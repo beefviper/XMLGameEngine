@@ -177,7 +177,7 @@ There are 37 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Tetris | a `map` of `cells`, `shape`s that turn by the standard kicks, `settle`, `slide`, `checks` for full rows (`clear`, `collapse`), and `send` for the next shape |
 | Columns | a `line` check of alike jewels, `fall`, `cycle`, and a group of groups picked by one character for random jewels |
 | Snake | `go` on cells, a `chain` for the body, `grow`, a `free` cell for food |
-| Centipede | `split` a chain where it is shot |
+| Centipede | `split` a chain where it is shot, `through` a mushroom when turning down |
 
 The games share one key convention: Space starts, pauses and restarts, player one is W A S D (plus the arrows), and where Space fires, P or Escape pauses.
 

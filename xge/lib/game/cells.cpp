@@ -291,6 +291,7 @@ namespace xge
 			touch.point = middleOf(*blocker);
 			const int beforeColumn = whole(mover.cellColumn);
 			const int beforeRow = whole(mover.cellRow);
+			goThrough = false;
 			reactTo(mover, *blocker, touch);
 			Touch back = touch;
 			back.edge = opposite(edge);
@@ -301,8 +302,12 @@ namespace xge
 			// A touch that took what was in the way away (food eaten) lets
 			// the step go on; one that moved the mover (a centipede turning)
 			// has made its own step instead.
+			// A <through /> in the rules makes it anyway.
 			const bool moved = whole(mover.cellColumn) != beforeColumn || whole(mover.cellRow) != beforeRow;
-			if (moved || !mover.exists || inTheWay(offMap) || offMap) { return false; }
+			const bool through = goThrough;
+			goThrough = false;
+			if (moved || !mover.exists) { return false; }
+			if (!through && (inTheWay(offMap) || offMap)) { return false; }
 		}
 
 		const int fromColumn = whole(mover.cellColumn);

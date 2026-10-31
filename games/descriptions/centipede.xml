@@ -161,14 +161,20 @@
           <group name="centipede" class="centipede">
             <chain object="centipede" />
             <collisions>
-              <!-- turned by the side or a mushroom: round, and a row down,
-                   or up while rising -->
-              <collision edge="horizontal" sprite="falling"><trigger action="fall" /></collision>
+              <!-- turned by the side, a mushroom or another centipede: round,
+                   and a row down, or up while rising (rising first, so one
+                   turned at the bottom goes up only once) -->
               <collision edge="horizontal" sprite="rising"><trigger action="rise" /></collision>
-              <collision class="mushroom" side="horizontal" sprite="falling"><trigger action="fall" /></collision>
+              <collision edge="horizontal" sprite="falling"><trigger action="fall" /></collision>
               <collision class="mushroom" side="horizontal" sprite="rising"><trigger action="rise" /></collision>
+              <collision class="mushroom" side="horizontal" sprite="falling"><trigger action="fall" /></collision>
+              <collision class="centipede" side="horizontal" sprite="rising"><trigger action="rise" /></collision>
+              <collision class="centipede" side="horizontal" sprite="falling"><trigger action="fall" /></collision>
+              <!-- turning down or up, nothing stops it -->
+              <collision class="mushroom" side="vertical"><through /></collision>
+              <collision class="centipede" side="vertical"><through /></collision>
               <!-- at the bottom it starts back up, and at the top down again -->
-              <collision edge="bottom"><become sprite="rising" /></collision>
+              <collision edge="bottom"><become sprite="rising" /><hop direction="up" /></collision>
               <collision edge="top"><become sprite="falling" /></collision>
               <!-- shot: cut in two here, and a mushroom where it was -->
               <collision class="shot" sprite="falling"><inc variable="status.score">90</inc></collision>

@@ -1112,6 +1112,8 @@
       <!-- land: stand on top of the object touched; leap: a jump of that height under the object's own pull -->
       <xs:element name="land" type="emptyType" />
       <xs:element name="ride" type="emptyType" />
+      <!-- through: on a map with <cells />, the refused step is made after all, into the cell with what is there -->
+      <xs:element name="through" type="emptyType" />
     </xs:choice>
   </xs:group>
 

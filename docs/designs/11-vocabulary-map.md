@@ -24,7 +24,7 @@ The vocabulary grew one game at a time ([motion](22-motion.md): a word is added 
 | Moving | `move` (on cells with `wait`), `hop` and `jump` (with `arc`), `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track`; on cells `slide`, `settle` |
 | Cells | `cycle` a shape; `go` keeps going, `chain`, `grow` and `split`, a spawn's `free`; in a check `clear`, `collapse`, `fall`; a spawn's `random`, `column`, `row`, `into=`; `send` between maps |
 | Steering | `chase`, `aim`, `follow`, `shift`; in a maze `go`, `hunt`, `wander` |
-| Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole` |
+| Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole`, `through` |
 | In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn`, `despawn`; `most` on an object |
 | Numbers | `inc`, `dec`, `set`, `copy`, `rank` |
 | Look and sound | `become`, `play`, `silence` |

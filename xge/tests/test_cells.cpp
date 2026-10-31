@@ -748,8 +748,9 @@ namespace
 {
 	// A worm on a field of cells: every piece of group "worm" can lead
 	// (a head @, and its body o), a cell a second to the right on Space;
-	// a mushroom (m) or the side turns it round and a row down. C cuts
-	// the piece wormKeys names, which then goes.
+	// a mushroom (m), the side or another worm turns it round and a row
+	// down, through whatever is there. C cuts the piece wormKeys names,
+	// which then goes; L sends that piece left.
 	std::string worm(const std::vector<std::string>& rows)
 	{
 		std::string map = "<map name=\"field\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position><cells />";
@@ -758,10 +759,13 @@ namespace
 		return map + "<group name=\"mushrooms\" class=\"mushroom\" char=\"m\"><sprite><rectangle><width>8</width><height>8</height></rectangle></sprite></group>"
 			"<group name=\"worm\" class=\"worm\"><chain object=\"worm\" />"
 			"<collisions><collision edge=\"horizontal\"><trigger action=\"turn\" /></collision>"
-			"<collision class=\"mushroom\" side=\"horizontal\"><trigger action=\"turn\" /></collision></collisions>"
+			"<collision class=\"mushroom\" side=\"horizontal\"><trigger action=\"turn\" /></collision>"
+			"<collision class=\"worm\" side=\"horizontal\"><trigger action=\"turn\" /></collision>"
+			"<collision class=\"mushroom\" side=\"vertical\"><through /></collision></collisions>"
 			"<actions><action name=\"start\"><go direction=\"right\">1</go></action>"
 			"<action name=\"turn\"><reverse /><hop direction=\"down\" /></action>"
-			"<action name=\"cut\"><split /><despawn /></action></actions>"
+			"<action name=\"cut\"><split /><despawn /></action>"
+			"<action name=\"back\"><go direction=\"left\">1</go></action></actions>"
 			"<group name=\"heads\" char=\"@\">" + looks + "</group>"
 			"<group name=\"bodies\" char=\"o\"><sprite name=\"body\"><circle><radius>4</radius></circle></sprite><sprite name=\"head\"><circle><radius>4</radius></circle></sprite></group>"
 			"</group></map>";
@@ -769,7 +773,7 @@ namespace
 
 	std::string wormKeys(const std::string& cut)
 	{
-		return "<trigger object=\"heads\" action=\"start\" /></input><input button=\"c\"><trigger object=\"" + cut + "\" action=\"cut\" />";
+		return "<trigger object=\"heads\" action=\"start\" /></input><input button=\"c\"><trigger object=\"" + cut + "\" action=\"cut\" /></input><input button=\"l\"><trigger object=\"" + cut + "\" action=\"back\" />";
 	}
 }
 
@@ -783,6 +787,38 @@ TEST_CASE("A head that meets the side or a mushroom turns round and goes a row d
 	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 7, 3 }, { 7, 2 }, { 6, 2 } });
 	play.frames(60);
 	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 6, 3 }, { 7, 3 }, { 7, 2 } });
+}
+
+TEST_CASE("A head turning down onto a mushroom goes through it, never stuck at the side", "[cells][chain]")
+{
+	played::Scratch file(worm({ "......", ".oo@m.", "...m..", "......" }), wormKeys("worm"));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(61);
+	// Turned by the mushroom ahead, down into the one under it.
+	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 4, 3 }, { 4, 2 }, { 3, 2 } });
+	play.frames(60);
+	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 3, 3 }, { 4, 3 }, { 4, 2 } });
+	CHECK(play.get("playing.field.mushrooms.2").exists);
+}
+
+TEST_CASE("Two heads that meet both turn down, and go on apart", "[cells][chain]")
+{
+	played::Scratch file(worm({ "........", "..@..@..", "........" }), wormKeys("playing.field.heads.2"));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::L);
+	play.frames(60);
+	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 4, 2 } });
+	CHECK(snakeOf(play, "playing.field.heads.2") == Snake{ { 5, 2 } });
+	// The second, turned by the first's touch, still makes its own step.
+	play.frames(60);
+	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 4, 3 } });
+	CHECK(snakeOf(play, "playing.field.heads.2") == Snake{ { 6, 3 } });
+	play.frames(60);
+	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 3, 3 } });
+	CHECK(snakeOf(play, "playing.field.heads.2") == Snake{ { 7, 3 } });
 }
 
 TEST_CASE("A <split /> cuts a chain: the links behind lead a chain of their own", "[cells][chain]")

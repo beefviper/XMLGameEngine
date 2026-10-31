@@ -398,6 +398,8 @@ namespace xge
 
 		// <split />: the chain the piece is in is cut there (see CmdSplit).
 		void splitChain(Object& piece);
+		// <through />: the refused cell step being asked about is made.
+		void stepThrough() { goThrough = true; }
 
 		// A <spawn><free />: in a free cell, at random (none: taken back,
 		// false).
@@ -461,6 +463,8 @@ namespace xge
 			int row{};
 		};
 		std::vector<Stepping> stepping;
+		// Set by a <through /> in the rules of a refused cell step.
+		bool goThrough = false;
 		// What a piece is, for a <line> of alike: its group, or for a copy
 		// the group of what it copies.
 		std::string kindOf(const Object& piece) noexcept;
