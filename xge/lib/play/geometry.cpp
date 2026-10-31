@@ -501,14 +501,16 @@ namespace xge
 		return at.left() >= 0 && at.top() >= 0 && at.right() <= window.x && at.bottom() <= window.y;
 	}
 
-	Vector2f bounced(const Vector2f& velocity, Edge edge) noexcept
+	Vector2f bounced(const Vector2f& velocity, Edge edge, float share) noexcept
 	{
+		// Off it at `share` of the speed into it; going away already, as it was.
+		const auto away = [share](float along, float sign) { return along * sign >= 0.0f ? along : -along * share; };
 		switch (edge)
 		{
-		case Edge::Left:   return { std::abs(velocity.x), velocity.y };
-		case Edge::Right:  return { -std::abs(velocity.x), velocity.y };
-		case Edge::Top:    return { velocity.x, std::abs(velocity.y) };
-		case Edge::Bottom: return { velocity.x, -std::abs(velocity.y) };
+		case Edge::Left:   return { away(velocity.x, 1.0f), velocity.y };
+		case Edge::Right:  return { away(velocity.x, -1.0f), velocity.y };
+		case Edge::Top:    return { velocity.x, away(velocity.y, 1.0f) };
+		case Edge::Bottom: return { velocity.x, away(velocity.y, -1.0f) };
 		}
 
 		return velocity;

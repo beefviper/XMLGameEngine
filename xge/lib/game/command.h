@@ -60,7 +60,12 @@ namespace xge
 	// makeCommand() (game/command.cpp) is the one place that turns a RawCommand
 	// into one of these.
 
-	struct CmdBounce {};
+	// <bounce />, <bounce>0.7</bounce>: off what it touched, mirrored about
+	// the way the touched surface faces (a screen edge, a box's side, the
+	// round of a circle, the slope of a drawn line), keeping that share of
+	// the speed it came in with (1 when left out; above 1 it comes off
+	// faster, a bumper). See xge::bounce.
+	struct CmdBounce { float share{ 1.0f }; };
 	struct CmdStick {};
 	struct CmdReset {};
 	struct CmdDie {};

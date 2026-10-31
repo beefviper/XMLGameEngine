@@ -79,7 +79,16 @@ namespace xge
 
 	Contact contactBetween(const Object& a, const Object& b, Edge edgeOfB, float time)
 	{
-		return contactOf(boxOf(a), isRound(a), boxOf(b), isRound(b), edgeOfB, time);
+		Contact contact = contactOf(boxOf(a), isRound(a), boxOf(b), isRound(b), edgeOfB, time);
+
+		// Tested by pixels: where the pixels meet, and the way what is drawn
+		// faces there (a slope of a <line>, the round of a ball).
+		if (usesPixels(a, b))
+		{
+			pixelContactAt(boxOf(a), [&](const Vector2f& local) { return solidAt(a, local); },
+				boxOf(b), [&](const Vector2f& local) { return solidAt(b, local); }, contact.point, contact.normal);
+		}
+		return contact;
 	}
 
 	std::optional<SweepHit> sweepObjects(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB)

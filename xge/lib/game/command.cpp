@@ -40,7 +40,16 @@ namespace xge
 	{
 		const std::string& verb = raw.verb;
 
-		if (verb == "bounce") { return CmdBounce{}; }
+		if (verb == "bounce")
+		{
+			const bool none = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
+			const float share = none ? 1.0f : evaluate(raw.amount);
+			if (!(share >= 0.0f))
+			{
+				throw std::runtime_error("<bounce> keeps a share of " + formatDisplayNumber(share) + " of its speed; expected 0 or more");
+			}
+			return CmdBounce{ share };
+		}
 		if (verb == "stick")  { return CmdStick{}; }
 		if (verb == "die")    { return CmdDie{}; }
 		if (verb == "stop")   { return CmdStop{}; }
@@ -467,7 +476,7 @@ namespace xge
 	std::ostream& operator<<(std::ostream& o, const Command& command)
 	{
 		std::visit(overload{
-			[&](const CmdBounce&) { o << "bounce"; },
+			[&](const CmdBounce& b) { o << "bounce(" << b.share << ")"; },
 			[&](const CmdStick&) { o << "stick"; },
 			[&](const CmdReset&) { o << "reset"; },
 			[&](const CmdDie&) { o << "die"; },
@@ -782,7 +791,7 @@ namespace xge
 		{
 			o << "." << command.direction << "(" << command.amount << ", " << command.seconds << ")";
 		}
-		else if (command.verb == "leap" || (command.verb == "knock" && (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())))
+		else if (command.verb == "leap" || ((command.verb == "knock" || command.verb == "bounce") && (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())))
 		{
 			o << "(" << command.amount << ")";
 		}

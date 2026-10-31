@@ -18,6 +18,7 @@
 - **Pac-Man** ([chase-and-paths](24-chase-and-paths.md), [games-classic](54-games-classic.md#pac-man)): a real path search as another verb, the other fruit, the later levels' shorter scatters and faster frights; tune the speeds by playing it.
 - **After the 2600 vocabulary** (2026-10-17): decals painted onto a picture ([pictures](30-pictures.md)); light blocked by walls and fading at its edge; a shadow that shrinks as its thing rises; Tennis's serving. Speeds in Tennis and Haunted House were chosen without playing them.
 - **Maps of cells** ([groups](06-groups.md#cells-a-map-that-is-a-playfield), 2026-10-30): Tetris, Columns, Snake, Centipede and Capsules are built. Open: gliding between cells; for Centipede the flea, spider and scorpion; for Columns scoring by chain round and pieces; for Tetris hold, lock delay, ghost piece, a bag of seven, scoring by rows at once.
+- **Tables and tracks** ([tables-and-tracks](25-tables-and-tracks.md), 2026-10-31): stage 1 built (bounce by the normal, `on=` key moments, Putt Park). Next: an artillery duel, a pinball table (`<pivot>`, `<swing>`), a top down racer (`<surface>`, `<gates>`). After those, moves as timelines (fighting).
 - **Games the vocabulary cannot say yet**: see [games-atari](56-games-atari.md).
 
 ## Code

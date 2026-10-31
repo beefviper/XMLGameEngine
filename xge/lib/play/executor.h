@@ -126,7 +126,7 @@ namespace xge
 		// for the sound; letting go silences it if it loops.
 		void playHeld(const std::string& sound, bool keyPressed);
 
-		void bounceScreenEdge(Object& object, Edge edge);
+		void bounceScreenEdge(Object& object, Edge edge, float share);
 		void moveByStep(Object& object, Direction direction, float step);
 		void queueHop(Object& object, Vector2f step);
 		bool startJump(Object& object, const CmdJump& jump);

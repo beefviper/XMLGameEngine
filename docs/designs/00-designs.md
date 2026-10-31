@@ -17,7 +17,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [objects](05-objects.md) | What an object is, storage, handles, lockstep | Built; handles Decided |
 | [groups](06-groups.md) | `<group>`: listed members, cells in columns and rows, `<map>`s drawn as text, maps of cells (Tetris), groups inside a group | Built; Columns, Snake, Centipede Decided |
 | [states-and-conditions](07-states-and-conditions.md) | State stack, `<pop state>`, `<shows>` and `<conditions>` sets, live tests, `<all>`/`<any>`, `total=`, `distance=`, states `from=`, keeps, a table of the best, turns, attract mode | Built; object-level conditions Open |
-| [input](08-input.md) | Actions, a refused press, key sets, held keys across states, mouse and pads | Built |
+| [input](08-input.md) | Actions, a refused press, key sets, held keys across states, a key's three moments (`on=`), mouse and pads | Built |
 | [timers](09-timers.md) | Timers, look timers, time left, commands in every context | Built; event queue Open |
 | [pools-and-enemies](10-pools-and-enemies.md) | Spawn and despawn (`<most>`), what replaced pools, enemies firing back | Built |
 | [vocabulary-map](11-vocabulary-map.md) | Every word by grammar and by layer; missing categories (checked 2026-10-28) | Reference |
@@ -33,6 +33,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [motion](22-motion.md) | Verb principle, gravity, thrust, headings, hop (diagonals too), jump, facing, pull, seek, altitude and shadows | Built |
 | [platforming](23-platforming.md) | Standing, leaping, ladders (Donkey Kong); arcing jump; `arc` and `grip` | Built; air control Idea |
 | [chase-and-paths](24-chase-and-paths.md) | `<chase>`, `<aim>`, paths and formations (Galaxian), maze walking (`<go>`, `<hunt>`, `<wander>`), AI targeting, computer players | Built; curved paths Idea |
+| [tables-and-tracks](25-tables-and-tracks.md) | Bodies over shaped surfaces: bounce by the normal, a key's three moments (Putt Park); pivots and flippers, surfaces and laps planned | Stage 1 Built; stages 2 to 4 Decided |
 
 ## Pictures and sound
 

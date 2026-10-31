@@ -158,6 +158,19 @@ namespace xge
 		// always reaches whatever it started, even across a state change.
 		std::array<std::vector<Command>, static_cast<std::size_t>(KeyCode::Count)> heldCommands{};
 
+		// Game::stateChangeCount() when each key last went down. A key's
+		// on="hold" and on="release" bindings answer only a press made in
+		// the state that is current now: Space held through the title does
+		// not charge the game's shot, nor shoot it when let go.
+		std::array<unsigned long, static_cast<std::size_t>(KeyCode::Count)> pressedInState{};
+
+		// Runs the current state's on="hold" bindings of the keys down.
+		void playHeldKeys(void);
+
+		// Runs commands as one press each, as a key's press runs its own,
+		// stopping at a refused one or a turn's end.
+		void runAsPress(const std::vector<Command>& commands);
+
 		// Sends the release to everything the held keys are driving, and
 		// forgets it; the keys stay down.
 		void stopHeldCommands(void);

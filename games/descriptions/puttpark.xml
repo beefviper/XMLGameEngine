@@ -1,0 +1,484 @@
+<!-- puttpark.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 31, 2026 -->
+
+<!--
+  Putt Park: an original game of mini golf, six holes on one screen each.
+  Aim the arrow, hold Space to build up the putt and let go to strike. Banked
+  walls send the ball off at their angle, round posts kick it away faster
+  than it came, soft cushions take the pace off it. Par for the park is 18.
+
+  A and D or the arrows aim, Space held then let go putts, P or Escape
+  pauses, Space starts and plays again.
+
+  It is the game the first stage of tables and tracks was made for:
+  * The walls of each hole are one picture of <line>s, tested by its pixels,
+    so the ball <bounce>s off a wall at whatever slope it was drawn: a bank
+    at 45 degrees turns a putt a quarter round. <bounce>0.8</bounce> keeps
+    eight tenths of the pace; the posts' <bounce>1.3</bounce> gives more back
+    than came in, and the cushions' 0.4 deadens it.
+  * The putt is a key's three moments: Space pressed does nothing of its
+    own, held (on="hold") adds to the arrow's power every frame up to 100,
+    and let go (on="release") strikes, setting the ball's speed along the
+    arrow's heading from that power. Both only while the arrow shows its
+    ready look, so the ball cannot be struck while it rolls.
+  * When the ball has all but stopped, a condition stops it dead, puts the
+    arrow on it and makes the arrow ready again.
+  * The holes are scenes. Each takes the first hole's and gives its own
+    walls, cup, tee and par; dropping into the cup counts the strokes and
+    enters the next, whose condition puts the ball on its tee.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Putt Park">
+    <width>800</width>
+    <height>600</height>
+    <background>color.darkgreen</background>
+  </window>
+  <variables>
+    <variable name="radius">5</variable>
+    <variable name="green">0.012</variable>
+    <variable name="charge">2</variable>
+    <variable name="most">100</variable>
+    <variable name="pace">0.1</variable>
+    <variable name="still">0.08</variable>
+    <variable name="holes">6</variable>
+  </variables>
+  <sounds>
+    <sound name="putt"><volume>0.35</volume><note pitch="G5">0.04</note></sound>
+    <sound name="wall"><volume>0.15</volume><note pitch="C4">0.03</note></sound>
+    <sound name="post" wave="triangle"><volume>0.3</volume><note pitch="E6">0.06</note></sound>
+    <sound name="cushion" wave="triangle"><volume>0.2</volume><note pitch="A2">0.06</note></sound>
+    <sound name="cup" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.16</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>100</size><color>color.yellow</color></style>
+    <style name="prompt"><size>40</size></style>
+    <style name="help"><size>28</size></style>
+    <style name="hud"><size>26</size><color>color.lightgrey</color></style>
+  </styles>
+  <kit>
+    <!-- a round post: kicks the ball off faster than it came -->
+    <object name="post" class="post">
+      <sprite><circle><radius>16</radius><color>color.red</color></circle></sprite>
+      <collisions />
+    </object>
+    <!-- a soft cushion: takes the pace off -->
+    <object name="cushion" class="cushion">
+      <sprite><rectangle><width>70</width><height>12</height><color>color.orange</color></rectangle></sprite>
+      <collisions />
+    </object>
+  </kit>
+  <objects>
+    <object name="again">
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>PUTT PARK</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+        </object>
+        <object name="help">
+          <sprite><text style="help"><content>six holes, par 18: sink each in as few putts as you can</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+        </object>
+        <object name="keys">
+          <sprite><text style="help"><content>a and d or the arrows aim, hold spacebar and let go to putt</content><color>color.lightgrey</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 6</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="space"><push state="playing" /></input>
+      </inputs>
+    </state>
+
+    <state name="playing">
+      <objects>
+        <!-- the score card: numbers only -->
+        <object name="card">
+          <variables>
+            <variable name="hole">1</variable>
+            <variable name="strokes">0</variable>
+            <variable name="total">0</variable>
+            <variable name="sunk">0</variable>
+            <variable name="placed">0</variable>
+          </variables>
+        </object>
+        <object name="holeshown">
+          <sprite><text style="hud"><content>HOLE</content><number>card.hole</number></text></sprite>
+          <position><x>40</x><y>14</y></position>
+        </object>
+        <object name="strokesshown">
+          <sprite><text style="hud"><content>STROKES</content><number>card.strokes</number></text></sprite>
+          <position><x>300</x><y>14</y></position>
+        </object>
+        <object name="totalshown">
+          <sprite><text style="hud"><content>TOTAL</content><number>card.total</number></text></sprite>
+          <position><x>480</x><y>14</y></position>
+        </object>
+        <object name="powershown">
+          <sprite><text style="hud"><content>POWER</content><number>arrow.power</number><color>color.yellow</color></text></sprite>
+          <position><x>640</x><y>14</y></position>
+        </object>
+
+        <object name="ball" class="ball">
+          <sprite><circle><radius>radius</radius><color>color.white</color></circle></sprite>
+          <position><x>0</x><y>0</y></position>
+          <drag>green</drag>
+          <collisions>
+            <collision class="wall">
+              <bounce>0.8</bounce>
+              <play sound="wall" />
+            </collision>
+            <collision class="post">
+              <bounce>1.3</bounce>
+              <play sound="post" />
+            </collision>
+            <collision class="cushion">
+              <bounce>0.4</bounce>
+              <play sound="cushion" />
+            </collision>
+            <collision class="cup">
+              <play sound="cup" />
+              <set variable="self.velocity.x">0</set>
+              <set variable="self.velocity.y">0</set>
+              <set variable="card.total">card.total + card.strokes</set>
+              <set variable="card.strokes">0</set>
+              <inc variable="card.sunk" />
+              <set variable="card.placed">0</set>
+              <enter way="next" />
+            </collision>
+            <collision edge="all"><bounce>0.8</bounce></collision>
+          </collisions>
+        </object>
+
+        <!-- The aim: a dotted line turned by its heading about its middle,
+             which sits on the ball. Its power is how hard the next putt is. -->
+        <object name="arrow">
+          <!-- as big as the ready look, all clear, so the arrow keeps its size -->
+          <sprite name="waiting">
+            <bitmap>
+              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+              <scale>2</scale>
+            </bitmap>
+          </sprite>
+          <sprite name="ready">
+            <bitmap>
+              <row>.*.</row><row>***</row><row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row><row>.*.</row>
+              <row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row>
+              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+              <scale>2</scale>
+              <color>color.yellow</color>
+            </bitmap>
+          </sprite>
+          <position><x>0</x><y>0</y></position>
+          <heading>90</heading>
+          <actions>
+            <action name="left"><turn direction="left">2</turn></action>
+            <action name="right"><turn direction="right">2</turn></action>
+            <action name="charge">
+              <inc variable="arrow.power">charge</inc>
+              <set variable="arrow.power"><formula><smallest><value>arrow.power</value><value>most</value></smallest></formula></set>
+            </action>
+            <action name="putt">
+              <set variable="ball.velocity.x">
+                <formula>
+                  <multiply>
+                    <multiplicand>arrow.power</multiplicand>
+                    <multiplier>pace</multiplier>
+                    <multiplier><sine><value>arrow.heading</value></sine></multiplier>
+                  </multiply>
+                </formula>
+              </set>
+              <set variable="ball.velocity.y">
+                <formula>
+                  <multiply>
+                    <multiplicand>arrow.power</multiplicand>
+                    <multiplier>pace</multiplier>
+                    <multiplier>-1</multiplier>
+                    <multiplier><cosine><value>arrow.heading</value></cosine></multiplier>
+                  </multiply>
+                </formula>
+              </set>
+              <set variable="arrow.power">0</set>
+              <set variable="arrow.rolling">1</set>
+              <inc variable="card.strokes" />
+              <become sprite="waiting" />
+              <play sound="putt" />
+            </action>
+          </actions>
+          <variables>
+            <variable name="power">0</variable>
+            <variable name="rolling">1</variable>
+          </variables>
+        </object>
+      </objects>
+      <scenes>
+        <!-- 1: a straight run with its corners cut -->
+        <scene name="hole1">
+          <ways><way name="next" scene="hole2" /></ways>
+          <variables>
+            <variable name="number">1</variable>
+            <variable name="teex">150</variable>
+            <variable name="teey">300</variable>
+            <variable name="par">2</variable>
+          </variables>
+          <objects>
+            <object name="course" class="wall">
+              <sprite>
+                <line><from><x>120</x><y>200</y></from><to><x>680</x><y>200</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>680</x><y>200</y></from><to><x>720</x><y>240</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>240</y></from><to><x>720</x><y>360</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>360</y></from><to><x>680</x><y>400</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>680</x><y>400</y></from><to><x>120</x><y>400</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>120</x><y>400</y></from><to><x>80</x><y>360</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>360</y></from><to><x>80</x><y>240</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>240</y></from><to><x>120</x><y>200</y></to><color>color.brown</color><thickness>4</thickness></line>
+              </sprite>
+              <position><x>0</x><y>0</y></position>
+              <collisions><type>pixel</type></collisions>
+            </object>
+            <object name="cup" class="cup">
+              <sprite><circle><radius>8</radius><color>color.black</color></circle></sprite>
+              <position><x>642</x><y>292</y></position>
+              <collisions />
+            </object>
+            <object name="parshown">
+              <sprite><text style="hud"><content>PAR</content><number>par</number></text></sprite>
+              <position><x>170</x><y>14</y></position>
+            </object>
+          </objects>
+          <conditions>
+            <!-- just come in: the ball on this hole's tee -->
+            <condition object="card" variable="placed">
+              <equal>0</equal>
+              <set variable="ball.x">teex - radius</set>
+              <set variable="ball.y">teey - radius</set>
+              <set variable="ball.velocity.x">0</set>
+              <set variable="ball.velocity.y">0</set>
+              <set variable="card.hole">number</set>
+              <set variable="card.placed">1</set>
+              <set variable="arrow.rolling">1</set>
+            </condition>
+          </conditions>
+        </scene>
+
+        <!-- 2: out to the right, then down a 45 degree bank -->
+        <scene name="hole2" from="hole1">
+          <ways><way name="next" scene="hole3" /></ways>
+          <variables>
+            <variable name="number">2</variable>
+            <variable name="teex">150</variable>
+            <variable name="teey">180</variable>
+            <variable name="par">3</variable>
+          </variables>
+          <objects>
+            <object name="course">
+              <sprite>
+                <line><from><x>80</x><y>90</y></from><to><x>460</x><y>90</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>460</x><y>90</y></from><to><x>720</x><y>350</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>350</y></from><to><x>720</x><y>570</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>570</y></from><to><x>560</x><y>570</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>560</x><y>570</y></from><to><x>560</x><y>430</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>560</x><y>430</y></from><to><x>400</x><y>270</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>400</x><y>270</y></from><to><x>80</x><y>270</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>270</y></from><to><x>80</x><y>90</y></to><color>color.brown</color><thickness>4</thickness></line>
+              </sprite>
+            </object>
+            <object name="cup"><position><x>632</x><y>502</y></position></object>
+          </objects>
+        </scene>
+
+        <!-- 3: three posts in the way -->
+        <scene name="hole3" from="hole1">
+          <ways><way name="next" scene="hole4" /></ways>
+          <variables>
+            <variable name="number">3</variable>
+            <variable name="teex">130</variable>
+            <variable name="teey">330</variable>
+            <variable name="par">3</variable>
+          </variables>
+          <objects>
+            <object name="course">
+              <sprite>
+                <line><from><x>80</x><y>100</y></from><to><x>720</x><y>100</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>100</y></from><to><x>720</x><y>560</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>560</y></from><to><x>80</x><y>560</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>560</y></from><to><x>80</x><y>100</y></to><color>color.brown</color><thickness>4</thickness></line>
+              </sprite>
+            </object>
+            <object name="cup"><position><x>662</x><y>322</y></position></object>
+            <object name="post1" from="post"><position><x>384</x><y>314</y></position></object>
+            <object name="post2" from="post"><position><x>304</x><y>204</y></position></object>
+            <object name="post3" from="post"><position><x>304</x><y>424</y></position></object>
+            <object name="post4" from="post"><position><x>504</x><y>254</y></position></object>
+            <object name="post5" from="post"><position><x>504</x><y>374</y></position></object>
+          </objects>
+        </scene>
+
+        <!-- 4: a diamond with a wedge in the middle -->
+        <scene name="hole4" from="hole1">
+          <ways><way name="next" scene="hole5" /></ways>
+          <variables>
+            <variable name="number">4</variable>
+            <variable name="teex">150</variable>
+            <variable name="teey">330</variable>
+            <variable name="par">3</variable>
+          </variables>
+          <objects>
+            <object name="course">
+              <sprite>
+                <line><from><x>400</x><y>70</y></from><to><x>730</x><y>330</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>730</x><y>330</y></from><to><x>400</x><y>590</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>400</x><y>590</y></from><to><x>70</x><y>330</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>70</x><y>330</y></from><to><x>400</x><y>70</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>350</x><y>330</y></from><to><x>450</x><y>270</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>450</x><y>270</y></from><to><x>450</x><y>390</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>450</x><y>390</y></from><to><x>350</x><y>330</y></to><color>color.brown</color><thickness>4</thickness></line>
+              </sprite>
+            </object>
+            <object name="cup"><position><x>642</x><y>322</y></position></object>
+          </objects>
+        </scene>
+
+        <!-- 5: a zigzag between two slanted baffles -->
+        <scene name="hole5" from="hole1">
+          <ways><way name="next" scene="hole6" /></ways>
+          <variables>
+            <variable name="number">5</variable>
+            <variable name="teex">140</variable>
+            <variable name="teey">520</variable>
+            <variable name="par">4</variable>
+          </variables>
+          <objects>
+            <object name="course">
+              <sprite>
+                <line><from><x>80</x><y>80</y></from><to><x>720</x><y>80</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>80</y></from><to><x>720</x><y>580</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>580</y></from><to><x>80</x><y>580</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>580</y></from><to><x>80</x><y>80</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>240</x><y>580</y></from><to><x>320</x><y>220</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>480</x><y>80</y></from><to><x>400</x><y>440</y></to><color>color.brown</color><thickness>4</thickness></line>
+              </sprite>
+            </object>
+            <object name="cup"><position><x>652</x><y>142</y></position></object>
+          </objects>
+        </scene>
+
+        <!-- 6: the cup ringed by soft cushions in an octagon -->
+        <scene name="hole6" from="hole1">
+          <ways><way name="next" scene="hole6" /></ways>
+          <variables>
+            <variable name="number">6</variable>
+            <variable name="teex">140</variable>
+            <variable name="teey">330</variable>
+            <variable name="par">3</variable>
+          </variables>
+          <objects>
+            <object name="course">
+              <sprite>
+                <line><from><x>200</x><y>80</y></from><to><x>600</x><y>80</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>600</x><y>80</y></from><to><x>720</x><y>200</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>200</y></from><to><x>720</x><y>460</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>460</y></from><to><x>600</x><y>580</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>600</x><y>580</y></from><to><x>200</x><y>580</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>200</x><y>580</y></from><to><x>80</x><y>460</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>460</y></from><to><x>80</x><y>200</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>200</y></from><to><x>200</x><y>80</y></to><color>color.brown</color><thickness>4</thickness></line>
+              </sprite>
+            </object>
+            <object name="cup"><position><x>492</x><y>322</y></position></object>
+            <object name="cushion1" from="cushion"><position><x>465</x><y>275</y></position></object>
+            <object name="cushion2" from="cushion"><position><x>465</x><y>373</y></position></object>
+            <object name="cushion3" from="cushion">
+              <sprite><rectangle><width>12</width><height>70</height></rectangle></sprite>
+              <position><x>548</x><y>295</y></position>
+            </object>
+          </objects>
+        </scene>
+      </scenes>
+      <inputs>
+        <input><button>a</button><button>left</button><trigger object="arrow" action="left" from="ready" /></input>
+        <input><button>d</button><button>right</button><trigger object="arrow" action="right" from="ready" /></input>
+        <input button="space" on="hold"><trigger object="arrow" action="charge" from="ready" /></input>
+        <input button="space" on="release"><trigger object="arrow" action="putt" from="ready" /></input>
+        <input><button>p</button><button>escape</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <!-- all but stopped: stopped dead, and the arrow on it, ready -->
+        <condition>
+          <all>
+            <condition object="arrow" variable="rolling"><equal>1</equal></condition>
+            <condition object="ball" variable="velocity.x"><atmost>still</atmost></condition>
+            <condition object="ball" variable="velocity.x"><atleast>0 - still</atleast></condition>
+            <condition object="ball" variable="velocity.y"><atmost>still</atmost></condition>
+            <condition object="ball" variable="velocity.y"><atleast>0 - still</atleast></condition>
+          </all>
+          <set variable="ball.velocity.x">0</set>
+          <set variable="ball.velocity.y">0</set>
+          <become object="arrow" sprite="ready" />
+          <set variable="arrow.x">ball.x + radius - arrow.width / 2</set>
+          <set variable="arrow.y">ball.y + radius - arrow.height / 2</set>
+          <set variable="arrow.rolling">0</set>
+        </condition>
+        <condition object="card" variable="sunk">
+          <atleast>holes</atleast>
+          <push state="finished" />
+        </condition>
+      </conditions>
+    </state>
+
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>p</button><button>escape</button><pop /></input>
+      </inputs>
+    </state>
+
+    <state name="finished">
+      <objects>
+        <object name="message">
+          <sprite><text style="banner"><content>ROUND OVER</content><size>80</size></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+        </object>
+        <object name="score">
+          <sprite><text style="prompt"><content>STROKES</content><number>card.total</number><content>PAR 18</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

@@ -38,6 +38,16 @@ A key can stay down while the state changes (hold Left, pause, unpause).
 - Implemented by `Game::stateChangeCount()` (up on every push/pop) compared in `Engine::syncHeldKeysToState()` after each key event and each frame (a condition can change state); `CommandExecutor::executeHeldInput` is the resume path. Releasing always reaches the commands its key is currently driving.
 - Repeat-while-held would be a separate verb or a repeat interval, not a behavior of `hop`.
 
+### A key's three moments (2026-10-31)
+
+- Need: a putt, a plunger, a cannon, a variable jump: "hold to build power, let go to strike". A key could only act on its press (held verbs staying on while down); nothing acted every frame while held as a plain command, and nothing on letting go. Found by the tables-and-tracks survey (`notes/tables-and-tracks-2026-10-31.md` in the project files).
+- Beef's framing: a key has three moments, pressed, held and released, and the language should name them, rather than gain a `<charge>` verb.
+- **Chosen: `on="press" | "hold" | "release"` on `<input>`**, left out meaning press (today's behaviour, so no game changed). `on=` picks one of three, so it is an attribute by the format's rule. `hold` runs the commands every frame the key is down, each run as one press; `release` once as it goes up. `State` keeps three maps (`input`, `holding`, `letGo`; `keyMaps()` walks them in the order of `keyMoments`), and a `<keys>` set carries all three.
+- **`release` reused as a value**: Beef asked whether it clashes with the `<release>` command (a waiting one brought into play). It cannot: one is an element among commands, this an attribute value, and `<demo>` already writes a key let go as `<release>`, so the file format already meant "key let go" by it.
+- **`hold` and `release` answer only a press made in the current state** (`Engine::pressedInState`, the state change count at the press). Otherwise Space held from the title into the game would charge, and its letting go strike. A pause and back ends what a held key was charging. Press bindings keep option B above.
+- `<charge>` was dropped: `on="hold"` with an `<inc>` and a `<formula>` `<smallest>` says the same. `<launch>` waits: a `<set>` of `velocity.x` and `.y` from `<sine>` and `<cosine>` of the heading says it today; a word is added if a second game wants it.
+- Open: a repeat with an interval while held (`<every>` on a hold), and how long a key has been held as a live number.
+
 ### Mouse and gamepads (2026-10-16)
 
 - **Buttons are keys.** A mouse or pad button is one more `KeyCode` (`mouse.left`, `pad1.a` ... `pad2.right`, an Xbox layout, two pads), so binding, held keys, key sets and the state rules above all apply unchanged. A pad's d-pad and its stick past halfway are the same four directions, so a game binds `pad1.left` once.

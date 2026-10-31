@@ -181,6 +181,8 @@ namespace xge
 
 		playComputer();
 
+		playHeldKeys();
+
 		game.updateObjects();
 
 		// A <condition> can change the state during updateObjects.
@@ -379,6 +381,7 @@ namespace xge
 		{
 			return;
 		}
+		pressedInState[index] = game.stateChangeCount();
 
 		// The commands are copied out before any runs: a command run below
 		// (<push state="paused" />, <pop />) pushes or pops the state stack.
@@ -390,11 +393,7 @@ namespace xge
 		}
 
 		heldCommands[index] = binding->second;
-		game.takeTurnStop();
-		for (const auto& command : heldCommands[index])
-		{
-			if (!commandExecutor.executeInput(command, true) || game.takeTurnStop()) { break; }
-		}
+		runAsPress(heldCommands[index]);
 
 		syncHeldKeysToState();
 	}
@@ -403,7 +402,8 @@ namespace xge
 	{
 		const auto index = static_cast<std::size_t>(key);
 
-		if (recording && !demoPlaying && !computerPressing && heldKeys.isDown(key))
+		const bool wasDown = heldKeys.isDown(key);
+		if (recording && !demoPlaying && !computerPressing && wasDown)
 		{
 			recordedSoFar.keys.push_back({ keyCodeToString(key), false, recordedSoFar.frames });
 		}
@@ -437,6 +437,45 @@ namespace xge
 			}
 		}
 
+		// on="release": once, for a press made in this state. A copy, as a
+		// command run may push or pop the state.
+		if (wasDown && pressedInState[index] == game.stateChangeCount())
+		{
+			const auto& letGo = game.getCurrentState().letGo;
+			if (const auto binding = letGo.find(key); binding != letGo.end())
+			{
+				const std::vector<Command> once = binding->second;
+				runAsPress(once);
+			}
+		}
+
+		syncHeldKeysToState();
+	}
+
+	void Engine::runAsPress(const std::vector<Command>& commands)
+	{
+		game.takeTurnStop();
+		for (const auto& command : commands)
+		{
+			if (!commandExecutor.executeInput(command, true) || game.takeTurnStop()) { break; }
+		}
+	}
+
+	void Engine::playHeldKeys(void)
+	{
+		const auto& holding = game.getCurrentState().holding;
+		if (holding.empty()) { return; }
+
+		// A copy, as a command run may push or pop the state.
+		const auto bindings = holding;
+		const unsigned long now = game.stateChangeCount();
+		for (const auto& [key, commands] : bindings)
+		{
+			if (heldKeys.isDown(key) && pressedInState[static_cast<std::size_t>(key)] == now && game.stateChangeCount() == now)
+			{
+				runAsPress(commands);
+			}
+		}
 		syncHeldKeysToState();
 	}
 

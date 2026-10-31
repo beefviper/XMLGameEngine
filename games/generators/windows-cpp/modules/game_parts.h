@@ -438,16 +438,21 @@ namespace xge::parts
 		return timer;
 	}
 
-	// The keys a state's <inputs> or a <keys> set gives, and what each runs.
-	using Keys = std::map<std::string, std::vector<RawCommand>>;
+	// The keys a <keys> set gives, and what each runs as it is pressed,
+	// held (on="hold") and let go (on="release").
+	struct Keys
+	{
+		std::map<std::string, std::vector<RawCommand>> input;
+		std::map<std::string, std::vector<RawCommand>> holding;
+		std::map<std::string, std::vector<RawCommand>> letGo;
+	};
 
 	// A <keys> set a state uses (keys="..."), over what it already has.
-	inline void use(Keys& input, const Keys& set)
+	inline void use(RawState& state, const Keys& set)
 	{
-		for (const auto& [button, commands] : set)
-		{
-			input[button] = commands;
-		}
+		for (const auto& [button, commands] : set.input) { state.input[button] = commands; }
+		for (const auto& [button, commands] : set.holding) { state.holding[button] = commands; }
+		for (const auto& [button, commands] : set.letGo) { state.letGo[button] = commands; }
 	}
 
 	// <note pitch="..." wave="..." to="...">length</note>

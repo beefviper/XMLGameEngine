@@ -234,8 +234,8 @@
           </xsl:call-template>
           <xsl:text>;</xsl:text>
         </xsl:when>
-        <!-- the bounce is optional, and 1 when left out -->
-        <xsl:when test="$verb = 'knock' and ($node/* or normalize-space($node) != '')">
+        <!-- the share kept is optional, and 1 when left out -->
+        <xsl:when test="($verb = 'knock' or $verb = 'bounce') and ($node/* or normalize-space($node) != '')">
           <xsl:text> command.amount = </xsl:text>
           <xsl:call-template name="value">
             <xsl:with-param name="node" select="$node" />
@@ -2088,8 +2088,8 @@
        =================================================================== -->
 
   <!-- The keys of an <input> (button="w", or <button>w</button>
-       <button>up</button>), each given its commands: to["w"] = to["up"] =
-       { ... }; at $indent. -->
+       <button>up</button>), each given its commands in the map of its
+       moment (on=): to.input["w"] = to.input["up"] = { ... }; at $indent. -->
   <xsl:template name="input">
     <xsl:param name="to" />
     <xsl:param name="indent" />
@@ -2098,10 +2098,17 @@
         <xsl:with-param name="word" select="'button'" />
       </xsl:call-template>
     </xsl:variable>
+    <xsl:variable name="moment">
+      <xsl:choose>
+        <xsl:when test="@on = 'hold'">.holding</xsl:when>
+        <xsl:when test="@on = 'release'">.letGo</xsl:when>
+        <xsl:otherwise>.input</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <xsl:value-of select="$indent" />
     <xsl:call-template name="buttons">
       <xsl:with-param name="words" select="normalize-space($buttons)" />
-      <xsl:with-param name="to" select="$to" />
+      <xsl:with-param name="to" select="concat($to, $moment)" />
     </xsl:call-template>
     <xsl:call-template name="commands">
       <xsl:with-param name="nodes" select="*[not(self::button)]" />
@@ -2515,7 +2522,7 @@
     </xsl:call-template>
     <xsl:for-each select="inputs/input[@button or button]">
       <xsl:call-template name="input">
-        <xsl:with-param name="to" select="'state.input'" />
+        <xsl:with-param name="to" select="'state'" />
         <xsl:with-param name="indent" select="$in" />
       </xsl:call-template>
     </xsl:for-each>
@@ -2560,7 +2567,7 @@
         </xsl:choose>
       </xsl:variable>
       <xsl:for-each select="ancestor::states/keys[@name = $word][1]">
-        <xsl:value-of select="concat($indent, 'use(state.input, ')" />
+        <xsl:value-of select="concat($indent, 'use(state, ')" />
         <xsl:call-template name="function-name">
           <xsl:with-param name="earlier" select="preceding-sibling::keys" />
           <xsl:with-param name="suffix" select="'Keys'" />

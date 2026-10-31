@@ -806,7 +806,10 @@ namespace xge
 		for (const State& state : states)
 		{
 			const std::string where = "state '" + state.name + "'";
-			for (const auto& [key, commands] : state.input) { check(commands, where + " > <input>"); }
+			for (const auto* keys : state.keyMaps())
+			{
+				for (const auto& [key, commands] : *keys) { check(commands, where + " > <input>"); }
+			}
 			for (const Condition& condition : state.conditions) { check(condition.commands, where + " > <condition>"); }
 			for (const Timer& timer : state.timers) { check(timer.commands, where + " > <timer>"); }
 			for (const Scene& scene : state.scenes)

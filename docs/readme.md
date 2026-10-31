@@ -13,7 +13,7 @@ This is the reference for what the engine does **today**: the game file, every e
 - [Sounds](#sounds)
 - [Commands](#commands): where they go and what each does
 - [Collisions](#collisions): rules, filters, how a touch is found, knocks
-- [Input](#input): keys, mouse, pads, held keys
+- [Input](#input): keys and their three moments, mouse, pads, held keys
 - [Timers and paths](#timers-and-paths)
 - [States and scenes](#states-and-scenes): the stack, scenes, conditions, keeps, turns, demos, computer players
 - [What happens when a game runs](#what-happens-when-a-game-runs)
@@ -95,7 +95,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 
 ### The shipped games
 
-38 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
+39 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
 
 | Game | Keys besides the convention | What it is, and what it shows |
 |---|---|---|
@@ -136,6 +136,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `columns` | A/D move, W/X/Space cycle the jewels, S drops faster; P pauses | columns of three random jewels; lines of three alike across, down or slanting go, and the rest [fall](#cells) into chains |
 | `capsules` | A/D move, W/X turn, E/C turn back, S drops faster; P pauses | germs in a bottle and two-coloured capsules, four of a colour across or down to clear them; halves with [`<joins>`](#cells) looks that stay joined, a robot doctor who throws the next capsule |
 | `snake` | W A S D or the arrows turn; Space or P pauses | a snake that goes on by itself with a [chain](#cells) for its body, food in a free cell, faster as it grows |
+| `puttpark` | A/D or Left/Right aim, Space held then let go putts; P or Escape pauses | an original mini golf of six holes as [scenes](#scenes): walls drawn as [`<line>`](#lines)s that the ball [bounces](#touching) off at their slope, posts that kick it away faster, soft cushions; the putt built up by a key [held and let go](#a-keys-three-moments) |
 | `centipede` | W A S D move the wand about its zone, Space fires; P or Escape pauses | a centipede winding down through a mushroom field, [split](#cells) in two where a shot hits it; each piece left grows a head; a line nobody sees over the bottom six rows turns it back down and holds the wand in |
 
 What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
@@ -937,7 +938,7 @@ An object out of play (hidden or dead) does nothing when its action is pressed o
 
 | Command | Does |
 |---|---|
-| `<bounce />` | the velocity reverses away from the edge touched |
+| `<bounce />`, `<bounce>0.8</bounce>` | off what it touched, as off a surface standing still: the velocity is mirrored about the way the surface faces there, keeping that share of the speed it came in at (1 when left out; above 1 it comes off faster, a bumper). A screen edge and a box's side face straight out, so off them it is the plain flip; a circle faces out from its middle, and a `pixel` picture the way it is drawn there, so a ball comes off a slope drawn as a `<line>` at its angle. One already going away keeps on. A surface that moves and lends its speed is a [`<knock>`](#knocks) |
 | `<deflect>45</deflect>` | off another object at an angle set by where it hit: straight out from the middle of the side touched, up to that many degrees toward either end, in proportion. The speed is kept. Pong's ball |
 | `<knock />`, `<knock>0.5</knock>` | the two meet as things with weight do ([knocks](#knocks)); the content, 0 to 1, is how bouncy |
 | `<stick />` | against a screen edge: kept inside it, and only the velocity into that edge stops, so it still slides along it. In a rule about another object, only the velocity into the side touched stops, so it slides along what it met (Centipede's wand under the zone's line and against mushrooms) |
@@ -1050,8 +1051,8 @@ A rule about another object can be narrowed; most filters work on edge rules too
 
 - **Swept.** Each object moves along its path for the frame, and the detector finds the moment two of them first touch (boxes as boxes, circles as circles, a circle against a box with rounded corners), so a small fast object cannot pass through a thin one. The earliest touch in the whole frame is handled first: everything moves to that moment, the pair's rules run, and the rest of the frame plays with the velocities they left. Each pair reacts at most once a frame.
 - **Who is looked at.** The pairs are those a rule answers for, worked out once at load. A pair is skipped unless one of the two has moved: it has a velocity or rides something, or it is not where the last frame left it, whatever put it there (a hop or a landing, a `<set>` of its `x`, a `<shift>`, a teleport, a spawn). Being loaded or reset puts an object in its place, which is not a move. An object in the middle of a jump is in no pair. Something a rule brings into play touches nothing until the next frame.
-- **What a touch is.** Worked out once, before either side's rules (`contactOf`, `play/geometry.h`): the edge of each that was touched, the point where they meet, the way straight apart, where along each one's side, how deep, and how far through the frame. Each side's rules see it their way, as `side=`, `touch.*` and `<knock>` read it.
-- **`<type>pixel</type>`.** The pair is first swept as boxes, then walked half a pixel at a time from the moment the boxes touch until a drawn pixel of one lies on a drawn pixel of the other. A pixel object is a picture the engine drew (lines, a bitmap, an SVG); a circle or rectangle is solid as itself; text and images cannot be `pixel`. The edge reported is the one the motion came in through.
+- **What a touch is.** Worked out once, before either side's rules (`contactOf`, `play/geometry.h`): the edge of each that was touched, the point where they meet, the way straight apart, where along each one's side, how deep, and how far through the frame. Each side's rules see it their way, as `side=`, `touch.*`, `<bounce>` and `<knock>` read it.
+- **`<type>pixel</type>`.** The pair is first swept as boxes, then walked half a pixel at a time from the moment the boxes touch until a drawn pixel of one lies on a drawn pixel of the other. A pixel object is a picture the engine drew (lines, a bitmap, an SVG); a circle or rectangle is solid as itself; text and images cannot be `pixel`. The edge reported is the one the motion came in through. The point is the middle of the pixels where they meet, and the way apart is how what is drawn lies there (`pixelContactAt`): of the solid pixels of each within four pixels of the point, the one lying flattest across the point is the surface (a drawn line, a wall's side), facing away from the other; where neither does (a corner, the end of a line) it is from the middle of the one's pixels there towards the other's.
 - **`<solid char="*" />`**, after `<type>pixel</type>`: only those characters of the object's bitmap touch; the others are drawn but touch nothing. Q*bert's cubes touch by their tops.
 - **`<hitbox>`**: the shape that touches other objects instead of the picture, a `<rectangle>` or `<circle>`, then a `<position>` of its top left from the picture's. Q*bert touches with his feet alone. The window's edges, `<land />`, `<stick />` and a carry still use the picture. Not with `pixel`.
 
@@ -1101,6 +1102,26 @@ So remapping a key is one attribute in one state, a key can do different things 
 - **Key names** are lowercase: `a`-`z`, `num0`-`num9`, `numpad0`-`numpad9`, `f1`-`f15`, `space`, `enter`, `escape`, `backspace`, `tab`, `left`, `right`, `up`, `down`, `home`, `end`, `pageup`, `pagedown`, `insert`, `delete`, `pause`, `lshift`, `rshift`, `lcontrol`, `rcontrol`, `lalt`, `ralt`, and a few more in `engine/keys.cpp`.
 - **The mouse and pads** are keys too: `mouse.left`, `mouse.right`, `mouse.middle`, and for two pads `pad1.a`, `.b`, `.x`, `.y`, `.lb`, `.rb`, `.back`, `.start`, `.up`, `.down`, `.left`, `.right` (and `pad2.`), named for an Xbox pad. A pad's directions are its d-pad or its left stick pushed past halfway.
 - **Key sets.** Bindings several states share can be a named `<keys>` set at the top of `<states>`, taken with `<inputs keys="walk">` (several by a `<keys>walk</keys>` each, first in `<inputs>`, each over the one before); the state's own `<input>`s go over the set's, key by key. No shipped game uses one now.
+
+### A key's three moments
+
+A key goes down, stays down and is let go; `on=` on an `<input>` picks which it answers:
+
+| `on=` | Runs its commands |
+|---|---|
+| `press`, or left out | as the key goes down. The verbs that are held (`<move>`, `<accelerate>`, `<thrust>`, `<turn>` in the action it triggers) stay on until it is let go |
+| `hold` | every frame while it is down, from the frame it went down, each time as one press |
+| `release` | once, as it is let go |
+
+```xml
+<input button="space" on="hold"><trigger object="arrow" action="charge" from="ready" /></input>
+<input button="space" on="release"><trigger object="arrow" action="putt" from="ready" /></input>
+```
+
+- A key may have all three, in one state or a key set, each its own `<input>`.
+- **`hold` and `release` answer only a press made in the current state.** Space held through the title into the game neither charges the putt nor strikes it when let go; a pause and back ends what a key held before it was doing. A press binding keeps the old rule: its held verbs carry on into a new state that binds the key the same way.
+- Putt Park builds a putt this way: held, an `<inc>` adds to the power and a `<formula>` `<smallest>` keeps it at 100; let go, a `<set>` gives the ball its speed along the arrow's heading.
+- `on=` is for a button; a control that points (`axis=`) runs as it moves.
 
 ### Pointing controls
 
@@ -1420,7 +1441,7 @@ A `<hold>` anywhere else, or any other command in a `<computer>`, stops the load
 
 ### Each frame
 
-`Engine::step` reads the keys (or the demo's, or the computer's) and runs the current state's bindings, then `Game::updateObjects` plays one frame (`playOneFrame`, `play/frame.cpp`), in this order:
+`Engine::step` reads the keys (or the demo's, or the computer's) and runs the current state's bindings for each press and let-go, then its `on="hold"` bindings for the keys down, then `Game::updateObjects` plays one frame (`playOneFrame`, `play/frame.cpp`), in this order:
 
 1. animations and blinking count a frame;
 2. timers count, and those that go off run;
@@ -1503,7 +1524,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 - Movement is in pixels per frame and timers count frames, so a machine that cannot keep up slows the game. Acceleration is constant per object; `<drag>` and `<grip>` are what slow a thing by itself.
 - Only touches between objects are swept. A screen edge is checked by position before the move, so something faster than a window's width a frame can miss it.
 - A pair where nothing moves is not looked at, so a rule against something standing still runs only when the object moves, rides, hops or lands.
-- A rule reports which side was touched and where along it, but no surface faces a way: there is no bounce off a slope, and a pixel hit reflects along the motion.
+- A surface faces a way only as drawn: a `pixel` touch reads its slope from four pixels round the point, so a line drawn with stairs of one-pixel steps is a slope, not stairs. Nothing turns about a point other than its middle (a flipper), and a turning thing lends nothing of its turn to what it hits.
 - A `pixel` collision is exact to half a pixel of motion; lines meant to touch should be at least 2 pixels thick. Text and images cannot be `pixel`.
 - `unless=` names a class, not one object. A rule on a screen edge cannot have a `<condition>` yet (a state's condition can test the same thing).
 - `<ride />` lends velocity a frame at a time while touching; it is not attached, so a rider meeting an edge is handled by that edge's rule.

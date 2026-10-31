@@ -85,6 +85,8 @@ Each rests on something that never changes while a game runs:
 - The schema checks shape and where commands go; the loader checks names once everything is built.
 - A verb is done in one place, `CommandExecutor::run` (`play/executor.cpp`), told by a `Doer` who runs it (an object or none, what it touched or which screen edge, key down or let go, in an action or not). `ruleFor` in `load/check.cpp` and the schema's command groups say where it may be written; a new verb needs a line in all three. Use `didYouMean` and `listOf` (`load/spelling.cpp`) in any name error.
 - Text falls back to the built-in 8x8 font when its font file is missing.
+- A `<become>` that changes an object's look does not change its size until the frame's end, so `name.width` read later in the same list is still the old look's. Give looks that must be placed by their size the same size (Putt Park's arrow has an all-clear `waiting` look as big as `ready`).
+- `on="hold"`/`on="release"` bindings only answer a press made in the current state (`Engine::pressedInState`); a test that presses a key in one state and expects a hold in the next sees nothing.
 
 ## Tests
 

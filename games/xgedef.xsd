@@ -1145,7 +1145,9 @@
   <!-- bounce: off a screen edge or another object -->
   <xs:group name="bounceCommands">
     <xs:choice>
-      <xs:element name="bounce" type="emptyType" />
+      <!-- bounce: off what it touched, mirrored about the way its surface faces;
+           its value is the share of the speed kept (left out, 1; above 1, a bumper) -->
+      <xs:element name="bounce" type="knockType" />
     </xs:choice>
   </xs:group>
 
@@ -1338,7 +1340,20 @@
     </xs:sequence>
     <xs:attribute name="button" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="axis" type="xs:string" use="optional" />
+    <!-- on: the moment of the key it answers. press (left out: the same) runs
+         its commands as the key goes down, a held verb staying on while it is
+         down; hold runs them every frame while it is down; release once when
+         it is let go. hold and release answer only a press made in this state. -->
+    <xs:attribute name="on" type="keyMomentType" use="optional" />
   </xs:complexType>
+
+  <xs:simpleType name="keyMomentType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="press" />
+      <xs:enumeration value="hold" />
+      <xs:enumeration value="release" />
+    </xs:restriction>
+  </xs:simpleType>
 
   <!--
     One test of a condition: atleast / atmost / above / below /

@@ -56,8 +56,14 @@ namespace xge
 		return object.velocity + object.riding;
 	}
 
-	// <bounce />: off the touched edge, the speed kept.
-	void bounce(Object& object, Edge edge);
+	// <bounce />: off what it touched, as off a surface standing still:
+	// mirrored about the touch's normal, keeping `share` of the speed it
+	// came in at; one already going away keeps on. A box's side faces
+	// straight out, so off a box this is the plain flip.
+	void bounce(Object& object, const Touch& touch, float share);
+
+	// <bounce /> off a screen edge, which faces straight in.
+	void bounceOffEdge(Object& object, Edge edge, float share);
 
 	// <deflect>maxDegrees</deflect>: back off `other` at an angle set by
 	// where on the touched side it hit.

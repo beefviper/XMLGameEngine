@@ -100,9 +100,21 @@ namespace xge
 		return true;
 	}
 
-	void bounce(Object& object, Edge edge)
+	void bounce(Object& object, const Touch& touch, float share)
 	{
-		object.velocity = bounced(object.velocity, edge);
+		// The way from the object into the other, a surface standing still:
+		// only the object's speed along that way changes. (A surface that
+		// moves and lends its speed is a <knock>.)
+		const Vector2f way = touch.normal * -1.0f;
+		if (const std::optional<Knocked> after = knockedApart(object.velocity, 1.0f, Vector2f{}, 0.0f, way, share))
+		{
+			object.velocity = after->first;
+		}
+	}
+
+	void bounceOffEdge(Object& object, Edge edge, float share)
+	{
+		object.velocity = bounced(object.velocity, edge, share);
 	}
 
 	// How far the object's middle is from the middle of the touched side, as

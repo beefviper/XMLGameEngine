@@ -53,6 +53,7 @@ set(data_xml
 	"games/descriptions/tetris.xml"
 	"games/descriptions/columns.xml"
 	"games/descriptions/capsules.xml"
+	"games/descriptions/puttpark.xml"
 	"games/descriptions/snake.xml"
 	"games/descriptions/centipede.xml")
 

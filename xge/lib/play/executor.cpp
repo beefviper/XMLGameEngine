@@ -163,10 +163,10 @@ namespace xge
 				else { moveByStep(*self, m.direction, m.step); }
 			},
 			// A bounce off what it touched, or off the screen's edge.
-			[&](const CmdBounce&)
+			[&](const CmdBounce& b)
 			{
-				if (self && doer.touch) { xge::bounce(*self, doer.touch->edge); }
-				else if (self && doer.screenEdge) { bounceScreenEdge(*self, *doer.screenEdge); }
+				if (self && doer.touch) { xge::bounce(*self, *doer.touch, b.share); }
+				else if (self && doer.screenEdge) { bounceScreenEdge(*self, *doer.screenEdge, b.share); }
 			},
 			// The screen edge's own.
 			[&](const CmdStick&)
@@ -423,7 +423,7 @@ namespace xge
 		}
 	}
 
-	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge)
+	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge, float share)
 	{
 		// An object in lockstep (e.g. the invader block in spaceinvaders) bounces as a
 		// whole block sideways instead of just moving this one object.
@@ -435,7 +435,7 @@ namespace xge
 			return;
 		}
 
-		xge::bounce(object, edge);
+		xge::bounceOffEdge(object, edge, share);
 	}
 
 	void CommandExecutor::moveByStep(Object& object, Direction direction, float step)

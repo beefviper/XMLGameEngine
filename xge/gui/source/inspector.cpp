@@ -606,9 +606,13 @@ namespace xge
 
 			auto* node = addNode(root, text(state.name), tr("shows %1").arg(shown.isEmpty() ? tr("nothing") : shown));
 
-			for (const auto& [key, commands] : state.input)
+			for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
 			{
-				addInfo(node, tr("key %1").arg(text(keyCodeToString(key))), commandsText(commands));
+				for (const auto& [key, commands] : *state.keyMaps()[moment])
+				{
+					const std::string named = keyCodeToString(key) + (moment == 0 ? "" : std::string(" on ") + keyMoments[moment]);
+					addInfo(node, tr("key %1").arg(text(named)), commandsText(commands));
+				}
 			}
 
 			int number = 0;

@@ -649,7 +649,10 @@ namespace xge
 
 		for (const State& state : states)
 		{
-			for (const auto& [key, commands] : state.input) { visit(commands, nullptr); }
+			for (const auto* keys : state.keyMaps())
+			{
+				for (const auto& [key, commands] : *keys) { visit(commands, nullptr); }
+			}
 			for (const auto& [axis, commands] : state.axes) { visit(commands, nullptr); }
 			for (const auto* conditions : { &state.conditions, &state.computer })
 			{
@@ -812,10 +815,13 @@ namespace xge
 		for (const auto& state : states)
 		{
 			const std::string where = "state '" + state.name + "'";
-			for (const auto& [key, commands] : state.input)
+			for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
 			{
-				const std::string here = where + " > <input button=\"" + keyCodeToString(key) + "\">";
-				checkAll(commands, here); checkOwnLooks(commands, nullptr, here); checkOwnFollow(commands, here); checkPlace(commands, Place::Input, here);
+				for (const auto& [key, commands] : *state.keyMaps()[moment])
+				{
+					const std::string here = where + " > <input button=\"" + keyCodeToString(key) + "\"" + (moment == 0 ? std::string() : std::string(" on=\"") + keyMoments[moment] + "\"") + ">";
+					checkAll(commands, here); checkOwnLooks(commands, nullptr, here); checkOwnFollow(commands, here); checkPlace(commands, Place::Input, here);
+				}
 			}
 			for (const auto& [axis, commands] : state.axes)
 			{

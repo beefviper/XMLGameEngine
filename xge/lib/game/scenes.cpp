@@ -446,7 +446,10 @@ namespace xge
 			};
 			add(made.show, state.show);
 			add(made.showStates, state.showStates);
-			for (const auto& [button, commands] : state.input) { made.input[button] = commands; }
+			for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
+			{
+				for (const auto& [button, commands] : *state.keyMaps()[moment]) { (*made.keyMaps()[moment])[button] = commands; }
+			}
 			for (const auto& [axis, commands] : state.axes) { made.axes[axis] = commands; }
 			made.conditions = mergedByName(earlier->conditions, state.conditions);
 			made.computer = mergedByName(earlier->computer, state.computer);
@@ -621,7 +624,10 @@ namespace xge
 		{
 			const Context context{ state.name, {}, "state '" + state.name + "'" };
 			for (std::string& shown : state.show) { shown = names.object(shown, context); }
-			for (auto& [button, list] : state.input) { resolve.commands(list, context); }
+			for (auto* keys : state.keyMaps())
+			{
+				for (auto& [button, list] : *keys) { resolve.commands(list, context); }
+			}
 			for (auto& [axis, list] : state.axes) { resolve.commands(list, context); }
 			resolve.conditions(state.conditions, context);
 			resolve.conditions(state.computer, context);

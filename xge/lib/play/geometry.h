@@ -173,6 +173,140 @@ namespace xge
 		return false;
 	}
 
+	// The pixels of one thing round a point: how many are solid, their middle,
+	// and the way they lie (found by pixelContactAt).
+	struct PixelSpread
+	{
+		float count{};
+		Vector2f middle;
+		Vector2f along{ 1.0f, 0.0f };  // the way they stretch furthest, one pixel long
+		float stretch{};                // how much further they stretch that way than across (1: not at all)
+		float reach{};                  // how far they spread that way (a standard deviation, in pixels)
+	};
+
+	// Of the solid pixels of a thing within `radius` of `point` (solid
+	// answering points measured from its box's top left): how they lie.
+	template <typename Solid>
+	PixelSpread pixelSpreadAt(const Box& box, Solid solid, const Vector2f& point, int radius)
+	{
+		PixelSpread spread;
+		Vector2f sum;
+		std::vector<Vector2f> found;
+		for (int dy = -radius; dy <= radius; ++dy)
+		{
+			for (int dx = -radius; dx <= radius; ++dx)
+			{
+				if (dx * dx + dy * dy > radius * radius) { continue; }
+				const Vector2f at{ std::floor(point.x) + static_cast<float>(dx) + 0.5f, std::floor(point.y) + static_cast<float>(dy) + 0.5f };
+				const Vector2f local = at - box.position;
+				if (local.x < 0 || local.y < 0 || local.x >= box.size.x || local.y >= box.size.y || !solid(local)) { continue; }
+				found.push_back(at);
+				sum += at;
+			}
+		}
+		spread.count = static_cast<float>(found.size());
+		if (found.empty()) { return spread; }
+		spread.middle = sum * (1.0f / spread.count);
+
+		float xx = 0.0f;
+		float yy = 0.0f;
+		float xy = 0.0f;
+		for (const Vector2f& at : found)
+		{
+			const Vector2f d = at - spread.middle;
+			xx += d.x * d.x;
+			yy += d.y * d.y;
+			xy += d.x * d.y;
+		}
+		xx /= spread.count;
+		yy /= spread.count;
+		xy /= spread.count;
+
+		// The two ways the pixels spread (the eigenvalues of their spread), and
+		// the angle of the wider one.
+		const float half = (xx + yy) / 2.0f;
+		const float apart = std::sqrt(((xx - yy) / 2.0f) * ((xx - yy) / 2.0f) + xy * xy);
+		const float angle = 0.5f * std::atan2(2.0f * xy, xx - yy);
+		spread.along = { std::cos(angle), std::sin(angle) };
+		// A pixel is a square, not a point: a twelfth of a pixel each way.
+		constexpr float pixel = 1.0f / 12.0f;
+		spread.stretch = (half + apart + pixel) / (half - apart + pixel);
+		spread.reach = std::sqrt(half + apart);
+		return spread;
+	}
+
+	// Where two pixel-tested things that touch meet, and the way the
+	// surface there faces, out of the second towards the first: the
+	// surface is whichever of the two lies flattest round the point (a line
+	// drawn, a wall's side), the other only telling which way out is. False
+	// when no pixels of the two meet, or nothing faces any way (a point
+	// on a point); the box's answer stands then.
+	template <typename SolidA, typename SolidB>
+	bool pixelContactAt(const Box& a, SolidA solidA, const Box& b, SolidB solidB, Vector2f& point, Vector2f& normal)
+	{
+		// Where they meet: the middle of the pixels solid in both, or, as they
+		// only just touch, of the first's pixels beside one of the second's.
+		const int left = static_cast<int>(std::floor(std::max(a.left(), b.left()))) - 1;
+		const int top = static_cast<int>(std::floor(std::max(a.top(), b.top()))) - 1;
+		const int right = static_cast<int>(std::ceil(std::min(a.right(), b.right()))) + 1;
+		const int bottom = static_cast<int>(std::ceil(std::min(a.bottom(), b.bottom()))) + 1;
+		const auto solidIn = [](const Box& box, auto& solid, const Vector2f& at)
+		{
+			const Vector2f local = at - box.position;
+			return local.x >= 0 && local.y >= 0 && local.x < box.size.x && local.y < box.size.y && solid(local);
+		};
+		Vector2f both;
+		float bothCount = 0.0f;
+		Vector2f beside;
+		float besideCount = 0.0f;
+		for (int y = top; y < bottom; ++y)
+		{
+			for (int x = left; x < right; ++x)
+			{
+				const Vector2f at{ static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f };
+				if (!solidIn(a, solidA, at)) { continue; }
+				if (solidIn(b, solidB, at)) { both += at; bothCount += 1.0f; continue; }
+				if (bothCount > 0.0f) { continue; }
+				for (const Vector2f& step : { Vector2f{ 1, 0 }, Vector2f{ -1, 0 }, Vector2f{ 0, 1 }, Vector2f{ 0, -1 } })
+				{
+					if (solidIn(b, solidB, at + step)) { beside += at; besideCount += 1.0f; break; }
+				}
+			}
+		}
+		if (bothCount > 0.0f) { point = both * (1.0f / bothCount); }
+		else if (besideCount > 0.0f) { point = beside * (1.0f / besideCount); }
+		else { return false; }
+
+		constexpr int radius = 4;
+		const PixelSpread first = pixelSpreadAt(a, solidA, point, radius);
+		const PixelSpread second = pixelSpreadAt(b, solidB, point, radius);
+		const Vector2f apart = first.middle - second.middle;
+		const auto length = [](const Vector2f& v) { return std::hypot(v.x, v.y); };
+
+		// The surface lies flat across the point, both ways along it: it faces
+		// across itself. Nothing does (a corner, the end of a line, a point on
+		// a point): out of the second's middle there towards the first's.
+		constexpr float flat = 1.5f;
+		const PixelSpread& surface = second.stretch >= first.stretch ? second : first;
+		const Vector2f off = point - surface.middle;
+		const bool across = std::abs(off.x * surface.along.x + off.y * surface.along.y) < 0.5f * surface.reach;
+		Vector2f out;
+		if (surface.stretch < flat || surface.count < 3.0f || !across)
+		{
+			if (length(apart) < 0.01f) { return false; }
+			out = apart;
+		}
+		else
+		{
+			out = { -surface.along.y, surface.along.x };
+			const float side = out.x * apart.x + out.y * apart.y;
+			if (std::abs(side) < 0.0001f) { return false; }
+			if (side < 0.0f) { out = out * -1.0f; }
+		}
+		normal = out * (1.0f / length(out));
+		return true;
+	}
+
 	// The side of the second thing that something moving by `relative`
 	// against it comes in through, by whichever way it is mostly going.
 	Edge edgeFromMotion(const Vector2f& relative) noexcept;
@@ -382,8 +516,10 @@ namespace xge
 	// --- What the verbs do. `edge` is always the thing's own edge that was
 	// touched (of itself, at the window, or against another thing).
 
-	// <bounce />: heading away from that edge, at the same speed.
-	Vector2f bounced(const Vector2f& velocity, Edge edge) noexcept;
+	// <bounce /> off a screen edge: heading away from that edge, at `share`
+	// of the speed it came at (along that way only); one already heading
+	// away keeps on.
+	Vector2f bounced(const Vector2f& velocity, Edge edge, float share = 1.0f) noexcept;
 
 	// <deflect>: away from `other` at the same speed, at an angle set by where
 	// it hit. How far the mover's middle is from the middle of the touched

@@ -78,9 +78,12 @@ namespace xge
 			o << (f.show.empty() && &still == &f.showStates.front() ? "" : ", ") << "state " << still;
 		}
 		o << '\n';
-		for (auto& input : f.input)
+		for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
 		{
-			o << "       button=" << input.first << ", action=" << input.second << '\n';
+			for (auto& input : *f.keyMaps()[moment])
+			{
+				o << "       button=" << input.first << (moment == 0 ? "" : std::string(" on ") + keyMoments[moment]) << ", action=" << input.second << '\n';
+			}
 		}
 		for (auto& input : f.axes)
 		{
@@ -125,14 +128,17 @@ namespace xge
 			o << (f.show.empty() && &still == &f.showStates.front() ? "" : ", ") << "state " << still;
 		}
 		o << '\n';
-		for (auto& input : f.input)
+		for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
 		{
-			o << "       button=" << keyCodeToString(input.first) << ", action=";
-			for (auto& command : input.second)
+			for (auto& input : *f.keyMaps()[moment])
 			{
-				o << command << (&command != &input.second.back() ? ";" : "");
+				o << "       button=" << keyCodeToString(input.first) << (moment == 0 ? "" : std::string(" on ") + keyMoments[moment]) << ", action=";
+				for (auto& command : input.second)
+				{
+					o << command << (&command != &input.second.back() ? ";" : "");
+				}
+				o << '\n';
 			}
-			o << '\n';
 		}
 		for (auto& input : f.axes)
 		{

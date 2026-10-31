@@ -9,6 +9,7 @@
 #include "engine/keys.h"
 #include "game/object.h"
 
+#include <array>
 #include <string>
 #include <vector>
 #include <map>
@@ -33,13 +34,28 @@ namespace xge
 		std::vector<RawTimer> timers;
 	};
 
+	// The moments of a key an <input> can answer, as on= names them:
+	// "press" (left out: the same), "hold", "release". In the order of
+	// RawState::keyMaps and State::keyMaps.
+	inline constexpr std::array<const char*, 3> keyMoments{ "press", "hold", "release" };
+
 	class RawState
 	{
 	public:
 		std::string name;
 		std::vector<std::string> show;
+		// <input button="...">: what a key runs when pressed (and, for the
+		// verbs that are held, for as long as it stays down); with
+		// on="hold", every frame while it is down; with on="release", once
+		// when it is let go.
 		std::map<std::string, std::vector<RawCommand>> input;
+		std::map<std::string, std::vector<RawCommand>> holding;
+		std::map<std::string, std::vector<RawCommand>> letGo;
 		std::map<std::string, std::vector<RawCommand>> axes;  // <input axis="mouse.x">
+
+		// The three, in the order of keyMoments.
+		std::array<std::map<std::string, std::vector<RawCommand>>*, 3> keyMaps() { return { &input, &holding, &letGo }; }
+		std::array<const std::map<std::string, std::vector<RawCommand>>*, 3> keyMaps() const { return { &input, &holding, &letGo }; }
 		std::vector<RawCondition> conditions;
 		std::vector<RawTimer> timers;
 
@@ -86,8 +102,14 @@ namespace xge
 	public:
 		std::string name;
 		std::vector<std::string> show;
-		std::map<KeyCode, std::vector<Command>> input;
+		std::map<KeyCode, std::vector<Command>> input;    // pressed (RawState::input)
+		std::map<KeyCode, std::vector<Command>> holding;  // on="hold": every frame while down
+		std::map<KeyCode, std::vector<Command>> letGo;    // on="release": once, let go
 		std::map<Axis, std::vector<Command>> axes;  // <input axis="mouse.x">: run as the control moves
+
+		// The three, in the order of keyMoments.
+		std::array<std::map<KeyCode, std::vector<Command>>*, 3> keyMaps() { return { &input, &holding, &letGo }; }
+		std::array<const std::map<KeyCode, std::vector<Command>>*, 3> keyMaps() const { return { &input, &holding, &letGo }; }
 		std::vector<Condition> conditions;
 
 		// <computer>: a player the game plays itself. Every frame each of

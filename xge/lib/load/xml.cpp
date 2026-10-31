@@ -1160,7 +1160,7 @@ namespace xge
 			}
 			if (verb == "slide") { requireAttribute(node, "direction", where); }
 			if (verb == "thrust" || verb == "deflect" || verb == "leap") { command.amount = readValue(node, where); }
-			if (verb == "knock" && (node.getFirstChild() || !readText(node).empty())) { command.amount = readValue(node, where); }
+			if ((verb == "knock" || verb == "bounce") && (node.getFirstChild() || !readText(node).empty())) { command.amount = readValue(node, where); }
 			if (verb == "climb")
 			{
 				requireAttribute(node, "direction", where);
@@ -2640,9 +2640,11 @@ namespace xge
 			return raw;
 		}
 
+		// A state's <inputs> or a <keys> set: what each key runs at each of
+		// its moments (in the order of keyMoments), and the controls that point.
 		struct KeyBindings
 		{
-			std::map<std::string, std::vector<RawCommand>> buttons;
+			std::array<std::map<std::string, std::vector<RawCommand>>, keyMoments.size()> buttons;
 			std::map<std::string, std::vector<RawCommand>> axes;
 		};
 
@@ -2692,16 +2694,25 @@ namespace xge
 				{
 					fail(where, "an <input> names a button (button=\"...\", or a <button> each) or an axis=\"...\", one of the two");
 				}
+				const std::string on = input->getAttribute("on");
 				if (!axis.empty())
 				{
+					if (!on.empty()) { fail(where + " > <input axis=\"" + axis + "\">", "on=\"" + on + "\" is for a button; a control that points runs as it moves"); }
 					out.axes[axis] = readCommands(input->getFirstChild(), where + " > <input axis=\"" + axis + "\">");
 					continue;
 				}
 
 				std::string written;
 				for (const std::string& button : buttons) { written += (written.empty() ? "" : " ") + button; }
+				const auto moment = on.empty() ? keyMoments.begin()
+					: std::find_if(keyMoments.begin(), keyMoments.end(), [&](const char* name) { return on == name; });
+				if (moment == keyMoments.end())
+				{
+					fail(where + " > <input " + written + ">", "on=\"" + on + "\" is not a moment of a key; expected press, hold or release");
+				}
 				const std::vector<RawCommand> commands = readCommands(std::move(commandsStart), where + " > <input " + written + ">");
-				for (const std::string& button : buttons) { out.buttons[button] = commands; }
+				auto& to = out.buttons[static_cast<std::size_t>(moment - keyMoments.begin())];
+				for (const std::string& button : buttons) { to[button] = commands; }
 			}
 		}
 
@@ -3041,12 +3052,18 @@ namespace xge
 				{
 					const auto set = keySets.find(setName);
 					if (set == keySets.end()) { fail(where + " > <inputs>", "keys=\"" + setName + "\" names no <keys> set"); }
-					for (const auto& [button, commands] : set->second.buttons) { rawState.input[button] = commands; }
+					for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
+					{
+						for (const auto& [button, commands] : set->second.buttons[moment]) { (*rawState.keyMaps()[moment])[button] = commands; }
+					}
 					for (const auto& [axis, commands] : set->second.axes) { rawState.axes[axis] = commands; }
 				}
 				KeyBindings own;
 				readInputs(*inputs, where + " > <inputs>", own);
-				for (auto& [button, commands] : own.buttons) { rawState.input[button] = std::move(commands); }
+				for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
+				{
+					for (auto& [button, commands] : own.buttons[moment]) { (*rawState.keyMaps()[moment])[button] = std::move(commands); }
+				}
 				for (auto& [axis, commands] : own.axes) { rawState.axes[axis] = std::move(commands); }
 			}
 			rawState = finishState(state, where, conditionSets, std::move(rawState));

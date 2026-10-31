@@ -357,15 +357,18 @@ namespace xge
 			state.showStates = rawState.showStates;
 			state.music = rawState.music;
 
-			for (auto& rawAction : rawState.input)
+			for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
 			{
-				const KeyCode key = keyCodeFromString(rawAction.first);
-				if (key == KeyCode::Unknown)
+				for (auto& rawAction : *rawState.keyMaps()[moment])
 				{
-					throw std::runtime_error(where + " > <input button=\"" + rawAction.first + "\">: there is no key named '" + rawAction.first + "'"
-						+ didYouMean(rawAction.first, keyNames()) + ". The keys are: " + listOf(keyNames()));
+					const KeyCode key = keyCodeFromString(rawAction.first);
+					if (key == KeyCode::Unknown)
+					{
+						throw std::runtime_error(where + " > <input button=\"" + rawAction.first + "\">: there is no key named '" + rawAction.first + "'"
+							+ didYouMean(rawAction.first, keyNames()) + ". The keys are: " + listOf(keyNames()));
+					}
+					(*state.keyMaps()[moment])[key] = processCommands(rawAction.second, where);
 				}
-				state.input[key] = processCommands(rawAction.second, where);
 			}
 
 			for (auto& [name, commands] : rawState.axes)

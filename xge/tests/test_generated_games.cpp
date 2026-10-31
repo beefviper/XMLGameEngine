@@ -328,7 +328,10 @@ namespace
 				for (const std::string& shown : s.show) { text(at + ".show", shown); }
 				for (const std::string& shown : s.showStates) { text(at + ".showState", shown); }
 				text(at + ".music", s.music);
-				for (const auto& [button, list] : s.input) { commands(at + ".input." + button, list); }
+				for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
+				{
+					for (const auto& [button, list] : *s.keyMaps()[moment]) { commands(at + ".input." + keyMoments[moment] + "." + button, list); }
+				}
 				for (const auto& [axis, list] : s.axes) { commands(at + ".axis." + axis, list); }
 				conditions(at, s.conditions);
 				conditions(at + ".computer", s.computer);
