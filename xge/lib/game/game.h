@@ -396,6 +396,9 @@ namespace xge
 		// its chain's first link.
 		bool goCells(Object& mover, Direction way, float speed);
 
+		// <split />: the chain the piece is in is cut there (see CmdSplit).
+		void splitChain(Object& piece);
+
 		// A <spawn><free />: in a free cell, at random (none: taken back,
 		// false).
 		bool putInFreeCell(Object& made, const std::string& map = {});

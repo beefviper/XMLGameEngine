@@ -676,3 +676,97 @@ TEST_CASE("Snake plays: it goes, eats the food in its way and dies on the wall",
 	play.frames(2);
 	CHECK(play.state() == "title");
 }
+
+TEST_CASE("Centipede plays: the wand's shot wears the mushroom above it away", "[cells][centipede]")
+{
+	Played play("descriptions/centipede.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	CHECK(play.state() == "playing");
+
+	// Four shots up the wand's column: the lowest mushroom there is gone.
+	const auto lowest = [&]() -> std::string
+	{
+		const Object* low = nullptr;
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (object.exists && object.objClass == "mushroom" && static_cast<int>(object.cellColumn) == 15 && (!low || object.cellRow > low->cellRow)) { low = &object; }
+		}
+		return low ? low->name : "";
+	};
+	const std::string first = lowest();
+	REQUIRE_FALSE(first.empty());
+	play.tap(KeyCode::Space);
+	play.frames(40);
+	CHECK(play.get(first).lookName() == "worn");
+	for (int i = 0; i < 3; ++i)
+	{
+		play.tap(KeyCode::Space);
+		play.frames(40);
+	}
+	CHECK_FALSE(play.get(first).exists);
+	CHECK(play.get("playing.status").variable.at("score") == 1.0f);
+}
+
+namespace
+{
+	// A worm on a field of cells: every piece of group "worm" can lead
+	// (a head @, and its body o), a cell a second to the right on Space;
+	// a mushroom (m) or the side turns it round and a row down. C cuts
+	// the piece wormKeys names, which then goes.
+	std::string worm(const std::vector<std::string>& rows)
+	{
+		std::string map = "<map name=\"field\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position><cells />";
+		for (const std::string& row : rows) { map += "<row>" + row + "</row>"; }
+		const std::string looks = "<sprite name=\"head\"><circle><radius>4</radius></circle></sprite><sprite name=\"body\"><circle><radius>4</radius></circle></sprite>";
+		return map + "<group name=\"mushrooms\" class=\"mushroom\" char=\"m\"><sprite><rectangle><width>8</width><height>8</height></rectangle></sprite></group>"
+			"<group name=\"worm\" class=\"worm\"><chain object=\"worm\" />"
+			"<collisions><collision edge=\"horizontal\"><trigger action=\"turn\" /></collision>"
+			"<collision class=\"mushroom\" side=\"horizontal\"><trigger action=\"turn\" /></collision></collisions>"
+			"<actions><action name=\"start\"><go direction=\"right\">1</go></action>"
+			"<action name=\"turn\"><reverse /><hop direction=\"down\" /></action>"
+			"<action name=\"cut\"><split /><despawn /></action></actions>"
+			"<group name=\"heads\" char=\"@\">" + looks + "</group>"
+			"<group name=\"bodies\" char=\"o\"><sprite name=\"body\"><circle><radius>4</radius></circle></sprite><sprite name=\"head\"><circle><radius>4</radius></circle></sprite></group>"
+			"</group></map>";
+	}
+
+	std::string wormKeys(const std::string& cut)
+	{
+		return "<trigger object=\"heads\" action=\"start\" /></input><input button=\"c\"><trigger object=\"" + cut + "\" action=\"cut\" />";
+	}
+}
+
+TEST_CASE("A head that meets the side or a mushroom turns round and goes a row down, the body after it", "[cells][chain]")
+{
+	played::Scratch file(worm({ "..........", ".oo@...m..", ".........." }), wormKeys("worm"));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(61 + 3 * 60);
+	// Three steps right, then the mushroom: down a row, now going left.
+	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 7, 3 }, { 7, 2 }, { 6, 2 } });
+	play.frames(60);
+	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 6, 3 }, { 7, 3 }, { 7, 2 } });
+}
+
+TEST_CASE("A <split /> cuts a chain: the links behind lead a chain of their own", "[cells][chain]")
+{
+	// Head at 6; links 5, 4, 3, 2 (field.bodies.4 down to .1).
+	played::Scratch file(worm({ "............", ".oooo@......", "............" }), wormKeys("playing.field.bodies.3"));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::C);
+	play.frames(1);
+
+	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 6, 2 }, { 5, 2 } });
+	Object& lead = play.get("playing.field.bodies.2");
+	CHECK(lead.cellGoing);
+	CHECK(lead.lookName() == "head");
+	CHECK(snakeOf(play, "playing.field.bodies.2") == Snake{ { 3, 2 }, { 2, 2 } });
+
+	// A step on: both go right, the new one into the cell left by the cut.
+	play.frames(60);
+	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 7, 2 }, { 6, 2 } });
+	CHECK(snakeOf(play, "playing.field.bodies.2") == Snake{ { 4, 2 }, { 3, 2 } });
+}

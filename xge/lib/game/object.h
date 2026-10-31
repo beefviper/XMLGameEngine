@@ -614,6 +614,9 @@ namespace xge
 		// where they lie when empty), and how many it is to grow by.
 		std::vector<std::string> chainLinks;
 		int chainGrow{};
+		// Its links are known (found, or given by a <split />): a link lost
+		// is dropped, never looked for again where they lie.
+		bool chainKnown{ false };
 
 		// In play: shown, and touching things when its collisions are on. die()
 		// takes it out of play and stops its collisions.

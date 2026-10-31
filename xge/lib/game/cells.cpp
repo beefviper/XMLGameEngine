@@ -289,6 +289,8 @@ namespace xge
 			touch.normal = outOf(opposite(edge));
 			touch.along = 0.5f;
 			touch.point = middleOf(*blocker);
+			const int beforeColumn = whole(mover.cellColumn);
+			const int beforeRow = whole(mover.cellRow);
 			reactTo(mover, *blocker, touch);
 			Touch back = touch;
 			back.edge = opposite(edge);
@@ -297,8 +299,10 @@ namespace xge
 			stepping.clear();
 
 			// A touch that took what was in the way away (food eaten) lets
-			// the step go on.
-			if (inTheWay(offMap) || offMap || !mover.exists) { return false; }
+			// the step go on; one that moved the mover (a centipede turning)
+			// has made its own step instead.
+			const bool moved = whole(mover.cellColumn) != beforeColumn || whole(mover.cellRow) != beforeRow;
+			if (moved || !mover.exists || inTheWay(offMap) || offMap) { return false; }
 		}
 
 		const int fromColumn = whole(mover.cellColumn);
@@ -321,15 +325,21 @@ namespace xge
 	{
 		if (head.chain.empty()) { return {}; }
 
-		// As kept, while every link is still there.
+		// As kept: a link no longer there is dropped.
 		std::vector<Object*> links;
-		for (const std::string& name : head.chainLinks)
+		if (head.chainKnown)
 		{
-			Object* link = findAnywhere(name);
-			if (!link || !link->exists) { links.clear(); break; }
-			links.push_back(link);
+			std::vector<std::string> kept;
+			for (const std::string& name : head.chainLinks)
+			{
+				Object* link = findAnywhere(name);
+				if (!link || !link->exists) { continue; }
+				links.push_back(link);
+				kept.push_back(name);
+			}
+			head.chainLinks = std::move(kept);
+			return links;
 		}
-		if (!links.empty()) { return links; }
 
 		// Found from where they lie: from the head, the next one beside
 		// the last, until there is none.
@@ -357,6 +367,7 @@ namespace xge
 			column = whole(next->cellColumn);
 			row = whole(next->cellRow);
 		}
+		head.chainKnown = true;
 		return links;
 	}
 
@@ -380,6 +391,63 @@ namespace xge
 		moveToMap(*grown, head.mapName);
 		putInCell(*grown, column, row);
 		head.chainLinks.push_back(grown->name);
+	}
+
+	void Game::splitChain(Object& piece)
+	{
+		if (piece.chain.empty()) { return; }
+
+		// The head it is, or the head it follows.
+		Object* head = nullptr;
+		std::size_t at = 0;
+		const auto lead = [&](auto& list)
+		{
+			for (Object& object : list)
+			{
+				if (head || !object.exists || object.chain.empty()) { continue; }
+				if (&object == &piece && (object.chainKnown || object.cellGoing)) { head = &object; return; }
+				const auto found = std::find(object.chainLinks.begin(), object.chainLinks.end(), piece.name);
+				if (found != object.chainLinks.end())
+				{
+					head = &object;
+					at = static_cast<std::size_t>(found - object.chainLinks.begin()) + 1;
+					return;
+				}
+			}
+		};
+		lead(objects);
+		lead(spawned);
+		if (!head) { return; }
+		chainOf(*head);
+
+		// at: where the piece is, 0 for the head itself.
+		const std::vector<std::string> links = head->chainLinks;
+		std::vector<std::string> behind(links.begin() + static_cast<std::ptrdiff_t>(std::min(at, links.size())), links.end());
+		head->chainLinks.resize(at == 0 ? 0 : at - 1);
+		head->chainKnown = true;
+
+		Object* next = behind.empty() ? nullptr : findAnywhere(behind.front());
+		if (next)
+		{
+			next->chainLinks.assign(behind.begin() + 1, behind.end());
+			next->chainKnown = true;
+			next->chainGrow = 0;
+			next->cellGoing = head->cellGoing;
+			next->cellGoEvery = head->cellGoEvery;
+			next->cellGoWait = head->cellGoWait;
+			// The way it was going: toward the cell of the piece cut out,
+			// across; or, just turning down or up, the head's way.
+			const int across = whole(piece.cellColumn) - whole(next->cellColumn);
+			next->cellGoWay = across > 0 ? Direction::Right : across < 0 ? Direction::Left : head->cellGoWay;
+			next->facing = next->cellGoWay;
+			next->variable = head->variable;
+			if (const std::string look = head->lookName(); !look.empty()) { showLookNamed(*next, look); }
+		}
+		if (&piece == head)
+		{
+			piece.cellGoing = false;
+			piece.chainLinks.clear();
+		}
 	}
 
 	bool Game::goCells(Object& mover, Direction way, float speed)

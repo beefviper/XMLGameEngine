@@ -1077,6 +1077,8 @@
       <xs:element name="cycle" type="emptyType" />
       <!-- grow: an object with a <chain> gets one link longer, at its tail, on its next step -->
       <xs:element name="grow" type="emptyType" />
+      <!-- split: a piece of a chain cuts it there: it leaves the chain, and the links behind it are a chain of their own, led by the first of them -->
+      <xs:element name="split" type="emptyType" />
     </xs:choice>
   </xs:group>
 

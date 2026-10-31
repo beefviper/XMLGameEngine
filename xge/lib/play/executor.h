@@ -113,7 +113,7 @@ namespace xge
 
 		// <spawn>: see CmdSpawn; false, and nothing made, when no more of
 		// it may exist (<most>).
-		bool spawn(const CmdSpawn& command);
+		bool spawn(const CmdSpawn& command, const Object* self = nullptr);
 
 		// <despawn />: `self` (none in a state's list), or with object= the
 		// objects it names.

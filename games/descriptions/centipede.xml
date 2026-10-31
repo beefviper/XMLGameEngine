@@ -1,0 +1,280 @@
+<!-- centipede.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 31, 2026 -->
+
+<!--
+  Centipede, after Atari's 1981 arcade game: a centipede of twelve pieces
+  winds down through a field of mushrooms, a row lower each time it meets
+  a mushroom or the side. Shot, a piece becomes a mushroom and the
+  centipede is cut in two there: the part behind gets a head of its own.
+  At the bottom it winds back up through the player's zone, and down
+  again. A mushroom takes four shots. Clear the centipede and another
+  comes; three lives.
+
+  A and D or the arrows move the wand, Space fires. P or Escape pauses;
+  Space starts and plays again.
+
+  How it is written:
+  * The field is a <map> of <cells />: m a mushroom, o the centipede's
+    body, @ its head. The wand and its shot move freely, by pixels, and
+    touch the cells' pieces as anything touches anything.
+  * The head <go>es a cell at a time; <chain object="centipede" /> brings
+    the body after it. A step into a mushroom or off the side is refused,
+    and is a touch: the head turns round and hops a row down. Its look
+    says which way it winds: falling, or rising after the bottom, until
+    the top.
+  * Shot, a piece runs <split />: the links behind it are a centipede of
+    their own, led by the first of them, which takes the head's look and
+    way. Then the piece goes and a mushroom is spawned in its cell.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Centipede">
+    <width>480</width>
+    <height>560</height>
+  </window>
+  <variables>
+    <variable name="cell">16</variable>
+    <variable name="top">40</variable>
+  </variables>
+  <sounds>
+    <sound name="zap"><note pitch="A6" to="A5">0.04</note></sound>
+    <sound name="pop" wave="noise"><note pitch="C4">0.05</note></sound>
+    <sound name="hit" wave="triangle"><note pitch="G4" to="C2">0.6</note></sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>72</size><color>color.magenta</color></style>
+    <style name="prompt"><size>28</size></style>
+    <style name="help"><size>20</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>24</size></style>
+  </styles>
+  <kit>
+    <!-- the wand's shot: one at a time, straight up -->
+    <object name="shot" class="shot">
+      <sprite><rectangle><width>2</width><height>8</height><color>color.white</color></rectangle></sprite>
+      <velocity><y>-12</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="top"><despawn /></collision>
+        <collision class="mushroom"><despawn /></collision>
+        <collision class="centipede"><despawn /></collision>
+      </collisions>
+    </object>
+  </kit>
+  <objects>
+    <object name="again">
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>CENTIPEDE</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 100</centered></y></position>
+        </object>
+        <object name="help">
+          <sprite><text style="help"><content>a and d or the arrows move, spacebar fires, p pauses</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 80</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <object name="status">
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="lives">3</variable>
+            <variable name="hit">0</variable>
+          </variables>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><number>status.score</number></text></sprite>
+          <position><x>10</x><y>8</y></position>
+        </object>
+        <object name="lives">
+          <sprite><text style="hud"><number>status.lives</number></text></sprite>
+          <position><x>440</x><y>8</y></position>
+        </object>
+
+        <map name="field">
+          <tile><width>cell</width><height>cell</height></tile>
+          <position><x>0</x><y>top</y></position>
+          <cells />
+          <row>...ooooooooooo@...............</row>
+          <row>..............................</row>
+          <row>..............................</row>
+          <row>...mm.................m.......</row>
+          <row>............m...m........mmm..</row>
+          <row>...m..........m..m.......m....</row>
+          <row>.......................m......</row>
+          <row>........................m.m..m</row>
+          <row>....m.........................</row>
+          <row>..............................</row>
+          <row>........................m.....</row>
+          <row>..............................</row>
+          <row>m.........................m...</row>
+          <row>.....m......m.................</row>
+          <row>..m.....m........m......m.....</row>
+          <row>m....m........................</row>
+          <row>..........m........m..........</row>
+          <row>.........................m....</row>
+          <row>.....m..............m.........</row>
+          <row>............m.................</row>
+          <row>...........m......m...........</row>
+          <row>..............m....m..........</row>
+          <row>...........m...........m......</row>
+          <row>m................m....m.......</row>
+          <row>..m..........m..m..........m..</row>
+          <row>............m.................</row>
+          <row>..............m.......mm......</row>
+          <row>..............................</row>
+          <row>..............................</row>
+          <row>..............................</row>
+          <row>..............................</row>
+          <row>..............................</row>
+
+          <!-- a mushroom takes four shots, a look worn away each -->
+          <group name="mushrooms" class="mushroom" char="m">
+            <sprite name="whole"><rectangle><width>cell</width><height>cell - 2</height><color>color.orange</color></rectangle></sprite>
+            <sprite name="worn"><rectangle><width>cell</width><height>cell - 6</height><color>color.orange</color></rectangle></sprite>
+            <sprite name="half"><rectangle><width>cell</width><height>cell - 9</height><color>color.orange</color></rectangle></sprite>
+            <sprite name="stub"><rectangle><width>cell</width><height>cell - 12</height><color>color.orange</color></rectangle></sprite>
+            <collisions>
+              <collision class="shot" sprite="stub"><despawn /><inc variable="status.score">1</inc></collision>
+              <collision class="shot" sprite="half"><become sprite="stub" /></collision>
+              <collision class="shot" sprite="worn"><become sprite="half" /></collision>
+              <collision class="shot" sprite="whole"><become sprite="worn" /></collision>
+            </collisions>
+          </group>
+
+          <!-- the centipede: a head and its body, every piece able to lead -->
+          <group name="centipede" class="centipede">
+            <chain object="centipede" />
+            <collisions>
+              <!-- turned by the side or a mushroom: round, and a row down,
+                   or up while rising -->
+              <collision edge="horizontal" sprite="falling"><trigger action="fall" /></collision>
+              <collision edge="horizontal" sprite="rising"><trigger action="rise" /></collision>
+              <collision class="mushroom" side="horizontal" sprite="falling"><trigger action="fall" /></collision>
+              <collision class="mushroom" side="horizontal" sprite="rising"><trigger action="rise" /></collision>
+              <!-- at the bottom it starts back up, and at the top down again -->
+              <collision edge="bottom"><become sprite="rising" /></collision>
+              <collision edge="top"><become sprite="falling" /></collision>
+              <!-- shot: cut in two here, and a mushroom where it was -->
+              <collision class="shot" sprite="falling"><inc variable="status.score">90</inc></collision>
+              <collision class="shot" sprite="rising"><inc variable="status.score">90</inc></collision>
+              <collision class="shot">
+                <split />
+                <despawn />
+                <spawn object="mushrooms" />
+                <inc variable="status.score">10</inc>
+                <play sound="pop" />
+              </collision>
+            </collisions>
+            <actions>
+              <action name="start"><go direction="right">12</go></action>
+              <action name="fall"><reverse /><hop direction="down" /></action>
+              <action name="rise"><reverse /><hop direction="up" /></action>
+            </actions>
+            <!-- a head shows which way it winds, falling or rising -->
+            <group name="heads" char="@">
+              <sprite name="falling"><circle><radius>cell / 2 - 1</radius><color>color.red</color></circle></sprite>
+              <sprite name="rising"><circle><radius>cell / 2 - 1</radius><color>color.magenta</color></circle></sprite>
+              <sprite name="body"><circle><radius>cell / 2 - 1</radius><color>color.green</color></circle></sprite>
+            </group>
+            <group name="bodies" char="o">
+              <sprite name="body"><circle><radius>cell / 2 - 1</radius><color>color.green</color></circle></sprite>
+              <sprite name="falling"><circle><radius>cell / 2 - 1</radius><color>color.red</color></circle></sprite>
+              <sprite name="rising"><circle><radius>cell / 2 - 1</radius><color>color.magenta</color></circle></sprite>
+            </group>
+          </group>
+        </map>
+
+        <!-- the wand, along the bottom -->
+        <object name="wand" class="player">
+          <sprite><rectangle><width>12</width><height>12</height><color>color.cyan</color></rectangle></sprite>
+          <position><x>14 * cell + 2</x><y>top + 31 * cell + 2</y></position>
+          <facing>up</facing>
+          <collisions>
+            <collision edge="horizontal"><stick /></collision>
+            <collision class="centipede"><set variable="status.hit">1</set></collision>
+          </collisions>
+          <actions>
+            <action name="left"><move direction="left">4</move></action>
+            <action name="right"><move direction="right">4</move></action>
+            <action name="fire"><fire object="shot" /><play sound="zap" /></action>
+          </actions>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="wand" action="left" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="wand" action="right" /></input>
+        <input><button>space</button><button>pad1.a</button><trigger object="wand" action="fire" /></input>
+        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <!-- caught: a life gone, and the centipede starts again -->
+        <condition object="status" variable="hit">
+          <equal>1</equal>
+          <set variable="status.hit">0</set>
+          <dec variable="status.lives" />
+          <play sound="hit" />
+          <reset object="centipede" />
+          <trigger object="heads" action="start" />
+        </condition>
+        <condition object="status" variable="lives">
+          <atmost>0</atmost>
+          <push state="gameover" />
+        </condition>
+        <!-- all shot: another comes -->
+        <condition class="centipede">
+          <remaining>0</remaining>
+          <reset object="centipede" />
+          <trigger object="heads" action="start" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer><after>0</after><trigger object="heads" action="start" /></timer>
+      </timers>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <objects>
+        <object name="message">
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

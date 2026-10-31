@@ -52,7 +52,8 @@ set(data_xml
 	"games/descriptions/hauntedhouse.xml"
 	"games/descriptions/tetris.xml"
 	"games/descriptions/columns.xml"
-	"games/descriptions/snake.xml")
+	"games/descriptions/snake.xml"
+	"games/descriptions/centipede.xml")
 
 set(data_assets
 	"games/assets/tuffy.ttf"
