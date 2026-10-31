@@ -135,7 +135,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `tetris` | A/D move, W/X turn, E/C turn back, S drops faster, Space drops at once; P pauses | seven shapes in a well of [cells](#cells), standard turns and kicks, full rows cleared, faster every ten rows, the next shape in a box (`<send>`) |
 | `columns` | A/D move, W/X/Space cycle the jewels, S drops faster; P pauses | columns of three random jewels; lines of three alike across, down or slanting go, and the rest [fall](#cells) into chains |
 | `snake` | W A S D or the arrows turn; Space or P pauses | a snake that goes on by itself with a [chain](#cells) for its body, food in a free cell, faster as it grows |
-| `centipede` | A/D move the wand, Space fires; P or Escape pauses | a centipede winding down through a mushroom field, [split](#cells) in two where a shot hits it; each piece left grows a head |
+| `centipede` | W A S D move the wand about its zone, Space fires; P or Escape pauses | a centipede winding down through a mushroom field, [split](#cells) in two where a shot hits it; each piece left grows a head; a line nobody sees over the bottom six rows turns it back down and holds the wand in |
 
 What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
 
@@ -756,7 +756,7 @@ An object with several named sprites and no unnamed animation has **looks**: it 
   </collision>
   ```
 
-- **A look can count hits.** A brick of two looks, `whole` and `cracked`, has `<collision object="ball" sprite="cracked"><die /></collision>` and then `<collision object="ball" sprite="whole"><become sprite="cracked" /></collision>`. The rules for one touch run in order and each sees the look the one before left, so **write the last look first**.
+- **A look can count hits.** A brick of two looks, `whole` and `cracked`, has `<collision object="ball" sprite="cracked"><die /></collision>` and then `<collision object="ball" sprite="whole"><become sprite="cracked" /></collision>`. Each rule asks for the look its object had **as the touch happened**, not one an earlier rule for the same touch gave it, so the order does not matter, and two rules can turn a look back and forth.
 - **A look tells the next state something.** One `wins` state whose `winner` has a look per player: the condition that ends the game does `<become object="winner" sprite="player2" />` and then pushes it.
 - A look is any shape kind, and cannot be a text showing a `<number>` or `<letter>`. With a `<heading>` every look (each frame of a moving one too) is kept to turn, so the look showing is drawn at the heading: Asteroids' ship has `coasting` and a flickering `burning`.
 
@@ -1038,7 +1038,7 @@ A rule about another object can be narrowed; most filters work on edge rules too
 | Filter | Runs only |
 |---|---|
 | `side="top"` (`bottom`, `left`, `right`, `horizontal`, `vertical`) | when touched on that side of its own object: a ball falling onto a block is touched on its bottom; Mario's head bumping a floor is his top |
-| `sprite="cracked"` (edge rules too) | while its object shows that [look](#looks) |
+| `sprite="cracked"` (edge rules too) | while its object shows that [look](#looks), as the touch happens: taken once before any rule runs, so a look one rule gives does not start another rule for the same touch |
 | `unless="logs"` (edge rules too) | when the object is not, at that moment, also touching something in play of that class. Frogger's river: `<collision class="water" unless="logs">`. On an edge: `<collision edge="bottom" unless="paddle">` |
 | `through="floor"` | for a touch felt through something of that class ([knocks](#knocks)); a rule without it, only for a touch itself |
 | `<slower>N</slower>`, `<faster>N</faster>` (first inside the rule) | while the object's speed is under N, or N or more, as the touch happens, taken once before any rule runs: a landing and a crash on one pad. Not on edge rules |

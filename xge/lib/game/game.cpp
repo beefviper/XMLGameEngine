@@ -1760,12 +1760,14 @@ namespace xge
 		CommandExecutor executor(*this);
 		const std::vector<Command>& commands = object.collisionData.edges[edgeIndex(edge)].commands;
 		const std::vector<EdgeGuard>& guards = object.collisionData.edges[edgeIndex(edge)].guards;
+		// sprite= asks for the look it had as it met the edge, not one an
+		// earlier rule changed (or the next would answer a turn again).
+		const std::string look = object.lookName();
 		for (std::size_t i = 0; i < commands.size();)
 		{
-			// a rule with sprite= or unless= is looked at as it comes, after
-			// the rules before it have run (one of them may have changed it)
+			// unless= is looked at as it comes, after the rules before it
 			const auto guard = std::find_if(guards.begin(), guards.end(), [&](const EdgeGuard& g) { return g.first == i; });
-			if (guard != guards.end() && isEdgeRulePassedOver(object, *guard))
+			if (guard != guards.end() && isEdgeRulePassedOver(object, look, *guard))
 			{
 				i += guard->count;
 				continue;
@@ -1777,9 +1779,9 @@ namespace xge
 		}
 	}
 
-	bool Game::isEdgeRulePassedOver(const Object& object, const EdgeGuard& guard)
+	bool Game::isEdgeRulePassedOver(const Object& object, const std::string& look, const EdgeGuard& guard)
 	{
-		return (!guard.sprite.empty() && object.lookName() != guard.sprite)
+		return (!guard.sprite.empty() && look != guard.sprite)
 			|| (!guard.unlessClass.empty() && isTouchingClass(object, object, guard.unlessClass));
 	}
 
@@ -1795,7 +1797,7 @@ namespace xge
 		for (std::size_t i = 0; i < commands.size(); ++i)
 		{
 			const bool passedOver = std::any_of(guards.begin(), guards.end(), [&](const EdgeGuard& guard)
-				{ return i >= guard.first && i < guard.first + guard.count && isEdgeRulePassedOver(object, guard); });
+				{ return i >= guard.first && i < guard.first + guard.count && isEdgeRulePassedOver(object, object.lookName(), guard); });
 			if (!passedOver && std::holds_alternative<CmdStick>(commands[i]))
 			{
 				return true;
@@ -1863,13 +1865,15 @@ namespace xge
 		// change which of the rules after it run.
 		const Vector2f motion = motionOf(self);
 		const float speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
+		// Its look as the touch happens, for sprite=, likewise.
+		const std::string look = self.lookName();
 
 		// A rule with unless= is passed over while `self` is also touching
 		// something of that class.
 		for (const auto& rule : self.collisionData.others)
 		{
 			if (!collisionRuleMatches(rule, other)) { continue; }
-			if (!rule.whileSprite.empty() && self.lookName() != rule.whileSprite) { continue; }
+			if (!rule.whileSprite.empty() && look != rule.whileSprite) { continue; }
 			if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
 			if (touch.through ? *touch.through != rule.throughClass : !rule.throughClass.empty()) { continue; }
 			if (rule.slower && !(speed < *rule.slower)) { continue; }

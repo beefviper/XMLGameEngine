@@ -714,6 +714,47 @@ TEST_CASE("Centipede plays: the wand's shot wears the mushroom above it away", "
 	CHECK(play.get("playing.status").variable.at("score") == 1.0f);
 }
 
+TEST_CASE("Centipede plays: the wand keeps to its zone, and moves along the top of it", "[cells][centipede]")
+{
+	Played play("descriptions/centipede.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	Object& wand = play.get("playing.wand");
+	const float zoneTop = play.get("playing.field.line.1").position.y + 16.0f;
+
+	play.engine.handleKeyPressed(KeyCode::W);
+	play.frames(60);
+	play.engine.handleKeyReleased(KeyCode::W);
+	CHECK(wand.position.y >= zoneTop - 0.5f);
+	CHECK(wand.position.y < zoneTop + 16.0f);
+
+	const float x = wand.position.x;
+	play.engine.handleKeyPressed(KeyCode::D);
+	play.frames(5);
+	play.engine.handleKeyReleased(KeyCode::D);
+	CHECK(wand.position.x > x + 10.0f);
+}
+
+TEST_CASE("Centipede: a head rising meets the zone's line and winds back down a row", "[cells][centipede]")
+{
+	Played play("descriptions/centipede.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	// The wand out of the way, the centipede reaches the bottom and winds back up, never
+	// over the zone's top row (27, under the line).
+	play.get("playing.wand").collisionsOn = false;
+	int highest = 33;
+	for (int f = 0; f < 60 * 120; ++f)
+	{
+		play.frames(1);
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (object.exists && object.cellGoing && object.lookName() == "rising") { highest = std::min(highest, static_cast<int>(object.cellRow)); }
+		}
+	}
+	CHECK(highest == 27);
+}
+
 TEST_CASE("Centipede plays: the shot goes up whichever way the wand last moved, and another follows", "[cells][centipede]")
 {
 	Played play("descriptions/centipede.xml");

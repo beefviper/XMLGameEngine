@@ -49,7 +49,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 - Galaxian: `Game::applyPaths` runs after timers, before acceleration, and a path ignores pushes on the way. Anything ending a path clears `Object::followPath`. Its dive relies on `<wrap />` taking exactly the window's height plus the object's.
 - An object mid-`<jump>` (`isAirborne()`) is in no collision pair and ignored by `unless=`. `Object::grounded` is set by `CommandExecutor::land` and cleared in `applyHops` (`play/frame.cpp`); a resting object stays touching its platform only because its pull moves it every frame, so `<stop />` ends that ([platforming](../designs/23-platforming.md)).
 - Touches in one moment run in file order, and a pair where neither moves is skipped: a `<land />` or `<stop />` that runs first can hide a hazard met at the same moment (Pitfall's jaws come before the crocodiles).
-- An object's rules for one touch run in order and see a look changed by an earlier rule, so write look-chain rules last look first. Two rules that turn a look back and forth on one touch need a `<condition>` on something set later (a look timer `<after>0</after>`), since "last look first" cannot order a cycle.
+- `sprite=` on a rule is the look as the touch happened (2026-10-31; before, each rule saw a look an earlier rule for the same touch had changed, so games were written last look first, and Mario Bros. still flips with a look timer from then). A look changed by a rule inside a nested touch (a refused hop's edge rule) no longer starts the outer touch's next rule.
 - Edge rules: `sprite=`/`unless=` are an `EdgeGuard`; `class=` or `object=` on an edge rule is a load error.
 - `Game` never touches audio: `<play>` queues a name and `Engine::step()` plays it.
 

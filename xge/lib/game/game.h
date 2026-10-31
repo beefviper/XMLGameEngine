@@ -588,7 +588,7 @@ namespace xge
 
 		// Whether an edge rule with sprite= or unless= is passed over right
 		// now: the object shows another look, or touches that class.
-		bool isEdgeRulePassedOver(const Object& object, const EdgeGuard& guard);
+		bool isEdgeRulePassedOver(const Object& object, const std::string& look, const EdgeGuard& guard);
 
 		// Checked once per frame against the current state's <conditions>; the
 		// first one whose target variable has reached its threshold fires its
