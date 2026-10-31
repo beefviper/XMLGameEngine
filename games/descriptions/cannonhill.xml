@@ -40,7 +40,9 @@
   <variables>
     <!-- how far the barrel's tip is from its middle, and how fast a full charge goes -->
     <variable name="tip">16</variable>
-    <variable name="charge">1.5</variable>
+    <!-- how fast the barrel turns and the charge builds, a frame: slow enough to stop on a number -->
+    <variable name="aimstep">1</variable>
+    <variable name="charge">0.75</variable>
     <variable name="most">100</variable>
     <variable name="speed">0.15</variable>
     <!-- the fall, and how much one step of wind pushes a shell across -->
@@ -94,11 +96,11 @@
       <heading>45</heading>
       <actions>
         <action name="raise">
-          <set variable="self.elevation"><formula><clamp><value><add><augend>self.elevation</augend><addend>1</addend></add></value><atleast>0</atleast><atmost>90</atmost></clamp></formula></set>
+          <set variable="self.elevation"><formula><clamp><value><add><augend>self.elevation</augend><addend>aimstep</addend></add></value><atleast>0</atleast><atmost>90</atmost></clamp></formula></set>
           <set variable="self.heading">self.level - self.side * self.elevation</set>
         </action>
         <action name="lower">
-          <set variable="self.elevation"><formula><clamp><value><subtract><minuend>self.elevation</minuend><subtrahend>1</subtrahend></subtract></value><atleast>0</atleast><atmost>90</atmost></clamp></formula></set>
+          <set variable="self.elevation"><formula><clamp><value><subtract><minuend>self.elevation</minuend><subtrahend>aimstep</subtrahend></subtract></value><atleast>0</atleast><atmost>90</atmost></clamp></formula></set>
           <set variable="self.heading">self.level - self.side * self.elevation</set>
         </action>
         <action name="charge">

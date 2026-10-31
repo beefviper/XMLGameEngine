@@ -80,6 +80,7 @@ TEST_CASE("cannonhill.xml: the barrel turns from its elevation, kept from level 
 {
 	Duel duel;
 	Object& barrel = duel.get("barrel1");
+	// A degree a frame.
 	duel.engine.handleKeyPressed(KeyCode::W);
 	duel.frames(10);
 	duel.engine.handleKeyReleased(KeyCode::W);
@@ -103,7 +104,8 @@ TEST_CASE("cannonhill.xml: a shell leaves the tip along the barrel, at the charg
 {
 	Duel duel;
 	duel.game.setVariable("playing.table", "wind", 3.0f);
-	duel.fire(40);
+	// Three quarters a frame: 80 frames held is 60.
+	duel.fire(80);
 	duel.frames(1);
 	Object* shell = duel.shell();
 	REQUIRE(shell);
@@ -127,7 +129,7 @@ TEST_CASE("cannonhill.xml: a shell that lands wide blows a crater and passes the
 	Duel duel;
 	duel.game.setVariable("playing.table", "wind", 0.0f);
 	// A soft shot: it lands on the slope in front.
-	duel.fire(20);
+	duel.fire(40);
 	for (int i = 0; i < 300 && duel.table("phase") == 1.0f; ++i) { duel.frames(1); }
 	REQUIRE(duel.table("phase") >= 2.0f);
 	const Object& ground = duel.get("ground");
@@ -146,7 +148,7 @@ TEST_CASE("cannonhill.xml: the crater is cut where the shell landed", "[cannonhi
 {
 	Duel duel;
 	duel.game.setVariable("playing.table", "wind", 0.0f);
-	duel.fire(20);
+	duel.fire(40);
 	Vector2f landed{};
 	for (int i = 0; i < 300 && duel.table("phase") == 1.0f; ++i)
 	{
