@@ -115,7 +115,7 @@ namespace
 					return object.position.y;
 				}
 			}
-			FAIL("no piece of " << girder << " at " << x);
+			FAIL_CHECK("no piece of " << girder << " at " << x);
 			return 0.0f;
 		}
 
