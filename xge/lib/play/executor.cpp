@@ -211,6 +211,11 @@ namespace xge
 			[&](const CmdEnterScene& e) { game.enter(e); },
 			[&](const CmdResetScene& r) { game.reset(r); },
 			[&](const CmdSpawn& c) { done = spawn(c); },
+			[&](const CmdSend& s)
+			{
+				const auto cell = [](const std::optional<float>& given) { return given ? std::optional<int>(static_cast<int>(std::lround(*given))) : std::nullopt; };
+				done = game.sendCells(s.target, s.from, s.into, cell(s.column), cell(s.row));
+			},
 			[&](const CmdDespawn& d) { despawn(self, d); },
 			// A cell map's.
 			[&](const CmdSettle&) { if (self) { game.settle(*self); } },
@@ -574,13 +579,16 @@ namespace xge
 		}
 
 		// A group's name: every member, each its own press (by place, since an
-		// action may spawn and so grow the list).
+		// action may spawn and so grow the list). Those it reaches are found
+		// first: a piece one of them sends onto its map (the next shape of
+		// Tetris) does not answer the same press.
 		std::vector<Object>& objects = game.getCurrentObjects();
-		const std::size_t count = objects.size();
-		for (std::size_t i = 0; i < count; ++i)
+		std::vector<std::size_t> reached;
+		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
-			if (objects[i].inGroup(objectName) && showing(objects[i])) { runAction(objects[i], actionName, keyPressed, byRule); }
+			if (objects[i].inGroup(objectName) && showing(objects[i]) && !objects[i].awayFromHome()) { reached.push_back(i); }
 		}
+		for (const std::size_t i : reached) { runAction(objects[i], actionName, keyPressed, byRule); }
 	}
 
 	void CommandExecutor::runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule)
@@ -589,6 +597,11 @@ namespace xge
 		// there does not fire, and a cannon not yet brought in does nothing.
 		// Letting go still goes through, so nothing stays held.
 		if (keyPressed && !object.isVisible)
+		{
+			return;
+		}
+		// A piece sent away from its own map (a next-piece box) is only shown.
+		if (object.awayFromHome())
 		{
 			return;
 		}
@@ -851,8 +864,10 @@ namespace xge
 		// On a cell map: in a cell, a shape's top left one (counting from 1).
 		if (made->onCells)
 		{
-			const auto cell = [](const std::optional<float>& given, int own) { return given ? static_cast<int>(std::lround(*given)) : own + 1; };
-			if (!game.putOnCells(*made, cell(command.column, made->mapColumn), cell(command.row, made->mapRow))) { return false; }
+			// Onto another map: its first cell unless told; on its own, its own.
+			const bool elsewhere = !command.into.empty() && command.into != made->mapName;
+			const auto cell = [&](const std::optional<float>& given, int own) { return given ? static_cast<int>(std::lround(*given)) : elsewhere ? 1 : own + 1; };
+			if (!game.putOnCells(*made, cell(command.column, made->mapColumn), cell(command.row, made->mapRow), command.into)) { return false; }
 			if (command.velocityX) { made->velocity.x = *command.velocityX; }
 			if (command.velocityY) { made->velocity.y = *command.velocityY; }
 			return true;

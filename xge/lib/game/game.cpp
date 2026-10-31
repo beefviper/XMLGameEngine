@@ -1122,7 +1122,8 @@ namespace xge
 		{
 			for (std::size_t t = 0; t < objects[i].timers.size(); ++t)
 			{
-				if (!isShown(objects[i]))
+				// Not shown, or sent away from its own map (a next-piece box).
+				if (!isShown(objects[i]) || objects[i].awayFromHome())
 				{
 					break;
 				}

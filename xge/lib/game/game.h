@@ -355,7 +355,14 @@ namespace xge
 		// A spawned copy on a cell map, put in that cell (its top left one,
 		// for a shape, whose cells are spawned with it); false, and the
 		// copy taken back, when a cell it needs is off the map or full.
-		bool putOnCells(Object& made, int column, int row);
+		// `map`: another map of cells it goes on instead of its own.
+		bool putOnCells(Object& made, int column, int row, const std::string& map = {});
+
+		// <send>: the first piece of that name or group on map `from` (a
+		// shape with its cells, or a loose piece) goes to map `into`, in
+		// that cell (left out: the one it is in); false when there is none
+		// or it has no room there.
+		bool sendCells(const std::string& target, const std::string& from, const std::string& into, std::optional<int> column, std::optional<int> row);
 
 		// The object (a shape, its cells with it) a whole number of cells
 		// across and down; false, after the touch, when refused.
@@ -416,6 +423,9 @@ namespace xge
 		Object* cellHolder(const std::string& map, int column, int row, const std::vector<Object*>& mover);
 		std::vector<Object*> cellsOf(Object& mover);
 		void putInCell(Object& object, int column, int row);
+		// Onto another map of cells: its place, tile, size and checks, as
+		// any piece of that map has them (false for a map with none).
+		bool moveToMap(Object& object, const std::string& map);
 		void askChecks(const std::string& map);
 		void cellMoves() override;
 

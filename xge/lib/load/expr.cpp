@@ -925,6 +925,7 @@ namespace xge
 		if (rawObject.cell.mapColumn > 0)
 		{
 			object.mapName = rawObject.cell.map;
+			object.homeMap = rawObject.cell.map;
 			object.mapColumn = rawObject.cell.mapColumn - 1;
 			object.mapRow = rawObject.cell.mapRow - 1;
 			object.mapColumns = rawObject.cell.mapColumns;

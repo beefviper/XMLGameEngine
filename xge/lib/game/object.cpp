@@ -186,6 +186,17 @@ namespace xge
 		object.exists = false;
 	}
 
+	RawObject mapHolder(const RawMap& map)
+	{
+		RawObject holder;
+		holder.name = map.name + ".cells";
+		holder.sprite = nothingSprite();
+		holder.isDrawn = false;
+		holder.rawVelocity = { RawValue::expression("0"), RawValue::expression("0") };
+		waitOnMap(holder, map);
+		return holder;
+	}
+
 	void pickShapePieces(std::vector<RawObject>& objects, std::size_t first)
 	{
 		for (std::size_t i = first; i < objects.size(); ++i)

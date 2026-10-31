@@ -353,7 +353,15 @@ namespace xge
 			half(raw.column, spawn.column, nullptr, "");
 			half(raw.row, spawn.row, nullptr, "");
 			spawn.random = raw.random;
+			spawn.into = raw.into;
 			return spawn;
+		}
+		if (verb == "send")
+		{
+			CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt };
+			if (!(raw.column.kind == RawValue::Kind::Expression && raw.column.text.empty())) { send.column = evaluate(raw.column); }
+			if (!(raw.row.kind == RawValue::Kind::Expression && raw.row.text.empty())) { send.row = evaluate(raw.row); }
+			return send;
 		}
 
 		throw std::runtime_error("unknown command <" + verb + ">");
@@ -582,6 +590,12 @@ namespace xge
 				half(s.velocityX, false);
 				o << " ";
 				half(s.velocityY, false);
+				o << ")";
+			},
+			[&](const CmdSend& s)
+			{
+				o << "send(" << s.target << ", " << s.from << " into " << s.into;
+				if (s.column && s.row) { o << ", " << *s.column << " " << *s.row; }
 				o << ")";
 			},
 			[&](const CmdLive& l) { o << "live " << l.loaded->command; },
@@ -830,7 +844,11 @@ namespace xge
 		else if (command.verb == "spawn")
 		{
 			o << "(" << command.object << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY
-				<< (command.random ? ", random" : "") << ", " << command.column << " " << command.row << ")";
+				<< (command.random ? ", random" : "") << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
+		}
+		else if (command.verb == "send")
+		{
+			o << "(" << command.object << ", " << command.from << " into " << command.into << ", " << command.column << " " << command.row << ")";
 		}
 
 		return o;

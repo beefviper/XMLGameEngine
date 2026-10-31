@@ -23,12 +23,13 @@ using played::Played;
 
 namespace
 {
-	// The falling shape of a game: the one in play that has cells.
+	// The falling shape of a game: the one in play that has cells, on its
+	// own map (not waiting in a next-piece box).
 	Object* falling(Game& game)
 	{
 		for (Object& object : game.getCurrentObjects())
 		{
-			if (object.exists && object.isShape() && object.isCopy()) { return &object; }
+			if (object.exists && object.isShape() && object.isCopy() && !object.awayFromHome()) { return &object; }
 		}
 		return nullptr;
 	}
@@ -45,7 +46,7 @@ namespace
 		return cells;
 	}
 
-	// The loose pieces of a map (in no shape), as (column, row).
+	// The loose pieces (in no shape), as (column, row).
 	std::set<std::pair<int, int>> loose(Game& game)
 	{
 		std::set<std::pair<int, int>> cells;
@@ -306,6 +307,50 @@ TEST_CASE("Tetris plays: a shape comes in, falls, lands and the next comes", "[c
 	CHECK(loose(play.game).size() == 4);
 	for (const auto& [column, row] : loose(play.game)) { CHECK(row >= 19); }
 	CHECK(play.get("playing.status").variable.at("over") == 0.0f);
+}
+
+TEST_CASE("Tetris shows the next shape in its box, still, and sends it in when one lands", "[cells][tetris]")
+{
+	Played play("descriptions/tetris.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+
+	// The next shape: on the box's map, away from the well it was written on.
+	const auto waiting = [&]() -> Object*
+	{
+		for (Object& object : play.game.getCurrentObjects())
+		{
+			if (object.exists && object.isShape() && object.isCopy() && object.awayFromHome()) { return &object; }
+		}
+		return nullptr;
+	};
+	Object* next = waiting();
+	REQUIRE(next);
+	CHECK(next->mapName == "playing.next");
+	CHECK(next->shapeParts.size() == 4);
+	const std::string nextName = next->name;
+	const auto shown = cellsOf(play.game, *next);
+
+	// Two seconds: the well's shape falls and answers the keys; the box's
+	// does neither.
+	const auto before = cellsOf(play.game, *falling(play.game));
+	play.tap(KeyCode::D);
+	play.frames(120);
+	CHECK(cellsOf(play.game, *falling(play.game)) != before);
+	REQUIRE(waiting());
+	CHECK(waiting()->name == nextName);
+	CHECK(cellsOf(play.game, *waiting()) == shown);
+
+	// Dropped: the shape that was next comes into the well at column 4,
+	// and another takes its place in the box.
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	REQUIRE(falling(play.game));
+	CHECK(falling(play.game)->name == nextName);
+	CHECK(falling(play.game)->mapName == "playing.board");
+	CHECK(static_cast<int>(falling(play.game)->cellColumn) == 4);
+	REQUIRE(waiting());
+	CHECK(waiting()->name != nextName);
 }
 
 TEST_CASE("Tetris is over when the next shape has no room to come in", "[cells][tetris]")

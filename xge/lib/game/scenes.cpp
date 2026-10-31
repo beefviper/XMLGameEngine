@@ -278,7 +278,8 @@ namespace xge
 				{
 					if (command.verb == "inc" || command.verb == "dec" || command.verb == "copy" || command.verb == "rank" || command.verb == "set") { command.variable = names_.variableTarget(command.variable, context); }
 					if (command.verb == "copy") { command.into = names_.variableTarget(command.into, context); }
-					if (command.verb == "rank") { command.into = names_.object(command.into, context); }
+					if (command.verb == "rank" || command.verb == "spawn" || command.verb == "send") { command.into = names_.object(command.into, context); }
+					if (command.verb == "send") { command.from = names_.object(command.from, context); }
 					command.object = names_.object(command.object, context);
 					command.partner = names_.object(command.partner, context);
 					command.retreat = names_.object(command.retreat, context);

@@ -771,6 +771,11 @@ namespace xge
 		// game/cells.cpp). The Moment's cellColumn and cellRow are the cell
 		// it is in.
 		bool onCells{ false };
+		// The map it was written on. Sent to another (a next-piece box), it
+		// is only shown there: its timers do not count and its actions do
+		// not run until it is back (see awayFromHome).
+		std::string homeMap;
+		bool awayFromHome() const noexcept { return onCells && mapName != homeMap; }
 		// The map's <checks>, made ready (each piece of the map has them).
 		struct CellCheck
 		{
@@ -1209,6 +1214,11 @@ namespace xge
 	// A piece of a cell map on none of its tiles: put on the map, not in
 	// the game, waiting to be spawned, as a piece of the kit does.
 	void waitOnMap(RawObject& object, const RawMap& map, char character = '\0');
+
+	// What a cell map with nothing on it (a next-piece box) is in the game:
+	// one undrawn piece, never in play, named map.cells, that holds where
+	// the map is so that pieces can be spawned or sent onto it.
+	RawObject mapHolder(const RawMap& map);
 
 	// Each <shape> among objects[first] on gets the objects its characters
 	// pick: of the same map, the one waiting piece or plain object picked

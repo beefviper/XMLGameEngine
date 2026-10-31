@@ -174,7 +174,7 @@ There are 34 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Tennis | `altitude` and `shadow`, a `computer` player |
 | Haunted House | `light` and `dark` |
 | Adventure | scenes and ways, `carry` and `drop` |
-| Tetris | a `map` of `cells`, `shape`s that turn by the standard kicks, `settle`, `slide`, and `checks` for full rows (`clear`, `collapse`) |
+| Tetris | a `map` of `cells`, `shape`s that turn by the standard kicks, `settle`, `slide`, `checks` for full rows (`clear`, `collapse`), and `send` for the next shape |
 
 The games share one key convention: Space starts, pauses and restarts, player one is W A S D (plus the arrows), and where Space fires, P or Escape pauses.
 

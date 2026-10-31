@@ -1012,7 +1012,7 @@ namespace xge
 				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "demo" || name == "move" || name == "hop"
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
-				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "despawn"
+				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
 				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse";
 		}
 
@@ -1053,6 +1053,22 @@ namespace xge
 				requireAttribute(node, "variable", where);
 				command.amount = readValue(node, where);
 			}
+			if (verb == "send")
+			{
+				requireAttribute(node, "object", where);
+				command.from = requireAttribute(node, "from", where);
+				command.into = requireAttribute(node, "into", where);
+				const std::string here = where + " > <send>";
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "column" && child->getName() != "row") { fail(here, "unknown <" + child->getName() + ">; expected a <column> and a <row>, if wanted"); }
+				}
+				const auto column = findChild(&node, "column");
+				const auto row = findChild(&node, "row");
+				if (!column != !row) { fail(here, "has a <column> or a <row> and not the other; give both, or neither to keep its cell"); }
+				if (column) { command.column = readValue(*column, here); }
+				if (row) { command.row = readValue(*row, here); }
+			}
 			if (verb == "spawn")
 			{
 				requireAttribute(node, "object", where);
@@ -1066,6 +1082,7 @@ namespace xge
 					}
 				}
 				command.random = findChild(&node, "random") != nullptr;
+				command.into = node.getAttribute("into");
 				if (auto column = findChild(&node, "column")) { command.column = readValue(*column, here); }
 				if (auto row = findChild(&node, "row")) { command.row = readValue(*row, here); }
 				if (auto position = findChild(&node, "position"))
@@ -2471,7 +2488,8 @@ namespace xge
 					fail(where, "unknown <" + tag + ">; expected a <tile>, a <position>, <columns> and <rows>, <cells />, <row>s, then <group>s and <object>s, then <checks>");
 				}
 			}
-			if (!any) { fail(where, "has nothing on it; give it <group>s and <object>s that pick its characters"); }
+			if (!any && map.cells) { out.push_back(mapHolder(map)); }
+			else if (!any) { fail(where, "has nothing on it; give it <group>s and <object>s that pick its characters"); }
 
 			pickShapePieces(out, first);
 		}

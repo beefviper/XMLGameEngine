@@ -140,6 +140,7 @@ namespace xge
 				[](const CmdResetScene&) { return std::string("<reset scene>"); },
 				[](const CmdSet&) { return std::string("<set>"); },
 				[](const CmdSpawn&) { return std::string("<spawn>"); },
+				[](const CmdSend&) { return std::string("<send>"); },
 				[](const CmdDespawn& d) { return std::string(d.target.empty() ? "<despawn />" : "<despawn object>"); },
 				[](const CmdSettle&) { return std::string("<settle />"); },
 				[](const CmdSlide&) { return std::string("<slide>"); },
@@ -173,7 +174,7 @@ namespace xge
 		const PlaceRule& ruleFor(Place place)
 		{
 			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<shift>", "<enter>",
-				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<despawn object>", "<trigger>" };
+				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<send>", "<despawn object>", "<trigger>" };
 			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />" };
 			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>" };
 			static const std::vector<std::string> steering{ "<aim>", "<chase>", "<hunt>", "<hunt> by <hop>", "<wander>" };
@@ -258,6 +259,13 @@ namespace xge
 		// runs: pressing a key bound to <push state="pasued" /> would otherwise
 		// stop the game in the middle of play (and used to read past the end of
 		// the list of states).
+		// A map of cells a command names (a spawn's or a send's into=).
+		void checkCellMap(const std::vector<Object>& objects, const std::string& map, const std::string& tag, const std::string& where)
+		{
+			const bool found = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.onCells && object.mapName == map; });
+			if (!found) { throw std::runtime_error(where + ": " + tag + " names no map with <cells />"); }
+		}
+
 		// The variable a command names: owner.variable, the variable after the
 		// last dot (the owner may be a path).
 		void checkVariable(const VariableName& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where)
@@ -563,6 +571,16 @@ namespace xge
 				{
 					throw std::runtime_error(where + ": <spawn> names '" + spawn->target + "', and there is no object or group of that name" + didYouMean(spawn->target, objectNames(objects)));
 				}
+				if (!spawn->into.empty()) { checkCellMap(objects, spawn->into, "<spawn into=\"" + spawn->into + "\">", where); }
+			}
+			else if (const auto* send = std::get_if<CmdSend>(&shapeOf(command)))
+			{
+				if (!findObject(objects, send->target))
+				{
+					throw std::runtime_error(where + ": <send> names '" + send->target + "', and there is no object or group of that name" + didYouMean(send->target, objectNames(objects)));
+				}
+				checkCellMap(objects, send->from, "<send from=\"" + send->from + "\">", where);
+				checkCellMap(objects, send->into, "<send into=\"" + send->into + "\">", where);
 			}
 			else if (const auto* copy = std::get_if<CmdCopy>(&shapeOf(command)))
 			{

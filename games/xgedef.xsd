@@ -685,7 +685,7 @@
     <xs:attribute name="variable" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- spawn: which object or group (<random />: one of its members at random, not in turn), where (a half may be <centered>; on a map with <cells />, the <column> and <row> of its top left cell), and how fast. -->
+  <!-- spawn: which object or group (<random />: one of its members at random, not in turn), into= the map of cells it goes on (left out: its own), where (a half may be <centered>; on a map with <cells />, the <column> and <row> of its top left cell), and how fast. -->
   <xs:complexType name="spawnType">
     <xs:sequence>
       <xs:element name="random" type="emptyType" minOccurs="0" />
@@ -699,6 +699,18 @@
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="object" type="xs:string" use="required" />
+    <xs:attribute name="into" type="xs:NMTOKEN" use="optional" />
+  </xs:complexType>
+
+  <!-- send: on maps with <cells />, the object's piece on map from= goes to map into=, in the <column> and <row> given (left out: the same cell). -->
+  <xs:complexType name="sendType">
+    <xs:sequence minOccurs="0">
+      <xs:element name="column" type="valueType" />
+      <xs:element name="row" type="valueType" />
+    </xs:sequence>
+    <xs:attribute name="object" type="xs:string" use="required" />
+    <xs:attribute name="from" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <!-- move: a direction, and how far a frame; on a map with <cells />, how many cells a second while held, after one at once and a <wait> of so many seconds. -->
@@ -983,6 +995,9 @@
            the <velocity> says (a half left out is as the object starts),
            worked out as it runs -->
       <xs:element name="spawn" type="spawnType" />
+      <!-- send: a piece from one map of cells to another (a next-piece box
+           to the playfield), refused if it has no room there -->
+      <xs:element name="send" type="sendType" />
       <!-- despawn: the object running it, or object= every one of that
            name or group, is taken out of the game -->
       <xs:element name="despawn">

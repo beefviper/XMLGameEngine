@@ -327,6 +327,16 @@
           <xsl:text> };</xsl:text>
         </xsl:when>
         <!-- where and how fast, each half if given -->
+        <xsl:when test="$verb = 'send'">
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.column'" />
+            <xsl:with-param name="node" select="$node/column" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.row'" />
+            <xsl:with-param name="node" select="$node/row" />
+          </xsl:call-template>
+        </xsl:when>
         <xsl:when test="$verb = 'spawn'">
           <xsl:if test="$node/random">
             <xsl:text> command.random = true;</xsl:text>
@@ -1771,6 +1781,10 @@
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
+    <!-- a map of cells with nothing on it: one piece holding where it is -->
+    <xsl:if test="cells and not(group | object)">
+      <xsl:value-of select="concat($in, 'all.push_back(mapHolder(map));&#10;')" />
+    </xsl:if>
     <!-- each shape's characters: the pieces its cells are -->
     <xsl:if test=".//shape">
       <xsl:value-of select="concat($in, 'pickShapePieces(all, first);&#10;')" />

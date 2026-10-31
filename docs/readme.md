@@ -132,7 +132,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `yarsrevenge` | W A S D fly, Space fires | the shield a moving map, a destroyer missile that [`<seek>`](#parts-of-an-object)s, the neutral zone |
 | `tennis` | W A S D walk | a ball with an [altitude](#height-and-shadows) and a shadow, a computer at the far end, the score in words |
 | `hauntedhouse` | W A S D walk, Space strikes a match | a dark house seen only by [light](#light-and-dark), four floors, three pieces of an urn |
-| `tetris` | A/D move, W/X turn, E/C turn back, S drops faster, Space drops at once; P pauses | seven shapes in a well of [cells](#cells), standard turns and kicks, full rows cleared, faster every ten rows |
+| `tetris` | A/D move, W/X turn, E/C turn back, S drops faster, Space drops at once; P pauses | seven shapes in a well of [cells](#cells), standard turns and kicks, full rows cleared, faster every ten rows, the next shape in a box (`<send>`) |
 
 What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
 
@@ -545,6 +545,7 @@ A map with `<cells />` is a playfield of cells, such as Tetris's well: its piece
 - **A refused move is a touch.** A step into a taken cell, or off the map, is not made, and runs the rules of both for that touch: `<collision class="block" side="bottom">` for a block under it, `<collision edge="bottom">` for the map's floor. Cell pieces touch one another only this way, never by pixels, and the window's edges do not apply to them.
 - **Turning** is the modern rule (the Super Rotation System): a shape turns about the middle of the square it is drawn in (3x3 for T S Z J L, 4x4 for I; a 2x2 never changes), and a turn that does not fit tries the standard kicks off walls and the floor in order. A square of another size turns in place or not at all.
 - **`<settle />`** ends a shape: it is despawned and its cells stay, loose. Then the map asks its `<checks>`.
+- **Another map: a next-piece box.** A second map of cells may have nothing on it (`<map name="next">` with its tile, position, `<columns>4</columns><rows>2</rows><cells />`). `<spawn object="pieces" into="next"><random /></spawn>` makes a piece on it (in its first cell unless told), and `<send object="pieces" from="next" into="board"><column>4</column><row>1</row></send>` moves the piece of that name on `next` (a shape with its cells) to that cell of `board` (left out: the cell it is in). A send with no piece to send, or no room for it, is refused. **A piece away from the map it was written on is only shown:** its timers do not count and its actions do not run, so the next shape neither falls nor answers the keys until it is sent home. One press reaches only the pieces that were there when it came, so a shape sent in by another's landing does not drop too.
 - **`<checks>`.** `<full class="block">` is a row of the map whose every cell holds a piece of that class. Its commands run once for each full row, from the bottom up; in them `<clear />` takes that row's pieces away and `<collapse />` brings every piece above it down a row.
 
 ### The kit and from=
@@ -1507,7 +1508,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 - A maze walker steers as the arcade's ghosts do, by the next tile nearest a target: there is no search, so a target behind a wall can leave it going round. Pac-Man's ghosts follow the arcade's first-level schedule of scatter and chase on every level, and the four-second idle rule counts thirty dots rather than letting the next ghost out at once.
 - A path is straight legs at one speed, with numbers fixed at load; home is the object's place in the file, so a formation cannot sway. A path cannot aim.
 - Enemies fire on timers from wherever they are: an invader behind others fires through them.
-- On a map of cells, only full rows can be asked about (no lines or groups of alike pieces yet); there is no next-piece box, hold, lock delay or ghost piece, and pieces spawn into the top rows with no hidden rows above. A spawn's `<random />` is a plain pick, not a bag of seven.
+- On a map of cells, only full rows can be asked about (no lines or groups of alike pieces yet); there is no hold (it wants a send that swaps), lock delay or ghost piece, and pieces spawn into the top rows with no hidden rows above. A spawn's `<random />` is a plain pick, not a bag of seven.
 - `<facing>` is one of four ways (diagonals come only from two held keys), and never turns the picture.
 
 **Pictures and sound**
