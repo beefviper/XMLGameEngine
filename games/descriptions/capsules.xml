@@ -181,9 +181,9 @@
               <row>..........yy..........kk.</row>
               <row>...........k.........kggk</row>
               <row>.......kkkkkkkkkk....kggk</row>
-              <row>......kwwwwrrwwwwk...kggk</row>
+              <row>......kwwwrwwrwwwk...kggk</row>
               <row>......kwwwrrrrwwwk...kgk.</row>
-              <row>......kwwwwrrwwwwk...kgk.</row>
+              <row>......kwwwrwwrwwwk...kgk.</row>
               <row>......kkkkkkkkkkkk...kgk.</row>
               <row>......kggggggggggk...kgk.</row>
               <row>......kgkkkkkkkkgk...kgk.</row>
@@ -198,9 +198,9 @@
               <row>...kwwwwwwwkwwwwwwwk.....</row>
               <row>..kwwwwwwwwkwwwwwwk......</row>
               <row>..kwkwwwwwwkwwwwwwk......</row>
-              <row>..kwkwwwwwwkwwrwwwk......</row>
-              <row>..kwkwwwwwwkwrrrwwk......</row>
-              <row>..kwkwwwwwwkwwrwwwk......</row>
+              <row>..kwkwwwwwwkwwwwwwk......</row>
+              <row>..kwkwwwwwwkwgggwwk......</row>
+              <row>..kwkwwwwwwkwwwwwwk......</row>
               <row>..kgkwwwwwwkwwwwwwk......</row>
               <row>..kgkwwwwwwkwwwwwwk......</row>
               <row>...k.kwwwwwkwwwwwk.......</row>
@@ -215,9 +215,9 @@
               <row>..........yy.............</row>
               <row>...........k.............</row>
               <row>.......kkkkkkkkkk........</row>
-              <row>......kwwwwrrwwwwk.......</row>
+              <row>......kwwwrwwrwwwk.......</row>
               <row>......kwwwrrrrwwwk.......</row>
-              <row>......kwwwwrrwwwwk.......</row>
+              <row>......kwwwrwwrwwwk.......</row>
               <row>......kkkkkkkkkkkk.......</row>
               <row>......kggggggggggk.......</row>
               <row>......kgkkkkkkkkgk.......</row>
@@ -232,9 +232,9 @@
               <row>...kwwwwwwwkwwwwwwwwwkk..</row>
               <row>..kwwwwwwwwkwwwwwkkwwwgk.</row>
               <row>..kwkwwwwwwkwwwwwk.kkkgk.</row>
-              <row>..kwkwwwwwwkwwrwwk...kk..</row>
-              <row>..kwkwwwwwwkwrrrwk.......</row>
-              <row>..kwkwwwwwwkwwrwwk.......</row>
+              <row>..kwkwwwwwwkwwwwwk...kk..</row>
+              <row>..kwkwwwwwwkwgggwk.......</row>
+              <row>..kwkwwwwwwkwwwwwk.......</row>
               <row>..kgkwwwwwwkwwwwwk.......</row>
               <row>..kgkwwwwwwkwwwwwk.......</row>
               <row>...k.kwwwwwkwwwwwk.......</row>
