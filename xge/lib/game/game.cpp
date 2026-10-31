@@ -1544,6 +1544,12 @@ namespace xge
 
 				object.velocity = *step;
 				if (!leg.home) { object.followLeft -= *step; }
+				// One that faces somewhere faces the way it flies.
+				if (object.hasHeading)
+				{
+					object.heading = headingOf(*step);
+					object.showHeading();
+				}
 				moving = true;
 				break;
 			}

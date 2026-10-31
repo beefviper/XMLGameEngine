@@ -158,7 +158,7 @@ Keys run the current state's bindings, timers count, objects move, collisions ar
 
 ## Games
 
-There are 41 games in [games/descriptions/](games/descriptions/), from Pong and Breakout to Pac-Man, Donkey Kong, Q\*bert, Adventure and Tetris. Many of them brought a word with them:
+There are 42 games in [games/descriptions/](games/descriptions/), from Pong and Breakout to Pac-Man, Donkey Kong, Q\*bert, Adventure and Tetris. Many of them brought a word with them:
 
 | Game | Words it needed |
 |---|---|
@@ -181,6 +181,7 @@ There are 41 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Centipede | `split` a chain where it is shot, `through` a mushroom when turning down |
 | Putt Park | `bounce` off a slope by the way its drawn wall faces, keeping a share of the speed; a key's `on="hold"` and `on="release"` to build up and strike a putt |
 | Cannon Hill | `polygon` for filled hills that `hole` blows craters in; a `spawn` with an `acceleration` for the wind on each shell |
+| Speedway | `grip` on a car with a heading holds it to the way it faces; `surface` on map pieces for grass, sand and oil; a path follower with a heading faces its way |
 | Pinball | `pivot` and `swing`: a flipper turns about its hinge in one eased stroke (from still, fastest half way, to still), the turn swept through the frame, and a `knock` lends the ball the speed of the point that strikes it; `friction` brings a cradled ball to rest |
 
 The games share one key convention: Space starts, pauses and restarts, player one is W A S D (plus the arrows), and where Space fires, P or Escape pauses.

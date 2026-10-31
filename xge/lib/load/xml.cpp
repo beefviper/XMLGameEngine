@@ -585,6 +585,19 @@ namespace xge
 			return rawLine;
 		}
 
+		// A <surface>: its <drag> and <grip>, each if given.
+		void readSurface(const XmlNode& surface, RawObject& rawObject, const std::string& where)
+		{
+			const std::string here = where + " > <surface>";
+			rawObject.hasSurface = true;
+			for (std::unique_ptr<XmlNode> child = surface.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				if (child->getName() == "drag") { rawObject.hasSurfaceDrag = true; rawObject.rawSurfaceDrag = readValue(*child, here); }
+				else if (child->getName() == "grip") { rawObject.hasSurfaceGrip = true; rawObject.rawSurfaceGrip = readValue(*child, here); }
+				else { fail(here, "unknown <" + child->getName() + ">; expected a <drag> and a <grip>, each if wanted"); }
+			}
+		}
+
 		// One <polygon>: its <point>s, three or more, and optionally its color.
 		RawPolygon readPolygon(const XmlNode& polygon, const std::string& where)
 		{
@@ -1959,6 +1972,7 @@ namespace xge
 				rawObject.hasFriction = true;
 				rawObject.rawFriction = readValue(*friction, where);
 			}
+			if (auto surface = findChild(&object, "surface")) { readSurface(*surface, rawObject, where); }
 			if (auto mass = findChild(&object, "mass"))
 			{
 				rawObject.hasMass = true;
@@ -2244,6 +2258,7 @@ namespace xge
 					shared.hasMass = true;
 					shared.rawMass = readValue(*child, where);
 				}
+				else if (tag == "surface") { readSurface(*child, shared, where); }
 				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
@@ -2262,7 +2277,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 

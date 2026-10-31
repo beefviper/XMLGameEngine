@@ -458,6 +458,13 @@ namespace xge
 		bool hasFriction{ false };
 		RawValue rawMass;            // only when hasMass
 		bool hasMass{ false };
+		// <surface>: ground, and the drag and grip it gives (each only when
+		// its has... is true).
+		bool hasSurface{ false };
+		RawValue rawSurfaceDrag;
+		bool hasSurfaceDrag{ false };
+		RawValue rawSurfaceGrip;
+		bool hasSurfaceGrip{ false };
 		// <pull object="sun">strength</pull>s: what pulls it, and how hard.
 		std::vector<std::pair<std::string, RawValue>> rawPulls;
 		// <seek object="ship">degrees</seek>: what it turns toward, and how
@@ -1076,6 +1083,17 @@ namespace xge
 		// 0 (the default) is no drag at all, 0.02 loses a fiftieth of the speed
 		// a frame, so a thruster can no longer push it faster than a top speed.
 		float drag{};
+
+		// <surface>: this is ground. A thing with a <grip> whose middle is
+		// over it has these in place of its own drag and grip (a surface
+		// that gives neither leaves them as they are); the last surface in
+		// the file's order wins. groundDrag and groundGrip are what this
+		// object has this frame, worked out by applyGrip (play/frame.cpp).
+		bool isSurface{ false };
+		std::optional<float> surfaceDrag;
+		std::optional<float> surfaceGrip;
+		float groundDrag{};
+		float groundGrip{ 1.0f };
 
 		// <friction>: at a touch with something that does not move, the speed
 		// along its surface is cut by up to this share of the speed the touch

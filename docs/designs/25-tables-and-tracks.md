@@ -1,6 +1,6 @@
 # Tables and tracks
 
-**Status:** stages 1, 2 and 3 Built (2026-10-31); stage 4 Decided, not built.
+**Status:** all four stages Built (2026-10-31).
 
 ## Why this class
 
@@ -17,7 +17,7 @@ Each ends with an original game, as the grid stages did.
 | 1 | `<bounce>` about the touch's normal with a share kept; a real normal for `pixel` touches; a key's three moments (`on="press"`, `"hold"`, `"release"`) | Putt Park, six holes of mini golf | Built |
 | 2 | `<polygon>` for filled hills that `<hole>` blows craters in; `<acceleration>` on a `<spawn>` for each shot's wind; turns as a phase on a table | Cannon Hill, an artillery duel | Built |
 | 3 | `<pivot>` (the point a heading turns about), `<swing>` back to where it started when let go, the turn swept through the frame, a turning thing's speed at the point of touch lent by `<knock>` | Pinball, one original table | Built |
-| 4 | `<surface>` on map pieces (drag and grip while over them), `<grip>` turning velocity toward a heading, `<gates>` and laps | a top down racer | Decided |
+| 4 | `<surface>` on map pieces (drag and grip while over them), `<grip>` holding a car with a heading to it, a path follower facing its way; laps by gate rules | Speedway, a top down racer | Built |
 
 ## Decisions along the way
 
@@ -52,6 +52,16 @@ Each ends with an original game, as the grid stages did.
 - **Turns are not `<turns>`**: those are the arcade's, each player a game of their own and seeing only it. Here both play on one field, so the table holds a phase (aiming, flying, landed, passing) and conditions move it on; the barrel whose look is `ready` answers the keys.
 - **The barrel turns from its elevation** (`heading = level − side × elevation`, kept 0 to 90 by a `<clamp>`), so one kit piece serves both sides, and its heading never wraps through 0. A hit is a blast landing within `reach` of a cannon's middle, by a `distance=` condition.
 - Open: a cannon falling into a crater dug under it (the cannons stand where they were put), damage instead of one-hit points, a computer player, a picture-shaped hole.
+
+## Speedway (stage 4)
+
+- Asked for (Beef, 2026-10-31, "Racer."): two players at one keyboard and two computer cars, three laps.
+- **`<grip>` with a heading is a wheel's grip**: each frame the speed across the heading loses that share. Reused rather than a new word: it is the same idea as a walker's grip (how firmly the ground holds it to what it means to do), and no game had a grip and a heading. Rejected: turning the velocity's direction toward the heading keeping its speed (no speed is lost in a skid, which reads wrong).
+- **`<surface>`** on a piece, with an optional `<drag>` and `<grip>`, is the ground under anything with a `<grip>` whose middle is over its box; the last in the file wins, and the tarmac is no piece. Felt only by things with a grip written, so a path follower or a shot is not slowed (a path's step is fixed; drag would make it drift off its line). Rejected: the car naming the ground it feels (as a maze walker names its `<slow>` class): every gripping thing feels every surface, which is what ground is.
+- **No `<gates>` word.** Laps were said with what exists: each car keeps `next`, and four rules, one per gate, move it on only when it is that gate, the finish line also counting the lap. Turning back or cutting across counts nothing.
+- **A path follower with a heading faces its way.** The computer's cars fly a looping path (a timer follows it again when it ends); without this they slid round sideways. No shipped path follower had a heading.
+- The computer's cars are not knocked: the players `<bounce>` off them, so a path stays on its line.
+- Open: cars that turn only while moving, steering that tightens with speed, computer cars that race (a path is one speed), a lap time and a best lap kept, more tracks as scenes.
 
 ## Pinball (stage 3)
 

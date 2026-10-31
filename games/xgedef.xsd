@@ -598,6 +598,14 @@
     </xs:restriction>
   </xs:simpleType>
   <!-- How its looks and steps follow its moves: poses, a mirror going one way across, and how quickly it gets to the speed its moves ask for (0 up to 1, 1 at once). -->
+  <!-- surface: the drag and grip a thing that grips has while its middle is over it; one left out is its own -->
+  <xs:complexType name="surfaceType">
+    <xs:sequence>
+      <xs:element name="drag" type="valueType" minOccurs="0" />
+      <xs:element name="grip" type="valueType" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:group name="moveParts">
     <xs:sequence>
       <xs:element name="poses" type="posesType" minOccurs="0" />
@@ -1654,6 +1662,8 @@
       <xs:element name="friction" type="valueType" minOccurs="0" />
       <!-- how hard it is to knock; left out, a knock does not move it -->
       <xs:element name="mass" type="valueType" minOccurs="0" />
+      <!-- ground: what holds a thing with a <grip> whose middle is over it, in place of its own drag and grip (grass, sand, oil) -->
+      <xs:element name="surface" type="surfaceType" minOccurs="0" />
       <!-- pulled toward the nearest of each, that much speed a frame -->
       <xs:element name="pull" type="targetValueType" minOccurs="0" maxOccurs="unbounded" />
       <!-- turns the way it goes toward the nearest of it, at most that many degrees a frame -->

@@ -1239,6 +1239,25 @@
         <xsl:with-param name="node" select="friction" />
       </xsl:call-template>
     </xsl:if>
+    <xsl:if test="surface">
+      <xsl:value-of select="concat($in, 'object.hasSurface = true;&#10;')" />
+      <xsl:if test="surface/drag">
+        <xsl:value-of select="concat($in, 'object.hasSurfaceDrag = true;&#10;')" />
+        <xsl:call-template name="assign-value">
+          <xsl:with-param name="indent" select="$in" />
+          <xsl:with-param name="to" select="'object.rawSurfaceDrag'" />
+          <xsl:with-param name="node" select="surface/drag" />
+        </xsl:call-template>
+      </xsl:if>
+      <xsl:if test="surface/grip">
+        <xsl:value-of select="concat($in, 'object.hasSurfaceGrip = true;&#10;')" />
+        <xsl:call-template name="assign-value">
+          <xsl:with-param name="indent" select="$in" />
+          <xsl:with-param name="to" select="'object.rawSurfaceGrip'" />
+          <xsl:with-param name="node" select="surface/grip" />
+        </xsl:call-template>
+      </xsl:if>
+    </xsl:if>
     <xsl:if test="mass">
       <xsl:value-of select="concat($in, 'object.hasMass = true;&#10;')" />
       <xsl:call-template name="assign-value">
@@ -1657,6 +1676,25 @@
         <xsl:with-param name="to" select="'group.object.rawFriction'" />
         <xsl:with-param name="node" select="friction" />
       </xsl:call-template>
+    </xsl:if>
+    <xsl:if test="surface">
+      <xsl:value-of select="concat($in, 'group.object.hasSurface = true;&#10;')" />
+      <xsl:if test="surface/drag">
+        <xsl:value-of select="concat($in, 'group.object.hasSurfaceDrag = true;&#10;')" />
+        <xsl:call-template name="assign-value">
+          <xsl:with-param name="indent" select="$in" />
+          <xsl:with-param name="to" select="'group.object.rawSurfaceDrag'" />
+          <xsl:with-param name="node" select="surface/drag" />
+        </xsl:call-template>
+      </xsl:if>
+      <xsl:if test="surface/grip">
+        <xsl:value-of select="concat($in, 'group.object.hasSurfaceGrip = true;&#10;')" />
+        <xsl:call-template name="assign-value">
+          <xsl:with-param name="indent" select="$in" />
+          <xsl:with-param name="to" select="'group.object.rawSurfaceGrip'" />
+          <xsl:with-param name="node" select="surface/grip" />
+        </xsl:call-template>
+      </xsl:if>
     </xsl:if>
     <xsl:if test="mass">
       <xsl:value-of select="concat($in, 'group.object.hasMass = true;&#10;')" />

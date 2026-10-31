@@ -95,7 +95,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 
 ### The shipped games
 
-41 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
+42 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
 
 | Game | Keys besides the convention | What it is, and what it shows |
 |---|---|---|
@@ -139,6 +139,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `puttpark` | A/D or Left/Right aim, Space held then let go putts; P or Escape pauses | an original mini golf of six holes as [scenes](#scenes): walls drawn as [`<line>`](#lines)s that the ball [bounces](#touching) off at their slope, posts that kick it away faster, soft cushions; the putt built up by a key [held and let go](#a-keys-three-moments) |
 | `pinball` | A or Left, D or Right flip; Space held then let go shoots; P or Escape pauses | an original table: flippers that [swing about a pivot](#turning-about-a-pivot) and lend the ball their speed where they strike it, a plunger [held and let go](#a-keys-three-moments), bumpers and slingshots that [bounce](#touching) it off faster, three rollover lanes for a bonus |
 | `cannonhill` | W/S or Up/Down aim, Space held then let go fires; P or Escape pauses | an original artillery duel for two at one keyboard: hills drawn as a filled [`<polygon>`](#polygons) that shells blow [craters](#touching) in, each shell [spawned](#spawn-and-despawn) from the barrel's tip with the turn's wind as its `<acceleration>`, turns kept by a phase on a table, a hit told by a blast's `distance=`, three fields as [scenes](#scenes) |
+| `speedway` | player one W A S D, player two the arrows: up goes, down brakes, left and right steer; P or Escape pauses | an original top down race of three laps against each other and two computer cars: cars with a `<heading>`, held `<thrust>` and `<turn>`, and a [`<grip>`](#poses-mirror-grip-and-blinking) that holds them to their heading; grass, sand and oil as map pieces with a [`<surface>`](#surfaces); laps by gate rules in order; the computer's cars on [paths](#paths), facing the way they go |
 | `centipede` | W A S D move the wand about its zone, Space fires; P or Escape pauses | a centipede winding down through a mushroom field, [split](#cells) in two where a shot hits it; each piece left grows a head; a line nobody sees over the bottom six rows turns it back down and holds the wand in |
 
 What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
@@ -372,6 +373,7 @@ Every part but the position is optional, and **what is left out is nothing**: no
 | `<heading>` | degrees clockwise from straight up. Lets `<turn>`, `<thrust>` and `<swing>` work, and turns the picture |
 | `<pivot>` | after `<heading>`: the point the picture turns about, `<x>` and `<y>` in the drawing's own pixels (a flipper's hinge at one end). The `<position>` is then where that point sits, and it stays there however the object turns ([turning about a pivot](#turning-about-a-pivot)). Left out, it turns about its middle |
 | `<drag>` | 0 up to 1: the share of its speed lost each frame (a pool ball on the cloth) |
+| `<surface>` | after `<mass>`: this is ground: a `<drag>` and a `<grip>` (each if wanted) that a thing with a `<grip>` has in place of its own while its middle is over it ([surfaces](#surfaces)) |
 | `<friction>` | 0 or more, after `<drag>`: how much a still surface it touches holds it back along that surface, as a share of how hard it met it; and what brings it to [rest](#knocks) |
 | `<mass>` | above 0: how hard it is to [knock](#knocks). Left out, a knock does not move it |
 | `<pull object="sun">strength</pull>` | that much more speed toward the nearest of that name each frame; several add up |
@@ -831,6 +833,25 @@ Three parts, after `<facing>`, give a walking, jumping thing its look and feel w
 - **`<poses>`** names the look for each way of moving, and the engine picks it every frame. `standing` is needed; walking falls back to standing, skidding to walking, falling to standing, rising to falling, thrusting to standing. While a `<thrust>` is held it is thrusting; in the air it is rising, then falling; on the ground standing when still, skidding when its grip has it sliding against its keys, walking otherwise. Poses are picked only while a pose look is showing, so a `<become>` to another look (Mario's `dead`) holds until a `<become>` puts a pose back.
 - **`<mirror>left</mirror>`** (or `right`) is the way its pictures do not face: going that way they are drawn flipped. The way is the move key held, else a jump's way across, else its velocity; stopping keeps the last. Not with a `<heading>` or a `<hole>`.
 - **`<grip>`** (above 0 up to 1, 1 when left out) is how quickly its speed across follows its keys: each frame it goes that share of the way to what the keys ask, so Mario's `0.15` takes a moment to get going and slides. Up and down too when nothing pulls it. It also slows an object with no keys held, so give it only to something a player steers.
+- **With a `<heading>`, `<grip>` is a wheel's**: each frame its speed across the way it faces loses that share, so a car goes where it points, and slides on when the grip is low. Its keys are its `<thrust>` and `<turn>`.
+
+#### Surfaces
+
+The ground a thing with a `<grip>` goes over can change how it goes. A piece with a `<surface>` is ground:
+
+```xml
+<group name="grass" char="g">
+  <sprite><rectangle><width>40</width><height>40</height><color>color.forestgreen</color></rectangle></sprite>
+  <surface><drag>0.08</drag><grip>0.3</grip></surface>
+</group>
+<group name="oil" char="o">
+  <sprite> ... </sprite>
+  <surface><drag>0.005</drag><grip>0.02</grip></surface>
+</group>
+```
+
+- While its middle is over a surface's box (one in play, drawn or not), a thing with a `<grip>` has that surface's `<drag>` and `<grip>` in place of its own; one the surface leaves out stays its own. Over several, the last in the file's order. Off every surface, its own: Speedway's tarmac is no piece at all.
+- Only something with a `<grip>` written feels the ground, so a shot, a path follower or a wall does not.
 - **Blinking.** `<set variable="mario.blink">2</set>` makes an object blink for two seconds, counting down by itself while in play. It is a live number, so a rule can leave a blinking player alone (`<condition object="mario" variable="blink"><atmost>0</atmost></condition>`). A reset ends it.
 
 ### Light and dark
@@ -1249,7 +1270,8 @@ A `<path>` is a route written once in the game's `<paths>` and flown by any obje
 - `<home />` flies it back to its `<position>` in the file, moved by any [`<shift>`](#commands) since, from wherever it has got to: a formation is just the objects' places, and a swaying one is shifted. Within a frame of its place it is put there. At the end of the path it comes to rest.
 - A path sets the velocity each frame, so the follower moves, wraps and collides as anything does. A `<wrap />` on the way leaves what is left of the step alone: Galaxian's dive adds up to the window's height plus the alien's, so a diver that misses comes back in from the top to its own place.
 - A step's `<x>` or `<y>` that names something live, or `self`, is worked out as the step starts, with `self` the follower: Galaxian's dive turns toward the ship with `<x>ship.x - self.x</x>`, and then flies that straight line whatever the ship does. Every other number on a path is fixed at load.
-- An object already on a path finishes it first; a reset, `<die />`, `<stop />` or `<reveal>` ends it.
+- An object already on a path finishes it first; a reset, `<die />`, `<stop />` or `<reveal>` ends it. So a timer `<every>0.1</every><follow path="lap" /></timer>` sends it round again each time it finishes (Speedway's computer cars).
+- **One with a `<heading>` faces the way it flies**, turned each frame to its step.
 
 ## States and scenes
 

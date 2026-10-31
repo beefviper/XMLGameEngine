@@ -250,6 +250,11 @@ namespace
 			flag(at + ".hasFriction", o.hasFriction);
 			value(at + ".mass", o.rawMass);
 			flag(at + ".hasMass", o.hasMass);
+			flag(at + ".hasSurface", o.hasSurface);
+			value(at + ".surfaceDrag", o.rawSurfaceDrag);
+			flag(at + ".hasSurfaceDrag", o.hasSurfaceDrag);
+			value(at + ".surfaceGrip", o.rawSurfaceGrip);
+			flag(at + ".hasSurfaceGrip", o.hasSurfaceGrip);
 			for (const auto& [name, strength] : o.rawPulls) { value(at + ".pull." + name, strength); }
 			text(at + ".seekTarget", o.seekTarget);
 			value(at + ".seek", o.rawSeek);

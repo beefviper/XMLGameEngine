@@ -371,7 +371,7 @@ namespace xge
 				value(object.animation.interval, context);
 				for (RawSprite& frame : object.animation.frames) { sprite(frame, context); }
 				for (RawValue* part : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y,
-					&object.rawAcceleration.x, &object.rawAcceleration.y, &object.rawHeading, &object.rawPivot.x, &object.rawPivot.y, &object.rawDrag, &object.rawFriction, &object.rawMass })
+					&object.rawAcceleration.x, &object.rawAcceleration.y, &object.rawHeading, &object.rawPivot.x, &object.rawPivot.y, &object.rawDrag, &object.rawFriction, &object.rawMass, &object.rawSurfaceDrag, &object.rawSurfaceGrip })
 				{
 					value(*part, context);
 				}

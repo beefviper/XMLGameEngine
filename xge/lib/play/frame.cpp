@@ -154,18 +154,64 @@ namespace xge
 			}
 		}
 
+		// The ground: a thing with a <grip> whose middle is over a <surface>
+		// (the last in the file's order, of those in play) has that
+		// surface's drag and grip this frame in place of its own.
+		void findGround(std::vector<Object>& objects, FrameRules& rules)
+		{
+			std::vector<const Object*> surfaces;
+			for (auto& object : objects)
+			{
+				object.groundDrag = object.drag;
+				object.groundGrip = object.grip;
+				if (object.isSurface && rules.inPlay(object)) { surfaces.push_back(&object); }
+			}
+			if (surfaces.empty()) { return; }
+
+			for (auto& object : objects)
+			{
+				if (object.grip >= 1.0f || object.isSurface || !rules.inPlay(object)) { continue; }
+				const Vector2f middle = middleOf(object);
+				for (auto ground = surfaces.rbegin(); ground != surfaces.rend(); ++ground)
+				{
+					const Object& surface = **ground;
+					const Vector2f size = sizeOf(surface);
+					if (middle.x < surface.position.x || middle.y < surface.position.y
+						|| middle.x >= surface.position.x + size.x || middle.y >= surface.position.y + size.y)
+					{
+						continue;
+					}
+					if (surface.surfaceDrag) { object.groundDrag = *surface.surfaceDrag; }
+					if (surface.surfaceGrip) { object.groundGrip = *surface.surfaceGrip; }
+					break;
+				}
+			}
+		}
+
 		// <grip>: what an object's held moves ask for, it goes a part of the way
 		// to each frame, so it slides into a walk and out of one. Across,
 		// unless a leap holds it; up and down too, when nothing pulls it.
+		// With a <heading> it is a wheel's grip instead: each frame its speed
+		// across the way it faces loses that share, so it goes where it
+		// points and slides when the grip is low (a car on oil).
 		void applyGrip(std::vector<Object>& objects, FrameRules& rules)
 		{
 			for (auto& object : objects)
 			{
 				if (object.grip >= 1.0f || object.climbing || !rules.inPlay(object)) { continue; }
 
+				if (object.hasHeading)
+				{
+					const Vector2f way = ahead(object.heading);
+					const float along = object.velocity.x * way.x + object.velocity.y * way.y;
+					const Vector2f across = object.velocity - way * along;
+					object.velocity -= across * object.groundGrip;
+					continue;
+				}
+
 				const auto ease = [&](float& velocity, float wanted)
 				{
-					velocity += (wanted - velocity) * object.grip;
+					velocity += (wanted - velocity) * object.groundGrip;
 					if (std::abs(wanted - velocity) < 0.05f) { velocity = wanted; }
 				};
 				const auto& step = object.activeMoveStep;
@@ -254,7 +300,7 @@ namespace xge
 				// asking whether it is in play.
 				const bool thrusting = object.activeThrust[0] != 0.0f || object.activeThrust[1] != 0.0f
 					|| object.activeThrust[2] != 0.0f || object.activeThrust[3] != 0.0f;
-				if (!thrusting && !object.hasHeading && object.drag == 0.0f && object.acceleration.x == 0.0f && object.acceleration.y == 0.0f)
+				if (!thrusting && !object.hasHeading && object.groundDrag == 0.0f && object.acceleration.x == 0.0f && object.acceleration.y == 0.0f)
 				{
 					continue;
 				}
@@ -357,9 +403,9 @@ namespace xge
 				object.velocity += change;
 
 				// Drag: what is left of the speed after this frame.
-				if (object.drag != 0.0f)
+				if (object.groundDrag != 0.0f)
 				{
-					object.velocity *= 1.0f - object.drag;
+					object.velocity *= 1.0f - object.groundDrag;
 				}
 			}
 		}
@@ -915,6 +961,8 @@ namespace xge
 		walkMazes(objects, rules);
 
 		applyClimbing(objects, rules);
+
+		findGround(objects, rules);
 
 		applyGrip(objects, rules);
 

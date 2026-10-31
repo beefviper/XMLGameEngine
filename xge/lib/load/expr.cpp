@@ -775,6 +775,27 @@ namespace xge
 			}
 		}
 
+		if (rawObject.hasSurface)
+		{
+			object.isSurface = true;
+			if (rawObject.hasSurfaceDrag)
+			{
+				object.surfaceDrag = evaluate(rawObject.rawSurfaceDrag, where + " > <surface> > <drag>");
+				if (*object.surfaceDrag < 0.0f || *object.surfaceDrag >= 1.0f)
+				{
+					throw std::runtime_error(where + " > <surface> > <drag> is " + formatDisplayNumber(*object.surfaceDrag) + "; expected 0 up to (not including) 1");
+				}
+			}
+			if (rawObject.hasSurfaceGrip)
+			{
+				object.surfaceGrip = evaluate(rawObject.rawSurfaceGrip, where + " > <surface> > <grip>");
+				if (!(*object.surfaceGrip > 0.0f && *object.surfaceGrip <= 1.0f))
+				{
+					throw std::runtime_error(where + " > <surface> > <grip> is " + formatDisplayNumber(*object.surfaceGrip) + "; expected above 0, up to 1");
+				}
+			}
+		}
+
 		if (rawObject.hasFriction)
 		{
 			object.friction = evaluate(rawObject.rawFriction, where);
