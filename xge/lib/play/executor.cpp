@@ -917,6 +917,8 @@ namespace xge
 			else if (!game.putOnCells(*made, cell(command.column, made->mapColumn, self ? self->cellColumn : 0.0f), cell(command.row, made->mapRow, self ? self->cellRow : 0.0f), command.into)) { return false; }
 			if (command.velocityX) { made->velocity.x = *command.velocityX; }
 			if (command.velocityY) { made->velocity.y = *command.velocityY; }
+			if (command.accelerationX) { made->acceleration.x = *command.accelerationX; }
+			if (command.accelerationY) { made->acceleration.y = *command.accelerationY; }
 			return true;
 		}
 
@@ -925,6 +927,8 @@ namespace xge
 		if (command.y) { made->position.y = command.centerY ? *command.y - size.y * 0.5f : *command.y; }
 		if (command.velocityX) { made->velocity.x = *command.velocityX; }
 		if (command.velocityY) { made->velocity.y = *command.velocityY; }
+		if (command.accelerationX) { made->acceleration.x = *command.accelerationX; }
+		if (command.accelerationY) { made->acceleration.y = *command.accelerationY; }
 		return true;
 	}
 

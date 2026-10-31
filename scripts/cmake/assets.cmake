@@ -55,6 +55,7 @@ set(data_xml
 	"games/descriptions/capsules.xml"
 	"games/descriptions/puttpark.xml"
 	"games/descriptions/pinball.xml"
+	"games/descriptions/cannonhill.xml"
 	"games/descriptions/snake.xml"
 	"games/descriptions/centipede.xml")
 

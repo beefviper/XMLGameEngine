@@ -585,6 +585,23 @@ namespace xge
 			return rawLine;
 		}
 
+		// One <polygon>: its <point>s, three or more, and optionally its color.
+		RawPolygon readPolygon(const XmlNode& polygon, const std::string& where)
+		{
+			const std::string here = where + " > <polygon>";
+			RawPolygon rawPolygon;
+
+			for (std::unique_ptr<XmlNode> node = polygon.getFirstChild(); node != nullptr; node = node->getNextSibling())
+			{
+				if (node->getName() == "point") { rawPolygon.points.push_back(readVector2(*node, here + " > <point>")); }
+				else if (node->getName() == "color") { rawPolygon.color = readText(*node); }
+				else { fail(here, "unknown <" + node->getName() + ">; expected <point>s and a <color>"); }
+			}
+			if (rawPolygon.points.size() < 3) { fail(here, "has " + std::to_string(rawPolygon.points.size()) + " <point>s; a filled shape needs three or more"); }
+
+			return rawPolygon;
+		}
+
 		RawSprite readSprite(const XmlNode& spriteNode, const std::string& where)
 		{
 			const std::string here = where + " > <sprite>";
@@ -603,6 +620,17 @@ namespace xge
 				{
 					if (node->getName() != "line") { fail(here, "a sprite of lines holds only <line>s, not <" + node->getName() + ">"); }
 					sprite.lines.push_back(readLine(*node, here));
+				}
+			}
+			else if (first->getName() == "polygon")
+			{
+				// Filled shapes: every <polygon> of the sprite, drawn in the order written.
+				sprite.kind = "polygon";
+
+				for (std::unique_ptr<XmlNode> node = std::move(first); node != nullptr; node = node->getNextSibling())
+				{
+					if (node->getName() != "polygon") { fail(here, "a sprite of polygons holds only <polygon>s, not <" + node->getName() + ">"); }
+					sprite.polygons.push_back(readPolygon(*node, here));
 				}
 			}
 			else if (isShapeTag(first->getName()))
@@ -624,7 +652,7 @@ namespace xge
 		RawSprite changeSprite(const XmlNode& spriteNode, const RawSprite& base, const std::string& where)
 		{
 			const std::unique_ptr<XmlNode> shape = spriteNode.getFirstChild();
-			if (!shape || shape->getName() != base.kind || base.kind == "line") { return readSprite(spriteNode, where); }
+			if (!shape || shape->getName() != base.kind || base.kind == "line" || base.kind == "polygon") { return readSprite(spriteNode, where); }
 
 			const std::string here = where + " > <sprite> > <" + base.kind + ">";
 			RawSprite sprite = base;
@@ -1076,9 +1104,9 @@ namespace xge
 				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 				{
 					const std::string tag = child->getName();
-					if (tag != "position" && tag != "velocity" && tag != "random" && tag != "column" && tag != "row" && tag != "free")
+					if (tag != "position" && tag != "velocity" && tag != "acceleration" && tag != "random" && tag != "column" && tag != "row" && tag != "free")
 					{
-						fail(here, "unknown <" + tag + ">; expected <random />, a <position> (or a <column> and a <row>, or <free />), and a <velocity>, each if wanted");
+						fail(here, "unknown <" + tag + ">; expected <random />, a <position> (or a <column> and a <row>, or <free />), a <velocity> and an <acceleration>, each if wanted");
 					}
 				}
 				command.random = findChild(&node, "random") != nullptr;
@@ -1105,6 +1133,12 @@ namespace xge
 					const PartialVector2 given = readPartialVector2(*velocity, here);
 					if (given.x) { command.velocityX = *given.x; }
 					if (given.y) { command.velocityY = *given.y; }
+				}
+				if (auto acceleration = findChild(&node, "acceleration"))
+				{
+					const PartialVector2 given = readPartialVector2(*acceleration, here);
+					if (given.x) { command.accelerationX = *given.x; }
+					if (given.y) { command.accelerationY = *given.y; }
 				}
 			}
 			if (verb == "copy" || verb == "rank") { requireAttribute(node, "variable", where); requireAttribute(node, "into", where); }

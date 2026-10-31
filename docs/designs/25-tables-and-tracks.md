@@ -1,6 +1,6 @@
 # Tables and tracks
 
-**Status:** stages 1 and 3 Built (2026-10-31); stages 2 and 4 Decided, not built.
+**Status:** stages 1, 2 and 3 Built (2026-10-31); stage 4 Decided, not built.
 
 ## Why this class
 
@@ -15,7 +15,7 @@ Each ends with an original game, as the grid stages did.
 | Stage | Words | Game | Status |
 |---|---|---|---|
 | 1 | `<bounce>` about the touch's normal with a share kept; a real normal for `pixel` touches; a key's three moments (`on="press"`, `"hold"`, `"release"`) | Putt Park, six holes of mini golf | Built |
-| 2 | turns and wind for a shot built by holding (`<turns>` and `<pull>` exist); hills and craters with `<hole>` | an artillery duel | Decided |
+| 2 | `<polygon>` for filled hills that `<hole>` blows craters in; `<acceleration>` on a `<spawn>` for each shot's wind; turns as a phase on a table | Cannon Hill, an artillery duel | Built |
 | 3 | `<pivot>` (the point a heading turns about), `<swing>` back to where it started when let go, the turn swept through the frame, a turning thing's speed at the point of touch lent by `<knock>` | Pinball, one original table | Built |
 | 4 | `<surface>` on map pieces (drag and grip while over them), `<grip>` turning velocity toward a heading, `<gates>` and laps | a top down racer | Decided |
 
@@ -41,7 +41,17 @@ Each ends with an original game, as the grid stages did.
 - Six holes as scenes of one state; each takes the first hole's and gives its own walls (one picture of `<line>`s, `pixel` collisions), cup, tee, par, and posts or cushions from the kit. A scene condition puts the ball on its tee when the card says it has not been placed.
 - The arrow is a bitmap turned by its `<heading>` about its middle, which sits on the ball; its two looks are the same size (all clear while the ball rolls), since `arrow.width` read in the same condition as a `<become>` is still the old look's.
 - Space held adds to the arrow's power up to 100, let go strikes; both through `<trigger from="ready">`, so the ball cannot be struck while it rolls. A condition stops the ball dead once its speed is under 0.08 a frame each way and gives the arrow back.
-- Open: the cup taking only a slow ball (a rule's condition on speed), water and sand (stage 4's surfaces), more holes, a best round kept.
+- Open: the cup taking only a slow ball (a rule's condition on speed) and only one wholly over it, not grazing it (Beef, 2026-10-31: for a fuller mini golf later), water and sand (stage 4's surfaces), more holes, a best round kept.
+
+## Cannon Hill (stage 2)
+
+- Asked for (Beef, 2026-10-31, "Start Artillery"): an original artillery duel for two at one keyboard.
+- **Hills are a `<polygon>`**: a filled shape of corner points. Lines have no fill, and a bitmap hill at a usable scale is a page of characters with stairs for slopes. Kept as its own kind of sprite (not mixed with lines), drawn once, turned by its pixels if ever given a heading, so a `<hole>` cuts it as it cuts a bitmap.
+- **Craters are the existing `<hole>`** with a radius and `<rough>` (Beef asked whether Space Invaders' damage could serve; it is the same verb). A hole in the shape of a picture, as the arcade's fixed explosion pattern was, is open: `<hole sprite=...>` if a game needs it.
+- **Wind is a spawn's `<acceleration>`**, read as it runs like its `<position>` and `<velocity>`, so each shell keeps the wind of the turn it was fired in. The plan's `<pull>` toward an object was rejected: a pull is toward a place, wind is a push across, and an acceleration value on the kit piece is fixed at load.
+- **Turns are not `<turns>`**: those are the arcade's, each player a game of their own and seeing only it. Here both play on one field, so the table holds a phase (aiming, flying, landed, passing) and conditions move it on; the barrel whose look is `ready` answers the keys.
+- **The barrel turns from its elevation** (`heading = level − side × elevation`, kept 0 to 90 by a `<clamp>`), so one kit piece serves both sides, and its heading never wraps through 0. A hit is a blast landing within `reach` of a cannon's middle, by a `distance=` condition.
+- Open: a cannon falling into a crater dug under it (the cannons stand where they were put), damage instead of one-hit points, a computer player, a picture-shaped hole.
 
 ## Pinball (stage 3)
 

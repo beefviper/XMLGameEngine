@@ -271,3 +271,31 @@ TEST_CASE("a copy's rule with a condition tests the copy's own values", "[spawn]
 	REQUIRE(play.has("ball.2"));
 	CHECK(play.get("ball.2").velocity.y == Approx(0.0f));
 }
+
+TEST_CASE("a spawn's <acceleration> is read as it runs and pulls the copy for as long as it lasts", "[spawn]")
+{
+	const Scratch file(box("gun", 300, 400, "<actions><action name=\"shoot\"><spawn object=\"shell\">"
+		"<velocity><y>-4</y></velocity><acceleration><x>self.wind</x><y>0.5</y></acceleration></spawn></action></actions>"
+		"<variables><variable name=\"wind\">0.25</variable></variables>"),
+		"<trigger object=\"gun\" action=\"shoot\" />", {},
+		"<object name=\"shell\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite></object>");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	REQUIRE(play.has("shell.1"));
+	const Object& shell = play.get("shell.1");
+	CHECK(shell.acceleration.x == Approx(0.25f));
+	CHECK(shell.acceleration.y == Approx(0.5f));
+	const Vector2f was = shell.velocity;
+	play.frames(4);
+	CHECK(shell.velocity.x - was.x == Approx(1.0f));
+	CHECK(shell.velocity.y - was.y == Approx(2.0f));
+
+	// The next one takes the wind as it is then.
+	play.game.setVariable("playing.gun", "wind", -1.0f);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	REQUIRE(play.has("shell.2"));
+	CHECK(play.get("shell.2").acceleration.x == Approx(-1.0f));
+}

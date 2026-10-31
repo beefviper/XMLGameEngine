@@ -303,6 +303,8 @@ namespace xge
 					value(command.positionY, context);
 					value(command.velocityX, context);
 					value(command.velocityY, context);
+					value(command.accelerationX, context);
+					value(command.accelerationY, context);
 					value(command.column, context);
 					value(command.row, context);
 				}
@@ -317,6 +319,14 @@ namespace xge
 					value(line.to.x, context);
 					value(line.to.y, context);
 					value(line.thickness, context);
+				}
+				for (RawPolygon& polygon : sprite.polygons)
+				{
+					for (RawVector2& point : polygon.points)
+					{
+						value(point.x, context);
+						value(point.y, context);
+					}
 				}
 				for (RawValue* part : { &sprite.scale, &sprite.svgX, &sprite.svgY, &sprite.svgWidth, &sprite.svgHeight,
 					&sprite.radius, &sprite.width, &sprite.height, &sprite.size, &sprite.thickness })

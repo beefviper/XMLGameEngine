@@ -11,6 +11,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <utility>
 #include <vector>
 
 namespace xge
@@ -75,6 +76,22 @@ namespace xge
 	// negative (std::invalid_argument). minWidth and minHeight make it at
 	// least that big (the lines stay where they are, the rest is transparent).
 	Bitmap rasterizeLines(const std::vector<LineSegment>& lines, int minWidth = 0, int minHeight = 0);
+
+	// One filled shape to draw: its corners in order, in pixels from the top
+	// left of the sprite, the last joined back to the first.
+	struct FilledPolygon
+	{
+		std::vector<std::pair<float, float>> points;
+		Color color;
+	};
+
+	// Draws the shapes, in the order given (a later one covers an earlier
+	// one), onto a transparent bitmap reaching the right-most and bottom-most
+	// corner: every pixel whose middle lies inside a shape (even-odd, so a
+	// shape that crosses itself leaves its overlap clear) takes its colour.
+	// Coordinates must not be negative, and each shape needs three corners
+	// (std::invalid_argument). Returns an empty bitmap for no shapes.
+	Bitmap rasterizePolygons(const std::vector<FilledPolygon>& polygons);
 
 	// A picture written as rows of text, one character to a pixel: '.' is a
 	// clear (transparent) pixel and '*' a solid one, drawn in `color`. Every

@@ -223,6 +223,63 @@ namespace xge
 		return bitmap;
 	}
 
+	Bitmap rasterizePolygons(const std::vector<FilledPolygon>& polygons)
+	{
+		Bitmap bitmap;
+		if (polygons.empty()) { return bitmap; }
+
+		float right = 0.0f;
+		float bottom = 0.0f;
+		for (const FilledPolygon& polygon : polygons)
+		{
+			if (polygon.points.size() < 3) { throw std::invalid_argument("a polygon has fewer than three points"); }
+			for (const auto& [x, y] : polygon.points)
+			{
+				if (x < 0.0f || y < 0.0f)
+				{
+					throw std::invalid_argument("a polygon has a negative coordinate; a sprite's points are measured from its top left corner");
+				}
+				right = std::max(right, x);
+				bottom = std::max(bottom, y);
+			}
+		}
+
+		bitmap.width = static_cast<int>(std::ceil(right));
+		bitmap.height = static_cast<int>(std::ceil(bottom));
+		bitmap.rgba.assign(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4, 0);
+
+		// Row by row: where the row's middle crosses each edge, sorted; the
+		// pixels whose middles lie between the first and second crossing, the
+		// third and fourth, and so on, are inside.
+		std::vector<float> crossings;
+		for (const FilledPolygon& polygon : polygons)
+		{
+			const std::size_t corners = polygon.points.size();
+			for (int y = 0; y < bitmap.height; ++y)
+			{
+				const float middle = static_cast<float>(y) + 0.5f;
+				crossings.clear();
+				for (std::size_t i = 0; i < corners; ++i)
+				{
+					const auto& [ax, ay] = polygon.points[i];
+					const auto& [bx, by] = polygon.points[(i + 1) % corners];
+					// Half open, so a corner on the row is counted once.
+					if ((ay <= middle) == (by <= middle)) { continue; }
+					crossings.push_back(ax + (middle - ay) * (bx - ax) / (by - ay));
+				}
+				std::sort(crossings.begin(), crossings.end());
+				for (std::size_t i = 0; i + 1 < crossings.size(); i += 2)
+				{
+					const int from = std::max(0, static_cast<int>(std::ceil(crossings[i] - 0.5f)));
+					const int to = std::min(bitmap.width - 1, static_cast<int>(std::ceil(crossings[i + 1] - 0.5f)) - 1);
+					for (int x = from; x <= to; ++x) { stamp(bitmap, x, y, 1, polygon.color); }
+				}
+			}
+		}
+
+		return bitmap;
+	}
+
 	int wholeDegrees(float degrees) noexcept
 	{
 		long whole = std::lround(degrees) % 360;

@@ -56,6 +56,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 
 ### Spawning
 
+- A spawn's `<position>`, `<velocity>` and `<acceleration>` halves are `RawCommand` fields renamed for `self` in `object.cpp` (two lists), given scene values in `scenes.cpp`, generated in `data.xsl` and compared in `test_generated_games.cpp`; a new half goes in all of them.
 - Copies (`Object::copyOf`, named `x.N`) wait in `Game::spawned` and join, and despawned copies are erased, in `settleSpawns()` at the start and end of `updateObjects`; it calls `rosterChanged()`, which drops every cache below ([pools-and-enemies](../designs/10-pools-and-enemies.md)).
 - A spawned piece lands beside its spawner, so its copies are named by that list (`playing.wave1.bomb.1`); a copy's `groupName` is what it copies (`playing.bomb`), and a test counting them by `groupName` must match the path's end.
 - `objects.reserve` at load keeps references to loaded objects good; new state that points into `objects` must be rebuilt in `rosterChanged()`.

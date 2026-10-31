@@ -482,7 +482,7 @@ namespace xge
 				if (renamed != *text) { *text = std::move(renamed); changed = true; }
 			}
 			for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
-				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.column, &command.row })
+				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row })
 			{
 				changed = nameSelfInValue(*each, name) || changed;
 			}
@@ -557,7 +557,7 @@ namespace xge
 				command.variable = renameStart(command.variable, from, to);
 				command.into = renameStart(command.into, from, to);
 				for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
-					&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.column, &command.row })
+					&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row })
 				{
 					value(*each);
 				}

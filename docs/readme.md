@@ -95,7 +95,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 
 ### The shipped games
 
-40 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
+41 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
 
 | Game | Keys besides the convention | What it is, and what it shows |
 |---|---|---|
@@ -138,6 +138,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `snake` | W A S D or the arrows turn; Space or P pauses | a snake that goes on by itself with a [chain](#cells) for its body, food in a free cell, faster as it grows |
 | `puttpark` | A/D or Left/Right aim, Space held then let go putts; P or Escape pauses | an original mini golf of six holes as [scenes](#scenes): walls drawn as [`<line>`](#lines)s that the ball [bounces](#touching) off at their slope, posts that kick it away faster, soft cushions; the putt built up by a key [held and let go](#a-keys-three-moments) |
 | `pinball` | A or Left, D or Right flip; Space held then let go shoots; P or Escape pauses | an original table: flippers that [swing about a pivot](#turning-about-a-pivot) and lend the ball their speed where they strike it, a plunger [held and let go](#a-keys-three-moments), bumpers and slingshots that [bounce](#touching) it off faster, three rollover lanes for a bonus |
+| `cannonhill` | W/S or Up/Down aim, Space held then let go fires; P or Escape pauses | an original artillery duel for two at one keyboard: hills drawn as a filled [`<polygon>`](#polygons) that shells blow [craters](#touching) in, each shell [spawned](#spawn-and-despawn) from the barrel's tip with the turn's wind as its `<acceleration>`, turns kept by a phase on a table, a hit told by a blast's `distance=`, three fields as [scenes](#scenes) |
 | `centipede` | W A S D move the wand about its zone, Space fires; P or Escape pauses | a centipede winding down through a mushroom field, [split](#cells) in two where a shot hits it; each piece left grows a head; a line nobody sees over the bottom six rows turns it back down and holds the wand in |
 
 What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
@@ -647,11 +648,12 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 | `<text>` | pieces (below), then `<size>`, `<color>`, `<font>`; `style=` | text |
 | `<image>` | `<path>`, `<flip>` | an image file, loaded by the window backend |
 | `<line>`s | each `<from>`, `<to>`, `<color>`, `<thickness>` | a drawing of straight lines ([lines](#lines)) |
+| `<polygon>`s | each `<point>`s (three or more), `<color>` | filled shapes ([polygons](#polygons)) |
 | `<bitmap>` | `<row>`s of characters, `<scale>`, `<color>`s, `<flip>`; `style=` | a picture written as text ([bitmaps](#bitmaps)) |
 | `<svg>` | `<path>`, a part (`<x>`, `<y>`, `<width>`, `<height>`), `<scale>`, `<hide>`s, `<flip>` | a drawing from an SVG file ([SVG pictures](#svg-pictures)) |
 | `<tether from="a" to="b">` | `<thickness>`, `<color>` | a line from the middle of `a` to the middle of `b`, drawn again every frame wherever they are; in play only while both ends are (a fishing line, a missile's trail) |
 
-**Pictures the engine draws.** Lines, bitmaps and SVGs all go one way, once, when the game loads (`buildPicture`, `load/expr.cpp`): the engine reads what the file describes, draws it into its own `Bitmap`, flips it if asked, and keeps it to turn for an object with a `<heading>`. No window backend draws them itself, so every library shows the same pixels; the object's size is known with no window (`name.width` works in tests); and a `pixel` [collision](#how-a-touch-is-found) tests exactly what is drawn. Cells of a group drawing the same picture share it. Text and `<image>` files are the exception: only a backend can measure them.
+**Pictures the engine draws.** Lines, polygons, bitmaps and SVGs all go one way, once, when the game loads (`buildPicture`, `load/expr.cpp`): the engine reads what the file describes, draws it into its own `Bitmap`, flips it if asked, and keeps it to turn for an object with a `<heading>`. No window backend draws them itself, so every library shows the same pixels; the object's size is known with no window (`name.width` works in tests); and a `pixel` [collision](#how-a-touch-is-found) tests exactly what is drawn. Cells of a group drawing the same picture share it. Text and `<image>` files are the exception: only a backend can measure them.
 
 **Turning.** An object with a `<heading>` shows its picture turned to the heading, to the nearest whole degree, made again only when the heading moves a degree. Lines are drawn again turned, so they stay sharp; a bitmap or SVG has its finished pixels turned, each taking the one pixel under it, so chunky pixels stay chunky. Every heading comes out as the same square, big enough for any angle, which is the object's size.
 
@@ -687,7 +689,27 @@ A `<pivot>` names the point of the drawing the object turns about. The picture i
 - Points are in pixels from the sprite's top left, so never negative. `<thickness>` is at least 1 (1 when left out).
 - The lines are drawn in the order written, with no gaps, into a picture as big as the furthest endpoint plus the thickness; everything not drawn on is clear.
 - A line thicker than 1 is every pixel within half its thickness of it: a bar of that width at any angle, with round ends, sitting in the square of its thickness down and to the right of each end. So a thick line turned is the same shape turned, which is what a flipper touches with.
-- Lines cannot be mixed with another shape and have no fill. Lunar Lander's moon is one object of fifteen lines, its pads single thick lines.
+- Lines cannot be mixed with another shape and have no fill (a filled shape is a [`<polygon>`](#polygons)). Lunar Lander's moon is one object of fifteen lines, its pads single thick lines.
+
+### Polygons
+
+```xml
+<sprite>
+  <polygon>
+    <point><x>0</x><y>600</y></point>
+    <point><x>0</x><y>450</y></point>
+    <point><x>390</x><y>270</y></point>
+    <point><x>800</x><y>445</y></point>
+    <point><x>800</x><y>600</y></point>
+    <color>color.forestgreen</color>
+  </polygon>
+</sprite>
+```
+
+- A `<polygon>` is a filled shape: its corners in order, the last joined back to the first. Points are in pixels from the sprite's top left, so never negative; three or more.
+- A sprite may hold several, drawn in the order written, a later one over an earlier one; the picture reaches the furthest corner. A pixel is filled when its middle lies inside (a shape that crosses itself leaves the overlap clear).
+- Drawn once when the game loads, like lines, so `pixel` collisions test what is drawn and a [`<hole>`](#touching) cuts it: Cannon Hill's hills, blown into craters. With a `<heading>` the finished pixels are turned, as a bitmap's are.
+- Polygons cannot be mixed with lines or another shape in one sprite.
 
 ### Bitmaps
 
@@ -972,7 +994,7 @@ An object out of play (hidden or dead) does nothing when its action is pressed o
 | `<ride />` | lent the touched object's velocity for that frame, on top of its own: a frog on a log. Worked out again every frame, so stepping off needs nothing |
 | `<carry />` | picks up the object touched and takes it along, held where it was picked up, until a `<drop />`. The carried thing is swept on the way and meets what it reaches (a key opening a gate). One at a time: picking up another puts the first down; either out of play or reset, and it is put down. Adventure's hero |
 | `<drop />` | puts down what the object carries; it is not picked up again until the two stop touching |
-| `<hole>4<rough>0.5</rough></hole>` | cuts a round hole of that radius in the object's own picture where the other struck it; what is cut is not drawn and, with `pixel` collisions, not touched. `<rough>` (0 to 1) leaves a ragged edge. Only for lines or a bitmap with no heading, animation, mirror or second look. A reset mends it. Space Invaders' shields |
+| `<hole>4<rough>0.5</rough></hole>` | cuts a round hole of that radius in the object's own picture where the other struck it; what is cut is not drawn and, with `pixel` collisions, not touched. `<rough>` (0 to 1) leaves a ragged edge. Only for lines, polygons or a bitmap with no heading, animation, mirror or second look. A reset mends it. Space Invaders' shields; Cannon Hill's craters (`<hole>18<rough>0.5</rough></hole>`) |
 
 ### In and out of play
 
@@ -986,7 +1008,7 @@ An object out of play (hidden or dead) does nothing when its action is pressed o
 | `<reveal object="blocks">count</reveal>` | brings back the first `count` (1 when left out) of that name that are out of play, each where it started |
 | `<release object="debris">count</release>` | in a rule: puts `count` of that name into play centred on the object running it: new copies of a kit piece, or the first out of play of a pool. How a rock breaks |
 | `<fire object="shot" />` | launches the projectile: a new copy of a kit piece (as many in flight as its `<most>`), or the first of a pool out of play. From a shooter that has aimed, along the aim; with a `<facing>`, from the middle of that side, that way (a diagonal when two keys are held); with a `<heading>`, from its nose along the heading; else from its top centre with the shot's own velocity |
-| `<spawn object="ball">` with `<position>`, `<velocity>` | makes a new copy, placed (its top left, or the middle of a `<centered>` half) and going as they say, read as it runs: `<x><centered>self.x + 5</centered></x>`. A half left out is as the file says |
+| `<spawn object="ball">` with `<position>`, `<velocity>`, `<acceleration>` | makes a new copy, placed (its top left, or the middle of a `<centered>` half), going and pulled as they say, read as it runs: `<x><centered>self.x + 5</centered></x>`. A half left out is as the file says. Cannon Hill's shell takes the fall and this turn's wind: `<acceleration><x>table.wind * windpush</x><y>gravity</y></acceleration>` |
 | `<despawn />`, `<despawn object="bomb" />` | takes the object, or every copy of that name and the object itself, out of the game ([spawn and despawn](#spawn-and-despawn)). Kaboom's bomb hitting the ground takes the whole wave's bombs |
 
 ### Numbers

@@ -1634,7 +1634,7 @@ namespace xge
 		// The Picture carries only the drawing's size. The one difference is in the
 		// turning: lines are kept as lines and drawn again at each heading, which
 		// keeps their edges sharp, where a finished picture's pixels are turned.
-		if (sprite.kind == "line" || sprite.kind == "bitmap" || sprite.kind == "svg")
+		if (sprite.kind == "line" || sprite.kind == "polygon" || sprite.kind == "bitmap" || sprite.kind == "svg")
 		{
 			auto kept = std::make_shared<Turnable>();
 			std::shared_ptr<const Bitmap> drawn;
@@ -1666,6 +1666,24 @@ namespace xge
 
 					// 2. Drawn. (Kept as lines for turning: see step 4.)
 					drawn = std::make_shared<const Bitmap>(rasterizeLines(kept->lines));
+				}
+				else if (sprite.kind == "polygon")
+				{
+					// 1. The corners and colours; 2. drawn, filled. Turned as a
+					// finished picture, pixel by pixel, and holed as one.
+					std::vector<FilledPolygon> polygons;
+					for (const RawPolygon& rawPolygon : sprite.polygons)
+					{
+						FilledPolygon polygon;
+						for (const RawVector2& point : rawPolygon.points)
+						{
+							polygon.points.emplace_back(evaluate(point.x, where), evaluate(point.y, where));
+						}
+						checkColor(rawPolygon.color.empty() ? "color.white" : rawPolygon.color, where + " > <polygon>");
+						polygon.color = colorFromName(rawPolygon.color.empty() ? "color.white" : rawPolygon.color);
+						polygons.push_back(std::move(polygon));
+					}
+					drawn = std::make_shared<const Bitmap>(rasterizePolygons(polygons));
 				}
 				else if (sprite.kind == "svg")
 				{

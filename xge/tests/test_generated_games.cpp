@@ -141,6 +141,8 @@ namespace
 			value(at + ".positionY", c.positionY);
 			value(at + ".velocityX", c.velocityX);
 			value(at + ".velocityY", c.velocityY);
+			value(at + ".accelerationX", c.accelerationX);
+			value(at + ".accelerationY", c.accelerationY);
 			for (const std::string& player : c.players) { out << at << ".player " << player << "\n"; }
 		}
 
@@ -176,6 +178,13 @@ namespace
 				text(here + ".color", s.lines[i].color);
 				value(here + ".thickness", s.lines[i].thickness);
 				flag(here + ".hasThickness", s.lines[i].hasThickness);
+			}
+			out << at << ".polygons count " << s.polygons.size() << "\n";
+			for (std::size_t i = 0; i < s.polygons.size(); ++i)
+			{
+				const std::string here = at + ".polygon" + std::to_string(i);
+				for (const RawVector2& point : s.polygons[i].points) { vector2(here + ".point", point); }
+				text(here + ".color", s.polygons[i].color);
 			}
 			for (const std::string& row : s.bitmapRows) { text(at + ".row", row); }
 			for (const auto& [character, color] : s.bitmapColors) { text(at + ".ink." + std::string(1, character), color); }

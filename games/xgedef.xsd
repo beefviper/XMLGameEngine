@@ -448,11 +448,26 @@
     </xs:sequence>
   </xs:complexType>
 
+  <!--
+    One filled shape of a drawing: its corners in order, in pixels from the
+    sprite's top left, the last joined back to the first, and its color. A
+    sprite of one or more of these is drawn once, when the game loads, and a
+    collision of type pixel looks at what is drawn; a <hole> can cut it (hills
+    blown into craters).
+  -->
+  <xs:complexType name="polygonType">
+    <xs:sequence>
+      <xs:element name="point" type="vector2Type" minOccurs="3" maxOccurs="unbounded" />
+      <xs:element name="color" type="xs:string" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
   <!-- A sprite is named when an object has several, so an animation can pick them out. -->
   <xs:complexType name="spriteType">
     <xs:choice>
       <xs:group ref="shape" />
       <xs:element name="line" type="lineType" maxOccurs="unbounded" />
+      <xs:element name="polygon" type="polygonType" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
@@ -537,6 +552,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="line" type="lineType" maxOccurs="unbounded" />
+      <xs:element name="polygon" type="polygonType" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
@@ -716,6 +732,8 @@
         </xs:element>
       </xs:choice>
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <!-- acceleration: its pull for as long as it lasts (wind on a shell), read as the spawn runs -->
+      <xs:element name="acceleration" type="partialVector2Type" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="object" type="xs:string" use="required" />
     <xs:attribute name="into" type="xs:NMTOKEN" use="optional" />

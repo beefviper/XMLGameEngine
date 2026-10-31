@@ -61,8 +61,14 @@ Keep new picture kinds on this path. Text and `<image>` files are the exception:
 - Need: shields that shots wear away (Space Invaders), craters; the author's words were a transformation of the picture, with a blast radius and noise, or decals.
 - **`<hole>`, chosen:** a command of a rule about another object, cutting a round hole (its radius as its content, and `<rough>` for a ragged edge) in the object's own picture. A pixel collision then sees the hole, so the next shot goes deeper. Centered on the solid pixel nearest the striker's middle (within two pixels of its box), not on the touch point: the touch point lies on the box edge, which never moves as the picture is eaten, so holes would stay at the surface; the striker's middle alone lies outside the picture and each hole would only reach a few pixels in.
 - Copy on write: the picture is shared by every object made from one definition, so the first hole copies it and keeps the whole one (`Object::unholed`) for a reset.
-- Only for a picture that stays as it is (lines or a bitmap, no heading, animation or second look): a turned or swapped picture is drawn again from its original and would lose its holes, and keeping holes across turns is not needed by any game yet.
-- Not done: decals (painting a picture onto another, a scorch mark), holes in an `<svg>` or `<image>` sprite, a hole's shape other than round.
+- Only for a picture that stays as it is (lines, polygons or a bitmap, no heading, animation or second look): a turned or swapped picture is drawn again from its original and would lose its holes, and keeping holes across turns is not needed by any game yet.
+- Not done: decals (painting a picture onto another, a scorch mark), holes in an `<svg>` or `<image>` sprite, a hole's shape other than round. Beef (2026-10-31) noted the arcade Space Invaders cut a fixed pattern, not a round blast; if wanted, `<hole sprite="splat" />` cutting the shape of a bitmap.
+
+## Polygons (2026-10-31)
+
+- Need: Cannon Hill's hills, filled and blown into craters. Lines have no fill; a bitmap hill is a page of characters with stairs for slopes.
+- **Chosen:** a `<polygon>` of `<point>`s and a `<color>`, a sprite of one or more, its own kind (not mixed with lines). Drawn once at load (`rasterizePolygons`: a pixel is filled when its middle is inside, rows scanned against the edges, even-odd), so it is a finished picture: `pixel` collisions test it, `<hole>` cuts it, a heading turns its pixels as a bitmap's.
+- Rejected: a `<fill />` on a closed run of lines (colour per line, and lines are redrawn when turned, which a hole would lose).
 
 ## Light and dark (2026-10-17)
 

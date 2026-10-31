@@ -382,6 +382,14 @@
             <xsl:with-param name="name" select="'command.velocityY'" />
             <xsl:with-param name="node" select="$node/velocity/y" />
           </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.accelerationX'" />
+            <xsl:with-param name="node" select="$node/acceleration/x" />
+          </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.accelerationY'" />
+            <xsl:with-param name="node" select="$node/acceleration/y" />
+          </xsl:call-template>
         </xsl:when>
         <xsl:when test="$verb = 'follow'">
           <xsl:call-template name="field">
@@ -571,6 +579,28 @@
         </xsl:for-each>
         <xsl:value-of select="concat($indent, '};&#10;')" />
       </xsl:when>
+      <xsl:when test="$kind = 'polygon'">
+        <xsl:value-of select="concat($indent, 'look.polygons = {&#10;')" />
+        <xsl:for-each select="$node/polygon">
+          <xsl:value-of select="concat($indent, $tab, 'make&lt;RawPolygon&gt;([](RawPolygon&amp; polygon) { polygon.points = { ')" />
+          <xsl:for-each select="point">
+            <xsl:if test="position() &gt; 1">, </xsl:if>
+            <xsl:call-template name="vector">
+              <xsl:with-param name="node" select="." />
+            </xsl:call-template>
+          </xsl:for-each>
+          <xsl:text> };</xsl:text>
+          <xsl:if test="color">
+            <xsl:text> polygon.color = </xsl:text>
+            <xsl:call-template name="text">
+              <xsl:with-param name="node" select="color" />
+            </xsl:call-template>
+            <xsl:text>;</xsl:text>
+          </xsl:if>
+          <xsl:text> }),&#10;</xsl:text>
+        </xsl:for-each>
+        <xsl:value-of select="concat($indent, '};&#10;')" />
+      </xsl:when>
       <xsl:when test="$kind = 'circle'">
         <xsl:call-template name="look-value">
           <xsl:with-param name="indent" select="$indent" />
@@ -735,7 +765,7 @@
       </xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
-    <xsl:if test="$kind != 'image' and $kind != 'svg' and $kind != 'line'">
+    <xsl:if test="$kind != 'image' and $kind != 'svg' and $kind != 'line' and $kind != 'polygon'">
       <xsl:call-template name="look-text">
         <xsl:with-param name="indent" select="$indent" />
         <xsl:with-param name="name" select="'color'" />

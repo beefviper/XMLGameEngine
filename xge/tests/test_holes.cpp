@@ -148,3 +148,31 @@ TEST_CASE("spaceinvaders.xml: shots wear holes in a shield until they pass throu
 	CHECK(play.get("shields.2.1").bitmap != whole);
 	CHECK(through);
 }
+
+TEST_CASE("a sprite of <polygon>s is filled, tested by its pixels, and holed where it is struck", "[hole][polygon]")
+{
+	const std::string hill = "<object name=\"hill\" class=\"ground\"><sprite><polygon>"
+		"<point><x>0</x><y>100</y></point><point><x>50</x><y>40</y></point><point><x>100</x><y>100</y></point>"
+		"<color>color.green</color></polygon></sprite>"
+		"<position><x>100</x><y>100</y></position>"
+		"<collisions><enabled>true</enabled><type>pixel</type><collision class=\"shell\"><hole>8</hole></collision></collisions></object>";
+	const std::string shell = box("shell", 148, 100, "<velocity><x>0</x><y>3</y></velocity><collisions><enabled>true</enabled>"
+		"<collision class=\"ground\"><stop /></collision></collisions>");
+	const Scratch file(hill + shell.substr(0, shell.find('>')) + " class=\"shell\"" + shell.substr(shell.find('>')), "<reset object=\"hill\" />");
+	Played play(file.path);
+	const Object& ground = play.get("hill");
+	REQUIRE(ground.bitmap);
+	CHECK(ground.bitmap->width == 100);
+	CHECK(ground.bitmap->height == 100);
+	CHECK(ground.bitmap->solidAt(50, 45));
+	CHECK_FALSE(ground.bitmap->solidAt(20, 45));
+
+	// Falling onto the peak: it stops on the slope, a hole cut round it.
+	play.frames(30);
+	CHECK(play.get("shell").position.y < 145.0f);
+	CHECK(play.get("shell").position.y > 125.0f);
+	CHECK_FALSE(play.get("hill").bitmap->solidAt(50, 45));
+	CHECK(play.get("hill").bitmap->solidAt(50, 90));
+	play.tap(KeyCode::Space);
+	CHECK(play.get("hill").bitmap->solidAt(50, 45));
+}

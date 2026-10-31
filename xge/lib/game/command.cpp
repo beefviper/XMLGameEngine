@@ -367,7 +367,7 @@ namespace xge
 				{
 					if (!centered)
 					{
-						throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <centered> is for its <position>, not its <velocity>");
+						throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <centered> is for its <position>, not its <velocity> or <acceleration>");
 					}
 					*centered = true;
 					into = evaluate(RawValue::expression(value.text.empty() ? middle : value.text));
@@ -379,6 +379,8 @@ namespace xge
 			half(raw.positionY, spawn.y, &spawn.centerY, "window.height.center");
 			half(raw.velocityX, spawn.velocityX, nullptr, "");
 			half(raw.velocityY, spawn.velocityY, nullptr, "");
+			half(raw.accelerationX, spawn.accelerationX, nullptr, "");
+			half(raw.accelerationY, spawn.accelerationY, nullptr, "");
 			half(raw.column, spawn.column, nullptr, "");
 			half(raw.row, spawn.row, nullptr, "");
 			spawn.random = raw.random;
@@ -629,6 +631,13 @@ namespace xge
 				half(s.velocityX, false);
 				o << " ";
 				half(s.velocityY, false);
+				if (s.accelerationX || s.accelerationY)
+				{
+					o << ", ";
+					half(s.accelerationX, false);
+					o << " ";
+					half(s.accelerationY, false);
+				}
 				o << ")";
 			},
 			[&](const CmdSend& s)
@@ -886,7 +895,7 @@ namespace xge
 		}
 		else if (command.verb == "spawn")
 		{
-			o << "(" << command.object << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY
+			o << "(" << command.object << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY << ", " << command.accelerationX << " " << command.accelerationY
 				<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << " " << command.below << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
 		}
 		else if (command.verb == "send")

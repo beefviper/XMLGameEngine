@@ -914,7 +914,7 @@ namespace xge
 					if (!std::holds_alternative<CmdHole>(shapeOf(command))) { continue; }
 					if (!object.bitmap || object.hasHeading || !object.animationBitmaps.empty() || !object.looks.empty() || object.mirrors)
 					{
-						throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or a <bitmap>, with no <heading>, <animation>, <mirror> or second <sprite>");
+						throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or <polygon>s, or a <bitmap>, with no <heading>, <animation>, <mirror> or second <sprite>");
 					}
 				}
 			}

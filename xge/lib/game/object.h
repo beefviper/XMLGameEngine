@@ -209,10 +209,18 @@ namespace xge
 		bool hasThickness{ false };
 	};
 
+	// One <polygon> of a sprite of filled shapes: its corners in order, in
+	// pixels from the sprite's top left, and its colour.
+	struct RawPolygon
+	{
+		std::vector<RawVector2> points;
+		std::string color;           // "" means color.white
+	};
+
 	// An object's <sprite>, as written: one shape, a drawing made of <line>s,
 	// or a picture written as rows of text.
 	// Which of the fields are used depends on `kind` (circle, rectangle, text,
-	// image, line, bitmap or svg).
+	// image, line, polygon, bitmap or svg).
 	// One piece of a <text>, in the order written: a fixed label
 	// (<content>), a number (<number>) or a number shown as a letter
 	// (<letter>, 0 is A, 25 is Z, and round again).
@@ -234,6 +242,7 @@ namespace xge
 		std::string name;
 
 		std::vector<RawLine> lines;  // line: one or more
+		std::vector<RawPolygon> polygons; // polygon: one or more
 
 		std::vector<std::string> bitmapRows; // bitmap: the <row>s, top to bottom
 		// bitmap: each <color char="w">: the character and the name of its

@@ -627,7 +627,8 @@ namespace xge
 		float value{};
 	};
 
-	// <spawn object="shots"> with a <position> and a <velocity>, each half
+	// <spawn object="shots"> with a <position>, a <velocity> and an
+	// <acceleration>, each half
 	// optional - one of `target` (a <group> used as a pool, or an object)
 	// that is out of play comes in, put where the position says (its top
 	// left, or, for a half that is <centered>, its middle) and going as the
@@ -644,6 +645,8 @@ namespace xge
 		bool centerY{ false };
 		std::optional<float> velocityX;
 		std::optional<float> velocityY;
+		std::optional<float> accelerationX;
+		std::optional<float> accelerationY;
 		// <random />: one of a group's members at random, not in turn.
 		bool random{ false };
 		// On a cell map: the column and row its top left cell goes in,
@@ -908,7 +911,7 @@ namespace xge
 		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way), swing (its <degrees>)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
-		// spawn: its <position> and <velocity>, each half empty text when
+		// spawn: its <position>, <velocity> and <acceleration>, each half empty text when
 		// left out; a position half may be <centered>.
 		// hop: a diagonal one's <x> across and <y> up or down (positionX and
 		// positionY), each empty text when it gives one distance instead.
@@ -917,6 +920,8 @@ namespace xge
 		RawValue positionY;
 		RawValue velocityX;
 		RawValue velocityY;
+		RawValue accelerationX;
+		RawValue accelerationY;
 		// spawn: <random />, and on a cell map its <column> and <row>, each
 		// empty text when left out, or <free />. move: its <wait> is `seconds`.
 		bool random{ false };

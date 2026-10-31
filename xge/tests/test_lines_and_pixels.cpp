@@ -846,3 +846,47 @@ TEST_CASE("an attribute the schema does not declare is turned away by Xerces, wh
 	CHECK(verdict.weakAccepts);
 	CHECK_FALSE(verdict.strongAccepts);
 }
+
+TEST_CASE("a polygon fills the pixels whose middles lie inside its corners", "[lines][polygon]")
+{
+	FilledPolygon square;
+	square.points = { { 2.0f, 1.0f }, { 6.0f, 1.0f }, { 6.0f, 4.0f }, { 2.0f, 4.0f } };
+	square.color = colorFromName("color.green");
+	const Bitmap drawn = rasterizePolygons({ square });
+	CHECK(drawn.width == 6);
+	CHECK(drawn.height == 4);
+	for (int y = 0; y < drawn.height; ++y)
+	{
+		for (int x = 0; x < drawn.width; ++x)
+		{
+			CHECK(drawn.solidAt(x, y) == (x >= 2 && x < 6 && y >= 1 && y < 4));
+		}
+	}
+
+	// A slope: the row's middle decides, so a hill's edge is a clean stair.
+	FilledPolygon hill;
+	hill.points = { { 0.0f, 10.0f }, { 10.0f, 0.0f }, { 10.0f, 10.0f } };
+	const Bitmap slope = rasterizePolygons({ hill });
+	CHECK(slope.solidAt(9, 0));
+	CHECK_FALSE(slope.solidAt(0, 0));
+	CHECK(slope.solidAt(5, 5));
+	CHECK_FALSE(slope.solidAt(3, 5));
+	CHECK(slope.solidAt(0, 9));
+
+	// A later one covers an earlier one.
+	FilledPolygon over = square;
+	over.color = colorFromName("color.red");
+	const Bitmap both = rasterizePolygons({ square, over });
+	CHECK(both.rgba[(2 * static_cast<std::size_t>(both.width) + 3) * 4] == 255);
+}
+
+TEST_CASE("a polygon needs three corners and none below 0, and an empty list draws nothing", "[lines][polygon]")
+{
+	FilledPolygon two;
+	two.points = { { 0.0f, 0.0f }, { 4.0f, 4.0f } };
+	CHECK_THROWS_AS(rasterizePolygons({ two }), std::invalid_argument);
+	FilledPolygon below;
+	below.points = { { 0.0f, 0.0f }, { 4.0f, -1.0f }, { 4.0f, 4.0f } };
+	CHECK_THROWS_AS(rasterizePolygons({ below }), std::invalid_argument);
+	CHECK(rasterizePolygons({}).rgba.empty());
+}
