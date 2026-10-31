@@ -192,8 +192,8 @@
           <position><x>0</x><y>0</y></position>
           <heading>90</heading>
           <actions>
-            <action name="left"><turn direction="left">2</turn></action>
-            <action name="right"><turn direction="right">2</turn></action>
+            <action name="left"><turn direction="counterclockwise">2</turn></action>
+            <action name="right"><turn direction="clockwise">2</turn></action>
             <action name="charge">
               <inc variable="arrow.power">charge</inc>
               <set variable="arrow.power"><formula><smallest><value>arrow.power</value><value>most</value></smallest></formula></set>

@@ -460,7 +460,7 @@ namespace xge
 		std::string burn;
 	};
 
-	// <turn direction="left">3</turn> (or right) - only ever in an object's own
+	// <turn direction="counterclockwise">3</turn> (or clockwise) - only ever in an object's own
 	// <action>: while the key is held the object's heading changes by `rate`
 	// degrees every frame, counterclockwise for left and clockwise for right
 	// (see Object::heading, playOneFrame). Held like a <move>.
@@ -480,14 +480,16 @@ namespace xge
 		std::string burn;
 	};
 
-	// <swing><to>330</to><seconds>0.1</seconds></swing> - only ever in an
-	// object's own <action>: while the key is held the heading goes to `to`
-	// by the shorter way in a stroke `seconds` long, starting from still,
-	// fastest half way, slowing to a stop; let go, it comes back the same
-	// way to the heading it started with (a flipper). See playOneFrame.
+	// <swing direction="counterclockwise"><degrees>60</degrees><seconds>0.1</seconds></swing>
+	// - only ever in an object's own <action>: while the key is held the
+	// heading turns that many degrees that way (as <turn>: counterclockwise takes from
+	// the heading, right adds) in a stroke `seconds` long, starting from
+	// still, fastest half way, slowing to a stop; let go, it comes back the
+	// same way to the heading it started with (a flipper). `by` is the turn
+	// with its sign (counterclockwise below 0). See playOneFrame.
 	struct CmdSwing
 	{
-		float to{};
+		float by{};
 		float seconds{};
 	};
 
@@ -904,7 +906,7 @@ namespace xge
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)
 		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
 		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)
-		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way), swing (its <to>)
+		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way), swing (its <degrees>)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
 		// spawn: its <position> and <velocity>, each half empty text when
 		// left out; a position half may be <centered>.

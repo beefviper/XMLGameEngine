@@ -337,7 +337,8 @@ namespace xge
 							object.swingDone = done;
 							const float pi = 3.14159265358979323846f;
 							const float eased = (1.0f - std::cos(pi * done)) / 2.0f;
-							const float now = std::fmod(object.start.heading + turnBetween(object.start.heading, object.swingTo) * eased + 720.0f, 360.0f);
+							float now = std::fmod(object.start.heading + object.swingBy * eased, 360.0f);
+							if (now < 0.0f) { now += 360.0f; }
 							object.spin = turnBetween(object.heading, now);
 							object.heading = now;
 							object.showHeading();

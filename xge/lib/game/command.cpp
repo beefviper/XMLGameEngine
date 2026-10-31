@@ -27,6 +27,16 @@ namespace xge
 
 			throw std::runtime_error("<" + verb + "> has direction=\"" + name + "\"; expected up, down, left or right");
 		}
+
+		// A turn's way: a rotation, clockwise (adds to the heading, kept as
+		// Right) or counterclockwise (takes from it, kept as Left).
+		Direction rotationFromName(const std::string& name, const std::string& verb)
+		{
+			if (name == "clockwise")        { return Direction::Right; }
+			if (name == "counterclockwise") { return Direction::Left; }
+
+			throw std::runtime_error("<" + verb + "> has direction=\"" + name + "\"; expected clockwise or counterclockwise");
+		}
 	}
 
 	VariableName VariableName::of(const std::string& written)
@@ -229,23 +239,19 @@ namespace xge
 
 		if (verb == "turn")
 		{
-			const Direction direction = directionFromName(raw.direction, verb);
-			if (direction != Direction::Left && direction != Direction::Right)
-			{
-				throw std::runtime_error("<turn> has direction=\"" + raw.direction + "\"; expected left or right");
-			}
-			return CmdTurn{ direction, amountOr0() };
+			return CmdTurn{ rotationFromName(raw.direction, verb), amountOr0() };
 		}
 
 		if (verb == "thrust") { return CmdThrust{ evaluate(raw.amount), raw.burn }; }
 
 		if (verb == "swing")
 		{
+			const Direction direction = rotationFromName(raw.direction, verb);
 			const float seconds = evaluate(raw.seconds);
 			if (!(seconds > 0.0f)) { throw std::runtime_error("<swing> takes <seconds> of " + formatDisplayNumber(seconds) + "; expected more than 0"); }
-			float to = std::fmod(evaluate(raw.distance), 360.0f);
-			if (to < 0.0f) { to += 360.0f; }
-			return CmdSwing{ to, seconds };
+			const float degrees = evaluate(raw.distance);
+			if (!(degrees > 0.0f)) { throw std::runtime_error("<swing> takes <degrees> of " + formatDisplayNumber(degrees) + "; expected more than 0"); }
+			return CmdSwing{ direction == Direction::Left ? -degrees : degrees, seconds };
 		}
 
 		if (verb == "deflect")
@@ -577,8 +583,8 @@ namespace xge
 					: "right";
 				o << "accelerate." << direction << "(" << a.amount << (a.burn.empty() ? "" : ", burn " + a.burn) << ")";
 			},
-			[&](const CmdTurn& t) { o << "turn." << (t.direction == Direction::Left ? "left" : "right") << "(" << t.rate << ")"; },
-			[&](const CmdSwing& s) { o << "swing(to " << s.to << ", " << s.seconds << "s)"; },
+			[&](const CmdTurn& t) { o << "turn." << (t.direction == Direction::Left ? "counterclockwise" : "clockwise") << "(" << t.rate << ")"; },
+			[&](const CmdSwing& s) { o << "swing(" << s.by << " degrees, " << s.seconds << "s)"; },
 			[&](const CmdThrust& t) { o << "thrust(" << t.amount << (t.burn.empty() ? "" : ", burn " + t.burn) << ")"; },
 			[&](const CmdRelease& r) { o << "release(" << r.target << ", " << r.count << ")"; },
 			[&](const CmdIncrement& c) { o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
@@ -783,7 +789,7 @@ namespace xge
 
 		if (command.verb == "swing")
 		{
-			o << "(to " << command.distance << ", " << command.seconds << "s)";
+			o << "(" << command.direction << " " << command.distance << " degrees, " << command.seconds << "s)";
 		}
 		else if (command.verb == "thrust" || command.verb == "deflect")
 		{

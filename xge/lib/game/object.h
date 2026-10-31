@@ -799,12 +799,12 @@ namespace xge
 		Vector2f pivotOnScreen() const;
 
 		// <swing>: a stroke of swingFrames frames from the heading it started
-		// with to swingTo, eased (still at both ends, fastest half way).
+		// with, turning swingBy degrees (less than 0: left), eased (still at both ends, fastest half way).
 		// swingDone is how far through it is, 0 to 1: held, it goes on;
 		// let go, it comes back. swingFrames 0: it has never swung. See
 		// playOneFrame.
 		int swingFrames{};
-		float swingTo{};
+		float swingBy{};
 		float swingDone{};
 		bool swingHeld{ false };
 

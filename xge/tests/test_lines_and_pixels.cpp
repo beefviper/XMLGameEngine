@@ -821,7 +821,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in lines, types and 
 		{ "a line with a corner it cannot hold", "<thickness>3</thickness>", "<thickness>3</thickness><corner />", "corner" },
 		{ "a collision type that is not one", "<collisions><type>pixel</type></collisions>", "<collisions><type>round</type></collisions>", "round" },
 		{ "an acceleration missing its y", "<y>gravity</y>", "", "y" },
-		{ "a turn with no direction", "<turn direction=\"left\">", "<turn>", "direction" },
+		{ "a turn with no direction", "<turn direction=\"counterclockwise\">", "<turn>", "direction" },
 	};
 
 	for (const Mistake& mistake : mistakes)

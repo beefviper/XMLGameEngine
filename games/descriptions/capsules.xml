@@ -478,8 +478,8 @@
               <action name="left"><move direction="left">10<wait>0.2</wait></move></action>
               <action name="right"><move direction="right">10<wait>0.2</wait></move></action>
               <action name="faster"><move direction="down">20</move></action>
-              <action name="clockwise"><turn direction="right" /><play sound="turn" /></action>
-              <action name="counter"><turn direction="left" /><play sound="turn" /></action>
+              <action name="clockwise"><turn direction="clockwise" /><play sound="turn" /></action>
+              <action name="counter"><turn direction="counterclockwise" /><play sound="turn" /></action>
               <action name="land">
                 <settle />
                 <play sound="land" />

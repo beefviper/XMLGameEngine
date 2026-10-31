@@ -1282,9 +1282,9 @@ TEST_CASE("a drag of 1 or more is reported when it loads", "[asteroids][errors]"
 	CHECK_THROWS_WITH(Game{ scratch.path.string() }, ContainsSubstring("drag"));
 }
 
-TEST_CASE("both schema checkers turn away a turn that is not left or right", "[asteroids][schema]")
+TEST_CASE("both schema checkers turn away a turn that is not clockwise or counterclockwise", "[asteroids][schema]")
 {
-	const Scratch scratch{ asteroidsWith("<turn direction=\"left\">", "<turn direction=\"up\">") };
+	const Scratch scratch{ asteroidsWith("<turn direction=\"counterclockwise\">", "<turn direction=\"up\">") };
 
 	auto weak = XmlDocumentFactory::create(XmlBackend::TinyXml2);
 	REQUIRE(weak->load(scratch.path.string()));

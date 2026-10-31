@@ -4,7 +4,7 @@
 // date: Oct 31, 2026
 //
 // Catch2 tests for the third stage of tables and tracks: a picture turned
-// about its <pivot>, which stays put; a <swing> that turns it to an angle
+// about its <pivot>, which stays put; a <swing> that turns it by an angle
 // while its key is held and back when it is let go; the frame's sweep
 // following the turn, so a ball in the way is struck however fast the
 // flipper swings; the speed a turning thing lends what it knocks, faster
@@ -60,7 +60,7 @@ namespace
 			"<color>color.white</color><thickness>8</thickness></line></sprite>"
 			"<position><x>300</x><y>400</y></position><heading>30</heading><pivot><x>0</x><y>0</y></pivot>"
 			"<collisions><type>pixel</type><collision class=\"ball\"><knock>0.5</knock></collision></collisions>"
-			"<actions><action name=\"flip\"><swing><to>330</to><seconds>" + std::to_string(static_cast<float>(frames) / 60.0f) + "</seconds></swing></action></actions></object>";
+			"<actions><action name=\"flip\"><swing direction=\"counterclockwise\"><degrees>60</degrees><seconds>" + std::to_string(static_cast<float>(frames) / 60.0f) + "</seconds></swing></action></actions></object>";
 	}
 
 	// A ball of radius 5 with its middle at x, y, still, with a mass.
@@ -106,7 +106,7 @@ TEST_CASE("a swing is one eased stroke: from still, fastest half way, to still, 
 	Object& flip = play.get("flipper");
 
 	// 60 degrees in six frames along half a wave: 4, 11, 15, 15, 11 and 4
-	// degrees, never past where it swings to.
+	// degrees, never past the 60.
 	play.engine.handleKeyPressed(KeyCode::D);
 	float was = flip.heading;
 	for (const float turn : { 4.02f, 10.98f, 15.0f, 15.0f, 10.98f, 4.02f })
@@ -134,6 +134,28 @@ TEST_CASE("a swing is one eased stroke: from still, fastest half way, to still, 
 	play.frames(10);
 	CHECK(flip.heading == Approx(30.0f));
 	CHECK(flip.spin == 0.0f);
+}
+
+TEST_CASE("a swing turns the way it says, by as many degrees as it says, past half a turn too", "[flippers][swing]")
+{
+	// Clockwise adds to the heading, as <turn direction="clockwise"> does; 270 goes
+	// the long way round, not the shorter 90 back.
+	std::string object = flipper(6);
+	const std::string counter = "<swing direction=\"counterclockwise\"><degrees>60</degrees>";
+	object.replace(object.find(counter), counter.size(), "<swing direction=\"clockwise\"><degrees>270</degrees>");
+	Written file(object);
+	Played play(file.path);
+	Object& flip = play.get("flipper");
+
+	play.engine.handleKeyPressed(KeyCode::D);
+	play.frames(3);
+	CHECK(flip.heading == Approx(165.0f).margin(0.05f));
+	CHECK(flip.spin > 0.0f);
+	play.frames(3);
+	CHECK(flip.heading == Approx(300.0f).margin(0.05f));
+	play.engine.handleKeyReleased(KeyCode::D);
+	play.frames(6);
+	CHECK(flip.heading == Approx(30.0f).margin(0.05f));
 }
 
 TEST_CASE("a ball in a flipper's way is struck as it swings, however fast", "[flippers][sweep]")
@@ -261,7 +283,8 @@ TEST_CASE("a ball at rest on a flipper wakes when the flipper moves", "[friction
 	// it on 30 degrees; on the flipper turned level (heading 0), it does.
 	std::string level = flipper(4);
 	level.replace(level.find("<heading>30</heading>"), 21, "<heading>0</heading>");
-	level.replace(level.find("<to>330</to>"), 12, "<to>30</to>");
+	const std::string up = "<swing direction=\"counterclockwise\"><degrees>60</degrees>";
+	level.replace(level.find(up), up.size(), "<swing direction=\"clockwise\"><degrees>30</degrees>");
 	const Vector2f at = onFlipper(40.0f, 0.0f, 11.0f);
 	Written file(level + rubbing(at.x, at.y, "<friction>0.2</friction>"));
 	Played play(file.path);

@@ -74,7 +74,7 @@ namespace
 			"<group name=\"pieces\" class=\"falling\">"
 			"<collisions><collision class=\"block\" side=\"bottom\"><settle /></collision><collision edge=\"bottom\"><settle /></collision></collisions>"
 			"<actions><action name=\"left\"><hop direction=\"left\" /></action><action name=\"right\"><hop direction=\"right\" /></action>"
-			"<action name=\"turn\"><turn direction=\"right\" /></action><action name=\"back\"><turn direction=\"left\" /></action>"
+			"<action name=\"turn\"><turn direction=\"clockwise\" /></action><action name=\"back\"><turn direction=\"counterclockwise\" /></action>"
 			"<action name=\"drop\"><slide direction=\"down\" /></action></actions>"
 			"<timers><timer><every>" + every + "</every><hop direction=\"down\" /></timer></timers>"
 			+ shapes + "</group>"
@@ -914,7 +914,7 @@ namespace
 			"<group name=\"pieces\" class=\"falling\">"
 			"<collisions><collision class=\"germ\" side=\"bottom\"><settle /></collision><collision class=\"pill\" side=\"bottom\"><settle /></collision>"
 			"<collision edge=\"bottom\"><settle /></collision></collisions>"
-			"<actions><action name=\"drop\"><slide direction=\"down\" /></action><action name=\"turn\"><turn direction=\"right\" /></action></actions>"
+			"<actions><action name=\"drop\"><slide direction=\"down\" /></action><action name=\"turn\"><turn direction=\"clockwise\" /></action></actions>"
 			"<group name=\"capsule\"><shape><row>" + capsule + "</row></shape></group></group>"
 			"<checks><line><atleast>4</atleast><straight /><alike variable=\"hue\" /><clear /><fall class=\"pill\" /></line></checks></map>";
 	}

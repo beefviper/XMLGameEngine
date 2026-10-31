@@ -214,8 +214,8 @@
             </collision>
           </collisions>
           <actions>
-            <action name="left"><turn direction="left">turnrate</turn></action>
-            <action name="right"><turn direction="right">turnrate</turn></action>
+            <action name="left"><turn direction="counterclockwise">turnrate</turn></action>
+            <action name="right"><turn direction="clockwise">turnrate</turn></action>
             <action name="thrust">
               <thrust burn="fuel">thrustpower</thrust>
               <play sound="thrust" />

@@ -291,7 +291,7 @@
         <xsl:when test="$verb = 'swing'">
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.distance'" />
-            <xsl:with-param name="node" select="$node/to" />
+            <xsl:with-param name="node" select="$node/degrees" />
           </xsl:call-template>
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.seconds'" />

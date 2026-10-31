@@ -211,7 +211,7 @@ namespace xge
 			{
 				if (!self || !doer.action) { return; }
 				self->swingFrames = std::max(1, game.framesFor(s.seconds));
-				self->swingTo = s.to;
+				self->swingBy = s.by;
 				self->swingHeld = pressed;
 			},
 			// The game's own: a state's list, and the rest.
@@ -375,7 +375,7 @@ namespace xge
 			else if (const auto* swing = std::get_if<CmdSwing>(&actionCommand))
 			{
 				object.swingFrames = std::max(1, game.framesFor(swing->seconds));
-				object.swingTo = swing->to;
+				object.swingBy = swing->by;
 				object.swingHeld = true;
 			}
 			else if (const auto* play = std::get_if<CmdPlay>(&actionCommand))
