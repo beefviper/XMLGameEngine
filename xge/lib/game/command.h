@@ -480,7 +480,7 @@ namespace xge
 		std::string burn;
 	};
 
-	// <swing>12<to>330</to></swing> - only ever in an object's own <action>:
+	// <swing>12<to>330</to><gain>4</gain></swing> - only ever in an object's own <action>:
 	// while the key is held the heading goes toward `to` by the shorter way,
 	// `rate` degrees a frame, and stops there; let go, it goes back the same
 	// way to the heading it started with (a flipper). See playOneFrame.
@@ -488,6 +488,7 @@ namespace xge
 	{
 		float rate{};
 		float to{};
+		float gain{}; // <gain>: degrees a frame its turn grows by each frame; 0 at once
 	};
 
 	// <release object="mediumrocks">2</release> - in a collision rule: puts
@@ -904,7 +905,7 @@ namespace xge
 		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
 		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way), swing (its <to>)
-		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
+		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0), swing (its <gain>; empty text: 0)
 		// spawn: its <position> and <velocity>, each half empty text when
 		// left out; a position half may be <centered>.
 		// hop: a diagonal one's <x> across and <y> up or down (positionX and

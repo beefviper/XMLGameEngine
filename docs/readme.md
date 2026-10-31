@@ -371,6 +371,7 @@ Every part but the position is optional, and **what is left out is nothing**: no
 | `<heading>` | degrees clockwise from straight up. Lets `<turn>`, `<thrust>` and `<swing>` work, and turns the picture |
 | `<pivot>` | after `<heading>`: the point the picture turns about, `<x>` and `<y>` in the drawing's own pixels (a flipper's hinge at one end). The `<position>` is then where that point sits, and it stays there however the object turns ([turning about a pivot](#turning-about-a-pivot)). Left out, it turns about its middle |
 | `<drag>` | 0 up to 1: the share of its speed lost each frame (a pool ball on the cloth) |
+| `<friction>` | 0 or more, after `<drag>`: how much a still surface it touches holds it back along that surface, as a share of how hard it met it; and what brings it to [rest](#knocks) |
 | `<mass>` | above 0: how hard it is to [knock](#knocks). Left out, a knock does not move it |
 | `<pull object="sun">strength</pull>` | that much more speed toward the nearest of that name each frame; several add up |
 | `<seek object="ship">degrees</seek>` | a homing missile: the way it goes turns toward the nearest of that name, at most that many degrees a frame, at the same speed |
@@ -660,16 +661,17 @@ A `<pivot>` names the point of the drawing the object turns about. The picture i
 
 ```xml
 <object name="leftflipper" from="flipper">
-  <position><x>145</x><y>540</y></position>
+  <position><x>141</x><y>539</y></position>
   <heading>30</heading>
   <pivot><x>0</x><y>0</y></pivot>
   <actions>
-    <action name="flip"><swing>12<to>330</to></swing></action>
+    <action name="flip"><swing>16<to>330</to><gain>4</gain></swing></action>
   </actions>
 </object>
 ```
 
-- **`<swing>`** (in an action, its key held) turns the heading its content's degrees a frame toward its `<to>`, by the shorter way, and stops there; let go, it turns back the same way to the heading it started with. Pressed again on the way back, it turns round.
+- **`<swing>`** (in an action, its key held) turns the heading toward its `<to>`, by the shorter way, and stops there; let go, it turns back the same way to the heading it started with. Pressed again on the way back, it turns round.
+- **A turn has the same three layers as a move:** the heading (where), the turn a frame (how fast) and `<gain>` (how much faster each frame). `<swing>16<to>330</to><gain>4</gain></swing>` turns 4 degrees, then 8, 12, 16, 16 and the last 4: the flipper starts slowly and is fastest at the top of its stroke, so a ball struck later goes off faster. Each start, and each turn back, begins from still. Left out, it turns its content's degrees from the first frame.
 - **The turn is swept.** What a swing turns in a frame is that frame's spin: the move goes from the old heading to the new one through the frame, alongside every other object's move, so a touch is found where the flipper's wedge first meets the ball's path, however fast either goes ([how a touch is found](#how-a-touch-is-found)). A heading changed any other way (a `<turn>`, a `<set>`) is not swept.
 - **A turning thing lends the speed of the point that touches.** A `<knock>` takes each side's speed at the touch point: its velocity, and for one turning, its spin times how far that point is from the pivot, across the arm. A ball struck by a flipper's tip goes off faster than one struck by the hinge, and off the way the flipper faces there.
 
@@ -684,6 +686,7 @@ A `<pivot>` names the point of the drawing the object turns about. The picture i
 
 - Points are in pixels from the sprite's top left, so never negative. `<thickness>` is at least 1 (1 when left out).
 - The lines are drawn in the order written, with no gaps, into a picture as big as the furthest endpoint plus the thickness; everything not drawn on is clear.
+- A line thicker than 1 is every pixel within half its thickness of it: a bar of that width at any angle, with round ends, sitting in the square of its thickness down and to the right of each end. So a thick line turned is the same shape turned, which is what a flipper touches with.
 - Lines cannot be mixed with another shape and have no fill. Lunar Lander's moon is one object of fifteen lines, its pads single thick lines.
 
 ### Bitmaps
@@ -938,7 +941,7 @@ An object out of play (hidden or dead) does nothing when its action is pressed o
 | `<accelerate direction="up" burn="fuel">amount</accelerate>` | held: adds `amount` to the velocity every frame (opposite ones cancel). `burn` names one of the object's own variables, taken 1 off each frame; at 0 the thrust does nothing |
 | `<thrust burn="fuel">amount</thrust>` | held: the same along the object's `<heading>` |
 | `<turn direction="left">degrees</turn>` (or `right`) | held: turns the heading that many degrees a frame |
-| `<swing>12<to>330</to></swing>` | held: turns the heading that many degrees a frame toward `<to>`, and stops there; let go, back to where it started. The turn is swept, and lends speed to what it knocks ([turning about a pivot](#turning-about-a-pivot)). Pinball's flippers |
+| `<swing>16<to>330</to><gain>4</gain></swing>` | held: turns the heading toward `<to>`, up to that many degrees a frame (from still, faster by `<gain>` each frame), and stops there; let go, back to where it started. The turn is swept, and lends speed to what it knocks ([turning about a pivot](#turning-about-a-pivot)). Pinball's flippers |
 | `<reverse />` | the velocity turns round, both ways at once (Kaboom's bomber on a timer) |
 | `<stop />` | comes to rest and stays: velocity 0, and no longer pulled by its acceleration or pushed by a held key, until a reset. Since the pull goes too, it is no landing for something that can be knocked up again |
 | `<track />`, `<track path="rail" />` | in an action run by a [pointing control](#pointing-controls): the object goes where it points; with `path=`, its middle goes that far along the path's legs from its `<start>` |
@@ -1075,7 +1078,7 @@ A rule about another object can be narrowed; most filters work on edge rules too
 - **Who is looked at.** The pairs are those a rule answers for, worked out once at load. A pair is skipped unless one of the two has moved: it has a velocity or rides something, or it is not where the last frame left it, whatever put it there (a hop or a landing, a `<set>` of its `x`, a `<shift>`, a teleport, a spawn). Being loaded or reset puts an object in its place, which is not a move. An object in the middle of a jump is in no pair. Something a rule brings into play touches nothing until the next frame.
 - **What a touch is.** Worked out once, before either side's rules (`contactOf`, `play/geometry.h`): the edge of each that was touched, the point where they meet, the way straight apart, where along each one's side, how deep, and how far through the frame. Each side's rules see it their way, as `side=`, `touch.*`, `<bounce>` and `<knock>` read it.
 - **`<type>pixel</type>`.** The pair is first swept as boxes, then walked half a pixel at a time from the moment the boxes touch until a drawn pixel of one lies on a drawn pixel of the other. A pixel object is a picture the engine drew (lines, a bitmap, an SVG); a circle or rectangle is solid as itself; text and images cannot be `pixel`. The edge reported is the one the motion came in through. How deep they are is how far the first must go along the way apart for no drawn pixels to meet (not how far their boxes overlap), which is how far a `<knock>` parts them. The point is the middle of the pixels where they meet, and the way apart is how what is drawn lies there (`pixelContactAt`): of the solid pixels of each within four pixels of the point, the one lying flattest across the point is the surface (a drawn line, a wall's side), facing away from the other; where neither does (a corner, the end of a line) it is from the middle of the one's pixels there towards the other's.
-- **Turning.** For a pair of which one turns this frame (a [`<swing>`](#turning-about-a-pivot)), both are walked through the frame together, the turning one turned about its pivot to its exact heading at each moment, half a pixel of the furthest any point of either goes at a time, until they touch; the moment is then narrowed down. The engine never runs a frame in smaller steps: only the moment of the touch is looked for.
+- **Turning.** For a pair of which one turns this frame (a [`<swing>`](#turning-about-a-pivot)), both are walked through the frame together, the turning one turned about its pivot and drawn as it would be shown at each moment (the nearest whole degree), half a pixel of the furthest any point of either goes at a time, until they touch; the moment is then narrowed down. The engine never runs a frame in smaller steps: only the moment of the touch is looked for.
 - **`<solid char="*" />`**, after `<type>pixel</type>`: only those characters of the object's bitmap touch; the others are drawn but touch nothing. Q*bert's cubes touch by their tops.
 - **`<hitbox>`**: the shape that touches other objects instead of the picture, a `<rectangle>` or `<circle>`, then a `<position>` of its top left from the picture's. Q*bert touches with his feet alone. The window's edges, `<land />`, `<stick />` and a carry still use the picture. Not with `pixel`.
 
@@ -1097,6 +1100,7 @@ A rule about another object can be narrowed; most filters work on edge rules too
 - Along the way straight apart they share out what they carry by their `<mass>`es; across it each keeps its own, so a ball hit off its middle goes off at an angle.
 - Each brings the speed of its point where they touch: its velocity, and for one [turning about a pivot](#turning-about-a-pivot) its spin times how far out the point is. A flipper's rule `<collision class="ball"><knock>0.3</knock></collision>` (the flipper with no `<mass>`, the ball with one) strikes harder the nearer the tip.
 - The content, 0 to 1 (1 when left out), is how bouncy: 1 is pool balls, 0 sends them on together. Nothing happens unless they are closing, so a second `<knock />` for the same touch does nothing.
+- **Friction and rest.** With `<friction>`, a thing that knocks or bounces off something with no `<mass>` loses speed along the surface: up to its friction times the speed the touch took off straight into it. And when it only settles there (below), it **comes to rest** if what it lies on is still and either its pull cannot slide it along that surface (the pull along it no more than friction times the pull into it: 0.05 holds a ball on a slope of under 3 degrees) or it lay against another surface a frame or two ago and its pull points between the two (wedged in a corner: a ball cradled between a raised flipper and the slope above it). At rest it does not move and is not pulled, so it is perfectly still, until something gives it a speed or moves it, or what it rests on moves, turns or swings. Without `<friction>` nothing rests.
 - **Settling.** Against something with no `<mass>`, a thing closing slower than four frames of its own `<acceleration>` into that surface does not bounce at all: a ball lying on a flipper or a slope settles there instead of hopping. A `<bounce>` up to 1 settles the same way; a bumper's (above 1) never does. A pull that does not press it into the surface (a walker meeting a wall) never settles it.
 - **No `<mass>` is as heavy as can be:** never moved by a knock, and its own knock sends a thing off at up to twice its speed (Trick Shot's cue tip).
 - **Through a thing with no mass.** A knock on something with no mass goes through it to whatever with a mass rests against its far side, as from something as heavy as can be; that thing then runs its own rules about the knocker that say `through="class"` of what it came through. Mario's head hitting a floor tile from below is a `<knock>0</knock>` that reaches the shellcreeper standing on it, whose `<collision class="brother" through="floor">` flips it. A knock goes through one thing, not a pile.

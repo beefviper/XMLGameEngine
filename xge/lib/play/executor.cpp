@@ -165,7 +165,7 @@ namespace xge
 			// A bounce off what it touched, or off the screen's edge.
 			[&](const CmdBounce& b)
 			{
-				if (self && doer.touch) { xge::bounce(*self, *doer.touch, b.share); }
+				if (self && doer.touch && doer.other) { xge::bounce(*self, *doer.other, *doer.touch, b.share); }
 				else if (self && doer.screenEdge) { bounceScreenEdge(*self, *doer.screenEdge, b.share); }
 			},
 			// The screen edge's own.
@@ -212,6 +212,7 @@ namespace xge
 				if (!self || !doer.action) { return; }
 				self->swingRate = s.rate;
 				self->swingTo = s.to;
+				self->swingGain = s.gain;
 				self->swingHeld = pressed;
 			},
 			// The game's own: a state's list, and the rest.
@@ -376,6 +377,7 @@ namespace xge
 			{
 				object.swingRate = swing->rate;
 				object.swingTo = swing->to;
+				object.swingGain = swing->gain;
 				object.swingHeld = true;
 			}
 			else if (const auto* play = std::get_if<CmdPlay>(&actionCommand))

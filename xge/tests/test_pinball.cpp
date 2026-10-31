@@ -72,8 +72,17 @@ TEST_CASE("pinball.xml: a flipper sends a ball coming down onto it back up the t
 	// Falling onto the middle of the left flipper.
 	table.put(185.0f, 520.0f, 0.0f, 3.0f);
 	table.engine.handleKeyPressed(KeyCode::A);
-	table.frames(4);
-	CHECK(table.get("leftflipper").heading == Approx(342.0f));
+	// Its turn grows each frame, 4, 8, 12, then 16 degrees, up to level and
+	// on to 30 above it.
+	const Object& flipper = table.get("leftflipper");
+	table.frames(1);
+	CHECK(flipper.heading == Approx(26.0f));
+	table.frames(1);
+	CHECK(flipper.heading == Approx(18.0f));
+	table.frames(1);
+	CHECK(flipper.heading == Approx(6.0f));
+	table.frames(3);
+	CHECK(flipper.heading == Approx(330.0f));
 	CHECK(table.ball().velocity.y < -6.0f);
 
 	table.frames(20);
@@ -149,20 +158,31 @@ TEST_CASE("pinball.xml: a ball dropped onto a flipper is never thrown further th
 	}
 }
 
-TEST_CASE("pinball.xml: a ball caught on a raised flipper rolls down to the hinge and settles there", "[pinball]")
+TEST_CASE("pinball.xml: a ball caught on a raised flipper rolls down to the hinge and comes to rest there", "[pinball]")
 {
 	Table table;
 	table.engine.handleKeyPressed(KeyCode::A);
 	table.frames(6);
 	table.put(185.0f, 500.0f, 0.0f, 0.0f);
 	table.frames(120);
-	const Vector2f settled = table.middle(table.ball());
-	CHECK(settled.x < 155.0f);
-	for (int i = 0; i < 30; ++i)
+	// Wedged between the flipper and the slope above it: still, not a hair
+	// of jitter.
+	REQUIRE(table.ball().resting);
+	const Vector2f settled = table.ball().position;
+	CHECK(table.middle(table.ball()).x < 155.0f);
+	for (int i = 0; i < 60; ++i)
 	{
 		table.frames(1);
-		const Vector2f now = table.middle(table.ball());
-		CHECK(std::abs(now.x - settled.x) < 1.5f);
-		CHECK(std::abs(now.y - settled.y) < 1.5f);
+		CHECK(table.ball().position == settled);
 	}
+
+	// Let go, it rolls down the flipper toward the tip, and the next flip
+	// sends it up the table.
+	table.engine.handleKeyReleased(KeyCode::A);
+	table.frames(20);
+	CHECK_FALSE(table.ball().resting);
+	CHECK(table.middle(table.ball()).x > settled.x + 10.0f);
+	table.engine.handleKeyPressed(KeyCode::A);
+	table.frames(8);
+	CHECK(table.ball().velocity.y < -8.0f);
 }

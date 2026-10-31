@@ -60,7 +60,9 @@ namespace xge
 	// mirrored about the touch's normal, keeping `share` of the speed it
 	// came in at; one already going away keeps on. A box's side faces
 	// straight out, so off a box this is the plain flip.
-	void bounce(Object& object, const Touch& touch, float share);
+	// With <friction>, it rubs along the surface and may come to rest on it
+	// (see Object::resting).
+	void bounce(Object& object, const Object& other, const Touch& touch, float share);
 
 	// <bounce /> off a screen edge, which faces straight in.
 	void bounceOffEdge(Object& object, Edge edge, float share);

@@ -166,6 +166,39 @@ namespace xge
 			const Point from = rounded(line.x1, line.y1);
 			const Point to = rounded(line.x2, line.y2);
 
+			// A thick line is every pixel whose middle is within half its
+			// thickness of it: a bar of that width at any angle, with round
+			// ends, in the square a stamp of its thickness at each end would
+			// cover (so it sits where a line of squares did). The same shape
+			// turned is the same shape, so what a turning thing touches with
+			// does not change as it turns.
+			if (thickness > 1)
+			{
+				const float half = static_cast<float>(thickness) / 2.0f;
+				const float ax = static_cast<float>(from.x) + half;
+				const float ay = static_cast<float>(from.y) + half;
+				const float bx = static_cast<float>(to.x) + half;
+				const float by = static_cast<float>(to.y) + half;
+				const float lengthSquared = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
+				const int fromX = std::max(0, std::min(from.x, to.x));
+				const int fromY = std::max(0, std::min(from.y, to.y));
+				const int toX = std::min(bitmap.width, std::max(from.x, to.x) + thickness);
+				const int toY = std::min(bitmap.height, std::max(from.y, to.y) + thickness);
+				for (int y = fromY; y < toY; ++y)
+				{
+					for (int x = fromX; x < toX; ++x)
+					{
+						const float px = static_cast<float>(x) + 0.5f;
+						const float py = static_cast<float>(y) + 0.5f;
+						const float share = lengthSquared > 0.0f ? std::clamp(((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / lengthSquared, 0.0f, 1.0f) : 0.0f;
+						const float dx = px - (ax + (bx - ax) * share);
+						const float dy = py - (ay + (by - ay) * share);
+						if (dx * dx + dy * dy <= half * half) { stamp(bitmap, x, y, 1, line.color); }
+					}
+				}
+				continue;
+			}
+
 			// Bresenham: every pixel from one end to the other, with no gaps.
 			const int dx = std::abs(to.x - from.x);
 			const int dy = -std::abs(to.y - from.y);

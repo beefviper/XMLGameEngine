@@ -775,6 +775,15 @@ namespace xge
 			}
 		}
 
+		if (rawObject.hasFriction)
+		{
+			object.friction = evaluate(rawObject.rawFriction, where);
+			if (object.friction < 0.0f)
+			{
+				throw std::runtime_error(where + ": <friction> is " + std::to_string(object.friction) + "; expected 0 or more");
+			}
+		}
+
 		if (rawObject.hasMass)
 		{
 			object.mass = evaluate(rawObject.rawMass, where);
@@ -1708,7 +1717,6 @@ namespace xge
 					{
 						drawn = std::make_shared<const Bitmap>(kept->at(0.0f));
 					}
-					kept->upright = kept->lines.empty() ? kept->picture : drawn;
 					*turnable = std::move(kept);
 				}
 			}

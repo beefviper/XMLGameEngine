@@ -768,6 +768,8 @@
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
       <xs:element name="to" type="valueType" />
+      <!-- how much its turn a frame grows each frame, from still up to its content; left out, it turns at its content at once -->
+      <xs:element name="gain" type="valueType" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
@@ -1629,6 +1631,8 @@
       <!-- the point of its picture, as drawn, that the heading turns it about (left out, its middle); its <position> is then where that point is on the screen -->
       <xs:element name="pivot" type="vector2Type" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
+      <!-- how much a surface it touches holds it back along that surface, as a share of how hard it meets it (0 none); and enough of it holds it still where its pull cannot slide it -->
+      <xs:element name="friction" type="valueType" minOccurs="0" />
       <!-- how hard it is to knock; left out, a knock does not move it -->
       <xs:element name="mass" type="valueType" minOccurs="0" />
       <!-- pulled toward the nearest of each, that much speed a frame -->

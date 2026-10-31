@@ -237,6 +237,8 @@ namespace
 			flag(at + ".hasHeading", o.hasHeading);
 			value(at + ".drag", o.rawDrag);
 			flag(at + ".hasDrag", o.hasDrag);
+			value(at + ".friction", o.rawFriction);
+			flag(at + ".hasFriction", o.hasFriction);
 			value(at + ".mass", o.rawMass);
 			flag(at + ".hasMass", o.hasMass);
 			for (const auto& [name, strength] : o.rawPulls) { value(at + ".pull." + name, strength); }

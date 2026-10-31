@@ -1162,10 +1162,11 @@ namespace xge
 			if (verb == "thrust" || verb == "deflect" || verb == "leap") { command.amount = readValue(node, where); }
 			if (verb == "swing")
 			{
-				command.amount = readLeadValue(node, { "to" }, "its degrees a frame, then a <to>", where);
+				command.amount = readLeadValue(node, { "to", "gain" }, "its degrees a frame, then a <to>", where);
 				std::unique_ptr<XmlNode> to = findChild(&node, "to");
 				if (!to) { fail(where, "<swing> gives the heading it swings to as a <to>"); }
 				command.distance = readValue(*to, where + " > <swing> > <to>");
+				if (std::unique_ptr<XmlNode> gain = findChild(&node, "gain")) { command.ahead = readValue(*gain, where + " > <swing> > <gain>"); }
 			}
 			if ((verb == "knock" || verb == "bounce") && (node.getFirstChild() || !readText(node).empty())) { command.amount = readValue(node, where); }
 			if (verb == "climb")
@@ -1918,6 +1919,11 @@ namespace xge
 				rawObject.hasDrag = true;
 				rawObject.rawDrag = readValue(*drag, where);
 			}
+			if (auto friction = findChild(&object, "friction"))
+			{
+				rawObject.hasFriction = true;
+				rawObject.rawFriction = readValue(*friction, where);
+			}
 			if (auto mass = findChild(&object, "mass"))
 			{
 				rawObject.hasMass = true;
@@ -2192,6 +2198,11 @@ namespace xge
 				{
 					shared.hasDrag = true;
 					shared.rawDrag = readValue(*child, where);
+				}
+				else if (tag == "friction")
+				{
+					shared.hasFriction = true;
+					shared.rawFriction = readValue(*child, where);
 				}
 				else if (tag == "mass")
 				{

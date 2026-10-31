@@ -298,6 +298,10 @@
             <xsl:with-param name="name" select="'command.distance'" />
             <xsl:with-param name="node" select="$node/to" />
           </xsl:call-template>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.ahead'" />
+            <xsl:with-param name="node" select="$node/gain" />
+          </xsl:call-template>
         </xsl:when>
         <xsl:when test="$verb = 'hunt'">
           <xsl:call-template name="field">
@@ -1202,6 +1206,14 @@
         <xsl:with-param name="node" select="drag" />
       </xsl:call-template>
     </xsl:if>
+    <xsl:if test="friction">
+      <xsl:value-of select="concat($in, 'object.hasFriction = true;&#10;')" />
+      <xsl:call-template name="assign-value">
+        <xsl:with-param name="indent" select="$in" />
+        <xsl:with-param name="to" select="'object.rawFriction'" />
+        <xsl:with-param name="node" select="friction" />
+      </xsl:call-template>
+    </xsl:if>
     <xsl:if test="mass">
       <xsl:value-of select="concat($in, 'object.hasMass = true;&#10;')" />
       <xsl:call-template name="assign-value">
@@ -1611,6 +1623,14 @@
         <xsl:with-param name="indent" select="$in" />
         <xsl:with-param name="to" select="'group.object.rawDrag'" />
         <xsl:with-param name="node" select="drag" />
+      </xsl:call-template>
+    </xsl:if>
+    <xsl:if test="friction">
+      <xsl:value-of select="concat($in, 'group.object.hasFriction = true;&#10;')" />
+      <xsl:call-template name="assign-value">
+        <xsl:with-param name="indent" select="$in" />
+        <xsl:with-param name="to" select="'group.object.rawFriction'" />
+        <xsl:with-param name="node" select="friction" />
       </xsl:call-template>
     </xsl:if>
     <xsl:if test="mass">

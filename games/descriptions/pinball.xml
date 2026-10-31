@@ -15,8 +15,8 @@
   It is the game the third stage of tables and tracks was made for:
   * A flipper is a <line> turned about its <pivot>, the hinge at one end:
     it turns about that point and the point stays where it is. Its <swing>
-    turns it up to its <to> a few degrees a frame while its key is held,
-    and back down to where it started once let go.
+    turns it up to its <to> while its key is held, faster every frame (its
+    <gain>), and back down to where it started the same way once let go.
   * The frame's sweep follows the swing: the flipper's turn and the ball's
     move are looked at together through the frame, so a ball is struck
     wherever the flipper meets it, however fast either goes.
@@ -27,6 +27,9 @@
   * The walls are one picture of <line>s, tested by its pixels, so the ball
     goes off them at their slope. Bumpers and slingshots <bounce> more than
     came in; the walls take some of it away.
+  * The ball has a little <friction>: wedged between a raised flipper and
+    the slope above it, it comes to rest, perfectly still, until the
+    flipper drops and it rolls down it.
   * The plunger is a key's three moments: held (on="hold") pulls it back a
     little more every frame, let go (on="release") shoots the ball from it,
     both only while the ball sits on it (its loaded look).
@@ -184,8 +187,8 @@
             <line><from><x>420</x><y>50</y></from><to><x>460</x><y>120</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
             <line><from><x>460</x><y>120</y></from><to><x>460</x><y>640</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
             <line><from><x>430</x><y>200</y></from><to><x>430</x><y>640</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>20</x><y>450</y></from><to><x>145</x><y>540</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>430</x><y>450</y></from><to><x>305</x><y>540</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>20</x><y>450</y></from><to><x>141</x><y>537</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>430</x><y>450</y></from><to><x>305</x><y>537</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
           </sprite>
           <position><x>0</x><y>0</y></position>
           <collisions><type>pixel</type></collisions>
@@ -212,19 +215,19 @@
         <!-- The flippers: hinged where the slopes end, resting 30 degrees
              down and swinging up to 30 above level. -->
         <object name="leftflipper" from="flipper">
-          <position><x>145</x><y>540</y></position>
+          <position><x>141</x><y>539</y></position>
           <heading>30</heading>
           <pivot><x>0</x><y>0</y></pivot>
           <actions>
-            <action name="flip"><swing>12<to>330</to></swing></action>
+            <action name="flip"><swing>16<to>330</to><gain>4</gain></swing></action>
           </actions>
         </object>
         <object name="rightflipper" from="flipper">
-          <position><x>305</x><y>540</y></position>
+          <position><x>299</x><y>539</y></position>
           <heading>330</heading>
           <pivot><x>70</x><y>0</y></pivot>
           <actions>
-            <action name="flip"><swing>12<to>30</to></swing></action>
+            <action name="flip"><swing>16<to>30</to><gain>4</gain></swing></action>
           </actions>
         </object>
 
@@ -258,6 +261,7 @@
           <sprite><circle><radius>radius</radius><color>color.white</color></circle></sprite>
           <position><x>laneX - radius</x><y>plungerTop - radius * 2</y></position>
           <acceleration><x>0</x><y>0.2</y></acceleration>
+          <friction>0.05</friction>
           <mass>1</mass>
           <collisions>
             <collision class="wall">

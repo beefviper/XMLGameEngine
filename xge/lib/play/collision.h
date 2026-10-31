@@ -63,7 +63,8 @@ namespace xge
 
 	// The same for a pair of which one or both turn as they go (a swinging
 	// flipper): turnA and turnB are the degrees each turns over the step, and
-	// one turning is turned about its pivot. Two pictures sweeping a wedge and
+	// one turning is turned about its pivot, as drawn at each whole degree.
+	// Two pictures sweeping a wedge and
 	// a fat line are walked together, half a pixel of the furthest any point
 	// of them goes at a time, until their pixels (or shapes) touch, and the
 	// moment narrowed down; the edge is the way the first goes against the

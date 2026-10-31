@@ -445,6 +445,8 @@ namespace xge
 		bool hasPivot{ false };
 		RawValue rawDrag;            // only when hasDrag
 		bool hasDrag{ false };
+		RawValue rawFriction;        // only when hasFriction
+		bool hasFriction{ false };
 		RawValue rawMass;            // only when hasMass
 		bool hasMass{ false };
 		// <pull object="sun">strength</pull>s: what pulls it, and how hard.
@@ -796,11 +798,17 @@ namespace xge
 		// Where its turning point is on the screen: the pivot, or the middle.
 		Vector2f pivotOnScreen() const;
 
-		// <swing>: held, the heading goes toward swingTo at swingRate degrees
-		// a frame; let go, back toward the heading it started with at the
-		// same rate. swingRate 0: it has never swung. See playOneFrame.
+		// <swing>: held, the heading goes toward swingTo, its turn a frame
+		// growing by swingGain each frame (0: at once) up to swingRate degrees;
+		// let go, back toward the heading it started with the same way.
+		// swingSpeed is how fast it turns now, swingWay which way (1
+		// clockwise, -1 not): turned the other way it starts again from
+		// still. swingRate 0: it has never swung. See playOneFrame.
 		float swingRate{};
 		float swingTo{};
+		float swingGain{};
+		float swingSpeed{};
+		int swingWay{};
 		bool swingHeld{ false };
 
 		// How many degrees it turned this frame (clockwise is more), from the
@@ -1062,6 +1070,37 @@ namespace xge
 		// 0 (the default) is no drag at all, 0.02 loses a fiftieth of the speed
 		// a frame, so a thruster can no longer push it faster than a top speed.
 		float drag{};
+
+		// <friction>: at a touch with something that does not move, the speed
+		// along its surface is cut by up to this share of the speed the touch
+		// took off straight into it (a slide on a rough surface); and while it
+		// lies on a surface (or wedged between two) that its own pull cannot
+		// slide it along, it comes to rest (see `resting`). 0: none.
+		float friction{};
+
+		// What something lies on, as it was: its name, where it was and the
+		// way it faced.
+		struct Support
+		{
+			std::string name;
+			Vector2f at;
+			float heading{};
+		};
+
+		// At rest (at `restedAt`) on one thing, or wedged between two, that
+		// do not move (`restingOn`, as they were then): it neither moves nor
+		// is pulled, until one of them moves or turns, or something moves it
+		// or gives it a speed. Worked out by a touch with friction
+		// (play/verbs.cpp's rub), which also keeps the last surface it
+		// settled on, the way out of it and how many frames ago
+		// (`settledOn`, `settledNormal`, `settledAge`), for one wedged
+		// between two.
+		bool resting{ false };
+		std::vector<Support> restingOn;
+		Vector2f restedAt;
+		Support settledOn;
+		Vector2f settledNormal;
+		int settledAge{ 1000 };
 
 		// <mass>: how hard it is to knock (see CmdKnock). 0, when it has
 		// none, is not knocked at all: a wall, a floor.

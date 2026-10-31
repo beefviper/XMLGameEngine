@@ -571,7 +571,7 @@ namespace xge
 
 		object.name = to;
 		for (RawValue* each : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y,
-			&object.rawAcceleration.x, &object.rawAcceleration.y, &object.rawHeading, &object.rawPivot.x, &object.rawPivot.y, &object.rawDrag, &object.rawMass, &object.rawSeek, &object.rawLight,
+			&object.rawAcceleration.x, &object.rawAcceleration.y, &object.rawHeading, &object.rawPivot.x, &object.rawPivot.y, &object.rawDrag, &object.rawFriction, &object.rawMass, &object.rawSeek, &object.rawLight,
 			&object.rawAltitude, &object.rawRise, &object.rawFall, &object.rawAltitudeBounce })
 		{
 			value(*each);

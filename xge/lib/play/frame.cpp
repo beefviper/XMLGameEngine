@@ -262,6 +262,25 @@ namespace xge
 				// On a ladder nothing pulls it (applyClimbing moves it).
 				if (!rules.inPlay(object) || object.climbing) { continue; }
 
+				// At rest (Object::resting): nothing pulls it while it lies
+				// where it came to rest, still, on something still there as
+				// it was. Anything else wakes it.
+				if (object.friction > 0.0f)
+				{
+					if (object.settledAge < 1000) { ++object.settledAge; }
+					if (object.resting)
+					{
+						object.resting = object.velocity.x == 0.0f && object.velocity.y == 0.0f && object.position == object.restedAt
+							&& std::all_of(object.restingOn.begin(), object.restingOn.end(), [&](const Object::Support& support)
+								{
+									const auto under = std::find_if(objects.begin(), objects.end(), [&](const Object& other) { return other.name == support.name; });
+									return under != objects.end() && rules.inPlay(*under) && under->position == support.at
+										&& under->heading == support.heading && under->spin == 0.0f;
+								});
+					}
+					if (object.resting) { continue; }
+				}
+
 				Vector2f change = object.acceleration;
 
 				// A thruster with no fuel does nothing.
@@ -309,9 +328,19 @@ namespace xge
 					{
 						const float target = object.swingHeld ? object.swingTo : object.start.heading;
 						const float apart = turnBetween(object.heading, target);
-						if (apart != 0.0f)
+						if (apart == 0.0f)
 						{
-							const float step = std::clamp(apart, -object.swingRate, object.swingRate);
+							object.swingSpeed = 0.0f;
+							object.swingWay = 0;
+						}
+						else
+						{
+							// Its turn grows by its gain each frame, from still
+							// when it starts or turns round, up to its rate.
+							const int way = apart > 0.0f ? 1 : -1;
+							if (way != object.swingWay) { object.swingSpeed = 0.0f; object.swingWay = way; }
+							object.swingSpeed = object.swingGain > 0.0f ? std::min(object.swingSpeed + object.swingGain, object.swingRate) : object.swingRate;
+							const float step = std::clamp(apart, -object.swingSpeed, object.swingSpeed);
 							object.heading = std::fmod(object.heading + step + 360.0f, 360.0f);
 							object.showHeading();
 							object.spin = step;

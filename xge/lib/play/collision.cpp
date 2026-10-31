@@ -139,14 +139,14 @@ namespace xge
 		// Where one of a pair is `time` through a sweep, moving by `move` and
 		// turning by `turn` degrees over it: its box, and whether a point of
 		// it (from that box's top left) touches with. One turning is turned
-		// about its pivot, which goes with the move, and asked at its exact
-		// heading then, not the nearest whole degree.
+		// about its pivot, which goes with the move, and is the picture
+		// showHeading would show then (at the nearest whole degree, kept by
+		// Turnable::turnedTo), so the sweep and the touch see one shape.
 		struct Posed
 		{
 			Box box;
 			const Object* object{};
-			const Turnable* drawing{};
-			float degrees{};
+			const Bitmap* drawing{};
 			bool round{};
 
 			bool solidAt(const Vector2f& local) const
@@ -154,7 +154,7 @@ namespace xge
 				if (!drawing) { return xge::solidAt(*object, local); }
 				if (object->collisionData.type == CollisionType::Pixel)
 				{
-					return drawing->touchesAt(degrees, box.size.x, local.x, local.y);
+					return drawing->touchesAt(static_cast<int>(std::floor(local.x)), static_cast<int>(std::floor(local.y)));
 				}
 				return solidShapeAt(box.size, round, local);
 			}
@@ -175,11 +175,13 @@ namespace xge
 				return at;
 			}
 
+			// Drawn and placed as showHeading would at that moment: the
+			// picture at the nearest whole degree, turned about its pivot.
 			const std::size_t frame = object.turnables.size() > 1 && object.animationIndex < object.turnables.size() ? object.animationIndex : 0;
-			at.drawing = object.turnables[frame].get();
-			at.degrees = object.heading + turn * time;
+			const int degrees = wholeDegrees(object.heading + turn * time);
+			at.drawing = &object.turnables[frame]->turnedTo(degrees);
 			const Vector2f arm = object.hasPivot ? object.pivotFromMiddle : Vector2f{};
-			at.box = { object.position + move * time + turnedBy(arm, static_cast<float>(object.pivotDegrees)) - turnedBy(arm, at.degrees), object.size };
+			at.box = { object.position + move * time + turnedBy(arm, static_cast<float>(object.pivotDegrees)) - turnedBy(arm, static_cast<float>(degrees)), object.size };
 			return at;
 		};
 
