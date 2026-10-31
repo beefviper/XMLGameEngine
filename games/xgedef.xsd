@@ -764,12 +764,12 @@
   </xs:complexType>
 
   <!-- swing: how many degrees a frame, then the heading it swings to. -->
-  <xs:complexType name="swingType" mixed="true">
+  <xs:complexType name="swingType">
     <xs:sequence>
-      <xs:group ref="valueTag" minOccurs="0" />
+      <!-- the heading it swings to -->
       <xs:element name="to" type="valueType" />
-      <!-- how much its turn a frame grows each frame, from still up to its content; left out, it turns at its content at once -->
-      <xs:element name="gain" type="valueType" minOccurs="0" />
+      <!-- how long the stroke takes: from still, fastest half way, to still -->
+      <xs:element name="seconds" type="valueType" />
     </xs:sequence>
   </xs:complexType>
 

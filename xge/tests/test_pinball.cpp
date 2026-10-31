@@ -72,17 +72,14 @@ TEST_CASE("pinball.xml: a flipper sends a ball coming down onto it back up the t
 	// Falling onto the middle of the left flipper.
 	table.put(185.0f, 520.0f, 0.0f, 3.0f);
 	table.engine.handleKeyPressed(KeyCode::A);
-	// Its turn grows each frame, 4, 8, 12, then 16 degrees, up to level and
-	// on to 30 above it.
+	// One eased stroke of six frames: slow, fast through level, slow again
+	// up to 30 above it.
 	const Object& flipper = table.get("leftflipper");
-	table.frames(1);
-	CHECK(flipper.heading == Approx(26.0f));
-	table.frames(1);
-	CHECK(flipper.heading == Approx(18.0f));
-	table.frames(1);
-	CHECK(flipper.heading == Approx(6.0f));
-	table.frames(3);
-	CHECK(flipper.heading == Approx(330.0f));
+	for (const float heading : { 25.98f, 15.0f, 0.0f, 345.0f, 334.02f, 330.0f })
+	{
+		table.frames(1);
+		CHECK(flipper.heading == Approx(heading).margin(0.05f));
+	}
 	CHECK(table.ball().velocity.y < -6.0f);
 
 	table.frames(20);

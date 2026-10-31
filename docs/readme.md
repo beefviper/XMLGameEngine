@@ -665,13 +665,13 @@ A `<pivot>` names the point of the drawing the object turns about. The picture i
   <heading>30</heading>
   <pivot><x>0</x><y>0</y></pivot>
   <actions>
-    <action name="flip"><swing>16<to>330</to><gain>4</gain></swing></action>
+    <action name="flip"><swing><to>330</to><seconds>0.1</seconds></swing></action>
   </actions>
 </object>
 ```
 
-- **`<swing>`** (in an action, its key held) turns the heading toward its `<to>`, by the shorter way, and stops there; let go, it turns back the same way to the heading it started with. Pressed again on the way back, it turns round.
-- **A turn has the same three layers as a move:** the heading (where), the turn a frame (how fast) and `<gain>` (how much faster each frame). `<swing>16<to>330</to><gain>4</gain></swing>` turns 4 degrees, then 8, 12, 16, 16 and the last 4: the flipper starts slowly and is fastest at the top of its stroke, so a ball struck later goes off faster. Each start, and each turn back, begins from still. Left out, it turns its content's degrees from the first frame.
+- **`<swing>`** (in an action, its key held) turns the heading to its `<to>`, by the shorter way, in one stroke `<seconds>` long; let go, it comes back the same way to the heading it started with. Pressed again on the way back, it turns round where it is.
+- **The stroke is eased, as half a wave:** it starts from still, speeds up to its fastest half way, and slows to a stop at the end, as a flipper has to get its weight moving and its coil pulls less at the end. Where it is, how fast it turns and how that changes all come from that one curve. Pinball's 60 degrees in 0.1 seconds (six frames) turns 4, 11, 15, 15, 11 and 4 degrees, so a ball struck half way goes off hardest.
 - **The turn is swept.** What a swing turns in a frame is that frame's spin: the move goes from the old heading to the new one through the frame, alongside every other object's move, so a touch is found where the flipper's wedge first meets the ball's path, however fast either goes ([how a touch is found](#how-a-touch-is-found)). A heading changed any other way (a `<turn>`, a `<set>`) is not swept.
 - **A turning thing lends the speed of the point that touches.** A `<knock>` takes each side's speed at the touch point: its velocity, and for one turning, its spin times how far that point is from the pivot, across the arm. A ball struck by a flipper's tip goes off faster than one struck by the hinge, and off the way the flipper faces there.
 
@@ -941,7 +941,7 @@ An object out of play (hidden or dead) does nothing when its action is pressed o
 | `<accelerate direction="up" burn="fuel">amount</accelerate>` | held: adds `amount` to the velocity every frame (opposite ones cancel). `burn` names one of the object's own variables, taken 1 off each frame; at 0 the thrust does nothing |
 | `<thrust burn="fuel">amount</thrust>` | held: the same along the object's `<heading>` |
 | `<turn direction="left">degrees</turn>` (or `right`) | held: turns the heading that many degrees a frame |
-| `<swing>16<to>330</to><gain>4</gain></swing>` | held: turns the heading toward `<to>`, up to that many degrees a frame (from still, faster by `<gain>` each frame), and stops there; let go, back to where it started. The turn is swept, and lends speed to what it knocks ([turning about a pivot](#turning-about-a-pivot)). Pinball's flippers |
+| `<swing><to>330</to><seconds>0.1</seconds></swing>` | held: turns the heading to `<to>` in one eased stroke that long (from still, fastest half way, to still); let go, back to where it started the same way. The turn is swept, and lends speed to what it knocks ([turning about a pivot](#turning-about-a-pivot)). Pinball's flippers |
 | `<reverse />` | the velocity turns round, both ways at once (Kaboom's bomber on a timer) |
 | `<stop />` | comes to rest and stays: velocity 0, and no longer pulled by its acceleration or pushed by a held key, until a reset. Since the pull goes too, it is no landing for something that can be knocked up again |
 | `<track />`, `<track path="rail" />` | in an action run by a [pointing control](#pointing-controls): the object goes where it points; with `path=`, its middle goes that far along the path's legs from its `<start>` |

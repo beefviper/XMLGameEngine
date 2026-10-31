@@ -318,32 +318,29 @@ namespace xge
 						object.showHeading();
 					}
 
-					// A swing: held, toward where it swings to; let go, back
-					// to where it started; never past either, by the shorter way.
-					// The turn is its spin this frame: the move sweeps it from
-					// where it was to where it is now (moveObjects), and what
-					// it strikes on the way takes its speed there (velocityAt).
+					// A swing: held, it goes on through its stroke toward where
+					// it swings to; let go, back through it to where it started.
+					// The stroke is eased, as a half wave: it starts from still,
+					// is fastest half way and slows to a stop at the end, so
+					// its heading, its turn a frame and how that changes all
+					// come from one curve. The turn is its spin this frame: the
+					// move sweeps it from where it was to where it is now
+					// (moveObjects), and what it strikes on the way takes its
+					// speed there (velocityAt).
 					object.spin = 0.0f;
-					if (object.swingRate > 0.0f)
+					if (object.swingFrames > 0)
 					{
-						const float target = object.swingHeld ? object.swingTo : object.start.heading;
-						const float apart = turnBetween(object.heading, target);
-						if (apart == 0.0f)
+						const float step = 1.0f / static_cast<float>(object.swingFrames);
+						const float done = std::clamp(object.swingDone + (object.swingHeld ? step : -step), 0.0f, 1.0f);
+						if (done != object.swingDone)
 						{
-							object.swingSpeed = 0.0f;
-							object.swingWay = 0;
-						}
-						else
-						{
-							// Its turn grows by its gain each frame, from still
-							// when it starts or turns round, up to its rate.
-							const int way = apart > 0.0f ? 1 : -1;
-							if (way != object.swingWay) { object.swingSpeed = 0.0f; object.swingWay = way; }
-							object.swingSpeed = object.swingGain > 0.0f ? std::min(object.swingSpeed + object.swingGain, object.swingRate) : object.swingRate;
-							const float step = std::clamp(apart, -object.swingSpeed, object.swingSpeed);
-							object.heading = std::fmod(object.heading + step + 360.0f, 360.0f);
+							object.swingDone = done;
+							const float pi = 3.14159265358979323846f;
+							const float eased = (1.0f - std::cos(pi * done)) / 2.0f;
+							const float now = std::fmod(object.start.heading + turnBetween(object.start.heading, object.swingTo) * eased + 720.0f, 360.0f);
+							object.spin = turnBetween(object.heading, now);
+							object.heading = now;
 							object.showHeading();
-							object.spin = step;
 						}
 					}
 

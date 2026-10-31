@@ -1162,11 +1162,11 @@ namespace xge
 			if (verb == "thrust" || verb == "deflect" || verb == "leap") { command.amount = readValue(node, where); }
 			if (verb == "swing")
 			{
-				command.amount = readLeadValue(node, { "to", "gain" }, "its degrees a frame, then a <to>", where);
 				std::unique_ptr<XmlNode> to = findChild(&node, "to");
-				if (!to) { fail(where, "<swing> gives the heading it swings to as a <to>"); }
+				std::unique_ptr<XmlNode> seconds = findChild(&node, "seconds");
+				if (!to || !seconds) { fail(where, "<swing> gives the heading it swings to as a <to>, and how long the stroke takes as <seconds>"); }
 				command.distance = readValue(*to, where + " > <swing> > <to>");
-				if (std::unique_ptr<XmlNode> gain = findChild(&node, "gain")) { command.ahead = readValue(*gain, where + " > <swing> > <gain>"); }
+				command.seconds = readValue(*seconds, where + " > <swing> > <seconds>");
 			}
 			if ((verb == "knock" || verb == "bounce") && (node.getFirstChild() || !readText(node).empty())) { command.amount = readValue(node, where); }
 			if (verb == "climb")

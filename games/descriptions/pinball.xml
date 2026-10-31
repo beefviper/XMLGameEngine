@@ -15,8 +15,9 @@
   It is the game the third stage of tables and tracks was made for:
   * A flipper is a <line> turned about its <pivot>, the hinge at one end:
     it turns about that point and the point stays where it is. Its <swing>
-    turns it up to its <to> while its key is held, faster every frame (its
-    <gain>), and back down to where it started the same way once let go.
+    turns it up to its <to> in a stroke <seconds> long while its key is
+    held: from still, fastest half way, slowing to a stop at the top. Let
+    go, it comes back down to where it started the same way.
   * The frame's sweep follows the swing: the flipper's turn and the ball's
     move are looked at together through the frame, so a ball is struck
     wherever the flipper meets it, however fast either goes.
@@ -219,7 +220,7 @@
           <heading>30</heading>
           <pivot><x>0</x><y>0</y></pivot>
           <actions>
-            <action name="flip"><swing>16<to>330</to><gain>4</gain></swing></action>
+            <action name="flip"><swing><to>330</to><seconds>0.1</seconds></swing></action>
           </actions>
         </object>
         <object name="rightflipper" from="flipper">
@@ -227,7 +228,7 @@
           <heading>330</heading>
           <pivot><x>70</x><y>0</y></pivot>
           <actions>
-            <action name="flip"><swing>16<to>30</to><gain>4</gain></swing></action>
+            <action name="flip"><swing><to>30</to><seconds>0.1</seconds></swing></action>
           </actions>
         </object>
 

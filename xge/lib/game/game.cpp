@@ -1267,8 +1267,7 @@ namespace xge
 			object.activeTurn = {};
 			object.activeThrustAheadBy.clear();
 			object.swingHeld = false;
-			object.swingSpeed = 0.0f;
-			object.swingWay = 0;
+			object.swingDone = 0.0f;
 			object.resting = false;
 			object.settledAge = 1000;
 			object.spin = 0.0f;

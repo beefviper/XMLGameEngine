@@ -8,8 +8,8 @@
 // while its key is held and back when it is let go; the frame's sweep
 // following the turn, so a ball in the way is struck however fast the
 // flipper swings; the speed a turning thing lends what it knocks, faster
-// the further from the pivot it is struck; a swing whose turn grows by its
-// <gain>; and <friction>, which brings a ball to rest on a shallow slope
+// the further from the pivot it is struck; a swing as one eased stroke,
+// hardest half way; and <friction>, which brings a ball to rest on a shallow slope
 // or wedged in a corner, but lets it roll down a steep one.
 
 #include "played.h"
@@ -52,15 +52,15 @@ namespace
 	};
 
 	// A flipper 80 long, hinged at its left end, which sits at 300, 400; it
-	// rests tilted 30 degrees down to the right and swings `rate` degrees a
-	// frame up to 30 above level.
-	std::string flipper(float rate, const std::string& gain = "")
+	// rests tilted 30 degrees down to the right and swings up to 30 above
+	// level in a stroke `frames` frames long (the game runs at 60 a second).
+	std::string flipper(int frames)
 	{
 		return "<object name=\"flipper\" class=\"flipper\"><sprite><line><from><x>0</x><y>0</y></from><to><x>80</x><y>0</y></to>"
 			"<color>color.white</color><thickness>8</thickness></line></sprite>"
 			"<position><x>300</x><y>400</y></position><heading>30</heading><pivot><x>0</x><y>0</y></pivot>"
 			"<collisions><type>pixel</type><collision class=\"ball\"><knock>0.5</knock></collision></collisions>"
-			"<actions><action name=\"flip\"><swing>" + std::to_string(rate) + "<to>330</to>" + gain + "</swing></action></actions></object>";
+			"<actions><action name=\"flip\"><swing><to>330</to><seconds>" + std::to_string(static_cast<float>(frames) / 60.0f) + "</seconds></swing></action></actions></object>";
 	}
 
 	// A ball of radius 5 with its middle at x, y, still, with a mass.
@@ -82,7 +82,7 @@ namespace
 
 TEST_CASE("a picture turned about its pivot keeps the pivot where it is", "[flippers][pivot]")
 {
-	Written file(flipper(15.0f));
+	Written file(flipper(4));
 	Played play(file.path);
 	Object& flip = play.get("flipper");
 
@@ -93,24 +93,43 @@ TEST_CASE("a picture turned about its pivot keeps the pivot where it is", "[flip
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(2);
 	CHECK(flip.heading == Approx(0.0f).margin(0.01f));
+	play.frames(2);
+	CHECK(flip.heading == Approx(330.0f).margin(0.01f));
 	CHECK(flip.pivotOnScreen().x == Approx(hinge.x).margin(0.01f));
 	CHECK(flip.pivotOnScreen().y == Approx(hinge.y).margin(0.01f));
 }
 
-TEST_CASE("a swing turns while held, never past where it swings to, and back when let go", "[flippers][swing]")
+TEST_CASE("a swing is one eased stroke: from still, fastest half way, to still, and back when let go", "[flippers][swing]")
 {
-	Written file(flipper(15.0f));
+	Written file(flipper(6));
 	Played play(file.path);
 	Object& flip = play.get("flipper");
 
+	// 60 degrees in six frames along half a wave: 4, 11, 15, 15, 11 and 4
+	// degrees, never past where it swings to.
 	play.engine.handleKeyPressed(KeyCode::D);
-	play.frames(1);
-	CHECK(flip.heading == Approx(15.0f));
-	CHECK(flip.spin == Approx(-15.0f));
-	play.frames(10);
+	float was = flip.heading;
+	for (const float turn : { 4.02f, 10.98f, 15.0f, 15.0f, 10.98f, 4.02f })
+	{
+		play.frames(1);
+		CHECK(flip.spin == Approx(-turn).margin(0.05f));
+		CHECK(turnBetween(was, flip.heading) == Approx(-turn).margin(0.05f));
+		was = flip.heading;
+	}
+	CHECK(flip.heading == Approx(330.0f));
+	play.frames(3);
 	CHECK(flip.heading == Approx(330.0f));
 	CHECK(flip.spin == 0.0f);
 
+	// Let go, back down the same way; pressed again on the way, it turns
+	// round where it is.
+	play.engine.handleKeyReleased(KeyCode::D);
+	play.frames(1);
+	CHECK(flip.spin == Approx(4.02f).margin(0.05f));
+	play.frames(2);
+	play.engine.handleKeyPressed(KeyCode::D);
+	play.frames(1);
+	CHECK(flip.spin == Approx(-15.0f).margin(0.05f));
 	play.engine.handleKeyReleased(KeyCode::D);
 	play.frames(10);
 	CHECK(flip.heading == Approx(30.0f));
@@ -122,7 +141,7 @@ TEST_CASE("a ball in a flipper's way is struck as it swings, however fast", "[fl
 	// The ball sits where the flipper's top passes halfway through its swing,
 	// level; a 60 degree swing in one frame goes right past it.
 	const Vector2f at = onFlipper(60.0f, 0.0f, 10.0f);
-	Written file(flipper(60.0f) + ball(at.x, at.y));
+	Written file(flipper(1) + ball(at.x, at.y));
 	Played play(file.path);
 	Object& ball = play.get("ball");
 
@@ -141,7 +160,7 @@ TEST_CASE("a flipper lends more speed the further from its pivot it strikes", "[
 	const auto struck = [](float along)
 	{
 		const Vector2f at = onFlipper(along, 0.0f, 10.0f);
-		Written file(flipper(15.0f) + ball(at.x, at.y));
+		Written file(flipper(4) + ball(at.x, at.y));
 		Played play(file.path);
 		Object& ball = play.get("ball");
 		play.engine.handleKeyPressed(KeyCode::D);
@@ -156,46 +175,27 @@ TEST_CASE("a flipper lends more speed the further from its pivot it strikes", "[
 	CHECK(nearTip > nearHinge * 2.0f);
 }
 
-TEST_CASE("a swing with a gain turns faster every frame, from still, up to its rate", "[flippers][swing]")
+TEST_CASE("a flipper strikes hardest half way through its stroke", "[flippers][knock]")
 {
-	Written file(flipper(20.0f, "<gain>5</gain>"));
-	Played play(file.path);
-	Object& flip = play.get("flipper");
-
-	play.engine.handleKeyPressed(KeyCode::D);
-	float was = flip.heading;
-	for (const float turn : { 5.0f, 10.0f, 15.0f, 20.0f, 10.0f })
-	{
-		play.frames(1);
-		CHECK(turnBetween(was, flip.heading) == Approx(-turn));
-		was = flip.heading;
-	}
-	CHECK(flip.heading == Approx(330.0f));
-
-	// Back down from still too.
-	play.engine.handleKeyReleased(KeyCode::D);
-	play.frames(1);
-	CHECK(turnBetween(was, flip.heading) == Approx(5.0f));
-}
-
-TEST_CASE("a later strike in a swing with a gain sends the ball off faster", "[flippers][knock]")
-{
-	// The same ball, met near the start of the stroke and near its end: how
-	// fast the first strike sends it (a ball left lying on a flipper is
-	// struck again and again as it speeds up, and goes off at the end of the
-	// stroke).
+	// The same ball, lying where the flipper passes at the start of its
+	// stroke, half way and near its end: how fast the first strike sends it
+	// (a ball left lying on a flipper is struck again as the flipper speeds
+	// up).
 	const auto struck = [](float degrees)
 	{
 		const Vector2f at = onFlipper(60.0f, degrees, 11.0f);
-		Written file(flipper(20.0f, "<gain>5</gain>") + ball(at.x, at.y));
+		Written file(flipper(6) + ball(at.x, at.y));
 		Played play(file.path);
 		Object& ball = play.get("ball");
 		play.engine.handleKeyPressed(KeyCode::D);
 		for (int i = 0; i < 8 && ball.velocity.x == 0.0f && ball.velocity.y == 0.0f; ++i) { play.frames(1); }
 		return std::hypot(ball.velocity.x, ball.velocity.y);
 	};
-	// Met as it turns 10 degrees a frame, then 20.
-	CHECK(struck(350.0f) > struck(20.0f) * 1.4f);
+	const float early = struck(24.0f);
+	const float middle = struck(5.0f);
+	const float late = struck(334.0f);
+	CHECK(middle > early * 1.4f);
+	CHECK(middle > late * 1.4f);
 }
 
 namespace
@@ -259,7 +259,7 @@ TEST_CASE("a ball at rest on a flipper wakes when the flipper moves", "[friction
 {
 	// Lying on the flipper raised and still, a little friction does not hold
 	// it on 30 degrees; on the flipper turned level (heading 0), it does.
-	std::string level = flipper(15.0f);
+	std::string level = flipper(4);
 	level.replace(level.find("<heading>30</heading>"), 21, "<heading>0</heading>");
 	level.replace(level.find("<to>330</to>"), 12, "<to>30</to>");
 	const Vector2f at = onFlipper(40.0f, 0.0f, 11.0f);

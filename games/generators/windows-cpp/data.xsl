@@ -289,18 +289,13 @@
           </xsl:call-template>
         </xsl:when>
         <xsl:when test="$verb = 'swing'">
-          <xsl:text> command.amount = </xsl:text>
-          <xsl:call-template name="value">
-            <xsl:with-param name="node" select="$node" />
-          </xsl:call-template>
-          <xsl:text>;</xsl:text>
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.distance'" />
             <xsl:with-param name="node" select="$node/to" />
           </xsl:call-template>
           <xsl:call-template name="field">
-            <xsl:with-param name="name" select="'command.ahead'" />
-            <xsl:with-param name="node" select="$node/gain" />
+            <xsl:with-param name="name" select="'command.seconds'" />
+            <xsl:with-param name="node" select="$node/seconds" />
           </xsl:call-template>
         </xsl:when>
         <xsl:when test="$verb = 'hunt'">

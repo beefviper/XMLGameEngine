@@ -798,17 +798,14 @@ namespace xge
 		// Where its turning point is on the screen: the pivot, or the middle.
 		Vector2f pivotOnScreen() const;
 
-		// <swing>: held, the heading goes toward swingTo, its turn a frame
-		// growing by swingGain each frame (0: at once) up to swingRate degrees;
-		// let go, back toward the heading it started with the same way.
-		// swingSpeed is how fast it turns now, swingWay which way (1
-		// clockwise, -1 not): turned the other way it starts again from
-		// still. swingRate 0: it has never swung. See playOneFrame.
-		float swingRate{};
+		// <swing>: a stroke of swingFrames frames from the heading it started
+		// with to swingTo, eased (still at both ends, fastest half way).
+		// swingDone is how far through it is, 0 to 1: held, it goes on;
+		// let go, it comes back. swingFrames 0: it has never swung. See
+		// playOneFrame.
+		int swingFrames{};
 		float swingTo{};
-		float swingGain{};
-		float swingSpeed{};
-		int swingWay{};
+		float swingDone{};
 		bool swingHeld{ false };
 
 		// How many degrees it turned this frame (clockwise is more), from the
