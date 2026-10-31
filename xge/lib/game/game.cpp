@@ -139,6 +139,7 @@ namespace xge
 		playOneFrame(getCurrentObjects(), windowDesc, *this);
 		settleSpawns();
 		stageChanged();
+		showJoins();
 	}
 
 	bool Game::isDescription(const std::string& name)

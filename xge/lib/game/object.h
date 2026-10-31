@@ -339,6 +339,10 @@ namespace xge
 		std::vector<RawCommand> commands;
 		// A <line>'s <atleast>: how many alike in a row.
 		int count{ 0 };
+		// <straight />: across and down only, no slants.
+		bool straight{ false };
+		// <alike variable="hue" />: alike by that variable's value, not by group.
+		std::string alike;
 	};
 
 	// Where a cell of a group laid out in <columns> and <rows> goes. Its slot
@@ -465,6 +469,9 @@ namespace xge
 		// <poses>: the look for each way it can be moving, by the pose's
 		// name (standing, walking, skidding, rising, falling); empty for none.
 		std::map<std::string, std::string> poses;
+		// <joins>: on a cell map, the look for where the piece it is joined
+		// to lies (alone, left, right, up, down); empty for none.
+		std::map<std::string, std::string> joins;
 		// <mirror>left</mirror>: going that way, its pictures are drawn
 		// flipped left to right; "" for never.
 		std::string mirror;
@@ -617,6 +624,10 @@ namespace xge
 		// Its links are known (found, or given by a <split />): a link lost
 		// is dropped, never looked for again where they lie.
 		bool chainKnown{ false };
+
+		// A piece with <joins>, settled: the other cells of the shape it came
+		// in, which it falls with while they are there.
+		std::vector<std::string> joinedWith;
 
 		// In play: shown, and touching things when its collisions are on. die()
 		// takes it out of play and stops its collisions.
@@ -805,6 +816,8 @@ namespace xge
 			std::string objClass;
 			std::vector<Command> commands;
 			int count{ 0 };
+			bool straight{ false };
+			std::string alike;
 		};
 		std::vector<CellCheck> cellChecks;
 		// What a check found: the map, the row (counting from 1) and the
@@ -964,6 +977,14 @@ namespace xge
 		enum class Pose { Standing, Walking, Skidding, Rising, Falling, Thrusting };
 		std::array<std::size_t, 6> poseLooks{};
 		bool hasPoses{ false };
+
+		// <joins>: the look (an index into looks) for where the piece it is
+		// joined to lies, by Join, when hasJoins: the other cells of its
+		// shape while it falls, the pieces in joinedWith once settled. Put
+		// on at the end of each frame (Game::showJoins), while it shows one.
+		enum class Join { Alone, Left, Right, Up, Down };
+		std::array<std::size_t, 5> joinLooks{};
+		bool hasJoins{ false };
 
 		// <mirror>: going `mirrorWay` (left or right) its pictures are drawn
 		// flipped left to right, when `mirrors`; `mirrored` is whether they

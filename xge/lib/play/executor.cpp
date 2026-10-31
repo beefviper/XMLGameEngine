@@ -899,7 +899,7 @@ namespace xge
 			};
 			if (command.free)
 			{
-				if (!game.putInFreeCell(*made, command.into)) { return false; }
+				if (!game.putInFreeCell(*made, command.into, command.freeBelow)) { return false; }
 			}
 			else if (!game.putOnCells(*made, cell(command.column, made->mapColumn, self ? self->cellColumn : 0.0f), cell(command.row, made->mapRow, self ? self->cellRow : 0.0f), command.into)) { return false; }
 			if (command.velocityX) { made->velocity.x = *command.velocityX; }

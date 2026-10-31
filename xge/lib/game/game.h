@@ -403,11 +403,14 @@ namespace xge
 
 		// A <spawn><free />: in a free cell, at random (none: taken back,
 		// false).
-		bool putInFreeCell(Object& made, const std::string& map = {});
+		bool putInFreeCell(Object& made, const std::string& map = {}, int below = 0);
 
-		// <fall />: every loose piece of the map down its column onto what
-		// is under it.
+		// <fall />: every loose piece of the map, with the pieces joined to
+		// it, down onto what is under it.
 		void fallCells(const std::string& map);
+		// <joins>: each piece that has them shows the look for where the
+		// piece it is joined to lies; at the end of every frame.
+		void showJoins();
 		// <cycle />: a shape's cells each on to the next of its outline.
 		void cycleCells(Object& shape);
 

@@ -1,0 +1,598 @@
+<!-- capsules.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 31, 2026 -->
+
+<!--
+  Capsules: germs sit in a bottle eight cells wide and sixteen deep. Doc,
+  a robot, throws in capsules of two halves, each red, yellow or blue.
+  Four or more of one colour in a line, across or down, halves and germs
+  alike, vanish; what is left of a capsule falls. Clear every germ and
+  the next level has more, and falls faster. The game is over when a new
+  capsule has no room at the neck.
+
+  A and D or the arrows move the capsule; W, Up or X turns it, E or C
+  turns it back; S or Down drops it faster while held. P or Escape
+  pauses; Space starts and plays again.
+
+  How it is written:
+  * The bottle is a <map> of <cells />. A capsule is a <shape> of two
+    cells of c, a half of any colour at random (a group of groups).
+  * A half has <joins>: the look for where its other half lies, so its
+    rounded end faces away, and a round pill once the other is gone.
+    Settled, the two stay joined and fall together.
+  * The bottle's <line> check is <straight /> (no slants) and counts as
+    alike what has the same hue, a variable the germs share with the
+    halves of their colour.
+  * Germs are spawned one a frame into free cells under row 6 while the
+    status says there are more to place; each one gone scores.
+  * The next capsule waits in a small map over Doc's raised hand.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Capsules">
+    <width>640</width>
+    <height>640</height>
+    <background>color.darkblue</background>
+  </window>
+  <variables>
+    <variable name="cell">32</variable>
+    <variable name="left">64</variable>
+    <variable name="top">104</variable>
+    <variable name="panel">400</variable>
+  </variables>
+  <sounds>
+    <sound name="move"><note pitch="E5">0.02</note></sound>
+    <sound name="turn"><note pitch="A5">0.02</note></sound>
+    <sound name="land" wave="triangle"><note pitch="D3">0.06</note></sound>
+    <sound name="match">
+      <note pitch="C5">0.04</note>
+      <note pitch="G5">0.04</note>
+      <note pitch="C6">0.08</note>
+    </sound>
+    <sound name="germ" wave="square"><volume>0.4</volume><note pitch="G6" to="C6">0.06</note></sound>
+    <sound name="level">
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <sound name="over" wave="triangle">
+      <note pitch="A4" to="A1">0.9</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="prompt"><size>32</size></style>
+    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="label"><size>24</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>36</size></style>
+    <style name="pill">
+      <scale>2</scale>
+      <color char="k">color.black</color>
+      <color char="w">color.white</color>
+    </style>
+    <style name="germ">
+      <scale>2</scale>
+      <color char="k">color.black</color>
+      <color char="w">color.white</color>
+    </style>
+    <style name="doctor">
+      <scale>3</scale>
+      <color char="k">color.black</color>
+      <color char="w">color.white</color>
+      <color char="g">color.lightgrey</color>
+      <color char="r">color.red</color>
+      <color char="c">color.cyan</color>
+      <color char="y">color.yellow</color>
+    </style>
+  </styles>
+  <objects>
+    <object name="again">
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>CAPSULES</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+        </object>
+        <object name="move">
+          <sprite><text style="help"><content>a and d or the arrows move, w or x turns, e or c turns back</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+        </object>
+        <object name="drop">
+          <sprite><text style="help"><content>s or down drops faster, p pauses</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 16</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <object name="status">
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="level">1</variable>
+            <!-- germs still to place, and germs in the bottle -->
+            <variable name="place">8</variable>
+            <variable name="germs">0</variable>
+            <variable name="gravity">0.8</variable>
+            <variable name="over">0</variable>
+          </variables>
+        </object>
+
+        <!-- the bottle: glass, its neck, and the dark inside -->
+        <object name="glass">
+          <sprite><rectangle><width>8 * cell + 16</width><height>16 * cell + 16</height><color>color.lightgrey</color></rectangle></sprite>
+          <position><x>left - 8</x><y>top - 8</y></position>
+        </object>
+        <object name="neck">
+          <sprite><rectangle><width>2 * cell + 16</width><height>40</height><color>color.lightgrey</color></rectangle></sprite>
+          <position><x>left + 3 * cell - 8</x><y>top - 40</y></position>
+        </object>
+        <object name="inside">
+          <sprite><rectangle><width>8 * cell</width><height>16 * cell</height><color>color.black</color></rectangle></sprite>
+          <position><x>left</x><y>top</y></position>
+        </object>
+        <object name="mouth">
+          <sprite><rectangle><width>2 * cell</width><height>40</height><color>color.black</color></rectangle></sprite>
+          <position><x>left + 3 * cell</x><y>top - 40</y></position>
+        </object>
+
+        <object name="scorelabel">
+          <sprite><text style="label"><content>SCORE</content></text></sprite>
+          <position><x>panel</x><y>320</y></position>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><number>status.score</number></text></sprite>
+          <position><x>panel</x><y>348</y></position>
+        </object>
+        <object name="levellabel">
+          <sprite><text style="label"><content>LEVEL</content></text></sprite>
+          <position><x>panel</x><y>412</y></position>
+        </object>
+        <object name="level">
+          <sprite><text style="hud"><number>status.level</number></text></sprite>
+          <position><x>panel</x><y>440</y></position>
+        </object>
+        <object name="germslabel">
+          <sprite><text style="label"><content>GERMS</content></text></sprite>
+          <position><x>panel</x><y>504</y></position>
+        </object>
+        <object name="germcount">
+          <sprite><text style="hud"><number>status.germs</number></text></sprite>
+          <position><x>panel</x><y>532</y></position>
+        </object>
+
+        <!-- Doc holds the next capsule up, and throws it in -->
+        <object name="doctor">
+          <sprite name="hold">
+            <bitmap style="doctor">
+              <row>..........yy..........kk.</row>
+              <row>...........k.........kggk</row>
+              <row>.......kkkkkkkkkk....kggk</row>
+              <row>......kwwwwrrwwwwk...kggk</row>
+              <row>......kwwwrrrrwwwk...kgk.</row>
+              <row>......kwwwwrrwwwwk...kgk.</row>
+              <row>......kkkkkkkkkkkk...kgk.</row>
+              <row>......kggggggggggk...kgk.</row>
+              <row>......kgkkkkkkkkgk...kgk.</row>
+              <row>......kgkcckkcckgk...kgk.</row>
+              <row>......kgkcckkcckgk...kgk.</row>
+              <row>......kgkkkkkkkkgk...kgk.</row>
+              <row>......kggggggggggk..kwwk.</row>
+              <row>......kggkrkrkrggk..kwwk.</row>
+              <row>.......kggggggggk..kwwk..</row>
+              <row>........kkkggkkk..kwwk...</row>
+              <row>....kkkkkwwwwwwkkkwwk....</row>
+              <row>...kwwwwwwwkwwwwwwwk.....</row>
+              <row>..kwwwwwwwwkwwwwwwk......</row>
+              <row>..kwkwwwwwwkwwwwwwk......</row>
+              <row>..kwkwwwwwwkwwrwwwk......</row>
+              <row>..kwkwwwwwwkwrrrwwk......</row>
+              <row>..kwkwwwwwwkwwrwwwk......</row>
+              <row>..kgkwwwwwwkwwwwwwk......</row>
+              <row>..kgkwwwwwwkwwwwwwk......</row>
+              <row>...k.kwwwwwkwwwwwk.......</row>
+              <row>.....kwwwwwkwwwwwk.......</row>
+              <row>.....kkkkkkkkkkkkk.......</row>
+              <row>......kggk...kggk........</row>
+              <row>.....kkkkk...kkkkk.......</row>
+            </bitmap>
+          </sprite>
+          <sprite name="throw">
+            <bitmap style="doctor">
+              <row>..........yy.............</row>
+              <row>...........k.............</row>
+              <row>.......kkkkkkkkkk........</row>
+              <row>......kwwwwrrwwwwk.......</row>
+              <row>......kwwwrrrrwwwk.......</row>
+              <row>......kwwwwrrwwwwk.......</row>
+              <row>......kkkkkkkkkkkk.......</row>
+              <row>......kggggggggggk.......</row>
+              <row>......kgkkkkkkkkgk.......</row>
+              <row>......kgkcckkcckgk.......</row>
+              <row>......kgkcckkcckgk.......</row>
+              <row>......kgkkkkkkkkgk.......</row>
+              <row>......kggggggggggk.......</row>
+              <row>......kggkkkkkkggk.......</row>
+              <row>.......kggggggggk........</row>
+              <row>........kkkggkkk.........</row>
+              <row>....kkkkkwwwwwwkkkkkk....</row>
+              <row>...kwwwwwwwkwwwwwwwwwkk..</row>
+              <row>..kwwwwwwwwkwwwwwkkwwwgk.</row>
+              <row>..kwkwwwwwwkwwwwwk.kkkgk.</row>
+              <row>..kwkwwwwwwkwwrwwk...kk..</row>
+              <row>..kwkwwwwwwkwrrrwk.......</row>
+              <row>..kwkwwwwwwkwwrwwk.......</row>
+              <row>..kgkwwwwwwkwwwwwk.......</row>
+              <row>..kgkwwwwwwkwwwwwk.......</row>
+              <row>...k.kwwwwwkwwwwwk.......</row>
+              <row>.....kwwwwwkwwwwwk.......</row>
+              <row>.....kkkkkkkkkkkkk.......</row>
+              <row>......kggk...kggk........</row>
+              <row>.....kkkkk...kkkkk.......</row>
+            </bitmap>
+          </sprite>
+          <position><x>panel + 40</x><y>150</y></position>
+          <timers>
+            <timer sprite="throw"><after>0.3</after><become sprite="hold" /></timer>
+          </timers>
+        </object>
+
+        <!-- the next capsule, over Doc's hand -->
+        <map name="next">
+          <tile><width>cell</width><height>cell</height></tile>
+          <position><x>panel + 88</x><y>110</y></position>
+          <columns>2</columns>
+          <rows>1</rows>
+          <cells />
+        </map>
+
+        <!-- the bottle's cells: eight across, sixteen down -->
+        <map name="bottle">
+          <tile><width>cell</width><height>cell</height></tile>
+          <position><x>left</x><y>top</y></position>
+          <columns>8</columns>
+          <rows>16</rows>
+          <cells />
+
+          <!-- a capsule half of each colour; c in a shape is any one of them -->
+          <group name="halves" class="pill" char="c">
+            <sprite name="alone">
+              <bitmap style="pill">
+                <row>................</row>
+                <row>................</row>
+                <row>....kkkkkkkk....</row>
+                <row>..kk********kk..</row>
+                <row>.k**ww********k.</row>
+                <row>.k*ww*********k.</row>
+                <row>k**w**********dk</row>
+                <row>k*************dk</row>
+                <row>k*************dk</row>
+                <row>k************ddk</row>
+                <row>.k**********ddk.</row>
+                <row>.k********dddk..</row>
+                <row>..kkddddddddkk..</row>
+                <row>....kkkkkkkk....</row>
+                <row>................</row>
+                <row>................</row>
+              </bitmap>
+            </sprite>
+            <sprite name="openleft">
+              <bitmap style="pill">
+                <row>................</row>
+                <row>................</row>
+                <row>kkkkkkkkkkkk....</row>
+                <row>************kk..</row>
+                <row>**********ww**k.</row>
+                <row>***********ww*k.</row>
+                <row>************w**k</row>
+                <row>***************k</row>
+                <row>***************k</row>
+                <row>d**************k</row>
+                <row>dd************k.</row>
+                <row>dddd**********k.</row>
+                <row>ddddddddddddkk..</row>
+                <row>kkkkkkkkkkkk....</row>
+                <row>................</row>
+                <row>................</row>
+              </bitmap>
+            </sprite>
+            <sprite name="openright">
+              <bitmap style="pill">
+                <row>................</row>
+                <row>................</row>
+                <row>....kkkkkkkkkkkk</row>
+                <row>..kk************</row>
+                <row>.k**ww**********</row>
+                <row>.k*ww***********</row>
+                <row>k**w************</row>
+                <row>k***************</row>
+                <row>k***************</row>
+                <row>k**************d</row>
+                <row>.k************dd</row>
+                <row>.k**********dddd</row>
+                <row>..kkdddddddddddd</row>
+                <row>....kkkkkkkkkkkk</row>
+                <row>................</row>
+                <row>................</row>
+              </bitmap>
+            </sprite>
+            <sprite name="openup">
+              <bitmap style="pill">
+                <row>..k******ddddk..</row>
+                <row>..k*******dddk..</row>
+                <row>..k********ddk..</row>
+                <row>..k********ddk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*w*******dk..</row>
+                <row>..k*ww******dk..</row>
+                <row>...k*ww*****k...</row>
+                <row>...k********k...</row>
+                <row>....kk****kk....</row>
+                <row>......kkkk......</row>
+              </bitmap>
+            </sprite>
+            <sprite name="opendown">
+              <bitmap style="pill">
+                <row>......kkkk......</row>
+                <row>....kk****kk....</row>
+                <row>...k********k...</row>
+                <row>...k*ww*****k...</row>
+                <row>..k*ww******dk..</row>
+                <row>..k*w*******dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k*********dk..</row>
+                <row>..k********ddk..</row>
+                <row>..k********ddk..</row>
+                <row>..k*******dddk..</row>
+                <row>..k******ddddk..</row>
+              </bitmap>
+            </sprite>
+            <joins>
+              <alone sprite="alone" />
+              <left sprite="openleft" />
+              <right sprite="openright" />
+              <up sprite="openup" />
+              <down sprite="opendown" />
+            </joins>
+            <group name="red">
+              <sprite name="alone"><bitmap><color>color.red</color><color char="d">color.brown</color></bitmap></sprite>
+              <sprite name="openleft"><bitmap><color>color.red</color><color char="d">color.brown</color></bitmap></sprite>
+              <sprite name="openright"><bitmap><color>color.red</color><color char="d">color.brown</color></bitmap></sprite>
+              <sprite name="openup"><bitmap><color>color.red</color><color char="d">color.brown</color></bitmap></sprite>
+              <sprite name="opendown"><bitmap><color>color.red</color><color char="d">color.brown</color></bitmap></sprite>
+              <variables><variable name="hue">1</variable></variables>
+            </group>
+            <group name="yellow">
+              <sprite name="alone"><bitmap><color>color.yellow</color><color char="d">color.orange</color></bitmap></sprite>
+              <sprite name="openleft"><bitmap><color>color.yellow</color><color char="d">color.orange</color></bitmap></sprite>
+              <sprite name="openright"><bitmap><color>color.yellow</color><color char="d">color.orange</color></bitmap></sprite>
+              <sprite name="openup"><bitmap><color>color.yellow</color><color char="d">color.orange</color></bitmap></sprite>
+              <sprite name="opendown"><bitmap><color>color.yellow</color><color char="d">color.orange</color></bitmap></sprite>
+              <variables><variable name="hue">2</variable></variables>
+            </group>
+            <group name="blue">
+              <sprite name="alone"><bitmap><color>color.cyan</color><color char="d">color.blue</color></bitmap></sprite>
+              <sprite name="openleft"><bitmap><color>color.cyan</color><color char="d">color.blue</color></bitmap></sprite>
+              <sprite name="openright"><bitmap><color>color.cyan</color><color char="d">color.blue</color></bitmap></sprite>
+              <sprite name="openup"><bitmap><color>color.cyan</color><color char="d">color.blue</color></bitmap></sprite>
+              <sprite name="opendown"><bitmap><color>color.cyan</color><color char="d">color.blue</color></bitmap></sprite>
+              <variables><variable name="hue">3</variable></variables>
+            </group>
+          </group>
+
+          <!-- the germs, little monsters that wriggle, one of each colour -->
+          <group name="germs" class="germ">
+            <sprite name="germa">
+              <bitmap style="germ">
+                <row>................</row>
+                <row>...k........k...</row>
+                <row>....k......k....</row>
+                <row>.....kkkkkk.....</row>
+                <row>...kk******kk...</row>
+                <row>..k**********k..</row>
+                <row>.k**wwk**wwk**k.</row>
+                <row>.k**wkk**wkk**k.</row>
+                <row>k**************k</row>
+                <row>k****kkkkkk****k</row>
+                <row>k*****k..k*****k</row>
+                <row>.k****kkkk****k.</row>
+                <row>..kk********kk..</row>
+                <row>.k..kk****kk..k.</row>
+                <row>k...k.kkkk.k...k</row>
+                <row>...k........k...</row>
+              </bitmap>
+            </sprite>
+            <sprite name="germb">
+              <bitmap style="germ">
+                <row>................</row>
+                <row>..k..........k..</row>
+                <row>...k........k...</row>
+                <row>.....kkkkkk.....</row>
+                <row>...kk******kk...</row>
+                <row>..k**********k..</row>
+                <row>.k**kww**kww**k.</row>
+                <row>.k**kkw**kkw**k.</row>
+                <row>k**************k</row>
+                <row>k**************k</row>
+                <row>k****kkkkkk****k</row>
+                <row>.k****k..k****k.</row>
+                <row>..kk***kk***kk..</row>
+                <row>...kkk****kkk...</row>
+                <row>..k..kkkkkk..k..</row>
+                <row>.k............k.</row>
+              </bitmap>
+            </sprite>
+            <animation name="wriggle">
+              <interval>0.3</interval>
+              <frame sprite="germa" />
+              <frame sprite="germb" />
+            </animation>
+            <group name="redgerm">
+              <sprite name="germa"><bitmap><color>color.red</color></bitmap></sprite>
+              <sprite name="germb"><bitmap><color>color.red</color></bitmap></sprite>
+              <variables><variable name="hue">1</variable></variables>
+            </group>
+            <group name="yellowgerm">
+              <sprite name="germa"><bitmap><color>color.yellow</color></bitmap></sprite>
+              <sprite name="germb"><bitmap><color>color.yellow</color></bitmap></sprite>
+              <variables><variable name="hue">2</variable></variables>
+            </group>
+            <group name="bluegerm">
+              <sprite name="germa"><bitmap><color>color.cyan</color></bitmap></sprite>
+              <sprite name="germb"><bitmap><color>color.cyan</color></bitmap></sprite>
+              <variables><variable name="hue">3</variable></variables>
+            </group>
+          </group>
+
+          <!-- the falling capsule -->
+          <group name="capsules" class="falling">
+            <collisions>
+              <!-- a fall refused by a half, a germ or the floor: it lands -->
+              <collision class="pill" side="bottom"><trigger action="land" /></collision>
+              <collision class="germ" side="bottom"><trigger action="land" /></collision>
+              <collision edge="bottom"><trigger action="land" /></collision>
+            </collisions>
+            <actions>
+              <action name="left"><move direction="left">10<wait>0.2</wait></move></action>
+              <action name="right"><move direction="right">10<wait>0.2</wait></move></action>
+              <action name="faster"><move direction="down">20</move></action>
+              <action name="clockwise"><turn direction="right" /><play sound="turn" /></action>
+              <action name="counter"><turn direction="left" /><play sound="turn" /></action>
+              <action name="land">
+                <settle />
+                <play sound="land" />
+                <set variable="status.over">1</set>
+                <send object="capsules" from="next" into="bottle"><column>4</column><row>1</row></send>
+                <become object="doctor" sprite="throw" />
+                <spawn object="capsules" into="next"><random /></spawn>
+                <set variable="status.over">0</set>
+              </action>
+            </actions>
+            <timers>
+              <timer><every>status.gravity</every><hop direction="down" /></timer>
+            </timers>
+            <group name="capsule">
+              <shape>
+                <row>cc</row>
+              </shape>
+            </group>
+          </group>
+
+          <!-- four or more of a hue across or down go; what is left falls; again -->
+          <checks>
+            <line>
+              <atleast>4</atleast>
+              <straight />
+              <alike variable="hue" />
+              <clear />
+              <fall />
+              <play sound="match" />
+            </line>
+          </checks>
+        </map>
+      </objects>
+      <inputs>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="capsules" action="left" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="capsules" action="right" /></input>
+        <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="capsules" action="faster" /></input>
+        <input><button>w</button><button>up</button><button>x</button><button>pad1.a</button><trigger object="capsules" action="clockwise" /></input>
+        <input><button>e</button><button>c</button><button>pad1.b</button><trigger object="capsules" action="counter" /></input>
+        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition object="status" variable="over">
+          <equal>1</equal>
+          <play sound="over" />
+          <push state="gameover" />
+        </condition>
+        <!-- the level's germs come in, one a frame, low in the bottle -->
+        <condition object="status" variable="place">
+          <above>0</above>
+          <spawn object="germs"><random /><free><below>6</below></free></spawn>
+          <dec variable="status.place" />
+          <inc variable="status.germs" />
+        </condition>
+        <!-- each germ gone scores -->
+        <condition class="germ" total="count">
+          <below>status.germs</below>
+          <dec variable="status.germs" />
+          <inc variable="status.score">100 * status.level</inc>
+          <play sound="germ" />
+        </condition>
+        <!-- every germ gone: an empty bottle, and the next level, faster, with more -->
+        <condition>
+          <all>
+            <condition object="status" variable="germs"><equal>0</equal></condition>
+            <condition object="status" variable="place"><equal>0</equal></condition>
+          </all>
+          <play sound="level" />
+          <despawn object="halves" />
+          <despawn object="capsules" />
+          <spawn object="capsules"><random /><column>4</column><row>1</row></spawn>
+          <spawn object="capsules" into="next"><random /></spawn>
+          <inc variable="status.level" />
+          <set variable="status.place">4 * status.level + 4</set>
+          <set variable="status.gravity">status.gravity * 0.9</set>
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <after>0</after>
+          <spawn object="capsules"><random /><column>4</column><row>1</row></spawn>
+          <spawn object="capsules" into="next"><random /></spawn>
+        </timer>
+      </timers>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <objects>
+        <object name="message">
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

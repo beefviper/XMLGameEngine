@@ -360,6 +360,9 @@ namespace xge
 			spawn.random = raw.random;
 			spawn.into = raw.into;
 			spawn.free = raw.free;
+			std::optional<float> below;
+			half(raw.below, below, nullptr, "");
+			spawn.freeBelow = below ? static_cast<int>(std::lround(*below)) : 0;
 			return spawn;
 		}
 		if (verb == "send")
@@ -855,7 +858,7 @@ namespace xge
 		else if (command.verb == "spawn")
 		{
 			o << "(" << command.object << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY
-				<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
+				<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << " " << command.below << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
 		}
 		else if (command.verb == "send")
 		{

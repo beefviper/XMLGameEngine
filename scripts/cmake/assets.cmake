@@ -52,6 +52,7 @@ set(data_xml
 	"games/descriptions/hauntedhouse.xml"
 	"games/descriptions/tetris.xml"
 	"games/descriptions/columns.xml"
+	"games/descriptions/capsules.xml"
 	"games/descriptions/snake.xml"
 	"games/descriptions/centipede.xml")
 

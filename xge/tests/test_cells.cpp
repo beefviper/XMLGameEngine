@@ -888,3 +888,158 @@ TEST_CASE("A <split /> cuts a chain: the links behind lead a chain of their own"
 	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 7, 2 }, { 6, 2 } });
 	CHECK(snakeOf(play, "playing.field.bodies.2") == Snake{ { 4, 2 }, { 3, 2 } });
 }
+
+namespace
+{
+	// A bottle of cells drawn by its rows: x a red germ, y a blue one. A
+	// capsule is two halves, R red and B blue, each showing where its
+	// other half lies; four of a hue across or down go, and what is left
+	// falls. Space puts the capsule in its cell; X turns it, S drops it.
+	std::string bottle(const std::vector<std::string>& rows, const std::string& capsule)
+	{
+		std::string map = "<map name=\"field\"><tile><width>10</width><height>10</height></tile><position><x>100</x><y>100</y></position><cells />";
+		for (const std::string& row : rows) { map += "<row>" + row + "</row>"; }
+		const std::string look = "<circle><radius>4</radius></circle>";
+		const auto half = [&](const std::string& name, const std::string& character, int hue)
+		{
+			return "<group name=\"" + name + "\" char=\"" + character + "\"><variables><variable name=\"hue\">" + std::to_string(hue) + "</variable></variables></group>";
+		};
+		return map
+			+ "<group name=\"germs\" class=\"germ\"><sprite>" + look + "</sprite>" + half("redgerm", "x", 1) + half("bluegerm", "y", 2) + "</group>"
+			"<group name=\"halves\" class=\"pill\">"
+			"<sprite name=\"alone\">" + look + "</sprite><sprite name=\"openleft\">" + look + "</sprite><sprite name=\"openright\">" + look + "</sprite>"
+			"<sprite name=\"openup\">" + look + "</sprite><sprite name=\"opendown\">" + look + "</sprite>"
+			"<joins><alone sprite=\"alone\" /><left sprite=\"openleft\" /><right sprite=\"openright\" /><up sprite=\"openup\" /><down sprite=\"opendown\" /></joins>"
+			+ half("red", "R", 1) + half("blue", "B", 2) + "</group>"
+			"<group name=\"pieces\" class=\"falling\">"
+			"<collisions><collision class=\"germ\" side=\"bottom\"><settle /></collision><collision class=\"pill\" side=\"bottom\"><settle /></collision>"
+			"<collision edge=\"bottom\"><settle /></collision></collisions>"
+			"<actions><action name=\"drop\"><slide direction=\"down\" /></action><action name=\"turn\"><turn direction=\"right\" /></action></actions>"
+			"<group name=\"capsule\"><shape><row>" + capsule + "</row></shape></group></group>"
+			"<checks><line><atleast>4</atleast><straight /><alike variable=\"hue\" /><clear /><fall /></line></checks></map>";
+	}
+
+	std::string capsuleAt(int column)
+	{
+		return "<spawn object=\"capsule\"><column>" + std::to_string(column) + "</column><row>1</row></spawn></input>"
+			"<input button=\"x\"><trigger object=\"pieces\" action=\"turn\" /></input>"
+			"<input button=\"s\"><trigger object=\"pieces\" action=\"drop\" />";
+	}
+
+	// Each half on the map: its cell and its look.
+	std::map<std::pair<int, int>, std::string> halvesOf(Game& game)
+	{
+		std::map<std::pair<int, int>, std::string> found;
+		for (const Object& object : game.getCurrentObjects())
+		{
+			if (object.exists && object.onCells && object.objClass == "pill") { found[{ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) }] = object.lookName(); }
+		}
+		return found;
+	}
+	using Halves = std::map<std::pair<int, int>, std::string>;
+
+	int germsIn(Game& game)
+	{
+		int count = 0;
+		for (const Object& object : game.getCurrentObjects())
+		{
+			if (object.exists && object.onCells && object.objClass == "germ") { ++count; }
+		}
+		return count;
+	}
+}
+
+TEST_CASE("A capsule's halves show their rounded ends, and it turns about its left half", "[cells][capsules]")
+{
+	played::Scratch file(bottle({ "....", "....", "....", "....", "...." }, "RB"), capsuleAt(2));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(halvesOf(play.game) == Halves{ { { 2, 1 }, "openright" }, { { 3, 1 }, "openleft" } });
+
+	// In the top row it stands down from its left half; then lies back
+	// along the row of its bottom half, the other way round.
+	play.tap(KeyCode::X);
+	play.frames(1);
+	CHECK(halvesOf(play.game) == Halves{ { { 2, 1 }, "opendown" }, { { 2, 2 }, "openup" } });
+	play.tap(KeyCode::X);
+	play.frames(1);
+	CHECK(halvesOf(play.game) == Halves{ { { 2, 2 }, "openright" }, { { 3, 2 }, "openleft" } });
+	// Standing up from its left half, now that there is room above.
+	play.tap(KeyCode::X);
+	play.frames(1);
+	CHECK(halvesOf(play.game) == Halves{ { { 2, 1 }, "opendown" }, { { 2, 2 }, "openup" } });
+}
+
+TEST_CASE("Four of a hue, germs and halves alike, go; the half left over is round, and falls", "[cells][capsules]")
+{
+	played::Scratch file(bottle({ "......", "......", "......", "...x..", "...x..", "...x.." }, "RB"), capsuleAt(4));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::S);
+	play.frames(2);
+	CHECK(germsIn(play.game) == 0);
+	CHECK(halvesOf(play.game) == Halves{ { { 5, 6 }, "alone" } });
+}
+
+TEST_CASE("Settled, a capsule's halves stay joined: they fall together, and only across or down make a line", "[cells][capsules]")
+{
+	// The red germs across row 5 go when the capsule lands on the one at
+	// column 4; the capsule, standing on nothing then, falls whole.
+	played::Scratch file(bottle({ "......", "......", "......", "......", "xxxx..", "......", "x....." }, "BR"), capsuleAt(4));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::S);
+	play.frames(2);
+	CHECK(halvesOf(play.game) == Halves{ { { 4, 7 }, "openright" }, { { 5, 7 }, "openleft" } });
+	CHECK(germsIn(play.game) == 1);
+}
+
+TEST_CASE("Capsules plays: germs come in low in the bottle, a capsule falls, and Doc holds the next", "[cells][capsules]")
+{
+	Played play("descriptions/capsules.xml");
+	play.tap(KeyCode::Space);
+	play.frames(30);
+	CHECK(play.state() == "playing");
+	Object& status = play.get("playing.status");
+	CHECK(status.variable.at("germs") == 8.0f);
+	CHECK(germsIn(play.game) == 8);
+	for (const Object& object : play.game.getCurrentObjects())
+	{
+		if (object.exists && object.onCells && object.objClass == "germ") { CHECK(object.cellRow > 6.0f); }
+	}
+	int falling = 0;
+	int next = 0;
+	for (const Object& object : play.game.getCurrentObjects())
+	{
+		if (!object.exists || object.objClass != "pill") { continue; }
+		if (object.mapName == "playing.next") { ++next; }
+		else if (!object.shapeOwner.empty()) { ++falling; }
+	}
+	CHECK(falling == 2);
+	CHECK(next == 2);
+
+	// Every germ gone: the germs score, and the next level brings more.
+	for (Object& object : play.game.getCurrentObjects())
+	{
+		if (object.exists && object.onCells && object.objClass == "germ") { play.game.despawn(object); }
+	}
+	play.frames(30);
+	CHECK(status.variable.at("score") == 800.0f);
+	CHECK(status.variable.at("level") == 2.0f);
+	CHECK(germsIn(play.game) == 12);
+	CHECK(status.variable.at("germs") == 12.0f);
+
+	// Capsules still come.
+	play.engine.handleKeyPressed(KeyCode::S);
+	play.frames(120);
+	play.engine.handleKeyReleased(KeyCode::S);
+	int pills = 0;
+	for (const Object& object : play.game.getCurrentObjects())
+	{
+		if (object.exists && object.objClass == "pill") { ++pills; }
+	}
+	CHECK(pills >= 6);
+}

@@ -1082,7 +1082,15 @@ namespace xge
 					}
 				}
 				command.random = findChild(&node, "random") != nullptr;
-				command.free = findChild(&node, "free") != nullptr;
+				if (auto free = findChild(&node, "free"))
+				{
+					command.free = true;
+					for (std::unique_ptr<XmlNode> child = free->getFirstChild(); child != nullptr; child = child->getNextSibling())
+					{
+						if (child->getName() != "below") { fail(here + " > <free>", "unknown <" + child->getName() + ">; expected only a <below>: the row it goes under"); }
+						command.below = readValue(*child, here + " > <free> > <below>");
+					}
+				}
 				command.into = node.getAttribute("into");
 				if (auto column = findChild(&node, "column")) { command.column = readValue(*column, here); }
 				if (auto row = findChild(&node, "row")) { command.row = readValue(*row, here); }
@@ -1403,6 +1411,25 @@ namespace xge
 					object.poses[tag] = requireAttribute(*pose, "sprite", here + " > <" + tag + ">");
 				}
 				if (!object.poses.count("standing")) { fail(here, "missing <standing>: the look when it is not moving, which the others fall back to"); }
+			}
+			if (auto joins = findChild(&node, "joins"))
+			{
+				const std::string here = where + " > <joins>";
+				object.joins.clear();
+				for (std::unique_ptr<XmlNode> join = joins->getFirstChild(); join != nullptr; join = join->getNextSibling())
+				{
+					const std::string tag = join->getName();
+					if (tag != "alone" && tag != "left" && tag != "right" && tag != "up" && tag != "down")
+					{
+						fail(here, "unknown <" + tag + ">; expected <alone>, <left>, <right>, <up> and <down>");
+					}
+					if (object.joins.count(tag)) { fail(here, "has two <" + tag + ">s"); }
+					object.joins[tag] = requireAttribute(*join, "sprite", here + " > <" + tag + ">");
+				}
+				for (const char* tag : { "alone", "left", "right", "up", "down" })
+				{
+					if (!object.joins.count(tag)) { fail(here, std::string("missing <") + tag + ">: every way it can be joined, and alone, has its look"); }
+				}
 			}
 			if (auto mirror = findChild(&node, "mirror"))
 			{
@@ -1734,6 +1761,13 @@ namespace xge
 					{
 						if (tag != "line") { fail(here, "has an <atleast>, which is for a <line>"); }
 						check.count = readCount(*command, here);
+						continue;
+					}
+					if (command->getName() == "straight" || command->getName() == "alike")
+					{
+						if (tag != "line") { fail(here, "has an <" + command->getName() + ">, which is for a <line>"); }
+						if (command->getName() == "straight") { check.straight = true; }
+						else { check.alike = requireAttribute(*command, "variable", here + " > <alike>"); }
 						continue;
 					}
 					check.commands.push_back(readCommand(*command, here));
@@ -2150,7 +2184,7 @@ namespace xge
 				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
-				else if (tag == "poses" || tag == "mirror" || tag == "grip") { /* below, all at once */ }
+				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins") { /* below, all at once */ }
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "chain")
 				{
@@ -2165,7 +2199,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 

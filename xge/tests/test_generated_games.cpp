@@ -251,6 +251,7 @@ namespace
 			text(at + ".shadowOf", o.shadowOf);
 			text(at + ".facing", o.facing);
 			for (const auto& [pose, look] : o.poses) { text(at + ".pose." + pose, look); }
+			for (const auto& [join, look] : o.joins) { text(at + ".join." + join, look); }
 			text(at + ".mirror", o.mirror);
 			flag(at + ".hasGrip", o.hasGrip);
 			value(at + ".grip", o.rawGrip);
@@ -292,7 +293,7 @@ namespace
 			value(at + ".tileHeight", o.cell.tileHeight);
 			out << at << ".cell " << o.cell.column << " " << o.cell.row << "\n";
 			out << at << ".cells " << o.cell.cells << " [" << o.cell.character << "]\n";
-			for (const RawCheck& check : o.cell.checks) { commands(at + ".check." + check.kind + "." + check.objClass + "." + std::to_string(check.count), check.commands); }
+			for (const RawCheck& check : o.cell.checks) { commands(at + ".check." + check.kind + "." + check.objClass + "." + std::to_string(check.count) + (check.straight ? ".straight" : "") + "." + check.alike, check.commands); }
 			for (const std::string& row : o.shapeRows) { text(at + ".shape", row); }
 			text(at + ".chain", o.chain);
 			for (const auto& [character, piece] : o.shapePieces) { out << at << ".shapePiece [" << character << "|" << piece << "]\n"; }

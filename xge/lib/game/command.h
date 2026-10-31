@@ -634,8 +634,10 @@ namespace xge
 		std::optional<float> row;
 		// into=: the map of cells it goes on, when not its own.
 		std::string into;
-		// <free />: in a free cell of the map, at random.
+		// <free />: in a free cell of the map, at random; with <below>N</below>,
+		// one under row N.
 		bool free{ false };
+		int freeBelow{ 0 };
 	};
 
 	// <grow /> - an object with a <chain>: one link longer, at the tail,
@@ -903,6 +905,8 @@ namespace xge
 		bool free{ false };
 		RawValue column;
 		RawValue row;
+		// spawn: the <below> of its <free>, empty text when left out.
+		RawValue below;
 	};
 
 	// A <timer> as written: <every> (again and again) or <after> (once), a

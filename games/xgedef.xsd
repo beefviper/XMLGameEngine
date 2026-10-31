@@ -587,8 +587,19 @@
       <xs:element name="poses" type="posesType" minOccurs="0" />
       <xs:element name="mirror" type="mirrorType" minOccurs="0" />
       <xs:element name="grip" type="valueType" minOccurs="0" />
+      <xs:element name="joins" type="joinsType" minOccurs="0" />
     </xs:sequence>
   </xs:group>
+  <!-- joins: on a map with <cells />, the look for where the piece it is joined to lies (the other cells of its shape, falling or settled), and alone; put on while it shows one of them -->
+  <xs:complexType name="joinsType">
+    <xs:sequence>
+      <xs:element name="alone" type="poseType" />
+      <xs:element name="left" type="poseType" />
+      <xs:element name="right" type="poseType" />
+      <xs:element name="up" type="poseType" />
+      <xs:element name="down" type="poseType" />
+    </xs:sequence>
+  </xs:complexType>
 
   <!-- Commands: what a collision rule, an object action, a key or a condition does. -->
   <!-- inc and dec: which variable, and by how much (1 when there is nothing between the tags). -->
@@ -695,8 +706,14 @@
           <xs:element name="column" type="valueType" />
           <xs:element name="row" type="valueType" />
         </xs:sequence>
-        <!-- free: a free cell of the map, at random -->
-        <xs:element name="free" type="emptyType" />
+        <!-- free: a free cell of the map, at random; with <below>, one under that row -->
+        <xs:element name="free">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="below" type="valueType" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
       </xs:choice>
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
     </xs:sequence>
@@ -1850,11 +1867,18 @@
           <xs:attribute name="class" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- line: <atleast> so many pieces alike (of one group) in a row, across, down or diagonal; every such line at once, asked again after its commands until none -->
+      <!-- line: <atleast> so many pieces alike (of one group) in a row, across, down or diagonal; every such line at once, asked again after its commands until none.
+           <straight />: across and down only. <alike variable="hue" />: alike by that variable's value instead of by group. -->
       <xs:element name="line">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="atleast" type="xs:positiveInteger" />
+            <xs:element name="straight" type="emptyType" minOccurs="0" />
+            <xs:element name="alike" minOccurs="0">
+              <xs:complexType>
+                <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+              </xs:complexType>
+            </xs:element>
             <xs:group ref="checkCommands" maxOccurs="unbounded" />
           </xs:sequence>
           <xs:attribute name="class" type="xs:string" use="optional" />

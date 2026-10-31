@@ -79,9 +79,9 @@ TEST_CASE("every XML library loads these games the same: mariobros, breakout, sp
 	for (const char* game : { "mariobros", "breakout", "spacerace", "freeway" }) { loadsTheSame(game); }
 }
 
-TEST_CASE("every XML library loads these games the same: donkeykong, kaboom, depthcharge, columns, lunarlander", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: donkeykong, kaboom, depthcharge, columns, capsules, lunarlander", "[xml_format][backends]")
 {
-	for (const char* game : { "donkeykong", "kaboom", "depthcharge", "columns", "lunarlander" }) { loadsTheSame(game); }
+	for (const char* game : { "donkeykong", "kaboom", "depthcharge", "columns", "capsules", "lunarlander" }) { loadsTheSame(game); }
 }
 
 TEST_CASE("every XML library loads these games the same: galaxian, astrosmash, combat, tennis", "[xml_format][backends]")

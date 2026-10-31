@@ -343,6 +343,10 @@
           </xsl:if>
           <xsl:if test="$node/free">
             <xsl:text> command.free = true;</xsl:text>
+            <xsl:call-template name="field">
+              <xsl:with-param name="name" select="'command.below'" />
+              <xsl:with-param name="node" select="$node/free/below" />
+            </xsl:call-template>
           </xsl:if>
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.column'" />
@@ -1282,7 +1286,7 @@
     </xsl:if>
   </xsl:template>
 
-  <!-- What an <object> and a <group> both have: <facing>, <poses>, <mirror>, <grip>, <timers>,
+  <!-- What an <object> and a <group> both have: <facing>, <poses>, <joins>, <mirror>, <grip>, <timers>,
        <active>, <collisions>, <actions> and <variables>, into $to. -->
   <xsl:template name="shared">
     <xsl:param name="node" />
@@ -1316,6 +1320,22 @@
     <xsl:if test="$node/poses">
       <xsl:value-of select="concat($indent, $to, '.poses = {')" />
       <xsl:for-each select="$node/poses/*">
+        <xsl:if test="position() &gt; 1">,</xsl:if>
+        <xsl:text> { </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="local-name()" />
+        </xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@sprite" />
+        </xsl:call-template>
+        <xsl:text> }</xsl:text>
+      </xsl:for-each>
+      <xsl:text> };&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$node/joins">
+      <xsl:value-of select="concat($indent, $to, '.joins = {')" />
+      <xsl:for-each select="$node/joins/*">
         <xsl:if test="position() &gt; 1">,</xsl:if>
         <xsl:text> { </xsl:text>
         <xsl:call-template name="string">
@@ -1766,12 +1786,14 @@
       </xsl:call-template>
       <xsl:text>, </xsl:text>
       <xsl:call-template name="commands">
-        <xsl:with-param name="nodes" select="*[not(self::atleast)]" />
+        <xsl:with-param name="nodes" select="*[not(self::atleast or self::straight or self::alike)]" />
         <xsl:with-param name="indent" select="$in" />
       </xsl:call-template>
-      <xsl:if test="atleast">
-        <xsl:value-of select="concat(', ', normalize-space(atleast))" />
-      </xsl:if>
+      <xsl:value-of select="concat(', ', normalize-space(atleast), substring('0', 1, number(not(atleast))))" />
+      <xsl:value-of select="concat(', ', substring('false', 1, 5 * not(straight)), substring('true', 1, 4 * boolean(straight)), ', ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="alike/@variable" />
+      </xsl:call-template>
       <xsl:text> });&#10;</xsl:text>
     </xsl:for-each>
     <xsl:if test=".//shape">

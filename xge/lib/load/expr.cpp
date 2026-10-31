@@ -892,6 +892,26 @@ namespace xge
 			if (standing != 0) { object.showLook(standing); }
 		}
 
+		// The look for where the piece it is joined to lies.
+		if (!rawObject.joins.empty())
+		{
+			std::size_t at = 0;
+			for (const char* join : { "alone", "left", "right", "up", "down" })
+			{
+				const std::string& name = rawObject.joins.at(join);
+				const auto look = std::find_if(looks.begin(), looks.end(), [&](const Object::Look& each) { return each.name == name; });
+				if (look == looks.end())
+				{
+					std::vector<std::string> names;
+					for (const Object::Look& each : looks) { names.push_back(each.name); }
+					throw std::runtime_error(where + " > <joins> > <" + join + " sprite=\"" + name + "\">: the object has no look of that name"
+						+ (names.empty() ? std::string(" (it has no looks)") : didYouMean(name, names) + ". Its looks are: " + listOf(names)));
+				}
+				object.joinLooks[at++] = static_cast<std::size_t>(look - looks.begin());
+			}
+			object.hasJoins = true;
+		}
+
 		if (!rawObject.mirror.empty())
 		{
 			if (rawObject.hasHeading) { throw std::runtime_error(where + ": <mirror> flips a picture that does not turn; it has a <heading>"); }
@@ -943,7 +963,7 @@ namespace xge
 				object.cellRow = object.start.cellRow = static_cast<float>(rawObject.cell.mapRow);
 				for (const RawCheck& check : rawObject.cell.checks)
 				{
-					object.cellChecks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count });
+					object.cellChecks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count, check.straight, check.alike });
 				}
 			}
 			for (std::size_t row = 0; row < rawObject.shapeRows.size(); ++row)
