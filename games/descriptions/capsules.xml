@@ -507,7 +507,7 @@
               <straight />
               <alike variable="hue" />
               <clear />
-              <fall />
+              <fall class="pill" />
               <play sound="match" />
             </line>
           </checks>

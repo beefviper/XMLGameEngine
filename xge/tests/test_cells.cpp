@@ -894,7 +894,7 @@ namespace
 	// A bottle of cells drawn by its rows: x a red germ, y a blue one. A
 	// capsule is two halves, R red and B blue, each showing where its
 	// other half lies; four of a hue across or down go, and what is left
-	// falls. Space puts the capsule in its cell; X turns it, S drops it.
+	// falls; germs stay where they are. Space puts the capsule in its cell; X turns it, S drops it.
 	std::string bottle(const std::vector<std::string>& rows, const std::string& capsule)
 	{
 		std::string map = "<map name=\"field\"><tile><width>10</width><height>10</height></tile><position><x>100</x><y>100</y></position><cells />";
@@ -916,7 +916,7 @@ namespace
 			"<collision edge=\"bottom\"><settle /></collision></collisions>"
 			"<actions><action name=\"drop\"><slide direction=\"down\" /></action><action name=\"turn\"><turn direction=\"right\" /></action></actions>"
 			"<group name=\"capsule\"><shape><row>" + capsule + "</row></shape></group></group>"
-			"<checks><line><atleast>4</atleast><straight /><alike variable=\"hue\" /><clear /><fall /></line></checks></map>";
+			"<checks><line><atleast>4</atleast><straight /><alike variable=\"hue\" /><clear /><fall class=\"pill\" /></line></checks></map>";
 	}
 
 	std::string capsuleAt(int column)
@@ -981,6 +981,27 @@ TEST_CASE("Four of a hue, germs and halves alike, go; the half left over is roun
 	play.frames(2);
 	CHECK(germsIn(play.game) == 0);
 	CHECK(halvesOf(play.game) == Halves{ { { 5, 6 }, "alone" } });
+}
+
+TEST_CASE("After a line goes only the halves fall: germs stay put, and hold up what lands on them", "[cells][capsules]")
+{
+	// The red line at column 4 goes; the blue half left over falls onto
+	// the blue germ at column 5, and the blue germ hanging at column 2
+	// stays where it is.
+	played::Scratch file(bottle({ "......", "......", "......", ".y.x..", "...x..", "...xy." }, "RB"), capsuleAt(4));
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::S);
+	play.frames(2);
+	CHECK(germsIn(play.game) == 2);
+	CHECK(halvesOf(play.game) == Halves{ { { 5, 5 }, "alone" } });
+	bool hanging = false;
+	for (const Object& object : play.game.getCurrentObjects())
+	{
+		if (object.exists && object.onCells && object.objClass == "germ" && object.cellColumn == 2.0f) { hanging = object.cellRow == 4.0f; }
+	}
+	CHECK(hanging);
 }
 
 TEST_CASE("Settled, a capsule's halves stay joined: they fall together, and only across or down make a line", "[cells][capsules]")

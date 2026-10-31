@@ -240,7 +240,7 @@ namespace xge
 			[&](const CmdSlide& m) { if (self && self->onCells) { game.slideCells(*self, m.direction); } },
 			[&](const CmdClear&) { if (doer.match) { game.clearCells(*doer.match); } },
 			[&](const CmdCollapse&) { if (doer.match) { game.collapseCells(*doer.match); } },
-			[&](const CmdFall&) { if (doer.match) { game.fallCells(doer.match->map); } },
+			[&](const CmdFall& fall) { if (doer.match) { game.fallCells(doer.match->map, fall.objClass); } },
 			[&](const CmdCycle&) { if (self) { game.cycleCells(*self); } },
 			[&](const CmdGrow&) { if (self && !self->chain.empty()) { ++self->chainGrow; } },
 			[&](const CmdSplit&) { if (self) { game.splitChain(*self); } },

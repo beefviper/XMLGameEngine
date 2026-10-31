@@ -1186,8 +1186,12 @@
       <!-- clear: what it found leaves the game; collapse: what is above a full row comes down a row -->
       <xs:element name="clear" type="emptyType" />
       <xs:element name="collapse" type="emptyType" />
-      <!-- fall: every loose piece of the map drops down its column onto what is under it -->
-      <xs:element name="fall" type="emptyType" />
+      <!-- fall: every loose piece of the map (with class=, only those of that class) drops down its column onto what is under it -->
+      <xs:element name="fall">
+        <xs:complexType>
+          <xs:attribute name="class" type="xs:NMTOKEN" />
+        </xs:complexType>
+      </xs:element>
     </xs:choice>
   </xs:group>
 

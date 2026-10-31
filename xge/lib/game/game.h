@@ -407,7 +407,7 @@ namespace xge
 
 		// <fall />: every loose piece of the map, with the pieces joined to
 		// it, down onto what is under it.
-		void fallCells(const std::string& map);
+		void fallCells(const std::string& map, const std::string& objClass);
 		// <joins>: each piece that has them shows the look for where the
 		// piece it is joined to lies; at the end of every frame.
 		void showJoins();

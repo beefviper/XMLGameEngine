@@ -54,7 +54,7 @@ namespace xge
 		if (verb == "settle") { return CmdSettle{}; }
 		if (verb == "clear") { return CmdClear{}; }
 		if (verb == "collapse") { return CmdCollapse{}; }
-		if (verb == "fall") { return CmdFall{}; }
+		if (verb == "fall") { return CmdFall{ raw.objClass }; }
 		if (verb == "cycle") { return CmdCycle{}; }
 		if (verb == "grow") { return CmdGrow{}; }
 		if (verb == "split") { return CmdSplit{}; }
@@ -476,7 +476,7 @@ namespace xge
 			[&](const CmdSettle&) { o << "settle"; },
 			[&](const CmdClear&) { o << "clear"; },
 			[&](const CmdCollapse&) { o << "collapse"; },
-			[&](const CmdFall&) { o << "fall"; },
+			[&](const CmdFall& fall) { o << "fall"; if (!fall.objClass.empty()) { o << "(" << fall.objClass << ")"; } },
 			[&](const CmdCycle&) { o << "cycle"; },
 			[&](const CmdGrow&) { o << "grow"; },
 			[&](const CmdSplit&) { o << "split"; },

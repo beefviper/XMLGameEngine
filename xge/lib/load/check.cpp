@@ -146,7 +146,7 @@ namespace xge
 				[](const CmdSlide&) { return std::string("<slide>"); },
 				[](const CmdClear&) { return std::string("<clear />"); },
 				[](const CmdCollapse&) { return std::string("<collapse />"); },
-				[](const CmdFall&) { return std::string("<fall />"); },
+				[](const CmdFall& fall) { return fall.objClass.empty() ? std::string("<fall />") : "<fall class=\"" + fall.objClass + "\" />"; },
 				[](const CmdCycle&) { return std::string("<cycle />"); },
 				[](const CmdGrow&) { return std::string("<grow />"); },
 				[](const CmdSplit&) { return std::string("<split />"); },

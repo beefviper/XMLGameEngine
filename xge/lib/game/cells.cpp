@@ -730,7 +730,7 @@ namespace xge
 		}
 	}
 
-	void Game::fallCells(const std::string& map)
+	void Game::fallCells(const std::string& map, const std::string& objClass)
 	{
 		const Object* any = nullptr;
 		for (const Object& object : objects)
@@ -742,8 +742,8 @@ namespace xge
 		const int rows = any->mapRows;
 
 		// From the bottom up, each loose piece, with the pieces joined to it,
-		// drops as far as all of them can; anything else (a shape's cell)
-		// stays, and stops them. Again, until nothing moves: a capsule half
+		// drops as far as all of them can; anything else (a shape's cell; with a class
+		// named, a piece of another class) stays, and stops them. Again, until nothing moves: a capsule half
 		// held up by its other half falls once that one has.
 		for (int pass = 0; pass < rows; ++pass)
 		{
@@ -754,12 +754,12 @@ namespace xge
 				for (int column = 1; column <= columns; ++column)
 				{
 					Object* holder = cellHolder(map, column, row, {});
-					if (!holder || !holder->shapeOwner.empty() || std::find(done.begin(), done.end(), holder) != done.end()) { continue; }
+					if (!holder || !holder->shapeOwner.empty() || (!objClass.empty() && holder->objClass != objClass) || std::find(done.begin(), done.end(), holder) != done.end()) { continue; }
 					std::vector<Object*> together{ holder };
 					for (const std::string& name : holder->joinedWith)
 					{
 						Object* other = findAnywhere(name);
-						if (other && other->exists && other->onCells && other->mapName == map && other->shapeOwner.empty()
+						if (other && other->exists && other->onCells && other->mapName == map && other->shapeOwner.empty() && (objClass.empty() || other->objClass == objClass)
 							&& std::find(together.begin(), together.end(), other) == together.end())
 						{
 							together.push_back(other);
