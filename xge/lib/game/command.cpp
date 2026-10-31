@@ -56,6 +56,7 @@ namespace xge
 		if (verb == "collapse") { return CmdCollapse{}; }
 		if (verb == "fall") { return CmdFall{}; }
 		if (verb == "cycle") { return CmdCycle{}; }
+		if (verb == "grow") { return CmdGrow{}; }
 		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
 
 		// <reset/> puts the object in the rule (or, in a state's input or
@@ -356,6 +357,7 @@ namespace xge
 			half(raw.row, spawn.row, nullptr, "");
 			spawn.random = raw.random;
 			spawn.into = raw.into;
+			spawn.free = raw.free;
 			return spawn;
 		}
 		if (verb == "send")
@@ -471,6 +473,7 @@ namespace xge
 			[&](const CmdCollapse&) { o << "collapse"; },
 			[&](const CmdFall&) { o << "fall"; },
 			[&](const CmdCycle&) { o << "cycle"; },
+			[&](const CmdGrow&) { o << "grow"; },
 			[&](const CmdSlide& m)
 			{
 				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");
@@ -848,7 +851,7 @@ namespace xge
 		else if (command.verb == "spawn")
 		{
 			o << "(" << command.object << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY
-				<< (command.random ? ", random" : "") << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
+				<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
 		}
 		else if (command.verb == "send")
 		{

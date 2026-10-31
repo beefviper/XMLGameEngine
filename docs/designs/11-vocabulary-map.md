@@ -22,7 +22,7 @@ The vocabulary grew one game at a time ([motion](22-motion.md): a word is added 
 | Family | Words |
 |---|---|
 | Moving | `move` (on cells with `wait`), `hop` and `jump` (with `arc`), `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track`; on cells `slide`, `settle` |
-| Cells | `cycle` a shape; in a check `clear`, `collapse`, `fall`; a spawn's `random`, `column`, `row`, `into=`; `send` between maps |
+| Cells | `cycle` a shape; `go` keeps going, `chain` and `grow`, a spawn's `free`; in a check `clear`, `collapse`, `fall`; a spawn's `random`, `column`, `row`, `into=`; `send` between maps |
 | Steering | `chase`, `aim`, `follow`, `shift`; in a maze `go`, `hunt`, `wander` |
 | Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole` |
 | In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn`, `despawn`; `most` on an object |

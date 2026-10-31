@@ -391,6 +391,15 @@ namespace xge
 		// brought down (<collapse />).
 		void clearCells(const Object::CellMatch& match);
 		void collapseCells(const Object::CellMatch& match);
+		// <go> on a map of cells: that way a cell at a time, `speed` cells
+		// a second, until told otherwise; false (refused) straight back into
+		// its chain's first link.
+		bool goCells(Object& mover, Direction way, float speed);
+
+		// A <spawn><free />: in a free cell, at random (none: taken back,
+		// false).
+		bool putInFreeCell(Object& made, const std::string& map = {});
+
 		// <fall />: every loose piece of the map down its column onto what
 		// is under it.
 		void fallCells(const std::string& map);
@@ -434,6 +443,21 @@ namespace xge
 		// any piece of that map has them (false for a map with none).
 		bool moveToMap(Object& object, const std::string& map);
 		void askChecks(const std::string& map);
+		// A <chain>: whether a piece is one of its links; the links of a
+		// head in order (found from where they lie when not yet known); and
+		// the links brought after a head that has stepped from that cell.
+		bool isLink(const Object& piece, const std::string& chain);
+		std::vector<Object*> chainOf(Object& head);
+		void followChain(Object& head, const std::vector<Object*>& links, int column, int row);
+		// The cells a refused step was going into, while its touch's rules
+		// run: no <free /> spawn goes there.
+		struct Stepping
+		{
+			std::string map;
+			int column{};
+			int row{};
+		};
+		std::vector<Stepping> stepping;
 		// What a piece is, for a <line> of alike: its group, or for a copy
 		// the group of what it copies.
 		std::string kindOf(const Object& piece) noexcept;

@@ -389,6 +389,7 @@ namespace xge
 				value(object.cell.tileHeight, context);
 				object.maze.map = names_.object(object.maze.map, context);
 				for (auto& [character, piece] : object.shapePieces) { piece = names_.object(piece, context); }
+				object.chain = names_.object(object.chain, context);
 				for (RawCheck& check : object.cell.checks) { commands(check.commands, context); }
 				for (auto& [name, strength] : object.rawPulls)
 				{

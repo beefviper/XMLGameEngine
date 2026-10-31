@@ -248,24 +248,31 @@ namespace xge
 		const std::vector<Object*> cells = cellsOf(mover);
 		const Edge edge = edgeOfStep(across, down);
 
+		// A chain's tail leaves its cell as the head comes in, unless it is
+		// growing there: it is no blocker.
+		std::vector<Object*> passing = cells;
+		const std::vector<Object*> links = chainOf(mover);
+		if (!links.empty() && mover.chainGrow == 0) { passing.push_back(links.back()); }
+
 		// The first thing in the way, or the map's edge.
-		Object* blocker = nullptr;
-		bool offMap = false;
-		for (Object* cell : cells)
+		const auto inTheWay = [&](bool& offMap) -> Object*
 		{
-			const int column = whole(cell->cellColumn) + across;
-			const int row = whole(cell->cellRow) + down;
-			if (column < 1 || row < 1 || column > mover.mapColumns || row > mover.mapRows)
+			offMap = false;
+			for (Object* cell : cells)
 			{
-				offMap = true;
-				break;
+				const int column = whole(cell->cellColumn) + across;
+				const int row = whole(cell->cellRow) + down;
+				if (column < 1 || row < 1 || column > mover.mapColumns || row > mover.mapRows)
+				{
+					offMap = true;
+					return nullptr;
+				}
+				if (Object* holder = cellHolder(mover.mapName, column, row, passing)) { return holder; }
 			}
-			if (Object* holder = cellHolder(mover.mapName, column, row, cells))
-			{
-				blocker = holder;
-				break;
-			}
-		}
+			return nullptr;
+		};
+		bool offMap = false;
+		Object* blocker = inTheWay(offMap);
 
 		if (offMap)
 		{
@@ -274,6 +281,9 @@ namespace xge
 		}
 		if (blocker)
 		{
+			// While the rules run, the cells it steps into are not free for
+			// a <spawn><free /> (Snake's next food).
+			for (Object* cell : cells) { stepping.push_back({ mover.mapName, whole(cell->cellColumn) + across, whole(cell->cellRow) + down }); }
 			Touch touch;
 			touch.edge = edge;
 			touch.normal = outOf(opposite(edge));
@@ -284,12 +294,141 @@ namespace xge
 			back.edge = opposite(edge);
 			back.normal = outOf(edge);
 			reactTo(*blocker, mover, back);
+			stepping.clear();
+
+			// A touch that took what was in the way away (food eaten) lets
+			// the step go on.
+			if (inTheWay(offMap) || offMap || !mover.exists) { return false; }
+		}
+
+		const int fromColumn = whole(mover.cellColumn);
+		const int fromRow = whole(mover.cellRow);
+		for (Object* cell : cells) { putInCell(*cell, whole(cell->cellColumn) + across, whole(cell->cellRow) + down); }
+		if (mover.isShape()) { putInCell(mover, whole(mover.cellColumn) + across, whole(mover.cellRow) + down); }
+		if (!mover.chain.empty()) { followChain(mover, links, fromColumn, fromRow); }
+		return true;
+	}
+
+	bool Game::isLink(const Object& piece, const std::string& chain)
+	{
+		if (piece.named(chain)) { return true; }
+		if (!piece.isCopy()) { return false; }
+		const Object* of = findAnywhere(piece.copyOf);
+		return piece.copyOf == chain || (of && of != &piece && of->named(chain));
+	}
+
+	std::vector<Object*> Game::chainOf(Object& head)
+	{
+		if (head.chain.empty()) { return {}; }
+
+		// As kept, while every link is still there.
+		std::vector<Object*> links;
+		for (const std::string& name : head.chainLinks)
+		{
+			Object* link = findAnywhere(name);
+			if (!link || !link->exists) { links.clear(); break; }
+			links.push_back(link);
+		}
+		if (!links.empty()) { return links; }
+
+		// Found from where they lie: from the head, the next one beside
+		// the last, until there is none.
+		head.chainLinks.clear();
+		int column = whole(head.cellColumn);
+		int row = whole(head.cellRow);
+		for (;;)
+		{
+			Object* next = nullptr;
+			const auto look = [&](auto& list)
+			{
+				for (Object& object : list)
+				{
+					if (next) { return; }
+					if (!object.exists || !object.onCells || object.mapName != head.mapName || &object == &head || !isLink(object, head.chain)) { continue; }
+					if (std::find(links.begin(), links.end(), &object) != links.end()) { continue; }
+					if (std::abs(whole(object.cellColumn) - column) + std::abs(whole(object.cellRow) - row) == 1) { next = &object; }
+				}
+			};
+			look(objects);
+			look(spawned);
+			if (!next) { break; }
+			links.push_back(next);
+			head.chainLinks.push_back(next->name);
+			column = whole(next->cellColumn);
+			row = whole(next->cellRow);
+		}
+		return links;
+	}
+
+	void Game::followChain(Object& head, const std::vector<Object*>& links, int column, int row)
+	{
+		// Each link into the cell of the one ahead of it.
+		for (Object* link : links)
+		{
+			const int nowColumn = whole(link->cellColumn);
+			const int nowRow = whole(link->cellRow);
+			putInCell(*link, column, row);
+			column = nowColumn;
+			row = nowRow;
+		}
+		if (head.chainGrow <= 0) { return; }
+
+		// Growing: a new link where the tail was.
+		--head.chainGrow;
+		Object* grown = spawn(head.chain, true);
+		if (!grown) { return; }
+		moveToMap(*grown, head.mapName);
+		putInCell(*grown, column, row);
+		head.chainLinks.push_back(grown->name);
+	}
+
+	bool Game::goCells(Object& mover, Direction way, float speed)
+	{
+		// Never straight back into its own first link.
+		const std::vector<Object*> links = chainOf(mover);
+		const Vector2f step = stepToward(way, 1.0f);
+		if (!links.empty() && whole(links.front()->cellColumn) == whole(mover.cellColumn) + whole(step.x)
+			&& whole(links.front()->cellRow) == whole(mover.cellRow) + whole(step.y))
+		{
 			return false;
 		}
 
-		for (Object* cell : cells) { putInCell(*cell, whole(cell->cellColumn) + across, whole(cell->cellRow) + down); }
-		if (mover.isShape()) { putInCell(mover, whole(mover.cellColumn) + across, whole(mover.cellRow) + down); }
+		const float framerate = static_cast<float>(windowDesc.framerate > 0 ? windowDesc.framerate : 60);
+		mover.cellGoEvery = speed > 0.0f ? std::max(1, whole(framerate / speed)) : 0;
+		if (!mover.cellGoing || mover.cellGoWait > mover.cellGoEvery) { mover.cellGoWait = mover.cellGoEvery; }
+		mover.cellGoing = speed > 0.0f;
+		mover.cellGoWay = way;
+		mover.facing = way;
 		return true;
+	}
+
+	bool Game::putInFreeCell(Object& made, const std::string& map)
+	{
+		if (!map.empty() && !moveToMap(made, map))
+		{
+			copyRaws.erase(made.name);
+			spawned.pop_back();
+			return false;
+		}
+		// Every cell the whole of it fits in, one of them at random.
+		std::vector<std::pair<int, int>> free;
+		for (int row = 1; row <= made.mapRows; ++row)
+		{
+			for (int column = 1; column <= made.mapColumns; ++column)
+			{
+				const bool taken = cellHolder(made.mapName, column, row, { &made })
+					|| std::any_of(stepping.begin(), stepping.end(), [&](const Stepping& each) { return each.map == made.mapName && each.column == column && each.row == row; });
+				if (!taken) { free.emplace_back(column, row); }
+			}
+		}
+		if (free.empty())
+		{
+			copyRaws.erase(made.name);
+			spawned.pop_back();
+			return false;
+		}
+		const std::size_t pick = std::min(free.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(free.size()))));
+		return putOnCells(made, free[pick].first, free[pick].second);
 	}
 
 	void Game::slideCells(Object& mover, Direction way)
@@ -578,10 +717,16 @@ namespace xge
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
 			Object& object = objects[i];
-			if (!object.cellHeld || !object.exists || !isShown(object) || object.awayFromHome()) { continue; }
-			if (--object.cellHeldWait > 0) { continue; }
-			object.cellHeldWait = object.cellHeldEvery;
-			const Vector2f step = stepToward(object.cellHeldWay, 1.0f);
+			if (!object.exists || !isShown(object) || object.awayFromHome()) { continue; }
+			if (object.cellGoing && --object.cellGoWait <= 0)
+			{
+				object.cellGoWait = object.cellGoEvery;
+				const Vector2f step = stepToward(object.cellGoWay, 1.0f);
+				stepCells(objects[i], whole(step.x), whole(step.y));
+			}
+			if (!objects[i].cellHeld || --objects[i].cellHeldWait > 0) { continue; }
+			objects[i].cellHeldWait = objects[i].cellHeldEvery;
+			const Vector2f step = stepToward(objects[i].cellHeldWay, 1.0f);
 			stepCells(objects[i], whole(step.x), whole(step.y));
 		}
 	}

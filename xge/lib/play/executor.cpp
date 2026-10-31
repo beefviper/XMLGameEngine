@@ -171,7 +171,11 @@ namespace xge
 			// The controls an action holds: a press, or on while it is down.
 			[&](const CmdHop& h) { if (self) { done = hop(*self, h); } },
 			[&](const CmdJump& j) { if (self && doer.action) { done = startJump(*self, j); } },
-			[&](const CmdGo& g) { if (self && doer.action) { startGo(*self, g); } },
+			[&](const CmdGo& g)
+			{
+				if (self && self->onCells) { done = game.goCells(*self, g.direction, g.speed); }
+				else if (self && doer.action) { startGo(*self, g); }
+			},
 			[&](const CmdLeap& l) { if (self && doer.action) { done = leap(*self, l.height); } },
 			[&](const CmdClimb& c)
 			{
@@ -224,6 +228,7 @@ namespace xge
 			[&](const CmdCollapse&) { if (doer.match) { game.collapseCells(*doer.match); } },
 			[&](const CmdFall&) { if (doer.match) { game.fallCells(doer.match->map); } },
 			[&](const CmdCycle&) { if (self) { game.cycleCells(*self); } },
+			[&](const CmdGrow&) { if (self && !self->chain.empty()) { ++self->chainGrow; } },
 			// Another action, of this object or another, as part of this.
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, pressed, doer.byRule, a.from); },
 			// <track /> runs on a pointing control (executeAxis), <hold> in a
@@ -869,7 +874,11 @@ namespace xge
 			// Onto another map: its first cell unless told; on its own, its own.
 			const bool elsewhere = !command.into.empty() && command.into != made->mapName;
 			const auto cell = [&](const std::optional<float>& given, int own) { return given ? static_cast<int>(std::lround(*given)) : elsewhere ? 1 : own + 1; };
-			if (!game.putOnCells(*made, cell(command.column, made->mapColumn), cell(command.row, made->mapRow), command.into)) { return false; }
+			if (command.free)
+			{
+				if (!game.putInFreeCell(*made, command.into)) { return false; }
+			}
+			else if (!game.putOnCells(*made, cell(command.column, made->mapColumn), cell(command.row, made->mapRow), command.into)) { return false; }
 			if (command.velocityX) { made->velocity.x = *command.velocityX; }
 			if (command.velocityY) { made->velocity.y = *command.velocityY; }
 			return true;

@@ -1,0 +1,203 @@
+<!-- snake.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Oct 31, 2026 -->
+
+<!--
+  Snake, after Gremlin's 1976 Blockade and the many games since: the snake
+  goes on by itself, a cell at a time, and turns when told. Each piece of
+  food it eats makes it one longer and a little faster; it dies on the
+  wall or on its own body.
+
+  W A S D or the arrows turn it (never straight back). Space starts,
+  pauses and plays again; P or Escape pauses too.
+
+  How it is written:
+  * The field is a <map> of <cells />, drawn by its rows: # wall, the
+    snake as it starts (o its body, @ its head), f the first food.
+  * <go> on cells keeps the head going a cell at a time until told again;
+    <chain object="body" /> brings the body after it along its trail,
+    and <grow /> adds a piece at the tail on the next step.
+  * A step into a wall or the body is refused, and is a touch: the head's
+    rule ends the game. A step into food is a touch too, and the food's
+    own rule takes it away, so the step goes on: it is eaten.
+  * <spawn object="food"><free /></spawn> puts the next food in a free
+    cell at random.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Snake">
+    <width>640</width>
+    <height>480</height>
+  </window>
+  <variables>
+    <variable name="cell">20</variable>
+  </variables>
+  <sounds>
+    <sound name="eat"><note pitch="C6">0.03</note><note pitch="G6">0.04</note></sound>
+    <sound name="over" wave="triangle">
+      <note pitch="E4" to="E1">0.7</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>88</size><color>color.green</color></style>
+    <style name="prompt"><size>32</size></style>
+    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>28</size></style>
+  </styles>
+  <objects>
+    <object name="again">
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>SNAKE</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 100</centered></y></position>
+        </object>
+        <object name="help">
+          <sprite><text style="help"><content>w a s d or the arrows turn, p pauses</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 80</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <object name="status">
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="speed">8</variable>
+            <variable name="over">0</variable>
+          </variables>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><number>status.score</number></text></sprite>
+          <position><x>20</x><y>6</y></position>
+        </object>
+
+        <map name="field">
+          <tile><width>cell</width><height>cell</height></tile>
+          <position><x>0</x><y>40</y></position>
+          <cells />
+          <row>################################</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#.....ooo@............f........#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>#..............................#</row>
+          <row>################################</row>
+
+          <group name="walls" class="wall" char="#">
+            <sprite><rectangle><width>cell</width><height>cell</height><color>color.darkgrey</color></rectangle></sprite>
+          </group>
+          <group name="body" class="body" char="o">
+            <sprite><rectangle><width>cell - 2</width><height>cell - 2</height><color>color.forestgreen</color></rectangle></sprite>
+          </group>
+          <group name="food" class="food" char="f">
+            <sprite><circle><radius>cell / 2 - 2</radius><color>color.red</color></circle></sprite>
+            <collisions>
+              <!-- eaten: gone, so the head's step goes on, and the next comes -->
+              <collision class="snake">
+                <despawn />
+                <spawn object="food"><free /></spawn>
+              </collision>
+            </collisions>
+          </group>
+          <object name="head" class="snake" char="@">
+            <sprite><rectangle><width>cell - 2</width><height>cell - 2</height><color>color.green</color></rectangle></sprite>
+            <facing>right</facing>
+            <chain object="body" />
+            <collisions>
+              <collision class="wall"><set variable="status.over">1</set></collision>
+              <collision class="body"><set variable="status.over">1</set></collision>
+              <collision class="food">
+                <grow />
+                <inc variable="status.score">10</inc>
+                <inc variable="status.speed">0.25</inc>
+                <play sound="eat" />
+              </collision>
+            </collisions>
+            <actions>
+              <action name="up"><go direction="up">status.speed</go></action>
+              <action name="down"><go direction="down">status.speed</go></action>
+              <action name="left"><go direction="left">status.speed</go></action>
+              <action name="right"><go direction="right">status.speed</go></action>
+            </actions>
+          </object>
+        </map>
+      </objects>
+      <inputs>
+        <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="head" action="up" /></input>
+        <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="head" action="down" /></input>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="head" action="left" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="head" action="right" /></input>
+        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition object="status" variable="over">
+          <equal>1</equal>
+          <play sound="over" />
+          <push state="gameover" />
+        </condition>
+      </conditions>
+      <timers>
+        <!-- off it goes, to the right -->
+        <timer><after>0</after><trigger object="head" action="right" /></timer>
+      </timers>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <state name="gameover">
+      <objects>
+        <object name="message">
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

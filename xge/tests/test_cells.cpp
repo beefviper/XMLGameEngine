@@ -534,3 +534,145 @@ TEST_CASE("Columns plays: a column comes in, cycles, lands and the next comes", 
 	CHECK(falling(play.game)->name != name);
 	CHECK(gemsOf(play.game).size() == 3);
 }
+
+namespace
+{
+	// A field of cells drawn by its rows (# wall, o body, @ head, f food),
+	// a cell a second; Space sets the head going right and W A S D turn it.
+	// The head's touch of a wall or its body counts a death; of food, it
+	// grows. Food eaten is gone and comes again in a free cell.
+	std::string field(const std::vector<std::string>& rows)
+	{
+		std::string map = "<object name=\"tally\"><variables><variable name=\"deaths\">0</variable><variable name=\"eaten\">0</variable></variables></object>"
+			"<map name=\"field\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position><cells />";
+		for (const std::string& row : rows) { map += "<row>" + row + "</row>"; }
+		const std::string square = "<sprite><rectangle><width>8</width><height>8</height></rectangle></sprite>";
+		return map + "<group name=\"walls\" class=\"wall\" char=\"#\">" + square + "</group>"
+			"<group name=\"body\" class=\"body\" char=\"o\">" + square + "</group>"
+			"<group name=\"food\" class=\"food\" char=\"f\">" + square
+			+ "<collisions><collision class=\"snake\"><despawn /><spawn object=\"food\"><free /></spawn></collision></collisions></group>"
+			"<object name=\"head\" class=\"snake\" char=\"@\">" + square + "<chain object=\"body\" />"
+			"<collisions><collision class=\"wall\"><inc variable=\"tally.deaths\" /></collision>"
+			"<collision class=\"body\"><inc variable=\"tally.deaths\" /></collision>"
+			"<collision class=\"food\"><grow /><inc variable=\"tally.eaten\" /></collision></collisions>"
+			"<actions><action name=\"up\"><go direction=\"up\">1</go></action><action name=\"down\"><go direction=\"down\">1</go></action>"
+			"<action name=\"left\"><go direction=\"left\">1</go></action><action name=\"right\"><go direction=\"right\">1</go></action></actions>"
+			"</object></map>";
+	}
+
+	const std::string turnKeys = "<trigger object=\"head\" action=\"right\" /></input>"
+		"<input button=\"w\"><trigger object=\"head\" action=\"up\" /></input>"
+		"<input button=\"s\"><trigger object=\"head\" action=\"down\" /></input>"
+		"<input button=\"a\"><trigger object=\"head\" action=\"left\" /></input>"
+		"<input button=\"d\"><trigger object=\"head\" action=\"right\" />";
+
+	// The head's cell, then each link's, in order.
+	std::vector<std::pair<int, int>> snakeOf(Played& play, const std::string& head)
+	{
+		Object& front = play.get(head);
+		std::vector<std::pair<int, int>> cells{ { static_cast<int>(front.cellColumn), static_cast<int>(front.cellRow) } };
+		for (const std::string& link : front.chainLinks)
+		{
+			const Object& piece = play.get(link);
+			cells.push_back({ static_cast<int>(piece.cellColumn), static_cast<int>(piece.cellRow) });
+		}
+		return cells;
+	}
+	using Snake = std::vector<std::pair<int, int>>;
+}
+
+TEST_CASE("A <go> on cells keeps going a cell at a time, and the chain follows its trail", "[cells][chain]")
+{
+	played::Scratch file(field({ "########", "#......#", "#.oo@..#", "#......#", "########" }), turnKeys);
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(61);
+	CHECK(snakeOf(play, "playing.head") == Snake{ { 6, 3 }, { 5, 3 }, { 4, 3 } });
+
+	play.tap(KeyCode::S);
+	play.frames(60);
+	CHECK(snakeOf(play, "playing.head") == Snake{ { 6, 4 }, { 6, 3 }, { 5, 3 } });
+}
+
+TEST_CASE("A <go> straight back into the chain is refused", "[cells][chain]")
+{
+	played::Scratch file(field({ "########", "#......#", "#.oo@..#", "#......#", "########" }), turnKeys);
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::A);
+	play.frames(60);
+	CHECK(snakeOf(play, "playing.head") == Snake{ { 6, 3 }, { 5, 3 }, { 4, 3 } });
+	CHECK(play.get("tally").variable.at("deaths") == 0.0f);
+}
+
+TEST_CASE("Food stepped into is eaten: the step goes on, the chain grows, more food comes", "[cells][chain]")
+{
+	played::Scratch file(field({ "########", "#......#", "#.o@f..#", "#......#", "########" }), turnKeys);
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(61);
+	CHECK(play.get("tally").variable.at("eaten") == 1.0f);
+	// Grown at once: a link where the tail left.
+	CHECK(snakeOf(play, "playing.head") == Snake{ { 5, 3 }, { 4, 3 }, { 3, 3 } });
+	play.frames(60);
+	CHECK(snakeOf(play, "playing.head") == Snake{ { 6, 3 }, { 5, 3 }, { 4, 3 } });
+
+	// One food again, in a cell nothing else is in.
+	int food = 0;
+	for (const Object& object : play.game.getCurrentObjects())
+	{
+		if (!object.exists || !object.named("playing.food")) { continue; }
+		++food;
+		const std::pair<int, int> at{ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) };
+		for (const auto& cell : snakeOf(play, "playing.head")) { CHECK(cell != at); }
+		CHECK((at.first > 1 && at.first < 8 && at.second > 1 && at.second < 5));
+	}
+	CHECK(food == 1);
+}
+
+TEST_CASE("A head stepping into a wall or its own body is refused, and touches it", "[cells][chain]")
+{
+	played::Scratch walls(field({ "######", "#.o@.#", "######" }), turnKeys);
+	Played intoWall(walls.path);
+	intoWall.tap(KeyCode::Space);
+	intoWall.frames(61);
+	intoWall.tap(KeyCode::W);
+	intoWall.frames(60);
+	CHECK(intoWall.get("tally").variable.at("deaths") >= 1.0f);
+	CHECK(snakeOf(intoWall, "playing.head") == Snake{ { 5, 2 }, { 4, 2 } });
+
+	// Five long, it turns up, left and down into itself.
+	played::Scratch coil(field({ "#########", "#.......#", "#.......#", "#oooo@..#", "#.......#", "#########" }), turnKeys);
+	Played play(coil.path);
+	play.tap(KeyCode::Space);
+	play.tap(KeyCode::W);
+	play.frames(61);
+	play.tap(KeyCode::A);
+	play.frames(60);
+	play.tap(KeyCode::S);
+	play.frames(60);
+	CHECK(play.get("tally").variable.at("deaths") >= 1.0f);
+}
+
+TEST_CASE("Snake plays: it goes, eats the food in its way and dies on the wall", "[cells][snake]")
+{
+	Played play("descriptions/snake.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	CHECK(play.state() == "playing");
+
+	// Going right along its row, it meets the food thirteen cells on.
+	play.frames(14 * 8);
+	CHECK(play.get("playing.status").variable.at("score") == 10.0f);
+	play.frames(9);
+	CHECK(snakeOf(play, "playing.head").size() == 5);
+
+	// Up into the wall.
+	play.tap(KeyCode::W);
+	play.frames(12 * 8);
+	CHECK(play.state() == "gameover");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	CHECK(play.state() == "title");
+}

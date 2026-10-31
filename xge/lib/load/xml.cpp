@@ -1013,7 +1013,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1076,12 +1076,13 @@ namespace xge
 				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 				{
 					const std::string tag = child->getName();
-					if (tag != "position" && tag != "velocity" && tag != "random" && tag != "column" && tag != "row")
+					if (tag != "position" && tag != "velocity" && tag != "random" && tag != "column" && tag != "row" && tag != "free")
 					{
-						fail(here, "unknown <" + tag + ">; expected <random />, a <position> (or a <column> and a <row>), and a <velocity>, each if wanted");
+						fail(here, "unknown <" + tag + ">; expected <random />, a <position> (or a <column> and a <row>, or <free />), and a <velocity>, each if wanted");
 					}
 				}
 				command.random = findChild(&node, "random") != nullptr;
+				command.free = findChild(&node, "free") != nullptr;
 				command.into = node.getAttribute("into");
 				if (auto column = findChild(&node, "column")) { command.column = readValue(*column, here); }
 				if (auto row = findChild(&node, "row")) { command.row = readValue(*row, here); }
@@ -1881,6 +1882,11 @@ namespace xge
 			if (auto facing = findChild(&object, "facing")) { rawObject.facing = readFacing(*facing, where); }
 			readMoves(object, rawObject, where);
 			if (auto maze = findChild(&object, "maze")) { rawObject.maze = readMaze(*maze, where); }
+			if (auto chain = findChild(&object, "chain"))
+			{
+				if (!map || !map->cells) { fail(where, "has a <chain>, which is for an object on a map with <cells />"); }
+				rawObject.chain = requireAttribute(*chain, "object", where + " > <chain>");
+			}
 			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
 			if (auto active = findChild(&object, "active"))
 			{
@@ -2146,6 +2152,11 @@ namespace xge
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
 				else if (tag == "poses" || tag == "mirror" || tag == "grip") { /* below, all at once */ }
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
+				else if (tag == "chain")
+				{
+					if (!own.map || !own.map->cells) { fail(where, "has a <chain>, which is for a group on a map with <cells />"); }
+					shared.chain = requireAttribute(*child, "object", where + " > <chain>");
+				}
 				else if (tag == "shape")
 				{
 					if (!own.map || !own.map->cells) { fail(where, "has a <shape>, which is for a group on a map with <cells />"); }
@@ -2154,7 +2165,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <maze>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <mass>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 

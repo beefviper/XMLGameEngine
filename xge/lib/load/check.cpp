@@ -148,6 +148,7 @@ namespace xge
 				[](const CmdCollapse&) { return std::string("<collapse />"); },
 				[](const CmdFall&) { return std::string("<fall />"); },
 				[](const CmdCycle&) { return std::string("<cycle />"); },
+				[](const CmdGrow&) { return std::string("<grow />"); },
 				[](const CmdLive& live) { return tagOf(live.loaded->command); },
 			}, command);
 		}
@@ -178,7 +179,7 @@ namespace xge
 			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<shift>", "<enter>",
 				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<send>", "<despawn object>", "<trigger>" };
 			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />" };
-			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>", "<cycle />" };
+			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>", "<cycle />", "<grow />" };
 			static const std::vector<std::string> steering{ "<aim>", "<chase>", "<hunt>", "<hunt> by <hop>", "<wander>" };
 			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />" };
 			static const std::vector<std::string> edge{ "<stick />", "<wrap />" };
@@ -883,6 +884,8 @@ namespace xge
 			{
 				for (const Command& command : commands)
 				{
+					// On a map of cells a <go> goes a cell at a time, with no maze.
+					if (std::holds_alternative<CmdGo>(shapeOf(command)) && object.onCells) { continue; }
 					if ((std::holds_alternative<CmdGo>(shapeOf(command)) || std::holds_alternative<CmdHunt>(shapeOf(command)) || std::holds_alternative<CmdWander>(shapeOf(command))) && !object.walksMaze())
 					{
 						throw std::runtime_error(here + ": " + tagOf(command) + " steers an object through a maze, and this one walks none: give it a <maze map=\"...\">");

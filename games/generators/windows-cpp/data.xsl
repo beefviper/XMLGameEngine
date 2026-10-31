@@ -341,6 +341,9 @@
           <xsl:if test="$node/random">
             <xsl:text> command.random = true;</xsl:text>
           </xsl:if>
+          <xsl:if test="$node/free">
+            <xsl:text> command.free = true;</xsl:text>
+          </xsl:if>
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.column'" />
             <xsl:with-param name="node" select="$node/column" />
@@ -1295,6 +1298,13 @@
         </xsl:call-template>
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$node/chain">
+      <xsl:value-of select="concat($indent, $to, '.chain = ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="$node/chain/@object" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
     </xsl:if>
     <xsl:if test="$node/facing">
       <xsl:value-of select="concat($indent, $to, '.facing = ')" />

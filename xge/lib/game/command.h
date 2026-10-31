@@ -634,7 +634,13 @@ namespace xge
 		std::optional<float> row;
 		// into=: the map of cells it goes on, when not its own.
 		std::string into;
+		// <free />: in a free cell of the map, at random.
+		bool free{ false };
 	};
+
+	// <grow /> - an object with a <chain>: one link longer, at the tail,
+	// on its next step.
+	struct CmdGrow {};
 
 	// <send object from into>: the object's piece on map `from` goes to map
 	// `into`, in that column and row (left out: the cell it is in).
@@ -684,7 +690,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdLive>;
 
 	struct LoadedCommand
 	{
@@ -882,8 +888,9 @@ namespace xge
 		RawValue velocityX;
 		RawValue velocityY;
 		// spawn: <random />, and on a cell map its <column> and <row>, each
-		// empty text when left out. move: its <wait> is `seconds`.
+		// empty text when left out, or <free />. move: its <wait> is `seconds`.
 		bool random{ false };
+		bool free{ false };
 		RawValue column;
 		RawValue row;
 	};

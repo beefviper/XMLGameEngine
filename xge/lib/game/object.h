@@ -479,6 +479,9 @@ namespace xge
 		// Empty for an object that is no shape.
 		std::vector<std::string> shapeRows;
 		std::map<char, std::string> shapePieces;
+		// <chain object="body" />: on a map with <cells />, the pieces of
+		// that name or group behind it follow its trail (empty for none).
+		std::string chain;
 		std::vector<RawTimer> timers;
 		RawCollisionData rawCollisionData;
 		std::map<std::string, std::vector<RawCommand>> action;
@@ -599,6 +602,18 @@ namespace xge
 		// live numbers column and row); 0 for anything else.
 		float cellColumn{};
 		float cellRow{};
+
+		// A <go> on a map with <cells />: going that way, a cell every
+		// cellGoEvery frames, the next in cellGoWait.
+		bool cellGoing{ false };
+		Direction cellGoWay{ Direction::Up };
+		int cellGoEvery{};
+		int cellGoWait{};
+
+		// A <chain>: its links in order from the one behind it (found from
+		// where they lie when empty), and how many it is to grow by.
+		std::vector<std::string> chainLinks;
+		int chainGrow{};
 
 		// In play: shown, and touching things when its collisions are on. die()
 		// takes it out of play and stops its collisions.
@@ -778,6 +793,8 @@ namespace xge
 		// not run until it is back (see awayFromHome).
 		std::string homeMap;
 		bool awayFromHome() const noexcept { return onCells && mapName != homeMap; }
+		// <chain object>: what its links are (see RawObject::chain).
+		std::string chain;
 		// The map's <checks>, made ready (each piece of the map has them).
 		struct CellCheck
 		{

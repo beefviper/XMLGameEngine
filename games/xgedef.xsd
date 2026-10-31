@@ -695,6 +695,8 @@
           <xs:element name="column" type="valueType" />
           <xs:element name="row" type="valueType" />
         </xs:sequence>
+        <!-- free: a free cell of the map, at random -->
+        <xs:element name="free" type="emptyType" />
       </xs:choice>
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
     </xs:sequence>
@@ -1073,6 +1075,8 @@
       <xs:element name="slide" type="slideType" />
       <!-- cycle: on a map with <cells />, a shape's cells each move on to the next cell of its outline, in reading order, the last to the first (Columns' jewels) -->
       <xs:element name="cycle" type="emptyType" />
+      <!-- grow: an object with a <chain> gets one link longer, at its tail, on its next step -->
+      <xs:element name="grow" type="emptyType" />
     </xs:choice>
   </xs:group>
 
@@ -1583,6 +1587,12 @@
       <xs:element name="facing" type="directionType" minOccurs="0" />
       <xs:group ref="moveParts" />
       <xs:element name="maze" type="mazeType" minOccurs="0" />
+      <!-- on a map with <cells />: the pieces of that name or group behind it follow its trail, a cell each step; <grow /> adds one at the tail -->
+      <xs:element name="chain" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="object" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
       <!-- false: out of play (not drawn, touching nothing, not counted) until a <reveal>, <release> or <fire> brings it in -->
       <xs:element name="active" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
