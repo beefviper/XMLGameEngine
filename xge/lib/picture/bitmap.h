@@ -7,6 +7,7 @@
 
 #include "picture/color.h"
 
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -134,6 +135,26 @@ namespace xge
 	{
 		std::vector<LineSegment> lines;
 		std::shared_ptr<const Bitmap> picture;
+
+		// The drawing at heading 0: the picture, or the lines drawn. What a
+		// sweep through a turn asks about a point at any heading (touchesAt).
+		std::shared_ptr<const Bitmap> upright;
+
+		// Whether the drawing turned to `degrees` (not rounded), drawn in a
+		// square `side` big, touches with the point x, y from its top left:
+		// the point turned back onto the upright drawing, as turnBitmap does.
+		bool touchesAt(float degrees, float side, float x, float y) const noexcept
+		{
+			if (!upright) { return false; }
+			const float angle = degrees * 3.14159265358979323846f / 180.0f;
+			const float c = std::cos(angle);
+			const float s = std::sin(angle);
+			const float dx = x - side / 2.0f;
+			const float dy = y - side / 2.0f;
+			const int sx = static_cast<int>(std::floor(dx * c + dy * s + static_cast<float>(upright->width) / 2.0f + 0.0001f));
+			const int sy = static_cast<int>(std::floor(-dx * s + dy * c + static_cast<float>(upright->height) / 2.0f + 0.0001f));
+			return upright->touchesAt(sx, sy);
+		}
 
 		// The drawing at the heading: the lines turned if there are lines,
 		// otherwise the picture turned.

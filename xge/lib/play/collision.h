@@ -61,6 +61,15 @@ namespace xge
 	// one the motion came in through.
 	std::optional<SweepHit> sweepObjects(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB);
 
+	// The same for a pair of which one or both turn as they go (a swinging
+	// flipper): turnA and turnB are the degrees each turns over the step, and
+	// one turning is turned about its pivot. Two pictures sweeping a wedge and
+	// a fat line are walked together, half a pixel of the furthest any point
+	// of them goes at a time, until their pixels (or shapes) touch, and the
+	// moment narrowed down; the edge is the way the first goes against the
+	// second there.
+	std::optional<SweepHit> sweepTurning(const Object& a, const Vector2f& moveA, float turnA, const Object& b, const Vector2f& moveB, float turnB);
+
 	// The box what the object touches with covers over this move
 	// (sweptBox): two whose boxes do not meet (boxesMeet) cannot touch.
 	Box reachOver(const Object& object, const Vector2f& move) noexcept;

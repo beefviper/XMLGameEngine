@@ -699,6 +699,14 @@ namespace xge
 		return { std::sin(radians), -std::cos(radians) };
 	}
 
+	float turnBetween(float from, float to) noexcept
+	{
+		float apart = std::fmod(to - from, 360.0f);
+		if (apart > 180.0f) { apart -= 360.0f; }
+		if (apart < -180.0f) { apart += 360.0f; }
+		return apart;
+	}
+
 	float headingOf(const Vector2f& way) noexcept
 	{
 		const float heading = std::atan2(way.x, -way.y) * 180.0f / pi;

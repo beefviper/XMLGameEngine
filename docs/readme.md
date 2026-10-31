@@ -95,7 +95,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 
 ### The shipped games
 
-39 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
+40 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
 
 | Game | Keys besides the convention | What it is, and what it shows |
 |---|---|---|
@@ -137,6 +137,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `capsules` | A/D move, W/X turn, E/C turn back, S drops faster; P pauses | germs in a bottle and two-coloured capsules, four of a colour across or down to clear them; halves with [`<joins>`](#cells) looks that stay joined, a robot doctor who throws the next capsule |
 | `snake` | W A S D or the arrows turn; Space or P pauses | a snake that goes on by itself with a [chain](#cells) for its body, food in a free cell, faster as it grows |
 | `puttpark` | A/D or Left/Right aim, Space held then let go putts; P or Escape pauses | an original mini golf of six holes as [scenes](#scenes): walls drawn as [`<line>`](#lines)s that the ball [bounces](#touching) off at their slope, posts that kick it away faster, soft cushions; the putt built up by a key [held and let go](#a-keys-three-moments) |
+| `pinball` | A or Left, D or Right flip; Space held then let go shoots; P or Escape pauses | an original table: flippers that [swing about a pivot](#turning-about-a-pivot) and lend the ball their speed where they strike it, a plunger [held and let go](#a-keys-three-moments), bumpers and slingshots that [bounce](#touching) it off faster, three rollover lanes for a bonus |
 | `centipede` | W A S D move the wand about its zone, Space fires; P or Escape pauses | a centipede winding down through a mushroom field, [split](#cells) in two where a shot hits it; each piece left grows a head; a line nobody sees over the bottom six rows turns it back down and holds the wand in |
 
 What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
@@ -367,7 +368,8 @@ Every part but the position is optional, and **what is left out is nothing**: no
 | `<position>` | where it starts, `<x>` and `<y>` from the top left, each a value. `<centered>value</centered>` puts its middle there instead (empty: the window's middle). Required, unless it has no sprite |
 | `<velocity>` | pixels a frame, `<x>` and `<y>`; a half left out is 0 |
 | `<acceleration>` | added to the velocity every frame before anything moves: gravity is a `<y>`. `<stop />` takes it away, a reset gives it back |
-| `<heading>` | degrees clockwise from straight up. Lets `<turn>` and `<thrust>` work, and turns the picture |
+| `<heading>` | degrees clockwise from straight up. Lets `<turn>`, `<thrust>` and `<swing>` work, and turns the picture |
+| `<pivot>` | after `<heading>`: the point the picture turns about, `<x>` and `<y>` in the drawing's own pixels (a flipper's hinge at one end). The `<position>` is then where that point sits, and it stays there however the object turns ([turning about a pivot](#turning-about-a-pivot)). Left out, it turns about its middle |
 | `<drag>` | 0 up to 1: the share of its speed lost each frame (a pool ball on the cloth) |
 | `<mass>` | above 0: how hard it is to [knock](#knocks). Left out, a knock does not move it |
 | `<pull object="sun">strength</pull>` | that much more speed toward the nearest of that name each frame; several add up |
@@ -652,6 +654,25 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 
 **Turning.** An object with a `<heading>` shows its picture turned to the heading, to the nearest whole degree, made again only when the heading moves a degree. Lines are drawn again turned, so they stay sharp; a bitmap or SVG has its finished pixels turned, each taking the one pixel under it, so chunky pixels stay chunky. Every heading comes out as the same square, big enough for any angle, which is the object's size.
 
+#### Turning about a pivot
+
+A `<pivot>` names the point of the drawing the object turns about. The picture is still turned about its middle, and the object is moved so that the pivot stays where it was: Pinball's flippers are a `<line>` with the pivot at the hinge end, their `<position>` the hinge on the table.
+
+```xml
+<object name="leftflipper" from="flipper">
+  <position><x>145</x><y>540</y></position>
+  <heading>30</heading>
+  <pivot><x>0</x><y>0</y></pivot>
+  <actions>
+    <action name="flip"><swing>12<to>330</to></swing></action>
+  </actions>
+</object>
+```
+
+- **`<swing>`** (in an action, its key held) turns the heading its content's degrees a frame toward its `<to>`, by the shorter way, and stops there; let go, it turns back the same way to the heading it started with. Pressed again on the way back, it turns round.
+- **The turn is swept.** What a swing turns in a frame is that frame's spin: the move goes from the old heading to the new one through the frame, alongside every other object's move, so a touch is found where the flipper's wedge first meets the ball's path, however fast either goes ([how a touch is found](#how-a-touch-is-found)). A heading changed any other way (a `<turn>`, a `<set>`) is not swept.
+- **A turning thing lends the speed of the point that touches.** A `<knock>` takes each side's speed at the touch point: its velocity, and for one turning, its spin times how far that point is from the pivot, across the arm. A ball struck by a flipper's tip goes off faster than one struck by the hinge, and off the way the flipper faces there.
+
 ### Lines
 
 ```xml
@@ -917,6 +938,7 @@ An object out of play (hidden or dead) does nothing when its action is pressed o
 | `<accelerate direction="up" burn="fuel">amount</accelerate>` | held: adds `amount` to the velocity every frame (opposite ones cancel). `burn` names one of the object's own variables, taken 1 off each frame; at 0 the thrust does nothing |
 | `<thrust burn="fuel">amount</thrust>` | held: the same along the object's `<heading>` |
 | `<turn direction="left">degrees</turn>` (or `right`) | held: turns the heading that many degrees a frame |
+| `<swing>12<to>330</to></swing>` | held: turns the heading that many degrees a frame toward `<to>`, and stops there; let go, back to where it started. The turn is swept, and lends speed to what it knocks ([turning about a pivot](#turning-about-a-pivot)). Pinball's flippers |
 | `<reverse />` | the velocity turns round, both ways at once (Kaboom's bomber on a timer) |
 | `<stop />` | comes to rest and stays: velocity 0, and no longer pulled by its acceleration or pushed by a held key, until a reset. Since the pull goes too, it is no landing for something that can be knocked up again |
 | `<track />`, `<track path="rail" />` | in an action run by a [pointing control](#pointing-controls): the object goes where it points; with `path=`, its middle goes that far along the path's legs from its `<start>` |
@@ -1053,6 +1075,7 @@ A rule about another object can be narrowed; most filters work on edge rules too
 - **Who is looked at.** The pairs are those a rule answers for, worked out once at load. A pair is skipped unless one of the two has moved: it has a velocity or rides something, or it is not where the last frame left it, whatever put it there (a hop or a landing, a `<set>` of its `x`, a `<shift>`, a teleport, a spawn). Being loaded or reset puts an object in its place, which is not a move. An object in the middle of a jump is in no pair. Something a rule brings into play touches nothing until the next frame.
 - **What a touch is.** Worked out once, before either side's rules (`contactOf`, `play/geometry.h`): the edge of each that was touched, the point where they meet, the way straight apart, where along each one's side, how deep, and how far through the frame. Each side's rules see it their way, as `side=`, `touch.*`, `<bounce>` and `<knock>` read it.
 - **`<type>pixel</type>`.** The pair is first swept as boxes, then walked half a pixel at a time from the moment the boxes touch until a drawn pixel of one lies on a drawn pixel of the other. A pixel object is a picture the engine drew (lines, a bitmap, an SVG); a circle or rectangle is solid as itself; text and images cannot be `pixel`. The edge reported is the one the motion came in through. The point is the middle of the pixels where they meet, and the way apart is how what is drawn lies there (`pixelContactAt`): of the solid pixels of each within four pixels of the point, the one lying flattest across the point is the surface (a drawn line, a wall's side), facing away from the other; where neither does (a corner, the end of a line) it is from the middle of the one's pixels there towards the other's.
+- **Turning.** For a pair of which one turns this frame (a [`<swing>`](#turning-about-a-pivot)), both are walked through the frame together, the turning one turned about its pivot to its exact heading at each moment, half a pixel of the furthest any point of either goes at a time, until they touch; the moment is then narrowed down. The engine never runs a frame in smaller steps: only the moment of the touch is looked for.
 - **`<solid char="*" />`**, after `<type>pixel</type>`: only those characters of the object's bitmap touch; the others are drawn but touch nothing. Q*bert's cubes touch by their tops.
 - **`<hitbox>`**: the shape that touches other objects instead of the picture, a `<rectangle>` or `<circle>`, then a `<position>` of its top left from the picture's. Q*bert touches with his feet alone. The window's edges, `<land />`, `<stick />` and a carry still use the picture. Not with `pixel`.
 
@@ -1072,6 +1095,7 @@ A rule about another object can be narrowed; most filters work on edge rules too
 `<knock />`, in a rule about another object, makes the two meet as things with weight do:
 
 - Along the way straight apart they share out what they carry by their `<mass>`es; across it each keeps its own, so a ball hit off its middle goes off at an angle.
+- Each brings the speed of its point where they touch: its velocity, and for one [turning about a pivot](#turning-about-a-pivot) its spin times how far out the point is. A flipper's rule `<collision class="ball"><knock>0.3</knock></collision>` (the flipper with no `<mass>`, the ball with one) strikes harder the nearer the tip.
 - The content, 0 to 1 (1 when left out), is how bouncy: 1 is pool balls, 0 sends them on together. Nothing happens unless they are closing, so a second `<knock />` for the same touch does nothing.
 - **No `<mass>` is as heavy as can be:** never moved by a knock, and its own knock sends a thing off at up to twice its speed (Trick Shot's cue tip).
 - **Through a thing with no mass.** A knock on something with no mass goes through it to whatever with a mass rests against its far side, as from something as heavy as can be; that thing then runs its own rules about the knocker that say `through="class"` of what it came through. Mario's head hitting a floor tile from below is a `<knock>0</knock>` that reaches the shellcreeper standing on it, whose `<collision class="brother" through="floor">` flips it. A knock goes through one thing, not a pile.
@@ -1446,9 +1470,9 @@ A `<hold>` anywhere else, or any other command in a `<computer>`, stops the load
 1. animations and blinking count a frame;
 2. timers count, and those that go off run;
 3. paths set their followers' velocities; maze walkers choose their way; held moves on [cells](#cells) step;
-4. climbing, grip, acceleration and held thrust, pulls and seeking, altitudes;
+4. climbing, grip, acceleration and held thrust, turns and swings, pulls and seeking, altitudes;
 5. screen-edge rules for what is moving;
-6. **the move**: queued hops are made, carried things are lent their carrier's motion, and everything moves, the touches found on the way running their rules ([how a touch is found](#how-a-touch-is-found));
+6. **the move**: queued hops are made, carried things are lent their carrier's motion, and everything moves (a swing turns through it), the touches found on the way running their rules ([how a touch is found](#how-a-touch-is-found));
 7. sticks hold, carried things are put where they are held, tethers and shadows follow, light and dark are worked out, poses are picked;
 8. conditions: the state's, then its current scene's;
 9. copies made join the game and despawned ones go.

@@ -1010,7 +1010,7 @@ namespace xge
 		{
 			return name == "bounce" || name == "deflect" || name == "knock" || name == "hole" || name == "hold" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
 				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "demo" || name == "move" || name == "hop"
-				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "release" || name == "stop"
+				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
 				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through";
@@ -1160,6 +1160,13 @@ namespace xge
 			}
 			if (verb == "slide") { requireAttribute(node, "direction", where); }
 			if (verb == "thrust" || verb == "deflect" || verb == "leap") { command.amount = readValue(node, where); }
+			if (verb == "swing")
+			{
+				command.amount = readLeadValue(node, { "to" }, "its degrees a frame, then a <to>", where);
+				std::unique_ptr<XmlNode> to = findChild(&node, "to");
+				if (!to) { fail(where, "<swing> gives the heading it swings to as a <to>"); }
+				command.distance = readValue(*to, where + " > <swing> > <to>");
+			}
 			if ((verb == "knock" || verb == "bounce") && (node.getFirstChild() || !readText(node).empty())) { command.amount = readValue(node, where); }
 			if (verb == "climb")
 			{
@@ -1901,6 +1908,11 @@ namespace xge
 				rawObject.hasHeading = true;
 				rawObject.rawHeading = readValue(*heading, where);
 			}
+			if (auto pivot = findChild(&object, "pivot"))
+			{
+				rawObject.hasPivot = true;
+				rawObject.rawPivot = readVector2(*pivot, where);
+			}
 			if (auto drag = findChild(&object, "drag"))
 			{
 				rawObject.hasDrag = true;
@@ -2170,6 +2182,11 @@ namespace xge
 				{
 					shared.hasHeading = true;
 					shared.rawHeading = readValue(*child, where);
+				}
+				else if (tag == "pivot")
+				{
+					shared.hasPivot = true;
+					shared.rawPivot = readVector2(*child, where);
 				}
 				else if (tag == "drag")
 				{

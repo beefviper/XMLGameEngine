@@ -115,6 +115,7 @@ namespace xge
 				[](const CmdAccelerate&) { return std::string("<accelerate>"); },
 				[](const CmdTurn&) { return std::string("<turn>"); },
 				[](const CmdThrust&) { return std::string("<thrust>"); },
+				[](const CmdSwing&) { return std::string("<swing>"); },
 				[](const CmdRelease&) { return std::string("<release>"); },
 				[](const CmdStop&) { return std::string("<stop />"); },
 				[](const CmdIncrement&) { return std::string("<inc>"); },
@@ -186,7 +187,7 @@ namespace xge
 			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />", "<through />", "<stick />" };
 			static const std::vector<std::string> edge{ "<stick />", "<wrap />" };
 			static const std::vector<std::string> bounce{ "<bounce />" };
-			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<jump>", "<leap>", "<thrust>", "<turn>", "<track />" };
+			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<jump>", "<leap>", "<swing>", "<thrust>", "<turn>", "<track />" };
 			static const std::vector<std::string> press{ "<hold>" };
 			static const std::vector<std::string> cells{ "<clear />", "<collapse />", "<fall />" };
 
@@ -945,7 +946,7 @@ namespace xge
 				for (const auto& command : commands)
 				{
 					if (std::holds_alternative<CmdTurn>(shapeOf(command)) && object.isShape()) { continue; }
-					if ((std::holds_alternative<CmdTurn>(shapeOf(command)) || std::holds_alternative<CmdThrust>(shapeOf(command))) && !object.hasHeading)
+					if ((std::holds_alternative<CmdTurn>(shapeOf(command)) || std::holds_alternative<CmdThrust>(shapeOf(command)) || std::holds_alternative<CmdSwing>(shapeOf(command))) && !object.hasHeading)
 					{
 						throw std::runtime_error(where + ": action '" + name + "' turns it or thrusts along its heading, and it has no <heading>");
 					}

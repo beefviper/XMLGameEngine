@@ -33,7 +33,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [motion](22-motion.md) | Verb principle, gravity, thrust, headings, hop (diagonals too), jump, facing, pull, seek, altitude and shadows | Built |
 | [platforming](23-platforming.md) | Standing, leaping, ladders (Donkey Kong); arcing jump; `arc` and `grip` | Built; air control Idea |
 | [chase-and-paths](24-chase-and-paths.md) | `<chase>`, `<aim>`, paths and formations (Galaxian), maze walking (`<go>`, `<hunt>`, `<wander>`), AI targeting, computer players | Built; curved paths Idea |
-| [tables-and-tracks](25-tables-and-tracks.md) | Bodies over shaped surfaces: bounce by the normal, a key's three moments (Putt Park); pivots and flippers, surfaces and laps planned | Stage 1 Built; stages 2 to 4 Decided |
+| [tables-and-tracks](25-tables-and-tracks.md) | Bodies over shaped surfaces: bounce by the normal, a key's three moments (Putt Park); pivots, swept swings and flippers (Pinball); surfaces and laps planned | Stages 1 and 3 Built; 2 and 4 Decided |
 
 ## Pictures and sound
 

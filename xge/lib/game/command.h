@@ -480,6 +480,16 @@ namespace xge
 		std::string burn;
 	};
 
+	// <swing>12<to>330</to></swing> - only ever in an object's own <action>:
+	// while the key is held the heading goes toward `to` by the shorter way,
+	// `rate` degrees a frame, and stops there; let go, it goes back the same
+	// way to the heading it started with (a flipper). See playOneFrame.
+	struct CmdSwing
+	{
+		float rate{};
+		float to{};
+	};
+
 	// <release object="mediumrocks">2</release> - in a collision rule: puts
 	// `count` (1 if it is left out) of the objects of that name that are out of
 	// play - inactive at the start, or taken out with <die /> - back in play, in
@@ -706,7 +716,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
-		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdLive>;
 
 	struct LoadedCommand
@@ -893,7 +903,7 @@ namespace xge
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0)
 		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
 		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)
-		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way)
+		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way), swing (its <to>)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
 		// spawn: its <position> and <velocity>, each half empty text when
 		// left out; a position half may be <centered>.

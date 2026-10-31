@@ -441,6 +441,8 @@ namespace xge
 		bool hasAcceleration{ false };
 		RawValue rawHeading;         // only when hasHeading
 		bool hasHeading{ false };
+		RawVector2 rawPivot;         // only when hasPivot: the point of the picture its heading turns about
+		bool hasPivot{ false };
 		RawValue rawDrag;            // only when hasDrag
 		bool hasDrag{ false };
 		RawValue rawMass;            // only when hasMass
@@ -594,6 +596,11 @@ namespace xge
 		// turns (see Object::hasHeading).
 		float heading{};
 
+		// An object with a <pivot>: the whole degrees of the heading its
+		// position was last laid out for, so that the pivot stays where it is
+		// on the screen as it turns (Object::showHeading).
+		int pivotDegrees{};
+
 		// Which way an object with a <facing> faces, one of the four
 		// directions, without turning its picture (see Object::hasFacing).
 		Direction facing{ Direction::Up };
@@ -648,6 +655,10 @@ namespace xge
 		// Its <variable>s by name, and its named timers' time left.
 		std::map<std::string, float> variable;
 	};
+
+	// The way `way` points once turned that many degrees clockwise (on the
+	// screen, where y grows downward), as a picture is turned.
+	Vector2f turnedBy(const Vector2f& way, float degrees) noexcept;
 
 	struct Object : Moment
 	{
@@ -775,6 +786,33 @@ namespace xge
 		// See playOneFrame.
 		std::array<float, 4> activeTurn{};
 		std::map<std::string, std::pair<float, std::string>> activeThrustAheadBy;
+
+		// <pivot>: it turns about that point of its picture, not its middle;
+		// pivotFromMiddle is the way from the middle of the picture as drawn
+		// (unturned) to it. See showHeading and pivotOnScreen.
+		bool hasPivot{ false };
+		Vector2f pivotFromMiddle;
+
+		// Where its turning point is on the screen: the pivot, or the middle.
+		Vector2f pivotOnScreen() const;
+
+		// <swing>: held, the heading goes toward swingTo at swingRate degrees
+		// a frame; let go, back toward the heading it started with at the
+		// same rate. swingRate 0: it has never swung. See playOneFrame.
+		float swingRate{};
+		float swingTo{};
+		bool swingHeld{ false };
+
+		// How many degrees it turned this frame (clockwise is more), from the
+		// heading the last frame left it at: the move sweeps the turn through
+		// the frame as it sweeps a velocity, and what it touches meets a
+		// surface going that fast where they touch (velocityAt). 0 for one
+		// put somewhere (a reset) and for anything that does not turn.
+		float spin{};
+
+		// How fast the point `at` of it is going: its velocity, and its spin
+		// about its turning point.
+		Vector2f velocityAt(const Vector2f& at) const;
 
 		// Whether it has a <facing> (Moment::facing): which way it faces, one
 		// of the four directions, without turning its picture. It follows the last <move>, <hop> or <jump> made, and a <fire> leaves the

@@ -100,10 +100,10 @@ namespace xge
 				if (tag == "collision") { return Match::Added; }
 				return tag == "solid" ? Match::All : Match::Tag;
 			}
-			if (parent == "position" || parent == "velocity" || parent == "acceleration" || parent == "padding") { return Match::Tag; }
+			if (parent == "position" || parent == "velocity" || parent == "acceleration" || parent == "pivot" || parent == "padding") { return Match::Tag; }
 			if (tag == "sprite" || tag == "animation") { return Match::Whole; }
 			if (tag == "group" || tag == "object") { return Match::Deep; }
-			if (tag == "position" || tag == "velocity" || tag == "acceleration" || tag == "padding"
+			if (tag == "position" || tag == "velocity" || tag == "acceleration" || tag == "pivot" || tag == "padding"
 				|| tag == "variables" || tag == "actions" || tag == "timers" || tag == "collisions") { return Match::Inner; }
 			return isLayout(tag) ? Match::All : Match::Tag;
 		}

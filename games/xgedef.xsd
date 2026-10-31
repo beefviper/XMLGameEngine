@@ -763,6 +763,14 @@
     <xs:attribute name="direction" type="turnDirectionType" use="required" />
   </xs:complexType>
 
+  <!-- swing: how many degrees a frame, then the heading it swings to. -->
+  <xs:complexType name="swingType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+      <xs:element name="to" type="valueType" />
+    </xs:sequence>
+  </xs:complexType>
+
   <!-- thrust: how much to add to the velocity each frame along the heading, and optionally the variable it burns. -->
   <xs:complexType name="aheadType" mixed="true">
     <xs:sequence>
@@ -1159,6 +1167,8 @@
       <xs:element name="go" type="goType" />
       <xs:element name="jump" type="jumpType" />
       <xs:element name="leap" type="valueType" />
+      <!-- swing: held, the heading goes toward <to> at this many degrees a frame; let go, back to the heading it started with -->
+      <xs:element name="swing" type="swingType" />
       <xs:element name="thrust" type="aheadType" />
       <xs:element name="turn" type="turnType" />
       <!-- track: where a control points; path= along that path instead of across the window -->
@@ -1616,6 +1626,8 @@
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
       <xs:element name="heading" type="valueType" minOccurs="0" />
+      <!-- the point of its picture, as drawn, that the heading turns it about (left out, its middle); its <position> is then where that point is on the screen -->
+      <xs:element name="pivot" type="vector2Type" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />
       <!-- how hard it is to knock; left out, a knock does not move it -->
       <xs:element name="mass" type="valueType" minOccurs="0" />

@@ -999,6 +999,41 @@ namespace xge
 
 		object.showHeading();
 
+		// <pivot>: the point it turns about, from the middle of the picture as
+		// drawn; its <position> is where that point is on the screen, so the
+		// square of the turned picture goes where puts it there.
+		if (rawObject.hasPivot)
+		{
+			if (object.turnables.empty() || !object.bitmap)
+			{
+				throw std::runtime_error(where + ": <pivot> is the point a <heading> turns a picture of <line>s or a <bitmap> about; it has no such picture that turns");
+			}
+			const Turnable& drawn = *object.turnables.front();
+			Vector2f middle;
+			if (!drawn.lines.empty())
+			{
+				float left = drawn.lines.front().x1, right = left, top = drawn.lines.front().y1, bottom = top;
+				for (const LineSegment& line : drawn.lines)
+				{
+					for (const float x : { line.x1, line.x2 }) { left = std::min(left, x); right = std::max(right, x); }
+					for (const float y : { line.y1, line.y2 }) { top = std::min(top, y); bottom = std::max(bottom, y); }
+				}
+				middle = { (left + right) / 2.0f, (top + bottom) / 2.0f };
+			}
+			else
+			{
+				middle = { static_cast<float>(drawn.picture->width) / 2.0f, static_cast<float>(drawn.picture->height) / 2.0f };
+			}
+			const Vector2f pivot{ evaluate(rawObject.rawPivot.x, where + " > <pivot>"), evaluate(rawObject.rawPivot.y, where + " > <pivot>") };
+			object.hasPivot = true;
+			object.pivotFromMiddle = pivot - middle;
+			object.pivotDegrees = wholeDegrees(object.heading);
+			const Vector2f square{ static_cast<float>(object.bitmap->width), static_cast<float>(object.bitmap->height) };
+			object.position = object.position - square * 0.5f - turnedBy(object.pivotFromMiddle, static_cast<float>(object.pivotDegrees));
+			object.start.position = object.position;
+			object.start.pivotDegrees = object.pivotDegrees;
+		}
+
 		object.collisionsOn = rawObject.rawCollisionData.enabled;
 		object.start.isVisible = object.isVisible;
 		object.start.collisionsOn = object.collisionsOn;
@@ -1673,6 +1708,7 @@ namespace xge
 					{
 						drawn = std::make_shared<const Bitmap>(kept->at(0.0f));
 					}
+					kept->upright = kept->lines.empty() ? kept->picture : drawn;
 					*turnable = std::move(kept);
 				}
 			}

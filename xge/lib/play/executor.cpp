@@ -116,7 +116,7 @@ namespace xge
 		{
 			return std::holds_alternative<CmdMove>(command) || std::holds_alternative<CmdClimb>(command)
 				|| std::holds_alternative<CmdAccelerate>(command) || std::holds_alternative<CmdTurn>(command)
-				|| std::holds_alternative<CmdThrust>(command) || std::holds_alternative<CmdPlay>(command)
+				|| std::holds_alternative<CmdThrust>(command) || std::holds_alternative<CmdSwing>(command) || std::holds_alternative<CmdPlay>(command)
 				|| std::holds_alternative<CmdTriggerAction>(command);
 		}
 	}
@@ -207,6 +207,13 @@ namespace xge
 				else { applyActionTurn(*self, t.direction, pressed ? t.rate : 0.0f); }
 			},
 			[&](const CmdThrust& t) { if (self && doer.action) { applyActionThrustAhead(*self, *doer.action, pressed ? t.amount : 0.0f, t.burn); } },
+			[&](const CmdSwing& s)
+			{
+				if (!self || !doer.action) { return; }
+				self->swingRate = s.rate;
+				self->swingTo = s.to;
+				self->swingHeld = pressed;
+			},
 			// The game's own: a state's list, and the rest.
 			[&](const CmdPushState& c) { game.pushState(c.name); },
 			[&](const CmdPopState& c) { game.popState(c.name); },
@@ -364,6 +371,12 @@ namespace xge
 			else if (const auto* ahead = std::get_if<CmdThrust>(&actionCommand))
 			{
 				applyActionThrustAhead(object, trigger->action, ahead->amount, ahead->burn);
+			}
+			else if (const auto* swing = std::get_if<CmdSwing>(&actionCommand))
+			{
+				object.swingRate = swing->rate;
+				object.swingTo = swing->to;
+				object.swingHeld = true;
 			}
 			else if (const auto* play = std::get_if<CmdPlay>(&actionCommand))
 			{

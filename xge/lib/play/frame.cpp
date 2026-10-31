@@ -28,7 +28,7 @@ namespace xge
 		bool isMoving(const Object& object) noexcept
 		{
 			const Vector2f motion = motionOf(object);
-			return motion.x != 0 || motion.y != 0 || object.position != object.before.position;
+			return motion.x != 0 || motion.y != 0 || object.spin != 0 || object.position != object.before.position;
 		}
 
 		// Whether a and b can touch at all, whatever their rules: both have
@@ -297,6 +297,25 @@ namespace xge
 						object.heading = std::fmod(object.heading + turn, 360.0f);
 						if (object.heading < 0.0f) { object.heading += 360.0f; }
 						object.showHeading();
+					}
+
+					// A swing: held, toward where it swings to; let go, back
+					// to where it started; never past either, by the shorter way.
+					// The turn is its spin this frame: the move sweeps it from
+					// where it was to where it is now (moveObjects), and what
+					// it strikes on the way takes its speed there (velocityAt).
+					object.spin = 0.0f;
+					if (object.swingRate > 0.0f)
+					{
+						const float target = object.swingHeld ? object.swingTo : object.start.heading;
+						const float apart = turnBetween(object.heading, target);
+						if (apart != 0.0f)
+						{
+							const float step = std::clamp(apart, -object.swingRate, object.swingRate);
+							object.heading = std::fmod(object.heading + step + 360.0f, 360.0f);
+							object.showHeading();
+							object.spin = step;
+						}
 					}
 
 					for (const auto& [action, thrust] : object.activeThrustAheadBy)
@@ -635,11 +654,29 @@ namespace xge
 			// frame it has been going since, not by adding up the pieces: so an
 			// object no reaction touched ends the frame exactly one whole step on,
 			// however many reactions the others had.
+			// One that turns this frame (a swing: its spin) goes back to the
+			// way it faced at the start, and turns through the frame as it
+			// moves: at any moment of it, it faces turnFrom plus that share of
+			// its spin, about its pivot, which stays put (or goes with it).
 			std::vector<Vector2f> origin(all.size());
 			std::vector<float> since(all.size(), 0.0f);
+			std::vector<float> turnFrom(all.size(), 0.0f);
+			std::vector<int> originDegrees(all.size(), 0);
+			const auto spinning = [&](std::size_t i) { return all[i].spin != 0.0f && all[i].hasHeading; };
+			const auto facingAt = [&](std::size_t i, float total)
+			{
+				return std::fmod(turnFrom[i] + all[i].spin * total + 720.0f, 360.0f);
+			};
 			for (std::size_t i = 0; i < all.size(); ++i)
 			{
+				if (spinning(i))
+				{
+					turnFrom[i] = std::fmod(all[i].heading - all[i].spin + 720.0f, 360.0f);
+					all[i].heading = turnFrom[i];
+					all[i].showHeading();
+				}
 				origin[i] = all[i].position;
+				originDegrees[i] = all[i].pivotDegrees;
 			}
 			float played = 0.0f;
 
@@ -651,6 +688,12 @@ namespace xge
 					if (playing[i]) // TODO: at some point you might wanna collide with invisible objects
 					{
 						all[i].position = origin[i] + motionOf(all[i]) * (total - since[i]);
+						if (spinning(i))
+						{
+							all[i].pivotDegrees = originDegrees[i];
+							all[i].heading = facingAt(i, total);
+							all[i].showHeading();
+						}
 					}
 				}
 			};
@@ -690,6 +733,10 @@ namespace xge
 				{
 					return { std::nullopt, true };
 				}
+				if (spinning(pair.i) || spinning(pair.j))
+				{
+					return { sweepTurning(a, moveA, a.spin * left, b, moveB, b.spin * left), false };
+				}
 				return { sweepObjects(a, moveA, b, moveB), false };
 			};
 
@@ -700,6 +747,7 @@ namespace xge
 				Vector2f position;
 				Vector2f motion;
 				Vector2f size;
+				float heading;
 			};
 			std::vector<Before> before(all.size());
 
@@ -710,17 +758,22 @@ namespace xge
 
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{
-						before[i] = { all[i].position, motionOf(all[i]), all[i].size };
+						before[i] = { all[i].position, motionOf(all[i]), all[i].size, all[i].heading };
 					}
 
 					rules.touched(*pair.first, *pair.second, contact);
 
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{
+						// Turned some other way by a reaction: it stops turning there.
+						const bool turned = spinning(i) && all[i].heading != before[i].heading;
+						if (turned) { all[i].spin = 0.0f; }
+
 						const char nowPlaying = rules.inPlay(all[i]) ? 1 : 0;
-						if (all[i].position != before[i].position || motionOf(all[i]) != before[i].motion || nowPlaying != playing[i])
+						if (turned || all[i].position != before[i].position || motionOf(all[i]) != before[i].motion || nowPlaying != playing[i])
 						{
 							origin[i] = all[i].position;
+							originDegrees[i] = all[i].pivotDegrees;
 							since[i] = played;
 							fresh[i] = 0;
 							changed.push_back(i);

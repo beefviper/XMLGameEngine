@@ -85,10 +85,10 @@
           <xsl:otherwise>tag</xsl:otherwise>
         </xsl:choose>
       </xsl:when>
-      <xsl:when test="$parent = 'position' or $parent = 'velocity' or $parent = 'acceleration' or $parent = 'padding'">tag</xsl:when>
+      <xsl:when test="$parent = 'position' or $parent = 'velocity' or $parent = 'acceleration' or $parent = 'pivot' or $parent = 'padding'">tag</xsl:when>
       <xsl:when test="$tag = 'sprite' or $tag = 'animation'">whole</xsl:when>
       <xsl:when test="$tag = 'group' or $tag = 'object'">deep</xsl:when>
-      <xsl:when test="$tag = 'position' or $tag = 'velocity' or $tag = 'acceleration' or $tag = 'padding'
+      <xsl:when test="$tag = 'position' or $tag = 'velocity' or $tag = 'acceleration' or $tag = 'pivot' or $tag = 'padding'
           or $tag = 'variables' or $tag = 'actions' or $tag = 'timers' or $tag = 'collisions'">inner</xsl:when>
       <xsl:when test="$tag = 'member' or $tag = 'row' or $tag = 'column' or $tag = 'cell'">all</xsl:when>
       <xsl:otherwise>tag</xsl:otherwise>

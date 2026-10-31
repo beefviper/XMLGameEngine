@@ -94,9 +94,9 @@ TEST_CASE("every XML library loads these games the same: qbert, spaceinvaders, s
 	for (const char* game : { "qbert", "spaceinvaders", "spaceinvaders2", "airseabattle" }) { loadsTheSame(game); }
 }
 
-TEST_CASE("every XML library loads these games the same: berserk, asteroids, megamania", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: berserk, asteroids, megamania, pinball", "[xml_format][backends]")
 {
-	for (const char* game : { "berserk", "asteroids", "megamania" }) { loadsTheSame(game); }
+	for (const char* game : { "berserk", "asteroids", "megamania", "pinball" }) { loadsTheSame(game); }
 }
 
 TEST_CASE("every XML library loads these games the same: pitfall, adventure, demonattack, centipede", "[xml_format][backends]")

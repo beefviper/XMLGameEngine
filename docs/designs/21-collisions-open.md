@@ -4,7 +4,7 @@
 
 ## Known weaknesses
 
-- A touch has a normal and a depth ([collisions](20-collisions.md#contacts-and-knocks-2026-10-16)), and since 2026-10-31 `bounce` mirrors about it ([bounce by the normal](20-collisions.md#bounce-by-the-normal-2026-10-31)); nothing turns about a pivot yet (flippers).
+- A touch has a normal and a depth ([collisions](20-collisions.md#contacts-and-knocks-2026-10-16)), and since 2026-10-31 `bounce` mirrors about it ([bounce by the normal](20-collisions.md#bounce-by-the-normal-2026-10-31)); a `<swing>` about a `<pivot>` is swept through the frame and lends its speed at the touch point to a `<knock>` (Pinball).
 - No spatial broad phase: pairs are pruned by the rules once per game and far ones sleep ([collisions](20-collisions.md#fewer-checks-2026-10-20)). A game with thousands of moving objects would want a grid, or sorted swept boxes.
 - A pair where nothing moves is not looked at, so a rule against something standing still runs only when the object moves, rides something or hops. A `watch` flag on a rule that must be checked every frame is one way out.
 - Only the first hit of a pair per frame is handled.

@@ -79,15 +79,20 @@ namespace xge
 	bool knock(Object& object, Object& other, const Touch& touch, float bounce)
 	{
 		// The way from the object into the other.
+		// Each one's speed at the point they touch: a thing turning about
+		// its pivot (a flipper swinging) moves faster the further out the
+		// point lies, and lends that speed (Object::velocityAt).
 		const Vector2f way = touch.normal * -1.0f;
-		const std::optional<Knocked> after = knockedApart(object.velocity, object.mass, other.velocity, other.mass, way, bounce);
+		const Vector2f objectAt = object.velocityAt(touch.point);
+		const Vector2f otherAt = other.velocityAt(touch.point);
+		const std::optional<Knocked> after = knockedApart(objectAt, object.mass, otherAt, other.mass, way, bounce);
 		if (!after)
 		{
 			return false;
 		}
 
-		object.velocity = after->first;
-		other.velocity = after->second;
+		object.velocity += after->first - objectAt;
+		other.velocity += after->second - otherAt;
 
 		// Gone into each other: apart again, each by its share.
 		if (touch.depth > 0.0f && (object.mass > 0.0f || other.mass > 0.0f))

@@ -288,6 +288,17 @@
             <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
         </xsl:when>
+        <xsl:when test="$verb = 'swing'">
+          <xsl:text> command.amount = </xsl:text>
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="$node" />
+          </xsl:call-template>
+          <xsl:text>;</xsl:text>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.distance'" />
+            <xsl:with-param name="node" select="$node/to" />
+          </xsl:call-template>
+        </xsl:when>
         <xsl:when test="$verb = 'hunt'">
           <xsl:call-template name="field">
             <xsl:with-param name="name" select="'command.amount'" />
@@ -1176,6 +1187,13 @@
         <xsl:with-param name="node" select="heading" />
       </xsl:call-template>
     </xsl:if>
+    <xsl:if test="pivot">
+      <xsl:value-of select="concat($in, 'object.hasPivot = true;&#10;', $in, 'object.rawPivot = ')" />
+      <xsl:call-template name="vector">
+        <xsl:with-param name="node" select="pivot" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
     <xsl:if test="drag">
       <xsl:value-of select="concat($in, 'object.hasDrag = true;&#10;')" />
       <xsl:call-template name="assign-value">
@@ -1579,6 +1597,13 @@
         <xsl:with-param name="to" select="'group.object.rawHeading'" />
         <xsl:with-param name="node" select="heading" />
       </xsl:call-template>
+    </xsl:if>
+    <xsl:if test="pivot">
+      <xsl:value-of select="concat($in, 'group.object.hasPivot = true;&#10;', $in, 'group.object.rawPivot = ')" />
+      <xsl:call-template name="vector">
+        <xsl:with-param name="node" select="pivot[last()]" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
     </xsl:if>
     <xsl:if test="drag">
       <xsl:value-of select="concat($in, 'group.object.hasDrag = true;&#10;')" />

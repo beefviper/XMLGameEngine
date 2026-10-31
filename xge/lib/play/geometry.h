@@ -588,6 +588,10 @@ namespace xge
 	Vector2f ahead(float heading) noexcept;
 	float headingOf(const Vector2f& way) noexcept;
 
+	// How far to turn from one heading to another by the shorter way:
+	// from -180 up to 180 degrees, clockwise more.
+	float turnBetween(float from, float to) noexcept;
+
 	// <seek>: `velocity` turned toward `way` by at most `degrees`, at the
 	// same speed. Still, it stays still.
 	Vector2f turnedToward(const Vector2f& velocity, const Vector2f& way, float degrees) noexcept;

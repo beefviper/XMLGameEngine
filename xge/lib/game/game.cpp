@@ -1266,6 +1266,8 @@ namespace xge
 			// No turn or thrust along its heading still held.
 			object.activeTurn = {};
 			object.activeThrustAheadBy.clear();
+			object.swingHeld = false;
+			object.spin = 0.0f;
 			object.showHeading();
 
 			// An animation starts again from its first picture, and a

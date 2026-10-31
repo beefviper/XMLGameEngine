@@ -231,6 +231,8 @@ namespace
 			vector2(at + ".velocity", o.rawVelocity);
 			vector2(at + ".acceleration", o.rawAcceleration);
 			flag(at + ".hasAcceleration", o.hasAcceleration);
+			vector2(at + ".pivot", o.rawPivot);
+			flag(at + ".hasPivot", o.hasPivot);
 			value(at + ".heading", o.rawHeading);
 			flag(at + ".hasHeading", o.hasHeading);
 			value(at + ".drag", o.rawDrag);

@@ -239,6 +239,15 @@ namespace xge
 
 		if (verb == "thrust") { return CmdThrust{ evaluate(raw.amount), raw.burn }; }
 
+		if (verb == "swing")
+		{
+			const float rate = evaluate(raw.amount);
+			if (!(rate > 0.0f)) { throw std::runtime_error("<swing> turns " + formatDisplayNumber(rate) + " degrees a frame; expected more than 0"); }
+			float to = std::fmod(evaluate(raw.distance), 360.0f);
+			if (to < 0.0f) { to += 360.0f; }
+			return CmdSwing{ rate, to };
+		}
+
 		if (verb == "deflect")
 		{
 			const float maxAngle = evaluate(raw.amount);
@@ -569,6 +578,7 @@ namespace xge
 				o << "accelerate." << direction << "(" << a.amount << (a.burn.empty() ? "" : ", burn " + a.burn) << ")";
 			},
 			[&](const CmdTurn& t) { o << "turn." << (t.direction == Direction::Left ? "left" : "right") << "(" << t.rate << ")"; },
+			[&](const CmdSwing& s) { o << "swing(" << s.rate << ", to " << s.to << ")"; },
 			[&](const CmdThrust& t) { o << "thrust(" << t.amount << (t.burn.empty() ? "" : ", burn " + t.burn) << ")"; },
 			[&](const CmdRelease& r) { o << "release(" << r.target << ", " << r.count << ")"; },
 			[&](const CmdIncrement& c) { o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
@@ -771,7 +781,11 @@ namespace xge
 	{
 		o << command.verb;
 
-		if (command.verb == "thrust" || command.verb == "deflect")
+		if (command.verb == "swing")
+		{
+			o << "(" << command.amount << ", to " << command.distance << ")";
+		}
+		else if (command.verb == "thrust" || command.verb == "deflect")
 		{
 			o << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
 		}

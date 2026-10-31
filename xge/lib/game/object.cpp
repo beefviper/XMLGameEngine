@@ -571,7 +571,7 @@ namespace xge
 
 		object.name = to;
 		for (RawValue* each : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y,
-			&object.rawAcceleration.x, &object.rawAcceleration.y, &object.rawHeading, &object.rawDrag, &object.rawMass, &object.rawSeek, &object.rawLight,
+			&object.rawAcceleration.x, &object.rawAcceleration.y, &object.rawHeading, &object.rawPivot.x, &object.rawPivot.y, &object.rawDrag, &object.rawMass, &object.rawSeek, &object.rawLight,
 			&object.rawAltitude, &object.rawRise, &object.rawFall, &object.rawAltitudeBounce })
 		{
 			value(*each);
@@ -658,6 +658,31 @@ namespace xge
 		return false;
 	}
 
+	Vector2f turnedBy(const Vector2f& way, float degrees) noexcept
+	{
+		const float angle = degrees * 3.14159265358979323846f / 180.0f;
+		const float c = std::cos(angle);
+		const float s = std::sin(angle);
+		return { way.x * c - way.y * s, way.x * s + way.y * c };
+	}
+
+	Vector2f Object::pivotOnScreen() const
+	{
+		// The picture as it shows now, turned: the square every heading
+		// comes out as.
+		const Vector2f shown = bitmap ? Vector2f{ static_cast<float>(bitmap->width), static_cast<float>(bitmap->height) } : size;
+		const Vector2f middle = position + shown * 0.5f;
+		return hasPivot ? middle + turnedBy(pivotFromMiddle, static_cast<float>(pivotDegrees)) : middle;
+	}
+
+	Vector2f Object::velocityAt(const Vector2f& at) const
+	{
+		if (spin == 0.0f) { return velocity; }
+		const Vector2f arm = at - pivotOnScreen();
+		const float radians = spin * 3.14159265358979323846f / 180.0f;
+		return velocity + Vector2f{ -arm.y * radians, arm.x * radians };
+	}
+
 	void Object::showHeading()
 	{
 		if (turnables.empty()) { return; }
@@ -667,6 +692,14 @@ namespace xge
 		const std::size_t frame = turnables.size() > 1 && animationIndex < turnables.size() ? animationIndex : 0;
 
 		const int degrees = wholeDegrees(heading);
+
+		// Turning about a pivot: the picture is turned about its middle, so the
+		// middle goes round the pivot, which stays where it is.
+		if (hasPivot && degrees != pivotDegrees)
+		{
+			position += turnedBy(pivotFromMiddle, static_cast<float>(pivotDegrees)) - turnedBy(pivotFromMiddle, static_cast<float>(degrees));
+			pivotDegrees = degrees;
+		}
 
 		if (bitmap && turnedDegrees == degrees && turnedFrame == frame) { return; }
 
