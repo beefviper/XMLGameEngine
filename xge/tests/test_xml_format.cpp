@@ -127,13 +127,6 @@ namespace
 		}
 	};
 
-	std::string printed(const Object& object)
-	{
-		std::ostringstream text;
-		text << object;
-		return text.str();
-	}
-
 	template <typename Alternative>
 	const Alternative& as(const Command& command)
 	{
@@ -724,59 +717,6 @@ TEST_CASE("a condition with no test, a wrong first tag, or no variable to read i
 
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml({}), "<conditions><condition class=\"c\"><atleast>1</atleast><pop /></condition></conditions>")),
 		ContainsSubstring("needs variable="));
-}
-
-namespace
-{
-	// What is compared for one object. Anything whose position or velocity is a
-	// <random> (the ball, Kaboom's bombs, Astrosmash's rocks) comes out different on
-	// every load, so only its name is compared (Missile Command's missiles, and Demon Attack's small demons, too).
-	std::string comparable(const Object& object)
-	{
-		// Named by their paths where a state or a scene owns them (playing.ball, playing.wave2.half).
-		const auto endsWith = [&](const std::string& end) { return object.name == end || (object.name.size() > end.size() && object.name.compare(object.name.size() - end.size() - 1, end.size() + 1, "." + end) == 0); };
-		const bool drawn = endsWith("ball") || endsWith("half") || object.objClass == "bomb" || object.objClass == "rocks" || object.objClass == "spinner" || object.objClass == "missile" || object.objClass == "ufo";
-		return drawn ? object.name : printed(object);
-	}
-
-	// Each library's copy draws its <random>s from the same seed.
-	struct SameSeed
-	{
-		SameSeed() { game_expr::fixRandomSeed(20261019u); }
-		~SameSeed() { game_expr::fixRandomSeed(std::nullopt); }
-	};
-}
-
-TEST_CASE("every shipped game loads the same through all four XML libraries", "[xml_format][backends]")
-{
-	// Same objects, sprites, positions, commands and rules whichever library read
-	// the file, so the text-and-element reading of each one agrees. (The ball's
-	// velocity, and the fall speeds and heights of Kaboom's bombs and Astrosmash's rocks and spinners,
-	// are <random>s, so those objects are left out of the comparison.)
-	for (const char* file : { "descriptions/pong.xml", "descriptions/breakout.xml", "descriptions/spaceinvaders.xml", "descriptions/frogger.xml", "descriptions/spacerace.xml", "descriptions/kaboom.xml", "descriptions/freeway.xml", "descriptions/depthcharge.xml", "descriptions/astrosmash.xml", "descriptions/asteroids.xml", "descriptions/berserk.xml", "descriptions/demonattack.xml", "descriptions/frostbite.xml", "descriptions/pong_min.xml", "descriptions/pitfall.xml", "descriptions/missilecommand.xml", "descriptions/combat.xml", "descriptions/airseabattle.xml", "descriptions/megamania.xml", "descriptions/adventure.xml", "descriptions/trickshot.xml", "descriptions/mariobros.xml", "descriptions/fishingderby.xml", "descriptions/qbert.xml", "descriptions/yarsrevenge.xml", "descriptions/tennis.xml", "descriptions/hauntedhouse.xml" })
-	{
-		DYNAMIC_SECTION(file)
-		{
-			const SameSeed seed;
-			std::vector<std::string> expected;
-			{
-				Game xerces{ readGame(file, XmlBackend::Xerces) };
-				for (const auto& object : xerces.getCurrentObjects()) { expected.push_back(comparable(object)); }
-			}
-
-			for (const XmlBackend backend : { XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
-			{
-				Game game{ readGame(file, backend) };
-				REQUIRE(game.getCurrentObjects().size() == expected.size());
-
-				for (std::size_t i = 0; i < expected.size(); ++i)
-				{
-					const Object& object = game.getCurrentObjects()[i];
-					CHECK(comparable(object) == expected[i]);
-				}
-			}
-		}
-	}
 }
 
 // ------------------------------------------------------------------ schema

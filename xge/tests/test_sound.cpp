@@ -471,20 +471,11 @@ TEST_CASE("the silent backend needs no sound device", "[sound][engine]")
 	CHECK(dynamic_cast<NullAudio*>(audio.get()) != nullptr);
 }
 
-TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lunar Lander and Asteroids have their sounds, and each is played somewhere", "[sound][games]")
+namespace
 {
-	const std::vector<std::pair<std::string, std::vector<std::string>>> games = {
-		{ "breakout", { "wall", "paddle", "red", "orange", "green", "yellow", "lost" } },
-		{ "frogger", { "hop", "squash", "splash", "home", "start", "win", "gameover" } },
-		{ "spacerace", { "score", "crash", "end" } },
-		{ "freeway", { "hop", "hit", "cross", "start", "end" } },
-		{ "depthcharge", { "sonar", "drop", "sink", "boom", "start", "gameover" } },
-		{ "astrosmash", { "pop", "thud", "boom", "shoot", "start", "spare", "gameover" } },
-		{ "lunarlander", { "thrust", "land", "crash", "start" } },
-		{ "asteroids", { "beat", "thrust", "shoot", "bangbig", "bangmedium", "bangsmall", "boom", "saucer", "extra", "gameover" } },
-	};
-
-	for (const auto& [name, expected] : games)
+	// The game's sounds, the same through every XML library, and each one
+	// played somewhere: a sound nothing plays is a sound that was forgotten.
+	void hasItsSounds(const std::string& name, const std::vector<std::string>& expected)
 	{
 		INFO(name);
 		const std::string path = "descriptions/" + name + ".xml";
@@ -497,7 +488,6 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 			CHECK(names == expected);
 		}
 
-		// A sound nothing plays is a sound that was forgotten.
 		std::ifstream file(path);
 		const std::string text = fileText(file);
 		for (const std::string& sound : expected)
@@ -506,6 +496,30 @@ TEST_CASE("Breakout, Frogger, Space Race, Freeway, Depth Charge, Astrosmash, Lun
 			CHECK((text.find("<play sound=\"" + sound + "\" />") != std::string::npos || text.find("<music sound=\"" + sound + "\" />") != std::string::npos));
 		}
 	}
+}
+
+TEST_CASE("Breakout and Frogger have their sounds, and each is played somewhere", "[sound][games]")
+{
+	hasItsSounds("breakout", { "wall", "paddle", "red", "orange", "green", "yellow", "lost" });
+	hasItsSounds("frogger", { "hop", "squash", "splash", "home", "start", "win", "gameover" });
+}
+
+TEST_CASE("Space Race and Freeway have their sounds, and each is played somewhere", "[sound][games]")
+{
+	hasItsSounds("spacerace", { "score", "crash", "end" });
+	hasItsSounds("freeway", { "hop", "hit", "cross", "start", "end" });
+}
+
+TEST_CASE("Depth Charge and Astrosmash have their sounds, and each is played somewhere", "[sound][games]")
+{
+	hasItsSounds("depthcharge", { "sonar", "drop", "sink", "boom", "start", "gameover" });
+	hasItsSounds("astrosmash", { "pop", "thud", "boom", "shoot", "start", "spare", "gameover" });
+}
+
+TEST_CASE("Lunar Lander and Asteroids have their sounds, and each is played somewhere", "[sound][games]")
+{
+	hasItsSounds("lunarlander", { "thrust", "land", "crash", "start" });
+	hasItsSounds("asteroids", { "beat", "thrust", "shoot", "bangbig", "bangmedium", "bangsmall", "boom", "saucer", "extra", "gameover" });
 }
 
 TEST_CASE("a sound that loops is read from the file, and a silence beside it", "[sound][xml]")
@@ -717,11 +731,6 @@ TEST_CASE("a state's music names a sound of the game", "[sound][xml][music][erro
 
 TEST_CASE("Pac-Man's music: the opening tune plays over READY!, the siren loops while play is current, and the loss plays once", "[sound][engine][music][pacman]")
 {
-	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
-	{
-		CHECK_NOTHROW(Game{ readGame("descriptions/pacman.xml", backend) });
-	}
-
 	Game game{ "descriptions/pacman.xml" };
 	AudioLog log;
 	Engine engine(game, std::make_unique<FakeWindow>(), std::make_unique<RecordingAudio>(log));

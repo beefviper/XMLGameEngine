@@ -35,12 +35,21 @@ if (NOT XGE_ALL_BACKENDS)
 	message(FATAL_ERROR "The test suite needs every backend: leave XGE_ALL_BACKENDS on (BUILD_TESTING turns it on).")
 endif()
 
+# The slowest tests' files come first (the XML libraries loading every game,
+# then Pac-Man, sound, Donkey Kong and Berserk), so a ctest run with no timings
+# from before starts them first.
+#
 # A second executable: the test files plus the engine library itself (the
 # xgelib target), so tests call into the real game/command.cpp/game.cpp
 # etc., not a hand-copied reimplementation of them. The library brings the
 # include directory and every third-party library it needs along with it.
 add_executable(xgetest
 	"xge/tests/test_main.cpp"
+	"xge/tests/test_xml_libraries.cpp"
+	"xge/tests/test_pacman.cpp"
+	"xge/tests/test_sound.cpp"
+	"xge/tests/test_donkeykong.cpp"
+	"xge/tests/test_berserk.cpp"
 	"xge/tests/test_command_parsing.cpp"
 	"xge/tests/test_object_variables.cpp"
 	"xge/tests/test_conditions.cpp"
@@ -71,7 +80,6 @@ add_executable(xgetest
 	"xge/tests/test_depthcharge.cpp"
 	"xge/tests/test_astrosmash.cpp"
 	"xge/tests/test_atlantis.cpp"
-	"xge/tests/test_pacman.cpp"
 	"xge/tests/test_lines_and_pixels.cpp"
 	"xge/tests/test_bitmap_sprites.cpp"
 	"xge/tests/test_svg_sprites.cpp"
@@ -79,15 +87,12 @@ add_executable(xgetest
 	"xge/tests/test_asteroids.cpp"
 	"xge/tests/test_demonattack.cpp"
 	"xge/tests/test_builtin_font.cpp"
-	"xge/tests/test_sound.cpp"
 	"xge/tests/test_speed.cpp"
 	"xge/tests/test_gameplay_verbs.cpp"
 	"xge/tests/test_kit.cpp"
 	"xge/tests/test_scenes.cpp"
 	"xge/tests/test_text.cpp"
 	"xge/tests/test_frostbite.cpp"
-	"xge/tests/test_donkeykong.cpp"
-	"xge/tests/test_berserk.cpp"
 	"xge/tests/test_pictures.cpp"
 	"xge/tests/test_cli.cpp"
 	"xge/tests/test_data_folder.cpp"

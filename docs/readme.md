@@ -1492,7 +1492,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
 | | `xge/gui/source/` | `main_window`, `game_session` (a game and its engine on a timer), `game_stage`, `game_view`, `qt_window` (the Qt renderer), `key_queue`, `options_dialog`, `session_options`, `app_settings` (`xgegui.ini`), `inspector` (the tree), `theme` |
 | generator | `games/generators/windows-cpp/` | `generate.xsl`, `merge.xsl`, `data.xsl`, `program.xsl`, `text.xsl`, `engine.xml`, `modules/game_parts.h` |
-| tests | `xge/tests/` | one `test_<topic>.cpp` per area: each verb and part of the format (`test_xml_format`, `test_places`, `test_formulas`, `test_kit`, `test_spawn`, `test_scenes`, ...), the backends and the command line, and each game played frame by frame (`test_<game>`). `played.h` is what game tests share, `invaders_fixture.h` a frozen first Space Invaders, `scratch.h` a scratch name per run. `xgetest "[.speed]"` prints every game's load and frame times |
+| tests | `xge/tests/` | one `test_<topic>.cpp` per area: each verb and part of the format (`test_xml_format`, `test_places`, `test_formulas`, `test_kit`, `test_spawn`, `test_scenes`, ...), the backends and the command line, and each game played frame by frame (`test_<game>`). `played.h` is what game tests share, `invaders_fixture.h` a frozen first Space Invaders, `scratch.h` a scratch name per run. `xgetest "[.speed]"` prints every game's load and frame times. `test_xml_libraries` (every game through all four XML libraries, a few games a test) and the slowest game tests come first in `tests.cmake`, so ctest starts them first |
 
 ## Known limitations
 
