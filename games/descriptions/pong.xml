@@ -8,8 +8,9 @@
   ball and a dashed net, the scores in big digits at the top. The first to
   eleven wins.
 
-  W and S move the left paddle, Up and Down the right one; Space starts,
-  pauses and plays again.
+  W and S move the left paddle. On the title, Space plays the computer
+  (A and D choose easy or smart), and 2 is for two players, the second on
+  Up and Down. Space pauses and plays again.
 
   How it is written:
   * The paddles are one group: their size, the <stick /> at the top and the
@@ -21,6 +22,14 @@
     a point and is served again, its <random>s and its hits drawn anew.
   * The net is a group of one column and many rows.
   * Paused and game over draw the game still underneath (<show state>).
+  * The computer plays the right paddle with a <computer>, holding Up or
+    Down as a second player would. Easy follows the ball's height all the
+    time; smart goes back to the middle once the ball has left it, and
+    follows the ball only once it comes over the net. Its choice is kept.
+  * The speeds make either beatable: a paddle goes 5 a frame, the ball 9,
+    then 11.7 from the fourth hit and 15.2 from the twelfth. From the fourth
+    hit on, a ball sent from the top corner to the bottom one crosses
+    faster than a paddle at the top can get down to meet it.
 -->
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Pong">
@@ -31,7 +40,7 @@
     <variable name="margin">30</variable>
     <variable name="width">20</variable>
     <variable name="height">120</variable>
-    <variable name="step">6</variable>
+    <variable name="step">5</variable>
   </variables>
   <!-- the arcade's three tones: a paddle hit, the wall an octave lower, and a long one for a point -->
   <sounds>
@@ -44,6 +53,21 @@
     <style name="prompt"><size>48</size><color>color.lightgrey</color></style>
     <style name="hud"><size>128</size></style>
   </styles>
+  <objects>
+    <!-- who plays the right paddle: 1 the computer, 2 a second player; and how well the computer plays -->
+    <object name="computer">
+      <sprite name="easy"><text style="prompt"><content>a d: the computer plays easy</content></text></sprite>
+      <sprite name="smart"><text style="prompt"><content>a d: the computer plays smart</content></text></sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 190</centered></y></position>
+      <variables>
+        <variable name="players">1</variable>
+        <variable name="level">1</variable>
+      </variables>
+    </object>
+  </objects>
+  <keeps>
+    <keep object="computer" />
+  </keeps>
   <states>
     <state name="mainmenu">
       <objects>
@@ -63,12 +87,18 @@
           </position>
         </object>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to serve, first to eleven</content></text></sprite>
+          <sprite><text style="prompt"><content>spacebar to play the computer, 2 for two players</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
         </object>
       </objects>
+      <shows>
+        <show object="computer" />
+      </shows>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input button="space"><set variable="computer.players">1</set><push state="playing" /></input>
+        <input><button>num2</button><button>numpad2</button><set variable="computer.players">2</set><push state="playing" /></input>
+        <input button="a"><set variable="computer.level">1</set><become object="computer" sprite="easy" /></input>
+        <input button="d"><set variable="computer.level">2</set><become object="computer" sprite="smart" /></input>
       </inputs>
     </state>
     <state name="playing">
@@ -158,7 +188,7 @@
           </collisions>
           <variables>
             <variable name="size">16</variable>
-            <variable name="speed">6</variable>
+            <variable name="speed">9</variable>
             <variable name="hits">0</variable>
             <variable name="angle"><random><min>-30</min><max>30</max></random></variable>
             <variable name="side"><random><min>-1</min><max>1</max></random></variable>
@@ -178,6 +208,71 @@
           <push state="gameover" />
         </condition>
       </conditions>
+      <!-- the right paddle, when the computer plays it: its middle kept within 8 of where it wants it -->
+      <computer>
+        <!-- easy: under the ball, always -->
+        <condition>
+          <all>
+            <condition object="computer" variable="players"><equal>1</equal></condition>
+            <condition object="computer" variable="level"><equal>1</equal></condition>
+            <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below></condition>
+          </all>
+          <hold button="down" />
+        </condition>
+        <condition>
+          <all>
+            <condition object="computer" variable="players"><equal>1</equal></condition>
+            <condition object="computer" variable="level"><equal>1</equal></condition>
+            <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above></condition>
+          </all>
+          <hold button="up" />
+        </condition>
+        <!-- smart: in the middle, then under the ball once it comes over the net -->
+        <condition>
+          <all>
+            <condition object="computer" variable="players"><equal>1</equal></condition>
+            <condition object="computer" variable="level"><equal>2</equal></condition>
+            <condition object="ball" variable="velocity.x"><above>0</above></condition>
+            <condition object="ball" variable="x"><above>window.width.center</above></condition>
+            <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below></condition>
+          </all>
+          <hold button="down" />
+        </condition>
+        <condition>
+          <all>
+            <condition object="computer" variable="players"><equal>1</equal></condition>
+            <condition object="computer" variable="level"><equal>2</equal></condition>
+            <condition object="ball" variable="velocity.x"><above>0</above></condition>
+            <condition object="ball" variable="x"><above>window.width.center</above></condition>
+            <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above></condition>
+          </all>
+          <hold button="up" />
+        </condition>
+        <condition>
+          <all>
+            <condition object="computer" variable="players"><equal>1</equal></condition>
+            <condition object="computer" variable="level"><equal>2</equal></condition>
+            <any>
+              <condition object="ball" variable="velocity.x"><atmost>0</atmost></condition>
+              <condition object="ball" variable="x"><atmost>window.width.center</atmost></condition>
+            </any>
+            <condition object="paddle2" variable="y"><below>window.height.center - height / 2 - 8</below></condition>
+          </all>
+          <hold button="down" />
+        </condition>
+        <condition>
+          <all>
+            <condition object="computer" variable="players"><equal>1</equal></condition>
+            <condition object="computer" variable="level"><equal>2</equal></condition>
+            <any>
+              <condition object="ball" variable="velocity.x"><atmost>0</atmost></condition>
+              <condition object="ball" variable="x"><atmost>window.width.center</atmost></condition>
+            </any>
+            <condition object="paddle2" variable="y"><above>window.height.center - height / 2 + 8</above></condition>
+          </all>
+          <hold button="up" />
+        </condition>
+      </computer>
     </state>
     <state name="paused">
       <objects>

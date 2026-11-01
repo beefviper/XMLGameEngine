@@ -99,7 +99,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 
 | Game | Keys besides the convention | What it is, and what it shows |
 |---|---|---|
-| `pong` | W/S, Up/Down | Atari's arcade Pong: a square ball, a dashed net, first to eleven, [`<deflect>`](#touching) off the paddles |
+| `pong` | W/S; Space on the title plays the computer (A/D easy or smart), 2 two players on Up/Down | Atari's arcade Pong: a square ball, a dashed net, first to eleven, [`<deflect>`](#touching) off the paddles; a [computer](#computer-players) of two levels, beatable by a fast ball from corner to corner |
 | `pong_min` | W/S, Up/Down | two paddles and a ball, nothing else: the game [`--generate`](#generating-a-program) was grown on |
 | `breakout` | A/D, the mouse | eight rows of bricks, the ball speeding up, a half paddle at the top; the paddle follows the mouse ([`<track />`](#pointing-controls)) |
 | `spaceinvaders` | A/D, Space fires | the march speeding up, bombs, a mystery ship, shields worn away by [`<hole>`](#touching) |
@@ -140,7 +140,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `pinball` | A or Left, D or Right flip; Space held then let go shoots; P or Escape pauses | an original table: flippers that [swing about a pivot](#turning-about-a-pivot) and lend the ball their speed where they strike it, a plunger [held and let go](#a-keys-three-moments), bumpers and slingshots that [bounce](#touching) it off faster, three rollover lanes for a bonus |
 | `cannonhill` | W/S or Up/Down aim, Space held then let go fires; P or Escape pauses | an original artillery duel for two at one keyboard: hills drawn as a filled [`<polygon>`](#polygons) that shells blow [craters](#touching) in, each shell [spawned](#spawn-and-despawn) from the barrel's tip with the turn's wind as its `<acceleration>`, turns kept by a phase on a table, a hit told by a blast's `distance=`, three fields as [scenes](#scenes) |
 | `speedway` | player one W A S D, player two the arrows: up goes, down brakes, left and right steer; P or Escape pauses | an original top down race of three laps against each other and two computer cars: cars with a `<heading>`, held `<thrust>` and `<turn>`, and a [`<grip>`](#poses-mirror-grip-and-blinking) that holds them to their heading; grass, sand and oil as map pieces with a [`<surface>`](#surfaces); laps by gate rules in order; the computer's cars on [paths](#paths), facing the way they go |
-| `checkers` | W A S D or the arrows move the cursor, Space picks up and puts down; P or Escape pauses | checkers for two at one keyboard: pieces with [`<moves>`](#board-games), forced jumps and runs of jumps, kings crowned by `<promote>`, a cursor that `<pick>`s and `<place>`s, a stuck side found by the live number `moves` |
+| `checkers` | W A S D or the arrows move the cursor, Space picks up and puts down; 2 on the title for two players; P or Escape pauses | checkers against a computer that [`<think>`](#computer-players)s four moves ahead, or for two at one keyboard: pieces with [`<moves>`](#board-games), forced jumps and runs of jumps, kings crowned by `<promote>`, a cursor that `<pick>`s and `<place>`s, a stuck side found by the live number `moves` |
 | `centipede` | W A S D move the wand about its zone, Space fires; P or Escape pauses | a centipede winding down through a mushroom field, [split](#cells) in two where a shot hits it; each piece left grows a head; a line nobody sees over the bottom six rows turns it back down and holds the wand in |
 
 What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
@@ -979,7 +979,7 @@ Commands are sorted by what they need, and each place takes only the groups that
 | edge | `stick`, `wrap` | a screen edge |
 | bounce | `bounce` | a screen edge or another object |
 | controls | `accelerate`, `climb`, `go`, `hop`, `jump`, `leap`, `thrust`, `turn`, `track` | a key held or pressed |
-| press | `hold` | a [computer player](#computer-players) |
+| press | `hold`, `think` | a [computer player](#computer-players) |
 
 | Place | Takes |
 |---|---|
@@ -1529,7 +1529,31 @@ A state's `<computer>` is a player the game plays itself, pressing the state's k
 </computer>
 ```
 
-A `<hold>` anywhere else, or any other command in a `<computer>`, stops the load.
+A computer's condition may gate itself on a mode (`<all>` with a `players` variable the title sets), so one state serves one player and two. Pong's computer has two levels, both plain conditions: easy keeps the paddle under the ball all the time; smart goes back to the middle while the ball goes away and follows it only once it comes over the net.
+
+**Thinking: `<think>`.** For a [board game](#board-games), a computer's condition may hold a `<think>` instead of `<hold>`s:
+
+```xml
+<computer>
+  <condition>
+    <all>
+      <condition object="match" variable="players"><equal>1</equal></condition>
+      <condition object="cursor" variable="turn"><equal>2</equal></condition>
+    </all>
+    <think class="white" object="cursor" button="f12">
+      <depth>4</depth>
+      <worth sprite="king">3</worth>
+    </think>
+  </condition>
+</computer>
+```
+
+- While its condition holds it plays the pieces of `class=`: it copies the board (where each piece is, its side, its look) and plays out every move, each side's in turn, `<depth>` moves deep (4 when left out, 1 to 8), by the pieces' own `<moves>` (forced jumps, runs of jumps, promotion). The other side is the class its pieces' jumps take.
+- **What it wants** is inferred: its pieces, less the other side's, each worth 1, or its look's `<worth>`; a side with no move has lost, and a sooner win is better. Equal moves are chosen between at random.
+- **How it plays** is as a person would: it walks the picker `object=` a cell at a time to the piece and to each cell of its move, pressing `button=` on each, eight frames apart. Checkers gives it its own key (F12) and its own cursor looks, so the player's keys do nothing on its turn.
+- It plans once each time its condition starts to hold, and again if its presses did not end its turn.
+
+A `<hold>` or `<think>` anywhere else, or any other command in a `<computer>`, stops the load.
 
 ## What happens when a game runs
 

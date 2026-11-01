@@ -718,6 +718,22 @@ namespace xge
 		KeyCode button{};
 	};
 
+	// <think class="white" object="cursor" button="space"> - only in a
+	// <condition> of a state's <computer>: while it holds, the computer
+	// plays the board game pieces of that class. It looks `depth` moves
+	// ahead (each side's in turn), weighing pieces by `worths` (by look;
+	// 1 for any other), picks the best, then walks the picker to the
+	// piece and to each cell of its move, a cell at a time, pressing the
+	// button on each as a player would. See Game::think (game/think.cpp).
+	struct CmdThink
+	{
+		std::string objClass;
+		std::string picker;
+		KeyCode button{};
+		int depth{ 4 };
+		std::vector<std::pair<std::string, float>> worths;
+	};
+
 	struct RawCommand;
 	struct LoadedCommand;
 
@@ -737,7 +753,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdThink, CmdLive>;
 
 	struct LoadedCommand
 	{
@@ -917,7 +933,8 @@ namespace xge
 		std::string from;      // become, trigger: only one showing this look
 		std::string partner;   // hunt: <with object="...">
 		std::string retreat;   // hunt: <retreat object="...">
-		std::string button;    // hold
+		std::string button;    // hold, think
+		std::vector<std::pair<std::string, float>> worths; // think: each <worth sprite="...">
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)

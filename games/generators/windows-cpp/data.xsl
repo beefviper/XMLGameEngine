@@ -195,6 +195,28 @@
             <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
         </xsl:when>
+        <!-- a computer thinking: how deep, and what its pieces are worth -->
+        <xsl:when test="$verb = 'think'">
+          <xsl:if test="$node/depth">
+            <xsl:text> command.amount = </xsl:text>
+            <xsl:call-template name="value">
+              <xsl:with-param name="node" select="$node/depth" />
+            </xsl:call-template>
+            <xsl:text>;</xsl:text>
+          </xsl:if>
+          <xsl:if test="$node/worth">
+            <xsl:text> command.worths = {</xsl:text>
+            <xsl:for-each select="$node/worth">
+              <xsl:if test="position() &gt; 1">,</xsl:if>
+              <xsl:text> { </xsl:text>
+              <xsl:call-template name="string">
+                <xsl:with-param name="text" select="@sprite" />
+              </xsl:call-template>
+              <xsl:value-of select="concat(', float(', normalize-space(.), ') }')" />
+            </xsl:for-each>
+            <xsl:text> };</xsl:text>
+          </xsl:if>
+        </xsl:when>
         <!-- a hunt by hops: its one hop -->
         <xsl:when test="$verb = 'hunt' and $node/hop">
           <xsl:text> command.byHops = true;</xsl:text>

@@ -1266,6 +1266,28 @@
           <xs:attribute name="button" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
+      <!-- think: only in a <computer>'s condition: while it holds, the computer plays the board game pieces of class=,
+           looking <depth> moves ahead (4 when left out), each piece worth 1 or its look's <worth>; it walks the picker
+           object= to the piece and each cell of its move, pressing button= on each -->
+      <xs:element name="think">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="depth" type="xs:positiveInteger" minOccurs="0" />
+            <xs:element name="worth" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal">
+                    <xs:attribute name="sprite" type="xs:NMTOKEN" use="required" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="object" type="xs:string" use="required" />
+          <xs:attribute name="button" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
     </xs:choice>
   </xs:group>
 

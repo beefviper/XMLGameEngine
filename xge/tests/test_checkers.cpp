@@ -5,8 +5,9 @@
 //
 // Catch2 tests for checkers.xml and what it brought: a board game piece's
 // <moves> (steps, jumps, forced jumps, a king's own set, <promote>), the
-// cursor's <pick> and <place>, a run of jumps that must be finished, and
-// the live number `moves` that tells a side it is stuck.
+// cursor's <pick> and <place>, a run of jumps that must be finished, the
+// live number `moves` that tells a side it is stuck, and the computer's
+// <think>.
 
 #include "played.h"
 
@@ -24,10 +25,17 @@ namespace
 
 	struct Board : Played
 	{
-		Board() : Played("descriptions/checkers.xml")
+		// Two players at the keyboard, or (computer) red against it.
+		explicit Board(bool computer = false) : Played("descriptions/checkers.xml")
 		{
-			tap(KeyCode::Space);
+			tap(computer ? KeyCode::Space : KeyCode::Num2);
 			frames(2);
+		}
+
+		// Frames until it is red's turn again, at most `most`.
+		void untilRed(int most = 600)
+		{
+			for (int i = 0; i < most && cursor().variable.at("turn") != 1.0f && state() == "playing"; ++i) { frames(1); }
 		}
 
 		Object& cursor() { return get("cursor"); }
@@ -281,4 +289,67 @@ TEST_CASE("checkers.xml: a side with no move on its turn has lost", "[checkers]"
 	board.space(2, 7);
 	REQUIRE(board.state() == "over");
 	CHECK(board.get("winner").lookName() == "red");
+}
+
+TEST_CASE("checkers.xml: against the computer, white answers red's move", "[checkers][think]")
+{
+	Board board(true);
+	REQUIRE(board.get("match").variable.at("players") == 1.0f);
+	board.space(3, 6);
+	board.space(4, 5);
+	REQUIRE(board.cursor().variable.at("turn") == 2.0f);
+	board.frames(1);
+	CHECK(board.cursor().lookName() == "cpufree");
+	// Your keys do nothing on its turn.
+	board.space(2, 3);
+	CHECK(board.cursor().lookName() == "cpufree");
+	board.untilRed();
+	CHECK(board.cursor().variable.at("turn") == 1.0f);
+	CHECK(board.cursor().lookName() == "redfree");
+	CHECK(board.count("white") == 12);
+	CHECK(board.count("red") == 12);
+	// One white man has stepped down off the third row.
+	int moved = 0;
+	for (int column = 1; column <= 8; ++column) { moved += board.at("white", column, 4) ? 1 : 0; }
+	CHECK(moved == 1);
+}
+
+TEST_CASE("checkers.xml: the computer does not step where it would be taken", "[checkers][think]")
+{
+	Board board(true);
+	// White's man on (2,3) can go to (1,4), or to (3,4) where red's man on
+	// (4,5) would take it; white's other man is hemmed in.
+	board.only({ { "red", 4, 5 }, { "red", 7, 8 }, { "red", 7, 2 }, { "red", 6, 3 }, { "white", 2, 3 }, { "white", 8, 1 } });
+	board.space(7, 8);
+	board.space(6, 7);
+	board.untilRed();
+	REQUIRE(board.cursor().variable.at("turn") == 1.0f);
+	CHECK(board.at("white", 1, 4));
+	CHECK_FALSE(board.at("white", 3, 4));
+}
+
+TEST_CASE("checkers.xml: the computer takes, and finishes a run of jumps to win", "[checkers][think]")
+{
+	Board board(true);
+	board.only({ { "red", 6, 3 }, { "red", 4, 5 }, { "red", 1, 8 }, { "white", 7, 2 }, { "white", 8, 1 } });
+	board.space(1, 8);
+	board.space(2, 7);
+	// Over (6,3), (4,5) and the man that just left (1,8): all three, and
+	// the game.
+	board.untilRed();
+	CHECK(board.at("white", 1, 8));
+	CHECK(board.count("red") == 0);
+	REQUIRE(board.state() == "over");
+	CHECK(board.get("winner").lookName() == "white");
+}
+
+TEST_CASE("checkers.xml: with two players the computer leaves white alone", "[checkers][think]")
+{
+	Board board;
+	REQUIRE(board.get("match").variable.at("players") == 2.0f);
+	board.space(3, 6);
+	board.space(4, 5);
+	board.frames(300);
+	CHECK(board.cursor().variable.at("turn") == 2.0f);
+	CHECK(board.cursor().lookName() == "whitefree");
 }

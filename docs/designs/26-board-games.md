@@ -1,6 +1,6 @@
 # Board games
 
-**Status:** Checkers Built (2026-10-31); a computer opponent, other board games Open.
+**Status:** Checkers Built (2026-10-31); its computer (`<think>`) Built (2026-11-01); other board games Open.
 
 ## What we looked for
 
@@ -23,8 +23,17 @@
 - **Crowning by a rule** (a condition on the row reached): conditions have no `self`, and a state's condition cannot change "the piece that just moved". `<promote>` inside the moves keeps it with the rule that leads there.
 - **Marking the piece held**: the cursor's look shows that something is held, not which piece. A `picked` name usable in `object=` would let the game change the held piece's look; left until a game needs it.
 
+## A computer opponent (2026-11-01)
+
+- Asked for (Beef): a "somewhat generic AI" that knows the rules and the end goals, for Checkers and Chess as well as enemies; "I don't expect it to play chess well". Agreed in discussion: the rules are already data, so the computer need not understand a game, only play it forward and score what comes of it.
+- **Chosen for board games: `<think>`**, a press command in a `<computer>`'s condition. It copies the board into a small table (cell, side, look per piece) and searches with negamax and alpha-beta, a few moves deep, using the pieces' own `<moves>`; no game objects are copied and nothing is drawn. Depth 4 by default: decent checkers, instantly.
+- **Goals mostly inferred** (Beef asked whether they must be told): the other side is what its pieces' jumps take; pieces count 1 each; a side with no move has lost (true of checkers; chess's stalemate would need saying). What no rule states, a king being worth more, is a `<worth sprite>` hint.
+- **It presses keys as a person would**, walking the picker and pressing the button, so the game's own actions still do the move and pass the turn. Its own key and its own cursor looks keep the player's keys out of its turn.
+- **Levels** (Beef: easy shadows, smarter returns to the middle): for Pong they are plain `<computer>` conditions, no search. Pong's speeds were set by Beef's rule that a paddle at the top cannot reach a ball sent from corner to corner, so neither level is unbeatable.
+- **Not built yet: lookahead for action games**, playing the game itself forward a second or two on a copy of the objects' numbers (pictures shared, no sound) for each choice of keys, scored by goals inferred from the conditions (a threshold's distance, a variable only ever increased). Discussed with Beef (2026-11-01) as the step after board games.
+
 ## Open
 
-- A computer opponent (a `<computer>` that presses keys cannot choose a move; it needs a move-choosing verb, perhaps "the move that takes most").
+- Lookahead for action games (above).
 - Draws (forty moves with no capture, a position repeated).
 - Other board games on the same words: halma and Chinese checkers (jumps over any class, not taking), reversi (placing new pieces that turn others over), chess (sliding moves of any length: a `<slide>` move, and pieces that block).

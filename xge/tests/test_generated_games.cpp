@@ -144,6 +144,7 @@ namespace
 			value(at + ".accelerationX", c.accelerationX);
 			value(at + ".accelerationY", c.accelerationY);
 			for (const std::string& player : c.players) { out << at << ".player " << player << "\n"; }
+			for (const auto& [look, worth] : c.worths) { out << at << ".worth " << look << " " << worth << "\n"; }
 		}
 
 		void commands(const std::string& at, const std::vector<RawCommand>& list)

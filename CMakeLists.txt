@@ -40,6 +40,7 @@ include(scripts/cmake/assets.cmake)
 set(ENGINE_SOURCES
 	"xge/lib/game/game.cpp"
 	"xge/lib/game/cells.cpp"
+	"xge/lib/game/think.cpp"
 	"xge/lib/engine/folder.cpp"
 	"xge/lib/engine/engine.cpp"
 	"xge/lib/engine/backends.cpp"

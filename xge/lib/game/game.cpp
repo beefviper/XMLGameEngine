@@ -2020,14 +2020,22 @@ namespace xge
 	std::set<KeyCode> Game::computerButtons()
 	{
 		std::set<KeyCode> held;
+		bool thought = false;
 		for (const Condition& condition : currentState.top().computer)
 		{
 			if (!holds(condition)) { continue; }
 			for (const Command& command : condition.commands)
 			{
 				if (const auto* hold = std::get_if<CmdHold>(&shapeOf(command))) { held.insert(hold->button); }
+				if (const auto* each = std::get_if<CmdThink>(&shapeOf(command)))
+				{
+					thought = true;
+					if (const auto key = think(*each)) { held.insert(*key); }
+				}
 			}
 		}
+		// Its turn is over (or the game was put back): the next is planned anew.
+		if (!thought) { thinking = {}; }
 		return held;
 	}
 

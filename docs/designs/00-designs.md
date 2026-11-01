@@ -34,7 +34,7 @@ Each file is one topic, so scan this table and open only the one you need. The b
 | [platforming](23-platforming.md) | Standing, leaping, ladders (Donkey Kong); arcing jump; `arc` and `grip` | Built; air control Idea |
 | [chase-and-paths](24-chase-and-paths.md) | `<chase>`, `<aim>`, paths and formations (Galaxian), maze walking (`<go>`, `<hunt>`, `<wander>`), AI targeting, computer players | Built; curved paths Idea |
 | [tables-and-tracks](25-tables-and-tracks.md) | Bodies over shaped surfaces: bounce by the normal, a key's three moments (Putt Park); polygon hills and wind (Cannon Hill); pivots, swept swings and flippers (Pinball); surfaces, wheel grip and laps (Speedway) | Built |
-| [board-games](26-board-games.md) | Pieces with `<moves>` (steps, jumps, forced, promote), a cursor that picks and places, the live number `moves` (Checkers) | Built; computer opponent Open |
+| [board-games](26-board-games.md) | Pieces with `<moves>` (steps, jumps, forced, promote), a cursor that picks and places, the live number `moves`, a computer that `<think>`s (Checkers); computer levels (Pong) | Built; lookahead for action games Decided |
 
 ## Pictures and sound
 

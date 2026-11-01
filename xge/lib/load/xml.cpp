@@ -1054,7 +1054,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "think";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1252,6 +1252,25 @@ namespace xge
 				command.amount = readValue(node, where);
 			}
 			if (verb == "hold") { command.button = requireAttribute(node, "button", where); }
+			if (verb == "think")
+			{
+				const std::string here = where + " > <think>";
+				command.button = requireAttribute(node, "button", here);
+				requireAttribute(node, "class", here);
+				requireAttribute(node, "object", here);
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					const std::string tag = child->getName();
+					if (tag == "depth") { command.amount = readValue(*child, here + " > <depth>"); continue; }
+					if (tag != "worth") { fail(here, "unknown <" + tag + ">; expected <depth>, then <worth>s"); }
+					const std::string look = requireAttribute(*child, "sprite", here + " > <worth>");
+					const std::string text = readText(*child);
+					char* end = nullptr;
+					const float worth = std::strtof(text.c_str(), &end);
+					if (text.empty() || end != text.c_str() + text.size()) { fail(here + " > <worth sprite=\"" + look + "\">", "is \"" + text + "\"; expected a number"); }
+					command.worths.emplace_back(look, worth);
+				}
+			}
 			if (verb == "hole")
 			{
 				// Its radius as its content, then how rough its edge is.

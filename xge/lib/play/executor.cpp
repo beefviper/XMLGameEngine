@@ -260,6 +260,7 @@ namespace xge
 			// <computer>, and a CmdLive is made into its command first.
 			[&](const CmdTrack&) {},
 			[&](const CmdHold&) {},
+			[&](const CmdThink&) {},
 			[&](const CmdLive&) {},
 		}, pressed ? now(command, made) : shapeOf(command));
 		return done;

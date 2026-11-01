@@ -4,8 +4,9 @@
 <!-- date: Oct 31, 2026 -->
 
 <!--
-  Checkers (draughts), for two players at one keyboard: red and white take
-  turns on an eight by eight board, red first. A man steps one square on
+  Checkers (draughts): red and white take turns on an eight by eight
+  board, red first; you play red against the computer, or two players
+  share the keyboard. A man steps one square on
   a slant towards the other side; a jump over an enemy piece into the
   empty square beyond takes it. A jump that can be made must be, and a
   piece that can jump again after a jump must go on. A man reaching the
@@ -16,7 +17,8 @@
   W A S D or the arrows move the cursor; Space picks up the piece under
   it, and puts it down where the cursor is. Space on another of your own
   pieces picks that one instead (not in the middle of a run of jumps).
-  P or Escape pauses; Space starts and plays again.
+  P or Escape pauses. On the title, Space plays the computer and 2 is
+  for two players; Space plays again.
 
   How it is written:
   * The board is a <map> of <cells />: r red men, w white men. Each side
@@ -34,6 +36,10 @@
     turn it is). Space triggers the action for the look it shows.
   * A side is stuck when the live number `moves` of its pieces adds up to
     nothing on its turn.
+  * The computer plays white with <think>: it looks four moves ahead,
+    a king worth three men, then walks the cursor and presses its own
+    key (F12, which only its looks answer), so your keys do nothing on
+    its turn.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -76,6 +82,10 @@
     <style name="cursor"><scale>6</scale><color>color.yellow</color></style>
   </styles>
   <objects>
+    <!-- how many play: 1 against the computer, 2 at one keyboard -->
+    <object name="match">
+      <variables><variable name="players">1</variable></variables>
+    </object>
     <object name="again">
       <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
@@ -89,7 +99,7 @@
           <position><x><centered /></x><y><centered>window.height.center - 120</centered></y></position>
         </object>
         <object name="help1">
-          <sprite><text style="help"><content>two players: red moves first, then white</content></text></sprite>
+          <sprite><text style="help"><content>you play red, and move first; 2 for two players</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
         </object>
         <object name="help2">
@@ -106,7 +116,8 @@
         </object>
       </objects>
       <inputs>
-        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+        <input><button>space</button><button>pad1.start</button><set variable="match.players">1</set><push state="playing" /></input>
+        <input><button>num2</button><button>numpad2</button><set variable="match.players">2</set><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
@@ -338,6 +349,34 @@
                 <row>**********</row>
               </bitmap>
             </sprite>
+            <sprite name="cpufree">
+              <bitmap style="cursor">
+                <row>**********</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>*........*</row>
+                <row>**********</row>
+              </bitmap>
+            </sprite>
+            <sprite name="cpuheld">
+              <bitmap style="cursor">
+                <row>**********</row>
+                <row>**********</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**......**</row>
+                <row>**********</row>
+                <row>**********</row>
+              </bitmap>
+            </sprite>
             <actions>
               <action name="up"><hop direction="up" /></action>
               <action name="down"><hop direction="down" /></action>
@@ -346,6 +385,7 @@
 
               <action name="redpick"><pick class="red" /><become sprite="redheld" /><play sound="pick" /></action>
               <action name="whitepick"><pick class="white" /><become sprite="whiteheld" /><play sound="pick" /></action>
+              <action name="cpupick"><pick class="white" /><become sprite="cpuheld" /><play sound="pick" /></action>
               <!-- the move made and over: the turn passes -->
               <action name="redplace">
                 <place />
@@ -384,6 +424,13 @@
           <trigger object="cursor" action="redpick" from="redfree" />
           <trigger object="cursor" action="whitepick" from="whitefree" />
         </input>
+        <!-- the computer's key: only its looks answer it -->
+        <input>
+          <button>f12</button>
+          <trigger object="cursor" action="whiteplace" from="cpuheld" />
+          <trigger object="cursor" action="cpupick" from="cpuheld" />
+          <trigger object="cursor" action="cpupick" from="cpufree" />
+        </input>
         <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
@@ -406,7 +453,28 @@
           <play sound="win" />
           <push state="over" />
         </condition>
+        <!-- against the computer, white's turn is its: the cursor takes its looks -->
+        <condition>
+          <all>
+            <condition object="match" variable="players"><equal>1</equal></condition>
+            <condition object="cursor" variable="turn"><equal>2</equal></condition>
+          </all>
+          <become object="cursor" sprite="cpufree" from="whitefree" />
+        </condition>
       </conditions>
+      <!-- white's move: four ahead, a king worth three men -->
+      <computer>
+        <condition>
+          <all>
+            <condition object="match" variable="players"><equal>1</equal></condition>
+            <condition object="cursor" variable="turn"><equal>2</equal></condition>
+          </all>
+          <think class="white" object="cursor" button="f12">
+            <depth>4</depth>
+            <worth sprite="king">3</worth>
+          </think>
+        </condition>
+      </computer>
     </state>
     <state name="paused">
       <objects>

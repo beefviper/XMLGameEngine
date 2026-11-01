@@ -203,6 +203,21 @@ namespace xge
 			}
 			return CmdHold{ button };
 		}
+		if (verb == "think")
+		{
+			const KeyCode button = keyCodeFromString(raw.button);
+			if (button == KeyCode::Unknown)
+			{
+				throw std::runtime_error("<think button=\"" + raw.button + "\">: there is no key named '" + raw.button + "'");
+			}
+			const bool none = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
+			const float depth = none ? 4.0f : evaluate(raw.amount);
+			if (!(depth >= 1.0f && depth <= 8.0f) || depth != std::floor(depth))
+			{
+				throw std::runtime_error("<think> looks " + formatDisplayNumber(depth) + " moves ahead; expected a whole number from 1 to 8");
+			}
+			return CmdThink{ raw.objClass, raw.object, button, static_cast<int>(depth), raw.worths };
+		}
 
 		// The speed of a <go>, <hunt> or <wander>, which may not be below 0.
 		const auto speedOf = [&](const char* what)
@@ -523,6 +538,12 @@ namespace xge
 			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
 			[&](const CmdKnock& k) { o << "knock(" << k.bounce << ")"; },
 			[&](const CmdHold& h) { o << "hold(" << keyCodeToString(h.button) << ")"; },
+			[&](const CmdThink& t)
+			{
+				o << "think(" << t.objClass << ", " << t.picker << ", " << keyCodeToString(t.button) << ", " << t.depth;
+				for (const auto& [look, worth] : t.worths) { o << ", " << look << "=" << worth; }
+				o << ")";
+			},
 			[&](const CmdHole& h) { o << "hole(" << h.radius << ", " << h.rough << ")"; },
 			[&](const CmdReverse&) { o << "reverse"; },
 			[&](const CmdMove& m)

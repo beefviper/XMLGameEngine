@@ -99,6 +99,7 @@ namespace xge
 				[](const CmdKnock&) { return std::string("<knock>"); },
 				[](const CmdHole&) { return std::string("<hole>"); },
 				[](const CmdHold&) { return std::string("<hold>"); },
+				[](const CmdThink&) { return std::string("<think>"); },
 				[](const CmdReverse&) { return std::string("<reverse />"); },
 				[](const CmdMove&) { return std::string("<move>"); },
 				[](const CmdHop&) { return std::string("<hop>"); },
@@ -190,7 +191,7 @@ namespace xge
 			static const std::vector<std::string> edge{ "<stick />", "<wrap />" };
 			static const std::vector<std::string> bounce{ "<bounce />" };
 			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<jump>", "<leap>", "<swing>", "<thrust>", "<turn>", "<track />" };
-			static const std::vector<std::string> press{ "<hold>" };
+			static const std::vector<std::string> press{ "<hold>", "<think>" };
 			static const std::vector<std::string> cells{ "<clear />", "<collapse />", "<fall />" };
 
 			static const std::vector<std::string> stateCommands = commandsOf({ &changes, &flow });

@@ -498,6 +498,19 @@ namespace xge
 			int row{};
 			Object* taken{ nullptr };
 		};
+		// <think> (game/think.cpp): the plan the computer is carrying out,
+		// the cells the picker goes to in turn (the piece, then each cell of
+		// its move), and the frames until its next step.
+		struct Thinking
+		{
+			bool planned{ false };
+			std::vector<std::pair<int, int>> cells;
+			std::size_t next{};
+			int wait{};
+		};
+		Thinking thinking;
+		std::optional<KeyCode> think(const CmdThink& think);
+		std::vector<std::pair<int, int>> bestMove(const CmdThink& think, const Object& picker);
 		const Object::MoveSet* moveSetOf(const Object& piece) const noexcept;
 		std::vector<PieceMoveTo> movesOf(Object& piece, bool jumpsOnly);
 		std::vector<PieceMoveTo> legalMoves(Object& piece, bool jumpsOnly);
