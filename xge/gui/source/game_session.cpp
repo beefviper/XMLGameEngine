@@ -102,6 +102,8 @@ namespace xge
 
 			engine = std::make_unique<Engine>(*game, makeWindow(desc), makeAudio());
 			engine->keepIn(keptFileFor(file.toStdString()).string());
+			// A computer thinks beside the game, which goes on being drawn.
+			game->thinkInBackground(true);
 
 			// The frame pace: the game moves a fixed amount a frame, so this is
 			// also its speed.

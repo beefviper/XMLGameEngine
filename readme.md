@@ -186,7 +186,7 @@ There are 47 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Reversi | `flank` in a piece's `moves` (a new piece traps a line and turns it), a cursor that `put`s pieces, `count` to keep the score |
 | Four in a Row | `fall` in a piece's `moves` (a put drops down its column), wins read from the map's `line` check by the computer |
 | Tic-Tac-Toe | empty `moves`: a put in any free square; an easy or a smart computer |
-| Dots and Boxes | `on` in a piece's `moves` (a line put in place of its faint slot), a put that `close`s a box and keeps the turn, a computer that knows it goes again |
+| Dots and Boxes | `on` in a piece's `moves` (a line put in place of its faint slot), a put that `close`s a box and keeps the turn, a cursor that hops and follows the mouse `onto` free places only, a computer that knows it goes again and thinks while the game goes on |
 | Pinball | `pivot` and `swing`: a flipper turns about its hinge in one eased stroke (from still, fastest half way, to still), the turn swept through the frame, and a `knock` lends the ball the speed of the point that strikes it; `friction` brings a cradled ball to rest |
 
 The games share one key convention: Space starts, pauses and restarts, player one is W A S D (plus the arrows), and where Space fires, P or Escape pauses.

@@ -2041,7 +2041,7 @@ namespace xge
 			}
 		}
 		// Its turn is over (or the game was put back): the next is planned anew.
-		if (!thought) { thinking = {}; }
+		if (!thought) { stopThinking(); }
 		return held;
 	}
 

@@ -116,6 +116,9 @@ if (NOT lunasvg_FOUND)
 	FetchContent_MakeAvailable(lunasvg)
 endif()
 
+# A computer player thinks on a thread of its own.
+find_package(Threads REQUIRED)
+
 add_executable(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text>
@@ -129,7 +132,7 @@ add_executable(</xsl:text>
     <xsl:for-each select="$engine">
       <xsl:value-of select="concat('&#9;engine/', substring-after(., '/'), '&#10;')" />
     </xsl:for-each>
-    <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio lunasvg::lunasvg)&#10;')" />
+    <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio lunasvg::lunasvg Threads::Threads)&#10;')" />
     <xsl:text>
 # The warnings the engine is built with (xge_warnings in its
 # scripts/cmake/platform.cmake), for its code and the game's alike, /bigobj

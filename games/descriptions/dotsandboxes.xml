@@ -10,9 +10,11 @@
   and that player goes again. When every box is claimed, more boxes wins.
   You play red against the computer, or two players share the keyboard.
 
-  W A S D or the arrows move the cursor a step at a time over the grid,
-  Space draws the line under it. The mouse works too: the cursor follows
-  it and a left click draws. P or Escape pauses. On the title, Space
+  W A S D or the arrows move the cursor over the places still free:
+  left and right along a row of them, up and down to the next row (across
+  lines and down lines in turn). Space draws the line under it. The mouse
+  works too: the cursor goes to the free place nearest the pointer and a
+  left click draws it. While the computer plays, the keys do nothing. P or Escape pauses. On the title, Space
   plays the computer and 2 is for two players. Space plays again.
 
   How it is written:
@@ -26,6 +28,8 @@
     line with no place for a line left around it becomes red's. A put
     that closes one counts as refused, so the turn does not pass.
   * <count> keeps the score, and how many boxes are still open.
+  * The cursor's hops and its <track> name the places with <onto>, so it
+    only ever stands on a place a line can still go.
   * The computer plays blue with <think>, three lines ahead: it reads
     from the cursor's own actions that blue's put closes boxes and goes
     again, and counts boxes.
@@ -109,6 +113,7 @@
         <object name="whoseturn">
           <sprite name="red"><text style="hud"><content>red to move</content><color>color.red</color></text></sprite>
           <sprite name="blue"><text style="hud"><content>blue to move</content><color>color.cyan</color></text></sprite>
+          <sprite name="thinking"><text style="hud"><content>blue is thinking</content><color>color.cyan</color></text></sprite>
           <position><x><centered /></x><y>24</y></position>
         </object>
         <object name="redscore">
@@ -250,11 +255,12 @@
               <last object="lastmark" />
             </marks>
             <actions>
-              <action name="up"><hop direction="up" /></action>
-              <action name="down"><hop direction="down" /></action>
-              <action name="left"><hop direction="left" /></action>
-              <action name="right"><hop direction="right" /></action>
-              <action name="point"><track /></action>
+              <!-- only onto places still free: along a row of them, or to the next row -->
+              <action name="up"><hop direction="up"><onto class="hslot" /><onto class="vslot" /></hop></action>
+              <action name="down"><hop direction="down"><onto class="hslot" /><onto class="vslot" /></hop></action>
+              <action name="left"><hop direction="left"><onto class="hslot" /><onto class="vslot" /></hop></action>
+              <action name="right"><hop direction="right"><onto class="hslot" /><onto class="vslot" /></hop></action>
+              <action name="point"><track><onto class="hslot" /><onto class="vslot" /></track></action>
               <!-- a line drawn; one that closes a box keeps the turn -->
               <action name="redput">
                 <put class="redline"><close class="box" object="redbox" /></put>
@@ -284,10 +290,11 @@
         </map>
       </objects>
       <inputs>
-        <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="cursor" action="up" /></input>
-        <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="cursor" action="down" /></input>
-        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="cursor" action="left" /></input>
-        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" /></input>
+        <!-- a player's keys: not while the computer plays (its look is cpu) -->
+        <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="cursor" action="up" from="red" /><trigger object="cursor" action="up" from="blue" /></input>
+        <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="cursor" action="down" from="red" /><trigger object="cursor" action="down" from="blue" /></input>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="cursor" action="left" from="red" /><trigger object="cursor" action="left" from="blue" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" from="red" /><trigger object="cursor" action="right" from="blue" /></input>
         <input>
           <button>space</button><button>pad1.a</button><button>mouse.left</button>
           <trigger object="cursor" action="redput" from="red" />
@@ -331,6 +338,7 @@
             <condition object="cursor" variable="turn"><equal>2</equal></condition>
           </all>
           <become object="cursor" sprite="cpu" from="blue" />
+          <become object="whoseturn" sprite="thinking" from="blue" />
         </condition>
       </conditions>
       <!-- blue's line: three ahead -->

@@ -94,7 +94,7 @@ TEST_CASE("the new commands print the way they are written", "[new_verbs][comman
 {
 	std::ostringstream out;
 	out << Command{ CmdDecrement{ { "frog", "lives" } } } << ' '
-		<< Command{ CmdHop{ Direction::Left, 48.0f } } << ' '
+		<< Command{ CmdHop{ Direction::Left, 48.0f, {}, 0.0f, 0.0f, {} } } << ' '
 		<< Command{ CmdWrap{} } << ' '
 		<< Command{ CmdRide{} };
 

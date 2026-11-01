@@ -965,6 +965,14 @@ namespace xge
 		int moveFromRow{};
 		int moveToColumn{};
 		int moveToRow{};
+		// A hop up or down <onto> pieces keeps to the column the first of
+		// them started from (keptColumn), while it is still in the cell the
+		// last one left it in (keptAt): a text cursor's way.
+		int keptColumn{};
+		std::pair<int, int> keptAt{};
+		// A <track> <onto> pieces: where the control points, in pixels, each
+		// half as it last came (below 0: not yet).
+		Vector2f pointer{ -1.0f, -1.0f };
 
 		// <marks>: copies of the mark pieces put in the cells marked (see
 		// Game::showMarks), made again only when what is marked changes.

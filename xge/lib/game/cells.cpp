@@ -1281,8 +1281,89 @@ namespace xge
 		return true;
 	}
 
-	void Game::trackCells(Object& object, bool horizontal, float at)
+	// The cells holding a piece in play of one of these classes.
+	std::vector<std::pair<int, int>> Game::ontoCells(const std::vector<std::string>& onto)
 	{
+		std::vector<std::pair<int, int>> cells;
+		for (const Object& object : objects)
+		{
+			if (!object.onCells || !isShown(object)) { continue; }
+			if (std::find(onto.begin(), onto.end(), object.objClass) == onto.end()) { continue; }
+			cells.emplace_back(whole(object.cellColumn), whole(object.cellRow));
+		}
+		return cells;
+	}
+
+	// <hop direction="right"><onto class="hslot" /></hop>: left and right,
+	// to the nearest such cell along the row; up and down, to the nearest
+	// row ahead that has one, the cell in it nearest the column kept (the
+	// one the first of these hops started from, as a text cursor keeps
+	// its column). Refused when there is none that way.
+	bool Game::hopOnto(Object& mover, Direction direction, const std::vector<std::string>& onto)
+	{
+		const int column = whole(mover.cellColumn);
+		const int row = whole(mover.cellRow);
+		const bool upDown = direction == Direction::Up || direction == Direction::Down;
+		const int ahead = direction == Direction::Down || direction == Direction::Right ? 1 : -1;
+		if (!upDown || mover.keptAt != std::pair<int, int>{ column, row }) { mover.keptColumn = column; }
+
+		std::optional<std::pair<int, int>> best;
+		int bestAlong = 0;
+		int bestAcross = 0;
+		for (const auto& [c, r] : ontoCells(onto))
+		{
+			if (!upDown && r != row) { continue; }
+			const int along = upDown ? (r - row) * ahead : (c - column) * ahead;
+			const int across = upDown ? std::abs(c - mover.keptColumn) : 0;
+			if (along <= 0) { continue; }
+			if (!best || along < bestAlong || (along == bestAlong && (across < bestAcross || (across == bestAcross && c < best->first))))
+			{
+				best = std::pair<int, int>{ c, r };
+				bestAlong = along;
+				bestAcross = across;
+			}
+		}
+		if (!best) { return false; }
+		putInCell(mover, best->first, best->second);
+		mover.facing = direction;
+		mover.keptAt = upDown ? *best : std::pair<int, int>{};
+		return true;
+	}
+
+	void Game::trackCells(Object& object, bool horizontal, float at, const std::vector<std::string>& onto)
+	{
+		// <onto>: the cell nearest where it points, of those holding such a
+		// piece, while it points over the map.
+		if (!onto.empty())
+		{
+			(horizontal ? object.pointer.x : object.pointer.y) = at;
+			const auto middle = [&](int column, int row)
+			{
+				return Vector2f{ object.mapOrigin.x + (static_cast<float>(column) - 0.5f) * object.mapTile.x,
+					object.mapOrigin.y + (static_cast<float>(row) - 0.5f) * object.mapTile.y };
+			};
+			Vector2f point = object.pointer;
+			const Vector2f here = middle(whole(object.cellColumn), whole(object.cellRow));
+			if (point.x < 0.0f) { point.x = here.x; }
+			if (point.y < 0.0f) { point.y = here.y; }
+			if (point.x < object.mapOrigin.x || point.y < object.mapOrigin.y
+				|| point.x > object.mapOrigin.x + object.mapTile.x * static_cast<float>(object.mapColumns)
+				|| point.y > object.mapOrigin.y + object.mapTile.y * static_cast<float>(object.mapRows)) { return; }
+			std::optional<std::pair<int, int>> best;
+			float bestDistance = 0.0f;
+			for (const auto& [c, r] : ontoCells(onto))
+			{
+				const Vector2f to = middle(c, r);
+				const float distance = (to.x - point.x) * (to.x - point.x) + (to.y - point.y) * (to.y - point.y);
+				if (!best || distance < bestDistance)
+				{
+					best = std::pair<int, int>{ c, r };
+					bestDistance = distance;
+				}
+			}
+			if (best && (best->first != whole(object.cellColumn) || best->second != whole(object.cellRow))) { putInCell(object, best->first, best->second); }
+			return;
+		}
 		const float from = horizontal ? object.mapOrigin.x : object.mapOrigin.y;
 		const float tile = horizontal ? object.mapTile.x : object.mapTile.y;
 		if (tile <= 0.0f || at < from) { return; }

@@ -132,6 +132,8 @@ namespace xge
 
 	void Engine::loop(void)
 	{
+		// A computer thinks beside the game, which goes on being drawn.
+		game.thinkInBackground(true);
 		while (isWindowOpen())
 		{
 			step();

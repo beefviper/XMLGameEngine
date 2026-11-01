@@ -67,7 +67,7 @@ namespace xge
 		if (verb == "ride")   { return CmdRide{}; }
 		if (verb == "carry")  { return CmdCarry{}; }
 		if (verb == "drop")   { return CmdDrop{}; }
-		if (verb == "track")  { return CmdTrack{ raw.path }; }
+		if (verb == "track")  { return CmdTrack{ raw.path, raw.onto }; }
 		if (verb == "land")   { return CmdLand{}; }
 		if (verb == "reverse") { return CmdReverse{}; }
 		if (verb == "settle") { return CmdSettle{}; }
@@ -131,9 +131,10 @@ namespace xge
 			const auto dash = name.find('-');
 			if (dash == std::string::npos)
 			{
-				CmdHop hop{ directionFromName(name, verb), amountOr0(), {}, hopSeconds() };
+				CmdHop hop{ directionFromName(name, verb), amountOr0(), {}, hopSeconds(), 0.0f, {} };
 				hop.arc = arcOf("hop", hop.seconds);
 				hop.step = stepToward(hop.direction, hop.distance);
+				hop.onto = raw.onto;
 				return hop;
 			}
 
@@ -147,7 +148,7 @@ namespace xge
 			const float distance = split ? 0.0f : evaluate(raw.amount);
 			const float across = split ? evaluate(raw.positionX) : distance;
 			const float down = split ? evaluate(raw.positionY) : distance;
-			CmdHop hop{ upDown, distance, {}, hopSeconds() };
+			CmdHop hop{ upDown, distance, {}, hopSeconds(), 0.0f, {} };
 			hop.arc = arcOf("hop", hop.seconds);
 			hop.step = { leftRight == Direction::Left ? -across : across, upDown == Direction::Up ? -down : down };
 			return hop;
@@ -538,7 +539,11 @@ namespace xge
 			[&](const CmdRide&) { o << "ride"; },
 			[&](const CmdCarry&) { o << "carry"; },
 			[&](const CmdDrop&) { o << "drop"; },
-			[&](const CmdTrack& t) { o << "track" << (t.path.empty() ? "" : "(" + t.path + ")"); },
+			[&](const CmdTrack& t)
+			{
+				o << "track" << (t.path.empty() ? "" : "(" + t.path + ")");
+				for (const std::string& onto : t.onto) { o << " onto " << onto; }
+			},
 			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
 			[&](const CmdKnock& k) { o << "knock(" << k.bounce << ")"; },
 			[&](const CmdHold& h) { o << "hold(" << keyCodeToString(h.button) << ")"; },
@@ -567,7 +572,9 @@ namespace xge
 				if (h.step.x != 0.0f && h.step.y != 0.0f) { o << "hop(" << h.step.x << ", " << h.step.y; }
 				else { o << "hop." << direction << "(" << h.distance; }
 				o << (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
-					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{}) << ")";
+					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{});
+				for (const std::string& onto : h.onto) { o << ", onto " << onto; }
+				o << ")";
 			},
 			[&](const CmdHuntHop& h)
 			{

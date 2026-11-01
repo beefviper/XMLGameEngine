@@ -13,14 +13,22 @@
 // put rather than moved (<flank>) is played the same way: each move is a
 // new piece in a cell and the pieces it turns, a side with no move passes,
 // and the game is over when neither side can move.
+//
+// The table is all the search reads: it holds its own copy of what it
+// needs of each kind of piece, so the search can run beside the game, on a
+// thread of its own, while the game goes on drawing and playing sounds.
 
 #include "game/game.h"
 #include "game/random.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
+#include <deque>
 #include <limits>
+#include <map>
 #include <optional>
+#include <thread>
 #include <utility>
 
 namespace xge
@@ -36,9 +44,19 @@ namespace xge
 		// A won or lost game, worth more than any count of pieces.
 		constexpr float decided = 1.0e6f;
 
+		// What the search needs of a kind of piece: its class, its rules
+		// and its looks (a copy, so the game may change while it thinks).
+		struct Kind
+		{
+			std::string objClass;
+			std::vector<Object::MoveSet> moveSets;
+			std::size_t look{};
+			std::vector<std::string> lookNames;
+		};
+
 		struct Piece
 		{
-			const Object* object{ nullptr };
+			const Kind* object{ nullptr };
 			int column{};
 			int row{};
 			std::size_t look{};
@@ -60,7 +78,7 @@ namespace xge
 			bool put{ false };
 			int side{ 0 };
 			std::vector<std::size_t> turned;
-			const Object* kind{ nullptr };  // a put: the piece it copies
+			const Kind* kind{ nullptr };  // a put: the piece it copies
 			int under{ -1 };                // a put <on> a piece: that piece
 		};
 
@@ -75,21 +93,35 @@ namespace xge
 
 		struct Board
 		{
+			std::deque<Kind> types;   // every kind on the board (a deque: pointers to them stay good)
+			std::map<const Object*, const Kind*> typeOf;
 			std::vector<Piece> pieces;
 			int columns{};
 			int rows{};
 			std::vector<int> grid;    // a piece's index + 1 in each cell, 0 for none
 			std::vector<std::string> sides;
 			// Each side's piece a put copies (none: its pieces are moved).
-			const Object* kinds[2]{ nullptr, nullptr };
+			const Kind* kinds[2]{ nullptr, nullptr };
 			// Every piece each side may put (one of each group), the classes
 			// they go <on>, and what a side's put <close>s and the class of
 			// what it claims with.
-			std::vector<const Object*> allKinds[2];
+			std::vector<const Kind*> allKinds[2];
 			std::vector<std::string> places;
 			std::string closeClass[2];
 			std::string ownClass[2];
 			std::vector<LineRule> lines;
+
+			// The kind of a piece of the game, copied the first time.
+			const Kind* kindOf(const Object* object)
+			{
+				if (!object) { return nullptr; }
+				if (const auto found = typeOf.find(object); found != typeOf.end()) { return found->second; }
+				Kind kind{ object->objClass, object->moveSets, object->look, {} };
+				for (const auto& look : object->looks) { kind.lookNames.push_back(look.name); }
+				types.push_back(std::move(kind));
+				typeOf[object] = &types.back();
+				return &types.back();
+			}
 
 			bool claims() const { return !closeClass[0].empty() || !closeClass[1].empty(); }
 
@@ -97,7 +129,7 @@ namespace xge
 			bool onBoard(int column, int row) const { return column >= 1 && row >= 1 && column <= columns && row <= rows; }
 			bool empty(int column, int row) { return onBoard(column, row) && at(column, row) == 0; }
 
-			static const Object::MoveSet* setOf(const Object& object, std::size_t look)
+			static const Object::MoveSet* setOf(const Kind& object, std::size_t look)
 			{
 				const Object::MoveSet* any = nullptr;
 				for (const Object::MoveSet& set : object.moveSets)
@@ -112,7 +144,7 @@ namespace xge
 			// Whether the side's pieces are put rather than moved.
 			bool puts(int side) const
 			{
-				const Object* kind = kinds[side];
+				const Kind* kind = kinds[side];
 				const Object::MoveSet* set = kind ? setOf(*kind, kind->look) : nullptr;
 				return set && set->puts();
 			}
@@ -121,7 +153,7 @@ namespace xge
 			// that stops is won by more pieces; else it is drawn.
 			bool flanks(int side) const
 			{
-				const Object* kind = kinds[side];
+				const Kind* kind = kinds[side];
 				const Object::MoveSet* set = kind ? setOf(*kind, kind->look) : nullptr;
 				return set && !set->flanks.empty();
 			}
@@ -190,13 +222,13 @@ namespace xge
 			// pieces that fits each cell.
 			void putMoves(int side, std::vector<Move>& out)
 			{
-				std::vector<const Object*> each = allKinds[side];
+				std::vector<const Kind*> each = allKinds[side];
 				if (each.empty()) { each.push_back(kinds[side]); }
 				for (int row = 1; row <= rows; ++row)
 				{
 					for (int column = 1; column <= columns; ++column)
 					{
-						for (const Object* kind : each)
+						for (const Kind* kind : each)
 						{
 							const Object::MoveSet* set = setOf(*kind, kind->look);
 							if (!set) { continue; }
@@ -466,10 +498,11 @@ namespace xge
 		{
 			Board& board;
 			const CmdThink& think;
+			const std::atomic<bool>& stop;
 
 			float worthOf(const Piece& piece) const
 			{
-				const std::string& look = piece.look < piece.object->looks.size() ? piece.object->looks[piece.look].name : std::string();
+				const std::string& look = piece.look < piece.object->lookNames.size() ? piece.object->lookNames[piece.look] : std::string();
 				for (const auto& [name, worth] : think.worths)
 				{
 					if (name == look) { return worth; }
@@ -507,6 +540,8 @@ namespace xge
 			// sooner is worse, so it plays for the quickest win.
 			float value(int side, int depth, float alpha, float beta)
 			{
+				// Its turn is over or the game was put back: nothing is wanted.
+				if (stop.load(std::memory_order_relaxed)) { return 0.0f; }
 				const std::vector<Move> moves = board.moves(side);
 				const float now = side == 0 ? score() : -score();
 				if (moves.empty() && board.puts(side))
@@ -541,8 +576,25 @@ namespace xge
 		};
 	}
 
-	std::vector<std::pair<int, int>> Game::bestMove(const CmdThink& think, const Object& picker)
+	// A search: the table it is made on, what it is asked, and, once it is
+	// done, the best moves. `stop` tells it to give up (its turn is over).
+	struct ThinkJob
 	{
+		Board board;
+		CmdThink think;
+		int pickerRow{};
+		std::atomic<bool> stop{ false };
+		std::atomic<bool> done{ false };
+		std::vector<std::vector<std::pair<int, int>>> best;
+	};
+
+	// The table of the board as it is now, and the search to be made on it.
+	std::shared_ptr<ThinkJob> Game::startThinking(const CmdThink& think, const Object& picker)
+	{
+		auto job = std::make_shared<ThinkJob>();
+		job->think = think;
+		job->pickerRow = whole(picker.cellRow);
+		Board& board = job->board;
 		// The board: the map of cells its pieces are on (the first piece of
 		// its class with moves), and everything on that map.
 		const Object* first = nullptr;
@@ -552,9 +604,12 @@ namespace xge
 		}
 		// None on the board yet (pieces put): the one a put copies.
 		if (!first) { first = putTemplate(think.objClass); }
-		if (!first || first->moveSets.empty()) { return {}; }
+		if (!first || first->moveSets.empty())
+		{
+			job->done = true;
+			return job;
+		}
 
-		Board board;
 		board.columns = first->mapColumns;
 		board.rows = first->mapRows;
 		board.grid.assign(static_cast<std::size_t>(board.columns * board.rows), 0);
@@ -577,13 +632,14 @@ namespace xge
 			const Object& object = objects[i];
 			if (object.onCells && object.mapName == first->mapName && !object.moveSets.empty() && object.objClass != think.objClass) { other = object.objClass; }
 		}
-		board.kinds[0] = putTemplate(think.objClass);
-		board.kinds[1] = other.empty() ? nullptr : putTemplate(other);
+		board.kinds[0] = board.kindOf(putTemplate(think.objClass));
+		board.kinds[1] = other.empty() ? nullptr : board.kindOf(putTemplate(other));
 		for (int side = 0; side < 2; ++side)
 		{
 			if (side == 1 && other.empty()) { break; }
-			for (const Object* kind : putTemplates(side == 0 ? think.objClass : other))
+			for (const Object* each : putTemplates(side == 0 ? think.objClass : other))
 			{
+				const Kind* kind = board.kindOf(each);
 				board.allKinds[side].push_back(kind);
 				if (const Object::MoveSet* set = Board::setOf(*kind, kind->look))
 				{
@@ -609,7 +665,8 @@ namespace xge
 			}
 		}
 		// The map's checks, as its pieces written carry them (a copy may not).
-		const Object* written = board.kinds[0] ? board.kinds[0] : first;
+		const Object* written = putTemplate(think.objClass);
+		if (!written) { written = first; }
 		for (const Object::CellCheck& check : written->cellChecks)
 		{
 			if (check.kind == "line") { board.lines.push_back({ check.objClass, check.count, check.straight }); }
@@ -634,7 +691,7 @@ namespace xge
 			const int row = whole(object.cellRow);
 			if (!board.onBoard(column, row)) { continue; }
 			Piece piece;
-			piece.object = &object;
+			piece.object = board.kindOf(&object);
 			piece.column = column;
 			piece.row = row;
 			piece.look = object.look;
@@ -647,33 +704,69 @@ namespace xge
 			board.at(column, row) = static_cast<int>(board.pieces.size());
 		}
 
-		// Every move it can make now, each played out; the best, one of
-		// the equals at random.
-		Search search{ board, think };
-		const std::vector<Move> moves = board.moves(0);
-		std::vector<const Move*> best;
-		float bestValue = -std::numeric_limits<float>::infinity();
-		for (const Move& move : moves)
+		// Thought about beside the game, or at once.
+		if (thinkAside)
 		{
-			const Board::Undo undo = board.make(move);
-			const float infinity = std::numeric_limits<float>::infinity();
-			const float got = board.madeLine(move) ? decided + static_cast<float>(think.depth)
-				: !undo.closed.empty() ? search.value(0, think.depth - 1, -infinity, infinity)
-				: -search.value(1, think.depth - 1, -infinity, infinity);
-			board.unmake(move, undo);
-			if (got > bestValue) { bestValue = got; best.clear(); }
-			if (got == bestValue) { best.push_back(&move); }
+			std::thread([job] { runThinking(*job); }).detach();
 		}
-		if (best.empty()) { return {}; }
-		const std::size_t pick = std::min(best.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(best.size()))));
-		std::vector<std::pair<int, int>> cells = best[pick]->cells;
-		// A piece that falls is dropped from the picker's own row.
-		if (best[pick]->put)
+		else
 		{
-			const Object::MoveSet* set = Board::setOf(*board.kinds[0], board.kinds[0]->look);
-			if (set && set->fall) { cells.front().second = whole(picker.cellRow); }
+			runThinking(*job);
 		}
-		return cells;
+		return job;
+	}
+
+	// Every move it can make now, each played out: the best, all of them
+	// that are as good.
+	void Game::runThinking(ThinkJob& job)
+	{
+		try
+		{
+			Board& board = job.board;
+			const CmdThink& think = job.think;
+			Search search{ board, think, job.stop };
+			const std::vector<Move> moves = board.moves(0);
+			std::vector<const Move*> best;
+			float bestValue = -std::numeric_limits<float>::infinity();
+			for (const Move& move : moves)
+			{
+				const Board::Undo undo = board.make(move);
+				const float infinity = std::numeric_limits<float>::infinity();
+				const float got = board.madeLine(move) ? decided + static_cast<float>(think.depth)
+					: !undo.closed.empty() ? search.value(0, think.depth - 1, -infinity, infinity)
+					: -search.value(1, think.depth - 1, -infinity, infinity);
+				board.unmake(move, undo);
+				if (got > bestValue) { bestValue = got; best.clear(); }
+				if (got == bestValue) { best.push_back(&move); }
+			}
+			for (const Move* move : best)
+			{
+				std::vector<std::pair<int, int>> cells = move->cells;
+				// A piece that falls is dropped from the picker's own row.
+				if (move->put)
+				{
+					const Object::MoveSet* set = Board::setOf(*board.kinds[0], board.kinds[0]->look);
+					if (set && set->fall) { cells.front().second = job.pickerRow; }
+				}
+				job.best.push_back(std::move(cells));
+			}
+		}
+		catch (...)
+		{
+			job.best.clear();
+		}
+		job.done = true;
+	}
+
+	void Game::stopThinking()
+	{
+		if (thinking.job) { thinking.job->stop = true; }
+		thinking = {};
+	}
+
+	void Game::thinkInBackground(bool aside) noexcept
+	{
+		thinkAside = aside;
 	}
 
 	std::optional<KeyCode> Game::think(const CmdThink& think)
@@ -686,11 +779,20 @@ namespace xge
 		}
 		if (!picker || !picker->onCells) { return std::nullopt; }
 
+		// Its move is thought about first (the frame its turn came is drawn
+		// before, the sounds of the move before it heard); then made.
 		if (!thinking.planned)
 		{
+			if (!thinking.job) { thinking.job = startThinking(think, *picker); }
+			if (!thinking.job->done) { return std::nullopt; }
+			const std::vector<std::vector<std::pair<int, int>>> best = std::move(thinking.job->best);
 			thinking = {};
 			thinking.planned = true;
-			thinking.cells = bestMove(think, *picker);
+			if (!best.empty())
+			{
+				const std::size_t pick = std::min(best.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(best.size()))));
+				thinking.cells = best[pick];
+			}
 			thinking.wait = pace;
 		}
 		if (--thinking.wait > 0) { return std::nullopt; }

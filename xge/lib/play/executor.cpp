@@ -94,7 +94,7 @@ namespace xge
 			if (along->path.empty())
 			{
 				const float span = horizontal ? window.width : window.height;
-				if (object.onCells) { game.trackCells(object, horizontal, fraction * span); }
+				if (object.onCells) { game.trackCells(object, horizontal, fraction * span, along->onto); }
 				else { track(object, horizontal, fraction, span); }
 			}
 			else if (const auto path = game.getPaths().find(along->path); path != game.getPaths().end())
@@ -540,6 +540,7 @@ namespace xge
 	{
 		// On a cell map: whole cells (one, with no distance), refused (and
 		// touching) when it cannot go.
+		if (object.onCells && !command.onto.empty()) { return game.hopOnto(object, command.direction, command.onto); }
 		if (object.onCells)
 		{
 			const auto cells = [](float pixels, float distance)
@@ -611,7 +612,7 @@ namespace xge
 		}
 		if (!best) { return false; }
 
-		return hop(object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds, hunt.arc });
+		return hop(object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds, hunt.arc, {} });
 	}
 
 	void CommandExecutor::queueHop(Object& object, Vector2f step)

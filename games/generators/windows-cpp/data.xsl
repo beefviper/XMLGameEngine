@@ -189,6 +189,16 @@
           </xsl:choose>
           <xsl:text>;</xsl:text>
         </xsl:when>
+        <!-- a hop or a track on cells onto pieces of these classes -->
+        <xsl:when test="($verb = 'hop' or $verb = 'track') and $node/onto">
+          <xsl:text> command.onto = {</xsl:text>
+          <xsl:for-each select="$node/onto">
+            <xsl:if test="position() &gt; 1">,</xsl:if>
+            <xsl:text> </xsl:text>
+            <xsl:call-template name="string"><xsl:with-param name="text" select="@class" /></xsl:call-template>
+          </xsl:for-each>
+          <xsl:text> };</xsl:text>
+        </xsl:when>
         <!-- a hop's step: one distance, or across and up or down, and how long -->
         <xsl:when test="$verb = 'hop' and ($node/x or $node/seconds or $node/arc)">
           <xsl:call-template name="hop-parts">

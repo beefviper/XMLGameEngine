@@ -771,9 +771,17 @@
     </xs:restriction>
   </xs:simpleType>
   <!-- hop: how far, as its value, or an <x> and a <y>, then how long it takes, and how high it goes on the way (an <arc>, which needs <seconds>). -->
+  <!-- hop: its step and how long; or, on cells, <onto>s: to the nearest cell that way holding one of those classes (left and right along the row; up and down to the nearest row that has one, keeping the column as a text cursor does) -->
   <xs:complexType name="hopType" mixed="true">
-    <xs:group ref="hopParts" minOccurs="0" />
+    <xs:choice minOccurs="0">
+      <xs:group ref="hopParts" />
+      <xs:element name="onto" type="ontoType" maxOccurs="unbounded" />
+    </xs:choice>
     <xs:attribute name="direction" type="hopDirectionType" use="required" />
+  </xs:complexType>
+  <!-- onto: a class of piece a hop or a track on cells may go to the cell of -->
+  <xs:complexType name="ontoType">
+    <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
   <xs:group name="hopParts">
     <xs:sequence>
@@ -1317,9 +1325,12 @@
       <xs:element name="swing" type="swingType" />
       <xs:element name="thrust" type="aheadType" />
       <xs:element name="turn" type="turnType" />
-      <!-- track: where a control points; path= along that path instead of across the window -->
+      <!-- track: where a control points; path= along that path instead of across the window; on cells, <onto>s: the cell nearest the pointer holding one of those classes -->
       <xs:element name="track">
         <xs:complexType>
+          <xs:sequence>
+            <xs:element name="onto" type="ontoType" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
           <xs:attribute name="path" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>

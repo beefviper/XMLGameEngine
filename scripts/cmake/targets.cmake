@@ -10,6 +10,10 @@ target_compile_features(xgelib PUBLIC cxx_std_20)
 
 target_include_directories(xgelib PUBLIC xge/lib)
 
+# A computer player's search runs on a thread of its own (game/think.cpp).
+find_package(Threads REQUIRED)
+target_link_libraries(xgelib PUBLIC Threads::Threads)
+
 # Only the backends that are built (options.cmake) are linked, and each one
 # defines XGE_WITH_<NAME> for the engine and its users: the factories (window/window.cpp,
 # audio/audio.cpp, xml/document.cpp) use it to know what they can make, and so does

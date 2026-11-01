@@ -1047,6 +1047,18 @@ namespace xge
 			return true;
 		}
 
+		// <onto class="hslot" />, one or more and nothing else: the cells a
+		// hop or a track on cells may go to.
+		void readOnto(const XmlNode& node, const std::string& here, RawCommand& command)
+		{
+			if (!readText(node).empty()) { fail(here, "has text; with <onto> it says nothing else"); }
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				if (child->getName() != "onto") { fail(here, "unknown <" + child->getName() + ">; with <onto> it says nothing else"); }
+				command.onto.push_back(requireAttribute(*child, "class", here + " > <onto>"));
+			}
+		}
+
 		bool isCommandTag(const std::string& name)
 		{
 			return name == "bounce" || name == "deflect" || name == "knock" || name == "hole" || name == "hold" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
@@ -1178,8 +1190,15 @@ namespace xge
 				if (node.getFirstChild() || !readText(node).empty()) { command.amount = readValue(node, where); }
 				else { command.amount = RawValue::expression("1"); }
 			}
+			if (verb == "track" && node.getFirstChild()) { readOnto(node, where + " > <track>", command); }
 			if (verb == "trigger") { requireAttribute(node, "action", where); }
-			if (verb == "hop")
+			if (verb == "hop" && findChild(&node, "onto"))
+			{
+				requireAttribute(node, "direction", where);
+				readOnto(node, where + " > <hop>", command);
+				if (command.direction.find('-') != std::string::npos) { fail(where, "<hop direction=\"" + command.direction + "\"> with <onto>: only up, down, left or right"); }
+			}
+			else if (verb == "hop")
 			{
 				requireAttribute(node, "direction", where);
 				if (readHop(node, where, command) && command.direction.find('-') == std::string::npos)

@@ -97,6 +97,9 @@ namespace xge
 	struct CmdTrack
 	{
 		std::string path;
+		// On cells, with <onto class="..."/>s: the cell nearest where it
+		// points that holds a piece of one of those classes.
+		std::vector<std::string> onto;
 	};
 
 	// <deflect>45</deflect> - in a collision rule about another object: a
@@ -280,6 +283,9 @@ namespace xge
 		Vector2f step{};
 		float seconds{};
 		float arc{};
+		// On cells, with <onto class="..."/>s: to the nearest cell that way
+		// holding a piece of one of those classes (Game::hopOnto).
+		std::vector<std::string> onto;
 	};
 
 	// <hunt object="qbert"><hop><x>32</x><y>48</y><seconds>0.3</seconds></hop></hunt>
@@ -965,6 +971,7 @@ namespace xge
 		bool only{ false };    // pick: <only />
 		std::string closeClass;  // put: <close class=...>
 		std::string closeObject; // put: <close object=...>
+		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)

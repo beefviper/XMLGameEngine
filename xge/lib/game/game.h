@@ -26,10 +26,14 @@
 #include <array>
 #include <cmath>
 #include <deque>
+#include <memory>
+#include <optional>
 #include <assert.h>
 
 namespace xge
 {
+	struct ThinkJob;
+
 	class CommandExecutor;
 
 	// The interpreter: it reads the game file into objects and states, and
@@ -50,6 +54,11 @@ namespace xge
 		explicit Game(const std::string& file);
 
 		void updateObjects(void);
+
+		// A computer's <think> searches on a thread of its own, so the game
+		// goes on (drawn, heard) while it thinks; off, it searches in the
+		// frame, the same each run (the tests). Engine::loop turns it on.
+		void thinkInBackground(bool aside) noexcept;
 
 		// Works out the <position> of every object that uses the size of a text
 		// or image (name.width / name.height, its own or another's) from the
@@ -447,7 +456,9 @@ namespace xge
 		float countClass(const std::string& objClass);
 		// <track /> by a pointer, for a piece on a map of cells: into the
 		// cell under `at` (a pixel across, or down), when it is on the map.
-		void trackCells(Object& object, bool horizontal, float at);
+		void trackCells(Object& object, bool horizontal, float at, const std::vector<std::string>& onto = {});
+		bool hopOnto(Object& mover, Direction direction, const std::vector<std::string>& onto);
+		std::vector<std::pair<int, int>> ontoCells(const std::vector<std::string>& onto);
 		// <marks>: each picker's marks put in their cells (game/cells.cpp).
 		void showMarks();
 		// <place />: the piece held makes the move that ends in the picker's
@@ -526,19 +537,26 @@ namespace xge
 			int row{};
 			Object* taken{ nullptr };
 		};
-		// <think> (game/think.cpp): the plan the computer is carrying out,
-		// the cells the picker goes to in turn (the piece, then each cell of
-		// its move), and the frames until its next step.
+		// <think> (game/think.cpp): the search under way, then the plan the
+		// computer is carrying out, the cells the picker goes to in turn (the
+		// piece, then each cell of its move), and the frames until its next
+		// step.
 		struct Thinking
 		{
+			std::shared_ptr<ThinkJob> job;
 			bool planned{ false };
 			std::vector<std::pair<int, int>> cells;
 			std::size_t next{};
 			int wait{};
 		};
 		Thinking thinking;
+		// Whether a search runs on a thread of its own (a game in a window)
+		// or at once, in the frame (the tests: the same each run).
+		bool thinkAside{ false };
 		std::optional<KeyCode> think(const CmdThink& think);
-		std::vector<std::pair<int, int>> bestMove(const CmdThink& think, const Object& picker);
+		std::shared_ptr<ThinkJob> startThinking(const CmdThink& think, const Object& picker);
+		static void runThinking(ThinkJob& job);
+		void stopThinking();
 		const Object::MoveSet* moveSetOf(const Object& piece) const noexcept;
 		std::vector<PieceMoveTo> movesOf(Object& piece, bool jumpsOnly);
 		std::vector<PieceMoveTo> legalMoves(Object& piece, bool jumpsOnly);
