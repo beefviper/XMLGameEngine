@@ -516,11 +516,15 @@ namespace xge
 			padDown[pad][static_cast<std::size_t>(PadButton::Right)] = padDown[pad][static_cast<std::size_t>(PadButton::Right)] || now.x > half;
 		}
 
-		// Where each control is, 0 to 1 across the window; -1 when it is not there.
+		// Where each control is, 0 to 1 across the window; -1 when it is not
+		// there. The mouse is there only over the playfield: the game's own
+		// pixels, not a title bar, a menu or the bars beside the picture.
 		const WindowDesc& desc = game.getWindowDesc();
+		const bool onField = controls.pointerInside && controls.pointerX >= 0.0f && controls.pointerY >= 0.0f
+			&& controls.pointerX < desc.width && controls.pointerY < desc.height;
 		std::array<float, axisCount> axes{};
 		axes.fill(-1.0f);
-		if (controls.pointerInside && desc.width > 0.0f && desc.height > 0.0f)
+		if (onField)
 		{
 			axes[static_cast<std::size_t>(Axis::MouseX)] = std::clamp(controls.pointerX / desc.width, 0.0f, 1.0f);
 			axes[static_cast<std::size_t>(Axis::MouseY)] = std::clamp(controls.pointerY / desc.height, 0.0f, 1.0f);
@@ -542,12 +546,23 @@ namespace xge
 			return;
 		}
 
+		// A mouse button is pressed for the game only when it goes down over
+		// the playfield (held down and moved onto it is no press), and let go
+		// only when it was pressed so: a click on the title bar, a menu or a
+		// bar beside the picture does nothing.
 		for (std::size_t button = 0; button < controls.mouse.size(); ++button)
 		{
-			if (controls.mouse[button] == lastControls.mouse[button]) { continue; }
 			const auto key = static_cast<KeyCode>(static_cast<std::size_t>(KeyCode::MouseLeft) + button);
-			if (controls.mouse[button]) { handleKeyPressed(key); }
-			else { handleKeyReleased(key); }
+			if (controls.mouse[button] && !lastControls.mouse[button] && onField && !mouseDown[button])
+			{
+				mouseDown[button] = true;
+				handleKeyPressed(key);
+			}
+			else if (!controls.mouse[button] && mouseDown[button])
+			{
+				mouseDown[button] = false;
+				handleKeyReleased(key);
+			}
 		}
 		for (std::size_t pad = 0; pad < padCount; ++pad)
 		{

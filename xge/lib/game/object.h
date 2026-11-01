@@ -1082,7 +1082,8 @@ namespace xge
 			int at{ -1 };
 			std::vector<int> held;
 			std::string from;
-			bool mouse{ false };
+			bool mouse{ false };    // moved by the mouse last, not the keys
+			bool over{ false };     // the mouse is over the pile pointed at (or a card of it)
 			Vector2f grab{};
 		};
 		Hand hand;

@@ -214,10 +214,28 @@ TEST_CASE("a mouse button is a key", "[controls]")
 
 	engine.handleControls(Controls{});
 	Controls down;
+	down.pointerInside = true;
+	down.pointerX = 100.0f;
+	down.pointerY = 50.0f;
 	down.mouse[0] = true;
 	engine.handleControls(down);
 	CHECK(paddle.velocity.x == 2.0f);
 	engine.handleControls(Controls{});
+	CHECK(paddle.velocity.x == 0.0f);
+
+	// Off the playfield (the title bar, a menu, a bar beside the picture)
+	// a click is nothing, and so is its release.
+	Controls bar = down;
+	bar.pointerX = -20.0f;
+	engine.handleControls(bar);
+	CHECK(paddle.velocity.x == 0.0f);
+	engine.handleControls(Controls{});
+	Controls titleBar = down;
+	titleBar.pointerInside = false;
+	engine.handleControls(titleBar);
+	CHECK(paddle.velocity.x == 0.0f);
+	// Held, then brought onto the playfield: still no press.
+	engine.handleControls(down);
 	CHECK(paddle.velocity.x == 0.0f);
 }
 

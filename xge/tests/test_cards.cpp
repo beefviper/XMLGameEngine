@@ -289,6 +289,50 @@ TEST_CASE("klondike.xml: the mouse takes a card, drags it and lays it", "[cards]
 	CHECK(table.hand().hand.held.empty());
 }
 
+TEST_CASE("klondike.xml: a click takes, and sounds, only over a card", "[cards][mouse]")
+{
+	Table table;
+	setUp(table, { { "waste", { { "hearts", "9" } } } });
+	const auto mouse = [&](float x, float y, bool down, bool inside = true)
+	{
+		Controls controls;
+		controls.pointerInside = inside;
+		controls.pointerX = x;
+		controls.pointerY = y;
+		controls.mouse[0] = down;
+		table.engine.handleControls(controls);
+	};
+	const Vector2f waste = table.pile("waste").position;
+	mouse(waste.x + 20.0f, waste.y + 30.0f, false);
+	table.frames(1);
+	(void)table.game.takeSoundRequests();
+	// On the green, away from every pile: nothing taken, no sound.
+	mouse(20.0f, 580.0f, false);
+	mouse(20.0f, 580.0f, true);
+	CHECK(table.hand().hand.held.empty());
+	CHECK(table.game.takeSoundRequests().empty());
+	mouse(20.0f, 580.0f, false);
+	table.frames(1);
+	// Off the playfield (a bar beside the picture, the title bar), even
+	// with the hand last over the card: no press.
+	mouse(waste.x + 20.0f, waste.y + 30.0f, false);
+	mouse(-30.0f, 300.0f, false);
+	mouse(-30.0f, 300.0f, true);
+	CHECK(table.hand().hand.held.empty());
+	mouse(-30.0f, 300.0f, false);
+	mouse(100.0f, -20.0f, true, false);
+	CHECK(table.hand().hand.held.empty());
+	// Held down off it and brought over the card: still no press.
+	mouse(waste.x + 20.0f, waste.y + 30.0f, true);
+	CHECK(table.hand().hand.held.empty());
+	CHECK(table.game.takeSoundRequests().empty());
+	mouse(waste.x + 20.0f, waste.y + 30.0f, false);
+	// Pressed on the card: taken, with its sound.
+	mouse(waste.x + 20.0f, waste.y + 30.0f, true);
+	CHECK(table.hand().hand.held.size() == 1);
+	CHECK(table.game.takeSoundRequests() == std::vector<std::string>{ "card" });
+}
+
 TEST_CASE("klondike.xml: all 52 home wins, and a new game deals again", "[cards]")
 {
 	Table table;

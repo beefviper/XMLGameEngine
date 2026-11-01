@@ -151,6 +151,10 @@ namespace xge
 		Controls lastControls;
 		std::array<std::array<bool, padButtonCount>, padCount> lastPadDown{};
 		std::array<float, axisCount> lastAxes{};
+		// The mouse buttons the game has been told are down: a button
+		// pressed off the playfield (a title bar, a menu, the bars beside a
+		// stretched picture) is not, nor is its release.
+		std::array<bool, 3> mouseDown{};
 
 		// The commands each held key is currently driving: what its press ran,
 		// or, after a state change, what the new state's binding for it

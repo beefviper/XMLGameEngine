@@ -502,7 +502,7 @@ namespace xge
 
 	bool Game::takeCards(Object& hand)
 	{
-		if (!hand.hand.is || !hand.hand.held.empty()) { return false; }
+		if (!hand.hand.is || !hand.hand.held.empty() || (hand.hand.mouse && !hand.hand.over)) { return false; }
 		Object* pile = pileNamed(hand.hand.pile);
 		if (!pile || !pile->pile.dealsInto.empty() || pile->pile.cards.empty()) { return false; }
 		const int count = static_cast<int>(pile->pile.cards.size());
@@ -548,6 +548,8 @@ namespace xge
 		std::vector<Object*> choices;
 		if (onto.empty())
 		{
+			// Let go over nothing: laid nowhere.
+			if (hand.hand.mouse && !hand.hand.over) { return false; }
 			if (Object* pile = pileNamed(hand.hand.pile)) { choices.push_back(pile); }
 		}
 		else
@@ -593,7 +595,7 @@ namespace xge
 
 	bool Game::dealCards(Object& hand)
 	{
-		if (!hand.hand.is || !hand.hand.held.empty()) { return false; }
+		if (!hand.hand.is || !hand.hand.held.empty() || (hand.hand.mouse && !hand.hand.over)) { return false; }
 		Object* pile = pileNamed(hand.hand.pile);
 		if (!pile || pile->pile.dealsInto.empty()) { return false; }
 		Object* into = pileNamed(pile->pile.dealsInto);
@@ -704,6 +706,7 @@ namespace xge
 		(horizontal ? hand.pointer.x : hand.pointer.y) = at;
 		if (hand.pointer.x < 0.0f || hand.pointer.y < 0.0f) { return; }
 		hand.hand.mouse = true;
+		hand.hand.over = false;
 		const Vector2f point = hand.pointer;
 		const auto inside = [&](Vector2f where, Vector2f size)
 		{
@@ -730,6 +733,7 @@ namespace xge
 			if (!hand.hand.held.empty()) { index = static_cast<int>(pile->pile.cards.size()) - 1; }
 			hand.hand.pile = pile->name;
 			hand.hand.at = index;
+			hand.hand.over = true;
 			break;
 		}
 		layOutCards();
