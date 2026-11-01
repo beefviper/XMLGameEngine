@@ -1452,7 +1452,21 @@
         <xsl:call-template name="string">
           <xsl:with-param name="text" select="promote/@sprite" />
         </xsl:call-template>
-        <xsl:value-of select="concat(', ', substring(concat('0', normalize-space(promote/row)), 1 + number(boolean(promote/row))), ' }')" />
+        <xsl:value-of select="concat(', ', substring(concat('0', normalize-space(promote/row)), 1 + number(boolean(promote/row))))" />
+        <xsl:if test="flank">
+          <xsl:text>, {</xsl:text>
+          <xsl:for-each select="flank">
+            <xsl:if test="position() &gt; 1">,</xsl:if>
+            <xsl:text> { </xsl:text>
+            <xsl:call-template name="string">
+              <xsl:with-param name="text" select="@class" />
+            </xsl:call-template>
+            <xsl:value-of select="concat(', ', substring('falsetrue', 1 + 5 * count(straight), 5 - count(straight)), ' }')" />
+          </xsl:for-each>
+          <xsl:text> }</xsl:text>
+        </xsl:if>
+        <xsl:if test="not(flank)">, {}</xsl:if>
+        <xsl:text> }</xsl:text>
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
     </xsl:if>

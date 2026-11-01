@@ -9,7 +9,10 @@
 // moves deep, by the same rules the pieces have (<moves>: steps, jumps,
 // forced jumps, runs of jumps, promotion). The best move is then made by
 // walking the picker to the piece and to each cell of the move and
-// pressing the button there, as a player would.
+// pressing the button there, as a player would. A game whose pieces are
+// put rather than moved (<flank>) is played the same way: each move is a
+// new piece in a cell and the pieces it turns, a side with no move passes,
+// and the game is over when neither side can move.
 
 #include "game/game.h"
 #include "game/random.h"
@@ -44,13 +47,17 @@ namespace xge
 		};
 
 		// One move: the piece, the cells it goes to in turn, the pieces it
-		// takes, and the look it ends with.
+		// takes, and the look it ends with. A put: a new piece (index
+		// `piece`, at the end of the table) in its one cell, and the pieces
+		// it turns.
 		struct Move
 		{
 			std::size_t piece{};
 			std::vector<std::pair<int, int>> cells;
 			std::vector<std::size_t> taken;
 			std::size_t look{};
+			bool put{ false };
+			std::vector<std::size_t> turned;
 		};
 
 		struct Board
@@ -60,20 +67,81 @@ namespace xge
 			int rows{};
 			std::vector<int> grid;    // a piece's index + 1 in each cell, 0 for none
 			std::vector<std::string> sides;
+			// Each side's piece a put copies (none: its pieces are moved).
+			const Object* kinds[2]{ nullptr, nullptr };
 
 			int& at(int column, int row) { return grid[static_cast<std::size_t>((row - 1) * columns + (column - 1))]; }
 			bool onBoard(int column, int row) const { return column >= 1 && row >= 1 && column <= columns && row <= rows; }
 			bool empty(int column, int row) { return onBoard(column, row) && at(column, row) == 0; }
 
-			const Object::MoveSet* setOf(const Piece& piece) const
+			static const Object::MoveSet* setOf(const Object& object, std::size_t look)
 			{
 				const Object::MoveSet* any = nullptr;
-				for (const Object::MoveSet& set : piece.object->moveSets)
+				for (const Object::MoveSet& set : object.moveSets)
 				{
-					if (set.look && *set.look == piece.look) { return &set; }
+					if (set.look && *set.look == look) { return &set; }
 					if (!set.look && !any) { any = &set; }
 				}
 				return any;
+			}
+			const Object::MoveSet* setOf(const Piece& piece) const { return setOf(*piece.object, piece.look); }
+
+			// Whether the side's pieces are put rather than moved.
+			bool puts(int side) const
+			{
+				const Object* kind = kinds[side];
+				const Object::MoveSet* set = kind ? setOf(*kind, kind->look) : nullptr;
+				return set && !set->flanks.empty();
+			}
+
+			// Every put the side can make: a free cell, and the lines it traps.
+			void putMoves(int side, std::vector<Move>& out)
+			{
+				const Object* kind = kinds[side];
+				const Object::MoveSet* set = setOf(*kind, kind->look);
+				for (int row = 1; row <= rows; ++row)
+				{
+					for (int column = 1; column <= columns; ++column)
+					{
+						if (at(column, row) != 0) { continue; }
+						Move put;
+						put.put = true;
+						put.piece = pieces.size();
+						put.cells.emplace_back(column, row);
+						put.look = kind->look;
+						for (const Object::Flank& flank : set->flanks)
+						{
+							for (int dy = -1; dy <= 1; ++dy)
+							{
+								for (int dx = -1; dx <= 1; ++dx)
+								{
+									if ((dx == 0 && dy == 0) || (flank.straight && dx != 0 && dy != 0)) { continue; }
+									std::vector<std::size_t> line;
+									for (int c = column + dx, r = row + dy; onBoard(c, r); c += dx, r += dy)
+									{
+										const int there = at(c, r);
+										if (there == 0) { break; }
+										const Piece& piece = pieces[static_cast<std::size_t>(there - 1)];
+										if (piece.side != side && piece.object->objClass == flank.objClass)
+										{
+											line.push_back(static_cast<std::size_t>(there - 1));
+											continue;
+										}
+										if (piece.side == side)
+										{
+											for (const std::size_t each : line)
+											{
+												if (std::find(put.turned.begin(), put.turned.end(), each) == put.turned.end()) { put.turned.push_back(each); }
+											}
+										}
+										break;
+									}
+								}
+							}
+						}
+						if (!put.turned.empty()) { out.push_back(std::move(put)); }
+					}
+				}
 			}
 
 			// The runs of jumps from where the piece is now, each to its end:
@@ -134,6 +202,12 @@ namespace xge
 			// Every move the side can make, by the rules its pieces have.
 			std::vector<Move> moves(int side)
 			{
+				if (puts(side))
+				{
+					std::vector<Move> putting;
+					putMoves(side, putting);
+					return putting;
+				}
 				std::vector<Move> jumping;
 				std::vector<Move> stepping;
 				bool forced = false;
@@ -172,6 +246,26 @@ namespace xge
 			Undo make(const Move& move)
 			{
 				Undo undo;
+				if (move.put)
+				{
+					const int side = pieces[move.turned.front()].side == 0 ? 1 : 0;
+					for (const std::size_t each : move.turned)
+					{
+						undo.taken.push_back(pieces[each]);
+						pieces[each].object = kinds[side];
+						pieces[each].look = kinds[side]->look;
+						pieces[each].side = side;
+					}
+					Piece made;
+					made.object = kinds[side];
+					made.column = move.cells.front().first;
+					made.row = move.cells.front().second;
+					made.look = move.look;
+					made.side = side;
+					pieces.push_back(made);
+					at(made.column, made.row) = static_cast<int>(pieces.size());
+					return undo;
+				}
 				Piece& piece = pieces[move.piece];
 				undo.before = piece;
 				at(piece.column, piece.row) = 0;
@@ -190,6 +284,13 @@ namespace xge
 
 			void unmake(const Move& move, const Undo& undo)
 			{
+				if (move.put)
+				{
+					at(move.cells.front().first, move.cells.front().second) = 0;
+					pieces.pop_back();
+					for (std::size_t i = 0; i < move.turned.size(); ++i) { pieces[move.turned[i]] = undo.taken[i]; }
+					return;
+				}
 				Piece& piece = pieces[move.piece];
 				at(piece.column, piece.row) = 0;
 				piece = undo.before;
@@ -236,8 +337,21 @@ namespace xge
 			float value(int side, int depth, float alpha, float beta)
 			{
 				const std::vector<Move> moves = board.moves(side);
+				const float now = side == 0 ? score() : -score();
+				if (moves.empty() && board.puts(side))
+				{
+					// No put: it passes; neither can: the game is over, won
+					// by the side with more (sooner is better).
+					if (board.moves(1 - side).empty())
+					{
+						const float sooner = static_cast<float>(depth);
+						return now > 0.0f ? decided + sooner + now : now < 0.0f ? -decided - sooner + now : 0.0f;
+					}
+					if (depth <= 0) { return now; }
+					return -value(1 - side, depth - 1, -beta, -alpha);
+				}
 				if (moves.empty()) { return -(decided + static_cast<float>(depth)); }
-				if (depth == 0) { return side == 0 ? score() : -score(); }
+				if (depth <= 0) { return now; }
 				for (const Move& move : moves)
 				{
 					const Board::Undo undo = board.make(move);
@@ -274,7 +388,14 @@ namespace xge
 			{
 				if (move.jump && other.empty()) { other = move.objClass; }
 			}
+			for (const Object::Flank& flank : set.flanks)
+			{
+				if (other.empty()) { other = flank.objClass; }
+			}
 		}
+		board.kinds[0] = putTemplate(think.objClass);
+		board.kinds[1] = other.empty() ? nullptr : putTemplate(other);
+		if (!board.kinds[1]) { board.kinds[0] = nullptr; }
 		for (const Object& object : objects)
 		{
 			if (!object.onCells || object.mapName != first->mapName || &object == &picker || !isShown(object)) { continue; }

@@ -58,6 +58,7 @@ set(data_xml
 	"games/descriptions/cannonhill.xml"
 	"games/descriptions/speedway.xml"
 	"games/descriptions/checkers.xml"
+	"games/descriptions/reversi.xml"
 	"games/descriptions/snake.xml"
 	"games/descriptions/centipede.xml")
 

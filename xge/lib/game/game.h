@@ -427,6 +427,22 @@ namespace xge
 		// <drop /> on a picker: the piece held is put back (it stays where
 		// it is); false with none held, or in the middle of a run of jumps.
 		bool dropPiece(Object& picker);
+		// <put class>: a new piece of that class in the picker's cell (see
+		// CmdPut); false when it may not go there.
+		bool putPiece(Object& picker, const std::string& objClass);
+		// The piece a <put> of that class copies: the first written of the
+		// class on a map of cells; null for none.
+		Object* putTemplate(const std::string& objClass);
+		// The pieces a new piece of `kind`'s class put in that cell of
+		// `kind`'s map would trap by its <flank>s; `can` is whether it may
+		// go there at all (a free cell, and something trapped when it has
+		// flanks).
+		std::vector<Object*> flanked(const Object& kind, int column, int row, bool& can);
+		// The cells a new piece of `kind`'s class may be put in.
+		std::vector<std::pair<int, int>> putCells(const Object& kind);
+		// <count class>: the objects of that class in play, those spawned
+		// this frame too.
+		float countClass(const std::string& objClass);
 		// <track /> by a pointer, for a piece on a map of cells: into the
 		// cell under `at` (a pixel across, or down), when it is on the map.
 		void trackCells(Object& object, bool horizontal, float at);

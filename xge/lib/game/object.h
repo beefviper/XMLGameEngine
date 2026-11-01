@@ -516,6 +516,12 @@ namespace xge
 			std::vector<RawPieceMove> moves;
 			std::string promote;    // <promote sprite=>: the look it takes...
 			int promoteRow{};       // ...on reaching this row
+			struct RawFlank
+			{
+				std::string objClass;   // what it traps in a line
+				bool straight{ false }; // across and down only
+			};
+			std::vector<RawFlank> flanks;   // <flank>: a new piece is <put> where it traps
 		};
 		std::vector<RawMoveSet> moveSets;
 		// <marks>: on a picker, the pieces it shows on a map of cells for
@@ -523,9 +529,9 @@ namespace xge
 		// sprite= while it shows that look, the one without always.
 		struct RawMark
 		{
-			std::string kind;       // held, moves, movable, last
+			std::string kind;       // held, moves, movable, put, last
 			std::string object;     // what is put in each cell marked
-			std::string objClass;   // movable: whose pieces
+			std::string objClass;   // movable, put: whose pieces
 			std::string variable;   // only while this is not 0 ("" always)
 		};
 		struct RawMarkSet
@@ -910,7 +916,16 @@ namespace xge
 		// that far away into the empty cell beyond, and takes it. The set
 		// for the look showing is used, else the one for no look. forced:
 		// while any piece of its class can jump, it may only jump.
-		// promote: reaching promoteRow, it shows that look.
+		// promote: reaching promoteRow, it shows that look. flanks: a new
+		// piece of its kind is <put> only in an empty cell from which a line
+		// of one or more pieces of a flank's class runs (any of the eight
+		// ways, or across and down only when straight) and ends in a piece
+		// of its own class; the pieces in those lines turn into its kind.
+		struct Flank
+		{
+			std::string objClass;
+			bool straight{ false };
+		};
 		struct PieceMove
 		{
 			bool jump{ false };
@@ -925,10 +940,13 @@ namespace xge
 			std::vector<PieceMove> moves;
 			std::optional<std::size_t> promoteLook;
 			int promoteRow{};
+			std::vector<Flank> flanks;
 		};
 		std::vector<MoveSet> moveSets;
 		// How many moves it can make now: the live number `moves`, counted
 		// before the conditions each frame (a side with none left is stuck).
+		// A piece whose set has <flank>s counts the cells a new piece of its
+		// kind could be put in as well.
 		float moveCount{};
 		// A picker (it runs <pick>): the piece it holds ("" for none), and
 		// whether that piece is in the middle of a run of jumps, which it
@@ -945,7 +963,7 @@ namespace xge
 		// Game::showMarks), made again only when what is marked changes.
 		struct Mark
 		{
-			enum class Kind { Held, Moves, Movable, Last };
+			enum class Kind { Held, Moves, Movable, Put, Last };
 			Kind kind{ Kind::Held };
 			std::string object;
 			std::string objClass;

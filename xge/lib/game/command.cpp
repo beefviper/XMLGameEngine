@@ -80,6 +80,8 @@ namespace xge
 		if (verb == "through") { return CmdThrough{}; }
 		if (verb == "pick") { return CmdPick{ raw.objClass, raw.only }; }
 		if (verb == "place") { return CmdPlace{}; }
+		if (verb == "put") { return CmdPut{ raw.objClass }; }
+		if (verb == "count") { return CmdCount{ raw.objClass, VariableName::of(raw.into) }; }
 		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
 
 		// <reset/> puts the object in the rule (or, in a state's input or
@@ -526,6 +528,8 @@ namespace xge
 			[&](const CmdThrough&) { o << "through"; },
 			[&](const CmdPick& p) { o << "pick(" << p.objClass << (p.only ? ", only" : "") << ")"; },
 			[&](const CmdPlace&) { o << "place"; },
+			[&](const CmdPut& p) { o << "put(" << p.objClass << ")"; },
+			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << ")"; },
 			[&](const CmdSlide& m)
 			{
 				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");

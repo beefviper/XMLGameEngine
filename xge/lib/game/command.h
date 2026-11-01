@@ -692,6 +692,24 @@ namespace xge
 	// the piece can jump on (the turn is not over). See Game::placePiece.
 	struct CmdPlace {};
 
+	// <put class="black" />: a picker puts a new piece of that class (a
+	// copy of the first written) in its cell of the pieces' map. Refused
+	// when the cell is taken, and, when the pieces' moves have <flank>s,
+	// where it traps no line; the pieces it traps turn into its kind. See
+	// Game::putPiece.
+	struct CmdPut
+	{
+		std::string objClass;
+	};
+
+	// <count class="black" into="score.black" />: how many objects of that
+	// class are in play now (pieces put this frame too), into a variable.
+	struct CmdCount
+	{
+		std::string objClass;
+		VariableName target;
+	};
+
 	// <send object from into>: the object's piece on map `from` goes to map
 	// `into`, in that column and row (left out: the cell it is in).
 	struct CmdSend
@@ -756,7 +774,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdThink, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdCount, CmdThink, CmdLive>;
 
 	struct LoadedCommand
 	{

@@ -966,6 +966,7 @@ namespace xge
 			for (const RawObject::RawPieceMove& move : rawSet.moves) { set.moves.push_back({ move.jump, move.objClass, move.x, move.y }); }
 			if (!rawSet.promote.empty()) { set.promoteLook = lookNamed(rawSet.promote, "<moves> > <promote"); }
 			set.promoteRow = rawSet.promoteRow;
+			for (const RawObject::RawMoveSet::RawFlank& flank : rawSet.flanks) { set.flanks.push_back({ flank.objClass, flank.straight }); }
 			object.moveSets.push_back(std::move(set));
 		}
 		for (const RawObject::RawMarkSet& rawSet : rawObject.markSets)
@@ -987,7 +988,7 @@ namespace xge
 			{
 				Object::Mark mark;
 				mark.kind = raw.kind == "held" ? Object::Mark::Kind::Held : raw.kind == "moves" ? Object::Mark::Kind::Moves
-					: raw.kind == "movable" ? Object::Mark::Kind::Movable : Object::Mark::Kind::Last;
+					: raw.kind == "movable" ? Object::Mark::Kind::Movable : raw.kind == "put" ? Object::Mark::Kind::Put : Object::Mark::Kind::Last;
 				mark.object = raw.object;
 				mark.objClass = raw.objClass;
 				mark.variable = raw.variable;

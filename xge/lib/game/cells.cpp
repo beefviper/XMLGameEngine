@@ -956,11 +956,144 @@ namespace xge
 
 	void Game::countMoves()
 	{
+		// The cells a class may put a piece in are the same for each of its
+		// pieces: worked out once.
+		std::vector<std::pair<std::string, float>> puts;
 		for (Object& piece : objects)
 		{
 			if (piece.moveSets.empty()) { continue; }
-			piece.moveCount = isShown(piece) ? static_cast<float>(movesOf(piece, false).size()) : 0.0f;
+			if (!isShown(piece)) { piece.moveCount = 0.0f; continue; }
+			float count = static_cast<float>(movesOf(piece, false).size());
+			const Object::MoveSet* set = moveSetOf(piece);
+			if (set && !set->flanks.empty())
+			{
+				auto known = std::find_if(puts.begin(), puts.end(), [&](const auto& each) { return each.first == piece.objClass; });
+				if (known == puts.end())
+				{
+					puts.emplace_back(piece.objClass, static_cast<float>(putCells(piece).size()));
+					known = puts.end() - 1;
+				}
+				count += known->second;
+			}
+			piece.moveCount = count;
 		}
+	}
+
+	Object* Game::putTemplate(const std::string& objClass)
+	{
+		for (std::size_t i = 0; i < loadedCount && i < objects.size(); ++i)
+		{
+			if (objects[i].objClass == objClass && objects[i].onCells && !objects[i].isShape()) { return &objects[i]; }
+		}
+		return nullptr;
+	}
+
+	std::vector<Object*> Game::flanked(const Object& kind, int column, int row, bool& can)
+	{
+		std::vector<Object*> trapped;
+		can = false;
+		const auto onMap = [&](int c, int r) { return c >= 1 && r >= 1 && c <= kind.mapColumns && r <= kind.mapRows; };
+		if (!onMap(column, row) || cellHolder(kind.mapName, column, row, {})) { return trapped; }
+		const Object::MoveSet* set = moveSetOf(kind);
+		if (!set || set->flanks.empty())
+		{
+			can = true;
+			return trapped;
+		}
+		for (const Object::Flank& flank : set->flanks)
+		{
+			for (int dy = -1; dy <= 1; ++dy)
+			{
+				for (int dx = -1; dx <= 1; ++dx)
+				{
+					if ((dx == 0 && dy == 0) || (flank.straight && dx != 0 && dy != 0)) { continue; }
+					// A line of the flank's class, then one of its own.
+					std::vector<Object*> line;
+					for (int c = column + dx, r = row + dy; onMap(c, r); c += dx, r += dy)
+					{
+						Object* there = cellHolder(kind.mapName, c, r, {});
+						if (!there) { break; }
+						if (there->objClass == flank.objClass && there->objClass != kind.objClass)
+						{
+							line.push_back(there);
+							continue;
+						}
+						if (there->objClass == kind.objClass)
+						{
+							for (Object* each : line)
+							{
+								if (std::find(trapped.begin(), trapped.end(), each) == trapped.end()) { trapped.push_back(each); }
+							}
+						}
+						break;
+					}
+				}
+			}
+		}
+		can = !trapped.empty();
+		return trapped;
+	}
+
+	std::vector<std::pair<int, int>> Game::putCells(const Object& kind)
+	{
+		std::vector<std::pair<int, int>> cells;
+		for (int row = 1; row <= kind.mapRows; ++row)
+		{
+			for (int column = 1; column <= kind.mapColumns; ++column)
+			{
+				bool can = false;
+				flanked(kind, column, row, can);
+				if (can) { cells.emplace_back(column, row); }
+			}
+		}
+		return cells;
+	}
+
+	bool Game::putPiece(Object& picker, const std::string& objClass)
+	{
+		if (!picker.onCells || !picker.picked.empty()) { return false; }
+		Object* kind = putTemplate(objClass);
+		if (!kind) { return false; }
+		const int column = whole(picker.cellColumn);
+		const int row = whole(picker.cellRow);
+		bool can = false;
+		const std::vector<Object*> trapped = flanked(*kind, column, row, can);
+		if (!can) { return false; }
+
+		// Turned: each trapped piece goes, and one of the new kind comes in
+		// its cell. (Names and cells first: a spawn may move the pieces
+		// spawned this frame.)
+		const std::string name = kind->name;
+		std::vector<std::pair<int, int>> cells{ { column, row } };
+		for (Object* each : trapped)
+		{
+			cells.emplace_back(whole(each->cellColumn), whole(each->cellRow));
+			despawn(*each);
+		}
+		for (const auto& [c, r] : cells)
+		{
+			if (Object* made = spawn(name)) { putInCell(*made, c, r); }
+		}
+		picker.moveFromColumn = column;
+		picker.moveFromRow = row;
+		picker.moveToColumn = column;
+		picker.moveToRow = row;
+		countMoves();
+		return true;
+	}
+
+	float Game::countClass(const std::string& objClass)
+	{
+		float count = 0.0f;
+		for (Object& object : objects)
+		{
+			if (object.objClass == objClass && object.exists && isShown(object)) { count += 1.0f; }
+		}
+		for (const Object& object : spawned)
+		{
+			if (object.objClass == objClass && object.exists) { count += 1.0f; }
+		}
+		return count;
 	}
 
 	bool Game::pickPiece(Object& picker, const std::string& objClass, bool only)
@@ -1107,11 +1240,21 @@ namespace xge
 								want.push_back({ mark.object, whole(piece.cellColumn), whole(piece.cellRow) });
 							}
 							break;
+						case Object::Mark::Kind::Put:
+							if (const Object* kind = putTemplate(mark.objClass))
+							{
+								for (const auto& [column, row] : putCells(*kind)) { want.push_back({ mark.object, column, row }); }
+							}
+							break;
 						case Object::Mark::Kind::Last:
 							if (picker.moveToColumn > 0)
 							{
 								want.push_back({ mark.object, picker.moveFromColumn, picker.moveFromRow });
-								want.push_back({ mark.object, picker.moveToColumn, picker.moveToRow });
+								// A piece put: one cell.
+								if (picker.moveToColumn != picker.moveFromColumn || picker.moveToRow != picker.moveFromRow)
+								{
+									want.push_back({ mark.object, picker.moveToColumn, picker.moveToRow });
+								}
 							}
 							break;
 						}

@@ -1,6 +1,6 @@
 # Board games
 
-**Status:** Checkers Built (2026-10-31); its computer (`<think>`) and marks, put back and mouse Built (2026-11-01); other board games Open.
+**Status:** Checkers Built (2026-10-31); its computer (`<think>`) and marks, put back and mouse Built (2026-11-01); Reversi Built (2026-11-01); other board games Open.
 
 ## What we looked for
 
@@ -40,8 +40,18 @@
 - **Auto-pick is `<pick><only />`** run by a condition: picking needs no new idea of "must move this one", only a pick that finds the piece itself when exactly one can move.
 - **The mouse is `<track />` on cells**: tracking an object on a map snaps it to the cell under the pointer, and a click is a key like Space. An axis trigger now keeps its `from=`, so the mouse moves only the player's cursor, not the computer's.
 
+## Reversi (2026-11-01)
+
+- Asked for (Beef): Reversi next, after a list of simple board games (Beef chose the order: Reversi, then a deck of cards as a first-class element, then backgammon with dice).
+- **New pieces, not moves: `<put class>`**, a self verb of the picker, beside `<pick>` and `<place>`. A put is a copy of the first piece of the class written, so the board in the file is the starting position and the pieces are the supply.
+- **The rule is `<flank class>` in the piece's `<moves>`**: a line of the other class ending in one of its own, any of the eight ways (`<straight />` for four). No offsets are listed: a flank is a line, like a `<line>` check, not a step. Trapped pieces turn by being taken out and a copy of the putter's kind put in their cell, so sides stay classes (what `<jump class>`, `total=` and `<think>` already go by), and a disc needs no look per side.
+- **Pieces with no `<moves>` can be put anywhere empty**: the same verb says tic-tac-toe or five in a row, with a `<line>` check for the win.
+- **Passing and the end are conditions, not words**: live `moves` of a flanking piece counts where its kind could be put, so "nowhere to go on its turn" passes and "neither side" ends the game. The computer knows the same rule: in a game of puts a side with no move passes, and both stuck is decided by the pieces left.
+- **`<count class into>`** gives the score: the number of a class in play into a variable, after each put. Considered and left: a `<count>` inside any value (values are worked out without the game's objects), and score kept by `<inc>` by the number turned (the turned number is not a name the game has).
+- **Not built:** a better judge of a reversi position for the computer (corners, how many moves each side has). It counts discs four moves deep, which plays sensibly but is beatable; a hint like `<worth>` by cell could come later.
+
 ## Open
 
 - Lookahead for action games (above).
 - Draws (forty moves with no capture, a position repeated).
-- Other board games on the same words: halma and Chinese checkers (jumps over any class, not taking), reversi (placing new pieces that turn others over), chess (sliding moves of any length: a `<slide>` move, and pieces that block).
+- Other board games on the same words: halma and Chinese checkers (jumps over any class, not taking), chess (sliding moves of any length: a `<slide>` move, and pieces that block).

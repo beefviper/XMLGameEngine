@@ -283,6 +283,7 @@ namespace
 					text(here + ".move", std::string(move.jump ? "jump " : "step ") + move.objClass + " " + std::to_string(move.x) + " " + std::to_string(move.y));
 				}
 				text(here + ".promote", set.promote + " " + std::to_string(set.promoteRow));
+				for (const RawObject::RawMoveSet::RawFlank& flank : set.flanks) { text(here + ".flank", flank.objClass + (flank.straight ? " straight" : "")); }
 			}
 			for (std::size_t i = 0; i < o.markSets.size(); ++i)
 			{

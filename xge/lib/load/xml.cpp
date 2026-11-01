@@ -1054,7 +1054,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "think";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1252,6 +1252,12 @@ namespace xge
 				command.amount = readValue(node, where);
 			}
 			if (verb == "hold") { command.button = requireAttribute(node, "button", where); }
+			if (verb == "put") { requireAttribute(node, "class", where); }
+			if (verb == "count")
+			{
+				requireAttribute(node, "class", where);
+				requireAttribute(node, "into", where);
+			}
 			if (verb == "pick")
 			{
 				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
@@ -1523,7 +1529,20 @@ namespace xge
 						set.promoteRow = std::stoi(text);
 						continue;
 					}
-					if (tag != "step" && tag != "jump") { fail(here, "unknown <" + tag + ">; expected <forced />, <step>s and <jump>s, then <promote>"); }
+					if (tag == "flank")
+					{
+						const std::string at = here + " > <flank>";
+						RawObject::RawMoveSet::RawFlank flank;
+						flank.objClass = requireAttribute(*move, "class", at);
+						for (std::unique_ptr<XmlNode> inside = move->getFirstChild(); inside != nullptr; inside = inside->getNextSibling())
+						{
+							if (inside->getName() != "straight") { fail(at, "unknown <" + inside->getName() + ">; expected <straight /> if wanted"); }
+							flank.straight = true;
+						}
+						set.flanks.push_back(std::move(flank));
+						continue;
+					}
+					if (tag != "step" && tag != "jump") { fail(here, "unknown <" + tag + ">; expected <forced />, <step>s and <jump>s, <flank>s, then <promote>"); }
 					RawObject::RawPieceMove each;
 					each.jump = tag == "jump";
 					const std::string at = here + " > <" + tag + ">";
@@ -1533,7 +1552,7 @@ namespace xge
 					if (each.x == 0 && each.y == 0) { fail(at, "goes nowhere: <x> and <y> are both 0"); }
 					set.moves.push_back(std::move(each));
 				}
-				if (set.moves.empty()) { fail(here, "has no <step> or <jump>"); }
+				if (set.moves.empty() && set.flanks.empty()) { fail(here, "has no <step>, <jump> or <flank>"); }
 				object.moveSets.push_back(std::move(set));
 			}
 
@@ -1549,13 +1568,13 @@ namespace xge
 				{
 					RawObject::RawMark each;
 					each.kind = mark->getName();
-					if (each.kind != "held" && each.kind != "moves" && each.kind != "movable" && each.kind != "last")
+					if (each.kind != "held" && each.kind != "moves" && each.kind != "movable" && each.kind != "put" && each.kind != "last")
 					{
-						fail(here, "unknown <" + each.kind + ">; expected <held>, <moves>, <movable> and <last>");
+						fail(here, "unknown <" + each.kind + ">; expected <held>, <moves>, <movable>, <put> and <last>");
 					}
 					const std::string at = here + " > <" + each.kind + ">";
 					each.object = requireAttribute(*mark, "object", at);
-					if (each.kind == "movable") { each.objClass = requireAttribute(*mark, "class", at); }
+					if (each.kind == "movable" || each.kind == "put") { each.objClass = requireAttribute(*mark, "class", at); }
 					each.variable = mark->getAttribute("variable");
 					set.marks.push_back(std::move(each));
 				}

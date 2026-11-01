@@ -618,13 +618,15 @@
   </xs:group>
   <!-- marks: on a picker, pieces it shows in cells of their own map of cells, a copy of object= in each:
        held, the piece it holds; moves, each cell that piece can move to; movable, each piece of class= that can be picked;
-       last, the cells the last move it placed went from and to. sprite=: only while it shows that look.
+       put, each cell a piece of class= can be <put> in;
+       last, the cells the last move it placed went from and to (a piece put: its cell). sprite=: only while it shows that look.
        variable=: only while that variable is not 0 (an option) -->
   <xs:complexType name="marksType">
     <xs:choice maxOccurs="unbounded">
       <xs:element name="held" type="markType" />
       <xs:element name="moves" type="markType" />
       <xs:element name="movable" type="markType" />
+      <xs:element name="put" type="markType" />
       <xs:element name="last" type="markType" />
     </xs:choice>
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
@@ -640,11 +642,14 @@
        step: to the empty cell that many cells across (x) and down (y).
        jump: over a piece of that class that far away into the empty cell beyond, taking it;
        a piece that can jump again after a jump must, before its turn is over.
+       flank: a new piece of its kind is <put> only where it traps a line of pieces of that class
+       (any of the eight ways; with <straight />, across and down only) against one of its own,
+       and the pieces trapped turn into its kind (reversi).
        promote: reaching that row, it shows that look (crowned), and its move ends. -->
   <xs:complexType name="pieceMovesType">
     <xs:sequence>
       <xs:element name="forced" type="emptyType" minOccurs="0" />
-      <xs:choice maxOccurs="unbounded">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="step" type="cellOffsetType" />
         <xs:element name="jump">
           <xs:complexType>
@@ -656,6 +661,14 @@
           </xs:complexType>
         </xs:element>
       </xs:choice>
+      <xs:element name="flank" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="straight" type="emptyType" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="promote" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -1047,6 +1060,13 @@
           <xs:attribute name="into" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
+      <!-- count: the variable into= (owner.variable) takes how many objects of that class are in play now -->
+      <xs:element name="count">
+        <xs:complexType>
+          <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="into" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
       <!-- rank: the entry variable= is of goes into the group into= (the best first), in place by that variable -->
       <xs:element name="rank">
         <xs:complexType>
@@ -1204,6 +1224,13 @@
       </xs:element>
       <!-- place: the piece held makes its move that ends in the picker's cell; refused when none does, and while it can jump on -->
       <xs:element name="place" type="emptyType" />
+      <!-- put: a new piece of that class in the picker's cell of the pieces' map; refused when the cell is taken,
+           or, when the pieces have <flank>s, where it traps nothing; the pieces it traps turn into its kind -->
+      <xs:element name="put">
+        <xs:complexType>
+          <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
     </xs:choice>
   </xs:group>
 
