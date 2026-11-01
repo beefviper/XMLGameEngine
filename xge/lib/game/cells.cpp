@@ -1134,17 +1134,25 @@ namespace xge
 			if (Object* made = spawn(name)) { putInCell(*made, c, r); }
 		}
 
-		// <close>: each piece of that class beside it now walled in on its
-		// four sides by pieces of the class put is taken by a copy of the
-		// object named.
+		// <close>: each piece of that class beside it now walled in, no place
+		// left beside it that a piece could be put <on> (lines of either
+		// side: the slots are gone), is taken by a copy of the object named.
 		bool closed = false;
 		if (!put.closeClass.empty())
 		{
+			std::vector<std::string> places;
+			for (const Object* each : putTemplates(put.objClass))
+			{
+				if (const Object::MoveSet* set = moveSetOf(*each))
+				{
+					places.insert(places.end(), set->on.begin(), set->on.end());
+				}
+			}
 			const auto onMap = [&](int c, int r) { return c >= 1 && r >= 1 && c <= columns && r <= rows; };
 			const auto put_ = [&](int c, int r)
 			{
 				const Object* there = onMap(c, r) ? cellHolder(map, c, r, {}) : nullptr;
-				return there && there->objClass == put.objClass;
+				return there && std::find(places.begin(), places.end(), there->objClass) == places.end();
 			};
 			const int sides[4][2] = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
 			for (const auto& side : sides)

@@ -4,26 +4,31 @@
 <!-- date: Nov 1, 2026 -->
 
 <!--
-  Dots and Boxes: two players take turns drawing a line between two dots
-  next to each other on a six by six grid of dots, red first. A line
-  that closes the fourth side of a box claims it, in the player's colour,
+  Dots and Boxes: two players take turns drawing a line, in their own
+  colour, between two dots next to each other on a six by six grid of
+  dots, red first. A line that closes the fourth side of a box claims it,
   and that player goes again. When every box is claimed, more boxes wins.
+  You play red against the computer, or two players share the keyboard.
 
   W A S D or the arrows move the cursor a step at a time over the grid,
   Space draws the line under it. The mouse works too: the cursor follows
-  it and a left click draws. P or Escape pauses. Space plays again.
+  it and a left click draws. P or Escape pauses. On the title, Space
+  plays the computer and 2 is for two players. Space plays again.
 
   How it is written:
   * The grid is a <map> of <cells />, two cells for each step between
     dots: o a dot, h and v where a line can go (faint until drawn), b a
     box.
-  * A line is put on its place: across and down are both of class line,
-    and <on class="hslot" /> in their <moves> says which goes where, so
-    <put class="line" /> takes whichever fits the cell.
+  * A line is put on its place: red's across and down are both of class
+    redline, and <on class="hslot" /> in their <moves> says which goes
+    where, so <put class="redline" /> takes whichever fits the cell.
   * <close class="box" object="redbox" /> in the put: a box beside the
-    line with a line on all four sides becomes red's. A put that closes
-    one counts as refused, so the turn does not pass.
+    line with no place for a line left around it becomes red's. A put
+    that closes one counts as refused, so the turn does not pass.
   * <count> keeps the score, and how many boxes are still open.
+  * The computer plays blue with <think>, three lines ahead: it reads
+    from the cursor's own actions that blue's put closes boxes and goes
+    again, and counts boxes.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -53,6 +58,10 @@
     <style name="cursor"><scale>4</scale><color>color.yellow</color></style>
   </styles>
   <objects>
+    <!-- how many play: 1 against the computer, 2 at one keyboard -->
+    <object name="match">
+      <variables><variable name="players">1</variable></variables>
+    </object>
     <!-- boxes each side has, and boxes still open -->
     <object name="score">
       <variables>
@@ -74,7 +83,7 @@
           <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
         </object>
         <object name="help1">
-          <sprite><text style="help"><content>for two players: red, then blue</content></text></sprite>
+          <sprite><text style="help"><content>you play red, and go first; 2 for two players</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
         </object>
         <object name="help2">
@@ -91,7 +100,8 @@
         </object>
       </objects>
       <inputs>
-        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+        <input><button>space</button><button>pad1.start</button><set variable="match.players">1</set><push state="playing" /></input>
+        <input><button>num2</button><button>numpad2</button><set variable="match.players">2</set><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
@@ -139,13 +149,21 @@
           <group name="boxes" char="b" class="box">
             <sprite><rectangle><width>4</width><height>4</height><color>color.black</color></rectangle></sprite>
           </group>
-          <!-- a line drawn, on its place -->
-          <object name="across" class="line">
-            <sprite><rectangle><width>square * 2</width><height>6</height><color>color.white</color></rectangle></sprite>
+          <!-- a line drawn on its place, in the colour of who drew it -->
+          <object name="redacross" class="redline">
+            <sprite><rectangle><width>square * 2</width><height>6</height><color>color.red</color></rectangle></sprite>
             <moves><on class="hslot" /></moves>
           </object>
-          <object name="down" class="line">
-            <sprite><rectangle><width>6</width><height>square * 2</height><color>color.white</color></rectangle></sprite>
+          <object name="reddown" class="redline">
+            <sprite><rectangle><width>6</width><height>square * 2</height><color>color.red</color></rectangle></sprite>
+            <moves><on class="vslot" /></moves>
+          </object>
+          <object name="blueacross" class="blueline">
+            <sprite><rectangle><width>square * 2</width><height>6</height><color>color.cyan</color></rectangle></sprite>
+            <moves><on class="hslot" /></moves>
+          </object>
+          <object name="bluedown" class="blueline">
+            <sprite><rectangle><width>6</width><height>square * 2</height><color>color.cyan</color></rectangle></sprite>
             <moves><on class="vslot" /></moves>
           </object>
           <!-- a box claimed -->
@@ -153,7 +171,7 @@
             <sprite><rectangle><width>square * 2 - 14</width><height>square * 2 - 14</height><color>color.red</color></rectangle></sprite>
           </object>
           <object name="bluebox" class="bluebox">
-            <sprite><rectangle><width>square * 2 - 14</width><height>square * 2 - 14</height><color>color.blue</color></rectangle></sprite>
+            <sprite><rectangle><width>square * 2 - 14</width><height>square * 2 - 14</height><color>color.cyan</color></rectangle></sprite>
           </object>
         </map>
 
@@ -214,6 +232,20 @@
                 <row>**......**</row>
               </bitmap>
             </sprite>
+            <sprite name="cpu">
+              <bitmap style="cursor">
+                <row>**......**</row>
+                <row>*........*</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>*........*</row>
+                <row>**......**</row>
+              </bitmap>
+            </sprite>
             <marks>
               <last object="lastmark" />
             </marks>
@@ -225,14 +257,14 @@
               <action name="point"><track /></action>
               <!-- a line drawn; one that closes a box keeps the turn -->
               <action name="redput">
-                <put class="line"><close class="box" object="redbox" /></put>
+                <put class="redline"><close class="box" object="redbox" /></put>
                 <play sound="line" />
                 <set variable="cursor.turn">2</set>
                 <become sprite="blue" />
                 <become object="whoseturn" sprite="blue" />
               </action>
               <action name="blueput">
-                <put class="line"><close class="box" object="bluebox" /></put>
+                <put class="blueline"><close class="box" object="bluebox" /></put>
                 <play sound="line" />
                 <set variable="cursor.turn">1</set>
                 <become sprite="red" />
@@ -262,8 +294,14 @@
           <trigger object="cursor" action="blueput" from="blue" />
           <trigger object="cursor" action="tally" />
         </input>
-        <input axis="mouse.x"><trigger object="cursor" action="point" /></input>
-        <input axis="mouse.y"><trigger object="cursor" action="point" /></input>
+        <!-- the computer's key: only its look answers it -->
+        <input>
+          <button>f12</button>
+          <trigger object="cursor" action="blueput" from="cpu" />
+          <trigger object="cursor" action="tally" />
+        </input>
+        <input axis="mouse.x"><trigger object="cursor" action="point" from="red" /><trigger object="cursor" action="point" from="blue" /></input>
+        <input axis="mouse.y"><trigger object="cursor" action="point" from="red" /><trigger object="cursor" action="point" from="blue" /></input>
         <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
@@ -286,7 +324,27 @@
           <play sound="win" />
           <push state="over" />
         </condition>
+        <!-- against the computer, blue's turn is its: the cursor takes its look -->
+        <condition>
+          <all>
+            <condition object="match" variable="players"><equal>1</equal></condition>
+            <condition object="cursor" variable="turn"><equal>2</equal></condition>
+          </all>
+          <become object="cursor" sprite="cpu" from="blue" />
+        </condition>
       </conditions>
+      <!-- blue's line: three ahead -->
+      <computer>
+        <condition>
+          <all>
+            <condition object="match" variable="players"><equal>1</equal></condition>
+            <condition object="cursor" variable="turn"><equal>2</equal></condition>
+          </all>
+          <think class="blueline" object="cursor" button="f12">
+            <depth>3</depth>
+          </think>
+        </condition>
+      </computer>
     </state>
     <state name="paused">
       <objects>

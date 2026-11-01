@@ -58,11 +58,12 @@
 - **The computer infers the goal from that check** (Beef had asked whether goals can be inferred): a `<line>` of a side's class is a win for it, and short of that each run of cells only one side holds is worth its pieces squared. No hint was needed for Four in a Row or Tic-Tac-Toe. Tic-Tac-Toe offers an easy level (one move ahead) and a smart one (to the end).
 - **Dots and Boxes needed two words:** `<on class>` so a line goes only on its faint place, and `<close class object>` on the put, which claims the boxes it walls in and counts the put as refused so the turn does not pass (the same rule as a place that must jump on). Lines are of one class with two groups (`across`, `down`), and a put takes whichever group fits the cell, so one key does both. The grid is two cells per step between dots: dots, places for lines, boxes. Qix-like claiming of areas is a different thing (filling a region a line closes) and is not built.
 - **A key's `from=` judged by the look when pressed** (an engine change found here): before, the triggers of one key ran in order, each against the look as it was then, so red's drop turning the cursor yellow let the next trigger drop yellow's disc in the same press.
-- **Not built:** a computer for Dots and Boxes. Its lines belong to no side, so `<think>`'s sides by class do not fit; the boxes are what is owned.
+- **Lines in the player's colour, and a computer** (Beef, after playing): each side's lines are a class of their own (`redline`, `blueline`), so `<think>`'s sides by class fit after all. A box is closed when no place for a line is left beside it (the classes the put's pieces go `<on>`), so lines of both colours wall it in. The computer reads from the picker's actions what a side's put closes and what it claims with; in the search a closing put claims and the same side moves again, and claimed boxes are the score. Three lines ahead it takes what it is given and does not hand over a box's third side while it has a safe line; it does not know the long-chain endgame.
+- **A fault found on the way:** the computer's board was built from the pieces in play only, so a piece put in the same frame (in play from the end of it) was missed, and Tic-Tac-Toe's smart level could lose. Pieces put this frame are on its board now.
 
 ## Open
 
 - Lookahead for action games (above).
-- A computer for Dots and Boxes, and claiming areas as Qix does.
+- A stronger Dots and Boxes computer (chains and the endgame), and claiming areas as Qix does.
 - Draws (forty moves with no capture, a position repeated).
 - Other board games on the same words: halma and Chinese checkers (jumps over any class, not taking), chess (sliding moves of any length: a `<slide>` move, and pieces that block).
