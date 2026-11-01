@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include "game/cards.h"
 #include "game/data.h"
 
 #include <algorithm>

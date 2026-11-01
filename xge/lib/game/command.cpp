@@ -80,6 +80,9 @@ namespace xge
 		if (verb == "through") { return CmdThrough{}; }
 		if (verb == "pick") { return CmdPick{ raw.objClass, raw.only }; }
 		if (verb == "place") { return CmdPlace{}; }
+		if (verb == "take") { return CmdTake{}; }
+		if (verb == "lay") { return CmdLay{ raw.pile }; }
+		if (verb == "deal") { return CmdDeal{}; }
 		if (verb == "put") { return CmdPut{ raw.objClass, raw.closeClass, raw.closeObject }; }
 		if (verb == "count") { return CmdCount{ raw.objClass, VariableName::of(raw.into) }; }
 		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
@@ -529,6 +532,9 @@ namespace xge
 			[&](const CmdThrough&) { o << "through"; },
 			[&](const CmdPick& p) { o << "pick(" << p.objClass << (p.only ? ", only" : "") << ")"; },
 			[&](const CmdPlace&) { o << "place"; },
+			[&](const CmdTake&) { o << "take"; },
+			[&](const CmdLay& l) { o << "lay" << (l.pile.empty() ? "" : "(" + l.pile + ")"); },
+			[&](const CmdDeal&) { o << "deal"; },
 			[&](const CmdPut& p) { o << "put(" << p.objClass << (p.closeClass.empty() ? "" : ", close " + p.closeClass + " " + p.closeObject) << ")"; },
 			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << ")"; },
 			[&](const CmdSlide& m)

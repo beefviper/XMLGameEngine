@@ -1,0 +1,301 @@
+<!-- klondike.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Nov 1, 2026 -->
+
+<!--
+  Klondike, the classic patience: one player, one pack of 52 cards.
+
+  Seven columns are dealt, one card in the first, two in the second, up to
+  seven in the last, each with only its top card face up; the rest of the
+  pack is the stock, top left. Build the columns down in alternating
+  colours (a red 9 on a black 10); a run of face-up cards moves together,
+  and a card left face down on top turns up. Only a king goes in an empty
+  column. Take the stock's cards one at a time onto the waste beside it;
+  when it is empty, take again to turn the waste back over. Each suit goes
+  up from its ace to its king on one of the four foundations, top right.
+  All 52 there wins.
+
+  W A S D or the arrows move the hand: left and right from pile to pile,
+  up and down through a column's face-up cards and between the rows.
+  Space takes the card the hand is on (with the cards on it) and lays them
+  where it is moved to; taken from the stock, Space deals. X or Backspace
+  puts back what is held, and F sends the card pointed at to its
+  foundation. With the mouse, press on a card, drag it and let go; a right
+  click sends a card home. P or Escape pauses, and N there deals a new game.
+
+  How it is written:
+  * <deck> makes the 52 cards from four <suit>s (each a pip drawn in rows,
+    and its colour) and thirteen <rank>s; the engine draws each face.
+  * Each place is an object with a <pile>: what it <takes> on top (the
+    columns: <down /> and <othercolor />, a K when empty; the foundations:
+    <one />, <up /> and <samesuit />, an A when empty), whether a <run />
+    can be taken from it, and the stock's <deals> and <refill>.
+  * <dealt>1<more>1</more></dealt> on the group of columns deals the
+    staircase: one, then one more for each column after.
+  * The hand's <take />, <lay /> and <drop /> carry cards; a lay that the
+    pile does not take is refused, so the hand keeps them.
+  * The live number `cards` of the foundations, added up, is the win.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Klondike">
+    <width>800</width>
+    <height>600</height>
+    <background>color.darkgreen</background>
+  </window>
+  <variables>
+    <variable name="cardwidth">63</variable>
+    <variable name="cardheight">93</variable>
+    <variable name="step">75</variable>
+    <variable name="left">144</variable>
+    <variable name="top">36</variable>
+    <variable name="low">146</variable>
+  </variables>
+  <sounds>
+    <sound name="card" wave="noise"><note pitch="C6">0.03</note></sound>
+    <sound name="deal" wave="noise"><note pitch="G5">0.02</note><note pitch="C6">0.02</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="prompt"><size>32</size></style>
+    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+  </styles>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>KLONDIKE</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
+        </object>
+        <object name="help1">
+          <sprite><text style="help"><content>build the columns down in alternating colours,</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+        </object>
+        <object name="help2">
+          <sprite><text style="help"><content>each suit up from ace to king on the foundations</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+        <object name="help3">
+          <sprite><text style="help"><content>w a s d or the arrows move, spacebar takes and lays, x puts back,</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+        </object>
+        <object name="help4">
+          <sprite><text style="help"><content>f sends a card home; or drag with the mouse, right click home</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <!-- the pack: four suits, thirteen ranks, the faces drawn by the engine -->
+        <deck name="cards" pile="stock">
+          <face><width>21</width><height>31</height><scale>3</scale><color>color.white</color><edge>color.grey</edge></face>
+          <back><color>color.darkblue</color><edge>color.lightgrey</edge></back>
+          <suit name="spades">
+            <row>..*..</row>
+            <row>.***.</row>
+            <row>*****</row>
+            <row>*****</row>
+            <row>.*.*.</row>
+            <row>..*..</row>
+            <color>color.black</color>
+          </suit>
+          <suit name="hearts">
+            <row>.*.*.</row>
+            <row>*****</row>
+            <row>*****</row>
+            <row>.***.</row>
+            <row>..*..</row>
+            <row>.....</row>
+            <color>color.red</color>
+          </suit>
+          <suit name="clubs">
+            <row>.***.</row>
+            <row>.***.</row>
+            <row>*****</row>
+            <row>*****</row>
+            <row>.*.*.</row>
+            <row>..*..</row>
+            <color>color.black</color>
+          </suit>
+          <suit name="diamonds">
+            <row>..*..</row>
+            <row>.***.</row>
+            <row>*****</row>
+            <row>.***.</row>
+            <row>..*..</row>
+            <color>color.red</color>
+          </suit>
+          <rank>A</rank><rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank>
+          <rank>8</rank><rank>9</rank><rank>10</rank><rank>J</rank><rank>Q</rank><rank>K</rank>
+        </deck>
+
+        <!-- the stock, top left: taken from, it deals one to the waste; empty, the waste turns back over -->
+        <object name="stock" class="place">
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>left</x><y>top</y></position>
+          <pile faces="down">
+            <deals into="waste">1</deals>
+            <refill from="waste" />
+          </pile>
+        </object>
+        <object name="waste" class="place">
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>left + step</x><y>top</y></position>
+          <pile faces="up" />
+        </object>
+
+        <!-- the foundations: each suit up from its ace, one card at a time -->
+        <group name="foundations" class="place">
+          <columns>4</columns>
+          <rows>1</rows>
+          <padding><x>step - cardwidth</x></padding>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>left + step * 3</x><y>top</y></position>
+          <pile faces="up">
+            <takes><one /><samesuit /><up /><empty><rank>A</rank></empty></takes>
+          </pile>
+        </group>
+
+        <!-- the seven columns: down in alternating colours, a king in an empty one -->
+        <group name="columns" class="place">
+          <columns>7</columns>
+          <rows>1</rows>
+          <padding><x>step - cardwidth</x></padding>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>left</x><y>low</y></position>
+          <pile>
+            <fan><y>21</y><hidden><y>6</y></hidden></fan>
+            <dealt>1<more>1</more></dealt>
+            <takes><othercolor /><down /><empty><rank>K</rank></empty></takes>
+            <run />
+            <showtop />
+          </pile>
+        </group>
+
+        <!-- the hand: a frame around the card it points at -->
+        <object name="hand">
+          <sprite name="free">
+            <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+            <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+            <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+            <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+          </sprite>
+          <sprite name="held">
+            <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+            <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
+            <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
+            <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+          </sprite>
+          <position><x>left - 3</x><y>top - 3</y></position>
+          <hand />
+          <actions>
+            <action name="left"><hop direction="left" /></action>
+            <action name="right"><hop direction="right" /></action>
+            <action name="up"><hop direction="up" /></action>
+            <action name="down"><hop direction="down" /></action>
+            <action name="point"><track /></action>
+            <action name="deal"><deal /><play sound="deal" /></action>
+            <action name="take"><take /><play sound="card" /><become sprite="held" /></action>
+            <action name="lay"><lay /><play sound="card" /><become sprite="free" /></action>
+            <action name="back"><drop /><play sound="card" /><become sprite="free" /></action>
+            <!-- home: the card pointed at onto the foundation that takes it -->
+            <action name="home"><take /><lay pile="foundations" /><play sound="card" /></action>
+          </actions>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="hand" action="left" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="hand" action="right" /></input>
+        <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="hand" action="up" /></input>
+        <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="hand" action="down" /></input>
+        <input>
+          <button>space</button><button>pad1.a</button>
+          <trigger object="hand" action="deal" from="free" />
+          <trigger object="hand" action="take" from="free" />
+          <trigger object="hand" action="lay" from="held" />
+        </input>
+        <input><button>x</button><button>backspace</button><button>pad1.b</button><trigger object="hand" action="back" from="held" /></input>
+        <!-- home, then back if no foundation took it -->
+        <input>
+          <button>f</button><button>mouse.right</button><button>pad1.y</button>
+          <trigger object="hand" action="home" from="free" />
+          <trigger object="hand" action="back" from="free" />
+        </input>
+        <!-- the mouse: press takes (or deals), let go lays or puts back -->
+        <input>
+          <button>mouse.left</button>
+          <trigger object="hand" action="deal" from="free" />
+          <trigger object="hand" action="take" from="free" />
+        </input>
+        <input on="release">
+          <button>mouse.left</button>
+          <trigger object="hand" action="lay" from="held" />
+          <trigger object="hand" action="back" from="held" />
+        </input>
+        <input axis="mouse.x"><trigger object="hand" action="point" /></input>
+        <input axis="mouse.y"><trigger object="hand" action="point" /></input>
+        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <!-- all 52 on the foundations -->
+        <condition object="foundations" variable="cards" total="sum">
+          <atleast>52</atleast>
+          <play sound="win" />
+          <push state="won" />
+        </condition>
+      </conditions>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+        </object>
+        <object name="newdeal">
+          <sprite><text style="prompt"><content>n for a new deal</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>n</button><reset /></input>
+      </inputs>
+    </state>
+    <state name="won">
+      <objects>
+        <object name="winner">
+          <sprite><text style="banner"><content>YOU WIN</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+        </object>
+        <object name="again">
+          <sprite><text style="prompt"><content>spacebar to deal again</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

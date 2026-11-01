@@ -458,6 +458,30 @@ namespace xge
 		// cell under `at` (a pixel across, or down), when it is on the map.
 		void trackCells(Object& object, bool horizontal, float at, const std::vector<std::string>& onto = {});
 		bool hopOnto(Object& mover, Direction direction, const std::vector<std::string>& onto);
+		// Cards (game/cards.cpp): a hand's verbs, each false when refused;
+		// moving it among the piles; the deal at the start of a game.
+		bool takeCards(Object& hand);
+		bool layCards(Object& hand, const std::string& pile);
+		bool dropCards(Object& hand);
+		bool dealCards(Object& hand);
+		bool hopHand(Object& hand, Direction direction);
+		void trackHand(Object& hand, bool horizontal, float at);
+		void dealDecks();
+		void layOutCards();
+		Object* cardAt(int number);
+		Object* pileNamed(const std::string& name);
+		void turnCard(Object& card, bool up);
+		void putOnPile(Object& pile, int number);
+		int takeTop(Object& pile);
+		void showTop(Object& pile);
+		Vector2f cardPlace(const Object& pile, std::size_t index);
+		bool pileTakes(Object& pile, const std::vector<int>& cards);
+		static bool follows(const PileRule& rule, const Object& below, const Object& next);
+		void layHeld(Object& hand, Object& pile);
+		std::vector<Object*> shownPiles();
+		// Where each card's object is in `objects`, by its number less one
+		// (looked over again when a copy taken away moved them).
+		std::vector<std::size_t> cardIndex;
 		std::vector<std::pair<int, int>> ontoCells(const std::vector<std::string>& onto);
 		// <marks>: each picker's marks put in their cells (game/cells.cpp).
 		void showMarks();

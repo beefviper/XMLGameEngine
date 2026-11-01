@@ -999,6 +999,29 @@ namespace xge
 			object.markSets.push_back(std::move(set));
 		}
 
+		// Cards: a pile's rules, a hand, a card of a deck.
+		if (rawObject.pile.is)
+		{
+			const RawObject::RawPile& raw = rawObject.pile;
+			const auto number = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
+			Object::Pile& pile = object.pile;
+			pile.is = true;
+			pile.faces = raw.faces;
+			pile.fan = { number(raw.fanX), number(raw.fanY) };
+			pile.hidden = raw.hasHidden ? Vector2f{ number(raw.hiddenX), number(raw.hiddenY) } : pile.fan;
+			pile.dealt = static_cast<int>(std::lround(number(raw.dealt)));
+			pile.dealtMore = static_cast<int>(std::lround(number(raw.dealtMore)));
+			pile.dealsInto = raw.dealsInto;
+			pile.deals = raw.dealsInto.empty() ? 0 : std::max(1, static_cast<int>(std::lround(number(raw.deals))));
+			pile.refillFrom = raw.refillFrom;
+			pile.run = raw.run;
+			pile.showTop = raw.showTop;
+			pile.takes = raw.takes;
+		}
+		object.hand.is = rawObject.hand;
+		object.isCard = rawObject.isCard;
+		object.card = rawObject.card;
+
 		if (!rawObject.mirror.empty())
 		{
 			if (rawObject.hasHeading) { throw std::runtime_error(where + ": <mirror> flips a picture that does not turn; it has a <heading>"); }

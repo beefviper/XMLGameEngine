@@ -376,6 +376,7 @@ namespace xge
 			{ "column", [](Object& o) -> float& { return o.cellColumn; }, false },
 			{ "row", [](Object& o) -> float& { return o.cellRow; }, false },
 			{ "moves", [](Object& o) -> float& { return o.moveCount; }, true },
+			{ "cards", [](Object& o) -> float& { return o.cardCount; }, true },
 		};
 		return parts;
 	}

@@ -6,6 +6,7 @@
 #include "load/xml.h"
 
 #include "engine/folder.h"
+#include "game/cards.h"
 #include "game/game.h"
 #include "engine/keys.h"
 #include "load/merge.h"
@@ -1047,6 +1048,149 @@ namespace xge
 			return true;
 		}
 
+		int readCount(const XmlNode& node, const std::string& where);
+
+		// A <pile>: faces=, then its <fan>, <dealt>, <deals> and <refill>,
+		// <takes>, <run /> and <showtop />.
+		void readPile(const XmlNode& node, RawObject::RawPile& pile, const std::string& here)
+		{
+			pile.is = true;
+			pile.faces = node.getAttribute("faces");
+			if (!pile.faces.empty() && pile.faces != "up" && pile.faces != "down") { fail(here, "faces=\"" + pile.faces + "\"; expected up or down, or none (each card keeps its own)"); }
+			const auto halves = [&](const XmlNode& vector, RawValue& x, RawValue& y, const std::string& at)
+			{
+				if (auto across = findChild(&vector, "x")) { x = readValue(*across, at); }
+				if (auto down = findChild(&vector, "y")) { y = readValue(*down, at); }
+			};
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				const std::string at = here + " > <" + tag + ">";
+				if (tag == "fan")
+				{
+					halves(*child, pile.fanX, pile.fanY, at);
+					if (auto hidden = findChild(child.get(), "hidden"))
+					{
+						pile.hasHidden = true;
+						halves(*hidden, pile.hiddenX, pile.hiddenY, at + " > <hidden>");
+					}
+				}
+				else if (tag == "dealt")
+				{
+					pile.dealt = readLeadValue(*child, { "more" }, "how many, then <more> if wanted", here);
+					if (auto more = findChild(child.get(), "more")) { pile.dealtMore = readValue(*more, at); }
+				}
+				else if (tag == "deals")
+				{
+					pile.dealsInto = requireAttribute(*child, "into", at);
+					pile.deals = readValue(*child, at);
+				}
+				else if (tag == "refill") { pile.refillFrom = requireAttribute(*child, "from", at); }
+				else if (tag == "run") { pile.run = true; }
+				else if (tag == "showtop") { pile.showTop = true; }
+				else if (tag == "takes")
+				{
+					PileRule& rule = pile.takes;
+					rule.given = true;
+					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						const std::string name = part->getName();
+						if (name == "one") { rule.one = true; }
+						else if (name == "samesuit") { rule.sameSuit = true; }
+						else if (name == "othercolor") { rule.otherColor = true; }
+						else if (name == "up") { rule.up = true; }
+						else if (name == "down") { rule.down = true; }
+						else if (name == "empty")
+						{
+							for (std::unique_ptr<XmlNode> first = part->getFirstChild(); first != nullptr; first = first->getNextSibling())
+							{
+								if (first->getName() == "rank") { rule.emptyRanks.push_back(readText(*first)); }
+								else if (first->getName() == "suit") { rule.emptySuits.push_back(readText(*first)); }
+								else { fail(at + " > <empty>", "unknown <" + first->getName() + ">; expected <rank>s and <suit>s"); }
+							}
+						}
+						else { fail(at, "unknown <" + name + ">; expected <one />, <samesuit />, <othercolor />, <up />, <down /> and <empty>"); }
+					}
+					if (rule.up && rule.down) { fail(at, "has <up /> and <down />; a card goes one way"); }
+				}
+				else { fail(here, "unknown <" + tag + ">; expected <fan>, <dealt>, <deals>, <refill>, <takes>, <run /> and <showtop />"); }
+			}
+			if (!pile.refillFrom.empty() && pile.dealsInto.empty()) { fail(here, "has a <refill> but no <deals>; a pile is refilled when it is dealt from empty"); }
+		}
+
+		// A <deck name="cards" pile="stock">: its <face>, <back>, <suit>s
+		// and <rank>s, and how many <copies>; its cards made by addDeck.
+		void readDeck(const XmlNode& node, std::vector<RawObject>& out)
+		{
+			RawDeck deck;
+			deck.name = requireAttribute(node, "name", "<deck>");
+			const std::string here = "<deck name=\"" + deck.name + "\">";
+			deck.pile = requireAttribute(node, "pile", here);
+			const std::string objClass = node.getAttribute("class");
+			const auto number = [&](const XmlNode& part, const std::string& at)
+			{
+				return readCount(part, at);
+			};
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				const std::string at = here + " > <" + tag + ">";
+				if (tag == "face")
+				{
+					if (auto width = findChild(child.get(), "width")) { deck.width = number(*width, at); }
+					if (auto height = findChild(child.get(), "height")) { deck.height = number(*height, at); }
+					if (auto scale = findChild(child.get(), "scale")) { deck.scale = number(*scale, at); }
+					if (auto color = findChild(child.get(), "color")) { deck.faceColor = readText(*color); }
+					if (auto edge = findChild(child.get(), "edge")) { deck.faceEdge = readText(*edge); }
+				}
+				else if (tag == "back")
+				{
+					if (auto color = findChild(child.get(), "color")) { deck.backColor = readText(*color); }
+					if (auto edge = findChild(child.get(), "edge")) { deck.backEdge = readText(*edge); }
+				}
+				else if (tag == "suit")
+				{
+					RawDeck::Suit suit;
+					suit.name = requireAttribute(*child, "name", at);
+					const std::string where = here + " > <suit name=\"" + suit.name + "\">";
+					for (std::unique_ptr<XmlNode> row = child->getFirstChild(); row != nullptr; row = row->getNextSibling())
+					{
+						if (row->getName() == "row") { suit.rows.push_back(readText(*row)); }
+					}
+					if (suit.rows.empty()) { fail(where, "has no <row>s: its pip"); }
+					for (const std::string& row : suit.rows)
+					{
+						if (row.size() != suit.rows.front().size()) { fail(where, "has rows of different lengths"); }
+					}
+					if (auto color = findPlainColor(*child)) { suit.color = readText(*color); }
+					else { fail(where, "has no <color>"); }
+					readBitmapColors(*child, where, suit.colors);
+					for (const auto& [c, color] : suit.colors)
+					{
+						if (c == '@' || c == '#') { fail(where, "<color char=\"" + std::string(1, c) + "\">: '@' and '#' are the card's own face and edge; give another character"); }
+					}
+					for (const std::string& row : suit.rows)
+					{
+						for (const char c : row)
+						{
+							if (c != '.' && c != '*' && std::none_of(suit.colors.begin(), suit.colors.end(), [&](const auto& each) { return each.first == c; }))
+							{
+								fail(where, "has '" + std::string(1, c) + "' in a row, which no <color char> names");
+							}
+						}
+					}
+					deck.suits.push_back(std::move(suit));
+				}
+				else if (tag == "rank") { deck.ranks.push_back(readText(*child)); }
+				else if (tag == "copies") { deck.copies = number(*child, at); }
+				else { fail(here, "unknown <" + tag + ">; expected <face>, <back>, <suit>s, <rank>s and <copies>"); }
+			}
+			const std::size_t first = out.size();
+			try { addDeck(out, deck); }
+			catch (const std::exception& error) { fail(here, error.what()); }
+			for (std::size_t i = first; i < out.size(); ++i) { out[i].objClass = objClass; }
+		}
+
 		// <onto class="hslot" />, one or more and nothing else: the cells a
 		// hop or a track on cells may go to.
 		void readOnto(const XmlNode& node, const std::string& here, RawCommand& command)
@@ -1066,7 +1210,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1077,6 +1221,7 @@ namespace xge
 			if (!isCommandTag(command.verb)) { fail(where, "unknown command <" + command.verb + ">"); }
 
 			command.object = node.getAttribute("object");
+			command.pile = node.getAttribute("pile");
 			command.variable = node.getAttribute("variable");
 			command.state = node.getAttribute("state");
 			command.action = node.getAttribute("action");
@@ -1619,6 +1764,8 @@ namespace xge
 		// says: its <poses>, <mirror> and <grip>.
 		void readMoves(const XmlNode& node, RawObject& object, const std::string& where)
 		{
+			if (auto pile = findChild(&node, "pile")) { readPile(*pile, object.pile, where + " > <pile>"); }
+			if (findChild(&node, "hand")) { object.hand = true; }
 			if (auto poses = findChild(&node, "poses"))
 			{
 				const std::string here = where + " > <poses>";
@@ -2430,7 +2577,7 @@ namespace xge
 				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
-				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves" || tag == "marks") { /* below, all at once */ }
+				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves" || tag == "marks" || tag == "pile" || tag == "hand") { /* below, all at once */ }
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "chain")
 				{
@@ -2445,7 +2592,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <pile>, <hand />, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -3132,6 +3279,7 @@ namespace xge
 				const std::unique_ptr<XmlNode> node = viewOf(element);
 				if (element->name == "group") { readGroup(*node, out); }
 				else if (element->name == "map") { readMap(*node, out); }
+				else if (element->name == "deck") { readDeck(*node, out); }
 				else { out.push_back(readObject(*node)); }
 			}
 		}

@@ -614,8 +614,120 @@
       <xs:element name="joins" type="joinsType" minOccurs="0" />
       <xs:element name="moves" type="pieceMovesType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="marks" type="marksType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="pile" type="pileType" minOccurs="0" />
+      <!-- hand: points at piles and carries cards between them (<take />, <lay />, <drop />, <deal />) -->
+      <xs:element name="hand" type="emptyType" minOccurs="0" />
     </xs:sequence>
   </xs:group>
+  <!-- pile: a place that holds cards. faces=: every card put on it turned up or down (left out: each keeps its own).
+       fan: each face-up card on from the one below (<hidden>: each face-down one); dealt: cards dealt it at the start
+       (in a group, <more>: each pile after the first that many more); deals: taking from it deals that many into= that pile,
+       refill: and taken from empty, that pile is turned back over onto it; takes: what may be laid on it (on an empty one, <empty>'s
+       ranks and suits); run: a face-up card may be taken with those above it; showtop: a face-down card left on top turns up -->
+  <xs:complexType name="pileType">
+    <xs:sequence>
+      <xs:element name="fan" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="x" type="valueType" minOccurs="0" />
+            <xs:element name="y" type="valueType" minOccurs="0" />
+            <xs:element name="hidden" type="partialVector2Type" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="dealt" minOccurs="0">
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:group ref="valueTag" minOccurs="0" />
+            <xs:element name="more" type="valueType" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="deals" minOccurs="0">
+        <xs:complexType mixed="true">
+          <xs:group ref="valueTag" minOccurs="0" />
+          <xs:attribute name="into" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="refill" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="from" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="takes" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="one" type="emptyType" minOccurs="0" />
+            <xs:element name="samesuit" type="emptyType" minOccurs="0" />
+            <xs:element name="othercolor" type="emptyType" minOccurs="0" />
+            <xs:choice minOccurs="0">
+              <xs:element name="up" type="emptyType" />
+              <xs:element name="down" type="emptyType" />
+            </xs:choice>
+            <xs:element name="empty" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="rank" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+                  <xs:element name="suit" type="xs:NMTOKEN" minOccurs="0" maxOccurs="unbounded" />
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="run" type="emptyType" minOccurs="0" />
+      <xs:element name="showtop" type="emptyType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="faces" use="optional">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="up" />
+          <xs:enumeration value="down" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+  <!-- deck: the cards, one of each suit with each rank (<copies>: that many packs), shuffled into the pile pile= names.
+       face: its size in pixels of the picture, the scale, and the color of the face and its edge; back: its color and the
+       color of its edge and pattern; suit: its pip as bitmap rows ('*' its <color>, more characters by <color char>);
+       rank: the label, drawn in a small built-in font (0-9, A-Z), lowest first -->
+  <xs:complexType name="deckType">
+    <xs:sequence>
+      <xs:element name="face" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="width" type="xs:positiveInteger" minOccurs="0" />
+            <xs:element name="height" type="xs:positiveInteger" minOccurs="0" />
+            <xs:element name="scale" type="xs:positiveInteger" minOccurs="0" />
+            <xs:element name="color" type="xs:string" minOccurs="0" />
+            <xs:element name="edge" type="xs:string" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="back" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="color" type="xs:string" minOccurs="0" />
+            <xs:element name="edge" type="xs:string" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="suit" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
+            <xs:element name="color" type="bitmapColorType" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="rank" type="xs:string" maxOccurs="unbounded" />
+      <xs:element name="copies" type="xs:positiveInteger" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="pile" type="xs:string" use="required" />
+  </xs:complexType>
   <!-- marks: on a picker, pieces it shows in cells of their own map of cells, a copy of object= in each:
        held, the piece it holds; moves, each cell that piece can move to; movable, each piece of class= that can be picked;
        put, each cell a piece of class= can be <put> in;
@@ -1241,6 +1353,17 @@
       </xs:element>
       <!-- place: the piece held makes its move that ends in the picker's cell; refused when none does, and while it can jump on -->
       <xs:element name="place" type="emptyType" />
+      <!-- take, on a hand: the card pointed at, with those above it from a pile with a <run />; refused when nothing can be taken -->
+      <xs:element name="take" type="emptyType" />
+      <!-- lay, on a hand: what it holds on the pile pointed at (pile=: the first of those piles that takes it); refused when none does;
+           laid back on the pile it came from it is put back -->
+      <xs:element name="lay">
+        <xs:complexType>
+          <xs:attribute name="pile" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+      <!-- deal, on a hand: from the pile pointed at, by its <deals> (or, empty, its <refill>) -->
+      <xs:element name="deal" type="emptyType" />
       <!-- put: a new piece of that class in the picker's cell of the pieces' map; refused when the cell is taken,
            or, when the pieces have <flank>s, where it traps nothing; the pieces it traps turn into its kind -->
       <!-- put with <close class object>: each piece of that class beside the piece put, walled in on its four sides
@@ -2107,6 +2230,7 @@
       <xs:element name="object" type="objectType" />
       <xs:element name="group" type="groupType" />
       <xs:element name="map" type="mapType" />
+      <xs:element name="deck" type="deckType" />
     </xs:choice>
   </xs:complexType>
 

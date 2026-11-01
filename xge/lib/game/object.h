@@ -418,6 +418,36 @@ namespace xge
 		std::vector<MazeSlow> slows{};
 	};
 
+	// What a <pile> <takes> on top (each <one />, <samesuit />, ...), and
+	// what may start it when it is empty (<empty>'s <rank>s and <suit>s;
+	// none named: any card). A pile with no <takes> takes nothing but the
+	// cards put back on it.
+	struct PileRule
+	{
+		bool given{ false };
+		bool one{ false };
+		bool sameSuit{ false };
+		bool otherColor{ false };
+		bool up{ false };
+		bool down{ false };
+		std::vector<std::string> emptyRanks;
+		std::vector<std::string> emptySuits;
+	};
+
+	// A card of a <deck> (see game/cards.h): which deck, its suit and rank
+	// (numbers from 1 in the order written), their names, the suit's color
+	// (what <othercolor /> compares) and the pile the deck starts in.
+	struct CardOf
+	{
+		std::string deck;
+		int suit{};
+		int rank{};
+		std::string suitName;
+		std::string rankName;
+		std::string color;
+		std::string startPile;
+	};
+
 	struct RawObject
 	{
 		std::string name;
@@ -542,6 +572,29 @@ namespace xge
 			std::vector<RawMark> marks;
 		};
 		std::vector<RawMarkSet> markSets;
+		// <pile>: a place that holds cards (Object::Pile), as written.
+		struct RawPile
+		{
+			bool is{ false };
+			std::string faces;          // "up", "down", or "" (each keeps its own)
+			RawValue fanX;              // each face-up card on from the one below (empty text: 0)
+			RawValue fanY;
+			RawValue hiddenX;           // each face-down one (empty text: as face up)
+			RawValue hiddenY;
+			bool hasHidden{ false };
+			RawValue dealt;             // cards dealt it at the start (empty text: none)
+			RawValue dealtMore;         // a group's: each pile after the first, this many more
+			std::string dealsInto;      // <deals into=>: taking from it deals that many there
+			RawValue deals;
+			std::string refillFrom;     // <refill from=>: taking from it empty turns that pile back over
+			bool run{ false };          // <run />: a face-up card can be taken with all above it
+			bool showTop{ false };      // <showtop />: a face-down card left on top turns up
+			PileRule takes;
+		};
+		RawPile pile;
+		bool hand{ false };             // <hand />: points at piles and carries cards (Object::Hand)
+		CardOf card;                    // a card of a <deck> (deck empty for anything else)
+		bool isCard{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
 		// <shape>: on a cell map, the cells it fills, a <row> of characters
 		// each, top to bottom; and the object of the map each character
@@ -990,6 +1043,52 @@ namespace xge
 			std::vector<Mark> marks;
 		};
 		std::vector<MarkSet> markSets;
+		// Cards (game/cards.cpp). A pile: its rules and the cards it holds,
+		// bottom first (each a card's number, Game::cardAt). Laid out by
+		// Game::layOutCards, never moved by the frame.
+		struct Pile
+		{
+			bool is{ false };
+			std::string faces;
+			Vector2f fan{};
+			Vector2f hidden{};
+			int dealt{};
+			int dealtMore{};
+			std::string dealsInto;
+			int deals{};
+			std::string refillFrom;
+			bool run{ false };
+			bool showTop{ false };
+			PileRule takes;
+			std::vector<int> cards;
+		};
+		Pile pile;
+		// The live number `cards`: how many the pile holds.
+		float cardCount{};
+		// A card: what it is, its number (from 1, every deck of the game
+		// in turn) and whether its face is up.
+		bool isCard{ false };
+		CardOf card;
+		int cardNumber{};
+		bool faceUp{ false };
+		// A hand: the pile it points at (its full name) and the card of it
+		// (index from the bottom; -1: the pile itself, empty), the cards it
+		// holds and the pile they came from, and whether the mouse moves it
+		// (the cards then follow the pointer, `grab` off it).
+		struct Hand
+		{
+			bool is{ false };
+			std::string pile;
+			int at{ -1 };
+			std::vector<int> held;
+			std::string from;
+			bool mouse{ false };
+			Vector2f grab{};
+		};
+		Hand hand;
+		// Drawn after everything with a smaller one; 0 keeps the file's order
+		// (cards and hands are drawn above the rest).
+		int drawOrder{};
 		struct Marked
 		{
 			std::string object;

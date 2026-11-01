@@ -8,7 +8,7 @@ This is the reference for what the engine does **today**: the game file, every e
 - [Running games](#running-games): `xgecli`, `xgegui`, the shipped games, generating a program
 - [The game file](#the-game-file): layout, the format's one rule, values, names
 - [Window, variables and styles](#window-variables-and-styles)
-- [Objects](#objects): parts, groups, maps, the kit, spawning
+- [Objects](#objects): parts, groups, maps, cards, the kit, spawning
 - [Pictures](#pictures): sprites, bitmaps, text, animation, looks, poses
 - [Sounds](#sounds)
 - [Commands](#commands): where they go and what each does
@@ -95,7 +95,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 
 ### The shipped games
 
-47 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
+48 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
 
 | Game | Keys besides the convention | What it is, and what it shows |
 |---|---|---|
@@ -145,6 +145,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `fourinarow` | A/D or the arrows move the disc, Space, S, Down or a left click drops it, the mouse points; 2 on the title for two players; P or Escape pauses | four in a row against the computer or for two: discs with [`<fall />`](#board-games) in their `<moves>` dropped down a column, wins found by the board's `<line>` check, a computer that reads that line from the checks |
 | `tictactoe` | W A S D or the arrows move, Space or a left click marks, the mouse points; A/D on the title for an easy or smart computer, 2 for two players; P or Escape pauses | tic-tac-toe: marks with an empty [`<moves />`](#board-games), put in any free square; smart looks to the end of the game and is only ever drawn with |
 | `dotsandboxes` | W A S D or the arrows move over the free places (left and right along a row, up and down a row of across or down lines at a time), Space or a left click draws, the mouse goes to the free place nearest it; 2 on the title for two players; P or Escape pauses | dots and boxes against the computer or for two: lines in each player's colour put [`<on>`](#board-games) their places, a box walled in claimed by `<close>` and the turn kept; a cursor that stands only on free places ([`<onto>`](#board-games)); the computer goes again after a box as well, and thinks while the game goes on |
+| `klondike` | W A S D or the arrows move the hand from pile to pile and up and down a column's face-up cards, Space takes and lays (and deals from the stock), X or Backspace puts back, F sends a card to its foundation; the mouse drags, a right click sends home; P or Escape pauses, N there deals again | the classic patience: a [`<deck>`](#cards) of 52 cards made from its suits and ranks, piles with rules of what they take, a hand that carries cards and runs of cards between them; won when the live number `cards` of the foundations adds up to 52 |
 | `centipede` | W A S D move the wand about its zone, Space fires; P or Escape pauses | a centipede winding down through a mushroom field, [split](#cells) in two where a shot hits it; each piece left grows a head; a line nobody sees over the bottom six rows turns it back down and holds the wand in |
 
 What each game was written to test, and what it left out: [games-classic](designs/54-games-classic.md), [games-written-by-ai](designs/55-games-written-by-ai.md), [games-atari](designs/56-games-atari.md).
@@ -605,6 +606,49 @@ A board game's pieces sit on a map of cells and are moved by a player, a move at
 - **`<put class="line"><close class="box" object="redbox" /></put>`**: after the put, each piece of class `box` beside it (above, below, left or right) that now has no place left on any of its four sides (no piece of a class the put's pieces go `<on>`: lines of either colour wall it in) is replaced by a copy of `redbox`. A put that closes one counts as refused, as a place that must jump on does: what is written after it (passing the turn) is not done, and the player goes again.
 - **Checks after a put.** The map's `<checks>` are asked after each put, as after a piece settles, so `<line class="red"><atleast>4</atleast>` finds four in a row. A check runs no `<push>`: Four in a Row's sets a variable that a condition answers.
 - **`<count class="black" into="score.black" />`** (any place) sets the variable to how many objects of that class are in play, those put this frame included: Reversi's score after each put.
+
+### Cards
+
+Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried between them by a **hand**. Klondike:
+
+```xml
+<deck name="cards" pile="stock">
+  <face><width>21</width><height>31</height><scale>3</scale><color>color.white</color><edge>color.grey</edge></face>
+  <back><color>color.darkblue</color><edge>color.lightgrey</edge></back>
+  <suit name="hearts">
+    <color>color.red</color>
+    <row>.*.*.</row> ... the pip, '*' in the suit's colour ...
+  </suit>
+  ... three more suits ...
+  <rank>A</rank><rank>2</rank> ... <rank>K</rank>
+</deck>
+<object name="stock">
+  <sprite name="spot"> ... </sprite>
+  <pile faces="down"><deals into="waste">1</deals><refill from="waste" /></pile>
+</object>
+<group name="columns">
+  ...
+  <pile>
+    <fan><y>21</y><hidden><y>6</y></hidden></fan>
+    <dealt>1<more>1</more></dealt>
+    <takes><othercolor /><down /><empty><rank>K</rank></empty></takes>
+    <run />
+    <showtop />
+  </pile>
+</group>
+<object name="hand"> ... <hand /> ... </object>
+```
+
+- **`<deck name="cards" pile="stock">`** (in any `<objects>`) makes a card for each `<suit>` and `<rank>`, in the order written, `<copies>` times over (packs shuffled together, 1 when left out): objects `cards.1`, `cards.2`, ..., each with variables `suit` and `rank` (numbers from 1 in the order written) and two looks, `face` and `back`. `class=` gives the cards a class. A deck of other suits and ranks (an Italian 40: coins, cups, swords and batons; ranks 1 to 7 and three court cards) is written the same way.
+- **The faces are drawn by the engine** as bitmaps (so every window library draws them): `<face>` is the card's size in bitmap pixels, its `<scale>`, and the colours of the face and its edge; each suit's pip is bitmap rows (`*` its `<color>`, `.` the face, other characters a `<color char>` of the suit's); the rank is drawn in a small built-in 3x5 font (digits and capital letters), with the pip, in the top left corner and again turned about in the bottom right, and the pip big in the middle when the face has room. `<back>` is a frame and a lattice in its two colours.
+- **A `<pile>`** on an object (or on each member of a group) makes it a place that holds cards, drawn on it in order: `faces="up"` or `"down"` turns every card laid there that way (none: each keeps its own); `<fan>` sets each card's offset from the one under it, and `<hidden>` in it a face-down card's; `<run />` lets a face-up card be taken with all those on it; `<showtop />` turns a face-down card left on top face up.
+- **The deal.** The shuffled deck goes to its `pile=`, and each pile's `<dealt>N</dealt>` takes N from it, a card a round as a dealer does, the last face up. On a group, `<more>1</more>` deals each member after the first one more (Klondike's staircase). A new game (a full [reset](#flow)) shuffles and deals again.
+- **`<takes>`** is what a pile takes on top: `<one />` (one card at a time, no runs), `<samesuit />`, `<othercolor />` (by the suit's `<color>`), `<up />` or `<down />` (one rank above or below the top card), and `<empty>` with the `<rank>`s and `<suit>`s it takes first. A pile with no `<takes>` takes nothing laid by the hand.
+- **A stock.** `<deals into="waste">1</deals>`: taking from it deals that many onto that pile; `<refill from="waste" />`: taken from empty, it turns that pile back over into itself.
+- **The hand** is an object with `<hand />`. It points at a pile (at a card of it) and carries cards: `<take />` takes the card pointed at and those on it (refused when that is not a run the pile gives, or the card is face down), and on a stock deals instead; `<lay />` lays what it holds on the pile it points at, refused when the pile does not take it (so what follows, a sound, does not happen); `<lay pile="foundations" />` lays it on the first of those piles (a group's name, or one pile's) that takes it; laying back on the pile the cards came from is always allowed. `<drop />` on a hand puts back. `<deal />` deals from the stock pointed at. All are self verbs.
+- **Moving the hand.** [`<hop>`](#moving) on a hand goes left and right to the nearest pile at the same height, up and down through the face-up cards of a fanned pile and then to the nearest row of piles above or below. [`<track />`](#pointing-controls) points at the top card under the pointer (or the pile under it); held cards follow the pointer, so a press, a drag and a release (`on="release"`) move cards as Space twice does.
+- **Drawing order.** Cards are drawn in their piles' order above everything else, held cards above them and the hand above all.
+- **Live number `cards`**: how many cards a pile holds. `<condition object="foundations" variable="cards" total="sum"><atleast>52</atleast></condition>` is Klondike's win.
 
 ### The kit and from=
 
@@ -1438,7 +1482,7 @@ A condition is checked every frame while its state (or scene) is current. It hol
 | `<above>N</above>`, `<below>N</below>`, `<equal>N</equal>` | more than, less than, the same as N |
 | `<remaining>N</remaining>` | no more than N of the matched objects are still in play (`class="aliens"` with `0`: all shot) |
 
-- **What is tested.** `variable="score"` is an object's variable, or, with none of that name, one of its live numbers (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`, and on a cell map `column`, `row` and `moves`), so a condition can compare where things are.
+- **What is tested.** `variable="score"` is an object's variable, or, with none of that name, one of its live numbers (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`, on a cell map `column`, `row` and `moves`, and on a pile `cards`), so a condition can compare where things are.
 - **The number is a value, read as the game runs** when it names something that changes, so a test can follow another object: Air-Sea Battle's winner.
 
   ```xml
@@ -1652,6 +1696,7 @@ cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 | | `play/verbs.cpp`, `play/executor.cpp` | what a verb does to an object; picking the verb and its target |
 | | `play/maze.cpp` | walking a map's tiles |
 | | `game/cells.cpp` | maps of [cells](#cells): spawning into cells, cell steps and turns (the kick tables), settling, the checks |
+| | `game/cards.cpp` | [cards](#cards): a deck's cards and their faces, the deal, piles and their rules, the hand |
 | pictures | `picture/bitmap.cpp`, `picture/svg.cpp`, `picture/font.cpp`, `picture/color.cpp` | lines and bitmap rows into pixels, flips and turns; SVG with lunasvg; font files and the built-in 8x8 font; color names |
 | loop and libraries | `engine/engine.cpp`, `engine/backends.cpp`, `engine/keys.cpp`, `engine/folder.cpp` | the loop (`loop()`, or `step()` and `render()`), keys and controls, sounds a frame asked for; choosing libraries by name; key names; the games folder and `findSchema` |
 | | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, one file per library; `audio/sound.cpp` is the synthesizer |

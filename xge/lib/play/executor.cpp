@@ -94,7 +94,8 @@ namespace xge
 			if (along->path.empty())
 			{
 				const float span = horizontal ? window.width : window.height;
-				if (object.onCells) { game.trackCells(object, horizontal, fraction * span, along->onto); }
+				if (object.hand.is) { game.trackHand(object, horizontal, fraction * span); }
+				else if (object.onCells) { game.trackCells(object, horizontal, fraction * span, along->onto); }
 				else { track(object, horizontal, fraction, span); }
 			}
 			else if (const auto path = game.getPaths().find(along->path); path != game.getPaths().end())
@@ -142,7 +143,8 @@ namespace xge
 			// of a run of jumps.
 			[&](const CmdDrop&)
 			{
-				if (self && !self->picked.empty()) { done = game.dropPiece(*self); }
+				if (self && self->hand.is) { done = game.dropCards(*self); }
+				else if (self && !self->picked.empty()) { done = game.dropPiece(*self); }
 				else if (self) { xge::drop(*self); }
 			},
 			[&](const CmdReverse&)
@@ -264,6 +266,9 @@ namespace xge
 			[&](const CmdThrough&) { if (self && doer.touch) { game.stepThrough(); } },
 			[&](const CmdPick& p) { done = self && game.pickPiece(*self, p.objClass, p.only); },
 			[&](const CmdPlace&) { done = self && game.placePiece(*self); },
+			[&](const CmdTake&) { done = self && game.takeCards(*self); },
+			[&](const CmdLay& l) { done = self && game.layCards(*self, l.pile); },
+			[&](const CmdDeal&) { done = self && game.dealCards(*self); },
 			[&](const CmdPut& p) { done = self && game.putPiece(*self, p); },
 			[&](const CmdCount& c) { game.setNumber(c.target, game.countClass(c.objClass)); },
 			// Another action, of this object or another, as part of this.
@@ -540,6 +545,7 @@ namespace xge
 	{
 		// On a cell map: whole cells (one, with no distance), refused (and
 		// touching) when it cannot go.
+		if (object.hand.is) { return game.hopHand(object, command.direction); }
 		if (object.onCells && !command.onto.empty()) { return game.hopOnto(object, command.direction, command.onto); }
 		if (object.onCells)
 		{

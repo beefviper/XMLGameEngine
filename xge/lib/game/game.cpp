@@ -63,6 +63,8 @@ namespace xge
 			stateTimers[state.name] = state.timers;
 		}
 		startScenes();
+		// The cards shuffled and dealt.
+		dealDecks();
 		loadedCount = objects.size();
 		runsInTop.assign(objects.size(), 0);
 		runsInTopStage.assign(objects.size(), 0);
@@ -1621,6 +1623,9 @@ namespace xge
 			currentState.pop();
 		}
 		setCurrentState(0);
+
+		// A new game: the cards shuffled and dealt again.
+		dealDecks();
 	}
 
 	void Game::refreshAllBoundTexts(void)

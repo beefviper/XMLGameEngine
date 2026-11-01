@@ -9,6 +9,7 @@
 #include "engine/keys.h"
 #include "game/object.h"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -105,19 +106,30 @@ namespace xge
 	// One picture of a game: the background, then every object in play, in
 	// the order they are listed. What the engine draws each frame, and a
 	// generated game too.
+	// The objects `which` says, in the order they are listed, except that
+	// those with a drawOrder (cards, a hand) come after the rest, lowest
+	// first.
+	template <typename Which>
+	void drawInOrder(Window& window, std::vector<Object>& objects, Which which)
+	{
+		static std::vector<Object*> later;
+		later.clear();
+		for (auto& object : objects)
+		{
+			if (!which(object)) { continue; }
+			if (object.drawOrder != 0) { later.push_back(&object); }
+			else { drawObject(window, object); }
+		}
+		if (later.empty()) { return; }
+		std::stable_sort(later.begin(), later.end(), [](const Object* a, const Object* b) { return a->drawOrder < b->drawOrder; });
+		for (Object* object : later) { drawObject(window, *object); }
+	}
+
 	template <typename InPlay>
 	void drawFrame(Window& window, std::vector<Object>& objects, const std::string& background, InPlay inPlay)
 	{
 		window.clear(background);
-
-		for (auto& object : objects)
-		{
-			if (inPlay(object))
-			{
-				drawObject(window, object);
-			}
-		}
-
+		drawInOrder(window, objects, inPlay);
 		window.display();
 	}
 
@@ -127,22 +139,8 @@ namespace xge
 	void drawFrame(Window& window, std::vector<Object>& objects, const std::string& background, Still still, InPlay inPlay)
 	{
 		window.clear(background);
-
-		for (auto& object : objects)
-		{
-			if (still(object))
-			{
-				drawObject(window, object);
-			}
-		}
-		for (auto& object : objects)
-		{
-			if (inPlay(object))
-			{
-				drawObject(window, object);
-			}
-		}
-
+		drawInOrder(window, objects, still);
+		drawInOrder(window, objects, inPlay);
 		window.display();
 	}
 

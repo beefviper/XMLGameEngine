@@ -698,6 +698,18 @@ namespace xge
 	// the piece can jump on (the turn is not over). See Game::placePiece.
 	struct CmdPlace {};
 
+	// Cards (game/cards.cpp), self verbs of a <hand />: <take /> the card
+	// pointed at (with those above it, from a pile with a <run />); <lay />
+	// what it holds on the pile pointed at, or with pile= on the first of
+	// those that takes it; <deal /> from the pile pointed at, by its
+	// <deals>. Each refused when it cannot be done.
+	struct CmdTake {};
+	struct CmdLay
+	{
+		std::string pile;
+	};
+	struct CmdDeal {};
+
 	// <put class="black" />: a picker puts a new piece of that class (a
 	// copy of the first written) in its cell of the pieces' map. Refused
 	// when the cell is taken, and, when the pieces' moves have <flank>s,
@@ -786,7 +798,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdCount, CmdThink, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdCount, CmdThink, CmdTake, CmdLay, CmdDeal, CmdLive>;
 
 	struct LoadedCommand
 	{
@@ -972,6 +984,7 @@ namespace xge
 		std::string closeClass;  // put: <close class=...>
 		std::string closeObject; // put: <close object=...>
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
+		std::string pile;      // lay: pile= the piles to lay on
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)
