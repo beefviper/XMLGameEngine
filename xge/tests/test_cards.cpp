@@ -7,6 +7,7 @@
 // their rules, the deal, and a hand that takes, lays and puts back
 // (klondike.xml).
 
+#include "game/cards.h"
 #include "played.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -360,4 +361,51 @@ TEST_CASE("klondike.xml: all 52 home wins, and a new game deals again", "[cards]
 	CHECK(table.pile("stock").pile.cards.size() == 24);
 	CHECK(table.pile("columns.7.1").pile.cards.size() == 7);
 	CHECK(table.pile("foundations.1.1").pile.cards.empty());
+}
+
+TEST_CASE("a deck of its own suits and ranks: an Italian forty, pips laid out, a double-ended picture", "[cards]")
+{
+	RawDeck deck;
+	deck.name = "carte";
+	deck.pile = "mazzo";
+	for (const char* name : { "coins", "cups", "swords", "batons" })
+	{
+		deck.suits.push_back({ name, "color.red", { ".*.", "***", ".*." }, {}, {}, {} });
+	}
+	for (const char* name : { "1", "2", "3", "4", "5", "6", "7", "F", "C", "R" }) { deck.ranks.push_back({ name, {}, {}, {}, false }); }
+	std::vector<RawObject> cards;
+	addDeck(cards, deck);
+	REQUIRE(cards.size() == 40);
+	CHECK(cards.back().name == "carte.40");
+	CHECK(cards.back().card.rankName == "R");
+
+	// Two pips on a grid of one column and three rows: the top one upright
+	// in the top middle, the bottom one turned round in the bottom middle.
+	RawDeck two = deck;
+	two.suits = { { "arrows", "color.black", { "*", "*", "." }, {}, {}, {} } };
+	two.ranks = { { "2", {}, { "*", ".", "v" }, {}, false } };
+	cards.clear();
+	addDeck(cards, two);
+	const std::vector<std::string>& rows = cards.front().looks.front().bitmapRows;
+	REQUIRE(rows.size() == 93);
+	CHECK(rows[5][31] == '*');
+	CHECK(rows[6][31] == '*');
+	CHECK(rows[7][31] == '@');
+	CHECK(rows[85][31] == '@');
+	CHECK(rows[86][31] == '*');
+	CHECK(rows[87][31] == '*');
+
+	// A picture's top half, and the bottom the same turned round.
+	RawDeck court = two;
+	court.ranks = { { "K", {}, {}, { "*..", "..." }, true } };
+	cards.clear();
+	addDeck(cards, court);
+	const std::vector<std::string>& king = cards.front().looks.front().bitmapRows;
+	CHECK(king[44][30] == '*');
+	CHECK(king[47][32] == '*');
+
+	// A picture's character no color names stops the load.
+	court.ranks = { { "K", {}, {}, { "*.q" }, false } };
+	cards.clear();
+	CHECK_THROWS(addDeck(cards, court));
 }

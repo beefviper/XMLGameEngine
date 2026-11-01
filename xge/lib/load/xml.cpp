@@ -1118,6 +1118,23 @@ namespace xge
 			if (!pile.refillFrom.empty() && pile.dealsInto.empty()) { fail(here, "has a <refill> but no <deals>; a pile is refilled when it is dealt from empty"); }
 		}
 
+		// The <row>s inside a part of a deck (a pip, an index, a picture),
+		// all of one length.
+		std::vector<std::string> rowsOf(const XmlNode& node, const std::string& here)
+		{
+			std::vector<std::string> rows;
+			for (std::unique_ptr<XmlNode> row = node.getFirstChild(); row != nullptr; row = row->getNextSibling())
+			{
+				if (row->getName() == "row") { rows.push_back(readText(*row)); }
+			}
+			if (rows.empty()) { fail(here, "has no <row>s"); }
+			for (const std::string& row : rows)
+			{
+				if (row.size() != rows.front().size()) { fail(here, "has rows of different lengths"); }
+			}
+			return rows;
+		}
+
 		// A <deck name="cards" pile="stock">: its <face>, <back>, <suit>s
 		// and <rank>s, and how many <copies>; its cards made by addDeck.
 		void readDeck(const XmlNode& node, std::vector<RawObject>& out)
@@ -1147,21 +1164,35 @@ namespace xge
 				{
 					if (auto color = findChild(child.get(), "color")) { deck.backColor = readText(*color); }
 					if (auto edge = findChild(child.get(), "edge")) { deck.backEdge = readText(*edge); }
+					if (auto pattern = findChild(child.get(), "pattern")) { deck.pattern = rowsOf(*pattern, at + " > <pattern>"); }
+				}
+				else if (tag == "color")
+				{
+					if (child->getAttribute("char").empty()) { fail(at, "has no char=; a deck's <color char=\"y\">s are the colors its pictures use"); }
 				}
 				else if (tag == "suit")
 				{
 					RawDeck::Suit suit;
 					suit.name = requireAttribute(*child, "name", at);
 					const std::string where = here + " > <suit name=\"" + suit.name + "\">";
-					for (std::unique_ptr<XmlNode> row = child->getFirstChild(); row != nullptr; row = row->getNextSibling())
+					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
 					{
-						if (row->getName() == "row") { suit.rows.push_back(readText(*row)); }
+						const std::string name = part->getName();
+						if (name == "row") { suit.rows.push_back(readText(*part)); }
+						else if (name == "index") { suit.index = rowsOf(*part, where + " > <index>"); }
+						else if (name == "large") { suit.large = rowsOf(*part, where + " > <large>"); }
 					}
 					if (suit.rows.empty()) { fail(where, "has no <row>s: its pip"); }
-					for (const std::string& row : suit.rows)
+					const auto even = [&](const std::vector<std::string>& rows, const std::string& what)
 					{
-						if (row.size() != suit.rows.front().size()) { fail(where, "has rows of different lengths"); }
-					}
+						for (const std::string& row : rows)
+						{
+							if (row.size() != rows.front().size()) { fail(where, what + " has rows of different lengths"); }
+						}
+					};
+					even(suit.rows, "its pip");
+					even(suit.index, "its <index>");
+					even(suit.large, "its <large>");
 					if (auto color = findPlainColor(*child)) { suit.color = readText(*color); }
 					else { fail(where, "has no <color>"); }
 					readBitmapColors(*child, where, suit.colors);
@@ -1169,25 +1200,62 @@ namespace xge
 					{
 						if (c == '@' || c == '#') { fail(where, "<color char=\"" + std::string(1, c) + "\">: '@' and '#' are the card's own face and edge; give another character"); }
 					}
-					for (const std::string& row : suit.rows)
+					for (const auto* rows : { &suit.rows, &suit.index, &suit.large })
 					{
-						for (const char c : row)
+						for (const std::string& row : *rows)
 						{
-							if (c != '.' && c != '*' && std::none_of(suit.colors.begin(), suit.colors.end(), [&](const auto& each) { return each.first == c; }))
+							for (const char c : row)
 							{
-								fail(where, "has '" + std::string(1, c) + "' in a row, which no <color char> names");
+								if (c != '.' && c != '*' && std::none_of(suit.colors.begin(), suit.colors.end(), [&](const auto& each) { return each.first == c; }))
+								{
+									fail(where, "has '" + std::string(1, c) + "' in a row, which no <color char> names");
+								}
 							}
 						}
 					}
 					deck.suits.push_back(std::move(suit));
 				}
-				else if (tag == "rank") { deck.ranks.push_back(readText(*child)); }
+				else if (tag == "rank")
+				{
+					RawDeck::Rank rank;
+					rank.name = child->getAttribute("name");
+					if (rank.name.empty())
+					{
+						// <rank>A</rank>: a name and nothing else.
+						rank.name = readText(*child);
+						if (rank.name.empty()) { fail(at, "has no name; write <rank>A</rank>, or <rank name=\"A\"> with its parts"); }
+					}
+					else
+					{
+						const std::string where = here + " > <rank name=\"" + rank.name + "\">";
+						if (!readText(*child).empty()) { fail(where, "has text and name=; give one"); }
+						for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
+						{
+							const std::string name = part->getName();
+							if (name == "index") { rank.index = rowsOf(*part, where + " > <index>"); }
+							else if (name == "pips") { rank.pips = rowsOf(*part, where + " > <pips>"); }
+							else if (name == "picture")
+							{
+								rank.picture = rowsOf(*part, where + " > <picture>");
+								rank.half = findChild(part.get(), "half") != nullptr;
+							}
+							else { fail(where, "unknown <" + name + ">; expected <index>, <pips> or <picture>"); }
+						}
+						if (!rank.pips.empty() && !rank.picture.empty()) { fail(where, "has <pips> and a <picture>; a face shows one"); }
+					}
+					deck.ranks.push_back(std::move(rank));
+				}
 				else if (tag == "copies") { deck.copies = number(*child, at); }
-				else { fail(here, "unknown <" + tag + ">; expected <face>, <back>, <suit>s, <rank>s and <copies>"); }
+				else { fail(here, "unknown <" + tag + ">; expected <face>, <back>, <color char>s, <suit>s, <rank>s and <copies>"); }
+			}
+			readBitmapColors(node, here, deck.colors);
+			for (const auto& [c, color] : deck.colors)
+			{
+				if (c == '@' || c == '#') { fail(here, "<color char=\"" + std::string(1, c) + "\">: '@' and '#' are the card's own face and edge; give another character"); }
 			}
 			const std::size_t first = out.size();
-			try { addDeck(out, deck); }
-			catch (const std::exception& error) { fail(here, error.what()); }
+			// addDeck's mistakes name the deck already.
+			addDeck(out, deck);
 			for (std::size_t i = first; i < out.size(); ++i) { out[i].objClass = objClass; }
 		}
 

@@ -613,14 +613,21 @@ Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried
 
 ```xml
 <deck name="cards" pile="stock">
-  <face><width>21</width><height>31</height><scale>3</scale><color>color.white</color><edge>color.grey</edge></face>
-  <back><color>color.darkblue</color><edge>color.lightgrey</edge></back>
+  <face><width>63</width><height>93</height><scale>1</scale><color>color.white</color><edge>color.grey</edge></face>
+  <back><color>color.darkblue</color><edge>color.lightgrey</edge><pattern><row>*.....*.</row> ... </pattern></back>
+  <color char="y">color.gold</color> ... the court pictures' colours ...
   <suit name="hearts">
     <color>color.red</color>
-    <row>.*.*.</row> ... the pip, '*' in the suit's colour ...
+    <row>.***...***.</row> ... the pip, '*' in the suit's colour ...
+    <index><row>.**.**.</row> ... </index>
+    <large><row>....******.....******....</row> ... </large>
   </suit>
   ... three more suits ...
-  <rank>A</rank><rank>2</rank> ... <rank>K</rank>
+  <rank name="3">
+    <index><row>.*****.</row> ... </index>
+    <pips><row>.*.</row> <row>...</row> ... <row>.*.</row> ... <row>.v.</row></pips>
+  </rank>
+  ... <rank name="K"><index> ... </index><picture><half /><row>***...</row> ... </picture></rank>
 </deck>
 <object name="stock">
   <sprite name="spot"> ... </sprite>
@@ -640,7 +647,11 @@ Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried
 ```
 
 - **`<deck name="cards" pile="stock">`** (in any `<objects>`) makes a card for each `<suit>` and `<rank>`, in the order written, `<copies>` times over (packs shuffled together, 1 when left out): objects `cards.1`, `cards.2`, ..., each with variables `suit` and `rank` (numbers from 1 in the order written) and two looks, `face` and `back`. `class=` gives the cards a class. A deck of other suits and ranks (an Italian 40: coins, cups, swords and batons; ranks 1 to 7 and three court cards) is written the same way.
-- **The faces are drawn by the engine** as bitmaps (so every window library draws them): `<face>` is the card's size in bitmap pixels, its `<scale>`, and the colours of the face and its edge; each suit's pip is bitmap rows (`*` its `<color>`, `.` the face, other characters a `<color char>` of the suit's); the rank is drawn in a small built-in 3x5 font (digits and capital letters), with the pip, in the top left corner and again turned about in the bottom right, and the pip big in the middle when the face has room. `<back>` is a frame and a lattice in its two colours.
+- **The faces are put together by the engine** as bitmaps (so every window library draws them), from parts the game draws as rows: `<face>` is the card's size in bitmap pixels (63 by 93 when left out), its `<scale>` (1), and the colours of the face and its edge (`@` and `#` in any part's rows).
+  - **A suit** has its `<color>` and its pip as `<row>`s (`*` its colour, `.` the face, other characters a `<color char>` of the suit's); `<index>`, the small pip of the corners (none: the pip); `<large>`, the ace's big pip (none: the pip twice the size).
+  - **A rank** is its name alone, `<rank>A</rank>`, drawn in a small built-in 3x5 font (digits and capital letters) with the pip big in the middle; or `<rank name="A">` with its corner `<index>` (rows) and one of: **`<pips>`**, a grid of rows where `*` is a pip, `v` a pip turned round (the lower half of a real card's) and `@` the large pip, spread evenly between the corners (Klondike's are three columns by thirteen rows, so three and four pips down a side both fall on the grid); or a **`<picture>`** (rows, centred; with `<half />` first, the rows are the top half and the bottom is the same turned round, as on double-ended court cards), whose characters are `*` the suit's colour and the deck's own `<color char>`s.
+  - **The corners**: the rank's index with the suit's index under it, in the top left (what shows where cards overlap) and turned round in the bottom right.
+  - **`<back>`** is a frame in its edge colour around its `<pattern>` (rows tiled, `*` the edge's colour) or, with none, a lattice of diamonds.
 - **A `<pile>`** on an object (or on each member of a group) makes it a place that holds cards, drawn on it in order: `faces="up"` or `"down"` turns every card laid there that way (none: each keeps its own); `<fan>` sets each card's offset from the one under it, and `<hidden>` in it a face-down card's; `<run />` lets a face-up card be taken with all those on it; `<showtop />` turns a face-down card left on top face up.
 - **The deal.** The shuffled deck goes to its `pile=`, and each pile's `<dealt>N</dealt>` takes N from it, a card a round as a dealer does, the last face up. On a group, `<more>1</more>` deals each member after the first one more (Klondike's staircase). A new game (a full [reset](#flow)) shuffles and deals again.
 - **`<takes>`** is what a pile takes on top: `<one />` (one card at a time, no runs), `<samesuit />`, `<othercolor />` (by the suit's `<color>`), `<up />` or `<down />` (one rank above or below the top card), and `<empty>` with the `<rank>`s and `<suit>`s it takes first. A pile with no `<takes>` takes nothing laid by the hand.
@@ -1166,7 +1177,7 @@ A game that would play wrong stops loading, with a message that says where and, 
 
 ### Colors
 
-`color.black`, `color.white`, `color.red`, `color.green`, `color.blue`, `color.yellow`, `color.magenta`, `color.cyan`, and the muted `color.grey`, `color.darkgrey`, `color.lightgrey`, `color.brown`, `color.orange`, `color.purple`, `color.darkblue`, `color.darkgreen`, `color.forestgreen` (`picture/color.cpp`).
+`color.black`, `color.white`, `color.red`, `color.green`, `color.blue`, `color.yellow`, `color.magenta`, `color.cyan`, and the muted `color.grey`, `color.darkgrey`, `color.lightgrey`, `color.brown`, `color.orange`, `color.purple`, `color.darkblue`, `color.darkgreen`, `color.forestgreen`, `color.gold`, `color.peach` (`picture/color.cpp`).
 
 ## Collisions
 

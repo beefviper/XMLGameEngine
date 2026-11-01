@@ -17,6 +17,7 @@
 #include <cmath>
 #include <map>
 #include <stdexcept>
+#include <utility>
 
 namespace xge
 {
@@ -91,7 +92,8 @@ namespace xge
 			}
 		};
 
-		// The card's shape: `fill` inside a one-pixel `edge`, its corners cut.
+		// The card's shape: `fill` inside a one-pixel `edge`, its corners
+		// rounded (cut by one pixel on a small card, two on a big one).
 		Canvas blank(int width, int height, char fill, char edge)
 		{
 			Canvas card(width, height, fill);
@@ -105,10 +107,17 @@ namespace xge
 				card.set(0, y, edge);
 				card.set(width - 1, y, edge);
 			}
-			card.set(0, 0, '.');
-			card.set(width - 1, 0, '.');
-			card.set(0, height - 1, '.');
-			card.set(width - 1, height - 1, '.');
+			const bool round = width >= 32 && height >= 32;
+			for (const auto& [x, y] : { std::pair{ 0, 0 }, std::pair{ width - 1, 0 }, std::pair{ 0, height - 1 }, std::pair{ width - 1, height - 1 } })
+			{
+				card.set(x, y, '.');
+				if (!round) { continue; }
+				const int inX = x == 0 ? 1 : x - 1;
+				const int inY = y == 0 ? 1 : y - 1;
+				card.set(inX, y, '.');
+				card.set(x, inY, '.');
+				card.set(inX, inY, edge);
+			}
 			return card;
 		}
 
@@ -130,10 +139,29 @@ namespace xge
 			return made;
 		}
 
-		Canvas pip(const RawDeck::Suit& suit)
+		Canvas fromRows(const std::vector<std::string>& rows)
 		{
-			Canvas made(static_cast<int>(suit.rows.front().size()), static_cast<int>(suit.rows.size()), '.');
-			made.rows = suit.rows;
+			Canvas made(rows.empty() ? 0 : static_cast<int>(rows.front().size()), static_cast<int>(rows.size()), '.');
+			made.rows = rows;
+			return made;
+		}
+
+		// A picture's rows, and with `half` the same turned round below.
+		Canvas whole(const std::vector<std::string>& rows, bool half)
+		{
+			const Canvas top = fromRows(rows);
+			if (!half) { return top; }
+			Canvas made(top.width, top.height * 2, '.');
+			made.paste(top, 0, 0);
+			made.paste(top.turned(), 0, top.height);
+			return made;
+		}
+
+		// Each pixel of a picture `grow` by `grow`.
+		Canvas grown(const Canvas& small, int grow)
+		{
+			Canvas made(small.width * grow, small.height * grow, '.');
+			made.paste(small, 0, 0, grow);
 			return made;
 		}
 
@@ -166,18 +194,48 @@ namespace xge
 	{
 		const std::string where = "<deck name=\"" + deck.name + "\">";
 		if (deck.suits.empty() || deck.ranks.empty()) { throw std::runtime_error(where + " needs <suit>s and <rank>s"); }
-		std::size_t widest = 0;
-		for (const std::string& rank : deck.ranks)
+		const auto sameWidth = [&](const std::vector<std::string>& rows, const std::string& what)
 		{
-			for (const char c : rank)
+			for (const std::string& row : rows)
 			{
-				if (!font().count(c)) { throw std::runtime_error(where + ": <rank>" + rank + "</rank> has '" + std::string(1, c) + "'; a rank's label is drawn with " + cardFontCharacters()); }
+				if (row.size() != rows.front().size()) { throw std::runtime_error(where + ": " + what + " has rows of different lengths"); }
 			}
-			widest = std::max(widest, rank.size());
+		};
+
+		// Each rank's corner index, and the widest: the corners are that
+		// wide, each index and small pip in the middle of it.
+		std::vector<Canvas> indexes;
+		int widest = 0;
+		for (const RawDeck::Rank& rank : deck.ranks)
+		{
+			const std::string what = "<rank name=\"" + rank.name + "\">";
+			if (rank.index.empty())
+			{
+				for (const char c : rank.name)
+				{
+					if (!font().count(c)) { throw std::runtime_error(where + ": " + what + " has '" + std::string(1, c) + "' and no <index>; a rank's name is drawn with " + cardFontCharacters()); }
+				}
+				indexes.push_back(label(rank.name, '*'));
+			}
+			else
+			{
+				sameWidth(rank.index, what + " <index>");
+				indexes.push_back(fromRows(rank.index));
+			}
+			sameWidth(rank.pips, what + " <pips>");
+			sameWidth(rank.picture, what + " <picture>");
+			for (const std::string& row : rank.pips)
+			{
+				for (const char c : row)
+				{
+					if (c != '.' && c != '*' && c != 'v' && c != '@') { throw std::runtime_error(where + ": " + what + " <pips> has '" + std::string(1, c) + "'; a pip is '*', 'v' (turned round) or '@' (the large pip), '.' none"); }
+				}
+			}
+			widest = std::max(widest, indexes.back().width);
 		}
 
-		// The back, shared: the card's shape, a frame inside its edge and a
-		// pattern of diamonds inside that.
+		// The back, shared: the card's shape, a frame inside its edge and
+		// the pattern (or a lattice of diamonds) inside that.
 		Canvas back = blank(deck.width, deck.height, '@', '#');
 		for (int x = 2; x < deck.width - 2; ++x)
 		{
@@ -189,11 +247,16 @@ namespace xge
 			back.set(2, y, '#');
 			back.set(deck.width - 3, y, '#');
 		}
+		sameWidth(deck.pattern, "<back> <pattern>");
+		const int tileWide = deck.pattern.empty() ? 0 : static_cast<int>(deck.pattern.front().size());
+		const int tileHigh = static_cast<int>(deck.pattern.size());
 		for (int y = 4; y < deck.height - 4; ++y)
 		{
 			for (int x = 4; x < deck.width - 4; ++x)
 			{
-				if ((x + y) % 4 == 0 || (x - y + 64) % 4 == 0) { back.set(x, y, '#'); }
+				const bool ink = deck.pattern.empty() ? ((x + y) % 4 == 0 || (x - y + 64) % 4 == 0)
+					: deck.pattern[static_cast<std::size_t>((y - 4) % tileHigh)][static_cast<std::size_t>((x - 4) % tileWide)] == '*';
+				if (ink) { back.set(x, y, '#'); }
 			}
 		}
 		const RawSprite backSprite = bitmapOf("back", back, deck.backEdge, { { '@', deck.backColor }, { '#', deck.backEdge } }, deck.scale);
@@ -204,34 +267,88 @@ namespace xge
 			for (std::size_t s = 0; s < deck.suits.size(); ++s)
 			{
 				const RawDeck::Suit& suit = deck.suits[s];
-				const Canvas small = pip(suit);
+				const Canvas pip = fromRows(suit.rows);
+				const Canvas small = suit.index.empty() ? pip : fromRows(suit.index);
+				std::vector<std::pair<char, std::string>> colors{ { '@', deck.faceColor }, { '#', deck.faceEdge } };
+				colors.insert(colors.end(), suit.colors.begin(), suit.colors.end());
+				colors.insert(colors.end(), deck.colors.begin(), deck.colors.end());
 				for (std::size_t r = 0; r < deck.ranks.size(); ++r)
 				{
-					// The face: in the top left corner the rank and the pip
-					// beside it (seen where cards overlap), the same turned
-					// round in the bottom right, and a big pip in the middle.
+					const RawDeck::Rank& rank = deck.ranks[r];
+					const std::string what = "<rank name=\"" + rank.name + "\">";
+					// The face: in the top left corner the rank's index with
+					// the small pip under it (seen where cards overlap), the
+					// same turned round in the bottom right, and between them
+					// the pips laid out, the picture, or one big pip.
 					Canvas face = blank(deck.width, deck.height, '@', '#');
-					const Canvas index = label(deck.ranks[r], '*');
-					const int stripHeight = std::max(5, small.height);
-					Canvas corner(index.width + 1 + small.width, stripHeight, '.');
-					corner.paste(index, 0, 0);
-					corner.paste(small, index.width + 1, 0);
-					if (corner.width > deck.width - 4 || 2 * stripHeight + 4 > deck.height)
+					const Canvas& index = indexes[r];
+					const int gap = deck.width >= 32 ? 2 : 1;
+					const int edge = deck.width >= 32 ? 3 : 2;
+					Canvas corner(std::max(widest, small.width), index.height + gap + small.height, '.');
+					corner.paste(index, (corner.width - index.width) / 2, 0);
+					corner.paste(small, (corner.width - small.width) / 2, index.height + gap);
+					if (corner.width * 2 + 2 * edge > deck.width || corner.height + 2 * edge > deck.height)
 					{
-						throw std::runtime_error(where + ": a face of " + std::to_string(deck.width) + " by " + std::to_string(deck.height) + " is too small for the rank '" + deck.ranks[r] + "' and the pip of " + suit.name);
+						throw std::runtime_error(where + ": a face of " + std::to_string(deck.width) + " by " + std::to_string(deck.height) + " is too small for the index of " + what + " and the pip of " + suit.name);
 					}
-					face.paste(corner, 2, 2);
-					face.paste(corner.turned(), deck.width - 2 - corner.width, deck.height - 2 - stripHeight);
-					const int roomHigh = deck.height - 2 * (2 + stripHeight) - 2;
-					int grow = 3;
-					while (grow > 1 && (small.width * grow > deck.width - 4 || small.height * grow > roomHigh)) { --grow; }
-					if (small.height * grow <= roomHigh)
-					{
-						face.paste(small, (deck.width - small.width * grow) / 2, (deck.height - small.height * grow) / 2, grow);
-					}
+					face.paste(corner, edge, edge);
+					face.paste(corner.turned(), deck.width - edge - corner.width, deck.height - edge - corner.height);
 
-					std::vector<std::pair<char, std::string>> colors{ { '@', deck.faceColor }, { '#', deck.faceEdge } };
-					colors.insert(colors.end(), suit.colors.begin(), suit.colors.end());
+					// What lies between the corners.
+					const int left = edge + corner.width + gap;
+					const int right = deck.width - left;
+					if (!rank.picture.empty())
+					{
+						const Canvas picture = whole(rank.picture, rank.half);
+						for (const std::string& row : picture.rows)
+						{
+							for (const char c : row)
+							{
+								if (c != '.' && c != '*' && std::none_of(colors.begin(), colors.end(), [&](const auto& each) { return each.first == c; }))
+								{
+									throw std::runtime_error(where + ": " + what + " <picture> has '" + std::string(1, c) + "', which no <color char> of the deck or of " + suit.name + " names");
+								}
+							}
+						}
+						face.paste(picture, (deck.width - picture.width) / 2, (deck.height - picture.height) / 2);
+					}
+					else if (!rank.pips.empty())
+					{
+						Canvas large = suit.large.empty() ? grown(pip, 2) : fromRows(suit.large);
+						const Canvas upside = pip.turned();
+						const int rows = static_cast<int>(rank.pips.size());
+						const int columns = static_cast<int>(rank.pips.front().size());
+						const float top = static_cast<float>(edge + 2);
+						const float wide = static_cast<float>(right - left - pip.width);
+						const float high = static_cast<float>(deck.height) - 2.0f * top - static_cast<float>(pip.height);
+						if (wide < 0.0f || high < 0.0f) { throw std::runtime_error(where + ": a face of " + std::to_string(deck.width) + " by " + std::to_string(deck.height) + " has no room for the pips of " + suit.name + " between its corners"); }
+						for (int row = 0; row < rows; ++row)
+						{
+							for (int column = 0; column < columns; ++column)
+							{
+								const char c = rank.pips[static_cast<std::size_t>(row)][static_cast<std::size_t>(column)];
+								if (c == '.') { continue; }
+								const Canvas& drawn = c == '@' ? large : (c == 'v' ? upside : pip);
+								// The grid's points spread from corner to corner of
+								// the room for a pip; one row or column is the middle.
+								const float x = columns == 1 ? static_cast<float>(deck.width) * 0.5f
+									: static_cast<float>(left) + static_cast<float>(pip.width) * 0.5f + wide * static_cast<float>(column) / static_cast<float>(columns - 1);
+								const float y = rows == 1 ? static_cast<float>(deck.height) * 0.5f
+									: top + static_cast<float>(pip.height) * 0.5f + high * static_cast<float>(row) / static_cast<float>(rows - 1);
+								face.paste(drawn, static_cast<int>(std::lround(x - static_cast<float>(drawn.width) * 0.5f)), static_cast<int>(std::lround(y - static_cast<float>(drawn.height) * 0.5f)));
+							}
+						}
+					}
+					else
+					{
+						const int roomHigh = deck.height - 2 * (edge + corner.height) - 2;
+						int grow = 3;
+						while (grow > 1 && (pip.width * grow > right - left || pip.height * grow > roomHigh)) { --grow; }
+						if (pip.height * grow <= roomHigh && pip.width * grow <= deck.width - 4)
+						{
+							face.paste(pip, (deck.width - pip.width * grow) / 2, (deck.height - pip.height * grow) / 2, grow);
+						}
+					}
 
 					RawObject card;
 					++number;
@@ -242,7 +359,7 @@ namespace xge
 					card.card.suit = static_cast<int>(s) + 1;
 					card.card.rank = static_cast<int>(r) + 1;
 					card.card.suitName = suit.name;
-					card.card.rankName = deck.ranks[r];
+					card.card.rankName = rank.name;
 					card.card.color = suit.color;
 					card.card.startPile = deck.pile;
 					card.looks = { bitmapOf("face", face, suit.color, colors, deck.scale), backSprite };

@@ -2152,35 +2152,49 @@
       <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:for-each>
+    <xsl:if test="back/pattern">
+      <xsl:value-of select="concat($in, 'deck.pattern = ')" />
+      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="back/pattern/row" /></xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="color">
+      <xsl:value-of select="concat($in, 'deck.colors = {')" />
+      <xsl:call-template name="deck-colors"><xsl:with-param name="colors" select="color" /></xsl:call-template>
+      <xsl:text> };&#10;</xsl:text>
+    </xsl:if>
     <xsl:for-each select="suit">
       <xsl:value-of select="concat($in, 'deck.suits.push_back({ ')" />
       <xsl:call-template name="string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
       <xsl:text>, </xsl:text>
       <xsl:call-template name="text"><xsl:with-param name="node" select="color[not(@char)][1]" /></xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="row" /></xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="index/row" /></xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="large/row" /></xsl:call-template>
       <xsl:text>, {</xsl:text>
-      <xsl:for-each select="row">
-        <xsl:if test="position() &gt; 1">,</xsl:if>
-        <xsl:text> </xsl:text>
-        <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-      </xsl:for-each>
-      <xsl:text> }, {</xsl:text>
-      <xsl:for-each select="color[@char]">
-        <xsl:if test="position() &gt; 1">,</xsl:if>
-        <xsl:text> { '</xsl:text>
-        <xsl:value-of select="@char" />
-        <xsl:text>', </xsl:text>
-        <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-        <xsl:text> }</xsl:text>
-      </xsl:for-each>
+      <xsl:call-template name="deck-colors"><xsl:with-param name="colors" select="color[@char]" /></xsl:call-template>
       <xsl:text> } });&#10;</xsl:text>
     </xsl:for-each>
-    <xsl:value-of select="concat($in, 'deck.ranks = {')" />
     <xsl:for-each select="rank">
-      <xsl:if test="position() &gt; 1">,</xsl:if>
-      <xsl:text> </xsl:text>
-      <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
+      <xsl:value-of select="concat($in, 'deck.ranks.push_back({ ')" />
+      <xsl:choose>
+        <xsl:when test="@name">
+          <xsl:call-template name="string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
+        </xsl:otherwise>
+      </xsl:choose>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="index/row" /></xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="pips/row" /></xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="picture/row" /></xsl:call-template>
+      <xsl:value-of select="concat(', ', substring('falsetrue', 1 + 5 * count(picture/half), 5 - count(picture/half)), ' });&#10;')" />
     </xsl:for-each>
-    <xsl:text> };&#10;</xsl:text>
     <xsl:choose>
       <xsl:when test="@class != ''">
         <xsl:value-of select="concat($in, 'const std::size_t first = all.size();&#10;', $in, 'addDeck(all, deck);&#10;')" />
@@ -2193,6 +2207,31 @@
       </xsl:otherwise>
     </xsl:choose>
     <xsl:text>&#9;}&#10;&#10;</xsl:text>
+  </xsl:template>
+
+  <!-- A deck's rows, as a list of strings, a row a line. -->
+  <xsl:template name="deck-rows">
+    <xsl:param name="rows" />
+    <xsl:text>{</xsl:text>
+    <xsl:for-each select="$rows">
+      <xsl:if test="position() &gt; 1">,</xsl:if>
+      <xsl:text> </xsl:text>
+      <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
+    </xsl:for-each>
+    <xsl:text> }</xsl:text>
+  </xsl:template>
+
+  <!-- A deck's or a suit's <color char>s: { 'y', "color.gold" }, ... -->
+  <xsl:template name="deck-colors">
+    <xsl:param name="colors" />
+    <xsl:for-each select="$colors">
+      <xsl:if test="position() &gt; 1">,</xsl:if>
+      <xsl:text> { '</xsl:text>
+      <xsl:value-of select="@char" />
+      <xsl:text>', </xsl:text>
+      <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
+      <xsl:text> }</xsl:text>
+    </xsl:for-each>
   </xsl:template>
 
   <!-- The C++ name of a <deck>'s function. -->

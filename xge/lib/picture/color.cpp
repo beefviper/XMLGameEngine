@@ -18,7 +18,7 @@ namespace xge
 			Color color;
 		};
 
-		constexpr std::array<NamedColor, 17> namedColors{ {
+		constexpr std::array<NamedColor, 19> namedColors{ {
 			{ "color.black",   { 0, 0, 0, 255 } },
 			{ "color.white",   { 255, 255, 255, 255 } },
 			{ "color.red",     { 255, 0, 0, 255 } },
@@ -38,6 +38,8 @@ namespace xge
 			{ "color.darkblue",    { 0, 0, 139, 255 } },
 			{ "color.darkgreen",   { 0, 100, 0, 255 } },
 			{ "color.forestgreen", { 34, 139, 34, 255 } },
+			{ "color.gold",        { 230, 180, 30, 255 } },
+			{ "color.peach",       { 255, 214, 170, 255 } },
 		} };
 	}
 

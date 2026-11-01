@@ -688,9 +688,18 @@
     </xs:attribute>
   </xs:complexType>
   <!-- deck: the cards, one of each suit with each rank (<copies>: that many packs), shuffled into the pile pile= names.
-       face: its size in pixels of the picture, the scale, and the color of the face and its edge; back: its color and the
-       color of its edge and pattern; suit: its pip as bitmap rows ('*' its <color>, more characters by <color char>);
-       rank: the label, drawn in a small built-in font (0-9, A-Z), lowest first -->
+       face: its size in pixels of the picture, the scale, and the color of the face and its edge; back: its color, the
+       color of its edge, and a <pattern> tiled inside its frame ('*' the edge's color; none: a lattice); <color char>s:
+       more characters the ranks' pictures use; suit: its pip as bitmap rows ('*' its <color>, more characters by
+       <color char>), the small pip of the corners (<index>) and the ace's big one (<large>); rank, lowest first: its
+       name alone (drawn in a small built-in font, 0-9 and A-Z), or name= with the corner's <index> (rows), and either
+       <pips> on a grid (rows: '*' a pip, 'v' one turned round, '@' the large pip) or a <picture> (rows; <half /> first:
+       the top half, the bottom the same turned round) -->
+  <xs:complexType name="deckRowsType">
+    <xs:sequence>
+      <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="deckType">
     <xs:sequence>
       <xs:element name="face" minOccurs="0">
@@ -709,19 +718,41 @@
           <xs:sequence>
             <xs:element name="color" type="xs:string" minOccurs="0" />
             <xs:element name="edge" type="xs:string" minOccurs="0" />
+            <xs:element name="pattern" type="deckRowsType" minOccurs="0" />
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="suit" maxOccurs="unbounded">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
             <xs:element name="color" type="bitmapColorType" maxOccurs="unbounded" />
+            <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
+            <xs:element name="index" type="deckRowsType" minOccurs="0" />
+            <xs:element name="large" type="deckRowsType" minOccurs="0" />
           </xs:sequence>
           <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
-      <xs:element name="rank" type="xs:string" maxOccurs="unbounded" />
+      <xs:element name="rank" maxOccurs="unbounded">
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:element name="index" type="deckRowsType" minOccurs="0" />
+            <xs:choice minOccurs="0">
+              <xs:element name="pips" type="deckRowsType" />
+              <xs:element name="picture">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="half" type="emptyType" minOccurs="0" />
+                    <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:choice>
+          </xs:sequence>
+          <xs:attribute name="name" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="copies" type="xs:positiveInteger" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
