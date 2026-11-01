@@ -1,0 +1,274 @@
+<!-- fourinarow.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Nov 1, 2026 -->
+
+<!--
+  Four in a Row: red and yellow take turns dropping a disc into one of
+  seven columns, red first; the disc falls to the lowest free place. The
+  first to have four in a line, across, down or on a slant, wins; a full
+  board is a draw. You play red against the computer, or two players
+  share the keyboard.
+
+  A and D or the arrows move the disc above the board, Space (or S, or
+  Down) drops it. The mouse works too: the disc follows it and a left
+  click drops it. P or Escape pauses. On the title, Space plays the
+  computer and 2 is for two players. Space plays again.
+
+  How it is written:
+  * The board is a <map> of seven by six <cells />, empty to begin with:
+    red and yellow wait on it, to be put. <fall /> in their <moves> drops
+    a disc put to the lowest free cell of its column.
+  * The cursor is a disc on a map of its own, one row above the board.
+    <put class="red" /> puts a red disc down its column; a full column
+    refuses it, so the turn passes only when a disc is put.
+  * The board's <checks> ask after each put: four red in a <line> make
+    red the winner. A count of discs put finds a full board.
+  * The computer plays yellow with <think>: it reads the lines from the
+    checks, so it takes a win, blocks one, and builds towards its own.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Four in a Row">
+    <width>800</width>
+    <height>600</height>
+  </window>
+  <variables>
+    <variable name="square">64</variable>
+    <variable name="left">176</variable>
+    <variable name="top">150</variable>
+  </variables>
+  <sounds>
+    <sound name="drop" wave="triangle"><note pitch="G3">0.04</note><note pitch="C3">0.06</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="prompt"><size>32</size></style>
+    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>32</size></style>
+  </styles>
+  <objects>
+    <!-- how many play: 1 against the computer, 2 at one keyboard; discs put; 1 once a line is made -->
+    <object name="match">
+      <variables>
+        <variable name="players">1</variable>
+        <variable name="made">0</variable>
+        <variable name="won">0</variable>
+      </variables>
+    </object>
+    <object name="again">
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>FOUR IN A ROW</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
+        </object>
+        <object name="help1">
+          <sprite><text style="help"><content>you play red, and go first; 2 for two players</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+        </object>
+        <object name="help2">
+          <sprite><text style="help"><content>four in a line, across, down or on a slant, wins</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+        <object name="help3">
+          <sprite><text style="help"><content>a d or the arrows move, spacebar or a click drops, p pauses</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><set variable="match.players">1</set><push state="playing" /></input>
+        <input><button>num2</button><button>numpad2</button><set variable="match.players">2</set><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <object name="whoseturn">
+          <sprite name="red"><text style="hud"><content>red to move</content><color>color.red</color></text></sprite>
+          <sprite name="yellow"><text style="hud"><content>yellow to move</content><color>color.yellow</color></text></sprite>
+          <position><x><centered /></x><y>24</y></position>
+        </object>
+        <object name="frame">
+          <sprite><rectangle><width>square * 7 + 16</width><height>square * 6 + 16</height><color>color.blue</color></rectangle></sprite>
+          <position><x>left - 8</x><y>top - 8</y></position>
+        </object>
+        <!-- the holes, each a place a disc can be -->
+        <group name="holes">
+          <columns>7</columns>
+          <rows>6</rows>
+          <padding><x>square - 52</x><y>square - 52</y></padding>
+          <sprite><circle><radius>26</radius><color>color.black</color></circle></sprite>
+          <position><x>left + 6</x><y>top + 6</y></position>
+        </group>
+
+        <map name="board">
+          <tile><width>square</width><height>square</height></tile>
+          <position><x>left</x><y>top</y></position>
+          <columns>7</columns>
+          <rows>6</rows>
+          <cells />
+          <group name="red" class="red">
+            <sprite><circle><radius>26</radius><color>color.red</color></circle></sprite>
+            <moves><fall /></moves>
+          </group>
+          <group name="yellow" class="yellow">
+            <sprite><circle><radius>26</radius><color>color.yellow</color></circle></sprite>
+            <moves><fall /></moves>
+          </group>
+          <checks>
+            <line class="red"><atleast>4</atleast><become object="over.winner" sprite="red" /><set variable="match.won">1</set></line>
+            <line class="yellow"><atleast>4</atleast><become object="over.winner" sprite="yellow" /><set variable="match.won">1</set></line>
+          </checks>
+        </map>
+
+        <!-- the last disc put, ringed -->
+        <map name="marks">
+          <tile><width>square</width><height>square</height></tile>
+          <position><x>left</x><y>top</y></position>
+          <columns>7</columns>
+          <rows>6</rows>
+          <cells />
+          <object name="lastmark">
+            <sprite><circle><radius>6</radius><color>color.white</color></circle></sprite>
+          </object>
+        </map>
+
+        <!-- the disc to drop, on a row of its own above the board -->
+        <map name="pointer">
+          <tile><width>square</width><height>square</height></tile>
+          <position><x>left</x><y>top - square - 8</y></position>
+          <cells />
+          <row>...c...</row>
+          <object name="cursor" char="c">
+            <sprite name="red"><circle><radius>26</radius><color>color.red</color></circle></sprite>
+            <sprite name="yellow"><circle><radius>26</radius><color>color.yellow</color></circle></sprite>
+            <sprite name="cpu"><circle><radius>26</radius><color>color.yellow</color></circle></sprite>
+            <marks>
+              <last object="lastmark" />
+            </marks>
+            <actions>
+              <action name="left"><hop direction="left" /></action>
+              <action name="right"><hop direction="right" /></action>
+              <action name="point"><track /></action>
+              <action name="redput">
+                <put class="red" />
+                <play sound="drop" />
+                <inc variable="match.made" />
+                <set variable="cursor.turn">2</set>
+                <become sprite="yellow" />
+                <become object="whoseturn" sprite="yellow" />
+              </action>
+              <action name="yellowput">
+                <put class="yellow" />
+                <play sound="drop" />
+                <inc variable="match.made" />
+                <set variable="cursor.turn">1</set>
+                <become sprite="red" />
+                <become object="whoseturn" sprite="red" />
+              </action>
+            </actions>
+            <!-- whose turn: 1 red, 2 yellow -->
+            <variables>
+              <variable name="turn">1</variable>
+            </variables>
+          </object>
+        </map>
+      </objects>
+      <inputs>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="cursor" action="left" from="red" /><trigger object="cursor" action="left" from="yellow" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" from="red" /><trigger object="cursor" action="right" from="yellow" /></input>
+        <input>
+          <button>space</button><button>s</button><button>down</button><button>pad1.a</button><button>mouse.left</button>
+          <trigger object="cursor" action="redput" from="red" />
+          <trigger object="cursor" action="yellowput" from="yellow" />
+        </input>
+        <input axis="mouse.x">
+          <trigger object="cursor" action="point" from="red" />
+          <trigger object="cursor" action="point" from="yellow" />
+        </input>
+        <!-- the computer's key: only its look answers it -->
+        <input><button>f12</button><trigger object="cursor" action="yellowput" from="cpu" /></input>
+        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition object="match" variable="won">
+          <equal>1</equal>
+          <play sound="win" />
+          <push state="over" />
+        </condition>
+        <!-- forty-two discs put and no line: a draw -->
+        <condition object="match" variable="made">
+          <atleast>42</atleast>
+          <become object="over.winner" sprite="draw" />
+          <push state="over" />
+        </condition>
+        <!-- against the computer, yellow's turn is its: the cursor takes its look -->
+        <condition>
+          <all>
+            <condition object="match" variable="players"><equal>1</equal></condition>
+            <condition object="cursor" variable="turn"><equal>2</equal></condition>
+          </all>
+          <become object="cursor" sprite="cpu" from="yellow" />
+        </condition>
+      </conditions>
+      <!-- yellow's move: six ahead -->
+      <computer>
+        <condition>
+          <all>
+            <condition object="match" variable="players"><equal>1</equal></condition>
+            <condition object="cursor" variable="turn"><equal>2</equal></condition>
+          </all>
+          <think class="yellow" object="cursor" button="f12">
+            <depth>6</depth>
+          </think>
+        </condition>
+      </computer>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <state name="over">
+      <objects>
+        <object name="winner">
+          <sprite name="red"><text style="banner"><content>RED WINS</content><color>color.red</color></text></sprite>
+          <sprite name="yellow"><text style="banner"><content>YELLOW WINS</content></text></sprite>
+          <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

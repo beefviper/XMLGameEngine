@@ -645,6 +645,9 @@
        flank: a new piece of its kind is <put> only where it traps a line of pieces of that class
        (any of the eight ways; with <straight />, across and down only) against one of its own,
        and the pieces trapped turn into its kind (reversi).
+       on: a piece put goes only on a piece of that class, in its place (dots and boxes' lines on their slots).
+       fall: a piece put drops to the lowest free cell of the picker's column (four in a row).
+       A set with no step or jump is of pieces put; one with nothing in it puts in any free cell (tic-tac-toe).
        promote: reaching that row, it shows that look (crowned), and its move ends. -->
   <xs:complexType name="pieceMovesType">
     <xs:sequence>
@@ -669,6 +672,12 @@
           <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="on" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="fall" type="emptyType" minOccurs="0" />
       <xs:element name="promote" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -1226,8 +1235,18 @@
       <xs:element name="place" type="emptyType" />
       <!-- put: a new piece of that class in the picker's cell of the pieces' map; refused when the cell is taken,
            or, when the pieces have <flank>s, where it traps nothing; the pieces it traps turn into its kind -->
+      <!-- put with <close class object>: each piece of that class beside the piece put, walled in on its four sides
+           by pieces of the class put, is replaced by a copy of the object; then the put counts as refused (the turn goes on) -->
       <xs:element name="put">
         <xs:complexType>
+          <xs:sequence>
+            <xs:element name="close" minOccurs="0">
+              <xs:complexType>
+                <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+                <xs:attribute name="object" type="xs:string" use="required" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
           <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>

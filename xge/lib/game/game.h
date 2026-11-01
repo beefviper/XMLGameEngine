@@ -429,10 +429,12 @@ namespace xge
 		bool dropPiece(Object& picker);
 		// <put class>: a new piece of that class in the picker's cell (see
 		// CmdPut); false when it may not go there.
-		bool putPiece(Object& picker, const std::string& objClass);
+		bool putPiece(Object& picker, const CmdPut& put);
 		// The piece a <put> of that class copies: the first written of the
-		// class on a map of cells; null for none.
+		// class on a map of cells; null for none. putTemplates: the first of
+		// each group of the class (a put takes the first that fits).
 		Object* putTemplate(const std::string& objClass);
+		std::vector<Object*> putTemplates(const std::string& objClass);
 		// The pieces a new piece of `kind`'s class put in that cell of
 		// `kind`'s map would trap by its <flank>s; `can` is whether it may
 		// go there at all (a free cell, and something trapped when it has

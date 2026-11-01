@@ -1,6 +1,6 @@
 # Board games
 
-**Status:** Checkers Built (2026-10-31); its computer (`<think>`) and marks, put back and mouse Built (2026-11-01); Reversi Built (2026-11-01); other board games Open.
+**Status:** Checkers Built (2026-10-31); its computer (`<think>`) and marks, put back and mouse Built (2026-11-01); Reversi, Four in a Row, Tic-Tac-Toe and Dots and Boxes Built (2026-11-01); other board games Open.
 
 ## What we looked for
 
@@ -50,8 +50,19 @@
 - **`<count class into>`** gives the score: the number of a class in play into a variable, after each put. Considered and left: a `<count>` inside any value (values are worked out without the game's objects), and score kept by `<inc>` by the number turned (the turned number is not a name the game has).
 - **Not built:** a better judge of a reversi position for the computer (corners, how many moves each side has). It counts discs four moves deep, which plays sensibly but is beatable; a hint like `<worth>` by cell could come later.
 
+## Four in a Row, Tic-Tac-Toe, Dots and Boxes (2026-11-01)
+
+- Asked for (Beef): "do Four in a Row, Tic-Tac-Toe, and Dots and Boxes"; he wondered whether Dots and Boxes needed anything new, as a grid version of something like Qix.
+- **One verb, `<put>`, with what the piece's `<moves>` say about where:** `<flank>` (reversi), `<fall />` (dropped down a column), nothing (anywhere free), `<on class>` (in place of a piece of that class). Each is a property of the piece, as steps and jumps are.
+- **Wins by line use the map's `<line>` check**, asked after every put, not a new word. Checks may not push a state, so the check sets a variable and a condition ends the game; a full board is a count of moves made.
+- **The computer infers the goal from that check** (Beef had asked whether goals can be inferred): a `<line>` of a side's class is a win for it, and short of that each run of cells only one side holds is worth its pieces squared. No hint was needed for Four in a Row or Tic-Tac-Toe. Tic-Tac-Toe offers an easy level (one move ahead) and a smart one (to the end).
+- **Dots and Boxes needed two words:** `<on class>` so a line goes only on its faint place, and `<close class object>` on the put, which claims the boxes it walls in and counts the put as refused so the turn does not pass (the same rule as a place that must jump on). Lines are of one class with two groups (`across`, `down`), and a put takes whichever group fits the cell, so one key does both. The grid is two cells per step between dots: dots, places for lines, boxes. Qix-like claiming of areas is a different thing (filling a region a line closes) and is not built.
+- **A key's `from=` judged by the look when pressed** (an engine change found here): before, the triggers of one key ran in order, each against the look as it was then, so red's drop turning the cursor yellow let the next trigger drop yellow's disc in the same press.
+- **Not built:** a computer for Dots and Boxes. Its lines belong to no side, so `<think>`'s sides by class do not fit; the boxes are what is owned.
+
 ## Open
 
 - Lookahead for action games (above).
+- A computer for Dots and Boxes, and claiming areas as Qix does.
 - Draws (forty moves with no capture, a position repeated).
 - Other board games on the same words: halma and Chinese checkers (jumps over any class, not taking), chess (sliding moves of any length: a `<slide>` move, and pieces that block).

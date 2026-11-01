@@ -197,6 +197,14 @@
         </xsl:when>
         <!-- the one piece that can move -->
         <xsl:when test="$verb = 'pick' and $node/only"> command.only = true;</xsl:when>
+        <!-- a put that closes what it walls in -->
+        <xsl:when test="$verb = 'put' and $node/close">
+          <xsl:text> command.closeClass = </xsl:text>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="$node/close/@class" /></xsl:call-template>
+          <xsl:text>; command.closeObject = </xsl:text>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="$node/close/@object" /></xsl:call-template>
+          <xsl:text>;</xsl:text>
+        </xsl:when>
         <!-- a computer thinking: how deep, and what its pieces are worth -->
         <xsl:when test="$verb = 'think'">
           <xsl:if test="$node/depth">
@@ -1466,6 +1474,15 @@
           <xsl:text> }</xsl:text>
         </xsl:if>
         <xsl:if test="not(flank)">, {}</xsl:if>
+        <xsl:value-of select="concat(', ', substring('falsetrue', 1 + 5 * count(fall), 5 - count(fall)), ', {')" />
+        <xsl:for-each select="on">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> </xsl:text>
+          <xsl:call-template name="string">
+            <xsl:with-param name="text" select="@class" />
+          </xsl:call-template>
+        </xsl:for-each>
+        <xsl:text> }</xsl:text>
         <xsl:text> }</xsl:text>
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>

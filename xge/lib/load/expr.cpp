@@ -967,6 +967,8 @@ namespace xge
 			if (!rawSet.promote.empty()) { set.promoteLook = lookNamed(rawSet.promote, "<moves> > <promote"); }
 			set.promoteRow = rawSet.promoteRow;
 			for (const RawObject::RawMoveSet::RawFlank& flank : rawSet.flanks) { set.flanks.push_back({ flank.objClass, flank.straight }); }
+			set.fall = rawSet.fall;
+			set.on = rawSet.on;
 			object.moveSets.push_back(std::move(set));
 		}
 		for (const RawObject::RawMarkSet& rawSet : rawObject.markSets)

@@ -1,0 +1,138 @@
+// test_dotsandboxes.cpp
+// XML Game Engine
+// author: beefviper
+// date: Nov 1, 2026
+//
+// Catch2 tests for dotsandboxes.xml and what it brought: <on class> in a
+// piece's <moves> (a put in place of a piece), <put> taking whichever
+// piece of its class fits, and <close> claiming a box and keeping the turn.
+
+#include "played.h"
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <cmath>
+#include <string>
+
+using namespace xge;
+using played::Played;
+
+namespace
+{
+	int cell(float number) { return static_cast<int>(std::lround(number)); }
+
+	struct Dots : Played
+	{
+		Dots() : Played("descriptions/dotsandboxes.xml")
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& cursor() { return get("cursor"); }
+		float turn() { return cursor().variable.at("turn"); }
+		float score(const std::string& name) { return get("score").variable.at(name); }
+
+		void to(int column, int row)
+		{
+			while (cell(cursor().cellColumn) < column) { tap(KeyCode::D); }
+			while (cell(cursor().cellColumn) > column) { tap(KeyCode::A); }
+			while (cell(cursor().cellRow) < row) { tap(KeyCode::S); }
+			while (cell(cursor().cellRow) > row) { tap(KeyCode::W); }
+		}
+
+		void draw(int column, int row)
+		{
+			to(column, row);
+			tap(KeyCode::Space);
+			frames(1);
+		}
+
+		// The class of what is in that cell of the grid, or "".
+		std::string at(int column, int row)
+		{
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (object.exists && object.isVisible && object.onCells && object.mapName == "playing.grid"
+					&& cell(object.cellColumn) == column && cell(object.cellRow) == row)
+				{
+					return object.objClass;
+				}
+			}
+			return "";
+		}
+	};
+}
+
+TEST_CASE("dotsandboxes.xml: a line goes on its place, across or down, and the turn passes", "[dotsandboxes]")
+{
+	Dots board;
+	REQUIRE(board.at(2, 1) == "hslot");
+	board.draw(2, 1);
+	CHECK(board.at(2, 1) == "line");
+	CHECK(board.turn() == 2.0f);
+	board.draw(1, 2);
+	CHECK(board.at(1, 2) == "line");
+	CHECK(board.turn() == 1.0f);
+	// Not on a dot, a box or a line drawn already.
+	board.draw(1, 1);
+	board.draw(2, 2);
+	board.draw(2, 1);
+	CHECK(board.turn() == 1.0f);
+	CHECK(board.at(1, 1) == "dot");
+	CHECK(board.at(2, 2) == "box");
+}
+
+TEST_CASE("dotsandboxes.xml: closing a box claims it and keeps the turn", "[dotsandboxes]")
+{
+	Dots board;
+	board.draw(2, 1);
+	board.draw(1, 2);
+	board.draw(3, 2);
+	REQUIRE(board.turn() == 2.0f);
+	board.draw(2, 3);
+	CHECK(board.at(2, 2) == "bluebox");
+	CHECK(board.score("blue") == 1.0f);
+	CHECK(board.score("open") == 24.0f);
+	CHECK(board.turn() == 2.0f);
+	CHECK(board.get("whoseturn").lookName() == "blue");
+	board.draw(6, 1);
+	CHECK(board.turn() == 1.0f);
+}
+
+TEST_CASE("dotsandboxes.xml: one line can close two boxes", "[dotsandboxes]")
+{
+	Dots board;
+	// Boxes (2,2) and (4,2) share the line at (3,2).
+	board.draw(2, 1);
+	board.draw(4, 1);
+	board.draw(1, 2);
+	board.draw(5, 2);
+	board.draw(2, 3);
+	board.draw(4, 3);
+	REQUIRE(board.turn() == 1.0f);
+	board.draw(3, 2);
+	CHECK(board.at(2, 2) == "redbox");
+	CHECK(board.at(4, 2) == "redbox");
+	CHECK(board.score("red") == 2.0f);
+	CHECK(board.turn() == 1.0f);
+}
+
+TEST_CASE("dotsandboxes.xml: every box claimed ends the game, more boxes wins", "[dotsandboxes]")
+{
+	Dots board;
+	// Every line, row by row: whoever closes boxes goes on.
+	for (int row = 1; row <= 11 && board.state() == "playing"; ++row)
+	{
+		for (int column = 1; column <= 11 && board.state() == "playing"; ++column)
+		{
+			const std::string here = board.at(column, row);
+			if (here == "hslot" || here == "vslot") { board.draw(column, row); }
+		}
+	}
+	board.frames(1);
+	CHECK(board.state() == "over");
+	CHECK(board.score("open") == 0.0f);
+	CHECK(board.score("red") + board.score("blue") == 25.0f);
+	CHECK(board.get("winner").lookName() == (board.score("red") > board.score("blue") ? "red" : "blue"));
+}

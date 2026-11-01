@@ -57,7 +57,17 @@ namespace xge
 			std::vector<std::size_t> taken;
 			std::size_t look{};
 			bool put{ false };
+			int side{ 0 };
 			std::vector<std::size_t> turned;
+		};
+
+		// A <line> check of the board's map: so many alike in a row (of
+		// that class, or any) wins for the side that makes it.
+		struct LineRule
+		{
+			std::string objClass;
+			int count{};
+			bool straight{ false };
 		};
 
 		struct Board
@@ -69,6 +79,7 @@ namespace xge
 			std::vector<std::string> sides;
 			// Each side's piece a put copies (none: its pieces are moved).
 			const Object* kinds[2]{ nullptr, nullptr };
+			std::vector<LineRule> lines;
 
 			int& at(int column, int row) { return grid[static_cast<std::size_t>((row - 1) * columns + (column - 1))]; }
 			bool onBoard(int column, int row) const { return column >= 1 && row >= 1 && column <= columns && row <= rows; }
@@ -91,7 +102,75 @@ namespace xge
 			{
 				const Object* kind = kinds[side];
 				const Object::MoveSet* set = kind ? setOf(*kind, kind->look) : nullptr;
+				return set && set->puts();
+			}
+
+			// Whether the side's pieces turn others (reversi): then a game
+			// that stops is won by more pieces; else it is drawn.
+			bool flanks(int side) const
+			{
+				const Object* kind = kinds[side];
+				const Object::MoveSet* set = kind ? setOf(*kind, kind->look) : nullptr;
 				return set && !set->flanks.empty();
+			}
+
+			// Whether the piece just put makes a line of a <line> rule.
+			bool madeLine(const Move& move)
+			{
+				if (!move.put || lines.empty()) { return false; }
+				const auto [column, row] = move.cells.front();
+				const auto ours = [&](int c, int r)
+				{
+					if (!onBoard(c, r) || at(c, r) == 0) { return false; }
+					return pieces[static_cast<std::size_t>(at(c, r) - 1)].side == move.side;
+				};
+				const int ways[4][2] = { { 1, 0 }, { 0, 1 }, { 1, 1 }, { -1, 1 } };
+				for (const LineRule& rule : lines)
+				{
+					if (!rule.objClass.empty() && kinds[move.side]->objClass != rule.objClass) { continue; }
+					for (int w = 0; w < (rule.straight ? 2 : 4); ++w)
+					{
+						int length = 1;
+						for (int c = column + ways[w][0], r = row + ways[w][1]; ours(c, r); c += ways[w][0], r += ways[w][1]) { ++length; }
+						for (int c = column - ways[w][0], r = row - ways[w][1]; ours(c, r); c -= ways[w][0], r -= ways[w][1]) { ++length; }
+						if (length >= rule.count) { return true; }
+					}
+				}
+				return false;
+			}
+
+			// How near each side is to a line: every run of cells as long as
+			// a line with pieces of one side only, the more the better.
+			float lineScore()
+			{
+				float total = 0.0f;
+				const int ways[4][2] = { { 1, 0 }, { 0, 1 }, { 1, 1 }, { -1, 1 } };
+				for (const LineRule& rule : lines)
+				{
+					for (int row = 1; row <= rows; ++row)
+					{
+						for (int column = 1; column <= columns; ++column)
+						{
+							for (int w = 0; w < (rule.straight ? 2 : 4); ++w)
+							{
+								const int endColumn = column + ways[w][0] * (rule.count - 1);
+								const int endRow = row + ways[w][1] * (rule.count - 1);
+								if (!onBoard(endColumn, endRow)) { continue; }
+								int counts[2]{ 0, 0 };
+								for (int i = 0; i < rule.count; ++i)
+								{
+									const int there = at(column + ways[w][0] * i, row + ways[w][1] * i);
+									if (there == 0) { continue; }
+									const int side = pieces[static_cast<std::size_t>(there - 1)].side;
+									if (side >= 0) { ++counts[side]; }
+								}
+								if (counts[1] == 0 && counts[0] > 0) { total += static_cast<float>(counts[0] * counts[0]); }
+								if (counts[0] == 0 && counts[1] > 0) { total -= static_cast<float>(counts[1] * counts[1]); }
+							}
+						}
+					}
+				}
+				return total;
 			}
 
 			// Every put the side can make: a free cell, and the lines it traps.
@@ -104,11 +183,19 @@ namespace xge
 					for (int column = 1; column <= columns; ++column)
 					{
 						if (at(column, row) != 0) { continue; }
+						// Falling: onto the floor or a piece only.
+						if (set->fall && row < rows && at(column, row + 1) == 0) { continue; }
 						Move put;
 						put.put = true;
+						put.side = side;
 						put.piece = pieces.size();
 						put.cells.emplace_back(column, row);
 						put.look = kind->look;
+						if (set->flanks.empty())
+						{
+							out.push_back(std::move(put));
+							continue;
+						}
 						for (const Object::Flank& flank : set->flanks)
 						{
 							for (int dy = -1; dy <= 1; ++dy)
@@ -248,7 +335,7 @@ namespace xge
 				Undo undo;
 				if (move.put)
 				{
-					const int side = pieces[move.turned.front()].side == 0 ? 1 : 0;
+					const int side = move.side;
 					for (const std::size_t each : move.turned)
 					{
 						undo.taken.push_back(pieces[each]);
@@ -320,8 +407,9 @@ namespace xge
 
 			// The pieces each side has, by their worth: the computer's less
 			// the other's.
-			float score() const
+			float score()
 			{
+				if (!board.lines.empty()) { return board.lineScore(); }
 				float total = 0.0f;
 				for (const Piece& piece : board.pieces)
 				{
@@ -341,9 +429,11 @@ namespace xge
 				if (moves.empty() && board.puts(side))
 				{
 					// No put: it passes; neither can: the game is over, won
-					// by the side with more (sooner is better).
+					// by the side with more (sooner is better), or, when
+					// pieces put turn nothing, drawn (a full board).
 					if (board.moves(1 - side).empty())
 					{
+						if (!board.flanks(side)) { return 0.0f; }
 						const float sooner = static_cast<float>(depth);
 						return now > 0.0f ? decided + sooner + now : now < 0.0f ? -decided - sooner + now : 0.0f;
 					}
@@ -355,7 +445,7 @@ namespace xge
 				for (const Move& move : moves)
 				{
 					const Board::Undo undo = board.make(move);
-					const float got = -value(1 - side, depth - 1, -beta, -alpha);
+					const float got = board.madeLine(move) ? decided + static_cast<float>(depth) : -value(1 - side, depth - 1, -beta, -alpha);
 					board.unmake(move, undo);
 					alpha = std::max(alpha, got);
 					if (alpha >= beta) { break; }
@@ -374,7 +464,9 @@ namespace xge
 		{
 			if (object.objClass == think.objClass && !object.moveSets.empty() && object.onCells && isShown(object)) { first = &object; break; }
 		}
-		if (!first) { return {}; }
+		// None on the board yet (pieces put): the one a put copies.
+		if (!first) { first = putTemplate(think.objClass); }
+		if (!first || first->moveSets.empty()) { return {}; }
 
 		Board board;
 		board.columns = first->mapColumns;
@@ -393,8 +485,20 @@ namespace xge
 				if (other.empty()) { other = flank.objClass; }
 			}
 		}
+		// Neither: any other class of pieces with moves on the map.
+		for (std::size_t i = 0; i < objects.size() && other.empty(); ++i)
+		{
+			const Object& object = objects[i];
+			if (object.onCells && object.mapName == first->mapName && !object.moveSets.empty() && object.objClass != think.objClass) { other = object.objClass; }
+		}
 		board.kinds[0] = putTemplate(think.objClass);
 		board.kinds[1] = other.empty() ? nullptr : putTemplate(other);
+		// The map's checks, as its pieces written carry them (a copy may not).
+		const Object* written = board.kinds[0] ? board.kinds[0] : first;
+		for (const Object::CellCheck& check : written->cellChecks)
+		{
+			if (check.kind == "line") { board.lines.push_back({ check.objClass, check.count, check.straight }); }
+		}
 		if (!board.kinds[1]) { board.kinds[0] = nullptr; }
 		for (const Object& object : objects)
 		{
@@ -425,14 +529,22 @@ namespace xge
 		for (const Move& move : moves)
 		{
 			const Board::Undo undo = board.make(move);
-			const float got = -search.value(1, think.depth - 1, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+			const float got = board.madeLine(move) ? decided + static_cast<float>(think.depth)
+				: -search.value(1, think.depth - 1, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
 			board.unmake(move, undo);
 			if (got > bestValue) { bestValue = got; best.clear(); }
 			if (got == bestValue) { best.push_back(&move); }
 		}
 		if (best.empty()) { return {}; }
 		const std::size_t pick = std::min(best.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(best.size()))));
-		return best[pick]->cells;
+		std::vector<std::pair<int, int>> cells = best[pick]->cells;
+		// A piece that falls is dropped from the picker's own row.
+		if (best[pick]->put)
+		{
+			const Object::MoveSet* set = Board::setOf(*board.kinds[0], board.kinds[0]->look);
+			if (set && set->fall) { cells.front().second = whole(picker.cellRow); }
+		}
+		return cells;
 	}
 
 	std::optional<KeyCode> Game::think(const CmdThink& think)

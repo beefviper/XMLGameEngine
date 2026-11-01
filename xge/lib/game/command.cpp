@@ -80,7 +80,7 @@ namespace xge
 		if (verb == "through") { return CmdThrough{}; }
 		if (verb == "pick") { return CmdPick{ raw.objClass, raw.only }; }
 		if (verb == "place") { return CmdPlace{}; }
-		if (verb == "put") { return CmdPut{ raw.objClass }; }
+		if (verb == "put") { return CmdPut{ raw.objClass, raw.closeClass, raw.closeObject }; }
 		if (verb == "count") { return CmdCount{ raw.objClass, VariableName::of(raw.into) }; }
 		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
 
@@ -214,9 +214,9 @@ namespace xge
 			}
 			const bool none = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
 			const float depth = none ? 4.0f : evaluate(raw.amount);
-			if (!(depth >= 1.0f && depth <= 8.0f) || depth != std::floor(depth))
+			if (!(depth >= 1.0f && depth <= 9.0f) || depth != std::floor(depth))
 			{
-				throw std::runtime_error("<think> looks " + formatDisplayNumber(depth) + " moves ahead; expected a whole number from 1 to 8");
+				throw std::runtime_error("<think> looks " + formatDisplayNumber(depth) + " moves ahead; expected a whole number from 1 to 9");
 			}
 			return CmdThink{ raw.objClass, raw.object, button, static_cast<int>(depth), raw.worths };
 		}
@@ -528,7 +528,7 @@ namespace xge
 			[&](const CmdThrough&) { o << "through"; },
 			[&](const CmdPick& p) { o << "pick(" << p.objClass << (p.only ? ", only" : "") << ")"; },
 			[&](const CmdPlace&) { o << "place"; },
-			[&](const CmdPut& p) { o << "put(" << p.objClass << ")"; },
+			[&](const CmdPut& p) { o << "put(" << p.objClass << (p.closeClass.empty() ? "" : ", close " + p.closeClass + " " + p.closeObject) << ")"; },
 			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << ")"; },
 			[&](const CmdSlide& m)
 			{

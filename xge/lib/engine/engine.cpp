@@ -455,9 +455,27 @@ namespace xge
 	void Engine::runAsPress(const std::vector<Command>& commands)
 	{
 		game.takeTurnStop();
+		// A <trigger from=> answers the look its object had when the key
+		// was pressed: one trigger's action changing the look (red's turn
+		// over, yellow's begun) does not let a later one of the same press
+		// answer the new look as well.
+		std::vector<bool> answers;
+		answers.reserve(commands.size());
 		for (const auto& command : commands)
 		{
-			if (!commandExecutor.executeInput(command, true) || game.takeTurnStop()) { break; }
+			const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command));
+			bool answer = true;
+			if (trigger && !trigger->from.empty())
+			{
+				const Object& object = game.getObject(trigger->object);
+				if (object.name == trigger->object || !object.inGroup(trigger->object)) { answer = object.lookName() == trigger->from; }
+			}
+			answers.push_back(answer);
+		}
+		for (std::size_t i = 0; i < commands.size(); ++i)
+		{
+			if (!answers[i]) { continue; }
+			if (!commandExecutor.executeInput(commands[i], true) || game.takeTurnStop()) { break; }
 		}
 	}
 

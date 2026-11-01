@@ -146,6 +146,7 @@ namespace
 			for (const std::string& player : c.players) { out << at << ".player " << player << "\n"; }
 			for (const auto& [look, worth] : c.worths) { out << at << ".worth " << look << " " << worth << "\n"; }
 			flag(at + ".only", c.only);
+			text(at + ".close", c.closeClass + " " + c.closeObject);
 		}
 
 		void commands(const std::string& at, const std::vector<RawCommand>& list)
@@ -284,6 +285,8 @@ namespace
 				}
 				text(here + ".promote", set.promote + " " + std::to_string(set.promoteRow));
 				for (const RawObject::RawMoveSet::RawFlank& flank : set.flanks) { text(here + ".flank", flank.objClass + (flank.straight ? " straight" : "")); }
+				flag(here + ".fall", set.fall);
+				for (const std::string& on : set.on) { text(here + ".on", on); }
 			}
 			for (std::size_t i = 0; i < o.markSets.size(); ++i)
 			{

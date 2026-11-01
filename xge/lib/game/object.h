@@ -522,6 +522,8 @@ namespace xge
 				bool straight{ false }; // across and down only
 			};
 			std::vector<RawFlank> flanks;   // <flank>: a new piece is <put> where it traps
+			bool fall{ false };             // <fall />: a piece put drops down its column
+			std::vector<std::string> on;    // <on class>: a piece put goes only on one of these, in its place
 		};
 		std::vector<RawMoveSet> moveSets;
 		// <marks>: on a picker, the pieces it shows on a map of cells for
@@ -921,6 +923,8 @@ namespace xge
 		// of one or more pieces of a flank's class runs (any of the eight
 		// ways, or across and down only when straight) and ends in a piece
 		// of its own class; the pieces in those lines turn into its kind.
+		// fall: a piece put goes to the lowest free cell of the picker's
+		// column. A set with no steps or jumps is one of pieces put.
 		struct Flank
 		{
 			std::string objClass;
@@ -941,6 +945,9 @@ namespace xge
 			std::optional<std::size_t> promoteLook;
 			int promoteRow{};
 			std::vector<Flank> flanks;
+			bool fall{ false };
+			std::vector<std::string> on;
+			bool puts() const noexcept { return moves.empty(); }
 		};
 		std::vector<MoveSet> moveSets;
 		// How many moves it can make now: the live number `moves`, counted

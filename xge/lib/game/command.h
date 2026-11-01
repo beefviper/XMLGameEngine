@@ -697,9 +697,15 @@ namespace xge
 	// when the cell is taken, and, when the pieces' moves have <flank>s,
 	// where it traps no line; the pieces it traps turn into its kind. See
 	// Game::putPiece.
+	// <close class="box" object="redbox" />: after the put, each piece of
+	// that class beside it walled in on all four sides by pieces of the
+	// class put is replaced by a copy of the object; then the put counts
+	// as refused, so the turn does not pass.
 	struct CmdPut
 	{
 		std::string objClass;
+		std::string closeClass;
+		std::string closeObject;
 	};
 
 	// <count class="black" into="score.black" />: how many objects of that
@@ -957,6 +963,8 @@ namespace xge
 		std::string button;    // hold, think
 		std::vector<std::pair<std::string, float>> worths; // think: each <worth sprite="...">
 		bool only{ false };    // pick: <only />
+		std::string closeClass;  // put: <close class=...>
+		std::string closeObject; // put: <close object=...>
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)

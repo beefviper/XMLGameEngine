@@ -1252,7 +1252,16 @@ namespace xge
 				command.amount = readValue(node, where);
 			}
 			if (verb == "hold") { command.button = requireAttribute(node, "button", where); }
-			if (verb == "put") { requireAttribute(node, "class", where); }
+			if (verb == "put")
+			{
+				requireAttribute(node, "class", where);
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "close" || !command.closeClass.empty()) { fail(where + " > <put>", "unknown <" + child->getName() + ">; expected one <close> if wanted"); }
+					command.closeClass = requireAttribute(*child, "class", where + " > <put> > <close>");
+					command.closeObject = requireAttribute(*child, "object", where + " > <put> > <close>");
+				}
+			}
 			if (verb == "count")
 			{
 				requireAttribute(node, "class", where);
@@ -1529,6 +1538,12 @@ namespace xge
 						set.promoteRow = std::stoi(text);
 						continue;
 					}
+					if (tag == "fall") { set.fall = true; continue; }
+					if (tag == "on")
+					{
+						set.on.push_back(requireAttribute(*move, "class", here + " > <on>"));
+						continue;
+					}
 					if (tag == "flank")
 					{
 						const std::string at = here + " > <flank>";
@@ -1542,7 +1557,7 @@ namespace xge
 						set.flanks.push_back(std::move(flank));
 						continue;
 					}
-					if (tag != "step" && tag != "jump") { fail(here, "unknown <" + tag + ">; expected <forced />, <step>s and <jump>s, <flank>s, then <promote>"); }
+					if (tag != "step" && tag != "jump") { fail(here, "unknown <" + tag + ">; expected <forced />, <step>s and <jump>s, <flank>s, <on>s, <fall />, then <promote>"); }
 					RawObject::RawPieceMove each;
 					each.jump = tag == "jump";
 					const std::string at = here + " > <" + tag + ">";
@@ -1552,7 +1567,6 @@ namespace xge
 					if (each.x == 0 && each.y == 0) { fail(at, "goes nowhere: <x> and <y> are both 0"); }
 					set.moves.push_back(std::move(each));
 				}
-				if (set.moves.empty() && set.flanks.empty()) { fail(here, "has no <step>, <jump> or <flank>"); }
 				object.moveSets.push_back(std::move(set));
 			}
 

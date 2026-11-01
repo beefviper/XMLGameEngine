@@ -114,6 +114,8 @@ add_executable(xgetest
 	"xge/tests/test_speedway.cpp"
 	"xge/tests/test_checkers.cpp"
 	"xge/tests/test_reversi.cpp"
+	"xge/tests/test_inarow.cpp"
+	"xge/tests/test_dotsandboxes.cpp"
 	"xge/tests/test_live.cpp"
 	"xge/tests/test_steering.cpp"
 	"xge/tests/test_hitbox.cpp"
