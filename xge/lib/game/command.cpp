@@ -78,7 +78,7 @@ namespace xge
 		if (verb == "grow") { return CmdGrow{}; }
 		if (verb == "split") { return CmdSplit{}; }
 		if (verb == "through") { return CmdThrough{}; }
-		if (verb == "pick") { return CmdPick{ raw.objClass }; }
+		if (verb == "pick") { return CmdPick{ raw.objClass, raw.only }; }
 		if (verb == "place") { return CmdPlace{}; }
 		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
 
@@ -524,7 +524,7 @@ namespace xge
 			[&](const CmdGrow&) { o << "grow"; },
 			[&](const CmdSplit&) { o << "split"; },
 			[&](const CmdThrough&) { o << "through"; },
-			[&](const CmdPick& p) { o << "pick(" << p.objClass << ")"; },
+			[&](const CmdPick& p) { o << "pick(" << p.objClass << (p.only ? ", only" : "") << ")"; },
 			[&](const CmdPlace&) { o << "place"; },
 			[&](const CmdSlide& m)
 			{

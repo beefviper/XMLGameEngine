@@ -1270,6 +1270,12 @@ namespace xge
 			object.swingDone = 0.0f;
 			object.picked.clear();
 			object.pickChain = false;
+			object.moveFromColumn = 0;
+			object.moveFromRow = 0;
+			object.moveToColumn = 0;
+			object.moveToRow = 0;
+			object.marked.clear();
+			object.markCopies.clear();
 			object.resting = false;
 			object.settledAge = 1000;
 			object.spin = 0.0f;

@@ -613,8 +613,27 @@
       <xs:element name="grip" type="valueType" minOccurs="0" />
       <xs:element name="joins" type="joinsType" minOccurs="0" />
       <xs:element name="moves" type="pieceMovesType" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="marks" type="marksType" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:group>
+  <!-- marks: on a picker, pieces it shows in cells of their own map of cells, a copy of object= in each:
+       held, the piece it holds; moves, each cell that piece can move to; movable, each piece of class= that can be picked;
+       last, the cells the last move it placed went from and to. sprite=: only while it shows that look.
+       variable=: only while that variable is not 0 (an option) -->
+  <xs:complexType name="marksType">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="held" type="markType" />
+      <xs:element name="moves" type="markType" />
+      <xs:element name="movable" type="markType" />
+      <xs:element name="last" type="markType" />
+    </xs:choice>
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
+  </xs:complexType>
+  <xs:complexType name="markType">
+    <xs:attribute name="object" type="xs:string" use="required" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="variable" type="xs:string" use="optional" />
+  </xs:complexType>
   <!-- moves: on a map with <cells />, a board game piece's moves, made when a picker <place>s it;
        sprite=: the set for that look (a king's), the one without for the other looks.
        forced: while any piece of its class can jump, it may only jump.
@@ -1174,8 +1193,12 @@
       <!-- split: a piece of a chain cuts it there: it leaves the chain, and the links behind it are a chain of their own, led by the first of them -->
       <xs:element name="split" type="emptyType" />
       <!-- pick: a picker on a map of cells over a board takes up the piece of that class in its cell, one with a move to make; refused when there is none, or while the piece held must jump on -->
+      <!-- pick with <only />: the one piece of that class that has a move, wherever the picker is, when only one has -->
       <xs:element name="pick">
         <xs:complexType>
+          <xs:sequence>
+            <xs:element name="only" type="emptyType" minOccurs="0" />
+          </xs:sequence>
           <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>

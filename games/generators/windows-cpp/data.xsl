@@ -195,6 +195,8 @@
             <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
         </xsl:when>
+        <!-- the one piece that can move -->
+        <xsl:when test="$verb = 'pick' and $node/only"> command.only = true;</xsl:when>
         <!-- a computer thinking: how deep, and what its pieces are worth -->
         <xsl:when test="$verb = 'think'">
           <xsl:if test="$node/depth">
@@ -1451,6 +1453,31 @@
           <xsl:with-param name="text" select="promote/@sprite" />
         </xsl:call-template>
         <xsl:value-of select="concat(', ', substring(concat('0', normalize-space(promote/row)), 1 + number(boolean(promote/row))), ' }')" />
+      </xsl:for-each>
+      <xsl:text> };&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$node/marks">
+      <xsl:value-of select="concat($indent, $to, '.markSets = {')" />
+      <xsl:for-each select="$node/marks">
+        <xsl:if test="position() &gt; 1">,</xsl:if>
+        <xsl:text> { </xsl:text>
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@sprite" />
+        </xsl:call-template>
+        <xsl:text>, {</xsl:text>
+        <xsl:for-each select="*">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> { </xsl:text>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="local-name()" /></xsl:call-template>
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="@object" /></xsl:call-template>
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="@class" /></xsl:call-template>
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="@variable" /></xsl:call-template>
+          <xsl:text> }</xsl:text>
+        </xsl:for-each>
+        <xsl:text> } }</xsl:text>
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
     </xsl:if>

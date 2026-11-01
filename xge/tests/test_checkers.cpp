@@ -7,14 +7,17 @@
 // <moves> (steps, jumps, forced jumps, a king's own set, <promote>), the
 // cursor's <pick> and <place>, a run of jumps that must be finished, the
 // live number `moves` that tells a side it is stuck, and the computer's
-// <think>.
+// <think>; the marks, options, put back and mouse play.
 
 #include "played.h"
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <string>
+#include <utility>
+#include <vector>
 
 using namespace xge;
 using played::Played;
@@ -352,4 +355,115 @@ TEST_CASE("checkers.xml: with two players the computer leaves white alone", "[ch
 	board.frames(300);
 	CHECK(board.cursor().variable.at("turn") == 2.0f);
 	CHECK(board.cursor().lookName() == "whitefree");
+}
+
+namespace
+{
+	// The cells holding a copy of that mark.
+	std::vector<std::pair<int, int>> marksOf(Played& board, const std::string& mark)
+	{
+		std::vector<std::pair<int, int>> cells;
+		for (const Object& object : board.game.getCurrentObjects())
+		{
+			if (object.exists && object.copyOf.find(mark) != std::string::npos) { cells.emplace_back(cell(object.cellColumn), cell(object.cellRow)); }
+		}
+		std::sort(cells.begin(), cells.end());
+		return cells;
+	}
+
+	using Cells = std::vector<std::pair<int, int>>;
+}
+
+TEST_CASE("checkers.xml: the piece held is ringed, where it can go dotted, and the last move cornered", "[checkers][marks]")
+{
+	Board board;
+	board.space(3, 6);
+	board.frames(1);
+	CHECK(marksOf(board, "heldmark") == Cells{ { 3, 6 } });
+	CHECK(marksOf(board, "movemark") == Cells{ { 2, 5 }, { 4, 5 } });
+	board.space(4, 5);
+	board.frames(1);
+	CHECK(marksOf(board, "heldmark").empty());
+	CHECK(marksOf(board, "movemark").empty());
+	CHECK(marksOf(board, "lastmark") == Cells{ { 3, 6 }, { 4, 5 } });
+}
+
+TEST_CASE("checkers.xml: the options turn the marks for moves and for pieces that can move", "[checkers][marks]")
+{
+	Board board;
+	board.game.setVariable("options", "moves", 0.0f);
+	board.game.setVariable("options", "movable", 1.0f);
+	board.frames(2);
+	CHECK(marksOf(board, "movablemark") == Cells{ { 1, 6 }, { 3, 6 }, { 5, 6 }, { 7, 6 } });
+	board.space(3, 6);
+	board.frames(1);
+	CHECK(marksOf(board, "movablemark").empty());
+	CHECK(marksOf(board, "movemark").empty());
+	CHECK(marksOf(board, "heldmark") == Cells{ { 3, 6 } });
+}
+
+TEST_CASE("checkers.xml: X puts the piece held back, but not in a run of jumps", "[checkers]")
+{
+	Board board;
+	board.space(3, 6);
+	REQUIRE(board.cursor().lookName() == "redheld");
+	board.tap(KeyCode::X);
+	CHECK(board.cursor().lookName() == "redfree");
+	CHECK(board.cursor().picked.empty());
+	CHECK(board.at("red", 3, 6));
+
+	Board chain;
+	chain.only({ { "red", 2, 7 }, { "white", 3, 6 }, { "white", 5, 4 }, { "white", 8, 1 } });
+	chain.space(2, 7);
+	chain.space(4, 5);
+	REQUIRE(chain.cursor().pickChain);
+	chain.tap(KeyCode::Backspace);
+	CHECK(chain.cursor().lookName() == "redheld");
+	CHECK_FALSE(chain.cursor().picked.empty());
+}
+
+TEST_CASE("checkers.xml: with the option on, the only piece that can move is picked up for you", "[checkers]")
+{
+	Board board;
+	board.game.setVariable("options", "jumper", 1.0f);
+	// Red has two men but only one can move: it jumps.
+	board.only({ { "red", 4, 5 }, { "red", 1, 8 }, { "red", 2, 7 }, { "white", 5, 4 }, { "white", 8, 1 } });
+	board.frames(2);
+	CHECK(board.cursor().lookName() == "redheld");
+	CHECK(board.cursor().picked == board.at("red", 4, 5)->name);
+	board.space(6, 3);
+	CHECK(board.at("red", 6, 3));
+	CHECK(board.count("white") == 1);
+}
+
+TEST_CASE("checkers.xml: the cursor follows the mouse, and a click picks up and puts down", "[checkers][mouse]")
+{
+	Board board;
+	const auto mouse = [&](float x, float y, bool left)
+	{
+		Controls controls;
+		controls.pointerInside = true;
+		controls.pointerX = x;
+		controls.pointerY = y;
+		board.engine.handleControls(controls);
+		if (left)
+		{
+			board.engine.handleKeyPressed(KeyCode::MouseLeft);
+			board.engine.handleKeyReleased(KeyCode::MouseLeft);
+		}
+		board.frames(1);
+	};
+	// The middle of the square in column 3, row 6, then of column 4, row 5.
+	mouse(160.0f + 60.0f * 2.5f, 80.0f + 60.0f * 5.5f, false);
+	CHECK(cell(board.cursor().cellColumn) == 3);
+	CHECK(cell(board.cursor().cellRow) == 6);
+	mouse(160.0f + 60.0f * 2.5f, 80.0f + 60.0f * 5.5f, true);
+	CHECK(board.cursor().lookName() == "redheld");
+	mouse(160.0f + 60.0f * 3.5f, 80.0f + 60.0f * 4.5f, true);
+	CHECK(board.at("red", 4, 5));
+	CHECK(board.cursor().lookName() == "whitefree");
+	// Off the board, the cursor stays where it was.
+	mouse(20.0f, 20.0f, false);
+	CHECK(cell(board.cursor().cellColumn) == 4);
+	CHECK(cell(board.cursor().cellRow) == 5);
 }

@@ -182,7 +182,7 @@ There are 43 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Putt Park | `bounce` off a slope by the way its drawn wall faces, keeping a share of the speed; a key's `on="hold"` and `on="release"` to build up and strike a putt |
 | Cannon Hill | `polygon` for filled hills that `hole` blows craters in; a `spawn` with an `acceleration` for the wind on each shell |
 | Speedway | `grip` on a car with a heading holds it to the way it faces; `surface` on map pieces for grass, sand and oil; a path follower with a heading faces its way |
-| Checkers | `moves` for a board game's pieces (`step`, `jump`, `forced`, `promote` for kings), a cursor that `pick`s and `place`s them, the live number `moves` to find a stuck side, a computer that `think`s a few moves ahead |
+| Checkers | `moves` for a board game's pieces (`step`, `jump`, `forced`, `promote` for kings), a cursor that `pick`s, `place`s and `drop`s them (keys or mouse), `marks` for the piece held, its moves, the movable pieces and the last move, the live number `moves` to find a stuck side, a computer that `think`s a few moves ahead |
 | Pinball | `pivot` and `swing`: a flipper turns about its hinge in one eased stroke (from still, fastest half way, to still), the turn swept through the frame, and a `knock` lends the ball the speed of the point that strikes it; `friction` brings a cradled ball to rest |
 
 The games share one key convention: Space starts, pauses and restarts, player one is W A S D (plus the arrows), and where Space fires, P or Escape pauses.

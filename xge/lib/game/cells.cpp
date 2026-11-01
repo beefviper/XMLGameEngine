@@ -963,9 +963,22 @@ namespace xge
 		}
 	}
 
-	bool Game::pickPiece(Object& picker, const std::string& objClass)
+	bool Game::pickPiece(Object& picker, const std::string& objClass, bool only)
 	{
 		if (picker.pickChain || !picker.onCells) { return false; }
+		if (only)
+		{
+			Object* one = nullptr;
+			for (Object& piece : objects)
+			{
+				if (piece.moveSets.empty() || piece.objClass != objClass || !piece.onCells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
+				if (one) { return false; }
+				one = &piece;
+			}
+			if (!one || picker.picked == one->name) { return false; }
+			picker.picked = one->name;
+			return true;
+		}
 		const int column = whole(picker.cellColumn);
 		const int row = whole(picker.cellRow);
 		for (Object& piece : objects)
@@ -1000,6 +1013,13 @@ namespace xge
 
 		const Object::MoveSet* set = moveSetOf(*piece);
 		const bool jumped = move->taken != nullptr;
+		if (!picker.pickChain)
+		{
+			picker.moveFromColumn = whole(piece->cellColumn);
+			picker.moveFromRow = whole(piece->cellRow);
+		}
+		picker.moveToColumn = column;
+		picker.moveToRow = row;
 		if (move->taken) { despawn(*move->taken); }
 		putInCell(*piece, column, row);
 
@@ -1022,5 +1042,98 @@ namespace xge
 		picker.pickChain = false;
 		countMoves();
 		return true;
+	}
+
+	bool Game::dropPiece(Object& picker)
+	{
+		if (picker.picked.empty() || picker.pickChain) { return false; }
+		picker.picked.clear();
+		return true;
+	}
+
+	void Game::trackCells(Object& object, bool horizontal, float at)
+	{
+		const float from = horizontal ? object.mapOrigin.x : object.mapOrigin.y;
+		const float tile = horizontal ? object.mapTile.x : object.mapTile.y;
+		if (tile <= 0.0f || at < from) { return; }
+		const int cell = static_cast<int>((at - from) / tile) + 1;
+		if (cell > (horizontal ? object.mapColumns : object.mapRows)) { return; }
+		const int column = horizontal ? cell : whole(object.cellColumn);
+		const int row = horizontal ? whole(object.cellRow) : cell;
+		if (column != whole(object.cellColumn) || row != whole(object.cellRow)) { putInCell(object, column, row); }
+	}
+
+	void Game::showMarks()
+	{
+		for (std::size_t i = 0; i < objects.size(); ++i)
+		{
+			// Not in play now (a pause over it): its marks stay as they are.
+			if (objects[i].markSets.empty() || !isShown(objects[i])) { continue; }
+			Object& picker = objects[i];
+
+			// What is marked now: the set for its look, and the one for any.
+			std::vector<Object::Marked> want;
+			{
+				const auto on = [&](const std::string& variable)
+				{
+					if (variable.empty()) { return true; }
+					VariableName name = VariableName::of(variable);
+					name.owner = fullName(name.owner);
+					const float* value = variableOf(name);
+					return value && *value != 0.0f;
+				};
+				Object* held = picker.picked.empty() ? nullptr : findAnywhere(picker.picked);
+				for (const Object::MarkSet& set : picker.markSets)
+				{
+					if (set.look && *set.look != picker.look) { continue; }
+					for (const Object::Mark& mark : set.marks)
+					{
+						if (!on(mark.variable)) { continue; }
+						switch (mark.kind)
+						{
+						case Object::Mark::Kind::Held:
+							if (held) { want.push_back({ mark.object, whole(held->cellColumn), whole(held->cellRow) }); }
+							break;
+						case Object::Mark::Kind::Moves:
+							if (held)
+							{
+								for (const PieceMoveTo& move : legalMoves(*held, picker.pickChain)) { want.push_back({ mark.object, move.column, move.row }); }
+							}
+							break;
+						case Object::Mark::Kind::Movable:
+							for (Object& piece : objects)
+							{
+								if (piece.moveSets.empty() || piece.objClass != mark.objClass || !piece.onCells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
+								want.push_back({ mark.object, whole(piece.cellColumn), whole(piece.cellRow) });
+							}
+							break;
+						case Object::Mark::Kind::Last:
+							if (picker.moveToColumn > 0)
+							{
+								want.push_back({ mark.object, picker.moveFromColumn, picker.moveFromRow });
+								want.push_back({ mark.object, picker.moveToColumn, picker.moveToRow });
+							}
+							break;
+						}
+					}
+				}
+			}
+			if (want == objects[i].marked) { continue; }
+
+			// Made again: the old copies out, a new one in each cell marked.
+			std::vector<std::string> old = std::move(objects[i].markCopies);
+			objects[i].markCopies.clear();
+			objects[i].marked = want;
+			for (const std::string& copy : old) { despawn(copy); }
+			std::vector<std::string> made;
+			for (const Object::Marked& mark : want)
+			{
+				Object* copy = spawn(mark.object);
+				if (!copy || !copy->onCells) { continue; }
+				putInCell(*copy, mark.column, mark.row);
+				made.push_back(copy->name);
+			}
+			objects[i].markCopies = std::move(made);
+		}
 	}
 }

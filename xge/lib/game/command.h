@@ -679,9 +679,12 @@ namespace xge
 	// up the piece of that class in its cell (column and row), one with a
 	// move it can make; refused when there is none, or while the piece it
 	// holds must jump on. See Game::pickPiece.
+	// <only />: the one piece of that class that has a move, wherever the
+	// picker is, when only one has (a jump that must be made).
 	struct CmdPick
 	{
 		std::string objClass;
+		bool only{ false };
 	};
 
 	// <place />: the piece the picker holds makes the one of its moves
@@ -935,6 +938,7 @@ namespace xge
 		std::string retreat;   // hunt: <retreat object="...">
 		std::string button;    // hold, think
 		std::vector<std::pair<std::string, float>> worths; // think: each <worth sprite="...">
+		bool only{ false };    // pick: <only />
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)

@@ -145,6 +145,7 @@ namespace
 			value(at + ".accelerationY", c.accelerationY);
 			for (const std::string& player : c.players) { out << at << ".player " << player << "\n"; }
 			for (const auto& [look, worth] : c.worths) { out << at << ".worth " << look << " " << worth << "\n"; }
+			flag(at + ".only", c.only);
 		}
 
 		void commands(const std::string& at, const std::vector<RawCommand>& list)
@@ -282,6 +283,12 @@ namespace
 					text(here + ".move", std::string(move.jump ? "jump " : "step ") + move.objClass + " " + std::to_string(move.x) + " " + std::to_string(move.y));
 				}
 				text(here + ".promote", set.promote + " " + std::to_string(set.promoteRow));
+			}
+			for (std::size_t i = 0; i < o.markSets.size(); ++i)
+			{
+				const std::string here = at + ".marks." + std::to_string(i);
+				text(here + ".sprite", o.markSets[i].sprite);
+				for (const RawObject::RawMark& mark : o.markSets[i].marks) { text(here + ".mark", mark.kind + " " + mark.object + " " + mark.objClass + " " + mark.variable); }
 			}
 			text(at + ".mirror", o.mirror);
 			flag(at + ".hasGrip", o.hasGrip);

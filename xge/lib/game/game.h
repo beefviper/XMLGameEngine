@@ -421,7 +421,17 @@ namespace xge
 		// <pick class>: the piece of that class in the picker's cell, with a
 		// move it can make, is the one it holds; false when there is none,
 		// or while the one it holds must jump on.
-		bool pickPiece(Object& picker, const std::string& objClass);
+		// `only`: the one piece of the class with a move, wherever it is,
+		// when just one has.
+		bool pickPiece(Object& picker, const std::string& objClass, bool only = false);
+		// <drop /> on a picker: the piece held is put back (it stays where
+		// it is); false with none held, or in the middle of a run of jumps.
+		bool dropPiece(Object& picker);
+		// <track /> by a pointer, for a piece on a map of cells: into the
+		// cell under `at` (a pixel across, or down), when it is on the map.
+		void trackCells(Object& object, bool horizontal, float at);
+		// <marks>: each picker's marks put in their cells (game/cells.cpp).
+		void showMarks();
 		// <place />: the piece held makes the move that ends in the picker's
 		// cell, taking what it jumps; false when none does, or when it can
 		// jump on (it stays held, and must).
@@ -617,7 +627,7 @@ namespace xge
 		bool canCollide(const Object& a, const Object& b) override;
 		bool hasRules(const Object& object) override { return !object.collisionData.others.empty(); }
 		void touched(Object& a, Object& b, const Contact& contact) override;
-		void conditions() override { countMoves(); checkConditions(); }
+		void conditions() override { countMoves(); showMarks(); checkConditions(); }
 
 		// Sets the velocity of every shown object that is on a path for this
 		// frame's part of it (see Path), starting its next leg when one is

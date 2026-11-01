@@ -1,6 +1,6 @@
 # Board games
 
-**Status:** Checkers Built (2026-10-31); its computer (`<think>`) Built (2026-11-01); other board games Open.
+**Status:** Checkers Built (2026-10-31); its computer (`<think>`) and marks, put back and mouse Built (2026-11-01); other board games Open.
 
 ## What we looked for
 
@@ -21,7 +21,7 @@
 
 - **A `<turns>`-style turn word**: `<turns>` swaps whole games between players; on one board both sides share one game. A variable and looks said it with nothing new.
 - **Crowning by a rule** (a condition on the row reached): conditions have no `self`, and a state's condition cannot change "the piece that just moved". `<promote>` inside the moves keeps it with the rule that leads there.
-- **Marking the piece held**: the cursor's look shows that something is held, not which piece. A `picked` name usable in `object=` would let the game change the held piece's look; left until a game needs it.
+- **Marking the piece held by changing its look**: a `picked` name usable in `object=` would let the game change the held piece's look, but every piece would need a held look per side and per king. Marks (below) say it once, on the picker.
 
 ## A computer opponent (2026-11-01)
 
@@ -31,6 +31,14 @@
 - **It presses keys as a person would**, walking the picker and pressing the button, so the game's own actions still do the move and pass the turn. Its own key and its own cursor looks keep the player's keys out of its turn.
 - **Levels** (Beef: easy shadows, smarter returns to the middle): for Pong they are plain `<computer>` conditions, no search. Pong's speeds were set by Beef's rule that a paddle at the top cannot reach a ball sent from corner to corner, so neither level is unbeatable.
 - **Not built yet: lookahead for action games**, playing the game itself forward a second or two on a copy of the objects' numbers (pictures shared, no sound) for each choice of keys, scored by goals inferred from the conditions (a threshold's distance, a variable only ever increased). Discussed with Beef (2026-11-01) as the step after board games.
+
+## Easier play (2026-11-01)
+
+- Asked for (Beef, after playing): a way to put a piece back, better signs of what is held and of where a move began, the moves shown when a piece is held, options on the title screen for showing moves and movable pieces and for picking up a piece that must jump, and the mouse.
+- **Put back is `<drop />`**, not a new verb: on a picker it lets go of the held piece, as on a carrier it lets go of what is carried. Refused once a run of jumps has begun, since the jump has been made.
+- **`<marks>` on the picker**, not looks on the pieces: four kinds (held, moves, movable, last) worked out by the engine from what it already knows, each shown by an object the game draws, as spawned copies on a map of their own so they block nothing. Gated per look of the picker (what a side sees on its turn) and by a variable, so an option is a variable kept by `<keeps>` and toggled on the title screen. Last move is the computer's too, which answers "where did it start".
+- **Auto-pick is `<pick><only />`** run by a condition: picking needs no new idea of "must move this one", only a pick that finds the piece itself when exactly one can move.
+- **The mouse is `<track />` on cells**: tracking an object on a map snaps it to the cell under the pointer, and a click is a key like Space. An axis trigger now keeps its `from=`, so the mouse moves only the player's cursor, not the computer's.
 
 ## Open
 

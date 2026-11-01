@@ -85,13 +85,17 @@ namespace xge
 		const bool horizontal = axis == Axis::MouseX || axis == Axis::Pad1X || axis == Axis::Pad2X;
 		const WindowDesc& window = game.getWindowDesc();
 		Object& object = game.getObject(trigger->object);
+		// from=: only while it shows that look.
+		if (!trigger->from.empty() && object.lookName() != trigger->from) { return; }
 		for (const auto& action : object.action[trigger->action])
 		{
 			const auto* along = std::get_if<CmdTrack>(&shapeOf(action));
 			if (!along) { continue; }
 			if (along->path.empty())
 			{
-				track(object, horizontal, fraction, horizontal ? window.width : window.height);
+				const float span = horizontal ? window.width : window.height;
+				if (object.onCells) { game.trackCells(object, horizontal, fraction * span); }
+				else { track(object, horizontal, fraction, span); }
 			}
 			else if (const auto path = game.getPaths().find(along->path); path != game.getPaths().end())
 			{
@@ -134,7 +138,13 @@ namespace xge
 			[&](const CmdReset&) { if (self) { restart(*self); } else { game.resetAll(); } },
 			[&](const CmdDie&) { if (self) { xge::die(*self); } },
 			[&](const CmdStop&) { if (self) { xge::stop(*self); } },
-			[&](const CmdDrop&) { if (self) { xge::drop(*self); } },
+			// A picker puts back the piece it holds; refused in the middle
+			// of a run of jumps.
+			[&](const CmdDrop&)
+			{
+				if (self && !self->picked.empty()) { done = game.dropPiece(*self); }
+				else if (self) { xge::drop(*self); }
+			},
 			[&](const CmdReverse&)
 			{
 				// On a map of cells, a <go> turns round.
@@ -252,7 +262,7 @@ namespace xge
 			[&](const CmdGrow&) { if (self && !self->chain.empty()) { ++self->chainGrow; } },
 			[&](const CmdSplit&) { if (self) { game.splitChain(*self); } },
 			[&](const CmdThrough&) { if (self && doer.touch) { game.stepThrough(); } },
-			[&](const CmdPick& p) { done = self && game.pickPiece(*self, p.objClass); },
+			[&](const CmdPick& p) { done = self && game.pickPiece(*self, p.objClass, p.only); },
 			[&](const CmdPlace&) { done = self && game.placePiece(*self); },
 			// Another action, of this object or another, as part of this.
 			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, pressed, doer.byRule, a.from); },

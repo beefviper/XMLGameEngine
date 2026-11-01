@@ -16,9 +16,14 @@
 
   W A S D or the arrows move the cursor; Space picks up the piece under
   it, and puts it down where the cursor is. Space on another of your own
-  pieces picks that one instead (not in the middle of a run of jumps).
+  pieces picks that one instead, and X or Backspace puts it back (neither
+  in the middle of a run of jumps). The mouse works too: the cursor
+  follows it, a left click is Space and a right click puts back.
   P or Escape pauses. On the title, Space plays the computer and 2 is
-  for two players; Space plays again.
+  for two players, and M, V and J turn on or off: showing where the piece
+  held can go, showing which pieces can move, and picking up the piece
+  for you when it is the only one that can move (a jump that must be
+  made). The options are kept. Space plays again.
 
   How it is written:
   * The board is a <map> of <cells />: r red men, w white men. Each side
@@ -36,6 +41,13 @@
     turn it is). Space triggers the action for the look it shows.
   * A side is stuck when the live number `moves` of its pieces adds up to
     nothing on its turn.
+  * The cursor's <marks> put pieces of the marks map in cells: a ring on
+    the piece held, a dot where it can go, a dot on each piece that can
+    move, corners on the last move's two cells. Each look has its set;
+    the options turn some on and off by their variable=.
+  * <drop /> puts back the piece held; <pick class="red"><only /></pick>
+    picks the one red piece that can move, when only one can.
+  * <track /> on a piece on cells puts it in the cell under the mouse.
   * The computer plays white with <think>: it looks four moves ahead,
     a king worth three men, then walks the cursor and presses its own
     key (F12, which only its looks answer), so your keys do nothing on
@@ -80,44 +92,71 @@
       <color char="y">color.yellow</color>
     </style>
     <style name="cursor"><scale>6</scale><color>color.yellow</color></style>
+    <style name="option"><size>22</size></style>
   </styles>
   <objects>
     <!-- how many play: 1 against the computer, 2 at one keyboard -->
     <object name="match">
       <variables><variable name="players">1</variable></variables>
     </object>
+    <!-- the player's options, kept: 1 on, 0 off -->
+    <object name="options">
+      <variables>
+        <variable name="moves">1</variable>
+        <variable name="movable">0</variable>
+        <variable name="jumper">0</variable>
+      </variables>
+    </object>
     <object name="again">
       <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
   </objects>
+  <keeps>
+    <keep object="options" />
+  </keeps>
   <states>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>CHECKERS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 120</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
         </object>
         <object name="help1">
           <sprite><text style="help"><content>you play red, and move first; 2 for two players</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
         </object>
         <object name="help2">
           <sprite><text style="help"><content>w a s d or the arrows move, spacebar picks up and puts down</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 15</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
         <object name="help3">
-          <sprite><text style="help"><content>p pauses</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 50</centered></y></position>
+          <sprite><text style="help"><content>x or backspace puts back, p pauses; or click, and right click to put back</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
+        </object>
+        <object name="option1">
+          <sprite><text style="option"><content>m: show where it can go</content><choose><by>options.moves</by><word>off</word><word>on</word></choose></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
+        </object>
+        <object name="option2">
+          <sprite><text style="option"><content>v: show which pieces can move</content><choose><by>options.movable</by><word>off</word><word>on</word></choose></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 60</centered></y></position>
+        </object>
+        <object name="option3">
+          <sprite><text style="option"><content>j: pick up the only piece that can move</content><choose><by>options.jumper</by><word>off</word><word>on</word></choose></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 130</centered></y></position>
+          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
         </object>
       </objects>
       <inputs>
         <input><button>space</button><button>pad1.start</button><set variable="match.players">1</set><push state="playing" /></input>
         <input><button>num2</button><button>numpad2</button><set variable="match.players">2</set><push state="playing" /></input>
+        <input button="m"><set variable="options.moves">1 - options.moves</set></input>
+        <input button="v"><set variable="options.movable">1 - options.movable</set></input>
+        <input button="j"><set variable="options.jumper">1 - options.jumper</set></input>
       </inputs>
     </state>
     <state name="playing">
@@ -278,6 +317,59 @@
           </group>
         </map>
 
+        <!-- what the cursor marks, on a map of their own: copies of these are put in the cells marked -->
+        <map name="marks">
+          <tile><width>square</width><height>square</height></tile>
+          <position><x>left</x><y>top</y></position>
+          <columns>8</columns>
+          <rows>8</rows>
+          <cells />
+          <object name="heldmark">
+            <sprite>
+              <bitmap style="cursor">
+                <row>....*****....</row>
+                <row>..**.....**..</row>
+                <row>.*.........*.</row>
+                <row>.*.........*.</row>
+                <row>*...........*</row>
+                <row>*...........*</row>
+                <row>*...........*</row>
+                <row>*...........*</row>
+                <row>*...........*</row>
+                <row>.*.........*.</row>
+                <row>.*.........*.</row>
+                <row>..**.....**..</row>
+                <row>....*****....</row>
+                <scale>5</scale>
+              </bitmap>
+            </sprite>
+          </object>
+          <object name="movemark">
+            <sprite><circle><radius>9</radius><color>color.yellow</color></circle></sprite>
+          </object>
+          <object name="movablemark">
+            <sprite><circle><radius>6</radius><color>color.cyan</color></circle></sprite>
+          </object>
+          <object name="lastmark">
+            <sprite>
+              <bitmap>
+                <row>**......**</row>
+                <row>*........*</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>..........</row>
+                <row>*........*</row>
+                <row>**......**</row>
+                <scale>6</scale>
+                <color>color.orange</color>
+              </bitmap>
+            </sprite>
+          </object>
+        </map>
+
         <!-- the cursor, on a map of its own over the board -->
         <map name="pointer">
           <tile><width>square</width><height>square</height></tile>
@@ -377,6 +469,26 @@
                 <row>**********</row>
               </bitmap>
             </sprite>
+            <marks>
+              <last object="lastmark" />
+            </marks>
+            <marks sprite="redfree">
+              <movable class="red" object="movablemark" variable="options.movable" />
+            </marks>
+            <marks sprite="whitefree">
+              <movable class="white" object="movablemark" variable="options.movable" />
+            </marks>
+            <marks sprite="redheld">
+              <held object="heldmark" />
+              <moves object="movemark" variable="options.moves" />
+            </marks>
+            <marks sprite="whiteheld">
+              <held object="heldmark" />
+              <moves object="movemark" variable="options.moves" />
+            </marks>
+            <marks sprite="cpuheld">
+              <held object="heldmark" />
+            </marks>
             <actions>
               <action name="up"><hop direction="up" /></action>
               <action name="down"><hop direction="down" /></action>
@@ -386,6 +498,14 @@
               <action name="redpick"><pick class="red" /><become sprite="redheld" /><play sound="pick" /></action>
               <action name="whitepick"><pick class="white" /><become sprite="whiteheld" /><play sound="pick" /></action>
               <action name="cpupick"><pick class="white" /><become sprite="cpuheld" /><play sound="pick" /></action>
+              <!-- the only piece that can move, picked for you -->
+              <action name="redonly"><pick class="red"><only /></pick><become sprite="redheld" /><play sound="pick" /></action>
+              <action name="whiteonly"><pick class="white"><only /></pick><become sprite="whiteheld" /><play sound="pick" /></action>
+              <!-- put back -->
+              <action name="redback"><drop /><become sprite="redfree" /></action>
+              <action name="whiteback"><drop /><become sprite="whitefree" /></action>
+              <!-- where the mouse is -->
+              <action name="point"><track /></action>
               <!-- the move made and over: the turn passes -->
               <action name="redplace">
                 <place />
@@ -416,13 +536,31 @@
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" /></input>
         <!-- one press: put the piece held down, or take one up (another of your own while holding one) -->
         <input>
-          <button>space</button><button>pad1.a</button>
+          <button>space</button><button>pad1.a</button><button>mouse.left</button>
           <trigger object="cursor" action="redplace" from="redheld" />
           <trigger object="cursor" action="whiteplace" from="whiteheld" />
           <trigger object="cursor" action="redpick" from="redheld" />
           <trigger object="cursor" action="whitepick" from="whiteheld" />
           <trigger object="cursor" action="redpick" from="redfree" />
           <trigger object="cursor" action="whitepick" from="whitefree" />
+        </input>
+        <input>
+          <button>x</button><button>backspace</button><button>pad1.b</button><button>mouse.right</button>
+          <trigger object="cursor" action="redback" from="redheld" />
+          <trigger object="cursor" action="whiteback" from="whiteheld" />
+        </input>
+        <!-- the mouse moves the cursor, but not on the computer's turn -->
+        <input axis="mouse.x">
+          <trigger object="cursor" action="point" from="redfree" />
+          <trigger object="cursor" action="point" from="redheld" />
+          <trigger object="cursor" action="point" from="whitefree" />
+          <trigger object="cursor" action="point" from="whiteheld" />
+        </input>
+        <input axis="mouse.y">
+          <trigger object="cursor" action="point" from="redfree" />
+          <trigger object="cursor" action="point" from="redheld" />
+          <trigger object="cursor" action="point" from="whitefree" />
+          <trigger object="cursor" action="point" from="whiteheld" />
         </input>
         <!-- the computer's key: only its looks answer it -->
         <input>
@@ -460,6 +598,21 @@
             <condition object="cursor" variable="turn"><equal>2</equal></condition>
           </all>
           <become object="cursor" sprite="cpufree" from="whitefree" />
+        </condition>
+        <!-- the option: the only piece that can move is picked up for you -->
+        <condition>
+          <all>
+            <condition object="options" variable="jumper"><equal>1</equal></condition>
+            <condition object="cursor" variable="turn"><equal>1</equal></condition>
+          </all>
+          <trigger object="cursor" action="redonly" from="redfree" />
+        </condition>
+        <condition>
+          <all>
+            <condition object="options" variable="jumper"><equal>1</equal></condition>
+            <condition object="cursor" variable="turn"><equal>2</equal></condition>
+          </all>
+          <trigger object="cursor" action="whiteonly" from="whitefree" />
         </condition>
       </conditions>
       <!-- white's move: four ahead, a king worth three men -->

@@ -518,6 +518,22 @@ namespace xge
 			int promoteRow{};       // ...on reaching this row
 		};
 		std::vector<RawMoveSet> moveSets;
+		// <marks>: on a picker, the pieces it shows on a map of cells for
+		// what it holds and can do (see Object::MarkSet); a set with a
+		// sprite= while it shows that look, the one without always.
+		struct RawMark
+		{
+			std::string kind;       // held, moves, movable, last
+			std::string object;     // what is put in each cell marked
+			std::string objClass;   // movable: whose pieces
+			std::string variable;   // only while this is not 0 ("" always)
+		};
+		struct RawMarkSet
+		{
+			std::string sprite;
+			std::vector<RawMark> marks;
+		};
+		std::vector<RawMarkSet> markSets;
 		RawMaze maze;                // <maze>: the map it walks, if any
 		// <shape>: on a cell map, the cells it fills, a <row> of characters
 		// each, top to bottom; and the object of the map each character
@@ -919,6 +935,37 @@ namespace xge
 		// must finish.
 		std::string picked;
 		bool pickChain{ false };
+		// The cells the last move it placed went from and to (0 for none).
+		int moveFromColumn{};
+		int moveFromRow{};
+		int moveToColumn{};
+		int moveToRow{};
+
+		// <marks>: copies of the mark pieces put in the cells marked (see
+		// Game::showMarks), made again only when what is marked changes.
+		struct Mark
+		{
+			enum class Kind { Held, Moves, Movable, Last };
+			Kind kind{ Kind::Held };
+			std::string object;
+			std::string objClass;
+			std::string variable;
+		};
+		struct MarkSet
+		{
+			std::optional<std::size_t> look;
+			std::vector<Mark> marks;
+		};
+		std::vector<MarkSet> markSets;
+		struct Marked
+		{
+			std::string object;
+			int column{};
+			int row{};
+			bool operator==(const Marked&) const = default;
+		};
+		std::vector<Marked> marked;
+		std::vector<std::string> markCopies;
 		// The map's <checks>, made ready (each piece of the map has them).
 		struct CellCheck
 		{

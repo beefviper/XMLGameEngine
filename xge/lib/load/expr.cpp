@@ -968,6 +968,33 @@ namespace xge
 			set.promoteRow = rawSet.promoteRow;
 			object.moveSets.push_back(std::move(set));
 		}
+		for (const RawObject::RawMarkSet& rawSet : rawObject.markSets)
+		{
+			Object::MarkSet set;
+			if (!rawSet.sprite.empty())
+			{
+				const auto look = std::find_if(looks.begin(), looks.end(), [&](const Object::Look& each) { return each.name == rawSet.sprite; });
+				if (look == looks.end())
+				{
+					std::vector<std::string> names;
+					for (const Object::Look& each : looks) { names.push_back(each.name); }
+					throw std::runtime_error(where + " > <marks sprite=\"" + rawSet.sprite + "\">: the object has no look of that name"
+						+ (names.empty() ? std::string(" (it has no looks)") : didYouMean(rawSet.sprite, names) + ". Its looks are: " + listOf(names)));
+				}
+				set.look = static_cast<std::size_t>(look - looks.begin());
+			}
+			for (const RawObject::RawMark& raw : rawSet.marks)
+			{
+				Object::Mark mark;
+				mark.kind = raw.kind == "held" ? Object::Mark::Kind::Held : raw.kind == "moves" ? Object::Mark::Kind::Moves
+					: raw.kind == "movable" ? Object::Mark::Kind::Movable : Object::Mark::Kind::Last;
+				mark.object = raw.object;
+				mark.objClass = raw.objClass;
+				mark.variable = raw.variable;
+				set.marks.push_back(std::move(mark));
+			}
+			object.markSets.push_back(std::move(set));
+		}
 
 		if (!rawObject.mirror.empty())
 		{

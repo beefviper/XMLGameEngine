@@ -1252,6 +1252,14 @@ namespace xge
 				command.amount = readValue(node, where);
 			}
 			if (verb == "hold") { command.button = requireAttribute(node, "button", where); }
+			if (verb == "pick")
+			{
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "only") { fail(where + " > <pick>", "unknown <" + child->getName() + ">; expected <only /> if wanted"); }
+					command.only = true;
+				}
+			}
 			if (verb == "think")
 			{
 				const std::string here = where + " > <think>";
@@ -1527,6 +1535,31 @@ namespace xge
 				}
 				if (set.moves.empty()) { fail(here, "has no <step> or <jump>"); }
 				object.moveSets.push_back(std::move(set));
+			}
+
+			bool anyMarks = false;
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				if (child->getName() != "marks") { continue; }
+				if (!anyMarks) { object.markSets.clear(); anyMarks = true; }
+				RawObject::RawMarkSet set;
+				set.sprite = child->getAttribute("sprite");
+				const std::string here = where + " > <marks" + (set.sprite.empty() ? std::string() : " sprite=\"" + set.sprite + "\"") + ">";
+				for (std::unique_ptr<XmlNode> mark = child->getFirstChild(); mark != nullptr; mark = mark->getNextSibling())
+				{
+					RawObject::RawMark each;
+					each.kind = mark->getName();
+					if (each.kind != "held" && each.kind != "moves" && each.kind != "movable" && each.kind != "last")
+					{
+						fail(here, "unknown <" + each.kind + ">; expected <held>, <moves>, <movable> and <last>");
+					}
+					const std::string at = here + " > <" + each.kind + ">";
+					each.object = requireAttribute(*mark, "object", at);
+					if (each.kind == "movable") { each.objClass = requireAttribute(*mark, "class", at); }
+					each.variable = mark->getAttribute("variable");
+					set.marks.push_back(std::move(each));
+				}
+				object.markSets.push_back(std::move(set));
 			}
 		}
 
@@ -2345,7 +2378,7 @@ namespace xge
 				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
-				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves") { /* below, all at once */ }
+				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves" || tag == "marks") { /* below, all at once */ }
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "chain")
 				{
@@ -2360,7 +2393,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
