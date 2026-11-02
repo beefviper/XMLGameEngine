@@ -523,6 +523,25 @@ namespace xge
 		// held move's next step, each frame (FrameRules::cellMoves).
 		Object* findAnywhere(const std::string& name) noexcept;
 		Object* cellHolder(const std::string& map, int column, int row, const std::vector<Object*>& mover);
+		// While nothing moves (counting the moves, laying out the marks):
+		// who holds each cell, found once per map and looked up after
+		// (cellHolder with no mover), instead of looking at every object
+		// for every cell. Held for as long as the returned guard lives.
+		struct HeldCells
+		{
+			bool on{ false };
+			std::unordered_map<std::string, std::unordered_map<long long, Object*>> maps;
+		};
+		struct CellsStill
+		{
+			Game& game;
+			bool first;  // the outermost guard lets go
+			explicit CellsStill(Game& owner) : game(owner), first(!owner.heldCells.on) { game.heldCells.on = true; }
+			~CellsStill() { if (first) { game.heldCells = {}; } }
+			CellsStill(const CellsStill&) = delete;
+			CellsStill& operator=(const CellsStill&) = delete;
+		};
+		HeldCells heldCells;
 		std::vector<Object*> cellsOf(Object& mover);
 		void putInCell(Object& object, int column, int row);
 		// Onto another map of cells: its place, tile, size and checks, as

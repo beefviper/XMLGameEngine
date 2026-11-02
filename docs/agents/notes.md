@@ -77,6 +77,7 @@ Gotchas that are easy to get wrong. How the engine works is [../readme.md](../re
 - `<grip>` below 1 also brakes an object with no keys held (it eases toward a speed of 0), so never give one to a thing that moves by `<velocity>` alone.
 - A timed hop's `<arc>` is drawn through `altitude`; the position stays on the ground line, so tests compare positions, not drawn spots.
 - A `RawObject` made in code (a deck's cards, `game/cards.cpp`) must have `sprite` equal to `looks.front()`: look 0's picture is built from `sprite`, so a sprite left as another look draws that one in its place.
+- `cellHolder` with no mover answers from a snapshot while a `Game::CellsStill` guard lives (`countMoves`, put marks). Never move a piece on cells while one is held.
 - Cards are drawn by `drawOrder` (`window/window.h` `drawInOrder`): everything with 0 first in the file's order, then the rest sorted. A new kind of thing that must sit above the cards needs a drawing order too.
 
 ### Things kept between frames

@@ -24,11 +24,13 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <cstdint>
 #include <deque>
 #include <limits>
 #include <map>
 #include <optional>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 
 namespace xge
@@ -52,6 +54,17 @@ namespace xge
 			std::vector<Object::MoveSet> moveSets;
 			std::size_t look{};
 			std::vector<std::string> lookNames;
+
+			// Worked out once the board is set (Board::prepare), so the
+			// search compares no names: its place in the board's kinds, its
+			// moves at its own look, the kinds that set goes <on>, and whether
+			// it is a place pieces go on, or what a side closes or owns.
+			std::size_t index{};
+			const Object::MoveSet* ownSet{ nullptr };
+			std::vector<char> goesOn;
+			bool isPlace{ false };
+			bool closedBy[2]{ false, false };
+			bool ownedBy[2]{ false, false };
 		};
 
 		struct Piece
@@ -116,7 +129,10 @@ namespace xge
 			{
 				if (!object) { return nullptr; }
 				if (const auto found = typeOf.find(object); found != typeOf.end()) { return found->second; }
-				Kind kind{ object->objClass, object->moveSets, object->look, {} };
+				Kind kind;
+				kind.objClass = object->objClass;
+				kind.moveSets = object->moveSets;
+				kind.look = object->look;
 				for (const auto& look : object->looks) { kind.lookNames.push_back(look.name); }
 				types.push_back(std::move(kind));
 				typeOf[object] = &types.back();
@@ -124,6 +140,58 @@ namespace xge
 			}
 
 			bool claims() const { return !closeClass[0].empty() || !closeClass[1].empty(); }
+
+			// Each kind's names worked out against the others, once.
+			void prepare()
+			{
+				std::size_t i = 0;
+				for (Kind& kind : types)
+				{
+					kind.index = i++;
+					kind.isPlace = std::find(places.begin(), places.end(), kind.objClass) != places.end();
+					for (int side = 0; side < 2; ++side)
+					{
+						kind.closedBy[side] = !closeClass[side].empty() && kind.objClass == closeClass[side];
+						kind.ownedBy[side] = !ownClass[side].empty() && kind.objClass == ownClass[side];
+					}
+				}
+				for (Kind& kind : types)
+				{
+					kind.ownSet = setOf(kind, kind.look);
+					kind.goesOn.assign(types.size(), 0);
+					if (!kind.ownSet) { continue; }
+					for (const Kind& other : types)
+					{
+						kind.goesOn[other.index] = std::find(kind.ownSet->on.begin(), kind.ownSet->on.end(), other.objClass) != kind.ownSet->on.end();
+					}
+				}
+			}
+
+			// What the board is, as one number: each piece in play by its
+			// cell, kind, look, side and owner, in any order. Two orders of
+			// the same moves come to the same number.
+			std::uint64_t key() const
+			{
+				std::uint64_t all = 0;
+				for (const Piece& piece : pieces)
+				{
+					if (!piece.alive) { continue; }
+					std::uint64_t one = reinterpret_cast<std::uintptr_t>(piece.object);
+					one = mix(one ^ (static_cast<std::uint64_t>(piece.column) << 40) ^ (static_cast<std::uint64_t>(piece.row) << 48));
+					one = mix(one ^ (static_cast<std::uint64_t>(piece.look) << 8) ^ static_cast<std::uint64_t>(piece.side + 1) ^ (static_cast<std::uint64_t>(piece.owner + 1) << 4));
+					all ^= one;
+				}
+				return all;
+			}
+
+			static std::uint64_t mix(std::uint64_t x)
+			{
+				// splitmix64's finish: every bit of x moves every bit out.
+				x += 0x9e3779b97f4a7c15ull;
+				x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ull;
+				x = (x ^ (x >> 27)) * 0x94d049bb133111ebull;
+				return x ^ (x >> 31);
+			}
 
 			int& at(int column, int row) { return grid[static_cast<std::size_t>((row - 1) * columns + (column - 1))]; }
 			bool onBoard(int column, int row) const { return column >= 1 && row >= 1 && column <= columns && row <= rows; }
@@ -220,7 +288,7 @@ namespace xge
 			// Every put the side can make: a free cell (or one holding what
 			// it goes <on>), and the lines it traps; the first of the side's
 			// pieces that fits each cell.
-			void putMoves(int side, std::vector<Move>& out)
+			void putMoves(int side, std::vector<Move>& out, std::size_t enough = std::numeric_limits<std::size_t>::max())
 			{
 				std::vector<const Kind*> each = allKinds[side];
 				if (each.empty()) { each.push_back(kinds[side]); }
@@ -230,7 +298,7 @@ namespace xge
 					{
 						for (const Kind* kind : each)
 						{
-							const Object::MoveSet* set = setOf(*kind, kind->look);
+							const Object::MoveSet* set = kind->ownSet;
 							if (!set) { continue; }
 							const int there = at(column, row);
 							int under = -1;
@@ -238,7 +306,7 @@ namespace xge
 							{
 								if (there == 0) { continue; }
 								const Piece& piece = pieces[static_cast<std::size_t>(there - 1)];
-								if (std::find(set->on.begin(), set->on.end(), piece.object->objClass) == set->on.end()) { continue; }
+								if (!kind->goesOn[piece.object->index]) { continue; }
 								under = there - 1;
 							}
 							else if (there != 0) { continue; }
@@ -255,6 +323,7 @@ namespace xge
 							if (set->flanks.empty())
 							{
 								out.push_back(std::move(put));
+								if (out.size() >= enough) { return; }
 								break;
 							}
 							for (const Object::Flank& flank : set->flanks)
@@ -290,6 +359,7 @@ namespace xge
 							if (!put.turned.empty())
 							{
 								out.push_back(std::move(put));
+								if (out.size() >= enough) { return; }
 								break;
 							}
 						}
@@ -353,6 +423,16 @@ namespace xge
 			}
 
 			// Every move the side can make, by the rules its pieces have.
+			// Whether the side has any move at all: for a put, the first
+			// one found is enough.
+			bool canMove(int side)
+			{
+				if (!puts(side)) { return !moves(side).empty(); }
+				std::vector<Move> one;
+				putMoves(side, one, 1);
+				return !one.empty();
+			}
+
 			std::vector<Move> moves(int side)
 			{
 				if (puts(side))
@@ -407,9 +487,38 @@ namespace xge
 					const int r = row + side[1];
 					if (!onBoard(c, r) || at(c, r) == 0) { return false; }
 					const Piece& piece = pieces[static_cast<std::size_t>(at(c, r) - 1)];
-					if (std::find(places.begin(), places.end(), piece.object->objClass) != places.end()) { return false; }
+					if (piece.object->isPlace) { return false; }
 				}
 				return true;
+			}
+
+			// Whether a put would close something: a piece of what its side
+			// closes beside it, walled in but for this cell.
+			bool closes(const Move& move)
+			{
+				if (!move.put || closeClass[move.side].empty()) { return false; }
+				const int column = move.cells.front().first;
+				const int row = move.cells.front().second;
+				const int around[4][2] = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
+				for (const auto& way : around)
+				{
+					const int c = column + way[0];
+					const int r = row + way[1];
+					if (!onBoard(c, r) || at(c, r) == 0) { continue; }
+					const Piece& box = pieces[static_cast<std::size_t>(at(c, r) - 1)];
+					if (box.owner >= 0 || !box.alive || !box.object->closedBy[move.side]) { continue; }
+					int open = 0;
+					for (const auto& side : around)
+					{
+						const int bc = c + side[0];
+						const int br = r + side[1];
+						if (!onBoard(bc, br) || at(bc, br) == 0) { open = 2; break; }
+						if (pieces[static_cast<std::size_t>(at(bc, br) - 1)].object->isPlace) { ++open; }
+					}
+					// Only the place this put goes on is still open.
+					if (open == 1 && move.under >= 0) { return true; }
+				}
+				return false;
 			}
 
 			Undo make(const Move& move)
@@ -444,7 +553,7 @@ namespace xge
 							const int r = made.row + way[1];
 							if (!onBoard(c, r) || at(c, r) == 0) { continue; }
 							const std::size_t box = static_cast<std::size_t>(at(c, r) - 1);
-							if (pieces[box].owner >= 0 || !pieces[box].alive || pieces[box].object->objClass != closeClass[side] || !walled(c, r)) { continue; }
+							if (pieces[box].owner >= 0 || !pieces[box].alive || !pieces[box].object->closedBy[side] || !walled(c, r)) { continue; }
 							pieces[box].owner = side;
 							undo.closed.push_back(box);
 						}
@@ -500,6 +609,17 @@ namespace xge
 			const CmdThink& think;
 			const std::atomic<bool>& stop;
 
+			// Boards already worked out, by their key, whose turn and how
+			// deep: the same lines drawn in another order are not looked at
+			// again. What was found may be only a bound (the search of it
+			// stopped early at alpha or beta).
+			struct Known
+			{
+				float value{};
+				enum class Bound { exact, atMost, atLeast } bound{ Bound::exact };
+			};
+			std::unordered_map<std::uint64_t, Known> known;
+
 			float worthOf(const Piece& piece) const
 			{
 				const std::string& look = piece.look < piece.object->lookNames.size() ? piece.object->lookNames[piece.look] : std::string();
@@ -522,8 +642,8 @@ namespace xge
 					for (const Piece& piece : board.pieces)
 					{
 						if (!piece.alive) { continue; }
-						if (piece.owner == 0 || piece.object->objClass == board.ownClass[0]) { total += 1.0f; }
-						else if (piece.owner == 1 || piece.object->objClass == board.ownClass[1]) { total -= 1.0f; }
+						if (piece.owner == 0 || piece.object->ownedBy[0]) { total += 1.0f; }
+						else if (piece.owner == 1 || piece.object->ownedBy[1]) { total -= 1.0f; }
 					}
 					return total;
 				}
@@ -542,14 +662,18 @@ namespace xge
 			{
 				// Its turn is over or the game was put back: nothing is wanted.
 				if (stop.load(std::memory_order_relaxed)) { return 0.0f; }
-				const std::vector<Move> moves = board.moves(side);
 				const float now = side == 0 ? score() : -score();
+				// The last of the moves looked at: only whether the game is
+				// over is wanted, not every move there is.
+				const bool any = depth > 0 || board.canMove(side);
+				const std::vector<Move> moves = depth > 0 ? board.moves(side) : std::vector<Move>{};
+				if (depth <= 0 && any) { return now; }
 				if (moves.empty() && board.puts(side))
 				{
 					// No put: it passes; neither can: the game is over, won
 					// by the side with more (sooner is better), or, when
 					// pieces put turn nothing, drawn (a full board).
-					if (board.moves(1 - side).empty())
+					if (!board.canMove(1 - side))
 					{
 						if (!board.flanks(side) && !board.claims()) { return 0.0f; }
 						const float sooner = static_cast<float>(depth);
@@ -560,16 +684,44 @@ namespace xge
 				}
 				if (moves.empty()) { return -(decided + static_cast<float>(depth)); }
 				if (depth <= 0) { return now; }
-				for (const Move& move : moves)
+
+				const std::uint64_t key = board.key() ^ Board::mix(static_cast<std::uint64_t>(side) * std::uint64_t{ 1000003 } + static_cast<std::uint64_t>(depth));
+				if (const auto found = known.find(key); found != known.end())
 				{
-					const Board::Undo undo = board.make(move);
+					const Known& seen = found->second;
+					if (seen.bound == Known::Bound::exact) { return seen.value; }
+					if (seen.bound == Known::Bound::atLeast) { alpha = std::max(alpha, seen.value); }
+					else { beta = std::min(beta, seen.value); }
+					if (alpha >= beta) { return seen.value; }
+				}
+				const float from = alpha;
+
+				// Moves that close something first: they are most often the
+				// best, and a good move found early cuts the rest short.
+				std::vector<const Move*> order;
+				order.reserve(moves.size());
+				for (const Move& move : moves) { order.push_back(&move); }
+				// (Not worth it just above the last step, where every move is
+				// only scored.)
+				if (board.claims() && depth >= 2)
+				{
+					std::stable_partition(order.begin(), order.end(), [&](const Move* move) { return board.closes(*move); });
+				}
+
+				for (const Move* move : order)
+				{
+					const Board::Undo undo = board.make(*move);
 					// Something closed: the same side goes again.
-					const float got = board.madeLine(move) ? decided + static_cast<float>(depth)
+					const float got = board.madeLine(*move) ? decided + static_cast<float>(depth)
 						: !undo.closed.empty() ? value(side, depth - 1, alpha, beta)
 						: -value(1 - side, depth - 1, -beta, -alpha);
-					board.unmake(move, undo);
+					board.unmake(*move, undo);
 					alpha = std::max(alpha, got);
 					if (alpha >= beta) { break; }
+				}
+				if (!stop.load(std::memory_order_relaxed))
+				{
+					known[key] = { alpha, alpha <= from ? Known::Bound::atMost : alpha >= beta ? Known::Bound::atLeast : Known::Bound::exact };
 				}
 				return alpha;
 			}
@@ -704,6 +856,8 @@ namespace xge
 			board.at(column, row) = static_cast<int>(board.pieces.size());
 		}
 
+		board.prepare();
+
 		// Thought about beside the game, or at once.
 		if (thinkAside)
 		{
@@ -724,17 +878,22 @@ namespace xge
 		{
 			Board& board = job.board;
 			const CmdThink& think = job.think;
-			Search search{ board, think, job.stop };
+			Search search{ board, think, job.stop, {} };
 			const std::vector<Move> moves = board.moves(0);
 			std::vector<const Move*> best;
-			float bestValue = -std::numeric_limits<float>::infinity();
+			const float infinity = std::numeric_limits<float>::infinity();
+			float bestValue = -infinity;
 			for (const Move& move : moves)
 			{
 				const Board::Undo undo = board.make(move);
-				const float infinity = std::numeric_limits<float>::infinity();
+				// Only whether it is as good as the best so far matters
+				// (the many moves that come to the same are all kept), so a
+				// move is looked at only until it is plainly worse. Values
+				// differ by whole boxes, pieces or moves.
+				const float low = bestValue - 0.5f;
 				const float got = board.madeLine(move) ? decided + static_cast<float>(think.depth)
-					: !undo.closed.empty() ? search.value(0, think.depth - 1, -infinity, infinity)
-					: -search.value(1, think.depth - 1, -infinity, infinity);
+					: !undo.closed.empty() ? search.value(0, think.depth - 1, low, infinity)
+					: -search.value(1, think.depth - 1, -infinity, -low);
 				board.unmake(move, undo);
 				if (got > bestValue) { bestValue = got; best.clear(); }
 				if (got == bestValue) { best.push_back(&move); }

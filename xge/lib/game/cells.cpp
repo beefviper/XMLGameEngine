@@ -98,6 +98,33 @@ namespace xge
 
 	Object* Game::cellHolder(const std::string& map, int column, int row, const std::vector<Object*>& mover)
 	{
+		const auto cellKey = [](int c, int r) { return static_cast<long long>(c) * 100000 + r; };
+		if (heldCells.on && mover.empty())
+		{
+			auto found = heldCells.maps.find(map);
+			if (found == heldCells.maps.end())
+			{
+				// The first piece in each cell, as the scan below finds it.
+				std::unordered_map<long long, Object*> cells;
+				for (Object& object : objects)
+				{
+					if (object.exists && object.onCells && !object.isShape() && object.mapName == map && isShown(object))
+					{
+						cells.emplace(cellKey(whole(object.cellColumn), whole(object.cellRow)), &object);
+					}
+				}
+				for (Object& object : spawned)
+				{
+					if (object.exists && object.onCells && !object.isShape() && object.mapName == map)
+					{
+						cells.emplace(cellKey(whole(object.cellColumn), whole(object.cellRow)), &object);
+					}
+				}
+				found = heldCells.maps.emplace(map, std::move(cells)).first;
+			}
+			const auto cell = found->second.find(cellKey(column, row));
+			return cell == found->second.end() ? nullptr : cell->second;
+		}
 		const auto holds = [&](Object& object)
 		{
 			return object.exists && object.onCells && !object.isShape() && object.mapName == map
@@ -956,6 +983,8 @@ namespace xge
 
 	void Game::countMoves()
 	{
+		// Nothing moves while they are counted.
+		const CellsStill still(*this);
 		// The cells a class may put a piece in are the same for each of its
 		// pieces: worked out once.
 		std::vector<std::pair<std::string, float>> puts;
@@ -1421,6 +1450,7 @@ namespace xge
 						case Object::Mark::Kind::Put:
 							if (const Object* kind = putTemplate(mark.objClass))
 							{
+								const CellsStill still(*this);
 								for (const auto& [column, row] : putCells(*kind)) { want.push_back({ mark.object, column, row }); }
 							}
 							break;
