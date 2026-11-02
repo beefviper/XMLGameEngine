@@ -1100,6 +1100,16 @@ namespace xge
 				else if (tag == "run") { pile.run = true; }
 				else if (tag == "showtop") { pile.showTop = true; }
 				else if (tag == "sorted") { pile.sorted = true; }
+				else if (tag == "lift") { pile.lift = readValue(*child, at); }
+				else if (tag == "points")
+				{
+					pile.hasPoints = true;
+					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						if (part->getName() != "atmost") { fail(at, "unknown <" + part->getName() + ">; expected <atmost>"); }
+						pile.pointsMost = readValue(*part, at + " > <atmost>");
+					}
+				}
 				else if (tag == "takes")
 				{
 					PileRule& rule = pile.takes;
@@ -1134,7 +1144,7 @@ namespace xge
 					}
 					if (rule.up && rule.down) { fail(at, "has <up /> and <down />; a card goes one way"); }
 				}
-				else { fail(here, "unknown <" + tag + ">; expected <fan>, <dealt>, <deals>, <refill>, <takes>, <run />, <showtop /> and <sorted />"); }
+				else { fail(here, "unknown <" + tag + ">; expected <fan>, <dealt>, <deals>, <refill>, <takes>, <run />, <showtop />, <sorted />, <lift> and <points>"); }
 			}
 			if (!pile.refillFrom.empty() && !pile.hasDeals) { fail(here, "has a <refill> but no <deals>; a pile is refilled when it is dealt from empty"); }
 		}
@@ -1260,7 +1270,8 @@ namespace xge
 								rank.picture = rowsOf(*part, where + " > <picture>");
 								rank.half = findChild(part.get(), "half") != nullptr;
 							}
-							else { fail(where, "unknown <" + name + ">; expected <index>, <pips> or <picture>"); }
+							else if (name == "worth") { rank.worths.push_back(static_cast<float>(number(*part, where + " > <worth>"))); }
+							else { fail(where, "unknown <" + name + ">; expected <index>, <pips>, <picture> and <worth>s"); }
 						}
 						if (!rank.pips.empty() && !rank.picture.empty()) { fail(where, "has <pips> and a <picture>; a face shows one"); }
 					}
@@ -1299,7 +1310,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal" || name == "call";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal" || name == "call" || name == "shuffle";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1416,7 +1427,12 @@ namespace xge
 			{
 				fail(where, "<become> needs a sprite= (a look), a style= (a palette), or both");
 			}
-			if (verb == "reveal")
+			if (verb == "reveal" && !command.pile.empty())
+			{
+				if (!command.object.empty()) { fail(where, "<reveal> names a pile= to turn its cards face up, or an object=, not both"); }
+				command.amount = RawValue::expression("1");
+			}
+			else if (verb == "reveal")
 			{
 				requireAttribute(node, "object", where);
 
@@ -1426,6 +1442,8 @@ namespace xge
 			}
 			if (verb == "track" && node.getFirstChild()) { readOnto(node, where + " > <track>", command); }
 			if (verb == "trigger") { requireAttribute(node, "action", where); }
+			if (verb == "shuffle") { requireAttribute(node, "pile", where); }
+			if (verb == "deal") { command.faces = node.getAttribute("faces"); }
 			if (verb == "hop" && findChild(&node, "onto"))
 			{
 				requireAttribute(node, "direction", where);

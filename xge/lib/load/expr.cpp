@@ -1020,6 +1020,8 @@ namespace xge
 			pile.run = raw.run;
 			pile.showTop = raw.showTop;
 			pile.sorted = raw.sorted;
+			pile.lift = number(raw.lift);
+			pile.pointsMost = raw.hasPoints ? number(raw.pointsMost) : 0.0f;
 			pile.takes = raw.takes;
 		}
 		object.hand.is = rawObject.hand;
@@ -1704,6 +1706,16 @@ namespace xge
 						piece.variable = reference->second;
 						piece.choices = raw.choices;
 						piece.shown = showPiece(raw.kind, found->second, piece.choices);
+						pieces.push_back(std::move(piece));
+						continue;
+					}
+					// A pile's live numbers follow it too (shown 0 until dealt).
+					if (reference->second == "cards" || reference->second == "points" || reference->second == "called" || reference->second == "calling")
+					{
+						piece.owner = owner;
+						piece.variable = reference->second;
+						piece.choices = raw.choices;
+						piece.shown = showPiece(raw.kind, 0.0f, piece.choices);
 						pieces.push_back(std::move(piece));
 						continue;
 					}

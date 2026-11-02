@@ -633,7 +633,9 @@
        many top cards); takes: what may be laid on it (<matches />: the same suit as the top, or the suit called, or the same
        rank; <wild> ranks go on anything, and the pile then waits for <call />; on an empty one, <empty>'s ranks and suits);
        run: a face-up card may be taken with those above it; showtop: a face-down card left on top turns up; sorted: kept
-       in suit then rank order -->
+       in suit then rank order; lift: the face-up card a hand points at is lifted out of the fan by that much;
+       points: the live number points adds up the face-up cards' worths, each as high as it may count while the total
+       stays <atmost> -->
   <xs:complexType name="pileType">
     <xs:sequence>
       <xs:element name="fan" minOccurs="0">
@@ -701,6 +703,14 @@
       <xs:element name="run" type="emptyType" minOccurs="0" />
       <xs:element name="showtop" type="emptyType" minOccurs="0" />
       <xs:element name="sorted" type="emptyType" minOccurs="0" />
+      <xs:element name="lift" type="valueType" minOccurs="0" />
+      <xs:element name="points" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="atmost" type="valueType" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
     <xs:attribute name="faces" use="optional">
       <xs:simpleType>
@@ -773,6 +783,8 @@
                 </xs:complexType>
               </xs:element>
             </xs:choice>
+            <!-- worth: what the card counts for in a pile's points, one or more (an ace's 1 and 11); none: its number in order -->
+            <xs:element name="worth" type="xs:nonNegativeInteger" minOccurs="0" maxOccurs="unbounded" />
           </xs:sequence>
           <xs:attribute name="name" type="xs:string" use="optional" />
         </xs:complexType>
@@ -1278,7 +1290,22 @@
           <xs:attribute name="from" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <xs:element name="reveal" type="releaseType" />
+      <!-- reveal: as release, or with pile= (no object=), every card of that pile turned face up -->
+      <xs:element name="reveal">
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:group ref="valueTag" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="object" type="xs:string" use="optional" />
+          <xs:attribute name="pile" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
+      <!-- shuffle: every card of the game back in pile=, shuffled, face down (a new round) -->
+      <xs:element name="shuffle">
+        <xs:complexType>
+          <xs:attribute name="pile" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="follow" type="followType" />
       <!-- <shift object="aliens"><x>2</x></shift>: those objects, and the
            places they go home to, moved by x across and y down -->
@@ -1417,8 +1444,21 @@
           <xs:attribute name="pile" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- deal, on a hand: from the pile pointed at, by its <deals> (or, empty, its <refill>) -->
-      <xs:element name="deal" type="emptyType" />
+      <!-- deal, on a hand: from the pile pointed at (pile=: from that one), by its <deals> (or, empty, its <refill>);
+           faces=: each card dealt turned up or down -->
+      <xs:element name="deal">
+        <xs:complexType>
+          <xs:attribute name="pile" type="xs:string" use="optional" />
+          <xs:attribute name="faces" use="optional">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="up" />
+                <xs:enumeration value="down" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:complexType>
+      </xs:element>
       <!-- call, on a hand with a pile of its own: the suit of the card it points at there is called for pile=, waiting
            with a <wild> card on top; refused when it is not waiting -->
       <xs:element name="call">

@@ -451,6 +451,7 @@ namespace xge
 		std::string rankName;
 		std::string color;
 		std::string startPile;
+		std::vector<float> worths;
 	};
 
 	struct RawObject
@@ -599,6 +600,9 @@ namespace xge
 			bool run{ false };          // <run />: a face-up card can be taken with all above it
 			bool showTop{ false };      // <showtop />: a face-down card left on top turns up
 			bool sorted{ false };       // <sorted />: kept in suit then rank order
+			RawValue lift;              // <lift>: the card a hand points at, lifted out of the fan by that much (empty text: none)
+			bool hasPoints{ false };    // <points>: how its face-up cards count
+			RawValue pointsMost;        // <points><atmost>: higher worths only while the total stays at most this (empty text: no limit)
 			PileRule takes;
 		};
 		RawPile pile;
@@ -1074,6 +1078,8 @@ namespace xge
 			bool run{ false };
 			bool showTop{ false };
 			bool sorted{ false };
+			float lift{};
+			float pointsMost{};     // 0: no limit
 			PileRule takes;
 			std::vector<int> cards;
 		};
@@ -1084,6 +1090,9 @@ namespace xge
 		float cardCount{};
 		float calling{};
 		float called{};
+		// The live number `points`: its face-up cards' worths added up, each
+		// as high as it may count while the total stays within <points>.
+		float points{};
 		// A card: what it is, its number (from 1, every deck of the game
 		// in turn) and whether its face is up.
 		bool isCard{ false };

@@ -708,7 +708,22 @@ namespace xge
 	{
 		std::string pile;
 	};
-	struct CmdDeal {};
+	struct CmdDeal
+	{
+		std::string pile;      // pile=: from this pile, not the one pointed at
+		std::string faces;     // faces=: each card dealt turned up or down
+	};
+	// <reveal pile="dealer" />: every card of the pile turned face up.
+	struct CmdRevealCards
+	{
+		std::string pile;
+	};
+	// <shuffle pile="stock" />: every card of the game back in that pile,
+	// shuffled (a new round).
+	struct CmdShuffle
+	{
+		std::string pile;
+	};
 	// <call pile="discard" />: a hand names the suit of the card it points
 	// at in its own pile for that pile, waiting with a <wild> card on top.
 	// Refused when the pile is not waiting or no card of its own is pointed at.
@@ -805,7 +820,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdCount, CmdThink, CmdTake, CmdLay, CmdDeal, CmdCall, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdCount, CmdThink, CmdTake, CmdLay, CmdDeal, CmdCall, CmdRevealCards, CmdShuffle, CmdLive>;
 
 	struct LoadedCommand
 	{
@@ -991,7 +1006,8 @@ namespace xge
 		std::string closeClass;  // put: <close class=...>
 		std::string closeObject; // put: <close object=...>
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
-		std::string pile;      // lay: pile= the piles to lay on
+		std::string pile;      // lay: pile= the piles to lay on; deal, reveal, shuffle, call: the pile
+		std::string faces;     // deal: faces="down" or "up", the cards dealt turned that way
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)

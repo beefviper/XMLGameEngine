@@ -1662,6 +1662,10 @@ namespace xge
 			{
 				piece.shown = showPiece(piece.kind, value->second, piece.choices);
 			}
+			else if (const auto live = numberOf(*owner, piece.variable))
+			{
+				piece.shown = showPiece(piece.kind, *live, piece.choices);
+			}
 		}
 
 		const std::string text = joinText(object.textPieces);

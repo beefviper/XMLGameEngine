@@ -1,6 +1,6 @@
 # Cards
 
-**Status:** Deck, piles and a hand Built (2026-11-01) with Klondike; players' cards, wild cards and a card-playing computer Built (2026-11-02) with Crazy Eights; decks of single cards Open.
+**Status:** Deck, piles and a hand Built (2026-11-01) with Klondike; players' cards, wild cards and a card-playing computer Built (2026-11-02) with Crazy Eights; points, a dealer and bets Built (2026-11-02) with Blackjack; decks of single cards Open.
 
 ## What we looked for
 
@@ -27,6 +27,10 @@
 - **The computer is a rule of thumb, not a search** (`<think>` on a hand): the other side's cards are hidden, so looking ahead means guessing them. It plays the suit it holds most of (keeping its options), the higher card first, and an eight only when nothing else goes; calls the suit it holds most of; draws when nothing goes. Every half second a step: point, then press.
 - **The stock refills from the discards** with `<refill><shuffle /><leave>1</leave></refill>`: Klondike's turning over and Crazy Eights' reshuffle are one property.
 
+- **Points are the deck's and the pile's** (Blackjack): what a card is worth is the game's deck (`<worth>` on a rank, more than one when it may count either), and how a pile adds them up is the pile's (`<points><atmost>21</atmost>`: every card that may count higher does while the total stays within). Only face-up cards count, so the dealer's shows what you can see. Asked of a pile as a live number, so conditions compare (`<above>dealer.points</above>`) and texts show it.
+- **The dealer is conditions and a timer**, no new verb: while the table's phase says it plays and its points are under 17, a condition gives its hand the look a draw timer follows. The game deals through two hands with piles of their own (`<deal pile="stock" />`, `faces="down"` for the hole card), turns the hole card with `<reveal pile>` and gathers everything with `<shuffle pile>`. Bets and payouts are plain variables; the rules of settling are an ordered list of conditions.
+- **The card a hand points at lifts** only on a pile that says so (`<lift>`): Blackjack's hands point at nothing anyone sees.
+
 ## Looked at and left
 
 - **Cards as pieces on a map of cells:** a fanned column could be cells, but a stock or a foundation holds many cards in one place, and a run moves as one.
@@ -37,5 +41,6 @@
 
 - A deck of single cards (each its own picture and variables), for games where every card is different.
 - A pass when no card goes and nothing is left to draw (every card but the top in hands: a turn then cannot end). A suit picker, if a game needs a suit called that no player holds.
+- Blackjack's doubling down, splitting pairs, insurance, a shoe of several packs, buttons for the mouse.
 - Scoring Crazy Eights across games (points for the cards left in the loser's hand), more than one computer player.
 - Dealing three at a time from the stock, undo, scoring, an automatic finish.

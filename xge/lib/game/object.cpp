@@ -379,6 +379,7 @@ namespace xge
 			{ "cards", [](Object& o) -> float& { return o.cardCount; }, true },
 			{ "calling", [](Object& o) -> float& { return o.calling; }, true },
 			{ "called", [](Object& o) -> float& { return o.called; }, true },
+			{ "points", [](Object& o) -> float& { return o.points; }, true },
 		};
 		return parts;
 	}

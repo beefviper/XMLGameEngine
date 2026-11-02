@@ -463,7 +463,9 @@ namespace xge
 		bool takeCards(Object& hand);
 		bool layCards(Object& hand, const std::string& pile);
 		bool dropCards(Object& hand);
-		bool dealCards(Object& hand);
+		bool dealCards(Object& hand, const std::string& from = {}, const std::string& faces = {});
+		bool revealCards(const std::string& pile);
+		bool gatherCards(const std::string& pile);
 		bool callSuit(Object& hand, const std::string& pile);
 		bool hopHand(Object& hand, Direction direction);
 		void trackHand(Object& hand, bool horizontal, float at);
@@ -481,6 +483,7 @@ namespace xge
 		void layHeld(Object& hand, Object& pile);
 		static bool isWild(const PileRule& rule, const Object& card);
 		void refreshCall(Object& pile);
+		void refreshPile(Object& pile);
 		std::optional<KeyCode> thinkCards(const CmdThink& think, Object& hand);
 		int cardWait{};
 		std::vector<Object*> shownPiles();

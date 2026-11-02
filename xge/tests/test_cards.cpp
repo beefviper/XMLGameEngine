@@ -372,7 +372,7 @@ TEST_CASE("a deck of its own suits and ranks: an Italian forty, pips laid out, a
 	{
 		deck.suits.push_back({ name, "color.red", { ".*.", "***", ".*." }, {}, {}, {} });
 	}
-	for (const char* name : { "1", "2", "3", "4", "5", "6", "7", "F", "C", "R" }) { deck.ranks.push_back({ name, {}, {}, {}, false }); }
+	for (const char* name : { "1", "2", "3", "4", "5", "6", "7", "F", "C", "R" }) { deck.ranks.push_back({ name, {}, {}, {}, false, {} }); }
 	std::vector<RawObject> cards;
 	addDeck(cards, deck);
 	REQUIRE(cards.size() == 40);
@@ -383,7 +383,7 @@ TEST_CASE("a deck of its own suits and ranks: an Italian forty, pips laid out, a
 	// in the top middle, the bottom one turned round in the bottom middle.
 	RawDeck two = deck;
 	two.suits = { { "arrows", "color.black", { "*", "*", "." }, {}, {}, {} } };
-	two.ranks = { { "2", {}, { "*", ".", "v" }, {}, false } };
+	two.ranks = { { "2", {}, { "*", ".", "v" }, {}, false, {} } };
 	cards.clear();
 	addDeck(cards, two);
 	const std::vector<std::string>& rows = cards.front().looks.front().bitmapRows;
@@ -397,7 +397,7 @@ TEST_CASE("a deck of its own suits and ranks: an Italian forty, pips laid out, a
 
 	// A picture's top half, and the bottom the same turned round.
 	RawDeck court = two;
-	court.ranks = { { "K", {}, {}, { "*..", "..." }, true } };
+	court.ranks = { { "K", {}, {}, { "*..", "..." }, true, {} } };
 	cards.clear();
 	addDeck(cards, court);
 	const std::vector<std::string>& king = cards.front().looks.front().bitmapRows;
@@ -405,7 +405,7 @@ TEST_CASE("a deck of its own suits and ranks: an Italian forty, pips laid out, a
 	CHECK(king[47][32] == '*');
 
 	// A picture's character no color names stops the load.
-	court.ranks = { { "K", {}, {}, { "*.q" }, false } };
+	court.ranks = { { "K", {}, {}, { "*.q" }, false, {} } };
 	cards.clear();
 	CHECK_THROWS(addDeck(cards, court));
 }
@@ -641,4 +641,130 @@ TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first
 	CHECK(table.state() == "over");
 	CHECK(turns < 300);
 	CHECK(table.pile("mine").pile.cards.size() + table.pile("theirs").pile.cards.size() + table.pile("stock").pile.cards.size() + table.pile("discard").pile.cards.size() == 52);
+}
+
+namespace
+{
+	// Blackjack, at the table, betting.
+	struct Twentyone : Played
+	{
+		Twentyone() : Played("descriptions/blackjack.xml")
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& pile(const std::string& name) { return get(name); }
+		float table(const std::string& name) { return get("table").variable.at(name); }
+
+		int cardOf(const std::string& rank, const std::string& suit)
+		{
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (object.isCard && object.card.suitName == suit && object.card.rankName == rank) { return object.cardNumber; }
+			}
+			return 0;
+		}
+
+		// The stock stacked so these come off it in this order (as "A hearts").
+		void stack(const std::vector<std::string>& next)
+		{
+			auto& cards = pile("stock").pile.cards;
+			for (auto each = next.rbegin(); each != next.rend(); ++each)
+			{
+				const auto space = each->find(' ');
+				const int number = cardOf(each->substr(0, space), each->substr(space + 1));
+				cards.erase(std::find(cards.begin(), cards.end(), number));
+				cards.push_back(number);
+			}
+		}
+
+		void press(KeyCode key)
+		{
+			tap(key);
+			frames(1);
+		}
+
+		// Frames until the hand is over.
+		void untilDone()
+		{
+			for (int i = 0; i < 2000 && table("phase") != 4.0f && state() == "playing"; ++i) { frames(1); }
+		}
+	};
+}
+
+TEST_CASE("blackjack.xml: points count face-up cards, an ace 11 while within 21, and the dealer's second card is hidden", "[cards][blackjack]")
+{
+	Twentyone play;
+	// You: A, 6; the dealer: 9 and a hidden K.
+	play.stack({ "A hearts", "9 spades", "6 clubs", "K diamonds" });
+	play.press(KeyCode::Space);
+	CHECK(play.table("bank") == 190.0f);
+	CHECK(play.pile("player").points == 17.0f);
+	CHECK(play.pile("dealer").points == 9.0f);
+	CHECK(play.pile("dealer").cardCount == 2.0f);
+	CHECK(play.get("dealerpoints").picture.text == "dealer 9");
+
+	// A 9: the ace counts 1 now.
+	play.stack({ "9 hearts" });
+	play.press(KeyCode::W);
+	CHECK(play.pile("player").points == 16.0f);
+	CHECK(play.get("yourpoints").picture.text == "you 16");
+}
+
+TEST_CASE("blackjack.xml: the dealer draws to 17, and the nearer to 21 wins", "[cards][blackjack]")
+{
+	Twentyone play;
+	// You: 10, 9 (19); the dealer: 6, 5, then 3 (14), 4 (18).
+	play.stack({ "10 hearts", "6 spades", "9 clubs", "5 diamonds", "3 hearts", "4 hearts" });
+	play.press(KeyCode::Space);
+	play.press(KeyCode::S);
+	play.untilDone();
+	CHECK(play.pile("dealer").pile.cards.size() == 4);
+	CHECK(play.pile("dealer").points == 18.0f);
+	CHECK(play.get("result").lookName() == "win");
+	CHECK(play.table("bank") == 210.0f);
+
+	// The next hand clears the table.
+	play.press(KeyCode::Space);
+	CHECK(play.pile("player").pile.cards.empty());
+	CHECK(play.pile("stock").pile.cards.size() == 52);
+	CHECK(play.table("phase") == 0.0f);
+}
+
+TEST_CASE("blackjack.xml: over 21 is bust; blackjack pays three to two", "[cards][blackjack]")
+{
+	Twentyone play;
+	play.stack({ "10 hearts", "6 spades", "9 clubs", "5 diamonds", "K clubs" });
+	play.press(KeyCode::Space);
+	play.press(KeyCode::W);
+	play.frames(2);
+	CHECK(play.pile("player").points == 29.0f);
+	CHECK(play.get("result").lookName() == "bust");
+	CHECK(play.table("bank") == 190.0f);
+	// The dealer's hidden card shows.
+	for (const int number : play.pile("dealer").pile.cards) { CHECK(play.game.cardAt(number)->faceUp); }
+
+	play.press(KeyCode::Space);
+	play.stack({ "A hearts", "6 spades", "K clubs", "5 diamonds" });
+	play.press(KeyCode::Space);
+	play.untilDone();
+	CHECK(play.get("result").lookName() == "blackjack");
+	CHECK(play.table("bank") == 205.0f);
+}
+
+TEST_CASE("blackjack.xml: the bet stays from 10 to 100 and within your chips", "[cards][blackjack]")
+{
+	Twentyone play;
+	play.press(KeyCode::A);
+	play.frames(1);
+	CHECK(play.table("bet") == 10.0f);
+	for (int i = 0; i < 15; ++i) { play.press(KeyCode::D); play.frames(1); }
+	CHECK(play.table("bet") == 100.0f);
+	play.get("table").variable["bank"] = 40.0f;
+	play.frames(2);
+	CHECK(play.table("bet") == 40.0f);
+	play.get("table").variable["bank"] = 5.0f;
+	play.frames(2);
+	CHECK(play.state() == "broke");
 }

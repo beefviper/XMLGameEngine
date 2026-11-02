@@ -161,7 +161,7 @@
     <xsl:param name="node" select="." />
     <xsl:variable name="verb" select="local-name($node)" />
     <xsl:variable name="fill">
-      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@style | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from | $node/@button | $node/@pile">
+      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@style | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from | $node/@button | $node/@pile | $node/@faces">
         <xsl:if test=". != ''">
           <xsl:text> command.</xsl:text>
           <xsl:choose>
@@ -1570,6 +1570,17 @@
       <xsl:if test="sorted">
         <xsl:value-of select="concat(' ', $to, '.pile.sorted = true;')" />
       </xsl:if>
+      <xsl:call-template name="field">
+        <xsl:with-param name="name" select="concat($to, '.pile.lift')" />
+        <xsl:with-param name="node" select="lift" />
+      </xsl:call-template>
+      <xsl:if test="points">
+        <xsl:value-of select="concat(' ', $to, '.pile.hasPoints = true;')" />
+      </xsl:if>
+      <xsl:call-template name="field">
+        <xsl:with-param name="name" select="concat($to, '.pile.pointsMost')" />
+        <xsl:with-param name="node" select="points/atmost" />
+      </xsl:call-template>
       <xsl:if test="run">
         <xsl:value-of select="concat(' ', $to, '.pile.run = true;')" />
       </xsl:if>
@@ -2221,7 +2232,12 @@
       <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="pips/row" /></xsl:call-template>
       <xsl:text>, </xsl:text>
       <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="picture/row" /></xsl:call-template>
-      <xsl:value-of select="concat(', ', substring('falsetrue', 1 + 5 * count(picture/half), 5 - count(picture/half)), ' });&#10;')" />
+      <xsl:value-of select="concat(', ', substring('falsetrue', 1 + 5 * count(picture/half), 5 - count(picture/half)), ', {')" />
+      <xsl:for-each select="worth">
+        <xsl:if test="position() &gt; 1">,</xsl:if>
+        <xsl:value-of select="concat(' ', normalize-space(.), '.0f')" />
+      </xsl:for-each>
+      <xsl:text> } });&#10;</xsl:text>
     </xsl:for-each>
     <xsl:choose>
       <xsl:when test="@class != ''">

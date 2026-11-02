@@ -71,6 +71,10 @@ namespace xge
 			std::vector<std::string> pips;
 			std::vector<std::string> picture;
 			bool half{ false };
+			// <worth>s: what the card counts for in a pile's points, the
+			// lowest first and any higher it may count for (an ace's 1 or
+			// 11); none: its number in the order written.
+			std::vector<float> worths;
 		};
 		std::vector<Rank> ranks;
 	};

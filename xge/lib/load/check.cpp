@@ -159,6 +159,8 @@ namespace xge
 				[](const CmdLay&) { return std::string("<lay />"); },
 				[](const CmdDeal&) { return std::string("<deal />"); },
 				[](const CmdCall&) { return std::string("<call />"); },
+				[](const CmdRevealCards&) { return std::string("<reveal pile>"); },
+				[](const CmdShuffle&) { return std::string("<shuffle>"); },
 				[](const CmdPut&) { return std::string("<put>"); },
 				[](const CmdCount&) { return std::string("<count>"); },
 				[](const CmdLive& live) { return tagOf(live.loaded->command); },
@@ -189,7 +191,7 @@ namespace xge
 		const PlaceRule& ruleFor(Place place)
 		{
 			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<shift>", "<enter>",
-				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<send>", "<despawn object>", "<trigger>", "<count>" };
+				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<send>", "<despawn object>", "<trigger>", "<count>", "<reveal pile>", "<shuffle>" };
 			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />" };
 			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>", "<cycle />", "<grow />", "<split />", "<pick>", "<place />", "<put>", "<take />", "<lay />", "<deal />", "<call />" };
 			static const std::vector<std::string> steering{ "<aim>", "<chase>", "<hunt>", "<hunt> by <hop>", "<wander>" };

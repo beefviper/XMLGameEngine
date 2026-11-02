@@ -82,7 +82,13 @@ namespace xge
 		if (verb == "place") { return CmdPlace{}; }
 		if (verb == "take") { return CmdTake{}; }
 		if (verb == "lay") { return CmdLay{ raw.pile }; }
-		if (verb == "deal") { return CmdDeal{}; }
+		if (verb == "deal")
+		{
+			if (!raw.faces.empty() && raw.faces != "up" && raw.faces != "down") { throw std::runtime_error("<deal faces=\"" + raw.faces + "\">: expected up or down"); }
+			return CmdDeal{ raw.pile, raw.faces };
+		}
+		if (verb == "shuffle") { return CmdShuffle{ raw.pile }; }
+		if (verb == "reveal" && !raw.pile.empty()) { return CmdRevealCards{ raw.pile }; }
 		if (verb == "call")
 		{
 			if (raw.pile.empty()) { throw std::runtime_error("<call>: needs pile=, the pile whose wild card the suit is called for"); }
@@ -539,7 +545,9 @@ namespace xge
 			[&](const CmdPlace&) { o << "place"; },
 			[&](const CmdTake&) { o << "take"; },
 			[&](const CmdLay& l) { o << "lay" << (l.pile.empty() ? "" : "(" + l.pile + ")"); },
-			[&](const CmdDeal&) { o << "deal"; },
+			[&](const CmdDeal& d) { o << "deal" << (d.pile.empty() ? "" : "(" + d.pile + ")"); },
+			[&](const CmdRevealCards& r) { o << "reveal(" << r.pile << ")"; },
+			[&](const CmdShuffle& s) { o << "shuffle(" << s.pile << ")"; },
 			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
 			[&](const CmdPut& p) { o << "put(" << p.objClass << (p.closeClass.empty() ? "" : ", close " + p.closeClass + " " + p.closeObject) << ")"; },
 			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << ")"; },
