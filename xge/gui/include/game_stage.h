@@ -15,6 +15,7 @@
 #include <optional>
 
 class QCloseEvent;
+class QLabel;
 class QVBoxLayout;
 
 namespace xge
@@ -49,7 +50,13 @@ namespace xge
 	//   two windows  the stage is hidden, and the picture is in a GameWindow
 	//
 	// The picture is one widget that lives for as long as the stage and is
-	// moved between the two places; it is hidden while a library draws.
+	// moved between the two places, with a thin bar under it (the game's
+	// defined size and scale, how large it is shown, and smaller, 100% and
+	// bigger buttons); both are hidden while a library draws.
+	//
+	// The windows keep their size from game to game; the picture fits in
+	// them. In one window the buttons zoom the picture within its room (never
+	// past filling it); in two they resize the game window around it.
 	class GameStage : public QWidget
 	{
 		Q_OBJECT
@@ -80,6 +87,12 @@ namespace xge
 		std::optional<QPoint> gameWindowPosition() const;
 		void setGameWindowPosition(const QPoint& position);
 
+		// The game window's size (without its frame), or the one it is to
+		// open at. None until it has been placed: it then opens at the
+		// game's defined size.
+		std::optional<QSize> gameWindowSize() const;
+		void setGameWindowSize(const QSize& size);
+
 		// Puts the keyboard focus on the picture.
 		void focusGame();
 
@@ -93,11 +106,14 @@ namespace xge
 	private:
 		KeyQueue keys;
 		GameView* view;
+		QWidget* holder;
+		QLabel* sizeLabel;
 		GameWindow* gameWindow{ nullptr };
 		QVBoxLayout* layout;
 		QString title;
 		bool split{ false };
 		std::optional<QPoint> wantedPosition;
+		std::optional<QSize> wantedSize;
 
 		// Whether the picture is wanted (showView, not hideView).
 		bool shown{ false };
@@ -105,5 +121,12 @@ namespace xge
 		// Puts the picture and the game window where `split` says, and shows them.
 		void place();
 		void moveViewTo(QVBoxLayout* target);
+
+		// The buttons: a step smaller (-1) or bigger (+1), or the defined size.
+		void zoomBy(int step);
+		void zoomTo(double percent);
+
+		// Writes the size and the percent shown on the bar.
+		void showSize();
 	};
 }

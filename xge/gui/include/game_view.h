@@ -28,6 +28,8 @@ namespace xge
 	// (SDL2, raylib, GLFW) is the only one on the thread.
 	class GameView : public QWidget
 	{
+		Q_OBJECT
+
 	public:
 		GameView(KeyQueue& keys, QWidget* parent = nullptr);
 
@@ -38,6 +40,25 @@ namespace xge
 
 		QSize sizeHint() const override;
 		QSize minimumSizeHint() const override;
+
+		// The game's window as the file defines it: its size and <scale>.
+		int gameWidth() const noexcept { return backBuffer.width(); }
+		int gameHeight() const noexcept { return backBuffer.height(); }
+		int gameScale() const noexcept { return shownScale; }
+
+		// How large the picture is shown, in percent of the defined size
+		// (the size times the scale), each percent of a screen pixel.
+		double shownPercent() const;
+
+		// The size the picture asks for at this percent of the defined size,
+		// in Qt's pixels.
+		QSize pictureSize(double percent) const;
+
+		// Shows the picture at this percent of the defined size, or smaller if
+		// the widget has no room; 0 makes it as large as fits (the default,
+		// and what a newly loaded game gets).
+		void setZoom(double percent);
+		double zoom() const noexcept { return zoomPercent; }
 
 		// The picture the engine draws into.
 		QImage& frame() noexcept { return backBuffer; }
@@ -61,15 +82,24 @@ namespace xge
 
 		// Tab is a key a game may use, not a way to leave the view.
 		bool focusNextPrevChild(bool next) override;
+		void resizeEvent(QResizeEvent* event) override;
+
+	signals:
+		// The picture changed size: a new game, a zoom or a resize.
+		void shownChanged();
 
 	private:
 		// Where the picture goes in the widget: as large as fits with the
-		// game's own proportions, centred on whole screen pixels (smoothed
+		// game's own proportions (or the zoom, if smaller), centred on whole screen pixels (smoothed
 		// only when made smaller than the game).
 		QRectF shownRect() const;
 
 		KeyQueue& keys;
 		QImage backBuffer;
 		int shownScale{ 1 };
+		double zoomPercent{ 0 };
+
+		// Screen pixels per game pixel, as shown.
+		double shownFactor() const;
 	};
 }

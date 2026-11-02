@@ -31,6 +31,7 @@ namespace xge
 		const QString kOneWindowKey = QStringLiteral("Windows/one_window");
 		const QString kControlsKey = QStringLiteral("Windows/controls");
 		const QString kGameKey = QStringLiteral("Windows/game");
+		const QString kGameSizeKey = QStringLiteral("Windows/game_size");
 
 		// What was last in use: one window or two, and the choices of the
 		// Options dialog.
@@ -97,6 +98,11 @@ namespace xge
 			settings.setValue(kGameKey, *position);
 		}
 
+		if (const auto size = stage->gameWindowSize())
+		{
+			settings.setValue(kGameSizeKey, *size);
+		}
+
 		settings.setValue(kTwoWindowsKey, stage->isSplit());
 		settings.setValue(kVideoKey, videoBackendKey(session->options().video));
 		settings.setValue(kXmlKey, xmlBackendKey(session->options().xml));
@@ -154,6 +160,11 @@ namespace xge
 		if (const QVariant game = settings.value(kGameKey); game.isValid() && onScreen(game.toPoint()))
 		{
 			stage->setGameWindowPosition(game.toPoint());
+		}
+
+		if (const QSize size = settings.value(kGameSizeKey).toSize(); size.isValid() && size.width() >= 160 && size.height() >= 90)
+		{
+			stage->setGameWindowSize(size);
 		}
 
 		// As it was left: the choices first, then the layout (a video library

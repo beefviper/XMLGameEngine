@@ -89,7 +89,7 @@ xgecli pong --generate windows-cpp -o out/pong
 
 ### xgegui
 
-The Qt 6 application, built only when Qt is found. `xgegui pong` opens a game the same way, or a file dialog in `games/descriptions/` when none is named. The game is drawn beside a tree of its data, which can be edited while it runs; Play, Pause, Step and Reset drive it, and the Options dialog picks the video, XML and sound libraries. A game that will not load is shown as a message, and the program carries on. See [gui](designs/53-gui.md).
+The Qt 6 application, built only when Qt is found. `xgegui pong` opens a game the same way, or a file dialog in `games/descriptions/` when none is named. The game is drawn beside a tree of its data, which can be edited while it runs; Play, Pause, Step and Reset drive it, and the Options dialog picks the video, XML and sound libraries. A game that will not load is shown as a message, and the program carries on. The windows keep their size between games and runs, and the game is drawn as large as fits with its proportions; a bar under it shows the game's defined size, its scale and the percent shown, with smaller, 100% and bigger buttons (in two windows they resize the game window). See [gui](designs/53-gui.md).
 
 In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, WindowBackend, AudioBackend)`.
 

@@ -13,6 +13,7 @@
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QResizeEvent>
 
 #include <algorithm>
 #include <cmath>
@@ -31,19 +32,52 @@ namespace xge
 	void GameView::setGameSize(int width, int height, int scale)
 	{
 		shownScale = std::max(scale, 1);
+		zoomPercent = 0;
 		backBuffer = QImage(width, height, QImage::Format_ARGB32_Premultiplied);
 		backBuffer.fill(Qt::black);
 		updateGeometry();
 		update();
+		emit shownChanged();
+	}
+
+	void GameView::setZoom(double percent)
+	{
+		zoomPercent = std::max(percent, 0.0);
+		update();
+		emit shownChanged();
+	}
+
+	double GameView::shownFactor() const
+	{
+		if (backBuffer.isNull()) { return 1; }
+		const double ratio = devicePixelRatioF();
+		const double fit = std::min(width() * ratio / backBuffer.width(), height() * ratio / backBuffer.height());
+		return zoomPercent > 0 ? std::min(fit, zoomPercent / 100 * shownScale) : fit;
+	}
+
+	double GameView::shownPercent() const
+	{
+		return shownFactor() / shownScale * 100;
+	}
+
+	QSize GameView::pictureSize(double percent) const
+	{
+		if (backBuffer.isNull()) { return QSize(640, 360); }
+		const double factor = percent / 100 * shownScale / devicePixelRatioF();
+		return QSize(static_cast<int>(std::ceil(backBuffer.width() * factor)), static_cast<int>(std::ceil(backBuffer.height() * factor)));
+	}
+
+	void GameView::resizeEvent(QResizeEvent* event)
+	{
+		QWidget::resizeEvent(event);
+		emit shownChanged();
 	}
 
 	QSize GameView::sizeHint() const
 	{
 		// In screen pixels, not Qt's (scaled by the display's setting), so a
 		// game opens at its own size, each pixel one on the screen.
-		if (backBuffer.isNull()) { return QSize(640, 360); }
-		const double ratio = devicePixelRatioF();
-		return QSize(static_cast<int>(std::ceil(backBuffer.width() * shownScale / ratio)), static_cast<int>(std::ceil(backBuffer.height() * shownScale / ratio)));
+		return pictureSize(100);
 	}
 
 	QRectF GameView::shownRect() const
@@ -51,8 +85,7 @@ namespace xge
 		const double ratio = devicePixelRatioF();
 		const double wide = width() * ratio;
 		const double high = height() * ratio;
-		const double fit = std::min(wide / backBuffer.width(), high / backBuffer.height());
-		const double scale = fit;
+		const double scale = shownFactor();
 		const double w = backBuffer.width() * scale;
 		const double h = backBuffer.height() * scale;
 		// On whole screen pixels, so no column of game pixels is drawn wider
