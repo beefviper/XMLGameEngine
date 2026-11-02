@@ -158,7 +158,7 @@ Keys run the current state's bindings, timers count, objects move, collisions ar
 
 ## Games
 
-There are 48 games in [games/descriptions/](games/descriptions/), from Pong and Breakout to Pac-Man, Donkey Kong, Q\*bert, Adventure and Tetris. Many of them brought a word with them:
+There are 49 games in [games/descriptions/](games/descriptions/), from Pong and Breakout to Pac-Man, Donkey Kong, Q\*bert, Adventure and Tetris. Many of them brought a word with them:
 
 | Game | Words it needed |
 |---|---|
@@ -188,6 +188,7 @@ There are 48 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Tic-Tac-Toe | empty `moves`: a put in any free square; an easy or a smart computer |
 | Dots and Boxes | `on` in a piece's `moves` (a line put in place of its faint slot), a put that `close`s a box and keeps the turn, a cursor that hops and follows the mouse `onto` free places only, a computer that knows it goes again and thinks while the game goes on |
 | Klondike | a `deck` made from its suits and ranks (the engine draws the faces), `pile`s with rules of what they `takes`, a `dealt` staircase, a stock that `deals` and `refill`s, a `hand` that will `take`, `lay` and `drop` cards by keys or mouse drag |
+| Crazy Eights | you against the computer: each player's cards a `sorted` pile fanned within a `width`, a discard pile that `takes` what `matches` and `wild` eights, a `call` of the suit after one, a stock refilled by shuffling the discards, a computer that `think`s with a hand of its own |
 | Pinball | `pivot` and `swing`: a flipper turns about its hinge in one eased stroke (from still, fastest half way, to still), the turn swept through the frame, and a `knock` lends the ball the speed of the point that strikes it; `friction` brings a cradled ball to rest |
 
 The games share one key convention: Space starts, pauses and restarts, player one is W A S D (plus the arrows), and where Space fires, P or Escape pauses.

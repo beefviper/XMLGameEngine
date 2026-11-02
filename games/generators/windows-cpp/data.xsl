@@ -1499,6 +1499,11 @@
     </xsl:if>
     <xsl:if test="$node/hand">
       <xsl:value-of select="concat($indent, $to, '.hand = true;&#10;')" />
+      <xsl:if test="$node/hand/@pile">
+        <xsl:value-of select="concat($indent, $to, '.handPile = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="$node/hand/@pile" /></xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+      </xsl:if>
     </xsl:if>
     <xsl:for-each select="$node/pile">
       <xsl:value-of select="concat($indent, $to, '.pile.is = true;')" />
@@ -1519,6 +1524,10 @@
         <xsl:value-of select="concat(' ', $to, '.pile.hasHidden = true;')" />
       </xsl:if>
       <xsl:call-template name="field">
+        <xsl:with-param name="name" select="concat($to, '.pile.fanWidth')" />
+        <xsl:with-param name="node" select="fan/width" />
+      </xsl:call-template>
+      <xsl:call-template name="field">
         <xsl:with-param name="name" select="concat($to, '.pile.hiddenX')" />
         <xsl:with-param name="node" select="fan/hidden/x" />
       </xsl:call-template>
@@ -1535,6 +1544,9 @@
         <xsl:with-param name="node" select="dealt/more" />
       </xsl:call-template>
       <xsl:if test="deals">
+        <xsl:value-of select="concat(' ', $to, '.pile.hasDeals = true;')" />
+      </xsl:if>
+      <xsl:if test="deals/@into">
         <xsl:value-of select="concat(' ', $to, '.pile.dealsInto = ')" />
         <xsl:call-template name="string"><xsl:with-param name="text" select="deals/@into" /></xsl:call-template>
         <xsl:text>;</xsl:text>
@@ -1547,6 +1559,16 @@
         <xsl:value-of select="concat(' ', $to, '.pile.refillFrom = ')" />
         <xsl:call-template name="string"><xsl:with-param name="text" select="refill/@from" /></xsl:call-template>
         <xsl:text>;</xsl:text>
+      </xsl:if>
+      <xsl:if test="refill/shuffle">
+        <xsl:value-of select="concat(' ', $to, '.pile.refillShuffle = true;')" />
+      </xsl:if>
+      <xsl:call-template name="field">
+        <xsl:with-param name="name" select="concat($to, '.pile.refillLeave')" />
+        <xsl:with-param name="node" select="refill/leave" />
+      </xsl:call-template>
+      <xsl:if test="sorted">
+        <xsl:value-of select="concat(' ', $to, '.pile.sorted = true;')" />
       </xsl:if>
       <xsl:if test="run">
         <xsl:value-of select="concat(' ', $to, '.pile.run = true;')" />
@@ -1569,6 +1591,12 @@
         </xsl:for-each>
         <xsl:text> }, {</xsl:text>
         <xsl:for-each select="empty/suit">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> </xsl:text>
+          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
+        </xsl:for-each>
+        <xsl:value-of select="concat(' }, ', substring('falsetrue', 1 + 5 * count(matches), 5 - count(matches)), ', {')" />
+        <xsl:for-each select="wild/rank">
           <xsl:if test="position() &gt; 1">,</xsl:if>
           <xsl:text> </xsl:text>
           <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>

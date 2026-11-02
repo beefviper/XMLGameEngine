@@ -2046,7 +2046,11 @@ namespace xge
 			}
 		}
 		// Its turn is over (or the game was put back): the next is planned anew.
-		if (!thought) { stopThinking(); }
+		if (!thought)
+		{
+			stopThinking();
+			cardWait = 30;
+		}
 		return held;
 	}
 

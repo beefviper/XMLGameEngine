@@ -1,6 +1,6 @@
 # Cards
 
-**Status:** Deck, piles and a hand Built (2026-11-01) with Klondike; Crazy Eights (hands, a computer) and decks of single cards Open.
+**Status:** Deck, piles and a hand Built (2026-11-01) with Klondike; players' cards, wild cards and a card-playing computer Built (2026-11-02) with Crazy Eights; decks of single cards Open.
 
 ## What we looked for
 
@@ -21,6 +21,12 @@
 - **Drawing order:** cards are drawn in pile order, held cards above them and the hand above all, by a drawing order the engine keeps on objects (`drawOrder`, 0 for everything else, which keeps the file's order).
 - **Live number `cards`** on a pile: how many it holds, so "all 52 on the foundations" is an ordinary condition with `total="sum"`.
 
+- **Players' cards are a pile of their own** (2026-11-02, Crazy Eights): a pile fanned across, `<sorted />`, squeezed into a `<width>`, and a hand that owns it (`<hand pile="mine" />`). Owning is what the game needs said once: the hand takes from that pile alone (any card, face down too: the computer's are face down, and it knows them), draws into it from a stock with no `into=`, and keeps pointing into it, the pointed card lifted so it shows whole. A hand of its own for the computer, so its pointer moves as a person's would.
+- **Wild cards and a call:** `<takes>` gets `<matches />` (suit or rank, the rule of the whole shedding family) and `<wild>` ranks. Laying a wild card makes the pile wait for a `<call />`; the suit called is the suit of a card the caller points at in its own hand, so no suit picker was needed: keys and mouse already point at cards, and a player always calls a suit they hold anyway. (Strict rules let any suit be named; this is the one place the game is narrower, chosen for having no extra screen.) The pile's live numbers `calling` and `called` let conditions pass the turn to the caller and show the suit.
+- **The turn is the game's,** not the engine's: a `turn` variable and looks on the two hands gate which keys do anything, as in Checkers. The computer's own actions are on F12, pressed only by `<think>`.
+- **The computer is a rule of thumb, not a search** (`<think>` on a hand): the other side's cards are hidden, so looking ahead means guessing them. It plays the suit it holds most of (keeping its options), the higher card first, and an eight only when nothing else goes; calls the suit it holds most of; draws when nothing goes. Every half second a step: point, then press.
+- **The stock refills from the discards** with `<refill><shuffle /><leave>1</leave></refill>`: Klondike's turning over and Crazy Eights' reshuffle are one property.
+
 ## Looked at and left
 
 - **Cards as pieces on a map of cells:** a fanned column could be cells, but a stock or a foundation holds many cards in one place, and a run moves as one.
@@ -30,5 +36,6 @@
 ## Open
 
 - A deck of single cards (each its own picture and variables), for games where every card is different.
-- Hands of cards held by players, and a computer playing a card game (Crazy Eights is next).
+- A pass when no card goes and nothing is left to draw (every card but the top in hands: a turn then cannot end). A suit picker, if a game needs a suit called that no player holds.
+- Scoring Crazy Eights across games (points for the cards left in the loser's hand), more than one computer player.
 - Dealing three at a time from the stock, undo, scoring, an automatic finish.

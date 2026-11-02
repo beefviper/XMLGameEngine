@@ -1069,6 +1069,7 @@ namespace xge
 				if (tag == "fan")
 				{
 					halves(*child, pile.fanX, pile.fanY, at);
+					if (auto width = findChild(child.get(), "width")) { pile.fanWidth = readValue(*width, at + " > <width>"); }
 					if (auto hidden = findChild(child.get(), "hidden"))
 					{
 						pile.hasHidden = true;
@@ -1082,12 +1083,23 @@ namespace xge
 				}
 				else if (tag == "deals")
 				{
-					pile.dealsInto = requireAttribute(*child, "into", at);
+					pile.dealsInto = child->getAttribute("into");
 					pile.deals = readValue(*child, at);
+					pile.hasDeals = true;
 				}
-				else if (tag == "refill") { pile.refillFrom = requireAttribute(*child, "from", at); }
+				else if (tag == "refill")
+				{
+					pile.refillFrom = requireAttribute(*child, "from", at);
+					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						if (part->getName() == "shuffle") { pile.refillShuffle = true; }
+						else if (part->getName() == "leave") { pile.refillLeave = readValue(*part, at + " > <leave>"); }
+						else { fail(at, "unknown <" + part->getName() + ">; expected <shuffle /> and <leave>"); }
+					}
+				}
 				else if (tag == "run") { pile.run = true; }
 				else if (tag == "showtop") { pile.showTop = true; }
+				else if (tag == "sorted") { pile.sorted = true; }
 				else if (tag == "takes")
 				{
 					PileRule& rule = pile.takes;
@@ -1100,6 +1112,15 @@ namespace xge
 						else if (name == "othercolor") { rule.otherColor = true; }
 						else if (name == "up") { rule.up = true; }
 						else if (name == "down") { rule.down = true; }
+						else if (name == "matches") { rule.matches = true; }
+						else if (name == "wild")
+						{
+							for (std::unique_ptr<XmlNode> rank = part->getFirstChild(); rank != nullptr; rank = rank->getNextSibling())
+							{
+								if (rank->getName() != "rank") { fail(at + " > <wild>", "unknown <" + rank->getName() + ">; expected <rank>s"); }
+								rule.wildRanks.push_back(readText(*rank));
+							}
+						}
 						else if (name == "empty")
 						{
 							for (std::unique_ptr<XmlNode> first = part->getFirstChild(); first != nullptr; first = first->getNextSibling())
@@ -1109,13 +1130,13 @@ namespace xge
 								else { fail(at + " > <empty>", "unknown <" + first->getName() + ">; expected <rank>s and <suit>s"); }
 							}
 						}
-						else { fail(at, "unknown <" + name + ">; expected <one />, <samesuit />, <othercolor />, <up />, <down /> and <empty>"); }
+						else { fail(at, "unknown <" + name + ">; expected <one />, <samesuit />, <othercolor />, <up />, <down />, <matches />, <wild> and <empty>"); }
 					}
 					if (rule.up && rule.down) { fail(at, "has <up /> and <down />; a card goes one way"); }
 				}
-				else { fail(here, "unknown <" + tag + ">; expected <fan>, <dealt>, <deals>, <refill>, <takes>, <run /> and <showtop />"); }
+				else { fail(here, "unknown <" + tag + ">; expected <fan>, <dealt>, <deals>, <refill>, <takes>, <run />, <showtop /> and <sorted />"); }
 			}
-			if (!pile.refillFrom.empty() && pile.dealsInto.empty()) { fail(here, "has a <refill> but no <deals>; a pile is refilled when it is dealt from empty"); }
+			if (!pile.refillFrom.empty() && !pile.hasDeals) { fail(here, "has a <refill> but no <deals>; a pile is refilled when it is dealt from empty"); }
 		}
 
 		// The <row>s inside a part of a deck (a pip, an index, a picture),
@@ -1278,7 +1299,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal" || name == "call";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1511,7 +1532,6 @@ namespace xge
 			{
 				const std::string here = where + " > <think>";
 				command.button = requireAttribute(node, "button", here);
-				requireAttribute(node, "class", here);
 				requireAttribute(node, "object", here);
 				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 				{
@@ -1833,7 +1853,11 @@ namespace xge
 		void readMoves(const XmlNode& node, RawObject& object, const std::string& where)
 		{
 			if (auto pile = findChild(&node, "pile")) { readPile(*pile, object.pile, where + " > <pile>"); }
-			if (findChild(&node, "hand")) { object.hand = true; }
+			if (auto hand = findChild(&node, "hand"))
+			{
+				object.hand = true;
+				object.handPile = hand->getAttribute("pile");
+			}
 			if (auto poses = findChild(&node, "poses"))
 			{
 				const std::string here = where + " > <poses>";

@@ -63,6 +63,7 @@ set(data_xml
 	"games/descriptions/tictactoe.xml"
 	"games/descriptions/dotsandboxes.xml"
 	"games/descriptions/klondike.xml"
+	"games/descriptions/crazyeights.xml"
 	"games/descriptions/snake.xml"
 	"games/descriptions/centipede.xml")
 

@@ -409,3 +409,236 @@ TEST_CASE("a deck of its own suits and ranks: an Italian forty, pips laid out, a
 	cards.clear();
 	CHECK_THROWS(addDeck(cards, court));
 }
+
+namespace
+{
+	// Crazy Eights, dealt: you against the computer.
+	struct Eights : Played
+	{
+		Eights() : Played("descriptions/crazyeights.xml")
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& pile(const std::string& name) { return get(name); }
+		Object& hand() { return get("hand"); }
+		Object& card(int number) { return *game.cardAt(number); }
+		float turn() { return hand().variable.at("turn"); }
+
+		int cardOf(const std::string& rank, const std::string& suit)
+		{
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (object.isCard && object.card.suitName == suit && object.card.rankName == rank) { return object.cardNumber; }
+			}
+			return 0;
+		}
+
+		// Every pile emptied, then these cards (as "8 hearts", bottom first)
+		// put on each by the pile's own way (face up or down, sorted).
+		void setUp(const std::vector<std::pair<std::string, std::vector<std::string>>>& piles)
+		{
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (object.pile.is) { object.pile.cards.clear(); object.cardCount = 0.0f; object.called = 0.0f; object.calling = 0.0f; }
+			}
+			for (const auto& [name, cards] : piles)
+			{
+				for (const std::string& each : cards)
+				{
+					const auto space = each.find(' ');
+					game.putOnPile(pile(name), cardOf(each.substr(0, space), each.substr(space + 1)));
+				}
+			}
+			hand().hand.pile = pile("mine").name;
+			hand().hand.at = 0;
+			hand().hand.mouse = false;
+			game.layOutCards();
+		}
+
+		std::string name(int number) { return card(number).card.rankName + " " + card(number).card.suitName; }
+		std::string top(const std::string& name) { return pile(name).pile.cards.empty() ? "" : this->name(pile(name).pile.cards.back()); }
+
+		// Points your hand at that card of yours.
+		void pointAt(const std::string& which)
+		{
+			const auto& cards = pile("mine").pile.cards;
+			for (std::size_t i = 0; i < cards.size(); ++i)
+			{
+				if (name(cards[i]) == which) { hand().hand.pile = pile("mine").name; hand().hand.at = static_cast<int>(i); }
+			}
+		}
+
+		void space()
+		{
+			tap(KeyCode::Space);
+			frames(1);
+		}
+
+		// Frames until it is your turn again (or the game is over).
+		void untilYourTurn()
+		{
+			for (int i = 0; i < 2000 && (turn() != 1.0f && state() == "playing"); ++i) { frames(1); }
+		}
+	};
+}
+
+TEST_CASE("crazyeights.xml: the deal: seven each, yours face up in order, one turned up, the rest the stock", "[cards][eights]")
+{
+	Eights table;
+	const auto& mine = table.pile("mine").pile.cards;
+	REQUIRE(mine.size() == 7);
+	for (std::size_t i = 0; i < mine.size(); ++i)
+	{
+		CHECK(table.card(mine[i]).faceUp);
+		if (i > 0) { CHECK(std::make_pair(table.card(mine[i - 1]).card.suit, table.card(mine[i - 1]).card.rank) < std::make_pair(table.card(mine[i]).card.suit, table.card(mine[i]).card.rank)); }
+	}
+	REQUIRE(table.pile("theirs").pile.cards.size() == 7);
+	for (const int number : table.pile("theirs").pile.cards) { CHECK_FALSE(table.card(number).faceUp); }
+	REQUIRE(table.pile("discard").pile.cards.size() == 1);
+	CHECK(table.card(table.pile("discard").pile.cards.back()).faceUp);
+	CHECK(table.pile("stock").pile.cards.size() == 37);
+	CHECK(table.hand().hand.pile == table.pile("mine").name);
+	CHECK(table.turn() == 1.0f);
+}
+
+TEST_CASE("crazyeights.xml: a card goes on the pile by suit or rank; one that does not goes back in your hand", "[cards][eights]")
+{
+	Eights table;
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "K clubs", "5 spades", "9 hearts", "2 diamonds" } }, { "theirs", { "3 clubs", "4 clubs" } }, { "stock", { "6 clubs" } } });
+	table.pointAt("K clubs");
+	table.space();
+	CHECK(table.top("discard") == "5 hearts");
+	CHECK(table.pile("mine").pile.cards.size() == 4);
+	CHECK(table.hand().hand.held.empty());
+	CHECK(table.turn() == 1.0f);
+
+	table.pointAt("5 spades");
+	table.space();
+	CHECK(table.top("discard") == "5 spades");
+	CHECK(table.pile("mine").pile.cards.size() == 3);
+	CHECK(table.turn() == 2.0f);
+	// Your hand still points into your own cards.
+	CHECK(table.hand().hand.pile == table.pile("mine").name);
+}
+
+TEST_CASE("crazyeights.xml: an eight goes on anything, you name a suit, and the computer follows it", "[cards][eights]")
+{
+	Eights table;
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "8 diamonds", "2 spades", "K clubs" } }, { "theirs", { "Q hearts", "8 clubs", "3 spades", "J diamonds" } }, { "stock", { "6 clubs", "7 clubs" } } });
+	table.pointAt("8 diamonds");
+	table.space();
+	table.frames(1);
+	CHECK(table.top("discard") == "8 diamonds");
+	CHECK(table.pile("discard").calling == 1.0f);
+	CHECK(table.turn() == 3.0f);
+	CHECK(table.hand().lookName() == "calling");
+
+	// Spades: the suit of the card pointed at.
+	table.pointAt("2 spades");
+	table.space();
+	CHECK(table.pile("discard").called == 1.0f);
+	CHECK(table.pile("discard").calling == 0.0f);
+	CHECK(table.turn() == 2.0f);
+	CHECK(table.pile("mine").pile.cards.size() == 2);
+	table.frames(1);
+	CHECK(table.get("called").lookName() == "spades");
+
+	// It plays its spade, not its eight.
+	table.untilYourTurn();
+	CHECK(table.top("discard") == "3 spades");
+	CHECK(table.pile("theirs").pile.cards.size() == 3);
+	CHECK(table.pile("discard").called == 0.0f);
+	CHECK(table.hand().lookName() == "free");
+}
+
+TEST_CASE("crazyeights.xml: the computer draws until it can play, and names the suit it holds most of after its eight", "[cards][eights]")
+{
+	Eights table;
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "2 spades", "K clubs" } }, { "theirs", { "Q spades" } }, { "stock", { "8 clubs", "4 diamonds", "9 diamonds" } } });
+	// The computer's turn.
+	table.hand().variable["turn"] = 2.0f;
+	table.hand().showLook(2);
+	table.get("cpuhand").showLook(1);
+	table.untilYourTurn();
+	// Drawn: the 9 and 4 of diamonds, then the 8 of clubs, which it plays and names diamonds.
+	CHECK(table.top("discard") == "8 clubs");
+	CHECK(table.pile("theirs").pile.cards.size() == 3);
+	CHECK(table.pile("stock").pile.cards.empty());
+	CHECK(table.pile("discard").called == 4.0f);
+	CHECK(table.turn() == 1.0f);
+}
+
+TEST_CASE("crazyeights.xml: drawn from empty, the stock takes the discard pile but its top, face down", "[cards][eights]")
+{
+	Eights table;
+	table.setUp({ { "discard", { "5 hearts", "6 hearts", "7 hearts" } }, { "mine", { "2 spades" } }, { "theirs", { "K clubs" } } });
+	table.hand().hand.pile = table.pile("stock").name;
+	table.hand().hand.at = -1;
+	table.space();
+	CHECK(table.top("discard") == "7 hearts");
+	CHECK(table.pile("discard").pile.cards.size() == 1);
+	REQUIRE(table.pile("stock").pile.cards.size() == 2);
+	for (const int number : table.pile("stock").pile.cards) { CHECK_FALSE(table.card(number).faceUp); }
+	// Then a draw into your hand, which stays your turn.
+	table.space();
+	CHECK(table.pile("mine").pile.cards.size() == 2);
+	CHECK(table.pile("stock").pile.cards.size() == 1);
+	CHECK(table.turn() == 1.0f);
+}
+
+TEST_CASE("crazyeights.xml: a long hand squeezes into its width; your last card out wins", "[cards][eights]")
+{
+	Eights table;
+	std::vector<std::string> many;
+	for (const char* rank : { "A", "2", "3", "4", "5", "6", "7", "9", "10", "J", "Q", "K" }) { many.push_back(std::string(rank) + " spades"); }
+	for (const char* rank : { "A", "2", "3", "4", "5", "6", "7", "9" }) { many.push_back(std::string(rank) + " clubs"); }
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", many }, { "theirs", { "K hearts" } } });
+	const Object& last = table.card(table.pile("mine").pile.cards.back());
+	CHECK(last.position.x + 96.0f <= 56.0f + 768.0f + 0.5f);
+	CHECK(last.position.x + 96.0f >= 56.0f + 768.0f - 0.5f);
+
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "9 hearts" } }, { "theirs", { "K clubs" } } });
+	table.space();
+	table.frames(2);
+	CHECK(table.state() == "over");
+	CHECK(table.get("over.winner").lookName() == "you");
+}
+
+TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first card that goes, ends", "[cards][eights]")
+{
+	Eights table;
+	int turns = 0;
+	for (; turns < 300 && table.state() == "playing"; ++turns)
+	{
+		REQUIRE(table.turn() == 1.0f);
+		// The first card of yours that goes, else a draw; after an eight, your first card's suit.
+		bool played = false;
+		for (std::size_t i = 0; i < table.pile("mine").pile.cards.size() && !played; ++i)
+		{
+			table.hand().hand.pile = table.pile("mine").name;
+			table.hand().hand.at = static_cast<int>(i);
+			table.space();
+			played = table.turn() != 1.0f;
+		}
+		if (!played)
+		{
+			table.hand().hand.pile = table.pile("stock").name;
+			table.hand().hand.at = -1;
+			table.space();
+			continue;
+		}
+		table.frames(1);
+		if (table.turn() == 3.0f)
+		{
+			table.hand().hand.pile = table.pile("mine").name;
+			table.hand().hand.at = 0;
+			table.space();
+		}
+		table.untilYourTurn();
+	}
+	CHECK(table.state() == "over");
+	CHECK(turns < 300);
+	CHECK(table.pile("mine").pile.cards.size() + table.pile("theirs").pile.cards.size() + table.pile("stock").pile.cards.size() + table.pile("discard").pile.cards.size() == 52);
+}

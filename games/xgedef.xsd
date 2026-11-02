@@ -615,15 +615,25 @@
       <xs:element name="moves" type="pieceMovesType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="marks" type="marksType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="pile" type="pileType" minOccurs="0" />
-      <!-- hand: points at piles and carries cards between them (<take />, <lay />, <drop />, <deal />) -->
-      <xs:element name="hand" type="emptyType" minOccurs="0" />
+      <!-- hand: points at piles and carries cards between them (<take />, <lay />, <drop />, <deal />, <call />);
+           pile=: its own pile, a player's cards: it takes from that pile alone (any card, face up or down), deals into it
+           from a stock with no into=, and stays pointing into it -->
+      <xs:element name="hand" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="pile" type="xs:NMTOKEN" use="optional" />
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:group>
   <!-- pile: a place that holds cards. faces=: every card put on it turned up or down (left out: each keeps its own).
-       fan: each face-up card on from the one below (<hidden>: each face-down one); dealt: cards dealt it at the start
-       (in a group, <more>: each pile after the first that many more); deals: taking from it deals that many into= that pile,
-       refill: and taken from empty, that pile is turned back over onto it; takes: what may be laid on it (on an empty one, <empty>'s
-       ranks and suits); run: a face-up card may be taken with those above it; showtop: a face-down card left on top turns up -->
+       fan: each face-up card on from the one below (<hidden>: each face-down one; <width>: the fan is never wider, the
+       steps across shrink); dealt: cards dealt it at the start (in a group, <more>: each pile after the first that many
+       more); deals: taking from it deals that many into= that pile (none: into the own pile of the hand that takes);
+       refill: and taken from empty, that pile is turned back over onto it (<shuffle />: shuffled; <leave>: but for that
+       many top cards); takes: what may be laid on it (<matches />: the same suit as the top, or the suit called, or the same
+       rank; <wild> ranks go on anything, and the pile then waits for <call />; on an empty one, <empty>'s ranks and suits);
+       run: a face-up card may be taken with those above it; showtop: a face-down card left on top turns up; sorted: kept
+       in suit then rank order -->
   <xs:complexType name="pileType">
     <xs:sequence>
       <xs:element name="fan" minOccurs="0">
@@ -632,6 +642,7 @@
             <xs:element name="x" type="valueType" minOccurs="0" />
             <xs:element name="y" type="valueType" minOccurs="0" />
             <xs:element name="hidden" type="partialVector2Type" minOccurs="0" />
+            <xs:element name="width" type="valueType" minOccurs="0" />
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -646,11 +657,15 @@
       <xs:element name="deals" minOccurs="0">
         <xs:complexType mixed="true">
           <xs:group ref="valueTag" minOccurs="0" />
-          <xs:attribute name="into" type="xs:string" use="required" />
+          <xs:attribute name="into" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="refill" minOccurs="0">
         <xs:complexType>
+          <xs:sequence>
+            <xs:element name="shuffle" type="emptyType" minOccurs="0" />
+            <xs:element name="leave" type="valueType" minOccurs="0" />
+          </xs:sequence>
           <xs:attribute name="from" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
@@ -664,6 +679,14 @@
               <xs:element name="up" type="emptyType" />
               <xs:element name="down" type="emptyType" />
             </xs:choice>
+            <xs:element name="matches" type="emptyType" minOccurs="0" />
+            <xs:element name="wild" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="rank" type="xs:string" maxOccurs="unbounded" />
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
             <xs:element name="empty" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
@@ -677,6 +700,7 @@
       </xs:element>
       <xs:element name="run" type="emptyType" minOccurs="0" />
       <xs:element name="showtop" type="emptyType" minOccurs="0" />
+      <xs:element name="sorted" type="emptyType" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="faces" use="optional">
       <xs:simpleType>
@@ -1395,6 +1419,13 @@
       </xs:element>
       <!-- deal, on a hand: from the pile pointed at, by its <deals> (or, empty, its <refill>) -->
       <xs:element name="deal" type="emptyType" />
+      <!-- call, on a hand with a pile of its own: the suit of the card it points at there is called for pile=, waiting
+           with a <wild> card on top; refused when it is not waiting -->
+      <xs:element name="call">
+        <xs:complexType>
+          <xs:attribute name="pile" type="xs:string" use="required" />
+        </xs:complexType>
+      </xs:element>
       <!-- put: a new piece of that class in the picker's cell of the pieces' map; refused when the cell is taken,
            or, when the pieces have <flank>s, where it traps nothing; the pieces it traps turn into its kind -->
       <!-- put with <close class object>: each piece of that class beside the piece put, walled in on its four sides
@@ -1517,7 +1548,7 @@
               </xs:complexType>
             </xs:element>
           </xs:sequence>
-          <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
           <xs:attribute name="object" type="xs:string" use="required" />
           <xs:attribute name="button" type="xs:string" use="required" />
         </xs:complexType>

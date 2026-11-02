@@ -95,7 +95,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 
 ### The shipped games
 
-48 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
+49 games in `games/descriptions/`. They share one key convention: **Space starts, pauses and plays again**; player one plays on **W A S D**, with the arrows as a second way in one-player games and player two's keys in two-player ones; where Space fires, **P or Escape** pauses.
 
 | Game | Keys besides the convention | What it is, and what it shows |
 |---|---|---|
@@ -145,6 +145,7 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 | `fourinarow` | A/D or the arrows move the disc, Space, S, Down or a left click drops it, the mouse points; 2 on the title for two players; P or Escape pauses | four in a row against the computer or for two: discs with [`<fall />`](#board-games) in their `<moves>` dropped down a column, wins found by the board's `<line>` check, a computer that reads that line from the checks |
 | `tictactoe` | W A S D or the arrows move, Space or a left click marks, the mouse points; A/D on the title for an easy or smart computer, 2 for two players; P or Escape pauses | tic-tac-toe: marks with an empty [`<moves />`](#board-games), put in any free square; smart looks to the end of the game and is only ever drawn with |
 | `dotsandboxes` | W A S D or the arrows move over the free places (left and right along a row, up and down a row of across or down lines at a time), Space or a left click draws, the mouse goes to the free place nearest it; 2 on the title for two players; P or Escape pauses | dots and boxes against the computer or for two: lines in each player's colour put [`<on>`](#board-games) their places, a box walled in claimed by `<close>` and the turn kept; a cursor that stands only on free places ([`<onto>`](#board-games)); the computer goes again after a box as well, and thinks while the game goes on |
+| `crazyeights` | A and D or the arrows move along your cards, W and S to the stock and back, Space plays the card pointed at or draws, and after an eight names the suit of the card pointed at; a click does the same; P or Escape pauses, N there deals again | the shedding game against the computer, with Klondike's deck: each player's cards are a pile of their own, sorted and fanned across; the discard pile takes a card of the same suit or rank, and an eight on anything, after which a suit is called; the stock refills from the discards but their top, shuffled; the computer plays the suit it holds most of and keeps its eights for last |
 | `klondike` | W A S D or the arrows move the hand from pile to pile and up and down a column's face-up cards, Space takes and lays (and deals from the stock), X or Backspace puts back, F sends a card to its foundation; the mouse drags, a right click sends home; P or Escape pauses, N there deals again | the classic patience, in an 880 by 840 window: a [`<deck>`](#cards) of 52 cards 96 by 140 pixels made from its suits and ranks, piles with rules of what they take, a hand that carries cards and runs of cards between them; won when the live number `cards` of the foundations adds up to 52 |
 | `centipede` | W A S D move the wand about its zone, Space fires; P or Escape pauses | a centipede winding down through a mushroom field, [split](#cells) in two where a shot hits it; each piece left grows a head; a line nobody sees over the bottom six rows turns it back down and holds the wand in |
 
@@ -660,6 +661,31 @@ Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried
 - **Moving the hand.** [`<hop>`](#moving) on a hand goes left and right to the nearest pile at the same height, up and down through the face-up cards of a fanned pile and then to the nearest row of piles above or below. [`<track />`](#pointing-controls) points at the top card under the pointer (or the pile under it); held cards follow the pointer, so a press, a drag and a release (`on="release"`) move cards as Space twice does. Moved by the mouse last, the hand takes, deals and lays only while the pointer is over a pile or one of its cards: a click on the green takes nothing (so its sound does not play), and cards let go over nothing are laid nowhere (a `<drop />` after the refused lay puts them back).
 - **Drawing order.** Cards are drawn in their piles' order above everything else, held cards above them and the hand above all.
 - **Live number `cards`**: how many cards a pile holds. `<condition object="foundations" variable="cards" total="sum"><atleast>52</atleast></condition>` is Klondike's win.
+
+**Players' cards** (Crazy Eights):
+
+```xml
+<object name="mine">
+  ...
+  <pile faces="up"><fan><x>56</x><width>768</width></fan><dealt>7</dealt><sorted /></pile>
+</object>
+<object name="stock">
+  ...
+  <pile faces="down"><deals>1</deals><refill from="discard"><shuffle /><leave>1</leave></refill></pile>
+</object>
+<object name="discard">
+  ...
+  <pile faces="up"><dealt>1</dealt><takes><matches /><wild><rank>8</rank></wild></takes></pile>
+</object>
+<object name="hand"> ... <hand pile="mine" /> ... </object>
+```
+
+- **`<hand pile="mine" />`**: a player's hand, with a pile of its own. It `<take />`s only from that pile, any one card of it, face up or down (it knows its own cards), and stays pointing into it after a lay or a put back; a face-up card it points at there is lifted out of the fan. `<deal />` from a stock whose `<deals>` names no `into=` deals into the own pile of the hand that takes, so each player draws into their own cards.
+- **A pile** may be **`<sorted />`** (cards kept suit by suit in rank order, as the suits and ranks are written), and its `<fan>` may have a **`<width>`**: the steps across shrink so the fan is never wider. Left and right on a pile fanned across go through its cards (a hand's own, or a run's) before going on to the next pile.
+- **`<refill>`** may **`<shuffle />`** instead of turning the pile over, and **`<leave>1</leave>`** that many top cards where they are.
+- **`<takes>`**: **`<matches />`** takes a card of the same suit as the top or the same rank; **`<wild>`** lists ranks that go on anything. After a wild card the pile **waits for a call**: it takes nothing until a hand's **`<call pile="discard" />`** names the suit of the card it points at in its own pile (refused when the pile is not waiting); then `<matches />` follows the suit called instead of the top's, until the next card is laid. A wild card turned up by the deal counts as its own suit.
+- **Live numbers `calling`** (1 while a pile waits for a call) and **`called`** (the suit called, numbered from 1 as written; 0 none). Crazy Eights moves the turn to the caller with `<condition object="discard" variable="calling"><equal>1</equal></condition>`, and shows the suit by `called`.
+- **A computer player**: [`<think object="cpuhand" button="f12" />`](#computer-players) on a hand with a pile of its own (no `class=`) plays cards: every half second it points the hand at what it will do, then presses the button. Waiting for a call, a card of the suit it holds most of; else, of its cards that some pile takes, an eight last, then the suit it holds most of, then the highest; else the stock. The game's actions, gated by the hand's looks, take and lay, put back, draw or call.
 
 ### The kit and from=
 
@@ -1622,6 +1648,7 @@ A computer's condition may gate itself on a mode (`<all>` with a `players` varia
 - **What it wants** is inferred: its pieces, less the other side's, each worth 1, or its look's `<worth>`; a side with no move has lost, and a sooner win is better. In a game of pieces put, a side with no move passes instead; when neither side can move, with `<flank>` the side with more pieces' worth has won, and without it the game is drawn (a full board). **Lines win:** a `<line>` check of the board's map is a win for the side that makes it, so the computer takes a line, blocks one, and between them scores each run of cells as long as a line that only one side has pieces in (Four in a Row, Tic-Tac-Toe). **Closing keeps the turn:** a side's put with a `<close>` (read from the picker's own actions) claims what it walls in in the search too, and that side moves again; the side with more claimed wins (Dots and Boxes). The board it searches includes pieces put this frame. Equal moves are chosen between at random.
 - **How it plays** is as a person would: it walks the picker `object=` a cell at a time to the piece and to each cell of its move (a piece put: its one cell), pressing `button=` on each, eight frames apart. Checkers gives it its own key (F12) and its own cursor looks, so the player's keys do nothing on its turn.
 - It plans once each time its condition starts to hold, and again if its presses did not end its turn.
+- **On a hand of cards** (`object=` a [`<hand pile=>`](#cards), no `class=`), it plays a card game instead: see Crazy Eights under [cards](#cards).
 - **It thinks beside the game.** In a window (`xgecli`, `xgegui`, a generated program) the search runs on a thread of its own, on a copy of the board, so the frame that gave it its turn is drawn and its sounds heard at once, and the game goes on drawing while it thinks; the walk starts once it is done. A search no longer wanted (its condition stops holding: a pause, a reset) is told to stop and its answer dropped. With no window (the tests) it searches in the frame, so a run is the same every time; `Game::thinkInBackground` turns it either way. Dots and Boxes says "blue is thinking" in the meantime, by a look the condition that gives the cursor its computer look also gives the turn text.
 
 A `<hold>` or `<think>` anywhere else, or any other command in a `<computer>`, stops the load.

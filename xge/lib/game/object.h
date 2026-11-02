@@ -432,6 +432,11 @@ namespace xge
 		bool down{ false };
 		std::vector<std::string> emptyRanks;
 		std::vector<std::string> emptySuits;
+		// <matches />: the same suit (or the suit called) or the same rank
+		// as the top card; <wild>: ranks that go on anything, and make the
+		// pile wait for a suit to be called.
+		bool matches{ false };
+		std::vector<std::string> wildRanks;
 	};
 
 	// A card of a <deck> (see game/cards.h): which deck, its suit and rank
@@ -584,15 +589,21 @@ namespace xge
 			bool hasHidden{ false };
 			RawValue dealt;             // cards dealt it at the start (empty text: none)
 			RawValue dealtMore;         // a group's: each pile after the first, this many more
-			std::string dealsInto;      // <deals into=>: taking from it deals that many there
+			std::string dealsInto;      // <deals into=>: taking from it deals that many there (none: into the hand's own pile)
 			RawValue deals;
+			bool hasDeals{ false };
 			std::string refillFrom;     // <refill from=>: taking from it empty turns that pile back over
+			bool refillShuffle{ false }; // <shuffle />: shuffled, not turned over
+			RawValue refillLeave;       // <leave>: that many of the top cards stay (empty text: none)
+			RawValue fanWidth;          // <fan><width>: the fan is never wider (empty text: no limit)
 			bool run{ false };          // <run />: a face-up card can be taken with all above it
 			bool showTop{ false };      // <showtop />: a face-down card left on top turns up
+			bool sorted{ false };       // <sorted />: kept in suit then rank order
 			PileRule takes;
 		};
 		RawPile pile;
 		bool hand{ false };             // <hand />: points at piles and carries cards (Object::Hand)
+		std::string handPile;           // <hand pile=>: its own pile (cards held by a player)
 		CardOf card;                    // a card of a <deck> (deck empty for anything else)
 		bool isCard{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
@@ -1057,14 +1068,22 @@ namespace xge
 			std::string dealsInto;
 			int deals{};
 			std::string refillFrom;
+			bool refillShuffle{ false };
+			int refillLeave{};
+			float fanWidth{};
 			bool run{ false };
 			bool showTop{ false };
+			bool sorted{ false };
 			PileRule takes;
 			std::vector<int> cards;
 		};
 		Pile pile;
-		// The live number `cards`: how many the pile holds.
+		// The live number `cards`: how many the pile holds. A pile that
+		// takes <wild> cards: `calling` is 1 while a wild card on top waits
+		// for a suit to be called, `called` the suit called (from 1; 0 none).
 		float cardCount{};
+		float calling{};
+		float called{};
 		// A card: what it is, its number (from 1, every deck of the game
 		// in turn) and whether its face is up.
 		bool isCard{ false };
@@ -1078,6 +1097,7 @@ namespace xge
 		struct Hand
 		{
 			bool is{ false };
+			std::string own;        // pile=: its own pile, as written, or none
 			std::string pile;
 			int at{ -1 };
 			std::vector<int> held;

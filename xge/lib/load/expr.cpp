@@ -1012,13 +1012,18 @@ namespace xge
 			pile.dealt = static_cast<int>(std::lround(number(raw.dealt)));
 			pile.dealtMore = static_cast<int>(std::lround(number(raw.dealtMore)));
 			pile.dealsInto = raw.dealsInto;
-			pile.deals = raw.dealsInto.empty() ? 0 : std::max(1, static_cast<int>(std::lround(number(raw.deals))));
+			pile.deals = !raw.hasDeals ? 0 : std::max(1, static_cast<int>(std::lround(number(raw.deals))));
 			pile.refillFrom = raw.refillFrom;
+			pile.refillShuffle = raw.refillShuffle;
+			pile.refillLeave = std::max(0, static_cast<int>(std::lround(number(raw.refillLeave))));
+			pile.fanWidth = number(raw.fanWidth);
 			pile.run = raw.run;
 			pile.showTop = raw.showTop;
+			pile.sorted = raw.sorted;
 			pile.takes = raw.takes;
 		}
 		object.hand.is = rawObject.hand;
+		object.hand.own = rawObject.handPile;
 		object.isCard = rawObject.isCard;
 		object.card = rawObject.card;
 

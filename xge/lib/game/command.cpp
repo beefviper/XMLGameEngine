@@ -83,6 +83,11 @@ namespace xge
 		if (verb == "take") { return CmdTake{}; }
 		if (verb == "lay") { return CmdLay{ raw.pile }; }
 		if (verb == "deal") { return CmdDeal{}; }
+		if (verb == "call")
+		{
+			if (raw.pile.empty()) { throw std::runtime_error("<call>: needs pile=, the pile whose wild card the suit is called for"); }
+			return CmdCall{ raw.pile };
+		}
 		if (verb == "put") { return CmdPut{ raw.objClass, raw.closeClass, raw.closeObject }; }
 		if (verb == "count") { return CmdCount{ raw.objClass, VariableName::of(raw.into) }; }
 		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
@@ -535,6 +540,7 @@ namespace xge
 			[&](const CmdTake&) { o << "take"; },
 			[&](const CmdLay& l) { o << "lay" << (l.pile.empty() ? "" : "(" + l.pile + ")"); },
 			[&](const CmdDeal&) { o << "deal"; },
+			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
 			[&](const CmdPut& p) { o << "put(" << p.objClass << (p.closeClass.empty() ? "" : ", close " + p.closeClass + " " + p.closeObject) << ")"; },
 			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << ")"; },
 			[&](const CmdSlide& m)

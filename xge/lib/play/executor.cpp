@@ -269,6 +269,7 @@ namespace xge
 			[&](const CmdTake&) { done = self && game.takeCards(*self); },
 			[&](const CmdLay& l) { done = self && game.layCards(*self, l.pile); },
 			[&](const CmdDeal&) { done = self && game.dealCards(*self); },
+			[&](const CmdCall& c) { done = self && game.callSuit(*self, c.pile); },
 			[&](const CmdPut& p) { done = self && game.putPiece(*self, p); },
 			[&](const CmdCount& c) { game.setNumber(c.target, game.countClass(c.objClass)); },
 			// Another action, of this object or another, as part of this.
