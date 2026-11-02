@@ -63,9 +63,9 @@ namespace xge
 		bool focusNextPrevChild(bool next) override;
 
 	private:
-		// Where the picture goes in the widget: as large as fits, each game
-		// pixel a whole number of screen pixels (smoothed down only when
-		// even one does not fit), centred.
+		// Where the picture goes in the widget: as large as fits with the
+		// game's own proportions, centred on whole screen pixels (smoothed
+		// only when made smaller than the game).
 		QRectF shownRect() const;
 
 		KeyQueue& keys;

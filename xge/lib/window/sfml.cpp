@@ -40,16 +40,15 @@ namespace xge
 		window.setFramerateLimit(static_cast<unsigned int>(windowDesc.framerate));
 	}
 
-	// The game's picture in the window as it is now: as large as fits, each
-	// game pixel a whole number of window pixels (smaller only when even one
-	// does not fit), centred, the rest left as bars.
+	// The game's picture in the window as it is now: as large as fits with
+	// the game's own proportions, centred, the rest left as bars.
 	void SFMLWindow::fitView()
 	{
 		const sf::Vector2u size = window.getSize();
 		if (size.x == 0 || size.y == 0) { return; }
 		const sf::Vector2f game = view.getSize();
 		const float fit = std::min(static_cast<float>(size.x) / game.x, static_cast<float>(size.y) / game.y);
-		const float scale = fit >= 1.0f ? std::floor(fit) : fit;
+		const float scale = fit;
 		const float wide = std::floor(game.x * scale);
 		const float high = std::floor(game.y * scale);
 		const float left = std::floor((static_cast<float>(size.x) - wide) / 2.0f);

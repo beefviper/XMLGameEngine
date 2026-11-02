@@ -52,7 +52,7 @@ namespace xge
 		const double wide = width() * ratio;
 		const double high = height() * ratio;
 		const double fit = std::min(wide / backBuffer.width(), high / backBuffer.height());
-		const double scale = fit >= 1.0 ? std::floor(fit) : fit;
+		const double scale = fit;
 		const double w = backBuffer.width() * scale;
 		const double h = backBuffer.height() * scale;
 		// On whole screen pixels, so no column of game pixels is drawn wider
