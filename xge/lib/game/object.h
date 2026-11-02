@@ -603,6 +603,8 @@ namespace xge
 			RawValue lift;              // <lift>: the card a hand points at, lifted out of the fan by that much (empty text: none)
 			bool hasPoints{ false };    // <points>: how its face-up cards count
 			RawValue pointsMost;        // <points><atmost>: higher worths only while the total stays at most this (empty text: no limit)
+			bool poker{ false };        // <poker with=>: its cards, with those of that pile, as a poker hand
+			std::string pokerWith;
 			PileRule takes;
 		};
 		RawPile pile;
@@ -1080,6 +1082,8 @@ namespace xge
 			bool sorted{ false };
 			float lift{};
 			float pointsMost{};     // 0: no limit
+			bool poker{ false };
+			std::string pokerWith;  // as written
 			PileRule takes;
 			std::vector<int> cards;
 		};
@@ -1093,6 +1097,14 @@ namespace xge
 		// The live number `points`: its face-up cards' worths added up, each
 		// as high as it may count while the total stays within <points>.
 		float points{};
+		// A <poker> pile: the best five of its cards and the shared ones,
+		// `hand` its kind (0 high card, 1 a pair, ... 8 a straight flush)
+		// and `strength` to compare (higher wins); `odds`, in percent, how
+		// often it beats one hand of two unseen cards when the shared cards
+		// are made up to five (a tie counts half).
+		float pokerHand{};
+		float strength{};
+		float odds{};
 		// A card: what it is, its number (from 1, every deck of the game
 		// in turn) and whether its face is up.
 		bool isCard{ false };

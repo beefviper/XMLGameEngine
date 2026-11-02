@@ -768,3 +768,240 @@ TEST_CASE("blackjack.xml: the bet stays from 10 to 100 and within your chips", "
 	play.frames(2);
 	CHECK(play.state() == "broke");
 }
+
+namespace
+{
+	struct Holdem : Played
+	{
+		Holdem() : Played("descriptions/holdem.xml")
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& pile(const std::string& name) { return get(name); }
+		float table(const std::string& name) { return get("table").variable.at(name); }
+		float chips(const std::string& who) { return get(who).variable.at("chips"); }
+
+		int cardOf(const std::string& name)
+		{
+			const auto space = name.find(' ');
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (object.isCard && object.card.rankName == name.substr(0, space) && object.card.suitName == name.substr(space + 1)) { return object.cardNumber; }
+			}
+			return 0;
+		}
+
+		// The stock stacked so these come off it in this order: yours,
+		// the computer's, yours, the computer's, then the board.
+		void stack(const std::vector<std::string>& next)
+		{
+			auto& cards = pile("stock").pile.cards;
+			for (auto each = next.rbegin(); each != next.rend(); ++each)
+			{
+				const int number = cardOf(*each);
+				cards.erase(std::find(cards.begin(), cards.end(), number));
+				cards.push_back(number);
+			}
+		}
+
+		// Seven cards (as "A hearts"): two in yours, the rest on the board, scored.
+		void lay(const std::vector<std::string>& seven)
+		{
+			auto& yours = pile("yours").pile.cards;
+			auto& board = pile("board").pile.cards;
+			yours.clear();
+			board.clear();
+			for (std::size_t i = 0; i < seven.size(); ++i) { (i < 2 ? yours : board).push_back(cardOf(seven[i])); }
+			game.scorePoker(pile("yours"));
+		}
+
+		void press(KeyCode key)
+		{
+			tap(key);
+			frames(1);
+		}
+
+		// Space between hands shuffles; the stock stacked then, the cards come.
+		void deal(const std::vector<std::string>& next)
+		{
+			press(KeyCode::Space);
+			stack(next);
+			for (int i = 0; i < 100 && table("street") != 0.0f; ++i) { frames(1); }
+		}
+
+		// Frames until it is your move, or the hand is over.
+		void untilYou()
+		{
+			for (int i = 0; i < 600; ++i)
+			{
+				frames(1);
+				const std::string look = get("you").lookName();
+				if (look != "wait" && get("table").variable.at("turn") == 1.0f) { return; }
+				if (table("street") >= 4.0f) { frames(2); return; }
+			}
+		}
+	};
+}
+
+TEST_CASE("holdem.xml: the best five of seven: the kinds in order, a wheel the lowest straight", "[cards][holdem]")
+{
+	Holdem play;
+	const auto kindOf = [&](const std::vector<std::string>& seven)
+	{
+		play.lay(seven);
+		return play.pile("yours").pokerHand;
+	};
+	CHECK(kindOf({ "A hearts", "K clubs", "2 spades", "7 diamonds", "9 clubs", "J hearts", "4 spades" }) == 0.0f);
+	CHECK(kindOf({ "A hearts", "A clubs", "2 spades", "7 diamonds", "9 clubs", "J hearts", "4 spades" }) == 1.0f);
+	CHECK(kindOf({ "A hearts", "A clubs", "2 spades", "7 diamonds", "9 clubs", "2 hearts", "4 spades" }) == 2.0f);
+	CHECK(kindOf({ "A hearts", "A clubs", "A spades", "7 diamonds", "9 clubs", "J hearts", "4 spades" }) == 3.0f);
+	CHECK(kindOf({ "A hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "J hearts", "J spades" }) == 4.0f);
+	CHECK(kindOf({ "A hearts", "2 hearts", "9 hearts", "4 hearts", "5 clubs", "J hearts", "J spades" }) == 5.0f);
+	CHECK(kindOf({ "A hearts", "A clubs", "J diamonds", "4 diamonds", "5 clubs", "J hearts", "J spades" }) == 6.0f);
+	CHECK(kindOf({ "J clubs", "A clubs", "J diamonds", "4 diamonds", "5 clubs", "J hearts", "J spades" }) == 7.0f);
+	CHECK(kindOf({ "10 hearts", "K hearts", "Q hearts", "J hearts", "A hearts", "2 clubs", "3 spades" }) == 8.0f);
+	CHECK(play.get("yourchips").picture.text == "you: 500 chips, a straight flush");
+
+	// A wheel (ace to five) is under a six-high straight; a flush beats both.
+	const float wheel = (play.lay({ "A hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "K hearts", "K spades" }), play.pile("yours").strength);
+	const float sixHigh = (play.lay({ "6 hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "K hearts", "K spades" }), play.pile("yours").strength);
+	const float flush = (play.lay({ "2 hearts", "7 hearts", "3 hearts", "4 diamonds", "5 clubs", "K hearts", "9 hearts" }), play.pile("yours").strength);
+	CHECK(wheel < sixHigh);
+	CHECK(sixHigh < flush);
+
+	// Two pair: the higher pair decides, then the lower, then the fifth card.
+	const float kingsSevens = (play.lay({ "K hearts", "K clubs", "7 spades", "7 diamonds", "2 clubs", "3 hearts", "4 spades" }), play.pile("yours").strength);
+	const float kingsSixesAce = (play.lay({ "K hearts", "K clubs", "6 spades", "6 diamonds", "A clubs", "3 hearts", "4 spades" }), play.pile("yours").strength);
+	const float kingsSevensAce = (play.lay({ "K hearts", "K clubs", "7 spades", "7 diamonds", "A clubs", "3 hearts", "4 spades" }), play.pile("yours").strength);
+	CHECK(kingsSixesAce < kingsSevens);
+	CHECK(kingsSevens < kingsSevensAce);
+}
+
+TEST_CASE("holdem.xml: the odds against one unseen hand: a pair of aces about 85, seven-two about 35", "[cards][holdem]")
+{
+	Holdem play;
+	play.lay({ "A hearts", "A clubs" });
+	CHECK(play.pile("yours").odds >= 80.0f);
+	CHECK(play.pile("yours").odds <= 90.0f);
+	play.lay({ "7 hearts", "2 clubs" });
+	CHECK(play.pile("yours").odds >= 28.0f);
+	CHECK(play.pile("yours").odds <= 40.0f);
+	// The same cards, the same odds.
+	const float once = play.pile("yours").odds;
+	play.lay({ "7 hearts", "2 clubs" });
+	CHECK(play.pile("yours").odds == once);
+	// A made hand on the river: nothing left to come, a straight flush cannot lose.
+	play.lay({ "10 hearts", "K hearts", "Q hearts", "J hearts", "A hearts", "2 clubs", "3 spades" });
+	CHECK(play.pile("yours").odds == 100.0f);
+}
+
+TEST_CASE("holdem.xml: the deal antes five each; checked through, the better hand takes the pot at the showdown", "[cards][holdem]")
+{
+	Holdem play;
+	play.deal({ "A hearts", "2 clubs", "K hearts", "7 diamonds", "Q hearts", "J hearts", "10 hearts", "3 spades", "4 clubs" });
+	CHECK(play.table("pot") == 10.0f);
+	CHECK(play.chips("you") == 495.0f);
+	CHECK(play.pile("yours").pile.cards.size() == 2);
+	CHECK(play.pile("theirs").pile.cards.size() == 2);
+	for (const int number : play.pile("theirs").pile.cards) { CHECK_FALSE(play.game.cardAt(number)->faceUp); }
+	CHECK(play.get("you").lookName() == "act");
+
+	// You check each round; the computer, with little, checks too.
+	for (int street = 0; street < 4 && play.table("street") < 4.0f; ++street)
+	{
+		play.press(KeyCode::Space);
+		play.untilYou();
+	}
+	CHECK(play.pile("board").pile.cards.size() == 5);
+	CHECK(play.pile("yours").pokerHand == 8.0f);
+	CHECK(play.get("result").lookName() == "youwin");
+	CHECK(play.chips("you") == 505.0f);
+	CHECK(play.chips("cpu") == 495.0f);
+	for (const int number : play.pile("theirs").pile.cards) { CHECK(play.game.cardAt(number)->faceUp); }
+	CHECK(play.get("you").lookName() == "done");
+}
+
+TEST_CASE("holdem.xml: the same best five splits the pot", "[cards][holdem]")
+{
+	Holdem play;
+	play.deal({ "2 hearts", "2 clubs", "3 hearts", "3 clubs", "A spades", "K spades", "Q spades", "J spades", "10 spades" });
+	for (int street = 0; street < 4 && play.table("street") < 4.0f; ++street)
+	{
+		play.press(KeyCode::Space);
+		play.untilYou();
+	}
+	CHECK(play.get("result").lookName() == "split");
+	CHECK(play.chips("you") == 500.0f);
+	CHECK(play.chips("cpu") == 500.0f);
+}
+
+TEST_CASE("holdem.xml: a bet the computer's odds do not pay for, it folds; you fold, it takes the pot", "[cards][holdem]")
+{
+	Holdem play;
+	// Your aces against its seven-two; the flop gives you a third ace.
+	play.deal({ "A hearts", "7 clubs", "A clubs", "2 diamonds", "A spades", "K spades", "9 hearts", "4 hearts", "5 spades" });
+	play.press(KeyCode::Space);
+	play.untilYou();
+	REQUIRE(play.table("street") == 1.0f);
+	play.press(KeyCode::W);
+	CHECK(play.table("owed") == 10.0f);
+	play.untilYou();
+	CHECK(play.get("cpusays").lookName() == "fold");
+	CHECK(play.get("result").lookName() == "cpufolds");
+	CHECK(play.chips("you") + play.chips("cpu") == 1000.0f);
+	CHECK(play.chips("you") > 500.0f);
+
+	// The next hand the computer acts first; you fold to whatever it does.
+	const float yoursBefore = play.chips("you");
+	play.deal({});
+	CHECK(play.table("first") == 2.0f);
+	play.untilYou();
+	play.press(KeyCode::X);
+	play.frames(2);
+	CHECK(play.get("result").lookName() == "youfold");
+	CHECK(play.table("pot") == 0.0f);
+	CHECK(play.chips("you") == yoursBefore - 5.0f);
+	CHECK(play.chips("you") + play.chips("cpu") == 1000.0f);
+}
+
+TEST_CASE("holdem.xml: raises stop at three a round; out of chips between hands ends the match", "[cards][holdem]")
+{
+	Holdem play;
+	play.deal({ "A hearts", "A clubs", "A diamonds", "A spades", "K spades", "K hearts", "9 hearts", "4 hearts", "5 spades" });
+	for (int i = 0; i < 6 && play.table("street") == 0.0f; ++i)
+	{
+		if (play.get("you").lookName() == "act") { play.press(KeyCode::W); }
+		else { play.press(KeyCode::Space); }
+		play.untilYou();
+	}
+	CHECK(play.table("raises") <= 3.0f);
+	CHECK(play.table("street") >= 1.0f);
+
+	play.get("cpu").variable["chips"] = 0.0f;
+	play.get("table").variable["street"] = 5.0f;
+	play.frames(2);
+	CHECK(play.state() == "over");
+	CHECK(play.get("over.winner").lookName() == "you");
+}
+
+TEST_CASE("holdem.xml: hand after hand, you calling everything, every hand ends and no chip is lost", "[cards][holdem]")
+{
+	Holdem play;
+	int hands = 0;
+	for (; hands < 40 && play.state() == "playing"; ++hands)
+	{
+		play.deal({});
+		for (int i = 0; i < 20 && play.table("street") < 4.0f; ++i)
+		{
+			play.untilYou();
+			if (play.table("street") < 4.0f) { play.press(KeyCode::Space); }
+		}
+		play.frames(2);
+		REQUIRE(play.table("street") == 5.0f);
+		CHECK(play.table("pot") == 0.0f);
+		CHECK(play.chips("you") + play.chips("cpu") == 1000.0f);
+	}
+	CHECK(hands > 0);
+}

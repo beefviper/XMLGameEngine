@@ -1101,6 +1101,11 @@ namespace xge
 				else if (tag == "showtop") { pile.showTop = true; }
 				else if (tag == "sorted") { pile.sorted = true; }
 				else if (tag == "lift") { pile.lift = readValue(*child, at); }
+				else if (tag == "poker")
+				{
+					pile.poker = true;
+					pile.pokerWith = child->getAttribute("with");
+				}
 				else if (tag == "points")
 				{
 					pile.hasPoints = true;
@@ -1144,7 +1149,7 @@ namespace xge
 					}
 					if (rule.up && rule.down) { fail(at, "has <up /> and <down />; a card goes one way"); }
 				}
-				else { fail(here, "unknown <" + tag + ">; expected <fan>, <dealt>, <deals>, <refill>, <takes>, <run />, <showtop />, <sorted />, <lift> and <points>"); }
+				else { fail(here, "unknown <" + tag + ">; expected <fan>, <dealt>, <deals>, <refill>, <takes>, <run />, <showtop />, <sorted />, <lift>, <points> and <poker>"); }
 			}
 			if (!pile.refillFrom.empty() && !pile.hasDeals) { fail(here, "has a <refill> but no <deals>; a pile is refilled when it is dealt from empty"); }
 		}

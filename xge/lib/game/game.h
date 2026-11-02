@@ -484,6 +484,7 @@ namespace xge
 		static bool isWild(const PileRule& rule, const Object& card);
 		void refreshCall(Object& pile);
 		void refreshPile(Object& pile);
+		void scorePoker(Object& pile);
 		std::optional<KeyCode> thinkCards(const CmdThink& think, Object& hand);
 		int cardWait{};
 		std::vector<Object*> shownPiles();

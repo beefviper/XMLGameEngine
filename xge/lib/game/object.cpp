@@ -380,6 +380,9 @@ namespace xge
 			{ "calling", [](Object& o) -> float& { return o.calling; }, true },
 			{ "called", [](Object& o) -> float& { return o.called; }, true },
 			{ "points", [](Object& o) -> float& { return o.points; }, true },
+			{ "hand", [](Object& o) -> float& { return o.pokerHand; }, true },
+			{ "strength", [](Object& o) -> float& { return o.strength; }, true },
+			{ "odds", [](Object& o) -> float& { return o.odds; }, true },
 		};
 		return parts;
 	}

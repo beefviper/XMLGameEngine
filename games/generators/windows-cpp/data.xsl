@@ -1577,6 +1577,11 @@
       <xsl:if test="points">
         <xsl:value-of select="concat(' ', $to, '.pile.hasPoints = true;')" />
       </xsl:if>
+      <xsl:if test="poker">
+        <xsl:value-of select="concat(' ', $to, '.pile.poker = true; ', $to, '.pile.pokerWith = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="poker/@with" /></xsl:call-template>
+        <xsl:text>;</xsl:text>
+      </xsl:if>
       <xsl:call-template name="field">
         <xsl:with-param name="name" select="concat($to, '.pile.pointsMost')" />
         <xsl:with-param name="node" select="points/atmost" />

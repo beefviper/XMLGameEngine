@@ -1022,6 +1022,8 @@ namespace xge
 			pile.sorted = raw.sorted;
 			pile.lift = number(raw.lift);
 			pile.pointsMost = raw.hasPoints ? number(raw.pointsMost) : 0.0f;
+			pile.poker = raw.poker;
+			pile.pokerWith = raw.pokerWith;
 			pile.takes = raw.takes;
 		}
 		object.hand.is = rawObject.hand;
@@ -1710,7 +1712,8 @@ namespace xge
 						continue;
 					}
 					// A pile's live numbers follow it too (shown 0 until dealt).
-					if (reference->second == "cards" || reference->second == "points" || reference->second == "called" || reference->second == "calling")
+					if (reference->second == "cards" || reference->second == "points" || reference->second == "called" || reference->second == "calling"
+						|| reference->second == "hand" || reference->second == "strength" || reference->second == "odds")
 					{
 						piece.owner = owner;
 						piece.variable = reference->second;

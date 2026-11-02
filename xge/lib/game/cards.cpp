@@ -15,7 +15,9 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <map>
+#include <random>
 #include <stdexcept>
 #include <utility>
 
@@ -474,6 +476,216 @@ namespace xge
 		pile.points = total;
 		refreshBoundTexts(pile.name, "cards", pile.cardCount);
 		refreshBoundTexts(pile.name, "points", pile.points);
+
+		// Poker hands: this pile's, and those that share its cards.
+		if (pile.pile.poker) { scorePoker(pile); }
+		for (Object& other : objects)
+		{
+			if (&other != &pile && other.pile.is && other.pile.poker && !other.pile.pokerWith.empty() && pileNamed(other.pile.pokerWith) == &pile) { scorePoker(other); }
+		}
+	}
+
+	namespace
+	{
+		// A poker card: its value (2 to 10, then jack 11 up to the ace,
+		// the first rank written, 14) and its suit.
+		struct PokerCard
+		{
+			int value;
+			int suit;
+		};
+
+		// The highest card of a straight in the values (a bit each, the
+		// ace also low), or 0.
+		int straightIn(unsigned values)
+		{
+			if (values & (1u << 14)) { values |= 1u << 1; }
+			for (int high = 14; high >= 5; --high)
+			{
+				const unsigned five = 0x1Fu << (high - 4);
+				if ((values & five) == five) { return high; }
+			}
+			return 0;
+		}
+
+		// The best five of the cards: its kind (0 high card ... 8 straight
+		// flush) and a number to compare, the kind first, then the cards
+		// that decide between two of a kind, highest first.
+		float bestFive(const std::vector<PokerCard>& cards, int& kind)
+		{
+			std::array<int, 15> count{};
+			std::map<int, unsigned> suits;
+			std::map<int, int> inSuit;
+			unsigned values = 0;
+			for (const PokerCard& card : cards)
+			{
+				++count[static_cast<std::size_t>(card.value)];
+				values |= 1u << card.value;
+				suits[card.suit] |= 1u << card.value;
+				++inSuit[card.suit];
+			}
+			std::vector<int> deciding;
+			const auto highest = [&](unsigned among, int many, int skipA, int skipB)
+			{
+				for (int value = 14; value >= 2 && many > 0; --value)
+				{
+					if ((among & (1u << value)) && value != skipA && value != skipB) { deciding.push_back(value); --many; }
+				}
+			};
+			const auto withCount = [&](int wanted, int below)
+			{
+				for (int value = std::min(14, below - 1); value >= 2; --value)
+				{
+					if (count[static_cast<std::size_t>(value)] >= wanted) { return value; }
+				}
+				return 0;
+			};
+			int flushSuit = -1;
+			for (const auto& [suit, many] : inSuit)
+			{
+				if (many >= 5) { flushSuit = suit; }
+			}
+
+			if (flushSuit >= 0 && straightIn(suits[flushSuit]))
+			{
+				kind = 8;
+				deciding = { straightIn(suits[flushSuit]) };
+			}
+			else if (const int four = withCount(4, 15))
+			{
+				kind = 7;
+				deciding = { four };
+				highest(values, 1, four, 0);
+			}
+			else if (const int three = withCount(3, 15); three && (withCount(2, three) || withCount(2, 15) != three))
+			{
+				kind = 6;
+				int two = 0;
+				for (int value = 14; value >= 2 && !two; --value)
+				{
+					if (value != three && count[static_cast<std::size_t>(value)] >= 2) { two = value; }
+				}
+				deciding = { three, two };
+			}
+			else if (flushSuit >= 0)
+			{
+				kind = 5;
+				highest(suits[flushSuit], 5, 0, 0);
+			}
+			else if (const int high = straightIn(values))
+			{
+				kind = 4;
+				deciding = { high };
+			}
+			else if (three)
+			{
+				kind = 3;
+				deciding = { three };
+				highest(values, 2, three, 0);
+			}
+			else if (const int pair = withCount(2, 15))
+			{
+				if (const int second = withCount(2, pair))
+				{
+					kind = 2;
+					deciding = { pair, second };
+					highest(values, 1, pair, second);
+				}
+				else
+				{
+					kind = 1;
+					deciding = { pair };
+					highest(values, 3, pair, 0);
+				}
+			}
+			else
+			{
+				kind = 0;
+				highest(values, 5, 0, 0);
+			}
+
+			float worth = static_cast<float>(kind);
+			for (std::size_t i = 0; i < 5; ++i) { worth = worth * 15.0f + static_cast<float>(i < deciding.size() ? deciding[i] : 0); }
+			return worth;
+		}
+	}
+
+	void Game::scorePoker(Object& pile)
+	{
+		std::vector<PokerCard> own;
+		std::vector<int> seen;
+		const auto add = [&](const Object& from)
+		{
+			for (const int number : from.pile.cards)
+			{
+				if (const Object* card = cardAt(number))
+				{
+					own.push_back({ card->card.rank == 1 ? 14 : card->card.rank, card->card.suit });
+					seen.push_back(number);
+				}
+			}
+		};
+		add(pile);
+		const std::size_t mine = own.size();
+		Object* shared = pile.pile.pokerWith.empty() ? nullptr : pileNamed(pile.pile.pokerWith);
+		if (shared) { add(*shared); }
+
+		int kind = 0;
+		pile.strength = own.empty() ? 0.0f : bestFive(own, kind);
+		pile.pokerHand = static_cast<float>(kind);
+
+		// The odds: the unseen cards dealt at random, as the same each time
+		// for the same cards (its own generator, seeded by them).
+		pile.odds = 0.0f;
+		if (mine > 0)
+		{
+			std::vector<PokerCard> unseen;
+			for (const Object& object : objects)
+			{
+				if (object.isCard && std::find(seen.begin(), seen.end(), object.cardNumber) == seen.end())
+				{
+					unseen.push_back({ object.card.rank == 1 ? 14 : object.card.rank, object.card.suit });
+				}
+			}
+			const std::size_t board = own.size() - mine;
+			const std::size_t more = board < 5 ? 5 - board : 0;
+			if (unseen.size() >= more + 2)
+			{
+				std::uint64_t seed = 1469598103934665603ull;
+				for (const int number : seen) { seed = (seed ^ static_cast<std::uint64_t>(static_cast<unsigned>(number))) * std::uint64_t{ 1099511628211u }; }
+				std::mt19937 random(static_cast<std::mt19937::result_type>(seed));
+				constexpr int trials = 1000;
+				float won = 0.0f;
+				std::vector<PokerCard> ours = own;
+				std::vector<PokerCard> theirs(own.begin() + static_cast<std::ptrdiff_t>(mine), own.end());
+				for (int trial = 0; trial < trials; ++trial)
+				{
+					// The first few of the unseen, shuffled that far.
+					for (std::size_t i = 0; i < more + 2; ++i)
+					{
+						std::uniform_int_distribution<std::size_t> pick(i, unseen.size() - 1);
+						std::swap(unseen[i], unseen[pick(random)]);
+					}
+					ours.resize(own.size());
+					theirs.resize(own.size() - mine);
+					for (std::size_t i = 0; i < more; ++i)
+					{
+						ours.push_back(unseen[i]);
+						theirs.push_back(unseen[i]);
+					}
+					theirs.push_back(unseen[more]);
+					theirs.push_back(unseen[more + 1]);
+					int ignored = 0;
+					const float us = bestFive(ours, ignored);
+					const float them = bestFive(theirs, ignored);
+					won += us > them ? 1.0f : us == them ? 0.5f : 0.0f;
+				}
+				pile.odds = std::round(won * 100.0f / static_cast<float>(trials));
+			}
+		}
+		refreshBoundTexts(pile.name, "hand", pile.pokerHand);
+		refreshBoundTexts(pile.name, "strength", pile.strength);
+		refreshBoundTexts(pile.name, "odds", pile.odds);
 	}
 
 	void Game::refreshCall(Object& pile)

@@ -704,6 +704,13 @@
       <xs:element name="showtop" type="emptyType" minOccurs="0" />
       <xs:element name="sorted" type="emptyType" minOccurs="0" />
       <xs:element name="lift" type="valueType" minOccurs="0" />
+      <!-- poker: its cards, with=: and that pile's, scored as a poker hand: live numbers hand (0 high card ... 8 straight
+           flush), strength (higher wins) and odds (percent, against one hand of two unseen cards) -->
+      <xs:element name="poker" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="with" type="xs:string" use="optional" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="points" minOccurs="0">
         <xs:complexType>
           <xs:sequence>

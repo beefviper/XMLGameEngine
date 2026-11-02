@@ -1,6 +1,6 @@
 # Cards
 
-**Status:** Deck, piles and a hand Built (2026-11-01) with Klondike; players' cards, wild cards and a card-playing computer Built (2026-11-02) with Crazy Eights; points, a dealer and bets Built (2026-11-02) with Blackjack; decks of single cards Open.
+**Status:** Deck, piles and a hand Built (2026-11-01) with Klondike; players' cards, wild cards and a card-playing computer Built (2026-11-02) with Crazy Eights; points, a dealer and bets Built (2026-11-02) with Blackjack; poker hands and odds Built (2026-11-02) with Texas Hold'em; decks of single cards Open.
 
 ## What we looked for
 
@@ -17,7 +17,7 @@
 - **Pile rules are data, like `<moves>`:** what a pile `<takes>` (`<one />`, `<samesuit />`, `<othercolor />`, `<up />`, `<down />`, and `<empty><rank>K</rank></empty>` for the first card), whether a `<run />` can be taken from it, whether a face-down card left on top turns up (`<showtop />`), and `faces="up|down"` for piles that turn every card one way. The stock's behaviour is two properties: `<deals into="waste">1</deals>` and `<refill from="waste" />`.
 - **The deal is the piles':** `<deck pile="stock">` puts the shuffled deck in one pile, and each pile's `<dealt>N</dealt>` takes N from it, in rounds, as a dealer does. A group of piles can say `<dealt>1<more>1</more></dealt>` (one, then one more each), which is Klondike's staircase without writing seven piles. A new game (a full reset) shuffles and deals again.
 - **The hand works like Checkers' picker:** `<take />`, `<lay />` (refused when the pile does not take the cards, so what follows does not happen), `<drop />` puts back, `<deal />` deals from the pile pointed at. `<lay pile="foundations" />` lays on the first of those piles that takes the cards (the right click sends a card home). Laying back on the pile the cards came from is always allowed: it is putting back.
-- **Moving the hand:** `<hop>` on a hand goes left and right to the next pile in the row (piles at the same height), up and down through the face-up cards of a fanned pile and then to the row above or below; `<track />` points at the top card under the pointer, and held cards follow the pointer. So a press, drag and release with the mouse, and Space twice with the keys, are both a move. Moved by the mouse, the hand takes, deals and lays only with the pointer over a pile or a card (Beef: a click on the table must do nothing and make no sound); with the keys it always points at a pile.
+- **Moving the hand:** `<hop>` on a hand goes left and right to the next pile in the row (piles at the same height), up and down through the face-up cards of a fanned pile and then to the row above or below; `<track />` points at the top card under the pointer, and held cards follow the pointer. So a press, drag and release with the mouse, and Space twice with the keys, are both a move. Moved by the mouse, the hand takes, deals and lays only with the pointer over a pile or a card (a click on the table must do nothing and make no sound); with the keys it always points at a pile.
 - **Drawing order:** cards are drawn in pile order, held cards above them and the hand above all, by a drawing order the engine keeps on objects (`drawOrder`, 0 for everything else, which keeps the file's order).
 - **Live number `cards`** on a pile: how many it holds, so "all 52 on the foundations" is an ordinary condition with `total="sum"`.
 
@@ -31,6 +31,10 @@
 - **The dealer is conditions and a timer**, no new verb: while the table's phase says it plays and its points are under 17, a condition gives its hand the look a draw timer follows. The game deals through two hands with piles of their own (`<deal pile="stock" />`, `faces="down"` for the hole card), turns the hole card with `<reveal pile>` and gathers everything with `<shuffle pile>`. Bets and payouts are plain variables; the rules of settling are an ordered list of conditions.
 - **The card a hand points at lifts** only on a pile that says so (`<lift>`): Blackjack's hands point at nothing anyone sees.
 
+- **Poker is the pile's, scored by the engine** (Hold'em): ranking seven cards into a best five is too much to say in conditions, and every poker game needs the same thing, so a pile says `<poker with="board" />` and gets three live numbers: `hand` (the kind, for words), `strength` (one number ordering any two hands, kind then deciding ranks in base 15, so the showdown is a plain comparison and a tie is a split) and `odds`. The ace is high, and low only in the wheel.
+- **Odds, not a search, for the computer:** its opponent's cards are hidden, so it estimates how often its cards win against two unseen ones, dealing what is still to come at random a thousand times (Monte Carlo). The random numbers are seeded by the cards seen, so the same cards always give the same odds: tests and replays stay fixed. Its play is four `<computer>` conditions: raise with odds of 65 or better, call when the odds beat the pot odds (`owed * 100 / (pot + owed)`), all in when short, else fold. Looked at and left: a bluffing or opponent-reading player; a full search over hidden cards.
+- **Betting is the game's**, plain variables (pot, owed, raises, acted, street, turn) and an ordered list of conditions, as Blackjack's bets: no betting verbs. Space between hands shuffles, and a dealer's short timer then deals, so the stock can be stacked in between (tests).
+
 ## Looked at and left
 
 - **Cards as pieces on a map of cells:** a fanned column could be cells, but a stock or a foundation holds many cards in one place, and a run moves as one.
@@ -41,6 +45,7 @@
 
 - A deck of single cards (each its own picture and variables), for games where every card is different.
 - A pass when no card goes and nothing is left to draw (every card but the top in hands: a turn then cannot end). A suit picker, if a game needs a suit called that no player holds.
+- Hold'em with more than two players, no-limit betting, side pots, blinds instead of antes, a computer that bluffs.
 - Blackjack's doubling down, splitting pairs, insurance, a shoe of several packs, buttons for the mouse.
 - Scoring Crazy Eights across games (points for the cards left in the loser's hand), more than one computer player.
 - Dealing three at a time from the stock, undo, scoring, an automatic finish.
