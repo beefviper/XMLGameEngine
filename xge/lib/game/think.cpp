@@ -521,6 +521,35 @@ namespace xge
 				return false;
 			}
 
+			// A put that touches nothing yet: every piece of what its side
+			// closes beside it has all its other places still free (a line
+			// on an empty stretch of Dots and Boxes). Such moves are all
+			// about as good as one another, so one of them stands for all.
+			bool quiet(const Move& move)
+			{
+				if (!move.put || closeClass[move.side].empty()) { return false; }
+				const int column = move.cells.front().first;
+				const int row = move.cells.front().second;
+				const int around[4][2] = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
+				for (const auto& way : around)
+				{
+					const int c = column + way[0];
+					const int r = row + way[1];
+					if (!onBoard(c, r) || at(c, r) == 0) { continue; }
+					const Piece& box = pieces[static_cast<std::size_t>(at(c, r) - 1)];
+					if (!box.alive || !box.object->closedBy[move.side]) { continue; }
+					for (const auto& side : around)
+					{
+						const int bc = c + side[0];
+						const int br = r + side[1];
+						if (bc == column && br == row) { continue; }
+						if (!onBoard(bc, br) || at(bc, br) == 0) { continue; }
+						if (!pieces[static_cast<std::size_t>(at(bc, br) - 1)].object->isPlace) { return false; }
+					}
+				}
+				return true;
+			}
+
 			Undo make(const Move& move)
 			{
 				Undo undo;
@@ -700,7 +729,17 @@ namespace xge
 				// best, and a good move found early cuts the rest short.
 				std::vector<const Move*> order;
 				order.reserve(moves.size());
-				for (const Move& move : moves) { order.push_back(&move); }
+				bool quietSeen = false;
+				for (const Move& move : moves)
+				{
+					// One quiet move stands for them all.
+					if (board.claims() && board.quiet(move))
+					{
+						if (quietSeen) { continue; }
+						quietSeen = true;
+					}
+					order.push_back(&move);
+				}
 				// (Not worth it just above the last step, where every move is
 				// only scored.)
 				if (board.claims() && depth >= 2)
@@ -883,8 +922,19 @@ namespace xge
 			std::vector<const Move*> best;
 			const float infinity = std::numeric_limits<float>::infinity();
 			float bestValue = -infinity;
+			// The quiet moves (touching nothing yet): the first is looked
+			// at, and the others are as good as it.
+			std::vector<const Move*> quiet;
+			if (board.claims())
+			{
+				for (const Move& move : moves)
+				{
+					if (board.quiet(move)) { quiet.push_back(&move); }
+				}
+			}
 			for (const Move& move : moves)
 			{
+				if (!quiet.empty() && &move != quiet.front() && std::find(quiet.begin(), quiet.end(), &move) != quiet.end()) { continue; }
 				const Board::Undo undo = board.make(move);
 				// Only whether it is as good as the best so far matters
 				// (the many moves that come to the same are all kept), so a
@@ -896,7 +946,11 @@ namespace xge
 					: -search.value(1, think.depth - 1, -infinity, -low);
 				board.unmake(move, undo);
 				if (got > bestValue) { bestValue = got; best.clear(); }
-				if (got == bestValue) { best.push_back(&move); }
+				if (got == bestValue)
+				{
+					if (!quiet.empty() && &move == quiet.front()) { best.insert(best.end(), quiet.begin(), quiet.end()); }
+					else { best.push_back(&move); }
+				}
 			}
 			for (const Move* move : best)
 			{
