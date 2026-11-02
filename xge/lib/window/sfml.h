@@ -54,6 +54,9 @@ namespace xge
 		};
 
 		sf::RenderWindow window;
+		sf::View view;  // the game's own pixels, placed in the window by fitView
+
+		void fitView();
 		// Each font file opened, by its name; null for one that could not be
 		// loaded, whose text is then drawn from the engine's built-in font
 		// (see picture/font.h).

@@ -35,8 +35,27 @@ namespace xge
 
 		// The game's own pixels, each drawn scale window pixels across (the
 		// mouse is mapped back through the same view).
-		window.setView(sf::View(sf::FloatRect({ 0.0f, 0.0f }, { windowDesc.width, windowDesc.height })));
+		view = sf::View(sf::FloatRect({ 0.0f, 0.0f }, { windowDesc.width, windowDesc.height }));
+		fitView();
 		window.setFramerateLimit(static_cast<unsigned int>(windowDesc.framerate));
+	}
+
+	// The game's picture in the window as it is now: as large as fits, each
+	// game pixel a whole number of window pixels (smaller only when even one
+	// does not fit), centred, the rest left as bars.
+	void SFMLWindow::fitView()
+	{
+		const sf::Vector2u size = window.getSize();
+		if (size.x == 0 || size.y == 0) { return; }
+		const sf::Vector2f game = view.getSize();
+		const float fit = std::min(static_cast<float>(size.x) / game.x, static_cast<float>(size.y) / game.y);
+		const float scale = fit >= 1.0f ? std::floor(fit) : fit;
+		const float wide = std::floor(game.x * scale);
+		const float high = std::floor(game.y * scale);
+		const float left = std::floor((static_cast<float>(size.x) - wide) / 2.0f);
+		const float top = std::floor((static_cast<float>(size.y) - high) / 2.0f);
+		view.setViewport(sf::FloatRect({ left / static_cast<float>(size.x), top / static_cast<float>(size.y) }, { wide / static_cast<float>(size.x), high / static_cast<float>(size.y) }));
+		window.setView(view);
 	}
 
 	bool SFMLWindow::isOpen() const
@@ -89,6 +108,10 @@ namespace xge
 			if (event->is<sf::Event::Closed>())
 			{
 				window.close();
+			}
+			else if (event->is<sf::Event::Resized>())
+			{
+				fitView();
 			}
 			else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
 			{

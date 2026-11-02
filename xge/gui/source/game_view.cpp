@@ -15,6 +15,7 @@
 #include <QPainter>
 
 #include <algorithm>
+#include <cmath>
 
 namespace xge
 {
@@ -38,7 +39,27 @@ namespace xge
 
 	QSize GameView::sizeHint() const
 	{
-		return backBuffer.isNull() ? QSize(640, 360) : backBuffer.size() * shownScale;
+		// In screen pixels, not Qt's (scaled by the display's setting), so a
+		// game opens at its own size, each pixel one on the screen.
+		if (backBuffer.isNull()) { return QSize(640, 360); }
+		const double ratio = devicePixelRatioF();
+		return QSize(static_cast<int>(std::ceil(backBuffer.width() * shownScale / ratio)), static_cast<int>(std::ceil(backBuffer.height() * shownScale / ratio)));
+	}
+
+	QRectF GameView::shownRect() const
+	{
+		const double ratio = devicePixelRatioF();
+		const double wide = width() * ratio;
+		const double high = height() * ratio;
+		const double fit = std::min(wide / backBuffer.width(), high / backBuffer.height());
+		const double scale = fit >= 1.0 ? std::floor(fit) : fit;
+		const double w = backBuffer.width() * scale;
+		const double h = backBuffer.height() * scale;
+		// On whole screen pixels, so no column of game pixels is drawn wider
+		// than the next.
+		const double left = std::floor((wide - w) / 2);
+		const double top = std::floor((high - h) / 2);
+		return QRectF(left / ratio, top / ratio, w / ratio, h / ratio);
 	}
 
 	QSize GameView::minimumSizeHint() const
@@ -66,13 +87,8 @@ namespace xge
 			return;
 		}
 
-		// As large as fits, centred, with the game's own proportions.
-		const double scale = std::min(static_cast<double>(width()) / backBuffer.width(), static_cast<double>(height()) / backBuffer.height());
-		const double w = backBuffer.width() * scale;
-		const double h = backBuffer.height() * scale;
-		const QRectF target((width() - w) / 2, (height() - h) / 2, w, h);
-
-		painter.setRenderHint(QPainter::SmoothPixmapTransform, scale < 1.0);
+		const QRectF target = shownRect();
+		painter.setRenderHint(QPainter::SmoothPixmapTransform, target.width() * devicePixelRatioF() < backBuffer.width());
 		painter.drawImage(target, backBuffer);
 	}
 
@@ -85,12 +101,10 @@ namespace xge
 		}
 
 		// The picture's place in the widget, as paintEvent draws it.
-		const double scale = std::min(static_cast<double>(width()) / backBuffer.width(), static_cast<double>(height()) / backBuffer.height());
-		const double left = (width() - backBuffer.width() * scale) / 2;
-		const double top = (height() - backBuffer.height() * scale) / 2;
+		const QRectF shown = shownRect();
 		const QPointF at = mapFromGlobal(QCursor::pos());
-		const double x = (at.x() - left) / scale;
-		const double y = (at.y() - top) / scale;
+		const double x = (at.x() - shown.left()) * backBuffer.width() / shown.width();
+		const double y = (at.y() - shown.top()) * backBuffer.height() / shown.height();
 		controls.pointerInside = x >= 0 && y >= 0 && x < backBuffer.width() && y < backBuffer.height();
 		controls.pointerX = static_cast<float>(x);
 		controls.pointerY = static_cast<float>(y);

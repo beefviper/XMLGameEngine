@@ -8,6 +8,7 @@
 #include "key_queue.h"
 
 #include <QImage>
+#include <QRectF>
 #include <QWidget>
 
 #include <utility>
@@ -62,6 +63,11 @@ namespace xge
 		bool focusNextPrevChild(bool next) override;
 
 	private:
+		// Where the picture goes in the widget: as large as fits, each game
+		// pixel a whole number of screen pixels (smoothed down only when
+		// even one does not fit), centred.
+		QRectF shownRect() const;
+
 		KeyQueue& keys;
 		QImage backBuffer;
 		int shownScale{ 1 };
