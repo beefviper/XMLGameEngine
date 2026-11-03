@@ -454,6 +454,24 @@ namespace xge
 		std::vector<float> worths;
 	};
 
+	// <patterns name="poker">: what a pile's cards may make, the lowest
+	// first; a pile with <score patterns="poker"> is scored by them. Each
+	// <pattern> is one or more parts that must all hold among the cards
+	// scored: <same>N (N cards of one rank; two <same>s, two ranks),
+	// <run>N (N worths in a row, a card counting any of its worths) and
+	// <suited>N (N cards of one suit).
+	struct RawPatterns
+	{
+		enum class Part { Same, Run, Suited };
+		struct Pattern
+		{
+			std::string name;
+			std::vector<std::pair<Part, int>> parts;
+		};
+		std::string name;
+		std::vector<Pattern> patterns;
+	};
+
 	struct RawObject
 	{
 		std::string name;
@@ -603,8 +621,10 @@ namespace xge
 			RawValue lift;              // <lift>: the card a hand points at, lifted out of the fan by that much (empty text: none)
 			bool hasPoints{ false };    // <points>: how its face-up cards count
 			RawValue pointsMost;        // <points><atmost>: higher worths only while the total stays at most this (empty text: no limit)
-			bool poker{ false };        // <poker with=>: its cards, with those of that pile, as a poker hand
-			std::string pokerWith;
+			std::string score;          // <score patterns=>: scored by those patterns (empty: not scored)
+			std::string scoreWith;      // <score><with pile=>: with that pile's cards too
+			int scoreFull{};            // <with><full>: that pile holds this many when all are dealt (0: as it is)
+			int scoreBest{};            // <score><best>: the best this many of the cards (0: all)
 			PileRule takes;
 		};
 		RawPile pile;
@@ -1082,8 +1102,11 @@ namespace xge
 			bool sorted{ false };
 			float lift{};
 			float pointsMost{};     // 0: no limit
-			bool poker{ false };
-			std::string pokerWith;  // as written
+			std::string score;      // as written
+			std::string scoreWith;
+			int scoreFull{};
+			int scoreBest{};
+			bool scoreDue{ false };  // its cards changed since it was last scored
 			PileRule takes;
 			std::vector<int> cards;
 		};
@@ -1097,12 +1120,12 @@ namespace xge
 		// The live number `points`: its face-up cards' worths added up, each
 		// as high as it may count while the total stays within <points>.
 		float points{};
-		// A <poker> pile: the best five of its cards and the shared ones,
-		// `hand` its kind (0 high card, 1 a pair, ... 8 a straight flush)
-		// and `strength` to compare (higher wins); `odds`, in percent, how
-		// often it beats one hand of two unseen cards when the shared cards
-		// are made up to five (a tie counts half).
-		float pokerHand{};
+		// A <score>d pile: the best of its cards (and the shared ones)
+		// by its patterns: `pattern` the highest they make (from 1 as
+		// written; 0 none) and `strength` to compare (higher wins); `odds`,
+		// in percent, how often it beats as many unseen cards when the
+		// shared pile is made up to full (a tie counts half).
+		float pattern{};
 		float strength{};
 		float odds{};
 		// A card: what it is, its number (from 1, every deck of the game

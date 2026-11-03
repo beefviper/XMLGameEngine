@@ -239,6 +239,7 @@ namespace
 			flag(at + ".isDrawn", o.isDrawn);
 			flag(at + ".exists", o.exists);
 			text(at + ".most", std::to_string(o.most));
+			text(at + ".pile.score", o.pile.score + " with " + o.pile.scoreWith + " full " + std::to_string(o.pile.scoreFull) + " best " + std::to_string(o.pile.scoreBest));
 			vector2(at + ".position", o.rawPosition);
 			vector2(at + ".velocity", o.rawVelocity);
 			vector2(at + ".acceleration", o.rawAcceleration);
@@ -406,6 +407,15 @@ namespace
 				}
 			}
 			for (const std::string& keep : g.keeps) { text("keep", keep); }
+			for (const RawPatterns& set : g.patterns)
+			{
+				for (const RawPatterns::Pattern& pattern : set.patterns)
+				{
+					std::string parts;
+					for (const auto& [part, many] : pattern.parts) { parts += std::to_string(static_cast<int>(part)) + ":" + std::to_string(many) + " "; }
+					text("patterns " + set.name + "." + pattern.name, parts);
+				}
+			}
 			for (const RawStyle& style : g.styles)
 			{
 				value("style " + style.name + ".size", style.size);

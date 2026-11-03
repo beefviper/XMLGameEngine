@@ -704,11 +704,23 @@
       <xs:element name="showtop" type="emptyType" minOccurs="0" />
       <xs:element name="sorted" type="emptyType" minOccurs="0" />
       <xs:element name="lift" type="valueType" minOccurs="0" />
-      <!-- poker: its cards, with=: and that pile's, scored as a poker hand: live numbers hand (0 high card ... 8 straight
-           flush), strength (higher wins) and odds (percent, against one hand of two unseen cards) -->
-      <xs:element name="poker" minOccurs="0">
+      <!-- score patterns=: its cards (<with pile=>: and that pile's, which holds <full> when all are dealt) scored as the
+           best <best> of them (none: all) by the game's <patterns> of that name: live numbers pattern (the highest made,
+           from 1 as written; 0 none), strength (higher wins) and odds (percent, against as many unseen cards) -->
+      <xs:element name="score" minOccurs="0">
         <xs:complexType>
-          <xs:attribute name="with" type="xs:string" use="optional" />
+          <xs:sequence>
+            <xs:element name="with" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="full" type="xs:positiveInteger" minOccurs="0" />
+                </xs:sequence>
+                <xs:attribute name="pile" type="xs:NMTOKEN" use="required" />
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="best" type="xs:positiveInteger" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="patterns" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="points" minOccurs="0">
@@ -2465,6 +2477,30 @@
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <!--
+          What a pile's cards may make, the lowest first, for a pile's
+          <score patterns="name">: each <pattern> one or more parts that all
+          hold: <same>N (N cards of one rank; each <same> a rank of its own),
+          <run>N (N worths in a row, a card counting any of its <worth>s) and
+          <suited>N (N cards of one suit).
+        -->
+        <xs:element name="patterns" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="pattern" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:choice maxOccurs="unbounded">
+                    <xs:element name="same" type="xs:positiveInteger" />
+                    <xs:element name="run" type="xs:positiveInteger" />
+                    <xs:element name="suited" type="xs:positiveInteger" />
+                  </xs:choice>
+                  <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
           </xs:complexType>
         </xs:element>
         <xs:element name="kit" type="kitType" minOccurs="0" />

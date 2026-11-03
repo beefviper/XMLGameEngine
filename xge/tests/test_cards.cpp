@@ -814,7 +814,7 @@ namespace
 			yours.clear();
 			board.clear();
 			for (std::size_t i = 0; i < seven.size(); ++i) { (i < 2 ? yours : board).push_back(cardOf(seven[i])); }
-			game.scorePoker(pile("yours"));
+			game.scorePile(pile("yours"));
 		}
 
 		void press(KeyCode key)
@@ -851,7 +851,7 @@ TEST_CASE("holdem.xml: the best five of seven: the kinds in order, a wheel the l
 	const auto kindOf = [&](const std::vector<std::string>& seven)
 	{
 		play.lay(seven);
-		return play.pile("yours").pokerHand;
+		return play.pile("yours").pattern;
 	};
 	CHECK(kindOf({ "A hearts", "K clubs", "2 spades", "7 diamonds", "9 clubs", "J hearts", "4 spades" }) == 0.0f);
 	CHECK(kindOf({ "A hearts", "A clubs", "2 spades", "7 diamonds", "9 clubs", "J hearts", "4 spades" }) == 1.0f);
@@ -915,7 +915,7 @@ TEST_CASE("holdem.xml: the deal antes five each; checked through, the better han
 		play.untilYou();
 	}
 	CHECK(play.pile("board").pile.cards.size() == 5);
-	CHECK(play.pile("yours").pokerHand == 8.0f);
+	CHECK(play.pile("yours").pattern == 8.0f);
 	CHECK(play.get("result").lookName() == "youwin");
 	CHECK(play.chips("you") == 505.0f);
 	CHECK(play.chips("cpu") == 495.0f);

@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <random>
 #include <stdexcept>
 #include <utility>
@@ -477,142 +478,270 @@ namespace xge
 		refreshBoundTexts(pile.name, "cards", pile.cardCount);
 		refreshBoundTexts(pile.name, "points", pile.points);
 
-		// Poker hands: this pile's, and those that share its cards.
-		if (pile.pile.poker) { scorePoker(pile); }
+		// Scored piles, this one and those that score its cards with theirs,
+		// are scored again before the conditions are asked (scoreDuePiles):
+		// once, however many cards came and went this frame.
+		if (!pile.pile.score.empty()) { pile.pile.scoreDue = scoresDue = true; }
 		for (Object& other : objects)
 		{
-			if (&other != &pile && other.pile.is && other.pile.poker && !other.pile.pokerWith.empty() && pileNamed(other.pile.pokerWith) == &pile) { scorePoker(other); }
+			if (&other != &pile && other.pile.is && !other.pile.score.empty() && !other.pile.scoreWith.empty() && pileNamed(other.pile.scoreWith) == &pile)
+			{
+				other.pile.scoreDue = scoresDue = true;
+			}
+		}
+	}
+
+	void Game::scoreDuePiles()
+	{
+		if (!scoresDue) { return; }
+		scoresDue = false;
+		for (Object& object : objects)
+		{
+			if (object.pile.is && object.pile.scoreDue)
+			{
+				object.pile.scoreDue = false;
+				scorePile(object);
+			}
 		}
 	}
 
 	namespace
 	{
-		// A poker card: its value (2 to 10, then jack 11 up to the ace,
-		// the first rank written, 14) and its suit.
-		struct PokerCard
+		// A card as patterns see it: its rank and suit (numbered from 1)
+		// and the worths it may count for, lowest first.
+		struct Scored
 		{
-			int value;
+			int rank;
 			int suit;
+			const std::vector<float>* worths;
+			// A bit for each worth when all are whole numbers under 64
+			// (the usual), else 0: runs are then found by bits.
+			std::uint64_t mask;
 		};
 
-		// The highest card of a straight in the values (a bit each, the
-		// ace also low), or 0.
-		int straightIn(unsigned values)
+		float highest(const Scored& card) { return card.worths->back(); }
+
+		// Room reused by bestPattern, call after call.
+		std::vector<float>& scratchWorths()
 		{
-			if (values & (1u << 14)) { values |= 1u << 1; }
-			for (int high = 14; high >= 5; --high)
+			thread_local std::vector<float> worths;
+			return worths;
+		}
+
+		// The highest pattern the cards make (from 1; 0 none), with what
+		// ranks it among others making the same, deciding first: a run's
+		// worths from its top down, else the cards in groups of a rank,
+		// bigger groups first, each group by worth; then the rest by worth.
+		// With `only` (from 1), that pattern alone is tried: -1 when the
+		// cards do not make it.
+		int bestPattern(const RawPatterns& set, const std::vector<Scored>& cards, std::vector<float>& deciding, int only = -1)
+		{
+			// Counted in place (ranks and suits are under 64; scorePile
+			// sees to that), as this runs thousands of times for the odds.
+			std::array<int, 64> ofRank{};
+			std::array<int, 64> ofSuit{};
+			std::array<float, 64> rankWorth{};
+			std::array<int, 64> ranks{};
+			std::size_t rankCount = 0;
+			int mostSuited = 0;
+			std::uint64_t mask = 0;
+			bool byBits = true;
+			for (const Scored& card : cards)
 			{
-				const unsigned five = 0x1Fu << (high - 4);
-				if ((values & five) == five) { return high; }
+				const auto rank = static_cast<std::size_t>(card.rank);
+				if (ofRank[rank]++ == 0) { ranks[rankCount++] = card.rank; }
+				mostSuited = std::max(mostSuited, ++ofSuit[static_cast<std::size_t>(card.suit)]);
+				rankWorth[rank] = highest(card);
+				mask |= card.mask;
+				byBits = byBits && card.mask != 0;
 			}
+			std::vector<float>& worths = scratchWorths();
+			if (!byBits)
+			{
+				worths.clear();
+				for (const Scored& card : cards) { worths.insert(worths.end(), card.worths->begin(), card.worths->end()); }
+				std::sort(worths.begin(), worths.end());
+				worths.erase(std::unique(worths.begin(), worths.end()), worths.end());
+			}
+			// Ranks by how many, then by worth, highest first.
+			const auto byGroup = [&](int a, int b)
+			{
+				const auto ia = static_cast<std::size_t>(a);
+				const auto ib = static_cast<std::size_t>(b);
+				return ofRank[ia] != ofRank[ib] ? ofRank[ia] > ofRank[ib] : rankWorth[ia] > rankWorth[ib];
+			};
+			std::sort(ranks.begin(), ranks.begin() + static_cast<std::ptrdiff_t>(rankCount), byGroup);
+			const auto inGroups = [&]()
+			{
+				deciding.clear();
+				for (std::size_t i = 0; i < rankCount; ++i)
+				{
+					const auto rank = static_cast<std::size_t>(ranks[i]);
+					deciding.insert(deciding.end(), static_cast<std::size_t>(ofRank[rank]), rankWorth[rank]);
+				}
+			};
+			// The top of the highest run of that many worths, or nothing.
+			const auto runTop = [&](int many) -> std::optional<float>
+			{
+				if (byBits)
+				{
+					if (many > 64) { return std::nullopt; }
+					const std::uint64_t run = many == 64 ? ~std::uint64_t{ 0 } : (std::uint64_t{ 1 } << many) - 1;
+					for (int top = 63; top >= many - 1; --top)
+					{
+						if (((mask >> (top - many + 1)) & run) == run) { return static_cast<float>(top); }
+					}
+					return std::nullopt;
+				}
+				for (auto top = worths.rbegin(); top != worths.rend(); ++top)
+				{
+					int length = 1;
+					while (length < many && std::binary_search(worths.begin(), worths.end(), *top - static_cast<float>(length))) { ++length; }
+					if (length == many) { return *top; }
+				}
+				return std::nullopt;
+			};
+
+			const std::size_t highestTried = only > 0 ? static_cast<std::size_t>(only) : only == 0 ? 0 : set.patterns.size();
+			const std::size_t lowestTried = only > 0 ? highestTried - 1 : 0;
+			for (std::size_t index = highestTried; index-- > lowestTried;)
+			{
+				const RawPatterns::Pattern& pattern = set.patterns[index];
+				int longestRun = 0;
+				bool holds = true;
+				// Each <same> a rank of its own, the biggest first: taken
+				// in that order, the ranks by group size serve them best.
+				std::uint64_t used = 0;
+				for (int wanted = static_cast<int>(cards.size()); wanted > 0 && holds; --wanted)
+				{
+					for (const auto& [part, many] : pattern.parts)
+					{
+						if (part != RawPatterns::Part::Same || many != wanted) { continue; }
+						bool found = false;
+						for (std::size_t i = 0; i < rankCount && !found; ++i)
+						{
+							const auto rank = static_cast<std::size_t>(ranks[i]);
+							if (!(used & (std::uint64_t{ 1 } << rank)) && ofRank[rank] >= many)
+							{
+								used |= std::uint64_t{ 1 } << rank;
+								found = true;
+							}
+						}
+						if (!found) { holds = false; break; }
+					}
+				}
+				for (const auto& [part, many] : pattern.parts)
+				{
+					if (part == RawPatterns::Part::Same && many > static_cast<int>(cards.size())) { holds = false; }
+					else if (part == RawPatterns::Part::Suited) { holds = holds && mostSuited >= many; }
+					else if (part == RawPatterns::Part::Run) { longestRun = std::max(longestRun, many); }
+				}
+				if (!holds) { continue; }
+				const std::optional<float> top = longestRun > 0 ? runTop(longestRun) : std::nullopt;
+				if (longestRun > 0 && !top) { continue; }
+
+				if (top)
+				{
+					deciding.clear();
+					std::vector<Scored> rest = cards;
+					for (int step = 0; step < longestRun; ++step)
+					{
+						const float worth = *top - static_cast<float>(step);
+						deciding.push_back(worth);
+						rest.erase(std::find_if(rest.begin(), rest.end(), [&](const Scored& card)
+						{
+							return std::find(card.worths->begin(), card.worths->end(), worth) != card.worths->end();
+						}));
+					}
+					std::vector<float> others;
+					for (const Scored& card : rest) { others.push_back(highest(card)); }
+					std::sort(others.rbegin(), others.rend());
+					deciding.insert(deciding.end(), others.begin(), others.end());
+				}
+				else { inGroups(); }
+				return static_cast<int>(index) + 1;
+			}
+			if (only > 0) { return -1; }
+			inGroups();
 			return 0;
 		}
 
-		// The best five of the cards: its kind (0 high card ... 8 straight
-		// flush) and a number to compare, the kind first, then the cards
-		// that decide between two of a kind, highest first.
-		float bestFive(const std::vector<PokerCard>& cards, int& kind)
+		// The best `best` of the cards (0: all of them): the pattern they
+		// make, and a number ordering any two the same size by the pattern,
+		// then by what decides between two of it, in base `base` (one more
+		// than any worth).
+		float bestOf(const RawPatterns& set, const std::vector<Scored>& cards, std::size_t best, float base, int& made)
 		{
-			std::array<int, 15> count{};
-			std::map<int, unsigned> suits;
-			std::map<int, int> inSuit;
-			unsigned values = 0;
-			for (const PokerCard& card : cards)
+			const std::size_t size = best == 0 ? cards.size() : std::min(best, cards.size());
+			std::vector<float> deciding;
+			// What all the cards make is the most any `size` of them can
+			// (every part asks for at least so many), so that is tried
+			// first, and only when none of them makes it, every pattern.
+			made = bestPattern(set, cards, deciding);
+			if (size == cards.size())
 			{
-				++count[static_cast<std::size_t>(card.value)];
-				values |= 1u << card.value;
-				suits[card.suit] |= 1u << card.value;
-				++inSuit[card.suit];
+				float strength = static_cast<float>(made);
+				for (const float worth : deciding) { strength = strength * base + worth; }
+				return strength;
 			}
-			std::vector<int> deciding;
-			const auto highest = [&](unsigned among, int many, int skipA, int skipB)
+			std::vector<Scored> some;
+			float strongest = -1.0f;
+			for (const bool onlyTheMost : { true, false })
 			{
-				for (int value = 14; value >= 2 && many > 0; --value)
+				std::vector<bool> chosen(cards.size(), false);
+				std::fill(chosen.begin(), chosen.begin() + static_cast<std::ptrdiff_t>(size), true);
+				int bestMade = 0;
+				do
 				{
-					if ((among & (1u << value)) && value != skipA && value != skipB) { deciding.push_back(value); --many; }
-				}
-			};
-			const auto withCount = [&](int wanted, int below)
-			{
-				for (int value = std::min(14, below - 1); value >= 2; --value)
+					some.clear();
+					for (std::size_t i = 0; i < cards.size(); ++i)
+					{
+						if (chosen[i]) { some.push_back(cards[i]); }
+					}
+					const int pattern = bestPattern(set, some, deciding, onlyTheMost ? made : -1);
+					if (pattern < 0) { continue; }
+					float strength = static_cast<float>(pattern);
+					for (const float worth : deciding) { strength = strength * base + worth; }
+					if (strength > strongest)
+					{
+						strongest = strength;
+						bestMade = pattern;
+					}
+				} while (std::prev_permutation(chosen.begin(), chosen.end()));
+				if (strongest >= 0.0f)
 				{
-					if (count[static_cast<std::size_t>(value)] >= wanted) { return value; }
-				}
-				return 0;
-			};
-			int flushSuit = -1;
-			for (const auto& [suit, many] : inSuit)
-			{
-				if (many >= 5) { flushSuit = suit; }
-			}
-
-			if (flushSuit >= 0 && straightIn(suits[flushSuit]))
-			{
-				kind = 8;
-				deciding = { straightIn(suits[flushSuit]) };
-			}
-			else if (const int four = withCount(4, 15))
-			{
-				kind = 7;
-				deciding = { four };
-				highest(values, 1, four, 0);
-			}
-			else if (const int three = withCount(3, 15); three && (withCount(2, three) || withCount(2, 15) != three))
-			{
-				kind = 6;
-				int two = 0;
-				for (int value = 14; value >= 2 && !two; --value)
-				{
-					if (value != three && count[static_cast<std::size_t>(value)] >= 2) { two = value; }
-				}
-				deciding = { three, two };
-			}
-			else if (flushSuit >= 0)
-			{
-				kind = 5;
-				highest(suits[flushSuit], 5, 0, 0);
-			}
-			else if (const int high = straightIn(values))
-			{
-				kind = 4;
-				deciding = { high };
-			}
-			else if (three)
-			{
-				kind = 3;
-				deciding = { three };
-				highest(values, 2, three, 0);
-			}
-			else if (const int pair = withCount(2, 15))
-			{
-				if (const int second = withCount(2, pair))
-				{
-					kind = 2;
-					deciding = { pair, second };
-					highest(values, 1, pair, second);
-				}
-				else
-				{
-					kind = 1;
-					deciding = { pair };
-					highest(values, 3, pair, 0);
+					made = bestMade;
+					break;
 				}
 			}
-			else
-			{
-				kind = 0;
-				highest(values, 5, 0, 0);
-			}
-
-			float worth = static_cast<float>(kind);
-			for (std::size_t i = 0; i < 5; ++i) { worth = worth * 15.0f + static_cast<float>(i < deciding.size() ? deciding[i] : 0); }
-			return worth;
+			return std::max(strongest, 0.0f);
 		}
 	}
 
-	void Game::scorePoker(Object& pile)
+	void Game::scorePile(Object& pile)
 	{
-		std::vector<PokerCard> own;
+		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == pile.pile.score; });
+		if (set == patterns.end()) { return; }
+		const auto scored = [](const Object& card)
+		{
+			std::uint64_t bits = 0;
+			for (const float worth : card.card.worths)
+			{
+				if (worth < 0.0f || worth > 63.0f || worth != std::floor(worth)) { bits = 0; break; }
+				bits |= std::uint64_t{ 1 } << static_cast<int>(worth);
+			}
+			return Scored{ card.card.rank, card.card.suit, &card.card.worths, bits };
+		};
+		float base = 1.0f;
+		for (const Object& object : objects)
+		{
+			if (!object.isCard) { continue; }
+			// Ranks and suits are counted in room for 63 (bestPattern).
+			if (object.card.rank >= 64 || object.card.suit >= 64) { return; }
+			base = std::max(base, highest(scored(object)) + 1.0f);
+		}
+
+		std::vector<Scored> own;
 		std::vector<int> seen;
 		const auto add = [&](const Object& from)
 		{
@@ -620,48 +749,48 @@ namespace xge
 			{
 				if (const Object* card = cardAt(number))
 				{
-					own.push_back({ card->card.rank == 1 ? 14 : card->card.rank, card->card.suit });
+					own.push_back(scored(*card));
 					seen.push_back(number);
 				}
 			}
 		};
 		add(pile);
 		const std::size_t mine = own.size();
-		Object* shared = pile.pile.pokerWith.empty() ? nullptr : pileNamed(pile.pile.pokerWith);
+		Object* shared = pile.pile.scoreWith.empty() ? nullptr : pileNamed(pile.pile.scoreWith);
 		if (shared) { add(*shared); }
+		const std::size_t best = static_cast<std::size_t>(pile.pile.scoreBest);
 
-		int kind = 0;
-		pile.strength = own.empty() ? 0.0f : bestFive(own, kind);
-		pile.pokerHand = static_cast<float>(kind);
+		int made = 0;
+		pile.strength = own.empty() ? 0.0f : bestOf(*set, own, best, base, made);
+		pile.pattern = static_cast<float>(made);
 
-		// The odds: the unseen cards dealt at random, as the same each time
-		// for the same cards (its own generator, seeded by them).
+		// The odds: as many unseen cards as this pile holds, against it,
+		// the shared pile made up to full from the unseen too; the same
+		// each time for the same cards (its own generator, seeded by them).
 		pile.odds = 0.0f;
 		if (mine > 0)
 		{
-			std::vector<PokerCard> unseen;
+			std::vector<Scored> unseen;
 			for (const Object& object : objects)
 			{
-				if (object.isCard && std::find(seen.begin(), seen.end(), object.cardNumber) == seen.end())
-				{
-					unseen.push_back({ object.card.rank == 1 ? 14 : object.card.rank, object.card.suit });
-				}
+				if (object.isCard && std::find(seen.begin(), seen.end(), object.cardNumber) == seen.end()) { unseen.push_back(scored(object)); }
 			}
 			const std::size_t board = own.size() - mine;
-			const std::size_t more = board < 5 ? 5 - board : 0;
-			if (unseen.size() >= more + 2)
+			const std::size_t full = static_cast<std::size_t>(pile.pile.scoreFull);
+			const std::size_t more = full > board ? full - board : 0;
+			if (unseen.size() >= more + mine)
 			{
 				std::uint64_t seed = 1469598103934665603ull;
 				for (const int number : seen) { seed = (seed ^ static_cast<std::uint64_t>(static_cast<unsigned>(number))) * std::uint64_t{ 1099511628211u }; }
 				std::mt19937 random(static_cast<std::mt19937::result_type>(seed));
 				constexpr int trials = 1000;
 				float won = 0.0f;
-				std::vector<PokerCard> ours = own;
-				std::vector<PokerCard> theirs(own.begin() + static_cast<std::ptrdiff_t>(mine), own.end());
+				std::vector<Scored> ours = own;
+				std::vector<Scored> theirs(own.begin() + static_cast<std::ptrdiff_t>(mine), own.end());
 				for (int trial = 0; trial < trials; ++trial)
 				{
 					// The first few of the unseen, shuffled that far.
-					for (std::size_t i = 0; i < more + 2; ++i)
+					for (std::size_t i = 0; i < more + mine; ++i)
 					{
 						std::uniform_int_distribution<std::size_t> pick(i, unseen.size() - 1);
 						std::swap(unseen[i], unseen[pick(random)]);
@@ -673,17 +802,16 @@ namespace xge
 						ours.push_back(unseen[i]);
 						theirs.push_back(unseen[i]);
 					}
-					theirs.push_back(unseen[more]);
-					theirs.push_back(unseen[more + 1]);
+					for (std::size_t i = 0; i < mine; ++i) { theirs.push_back(unseen[more + i]); }
 					int ignored = 0;
-					const float us = bestFive(ours, ignored);
-					const float them = bestFive(theirs, ignored);
+					const float us = bestOf(*set, ours, best, base, ignored);
+					const float them = bestOf(*set, theirs, best, base, ignored);
 					won += us > them ? 1.0f : us == them ? 0.5f : 0.0f;
 				}
 				pile.odds = std::round(won * 100.0f / static_cast<float>(trials));
 			}
 		}
-		refreshBoundTexts(pile.name, "hand", pile.pokerHand);
+		refreshBoundTexts(pile.name, "pattern", pile.pattern);
 		refreshBoundTexts(pile.name, "strength", pile.strength);
 		refreshBoundTexts(pile.name, "odds", pile.odds);
 	}

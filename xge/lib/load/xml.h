@@ -50,6 +50,7 @@ namespace xge
 			std::vector<RawSound>& rawSounds,
 			std::vector<RawPath>& rawPaths,
 			std::vector<RawStyle>& rawStyles,
+			std::vector<RawPatterns>& rawPatterns,
 			std::vector<std::string>& rawKeeps,
 			RawDemo& rawDemo,
 			SchemaValidation& validation);

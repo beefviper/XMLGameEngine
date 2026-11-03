@@ -24,12 +24,16 @@
   Space after a hand deals the next. P or Escape pauses.
 
   How it is written:
-  * The deck is Klondike's; the ace is the first rank and counts high
-    (and low in A 2 3 4 5).
-  * Your cards and the computer's are piles with <poker with="board" />:
-    live numbers `hand` (what the best five are, 0 high card to 8
-    straight flush), `strength` (compared at the showdown) and `odds`
-    (how often they beat a hand of two unseen cards, in percent).
+  * The deck is Klondike's, its ace worth <worth>1</worth><worth>14</worth>
+    so it plays high, and low in A 2 3 4 5; the other cards are worth
+    their number in order (jack 11, queen 12, king 13).
+  * Poker's hands are a <patterns> set of the game: <same> cards of a
+    rank, a <run> of worths in a row, <suited> cards of one suit. Your
+    cards and the computer's are piles that <score> by them, <with> the
+    board's five, the <best> five: live numbers `pattern` (which hand,
+    0 the highest cards to 8 a straight flush), `strength` (compared at
+    the showdown) and `odds` (how often they beat two unseen cards, in
+    percent).
   * The betting is the table's variables (pot, owed, raises, acted,
     street, turn) and conditions; the computer's play is four
     <computer> conditions on its odds against the price of a call.
@@ -71,6 +75,17 @@
     <style name="note"><size>26</size><color>color.white</color></style>
     <style name="result"><size>40</size><color>color.yellow</color></style>
   </styles>
+  <!-- poker's hands, the lowest first; none of them: the highest cards -->
+  <patterns name="poker">
+    <pattern name="pair"><same>2</same></pattern>
+    <pattern name="twopair"><same>2</same><same>2</same></pattern>
+    <pattern name="three"><same>3</same></pattern>
+    <pattern name="straight"><run>5</run></pattern>
+    <pattern name="flush"><suited>5</suited></pattern>
+    <pattern name="fullhouse"><same>3</same><same>2</same></pattern>
+    <pattern name="four"><same>4</same></pattern>
+    <pattern name="straightflush"><run>5</run><suited>5</suited></pattern>
+  </patterns>
   <states>
     <state name="title">
       <objects>
@@ -496,6 +511,7 @@
             <pips>
               <row>@</row>
             </pips>
+            <worth>1</worth><worth>14</worth>
           </rank>
           <rank name="2">
             <index>
@@ -1070,7 +1086,7 @@
         <object name="theirs" class="place">
           <sprite name="spot"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth - 4</x><y>theirrow</y></position>
-          <pile faces="up"><fan><x>cardwidth + 8</x></fan><poker with="board" /></pile>
+          <pile faces="up"><fan><x>cardwidth + 8</x></fan><score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score></pile>
         </object>
         <object name="board" class="place">
           <sprite><rectangle><width>cardwidth * 5 + 64</width><height>cardheight + 16</height><color>color.forestgreen</color></rectangle></sprite>
@@ -1080,7 +1096,7 @@
         <object name="yours" class="place">
           <sprite name="spot"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth - 4</x><y>yourrow</y></position>
-          <pile faces="up"><fan><x>cardwidth + 8</x></fan><poker with="board" /></pile>
+          <pile faces="up"><fan><x>cardwidth + 8</x></fan><score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score></pile>
         </object>
 
         <!-- who takes the cards: hands of their own, never seen -->
@@ -1329,7 +1345,7 @@
             <text style="note">
               <content>you: </content><number>you.chips</number><content> chips, </content>
               <choose>
-                <by>yours.hand</by>
+                <by>yours.pattern</by>
                 <word>high card</word><word>a pair</word><word>two pair</word><word>three of a kind</word><word>a straight</word>
                 <word>a flush</word><word>a full house</word><word>four of a kind</word><word>a straight flush</word>
               </choose>

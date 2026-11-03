@@ -1101,10 +1101,19 @@ namespace xge
 				else if (tag == "showtop") { pile.showTop = true; }
 				else if (tag == "sorted") { pile.sorted = true; }
 				else if (tag == "lift") { pile.lift = readValue(*child, at); }
-				else if (tag == "poker")
+				else if (tag == "score")
 				{
-					pile.poker = true;
-					pile.pokerWith = child->getAttribute("with");
+					pile.score = requireAttribute(*child, "patterns", at + " > <score>");
+					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						if (part->getName() == "with")
+						{
+							pile.scoreWith = requireAttribute(*part, "pile", at + " > <score> > <with>");
+							if (auto full = findChild(part.get(), "full")) { pile.scoreFull = readCount(*full, at + " > <score> > <with> > <full>"); }
+						}
+						else if (part->getName() == "best") { pile.scoreBest = readCount(*part, at + " > <score> > <best>"); }
+						else { fail(at + " > <score>", "unknown <" + part->getName() + ">; expected <with> and <best>"); }
+					}
 				}
 				else if (tag == "points")
 				{
@@ -1149,7 +1158,7 @@ namespace xge
 					}
 					if (rule.up && rule.down) { fail(at, "has <up /> and <down />; a card goes one way"); }
 				}
-				else { fail(here, "unknown <" + tag + ">; expected <fan>, <dealt>, <deals>, <refill>, <takes>, <run />, <showtop />, <sorted />, <lift>, <points> and <poker>"); }
+				else { fail(here, "unknown <" + tag + ">; expected <fan>, <dealt>, <deals>, <refill>, <takes>, <run />, <showtop />, <sorted />, <lift>, <points> and <score>"); }
 			}
 			if (!pile.refillFrom.empty() && !pile.hasDeals) { fail(here, "has a <refill> but no <deals>; a pile is refilled when it is dealt from empty"); }
 		}
@@ -3595,7 +3604,8 @@ namespace xge
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, std::vector<RawPath>& rawPaths,
-		std::vector<RawStyle>& rawStyles, std::vector<std::string>& rawKeeps, RawDemo& rawDemo, SchemaValidation& validation)
+		std::vector<RawStyle>& rawStyles, std::vector<RawPatterns>& rawPatterns, std::vector<std::string>& rawKeeps, RawDemo& rawDemo,
+		SchemaValidation& validation)
 	{
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
 
@@ -3718,6 +3728,35 @@ namespace xge
 			}
 		}
 
+		// load patterns (optional: what a pile's <score patterns="..."> is scored by)
+		for (std::unique_ptr<XmlNode> node = root->getFirstChild(); node != nullptr; node = node->getNextSibling())
+		{
+			if (node->getName() != "patterns") { continue; }
+			RawPatterns raw;
+			raw.name = requireAttribute(*node, "name", "<patterns>");
+			const std::string here = "<patterns name=\"" + raw.name + "\">";
+			if (std::any_of(rawPatterns.begin(), rawPatterns.end(), [&](const RawPatterns& each) { return each.name == raw.name; }))
+			{
+				fail("<patterns>", "two <patterns> are called '" + raw.name + "'");
+			}
+			for (std::unique_ptr<XmlNode> pattern = node->getFirstChild(); pattern != nullptr; pattern = pattern->getNextSibling())
+			{
+				RawPatterns::Pattern one;
+				one.name = requireAttribute(*pattern, "name", here + " > <pattern>");
+				const std::string at = here + " > <pattern name=\"" + one.name + "\">";
+				for (std::unique_ptr<XmlNode> part = pattern->getFirstChild(); part != nullptr; part = part->getNextSibling())
+				{
+					const std::string tag = part->getName();
+					const RawPatterns::Part kind = tag == "same" ? RawPatterns::Part::Same : tag == "run" ? RawPatterns::Part::Run : RawPatterns::Part::Suited;
+					if (tag != "same" && tag != "run" && tag != "suited") { fail(at, "unknown <" + tag + ">; expected <same>, <run> and <suited>"); }
+					one.parts.emplace_back(kind, readCount(*part, at + " > <" + tag + ">"));
+				}
+				if (one.parts.empty()) { fail(at, "has no <same>, <run> or <suited>"); }
+				raw.patterns.push_back(std::move(one));
+			}
+			rawPatterns.push_back(std::move(raw));
+		}
+
 		// load the kit: pieces written once, in play only where something
 		// takes them (load/merge)
 		Kit kit;
@@ -3835,7 +3874,7 @@ namespace xge
 	{
 		GameData data;
 		SchemaValidation validation = SchemaValidation::None;
-		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.styles, data.keeps, data.demo, validation);
+		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.styles, data.patterns, data.keeps, data.demo, validation);
 
 		std::ostringstream said;
 		said << validation;

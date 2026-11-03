@@ -45,6 +45,7 @@ namespace xge
 		rawObjects = std::move(data.objects);
 		rawSounds = std::move(data.sounds);
 		rawPaths = std::move(data.paths);
+		patterns = std::move(data.patterns);
 		const std::vector<std::string> keeps = std::move(data.keeps);
 		demo = std::move(data.demo);
 
@@ -63,8 +64,16 @@ namespace xge
 			stateTimers[state.name] = state.timers;
 		}
 		startScenes();
-		// The cards shuffled and dealt.
+		// The cards shuffled and dealt, piles scored by patterns there are.
+		for (const Object& object : objects)
+		{
+			if (!object.pile.score.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.pile.score; }))
+			{
+				throw std::runtime_error("<object name=\"" + object.name + "\"> > <pile> > <score patterns=\"" + object.pile.score + "\">: names no <patterns>");
+			}
+		}
 		dealDecks();
+		scoreDuePiles();
 		loadedCount = objects.size();
 		runsInTop.assign(objects.size(), 0);
 		runsInTopStage.assign(objects.size(), 0);

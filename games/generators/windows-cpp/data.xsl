@@ -1577,10 +1577,21 @@
       <xsl:if test="points">
         <xsl:value-of select="concat(' ', $to, '.pile.hasPoints = true;')" />
       </xsl:if>
-      <xsl:if test="poker">
-        <xsl:value-of select="concat(' ', $to, '.pile.poker = true; ', $to, '.pile.pokerWith = ')" />
-        <xsl:call-template name="string"><xsl:with-param name="text" select="poker/@with" /></xsl:call-template>
+      <xsl:if test="score">
+        <xsl:value-of select="concat(' ', $to, '.pile.score = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="score/@patterns" /></xsl:call-template>
         <xsl:text>;</xsl:text>
+        <xsl:if test="score/with">
+          <xsl:value-of select="concat(' ', $to, '.pile.scoreWith = ')" />
+          <xsl:call-template name="string"><xsl:with-param name="text" select="score/with/@pile" /></xsl:call-template>
+          <xsl:text>;</xsl:text>
+        </xsl:if>
+        <xsl:if test="score/with/full">
+          <xsl:value-of select="concat(' ', $to, '.pile.scoreFull = ', normalize-space(score/with/full), ';')" />
+        </xsl:if>
+        <xsl:if test="score/best">
+          <xsl:value-of select="concat(' ', $to, '.pile.scoreBest = ', normalize-space(score/best), ';')" />
+        </xsl:if>
       </xsl:if>
       <xsl:call-template name="field">
         <xsl:with-param name="name" select="concat($to, '.pile.pointsMost')" />
@@ -3359,6 +3370,28 @@
       <xsl:text>&#9;};&#10;</xsl:text>
     </xsl:if>
     <xsl:text>&#9;game.objects = objects();&#10;</xsl:text>
+    <xsl:for-each select="$game/patterns">
+      <xsl:text>&#9;game.patterns.push_back({ </xsl:text>
+      <xsl:call-template name="string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
+      <xsl:text>, {</xsl:text>
+      <xsl:for-each select="pattern">
+        <xsl:if test="position() &gt; 1">,</xsl:if>
+        <xsl:text> { </xsl:text>
+        <xsl:call-template name="string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
+        <xsl:text>, {</xsl:text>
+        <xsl:for-each select="*">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:choose>
+            <xsl:when test="local-name() = 'same'"> { RawPatterns::Part::Same, </xsl:when>
+            <xsl:when test="local-name() = 'run'"> { RawPatterns::Part::Run, </xsl:when>
+            <xsl:otherwise> { RawPatterns::Part::Suited, </xsl:otherwise>
+          </xsl:choose>
+          <xsl:value-of select="concat(normalize-space(.), ' }')" />
+        </xsl:for-each>
+        <xsl:text> } }</xsl:text>
+      </xsl:for-each>
+      <xsl:text> } });&#10;</xsl:text>
+    </xsl:for-each>
     <xsl:if test="$game/keeps/keep">
       <xsl:text>&#9;game.keeps = {</xsl:text>
       <xsl:for-each select="$game/keeps/keep">

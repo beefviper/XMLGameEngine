@@ -52,6 +52,9 @@ namespace xge
 		// <styles>: what a <text> or a <bitmap> can take by style="..." (see applyStyles).
 		std::vector<RawStyle> styles;
 
+		// <patterns>: what piles with a <score> are scored by (see RawPatterns).
+		std::vector<RawPatterns> patterns;
+
 		// <keeps>: the objects (or groups) a full <reset /> passes over, as
 		// named in the file.
 		std::vector<std::string> keeps;

@@ -484,7 +484,9 @@ namespace xge
 		static bool isWild(const PileRule& rule, const Object& card);
 		void refreshCall(Object& pile);
 		void refreshPile(Object& pile);
-		void scorePoker(Object& pile);
+		void scorePile(Object& pile);
+		void scoreDuePiles();
+		bool scoresDue{ false };
 		std::optional<KeyCode> thinkCards(const CmdThink& think, Object& hand);
 		int cardWait{};
 		std::vector<Object*> shownPiles();
@@ -657,6 +659,7 @@ namespace xge
 		std::vector<RawSound> rawSounds;
 		std::vector<SoundDesc> sounds;
 		std::vector<RawPath> rawPaths;
+		std::vector<RawPatterns> patterns;
 		std::map<std::string, Path> paths;
 		std::vector<std::string> soundRequests;
 		std::vector<std::string> silenceRequests;
@@ -715,7 +718,7 @@ namespace xge
 		bool canCollide(const Object& a, const Object& b) override;
 		bool hasRules(const Object& object) override { return !object.collisionData.others.empty(); }
 		void touched(Object& a, Object& b, const Contact& contact) override;
-		void conditions() override { countMoves(); showMarks(); checkConditions(); }
+		void conditions() override { scoreDuePiles(); countMoves(); showMarks(); checkConditions(); }
 
 		// Sets the velocity of every shown object that is on a path for this
 		// frame's part of it (see Path), starting its next leg when one is
