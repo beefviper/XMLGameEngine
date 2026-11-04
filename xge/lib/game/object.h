@@ -437,6 +437,13 @@ namespace xge
 		// pile wait for a suit to be called.
 		bool matches{ false };
 		std::vector<std::string> wildRanks;
+		// <follow />: a trick. Any card leads (the first on the empty
+		// pile); after it, a card of the suit led, unless the hand laying
+		// holds none. <breaks>: suits that may not lead until one has been
+		// laid on the pile since the cards were gathered, unless the hand
+		// holds nothing else.
+		bool follow{ false };
+		std::vector<std::string> breakSuits;
 	};
 
 	// A card of a <deck> (see game/cards.h): which deck, its suit and rank
@@ -621,6 +628,15 @@ namespace xge
 			RawValue lift;              // <lift>: the card a hand points at, lifted out of the fan by that much (empty text: none)
 			bool hasPoints{ false };    // <points>: how its face-up cards count
 			RawValue pointsMost;        // <points><atmost>: higher worths only while the total stays at most this (empty text: no limit)
+			// <points><each suit= rank=>N: a card counts the first that it
+			// matches (suit=, rank= or both), and any other none.
+			struct Each
+			{
+				std::string suit;
+				std::string rank;
+				RawValue points;
+			};
+			std::vector<Each> pointsEach;
 			std::string score;          // <score patterns=>: scored by those patterns (empty: not scored)
 			std::string scoreWith;      // <score><with pile=>: with that pile's cards too
 			int scoreFull{};            // <with><full>: that pile holds this many when all are dealt (0: as it is)
@@ -630,6 +646,7 @@ namespace xge
 		RawPile pile;
 		bool hand{ false };             // <hand />: points at piles and carries cards (Object::Hand)
 		std::string handPile;           // <hand pile=>: its own pile (cards held by a player)
+		int handSeat{};                 // <hand><seat>: which player, for a trick's `winner` (0 none)
 		CardOf card;                    // a card of a <deck> (deck empty for anything else)
 		bool isCard{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
@@ -1102,6 +1119,14 @@ namespace xge
 			bool sorted{ false };
 			float lift{};
 			float pointsMost{};     // 0: no limit
+			struct Each
+			{
+				std::string suit;
+				std::string rank;
+				float points{};
+			};
+			std::vector<Each> pointsEach;
+			std::vector<int> broken;  // the suits of its <breaks> laid on it since the cards were gathered
 			std::string score;      // as written
 			std::string scoreWith;
 			int scoreFull{};
@@ -1128,11 +1153,17 @@ namespace xge
 		float pattern{};
 		float strength{};
 		float odds{};
+		// A <follow /> pile (a trick): `lead`, the suit of its first card
+		// (from 1; 0 empty), and `winner`, the seat of the hand that laid
+		// the card winning it: the highest of the suit led.
+		float lead{};
+		float winner{};
 		// A card: what it is, its number (from 1, every deck of the game
 		// in turn) and whether its face is up.
 		bool isCard{ false };
 		CardOf card;
 		int cardNumber{};
+		int laidBy{};           // the seat of the hand that last laid it (0 none)
 		bool faceUp{ false };
 		// A hand: the pile it points at (its full name) and the card of it
 		// (index from the bottom; -1: the pile itself, empty), the cards it
@@ -1142,6 +1173,7 @@ namespace xge
 		{
 			bool is{ false };
 			std::string own;        // pile=: its own pile, as written, or none
+			int seat{};             // <seat>: which player (0 none)
 			std::string pile;
 			int at{ -1 };
 			std::vector<int> held;

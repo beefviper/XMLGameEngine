@@ -268,7 +268,12 @@ namespace xge
 			[&](const CmdPlace&) { done = self && game.placePiece(*self); },
 			[&](const CmdTake&) { done = self && game.takeCards(*self); },
 			[&](const CmdLay& l) { done = self && game.layCards(*self, l.pile); },
-			[&](const CmdDeal& d) { done = self && game.dealCards(*self, d.pile, d.faces); },
+			[&](const CmdDeal& d)
+			{
+				done = false;
+				for (int i = 0; i < d.count && self; ++i) { done = game.dealCards(*self, d.pile, d.faces) || done; }
+			},
+			[&](const CmdCollect& c) { done = game.collectCards(c.pile, c.into); },
 			[&](const CmdRevealCards& r) { done = game.revealCards(r.pile); },
 			[&](const CmdShuffle& s) { done = game.gatherCards(s.pile); },
 			[&](const CmdCall& c) { done = self && game.callSuit(*self, c.pile); },
@@ -294,8 +299,11 @@ namespace xge
 		}
 		else if (self && (command.from.empty() || self->lookName() == command.from))
 		{
+			const std::string before = self->hand.is ? self->lookName() : std::string();
 			if (!command.sprite.empty()) { showLookNamed(*self, command.sprite); }
 			if (!command.style.empty()) { wearPaletteNamed(*self, command.style); }
+			// A hand sits centred on its card by its look's size.
+			if (self->hand.is && self->lookName() != before) { game.layOutCards(); }
 		}
 	}
 

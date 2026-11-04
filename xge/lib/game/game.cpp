@@ -1388,14 +1388,19 @@ namespace xge
 
 	void Game::become(const std::string& target, const std::string& sprite, const std::string& from, const std::string& style)
 	{
+		bool handChanged = false;
 		for (auto& object : objects)
 		{
 			if ((object.named(target)) && (from.empty() || object.lookName() == from))
 			{
+				const std::string before = object.hand.is ? object.lookName() : std::string();
 				if (!sprite.empty()) { showLookNamed(object, sprite); }
 				if (!style.empty()) { wearPaletteNamed(object, style); }
+				handChanged = handChanged || (object.hand.is && object.lookName() != before);
 			}
 		}
+		// A hand sits centred on what it points at, by the size of its look.
+		if (handChanged) { layOutCards(); }
 	}
 
 	void Game::reveal(const std::string& target, int count)

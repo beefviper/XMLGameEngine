@@ -1,6 +1,6 @@
 # Cards
 
-**Status:** Deck, piles and a hand Built (2026-11-01) with Klondike; players' cards, wild cards and a card-playing computer Built (2026-11-02) with Crazy Eights; points, a dealer and bets Built (2026-11-02) with Blackjack; patterns of cards, scoring and odds Built (2026-11-03) with Texas Hold'em; decks of single cards Open.
+**Status:** Deck, piles and a hand Built (2026-11-01) with Klondike; players' cards, wild cards and a card-playing computer Built (2026-11-02) with Crazy Eights; points, a dealer and bets Built (2026-11-02) with Blackjack; patterns of cards, scoring and odds Built (2026-11-03) with Texas Hold'em; tricks Built (2026-11-04) with Hearts; decks of single cards Open.
 
 ## What we looked for
 
@@ -37,6 +37,11 @@
 - **Odds, not a search, for the computer:** its opponent's cards are hidden, so it estimates how often its cards win against as many unseen ones, dealing what is still to come at random a thousand times (Monte Carlo). The random numbers are seeded by the cards seen, so the same cards always give the same odds: tests and replays stay fixed. Scoring is done once a frame, before the conditions, for piles whose cards changed: a deal of three cards scores once. Its play is four `<computer>` conditions: raise with odds of 65 or better, call when the odds beat the pot odds (`owed * 100 / (pot + owed)`), all in when short, else fold. Looked at and left: a bluffing or opponent-reading player; a full search over hidden cards.
 - **Betting is the game's**, plain variables (pot, owed, raises, acted, street, turn) and an ordered list of conditions, as Blackjack's bets: no betting verbs. Space between hands shuffles, and a dealer's short timer then deals, so the stock can be stacked in between (tests).
 
+- **A trick is a pile with a rule** (2026-11-04, Hearts): `<takes><follow />` (follow the suit led if you hold it) and `<breaks>` (suits that may not lead until one has been played) are the rules of the whole trick-taking family (Whist, Spades, Bridge, Euchre), not Hearts'. The pile knows who laid each card by the hand's `<seat>`, and says `lead` and `winner` as live numbers, so whose turn it is and who takes the trick are the game's conditions. Trumps were left for a game that has them (Spades): they change only who wins.
+- **Points by card, not by rank worth:** `<points><each suit rank>` counts the pile's cards (a heart 1, the queen of spades 13). A rank's `<worth>` is what a card is worth in play; points by card are what it costs to take, so they stay on the pile.
+- **Taken tricks go into a pile** with `<collect pile into>`, face down, out of play until the next deal; their points go to the taker by a condition reading `trick.points` before the collect. Shooting the moon is two conditions on the scores. `<deal>N</deal>` deals a whole hand at once.
+- **The computer keeps out of tricks** with `<think><avoid /></think>`: the same rule-of-thumb player as Crazy Eights, with the one choice every trick game makes (try to take it, or not). Ducking with the highest card that still loses, shedding the most points when void. Looked at and left: counting cards played, which a later game may want.
+
 ## Looked at and left
 
 - **Cards as pieces on a map of cells:** a fanned column could be cells, but a stock or a foundation holds many cards in one place, and a run moves as one.
@@ -51,3 +56,4 @@
 - Blackjack's doubling down, splitting pairs, insurance, a shoe of several packs, buttons for the mouse.
 - Scoring Crazy Eights across games (points for the cards left in the loser's hand), more than one computer player.
 - Dealing three at a time from the stock, undo, scoring, an automatic finish.
+- Hearts' passing of three cards before each hand, the two of clubs leading the first trick (the first leader goes round instead), no points on the first trick; trumps and bidding for Spades; a computer that counts cards.

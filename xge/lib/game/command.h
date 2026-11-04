@@ -712,6 +712,14 @@ namespace xge
 	{
 		std::string pile;      // pile=: from this pile, not the one pointed at
 		std::string faces;     // faces=: each card dealt turned up or down
+		int count{ 1 };        // its content: how many cards
+	};
+	// <collect pile="trick" into="taken" />: every card of the pile onto
+	// the other (a trick to whoever took it).
+	struct CmdCollect
+	{
+		std::string pile;
+		std::string into;
 	};
 	// <reveal pile="dealer" />: every card of the pile turned face up.
 	struct CmdRevealCards
@@ -799,6 +807,7 @@ namespace xge
 		KeyCode button{};
 		int depth{ 4 };
 		std::vector<std::pair<std::string, float>> worths;
+		bool avoid{ false };   // <avoid />: a card player that keeps out of tricks
 	};
 
 	struct RawCommand;
@@ -820,7 +829,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdCount, CmdThink, CmdTake, CmdLay, CmdDeal, CmdCall, CmdRevealCards, CmdShuffle, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdCount, CmdThink, CmdTake, CmdLay, CmdDeal, CmdCall, CmdRevealCards, CmdShuffle, CmdCollect, CmdLive>;
 
 	struct LoadedCommand
 	{
@@ -1003,6 +1012,7 @@ namespace xge
 		std::string button;    // hold, think
 		std::vector<std::pair<std::string, float>> worths; // think: each <worth sprite="...">
 		bool only{ false };    // pick: <only />
+		bool avoid{ false };   // think: <avoid />, a card player that keeps out of tricks
 		std::string closeClass;  // put: <close class=...>
 		std::string closeObject; // put: <close object=...>
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>

@@ -85,9 +85,13 @@ namespace xge
 		if (verb == "deal")
 		{
 			if (!raw.faces.empty() && raw.faces != "up" && raw.faces != "down") { throw std::runtime_error("<deal faces=\"" + raw.faces + "\">: expected up or down"); }
-			return CmdDeal{ raw.pile, raw.faces };
+			const bool none = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
+			const float count = none ? 1.0f : evaluate(raw.amount);
+			if (!(count >= 1.0f) || count != std::floor(count)) { throw std::runtime_error("<deal>: deals " + formatDisplayNumber(count) + " cards; expected a whole number from 1"); }
+			return CmdDeal{ raw.pile, raw.faces, static_cast<int>(count) };
 		}
 		if (verb == "shuffle") { return CmdShuffle{ raw.pile }; }
+		if (verb == "collect") { return CmdCollect{ raw.pile, raw.into }; }
 		if (verb == "reveal" && !raw.pile.empty()) { return CmdRevealCards{ raw.pile }; }
 		if (verb == "call")
 		{
@@ -233,7 +237,7 @@ namespace xge
 			{
 				throw std::runtime_error("<think> looks " + formatDisplayNumber(depth) + " moves ahead; expected a whole number from 1 to 9");
 			}
-			return CmdThink{ raw.objClass, raw.object, button, static_cast<int>(depth), raw.worths };
+			return CmdThink{ raw.objClass, raw.object, button, static_cast<int>(depth), raw.worths, raw.avoid };
 		}
 
 		// The speed of a <go>, <hunt> or <wander>, which may not be below 0.
@@ -545,7 +549,8 @@ namespace xge
 			[&](const CmdPlace&) { o << "place"; },
 			[&](const CmdTake&) { o << "take"; },
 			[&](const CmdLay& l) { o << "lay" << (l.pile.empty() ? "" : "(" + l.pile + ")"); },
-			[&](const CmdDeal& d) { o << "deal" << (d.pile.empty() ? "" : "(" + d.pile + ")"); },
+			[&](const CmdDeal& d) { o << "deal" << (d.pile.empty() ? "" : "(" + d.pile + ")") << (d.count == 1 ? "" : " x" + std::to_string(d.count)); },
+			[&](const CmdCollect& c) { o << "collect(" << c.pile << " into " << c.into << ")"; },
 			[&](const CmdRevealCards& r) { o << "reveal(" << r.pile << ")"; },
 			[&](const CmdShuffle& s) { o << "shuffle(" << s.pile << ")"; },
 			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },

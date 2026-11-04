@@ -66,6 +66,7 @@ set(data_xml
 	"games/descriptions/crazyeights.xml"
 	"games/descriptions/blackjack.xml"
 	"games/descriptions/holdem.xml"
+	"games/descriptions/hearts.xml"
 	"games/descriptions/snake.xml"
 	"games/descriptions/centipede.xml")
 

@@ -1120,7 +1120,14 @@ namespace xge
 					pile.hasPoints = true;
 					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
 					{
-						if (part->getName() != "atmost") { fail(at, "unknown <" + part->getName() + ">; expected <atmost>"); }
+						if (part->getName() == "each")
+						{
+							RawObject::RawPile::Each each{ part->getAttribute("suit"), part->getAttribute("rank"), readValue(*part, at + " > <each>") };
+							if (each.suit.empty() && each.rank.empty()) { fail(at + " > <each>", "names no suit= or rank=; it would count every card"); }
+							pile.pointsEach.push_back(std::move(each));
+							continue;
+						}
+						if (part->getName() != "atmost") { fail(at, "unknown <" + part->getName() + ">; expected <atmost> and <each>s"); }
 						pile.pointsMost = readValue(*part, at + " > <atmost>");
 					}
 				}
@@ -1137,6 +1144,15 @@ namespace xge
 						else if (name == "up") { rule.up = true; }
 						else if (name == "down") { rule.down = true; }
 						else if (name == "matches") { rule.matches = true; }
+						else if (name == "follow") { rule.follow = true; }
+						else if (name == "breaks")
+						{
+							for (std::unique_ptr<XmlNode> suit = part->getFirstChild(); suit != nullptr; suit = suit->getNextSibling())
+							{
+								if (suit->getName() != "suit") { fail(at + " > <breaks>", "unknown <" + suit->getName() + ">; expected <suit>s"); }
+								rule.breakSuits.push_back(readText(*suit));
+							}
+						}
 						else if (name == "wild")
 						{
 							for (std::unique_ptr<XmlNode> rank = part->getFirstChild(); rank != nullptr; rank = rank->getNextSibling())
@@ -1154,7 +1170,7 @@ namespace xge
 								else { fail(at + " > <empty>", "unknown <" + first->getName() + ">; expected <rank>s and <suit>s"); }
 							}
 						}
-						else { fail(at, "unknown <" + name + ">; expected <one />, <samesuit />, <othercolor />, <up />, <down />, <matches />, <wild> and <empty>"); }
+						else { fail(at, "unknown <" + name + ">; expected <one />, <samesuit />, <othercolor />, <up />, <down />, <matches />, <wild>, <empty>, <follow /> and <breaks>"); }
 					}
 					if (rule.up && rule.down) { fail(at, "has <up /> and <down />; a card goes one way"); }
 				}
@@ -1324,7 +1340,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal" || name == "call" || name == "shuffle";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal" || name == "call" || name == "shuffle" || name == "collect";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1457,7 +1473,18 @@ namespace xge
 			if (verb == "track" && node.getFirstChild()) { readOnto(node, where + " > <track>", command); }
 			if (verb == "trigger") { requireAttribute(node, "action", where); }
 			if (verb == "shuffle") { requireAttribute(node, "pile", where); }
-			if (verb == "deal") { command.faces = node.getAttribute("faces"); }
+			if (verb == "deal")
+			{
+				command.faces = node.getAttribute("faces");
+				// How many is optional: a bare <deal /> is one.
+				if (node.getFirstChild() || !readText(node).empty()) { command.amount = readValue(node, where); }
+				else { command.amount = RawValue::expression("1"); }
+			}
+			if (verb == "collect")
+			{
+				command.pile = requireAttribute(node, "pile", where);
+				requireAttribute(node, "into", where);
+			}
 			if (verb == "hop" && findChild(&node, "onto"))
 			{
 				requireAttribute(node, "direction", where);
@@ -1569,7 +1596,8 @@ namespace xge
 				{
 					const std::string tag = child->getName();
 					if (tag == "depth") { command.amount = readValue(*child, here + " > <depth>"); continue; }
-					if (tag != "worth") { fail(here, "unknown <" + tag + ">; expected <depth>, then <worth>s"); }
+					if (tag == "avoid") { command.avoid = true; continue; }
+					if (tag != "worth") { fail(here, "unknown <" + tag + ">; expected <depth>, <avoid /> and <worth>s"); }
 					const std::string look = requireAttribute(*child, "sprite", here + " > <worth>");
 					const std::string text = readText(*child);
 					char* end = nullptr;
@@ -1889,6 +1917,7 @@ namespace xge
 			{
 				object.hand = true;
 				object.handPile = hand->getAttribute("pile");
+				if (auto seat = findChild(hand.get(), "seat")) { object.handSeat = readCount(*seat, where + " > <hand> > <seat>"); }
 			}
 			if (auto poses = findChild(&node, "poses"))
 			{

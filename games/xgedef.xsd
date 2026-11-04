@@ -620,6 +620,10 @@
            from a stock with no into=, and stays pointing into it -->
       <xs:element name="hand" minOccurs="0">
         <xs:complexType>
+          <xs:sequence>
+            <!-- seat: which player, for a trick's live number winner -->
+            <xs:element name="seat" type="xs:positiveInteger" minOccurs="0" />
+          </xs:sequence>
           <xs:attribute name="pile" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
@@ -697,6 +701,17 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+            <!-- follow: a trick: any card leads, then the suit led, unless the hand laying holds none;
+                 breaks: these suits lead only once one was laid here since the cards were gathered, or when the hand
+                 holds nothing else -->
+            <xs:element name="follow" type="emptyType" minOccurs="0" />
+            <xs:element name="breaks" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="suit" type="xs:NMTOKEN" maxOccurs="unbounded" />
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -727,6 +742,17 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element name="atmost" type="valueType" minOccurs="0" />
+            <!-- each: a card matching suit=, rank= or both counts this many (the first that matches), and a card
+                 matching none of them nothing -->
+            <xs:element name="each" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType mixed="true">
+                <xs:sequence>
+                  <xs:group ref="valueTag" minOccurs="0" />
+                </xs:sequence>
+                <xs:attribute name="suit" type="xs:NMTOKEN" use="optional" />
+                <xs:attribute name="rank" type="xs:string" use="optional" />
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -1325,6 +1351,13 @@
           <xs:attribute name="pile" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
+      <!-- collect: every card of pile= onto into= (a trick to whoever took it) -->
+      <xs:element name="collect">
+        <xs:complexType>
+          <xs:attribute name="pile" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="follow" type="followType" />
       <!-- <shift object="aliens"><x>2</x></shift>: those objects, and the
            places they go home to, moved by x across and y down -->
@@ -1466,7 +1499,11 @@
       <!-- deal, on a hand: from the pile pointed at (pile=: from that one), by its <deals> (or, empty, its <refill>);
            faces=: each card dealt turned up or down -->
       <xs:element name="deal">
-        <xs:complexType>
+        <!-- its content: how many cards (none: one) -->
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:group ref="valueTag" minOccurs="0" />
+          </xs:sequence>
           <xs:attribute name="pile" type="xs:string" use="optional" />
           <xs:attribute name="faces" use="optional">
             <xs:simpleType>
@@ -1597,6 +1634,8 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element name="depth" type="xs:positiveInteger" minOccurs="0" />
+            <!-- avoid: a card player that keeps out of tricks (Hearts); none: one that takes them -->
+            <xs:element name="avoid" type="emptyType" minOccurs="0" />
             <xs:element name="worth" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>

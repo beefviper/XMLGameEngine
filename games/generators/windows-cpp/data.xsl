@@ -177,7 +177,7 @@
       </xsl:for-each>
       <xsl:choose>
         <!-- how many is optional, and one when left out -->
-        <xsl:when test="$verb = 'inc' or $verb = 'dec' or $verb = 'reveal' or $verb = 'release'">
+        <xsl:when test="$verb = 'inc' or $verb = 'dec' or $verb = 'reveal' or $verb = 'release' or $verb = 'deal'">
           <xsl:text> command.amount = </xsl:text>
           <xsl:choose>
             <xsl:when test="$node/* or normalize-space($node) != ''">
@@ -217,6 +217,7 @@
         </xsl:when>
         <!-- a computer thinking: how deep, and what its pieces are worth -->
         <xsl:when test="$verb = 'think'">
+          <xsl:if test="$node/avoid"> command.avoid = true;</xsl:if>
           <xsl:if test="$node/depth">
             <xsl:text> command.amount = </xsl:text>
             <xsl:call-template name="value">
@@ -1504,6 +1505,9 @@
         <xsl:call-template name="string"><xsl:with-param name="text" select="$node/hand/@pile" /></xsl:call-template>
         <xsl:text>;&#10;</xsl:text>
       </xsl:if>
+      <xsl:if test="$node/hand/seat">
+        <xsl:value-of select="concat($indent, $to, '.handSeat = ', normalize-space($node/hand/seat), ';&#10;')" />
+      </xsl:if>
     </xsl:if>
     <xsl:for-each select="$node/pile">
       <xsl:value-of select="concat($indent, $to, '.pile.is = true;')" />
@@ -1597,6 +1601,15 @@
         <xsl:with-param name="name" select="concat($to, '.pile.pointsMost')" />
         <xsl:with-param name="node" select="points/atmost" />
       </xsl:call-template>
+      <xsl:for-each select="points/each">
+        <xsl:value-of select="concat(' ', $to, '.pile.pointsEach.push_back({ ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="@suit" /></xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="string"><xsl:with-param name="text" select="@rank" /></xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="value"><xsl:with-param name="node" select="." /></xsl:call-template>
+        <xsl:text> });</xsl:text>
+      </xsl:for-each>
       <xsl:if test="run">
         <xsl:value-of select="concat(' ', $to, '.pile.run = true;')" />
       </xsl:if>
@@ -1624,6 +1637,12 @@
         </xsl:for-each>
         <xsl:value-of select="concat(' }, ', substring('falsetrue', 1 + 5 * count(matches), 5 - count(matches)), ', {')" />
         <xsl:for-each select="wild/rank">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> </xsl:text>
+          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
+        </xsl:for-each>
+        <xsl:value-of select="concat(' }, ', substring('falsetrue', 1 + 5 * count(follow), 5 - count(follow)), ', {')" />
+        <xsl:for-each select="breaks/suit">
           <xsl:if test="position() &gt; 1">,</xsl:if>
           <xsl:text> </xsl:text>
           <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>

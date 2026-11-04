@@ -427,18 +427,49 @@ namespace xge
 		auto at = pile.pile.cards.end();
 		if (pile.pile.sorted)
 		{
-			// Suit by suit, each in rank order.
+			// Suit by suit, each by its highest worth (in rank order,
+			// unless a worth puts a card elsewhere: an ace worth 14 last).
+			const auto order = [](const Object& of) { return std::make_tuple(of.card.suit, of.card.worths.empty() ? 0.0f : of.card.worths.back(), of.card.rank); };
 			const auto before = [&](int other)
 			{
 				const Object* each = cardAt(other);
-				return each && std::make_pair(card->card.suit, card->card.rank) < std::make_pair(each->card.suit, each->card.rank);
+				return each && order(*card) < order(*each);
 			};
 			at = std::find_if(pile.pile.cards.begin(), pile.pile.cards.end(), before);
 		}
 		pile.pile.cards.insert(at, number);
+		// A suit that <breaks>, broken.
+		const std::vector<std::string>& breaks = pile.pile.takes.breakSuits;
+		if (std::find(breaks.begin(), breaks.end(), card->card.suitName) != breaks.end()
+			&& std::find(pile.pile.broken.begin(), pile.pile.broken.end(), card->card.suit) == pile.pile.broken.end())
+		{
+			pile.pile.broken.push_back(card->card.suit);
+		}
 		// A card laid answers any call.
 		pile.called = 0.0f;
 		refreshPile(pile);
+	}
+
+	float Game::cardPoints(const Object& pile, const Object& card)
+	{
+		for (const auto& each : pile.pile.pointsEach)
+		{
+			if ((each.suit.empty() || each.suit == card.card.suitName) && (each.rank.empty() || each.rank == card.card.rankName)) { return each.points; }
+		}
+		return 0.0f;
+	}
+
+	const Object* Game::trickWinning(const Object& pile)
+	{
+		if (pile.pile.cards.empty()) { return nullptr; }
+		const Object* lead = cardAt(pile.pile.cards.front());
+		const Object* best = lead;
+		for (const int number : pile.pile.cards)
+		{
+			const Object* card = cardAt(number);
+			if (card && lead && best && card->card.suit == lead->card.suit && card->card.worths.back() > best->card.worths.back()) { best = card; }
+		}
+		return best;
 	}
 
 	bool Game::isWild(const PileRule& rule, const Object& card)
@@ -459,6 +490,12 @@ namespace xge
 		{
 			const Object* card = cardAt(number);
 			if (!card || !card->faceUp || card->card.worths.empty()) { continue; }
+			// <each>: what the first that matches it says, or nothing.
+			if (!pile.pile.pointsEach.empty())
+			{
+				total += cardPoints(pile, *card);
+				continue;
+			}
 			total += card->card.worths.front();
 			shown.push_back(card);
 		}
@@ -477,6 +514,17 @@ namespace xge
 		pile.points = total;
 		refreshBoundTexts(pile.name, "cards", pile.cardCount);
 		refreshBoundTexts(pile.name, "points", pile.points);
+
+		// A trick: the suit led, and who laid the card winning it.
+		if (pile.pile.takes.follow)
+		{
+			const Object* lead = pile.pile.cards.empty() ? nullptr : cardAt(pile.pile.cards.front());
+			const Object* best = trickWinning(pile);
+			pile.lead = lead ? static_cast<float>(lead->card.suit) : 0.0f;
+			pile.winner = best ? static_cast<float>(best->laidBy) : 0.0f;
+			refreshBoundTexts(pile.name, "lead", pile.lead);
+			refreshBoundTexts(pile.name, "winner", pile.winner);
+		}
 
 		// Scored piles, this one and those that score its cards with theirs,
 		// are scored again before the conditions are asked (scoreDuePiles):
@@ -850,7 +898,8 @@ namespace xge
 
 		for (Object& object : objects)
 		{
-			if (object.pile.is) { object.pile.cards.clear(); object.called = 0.0f; refreshPile(object); }
+			if (object.pile.is) { object.pile.cards.clear(); object.pile.broken.clear(); object.called = 0.0f; refreshPile(object); }
+			if (object.isCard) { object.laidBy = 0; }
 			if (object.hand.is)
 			{
 				object.hand.held.clear();
@@ -1027,13 +1076,41 @@ namespace xge
 	}
 
 	// Whether `cards` (the lowest first) may go on the pile, by its <takes>.
-	bool Game::pileTakes(Object& pile, const std::vector<int>& cards)
+	bool Game::pileTakes(Object& pile, const std::vector<int>& cards, const Object* holder)
 	{
 		const PileRule& rule = pile.pile.takes;
 		if (!rule.given || cards.empty()) { return false; }
 		if (rule.one && cards.size() > 1) { return false; }
 		const Object* first = cardAt(cards.front());
 		if (!first) { return false; }
+		// A trick: what the hand laying holds (its own pile) decides.
+		if (rule.follow)
+		{
+			const auto holds = [&](const auto& test)
+			{
+				if (!holder) { return false; }
+				for (const int number : holder->pile.cards)
+				{
+					const Object* card = cardAt(number);
+					if (card && number != first->cardNumber && test(*card)) { return true; }
+				}
+				return false;
+			};
+			if (pile.pile.cards.empty())
+			{
+				const auto unbroken = [&](const Object& card)
+				{
+					return std::find(rule.breakSuits.begin(), rule.breakSuits.end(), card.card.suitName) != rule.breakSuits.end()
+						&& std::find(pile.pile.broken.begin(), pile.pile.broken.end(), card.card.suit) == pile.pile.broken.end();
+				};
+				// A suit not yet broken leads only when the hand holds nothing else.
+				if (unbroken(*first) && holds([&](const Object& card) { return !unbroken(card); })) { return false; }
+			}
+			else if (const Object* lead = cardAt(pile.pile.cards.front()); lead && first->card.suit != lead->card.suit)
+			{
+				if (holds([&](const Object& card) { return card.card.suit == lead->card.suit; })) { return false; }
+			}
+		}
 		if (pile.pile.cards.empty())
 		{
 			if (!rule.emptyRanks.empty() && std::find(rule.emptyRanks.begin(), rule.emptyRanks.end(), first->card.rankName) == rule.emptyRanks.end()) { return false; }
@@ -1113,7 +1190,11 @@ namespace xge
 	// they came from shows its top.
 	void Game::layHeld(Object& hand, Object& pile)
 	{
-		for (const int number : hand.hand.held) { putOnPile(pile, number); }
+		for (const int number : hand.hand.held)
+		{
+			if (Object* card = cardAt(number)) { card->laidBy = hand.hand.seat; }
+			putOnPile(pile, number);
+		}
 		hand.hand.held.clear();
 		if (Object* from = pileNamed(hand.hand.from); from && from != &pile) { showTop(*from); }
 		hand.hand.from.clear();
@@ -1157,7 +1238,7 @@ namespace xge
 				layHeld(hand, *pile);
 				return true;
 			}
-			if (pileTakes(*pile, hand.hand.held))
+			if (pileTakes(*pile, hand.hand.held, hand.hand.own.empty() ? nullptr : pileNamed(hand.hand.own)))
 			{
 				layHeld(hand, *pile);
 				return true;
@@ -1265,6 +1346,19 @@ namespace xge
 		return turned;
 	}
 
+	bool Game::collectCards(const std::string& fromName, const std::string& intoName)
+	{
+		Object* from = pileNamed(fromName);
+		Object* into = pileNamed(intoName);
+		if (!from || !into || from == into || from->pile.cards.empty()) { return false; }
+		const std::vector<int> cards = std::move(from->pile.cards);
+		from->pile.cards.clear();
+		refreshPile(*from);
+		for (const int card : cards) { putOnPile(*into, card); }
+		layOutCards();
+		return true;
+	}
+
 	bool Game::gatherCards(const std::string& name)
 	{
 		Object* into = pileNamed(name);
@@ -1276,6 +1370,7 @@ namespace xge
 			{
 				cards.insert(cards.end(), object.pile.cards.begin(), object.pile.cards.end());
 				object.pile.cards.clear();
+				object.pile.broken.clear();
 				object.called = 0.0f;
 				refreshPile(object);
 			}
@@ -1293,9 +1388,14 @@ namespace xge
 			const std::size_t j = std::min(i - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(i))));
 			std::swap(cards[i - 1], cards[j]);
 		}
+		into->pile.broken.clear();
 		for (const int card : cards)
 		{
-			if (Object* each = cardAt(card)) { turnCard(*each, false); }
+			if (Object* each = cardAt(card))
+			{
+				turnCard(*each, false);
+				each->laidBy = 0;
+			}
 			putOnPile(*into, card);
 		}
 		into->called = 0.0f;
@@ -1471,6 +1571,57 @@ namespace xge
 	// hand at what it will do, then press. Calling, the suit it holds most
 	// of; else the card that goes somewhere, a wild one last, from the suit
 	// it holds most of and the highest; else a draw from the stock.
+	int Game::playToTrick(Object& trick, const Object& own, bool avoid)
+	{
+		int players = 0;
+		for (const Object& object : objects)
+		{
+			if (object.hand.is && object.hand.seat > 0 && isShown(object)) { ++players; }
+		}
+		const bool last = static_cast<int>(trick.pile.cards.size()) + 1 >= std::max(players, 2);
+		const Object* winning = trickWinning(trick);
+		const auto worth = [](const Object& card) { return card.card.worths.empty() ? static_cast<float>(card.card.rank) : card.card.worths.back(); };
+
+		std::vector<std::pair<int, const Object*>> legal;
+		for (int i = 0; i < static_cast<int>(own.pile.cards.size()); ++i)
+		{
+			const int number = own.pile.cards[static_cast<std::size_t>(i)];
+			const Object* card = cardAt(number);
+			if (card && pileTakes(trick, { number }, &own)) { legal.emplace_back(i, card); }
+		}
+		if (legal.empty()) { return -1; }
+		const bool following = winning && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return each.second->card.suit == winning->card.suit; });
+		const bool ducking = following && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return worth(*each.second) < worth(*winning); });
+
+		// How much each card is wanted: the highest is played.
+		const auto wanted = [&](const Object& card)
+		{
+			const float value = worth(card);
+			const float points = cardPoints(trick, card);
+			if (!winning) { return avoid ? -(points * 100.0f + value) : value; }       // leading
+			if (!following) { return avoid ? points * 100.0f + value : -value; }       // none of the suit led: shed
+			if (avoid)
+			{
+				if (ducking) { return value < worth(*winning) ? value : -1000.0f - value; }  // the highest that still loses
+				return last ? value : -value;                                               // taking it anyway
+			}
+			const bool beats = value > worth(*winning);
+			return beats ? 1000.0f - value : -value;                                        // the lowest that wins, else the lowest
+		};
+		int best = legal.front().first;
+		float most = wanted(*legal.front().second);
+		for (const auto& [i, card] : legal)
+		{
+			const float each = wanted(*card);
+			if (each > most)
+			{
+				most = each;
+				best = i;
+			}
+		}
+		return best;
+	}
+
 	std::optional<KeyCode> Game::thinkCards(const CmdThink& think, Object& hand)
 	{
 		Object* own = hand.hand.own.empty() ? nullptr : pileNamed(hand.hand.own);
@@ -1499,7 +1650,15 @@ namespace xge
 		Object* aim = nullptr;
 		int index = -1;
 		const bool calling = std::any_of(targets.begin(), targets.end(), [](const Object* pile) { return pile->calling > 0.0f; });
-		if (calling)
+		const auto trick = std::find_if(targets.begin(), targets.end(), [](const Object* pile) { return pile->pile.takes.follow; });
+		if (trick != targets.end() && !calling)
+		{
+			// A trick: of the cards it takes, the one that best keeps out
+			// of it (<avoid />) or takes it.
+			index = playToTrick(**trick, *own, think.avoid);
+			if (index >= 0) { aim = own; }
+		}
+		else if (calling)
 		{
 			int most = 0;
 			for (int i = 0; i < static_cast<int>(own->pile.cards.size()); ++i)
@@ -1523,7 +1682,7 @@ namespace xge
 				if (!card) { continue; }
 				for (Object* pile : targets)
 				{
-					if (!pileTakes(*pile, { number })) { continue; }
+					if (!pileTakes(*pile, { number }, own)) { continue; }
 					const float worth = isWild(pile->pile.takes, *card) ? 1.0f : 100.0f + static_cast<float>(inSuit[card->card.suit] * 20 + card->card.rank);
 					if (worth > best)
 					{

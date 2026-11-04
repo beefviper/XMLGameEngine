@@ -1,0 +1,1554 @@
+<!-- hearts.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Nov 4, 2026 -->
+
+<!--
+  Hearts, the trick-taking game: you and three computer players (west,
+  north and east), one pack of 52 cards, the ace high.
+
+  All the cards are dealt, thirteen each. A player leads any card, and
+  each in turn (clockwise: you, west, north, east) plays one: a card of the
+  suit led if they have one, else anything. The highest card of the suit
+  led takes the trick, and whoever took it leads the next. Hearts may not
+  be led until a heart has been played on a trick (hearts are broken),
+  unless the leader holds nothing else. Each heart taken is a point, the
+  queen of spades thirteen; points are bad. Take all of them (every heart
+  and the queen, shooting the moon) and the other three get 26 instead.
+  After a hand, once anyone has 100 or more, the lowest score wins.
+  Who leads the first trick goes round the table each hand.
+
+  A and D or the arrows pick a card, Space plays it; or click a card.
+  Space after a hand deals the next. P or Escape pauses.
+
+  How it is written:
+  * The deck is Klondike's, its ace <worth>14</worth>: the highest card,
+    and last in a sorted hand.
+  * The trick is a pile that <takes> what <follow />s the suit led and
+    <breaks> hearts; its live numbers `lead` (the suit led) and `winner`
+    (the <seat> of the hand that laid the card taking it), and `points`
+    by <each> heart and the queen of spades.
+  * Each player is a hand with a pile of its own and a <seat>; the
+    computer's three <think> with <avoid />: they keep out of tricks, and
+    shed points when they cannot follow.
+  * A full trick waits a moment (a timer on the table's look), then is
+    <collect>ed into the pile in the corner, its points to the taker.
+  * The table's `phase`: 0 playing, 1 a full trick showing, 2 taking it,
+    3 the hand over, 4 shuffling; `turn`, the seat to play; `first`, who
+    leads the hand's first trick; `tricks`, how many taken.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Hearts">
+    <width>880</width>
+    <height>840</height>
+    <background>color.darkgreen</background>
+  </window>
+  <variables>
+    <variable name="cardwidth">96</variable>
+    <variable name="cardheight">140</variable>
+    <variable name="northrow">16</variable>
+    <variable name="siderow">196</variable>
+    <variable name="trickrow">300</variable>
+    <variable name="yours">676</variable>
+  </variables>
+  <sounds>
+    <sound name="card" wave="noise"><note pitch="C6">0.03</note></sound>
+    <sound name="deal" wave="noise"><note pitch="G5">0.02</note><note pitch="C6">0.02</note></sound>
+    <sound name="shuffle" wave="noise"><note pitch="C6">0.02</note><rest>0.02</rest><note pitch="D6">0.02</note><rest>0.02</rest><note pitch="C6">0.02</note><rest>0.02</rest><note pitch="D6">0.02</note></sound>
+    <sound name="take"><note pitch="E5">0.06</note><note pitch="C5">0.1</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+    <sound name="lose">
+      <note pitch="G4">0.15</note>
+      <note pitch="E4">0.15</note>
+      <note pitch="C4">0.4</note>
+    </sound>
+  </sounds>
+  <styles>
+    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="prompt"><size>32</size></style>
+    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="note"><size>24</size><color>color.white</color></style>
+  </styles>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>HEARTS</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 190</centered></y></position>
+        </object>
+        <object name="help1">
+          <sprite><text style="help"><content>follow the suit led if you can; the highest card of it takes the trick.</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+        </object>
+        <object name="help2">
+          <sprite><text style="help"><content>each heart taken is a point, the queen of spades thirteen: keep them low.</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+        <object name="help3">
+          <sprite><text style="help"><content>take them all and the others get 26. at 100, the lowest score wins.</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
+        </object>
+        <object name="help4">
+          <sprite><text style="help"><content>a d or the arrows pick a card, spacebar plays it, or click a card</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 0</centered></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <!-- the pack: Klondike's, the ace high -->
+        <deck name="cards" pile="stock">
+          <face><width>96</width><height>140</height><scale>1</scale><color>color.white</color><edge>color.grey</edge></face>
+          <back>
+            <color>color.darkblue</color>
+            <edge>color.lightgrey</edge>
+            <pattern>
+              <row>*.........*.</row>
+              <row>.*.......*..</row>
+              <row>..*.....*...</row>
+              <row>...*...*....</row>
+              <row>....*.*.....</row>
+              <row>.....*......</row>
+              <row>....*.*.....</row>
+              <row>...*...*....</row>
+              <row>..*.....*...</row>
+              <row>.*.......*..</row>
+              <row>*.........*.</row>
+              <row>............</row>
+            </pattern>
+          </back>
+          <!-- the colours of the court pictures -->
+          <color char="y">color.gold</color>
+          <color char="s">color.peach</color>
+          <color char="k">color.black</color>
+          <color char="n">color.brown</color>
+          <color char="r">color.red</color>
+          <color char="b">color.blue</color>
+          <color char="w">color.white</color>
+          <color char="g">color.lightgrey</color>
+          <color char="e">color.green</color>
+
+          <!-- spades: the pip, the corner pip and the ace's -->
+          <suit name="spades">
+            <color>color.black</color>
+            <row>........*........</row>
+            <row>.......***.......</row>
+            <row>......*****......</row>
+            <row>.....*******.....</row>
+            <row>....*********....</row>
+            <row>...***********...</row>
+            <row>..*************..</row>
+            <row>.***************.</row>
+            <row>*****************</row>
+            <row>*****************</row>
+            <row>*****************</row>
+            <row>*****************</row>
+            <row>.***************.</row>
+            <row>..****..*..****..</row>
+            <row>.......***.......</row>
+            <row>.......***.......</row>
+            <row>......*****......</row>
+            <row>......*****......</row>
+            <index>
+              <row>.....*.....</row>
+              <row>....***....</row>
+              <row>...*****...</row>
+              <row>..*******..</row>
+              <row>.*********.</row>
+              <row>***********</row>
+              <row>***********</row>
+              <row>***********</row>
+              <row>.*********.</row>
+              <row>.....*.....</row>
+              <row>....***....</row>
+              <row>....***....</row>
+            </index>
+            <large>
+              <row>....................*....................</row>
+              <row>...................**....................</row>
+              <row>...................***...................</row>
+              <row>..................*****..................</row>
+              <row>.................*******.................</row>
+              <row>................*********................</row>
+              <row>...............***********...............</row>
+              <row>..............*************..............</row>
+              <row>.............***************.............</row>
+              <row>............*****************............</row>
+              <row>...........*******************...........</row>
+              <row>..........*********************..........</row>
+              <row>........*************************........</row>
+              <row>.......***************************.......</row>
+              <row>......*****************************......</row>
+              <row>.....*******************************.....</row>
+              <row>....*********************************....</row>
+              <row>...***********************************...</row>
+              <row>...***********************************...</row>
+              <row>..*************************************..</row>
+              <row>.***************************************.</row>
+              <row>.***************************************.</row>
+              <row>****************************************.</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>.***************************************.</row>
+              <row>.***************************************.</row>
+              <row>..*************************************..</row>
+              <row>...***************.***.***************...</row>
+              <row>....*************..***..*************....</row>
+              <row>......*********....***....*********......</row>
+              <row>........****......****.......***.........</row>
+              <row>..................*****..................</row>
+              <row>..................*****..................</row>
+              <row>.................*******.................</row>
+              <row>.................*******.................</row>
+              <row>................********.................</row>
+              <row>................*********................</row>
+              <row>...............***********...............</row>
+              <row>...............***********...............</row>
+              <row>..............*************..............</row>
+              <row>.............***************.............</row>
+            </large>
+          </suit>
+
+          <!-- hearts: the pip, the corner pip and the ace's -->
+          <suit name="hearts">
+            <color>color.red</color>
+            <row>...***.....***...</row>
+            <row>.******...******.</row>
+            <row>.*******.*******.</row>
+            <row>*****************</row>
+            <row>*****************</row>
+            <row>*****************</row>
+            <row>*****************</row>
+            <row>.***************.</row>
+            <row>.***************.</row>
+            <row>..*************..</row>
+            <row>...***********...</row>
+            <row>....*********....</row>
+            <row>.....*******.....</row>
+            <row>......*****......</row>
+            <row>.......***.......</row>
+            <row>.......***.......</row>
+            <row>........*........</row>
+            <row>.................</row>
+            <index>
+              <row>.***...***.</row>
+              <row>*****.*****</row>
+              <row>***********</row>
+              <row>***********</row>
+              <row>***********</row>
+              <row>.*********.</row>
+              <row>.*********.</row>
+              <row>..*******..</row>
+              <row>...*****...</row>
+              <row>....***....</row>
+              <row>.....*.....</row>
+              <row>...........</row>
+            </index>
+            <large>
+              <row>........*****...............*****........</row>
+              <row>......*********...........*********......</row>
+              <row>....************.........************....</row>
+              <row>...**************.......**************...</row>
+              <row>..****************.....***************...</row>
+              <row>..*****************...*****************..</row>
+              <row>.******************...******************.</row>
+              <row>.*******************.*******************.</row>
+              <row>.*******************.*******************.</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>****************************************.</row>
+              <row>.***************************************.</row>
+              <row>.***************************************.</row>
+              <row>..*************************************..</row>
+              <row>..*************************************..</row>
+              <row>...***********************************...</row>
+              <row>...***********************************...</row>
+              <row>....*********************************....</row>
+              <row>.....*******************************.....</row>
+              <row>.....*******************************.....</row>
+              <row>......*****************************......</row>
+              <row>.......***************************.......</row>
+              <row>........*************************........</row>
+              <row>.........***********************.........</row>
+              <row>..........*********************..........</row>
+              <row>...........*******************...........</row>
+              <row>............*****************............</row>
+              <row>.............***************.............</row>
+              <row>.............**************..............</row>
+              <row>..............*************..............</row>
+              <row>...............***********...............</row>
+              <row>................*********................</row>
+              <row>.................*******.................</row>
+              <row>..................*****..................</row>
+              <row>..................*****..................</row>
+              <row>...................***...................</row>
+              <row>...................***...................</row>
+              <row>....................*....................</row>
+              <row>....................*....................</row>
+              <row>.........................................</row>
+            </large>
+          </suit>
+
+          <!-- clubs: the pip, the corner pip and the ace's -->
+          <suit name="clubs">
+            <color>color.black</color>
+            <row>.......***.......</row>
+            <row>.....*******.....</row>
+            <row>.....*******.....</row>
+            <row>.....*******.....</row>
+            <row>.....*******.....</row>
+            <row>...***********...</row>
+            <row>.***************.</row>
+            <row>*****************</row>
+            <row>*****************</row>
+            <row>*****************</row>
+            <row>*****************</row>
+            <row>.******.*.******.</row>
+            <row>..****..*..****..</row>
+            <row>........*........</row>
+            <row>.......***.......</row>
+            <row>.......***.......</row>
+            <row>......*****......</row>
+            <row>......*****......</row>
+            <index>
+              <row>....***....</row>
+              <row>...*****...</row>
+              <row>...*****...</row>
+              <row>...*****...</row>
+              <row>.*********.</row>
+              <row>***********</row>
+              <row>***********</row>
+              <row>***********</row>
+              <row>.***.*.***.</row>
+              <row>.....*.....</row>
+              <row>....***....</row>
+              <row>....***....</row>
+            </index>
+            <large>
+              <row>..................*****..................</row>
+              <row>................*********................</row>
+              <row>..............*************..............</row>
+              <row>.............***************.............</row>
+              <row>.............***************.............</row>
+              <row>............*****************............</row>
+              <row>............*****************............</row>
+              <row>...........*******************...........</row>
+              <row>...........*******************...........</row>
+              <row>...........*******************...........</row>
+              <row>...........*******************...........</row>
+              <row>...........*******************...........</row>
+              <row>...........*******************...........</row>
+              <row>............*****************............</row>
+              <row>......*****************************......</row>
+              <row>....*********************************....</row>
+              <row>...***********************************...</row>
+              <row>..*************************************..</row>
+              <row>.***************************************.</row>
+              <row>.***************************************.</row>
+              <row>.***************************************.</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>*****************************************</row>
+              <row>******************.***.******************</row>
+              <row>.*****************.***.*****************.</row>
+              <row>.*****************.***.*****************.</row>
+              <row>..***************..***..***************..</row>
+              <row>...*************...***...*************...</row>
+              <row>....***********....***....***********....</row>
+              <row>.....*********.....***.....*********.....</row>
+              <row>........***.......*****.......***........</row>
+              <row>..................*****..................</row>
+              <row>..................*****..................</row>
+              <row>..................*****..................</row>
+              <row>.................*******.................</row>
+              <row>.................*******.................</row>
+              <row>.................*******.................</row>
+              <row>................*********................</row>
+              <row>................*********................</row>
+              <row>...............***********...............</row>
+              <row>..............************...............</row>
+              <row>..............*************..............</row>
+              <row>.............***************.............</row>
+            </large>
+          </suit>
+
+          <!-- diamonds: the pip, the corner pip and the ace's -->
+          <suit name="diamonds">
+            <color>color.red</color>
+            <row>......*......</row>
+            <row>.....***.....</row>
+            <row>.....***.....</row>
+            <row>....*****....</row>
+            <row>...*******...</row>
+            <row>...*******...</row>
+            <row>..*********..</row>
+            <row>.***********.</row>
+            <row>*************</row>
+            <row>*************</row>
+            <row>.***********.</row>
+            <row>..*********..</row>
+            <row>...*******...</row>
+            <row>...*******...</row>
+            <row>....*****....</row>
+            <row>.....***.....</row>
+            <row>.....***.....</row>
+            <row>......*......</row>
+            <index>
+              <row>....*....</row>
+              <row>...***...</row>
+              <row>...***...</row>
+              <row>..*****..</row>
+              <row>.*******.</row>
+              <row>*********</row>
+              <row>*********</row>
+              <row>.*******.</row>
+              <row>..*****..</row>
+              <row>...***...</row>
+              <row>...***...</row>
+              <row>....*....</row>
+            </index>
+            <large>
+              <row>................*................</row>
+              <row>...............***...............</row>
+              <row>...............***...............</row>
+              <row>..............*****..............</row>
+              <row>.............*******.............</row>
+              <row>.............*******.............</row>
+              <row>............*********............</row>
+              <row>...........***********...........</row>
+              <row>..........*************..........</row>
+              <row>..........*************..........</row>
+              <row>.........***************.........</row>
+              <row>........*****************........</row>
+              <row>........*****************........</row>
+              <row>.......*******************.......</row>
+              <row>......*********************......</row>
+              <row>.....***********************.....</row>
+              <row>.....***********************.....</row>
+              <row>....*************************....</row>
+              <row>...***************************...</row>
+              <row>...***************************...</row>
+              <row>..*****************************..</row>
+              <row>.*******************************.</row>
+              <row>*********************************</row>
+              <row>*********************************</row>
+              <row>.*******************************.</row>
+              <row>..*****************************..</row>
+              <row>...***************************...</row>
+              <row>...***************************...</row>
+              <row>....*************************....</row>
+              <row>.....***********************.....</row>
+              <row>.....***********************.....</row>
+              <row>......*********************......</row>
+              <row>.......*******************.......</row>
+              <row>........*****************........</row>
+              <row>........*****************........</row>
+              <row>.........***************.........</row>
+              <row>..........*************..........</row>
+              <row>..........*************..........</row>
+              <row>...........***********...........</row>
+              <row>............*********............</row>
+              <row>.............*******.............</row>
+              <row>.............*******.............</row>
+              <row>..............*****..............</row>
+              <row>...............***...............</row>
+              <row>...............***...............</row>
+              <row>................*................</row>
+            </large>
+          </suit>
+
+          <!-- the ranks, lowest first: the corner index, then the pips on a grid of three columns and thirteen
+               rows ('*' a pip, 'v' a pip turned round, '@' the ace's big one), or the court picture's top half -->
+          <rank name="A">
+            <index>
+              <row>...***...</row>
+              <row>...***...</row>
+              <row>..**.**..</row>
+              <row>..**.**..</row>
+              <row>..**.**..</row>
+              <row>.**...**.</row>
+              <row>.**...**.</row>
+              <row>.**...**.</row>
+              <row>.*******.</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+            </index>
+            <pips>
+              <row>@</row>
+            </pips>
+            <worth>14</worth>
+          </rank>
+          <rank name="2">
+            <index>
+              <row>..*****..</row>
+              <row>.**...**.</row>
+              <row>**.....**</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>......**.</row>
+              <row>.....**..</row>
+              <row>....**...</row>
+              <row>...**....</row>
+              <row>..**.....</row>
+              <row>.**......</row>
+              <row>**.......</row>
+              <row>**.......</row>
+              <row>**.......</row>
+              <row>*********</row>
+            </index>
+            <pips>
+              <row>.*.</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>.v.</row>
+            </pips>
+          </rank>
+          <rank name="3">
+            <index>
+              <row>.******..</row>
+              <row>**....**.</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>......**.</row>
+              <row>..*****..</row>
+              <row>......**.</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>**.....**</row>
+              <row>.**...**.</row>
+              <row>..*****..</row>
+            </index>
+            <pips>
+              <row>.*.</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>.*.</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>.v.</row>
+            </pips>
+          </rank>
+          <rank name="4">
+            <index>
+              <row>......**.</row>
+              <row>.....***.</row>
+              <row>....****.</row>
+              <row>...**.**.</row>
+              <row>...**.**.</row>
+              <row>..**..**.</row>
+              <row>..**..**.</row>
+              <row>.**...**.</row>
+              <row>**....**.</row>
+              <row>*********</row>
+              <row>*********</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>......**.</row>
+            </index>
+            <pips>
+              <row>*.*</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>v.v</row>
+            </pips>
+          </rank>
+          <rank name="5">
+            <index>
+              <row>*********</row>
+              <row>**.......</row>
+              <row>**.......</row>
+              <row>**.......</row>
+              <row>**.......</row>
+              <row>*******..</row>
+              <row>......**.</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>**.....**</row>
+              <row>.**...**.</row>
+              <row>..*****..</row>
+            </index>
+            <pips>
+              <row>*.*</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>.*.</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>v.v</row>
+            </pips>
+          </rank>
+          <rank name="6">
+            <index>
+              <row>...*****.</row>
+              <row>..**.....</row>
+              <row>.**......</row>
+              <row>**.......</row>
+              <row>**.......</row>
+              <row>**.****..</row>
+              <row>***...**.</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>.**...**.</row>
+              <row>..*****..</row>
+            </index>
+            <pips>
+              <row>*.*</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>*.*</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>v.v</row>
+            </pips>
+          </rank>
+          <rank name="7">
+            <index>
+              <row>*********</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>.....**..</row>
+              <row>.....**..</row>
+              <row>....**...</row>
+              <row>....**...</row>
+              <row>...**....</row>
+              <row>...**....</row>
+              <row>...**....</row>
+              <row>...**....</row>
+              <row>...**....</row>
+              <row>...**....</row>
+            </index>
+            <pips>
+              <row>*.*</row>
+              <row>...</row>
+              <row>...</row>
+              <row>.*.</row>
+              <row>...</row>
+              <row>...</row>
+              <row>*.*</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>v.v</row>
+            </pips>
+          </rank>
+          <rank name="8">
+            <index>
+              <row>..*****..</row>
+              <row>.**...**.</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>.**...**.</row>
+              <row>..*****..</row>
+              <row>.**...**.</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>.**...**.</row>
+              <row>..*****..</row>
+            </index>
+            <pips>
+              <row>*.*</row>
+              <row>...</row>
+              <row>...</row>
+              <row>.*.</row>
+              <row>...</row>
+              <row>...</row>
+              <row>*.*</row>
+              <row>...</row>
+              <row>...</row>
+              <row>.v.</row>
+              <row>...</row>
+              <row>...</row>
+              <row>v.v</row>
+            </pips>
+          </rank>
+          <rank name="9">
+            <index>
+              <row>..*****..</row>
+              <row>.**...**.</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>.**...***</row>
+              <row>..****.**</row>
+              <row>.......**</row>
+              <row>.......**</row>
+              <row>......**.</row>
+              <row>.....**..</row>
+              <row>....**...</row>
+              <row>.****....</row>
+            </index>
+            <pips>
+              <row>*.*</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>*.*</row>
+              <row>...</row>
+              <row>.*.</row>
+              <row>...</row>
+              <row>v.v</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>v.v</row>
+            </pips>
+          </rank>
+          <rank name="10">
+            <index>
+              <row>..**...****..</row>
+              <row>.***..**..**.</row>
+              <row>****.**....**</row>
+              <row>..**.**....**</row>
+              <row>..**.**....**</row>
+              <row>..**.**....**</row>
+              <row>..**.**....**</row>
+              <row>..**.**....**</row>
+              <row>..**.**....**</row>
+              <row>..**.**....**</row>
+              <row>..**.**....**</row>
+              <row>..**.**....**</row>
+              <row>..**.**....**</row>
+              <row>..**..**..**.</row>
+              <row>..**...****..</row>
+            </index>
+            <pips>
+              <row>*.*</row>
+              <row>...</row>
+              <row>.*.</row>
+              <row>...</row>
+              <row>*.*</row>
+              <row>...</row>
+              <row>...</row>
+              <row>...</row>
+              <row>v.v</row>
+              <row>...</row>
+              <row>.v.</row>
+              <row>...</row>
+              <row>v.v</row>
+            </pips>
+          </rank>
+          <rank name="J">
+            <index>
+              <row>....*****</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>......**.</row>
+              <row>**....**.</row>
+              <row>**....**.</row>
+              <row>.**..**..</row>
+              <row>..****...</row>
+            </index>
+            <picture>
+              <half />
+              <row>************************************rrr********</row>
+              <row>*...................................rrr.......*</row>
+              <row>*...................................rrr.......*</row>
+              <row>*.....gg..........................rrrr........*</row>
+              <row>*.....gg..........................rrrr........*</row>
+              <row>*.....gg..........................rrrr........*</row>
+              <row>*...ggggg........................rrr..........*</row>
+              <row>*...ggggg........bbbbbbbbbbbb....rrr..........*</row>
+              <row>*...ggggg......bbbbbbbbbbbbbbbbb.rrr..........*</row>
+              <row>*..gggggg....bbbbbbbbbbbbbbbbbbrrrr...........*</row>
+              <row>*..gggggg...bbbbbbbbbbbbbbbbbbbrrrr...........*</row>
+              <row>*...ggggg...bbbbbbbbbbbbbbbbbbbrrrr...........*</row>
+              <row>*...ggggg..bbbbbbbbbbbbbbbbbbbbbbbb...........*</row>
+              <row>*...ggggg.yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
+              <row>*.....nn..yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
+              <row>*.....nn..yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
+              <row>*.....nn..yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
+              <row>*.....nn......nnbbbbbbbbbbbbbbbn..............*</row>
+              <row>*.....nn......nnnsssbbbbbbbsssnnn.............*</row>
+              <row>*.....nn.....nnnssnnnssssnnnnsnnn.............*</row>
+              <row>*.....nn.....nnnssnnnssssnnnnsnnn.............*</row>
+              <row>*.....nn.....nnnssskksssskkssssnnn............*</row>
+              <row>*.....nn.....nnnssskksssskkssssnnn............*</row>
+              <row>*.....nn.....nnnsssssssssssssssnnn............*</row>
+              <row>*.....nn.....nnnssssssnnsssssssnnn............*</row>
+              <row>*.....nn.....nnnssssssnnsssssssnnn............*</row>
+              <row>*.....nn.....nnnssssssssssssssnnn.............*</row>
+              <row>*.....nn.....nnnnssssrrrrrssssnnn.............*</row>
+              <row>*.....nn......nnnssssrrrrrsssnnnn.............*</row>
+              <row>*.....nn......nnnnsssssssssssnnn..............*</row>
+              <row>*.....nn.......nnnnsssssssssnnnn..............*</row>
+              <row>*.....nn........nnnnssssssnnnnn...............*</row>
+              <row>*.....nn.........nnnnnnnnnnnnn................*</row>
+              <row>*.....nn..........nnnnnnnnnnn.................*</row>
+              <row>*.....nn............nnnnnnn...................*</row>
+              <row>*.....nn......................................*</row>
+              <row>*.....nn......................................*</row>
+              <row>*.....nn..yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
+              <row>*.....nn..yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
+              <row>*.....nn.byyyyyyyyyyyyyyyyyyyyyyyyyy**........*</row>
+              <row>*.....nn*byyyyyyyyyyyyyyyyyyyyyyyyyy*****.....*</row>
+              <row>*.....nn*bbb***bbb***bbb***bbb***********.....*</row>
+              <row>*....*nnb***bbb***bbb***bbb***************....*</row>
+              <row>*....*nnb***bbb***bbb***bbb***************....*</row>
+              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
+              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
+              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
+              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
+              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
+              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
+              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
+              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
+              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
+              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
+              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
+              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
+              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
+              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
+              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
+              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
+              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
+              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
+              <row>***********************************************</row>
+            </picture>
+          </rank>
+          <rank name="Q">
+            <index>
+              <row>..*****..</row>
+              <row>.**...**.</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**..**.**</row>
+              <row>**...****</row>
+              <row>.**...**.</row>
+              <row>..*****.*</row>
+              <row>.......**</row>
+            </index>
+            <picture>
+              <half />
+              <row>***********************************************</row>
+              <row>*.............................................*</row>
+              <row>*.............................................*</row>
+              <row>*.............................................*</row>
+              <row>*............ww...ww..ww...ww..ww.............*</row>
+              <row>*............ww...ww..ww...ww..ww.............*</row>
+              <row>*............yy...yy..yy...yy..yy.............*</row>
+              <row>*............yy...yy..yy...yy..yy.............*</row>
+              <row>*............yy...yy..yy...yy..yy.............*</row>
+              <row>*............yyyyyyyyyyyyyyyyyyyy.............*</row>
+              <row>*............yyyyybbyyrryyybbyyyy.............*</row>
+              <row>*............yyyyybbyyrryyybbyyyy...rrrrr.....*</row>
+              <row>*............yyyyyyyyyyyyyyyyyyyy..rrrrrrr....*</row>
+              <row>*............yyyyyyyyyyyyyyyyyyyy..rryyrrr....*</row>
+              <row>*..............yyyyyyssssyyyyyy....rryyrrr....*</row>
+              <row>*.............yyyyyssssssssyyyyy...rrrrrrr....*</row>
+              <row>*............yyyyyssssssssssyyyyy..rrrrrr.....*</row>
+              <row>*............yyyyssssssssssssyyyyy..rrrr......*</row>
+              <row>*...........yyyyysssssssssssssyyyy...ee.......*</row>
+              <row>*...........yyyyssnnnssssnnnnsyyyyy..ee.......*</row>
+              <row>*..........yyyyyssnnnssssnnnnsyyyyy..ee.......*</row>
+              <row>*..........yyyyyssskksssskkssssyyyyy.ee.......*</row>
+              <row>*.........yyyyyyssskksssskkssssyyyyy.ee.......*</row>
+              <row>*.........yyyyyysssssssssssssssyyyyy.ee.......*</row>
+              <row>*.........yyyyyyssssssnnsssssssyyyyy.ee.......*</row>
+              <row>*.........yyyyyyssssssnnsssssssyyyyyyee.......*</row>
+              <row>*.........yyyyyyssssssssssssssyyyyyyyee.......*</row>
+              <row>*.........yyyyyyyssssrrrrrssssyyyyyyyee.......*</row>
+              <row>*.........yyyyyyyssssrrrrrsssyyyyyyyyee.......*</row>
+              <row>*.........yyyyyyyysssssssssssyyyyyyyyee.......*</row>
+              <row>*.........yyyyyyyyysssssssssyyyyyyeeeee.......*</row>
+              <row>*.........yyyyyyyyyyssssssyyyyyyyyeeeee.......*</row>
+              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
+              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
+              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
+              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
+              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.eeeee....*</row>
+              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.eeeee....*</row>
+              <row>*.........yyyyyyyyyyyyyyyyyyyyyyy.yy.ee.......*</row>
+              <row>*.........yyyyyyyyyyyyyyyyyyyyyyy.yy.ee.......*</row>
+              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
+              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
+              <row>*........*yyyyryyyyyyyyyyyyyyyyrryyy*ee.......*</row>
+              <row>*.....****yyyyryyyryyyyyyyyrryyrryyy*ee**.....*</row>
+              <row>*.....****yyyy********************yy*ee**.....*</row>
+              <row>*....********************************ee***....*</row>
+              <row>*...yy****yy****yy****yy****yy****yy*ee*yy....*</row>
+              <row>*..*yy****yy****yy****yy****yy****yy*ee*yy**..*</row>
+              <row>*..**********************************ee*****..*</row>
+              <row>*..**********************************ee*****..*</row>
+              <row>*..**********************************ee*****..*</row>
+              <row>*..****yy****yy****yy****yy****yy****yy****yy.*</row>
+              <row>*..****yy****yy****yy****yy****yy****yy****yy.*</row>
+              <row>*..*****************************************..*</row>
+              <row>*..*****************************************..*</row>
+              <row>*..*yy****yy****yy****yy****yy****yy****yy**..*</row>
+              <row>*..*yy****yy****yy****yy****yy****yy****yy**..*</row>
+              <row>*..*****************************************..*</row>
+              <row>*..*****************************************..*</row>
+              <row>*..*****************************************..*</row>
+              <row>*..****yy****yy****yy****yy****yy****yy****yy.*</row>
+              <row>*..****yy****yy****yy****yy****yy****yy****yy.*</row>
+              <row>***********************************************</row>
+            </picture>
+          </rank>
+          <rank name="K">
+            <index>
+              <row>**.....**</row>
+              <row>**....**.</row>
+              <row>**...**..</row>
+              <row>**..**...</row>
+              <row>**.**....</row>
+              <row>****.....</row>
+              <row>***......</row>
+              <row>****.....</row>
+              <row>**.**....</row>
+              <row>**..**...</row>
+              <row>**...**..</row>
+              <row>**....**.</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+              <row>**.....**</row>
+            </index>
+            <picture>
+              <half />
+              <row>***********************************************</row>
+              <row>*.............................................*</row>
+              <row>*.............................................*</row>
+              <row>*.............................................*</row>
+              <row>*.....................yy...............gww....*</row>
+              <row>*.....................yy...............gww....*</row>
+              <row>*...........yy........yy.........yy....gww....*</row>
+              <row>*...........yy..yy....yy....yy...yy....gww....*</row>
+              <row>*...........yy..yy....yy....yy...yy....gww....*</row>
+              <row>*...........yy..yy....yy....yy...yy....gww....*</row>
+              <row>*...........yyyyyyyyyyyyyyyyyyyyyyy....gww....*</row>
+              <row>*...........yyyyyyyyyyyyyyyyyyyyyyy....gww....*</row>
+              <row>*...........yyyrryyyyybbyyyyyyrryyy....gww....*</row>
+              <row>*...........yyyrryyyyybbyyyyyyrryyy....gww....*</row>
+              <row>*...........yyyyyyyyyyyyyyyyyyyyyyy....gww....*</row>
+              <row>*..............nnnnssssssssnnnnn.......gww....*</row>
+              <row>*.............nnnnssssssssssnnnnn......gww....*</row>
+              <row>*............nnnnssssssssssssnnnn......gww....*</row>
+              <row>*............nnnnsssssssssssssnnnn.....gww....*</row>
+              <row>*...........nnnnssnnnssssnnnnsnnnn.....gww....*</row>
+              <row>*...........nnnnssnnnssssnnnnsnnnnn....gww....*</row>
+              <row>*...........nnnnssskksssskkssssnnnn....gww....*</row>
+              <row>*..........nnnnnssskksssskkssssnnnn....gww....*</row>
+              <row>*..........nnnnnsssssssssssssssnnnn....gww....*</row>
+              <row>*..........nnnnnssssssnnsssssssnnnn....gww....*</row>
+              <row>*..........nnnnnssssssnnsssssssnnnn....gww....*</row>
+              <row>*..........nnnnnssssssssssssssnnnnn....gww....*</row>
+              <row>*...........nnnnnnnnnnnnnnnnnnnnnnn....gww....*</row>
+              <row>*...........nnnnnnnnnrrrrnnnnnnnnnn....gww....*</row>
+              <row>*...........nnnnnnnnnrrrrrnnnnnnnn.....gww....*</row>
+              <row>*...........nnnnnnnnnnnnnnnnnnnnnn.....gww....*</row>
+              <row>*............nnnnnnnnnnnnnnnnnnnnn.....gww....*</row>
+              <row>*............nnnnnnnnnnnnnnnnnnnn......gww....*</row>
+              <row>*.............nnnnnnnnnnnnnnnnnn.......gww....*</row>
+              <row>*..............nnnnnnnnnnnnnnnnn.......gww....*</row>
+              <row>*...............nnnnnnnnnnnnnnn........gww....*</row>
+              <row>*................nnnnnnnnnnnn..........gww....*</row>
+              <row>*..................nnnnnnnn............gww....*</row>
+              <row>*..................nnnnnnnn............gww....*</row>
+              <row>*.....kkwwwwkkwwwwkkwnnnnnwwwwkkwwwwkkwgww....*</row>
+              <row>*.....kkwkkwkkwkkwkkwnnnnnwkkwkkwkkwkkwgww....*</row>
+              <row>*.....wwwkkwwwwkkwwwwkkwwwwkkwwwwkkwwwwgww....*</row>
+              <row>*.....kkwwwwkkwwwwkkwwwwkkwwwwkkwwwwkkwgww....*</row>
+              <row>*....*kkwwwwkkwwwwkkwyyyyywwwwkkwwwwkkwgww....*</row>
+              <row>*....****************yyyyy*************gww....*</row>
+              <row>*..******************yyyyy**********yyyyyyyyy.*</row>
+              <row>*..******************yrryy**********yyynnnyyy.*</row>
+              <row>*..******************yrryy*************nnn**..*</row>
+              <row>*..******************yyyyy*************nnn**..*</row>
+              <row>*..******************yyyyy*************nnn**..*</row>
+              <row>*..******************yyyyy*************nnn**..*</row>
+              <row>*..******************yyyyy*************nnn**..*</row>
+              <row>*..******************yrryy*************nnn**..*</row>
+              <row>*..******************yrryy*************nnn**..*</row>
+              <row>*..******************yyyyy*************nnn**..*</row>
+              <row>*..******************yyyyy*************nnn**..*</row>
+              <row>*..******************yyyyy******************..*</row>
+              <row>*..******************yyyyy******************..*</row>
+              <row>*..******************yrryy******************..*</row>
+              <row>*..******************yrryy******************..*</row>
+              <row>*..******************yyyyy******************..*</row>
+              <row>*..******************yyyyy******************..*</row>
+              <row>***********************************************</row>
+            </picture>
+          </rank>
+        </deck>
+
+        <!-- the stock, top left: the deal comes from it, and every trick taken goes back onto it -->
+        <object name="stock" class="place">
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>24</x><y>northrow</y></position>
+          <pile faces="down"><deals>1</deals></pile>
+        </object>
+
+        <!-- the computer's cards, face down: west down the left, north along the top, east down the right -->
+        <object name="west" class="place">
+          <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>24</x><y>siderow</y></position>
+          <pile faces="down"><fan><hidden><y>24</y></hidden></fan><dealt>13</dealt><sorted /></pile>
+        </object>
+        <object name="north" class="place">
+          <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>window.width.center - cardwidth / 2 - 144</x><y>northrow</y></position>
+          <pile faces="down"><fan><hidden><x>24</x></hidden></fan><dealt>13</dealt><sorted /></pile>
+        </object>
+        <object name="east" class="place">
+          <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>window.width.center * 2 - cardwidth - 24</x><y>siderow</y></position>
+          <pile faces="down"><fan><hidden><y>24</y></hidden></fan><dealt>13</dealt><sorted /></pile>
+        </object>
+
+        <!-- your cards, face up along the bottom, in suit and rank order -->
+        <object name="mine" class="place">
+          <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>56</x><y>yours</y></position>
+          <pile faces="up"><fan><x>56</x><width>768</width></fan><dealt>13</dealt><sorted /><lift>16</lift></pile>
+        </object>
+
+        <!-- the trick: the suit led is followed if it can be; hearts lead only once broken; a heart a point, the queen of spades 13 -->
+        <object name="trick" class="place">
+          <sprite><rectangle><width>cardwidth + 3 * 64</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>window.width.center - cardwidth / 2 - 96</x><y>trickrow</y></position>
+          <pile faces="up">
+            <fan><x>64</x></fan>
+            <takes><follow /><breaks><suit>hearts</suit></breaks></takes>
+            <points><each suit="hearts">1</each><each suit="spades" rank="Q">13</each></points>
+          </pile>
+        </object>
+
+        <!-- the scores: the game's, plus this hand's points so far -->
+        <object name="northscore">
+          <sprite><text style="note"><content>north</content><number>northhand.score</number><content>+</content><number>northhand.got</number></text></sprite>
+          <position><x><centered /></x><y>northrow + cardheight + 6</y></position>
+        </object>
+        <object name="westscore">
+          <sprite><text style="note"><content>west</content><number>westhand.score</number><content>+</content><number>westhand.got</number></text></sprite>
+          <position><x>24</x><y>siderow - 34</y></position>
+        </object>
+        <object name="eastscore">
+          <sprite><text style="note"><content>east</content><number>easthand.score</number><content>+</content><number>easthand.got</number></text></sprite>
+          <position><x>window.width.center * 2 - 150</x><y>siderow - 34</y></position>
+        </object>
+        <object name="yourscore">
+          <sprite><text style="note"><content>you</content><number>hand.score</number><content>+</content><number>hand.got</number></text></sprite>
+          <position><x><centered /></x><y>yours - 52</y></position>
+        </object>
+
+        <!-- what is happening -->
+        <object name="message">
+          <sprite name="yours"><text style="note"><content>your turn: play a card</content><color>color.yellow</color></text></sprite>
+          <sprite name="west"><text style="note"><content>west is playing</content><color>color.lightgrey</color></text></sprite>
+          <sprite name="north"><text style="note"><content>north is playing</content><color>color.lightgrey</color></text></sprite>
+          <sprite name="east"><text style="note"><content>east is playing</content><color>color.lightgrey</color></text></sprite>
+          <sprite name="took1"><text style="note"><content>you take the trick</content><color>color.yellow</color></text></sprite>
+          <sprite name="took2"><text style="note"><content>west takes the trick</content></text></sprite>
+          <sprite name="took3"><text style="note"><content>north takes the trick</content></text></sprite>
+          <sprite name="took4"><text style="note"><content>east takes the trick</content></text></sprite>
+          <sprite name="moon"><text style="note"><content>the moon is shot: 26 to everyone else. spacebar deals</content><color>color.cyan</color></text></sprite>
+          <sprite name="done"><text style="note"><content>the hand is over: spacebar deals the next</content></text></sprite>
+          <sprite name="dealing"><text style="note"><content>shuffling</content><color>color.lightgrey</color></text></sprite>
+          <position><x><centered /></x><y>trickrow + cardheight + 24</y></position>
+        </object>
+
+        <!-- the table: whose turn, the phase, who leads first, the tricks taken; a full trick shows a moment -->
+        <object name="table">
+          <sprite name="playing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="full"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>0</x><y>0</y></position>
+          <drawn>false</drawn>
+          <actions>
+            <action name="shuffle">
+              <shuffle pile="stock" />
+              <set variable="table.phase">4</set>
+              <become object="dealer" sprite="shuffling" />
+              <play sound="shuffle" />
+            </action>
+            <action name="deal">
+              <trigger object="hand" action="deal" />
+              <trigger object="westhand" action="deal" />
+              <trigger object="northhand" action="deal" />
+              <trigger object="easthand" action="deal" />
+              <set variable="table.tricks">0</set>
+              <inc variable="table.first">1</inc>
+              <set variable="table.turn">table.first</set>
+              <set variable="table.phase">0</set>
+              <play sound="deal" />
+            </action>
+          </actions>
+          <variables>
+            <variable name="turn">1</variable>
+            <variable name="phase">0</variable>
+            <variable name="first">1</variable>
+            <variable name="tricks">0</variable>
+          </variables>
+          <timers>
+            <timer sprite="full"><every>1.2</every><become sprite="playing" /><set variable="table.phase">2</set></timer>
+          </timers>
+        </object>
+
+        <!-- the dealer: a moment to shuffle before the cards come -->
+        <object name="dealer">
+          <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="shuffling"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>0</x><y>0</y></position>
+          <drawn>false</drawn>
+          <timers>
+            <timer sprite="shuffling"><every>0.4</every><become sprite="idle" /><trigger object="table" action="deal" /></timer>
+          </timers>
+        </object>
+
+        <!-- west: it thinks, points (unseen) and presses F9, keeping out of tricks -->
+        <object name="westhand">
+          <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="go"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>21</x><y>siderow - 3</y></position>
+          <hand pile="west"><seat>2</seat></hand>
+          <drawn>false</drawn>
+          <actions>
+            <action name="play">
+              <take />
+              <lay pile="trick" />
+              <play sound="card" />
+              <set variable="table.turn">3</set>
+              <become sprite="idle" />
+            </action>
+            <action name="back"><drop /></action>
+            <action name="deal"><set variable="westhand.got">0</set><deal pile="stock">13</deal></action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="got">0</variable>
+          </variables>
+        </object>
+
+        <!-- north: it thinks, points (unseen) and presses F10, keeping out of tricks -->
+        <object name="northhand">
+          <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="go"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>window.width.center - cardwidth / 2 - 147</x><y>northrow - 3</y></position>
+          <hand pile="north"><seat>3</seat></hand>
+          <drawn>false</drawn>
+          <actions>
+            <action name="play">
+              <take />
+              <lay pile="trick" />
+              <play sound="card" />
+              <set variable="table.turn">4</set>
+              <become sprite="idle" />
+            </action>
+            <action name="back"><drop /></action>
+            <action name="deal"><set variable="northhand.got">0</set><deal pile="stock">13</deal></action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="got">0</variable>
+          </variables>
+        </object>
+
+        <!-- east: it thinks, points (unseen) and presses F11, keeping out of tricks -->
+        <object name="easthand">
+          <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="go"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>window.width.center * 2 - cardwidth - 27</x><y>siderow - 3</y></position>
+          <hand pile="east"><seat>4</seat></hand>
+          <drawn>false</drawn>
+          <actions>
+            <action name="play">
+              <take />
+              <lay pile="trick" />
+              <play sound="card" />
+              <set variable="table.turn">1</set>
+              <become sprite="idle" />
+            </action>
+            <action name="back"><drop /></action>
+            <action name="deal"><set variable="easthand.got">0</set><deal pile="stock">13</deal></action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="got">0</variable>
+          </variables>
+        </object>
+
+        <!-- your hand: a frame around the card it points at -->
+        <object name="hand">
+          <sprite name="free">
+            <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+            <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+            <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+            <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+          </sprite>
+          <sprite name="wait"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="done"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>53</x><y>yours - 3</y></position>
+          <hand pile="mine"><seat>1</seat></hand>
+          <actions>
+            <action name="left"><hop direction="left" /></action>
+            <action name="right"><hop direction="right" /></action>
+            <action name="point"><track /></action>
+            <!-- the card pointed at onto the trick, if it may go there -->
+            <action name="play">
+              <take />
+              <lay pile="trick" />
+              <play sound="card" />
+              <set variable="table.turn">2</set>
+              <become sprite="wait" />
+            </action>
+            <!-- it may not: back in your hand -->
+            <action name="back"><drop /></action>
+            <action name="next"><trigger object="table" action="shuffle" /></action>
+            <action name="deal"><set variable="hand.got">0</set><deal pile="stock">13</deal></action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="got">0</variable>
+          </variables>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="hand" action="left" from="free" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="hand" action="right" from="free" /></input>
+        <input>
+          <button>space</button><button>pad1.a</button><button>mouse.left</button>
+          <trigger object="hand" action="play" from="free" />
+          <trigger object="hand" action="back" from="free" />
+          <trigger object="hand" action="next" from="done" />
+        </input>
+        <input axis="mouse.x"><trigger object="hand" action="point" from="free" /></input>
+        <input axis="mouse.y"><trigger object="hand" action="point" from="free" /></input>
+        <!-- the computer's keys: only their looks answer them -->
+        <input><button>f9</button><trigger object="westhand" action="play" from="go" /><trigger object="westhand" action="back" from="go" /></input>
+        <input><button>f10</button><trigger object="northhand" action="play" from="go" /><trigger object="northhand" action="back" from="go" /></input>
+        <input><button>f11</button><trigger object="easthand" action="play" from="go" /><trigger object="easthand" action="back" from="go" /></input>
+        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <!-- who leads first goes round the table -->
+        <condition object="table" variable="first">
+          <equal>5</equal>
+          <set variable="table.first">1</set>
+          <set variable="table.turn">1</set>
+        </condition>
+
+        <!-- the hand over and someone at 100: the lowest score wins (a tie, the first named) -->
+        <condition>
+          <all><condition object="table" variable="phase"><equal>3</equal></condition><any><condition object="hand" variable="score"><atleast>100</atleast></condition><condition object="westhand" variable="score"><atleast>100</atleast></condition><condition object="northhand" variable="score"><atleast>100</atleast></condition><condition object="easthand" variable="score"><atleast>100</atleast></condition></any><condition object="hand" variable="score"><atmost>westhand.score</atmost></condition><condition object="hand" variable="score"><atmost>northhand.score</atmost></condition><condition object="hand" variable="score"><atmost>easthand.score</atmost></condition></all>
+          <become object="over.winner" sprite="you" />
+          <play sound="win" />
+          <push state="over" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>3</equal></condition><any><condition object="hand" variable="score"><atleast>100</atleast></condition><condition object="westhand" variable="score"><atleast>100</atleast></condition><condition object="northhand" variable="score"><atleast>100</atleast></condition><condition object="easthand" variable="score"><atleast>100</atleast></condition></any><condition object="westhand" variable="score"><atmost>hand.score</atmost></condition><condition object="westhand" variable="score"><atmost>northhand.score</atmost></condition><condition object="westhand" variable="score"><atmost>easthand.score</atmost></condition></all>
+          <become object="over.winner" sprite="west" />
+          <play sound="lose" />
+          <push state="over" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>3</equal></condition><any><condition object="hand" variable="score"><atleast>100</atleast></condition><condition object="westhand" variable="score"><atleast>100</atleast></condition><condition object="northhand" variable="score"><atleast>100</atleast></condition><condition object="easthand" variable="score"><atleast>100</atleast></condition></any><condition object="northhand" variable="score"><atmost>hand.score</atmost></condition><condition object="northhand" variable="score"><atmost>westhand.score</atmost></condition><condition object="northhand" variable="score"><atmost>easthand.score</atmost></condition></all>
+          <become object="over.winner" sprite="north" />
+          <play sound="lose" />
+          <push state="over" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>3</equal></condition><any><condition object="hand" variable="score"><atleast>100</atleast></condition><condition object="westhand" variable="score"><atleast>100</atleast></condition><condition object="northhand" variable="score"><atleast>100</atleast></condition><condition object="easthand" variable="score"><atleast>100</atleast></condition></any><condition object="easthand" variable="score"><atmost>hand.score</atmost></condition><condition object="easthand" variable="score"><atmost>westhand.score</atmost></condition><condition object="easthand" variable="score"><atmost>northhand.score</atmost></condition></all>
+          <become object="over.winner" sprite="east" />
+          <play sound="lose" />
+          <push state="over" />
+        </condition>
+
+        <!-- all thirteen tricks taken: the points to the scores; one who took all 26 shot the moon -->
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="hand" variable="got"><equal>26</equal></condition></all>
+          <inc variable="westhand.score">26</inc>
+          <inc variable="northhand.score">26</inc>
+          <inc variable="easthand.score">26</inc>
+          <set variable="table.phase">3</set>
+          <become object="message" sprite="moon" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="westhand" variable="got"><equal>26</equal></condition></all>
+          <inc variable="hand.score">26</inc>
+          <inc variable="northhand.score">26</inc>
+          <inc variable="easthand.score">26</inc>
+          <set variable="table.phase">3</set>
+          <become object="message" sprite="moon" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="northhand" variable="got"><equal>26</equal></condition></all>
+          <inc variable="hand.score">26</inc>
+          <inc variable="westhand.score">26</inc>
+          <inc variable="easthand.score">26</inc>
+          <set variable="table.phase">3</set>
+          <become object="message" sprite="moon" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="easthand" variable="got"><equal>26</equal></condition></all>
+          <inc variable="hand.score">26</inc>
+          <inc variable="westhand.score">26</inc>
+          <inc variable="northhand.score">26</inc>
+          <set variable="table.phase">3</set>
+          <become object="message" sprite="moon" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition></all>
+          <inc variable="hand.score">hand.got</inc>
+          <inc variable="westhand.score">westhand.got</inc>
+          <inc variable="northhand.score">northhand.got</inc>
+          <inc variable="easthand.score">easthand.got</inc>
+          <set variable="table.phase">3</set>
+          <become object="message" sprite="done" />
+        </condition>
+
+        <!-- a full trick: who took it, shown a moment -->
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="trick" variable="cards"><equal>4</equal></condition><condition object="trick" variable="winner"><equal>1</equal></condition></all>
+          <set variable="table.phase">1</set>
+          <become object="table" sprite="full" />
+          <become object="message" sprite="took1" />
+          <become object="hand" sprite="wait" />
+          <play sound="take" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="trick" variable="cards"><equal>4</equal></condition><condition object="trick" variable="winner"><equal>2</equal></condition></all>
+          <set variable="table.phase">1</set>
+          <become object="table" sprite="full" />
+          <become object="message" sprite="took2" />
+          <become object="hand" sprite="wait" />
+          <play sound="take" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="trick" variable="cards"><equal>4</equal></condition><condition object="trick" variable="winner"><equal>3</equal></condition></all>
+          <set variable="table.phase">1</set>
+          <become object="table" sprite="full" />
+          <become object="message" sprite="took3" />
+          <become object="hand" sprite="wait" />
+          <play sound="take" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="trick" variable="cards"><equal>4</equal></condition><condition object="trick" variable="winner"><equal>4</equal></condition></all>
+          <set variable="table.phase">1</set>
+          <become object="table" sprite="full" />
+          <become object="message" sprite="took4" />
+          <become object="hand" sprite="wait" />
+          <play sound="take" />
+        </condition>
+        <!-- then taken: its points to the taker, its cards to the stock, the taker leads -->
+        <condition>
+          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="trick" variable="winner"><equal>1</equal></condition></all>
+          <inc variable="hand.got">trick.points</inc>
+          <collect pile="trick" into="stock" />
+          <inc variable="table.tricks">1</inc>
+          <set variable="table.turn">1</set>
+          <set variable="table.phase">0</set>
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="trick" variable="winner"><equal>2</equal></condition></all>
+          <inc variable="westhand.got">trick.points</inc>
+          <collect pile="trick" into="stock" />
+          <inc variable="table.tricks">1</inc>
+          <set variable="table.turn">2</set>
+          <set variable="table.phase">0</set>
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="trick" variable="winner"><equal>3</equal></condition></all>
+          <inc variable="northhand.got">trick.points</inc>
+          <collect pile="trick" into="stock" />
+          <inc variable="table.tricks">1</inc>
+          <set variable="table.turn">3</set>
+          <set variable="table.phase">0</set>
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="trick" variable="winner"><equal>4</equal></condition></all>
+          <inc variable="easthand.got">trick.points</inc>
+          <collect pile="trick" into="stock" />
+          <inc variable="table.tricks">1</inc>
+          <set variable="table.turn">4</set>
+          <set variable="table.phase">0</set>
+        </condition>
+
+        <!-- whose turn it is, shown -->
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="turn"><equal>1</equal></condition></all>
+          <become object="hand" sprite="free" />
+          <become object="message" sprite="yours" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="turn"><equal>2</equal></condition></all>
+          <become object="hand" sprite="wait" />
+          <become object="westhand" sprite="go" from="idle" />
+          <become object="message" sprite="west" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="turn"><equal>3</equal></condition></all>
+          <become object="hand" sprite="wait" />
+          <become object="northhand" sprite="go" from="idle" />
+          <become object="message" sprite="north" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="turn"><equal>4</equal></condition></all>
+          <become object="hand" sprite="wait" />
+          <become object="easthand" sprite="go" from="idle" />
+          <become object="message" sprite="east" />
+        </condition>
+        <condition object="table" variable="phase">
+          <equal>3</equal>
+          <become object="hand" sprite="done" />
+        </condition>
+        <condition object="table" variable="phase">
+          <equal>4</equal>
+          <become object="hand" sprite="wait" />
+          <become object="message" sprite="dealing" />
+        </condition>
+      </conditions>
+      <!-- the computer's turns: each thinks with its own hand and key -->
+      <computer>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="turn"><equal>2</equal></condition></all>
+          <think object="westhand" button="f9"><avoid /></think>
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="turn"><equal>3</equal></condition></all>
+          <think object="northhand" button="f10"><avoid /></think>
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="turn"><equal>4</equal></condition></all>
+          <think object="easthand" button="f11"><avoid /></think>
+        </condition>
+      </computer>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+        </object>
+        <object name="newgame">
+          <sprite><text style="prompt"><content>n for a new game</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>n</button><reset /></input>
+      </inputs>
+    </state>
+    <state name="over">
+      <objects>
+        <object name="winner">
+          <sprite name="you"><text style="banner"><content>YOU WIN</content></text></sprite>
+          <sprite name="west"><text style="banner"><content>WEST WINS</content></text></sprite>
+          <sprite name="north"><text style="banner"><content>NORTH WINS</content></text></sprite>
+          <sprite name="east"><text style="banner"><content>EAST WINS</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+        </object>
+        <object name="again">
+          <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
+      </inputs>
+    </state>
+  </states>
+</game>

@@ -71,6 +71,13 @@ namespace xge
 			showHeading();
 		}
 		visualDirty = true;
+		// The new look is the size it is now, not at the next draw: what the
+		// edges, touches and card layout of this frame look at.
+		if (sizeKnown)
+		{
+			if (bitmap) { size = Vector2f{ static_cast<float>(std::max(bitmap->width, 1)), static_cast<float>(std::max(bitmap->height, 1)) }; }
+			else if (const Vector2f measured = measureShapeSize(picture); measured.x > 0.0f && measured.y > 0.0f) { size = measured; }
+		}
 	}
 
 	void Object::wearPalette(std::size_t index)
@@ -383,6 +390,8 @@ namespace xge
 			{ "pattern", [](Object& o) -> float& { return o.pattern; }, true },
 			{ "strength", [](Object& o) -> float& { return o.strength; }, true },
 			{ "odds", [](Object& o) -> float& { return o.odds; }, true },
+			{ "lead", [](Object& o) -> float& { return o.lead; }, true },
+			{ "winner", [](Object& o) -> float& { return o.winner; }, true },
 		};
 		return parts;
 	}

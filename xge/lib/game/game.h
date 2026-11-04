@@ -466,6 +466,7 @@ namespace xge
 		bool dealCards(Object& hand, const std::string& from = {}, const std::string& faces = {});
 		bool revealCards(const std::string& pile);
 		bool gatherCards(const std::string& pile);
+		bool collectCards(const std::string& from, const std::string& into);
 		bool callSuit(Object& hand, const std::string& pile);
 		bool hopHand(Object& hand, Direction direction);
 		void trackHand(Object& hand, bool horizontal, float at);
@@ -478,7 +479,9 @@ namespace xge
 		int takeTop(Object& pile);
 		void showTop(Object& pile);
 		Vector2f cardPlace(const Object& pile, std::size_t index);
-		bool pileTakes(Object& pile, const std::vector<int>& cards);
+		bool pileTakes(Object& pile, const std::vector<int>& cards, const Object* holder = nullptr);
+		float cardPoints(const Object& pile, const Object& card);
+		const Object* trickWinning(const Object& pile);
 		static bool follows(const PileRule& rule, const Object& below, const Object& next);
 		void layHeld(Object& hand, Object& pile);
 		static bool isWild(const PileRule& rule, const Object& card);
@@ -488,6 +491,7 @@ namespace xge
 		void scoreDuePiles();
 		bool scoresDue{ false };
 		std::optional<KeyCode> thinkCards(const CmdThink& think, Object& hand);
+		int playToTrick(Object& trick, const Object& own, bool avoid);
 		int cardWait{};
 		std::vector<Object*> shownPiles();
 		// Where each card's object is in `objects`, by its number less one

@@ -1022,6 +1022,7 @@ namespace xge
 			pile.sorted = raw.sorted;
 			pile.lift = number(raw.lift);
 			pile.pointsMost = raw.hasPoints ? number(raw.pointsMost) : 0.0f;
+			for (const auto& each : raw.pointsEach) { pile.pointsEach.push_back({ each.suit, each.rank, number(each.points) }); }
 			pile.score = raw.score;
 			pile.scoreWith = raw.scoreWith;
 			pile.scoreFull = raw.scoreFull;
@@ -1030,6 +1031,7 @@ namespace xge
 		}
 		object.hand.is = rawObject.hand;
 		object.hand.own = rawObject.handPile;
+		object.hand.seat = rawObject.handSeat;
 		object.isCard = rawObject.isCard;
 		object.card = rawObject.card;
 
@@ -1715,7 +1717,8 @@ namespace xge
 					}
 					// A pile's live numbers follow it too (shown 0 until dealt).
 					if (reference->second == "cards" || reference->second == "points" || reference->second == "called" || reference->second == "calling"
-						|| reference->second == "pattern" || reference->second == "strength" || reference->second == "odds")
+						|| reference->second == "pattern" || reference->second == "strength" || reference->second == "odds"
+						|| reference->second == "lead" || reference->second == "winner")
 					{
 						piece.owner = owner;
 						piece.variable = reference->second;
