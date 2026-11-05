@@ -1213,6 +1213,14 @@ namespace xge
 				const std::size_t j = std::min(i - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(i))));
 				std::swap(cards[i - 1], cards[j]);
 			}
+			// Stacked (tests): those cards last, so on top, the first last of all.
+			for (auto each = stackedDeal.rbegin(); each != stackedDeal.rend(); ++each)
+			{
+				const auto at = std::find(cards.begin(), cards.end(), *each);
+				if (at == cards.end()) { continue; }
+				cards.erase(at);
+				cards.push_back(*each);
+			}
 			for (const int card : cards)
 			{
 				if (Object* each = cardAt(card)) { turnCard(*each, false); }
@@ -1246,6 +1254,8 @@ namespace xge
 			}
 			for (auto& [each, count] : wanting) { showTop(*each); }
 		}
+
+		stackedDeal.clear();
 
 		// A wild card turned up to start: its own suit is the one called.
 		for (Object& object : objects)
@@ -1441,12 +1451,12 @@ namespace xge
 	}
 
 	// Whether a card of a pile lies under another pile's card drawn over it.
-	bool Game::isCovered(const Object& card)
+	bool Game::isCovered(const Object& card, const Object& own)
 	{
 		const Vector2f size = sizeOf(card);
 		for (const Object& pile : objects)
 		{
-			if (!pile.pile.is || !isShown(pile)) { continue; }
+			if (!pile.pile.is || &pile == &own || !isShown(pile)) { continue; }
 			for (const int number : pile.pile.cards)
 			{
 				const Object* other = cardAt(number);
@@ -1467,11 +1477,9 @@ namespace xge
 		if (!hand.hand.is || (hand.hand.mouse && !hand.hand.over)) { return false; }
 		Object* pile = pileNamed(hand.hand.pile);
 		if (!pile || pile->pile.deals > 0 || pile->pile.cards.empty()) { return false; }
-		if (pile->pile.uncovered)
-		{
-			const Object* top = cardAt(pile->pile.cards.back());
-			if (top && isCovered(*top)) { return false; }
-		}
+		// Covering: a top card that a card of another pile, drawn over it,
+		// overlaps stays where it is.
+		if (const Object* top = cardAt(pile->pile.cards.back()); top && isCovered(*top, *pile)) { return false; }
 		// Holding already: the top card of another pile too, while the hand
 		// <holds> cards from that many piles.
 		if (!hand.hand.held.empty())
@@ -1712,6 +1720,18 @@ namespace xge
 		for (const int card : cards) { putOnPile(*into, card); }
 		layOutCards();
 		return true;
+	}
+
+	// A new hand: every card back, shuffled and dealt as a new game is.
+	void Game::redealCards()
+	{
+		dealDecks();
+		for (Object& object : objects)
+		{
+			if (object.pile.is) { refreshPile(object); }
+		}
+		scoreDuePiles();
+		layOutCards();
 	}
 
 	bool Game::gatherCards(const std::string& name)

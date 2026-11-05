@@ -26,10 +26,12 @@
 
   How it is written:
   * The deck is Klondike's, its ace <worth>14</worth>.
-  * The trick is a pile that <takes> what <follow />s the suit led, with
+  * The trick is a pile with a <trick>: the suit led is followed, with
     spades its <trumps> and <breaks>; its live numbers `lead` and `winner`
     (the <seat> of the hand that laid the card taking it).
   * Each player is a hand with a pile of its own, a <seat> and a <team>.
+    Each player's pile is <dealt>13</dealt>; between hands, and for the
+    first, <redeal /> gathers, shuffles and deals them again.
     A pile of a hand's own has the live number `tricks`: how many tricks
     its cards should take, which is each player's bid (at least one).
   * The computer's three <think>: they take tricks, and let a partner's
@@ -1083,24 +1085,24 @@
         <object name="west" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>24</x><y>siderow</y></position>
-          <pile faces="down"><fan><hidden><y>24</y></hidden></fan><sorted /></pile>
+          <pile faces="down"><fan><hidden><y>24</y></hidden></fan><dealt>13</dealt><sorted /></pile>
         </object>
         <object name="north" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 144</x><y>northrow</y></position>
-          <pile faces="down"><fan><hidden><x>24</x></hidden></fan><sorted /></pile>
+          <pile faces="down"><fan><hidden><x>24</x></hidden></fan><dealt>13</dealt><sorted /></pile>
         </object>
         <object name="east" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center * 2 - cardwidth - 24</x><y>siderow</y></position>
-          <pile faces="down"><fan><hidden><y>24</y></hidden></fan><sorted /></pile>
+          <pile faces="down"><fan><hidden><y>24</y></hidden></fan><dealt>13</dealt><sorted /></pile>
         </object>
 
         <!-- your cards, face up along the bottom, in suit and rank order -->
         <object name="mine" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>56</x><y>yours</y></position>
-          <pile faces="up"><fan><x>56</x><width>768</width></fan><sorted /><lift>16</lift></pile>
+          <pile faces="up"><fan><x>56</x><width>768</width></fan><dealt>13</dealt><sorted /><lift>16</lift></pile>
         </object>
 
         <!-- the trick: the suit led is followed if it can be; spades are trumps, and lead only once broken -->
@@ -1109,7 +1111,7 @@
           <position><x>window.width.center - cardwidth / 2 - 96</x><y>trickrow</y></position>
           <pile faces="up">
             <fan><x>64</x></fan>
-            <takes><follow /><breaks><suit>spades</suit></breaks><trumps><suit>spades</suit></trumps></takes>
+            <trick><breaks><suit>spades</suit></breaks><trumps><suit>spades</suit></trumps></trick>
           </pile>
         </object>
 
@@ -1166,16 +1168,20 @@
           <drawn>false</drawn>
           <actions>
             <action name="shuffle">
-              <shuffle pile="stock" />
               <set variable="table.phase">4</set>
               <become object="dealer" sprite="shuffling" />
               <play sound="shuffle" />
             </action>
             <action name="deal">
-              <trigger object="hand" action="deal" />
-              <trigger object="westhand" action="deal" />
-              <trigger object="northhand" action="deal" />
-              <trigger object="easthand" action="deal" />
+              <redeal />
+              <set variable="hand.won">0</set>
+              <set variable="hand.bid"><formula><largest><value>mine.tricks</value><value>1</value></largest></formula></set>
+              <set variable="westhand.won">0</set>
+              <set variable="westhand.bid"><formula><largest><value>west.tricks</value><value>1</value></largest></formula></set>
+              <set variable="northhand.won">0</set>
+              <set variable="northhand.bid"><formula><largest><value>north.tricks</value><value>1</value></largest></formula></set>
+              <set variable="easthand.won">0</set>
+              <set variable="easthand.bid"><formula><largest><value>east.tricks</value><value>1</value></largest></formula></set>
               <set variable="table.tricks">0</set>
               <set variable="table.uswon">0</set>
               <set variable="table.themwon">0</set>
@@ -1231,11 +1237,6 @@
               <become sprite="idle" />
             </action>
             <action name="back"><drop /></action>
-            <action name="deal">
-              <set variable="westhand.won">0</set>
-              <deal pile="stock">13</deal>
-              <set variable="westhand.bid"><formula><largest><value>west.tricks</value><value>1</value></largest></formula></set>
-            </action>
           </actions>
           <variables>
             <variable name="bid">0</variable>
@@ -1259,11 +1260,6 @@
               <become sprite="idle" />
             </action>
             <action name="back"><drop /></action>
-            <action name="deal">
-              <set variable="northhand.won">0</set>
-              <deal pile="stock">13</deal>
-              <set variable="northhand.bid"><formula><largest><value>north.tricks</value><value>1</value></largest></formula></set>
-            </action>
           </actions>
           <variables>
             <variable name="bid">0</variable>
@@ -1287,11 +1283,6 @@
               <become sprite="idle" />
             </action>
             <action name="back"><drop /></action>
-            <action name="deal">
-              <set variable="easthand.won">0</set>
-              <deal pile="stock">13</deal>
-              <set variable="easthand.bid"><formula><largest><value>east.tricks</value><value>1</value></largest></formula></set>
-            </action>
           </actions>
           <variables>
             <variable name="bid">0</variable>
@@ -1336,11 +1327,6 @@
               <set variable="table.phase">0</set>
               <become sprite="wait" />
               <play sound="card" />
-            </action>
-            <action name="deal">
-              <set variable="hand.won">0</set>
-              <deal pile="stock">13</deal>
-              <set variable="hand.bid"><formula><largest><value>mine.tricks</value><value>1</value></largest></formula></set>
             </action>
           </actions>
           <variables>

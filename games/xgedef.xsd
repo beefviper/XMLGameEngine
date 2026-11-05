@@ -705,10 +705,18 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-            <!-- follow: a trick: any card leads, then the suit led, unless the hand laying holds none;
-                 breaks: these suits lead only once one was laid here since the cards were gathered, or when the hand
-                 holds nothing else -->
-            <xs:element name="follow" type="emptyType" minOccurs="0" />
+            <!-- sum: the cards laid, all held together, when their worths add up to this, whatever is on the pile -->
+            <xs:element name="sum" type="xs:positiveInteger" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <!-- trick: a pile each player lays a card on; any card leads, then the suit led, unless the hand laying holds
+           none. breaks: these suits lead only once one was laid here since the deal, or when the hand holds nothing
+           else; trumps: a card of these suits takes the trick over every card of the others. Live numbers lead (the
+           suit led) and winner (the seat of the hand whose card takes it) -->
+      <xs:element name="trick" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
             <xs:element name="breaks" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
@@ -716,9 +724,6 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-            <!-- sum: the cards laid, all held together, when their worths add up to this, whatever is on the pile -->
-            <xs:element name="sum" type="xs:positiveInteger" minOccurs="0" />
-            <!-- trumps: a card of these suits takes the trick over every card of the others -->
             <xs:element name="trumps" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
@@ -739,6 +744,11 @@
       <xs:element name="score" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
+            <!-- melds: scored instead by laying the cards out in groups, each making one of the patterns with all its
+                 cards (<same>: one rank, <run>: worths in a row, <suited>: one suit, at least as many as the number),
+                 the groups leaving the fewest points over; live number deadwood, the points left over by the best
+                 <best> of them -->
+            <xs:element name="melds" type="emptyType" minOccurs="0" />
             <xs:element name="with" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
@@ -747,19 +757,6 @@
                 <xs:attribute name="pile" type="xs:NMTOKEN" use="required" />
               </xs:complexType>
             </xs:element>
-            <xs:element name="best" type="xs:positiveInteger" minOccurs="0" />
-          </xs:sequence>
-          <xs:attribute name="patterns" type="xs:NMTOKEN" use="required" />
-        </xs:complexType>
-      </xs:element>
-      <!-- uncovered: its top card can be taken only while no card of another pile, drawn over it, overlaps it -->
-      <xs:element name="uncovered" type="emptyType" minOccurs="0" />
-      <!-- melds patterns=: its cards laid out in groups, each making one of the game's <patterns> of that name with all
-           its cards (<same>: one rank, <run>: worths in a row, <suited>: one suit, at least as many as the number), the
-           groups leaving the fewest points over; live number deadwood, the points left over by the best <best> of them -->
-      <xs:element name="melds" minOccurs="0">
-        <xs:complexType>
-          <xs:sequence>
             <xs:element name="best" type="xs:positiveInteger" minOccurs="0" />
           </xs:sequence>
           <xs:attribute name="patterns" type="xs:NMTOKEN" use="required" />
@@ -1378,6 +1375,9 @@
           <xs:attribute name="pile" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
+      <!-- redeal: every card gathered, each deck shuffled into its pile and dealt to the piles' <dealt> again, as a new
+           game deals -->
+      <xs:element name="redeal" type="emptyType" />
       <!-- collect: every card of pile= onto into= (a trick to whoever took it) -->
       <xs:element name="collect">
         <xs:complexType>
@@ -1526,11 +1526,8 @@
       <!-- deal, on a hand: from the pile pointed at (pile=: from that one), by its <deals> (or, empty, its <refill>);
            faces=: each card dealt turned up or down -->
       <xs:element name="deal">
-        <!-- its content: how many cards (none: one) -->
-        <xs:complexType mixed="true">
-          <xs:sequence>
-            <xs:group ref="valueTag" minOccurs="0" />
-          </xs:sequence>
+        <!-- one card: a new hand of many is <redeal /> -->
+        <xs:complexType>
           <xs:attribute name="pile" type="xs:string" use="optional" />
           <xs:attribute name="faces" use="optional">
             <xs:simpleType>

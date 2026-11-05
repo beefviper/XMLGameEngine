@@ -85,12 +85,10 @@ namespace xge
 		if (verb == "deal")
 		{
 			if (!raw.faces.empty() && raw.faces != "up" && raw.faces != "down") { throw std::runtime_error("<deal faces=\"" + raw.faces + "\">: expected up or down"); }
-			const bool none = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
-			const float count = none ? 1.0f : evaluate(raw.amount);
-			if (!(count >= 1.0f) || count != std::floor(count)) { throw std::runtime_error("<deal>: deals " + formatDisplayNumber(count) + " cards; expected a whole number from 1"); }
-			return CmdDeal{ raw.pile, raw.faces, static_cast<int>(count) };
+			return CmdDeal{ raw.pile, raw.faces };
 		}
 		if (verb == "shuffle") { return CmdShuffle{ raw.pile }; }
+		if (verb == "redeal") { return CmdRedeal{}; }
 		if (verb == "collect") { return CmdCollect{ raw.pile, raw.into }; }
 		if (verb == "reveal" && !raw.pile.empty()) { return CmdRevealCards{ raw.pile }; }
 		if (verb == "call")
@@ -549,10 +547,11 @@ namespace xge
 			[&](const CmdPlace&) { o << "place"; },
 			[&](const CmdTake&) { o << "take"; },
 			[&](const CmdLay& l) { o << "lay" << (l.pile.empty() ? "" : "(" + l.pile + ")"); },
-			[&](const CmdDeal& d) { o << "deal" << (d.pile.empty() ? "" : "(" + d.pile + ")") << (d.count == 1 ? "" : " x" + std::to_string(d.count)); },
+			[&](const CmdDeal& d) { o << "deal" << (d.pile.empty() ? "" : "(" + d.pile + ")") ; },
 			[&](const CmdCollect& c) { o << "collect(" << c.pile << " into " << c.into << ")"; },
 			[&](const CmdRevealCards& r) { o << "reveal(" << r.pile << ")"; },
 			[&](const CmdShuffle& s) { o << "shuffle(" << s.pile << ")"; },
+			[&](const CmdRedeal&) { o << "redeal()"; },
 			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
 			[&](const CmdPut& p) { o << "put(" << p.objClass << (p.closeClass.empty() ? "" : ", close " + p.closeClass + " " + p.closeObject) << ")"; },
 			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << ")"; },

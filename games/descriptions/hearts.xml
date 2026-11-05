@@ -24,13 +24,15 @@
   How it is written:
   * The deck is Klondike's, its ace <worth>14</worth>: the highest card,
     and last in a sorted hand.
-  * The trick is a pile that <takes> what <follow />s the suit led and
+  * The trick is a pile with a <trick>: the suit led is followed, and it
     <breaks> hearts; its live numbers `lead` (the suit led) and `winner`
     (the <seat> of the hand that laid the card taking it), and `points`
     by <each> heart and the queen of spades.
   * Each player is a hand with a pile of its own and a <seat>; the
     computer's three <think> with <avoid />: they keep out of tricks, and
     shed points when they cannot follow.
+  * Each player's pile is <dealt>13</dealt>; between hands <redeal />
+    gathers, shuffles and deals them again, as a new game does.
   * A full trick waits a moment (a timer on the table's look), then is
     <collect>ed into the pile in the corner, its points to the taker.
   * The table's `phase`: 0 playing, 1 a full trick showing, 2 taking it,
@@ -1106,7 +1108,7 @@
           <position><x>window.width.center - cardwidth / 2 - 96</x><y>trickrow</y></position>
           <pile faces="up">
             <fan><x>64</x></fan>
-            <takes><follow /><breaks><suit>hearts</suit></breaks></takes>
+            <trick><breaks><suit>hearts</suit></breaks></trick>
             <points><each suit="hearts">1</each><each suit="spades" rank="Q">13</each><each>0</each></points>
           </pile>
         </object>
@@ -1153,16 +1155,16 @@
           <drawn>false</drawn>
           <actions>
             <action name="shuffle">
-              <shuffle pile="stock" />
               <set variable="table.phase">4</set>
               <become object="dealer" sprite="shuffling" />
               <play sound="shuffle" />
             </action>
             <action name="deal">
-              <trigger object="hand" action="deal" />
-              <trigger object="westhand" action="deal" />
-              <trigger object="northhand" action="deal" />
-              <trigger object="easthand" action="deal" />
+              <redeal />
+              <set variable="hand.got">0</set>
+              <set variable="westhand.got">0</set>
+              <set variable="northhand.got">0</set>
+              <set variable="easthand.got">0</set>
               <set variable="table.tricks">0</set>
               <inc variable="table.first">1</inc>
               <set variable="table.turn">table.first</set>
@@ -1208,7 +1210,6 @@
               <become sprite="idle" />
             </action>
             <action name="back"><drop /></action>
-            <action name="deal"><set variable="westhand.got">0</set><deal pile="stock">13</deal></action>
           </actions>
           <variables>
             <variable name="score">0</variable>
@@ -1232,7 +1233,6 @@
               <become sprite="idle" />
             </action>
             <action name="back"><drop /></action>
-            <action name="deal"><set variable="northhand.got">0</set><deal pile="stock">13</deal></action>
           </actions>
           <variables>
             <variable name="score">0</variable>
@@ -1256,7 +1256,6 @@
               <become sprite="idle" />
             </action>
             <action name="back"><drop /></action>
-            <action name="deal"><set variable="easthand.got">0</set><deal pile="stock">13</deal></action>
           </actions>
           <variables>
             <variable name="score">0</variable>
@@ -1291,7 +1290,6 @@
             <!-- it may not: back in your hand -->
             <action name="back"><drop /></action>
             <action name="next"><trigger object="table" action="shuffle" /></action>
-            <action name="deal"><set variable="hand.got">0</set><deal pile="stock">13</deal></action>
           </actions>
           <variables>
             <variable name="score">0</variable>

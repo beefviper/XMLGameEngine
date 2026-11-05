@@ -29,12 +29,15 @@
   * The deck is Klondike's, the ace's worth 1 (its place in the order).
   * The game's <patterns name="rummy">: a set is <same>3, a run
     <run>3 and <suited>3.
-  * Each player's cards are a pile with <melds patterns="rummy">: laid out
+  * Each player's cards are a pile with <score patterns="rummy"><melds />: laid out
     in groups that each make a pattern with all their cards, the groups
     chosen to leave the fewest points over; its live number `deadwood`,
     those points, counted from its best ten (<best>10): holding eleven,
     what is left after the best discard. Its <points> count the court
     cards <each> ten, the others their worth.
+  * Each pile says what it is <dealt>: ten each, one to the discard
+    pile. Between hands, and for the first, <redeal /> gathers, shuffles
+    and deals them again.
   * The stock and the discard pile both <deals> one into the hand that
     draws; the discard pile <takes /> anything.
   * The computer's <think> on a hand with melds draws the discard when
@@ -1088,19 +1091,19 @@
         <object name="discard" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center + 24</x><y>middle</y></position>
-          <pile faces="up"><deals>1</deals><takes /></pile>
+          <pile faces="up"><dealt>1</dealt><deals>1</deals><takes /></pile>
         </object>
 
         <!-- north's cards, face down, and yours: laid out in melds, the deadwood counted -->
         <object name="north" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - 168</x><y>theirs</y></position>
-          <pile faces="down"><fan><x>24</x></fan><melds patterns="rummy"><best>10</best></melds><points><each rank="J">10</each><each rank="Q">10</each><each rank="K">10</each></points></pile>
+          <pile faces="down"><fan><x>24</x></fan><dealt>10</dealt><score patterns="rummy"><melds /><best>10</best></score><points><each rank="J">10</each><each rank="Q">10</each><each rank="K">10</each></points></pile>
         </object>
         <object name="mine" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>56</x><y>yours</y></position>
-          <pile faces="up"><fan><x>64</x><width>768</width></fan><lift>16</lift><melds patterns="rummy"><best>10</best></melds><points><each rank="J">10</each><each rank="Q">10</each><each rank="K">10</each></points></pile>
+          <pile faces="up"><fan><x>64</x><width>768</width></fan><dealt>10</dealt><lift>16</lift><score patterns="rummy"><melds /><best>10</best></score><points><each rank="J">10</each><each rank="Q">10</each><each rank="K">10</each></points></pile>
         </object>
 
         <!-- the scores and your deadwood -->
@@ -1141,15 +1144,12 @@
           <drawn>false</drawn>
           <actions>
             <action name="shuffle">
-              <shuffle pile="stock" />
               <set variable="table.phase">5</set>
               <become object="dealer" sprite="shuffling" />
               <play sound="shuffle" />
             </action>
             <action name="deal">
-              <trigger object="hand" action="deal" />
-              <trigger object="northhand" action="deal" />
-              <trigger object="turner" action="deal" />
+              <redeal />
               <set variable="table.phase">table.first</set>
               <set variable="table.first">2 - table.first</set>
               <play sound="deal" />
@@ -1175,17 +1175,6 @@
           </timers>
         </object>
 
-        <!-- the turner: the card turned up to start the discard pile -->
-        <object name="turner">
-          <sprite name="on"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hand pile="discard" />
-          <drawn>false</drawn>
-          <actions>
-            <action name="deal"><deal pile="stock" /></action>
-          </actions>
-        </object>
-
         <!-- north: it thinks, points (unseen) and presses F12 -->
         <object name="northhand">
           <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
@@ -1205,7 +1194,6 @@
               <become sprite="idle" />
             </action>
             <action name="back"><drop /></action>
-            <action name="deal"><deal pile="stock">10</deal></action>
           </actions>
         </object>
 
@@ -1259,7 +1247,6 @@
               <become sprite="wait" />
             </action>
             <action name="next"><trigger object="table" action="shuffle" /></action>
-            <action name="deal"><deal pile="stock">10</deal></action>
           </actions>
         </object>
       </objects>

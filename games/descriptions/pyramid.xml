@@ -23,9 +23,9 @@
 
   How it is written:
   * The deck is Klondike's, the ace's worth 1: the worths are the ranks.
-  * The pyramid is seven groups of one-card piles, a row each, every
-    pile <uncovered />: its card is taken only while no card drawn over
-    it overlaps it.
+  * The pyramid is seven groups of one-card piles, a row each. A card
+    is taken only while no card of another pile, drawn over it, overlaps
+    it: the rows below cover the rows above.
   * The hand <holds>2</holds>: it may hold a card from two piles at once.
   * The discard pile <takes><sum>13</sum></takes>: what the hand holds
     goes there when the worths add up to 13; else the hand puts both back.
@@ -1063,7 +1063,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 0 * step / 2</x><y>top + 0 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt><uncovered /></pile>
+          <pile faces="up"><dealt>1</dealt></pile>
         </group>
         <group name="row2" class="peak">
           <columns>2</columns>
@@ -1071,7 +1071,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 1 * step / 2</x><y>top + 1 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt><uncovered /></pile>
+          <pile faces="up"><dealt>1</dealt></pile>
         </group>
         <group name="row3" class="peak">
           <columns>3</columns>
@@ -1079,7 +1079,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 2 * step / 2</x><y>top + 2 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt><uncovered /></pile>
+          <pile faces="up"><dealt>1</dealt></pile>
         </group>
         <group name="row4" class="peak">
           <columns>4</columns>
@@ -1087,7 +1087,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 3 * step / 2</x><y>top + 3 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt><uncovered /></pile>
+          <pile faces="up"><dealt>1</dealt></pile>
         </group>
         <group name="row5" class="peak">
           <columns>5</columns>
@@ -1095,7 +1095,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 4 * step / 2</x><y>top + 4 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt><uncovered /></pile>
+          <pile faces="up"><dealt>1</dealt></pile>
         </group>
         <group name="row6" class="peak">
           <columns>6</columns>
@@ -1103,7 +1103,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 5 * step / 2</x><y>top + 5 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt><uncovered /></pile>
+          <pile faces="up"><dealt>1</dealt></pile>
         </group>
         <group name="row7" class="peak">
           <columns>7</columns>
@@ -1111,7 +1111,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 6 * step / 2</x><y>top + 6 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt><uncovered /></pile>
+          <pile faces="up"><dealt>1</dealt></pile>
         </group>
 
         <!-- the stock turns onto the waste, and over again when it is out -->

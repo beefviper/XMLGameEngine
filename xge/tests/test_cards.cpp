@@ -1008,6 +1008,28 @@ TEST_CASE("holdem.xml: hand after hand, you calling everything, every hand ends 
 
 namespace
 {
+	// The order a stock is stacked in (first on top) so that a deal a
+	// card a round gives each pile its cards, the piles in deal order.
+	template <typename Table>
+	std::vector<int> roundRobin(Table& table, const std::vector<std::vector<std::string>>& piles)
+	{
+		std::vector<int> order;
+		for (std::size_t round = 0;; ++round)
+		{
+			bool any = false;
+			for (const auto& cards : piles)
+			{
+				if (round < cards.size())
+				{
+					order.push_back(table.cardOf(cards[round]));
+					any = true;
+				}
+			}
+			if (!any) { break; }
+		}
+		return order;
+	}
+
 	// A trick game of four, you, west, north and east (Hearts, Spades).
 	struct Tricks : Played
 	{
@@ -1040,17 +1062,9 @@ namespace
 			set("table", "phase", 3.0f);
 			set("table", "first", static_cast<float>(leader == 1 ? 4 : leader - 1));
 			frames(2);
+			// Dealt a card a round to west, north, east and you, in the file's order.
+			game.stackedDeal = roundRobin(*this, { hands[1], hands[2], hands[3], hands[0] });
 			tap(KeyCode::Space);
-			frames(1);
-			auto& cards = pile("stock").pile.cards;
-			std::vector<std::string> order;
-			for (const auto& hand : hands) { order.insert(order.end(), hand.begin(), hand.end()); }
-			for (auto each = order.rbegin(); each != order.rend(); ++each)
-			{
-				const int number = cardOf(*each);
-				cards.erase(std::find(cards.begin(), cards.end(), number));
-				cards.push_back(number);
-			}
 			for (int i = 0; i < 100 && table("phase") != 0.0f && table("phase") != 5.0f; ++i) { frames(1); }
 			frames(2);
 		}
@@ -1448,13 +1462,14 @@ namespace
 		{
 			tap(KeyCode::Space);
 			frames(1);
-			auto& cards = get("stock").pile.cards;
-			for (auto each = top.rbegin(); each != top.rend(); ++each)
+			// Dealt in rounds to the discard pile (one), north and you, in the file's order.
+			const auto part = [&](std::size_t from, std::size_t count)
 			{
-				const int number = cardOf(*each);
-				cards.erase(std::find(cards.begin(), cards.end(), number));
-				cards.push_back(number);
-			}
+				std::vector<std::string> cards;
+				for (std::size_t i = from; i < std::min(from + count, top.size()); ++i) { cards.push_back(top[i]); }
+				return cards;
+			};
+			game.stackedDeal = roundRobin(*this, { part(20, 1), part(10, 10), part(0, 10) });
 			for (int i = 0; i < 100 && table("phase") == 5.0f; ++i) { frames(1); }
 			frames(2);
 		}
@@ -1514,7 +1529,7 @@ namespace
 TEST_CASE("gin.xml: cards laid out in the melds that leave the least deadwood, the court cards ten", "[cards][gin]")
 {
 	// The seven of hearts in a run or in the set of sevens: the set leaves less.
-	Gin play(cardsOf({ suitOf("hearts", { "5", "6", "7" }), { "7 spades", "7 diamonds" }, suitOf("clubs", { "J", "Q", "K" }), { "A diamonds", "2 spades" }, ginJunk, { "10 hearts" } }));
+	Gin play(cardsOf({ suitOf("hearts", { "5", "6", "7" }), { "7 spades", "7 diamonds" }, suitOf("spades", { "J", "Q", "K" }), { "A diamonds", "2 spades" }, ginJunk, { "10 hearts" } }));
 	REQUIRE(play.table("phase") == 0.0f);
 	CHECK(play.pile("mine").deadwood == 14.0f);
 	CHECK(play.pile("north").deadwood == 58.0f);

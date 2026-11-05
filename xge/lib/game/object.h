@@ -647,9 +647,8 @@ namespace xge
 			std::string scoreWith;      // <score><with pile=>: with that pile's cards too
 			int scoreFull{};            // <with><full>: that pile holds this many when all are dealt (0: as it is)
 			int scoreBest{};            // <score><best>: the best this many of the cards (0: all)
-			bool uncovered{ false };    // <uncovered />: its top card taken only while no card drawn over it overlaps it
-			std::string melds;          // <melds patterns=>: its cards laid out in groups that make those patterns (empty: none)
-			int meldsBest{};            // <melds><best>: the best this many of the cards (0: all)
+			std::string melds;          // <score patterns=><melds />: its cards laid out in groups that make those patterns (empty: none)
+			int meldsBest{};            // <score><best> with <melds />: the best this many of the cards (0: all)
 			PileRule takes;
 		};
 		RawPile pile;
@@ -1142,7 +1141,6 @@ namespace xge
 			std::string scoreWith;
 			int scoreFull{};
 			int scoreBest{};
-			bool uncovered{ false };
 			std::string melds;      // as written
 			int meldsBest{};
 			bool scoreDue{ false };  // its cards changed since it was last scored
@@ -1177,7 +1175,7 @@ namespace xge
 		// tricks its cards should take (a reckoning by high cards, trumps
 		// and short suits, as a player counts them to bid).
 		float tricks{};
-		// A pile with <melds>: `deadwood`, the points of its cards in no
+		// A pile scored with <melds />: `deadwood`, the points of its cards in no
 		// group, the groups chosen to leave the fewest.
 		float deadwood{};
 		// A card: what it is, its number (from 1, every deck of the game

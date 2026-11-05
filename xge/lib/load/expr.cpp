@@ -1028,7 +1028,6 @@ namespace xge
 			pile.scoreFull = raw.scoreFull;
 			pile.scoreBest = raw.scoreBest;
 			pile.melds = raw.melds;
-			pile.uncovered = raw.uncovered;
 			pile.meldsBest = raw.meldsBest;
 			pile.takes = raw.takes;
 		}

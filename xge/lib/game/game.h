@@ -466,13 +466,17 @@ namespace xge
 		bool dealCards(Object& hand, const std::string& from = {}, const std::string& faces = {});
 		bool revealCards(const std::string& pile);
 		bool gatherCards(const std::string& pile);
+		void redealCards();
+		// For tests: the next deal puts these cards on top of the deck's
+		// pile after shuffling, the first on top, before the piles are dealt.
+		std::vector<int> stackedDeal;
 		bool collectCards(const std::string& from, const std::string& into);
 		bool callSuit(Object& hand, const std::string& pile);
 		bool hopHand(Object& hand, Direction direction);
 		void trackHand(Object& hand, bool horizontal, float at);
 		void dealDecks();
 		void layOutCards();
-		bool isCovered(const Object& card);
+		bool isCovered(const Object& card, const Object& own);   // overlapped by a later-drawn card of another shown pile
 		Object* cardAt(int number);
 		Object* pileNamed(const std::string& name);
 		void turnCard(Object& card, bool up);

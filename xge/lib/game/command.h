@@ -711,8 +711,7 @@ namespace xge
 	struct CmdDeal
 	{
 		std::string pile;      // pile=: from this pile, not the one pointed at
-		std::string faces;     // faces=: each card dealt turned up or down
-		int count{ 1 };        // its content: how many cards
+		std::string faces;     // faces=: the card dealt turned up or down
 	};
 	// <collect pile="trick" into="taken" />: every card of the pile onto
 	// the other (a trick to whoever took it).
@@ -731,6 +730,11 @@ namespace xge
 	struct CmdShuffle
 	{
 		std::string pile;
+	};
+	// <redeal />: every card gathered, each deck shuffled into its pile and
+	// dealt to the piles' <dealt> again, as a new game deals.
+	struct CmdRedeal
+	{
 	};
 	// <call pile="discard" />: a hand names the suit of the card it points
 	// at in its own pile for that pile, waiting with a <wild> card on top.
@@ -829,7 +833,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdCount, CmdThink, CmdTake, CmdLay, CmdDeal, CmdCall, CmdRevealCards, CmdShuffle, CmdCollect, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdCount, CmdThink, CmdTake, CmdLay, CmdDeal, CmdCall, CmdRevealCards, CmdShuffle, CmdRedeal, CmdCollect, CmdLive>;
 
 	struct LoadedCommand
 	{

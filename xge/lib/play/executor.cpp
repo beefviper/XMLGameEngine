@@ -268,14 +268,11 @@ namespace xge
 			[&](const CmdPlace&) { done = self && game.placePiece(*self); },
 			[&](const CmdTake&) { done = self && game.takeCards(*self); },
 			[&](const CmdLay& l) { done = self && game.layCards(*self, l.pile); },
-			[&](const CmdDeal& d)
-			{
-				done = false;
-				for (int i = 0; i < d.count && self; ++i) { done = game.dealCards(*self, d.pile, d.faces) || done; }
-			},
+			[&](const CmdDeal& d) { done = self && game.dealCards(*self, d.pile, d.faces); },
 			[&](const CmdCollect& c) { done = game.collectCards(c.pile, c.into); },
 			[&](const CmdRevealCards& r) { done = game.revealCards(r.pile); },
 			[&](const CmdShuffle& s) { done = game.gatherCards(s.pile); },
+			[&](const CmdRedeal&) { game.redealCards(); },
 			[&](const CmdCall& c) { done = self && game.callSuit(*self, c.pile); },
 			[&](const CmdPut& p) { done = self && game.putPiece(*self, p); },
 			[&](const CmdCount& c) { game.setNumber(c.target, game.countClass(c.objClass)); },

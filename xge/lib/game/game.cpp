@@ -73,7 +73,7 @@ namespace xge
 			}
 			if (!object.pile.melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.pile.melds; }))
 			{
-				throw std::runtime_error("<object name=\"" + object.name + "\"> > <pile> > <melds patterns=\"" + object.pile.melds + "\">: names no <patterns>");
+				throw std::runtime_error("<object name=\"" + object.name + "\"> > <pile> > <score patterns=\"" + object.pile.melds + "\"> with <melds />: names no <patterns>");
 			}
 		}
 		dealDecks();
