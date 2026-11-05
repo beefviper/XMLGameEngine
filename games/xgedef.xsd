@@ -748,12 +748,23 @@
           <xs:attribute name="patterns" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
+      <!-- melds patterns=: its cards laid out in groups, each making one of the game's <patterns> of that name with all
+           its cards (<same>: one rank, <run>: worths in a row, <suited>: one suit, at least as many as the number), the
+           groups leaving the fewest points over; live number deadwood, the points left over by the best <best> of them -->
+      <xs:element name="melds" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="best" type="xs:positiveInteger" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="patterns" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="points" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="atmost" type="valueType" minOccurs="0" />
-            <!-- each: a card matching suit=, rank= or both counts this many (the first that matches), and a card
-                 matching none of them nothing -->
+            <!-- each: a card matching suit=, rank=, both or neither (every card) counts this many (the first that
+                 matches), and a card matching none of them its worth -->
             <xs:element name="each" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType mixed="true">
                 <xs:sequence>

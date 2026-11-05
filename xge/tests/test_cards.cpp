@@ -1437,3 +1437,177 @@ TEST_CASE("spades.xml: a whole hand, you playing the first card that goes: 13 tr
 	CHECK(play.table("them") != 0.0f);
 	CHECK(play.pile("stock").pile.cards.size() == 52);
 }
+
+namespace
+{
+	// Gin rummy: the first deal comes from a stock stacked as given, top
+	// first: your ten, north's ten, the card turned up, then the stock.
+	struct Gin : Played
+	{
+		explicit Gin(const std::vector<std::string>& top) : Played("descriptions/gin.xml")
+		{
+			tap(KeyCode::Space);
+			frames(1);
+			auto& cards = get("stock").pile.cards;
+			for (auto each = top.rbegin(); each != top.rend(); ++each)
+			{
+				const int number = cardOf(*each);
+				cards.erase(std::find(cards.begin(), cards.end(), number));
+				cards.push_back(number);
+			}
+			for (int i = 0; i < 100 && table("phase") == 5.0f; ++i) { frames(1); }
+			frames(2);
+		}
+
+		Object& pile(const std::string& name) { return get(name); }
+		float table(const std::string& name) { return get("table").variable.at(name); }
+		void set(const std::string& object, const std::string& name, float value) { game.setVariable(get(object).name, name, value); }
+
+		int cardOf(const std::string& name)
+		{
+			const auto space = name.find(' ');
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (object.isCard && object.card.rankName == name.substr(0, space) && object.card.suitName == name.substr(space + 1)) { return object.cardNumber; }
+			}
+			return 0;
+		}
+
+		bool holds(const std::string& pileName, const std::string& card)
+		{
+			const auto& cards = pile(pileName).pile.cards;
+			return std::find(cards.begin(), cards.end(), cardOf(card)) != cards.end();
+		}
+
+		// The hand at the top of the discard pile, and Space.
+		void drawDiscard()
+		{
+			Object& hand = get("hand");
+			hand.hand.pile = "playing.discard";
+			hand.hand.at = static_cast<int>(pile("discard").pile.cards.size()) - 1;
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		// The hand at that card of yours, and the key.
+		void discard(const std::string& name, KeyCode key)
+		{
+			const auto& mine = pile("mine").pile.cards;
+			Object& hand = get("hand");
+			hand.hand.pile = "playing.mine";
+			hand.hand.at = static_cast<int>(std::find(mine.begin(), mine.end(), cardOf(name)) - mine.begin());
+			tap(key);
+			frames(2);
+		}
+	};
+
+	std::vector<std::string> cardsOf(std::initializer_list<std::vector<std::string>> parts)
+	{
+		std::vector<std::string> all;
+		for (const auto& part : parts) { all.insert(all.end(), part.begin(), part.end()); }
+		return all;
+	}
+
+	const std::vector<std::string> ginJunk{ "A spades", "3 spades", "5 spades", "9 diamonds", "J diamonds", "K clubs", "2 diamonds", "4 clubs", "6 clubs", "8 hearts" };
+}
+
+TEST_CASE("gin.xml: cards laid out in the melds that leave the least deadwood, the court cards ten", "[cards][gin]")
+{
+	// The seven of hearts in a run or in the set of sevens: the set leaves less.
+	Gin play(cardsOf({ suitOf("hearts", { "5", "6", "7" }), { "7 spades", "7 diamonds" }, suitOf("clubs", { "J", "Q", "K" }), { "A diamonds", "2 spades" }, ginJunk, { "10 hearts" } }));
+	REQUIRE(play.table("phase") == 0.0f);
+	CHECK(play.pile("mine").deadwood == 14.0f);
+	CHECK(play.pile("north").deadwood == 58.0f);
+	// Melds first, then the deadwood.
+	const auto& mine = play.pile("mine").pile.cards;
+	REQUIRE(mine.size() == 10);
+	std::vector<std::string> last;
+	for (std::size_t i = 6; i < 10; ++i) { last.push_back(play.game.cardAt(mine[i])->card.rankName + " " + play.game.cardAt(mine[i])->card.suitName); }
+	CHECK(std::find(last.begin(), last.end(), "5 hearts") != last.end());
+	CHECK(std::find(last.begin(), last.end(), "A diamonds") != last.end());
+	CHECK(std::find(last.begin(), last.end(), "7 hearts") == last.end());
+}
+
+TEST_CASE("gin.xml: a draw from the discard pile, then a discard; the deadwood counts the best ten", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "2 spades" } }));
+	CHECK(play.pile("mine").deadwood == 10.0f);
+	play.drawDiscard();
+	CHECK(play.pile("mine").pile.cards.size() == 11);
+	CHECK(play.table("phase") == 1.0f);
+	CHECK(play.pile("mine").deadwood == 2.0f);
+	CHECK(play.get("hand").lookName() == "discard");
+	play.discard("K diamonds", KeyCode::Space);
+	CHECK(play.holds("discard", "K diamonds"));
+	CHECK(play.table("phase") >= 2.0f);
+}
+
+TEST_CASE("gin.xml: a knock with ten or less scores the difference, north's cards shown", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "2 spades" } }));
+	play.drawDiscard();
+	play.discard("K diamonds", KeyCode::K);
+	play.frames(2);
+	CHECK(play.table("phase") == 4.0f);
+	CHECK(play.table("you") == 56.0f);
+	CHECK(play.get("message").lookName() == "youknock");
+	for (const int number : play.pile("north").pile.cards) { CHECK(play.game.cardAt(number)->faceUp); }
+}
+
+TEST_CASE("gin.xml: gin scores 25 more", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J", "Q" }), ginJunk, { "K diamonds" } }));
+	play.drawDiscard();
+	play.discard("K diamonds", KeyCode::K);
+	play.frames(2);
+	CHECK(play.table("you") == 83.0f);
+	CHECK(play.get("message").lookName() == "yougin");
+}
+
+TEST_CASE("gin.xml: a knock against no more deadwood is undercut: 25 and the difference to the other", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "9 diamonds" },
+		suitOf("spades", { "A", "2", "3" }), suitOf("diamonds", { "4", "5", "6" }), { "8 clubs", "8 hearts", "8 spades", "2 clubs" }, { "K diamonds" } }));
+	CHECK(play.pile("north").deadwood == 2.0f);
+	play.drawDiscard();
+	play.discard("K diamonds", KeyCode::K);
+	play.frames(2);
+	CHECK(play.table("north") == 32.0f);
+	CHECK(play.table("you") == 0.0f);
+	CHECK(play.get("message").lookName() == "youcut");
+}
+
+TEST_CASE("gin.xml: a knock with more than ten left is only a discard", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "Q spades" } }));
+	play.drawDiscard();
+	play.discard("9 clubs", KeyCode::K);
+	play.frames(2);
+	CHECK(play.table("knocking") == 0.0f);
+	CHECK(play.table("phase") >= 2.0f);
+	CHECK(play.table("phase") != 4.0f);
+}
+
+TEST_CASE("gin.xml: north draws a discard that melds, and lets go of what melds least", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "6 diamonds" },
+		{ "4 diamonds", "5 diamonds", "A spades", "3 spades", "9 spades", "J spades", "K clubs", "2 clubs", "4 clubs", "8 hearts" }, { "Q hearts" } }));
+	play.drawDiscard();
+	play.discard("6 diamonds", KeyCode::Space);
+	for (int i = 0; i < 600 && play.table("phase") != 0.0f; ++i) { play.frames(1); }
+	REQUIRE(play.table("phase") == 0.0f);
+	CHECK(play.holds("north", "6 diamonds"));
+	CHECK(play.pile("north").pile.cards.size() == 10);
+	CHECK(play.pile("north").deadwood == 37.0f);
+}
+
+TEST_CASE("gin.xml: at 100 after a hand the higher score wins", "[cards][gin]")
+{
+	Gin play(ginJunk);
+	play.set("table", "you", 105.0f);
+	play.set("table", "north", 40.0f);
+	play.set("table", "phase", 4.0f);
+	play.frames(2);
+	CHECK(play.state() == "over");
+	CHECK(play.get("over.winner").lookName() == "you");
+}

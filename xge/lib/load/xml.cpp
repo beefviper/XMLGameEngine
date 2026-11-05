@@ -1115,6 +1115,15 @@ namespace xge
 						else { fail(at + " > <score>", "unknown <" + part->getName() + ">; expected <with> and <best>"); }
 					}
 				}
+				else if (tag == "melds")
+				{
+					pile.melds = requireAttribute(*child, "patterns", at + " > <melds>");
+					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						if (part->getName() == "best") { pile.meldsBest = readCount(*part, at + " > <melds> > <best>"); }
+						else { fail(at + " > <melds>", "unknown <" + part->getName() + ">; expected <best>"); }
+					}
+				}
 				else if (tag == "points")
 				{
 					pile.hasPoints = true;
@@ -1123,7 +1132,6 @@ namespace xge
 						if (part->getName() == "each")
 						{
 							RawObject::RawPile::Each each{ part->getAttribute("suit"), part->getAttribute("rank"), readValue(*part, at + " > <each>") };
-							if (each.suit.empty() && each.rank.empty()) { fail(at + " > <each>", "names no suit= or rank=; it would count every card"); }
 							pile.pointsEach.push_back(std::move(each));
 							continue;
 						}

@@ -1,6 +1,6 @@
 # Cards
 
-**Status:** Deck, piles and a hand Built (2026-11-01) with Klondike; players' cards, wild cards and a card-playing computer Built (2026-11-02) with Crazy Eights; points, a dealer and bets Built (2026-11-02) with Blackjack; patterns of cards, scoring and odds Built (2026-11-03) with Texas Hold'em; tricks Built (2026-11-04) with Hearts; trumps, partners and bids Built (2026-11-05) with Spades; decks of single cards Open.
+**Status:** Deck, piles and a hand Built (2026-11-01) with Klondike; players' cards, wild cards and a card-playing computer Built (2026-11-02) with Crazy Eights; points, a dealer and bets Built (2026-11-02) with Blackjack; patterns of cards, scoring and odds Built (2026-11-03) with Texas Hold'em; tricks Built (2026-11-04) with Hearts; trumps, partners and bids Built (2026-11-05) with Spades; melds Built (2026-11-05) with Gin Rummy; decks of single cards Open.
 
 ## What we looked for
 
@@ -42,6 +42,9 @@
 - **Taken tricks go into a pile** with `<collect pile into>`, face down, out of play until the next deal; their points go to the taker by a condition reading `trick.points` before the collect. Shooting the moon is two conditions on the scores. `<deal>N</deal>` deals a whole hand at once.
 - **The computer keeps out of tricks** with `<think><avoid /></think>`: the same rule-of-thumb player as Crazy Eights, with the one choice every trick game makes (try to take it, or not). Ducking with the highest card that still loses, shedding the most points when void. Looked at and left: counting cards played, which a later game may want.
 - **Bids from a reckoning, partners from a team** (2026-11-05, Spades): a bid is a number the game keeps, so the only thing the engine adds is what a player counts to make it: the live number `tricks` on a hand's own pile, a fixed rule of thumb (high cards, trump length, short suits) as books on bidding teach it. The computers' bids are a `<set>` with `<largest>` of it and 1. A `<team>` on a hand is for the computer only: it lets a partner's safe winner stand; the game's sides are its own variables. Looked at and left: nil bids, a computer that bids from its partner's bid, counting played cards.
+- **Melds are patterns read for a whole group** (2026-11-05, Gin Rummy): a set is `<same>3`, a run `<run>3` with `<suited>3`, the same parts Hold'em's hands are made of. For `<score>` a pattern is found among the cards; for `<melds>` every card of a group must take part in each part, which is what a meld is. The engine splits the cards into groups that leave the fewest points over (every group that fits, then the best split, worked out over the sets of cards: at most sixteen), and lays the pile out that way, so the player sees the melds. `<best>10` is Hold'em's `<best>5`: with eleven cards, the deadwood after the best discard.
+- **`<each>` names exceptions** (2026-11-05): a card no `<each>` matches counts its worth, as a pile with no `<each>` does, so Gin Rummy writes only its court cards; an `<each>` naming neither suit nor rank matches every card (Hearts' `<each>0</each>`). Looked at and left: a second number on a rank for points beside its worth.
+- **Drawing from the discard pile is a deal**: the discard pile `<deals>1</deals>` as the stock does, so drawing from either is `<deal />` on the pile pointed at; a `<takes />` with nothing in it takes any card. Knocking is the game's: a discard that sets a variable, then a condition on `deadwood`. Looked at and left: laying off onto the knocker's melds, the big gin and box bonuses.
 
 ## Looked at and left
 
@@ -58,3 +61,4 @@
 - Scoring Crazy Eights across games (points for the cards left in the loser's hand), more than one computer player.
 - Dealing three at a time from the stock, undo, scoring, an automatic finish.
 - Hearts' passing of three cards before each hand, the two of clubs leading the first trick (the first leader goes round instead), no points on the first trick; nil bids and blind bids for Spades; a computer that counts cards.
+- Gin Rummy's laying off, the line and box bonuses; Oklahoma gin; rummy games that lay melds on the table (a pile of piles).

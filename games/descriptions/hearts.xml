@@ -1107,7 +1107,7 @@
           <pile faces="up">
             <fan><x>64</x></fan>
             <takes><follow /><breaks><suit>hearts</suit></breaks></takes>
-            <points><each suit="hearts">1</each><each suit="spades" rank="Q">13</each></points>
+            <points><each suit="hearts">1</each><each suit="spades" rank="Q">13</each><each>0</each></points>
           </pile>
         </object>
 

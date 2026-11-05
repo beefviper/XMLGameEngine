@@ -1600,6 +1600,14 @@
           <xsl:value-of select="concat(' ', $to, '.pile.scoreBest = ', normalize-space(score/best), ';')" />
         </xsl:if>
       </xsl:if>
+      <xsl:if test="melds">
+        <xsl:value-of select="concat(' ', $to, '.pile.melds = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="melds/@patterns" /></xsl:call-template>
+        <xsl:text>;</xsl:text>
+        <xsl:if test="melds/best">
+          <xsl:value-of select="concat(' ', $to, '.pile.meldsBest = ', normalize-space(melds/best), ';')" />
+        </xsl:if>
+      </xsl:if>
       <xsl:call-template name="field">
         <xsl:with-param name="name" select="concat($to, '.pile.pointsMost')" />
         <xsl:with-param name="node" select="points/atmost" />

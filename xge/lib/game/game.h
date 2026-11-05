@@ -481,6 +481,10 @@ namespace xge
 		Vector2f cardPlace(const Object& pile, std::size_t index);
 		bool pileTakes(Object& pile, const std::vector<int>& cards, const Object* holder = nullptr);
 		float cardPoints(const Object& pile, const Object& card);
+		std::optional<float> eachPoints(const Object& pile, const Object& card);
+		bool meldFits(const std::vector<const Object*>& group, const RawPatterns::Pattern& pattern);
+		float meldDeadwood(const Object& pile, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds);
+		void layOutMelds(Object& pile);
 		const Object* trickWinning(const Object& pile);
 		const Object* trickPile();
 		bool isTrump(const PileRule& rule, const Object& card);

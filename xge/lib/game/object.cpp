@@ -393,6 +393,7 @@ namespace xge
 			{ "lead", [](Object& o) -> float& { return o.lead; }, true },
 			{ "winner", [](Object& o) -> float& { return o.winner; }, true },
 			{ "tricks", [](Object& o) -> float& { return o.tricks; }, true },
+			{ "deadwood", [](Object& o) -> float& { return o.deadwood; }, true },
 		};
 		return parts;
 	}

@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
 #include <cstdint>
 #include <map>
@@ -450,13 +451,196 @@ namespace xge
 		refreshPile(pile);
 	}
 
-	float Game::cardPoints(const Object& pile, const Object& card)
+	std::optional<float> Game::eachPoints(const Object& pile, const Object& card)
 	{
 		for (const auto& each : pile.pile.pointsEach)
 		{
 			if ((each.suit.empty() || each.suit == card.card.suitName) && (each.rank.empty() || each.rank == card.card.rankName)) { return each.points; }
 		}
-		return 0.0f;
+		return std::nullopt;
+	}
+
+	float Game::cardPoints(const Object& pile, const Object& card)
+	{
+		if (const auto each = eachPoints(pile, card)) { return *each; }
+		return card.card.worths.empty() ? static_cast<float>(card.card.rank) : card.card.worths.front();
+	}
+
+	// Whether these cards, every one of them, make the pattern: each part
+	// holds for all of them (<same>: one rank, <run>: worths in a row, a
+	// card counting any of its worths, <suited>: one suit), and there are
+	// at least as many as its number.
+	bool Game::meldFits(const std::vector<const Object*>& group, const RawPatterns::Pattern& pattern)
+	{
+		const std::size_t n = group.size();
+		for (const auto& [part, count] : pattern.parts)
+		{
+			if (n < static_cast<std::size_t>(count)) { return false; }
+			if (part == RawPatterns::Part::Same || part == RawPatterns::Part::Suited)
+			{
+				for (const Object* card : group)
+				{
+					if (part == RawPatterns::Part::Same ? card->card.rank != group.front()->card.rank : card->card.suit != group.front()->card.suit) { return false; }
+				}
+				continue;
+			}
+			// A run: some start from which each worth in turn is a different card's.
+			bool found = false;
+			for (const Object* starter : group)
+			{
+				for (const float start : starter->card.worths)
+				{
+					std::vector<bool> used(n, false);
+					const auto take = [&](const auto& self, std::size_t step) -> bool
+					{
+						if (step == n) { return true; }
+						const float wanted = start + static_cast<float>(step);
+						for (std::size_t i = 0; i < n; ++i)
+						{
+							const auto& worths = group[i]->card.worths;
+							if (used[i] || std::find(worths.begin(), worths.end(), wanted) == worths.end()) { continue; }
+							used[i] = true;
+							if (self(self, step + 1)) { return true; }
+							used[i] = false;
+						}
+						return false;
+					};
+					if (take(take, 0)) { found = true; break; }
+				}
+				if (found) { break; }
+			}
+			if (!found) { return false; }
+		}
+		return true;
+	}
+
+	// The fewest points left in no group, these cards (or the best `best`
+	// of them) laid out in groups each making one of the pile's <melds>
+	// patterns; `melds`, when asked, gets the groups (indexes into
+	// `numbers`). Each card counts its points by the pile's <points>.
+	float Game::meldDeadwood(const Object& pile, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds)
+	{
+		std::vector<const Object*> cards;
+		for (const int number : numbers)
+		{
+			if (const Object* card = cardAt(number)) { cards.push_back(card); }
+		}
+		const std::size_t n = cards.size();
+		std::vector<float> value(n);
+		for (std::size_t i = 0; i < n; ++i) { value[i] = cardPoints(pile, *cards[i]); }
+		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == pile.pile.melds; });
+		if (set == patterns.end() || n > 16 || n != numbers.size())
+		{
+			float total = 0.0f;
+			for (const float each : value) { total += each; }
+			return total;
+		}
+
+		// Every group of the cards that makes a pattern, by its lowest card.
+		const std::uint32_t all = (std::uint32_t{ 1 } << n) - 1;
+		std::vector<std::vector<std::uint32_t>> groups(n);
+		std::vector<const Object*> group;
+		for (std::uint32_t mask = 1; mask <= all; ++mask)
+		{
+			if (std::popcount(mask) < 2) { continue; }
+			group.clear();
+			for (std::size_t i = 0; i < n; ++i)
+			{
+				if (mask & (std::uint32_t{ 1 } << i)) { group.push_back(cards[i]); }
+			}
+			if (std::any_of(set->patterns.begin(), set->patterns.end(), [&](const RawPatterns::Pattern& pattern) { return meldFits(group, pattern); }))
+			{
+				groups[static_cast<std::size_t>(std::countr_zero(mask))].push_back(mask);
+			}
+		}
+		// The least left over by each set of the cards: its lowest card left
+		// over, or in one of its groups.
+		std::vector<float> left(std::size_t{ all } + 1, 0.0f);
+		std::vector<std::uint32_t> chosen(std::size_t{ all } + 1, 0);
+		for (std::uint32_t mask = 1; mask <= all; ++mask)
+		{
+			const int low = std::countr_zero(mask);
+			const std::uint32_t lowBit = std::uint32_t{ 1 } << low;
+			left[mask] = value[static_cast<std::size_t>(low)] + left[mask ^ lowBit];
+			for (const std::uint32_t each : groups[static_cast<std::size_t>(low)])
+			{
+				if ((each & mask) == each && left[mask ^ each] < left[mask])
+				{
+					left[mask] = left[mask ^ each];
+					chosen[mask] = each;
+				}
+			}
+		}
+		std::uint32_t target = all;
+		if (best > 0 && static_cast<std::size_t>(best) < n)
+		{
+			float least = -1.0f;
+			for (std::uint32_t mask = 1; mask <= all; ++mask)
+			{
+				if (std::popcount(mask) == best && (least < 0.0f || left[mask] < least))
+				{
+					least = left[mask];
+					target = mask;
+				}
+			}
+		}
+		if (melds)
+		{
+			melds->clear();
+			for (std::uint32_t mask = target; mask != 0;)
+			{
+				const std::uint32_t each = chosen[mask];
+				if (each == 0)
+				{
+					mask &= mask - 1;
+					continue;
+				}
+				std::vector<int> indexes;
+				for (std::size_t i = 0; i < n; ++i)
+				{
+					if (each & (std::uint32_t{ 1 } << i)) { indexes.push_back(static_cast<int>(i)); }
+				}
+				melds->push_back(std::move(indexes));
+				mask ^= each;
+			}
+		}
+		return left[target];
+	}
+
+	// A pile with <melds>: its groups first, each lowest card first, the
+	// rest after them in suit and rank order; `deadwood` from its best.
+	void Game::layOutMelds(Object& pile)
+	{
+		std::vector<std::vector<int>> melds;
+		const std::vector<int> cards = pile.pile.cards;
+		pile.deadwood = meldDeadwood(pile, cards, pile.pile.meldsBest, nullptr);
+		meldDeadwood(pile, cards, 0, &melds);
+		std::vector<int> order;
+		std::vector<bool> placed(cards.size(), false);
+		const auto byWorth = [&](int a, int b)
+		{
+			const Object& x = *cardAt(cards[static_cast<std::size_t>(a)]);
+			const Object& y = *cardAt(cards[static_cast<std::size_t>(b)]);
+			return std::make_tuple(x.card.suit, x.card.rank) < std::make_tuple(y.card.suit, y.card.rank);
+		};
+		for (auto& meld : melds)
+		{
+			std::sort(meld.begin(), meld.end(), byWorth);
+			for (const int i : meld)
+			{
+				order.push_back(cards[static_cast<std::size_t>(i)]);
+				placed[static_cast<std::size_t>(i)] = true;
+			}
+		}
+		std::vector<int> rest;
+		for (std::size_t i = 0; i < cards.size(); ++i)
+		{
+			if (!placed[i]) { rest.push_back(static_cast<int>(i)); }
+		}
+		std::sort(rest.begin(), rest.end(), byWorth);
+		for (const int i : rest) { order.push_back(cards[static_cast<std::size_t>(i)]); }
+		pile.pile.cards = order;
+		refreshBoundTexts(pile.name, "deadwood", pile.deadwood);
 	}
 
 	bool Game::isTrump(const PileRule& rule, const Object& card)
@@ -577,10 +761,10 @@ namespace xge
 		{
 			const Object* card = cardAt(number);
 			if (!card || !card->faceUp || card->card.worths.empty()) { continue; }
-			// <each>: what the first that matches it says, or nothing.
-			if (!pile.pile.pointsEach.empty())
+			// <each>: what the first that matches it says, or its worth.
+			if (const auto each = eachPoints(pile, *card))
 			{
-				total += cardPoints(pile, *card);
+				total += *each;
 				continue;
 			}
 			total += card->card.worths.front();
@@ -601,6 +785,9 @@ namespace xge
 		pile.points = total;
 		refreshBoundTexts(pile.name, "cards", pile.cardCount);
 		refreshBoundTexts(pile.name, "points", pile.points);
+
+		// A pile with <melds>: laid out in its groups, and its deadwood.
+		if (!pile.pile.melds.empty() && std::all_of(pile.pile.cards.begin(), pile.pile.cards.end(), [&](int number) { return cardAt(number) != nullptr; })) { layOutMelds(pile); }
 
 		// A hand's own pile in a game with a trick: the tricks it should take.
 		if (const Object* trick = trickPile(); trick && trick != &pile)
@@ -1774,7 +1961,54 @@ namespace xge
 		int index = -1;
 		const bool calling = std::any_of(targets.begin(), targets.end(), [](const Object* pile) { return pile->calling > 0.0f; });
 		const auto trick = std::find_if(targets.begin(), targets.end(), [](const Object* pile) { return pile->pile.takes.follow; });
-		if (trick != targets.end() && !calling)
+		if (!own->pile.melds.empty())
+		{
+			// Melds: holding no more than its best, it draws, the face-up top
+			// of a pile when that leaves less deadwood, else the face-down
+			// one; holding more, it lets go of the card leaving the least
+			// (the one worth most, of two alike).
+			const int best = own->pile.meldsBest > 0 ? own->pile.meldsBest : static_cast<int>(own->pile.cards.size());
+			if (static_cast<int>(own->pile.cards.size()) <= best)
+			{
+				Object* up = nullptr;
+				Object* down = nullptr;
+				for (Object* pile : shownPiles())
+				{
+					if (pile == own || pile->pile.deals <= 0 || pile->pile.cards.empty()) { continue; }
+					const Object* top = cardAt(pile->pile.cards.back());
+					if (top && top->faceUp) { up = up ? up : pile; }
+					else { down = down ? down : pile; }
+				}
+				aim = down ? down : up;
+				if (up && down)
+				{
+					std::vector<int> with = own->pile.cards;
+					with.push_back(up->pile.cards.back());
+					if (meldDeadwood(*own, with, best, nullptr) < meldDeadwood(*own, own->pile.cards, best, nullptr)) { aim = up; }
+				}
+				if (aim) { index = static_cast<int>(aim->pile.cards.size()) - 1; }
+			}
+			else
+			{
+				float least = 0.0f;
+				float worth = 0.0f;
+				for (int i = 0; i < static_cast<int>(own->pile.cards.size()); ++i)
+				{
+					std::vector<int> rest = own->pile.cards;
+					rest.erase(rest.begin() + i);
+					const float left = meldDeadwood(*own, rest, 0, nullptr);
+					const float points = cardAt(own->pile.cards[static_cast<std::size_t>(i)]) ? cardPoints(*own, *cardAt(own->pile.cards[static_cast<std::size_t>(i)])) : 0.0f;
+					if (index < 0 || left < least || (left == least && points > worth))
+					{
+						least = left;
+						worth = points;
+						index = i;
+					}
+				}
+				if (index >= 0) { aim = own; }
+			}
+		}
+		else if (trick != targets.end() && !calling)
 		{
 			// A trick: of the cards it takes, the one that best keeps out
 			// of it (<avoid />) or takes it.

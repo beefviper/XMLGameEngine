@@ -631,7 +631,8 @@ namespace xge
 			bool hasPoints{ false };    // <points>: how its face-up cards count
 			RawValue pointsMost;        // <points><atmost>: higher worths only while the total stays at most this (empty text: no limit)
 			// <points><each suit= rank=>N: a card counts the first that it
-			// matches (suit=, rank= or both), and any other none.
+			// matches (suit=, rank=, both, or neither: every card), and any
+			// other its worth.
 			struct Each
 			{
 				std::string suit;
@@ -643,6 +644,8 @@ namespace xge
 			std::string scoreWith;      // <score><with pile=>: with that pile's cards too
 			int scoreFull{};            // <with><full>: that pile holds this many when all are dealt (0: as it is)
 			int scoreBest{};            // <score><best>: the best this many of the cards (0: all)
+			std::string melds;          // <melds patterns=>: its cards laid out in groups that make those patterns (empty: none)
+			int meldsBest{};            // <melds><best>: the best this many of the cards (0: all)
 			PileRule takes;
 		};
 		RawPile pile;
@@ -1134,6 +1137,8 @@ namespace xge
 			std::string scoreWith;
 			int scoreFull{};
 			int scoreBest{};
+			std::string melds;      // as written
+			int meldsBest{};
 			bool scoreDue{ false };  // its cards changed since it was last scored
 			PileRule takes;
 			std::vector<int> cards;
@@ -1166,6 +1171,9 @@ namespace xge
 		// tricks its cards should take (a reckoning by high cards, trumps
 		// and short suits, as a player counts them to bid).
 		float tricks{};
+		// A pile with <melds>: `deadwood`, the points of its cards in no
+		// group, the groups chosen to leave the fewest.
+		float deadwood{};
 		// A card: what it is, its number (from 1, every deck of the game
 		// in turn) and whether its face is up.
 		bool isCard{ false };
