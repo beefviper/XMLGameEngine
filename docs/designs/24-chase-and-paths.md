@@ -1,63 +1,38 @@
 # Chasing, aiming and paths
 
-**Status:** Built: `<chase>`, `<aim>`, paths of straight steps. Curved paths and other AI strategies are ideas.
+**Status:** Built: `<chase>`, `<aim>`, maze walking, paths of straight steps, computer players. Ideas: curved paths, searching. Reference: [steering](../reference/commands.md#steering), [maps](../reference/maps.md#walking-a-map), [paths](../reference/timers.md#paths).
 
-## Chasing and aiming (Berserk)
+## Chasing and aiming
 
-**What we looked for.** The author's ask: "chase to get close, then aim to target, then fire". Berserk's Evil Otto should come for the man, and its robots should shoot at him, not along the way their group faces.
+- The ask: "chase to get close, then aim to target, then fire". Berserk's Otto should come for the man, its robots shoot at him.
+- Looked at: a behaviour property running every frame (needs its own frame order); **verbs that act once, run by a timer or a rule**; an `at=` on `<fire>` (could not face without firing). **Chosen: verbs,** so the timer says how often the chaser looks again, which is also how sluggish it is.
+- `<chase object>speed<near>8</near></chase>` sets the velocity at the nearest one of a name; a heading turns to it.
+- `<aim object />` stores the way; the next `<fire>`s go along it. `<lined>` refuses unless the target is on one of eight lines.
+- Open: chasing round walls, leading a moving target.
 
-**What we looked at.** (a) A behavior property on the object (`<ai targeting="direct" />`, below): it runs every frame and needs a frame order of its own. (b) Verbs that act once, run by a timer or a rule: the timer says how often the chaser looks again, which is also how sluggish it is. (c) Aiming as a `<fire at="...">` attribute: one verb, but a shooter could not face its target without firing.
+## Walking a maze
 
-**Chosen: (b).**
-- *`<chase object="hero">2<near>8</near></chase>`* sets the velocity straight at the middle of the nearest one in play of that name or group, at the speed (its content), or 0 within `<near>`; it faces that way, and a `<heading>` turns to it (2026-10-19, so Missile Command's missiles are streaks that point the way they fly). In an object's timer, path step, action or collision with another object.
-- *`<aim object />`* stores the way to the target's middle; the next `<fire>`s go along it from the shooter's middle, at any angle, at the projectile's own speed; facing (or a heading, exactly) turns too. A key that moves, hops or jumps the shooter, a reset, or another aim replaces it. Same places as `<chase>`. `<lined>` refuses the aim unless the target is across, up, down or on a true diagonal within so many pixels (Berzerk's robots fire along 8 ways).
-- The target is the nearest one of a name or group in play, so one of several players works the same.
-- Berserk: Otto chases the man ten times a second at 1.1 over the walls; every robot aims before it fires.
+- Pac-Man and four ghosts on a tile maze. **A `<maze map>` on the walker and three verbs for how it chooses at a tile:** `<go>` (a player's stick, taken at the first open tile), `<hunt>` (arcade targeting), `<wander>` (random). The walking itself is one engine pass, the same for all three (`play/maze.cpp`).
+- **Arcade targeting, not a search:** of the open ways other than back, the one whose next tile is nearest the target; ties up, left, down, right. The four ghosts are four targets on one verb (the quarry, `<ahead>`, doubled `<with>` a partner, `<retreat>` within a range). A* was rejected as the default: getting stuck and doubling back is how the game plays.
+- **Walls are the walker's own list**, by class and look, so the ghost house door is a wall to a hunter and open to eyes going home.
+- **`<slow class>`** in the maze, as the ghosts crawl through the tunnel. Rejected: a rule that changes speed and must change it back.
+- Rejected: one `<ai targeting>` attribute with a mode per ghost (packs choices into attributes), a verb per ghost (names a ghost, not a behaviour).
 
-**Open.** Chasing round walls (pathfinding), leading a moving target. A condition on distance is built (`distance=`, [states-and-conditions](07-states-and-conditions.md#and-or-totals-distance)).
+## Paths and formations
 
+- Galaxian's aliens fly in, hold a formation, then dive: scripted motion flown by many objects.
+- Looked at: a table of steps, a parametric curve, Bezier curves, a turtle command sequence. **Chosen: steps, the simplest.**
+- **Relative steps, not points:** the same dive is flown from any slot, and a `<wrap />` mid-step does not upset it. Galaxian's dive adds up to the window's height plus an alien's, so a diver that misses wraps home.
+- **Home is the formation:** `<home />` flies back to the object's position. A formation needs no grid of slots.
+- **A step can run commands** as it sets off (bombs on the way down).
+- **A path sets the velocity,** so the follower moves, wraps and collides as anything does.
+- **`<stagger>`** sends a group one behind another; an object on a path ignores another `<follow>`.
+- **Sway** is `<shift>` on a timer, moving objects and their home places together. **Aim** is a step whose `<x>` names something live, worked out as the step starts. **Escorts** are `<follow><nearest>2</nearest>`. A step's `self` is made for each object that can fly it, at load.
+- Open: curves, easing, Galaga's capture beam.
 
-## Walking a maze (Pac-Man)
+## Computer players
 
-- Need: Pac-Man and four ghosts on a tile maze. Pac-Man turns where the keys say as soon as the maze lets him; each ghost chases its own way.
-- **Chosen: a `<maze map=>` on the walker and three verbs that say how it chooses its way at a tile**: `<go direction>` (a player's stick: the wished way at the first tile it is open, straight on until then, stopped by a wall, reversed at once), `<hunt object>` (the arcade's targeting) and `<wander>` (one open way at random, a frightened ghost). The walking itself (keep to the lane, turn exactly in the middle of a tile, never onto a wall tile, straight on off the map) is one engine pass after the paths (`play/maze.cpp`), the same for all three.
-- **Arcade targeting, not a search.** At each tile a hunter takes, of the open ways other than back, the one whose next tile is nearest its target; ties go up, left, down, right. The four ghosts are four targets on one verb: the quarry (Blinky), `<ahead>` tiles in front of it (Pinky), that point doubled away from a `<with object>` partner (Inky), and a `<retreat object>` corner inside so many tiles (Clyde). A* or a breadth-first search was rejected as the default: the ghosts' getting stuck and doubling back is how the game plays, and a search would make every ghost the same perfect chaser. A real search can be another verb later.
-- Walls are the walker's own list (`<wall class="door" sprite="blue" />`): a tile is closed to it while an object in play of that class is there and the walker shows that look. The ghost house is just that: the door is a wall to a hunting or frightened ghost and open to eyes going home, and a `<path>` takes a ghost out of the house, since a path moves an object regardless of the maze.
-- **Slow ground**: `<slow class="tunnel">0.5</slow>` in the `<maze>`, a share of the walker's speed on tiles holding an object of that class, as the arcade's ghosts crawl through the tunnel. Chosen as part of the maze, like its walls, rather than a collision rule that changes the speed and has to change it back.
-- **Modes from outside**: the scatter and chase waves are a `mode` object's looks; it sends the ghosts their mode with `<trigger from="normal">` (only members showing that look), so frightened ghosts and eyes are left alone without a condition per ghost.
-- Rejected: one `<ai targeting="...">` attribute with a mode per ghost (packs a choice and its numbers into attributes; the parts of the target are elements now), and a verb per ghost (names a ghost, not a behaviour).
-
-## AI targeting (idea)
-
-- Maze-game AI decomposes into a few strategies with parameters. The Pac-Man ghosts: Blinky chases directly; Pinky targets a few tiles ahead of the player's direction; Inky uses the player's and Blinky's positions to flank; Clyde chases when far and retreats to a corner inside a threshold. Sketch: `<ai targeting="direct" />`, `"ahead" lookahead=4`, `"flank" reference="blinky"`, `"proximity_flee" threshold=8 fallback="corner"`. Pathfinding is the engine's job. Other modes: predictive, random, territorial.
-- Berserk's robots were the first need; the smallest step, a verb that sets a velocity (`<chase>`) or aims a `<fire>` (`<aim>`) from another object's position, is built (above).
-
-
-## Paths and formations (Galaxian)
-
-**What we looked for.** Galaxian's aliens fly in, hold a formation, then break away and dive: scripted motion, neither constant velocity nor physics, and the same script flown by many objects. The originals used stored tables of positions or velocity steps, math for loops, tiny command languages, and a script per entrance ending in an empty formation slot.
-
-**What we looked at.** Four ways to write a path, all able to sit behind one interface ("where is it at time t"): a **table of steps** (move this far, then this far), a **parametric curve** (x and y as expressions of time; fits the evaluator), **Bezier** curves (facing from the derivative), and a **command sequence** (turtle: forward, turn, repeat).
-
-**Chosen: the table of steps, built first because it is the simplest.**
-- A named `<path>` in the game's `<paths>`, written once and flown by any object (`<follow path="...">`), as the sketch here had it. Its numbers are content: a `<speed>`, an optional `<start>`, then `<step>`s (an `<x>` and a `<y>`, relative to where the step began) and `<home />`.
-- **Relative steps, not points.** The same dive is flown from any place in the formation, and a `<wrap />` in the middle of a step does not upset it, because what is left of a step is a distance, not a target. Galaxian's dive uses that: its steps add up to the window's height plus an alien's, which is exactly what the wrap takes off, so a diver that misses comes back from the top to its own place.
-- **Home is the formation.** An object's `<position>` is its slot; `<home />` flies back to it from wherever the object is. A formation is then just the objects' places, and needs no grid of slots or "go to slot" verb.
-- **A step can run commands** as it sets off (the follower's own, as on its timer), which is how a diver drops bombs on the way down without a timer that fires in formation too.
-- **A path sets the velocity**, each frame, and the object moves, wraps and collides as anything else does; nothing about collisions changed.
-- **`<stagger>` on `<follow object=...>`** sends a group one behind another, each waiting at the path's start: a line of aliens flying in. An object already on a path ignores another `<follow>`, so an alien's dive timer simply does nothing while it is still flying in.
-- Rejected for now: absolute points (a dive would need a copy per slot), a `<wait>` leg, a delay before the first of a stagger (Galaxian's sixth row, the arcade's third row of blues, shares the first blues' path in a group of the two, so it flies in behind them as a line of twenty rather than sitting in its place, drawn, until a later timer sent it).
-- **Sway, aim and escorts** (2026-10-29). A swaying formation is `<shift object="aliens">` on a timer: the objects and their home places move together, so `<home />` flies to where the slot is now; one on a path has only its place moved, and is put on it once within a frame (else a moving place stays a step ahead). Rejected: a formation object the aliens are placed relative to (a parent, which nothing else has). Aim is a step whose `<x>` names something live, worked out once as the step starts with `self` the follower: the dive still adds up down, so the wrap brings it home, and it flies a straight line rather than homing. A flagship's escorts are `<follow object="escorts"><nearest>2</nearest>`: the two nearest it. A diver's worth is a variable `pays` set to `diving` by the dive's first step and back by the bottom wrap. A path is the game's, flown by many, so a step's commands could not say `self` (it was named only in an object's own commands, at load) and escorts kept their formation points; now a step's commands that say `self` are made for each object a `<follow>` anywhere can send along it, when the game loads (so a mistake still stops the load), and for a copy made later the first time it flies it.
-- **The fleet is one group** (rewritten 2026-10-19): what every alien does (wrap, die to the shot and score `self.worth`, dive on a timer) is said once in a group of six inner groups, each row laid out in `<columns>` and saying only its picture, place and worth; the cells are `blues2.5.1` and so on. A starfield `<map>` drifts and blinks behind it.
-
-**Open.** Curves (a Bezier or a parametric leg) for smooth loops; steps that ease in and out; Galaga's capture beam; a dive's last steps go home in a straight line rather than looping.
-
-
-## Computer players (2026-10-17)
-
-- Need: the author asked for "some way for the game to control the AI", the way the recorded demo sends keys: a far player in Tennis, a second paddle in Pong.
-- **Chosen: a state's `<computer>`**, a list of conditions whose commands are `<hold button=>`. Every condition is tested every frame (unlike a state's conditions, where the first that holds wins), and the engine presses and lets go of the keys as it does a person's or the demo's (`Engine::playComputer`), not recording them. So the computer plays through the same keys and actions a person would, a second person could take its place, and a game needs no new verbs for what a computer does.
-- Conditions can compare where things are and how they go (`variable="x"`, `<below>ball.x</below>`, read live): a condition reads an object's variable, or, without one of that name, one of its live numbers (`numberOf`). That was the missing piece; it helps every condition, not only the computer's.
-- Looked at: AI verbs on the object (`<follow-ball>`, a different vocabulary from the player's), a script of moves (a program), and the demo stream itself (fixed, cannot react).
-- A test's number is live (2026-10-28), so a dead zone is `<above>ball.x + 10</above>`.
-- Open: a reaction delay, a computer that also chooses when to fire by distance or timing beyond what conditions say today.
+- Tennis and Pong need a computer player. **A state's `<computer>`:** conditions whose commands are `<hold button>`; every one is tested each frame and the engine presses keys as a person would (`Engine::playComputer`). A second person could take its place, and no verbs are new.
+- What made it possible: a condition reads an object's live numbers (`x`, `velocity.x`) when it has no variable of that name.
+- Rejected: AI verbs on the object (a second vocabulary), a script of moves (a program), the demo stream (cannot react).
+- Board games search instead ([board games](26-board-games.md#the-computer)). Open: a reaction delay.

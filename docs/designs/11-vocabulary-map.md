@@ -1,104 +1,57 @@
 # Vocabulary map
 
-**Status:** A reference, not a decision. Read from `games/xgedef.xsd` and [../readme.md](../readme.md) on `working`, 2026-10-28.
+**Status:** A map, not a decision. Every word is listed in the [docs index](../readme.md#word-index) and the [reference](../reference/); this page is how the words fit together, and which kinds of word are missing.
 
 ## Why
 
-The vocabulary grew one game at a time ([motion](22-motion.md): a word is added only when a real game cannot be written without it), so it was never laid out as a whole. Laying it out shows where the language is rich (collision, motion), where it is thin (values), and what kind of word each gap needs.
+The vocabulary grew one game at a time (a word is added only when a real game cannot be written without it), so it was never laid out as a whole. Laid out, it shows where the language is rich (collision, motion), where it is thin (values), and what kind of word each gap needs.
 
-## The words today, by grammar
+## The words as grammar
 
-**Nouns: things that exist**
+| Part of speech | What it is | Examples |
+|---|---|---|
+| Nouns | things that exist | `object`, `group`, `map`, `state`, `scene`, `sound`, `path`, `timer`, `deck`, `pile` |
+| Verbs | commands | `move`, `bounce`, `fire`, `inc`, `become`, `push` ([commands](../reference/commands.md)) |
+| Adjectives | properties of a noun | `velocity`, `heading`, `drag`, `mass`, `grip`, `light`, `type`, `hitbox` |
+| Prepositions | who, when, where | `edge=`, `class=`, `object=`, `side=`, `unless=`, `from=`, `into=` |
+| Pronouns | names that point | `ball.radius`, `window.right`, `aliens.3.2`, `self.`, `touch.`, `energy.level` |
+| Adverbs | how, how much, how long | `every`, `after`, `seconds`, `burn`, a verb's amount |
+| Values | numbers | text arithmetic (`+ - * /`), `<random>`, `<formula>` tags |
 
-- Containers: `game`, `window`, `variables`, `sounds`, `paths`, `styles`, `kit`, `objects`, `keeps`, `states`, `scenes`, `ways`, `timers`, `actions`, `inputs`, `conditions`, `shows`.
-- Things: `object` (or a piece of the `kit`, taken by `from=`), `group` and its `member`s or cells (`columns`, `rows`, `padding`, changed by `row`, `column`, `cell`; `slope`), `map` (`tile`, `row`s of characters or `columns` and `rows`, pieces picked by `char=`; with `cells` a playfield of cells, its `checks` (`full`, `line`), pieces of several cells as a `shape`), `variable`, `state`, `scene`, `way`, `sound`, `path`, `style`, `timer`, `action`, `keep`, `demo`, `computer`, `turns` and its `player`s.
-- Sprite shapes: `circle`, `rectangle`, `text`, `image`, `line`, `bitmap`, `svg`, `tether`. Text pieces: `content`, `number`, `letter`, `choose` (`by`, `word`). Several named `sprite`s on one object are its **looks** (`become`) or the frames of an `animation` (`frame`); a named animation is a look that moves. `poses` (`standing`, `walking`, `skidding`, `rising`, `falling`) picks a look by how the object moves, `mirror` flips it for the other way. The `window` has a `scale`.
-- Sound parts: `note`, `rest`, `part` (one voice of music), `loop`.
-- Path parts: `step`, `start`, `home`, `speed`.
-- Recorded play: `demo` with `seed`, `press`, `frames`.
+A collision rule reads like a sentence: *this object*, *when it touches* *that class*, *on its top* (`side`), *unless* *it is on a log*, *do this*.
 
-**Verbs: commands**
+Adverbs are each verb's own: there is no shared "how" vocabulary. Its likely members would be an amount, a duration and a limit any verb could take.
 
-| Family | Words |
+## The words by engine layer
+
+| Layer | How complete |
 |---|---|
-| Moving | `move` (on cells with `wait`), `hop` and `jump` (with `arc`), `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track`; on cells `slide`, `settle` |
-| Cells | `cycle` a shape; `go` keeps going, `chain`, `grow` and `split`, `joins`, a line's `straight` and `alike`, a free cell `below` a row, a spawn's `free`; in a check `clear`, `collapse`, `fall`; a spawn's `random`, `column`, `row`, `into=`; `send` between maps |
-| Steering | `chase`, `aim`, `follow`, `shift`; in a maze `go`, `hunt`, `wander` |
-| Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole`, `through` |
-| In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn`, `despawn`; `most` on an object |
-| Numbers | `inc`, `dec`, `set`, `copy`, `rank` |
-| Look and sound | `become`, `play`, `silence` |
-| Flow | `push`, `pop`, `enter`, `trigger`, `turns`, `pass`, `out`, `demo`, `hold` |
+| Data model: objects, groups, maps, cells, the kit, states and scenes, keeps | solid |
+| Appearance: shapes, bitmaps with inks, SVG, animation, looks, poses, turning, light, shadows, holes | solid |
+| Kinematics: velocity, acceleration, heading, drag, mass, pull, seek, altitude, grip, swing | good; no air control in a `<leap>` |
+| Steering: chase, aim, paths, maze walking | good; no search of a maze, straight legs only |
+| Collision: edges, filters, conditions, pixel tests, the touching verbs | the largest layer, where verbs, adjectives and prepositions meet |
+| Time: timers, intervals, seconds | built; counts frames |
+| Sound: notes, parts, waves, music | built; no envelope, no stereo |
+| Input: keys, axes, the three moments, computer players | small and clean |
+| Flow: the stack, scenes, conditions, turns, demos | enough for the shipped games |
+| Boards and cards: moves, picker, think, decks, piles, patterns | built for the shipped games |
+| Values: text arithmetic, `<random>`, `<formula>` | thinnest: no power, root, tangent or "if" |
 
-Each verb belongs to one of nine command groups, and each place (a collision, an action, a key, a condition, a timer, a path step) takes the groups that make sense there ([file-format](02-file-format.md#commands-in-groups)). In an action, timer or path step, a verb that is refused (a `fire` with no free projectile, a `hop` in the air) ends the list there.
+## Kinds of word the language does not have
 
-**Adjectives: properties of a noun**
-
-- Place and motion: `position`, `velocity`, `acceleration`, `heading`, `facing`, `drag`, `mass`, `grip`, `pull`, `seek`, `altitude` (`start`, `rise`, `fall`, `bounce`), `shadow`, `maze` (`wall`, `slow`), `centered`.
-- Being in play: `active`, `drawn`, `light`, `dark` (`unlit` or `unseen`).
-- Look: `color`, `size`, `radius`, `width`, `height`, `thickness`, `scale`, `flip`, `hide` (parts of an SVG left out), `background`, `font`, `style=` (and `<become style>` puts a style's colours on a bitmap).
-- Collision settings: `enabled`, `lockstep`, `type` (`box` or `pixel`), `solid` (which bitmap characters touch), `hitbox`.
-- Sound: `wave` (`square`, `triangle`, `sawtooth`, `sine`, `noise`), `pitch`, `to`, `volume`, `music` (a state's own sound).
-
-**Prepositions and conjunctions: who, when, where**
-
-- Targets: `edge`, `class`, `object`, `variable`, `into`, `direction`, `button`, `axis`, `keys`, `sound`, `state`, `scene`, `way`, `path`, `from`.
-- Filters on a collision rule: `side`, `unless`, `sprite` (only in that look), `slower`, `faster`, `through`, and `condition`s.
-- Tests in a condition: `atleast`, `atmost`, `above`, `below`, `equal` (each a number, read live when it names a variable), `remaining`; over many objects `total=` (`count`, `sum`, `highest`, `lowest`); `distance=` to a name or group (with a total too); `all` and `any` to join them.
-- Steering details: `ahead`, `with`, `retreat` (`hunt`), `near` (`chase`), `lined` (`aim`), `stagger`, `nearest` (`follow`), `rough` (`hole`).
-
-**Pronouns: names that can be pointed at**
-
-- Dotted references (`ball.radius`, `paddle1.score`), built-in names (`window.right`, `window.width.center`), generated names (`aliens.3.2`, `maze.dots.17`), scene paths (`playing.room2.robots`), live numbers (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`), a named timer's time left (`energy.level`), `self.` (the object running a rule) and `touch.` (the touch a rule answers), colors (`color.red`) and key names (`space`, `mouse.left`, `pad1.a`).
-
-**Adverbs: how, how much, how long**
-
-Time words: `every` and `after` (timers), `interval` (an animation's pictures), `seconds` (a `jump` or a timed `hop`), the seconds in a `note` and `rest`. Amounts are still each verb's own: `burn` on `accelerate` and `thrust`, the amount in `inc`, `dec`, `move`, `hop`, the count in `release` and `reveal`, the angle in `deflect`, the strength of `pull` and the turn of `seek`. There is no shared "how" vocabulary; the likely members would be an amount, a duration and a limit any verb could take.
-
-**Values**
-
-- Text expressions of numbers, names, `+ - * /` and brackets, worked out by the engine (`load/calc`); one value tag that draws a number, `<random>` (`<min>`, `<max>`); and arithmetic as tags, `<formula>` (one operation, operands as nested elements).
-- `<formula>` uses four arithmetic words, each with operands named for what they are: `add` (`augend`, `addend`), `subtract` (`minuend`, `subtrahend`), `multiply` (`multiplicand`, `multiplier`), `divide` (`dividend`, `divisor`); `remainder` (`dividend`, one `divisor`); and more whose operands are `<value>`: `smallest`, `largest` (two or more), `absolute`, `negate`, `sign`, `floor`, `ceiling`, `round`, `sine` and `cosine` (one; angles in degrees), `clamp`; and `compare`, a `<value>` and its test (`above`, `below`, `atleast`, `atmost`, `equal`: the condition words), 1 or 0 (a `<value>`, then `<atleast>` and `<atmost>`). An operand is a name or a number, never an expression. A `<random>`'s ends may be formulas.
-- A command's values are read when it runs, so they can name live numbers; every other value is worked out once at load ([values-and-names](04-values-and-names.md)).
-- The text form has no functions and no comparisons: anything past `+ - * /` is a tag (Berserk keeps a wait above a floor with `<largest>`).
-
-A note on pictures: an `<image>` is a file loaded by the window backend; an `<svg>` is drawn by the engine itself (`picture/svg.cpp`). Lines, bitmaps and SVGs share one bitmap path and can be `pixel` collision shapes; an `<image>` cannot ([pictures](30-pictures.md)).
-
-## The words today, by engine layer
-
-| Layer | Vocabulary | How complete |
+| Missing | Words it would hold | Where |
 |---|---|---|
-| Data model: what exists | objects, groups, maps, variables, states (`from=`), the `<kit>` and `from=`, scenes (`from=`, ways), keeps | solid |
-| Appearance | eight shapes, multi-color bitmaps, animation, looks (moving ones too) and `become`, `poses`, `mirror`, blinking, the window's `scale`, `flip`, `heading`, `light`/`dark`, `shadow`, `hole` | solid; a palette swap has two colours a style (a third is open) |
-| Kinematics | velocity, acceleration, heading, facing, drag, mass, pull, seek, altitude, grip, a hop's or jump's arc, and the moving verbs | good; `leap` has no air control |
-| Steering | `chase`, `aim`, paths with `follow`, maze walking with `go`, `hunt`, `wander`, `hunt` by hops | good; no search of a maze, straight path legs only |
-| Collision | edges, `class`, `object`, `side`, `unless`, `sprite`, `slower`, `faster`, conditions, `type`, `solid`, `hitbox`, and the touching verbs | the largest layer: where verbs, adjectives and prepositions meet |
-| Time | timers with `every` and `after` (on objects, states, scenes, looks), animation `interval`, `seconds` | built; counts frames; a named object timer's time left is its object's number |
-| Sound | `sounds`, `note`, `rest`, `part`, `wave`, `pitch`, `to`, `volume`, `loop`, `play`, `silence`, `music` | built; no envelope, no stereo |
-| Input | `input` (`button`, `axis`), `keys` sets, `trigger`, `track`, mouse and pads, `computer` with `hold` | small and clean |
-| Game flow | states, `push`, `pop`, scenes with `enter` and `reset scene`/`way`, `show state`, conditions with `all`/`any`, `turns`, `demo`, `keeps`, `rank` | enough for the shipped games |
-| Values | expressions, `random`, `formula` with eight operations, live numbers in commands | thin; no `negate`, `floor`, `sign` as tags |
+| More maths | power, square root, tangent, an integer `random` | [arithmetic](03-arithmetic.md) |
+| Planning | searching a maze, leading a target, curved paths | [chase-and-paths](24-chase-and-paths.md) |
+| Queries | line of sight; a total or distance inside a value | [states-and-conditions](07-states-and-conditions.md) |
+| Branching and events | `if`, `goto`, an event queue. Kept out on purpose: conditions join tests but have no else | [vision](01-vision.md) |
+| Presentation | a camera and scrolling (version 2), per-frame intervals, decals | [ideas](57-ideas.md) |
 
-A collision rule reads like a sentence: *this object* (noun), *when it touches* (preposition) *that class* (noun), *on its top* (`side`), *unless* (conjunction) *it is on a log*, *do this* (verb).
-
-## Categories the language does not have
-
-| Missing category | Words it would hold | Where it is discussed |
-|---|---|---|
-| **Math** beyond the eight operations | `negate`, `floor`, `sign`, `pick`, an integer `random` | [arithmetic](03-arithmetic.md), [values-and-names](04-values-and-names.md) |
-| **Planning** | searching a maze, leading a target, curved paths, paths that aim | [chase-and-paths](24-chase-and-paths.md) |
-| **Queries** | what is touching what, line of sight; a total or distance inside an expression | [states-and-conditions](07-states-and-conditions.md) |
-| **Branching and events** | `if`, `goto`, an event queue. Conditions join tests with `all`/`any` but have no else; keeping control flow out is deliberate | [vision](01-vision.md), [timers](09-timers.md) |
-| **Presentation** | a camera and scrolling (version 2), per-frame animation intervals, decals | [ideas](57-ideas.md), [pictures](30-pictures.md) |
-
-Time, sound, music, conditions over many objects, maze walking and making objects while a game runs (`spawn`/`despawn`, 2026-10-23) were gaps in earlier versions of this map and are filled now. They show how a gap closes: a game could not be written (Frostbite's cold, Pac-Man's ghosts, Adventure's sleeping dragon), the word was added in the places that already hold commands, and the workaround objects were deleted.
+Time, sound, conditions over many objects, maze walking, spawning, `negate`, `floor` and `sign` were all gaps once. Each closed the same way: a game could not be written, the word was added where commands already go, and the workaround objects were deleted.
 
 ## The shape this suggests
 
-Two grammars, one inside the other. The outer one is **noun / property / verb / filter**, and it is regular: tags are checked by the schema and every word is visible to XSLT. The inner one is the **value**, which has a small vocabulary of its own (`random` and sixteen arithmetic words) beside plain `+ - * /` text. Each further word (`negate`, `pick`) is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
+Two grammars, one inside the other. The outer is **noun, property, verb, filter**: regular, checked by the schema, visible to XSLT. The inner is the **value**, with a small vocabulary of its own beside plain `+ - * /` text. Each further value word is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
 
-A word is added only when a real game cannot be described without it, and a verb that means "behave like one particular game" shows that its parameters were not found ([motion](22-motion.md)).
-
-## Keeping this current
-
-When a verb, tag, attribute or value tag is added, add it here as well as to [../readme.md](../readme.md), the root readme's vocabulary tables and the schema. When a gap in the last table is filled, move the word up and say which game needed it.
+A verb that means "behave like one particular game" shows that its parameters were not found.

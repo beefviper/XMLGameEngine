@@ -1,45 +1,40 @@
 # Arithmetic in text and as tags
 
-**Status:** Built.
+**Status:** Built: text arithmetic of `+ - * /` (`load/calc`), and `<formula>` tags for everything more. Reference: [arithmetic as tags](../reference/format.md#arithmetic-as-tags).
 
-## Arithmetic in text and as tags
+## What we looked for
 
-Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from XSD and XSLT: a string a tool cannot see into. What we looked for: a way to write it that a schema can check and a transformation can walk, that does not cost every game its readability, and that does not need a second tool in the pipeline.
+Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from XSD and XSLT: a string a tool cannot see into. Wanted: a form a schema can check and a transformation can walk, that does not cost every game its readability, and that needs no second tool.
 
-| Option | Notes |
+| Option | Verdict |
 |---|---|
-| E1. Paste the string through | Works for C++ targets (infix is valid C++), not assembly |
-| E2. XSLT parses it | Possible with `analyze-string`, awkward precedence parsing |
-| E3. Parse once in C++ into AST-as-XML, XSLT walks it | Keeps the fragile part testable; adds a step |
-| E4. Remove arithmetic: computation as elements | Fully toolable, verbose, needs a math vocabulary. **Built as `<formula>`, beside the text** |
+| E1. Paste the string through | Fine for C++ targets, not assembly |
+| E2. XSLT parses it | Awkward precedence parsing |
+| E3. Parse in C++ to an AST as XML for XSLT | Adds a step |
+| **E4. Computation as elements** | Built as `<formula>`, beside plain text for sums |
 
-**What was built (E4).** One value tag, a sibling of `<random>`, so it goes anywhere a number does, and plain text arithmetic stays valid everywhere (it stays the everyday form for sums):
+## `<formula>`
 
-- **`<formula>`**, nested: one operation whose operands are elements that hold a name, a number, a `<random>` or another operation. Precedence is the nesting, and a chain (`a - b - c`) is one operation with several second operands. Closest to a C++ expression tree. Pong's and Breakout's titles use it, and every value that needs more than `+ - * /`.
+- **One value tag, nested:** one operation whose operands hold a name, a number, a `<random>` or another operation. Precedence is the nesting; a chain (`a - b - c`) is one operation with several second operands.
+- **Operands named for what they are:** `augend`/`addend`, `minuend`/`subtrahend`, `multiplicand`/`multiplier`, `dividend`/`divisor`. Operations with no classic names take `<value>`s. One table, `operationShape` in `game/command.cpp`, drives loader, evaluator and printer.
+- **An operand is a name or a number, never an expression,** or `<dividend>a + b</dividend>` brings the hidden string back.
+- **A divisor of 0** is the engine's to catch, since XSD cannot see what a name holds. Certainly 0 at load stops the load; 0 only because an input is not final yet (a size not yet measured) gives 0 and is worked out again; while running it gives 0 and one warning. A `late` flag tells these apart.
+- **One form, not two.** A flat `<equation>` of steps (three-address code) was built beside it, then dropped: two structured spellings of one thing are one too many, and its operands as attributes broke the format's rule.
+- **`<smallest>`, `<largest>`, `<absolute>`, `<clamp>`;** clamp reuses the condition words (`<atleast>`, `<atmost>`). Rejected: `<min>`/`<max>`, which already mean a `<random>`'s ends.
+- **`<compare>`** gives 1 or 0: `<compare><value>mode.waves</value><atleast>4</atleast></compare>`, the condition words again, so there is one comparing vocabulary and the test says which side is which. Rejected: five two-operand comparisons (which side?), a test as an empty tag between bare operands (mixed content the schema cannot check), an `<if>` (multiplying by 1 or 0 says it).
+- Also `<sign>`, `<ceiling>`, `<floor>`, `<round>`, `<negate>`, `<sine>` and `<cosine>` in degrees (so no `pi`), `<remainder>` from 0 up to the divisor so a count wraps.
+- Rejected on the way: operators as empty tags (`<divide>a<by/>b</divide>`), output names per operation, dotted outputs written into an object.
 
-It uses four operations named for their operands (`augend`/`addend`, `minuend`/`subtrahend`, `multiplicand`/`multiplier`, `dividend`/`divisor`); one table, `operationShape` in `game/command.cpp`, drives the loader, the evaluator and the printer.
+## The text cut down
 
-**One form, not two.** A flat `<equation>` (steps with operands as attributes, each able to `name` its answer for the later ones: three-address code) was built beside `<formula>` at first, on the view that the two were different enough in taste (`printf` against `cout`) to keep both. The grammar review of 2026-10 dropped it: two structured spellings of one thing are one too many, its operands as attributes went against the format's rule (an attribute names or picks something), it could not hold a `<random>`, and only Pong's title used it. The nested form stayed, since it can hold a `<random>` and maps straight onto an expression tree. At the same time `<random min= max= />` became `<random><min>..</min><max>..</max></random>`, its ends element content like every other number.
+- The text was once worked out by exprtk, so it had functions (`max(...)`, `cos(... * pi / 180)`) and comparisons: a second, hidden maths vocabulary beside the tags.
+- **Chosen: one small library of our own,** `load/calc`: numbers, names, `+ - * /`, a leading sign, brackets, nothing else. It compiles a text once into steps that read each name's number where it lives, and works left to right exactly as written. A function call stops the load and says to write a `<formula>`.
+- Rejected: an expression backend behind a factory with exprtk as an option. Nothing a game writes would differ between them, and a game would fail on one the first time someone used a function.
 
-**Decisions inside it.**
+## Schema
 
-- *An operand is a name or a number, never an expression.* Otherwise `<dividend>a + b</dividend>` brings the hidden string back. It also keeps the format's rule (an attribute names or picks something) honest for the attribute operands: a name or a plain number is that, and anything computed is an operation. The price is verbosity: roughly 380 expressions in the games have two or three operators each, so converting all of them would give roughly a thousand operation lines (a rough count).
-- *Evaluated at load* like every value, in the written order; a size-dependent position is finished once the window has measured, the same as for text.
-- *A divisor of 0 is the engine's to catch, not the schema's:* XSD cannot see what a name holds, and could at best refuse the literal `0` (and not `0.0`, or a name that is 0). The engine refuses a divisor that is certainly 0 at load and names the `<divide>`. It cannot refuse one that is 0 only because its input is not final yet (another object's variable reads 0 until that object is built; a text's width until a window has measured it), so that gives 0 silently and is worked out again later where it can be. While the game is running a throw would end it, so a divisor of 0 gives 0 and one warning for each place. To tell these cases apart each answer carries a `late` flag, set by an operand that is an object variable or an object's size and passed on to everything made from it. The expression text keeps its old behaviour (infinity), so no existing game changes.
+A formula's operands hold operations, so the schema's types contain themselves. Xerces handles that; `load/xsd` was taught to follow a named type that refers to itself. The operations are listed twice (formula and operand), since a group containing itself is still refused there.
 
-**Rejected on the way.** Operators as empty tags between operands (`<divide>window.width<by/>2</divide>`, and with a `<divided-by/>` between named operands): mixed content the schema cannot check, with operands still strings, or a separator that carries no information. One element accepting both operand spellings: harder to validate and to explain than two names. Output names per operation (`quotient=`, `difference=`): a word and a schema type for every operation. Dotted outputs written into an object (`object.middle`): they would collide with real names. Flat `<equation>` steps: built, then dropped (above).
+## Open
 
-**Schema and validators.** A formula's operands hold operations whose operands are operations, so the schema has types that contain themselves. Xerces handles that; `load/xsd` did not, and now follows a named type that refers to itself (and frees the cycle when the model goes). A group that contains itself is still refused there.
-
-**Smallest, largest, absolute, clamp (2026-10-28).** Four more operations, added together as planned. The four arithmetic words have classic names for their operands; these have none, so their operands are `<value>` (`<smallest><value>a</value><value>b</value></smallest>`, two or more; `<absolute>` exactly one), and `<clamp>` reuses the condition words: `<clamp><value>speed</value><atleast>1</atleast><atmost>5</atmost></clamp>`. Rejected: `<min>`/`<max>` as tags, which already mean a `<random>`'s ends and would read `<random><min><formula><min>`. `operationShape` gained how many operands a tag takes and a different role for the last (clamp's `<atmost>`), and how it prints (`min(a, b)`, `clamp(...)`). At the same time a `<random>`'s `<min>` and `<max>` may each be a `<formula>`: the two ends are then kept as one operation, `random`, of `min` and `max` (`RawValue::operations`), so renaming, scenes and the generator walk them like any formula's operands.
-
-**Sign, ceiling, sine, cosine, and the text cut down (2026-10-29, Beef's call).** The text form had been worked out by exprtk, so it had functions (`max(...)`, `sgn(...)`, `cos(... * pi / 180)`) and comparisons (Pac-Man's `20 + 100000 * (mode.waves >= 4)`): a second, hidden math vocabulary beside the tags. Beef asked for one small library of our own and every function moved to tags. Built:
-
-- `<sign>`, `<ceiling>`, `<sine>` and `<cosine>`, each of one `<value>`, the four the games needed. Sine and cosine take degrees, like every angle in a game (`<heading>`, `<deflect>`), so Pong needs no `pi`.
-- The 25 function calls in eleven games written as formulas.
-- `load/calc`, the text's arithmetic: numbers, names, `+ - * /`, a sign in front, brackets. No functions, no comparisons, no `pi`, no constants of its own. It compiles a text once into steps (a small stack machine) that read each name's number where it lives, so working a text out again only reads numbers. A text that calls a function stops the load and says to write a `<formula>`. It works left to right exactly as written; exprtk regrouped constants (`angle * pi / 180`), which once made generated C++ differ from the engine in the last bit.
-- exprtk is gone from the build, the generated programs and the docs. Looked at: an expression backend behind a factory, like the window and XML libraries (Beef's first thought), with exprtk as an option. Rejected: nothing a game writes would differ between them, so it is a choice with nothing to choose, and a game that loaded on one would fail on the other the first time someone used a function. One library, like the one SVG library.
-
-**Comparisons and the rest of the basics (2026-10-29, Beef asked).** `<compare><value>mode.waves</value><atleast>4</atleast></compare>` gives 1 when the `<value>` passes its test and 0 when not; the test is one of `<above>`, `<below>`, `<atleast>`, `<atmost>` and `<equal>`, the same words as a condition's tests (and clamp's ends), so there is one comparing vocabulary and the test names which side is which. Built first as five operations of two `<value>` (`<atleast><value>a</value><value>b</value></atleast>`), which did not say which side was which; Beef asked for a `<compare>`. His form put the test as an empty tag between bare operands (`<compare>a<lessthan />b</compare>`): rejected, as for arithmetic (above), since that is mixed content the schema cannot check and an operand could not be an operation. Pac-Man's mode timings, first a clamp of the wave, now compare it. The one-word operand these operations share was `<of>` until 2026-10-30, when Beef asked for a better word: `<value>`, everywhere, since every number in a game is already called a value. With them: `<negate>`, `<floor>`, `<round>` (a half away from 0) of one `<value>`, and `<remainder>` of a `<dividend>` and one `<divisor>`, from 0 up to the divisor so a count wraps (-1 of 4 is 3), a divisor of 0 handled as `<divide>`'s. The schema lists the operations twice (formula and operand): a group that contains itself is what `load/xsd` cannot follow. Looked at: an `<if>` taking a comparison and two answers; rejected for now, since multiplying by the 1 or 0 says the same and is one more shape.
-
-**Open.** `tangent`, square root, power and `pick` are not built: add one when a game needs it. A schedule (a list of lengths, one per wave) would say Pac-Man's timings plainly, if another game wants one. The reason for all of it, generating code for another target: the first windows-cpp generator wrote a `<formula>` back out as ordinary C++ arithmetic; the current one writes it as the engine's data (`formula(...)`) and lets the engine work them out ([generator](40-generator.md)). [vocabulary-map](11-vocabulary-map.md) lists every word the language has.
+`tangent`, square root, power and `pick`: added when a game needs one. A schedule (a list of lengths, one per wave) would say Pac-Man's timings plainly.

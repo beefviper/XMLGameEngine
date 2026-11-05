@@ -1,65 +1,48 @@
 # Input
 
-**Status:** Built, the mouse and gamepads too.
+**Status:** Built, the mouse and pads too. Reference: [input](../reference/input.md).
 
-## Input: three layers
+## Three layers
 
-- An **object** names what it can do: `<action name="up"><move direction="up">step</move></action>`. A **state** binds a key to a name: `<input button="w"><trigger object="paddle1" action="up" /></input>`. The **key** is only a label.
-- Consequences: remapping is one attribute in one state; the same key can do different things in different states; changing what `up` does is one edit on the object; the same action name can mean different things on different objects (polymorphism with no class hierarchy).
-- Built on top: one input can name several keys, a `<button>` each (`<button>a</button><button>left</button>`), and named key sets ([below](#key-sets)).
-- Held `<move>`s record each direction's step; velocity is recomputed from all four on every key change (replacing an earlier last-key-wins), so Down plus tapping Up cancels, and two keys make a diagonal.
-- One-shot verbs (`<hop>`, `<jump>`, `<fire>`) belong to the press.
+- An **object** names what it can do (`<action name="up">`); a **state** binds a key to that name (`<input button="w"><trigger object="paddle1" action="up" />`); the **key** is only a label.
+- So remapping is one edit in one state, one key does different things in different states, and one action name means different things on different objects, with no class hierarchy.
+- Held `<move>`s record each direction's step and the velocity is worked out from all four on every key change, so Down held and Up tapped cancel and two keys make a diagonal. Replaced last-key-wins.
+- **Key sets:** a named `<keys>` set holds inputs; a state takes them (a `<keys>` each, not `keys="a b"`), its own inputs going over them key by key.
 
-### A press that cannot be done (2026-10-18)
+## A press that cannot be done
 
-- Need: the author saw a ship play its firing sound with its shot already in flight, and Q*bert turn and squeak when pressed in the air: "the engine should be able to work out if a command can trigger or not and then fire off any described responses". About twenty games wrote `<fire>` or a hop and then a `<play>` in one action.
-- **Chosen: an action (on the press), an object's timer or a path step stops at the first verb refused** (`<fire>` with no projectile free, `<hop>`, `<jump>`, hunt by hops, `<leap>`). Each verb already knew; it now says so (`CommandExecutor` returns false) and the list ends. No new tag, and every shipped game already wrote the verb first. Commands before it still run, which Berserk's robots need (`<aim>` before `<fire>`).
-- Looked at: running the verbs first and the rest after (breaks an `<aim>` that must come before), and a wrapper such as `<try><fire/><then>...</then></try>` (the same order said with more tags, and something every author would have to remember).
-- **Collision rules, keys and conditions stop the same way (2026-10-28).** A `<spawn>` or `<fire>` at its cap, an `<aim>` not lined up or a hunt by hops that cannot be made ends that rule (edge or object), that key's list or that condition's list there; the rules after it still run. Every edge rule now records where it starts and ends (`EdgeGuard`, which before marked only rules with `sprite=` or `unless=`), so the engine knows where one ends. No shipped game wrote a verb after a refusable one there, so none changed.
-- Open: a sound for a refused press (an empty click).
-- **An object out of play does not act (2026-10-19).** Yars' Revenge's Space fires Yar's missile and, once a bite has brought it in, the Zorlon cannon; with the cannon hidden its action fired the blast from where it waited unseen, and the Asteroids ship fired while it was gone. Chosen: a press or a `<trigger>` of an action of an object out of play or dead does nothing; letting go still goes through, so a held move is let go. Looked at: a test inside the action (an action has no conditions, and every game would have to write it), a state per case (a playing state with and without the cannon, the same inputs twice).
+- A ship played its firing sound with its shot already in flight; Q*bert squeaked when pressed in the air.
+- **Chosen: a list stops at the first verb refused** (`<fire>` with none free, a hop in the air, `<leap>` off the ground). Each verb already knew; it now says so. Commands before it still run, which Berserk's `<aim>` before `<fire>` needs. The same holds in rules, keys and conditions; later rules still run.
+- Rejected: running verbs first and the rest after (breaks aim-then-fire), a `<try><then>` wrapper (the same order in more tags).
+- **An object out of play does not act:** its press or trigger does nothing, though letting go still lets go. Yars' hidden cannon fired from where it waited. Rejected: a test in every action, a state per case.
 
-### Key sets
+## Held keys across state changes
 
-- Need (2026-10-03): every play state of a game with waves or rooms copied the same bindings.
-- **Chosen:** a named `<keys name="...">` set at the top of `<states>` holds `<input>`s; `<inputs keys="a">` takes one, a `<keys>` each takes several (each over the one before) and the state's own `<input>`s go over them, key by key. Chosen over copying bindings.
-- Several sets were `keys="a b"`, names packed in a string, until 2026-10-29 ([file-format](02-file-format.md#lists-and-parts-still-packed-into-attribute-strings)).
-
-### Held keys across state changes
-
-A key can stay down while the state changes (hold Left, pause, unpause).
-
-| Option | Behavior |
+| Option | Behaviour |
 |---|---|
-| A. Latched to the press | A press runs the binding of the state active then; the release goes to the same commands. Hold Left through pause: the paddle keeps moving on the pause screen, and a key first pressed during the pause does nothing after. Built first, then replaced |
-| **B. Live held keys (built)** | The current state gates what a held key means. On each state change the engine releases what held keys were driving, then resumes the new state's *continuous* bindings (`move`, `accelerate`, `thrust`, `turn`) for keys still down. Pausing stops the paddle; unpausing restarts it with no re-press. Space held through the menu does not pause (state changes and one-shots run only on a real press) |
-| C. Cancel on change | Nothing resumed; press again after every pause. Simple, but annoying. Switching to it means dropping the resume half of `syncHeldKeysToState` |
+| Latched to the press | Hold Left through pause and the paddle moves on the pause screen. Built first, replaced |
+| **Live held keys** | The current state decides what a held key means. On a change the old bindings are let go and the new state's held verbs resume for keys still down. One-shots and state changes need a real press |
+| Cancel on change | Press again after every pause. Simple but annoying |
 
-- Implemented by `Game::stateChangeCount()` (up on every push/pop) compared in `Engine::syncHeldKeysToState()` after each key event and each frame (a condition can change state); `CommandExecutor::executeHeldInput` is the resume path. Releasing always reaches the commands its key is currently driving.
-- Repeat-while-held would be a separate verb or a repeat interval, not a behavior of `hop`.
+Built by a state change count compared in `Engine::syncHeldKeysToState()` after each key event and frame.
 
-### A key's three moments (2026-10-31)
+## A key's three moments
 
-- Need: a putt, a plunger, a cannon, a variable jump: "hold to build power, let go to strike". A key could only act on its press (held verbs staying on while down); nothing acted every frame while held as a plain command, and nothing on letting go. Found by the tables-and-tracks survey (`notes/tables-and-tracks-2026-10-31.md` in the project files).
-- Beef's framing: a key has three moments, pressed, held and released, and the language should name them, rather than gain a `<charge>` verb.
-- **Chosen: `on="press" | "hold" | "release"` on `<input>`**, left out meaning press (today's behaviour, so no game changed). `on=` picks one of three, so it is an attribute by the format's rule. `hold` runs the commands every frame the key is down, each run as one press; `release` once as it goes up. `State` keeps three maps (`input`, `holding`, `letGo`; `keyMaps()` walks them in the order of `keyMoments`), and a `<keys>` set carries all three.
-- **`release` reused as a value**: Beef asked whether it clashes with the `<release>` command (a waiting one brought into play). It cannot: one is an element among commands, this an attribute value, and `<demo>` already writes a key let go as `<release>`, so the file format already meant "key let go" by it.
-- **`hold` and `release` answer only a press made in the current state** (`Engine::pressedInState`, the state change count at the press). Otherwise Space held from the title into the game would charge, and its letting go strike. A pause and back ends what a held key was charging. Press bindings keep option B above.
-- `<charge>` was dropped: `on="hold"` with an `<inc>` and a `<formula>` `<smallest>` says the same. `<launch>` waits: a `<set>` of `velocity.x` and `.y` from `<sine>` and `<cosine>` of the heading says it today; a word is added if a second game wants it.
-- Open: a repeat with an interval while held (`<every>` on a hold), and how long a key has been held as a live number.
+- A putt, a plunger, a cannon: "hold to build power, let go to strike". A key could act only on its press.
+- **Chosen: `on="press|hold|release"`** (press if left out, so no game changed), rather than a `<charge>` verb; a charge is hold, `<inc>` and `<smallest>`. `release` as a value does not clash with the `<release>` command, and a `<demo>` already writes a let-go key as `<release>`.
+- **`hold` and `release` answer only a press made in the current state**, or Space held from the title would charge and strike.
+- Open: a repeat interval while held; how long a key has been held as a number.
 
-### Mouse and gamepads (2026-10-16)
+## Mouse and pads
 
-- **Buttons are keys.** A mouse or pad button is one more `KeyCode` (`mouse.left`, `pad1.a` ... `pad2.right`, an Xbox layout, two pads), so binding, held keys, key sets and the state rules above all apply unchanged. A pad's d-pad and its stick past halfway are the same four directions, so a game binds `pad1.left` once.
-- **Backends report state, the engine finds changes.** `Window::controls()` gives the mouse's place and buttons and each pad's buttons and stick once a frame; `Engine::handleControls` diffs it with the last frame and presses and releases. One place for the rules (the halfway stick, the first look that only notes) instead of five event loops. Qt has the mouse only (Qt 6 has no gamepad module).
-- **A click counts only on the playfield** (2026-11-01, Beef found Klondike answering clicks on the title bar, the menus and the bars beside the picture). The libraries read the buttons as held anywhere, so the engine decides, in `handleControls`, for every library and both programs: a button goes down for the game only when it goes down with the pointer inside the game's own pixels, and comes up only after such a press. A button held and brought onto the field is no press. The mouse axes are absent off the field too, so `<track />` does not follow the pointer into the bars. Rejected: fixing it per library (five places, and Qt's buttons are global).
-- **Analog is an `axis=` binding plus `<track />`.** The Atari paddle is a position, not a direction, so it binds to an action like a key does (the three layers stay: state binds, object acts) and `<track />` names the behavior: follow where it points, across the window, kept inside. It runs only when the control moves, so the keys and the mouse share an object. Rejected: a velocity from a stick (the d-pad already moves), a range on `<track>` (the window is every shipped game's range; add `<from>`/`<to>` when one is not).
-- 2026-10-17: `<track path="..." />` follows a `<path>`'s legs instead of the window's width, the range asked for above ([motion](22-motion.md#pulls-seeking-and-diagonal-hops-2026-10-17)).
-- Open: the right stick and triggers, a stick's push as a speed, a third and fourth pad, pads in Qt.
+- **Buttons are keys** (`mouse.left`, `pad1.a`), so binding, held keys and sets all apply. A pad's d-pad and stick past halfway are the same four directions.
+- **Backends report state, the engine finds changes** (`Window::controls()` diffed in `Engine::handleControls`), one place for the rules instead of five event loops.
+- **A click counts only on the game's own pixels**, decided once in the engine for every library: Klondike answered clicks on the title bar and menus. A button held and brought onto the field is no press.
+- **Analog is an `axis=` binding plus `<track />`:** the Atari paddle is a position, not a direction. `<track path>` follows a path's legs. Rejected: a velocity from a stick, a range on `<track>`.
+- Qt reads the mouse only (Qt 6 has no gamepad module). Open: right stick, triggers, more pads.
 
-### Ideas
+## Ideas
 
-- A frame-scoped **command queue**: input builds intents (command, target, amount), update consumes them, cleared every tick. Gives determinism, replay, an AI that issues the same commands, network sync. The three layers above are the same idea from the XML side. A queue inside every object was rejected.
-- Many-to-one bindings (two players' inputs combined into one object: same direction, opposite, sum, sum with momentum; Pong with a third paddle).
-- Few actions, context chooses the effect (instead of a button per command); axis inversion as a binding attribute.
-- Fixed conventions for shipped games (Space starts/pauses/restarts, W A S D plus arrows) are listed in [../readme.md](../readme.md) and enforced by `test_engine_input`.
+- A frame-scoped **command queue** (input makes intents, update uses them): determinism, replay, network sync. The three layers are the same idea from the XML side.
+- Many-to-one bindings (two players steering one object); axis inversion as a binding attribute.
+- The shipped games' key convention is in [the shipped games](../reference/games.md#the-key-convention), enforced by `test_engine_input`.

@@ -4,9 +4,10 @@ XMLGameEngine is a video game description language in XML plus a C++ engine that
 
 ## Read in this order
 
-1. [docs/readme.md](docs/readme.md): how the engine works **today** (format, every verb, backends, source map, limitations). The authority on behavior.
-2. [docs/designs/00-designs.md](docs/designs/00-designs.md): index of one small file per topic: why, options rejected, ideas, backlog. Open only the one for your area.
-3. [docs/agents/notes.md](docs/agents/notes.md): gotchas.
+1. [docs/readme.md](docs/readme.md): the guide to the docs, a short tour and an index of every word.
+2. [docs/reference/](docs/reference/): how the engine works **today**, a page per topic (format, objects, collisions, commands, states, the engine, limitations). The authority on behaviour.
+3. [docs/designs/00-designs.md](docs/designs/00-designs.md): index of one small file per topic: why, options rejected, ideas, backlog. Open only the one for your area.
+4. [docs/agents/notes.md](docs/agents/notes.md): gotchas.
 
 The root [readme.md](readme.md) is the short public overview.
 
@@ -51,7 +52,7 @@ A plain build has one backend of each kind (SFML 3, Xerces); `-DXGE_WITH_<NAME>=
   ```
 
 - Files end with exactly one trailing newline; stored LF (`.gitattributes` checks out CRLF on Windows).
-- **Docs move with code:** update `docs/readme.md` (and root `readme.md` when a game, verb or dependency changes) and the matching `docs/designs/` file in the same change. The code is the truth. Design files hold: what we looked for, looked at, chose and why, what is open; no diaries or test logs.
+- **Docs move with code:** update the matching `docs/reference/` page (and the word index in `docs/readme.md` and the root `readme.md` when a game, verb or dependency changes) and the matching `docs/designs/` file in the same change. The code is the truth. Design files hold: what we looked for, looked at, chose and why, what is open; near 6 KB each, no dates, diaries or test logs.
 - A new game goes in `games/descriptions/` and in `data_xml` in `scripts/cmake/assets.cmake`; a test file in `scripts/cmake/tests.cmake`; an engine source in `ENGINE_SOURCES` in the top `CMakeLists.txt`.
 - **Warnings stay at zero** (`xge_warnings()` in `scripts/cmake/platform.cmake`; clean on GCC and Clang). Fix, do not silence. A constructor parameter named like its member counts (`-Wshadow`, C4458).
 - Games share one key convention: Space starts, pauses and restarts (never Enter); player one is W A S D plus the arrows; where Space fires, pause is P or Escape. Colors are `color.` names only.

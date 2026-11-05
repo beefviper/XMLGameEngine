@@ -1,34 +1,41 @@
 # Open work
 
-**Status:** a backlog, nothing here is decided. Each item points at the design file that holds the reasoning.
+**Status:** A backlog; nothing here is decided. Each item points at the file that holds the reasoning.
+
+## Next classes of game
+
+- **Dice** (backgammon) was agreed as the next board or card step ([cards](27-cards.md)).
+- **Moves as timelines** (fighting games: one-shot animations, a hitbox per frame, key sequences) is the next class after tables and tracks ([tables-and-tracks](25-tables-and-tracks.md)).
+- **Lookahead for action games' computers** ([board-games](26-board-games.md#open)).
+- **A deck of single cards**, each its own picture and numbers ([cards](27-cards.md)).
+- Games the vocabulary cannot say yet: [games-atari](56-games-atari.md#near-misses).
 
 ## Language and engine
 
-- **Chasing and aiming** ([chase-and-paths](24-chase-and-paths.md)): lead a target, chase round walls; Galaxian's divers and bombs could `<aim>`. Only the front invader of a column firing ([pools-and-enemies](10-pools-and-enemies.md)).
-- **Donkey Kong** ([platforming](23-platforming.md)): barrels that choose ladders by where Jumpman is, the other three screens, the rest of the air-control ladder.
-- **Galaxian** ([chase-and-paths](24-chase-and-paths.md)): curved path legs. Its speeds and timings were chosen without seeing it played; so were Berserk's. Tune them first.
-- **Asteroids**: the saucers' shots breaking rocks. Lunar Lander: hard landings, and the speeds and altitude on the screen.
-- **Sound** ([sound](33-sound.md)): the march of Space Invaders keeping time with the block (it is a fixed loop, the playing state's music); an envelope; how the eight new sets sound is unheard by agents, so tune them by ear. Breakout could use `<deflect>`; Pong could serve at a set speed and random angle and speed up per hit.
-- **Pictures** ([animation-and-looks](31-animation-and-looks.md)): the rest of the Space Invaders 2 sheet (banking ship and hit flash as looks); per-frame intervals; animation that runs once.
-- **Groups** ([groups](06-groups.md)): a bare `<x>` in a member, evenly spaced members.
-- **Arithmetic** ([arithmetic](03-arithmetic.md), [vocabulary-map](11-vocabulary-map.md)): move the other games' arithmetic to `<formula>` if wanted; `negate`, `floor`, `sign` as tags.
-- **Repetition** (counted 2026-10-13, before defaults: about 940 lines of the games repeat exactly and 2,200 with only a number or name changed). Done since: [objects](05-objects.md)' defaults, [groups inside a group](06-groups.md), and `<shows>` and `<conditions>` sets ([states-and-conditions](07-states-and-conditions.md)). The numbered bundles (Berserk's rooms ×4, Kaboom's waves ×3) are now scenes inside a state, taking shared pieces from a kit ([scenes](12-scenes.md), 2026-10-15). One rule throughout: take the shared thing, say only what differs.
-- **Berserk** ([games-written-by-ai](55-games-written-by-ai.md)): the arcade's far bigger grid of rooms, each maze worked out from where its room is (needs maps made as the game runs); robots' speed and colour by score rather than by room. Its four room maps take one map of the kit and give only their rows (2026-10-28, [kit](13-kit.md)).
-- **Adventure** ([games-atari](56-games-atari.md)): five rooms are built ([scenes](12-scenes.md)), the carried thing going along; the bat, Rhindle, the rest of the kingdom.
-- **Pac-Man** ([chase-and-paths](24-chase-and-paths.md), [games-classic](54-games-classic.md#pac-man)): a real path search as another verb, the other fruit, the later levels' shorter scatters and faster frights; tune the speeds by playing it.
-- **After the 2600 vocabulary** (2026-10-17): decals painted onto a picture ([pictures](30-pictures.md)); light blocked by walls and fading at its edge; a shadow that shrinks as its thing rises; Tennis's serving. Speeds in Tennis and Haunted House were chosen without playing them.
-- **Maps of cells** ([groups](06-groups.md#cells-a-map-that-is-a-playfield), 2026-10-30): Tetris, Columns, Snake, Centipede and Capsules are built. Open: gliding between cells; for Centipede the flea, spider and scorpion; for Columns scoring by chain round and pieces; for Tetris hold, lock delay, ghost piece, a bag of seven, scoring by rows at once.
-- **Tables and tracks** ([tables-and-tracks](25-tables-and-tracks.md), 2026-10-31): stages 1 to 3 built (bounce by the normal, `on=` key moments, Putt Park; `<polygon>` hills, `<acceleration>` on a spawn, Cannon Hill; `<pivot>`, `<swing>` swept through the frame, lent speed in `<knock>`, Pinball). Putt Park's cup takes a ball at any speed and at a graze (Beef, 2026-10-31: for a fuller mini golf later). Speedway (stage 4) built too: `<surface>`, `<grip>` along a heading, path followers facing their way. Next class: moves as timelines (fighting).
-- **Board games** ([board-games](26-board-games.md), 2026-10-31): Checkers built (`<moves>`, `<pick>`, `<place>`, live `moves`), with a computer (`<think>`, 2026-11-01) and easier play (put back, `<marks>`, `<pick><only />`, mouse on cells, title options); Reversi (`<flank>`, `<put>`, `<count>`); Four in a Row, Tic-Tac-Toe, Dots and Boxes (`<fall />`, empty `<moves />`, `<on>`, `<close>`, the computer reading `<line>` checks; a cursor `<onto>` free places, the computer thinking on its own thread). Next asked for: backgammon (dice). Open: lookahead for action games' computers, draws, other board games (halma, chess's sliding moves), a better reversi judge for the computer, a stronger Dots and Boxes computer (chains).
-- **Cards** ([cards](27-cards.md), 2026-11-01): `<deck>`, piles, the hand and Klondike built. Next: Crazy Eights (hands of cards held by players, a computer playing cards), then a deck of single cards (each its own picture and numbers) for trading-card style games; dealing three, undo, scoring and an automatic finish for Klondike.
-- **Games the vocabulary cannot say yet**: see [games-atari](56-games-atari.md).
+- **Steering** ([chase-and-paths](24-chase-and-paths.md)): leading a target, chasing round walls, a real maze search as another verb, curved path legs.
+- **Platforms** ([platforming](23-platforming.md)): Donkey Kong's barrels choosing ladders by where Jumpman is, the other three screens, air control.
+- **Cells** ([groups](06-groups.md#cells)): gliding between cells; Tetris hold, lock delay, ghost piece, a bag of seven, row scoring; Columns chain scoring; Centipede's flea, spider and scorpion.
+- **Pictures** ([pictures](30-pictures.md), [animation-and-looks](31-animation-and-looks.md)): decals, a hole the shape of a bitmap, light blocked by walls, an interval per frame, an animation that runs once.
+- **Sound** ([sound](33-sound.md)): an envelope; notes that follow a variable (Space Invaders' march keeping time).
+- **Values** ([arithmetic](03-arithmetic.md)): tangent, square root, power, `pick`, when a game needs one.
+- **Conditions** ([states-and-conditions](07-states-and-conditions.md)): object-level conditions, a total inside a value, conditions on edge rules.
+- **A word for the object touched** (`other`), so Mario Bros.' rules about either brother are written once ([games-atari](56-games-atari.md#mario-bros)).
+- **Scenes** ([scenes](12-scenes.md)): Berserk's larger grid of rooms, which needs maps made while playing.
+
+## The games
+
+- Galaxian: escorts' points. Asteroids: the saucers' shots breaking rocks. Lunar Lander: hard landings.
+- Pac-Man: the later levels' schedules, the other fruit. Adventure: the bat, Rhindle, the rest of the kingdom.
+- Putt Park: a cup that takes only a slow ball wholly over it. Cannon Hill: cannons falling into craters.
+- Speeds in Galaxian, Berserk, Tennis, Haunted House and Pac-Man were chosen without watching play: tune them first.
 
 ## Code
 
-- `xgecli --generate`: what is open is under Open in [generator](40-generator.md). `test_generated_games.cpp` checks every generated game's data against the engine's reading and plays it against its file; building the generated programs themselves is by hand: `scripts/shell/windows/games-run-all.bat` generates, builds (MSVC `/W4`) and tests them all on Windows.
+- `data.xsl` reads the file a second time; a new field in `load/xml.cpp` needs the same there ([generator](40-generator.md#open)).
+- Building generated programs is by hand: `scripts/shell/windows/games-run-all.bat` generates, builds at MSVC `/W4` and tests them all.
 
 ## Known untested
 
-- MSVC: the engine, `xgegui` and the tests build clean on MSVC 19.44 with every backend, and all tests pass; checked by hand, not automatically. Older MSVC versions are untested.
-- A default build (`cmake -B build`, no options) and a build with only `-DXGE_WITH_OPENGL=ON` are covered by no automatic check ([backends](50-backends.md)).
-- Agents build in a Linux sandbox and cannot watch or listen, so anything about how a game feels is unchecked.
+- MSVC is checked by hand, not automatically; older versions are untested.
+- A default build (no options) and one with only `-DXGE_WITH_OPENGL=ON` have no automatic check ([build-and-layout](51-build-and-layout.md)).
+- Agents build in a Linux sandbox and cannot watch or listen, so how a game feels and sounds is unchecked.

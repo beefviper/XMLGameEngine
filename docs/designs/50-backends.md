@@ -1,36 +1,38 @@
 # Backends and the library
 
-**Status:** Built: 4 XML, 4 window and 3 audio backends (plus silent), library plus two programs.
+**Status:** Built: 4 XML, 4 window and 3 sound libraries plus silence; a library and two programs. Reference: [the engine](../reference/engine.md#backends).
 
-## Backends
+## Why backends
 
-- Why: the prototype was hard-wired to Xerces and SFML. Each library sits behind an interface so the core never names one, licensing or weight problems can be dodged per backend, and a library can be swapped without touching game logic. A compiling two-backend example (pugixml and Xerces through the same `main.cpp`) proved it before adoption.
-- **XML: `XmlDocument` / `XmlNode`** (read-only):
+The prototype was hard-wired to Xerces and SFML. Each library sits behind an interface so the core never names one, licensing or weight can be dodged per library, and one can be swapped without touching game logic. A compiling two-library example proved it before adoption.
+
+## XML: `XmlDocument` and `XmlNode`
 
 | Decision | Alternative | Why |
 |---|---|---|
-| Node is an **interface** | One concrete struct everything converts into | Libraries store data very differently (Xerces DOM, pugixml pool, RapidXML in place); a struct copies on every access |
-| `getFirstChild()` / `getNextSibling()` return a fresh `unique_ptr` | Raw pointers into a cache; value handles | Several nodes alive while a subtree is walked; allocation is irrelevant at load |
-| Unfiltered traversal, callers filter by name | Name-filtered or positional | Element order is not guaranteed |
-| Read-only | Mutable | RapidXML non-owning cannot mutate; writing would be a separate interface |
-| UTF-8 `std::string` | `wstring`, `XMLCh*` | Library-agnostic; Xerces transcodes at load |
+| A node is an **interface** | one struct everything converts into | libraries store data very differently; a struct copies on every access |
+| Children come as fresh `unique_ptr`s | raw pointers into a cache | several nodes alive while a subtree is walked; allocation is irrelevant at load |
+| Unfiltered traversal, callers filter by name | positional | element order is not guaranteed |
+| Read-only, UTF-8 `std::string` | mutable; `wstring` | RapidXML cannot mutate; library-agnostic |
 
-- Interface hygiene: abstract base gets only `virtual ~X() = default;`. Ideas: a range-for iterator over children, a node pool per backend.
-- **Validation follows the backend:** only Xerces does real XSD validation ("Strong"). The other three use `load/xsd`, which reads the same `.xsd` through the same interface and checks only the subset the schema uses (sequence, element, complexType, attribute); deliberately permissive (unknown attribute types pass). `printGame()` says which ran. `xge/tests/test_xml_format.cpp` pins what both must reject. Alternative: put validation in the engine layer so a new parser only has to parse.
-- **Window: `Window`:** `isOpen`/`close`, `init()` (build and measure each object's visual), `pollEvents()` (`{key, pressed}`), `controls()` (mouse and pads, once a frame), `clear`, `prepare` (an object's picture before drawing), `draw`, `display`, `setTitle`, `position`/`setPosition`. Everything in engine terms (`WindowDesc`, `Object`, `KeyCode`, `Color`, `Vector2f`); no library type leaks. `Object::size` is the one thing only a backend can measure (text and image). Backends: SFML3, Raylib, SDL2, OpenGL (GLFW), plus xgegui's Qt renderer. Every backend opens a window of its own and throws `std::runtime_error` if the library cannot start.
-- **Audio: `Audio`:** `load()`, `play(name)`, `loop(name)`, `stop(name)`, `stopAll()`, `update()`; SFML3, Raylib, SDL2, `NullAudio` ([sound](33-sound.md)).
-- **Factories** (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`) are the only places that know every implementation; a new library is one branch and one pair of files. Selection is a run-time factory; CMake options only decide which libraries get built.
-- The word "backend" stayed over implementation/module/service/provider/adapter: it says "interchangeable lower layer" and still fits as subsystems grow (window, graphics, input, audio, network, XML, expressions, filesystem). The engine owns the loop and knows only interfaces; the game is plain data.
-- Not an interface: lunasvg draws SVG inside the engine ([pictures](30-pictures.md)).
-- **Window `<scale>` (2026-10-23):** games written at an arcade's size (256 by 224) looked empty in a modern window with pixels a sixth of the sprite they belonged to. The game keeps its own size and every backend draws it N times bigger: SFML a view on a bigger window, SDL2 `SDL_RenderSetScale`, raylib `DrawTexturePro` into a bigger rectangle, OpenGL the viewport, Qt a size hint N times the picture. The mouse is mapped back to game pixels. Chosen over scaling every position and size in the file (each game would carry the factor in every number) and over a free resizable window (a whole-number scale keeps square pixels). Text is drawn unsmoothed, so a pixel font such as Press Start 2P at sizes in multiples of 8 stays sharp when scaled ([text](32-text.md)).
-- **On screen pixels, scaled freely (2026-11-02).** `xgegui` measured its view in Qt's pixels, which the display setting scales (125% on many 1080p screens), so a game opened bigger than itself. `GameView::shownRect` and the size hint now work in screen pixels (`devicePixelRatioF`), so a game opens at its own size; made bigger it scales by any amount that fits, keeping its proportions, centred on whole pixels, smoothed only when made smaller. `xgecli`'s SFML window letterboxes the same way when resized (`SFMLWindow::fitView`). Tried first: whole-number scales only (crisp, but a window a little too small for 2x showed the game at 1x with wide bars); Beef preferred free scaling for now. Not yet in the SDL2, raylib and OpenGL windows, which stretch when resized.
-- Ideas: a software renderer and null implementations of every subsystem so the engine never checks for absence ([ideas](57-ideas.md)); forward declarations to keep third-party types out of headers (they are `PUBLIC` today, so programs including `engine/engine.h` need them).
+- **Validation follows the library:** only Xerces validates fully ("strong"). The others use `load/xsd`, which reads the same `.xsd` and checks the subset the schema uses ("weak"), deliberately permissive. `test_xml_format.cpp` pins what both must reject.
 
+## Window and sound
+
+- **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. The one thing only a backend can measure is a text's or image's size. Every library opens a window of its own and throws if it cannot start.
+- **`Audio`**: `load`, `play`, `loop`, `stop`, `stopAll`, `update` ([sound](33-sound.md)).
+- **Factories** are the only places that know every library; a new one is one branch and a pair of files. Choice is at run time; CMake decides only what is built.
+- "Backend" stayed over module, provider or adapter: it says "interchangeable lower layer".
+- lunasvg is not a backend: it draws inside the engine ([pictures](30-pictures.md)).
+
+## Scale
+
+- **Window `<scale>`:** a game at an arcade's 256 by 224 looked empty in a modern window. The game keeps its size and every library draws it N times bigger (an SFML view, `SDL_RenderSetScale`, raylib's `DrawTexturePro`, the OpenGL viewport); the mouse maps back. Rejected: scaling every number in the file, a free resizable window (a whole scale keeps square pixels). Text is drawn unsmoothed, so a pixel font at multiples of 8 stays sharp.
+- **Resized freely:** `xgegui` and `xgecli`'s SFML window fit the game to the window by any factor with its proportions, centred on whole pixels. Whole-number scales only were tried first: a window a little too small for 2x showed 1x with wide bars. Not yet in the SDL2, raylib and OpenGL windows, which stretch.
 
 ## Library and programs
 
-- The engine is a library, `xgelib` (`xge/lib/`). `xgecli` ([cli](52-cli.md)) and `xgegui` are programs; `xgetest` links the library. `xgedata` copies `games/` (descriptions, assets, generators) and the schema, to the top of the output folder. A new front end is a `main()` and a few lines in `executables.cmake`.
-- Layout: one folder per project (`xge/lib/`, a folder per part of the engine; `xge/cli/` and `xge/gui/`, each with `source/` and `include/`), with `xge/tests/` beside them; everything a game is made of is in `games/` (see [build-and-layout](51-build-and-layout.md)). The schema sat with the engine in `xge/` until 2026-10-28, when it moved beside the games (`games/xgedef.xsd`) so every game names it the short way, `../xgedef.xsd`, in the repository and in the output alike ([build-and-layout](51-build-and-layout.md)). (Before, the engine's `source/`/`include/` sat at the top so the programs looked like extras.)
-- **Static by default, shared with `-DXGE_BUILD_SHARED=ON`.** Static: `xgecli` is one file that runs anywhere beside its games and assets; nothing to mismatch. Shared: one copy, replaceable without relinking, but the library must be found at run time and on Windows every crossing class needs exporting (`WINDOWS_EXPORT_ALL_SYMBOLS`). With two small programs always built together, nothing is gained from sharing. Tests were run both ways.
-- Rejected: one executable with a `--gui` switch; a `CMakeLists.txt` in every folder; third-party libraries `PRIVATE` (the engine's headers include Xerces, SFML and others; hiding them behind interfaces is a separate change).
-- Targets are all `XGE`-named; the CMake project is `XMLGameEngine`.
+- The engine is a library, `xgelib`; `xgecli` and `xgegui` are programs; `xgetest` links the library. A new front end is a `main()` and a few lines in `executables.cmake`.
+- **Static by default,** `-DXGE_BUILD_SHARED=ON` for shared. Static `xgecli` is one file that runs beside its games; with two small programs always built together, sharing gains nothing.
+- Rejected: one executable with a `--gui` switch; third-party libraries `PRIVATE` (the engine's headers include them; hiding them is a separate change).
+- Ideas: null implementations of every subsystem so the engine never checks for absence; forward declarations to keep library types out of headers.

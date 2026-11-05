@@ -1,70 +1,57 @@
 # Values, variables and names
 
-**Status:** Built. Handle references and a `Value` variant are decided, not built ([objects](05-objects.md)).
+**Status:** Built. A `Value` variant and anchors are ideas. Reference: [the game file](../reference/format.md#values).
 
 ## Values
 
-- A **value** is any number in a game file (position, velocity, size, threshold, step, interval). It is **expression text** (`+ - * /` and brackets over named values and numbers, `load/calc`) or **one value tag**.
-- Built value tags: `<formula>`, arithmetic as tags (the four, and smallest, largest, absolute, sign, ceiling, sine, cosine, clamp), so no string is left to parse ([arithmetic](03-arithmetic.md#arithmetic-in-text-and-as-tags)); and `<random>` with a `<min>` and a `<max>`, drawn at load and again whenever its object comes back into play, by a reset (of it, its scene or the game), a `<reveal>`, a `<release>` or a `<fire>` (`Game::drawStartAgain`: the object's random variables, then its velocity and position worked out again), so every Pong serve is new and every rock that comes into play falls its own way. Ideas, each one new tag in the XSD and one case in the evaluator: `<pick>` (one of a list), an integer `<random>`, `<count>` of a class; a random magnitude with a random sign is written with `<sign>` of a random (Pong multiplies `<sign>` of `ball.side`, `ball.speed` and `<cosine>` of `ball.angle`, so the serve is never near-vertical or slow). Other balance helpers (saturate, floor, cap, diminishing returns) are candidates too ([ideas](57-ideas.md)).
-- A value holds text or a tag, not both.
-- **What is worked out when.** Everything is evaluated once at load, except a timer's `<every>`/`<after>` (worked out again each round), positions that depend on a text's or image's measured size, and, since 2026-10-17, a command whose numbers name something that changes (see [values read when used](#values-read-when-used-2026-10-17)). A condition's number is read every frame too, so it can name another variable ([states-and-conditions](07-states-and-conditions.md)). An object's variables are worked out before its position and velocity, so those can use them.
+- A **value** is any number in a game: text arithmetic (`+ - * /`, brackets, names, numbers; `load/calc`) or **one value tag**: `<formula>` ([arithmetic](03-arithmetic.md)) or `<random>`. A value holds text or a tag, not both.
+- **`<random>`** is drawn at load and again whenever its object comes back into play (a reset, `<reveal>`, `<release>`, `<fire>`; `Game::drawStartAgain`), so every Pong serve is new. A random size with a random sign is `<sign>` of a random.
+- **What is worked out when:** once at load, except a timer's interval (each round), positions that depend on a measured text size, a condition's number, and a command's values that name something that changes. An object's variables are worked out before its position and velocity, so those can use them.
+- Ideas, each one tag and one case: `<pick>` from a list, an integer `<random>`, a `<count>` of a class.
 
-## Values read when used (2026-10-17)
+## Values read when used
 
-- Need: the author asked that "a variable should always be able to be changed": an `<inc>` amount was fixed at load, so a fish could not add its own worth, a shot could not leave from where the ship is now, and nothing could put a number into where an object is.
-- **Chosen: a command remembers what it was written as.** A command whose amount, seconds, distance or ahead names an object's variable or a live number, and every `<set>` and `<spawn>`, is kept as `CmdLive`: the raw command, the command as made at load (its kind, for every check that asks), and where it is. Each time it runs, `Game::makeNow` makes it again with `makeCommand`, the one place a command is made, so no verb needs to know. Looked at: evaluating each verb's fields by hand in the executor (every verb twice), and making every command live (works out every value on every bounce for nothing).
-- **Live numbers:** `owner.x`, `owner.y`, `owner.velocity.x`, `owner.velocity.y`, `owner.heading`, `owner.altitude`, `owner.rise`, `owner.light` and `owner.blink` for every object (`liveParts` in `game/object.cpp`), and `touch.*` for the touch a rule answers, are bound into the arithmetic like the variables, as numbers in `game_expr::liveNumbers` that Game writes before a value is worked out (`Game::refreshLive`, from links worked out once). Only a command's value may read them: anywhere else they would read 0, so the load stops with a message naming the value.
-- `self.` is written out to the object's own name before anything is evaluated (`nameSelf`), in every value of its commands and their variable= and into=.
-- `<set>` writes a variable (refreshing what shows it) or one of the live numbers, on an object or every member of a group; a variable of the object's own of that name wins, as everywhere else.
-- `<spawn>` makes a new copy of a kit piece or object (2026-10-23), with a position and velocity read as it runs; a `<centered>` half places the middle ([pools-and-enemies](10-pools-and-enemies.md#spawn-and-despawn-2026-10-23)).
-- Open: live numbers of a group by its name (`rocks.x`, which one?), an object's middle as a name of its own (`ship.x + ship.width / 2` today), a value that cannot be worked out as it runs falls back to the load-time command with one warning rather than stopping.
+- "A variable should always be able to be changed": an `<inc>` amount was fixed at load, so a fish could not add its own worth.
+- **Chosen: a command remembers what it was written as.** One whose values name a live number, and every `<set>` and `<spawn>`, is kept raw (`CmdLive`) and made again by `makeCommand` each time it runs, so no verb needs to know. Rejected: each verb evaluating its own fields (every verb twice), every command live (wasted work on every bounce).
+- **Live numbers** (`x`, `y`, `velocity.x`, `heading`, `altitude`, `light`, `blink`, and `touch.*` in a rule) are bound into the arithmetic before a value is worked out. Only a command's value may read them; anywhere else would read 0, so the load stops.
+- `self.` is written out to the object's own name before evaluation (`nameSelf`).
+- Open: a group's live number by its name (which member?), an object's middle as a name of its own.
 
 ## Evaluation order and dotted names
 
-- Problem: XML has no definition order or scope, so `<x>screenWidth / 2 - ball.radius</x>` says nothing about whether `screenWidth` exists yet.
-- **Chosen: collect, then evaluate.** Parse the whole tree as raw strings; register every symbol (globals, `window.*`, every object's variables as `owner.variable`, initially 0); evaluate. So `score1` can read `paddle1.score` even though `paddle1` comes later in the file. Globals are worked out in written order.
-- The arithmetic has no member access, so `ball.radius` is just a symbol whose name contains a dot, registered up front.
-- Owned objects are named by their path (`playing.room1.robots.3`, a variable `playing.room1.robots.3.speed`), so a reference is split at its **last** dot into owner and variable. Before evaluation, `layOutScenes` writes every name in every expression out in full, looked for from the inside out (scene, state, game, end of one path), so the arithmetic still sees only plain symbols ([scenes](12-scenes.md)).
-- Chained references (A reads B's variable that is itself an expression): a topological sort with cycle detection, or lazy evaluation with caching and a loud cycle error. Lazy was suggested; not needed, since only simple cross-object reads exist.
-- Expressions read object variables live (`Game::refreshBoundTexts` also writes `expr.objectVariables`), which timers needed.
+- XML has no definition order or scope. **Chosen: collect, then evaluate:** register every symbol (globals, `window.*`, every `owner.variable`), then evaluate, so `score1` can read `paddle1.score` written later. Globals go in written order.
+- `ball.radius` is a symbol with a dot in it. Owned objects are named by path, so a reference splits at its **last** dot. `layOutScenes` writes every name out in full first, inside out ([scenes](12-scenes.md)).
+- Chains of references need no sort: only simple reads exist.
 
 ## Variables
 
-- Global `<variable>`s are named constants. Mutable state lives on **objects** (`paddle1.score`); a variable with no owner is "no such object" and does nothing. A mutable game-wide variable was never needed: an object's own variables were enough in every shipped game.
-- **Chosen: polling by named reference.** Each object has `map<string, float>`, plus a snapshot used by `reset`. A text whose `<number>` is exactly one `owner.variable` is bound to it and redraws when `<inc>`/`<dec>`/`setVariable` changes it. Any other `<number>` expression is worked out once.
+- Global `<variable>`s are named constants. **Changing state lives on objects** (`paddle1.score`); a game-wide changing variable was never needed.
+- **Polling by name:** each object has a map of numbers and a snapshot for reset; a text whose `<number>` is one `owner.variable` redraws when it changes.
 
 | Option | Verdict |
 |---|---|
-| **Polling** (reader looks the value up) | Chosen: simple, fits a declarative file |
-| Listeners / observers | Better when many things react to rare changes; stale subscriber cleanup and "subscribe" wiring do not look declarative. A second batch of conversations argued for observers throughout, for swappable parts; middle path: references for simple local dependencies, observers where decoupling pays |
-| Copy the value | Goes stale. Rejected |
-| Raw pointers | Dangle when storage moves. Rejected in favor of handles |
+| **Polling** | Chosen: simple, fits a declarative file |
+| Listeners | Cleanup and wiring do not look declarative |
+| Copying the value | Goes stale |
+| Raw pointers | Dangle when storage moves |
 
-- Decided, not built: a small `Value` variant (`int`, `float`, `bool`, `string`) so "score" and "doubled" are game-author data; a reference form `{handle, variable}` resolved after the first pass (a dangling one returns a default and can be reported); per-entity variables bound into the arithmetic before a condition runs. Profile before optimizing the string lookups.
+- Idea: a small `Value` variant (int, float, bool, string); references as `{handle, variable}` resolved after the first pass.
 
-## An object's own size in expressions
+## An object's own size
 
-- Need: centering a text needs a width only a backend can measure. Games used hand-tuned offsets (`window.width.center - 350`) that broke on any wording or font change.
-- **Built:** `objectName.width` / `.height` in expressions (meant for `<position>`); an object names itself like any other (an earlier `self.width` was dropped). A circle/rectangle/bitmap size is known at load; a text/image position is marked unknown (`printGame` says so) until the window measures it, then recomputed whenever a size it names changes (`Game::resolveSizeDependentPositions`). Other expressions see those sizes as 0 until measured.
-- **Wart:** an object's own `<variable name="width">` shadows its size. Precedence (variable wins) keeps old games working. Alternatives, none built: a reserved spelling (`title.size.width`, `title.@width`), a separate namespace, rejecting the clash at load, a load warning.
-- Alternatives to arithmetic for placing by size, none built: an alignment attribute (`align="center"`), an origin at the center, a per-axis anchor.
+- Centring a text needs a width only a backend can measure; games used hand-tuned offsets that broke on any wording change.
+- **Built:** `name.width` and `.height` in positions. A text's position is unknown until the window measures it, then worked out again whenever a size it names changes.
+- **Wart:** an object's own variable `width` shadows its size (the variable wins, keeping old games working).
 
-## Reference points and axes
+## Reference points and axes (idea)
 
-**Status:** Idea, to come back to later (2026-10-13). Nothing decided.
-
-- Measured on 2026-10-13: `window.width.center - name.width / 2` (or the height form) is written 330 times in the 23 games, and is 330 of the 396 places an object names its own size inside itself (Kaboom 23, Combat 20, Missile Command 19, Asteroids 18, Freeway 18). Every one exists because positions name an object's top-left corner.
-- The idea is broader than centring: let a game say **which point of an object its position and math name** (top-left, as now, or centre, or another of the nine), and perhaps **where the screen's origin is and which way its axes run** (y up, as in maths, or down, as now).
-- Possible forms, none chosen:
-  - an attribute on `<position>`, `anchor="center"`, borrowing the edge words (`top`, `bottom-right`); an attribute because it picks a point, it does not compute;
-  - one setting for the whole game in `<window>`, so every position, size and collision edge is read the same way;
-  - both: a game-wide default that a `<position>` can change, the same "say only what differs" rule as groups.
-- Beef's view (2026-10-13): open to alternate ways of describing this, as long as it stays an element or attribute and not something parsed out of a string.
-- Open: whether velocity and the `<move>` directions follow a flipped y axis; whether a size-dependent position still needs re-placing when text is measured (with a centre anchor the centre stays put and only the corner moves); what the windows-cpp generator writes.
+- `window.width.center - name.width / 2` was written 330 times in 23 games, because positions name an object's top-left corner.
+- The idea: let a game say **which point of an object its position names** (top-left, centre, any of nine), and perhaps where the origin is and which way y runs.
+- Forms, none chosen: `anchor="center"` on a position (an attribute: it picks a point); one setting in `<window>`; a game-wide default a position can change. It must stay an element or attribute, never parsed from a string.
+- Open: whether velocity follows a flipped y; what the generator writes.
 
 ## Names and classes
 
-- Objects have a unique `name` and an optional `class`, borrowed from HTML `id` and `class`: target one thing or all things of a kind. One condition on `class="paddle"` covers both paddles.
-- Used by `<condition class object>` and `<collision class object>` (both combine with AND; a `<collision>` with neither is "anything"); `class="projectile"` still starts an object out of play (a leftover from before `<active>`).
-- Every `<group>` member or cell is its own object with a unique name (`logrow3.2`, `aliens.3.2`); the group name still means all of them ([objects](05-objects.md)).
-- Ideas, not built: compound CSS-style selectors (a two-player win vs either-player win), class inheritance (`platform` extends `solid`), wildcard queries over variables (`player1.*`, a map scan), several tags per object, formation names (`group1[x]`).
+- A unique `name` and an optional `class`, borrowed from HTML `id` and `class`: one thing, or every thing of a kind. One condition on `class="paddle"` covers both paddles.
+- Every group member or cell is its own object with its own name; the group's name means all of them.
+- Ideas: compound selectors, class inheritance, wildcards over variables, several tags per object.

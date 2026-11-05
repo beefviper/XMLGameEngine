@@ -2,7 +2,7 @@
 
 XMLGameEngine is a video game description language written in XML, plus a C++ engine that runs it. A whole game (window, sounds, objects, screens, rules) is one `.xml` file, checked against a schema, [games/xgedef.xsd](games/xgedef.xsd).
 
-The file holds no code: no loops, no `if`, no function calls. What things do comes from a fixed vocabulary of verbs written as tags (`<bounce />`, `<die />`, `<hop direction="up">`), and the engine knows how to carry each one out. The aim is to describe the non-scrolling 2D games of the late 1970s and early 1980s with a small vocabulary, and to add a word only when a real game cannot be written without it.
+The file holds no code: no loops, no `if`, no function calls. What things do comes from a fixed vocabulary of verbs written as tags (`<bounce />`, `<die />`, `<hop direction="up">`), and the engine knows how to carry out each one. The aim is to describe the non-scrolling 2D games of the late 1970s and early 1980s, and the board and card games beside them, adding a word only when a real game cannot be written without it.
 
 ## A whole game
 
@@ -27,8 +27,23 @@ This is all of `pong_min.xml`, two paddles and a ball:
           <sprite><rectangle><width>size</width><height>size</height></rectangle></sprite>
           <position><x><centered /></x><y><centered /></y></position>
           <velocity>
-            <x>sgn(ball.side) * ball.speed * cos(ball.angle * pi / 180)</x>
-            <y>ball.speed * sin(ball.angle * pi / 180)</y>
+            <x>
+              <formula>
+                <multiply>
+                  <multiplicand><sign><value>ball.side</value></sign></multiplicand>
+                  <multiplier>ball.speed</multiplier>
+                  <multiplier><cosine><value>ball.angle</value></cosine></multiplier>
+                </multiply>
+              </formula>
+            </x>
+            <y>
+              <formula>
+                <multiply>
+                  <multiplicand>ball.speed</multiplicand>
+                  <multiplier><sine><value>ball.angle</value></sine></multiplier>
+                </multiply>
+              </formula>
+            </y>
           </velocity>
           <collisions>
             <collision edge="vertical"><bounce /></collision>
@@ -65,139 +80,51 @@ This is all of `pong_min.xml`, two paddles and a ball:
 </game>
 ```
 
-A collision rule reads like a sentence: this ball, when it touches the top or bottom edge, bounces; when it leaves by a side, it starts again; when it touches anything else, it deflects by up to 45 degrees.
+A collision rule reads like a sentence: this ball, when it touches the top or bottom edge, bounces; when it leaves by a side, it starts again; when it touches anything else, it deflects by up to 45 degrees. The serve is worked out with `<formula>` tags, so no arithmetic beyond `+ - * /` hides in a string.
 
-## The language
+## The language in brief
 
-### Grammar
-
-- **Attributes name or pick; everything else is content.** `name`, `class`, `object`, `edge`, `button`, `state`, `sound` are attributes. A size, a color, a position or a flag is element content: `<radius>10</radius>`.
-- **Behavior is a list of verbs, run in the order written.** Lists sit in a collision rule, an object's action, a key, a condition, a timer and a path step; the schema sorts the verbs into groups and says which groups each place takes, so a verb can only be written where it does something.
-- **A value is a number written one of three ways:** plain arithmetic as text (`window.width.center - ball.radius`: names, numbers, `+ - * /` and brackets, nothing more), a `<random>` with a `<min>` and a `<max>`, or arithmetic as tags (a nested `<formula>` of `add`, `subtract`, `multiply`, `divide`, `smallest`, `largest`, `sign`, `sine` and the like), which leaves nothing in a string for a tool to parse. The engine works out the text itself; there is no expression library.
-- **Names are dotted.** `ball.radius` is the ball's variable, `paddle1.x` where it is, `aliens.3.2` a cell of a group, `playing.room2.robots` an object in a scene. `window.right`, `window.width.center` and the `color.` names are built in, and `self.` and `touch.` mean the object running a rule and the touch it answers.
-- **Keys are bound in states, never in objects.** An object has named actions (`up`, `fire`), and a state binds keys to them, so changing a key is one edit.
-- **Mistakes stop the load** with a message that says where: an unknown verb, a misspelled key (`did you mean 'space'?`), a state, sound or look that does not exist, or a verb in a place where it does nothing.
-
-### Structure
+- **Attributes name or pick; everything else is content.** `name`, `class`, `edge`, `button` are attributes; a size, a colour or a position is element content.
+- **Behaviour is a list of verbs, run in order,** in a collision rule, an action, a key, a condition, a timer or a path step. The schema says which verbs each place takes.
+- **A value is a number:** plain arithmetic as text (`window.right - margin`), a `<random>`, or a `<formula>` of tags.
+- **Names are dotted:** `ball.radius`, `aliens.3.2`, `playing.room2.robots`; `self.` and `touch.` inside a rule.
+- **Keys are bound in states, never in objects,** so changing a key is one edit.
+- **Say a thing once:** groups write what members share; a kit holds pieces taken by name; states and scenes copy others with `from=` and say only what differs.
+- **Mistakes stop the load** with a message that says where, and "did you mean" for a misspelt name.
 
 ```
 <game>
-  <window>      size, background, frame rate
+  <window>      size, background, frame rate, scale
   <variables>   numbers the whole game uses
-  <sounds>      notes, rests and parts of chip music           (optional)
-  <paths>       routes that objects fly                        (optional)
-  <styles>      named sizes, colors and fonts for text and bitmaps (optional)
-  <kit>         pieces written once, taken or spawned later    (optional)
-  <objects>     what every state shares                        (optional)
-  <keeps>       objects kept from one game to the next         (optional)
+  <sounds>      chip notes and music                  (optional)
+  <paths>       routes that objects fly               (optional)
+  <styles>      named text and bitmap looks           (optional)
+  <kit>         pieces written once, taken later      (optional)
+  <objects>     what every state shares               (optional)
+  <keeps>       objects kept between games            (optional)
   <states>      title, playing, paused, game over ...
-  <demo>        a recorded game for the attract mode           (optional)
+  <demo>        a recorded game for attract mode      (optional)
 </game>
 ```
 
-A **state** is a mode of the game. It owns its objects, can hold **scenes** (the rooms or screens of one state), binds its keys in `<inputs>`, checks `<conditions>` every frame, and can have `<timers>`, `<music>` and a `<computer>` player. States form a stack: `<push>` a pause over play, `<pop />` back.
-
-### Saying a thing once
-
-Something many objects or states share is written once under a name, higher up, and each place below takes it and says only what differs.
-
-- **Leave out what is nothing.** An object that never moves has no `<velocity>`; one that never collides has no `<collisions>`.
-- **Groups** write their members' shared parts once. Members are listed, laid out as columns and rows (where a row, a column or a cell changes what it needs), or placed by a **map**: rows of text where each character stands for a group or object (Pac-Man's walls and dots).
-- **Named sets** at the top of `<states>` hold the `<keys>`, `<shows>` and `<conditions>` several states use; a state takes one with `set=` or `keys=`.
-- **The kit** at the top of the game holds objects, groups and maps written once. Nothing in it is in play until an `<objects>` takes it (`<object name="paddle2" from="paddle">`, or just by the piece's name) or a `spawn` copies it; where it is taken says how long it lasts: the game, a state or a scene.
-- **Copies.** `<state from="youwin">` and `<scene from="room1">` start as a copy of an earlier one and change what differs, by the same rule a take of a kit piece follows.
-- **Scenes** take their pieces from the kit, and an exit names a way (`<enter way="east" />`) that each scene points somewhere different.
-
-### Vocabulary
-
-**Things**
-
-| Word | What it is |
-|---|---|
-| `object` | anything drawn, moved or touched; `class=` makes it one of a kind |
-| `group`, `member`, `columns`, `rows`, `row`, `column`, `cell` | many objects written once |
-| `map`, `tile` | level data as rows of characters, each character a group or object |
-| `state`, `scene`, `way` | modes of the game; places within a mode; exits between places |
-| `variable` | a number, owned by the game or by an object |
-| `sound`, `note`, `rest`, `part`, `loop` | chip sounds and music, from five waves (`square`, `triangle`, `sawtooth`, `sine`, `noise`) |
-| `path`, `step`, `start`, `home`, `speed` | a route of straight legs, with verbs at its steps |
-| `timer`, `every`, `after` | something done again and again, or once after a while; a named one's time left is a number of its object |
-| `keep`, `style`, `demo` | an object kept between games (a best score); a text style; a recorded game for the attract mode |
-
-**Looks.** A `<sprite>` is a `circle`, `rectangle`, `text`, `image`, `bitmap` (ASCII rows, one color per character), `svg`, a set of `line`s, or a `tether` (a line between two objects, redrawn each frame). Text is built from `content`, `number`, `letter` and `choose` pieces. Several named sprites are an object's **looks**, changed by `<become>`, which can also swap a bitmap's palette for another style's colors (`<become style="angry" />`), and an `<animation>` of `<frame>`s cycles them; a named animation is a look that moves. `<poses>` picks the look for standing, walking, skidding, rising and falling by itself, and `<mirror>` flips the pictures for the other way. The `<window>` can have a `<scale>`, so a game is written at the size of the original screen and drawn bigger.
-
-**Properties** of an object: `position`, `velocity`, `acceleration` (gravity), `heading` (turns the picture), `facing` (one of four ways), `grip` (how fast the speed follows the keys, so it slides), `drag`, `mass`, `pull` and `seek` (toward the nearest of something), `altitude` and `shadow` (height off the ground), `light` and `dark` (seen only when lit), `maze` (walks a map's tiles), `active` (false: starts out of play), `drawn` (in play but never drawn), and `most` (how many copies a `spawn` may have made of it at once).
-
-**Collisions.** `<collisions>` turns touching on (`enabled`) and says how: `type` (`box` or `pixel`), `solid` characters, a `hitbox`, and `lockstep` for a group that marches as one. Each `<collision>` rule is about a screen `edge` or another `class`/`object`, and can be narrowed by `side=`, `unless=` (not while also touching that class), `sprite=` (only in that look), `<slower>`, `<faster>`, `through=` (only a knock felt through that class, as Mario Bros.' floors pass a bump on) and `<condition>`s.
-
-**Verbs**
-
-| Family | Words |
-|---|---|
-| Moving | `move`, `hop` and `jump` (with an `arc` to go up and over), `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `reverse`, `stop`, `track` (follow the mouse or a stick) |
-| Steering | `chase`, `aim`, `follow` a path, and in a maze `go`, `hunt`, `wander` |
-| Touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `drop`, `hole` |
-| In and out of play | `die`, `reset`, `fire`, `release`, `reveal`, `spawn` and `despawn` (objects made and taken away while the game runs) |
-| Numbers | `inc`, `dec`, `set`, `copy`, `rank` |
-| Look and sound | `become`, `play`, `silence` |
-| Flow | `push`, `pop`, `enter`, `trigger` (run an object's action), `turns` with `pass` and `out`, `demo`, `hold` (a computer player's key) |
-
-**Conditions** test an object's variable, a count, or a distance, and run verbs when the test holds:
-
-```xml
-<condition class="aliens"><remaining>0</remaining><push state="youwin" /></condition>
-```
-
-The tests are `atleast`, `atmost`, `above`, `below`, `equal` (against a number, which can name another variable and is read as the game runs) and `remaining`. `total=` counts a group or takes its sum, highest or lowest, `distance=` measures to an object, and `<all>`/`<any>` of `<condition>`s join tests.
-
-**Input.** `<input button="space">` binds a key, a mouse button (`mouse.left`) or a gamepad button (`pad1.a`); `<input axis="mouse.x">` binds a control that points.
-
-### A frame
-
-Keys run the current state's bindings, timers count, objects move, collisions are swept (so a fast ball cannot pass through a thin paddle) and their rules run, conditions are checked, the sounds asked for play, and the frame is drawn. The frame lives in `xge/lib/play/frame.cpp` and the verbs in `xge/lib/play/verbs.cpp`.
+The [documentation](docs/readme.md) has a tour, every word, and an index linking each to its page.
 
 ## Games
 
-There are 55 games in [games/descriptions/](games/descriptions/), from Pong and Breakout to Pac-Man, Donkey Kong, Q\*bert, Adventure and Tetris. Many of them brought a word with them:
+55 games in [games/descriptions/](games/descriptions/), each with a test that plays it frame by frame:
 
-| Game | Words it needed |
+| Kind | Games |
 |---|---|
-| Pong | `deflect`: the angle off a paddle depends on where the ball hits it; a `computer` of two levels (easy shadows the ball, smart waits in the middle) |
-| Space Invaders | groups of columns and rows in `lockstep`, `hole` for the shields |
-| Frogger | `ride` a log, `unless=` (the water drowns you unless you are on a log) |
-| Donkey Kong | `leap`, `land` and `climb` for girders and ladders, and a group's `slope` |
-| Pac-Man | `map`, `maze`, and the ghosts' `go`, `hunt` and `wander` |
-| Mario Bros. | `poses`, `mirror`, `grip` and the window's `scale` |
-| Q\*bert | hops with an `arc`, `hunt` by hops, `solid` characters and a `hitbox` |
-| Galaxian | `path`s and `follow` (aimed steps, `nearest` escorts), `shift` for the sway, `turns` for two players, a `demo`, a top-five with `rank` |
-| Trick Shot | `knock` by `mass`, slowed by `drag` |
-| Tennis | `altitude` and `shadow`, a `computer` player |
-| Haunted House | `light` and `dark` |
-| Adventure | scenes and ways, `carry` and `drop` |
-| Tetris | a `map` of `cells`, `shape`s that turn by the standard kicks, `settle`, `slide`, `checks` for full rows (`clear`, `collapse`), and `send` for the next shape |
-| Columns | a `line` check of alike jewels, `fall`, `cycle`, and a group of groups picked by one character for random jewels |
-| Snake | `go` on cells, a `chain` for the body, `grow`, a `free` cell for food |
-| Capsules | `joins` looks for capsule halves that stay joined, a `straight` line `alike` by a colour variable |
-| Centipede | `split` a chain where it is shot, `through` a mushroom when turning down |
-| Putt Park | `bounce` off a slope by the way its drawn wall faces, keeping a share of the speed; a key's `on="hold"` and `on="release"` to build up and strike a putt |
-| Cannon Hill | `polygon` for filled hills that `hole` blows craters in; a `spawn` with an `acceleration` for the wind on each shell |
-| Speedway | `grip` on a car with a heading holds it to the way it faces; `surface` on map pieces for grass, sand and oil; a path follower with a heading faces its way |
-| Checkers | `moves` for a board game's pieces (`step`, `jump`, `forced`, `promote` for kings), a cursor that `pick`s, `place`s and `drop`s them (keys or mouse), `marks` for the piece held, its moves, the movable pieces and the last move, the live number `moves` to find a stuck side, a computer that `think`s a few moves ahead |
-| Reversi | `flank` in a piece's `moves` (a new piece traps a line and turns it), a cursor that `put`s pieces, `count` to keep the score |
-| Four in a Row | `fall` in a piece's `moves` (a put drops down its column), wins read from the map's `line` check by the computer |
-| Tic-Tac-Toe | empty `moves`: a put in any free square; an easy or a smart computer |
-| Dots and Boxes | `on` in a piece's `moves` (a line put in place of its faint slot), a put that `close`s a box and keeps the turn, a cursor that hops and follows the mouse `onto` free places only, a computer that knows it goes again and thinks while the game goes on |
-| Klondike | a `deck` made from its suits and ranks (the engine draws the faces), `pile`s with rules of what they `takes`, a `dealt` staircase, a stock that `deals` and `refill`s, a `hand` that will `take`, `lay` and `drop` cards by keys or mouse drag |
-| Blackjack | card `worth`s (an ace 1 or 11), a pile's live `points` within `<atmost>21`, a hand that will `deal` from the stock face up or down, `reveal` of the dealer's hidden card, `shuffle` to gather every card for the next hand; bets as plain variables |
-| Texas Hold'em | `patterns` of cards, made of `same` (cards of a rank), `run` (worths in a row) and `suited` (cards of a suit): poker's hands written in the game, not built into the engine; piles that `score` by them with the shared cards, live numbers `pattern`, `strength` and `odds` (how often they win against unseen cards); fixed-limit betting as plain variables and conditions |
-| Spades | `trumps` in a trick, a hand's `team` (partners), a hand's live `tricks` (what its cards should take, for a bid) |
-| Gin Rummy | a pile scored as `melds` of the game's `patterns` (sets and runs) with live `deadwood`, `points` by `each` card for the court cards; a computer that melds |
-| Pyramid | covering (a card is free when nothing overlaps it), a hand that `holds` cards from two piles, a pile that takes cards whose worths `sum` to 13 |
-| Hearts | a `trick` pile (follow the suit led), `breaks` for hearts not led until played, `points` by `each` card (a heart 1, the queen of spades 13), live `lead` and `winner` by a hand's `seat`, `redeal` for each hand, `collect` for a taken trick, computers that `think` with `avoid` to keep out of tricks |
-| Crazy Eights | you against the computer: each player's cards a `sorted` pile fanned within a `width`, a discard pile that `takes` what `matches` and `wild` eights, a `call` of the suit after one, a stock refilled by shuffling the discards, a computer that `think`s with a hand of its own |
-| Pinball | `pivot` and `swing`: a flipper turns about its hinge in one eased stroke (from still, fastest half way, to still), the turn swept through the frame, and a `knock` lends the ball the speed of the point that strikes it; `friction` brings a cradled ball to rest |
+| Paddle and ball | Pong, Breakout, Space Race, Tennis |
+| Shooters | Space Invaders (two versions), Galaxian, Asteroids, Missile Command, Megamania, Yars' Revenge, Berserk, Demon Attack, Atlantis, Astrosmash, Air-Sea Battle, Combat, Depth Charge |
+| Platforms and rooms | Donkey Kong, Mario Bros., Q\*bert, Pitfall!, Frostbite, Adventure, Haunted House, Lunar Lander |
+| Mazes, lanes, catching | Pac-Man, Frogger, Freeway, Kaboom!, Fishing Derby |
+| Grid puzzles | Tetris, Columns, Snake, Centipede, Capsules |
+| Tables and tracks | Putt Park, Cannon Hill, Pinball, Speedway, Trick Shot |
+| Board games | Checkers, Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes |
+| Card games | Klondike, Crazy Eights, Blackjack, Texas Hold'em, Hearts, Spades, Gin Rummy, Pyramid |
 
-The games share one key convention: Space starts, pauses and restarts, player one is W A S D (plus the arrows), and where Space fires, P or Escape pauses.
+The [full list](docs/reference/games.md) says what each game needed. They share one key convention: Space starts, pauses and restarts; player one is W A S D plus the arrows; where Space fires, P or Escape pauses.
 
 ## Build and run
 
@@ -207,11 +134,7 @@ cmake --build build --parallel
 output/Debug/xgecli frogger
 ```
 
-The build makes `xgelib` (the engine), `xgecli` (command line) and `xgegui` (a Qt 6 app that shows the game beside a tree of its data, built only when Qt is found). Everything needed to run lands in `output/<Config>/`: the programs, the games, the schema and the libraries, so the folder can be copied anywhere.
-
-`xgecli frogger` finds `frogger.xml` in `games/descriptions/`; with no name it runs Pong. `-w`, `-x` and `-a` pick the window, XML and sound libraries (`xgecli pong -w raylib -a sdl2`).
-
-**Dependencies.** Each is found through vcpkg or the system, or fetched and built when missing (`FORCE_LOCAL_<NAME>` forces a fetch).
+The build makes `xgelib` (the engine), `xgecli` (command line) and `xgegui` (a Qt 6 app showing the game beside a tree of its data, built only when Qt is found). Everything needed to run lands in `output/<Config>/`, so the folder can be copied anywhere. `-w`, `-x` and `-a` pick the window, XML and sound libraries (`xgecli pong -w raylib -a sdl2`).
 
 | Library | For |
 |---|---|
@@ -222,30 +145,22 @@ The build makes `xgelib` (the engine), `xgecli` (command line) and `xgegui` (a Q
 | libxslt | `xgecli --generate` (found, never fetched) |
 | Catch2 | the tests |
 
-**Backends.** A plain build has one of each kind. Others are built on request, to choose between and compare:
+Each is found through vcpkg or the system, or fetched and built. A plain build has one library of each kind; `-DXGE_WITH_<NAME>=ON` adds raylib, SDL2, OpenGL, TinyXML2, PugiXML or RapidXML, and `-DXGE_ALL_BACKENDS=ON` all of them.
 
-| Kind | Default | Others |
-|---|---|---|
-| Window | SFML 3 | Raylib, SDL2, OpenGL |
-| Sound | SFML 3 | Raylib, SDL2, none |
-| XML | Xerces | TinyXML2, PugiXML, RapidXML (with a built-in validator for the schema's subset of XSD) |
-
-`-DXGE_WITH_<NAME>=ON` adds one and `-DXGE_ALL_BACKENDS=ON` adds all of them.
-
-**Tests.** `cmake -B build -DBUILD_TESTING=ON` builds every backend and `xgetest`, which plays the games frame by frame and compares the backends. Run `output/Debug/xgetest`.
-
-**Generating a program.** `xgecli pong --generate windows-cpp` writes the game out as a standalone SFML program in `pong-windows-cpp/`. XSLT stylesheets in `games/generators/` turn the game file into C++ data, and the engine's own code plays it, so it plays exactly as `xgecli` does. The `xgetest-generated` target checks this for every game, and on Windows `scripts\shell\windows\games-run-all.bat` generates, builds and tests them all.
+- **Tests:** `cmake -B build -DBUILD_TESTING=ON`, then `output/Debug/xgetest`.
+- **A program of its own:** `xgecli pong --generate windows-cpp` writes the game as a standalone SFML program. XSLT turns the game file into C++ data and the engine's own code plays it, so it plays exactly as `xgecli` does.
 
 ## Status
 
-Version 1 is non-scrolling games; a camera for scrolling ones is planned for version 2. Movement is in pixels per frame and timers count frames. Paths are straight legs, maze walkers steer as the arcade's ghosts do (no search of the maze), and sound is chip music made from notes, never sound files. The full list of limits is in [docs/readme.md](docs/readme.md#known-limitations).
+Version 1 is non-scrolling games; a camera for scrolling ones is planned for version 2. Movement is pixels per frame and timers count frames; sound is chip music made from notes. The limits are listed in [known limitations](docs/reference/limits.md).
 
 ## Licence
 
-MIT, in [LICENSE](LICENSE); a program `--generate` writes carries a copy. The fonts in `games/assets/` keep their own: Tuffy is public domain, and Press Start 2P is under the SIL Open Font License (`pressstart2p-ofl.txt` beside it).
+MIT, in [LICENSE](LICENSE); a generated program carries a copy. The fonts in `games/assets/` keep their own: Tuffy is public domain, and Press Start 2P is under the SIL Open Font License (`pressstart2p-ofl.txt` beside it).
 
 ## Documentation
 
-- [docs/readme.md](docs/readme.md): how the engine works today, verb by verb.
-- [docs/designs/00-designs.md](docs/designs/00-designs.md): design decisions, options rejected, and ideas not built yet.
+- [docs/readme.md](docs/readme.md): the guide, a tour, and an index of every word.
+- [docs/reference/](docs/reference/): how the engine works today, a page per topic.
+- [docs/designs/00-designs.md](docs/designs/00-designs.md): why, options rejected, ideas not built.
 - [AGENTS.md](AGENTS.md) and [docs/agents/notes.md](docs/agents/notes.md): notes for contributors and AI coding agents.

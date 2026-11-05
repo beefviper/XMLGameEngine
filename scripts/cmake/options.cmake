@@ -36,7 +36,7 @@ option(BUILD_TESTING "Build the Catch2-based test suite in xge/tests/" OFF)
 # .exe. ON is a shared library (a DLL on Windows, a .so on Linux): one copy
 # of the engine that the programs load at run time, which is what a plug-in
 # or a second front end sharing one engine install would want. See
-# docs/readme.md, "Building".
+# docs/reference/engine.md, "Building".
 option(XGE_BUILD_SHARED "Build the engine as a shared library instead of a static one" OFF)
 
 # Which window, sound and XML backends are built into the engine. The default

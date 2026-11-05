@@ -1,73 +1,37 @@
 # Tables and tracks
 
-**Status:** all four stages Built (2026-10-31).
+**Status:** All four stages built. Reference: [collisions](../reference/collisions.md), [pictures](../reference/pictures.md#turning-about-a-pivot), [input](../reference/input.md#a-keys-three-moments).
 
 ## Why this class
 
-- Asked for (2026-10-31): after the grid games, "another class of games we can't easily describe" that would expand the language. The survey (project files, `notes/tables-and-tracks-2026-10-31.md`) sized seven classes still out of reach: tables and tracks, moves as timelines (fighting), claimed area, pointer games, turn puzzles on cells, team sports, rhythm and words.
-- **Chosen: tables and tracks**, games of a body moving over a shaped surface: pinball, top down racing, mini golf, artillery over hills, angled blocks in a paddle game. Every one was out of reach for the same four reasons, all already known limitations: nothing faced a way (no bounce off a slope), nothing solid turned about a point, no key acted on being let go, and the ground never changed how a thing moved.
-- Runner-up: moves as timelines (one-shot animations, a hitbox per frame, key sequences), which also helps games already here. Claimed area and turn puzzles are smaller follow-ons to the cells.
+- After the grid games, a survey sized seven classes still out of reach: tables and tracks, moves as timelines (fighting), claimed area, pointer games, turn puzzles on cells, team sports, rhythm and words.
+- **Chosen: tables and tracks,** a body moving over a shaped surface: pinball, top-down racing, mini golf, artillery, angled blocks. All were out of reach for the same four reasons: nothing faced a way (no bounce off a slope), nothing solid turned about a point, no key acted on being let go, and the ground never changed how a thing moved.
+- Runner-up: moves as timelines (one-shot animations, a hitbox per frame, key sequences).
 
-## Stages
-
-Each ends with an original game, as the grid stages did.
-
-| Stage | Words | Game | Status |
-|---|---|---|---|
-| 1 | `<bounce>` about the touch's normal with a share kept; a real normal for `pixel` touches; a key's three moments (`on="press"`, `"hold"`, `"release"`) | Putt Park, six holes of mini golf | Built |
-| 2 | `<polygon>` for filled hills that `<hole>` blows craters in; `<acceleration>` on a `<spawn>` for each shot's wind; turns as a phase on a table | Cannon Hill, an artillery duel | Built |
-| 3 | `<pivot>` (the point a heading turns about), `<swing>` back to where it started when let go, the turn swept through the frame, a turning thing's speed at the point of touch lent by `<knock>` | Pinball, one original table | Built |
-| 4 | `<surface>` on map pieces (drag and grip while over them), `<grip>` holding a car with a heading to it, a path follower facing its way; laps by gate rules | Speedway, a top down racer | Built |
+| Stage | Words | Game |
+|---|---|---|
+| 1 | `<bounce>` about the touch normal; pixel normals; `on="press|hold|release"` | Putt Park, mini golf |
+| 2 | `<polygon>`; `<acceleration>` on a `<spawn>` (wind); turns as a phase | Cannon Hill, artillery |
+| 3 | `<pivot>`, `<swing>`, swept turns, speed at the touch point in `<knock>` | Pinball |
+| 4 | `<surface>`, `<grip>` with a heading, path followers facing their way | Speedway, a racer |
 
 ## Decisions along the way
 
-- **Keys** ([input](08-input.md#a-keys-three-moments-2026-10-31)): Beef's framing of pressed, held, released replaced a `<charge>` verb.
-- **Bounce** ([collisions](20-collisions.md#bounce-by-the-normal-2026-10-31)): Beef asked for one rule with no special cases; square things keep the classic flip because their sides are square. A bounce is off a surface standing still; a moving surface lending its speed is `<knock>`'s, so `<kick>` was dropped for `<bounce>` above 1.
-- **Swept turns, no sub-steps** (Beef, 2026-10-31): every game here is worked out a frame at a time; over one a flipper sweeps a wedge and the ball a fat line, so the touch is found in the frame's one sweep (the pair walked together, half a pixel of the furthest-moving point at a time, then bisected), never by running the frame in smaller steps. Only a `<swing>`'s turn is swept: it is the one turn whose speed matters. A `<turn>` or `<set>` of a heading jumps, as before.
-- **Lent speed** (Beef: "analogous to a ball bouncing off a paddle at a different angle based on where it hit"): `<knock>` takes each side's speed at the touch point, velocity plus spin times the arm from the pivot. No new word: a flipper's rule is an ordinary `<knock>`.
-- **Settling, not hopping** (Beef, after playing: the ball was "a rubber ball bouncing crazily" round the flippers and "friction would dominate" at low speeds): two faults. A pixel touch's depth was the boxes' overlap, so a `<knock>` threw a ball lying on a flipper (whose turning square is far bigger than its bar) tens of pixels; depth is now measured by the pixels. And slow knocks gave back their share: now a thing closing on an immovable surface slower than four frames of its own pull into it does not bounce (a share up to 1). Scaled by the pull, so walkers meeting walls (no pull into them) and pool balls (both with mass) are untouched; no friction along the surface, so a ball still rolls down a slope.
-- **Turning in three layers, friction, rest** (Beef, after playing again: the cradled ball still jittered "ever so slightly", the flipper should gain power through its stroke, and "position, velocity, acceleration, and friction" should describe it): a turn has heading, turn a frame and how that changes; `<friction>` on the moving thing rubs speed off along a still surface it meets, and brings it to a true rest (not moved, not pulled) when its pull cannot slide it or it is wedged between two surfaces, until something moves it or a support moves. A rolling ball should not be held on a real slope, so pinball's ball has 0.05 (holds under about 3 degrees) and rests only wedged.
-- **The stroke is one eased curve** (Beef: a flipper moves like a sine wave, accelerating to half way and decelerating, since it must overcome its own resting mass and its coil maxes out at the end): `<swing direction="counterclockwise"><degrees>60</degrees><seconds>0.1</seconds></swing>`, the heading following half a cosine wave from start through the turn, so position, speed and acceleration of the turn all come from it and a strike half way is hardest. Replaced a first form, `<swing>16<to>330</to><gain>4</gain></swing>` (a top rate as bare content and a gain to it), which Beef rejected: the bare number looked naked next to `<to>`, and the stroke should slow at the end too. Time rather than a rate, so a game says how long a flip takes, which is how a flipper is felt.
-- **How far, not where to** (Beef: the start is not written, so neither should the end be): a swing says the turn, `<degrees>` with `direction="clockwise|counterclockwise"`, not a `<to>` heading, so the two flippers differ only in their way. Beef offered `<value>` and `<duration>`; kept `<degrees>` and `<seconds>`, since `<value>` is the formula operand word and `<hop>` and `<jump>` already say `<seconds>` for how long a move takes. Over 180 degrees is allowed: the way is said, not the shorter one.
-- **Clockwise, not left and right** (Beef, a pet peeve: a rotation has no left or right): `<turn>` and `<swing>` take `direction="clockwise"` or `"counterclockwise"`. Moves keep up, down, left, right.
-- **Thick lines are round-ended bars** of true width, not rows of square stamps: square stamps turned with the flipper left a flat ledge at its hinge that a ball balanced on. The bar sits in the squares the stamps covered, so pictures stay where they were; no other game's tests moved.
-- **The turning sweep tests the pictures as drawn** (whole degrees, kept once made), not a rotation of the upright one, so the sweep and the touch agree.
-- **Not added**: a ball's own spin (english), angular mass for things that turn freely when hit (spinners, gates), rolling as distinct from sliding. Each waits for a game that needs it.
-- **No `<rest>`.** A swing goes back to the heading the object started with (its `start`); a word is added if a game wants it to rest elsewhere.
-- **No `<launch>` yet.** Putt Park sets the ball's `velocity.x` and `.y` from `<sine>` and `<cosine>` of the arrow's heading. A word is added when a second game wants the same.
+- **Keys:** pressed, held and released replaced a planned `<charge>` verb; a charge is hold plus `<inc>` plus a clamp ([input](08-input.md)).
+- **Bounce:** one rule with no special cases ([collisions](20-collisions.md#bounce-by-the-normal)). A bumper is `<bounce>1.3</bounce>`, so `<kick>` was dropped.
+- **Swept turns, never sub-steps.** Over a frame a flipper sweeps a wedge and the ball a fat line, so the touch is found in the frame's one sweep (walked together, then bisected), never by running the frame in smaller steps. Only a `<swing>` is swept; a `<turn>` or a `<set>` of a heading jumps.
+- **Lent speed:** `<knock>` takes each side's speed at the touch point, velocity plus spin times the arm from the pivot, as a ball off a paddle depends on where it hits. No new word.
+- **Settling, not hopping.** The ball once bounced wildly round the flippers. Two faults: a pixel touch's depth was the boxes' overlap (now measured by pixels), and slow knocks gave back their share (now, closing on an immovable surface slower than four frames of its own pull does not bounce). Scaled by the pull, so walkers and pool balls are untouched.
+- **`<friction>`** rubs speed off along a still surface and brings a true rest when the pull cannot slide the thing or it is wedged. Pinball's ball has 0.05 and rests only when wedged.
+- **The stroke is one eased curve:** `<swing direction="counterclockwise"><degrees>60</degrees><seconds>0.1</seconds></swing>`, the heading following half a cosine, hardest half way, as a flipper's coil works. Rejected: a top rate as bare content with a `<gain>` (a naked number, and no slowing at the end).
+- **How far, not where to:** the start is not written, so neither is the end. `<degrees>` and `<seconds>`, since `<value>` is the formula's word and hops already say `<seconds>`.
+- **Clockwise and counterclockwise,** never left and right, for `<turn>` and `<swing>`.
+- **Thick lines are round-ended bars** of true width; square stamps left a ledge a ball balanced on.
+- Not added yet: ball spin, angular mass for free spinners, rolling apart from sliding, a `<launch>` word, a `<rest>` heading for a swing.
 
-## Putt Park (stage 1)
+## The games
 
-- Six holes as scenes of one state; each takes the first hole's and gives its own walls (one picture of `<line>`s, `pixel` collisions), cup, tee, par, and posts or cushions from the kit. A scene condition puts the ball on its tee when the card says it has not been placed.
-- The arrow is a bitmap turned by its `<heading>` about its middle, which sits on the ball; its two looks are the same size (all clear while the ball rolls), since `arrow.width` read in the same condition as a `<become>` is still the old look's.
-- Space held adds to the arrow's power up to 100, let go strikes; both through `<trigger from="ready">`, so the ball cannot be struck while it rolls. A condition stops the ball dead once its speed is under 0.08 a frame each way and gives the arrow back.
-- Open: the cup taking only a slow ball (a rule's condition on speed) and only one wholly over it, not grazing it (Beef, 2026-10-31: for a fuller mini golf later), water and sand (stage 4's surfaces), more holes, a best round kept.
-
-## Cannon Hill (stage 2)
-
-- Asked for (Beef, 2026-10-31, "Start Artillery"): an original artillery duel for two at one keyboard.
-- **Hills are a `<polygon>`**: a filled shape of corner points. Lines have no fill, and a bitmap hill at a usable scale is a page of characters with stairs for slopes. Kept as its own kind of sprite (not mixed with lines), drawn once, turned by its pixels if ever given a heading, so a `<hole>` cuts it as it cuts a bitmap.
-- **Craters are the existing `<hole>`** with a radius and `<rough>` (Beef asked whether Space Invaders' damage could serve; it is the same verb). A hole in the shape of a picture, as the arcade's fixed explosion pattern was, is open: `<hole sprite=...>` if a game needs it.
-- **Wind is a spawn's `<acceleration>`**, read as it runs like its `<position>` and `<velocity>`, so each shell keeps the wind of the turn it was fired in. The plan's `<pull>` toward an object was rejected: a pull is toward a place, wind is a push across, and an acceleration value on the kit piece is fixed at load.
-- **Turns are not `<turns>`**: those are the arcade's, each player a game of their own and seeing only it. Here both play on one field, so the table holds a phase (aiming, flying, landed, passing) and conditions move it on; the barrel whose look is `ready` answers the keys.
-- **The barrel turns from its elevation** (`heading = level − side × elevation`, kept 0 to 90 by a `<clamp>`), so one kit piece serves both sides, and its heading never wraps through 0. A hit is a blast landing within `reach` of a cannon's middle, by a `distance=` condition.
-- Open: a cannon falling into a crater dug under it (the cannons stand where they were put), damage instead of one-hit points, a computer player, a picture-shaped hole.
-
-## Speedway (stage 4)
-
-- Asked for (Beef, 2026-10-31, "Racer."): two players at one keyboard and two computer cars, three laps.
-- **`<grip>` with a heading is a wheel's grip**: each frame the speed across the heading loses that share. Reused rather than a new word: it is the same idea as a walker's grip (how firmly the ground holds it to what it means to do), and no game had a grip and a heading. Rejected: turning the velocity's direction toward the heading keeping its speed (no speed is lost in a skid, which reads wrong).
-- **`<surface>`** on a piece, with an optional `<drag>` and `<grip>`, is the ground under anything with a `<grip>` whose middle is over its box; the last in the file wins, and the tarmac is no piece. Felt only by things with a grip written, so a path follower or a shot is not slowed (a path's step is fixed; drag would make it drift off its line). Rejected: the car naming the ground it feels (as a maze walker names its `<slow>` class): every gripping thing feels every surface, which is what ground is.
-- **No `<gates>` word.** Laps were said with what exists: each car keeps `next`, and four rules, one per gate, move it on only when it is that gate, the finish line also counting the lap. Turning back or cutting across counts nothing.
-- **A path follower with a heading faces its way.** The computer's cars fly a looping path (a timer follows it again when it ends); without this they slid round sideways. No shipped path follower had a heading.
-- The computer's cars are not knocked: the players `<bounce>` off them, so a path stays on its line.
-- Open: cars that turn only while moving, steering that tightens with speed, computer cars that race (a path is one speed), a lap time and a best lap kept, more tracks as scenes.
-
-## Pinball (stage 3)
-
-- One table on one screen: walls as one `pixel` picture of `<line>`s (a rounded top, the shooting lane, slopes down to the flippers), two slingshot lines and three bumpers that `<bounce>` above 1, three rollover lanes the ball passes over (the lane's own rule, from its `dark` look, so it lights once).
-- Flippers are a kit `<line>` with `<pivot>` at the hinge end, a `<swing>` through 60 degrees in 0.1 seconds, and the rule `<knock>0.3</knock>` on the flipper; the ball has `<mass>`, `<friction>0.05</friction>` and `<acceleration>` for the table's tilt. The slopes above the flippers end just above the hinge, so a ball rolls from slope onto flipper with no bump.
-- The plunger is Space held (`on="hold"` pulls it back, up to 100) and let go (`on="release"` sets the ball's speed), both `from="loaded"`, the look the ball's rule gives it when the ball sits on it.
-- All three lanes lit: a bonus, and the lanes show `flash` for half a second before going dark, so the ball still over the last one does not light it again at once.
-- Open: multiball (`<spawn>` a ball), drop targets, a tilt, a ball saver, ramps (needs a layer above the table, like `<altitude>`), a high-score table, nudging the table.
-
+- **Putt Park:** six holes as scenes. Space held adds power, let go strikes, both `from="ready"` so a rolling ball cannot be struck. A condition stops the ball under 0.08 a frame. Open: the cup taking only a slow ball wholly over it, sand and water, a best round.
+- **Cannon Hill:** hills are a `<polygon>` (lines have no fill; a bitmap hill is a page of stairs), cut by the existing `<hole>`. Wind is a spawn's `<acceleration>`, so each shell keeps its turn's wind; a `<pull>` was rejected (a pull is toward a place). Turns are a table phase, not `<turns>`, since both play on one field. One barrel piece serves both sides by `heading = level - side * elevation`. Open: cannons falling into craters, a computer player, a picture-shaped hole (`<hole sprite>`).
+- **Pinball:** walls are one pixel picture of lines; bumpers bounce above 1. Flippers are a kit `<line>` with a `<pivot>`, a `<swing>` and `<knock>0.3</knock>`; the slopes end just above the hinge so the ball rolls on with no bump. The plunger is Space held and let go. Open: multiball, drop targets, tilt, ramps (a layer above the table).
+- **Speedway:** `<grip>` with a heading is a wheel's grip, the speed across the heading losing that share; reused rather than a new word. Rejected: turning the velocity to the heading (a skid would lose no speed). `<surface>` is the ground under anything with a grip; rejected the car naming the ground it feels. Laps by four gate rules, no `<gates>` word. Path followers with a heading face their way. Open: steering by speed, computer cars that race, lap times.

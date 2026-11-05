@@ -1,97 +1,68 @@
 # Collisions
 
-**Status:** Built: detection, dispatch, execution; swept object collision; pixel tests; riding; exceptions; deflect; side, checks and triggers in rules; contacts, circles against circles and `<knock>`.
+**Status:** Built: detection, dispatch and execution apart; swept touches; pixel tests; riding and carrying; `unless=`; deflect; side, checks and triggers in rules; contacts and `<knock>`; solid inks and hitboxes; bounce by the normal. Reference: [collisions](../reference/collisions.md), [commands](../reference/commands.md#touching).
 
 ## Structure
 
-- The prototype had one function that detected an edge hit *and* executed the action, parsing action tokens by hand. Split into three:
-  1. **Detection**: pure geometry, no side effects (`play/collision.h`, free functions over `play/geometry.h`).
-  2. **Dispatch**: what the XML declared for that event (`Game`, typed `Command`s from `makeCommand()` in `game/command.cpp`).
-  3. **Execution**: do it (`CommandExecutor::run`, one `std::visit` for every place a command runs, told by a `Doer` what it has: an object, what it touched or which screen edge, a key down or let go, an action).
-- Declaratively: the XML does not spell out "if the ball touches the edge"; it says the ball *has* a collision with the vertical edge and the response is `<bounce />`. The conditional lives in detection.
-- Rules: `<collision edge="...">` (left/right/top/bottom/vertical/horizontal/all) or against another object by `class` and/or `object` (no selector = anything). Command lists run in order.
+- The prototype found an edge hit and acted on it in one function, parsing action tokens by hand. Split into three:
+  1. **Detection**: geometry only, no side effects (`play/collision.h`, `play/geometry.h`).
+  2. **Dispatch**: what the XML declared for that touch (typed `Command`s from `game/command.cpp`).
+  3. **Execution**: `CommandExecutor::run`, one `std::visit` for every place a command runs, told by a `Doer` what it has (an object, what it touched, a key, an action).
+- Declarative: the ball *has* a collision with the vertical edge whose answer is `<bounce />`; the "if" lives in detection.
 
+## The algorithm
 
-## Algorithm (as built)
+- **Screen edges** are checked by position before the move, not swept.
+- **Object against object is swept.** Both motions reduce to one; box against box by slabs, circle against box with rounded corners, circle against circle by the two radii. Touching and moving apart is not a hit.
+- **The frame loop** (`moveObjects`, `play/frame.cpp`): each round the earliest touch anywhere wins, everything advances to it, that pair's rules run, and the rest of the frame plays on. A pair reacts at most once a frame.
+- **What has moved.** A pair is looked at only when one has moved: a velocity, a ride, or being somewhere else than last frame (a hop, a `<set>` of `x`, a teleport, a spawn). Each object keeps last frame's `Moment` in `before`. Put somewhere by a load or a reset between frames is not a move (`placed`); reset in the middle of a frame is. Rejected: a list of verbs that move by place (one would be missed).
+- **Hops land before collisions** and are judged where they land: swept, a frog hopping onto a log would first touch the water.
 
-- **Screen edges** are checked by position before the move (not swept). An object faster than a window is wide could skip them.
-- **Swept object-against-object.** Reduce both motions to one (hold B still, move A by the difference). Rectangle vs rectangle: slab method against B grown by A's size. Circle vs rectangle: the centre against the rectangle grown by the radius, with rounded corners solved as a ray against a circle. Circle vs circle (2026-10-16; before, the second was taken as its box): the relative path of the first centre against a circle of the two radii. Returns the time (0 to 1) and B's touched edge. Touching and moving apart is not a hit. Static overlap (`objectsOverlap`) covers pairs already overlapping at frame start.
-- **Frame loop (`moveObjects` in `play/frame.cpp`).** Candidate pairs: one has a rule answering to the other, they are not in lockstep with each other, neither is in the air mid-`<jump>`, one has moved. (Members of a group without lockstep do collide with each other if a rule answers.) Each round every pair is swept for the time left; the earliest hit anywhere wins; all objects in play advance to that moment; that pair's rules run; the rest of the frame plays with whatever velocities they left. A pair reacts at most once per frame (bounds the loop and stops a bounce re-triggering).
-- Each object is swept alone ([objects](05-objects.md) lockstep).
-- **What has moved (2026-10-29).** The sweep only looks at a pair when one of them has moved, as first meant; that had become "has a velocity", so anything put somewhere by writing its place was never looked at (two climbers on one ladder passed through each other, and a hop needed its own flag, `hopped`, to count). Now each object keeps how the last frame left it (`Object::before`, a [Moment](05-objects.md#start-before-and-now-2026-10-29) copied before the conditions run), and it has moved when it has a velocity or a ride, or is somewhere else now: a hop, a `<set>` of `x`, a `<shift>`, a path's snap home, a teleport, a spawned copy. Loaded or reset between frames, its place is not a move (`placed`, until the next frame starts), or Q*bert would light his first cube and every frog on a reset would touch what it was put by; reset by a rule in the middle of a frame it has moved (the disc sets Q*bert down on the top cube, which lights). Looked at: keeping a list of verbs that move by place (one would be missed, as climbing was), and making every move a velocity (a teleport is not a move along a path). Since 2026-10-29 a climb is a velocity too, so a climber is swept along its way.
-- **Hops and jumps land before collisions.** A queued hop is made at the start of the move and judged where it lands, not swept: swept, a frog hopping onto a log would first touch the *water*. A jump in the air is in no pair; on the landing frame it is somewhere new, so it has moved.
-- **Riding (`<ride />`).** Lends the other's velocity for the frame (`Object::riding`), added in movement, the sweep and edge checks; cleared each frame and recomputed from current touches, so stepping off needs no undo. Alternatives rejected: copy the velocity into the object's own (must be undone, fights hop and keys), attach as a child (an ownership model the language lacks), a position offset (bypasses the sweep). It was first called `<carry />`; it was renamed so the frog *rides* the log, and `carry` is kept for the other thing, one object taking another along (Adventure's key), built 2026-10-14 (below).
-- **`unless="class"`.** A rule is passed over while the object touches something of that class right now (`Game::isTouchingClass`, plain overlap), so it does not depend on pair order. Frogger's river: the water rule, unless on a log. Rejected: rule order (separate pairs do not compose), a "safe" class overriding a "hazard", water only in the gaps between logs, an overlap-counting condition. An edge rule takes it too (and `sprite=`), kept beside the edge's flat list of commands as an `EdgeGuard`. `class=` and `object=` pick the other of a touch, and an edge is no object, so on an edge rule they stop the load; before, the engine read all three on an edge rule and dropped them.
-- **`<stick />`** is axis-aware (position and velocity corrected on the touched axis only, so a pushed-into-wall object still slides) and re-applied after the move so a stopped object never ends a frame past the wall.
-- **Carrying (`<carry />`, `<drop />`; built 2026-10-14).** In the carrier's rule about the thing (`<collision class="item"><carry /></collision>`): the carrier names what it carries (`Object::carrying`) and where it holds it (`carryOffset`, as it was when picked up), so the thing needs no rule of its own and one rule picks up a whole class. Each frame the carried thing is lent its carrier's motion before the move, as a ride is, so it is swept and its own touches run (Adventure's key opening the gate before the hero reaches it), and after the move it is put exactly where it is held (the carrier may have been stopped on the way). Kept on the carrier, not the carried, because the rule runs on the carrier and "one thing at a time" is a fact about the carrier: picking up another puts the first down where it is, as in Adventure, and taking one another object carries takes it from that one. `<drop />` (an action, a rule, a timer) puts it down and remembers it (`dropped`) until the two stop overlapping, or the carry rule would pick it up again at once; Adventure needs the same. Out of play on either side, or a reset of either, ends it. Rejected: an attachment kept on the carried thing (it would need its own rule, and the swap rule is the carrier's), a parent/child tree of objects (an ownership model the language does not have; [objects](05-objects.md)), moving the carried thing by teleport alone (its touches on the way would be missed, since a pair where neither moves is skipped). Not built: carrying several things, a carried thing that hangs where the carrier faces, a carrier taking it from another only when some rule says (Adventure's bat steals; here anyone does).
-- **Verbs in object rules.** `reset`, `move`, `inc`, `dec`, `ride`, `stop`, `reverse`, `become`, `reveal`, `release`, `play` and `reset object` all work in rules about another object (they used to be ignored); `executeObjectCollision` is given the other object.
-- A dead object means the same everywhere: not drawn, moved or collided with (an older special case parked a dead circle at -100, -100).
+## Fewer checks
 
+Donkey Kong lagged: about 50,000 pairs compared each frame. Kept every touch and its order exactly, and:
 
-## Fewer checks (2026-10-20)
+1. which pairs a rule answers for is found once per game (`FrameRules::partners`);
+2. each pair first checks whether the boxes they cover over the frame meet;
+3. a pair too far apart sleeps until a reaction moves one of them;
+4. being in play is cached until the stage changes.
 
-- **Looked for:** Donkey Kong lagged with a few barrels rolling. The frame compared class and group names for every two of its 319 objects (about 50,000 pairs) every frame, asked whether each was in play for every pair, and swept every pair again after each of the frame's reactions (a barrel landing is one). Debug builds took 14.5 ms a frame there.
-- **Looked at:** a grid of screen chunks, so only objects in the same or a next chunk are paired (Beef's suggestion); sort and sweep along one axis; keeping each pair's sweep and reusing it.
-- **Chose,** keeping every touch, its moment and the order pairs go in exactly as before (the tests and the generated games, which play the same code, show it):
-  1. Which pairs a rule answers for is found once per game (`FrameRules::partners`), since an object's name, class, groups and rules never change; only objects with rules are asked about. Walls never pair with walls.
-  2. Each pair's first look is whether the boxes the two cover over the frame (start to end, half a pixel to spare) meet; each object's box is found once a frame.
-  3. A pair found too far apart sleeps (`playFrame`): it is swept again only after a reaction moves, turns, resizes, shows or hides one of its two, since what is left of the frame only gets shorter. A busy frame sweeps again only the pairs near each other.
-  4. Whether an object is in play is kept per object until the state stack, a scene or an object's scene changes, or a frame starts or ends (`Game::stageChanged`).
-- **Why not a grid:** it would need a cell size per game, and a reaction that moves something still has to wake its neighbours; with the rules pruning most pairs and far ones asleep, what is left is a few hundred cheap box tests a frame.
-- **Open:** a grid if a game ever has thousands of moving objects; `nearest` searches (`<chase>`, `<hunt>`, distance conditions) still look through every object.
+A screen grid was rejected: it needs a cell size per game, and what is left after pruning is a few hundred cheap tests. Open: a grid if a game has thousands of movers; `nearest` searches still look at everything.
 
+## Riding, carrying, unless
+
+- **`<ride />`** lends the other's velocity for the frame, recomputed from current touches, so stepping off needs no undo. Rejected: copying the velocity (must be undone), parent/child attachment (an ownership model the language lacks).
+- **`<carry />`** is the carrier's: it remembers what and where, lends its motion before the move (so the carried thing's touches run) and places it after. One thing at a time; taking another puts the first down. `<drop />` remembers the dropped thing until they part. Open: several things, a thief that steals only by rule.
+- **`unless="class"`** skips a rule while touching that class (Frogger's water unless on a log), so it does not depend on pair order. Rejected: rule order, a "safe" class overriding a "hazard".
+- **`<stick />`** corrects only the touched axis, so a pushed object slides along.
 
 ## Pixel collisions
 
-- Need: a jagged moon in a bounding box is mostly empty; the same need as a fighting game.
-- **Chosen:** `<type>pixel</type>` is opt-in per object. The box/circle sweep runs first; only a pair it reports touching is walked in half-pixel steps and bisected to the first step where a drawn pixel of one lies on a solid pixel of the other. Any other shape counts as solid over its shape (a circle analytically). Refused on text and images (their pixels belong to a backend). The edge reported is the one the motion came in through, so `stick` and `bounce` work unchanged. Any alpha above 0 counts as solid.
-- Rejected: a list of boxes (a second description of one picture that drifts); pixel for everything (costly for no gain in Pong); a threshold for alpha (changes "solid" for all sprites).
-- Limits: half-pixel steps; lines meant to be tested should be at least 2 pixels thick. A pixel touch's normal is read from what is drawn round the point ([below](#bounce-by-the-normal-2026-10-31)).
+- `<type>pixel</type>` is opt-in. The box sweep runs first; only a touching pair is walked in half-pixel steps to the first shared solid pixel. Any alpha counts as solid. Refused on text and images (their pixels are a backend's).
+- Rejected: a list of boxes (a second picture that drifts), pixels for everything (costly), an alpha threshold.
+- **`<solid char>`** names which inks of a bitmap touch (Q*bert's cube tops); the mask goes with flips and turns. **`<hitbox>`** is a smaller box or circle used for every touch. Rejected: a separate collision picture, polygon hitboxes. Open: a hitbox per look.
 
+## Filters and checks in rules
 
-## Speed filters
+- **`<slower>`/`<faster>`**: the speed is read once per touch, so a landing rule and a crash rule never both run.
+- **`side=`** is the side of the rule's own object that was touched; same words as `edge=` but a separate attribute, since `edge=` means a screen edge.
+- **Checks** reuse the condition tests (`<condition>`, `<all>`, `<any>`); one with no `object=` means the object itself. Not yet on edge rules.
+- **`<trigger>` in rules** runs one of the object's actions, so a death is one action that every killing rule names.
 
-- `<slower>N</slower>` / `<faster>N</faster>` before a rule's commands: run only while the object's speed (its velocity plus what it rides) is under N / at least N. The speed is read once per touch, so two rules for the pad (landing and crash) can never both run or both be skipped. Not allowed on screen-edge rules. Chosen over a rule on the key or a world variable.
+## Deflect
 
+Pong's rule: the paddle's middle sends the ball straight back, its ends at 45 degrees. `<deflect>45</deflect>` measures from the side's middle and keeps the speed. Rejected: `<bounce>45</bounce>` (bounce also runs on edges).
 
-## Deflect (Pong)
+## Contacts and knocks
 
-- Need: the ball only ever kept its random slope. The arcade rule: middle of the paddle sends it straight back, ends send it back at 45 degrees. No command could say where along the side the hit was.
-- **Chosen: `<deflect>angle</deflect>`**, a new verb in a rule about another object (angle is a value, 0 up to 90). Measured from the side's middle: half the side's length is the full angle, in proportion between; leaves away from the side touched; **speed kept**. Pong uses 45.
-- Rejected: `<bounce>45</bounce>` (bounce also runs on screen edges and in lockstep, keep every bounce unchanged); measuring to the ball's own edge (gave about 40 degrees at the top corner).
-- Open: serve at a set speed and random angle, speeding up per hit with a cap, adding the paddle's motion to the angle (velocity transfer). Breakout's paddle does not use it yet (plain `<bounce />`).
+- **A contact is worked out once per touch** (`contactOf`): edges, point, normal, where along each side, depth, time. Each side's rules see it from their own side; commands read `touch.x`, `touch.normal.x` and so on. Chosen over every sweep returning it, or each verb measuring for itself.
+- **`<knock>`** is a one-dimensional collision along the normal by `<mass>`, its content the bounce. Nothing happens unless closing, so both sides may say it. No mass is as heavy as can be. Chains of balls pass a knock on with no extra mechanism.
+- **Through a thing with no mass** (Mario Bros.' bumped floor): the knock goes to what rests on its far side, which then runs its rules as touched from below. A rule's `through="class"` takes only such felt-through touches.
+- Open: spin, rolling friction apart from `<drag>`.
 
+## Bounce by the normal
 
-## Side, checks and triggers (2026-10-16)
-
-- Need: Mario Bros. and Joust tell a bump from below or above from a touch from the side; a lap that counts only after the halfway marker is a rule that depends on a variable; six games wrote the same death (three to five commands) in two to four rules.
-- **`side=`, chosen:** the side of the rule's own object that was touched, the edge the detector already reported. Same words as `edge=` (top, bottom, left, right, horizontal, vertical), but a separate attribute, since `edge=` already means a screen edge. Looked at: `edge=` doing both (one word meaning two things), and a `<from>` filter naming the other's motion (the touched side already says it).
-- **Checks, chosen:** the `<condition>`, `<all>` and `<any>` of [conditions](07-states-and-conditions.md) after `<slower>`/`<faster>`, all of which must hold. One test vocabulary, not a second one for rules. A `<condition>` with no `class=` or `object=` means the object itself (`nameSelf`, after names are final), since a rule is always about its own object; in a state's condition that same check still means every object with the variable. Not yet on screen-edge rules (`EdgeGuard` would need its own checks); a state condition covers the cases met so far.
-- **`<trigger>` in rules, chosen:** a rule runs one of the object's `<action>`s, `object=` left out meaning itself, and an action can now also `<inc>`, `<dec>`, `<copy>`, `<reset object>`, `<reset scene>`, `<enter>` and `<die />`. So a death is one action and the rules that kill each say `<trigger action="lose" />`. Looked at: several classes in one `class=` (a list in a string), and a named rule set (another mechanism for what an action already is). An action run from a rule or a timer is one press: a `<move>` in it stays on, as it did from a timer.
-- Open: the other object as a name in a rule (shelved earlier as a name whose meaning changes).
-
-## Contacts and knocks (2026-10-16)
-
-- Need: pool, and Mario Bros. bumping a floor from below to turn over what walks on it; the author asked for momentum "carried through many possible objects", and for collision detection to pass on far more than an edge, "done once, in a central location".
-- **Contact, chosen:** worked out once per touch, in the frame (`contactOf` in `play/geometry.h`, from the shapes where they are when the touch is found), before either side's rules: the edges, the point, the normal (out of the second towards the first), where along each one's touched side (0 to 1), the depth, and the time through the frame. Each side's rules get it turned to their own point of view (`Touch`). Looked at: having every sweep return it (four sweep routines and the pixel walk would each have to compute it, where the shapes at the moment of touching are enough), and leaving each verb to measure what it needs (the old way, which `<deflect>` still does, and which is what "once, centrally" was asking to stop). Read by `side=` and `<knock>`, and by a rule's commands as the live numbers `touch.x`, `touch.y`, `touch.along`, `touch.depth`, `touch.normal.x` and `touch.normal.y`.
-- **`<knock>`, chosen:** a one-dimensional collision along the normal, by `<mass>`, with the bounce as its content (0 to 1, 1 left out); across the normal each keeps its velocity. Nothing happens unless the two are closing, which makes the second of two `<knock />` rules for one touch a no-op and lets both sides say it. No `<mass>` means as heavy as can be: never moved by a knock, and its own knock is a moving wall's. Looked at: mass as a variable (a reserved variable name), every object knockable with a default mass of 1 (a knock on a wall or floor would send it flying), a `<push>` verb that only moves the other (pool needs both sides to change).
-- **Chains:** a row of balls passes a knock on with no extra mechanism: a ball set moving touches the next within the same frame, and that pair has not reacted yet. Simultaneous touches are resolved one pair at a time, so an apex ball hit square into two can roll back a little, where a real one rolls on slowly; good enough for a table.
-- **Through a thing with no mass, chosen:** the knock goes to whatever with a mass rests within a pixel of its far side, overlapping it along it, as from something as heavy as can be, and that thing then runs its own rules about the knocker as touched on its near side. So Mario Bros. is written as the arcade means it: the bump comes from below (`side="bottom"`) whichever tile carried it. Looked at: the floor tile moving up a little (a floor that moves would need putting back, and what stands on it would have to tell a bump from standing), a rule on the creeper about the floor (it stands on the floor every frame), the receiver running its rules about the floor (it cannot tell the bump from standing either). One level only; a knock does not go on through a pile. 2026-10-28: a touch felt through is told from a touch itself by the rule's `through="class"` (only felt-through touches; rules without it only direct ones), after Mario jumping into a shellcreeper hanging off a ledge touched its bottom directly every frame and turned it over and back again. Looked at: gating on the receiver standing (it still stands half on the ledge), a side= value for it (it is not a side).
-- Open: a knock that turns as well as pushes (spin, english on a cue ball); rolling friction apart from `<drag>`; a cue that aims and strikes (wants values read when used, and making things at run time).
-
-## Solid characters and hitboxes (2026-10-18)
-
-- Need: Q*bert's cubes are three faces in one picture, and only the top should be landed on; Q*bert and Coily stand on their feet, so the box that touches is smaller than the picture. The author asked for "a custom hitbox" for diamond and parallelogram shapes.
-- **`<solid char>`, chosen:** in `<collisions>`, after `<type>pixel</type>`, names which of a bitmap's inks touch (`*` the default colour); any number, an inner group's replacing the outer's. The mask is made when the bitmap is drawn (`Bitmap::touching`) and goes with its flips and turns, so looks and frames need nothing more. Only for bitmaps. Looked at: a separate collision picture (a second drawing to keep in step with the first), and a shape list of points (a string to parse, or many elements, for what the picture already says).
-- **`<hitbox>`, chosen:** a `<rectangle>` or `<circle>` with an optional `<position>` inside the picture, used for every touch (`boxOf` and `isRound`); the window's edges and drawing still use the whole picture. Not with pixel type (pixels already are the shape). Looked at: a hitbox per look (no game needs it yet), a polygon (would be the first shape that is neither box nor circle in every sweep).
-- Open: a hitbox per look or frame; a polygon or diamond hitbox, which the solid inks mostly cover.
-
-## Bounce by the normal (2026-10-31)
-
-- Need: pinball, mini golf, track walls and angled blocks all bounce off surfaces that are not square. `<bounce />` flipped one component by the touched edge, and a pixel touch reported the box edge the motion came in by, so a ball met a slope as if it were a wall.
-- Beef's rule: no special cases. Things that never turn have edges that are only across or down, so a bounce about the surface's facing gives them the classic flip by itself.
-- **Chosen: `<bounce>` mirrors the velocity about the touch's normal**, as off a surface standing still, keeping its content's share of the speed it came in at (1 left out; above 1 a bumper). It is `knockedApart` with the other as heavy as can be and still. A box's side and a screen edge face straight out, so every box game plays as before; the 947 tests passed unchanged. What changes is only where the surface is not square: a circle met off its middle, a box corner met by a circle, and pixel pictures.
-- **A surface standing still, not moving.** Tried first: the other's velocity counted too, so a moving paddle lends its speed. Two Mario Bros. shellcreepers walking into each other then each saw the other as a wall coming at it: the first went off at three times its speed and the second kept on. The moving surface is what `<knock>` already does (with masses, and a massless thing as a moving wall), so it stays there; a bounce is off something still. `<kick>` was dropped from the plan: a bumper is `<bounce>1.3</bounce>`.
-- **The pixel normal (`pixelContactAt`, `play/geometry.h`).** The point is the middle of the pixels solid in both (or, only just touching, the first's beside the second's). Round it, four pixels each way, each thing's solid pixels are measured for how they spread (their two main directions). The one lying flattest is the surface, provided the point lies along it rather than off its end; it faces across itself, away from the other. Otherwise (a corner, the end of a line, two points) the normal is from the middle of the second's pixels there to the first's. Combat's test caught the end case: a shell meeting a tank's gun barrel end-on first came off sideways.
-- Looked at: a surface normal written on the object (`<facing>` per line: every drawn wall would need it, and pictures turn), the box edge kept for pixels (the limitation itself), and the gradient alone (a thin line hit in its middle has pixels on both sides of the point, so it gives no way at all).
-- Open: push-out along the normal after a bounce. (A turning solid and its speed at the point of touch came with Pinball: [tables and tracks](25-tables-and-tracks.md#decisions-along-the-way).)
+- Pinball, golf and track walls are not square. **`<bounce>` mirrors the velocity about the touch normal**, as off a surface standing still, keeping its content's share of speed (above 1, a bumper). A box side faces straight out, so every box game plays as before; the tests passed unchanged.
+- **Off a still surface, not a moving one.** Counting the other's velocity made two Mario Bros. creepers meeting fling each other. A moving surface is `<knock>`'s job.
+- **The pixel normal** (`pixelContactAt`): round the touch point, each side's solid pixels are measured for how they spread; the flattest is the surface. Otherwise middle to middle, which handles the end of a gun barrel.
+- Rejected: a normal written on the object, the gradient alone (a thin line gives none). Open: push-out along the normal.
