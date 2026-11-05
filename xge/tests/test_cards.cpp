@@ -1611,3 +1611,159 @@ TEST_CASE("gin.xml: at 100 after a hand the higher score wins", "[cards][gin]")
 	CHECK(play.state() == "over");
 	CHECK(play.get("over.winner").lookName() == "you");
 }
+
+namespace
+{
+	struct Pyramid : Played
+	{
+		Pyramid() : Played("descriptions/pyramid.xml")
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& pile(const std::string& name) { return get(name); }
+
+		int cardOf(const std::string& name)
+		{
+			const auto space = name.find(' ');
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (object.isCard && object.card.rankName == name.substr(0, space) && object.card.suitName == name.substr(space + 1)) { return object.cardNumber; }
+			}
+			return 0;
+		}
+
+		// That card swapped with the one on that pile.
+		void put(const std::string& name, const std::string& onto)
+		{
+			const int number = cardOf(name);
+			auto& target = pile(onto).pile.cards;
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (!object.pile.is) { continue; }
+				const auto at = std::find(object.pile.cards.begin(), object.pile.cards.end(), number);
+				if (at == object.pile.cards.end()) { continue; }
+				if (&object.pile.cards == &target)
+				{
+					std::iter_swap(at, target.end() - 1);
+					break;
+				}
+				Object& moved = *game.cardAt(number);
+				Object& other = *game.cardAt(target.back());
+				const bool up = other.faceUp;
+				game.turnCard(other, moved.faceUp);
+				game.turnCard(moved, up);
+				*at = target.back();
+				target.back() = number;
+			}
+			game.layOutCards();
+		}
+
+		bool holds(const std::string& pileName, const std::string& name)
+		{
+			const auto& cards = pile(pileName).pile.cards;
+			return std::find(cards.begin(), cards.end(), cardOf(name)) != cards.end();
+		}
+
+		void space(const std::string& at)
+		{
+			Object& hand = get("hand");
+			hand.hand.pile = pile(at).name;
+			hand.hand.at = static_cast<int>(pile(at).pile.cards.size()) - 1;
+			hand.hand.mouse = false;
+			tap(KeyCode::Space);
+			frames(1);
+		}
+	};
+}
+
+TEST_CASE("pyramid.xml: 28 cards in seven rows, 24 in the stock", "[cards][pyramid]")
+{
+	Pyramid play;
+	int dealt = 0;
+	for (int row = 1; row <= 7; ++row)
+	{
+		for (int column = 1; column <= row; ++column)
+		{
+			const auto& cards = play.pile("row" + std::to_string(row) + "." + std::to_string(column) + ".1").pile.cards;
+			CHECK(cards.size() == 1);
+			dealt += static_cast<int>(cards.size());
+		}
+	}
+	CHECK(dealt == 28);
+	CHECK(play.pile("stock").pile.cards.size() == 24);
+}
+
+TEST_CASE("pyramid.xml: a covered card cannot be taken; a king goes alone", "[cards][pyramid]")
+{
+	Pyramid play;
+	play.put("K spades", "row1.1.1");
+	play.space("row1.1.1");
+	CHECK(play.holds("row1.1.1", "K spades"));
+	CHECK(play.get("hand").lookName() == "free");
+	play.put("K hearts", "row7.4.1");
+	play.space("row7.4.1");
+	CHECK(play.holds("pairs", "K hearts"));
+	CHECK(play.pile("row7.4.1").pile.cards.empty());
+	CHECK(play.get("hand").lookName() == "free");
+}
+
+TEST_CASE("pyramid.xml: two free cards making 13 go together; two that do not go back", "[cards][pyramid]")
+{
+	Pyramid play;
+	play.put("Q hearts", "row7.1.1");
+	play.put("A spades", "row7.2.1");
+	play.put("5 hearts", "row7.3.1");
+	play.put("6 clubs", "row7.4.1");
+	play.space("row7.1.1");
+	CHECK(play.get("hand").lookName() == "held");
+	play.space("row7.2.1");
+	CHECK(play.holds("pairs", "Q hearts"));
+	CHECK(play.holds("pairs", "A spades"));
+	CHECK(play.get("hand").lookName() == "free");
+
+	play.space("row7.3.1");
+	play.space("row7.4.1");
+	CHECK(play.holds("row7.3.1", "5 hearts"));
+	CHECK(play.holds("row7.4.1", "6 clubs"));
+	CHECK(play.get("hand").lookName() == "free");
+
+	// Row seven's first two gone: the first of row six is free.
+	play.put("J diamonds", "row6.1.1");
+	play.put("2 clubs", "row7.5.1");
+	play.space("row6.1.1");
+	play.space("row7.5.1");
+	CHECK(play.holds("pairs", "J diamonds"));
+	CHECK(play.holds("pairs", "2 clubs"));
+}
+
+TEST_CASE("pyramid.xml: the stock turns onto the waste, whose top pairs with the pyramid", "[cards][pyramid]")
+{
+	Pyramid play;
+	play.put("10 spades", "stock");
+	play.put("3 hearts", "row7.7.1");
+	play.space("stock");
+	CHECK(play.holds("waste", "10 spades"));
+	play.space("waste");
+	play.space("row7.7.1");
+	CHECK(play.holds("pairs", "10 spades"));
+	CHECK(play.holds("pairs", "3 hearts"));
+}
+
+TEST_CASE("pyramid.xml: the pyramid cleared wins", "[cards][pyramid]")
+{
+	Pyramid play;
+	for (int row = 1; row <= 7; ++row)
+	{
+		for (int column = 1; column <= row; ++column)
+		{
+			Object& each = play.pile("row" + std::to_string(row) + "." + std::to_string(column) + ".1");
+			for (const int number : each.pile.cards) { play.pile("pairs").pile.cards.push_back(number); }
+			each.pile.cards.clear();
+			play.game.refreshPile(each);
+		}
+	}
+	play.frames(2);
+	CHECK(play.state() == "won");
+}

@@ -1511,6 +1511,9 @@
       <xsl:if test="$node/hand/team">
         <xsl:value-of select="concat($indent, $to, '.handTeam = ', normalize-space($node/hand/team), ';&#10;')" />
       </xsl:if>
+      <xsl:if test="$node/hand/holds">
+        <xsl:value-of select="concat($indent, $to, '.handHolds = ', normalize-space($node/hand/holds), ';&#10;')" />
+      </xsl:if>
     </xsl:if>
     <xsl:for-each select="$node/pile">
       <xsl:value-of select="concat($indent, $to, '.pile.is = true;')" />
@@ -1600,6 +1603,9 @@
           <xsl:value-of select="concat(' ', $to, '.pile.scoreBest = ', normalize-space(score/best), ';')" />
         </xsl:if>
       </xsl:if>
+      <xsl:if test="uncovered">
+        <xsl:value-of select="concat(' ', $to, '.pile.uncovered = true;')" />
+      </xsl:if>
       <xsl:if test="melds">
         <xsl:value-of select="concat(' ', $to, '.pile.melds = ')" />
         <xsl:call-template name="string"><xsl:with-param name="text" select="melds/@patterns" /></xsl:call-template>
@@ -1664,7 +1670,9 @@
           <xsl:text> </xsl:text>
           <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
         </xsl:for-each>
-        <xsl:text> } };&#10;</xsl:text>
+        <xsl:text> }, </xsl:text>
+        <xsl:value-of select="concat(substring('0', 1, 1 - count(sum)), normalize-space(sum))" />
+        <xsl:text> };&#10;</xsl:text>
       </xsl:for-each>
     </xsl:for-each>
     <xsl:if test="$node/marks">

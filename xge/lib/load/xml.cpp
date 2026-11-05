@@ -1115,6 +1115,7 @@ namespace xge
 						else { fail(at + " > <score>", "unknown <" + part->getName() + ">; expected <with> and <best>"); }
 					}
 				}
+				else if (tag == "uncovered") { pile.uncovered = true; }
 				else if (tag == "melds")
 				{
 					pile.melds = requireAttribute(*child, "patterns", at + " > <melds>");
@@ -1161,6 +1162,7 @@ namespace xge
 								rule.breakSuits.push_back(readText(*suit));
 							}
 						}
+						else if (name == "sum") { rule.sum = readCount(*part, at + " > <sum>"); }
 						else if (name == "trumps")
 						{
 							for (std::unique_ptr<XmlNode> suit = part->getFirstChild(); suit != nullptr; suit = suit->getNextSibling())
@@ -1935,6 +1937,7 @@ namespace xge
 				object.handPile = hand->getAttribute("pile");
 				if (auto seat = findChild(hand.get(), "seat")) { object.handSeat = readCount(*seat, where + " > <hand> > <seat>"); }
 				if (auto team = findChild(hand.get(), "team")) { object.handTeam = readCount(*team, where + " > <hand> > <team>"); }
+				if (auto holds = findChild(hand.get(), "holds")) { object.handHolds = readCount(*holds, where + " > <hand> > <holds>"); }
 			}
 			if (auto poses = findChild(&node, "poses"))
 			{

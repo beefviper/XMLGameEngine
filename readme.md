@@ -158,7 +158,7 @@ Keys run the current state's bindings, timers count, objects move, collisions ar
 
 ## Games
 
-There are 54 games in [games/descriptions/](games/descriptions/), from Pong and Breakout to Pac-Man, Donkey Kong, Q\*bert, Adventure and Tetris. Many of them brought a word with them:
+There are 55 games in [games/descriptions/](games/descriptions/), from Pong and Breakout to Pac-Man, Donkey Kong, Q\*bert, Adventure and Tetris. Many of them brought a word with them:
 
 | Game | Words it needed |
 |---|---|
@@ -192,6 +192,7 @@ There are 54 games in [games/descriptions/](games/descriptions/), from Pong and 
 | Texas Hold'em | `patterns` of cards, made of `same` (cards of a rank), `run` (worths in a row) and `suited` (cards of a suit): poker's hands written in the game, not built into the engine; piles that `score` by them with the shared cards, live numbers `pattern`, `strength` and `odds` (how often they win against unseen cards); fixed-limit betting as plain variables and conditions |
 | Spades | `trumps` in a trick, a hand's `team` (partners), a hand's live `tricks` (what its cards should take, for a bid) |
 | Gin Rummy | `melds` of the game's `patterns` (sets and runs) with live `deadwood`, `points` by `each` card for the court cards; a computer that melds |
+| Pyramid | `uncovered` piles (a card is free when nothing overlaps it), a hand that `holds` cards from two piles, a pile that takes cards whose worths `sum` to 13 |
 | Hearts | tricks: a pile that takes cards that `follow` the suit led, `breaks` for hearts not led until played, `points` by `each` card (a heart 1, the queen of spades 13), live `lead` and `winner` by a hand's `seat`, `collect` for a taken trick, computers that `think` with `avoid` to keep out of tricks |
 | Crazy Eights | you against the computer: each player's cards a `sorted` pile fanned within a `width`, a discard pile that `takes` what `matches` and `wild` eights, a `call` of the suit after one, a stock refilled by shuffling the discards, a computer that `think`s with a hand of its own |
 | Pinball | `pivot` and `swing`: a flipper turns about its hinge in one eased stroke (from still, fastest half way, to still), the turn swept through the frame, and a `knock` lends the ball the speed of the point that strikes it; `friction` brings a cradled ball to rest |

@@ -472,6 +472,7 @@ namespace xge
 		void trackHand(Object& hand, bool horizontal, float at);
 		void dealDecks();
 		void layOutCards();
+		bool isCovered(const Object& card);
 		Object* cardAt(int number);
 		Object* pileNamed(const std::string& name);
 		void turnCard(Object& card, bool up);
@@ -490,6 +491,7 @@ namespace xge
 		bool isTrump(const PileRule& rule, const Object& card);
 		bool beatsInTrick(const PileRule& rule, const Object& card, const Object& best);
 		float reckonTricks(const Object& own, const PileRule& trick);
+
 		static bool follows(const PileRule& rule, const Object& below, const Object& next);
 		void layHeld(Object& hand, Object& pile);
 		static bool isWild(const PileRule& rule, const Object& card);

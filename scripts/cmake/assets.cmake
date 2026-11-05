@@ -69,6 +69,7 @@ set(data_xml
 	"games/descriptions/hearts.xml"
 	"games/descriptions/spades.xml"
 	"games/descriptions/gin.xml"
+	"games/descriptions/pyramid.xml"
 	"games/descriptions/snake.xml"
 	"games/descriptions/centipede.xml")
 

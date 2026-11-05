@@ -1368,6 +1368,18 @@ namespace xge
 	{
 		const PileRule& rule = pile.pile.takes;
 		if (!rule.given || cards.empty()) { return false; }
+		// <sum>: the cards laid, added up by their worths.
+		if (rule.sum > 0)
+		{
+			float total = 0.0f;
+			for (const int number : cards)
+			{
+				const Object* card = cardAt(number);
+				if (!card) { return false; }
+				total += card->card.worths.empty() ? static_cast<float>(card->card.rank) : card->card.worths.front();
+			}
+			return total == static_cast<float>(rule.sum);
+		}
 		if (rule.one && cards.size() > 1) { return false; }
 		const Object* first = cardAt(cards.front());
 		if (!first) { return false; }
@@ -1428,11 +1440,54 @@ namespace xge
 		return true;
 	}
 
+	// Whether a card of a pile lies under another pile's card drawn over it.
+	bool Game::isCovered(const Object& card)
+	{
+		const Vector2f size = sizeOf(card);
+		for (const Object& pile : objects)
+		{
+			if (!pile.pile.is || !isShown(pile)) { continue; }
+			for (const int number : pile.pile.cards)
+			{
+				const Object* other = cardAt(number);
+				if (!other || other == &card || other->drawOrder <= card.drawOrder) { continue; }
+				const Vector2f otherSize = sizeOf(*other);
+				if (other->position.x < card.position.x + size.x && card.position.x < other->position.x + otherSize.x
+					&& other->position.y < card.position.y + size.y && card.position.y < other->position.y + otherSize.y)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	bool Game::takeCards(Object& hand)
 	{
-		if (!hand.hand.is || !hand.hand.held.empty() || (hand.hand.mouse && !hand.hand.over)) { return false; }
+		if (!hand.hand.is || (hand.hand.mouse && !hand.hand.over)) { return false; }
 		Object* pile = pileNamed(hand.hand.pile);
 		if (!pile || pile->pile.deals > 0 || pile->pile.cards.empty()) { return false; }
+		if (pile->pile.uncovered)
+		{
+			const Object* top = cardAt(pile->pile.cards.back());
+			if (top && isCovered(*top)) { return false; }
+		}
+		// Holding already: the top card of another pile too, while the hand
+		// <holds> cards from that many piles.
+		if (!hand.hand.held.empty())
+		{
+			const auto taken = [&](const std::string& name) { return name == hand.hand.from || std::any_of(hand.hand.also.begin(), hand.hand.also.end(), [&](const auto& each) { return each.second == name; }); };
+			if (static_cast<int>(hand.hand.also.size()) + 1 >= hand.hand.holds || taken(pile->name)) { return false; }
+			const int number = pile->pile.cards.back();
+			const Object* top = cardAt(number);
+			if (!top || !top->faceUp) { return false; }
+			pile->pile.cards.pop_back();
+			refreshPile(*pile);
+			hand.hand.held.push_back(number);
+			hand.hand.also.emplace_back(number, pile->name);
+			layOutCards();
+			return true;
+		}
 		const int count = static_cast<int>(pile->pile.cards.size());
 		const int at = hand.hand.at < 0 ? count - 1 : std::min(hand.hand.at, count - 1);
 		// A hand with a pile of its own takes from it alone, any one card,
@@ -1486,6 +1541,11 @@ namespace xge
 		hand.hand.held.clear();
 		if (Object* from = pileNamed(hand.hand.from); from && from != &pile) { showTop(*from); }
 		hand.hand.from.clear();
+		for (const auto& [number, name] : hand.hand.also)
+		{
+			if (Object* from = pileNamed(name); from && from != &pile) { showTop(*from); }
+		}
+		hand.hand.also.clear();
 		// A hand with a pile of its own stays pointing into it.
 		if (Object* own = hand.hand.own.empty() ? nullptr : pileNamed(hand.hand.own))
 		{
@@ -1543,6 +1603,13 @@ namespace xge
 		const std::string pointed = hand.hand.pile;
 		const int at = hand.hand.at;
 		const int card = hand.hand.held.front();
+		// Cards taken from other piles go back to theirs first.
+		for (const auto& [number, name] : hand.hand.also)
+		{
+			hand.hand.held.erase(std::find(hand.hand.held.begin(), hand.hand.held.end(), number));
+			if (Object* back = pileNamed(name)) { putOnPile(*back, number); }
+		}
+		hand.hand.also.clear();
 		layHeld(hand, *from);
 		// Back in a hand's own pile: pointing at it again.
 		if (!hand.hand.own.empty() && from == pileNamed(hand.hand.own))
@@ -1812,8 +1879,11 @@ namespace xge
 		{
 			return point.x >= where.x && point.y >= where.y && point.x < where.x + size.x && point.y < where.y + size.y;
 		};
-		// The top card under the pointer, else the pile's place; holding
-		// cards, the pile under the held cards' middle counts too.
+		// The top card under the pointer (of piles overlapping, the one
+		// drawn over), else the pile's place.
+		Object* found = nullptr;
+		int foundAt = -1;
+		int foundOrder = -1;
 		for (Object* pile : shownPiles())
 		{
 			bool hit = false;
@@ -1829,12 +1899,20 @@ namespace xge
 			}
 			if (!hit && inside(pile->position, sizeOf(*pile))) { hit = true; }
 			if (!hit) { continue; }
+			const Object* card = index >= 0 ? cardAt(pile->pile.cards[static_cast<std::size_t>(index)]) : nullptr;
+			const int order = card ? card->drawOrder : 0;
+			if (found && order <= foundOrder) { continue; }
+			found = pile;
+			foundAt = index;
+			foundOrder = order;
+		}
+		if (found)
+		{
 			// Holding: the pile, its top card.
-			if (!hand.hand.held.empty()) { index = static_cast<int>(pile->pile.cards.size()) - 1; }
-			hand.hand.pile = pile->name;
-			hand.hand.at = index;
+			if (!hand.hand.held.empty() && hand.hand.holds <= 1) { foundAt = static_cast<int>(found->pile.cards.size()) - 1; }
+			hand.hand.pile = found->name;
+			hand.hand.at = foundAt;
 			hand.hand.over = true;
-			break;
 		}
 		layOutCards();
 	}

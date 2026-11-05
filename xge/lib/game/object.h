@@ -446,6 +446,9 @@ namespace xge
 		bool follow{ false };
 		std::vector<std::string> breakSuits;
 		std::vector<std::string> trumpSuits;
+		// <sum>N: the cards laid (all of them, held together) when their
+		// worths add up to N, whatever is on the pile (0: no such rule).
+		int sum{};
 	};
 
 	// A card of a <deck> (see game/cards.h): which deck, its suit and rank
@@ -644,6 +647,7 @@ namespace xge
 			std::string scoreWith;      // <score><with pile=>: with that pile's cards too
 			int scoreFull{};            // <with><full>: that pile holds this many when all are dealt (0: as it is)
 			int scoreBest{};            // <score><best>: the best this many of the cards (0: all)
+			bool uncovered{ false };    // <uncovered />: its top card taken only while no card drawn over it overlaps it
 			std::string melds;          // <melds patterns=>: its cards laid out in groups that make those patterns (empty: none)
 			int meldsBest{};            // <melds><best>: the best this many of the cards (0: all)
 			PileRule takes;
@@ -653,6 +657,7 @@ namespace xge
 		std::string handPile;           // <hand pile=>: its own pile (cards held by a player)
 		int handSeat{};                 // <hand><seat>: which player, for a trick's `winner` (0 none)
 		int handTeam{};                 // <hand><team>: the side it plays for, partners alike (0 none)
+		int handHolds{ 1 };             // <hand><holds>: from how many piles it may hold a card at once
 		CardOf card;                    // a card of a <deck> (deck empty for anything else)
 		bool isCard{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
@@ -1137,6 +1142,7 @@ namespace xge
 			std::string scoreWith;
 			int scoreFull{};
 			int scoreBest{};
+			bool uncovered{ false };
 			std::string melds;      // as written
 			int meldsBest{};
 			bool scoreDue{ false };  // its cards changed since it was last scored
@@ -1191,6 +1197,10 @@ namespace xge
 			std::string own;        // pile=: its own pile, as written, or none
 			int seat{};             // <seat>: which player (0 none)
 			int team{};             // <team>: its side; a partner is another hand on it (0 none)
+			int holds{ 1 };         // <holds>: from how many piles it holds cards at once
+			// Holding cards from more than one pile: each card taken after
+			// the first, and the pile it came from.
+			std::vector<std::pair<int, std::string>> also;
 			std::string pile;
 			int at{ -1 };
 			std::vector<int> held;

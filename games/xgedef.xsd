@@ -625,6 +625,8 @@
             <xs:element name="seat" type="xs:positiveInteger" minOccurs="0" />
             <!-- team: its side; partners are hands on the same team (a computer's think lets a partner's card win) -->
             <xs:element name="team" type="xs:positiveInteger" minOccurs="0" />
+            <!-- holds: from how many piles it may hold a card at once (a pair taken together); none: one -->
+            <xs:element name="holds" type="xs:positiveInteger" minOccurs="0" />
           </xs:sequence>
           <xs:attribute name="pile" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
@@ -714,6 +716,8 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+            <!-- sum: the cards laid, all held together, when their worths add up to this, whatever is on the pile -->
+            <xs:element name="sum" type="xs:positiveInteger" minOccurs="0" />
             <!-- trumps: a card of these suits takes the trick over every card of the others -->
             <xs:element name="trumps" minOccurs="0">
               <xs:complexType>
@@ -748,6 +752,8 @@
           <xs:attribute name="patterns" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
+      <!-- uncovered: its top card can be taken only while no card of another pile, drawn over it, overlaps it -->
+      <xs:element name="uncovered" type="emptyType" minOccurs="0" />
       <!-- melds patterns=: its cards laid out in groups, each making one of the game's <patterns> of that name with all
            its cards (<same>: one rank, <run>: worths in a row, <suited>: one suit, at least as many as the number), the
            groups leaving the fewest points over; live number deadwood, the points left over by the best <best> of them -->
