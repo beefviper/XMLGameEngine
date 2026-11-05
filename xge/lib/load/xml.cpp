@@ -1153,6 +1153,14 @@ namespace xge
 								rule.breakSuits.push_back(readText(*suit));
 							}
 						}
+						else if (name == "trumps")
+						{
+							for (std::unique_ptr<XmlNode> suit = part->getFirstChild(); suit != nullptr; suit = suit->getNextSibling())
+							{
+								if (suit->getName() != "suit") { fail(at + " > <trumps>", "unknown <" + suit->getName() + ">; expected <suit>s"); }
+								rule.trumpSuits.push_back(readText(*suit));
+							}
+						}
 						else if (name == "wild")
 						{
 							for (std::unique_ptr<XmlNode> rank = part->getFirstChild(); rank != nullptr; rank = rank->getNextSibling())
@@ -1918,6 +1926,7 @@ namespace xge
 				object.hand = true;
 				object.handPile = hand->getAttribute("pile");
 				if (auto seat = findChild(hand.get(), "seat")) { object.handSeat = readCount(*seat, where + " > <hand> > <seat>"); }
+				if (auto team = findChild(hand.get(), "team")) { object.handTeam = readCount(*team, where + " > <hand> > <team>"); }
 			}
 			if (auto poses = findChild(&node, "poses"))
 			{

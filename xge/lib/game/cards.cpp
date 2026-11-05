@@ -459,17 +459,104 @@ namespace xge
 		return 0.0f;
 	}
 
+	bool Game::isTrump(const PileRule& rule, const Object& card)
+	{
+		return std::find(rule.trumpSuits.begin(), rule.trumpSuits.end(), card.card.suitName) != rule.trumpSuits.end();
+	}
+
+	// Whether `card` laid now takes the trick from `best`: a trump over
+	// any other card, else a higher card of the same suit.
+	bool Game::beatsInTrick(const PileRule& rule, const Object& card, const Object& best)
+	{
+		const bool trump = isTrump(rule, card);
+		if (trump != isTrump(rule, best)) { return trump; }
+		return card.card.suit == best.card.suit && card.card.worths.back() > best.card.worths.back();
+	}
+
 	const Object* Game::trickWinning(const Object& pile)
 	{
 		if (pile.pile.cards.empty()) { return nullptr; }
-		const Object* lead = cardAt(pile.pile.cards.front());
-		const Object* best = lead;
+		const Object* best = cardAt(pile.pile.cards.front());
 		for (const int number : pile.pile.cards)
 		{
 			const Object* card = cardAt(number);
-			if (card && lead && best && card->card.suit == lead->card.suit && card->card.worths.back() > best->card.worths.back()) { best = card; }
+			if (card && best && beatsInTrick(pile.pile.takes, *card, *best)) { best = card; }
 		}
 		return best;
+	}
+
+	// How many tricks a hand's cards should take, as a player reckons it
+	// to bid: each side suit's ace, a king with another card of its suit,
+	// half a queen with two more and a higher card; each trump honour with
+	// as many trumps under it as there are above it, and each trump past
+	// three; with trumps to spare, a missing suit one and a single card a
+	// half. Rounded to the nearest.
+	float Game::reckonTricks(const Object& own, const PileRule& trick)
+	{
+		float top = 0.0f;
+		std::vector<int> suits;
+		for (const Object& object : objects)
+		{
+			if (!object.isCard || object.card.worths.empty()) { continue; }
+			top = std::max(top, object.card.worths.back());
+			if (std::find(suits.begin(), suits.end(), object.card.suit) == suits.end()) { suits.push_back(object.card.suit); }
+		}
+		std::map<int, std::vector<float>> held;
+		std::map<int, bool> trumpSuit;
+		int trumps = 0;
+		for (const int number : own.pile.cards)
+		{
+			const Object* card = cardAt(number);
+			if (!card || card->card.worths.empty()) { continue; }
+			held[card->card.suit].push_back(card->card.worths.back());
+			if (isTrump(trick, *card))
+			{
+				trumpSuit[card->card.suit] = true;
+				++trumps;
+			}
+		}
+		float total = 0.0f;
+		int honours = 0;
+		for (auto& [suit, worths] : held)
+		{
+			std::sort(worths.rbegin(), worths.rend());
+			const std::size_t length = worths.size();
+			const auto has = [&](float worth) { return std::find(worths.begin(), worths.end(), worth) != worths.end(); };
+			if (trumpSuit[suit])
+			{
+				for (std::size_t k = 0; k < 3; ++k)
+				{
+					if (has(top - static_cast<float>(k)) && length > k) { ++honours; }
+				}
+				total += static_cast<float>(length > 3 ? length - 3 : 0);
+				continue;
+			}
+			if (has(top)) { total += 1.0f; }
+			if (has(top - 1.0f) && length >= 2) { total += length <= 5 ? 1.0f : 0.5f; }
+			if (has(top - 2.0f) && length >= 3 && (has(top) || has(top - 1.0f))) { total += 0.5f; }
+		}
+		total += static_cast<float>(honours);
+		if (!trick.trumpSuits.empty())
+		{
+			float ruffs = 0.0f;
+			for (const int suit : suits)
+			{
+				if (trumpSuit[suit]) { continue; }
+				const auto it = held.find(suit);
+				const std::size_t length = it == held.end() ? 0 : it->second.size();
+				if (length == 0) { ruffs += 1.0f; }
+				else if (length == 1) { ruffs += 0.5f; }
+			}
+			const int spare = trumps - honours;
+			total += std::min(ruffs, static_cast<float>(std::max(spare, 0)));
+		}
+		return std::floor(total + 0.5f);
+	}
+
+	const Object* Game::trickPile()
+	{
+		const auto found = std::find_if(objects.begin(), objects.end(), [](const Object& object) { return object.pile.is && object.pile.takes.follow; });
+		return found == objects.end() ? nullptr : &*found;
 	}
 
 	bool Game::isWild(const PileRule& rule, const Object& card)
@@ -514,6 +601,17 @@ namespace xge
 		pile.points = total;
 		refreshBoundTexts(pile.name, "cards", pile.cardCount);
 		refreshBoundTexts(pile.name, "points", pile.points);
+
+		// A hand's own pile in a game with a trick: the tricks it should take.
+		if (const Object* trick = trickPile(); trick && trick != &pile)
+		{
+			const bool owned = std::any_of(objects.begin(), objects.end(), [&](const Object& hand) { return hand.hand.is && !hand.hand.own.empty() && pileNamed(hand.hand.own) == &pile; });
+			if (owned)
+			{
+				pile.tricks = reckonTricks(pile, trick->pile.takes);
+				refreshBoundTexts(pile.name, "tricks", pile.tricks);
+			}
+		}
 
 		// A trick: the suit led, and who laid the card winning it.
 		if (pile.pile.takes.follow)
@@ -1036,6 +1134,9 @@ namespace xge
 		{
 			if (!hand.hand.is) { continue; }
 			Object* pile = hand.hand.pile.empty() ? nullptr : pileNamed(hand.hand.pile);
+			// A hand pointing into its own pile, emptied then dealt to again:
+			// at its first card.
+			if (pile && hand.hand.at < 0 && !pile->pile.cards.empty() && !hand.hand.own.empty() && pileNamed(hand.hand.own) == pile) { hand.hand.at = 0; }
 			Vector2f pointed = pile ? pile->position : hand.position;
 			Vector2f size = pile ? sizeOf(*pile) : Vector2f{};
 			if (pile && hand.hand.at >= 0 && static_cast<std::size_t>(hand.hand.at) < pile->pile.cards.size())
@@ -1571,7 +1672,7 @@ namespace xge
 	// hand at what it will do, then press. Calling, the suit it holds most
 	// of; else the card that goes somewhere, a wild one last, from the suit
 	// it holds most of and the highest; else a draw from the stock.
-	int Game::playToTrick(Object& trick, const Object& own, bool avoid)
+	int Game::playToTrick(Object& trick, const Object& hand, const Object& own, bool avoid)
 	{
 		int players = 0;
 		for (const Object& object : objects)
@@ -1590,23 +1691,45 @@ namespace xge
 			if (card && pileTakes(trick, { number }, &own)) { legal.emplace_back(i, card); }
 		}
 		if (legal.empty()) { return -1; }
-		const bool following = winning && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return each.second->card.suit == winning->card.suit; });
+		const Object* led = trick.pile.cards.empty() ? nullptr : cardAt(trick.pile.cards.front());
+		const bool following = led && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return each.second->card.suit == led->card.suit; });
 		const bool ducking = following && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return worth(*each.second) < worth(*winning); });
+		const PileRule& rule = trick.pile.takes;
+		float top = 0.0f;
+		for (const Object& object : objects)
+		{
+			if (object.isCard && !object.card.worths.empty()) { top = std::max(top, object.card.worths.back()); }
+		}
+		// A partner (another hand on its <team>) winning safely: it is the
+		// last card, or the partner's is the highest or next of its suit.
+		bool partnerWins = false;
+		if (winning && hand.hand.team > 0 && winning->laidBy != hand.hand.seat)
+		{
+			for (const Object& other : objects)
+			{
+				if (other.hand.is && other.hand.seat == winning->laidBy && other.hand.team == hand.hand.team) { partnerWins = last || worth(*winning) >= top - 1.0f || isTrump(rule, *winning); }
+			}
+		}
 
 		// How much each card is wanted: the highest is played.
 		const auto wanted = [&](const Object& card)
 		{
 			const float value = worth(card);
 			const float points = cardPoints(trick, card);
-			if (!winning) { return avoid ? -(points * 100.0f + value) : value; }       // leading
-			if (!following) { return avoid ? points * 100.0f + value : -value; }       // none of the suit led: shed
+			if (!winning)                                                                  // leading
+			{
+				if (avoid) { return -(points * 100.0f + value); }
+				return value >= top ? 100.0f + value : -value - (isTrump(rule, card) ? 50.0f : 0.0f);  // an ace, else the lowest side card
+			}
+			if (!following && avoid) { return points * 100.0f + value; }                  // none of the suit led: shed
 			if (avoid)
 			{
 				if (ducking) { return value < worth(*winning) ? value : -1000.0f - value; }  // the highest that still loses
 				return last ? value : -value;                                               // taking it anyway
 			}
-			const bool beats = value > worth(*winning);
-			return beats ? 1000.0f - value : -value;                                        // the lowest that wins, else the lowest
+			const float spare = isTrump(rule, card) ? 50.0f : 0.0f;                           // a trump kept back
+			if (partnerWins) { return -value - spare; }                                       // the lowest: the partner has it
+			return beatsInTrick(rule, card, *winning) ? 1000.0f - value : -value - spare;     // the lowest that wins, else the lowest
 		};
 		int best = legal.front().first;
 		float most = wanted(*legal.front().second);
@@ -1655,7 +1778,7 @@ namespace xge
 		{
 			// A trick: of the cards it takes, the one that best keeps out
 			// of it (<avoid />) or takes it.
-			index = playToTrick(**trick, *own, think.avoid);
+			index = playToTrick(**trick, hand, *own, think.avoid);
 			if (index >= 0) { aim = own; }
 		}
 		else if (calling)

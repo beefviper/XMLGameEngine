@@ -1008,9 +1008,10 @@ TEST_CASE("holdem.xml: hand after hand, you calling everything, every hand ends 
 
 namespace
 {
-	struct Hearts : Played
+	// A trick game of four, you, west, north and east (Hearts, Spades).
+	struct Tricks : Played
 	{
-		Hearts() : Played("descriptions/hearts.xml")
+		explicit Tricks(const std::string& file) : Played(file)
 		{
 			tap(KeyCode::Space);
 			frames(2);
@@ -1050,7 +1051,7 @@ namespace
 				cards.erase(std::find(cards.begin(), cards.end(), number));
 				cards.push_back(number);
 			}
-			for (int i = 0; i < 100 && table("phase") != 0.0f; ++i) { frames(1); }
+			for (int i = 0; i < 100 && table("phase") != 0.0f && table("phase") != 5.0f; ++i) { frames(1); }
 			frames(2);
 		}
 
@@ -1077,6 +1078,28 @@ namespace
 				if (table("phase") == 0.0f && table("turn") == 1.0f && get("hand").lookName() == "free") { return; }
 				frames(1);
 			}
+		}
+	};
+
+	struct Hearts : Tricks
+	{
+		Hearts() : Tricks("descriptions/hearts.xml") {}
+	};
+
+	// Spades: the first deal comes after a moment; then you bid.
+	struct Spades : Tricks
+	{
+		Spades() : Tricks("descriptions/spades.xml")
+		{
+			for (int i = 0; i < 100 && table("phase") != 5.0f; ++i) { frames(1); }
+			frames(2);
+		}
+
+		void deal(const std::vector<std::vector<std::string>>& hands, int leader)
+		{
+			Tricks::deal(hands, leader);
+			tap(KeyCode::Space);
+			frames(2);
 		}
 	};
 
@@ -1254,4 +1277,163 @@ TEST_CASE("hearts.xml: a whole hand, you playing the first card that goes: 26 po
 	play.frames(1);
 	CHECK(play.pile("mine").pile.cards.size() == 13);
 	CHECK(play.table("turn") == 2.0f);
+}
+
+TEST_CASE("spades.xml: everyone bids what their cards should take; you change yours and bid", "[cards][spades]")
+{
+	Spades play;
+	REQUIRE(play.table("phase") == 5.0f);
+	CHECK(play.get("hand").lookName() == "bid");
+	for (const auto& [hand, pile] : { std::make_pair("westhand", "west"), std::make_pair("northhand", "north"), std::make_pair("easthand", "east"), std::make_pair("hand", "mine") })
+	{
+		CHECK(play.of(hand, "bid") == std::max(play.pile(pile).tricks, 1.0f));
+	}
+	const float first = play.of("hand", "bid");
+	play.tap(KeyCode::W);
+	play.frames(1);
+	CHECK(play.of("hand", "bid") == std::min(first + 1.0f, 13.0f));
+	for (int i = 0; i < 16; ++i) { play.tap(KeyCode::S); }
+	play.frames(2);
+	CHECK(play.of("hand", "bid") == 1.0f);
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	CHECK(play.table("phase") == 0.0f);
+	CHECK(play.table("usbid") == 1.0f + play.of("northhand", "bid"));
+	CHECK(play.table("thembid") == play.of("westhand", "bid") + play.of("easthand", "bid"));
+}
+
+TEST_CASE("spades.xml: a hand's live number tricks reckons high cards, trumps and short suits", "[cards][spades]")
+{
+	Spades play;
+	// Seven spades from the ace (three honours, four past three), three side aces, a guarded king.
+	play.deal({
+		joined(joined(suitOf("spades", { "A", "K", "Q", "J", "10", "9", "8" }), suitOf("hearts", { "A", "K" })), joined(suitOf("diamonds", { "A", "2" }), suitOf("clubs", { "A", "2" }))),
+		joined(suitOf("spades", { "2", "3", "4", "5", "6", "7" }), suitOf("hearts", { "2", "3", "4", "5", "6", "7", "8" })),
+		joined(suitOf("hearts", { "9", "10", "J", "Q" }), suitOf("diamonds", { "3", "4", "5", "6", "7", "8", "9", "10", "J" })),
+		joined(suitOf("diamonds", { "Q", "K" }), suitOf("clubs", { "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" })),
+	}, 1);
+	CHECK(play.pile("mine").tricks == 11.0f);
+	CHECK(play.of("hand", "bid") == 11.0f);
+	// Six small trumps, no clubs or diamonds: three past three, and ruffs for the two missing suits.
+	CHECK(play.pile("west").tricks == 5.0f);
+}
+
+TEST_CASE("spades.xml: spades lead only once broken; a spade takes a trick of another suit", "[cards][spades]")
+{
+	Spades play;
+	play.deal({
+		joined(suitOf("spades", { "2" }), suitOf("diamonds", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" })),
+		suitOf("clubs", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+		suitOf("hearts", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+		joined(suitOf("spades", { "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }), suitOf("diamonds", { "A" })),
+	}, 2);
+	// West leads its ace of clubs; north sheds a heart, east lets its partner's ace stand.
+	play.untilYou();
+	REQUIRE(play.pile("trick").pile.cards.size() == 3);
+	CHECK(play.pile("trick").winner == 2.0f);
+	CHECK(play.pile("east").pile.cards.size() == 12);
+	CHECK(std::find(play.pile("east").pile.cards.begin(), play.pile("east").pile.cards.end(), play.cardOf("A diamonds")) == play.pile("east").pile.cards.end());
+	// No club: your two of spades trumps the ace.
+	CHECK(play.play("2 spades"));
+	CHECK(play.pile("trick").winner == 1.0f);
+	play.untilYou();
+	CHECK(play.of("hand", "won") == 1.0f);
+	CHECK(play.table("uswon") == 1.0f);
+}
+
+TEST_CASE("spades.xml: no spade leads before spades are broken, unless only spades are held", "[cards][spades]")
+{
+	Spades play;
+	play.deal({
+		joined(suitOf("spades", { "2", "3", "4", "5", "6", "7", "8" }), suitOf("diamonds", { "2", "3", "4", "5", "6", "7" })),
+		joined(suitOf("spades", { "9", "10", "J", "Q", "K", "A" }), suitOf("diamonds", { "8", "9", "10", "J", "Q", "K", "A" })),
+		suitOf("hearts", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+		suitOf("clubs", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+	}, 1);
+	CHECK_FALSE(play.play("2 spades"));
+	CHECK(play.play("2 diamonds"));
+}
+
+TEST_CASE("spades.xml: a partner's winning ace stands: north plays low under it", "[cards][spades]")
+{
+	Spades play;
+	play.deal({
+		joined(suitOf("hearts", { "A" }), suitOf("diamonds", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" })),
+		joined(suitOf("hearts", { "3", "4", "5", "6", "7", "8" }), suitOf("clubs", { "2", "3", "4", "5", "6", "7", "8" })),
+		joined(joined(suitOf("hearts", { "K", "2" }), suitOf("clubs", { "9", "10", "J", "Q", "K", "A" })), suitOf("spades", { "2", "3", "4", "5", "6" })),
+		joined(joined(suitOf("hearts", { "9", "10", "J", "Q" }), suitOf("spades", { "7", "8", "9", "10", "J", "Q", "K", "A" })), suitOf("diamonds", { "A" })),
+	}, 1);
+	CHECK(play.play("A hearts"));
+	play.untilYou();
+	CHECK(play.of("hand", "won") == 1.0f);
+	const auto& north = play.pile("north").pile.cards;
+	CHECK(std::find(north.begin(), north.end(), play.cardOf("K hearts")) != north.end());
+	CHECK(std::find(north.begin(), north.end(), play.cardOf("2 hearts")) == north.end());
+}
+
+TEST_CASE("spades.xml: a side that makes its bid scores ten a trick and a bag each over; short, it loses ten a trick", "[cards][spades]")
+{
+	Spades play;
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	play.set("table", "usbid", 4.0f);
+	play.set("table", "uswon", 5.0f);
+	play.set("table", "thembid", 9.0f);
+	play.set("table", "themwon", 8.0f);
+	play.set("table", "tricks", 13.0f);
+	play.frames(2);
+	CHECK(play.table("us") == 41.0f);
+	CHECK(play.table("usbags") == 1.0f);
+	CHECK(play.table("them") == -90.0f);
+	CHECK(play.table("phase") == 3.0f);
+	CHECK(play.get("message").lookName() == "made10");
+
+	// Ten bags cost a hundred.
+	play.set("table", "usbags", 11.0f);
+	play.frames(2);
+	CHECK(play.table("us") == -59.0f);
+	CHECK(play.table("usbags") == 1.0f);
+}
+
+TEST_CASE("spades.xml: at 500 after a hand the higher score wins", "[cards][spades]")
+{
+	Spades play;
+	play.set("table", "us", 320.0f);
+	play.set("table", "them", 512.0f);
+	play.set("table", "phase", 3.0f);
+	play.frames(2);
+	CHECK(play.state() == "over");
+	CHECK(play.get("over.winner").lookName() == "them");
+}
+
+TEST_CASE("spades.xml: a whole hand, you playing the first card that goes: 13 tricks scored", "[cards][spades]")
+{
+	Spades play;
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	for (int trick = 0; trick < 13 && play.table("phase") != 3.0f; ++trick)
+	{
+		play.untilYou();
+		if (play.table("phase") == 3.0f) { break; }
+		bool played = false;
+		const std::vector<int> mine = play.pile("mine").pile.cards;
+		for (const int number : mine)
+		{
+			const Object& card = *play.game.cardAt(number);
+			if (play.play(card.card.rankName + " " + card.card.suitName))
+			{
+				played = true;
+				break;
+			}
+		}
+		REQUIRE(played);
+		play.frames(2);
+	}
+	play.untilYou();
+	REQUIRE(play.table("phase") == 3.0f);
+	CHECK(play.table("uswon") + play.table("themwon") == 13.0f);
+	CHECK(play.of("hand", "won") + play.of("northhand", "won") == play.table("uswon"));
+	CHECK(play.table("us") != 0.0f);
+	CHECK(play.table("them") != 0.0f);
+	CHECK(play.pile("stock").pile.cards.size() == 52);
 }

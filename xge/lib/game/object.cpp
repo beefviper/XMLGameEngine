@@ -392,6 +392,7 @@ namespace xge
 			{ "odds", [](Object& o) -> float& { return o.odds; }, true },
 			{ "lead", [](Object& o) -> float& { return o.lead; }, true },
 			{ "winner", [](Object& o) -> float& { return o.winner; }, true },
+			{ "tricks", [](Object& o) -> float& { return o.tricks; }, true },
 		};
 		return parts;
 	}

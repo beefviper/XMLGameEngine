@@ -1032,6 +1032,7 @@ namespace xge
 		object.hand.is = rawObject.hand;
 		object.hand.own = rawObject.handPile;
 		object.hand.seat = rawObject.handSeat;
+		object.hand.team = rawObject.handTeam;
 		object.isCard = rawObject.isCard;
 		object.card = rawObject.card;
 
@@ -1718,7 +1719,7 @@ namespace xge
 					// A pile's live numbers follow it too (shown 0 until dealt).
 					if (reference->second == "cards" || reference->second == "points" || reference->second == "called" || reference->second == "calling"
 						|| reference->second == "pattern" || reference->second == "strength" || reference->second == "odds"
-						|| reference->second == "lead" || reference->second == "winner")
+						|| reference->second == "lead" || reference->second == "winner" || reference->second == "tricks")
 					{
 						piece.owner = owner;
 						piece.variable = reference->second;

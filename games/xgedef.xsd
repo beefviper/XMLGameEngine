@@ -623,6 +623,8 @@
           <xs:sequence>
             <!-- seat: which player, for a trick's live number winner -->
             <xs:element name="seat" type="xs:positiveInteger" minOccurs="0" />
+            <!-- team: its side; partners are hands on the same team (a computer's think lets a partner's card win) -->
+            <xs:element name="team" type="xs:positiveInteger" minOccurs="0" />
           </xs:sequence>
           <xs:attribute name="pile" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
@@ -706,6 +708,14 @@
                  holds nothing else -->
             <xs:element name="follow" type="emptyType" minOccurs="0" />
             <xs:element name="breaks" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="suit" type="xs:NMTOKEN" maxOccurs="unbounded" />
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <!-- trumps: a card of these suits takes the trick over every card of the others -->
+            <xs:element name="trumps" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
                   <xs:element name="suit" type="xs:NMTOKEN" maxOccurs="unbounded" />

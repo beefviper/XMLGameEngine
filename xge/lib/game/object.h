@@ -441,9 +441,11 @@ namespace xge
 		// pile); after it, a card of the suit led, unless the hand laying
 		// holds none. <breaks>: suits that may not lead until one has been
 		// laid on the pile since the cards were gathered, unless the hand
-		// holds nothing else.
+		// holds nothing else. <trumps>: a card of these suits beats every
+		// card of the others, whatever was led.
 		bool follow{ false };
 		std::vector<std::string> breakSuits;
+		std::vector<std::string> trumpSuits;
 	};
 
 	// A card of a <deck> (see game/cards.h): which deck, its suit and rank
@@ -647,6 +649,7 @@ namespace xge
 		bool hand{ false };             // <hand />: points at piles and carries cards (Object::Hand)
 		std::string handPile;           // <hand pile=>: its own pile (cards held by a player)
 		int handSeat{};                 // <hand><seat>: which player, for a trick's `winner` (0 none)
+		int handTeam{};                 // <hand><team>: the side it plays for, partners alike (0 none)
 		CardOf card;                    // a card of a <deck> (deck empty for anything else)
 		bool isCard{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
@@ -1155,9 +1158,14 @@ namespace xge
 		float odds{};
 		// A <follow /> pile (a trick): `lead`, the suit of its first card
 		// (from 1; 0 empty), and `winner`, the seat of the hand that laid
-		// the card winning it: the highest of the suit led.
+		// the card winning it: the highest trump, else the highest of the
+		// suit led.
 		float lead{};
 		float winner{};
+		// A hand's own pile in a game with a trick: `tricks`, how many
+		// tricks its cards should take (a reckoning by high cards, trumps
+		// and short suits, as a player counts them to bid).
+		float tricks{};
 		// A card: what it is, its number (from 1, every deck of the game
 		// in turn) and whether its face is up.
 		bool isCard{ false };
@@ -1174,6 +1182,7 @@ namespace xge
 			bool is{ false };
 			std::string own;        // pile=: its own pile, as written, or none
 			int seat{};             // <seat>: which player (0 none)
+			int team{};             // <team>: its side; a partner is another hand on it (0 none)
 			std::string pile;
 			int at{ -1 };
 			std::vector<int> held;
