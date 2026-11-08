@@ -53,7 +53,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 |---|---|
 | [The game file](reference/format.md) | layout, the one rule, values and arithmetic, names, window, variables, styles, colours |
 | [Objects](reference/objects.md) | parts of an object, groups, columns and rows, the kit and `from=`, spawn and despawn |
-| [Pictures](reference/pictures.md) | shapes, lines, polygons, bitmaps, SVG, text, animation, looks, poses, turning, light, height |
+| [Pictures](reference/pictures.md) | shapes, lines, polygons, bitmaps, SVG, sheets, text, animation, looks, poses, turning, light, height |
 | [Sounds](reference/sounds.md) | notes, waves, music, playing |
 | [Collisions](reference/collisions.md) | rules, filters, how a touch is found, knocks |
 | [Commands](reference/commands.md) | every verb, where each may go, refused presses |
@@ -81,7 +81,8 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | flow | `push`, `pop`, `enter`, `turns`, `pass`, `out`, `demo`, `trigger` | [flow](reference/commands.md#flow) |
 | cells | `settle`, `slide`, `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |
 | boards | `pick`, `place`, `put`, `flank`, `moves` | [boards](reference/boards.md) |
-| cards | `deck` (`sheet`), `deal`, `take`, `lay`, piles, patterns, tricks | [cards](reference/cards.md) |
+| pictures | `sheets`, `sheet`, `cell`, `cells` (sprites, frames and cards cut from one picture) | [sheets](reference/pictures.md#sheets) |
+| cards | `deck` (`sheet=`, `faces`), `deal`, `take`, `lay`, piles, patterns, tricks | [cards](reference/cards.md) |
 | computer | `computer`, `hold`, `think` | [computer players](reference/states.md#computer-players) |
 
 ## Keeping the docs

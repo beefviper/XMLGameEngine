@@ -7,12 +7,13 @@
 // What a game file says of it (RawDeck), and the card objects it makes
 // (addDeck), each with a face laid out as a bitmap from the suit's pip and
 // the rank's label in a small built-in pixel font, and a back, or cut
-// from a picture file of them all (a <sheet>). Read by
+// from one of the game's <sheets>. Read by
 // load/xml, written out by a generated program; both make the cards here.
 
 #pragma once
 
 #include "game/object.h"
+#include "picture/image.h"
 
 #include <string>
 #include <utility>
@@ -41,14 +42,19 @@ namespace xge
 		std::string backEdge{ "color.white" };
 		std::vector<std::string> pattern;
 
-		// <sheet>: a picture file holding every face, a row for each suit
-		// and a column for each rank in the order written, and under them a
-		// row of backs; `back` is which of them, from 1. The faces are cut
-		// from it and made the <face>'s size (times its scale), and the
-		// suits' and ranks' rows, the face's colors and <back> go unused.
+		// sheet=: the game's <sheet> the faces and the back are cut from,
+		// each made the <face>'s size (times its scale); the suits' and
+		// ranks' rows, the face's colors and a drawn <back> go unused. The
+		// faces lie in `faces`, a cell for each card in the deck's order
+		// (suit by suit, rank by rank); none: each suit a row and each rank a
+		// column (with `down`, each suit a column and each rank a row). The
+		// back is `back`; none given: the first cell after the suits.
 		// Empty: the faces are drawn from the rows.
 		std::string sheet;
-		int back{ 1 };
+		std::vector<SheetCell> faces;
+		bool down{ false };
+		bool hasBack{ false };
+		SheetCell back;
 
 		// <color char="y">s: more characters the ranks' pictures use.
 		std::vector<std::pair<char, std::string>> colors;
@@ -94,9 +100,8 @@ namespace xge
 	// turn; each with looks `face` and `back` and variables `suit` and
 	// `rank`. Throws when a rank's label has a character the built-in font
 	// has not, a picture a character no color names, or the face is too
-	// small for its corners and pips; with a sheet, when it cannot be read,
-	// does not split evenly into the suits' rows (and one of backs) and the
-	// ranks' columns, or has no such back.
+	// small for its corners and pips, or a sheet deck's `faces` are not a
+	// cell for each card. (A sheet's cells are cut when the game loads.)
 	void addDeck(std::vector<RawObject>& out, const RawDeck& deck);
 
 	// The characters the rank labels may use.

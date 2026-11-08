@@ -10,7 +10,6 @@
 #include "game/cards.h"
 #include "game/game.h"
 #include "game/random.h"
-#include "picture/image.h"
 #include "play/verbs.h"
 
 #include <algorithm>
@@ -170,15 +169,6 @@ namespace xge
 			return made;
 		}
 
-		RawSprite drawnOf(const std::string& name, std::shared_ptr<const Bitmap> picture)
-		{
-			RawSprite sprite;
-			sprite.kind = "drawn";
-			sprite.name = name;
-			sprite.drawn = std::move(picture);
-			return sprite;
-		}
-
 		RawSprite bitmapOf(const std::string& name, const Canvas& canvas, const std::string& color, std::vector<std::pair<char, std::string>> colors, int scale)
 		{
 			RawSprite sprite;
@@ -246,32 +236,65 @@ namespace xge
 			}
 		}
 
-		// A deck cut from its <sheet>: each suit a row, each rank a column,
-		// the backs a row under them; each face made the card's size once.
+		// A face or the back cut from the deck's sheet, the card's size.
+		RawSprite cellOf(const std::string& name, const RawDeck& deck, const SheetCell& cell)
+		{
+			RawSprite sprite;
+			sprite.kind = "cell";
+			sprite.name = name;
+			sprite.sheet = deck.sheet;
+			if (cell.free)
+			{
+				sprite.hasSvgRegion = true;
+				sprite.svgX = RawValue::expression(formatDisplayNumber(cell.x));
+				sprite.svgY = RawValue::expression(formatDisplayNumber(cell.y));
+				sprite.svgWidth = RawValue::expression(formatDisplayNumber(cell.width));
+				sprite.svgHeight = RawValue::expression(formatDisplayNumber(cell.height));
+			}
+			else
+			{
+				sprite.column = RawValue::expression(std::to_string(cell.column));
+				sprite.row = RawValue::expression(std::to_string(cell.row));
+			}
+			const int scale = std::max(1, deck.scale);
+			sprite.width = RawValue::expression(std::to_string(deck.width * scale));
+			sprite.height = RawValue::expression(std::to_string(deck.height * scale));
+			return sprite;
+		}
+
+		// A deck cut from a sheet: each card's face from its cell, the back
+		// from the deck's.
 		void addSheetDeck(std::vector<RawObject>& out, const RawDeck& deck, const std::string& where)
 		{
-			const int columns = static_cast<int>(deck.ranks.size());
-			const int rows = static_cast<int>(deck.suits.size()) + 1;
-			if (deck.back < 1 || deck.back > columns) { throw std::runtime_error(where + " <sheet>: <back>" + std::to_string(deck.back) + "</back>; a sheet of " + std::to_string(columns) + " ranks has backs 1 to " + std::to_string(columns)); }
-			std::vector<std::pair<int, int>> cells;
-			for (int row = 0; row + 1 < rows; ++row)
+			const std::size_t suits = deck.suits.size();
+			const std::size_t ranks = deck.ranks.size();
+			std::vector<SheetCell> cells = deck.faces;
+			if (cells.empty())
 			{
-				for (int column = 0; column < columns; ++column) { cells.emplace_back(column, row); }
+				for (std::size_t s = 0; s < suits; ++s)
+				{
+					for (std::size_t r = 0; r < ranks; ++r)
+					{
+						SheetCell cell;
+						cell.column = static_cast<int>(deck.down ? s : r) + 1;
+						cell.row = static_cast<int>(deck.down ? r : s) + 1;
+						cells.push_back(cell);
+					}
+				}
 			}
-			cells.emplace_back(deck.back - 1, rows - 1);
-			const int scale = std::max(1, deck.scale);
-			std::vector<Bitmap> cut;
-			try { cut = cutImage(deck.sheet, columns, rows, cells, deck.width * scale, deck.height * scale); }
-			catch (const std::exception& error) { throw std::runtime_error(where + " <sheet> (a row for each suit, then one of backs; a column for each rank): " + error.what()); }
-
+			if (cells.size() != suits * ranks)
+			{
+				throw std::runtime_error(where + " <faces>: " + std::to_string(cells.size()) + " cells for " + std::to_string(suits * ranks) + " cards (" + std::to_string(suits) + " suits of " + std::to_string(ranks) + ")");
+			}
+			SheetCell backCell = deck.back;
+			if (!deck.hasBack)
+			{
+				backCell.column = deck.down ? static_cast<int>(suits) + 1 : 1;
+				backCell.row = deck.down ? 1 : static_cast<int>(suits) + 1;
+			}
 			std::vector<RawSprite> faces;
-			for (std::size_t i = 0; i + 1 < cut.size(); ++i) { faces.push_back(drawnOf("face", std::make_shared<const Bitmap>(std::move(cut[i])))); }
-			const RawSprite back = drawnOf("back", std::make_shared<const Bitmap>(std::move(cut.back())));
-			if (std::none_of(back.drawn->rgba.begin(), back.drawn->rgba.end(), [](std::uint8_t each) { return each != 0; }))
-			{
-				throw std::runtime_error(where + " <sheet>: back " + std::to_string(deck.back) + " of " + deck.sheet + " is empty");
-			}
-			addCards(out, deck, faces, back);
+			for (const SheetCell& cell : cells) { faces.push_back(cellOf("face", deck, cell)); }
+			addCards(out, deck, faces, cellOf("back", deck, backCell));
 		}
 	}
 

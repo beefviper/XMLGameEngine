@@ -88,7 +88,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `play/geometry.cpp`, `play/collision.cpp` | touching (box, circle, swept, pixel walk, `contactOf`) and the verbs' arithmetic |
 | | `play/verbs.cpp`, `play/executor.cpp` | what a verb does; which verb and on what |
 | | `play/maze.cpp` | walking a map's tiles |
-| pictures | `picture/bitmap.cpp`, `svg.cpp`, `image.cpp`, `font.cpp`, `color.cpp` | pixels, flips and turns; SVG with lunasvg; picture sheets cut and shrunk (a deck's `<sheet>`); fonts and the 8x8 fallback; colour names |
+| pictures | `picture/bitmap.cpp`, `svg.cpp`, `image.cpp`, `font.cpp`, `color.cpp` | pixels, flips and turns; SVG with lunasvg; picture sheets cut and shrunk (`<sheets>`); fonts and the 8x8 fallback; colour names |
 | loop and libraries | `engine/engine.cpp`, `backends.cpp`, `keys.cpp`, `folder.cpp` | the loop (`loop()`, or `step()` and `render()`), choosing libraries, key names, the games folder and `findSchema` |
 | | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, a file per library; `audio/sound.cpp` is the synthesizer |
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |

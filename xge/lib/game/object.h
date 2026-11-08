@@ -262,8 +262,8 @@ namespace xge
 		std::vector<std::string> svgHide;
 
 		RawValue radius;             // circle
-		RawValue width;              // rectangle
-		RawValue height;             // rectangle
+		RawValue width;              // rectangle; cell: the size it is made (a card)
+		RawValue height;             // rectangle; cell
 		RawValue size;               // text
 
 		// A text: its pieces, in order (see RawTextPiece); a <number> or a
@@ -273,9 +273,13 @@ namespace xge
 
 		std::string path;            // image, svg
 
-		// drawn: a picture the engine has made already (a card cut from a
-		// deck's <sheet>), shown as it is.
-		std::shared_ptr<const Bitmap> drawn;
+		// cell: a picture cut from the game's <sheet> called `sheet`, the
+		// cell at `column` and `row` (from 1), or with hasSvgRegion the part
+		// at svgX, svgY, svgWidth by svgHeight; drawn `scale` pixels to the
+		// sheet's, or (a deck's faces) made `width` by `height` when given.
+		std::string sheet;
+		RawValue column;
+		RawValue row;
 
 		// tether: the two objects whose middles
 		// the line joins, drawn again every frame, and how thick it is
@@ -315,6 +319,10 @@ namespace xge
 		std::string name;
 		RawValue interval;
 		std::vector<std::string> frames;
+		// Frames cut from a sheet (<cell>s and runs of <cells>), named for
+		// the animation and numbered ("walk.1", "frame.1" for an unnamed
+		// one), each also among `frames`: sprites the object gains.
+		std::vector<RawSprite> cells;
 	};
 
 	// A game's <style name="...">: what a <text> (a size and a color) or a

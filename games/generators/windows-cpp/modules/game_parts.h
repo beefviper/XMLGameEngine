@@ -240,7 +240,11 @@ namespace xge::parts
 	// A named <animation>: a look that moves, its pictures the sprites named.
 	inline RawFrames frames(std::string name, RawValue interval, std::vector<std::string> names)
 	{
-		return RawFrames{ std::move(name), std::move(interval), std::move(names) };
+		RawFrames animation;
+		animation.name = std::move(name);
+		animation.interval = std::move(interval);
+		animation.frames = std::move(names);
+		return animation;
 	}
 
 	// What an object with named <animation>s looks like: each a look that

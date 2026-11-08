@@ -47,4 +47,8 @@ namespace xge
 	// a region with no width or height (or a negative one, or one with no part
 	// inside the drawing).
 	Bitmap rasterizeSvg(const std::string& path, const SvgRegion& region, float scale, const std::vector<std::string>& hide = {});
+
+	// An SVG file's width and height, in the units its drawing is written
+	// in. Throws std::runtime_error as rasterizeSvg does.
+	SvgRegion svgSize(const std::string& path);
 }

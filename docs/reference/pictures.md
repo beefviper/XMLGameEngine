@@ -91,6 +91,33 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 - The drawing keeps its own colours; a pixel with anything drawn counts as solid.
 - Drawn by the engine with lunasvg (`picture/svg.cpp`). A missing file, a part outside the drawing or a scale of 0 or less stops the load.
 
+### Sheets
+
+One picture holding many: sprites, animation frames and a deck's cards are cut from it by place. The game names its sheets once, after `<styles>`:
+
+```xml
+<sheets>
+  <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
+  <sheet name="hero">
+    <path>assets/hero.png</path>
+    <cell><width>32</width><height>32</height></cell>
+    <margin>2</margin><gap>4</gap>                           <!-- 0 when left out -->
+  </sheet>
+</sheets>
+```
+
+- **The grid** is `<columns>` and `<rows>` (the picture split evenly), or a `<cell>` size; `<margin>` is the empty border round the picture, `<gap>` the space between cells, both in the picture's pixels and 0 when left out. A sheet need not have a grid if every cut gives its own part.
+- **A file** is a PNG, JPEG or BMP, read by the engine itself (plutovg, inside lunasvg), or an SVG (drawn by lunasvg, with `<hide>` ids left out). It is opened once while the game loads and let go after.
+- **A sprite** is a `<cell sheet>`: by `<column>` and `<row>` (from 1, each 1 when left out), or anywhere by all four of `<x>`, `<y>`, `<width>` and `<height>`, for pictures scattered over the sheet. `<scale>` sizes it (1 when left out: the sheet's own pixels) and `<flip>` flips it:
+
+  ```xml
+  <sprite><cell sheet="hero"><column>3</column><row>2</row><scale>2</scale></cell></sprite>
+  <sprite><cell sheet="hero"><x>140</x><y>2</y><width>7</width><height>27</height></cell></sprite>
+  ```
+
+- Shrunk pictures are averaged, so a sheet can be far bigger than it is shown; a whole-number shrink gives pixel art back exactly. A sheet that is not there, a cell off it or a file that will not open stops the load.
+- A [deck](cards.md#deck) cuts its faces and back from a sheet with `sheet=`.
+
 ## Text
 
 A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a `style=` for those it leaves out):
@@ -126,6 +153,17 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
 ```
 
 - `<interval>` is seconds per picture (above 0); each `<frame>` picks a sprite. At least two frames, all pictures of one size; an unnamed animation shows every sprite.
+- **Frames from a [sheet](#sheets)** need no sprites: a `<cell sheet>` is one frame, and a run of `<cells sheet>` is `<count>` frames from its `<column>` and `<row>` along the row (or down the column with `<down />`). Frames, cells and runs mix in any order, so a long animation split over two rows is two runs:
+
+  ```xml
+  <animation name="walk">
+    <interval>0.08</interval>
+    <cells sheet="hero"><row>3</row><count>8</count></cells>
+    <cells sheet="hero"><row>4</row><count>7</count></cells>
+  </animation>
+  ```
+
+  Each cut frame is a sprite named for its animation and numbered, `walk.1` to `walk.15` (`frame.1` ... for an unnamed one).
 - It moves on only while its object is in play, so a pause holds it; a reset starts it again. A group's cells start together, so a block of aliens flaps as one.
 - In a group, a member, row, column or cell giving sprites changes the group's of those names.
 

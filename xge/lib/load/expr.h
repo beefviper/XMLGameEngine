@@ -6,6 +6,7 @@
 #pragma once
 
 #include "picture/bitmap.h"
+#include "picture/image.h"
 #include "picture/color.h"
 #include "game/command.h"
 #include "load/calc.h"
@@ -47,7 +48,13 @@ namespace xge
 		// again while the game runs (a timer's interval, a position finished
 		// once a text is measured) never throws for a division by 0: see
 		// evaluateOperation.
-		void finishLoading() { loading = false; }
+		// Loading is over: the sheets' pictures, held while their cells were
+		// cut, are let go.
+		void finishLoading()
+		{
+			loading = false;
+			openSheets.clear();
+		}
 
 		// What an object's sprite was drawn as before it was built (init's
 		// first pass, or the object a copy is spawned from): its sprite's
@@ -210,6 +217,11 @@ namespace xge
 
 		// The game's <styles>, for the palettes a <become style> asks for.
 		std::vector<RawStyle> styles;
+
+		// The game's <sheets>, and each one's picture, opened the first time a
+		// cell of it is drawn and held until loading is over.
+		std::vector<Sheet> sheets;
+		std::map<std::string, std::shared_ptr<SheetPicture>> openSheets;
 
 		// Each object's palettes (Object::palettes), for the styles `wanted`
 		// names for it by its name, drawn from what the file says of it.

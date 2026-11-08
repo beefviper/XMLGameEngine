@@ -92,4 +92,11 @@ namespace xge
 
 		return bitmap;
 	}
+
+	SvgRegion svgSize(const std::string& path)
+	{
+		const std::unique_ptr<lunasvg::Document> document = lunasvg::Document::loadFromFile(path);
+		if (!document) { throw std::runtime_error("could not read the svg file " + path + " (missing, or not an SVG)"); }
+		return { 0.0f, 0.0f, document->width(), document->height() };
+	}
 }

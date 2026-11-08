@@ -5,8 +5,11 @@ Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried
 ## Deck
 
 ```xml
-<deck name="cards" pile="stock">
-  <sheet><path>assets/cards.png</path><back>1</back></sheet>
+<sheets>                                             <!-- at the top of the game -->
+  <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
+</sheets>
+
+<deck name="cards" pile="stock" sheet="cards">
   <face><width>96</width><height>140</height></face>
   <suit name="spades"><color>color.black</color></suit>
   <suit name="hearts"><color>color.red</color></suit>
@@ -19,12 +22,24 @@ Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried
 
 - **The cards.** A card for each `<suit>` and `<rank>`, in the order written, `<copies>` times (1 when left out): objects `cards.1`, `cards.2` ... with variables `suit` and `rank` (from 1, as written) and two looks, `face` and `back`. `class=` gives them a class. Any deck works the same way (an Italian 40).
 - **A suit** gives its name and `<color>` (what `<othercolor />` compares); **a rank** its name and its `<worth>`s ([points](#points)).
-- **`<sheet>`**: one picture file (PNG, JPEG, BMP) holding every face, **a row for each suit and a column for each rank, in the order written, then one row of backs**. `<back>` picks a back, from 1 (default 1). The engine reads the file itself and makes each face and the back `<face>`'s size (times `<scale>`), each pixel the average of the ones it covers, so the sheet can be far bigger than the cards; a whole-number shrink gives pixel art back exactly. The file is held only while it is cut. A sheet that does not split evenly into those rows and columns, or an empty or missing back, stops the load.
-- **`games/assets/cards.png`** is the shared sheet: 2496 by 1400, cells of 192 by 280 (twice a 96 by 140 card), the four suits in the order spades, hearts, clubs, diamonds, ranks A to K, and eight backs (blue, red, green, black and gold, purple, then blue, red and green lattices). All eight card games use it. **To change the cards' look**, replace the file with another of the same layout, at any size that splits evenly into 13 columns and 5 rows.
+- **`sheet=`** names one of the game's [`<sheets>`](pictures.md#sheets): every face and the back are cut from it and made `<face>`'s size (times `<scale>`). Left as it is, **the faces are a row for each suit and a column for each rank, in the order written**, and the back is the first cell after them (column 1 of the next row).
+- **`<faces>`** says otherwise, before `<face>`: `<faces><down /></faces>` is a column for each suit and a row for each rank; or the faces in the deck's order (suit by suit, rank by rank) as `<cell>`s and runs of `<cells>`, so a suit can be split over two rows:
+
+  ```xml
+  <faces>
+    <cells><row>1</row><count>7</count></cells>               <!-- spades A to 7 -->
+    <cells><row>2</row><count>6</count></cells>               <!-- spades 8 to K -->
+    ...
+  </faces>
+  <back><column>3</column><row>9</row></back>                 <!-- or <x> <y> <width> <height> -->
+  ```
+
+  A run starts at its `<column>` and `<row>` (each 1 when left out) and goes `<count>` cells along the row, or down the column with `<down />`. Faces that do not make one for every card, or a cell off the sheet, stop the load. With a sheet, `<back>` picks the back's cell, and the face's colours and drawn parts go unused.
+- **`games/assets/cards.png`** is the shared sheet: 2496 by 1400, cells of 192 by 280 (twice a 96 by 140 card), the four suits in the order spades, hearts, clubs, diamonds, ranks A to K, and a row of eight backs (blue, red, green, black and gold, purple, then blue, red and green lattices; `<back><column>2</column><row>5</row></back>` is the red). All eight card games use it. **To change the cards' look**, replace the file with another of the same layout at any size, or describe another layout with the sheet's grid and `<faces>`.
 
 ### A drawn deck
 
-Without a `<sheet>`, the engine puts each face together from parts the game draws as rows, so every window library draws them:
+Without `sheet=`, the engine puts each face together from parts the game draws as rows, so every window library draws them:
 
 ```xml
 <deck name="cards" pile="stock">
@@ -48,7 +63,7 @@ Without a `<sheet>`, the engine puts each face together from parts the game draw
 - `<face>` is the card's size in bitmap pixels (63 by 93 by default) and its colours (`@` face and `#` edge in any part's rows).
 - **A suit**: its pip as rows (`*` its colour, `.` the face); `<index>` the corner pip (default: the pip), `<large>` the ace's (default: the pip twice the size).
 - **A rank**: just a name (drawn in a small 3x5 font with the pip big in the middle), or `<rank name>` with an `<index>` and either **`<pips>`** (a grid: `*` a pip, `v` one turned round, `@` the large pip, spread between the corners) or a **`<picture>`** (with `<half />` first, the rows are the top half and the bottom is them turned round).
-- **`<back>`**: a frame round its `<pattern>`, or a lattice of diamonds. A deck has a `<sheet>` or a `<back>`, not both.
+- **`<back>`**: a frame round its `<pattern>`, or a lattice of diamonds. A deck with `sheet=` takes its back from the sheet instead.
 
 ## Piles
 

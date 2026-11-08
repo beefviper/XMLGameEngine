@@ -1761,7 +1761,7 @@ namespace xge
 		// The Picture carries only the drawing's size. The one difference is in the
 		// turning: lines are kept as lines and drawn again at each heading, which
 		// keeps their edges sharp, where a finished picture's pixels are turned.
-		if (sprite.kind == "line" || sprite.kind == "polygon" || sprite.kind == "bitmap" || sprite.kind == "svg" || sprite.kind == "drawn")
+		if (sprite.kind == "line" || sprite.kind == "polygon" || sprite.kind == "bitmap" || sprite.kind == "svg" || sprite.kind == "cell")
 		{
 			auto kept = std::make_shared<Turnable>();
 			std::shared_ptr<const Bitmap> drawn;
@@ -1812,11 +1812,46 @@ namespace xge
 					}
 					drawn = std::make_shared<const Bitmap>(rasterizePolygons(polygons));
 				}
-				else if (sprite.kind == "drawn")
+				else if (sprite.kind == "cell")
 				{
-					// Made already (a card cut from a deck's sheet): only flipped.
-					if (!sprite.drawn) { throw std::invalid_argument("a picture made by the engine is missing"); }
-					drawn = sprite.flip.empty() ? sprite.drawn : std::make_shared<const Bitmap>(flipped(*sprite.drawn));
+					// 1. Which sheet, which cell or part of it, at what size.
+					const auto sheet = std::find_if(sheets.begin(), sheets.end(), [&](const Sheet& each) { return each.name == sprite.sheet; });
+					if (sheet == sheets.end()) { throw std::invalid_argument("<cell sheet=\"" + sprite.sheet + "\">: the game has no <sheet name=\"" + sprite.sheet + "\">"); }
+					const auto given = [](const RawValue& value) { return !(value.kind == RawValue::Kind::Expression && value.text.empty()); };
+					SheetCell cell;
+					std::string key = "cell|" + sheet->name + "|";
+					if (sprite.hasSvgRegion)
+					{
+						cell.free = true;
+						cell.x = evaluate(sprite.svgX, where);
+						cell.y = evaluate(sprite.svgY, where);
+						cell.width = evaluate(sprite.svgWidth, where);
+						cell.height = evaluate(sprite.svgHeight, where);
+						key += std::to_string(cell.x) + "," + std::to_string(cell.y) + "," + std::to_string(cell.width) + "," + std::to_string(cell.height);
+					}
+					else
+					{
+						cell.column = given(sprite.column) ? static_cast<int>(std::lround(evaluate(sprite.column, where))) : 1;
+						cell.row = given(sprite.row) ? static_cast<int>(std::lround(evaluate(sprite.row, where))) : 1;
+						key += std::to_string(cell.column) + "/" + std::to_string(cell.row);
+					}
+					const bool sized = given(sprite.width) && given(sprite.height);
+					const int toWidth = sized ? static_cast<int>(std::lround(evaluate(sprite.width, where))) : 0;
+					const int toHeight = sized ? static_cast<int>(std::lround(evaluate(sprite.height, where))) : 0;
+					const float cellScale = sprite.hasScale ? evaluate(sprite.scale, where) : 1.0f;
+					key += sized ? "|" + std::to_string(toWidth) + "x" + std::to_string(toHeight) : "|*" + std::to_string(cellScale);
+					key += "|" + sprite.flip;
+
+					// 2. Cut, once for every sprite of the same cell and size (a
+					// deck's packs, a group's members), from the sheet's picture,
+					// opened once while the game loads.
+					drawn = drawOnce(key, [&]
+					{
+						std::shared_ptr<SheetPicture>& opened = openSheets[sheet->name];
+						if (!opened) { opened = std::make_shared<SheetPicture>(*sheet); }
+						const SheetPart part = opened->partOf(cell);
+						return flipped(sized ? opened->cut(part, toWidth, toHeight) : opened->cut(part, cellScale));
+					});
 				}
 				else if (sprite.kind == "svg")
 				{
@@ -1942,9 +1977,9 @@ namespace xge
 			const std::string here = where + " > frame " + std::to_string(i + 1)
 				+ (frame.name.empty() ? std::string{} : " (\"" + frame.name + "\")");
 
-			if (frame.kind != "bitmap" && frame.kind != "svg" && frame.kind != "line")
+			if (frame.kind != "bitmap" && frame.kind != "svg" && frame.kind != "line" && frame.kind != "cell")
 			{
-				throw std::runtime_error(here + ": a frame must be a <bitmap>, an <svg> or a drawing of <line>s, not a <" + frame.kind + ">");
+				throw std::runtime_error(here + ": a frame must be a <bitmap>, an <svg>, a sheet's <cell> or a drawing of <line>s, not a <" + frame.kind + ">");
 			}
 
 			std::shared_ptr<const Bitmap> picture;

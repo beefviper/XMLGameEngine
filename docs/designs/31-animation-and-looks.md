@@ -7,6 +7,7 @@
 - Arcade creatures flap between two poses. An object with several named sprites and an `<animation>`: an `<interval>` and `<frame sprite>`s naming them, so a sprite can be reused. Frames must be one size.
 - **Seconds in the file, frames in the engine:** turned into frames at load. One count per object, advanced at the start of a frame while it is in play, so a pause holds the picture and a reset shows frame one. Cells animate together because they start together.
 - In a group, a member's sprites replace the group's, and the animation is looked up in what the member ends with: three alien kinds in one lockstep group.
+- **Frames cut from a sheet:** `<cell>` and runs of `<cells>` beside `<frame>`s, each a sprite of its own named `walk.1`, `walk.2` ([sheets](30-pictures.md#sheets)), so a sprite sheet needs no sprite per frame.
 - Rejected: a global animation clock (awkward with pause and reset).
 - Not done: an interval per frame, an animation that runs once or starts on a touch.
 

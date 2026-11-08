@@ -27,8 +27,8 @@
   How it is written:
   * <deck> makes the 52 cards from four <suit>s (each with its colour) and
     thirteen <rank>s; their faces are cut from one picture, assets/cards.png
-    (a row for each suit, a column for each rank, then a row of backs, of
-    which <back> picks the first), and made the <face>'s size.
+    named in <sheets> (a row for each suit, a column for each rank, then a
+    row of backs; the deck takes the first), and made the <face>'s size.
   * Each place is an object with a <pile>: what it <takes> on top (the
     columns: <down /> and <othercolor />, a K when empty; the foundations:
     <one />, <up /> and <samesuit />, an A when empty), whether a <run />
@@ -69,6 +69,10 @@
     <style name="prompt"><size>32</size></style>
     <style name="help"><size>22</size><color>color.lightgrey</color></style>
   </styles>
+  <!-- the card sheet: a row for each suit, a column for each rank, then a row of backs -->
+  <sheets>
+    <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
+  </sheets>
   <states>
     <state name="title">
       <objects>
@@ -104,8 +108,7 @@
     <state name="playing">
       <objects>
         <!-- the pack: four suits, thirteen ranks; the faces and the back cut from the card sheet -->
-        <deck name="cards" pile="stock">
-          <sheet><path>assets/cards.png</path><back>1</back></sheet>
+        <deck name="cards" pile="stock" sheet="cards">
           <face><width>96</width><height>140</height></face>
           <suit name="spades"><color>color.black</color></suit>
           <suit name="hearts"><color>color.red</color></suit>

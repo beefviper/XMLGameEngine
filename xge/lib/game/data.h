@@ -8,6 +8,7 @@
 #include "game/command.h"
 #include "game/object.h"
 #include "game/states.h"
+#include "picture/image.h"
 
 #include <string>
 #include <utility>
@@ -51,6 +52,10 @@ namespace xge
 
 		// <styles>: what a <text> or a <bitmap> can take by style="..." (see applyStyles).
 		std::vector<RawStyle> styles;
+
+		// <sheets>: the picture files sprites, animations and decks cut their
+		// pictures from (see Sheet).
+		std::vector<Sheet> sheets;
 
 		// <patterns>: what piles with a <score> are scored by (see RawPatterns).
 		std::vector<RawPatterns> patterns;

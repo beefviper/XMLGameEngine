@@ -9,9 +9,13 @@
 
 #include "game/cards.h"
 #include "played.h"
+#include "scratch.h"
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -410,50 +414,122 @@ TEST_CASE("a deck of its own suits and ranks: an Italian forty, pips laid out, a
 	CHECK_THROWS(addDeck(cards, court));
 }
 
-TEST_CASE("a deck cut from a sheet: a face for each suit and rank, a back picked from the last row", "[cards]")
+namespace
 {
-	RawDeck deck;
-	deck.name = "cards";
-	deck.pile = "stock";
-	deck.sheet = "assets/cards.png";
-	deck.width = 96;
-	deck.height = 140;
-	for (const char* name : { "spades", "hearts", "clubs", "diamonds" }) { deck.suits.push_back({ name, "color.black", {}, {}, {}, {} }); }
-	for (const char* name : { "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" }) { deck.ranks.push_back({ name, {}, {}, {}, false, {} }); }
-	std::vector<RawObject> cards;
-	addDeck(cards, deck);
-	REQUIRE(cards.size() == 52);
-	CHECK(cards[13].card.suitName == "hearts");
-	const RawSprite& ace = cards.front().looks.front();
-	REQUIRE(ace.kind == "drawn");
-	REQUIRE(ace.drawn->width == 96);
-	REQUIRE(ace.drawn->height == 140);
-	CHECK_FALSE(ace.drawn->solidAt(0, 0));          // a rounded corner
-	CHECK(ace.drawn->solidAt(48, 70));               // the big spade
-	CHECK(ace.drawn->rgba[(70 * 96 + 48) * 4] < 40);
-	CHECK(cards[0].looks[1].name == "back");
-	CHECK(cards[0].looks[1].drawn == cards[51].looks[1].drawn);
+	// A game of one state holding `objects`, with the card sheet as two
+	// <sheets>: "cards", a grid of 13 by 5, and "loose", no grid but a
+	// margin and gap that change nothing (cells by x and y).
+	struct SheetGame
+	{
+		std::string path;
+		explicit SheetGame(const std::string& objects, const std::string& sheets = "")
+			: path(scratchName("descriptions/sheet_scratch.xml"))
+		{
+			std::ofstream out(path);
+			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+				"<window name=\"sheets\"><width>800</width><height>600</height><background>color.black</background></window>"
+				"<variables><variable name=\"unused\">0</variable></variables>"
+				"<sheets><sheet name=\"cards\"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>"
+				"<sheet name=\"sized\"><path>assets/cards.png</path><cell><width>192</width><height>280</height></cell></sheet>" << sheets << "</sheets>"
+				"<states><state name=\"playing\"><objects>" << objects << "</objects><inputs><input><button>escape</button><pop /></input></inputs></state></states></game>";
+		}
+		~SheetGame() { std::error_code ignored; std::filesystem::remove(path, ignored); }
+	};
 
-	// Another back; twice the size at a scale of 2.
-	RawDeck red = deck;
-	red.back = 2;
-	red.scale = 2;
-	std::vector<RawObject> others;
-	addDeck(others, red);
-	CHECK(others.front().looks.front().drawn->width == 192);
-	CHECK(others.front().looks[1].drawn->rgba != cards.front().looks[1].drawn->rgba);
+	const std::vector<std::uint8_t>& pixels(Object& object, std::size_t look = 0) { return object.looks[look].bitmap->rgba; }
+}
 
-	// No such back, an empty one, and a sheet that does not split into the ranks.
-	red.back = 14;
-	CHECK_THROWS(addDeck(others, red));
-	red.back = 13;
-	CHECK_THROWS(addDeck(others, red));
-	RawDeck five = deck;
-	five.ranks.resize(5);
-	CHECK_THROWS(addDeck(others, five));
-	RawDeck missing = deck;
-	missing.sheet = "assets/nothing.png";
-	CHECK_THROWS(addDeck(others, missing));
+TEST_CASE("a deck cut from a sheet: a face for each suit and rank, the back the first cell after the suits", "[cards][sheets]")
+{
+	Played hearts("descriptions/hearts.xml");
+	hearts.tap(KeyCode::Space);
+	hearts.frames(2);
+	Object& ace = *hearts.game.cardAt(1);
+	REQUIRE(ace.looks.size() == 2);
+	const Bitmap& face = *ace.looks[0].bitmap;
+	REQUIRE(face.width == 96);
+	REQUIRE(face.height == 140);
+	CHECK_FALSE(face.solidAt(0, 0));          // a rounded corner
+	CHECK(face.solidAt(48, 70));               // the big spade
+	CHECK(face.rgba[(70 * 96 + 48) * 4] < 40);
+	CHECK(ace.looks[1].name == "back");
+	CHECK(ace.looks[1].bitmap == hearts.game.cardAt(52)->looks[1].bitmap);   // one back, shared
+	CHECK(ace.looks[0].bitmap != hearts.game.cardAt(14)->looks[0].bitmap);
+}
+
+TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of cells as frames and faces", "[cards][sheets]")
+{
+	const std::string at = "<position><x>0</x><y>0</y></position>";
+	SheetGame sheet(
+		// the ace of hearts three ways, at half the sheet's size
+		"<object name=\"grid\"><sprite><cell sheet=\"cards\"><column>1</column><row>2</row><scale>0.5</scale></cell></sprite>" + at + "</object>"
+		"<object name=\"part\"><sprite><cell sheet=\"cards\"><x>0</x><y>280</y><width>192</width><height>280</height><scale>0.5</scale></cell></sprite>" + at + "</object>"
+		"<object name=\"sized\"><sprite><cell sheet=\"sized\"><row>2</row><scale>0.5</scale></cell></sprite>" + at + "</object>"
+		// an animation: three cells of the second row, then one of the third
+		"<object name=\"walker\"><animation><interval>0.1</interval>"
+		"<cells sheet=\"cards\"><row>2</row><count>3</count><scale>0.5</scale></cells>"
+		"<cell sheet=\"cards\"><row>3</row><scale>0.5</scale></cell></animation>" + at + "</object>"
+		// a group whose only pictures are its animation's, a run down a column
+		"<group name=\"flock\"><animation><interval>0.1</interval><cells sheet=\"cards\"><count>2</count><down /><scale>0.5</scale></cells></animation>" + at +
+		"<member name=\"bird\" /></group>"
+		// a deck of one suit laid out as seven, then six, on the third row and the fourth
+		"<deck name=\"cards\" pile=\"stock\" sheet=\"cards\"><faces><cells><row>3</row><count>7</count></cells><cells><column>1</column><row>4</row><count>6</count></cells></faces>"
+		"<face><width>96</width><height>140</height></face><back><column>2</column><row>5</row></back>"
+		"<suit name=\"clubs\"><color>color.black</color></suit>"
+		"<rank>A</rank><rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank><rank>8</rank><rank>9</rank><rank>10</rank><rank>J</rank><rank>Q</rank><rank>K</rank></deck>"
+		"<object name=\"stock\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>" + at + "<pile faces=\"down\" /></object>");
+	Played play(sheet.path);
+	Object& grid = play.get("grid");
+	const auto drawn = [](const Object& object) -> const Bitmap& { return *object.bitmap; };
+	REQUIRE(drawn(grid).width == 96);
+	CHECK((drawn(grid).rgba == drawn(play.get("part")).rgba));
+	CHECK((drawn(grid).rgba == drawn(play.get("sized")).rgba));
+
+	Object& walker = play.get("walker");
+	REQUIRE(walker.animationBitmaps.size() == 4);
+	CHECK((walker.animationBitmaps[0]->rgba == drawn(grid).rgba));
+	CHECK((walker.animationBitmaps[1]->rgba != drawn(grid).rgba));
+	Object& bird = play.get("bird");
+	REQUIRE(bird.animationBitmaps.size() == 2);
+	CHECK((bird.animationBitmaps[1]->rgba == drawn(grid).rgba));   // column 1 down to row 2: the ace of hearts
+
+	// The deck's 1 to 7 are the third row's first seven, its 8 to K the
+	// fourth row's first six (the sheet's clubs, then its diamonds); the
+	// back is the second.
+	Object& eight = *play.game.cardAt(8);
+	CHECK(eight.looks[0].bitmap->width == 96);
+	Played hearts("descriptions/hearts.xml");
+	hearts.tap(KeyCode::Space);
+	hearts.frames(2);
+	CHECK((pixels(*play.game.cardAt(1)) == pixels(*hearts.game.cardAt(27))));   // the sheet's ace of clubs
+	CHECK((pixels(*play.game.cardAt(7)) == pixels(*hearts.game.cardAt(33))));   // its 7 of clubs
+	CHECK((pixels(eight) == pixels(*hearts.game.cardAt(40))));                  // its ace of diamonds
+	CHECK((pixels(eight, 1) != pixels(*hearts.game.cardAt(1), 1)));             // a red back, not the blue
+}
+
+TEST_CASE("sheets: a cell off the grid, a sheet not there, and faces short of the cards stop the load", "[cards][sheets]")
+{
+	const std::string at = "<position><x>0</x><y>0</y></position>";
+	{
+		SheetGame sheet("<object name=\"off\"><sprite><cell sheet=\"cards\"><column>14</column></cell></sprite>" + at + "</object>");
+		CHECK_THROWS(Played(sheet.path));
+	}
+	{
+		SheetGame sheet("<object name=\"none\"><sprite><cell sheet=\"nothing\" /></sprite>" + at + "</object>");
+		CHECK_THROWS(Played(sheet.path));
+	}
+	{
+		SheetGame sheet("<object name=\"lost\"><sprite><cell sheet=\"missing\" /></sprite>" + at + "</object>",
+			"<sheet name=\"missing\"><path>assets/nothing.png</path><columns>1</columns><rows>1</rows></sheet>");
+		CHECK_THROWS(Played(sheet.path));
+	}
+	{
+		SheetGame sheet("<deck name=\"cards\" pile=\"stock\" sheet=\"cards\"><faces><cells><count>12</count></cells></faces>"
+			"<suit name=\"clubs\"><color>color.black</color></suit>"
+			"<rank>A</rank><rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank><rank>8</rank><rank>9</rank><rank>10</rank><rank>J</rank><rank>Q</rank><rank>K</rank></deck>"
+			"<object name=\"stock\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>" + at + "<pile faces=\"down\" /></object>");
+		CHECK_THROWS(Played(sheet.path));
+	}
 }
 
 namespace

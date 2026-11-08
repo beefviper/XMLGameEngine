@@ -718,6 +718,12 @@
           <xsl:with-param name="node" select="$shape/size" />
         </xsl:call-template>
       </xsl:when>
+      <xsl:when test="$kind = 'cell'">
+        <xsl:call-template name="cell-fill">
+          <xsl:with-param name="node" select="$shape" />
+          <xsl:with-param name="indent" select="$indent" />
+        </xsl:call-template>
+      </xsl:when>
       <xsl:when test="$kind = 'image'">
         <xsl:call-template name="look-text">
           <xsl:with-param name="indent" select="$indent" />
@@ -808,7 +814,7 @@
       </xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
-    <xsl:if test="$kind != 'image' and $kind != 'svg' and $kind != 'line' and $kind != 'polygon'">
+    <xsl:if test="$kind != 'image' and $kind != 'svg' and $kind != 'line' and $kind != 'polygon' and $kind != 'cell'">
       <xsl:call-template name="look-text">
         <xsl:with-param name="indent" select="$indent" />
         <xsl:with-param name="name" select="'color'" />
@@ -820,6 +826,194 @@
         <xsl:with-param name="indent" select="$indent" />
         <xsl:with-param name="name" select="'font'" />
         <xsl:with-param name="node" select="$shape/font" />
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- A picture cut from one of the game's <sheets>, a <cell sheet="...">:
+       a cell of its grid by <column> and <row> ($column and $row in place
+       of them for a run of <cells>), or a part by <x>, <y>, <width> and
+       <height>; its <scale> and <flip>. -->
+  <xsl:template name="cell-fill">
+    <xsl:param name="node" />
+    <xsl:param name="indent" />
+    <xsl:param name="column" />
+    <xsl:param name="row" />
+    <xsl:value-of select="concat($indent, 'look.sheet = ')" />
+    <xsl:call-template name="string">
+      <xsl:with-param name="text" select="$node/@sheet" />
+    </xsl:call-template>
+    <xsl:text>;&#10;</xsl:text>
+    <xsl:choose>
+      <xsl:when test="$column != ''">
+        <xsl:value-of select="concat($indent, 'look.column = value(&quot;', $column, '&quot;);&#10;')" />
+        <xsl:value-of select="concat($indent, 'look.row = value(&quot;', $row, '&quot;);&#10;')" />
+      </xsl:when>
+      <xsl:when test="$node/x">
+        <xsl:value-of select="concat($indent, 'look.hasSvgRegion = true;&#10;')" />
+        <xsl:call-template name="look-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="name" select="'svgX'" />
+          <xsl:with-param name="node" select="$node/x" />
+        </xsl:call-template>
+        <xsl:call-template name="look-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="name" select="'svgY'" />
+          <xsl:with-param name="node" select="$node/y" />
+        </xsl:call-template>
+        <xsl:call-template name="look-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="name" select="'svgWidth'" />
+          <xsl:with-param name="node" select="$node/width" />
+        </xsl:call-template>
+        <xsl:call-template name="look-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="name" select="'svgHeight'" />
+          <xsl:with-param name="node" select="$node/height" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="look-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="name" select="'column'" />
+          <xsl:with-param name="node" select="$node/column" />
+        </xsl:call-template>
+        <xsl:call-template name="look-value">
+          <xsl:with-param name="indent" select="$indent" />
+          <xsl:with-param name="name" select="'row'" />
+          <xsl:with-param name="node" select="$node/row" />
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:if test="$node/scale">
+      <xsl:value-of select="concat($indent, 'look.hasScale = true;&#10;')" />
+      <xsl:call-template name="look-value">
+        <xsl:with-param name="indent" select="$indent" />
+        <xsl:with-param name="name" select="'scale'" />
+        <xsl:with-param name="node" select="$node/scale" />
+      </xsl:call-template>
+    </xsl:if>
+    <xsl:call-template name="look-text">
+      <xsl:with-param name="indent" select="$indent" />
+      <xsl:with-param name="name" select="'flip'" />
+      <xsl:with-param name="node" select="$node/flip" />
+    </xsl:call-template>
+  </xsl:template>
+
+  <!-- How many frames an animation's <cell> or run of <cells> is. -->
+  <xsl:template name="cell-count">
+    <xsl:param name="node" />
+    <xsl:choose>
+      <xsl:when test="$node/self::cells and $node/count"><xsl:value-of select="normalize-space($node/count)" /></xsl:when>
+      <xsl:otherwise>1</xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- The number of an animation's first frame cut from $node, a <cell>
+       or <cells>: one after the frames its earlier ones cut. -->
+  <xsl:template name="cell-base">
+    <xsl:param name="node" />
+    <xsl:value-of select="count($node/preceding-sibling::cell) + count($node/preceding-sibling::cells[not(count)]) + sum($node/preceding-sibling::cells/count) + 1" />
+  </xsl:template>
+
+  <!-- The name of an animation's frame number $number cut from a sheet,
+       as the engine names it: walk.1, or frame.1 for an unnamed one. -->
+  <xsl:template name="cell-name">
+    <xsl:param name="animation" />
+    <xsl:param name="number" />
+    <xsl:choose>
+      <xsl:when test="$animation/@name != ''"><xsl:value-of select="$animation/@name" /></xsl:when>
+      <xsl:otherwise>frame</xsl:otherwise>
+    </xsl:choose>
+    <xsl:value-of select="concat('.', $number)" />
+  </xsl:template>
+
+  <!-- The sprites the <animation>s $animations cut from sheets, as sprite()
+       list items at $indent, or (with $to) as change($to, ...) lines. -->
+  <xsl:template name="animation-cells">
+    <xsl:param name="animations" />
+    <xsl:param name="indent" />
+    <xsl:param name="to" />
+    <xsl:for-each select="$animations/cell | $animations/cells">
+      <xsl:variable name="base">
+        <xsl:call-template name="cell-base">
+          <xsl:with-param name="node" select="." />
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:call-template name="animation-cell-run">
+        <xsl:with-param name="node" select="." />
+        <xsl:with-param name="indent" select="$indent" />
+        <xsl:with-param name="to" select="$to" />
+        <xsl:with-param name="base" select="$base" />
+        <xsl:with-param name="i" select="0" />
+      </xsl:call-template>
+    </xsl:for-each>
+  </xsl:template>
+
+  <!-- Frame $i (from 0) of the <cell> or <cells> $node, then the rest. -->
+  <xsl:template name="animation-cell-run">
+    <xsl:param name="node" />
+    <xsl:param name="indent" />
+    <xsl:param name="to" />
+    <xsl:param name="base" />
+    <xsl:param name="i" />
+    <xsl:variable name="many">
+      <xsl:call-template name="cell-count">
+        <xsl:with-param name="node" select="$node" />
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:if test="$i &lt; number($many)">
+      <xsl:variable name="name">
+        <xsl:call-template name="cell-name">
+          <xsl:with-param name="animation" select="$node/.." />
+          <xsl:with-param name="number" select="$base + $i" />
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:choose>
+        <xsl:when test="$to != ''">
+          <xsl:value-of select="concat($indent, 'change(', $to, ', &quot;cell&quot;, ')" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="concat($indent, 'sprite(&quot;cell&quot;, ')" />
+        </xsl:otherwise>
+      </xsl:choose>
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="$name" />
+      </xsl:call-template>
+      <xsl:value-of select="concat(', [](RawSprite&amp; look)&#10;', $indent, '{&#10;')" />
+      <xsl:choose>
+        <xsl:when test="$node/self::cells">
+          <xsl:variable name="column">
+            <xsl:choose><xsl:when test="$node/column"><xsl:value-of select="normalize-space($node/column)" /></xsl:when><xsl:otherwise>1</xsl:otherwise></xsl:choose>
+          </xsl:variable>
+          <xsl:variable name="row">
+            <xsl:choose><xsl:when test="$node/row"><xsl:value-of select="normalize-space($node/row)" /></xsl:when><xsl:otherwise>1</xsl:otherwise></xsl:choose>
+          </xsl:variable>
+          <xsl:call-template name="cell-fill">
+            <xsl:with-param name="node" select="$node" />
+            <xsl:with-param name="indent" select="concat($indent, $tab)" />
+            <xsl:with-param name="column" select="number($column) + $i * number(not($node/down))" />
+            <xsl:with-param name="row" select="number($row) + $i * number(boolean($node/down))" />
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:call-template name="cell-fill">
+            <xsl:with-param name="node" select="$node" />
+            <xsl:with-param name="indent" select="concat($indent, $tab)" />
+          </xsl:call-template>
+        </xsl:otherwise>
+      </xsl:choose>
+      <xsl:value-of select="concat($indent, '}')" />
+      <xsl:choose>
+        <xsl:when test="$to != ''"><xsl:text>);&#10;</xsl:text></xsl:when>
+        <xsl:otherwise><xsl:text>),&#10;</xsl:text></xsl:otherwise>
+      </xsl:choose>
+      <xsl:call-template name="animation-cell-run">
+        <xsl:with-param name="node" select="$node" />
+        <xsl:with-param name="indent" select="$indent" />
+        <xsl:with-param name="to" select="$to" />
+        <xsl:with-param name="base" select="$base" />
+        <xsl:with-param name="i" select="$i + 1" />
       </xsl:call-template>
     </xsl:if>
   </xsl:template>
@@ -852,6 +1046,7 @@
   <xsl:template name="sprites">
     <xsl:param name="nodes" />
     <xsl:param name="indent" />
+    <xsl:param name="animations" select="/.." />
     <xsl:text>{&#10;</xsl:text>
     <xsl:for-each select="$nodes">
       <xsl:value-of select="concat($indent, $tab, 'sprite(')" />
@@ -861,6 +1056,10 @@
       </xsl:call-template>
       <xsl:text>),&#10;</xsl:text>
     </xsl:for-each>
+    <xsl:call-template name="animation-cells">
+      <xsl:with-param name="animations" select="$animations" />
+      <xsl:with-param name="indent" select="concat($indent, $tab)" />
+    </xsl:call-template>
     <xsl:value-of select="concat($indent, '}')" />
   </xsl:template>
 
@@ -886,13 +1085,55 @@
   <xsl:template name="frames">
     <xsl:param name="animation" />
     <xsl:text>{ </xsl:text>
-    <xsl:for-each select="$animation/frame">
+    <xsl:for-each select="$animation/frame | $animation/cell | $animation/cells">
       <xsl:if test="position() &gt; 1">, </xsl:if>
-      <xsl:call-template name="string">
-        <xsl:with-param name="text" select="@sprite" />
-      </xsl:call-template>
+      <xsl:choose>
+        <xsl:when test="self::frame">
+          <xsl:call-template name="string">
+            <xsl:with-param name="text" select="@sprite" />
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:call-template name="cell-frame-names">
+            <xsl:with-param name="node" select="." />
+          </xsl:call-template>
+        </xsl:otherwise>
+      </xsl:choose>
     </xsl:for-each>
     <xsl:text> }</xsl:text>
+  </xsl:template>
+
+  <!-- The names of the frames a <cell> or <cells> of an animation cuts,
+       "walk.3", "walk.4". -->
+  <xsl:template name="cell-frame-names">
+    <xsl:param name="node" />
+    <xsl:param name="i" select="0" />
+    <xsl:variable name="many">
+      <xsl:call-template name="cell-count">
+        <xsl:with-param name="node" select="$node" />
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:variable name="base">
+      <xsl:call-template name="cell-base">
+        <xsl:with-param name="node" select="$node" />
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:if test="$i &lt; number($many)">
+      <xsl:if test="$i &gt; 0">, </xsl:if>
+      <xsl:variable name="name">
+        <xsl:call-template name="cell-name">
+          <xsl:with-param name="animation" select="$node/.." />
+          <xsl:with-param name="number" select="$base + $i" />
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="$name" />
+      </xsl:call-template>
+      <xsl:call-template name="cell-frame-names">
+        <xsl:with-param name="node" select="$node" />
+        <xsl:with-param name="i" select="$i + 1" />
+      </xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <!-- ===================================================================
@@ -1186,6 +1427,7 @@
         <xsl:value-of select="concat($in, 'moving(object, ')" />
         <xsl:call-template name="sprites">
           <xsl:with-param name="nodes" select="sprite" />
+          <xsl:with-param name="animations" select="animation" />
           <xsl:with-param name="indent" select="$in" />
         </xsl:call-template>
         <xsl:text>, {</xsl:text>
@@ -1202,6 +1444,7 @@
         <xsl:value-of select="concat($in, 'animate(object, ')" />
         <xsl:call-template name="sprites">
           <xsl:with-param name="nodes" select="sprite" />
+          <xsl:with-param name="animations" select="animation" />
           <xsl:with-param name="indent" select="$in" />
         </xsl:call-template>
         <xsl:text>, </xsl:text>
@@ -2241,13 +2484,24 @@
     <xsl:value-of select="concat(';&#10;', $in, 'deck.pile = ')" />
     <xsl:call-template name="string"><xsl:with-param name="text" select="@pile" /></xsl:call-template>
     <xsl:text>;&#10;</xsl:text>
-    <xsl:if test="sheet">
+    <xsl:if test="@sheet">
       <xsl:value-of select="concat($in, 'deck.sheet = ')" />
-      <xsl:call-template name="text"><xsl:with-param name="node" select="sheet/path" /></xsl:call-template>
+      <xsl:call-template name="string"><xsl:with-param name="text" select="@sheet" /></xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
-      <xsl:for-each select="sheet/back">
-        <xsl:value-of select="concat($in, 'deck.back = ', normalize-space(.), ';&#10;')" />
+      <xsl:if test="faces/down">
+        <xsl:value-of select="concat($in, 'deck.down = true;&#10;')" />
+      </xsl:if>
+      <xsl:for-each select="faces/cell | faces/cells">
+        <xsl:call-template name="deck-cells">
+          <xsl:with-param name="node" select="." />
+          <xsl:with-param name="in" select="$in" />
+        </xsl:call-template>
       </xsl:for-each>
+      <xsl:if test="back">
+        <xsl:value-of select="concat($in, 'deck.hasBack = true;&#10;', $in, 'deck.back = ')" />
+        <xsl:call-template name="sheet-cell"><xsl:with-param name="node" select="back" /></xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+      </xsl:if>
     </xsl:if>
     <xsl:for-each select="copies | face/width | face/height | face/scale">
       <xsl:value-of select="concat($in, 'deck.', local-name(), ' = ', normalize-space(.), ';&#10;')" />
@@ -2317,6 +2571,50 @@
       </xsl:otherwise>
     </xsl:choose>
     <xsl:text>&#9;}&#10;&#10;</xsl:text>
+  </xsl:template>
+
+  <!-- A place on a deck's sheet: SheetCell{ column, row }, or a part
+       SheetCell{ 1, 1, true, x, y, width, height }. -->
+  <xsl:template name="sheet-cell">
+    <xsl:param name="node" />
+    <xsl:param name="i" select="0" />
+    <xsl:choose>
+      <xsl:when test="$node/x">
+        <xsl:value-of select="concat('SheetCell{ 1, 1, true, ', normalize-space($node/x), ', ', normalize-space($node/y), ', ', normalize-space($node/width), ', ', normalize-space($node/height), ' }')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:variable name="column">
+          <xsl:choose><xsl:when test="$node/column"><xsl:value-of select="normalize-space($node/column)" /></xsl:when><xsl:otherwise>1</xsl:otherwise></xsl:choose>
+        </xsl:variable>
+        <xsl:variable name="row">
+          <xsl:choose><xsl:when test="$node/row"><xsl:value-of select="normalize-space($node/row)" /></xsl:when><xsl:otherwise>1</xsl:otherwise></xsl:choose>
+        </xsl:variable>
+        <xsl:value-of select="concat('SheetCell{ ', number($column) + $i * number(not($node/down)), ', ', number($row) + $i * number(boolean($node/down)), ' }')" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A deck's <cell> or run of <cells> of faces, a push_back each. -->
+  <xsl:template name="deck-cells">
+    <xsl:param name="node" />
+    <xsl:param name="in" />
+    <xsl:param name="i" select="0" />
+    <xsl:variable name="many">
+      <xsl:call-template name="cell-count"><xsl:with-param name="node" select="$node" /></xsl:call-template>
+    </xsl:variable>
+    <xsl:if test="$i &lt; number($many)">
+      <xsl:value-of select="concat($in, 'deck.faces.push_back(')" />
+      <xsl:call-template name="sheet-cell">
+        <xsl:with-param name="node" select="$node" />
+        <xsl:with-param name="i" select="$i" />
+      </xsl:call-template>
+      <xsl:text>);&#10;</xsl:text>
+      <xsl:call-template name="deck-cells">
+        <xsl:with-param name="node" select="$node" />
+        <xsl:with-param name="in" select="$in" />
+        <xsl:with-param name="i" select="$i + 1" />
+      </xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <!-- A deck's rows, as a list of strings, a row a line. -->
@@ -2418,6 +2716,12 @@
     <xsl:param name="named" />
     <xsl:param name="to" />
     <xsl:param name="indent" />
+    <!-- the frames they cut from sheets, sprites of their own -->
+    <xsl:call-template name="animation-cells">
+      <xsl:with-param name="animations" select="$named | $node" />
+      <xsl:with-param name="indent" select="$indent" />
+      <xsl:with-param name="to" select="$to" />
+    </xsl:call-template>
     <xsl:for-each select="$named">
       <xsl:value-of select="concat($indent, 'moves(', $to, ', ')" />
       <xsl:call-template name="named-frames">
@@ -3357,6 +3661,25 @@
     </xsl:if>
     <xsl:if test="$game/paths/path">
       <xsl:text>&#9;game.paths = paths();&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$game/sheets/sheet">
+      <xsl:text>&#9;game.sheets = {&#10;</xsl:text>
+      <xsl:for-each select="$game/sheets/sheet">
+        <xsl:text>&#9;&#9;Sheet{ </xsl:text>
+        <xsl:call-template name="string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="text"><xsl:with-param name="node" select="path" /></xsl:call-template>
+        <xsl:value-of select="concat(', ', number(concat('0', normalize-space(columns))), ', ', number(concat('0', normalize-space(rows))))" />
+        <xsl:value-of select="concat(', ', number(concat('0', normalize-space(cell/width))), ', ', number(concat('0', normalize-space(cell/height))))" />
+        <xsl:value-of select="concat(', ', number(concat('0', normalize-space(margin))), ', ', number(concat('0', normalize-space(gap))), ', {')" />
+        <xsl:for-each select="hide">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> </xsl:text>
+          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
+        </xsl:for-each>
+        <xsl:text> } },&#10;</xsl:text>
+      </xsl:for-each>
+      <xsl:text>&#9;};&#10;</xsl:text>
     </xsl:if>
     <xsl:if test="$game/styles/style">
       <xsl:text>&#9;game.styles = {&#10;</xsl:text>

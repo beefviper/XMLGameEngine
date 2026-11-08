@@ -53,6 +53,7 @@ namespace xge
 		// they are (and a reference to one good) as copies join.
 		objects.reserve(rawObjects.size() * 2 + 256);
 		expr.styles = data.styles;
+		expr.sheets = data.sheets;
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 		keep(keeps);

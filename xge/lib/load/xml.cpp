@@ -363,7 +363,7 @@ namespace xge
 
 		bool isShapeTag(const std::string& name)
 		{
-			return name == "circle" || name == "rectangle" || name == "text" || name == "image" || name == "bitmap" || name == "svg" || name == "tether";
+			return name == "circle" || name == "rectangle" || name == "text" || name == "image" || name == "bitmap" || name == "svg" || name == "tether" || name == "cell";
 		}
 
 		// The <flip> of a picture the engine draws itself (a <bitmap> or an
@@ -462,6 +462,89 @@ namespace xge
 			return nullptr;
 		}
 
+		int readCount(const XmlNode& node, const std::string& where);
+
+		// Where on a sheet a <cell sheet="..."> is: its <column> and <row>
+		// (from 1, each 1 when left out), or all four of <x>, <y>, <width>
+		// and <height>.
+		void readCell(const XmlNode& cell, RawSprite& sprite, const std::string& here)
+		{
+			sprite.sheet = requireAttribute(cell, "sheet", here);
+			const auto x = findChild(&cell, "x");
+			const auto y = findChild(&cell, "y");
+			const auto width = findChild(&cell, "width");
+			const auto height = findChild(&cell, "height");
+			if (x || y || width || height)
+			{
+				if (!(x && y && width && height)) { fail(here, "takes a part of the sheet with all four of <x>, <y>, <width> and <height>, or a <column> and <row>"); }
+				if (findChild(&cell, "column") || findChild(&cell, "row")) { fail(here, "has a <column> or <row> and a part by <x> and <y>; give one"); }
+				sprite.hasSvgRegion = true;
+				sprite.svgX = readValue(*x, here);
+				sprite.svgY = readValue(*y, here);
+				sprite.svgWidth = readValue(*width, here);
+				sprite.svgHeight = readValue(*height, here);
+				return;
+			}
+			if (auto column = findChild(&cell, "column")) { sprite.column = readValue(*column, here); }
+			if (auto row = findChild(&cell, "row")) { sprite.row = readValue(*row, here); }
+		}
+
+		// A place on a sheet for a deck: a <cell> (a <column> and <row>, or
+		// <x>, <y>, <width> and <height>), plain numbers.
+		SheetCell readSheetCell(const XmlNode& node, const std::string& here)
+		{
+			SheetCell cell;
+			const auto number = [&](const char* tag, float fallback)
+			{
+				const auto part = findChild(&node, tag);
+				if (!part) { return fallback; }
+				const std::string text = readText(*part);
+				std::size_t used = 0;
+				float value = -1.0f;
+				try { value = std::stof(text, &used); }
+				catch (const std::exception&) { used = 0; }
+				if (text.empty() || used != text.size() || value < 0.0f) { fail(here + " > <" + tag + ">", "is \"" + text + "\"; expected a number from 0"); }
+				return value;
+			};
+			if (findChild(&node, "x") || findChild(&node, "y") || findChild(&node, "width") || findChild(&node, "height"))
+			{
+				if (!(findChild(&node, "x") && findChild(&node, "y") && findChild(&node, "width") && findChild(&node, "height")))
+				{
+					fail(here, "takes a part of the sheet with all four of <x>, <y>, <width> and <height>, or a <column> and <row>");
+				}
+				cell.free = true;
+				cell.x = number("x", 0.0f);
+				cell.y = number("y", 0.0f);
+				cell.width = number("width", 0.0f);
+				cell.height = number("height", 0.0f);
+				return cell;
+			}
+			cell.column = static_cast<int>(number("column", 1.0f));
+			cell.row = static_cast<int>(number("row", 1.0f));
+			return cell;
+		}
+
+		// A run of cells on a sheet, <cells>: from its <column> and <row>
+		// (each 1 when left out) <count> cells (1 when left out) along the
+		// row, or down the column with <down />. An animation's frames, a
+		// deck's faces.
+		std::vector<SheetCell> readSheetRun(const XmlNode& node, const std::string& here)
+		{
+			const SheetCell start = readSheetCell(node, here);
+			if (start.free) { fail(here, "is a run of a sheet's cells, from a <column> and <row>; a part by <x> and <y> is a <cell>"); }
+			const auto count = findChild(&node, "count");
+			const int many = count ? readCount(*count, here + " > <count>") : 1;
+			const bool down = findChild(&node, "down") != nullptr;
+			std::vector<SheetCell> cells;
+			for (int i = 0; i < many; ++i)
+			{
+				SheetCell cell = start;
+				(down ? cell.row : cell.column) += i;
+				cells.push_back(cell);
+			}
+			return cells;
+		}
+
 		// One <circle>, <rectangle>, <text>, <image>, <bitmap> or <svg>, written into `sprite`.
 		void readShape(const XmlNode& shape, RawSprite& sprite, const std::string& where)
 		{
@@ -533,6 +616,18 @@ namespace xge
 				}
 				sprite.flip = readPictureFlip(shape, here);
 			}
+			else if (kind == "cell")
+			{
+				// A picture cut from one of the game's <sheets>: a cell of
+				// its grid, or a part of it by <x>, <y>, <width> and <height>.
+				readCell(shape, sprite, here);
+				if (auto scale = findChild(&shape, "scale"))
+				{
+					sprite.hasScale = true;
+					sprite.scale = readValue(*scale, here);
+				}
+				sprite.flip = readPictureFlip(shape, here);
+			}
 			else if (kind == "tether")
 			{
 				// A line joining two objects' middles, wherever they go.
@@ -560,7 +655,7 @@ namespace xge
 				if (auto flip = findChild(&shape, "flip")) { sprite.flip = readText(*flip); }
 			}
 
-			if (kind != "image" && kind != "svg")
+			if (kind != "image" && kind != "svg" && kind != "cell")
 			{
 				if (auto color = findPlainColor(shape)) { sprite.color = readText(*color); }
 			}
@@ -666,7 +761,7 @@ namespace xge
 		RawSprite changeSprite(const XmlNode& spriteNode, const RawSprite& base, const std::string& where)
 		{
 			const std::unique_ptr<XmlNode> shape = spriteNode.getFirstChild();
-			if (!shape || shape->getName() != base.kind || base.kind == "line" || base.kind == "polygon") { return readSprite(spriteNode, where); }
+			if (!shape || shape->getName() != base.kind || base.kind == "line" || base.kind == "polygon" || base.kind == "cell") { return readSprite(spriteNode, where); }
 
 			const std::string here = where + " > <sprite> > <" + base.kind + ">";
 			RawSprite sprite = base;
@@ -815,10 +910,45 @@ namespace xge
 
 			spec.interval = readValueOf(animation, "interval", here);
 
+			// A frame cut from a sheet: a sprite of its own, named for the
+			// animation and numbered.
+			const auto addCell = [&](RawSprite sprite, const XmlNode& node, const std::string& at)
+			{
+				sprite.kind = "cell";
+				sprite.name = (spec.name.empty() ? std::string("frame") : spec.name) + "." + std::to_string(spec.cells.size() + 1);
+				if (auto scale = findChild(&node, "scale"))
+				{
+					sprite.hasScale = true;
+					sprite.scale = readValue(*scale, at);
+				}
+				sprite.flip = readPictureFlip(node, at);
+				spec.frames.push_back(sprite.name);
+				spec.cells.push_back(std::move(sprite));
+			};
+
 			for (std::unique_ptr<XmlNode> node = animation.getFirstChild(); node != nullptr; node = node->getNextSibling())
 			{
-				if (node->getName() == "frame") { spec.frames.push_back(requireAttribute(*node, "sprite", here + " > <frame>")); }
-				else if (node->getName() != "interval") { fail(here, "unknown <" + node->getName() + ">; expected an <interval> and then <frame>s"); }
+				const std::string tag = node->getName();
+				if (tag == "frame") { spec.frames.push_back(requireAttribute(*node, "sprite", here + " > <frame>")); }
+				else if (tag == "cell")
+				{
+					RawSprite sprite;
+					readCell(*node, sprite, here + " > <cell>");
+					addCell(std::move(sprite), *node, here + " > <cell>");
+				}
+				else if (tag == "cells")
+				{
+					const std::string at = here + " > <cells>";
+					for (const SheetCell& cell : readSheetRun(*node, at))
+					{
+						RawSprite sprite;
+						sprite.sheet = requireAttribute(*node, "sheet", at);
+						sprite.column = RawValue::expression(std::to_string(cell.column));
+						sprite.row = RawValue::expression(std::to_string(cell.row));
+						addCell(std::move(sprite), *node, at);
+					}
+				}
+				else if (tag != "interval") { fail(here, "unknown <" + tag + ">; expected an <interval> and then <frame>s, <cell>s and runs of <cells>"); }
 			}
 
 			return spec;
@@ -862,9 +992,12 @@ namespace xge
 		// Anything that cannot be settled, such as several sprites and nothing
 		// to say which is shown when, or a frame naming a sprite that is not
 		// there, stops the load.
-		void chooseSprite(const std::vector<RawSprite>& sprites, const std::vector<AnimationSpec>& animations,
+		void chooseSprite(const std::vector<RawSprite>& written, const std::vector<AnimationSpec>& animations,
 			const std::string& where, RawObject& object)
 		{
+			// The sprites written, and the frames the animations cut from sheets.
+			std::vector<RawSprite> sprites = written;
+			for (const AnimationSpec& animation : animations) { sprites.insert(sprites.end(), animation.cells.begin(), animation.cells.end()); }
 			if (sprites.empty()) { fail(where, "missing <sprite>"); }
 
 			const bool named = std::any_of(animations.begin(), animations.end(), [](const AnimationSpec& each) { return !each.name.empty(); });
@@ -1221,13 +1354,13 @@ namespace xge
 			deck.name = requireAttribute(node, "name", "<deck>");
 			const std::string here = "<deck name=\"" + deck.name + "\">";
 			deck.pile = requireAttribute(node, "pile", here);
+			deck.sheet = node.getAttribute("sheet");
 			const std::string objClass = node.getAttribute("class");
 			const auto number = [&](const XmlNode& part, const std::string& at)
 			{
 				return readCount(part, at);
 			};
-			std::string pipless; // a suit with no pip, fine only with a <sheet>
-			bool drawnBack = false;
+			std::string pipless; // a suit with no pip, fine only with a sheet
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
@@ -1240,18 +1373,32 @@ namespace xge
 					if (auto color = findChild(child.get(), "color")) { deck.faceColor = readText(*color); }
 					if (auto edge = findChild(child.get(), "edge")) { deck.faceEdge = readText(*edge); }
 				}
-				else if (tag == "sheet")
+				else if (tag == "faces")
 				{
-					if (auto path = findChild(child.get(), "path")) { deck.sheet = readText(*path); }
-					if (deck.sheet.empty()) { fail(at, "has no <path>: the picture file of the faces and backs"); }
-					if (auto back = findChild(child.get(), "back")) { deck.back = number(*back, at + " > <back>"); }
+					if (deck.sheet.empty()) { fail(at, "says where the faces lie on a sheet; the deck has no sheet=\"...\""); }
+					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						const std::string name = part->getName();
+						if (name == "down") { deck.down = true; }
+						else if (name == "cell") { deck.faces.push_back(readSheetCell(*part, at + " > <cell>")); }
+						else if (name == "cells")
+						{
+							for (const SheetCell& cell : readSheetRun(*part, at + " > <cells>")) { deck.faces.push_back(cell); }
+						}
+						else { fail(at, "unknown <" + name + ">; expected <down />, or <cell>s and runs of <cells>, one for each card in order"); }
+					}
+					if (deck.down && !deck.faces.empty()) { fail(at, "has <down /> and cells; <down /> lays the suits in columns, cells say where each card is"); }
+				}
+				else if (tag == "back" && !deck.sheet.empty())
+				{
+					deck.hasBack = true;
+					deck.back = readSheetCell(*child, at);
 				}
 				else if (tag == "back")
 				{
 					if (auto color = findChild(child.get(), "color")) { deck.backColor = readText(*color); }
 					if (auto edge = findChild(child.get(), "edge")) { deck.backEdge = readText(*edge); }
 					if (auto pattern = findChild(child.get(), "pattern")) { deck.pattern = rowsOf(*pattern, at + " > <pattern>"); }
-					drawnBack = true;
 				}
 				else if (tag == "color")
 				{
@@ -1334,10 +1481,9 @@ namespace xge
 					deck.ranks.push_back(std::move(rank));
 				}
 				else if (tag == "copies") { deck.copies = number(*child, at); }
-				else { fail(here, "unknown <" + tag + ">; expected <sheet>, <face>, <back>, <color char>s, <suit>s, <rank>s and <copies>"); }
+				else { fail(here, "unknown <" + tag + ">; expected <faces>, <face>, <back>, <color char>s, <suit>s, <rank>s and <copies>"); }
 			}
-			if (deck.sheet.empty() && !pipless.empty()) { fail(pipless, "has no <row>s: its pip (or give the deck a <sheet>)"); }
-			if (!deck.sheet.empty() && drawnBack) { fail(here, "has a <sheet> and a <back>; the sheet's <back> picks one of its backs"); }
+			if (deck.sheet.empty() && !pipless.empty()) { fail(pipless, "has no <row>s: its pip (or give the deck a sheet=\"...\" to cut its faces from)"); }
 			readBitmapColors(node, here, deck.colors);
 			for (const auto& [c, color] : deck.colors)
 			{
@@ -2858,7 +3004,8 @@ namespace xge
 				}
 				else
 				{
-					if (used.empty()) { fail(here, "has no <sprite>, and neither does its group"); }
+					const bool cut = std::any_of(usedAnimations.begin(), usedAnimations.end(), [](const AnimationSpec& each) { return !each.cells.empty(); });
+					if (used.empty() && !cut) { fail(here, "has no <sprite>, and neither does its group"); }
 					chooseSprite(used, usedAnimations, here, rawObject);
 				}
 
@@ -3660,7 +3807,7 @@ namespace xge
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, std::vector<RawPath>& rawPaths,
-		std::vector<RawStyle>& rawStyles, std::vector<RawPatterns>& rawPatterns, std::vector<std::string>& rawKeeps, RawDemo& rawDemo,
+		std::vector<RawStyle>& rawStyles, std::vector<Sheet>& rawSheets, std::vector<RawPatterns>& rawPatterns, std::vector<std::string>& rawKeeps, RawDemo& rawDemo,
 		SchemaValidation& validation)
 	{
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
@@ -3781,6 +3928,51 @@ namespace xge
 				readBitmapColors(*style, here, raw.bitmapColors);
 				if (auto font = findChild(style.get(), "font")) { raw.font = readText(*font); }
 				rawStyles.push_back(std::move(raw));
+			}
+		}
+
+		// load sheets (optional: the pictures sprites, animations and decks cut theirs from)
+		if (std::unique_ptr<XmlNode> sheetsNode = findChild(root.get(), "sheets"))
+		{
+			for (std::unique_ptr<XmlNode> node = sheetsNode->getFirstChild(); node != nullptr; node = node->getNextSibling())
+			{
+				Sheet sheet;
+				sheet.name = requireAttribute(*node, "name", "<sheets> > <sheet>");
+				const std::string here = "<sheets> > <sheet name=\"" + sheet.name + "\">";
+				if (std::any_of(rawSheets.begin(), rawSheets.end(), [&](const Sheet& each) { return each.name == sheet.name; }))
+				{
+					fail("<sheets>", "two <sheet>s are called '" + sheet.name + "'");
+				}
+				sheet.path = readText(*requireChild(*node, "path", here));
+				const auto plain = [&](const XmlNode& parent, const char* tag, const std::string& at)
+				{
+					const auto part = findChild(&parent, tag);
+					if (!part) { return 0.0f; }
+					const std::string text = readText(*part);
+					std::size_t used = 0;
+					float value = -1.0f;
+					try { value = std::stof(text, &used); }
+					catch (const std::exception&) { used = 0; }
+					if (text.empty() || used != text.size() || value < 0.0f) { fail(at + " > <" + tag + ">", "is \"" + text + "\"; expected a number from 0"); }
+					return value;
+				};
+				if (auto columns = findChild(node.get(), "columns")) { sheet.columns = readCount(*columns, here); }
+				if (auto rows = findChild(node.get(), "rows")) { sheet.rows = readCount(*rows, here); }
+				if ((sheet.columns > 0) != (sheet.rows > 0)) { fail(here, "has <columns> or <rows> without the other"); }
+				if (auto cell = findChild(node.get(), "cell"))
+				{
+					if (sheet.columns > 0) { fail(here, "has <columns> and <rows> and a <cell> size; give one"); }
+					sheet.cellWidth = plain(*cell, "width", here + " > <cell>");
+					sheet.cellHeight = plain(*cell, "height", here + " > <cell>");
+					if (!(sheet.cellWidth > 0.0f && sheet.cellHeight > 0.0f)) { fail(here + " > <cell>", "needs a <width> and a <height> above 0"); }
+				}
+				sheet.margin = plain(*node, "margin", here);
+				sheet.gap = plain(*node, "gap", here);
+				for (std::unique_ptr<XmlNode> hide = node->getFirstChild(); hide != nullptr; hide = hide->getNextSibling())
+				{
+					if (hide->getName() == "hide") { sheet.hide.push_back(readText(*hide)); }
+				}
+				rawSheets.push_back(std::move(sheet));
 			}
 		}
 
@@ -3930,7 +4122,7 @@ namespace xge
 	{
 		GameData data;
 		SchemaValidation validation = SchemaValidation::None;
-		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.styles, data.patterns, data.keeps, data.demo, validation);
+		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.styles, data.sheets, data.patterns, data.keeps, data.demo, validation);
 
 		std::ostringstream said;
 		said << validation;

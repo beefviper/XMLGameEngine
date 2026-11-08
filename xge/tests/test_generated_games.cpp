@@ -211,6 +211,9 @@ namespace
 				for (const std::string& choice : piece.choices) { text(at + ".text.choice", choice); }
 			}
 			text(at + ".path", s.path);
+			text(at + ".sheet", s.sheet);
+			value(at + ".column", s.column);
+			value(at + ".row", s.row);
 			text(at + ".flip", s.flip);
 			text(at + ".color", s.color);
 			text(at + ".style", s.style);
@@ -415,6 +418,14 @@ namespace
 					for (const auto& [part, many] : pattern.parts) { parts += std::to_string(static_cast<int>(part)) + ":" + std::to_string(many) + " "; }
 					text("patterns " + set.name + "." + pattern.name, parts);
 				}
+			}
+			for (const Sheet& sheet : g.sheets)
+			{
+				const std::string at = "sheet " + sheet.name;
+				text(at + ".path", sheet.path);
+				text(at + ".grid", std::to_string(sheet.columns) + "x" + std::to_string(sheet.rows) + " " + std::to_string(sheet.cellWidth) + "x" + std::to_string(sheet.cellHeight));
+				text(at + ".space", std::to_string(sheet.margin) + " " + std::to_string(sheet.gap));
+				for (const std::string& hide : sheet.hide) { text(at + ".hide", hide); }
 			}
 			for (const RawStyle& style : g.styles)
 			{

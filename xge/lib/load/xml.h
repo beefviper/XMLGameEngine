@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "picture/image.h"
+
 #include "game/data.h"
 #include "game/object.h"
 #include "audio/sound.h"
@@ -50,6 +52,7 @@ namespace xge
 			std::vector<RawSound>& rawSounds,
 			std::vector<RawPath>& rawPaths,
 			std::vector<RawStyle>& rawStyles,
+			std::vector<Sheet>& rawSheets,
 			std::vector<RawPatterns>& rawPatterns,
 			std::vector<std::string>& rawKeeps,
 			RawDemo& rawDemo,

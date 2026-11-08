@@ -63,6 +63,10 @@
     <style name="help"><size>22</size><color>color.lightgrey</color></style>
     <style name="note"><size>24</size><color>color.white</color></style>
   </styles>
+  <!-- the card sheet: a row for each suit, a column for each rank, then a row of backs -->
+  <sheets>
+    <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
+  </sheets>
   <states>
     <state name="title">
       <objects>
@@ -98,8 +102,7 @@
     <state name="playing">
       <objects>
         <!-- the pack: the card sheet's, the ace one -->
-        <deck name="cards" pile="stock">
-          <sheet><path>assets/cards.png</path><back>1</back></sheet>
+        <deck name="cards" pile="stock" sheet="cards">
           <face><width>96</width><height>140</height></face>
           <suit name="spades"><color>color.black</color></suit>
           <suit name="hearts"><color>color.red</color></suit>
