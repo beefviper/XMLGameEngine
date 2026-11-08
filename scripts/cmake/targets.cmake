@@ -70,8 +70,9 @@ if (XGE_NEEDS_SDL2)
 endif()
 
 # lunasvg is PRIVATE: only picture/svg.cpp uses it, and picture/svg.h speaks in the engine's
-# own Bitmap, so nothing that includes the engine's headers needs it.
-target_link_libraries(xgelib PRIVATE lunasvg::lunasvg)
+# own Bitmap, so nothing that includes the engine's headers needs it. The drawing library
+# inside it, plutovg, also reads picture files (picture/image.cpp, a deck's <sheet>).
+target_link_libraries(xgelib PRIVATE lunasvg::lunasvg plutovg::plutovg)
 
 # TinyXML2, PugiXML and RapidXML XML backends - see xml/tinyxml2.h/
 # xml/pugixml.h/xml_rapidxml.h. Every game parses with one (chosen by whichever

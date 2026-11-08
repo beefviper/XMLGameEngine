@@ -6,6 +6,28 @@ Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried
 
 ```xml
 <deck name="cards" pile="stock">
+  <sheet><path>assets/cards.png</path><back>1</back></sheet>
+  <face><width>96</width><height>140</height></face>
+  <suit name="spades"><color>color.black</color></suit>
+  <suit name="hearts"><color>color.red</color></suit>
+  <suit name="clubs"><color>color.black</color></suit>
+  <suit name="diamonds"><color>color.red</color></suit>
+  <rank name="A"><worth>14</worth></rank>
+  <rank>2</rank><rank>3</rank> ... <rank>K</rank>
+</deck>
+```
+
+- **The cards.** A card for each `<suit>` and `<rank>`, in the order written, `<copies>` times (1 when left out): objects `cards.1`, `cards.2` ... with variables `suit` and `rank` (from 1, as written) and two looks, `face` and `back`. `class=` gives them a class. Any deck works the same way (an Italian 40).
+- **A suit** gives its name and `<color>` (what `<othercolor />` compares); **a rank** its name and its `<worth>`s ([points](#points)).
+- **`<sheet>`**: one picture file (PNG, JPEG, BMP) holding every face, **a row for each suit and a column for each rank, in the order written, then one row of backs**. `<back>` picks a back, from 1 (default 1). The engine reads the file itself and makes each face and the back `<face>`'s size (times `<scale>`), each pixel the average of the ones it covers, so the sheet can be far bigger than the cards; a whole-number shrink gives pixel art back exactly. The file is held only while it is cut. A sheet that does not split evenly into those rows and columns, or an empty or missing back, stops the load.
+- **`games/assets/cards.png`** is the shared sheet: 4992 by 2800, cells of 384 by 560, the four suits in the order spades, hearts, clubs, diamonds, ranks A to K, and eight backs (blue, red, green, black and gold, purple, then blue, red and green lattices). All eight card games use it.
+
+### A drawn deck
+
+Without a `<sheet>`, the engine puts each face together from parts the game draws as rows, so every window library draws them:
+
+```xml
+<deck name="cards" pile="stock">
   <face><width>63</width><height>93</height><scale>1</scale><color>color.white</color><edge>color.grey</edge></face>
   <back><color>color.darkblue</color><edge>color.lightgrey</edge><pattern><row>*.....*.</row> ... </pattern></back>
   <color char="y">color.gold</color>                 <!-- colours for the court pictures -->
@@ -15,7 +37,6 @@ Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried
     <index><row>.**.**.</row> ... </index>           <!-- the corner pip -->
     <large><row>....******....</row> ... </large>    <!-- the ace's pip -->
   </suit>
-  ... three more suits ...
   <rank name="3">
     <index><row>.*****.</row> ... </index>
     <pips><row>.*.</row> <row>...</row> ... <row>.v.</row></pips>
@@ -24,11 +45,10 @@ Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried
 </deck>
 ```
 
-- **The cards.** A card for each `<suit>` and `<rank>`, in the order written, `<copies>` times (1 when left out): objects `cards.1`, `cards.2` ... with variables `suit` and `rank` (from 1, as written) and two looks, `face` and `back`. `class=` gives them a class. Any deck works the same way (an Italian 40).
-- **The faces are put together by the engine** as bitmaps, so every window library draws them. `<face>` is the card's size in bitmap pixels (63 by 93 by default) and its colours (`@` face and `#` edge in any part's rows).
-- **A suit**: its `<color>` and its pip as rows (`*` its colour, `.` the face); `<index>` the corner pip (default: the pip), `<large>` the ace's (default: the pip twice the size).
-- **A rank**: just a name (`<rank>A</rank>`, drawn in a small 3x5 font with the pip big in the middle), or `<rank name>` with an `<index>` and either **`<pips>`** (a grid: `*` a pip, `v` one turned round, `@` the large pip, spread between the corners) or a **`<picture>`** (with `<half />` first, the rows are the top half and the bottom is them turned round).
-- **`<back>`**: a frame round its `<pattern>`, or a lattice of diamonds.
+- `<face>` is the card's size in bitmap pixels (63 by 93 by default) and its colours (`@` face and `#` edge in any part's rows).
+- **A suit**: its pip as rows (`*` its colour, `.` the face); `<index>` the corner pip (default: the pip), `<large>` the ace's (default: the pip twice the size).
+- **A rank**: just a name (drawn in a small 3x5 font with the pip big in the middle), or `<rank name>` with an `<index>` and either **`<pips>`** (a grid: `*` a pip, `v` one turned round, `@` the large pip, spread between the corners) or a **`<picture>`** (with `<half />` first, the rows are the top half and the bottom is them turned round).
+- **`<back>`**: a frame round its `<pattern>`, or a lattice of diamonds. A deck has a `<sheet>` or a `<back>`, not both.
 
 ## Piles
 

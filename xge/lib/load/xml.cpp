@@ -1226,6 +1226,8 @@ namespace xge
 			{
 				return readCount(part, at);
 			};
+			std::string pipless; // a suit with no pip, fine only with a <sheet>
+			bool drawnBack = false;
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
@@ -1238,11 +1240,18 @@ namespace xge
 					if (auto color = findChild(child.get(), "color")) { deck.faceColor = readText(*color); }
 					if (auto edge = findChild(child.get(), "edge")) { deck.faceEdge = readText(*edge); }
 				}
+				else if (tag == "sheet")
+				{
+					if (auto path = findChild(child.get(), "path")) { deck.sheet = readText(*path); }
+					if (deck.sheet.empty()) { fail(at, "has no <path>: the picture file of the faces and backs"); }
+					if (auto back = findChild(child.get(), "back")) { deck.back = number(*back, at + " > <back>"); }
+				}
 				else if (tag == "back")
 				{
 					if (auto color = findChild(child.get(), "color")) { deck.backColor = readText(*color); }
 					if (auto edge = findChild(child.get(), "edge")) { deck.backEdge = readText(*edge); }
 					if (auto pattern = findChild(child.get(), "pattern")) { deck.pattern = rowsOf(*pattern, at + " > <pattern>"); }
+					drawnBack = true;
 				}
 				else if (tag == "color")
 				{
@@ -1260,7 +1269,7 @@ namespace xge
 						else if (name == "index") { suit.index = rowsOf(*part, where + " > <index>"); }
 						else if (name == "large") { suit.large = rowsOf(*part, where + " > <large>"); }
 					}
-					if (suit.rows.empty()) { fail(where, "has no <row>s: its pip"); }
+					if (suit.rows.empty()) { pipless = where; }
 					const auto even = [&](const std::vector<std::string>& rows, const std::string& what)
 					{
 						for (const std::string& row : rows)
@@ -1325,8 +1334,10 @@ namespace xge
 					deck.ranks.push_back(std::move(rank));
 				}
 				else if (tag == "copies") { deck.copies = number(*child, at); }
-				else { fail(here, "unknown <" + tag + ">; expected <face>, <back>, <color char>s, <suit>s, <rank>s and <copies>"); }
+				else { fail(here, "unknown <" + tag + ">; expected <sheet>, <face>, <back>, <color char>s, <suit>s, <rank>s and <copies>"); }
 			}
+			if (deck.sheet.empty() && !pipless.empty()) { fail(pipless, "has no <row>s: its pip (or give the deck a <sheet>)"); }
+			if (!deck.sheet.empty() && drawnBack) { fail(here, "has a <sheet> and a <back>; the sheet's <back> picks one of its backs"); }
 			readBitmapColors(node, here, deck.colors);
 			for (const auto& [c, color] : deck.colors)
 			{

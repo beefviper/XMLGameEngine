@@ -28,6 +28,8 @@
   <file>lib/picture/bitmap.cpp</file>
   <file>lib/picture/svg.h</file>
   <file>lib/picture/svg.cpp</file>
+  <file>lib/picture/image.h</file>
+  <file>lib/picture/image.cpp</file>
   <file>lib/load/spelling.h</file>
   <file>lib/load/spelling.cpp</file>
   <file>lib/engine/keys.h</file>

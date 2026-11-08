@@ -140,7 +140,7 @@ The build makes `xgelib` (the engine), `xgecli` (command line) and `xgegui` (a Q
 |---|---|
 | [Xerces-C](https://github.com/apache/xerces-c) | parsing and full XSD validation |
 | [SFML 3](https://github.com/SFML/SFML) | window, keys and sound |
-| [lunasvg](https://github.com/sammycage/lunasvg) | drawing SVG sprites |
+| [lunasvg](https://github.com/sammycage/lunasvg) | drawing SVG sprites; its plutovg reads a deck's card sheet |
 | Qt 6 Widgets | `xgegui` (found, never fetched) |
 | libxslt | `xgecli --generate` (found, never fetched) |
 | Catch2 | the tests |

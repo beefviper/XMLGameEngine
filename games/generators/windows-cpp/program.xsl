@@ -96,8 +96,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/output")
 include(FetchContent)
 
 # What the engine is built with: SFML 3 for the window and sound, lunasvg for
-# any &lt;svg&gt; picture. Each as installed (vcpkg install sfml lunasvg), or
-# else fetched and built here.
+# any &lt;svg&gt; picture (and plutovg, inside it, for a deck's card sheet). Each
+# as installed (vcpkg install sfml lunasvg), or else fetched and built here.
 find_package(SFML 3 COMPONENTS Graphics Audio QUIET)
 if (NOT SFML_FOUND)
 	message(STATUS "SFML 3 not found, using FetchContent to download and build it.")
@@ -132,7 +132,7 @@ add_executable(</xsl:text>
     <xsl:for-each select="$engine">
       <xsl:value-of select="concat('&#9;engine/', substring-after(., '/'), '&#10;')" />
     </xsl:for-each>
-    <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio lunasvg::lunasvg Threads::Threads)&#10;')" />
+    <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio lunasvg::lunasvg plutovg::plutovg Threads::Threads)&#10;')" />
     <xsl:text>
 # The warnings the engine is built with (xge_warnings in its
 # scripts/cmake/platform.cmake), for its code and the game's alike, /bigobj

@@ -81,7 +81,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | flow | `push`, `pop`, `enter`, `turns`, `pass`, `out`, `demo`, `trigger` | [flow](reference/commands.md#flow) |
 | cells | `settle`, `slide`, `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |
 | boards | `pick`, `place`, `put`, `flank`, `moves` | [boards](reference/boards.md) |
-| cards | `deal`, `take`, `lay`, piles, patterns, tricks | [cards](reference/cards.md) |
+| cards | `deck` (`sheet`), `deal`, `take`, `lay`, piles, patterns, tricks | [cards](reference/cards.md) |
 | computer | `computer`, `hold`, `think` | [computer players](reference/states.md#computer-players) |
 
 ## Keeping the docs

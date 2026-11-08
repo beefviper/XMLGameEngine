@@ -10,6 +10,7 @@
 #include "game/cards.h"
 #include "game/game.h"
 #include "game/random.h"
+#include "picture/image.h"
 #include "play/verbs.h"
 
 #include <algorithm>
@@ -169,6 +170,15 @@ namespace xge
 			return made;
 		}
 
+		RawSprite drawnOf(const std::string& name, std::shared_ptr<const Bitmap> picture)
+		{
+			RawSprite sprite;
+			sprite.kind = "drawn";
+			sprite.name = name;
+			sprite.drawn = std::move(picture);
+			return sprite;
+		}
+
 		RawSprite bitmapOf(const std::string& name, const Canvas& canvas, const std::string& color, std::vector<std::pair<char, std::string>> colors, int scale)
 		{
 			RawSprite sprite;
@@ -194,10 +204,86 @@ namespace xge
 		return all;
 	}
 
+	namespace
+	{
+		// The card objects of a deck, made from its looks: a face for each
+		// suit and rank (suit by suit) and the back they share.
+		void addCards(std::vector<RawObject>& out, const RawDeck& deck, const std::vector<RawSprite>& faces, const RawSprite& back)
+		{
+			int number = 0;
+			for (int pack = 0; pack < std::max(1, deck.copies); ++pack)
+			{
+				for (std::size_t s = 0; s < deck.suits.size(); ++s)
+				{
+					for (std::size_t r = 0; r < deck.ranks.size(); ++r)
+					{
+						const RawDeck::Suit& suit = deck.suits[s];
+						const RawDeck::Rank& rank = deck.ranks[r];
+						RawObject card;
+						++number;
+						card.name = deck.name + "." + std::to_string(number);
+						card.groupName = deck.name;
+						card.isCard = true;
+						card.card.deck = deck.name;
+						card.card.suit = static_cast<int>(s) + 1;
+						card.card.rank = static_cast<int>(r) + 1;
+						card.card.suitName = suit.name;
+						card.card.rankName = rank.name;
+						card.card.color = suit.color;
+						card.card.startPile = deck.pile;
+						card.card.worths = rank.worths.empty() ? std::vector<float>{ static_cast<float>(card.card.rank) } : rank.worths;
+						std::sort(card.card.worths.begin(), card.card.worths.end());
+						card.looks = { faces[s * deck.ranks.size() + r], back };
+						card.sprite = card.looks.front();
+						card.rawPosition = { RawValue::expression("0"), RawValue::expression("0") };
+						card.rawVelocity = { RawValue::expression("0"), RawValue::expression("0") };
+						card.variable["suit"] = RawValue::expression(std::to_string(card.card.suit));
+						card.variable["rank"] = RawValue::expression(std::to_string(card.card.rank));
+						card.variable["worth"] = RawValue::expression(formatDisplayNumber(card.card.worths.front()));
+						out.push_back(std::move(card));
+					}
+				}
+			}
+		}
+
+		// A deck cut from its <sheet>: each suit a row, each rank a column,
+		// the backs a row under them; each face made the card's size once.
+		void addSheetDeck(std::vector<RawObject>& out, const RawDeck& deck, const std::string& where)
+		{
+			const int columns = static_cast<int>(deck.ranks.size());
+			const int rows = static_cast<int>(deck.suits.size()) + 1;
+			if (deck.back < 1 || deck.back > columns) { throw std::runtime_error(where + " <sheet>: <back>" + std::to_string(deck.back) + "</back>; a sheet of " + std::to_string(columns) + " ranks has backs 1 to " + std::to_string(columns)); }
+			std::vector<std::pair<int, int>> cells;
+			for (int row = 0; row + 1 < rows; ++row)
+			{
+				for (int column = 0; column < columns; ++column) { cells.emplace_back(column, row); }
+			}
+			cells.emplace_back(deck.back - 1, rows - 1);
+			const int scale = std::max(1, deck.scale);
+			std::vector<Bitmap> cut;
+			try { cut = cutImage(deck.sheet, columns, rows, cells, deck.width * scale, deck.height * scale); }
+			catch (const std::exception& error) { throw std::runtime_error(where + " <sheet> (a row for each suit, then one of backs; a column for each rank): " + error.what()); }
+
+			std::vector<RawSprite> faces;
+			for (std::size_t i = 0; i + 1 < cut.size(); ++i) { faces.push_back(drawnOf("face", std::make_shared<const Bitmap>(std::move(cut[i])))); }
+			const RawSprite back = drawnOf("back", std::make_shared<const Bitmap>(std::move(cut.back())));
+			if (std::none_of(back.drawn->rgba.begin(), back.drawn->rgba.end(), [](std::uint8_t each) { return each != 0; }))
+			{
+				throw std::runtime_error(where + " <sheet>: back " + std::to_string(deck.back) + " of " + deck.sheet + " is empty");
+			}
+			addCards(out, deck, faces, back);
+		}
+	}
+
 	void addDeck(std::vector<RawObject>& out, const RawDeck& deck)
 	{
 		const std::string where = "<deck name=\"" + deck.name + "\">";
 		if (deck.suits.empty() || deck.ranks.empty()) { throw std::runtime_error(where + " needs <suit>s and <rank>s"); }
+		if (!deck.sheet.empty())
+		{
+			addSheetDeck(out, deck, where);
+			return;
+		}
 		const auto sameWidth = [&](const std::vector<std::string>& rows, const std::string& what)
 		{
 			for (const std::string& row : rows)
@@ -265,120 +351,97 @@ namespace xge
 		}
 		const RawSprite backSprite = bitmapOf("back", back, deck.backEdge, { { '@', deck.backColor }, { '#', deck.backEdge } }, deck.scale);
 
-		int number = 0;
-		for (int pack = 0; pack < std::max(1, deck.copies); ++pack)
+		std::vector<RawSprite> faces;
+		for (std::size_t s = 0; s < deck.suits.size(); ++s)
 		{
-			for (std::size_t s = 0; s < deck.suits.size(); ++s)
+			const RawDeck::Suit& suit = deck.suits[s];
+			const Canvas pip = fromRows(suit.rows);
+			const Canvas small = suit.index.empty() ? pip : fromRows(suit.index);
+			std::vector<std::pair<char, std::string>> colors{ { '@', deck.faceColor }, { '#', deck.faceEdge } };
+			colors.insert(colors.end(), suit.colors.begin(), suit.colors.end());
+			colors.insert(colors.end(), deck.colors.begin(), deck.colors.end());
+			for (std::size_t r = 0; r < deck.ranks.size(); ++r)
 			{
-				const RawDeck::Suit& suit = deck.suits[s];
-				const Canvas pip = fromRows(suit.rows);
-				const Canvas small = suit.index.empty() ? pip : fromRows(suit.index);
-				std::vector<std::pair<char, std::string>> colors{ { '@', deck.faceColor }, { '#', deck.faceEdge } };
-				colors.insert(colors.end(), suit.colors.begin(), suit.colors.end());
-				colors.insert(colors.end(), deck.colors.begin(), deck.colors.end());
-				for (std::size_t r = 0; r < deck.ranks.size(); ++r)
+				const RawDeck::Rank& rank = deck.ranks[r];
+				const std::string what = "<rank name=\"" + rank.name + "\">";
+				// The face: in the top left corner the rank's index with
+				// the small pip under it (seen where cards overlap), the
+				// same turned round in the bottom right, and between them
+				// the pips laid out, the picture, or one big pip.
+				Canvas face = blank(deck.width, deck.height, '@', '#');
+				const Canvas& index = indexes[r];
+				const int gap = deck.width >= 32 ? 2 : 1;
+				const int edge = deck.width >= 32 ? 3 : 2;
+				Canvas corner(std::max(widest, small.width), index.height + gap + small.height, '.');
+				corner.paste(index, (corner.width - index.width) / 2, 0);
+				corner.paste(small, (corner.width - small.width) / 2, index.height + gap);
+				if (corner.width * 2 + 2 * edge > deck.width || corner.height + 2 * edge > deck.height)
 				{
-					const RawDeck::Rank& rank = deck.ranks[r];
-					const std::string what = "<rank name=\"" + rank.name + "\">";
-					// The face: in the top left corner the rank's index with
-					// the small pip under it (seen where cards overlap), the
-					// same turned round in the bottom right, and between them
-					// the pips laid out, the picture, or one big pip.
-					Canvas face = blank(deck.width, deck.height, '@', '#');
-					const Canvas& index = indexes[r];
-					const int gap = deck.width >= 32 ? 2 : 1;
-					const int edge = deck.width >= 32 ? 3 : 2;
-					Canvas corner(std::max(widest, small.width), index.height + gap + small.height, '.');
-					corner.paste(index, (corner.width - index.width) / 2, 0);
-					corner.paste(small, (corner.width - small.width) / 2, index.height + gap);
-					if (corner.width * 2 + 2 * edge > deck.width || corner.height + 2 * edge > deck.height)
-					{
-						throw std::runtime_error(where + ": a face of " + std::to_string(deck.width) + " by " + std::to_string(deck.height) + " is too small for the index of " + what + " and the pip of " + suit.name);
-					}
-					face.paste(corner, edge, edge);
-					face.paste(corner.turned(), deck.width - edge - corner.width, deck.height - edge - corner.height);
-
-					// What lies between the corners.
-					const int left = edge + corner.width + gap;
-					const int right = deck.width - left;
-					if (!rank.picture.empty())
-					{
-						const Canvas picture = whole(rank.picture, rank.half);
-						for (const std::string& row : picture.rows)
-						{
-							for (const char c : row)
-							{
-								if (c != '.' && c != '*' && std::none_of(colors.begin(), colors.end(), [&](const auto& each) { return each.first == c; }))
-								{
-									throw std::runtime_error(where + ": " + what + " <picture> has '" + std::string(1, c) + "', which no <color char> of the deck or of " + suit.name + " names");
-								}
-							}
-						}
-						face.paste(picture, (deck.width - picture.width) / 2, (deck.height - picture.height) / 2);
-					}
-					else if (!rank.pips.empty())
-					{
-						Canvas large = suit.large.empty() ? grown(pip, 2) : fromRows(suit.large);
-						const Canvas upside = pip.turned();
-						const int rows = static_cast<int>(rank.pips.size());
-						const int columns = static_cast<int>(rank.pips.front().size());
-						const float top = static_cast<float>(edge + 2);
-						const float wide = static_cast<float>(right - left - pip.width);
-						const float high = static_cast<float>(deck.height) - 2.0f * top - static_cast<float>(pip.height);
-						if (wide < 0.0f || high < 0.0f) { throw std::runtime_error(where + ": a face of " + std::to_string(deck.width) + " by " + std::to_string(deck.height) + " has no room for the pips of " + suit.name + " between its corners"); }
-						for (int row = 0; row < rows; ++row)
-						{
-							for (int column = 0; column < columns; ++column)
-							{
-								const char c = rank.pips[static_cast<std::size_t>(row)][static_cast<std::size_t>(column)];
-								if (c == '.') { continue; }
-								const Canvas& drawn = c == '@' ? large : (c == 'v' ? upside : pip);
-								// The grid's points spread from corner to corner of
-								// the room for a pip; one row or column is the middle.
-								const float x = columns == 1 ? static_cast<float>(deck.width) * 0.5f
-									: static_cast<float>(left) + static_cast<float>(pip.width) * 0.5f + wide * static_cast<float>(column) / static_cast<float>(columns - 1);
-								const float y = rows == 1 ? static_cast<float>(deck.height) * 0.5f
-									: top + static_cast<float>(pip.height) * 0.5f + high * static_cast<float>(row) / static_cast<float>(rows - 1);
-								face.paste(drawn, static_cast<int>(std::lround(x - static_cast<float>(drawn.width) * 0.5f)), static_cast<int>(std::lround(y - static_cast<float>(drawn.height) * 0.5f)));
-							}
-						}
-					}
-					else
-					{
-						const int roomHigh = deck.height - 2 * (edge + corner.height) - 2;
-						int grow = 3;
-						while (grow > 1 && (pip.width * grow > right - left || pip.height * grow > roomHigh)) { --grow; }
-						if (pip.height * grow <= roomHigh && pip.width * grow <= deck.width - 4)
-						{
-							face.paste(pip, (deck.width - pip.width * grow) / 2, (deck.height - pip.height * grow) / 2, grow);
-						}
-					}
-
-					RawObject card;
-					++number;
-					card.name = deck.name + "." + std::to_string(number);
-					card.groupName = deck.name;
-					card.isCard = true;
-					card.card.deck = deck.name;
-					card.card.suit = static_cast<int>(s) + 1;
-					card.card.rank = static_cast<int>(r) + 1;
-					card.card.suitName = suit.name;
-					card.card.rankName = rank.name;
-					card.card.color = suit.color;
-					card.card.startPile = deck.pile;
-					card.card.worths = rank.worths.empty() ? std::vector<float>{ static_cast<float>(card.card.rank) } : rank.worths;
-					std::sort(card.card.worths.begin(), card.card.worths.end());
-					card.looks = { bitmapOf("face", face, suit.color, colors, deck.scale), backSprite };
-					card.sprite = card.looks.front();
-					card.rawPosition = { RawValue::expression("0"), RawValue::expression("0") };
-					card.rawVelocity = { RawValue::expression("0"), RawValue::expression("0") };
-					card.variable["suit"] = RawValue::expression(std::to_string(card.card.suit));
-					card.variable["rank"] = RawValue::expression(std::to_string(card.card.rank));
-					card.variable["worth"] = RawValue::expression(formatDisplayNumber(card.card.worths.front()));
-					out.push_back(std::move(card));
+					throw std::runtime_error(where + ": a face of " + std::to_string(deck.width) + " by " + std::to_string(deck.height) + " is too small for the index of " + what + " and the pip of " + suit.name);
 				}
+				face.paste(corner, edge, edge);
+				face.paste(corner.turned(), deck.width - edge - corner.width, deck.height - edge - corner.height);
+
+				// What lies between the corners.
+				const int left = edge + corner.width + gap;
+				const int right = deck.width - left;
+				if (!rank.picture.empty())
+				{
+					const Canvas picture = whole(rank.picture, rank.half);
+					for (const std::string& row : picture.rows)
+					{
+						for (const char c : row)
+						{
+							if (c != '.' && c != '*' && std::none_of(colors.begin(), colors.end(), [&](const auto& each) { return each.first == c; }))
+							{
+								throw std::runtime_error(where + ": " + what + " <picture> has '" + std::string(1, c) + "', which no <color char> of the deck or of " + suit.name + " names");
+							}
+						}
+					}
+					face.paste(picture, (deck.width - picture.width) / 2, (deck.height - picture.height) / 2);
+				}
+				else if (!rank.pips.empty())
+				{
+					Canvas large = suit.large.empty() ? grown(pip, 2) : fromRows(suit.large);
+					const Canvas upside = pip.turned();
+					const int rows = static_cast<int>(rank.pips.size());
+					const int columns = static_cast<int>(rank.pips.front().size());
+					const float top = static_cast<float>(edge + 2);
+					const float wide = static_cast<float>(right - left - pip.width);
+					const float high = static_cast<float>(deck.height) - 2.0f * top - static_cast<float>(pip.height);
+					if (wide < 0.0f || high < 0.0f) { throw std::runtime_error(where + ": a face of " + std::to_string(deck.width) + " by " + std::to_string(deck.height) + " has no room for the pips of " + suit.name + " between its corners"); }
+					for (int row = 0; row < rows; ++row)
+					{
+						for (int column = 0; column < columns; ++column)
+						{
+							const char c = rank.pips[static_cast<std::size_t>(row)][static_cast<std::size_t>(column)];
+							if (c == '.') { continue; }
+							const Canvas& drawn = c == '@' ? large : (c == 'v' ? upside : pip);
+							// The grid's points spread from corner to corner of
+							// the room for a pip; one row or column is the middle.
+							const float x = columns == 1 ? static_cast<float>(deck.width) * 0.5f
+								: static_cast<float>(left) + static_cast<float>(pip.width) * 0.5f + wide * static_cast<float>(column) / static_cast<float>(columns - 1);
+							const float y = rows == 1 ? static_cast<float>(deck.height) * 0.5f
+								: top + static_cast<float>(pip.height) * 0.5f + high * static_cast<float>(row) / static_cast<float>(rows - 1);
+							face.paste(drawn, static_cast<int>(std::lround(x - static_cast<float>(drawn.width) * 0.5f)), static_cast<int>(std::lround(y - static_cast<float>(drawn.height) * 0.5f)));
+						}
+					}
+				}
+				else
+				{
+					const int roomHigh = deck.height - 2 * (edge + corner.height) - 2;
+					int grow = 3;
+					while (grow > 1 && (pip.width * grow > right - left || pip.height * grow > roomHigh)) { --grow; }
+					if (pip.height * grow <= roomHigh && pip.width * grow <= deck.width - 4)
+					{
+						face.paste(pip, (deck.width - pip.width * grow) / 2, (deck.height - pip.height * grow) / 2, grow);
+					}
+				}
+
+				faces.push_back(bitmapOf("face", face, suit.color, colors, deck.scale));
 			}
 		}
+		addCards(out, deck, faces, backSprite);
 	}
 
 	// ===================================================================

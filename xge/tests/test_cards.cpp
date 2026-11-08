@@ -410,6 +410,52 @@ TEST_CASE("a deck of its own suits and ranks: an Italian forty, pips laid out, a
 	CHECK_THROWS(addDeck(cards, court));
 }
 
+TEST_CASE("a deck cut from a sheet: a face for each suit and rank, a back picked from the last row", "[cards]")
+{
+	RawDeck deck;
+	deck.name = "cards";
+	deck.pile = "stock";
+	deck.sheet = "assets/cards.png";
+	deck.width = 96;
+	deck.height = 140;
+	for (const char* name : { "spades", "hearts", "clubs", "diamonds" }) { deck.suits.push_back({ name, "color.black", {}, {}, {}, {} }); }
+	for (const char* name : { "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" }) { deck.ranks.push_back({ name, {}, {}, {}, false, {} }); }
+	std::vector<RawObject> cards;
+	addDeck(cards, deck);
+	REQUIRE(cards.size() == 52);
+	CHECK(cards[13].card.suitName == "hearts");
+	const RawSprite& ace = cards.front().looks.front();
+	REQUIRE(ace.kind == "drawn");
+	REQUIRE(ace.drawn->width == 96);
+	REQUIRE(ace.drawn->height == 140);
+	CHECK_FALSE(ace.drawn->solidAt(0, 0));          // a rounded corner
+	CHECK(ace.drawn->solidAt(48, 70));               // the big spade
+	CHECK(ace.drawn->rgba[(70 * 96 + 48) * 4] < 40);
+	CHECK(cards[0].looks[1].name == "back");
+	CHECK(cards[0].looks[1].drawn == cards[51].looks[1].drawn);
+
+	// Another back; twice the size at a scale of 2.
+	RawDeck red = deck;
+	red.back = 2;
+	red.scale = 2;
+	std::vector<RawObject> others;
+	addDeck(others, red);
+	CHECK(others.front().looks.front().drawn->width == 192);
+	CHECK(others.front().looks[1].drawn->rgba != cards.front().looks[1].drawn->rgba);
+
+	// No such back, an empty one, and a sheet that does not split into the ranks.
+	red.back = 14;
+	CHECK_THROWS(addDeck(others, red));
+	red.back = 13;
+	CHECK_THROWS(addDeck(others, red));
+	RawDeck five = deck;
+	five.ranks.resize(5);
+	CHECK_THROWS(addDeck(others, five));
+	RawDeck missing = deck;
+	missing.sheet = "assets/nothing.png";
+	CHECK_THROWS(addDeck(others, missing));
+}
+
 namespace
 {
 	// Crazy Eights, dealt: you against the computer.

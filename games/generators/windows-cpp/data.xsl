@@ -2241,6 +2241,14 @@
     <xsl:value-of select="concat(';&#10;', $in, 'deck.pile = ')" />
     <xsl:call-template name="string"><xsl:with-param name="text" select="@pile" /></xsl:call-template>
     <xsl:text>;&#10;</xsl:text>
+    <xsl:if test="sheet">
+      <xsl:value-of select="concat($in, 'deck.sheet = ')" />
+      <xsl:call-template name="text"><xsl:with-param name="node" select="sheet/path" /></xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+      <xsl:for-each select="sheet/back">
+        <xsl:value-of select="concat($in, 'deck.back = ', normalize-space(.), ';&#10;')" />
+      </xsl:for-each>
+    </xsl:if>
     <xsl:for-each select="copies | face/width | face/height | face/scale">
       <xsl:value-of select="concat($in, 'deck.', local-name(), ' = ', normalize-space(.), ';&#10;')" />
     </xsl:for-each>

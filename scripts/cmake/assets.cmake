@@ -78,6 +78,7 @@ set(data_assets
 	"games/assets/pressstart2p.ttf"
 	"games/assets/pressstart2p-ofl.txt"
 	"games/assets/paddle.jpg"
+	"games/assets/cards.png"
 	"games/assets/Space Invaders Color Sprites.svg")
 
 # The stylesheets xgecli --generate runs, a folder per target (generate.cpp),

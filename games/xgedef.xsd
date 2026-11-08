@@ -805,6 +805,17 @@
   </xs:complexType>
   <xs:complexType name="deckType">
     <xs:sequence>
+      <!-- sheet: a picture file of every face, a row for each suit and a column for each rank in the order
+           written, then a row of backs; back: which, from 1. The faces are cut from it at the <face>'s size,
+           so its suits need no rows and the deck no <back>. -->
+      <xs:element name="sheet" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="path" type="xs:string" />
+            <xs:element name="back" type="xs:positiveInteger" minOccurs="0" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="face" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -830,7 +841,7 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element name="color" type="bitmapColorType" maxOccurs="unbounded" />
-            <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
+            <xs:element name="row" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="index" type="deckRowsType" minOccurs="0" />
             <xs:element name="large" type="deckRowsType" minOccurs="0" />
           </xs:sequence>

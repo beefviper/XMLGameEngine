@@ -50,6 +50,7 @@ set(ENGINE_SOURCES
 	"xge/lib/picture/color.cpp"
 	"xge/lib/picture/bitmap.cpp"
 	"xge/lib/picture/svg.cpp"
+	"xge/lib/picture/image.cpp"
 	"xge/lib/picture/font.cpp"
 	"xge/lib/engine/keys.cpp"
 	"xge/lib/load/spelling.cpp"

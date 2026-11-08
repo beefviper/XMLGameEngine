@@ -56,7 +56,7 @@
        font if it shows text, the fonts it names, and every picture and
        drawing it names; and the engine's licence. -->
   <xsl:variable name="engine" select="document('engine.xml')/engine/file" />
-  <xsl:variable name="pictures" select="//sprite/image/path | //sprite/svg/path" />
+  <xsl:variable name="pictures" select="//sprite/image/path | //sprite/svg/path | //deck/sheet/path" />
   <xsl:variable name="texts" select="//sprite/text" />
   <xsl:variable name="fonts" select="//text/font | //styles/style/font" />
 

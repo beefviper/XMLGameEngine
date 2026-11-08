@@ -1761,7 +1761,7 @@ namespace xge
 		// The Picture carries only the drawing's size. The one difference is in the
 		// turning: lines are kept as lines and drawn again at each heading, which
 		// keeps their edges sharp, where a finished picture's pixels are turned.
-		if (sprite.kind == "line" || sprite.kind == "polygon" || sprite.kind == "bitmap" || sprite.kind == "svg")
+		if (sprite.kind == "line" || sprite.kind == "polygon" || sprite.kind == "bitmap" || sprite.kind == "svg" || sprite.kind == "drawn")
 		{
 			auto kept = std::make_shared<Turnable>();
 			std::shared_ptr<const Bitmap> drawn;
@@ -1811,6 +1811,12 @@ namespace xge
 						polygons.push_back(std::move(polygon));
 					}
 					drawn = std::make_shared<const Bitmap>(rasterizePolygons(polygons));
+				}
+				else if (sprite.kind == "drawn")
+				{
+					// Made already (a card cut from a deck's sheet): only flipped.
+					if (!sprite.drawn) { throw std::invalid_argument("a picture made by the engine is missing"); }
+					drawn = sprite.flip.empty() ? sprite.drawn : std::make_shared<const Bitmap>(flipped(*sprite.drawn));
 				}
 				else if (sprite.kind == "svg")
 				{

@@ -273,6 +273,10 @@ namespace xge
 
 		std::string path;            // image, svg
 
+		// drawn: a picture the engine has made already (a card cut from a
+		// deck's <sheet>), shown as it is.
+		std::shared_ptr<const Bitmap> drawn;
+
 		// tether: the two objects whose middles
 		// the line joins, drawn again every frame, and how thick it is
 		// (empty text: 1).
