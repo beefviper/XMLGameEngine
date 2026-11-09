@@ -582,6 +582,16 @@ namespace xge
 			// self in them is this object too.
 			for (auto& each : object.variable) { value(each.second); }
 			for (RawValue* half : { &object.rawPosition.x, &object.rawPosition.y, &object.rawHeading }) { value(*half); }
+			// The numbers its texts show (<number>self.value</number>).
+			for (RawTextPiece& piece : object.sprite.text) { value(piece.value); }
+		for (RawSprite& look : object.looks)
+		{
+			for (RawTextPiece& piece : look.text) { value(piece.value); }
+		}
+			for (RawSprite& look : object.looks)
+			{
+				for (RawTextPiece& piece : look.text) { value(piece.value); }
+			}
 		}
 	}
 

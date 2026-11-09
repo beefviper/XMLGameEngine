@@ -72,7 +72,8 @@ set(data_xml
 	"games/descriptions/pyramid.xml"
 	"games/descriptions/snake.xml"
 	"games/descriptions/centipede.xml"
-	"games/descriptions/crates.xml")
+	"games/descriptions/crates.xml"
+	"games/descriptions/doubles.xml")
 
 set(data_assets
 	"games/assets/tuffy.ttf"

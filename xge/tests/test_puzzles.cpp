@@ -13,8 +13,10 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <map>
 #include <string>
 #include <utility>
+#include <vector>
 
 using namespace xge;
 using played::Played;
@@ -120,4 +122,105 @@ TEST_CASE("Crates: every room can be finished, and the last one wins the game", 
 		play.frames(2);
 	}
 	CHECK(play.state() == "won");
+}
+
+namespace
+{
+	// The numbers on Doubles' board, by cell (0 for none).
+	std::map<std::pair<int, int>, int> numbers(Played& play)
+	{
+		std::map<std::pair<int, int>, int> found;
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (object.exists && object.isCopy() && object.objClass == "tile") { found[cellOf(object)] = static_cast<int>(object.variable.at("value")); }
+		}
+		return found;
+	}
+}
+
+TEST_CASE("Doubles: two numbers to begin, and a slide that moves brings a new one", "[puzzles][doubles]")
+{
+	Played play("descriptions/doubles.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	REQUIRE(numbers(play).size() == 2);
+	// Some way moves something: four tries, the board grows by one each time it did.
+	std::size_t before = numbers(play).size();
+	for (const KeyCode key : { KeyCode::A, KeyCode::D, KeyCode::W, KeyCode::S })
+	{
+		play.tap(key);
+		play.frames(1);
+		const std::size_t now = numbers(play).size();
+		CHECK((now == before + 1 || now == before || now == before - 1));
+		before = now;
+	}
+	CHECK(play.state() == "playing");
+}
+
+namespace
+{
+	// A row of numbers (t a 2, f a 4) that Space slides left.
+	std::string numberRow(const std::string& row)
+	{
+		const std::string number = "<sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>";
+		return "<object name=\"holder\"><actions><action name=\"left\"><slide class=\"tile\" direction=\"left\" /><inc variable=\"holder.moved\" /></action></actions>"
+			"<variables><variable name=\"moved\">0</variable><variable name=\"score\">0</variable></variables></object>"
+			"<map name=\"board\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position><cells /><row>" + row + "</row>"
+			"<group name=\"tiles\" class=\"tile\">" + number +
+			"<collisions><collision class=\"tile\"><merge variable=\"value\" /><inc variable=\"holder.score\">self.value</inc></collision></collisions>"
+			"<variables><variable name=\"value\">2</variable></variables>"
+			"<group name=\"twos\" char=\"t\" /><group name=\"fours\" char=\"f\"><variables><variable name=\"value\">4</variable></variables></group></group></map>";
+	}
+
+	// Each number left on the row, from the left (0 for an empty cell).
+	std::vector<int> rowOf(Played& play, int width)
+	{
+		std::vector<int> row(static_cast<std::size_t>(width), 0);
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (object.exists && object.objClass == "tile") { row[static_cast<std::size_t>(object.cellColumn) - 1] = static_cast<int>(object.variable.at("value")); }
+		}
+		return row;
+	}
+}
+
+TEST_CASE("<merge>: equal numbers that meet in a slide add up, each once a slide", "[puzzles][merge]")
+{
+	SECTION("four twos make two fours, not an eight")
+	{
+		played::Scratch file(numberRow("tttt"), "<trigger object=\"holder\" action=\"left\" />");
+		Played play(file.path);
+		play.tap(KeyCode::Space);
+		play.frames(1);
+		CHECK(rowOf(play, 4) == std::vector<int>{ 4, 4, 0, 0 });
+	}
+	SECTION("a four made does not take the four beside it")
+	{
+		played::Scratch file(numberRow("ttf."), "<trigger object=\"holder\" action=\"left\" />");
+		Played play(file.path);
+		play.tap(KeyCode::Space);
+		play.frames(1);
+		CHECK(rowOf(play, 4) == std::vector<int>{ 4, 4, 0, 0 });
+		play.tap(KeyCode::Space);
+		play.frames(1);
+		CHECK(rowOf(play, 4) == std::vector<int>{ 8, 0, 0, 0 });
+	}
+	SECTION("unequal numbers only close up")
+	{
+		played::Scratch file(numberRow(".t.f"), "<trigger object=\"holder\" action=\"left\" />");
+		Played play(file.path);
+		play.tap(KeyCode::Space);
+		play.frames(1);
+		CHECK(rowOf(play, 4) == std::vector<int>{ 2, 4, 0, 0 });
+	}
+}
+
+TEST_CASE("<slide class> that moves nothing is refused, so what follows it does not run", "[puzzles][merge]")
+{
+	played::Scratch file(numberRow("tf.."), "<trigger object=\"holder\" action=\"left\" />");
+	Played play(file.path);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(rowOf(play, 4) == std::vector<int>{ 2, 4, 0, 0 });
+	CHECK(play.get("holder").variable.at("moved") == 0.0f);
 }
