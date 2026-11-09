@@ -1975,7 +1975,8 @@ namespace xge
 			{
 				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 				{
-					if (child->getName() != "only") { fail(where + " > <pick>", "unknown <" + child->getName() + ">; expected <only /> if wanted"); }
+					if (child->getName() == "most") { command.most = readCount(*child, where + " > <pick> > <most>"); continue; }
+					if (child->getName() != "only") { fail(where + " > <pick>", "unknown <" + child->getName() + ">; expected <only /> and <most> if wanted"); }
 					command.only = true;
 				}
 			}

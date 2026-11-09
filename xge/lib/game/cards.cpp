@@ -567,7 +567,11 @@ namespace xge
 			{
 				for (const RawCommand& command : commands)
 				{
-					if (command.verb == "pick" && std::find(held.begin(), held.end(), command.objClass) != held.end()) { object.hand = true; }
+					if (command.verb == "pick" && std::find(held.begin(), held.end(), command.objClass) != held.end())
+					{
+						object.hand = true;
+						if (command.most > 0) { object.handHolds = command.most; }
+					}
 				}
 			}
 		}
@@ -1681,6 +1685,20 @@ namespace xge
 			}
 			return total == static_cast<float>(rule.sum);
 		}
+		// <total variable>N: what is laid together, that variable added up, is N.
+		for (const PileRule::VarRule& each : rule.rules)
+		{
+			if (each.kind != PileRule::VarRule::Kind::Total) { continue; }
+			float total = 0.0f;
+			for (const int number : cards)
+			{
+				const Object* card = cardAt(number);
+				if (!card) { return false; }
+				const auto value = card->variable.find(each.variable);
+				total += value == card->variable.end() ? 0.0f : value->second;
+			}
+			if (total != each.amount) { return false; }
+		}
 		if (rule.one && cards.size() > 1) { return false; }
 		const Object* first = cardAt(cards.front());
 		if (!first) { return false; }
@@ -1769,7 +1787,7 @@ namespace xge
 			case Kind::Same: holds = mine == theirs; break;
 			case Kind::Differs: holds = mine != theirs; break;
 			case Kind::Step: holds = mine == theirs + each.amount; break;
-			case Kind::Total: holds = mine + theirs == each.amount; break;
+			case Kind::Total: break;   // what is laid together, added up (pileTakes)
 			case Kind::Equal: holds = mine == each.amount; break;
 			case Kind::AtLeast: holds = mine >= each.amount; break;
 			case Kind::AtMost: holds = mine <= each.amount; break;

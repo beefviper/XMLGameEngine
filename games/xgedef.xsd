@@ -757,6 +757,7 @@
               <xs:element name="same" type="acceptVariableType" />
               <xs:element name="differs" type="acceptVariableType" />
               <xs:element name="step" type="acceptAmountType" />
+              <!-- total: what is laid at once (one or several), that variable added up, is the number -->
               <xs:element name="total" type="acceptAmountType" />
               <xs:element name="condition" type="acceptConditionType" />
             </xs:choice>
@@ -1829,6 +1830,8 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element name="only" type="emptyType" minOccurs="0" />
+            <!-- most: by a picker of a class a <holds> holds, from how many holders it may hold one at once (Pyramid's two) -->
+            <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
           </xs:sequence>
           <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
         </xs:complexType>

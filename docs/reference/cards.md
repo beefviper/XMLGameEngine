@@ -37,7 +37,7 @@ The card words are moving to general ones: a pack is a `<group>`, a pile is anyt
 - **The pack** is a group in `<columns>` and `<rows>` whose class a `<holds>` names. Each cell is a card: its row is its `suit`, its column its `rank` (variables, from 1), its first look the face and its second the back. A sheet `<cell>` that leaves out its column or row takes the cell's own, so the faces are one sprite. `worth` is the rank (its column) unless a column, row or cell gives one (`<column><number>11</number><number>12</number><number>13</number><variables><variable name="worth">10</variable></variables></column>`); a **`high`** variable is a second value it may count instead where a holder counts within a limit (Blackjack's ace: `high` 11).
 - **`<holds class sprite>`** on an object or group makes it a holder: what it holds, in order, the last on top, each showing the look `sprite=` while laid there (none: each keeps its own).
 - **`<spread>`**: each one on from the one under it (`<x>`, `<y>`, `<width>` the most it spreads across); a second with `sprite=` for those showing that look.
-- **`<accepts>`**: what may be placed on top, by the arriving one's variables. `<same variable>`, `<differs variable>`, `<step variable>N` (the top one's plus N), `<total variable>N` (the two add up to N), `<condition variable>` with `<equal>`, `<atleast>` or `<atmost>`; `<one />` one at a time; `<any>` holds rules of which one must hold; `<empty>` holds `<condition>`s for the first. No `<accepts>`: takes nothing.
+- **`<accepts>`**: what may be placed on top, by the arriving one's variables. `<same variable>`, `<differs variable>`, `<step variable>N` (the top one's plus N), `<total variable>N` (what is laid at once adds up to N), `<condition variable>` with `<equal>`, `<atleast>` or `<atmost>`; `<one />` one at a time; `<any>` holds rules of which one must hold; `<empty>` holds `<condition>`s for the first. No `<accepts>`: takes nothing.
 - **`<wild variable="suit">`** in `<accepts>`, with `<condition>`s: what keeps them goes on anything. The holder then waits (live `calling` 1) until the one who laid it names a value with `<call pile>`: the `suit` of the one it points at among its own. Live `called` is that value, and the top counts as it until the next one is laid. A wild one dealt on top counts as its own.
 
   ```xml
@@ -280,7 +280,7 @@ A pile or a holder (Hold'em's: the ace's `high` 14) scores by them with `<score 
 
 ## Covering and pairs
 
-Pyramid: a hand's **`<holds>2</holds>`** may take the top card of another pile while holding, from that many piles in all; `<drop />` puts each back. A pile's **`<takes><sum>13</sum></takes>`** takes all the cards held when their worths add up to that. So a pick is `<take />` then `<lay pile="pairs" />`, else `<drop />`.
+Pyramid: a picker's **`<pick class="card"><most>2</most></pick>`** may take the top card of another holder while holding, from that many holders in all; `<drop />` puts each back. A holder's **`<accepts><total variable="worth">13</total></accepts>`** takes what is laid at once when their worths add up to that (a king alone). So a pair is `<pick class="card"><most>2</most></pick>` then `<place into="pairs" />`, else `<drop />`. Old form: a hand's `<holds>2</holds>` and a pile's `<takes><sum>13</sum></takes>`.
 
 ## The computer
 

@@ -22,13 +22,17 @@
   puts back. Or click. P or Escape pauses, and N there deals a new game.
 
   How it is written:
-  * The deck is the card sheet's, the ace's worth 1: the worths are the ranks.
-  * The pyramid is seven groups of one-card piles, a row each. A card
-    is taken only while no card of another pile, drawn over it, overlaps
-    it: the rows below cover the rows above.
-  * The hand <holds>2</holds>: it may hold a card from two piles at once.
-  * The discard pile <takes><sum>13</sum></takes>: what the hand holds
-    goes there when the worths add up to 13; else the hand puts both back.
+  * The pack is a group, a row for each suit and a column for each rank;
+    a card is worth its column, the ace 1.
+  * The pyramid is seven groups of one-card holders, a row each. A card
+    is taken only while no card of another holder, drawn over it, overlaps
+    it: the rows below cover the rows above. The <starts> deal one to each.
+  * The picker's <pick> takes from at <most>2 holders at once.
+  * The discard pile <accepts> a <total variable="worth">13</total>: what
+    the picker holds goes there when the worths add up to 13; else it
+    puts both back.
+  * Picked, the stock sends its top to the waste (<picked><send into>),
+    and when <empty> the waste comes back.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -101,24 +105,23 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- the pack: the card sheet's, the ace one -->
-        <deck name="cards" pile="stock" sheet="cards">
-          <face><width>96</width><height>140</height></face>
-          <suit name="spades"><color>color.black</color></suit>
-          <suit name="hearts"><color>color.red</color></suit>
-          <suit name="clubs"><color>color.black</color></suit>
-          <suit name="diamonds"><color>color.red</color></suit>
-          <rank>A</rank><rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank><rank>8</rank><rank>9</rank><rank>10</rank><rank>J</rank><rank>Q</rank><rank>K</rank>
-        </deck>
+        <!-- the pack: a row for each suit (spades, hearts, clubs, diamonds), a column for each rank, the ace one -->
+        <group name="cards" class="card">
+          <columns>13</columns>
+          <rows>4</rows>
+          <sprite name="face"><cell sheet="cards"><scale>0.5</scale></cell></sprite>
+          <sprite name="back"><cell sheet="cards"><column>1</column><row>5</row><scale>0.5</scale></cell></sprite>
+          <position><x>0</x><y>0</y></position>
+        </group>
 
-        <!-- the pyramid: a row of one-card piles a group, each lower row drawn over the one above; a card covered cannot be taken -->
+        <!-- the pyramid: a row of one-card holders a group, each lower row drawn over the one above; a card covered cannot be taken -->
         <group name="row1" class="peak">
           <columns>1</columns>
           <rows>1</rows>
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 0 * step / 2</x><y>top + 0 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt></pile>
+          <holds class="card" sprite="face" />
         </group>
         <group name="row2" class="peak">
           <columns>2</columns>
@@ -126,7 +129,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 1 * step / 2</x><y>top + 1 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt></pile>
+          <holds class="card" sprite="face" />
         </group>
         <group name="row3" class="peak">
           <columns>3</columns>
@@ -134,7 +137,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 2 * step / 2</x><y>top + 2 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt></pile>
+          <holds class="card" sprite="face" />
         </group>
         <group name="row4" class="peak">
           <columns>4</columns>
@@ -142,7 +145,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 3 * step / 2</x><y>top + 3 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt></pile>
+          <holds class="card" sprite="face" />
         </group>
         <group name="row5" class="peak">
           <columns>5</columns>
@@ -150,7 +153,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 4 * step / 2</x><y>top + 4 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt></pile>
+          <holds class="card" sprite="face" />
         </group>
         <group name="row6" class="peak">
           <columns>6</columns>
@@ -158,7 +161,7 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 5 * step / 2</x><y>top + 5 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt></pile>
+          <holds class="card" sprite="face" />
         </group>
         <group name="row7" class="peak">
           <columns>7</columns>
@@ -166,26 +169,26 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 6 * step / 2</x><y>top + 6 * rowstep</y></position>
-          <pile faces="up"><dealt>1</dealt></pile>
+          <holds class="card" sprite="face" />
         </group>
 
-        <!-- the stock turns onto the waste, and over again when it is out -->
+        <!-- picked, the stock turns one onto the waste, and the waste over again when it is out -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>56</x><y>low</y></position>
-          <pile faces="down"><deals into="waste">1</deals><refill from="waste" /></pile>
+          <holds class="card" sprite="back"><picked><send into="waste">1</send><empty><send from="waste"><all /></send></empty><play sound="deal" /></picked></holds>
         </object>
         <object name="waste" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>56 + step + 16</x><y>low</y></position>
-          <pile faces="up" />
+          <holds class="card" sprite="face" />
         </object>
 
         <!-- the pairs taken away: what adds up to 13 -->
         <object name="pairs" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center * 2 - 56 - cardwidth</x><y>low</y></position>
-          <pile faces="up"><takes><sum>13</sum></takes></pile>
+          <holds class="card" sprite="face"><accepts><total variable="worth">13</total></accepts></holds>
         </object>
 
         <object name="message">
@@ -193,7 +196,7 @@
           <position><x><centered /></x><y>low + 50</y></position>
         </object>
 
-        <!-- the hand: a frame around the card it points at; it may hold a card from two piles -->
+        <!-- the picker: a frame around the card it points at; it may hold a card from two holders -->
         <object name="hand">
           <sprite name="free">
             <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
@@ -208,27 +211,25 @@
             <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
           </sprite>
           <position><x>window.width.center - cardwidth / 2 - 3</x><y>top - 3</y></position>
-          <hand><holds>2</holds></hand>
           <actions>
             <action name="left"><hop direction="left" /></action>
             <action name="right"><hop direction="right" /></action>
             <action name="up"><hop direction="up" /></action>
             <action name="down"><hop direction="down" /></action>
             <action name="point"><track /></action>
-            <action name="deal"><deal /><play sound="deal" /></action>
-            <!-- a free card picked up; a king goes at once -->
+            <!-- a free card picked up (the stock turns one instead); a king goes at once -->
             <action name="pick">
-              <take />
+              <pick class="card"><most>2</most></pick>
               <play sound="card" />
               <become sprite="held" />
-              <lay pile="pairs" />
+              <place into="pairs" />
               <play sound="pair" />
               <become sprite="free" />
             </action>
             <!-- a second: the two go if they make 13 -->
             <action name="pair">
-              <take />
-              <lay pile="pairs" />
+              <pick class="card"><most>2</most></pick>
+              <place into="pairs" />
               <play sound="pair" />
               <become sprite="free" />
             </action>
@@ -237,6 +238,18 @@
           </actions>
         </object>
       </objects>
+      <!-- the deal: the pack shuffled into the stock, one to each place of the pyramid -->
+      <starts>
+        <send from="cards" into="stock"><all /></send>
+        <order group="stock"><random /></order>
+        <distribute from="stock" into="row1">1</distribute>
+        <distribute from="stock" into="row2">1</distribute>
+        <distribute from="stock" into="row3">1</distribute>
+        <distribute from="stock" into="row4">1</distribute>
+        <distribute from="stock" into="row5">1</distribute>
+        <distribute from="stock" into="row6">1</distribute>
+        <distribute from="stock" into="row7">1</distribute>
+      </starts>
       <inputs>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="hand" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="hand" action="right" /></input>
@@ -244,7 +257,6 @@
         <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="hand" action="down" /></input>
         <input>
           <button>space</button><button>pad1.a</button><button>mouse.left</button>
-          <trigger object="hand" action="deal" from="free" />
           <trigger object="hand" action="pick" from="free" />
           <trigger object="hand" action="pair" from="held" />
           <trigger object="hand" action="back" from="held" />

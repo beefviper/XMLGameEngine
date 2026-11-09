@@ -238,7 +238,10 @@
           <xsl:text>);</xsl:text>
         </xsl:when>
         <!-- the one piece that can move -->
-        <xsl:when test="$verb = 'pick' and $node/only"> command.only = true;</xsl:when>
+        <xsl:when test="$verb = 'pick' and ($node/only or $node/most)">
+          <xsl:if test="$node/only"> command.only = true;</xsl:if>
+          <xsl:if test="$node/most"><xsl:value-of select="concat(' command.most = ', normalize-space($node/most), ';')" /></xsl:if>
+        </xsl:when>
         <!-- a put that closes what it walls in -->
         <xsl:when test="$verb = 'put' and $node/close">
           <xsl:text> command.closeClass = </xsl:text>

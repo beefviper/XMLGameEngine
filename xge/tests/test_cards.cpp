@@ -1892,15 +1892,7 @@ namespace
 
 		Object& pile(const std::string& name) { return get(name); }
 
-		int cardOf(const std::string& name)
-		{
-			const auto space = name.find(' ');
-			for (Object& object : game.getCurrentObjects())
-			{
-				if (object.isCard && object.card.rankName == name.substr(0, space) && object.card.suitName == name.substr(space + 1)) { return object.cardNumber; }
-			}
-			return 0;
-		}
+		int cardOf(const std::string& name) { return cardNamed(game, name); }
 
 		// That card swapped with the one on that pile.
 		void put(const std::string& name, const std::string& onto)

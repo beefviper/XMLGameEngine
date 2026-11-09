@@ -1073,6 +1073,7 @@ namespace xge
 		bool random{ false };
 		bool free{ false };
 		bool all{ false };     // send: <all />
+		int most{ 0 };         // pick: <most>, from how many holders a picker may hold one at once
 		RawValue column;
 		RawValue row;
 		// spawn: the <below> of its <free>, empty text when left out.
