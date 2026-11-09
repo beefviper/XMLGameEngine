@@ -326,3 +326,31 @@ TEST_CASE("Minefield: a flag goes on and off, and a flagged square does not open
 	CHECK(middle.lookName() == "closed");
 	CHECK(play.get("status").variable.at("flags") == 0.0f);
 }
+
+TEST_CASE("Doubles: every number shows its value, and slides only add equal ones", "[puzzles][doubles]")
+{
+	Played play("descriptions/doubles.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	const KeyCode keys[] = { KeyCode::A, KeyCode::W, KeyCode::D, KeyCode::S, KeyCode::A, KeyCode::A, KeyCode::S, KeyCode::D };
+	for (int turn = 0; turn < 120 && play.state() == "playing"; ++turn)
+	{
+		const auto before = numbers(play);
+		int sumBefore = 0;
+		for (const auto& [cell, number] : before) { sumBefore += number; }
+		play.tap(keys[turn % 8]);
+		play.frames(1);
+		const auto after = numbers(play);
+		int sumAfter = 0;
+		for (const auto& [cell, number] : after) { sumAfter += number; }
+		INFO("turn " << turn);
+		// Nothing made or lost but the new 2.
+		CHECK((sumAfter == sumBefore || sumAfter == sumBefore + 2));
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (!object.exists || !object.isCopy() || object.objClass != "tile") { continue; }
+			INFO(object.name);
+			CHECK(object.picture.text == std::to_string(static_cast<int>(object.variable.at("value"))));
+		}
+	}
+}

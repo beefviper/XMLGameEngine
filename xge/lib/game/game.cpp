@@ -1733,7 +1733,9 @@ namespace xge
 			{
 				continue;
 			}
-			const Object* owner = tryGetObject(piece.owner);
+			// Its own numbers (self.value) read from itself: a copy just
+			// spawned is not yet among the objects a name finds.
+			const Object* owner = piece.owner == object.name ? &object : tryGetObject(piece.owner);
 			if (!owner)
 			{
 				continue;
