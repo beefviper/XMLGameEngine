@@ -384,6 +384,7 @@ namespace xge
 			{ "row", [](Object& o) -> float& { return o.cellRow; }, false },
 			{ "moves", [](Object& o) -> float& { return o.moveCount; }, true },
 			{ "cards", [](Object& o) -> float& { return o.cardCount; }, true },
+			{ "held", [](Object& o) -> float& { return o.cardCount; }, true },
 			{ "calling", [](Object& o) -> float& { return o.calling; }, true },
 			{ "called", [](Object& o) -> float& { return o.called; }, true },
 			{ "points", [](Object& o) -> float& { return o.points; }, true },

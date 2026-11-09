@@ -496,7 +496,11 @@ namespace xge
 		bool beatsInTrick(const PileRule& rule, const Object& card, const Object& best);
 		float reckonTricks(const Object& own, const PileRule& trick);
 
+		// <pick /> by a hand of cards: takes what it points at, or from a
+		// holder with <picked> sends as that says (then false: nothing held).
+		bool pickCards(Object& hand);
 		static bool follows(const PileRule& rule, const Object& below, const Object& next);
+		static bool acceptsBy(const std::vector<PileRule::VarRule>& rules, const Object& next, const Object* below);
 		void layHeld(Object& hand, Object& pile);
 		static bool isWild(const PileRule& rule, const Object& card);
 		void refreshCall(Object& pile);

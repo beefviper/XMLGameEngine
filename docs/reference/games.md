@@ -104,7 +104,7 @@ Space or a click plays; P or Escape pauses (N there deals again where offered).
 
 | Game | Keys | Shows |
 |---|---|---|
-| `klondike` | move from pile to pile, Space takes and lays, X puts back, F sends home; the mouse drags | a [`<deck>`](cards.md) made from suits and ranks, piles with rules of what they take |
+| `klondike` | move from pile to pile, Space takes and lays, X puts back, F sends home; the mouse drags | the pack a [group](cards.md#holders) of rows and columns, places that `<holds>` with rules of what they accept, the deal in `<starts>` |
 | `crazyeights` | A/D along your cards, W/S to the stock, Space plays or draws, names the suit after an eight | [players' own piles](cards.md#players-cards), wild cards and a call |
 | `blackjack` | A/D bet, Space deals, W hits, S stands | [`<worth>`](cards.md#points) and live `points`, a dealer's hole card |
 | `holdem` | W bets or raises, Space checks or calls, X folds | poker hands as a game's [`<patterns>`](cards.md#patterns), live `pattern`, `strength`, `odds` |

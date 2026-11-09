@@ -115,6 +115,7 @@ One picture holding many: sprites, animation frames and a deck's cards are cut f
   <sprite><cell sheet="hero"><x>140</x><y>2</y><width>7</width><height>27</height></cell></sprite>
   ```
 
+- In a group laid out in `<columns>` and `<rows>`, a `<cell>` that leaves out its column or row takes the group cell's own, so one sprite gives every cell its own picture (a pack of cards).
 - Shrunk pictures are averaged, so a sheet can be far bigger than it is shown; a whole-number shrink gives pixel art back exactly. A sheet that is not there, a cell off it or a file that will not open stops the load.
 - A [deck](cards.md#deck) cuts its faces and back from a sheet with `sheet=`.
 

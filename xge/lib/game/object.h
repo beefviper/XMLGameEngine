@@ -461,6 +461,21 @@ namespace xge
 		// <sum>N: the cards laid (all of them, held together) when their
 		// worths add up to N, whatever is on the pile (0: no such rule).
 		int sum{};
+		// <accepts> of a <holds>: rules on the arriving member's variables.
+		// Same, Differs, Step and Total compare it with the top one (Step:
+		// its value is the top's plus `amount`; Total: the two add up to
+		// `amount`); Equal, AtLeast and AtMost compare it with `amount`.
+		// `rules` hold while something is held, `emptyRules` (<empty>) for
+		// the first.
+		struct VarRule
+		{
+			enum class Kind { Same, Differs, Step, Total, Equal, AtLeast, AtMost };
+			Kind kind{ Kind::Same };
+			std::string variable;
+			float amount{};
+		};
+		std::vector<VarRule> rules;
+		std::vector<VarRule> emptyRules;
 	};
 
 	// A card of a <deck> (see game/cards.h): which deck, its suit and rank
@@ -662,6 +677,16 @@ namespace xge
 			std::string melds;          // <score patterns=><melds />: its cards laid out in groups that make those patterns (empty: none)
 			int meldsBest{};            // <score><best> with <melds />: the best this many of the cards (0: all)
 			PileRule takes;
+			// <holds class sprite>: the class it holds, as written, and the
+			// looks its words name (the look laid members show, the one a
+			// second <spread> is for, <top sprite>'s); worked out into
+			// faces, the hidden fan and showTop by settleHolders
+			// (game/holders.h). Empty for a <pile>.
+			std::string holdsClass;
+			std::string holdsSprite;
+			std::string spreadSprite;
+			std::string topSprite;
+			std::string pickedSound;    // <picked><play sound>: sounded when picking from it sends
 		};
 		RawPile pile;
 		bool hand{ false };             // <hand />: points at piles and carries cards (Object::Hand)
@@ -706,6 +731,23 @@ namespace xge
 
 		// Where it goes in its group's <columns> and <rows>, when it is a cell.
 		RawCell cell;
+
+		// A cell's sheet <cell>s that leave out a column or a row take the
+		// cell's own (a pack's faces are a sheet's grid): its sprite, looks
+		// and animation frames. Made once the cell knows its place.
+		void takeOwnCell()
+		{
+			const auto own = [&](RawSprite& each)
+			{
+				if (each.kind != "cell" || each.hasSvgRegion) { return; }
+				const auto unset = [](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty(); };
+				if (unset(each.column)) { each.column = RawValue::expression(std::to_string(cell.column)); }
+				if (unset(each.row)) { each.row = RawValue::expression(std::to_string(cell.row)); }
+			};
+			own(sprite);
+			for (RawSprite& look : looks) { own(look); }
+			for (RawSprite& frame : animation.frames) { own(frame); }
+		}
 
 		// Who owns it: empty for one of the game's own <objects>; the state's
 		// name for one of a state's; and that and the scene's path
@@ -1135,6 +1177,7 @@ namespace xge
 			std::string refillFrom;
 			bool refillShuffle{ false };
 			int refillLeave{};
+			std::string pickedSound;
 			float fanWidth{};
 			bool run{ false };
 			bool showTop{ false };

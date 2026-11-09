@@ -1183,6 +1183,141 @@ namespace xge
 
 		int readCount(const XmlNode& node, const std::string& where);
 
+		// A plain number of a holder's rules: "-1", "13".
+		float readPlainNumber(const XmlNode& node, const std::string& here)
+		{
+			const std::string text = readText(node);
+			std::size_t used = 0;
+			float value = 0.0f;
+			try { value = std::stof(text, &used); }
+			catch (const std::exception&) { used = 0; }
+			if (text.empty() || used != text.size()) { fail(here, "is \"" + text + "\"; expected a number"); }
+			return value;
+		}
+
+		// The rules of an <accepts> (or of its <empty>) on the arriving
+		// member: <same variable>, <differs variable>, <step variable>N,
+		// <total variable>N, and <condition variable> with <equal>,
+		// <atleast> or <atmost> a number.
+		void readAcceptRules(const XmlNode& node, PileRule& rule, std::vector<PileRule::VarRule>& into, const std::string& here, bool top)
+		{
+			using Kind = PileRule::VarRule::Kind;
+			for (std::unique_ptr<XmlNode> part = node.getFirstChild(); part != nullptr; part = part->getNextSibling())
+			{
+				const std::string name = part->getName();
+				const std::string at = here + " > <" + name + ">";
+				PileRule::VarRule each;
+				if (top && name == "one") { rule.one = true; continue; }
+				if (top && name == "empty") { readAcceptRules(*part, rule, rule.emptyRules, at, false); continue; }
+				if (top && (name == "same" || name == "differs" || name == "step" || name == "total"))
+				{
+					each.kind = name == "same" ? Kind::Same : name == "differs" ? Kind::Differs : name == "step" ? Kind::Step : Kind::Total;
+					each.variable = requireAttribute(*part, "variable", at);
+					if (each.kind == Kind::Step || each.kind == Kind::Total) { each.amount = readPlainNumber(*part, at); }
+				}
+				else if (name == "condition")
+				{
+					each.variable = requireAttribute(*part, "variable", at);
+					const std::unique_ptr<XmlNode> test = part->getFirstChild();
+					const std::string kind = test ? test->getName() : "";
+					if (kind != "equal" && kind != "atleast" && kind != "atmost") { fail(at, "compares the arriving one's " + each.variable + " with an <equal>, <atleast> or <atmost> number"); }
+					each.kind = kind == "equal" ? Kind::Equal : kind == "atleast" ? Kind::AtLeast : Kind::AtMost;
+					each.amount = readPlainNumber(*test, at + " > <" + kind + ">");
+				}
+				else
+				{
+					fail(here, "unknown <" + name + ">; expected " + std::string(top ? "<one />, <same>, <differs>, <step>, <total>, <condition>s and an <empty>" : "<condition>s on the first one"));
+				}
+				into.push_back(std::move(each));
+			}
+		}
+
+		// A <holds class sprite>: the class of what it holds and the look
+		// they show laid there, then its <spread>s, <accepts>, <run />,
+		// <top sprite>, <lift> and <picked>. Read into the pile it is
+		// (Object::Pile); the looks it names are worked out once the
+		// members they belong to are known (settleHolders, game/holders.h).
+		void readHolds(const XmlNode& node, RawObject::RawPile& pile, const std::string& here)
+		{
+			pile.is = true;
+			pile.holdsClass = requireAttribute(node, "class", here);
+			pile.holdsSprite = node.getAttribute("sprite");
+			const auto halves = [&](const XmlNode& vector, RawValue& x, RawValue& y, const std::string& at)
+			{
+				if (auto across = findChild(&vector, "x")) { x = readValue(*across, at); }
+				if (auto down = findChild(&vector, "y")) { y = readValue(*down, at); }
+			};
+			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				const std::string at = here + " > <" + tag + ">";
+				if (tag == "spread")
+				{
+					const std::string look = child->getAttribute("sprite");
+					if (look.empty())
+					{
+						halves(*child, pile.fanX, pile.fanY, at);
+						if (auto width = findChild(child.get(), "width")) { pile.fanWidth = readValue(*width, at + " > <width>"); }
+					}
+					else
+					{
+						if (!pile.spreadSprite.empty()) { fail(at, "is a second <spread sprite>; a holder has one plain <spread> and one for a look"); }
+						pile.spreadSprite = look;
+						pile.hasHidden = true;
+						halves(*child, pile.hiddenX, pile.hiddenY, at);
+					}
+				}
+				else if (tag == "accepts")
+				{
+					pile.takes.given = true;
+					readAcceptRules(*child, pile.takes, pile.takes.rules, at, true);
+				}
+				else if (tag == "run") { pile.run = true; }
+				else if (tag == "top") { pile.topSprite = requireAttribute(*child, "sprite", at); }
+				else if (tag == "lift") { pile.lift = readValue(*child, at); }
+				else if (tag == "picked")
+				{
+					// For now: a <send into>N (taking from it sends that many
+					// there), and an <empty> with a <send from><all /> (and its
+					// <leave>) and <order><random /></order>.
+					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						const std::string name = part->getName();
+						if (name == "send")
+						{
+							if (!part->getAttribute("from").empty()) { fail(at + " > <send>", "sends from the holder itself; leave out from="); }
+							pile.dealsInto = part->getAttribute("into");
+							pile.deals = readLeadValue(*part, {}, "how many", at);
+							pile.hasDeals = true;
+						}
+						else if (name == "play") { pile.pickedSound = requireAttribute(*part, "sound", at + " > <play>"); }
+						else if (name == "empty")
+						{
+							for (std::unique_ptr<XmlNode> step = part->getFirstChild(); step != nullptr; step = step->getNextSibling())
+							{
+								const std::string verb = step->getName();
+								const std::string where = at + " > <empty> > <" + verb + ">";
+								if (verb == "send")
+								{
+									pile.refillFrom = requireAttribute(*step, "from", where);
+									if (!findChild(step.get(), "all")) { fail(where, "brings back <all /> of what that holder holds (and <leave> on it if wanted)"); }
+									if (auto leave = findChild(step.get(), "leave")) { pile.refillLeave = readValue(*leave, where + " > <leave>"); }
+								}
+								else if (verb == "order")
+								{
+									if (!findChild(step.get(), "random")) { fail(where, "orders what came back at <random />"); }
+									pile.refillShuffle = true;
+								}
+								else { fail(at + " > <empty>", "unknown <" + verb + ">; expected a <send from> and an <order>"); }
+							}
+						}
+						else { fail(at, "unknown <" + name + ">; expected a <send into>, an <empty> and a <play sound>"); }
+					}
+				}
+				else { fail(here, "unknown <" + tag + ">; expected <spread>s, <accepts>, <run />, <top>, <lift> and <picked>"); }
+			}
+		}
+
 		// A <pile>: faces=, then its <fan>, <dealt>, <deals> and <refill>,
 		// <takes>, <run /> and <showtop />.
 		void readPile(const XmlNode& node, RawObject::RawPile& pile, const std::string& here)
@@ -2084,6 +2219,11 @@ namespace xge
 		void readMoves(const XmlNode& node, RawObject& object, const std::string& where)
 		{
 			if (auto pile = findChild(&node, "pile")) { readPile(*pile, object.pile, where + " > <pile>"); }
+			if (auto holds = findChild(&node, "holds"))
+			{
+				if (object.pile.is) { fail(where, "has a <pile> and a <holds>; give one"); }
+				readHolds(*holds, object.pile, where + " > <holds>");
+			}
 			if (auto hand = findChild(&node, "hand"))
 			{
 				object.hand = true;
@@ -2903,7 +3043,7 @@ namespace xge
 				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
-				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves" || tag == "marks" || tag == "pile" || tag == "hand") { /* below, all at once */ }
+				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves" || tag == "marks" || tag == "pile" || tag == "holds" || tag == "hand") { /* below, all at once */ }
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "chain")
 				{
@@ -2918,7 +3058,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <pile>, <hand />, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <pile> or <holds>, <hand />, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -3192,6 +3332,7 @@ namespace xge
 					rawObject.cell.slot = make(cellName, here, rowParts).sprite;
 					rawObject.cell.column = column;
 					rawObject.cell.row = row;
+					rawObject.takeOwnCell();
 					rawObject.cell.gapBefore = column == 1 ? RawValue::expression("0")
 						: gapBefore ? *gapBefore->padding.x : padding.x ? *padding.x : RawValue::expression("0");
 					rawObject.cell.gapAbove = row == 1 ? RawValue::expression("0")
@@ -3747,6 +3888,41 @@ namespace xge
 			if (std::unique_ptr<XmlNode> objects = findChild(&state, "objects"))
 			{
 				list = layOut(*objects, std::move(list), kit, where + " > <objects>");
+			}
+
+			// <starts> (optional): the deal, done when it begins
+			if (std::unique_ptr<XmlNode> starts = findChild(&state, "starts"))
+			{
+				for (std::unique_ptr<XmlNode> step = starts->getFirstChild(); step != nullptr; step = step->getNextSibling())
+				{
+					RawStart start;
+					start.verb = step->getName();
+					const std::string at = where + " > <starts> > <" + start.verb + ">";
+					if (start.verb == "send" || start.verb == "distribute")
+					{
+						start.from = requireAttribute(*step, "from", at);
+						start.into = requireAttribute(*step, "into", at);
+						if (findChild(step.get(), "all")) { start.all = true; }
+						else
+						{
+							const RawValue count = readLeadValue(*step, { "more" }, start.verb == "send" ? "how many, or <all />" : "how many each, then <more> if wanted", at);
+							try { start.count = std::stoi(count.text); }
+							catch (const std::exception&) { fail(at, "is \"" + count.text + "\"; expected a whole number"); }
+						}
+						if (auto more = findChild(step.get(), "more"))
+						{
+							if (start.verb != "distribute") { fail(at, "has a <more>, which is for <distribute>"); }
+							start.more = static_cast<int>(readPlainNumber(*more, at + " > <more>"));
+						}
+					}
+					else if (start.verb == "order")
+					{
+						start.from = requireAttribute(*step, "group", at);
+						if (!findChild(step.get(), "random")) { fail(at, "orders at <random /> (for now the only order a start knows)"); }
+					}
+					else { fail(where + " > <starts>", "unknown <" + start.verb + ">; expected <send>, <order> and <distribute>"); }
+					rawState.starts.push_back(std::move(start));
+				}
 			}
 
 			// <shows> (optional): objects of the game's, named <shows> sets

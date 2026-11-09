@@ -2,6 +2,58 @@
 
 Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried between piles by a **hand**. Rules of a card game (what is a pair, who wins a trick) are written in the game from general parts; there is no tag for any one game.
 
+The card words are moving to general ones: a pack is a `<group>`, a pile is anything that [`<holds>`](#holders), and the hand is a picker. Klondike is written that way; the other card games still use `<deck>`, `<pile>` and `<hand />`, described after it.
+
+## Holders
+
+```xml
+<!-- the pack: a row for each suit, a column for each rank -->
+<group name="cards" class="card">
+  <columns>13</columns>
+  <rows>4</rows>
+  <sprite name="face"><cell sheet="cards"><scale>0.5</scale></cell></sprite>
+  <sprite name="back"><cell sheet="cards"><column>1</column><row>5</row><scale>0.5</scale></cell></sprite>
+  <position><x>0</x><y>0</y></position>
+  <variables><variable name="color">1</variable></variables>
+  <row><number>2</number><number>4</number><variables><variable name="color">2</variable></variables></row>
+</group>
+
+<group name="columns" class="place">
+  ...
+  <holds class="card">
+    <spread><y>32</y></spread>
+    <spread sprite="back"><y>9</y></spread>
+    <accepts>
+      <differs variable="color" />
+      <step variable="rank">-1</step>
+      <empty><condition variable="rank"><equal>13</equal></condition></empty>
+    </accepts>
+    <run />
+    <top sprite="face" />
+  </holds>
+</group>
+```
+
+- **The pack** is a group in `<columns>` and `<rows>` whose class a `<holds>` names. Each cell is a card: its row is its `suit`, its column its `rank` (variables, from 1), its first look the face and its second the back. A sheet `<cell>` that leaves out its column or row takes the cell's own, so the faces are one sprite. `worth` is the rank unless the cells give one.
+- **`<holds class sprite>`** on an object or group makes it a holder: what it holds, in order, the last on top, each showing the look `sprite=` while laid there (none: each keeps its own).
+- **`<spread>`**: each one on from the one under it (`<x>`, `<y>`, `<width>` the most it spreads across); a second with `sprite=` for those showing that look.
+- **`<accepts>`**: what may be placed on top, by the arriving one's variables. `<same variable>`, `<differs variable>`, `<step variable>N` (the top one's plus N), `<total variable>N` (the two add up to N), `<condition variable>` with `<equal>`, `<atleast>` or `<atmost>`; `<one />` one at a time; `<empty>` holds `<condition>`s for the first. No `<accepts>`: takes nothing.
+- **`<run />`**: one may be picked with all those on it, while each follows the rules. **`<top sprite="face" />`**: the top one turns face up. **`<lift>`** as a pile's.
+- **`<picked>`**: what picking from it does instead, picking nothing up: `<send into="waste">1</send>`, and `<empty>` with `<send from="waste"><all /></send>` (a `<leave>` in it) and `<order><random /></order>`; `<play sound>` sounds as it sends.
+- **The picker.** An object whose actions `<pick class>` a held class is a hand: `<pick class="card" />` takes what it points at, `<place />` lays it where it points, `<place into="foundations" />` on the first of those that accepts it, `<drop />` puts it back. Moving it is as for the hand below.
+- **`<starts>`** in a state is the deal, done as it begins and on a full reset:
+
+  ```xml
+  <starts>
+    <send from="cards" into="stock"><all /></send>
+    <order group="stock"><random /></order>
+    <distribute from="stock" into="columns">1<more>1</more></distribute>
+  </starts>
+  ```
+
+  For now it sends all of a pack into one holder, orders it at random, then `<distribute>`s N to each holder of a group (one at a time round; `<more>`: each after the first that many more) or `<send>`s N to one.
+- Live **`held`** is how many a holder holds (`cards` as well).
+
 ## Deck
 
 ```xml

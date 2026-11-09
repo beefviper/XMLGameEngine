@@ -353,6 +353,7 @@ namespace xge::parts
 		object.cell.slot = finish(rowsOnly).sprite;
 		object.cell.column = column;
 		object.cell.row = row;
+		object.takeOwnCell();
 		if (column == 1)
 		{
 			object.cell.gapBefore = value("0");

@@ -25,19 +25,21 @@
   click sends a card home. P or Escape pauses, and N there deals a new game.
 
   How it is written:
-  * <deck> makes the 52 cards from four <suit>s (each with its colour) and
-    thirteen <rank>s; their faces are cut from one picture, assets/cards.png
-    named in <sheets> (a row for each suit, a column for each rank, then a
-    row of backs; the deck takes the first), and made the <face>'s size.
-  * Each place is an object with a <pile>: what it <takes> on top (the
-    columns: <down /> and <othercolor />, a K when empty; the foundations:
-    <one />, <up /> and <samesuit />, an A when empty), whether a <run />
-    can be taken from it, and the stock's <deals> and <refill>.
-  * <dealt>1<more>1</more></dealt> on the group of columns deals the
-    staircase: one, then one more for each column after.
-  * The hand's <take />, <lay /> and <drop /> carry cards; a lay that the
-    pile does not take is refused, so the hand keeps them.
-  * The live number `cards` of the foundations, added up, is the win.
+  * The pack is a group of 52 cells in 13 <columns> and 4 <rows>: a row for
+    each suit, a column for each rank. Each card's face is its own cell of
+    the card sheet (a <cell> that leaves out its column and row), its back
+    the sheet's first back; a variable `color` tells red from black.
+  * Each place is an object or group that <holds> cards: the look a card
+    laid there shows, how they <spread>, what it <accepts> on top (the
+    columns: a different colour, a rank one lower, a K when empty; the
+    foundations: one at a time, the same suit, a rank one higher, an A when
+    empty), whether a <run /> can be picked from it, and what picking from
+    the stock does instead (<picked>).
+  * <starts> deals: every card into the stock, shuffled, then one to each
+    column and one more for each column after (the staircase).
+  * The hand picks and places cards; a place that the pile does not accept
+    is refused, so the hand keeps them.
+  * The live number `held` of the foundations, added up, is the win.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -107,31 +109,33 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- the pack: four suits, thirteen ranks; the faces and the back cut from the card sheet -->
-        <deck name="cards" pile="stock" sheet="cards">
-          <face><width>96</width><height>140</height></face>
-          <suit name="spades"><color>color.black</color></suit>
-          <suit name="hearts"><color>color.red</color></suit>
-          <suit name="clubs"><color>color.black</color></suit>
-          <suit name="diamonds"><color>color.red</color></suit>
-          <rank>A</rank><rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank><rank>8</rank><rank>9</rank><rank>10</rank><rank>J</rank><rank>Q</rank><rank>K</rank>
-        </deck>
-
-        <!-- the stock, top left: taken from, it deals one to the waste; empty, the waste turns back over -->
+        <!-- the pack: a row for each suit, a column for each rank, each face its own cell of the card sheet -->
+        <group name="cards" class="card">
+          <columns>13</columns>
+          <rows>4</rows>
+          <sprite name="face"><cell sheet="cards"><scale>0.5</scale></cell></sprite>
+          <sprite name="back"><cell sheet="cards"><column>1</column><row>5</row><scale>0.5</scale></cell></sprite>
+          <position><x>0</x><y>0</y></position>
+          <variables><variable name="color">1</variable></variables>
+          <row><number>2</number><number>4</number><variables><variable name="color">2</variable></variables></row>
+        </group>
+        <!-- the stock, top left: picked from, it turns one onto the waste; empty, the waste comes back -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>left</x><y>top</y></position>
-          <pile faces="down">
-            <deals into="waste">1</deals>
-            <refill from="waste" />
-          </pile>
+          <holds class="card" sprite="back">
+            <picked>
+              <send into="waste">1</send>
+              <empty><send from="waste"><all /></send></empty>
+              <play sound="deal" />
+            </picked>
+          </holds>
         </object>
         <object name="waste" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>left + step</x><y>top</y></position>
-          <pile faces="up" />
+          <holds class="card" sprite="face" />
         </object>
-
         <!-- the foundations: each suit up from its ace, one card at a time -->
         <group name="foundations" class="place">
           <columns>4</columns>
@@ -139,11 +143,15 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>left + step * 3</x><y>top</y></position>
-          <pile faces="up">
-            <takes><one /><samesuit /><up /><empty><rank>A</rank></empty></takes>
-          </pile>
+          <holds class="card" sprite="face">
+            <accepts>
+              <one />
+              <same variable="suit" />
+              <step variable="rank">1</step>
+              <empty><condition variable="rank"><equal>1</equal></condition></empty>
+            </accepts>
+          </holds>
         </group>
-
         <!-- the seven columns: down in alternating colours, a king in an empty one -->
         <group name="columns" class="place">
           <columns>7</columns>
@@ -151,15 +159,18 @@
           <padding><x>step - cardwidth</x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>left</x><y>low</y></position>
-          <pile>
-            <fan><y>32</y><hidden><y>9</y></hidden></fan>
-            <dealt>1<more>1</more></dealt>
-            <takes><othercolor /><down /><empty><rank>K</rank></empty></takes>
+          <holds class="card">
+            <spread><y>32</y></spread>
+            <spread sprite="back"><y>9</y></spread>
+            <accepts>
+              <differs variable="color" />
+              <step variable="rank">-1</step>
+              <empty><condition variable="rank"><equal>13</equal></condition></empty>
+            </accepts>
             <run />
-            <showtop />
-          </pile>
+            <top sprite="face" />
+          </holds>
         </group>
-
         <!-- the hand: a frame around the card it points at -->
         <object name="hand">
           <sprite name="free">
@@ -175,22 +186,26 @@
             <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
           </sprite>
           <position><x>left - 3</x><y>top - 3</y></position>
-          <hand />
           <actions>
             <action name="left"><hop direction="left" /></action>
             <action name="right"><hop direction="right" /></action>
             <action name="up"><hop direction="up" /></action>
             <action name="down"><hop direction="down" /></action>
             <action name="point"><track /></action>
-            <action name="deal"><deal /><play sound="deal" /></action>
-            <action name="take"><take /><play sound="card" /><become sprite="held" /></action>
-            <action name="lay"><lay /><play sound="card" /><become sprite="free" /></action>
+            <action name="take"><pick class="card" /><play sound="card" /><become sprite="held" /></action>
+            <action name="lay"><place /><play sound="card" /><become sprite="free" /></action>
             <action name="back"><drop /><play sound="card" /><become sprite="free" /></action>
             <!-- home: the card pointed at onto the foundation that takes it -->
-            <action name="home"><take /><lay pile="foundations" /><play sound="card" /></action>
+            <action name="home"><pick class="card" /><place into="foundations" /><play sound="card" /></action>
           </actions>
         </object>
       </objects>
+      <!-- the deal: every card into the stock, shuffled; then the staircase -->
+      <starts>
+        <send from="cards" into="stock"><all /></send>
+        <order group="stock"><random /></order>
+        <distribute from="stock" into="columns">1<more>1</more></distribute>
+      </starts>
       <inputs>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="hand" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="hand" action="right" /></input>
@@ -198,7 +213,6 @@
         <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="hand" action="down" /></input>
         <input>
           <button>space</button><button>pad1.a</button>
-          <trigger object="hand" action="deal" from="free" />
           <trigger object="hand" action="take" from="free" />
           <trigger object="hand" action="lay" from="held" />
         </input>
@@ -212,7 +226,6 @@
         <!-- the mouse: press takes (or deals), let go lays or puts back -->
         <input>
           <button>mouse.left</button>
-          <trigger object="hand" action="deal" from="free" />
           <trigger object="hand" action="take" from="free" />
         </input>
         <input on="release">
@@ -226,7 +239,7 @@
       </inputs>
       <conditions>
         <!-- all 52 on the foundations -->
-        <condition object="foundations" variable="cards" total="sum">
+        <condition object="foundations" variable="held" total="sum">
           <atleast>52</atleast>
           <play sound="win" />
           <push state="won" />

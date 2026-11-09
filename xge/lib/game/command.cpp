@@ -79,7 +79,7 @@ namespace xge
 		if (verb == "split") { return CmdSplit{}; }
 		if (verb == "through") { return CmdThrough{}; }
 		if (verb == "pick") { return CmdPick{ raw.objClass, raw.only }; }
-		if (verb == "place") { return CmdPlace{}; }
+		if (verb == "place") { return CmdPlace{ raw.into }; }
 		if (verb == "take") { return CmdTake{}; }
 		if (verb == "lay") { return CmdLay{ raw.pile }; }
 		if (verb == "deal")
@@ -544,7 +544,7 @@ namespace xge
 			[&](const CmdSplit&) { o << "split"; },
 			[&](const CmdThrough&) { o << "through"; },
 			[&](const CmdPick& p) { o << "pick(" << p.objClass << (p.only ? ", only" : "") << ")"; },
-			[&](const CmdPlace&) { o << "place"; },
+			[&](const CmdPlace& p) { o << "place" << (p.into.empty() ? "" : "(" + p.into + ")"); },
 			[&](const CmdTake&) { o << "take"; },
 			[&](const CmdLay& l) { o << "lay" << (l.pile.empty() ? "" : "(" + l.pile + ")"); },
 			[&](const CmdDeal& d) { o << "deal" << (d.pile.empty() ? "" : "(" + d.pile + ")") ; },

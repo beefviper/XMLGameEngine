@@ -39,6 +39,18 @@ namespace xge
 	// RawState::keyMaps and State::keyMaps.
 	inline constexpr std::array<const char*, 3> keyMoments{ "press", "hold", "release" };
 
+	// A step of a state's <starts>, as written: <send from into> (N, or
+	// <all />), <order group> (<random />), <distribute from into>N<more>.
+	struct RawStart
+	{
+		std::string verb;      // send, order, distribute
+		std::string from;      // send, distribute; order: the group ordered
+		std::string into;
+		int count{};
+		int more{};
+		bool all{ false };
+	};
+
 	class RawState
 	{
 	public:
@@ -62,6 +74,10 @@ namespace xge
 		// <computer>: conditions whose commands are only <hold>s, every one
 		// tested every frame; see State::computer.
 		std::vector<RawCondition> computer;
+
+		// <starts>: what is done when it begins and on a full reset (the
+		// deal), worked out by settleHolders (game/holders.h).
+		std::vector<RawStart> starts;
 
 		// The states it draws still underneath its own (<show state="..." />).
 		std::vector<std::string> showStates;

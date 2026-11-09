@@ -104,6 +104,19 @@ namespace xge
 	// cell for each card. (A sheet's cells are cut when the game loads.)
 	void addDeck(std::vector<RawObject>& out, const RawDeck& deck);
 
+	struct GameData;
+
+	// The game's holders (<holds class>) and what they hold, worked out
+	// once every object is laid out (game.cpp, before anything plays): each
+	// member of a held class is a card, its suit its row and its rank its
+	// column in its group (the face its first look, the back its second);
+	// each holder's looks become which way up what is laid there turns, and
+	// each state's <starts> where the cards begin and how many each holder
+	// is dealt. Throws, naming what is wrong, when a held class has no
+	// members, a member is not a cell of a group with two looks, a holder
+	// names a look the members have not, or a start is one the deal cannot do.
+	void settleHolders(GameData& data);
+
 	// The characters the rank labels may use.
 	const std::string& cardFontCharacters();
 }

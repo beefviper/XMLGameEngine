@@ -696,7 +696,13 @@ namespace xge
 	// <place />: the piece the picker holds makes the one of its moves
 	// that ends in the picker's cell. Refused when none does, and while
 	// the piece can jump on (the turn is not over). See Game::placePiece.
-	struct CmdPlace {};
+	// By a picker of what a <holds> holds (a hand of cards), <pick /> takes
+	// what it points at and <place /> lays what it holds where it points,
+	// or with into= on the first of those holders that accepts it.
+	struct CmdPlace
+	{
+		std::string into;
+	};
 
 	// Cards (game/cards.cpp), self verbs of a <hand />: <take /> the card
 	// pointed at (with those above it, from a pile with a <run />); <lay />

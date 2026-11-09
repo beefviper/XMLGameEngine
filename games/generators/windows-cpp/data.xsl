@@ -1913,7 +1913,104 @@
         </xsl:for-each>
         <xsl:text> }, </xsl:text>
         <xsl:value-of select="concat(substring('0', 1, 1 - count(sum)), normalize-space(sum))" />
-        <xsl:text> };&#10;</xsl:text>
+        <xsl:text>, { }, { } };&#10;</xsl:text>
+      </xsl:for-each>
+    </xsl:for-each>
+    <!-- a <holds>: a pile whose looks settleHolders (game/cards.h) works out -->
+    <xsl:for-each select="$node/holds">
+      <xsl:value-of select="concat($indent, $to, '.pile.is = true; ', $to, '.pile.holdsClass = ')" />
+      <xsl:call-template name="string"><xsl:with-param name="text" select="@class" /></xsl:call-template>
+      <xsl:text>;</xsl:text>
+      <xsl:if test="@sprite">
+        <xsl:value-of select="concat(' ', $to, '.pile.holdsSprite = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="@sprite" /></xsl:call-template>
+        <xsl:text>;</xsl:text>
+      </xsl:if>
+      <xsl:call-template name="field">
+        <xsl:with-param name="name" select="concat($to, '.pile.fanX')" />
+        <xsl:with-param name="node" select="spread[not(@sprite)]/x" />
+      </xsl:call-template>
+      <xsl:call-template name="field">
+        <xsl:with-param name="name" select="concat($to, '.pile.fanY')" />
+        <xsl:with-param name="node" select="spread[not(@sprite)]/y" />
+      </xsl:call-template>
+      <xsl:call-template name="field">
+        <xsl:with-param name="name" select="concat($to, '.pile.fanWidth')" />
+        <xsl:with-param name="node" select="spread[not(@sprite)]/width" />
+      </xsl:call-template>
+      <xsl:for-each select="spread[@sprite]">
+        <xsl:value-of select="concat(' ', $to, '.pile.hasHidden = true; ', $to, '.pile.spreadSprite = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="@sprite" /></xsl:call-template>
+        <xsl:text>;</xsl:text>
+        <xsl:call-template name="field">
+          <xsl:with-param name="name" select="concat($to, '.pile.hiddenX')" />
+          <xsl:with-param name="node" select="x" />
+        </xsl:call-template>
+        <xsl:call-template name="field">
+          <xsl:with-param name="name" select="concat($to, '.pile.hiddenY')" />
+          <xsl:with-param name="node" select="y" />
+        </xsl:call-template>
+      </xsl:for-each>
+      <xsl:if test="run">
+        <xsl:value-of select="concat(' ', $to, '.pile.run = true;')" />
+      </xsl:if>
+      <xsl:if test="top">
+        <xsl:value-of select="concat(' ', $to, '.pile.topSprite = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="top/@sprite" /></xsl:call-template>
+        <xsl:text>;</xsl:text>
+      </xsl:if>
+      <xsl:call-template name="field">
+        <xsl:with-param name="name" select="concat($to, '.pile.lift')" />
+        <xsl:with-param name="node" select="lift" />
+      </xsl:call-template>
+      <xsl:if test="picked/send">
+        <xsl:value-of select="concat(' ', $to, '.pile.hasDeals = true;')" />
+        <xsl:if test="picked/send/@into">
+          <xsl:value-of select="concat(' ', $to, '.pile.dealsInto = ')" />
+          <xsl:call-template name="string"><xsl:with-param name="text" select="picked/send/@into" /></xsl:call-template>
+          <xsl:text>;</xsl:text>
+        </xsl:if>
+        <xsl:call-template name="field">
+          <xsl:with-param name="name" select="concat($to, '.pile.deals')" />
+          <xsl:with-param name="node" select="picked/send" />
+        </xsl:call-template>
+      </xsl:if>
+      <xsl:if test="picked/empty/send">
+        <xsl:value-of select="concat(' ', $to, '.pile.refillFrom = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="picked/empty/send/@from" /></xsl:call-template>
+        <xsl:text>;</xsl:text>
+      </xsl:if>
+      <xsl:if test="picked/empty/order">
+        <xsl:value-of select="concat(' ', $to, '.pile.refillShuffle = true;')" />
+      </xsl:if>
+      <xsl:call-template name="field">
+        <xsl:with-param name="name" select="concat($to, '.pile.refillLeave')" />
+        <xsl:with-param name="node" select="picked/empty/send/leave" />
+      </xsl:call-template>
+      <xsl:if test="picked/play">
+        <xsl:value-of select="concat(' ', $to, '.pile.pickedSound = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="picked/play/@sound" /></xsl:call-template>
+        <xsl:text>;</xsl:text>
+      </xsl:if>
+      <xsl:text>&#10;</xsl:text>
+      <xsl:for-each select="accepts">
+        <xsl:value-of select="concat($indent, $to, '.pile.takes.given = true;')" />
+        <xsl:if test="one">
+          <xsl:value-of select="concat(' ', $to, '.pile.takes.one = true;')" />
+        </xsl:if>
+        <xsl:text>&#10;</xsl:text>
+        <xsl:for-each select="same | differs | step | total | condition">
+          <xsl:call-template name="accept-rule">
+            <xsl:with-param name="list" select="concat($to, '.pile.takes.rules')" />
+            <xsl:with-param name="indent" select="$indent" />
+          </xsl:call-template>
+        </xsl:for-each>
+        <xsl:for-each select="empty/condition">
+          <xsl:call-template name="accept-rule">
+            <xsl:with-param name="list" select="concat($to, '.pile.takes.emptyRules')" />
+            <xsl:with-param name="indent" select="$indent" />
+          </xsl:call-template>
+        </xsl:for-each>
       </xsl:for-each>
     </xsl:for-each>
     <xsl:if test="$node/marks">
@@ -2705,6 +2802,34 @@
     </xsl:if>
   </xsl:template>
 
+  <!-- A rule of an <accepts> (the current node) on the arriving one's
+       variables: list.push_back({ PileRule::VarRule::Kind::Step, "rank", 1 }). -->
+  <xsl:template name="accept-rule">
+    <xsl:param name="list" />
+    <xsl:param name="indent" />
+    <xsl:variable name="kind">
+      <xsl:choose>
+        <xsl:when test="self::same">Same</xsl:when>
+        <xsl:when test="self::differs">Differs</xsl:when>
+        <xsl:when test="self::step">Step</xsl:when>
+        <xsl:when test="self::total">Total</xsl:when>
+        <xsl:when test="equal">Equal</xsl:when>
+        <xsl:when test="atleast">AtLeast</xsl:when>
+        <xsl:otherwise>AtMost</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="amount">
+      <xsl:choose>
+        <xsl:when test="self::step or self::total"><xsl:value-of select="normalize-space(.)" /></xsl:when>
+        <xsl:when test="self::condition"><xsl:value-of select="normalize-space(*[1])" /></xsl:when>
+        <xsl:otherwise>0</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:value-of select="concat($indent, $list, '.push_back({ PileRule::VarRule::Kind::', $kind, ', ')" />
+    <xsl:call-template name="string"><xsl:with-param name="text" select="@variable" /></xsl:call-template>
+    <xsl:value-of select="concat(', ', $amount, ' });&#10;')" />
+  </xsl:template>
+
   <!-- What a part of a group is called in the C++: member3, row1, column2, cell1. -->
   <xsl:template name="part-name">
     <xsl:value-of select="concat(local-name(), count(preceding-sibling::*[local-name() = local-name(current())]) + 1)" />
@@ -3382,6 +3507,23 @@
       <xsl:with-param name="inner" select="$inner" />
       <xsl:with-param name="list" select="'state.computer'" />
     </xsl:apply-templates>
+    <!-- <starts>: the deal, worked out by settleHolders -->
+    <xsl:for-each select="starts/*">
+      <xsl:value-of select="concat($in, 'state.starts.push_back({ ')" />
+      <xsl:call-template name="string"><xsl:with-param name="text" select="local-name()" /></xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="string"><xsl:with-param name="text" select="@from | @group" /></xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="string"><xsl:with-param name="text" select="@into" /></xsl:call-template>
+      <xsl:variable name="count" select="normalize-space(text())" />
+      <xsl:text>, </xsl:text>
+      <xsl:choose>
+        <xsl:when test="$count != ''"><xsl:value-of select="$count" /></xsl:when>
+        <xsl:otherwise>0</xsl:otherwise>
+      </xsl:choose>
+      <xsl:value-of select="concat(', ', substring('0', 1, 1 - count(more)), normalize-space(more))" />
+      <xsl:value-of select="concat(', ', substring('falsetrue', 1 + 5 * count(all), 5 - count(all)), ' });&#10;')" />
+    </xsl:for-each>
     <xsl:call-template name="timers">
       <xsl:with-param name="node" select="timers" />
       <xsl:with-param name="list" select="'state.timers'" />

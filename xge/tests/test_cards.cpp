@@ -61,12 +61,22 @@ TEST_CASE("klondike.xml: the deal: a staircase of columns, their tops face up, t
 
 namespace
 {
+	// Klondike's pack is a group: a card's suit is its row (spades,
+	// hearts, clubs, diamonds) and its rank its column (A to K).
+	const std::vector<std::string> klondikeSuits{ "spades", "hearts", "clubs", "diamonds" };
+	const std::vector<std::string> klondikeRanks{ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
+
+	int numberIn(const std::vector<std::string>& names, const std::string& name)
+	{
+		return static_cast<int>(std::find(names.begin(), names.end(), name) - names.begin()) + 1;
+	}
+
 	// The card of that suit and rank.
 	int cardOf(Table& table, const std::string& suit, const std::string& rank)
 	{
 		for (Object& object : table.game.getCurrentObjects())
 		{
-			if (object.isCard && object.card.suitName == suit && object.card.rankName == rank) { return object.cardNumber; }
+			if (object.isCard && object.card.suit == numberIn(klondikeSuits, suit) && object.card.rank == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
 		}
 		return 0;
 	}
@@ -111,7 +121,7 @@ namespace
 		const Object& object = table.pile(pile);
 		if (object.pile.cards.empty()) { return ""; }
 		const Object& card = table.card(object.pile.cards.back());
-		return card.card.rankName + " " + card.card.suitName;
+		return klondikeRanks[static_cast<std::size_t>(card.card.rank - 1)] + " " + klondikeSuits[static_cast<std::size_t>(card.card.suit - 1)];
 	}
 }
 
@@ -505,6 +515,23 @@ TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of c
 	CHECK((pixels(*play.game.cardAt(7)) == pixels(*hearts.game.cardAt(33))));   // its 7 of clubs
 	CHECK((pixels(eight) == pixels(*hearts.game.cardAt(40))));                  // its ace of diamonds
 	CHECK((pixels(eight, 1) != pixels(*hearts.game.cardAt(1), 1)));             // a red back, not the blue
+}
+
+TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces from the sheet", "[cards][sheets]")
+{
+	Table table;
+	Played hearts("descriptions/hearts.xml");
+	hearts.tap(KeyCode::Space);
+	hearts.frames(2);
+	// Card 22 is the 9 of hearts in both: row 2, column 9.
+	Object& nine = table.card(cardOf(table, "hearts", "9"));
+	CHECK(nine.cardNumber == 22);
+	CHECK(nine.card.suit == 2);
+	CHECK(nine.card.rank == 9);
+	CHECK((nine.looks[0].bitmap->rgba == hearts.game.cardAt(22)->looks[0].bitmap->rgba));
+	CHECK((nine.looks[1].bitmap->rgba == hearts.game.cardAt(22)->looks[1].bitmap->rgba));
+	CHECK(nine.variable.at("color") == 2.0f);
+	CHECK(table.card(cardOf(table, "clubs", "9")).variable.at("color") == 1.0f);
 }
 
 TEST_CASE("sheets: a cell off the grid, a sheet not there, and faces short of the cards stop the load", "[cards][sheets]")

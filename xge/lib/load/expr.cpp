@@ -1015,6 +1015,7 @@ namespace xge
 			pile.deals = !raw.hasDeals ? 0 : std::max(1, static_cast<int>(std::lround(number(raw.deals))));
 			pile.refillFrom = raw.refillFrom;
 			pile.refillShuffle = raw.refillShuffle;
+			pile.pickedSound = raw.pickedSound;
 			pile.refillLeave = std::max(0, static_cast<int>(std::lround(number(raw.refillLeave))));
 			pile.fanWidth = number(raw.fanWidth);
 			pile.run = raw.run;
@@ -1720,7 +1721,7 @@ namespace xge
 						continue;
 					}
 					// A pile's live numbers follow it too (shown 0 until dealt).
-					if (reference->second == "cards" || reference->second == "points" || reference->second == "called" || reference->second == "calling"
+					if (reference->second == "cards" || reference->second == "held" || reference->second == "points" || reference->second == "called" || reference->second == "calling"
 						|| reference->second == "pattern" || reference->second == "strength" || reference->second == "odds"
 						|| reference->second == "lead" || reference->second == "winner" || reference->second == "tricks" || reference->second == "deadwood")
 					{

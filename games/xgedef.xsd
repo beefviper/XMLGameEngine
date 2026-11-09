@@ -666,7 +666,10 @@
       <xs:element name="joins" type="joinsType" minOccurs="0" />
       <xs:element name="moves" type="pieceMovesType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="marks" type="marksType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="pile" type="pileType" minOccurs="0" />
+      <xs:choice minOccurs="0">
+        <xs:element name="pile" type="pileType" />
+        <xs:element name="holds" type="holdsType" />
+      </xs:choice>
       <!-- hand: points at piles and carries cards between them (<take />, <lay />, <drop />, <deal />, <call />);
            pile=: its own pile, a player's cards: it takes from that pile alone (any card, face up or down), deals into it
            from a stock with no into=, and stays pointing into it -->
@@ -696,6 +699,120 @@
        in suit then rank order; lift: the face-up card a hand points at is lifted out of the fan by that much;
        points: the live number points adds up the face-up cards' worths, each as high as it may count while the total
        stays <atmost> -->
+  <!-- holds: what this object (or each member of a group) holds, in order, the last on top: members of that class=, each
+       showing the look sprite= while laid here. The members of a held class are the cells of one <group> in <columns> and
+       <rows> (cards: a row for each suit, a column for each rank), with two looks, the face first and the back.
+       spread: each held one on from the one under it (<width>: never wider; with sprite=, for those showing that look);
+       accepts: what may be placed on top, by the arriving one's variables against the top one's (<same>, <differs>,
+       <step>N: the top's plus N; <total>N: the two add up to N), <one />: one at a time, <empty>: <condition>s on the
+       first one; run: one may be picked with all those on it; top: the top one turns to that look; lift: the one a
+       picker points at is lifted by that much; picked: what picking from it does instead, picking nothing up (<send
+       into>N there; <empty>: a <send from> with <all /> (and <leave>) back, then <order><random /></order>; <play sound>) -->
+  <xs:complexType name="holdsType">
+    <xs:sequence>
+      <xs:element name="spread" minOccurs="0" maxOccurs="2">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="x" type="valueType" minOccurs="0" />
+            <xs:element name="y" type="valueType" minOccurs="0" />
+            <xs:element name="width" type="valueType" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="accepts" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="one" type="emptyType" minOccurs="0" />
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:element name="same" type="acceptVariableType" />
+              <xs:element name="differs" type="acceptVariableType" />
+              <xs:element name="step" type="acceptAmountType" />
+              <xs:element name="total" type="acceptAmountType" />
+              <xs:element name="condition" type="acceptConditionType" />
+            </xs:choice>
+            <xs:element name="empty" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="condition" type="acceptConditionType" minOccurs="0" maxOccurs="unbounded" />
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="run" type="emptyType" minOccurs="0" />
+      <xs:element name="top" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="sprite" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="lift" type="valueType" minOccurs="0" />
+      <xs:element name="picked" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="send" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="into" type="xs:NMTOKEN" use="optional" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="empty" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="send">
+                    <xs:complexType>
+                      <xs:sequence>
+                        <xs:element name="all" type="emptyType" />
+                        <xs:element name="leave" type="valueType" minOccurs="0" />
+                      </xs:sequence>
+                      <xs:attribute name="from" type="xs:NMTOKEN" use="required" />
+                    </xs:complexType>
+                  </xs:element>
+                  <xs:element name="order" minOccurs="0">
+                    <xs:complexType>
+                      <xs:sequence>
+                        <xs:element name="random" type="emptyType" />
+                      </xs:sequence>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="play" minOccurs="0">
+              <xs:complexType>
+                <xs:attribute name="sound" type="xs:string" use="required" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
+  </xs:complexType>
+  <xs:complexType name="acceptVariableType">
+    <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+  </xs:complexType>
+  <xs:complexType name="acceptAmountType">
+    <xs:simpleContent>
+      <xs:extension base="xs:decimal">
+        <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="acceptConditionType">
+    <xs:choice>
+      <xs:element name="equal" type="xs:decimal" />
+      <xs:element name="atleast" type="xs:decimal" />
+      <xs:element name="atmost" type="xs:decimal" />
+    </xs:choice>
+    <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+  </xs:complexType>
+
   <xs:complexType name="pileType">
     <xs:sequence>
       <xs:element name="fan" minOccurs="0">
@@ -1593,8 +1710,13 @@
           <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- place: the piece held makes its move that ends in the picker's cell; refused when none does, and while it can jump on -->
-      <xs:element name="place" type="emptyType" />
+      <!-- place: the piece held makes its move that ends in the picker's cell; refused when none does, and while it can jump on.
+           By a picker of a class a <holds> holds: lays what it holds where it points (into=: on the first of those holders that accepts it) -->
+      <xs:element name="place">
+        <xs:complexType>
+          <xs:attribute name="into" type="xs:NMTOKEN" use="optional" />
+        </xs:complexType>
+      </xs:element>
       <!-- take, on a hand: the card pointed at, with those above it from a pile with a <run />; refused when nothing can be taken -->
       <xs:element name="take" type="emptyType" />
       <!-- lay, on a hand: what it holds on the pile pointed at (pile=: the first of those piles that takes it); refused when none does;
@@ -2753,6 +2875,46 @@
                     <!-- the state's own objects, in play in every scene of it -->
                     <xs:element name="objects" type="objectsType" minOccurs="0" />
                     <xs:element name="scenes" type="scenesType" minOccurs="0" />
+                    <!--
+                      starts: done as the state begins and on a full reset, the
+                      deal: a <send from into> of <all /> of a group's held
+                      members into one holder, then <order group> at <random />
+                      and <distribute from into>N (each, one at a time round;
+                      <more>: each after the first that many more) and <send
+                      from into>N from it.
+                    -->
+                    <xs:element name="starts" minOccurs="0">
+                      <xs:complexType>
+                        <xs:choice maxOccurs="unbounded">
+                          <xs:element name="send">
+                            <xs:complexType mixed="true">
+                              <xs:sequence>
+                                <xs:element name="all" type="emptyType" minOccurs="0" />
+                              </xs:sequence>
+                              <xs:attribute name="from" type="xs:NMTOKEN" use="required" />
+                              <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="order">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="random" type="emptyType" />
+                              </xs:sequence>
+                              <xs:attribute name="group" type="xs:NMTOKEN" use="required" />
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="distribute">
+                            <xs:complexType mixed="true">
+                              <xs:sequence>
+                                <xs:element name="more" type="xs:integer" minOccurs="0" />
+                              </xs:sequence>
+                              <xs:attribute name="from" type="xs:NMTOKEN" use="required" />
+                              <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:choice>
+                      </xs:complexType>
+                    </xs:element>
                     <xs:element name="shows" minOccurs="0">
                       <xs:complexType>
                         <xs:sequence>

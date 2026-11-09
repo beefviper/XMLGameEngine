@@ -8,6 +8,7 @@
 // laying cards by each pile's rules, and where every card is drawn.
 
 #include "game/cards.h"
+#include "game/data.h"
 #include "game/game.h"
 #include "game/random.h"
 #include "play/verbs.h"
@@ -471,6 +472,146 @@ namespace xge
 	// The game's piles and hands
 	// ===================================================================
 
+	void settleHolders(GameData& data)
+	{
+		std::vector<RawObject>& objects = data.objects;
+
+		// The classes held, and their members: cards.
+		std::vector<std::string> held;
+		for (const RawObject& object : objects)
+		{
+			if (!object.pile.holdsClass.empty() && std::find(held.begin(), held.end(), object.pile.holdsClass) == held.end()) { held.push_back(object.pile.holdsClass); }
+		}
+		if (held.empty()) { return; }
+
+		std::map<std::string, const RawObject*> sample;  // a member of each class held
+		for (RawObject& object : objects)
+		{
+			if (object.objClass.empty() || std::find(held.begin(), held.end(), object.objClass) == held.end()) { continue; }
+			const std::string where = "object '" + object.name + "' (of class " + object.objClass + ", which a <holds> holds)";
+			if (object.groupName.empty() || object.cell.column < 1) { throw std::runtime_error(where + ": is a member of a <group> laid out in <columns> and <rows>, its suit its row and its rank its column"); }
+			if (object.looks.size() < 2) { throw std::runtime_error(where + ": has two looks, its face first and its back"); }
+			object.isCard = true;
+			object.card.deck = object.groupName;
+			object.card.suit = object.cell.row;
+			object.card.rank = object.cell.column;
+			object.card.suitName = std::to_string(object.cell.row);
+			object.card.rankName = std::to_string(object.cell.column);
+			if (const auto color = object.variable.find("color"); color != object.variable.end()) { object.card.color = color->second.text; }
+			float worth = static_cast<float>(object.card.rank);
+			if (const auto given = object.variable.find("worth"); given != object.variable.end())
+			{
+				try { worth = std::stof(given->second.text); }
+				catch (const std::exception&) { throw std::runtime_error(where + ": its worth is \"" + given->second.text + "\"; expected a number"); }
+			}
+			object.card.worths = { worth };
+			object.variable["suit"] = RawValue::expression(std::to_string(object.card.suit));
+			object.variable["rank"] = RawValue::expression(std::to_string(object.card.rank));
+			object.variable["worth"] = RawValue::expression(formatDisplayNumber(worth));
+			object.sprite = object.looks.front();
+			sample.emplace(object.objClass, &object);
+		}
+
+		// Each holder: which way up its looks turn what is laid there.
+		for (RawObject& object : objects)
+		{
+			RawObject::RawPile& pile = object.pile;
+			if (pile.holdsClass.empty()) { continue; }
+			const std::string where = "object '" + object.name + "' > <holds class=\"" + pile.holdsClass + "\">";
+			const auto member = sample.find(pile.holdsClass);
+			if (member == sample.end()) { throw std::runtime_error(where + ": nothing is of class " + pile.holdsClass); }
+			const std::vector<RawSprite>& looks = member->second->looks;
+			const std::string face = looks[0].name;
+			const auto known = [&](const std::string& look, const std::string& part)
+			{
+				if (std::none_of(looks.begin(), looks.end(), [&](const RawSprite& each) { return each.name == look; }))
+				{
+					throw std::runtime_error(where + ": " + part + " sprite=\"" + look + "\", a look the members of class " + pile.holdsClass + " have not (they have '" + face + "' and '" + looks[1].name + "')");
+				}
+			};
+			if (!pile.holdsSprite.empty()) { known(pile.holdsSprite, "its"); pile.faces = pile.holdsSprite == face ? "up" : "down"; }
+			if (!pile.spreadSprite.empty())
+			{
+				known(pile.spreadSprite, "<spread>");
+				// The engine's hidden fan is for the face-down ones: a spread
+				// for the face is the fan, the plain one then the hidden.
+				if (pile.spreadSprite == face)
+				{
+					std::swap(pile.fanX, pile.hiddenX);
+					std::swap(pile.fanY, pile.hiddenY);
+				}
+			}
+			if (!pile.topSprite.empty())
+			{
+				known(pile.topSprite, "<top>");
+				if (pile.topSprite != face) { throw std::runtime_error(where + " > <top>: turns the top one to its face, '" + face + "'"); }
+				pile.showTop = true;
+			}
+		}
+
+		// A picker of a class held is a hand of cards.
+		for (RawObject& object : objects)
+		{
+			for (const auto& [action, commands] : object.action)
+			{
+				for (const RawCommand& command : commands)
+				{
+					if (command.verb == "pick" && std::find(held.begin(), held.end(), command.objClass) != held.end()) { object.hand = true; }
+				}
+			}
+		}
+
+		// Each state's <starts>: the deal.
+		const auto pileFor = [&](const std::string& name, const std::string& state) -> std::vector<RawObject*>
+		{
+			std::vector<RawObject*> found;
+			for (RawObject& object : objects)
+			{
+				if (object.pile.is && object.ownerState == state && (object.named(state + "." + name) || object.named(name))) { found.push_back(&object); }
+			}
+			return found;
+		};
+		for (RawState& state : data.states)
+		{
+			std::string start;   // the holder every card starts in
+			for (const RawStart& step : state.starts)
+			{
+				const std::string where = "state '" + state.name + "' > <starts> > <" + step.verb + ">";
+				if (step.verb == "send" && step.all)
+				{
+					bool any = false;
+					for (RawObject& object : objects)
+					{
+						if (object.isCard && object.ownerState == state.name && (object.named(state.name + "." + step.from) || object.named(step.from))) { object.card.startPile = step.into; any = true; }
+					}
+					if (!any) { throw std::runtime_error(where + ": from=\"" + step.from + "\" names no held members of this state"); }
+					if (pileFor(step.into, state.name).size() != 1) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no one holder of this state"); }
+					start = step.into;
+					continue;
+				}
+				if (start.empty() || step.from != start)
+				{
+					throw std::runtime_error(where + ": for now a start sends <all /> of a group into one holder first, then orders and deals from that holder");
+				}
+				if (step.verb == "order") { continue; }   // the cards are always shuffled where they start
+				const std::vector<RawObject*> into = pileFor(step.into, state.name);
+				if (into.empty()) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no holder of this state"); }
+				for (RawObject* each : into)
+				{
+					each->pile.dealt = RawValue::expression(std::to_string(step.count));
+					if (step.more != 0) { each->pile.dealtMore = RawValue::expression(std::to_string(step.more)); }
+				}
+			}
+		}
+		for (const RawObject& object : objects)
+		{
+			if (object.isCard && object.card.startPile.empty())
+			{
+				throw std::runtime_error("object '" + object.name + "': of a held class, but no state's <starts> sends it into a holder");
+			}
+		}
+	}
+
 	Object* Game::cardAt(int number)
 	{
 		if (number <= 0) { return nullptr; }
@@ -870,6 +1011,7 @@ namespace xge
 		}
 		pile.points = total;
 		refreshBoundTexts(pile.name, "cards", pile.cardCount);
+		refreshBoundTexts(pile.name, "held", pile.cardCount);
 		refreshBoundTexts(pile.name, "points", pile.points);
 
 		// A pile with <melds>: laid out in its groups, and its deadwood.
@@ -1509,6 +1651,7 @@ namespace xge
 		}
 		if (pile.pile.cards.empty())
 		{
+			if (!acceptsBy(rule.emptyRules, *first, nullptr)) { return false; }
 			if (!rule.emptyRanks.empty() && std::find(rule.emptyRanks.begin(), rule.emptyRanks.end(), first->card.rankName) == rule.emptyRanks.end()) { return false; }
 			if (!rule.emptySuits.empty() && std::find(rule.emptySuits.begin(), rule.emptySuits.end(), first->card.suitName) == rule.emptySuits.end()) { return false; }
 			return true;
@@ -1533,6 +1676,36 @@ namespace xge
 		if (rule.otherColor && next.card.color == below.card.color) { return false; }
 		if (rule.up && next.card.rank != below.card.rank + 1) { return false; }
 		if (rule.down && next.card.rank != below.card.rank - 1) { return false; }
+		return acceptsBy(rule.rules, next, &below);
+	}
+
+	// Whether `next` keeps an <accepts>'s rules on its variables, against
+	// the one under it (`below`; none for the first on an empty holder).
+	bool Game::acceptsBy(const std::vector<PileRule::VarRule>& rules, const Object& next, const Object* below)
+	{
+		using Kind = PileRule::VarRule::Kind;
+		const auto value = [](const Object& of, const std::string& name)
+		{
+			const auto found = of.variable.find(name);
+			return found == of.variable.end() ? 0.0f : found->second;
+		};
+		for (const PileRule::VarRule& each : rules)
+		{
+			const float mine = value(next, each.variable);
+			const float theirs = below ? value(*below, each.variable) : 0.0f;
+			bool holds = true;
+			switch (each.kind)
+			{
+			case Kind::Same: holds = mine == theirs; break;
+			case Kind::Differs: holds = mine != theirs; break;
+			case Kind::Step: holds = mine == theirs + each.amount; break;
+			case Kind::Total: holds = mine + theirs == each.amount; break;
+			case Kind::Equal: holds = mine == each.amount; break;
+			case Kind::AtLeast: holds = mine >= each.amount; break;
+			case Kind::AtMost: holds = mine <= each.amount; break;
+			}
+			if (!holds) { return false; }
+		}
 		return true;
 	}
 
@@ -1621,6 +1794,20 @@ namespace xge
 		}
 		layOutCards();
 		return true;
+	}
+
+	bool Game::pickCards(Object& hand)
+	{
+		// From a holder with <picked>: it sends instead, and nothing is
+		// picked up, so the picker's verbs after <pick /> do not run.
+		const Object* pile = hand.hand.is ? pileNamed(hand.hand.pile) : nullptr;
+		if (pile && pile->pile.deals > 0)
+		{
+			const std::string sound = pile->pile.pickedSound;
+			if (dealCards(hand, "", "") && !sound.empty()) { requestSound(sound); }
+			return false;
+		}
+		return takeCards(hand);
 	}
 
 	// The cards held go on the pile, the top one pointed at, and the pile

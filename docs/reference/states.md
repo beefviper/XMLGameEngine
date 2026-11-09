@@ -15,6 +15,7 @@ The first state in the file is where the game starts. `name` is required; `from`
 | `<inputs>` | the keys ([input](input.md)). Needed unless the state is `from=` another |
 | `<conditions>` | tests checked every frame ([conditions](#conditions)) |
 | `<computer>` | a player the game plays itself ([computer players](#computer-players)) |
+| `<starts>` | done as it begins and on a full reset: the deal of a card game ([holders](cards.md#holders)) |
 | `<timers>` | timers that count while it is current |
 
 ```xml
