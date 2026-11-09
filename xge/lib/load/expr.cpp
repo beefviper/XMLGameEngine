@@ -376,6 +376,7 @@ namespace xge
 			case RawCondition::Test::Above:     condition.compare = Compare::Above; break;
 			case RawCondition::Test::Below:     condition.compare = Compare::Below; break;
 			case RawCondition::Test::Equal:     condition.compare = Compare::Equal; break;
+			case RawCondition::Test::Unequal:   condition.compare = Compare::Unequal; break;
 			case RawCondition::Test::Remaining: condition.remaining = threshold; break;
 			case RawCondition::Test::Shows:     condition.compare = Compare::Shows; break;
 			case RawCondition::Test::Lowest:    condition.compare = Compare::Lowest; break;
@@ -1155,7 +1156,7 @@ namespace xge
 			pile.pickedSound = raw.pickedSound;
 			pile.refillLeave = std::max(0, static_cast<int>(std::lround(number(raw.refillLeave))));
 			pile.fanWidth = number(raw.fanWidth);
-			pile.run = raw.run;
+			pile.carry = raw.carry;
 			pile.showTop = raw.showTop;
 			pile.sorted = raw.sorted;
 			pile.orderBy = raw.orderBy;

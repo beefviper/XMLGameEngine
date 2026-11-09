@@ -469,7 +469,7 @@ namespace xge
 		// the first.
 		struct VarRule
 		{
-			enum class Kind { Same, Differs, Step, Total, Equal, AtLeast, AtMost };
+			enum class Kind { Same, Differs, Step, Total, Equal, Unequal, AtLeast, AtMost };
 			Kind kind{ Kind::Same };
 			std::string variable;
 			float amount{};
@@ -662,7 +662,7 @@ namespace xge
 			bool refillShuffle{ false }; // <shuffle />: shuffled, not turned over
 			RawValue refillLeave;       // <leave>: that many of the top cards stay (empty text: none)
 			RawValue fanWidth;          // <fan><width>: the fan is never wider (empty text: no limit)
-			bool run{ false };          // <run />: a face-up card can be taken with all above it
+			bool carry{ false };        // <carry />: a face-up card can be taken with all above it
 			bool showTop{ false };      // <showtop />: a face-down card left on top turns up
 			bool sorted{ false };       // <sorted />: kept in suit then rank order
 			RawValue lift;              // <lift>: the card a hand points at, lifted out of the fan by that much (empty text: none)
@@ -1188,7 +1188,7 @@ namespace xge
 			std::string pickedSound;
 			std::vector<std::string> orderBy;
 			float fanWidth{};
-			bool run{ false };
+			bool carry{ false };
 			bool showTop{ false };
 			bool sorted{ false };
 			float lift{};

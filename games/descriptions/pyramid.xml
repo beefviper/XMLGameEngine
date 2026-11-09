@@ -28,9 +28,8 @@
     is taken only while no card of another holder, drawn over it, overlaps
     it: the rows below cover the rows above. The <starts> deal one to each.
   * The picker's <pick> takes from at <most>2 holders at once.
-  * The discard pile <accepts> a <total variable="worth">13</total>: what
-    the picker holds goes there when the worths add up to 13; else it
-    puts both back.
+  * The discard pile <accepts> what the picker holds when its worths
+    add up to 13 (total="sum"); else it puts both back.
   * Picked, the stock sends its top to the waste (<picked><send into>),
     and when <empty> the waste comes back.
 -->
@@ -188,7 +187,7 @@
         <object name="pairs" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center * 2 - 56 - cardwidth</x><y>low</y></position>
-          <holds class="card" sprite="face"><accepts><total variable="worth">13</total></accepts></holds>
+          <holds class="card" sprite="face"><accepts><condition variable="worth" total="sum"><equal>13</equal></condition></accepts></holds>
         </object>
 
         <object name="message">

@@ -33,8 +33,8 @@
     laid there shows, how they <spread>, what it <accepts> on top (the
     columns: a different colour, a rank one lower, a K when empty; the
     foundations: one at a time, the same suit, a rank one higher, an A when
-    empty), whether a <run /> can be picked from it, and what picking from
-    the stock does instead (<picked>).
+    empty), whether a card picked may <carry /> those on it, and what
+    picking from the stock does instead (<picked>).
   * <starts> deals: every card into the stock, shuffled, then one to each
     column and one more for each column after (the staircase).
   * The hand picks and places cards; a place that the pile does not accept
@@ -145,9 +145,9 @@
           <position><x>left + step * 3</x><y>top</y></position>
           <holds class="card" sprite="face">
             <accepts>
-              <one />
-              <same variable="suit" />
-              <step variable="rank">1</step>
+              <condition total="count"><equal>1</equal></condition>
+              <condition variable="suit"><equal>top.suit</equal></condition>
+              <condition variable="rank"><equal>top.rank + 1</equal></condition>
               <empty><condition variable="rank"><equal>1</equal></condition></empty>
             </accepts>
           </holds>
@@ -163,11 +163,11 @@
             <spread><y>32</y></spread>
             <spread sprite="back"><y>9</y></spread>
             <accepts>
-              <differs variable="color" />
-              <step variable="rank">-1</step>
+              <condition variable="color"><unequal>top.color</unequal></condition>
+              <condition variable="rank"><equal>top.rank - 1</equal></condition>
               <empty><condition variable="rank"><equal>13</equal></condition></empty>
             </accepts>
-            <run />
+            <carry />
             <top sprite="face" />
           </holds>
         </group>

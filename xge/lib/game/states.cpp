@@ -18,6 +18,7 @@ namespace xge
 		case Compare::Above:   return variable > against;
 		case Compare::Below:   return variable < against;
 		case Compare::Equal:   return variable == against;
+		case Compare::Unequal: return variable != against;
 		case Compare::Shows:   return true;
 		case Compare::Lowest:  return false; // one of many: Game::holds
 		case Compare::Highest: return false;
@@ -86,7 +87,7 @@ namespace xge
 			return text.str();
 		}
 
-		static const char* const signs[] = { " >= ", " <= ", " > ", " < ", " = ", "", " lowest", " highest" };
+		static const char* const signs[] = { " >= ", " <= ", " > ", " < ", " = ", "", " lowest", " highest", " != " };
 		static const char* const totals[] = { "", "count of ", "sum of ", "highest of ", "lowest of " };
 		text << totals[static_cast<std::size_t>(condition.total)];
 		if (!condition.distanceTo.empty())
@@ -137,7 +138,7 @@ namespace xge
 		for (auto& condition : f.conditions)
 		{
 			o << "       condition: ";
-			static const char* const tests[] = { "atleast", "atmost", "remaining", "above", "below", "equal", "shows", "lowest", "highest" };
+			static const char* const tests[] = { "atleast", "atmost", "remaining", "above", "below", "equal", "shows", "lowest", "highest", "unequal" };
 			const char* test = tests[static_cast<std::size_t>(condition.test)];
 			if (condition.join != RawCondition::Join::None)
 			{

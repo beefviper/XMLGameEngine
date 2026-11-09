@@ -1195,26 +1195,28 @@ namespace xge
 			return value;
 		}
 
-		// The rules of an <accepts> (or of its <empty>) on the arriving
-		// member: <same variable>, <differs variable>, <step variable>N,
-		// <total variable>N, and <condition variable> with <equal>,
-		// <atleast> or <atmost> a number.
+		// The rules of an <accepts> (or of its <any>, <wild> or <empty>):
+		// <condition>s on the arriving one, which is self. Each compares a
+		// variable with <equal>, <unequal>, <atleast> or <atmost> a number,
+		// or (on a holder holding something) with the top one's:
+		// <equal>top.suit</equal>, <unequal>top.color</unequal>,
+		// <equal>top.rank - 1</equal>. total="sum" adds up that variable over
+		// what is laid at once; total="count" with <equal>1</equal> lays one
+		// at a time.
 		void readAcceptRules(const XmlNode& node, PileRule& rule, std::vector<PileRule::VarRule>& into, const std::string& here, int level)
 		{
-			// level 0: an <accepts>; 1: an <any> in it; 2: <condition>s only.
+			// level 0: an <accepts>; 1: an <any> in it; 2: an <empty> or a <wild>, where nothing lies under it.
 			using Kind = PileRule::VarRule::Kind;
 			const bool top = level == 0;
 			for (std::unique_ptr<XmlNode> part = node.getFirstChild(); part != nullptr; part = part->getNextSibling())
 			{
 				const std::string name = part->getName();
 				const std::string at = here + " > <" + name + ">";
-				PileRule::VarRule each;
-				if (top && name == "one") { rule.one = true; continue; }
 				if (top && name == "empty") { readAcceptRules(*part, rule, rule.emptyRules, at, 2); continue; }
 				if (top && name == "any")
 				{
 					readAcceptRules(*part, rule, rule.anyRules, at, 1);
-					if (rule.anyRules.empty()) { fail(at, "holds the rules of which one must hold: <same>, <differs>, <step>, <total> and <condition>s"); }
+					if (rule.anyRules.empty()) { fail(at, "holds the <condition>s of which one must hold"); }
 					continue;
 				}
 				if (top && name == "wild")
@@ -1225,24 +1227,76 @@ namespace xge
 					if (rule.wildRules.empty()) { fail(at, "says which are wild by <condition>s on them"); }
 					continue;
 				}
-				if (level <= 1 && (name == "same" || name == "differs" || name == "step" || name == "total"))
+				if (name != "condition")
 				{
-					each.kind = name == "same" ? Kind::Same : name == "differs" ? Kind::Differs : name == "step" ? Kind::Step : Kind::Total;
-					each.variable = requireAttribute(*part, "variable", at);
-					if (each.kind == Kind::Step || each.kind == Kind::Total) { each.amount = readPlainNumber(*part, at); }
+					fail(here, "unknown <" + name + ">; expected " + std::string(top ? "<condition>s, an <any>, a <wild> and an <empty>" : "<condition>s"));
 				}
-				else if (name == "condition")
+				const std::unique_ptr<XmlNode> test = part->getFirstChild();
+				const std::string kind = test ? test->getName() : "";
+				if (kind != "equal" && kind != "unequal" && kind != "atleast" && kind != "atmost")
 				{
-					each.variable = requireAttribute(*part, "variable", at);
-					const std::unique_ptr<XmlNode> test = part->getFirstChild();
-					const std::string kind = test ? test->getName() : "";
-					if (kind != "equal" && kind != "atleast" && kind != "atmost") { fail(at, "compares the arriving one's " + each.variable + " with an <equal>, <atleast> or <atmost> number"); }
-					each.kind = kind == "equal" ? Kind::Equal : kind == "atleast" ? Kind::AtLeast : Kind::AtMost;
-					each.amount = readPlainNumber(*test, at + " > <" + kind + ">");
+					fail(at, "compares the arriving one with an <equal>, <unequal>, <atleast> or <atmost>");
+				}
+				const std::string testAt = at + " > <" + kind + ">";
+				const std::string total = part->getAttribute("total");
+				PileRule::VarRule each;
+				each.variable = part->getAttribute("variable");
+				if (total == "count")
+				{
+					if (!top) { fail(at, "total=\"count\" says how many are laid at once, so it stands in the <accepts> itself"); }
+					if (!each.variable.empty()) { fail(at, "total=\"count\" counts what is laid, so it reads no variable="); }
+					if (kind != "equal" || readPlainNumber(*test, testAt) != 1.0f) { fail(at, "total=\"count\" takes <equal>1</equal> for now: one at a time"); }
+					rule.one = true;
+					continue;
+				}
+				if (each.variable.empty()) { fail(at, "needs variable=\"...\": the arriving one's variable it compares"); }
+				if (total == "sum")
+				{
+					if (level > 1) { fail(at, "total=\"sum\" adds up what is laid with the top, so it is not in an <empty> or a <wild>"); }
+					if (kind != "equal") { fail(at, "total=\"sum\" takes an <equal> number for now"); }
+					each.kind = Kind::Total;
+					each.amount = readPlainNumber(*test, testAt);
+					into.push_back(std::move(each));
+					continue;
+				}
+				if (!total.empty()) { fail(at, "total=\"" + total + "\"; expected count or sum"); }
+
+				// top.<variable>, then + N or - N: the one it would go on.
+				const std::string text = readText(*test);
+				if (text.rfind("top.", 0) == 0)
+				{
+					if (level > 1) { fail(testAt, "names top, but in an <empty> or a <wild> nothing lies under it"); }
+					std::size_t end = 4;
+					while (end < text.size() && text[end] != ' ' && text[end] != '+' && text[end] != '-') { ++end; }
+					const std::string named = text.substr(4, end - 4);
+					if (named != each.variable) { fail(testAt, "compares " + each.variable + " with top." + named + "; for now a variable is compared with the top's own (top." + each.variable + ")"); }
+					std::string rest = text.substr(end);
+					rest.erase(0, rest.find_first_not_of(' '));
+					if (rest.empty())
+					{
+						if (kind == "equal") { each.kind = Kind::Same; }
+						else if (kind == "unequal") { each.kind = Kind::Differs; }
+						else { fail(testAt, "compares with top; for now <equal> or <unequal> it, or <equal> it plus or minus a number"); }
+					}
+					else
+					{
+						if (kind != "equal" || (rest[0] != '+' && rest[0] != '-')) { fail(testAt, "is \"" + text + "\"; expected <equal>top." + each.variable + " + N</equal> or - N"); }
+						const float sign = rest[0] == '-' ? -1.0f : 1.0f;
+						std::string number = rest.substr(1);
+						number.erase(0, number.find_first_not_of(' '));
+						std::size_t used = 0;
+						float value = 0.0f;
+						try { value = std::stof(number, &used); }
+						catch (const std::exception&) { used = 0; }
+						if (number.empty() || used != number.size()) { fail(testAt, "is \"" + text + "\"; expected top." + each.variable + " plus or minus a number"); }
+						each.kind = Kind::Step;
+						each.amount = sign * value;
+					}
 				}
 				else
 				{
-					fail(here, "unknown <" + name + ">; expected " + std::string(top ? "<one />, <same>, <differs>, <step>, <total>, <condition>s, an <any>, a <wild> and an <empty>" : level == 1 ? "<same>, <differs>, <step>, <total> and <condition>s" : "<condition>s"));
+					each.kind = kind == "equal" ? Kind::Equal : kind == "unequal" ? Kind::Unequal : kind == "atleast" ? Kind::AtLeast : Kind::AtMost;
+					each.amount = readPlainNumber(*test, testAt);
 				}
 				into.push_back(std::move(each));
 			}
@@ -1313,7 +1367,7 @@ namespace xge
 					pile.takes.given = true;
 					readAcceptRules(*child, pile.takes, pile.takes.rules, at, 0);
 				}
-				else if (tag == "run") { pile.run = true; }
+				else if (tag == "carry") { pile.carry = true; }
 				else if (tag == "counts")
 				{
 					// What its members are worth added: a variable of each,
@@ -3443,7 +3497,7 @@ namespace xge
 			// No test tag: with sprite=, showing that look is the test; with
 			// class= or object= alone, being there is (each of them, for
 			// commands that name self).
-			static const std::set<std::string> tests{ "atleast", "atmost", "above", "below", "equal", "remaining", "lowest", "highest", "all", "any" };
+			static const std::set<std::string> tests{ "atleast", "atmost", "above", "below", "equal", "unequal", "remaining", "lowest", "highest", "all", "any" };
 			const bool named = !raw.filterClass.empty() || !raw.filterObject.empty();
 			if (named && (!test || !tests.contains(test->getName()))
 				&& (!raw.sprite.empty() || (raw.variableName.empty() && raw.total.empty() && raw.distance.empty())))
@@ -3455,7 +3509,7 @@ namespace xge
 				raw.test = RawCondition::Test::Shows;
 				return test;
 			}
-			if (!test) { fail(here, "needs an <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>, or an <all> or <any>"); }
+			if (!test) { fail(here, "needs an <atleast>, <atmost>, <above>, <below>, <equal>, <unequal> or <remaining>, or an <all> or <any>"); }
 
 			const std::string testName = test->getName();
 
@@ -3475,10 +3529,11 @@ namespace xge
 			else if (testName == "above") { raw.test = RawCondition::Test::Above; }
 			else if (testName == "below") { raw.test = RawCondition::Test::Below; }
 			else if (testName == "equal") { raw.test = RawCondition::Test::Equal; }
+			else if (testName == "unequal") { raw.test = RawCondition::Test::Unequal; }
 			else if (testName == "remaining") { raw.test = RawCondition::Test::Remaining; }
 			else if (testName == "lowest") { raw.test = RawCondition::Test::Lowest; }
 			else if (testName == "highest") { raw.test = RawCondition::Test::Highest; }
-			else { fail(here, "starts with <" + testName + ">; expected <atleast>, <atmost>, <above>, <below>, <equal>, <remaining>, <lowest /> or <highest />, or an <all> or <any>"); }
+			else { fail(here, "starts with <" + testName + ">; expected <atleast>, <atmost>, <above>, <below>, <equal>, <unequal>, <remaining>, <lowest /> or <highest />, or an <all> or <any>"); }
 
 			// <lowest /> and <highest />: the one whose variable is lowest (or highest) of all those matched.
 			if (raw.test == RawCondition::Test::Lowest || raw.test == RawCondition::Test::Highest)
@@ -4012,11 +4067,11 @@ namespace xge
 				for (std::unique_ptr<XmlNode> part = pattern->getFirstChild(); part != nullptr; part = part->getNextSibling())
 				{
 					const std::string tag = part->getName();
-					if (tag != "same" && tag != "run") { fail(at, "unknown <" + tag + ">; expected <same variable> and <run variable>"); }
-					// The variable compared: <same> one value of it, <run> values in a row.
+					if (tag != "alike" && tag != "run") { fail(at, "unknown <" + tag + ">; expected <alike variable> and <run variable>"); }
+					// The variable compared: <alike> one value of it, <run> values in a row.
 					const std::string variable = requireAttribute(*part, "variable", at + " > <" + tag + ">");
 					RawPatterns::Part kind = tag == "run" ? RawPatterns::Part::Run : variable == "suit" ? RawPatterns::Part::Suited : RawPatterns::Part::Same;
-					if (tag == "same" && variable != "rank" && variable != "suit") { fail(at + " > <same>", "variable=\"" + variable + "\"; for now a pattern compares rank or suit"); }
+					if (tag == "alike" && variable != "rank" && variable != "suit") { fail(at + " > <alike>", "variable=\"" + variable + "\"; for now a pattern compares rank or suit"); }
 					if (tag == "run")
 					{
 						if (variable != "worth" && variable != "rank") { fail(at + " > <run>", "variable=\"" + variable + "\"; for now a run is of worth or rank"); }
@@ -4024,7 +4079,7 @@ namespace xge
 					}
 					one.parts.emplace_back(kind, readCount(*part, at + " > <" + tag + ">"));
 				}
-				if (one.parts.empty()) { fail(at, "has no <same> or <run>"); }
+				if (one.parts.empty()) { fail(at, "has no <alike> or <run>"); }
 				raw.patterns.push_back(std::move(one));
 			}
 			rawPatterns.push_back(std::move(raw));

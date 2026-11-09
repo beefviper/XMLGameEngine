@@ -43,7 +43,7 @@ namespace xge
 	// those into the plain list the engine checks.
 	struct RawCondition
 	{
-		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal, Shows, Lowest, Highest };
+		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal, Shows, Lowest, Highest, Unequal };
 		enum class Join { None, All, Any };
 
 		std::string filterClass;
@@ -68,7 +68,7 @@ namespace xge
 
 	// How a condition's variable is compared, and whether `variable` passes
 	// against `against` that way.
-	enum class Compare { AtLeast, AtMost, Above, Below, Equal, Shows, Lowest, Highest };
+	enum class Compare { AtLeast, AtMost, Above, Below, Equal, Shows, Lowest, Highest, Unequal };
 	bool passes(Compare compare, float variable, float against) noexcept;
 
 

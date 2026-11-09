@@ -29,8 +29,8 @@
   * The pack is a group, a row for each suit (spades, hearts, clubs,
     diamonds) and a column for each rank; a card is worth its column (the
     ace 1), the court cards 10.
-  * The game's <patterns name="rummy">: a set is <same variable="rank">3,
-    a run <run variable="rank">3 and <same variable="suit">3.
+  * The game's <patterns name="rummy">: a set is <alike variable="rank">3,
+    a run <run variable="rank">3 and <alike variable="suit">3.
   * Each player's cards are a holder with <score patterns="rummy"><melds />:
     laid out in groups that each make a pattern with all their cards, the
     groups chosen to leave the fewest points over; its live number
@@ -97,8 +97,8 @@
   </sheets>
   <!-- what melds: a set of three or four of a rank, a run of three or more of a suit -->
   <patterns name="rummy">
-    <pattern name="set"><same variable="rank">3</same></pattern>
-    <pattern name="run"><run variable="rank">3</run><same variable="suit">3</same></pattern>
+    <pattern name="set"><alike variable="rank">3</alike></pattern>
+    <pattern name="run"><run variable="rank">3</run><alike variable="suit">3</alike></pattern>
   </patterns>
   <states>
     <state name="title">

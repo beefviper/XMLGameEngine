@@ -12,11 +12,14 @@
 #include "scratch.h"
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace xge;
@@ -398,6 +401,70 @@ namespace
 		}
 		~SheetGame() { std::error_code ignored; std::filesystem::remove(path, ignored); }
 	};
+}
+
+namespace
+{
+	// Klondike with one piece of its file changed, written to a scratch file.
+	struct Changed
+	{
+		std::string path;
+		Changed(const std::vector<std::pair<std::string, std::string>>& changes)
+			: path(scratchName("descriptions/klondike_scratch.xml"))
+		{
+			std::ifstream in("descriptions/klondike.xml");
+			std::stringstream read;
+			read << in.rdbuf();
+			std::string text = read.str();
+			for (const auto& [from, to] : changes)
+			{
+				const std::size_t at = text.find(from);
+				REQUIRE(at != std::string::npos);
+				text.replace(at, from.size(), to);
+			}
+			std::ofstream(path) << text;
+		}
+		~Changed() { std::error_code ignored; std::filesystem::remove(path, ignored); }
+	};
+}
+
+TEST_CASE("klondike.xml: placing rules are conditions on the arriving card against top; mistakes in them stop the load", "[cards][accepts]")
+{
+	const std::string column = "<condition variable=\"rank\"><equal>top.rank - 1</equal></condition>";
+	const std::string king = "<empty><condition variable=\"rank\"><equal>13</equal></condition></empty>";
+	const auto fails = [&](const std::string& to, const std::string& message, const std::string& from = {})
+	{
+		Changed changed({ { from.empty() ? column : from, to } });
+		CHECK_THROWS_WITH(Played(changed.path), Catch::Matchers::ContainsSubstring(message));
+	};
+	fails("<condition variable=\"rank\"><equal>top.suit</equal></condition>", "compares rank with top.suit");
+	fails("<condition variable=\"rank\"><atleast>top.rank</atleast></condition>", "failed to validate"); // the schema: a number
+	fails("<condition variable=\"rank\"><unequal>top.rank - 1</unequal></condition>", "expected <equal>top.rank + N</equal>");
+	fails("<condition variable=\"rank\"><equal>top.rank - x</equal></condition>", "plus or minus a number");
+	fails("<condition><equal>1</equal></condition>", "needs variable=");
+	fails("<condition total=\"count\"><equal>2</equal></condition>", "<equal>1</equal> for now");
+	fails("<empty><condition variable=\"rank\"><equal>top.rank</equal></condition></empty>", "nothing lies under it", king);
+
+	// A plain number and <unequal> one: a column that takes anything but a queen and never a king, on anything.
+	Changed plain({ { column, "<condition variable=\"rank\"><unequal>12</unequal></condition>" },
+		{ king, "<empty><condition variable=\"rank\"><atmost>12</atmost></condition></empty>" } });
+	Played played(plain.path);
+	const PileRule& takes = played.get("columns.1.1").pile.takes;
+	REQUIRE(takes.rules.size() == 2);
+	CHECK(takes.rules[0].kind == PileRule::VarRule::Kind::Differs);
+	CHECK(takes.rules[1].kind == PileRule::VarRule::Kind::Unequal);
+	CHECK(takes.rules[1].amount == 12.0f);
+	REQUIRE(takes.emptyRules.size() == 1);
+	CHECK(takes.emptyRules[0].kind == PileRule::VarRule::Kind::AtMost);
+
+	// Klondike as written: the foundations one at a time, the same suit, one higher.
+	Played klondike("descriptions/klondike.xml");
+	const PileRule& home = klondike.get("foundations.1.1").pile.takes;
+	CHECK(home.one);
+	REQUIRE(home.rules.size() == 2);
+	CHECK(home.rules[0].kind == PileRule::VarRule::Kind::Same);
+	CHECK(home.rules[1].kind == PileRule::VarRule::Kind::Step);
+	CHECK(home.rules[1].amount == 1.0f);
 }
 
 TEST_CASE("a pack cut from a sheet: a face for each suit and rank, one back for all", "[cards][sheets]")

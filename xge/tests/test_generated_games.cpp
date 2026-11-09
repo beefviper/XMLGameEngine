@@ -243,6 +243,16 @@ namespace
 			flag(at + ".exists", o.exists);
 			text(at + ".most", std::to_string(o.most));
 			text(at + ".pile.score", o.pile.score + " with " + o.pile.scoreWith + " full " + std::to_string(o.pile.scoreFull) + " best " + std::to_string(o.pile.scoreBest));
+			flag(at + ".pile.carry", o.pile.carry);
+			flag(at + ".pile.takes.one", o.pile.takes.one);
+			const auto rules = [&](const std::string& here, const std::vector<PileRule::VarRule>& list)
+			{
+				for (const PileRule::VarRule& rule : list) { text(here, std::to_string(static_cast<int>(rule.kind)) + " " + rule.variable + " " + std::to_string(rule.amount)); }
+			};
+			rules(at + ".pile.takes.rules", o.pile.takes.rules);
+			rules(at + ".pile.takes.empty", o.pile.takes.emptyRules);
+			rules(at + ".pile.takes.any", o.pile.takes.anyRules);
+			rules(at + ".pile.takes.wild " + o.pile.takes.wildVariable, o.pile.takes.wildRules);
 			vector2(at + ".position", o.rawPosition);
 			vector2(at + ".velocity", o.rawVelocity);
 			vector2(at + ".acceleration", o.rawAcceleration);

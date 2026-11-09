@@ -1332,6 +1332,7 @@ namespace xge
 			case Kind::Step: holds = mine == theirs + each.amount; break;
 			case Kind::Total: break;   // what is laid together, added up (pileTakes)
 			case Kind::Equal: holds = mine == each.amount; break;
+			case Kind::Unequal: holds = mine != each.amount; break;
 			case Kind::AtLeast: holds = mine >= each.amount; break;
 			case Kind::AtMost: holds = mine <= each.amount; break;
 			}
@@ -1405,7 +1406,7 @@ namespace xge
 			layOutCards();
 			return true;
 		}
-		if (at < count - 1 && !pile->pile.run) { return false; }
+		if (at < count - 1 && !pile->pile.carry) { return false; }
 		// Face up, and each on the one below it by the pile's own rule.
 		for (int i = at; i < count; ++i)
 		{
@@ -1767,7 +1768,7 @@ namespace xge
 		// A pile fanned across: left and right go through its cards first
 		// (any of a hand's own, else a run's face-up ones).
 		const bool fannedAcross = std::fabs(pile->pile.fan.x) > std::fabs(pile->pile.fan.y);
-		if (fannedAcross && (direction == Direction::Left || direction == Direction::Right) && (own || pile->pile.run))
+		if (fannedAcross && (direction == Direction::Left || direction == Direction::Right) && (own || pile->pile.carry))
 		{
 			const int at = hand.hand.at < 0 ? count - 1 : hand.hand.at;
 			const int next = at + ((direction == Direction::Right) == (pile->pile.fan.x > 0.0f) ? 1 : -1);
@@ -1798,14 +1799,14 @@ namespace xge
 		// piles above or below, the pile nearest across.
 		const bool up = direction == Direction::Up;
 		const int at = hand.hand.at < 0 ? count - 1 : hand.hand.at;
-		if (!fannedAcross && pile->pile.run && up && takeable(at - 1) && takeable(at))
+		if (!fannedAcross && pile->pile.carry && up && takeable(at - 1) && takeable(at))
 		{
 			hand.hand.at = at - 1;
 			hand.hand.mouse = false;
 			layOutCards();
 			return true;
 		}
-		if (!fannedAcross && pile->pile.run && !up && at < count - 1)
+		if (!fannedAcross && pile->pile.carry && !up && at < count - 1)
 		{
 			hand.hand.at = at + 1;
 			hand.hand.mouse = false;

@@ -110,7 +110,7 @@ A condition is checked every frame while its state (or scene) is current. It hol
 |---|---|
 | `<atleast>N</atleast>` | N or more |
 | `<atmost>N</atmost>` | N or less (lives counting down) |
-| `<above>N</above>`, `<below>N</below>`, `<equal>N</equal>` | more than, less than, equal to N |
+| `<above>N</above>`, `<below>N</below>`, `<equal>N</equal>`, `<unequal>N</unequal>` | more than, less than, equal to, not equal to N |
 | `<remaining>N</remaining>` | no more than N of the matched objects are in play (`class="aliens"` with 0: all shot) |
 
 - **What is tested.** `variable="score"` is the object's variable or, if none, one of its live numbers: `x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`; on cells `column`, `row`, `moves`; on a holder its [card numbers](cards.md#holders).

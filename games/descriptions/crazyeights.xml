@@ -149,7 +149,10 @@
           <position><x>window.width.center + 24</x><y>middle</y></position>
           <holds class="card" sprite="face">
             <accepts>
-              <any><same variable="suit" /><same variable="rank" /></any>
+              <any>
+                <condition variable="suit"><equal>top.suit</equal></condition>
+                <condition variable="rank"><equal>top.rank</equal></condition>
+              </any>
               <wild variable="suit"><condition variable="rank"><equal>8</equal></condition></wild>
             </accepts>
           </holds>

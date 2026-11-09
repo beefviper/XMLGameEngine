@@ -1384,6 +1384,16 @@ TEST_CASE("mistakes in nested conditions and look tests stop the load, saying wh
 		ContainsSubstring("starts with <set>"));
 }
 
+TEST_CASE("<unequal> holds for what is not that number", "[conditions][self]")
+{
+	// v is 2, 5 and 9.
+	Coins each("class=\"coin\" variable=\"v\"><unequal>5</unequal><inc variable=\"self.v\">10</inc>");
+	each.loaded.frames(1);
+	CHECK(each.loaded.variable("coin1", "v") == 12.0f);
+	CHECK(each.loaded.variable("coin2", "v") == 5.0f);
+	CHECK(each.loaded.variable("coin3", "v") == 19.0f);
+}
+
 TEST_CASE("a condition on a class: self is each one it holds for, others the rest; what names neither runs once", "[conditions][self]")
 {
 	// v is 2, 5 and 9; flag.n counts the commands run once.

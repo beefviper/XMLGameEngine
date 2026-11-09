@@ -1825,8 +1825,8 @@
           <xsl:with-param name="node" select="y" />
         </xsl:call-template>
       </xsl:for-each>
-      <xsl:if test="run">
-        <xsl:value-of select="concat(' ', $to, '.pile.run = true;')" />
+      <xsl:if test="carry">
+        <xsl:value-of select="concat(' ', $to, '.pile.carry = true;')" />
       </xsl:if>
       <xsl:if test="top">
         <xsl:value-of select="concat(' ', $to, '.pile.topSprite = ')" />
@@ -1927,11 +1927,11 @@
       <xsl:text>&#10;</xsl:text>
       <xsl:for-each select="accepts">
         <xsl:value-of select="concat($indent, $to, '.pile.takes.given = true;')" />
-        <xsl:if test="one">
+        <xsl:if test="condition[@total = 'count']">
           <xsl:value-of select="concat(' ', $to, '.pile.takes.one = true;')" />
         </xsl:if>
         <xsl:text>&#10;</xsl:text>
-        <xsl:for-each select="same | differs | step | total | condition">
+        <xsl:for-each select="condition[not(@total = 'count')]">
           <xsl:call-template name="accept-rule">
             <xsl:with-param name="list" select="concat($to, '.pile.takes.rules')" />
             <xsl:with-param name="indent" select="$indent" />
@@ -2568,27 +2568,33 @@
     </xsl:if>
   </xsl:template>
 
-  <!-- A rule of an <accepts> (the current node) on the arriving one's
-       variables: list.push_back({ PileRule::VarRule::Kind::Step, "rank", 1 }). -->
+  <!-- A <condition> of an <accepts> (the current node) on the arriving one's
+       variables: list.push_back({ PileRule::VarRule::Kind::Step, "rank", 1 }).
+       Against top.<variable>: <equal> Same, <unequal> Differs, plus or minus N Step. -->
   <xsl:template name="accept-rule">
     <xsl:param name="list" />
     <xsl:param name="indent" />
+    <xsl:variable name="text" select="normalize-space(*[1])" />
+    <xsl:variable name="rest" select="normalize-space(substring-after($text, concat('top.', @variable)))" />
+    <xsl:variable name="against" select="starts-with($text, 'top.')" />
     <xsl:variable name="kind">
       <xsl:choose>
-        <xsl:when test="self::same">Same</xsl:when>
-        <xsl:when test="self::differs">Differs</xsl:when>
-        <xsl:when test="self::step">Step</xsl:when>
-        <xsl:when test="self::total">Total</xsl:when>
+        <xsl:when test="@total = 'sum'">Total</xsl:when>
+        <xsl:when test="$against and $rest != ''">Step</xsl:when>
+        <xsl:when test="$against and equal">Same</xsl:when>
+        <xsl:when test="$against">Differs</xsl:when>
         <xsl:when test="equal">Equal</xsl:when>
+        <xsl:when test="unequal">Unequal</xsl:when>
         <xsl:when test="atleast">AtLeast</xsl:when>
         <xsl:otherwise>AtMost</xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     <xsl:variable name="amount">
       <xsl:choose>
-        <xsl:when test="self::step or self::total"><xsl:value-of select="normalize-space(.)" /></xsl:when>
-        <xsl:when test="self::condition"><xsl:value-of select="normalize-space(*[1])" /></xsl:when>
-        <xsl:otherwise>0</xsl:otherwise>
+        <xsl:when test="$against and starts-with($rest, '-')"><xsl:value-of select="concat('-', normalize-space(substring($rest, 2)))" /></xsl:when>
+        <xsl:when test="$against and $rest != ''"><xsl:value-of select="normalize-space(substring($rest, 2))" /></xsl:when>
+        <xsl:when test="$against">0</xsl:when>
+        <xsl:otherwise><xsl:value-of select="$text" /></xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     <xsl:value-of select="concat($indent, $list, '.push_back({ PileRule::VarRule::Kind::', $kind, ', ')" />
@@ -2966,7 +2972,7 @@
         </xsl:apply-templates>
         <xsl:value-of select="concat($inner, $var, '.commands = ')" />
         <xsl:call-template name="commands">
-          <xsl:with-param name="nodes" select="*[not(self::condition)][not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::remaining or self::lowest or self::highest or self::all or self::any))]" />
+          <xsl:with-param name="nodes" select="*[not(self::condition)][not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::all or self::any))]" />
           <xsl:with-param name="indent" select="$inner" />
         </xsl:call-template>
         <xsl:value-of select="concat(';&#10;', $in, '}));&#10;')" />
@@ -3003,7 +3009,7 @@
       </xsl:if>
     </xsl:for-each>
     <xsl:choose>
-      <xsl:when test="($node/@class or $node/@object) and ($node/@sprite or not($node/@variable or $node/@total or $node/@distance)) and not($test[self::atleast or self::atmost or self::above or self::below or self::equal or self::remaining or self::lowest or self::highest or self::all or self::any])">
+      <xsl:when test="($node/@class or $node/@object) and ($node/@sprite or not($node/@variable or $node/@total or $node/@distance)) and not($test[self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::all or self::any])">
         <xsl:value-of select="concat($inner, $var, '.test = RawCondition::Test::Shows;&#10;')" />
       </xsl:when>
       <xsl:when test="$test[self::all or self::any]">
@@ -3022,6 +3028,7 @@
             <xsl:when test="$test[self::above]">Above</xsl:when>
             <xsl:when test="$test[self::below]">Below</xsl:when>
             <xsl:when test="$test[self::equal]">Equal</xsl:when>
+            <xsl:when test="$test[self::unequal]">Unequal</xsl:when>
             <xsl:when test="$test[self::lowest]">Lowest</xsl:when>
             <xsl:when test="$test[self::highest]">Highest</xsl:when>
             <xsl:otherwise>Remaining</xsl:otherwise>
@@ -3693,8 +3700,8 @@
         <xsl:for-each select="*">
           <xsl:if test="position() &gt; 1">,</xsl:if>
           <xsl:choose>
-            <xsl:when test="local-name() = 'same' and @variable = 'suit'"> { RawPatterns::Part::Suited, </xsl:when>
-            <xsl:when test="local-name() = 'same'"> { RawPatterns::Part::Same, </xsl:when>
+            <xsl:when test="local-name() = 'alike' and @variable = 'suit'"> { RawPatterns::Part::Suited, </xsl:when>
+            <xsl:when test="local-name() = 'alike'"> { RawPatterns::Part::Same, </xsl:when>
             <xsl:when test="local-name() = 'run'"> { RawPatterns::Part::Run, </xsl:when>
             <xsl:otherwise> { RawPatterns::Part::Suited, </xsl:otherwise>
           </xsl:choose>

@@ -28,8 +28,8 @@
     diamonds) and a column for each rank; a card is worth its column
     (jack 11, queen 12, king 13), the ace 1 and its `high` 14, so it plays
     high, and low in A 2 3 4 5.
-  * Poker's hands are a <patterns> set of the game: <same variable="rank">
-    cards of a rank, a <run variable="worth"> of worths in a row, <same
+  * Poker's hands are a <patterns> set of the game: <alike variable="rank">
+    cards of a rank, a <run variable="worth"> of worths in a row, <alike
     variable="suit"> cards of one suit. Your cards and the computer's are
     holders that <score> by them, <with> the
     board's five, the <best> five: live numbers `pattern` (which hand,
@@ -86,14 +86,14 @@
   </sheets>
   <!-- poker's hands, the lowest first; none of them: the highest cards -->
   <patterns name="poker">
-    <pattern name="pair"><same variable="rank">2</same></pattern>
-    <pattern name="twopair"><same variable="rank">2</same><same variable="rank">2</same></pattern>
-    <pattern name="three"><same variable="rank">3</same></pattern>
+    <pattern name="pair"><alike variable="rank">2</alike></pattern>
+    <pattern name="twopair"><alike variable="rank">2</alike><alike variable="rank">2</alike></pattern>
+    <pattern name="three"><alike variable="rank">3</alike></pattern>
     <pattern name="straight"><run variable="worth">5</run></pattern>
-    <pattern name="flush"><same variable="suit">5</same></pattern>
-    <pattern name="fullhouse"><same variable="rank">3</same><same variable="rank">2</same></pattern>
-    <pattern name="four"><same variable="rank">4</same></pattern>
-    <pattern name="straightflush"><run variable="worth">5</run><same variable="suit">5</same></pattern>
+    <pattern name="flush"><alike variable="suit">5</alike></pattern>
+    <pattern name="fullhouse"><alike variable="rank">3</alike><alike variable="rank">2</alike></pattern>
+    <pattern name="four"><alike variable="rank">4</alike></pattern>
+    <pattern name="straightflush"><run variable="worth">5</run><alike variable="suit">5</alike></pattern>
   </patterns>
   <states>
     <state name="title">

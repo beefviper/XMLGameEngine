@@ -687,24 +687,14 @@
     </xs:sequence>
     <xs:attribute name="button" type="xs:string" use="required" />
   </xs:complexType>
-  <!-- pile: a place that holds cards. faces=: every card put on it turned up or down (left out: each keeps its own).
-       fan: each face-up card on from the one below (<hidden>: each face-down one; <width>: the fan is never wider, the
-       steps across shrink); dealt: cards dealt it at the start (in a group, <more>: each pile after the first that many
-       more); deals: taking from it deals that many into= that pile (none: into the own pile of the hand that takes);
-       refill: and taken from empty, that pile is turned back over onto it (<shuffle />: shuffled; <leave>: but for that
-       many top cards); takes: what may be laid on it (<matches />: the same suit as the top, or the suit called, or the same
-       rank; <wild> ranks go on anything, and the pile then waits for <call />; on an empty one, <empty>'s ranks and suits);
-       run: a face-up card may be taken with those above it; showtop: a face-down card left on top turns up; sorted: kept
-       in suit then rank order; lift: the face-up card a hand points at is lifted out of the fan by that much;
-       points: the live number points adds up the face-up cards' worths, each as high as it may count while the total
-       stays <atmost> -->
   <!-- holds: what this object (or each member of a group) holds, in order, the last on top: members of that class=, each
        showing the look sprite= while laid here. The members of a held class are the cells of one <group> in <columns> and
        <rows> (cards: a row for each suit, a column for each rank), with two looks, the face first and the back.
        spread: each held one on from the one under it (<width>: never wider; with sprite=, for those showing that look);
-       accepts: what may be placed on top, by the arriving one's variables against the top one's (<same>, <differs>,
-       <step>N: the top's plus N; <total>N: the two add up to N), <one />: one at a time, <empty>: <condition>s on the
-       first one; run: one may be picked with all those on it; top: the top one turns to that look; lift: the one a
+       accepts: what may be placed on top, as <condition>s on the arriving one (all must hold), comparing its variable=
+       with a number or the top one's (top.suit, top.rank - 1); total="sum": that variable added up over what is laid at
+       once; total="count" <equal>1: one at a time; <any>: one of these holds too; <empty>: <condition>s on the first
+       one; carry: one may be picked with all those on it; top: the top one turns to that look; lift: the one a
        picker points at is lifted by that much; picked: what picking from it does instead, picking nothing up (<send
        into>N there; <empty>: a <send from> with <all /> (and <leave>) back, then <order><random /></order>; <play sound>) -->
   <xs:complexType name="holdsType">
@@ -722,25 +712,13 @@
       <xs:element name="accepts" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="one" type="emptyType" minOccurs="0" />
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-              <xs:element name="same" type="acceptVariableType" />
-              <xs:element name="differs" type="acceptVariableType" />
-              <xs:element name="step" type="acceptAmountType" />
-              <!-- total: what is laid at once (one or several), that variable added up, is the number -->
-              <xs:element name="total" type="acceptAmountType" />
-              <xs:element name="condition" type="acceptConditionType" />
-            </xs:choice>
+            <xs:element name="condition" type="acceptConditionType" minOccurs="0" maxOccurs="unbounded" />
             <!-- one of these holds too -->
             <xs:element name="any" minOccurs="0">
               <xs:complexType>
-                <xs:choice maxOccurs="unbounded">
-                  <xs:element name="same" type="acceptVariableType" />
-                  <xs:element name="differs" type="acceptVariableType" />
-                  <xs:element name="step" type="acceptAmountType" />
-                  <xs:element name="total" type="acceptAmountType" />
-                  <xs:element name="condition" type="acceptConditionType" />
-                </xs:choice>
+                <xs:sequence>
+                  <xs:element name="condition" type="acceptConditionType" maxOccurs="unbounded" />
+                </xs:sequence>
               </xs:complexType>
             </xs:element>
             <!-- what keeps these goes on anything; who laid it then names a value of variable= -->
@@ -762,7 +740,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="run" type="emptyType" minOccurs="0" />
+      <xs:element name="carry" type="emptyType" minOccurs="0" />
       <xs:element name="top" minOccurs="0">
         <xs:complexType>
           <xs:attribute name="sprite" type="xs:NMTOKEN" use="required" />
@@ -852,23 +830,24 @@
     <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
-  <xs:complexType name="acceptVariableType">
-    <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
-  </xs:complexType>
-  <xs:complexType name="acceptAmountType">
-    <xs:simpleContent>
-      <xs:extension base="xs:decimal">
-        <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
+  <!-- A <condition> of an <accepts>: the arriving one's variable= against a number, or against the top one's
+       (top.suit; top.rank + 1). total="sum": that variable over what is laid at once; total="count": how many. -->
   <xs:complexType name="acceptConditionType">
     <xs:choice>
-      <xs:element name="equal" type="xs:decimal" />
+      <xs:element name="equal" type="xs:string" />
+      <xs:element name="unequal" type="xs:string" />
       <xs:element name="atleast" type="xs:decimal" />
       <xs:element name="atmost" type="xs:decimal" />
     </xs:choice>
-    <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="variable" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="total" use="optional">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="count" />
+          <xs:enumeration value="sum" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
   </xs:complexType>
 
   <!-- marks: on a picker, pieces it shows in cells of their own map of cells, a copy of object= in each:
@@ -1883,7 +1862,7 @@
 
   <!--
     One test of a condition: atleast / atmost / above / below /
-    equal compare what is tested (the variable named by variable= of every
+    equal / unequal compare what is tested (the variable named by variable= of every
     object that matches class and/or object; a total= over them; or each
     one's distance= to the nearest of another) with a number or another
     variable; remaining counts the matching objects still in play.
@@ -1895,6 +1874,7 @@
       <xs:element name="above" type="compareType" />
       <xs:element name="below" type="compareType" />
       <xs:element name="equal" type="compareType" />
+      <xs:element name="unequal" type="compareType" />
       <xs:element name="remaining" type="valueType" />
       <!-- the one whose variable is lowest (highest) of all those matched; a tie, the first -->
       <xs:element name="lowest" type="emptyType" />
@@ -2638,8 +2618,8 @@
         <!--
           What a pile's cards may make, the lowest first, for a pile's
           <score patterns="name">: each <pattern> one or more parts that all
-          hold: <same variable="rank">N (N cards of one rank; each <same> a
-          rank of its own), <same variable="suit">N (N cards of one suit),
+          hold: <alike variable="rank">N (N cards of one rank; each <alike> a
+          rank of its own), <alike variable="suit">N (N cards of one suit),
           <run variable="worth">N (N worths in a row, a card counting its high
           too; variable="rank": its column, for <melds /> only).
         -->
@@ -2649,7 +2629,7 @@
               <xs:element name="pattern" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:choice maxOccurs="unbounded">
-                    <xs:element name="same" type="patternPartType" />
+                    <xs:element name="alike" type="patternPartType" />
                     <xs:element name="run" type="patternPartType" />
                   </xs:choice>
                   <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
