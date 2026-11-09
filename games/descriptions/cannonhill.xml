@@ -22,8 +22,9 @@
     barrel at the speed of the charge, with an <acceleration> the spawn
     gives it: the fall, and this shot's wind across.
   * The barrel is a bitmap turned about its middle, which sits on top of
-    the cannon. Its heading is worked out from its elevation, kept from 0
-    to 90 by a <clamp>, so the two cannons share one kit piece.
+    the cannon. Its heading, and where its tip is, follow its elevation
+    (update="live"), kept from 0 to 90 by a <clamp>, so the two cannons
+    share one kit piece and aiming only changes the elevation.
   * Where a turn is, is the table's look: handing over, aiming, flying,
     landed, done, a point; each look's rules sit inside one condition on it.
     The blast that a landing leaves says whether a cannon was hit, by a
@@ -63,7 +64,7 @@
   <kit>
     <!-- A barrel: two pixels' worth of bars above its middle, clear below, so
          it turns about the middle, which sits on top of the cannon. Its
-         heading comes from its elevation: level + side * elevation, side 1
+         heading follows its elevation: level - side * elevation, side 1
          for a barrel facing right, -1 for one facing left. -->
     <object name="barrel" class="barrel">
       <sprite name="idle">
@@ -73,24 +74,19 @@
         <bitmap from="barrel-ready" />
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <heading>45</heading>
+      <heading update="live">self.level - self.side * self.elevation</heading>
       <actions>
         <action name="raise">
           <set variable="self.elevation"><formula><clamp><value><add><augend>self.elevation</augend><addend>aimstep</addend></add></value><atleast>0</atleast><atmost>90</atmost></clamp></formula></set>
-          <set variable="self.heading">self.level - self.side * self.elevation</set>
         </action>
         <action name="lower">
           <set variable="self.elevation"><formula><clamp><value><subtract><minuend>self.elevation</minuend><subtrahend>aimstep</subtrahend></subtract></value><atleast>0</atleast><atmost>90</atmost></clamp></formula></set>
-          <set variable="self.heading">self.level - self.side * self.elevation</set>
         </action>
         <action name="charge">
           <inc variable="self.power">charge</inc>
           <set variable="self.power"><formula><smallest><value>self.power</value><value>most</value></smallest></formula></set>
         </action>
         <action name="fire">
-          <!-- where the tip is, from the middle -->
-          <set variable="self.tipx"><formula><multiply><multiplicand>tip</multiplicand><multiplier><sine><value>self.heading</value></sine></multiplier></multiply></formula></set>
-          <set variable="self.tipy"><formula><multiply><multiplicand>tip</multiplicand><multiplier>-1</multiplier><multiplier><cosine><value>self.heading</value></cosine></multiplier></multiply></formula></set>
           <spawn object="shell">
             <position>
               <x><centered>self.x + self.width / 2 + self.tipx</centered></x>
@@ -118,8 +114,9 @@
         <variable name="side">1</variable>
         <variable name="power">0</variable>
         <variable name="last">0</variable>
-        <variable name="tipx">0</variable>
-        <variable name="tipy">0</variable>
+        <!-- where the tip is, from the middle -->
+        <variable name="tipx" update="live"><formula><multiply><multiplicand>tip</multiplicand><multiplier><sine><value>self.heading</value></sine></multiplier></multiply></formula></variable>
+        <variable name="tipy" update="live"><formula><multiply><multiplicand>tip</multiplicand><multiplier>-1</multiplier><multiplier><cosine><value>self.heading</value></cosine></multiplier></multiply></formula></variable>
       </variables>
     </object>
 
@@ -264,7 +261,6 @@
         </object>
         <object name="barrel1" from="barrel" />
         <object name="barrel2" from="barrel">
-          <heading>315</heading>
           <variables>
             <variable name="level">270</variable>
             <variable name="side">-1</variable>
@@ -323,9 +319,7 @@
               <set variable="barrel2.x">x2 - barrel2.width / 2</set>
               <set variable="barrel2.y">y2 - cannon2.height - barrel2.height / 2</set>
               <set variable="barrel1.elevation">45</set>
-              <set variable="barrel1.heading">45</set>
               <set variable="barrel2.elevation">45</set>
-              <set variable="barrel2.heading">315</set>
               <set variable="table.placed">1</set>
             </condition>
           </conditions>

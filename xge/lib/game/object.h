@@ -1674,6 +1674,24 @@ namespace xge
 		// back.
 		Vector2f cellOffset{};
 
+		// What it says update="live" of: a <variable>, a half of its
+		// <position> (a group's, with this one's place in it added) or its
+		// <heading>, worked out again every frame from what it reads
+		// (Game::follow), after the move and before the conditions. No
+		// command may write one (load/check). In the file's order: the
+		// position and heading first, then the variables.
+		struct Follow
+		{
+			enum class Part { X, Y, Heading, Variable };
+			Part part{ Part::Variable };
+			std::string variable;
+			RawValue value;
+		};
+		std::vector<Follow> follows;
+
+		// Whether `part` (x, y, heading or a variable's name) is one it follows.
+		bool followsPart(const std::string& part) const;
+
 		// Whether its start (position, velocity or a <variable>) draws a
 		// <random>: a reset then draws it again (Game::drawStartAgain).
 		bool startDrawsRandom{ false };

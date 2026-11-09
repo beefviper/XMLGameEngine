@@ -33,7 +33,7 @@ What the engine cannot do today. Why, and what might come, is in the [design fil
 
 ## Values
 
-- Values outside a command or a condition's test are fixed at load. A class condition cannot compare each object with its own other variable.
+- Values outside a command, a condition's test or an object's `update="live"` number are fixed at load; a game `<variable>`, a velocity and a size cannot be live. A class condition cannot compare each object with its own other variable.
 - No tangent, square root, power or "if" in `<formula>`: a comparison is a 1 or 0 to multiply by.
 - A `<divide>` by something not known at load gives 0; only positions and timer intervals are worked out again.
 - Expressions are text to the schema, so a typo is found at load, not by validation. The weak validator covers only the XSD the schema uses.

@@ -135,6 +135,9 @@ namespace xge
 		// makes. `where` says whose value it is, for the message if the
 		// expression does not compile (std::runtime_error).
 		float evaluate(const RawValue& value, const std::string& where);
+		// The same for where an object starts: an update="live" one may read
+		// what is only known while the game runs (Object::follows).
+		float evaluateStart(const RawValue& value, const std::string& where);
 
 		// A path step's commands about its flier (PathStep::ownRaw), made for
 		// the object `follower`: self is its name.

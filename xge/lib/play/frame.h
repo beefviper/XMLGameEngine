@@ -92,6 +92,10 @@ namespace xge
 		// contact is where and how): both their rules for it.
 		virtual void touched(Object& a, Object& b, const Contact& contact) { (void)a; (void)b; (void)contact; }
 
+		// After everything has moved and what is carried is held: what
+		// follows something (update="live") worked out again.
+		virtual void follow() {}
+
 		// After everything has moved: the state's conditions.
 		virtual void conditions() {}
 

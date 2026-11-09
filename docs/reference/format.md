@@ -64,7 +64,8 @@ Once, at load, except:
 
 - a timer's `<every>` and `<after>`, worked out again each time it starts over;
 - a position naming a text's or image's size, finished once the window measures it and again whenever that size changes;
-- a command's values and a condition's test, read as they run ([below](#values-read-when-used)).
+- a command's values and a condition's test, read as they run ([below](#values-read-when-used));
+- an object's number written `update="live"` ([below](#live-numbers-of-an-object)).
 
 A `<random>` is drawn at load and again whenever its object comes back into play: a reset (of it, its scene or the game), a `<reveal>`, `<release>` or `<fire>`, or a new copy. So each Pong serve is new. A game-level `<random>` is drawn once; entering a scene draws nothing.
 
@@ -80,7 +81,7 @@ A `<random>` is drawn at load and again whenever its object comes back into play
 | `object.width`, `object.height` | its size (its sprite's footprint); meant for `<position>` |
 | `object.timer` | a named object timer's [time left](timers.md#time-left) |
 | `object.x`, `.y`, `.velocity.x`, `.velocity.y`, `.heading`, `.altitude`, `.rise`, `.light`, `.blink` | **live numbers**: its top left, how it goes, its [height](pictures.md#height-and-shadows), [light](pictures.md#light-and-dark), [blinking](pictures.md#poses-mirror-grip-and-blinking) |
-| `self.` before any of these | in an object's own rules, actions and timers, the object running it |
+| `self.` before any of these | in an object's own rules, actions, timers and numbers, the object running it |
 | `touch.x`, `.y`, `.along`, `.depth`, `.normal.x`, `.normal.y` | in a rule about another object: the point, where along the object's side (0 to 1), how deep, the way out of the other |
 
 An object's own `<variable>` named like a size or live number (`width`, `x`) wins over it.
@@ -95,7 +96,22 @@ A command whose numbers name something that changes is worked out each time it r
 <above>gun2.score</above>                                         <!-- a test following gun 2's score -->
 ```
 
-Every other value is fixed at load, and one that is not a command's (a position, a size) naming a live number stops the load, since nothing is anywhere yet.
+Every other value is fixed at load, and one that is not a command's (a position, a size) naming a live number stops the load, since nothing is anywhere yet, unless it is `update="live"`.
+
+### Live numbers of an object
+
+`update="live"` on an object's `<variable>`, a half of its `<position>` or its `<heading>` works it out again every frame from what it reads, after the move and before the conditions, and as the game starts. Left out (or `update="once"`), it is worked out once, as ever.
+
+```xml
+<position><x update="live">player.x + 18</x><y>0</y></position>      <!-- Demon Attack's shot, steered by the cannon -->
+<heading update="live">self.level - self.side * self.elevation</heading>  <!-- Cannon Hill's barrel follows its elevation -->
+<variable name="tipx" update="live"><formula>...<sine><value>self.heading</value></sine>...</formula></variable>
+```
+
+- It may read anything a command can: live numbers, other variables, `self`, a `<formula>`. A group's live half is worked out for each member, its place in the group added.
+- No command can change it: a `<set>`, `<inc>`, `<dec>` or `<copy into>` naming it stops the load. Change what it reads instead. A live half is put back each frame whatever moved it; the other half moves as ever.
+- Its heading and position are worked out before its variables, so a variable can read them. One reading another live number gets it as it was worked out this frame if that came first, else as it was last frame.
+- Use it for what follows something (a steered shot, a part riding a turret, a number made from others). A snapshot (what the bet was, the power just fired) or a start that then changes (fuel that burns) stays once.
 
 ### Arithmetic as tags
 

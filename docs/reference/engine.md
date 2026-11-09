@@ -21,7 +21,7 @@ How a game is loaded and played, the libraries behind it, how to build it, and w
 4. climbing, grip, acceleration, held thrust, turns and swings, pulls and seeking, altitudes;
 5. screen-edge rules for what is moving;
 6. **the move**: hops are made, carried things lent their carrier's motion, everything moves (a swing turns through it), and each touch found on the way runs its rules;
-7. sticks hold, carried things are placed, tethers and shadows follow, light and dark worked out, poses picked;
+7. sticks hold, carried things are placed, `update="live"` numbers are worked out again (`Game::follow`), tethers and shadows follow, light and dark worked out, poses picked;
 8. conditions: the state's, then its current scene's;
 9. copies made join, despawned ones go.
 

@@ -14,7 +14,9 @@
 #include "load/spelling.h"
 #include "play/verbs.h"
 
+
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <iomanip>
@@ -106,6 +108,8 @@ namespace xge
 		// Which objects' rules answer which others, found while loading
 		// rather than in the first frame.
 		partners(objects);
+		// What follows something, from where everything starts.
+		follow();
 		// Every object's own visual is built later, by Engine, once a real
 		// Window (and therefore a real backend to build against) exists -
 		// see Window::init() in window/window.h.
@@ -1998,6 +2002,41 @@ namespace xge
 		for (const LiveLink& link : liveLinks)
 		{
 			*link.number = parts[link.part].of(objects[link.object]);
+		}
+	}
+
+	void Game::follow(void)
+	{
+		for (Object& object : getCurrentObjects())
+		{
+			if (object.follows.empty() || !object.exists) { continue; }
+			const std::string where = "object '" + object.name + "'";
+			for (const Object::Follow& each : object.follows)
+			{
+				const float value = evaluateNow(each.value, where);
+				switch (each.part)
+				{
+				case Object::Follow::Part::X: object.position.x = value + object.cellOffset.x; break;
+				case Object::Follow::Part::Y: object.position.y = value + object.cellOffset.y; break;
+				case Object::Follow::Part::Heading:
+				{
+					float degrees = std::fmod(value, 360.0f);
+					if (degrees < 0.0f) { degrees += 360.0f; }
+					if (degrees != object.heading) { object.heading = degrees; object.showHeading(); }
+					break;
+				}
+				case Object::Follow::Part::Variable:
+				{
+					const auto held = object.variable.find(each.variable);
+					if (held != object.variable.end() && held->second != value)
+					{
+						held->second = value;
+						refreshBoundTexts(object.name, each.variable, value);
+					}
+					break;
+				}
+				}
+			}
 		}
 	}
 

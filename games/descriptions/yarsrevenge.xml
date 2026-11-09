@@ -24,8 +24,8 @@
     together; <reset object="shield" /> puts the whole map back.
   * The destroyer missile has a <seek object="yar">; Yar's rule about it
     has unless="zone", so in the zone it does nothing.
-  * The cannon is out of play until a bite <reveal>s it; a timer sets its y
-    to Yar's every frame, and its action fires the blast and puts it away.
+  * The cannon is out of play until a bite <reveal>s it; its y is
+    update="live", level with Yar's every frame, and its action fires the blast and puts it away.
     An object out of play does not act on a key, so Space without the
     cannon fires only Yar's missile.
   * The Swirl does not exist until the Qotile <spawn>s it where it is
@@ -276,7 +276,7 @@
           <sprite>
             <bitmap from="cannon" />
           </sprite>
-          <position><x>0</x><y>292</y></position>
+          <position><x>0</x><y update="live">yar.y + 4</y></position>
           <facing>right</facing>
           <active>false</active>
           <actions>
@@ -286,9 +286,6 @@
               <die />
             </action>
           </actions>
-          <timers>
-            <timer><every>0.01</every><set variable="cannon.y">yar.y + 4</set></timer>
-          </timers>
         </object>
         <object name="blast">
           <sprite><rectangle><width>24</width><height>10</height><color>color.yellow</color></rectangle></sprite>

@@ -22,8 +22,27 @@
        =================================================================== -->
 
   <!-- The value $node holds: its text as an expression, or the one value tag
-       inside it (readValue). -->
+       inside it (readValue); update="live" said with live(). -->
   <xsl:template name="value">
+    <xsl:param name="node" />
+    <xsl:choose>
+      <xsl:when test="$node/@update = 'live'">
+        <xsl:text>live(</xsl:text>
+        <xsl:call-template name="value-body">
+          <xsl:with-param name="node" select="$node" />
+        </xsl:call-template>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="value-body">
+          <xsl:with-param name="node" select="$node" />
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- The value itself, live or not. -->
+  <xsl:template name="value-body">
     <xsl:param name="node" />
     <!-- a value tag, or the text, beside the named parts of a verb whose
          number is its content (readLeadValue): <jump>rowgap<seconds>... -->

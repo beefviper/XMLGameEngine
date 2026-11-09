@@ -876,6 +876,11 @@ namespace xge
 		// and min and max above left empty.
 		std::shared_ptr<const std::vector<RawOperation>> operations;
 
+		// update="live": worked out again every frame from what it reads, not
+		// once as the game loads. Only an object's <variable>, the halves of
+		// its <position> and its <heading> take it (Object::follows).
+		bool live{ false };
+
 		static RawValue expression(std::string text)
 		{
 			RawValue value;

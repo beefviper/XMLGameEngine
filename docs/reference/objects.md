@@ -21,10 +21,10 @@ An object is anything drawn, moved or touched. `name` is required; `class` is op
 |---|---|
 | `<sprite>` | what it looks like: one [shape](pictures.md#sprites). Several named sprites are [looks](pictures.md#looks) or [animation](pictures.md#animation) frames |
 | `<animation>` | which sprites show, in what order, for how long |
-| `<position>` | where it starts, `<x>` and `<y>` from the top left. `<centered>value</centered>` puts its middle there instead (empty: the window's middle). Required unless it has no sprite |
+| `<position>` | where it starts, `<x>` and `<y>` from the top left. `<centered>value</centered>` puts its middle there instead (empty: the window's middle). A half written `update="live"` [follows](format.md#live-numbers-of-an-object) what it reads every frame. Required unless it has no sprite |
 | `<velocity>` | pixels a frame, `<x>` and `<y>`; a half left out is 0 |
 | `<acceleration>` | added to the velocity every frame: gravity is a `<y>`. `<stop />` takes it away, a reset gives it back |
-| `<heading>` | degrees clockwise from straight up. Lets `<turn>`, `<thrust>`, `<swing>` work, and turns the picture |
+| `<heading>` | degrees clockwise from straight up. Lets `<turn>`, `<thrust>`, `<swing>` work, and turns the picture. `update="live"`: [follows](format.md#live-numbers-of-an-object) what it reads |
 | `<pivot>` | the point the picture turns about ([turning about a pivot](pictures.md#turning-about-a-pivot)); the position is then where that point sits |
 | `<drag>` | 0 up to 1: the share of its speed lost each frame |
 | `<friction>` | 0 or more: how much a still surface holds it back, and what brings it to [rest](collisions.md#knocks) |
@@ -42,7 +42,7 @@ An object is anything drawn, moved or touched. `name` is required; `class` is op
 | `<most>` | how many [copies](#spawn-and-despawn) may be out at once |
 | `<collisions>` | how and what it touches ([collisions](collisions.md)). Written, it is on unless `<enabled>false</enabled>`; `<collisions />` alone is something others touch |
 | `<actions>` | named `<action>`s that a key or a rule runs |
-| `<variables>` | its own numbers, read anywhere as `name.variable` |
+| `<variables>` | its own numbers, read anywhere as `name.variable`; one written `update="live"` [follows](format.md#live-numbers-of-an-object) what it reads |
 | `<timers>` | what it does every so often, or once after a while ([timers](timers.md)) |
 
 A group's member, a map's piece and a kit piece have the same parts (the schema's `objectParts`), so they cannot drift apart.

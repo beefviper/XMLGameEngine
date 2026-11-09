@@ -855,7 +855,7 @@ namespace xge
 		// (a serve drawn as an angle: its speed times the cosine of its angle).
 		for (auto& rawVariable : rawObject.variable)
 		{
-			const float value = evaluate(rawVariable.second, where);
+			const float value = evaluateStart(rawVariable.second, where);
 			object.variable[rawVariable.first] = value;
 			object.start.variable[rawVariable.first] = value;
 
@@ -869,8 +869,8 @@ namespace xge
 			|| rawObject.rawVelocity.x.drawsRandom() || rawObject.rawVelocity.y.drawsRandom()
 			|| std::any_of(rawObject.variable.begin(), rawObject.variable.end(), [](const auto& variable) { return variable.second.drawsRandom(); });
 
-		object.start.position.x = evaluate(rawObject.rawPosition.x, where);
-		object.start.position.y = evaluate(rawObject.rawPosition.y, where);
+		object.start.position.x = evaluateStart(rawObject.rawPosition.x, where);
+		object.start.position.y = evaluateStart(rawObject.rawPosition.y, where);
 
 		// A cell is its group's position and its place in the
 		// group; start.position keeps both, so a reset puts each
@@ -882,6 +882,16 @@ namespace xge
 		object.sizeDependencies = positionSizeDependencies;
 		object.positionUsesSize = !positionSizeDependencies.empty();
 		object.positionResolved = !object.positionUsesSize;
+
+		// What it follows, worked out again every frame (Game::follow).
+		using Follow = Object::Follow;
+		if (rawObject.rawPosition.x.live) { object.follows.push_back({ Follow::Part::X, "", rawObject.rawPosition.x }); }
+		if (rawObject.rawPosition.y.live) { object.follows.push_back({ Follow::Part::Y, "", rawObject.rawPosition.y }); }
+		if (rawObject.hasHeading && rawObject.rawHeading.live) { object.follows.push_back({ Follow::Part::Heading, "", rawObject.rawHeading }); }
+		for (const auto& [name, value] : rawObject.variable)
+		{
+			if (value.live) { object.follows.push_back({ Follow::Part::Variable, name, value }); }
+		}
 
 		object.velocity.x = evaluate(rawObject.rawVelocity.x, where);
 		object.velocity.y = evaluate(rawObject.rawVelocity.y, where);
@@ -898,7 +908,7 @@ namespace xge
 		if (rawObject.hasHeading)
 		{
 			object.hasHeading = true;
-			float degrees = std::fmod(evaluate(rawObject.rawHeading, where), 360.0f);
+			float degrees = std::fmod(evaluateStart(rawObject.rawHeading, where), 360.0f);
 			if (degrees < 0.0f) { degrees += 360.0f; }
 			object.heading = degrees;
 		}
@@ -1524,6 +1534,26 @@ namespace xge
 		}
 
 		return sound;
+	}
+
+	float game_expr::evaluateStart(const RawValue& value, const std::string& where)
+	{
+		if (!value.live) { return evaluate(value, where); }
+		// It may read where things are (reading 0 while loading): the game
+		// works it out again before anything is drawn (Game::follow).
+		const bool was = commandValues;
+		commandValues = true;
+		try
+		{
+			const float answer = evaluate(value, where);
+			commandValues = was;
+			return answer;
+		}
+		catch (...)
+		{
+			commandValues = was;
+			throw;
+		}
 	}
 
 	float game_expr::evaluate(const RawValue& value, const std::string& where)

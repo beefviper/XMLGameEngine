@@ -238,6 +238,26 @@
     </xs:sequence>
   </xs:complexType>
 
+  <!--
+    When a number of an object's is worked out: once, as the game loads (the
+    default), or live, again every frame from what it reads, after the move:
+    <x update="live">player.x + 18</x>. A command cannot change a live one.
+  -->
+  <xs:simpleType name="updateType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="once" />
+      <xs:enumeration value="live" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- A number that may be live: an object's <heading>. -->
+  <xs:complexType name="liveValueType" mixed="true">
+    <xs:sequence>
+      <xs:group ref="valueTag" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="update" type="updateType" use="optional" />
+  </xs:complexType>
+
   <!-- A number with a name, for <variable name="score">0</variable>. -->
   <xs:complexType name="variableType" mixed="true">
     <xs:sequence>
@@ -1055,7 +1075,7 @@
     <xs:sequence>
       <xs:element name="random" type="emptyType" minOccurs="0" />
       <xs:choice minOccurs="0">
-        <xs:element name="position" type="partialPositionType" />
+        <xs:element name="position" type="spawnPositionType" />
         <xs:sequence>
           <xs:element name="column" type="valueType" />
           <xs:element name="row" type="valueType" />
@@ -2062,9 +2082,24 @@
       <xs:group ref="valueTag" />
       <xs:element name="centered" type="xs:string" />
     </xs:choice>
+    <xs:attribute name="update" type="updateType" use="optional" />
   </xs:complexType>
 
-  <!-- Some of a <position>: a group's, a member's, a cell's or a scene's change (a half left out is the group's, or 0). -->
+  <!-- Where a <spawn> puts its copy: worked out as it spawns. -->
+  <xs:complexType name="placeValueType" mixed="true">
+    <xs:choice minOccurs="0">
+      <xs:group ref="valueTag" />
+      <xs:element name="centered" type="xs:string" />
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="spawnPositionType">
+    <xs:sequence>
+      <xs:element name="x" type="placeValueType" minOccurs="0" />
+      <xs:element name="y" type="placeValueType" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Some of a <position>: a group's, a member's, a cell's or a scene's change (a half left out is the group's, or 0); a half may be live. -->
   <xs:complexType name="partialPositionType">
     <xs:sequence>
       <xs:element name="x" type="positionValueType" minOccurs="0" />
@@ -2141,10 +2176,18 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- The variables an object owns. -->
+  <!-- The variables an object owns; one may be live. -->
   <xs:complexType name="variablesType">
     <xs:sequence>
-      <xs:element name="variable" type="variableType" maxOccurs="unbounded" />
+      <xs:element name="variable" maxOccurs="unbounded">
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:group ref="valueTag" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="name" type="xs:string" use="required" />
+          <xs:attribute name="update" type="updateType" use="optional" />
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
 
@@ -2174,7 +2217,7 @@
       <xs:element name="shape" type="shapeType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="acceleration" type="vector2Type" minOccurs="0" />
-      <xs:element name="heading" type="valueType" minOccurs="0" />
+      <xs:element name="heading" type="liveValueType" minOccurs="0" />
       <!-- the point of its picture, as drawn, that the heading turns it about (left out, its middle); its <position> is then where that point is on the screen -->
       <xs:element name="pivot" type="vector2Type" minOccurs="0" />
       <xs:element name="drag" type="valueType" minOccurs="0" />

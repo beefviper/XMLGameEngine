@@ -280,6 +280,18 @@ namespace xge
 			if (!found) { throw std::runtime_error(where + ": " + tag + " names no map with <cells />"); }
 		}
 
+		// A command writing what its object follows (update="live"): it would
+		// be undone at the end of the frame, so it is a mistake.
+		void refuseFollowed(const VariableName& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where)
+		{
+			const Object* owner = target.variable.empty() ? nullptr : findObject(objects, target.owner);
+			if (owner && owner->followsPart(target.variable))
+			{
+				throw std::runtime_error(where + ": " + tag + ": '" + target.written() + "' is update=\"live\", worked out every frame from what it reads;"
+					" no command can change it. Change what it reads, or leave out update=\"live\"");
+			}
+		}
+
 		// The variable a command names: owner.variable, the variable after the
 		// last dot (the owner may be a path).
 		void checkVariable(const VariableName& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where)
@@ -545,12 +557,14 @@ namespace xge
 				const VariableName& target = inc ? std::get<CmdIncrement>(shapeOf(command)).target : std::get<CmdDecrement>(shapeOf(command)).target;
 				const std::string written = target.variable.empty() ? target.owner : target.written();
 				checkVariable(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + written + "\" />", objects, where);
+				refuseFollowed(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + written + "\" />", objects, where);
 			}
 			else if (const auto* set = std::get_if<CmdSet>(&shapeOf(command)))
 			{
 				// A variable of an object's, or one of the numbers every
 				// object has (where it is, how it is going, its heading).
 				const std::string tag = "<set variable=\"" + (set->target.variable.empty() ? set->target.owner : set->target.written()) + "\">";
+				refuseFollowed(set->target, tag, objects, where);
 				const std::string part = liveNumberPart(set->target.written());
 				const Object* holder = part.empty() ? nullptr : findObject(objects, set->target.owner);
 				if (part.empty() || (holder && holder->variable.count(part)))
@@ -612,6 +626,7 @@ namespace xge
 				const std::string tag = "<copy variable=\"" + copy->from.written() + "\" into=\"" + copy->into.written() + "\" />";
 				checkVariable(copy->from, tag, objects, where);
 				checkVariable(copy->into, tag, objects, where);
+				refuseFollowed(copy->into, tag, objects, where);
 			}
 			else if (const auto* rank = std::get_if<CmdRank>(&shapeOf(command)))
 			{

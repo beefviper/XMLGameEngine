@@ -1011,6 +1011,8 @@ namespace xge
 
 		holdCarried(objects);
 
+		rules.follow();
+
 		drawTethers(objects);
 
 		castShadows(objects);

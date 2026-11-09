@@ -448,6 +448,21 @@ namespace xge
 		return names;
 	}
 
+	bool Object::followsPart(const std::string& part) const
+	{
+		return std::any_of(follows.begin(), follows.end(), [&](const Follow& each)
+		{
+			switch (each.part)
+			{
+			case Follow::Part::X: return part == "x";
+			case Follow::Part::Y: return part == "y";
+			case Follow::Part::Heading: return part == "heading";
+			case Follow::Part::Variable: return part == each.variable;
+			}
+			return false;
+		});
+	}
+
 	std::string renameStart(const std::string& text, const std::string& from, const std::string& to)
 	{
 		const auto word = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '.'; };
@@ -549,6 +564,11 @@ namespace xge
 			}
 			for (RawTimer& timer : object.timers) { commands(timer.commands); }
 			for (auto& [name, list] : object.action) { commands(list); }
+
+			// Its own numbers, worked out once or live (update="live"):
+			// self in them is this object too.
+			for (auto& each : object.variable) { value(each.second); }
+			for (RawValue* half : { &object.rawPosition.x, &object.rawPosition.y, &object.rawHeading }) { value(*half); }
 		}
 	}
 
@@ -625,7 +645,9 @@ namespace xge
 			{
 				if (value.kind != RawValue::Kind::Centered) { return; }
 				const std::string middle = value.text.empty() ? windowMiddle : "(" + value.text + ")";
+				const bool live = value.live;
 				value = RawValue::expression(middle + " - " + object.name + "." + size + " / 2");
+				value.live = live;
 			};
 			center(object.rawPosition.x, "window.width.center", "width");
 			center(object.rawPosition.y, "window.height.center", "height");

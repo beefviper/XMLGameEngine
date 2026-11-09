@@ -19,8 +19,8 @@
     state's own objects, there in every wave. The three waves are its
     <scenes>, each with its own demons and its own speed (a scene variable
     read by plain name).
-  * As on the 2600, the shot goes where the cannon goes: a timer that runs
-    every frame while it flies puts it over the cannon.
+  * As on the 2600, the shot goes where the cannon goes: its x is
+    update="live", worked out from the cannon's every frame.
   * A wave is a <group> of demons, each with a velocity of its own, bouncing
     off the sides, turning round on a timer drawn anew each time and dropping
     bombs from under it (<facing>down</facing>, <fire>) on another.
@@ -165,7 +165,7 @@
         <!-- one shot at a time, kept over the cannon as it flies -->
         <object name="laser" class="laser">
           <sprite><rectangle><width>3</width><height>18</height><color>color.yellow</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
+          <position><x update="live">player.x + 18</x><y>0</y></position>
           <velocity><y>-9</y></velocity>
           <active>false</active>
           <collisions>
@@ -173,9 +173,6 @@
             <collision edge="all"><die /></collision>
             <collision class="demon"><die /></collision>
           </collisions>
-          <timers>
-            <timer><every>0.01</every><set variable="laser.x">player.x + 18</set></timer>
-          </timers>
         </object>
 
         <object name="score">

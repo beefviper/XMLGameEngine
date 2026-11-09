@@ -28,8 +28,8 @@
     two rows and what a hit scores are the wave's <variables>.
   * Each member drops bombs from under it (<facing>down</facing>, <fire>)
     on a timer of its own, every few seconds, the wait drawn again each time.
-  * As on the 2600, the shot is steered: a timer that runs every frame while
-    it flies keeps it over the blaster.
+  * As on the 2600, the shot is steered: its x is update="live", worked
+    out from the blaster's every frame.
   * The energy is a timer of its own object, named "level", so energy.level
     is the seconds it has left; when it goes off a blaster is lost, and a
     <reset object="energy" /> fills it again at the start of each wave and
@@ -172,7 +172,7 @@
         <!-- one shot at a time, steered with the blaster -->
         <object name="laser" class="laser">
           <sprite><rectangle><width>3</width><height>14</height><color>color.cyan</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
+          <position><x update="live">player.x + 16.5</x><y>0</y></position>
           <velocity><y>-9</y></velocity>
           <active>false</active>
           <collisions>
@@ -180,9 +180,6 @@
             <collision edge="all"><die /></collision>
             <collision class="enemy"><die /></collision>
           </collisions>
-          <timers>
-            <timer><every>0.01</every><set variable="laser.x">player.x + 16.5</set></timer>
-          </timers>
         </object>
 
         <!-- the energy that runs down, and its bar: a green strip, and a black

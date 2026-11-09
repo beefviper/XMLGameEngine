@@ -6,7 +6,8 @@
 // Catch2 tests for values read when they are used: a command's numbers
 // worked out as it runs (where things are, how they go, every variable as
 // it is now, the touch a rule answers), <set>, <spawn> and a <tether>
-// (more of <spawn> in test_spawn.cpp);
+// (more of <spawn> in test_spawn.cpp); what an object says update="live"
+// of, worked out again every frame;
 // then played in games/descriptions/fishingderby.xml.
 
 #include "scratch.h"
@@ -428,4 +429,75 @@ TEST_CASE("a named timer's name cannot be a variable of its object or where it i
 		ContainsSubstring("bomb.fuse is the timer's time left"));
 	CHECK_THROWS_WITH(load(box("bomb", 0, 0, "<timers><timer name=\"x\"><after>3</after></timer></timers>")),
 		ContainsSubstring("give the timer another name"));
+}
+
+TEST_CASE("update=\"live\" on a half of a position: worked out again every frame, after the move", "[live][follow]")
+{
+	const Scratch file(box("ship", 300, 400, "<velocity><x>3</x><y>0</y></velocity>")
+		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<position><x update=\"live\">ship.x + 5</x><y>100</y></position><velocity><x>0</x><y>-2</y></velocity></object>",
+		"<pop />");
+	Played play(file.path);
+
+	// Already where it follows to as the game starts, though ship.x is only
+	// known while the game runs.
+	CHECK(play.get("shot").position.x == Approx(305));
+
+	play.frames(10);
+	CHECK(play.get("ship").position.x == Approx(330));
+	CHECK(play.get("shot").position.x == Approx(335));
+	// the other half moves as ever
+	CHECK(play.get("shot").position.y == Approx(80));
+}
+
+TEST_CASE("a live variable follows what it reads; one worked out once keeps its start", "[live][follow]")
+{
+	const Scratch file(box("ball", 100, 50, "<velocity><x>100</x><y>0</y></velocity><variables><variable name=\"base\">2</variable>"
+		"<variable name=\"twice\" update=\"live\">self.base * 2</variable>"
+		"<variable name=\"start\">self.base * 2</variable>"
+		"<variable name=\"across\" update=\"live\"><formula><smallest><value>self.x</value><value>500</value></smallest></formula></variable></variables>"),
+		"<set variable=\"ball.base\">10</set>");
+	Played play(file.path);
+
+	CHECK(play.get("ball").variable.at("twice") == Approx(4));
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.get("ball").variable.at("twice") == Approx(20));
+	CHECK(play.get("ball").variable.at("start") == Approx(4));
+	CHECK(play.get("ball").variable.at("across") == Approx(200));
+	play.frames(5);
+	CHECK(play.get("ball").variable.at("across") == Approx(500));
+}
+
+TEST_CASE("a live heading turns its object, and a spawned copy follows for itself", "[live][follow]")
+{
+	const Scratch file(box("gun", 300, 400, "<heading update=\"live\">self.aim * 10</heading><variables><variable name=\"aim\">3</variable></variables>"),
+		"<inc variable=\"gun.aim\" /><spawn object=\"tag\" />",
+		"<object name=\"tag\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
+		"<position><x update=\"live\">gun.x + self.gap</x><y>0</y></position><variables><variable name=\"gap\">7</variable></variables></object>");
+	Played play(file.path);
+
+	CHECK(play.get("gun").heading == Approx(30));
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.get("gun").heading == Approx(40));
+	CHECK(play.get("tag.1").position.x == Approx(307));
+}
+
+TEST_CASE("no command can change what is live", "[live][follow]")
+{
+	const auto load = [](const std::string& objects, const std::string& onSpace)
+	{
+		const Scratch file(objects, onSpace);
+		Game game(file.path);
+	};
+	const std::string follower = box("ship", 300, 400)
+		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<position><x update=\"live\">ship.x</x><y>0</y></position>"
+		"<variables><variable name=\"far\" update=\"live\">ship.x * 2</variable><variable name=\"near\">0</variable></variables></object>";
+
+	CHECK_THROWS_WITH(load(follower, "<set variable=\"shot.x\">1</set>"), ContainsSubstring("shot.x' is update=\"live\""));
+	CHECK_THROWS_WITH(load(follower, "<inc variable=\"shot.far\" />"), ContainsSubstring("shot.far' is update=\"live\""));
+	CHECK_THROWS_WITH(load(follower, "<copy variable=\"shot.near\" into=\"shot.far\" />"), ContainsSubstring("no command can change it"));
+	CHECK_NOTHROW(load(follower, "<set variable=\"shot.y\">1</set><set variable=\"shot.near\">shot.far</set>"));
 }

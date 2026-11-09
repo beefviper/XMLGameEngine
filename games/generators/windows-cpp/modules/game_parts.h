@@ -86,6 +86,13 @@ namespace xge::parts
 	}
 
 	// <centered>: where the object's middle goes, or empty for the window's.
+	// A value written update="live" (RawValue::live).
+	inline RawValue live(RawValue value)
+	{
+		value.live = true;
+		return value;
+	}
+
 	inline RawValue centered(std::string text)
 	{
 		RawValue middle = RawValue::expression(std::move(text));

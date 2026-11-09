@@ -286,9 +286,19 @@ namespace xge
 			return value;
 		}
 
+		RawValue readValueBody(const XmlNode& node, const std::string& where);
+
 		// A number, written either as an expression (the text of the element) or
-		// as one value tag inside it - see RawValue.
+		// as one value tag inside it - see RawValue - and whether it is
+		// update="live".
 		RawValue readValue(const XmlNode& node, const std::string& where)
+		{
+			RawValue value = readValueBody(node, where);
+			value.live = node.getAttribute("update") == "live";
+			return value;
+		}
+
+		RawValue readValueBody(const XmlNode& node, const std::string& where)
 		{
 			const std::string text = readText(node);
 			const std::string here = where + " > <" + node.getName() + ">";

@@ -774,6 +774,7 @@ namespace xge
 		bool canCollide(const Object& a, const Object& b) override;
 		bool hasRules(const Object& object) override { return !object.collisionData.others.empty(); }
 		void touched(Object& a, Object& b, const Contact& contact) override;
+		void follow() override;
 		void conditions() override { scoreDuePiles(); countMoves(); showMarks(); checkConditions(); }
 
 		// Sets the velocity of every shown object that is on a path for this
