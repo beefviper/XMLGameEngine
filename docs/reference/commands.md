@@ -35,7 +35,7 @@ Commands are sorted by what they need. Each place takes only the groups that mea
 <fire object="bullet" /><play sound="shoot" />   <!-- sounds only when a shot leaves -->
 ```
 
-Refused are: a `<fire>` or `<spawn>` at its `<most>`; a `<hop>`, `<jump>` or hunt by hops in the air or landing outside the window; a `<leap>` off the ground; an `<aim>` with `<lined>` not lined up; a [`<pick>`, `<place>` or `<put>`](boards.md#the-picker) that is no move; a card [`<take>` or `<lay>`](cards.md#the-hand) the pile does not allow; a spawn into a taken cell. So write the verb first and its answers after.
+Refused are: a `<fire>` or `<spawn>` at its `<most>`; a `<hop>`, `<jump>` or hunt by hops in the air or landing outside the window; a `<leap>` off the ground; an `<aim>` with `<lined>` not lined up; a [`<pick>`, `<place>` or `<put>`](boards.md#the-picker) that is no move; a card [`<send>` or `<distribute>`](cards.md#holders) with nothing to send; a spawn into a taken cell. So write the verb first and its answers after.
 
 An object out of play does nothing when its action is pressed or triggered; letting go still lets go.
 
@@ -83,7 +83,7 @@ An object out of play does nothing when its action is pressed or triggered; lett
 | `<through />` | a refused [cell](maps.md#cells) step is made anyway; the two share the cell |
 | `<ride />` | lent the other's velocity this frame (a frog on a log) |
 | `<carry />` | picks up what it touched and takes it along until a `<drop />`; one at a time |
-| `<drop />` | puts down what it carries; on a [picker](boards.md#the-picker) or [hand](cards.md#the-hand), puts back |
+| `<drop />` | puts down what it carries; on a [picker](boards.md#the-picker) (a [hand](cards.md#holders) too), puts back |
 | `<hole>4<rough>0.5</rough></hole>` | cuts a round hole in its own picture where it was struck; a reset mends it. Lines, polygons or a plain bitmap only |
 
 ## In and out of play

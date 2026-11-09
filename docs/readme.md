@@ -62,7 +62,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | [States and scenes](reference/states.md) | the stack, scenes, conditions, keeps, best tables, turns, demos, computer players |
 | [Maps](reference/maps.md) | ASCII maps, mazes, cells for grid puzzles |
 | [Board games](reference/boards.md) | moves, the picker, marks, put pieces |
-| [Cards](reference/cards.md) | decks, piles, hands, patterns, tricks, the computer |
+| [Cards](reference/cards.md) | packs, holders, patterns, tricks, the computer |
 | [The shipped games](reference/games.md) | the key convention and each game, by kind |
 | [Programs](reference/programs.md) | `xgecli`, `xgegui`, generating a program |
 | [The engine](reference/engine.md) | loading, each frame, backends, building, source map |
@@ -84,7 +84,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | pictures | `sheets`, `sheet`, `cell`, `cells` (sprites, frames and cards cut from one picture) | [sheets](reference/pictures.md#sheets) |
 | holders | `holds`, `spread`, `accepts` (`same`, `differs`, `step`, `total`, `any`, `wild`), `top`, `order`, `counts`, `trick`, `score`, `picked`, `owns`, `starts`, `distribute`; in actions `send from into`, `order group`, `distribute`, `pick` (`most`), a holder's `become` | [holders](reference/cards.md#holders) |
 | players | `turns` on a group, `pass` (`member=`), a member's `think`, `owns` and `team`, live `turn` | [players as a group](reference/states.md#players-as-a-group) |
-| cards | `deck` (`sheet=`, `faces`), `deal`, `take`, `lay`, piles, patterns, tricks | [cards](reference/cards.md) |
+| cards | `<holds>` (`<spread>`, `<accepts>`, `<picked>`, `<counts>`, `<trick>`, `<score>`), `send`, `distribute`, `starts`, patterns, tricks | [cards](reference/cards.md) |
 | computer | `computer`, `hold`, `think` | [computer players](reference/states.md#computer-players) |
 
 ## Keeping the docs

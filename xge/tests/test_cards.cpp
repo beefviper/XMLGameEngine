@@ -3,9 +3,9 @@
 // author: beefviper
 // date: Nov 1, 2026
 //
-// Catch2 tests for cards: a <deck> made from suits and ranks, piles and
-// their rules, the deal, and a hand that takes, lays and puts back
-// (klondike.xml).
+// Catch2 tests for cards: a pack laid out as a group, holders and their
+// rules, the deal, and a picker that picks, places and puts back, game by
+// game.
 
 #include "game/cards.h"
 #include "played.h"
@@ -377,53 +377,6 @@ TEST_CASE("klondike.xml: all 52 home wins, and a new game deals again", "[cards]
 	CHECK(table.pile("foundations.1.1").pile.cards.empty());
 }
 
-TEST_CASE("a deck of its own suits and ranks: an Italian forty, pips laid out, a double-ended picture", "[cards]")
-{
-	RawDeck deck;
-	deck.name = "carte";
-	deck.pile = "mazzo";
-	for (const char* name : { "coins", "cups", "swords", "batons" })
-	{
-		deck.suits.push_back({ name, "color.red", { ".*.", "***", ".*." }, {}, {}, {} });
-	}
-	for (const char* name : { "1", "2", "3", "4", "5", "6", "7", "F", "C", "R" }) { deck.ranks.push_back({ name, {}, {}, {}, false, {} }); }
-	std::vector<RawObject> cards;
-	addDeck(cards, deck);
-	REQUIRE(cards.size() == 40);
-	CHECK(cards.back().name == "carte.40");
-	CHECK(cards.back().card.rankName == "R");
-
-	// Two pips on a grid of one column and three rows: the top one upright
-	// in the top middle, the bottom one turned round in the bottom middle.
-	RawDeck two = deck;
-	two.suits = { { "arrows", "color.black", { "*", "*", "." }, {}, {}, {} } };
-	two.ranks = { { "2", {}, { "*", ".", "v" }, {}, false, {} } };
-	cards.clear();
-	addDeck(cards, two);
-	const std::vector<std::string>& rows = cards.front().looks.front().bitmapRows;
-	REQUIRE(rows.size() == 93);
-	CHECK(rows[5][31] == '*');
-	CHECK(rows[6][31] == '*');
-	CHECK(rows[7][31] == '@');
-	CHECK(rows[85][31] == '@');
-	CHECK(rows[86][31] == '*');
-	CHECK(rows[87][31] == '*');
-
-	// A picture's top half, and the bottom the same turned round.
-	RawDeck court = two;
-	court.ranks = { { "K", {}, {}, { "*..", "..." }, true, {} } };
-	cards.clear();
-	addDeck(cards, court);
-	const std::vector<std::string>& king = cards.front().looks.front().bitmapRows;
-	CHECK(king[44][30] == '*');
-	CHECK(king[47][32] == '*');
-
-	// A picture's character no color names stops the load.
-	court.ranks = { { "K", {}, {}, { "*.q" }, false, {} } };
-	cards.clear();
-	CHECK_THROWS(addDeck(cards, court));
-}
-
 namespace
 {
 	// A game of one state holding `objects`, with the card sheet as two
@@ -445,11 +398,9 @@ namespace
 		}
 		~SheetGame() { std::error_code ignored; std::filesystem::remove(path, ignored); }
 	};
-
-	const std::vector<std::uint8_t>& pixels(Object& object, std::size_t look = 0) { return object.looks[look].bitmap->rgba; }
 }
 
-TEST_CASE("a deck cut from a sheet: a face for each suit and rank, the back the first cell after the suits", "[cards][sheets]")
+TEST_CASE("a pack cut from a sheet: a face for each suit and rank, one back for all", "[cards][sheets]")
 {
 	Played hearts("descriptions/hearts.xml");
 	hearts.tap(KeyCode::Space);
@@ -481,13 +432,7 @@ TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of c
 		"<cell sheet=\"cards\"><row>3</row><scale>0.5</scale></cell></animation>" + at + "</object>"
 		// a group whose only pictures are its animation's, a run down a column
 		"<group name=\"flock\"><animation><interval>0.1</interval><cells sheet=\"cards\"><count>2</count><down /><scale>0.5</scale></cells></animation>" + at +
-		"<member name=\"bird\" /></group>"
-		// a deck of one suit laid out as seven, then six, on the third row and the fourth
-		"<deck name=\"cards\" pile=\"stock\" sheet=\"cards\"><faces><cells><row>3</row><count>7</count></cells><cells><column>1</column><row>4</row><count>6</count></cells></faces>"
-		"<face><width>96</width><height>140</height></face><back><column>2</column><row>5</row></back>"
-		"<suit name=\"clubs\"><color>color.black</color></suit>"
-		"<rank>A</rank><rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank><rank>8</rank><rank>9</rank><rank>10</rank><rank>J</rank><rank>Q</rank><rank>K</rank></deck>"
-		"<object name=\"stock\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>" + at + "<pile faces=\"down\" /></object>");
+		"<member name=\"bird\" /></group>");
 	Played play(sheet.path);
 	Object& grid = play.get("grid");
 	const auto drawn = [](const Object& object) -> const Bitmap& { return *object.bitmap; };
@@ -502,19 +447,6 @@ TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of c
 	Object& bird = play.get("bird");
 	REQUIRE(bird.animationBitmaps.size() == 2);
 	CHECK((bird.animationBitmaps[1]->rgba == drawn(grid).rgba));   // column 1 down to row 2: the ace of hearts
-
-	// The deck's 1 to 7 are the third row's first seven, its 8 to K the
-	// fourth row's first six (the sheet's clubs, then its diamonds); the
-	// back is the second.
-	Object& eight = *play.game.cardAt(8);
-	CHECK(eight.looks[0].bitmap->width == 96);
-	Played hearts("descriptions/hearts.xml");
-	hearts.tap(KeyCode::Space);
-	hearts.frames(2);
-	CHECK((pixels(*play.game.cardAt(1)) == pixels(*hearts.game.cardAt(27))));   // the sheet's ace of clubs
-	CHECK((pixels(*play.game.cardAt(7)) == pixels(*hearts.game.cardAt(33))));   // its 7 of clubs
-	CHECK((pixels(eight) == pixels(*hearts.game.cardAt(40))));                  // its ace of diamonds
-	CHECK((pixels(eight, 1) != pixels(*hearts.game.cardAt(1), 1)));             // a red back, not the blue
 }
 
 TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces from the sheet", "[cards][sheets]")
@@ -534,7 +466,7 @@ TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces fro
 	CHECK(table.card(cardOf(table, "clubs", "9")).variable.at("color") == 1.0f);
 }
 
-TEST_CASE("sheets: a cell off the grid, a sheet not there, and faces short of the cards stop the load", "[cards][sheets]")
+TEST_CASE("sheets: a cell off the grid and a sheet not there stop the load", "[cards][sheets]")
 {
 	const std::string at = "<position><x>0</x><y>0</y></position>";
 	{
@@ -548,13 +480,6 @@ TEST_CASE("sheets: a cell off the grid, a sheet not there, and faces short of th
 	{
 		SheetGame sheet("<object name=\"lost\"><sprite><cell sheet=\"missing\" /></sprite>" + at + "</object>",
 			"<sheet name=\"missing\"><path>assets/nothing.png</path><columns>1</columns><rows>1</rows></sheet>");
-		CHECK_THROWS(Played(sheet.path));
-	}
-	{
-		SheetGame sheet("<deck name=\"cards\" pile=\"stock\" sheet=\"cards\"><faces><cells><count>12</count></cells></faces>"
-			"<suit name=\"clubs\"><color>color.black</color></suit>"
-			"<rank>A</rank><rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank><rank>8</rank><rank>9</rank><rank>10</rank><rank>J</rank><rank>Q</rank><rank>K</rank></deck>"
-			"<object name=\"stock\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>" + at + "<pile faces=\"down\" /></object>");
 		CHECK_THROWS(Played(sheet.path));
 	}
 }

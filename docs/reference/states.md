@@ -113,7 +113,7 @@ A condition is checked every frame while its state (or scene) is current. It hol
 | `<above>N</above>`, `<below>N</below>`, `<equal>N</equal>` | more than, less than, equal to N |
 | `<remaining>N</remaining>` | no more than N of the matched objects are in play (`class="aliens"` with 0: all shot) |
 
-- **What is tested.** `variable="score"` is the object's variable or, if none, one of its live numbers: `x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`; on cells `column`, `row`, `moves`; on a pile its [card numbers](cards.md#piles).
+- **What is tested.** `variable="score"` is the object's variable or, if none, one of its live numbers: `x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`; on cells `column`, `row`, `moves`; on a holder its [card numbers](cards.md#holders).
 - **The number is read as the game runs** when it names something that changes: `<above>gun2.score</above>`.
 - **`total=`**: one number over everything matched and in play: `count` (no variable), `sum`, `highest`, `lowest`.
 - **`distance="hero"`**: how far each matched object is from the nearest `hero`, middle to middle. With a total, over them all: `class="hazard" distance="centre" total="lowest"` with `<above>150</above>` is "nothing within 150 of the middle".

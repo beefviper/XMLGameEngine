@@ -10,7 +10,7 @@ The vocabulary grew one game at a time (a word is added only when a real game ca
 
 | Part of speech | What it is | Examples |
 |---|---|---|
-| Nouns | things that exist | `object`, `group`, `map`, `state`, `scene`, `sound`, `path`, `timer`, `deck`, `pile` |
+| Nouns | things that exist | `object`, `group`, `map`, `state`, `scene`, `sound`, `path`, `timer` |
 | Verbs | commands | `move`, `bounce`, `fire`, `inc`, `become`, `push` ([commands](../reference/commands.md)) |
 | Adjectives | properties of a noun | `velocity`, `heading`, `drag`, `mass`, `grip`, `light`, `type`, `hitbox` |
 | Prepositions | who, when, where | `edge=`, `class=`, `object=`, `side=`, `unless=`, `from=`, `into=` |
@@ -35,7 +35,7 @@ Adverbs are each verb's own: there is no shared "how" vocabulary. Its likely mem
 | Sound: notes, parts, waves, music | built; no envelope, no stereo |
 | Input: keys, axes, the three moments, computer players | small and clean |
 | Flow: the stack, scenes, conditions, turns, demos | enough for the shipped games |
-| Boards and cards: moves, picker, think, decks, piles, patterns | built for the shipped games |
+| Boards and cards: moves, picker, think, packs, holders, patterns | built for the shipped games |
 | Values: text arithmetic, `<random>`, `<formula>` | thinnest: no power, root, tangent or "if" |
 
 ## Kinds of word the language does not have

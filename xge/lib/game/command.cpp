@@ -80,17 +80,6 @@ namespace xge
 		if (verb == "through") { return CmdThrough{}; }
 		if (verb == "pick") { return CmdPick{ raw.objClass, raw.only }; }
 		if (verb == "place") { return CmdPlace{ raw.into }; }
-		if (verb == "take") { return CmdTake{}; }
-		if (verb == "lay") { return CmdLay{ raw.pile }; }
-		if (verb == "deal")
-		{
-			if (!raw.faces.empty() && raw.faces != "up" && raw.faces != "down") { throw std::runtime_error("<deal faces=\"" + raw.faces + "\">: expected up or down"); }
-			return CmdDeal{ raw.pile, raw.faces };
-		}
-		if (verb == "shuffle") { return CmdShuffle{ raw.pile }; }
-		if (verb == "redeal") { return CmdRedeal{}; }
-		if (verb == "collect") { return CmdCollect{ raw.pile, raw.into }; }
-		if (verb == "reveal" && !raw.pile.empty()) { return CmdRevealCards{ raw.pile }; }
 		if (verb == "call")
 		{
 			if (raw.pile.empty()) { throw std::runtime_error("<call>: needs pile=, the pile whose wild card the suit is called for"); }
@@ -568,13 +557,6 @@ namespace xge
 			[&](const CmdThrough&) { o << "through"; },
 			[&](const CmdPick& p) { o << "pick(" << p.objClass << (p.only ? ", only" : "") << ")"; },
 			[&](const CmdPlace& p) { o << "place" << (p.into.empty() ? "" : "(" + p.into + ")"); },
-			[&](const CmdTake&) { o << "take"; },
-			[&](const CmdLay& l) { o << "lay" << (l.pile.empty() ? "" : "(" + l.pile + ")"); },
-			[&](const CmdDeal& d) { o << "deal" << (d.pile.empty() ? "" : "(" + d.pile + ")") ; },
-			[&](const CmdCollect& c) { o << "collect(" << c.pile << " into " << c.into << ")"; },
-			[&](const CmdRevealCards& r) { o << "reveal(" << r.pile << ")"; },
-			[&](const CmdShuffle& s) { o << "shuffle(" << s.pile << ")"; },
-			[&](const CmdRedeal&) { o << "redeal()"; },
 			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
 			[&](const CmdOrder& r) { o << "order(" << r.group << ", random)"; },
 			[&](const CmdPut& p) { o << "put(" << p.objClass << (p.closeClass.empty() ? "" : ", close " + p.closeClass + " " + p.closeObject) << ")"; },

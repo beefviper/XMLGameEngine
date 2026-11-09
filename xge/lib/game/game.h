@@ -483,13 +483,9 @@ namespace xge
 		bool layCards(Object& hand, const std::string& pile);
 		bool dropCards(Object& hand);
 		bool dealCards(Object& hand, const std::string& from = {}, const std::string& faces = {});
-		bool revealCards(const std::string& pile);
-		bool gatherCards(const std::string& pile);
-		void redealCards();
 		// For tests: the next deal puts these cards on top of the deck's
 		// pile after shuffling, the first on top, before the piles are dealt.
 		std::vector<int> stackedDeal;
-		bool collectCards(const std::string& from, const std::string& into);
 		// Members of a held class, holder to holder: the top `count` of
 		// `from` (or all; a group's name: every member, wherever it is)
 		// into `into`, showing `sprite` if given; a holder's cards at
@@ -513,7 +509,6 @@ namespace xge
 		Vector2f cardPlace(const Object& pile, std::size_t index);
 		bool pileTakes(Object& pile, const std::vector<int>& cards, const Object* holder = nullptr);
 		float cardPoints(const Object& pile, const Object& card);
-		std::optional<float> eachPoints(const Object& pile, const Object& card);
 		bool meldFits(const std::vector<const Object*>& group, const RawPatterns::Pattern& pattern);
 		float meldDeadwood(const Object& pile, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds);
 		void layOutMelds(Object& pile);

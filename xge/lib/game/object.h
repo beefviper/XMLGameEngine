@@ -666,18 +666,8 @@ namespace xge
 			bool showTop{ false };      // <showtop />: a face-down card left on top turns up
 			bool sorted{ false };       // <sorted />: kept in suit then rank order
 			RawValue lift;              // <lift>: the card a hand points at, lifted out of the fan by that much (empty text: none)
-			bool hasPoints{ false };    // <points>: how its face-up cards count
-			RawValue pointsMost;        // <points><atmost>: higher worths only while the total stays at most this (empty text: no limit)
-			// <points><each suit= rank=>N: a card counts the first that it
-			// matches (suit=, rank=, both, or neither: every card), and any
-			// other its worth.
-			struct Each
-			{
-				std::string suit;
-				std::string rank;
-				RawValue points;
-			};
-			std::vector<Each> pointsEach;
+			bool hasPoints{ false };    // <counts>: what its face-up cards add up to
+			RawValue pointsMost;        // <counts><atmost>: highs only while the total stays at most this (empty text: no limit)
 			std::string score;          // <score patterns=>: scored by those patterns (empty: not scored)
 			std::string scoreWith;      // <score><with pile=>: with that pile's cards too
 			int scoreFull{};            // <with><full>: that pile holds this many when all are dealt (0: as it is)
@@ -1204,13 +1194,6 @@ namespace xge
 			float lift{};
 			float pointsMost{};     // 0: no limit
 			std::string counts;     // <counts variable>: as written (empty: none)
-			struct Each
-			{
-				std::string suit;
-				std::string rank;
-				float points{};
-			};
-			std::vector<Each> pointsEach;
 			std::vector<int> broken;  // the suits of its <breaks> laid on it since the cards were gathered
 			std::string score;      // as written
 			std::string scoreWith;

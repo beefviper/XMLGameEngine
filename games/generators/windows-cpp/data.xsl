@@ -161,7 +161,7 @@
     <xsl:param name="node" select="." />
     <xsl:variable name="verb" select="local-name($node)" />
     <xsl:variable name="fill">
-      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@style | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from | $node/@button | $node/@pile | $node/@faces">
+      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@style | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from | $node/@button | $node/@pile">
         <xsl:if test=". != ''">
           <xsl:text> command.</xsl:text>
           <xsl:choose>
@@ -1776,23 +1776,6 @@
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
     </xsl:if>
-    <xsl:if test="$node/hand">
-      <xsl:value-of select="concat($indent, $to, '.hand = true;&#10;')" />
-      <xsl:if test="$node/hand/@pile">
-        <xsl:value-of select="concat($indent, $to, '.handPile = ')" />
-        <xsl:call-template name="string"><xsl:with-param name="text" select="$node/hand/@pile" /></xsl:call-template>
-        <xsl:text>;&#10;</xsl:text>
-      </xsl:if>
-      <xsl:if test="$node/hand/seat">
-        <xsl:value-of select="concat($indent, $to, '.handSeat = ', normalize-space($node/hand/seat), ';&#10;')" />
-      </xsl:if>
-      <xsl:if test="$node/hand/team">
-        <xsl:value-of select="concat($indent, $to, '.handTeam = ', normalize-space($node/hand/team), ';&#10;')" />
-      </xsl:if>
-      <xsl:if test="$node/hand/holds">
-        <xsl:value-of select="concat($indent, $to, '.handHolds = ', normalize-space($node/hand/holds), ';&#10;')" />
-      </xsl:if>
-    </xsl:if>
     <xsl:if test="$node/owns">
       <xsl:value-of select="concat($indent, $to, '.handPile = ')" />
       <xsl:call-template name="string"><xsl:with-param name="text" select="$node/owns/@object" /></xsl:call-template>
@@ -1807,164 +1790,6 @@
         <xsl:text>;&#10;</xsl:text>
       </xsl:if>
     </xsl:if>
-    <xsl:for-each select="$node/pile">
-      <xsl:value-of select="concat($indent, $to, '.pile.is = true;')" />
-      <xsl:if test="@faces">
-        <xsl:value-of select="concat(' ', $to, '.pile.faces = ')" />
-        <xsl:call-template name="string"><xsl:with-param name="text" select="@faces" /></xsl:call-template>
-        <xsl:text>;</xsl:text>
-      </xsl:if>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.fanX')" />
-        <xsl:with-param name="node" select="fan/x" />
-      </xsl:call-template>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.fanY')" />
-        <xsl:with-param name="node" select="fan/y" />
-      </xsl:call-template>
-      <xsl:if test="fan/hidden">
-        <xsl:value-of select="concat(' ', $to, '.pile.hasHidden = true;')" />
-      </xsl:if>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.fanWidth')" />
-        <xsl:with-param name="node" select="fan/width" />
-      </xsl:call-template>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.hiddenX')" />
-        <xsl:with-param name="node" select="fan/hidden/x" />
-      </xsl:call-template>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.hiddenY')" />
-        <xsl:with-param name="node" select="fan/hidden/y" />
-      </xsl:call-template>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.dealt')" />
-        <xsl:with-param name="node" select="dealt" />
-      </xsl:call-template>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.dealtMore')" />
-        <xsl:with-param name="node" select="dealt/more" />
-      </xsl:call-template>
-      <xsl:if test="deals">
-        <xsl:value-of select="concat(' ', $to, '.pile.hasDeals = true;')" />
-      </xsl:if>
-      <xsl:if test="deals/@into">
-        <xsl:value-of select="concat(' ', $to, '.pile.dealsInto = ')" />
-        <xsl:call-template name="string"><xsl:with-param name="text" select="deals/@into" /></xsl:call-template>
-        <xsl:text>;</xsl:text>
-      </xsl:if>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.deals')" />
-        <xsl:with-param name="node" select="deals" />
-      </xsl:call-template>
-      <xsl:if test="refill">
-        <xsl:value-of select="concat(' ', $to, '.pile.refillFrom = ')" />
-        <xsl:call-template name="string"><xsl:with-param name="text" select="refill/@from" /></xsl:call-template>
-        <xsl:text>;</xsl:text>
-      </xsl:if>
-      <xsl:if test="refill/shuffle">
-        <xsl:value-of select="concat(' ', $to, '.pile.refillShuffle = true;')" />
-      </xsl:if>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.refillLeave')" />
-        <xsl:with-param name="node" select="refill/leave" />
-      </xsl:call-template>
-      <xsl:if test="sorted">
-        <xsl:value-of select="concat(' ', $to, '.pile.sorted = true;')" />
-      </xsl:if>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.lift')" />
-        <xsl:with-param name="node" select="lift" />
-      </xsl:call-template>
-      <xsl:if test="points">
-        <xsl:value-of select="concat(' ', $to, '.pile.hasPoints = true;')" />
-      </xsl:if>
-      <xsl:if test="score[not(melds)]">
-        <xsl:value-of select="concat(' ', $to, '.pile.score = ')" />
-        <xsl:call-template name="string"><xsl:with-param name="text" select="score/@patterns" /></xsl:call-template>
-        <xsl:text>;</xsl:text>
-        <xsl:if test="score/with">
-          <xsl:value-of select="concat(' ', $to, '.pile.scoreWith = ')" />
-          <xsl:call-template name="string"><xsl:with-param name="text" select="score/with/@pile" /></xsl:call-template>
-          <xsl:text>;</xsl:text>
-        </xsl:if>
-        <xsl:if test="score/with/full">
-          <xsl:value-of select="concat(' ', $to, '.pile.scoreFull = ', normalize-space(score/with/full), ';')" />
-        </xsl:if>
-        <xsl:if test="score/best">
-          <xsl:value-of select="concat(' ', $to, '.pile.scoreBest = ', normalize-space(score/best), ';')" />
-        </xsl:if>
-      </xsl:if>
-      <xsl:if test="score/melds">
-        <xsl:value-of select="concat(' ', $to, '.pile.melds = ')" />
-        <xsl:call-template name="string"><xsl:with-param name="text" select="score/@patterns" /></xsl:call-template>
-        <xsl:text>;</xsl:text>
-        <xsl:if test="score/best">
-          <xsl:value-of select="concat(' ', $to, '.pile.meldsBest = ', normalize-space(score/best), ';')" />
-        </xsl:if>
-      </xsl:if>
-      <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.pointsMost')" />
-        <xsl:with-param name="node" select="points/atmost" />
-      </xsl:call-template>
-      <xsl:for-each select="points/each">
-        <xsl:value-of select="concat(' ', $to, '.pile.pointsEach.push_back({ ')" />
-        <xsl:call-template name="string"><xsl:with-param name="text" select="@suit" /></xsl:call-template>
-        <xsl:text>, </xsl:text>
-        <xsl:call-template name="string"><xsl:with-param name="text" select="@rank" /></xsl:call-template>
-        <xsl:text>, </xsl:text>
-        <xsl:call-template name="value"><xsl:with-param name="node" select="." /></xsl:call-template>
-        <xsl:text> });</xsl:text>
-      </xsl:for-each>
-      <xsl:if test="run">
-        <xsl:value-of select="concat(' ', $to, '.pile.run = true;')" />
-      </xsl:if>
-      <xsl:if test="showtop">
-        <xsl:value-of select="concat(' ', $to, '.pile.showTop = true;')" />
-      </xsl:if>
-      <xsl:text>&#10;</xsl:text>
-      <!-- what it takes: its <takes>, or a <trick>'s rules -->
-      <xsl:for-each select="(takes | trick)[1]">
-        <xsl:value-of select="concat($indent, $to, '.pile.takes = { true, ')" />
-        <xsl:value-of select="concat(substring('falsetrue', 1 + 5 * count(one), 5 - count(one)), ', ')" />
-        <xsl:value-of select="concat(substring('falsetrue', 1 + 5 * count(samesuit), 5 - count(samesuit)), ', ')" />
-        <xsl:value-of select="concat(substring('falsetrue', 1 + 5 * count(othercolor), 5 - count(othercolor)), ', ')" />
-        <xsl:value-of select="concat(substring('falsetrue', 1 + 5 * count(up), 5 - count(up)), ', ')" />
-        <xsl:value-of select="concat(substring('falsetrue', 1 + 5 * count(down), 5 - count(down)), ', {')" />
-        <xsl:for-each select="empty/rank">
-          <xsl:if test="position() &gt; 1">,</xsl:if>
-          <xsl:text> </xsl:text>
-          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-        </xsl:for-each>
-        <xsl:text> }, {</xsl:text>
-        <xsl:for-each select="empty/suit">
-          <xsl:if test="position() &gt; 1">,</xsl:if>
-          <xsl:text> </xsl:text>
-          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-        </xsl:for-each>
-        <xsl:value-of select="concat(' }, ', substring('falsetrue', 1 + 5 * count(matches), 5 - count(matches)), ', {')" />
-        <xsl:for-each select="wild/rank">
-          <xsl:if test="position() &gt; 1">,</xsl:if>
-          <xsl:text> </xsl:text>
-          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-        </xsl:for-each>
-        <xsl:value-of select="concat(' }, ', substring('falsetrue', 1 + 5 * count(../trick), 5 - count(../trick)), ', {')" />
-        <xsl:for-each select="../trick/breaks/suit">
-          <xsl:if test="position() &gt; 1">,</xsl:if>
-          <xsl:text> </xsl:text>
-          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-        </xsl:for-each>
-        <xsl:text> }, {</xsl:text>
-        <xsl:for-each select="../trick/trumps/suit">
-          <xsl:if test="position() &gt; 1">,</xsl:if>
-          <xsl:text> </xsl:text>
-          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-        </xsl:for-each>
-        <xsl:text> }, </xsl:text>
-        <xsl:value-of select="concat(substring('0', 1, 1 - count(sum)), normalize-space(sum))" />
-        <xsl:text>, { }, { }, { }, { }, { } };&#10;</xsl:text>
-      </xsl:for-each>
-    </xsl:for-each>
     <!-- a <holds>: a pile whose looks settleHolders (game/cards.h) works out -->
     <xsl:for-each select="$node/holds">
       <xsl:value-of select="concat($indent, $to, '.pile.is = true; ', $to, '.pile.holdsClass = ')" />
@@ -2692,189 +2517,6 @@
   </xsl:template>
 
   <!-- The function a <map> is written as: its name in camel case and Map. -->
-  <!-- <deck name="..."> (readDeck): a function that makes its cards with
-       addDeck, as the engine does, and gives them the deck's class. -->
-  <xsl:template match="deck">
-    <xsl:variable name="in" select="concat($tab, $tab)" />
-    <xsl:text>&#9;// &lt;deck name="</xsl:text>
-    <xsl:value-of select="@name" />
-    <xsl:text>"&gt;&#10;&#9;void </xsl:text>
-    <xsl:call-template name="deck-function" />
-    <xsl:value-of select="concat('(std::vector&lt;RawObject&gt;&amp; all)&#10;&#9;{&#10;', $in, 'RawDeck deck;&#10;', $in, 'deck.name = ')" />
-    <xsl:call-template name="string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
-    <xsl:value-of select="concat(';&#10;', $in, 'deck.pile = ')" />
-    <xsl:call-template name="string"><xsl:with-param name="text" select="@pile" /></xsl:call-template>
-    <xsl:text>;&#10;</xsl:text>
-    <xsl:if test="@sheet">
-      <xsl:value-of select="concat($in, 'deck.sheet = ')" />
-      <xsl:call-template name="string"><xsl:with-param name="text" select="@sheet" /></xsl:call-template>
-      <xsl:text>;&#10;</xsl:text>
-      <xsl:if test="faces/down">
-        <xsl:value-of select="concat($in, 'deck.down = true;&#10;')" />
-      </xsl:if>
-      <xsl:for-each select="faces/cell | faces/cells">
-        <xsl:call-template name="deck-cells">
-          <xsl:with-param name="node" select="." />
-          <xsl:with-param name="in" select="$in" />
-        </xsl:call-template>
-      </xsl:for-each>
-      <xsl:if test="back">
-        <xsl:value-of select="concat($in, 'deck.hasBack = true;&#10;', $in, 'deck.back = ')" />
-        <xsl:call-template name="sheet-cell"><xsl:with-param name="node" select="back" /></xsl:call-template>
-        <xsl:text>;&#10;</xsl:text>
-      </xsl:if>
-    </xsl:if>
-    <xsl:for-each select="copies | face/width | face/height | face/scale">
-      <xsl:value-of select="concat($in, 'deck.', local-name(), ' = ', normalize-space(.), ';&#10;')" />
-    </xsl:for-each>
-    <xsl:for-each select="face/color | face/edge | back/color | back/edge">
-      <xsl:value-of select="concat($in, 'deck.', local-name(..), translate(substring(local-name(), 1, 1), 'ce', 'CE'), substring(local-name(), 2), ' = ')" />
-      <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-      <xsl:text>;&#10;</xsl:text>
-    </xsl:for-each>
-    <xsl:if test="back/pattern">
-      <xsl:value-of select="concat($in, 'deck.pattern = ')" />
-      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="back/pattern/row" /></xsl:call-template>
-      <xsl:text>;&#10;</xsl:text>
-    </xsl:if>
-    <xsl:if test="color">
-      <xsl:value-of select="concat($in, 'deck.colors = {')" />
-      <xsl:call-template name="deck-colors"><xsl:with-param name="colors" select="color" /></xsl:call-template>
-      <xsl:text> };&#10;</xsl:text>
-    </xsl:if>
-    <xsl:for-each select="suit">
-      <xsl:value-of select="concat($in, 'deck.suits.push_back({ ')" />
-      <xsl:call-template name="string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
-      <xsl:text>, </xsl:text>
-      <xsl:call-template name="text"><xsl:with-param name="node" select="color[not(@char)][1]" /></xsl:call-template>
-      <xsl:text>, </xsl:text>
-      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="row" /></xsl:call-template>
-      <xsl:text>, </xsl:text>
-      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="index/row" /></xsl:call-template>
-      <xsl:text>, </xsl:text>
-      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="large/row" /></xsl:call-template>
-      <xsl:text>, {</xsl:text>
-      <xsl:call-template name="deck-colors"><xsl:with-param name="colors" select="color[@char]" /></xsl:call-template>
-      <xsl:text> } });&#10;</xsl:text>
-    </xsl:for-each>
-    <xsl:for-each select="rank">
-      <xsl:value-of select="concat($in, 'deck.ranks.push_back({ ')" />
-      <xsl:choose>
-        <xsl:when test="@name">
-          <xsl:call-template name="string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-        </xsl:otherwise>
-      </xsl:choose>
-      <xsl:text>, </xsl:text>
-      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="index/row" /></xsl:call-template>
-      <xsl:text>, </xsl:text>
-      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="pips/row" /></xsl:call-template>
-      <xsl:text>, </xsl:text>
-      <xsl:call-template name="deck-rows"><xsl:with-param name="rows" select="picture/row" /></xsl:call-template>
-      <xsl:value-of select="concat(', ', substring('falsetrue', 1 + 5 * count(picture/half), 5 - count(picture/half)), ', {')" />
-      <xsl:for-each select="worth">
-        <xsl:if test="position() &gt; 1">,</xsl:if>
-        <xsl:value-of select="concat(' ', normalize-space(.), '.0f')" />
-      </xsl:for-each>
-      <xsl:text> } });&#10;</xsl:text>
-    </xsl:for-each>
-    <xsl:choose>
-      <xsl:when test="@class != ''">
-        <xsl:value-of select="concat($in, 'const std::size_t first = all.size();&#10;', $in, 'addDeck(all, deck);&#10;')" />
-        <xsl:value-of select="concat($in, 'for (std::size_t i = first; i &lt; all.size(); ++i) { all[i].objClass = ')" />
-        <xsl:call-template name="string"><xsl:with-param name="text" select="@class" /></xsl:call-template>
-        <xsl:text>; }&#10;</xsl:text>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="concat($in, 'addDeck(all, deck);&#10;')" />
-      </xsl:otherwise>
-    </xsl:choose>
-    <xsl:text>&#9;}&#10;&#10;</xsl:text>
-  </xsl:template>
-
-  <!-- A place on a deck's sheet: SheetCell{ column, row }, or a part
-       SheetCell{ 1, 1, true, x, y, width, height }. -->
-  <xsl:template name="sheet-cell">
-    <xsl:param name="node" />
-    <xsl:param name="i" select="0" />
-    <xsl:choose>
-      <xsl:when test="$node/x">
-        <xsl:value-of select="concat('SheetCell{ 1, 1, true, ', normalize-space($node/x), ', ', normalize-space($node/y), ', ', normalize-space($node/width), ', ', normalize-space($node/height), ' }')" />
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:variable name="column">
-          <xsl:choose><xsl:when test="$node/column"><xsl:value-of select="normalize-space($node/column)" /></xsl:when><xsl:otherwise>1</xsl:otherwise></xsl:choose>
-        </xsl:variable>
-        <xsl:variable name="row">
-          <xsl:choose><xsl:when test="$node/row"><xsl:value-of select="normalize-space($node/row)" /></xsl:when><xsl:otherwise>1</xsl:otherwise></xsl:choose>
-        </xsl:variable>
-        <xsl:value-of select="concat('SheetCell{ ', number($column) + $i * number(not($node/down)), ', ', number($row) + $i * number(boolean($node/down)), ' }')" />
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
-
-  <!-- A deck's <cell> or run of <cells> of faces, a push_back each. -->
-  <xsl:template name="deck-cells">
-    <xsl:param name="node" />
-    <xsl:param name="in" />
-    <xsl:param name="i" select="0" />
-    <xsl:variable name="many">
-      <xsl:call-template name="cell-count"><xsl:with-param name="node" select="$node" /></xsl:call-template>
-    </xsl:variable>
-    <xsl:if test="$i &lt; number($many)">
-      <xsl:value-of select="concat($in, 'deck.faces.push_back(')" />
-      <xsl:call-template name="sheet-cell">
-        <xsl:with-param name="node" select="$node" />
-        <xsl:with-param name="i" select="$i" />
-      </xsl:call-template>
-      <xsl:text>);&#10;</xsl:text>
-      <xsl:call-template name="deck-cells">
-        <xsl:with-param name="node" select="$node" />
-        <xsl:with-param name="in" select="$in" />
-        <xsl:with-param name="i" select="$i + 1" />
-      </xsl:call-template>
-    </xsl:if>
-  </xsl:template>
-
-  <!-- A deck's rows, as a list of strings, a row a line. -->
-  <xsl:template name="deck-rows">
-    <xsl:param name="rows" />
-    <xsl:text>{</xsl:text>
-    <xsl:for-each select="$rows">
-      <xsl:if test="position() &gt; 1">,</xsl:if>
-      <xsl:text> </xsl:text>
-      <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-    </xsl:for-each>
-    <xsl:text> }</xsl:text>
-  </xsl:template>
-
-  <!-- A deck's or a suit's <color char>s: { 'y', "color.gold" }, ... -->
-  <xsl:template name="deck-colors">
-    <xsl:param name="colors" />
-    <xsl:for-each select="$colors">
-      <xsl:if test="position() &gt; 1">,</xsl:if>
-      <xsl:text> { '</xsl:text>
-      <xsl:value-of select="@char" />
-      <xsl:text>', </xsl:text>
-      <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
-      <xsl:text> }</xsl:text>
-    </xsl:for-each>
-  </xsl:template>
-
-  <!-- The C++ name of a <deck>'s function. -->
-  <xsl:template name="deck-function">
-    <xsl:variable name="container" select="generate-id(ancestor::objects[1])" />
-    <xsl:call-template name="function-name">
-      <xsl:with-param name="earlier" select="preceding::deck[generate-id(ancestor::objects[1]) = $container]" />
-      <xsl:with-param name="suffix" select="'Deck'" />
-      <xsl:with-param name="prefix">
-        <xsl:call-template name="owner-prefix" />
-      </xsl:with-param>
-    </xsl:call-template>
-  </xsl:template>
-
   <xsl:template name="map-function">
     <xsl:variable name="container" select="generate-id(ancestor::objects[1])" />
     <xsl:call-template name="function-name">
@@ -3432,10 +3074,6 @@
           <xsl:call-template name="map-function" />
           <xsl:text>(all);&#10;</xsl:text>
         </xsl:when>
-        <xsl:when test="self::deck">
-          <xsl:call-template name="deck-function" />
-          <xsl:text>(all);&#10;</xsl:text>
-        </xsl:when>
         <xsl:otherwise>
           <xsl:text>all.push_back(</xsl:text>
           <xsl:call-template name="object-function" />
@@ -3869,7 +3507,7 @@
       <xsl:if test="$game/paths/path">
         <xsl:call-template name="paths" />
       </xsl:if>
-      <xsl:apply-templates select="$game/objects/object | $game/objects/group | $game/objects/map | $game/objects/deck" />
+      <xsl:apply-templates select="$game/objects/object | $game/objects/group | $game/objects/map" />
       <xsl:call-template name="objects-function">
         <xsl:with-param name="nodes" select="$game/objects/*" />
         <xsl:with-param name="function" select="'objects'" />

@@ -93,7 +93,7 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 
 ### Sheets
 
-One picture holding many: sprites, animation frames and a deck's cards are cut from it by place. The game names its sheets once, after `<styles>`:
+One picture holding many: sprites, animation frames and a pack's cards are cut from it by place. The game names its sheets once, after `<styles>`:
 
 ```xml
 <sheets>
@@ -117,7 +117,7 @@ One picture holding many: sprites, animation frames and a deck's cards are cut f
 
 - In a group laid out in `<columns>` and `<rows>`, a `<cell>` that leaves out its column or row takes the group cell's own, so one sprite gives every cell its own picture (a pack of cards).
 - Shrunk pictures are averaged, so a sheet can be far bigger than it is shown; a whole-number shrink gives pixel art back exactly. A sheet that is not there, a cell off it or a file that will not open stops the load.
-- A [deck](cards.md#deck) cuts its faces and back from a sheet with `sheet=`.
+- A [pack](cards.md#holders) takes its faces and back from a sheet this way.
 
 ## Text
 
