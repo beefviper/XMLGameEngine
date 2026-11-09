@@ -224,6 +224,7 @@ namespace xge
 		}
 		if (verb == "think")
 		{
+			if (raw.object.empty()) { throw std::runtime_error("<think>: names the object it plays with object= (a <think> on a member of a group that takes <turns> plays that member)"); }
 			const KeyCode button = keyCodeFromString(raw.button);
 			if (button == KeyCode::Unknown)
 			{

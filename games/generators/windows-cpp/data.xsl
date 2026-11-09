@@ -1758,6 +1758,20 @@
         <xsl:value-of select="concat($indent, $to, '.handHolds = ', normalize-space($node/hand/holds), ';&#10;')" />
       </xsl:if>
     </xsl:if>
+    <xsl:if test="$node/owns">
+      <xsl:value-of select="concat($indent, $to, '.handPile = ')" />
+      <xsl:call-template name="string"><xsl:with-param name="text" select="$node/owns/@object" /></xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <!-- players taking turns (settlePlayers, game/players.h) -->
+    <xsl:if test="$node/turns">
+      <xsl:value-of select="concat($indent, $to, '.takesTurns = true;&#10;')" />
+      <xsl:if test="$node/turns/@sprite">
+        <xsl:value-of select="concat($indent, $to, '.turnsSprite = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="$node/turns/@sprite" /></xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+      </xsl:if>
+    </xsl:if>
     <xsl:for-each select="$node/pile">
       <xsl:value-of select="concat($indent, $to, '.pile.is = true;')" />
       <xsl:if test="@faces">
@@ -1913,7 +1927,7 @@
         </xsl:for-each>
         <xsl:text> }, </xsl:text>
         <xsl:value-of select="concat(substring('0', 1, 1 - count(sum)), normalize-space(sum))" />
-        <xsl:text>, { }, { } };&#10;</xsl:text>
+        <xsl:text>, { }, { }, { }, { }, { } };&#10;</xsl:text>
       </xsl:for-each>
     </xsl:for-each>
     <!-- a <holds>: a pile whose looks settleHolders (game/cards.h) works out -->
@@ -1963,6 +1977,15 @@
         <xsl:with-param name="name" select="concat($to, '.pile.lift')" />
         <xsl:with-param name="node" select="lift" />
       </xsl:call-template>
+      <xsl:if test="order">
+        <xsl:value-of select="concat(' ', $to, '.pile.orderBy = {')" />
+        <xsl:for-each select="order/by">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> </xsl:text>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="@variable" /></xsl:call-template>
+        </xsl:for-each>
+        <xsl:text> };</xsl:text>
+      </xsl:if>
       <xsl:if test="picked/send">
         <xsl:value-of select="concat(' ', $to, '.pile.hasDeals = true;')" />
         <xsl:if test="picked/send/@into">
@@ -2010,6 +2033,23 @@
             <xsl:with-param name="list" select="concat($to, '.pile.takes.emptyRules')" />
             <xsl:with-param name="indent" select="$indent" />
           </xsl:call-template>
+        </xsl:for-each>
+        <xsl:for-each select="any/*">
+          <xsl:call-template name="accept-rule">
+            <xsl:with-param name="list" select="concat($to, '.pile.takes.anyRules')" />
+            <xsl:with-param name="indent" select="$indent" />
+          </xsl:call-template>
+        </xsl:for-each>
+        <xsl:for-each select="wild">
+          <xsl:value-of select="concat($indent, $to, '.pile.takes.wildVariable = ')" />
+          <xsl:call-template name="string"><xsl:with-param name="text" select="@variable" /></xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+          <xsl:for-each select="condition">
+            <xsl:call-template name="accept-rule">
+              <xsl:with-param name="list" select="concat($to, '.pile.takes.wildRules')" />
+              <xsl:with-param name="indent" select="$indent" />
+            </xsl:call-template>
+          </xsl:for-each>
         </xsl:for-each>
       </xsl:for-each>
     </xsl:for-each>
@@ -2927,6 +2967,19 @@
       <xsl:with-param name="to" select="'member.object'" />
       <xsl:with-param name="indent" select="$indent" />
     </xsl:call-template>
+    <xsl:if test="owns">
+      <xsl:value-of select="concat($indent, 'member.object.handPile = ')" />
+      <xsl:call-template name="string"><xsl:with-param name="text" select="owns/@object" /></xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <!-- the computer plays it -->
+    <xsl:if test="think">
+      <xsl:value-of select="concat($indent, 'member.object.think = { ')" />
+      <xsl:call-template name="command">
+        <xsl:with-param name="node" select="think" />
+      </xsl:call-template>
+      <xsl:text> };&#10;</xsl:text>
+    </xsl:if>
   </xsl:template>
 
   <!-- Whether the <row> or <column> here picks $n: "yes" if its number=

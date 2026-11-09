@@ -62,6 +62,8 @@
   <file>lib/game/think.cpp</file>
   <file>lib/game/cards.h</file>
   <file>lib/game/cards.cpp</file>
+  <file>lib/game/players.h</file>
+  <file>lib/game/players.cpp</file>
   <file>lib/audio/audio.h</file>
   <file>lib/audio/sfml.h</file>
   <file>lib/audio/sfml.cpp</file>

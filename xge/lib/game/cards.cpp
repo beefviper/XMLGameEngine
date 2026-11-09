@@ -653,7 +653,27 @@ namespace xge
 		if (pile.pile.faces == "up") { turnCard(*card, true); }
 		else if (pile.pile.faces == "down") { turnCard(*card, false); }
 		auto at = pile.pile.cards.end();
-		if (pile.pile.sorted)
+		if (!pile.pile.orderBy.empty())
+		{
+			// <order>: by each variable named, the first first.
+			const auto order = [&](const Object& of)
+			{
+				std::vector<float> values;
+				for (const std::string& name : pile.pile.orderBy)
+				{
+					const auto found = of.variable.find(name);
+					values.push_back(found == of.variable.end() ? 0.0f : found->second);
+				}
+				return values;
+			};
+			const std::vector<float> mine = order(*card);
+			at = std::find_if(pile.pile.cards.begin(), pile.pile.cards.end(), [&](int other)
+				{
+					const Object* each = cardAt(other);
+					return each && mine < order(*each);
+				});
+		}
+		else if (pile.pile.sorted)
 		{
 			// Suit by suit, each by its highest worth (in rank order,
 			// unless a worth puts a card elsewhere: an ace worth 14 last).
@@ -972,7 +992,8 @@ namespace xge
 
 	bool Game::isWild(const PileRule& rule, const Object& card)
 	{
-		return std::find(rule.wildRanks.begin(), rule.wildRanks.end(), card.card.rankName) != rule.wildRanks.end();
+		return std::find(rule.wildRanks.begin(), rule.wildRanks.end(), card.card.rankName) != rule.wildRanks.end()
+			|| (!rule.wildRules.empty() && acceptsBy(rule.wildRules, card, nullptr));
 	}
 
 	void Game::refreshPile(Object& pile)
@@ -1380,7 +1401,9 @@ namespace xge
 	void Game::refreshCall(Object& pile)
 	{
 		const Object* top = pile.pile.cards.empty() ? nullptr : cardAt(pile.pile.cards.back());
-		pile.calling = !pile.pile.takes.wildRanks.empty() && top && isWild(pile.pile.takes, *top) && pile.called == 0.0f ? 1.0f : 0.0f;
+		pile.calling = (!pile.pile.takes.wildRanks.empty() || !pile.pile.takes.wildRules.empty()) && top && isWild(pile.pile.takes, *top) && pile.called == 0.0f ? 1.0f : 0.0f;
+		refreshBoundTexts(pile.name, "calling", pile.calling);
+		refreshBoundTexts(pile.name, "called", pile.called);
 	}
 
 	int Game::takeTop(Object& pile)
@@ -1490,7 +1513,10 @@ namespace xge
 		{
 			if (object.pile.is && object.calling > 0.0f)
 			{
-				object.called = static_cast<float>(cardAt(object.pile.cards.back())->card.suit);
+				const Object* top = cardAt(object.pile.cards.back());
+				const std::string& named = object.pile.takes.wildVariable;
+				const auto value = named.empty() ? top->variable.end() : top->variable.find(named);
+				object.called = value == top->variable.end() ? static_cast<float>(top->card.suit) : value->second;
 				refreshCall(object);
 			}
 		}
@@ -1666,6 +1692,13 @@ namespace xge
 			const int suit = pile.called > 0.0f ? static_cast<int>(pile.called) : top->card.suit;
 			if (first->card.rank != top->card.rank && first->card.suit != suit) { return false; }
 		}
+		// <any>: one of them, a value called standing for the top's own.
+		if (!rule.anyRules.empty())
+		{
+			const float called = rule.wildVariable.empty() ? 0.0f : pile.called;
+			const bool any = std::any_of(rule.anyRules.begin(), rule.anyRules.end(), [&](const PileRule::VarRule& each) { return acceptsBy({ each }, *first, top, rule.wildVariable, called); });
+			if (!any) { return false; }
+		}
 		return follows(rule, *top, *first);
 	}
 
@@ -1681,18 +1714,18 @@ namespace xge
 
 	// Whether `next` keeps an <accepts>'s rules on its variables, against
 	// the one under it (`below`; none for the first on an empty holder).
-	bool Game::acceptsBy(const std::vector<PileRule::VarRule>& rules, const Object& next, const Object* below)
+	bool Game::acceptsBy(const std::vector<PileRule::VarRule>& rules, const Object& next, const Object* below, const std::string& called, float value)
 	{
 		using Kind = PileRule::VarRule::Kind;
-		const auto value = [](const Object& of, const std::string& name)
+		const auto valueOf = [](const Object& of, const std::string& name)
 		{
 			const auto found = of.variable.find(name);
 			return found == of.variable.end() ? 0.0f : found->second;
 		};
 		for (const PileRule::VarRule& each : rules)
 		{
-			const float mine = value(next, each.variable);
-			const float theirs = below ? value(*below, each.variable) : 0.0f;
+			const float mine = valueOf(next, each.variable);
+			const float theirs = !below ? 0.0f : value > 0.0f && each.variable == called ? value : valueOf(*below, each.variable);
 			bool holds = true;
 			switch (each.kind)
 			{
@@ -2221,7 +2254,10 @@ namespace xge
 		const int at = hand.hand.at < 0 ? count - 1 : std::min(hand.hand.at, count - 1);
 		const Object* card = cardAt(own->pile.cards[static_cast<std::size_t>(at)]);
 		if (!card) { return false; }
-		pile->called = static_cast<float>(card->card.suit);
+		// The value named: the card's suit, or its <wild variable=>.
+		const std::string& named = pile->pile.takes.wildVariable;
+		const auto value = named.empty() ? card->variable.end() : card->variable.find(named);
+		pile->called = value == card->variable.end() ? static_cast<float>(card->card.suit) : value->second;
 		refreshCall(*pile);
 		return true;
 	}

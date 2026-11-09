@@ -80,7 +80,7 @@ A `<group>` is several objects written once. It gives what its members share, th
 
 - **Members are ordinary objects**, named after the group with a number from 1 (`logrow3.1`), or by their own `name`. Each moves and touches on its own.
 - **The group's name means every member** wherever a name is taken: `<reset object="logrow3" />`, a rule's or condition's `object=`. Its `class` is every member's.
-- **A member gives only** sprites, animations, position and velocity (or a half of one). Rules, actions, variables and timers are the group's; a member that acts differently is an object of its own.
+- **A member gives only** sprites, animations, position and velocity (or a half of one), its own starting `<variables>`, and for a player its `<owns>` and `<think>` ([players](states.md#players-as-a-group)). Rules, actions and timers are the group's; a member that acts differently is an object of its own.
 - **A member's sprite changes the group's of that name.** Of the same shape it gives only what changes (`<rectangle><width>10</width></rectangle>`); of another shape it must be complete. A new name adds a sprite.
 - Members are drawn in the order written, where the group stands.
 

@@ -2,7 +2,7 @@
 
 Cards are made by a `<deck>`, lie in objects that are **piles**, and are carried between piles by a **hand**. Rules of a card game (what is a pair, who wins a trick) are written in the game from general parts; there is no tag for any one game.
 
-The card words are moving to general ones: a pack is a `<group>`, a pile is anything that [`<holds>`](#holders), and the hand is a picker. Klondike is written that way; the other card games still use `<deck>`, `<pile>` and `<hand />`, described after it.
+The card words are moving to general ones: a pack is a `<group>`, a pile is anything that [`<holds>`](#holders), and the hand is a picker; the players are a [group that takes turns](states.md#players-as-a-group). Klondike and Crazy Eights are written that way; the other card games still use `<deck>`, `<pile>` and `<hand />`, described after it.
 
 ## Holders
 
@@ -37,10 +37,18 @@ The card words are moving to general ones: a pack is a `<group>`, a pile is anyt
 - **The pack** is a group in `<columns>` and `<rows>` whose class a `<holds>` names. Each cell is a card: its row is its `suit`, its column its `rank` (variables, from 1), its first look the face and its second the back. A sheet `<cell>` that leaves out its column or row takes the cell's own, so the faces are one sprite. `worth` is the rank unless the cells give one.
 - **`<holds class sprite>`** on an object or group makes it a holder: what it holds, in order, the last on top, each showing the look `sprite=` while laid there (none: each keeps its own).
 - **`<spread>`**: each one on from the one under it (`<x>`, `<y>`, `<width>` the most it spreads across); a second with `sprite=` for those showing that look.
-- **`<accepts>`**: what may be placed on top, by the arriving one's variables. `<same variable>`, `<differs variable>`, `<step variable>N` (the top one's plus N), `<total variable>N` (the two add up to N), `<condition variable>` with `<equal>`, `<atleast>` or `<atmost>`; `<one />` one at a time; `<empty>` holds `<condition>`s for the first. No `<accepts>`: takes nothing.
-- **`<run />`**: one may be picked with all those on it, while each follows the rules. **`<top sprite="face" />`**: the top one turns face up. **`<lift>`** as a pile's.
-- **`<picked>`**: what picking from it does instead, picking nothing up: `<send into="waste">1</send>`, and `<empty>` with `<send from="waste"><all /></send>` (a `<leave>` in it) and `<order><random /></order>`; `<play sound>` sounds as it sends.
-- **The picker.** An object whose actions `<pick class>` a held class is a hand: `<pick class="card" />` takes what it points at, `<place />` lays it where it points, `<place into="foundations" />` on the first of those that accepts it, `<drop />` puts it back. Moving it is as for the hand below.
+- **`<accepts>`**: what may be placed on top, by the arriving one's variables. `<same variable>`, `<differs variable>`, `<step variable>N` (the top one's plus N), `<total variable>N` (the two add up to N), `<condition variable>` with `<equal>`, `<atleast>` or `<atmost>`; `<one />` one at a time; `<any>` holds rules of which one must hold; `<empty>` holds `<condition>`s for the first. No `<accepts>`: takes nothing.
+- **`<wild variable="suit">`** in `<accepts>`, with `<condition>`s: what keeps them goes on anything. The holder then waits (live `calling` 1) until the one who laid it names a value with `<call pile>`: the `suit` of the one it points at among its own. Live `called` is that value, and the top counts as it until the next one is laid. A wild one dealt on top counts as its own.
+
+  ```xml
+  <accepts>
+    <any><same variable="suit" /><same variable="rank" /></any>
+    <wild variable="suit"><condition variable="rank"><equal>8</equal></condition></wild>
+  </accepts>
+  ```
+- **`<run />`**: one may be picked with all those on it, while each follows the rules. **`<top sprite="face" />`**: the top one turns face up. **`<lift>`** as a pile's. **`<order><by variable="suit" /><by variable="rank" /></order>`**: kept in that order, the first first.
+- **`<picked>`**: what picking from it does instead, picking nothing up: `<send into="waste">1</send>` (no `into=`: to the picker's own holder), and `<empty>` with `<send from="waste"><all /></send>` (a `<leave>` in it) and `<order><random /></order>`; `<play sound>` sounds as it sends.
+- **The picker.** An object whose actions `<pick class>` a held class is a hand: `<pick class="card" />` takes what it points at, `<place />` lays it where it points, `<place into="foundations" />` on the first of those that accepts it, `<drop />` puts it back. Moving it is as for the hand below. **`<owns object="mine" />`** gives it a holder of its own, as `<hand pile>` does: it picks any of those, face up or down, and stays pointing there.
 - **`<starts>`** in a state is the deal, done as it begins and on a full reset:
 
   ```xml

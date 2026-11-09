@@ -32,6 +32,16 @@ A state is a **mode**: menu, play, pause, game over. It says what is shown, whic
 - **Turns swap the play,** as arcade boards swapped RAM: each player has a whole game of their own (every object not kept, every timer, the current scenes), so any one-player game becomes two-player in a few lines. Swaps happen only from a state's commands, never mid-frame.
 - **Attract mode is recorded play:** the same seed and the same keys on the same frames give the same game, so a `<demo>` is a seed, a length and key changes. Rejected: a scripted computer player, replaying positions.
 
+## Players as a group
+
+- **Wanted:** board and card games share one world, and the players take turns in it. Before, each game kept a turn variable, looks gating every key, a second hand object for the computer and an F-key for it to press (Crazy Eights: four turn values, F12, a `cpuhand`).
+- **Chosen (Beef agreed, 2026-11 proposal):** the players are a `<group>` with `<turns />`, in the order written. Keys reach only the member on its turn; a member with a `<think>` is the computer's, and answers only the presses the computer makes for it, on the same keys a person uses. `<pass />` (the word arcade turns use) hands the turn on. Live `turn` is 1 or 0 on each member, so a live text can say whose turn it is.
+- A member may give its own `<variables>`, `<owns>` and `<think>`: the same take-and-change rule as sprites.
+- A verb naming the group changes the member on its turn; `class=` still means every member.
+- Off its turn a member shows `<turns sprite>`; the one whose turn comes shows its first look (not the look it had: resets stay simple).
+- Kept apart: arcade `<turns><player state>`, where each player has a world of their own.
+- Open: live `computer` to switch a member between person and computer (one player or two from the title); `<pass member=>`, a trick's winner leading; `others`; a member's name in a text; Hearts, Spades, Checkers on it.
+
 ## Open
 
 - Object-level conditions (a colour above a speed, a death at 0 health); win and lose as first-class terms.

@@ -5,6 +5,7 @@
 
 #include "game/game.h"
 #include "game/cards.h"
+#include "game/players.h"
 
 #include "play/executor.h"
 #include "play/geometry.h"
@@ -34,6 +35,7 @@ namespace xge
 		takeStates(data.states);
 		layOutScenes(data);
 		settleHolders(data);
+		settlePlayers(data);
 		// Then, with every object's name final, its styles, what it
 		// leaves to mean itself, and its centering.
 		applyStyles(data.objects, data.styles);
@@ -81,6 +83,14 @@ namespace xge
 		}
 		dealDecks();
 		scoreDuePiles();
+		// The players: the first one's turn; those the computer plays.
+		for (const RawObject& raw : rawObjects)
+		{
+			if (raw.think.empty()) { continue; }
+			const Command made = makeCommand(raw.think.front(), [&](const RawValue& value) { return expr.evaluate(value, "object '" + raw.name + "' > <think>"); });
+			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { memberThinks.emplace(raw.name, *plays); }
+		}
+		startPlayers();
 		loadedCount = objects.size();
 		runsInTop.assign(objects.size(), 0);
 		runsInTopStage.assign(objects.size(), 0);
@@ -1398,7 +1408,9 @@ namespace xge
 		bool handChanged = false;
 		for (auto& object : objects)
 		{
-			if ((object.named(target)) && (from.empty() || object.lookName() == from))
+			// A group of players taking turns: the one on its turn.
+			const bool offTurn = object.takesTurns && object.inGroup(target) && object.variable["turn"] == 0.0f;
+			if (object.named(target) && !offTurn && (from.empty() || object.lookName() == from))
 			{
 				const std::string before = object.hand.is ? object.lookName() : std::string();
 				if (!sprite.empty()) { showLookNamed(object, sprite); }
@@ -1645,8 +1657,9 @@ namespace xge
 		}
 		setCurrentState(0);
 
-		// A new game: the cards shuffled and dealt again.
+		// A new game: the cards shuffled and dealt again, the first player's turn.
 		dealDecks();
+		startPlayers();
 	}
 
 	void Game::refreshAllBoundTexts(void)
@@ -2069,6 +2082,14 @@ namespace xge
 					if (const auto key = think(*each)) { held.insert(*key); }
 				}
 			}
+		}
+		// A player the computer plays, on its turn.
+		for (const auto& [name, plays] : memberThinks)
+		{
+			const Object* member = tryGetObject(name);
+			if (!member || !member->exists || !isShown(*member) || member->variable.find("turn")->second == 0.0f) { continue; }
+			thought = true;
+			if (const auto key = think(plays)) { held.insert(*key); }
 		}
 		// Its turn is over (or the game was put back): the next is planned anew.
 		if (!thought)

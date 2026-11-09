@@ -84,7 +84,9 @@ namespace xge
 
 		const bool horizontal = axis == Axis::MouseX || axis == Axis::Pad1X || axis == Axis::Pad2X;
 		const WindowDesc& window = game.getWindowDesc();
-		Object& object = game.getObject(trigger->object);
+		Object* turn = game.takesTurns(trigger->object) ? game.onTurn(trigger->object) : nullptr;
+		if (game.takesTurns(trigger->object) && (!turn || !game.answers(*turn))) { return; }
+		Object& object = turn ? *turn : game.getObject(trigger->object);
 		// from=: only while it shows that look.
 		if (!trigger->from.empty() && object.lookName() != trigger->from) { return; }
 		for (const auto& action : object.action[trigger->action])
@@ -230,7 +232,7 @@ namespace xge
 			[&](const CmdPushState& c) { game.pushState(c.name); },
 			[&](const CmdPopState& c) { game.popState(c.name); },
 			[&](const CmdTurns& t) { if (!self) { game.startTurns(t.players); } },
-			[&](const CmdPass&) { if (!self) { game.passTurn(false); } },
+			[&](const CmdPass&) { if (!self) { game.passTurn(false); } else if (self->takesTurns) { done = game.passPlayers(*self); } },
 			[&](const CmdOut&) { if (!self) { game.passTurn(true); } },
 			[&](const CmdDemo&) { if (!self) { game.requestDemo(); } },
 			[&](const CmdIncrement& i) { game.addTo(i.target, i.amount); },
@@ -650,9 +652,11 @@ namespace xge
 		// Tetris) does not answer the same press.
 		std::vector<Object>& objects = game.getCurrentObjects();
 		std::vector<std::size_t> reached;
+		// Players taking turns: a key reaches the one on its turn, and only
+		// as the one who plays it presses (the computer, or a person).
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
-			if (objects[i].inGroup(objectName) && showing(objects[i]) && !objects[i].awayFromHome()) { reached.push_back(i); }
+			if (objects[i].inGroup(objectName) && showing(objects[i]) && !objects[i].awayFromHome() && (byRule || game.answers(objects[i]))) { reached.push_back(i); }
 		}
 		for (const std::size_t i : reached) { runAction(objects[i], actionName, keyPressed, byRule); }
 	}

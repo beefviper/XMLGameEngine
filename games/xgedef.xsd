@@ -686,8 +686,31 @@
           <xs:attribute name="pile" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
+      <!-- owns: the holder of its own, a player's cards: a picker takes any of them, face up or down, and what a
+           holder's <picked> sends with no into= comes to it -->
+      <xs:element name="owns" type="ownsType" minOccurs="0" />
     </xs:sequence>
   </xs:group>
+  <xs:complexType name="ownsType">
+    <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
+  </xs:complexType>
+  <!-- think on a member of a group that takes turns: the computer plays it, pressing button= on its turn -->
+  <xs:complexType name="memberThinkType">
+    <xs:sequence>
+      <xs:element name="depth" type="valueType" minOccurs="0" />
+      <xs:element name="avoid" type="emptyType" minOccurs="0" />
+      <xs:element name="worth" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute name="sprite" type="xs:NMTOKEN" use="required" />
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="button" type="xs:string" use="required" />
+  </xs:complexType>
   <!-- pile: a place that holds cards. faces=: every card put on it turned up or down (left out: each keeps its own).
        fan: each face-up card on from the one below (<hidden>: each face-down one; <width>: the fan is never wider, the
        steps across shrink); dealt: cards dealt it at the start (in a group, <more>: each pile after the first that many
@@ -731,6 +754,27 @@
               <xs:element name="total" type="acceptAmountType" />
               <xs:element name="condition" type="acceptConditionType" />
             </xs:choice>
+            <!-- one of these holds too -->
+            <xs:element name="any" minOccurs="0">
+              <xs:complexType>
+                <xs:choice maxOccurs="unbounded">
+                  <xs:element name="same" type="acceptVariableType" />
+                  <xs:element name="differs" type="acceptVariableType" />
+                  <xs:element name="step" type="acceptAmountType" />
+                  <xs:element name="total" type="acceptAmountType" />
+                  <xs:element name="condition" type="acceptConditionType" />
+                </xs:choice>
+              </xs:complexType>
+            </xs:element>
+            <!-- what keeps these goes on anything; who laid it then names a value of variable= -->
+            <xs:element name="wild" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="condition" type="acceptConditionType" maxOccurs="unbounded" />
+                </xs:sequence>
+                <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+              </xs:complexType>
+            </xs:element>
             <xs:element name="empty" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
@@ -748,6 +792,18 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="lift" type="valueType" minOccurs="0" />
+      <!-- kept in order by these variables, the first first -->
+      <xs:element name="order" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="by" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="picked" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -1923,6 +1979,8 @@
       <xs:group ref="selfCommands" />
       <xs:group ref="steeringCommands" />
       <xs:group ref="controlsCommands" />
+      <!-- pass, by a member of a group that takes <turns>: the next member's turn; refused while a holder waits for a wild card's call -->
+      <xs:element name="pass" type="emptyType" />
     </xs:choice>
   </xs:group>
 
@@ -2393,6 +2451,9 @@
       <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="variables" type="variablesType" minOccurs="0" />
+      <xs:element name="owns" type="ownsType" minOccurs="0" />
+      <xs:element name="think" type="memberThinkType" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
@@ -2460,6 +2521,14 @@
       <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="position" type="partialPositionType" minOccurs="0" />
       <xs:group ref="objectParts" />
+      <!-- turns: the members take turns, in the order written, the first first (live turn: 1 on its turn, else 0);
+           keys reach only the member on its turn, and one with a <think> only as the computer presses for it;
+           <pass /> in an action hands the turn on. sprite=: the look a member shows off its turn -->
+      <xs:element name="turns" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:group>
 

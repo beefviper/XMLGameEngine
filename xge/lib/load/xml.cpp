@@ -1199,17 +1199,33 @@ namespace xge
 		// member: <same variable>, <differs variable>, <step variable>N,
 		// <total variable>N, and <condition variable> with <equal>,
 		// <atleast> or <atmost> a number.
-		void readAcceptRules(const XmlNode& node, PileRule& rule, std::vector<PileRule::VarRule>& into, const std::string& here, bool top)
+		void readAcceptRules(const XmlNode& node, PileRule& rule, std::vector<PileRule::VarRule>& into, const std::string& here, int level)
 		{
+			// level 0: an <accepts>; 1: an <any> in it; 2: <condition>s only.
 			using Kind = PileRule::VarRule::Kind;
+			const bool top = level == 0;
 			for (std::unique_ptr<XmlNode> part = node.getFirstChild(); part != nullptr; part = part->getNextSibling())
 			{
 				const std::string name = part->getName();
 				const std::string at = here + " > <" + name + ">";
 				PileRule::VarRule each;
 				if (top && name == "one") { rule.one = true; continue; }
-				if (top && name == "empty") { readAcceptRules(*part, rule, rule.emptyRules, at, false); continue; }
-				if (top && (name == "same" || name == "differs" || name == "step" || name == "total"))
+				if (top && name == "empty") { readAcceptRules(*part, rule, rule.emptyRules, at, 2); continue; }
+				if (top && name == "any")
+				{
+					readAcceptRules(*part, rule, rule.anyRules, at, 1);
+					if (rule.anyRules.empty()) { fail(at, "holds the rules of which one must hold: <same>, <differs>, <step>, <total> and <condition>s"); }
+					continue;
+				}
+				if (top && name == "wild")
+				{
+					if (!rule.wildVariable.empty()) { fail(at, "is a second <wild>; a holder has one"); }
+					rule.wildVariable = requireAttribute(*part, "variable", at);
+					readAcceptRules(*part, rule, rule.wildRules, at, 2);
+					if (rule.wildRules.empty()) { fail(at, "says which are wild by <condition>s on them"); }
+					continue;
+				}
+				if (level <= 1 && (name == "same" || name == "differs" || name == "step" || name == "total"))
 				{
 					each.kind = name == "same" ? Kind::Same : name == "differs" ? Kind::Differs : name == "step" ? Kind::Step : Kind::Total;
 					each.variable = requireAttribute(*part, "variable", at);
@@ -1226,7 +1242,7 @@ namespace xge
 				}
 				else
 				{
-					fail(here, "unknown <" + name + ">; expected " + std::string(top ? "<one />, <same>, <differs>, <step>, <total>, <condition>s and an <empty>" : "<condition>s on the first one"));
+					fail(here, "unknown <" + name + ">; expected " + std::string(top ? "<one />, <same>, <differs>, <step>, <total>, <condition>s, an <any>, a <wild> and an <empty>" : level == 1 ? "<same>, <differs>, <step>, <total> and <condition>s" : "<condition>s"));
 				}
 				into.push_back(std::move(each));
 			}
@@ -1270,11 +1286,20 @@ namespace xge
 				else if (tag == "accepts")
 				{
 					pile.takes.given = true;
-					readAcceptRules(*child, pile.takes, pile.takes.rules, at, true);
+					readAcceptRules(*child, pile.takes, pile.takes.rules, at, 0);
 				}
 				else if (tag == "run") { pile.run = true; }
 				else if (tag == "top") { pile.topSprite = requireAttribute(*child, "sprite", at); }
 				else if (tag == "lift") { pile.lift = readValue(*child, at); }
+				else if (tag == "order")
+				{
+					for (std::unique_ptr<XmlNode> by = child->getFirstChild(); by != nullptr; by = by->getNextSibling())
+					{
+						if (by->getName() != "by") { fail(at, "unknown <" + by->getName() + ">; expected a <by variable> for each thing kept in order, the first first"); }
+						pile.orderBy.push_back(requireAttribute(*by, "variable", at + " > <by>"));
+					}
+					if (pile.orderBy.empty()) { fail(at, "keeps what it holds in order <by variable>"); }
+				}
 				else if (tag == "picked")
 				{
 					// For now: a <send into>N (taking from it sends that many
@@ -1314,7 +1339,7 @@ namespace xge
 						else { fail(at, "unknown <" + name + ">; expected a <send into>, an <empty> and a <play sound>"); }
 					}
 				}
-				else { fail(here, "unknown <" + tag + ">; expected <spread>s, <accepts>, <run />, <top>, <lift> and <picked>"); }
+				else { fail(here, "unknown <" + tag + ">; expected <spread>s, <accepts>, <run />, <top>, <lift>, <order> and <picked>"); }
 			}
 		}
 
@@ -1897,7 +1922,6 @@ namespace xge
 			{
 				const std::string here = where + " > <think>";
 				command.button = requireAttribute(node, "button", here);
-				requireAttribute(node, "object", here);
 				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 				{
 					const std::string tag = child->getName();
@@ -2224,6 +2248,7 @@ namespace xge
 				if (object.pile.is) { fail(where, "has a <pile> and a <holds>; give one"); }
 				readHolds(*holds, object.pile, where + " > <holds>");
 			}
+			if (auto owns = findChild(&node, "owns")) { object.handPile = requireAttribute(*owns, "object", where + " > <owns>"); }
 			if (auto hand = findChild(&node, "hand"))
 			{
 				object.hand = true;
@@ -2859,6 +2884,8 @@ namespace xge
 			PartialVector2 velocity;
 			PartialVector2 padding;
 			std::map<std::string, RawValue> variables;
+			std::string owns;                       // <owns object=>
+			std::vector<RawCommand> think;          // <think>
 		};
 
 		// The parts of a member, row, column or cell, as far as they are its
@@ -2879,6 +2906,8 @@ namespace xge
 				else if (tag == "position") { part.position = readPartialVector2(*child, where); }
 				else if (tag == "velocity") { part.velocity = readPartialVector2(*child, where); }
 				else if (tag == "padding") { part.padding = readPartialVector2(*child, where); }
+				else if (tag == "owns") { part.owns = requireAttribute(*child, "object", where + " > <owns>"); }
+				else if (tag == "think") { part.think = { readCommand(*child, where) }; }
 			}
 			readObjectVariables(*node, where, part.variables);
 			part.animations = readAnimations(*node, where);
@@ -3043,7 +3072,12 @@ namespace xge
 				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
 				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
-				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves" || tag == "marks" || tag == "pile" || tag == "holds" || tag == "hand") { /* below, all at once */ }
+				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves" || tag == "marks" || tag == "pile" || tag == "holds" || tag == "hand" || tag == "owns") { /* below, all at once */ }
+				else if (tag == "turns")
+				{
+					shared.takesTurns = true;
+					shared.turnsSprite = child->getAttribute("sprite");
+				}
 				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "chain")
 				{
@@ -3058,7 +3092,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <pile> or <holds>, <hand />, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <pile> or <holds>, <hand />, <owns>, <turns>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -3134,6 +3168,8 @@ namespace xge
 					if (part->velocity.x) { velocityX = part->velocity.x; }
 					if (part->velocity.y) { velocityY = part->velocity.y; }
 					for (const auto& [variable, value] : part->variables) { rawObject.variable[variable] = value; }
+					if (!part->owns.empty()) { rawObject.handPile = part->owns; }
+					if (!part->think.empty()) { rawObject.think = part->think; }
 				}
 
 				if (!rawObject.shapeRows.empty())
@@ -3229,8 +3265,8 @@ namespace xge
 					const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
 					const std::string here = "object '" + memberName + "' (a member of " + where + ")";
 
-					const GroupPart member = readGroupPart(std::move(child), here, { "sprite", "animation", "position", "velocity" },
-						"a member can give <sprite>s, an <animation>, a <position> or a <velocity>");
+					const GroupPart member = readGroupPart(std::move(child), here, { "sprite", "animation", "position", "velocity", "variables", "owns", "think" },
+						"a member can give <sprite>s, an <animation>, a <position>, a <velocity>, <variables>, an <owns> and a <think>");
 					out.push_back(make(memberName, here, { &member }));
 				}
 

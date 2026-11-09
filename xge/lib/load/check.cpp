@@ -203,6 +203,7 @@ namespace xge
 			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<jump>", "<leap>", "<swing>", "<thrust>", "<turn>", "<track />" };
 			static const std::vector<std::string> press{ "<hold>", "<think>" };
 			static const std::vector<std::string> cells{ "<clear />", "<collapse />", "<fall />" };
+			static const std::vector<std::string> turn{ "<pass />" };   // by a member of a group that takes <turns>
 
 			static const std::vector<std::string> stateCommands = commandsOf({ &changes, &flow });
 			static const std::vector<std::string> objectTimeCommands = commandsOf({ &changes, &self, &steering });
@@ -213,7 +214,7 @@ namespace xge
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", objectTimeCommands },
-				{ "an <action>", commandsOf({ &changes, &self, &steering, &controls }) },
+				{ "an <action>", commandsOf({ &changes, &self, &steering, &controls, &turn }) },
 				{ "a path's <step>", objectTimeCommands },
 				{ "a <computer>'s <condition>", press },
 				{ "a map's check", commandsOf({ &changes, &cells }) },

@@ -356,6 +356,7 @@ namespace xge
 	{
 		const std::set<KeyCode> wanted = game.computerButtons();
 		computerPressing = true;
+		game.pressingForComputer(true);
 		for (const KeyCode key : computerHeld)
 		{
 			if (!wanted.count(key)) { handleKeyReleased(key); }
@@ -365,6 +366,7 @@ namespace xge
 			if (!computerHeld.count(key)) { handleKeyPressed(key); }
 		}
 		computerPressing = false;
+		game.pressingForComputer(false);
 		computerHeld = wanted;
 	}
 

@@ -6,7 +6,9 @@
 
 - Beef: deck, pile and hand are card nouns; other games will need collections of pieces too. So a pack is a `<group>` in rows (suits) and columns (ranks), a pile anything that `<holds>` a class, and the hand a picker (`<pick>`, `<place>`, `<drop>`). Verbs named for what they do, not for cards: `<send>`, `<distribute>` (Beef's word over deal), `<order>` with `<random />` (over shuffle or randomize: it says what becomes random). Rules on what is placed compare variables (`<same>`, `<differs>`, `<step>`, `<total>`), so no word knows suits or colours.
 - **Stage one, built:** Klondike. The new words are read into the existing card engine (`settleHolders`, game/cards.cpp): a held class's cells become cards, a holder's looks become face up or down, `<starts>` becomes where the cards begin and what each holder is dealt. Generated programs build the same raw data and call the same function.
-- Open: `<picked>` and `<starts>` take only the forms the deal needs; `<order>` and `<distribute>` as verbs anywhere; the other seven games (Crazy Eights with players as a group); `<any>` in `<accepts>`; points, patterns and tricks on held members.
+- **Stage two, built:** Crazy Eights, on [players as a group](07-states-and-conditions.md#players-as-a-group). `<accepts>` gained `<any>` and `<wild variable>` (the call names a value of that variable, which the top then counts as, so nothing knows suits); a holder keeps `<order>` by variables; `<picked><send>` with no `into=` goes to the picker's `<owns>`. The game lost its second hand, the F12 key, the turn variable's four values and the five "called" conditions (two live `<choose>` texts instead): 410 lines to 321.
+- Rejected for the wait after a wild card: a `laid` variable and two conditions in the game. A turn not passing while a holder waits for its call says the rule of the game in one place.
+- Open: `<picked>` and `<starts>` take only the forms the deal needs; `<order>` and `<distribute>` as verbs anywhere; `<call pile>` still a card word; the other six games; points, patterns and tricks on held members.
 
 ## What we looked for
 
@@ -18,19 +20,16 @@
 
 - **Three things, kept apart:** a `<deck>` makes the cards; a `<pile>` on an object holds cards, with its rules; a `<hand />` object is the player's cursor that carries cards between piles. Piles and hands know nothing of suits, so a deck of single cards can come later.
 - **A card is an ordinary object** (`cards.1` to `cards.52`) with `suit` and `rank` and looks `face` and `back`, so conditions, sounds and looks work on cards.
-- **Faces come from one picture sheet** (Beef's call), `sheet=` naming one of the game's `<sheets>`: a row per suit, a column per rank, the back the next cell; other layouts are `<faces>` runs ([pictures](30-pictures.md#sheets)). The drawn deck was about 960 of each card game's lines; the shared `assets/cards.png` (2496 by 1400, eight backs) takes it to 10 and is easy to replace. Read by plutovg, shrunk by area averaging: 0.1 s and 45 MB at load (4992 wide: 0.2 s, 130 MB).
-- **A drawn deck stays possible:** each suit gives its pips as rows, each rank its corner index and pips as a grid of characters, a court card a `<picture>` drawn as its top half; the engine lays out the faces. The shared sheet was rendered from exactly that deck at twice the size, so the faces are pixel for pixel what they were.
+- **Faces come from one picture sheet** (Beef's call): a row per suit, a column per rank, the back the next cell ([pictures](30-pictures.md#sheets)). The drawn deck was about 960 of each card game's lines; the shared `assets/cards.png` (2496 by 1400) takes it to 10. Loading it costs 0.1 s and 45 MB.
+- **A drawn deck stays possible:** pips as rows, corner indexes and court halves as characters; the shared sheet was rendered from it at twice the size.
 - **Pile rules are data, like `<moves>`:** what it `<takes>` (`<samesuit />`, `<othercolor />`, `<up />`, `<down />`, `<empty>`), whether a `<run />` may be taken, `<showtop />`, `faces=`. The stock is `<deals into>` and `<refill from>`.
 - **The deal is the piles':** each pile's `<dealt>N</dealt>` takes from the deck in rounds; `<more>1</more>` makes Klondike's staircase over a group.
-- **The hand works like Checkers' picker:** `<take />`, `<lay />` (refused when the pile does not take the cards), `<drop />`, `<deal />`. Laying back where cards came from is always allowed.
-- **Moving the hand:** `<hop>` goes to the next pile or card; `<track />` points under the mouse, so press-drag-release and Space twice are both a move. A click on the bare table does nothing.
-- Cards draw in pile order, held cards above, by a `drawOrder` kept on objects.
+- **The hand works like Checkers' picker** (`<take />`, `<lay />`, `<drop />`, `<deal />`; laying back is always allowed), moved by `<hop>` or `<track />` under the mouse.
 
 ## Players, points and patterns
 
 - **A player's cards are a pile of their own,** fanned, `<sorted />`, and a hand that owns it (`<hand pile="mine" />`) takes only from it and draws into it.
-- **Wild cards and a call:** `<matches />`, `<wild>`; a wild card makes the pile wait for a `<call />` of the suit of a card the caller points at. No suit picker was needed; this is narrower than strict rules, chosen for having no extra screen.
-- **The turn is the game's** (a variable and looks gating keys), not the engine's.
+- **Wild cards and a call:** a wild card makes the pile wait for a `<call />` of the suit of a card the caller points at; no suit picker screen.
 - **Points:** a rank's `<worth>` (several when it may count either); a pile's `<points><atmost>21</atmost>` adds them, face-up cards only. The dealer is conditions and a timer, bets are plain variables.
 - **Patterns, not poker:** hands are written as a `<patterns>` set from three mechanics, `<same>`, `<run>`, `<suited>`, the same parts rummy and dice use. The engine finds the best and orders two by one general tie rule. A pile `<score>`s by a set, `<with>` a shared pile, the `<best>` so many.
 - **Melds** are patterns read for a whole group (`<score><melds />`): the engine splits the cards for the least deadwood and lays the pile out that way. `<each>` names exceptions to worth.
@@ -45,7 +44,7 @@
 ## The computer
 
 - **Rules of thumb, not a search,** since hidden cards would have to be guessed. Shedding: play the longest suit, high first, wild last. Tricks: `<avoid />` ducks with the highest losing card. Bids count `tricks` by the book's rule of thumb. `<team>` lets a partner's winner stand.
-- **Hold'em uses odds:** a thousand random deals of the unseen cards, seeded by the cards seen so runs repeat. Four conditions play it: raise, call by pot odds, all in, fold.
+- **Hold'em uses odds:** a thousand random deals of the unseen cards, seeded so runs repeat; four conditions play it.
 - Rejected: bluffing, opponent reading, counting played cards (for now).
 
 ## Looked at and left

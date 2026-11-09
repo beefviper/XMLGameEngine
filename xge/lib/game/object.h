@@ -476,6 +476,13 @@ namespace xge
 		};
 		std::vector<VarRule> rules;
 		std::vector<VarRule> emptyRules;
+		// <any>: at least one of these holds too. <wild variable=>: what
+		// keeps all of `wildRules` goes on anything, and the holder then
+		// waits for a call: the one who laid it names a value of
+		// `wildVariable` (from 1), which its top then counts as.
+		std::vector<VarRule> anyRules;
+		std::vector<VarRule> wildRules;
+		std::string wildVariable;
 	};
 
 	// A card of a <deck> (see game/cards.h): which deck, its suit and rank
@@ -687,8 +694,17 @@ namespace xge
 			std::string spreadSprite;
 			std::string topSprite;
 			std::string pickedSound;    // <picked><play sound>: sounded when picking from it sends
+			std::vector<std::string> orderBy; // <order><by variable>s: kept in order by these, the first first
 		};
 		RawPile pile;
+		// <owns object=>: the holder of its own (a player's cards), as
+		// written; the same as <hand pile=>.
+		// <turns sprite=> on a group: its members take turns, in order,
+		// the first first; one off its turn shows that look (none: as it
+		// is). <think> on a member: the computer plays it.
+		bool takesTurns{ false };
+		std::string turnsSprite;
+		std::vector<RawCommand> think;
 		bool hand{ false };             // <hand />: points at piles and carries cards (Object::Hand)
 		std::string handPile;           // <hand pile=>: its own pile (cards held by a player)
 		int handSeat{};                 // <hand><seat>: which player, for a trick's `winner` (0 none)
@@ -1178,6 +1194,7 @@ namespace xge
 			bool refillShuffle{ false };
 			int refillLeave{};
 			std::string pickedSound;
+			std::vector<std::string> orderBy;
 			float fanWidth{};
 			bool run{ false };
 			bool showTop{ false };
@@ -1263,6 +1280,10 @@ namespace xge
 			Vector2f grab{};
 		};
 		Hand hand;
+		// A member of a group that takes <turns>: the look it shows off its
+		// turn (none: as it is). Its live `turn` is 1 on its turn, else 0.
+		bool takesTurns{ false };
+		std::string turnsSprite;
 		// Drawn after everything with a smaller one; 0 keeps the file's order
 		// (cards and hands are drawn above the rest).
 		int drawOrder{};

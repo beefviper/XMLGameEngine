@@ -571,15 +571,30 @@ namespace
 		}
 
 		Object& pile(const std::string& name) { return get(name); }
-		Object& hand() { return get("hand"); }
+		Object& hand() { return get("you"); }
+		Object& computer() { return get("computer"); }
 		Object& card(int number) { return *game.cardAt(number); }
-		float turn() { return hand().variable.at("turn"); }
+		// 1 your turn, 2 the computer's, 3 yours to name a suit, 4 its.
+		float turn()
+		{
+			const bool yours = hand().variable.at("turn") == 1.0f;
+			const bool calling = (yours ? hand() : computer()).lookName() == "calling";
+			return (yours ? 1.0f : 2.0f) + (calling ? 2.0f : 0.0f);
+		}
+		// The computer's turn, as a pass would give it.
+		void computersTurn()
+		{
+			game.setVariable(hand().name, "turn", 0.0f);
+			showLookNamed(hand(), "waiting");
+			game.setVariable(computer().name, "turn", 1.0f);
+			computer().showLook(0);
+		}
 
 		int cardOf(const std::string& rank, const std::string& suit)
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.isCard && object.card.suitName == suit && object.card.rankName == rank) { return object.cardNumber; }
+				if (object.isCard && object.card.suit == numberIn(klondikeSuits, suit) && object.card.rank == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
 			}
 			return 0;
 		}
@@ -606,7 +621,7 @@ namespace
 			game.layOutCards();
 		}
 
-		std::string name(int number) { return card(number).card.rankName + " " + card(number).card.suitName; }
+		std::string name(int number) { return klondikeRanks[static_cast<std::size_t>(card(number).card.rank - 1)] + " " + klondikeSuits[static_cast<std::size_t>(card(number).card.suit - 1)]; }
 		std::string top(const std::string& name) { return pile(name).pile.cards.empty() ? "" : this->name(pile(name).pile.cards.back()); }
 
 		// Points your hand at that card of yours.
@@ -650,6 +665,29 @@ TEST_CASE("crazyeights.xml: the deal: seven each, yours face up in order, one tu
 	CHECK(table.pile("stock").pile.cards.size() == 37);
 	CHECK(table.hand().hand.pile == table.pile("mine").name);
 	CHECK(table.turn() == 1.0f);
+	CHECK(table.hand().lookName() == "free");
+	CHECK(table.computer().lookName() == "waiting");
+	CHECK(table.get("whoseturn").textPieces.front().shown == "your turn: play a card that matches, or draw");
+}
+
+TEST_CASE("crazyeights.xml: keys reach only the player on its turn, and never the one the computer plays", "[cards][eights][players]")
+{
+	Eights table;
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "K clubs", "5 spades" } }, { "theirs", { "3 clubs", "4 clubs" } }, { "stock", { "6 clubs" } } });
+	table.computersTurn();
+	table.computer().hand.pile = table.pile("theirs").name;
+	table.computer().hand.at = 0;
+	table.hand().hand.at = 1;
+	// Space and the arrows: nobody's, the computer's cards stay where they are.
+	table.engine.handleKeyPressed(KeyCode::Space);
+	table.engine.handleKeyReleased(KeyCode::Space);
+	table.engine.handleKeyPressed(KeyCode::D);
+	table.engine.handleKeyReleased(KeyCode::D);
+	CHECK(table.pile("theirs").pile.cards.size() == 2);
+	CHECK(table.pile("mine").pile.cards.size() == 2);
+	CHECK(table.hand().hand.at == 1);
+	CHECK(table.computer().hand.at == 0);
+	CHECK(table.get("whoseturn").textPieces.front().shown == "the computer is playing");
 }
 
 TEST_CASE("crazyeights.xml: a card goes on the pile by suit or rank; one that does not goes back in your hand", "[cards][eights]")
@@ -692,7 +730,7 @@ TEST_CASE("crazyeights.xml: an eight goes on anything, you name a suit, and the 
 	CHECK(table.turn() == 2.0f);
 	CHECK(table.pile("mine").pile.cards.size() == 2);
 	table.frames(1);
-	CHECK(table.get("called").lookName() == "spades");
+	CHECK(table.get("called").textPieces.front().shown == "spades");
 
 	// It plays its spade, not its eight.
 	table.untilYourTurn();
@@ -707,9 +745,7 @@ TEST_CASE("crazyeights.xml: the computer draws until it can play, and names the 
 	Eights table;
 	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "2 spades", "K clubs" } }, { "theirs", { "Q spades" } }, { "stock", { "8 clubs", "4 diamonds", "9 diamonds" } } });
 	// The computer's turn.
-	table.hand().variable["turn"] = 2.0f;
-	table.hand().showLook(2);
-	table.get("cpuhand").showLook(1);
+	table.computersTurn();
 	table.untilYourTurn();
 	// Drawn: the 9 and 4 of diamonds, then the 8 of clubs, which it plays and names diamonds.
 	CHECK(table.top("discard") == "8 clubs");

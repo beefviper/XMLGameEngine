@@ -1021,6 +1021,7 @@ namespace xge
 			pile.run = raw.run;
 			pile.showTop = raw.showTop;
 			pile.sorted = raw.sorted;
+			pile.orderBy = raw.orderBy;
 			pile.lift = number(raw.lift);
 			pile.pointsMost = raw.hasPoints ? number(raw.pointsMost) : 0.0f;
 			for (const auto& each : raw.pointsEach) { pile.pointsEach.push_back({ each.suit, each.rank, number(each.points) }); }
@@ -1039,6 +1040,8 @@ namespace xge
 		object.hand.holds = rawObject.handHolds;
 		object.isCard = rawObject.isCard;
 		object.card = rawObject.card;
+		object.takesTurns = rawObject.takesTurns;
+		object.turnsSprite = rawObject.turnsSprite;
 
 		if (!rawObject.mirror.empty())
 		{

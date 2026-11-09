@@ -157,6 +157,20 @@ namespace xge
 		// those its conditions that hold name in their <hold>s.
 		std::set<KeyCode> computerButtons();
 
+		// Players as a group (game/players.cpp). The member of the group
+		// `name` on its turn (none: the group takes no turns); whether a
+		// name is such a group; whether a key reaches `member` now (always,
+		// unless it takes turns: then only on its turn, and only a press of
+		// the computer's for a member it plays, a person's for the rest).
+		// <pass /> in a member's action: the next member's turn (false:
+		// not its turn, or a holder waits for a wild card's call).
+		Object* onTurn(const std::string& name);
+		bool takesTurns(const std::string& name) const;
+		bool answers(const Object& member) const;
+		bool passPlayers(Object& member);
+		// The engine says while it presses the computer's keys.
+		void pressingForComputer(bool pressing) noexcept { computerPresses = pressing; }
+
 		void setCurrentState(const int& index);
 		void setCurrentState(const std::string& name);
 
@@ -500,7 +514,8 @@ namespace xge
 		// holder with <picked> sends as that says (then false: nothing held).
 		bool pickCards(Object& hand);
 		static bool follows(const PileRule& rule, const Object& below, const Object& next);
-		static bool acceptsBy(const std::vector<PileRule::VarRule>& rules, const Object& next, const Object* below);
+		// `called`: a variable whose value on `below` counts as `value` (0: its own).
+		static bool acceptsBy(const std::vector<PileRule::VarRule>& rules, const Object& next, const Object* below, const std::string& called = {}, float value = 0.0f);
 		void layHeld(Object& hand, Object& pile);
 		static bool isWild(const PileRule& rule, const Object& card);
 		void refreshCall(Object& pile);
@@ -511,6 +526,12 @@ namespace xge
 		std::optional<KeyCode> thinkCards(const CmdThink& think, Object& hand);
 		int playToTrick(Object& trick, const Object& hand, const Object& own, bool avoid);
 		int cardWait{};
+		// Players as a group: back to the first member's turn, the rest
+		// showing their <turns sprite=>; each member the computer plays,
+		// with its <think>; whether the computer is pressing now.
+		void startPlayers();
+		std::map<std::string, CmdThink> memberThinks;
+		bool computerPresses{ false };
 		std::vector<Object*> shownPiles();
 		// Where each card's object is in `objects`, by its number less one
 		// (looked over again when a copy taken away moved them).

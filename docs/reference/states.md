@@ -163,6 +163,32 @@ A group whose members are the places, best first, and `<rank variable="entry.sco
 <input button="space"><rank variable="entry.score" into="table" /><reset /></input>
 ```
 
+## Players as a group
+
+Board and card games share one world, and the players take it in turns. The players are a group with `<turns />`:
+
+```xml
+<group name="players" class="player">
+  <sprite name="free"> ... </sprite>
+  <sprite name="calling"> ... </sprite>
+  <sprite name="waiting"> ... </sprite>
+  <actions>
+    <action name="play"><pick class="card" /><place into="discard" /><play sound="card" /><pass /></action>
+    ...
+  </actions>
+  <turns sprite="waiting" />
+  <member name="you"><position> ... </position><owns object="mine" /></member>
+  <member name="computer"><position> ... </position><owns object="theirs" /><think button="space" /></member>
+</group>
+```
+
+- **The members take turns in the order written**, the first first. Live **`turn`** on each is 1 on its turn, else 0 (`you.turn`). `sprite=`: the look a member shows off its turn; the one whose turn comes shows its first look.
+- **Keys reach only the member on its turn.** A `<trigger object="players">` (and a pointing control) goes to that one alone, and to a member with a `<think>` only as the computer presses for it, so a person's keys never play the computer's member. A trigger run by a rule or condition is not held back.
+- **`<pass />`** in a member's action hands the turn to the next, round to the first, and ends what the press would still do. It is refused while a holder waits for a [wild card's call](cards.md#holders).
+- **A member's `<think button>`**: the computer plays it on its turn, pointing as it thinks best and pressing that key (`<depth>`, `<avoid />` and `<worth>`s as a [computer's](#computer-players)). No `<computer>` condition is needed.
+- **A verb naming the group** (`<become object="players" sprite="calling" />`) changes the member on its turn.
+- **`<owns object>`**: the holder of its own, a player's cards ([holders](cards.md#holders)).
+
 ## Taking turns
 
 Players take turns as the arcade machines did: each plays a game of their own, and the machine swaps them.

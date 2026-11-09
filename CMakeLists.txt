@@ -42,6 +42,7 @@ set(ENGINE_SOURCES
 	"xge/lib/game/cells.cpp"
 	"xge/lib/game/think.cpp"
 	"xge/lib/game/cards.cpp"
+	"xge/lib/game/players.cpp"
 	"xge/lib/engine/folder.cpp"
 	"xge/lib/engine/engine.cpp"
 	"xge/lib/engine/backends.cpp"
