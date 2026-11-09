@@ -355,8 +355,8 @@
       <xs:element name="text">
         <xs:complexType>
           <xs:sequence>
-            <!-- its pieces, in order, a space between them (letters side by side make one word) -->
-            <xs:choice maxOccurs="unbounded">
+            <!-- its pieces, in order, a space between them (letters side by side make one word); none only in a group whose members, rows or cells give them -->
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
               <!-- a fixed label -->
               <xs:element name="content" type="xs:string" />
               <!-- a live number: an owner.variable stays up to date as it changes -->

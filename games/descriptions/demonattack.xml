@@ -129,14 +129,14 @@
           <sprite><text style="banner"><content>DEMON ATTACK</content><size>80</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="line"><content>shoot every demon before it bombs you</content></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>50</y></padding>
+          <sprite><text style="line" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="line"><content>a and d (or the arrows) slide, space fires</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>shoot every demon before it bombs you</content></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d (or the arrows) slide, space fires</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text><content>spacebar to start</content><size>40</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>

@@ -107,22 +107,16 @@
           <sprite><text style="banner"><content>GIN RUMMY</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 190</centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>draw a card, then discard one. meld sets of a rank and runs of a suit;</content></text></sprite>
+        <group name="help">
+          <rows>4</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>the rest is deadwood. at ten or less, knock: score the difference.</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="help3">
-          <sprite><text style="help"><content>gin, no deadwood, scores 25 more; an undercut gives them 25. 100 wins.</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
-        </object>
-        <object name="help4">
-          <sprite><text style="help"><content>a d along your cards, w s to the piles, spacebar draws and discards, k knocks</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 0</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>draw a card, then discard one. meld sets of a rank and runs of a suit;</content></text></sprite></row>
+          <row number="2"><sprite><text><content>the rest is deadwood. at ten or less, knock: score the difference.</content></text></sprite></row>
+          <row number="3"><sprite><text><content>gin, no deadwood, scores 25 more; an undercut gives them 25. 100 wins.</content></text></sprite></row>
+          <row number="4"><sprite><text><content>a d along your cards, w s to the piles, spacebar draws and discards, k knocks</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>

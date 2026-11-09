@@ -207,14 +207,14 @@
           <sprite><text style="banner"><content>FROSTBITE</content></text></sprite>
           <position><x><centered /></x><y>170</y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>land on white ice to build the igloo, then walk in</content></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>50</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y>320</y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>w and s jump, a and d walk</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y>370</y></position>
-        </object>
+          <row number="1"><sprite><text><content>land on white ice to build the igloo, then walk in</content></text></sprite></row>
+          <row number="2"><sprite><text><content>w and s jump, a and d walk</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y>450</y></position>

@@ -2160,7 +2160,7 @@
       <xsl:if test="$onMap">, const RawMap&amp; map</xsl:if>
     </xsl:variable>
     <xsl:variable name="leaf" select="not(group)" />
-    <xsl:variable name="cells" select="boolean(ancestor-or-self::group/columns)" />
+    <xsl:variable name="cells" select="boolean(ancestor-or-self::group/columns | ancestor-or-self::group/rows)" />
     <xsl:text>&#9;// &lt;group name="</xsl:text>
     <xsl:value-of select="@name" />
     <xsl:choose>
@@ -2404,8 +2404,9 @@
       <xsl:when test="$cells">
         <xsl:call-template name="cells">
           <xsl:with-param name="group" select="." />
-          <xsl:with-param name="columns" select="number(normalize-space((ancestor-or-self::group/columns)[last()]))" />
-          <xsl:with-param name="rows" select="number(normalize-space((ancestor-or-self::group/rows)[last()]))" />
+          <!-- <rows> alone is one column, <columns> alone one row -->
+          <xsl:with-param name="columns" select="number(concat('0', normalize-space((ancestor-or-self::group/columns)[last()]))) + number(not(ancestor-or-self::group/columns))" />
+          <xsl:with-param name="rows" select="number(concat('0', normalize-space((ancestor-or-self::group/rows)[last()]))) + number(not(ancestor-or-self::group/rows))" />
           <xsl:with-param name="row" select="1" />
           <xsl:with-param name="indent" select="$in" />
         </xsl:call-template>
@@ -2794,6 +2795,9 @@
         <xsl:with-param name="text">
           <xsl:choose>
             <xsl:when test="$cell/@name != ''"><xsl:value-of select="$cell/@name" /></xsl:when>
+            <!-- <rows> alone: named by row; <columns> alone: by column -->
+            <xsl:when test="not($group/ancestor-or-self::group/columns)"><xsl:value-of select="concat($group/@name, '.', $row)" /></xsl:when>
+            <xsl:when test="not($group/ancestor-or-self::group/rows)"><xsl:value-of select="concat($group/@name, '.', $column)" /></xsl:when>
             <xsl:otherwise><xsl:value-of select="concat($group/@name, '.', $column, '.', $row)" /></xsl:otherwise>
           </xsl:choose>
         </xsl:with-param>

@@ -96,22 +96,16 @@
           <sprite><text style="banner"><content>SPADES</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 190</centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>you and north against west and east. follow the suit led if you can;</content></text></sprite>
+        <group name="help">
+          <rows>4</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>spades are trumps. bid your tricks: make your side's bid for ten a trick,</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="help3">
-          <sprite><text style="help"><content>one for each over; ten overs cost 100. short, lose ten a trick. 500 wins.</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
-        </object>
-        <object name="help4">
-          <sprite><text style="help"><content>w s change your bid, a d pick a card, spacebar bids and plays</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 0</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>you and north against west and east. follow the suit led if you can;</content></text></sprite></row>
+          <row number="2"><sprite><text><content>spades are trumps. bid your tricks: make your side's bid for ten a trick,</content></text></sprite></row>
+          <row number="3"><sprite><text><content>one for each over; ten overs cost 100. short, lose ten a trick. 500 wins.</content></text></sprite></row>
+          <row number="4"><sprite><text><content>w s change your bid, a d pick a card, spacebar bids and plays</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>

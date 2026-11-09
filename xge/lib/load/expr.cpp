@@ -2076,6 +2076,10 @@ namespace xge
 			// Its pieces: fixed labels, numbers shown as the whole numbers they
 			// are, with no decimal point, the way someone typing the label
 			// would, and letters.
+			if (sprite.text.empty())
+			{
+				throw std::runtime_error(where + " > <text>: needs a <content> (a label), a <number>, a <letter> or a <choose>; only a group's text can leave them to its members, rows or cells");
+			}
 			picture.kind = ShapeKind::Text;
 			picture.text = joinText(textPieces(sprite, where, self));
 			picture.textSize = static_cast<int>(evaluate(sprite.size, where));
@@ -2238,11 +2242,13 @@ namespace xge
 				const Picture slotPicture = buildPicture(first.cell.slot, where);
 				const ShapeKind slotKind = slotPicture.kind;
 				const Vector2f slot = measureShapeSize(slotPicture);
-				if (slotKind == ShapeKind::Text || slotKind == ShapeKind::Image)
+				// Rows of text are spaced by their <padding> alone, top to top
+				// (lines of words); an image's size too is only known to a
+				// window backend (see measureShapeSize).
+				if (slotKind == ShapeKind::Image)
 				{
-					std::cout << "warning: group '" << group << "': row " << row << " is "
-						<< (slotKind == ShapeKind::Text ? "text" : "an image")
-						<< ", whose size is only known to a window backend (see measureShapeSize), so its cells are spaced by the <padding> alone\n";
+					std::cout << "warning: group '" << group << "': row " << row
+						<< " is an image, whose size is only known to a window backend (see measureShapeSize), so its cells are spaced by the <padding> alone\n";
 				}
 
 				if (row > rows.begin()->first) { top += above + evaluate(first.cell.gapAbove, where); }

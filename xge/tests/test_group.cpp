@@ -439,6 +439,42 @@ TEST_CASE("the padding of a row or column is the gap before it", "[group][cells]
 	CHECK(game.getObject("wall.3.1").position.x == 100.0f + 25.0f + 20.0f + 15.0f);
 }
 
+TEST_CASE("lines of text are a group in <rows> alone: one style, each line named by its row, the padding apart", "[group][cells][text]")
+{
+	const std::string lines =
+		"<group name=\"help\">"
+		"<rows>3</rows>"
+		"<padding><y>30</y></padding>"
+		"<sprite><text style=\"help\" /></sprite>"
+		"<position><x><centered /></x><y>100</y></position>"
+		"<row number=\"1\"><sprite><text><content>first line</content></text></sprite></row>"
+		"<row number=\"2\"><sprite><text><content>second</content><color>color.red</color></text></sprite></row>"
+		"<row number=\"3\"><sprite><text><content>third</content></text></sprite><padding><y>50</y></padding></row>"
+		"</group>";
+	std::string xml = gameXml(lines, "<show object=\"help\" />");
+	xml.replace(xml.find("<variables>"), 0, "<styles><style name=\"help\"><size>20</size><color>color.white</color></style></styles>");
+	Loaded loaded{ xml };
+	Game& game = loaded.game;
+
+	REQUIRE(game.getCurrentObjects().size() == 3);
+	CHECK(game.getObject("help.1").picture.text == "first line");
+	CHECK(game.getObject("help.2").picture.text == "second");
+	CHECK(game.getObject("help.3").picture.text == "third");
+	CHECK(game.getObject("help.1").picture.textSize == 20);
+	CHECK(colorOf(game.getObject("help.1")) == "color.white");
+	CHECK(colorOf(game.getObject("help.2")) == "color.red");
+
+	// Text is measured only by a window, so lines are their padding apart, top to top.
+	CHECK(game.getObject("help.1").position.y == 100.0f);
+	CHECK(game.getObject("help.2").position.y == 130.0f);
+	CHECK(game.getObject("help.3").position.y == 180.0f);
+
+	// A line that gives no words, where its group gives none, says so.
+	std::string empty = xml;
+	empty.replace(empty.find("<content>second</content>"), std::string("<content>second</content>").size(), "");
+	REQUIRE_THROWS_WITH(Loaded(empty), ContainsSubstring("help.2") && ContainsSubstring("needs a <content>"));
+}
+
 TEST_CASE("a row or column picks by number, several numbers, odd or even", "[group][cells]")
 {
 	Loaded loaded{ gameXml(wallWith(

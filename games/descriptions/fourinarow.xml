@@ -74,18 +74,15 @@
           <sprite><text style="banner"><content>FOUR IN A ROW</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>you play red, and go first; 2 for two players</content></text></sprite>
+        <group name="help">
+          <rows>3</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>four in a line, across, down or on a slant, wins</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="help3">
-          <sprite><text style="help"><content>a d or the arrows move, spacebar or a click drops, p pauses</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>you play red, and go first; 2 for two players</content></text></sprite></row>
+          <row number="2"><sprite><text><content>four in a line, across, down or on a slant, wins</content></text></sprite></row>
+          <row number="3"><sprite><text><content>a d or the arrows move, spacebar or a click drops, p pauses</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>

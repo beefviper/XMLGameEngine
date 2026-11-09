@@ -99,22 +99,16 @@
           <sprite><text style="banner"><content>HEARTS</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 190</centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>follow the suit led if you can; the highest card of it takes the trick.</content></text></sprite>
+        <group name="help">
+          <rows>4</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>each heart taken is a point, the queen of spades thirteen: keep them low.</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="help3">
-          <sprite><text style="help"><content>take them all and the others get 26. at 100, the lowest score wins.</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
-        </object>
-        <object name="help4">
-          <sprite><text style="help"><content>a d or the arrows pick a card, spacebar plays it, or click a card</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 0</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>follow the suit led if you can; the highest card of it takes the trick.</content></text></sprite></row>
+          <row number="2"><sprite><text><content>each heart taken is a point, the queen of spades thirteen: keep them low.</content></text></sprite></row>
+          <row number="3"><sprite><text><content>take them all and the others get 26. at 100, the lowest score wins.</content></text></sprite></row>
+          <row number="4"><sprite><text><content>a d or the arrows pick a card, spacebar plays it, or click a card</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>

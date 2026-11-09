@@ -277,14 +277,14 @@
           <sprite><text style="banner"><content>ADVENTURE</content><size>72</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>bring the chalice home to the gold castle</content></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>40</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>w a s d or arrows walk, space puts down</content></text></sprite>
-          <position><x><centered /></x><y><centered /></y></position>
-        </object>
+          <row number="1"><sprite><text><content>bring the chalice home to the gold castle</content></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d or arrows walk, space puts down</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 100</centered></y></position>

@@ -141,6 +141,26 @@ Instead of members, a group can lay out a block: `<columns>` and `<rows>` make a
 - A cell's slot is the size of its row's sprite; a cell of another size sits centred in its slot.
 - A `<cell>` wins over its row and column, but a row and a column that change the same thing in one cell stop the load.
 
+### Lines of text
+
+`<rows>` alone is one column (and `<columns>` alone one row), its cells named by the one number (`help.2`). This is how a screen writes lines of words once: the group gives the style and the centring, each row its words.
+
+```xml
+<group name="help">
+  <rows>3</rows>
+  <padding><y>30</y></padding>
+  <sprite><text style="help" /></sprite>
+  <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+  <row number="1"><sprite><text><content>build the columns down in alternating colours,</content></text></sprite></row>
+  <row number="2"><sprite><text><content>each suit up from ace to king on the foundations</content></text></sprite></row>
+  <row number="3"><sprite><text><content>w a s d or the arrows move</content><color>color.lightgrey</color></text></sprite><padding><y>40</y></padding></row>
+</group>
+```
+
+- A text is only measured by a window, so rows of text are their `<padding>` apart, top to top; a row's own padding is the step before it (a paragraph).
+- Each line is centred on its own width.
+- Only a group's text may leave out its words; a cell that ends up with none stops the load.
+
 ## The kit and from=
 
 The `<kit>` holds objects, groups and maps written once, called **pieces**. A piece is never in play itself: it comes into play where an `<objects>` takes it, or as copies a [spawn](#spawn-and-despawn) makes.

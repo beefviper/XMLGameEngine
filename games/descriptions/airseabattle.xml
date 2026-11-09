@@ -115,14 +115,14 @@
           <sprite><text style="prompt"><content>two players, 2:16, most planes wins</content><size>26</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 50</centered></y></position>
         </object>
-        <object name="keys1">
-          <sprite><text style="keys"><content>yellow: a s d point the gun, w fires</content></text></sprite>
+        <group name="keys">
+          <rows>2</rows>
+          <padding><y>35</y></padding>
+          <sprite><text style="keys" /></sprite>
           <position><x><centered /></x><y><centered /></y></position>
-        </object>
-        <object name="keys2">
-          <sprite><text style="keys"><content>white: left down right point, up fires</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 35</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>yellow: a s d point the gun, w fires</content></text></sprite></row>
+          <row number="2"><sprite><text><content>white: left down right point, up fires</content><color>color.white</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content><color>color.yellow</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>

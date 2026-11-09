@@ -150,14 +150,14 @@
           <sprite><text style="banner"><content>YARS' REVENGE</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>eat through the shield, then fire the cannon into the qotile</content></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>50</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>w a s d or the arrows fly, space fires, p pauses</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>eat through the shield, then fire the cannon into the qotile</content></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d or the arrows fly, space fires, p pauses</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="help"><content>spacebar to start</content><size>40</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>

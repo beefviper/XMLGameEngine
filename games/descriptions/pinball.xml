@@ -131,14 +131,14 @@
           <sprite><text style="banner"><content>PINBALL</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>three balls: light the three lanes for a bonus</content></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>46</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>a and d or the arrows flip, hold spacebar and let go to shoot</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 6</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>three balls: light the three lanes for a bonus</content></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d or the arrows flip, hold spacebar and let go to shoot</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>

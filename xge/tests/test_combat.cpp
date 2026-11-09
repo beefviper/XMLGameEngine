@@ -230,7 +230,7 @@ TEST_CASE("each state owns what it draws, and a win draws the field still under 
 {
 	Combat play;
 	CHECK(play.tank1().ownerState == "playing");
-	CHECK(play.game.getObject("keys1").ownerState == "title");
+	CHECK(play.game.getObject("keys.1").ownerState == "title");
 	CHECK(play.game.getObject("again").ownerState == "wins");
 	CHECK(play.game.isShown(play.game.getObject("title.title")));
 	CHECK_FALSE(play.game.isShown(play.tank1()));

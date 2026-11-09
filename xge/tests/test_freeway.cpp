@@ -401,7 +401,7 @@ TEST_CASE("each state has its own objects: the title, the road, the signs", "[fr
 {
 	Game game{ "descriptions/freeway.xml" };
 	game.setCurrentState("mainmenu");
-	CHECK(game.isShown(game.getObject("keys")));
+	CHECK(game.isShown(game.getObject("help.2")));
 	CHECK_FALSE(game.isShown(game.getObject("chicken1")));
 
 	game.pushState("playing");
@@ -409,7 +409,7 @@ TEST_CASE("each state has its own objects: the title, the road, the signs", "[fr
 	CHECK(game.getObject("lane5.1.1").name == "playing.lane5.1.1");
 	CHECK(game.isShown(game.getObject("lane5.1.1")));
 	CHECK(game.isShown(game.getObject("score1")));
-	CHECK_FALSE(game.isShown(game.getObject("keys")));
+	CHECK_FALSE(game.isShown(game.getObject("help.2")));
 }
 
 TEST_CASE("paused and the endings draw the road still underneath, scores and all", "[freeway][states]")

@@ -125,6 +125,11 @@ namespace xge
 		std::map<std::string, std::shared_ptr<ComplexType>> complexTypes;
 		std::map<std::string, Particle> groups;
 		std::set<std::string> inProgress;
+		// Named types reached while a group is being built, made once the
+		// root is: a group may hold an element of a type that holds the group
+		// again (a <trigger>'s <otherwise> holds commands, <trigger> among them).
+		std::vector<std::shared_ptr<ComplexType>> deferred;
+		std::vector<std::string> deferredNames;
 
 		// Types that contain themselves point at each other through shared
 		// pointers; emptying every named type lets them all go.
@@ -392,6 +397,14 @@ namespace xge
 		auto type = std::make_shared<ComplexType>();
 		complexTypes[name] = type;
 
+		if (!inProgress.empty())
+		{
+			deferred.push_back(type);
+			deferredNames.push_back(name);
+			out = type;
+			return true;
+		}
+
 		if (!buildComplexType(*node->second, *type, error))
 		{
 			complexTypes.erase(name);
@@ -482,7 +495,17 @@ namespace xge
 			return false;
 		}
 
-		return buildElement(*topElement, root, error);
+		if (!buildElement(*topElement, root, error)) { return false; }
+
+		while (!deferred.empty())
+		{
+			const std::shared_ptr<ComplexType> type = deferred.back();
+			const std::string name = deferredNames.back();
+			deferred.pop_back();
+			deferredNames.pop_back();
+			if (!buildComplexType(*complexTypeNodes.at(name), *type, error)) { return false; }
+		}
+		return true;
 	}
 
 	// ----------------------------------------------------------- validating

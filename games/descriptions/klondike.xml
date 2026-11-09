@@ -82,22 +82,16 @@
           <sprite><text style="banner"><content>KLONDIKE</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>build the columns down in alternating colours,</content></text></sprite>
+        <group name="help">
+          <rows>4</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>each suit up from ace to king on the foundations</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="help3">
-          <sprite><text style="help"><content>w a s d or the arrows move, spacebar takes and lays, x puts back,</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
-        </object>
-        <object name="help4">
-          <sprite><text style="help"><content>f sends a card home; or drag with the mouse, right click home</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>build the columns down in alternating colours,</content></text></sprite></row>
+          <row number="2"><sprite><text><content>each suit up from ace to king on the foundations</content></text></sprite></row>
+          <row number="3"><sprite><text><content>w a s d or the arrows move, spacebar takes and lays, x puts back,</content></text></sprite><padding><y>40</y></padding></row>
+          <row number="4"><sprite><text><content>f sends a card home; or drag with the mouse, right click home</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>

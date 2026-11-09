@@ -240,7 +240,7 @@ TEST_CASE("paused, the battle is drawn still: the planes stop and the clock neve
 TEST_CASE("each end screen draws the battle still under TIME UP and its message", "[airseabattle]")
 {
 	AirSeaBattle play;
-	CHECK(play.game.getObject("keys1").ownerState == "title");
+	CHECK(play.game.getObject("keys.1").ownerState == "title");
 	CHECK(play.game.getObject("timeup").ownerState.empty());
 	CHECK_FALSE(play.game.isShown(play.game.getObject("timeup")));
 

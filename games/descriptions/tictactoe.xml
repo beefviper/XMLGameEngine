@@ -82,14 +82,14 @@
           <sprite><text style="banner"><content>TIC-TAC-TOE</content><color>color.red</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>you play x, and go first; 2 for two players</content></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>w a s d or the arrows move, spacebar or a click marks, p pauses</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>you play x, and go first; 2 for two players</content></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d or the arrows move, spacebar or a click marks, p pauses</content></text></sprite></row>
+        </group>
         <object name="level">
           <sprite><text style="help"><content>a d: the computer plays </content><choose><by>options.smart</by><word>easy</word><word>smart</word></choose></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>

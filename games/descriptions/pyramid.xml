@@ -77,22 +77,16 @@
           <sprite><text style="banner"><content>PYRAMID</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 190</centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>take away two free cards that add up to 13, or a king alone;</content></text></sprite>
+        <group name="help">
+          <rows>4</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>a card is free when nothing lies over it. clear the pyramid to win.</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="help3">
-          <sprite><text style="help"><content>the jack is 11, the queen 12, the king 13. the stock turns onto the waste.</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
-        </object>
-        <object name="help4">
-          <sprite><text style="help"><content>w a s d move, spacebar turns, picks and pairs, x puts back. or click</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 0</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>take away two free cards that add up to 13, or a king alone;</content></text></sprite></row>
+          <row number="2"><sprite><text><content>a card is free when nothing lies over it. clear the pyramid to win.</content></text></sprite></row>
+          <row number="3"><sprite><text><content>the jack is 11, the queen 12, the king 13. the stock turns onto the waste.</content></text></sprite></row>
+          <row number="4"><sprite><text><content>w a s d move, spacebar turns, picks and pairs, x puts back. or click</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>

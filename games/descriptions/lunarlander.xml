@@ -98,14 +98,14 @@
           <sprite><text style="banner"><content>LUNAR LANDER</content><size>100</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="line"><content>land upright and slowly on a pad: 2X, 3X or 5X the points</content></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>45</y></padding>
+          <sprite><text style="line" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="line"><content>left and right turn, up fires the engine</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 25</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>land upright and slowly on a pad: 2X, 3X or 5X the points</content></text></sprite></row>
+          <row number="2"><sprite><text><content>left and right turn, up fires the engine</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="line"><content>spacebar to start</content><size>48</size><color>color.green</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>

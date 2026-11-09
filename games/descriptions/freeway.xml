@@ -87,14 +87,14 @@
           <sprite><text style="banner"><content>FREEWAY</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>cross the highway as often as you can</content><color>color.white</color></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>60</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>player 1: w and s    player 2: up and down</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>cross the highway as often as you can</content><color>color.white</color></text></sprite></row>
+          <row number="2"><sprite><text><content>player 1: w and s    player 2: up and down</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 150</centered></y></position>

@@ -135,6 +135,7 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
 | `<choose><by>value</by><word>LOVE</word><word>15</word>...</choose>` | one of its words, the first for 0 (past either end, the end word), live like a number |
 
 - Pieces are joined with a space; letters side by side make one word (`ABC 120`).
+- Several lines on a screen are a [group in rows](objects.md#lines-of-text), one text style for all.
 - In a group, a piece naming the group's own variable (`table.score` in the group `table`) shows each member's own.
 - A text whose look or width changes is measured again, so a centred one stays centred.
 - Drawn with the style's font, else `assets/tuffy.ttf`, unsmoothed. If a font file is missing, each window library says so once and uses the built-in 8 by 8 font.

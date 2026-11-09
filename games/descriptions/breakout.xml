@@ -94,14 +94,14 @@
             </y>
           </position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>three balls, two walls: yellow 1, green 3, orange 5, red 7</content></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>40</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 10</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>a and d, the arrows or the mouse move the paddle</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>three balls, two walls: yellow 1, green 3, orange 5, red 7</content></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d, the arrows or the mouse move the paddle</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>

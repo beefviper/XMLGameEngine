@@ -87,18 +87,15 @@
           <sprite><text style="banner"><content>BLACKJACK</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>get nearer 21 than the dealer without going over;</content></text></sprite>
+        <group name="help">
+          <rows>3</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>court cards count 10, an ace 1 or 11. the dealer draws to 17</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="help3">
-          <sprite><text style="help"><content>a d or the arrows bet, spacebar deals; w or up hits, s or down stands</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>get nearer 21 than the dealer without going over;</content></text></sprite></row>
+          <row number="2"><sprite><text><content>court cards count 10, an ace 1 or 11. the dealer draws to 17</content></text></sprite></row>
+          <row number="3"><sprite><text><content>a d or the arrows bet, spacebar deals; w or up hits, s or down stands</content></text></sprite><padding><y>40</y></padding></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>

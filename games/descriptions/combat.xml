@@ -81,14 +81,14 @@
           <sprite><text style="prompt"><content>two players, the most hits in 2:16</content><size>30</size></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 50</centered></y></position>
         </object>
-        <object name="keys1">
-          <sprite><text style="keys"><content>yellow: w s drive, a d turn, f fires</content></text></sprite>
+        <group name="keys">
+          <rows>2</rows>
+          <padding><y>35</y></padding>
+          <sprite><text style="keys" /></sprite>
           <position><x><centered /></x><y><centered /></y></position>
-        </object>
-        <object name="keys2">
-          <sprite><text style="keys"><content>blue: arrows drive and turn, right shift fires</content><color>color.cyan</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 35</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>yellow: w s drive, a d turn, f fires</content></text></sprite></row>
+          <row number="2"><sprite><text><content>blue: arrows drive and turn, right shift fires</content><color>color.cyan</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>

@@ -919,12 +919,7 @@
     </object>
     <!-- PHASE n, for a moment as a phase starts -->
     <object name="label">
-      <sprite>
-        <text style="text">
-          <content>PHASE</content>
-          <number>phase</number>
-        </text>
-      </sprite>
+      <sprite><text style="text"><content>PHASE</content><number>phase</number></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center - 24</centered></y></position>
       <timers>
         <timer>
@@ -936,21 +931,12 @@
   </kit>
   <objects>
     <object name="again">
-      <sprite>
-        <text style="text">
-          <content>space to play again</content>
-        </text>
-      </sprite>
+      <sprite><text style="text"><content>space to play again</content></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
     </object>
     <!-- the best score, kept from game to game -->
     <object name="best">
-      <sprite>
-        <text style="text">
-          <content>TOP</content>
-          <number>best.score</number>
-        </text>
-      </sprite>
+      <sprite><text style="text"><content>TOP</content><number>best.score</number></text></sprite>
       <position><x><centered /></x><y>4</y></position>
       <variables>
         <variable name="score">0</variable>
@@ -971,46 +957,19 @@
     <state name="mainmenu">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>MARIO BROS.</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>MARIO BROS.</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 56</centered></y></position>
         </object>
-        <object name="help">
-          <sprite>
-            <text style="text">
-              <content>bump a shellcreeper from below</content>
-            </text>
-          </sprite>
+        <group name="help">
+          <rows>4</rows>
+          <padding><y>12</y></padding>
+          <sprite><text style="text" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 12</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite>
-            <text style="text">
-              <content>then kick it off</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite>
-            <text style="text">
-              <content>a d walk, w or space jumps</content>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 20</centered></y></position>
-        </object>
-        <object name="start">
-          <sprite>
-            <text style="text">
-              <content>space 1 player  2 two</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 48</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>bump a shellcreeper from below</content></text></sprite></row>
+          <row number="2"><sprite><text><content>then kick it off</content></text></sprite></row>
+          <row number="3"><sprite><text><content>a d walk, w or space jumps</content><color>color.lightgrey</color></text></sprite><padding><y>20</y></padding></row>
+          <row number="4"><sprite><text><content>space 1 player  2 two</content></text></sprite><padding><y>28</y></padding></row>
+        </group>
       </objects>
       <shows>
         <show object="best" />
@@ -1238,42 +1197,20 @@
           </variables>
         </object>
         <object name="score">
-          <sprite>
-            <text style="text">
-              <content>I</content>
-              <number>mario.score</number>
-            </text>
-          </sprite>
+          <sprite><text style="text"><content>I</content><number>mario.score</number></text></sprite>
           <position><x>8</x><y>4</y></position>
         </object>
         <object name="lives">
-          <sprite>
-            <text style="text">
-              <content>M x</content>
-              <number>mario.lives</number>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="text"><content>M x</content><number>mario.lives</number><color>color.red</color></text></sprite>
           <position><x>8</x><y>14</y></position>
         </object>
         <object name="score2">
-          <sprite>
-            <text style="text">
-              <content>II</content>
-              <number>luigi.score</number>
-            </text>
-          </sprite>
+          <sprite><text style="text"><content>II</content><number>luigi.score</number></text></sprite>
           <position><x>window.right - score2.width - 8</x><y>4</y></position>
           <active>false</active>
         </object>
         <object name="lives2">
-          <sprite>
-            <text style="text">
-              <content>L x</content>
-              <number>luigi.lives</number>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="text"><content>L x</content><number>luigi.lives</number><color>color.green</color></text></sprite>
           <position><x>window.right - lives2.width - 8</x><y>14</y></position>
           <active>false</active>
         </object>
@@ -1351,20 +1288,12 @@
           <ways><way name="next" scene="phase4" /></ways>
           <objects>
             <object name="label">
-              <sprite>
-                <text style="text">
-                  <content>TEST YOUR SKILL!</content>
-                </text>
-              </sprite>
+              <sprite><text style="text"><content>TEST YOUR SKILL!</content></text></sprite>
               <position><x><centered /></x><y><centered>window.height.center - 24</centered></y></position>
             </object>
             <!-- the time left, a named timer read as clock.left -->
             <object name="clock">
-              <sprite>
-                <text style="text">
-                  <number>clock.left</number>
-                </text>
-              </sprite>
+              <sprite><text style="text"><number>clock.left</number></text></sprite>
               <position><x><centered /></x><y>28</y></position>
               <timers>
                 <timer name="left">
@@ -1587,12 +1516,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -1606,12 +1530,7 @@
     <state name="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>YOU WIN</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
         </object>
       </objects>
@@ -1628,11 +1547,7 @@
     <state name="gameover" from="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME OVER</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
         </object>
       </objects>
     </state>

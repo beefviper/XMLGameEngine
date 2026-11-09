@@ -638,11 +638,9 @@ namespace xge
 			}
 			else if (kind == "text")
 			{
+				// No pieces is for a group whose members, rows or cells give
+				// them; a picture made with none stops the load (buildPicture).
 				sprite.text = readTextPieces(shape, here);
-				if (sprite.text.empty())
-				{
-					fail(here, "needs a <content> (a label), a <number>, a <letter> or a <choose>");
-				}
 
 				sprite.style = shape.getAttribute("style");
 				if (auto size = findChild(&shape, "size")) { sprite.size = readValue(*size, here); }
@@ -3015,10 +3013,9 @@ namespace xge
 			const PartialVector2& position = own.position;
 			const PartialVector2& velocity = own.velocity;
 			const PartialVector2& padding = own.padding;
-			const int columns = own.columns;
-			const int rows = own.rows;
-
-			if ((columns > 0) != (rows > 0)) { fail(where, "has <columns> or <rows> and not the other; a group laid out in cells needs both"); }
+			// <rows> alone is one column (lines of text), <columns> alone one row.
+			const int columns = own.columns > 0 || own.rows == 0 ? own.columns : 1;
+			const int rows = own.rows > 0 || own.columns == 0 ? own.rows : 1;
 
 			shared.groupName = name;
 			if (own.map)
@@ -3225,7 +3222,11 @@ namespace xge
 					}
 
 					const std::string ownName = cell ? cell->node->getAttribute("name") : std::string{};
-					const std::string cellName = ownName.empty() ? name + "." + std::to_string(column) + "." + std::to_string(row) : ownName;
+					// Named by column and row; by the one given, when only one is.
+					const std::string place = own.columns == 0 ? std::to_string(row)
+						: own.rows == 0 ? std::to_string(column)
+						: std::to_string(column) + "." + std::to_string(row);
+					const std::string cellName = ownName.empty() ? name + "." + place : ownName;
 					const std::string here = "object '" + cellName + "' (column " + std::to_string(column) + ", row " + std::to_string(row) + " of " + where + ")";
 
 					// The rows and columns that pick it, then its own <cell>; and

@@ -138,14 +138,14 @@
           <sprite><text style="banner"><content>SPEEDWAY</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>three laps against each other and two computer cars: keep off the grass, mind the oil</content></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>46</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>player one w a s d, player two the arrows: up goes, down brakes, left and right steer</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 6</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>three laps against each other and two computer cars: keep off the grass, mind the oil</content></text></sprite></row>
+          <row number="2"><sprite><text><content>player one w a s d, player two the arrows: up goes, down brakes, left and right steer</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>

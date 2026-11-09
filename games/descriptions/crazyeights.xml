@@ -84,22 +84,16 @@
           <sprite><text style="banner"><content>CRAZY EIGHTS</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>play a card of the same suit or rank as the top of the pile;</content></text></sprite>
+        <group name="help">
+          <rows>4</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>eights go on anything and name the next suit. first out wins</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="help3">
-          <sprite><text style="help"><content>a d or the arrows pick a card, w s to the stock, spacebar plays or draws;</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
-        </object>
-        <object name="help4">
-          <sprite><text style="help"><content>after an eight, spacebar on a card names its suit. or click with the mouse</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>play a card of the same suit or rank as the top of the pile;</content></text></sprite></row>
+          <row number="2"><sprite><text><content>eights go on anything and name the next suit. first out wins</content></text></sprite></row>
+          <row number="3"><sprite><text><content>a d or the arrows pick a card, w s to the stock, spacebar plays or draws;</content></text></sprite><padding><y>40</y></padding></row>
+          <row number="4"><sprite><text><content>after an eight, spacebar on a card names its suit. or click with the mouse</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>

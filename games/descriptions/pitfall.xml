@@ -413,22 +413,12 @@
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
-        </text>
-      </sprite>
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
     <!-- the best score, kept from game to game -->
     <object name="best">
-      <sprite>
-        <text style="hud">
-          <content>BEST</content>
-          <number>best.score</number>
-          <color>color.lightgrey</color>
-        </text>
-      </sprite>
+      <sprite><text style="hud"><content>BEST</content><number>best.score</number><color>color.lightgrey</color></text></sprite>
       <position><x><centered /></x><y>window.bottom - best.height - 4</y></position>
       <variables>
         <variable name="score">0</variable>
@@ -442,39 +432,18 @@
     <state name="title">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>PITFALL!</content>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PITFALL!</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
-        <object name="help">
-          <sprite>
-            <text>
-              <content>find the four treasures before time runs out</content>
-              <size>26</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>50</y></padding>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite>
-            <text>
-              <content>a and d run, space jumps, w and s climb</content>
-              <size>22</size>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>find the four treasures before time runs out</content><size>26</size><color>color.white</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d run, space jumps, w and s climb</content><size>22</size><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
         </object>
       </objects>
@@ -647,29 +616,15 @@
 
         <!-- what the player sees of status -->
         <object name="score">
-          <sprite>
-            <text style="hud">
-              <number>status.score</number>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>status.score</number></text></sprite>
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="clock">
-          <sprite>
-            <text style="hud">
-              <number>status.time</number>
-              <color>color.yellow</color>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>status.time</number><color>color.yellow</color></text></sprite>
           <position><x><centered /></x><y>margin</y></position>
         </object>
         <object name="lives">
-          <sprite>
-            <text style="hud">
-              <number>status.lives</number>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>status.lives</number><color>color.red</color></text></sprite>
           <position><x>window.right - lives.width - margin</x><y>margin</y></position>
         </object>
       </objects>
@@ -837,12 +792,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -856,12 +806,7 @@
     <state name="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>YOU WIN</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
@@ -876,12 +821,7 @@
     <state name="gameover" from="youwin">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME OVER</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
         </object>
       </objects>
     </state>

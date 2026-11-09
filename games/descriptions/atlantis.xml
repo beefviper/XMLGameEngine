@@ -186,14 +186,13 @@
           <sprite><text style="banner"><content>ATLANTIS</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text><content>bring down the gorgon ships before they ray the city</content><size>22</size><color>color.white</color></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>50</y></padding>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text><content>a, w and d (or the arrows) fire the left, middle and right posts</content><size>20</size><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
-        </object>
+          <row number="1"><sprite><text><content>bring down the gorgon ships before they ray the city</content><size>22</size><color>color.white</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a, w and d (or the arrows) fire the left, middle and right posts</content><size>20</size><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
