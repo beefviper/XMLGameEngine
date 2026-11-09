@@ -1618,7 +1618,11 @@ namespace xge
 				else { command.amount = RawValue::expression("1"); }
 			}
 			if (verb == "track" && node.getFirstChild()) { readOnto(node, where + " > <track>", command); }
-			if (verb == "trigger") { requireAttribute(node, "action", where); }
+			if (verb == "trigger")
+			{
+				requireAttribute(node, "action", where);
+				if (node.getFirstChild()) { fail(where + " > <trigger>", "holds <" + node.getFirstChild()->getName() + ">; for now only a trigger in a key's <input> holds an <otherwise>"); }
+			}
 			if (verb == "hop" && findChild(&node, "onto"))
 			{
 				requireAttribute(node, "direction", where);
@@ -1845,6 +1849,36 @@ namespace xge
 				commands.push_back(readCommand(*node, where));
 			}
 
+			return commands;
+		}
+
+		// A key's commands: as readCommands, but a <trigger> may hold an
+		// <otherwise>, commands run only when its action was refused. They
+		// follow the trigger in the list, which counts them (`otherwise`).
+		std::vector<RawCommand> readKeyCommands(std::unique_ptr<XmlNode> first, const std::string& where)
+		{
+			std::vector<RawCommand> commands;
+			for (std::unique_ptr<XmlNode> node = std::move(first); node != nullptr; node = node->getNextSibling())
+			{
+				std::unique_ptr<XmlNode> otherwise = node->getName() == "trigger" ? node->getFirstChild() : nullptr;
+				if (!otherwise)
+				{
+					commands.push_back(readCommand(*node, where));
+					continue;
+				}
+				const std::string here = where + " > <trigger action=\"" + node->getAttribute("action") + "\">";
+				if (otherwise->getName() != "otherwise" || otherwise->getNextSibling()) { fail(here, "holds <" + otherwise->getName() + ">; a trigger holds one <otherwise> if wanted, run when its action is refused"); }
+				RawCommand trigger;
+				trigger.verb = "trigger";
+				trigger.object = node->getAttribute("object");
+				trigger.action = requireAttribute(*node, "action", here);
+				trigger.from = node->getAttribute("from");
+				std::vector<RawCommand> instead = readCommands(otherwise->getFirstChild(), here + " > <otherwise>");
+				if (instead.empty()) { fail(here + " > <otherwise>", "is empty; leave it out"); }
+				trigger.otherwise = static_cast<int>(instead.size());
+				commands.push_back(std::move(trigger));
+				commands.insert(commands.end(), instead.begin(), instead.end());
+			}
 			return commands;
 		}
 
@@ -3455,7 +3489,7 @@ namespace xge
 				{
 					fail(where + " > <input " + written + ">", "on=\"" + on + "\" is not a moment of a key; expected press, hold or release");
 				}
-				const std::vector<RawCommand> commands = readCommands(std::move(commandsStart), where + " > <input " + written + ">");
+				const std::vector<RawCommand> commands = readKeyCommands(std::move(commandsStart), where + " > <input " + written + ">");
 				auto& to = out.buttons[static_cast<std::size_t>(moment - keyMoments.begin())];
 				for (const std::string& button : buttons) { to[button] = commands; }
 			}

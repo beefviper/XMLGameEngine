@@ -478,8 +478,12 @@ namespace xge
 		}
 		for (std::size_t i = 0; i < commands.size(); ++i)
 		{
-			if (!answers[i]) { continue; }
+			const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(commands[i]));
+			const std::size_t otherwise = trigger ? static_cast<std::size_t>(trigger->otherwise) : 0;
+			if (!answers[i]) { i += otherwise; continue; }
 			if (!commandExecutor.executeInput(commands[i], true) || game.takeTurnStop()) { break; }
+			// A trigger's <otherwise>: the commands after it, only when its action was refused.
+			if (otherwise > 0 && !commandExecutor.triggerRefused()) { i += otherwise; }
 		}
 	}
 

@@ -18,6 +18,7 @@
 #include "play/geometry.h"
 #include "game/game.h"
 #include "load/xml.h"
+#include "played.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -1471,6 +1472,53 @@ TEST_CASE("mistakes in rules holding rules stop the load, saying where", "[colli
 		ContainsSubstring("unexpected element <collision>"));
 	CHECK_THROWS_WITH(Loaded(ruled("<collision class=\"wall\"><first><stop /></first></collision>"), XmlBackend::TinyXml2),
 		ContainsSubstring("unexpected element <first>"));
+}
+
+TEST_CASE("a key's trigger holds an <otherwise>, run only when its action is refused", "[input][otherwise]")
+{
+	// "stuck" hops up off the window, which is refused; "fine" counts; "mark" marks out.
+	const std::string actions = "<actions>"
+		"<action name=\"stuck\"><hop direction=\"up\">20</hop><inc variable=\"self.n\">100</inc></action>"
+		"<action name=\"fine\"><inc variable=\"self.n\">1</inc></action>"
+		"<action name=\"mark\"><inc variable=\"self.out\">10</inc></action>"
+		"</actions><variables><variable name=\"n\">0</variable><variable name=\"out\">0</variable></variables>";
+	const auto otherwise = [](const std::string& button, const std::string& trigger)
+	{
+		return "<input button=\"" + button + "\">" + trigger + "<otherwise><trigger object=\"a\" action=\"mark\" /></otherwise></trigger></input>";
+	};
+	const std::string inputs = otherwise("space", "<trigger object=\"a\" action=\"stuck\">")
+		+ otherwise("w", "<trigger object=\"a\" action=\"fine\">")
+		+ otherwise("s", "<trigger object=\"a\" action=\"stuck\" from=\"other\">")
+		+ "<input button=\"escape\"><pop /></input>";
+	const std::string path = scratchName("descriptions/otherwise_scratch.xml");
+	{
+		std::ofstream out(path);
+		out << gameXml(box("a", 100, 0, 10, 10, "<enabled>false</enabled>", {}, actions), state("playing", { "a" }, inputs));
+	}
+	{
+		played::Played played(path);
+		played.game.setCurrentState(0);
+		const auto value = [&](const char* name) { return played.game.getObject("a").variable.at(name); };
+
+		played.tap(KeyCode::Space);
+		CHECK(value("n") == 0.0f);
+		CHECK(value("out") == 10.0f);
+
+		played.tap(KeyCode::W);
+		CHECK(value("n") == 1.0f);
+		CHECK(value("out") == 10.0f);
+
+		// Not showing the look from= names: nothing ran, so nothing was refused.
+		played.tap(KeyCode::S);
+		CHECK(value("out") == 10.0f);
+	}
+	std::error_code ignored;
+	std::filesystem::remove(path, ignored);
+
+	// Only a key's trigger holds one, for now.
+	CHECK_THROWS_WITH(Loaded(gameXml(box("a", 100, 0, 10, 10, "<enabled>false</enabled>", {}, actions), state("playing", { "a" }, "<input button=\"escape\"><pop /></input>",
+		"<timers><timer><every>1</every><trigger object=\"a\" action=\"stuck\"><otherwise><trigger object=\"a\" action=\"mark\" /></otherwise></trigger></timer></timers>"))),
+		ContainsSubstring("for now only a trigger in a key's <input> holds an <otherwise>"));
 }
 
 TEST_CASE("a condition on a class: self is each one it holds for, others the rest; what names neither runs once", "[conditions][self]")

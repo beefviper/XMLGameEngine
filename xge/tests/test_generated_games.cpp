@@ -131,7 +131,7 @@ namespace
 		{
 			out << at << " " << c.verb << " [" << c.object << "|" << c.variable << "|" << c.state << "|" << c.action << "|" << c.direction
 				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "|" << c.way << "|" << c.into
-				<< "|" << c.from << "|" << c.partner << "|" << c.retreat << "|" << c.button << "]\n";
+				<< "|" << c.from << "|" << c.partner << "|" << c.retreat << "|" << c.button << "] otherwise " << c.otherwise << "\n";
 			flag(at + ".byHops", c.byHops);
 			value(at + ".amount", c.amount);
 			value(at + ".ahead", c.ahead);

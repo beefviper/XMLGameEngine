@@ -359,7 +359,7 @@ namespace xge
 			return CmdReveal{ raw.object, count };
 		}
 		if (verb == "fire")    { return CmdFire{ raw.object }; }
-		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action, raw.from }; }
+		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action, raw.from, raw.otherwise }; }
 		if (verb == "follow")
 		{
 			const bool none = raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty();

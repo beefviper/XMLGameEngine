@@ -213,7 +213,6 @@
             <action name="point"><track /></action>
             <!-- the card pointed at onto the discard pile, if it goes there, and the next one's turn; on the stock, one drawn -->
             <action name="play"><pick class="card" /><place into="discard" /><play sound="card" /><pass /></action>
-            <!-- it did not go: back -->
             <action name="back"><drop /></action>
             <!-- after an eight: the suit of the card pointed at is named -->
             <action name="call"><call pile="discard" /><play sound="call" /><become sprite="free" /><pass /></action>
@@ -254,8 +253,9 @@
         <input>
           <button>space</button><button>pad1.a</button><button>mouse.left</button>
           <trigger object="players" action="call" from="calling" />
-          <trigger object="players" action="play" from="free" />
-          <trigger object="players" action="back" from="free" />
+          <trigger object="players" action="play" from="free">
+            <otherwise><trigger object="players" action="back" /></otherwise>
+          </trigger>
         </input>
         <input axis="mouse.x"><trigger object="players" action="point" /></input>
         <input axis="mouse.y"><trigger object="players" action="point" /></input>

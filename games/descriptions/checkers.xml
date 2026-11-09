@@ -537,10 +537,13 @@
         <!-- one press: put the piece held down, or take one up (another of your own while holding one) -->
         <input>
           <button>space</button><button>pad1.a</button><button>mouse.left</button>
-          <trigger object="cursor" action="redplace" from="redheld" />
-          <trigger object="cursor" action="whiteplace" from="whiteheld" />
-          <trigger object="cursor" action="redpick" from="redheld" />
-          <trigger object="cursor" action="whitepick" from="whiteheld" />
+          <!-- holding a piece: lay it, or if it may not go there, take the one pointed at instead -->
+          <trigger object="cursor" action="redplace" from="redheld">
+            <otherwise><trigger object="cursor" action="redpick" /></otherwise>
+          </trigger>
+          <trigger object="cursor" action="whiteplace" from="whiteheld">
+            <otherwise><trigger object="cursor" action="whitepick" /></otherwise>
+          </trigger>
           <trigger object="cursor" action="redpick" from="redfree" />
           <trigger object="cursor" action="whitepick" from="whitefree" />
         </input>
@@ -565,8 +568,9 @@
         <!-- the computer's key: only its looks answer it -->
         <input>
           <button>f12</button>
-          <trigger object="cursor" action="whiteplace" from="cpuheld" />
-          <trigger object="cursor" action="cpupick" from="cpuheld" />
+          <trigger object="cursor" action="whiteplace" from="cpuheld">
+            <otherwise><trigger object="cursor" action="cpupick" /></otherwise>
+          </trigger>
           <trigger object="cursor" action="cpupick" from="cpufree" />
         </input>
         <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>

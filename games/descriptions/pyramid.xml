@@ -257,8 +257,9 @@
         <input>
           <button>space</button><button>pad1.a</button><button>mouse.left</button>
           <trigger object="hand" action="pick" from="free" />
-          <trigger object="hand" action="pair" from="held" />
-          <trigger object="hand" action="back" from="held" />
+          <trigger object="hand" action="pair" from="held">
+            <otherwise><trigger object="hand" action="back" /></otherwise>
+          </trigger>
         </input>
         <input><button>x</button><button>backspace</button><button>pad1.b</button><button>mouse.right</button><trigger object="hand" action="back" from="held" /></input>
         <input axis="mouse.x"><trigger object="hand" action="point" /></input>

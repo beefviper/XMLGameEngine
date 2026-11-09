@@ -220,8 +220,9 @@
         <!-- home, then back if no foundation took it -->
         <input>
           <button>f</button><button>mouse.right</button><button>pad1.y</button>
-          <trigger object="hand" action="home" from="free" />
-          <trigger object="hand" action="back" from="free" />
+          <trigger object="hand" action="home" from="free">
+            <otherwise><trigger object="hand" action="back" /></otherwise>
+          </trigger>
         </input>
         <!-- the mouse: press takes (or deals), let go lays or puts back -->
         <input>
@@ -230,8 +231,9 @@
         </input>
         <input on="release">
           <button>mouse.left</button>
-          <trigger object="hand" action="lay" from="held" />
-          <trigger object="hand" action="back" from="held" />
+          <trigger object="hand" action="lay" from="held">
+            <otherwise><trigger object="hand" action="back" /></otherwise>
+          </trigger>
         </input>
         <input axis="mouse.x"><trigger object="hand" action="point" /></input>
         <input axis="mouse.y"><trigger object="hand" action="point" /></input>

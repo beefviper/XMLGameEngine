@@ -273,6 +273,10 @@
             <xsl:text> };</xsl:text>
           </xsl:if>
         </xsl:when>
+        <!-- a trigger's <otherwise>: how many commands after it are its -->
+        <xsl:when test="$verb = 'trigger' and $node/otherwise">
+          <xsl:value-of select="concat(' command.otherwise = ', count($node/otherwise/*), ';')" />
+        </xsl:when>
         <!-- a hunt by hops: its one hop -->
         <xsl:when test="$verb = 'hunt' and $node/hop">
           <xsl:text> command.byHops = true;</xsl:text>
@@ -541,18 +545,20 @@
   <xsl:template name="commands">
     <xsl:param name="nodes" />
     <xsl:param name="indent" />
+    <!-- a trigger's <otherwise> follows it in the list (readKeyCommands) -->
+    <xsl:variable name="all" select="$nodes | $nodes[self::trigger]/otherwise/*" />
     <xsl:choose>
-      <xsl:when test="not($nodes)">{}</xsl:when>
-      <xsl:when test="count($nodes) = 1">
+      <xsl:when test="not($all)">{}</xsl:when>
+      <xsl:when test="count($all) = 1">
         <xsl:text>{ </xsl:text>
         <xsl:call-template name="command">
-          <xsl:with-param name="node" select="$nodes" />
+          <xsl:with-param name="node" select="$all" />
         </xsl:call-template>
         <xsl:text> }</xsl:text>
       </xsl:when>
       <xsl:otherwise>
         <xsl:text>{&#10;</xsl:text>
-        <xsl:for-each select="$nodes">
+        <xsl:for-each select="$all">
           <xsl:value-of select="concat($indent, $tab)" />
           <xsl:call-template name="command" />
           <xsl:text>,&#10;</xsl:text>

@@ -1459,6 +1459,10 @@
       </xs:element>
       <xs:element name="trigger">
         <xs:complexType>
+          <!-- in a key's <input>: commands run only when the action it runs is refused (for now only there) -->
+          <xs:sequence>
+            <xs:element name="otherwise" type="stateCommandsType" minOccurs="0" />
+          </xs:sequence>
           <!-- left out in an object's own collision, action or timer: that object -->
           <xs:attribute name="object" type="xs:string" use="optional" />
           <xs:attribute name="action" type="xs:string" use="required" />

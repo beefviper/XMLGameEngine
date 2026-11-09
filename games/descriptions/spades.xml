@@ -305,7 +305,6 @@
             <action name="point"><track /></action>
             <!-- the card pointed at onto the trick, if it may go there, and the next one's turn -->
             <action name="play"><pick class="card" /><place into="trick" /><play sound="card" /><pass /></action>
-            <!-- it may not: back -->
             <action name="back"><drop /></action>
           </actions>
           <variables>
@@ -330,8 +329,9 @@
         <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="table" action="less" from="bid" /></input>
         <input>
           <button>space</button><button>pad1.a</button><button>mouse.left</button>
-          <trigger object="players" action="play" />
-          <trigger object="players" action="back" />
+          <trigger object="players" action="play">
+            <otherwise><trigger object="players" action="back" /></otherwise>
+          </trigger>
           <trigger object="table" action="bid" from="bid" />
           <trigger object="table" action="shuffle" from="done" />
         </input>

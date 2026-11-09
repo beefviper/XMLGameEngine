@@ -24,6 +24,14 @@ So remapping a key is one edit in one state, a key can do different things in di
 - **Names** are lowercase: `a`-`z`, `num0`-`num9`, `numpad0`-`numpad9`, `f1`-`f15`, `space`, `enter`, `escape`, `backspace`, `tab`, `left`, `right`, `up`, `down`, `home`, `end`, `pageup`, `pagedown`, `insert`, `delete`, `pause`, `lshift`, `rshift`, `lcontrol`, `rcontrol`, `lalt`, `ralt`, and a few more in `engine/keys.cpp`.
 - **The mouse and pads** are keys too: `mouse.left`, `mouse.right`, `mouse.middle`; for two pads `pad1.a`, `.b`, `.x`, `.y`, `.lb`, `.rb`, `.back`, `.start`, `.up`, `.down`, `.left`, `.right` (and `pad2.`), named for an Xbox pad. A pad's directions are its d-pad or its left stick past halfway.
 - A mouse button counts only when it goes down over the game's own pixels, not on the title bar, a menu or the bars beside a stretched picture.
+- **A key's commands run in order**, and a `<trigger from=>` answers the look its object had at the press, so one trigger changing the look does not let a later one answer the new look too.
+- **`<otherwise>` in a trigger**: commands run only when the action it runs was refused (a `<place />` that may not go there, a `<pick>` of nothing). Not showing its `from=` look is not a refusal: then neither runs. For now only a key's trigger holds one.
+
+  ```xml
+  <trigger object="hand" action="lay" from="held">
+    <otherwise><trigger object="hand" action="back" /></otherwise>
+  </trigger>
+  ```
 - **Key sets.** Bindings several states share can be a named `<keys>` set at the top of `<states>`, taken with `<inputs keys="walk">` (several: a `<keys>walk</keys>` each). The state's own inputs go over the set's, key by key.
 
 ## A key's three moments

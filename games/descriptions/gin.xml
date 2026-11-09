@@ -312,19 +312,21 @@
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="players" action="right" /></input>
         <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="players" action="up" /></input>
         <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="players" action="down" /></input>
-        <!-- a discard first: a draw changes the look, and the same press must not discard too -->
+        <!-- a discard, or if it may not go, back; a draw (an own card picked up goes back) -->
         <input>
           <button>space</button><button>pad1.a</button><button>mouse.left</button>
-          <trigger object="players" action="play" from="discard" />
-          <trigger object="players" action="back" from="discard" />
+          <trigger object="players" action="play" from="discard">
+            <otherwise><trigger object="players" action="back" /></otherwise>
+          </trigger>
           <trigger object="players" action="draw" from="draw" />
           <trigger object="players" action="back" from="draw" />
           <trigger object="table" action="shuffle" from="done" />
         </input>
         <input>
           <button>k</button><button>pad1.b</button>
-          <trigger object="players" action="knock" from="discard" />
-          <trigger object="players" action="back" from="discard" />
+          <trigger object="players" action="knock" from="discard">
+            <otherwise><trigger object="players" action="back" /></otherwise>
+          </trigger>
         </input>
         <input axis="mouse.x"><trigger object="players" action="point" /></input>
         <input axis="mouse.y"><trigger object="players" action="point" /></input>

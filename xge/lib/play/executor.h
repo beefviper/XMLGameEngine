@@ -74,8 +74,13 @@ namespace xge
 		// axis's own direction.
 		void executeAxis(const Command& command, Axis axis, float fraction);
 
+		// Whether the last <trigger> run reached an action and every action
+		// it reached was refused: what its <otherwise> answers.
+		bool triggerRefused() const noexcept { return lastTriggerRefused; }
+
 	private:
 		Game& game;
+		bool lastTriggerRefused{ false };
 
 		// Who runs a command, and where: what every verb looks at to know
 		// what to do. The places a verb may be written are the loader's
@@ -175,10 +180,12 @@ namespace xge
 		// With `from`, only those showing that look run it. `byRule`: run by
 		// a rule, a timer or a condition rather than a key, so a <climb> in
 		// it takes the object along one ladder and then lets go.
+		// Sets lastTriggerRefused.
 		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, bool byRule, const std::string& from = {});
 		// One object's action of that name, as triggerObjectAction runs it
-		// for that object or for each member of a group.
-		void runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule);
+		// for that object or for each member of a group. Whether it ran and
+		// a verb in it was refused.
+		bool runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule);
 
 		// False when every one of the projectiles is in flight.
 		bool spawnProjectile(Object& shooter, const std::string& projectileName);

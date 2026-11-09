@@ -568,6 +568,9 @@ namespace xge
 		std::string object;
 		std::string action;
 		std::string from{};
+		// In a key's commands: how many after it are its <otherwise>, run
+		// only when its action is refused (Engine::runAsPress).
+		int otherwise{ 0 };
 	};
 
 	// <reset object="objectName" /> - only ever appears in a State's <input> or
@@ -1001,6 +1004,7 @@ namespace xge
 		std::string scene;     // enter, reset
 		std::string way;       // enter, reset: a way of the current scene
 		std::string from;      // become, trigger: only one showing this look
+		int otherwise{ 0 };    // trigger in a key's input: how many commands after it are its <otherwise>
 		std::string partner;   // hunt: <with object="...">
 		std::string retreat;   // hunt: <retreat object="...">
 		std::string button;    // hold, think

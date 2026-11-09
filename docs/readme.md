@@ -78,7 +78,8 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | in and out of play | `die`, `reveal`, `fire`, `release`, `drop`, `spawn`, `despawn`, `reset` | [in and out of play](reference/commands.md#in-and-out-of-play), [spawn](reference/objects.md#spawn-and-despawn) |
 | numbers | `inc`, `dec`, `set`, `copy`, `rank`, `formula` | [numbers](reference/commands.md#numbers), [arithmetic](reference/format.md#arithmetic-as-tags) |
 | look and sound | `become`, `play`, `silence`, `music` | [look and sound](reference/commands.md#look-and-sound) |
-| flow | `push`, `pop`, `enter`, `turns`, `pass`, `out`, `demo`, `trigger` | [flow](reference/commands.md#flow) |
+| flow | `push`, `pop`, `enter`, `turns`, `pass`, `out`, `demo`, `trigger` (in a key, `otherwise`) | [flow](reference/commands.md#flow) |
+| rules in rules | a condition holding conditions (`first`, `otherwise`), a collision holding collisions (`first`), `sprite=` tests, `self`/`others`, `lowest`, `highest`, `unequal` | [conditions in conditions](reference/states.md#conditions-in-conditions), [collisions](reference/collisions.md) |
 | cells | `settle`, `slide`, `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |
 | boards | `pick`, `place`, `put`, `flank`, `moves` | [boards](reference/boards.md) |
 | pictures | `sheets`, `sheet`, `cell`, `cells` (sprites, frames and cards cut from one picture) | [sheets](reference/pictures.md#sheets) |

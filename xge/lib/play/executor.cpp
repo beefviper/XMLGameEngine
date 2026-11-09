@@ -645,10 +645,11 @@ namespace xge
 	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, bool byRule, const std::string& from)
 	{
 		const auto showing = [&](const Object& object) { return from.empty() || object.lookName() == from; };
+		lastTriggerRefused = false;
 		Object& first = game.getObject(objectName);
 		if (first.name == objectName || !first.inGroup(objectName))
 		{
-			if (showing(first)) { runAction(first, actionName, keyPressed, byRule); }
+			if (showing(first)) { lastTriggerRefused = runAction(first, actionName, keyPressed, byRule); }
 			return;
 		}
 
@@ -664,22 +665,24 @@ namespace xge
 		{
 			if (objects[i].inGroup(objectName) && showing(objects[i]) && !objects[i].awayFromHome() && (byRule || game.answers(objects[i]))) { reached.push_back(i); }
 		}
-		for (const std::size_t i : reached) { runAction(objects[i], actionName, keyPressed, byRule); }
+		bool refused = !reached.empty();
+		for (const std::size_t i : reached) { refused = runAction(objects[i], actionName, keyPressed, byRule) && refused; }
+		lastTriggerRefused = refused;
 	}
 
-	void CommandExecutor::runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule)
+	bool CommandExecutor::runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule)
 	{
 		// An object out of play does not act on a key: a ship that is not
 		// there does not fire, and a cannon not yet brought in does nothing.
 		// Letting go still goes through, so nothing stays held.
 		if (keyPressed && !object.isVisible)
 		{
-			return;
+			return false;
 		}
 		// A piece sent away from its own map (a next-piece box) is only shown.
 		if (object.awayFromHome())
 		{
-			return;
+			return false;
 		}
 
 		Doer doer;
@@ -690,8 +693,9 @@ namespace xge
 		for (const auto& written : object.action[actionName])
 		{
 			// Refused: what comes after it answers a press that did nothing.
-			if (!run(written, doer)) { return; }
+			if (!run(written, doer)) { return true; }
 		}
+		return false;
 	}
 
 	void CommandExecutor::knock(Object& object, Object& other, const Touch& touch, float bounce)
