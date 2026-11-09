@@ -1917,9 +1917,10 @@
 
   <!--
     Checked every frame. One test (or an <all> or <any> of conditions; with
-    sprite=, none: showing that look is the test), then the conditions it holds,
-    checked in order only while it holds (the first that holds runs), then the
-    commands to run when it holds and none of those did. Or, with set="name"
+    sprite=, none: showing that look is the test), then the commands to run
+    when it holds; or, holding conditions (checked in order only while it holds,
+    the first that holds runs), a <first> run before them and an <otherwise>
+    run when none of them does. Or, with set="name"
     and nothing else, a named <conditions> set's conditions in its place.
   -->
   <xs:group name="conditionHead">
@@ -1943,20 +1944,40 @@
     <!-- a scene from= this one's can put a condition of the same name in its place -->
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:attributeGroup>
+  <!-- The commands of a condition that holds conditions: <first> runs as soon as it holds, before they are
+       checked; <otherwise> when none of them does. -->
+  <xs:complexType name="stateCommandsType">
+    <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
+  </xs:complexType>
+  <xs:complexType name="pressCommandsType">
+    <xs:group ref="pressCommands" minOccurs="0" maxOccurs="unbounded" />
+  </xs:complexType>
   <xs:complexType name="conditionType">
     <xs:sequence minOccurs="0">
       <xs:group ref="conditionHead" minOccurs="0" />
-      <xs:element name="condition" type="conditionType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
+      <xs:choice>
+        <xs:sequence>
+          <xs:element name="first" type="stateCommandsType" minOccurs="0" />
+          <xs:element name="condition" type="conditionType" maxOccurs="unbounded" />
+          <xs:element name="otherwise" type="stateCommandsType" minOccurs="0" />
+        </xs:sequence>
+        <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
+      </xs:choice>
     </xs:sequence>
     <xs:attributeGroup ref="conditionAttributes" />
   </xs:complexType>
-  <!-- A computer player's condition: a state's test, then the buttons it holds down while it holds. -->
+  <!-- A computer player's condition: a state's test, then the buttons it holds down while it holds. Every one that
+       holds counts, so one holding conditions has a <first> but no <otherwise>. -->
   <xs:complexType name="computerConditionType">
     <xs:sequence minOccurs="0">
       <xs:group ref="conditionHead" minOccurs="0" />
-      <xs:element name="condition" type="computerConditionType" minOccurs="0" maxOccurs="unbounded" />
-      <xs:group ref="pressCommands" minOccurs="0" maxOccurs="unbounded" />
+      <xs:choice>
+        <xs:sequence>
+          <xs:element name="first" type="pressCommandsType" minOccurs="0" />
+          <xs:element name="condition" type="computerConditionType" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:group ref="pressCommands" minOccurs="0" maxOccurs="unbounded" />
+      </xs:choice>
     </xs:sequence>
     <xs:attributeGroup ref="conditionAttributes" />
   </xs:complexType>

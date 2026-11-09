@@ -1300,7 +1300,7 @@ namespace
 		"<condition object=\"flag\" variable=\"n\"><equal>2</equal>"
 		"<condition object=\"flag\" variable=\"out\"><equal>0</equal><set variable=\"flag.out\">20</set></condition>"
 		"</condition>"
-		"<set variable=\"flag.out\">9</set>"
+		"<otherwise><set variable=\"flag.out\">9</set></otherwise>"
 		"</condition>"
 		"<condition object=\"light\" sprite=\"red\"><set variable=\"flag.out\">5</set></condition>";
 }
@@ -1329,6 +1329,29 @@ TEST_CASE("a condition holds conditions, checked while it holds; its own command
 	// Another look: the light's conditions are passed over.
 	loaded.game.getObject("light").showLook(1);
 	CHECK(run(1) == 5.0f);
+}
+
+TEST_CASE("<first> runs as soon as the holder holds, before the case it holds; <otherwise> when none does", "[conditions][nested]")
+{
+	// out counts up by 1 in <first>, by 10 in the case n = 1, by 100 otherwise; flag.n set in <first> does not choose the case.
+	Loaded loaded(lights("<condition object=\"light\" sprite=\"green\">"
+		"<first><inc variable=\"flag.out\">1</inc><set variable=\"flag.n\">1</set></first>"
+		"<condition object=\"flag\" variable=\"n\"><equal>1</equal><inc variable=\"flag.out\">10</inc></condition>"
+		"<otherwise><inc variable=\"flag.out\">100</inc></otherwise>"
+		"</condition>"));
+	loaded.frames(1);
+	CHECK(loaded.variable("flag", "out") == 101.0f);
+	loaded.frames(1);
+	CHECK(loaded.variable("flag", "out") == 112.0f);
+
+	// No <otherwise>: <first> still runs when no case holds, and no later condition is checked that frame.
+	Loaded alone(lights("<condition object=\"light\" sprite=\"green\">"
+		"<first><inc variable=\"flag.out\">1</inc></first>"
+		"<condition object=\"flag\" variable=\"n\"><equal>1</equal><inc variable=\"flag.out\">10</inc></condition>"
+		"</condition>"
+		"<condition object=\"light\" sprite=\"green\"><inc variable=\"flag.out\">100</inc></condition>"));
+	alone.frames(1);
+	CHECK(alone.variable("flag", "out") == 1.0f);
 }
 
 TEST_CASE("sprite= tests a look, alone or with a test, in an <all> too", "[conditions][nested]")
@@ -1371,14 +1394,20 @@ TEST_CASE("mistakes in nested conditions and look tests stop the load, saying wh
 		ContainsSubstring("green"));
 	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"light\" sprite=\"red\" variable=\"n\"><set variable=\"flag.out\">1</set></condition>"), XmlBackend::TinyXml2),
 		ContainsSubstring("but no test of them"));
+	// Commands loose beside the conditions it holds: <first> or <otherwise> says when they run (the schema says so).
 	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"light\" sprite=\"red\"><set variable=\"flag.out\">1</set>"
 		"<condition object=\"flag\" variable=\"n\"><equal>1</equal></condition></condition>"), XmlBackend::TinyXml2),
 		ContainsSubstring("unexpected element <condition>"));
+	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"light\" sprite=\"red\">"
+		"<condition object=\"flag\" variable=\"n\"><equal>1</equal></condition><set variable=\"flag.out\">1</set></condition>"), XmlBackend::TinyXml2),
+		ContainsSubstring("unexpected element <set>"));
+	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"light\" sprite=\"red\"><otherwise><set variable=\"flag.out\">1</set></otherwise></condition>"), XmlBackend::TinyXml2),
+		ContainsSubstring("unexpected element <otherwise>"));
 	// In <computer> every condition that holds counts, so one holding conditions has no buttons of its own.
 	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"flag\" variable=\"n\"><equal>9</equal></condition>", "<computer>"
 		"<condition object=\"light\" sprite=\"green\"><condition object=\"flag\" variable=\"n\"><equal>0</equal><hold button=\"up\" /></condition>"
-		"<hold button=\"down\" /></condition></computer>")),
-		ContainsSubstring("holds conditions and buttons of its own"));
+		"<otherwise><hold button=\"down\" /></otherwise></condition></computer>"), XmlBackend::TinyXml2),
+		ContainsSubstring("computer/condition[1]: unexpected element <otherwise>"));
 	// The schema lets a condition leave out its test (sprite= may be the test), so the engine says it.
 	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"flag\" variable=\"n\"><set variable=\"flag.out\">1</set></condition>")),
 		ContainsSubstring("starts with <set>"));

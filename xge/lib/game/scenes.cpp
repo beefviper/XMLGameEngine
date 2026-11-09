@@ -359,6 +359,7 @@ namespace xge
 					value(condition.threshold, context);
 					this->conditions(condition.parts, context);
 					this->conditions(condition.inner, context);
+					commands(condition.first, context);
 					commands(condition.commands, context);
 				}
 			}

@@ -270,7 +270,9 @@
               <become object="dealer" sprite="face" />
               <become object="table" sprite="settling" />
             </condition>
-            <trigger object="table" action="stand" />
+            <otherwise>
+              <trigger object="table" action="stand" />
+            </otherwise>
           </condition>
         </condition>
 
@@ -279,11 +281,14 @@
           <condition object="dealer" variable="worth"><below>17</below>
             <become object="drawing" sprite="draw" from="wait" />
           </condition>
-          <become object="table" sprite="settling" />
+          <otherwise>
+            <become object="table" sprite="settling" />
+          </otherwise>
         </condition>
 
         <!-- settling -->
         <condition object="table" sprite="settling">
+          <first><become object="table" sprite="done" /></first>
           <!-- blackjack, 21 in two cards: against the dealer's a push, else it pays three to two -->
           <condition>
             <all><condition object="player" variable="worth"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
@@ -291,42 +296,39 @@
               <all><condition object="dealer" variable="worth"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition></all>
               <inc variable="table.bank">table.bet</inc>
               <become object="result" sprite="push" />
-              <become object="table" sprite="done" />
             </condition>
-            <inc variable="table.bank">table.bet * 2.5</inc>
-            <become object="result" sprite="blackjack" />
-            <play sound="blackjack" />
-            <become object="table" sprite="done" />
+            <otherwise>
+              <inc variable="table.bank">table.bet * 2.5</inc>
+              <become object="result" sprite="blackjack" />
+              <play sound="blackjack" />
+            </otherwise>
           </condition>
           <!-- the dealer's blackjack beats any other 21 -->
           <condition>
             <all><condition object="dealer" variable="worth"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition></all>
             <become object="result" sprite="lose" />
             <play sound="lose" />
-            <become object="table" sprite="done" />
           </condition>
           <!-- the dealer bust or beaten pays two to one, a tie gives the bet back -->
           <condition object="dealer" variable="worth"><above>21</above>
             <inc variable="table.bank">table.bet * 2</inc>
             <become object="result" sprite="dealerbust" />
             <play sound="win" />
-            <become object="table" sprite="done" />
           </condition>
           <condition object="player" variable="worth"><above>dealer.worth</above>
             <inc variable="table.bank">table.bet * 2</inc>
             <become object="result" sprite="win" />
             <play sound="win" />
-            <become object="table" sprite="done" />
           </condition>
           <condition object="player" variable="worth"><equal>dealer.worth</equal>
             <inc variable="table.bank">table.bet</inc>
             <become object="result" sprite="push" />
-            <become object="table" sprite="done" />
           </condition>
           <!-- otherwise the dealer wins -->
-          <become object="result" sprite="lose" />
-          <play sound="lose" />
-          <become object="table" sprite="done" />
+          <otherwise>
+            <become object="result" sprite="lose" />
+            <play sound="lose" />
+          </otherwise>
         </condition>
       </conditions>
     </state>

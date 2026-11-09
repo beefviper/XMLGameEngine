@@ -38,22 +38,27 @@ namespace xge
 			}
 			RawCondition test = condition;
 			test.inner.clear();
+			test.first.clear();
 			test.commands.clear();
 			test.name.clear();
 			for (RawCondition& each : flattened(condition.inner))
 			{
 				RawCondition both;
 				both.join = RawCondition::Join::All;
-				both.commands = std::move(each.commands);
+				both.commands = condition.first;
+				both.commands.insert(both.commands.end(), each.commands.begin(), each.commands.end());
 				each.commands.clear();
 				each.name.clear();
 				both.parts = { test, std::move(each) };
 				out.push_back(std::move(both));
 			}
-			if (!condition.commands.empty())
+			if (!condition.first.empty() || !condition.commands.empty())
 			{
 				RawCondition own = condition;
 				own.inner.clear();
+				own.first.clear();
+				own.commands = condition.first;
+				own.commands.insert(own.commands.end(), condition.commands.begin(), condition.commands.end());
 				out.push_back(std::move(own));
 			}
 		}

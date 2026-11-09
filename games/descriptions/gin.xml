@@ -334,50 +334,50 @@
         <!-- your discard to knock: with ten or less left, the hand is over (gin, an undercut, or the difference); else it was only a discard -->
         <condition object="table" variable="knocking"><equal>1</equal>
           <condition object="mine" variable="deadwood"><atmost>10</atmost>
+            <first><set variable="table.knocking">3</set></first>
             <condition object="mine" variable="deadwood"><equal>0</equal>
               <inc variable="you.score">25 + northcards.deadwood</inc>
               <become object="message" sprite="yougin" />
               <play sound="win" />
-              <set variable="table.knocking">3</set>
             </condition>
             <condition object="northcards" variable="deadwood"><atmost>mine.deadwood</atmost>
               <inc variable="north.score">25 + mine.deadwood - northcards.deadwood</inc>
               <become object="message" sprite="youcut" />
               <play sound="lose" />
-              <set variable="table.knocking">3</set>
             </condition>
-            <inc variable="you.score">northcards.deadwood - mine.deadwood</inc>
-            <become object="message" sprite="youknock" />
-            <play sound="win" />
-            <set variable="table.knocking">3</set>
+            <otherwise>
+              <inc variable="you.score">northcards.deadwood - mine.deadwood</inc>
+              <become object="message" sprite="youknock" />
+              <play sound="win" />
+            </otherwise>
           </condition>
-          <set variable="table.knocking">0</set>
+          <otherwise>
+            <set variable="table.knocking">0</set>
+          </otherwise>
         </condition>
 
         <!-- north knocks whenever its discard leaves it ten or less -->
         <condition object="north" variable="discarded"><equal>1</equal>
+          <first><set variable="north.discarded">0</set></first>
           <condition object="northcards" variable="deadwood"><equal>0</equal>
             <inc variable="north.score">25 + mine.deadwood</inc>
             <become object="message" sprite="northgin" />
             <play sound="lose" />
-            <set variable="north.discarded">0</set>
             <set variable="table.knocking">3</set>
           </condition>
           <condition object="northcards" variable="deadwood"><atmost>10</atmost>
+            <first><set variable="table.knocking">3</set></first>
             <condition object="mine" variable="deadwood"><atmost>northcards.deadwood</atmost>
               <inc variable="you.score">25 + northcards.deadwood - mine.deadwood</inc>
               <become object="message" sprite="northcut" />
               <play sound="win" />
-              <set variable="north.discarded">0</set>
-              <set variable="table.knocking">3</set>
             </condition>
-            <inc variable="north.score">mine.deadwood - northcards.deadwood</inc>
-            <become object="message" sprite="northknock" />
-            <play sound="lose" />
-            <set variable="north.discarded">0</set>
-            <set variable="table.knocking">3</set>
+            <otherwise>
+              <inc variable="north.score">mine.deadwood - northcards.deadwood</inc>
+              <become object="message" sprite="northknock" />
+              <play sound="lose" />
+            </otherwise>
           </condition>
-          <set variable="north.discarded">0</set>
         </condition>
 
         <!-- after a knock that holds: north's cards shown, the hand over, nobody's turn -->
@@ -408,7 +408,9 @@
             <become object="table" sprite="done" />
             <pass object="players" member="0" />
           </condition>
-          <become object="message" sprite="none" />
+          <otherwise>
+            <become object="message" sprite="none" />
+          </otherwise>
         </condition>
 
         <condition object="table" sprite="dealing"><become object="message" sprite="dealing" /></condition>

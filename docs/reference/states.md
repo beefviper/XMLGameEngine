@@ -149,18 +149,28 @@ A condition is checked every frame while its state (or scene) is current. It hol
 
 ### Conditions in conditions
 
-A condition holds conditions, after its test and before its own commands. They are checked only while it holds, in order, the first that holds running; its own commands run when it holds and none of them does. So the test they share is written once, and the "otherwise" ends the block:
+A condition holds conditions after its test. They are checked only while it holds, in order, the first that holds running. So the test they share is written once. Its commands then go in two blocks, either or both left out: **`<first>`** runs as soon as it holds, before the conditions it holds are checked (what every case does), and **`<otherwise>`** runs when none of them holds. Commands loose beside the conditions it holds stop the load, so which run when is always written.
 
 ```xml
-<condition object="table" sprite="dealer">
-  <condition object="dealer" variable="worth"><below>17</below>
-    <become object="drawing" sprite="draw" from="wait" />
+<condition object="table" sprite="settling">
+  <first><become object="table" sprite="done" /></first>
+  <condition object="dealer" variable="worth"><above>21</above>
+    <inc variable="table.bank">table.bet * 2</inc>
+    <become object="result" sprite="dealerbust" />
   </condition>
-  <become object="table" sprite="settling" />
+  <condition object="player" variable="worth"><equal>dealer.worth</equal>
+    <inc variable="table.bank">table.bet</inc>
+    <become object="result" sprite="push" />
+  </condition>
+  <otherwise>
+    <become object="result" sprite="lose" />
+  </otherwise>
 </condition>
 ```
 
-They nest to any depth. One with no commands of its own, none of whose conditions holds, lets the next condition be checked.
+The case is chosen before `<first>` runs, so what `<first>` changes does not choose it. A condition holding no conditions writes its commands directly. In `<computer>`, where every condition that holds counts, one holding conditions may have a `<first>` but no `<otherwise>`.
+
+They nest to any depth. One with no `<first>` or `<otherwise>`, none of whose conditions holds, lets the next condition be checked.
 
 - A filter matching nothing is a warning, since "none left" would hold at once. A missing object or variable stops the load.
 - A state's condition has no `self`, so it names what it compares; a rule's condition has `self`.

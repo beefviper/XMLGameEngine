@@ -3569,9 +3569,10 @@ namespace xge
 			return test->getNextSibling();
 		}
 
-		// One <condition> into `out`: a test, the conditions it holds (each
-		// read the same way), then the commands to run when it holds; or
-		// <condition set="..."> for a named set's, in its place.
+		// One <condition> into `out`: a test, then the commands to run when it
+		// holds; or, holding conditions (each read the same way), a <first>
+		// before them and an <otherwise> after; or <condition set="..."> for a
+		// named set's, in its place.
 		void readCondition(const XmlNode& condition, const std::string& where, const ConditionSets& conditionSets, std::vector<RawCondition>& out)
 		{
 			const std::string conditionHere = where + " > <condition>";
@@ -3598,17 +3599,45 @@ namespace xge
 			}
 			std::unique_ptr<XmlNode> after = readCheck(condition, conditionHere, raw);
 
-			// The conditions it holds, checked while it holds, before its own commands.
-			std::unique_ptr<XmlNode> firstCommand = std::move(after);
-			for (; firstCommand && firstCommand->getName() == "condition"; firstCommand = firstCommand->getNextSibling())
+			// Holding conditions: <first>, the conditions, <otherwise>, and no
+			// commands loose beside them, so which run when is written.
+			bool holding = false;
+			for (std::unique_ptr<XmlNode> each = condition.getFirstChild(); each; each = each->getNextSibling())
 			{
-				readCondition(*firstCommand, conditionHere, conditionSets, raw.inner);
+				if (each->getName() == "condition") { holding = true; }
 			}
-			for (std::unique_ptr<XmlNode> rest = firstCommand ? firstCommand->getNextSibling() : nullptr; rest; rest = rest->getNextSibling())
+			if (!holding)
 			{
-				if (rest->getName() == "condition") { fail(conditionHere, "has a <condition> after its commands; the conditions it holds come first, its own commands last"); }
+				for (std::unique_ptr<XmlNode> each = condition.getFirstChild(); each; each = each->getNextSibling())
+				{
+					if (each->getName() == "first" || each->getName() == "otherwise")
+					{
+						fail(conditionHere, "has a <" + each->getName() + "> but holds no conditions; its commands go in it directly");
+					}
+				}
+				raw.commands = readCommands(std::move(after), conditionHere);
+				out.push_back(std::move(raw));
+				return;
 			}
-			raw.commands = readCommands(std::move(firstCommand), conditionHere);
+			std::unique_ptr<XmlNode> part = std::move(after);
+			if (part && part->getName() == "first")
+			{
+				raw.first = readCommands(part->getFirstChild(), conditionHere + " > <first>");
+				part = part->getNextSibling();
+			}
+			for (; part && part->getName() == "condition"; part = part->getNextSibling())
+			{
+				readCondition(*part, conditionHere, conditionSets, raw.inner);
+			}
+			if (part && part->getName() == "otherwise")
+			{
+				raw.commands = readCommands(part->getFirstChild(), conditionHere + " > <otherwise>");
+				part = part->getNextSibling();
+			}
+			if (part)
+			{
+				fail(conditionHere, "holds conditions, so <" + part->getName() + "> is out of place; a condition holding conditions has a <first> before them, run as soon as it holds, and an <otherwise> after, run when none of them does");
+			}
 			out.push_back(std::move(raw));
 		}
 
@@ -3749,7 +3778,7 @@ namespace xge
 					{
 						if (!each.inner.empty() && !each.commands.empty())
 						{
-							fail(where + " > <computer> > <condition>", "holds conditions and buttons of its own; in <computer> every condition that holds holds its buttons, so they go in a condition of their own");
+							fail(where + " > <computer> > <condition>", "has an <otherwise>; in <computer> every condition that holds holds its buttons, so buttons for when none does go in a condition of their own");
 						}
 						plain(each.inner);
 					}

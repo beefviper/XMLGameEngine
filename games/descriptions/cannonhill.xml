@@ -493,12 +493,13 @@
           </condition>
         </condition>
         <condition object="table" sprite="handing">
+          <first><become object="table" sprite="aiming" /></first>
           <condition object="table" variable="turn"><equal>1</equal>
             <become object="barrel1" sprite="ready" />
-            <become object="table" sprite="aiming" />
           </condition>
-          <become object="barrel2" sprite="ready" />
-          <become object="table" sprite="aiming" />
+          <otherwise>
+            <become object="barrel2" sprite="ready" />
+          </otherwise>
         </condition>
       </conditions>
     </state>

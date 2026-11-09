@@ -342,7 +342,9 @@
             <pass object="players" member="0" />
             <play sound="take" />
           </condition>
-          <become object="message" sprite="none" />
+          <otherwise>
+            <become object="message" sprite="none" />
+          </otherwise>
         </condition>
 
         <!-- then taken: the taker's turn, its points to the taker, its cards to the stock -->

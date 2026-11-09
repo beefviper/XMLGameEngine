@@ -350,7 +350,9 @@
         <condition object="table" sprite="bid">
           <condition object="you" variable="bid"><above>13</above><set variable="you.bid">13</set></condition>
           <condition object="you" variable="bid"><below>1</below><set variable="you.bid">1</set></condition>
-          <become object="message" sprite="bidding" />
+          <otherwise>
+            <become object="message" sprite="bidding" />
+          </otherwise>
         </condition>
 
         <!-- the hand over: ten bags cost a hundred; and a side at 500, the higher score wins (a tie plays on) -->
@@ -382,6 +384,10 @@
         <condition object="table" sprite="playing">
           <!-- all thirteen tricks taken: a side that made its bid scores ten a trick bid, a point and a bag a trick over; one set loses ten a trick bid -->
           <condition object="table" variable="tricks"><equal>13</equal>
+            <first>
+              <become object="table" sprite="done" />
+              <pass object="players" member="0" />
+            </first>
             <condition object="table" variable="usbid"><atmost>you.won + north.won</atmost>
               <condition object="table" variable="thembid"><atmost>west.won + east.won</atmost>
                 <inc variable="table.us">table.usbid * 9 + you.won + north.won</inc>
@@ -389,29 +395,25 @@
                 <inc variable="table.them">table.thembid * 9 + west.won + east.won</inc>
                 <inc variable="table.thembags">west.won + east.won - table.thembid</inc>
                 <become object="message" sprite="made11" />
-                <become object="table" sprite="done" />
-                <pass object="players" member="0" />
               </condition>
-              <inc variable="table.us">table.usbid * 9 + you.won + north.won</inc>
-              <inc variable="table.usbags">you.won + north.won - table.usbid</inc>
-              <inc variable="table.them">0 - table.thembid * 10</inc>
-              <become object="message" sprite="made10" />
-              <become object="table" sprite="done" />
-              <pass object="players" member="0" />
+              <otherwise>
+                <inc variable="table.us">table.usbid * 9 + you.won + north.won</inc>
+                <inc variable="table.usbags">you.won + north.won - table.usbid</inc>
+                <inc variable="table.them">0 - table.thembid * 10</inc>
+                <become object="message" sprite="made10" />
+              </otherwise>
             </condition>
             <condition object="table" variable="thembid"><atmost>west.won + east.won</atmost>
               <inc variable="table.us">0 - table.usbid * 10</inc>
               <inc variable="table.them">table.thembid * 9 + west.won + east.won</inc>
               <inc variable="table.thembags">west.won + east.won - table.thembid</inc>
               <become object="message" sprite="made01" />
-              <become object="table" sprite="done" />
-              <pass object="players" member="0" />
             </condition>
-            <inc variable="table.us">0 - table.usbid * 10</inc>
-            <inc variable="table.them">0 - table.thembid * 10</inc>
-            <become object="message" sprite="made00" />
-            <become object="table" sprite="done" />
-            <pass object="players" member="0" />
+            <otherwise>
+              <inc variable="table.us">0 - table.usbid * 10</inc>
+              <inc variable="table.them">0 - table.thembid * 10</inc>
+              <become object="message" sprite="made00" />
+            </otherwise>
           </condition>
           <!-- a full trick: shown a moment, nobody's turn -->
           <condition object="trick" variable="cards"><equal>4</equal>
@@ -419,7 +421,9 @@
             <pass object="players" member="0" />
             <play sound="take" />
           </condition>
-          <become object="message" sprite="none" />
+          <otherwise>
+            <become object="message" sprite="none" />
+          </otherwise>
         </condition>
 
         <!-- then taken: the taker's turn, a trick to the taker, its cards to the stock -->

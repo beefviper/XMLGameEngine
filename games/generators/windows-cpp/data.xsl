@@ -2970,11 +2970,31 @@
           <xsl:with-param name="list" select="concat($var, '.inner')" />
           <xsl:with-param name="var" select="concat('held', count(ancestor::condition) + 1)" />
         </xsl:apply-templates>
-        <xsl:value-of select="concat($inner, $var, '.commands = ')" />
-        <xsl:call-template name="commands">
-          <xsl:with-param name="nodes" select="*[not(self::condition)][not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::all or self::any))]" />
-          <xsl:with-param name="indent" select="$inner" />
-        </xsl:call-template>
+        <xsl:choose>
+          <!-- holding conditions: <first> before them, <otherwise> when none holds -->
+          <xsl:when test="condition">
+            <xsl:if test="first">
+              <xsl:value-of select="concat($inner, $var, '.first = ')" />
+              <xsl:call-template name="commands">
+                <xsl:with-param name="nodes" select="first/*" />
+                <xsl:with-param name="indent" select="$inner" />
+              </xsl:call-template>
+              <xsl:text>;&#10;</xsl:text>
+            </xsl:if>
+            <xsl:value-of select="concat($inner, $var, '.commands = ')" />
+            <xsl:call-template name="commands">
+              <xsl:with-param name="nodes" select="otherwise/*" />
+              <xsl:with-param name="indent" select="$inner" />
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="concat($inner, $var, '.commands = ')" />
+            <xsl:call-template name="commands">
+              <xsl:with-param name="nodes" select="*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::all or self::any))]" />
+              <xsl:with-param name="indent" select="$inner" />
+            </xsl:call-template>
+          </xsl:otherwise>
+        </xsl:choose>
         <xsl:value-of select="concat(';&#10;', $in, '}));&#10;')" />
       </xsl:otherwise>
     </xsl:choose>

@@ -387,8 +387,10 @@
               <play sound="win" />
               <push state="over" />
             </condition>
-            <become object="over.winner" sprite="draw" />
-            <push state="over" />
+            <otherwise>
+              <become object="over.winner" sprite="draw" />
+              <push state="over" />
+            </otherwise>
           </condition>
         </condition>
         <!-- a side with nowhere to put a disc on its turn passes -->
