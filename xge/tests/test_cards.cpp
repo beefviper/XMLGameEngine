@@ -803,7 +803,7 @@ namespace
 		// Frames until the hand is over.
 		void untilDone()
 		{
-			for (int i = 0; i < 2000 && table("phase") != 4.0f && state() == "playing"; ++i) { frames(1); }
+			for (int i = 0; i < 2000 && get("table").lookName() != "done" && state() == "playing"; ++i) { frames(1); }
 		}
 	};
 }
@@ -844,7 +844,7 @@ TEST_CASE("blackjack.xml: the dealer draws to 17, and the nearer to 21 wins", "[
 	play.press(KeyCode::Space);
 	CHECK(play.pile("player").pile.cards.empty());
 	CHECK(play.pile("stock").pile.cards.size() == 52);
-	CHECK(play.table("phase") == 0.0f);
+	CHECK(play.get("table").lookName() == "betting");
 }
 
 TEST_CASE("blackjack.xml: over 21 is bust; blackjack pays three to two", "[cards][blackjack]")

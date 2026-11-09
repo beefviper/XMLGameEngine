@@ -18,8 +18,43 @@ namespace xge
 		case Compare::Above:   return variable > against;
 		case Compare::Below:   return variable < against;
 		case Compare::Equal:   return variable == against;
+		case Compare::Shows:   return true;
 		}
 		return false;
+	}
+
+	std::vector<RawCondition> flattened(const std::vector<RawCondition>& conditions)
+	{
+		std::vector<RawCondition> out;
+		for (const RawCondition& condition : conditions)
+		{
+			if (condition.inner.empty())
+			{
+				out.push_back(condition);
+				continue;
+			}
+			RawCondition test = condition;
+			test.inner.clear();
+			test.commands.clear();
+			test.name.clear();
+			for (RawCondition& each : flattened(condition.inner))
+			{
+				RawCondition both;
+				both.join = RawCondition::Join::All;
+				both.commands = std::move(each.commands);
+				each.commands.clear();
+				each.name.clear();
+				both.parts = { test, std::move(each) };
+				out.push_back(std::move(both));
+			}
+			if (!condition.commands.empty())
+			{
+				RawCondition own = condition;
+				own.inner.clear();
+				out.push_back(std::move(own));
+			}
+		}
+		return out;
 	}
 
 	std::string describe(const Condition& condition)
@@ -37,13 +72,19 @@ namespace xge
 		}
 
 		std::string what = condition.filterObject.empty() ? condition.filterClass : condition.filterObject;
+		if (condition.compare == Compare::Shows)
+		{
+			text << (what.empty() ? "anything" : what) << " shows " << condition.sprite;
+			return text.str();
+		}
+		if (!condition.sprite.empty()) { what += " showing " + condition.sprite; }
 		if (condition.remaining)
 		{
 			text << "remaining of " << (what.empty() ? "anything" : what) << " <= " << *condition.remaining;
 			return text.str();
 		}
 
-		static const char* const signs[] = { " >= ", " <= ", " > ", " < ", " = " };
+		static const char* const signs[] = { " >= ", " <= ", " > ", " < ", " = ", "" };
 		static const char* const totals[] = { "", "count of ", "sum of ", "highest of ", "lowest of " };
 		text << totals[static_cast<std::size_t>(condition.total)];
 		if (!condition.distanceTo.empty())
@@ -93,7 +134,7 @@ namespace xge
 		for (auto& condition : f.conditions)
 		{
 			o << "       condition: ";
-			static const char* const tests[] = { "atleast", "atmost", "remaining", "above", "below", "equal" };
+			static const char* const tests[] = { "atleast", "atmost", "remaining", "above", "below", "equal", "shows" };
 			const char* test = tests[static_cast<std::size_t>(condition.test)];
 			if (condition.join != RawCondition::Join::None)
 			{

@@ -804,7 +804,6 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 		{ "a window width that is not a number", "<width>1280</width>", "<width>huge</width>", "not a valid" },
 		{ "a window scale of nothing", "<height>720</height>", "<height>720</height><scale>0</scale>", "not a valid" },
 		{ "an edge that is not one", "<collision edge=\"vertical\">", "<collision edge=\"middle\">", "edge" },
-		{ "a condition with no test (only a set=\"...\" condition has none)", "<atleast>11</atleast>", "", "unexpected element <push>" },
 		{ "a <random> with no max", "<random><min>-30</min><max>30</max></random>", "<random><min>-30</min></random>", "max" },
 		{ "several keys in one button=", "<input button=\"w\">", "<input button=\"w up\">", "not a valid" },
 	};

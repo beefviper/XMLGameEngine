@@ -1908,9 +1908,10 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- A <condition> inside an <all>, an <any> or a <collision>: one test with what it tests, and no commands. -->
+  <!-- A <condition> inside an <all>, an <any> or a <collision>: one test with what it tests, and no commands.
+       With sprite=, the test may be left out: showing that look is the test. -->
   <xs:complexType name="testType">
-    <xs:group ref="conditionTest" />
+    <xs:group ref="conditionTest" minOccurs="0" />
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="variable" type="xs:string" use="optional" />
@@ -1918,6 +1919,8 @@
     <xs:attribute name="total" type="totalType" use="optional" />
     <!-- how far each is from the nearest in play of this object or group -->
     <xs:attribute name="distance" type="xs:string" use="optional" />
+    <!-- only those showing this look -->
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <!-- all: every condition holds; any: one of them does. Each a test of its own. -->
@@ -1930,9 +1933,11 @@
   </xs:complexType>
 
   <!--
-    Checked every frame. One test (or an <all> or <any> of conditions), then the
-    commands to run when it holds. Or, with set="name" and nothing else, a
-    named <conditions> set's conditions in its place.
+    Checked every frame. One test (or an <all> or <any> of conditions; with
+    sprite=, none: showing that look is the test), then the conditions it holds,
+    checked in order only while it holds (the first that holds runs), then the
+    commands to run when it holds and none of those did. Or, with set="name"
+    and nothing else, a named <conditions> set's conditions in its place.
   -->
   <xs:group name="conditionHead">
     <xs:choice>
@@ -1949,13 +1954,16 @@
     <xs:attribute name="total" type="totalType" use="optional" />
     <!-- how far each is from the nearest in play of this object or group -->
     <xs:attribute name="distance" type="xs:string" use="optional" />
+    <!-- only those showing this look; with no test, showing it is the test -->
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="set" type="xs:string" use="optional" />
     <!-- a scene from= this one's can put a condition of the same name in its place -->
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:attributeGroup>
   <xs:complexType name="conditionType">
     <xs:sequence minOccurs="0">
-      <xs:group ref="conditionHead" />
+      <xs:group ref="conditionHead" minOccurs="0" />
+      <xs:element name="condition" type="conditionType" minOccurs="0" maxOccurs="unbounded" />
       <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attributeGroup ref="conditionAttributes" />
@@ -1963,7 +1971,7 @@
   <!-- A computer player's condition: a state's test, then the buttons it holds down while it holds. -->
   <xs:complexType name="computerConditionType">
     <xs:sequence minOccurs="0">
-      <xs:group ref="conditionHead" />
+      <xs:group ref="conditionHead" minOccurs="0" />
       <xs:group ref="pressCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attributeGroup ref="conditionAttributes" />

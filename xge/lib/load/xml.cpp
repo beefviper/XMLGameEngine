@@ -3435,8 +3435,22 @@ namespace xge
 			raw.variableName = node.getAttribute("variable");
 			raw.total = node.getAttribute("total");
 			raw.distance = node.getAttribute("distance");
+			raw.sprite = node.getAttribute("sprite");
 
 			std::unique_ptr<XmlNode> test = node.getFirstChild();
+
+			// sprite= and no test tag: showing that look is the test.
+			static const std::set<std::string> tests{ "atleast", "atmost", "above", "below", "equal", "remaining", "all", "any" };
+			if (!raw.sprite.empty() && (!test || !tests.contains(test->getName())))
+			{
+				if (raw.filterClass.empty() && raw.filterObject.empty()) { fail(here, "sprite=\"" + raw.sprite + "\" tests a look, so it needs object= or class= to say whose"); }
+				if (!raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty())
+				{
+					fail(here, "has variable=, total= or distance= but no test of them; add an <atleast>, <atmost>, <above>, <below> or <equal>");
+				}
+				raw.test = RawCondition::Test::Shows;
+				return test;
+			}
 			if (!test) { fail(here, "needs an <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>, or an <all> or <any>"); }
 
 			const std::string testName = test->getName();
@@ -3444,9 +3458,9 @@ namespace xge
 			// <all> / <any>: several checks, each a test of its own.
 			if (testName == "all" || testName == "any")
 			{
-				if (!raw.filterClass.empty() || !raw.filterObject.empty() || !raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty())
+				if (!raw.filterClass.empty() || !raw.filterObject.empty() || !raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty() || !raw.sprite.empty())
 				{
-					fail(here, "<" + testName + "> says what is tested in each of its <condition>s, so the condition has no class=, object=, variable=, total= or distance=");
+					fail(here, "<" + testName + "> says what is tested in each of its <condition>s, so the condition has no class=, object=, variable=, total=, distance= or sprite=");
 				}
 				readJoin(*test, here + " > <" + testName + ">", raw);
 				return test->getNextSibling();
@@ -3485,38 +3499,56 @@ namespace xge
 			return test->getNextSibling();
 		}
 
+		// One <condition> into `out`: a test, the conditions it holds (each
+		// read the same way), then the commands to run when it holds; or
+		// <condition set="..."> for a named set's, in its place.
+		void readCondition(const XmlNode& condition, const std::string& where, const ConditionSets& conditionSets, std::vector<RawCondition>& out)
+		{
+			const std::string conditionHere = where + " > <condition>";
+
+			// <condition set="..."> takes a named <conditions> set's in its place
+			if (!condition.getAttribute("set").empty())
+			{
+				const std::string setName = condition.getAttribute("set");
+				if (condition.getFirstChild() || !condition.getAttribute("class").empty() || !condition.getAttribute("object").empty() || !condition.getAttribute("variable").empty() || !condition.getAttribute("name").empty())
+				{
+					fail(conditionHere, "set=\"" + setName + "\" takes a <conditions> set whole, so it has nothing else");
+				}
+				const auto set = conditionSets.find(setName);
+				if (set == conditionSets.end()) { fail(conditionHere, "set=\"" + setName + "\" names no <conditions> set before it"); }
+				out.insert(out.end(), set->second.begin(), set->second.end());
+				return;
+			}
+
+			RawCondition raw;
+			raw.name = condition.getAttribute("name");
+			if (!raw.name.empty() && std::any_of(out.begin(), out.end(), [&](const RawCondition& other) { return other.name == raw.name; }))
+			{
+				fail(conditionHere, "has two conditions called '" + raw.name + "'");
+			}
+			std::unique_ptr<XmlNode> after = readCheck(condition, conditionHere, raw);
+
+			// The conditions it holds, checked while it holds, before its own commands.
+			std::unique_ptr<XmlNode> firstCommand = std::move(after);
+			for (; firstCommand && firstCommand->getName() == "condition"; firstCommand = firstCommand->getNextSibling())
+			{
+				readCondition(*firstCommand, conditionHere, conditionSets, raw.inner);
+			}
+			for (std::unique_ptr<XmlNode> rest = firstCommand ? firstCommand->getNextSibling() : nullptr; rest; rest = rest->getNextSibling())
+			{
+				if (rest->getName() == "condition") { fail(conditionHere, "has a <condition> after its commands; the conditions it holds come first, its own commands last"); }
+			}
+			raw.commands = readCommands(std::move(firstCommand), conditionHere);
+			out.push_back(std::move(raw));
+		}
+
 		// The <condition>s under a node (a state's <conditions>, or a
-		// <conditions> set), in order: a test, then the commands to run when it
-		// holds; or <condition set="..."> for a named set's, in its place.
+		// <conditions> set), in order.
 		void readConditions(const XmlNode& node, const std::string& where, const ConditionSets& conditionSets, std::vector<RawCondition>& out)
 		{
 			for (std::unique_ptr<XmlNode> condition = node.getFirstChild(); condition != nullptr; condition = condition->getNextSibling())
 			{
-				const std::string conditionHere = where + " > <condition>";
-
-				// <condition set="..."> takes a named <conditions> set's in its place
-				if (!condition->getAttribute("set").empty())
-				{
-					const std::string setName = condition->getAttribute("set");
-					if (condition->getFirstChild() || !condition->getAttribute("class").empty() || !condition->getAttribute("object").empty() || !condition->getAttribute("variable").empty() || !condition->getAttribute("name").empty())
-					{
-						fail(conditionHere, "set=\"" + setName + "\" takes a <conditions> set whole, so it has nothing else");
-					}
-					const auto set = conditionSets.find(setName);
-					if (set == conditionSets.end()) { fail(conditionHere, "set=\"" + setName + "\" names no <conditions> set before it"); }
-					out.insert(out.end(), set->second.begin(), set->second.end());
-					continue;
-				}
-
-				RawCondition raw;
-				raw.name = condition->getAttribute("name");
-				if (!raw.name.empty() && std::any_of(out.begin(), out.end(), [&](const RawCondition& other) { return other.name == raw.name; }))
-				{
-					fail(conditionHere, "has two conditions called '" + raw.name + "'");
-				}
-				std::unique_ptr<XmlNode> after = readCheck(*condition, conditionHere, raw);
-				raw.commands = readCommands(std::move(after), conditionHere);
-				out.push_back(std::move(raw));
+				readCondition(*condition, where, conditionSets, out);
 			}
 		}
 

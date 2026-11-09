@@ -22,6 +22,8 @@ A state is a **mode**: menu, play, pause, game over. It says what is shown, whic
 - **`<all>` and `<any>`** of `<condition>`s, nesting, one test each, since the tests of a real "and" are about different things. Rejected: `and=`/`or=` chains, `<not>` (each test has its opposite).
 - **`total=`** (count, sum, highest, lowest) makes one number over everything matched, so "at least three bullets in flight" needs nothing new.
 - **`distance=`** measures to the nearest of a name; with `total="lowest"`, "nothing near" is one test (Asteroids' respawn).
+- **Conditions in conditions** (Beef, 2026-11: the card games' rules read as "a random list of tags"): a condition holds conditions, so a shared test is written once above what it governs, the reuse rule applied to rules. Its own commands, after them, are the "otherwise". The engine flattens them (`flattened()`) into the plain first-that-holds list, so nothing else changed. Counted before: Blackjack, Spades, Hearts and Gin repeated the test before in 8 to 11 of 14 to 16 conditions. Rejected: an explicit `<otherwise>` (the block's end says it).
+- **A look is the phase:** `sprite=` on a condition tests what an object shows. Games kept a `phase` number beside a look saying the same thing; the number goes. `sprite=` over `from=` (which reads as changing from).
 - **One word, `<condition>`:** the test inside `<all>`, `<any>` and a rule was once `<check>`; the schema gives one word two shapes by where it stands.
 
 ## Keeps, tables, turns, demos

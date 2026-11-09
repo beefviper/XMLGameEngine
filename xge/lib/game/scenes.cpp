@@ -358,6 +358,7 @@ namespace xge
 					condition.distance = names_.object(condition.distance, context);
 					value(condition.threshold, context);
 					this->conditions(condition.parts, context);
+					this->conditions(condition.inner, context);
 					commands(condition.commands, context);
 				}
 			}

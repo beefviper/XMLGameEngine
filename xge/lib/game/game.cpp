@@ -2163,7 +2163,8 @@ namespace xge
 		const std::vector<std::size_t>& candidates = matching(condition.filterClass, condition.filterObject);
 		const auto considers = [&](const Object& object)
 		{
-			return inScope(object) || namedByPath(object, condition.filterObject);
+			return (inScope(object) || namedByPath(object, condition.filterObject))
+				&& (condition.sprite.empty() || object.lookName() == condition.sprite);
 		};
 
 		// The number compared with: as it was at load, or, when it names
@@ -2257,6 +2258,7 @@ namespace xge
 				continue;
 			}
 
+			if (condition.compare == Compare::Shows) { return true; }
 			const std::optional<float> tested = measure(object);
 			if (tested && passes(condition.compare, *tested, against))
 			{

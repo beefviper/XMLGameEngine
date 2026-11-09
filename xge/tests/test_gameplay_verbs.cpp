@@ -1279,3 +1279,102 @@ TEST_CASE("mistakes in totals, distances, <all> and <any> stop the load, saying 
 	CHECK_THROWS_WITH(Coins("class=\"coin\" total=\"most\"><atleast>1</atleast>", XmlBackend::TinyXml2), ContainsSubstring("is not a valid totalType"));
 	CHECK_THROWS_WITH(Coins("><any><when /></any>"), ContainsSubstring("when"));
 }
+
+namespace
+{
+	// A light with two looks, green first, and a flag whose n picks which
+	// of the conditions below holds; out says which ran. `conditions` is
+	// the state's <conditions>.
+	std::string lights(const std::string& conditions)
+	{
+		const std::string look = "<rectangle><width>10</width><height>10</height></rectangle>";
+		return gameXml("<object name=\"light\"><sprite name=\"green\">" + look + "</sprite><sprite name=\"red\">" + look + "</sprite>"
+			"<position><x>0</x><y>0</y></position></object>"
+			+ box("flag", 0, 300, 1, 1, "<enabled>false</enabled>", {}, "<variables><variable name=\"n\">0</variable><variable name=\"out\">0</variable></variables>"),
+			state("playing", { "light", "flag" }, "<input button=\"space\"><pop /></input>", "<conditions>" + conditions + "</conditions>"));
+	}
+
+	const std::string kNested =
+		"<condition object=\"light\" sprite=\"green\">"
+		"<condition object=\"flag\" variable=\"n\"><equal>1</equal><set variable=\"flag.out\">1</set></condition>"
+		"<condition object=\"flag\" variable=\"n\"><equal>2</equal>"
+		"<condition object=\"flag\" variable=\"out\"><equal>0</equal><set variable=\"flag.out\">20</set></condition>"
+		"</condition>"
+		"<set variable=\"flag.out\">9</set>"
+		"</condition>"
+		"<condition object=\"light\" sprite=\"red\"><set variable=\"flag.out\">5</set></condition>";
+}
+
+TEST_CASE("a condition holds conditions, checked while it holds; its own commands run when none of them does", "[conditions][nested]")
+{
+	Loaded loaded(lights(kNested));
+	const auto run = [&](float n) -> float
+	{
+		loaded.game.setVariable("flag", "out", 0.0f);
+		loaded.game.setVariable("flag", "n", n);
+		loaded.frames(1);
+		return loaded.variable("flag", "out");
+	};
+	CHECK(run(1) == 1.0f);
+	CHECK(run(0) == 9.0f);
+	// n 2 with out 0: the inner one's inner one.
+	CHECK(run(2) == 20.0f);
+
+	// n 2 with out not 0: none of the inner ones holds, so the next level's own commands, then the holder's.
+	loaded.game.setVariable("flag", "n", 2.0f);
+	loaded.game.setVariable("flag", "out", 3.0f);
+	loaded.frames(1);
+	CHECK(loaded.variable("flag", "out") == 9.0f);
+
+	// Another look: the light's conditions are passed over.
+	loaded.game.getObject("light").showLook(1);
+	CHECK(run(1) == 5.0f);
+}
+
+TEST_CASE("sprite= tests a look, alone or with a test, in an <all> too", "[conditions][nested]")
+{
+	Loaded alone(lights("<condition object=\"light\" sprite=\"red\"><set variable=\"flag.out\">1</set></condition>"));
+	alone.frames(1);
+	CHECK(alone.variable("flag", "out") == 0.0f);
+	alone.game.getObject("light").showLook(1);
+	alone.frames(1);
+	CHECK(alone.variable("flag", "out") == 1.0f);
+
+	Loaded joined(lights("<condition><all><condition object=\"light\" sprite=\"green\" /><condition object=\"flag\" variable=\"n\"><equal>0</equal></condition></all>"
+		"<set variable=\"flag.out\">1</set></condition>"));
+	joined.frames(1);
+	CHECK(joined.variable("flag", "out") == 1.0f);
+
+	Loaded both(lights("<condition object=\"light\" sprite=\"red\" total=\"count\"><equal>1</equal><set variable=\"flag.out\">1</set></condition>"
+		"<condition object=\"light\" sprite=\"green\" total=\"count\"><equal>1</equal><set variable=\"flag.out\">2</set></condition>"));
+	both.frames(1);
+	CHECK(both.variable("flag", "out") == 2.0f);
+}
+
+TEST_CASE("nested conditions and look tests load with every XML library", "[conditions][nested][xml]")
+{
+	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
+	{
+		INFO(static_cast<int>(backend));
+		Loaded loaded(lights(kNested), backend);
+		loaded.game.setVariable("flag", "n", 1.0f);
+		loaded.frames(1);
+		CHECK(loaded.variable("flag", "out") == 1.0f);
+	}
+}
+
+TEST_CASE("mistakes in nested conditions and look tests stop the load, saying where", "[conditions][nested][errors]")
+{
+	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"light\" sprite=\"blue\"><set variable=\"flag.out\">1</set></condition>")),
+		ContainsSubstring("sprite=\"blue\" is no look of what the condition looks at"));
+	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"light\" sprite=\"gren\"><set variable=\"flag.out\">1</set></condition>")),
+		ContainsSubstring("green"));
+	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"light\" sprite=\"red\" variable=\"n\"><set variable=\"flag.out\">1</set></condition>"), XmlBackend::TinyXml2),
+		ContainsSubstring("but no test of them"));
+	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"light\" sprite=\"red\"><set variable=\"flag.out\">1</set>"
+		"<condition object=\"flag\" variable=\"n\"><equal>1</equal></condition></condition>"), XmlBackend::TinyXml2),
+		ContainsSubstring("unexpected element <condition>"));
+	// The schema lets a condition leave out its test (sprite= may be the test), so the engine says it.
+	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"flag\" variable=\"n\"><set variable=\"flag.out\">1</set></condition>")),
+		ContainsSubstring("starts with <set>"));
+}

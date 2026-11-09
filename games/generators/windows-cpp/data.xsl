@@ -2930,6 +2930,8 @@
     <xsl:param name="in" />
     <xsl:param name="inner" />
     <xsl:param name="list" select="'state.conditions'" />
+    <!-- the RawCondition's name in the code: one held by another is named by its depth, so none shadows another -->
+    <xsl:param name="var" select="'condition'" />
     <xsl:choose>
       <xsl:when test="@set">
         <xsl:variable name="set" select="@set" />
@@ -2937,12 +2939,13 @@
           <xsl:with-param name="in" select="$in" />
           <xsl:with-param name="inner" select="$inner" />
           <xsl:with-param name="list" select="$list" />
+          <xsl:with-param name="var" select="$var" />
         </xsl:apply-templates>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:value-of select="concat($in, $list, '.push_back(make&lt;RawCondition&gt;([](RawCondition&amp; condition)&#10;', $in, '{&#10;')" />
+        <xsl:value-of select="concat($in, $list, '.push_back(make&lt;RawCondition&gt;([](RawCondition&amp; ', $var, ')&#10;', $in, '{&#10;')" />
         <xsl:if test="@name != ''">
-          <xsl:value-of select="concat($inner, 'condition.name = ')" />
+          <xsl:value-of select="concat($inner, $var, '.name = ')" />
           <xsl:call-template name="string">
             <xsl:with-param name="text" select="@name" />
           </xsl:call-template>
@@ -2950,13 +2953,20 @@
         </xsl:if>
         <xsl:call-template name="condition-test">
           <xsl:with-param name="node" select="." />
-          <xsl:with-param name="var" select="'condition'" />
+          <xsl:with-param name="var" select="$var" />
           <xsl:with-param name="inner" select="$inner" />
           <xsl:with-param name="depth" select="1" />
         </xsl:call-template>
-        <xsl:value-of select="concat($inner, 'condition.commands = ')" />
+        <!-- the conditions it holds, each the same way, onto its inner list -->
+        <xsl:apply-templates select="condition" mode="condition">
+          <xsl:with-param name="in" select="$inner" />
+          <xsl:with-param name="inner" select="concat($inner, $tab)" />
+          <xsl:with-param name="list" select="concat($var, '.inner')" />
+          <xsl:with-param name="var" select="concat('held', count(ancestor::condition) + 1)" />
+        </xsl:apply-templates>
+        <xsl:value-of select="concat($inner, $var, '.commands = ')" />
         <xsl:call-template name="commands">
-          <xsl:with-param name="nodes" select="*[position() &gt; 1]" />
+          <xsl:with-param name="nodes" select="*[not(self::condition)][not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::remaining or self::all or self::any))]" />
           <xsl:with-param name="indent" select="$inner" />
         </xsl:call-template>
         <xsl:value-of select="concat(';&#10;', $in, '}));&#10;')" />
@@ -2974,7 +2984,7 @@
     <xsl:param name="inner" />
     <xsl:param name="depth" />
     <xsl:variable name="test" select="$node/*[1]" />
-    <xsl:for-each select="$node/@class | $node/@object | $node/@variable | $node/@total | $node/@distance">
+    <xsl:for-each select="$node/@class | $node/@object | $node/@variable | $node/@total | $node/@distance | $node/@sprite">
       <xsl:if test=". != ''">
         <xsl:value-of select="concat($inner, $var, '.')" />
         <xsl:choose>
@@ -2982,6 +2992,7 @@
           <xsl:when test="local-name() = 'object'">filterObject</xsl:when>
           <xsl:when test="local-name() = 'total'">total</xsl:when>
           <xsl:when test="local-name() = 'distance'">distance</xsl:when>
+          <xsl:when test="local-name() = 'sprite'">sprite</xsl:when>
           <xsl:otherwise>variableName</xsl:otherwise>
         </xsl:choose>
         <xsl:text> = </xsl:text>
@@ -2992,6 +3003,9 @@
       </xsl:if>
     </xsl:for-each>
     <xsl:choose>
+      <xsl:when test="$node/@sprite and not($test[self::atleast or self::atmost or self::above or self::below or self::equal or self::remaining or self::all or self::any])">
+        <xsl:value-of select="concat($inner, $var, '.test = RawCondition::Test::Shows;&#10;')" />
+      </xsl:when>
       <xsl:when test="$test[self::all or self::any]">
         <xsl:call-template name="condition-join">
           <xsl:with-param name="join" select="$test" />

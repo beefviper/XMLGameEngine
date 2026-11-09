@@ -32,8 +32,9 @@
     up. Between hands every card is sent back and <order>ed at random.
   * The dealer draws by a timer that follows a look its condition gives
     it while its worth is under 17.
-  * The table's `phase`: 0 betting, 1 your play, 2 the dealer's,
-    3 settling, 4 the hand over; its looks say what to do.
+  * Where the hand is, is the table's look: betting, playing, dealer,
+    settling, done. Each look's rules sit inside one condition on it,
+    and what no rule in it catches comes last (the dealer wins).
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -176,6 +177,7 @@
           <sprite name="betting"><text style="note"><content>a d to change the bet, spacebar deals</content></text></sprite>
           <sprite name="playing"><text style="note"><content>w to hit, s to stand</content></text></sprite>
           <sprite name="dealer"><text style="note"><content>the dealer plays</content><color>color.lightgrey</color></text></sprite>
+          <sprite name="settling"><text style="note"><content>the dealer plays</content><color>color.lightgrey</color></text></sprite>
           <sprite name="done"><text style="note"><content>spacebar for the next hand</content></text></sprite>
           <position><x><centered /></x><y>yourrow + cardheight + 70</y></position>
           <actions>
@@ -189,20 +191,17 @@
               <send from="stock" into="player">1</send>
               <send from="stock" into="dealer" sprite="back">1</send>
               <play sound="deal" />
-              <set variable="table.phase">1</set>
               <become sprite="playing" />
             </action>
             <action name="hit"><send from="stock" into="player">1</send><play sound="deal" /></action>
             <action name="stand">
               <become object="dealer" sprite="face" />
-              <set variable="table.phase">2</set>
               <become sprite="dealer" />
             </action>
             <!-- every card back in the stock, shuffled -->
             <action name="next">
               <send from="cards" into="stock"><all /></send>
               <order group="stock"><random /></order>
-              <set variable="table.phase">0</set>
               <become sprite="betting" />
               <become object="result" sprite="none" />
             </action>
@@ -210,7 +209,6 @@
           <variables>
             <variable name="bank">200</variable>
             <variable name="bet">10</variable>
-            <variable name="phase">0</variable>
           </variables>
         </object>
 
@@ -249,98 +247,86 @@
       </inputs>
       <conditions>
         <!-- the bet: 10 to 100, never more than the chips -->
-        <condition><all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="bank"><below>10</below></condition></all><play sound="lose" /><push state="broke" /></condition>
-        <condition><all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="bet"><above>table.bank</above></condition></all><set variable="table.bet">table.bank</set></condition>
-        <condition><all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="bet"><below>10</below></condition></all><set variable="table.bet">10</set></condition>
-        <condition><all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="bet"><above>100</above></condition></all><set variable="table.bet">100</set></condition>
+        <condition object="table" sprite="betting">
+          <condition object="table" variable="bank"><below>10</below>
+            <play sound="lose" />
+            <push state="broke" />
+          </condition>
+          <condition object="table" variable="bet"><above>table.bank</above><set variable="table.bet">table.bank</set></condition>
+          <condition object="table" variable="bet"><below>10</below><set variable="table.bet">10</set></condition>
+          <condition object="table" variable="bet"><above>100</above><set variable="table.bet">100</set></condition>
+        </condition>
 
         <!-- your play: over 21 is bust; 21 stands by itself, at once with blackjack -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="worth"><above>21</above></condition></all>
-          <become object="dealer" sprite="face" />
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="bust" />
-          <play sound="lose" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="worth"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
-          <become object="dealer" sprite="face" />
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="dealer" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="worth"><equal>21</equal></condition></all>
-          <trigger object="table" action="stand" />
+        <condition object="table" sprite="playing">
+          <condition object="player" variable="worth"><above>21</above>
+            <become object="dealer" sprite="face" />
+            <become object="table" sprite="done" />
+            <become object="result" sprite="bust" />
+            <play sound="lose" />
+          </condition>
+          <condition object="player" variable="worth"><equal>21</equal>
+            <condition object="player" variable="cards"><equal>2</equal>
+              <become object="dealer" sprite="face" />
+              <become object="table" sprite="settling" />
+            </condition>
+            <trigger object="table" action="stand" />
+          </condition>
         </condition>
 
         <!-- the dealer's play: under 17 it draws, else it stands -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="dealer" variable="worth"><below>17</below></condition></all>
-          <become object="drawing" sprite="draw" from="wait" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="dealer" variable="worth"><atleast>17</atleast></condition></all>
-          <set variable="table.phase">3</set>
+        <condition object="table" sprite="dealer">
+          <condition object="dealer" variable="worth"><below>17</below>
+            <become object="drawing" sprite="draw" from="wait" />
+          </condition>
+          <become object="table" sprite="settling" />
         </condition>
 
-        <!-- settling: blackjack against blackjack is a push; blackjack pays three to two -->
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>3</equal></condition>
-            <condition object="player" variable="worth"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition>
-            <condition object="dealer" variable="worth"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition>
-          </all>
-          <inc variable="table.bank">table.bet</inc>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="push" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="worth"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
-          <inc variable="table.bank">table.bet * 2.5</inc>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="blackjack" />
-          <play sound="blackjack" />
-        </condition>
-        <!-- the dealer's blackjack beats any other 21 -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="dealer" variable="worth"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition></all>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
+        <!-- settling -->
+        <condition object="table" sprite="settling">
+          <!-- blackjack, 21 in two cards: against the dealer's a push, else it pays three to two -->
+          <condition>
+            <all><condition object="player" variable="worth"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
+            <condition>
+              <all><condition object="dealer" variable="worth"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition></all>
+              <inc variable="table.bank">table.bet</inc>
+              <become object="result" sprite="push" />
+              <become object="table" sprite="done" />
+            </condition>
+            <inc variable="table.bank">table.bet * 2.5</inc>
+            <become object="result" sprite="blackjack" />
+            <play sound="blackjack" />
+            <become object="table" sprite="done" />
+          </condition>
+          <!-- the dealer's blackjack beats any other 21 -->
+          <condition>
+            <all><condition object="dealer" variable="worth"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition></all>
+            <become object="result" sprite="lose" />
+            <play sound="lose" />
+            <become object="table" sprite="done" />
+          </condition>
+          <!-- the dealer bust or beaten pays two to one, a tie gives the bet back -->
+          <condition object="dealer" variable="worth"><above>21</above>
+            <inc variable="table.bank">table.bet * 2</inc>
+            <become object="result" sprite="dealerbust" />
+            <play sound="win" />
+            <become object="table" sprite="done" />
+          </condition>
+          <condition object="player" variable="worth"><above>dealer.worth</above>
+            <inc variable="table.bank">table.bet * 2</inc>
+            <become object="result" sprite="win" />
+            <play sound="win" />
+            <become object="table" sprite="done" />
+          </condition>
+          <condition object="player" variable="worth"><equal>dealer.worth</equal>
+            <inc variable="table.bank">table.bet</inc>
+            <become object="result" sprite="push" />
+            <become object="table" sprite="done" />
+          </condition>
+          <!-- otherwise the dealer wins -->
           <become object="result" sprite="lose" />
           <play sound="lose" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="dealer" variable="worth"><above>21</above></condition></all>
-          <inc variable="table.bank">table.bet * 2</inc>
-          <set variable="table.phase">4</set>
           <become object="table" sprite="done" />
-          <become object="result" sprite="dealerbust" />
-          <play sound="win" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="worth"><above>dealer.worth</above></condition></all>
-          <inc variable="table.bank">table.bet * 2</inc>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="win" />
-          <play sound="win" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="worth"><equal>dealer.worth</equal></condition></all>
-          <inc variable="table.bank">table.bet</inc>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="push" />
-        </condition>
-        <condition object="table" variable="phase">
-          <equal>3</equal>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="lose" />
-          <play sound="lose" />
         </condition>
       </conditions>
     </state>

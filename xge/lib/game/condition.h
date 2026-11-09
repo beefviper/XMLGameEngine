@@ -35,9 +35,15 @@ namespace xge
 	// its own, with no commands), which can hold <all>s and <any>s in turn:
 	// then `join` says which, the checks are `parts`, and the condition's own
 	// test is not used.
+	//
+	// sprite= looks only at the objects showing that look; with no test tag,
+	// showing it is the test (Test::Shows). A state's condition can hold
+	// conditions (`inner`), checked in order only while it holds; its own
+	// commands run when it holds and none of them does. flattened() turns
+	// those into the plain list the engine checks.
 	struct RawCondition
 	{
-		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal };
+		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal, Shows };
 		enum class Join { None, All, Any };
 
 		std::string filterClass;
@@ -45,17 +51,24 @@ namespace xge
 		std::string variableName;
 		std::string total;    // total="...": "" (each object), count, sum, highest, lowest
 		std::string distance; // distance="...": the object or group measured to, or ""
+		std::string sprite;   // sprite="...": only those showing this look
 		Test test{ Test::AtLeast };
 		RawValue threshold;      // the test tag's number
 		Join join{ Join::None };
 		std::vector<RawCondition> parts; // <all> or <any>: its <condition>s, <all>s and <any>s
+		std::vector<RawCondition> inner; // the conditions it holds, checked while it holds
 		std::vector<RawCommand> commands;
 		std::string name; // name="...": a scene from= this one's can put another in its place
 	};
 
+	// Conditions holding conditions, as the plain list the engine checks in
+	// order: each inner one as an <all> of its holder's test and its own,
+	// then the holder alone with its own commands, if it has any.
+	std::vector<RawCondition> flattened(const std::vector<RawCondition>& conditions);
+
 	// How a condition's variable is compared, and whether `variable` passes
 	// against `against` that way.
-	enum class Compare { AtLeast, AtMost, Above, Below, Equal };
+	enum class Compare { AtLeast, AtMost, Above, Below, Equal, Shows };
 	bool passes(Compare compare, float variable, float against) noexcept;
 
 
@@ -70,6 +83,7 @@ namespace xge
 		std::string variableName;
 		Total total{ Total::None };
 		std::string distanceTo; // measured to the nearest one in play of this name or group
+		std::string sprite;     // only those showing this look
 		RawCondition::Join join{ RawCondition::Join::None };
 		std::vector<Condition> parts;
 		Compare compare{ Compare::AtLeast };

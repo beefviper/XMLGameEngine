@@ -130,6 +130,23 @@ A condition is checked every frame while its state (or scene) is current. It hol
 </condition>
 ```
 
+- **`sprite="settling"`** looks only at the matched objects showing that look. With no test tag, showing it is the test: `<condition object="table" sprite="settling">` holds while the table shows `settling`. A look none of them has stops the load. Where a game is in its turn (betting, playing, settling) is a look of one object, changed with `<become>`, not a number.
+
+### Conditions in conditions
+
+A condition holds conditions, after its test and before its own commands. They are checked only while it holds, in order, the first that holds running; its own commands run when it holds and none of them does. So the test they share is written once, and the "otherwise" ends the block:
+
+```xml
+<condition object="table" sprite="dealer">
+  <condition object="dealer" variable="worth"><below>17</below>
+    <become object="drawing" sprite="draw" from="wait" />
+  </condition>
+  <become object="table" sprite="settling" />
+</condition>
+```
+
+They nest to any depth. One with no commands of its own, none of whose conditions holds, lets the next condition be checked.
+
 - A filter matching nothing is a warning, since "none left" would hold at once. A missing object or variable stops the load.
 - A state's condition has no `self`, so it names what it compares; a rule's condition has `self`.
 

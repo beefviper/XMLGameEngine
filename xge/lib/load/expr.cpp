@@ -256,6 +256,7 @@ namespace xge
 			condition.filterObject = rawCondition.filterObject;
 			condition.variableName = rawCondition.variableName;
 			condition.distanceTo = rawCondition.distance;
+			condition.sprite = rawCondition.sprite;
 			if (rawCondition.total == "count") { condition.total = Total::Count; }
 			else if (rawCondition.total == "sum") { condition.total = Total::Sum; }
 			else if (rawCondition.total == "highest") { condition.total = Total::Highest; }
@@ -264,9 +265,10 @@ namespace xge
 			// A number that names something that changes is worked out again
 			// each time the condition is tested (Game::testCondition); now, it
 			// may read where things are as 0, as a command's values may.
-			const bool live = namesLive(rawCondition.threshold);
+			const bool shows = rawCondition.test == RawCondition::Test::Shows;
+			const bool live = !shows && namesLive(rawCondition.threshold);
 			commandValues = live;
-			const float threshold = evaluate(rawCondition.threshold, where);
+			const float threshold = shows ? 0.0f : evaluate(rawCondition.threshold, where);
 			commandValues = false;
 			if (live)
 			{
@@ -299,8 +301,24 @@ namespace xge
 			case RawCondition::Test::Below:     condition.compare = Compare::Below; break;
 			case RawCondition::Test::Equal:     condition.compare = Compare::Equal; break;
 			case RawCondition::Test::Remaining: condition.remaining = threshold; break;
+			case RawCondition::Test::Shows:     condition.compare = Compare::Shows; break;
 			}
 			condition.value = threshold;
+
+			// A look by name: something it looks at has a look of that name.
+			if (!condition.sprite.empty())
+			{
+				std::vector<std::string> looks;
+				for (const Object& object : objects)
+				{
+					if (!matches(rawCondition, object)) { continue; }
+					for (const auto& look : object.looks) { looks.push_back(look.name); }
+				}
+				if (std::find(looks.begin(), looks.end(), condition.sprite) == looks.end())
+				{
+					throw std::runtime_error(where + ": sprite=\"" + condition.sprite + "\" is no look of what the condition looks at" + didYouMean(condition.sprite, looks));
+				}
+			}
 
 			if (!condition.distanceTo.empty() && !findObject(objects, condition.distanceTo))
 			{
@@ -382,11 +400,11 @@ namespace xge
 				state.axes[axis] = processCommands(commands, where);
 			}
 
-			for (auto& rawCondition : rawState.conditions)
+			for (auto& rawCondition : flattened(rawState.conditions))
 			{
 				state.conditions.push_back(makeCondition(rawCondition, where, where));
 			}
-			for (auto& rawCondition : rawState.computer)
+			for (auto& rawCondition : flattened(rawState.computer))
 			{
 				state.computer.push_back(makeCondition(rawCondition, where + " > <computer>", where));
 			}
@@ -414,7 +432,7 @@ namespace xge
 					}
 					scene.ways[way] = rawState.name + "." + leads->name;
 				}
-				for (const RawCondition& rawCondition : rawScene.conditions)
+				for (const RawCondition& rawCondition : flattened(rawScene.conditions))
 				{
 					scene.conditions.push_back(makeCondition(rawCondition, sceneWhere, sceneWhere));
 				}
