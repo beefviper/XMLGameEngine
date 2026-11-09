@@ -695,15 +695,13 @@
           <play sound="extralife" />
         </condition>
         <!-- no robot left in the room: ten more for each destroyed -->
-        <condition>
-          <all>
-            <condition class="robot"><remaining>0</remaining></condition>
-            <condition object="player" variable="kills"><atleast>1</atleast></condition>
-          </all>
-          <inc variable="player.score">10 * player.kills</inc>
-          <inc variable="player.lifepoints">10 * player.kills</inc>
-          <set variable="player.kills">0</set>
-          <play sound="bonus" />
+        <condition class="robot"><remaining>0</remaining>
+          <condition object="player" variable="kills"><atleast>1</atleast>
+            <inc variable="player.score">10 * player.kills</inc>
+            <inc variable="player.lifepoints">10 * player.kills</inc>
+            <set variable="player.kills">0</set>
+            <play sound="bonus" />
+          </condition>
         </condition>
         <!-- and Otto comes at once, and faster -->
         <condition class="robot">

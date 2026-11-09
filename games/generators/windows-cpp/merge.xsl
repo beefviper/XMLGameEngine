@@ -447,8 +447,7 @@
   </xsl:template>
 
   <!-- What a <spawn>, <fire> or <release> in $nodes names (spawnedIn), and
-       in a path they <follow>, a <keys> set their <inputs keys> take or a
-       <conditions> set a <condition set> takes, each between spaces.
+       in a path they <follow>, each between spaces.
        $taken: the sets already looked in. -->
   <xsl:template name="merge-spawned">
     <xsl:param name="nodes" />
@@ -456,18 +455,8 @@
     <xsl:for-each select="($nodes | $nodes//*)[self::spawn or self::fire or self::release][@object != '']">
       <xsl:value-of select="concat(' ', @object, ' ')" />
     </xsl:for-each>
-    <xsl:variable name="keys">
-      <xsl:for-each select="($nodes | $nodes//*)[self::inputs]">
-        <xsl:value-of select="concat(' ', normalize-space(@keys), ' ')" />
-        <xsl:for-each select="keys">
-          <xsl:value-of select="concat(' ', normalize-space(.), ' ')" />
-        </xsl:for-each>
-      </xsl:for-each>
-    </xsl:variable>
     <xsl:variable name="more"
-        select="$merge-source/paths/path[@name = ($nodes | $nodes//*)[self::follow]/@path][not(contains($taken, concat(' path:', @name, ' ')))]
-          | $merge-source/states/keys[contains(concat(' ', translate($keys, '&#9;&#10;&#13;', '   '), ' '), concat(' ', @name, ' '))][not(contains($taken, concat(' keys:', @name, ' ')))]
-          | $merge-source/states/conditions[@name = ($nodes | $nodes//*)[self::condition]/@set][not(contains($taken, concat(' conditions:', @name, ' ')))]" />
+        select="$merge-source/paths/path[@name = ($nodes | $nodes//*)[self::follow]/@path][not(contains($taken, concat(' path:', @name, ' ')))]" />
     <xsl:if test="$more">
       <xsl:call-template name="merge-spawned">
         <xsl:with-param name="nodes" select="$more" />

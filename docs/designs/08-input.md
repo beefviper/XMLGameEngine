@@ -7,7 +7,7 @@
 - An **object** names what it can do (`<action name="up">`); a **state** binds a key to that name (`<input button="w"><trigger object="paddle1" action="up" />`); the **key** is only a label.
 - So remapping is one edit in one state, one key does different things in different states, and one action name means different things on different objects, with no class hierarchy.
 - Held `<move>`s record each direction's step and the velocity is worked out from all four on every key change, so Down held and Up tapped cancel and two keys make a diagonal. Replaced last-key-wins.
-- **Key sets:** a named `<keys>` set holds inputs; a state takes them (a `<keys>` each, not `keys="a b"`), its own inputs going over them key by key.
+- **Shared keys** come with a state `from=` another, its own inputs going over the copied ones key by key. Named `<keys>` sets did this once; no game used them after `from=`, so they went.
 
 ## A press that cannot be done
 

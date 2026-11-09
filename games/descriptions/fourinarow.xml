@@ -215,24 +215,20 @@
           <push state="over" />
         </condition>
         <!-- against the computer, yellow's turn is its: the cursor takes its look -->
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <become object="cursor" sprite="cpu" from="yellow" />
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="cursor" variable="turn"><equal>2</equal>
+            <become object="cursor" sprite="cpu" from="yellow" />
+          </condition>
         </condition>
       </conditions>
       <!-- yellow's move: six ahead -->
       <computer>
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <think class="yellow" object="cursor" button="f12">
-            <depth>6</depth>
-          </think>
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="cursor" variable="turn"><equal>2</equal>
+            <think class="yellow" object="cursor" button="f12">
+              <depth>6</depth>
+            </think>
+          </condition>
         </condition>
       </computer>
     </state>

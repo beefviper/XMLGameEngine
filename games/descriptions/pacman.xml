@@ -876,22 +876,24 @@
               <collision edge="horizontal">
                 <wrap />
               </collision>
-              <collision object="pacman" sprite="normal">
-                <dec variable="status.lives" />
-                <inc variable="status.caught" />
-                <play sound="caught" />
-                <reset object="pacman" />
-                <reset object="ghosts" />
-                <become object="fruit" sprite="none" />
-                <set variable="status.eaten">0</set>
-                <set variable="status.released">1</set>
-                <reset object="mode" />
-              </collision>
-              <collision object="pacman" sprite="blue">
-                <inc variable="status.score">status.worth</inc>
-                <set variable="status.worth">status.worth * 2</set>
-                <play sound="eatghost" />
-                <become sprite="eyes" />
+              <collision object="pacman">
+                <collision sprite="normal">
+                  <dec variable="status.lives" />
+                  <inc variable="status.caught" />
+                  <play sound="caught" />
+                  <reset object="pacman" />
+                  <reset object="ghosts" />
+                  <become object="fruit" sprite="none" />
+                  <set variable="status.eaten">0</set>
+                  <set variable="status.released">1</set>
+                  <reset object="mode" />
+                </collision>
+                <collision sprite="blue">
+                  <inc variable="status.score">status.worth</inc>
+                  <set variable="status.worth">status.worth * 2</set>
+                  <play sound="eatghost" />
+                  <become sprite="eyes" />
+                </collision>
               </collision>
               <collision object="pen" sprite="eyes">
                 <become sprite="normal" />
@@ -1061,48 +1063,38 @@
           <push state="caught" />
         </condition>
         <!-- Inky comes out after thirty dots, Clyde after sixty more -->
-        <condition>
-          <all>
-            <condition object="status" variable="eaten"><atleast>30</atleast></condition>
-            <condition object="status" variable="released"><equal>1</equal></condition>
-          </all>
-          <inc variable="status.released" />
-          <trigger object="inky" action="out" />
+        <condition object="status" variable="eaten"><atleast>30</atleast>
+          <condition object="status" variable="released"><equal>1</equal>
+            <inc variable="status.released" />
+            <trigger object="inky" action="out" />
+          </condition>
         </condition>
-        <condition>
-          <all>
-            <condition object="status" variable="eaten"><atleast>90</atleast></condition>
-            <condition object="status" variable="released"><equal>2</equal></condition>
-          </all>
-          <inc variable="status.released" />
-          <trigger object="clyde" action="out" />
+        <condition object="status" variable="eaten"><atleast>90</atleast>
+          <condition object="status" variable="released"><equal>2</equal>
+            <inc variable="status.released" />
+            <trigger object="clyde" action="out" />
+          </condition>
         </condition>
         <!-- the cherry, after 70 dots and after 170 -->
-        <condition>
-          <all>
-            <condition class="food" total="count"><atmost>174</atmost></condition>
-            <condition object="status" variable="fruits"><equal>0</equal></condition>
-          </all>
-          <inc variable="status.fruits" />
-          <become object="fruit" sprite="cherry" />
+        <condition class="food" total="count"><atmost>174</atmost>
+          <condition object="status" variable="fruits"><equal>0</equal>
+            <inc variable="status.fruits" />
+            <become object="fruit" sprite="cherry" />
+          </condition>
         </condition>
-        <condition>
-          <all>
-            <condition class="food" total="count"><atmost>74</atmost></condition>
-            <condition object="status" variable="fruits"><equal>1</equal></condition>
-          </all>
-          <inc variable="status.fruits" />
-          <become object="fruit" sprite="cherry" />
+        <condition class="food" total="count"><atmost>74</atmost>
+          <condition object="status" variable="fruits"><equal>1</equal>
+            <inc variable="status.fruits" />
+            <become object="fruit" sprite="cherry" />
+          </condition>
         </condition>
         <!-- a life at 10,000 points -->
-        <condition>
-          <all>
-            <condition object="status" variable="score"><atleast>10000</atleast></condition>
-            <condition object="status" variable="bonus"><equal>0</equal></condition>
-          </all>
-          <inc variable="status.bonus" />
-          <inc variable="status.lives" />
-          <play sound="extra" />
+        <condition object="status" variable="score"><atleast>10000</atleast>
+          <condition object="status" variable="bonus"><equal>0</equal>
+            <inc variable="status.bonus" />
+            <inc variable="status.lives" />
+            <play sound="extra" />
+          </condition>
         </condition>
         <condition object="status" variable="score">
           <above>best.score</above>

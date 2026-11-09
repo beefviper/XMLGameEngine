@@ -73,6 +73,7 @@
     <style name="prompt"><size>40</size><color>color.white</color></style>
     <style name="keys"><size>22</size><color>color.yellow</color></style>
     <style name="hud"><size>40</size><color>color.yellow</color></style>
+    <style name="outcome"><size>50</size><color>color.white</color></style>
   </styles>
   <kit>
     <!-- each gun's shell, made when it fires: two each in the air at most -->
@@ -370,9 +371,9 @@
       <objects>
         <!-- who won, or a draw: under TIME UP -->
         <object name="outcome">
-          <sprite name="yellow"><text><content>YELLOW WINS</content><size>50</size><color>color.yellow</color></text></sprite>
-          <sprite name="white"><text><content>WHITE WINS</content><size>50</size><color>color.white</color></text></sprite>
-          <sprite name="draw"><text><content>A DRAW</content><size>50</size><color>color.white</color></text></sprite>
+          <sprite name="yellow"><text style="outcome"><content>YELLOW WINS</content><color>color.yellow</color></text></sprite>
+          <sprite name="white"><text style="outcome"><content>WHITE WINS</content></text></sprite>
+          <sprite name="draw"><text style="outcome"><content>A DRAW</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
         </object>
       </objects>

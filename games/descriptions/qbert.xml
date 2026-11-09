@@ -391,20 +391,24 @@
               <frame sprite="spinc" />
             </animation>
             <collisions>
-              <collision object="qbert" sprite="used">
-                <play sound="fall" />
-                <trigger object="qbert" action="lose" />
-              </collision>
-              <!-- Coily, chasing him, leaps after him -->
-              <collision object="qbert" sprite="ready">
-                <condition object="coily" variable="snake"><equal>1</equal></condition>
-                <inc variable="player.score">500</inc>
-                <reset object="coily" />
-              </collision>
-              <collision object="qbert" sprite="ready">
-                <become sprite="used" />
-                <play sound="disc" />
-                <reset object="qbert" />
+              <collision object="qbert">
+                <collision sprite="used">
+                  <play sound="fall" />
+                  <trigger object="qbert" action="lose" />
+                </collision>
+                <collision sprite="ready">
+                  <!-- Coily, chasing him, leaps after him -->
+                  <collision>
+                    <condition object="coily" variable="snake"><equal>1</equal></condition>
+                    <inc variable="player.score">500</inc>
+                    <reset object="coily" />
+                  </collision>
+                  <collision>
+                    <become sprite="used" />
+                    <play sound="disc" />
+                    <reset object="qbert" />
+                  </collision>
+                </collision>
               </collision>
             </collisions>
           </group>

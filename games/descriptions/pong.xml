@@ -218,13 +218,15 @@
           </condition>
           <!-- smart: under the ball once it comes over the net, else in the middle -->
           <condition object="computer" variable="level"><equal>2</equal>
-            <condition>
-              <all>
-                <condition object="ball" variable="velocity.x"><above>0</above></condition>
-                <condition object="ball" variable="x"><above>window.width.center</above></condition>
-              </all>
-              <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below><hold button="down" /></condition>
-              <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above><hold button="up" /></condition>
+            <condition object="ball" variable="velocity.x"><above>0</above>
+              <condition object="ball" variable="x"><above>window.width.center</above>
+                <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below>
+                  <hold button="down" />
+                </condition>
+                <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above>
+                  <hold button="up" />
+                </condition>
+              </condition>
             </condition>
             <condition>
               <any>

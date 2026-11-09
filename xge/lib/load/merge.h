@@ -63,8 +63,7 @@ namespace xge
 	class Kit;
 
 	// The objects that a <spawn>, <fire> or <release> in it names, and in a
-	// path it <follow>s, a <keys> set its <inputs keys> take or a
-	// <conditions> set a <condition set> takes.
+	// path it <follow>s.
 	std::set<std::string> spawnedIn(const ElementPtr& element, const Kit& kit);
 
 	// The game's <kit>: pieces written once (objects, groups and maps), which
@@ -91,8 +90,7 @@ namespace xge
 
 		std::vector<std::string> names() const;
 
-		// The game's <path>s, and the <keys> and <conditions> sets of its
-		// <states>, by tag and name, for what they spawn.
+		// The game's <path>s, by tag and name, for what they spawn.
 		void addSet(const std::string& tag, const std::string& name, const ElementPtr& set);
 		ElementPtr setOf(const std::string& tag, const std::string& name) const;
 

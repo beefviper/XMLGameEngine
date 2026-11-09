@@ -62,10 +62,11 @@
   <styles>
     <style name="banner"><size>110</size><color>color.white</color></style>
     <style name="score"><size>32</size><color>color.white</color></style>
+    <style name="prompt"><size>40</size><color>color.white</color></style>
   </styles>
   <objects>
     <object name="continue">
-      <sprite><text><content>spacebar to play</content><size>40</size><color>color.white</color></text></sprite>
+      <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
       <position><x><centered /></x><y>window.height.center + 60</y></position>
     </object>
   </objects>
@@ -226,12 +227,10 @@
           <push state="lost" />
         </condition>
         <!-- four all is deuce again: forty all -->
-        <condition>
-          <all>
-            <condition object="player" variable="points"><atleast>4</atleast></condition>
-            <condition object="cpu" variable="points"><atleast>4</atleast></condition>
-          </all>
-          <set variable="players.points">3</set>
+        <condition object="player" variable="points"><atleast>4</atleast>
+          <condition object="cpu" variable="points"><atleast>4</atleast>
+            <set variable="players.points">3</set>
+          </condition>
         </condition>
         <!-- four points against thirty or less, or five (after advantage), take the game -->
         <condition>

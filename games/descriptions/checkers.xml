@@ -571,31 +571,25 @@
       </inputs>
       <conditions>
         <!-- a side with no move on its turn (none left, or all blocked) has lost -->
-        <condition>
-          <all>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-            <condition class="white" variable="moves" total="sum"><equal>0</equal></condition>
-          </all>
-          <become object="over.winner" sprite="red" />
-          <play sound="win" />
-          <push state="over" />
+        <condition object="cursor" variable="turn"><equal>2</equal>
+          <condition class="white" variable="moves" total="sum"><equal>0</equal>
+            <become object="over.winner" sprite="red" />
+            <play sound="win" />
+            <push state="over" />
+          </condition>
         </condition>
-        <condition>
-          <all>
-            <condition object="cursor" variable="turn"><equal>1</equal></condition>
-            <condition class="red" variable="moves" total="sum"><equal>0</equal></condition>
-          </all>
-          <become object="over.winner" sprite="white" />
-          <play sound="win" />
-          <push state="over" />
+        <condition object="cursor" variable="turn"><equal>1</equal>
+          <condition class="red" variable="moves" total="sum"><equal>0</equal>
+            <become object="over.winner" sprite="white" />
+            <play sound="win" />
+            <push state="over" />
+          </condition>
         </condition>
         <!-- against the computer, white's turn is its: the cursor takes its looks -->
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <become object="cursor" sprite="cpufree" from="whitefree" />
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="cursor" variable="turn"><equal>2</equal>
+            <become object="cursor" sprite="cpufree" from="whitefree" />
+          </condition>
         </condition>
         <!-- the option: the only piece that can move is picked up for you -->
         <condition object="options" variable="jumper"><equal>1</equal>
@@ -605,15 +599,13 @@
       </conditions>
       <!-- white's move: four ahead, a king worth three men -->
       <computer>
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <think class="white" object="cursor" button="f12">
-            <depth>4</depth>
-            <worth sprite="king">3</worth>
-          </think>
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="cursor" variable="turn"><equal>2</equal>
+            <think class="white" object="cursor" button="f12">
+              <depth>4</depth>
+              <worth sprite="king">3</worth>
+            </think>
+          </condition>
         </condition>
       </computer>
     </state>

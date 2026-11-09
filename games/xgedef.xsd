@@ -1819,7 +1819,6 @@
            rule to run; one with no class= or object= is about the object itself -->
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="condition" type="testType" />
-        <xs:element name="all" type="joinType" />
         <xs:element name="any" type="joinType" />
       </xs:choice>
       <xs:choice>
@@ -1934,17 +1933,16 @@
   </xs:complexType>
 
   <!--
-    Checked every frame. One test (or an <all> or <any> of conditions; with
-    sprite=, none: showing that look is the test), then the commands to run
-    when it holds; or, holding conditions (checked in order only while it holds,
-    the first that holds runs), a <first> run before them and an <otherwise>
-    run when none of them does. Or, with set="name"
-    and nothing else, a named <conditions> set's conditions in its place.
+    Checked every frame. One test (or an <any> of conditions, an <all> of
+    some of them inside it; with sprite=, none: showing that look is the
+    test), then the commands to run when it holds; or, holding conditions
+    (checked in order only while it holds, the first that holds runs), a
+    <first> run before them and an <otherwise> run when none of them does.
+    Tests that must all hold are a condition in a condition.
   -->
   <xs:group name="conditionHead">
     <xs:choice>
       <xs:group ref="conditionTest" />
-      <xs:element name="all" type="joinType" />
       <xs:element name="any" type="joinType" />
     </xs:choice>
   </xs:group>
@@ -1958,7 +1956,6 @@
     <xs:attribute name="distance" type="xs:string" use="optional" />
     <!-- only those showing this look; with no test, showing it is the test -->
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
-    <xs:attribute name="set" type="xs:string" use="optional" />
     <!-- a scene from= this one's can put a condition of the same name in its place -->
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:attributeGroup>
@@ -2699,46 +2696,19 @@
           <xs:complexType>
             <xs:sequence>
               <!--
-                A named set of key bindings that states can share: a state's
-                <inputs keys="name"> takes them, and its own <input>s go over
-                them, key by key.
+                A named set of objects that states can share: a state's
+                <show set="name" /> shows them, in order, where it stands.
+                A set can take a set written before it. (Inputs and
+                conditions several states share come with from=.)
               -->
-              <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:element name="keys">
-                  <xs:complexType>
-                    <xs:sequence>
-                      <xs:element name="input" type="inputType" maxOccurs="unbounded" />
-                    </xs:sequence>
-                    <xs:attribute name="name" type="xs:string" use="required" />
-                  </xs:complexType>
-                </xs:element>
-                <!--
-                  A named set of objects that states can share: a state's
-                  <show set="name" /> shows them, in order, where it stands.
-                  A set can take a set written before it.
-                -->
-                <xs:element name="shows">
-                  <xs:complexType>
-                    <xs:sequence>
-                      <xs:element name="show" type="showType" maxOccurs="unbounded" />
-                    </xs:sequence>
-                    <xs:attribute name="name" type="xs:string" use="required" />
-                  </xs:complexType>
-                </xs:element>
-                <!--
-                  A named set of conditions that states can share: a state's
-                  <condition set="name" /> checks them, in order, where it
-                  stands. A set can take a set written before it.
-                -->
-                <xs:element name="conditions">
-                  <xs:complexType>
-                    <xs:sequence>
-                      <xs:element name="condition" type="conditionType" maxOccurs="unbounded" />
-                    </xs:sequence>
-                    <xs:attribute name="name" type="xs:string" use="required" />
-                  </xs:complexType>
-                </xs:element>
-              </xs:choice>
+              <xs:element name="shows" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="show" type="showType" maxOccurs="unbounded" />
+                  </xs:sequence>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
               <xs:element name="state" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:sequence>
@@ -2806,11 +2776,8 @@
                     <xs:element name="inputs" minOccurs="0">
                       <xs:complexType>
                         <xs:sequence>
-                          <!-- the <keys> sets it takes: keys="name", or a <keys> each -->
-                          <xs:element name="keys" type="xs:NMTOKEN" minOccurs="0" maxOccurs="unbounded" />
                           <xs:element name="input" type="inputType" minOccurs="0" maxOccurs="unbounded" />
                         </xs:sequence>
-                        <xs:attribute name="keys" type="xs:NMTOKEN" use="optional" />
                       </xs:complexType>
                     </xs:element>
                     <xs:element name="conditions" type="conditionsType" minOccurs="0" />

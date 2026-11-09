@@ -39,7 +39,7 @@ One `<game>` root, its children in this order (the schema enforces it):
 
 - Attributes are labels that cannot be computed: `name`, `class`, `object`, `variable`, `state`, `action`, `button`, `edge`, `direction`, `unless`, `sound`, `wave`, `pitch`, `to`.
 - What something *does* is a list of command tags, run in the order written. No `;`-separated strings.
-- An attribute holds one name. Several are an element each, written first: `<button>a</button><button>left</button>`, `<keys>`, a row's `<number>`. A note's `pitch="F#4"` is one standard name, like a colour's.
+- An attribute holds one name. Several are an element each, written first: `<button>a</button><button>left</button>`, a row's `<number>`. A note's `pitch="F#4"` is one standard name, like a colour's.
 
 ## Values
 

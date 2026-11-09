@@ -32,7 +32,7 @@ So remapping a key is one edit in one state, a key can do different things in di
     <otherwise><trigger object="hand" action="back" /></otherwise>
   </trigger>
   ```
-- **Key sets.** Bindings several states share can be a named `<keys>` set at the top of `<states>`, taken with `<inputs keys="walk">` (several: a `<keys>walk</keys>` each). The state's own inputs go over the set's, key by key.
+- **Keys several states share** come with a state [`from=`](states.md#a-state-from-another) another: its own inputs go over the copied ones, key by key.
 
 ## A key's three moments
 

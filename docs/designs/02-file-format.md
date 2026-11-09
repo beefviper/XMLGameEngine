@@ -27,7 +27,7 @@ Reached by removing a small scripting language that had grown inside attribute s
 | **Functions become elements and value tags; plain arithmetic stays text** | Chosen |
 
 - A command list is sequential with no control flow. The line to hold: **no conditionals, loops, variables or dynamic dispatch inside a command list.**
-- **One name per attribute.** Lists once packed in strings (`button="space p"`, `keys="a b"`, `number="2 4 6"`) are now an element each, written first: `<button>`, `<keys>`, `<number>`, `<odd />`. An attribute is an `xs:NMTOKEN`, so the schema refuses a space. `<button>`, not `<key>`, since it names pad buttons too. Rejected: `<key value="s" />` wrappers, repeating the input per key. `pitch="F#4"` stays: one standard name, like a colour's.
+- **One name per attribute.** Lists once packed in strings (`button="space p"`, `keys="a b"`, `number="2 4 6"`) are now an element each, written first: `<button>`, `<number>`, `<odd />`. An attribute is an `xs:NMTOKEN`, so the schema refuses a space. `<button>`, not `<key>`, since it names pad buttons too. Rejected: `<key value="s" />` wrappers, repeating the input per key. `pitch="F#4"` stays: one standard name, like a colour's.
 
 ## Commands in groups
 

@@ -2914,26 +2914,6 @@
     </xsl:if>
   </xsl:template>
 
-  <!-- <keys name="..."> in <states>: a function that gives its keys. -->
-  <xsl:template match="keys">
-    <xsl:variable name="in" select="concat($tab, $tab)" />
-    <xsl:text>&#9;// &lt;keys name="</xsl:text>
-    <xsl:value-of select="@name" />
-    <xsl:text>"&gt;&#10;&#9;Keys </xsl:text>
-    <xsl:call-template name="function-name">
-      <xsl:with-param name="earlier" select="preceding-sibling::keys" />
-      <xsl:with-param name="suffix" select="'Keys'" />
-    </xsl:call-template>
-    <xsl:value-of select="concat('()&#10;&#9;{&#10;', $in, 'Keys keys;&#10;')" />
-    <xsl:for-each select="input">
-      <xsl:call-template name="input">
-        <xsl:with-param name="to" select="'keys'" />
-        <xsl:with-param name="indent" select="$in" />
-      </xsl:call-template>
-    </xsl:for-each>
-    <xsl:value-of select="concat($in, 'return keys;&#10;&#9;}&#10;&#10;')" />
-  </xsl:template>
-
   <!-- A <show> (readShows): its object's name, or a <shows> set's names in
        its place, each followed by ", ". -->
   <xsl:template match="show" mode="shown">
@@ -2953,73 +2933,60 @@
   </xsl:template>
 
   <!-- A state's <condition> (readConditions): one pushed onto the state's
-       list, or a <conditions> set's in its place, in order. -->
+       list, in order. -->
   <xsl:template match="condition" mode="condition">
     <xsl:param name="in" />
     <xsl:param name="inner" />
     <xsl:param name="list" select="'state.conditions'" />
     <!-- the RawCondition's name in the code: one held by another is named by its depth, so none shadows another -->
     <xsl:param name="var" select="'condition'" />
+    <xsl:value-of select="concat($in, $list, '.push_back(make&lt;RawCondition&gt;([](RawCondition&amp; ', $var, ')&#10;', $in, '{&#10;')" />
+    <xsl:if test="@name != ''">
+      <xsl:value-of select="concat($inner, $var, '.name = ')" />
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="@name" />
+      </xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:call-template name="condition-test">
+      <xsl:with-param name="node" select="." />
+      <xsl:with-param name="var" select="$var" />
+      <xsl:with-param name="inner" select="$inner" />
+      <xsl:with-param name="depth" select="1" />
+    </xsl:call-template>
+    <!-- the conditions it holds, each the same way, onto its inner list -->
+    <xsl:apply-templates select="condition" mode="condition">
+      <xsl:with-param name="in" select="$inner" />
+      <xsl:with-param name="inner" select="concat($inner, $tab)" />
+      <xsl:with-param name="list" select="concat($var, '.inner')" />
+      <xsl:with-param name="var" select="concat('held', count(ancestor::condition) + 1)" />
+    </xsl:apply-templates>
     <xsl:choose>
-      <xsl:when test="@set">
-        <xsl:variable name="set" select="@set" />
-        <xsl:apply-templates select="ancestor::states/conditions[@name = $set][1]/condition" mode="condition">
-          <xsl:with-param name="in" select="$in" />
-          <xsl:with-param name="inner" select="$inner" />
-          <xsl:with-param name="list" select="$list" />
-          <xsl:with-param name="var" select="$var" />
-        </xsl:apply-templates>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="concat($in, $list, '.push_back(make&lt;RawCondition&gt;([](RawCondition&amp; ', $var, ')&#10;', $in, '{&#10;')" />
-        <xsl:if test="@name != ''">
-          <xsl:value-of select="concat($inner, $var, '.name = ')" />
-          <xsl:call-template name="string">
-            <xsl:with-param name="text" select="@name" />
+      <!-- holding conditions: <first> before them, <otherwise> when none holds -->
+      <xsl:when test="condition">
+        <xsl:if test="first">
+          <xsl:value-of select="concat($inner, $var, '.first = ')" />
+          <xsl:call-template name="commands">
+            <xsl:with-param name="nodes" select="first/*" />
+            <xsl:with-param name="indent" select="$inner" />
           </xsl:call-template>
           <xsl:text>;&#10;</xsl:text>
         </xsl:if>
-        <xsl:call-template name="condition-test">
-          <xsl:with-param name="node" select="." />
-          <xsl:with-param name="var" select="$var" />
-          <xsl:with-param name="inner" select="$inner" />
-          <xsl:with-param name="depth" select="1" />
+        <xsl:value-of select="concat($inner, $var, '.commands = ')" />
+        <xsl:call-template name="commands">
+          <xsl:with-param name="nodes" select="otherwise/*" />
+          <xsl:with-param name="indent" select="$inner" />
         </xsl:call-template>
-        <!-- the conditions it holds, each the same way, onto its inner list -->
-        <xsl:apply-templates select="condition" mode="condition">
-          <xsl:with-param name="in" select="$inner" />
-          <xsl:with-param name="inner" select="concat($inner, $tab)" />
-          <xsl:with-param name="list" select="concat($var, '.inner')" />
-          <xsl:with-param name="var" select="concat('held', count(ancestor::condition) + 1)" />
-        </xsl:apply-templates>
-        <xsl:choose>
-          <!-- holding conditions: <first> before them, <otherwise> when none holds -->
-          <xsl:when test="condition">
-            <xsl:if test="first">
-              <xsl:value-of select="concat($inner, $var, '.first = ')" />
-              <xsl:call-template name="commands">
-                <xsl:with-param name="nodes" select="first/*" />
-                <xsl:with-param name="indent" select="$inner" />
-              </xsl:call-template>
-              <xsl:text>;&#10;</xsl:text>
-            </xsl:if>
-            <xsl:value-of select="concat($inner, $var, '.commands = ')" />
-            <xsl:call-template name="commands">
-              <xsl:with-param name="nodes" select="otherwise/*" />
-              <xsl:with-param name="indent" select="$inner" />
-            </xsl:call-template>
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:value-of select="concat($inner, $var, '.commands = ')" />
-            <xsl:call-template name="commands">
-              <xsl:with-param name="nodes" select="*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::all or self::any))]" />
-              <xsl:with-param name="indent" select="$inner" />
-            </xsl:call-template>
-          </xsl:otherwise>
-        </xsl:choose>
-        <xsl:value-of select="concat(';&#10;', $in, '}));&#10;')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat($inner, $var, '.commands = ')" />
+        <xsl:call-template name="commands">
+          <xsl:with-param name="nodes" select="*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::all or self::any))]" />
+          <xsl:with-param name="indent" select="$inner" />
+        </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
+    <xsl:value-of select="concat(';&#10;', $in, '}));&#10;')" />
   </xsl:template>
 
   <!-- What a <condition> ($node) tests (readCheck), set on the
@@ -3314,17 +3281,6 @@
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
     </xsl:if>
-    <xsl:variable name="sets">
-      <xsl:for-each select="inputs">
-        <xsl:call-template name="names-given">
-          <xsl:with-param name="word" select="'keys'" />
-        </xsl:call-template>
-      </xsl:for-each>
-    </xsl:variable>
-    <xsl:call-template name="use-keys">
-      <xsl:with-param name="words" select="normalize-space($sets)" />
-      <xsl:with-param name="indent" select="$in" />
-    </xsl:call-template>
     <xsl:for-each select="inputs/input[@button or button]">
       <xsl:call-template name="input">
         <xsl:with-param name="to" select="'state'" />
@@ -3375,32 +3331,6 @@
       <xsl:with-param name="indent" select="$in" />
     </xsl:call-template>
     <xsl:value-of select="concat($in, 'return state;&#10;&#9;}&#10;&#10;')" />
-  </xsl:template>
-
-  <!-- The <keys> sets a state's <inputs keys="..."> names, each over the one before. -->
-  <xsl:template name="use-keys">
-    <xsl:param name="words" />
-    <xsl:param name="indent" />
-    <xsl:if test="$words != ''">
-      <xsl:variable name="word">
-        <xsl:choose>
-          <xsl:when test="contains($words, ' ')"><xsl:value-of select="substring-before($words, ' ')" /></xsl:when>
-          <xsl:otherwise><xsl:value-of select="$words" /></xsl:otherwise>
-        </xsl:choose>
-      </xsl:variable>
-      <xsl:for-each select="ancestor::states/keys[@name = $word][1]">
-        <xsl:value-of select="concat($indent, 'use(state, ')" />
-        <xsl:call-template name="function-name">
-          <xsl:with-param name="earlier" select="preceding-sibling::keys" />
-          <xsl:with-param name="suffix" select="'Keys'" />
-        </xsl:call-template>
-        <xsl:text>());&#10;</xsl:text>
-      </xsl:for-each>
-      <xsl:call-template name="use-keys">
-        <xsl:with-param name="words" select="substring-after($words, ' ')" />
-        <xsl:with-param name="indent" select="$indent" />
-      </xsl:call-template>
-    </xsl:if>
   </xsl:template>
 
   <!-- ===================================================================
@@ -3580,7 +3510,6 @@
         <xsl:with-param name="function" select="'objects'" />
         <xsl:with-param name="comment" select="'Every object, and every member of a group, in the order of the file.'" />
       </xsl:call-template>
-      <xsl:apply-templates select="$game/states/keys" />
       <xsl:apply-templates select="$game/states/state" />
     </xsl:variable>
     <xsl:value-of select="substring($functions, 1, string-length($functions) - 1)" />

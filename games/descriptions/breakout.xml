@@ -213,10 +213,8 @@
             </collision>
             <collision class="brick"><bounce /></collision>
             <collision class="brick">
-              <all>
-                <condition variable="y"><below>top + 4 * line</below></condition>
-                <condition variable="deep"><equal>0</equal></condition>
-              </all>
+              <condition variable="y"><below>top + 4 * line</below></condition>
+              <condition variable="deep"><equal>0</equal></condition>
               <inc variable="ball.deep" />
               <trigger action="faster" />
             </collision>
@@ -240,12 +238,10 @@
         <input><button>space</button><button>p</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
-        <condition>
-          <all>
-            <condition object="wall"><remaining>0</remaining></condition>
-            <condition object="status" variable="walls"><atleast>1</atleast></condition>
-          </all>
-          <push state="youwin" />
+        <condition object="wall"><remaining>0</remaining>
+          <condition object="status" variable="walls"><atleast>1</atleast>
+            <push state="youwin" />
+          </condition>
         </condition>
         <!-- the first wall cleared: a second, and a new ball -->
         <condition object="wall">

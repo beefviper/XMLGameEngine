@@ -5,7 +5,7 @@
 //
 // Catch2 tests for timers (an object's and a state's, <every> and <after>),
 // <facing> and firing along it, <jump>, <reverse />, <reset object> in a
-// collision, named <keys> sets with several keys to one <input>, a <text>
+// collision, several keys to one <input>, a <text>
 // of pieces with <letter>s, and <rank>.
 //
 // Each game is written beside the shipped ones so that its schema path
@@ -54,7 +54,7 @@ namespace
 	};
 
 	// A whole game file: 800 by 600 at 60 frames a second, the objects and
-	// states given, and the <keys> sets given before the states.
+	// states given, and anything given before the states.
 	std::string gameXml(const std::string& objects, const std::string& states, const std::string& keys = {})
 	{
 		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
@@ -381,20 +381,17 @@ TEST_CASE("<reverse /> turns an object round, and a collision can reset another 
 	CHECK(walker.velocity.x == Approx(-3));
 }
 
-TEST_CASE("a <keys> set is shared by states, one <input> can name several keys, and a state's own binding wins", "[keys]")
+TEST_CASE("one <input> can name several keys, and a state from= another takes its keys, its own binding winning", "[keys]")
 {
-	const std::string keys = "<keys name=\"move\">"
-		"<input><button>a</button><button>left</button><trigger object=\"man\" action=\"left\" /></input>"
-		"<input button=\"space\"><push state=\"paused\" /></input>"
-		"</keys>";
+	const std::string inputs = "<input><button>a</button><button>left</button><trigger object=\"man\" action=\"left\" /></input>"
+		"<input button=\"space\"><push state=\"paused\" /></input>";
 	const std::string actions = "<actions><action name=\"left\"><move direction=\"left\">2</move></action></actions>";
 
 	Loaded loaded(gameXml(
 		box("man", 100, 100, 20, 20, "<enabled>false</enabled>", {}, actions),
-		state("playing", { "man" }, {}, {}, " keys=\"move\"")
-		+ state("special", { "man" }, "<input button=\"a\"><push state=\"paused\" /></input>", {}, " keys=\"move\"")
-		+ state("paused", { "man" })
-		, keys), XmlBackend::TinyXml2);
+		state("playing", { "man" }, inputs)
+		+ "<state name=\"special\" from=\"playing\"><inputs><input button=\"a\"><push state=\"paused\" /></input></inputs></state>"
+		+ state("paused", { "man" })), XmlBackend::TinyXml2);
 
 	const auto& states = loaded.game.getStates();
 	const State& playing = states.at(0);
@@ -406,30 +403,19 @@ TEST_CASE("a <keys> set is shared by states, one <input> can name several keys, 
 	CHECK(std::holds_alternative<CmdTriggerAction>(playing.input.at(KeyCode::Left).at(0)));
 	CHECK(std::holds_alternative<CmdPushState>(playing.input.at(KeyCode::Space).at(0)));
 
-	// The special state keeps the set's Left, and A is its own.
+	// The special state keeps the copied Left, and A is its own.
 	CHECK(std::holds_alternative<CmdTriggerAction>(special.input.at(KeyCode::Left).at(0)));
 	CHECK(std::holds_alternative<CmdPushState>(special.input.at(KeyCode::A).at(0)));
 }
 
-TEST_CASE("a state takes several <keys> sets, a <keys> each, each over the one before", "[keys]")
+TEST_CASE("named <keys> and <conditions> sets are gone: from= shares a state's keys and conditions", "[keys][conditions]")
 {
-	const std::string keys = "<keys name=\"move\"><input button=\"a\"><trigger object=\"man\" action=\"left\" /></input></keys>"
-		"<keys name=\"menu\"><input button=\"space\"><push state=\"paused\" /></input><input button=\"a\"><push state=\"paused\" /></input></keys>";
-	const std::string actions = "<actions><action name=\"left\"><move direction=\"left\">2</move></action></actions>";
-
-	Loaded loaded(gameXml(
-		box("man", 100, 100, 20, 20, "<enabled>false</enabled>", {}, actions),
-		state("playing", { "man" }, "<keys>move</keys><keys>menu</keys>")
-		+ state("paused", { "man" })
-		, keys), XmlBackend::TinyXml2);
-
-	const State& playing = loaded.game.getStates().at(0);
-	CHECK(std::holds_alternative<CmdPushState>(playing.input.at(KeyCode::Space).at(0)));
-	CHECK(std::holds_alternative<CmdPushState>(playing.input.at(KeyCode::A).at(0))); // menu, written second, wins
-
-	// Both in one keys= is a list in a string: the schema turns it away.
-	CHECK_THROWS(Loaded(gameXml(box("man", 100, 100, 20, 20, "<enabled>false</enabled>", {}, actions),
-		state("playing", { "man" }, {}, {}, " keys=\"move menu\"") + state("paused", { "man" }), keys)));
+	const std::string man = box("man", 100, 100, 20, 20);
+	CHECK_THROWS(Loaded(gameXml(man, state("playing", { "man" }, {}, {}, " keys=\"move\"") + state("paused", { "man" }),
+		"<keys name=\"move\"><input button=\"a\"><pop /></input></keys>")));
+	CHECK_THROWS(Loaded(gameXml(man, state("playing", { "man" }, "<input button=\"space\"><pop /></input>", "<conditions><condition set=\"dead\" /></conditions>")
+		+ state("paused", { "man" }),
+		"<conditions name=\"dead\"><condition object=\"man\" variable=\"x\"><atmost>0</atmost><pop /></condition></conditions>")));
 }
 
 TEST_CASE("a <shows> set is shared by states, can take an earlier set, and a state adds its own objects", "[shows]")
@@ -448,31 +434,6 @@ TEST_CASE("a <shows> set is shared by states, can take an earlier set, and a sta
 	CHECK(states.size() == 2);
 	CHECK(states.at(0).show == std::vector<std::string>{ "man", "score" });
 	CHECK(states.at(1).show == std::vector<std::string>{ "paused", "score" });
-}
-
-TEST_CASE("a <conditions> set is checked where a state takes it, in order, and can take an earlier set", "[conditions]")
-{
-	const std::string sets = "<conditions name=\"dead\"><condition object=\"man\" variable=\"lives\"><atmost>0</atmost><push state=\"over\" /></condition></conditions>"
-		"<conditions name=\"ending\"><condition set=\"dead\" />"
-		"<condition object=\"man\" variable=\"gold\"><atleast>3</atleast><push state=\"won\" /></condition></conditions>";
-	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
-	const std::string man = "<object name=\"man\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-		"<position><x>100</x><y>100</y></position><variables><variable name=\"lives\">1</variable><variable name=\"gold\">0</variable>"
-		"<variable name=\"steps\">0</variable></variables></object>";
-
-	Loaded loaded(gameXml(man,
-		"<state name=\"playing\"><shows><show object=\"man\" /></shows>" + inputs
-		+ "<conditions><condition object=\"man\" variable=\"steps\"><atleast>5</atleast><push state=\"won\" /></condition>"
-		"<condition set=\"ending\" /></conditions></state>"
-		"<state name=\"won\"><shows><show object=\"man\" /></shows>" + inputs + "</state>"
-		"<state name=\"over\"><shows><show object=\"man\" /></shows>" + inputs + "</state>"
-		, sets), XmlBackend::TinyXml2);
-
-	const auto& conditions = loaded.game.getStates().at(0).conditions;
-	REQUIRE(conditions.size() == 3);
-	CHECK(conditions.at(0).variableName == "steps");
-	CHECK(conditions.at(1).variableName == "lives");
-	CHECK(conditions.at(2).variableName == "gold");
 }
 
 TEST_CASE("mistakes in the new tags are turned away when the game loads, saying where", "[timers][facing][jump][keys][errors]")
@@ -506,7 +467,6 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 		plain, "holds both the text \"2\" and a <random> tag");
 	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump direction=\"up\">5<seconds>0</seconds></jump></action></actions>"),
 		plain, "<jump> has <seconds> of 0");
-	fails(box("o", 0, 0, 1, 1), state("playing", { "o" }, {}, {}, " keys=\"nothing\""), "keys=\"nothing\" names no <keys> set");
 	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
 	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show set=\"nothing\" /></shows>" + inputs + "</state>",
 		"set=\"nothing\" names no <shows> set before it");
@@ -516,16 +476,6 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 		"set=\"b\" names no <shows> set before it");
 	fails(box("o", 0, 0, 1, 1), "<shows name=\"a\"><show object=\"o\" /></shows><shows name=\"a\"><show object=\"o\" /></shows>" + plain,
 		"two <shows> sets are called 'a'");
-	const std::string checked = "<state name=\"playing\"><shows><show object=\"o\" /></shows>" + inputs + "<conditions><condition set=\"%\" /></conditions></state>";
-	const auto takes = [&](const std::string& set) { std::string xml = checked; return xml.replace(xml.find('%'), 1, set); };
-	fails(box("o", 0, 0, 1, 1), takes("nothing"), "set=\"nothing\" names no <conditions> set before it");
-	fails(box("o", 0, 0, 1, 1), "<conditions name=\"a\"><condition set=\"b\" /></conditions><conditions name=\"b\"><condition class=\"o\"><remaining>0</remaining></condition></conditions>"
-		+ takes("a"), "set=\"b\" names no <conditions> set before it");
-	fails(box("o", 0, 0, 1, 1), "<conditions name=\"a\"><condition class=\"o\"><remaining>0</remaining></condition></conditions>"
-		"<conditions name=\"a\"><condition class=\"o\"><remaining>0</remaining></condition></conditions>" + takes("a"), "two <conditions> sets are called 'a'");
-	fails(box("o", 0, 0, 1, 1), "<conditions name=\"a\"><condition class=\"o\"><remaining>0</remaining></condition></conditions>"
-		"<state name=\"playing\"><shows><show object=\"o\" /></shows>" + inputs
-		+ "<conditions><condition set=\"a\" class=\"o\" /></conditions></state>", "takes a <conditions> set whole, so it has nothing else");
 }
 
 TEST_CASE("an object with several named sprites can <become> each of them, and a reset brings back the first", "[looks]")
@@ -1225,36 +1175,36 @@ TEST_CASE("a condition can test how far each object it matches is from the neare
 	CHECK(clear.fires());
 }
 
-TEST_CASE("<all> holds when every check does, <any> when one does, and they nest", "[conditions][join]")
+TEST_CASE("<any> holds when one check does, an <all> in it when every one does, and they nest", "[conditions][join]")
 {
 	const std::string yes = "<condition object=\"coin1\" variable=\"v\"><equal>2</equal></condition>";
 	const std::string no = "<condition object=\"coin2\" variable=\"v\"><equal>2</equal></condition>";
 
-	CHECK(Coins("><all>" + yes + yes + "</all>").fires());
-	CHECK_FALSE(Coins("><all>" + yes + no + "</all>").fires());
+	CHECK(Coins("><any><all>" + yes + yes + "</all></any>").fires());
+	CHECK_FALSE(Coins("><any><all>" + yes + no + "</all></any>").fires());
 	CHECK(Coins("><any>" + no + yes + "</any>").fires());
 	CHECK_FALSE(Coins("><any>" + no + no + "</any>").fires());
-	CHECK(Coins("><all>" + yes + "<any>" + no + "<condition class=\"coin\" total=\"count\"><equal>3</equal></condition></any></all>").fires());
+	CHECK(Coins("><any><all>" + yes + "<any>" + no + "<condition class=\"coin\" total=\"count\"><equal>3</equal></condition></any></all></any>").fires());
 	CHECK_FALSE(Coins("><any>" + no + "<all>" + yes + no + "</all></any>").fires());
 
 	// Each check its own kind of test, read every frame.
-	Coins coins("><all><condition object=\"ball\" distance=\"coin1\"><below>60</below></condition>"
-		"<condition object=\"flag\" variable=\"n\"><equal>0</equal></condition></all>");
+	Coins coins("><any><all><condition object=\"ball\" distance=\"coin1\"><below>60</below></condition>"
+		"<condition object=\"flag\" variable=\"n\"><equal>0</equal></condition></all></any>");
 	CHECK(coins.fires());
 	CHECK_FALSE(coins.fires()); // n is 1 now
 }
 
-TEST_CASE("totals, distances, <all> and <any> load with every XML library", "[conditions][xml]")
+TEST_CASE("totals, distances, <any> and <all> in it load with every XML library", "[conditions][xml]")
 {
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 	{
 		INFO(static_cast<int>(backend));
-		CHECK(Coins("><all><condition class=\"coin\" variable=\"v\" total=\"sum\"><atleast>1</atleast></condition>"
-			"<any><condition object=\"ball\" distance=\"coin1\"><below>60</below></condition></any></all>", backend).fires());
+		CHECK(Coins("><any><all><condition class=\"coin\" variable=\"v\" total=\"sum\"><atleast>1</atleast></condition>"
+			"<any><condition object=\"ball\" distance=\"coin1\"><below>60</below></condition></any></all></any>", backend).fires());
 	}
 }
 
-TEST_CASE("mistakes in totals, distances, <all> and <any> stop the load, saying where", "[conditions][errors]")
+TEST_CASE("mistakes in totals, distances, <any> and <all> stop the load, saying where", "[conditions][errors]")
 {
 	// With no schema named, so these are the engine's own checks.
 	const auto fails = [](const std::string& condition, const std::string& expected)
@@ -1270,11 +1220,12 @@ TEST_CASE("mistakes in totals, distances, <all> and <any> stop the load, saying 
 	fails("object=\"ball\" distance=\"coin1\" variable=\"v\"><below>5</below>", "reads no variable=");
 	fails("object=\"ball\" distance=\"coin1\" total=\"count\"><below>5</below>", "measures no distance=");
 	fails("class=\"coin\" total=\"count\"><remaining>1</remaining>", "<remaining> counts what is in play");
-	fails("object=\"ball\"><all><condition object=\"ball\" variable=\"n\"><below>5</below></condition></all>", "so the condition has no class=");
-	fails("><all></all>", "<all>: has no <condition>");
+	fails("object=\"ball\"><any><condition object=\"ball\" variable=\"n\"><below>5</below></condition></any>", "so the condition has no class=");
+	fails("><all><condition object=\"ball\" variable=\"n\"><below>5</below></condition></all>", "an <all> goes only in an <any>");
+	fails("><any><all></all></any>", "<all>: has no <condition>");
 	fails("><any><condition object=\"coin1\" variable=\"v\"><below>5</below><inc variable=\"flag.n\" /></condition></any>", "the commands go at the end");
 	fails("><any><when /></any>", "unknown <when>");
-	fails("><all><condition object=\"coin1\"><below>5</below></condition></all>", "<all> > <condition>: <below> reads a variable");
+	fails("><any><all><condition object=\"coin1\"><below>5</below></condition></all></any>", "<all> > <condition>: <below> reads a variable");
 
 	// The schema turns the shapes away first.
 	CHECK_THROWS_WITH(Coins("class=\"coin\" total=\"most\"><atleast>1</atleast>", XmlBackend::TinyXml2), ContainsSubstring("is not a valid totalType"));
@@ -1355,7 +1306,7 @@ TEST_CASE("<first> runs as soon as the holder holds, before the case it holds; <
 	CHECK(alone.variable("flag", "out") == 1.0f);
 }
 
-TEST_CASE("sprite= tests a look, alone or with a test, in an <all> too", "[conditions][nested]")
+TEST_CASE("sprite= tests a look, alone or with a test, in a condition in a condition too", "[conditions][nested]")
 {
 	Loaded alone(lights("<condition object=\"light\" sprite=\"red\"><set variable=\"flag.out\">1</set></condition>"));
 	alone.frames(1);
@@ -1364,8 +1315,8 @@ TEST_CASE("sprite= tests a look, alone or with a test, in an <all> too", "[condi
 	alone.frames(1);
 	CHECK(alone.variable("flag", "out") == 1.0f);
 
-	Loaded joined(lights("<condition><all><condition object=\"light\" sprite=\"green\" /><condition object=\"flag\" variable=\"n\"><equal>0</equal></condition></all>"
-		"<set variable=\"flag.out\">1</set></condition>"));
+	Loaded joined(lights("<condition object=\"light\" sprite=\"green\"><condition object=\"flag\" variable=\"n\"><equal>0</equal>"
+		"<set variable=\"flag.out\">1</set></condition></condition>"));
 	joined.frames(1);
 	CHECK(joined.variable("flag", "out") == 1.0f);
 

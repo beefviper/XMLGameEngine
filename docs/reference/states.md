@@ -89,11 +89,7 @@ One scene is current, and only its objects are in play, beside the state's own.
 
 ## Shared sets
 
-At the top of `<states>`, named sets hold what several states share; a set can take an earlier set.
-
-- `<keys name>`: inputs, taken with `<inputs keys="name">`.
-- `<shows name>`: shows, taken with `<show set="name" />`.
-- `<conditions name>`: conditions, taken with `<condition set="name" />`, checked right there in order.
+At the top of `<states>`, a named `<shows name>` set holds shows several states share, taken with `<show set="name" />`; a set can take an earlier set. Keys and conditions several states share come with [`from=`](#a-state-from-another).
 
 ## Conditions
 
@@ -117,16 +113,29 @@ A condition is checked every frame while its state (or scene) is current. It hol
 - **The number is read as the game runs** when it names something that changes: `<above>gun2.score</above>`.
 - **`total=`**: one number over everything matched and in play: `count` (no variable), `sum`, `highest`, `lowest`.
 - **`distance="hero"`**: how far each matched object is from the nearest `hero`, middle to middle. With a total, over them all: `class="hazard" distance="centre" total="lowest"` with `<above>150</above>` is "nothing within 150 of the middle".
-- **`<all>` and `<any>`** join tests. Inside them a `<condition>` is a test alone, with no commands; they nest.
+- **Tests that must all hold** are a [condition in a condition](#conditions-in-conditions): the first test on the outer, the next inside it.
+
+```xml
+<condition object="dragon" distance="hero"><below>160</below>
+  <condition object="dragon" variable="awake"><equal>0</equal>
+    <inc variable="dragon.awake" />
+    <become object="dragon" sprite="awake" />
+  </condition>
+</condition>
+```
+
+- **`<any>`** holds when one of its tests does. Inside it a `<condition>` is a test alone, with no commands, and an `<all>` is tests that must all hold; they nest. An `<all>` goes only in an `<any>`.
 
 ```xml
 <condition>
-  <all>
-    <condition object="dragon" distance="hero"><below>160</below></condition>
-    <condition object="dragon" variable="awake"><equal>0</equal></condition>
-  </all>
-  <inc variable="dragon.awake" />
-  <become object="dragon" sprite="awake" />
+  <any>
+    <condition object="player" variable="points"><atleast>5</atleast></condition>
+    <all>
+      <condition object="player" variable="points"><atleast>4</atleast></condition>
+      <condition object="cpu" variable="points"><atmost>2</atmost></condition>
+    </all>
+  </any>
+  <inc variable="player.games" />
 </condition>
 ```
 
@@ -289,15 +298,13 @@ For a [board game](boards.md), a condition may hold a `<think>` instead of `<hol
 
 ```xml
 <computer>
-  <condition>
-    <all>
-      <condition object="match" variable="players"><equal>1</equal></condition>
-      <condition object="cursor" variable="turn"><equal>2</equal></condition>
-    </all>
-    <think class="white" object="cursor" button="f12">
-      <depth>4</depth>
-      <worth sprite="king">3</worth>
-    </think>
+  <condition object="match" variable="players"><equal>1</equal>
+    <condition object="cursor" variable="turn"><equal>2</equal>
+      <think class="white" object="cursor" button="f12">
+        <depth>4</depth>
+        <worth sprite="king">3</worth>
+      </think>
+    </condition>
   </condition>
 </computer>
 ```

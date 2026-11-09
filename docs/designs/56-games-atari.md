@@ -32,7 +32,7 @@ The author listed about thirty non-scrolling Atari 2600 games and asked for five
 - **Air-Sea Battle.** Guns with a heading, pointed by `<set variable="self.heading">`. Plane lanes start off the side they fly in from, so a revealed plane comes back from there.
 - **Megamania.** Eight waves as a `from=` chain. Energy is a named timer (`energy.level`) drawn as a bar.
 - **Atlantis.** The third wave keeps the second's scene but replaces its `launch` timer and `quota` condition by name. Ships drop a lane at the right edge; a ship cannot leave the screen first, since `<wrap />` is the only edge rule that waits until it is off.
-- **Adventure.** One `<carry />` rule for class `item`; dragons wake by an `<all>` of a distance and a flag. A room's walls in another colour must be written again, since a take replaces a whole sprite.
+- **Adventure.** One `<carry />` rule for class `item`; dragons wake by a distance holding a flag's test (a condition in a condition). A room's walls in another colour must be written again, since a take replaces a whole sprite.
 - **Trick Shot.** The cue tip has no mass, so its knock sends the white ball at up to twice its speed and passes over other balls.
 - **Q*bert.** Cubes touch only on their tops (`<solid char>`); Q*bert and Coily touch by their feet (`<hitbox>`); Coily `<hunt>`s by hops.
 - **Yars' Revenge.** The neutral zone is `unless="zone"`. The Zorlon cannon is out of play until revealed, so its action does nothing before.

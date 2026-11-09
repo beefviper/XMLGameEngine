@@ -555,40 +555,39 @@
           <play sound="gameover" />
         </condition>
         <!-- a wave cleared: the next one comes in from the edges -->
-        <condition>
-          <all>
-            <condition object="rocks"><remaining>0</remaining></condition>
-            <condition object="mediumrocks"><remaining>0</remaining></condition>
-            <condition object="smallrocks"><remaining>0</remaining></condition>
-          </all>
-          <reset object="rocks" />
+        <condition object="rocks"><remaining>0</remaining>
+          <condition object="mediumrocks"><remaining>0</remaining>
+            <condition object="smallrocks"><remaining>0</remaining>
+              <reset object="rocks" />
+            </condition>
+          </condition>
         </condition>
         <!-- the middle clear: the ship comes back -->
-        <condition>
-          <all>
-            <condition object="centre" variable="ready"><equal>1</equal></condition>
+        <condition object="centre" variable="ready"><equal>1</equal>
+          <condition>
             <any>
               <condition class="hazard"><remaining>0</remaining></condition>
               <condition class="hazard" distance="centre" total="lowest"><above>150</above></condition>
             </any>
-          </all>
-          <reveal object="ship" />
-          <reset object="centre" />
+            <reveal object="ship" />
+            <reset object="centre" />
+          </condition>
         </condition>
         <!-- a saucer due and none out: the small one by luck, likelier as the score climbs -->
-        <condition>
-          <all>
-            <condition object="saucers" variable="due"><equal>1</equal></condition>
-            <condition object="saucer"><remaining>0</remaining></condition>
-            <condition object="smallsaucer"><remaining>0</remaining></condition>
-          </all>
-          <first><set variable="saucers.due">0</set></first>
-          <condition object="saucers" variable="luck"><below>ship.score / 40000</below>
-            <reveal object="smallsaucer" />
+        <condition object="saucers" variable="due"><equal>1</equal>
+          <condition object="saucer"><remaining>0</remaining>
+            <condition object="smallsaucer"><remaining>0</remaining>
+              <first>
+                <set variable="saucers.due">0</set>
+              </first>
+              <condition object="saucers" variable="luck"><below>ship.score / 40000</below>
+                <reveal object="smallsaucer" />
+              </condition>
+              <otherwise>
+                <reveal object="saucer" />
+              </otherwise>
+            </condition>
           </condition>
-          <otherwise>
-            <reveal object="saucer" />
-          </otherwise>
         </condition>
         <condition object="ship" variable="score">
           <atleast>ship.next</atleast>

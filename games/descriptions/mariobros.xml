@@ -1107,27 +1107,17 @@
           </sprite>
           <position><x>window.width.center - 8</x><y>low</y></position>
           <collisions>
-            <!-- last look first, so one bump changes it only once -->
-            <collision class="brother" side="bottom" sprite="one">
-              <trigger object="shellcreepers" action="powed" />
-              <trigger object="sidesteppers" action="powed" />
-              <trigger object="fighterflies" action="powed" />
-              <play sound="pow" />
-              <die />
-            </collision>
-            <collision class="brother" side="bottom" sprite="two">
-              <become sprite="one" />
-              <trigger object="shellcreepers" action="powed" />
-              <trigger object="sidesteppers" action="powed" />
-              <trigger object="fighterflies" action="powed" />
-              <play sound="pow" />
-            </collision>
-            <collision class="brother" side="bottom" sprite="three">
-              <become sprite="two" />
-              <trigger object="shellcreepers" action="powed" />
-              <trigger object="sidesteppers" action="powed" />
-              <trigger object="fighterflies" action="powed" />
-              <play sound="pow" />
+            <!-- each bump: everything on the floors flipped, and the block a look smaller -->
+            <collision class="brother" side="bottom">
+              <first>
+                <trigger object="shellcreepers" action="powed" />
+                <trigger object="sidesteppers" action="powed" />
+                <trigger object="fighterflies" action="powed" />
+                <play sound="pow" />
+              </first>
+              <collision sprite="three"><become sprite="two" /></collision>
+              <collision sprite="two"><become sprite="one" /></collision>
+              <collision sprite="one"><die /></collision>
             </collision>
           </collisions>
         </object>
@@ -1472,12 +1462,10 @@
         <input><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
-        <condition>
-          <all>
-            <condition object="mario" variable="lives"><atmost>0</atmost></condition>
-            <condition object="luigi" variable="lives"><atmost>0</atmost></condition>
-          </all>
-          <push state="gameover" />
+        <condition object="mario" variable="lives"><atmost>0</atmost>
+          <condition object="luigi" variable="lives"><atmost>0</atmost>
+            <push state="gameover" />
+          </condition>
         </condition>
         <!-- two players: Luigi comes in, once -->
         <condition object="players" variable="count">
@@ -1489,19 +1477,15 @@
           <set variable="players.count">3</set>
         </condition>
         <!-- a brother with no lives left is out; the other plays on -->
-        <condition>
-          <all>
-            <condition object="mario" variable="lives"><atmost>0</atmost></condition>
-            <condition object="mario" total="count"><atleast>1</atleast></condition>
-          </all>
-          <despawn object="mario" />
+        <condition object="mario" variable="lives"><atmost>0</atmost>
+          <condition object="mario" total="count"><atleast>1</atleast>
+            <despawn object="mario" />
+          </condition>
         </condition>
-        <condition>
-          <all>
-            <condition object="luigi" variable="lives"><atmost>0</atmost></condition>
-            <condition object="luigi" total="count"><atleast>1</atleast></condition>
-          </all>
-          <despawn object="luigi" />
+        <condition object="luigi" variable="lives"><atmost>0</atmost>
+          <condition object="luigi" total="count"><atleast>1</atleast>
+            <despawn object="luigi" />
+          </condition>
         </condition>
         <condition object="mario" variable="score">
           <above>best.score</above>

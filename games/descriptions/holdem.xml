@@ -494,9 +494,10 @@
             <become object="you" sprite="wait" />
           </condition>
           <!-- your turn: what you can do -->
-          <condition>
-            <all><condition object="table" variable="raises"><below>3</below></condition><condition object="you" variable="chips"><atleast>table.owed + table.bet</atleast></condition></all>
-            <become object="you" sprite="act" />
+          <condition object="table" variable="raises"><below>3</below>
+            <condition object="you" variable="chips"><atleast>table.owed + table.bet</atleast>
+              <become object="you" sprite="act" />
+            </condition>
           </condition>
           <condition object="you" variable="chips"><atleast>table.owed</atleast><become object="you" sprite="callonly" /></condition>
           <otherwise>
@@ -509,25 +510,31 @@
         <condition object="hand" sprite="betting">
           <condition object="table" variable="turn"><equal>2</equal>
             <condition object="cpu" variable="ready"><equal>1</equal>
-              <condition>
-                <all><condition object="theirs" variable="odds"><atleast>65</atleast></condition><condition object="table" variable="raises"><below>3</below></condition><condition object="cpu" variable="chips"><atleast>table.owed + table.bet</atleast></condition></all>
-                <hold button="f12" />
+              <condition object="theirs" variable="odds"><atleast>65</atleast>
+                <condition object="table" variable="raises"><below>3</below>
+                  <condition object="cpu" variable="chips"><atleast>table.owed + table.bet</atleast>
+                    <hold button="f12" />
+                  </condition>
+                </condition>
               </condition>
-              <condition>
-                <all>
-                  <condition object="cpu" variable="chips"><atleast>table.owed</atleast></condition>
+              <condition object="cpu" variable="chips"><atleast>table.owed</atleast>
+                <condition>
                   <any><condition object="theirs" variable="odds"><below>65</below></condition><condition object="table" variable="raises"><atleast>3</atleast></condition><condition object="cpu" variable="chips"><below>table.owed + table.bet</below></condition></any>
-                  <any><condition object="table" variable="owed"><equal>0</equal></condition><condition object="theirs" variable="odds"><atleast>table.owed * 100 / (table.pot + table.owed)</atleast></condition></any>
-                </all>
-                <hold button="f11" />
+                  <condition>
+                    <any><condition object="table" variable="owed"><equal>0</equal></condition><condition object="theirs" variable="odds"><atleast>table.owed * 100 / (table.pot + table.owed)</atleast></condition></any>
+                    <hold button="f11" />
+                  </condition>
+                </condition>
               </condition>
-              <condition>
-                <all><condition object="cpu" variable="chips"><below>table.owed</below></condition><condition object="theirs" variable="odds"><atleast>table.owed * 100 / (table.pot + table.owed)</atleast></condition></all>
-                <hold button="f9" />
+              <condition object="cpu" variable="chips"><below>table.owed</below>
+                <condition object="theirs" variable="odds"><atleast>table.owed * 100 / (table.pot + table.owed)</atleast>
+                  <hold button="f9" />
+                </condition>
               </condition>
-              <condition>
-                <all><condition object="table" variable="owed"><above>0</above></condition><condition object="theirs" variable="odds"><below>table.owed * 100 / (table.pot + table.owed)</below></condition></all>
-                <hold button="f10" />
+              <condition object="table" variable="owed"><above>0</above>
+                <condition object="theirs" variable="odds"><below>table.owed * 100 / (table.pot + table.owed)</below>
+                  <hold button="f10" />
+                </condition>
               </condition>
             </condition>
           </condition>

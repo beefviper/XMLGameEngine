@@ -176,25 +176,25 @@
 
         <!-- the scores: the game's, plus this hand's points so far, and whose turn it is -->
         <object name="northscore">
-          <sprite><text style="note"><content>north</content><number>north.score</number><content>+</content><number>north.got</number><choose><by>north.turn</by><word></word><word>to play</word></choose></text></sprite>
+          <sprite><text style="note"><content>north</content><number>north.score</number><content>+</content><number>north.got</number><choose><by>north.turn</by><word /><word>to play</word></choose></text></sprite>
           <position><x><centered /></x><y>northrow + cardheight + 6</y></position>
         </object>
         <object name="westscore">
-          <sprite><text style="note"><content>west</content><number>west.score</number><content>+</content><number>west.got</number><choose><by>west.turn</by><word></word><word>to play</word></choose></text></sprite>
+          <sprite><text style="note"><content>west</content><number>west.score</number><content>+</content><number>west.got</number><choose><by>west.turn</by><word /><word>to play</word></choose></text></sprite>
           <position><x>24</x><y>siderow - 34</y></position>
         </object>
         <object name="eastscore">
-          <sprite><text style="note"><content>east</content><number>east.score</number><content>+</content><number>east.got</number><choose><by>east.turn</by><word></word><word>to play</word></choose></text></sprite>
+          <sprite><text style="note"><content>east</content><number>east.score</number><content>+</content><number>east.got</number><choose><by>east.turn</by><word /><word>to play</word></choose></text></sprite>
           <position><x>window.width.center * 2 - 200</x><y>siderow - 34</y></position>
         </object>
         <object name="yourscore">
-          <sprite><text style="note"><content>you</content><number>you.score</number><content>+</content><number>you.got</number><choose><by>you.turn</by><word></word><word>your turn: play a card</word></choose></text></sprite>
+          <sprite><text style="note"><content>you</content><number>you.score</number><content>+</content><number>you.got</number><choose><by>you.turn</by><word /><word>your turn: play a card</word></choose></text></sprite>
           <position><x><centered /></x><y>yours - 52</y></position>
         </object>
 
         <!-- who the trick goes to, as it stands -->
         <object name="taker">
-          <sprite><text style="note"><choose><by>trick.winner</by><word></word><word>the trick: yours</word><word>the trick: west's</word><word>the trick: north's</word><word>the trick: east's</word></choose></text></sprite>
+          <sprite><text style="note"><choose><by>trick.winner</by><word /><word>the trick: yours</word><word>the trick: west's</word><word>the trick: north's</word><word>the trick: east's</word></choose></text></sprite>
           <position><x><centered /></x><y>trickrow + cardheight + 24</y></position>
         </object>
 

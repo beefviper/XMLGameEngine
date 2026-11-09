@@ -73,6 +73,7 @@
   <styles>
     <style name="banner"><size>100</size><color>color.orange</color></style>
     <style name="line"><size>24</size><color>color.white</color></style>
+    <style name="prompt"><size>40</size></style>
     <style name="hud"><size>28</size><color>color.yellow</color></style>
   </styles>
   <kit>
@@ -118,7 +119,7 @@
   <objects>
     <!-- after a game, in both endings -->
     <object name="again">
-      <sprite><text><content>spacebar to play again</content><size>40</size></text></sprite>
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
       <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
     </object>
   </objects>
@@ -138,7 +139,7 @@
           <row number="2"><sprite><text><content>a and d (or the arrows) slide, space fires</content><color>color.lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text><content>spacebar to start</content><size>40</size></text></sprite>
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
         </object>
       </objects>
@@ -422,15 +423,17 @@
               <collisions>
                 <collision edge="horizontal"><bounce /></collision>
                 <!-- the hurt look first: a hit on a whole one only turns it -->
-                <collision object="laser" sprite="hurt">
-                  <inc variable="player.score">100</inc>
-                  <play sound="hit" />
-                  <die />
-                </collision>
-                <collision object="laser" sprite="full">
-                  <inc variable="player.score">20</inc>
-                  <play sound="hurt" />
-                  <become sprite="hurt" />
+                <collision object="laser">
+                  <collision sprite="hurt">
+                    <inc variable="player.score">100</inc>
+                    <play sound="hit" />
+                    <die />
+                  </collision>
+                  <collision sprite="full">
+                    <inc variable="player.score">20</inc>
+                    <play sound="hurt" />
+                    <become sprite="hurt" />
+                  </collision>
                 </collision>
               </collisions>
               <timers>

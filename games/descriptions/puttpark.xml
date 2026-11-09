@@ -424,20 +424,21 @@
       </inputs>
       <conditions>
         <!-- all but stopped: stopped dead, and the arrow on it, ready -->
-        <condition>
-          <all>
-            <condition object="arrow" variable="rolling"><equal>1</equal></condition>
-            <condition object="ball" variable="velocity.x"><atmost>still</atmost></condition>
-            <condition object="ball" variable="velocity.x"><atleast>0 - still</atleast></condition>
-            <condition object="ball" variable="velocity.y"><atmost>still</atmost></condition>
-            <condition object="ball" variable="velocity.y"><atleast>0 - still</atleast></condition>
-          </all>
-          <set variable="ball.velocity.x">0</set>
-          <set variable="ball.velocity.y">0</set>
-          <become object="arrow" sprite="ready" />
-          <set variable="arrow.x">ball.x + radius - arrow.width / 2</set>
-          <set variable="arrow.y">ball.y + radius - arrow.height / 2</set>
-          <set variable="arrow.rolling">0</set>
+        <condition object="arrow" variable="rolling"><equal>1</equal>
+          <condition object="ball" variable="velocity.x"><atmost>still</atmost>
+            <condition object="ball" variable="velocity.x"><atleast>0 - still</atleast>
+              <condition object="ball" variable="velocity.y"><atmost>still</atmost>
+                <condition object="ball" variable="velocity.y"><atleast>0 - still</atleast>
+                  <set variable="ball.velocity.x">0</set>
+                  <set variable="ball.velocity.y">0</set>
+                  <become object="arrow" sprite="ready" />
+                  <set variable="arrow.x">ball.x + radius - arrow.width / 2</set>
+                  <set variable="arrow.y">ball.y + radius - arrow.height / 2</set>
+                  <set variable="arrow.rolling">0</set>
+                </condition>
+              </condition>
+            </condition>
+          </condition>
         </condition>
         <condition object="card" variable="sunk">
           <atleast>holes</atleast>

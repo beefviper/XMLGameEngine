@@ -374,33 +374,21 @@
       </conditions>
       <!-- the computer takes its hook down to the second cod while it is free, and reels in a bite while the shark is not near -->
       <computer>
-        <condition>
-          <all>
-            <condition object="hook2" variable="line"><equal>0</equal></condition>
-            <condition object="hook2" variable="y"><below>cod.2.y</below></condition>
-          </all>
-          <hold button="k" />
+        <condition object="hook2" variable="line"><equal>0</equal>
+          <condition object="hook2" variable="y"><below>cod.2.y</below>
+            <hold button="k" />
+          </condition>
+          <condition object="hook2" variable="x"><below>cod.2.x</below>
+            <hold button="l" />
+          </condition>
+          <condition object="hook2" variable="x"><above>cod.2.x</above>
+            <hold button="j" />
+          </condition>
         </condition>
-        <condition>
-          <all>
-            <condition object="hook2" variable="line"><equal>0</equal></condition>
-            <condition object="hook2" variable="x"><below>cod.2.x</below></condition>
-          </all>
-          <hold button="l" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="hook2" variable="line"><equal>0</equal></condition>
-            <condition object="hook2" variable="x"><above>cod.2.x</above></condition>
-          </all>
-          <hold button="j" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="hook2" variable="line"><atleast>1</atleast></condition>
-            <condition object="hook2" distance="shark"><above>200</above></condition>
-          </all>
-          <hold button="i" />
+        <condition object="hook2" variable="line"><atleast>1</atleast>
+          <condition object="hook2" distance="shark"><above>200</above>
+            <hold button="i" />
+          </condition>
         </condition>
       </computer>
     </state>

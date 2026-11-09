@@ -287,31 +287,25 @@
           <push state="over" />
         </condition>
         <!-- against the computer, O's turn is its: the cursor takes its look -->
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <become object="cursor" sprite="cpu" from="o" />
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="cursor" variable="turn"><equal>2</equal>
+            <become object="cursor" sprite="cpu" from="o" />
+          </condition>
         </condition>
       </conditions>
       <!-- O's move: easy looks one ahead, smart to the end -->
       <computer>
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="options" variable="smart"><equal>0</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <think class="o" object="cursor" button="f12"><depth>1</depth></think>
-        </condition>
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="options" variable="smart"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <think class="o" object="cursor" button="f12"><depth>9</depth></think>
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="options" variable="smart"><equal>0</equal>
+            <condition object="cursor" variable="turn"><equal>2</equal>
+              <think class="o" object="cursor" button="f12"><depth>1</depth></think>
+            </condition>
+          </condition>
+          <condition object="options" variable="smart"><equal>1</equal>
+            <condition object="cursor" variable="turn"><equal>2</equal>
+              <think class="o" object="cursor" button="f12"><depth>9</depth></think>
+            </condition>
+          </condition>
         </condition>
       </computer>
     </state>

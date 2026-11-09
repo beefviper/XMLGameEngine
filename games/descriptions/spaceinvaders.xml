@@ -75,6 +75,7 @@
   <styles>
     <style name="banner"><size>128</size><color>color.green</color></style>
     <style name="hud"><size>36</size><color>color.white</color></style>
+    <style name="prompt"><size>48</size><color>color.white</color></style>
   </styles>
   <kit>
     <!-- a bomb, three at most, a zigzag that wriggles as it falls,
@@ -164,7 +165,7 @@
       <variables><variable name="score">0</variable></variables>
     </object>
     <object name="continue">
-      <sprite><text><content>spacebar to continue</content><size>48</size><color>color.white</color></text></sprite>
+      <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
       <position><x><centered /></x><y>window.height.center + 60</y></position>
     </object>
   </objects>

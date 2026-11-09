@@ -295,19 +295,6 @@ namespace xge
 				if (const std::string object = element->attribute("object"); !object.empty()) { names.insert(object); }
 			}
 			else if (tag == "follow") { look("path", element->attribute("path")); }
-			else if (tag == "condition" && !element->attribute("set").empty()) { look("conditions", element->attribute("set")); }
-			else if (tag == "inputs")
-			{
-				// keys="player", or a <keys> each.
-				if (const std::string set = element->attribute("keys"); !set.empty()) { look("keys", set); }
-				for (const ElementPtr& child : element->children)
-				{
-					if (child->name != "keys") { continue; }
-					const std::size_t begin = child->text.find_first_not_of(" \t\r\n");
-					const std::size_t end = child->text.find_last_not_of(" \t\r\n");
-					if (begin != std::string::npos) { look("keys", child->text.substr(begin, end - begin + 1)); }
-				}
-			}
 			for (const ElementPtr& child : element->children) { collect(child, kit, names, taken); }
 		}
 	}

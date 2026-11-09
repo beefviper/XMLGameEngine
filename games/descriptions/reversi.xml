@@ -391,45 +391,37 @@
           </condition>
         </condition>
         <!-- a side with nowhere to put a disc on its turn passes -->
-        <condition>
-          <all>
-            <condition object="cursor" variable="turn"><equal>1</equal></condition>
-            <condition class="black" variable="moves" total="sum"><equal>0</equal></condition>
-          </all>
-          <play sound="pass" />
-          <set variable="cursor.turn">2</set>
-          <become object="cursor" sprite="whitefree" />
-          <become object="whoseturn" sprite="whiteagain" />
+        <condition object="cursor" variable="turn"><equal>1</equal>
+          <condition class="black" variable="moves" total="sum"><equal>0</equal>
+            <play sound="pass" />
+            <set variable="cursor.turn">2</set>
+            <become object="cursor" sprite="whitefree" />
+            <become object="whoseturn" sprite="whiteagain" />
+          </condition>
         </condition>
-        <condition>
-          <all>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-            <condition class="white" variable="moves" total="sum"><equal>0</equal></condition>
-          </all>
-          <play sound="pass" />
-          <set variable="cursor.turn">1</set>
-          <become object="cursor" sprite="blackfree" />
-          <become object="whoseturn" sprite="blackagain" />
+        <condition object="cursor" variable="turn"><equal>2</equal>
+          <condition class="white" variable="moves" total="sum"><equal>0</equal>
+            <play sound="pass" />
+            <set variable="cursor.turn">1</set>
+            <become object="cursor" sprite="blackfree" />
+            <become object="whoseturn" sprite="blackagain" />
+          </condition>
         </condition>
         <!-- against the computer, white's turn is its: the cursor takes its look -->
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <become object="cursor" sprite="cpufree" from="whitefree" />
+        <condition object="cursor" variable="turn"><equal>2</equal>
+          <condition object="match" variable="players"><equal>1</equal>
+            <become object="cursor" sprite="cpufree" from="whitefree" />
+          </condition>
         </condition>
       </conditions>
       <!-- white's move: four ahead -->
       <computer>
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <think class="white" object="cursor" button="f12">
-            <depth>4</depth>
-          </think>
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="cursor" variable="turn"><equal>2</equal>
+            <think class="white" object="cursor" button="f12">
+              <depth>4</depth>
+            </think>
+          </condition>
         </condition>
       </computer>
     </state>

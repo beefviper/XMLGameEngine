@@ -262,18 +262,21 @@
       </inputs>
       <conditions>
         <!-- the pyramid cleared -->
-        <condition>
-          <all>
-            <condition object="row1" variable="cards" total="sum"><equal>0</equal></condition>
-            <condition object="row2" variable="cards" total="sum"><equal>0</equal></condition>
-            <condition object="row3" variable="cards" total="sum"><equal>0</equal></condition>
-            <condition object="row4" variable="cards" total="sum"><equal>0</equal></condition>
-            <condition object="row5" variable="cards" total="sum"><equal>0</equal></condition>
-            <condition object="row6" variable="cards" total="sum"><equal>0</equal></condition>
-            <condition object="row7" variable="cards" total="sum"><equal>0</equal></condition>
-          </all>
-          <play sound="win" />
-          <push state="won" />
+        <condition object="row1" variable="cards" total="sum"><equal>0</equal>
+          <condition object="row2" variable="cards" total="sum"><equal>0</equal>
+            <condition object="row3" variable="cards" total="sum"><equal>0</equal>
+              <condition object="row4" variable="cards" total="sum"><equal>0</equal>
+                <condition object="row5" variable="cards" total="sum"><equal>0</equal>
+                  <condition object="row6" variable="cards" total="sum"><equal>0</equal>
+                    <condition object="row7" variable="cards" total="sum"><equal>0</equal>
+                      <play sound="win" />
+                      <push state="won" />
+                    </condition>
+                  </condition>
+                </condition>
+              </condition>
+            </condition>
+          </condition>
         </condition>
       </conditions>
     </state>

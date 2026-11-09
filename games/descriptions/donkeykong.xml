@@ -819,13 +819,11 @@
           <trigger object="man" action="lose" />
         </condition>
         <!-- a barrel under him in a jump: scored when he lands -->
-        <condition>
-          <all>
-            <condition object="man" variable="leapt"><equal>1</equal></condition>
-            <condition class="barrel" distance="man"><below>64</below></condition>
-          </all>
-          <set variable="man.leapt">0</set>
-          <set variable="man.over">1</set>
+        <condition object="man" variable="leapt"><equal>1</equal>
+          <condition class="barrel" distance="man"><below>64</below>
+            <set variable="man.leapt">0</set>
+            <set variable="man.over">1</set>
+          </condition>
         </condition>
         <condition object="man" variable="score">
           <above>best.score</above>

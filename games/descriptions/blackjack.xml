@@ -287,24 +287,27 @@
         <condition object="table" sprite="settling">
           <first><become object="table" sprite="done" /></first>
           <!-- blackjack, 21 in two cards: against the dealer's a push, else it pays three to two -->
-          <condition>
-            <all><condition object="player" variable="worth"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
-            <condition>
-              <all><condition object="dealer" variable="worth"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition></all>
-              <inc variable="table.bank">table.bet</inc>
-              <become object="result" sprite="push" />
+          <condition object="player" variable="worth"><equal>21</equal>
+            <condition object="player" variable="cards"><equal>2</equal>
+              <condition object="dealer" variable="worth"><equal>21</equal>
+                <condition object="dealer" variable="cards"><equal>2</equal>
+                  <inc variable="table.bank">table.bet</inc>
+                  <become object="result" sprite="push" />
+                </condition>
+              </condition>
+              <otherwise>
+                <inc variable="table.bank">table.bet * 2.5</inc>
+                <become object="result" sprite="blackjack" />
+                <play sound="blackjack" />
+              </otherwise>
             </condition>
-            <otherwise>
-              <inc variable="table.bank">table.bet * 2.5</inc>
-              <become object="result" sprite="blackjack" />
-              <play sound="blackjack" />
-            </otherwise>
           </condition>
           <!-- the dealer's blackjack beats any other 21 -->
-          <condition>
-            <all><condition object="dealer" variable="worth"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition></all>
-            <become object="result" sprite="lose" />
-            <play sound="lose" />
+          <condition object="dealer" variable="worth"><equal>21</equal>
+            <condition object="dealer" variable="cards"><equal>2</equal>
+              <become object="result" sprite="lose" />
+              <play sound="lose" />
+            </condition>
           </condition>
           <!-- the dealer bust or beaten pays two to one, a tie gives the bet back -->
           <condition object="dealer" variable="worth"><above>21</above>

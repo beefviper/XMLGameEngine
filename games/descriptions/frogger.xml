@@ -171,10 +171,12 @@
           </sprite>
           <position><x>2 * cell + 4</x><y>1 * cell + 4</y></position>
           <collisions>
-            <collision object="frog" sprite="home"><trigger object="frog" action="lose" /></collision>
-            <collision object="frog" sprite="empty">
-              <become sprite="home" />
-              <trigger object="frog" action="home" />
+            <collision object="frog">
+              <collision sprite="home"><trigger object="frog" action="lose" /></collision>
+              <collision sprite="empty">
+                <become sprite="home" />
+                <trigger object="frog" action="home" />
+              </collision>
             </collision>
           </collisions>
         </group>

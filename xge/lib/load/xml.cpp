@@ -2287,7 +2287,11 @@ namespace xge
 				}
 
 				// Then the checks that must all hold for it to run.
-				while (firstCommand && (firstCommand->getName() == "condition" || firstCommand->getName() == "all" || firstCommand->getName() == "any"))
+				if (firstCommand && firstCommand->getName() == "all")
+				{
+					fail(ruleHere + " > <all>", "a rule's checks must all hold already; write them one after another, with no <all>");
+				}
+				while (firstCommand && (firstCommand->getName() == "condition" || firstCommand->getName() == "any"))
 				{
 					const std::string name = firstCommand->getName();
 					RawCondition part;
@@ -3457,7 +3461,7 @@ namespace xge
 			return names;
 		}
 
-		// The <input>s under a node (a state's <inputs>, or a <keys> set): a key
+		// The <input>s of a state's <inputs>: a key
 		// (button="a"), or several, a <button> each, or a control that points
 		// (axis="mouse.x"), and the commands each one runs. One given twice
 		// keeps the later binding.
@@ -3465,7 +3469,6 @@ namespace xge
 		{
 			for (std::unique_ptr<XmlNode> input = node.getFirstChild(); input != nullptr; input = input->getNextSibling())
 			{
-				if (input->getName() == "keys") { continue; } // a state's <inputs> names its sets first
 				if (input->getName() != "input") { fail(where, "has <" + input->getName() + ">, which is not an <input>"); }
 				std::unique_ptr<XmlNode> commandsStart;
 				const std::vector<std::string> buttons = namesGiven(*input, "button", where + " > <input>", &commandsStart);
@@ -3533,8 +3536,6 @@ namespace xge
 			}
 		}
 
-		using ConditionSets = std::map<std::string, std::vector<RawCondition>>;
-
 		// An <all> or an <any>, into `raw`: which, and its <condition>s, <all>s
 		// and <any>s in order.
 		void readJoin(const XmlNode& join, const std::string& here, RawCondition& raw)
@@ -3591,9 +3592,13 @@ namespace xge
 				raw.test = RawCondition::Test::Shows;
 				return test;
 			}
-			if (!test) { fail(here, "needs an <atleast>, <atmost>, <above>, <below>, <equal>, <unequal> or <remaining>, or an <all> or <any>"); }
+			if (!test) { fail(here, "needs an <atleast>, <atmost>, <above>, <below>, <equal>, <unequal> or <remaining>, or an <any>"); }
 
 			const std::string testName = test->getName();
+			if (testName == "all")
+			{
+				fail(here + " > <all>", "tests that must all hold are a condition in a condition: the first test here, the next in a <condition> inside it (an <all> goes only in an <any>)");
+			}
 
 			// <all> / <any>: several checks, each a test of its own.
 			if (testName == "all" || testName == "any")
@@ -3653,26 +3658,10 @@ namespace xge
 
 		// One <condition> into `out`: a test, then the commands to run when it
 		// holds; or, holding conditions (each read the same way), a <first>
-		// before them and an <otherwise> after; or <condition set="..."> for a
-		// named set's, in its place.
-		void readCondition(const XmlNode& condition, const std::string& where, const ConditionSets& conditionSets, std::vector<RawCondition>& out)
+		// before them and an <otherwise> after.
+		void readCondition(const XmlNode& condition, const std::string& where, std::vector<RawCondition>& out)
 		{
 			const std::string conditionHere = where + " > <condition>";
-
-			// <condition set="..."> takes a named <conditions> set's in its place
-			if (!condition.getAttribute("set").empty())
-			{
-				const std::string setName = condition.getAttribute("set");
-				if (condition.getFirstChild() || !condition.getAttribute("class").empty() || !condition.getAttribute("object").empty() || !condition.getAttribute("variable").empty() || !condition.getAttribute("name").empty())
-				{
-					fail(conditionHere, "set=\"" + setName + "\" takes a <conditions> set whole, so it has nothing else");
-				}
-				const auto set = conditionSets.find(setName);
-				if (set == conditionSets.end()) { fail(conditionHere, "set=\"" + setName + "\" names no <conditions> set before it"); }
-				out.insert(out.end(), set->second.begin(), set->second.end());
-				return;
-			}
-
 			RawCondition raw;
 			raw.name = condition.getAttribute("name");
 			if (!raw.name.empty() && std::any_of(out.begin(), out.end(), [&](const RawCondition& other) { return other.name == raw.name; }))
@@ -3709,7 +3698,7 @@ namespace xge
 			}
 			for (; part && part->getName() == "condition"; part = part->getNextSibling())
 			{
-				readCondition(*part, conditionHere, conditionSets, raw.inner);
+				readCondition(*part, conditionHere, raw.inner);
 			}
 			if (part && part->getName() == "otherwise")
 			{
@@ -3725,11 +3714,11 @@ namespace xge
 
 		// The <condition>s under a node (a state's <conditions>, or a
 		// <conditions> set), in order.
-		void readConditions(const XmlNode& node, const std::string& where, const ConditionSets& conditionSets, std::vector<RawCondition>& out)
+		void readConditions(const XmlNode& node, const std::string& where, std::vector<RawCondition>& out)
 		{
 			for (std::unique_ptr<XmlNode> condition = node.getFirstChild(); condition != nullptr; condition = condition->getNextSibling())
 			{
-				readCondition(*condition, where, conditionSets, out);
+				readCondition(*condition, where, out);
 			}
 		}
 
@@ -3777,7 +3766,7 @@ namespace xge
 		// the scene it is from=, changed by its own of the same names, then its
 		// own and the <kit> pieces it takes. `seen` is every name of its state's
 		// objects and the game's.
-		void readScenes(const XmlNode& scenes, const std::string& stateWhere, const ConditionSets& conditionSets, const Kit& kit, const std::set<std::string>& seen, RawState& state)
+		void readScenes(const XmlNode& scenes, const std::string& stateWhere, const Kit& kit, const std::set<std::string>& seen, RawState& state)
 		{
 			if (findChild(&scenes, "objects"))
 			{
@@ -3829,7 +3818,7 @@ namespace xge
 
 				if (std::unique_ptr<XmlNode> conditions = findChild(node.get(), "conditions"))
 				{
-					readConditions(*conditions, where, conditionSets, scene.conditions);
+					readConditions(*conditions, where, scene.conditions);
 				}
 				scene.timers = readTimers(findChild(node.get(), "timers").get(), where, false);
 
@@ -3844,15 +3833,15 @@ namespace xge
 		// What comes after a state's <inputs>: its <conditions> (optional - the
 		// schema allows a state with none) and its <timers> (optional: counted
 		// while this is the current state).
-		RawState finishState(const XmlNode& state, const std::string& where, const ConditionSets& conditionSets, RawState rawState)
+		RawState finishState(const XmlNode& state, const std::string& where, RawState rawState)
 		{
 			if (std::unique_ptr<XmlNode> conditions = findChild(&state, "conditions"))
 			{
-				readConditions(*conditions, where, conditionSets, rawState.conditions);
+				readConditions(*conditions, where, rawState.conditions);
 			}
 			if (std::unique_ptr<XmlNode> computer = findChild(&state, "computer"))
 			{
-				readConditions(*computer, where + " > <computer>", conditionSets, rawState.computer);
+				readConditions(*computer, where + " > <computer>", rawState.computer);
 				// Every one that holds holds its buttons, so one holding conditions has no "otherwise".
 				const std::function<void(const std::vector<RawCondition>&)> plain = [&](const std::vector<RawCondition>& list)
 				{
@@ -3874,8 +3863,8 @@ namespace xge
 		// A <state>. Its objects are laid out by load/merge: those of the state
 		// it is from= (`lists`, each state so far laid out), changed by its own
 		// of the same names, then its own and the <kit> pieces it takes.
-		RawState readState(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists, const std::map<std::string, KeyBindings>& keySets,
-			const ShowSets& showSets, const ConditionSets& conditionSets, const Kit& kit, const std::set<std::string>& gameNames)
+		RawState readState(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists,
+			const ShowSets& showSets, const Kit& kit, const std::set<std::string>& gameNames)
 		{
 			RawState rawState{};
 			rawState.name = requireAttribute(state, "name", "<state>");
@@ -3945,23 +3934,10 @@ namespace xge
 				rawState.music = requireAttribute(*music, "sound", where + " > <music>");
 			}
 
-			// <inputs>: the named <keys> sets it uses (keys="player", or a <keys>
-			// each), in order, each over the one before, then its own <input>s
-			// over those: a state can use a set and still give one of its keys a
-			// job of its own.
+			// <inputs>: its own <input>s, over those of the state it is from=.
 			std::unique_ptr<XmlNode> inputs = rawState.from.empty() ? requireChild(state, "inputs", where) : findChild(&state, "inputs");
 			if (inputs)
 			{
-				for (const std::string& setName : namesGiven(*inputs, "keys", where + " > <inputs>"))
-				{
-					const auto set = keySets.find(setName);
-					if (set == keySets.end()) { fail(where + " > <inputs>", "keys=\"" + setName + "\" names no <keys> set"); }
-					for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
-					{
-						for (const auto& [button, commands] : set->second.buttons[moment]) { (*rawState.keyMaps()[moment])[button] = commands; }
-					}
-					for (const auto& [axis, commands] : set->second.axes) { rawState.axes[axis] = commands; }
-				}
 				KeyBindings own;
 				readInputs(*inputs, where + " > <inputs>", own);
 				for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
@@ -3970,7 +3946,7 @@ namespace xge
 				}
 				for (auto& [axis, commands] : own.axes) { rawState.axes[axis] = std::move(commands); }
 			}
-			rawState = finishState(state, where, conditionSets, std::move(rawState));
+			rawState = finishState(state, where, std::move(rawState));
 
 			// What its own inputs, conditions and timers spawn (a <kit> piece
 			// comes into its objects), then its scenes, then its objects read.
@@ -3978,7 +3954,7 @@ namespace xge
 
 			if (std::unique_ptr<XmlNode> scenes = findChild(&state, "scenes"))
 			{
-				readScenes(*scenes, where, conditionSets, kit, namesOf(list, gameNames), rawState);
+				readScenes(*scenes, where, kit, namesOf(list, gameNames), rawState);
 			}
 
 			readAll(list, rawState.objects);
@@ -4263,26 +4239,12 @@ namespace xge
 			}
 		}
 
-		// load states: the named <keys>, <shows> and <conditions> sets first, so
-		// any state can use any of them (a <shows> or <conditions> set can take
-		// a set written before it)
-		std::map<std::string, KeyBindings> keySets;
+		// load states: the named <shows> sets first, so any state can use any
+		// of them (a set can take a set written before it)
 		ShowSets showSets;
-		ConditionSets conditionSets;
 		for (std::unique_ptr<XmlNode> node = states->getFirstChild(); node != nullptr; node = node->getNextSibling())
 		{
-			if (node->getName() == "keys")
-			{
-				const std::string name = requireAttribute(*node, "name", "<states> > <keys>");
-				if (keySets.count(name)) { fail("<states>", "two <keys> sets are called '" + name + "'"); }
-				readInputs(*node, "<keys name=\"" + name + "\">", keySets[name]);
-				kit.addSet("keys", name, copyElement(*node));
-				if (!keySets[name].axes.empty())
-				{
-					fail("<keys name=\"" + name + "\">", "an <input axis=\"...\"> goes in a state's own <inputs>, not in a <keys> set");
-				}
-			}
-			else if (node->getName() == "shows")
+			if (node->getName() == "shows")
 			{
 				const std::string name = requireAttribute(*node, "name", "<states> > <shows>");
 				if (showSets.count(name)) { fail("<states>", "two <shows> sets are called '" + name + "'"); }
@@ -4290,22 +4252,13 @@ namespace xge
 				readShows(*node, "<shows name=\"" + name + "\">", showSets, objects);
 				showSets[name] = std::move(objects);
 			}
-			else if (node->getName() == "conditions")
-			{
-				const std::string name = requireAttribute(*node, "name", "<states> > <conditions>");
-				if (conditionSets.count(name)) { fail("<states>", "two <conditions> sets are called '" + name + "'"); }
-				std::vector<RawCondition> conditions;
-				readConditions(*node, "<conditions name=\"" + name + "\">", conditionSets, conditions);
-				conditionSets[name] = std::move(conditions);
-				kit.addSet("conditions", name, copyElement(*node));
-			}
 		}
 
 		std::map<std::string, std::vector<ElementPtr>> stateLists;
 		for (std::unique_ptr<XmlNode> state = states->getFirstChild(); state != nullptr; state = state->getNextSibling())
 		{
 			if (state->getName() != "state") { continue; }
-			rawStates.push_back(readState(*state, stateLists, keySets, showSets, conditionSets, kit, gameNames));
+			rawStates.push_back(readState(*state, stateLists, showSets, kit, gameNames));
 		}
 	}
 

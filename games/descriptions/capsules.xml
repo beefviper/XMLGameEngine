@@ -542,19 +542,17 @@
           <play sound="germ" />
         </condition>
         <!-- every germ gone: an empty bottle, and the next level, faster, with more -->
-        <condition>
-          <all>
-            <condition object="status" variable="germs"><equal>0</equal></condition>
-            <condition object="status" variable="place"><equal>0</equal></condition>
-          </all>
-          <play sound="level" />
-          <despawn object="halves" />
-          <despawn object="capsules" />
-          <spawn object="capsules"><random /><column>4</column><row>1</row></spawn>
-          <spawn object="capsules" into="next"><random /></spawn>
-          <inc variable="status.level" />
-          <set variable="status.place">4 * status.level + 4</set>
-          <set variable="status.gravity">status.gravity * 0.9</set>
+        <condition object="status" variable="germs"><equal>0</equal>
+          <condition object="status" variable="place"><equal>0</equal>
+            <play sound="level" />
+            <despawn object="halves" />
+            <despawn object="capsules" />
+            <spawn object="capsules"><random /><column>4</column><row>1</row></spawn>
+            <spawn object="capsules" into="next"><random /></spawn>
+            <inc variable="status.level" />
+            <set variable="status.place">4 * status.level + 4</set>
+            <set variable="status.gravity">status.gravity * 0.9</set>
+          </condition>
         </condition>
       </conditions>
       <timers>

@@ -164,11 +164,11 @@
 
         <!-- the scores, whose turn it is, and your deadwood -->
         <object name="northscore">
-          <sprite><text style="note"><content>north</content><number>north.score</number><choose><by>north.turn</by><word></word><word>to play</word></choose></text></sprite>
+          <sprite><text style="note"><content>north</content><number>north.score</number><choose><by>north.turn</by><word /><word>to play</word></choose></text></sprite>
           <position><x><centered /></x><y>theirs + cardheight + 8</y></position>
         </object>
         <object name="yourscore">
-          <sprite><text style="note"><content>you</content><number>you.score</number><choose><by>you.turn</by><word></word><word>your turn: draw, then discard; k knocks</word></choose><color>color.yellow</color></text></sprite>
+          <sprite><text style="note"><content>you</content><number>you.score</number><choose><by>you.turn</by><word /><word>your turn: draw, then discard; k knocks</word></choose><color>color.yellow</color></text></sprite>
           <position><x>56</x><y>yours - 52</y></position>
         </object>
         <object name="deadwood">

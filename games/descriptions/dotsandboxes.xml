@@ -323,25 +323,21 @@
           </condition>
         </condition>
         <!-- against the computer, blue's turn is its: the cursor takes its look -->
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <become object="cursor" sprite="cpu" from="blue" />
-          <become object="whoseturn" sprite="thinking" from="blue" />
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="cursor" variable="turn"><equal>2</equal>
+            <become object="cursor" sprite="cpu" from="blue" />
+            <become object="whoseturn" sprite="thinking" from="blue" />
+          </condition>
         </condition>
       </conditions>
       <!-- blue's line: three ahead -->
       <computer>
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <think class="blueline" object="cursor" button="f12">
-            <depth>3</depth>
-          </think>
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="cursor" variable="turn"><equal>2</equal>
+            <think class="blueline" object="cursor" button="f12">
+              <depth>3</depth>
+            </think>
+          </condition>
         </condition>
       </computer>
     </state>

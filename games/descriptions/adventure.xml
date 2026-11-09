@@ -41,8 +41,8 @@
   * A portcullis <die />s when its key touches it, carried or not; a carried
     key is swept like anything that moves, so it meets the gate first.
   * A dragon sleeps (its first look) until the hero comes near: a condition
-    of its room, an <all> of how far the hero is (distance=) and that it is
-    still asleep, wakes it with a roar. Its timer follows the awake look, so
+    of its room, how far the hero is (distance=) holding that it is still
+    asleep, wakes it with a roar. Its timer follows the awake look, so
     only then does it <chase> him, at its room's dragonspeed.
   * Paused, won and eaten draw the room still underneath (<show state>).
   Not in it: the other rooms and the blue labyrinth, the white castle, Rhindle
@@ -448,14 +448,12 @@
             <object name="yorgle" />
           </objects>
           <conditions>
-            <condition>
-              <all>
-                <condition object="yorgle" distance="hero"><below>160</below></condition>
-                <condition object="yorgle" variable="awake"><equal>0</equal></condition>
-              </all>
-              <inc variable="yorgle.awake" />
-              <become object="yorgle" sprite="awake" />
-              <play sound="roar" />
+            <condition object="yorgle" distance="hero"><below>160</below>
+              <condition object="yorgle" variable="awake"><equal>0</equal>
+                <inc variable="yorgle.awake" />
+                <become object="yorgle" sprite="awake" />
+                <play sound="roar" />
+              </condition>
             </condition>
           </conditions>
         </scene>
@@ -543,14 +541,12 @@
             <object name="grundle" />
           </objects>
           <conditions>
-            <condition>
-              <all>
-                <condition object="grundle" distance="hero"><below>200</below></condition>
-                <condition object="grundle" variable="awake"><equal>0</equal></condition>
-              </all>
-              <inc variable="grundle.awake" />
-              <become object="grundle" sprite="awake" />
-              <play sound="roar" />
+            <condition object="grundle" distance="hero"><below>200</below>
+              <condition object="grundle" variable="awake"><equal>0</equal>
+                <inc variable="grundle.awake" />
+                <become object="grundle" sprite="awake" />
+                <play sound="roar" />
+              </condition>
             </condition>
           </conditions>
         </scene>

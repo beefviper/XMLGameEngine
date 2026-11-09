@@ -154,7 +154,7 @@
 
         <!-- the suit called after an eight, beside the pile -->
         <object name="called">
-          <sprite><text style="note"><choose><by>discard.called</by><word></word><word>spades</word><word>hearts</word><word>clubs</word><word>diamonds</word></choose></text></sprite>
+          <sprite><text style="note"><choose><by>discard.called</by><word /><word>spades</word><word>hearts</word><word>clubs</word><word>diamonds</word></choose></text></sprite>
           <position><x>window.width.center + cardwidth + 48</x><y>middle + cardheight / 2 - 14</y></position>
         </object>
 
@@ -164,7 +164,7 @@
           <position><x>left</x><y>middle + cardheight + 40</y></position>
         </object>
         <object name="calling">
-          <sprite><text style="note"><choose><by>discard.calling</by><word></word><word>an eight: its player names a suit, pointing at a card of it</word></choose><color>color.cyan</color></text></sprite>
+          <sprite><text style="note"><choose><by>discard.calling</by><word /><word>an eight: its player names a suit, pointing at a card of it</word></choose><color>color.cyan</color></text></sprite>
           <position><x>left</x><y>middle + cardheight + 76</y></position>
         </object>
 
