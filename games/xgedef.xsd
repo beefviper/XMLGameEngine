@@ -691,6 +691,12 @@
       <xs:element name="owns" type="ownsType" minOccurs="0" />
     </xs:sequence>
   </xs:group>
+  <!-- pass: the next player's turn. For a group that takes turns, member= the number of the member whose turn it is
+       now (from 1; 0: nobody's), of the group object= names (in an action, left out: the doer's) -->
+  <xs:complexType name="passType">
+    <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="member" type="xs:string" use="optional" />
+  </xs:complexType>
   <xs:complexType name="ownsType">
     <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
@@ -1724,7 +1730,7 @@
         </xs:complexType>
       </xs:element>
       <!-- pass: the next player's turn; out: this player is out, and the next player's turn -->
-      <xs:element name="pass" type="emptyType" />
+      <xs:element name="pass" type="passType" />
       <xs:element name="out" type="emptyType" />
       <!-- demo: the game's recorded <demo> plays, until a key is pressed -->
       <xs:element name="demo" type="emptyType" />
@@ -1980,7 +1986,7 @@
       <xs:group ref="steeringCommands" />
       <xs:group ref="controlsCommands" />
       <!-- pass, by a member of a group that takes <turns>: the next member's turn; refused while a holder waits for a wild card's call -->
-      <xs:element name="pass" type="emptyType" />
+      <xs:element name="pass" type="passType" />
     </xs:choice>
   </xs:group>
 

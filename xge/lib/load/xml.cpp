@@ -1905,6 +1905,10 @@ namespace xge
 					command.closeObject = requireAttribute(*child, "object", where + " > <put> > <close>");
 				}
 			}
+			if (verb == "pass" && !node.getAttribute("member").empty())
+			{
+				command.amount = RawValue::expression(node.getAttribute("member"));
+			}
 			if (verb == "count")
 			{
 				requireAttribute(node, "class", where);

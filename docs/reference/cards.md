@@ -257,7 +257,7 @@ A pile scores by them with `<score patterns="poker"><with pile="board"><full>5</
 - **`<trick>`** (in place of `<takes>`): the first card leads any suit; after it, a hand holding the suit led must follow.
 - **`<breaks>`**: suits that may not lead until one has been laid since the deal, unless the leader holds nothing else.
 - **`<trumps>`**: a card of those suits beats every other suit.
-- A hand's **`<seat>`** is its place; **`<team>`** its side (partners share one).
+- A hand's **`<seat>`** is its place; **`<team>`** its side (partners share one). A member of [players in turn](states.md#players-as-a-group) with a `<hand />` sits at its number in the group, so `<pass member="trick.winner" />` gives the winner the lead (Hearts).
 - Live **`lead`** (the suit led) and **`winner`** (the seat of the highest card).
 - Live **`tricks`** on a hand's own pile: how many tricks its cards should take, counted as a bidder does (high cards, trump length, short suits).
 

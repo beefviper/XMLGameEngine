@@ -246,7 +246,14 @@ namespace xge
 
 	// <pass /> - the turn passes to the next player still in: this player's
 	// game is put away as it is, theirs comes back. See Game::passTurn.
-	struct CmdPass {};
+	// By a member of a group that takes turns, the next member's turn; with
+	// member=, the turn of the group's member of that number (0: nobody's),
+	// the group named by object= or else the doer's. See Game::passPlayers.
+	struct CmdPass
+	{
+		std::string group;
+		int member{ -1 };
+	};
 
 	// <out /> - this player is out of the game, and the turn passes; when
 	// another is still in, nothing after it in the list runs, and when none

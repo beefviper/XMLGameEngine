@@ -1229,6 +1229,21 @@ namespace
 		float of(const std::string& hand, const std::string& name) { return get(hand).variable.at(name); }
 		void set(const std::string& object, const std::string& name, float value) { game.setVariable(get(object).name, name, value); }
 
+		// Your hand, and whether the players are a group taking turns
+		// (then the turn is the number of the member on it, 0 nobody's).
+		std::string me{ "hand" };
+		bool players{ false };
+		float turn()
+		{
+			if (!players) { return table("turn"); }
+			const char* names[] = { "you", "west", "north", "east" };
+			for (int i = 0; i < 4; ++i)
+			{
+				if (of(names[i], "turn") == 1.0f) { return static_cast<float>(i + 1); }
+			}
+			return 0.0f;
+		}
+
 		int cardOf(const std::string& name)
 		{
 			const auto space = name.find(' ');
@@ -1246,6 +1261,12 @@ namespace
 		{
 			set("table", "phase", 3.0f);
 			set("table", "first", static_cast<float>(leader == 1 ? 4 : leader - 1));
+			// As a hand ends: the table done, nobody's turn.
+			if (players)
+			{
+				showLookNamed(get("table"), "done");
+				game.passPlayersTo("players", 0);
+			}
 			frames(2);
 			// Dealt a card a round to west, north, east and you, in the file's order.
 			game.stackedDeal = roundRobin(*this, { hands[1], hands[2], hands[3], hands[0] });
@@ -1260,7 +1281,7 @@ namespace
 			const auto& mine = pile("mine").pile.cards;
 			const auto at = std::find(mine.begin(), mine.end(), cardOf(name));
 			if (at == mine.end()) { return false; }
-			Object& hand = get("hand");
+			Object& hand = get(me);
 			hand.hand.pile = "playing.mine";
 			hand.hand.at = static_cast<int>(at - mine.begin());
 			tap(KeyCode::Space);
@@ -1274,7 +1295,12 @@ namespace
 			for (int i = 0; i < 3000; ++i)
 			{
 				if (table("phase") == 3.0f || state() != "playing") { return; }
-				if (table("phase") == 0.0f && table("turn") == 1.0f && get("hand").lookName() == "free") { return; }
+				if (table("phase") == 0.0f && turn() == 1.0f && get(me).lookName() == "free")
+				{
+					// The computer's own press of the same key let go first.
+					frames(1);
+					return;
+				}
 				frames(1);
 			}
 		}
@@ -1282,7 +1308,11 @@ namespace
 
 	struct Hearts : Tricks
 	{
-		Hearts() : Tricks("descriptions/hearts.xml") {}
+		Hearts() : Tricks("descriptions/hearts.xml")
+		{
+			me = "you";
+			players = true;
+		}
 	};
 
 	// Spades: the first deal comes after a moment; then you bid.
@@ -1319,7 +1349,7 @@ namespace
 TEST_CASE("hearts.xml: the deal: thirteen each, yours face up in suit order, the ace last", "[cards][hearts]")
 {
 	Hearts play;
-	for (const char* name : { "mine", "west", "north", "east" }) { CHECK(play.pile(name).pile.cards.size() == 13); }
+	for (const char* name : { "mine", "westcards", "northcards", "eastcards" }) { CHECK(play.pile(name).pile.cards.size() == 13); }
 	CHECK(play.pile("stock").pile.cards.empty());
 	const auto& mine = play.pile("mine").pile.cards;
 	for (std::size_t i = 1; i < mine.size(); ++i)
@@ -1329,8 +1359,8 @@ TEST_CASE("hearts.xml: the deal: thirteen each, yours face up in suit order, the
 		CHECK(std::make_pair(before.card.suit, before.card.worths.back()) < std::make_pair(after.card.suit, after.card.worths.back()));
 		CHECK(after.faceUp);
 	}
-	CHECK(play.table("turn") == 1.0f);
-	CHECK(play.get("hand").lookName() == "free");
+	CHECK(play.turn() == 1.0f);
+	CHECK(play.get("you").lookName() == "free");
 }
 
 TEST_CASE("hearts.xml: the suit led is followed; hearts lead only once broken, or when nothing else is held", "[cards][hearts]")
@@ -1344,7 +1374,7 @@ TEST_CASE("hearts.xml: the suit led is followed; hearts lead only once broken, o
 		joined(suitOf("hearts", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" }), suitOf("spades", { "A" })),
 		joined(suitOf("spades", { "Q" }), suitOf("diamonds", { "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" })),
 	}, 1);
-	REQUIRE(play.table("turn") == 1.0f);
+	REQUIRE(play.turn() == 1.0f);
 	// Hearts are not broken: no heart leads.
 	CHECK_FALSE(play.play("A hearts"));
 	CHECK(play.pile("mine").pile.cards.size() == 13);
@@ -1354,7 +1384,7 @@ TEST_CASE("hearts.xml: the suit led is followed; hearts lead only once broken, o
 	// West follows low; north and east, with no clubs, shed their worst:
 	// north its king of hearts, east the queen of spades.
 	play.untilYou();
-	CHECK(play.of("westhand", "got") == 14.0f);
+	CHECK(play.of("west", "got") == 14.0f);
 	CHECK(play.table("tricks") == 1.0f);
 	// A heart has been laid: hearts are broken.
 	const auto& broken = play.pile("trick").pile.broken;
@@ -1379,13 +1409,13 @@ TEST_CASE("hearts.xml: a card not of the suit led is refused while you hold one"
 	REQUIRE(play.pile("trick").pile.cards.size() == 3);
 	CHECK(play.pile("trick").lead == 3.0f);
 	CHECK_FALSE(play.play("5 diamonds"));
-	CHECK(play.get("hand").lookName() == "free");
+	CHECK(play.get("you").lookName() == "free");
 	CHECK(play.play("K clubs"));
 	// Yours is the highest club: you take it, with north's heart and east's queen of spades.
 	play.untilYou();
-	CHECK(play.of("hand", "got") == 14.0f);
+	CHECK(play.of("you", "got") == 14.0f);
 	CHECK(play.pile("stock").pile.cards.size() == 4);
-	CHECK(play.table("turn") == 1.0f);
+	CHECK(play.turn() == 1.0f);
 }
 
 TEST_CASE("hearts.xml: holding nothing but hearts, one leads before they are broken", "[cards][hearts]")
@@ -1400,42 +1430,43 @@ TEST_CASE("hearts.xml: holding nothing but hearts, one leads before they are bro
 	CHECK(play.play("2 hearts"));
 	// Nobody else has a heart: you take your own, and east sheds the queen of spades on it.
 	play.untilYou();
-	CHECK(play.of("hand", "got") == 14.0f);
+	CHECK(play.of("you", "got") == 14.0f);
 }
 
 TEST_CASE("hearts.xml: the hand's points to the scores; all 26 to one shoots the moon", "[cards][hearts]")
 {
 	Hearts play;
 	play.set("table", "tricks", 13.0f);
-	play.set("hand", "got", 3.0f);
-	play.set("westhand", "got", 13.0f);
-	play.set("northhand", "got", 10.0f);
+	play.set("you", "got", 3.0f);
+	play.set("west", "got", 13.0f);
+	play.set("north", "got", 10.0f);
 	play.frames(2);
-	CHECK(play.of("hand", "score") == 3.0f);
-	CHECK(play.of("westhand", "score") == 13.0f);
-	CHECK(play.of("northhand", "score") == 10.0f);
+	CHECK(play.of("you", "score") == 3.0f);
+	CHECK(play.of("west", "score") == 13.0f);
+	CHECK(play.of("north", "score") == 10.0f);
 	CHECK(play.table("phase") == 3.0f);
-	CHECK(play.get("hand").lookName() == "done");
+	CHECK(play.get("table").lookName() == "done");
+	CHECK(play.turn() == 0.0f);
 
-	play.set("hand", "got", 0.0f);
-	play.set("westhand", "got", 0.0f);
-	play.set("northhand", "got", 26.0f);
+	play.set("you", "got", 0.0f);
+	play.set("west", "got", 0.0f);
+	play.set("north", "got", 26.0f);
 	play.set("table", "phase", 0.0f);
 	play.frames(2);
-	CHECK(play.of("hand", "score") == 29.0f);
-	CHECK(play.of("westhand", "score") == 39.0f);
-	CHECK(play.of("northhand", "score") == 10.0f);
-	CHECK(play.of("easthand", "score") == 26.0f);
+	CHECK(play.of("you", "score") == 29.0f);
+	CHECK(play.of("west", "score") == 39.0f);
+	CHECK(play.of("north", "score") == 10.0f);
+	CHECK(play.of("east", "score") == 26.0f);
 	CHECK(play.get("message").lookName() == "moon");
 }
 
 TEST_CASE("hearts.xml: at 100 after a hand the lowest score wins", "[cards][hearts]")
 {
 	Hearts play;
-	play.set("hand", "score", 40.0f);
-	play.set("westhand", "score", 104.0f);
-	play.set("northhand", "score", 35.0f);
-	play.set("easthand", "score", 60.0f);
+	play.set("you", "score", 40.0f);
+	play.set("west", "score", 104.0f);
+	play.set("north", "score", 35.0f);
+	play.set("east", "score", 60.0f);
 	play.set("table", "phase", 3.0f);
 	play.frames(2);
 	CHECK(play.state() == "over");
@@ -1465,7 +1496,7 @@ TEST_CASE("hearts.xml: a whole hand, you playing the first card that goes: 26 po
 	}
 	play.untilYou();
 	REQUIRE(play.table("phase") == 3.0f);
-	const float total = play.of("hand", "score") + play.of("westhand", "score") + play.of("northhand", "score") + play.of("easthand", "score");
+	const float total = play.of("you", "score") + play.of("west", "score") + play.of("north", "score") + play.of("east", "score");
 	CHECK((total == 26.0f || total == 78.0f));
 	CHECK(play.pile("stock").pile.cards.size() == 52);
 
@@ -1475,7 +1506,7 @@ TEST_CASE("hearts.xml: a whole hand, you playing the first card that goes: 26 po
 	for (int i = 0; i < 100 && play.table("phase") != 0.0f; ++i) { play.frames(1); }
 	play.frames(1);
 	CHECK(play.pile("mine").pile.cards.size() == 13);
-	CHECK(play.table("turn") == 2.0f);
+	CHECK(play.turn() == 2.0f);
 }
 
 TEST_CASE("spades.xml: everyone bids what their cards should take; you change yours and bid", "[cards][spades]")

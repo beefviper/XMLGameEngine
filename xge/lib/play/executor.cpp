@@ -232,7 +232,13 @@ namespace xge
 			[&](const CmdPushState& c) { game.pushState(c.name); },
 			[&](const CmdPopState& c) { game.popState(c.name); },
 			[&](const CmdTurns& t) { if (!self) { game.startTurns(t.players); } },
-			[&](const CmdPass&) { if (!self) { game.passTurn(false); } else if (self->takesTurns) { done = game.passPlayers(*self); } },
+			[&](const CmdPass& p)
+			{
+				if (p.member >= 0) { done = game.passPlayersTo(p.group.empty() && self ? self->groupName : p.group, p.member); }
+				else if (!p.group.empty()) { if (Object* on = game.onTurn(p.group)) { done = game.passPlayers(*on); } }
+				else if (!self) { game.passTurn(false); }
+				else if (self->takesTurns) { done = game.passPlayers(*self); }
+			},
 			[&](const CmdOut&) { if (!self) { game.passTurn(true); } },
 			[&](const CmdDemo&) { if (!self) { game.requestDemo(); } },
 			[&](const CmdIncrement& i) { game.addTo(i.target, i.amount); },

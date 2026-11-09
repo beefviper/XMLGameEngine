@@ -345,7 +345,14 @@ namespace xge
 			if (raw.players.empty()) { throw std::runtime_error("<turns> has no <player>; it needs one for each player"); }
 			return CmdTurns{ raw.players };
 		}
-		if (verb == "pass") { return CmdPass{}; }
+		if (verb == "pass")
+		{
+			const bool none = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
+			if (none) { return CmdPass{ raw.object, -1 }; }
+			const float number = evaluate(raw.amount);
+			if (number < 0.0f || number != std::floor(number)) { throw std::runtime_error("<pass member=\"" + raw.amount.text + "\">: is " + formatDisplayNumber(number) + "; expected a member's number from 1, or 0 for nobody's turn"); }
+			return CmdPass{ raw.object, static_cast<int>(number) };
+		}
 		if (verb == "out") { return CmdOut{}; }
 		if (verb == "demo") { return CmdDemo{}; }
 

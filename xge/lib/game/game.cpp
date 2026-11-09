@@ -809,7 +809,7 @@ namespace xge
 
 	float* Game::variableOf(const VariableName& name) noexcept
 	{
-		Object* owner = tryGetObject(name.owner);
+		Object* owner = tryGetObject(anyTurns ? turnOwner(name.owner) : name.owner);
 		if (!owner) { return nullptr; }
 		const auto found = owner->variable.find(name.variable);
 		return found == owner->variable.end() ? nullptr : &found->second;
@@ -1250,7 +1250,7 @@ namespace xge
 
 	bool Game::setVariable(const std::string& objectName, const std::string& variableName, float value)
 	{
-		Object* owner = tryGetObject(objectName);
+		Object* owner = tryGetObject(anyTurns ? turnOwner(objectName) : objectName);
 		if (!owner)
 		{
 			return false;

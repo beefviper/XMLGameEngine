@@ -13,6 +13,7 @@
 #include "game/game.h"
 
 #include <algorithm>
+#include <map>
 #include <set>
 #include <stdexcept>
 
@@ -20,7 +21,7 @@ namespace xge
 {
 	void settlePlayers(GameData& data)
 	{
-		std::set<std::string> started;
+		std::map<std::string, int> count;
 		for (RawObject& object : data.objects)
 		{
 			if (!object.takesTurns)
@@ -28,7 +29,10 @@ namespace xge
 				if (!object.think.empty()) { throw std::runtime_error("object '" + object.name + "': has a <think>, which plays a member of a group that takes <turns>"); }
 				continue;
 			}
-			const bool first = started.insert(object.groupName).second;
+			const int number = ++count[object.groupName];
+			const bool first = number == 1;
+			// Its seat at a trick is its number.
+			if (object.handSeat == 0) { object.handSeat = number; }
 			object.variable["turn"] = RawValue::expression(first ? "1" : "0");
 			if (!object.turnsSprite.empty() && std::none_of(object.looks.begin(), object.looks.end(), [&](const RawSprite& look) { return look.name == object.turnsSprite; }))
 			{
@@ -44,6 +48,7 @@ namespace xge
 		for (Object& object : objects)
 		{
 			if (!object.takesTurns) { continue; }
+			anyTurns = true;
 			const bool first = started.insert(object.groupName).second;
 			object.variable["turn"] = first ? 1.0f : 0.0f;
 			refreshBoundTexts(object.name, "turn", object.variable["turn"]);
@@ -94,13 +99,46 @@ namespace xge
 		const auto at = std::find(members.begin(), members.end(), &member);
 		Object* next = members[static_cast<std::size_t>(at - members.begin() + 1) % members.size()];
 		if (next == &member) { return true; }
-		setVariable(member.name, "turn", 0.0f);
-		if (!member.turnsSprite.empty()) { showLookNamed(member, member.turnsSprite); }
-		setVariable(next->name, "turn", 1.0f);
-		next->showLook(0);
+		handTurn(members, next);
 		// What else the press would do is not the next one's.
 		turnHandedOver = true;
-		layOutCards();
 		return true;
+	}
+
+	bool Game::passPlayersTo(const std::string& group, int number)
+	{
+		const std::string full = fullName(group);
+		std::vector<Object*> members;
+		for (Object& object : objects)
+		{
+			if (object.takesTurns && (object.inGroup(group) || object.inGroup(full)) && object.exists) { members.push_back(&object); }
+		}
+		if (members.empty() || number > static_cast<int>(members.size())) { return false; }
+		handTurn(members, number == 0 ? nullptr : members[static_cast<std::size_t>(number - 1)]);
+		return true;
+	}
+
+	// The turn to `next` (none: nobody's), the others off it.
+	void Game::handTurn(const std::vector<Object*>& members, Object* next)
+	{
+		for (Object* each : members)
+		{
+			const bool on = each == next;
+			if (on == (each->variable["turn"] != 0.0f)) { continue; }
+			setVariable(each->name, "turn", on ? 1.0f : 0.0f);
+			if (on) { each->showLook(0); }
+			else if (!each->turnsSprite.empty()) { showLookNamed(*each, each->turnsSprite); }
+		}
+		// A moment before the computer plays the one whose turn came, and the
+		// game's conditions see the turn change first.
+		cardWait = 30;
+		layOutCards();
+	}
+
+	std::string Game::turnOwner(const std::string& owner)
+	{
+		if (!takesTurns(owner)) { return owner; }
+		const Object* on = onTurn(owner);
+		return on ? on->name : owner;
 	}
 }

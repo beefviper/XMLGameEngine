@@ -205,6 +205,12 @@
             <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
         </xsl:when>
+        <!-- the turn to a member by its number -->
+        <xsl:when test="$verb = 'pass' and $node/@member">
+          <xsl:text> command.amount = value(</xsl:text>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="$node/@member" /></xsl:call-template>
+          <xsl:text>);</xsl:text>
+        </xsl:when>
         <!-- the one piece that can move -->
         <xsl:when test="$verb = 'pick' and $node/only"> command.only = true;</xsl:when>
         <!-- a put that closes what it walls in -->

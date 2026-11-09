@@ -168,6 +168,11 @@ namespace xge
 		bool takesTurns(const std::string& name) const;
 		bool answers(const Object& member) const;
 		bool passPlayers(Object& member);
+		// <pass member=>: the turn of the group's member of that number
+		// (from 1; 0: nobody's turn). And the owner a verb's variable names:
+		// a group that takes turns means the member on its turn.
+		bool passPlayersTo(const std::string& group, int number);
+		std::string turnOwner(const std::string& owner);
 		// The engine says while it presses the computer's keys.
 		void pressingForComputer(bool pressing) noexcept { computerPresses = pressing; }
 
@@ -530,7 +535,9 @@ namespace xge
 		// showing their <turns sprite=>; each member the computer plays,
 		// with its <think>; whether the computer is pressing now.
 		void startPlayers();
+		void handTurn(const std::vector<Object*>& members, Object* next);
 		std::map<std::string, CmdThink> memberThinks;
+		bool anyTurns{ false };
 		bool computerPresses{ false };
 		std::vector<Object*> shownPiles();
 		// Where each card's object is in `objects`, by its number less one
