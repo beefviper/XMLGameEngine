@@ -110,5 +110,5 @@ Space or a click plays; P or Escape pauses (N there deals again where offered).
 | `holdem` | W bets or raises, Space checks or calls, X folds | poker hands as a game's [`<patterns>`](cards.md#patterns), live `pattern`, `strength`, `odds` |
 | `hearts` | A/D along your cards, Space plays | a [`<trick>`](cards.md#tricks) broken by hearts, points by card; the players a [group in turn](states.md#players-as-a-group), the trick's winner leading |
 | `spades` | W/S bid, A/D along your cards, Space bids or plays | [trumps and partners](cards.md#tricks), bids from live `tricks`; the players a [group in turn](states.md#players-as-a-group), partners by `<team>` |
-| `gin` | A/D along cards, W/S to the piles, Space draws or discards, K knocks | [melds](cards.md#melds) of sets and runs, live `deadwood` |
+| `gin` | A/D along cards, W/S to the piles, Space draws or discards, K knocks | [melds](cards.md#melds) of sets and runs, live `deadwood`; the players a [group in turn](states.md#players-as-a-group), a turn a draw then a discard |
 | `pyramid` | Space turns the stock, picks and pairs, X puts back | [covering](cards.md#covering-and-pairs), a hand that holds two, a pile that takes a sum of 13 |

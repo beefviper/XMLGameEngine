@@ -1682,6 +1682,7 @@ namespace
 		}
 
 		Object& pile(const std::string& name) { return get(name); }
+		float of(const std::string& player, const std::string& name) { return get(player).variable.at(name); }
 		float table(const std::string& name) { return get("table").variable.at(name); }
 		void set(const std::string& object, const std::string& name, float value) { game.setVariable(get(object).name, name, value); }
 
@@ -1704,7 +1705,7 @@ namespace
 		// The hand at the top of the discard pile, and Space.
 		void drawDiscard()
 		{
-			Object& hand = get("hand");
+			Object& hand = get("you");
 			hand.hand.pile = "playing.discard";
 			hand.hand.at = static_cast<int>(pile("discard").pile.cards.size()) - 1;
 			tap(KeyCode::Space);
@@ -1715,7 +1716,7 @@ namespace
 		void discard(const std::string& name, KeyCode key)
 		{
 			const auto& mine = pile("mine").pile.cards;
-			Object& hand = get("hand");
+			Object& hand = get("you");
 			hand.hand.pile = "playing.mine";
 			hand.hand.at = static_cast<int>(std::find(mine.begin(), mine.end(), cardOf(name)) - mine.begin());
 			tap(key);
@@ -1739,7 +1740,7 @@ TEST_CASE("gin.xml: cards laid out in the melds that leave the least deadwood, t
 	Gin play(cardsOf({ suitOf("hearts", { "5", "6", "7" }), { "7 spades", "7 diamonds" }, suitOf("spades", { "J", "Q", "K" }), { "A diamonds", "2 spades" }, ginJunk, { "10 hearts" } }));
 	REQUIRE(play.table("phase") == 0.0f);
 	CHECK(play.pile("mine").deadwood == 14.0f);
-	CHECK(play.pile("north").deadwood == 58.0f);
+	CHECK(play.pile("northcards").deadwood == 58.0f);
 	// Melds first, then the deadwood.
 	const auto& mine = play.pile("mine").pile.cards;
 	REQUIRE(mine.size() == 10);
@@ -1758,10 +1759,10 @@ TEST_CASE("gin.xml: a draw from the discard pile, then a discard; the deadwood c
 	CHECK(play.pile("mine").pile.cards.size() == 11);
 	CHECK(play.table("phase") == 1.0f);
 	CHECK(play.pile("mine").deadwood == 2.0f);
-	CHECK(play.get("hand").lookName() == "discard");
+	CHECK(play.get("you").lookName() == "discard");
 	play.discard("K diamonds", KeyCode::Space);
 	CHECK(play.holds("discard", "K diamonds"));
-	CHECK(play.table("phase") >= 2.0f);
+	CHECK(play.of("north", "turn") == 1.0f);
 }
 
 TEST_CASE("gin.xml: a knock with ten or less scores the difference, north's cards shown", "[cards][gin]")
@@ -1771,9 +1772,9 @@ TEST_CASE("gin.xml: a knock with ten or less scores the difference, north's card
 	play.discard("K diamonds", KeyCode::K);
 	play.frames(2);
 	CHECK(play.table("phase") == 4.0f);
-	CHECK(play.table("you") == 56.0f);
+	CHECK(play.of("you", "score") == 56.0f);
 	CHECK(play.get("message").lookName() == "youknock");
-	for (const int number : play.pile("north").pile.cards) { CHECK(play.game.cardAt(number)->faceUp); }
+	for (const int number : play.pile("northcards").pile.cards) { CHECK(play.game.cardAt(number)->faceUp); }
 }
 
 TEST_CASE("gin.xml: gin scores 25 more", "[cards][gin]")
@@ -1782,7 +1783,7 @@ TEST_CASE("gin.xml: gin scores 25 more", "[cards][gin]")
 	play.drawDiscard();
 	play.discard("K diamonds", KeyCode::K);
 	play.frames(2);
-	CHECK(play.table("you") == 83.0f);
+	CHECK(play.of("you", "score") == 83.0f);
 	CHECK(play.get("message").lookName() == "yougin");
 }
 
@@ -1790,12 +1791,12 @@ TEST_CASE("gin.xml: a knock against no more deadwood is undercut: 25 and the dif
 {
 	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "9 diamonds" },
 		suitOf("spades", { "A", "2", "3" }), suitOf("diamonds", { "4", "5", "6" }), { "8 clubs", "8 hearts", "8 spades", "2 clubs" }, { "K diamonds" } }));
-	CHECK(play.pile("north").deadwood == 2.0f);
+	CHECK(play.pile("northcards").deadwood == 2.0f);
 	play.drawDiscard();
 	play.discard("K diamonds", KeyCode::K);
 	play.frames(2);
-	CHECK(play.table("north") == 32.0f);
-	CHECK(play.table("you") == 0.0f);
+	CHECK(play.of("north", "score") == 32.0f);
+	CHECK(play.of("you", "score") == 0.0f);
 	CHECK(play.get("message").lookName() == "youcut");
 }
 
@@ -1806,7 +1807,7 @@ TEST_CASE("gin.xml: a knock with more than ten left is only a discard", "[cards]
 	play.discard("9 clubs", KeyCode::K);
 	play.frames(2);
 	CHECK(play.table("knocking") == 0.0f);
-	CHECK(play.table("phase") >= 2.0f);
+	CHECK(play.of("north", "turn") == 1.0f);
 	CHECK(play.table("phase") != 4.0f);
 }
 
@@ -1816,18 +1817,35 @@ TEST_CASE("gin.xml: north draws a discard that melds, and lets go of what melds 
 		{ "4 diamonds", "5 diamonds", "A spades", "3 spades", "9 spades", "J spades", "K clubs", "2 clubs", "4 clubs", "8 hearts" }, { "Q hearts" } }));
 	play.drawDiscard();
 	play.discard("6 diamonds", KeyCode::Space);
-	for (int i = 0; i < 600 && play.table("phase") != 0.0f; ++i) { play.frames(1); }
-	REQUIRE(play.table("phase") == 0.0f);
-	CHECK(play.holds("north", "6 diamonds"));
-	CHECK(play.pile("north").pile.cards.size() == 10);
-	CHECK(play.pile("north").deadwood == 37.0f);
+	for (int i = 0; i < 600 && play.of("you", "turn") != 1.0f; ++i) { play.frames(1); }
+	REQUIRE(play.of("you", "turn") == 1.0f);
+	CHECK(play.holds("northcards", "6 diamonds"));
+	CHECK(play.pile("northcards").pile.cards.size() == 10);
+	CHECK(play.pile("northcards").deadwood == 37.0f);
+}
+
+TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[cards][gin]")
+{
+	// Yours: hearts, clubs and diamonds that meld nowhere. North's: three melds and the king of spades.
+	Gin play(cardsOf({ { "2 hearts", "4 hearts", "6 hearts", "8 hearts", "10 hearts", "Q hearts", "2 clubs", "4 clubs", "6 clubs", "8 clubs" },
+		suitOf("spades", { "A", "2", "3" }), suitOf("diamonds", { "4", "5", "6" }), { "9 clubs", "9 hearts", "9 spades", "K spades" }, { "Q diamonds" } }));
+	REQUIRE(play.pile("northcards").deadwood == 10.0f);
+	play.drawDiscard();
+	play.discard("Q diamonds", KeyCode::Space);
+	for (int i = 0; i < 600 && play.table("phase") != 4.0f; ++i) { play.frames(1); }
+	REQUIRE(play.table("phase") == 4.0f);
+	CHECK(play.get("message").lookName() == "northknock");
+	CHECK(play.of("north", "score") == play.pile("mine").deadwood - play.pile("northcards").deadwood);
+	CHECK(play.of("you", "turn") == 0.0f);
+	CHECK(play.of("north", "turn") == 0.0f);
+	for (const int number : play.pile("northcards").pile.cards) { CHECK(play.game.cardAt(number)->faceUp); }
 }
 
 TEST_CASE("gin.xml: at 100 after a hand the higher score wins", "[cards][gin]")
 {
 	Gin play(ginJunk);
-	play.set("table", "you", 105.0f);
-	play.set("table", "north", 40.0f);
+	play.set("you", "score", 105.0f);
+	play.set("north", "score", 40.0f);
 	play.set("table", "phase", 4.0f);
 	play.frames(2);
 	CHECK(play.state() == "over");
