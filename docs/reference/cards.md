@@ -34,7 +34,7 @@ The card words are moving to general ones: a pack is a `<group>`, a pile is anyt
 </group>
 ```
 
-- **The pack** is a group in `<columns>` and `<rows>` whose class a `<holds>` names. Each cell is a card: its row is its `suit`, its column its `rank` (variables, from 1), its first look the face and its second the back. A sheet `<cell>` that leaves out its column or row takes the cell's own, so the faces are one sprite. `worth` is the rank unless the cells give one.
+- **The pack** is a group in `<columns>` and `<rows>` whose class a `<holds>` names. Each cell is a card: its row is its `suit`, its column its `rank` (variables, from 1), its first look the face and its second the back. A sheet `<cell>` that leaves out its column or row takes the cell's own, so the faces are one sprite. `worth` is the rank (its column) unless a column, row or cell gives one (`<column><number>11</number><number>12</number><number>13</number><variables><variable name="worth">10</variable></variables></column>`); a **`high`** variable is a second value it may count instead where a holder counts within a limit (Blackjack's ace: `high` 11).
 - **`<holds class sprite>`** on an object or group makes it a holder: what it holds, in order, the last on top, each showing the look `sprite=` while laid there (none: each keeps its own).
 - **`<spread>`**: each one on from the one under it (`<x>`, `<y>`, `<width>` the most it spreads across); a second with `sprite=` for those showing that look.
 - **`<accepts>`**: what may be placed on top, by the arriving one's variables. `<same variable>`, `<differs variable>`, `<step variable>N` (the top one's plus N), `<total variable>N` (the two add up to N), `<condition variable>` with `<equal>`, `<atleast>` or `<atmost>`; `<one />` one at a time; `<any>` holds rules of which one must hold; `<empty>` holds `<condition>`s for the first. No `<accepts>`: takes nothing.
@@ -60,6 +60,15 @@ The card words are moving to general ones: a pack is a `<group>`, a pile is anyt
   ```
 
   For now it sends all of a pack into one holder, orders it at random, then `<distribute>`s N to each holder of a group (one at a time round; `<more>`: each after the first that many more) or `<send>`s N to one.
+- **`<counts variable="worth"><atmost>21</atmost></counts>`** in a `<holds>`: the holder's own variable of that name (`player.worth`) is what its face-up members' variables of that name add up to. For `worth`, a member's `high` counts instead while the total stays within `<atmost>`.
+- **The verbs, in any action, timer or condition:** `<send from="stock" into="player">1</send>` sends the top one (or `<all />`) from holder to holder; from the pack's name, `<all />` is every card wherever it is. `sprite="back"` lays them showing that look. `<order group="stock"><random /></order>` puts what a holder holds at random. **`<become object="dealer" sprite="face" />`** on a holder, with a look of what it holds rather than its own, turns everything it holds to that look. Each is refused when there is nothing to send or no such holder or look.
+
+  ```xml
+  <action name="next">
+    <send from="cards" into="stock"><all /></send>
+    <order group="stock"><random /></order>
+  </action>
+  ```
 - Live **`held`** is how many a holder holds (`cards` as well).
 
 ## Deck

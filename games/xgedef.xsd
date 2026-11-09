@@ -798,6 +798,16 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="lift" type="valueType" minOccurs="0" />
+      <!-- counts: its own variable of that name, what its face-up members' variables of that name add up to; for
+           worth, a member's high instead while the total stays <atmost> -->
+      <xs:element name="counts" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="atmost" type="valueType" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
       <!-- kept in order by these variables, the first first -->
       <xs:element name="order" minOccurs="0">
         <xs:complexType>
@@ -1345,14 +1355,28 @@
   </xs:complexType>
 
   <!-- send: on maps with <cells />, the object's piece on map from= goes to map into=, in the <column> and <row> given (left out: the same cell). -->
-  <xs:complexType name="sendType">
-    <xs:sequence minOccurs="0">
-      <xs:element name="column" type="valueType" />
-      <xs:element name="row" type="valueType" />
-    </xs:sequence>
-    <xs:attribute name="object" type="xs:string" use="required" />
+  <!-- send: with object=, its piece from one map of cells to another, at a <column> and <row> if given; with no
+       object=, members of a held class from holder from= (a group's name: every member, wherever it is) into holder
+       into=: how many, as content, or <all />; sprite= the look they show there -->
+  <xs:complexType name="sendType" mixed="true">
+    <xs:choice minOccurs="0">
+      <xs:sequence>
+        <xs:element name="column" type="valueType" />
+        <xs:element name="row" type="valueType" />
+      </xs:sequence>
+      <xs:element name="all" type="emptyType" />
+    </xs:choice>
+    <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="from" type="xs:NMTOKEN" use="required" />
     <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
+  </xs:complexType>
+  <!-- order: what holder group= holds, at <random /> -->
+  <xs:complexType name="orderType">
+    <xs:sequence>
+      <xs:element name="random" type="emptyType" />
+    </xs:sequence>
+    <xs:attribute name="group" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <!-- move: a direction, and how far a frame; on a map with <cells />, how many cells a second while held, after one at once and a <wait> of so many seconds. -->
@@ -1683,6 +1707,7 @@
       <!-- send: a piece from one map of cells to another (a next-piece box
            to the playfield), refused if it has no room there -->
       <xs:element name="send" type="sendType" />
+      <xs:element name="order" type="orderType" />
       <!-- despawn: the object running it, or object= every one of that
            name or group, is taken out of the game -->
       <xs:element name="despawn">

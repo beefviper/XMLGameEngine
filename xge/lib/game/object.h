@@ -695,6 +695,7 @@ namespace xge
 			std::string topSprite;
 			std::string pickedSound;    // <picked><play sound>: sounded when picking from it sends
 			std::vector<std::string> orderBy; // <order><by variable>s: kept in order by these, the first first
+			std::string counts;         // <counts variable>: the holder's own variable of that name, its face-up members' added
 		};
 		RawPile pile;
 		// <owns object=>: the holder of its own (a player's cards), as
@@ -1201,6 +1202,7 @@ namespace xge
 			bool sorted{ false };
 			float lift{};
 			float pointsMost{};     // 0: no limit
+			std::string counts;     // <counts variable>: as written (empty: none)
 			struct Each
 			{
 				std::string suit;

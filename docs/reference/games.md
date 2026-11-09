@@ -106,7 +106,7 @@ Space or a click plays; P or Escape pauses (N there deals again where offered).
 |---|---|---|
 | `klondike` | move from pile to pile, Space takes and lays, X puts back, F sends home; the mouse drags | the pack a [group](cards.md#holders) of rows and columns, places that `<holds>` with rules of what they accept, the deal in `<starts>` |
 | `crazyeights` | A/D along your cards, W/S to the stock, Space plays or draws, names the suit after an eight | [players as a group](states.md#players-as-a-group) taking turns, a computer member, `<wild>` and a call |
-| `blackjack` | A/D bet, Space deals, W hits, S stands | [`<worth>`](cards.md#points) and live `points`, a dealer's hole card |
+| `blackjack` | A/D bet, Space deals, W hits, S stands | a pack whose columns give `worth` (an ace's `high` 11) and holders that [`<counts>`](cards.md#holders) within 21; `<send sprite="back">` for the dealer's hole card |
 | `holdem` | W bets or raises, Space checks or calls, X folds | poker hands as a game's [`<patterns>`](cards.md#patterns), live `pattern`, `strength`, `odds` |
 | `hearts` | A/D along your cards, Space plays | a [`<trick>`](cards.md#tricks) broken by hearts, points by card; the players a [group in turn](states.md#players-as-a-group), the trick's winner leading |
 | `spades` | W/S bid, A/D along your cards, Space bids or plays | [trumps and partners](cards.md#tricks), bids from live `tricks`; the players a [group in turn](states.md#players-as-a-group), partners by `<team>` |

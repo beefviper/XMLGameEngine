@@ -258,6 +258,12 @@ namespace xge
 			[&](const CmdSpawn& c) { done = spawn(c, self); },
 			[&](const CmdSend& s)
 			{
+				// Members of a held class, holder to holder; else a piece, map to map.
+				if (s.held)
+				{
+					done = game.sendHeld(s.from, s.into, s.count, s.all, s.sprite);
+					return;
+				}
 				const auto cell = [](const std::optional<float>& given) { return given ? std::optional<int>(static_cast<int>(std::lround(*given))) : std::nullopt; };
 				done = game.sendCells(s.target, s.from, s.into, cell(s.column), cell(s.row));
 			},
@@ -282,6 +288,7 @@ namespace xge
 			[&](const CmdShuffle& s) { done = game.gatherCards(s.pile); },
 			[&](const CmdRedeal&) { game.redealCards(); },
 			[&](const CmdCall& c) { done = self && game.callSuit(*self, c.pile); },
+			[&](const CmdOrder& r) { done = game.orderHeld(r.group); },
 			[&](const CmdPut& p) { done = self && game.putPiece(*self, p); },
 			[&](const CmdCount& c) { game.setNumber(c.target, game.countClass(c.objClass)); },
 			// Another action, of this object or another, as part of this.

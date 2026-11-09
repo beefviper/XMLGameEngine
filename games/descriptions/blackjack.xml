@@ -21,16 +21,17 @@
   Down stands. Space after a hand clears the table. P or Escape pauses.
 
   How it is written:
-  * The deck is the card sheet's, its ace worth <worth>1</worth><worth>11</worth>
-    and its court cards <worth>10</worth>.
-  * The two hands of cards are piles with <points><atmost>21</atmost>
-    </points>: the live number `points` counts their face-up cards, an
-    ace as 11 while that stays within 21.
-  * Two hands with piles of their own <deal pile="stock" /> into them,
-    the dealer's second card with faces="down"; <reveal pile="dealer" />
-    turns it up; <shuffle pile="stock" /> gathers every card for the next.
+  * The pack is a group of class card, a row for each suit and a column
+    for each rank, a card worth its column: the court cards' columns
+    give a worth of 10, the ace's a `high` of 11.
+  * Your cards and the dealer's are holders that <counts variable="worth">
+    <atmost>21</atmost>: their own `worth` adds up their face-up cards',
+    an ace's high while that stays within 21.
+  * The table's actions <send> cards from the stock, the dealer's second
+    showing its back; <become object="dealer" sprite="face" /> turns it
+    up. Between hands every card is sent back and <order>ed at random.
   * The dealer draws by a timer that follows a look its condition gives
-    it while its points are under 17.
+    it while its worth is under 17.
   * The table's `phase`: 0 betting, 1 your play, 2 the dealer's,
     3 settling, 4 the hand over; its looks say what to do.
 -->
@@ -108,77 +109,62 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- the pack: the card sheet's, an ace worth 1 or 11 and the court cards 10 -->
-        <deck name="cards" pile="stock" sheet="cards">
-          <face><width>96</width><height>140</height></face>
-          <suit name="spades"><color>color.black</color></suit>
-          <suit name="hearts"><color>color.red</color></suit>
-          <suit name="clubs"><color>color.black</color></suit>
-          <suit name="diamonds"><color>color.red</color></suit>
-          <rank name="A"><worth>1</worth><worth>11</worth></rank>
-          <rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank><rank>8</rank><rank>9</rank><rank>10</rank>
-          <rank name="J"><worth>10</worth></rank>
-          <rank name="Q"><worth>10</worth></rank>
-          <rank name="K"><worth>10</worth></rank>
-        </deck>
+        <!-- the pack: a row for each suit (spades, hearts, clubs, diamonds), a column for each rank, each face its own
+             cell of the card sheet; a card is worth its column, the court cards 10, and an ace may count 11 -->
+        <group name="cards" class="card">
+          <columns>13</columns>
+          <rows>4</rows>
+          <sprite name="face"><cell sheet="cards"><scale>0.5</scale></cell></sprite>
+          <sprite name="back"><cell sheet="cards"><column>2</column><row>5</row><scale>0.5</scale></cell></sprite>
+          <position><x>0</x><y>0</y></position>
+          <column><number>1</number><variables><variable name="high">11</variable></variables></column>
+          <column><number>11</number><number>12</number><number>13</number><variables><variable name="worth">10</variable></variables></column>
+        </group>
 
         <!-- the stock, top right -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center * 2 - cardwidth - 40</x><y>dealerrow</y></position>
-          <pile faces="down"><deals>1</deals></pile>
+          <holds class="card" sprite="back" />
         </object>
 
-        <!-- the dealer's cards and yours: their points count the face-up cards, an ace as 11 while within 21 -->
+        <!-- the dealer's cards and yours: their worth counts the face-up cards, an ace 11 while within 21 -->
         <object name="dealer" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>left</x><y>dealerrow</y></position>
-          <pile faces="up">
-            <fan><x>48</x><width>480</width></fan>
-            <points><atmost>21</atmost></points>
-          </pile>
+          <holds class="card" sprite="face">
+            <spread><x>48</x><width>480</width></spread>
+            <counts variable="worth"><atmost>21</atmost></counts>
+          </holds>
         </object>
         <object name="player" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>left</x><y>yourrow</y></position>
-          <pile faces="up">
-            <fan><x>48</x><width>480</width></fan>
-            <points><atmost>21</atmost></points>
-          </pile>
+          <holds class="card" sprite="face">
+            <spread><x>48</x><width>480</width></spread>
+            <counts variable="worth"><atmost>21</atmost></counts>
+          </holds>
         </object>
 
         <object name="dealerpoints">
-          <sprite><text style="note"><content>dealer </content><number>dealer.points</number></text></sprite>
+          <sprite><text style="note"><content>dealer </content><number>dealer.worth</number></text></sprite>
           <position><x>left</x><y>dealerrow - 44</y></position>
         </object>
         <object name="yourpoints">
-          <sprite><text style="note"><content>you </content><number>player.points</number></text></sprite>
+          <sprite><text style="note"><content>you </content><number>player.worth</number></text></sprite>
           <position><x>left</x><y>yourrow - 44</y></position>
         </object>
 
-        <!-- who takes the cards: hands of their own, never seen -->
-        <object name="yourhand">
-          <sprite name="hand"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hand pile="player" />
-          <actions>
-            <action name="hit"><deal pile="stock" /><play sound="deal" /></action>
-          </actions>
-        </object>
-        <object name="dealerhand">
+        <!-- the dealer's draw: while it shows draw, a card each 0.6 seconds -->
+        <object name="drawing">
           <sprite name="wait"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="draw"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <hand pile="dealer" />
-          <actions>
-            <action name="up"><deal pile="stock" /></action>
-            <action name="down"><deal pile="stock" faces="down" /></action>
-          </actions>
-          <!-- drawing to 17, a card each half second -->
+          <drawn>false</drawn>
           <timers>
             <timer sprite="draw">
               <every>0.6</every>
-              <deal pile="stock" />
+              <send from="stock" into="dealer">1</send>
               <play sound="deal" />
               <become sprite="wait" />
             </timer>
@@ -195,23 +181,27 @@
           <actions>
             <action name="less"><dec variable="table.bet">10</dec><play sound="chip" /></action>
             <action name="more"><inc variable="table.bet">10</inc><play sound="chip" /></action>
+            <!-- two each, the dealer's second face down -->
             <action name="deal">
               <dec variable="table.bank">table.bet</dec>
-              <trigger object="yourhand" action="hit" />
-              <trigger object="dealerhand" action="up" />
-              <trigger object="yourhand" action="hit" />
-              <trigger object="dealerhand" action="down" />
+              <send from="stock" into="player">1</send>
+              <send from="stock" into="dealer">1</send>
+              <send from="stock" into="player">1</send>
+              <send from="stock" into="dealer" sprite="back">1</send>
+              <play sound="deal" />
               <set variable="table.phase">1</set>
               <become sprite="playing" />
             </action>
-            <action name="hit"><trigger object="yourhand" action="hit" /></action>
+            <action name="hit"><send from="stock" into="player">1</send><play sound="deal" /></action>
             <action name="stand">
-              <reveal pile="dealer" />
+              <become object="dealer" sprite="face" />
               <set variable="table.phase">2</set>
               <become sprite="dealer" />
             </action>
+            <!-- every card back in the stock, shuffled -->
             <action name="next">
-              <shuffle pile="stock" />
+              <send from="cards" into="stock"><all /></send>
+              <order group="stock"><random /></order>
               <set variable="table.phase">0</set>
               <become sprite="betting" />
               <become object="result" sprite="none" />
@@ -240,6 +230,11 @@
           <position><x><centered /></x><y>window.height.center * 2 - 60</y></position>
         </object>
       </objects>
+      <!-- the pack into the stock, shuffled -->
+      <starts>
+        <send from="cards" into="stock"><all /></send>
+        <order group="stock"><random /></order>
+      </starts>
       <inputs>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="table" action="less" from="betting" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="table" action="more" from="betting" /></input>
@@ -261,31 +256,31 @@
 
         <!-- your play: over 21 is bust; 21 stands by itself, at once with blackjack -->
         <condition>
-          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="points"><above>21</above></condition></all>
-          <reveal pile="dealer" />
+          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="worth"><above>21</above></condition></all>
+          <become object="dealer" sprite="face" />
           <set variable="table.phase">4</set>
           <become object="table" sprite="done" />
           <become object="result" sprite="bust" />
           <play sound="lose" />
         </condition>
         <condition>
-          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="points"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
-          <reveal pile="dealer" />
+          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="worth"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
+          <become object="dealer" sprite="face" />
           <set variable="table.phase">3</set>
           <become object="table" sprite="dealer" />
         </condition>
         <condition>
-          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="points"><equal>21</equal></condition></all>
+          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="worth"><equal>21</equal></condition></all>
           <trigger object="table" action="stand" />
         </condition>
 
         <!-- the dealer's play: under 17 it draws, else it stands -->
         <condition>
-          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="dealer" variable="points"><below>17</below></condition></all>
-          <become object="dealerhand" sprite="draw" from="wait" />
+          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="dealer" variable="worth"><below>17</below></condition></all>
+          <become object="drawing" sprite="draw" from="wait" />
         </condition>
         <condition>
-          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="dealer" variable="points"><atleast>17</atleast></condition></all>
+          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="dealer" variable="worth"><atleast>17</atleast></condition></all>
           <set variable="table.phase">3</set>
         </condition>
 
@@ -293,8 +288,8 @@
         <condition>
           <all>
             <condition object="table" variable="phase"><equal>3</equal></condition>
-            <condition object="player" variable="points"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition>
-            <condition object="dealer" variable="points"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition>
+            <condition object="player" variable="worth"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition>
+            <condition object="dealer" variable="worth"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition>
           </all>
           <inc variable="table.bank">table.bet</inc>
           <set variable="table.phase">4</set>
@@ -302,7 +297,7 @@
           <become object="result" sprite="push" />
         </condition>
         <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="points"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
+          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="worth"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
           <inc variable="table.bank">table.bet * 2.5</inc>
           <set variable="table.phase">4</set>
           <become object="table" sprite="done" />
@@ -311,14 +306,14 @@
         </condition>
         <!-- the dealer's blackjack beats any other 21 -->
         <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="dealer" variable="points"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition></all>
+          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="dealer" variable="worth"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition></all>
           <set variable="table.phase">4</set>
           <become object="table" sprite="done" />
           <become object="result" sprite="lose" />
           <play sound="lose" />
         </condition>
         <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="dealer" variable="points"><above>21</above></condition></all>
+          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="dealer" variable="worth"><above>21</above></condition></all>
           <inc variable="table.bank">table.bet * 2</inc>
           <set variable="table.phase">4</set>
           <become object="table" sprite="done" />
@@ -326,7 +321,7 @@
           <play sound="win" />
         </condition>
         <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="points"><above>dealer.points</above></condition></all>
+          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="worth"><above>dealer.worth</above></condition></all>
           <inc variable="table.bank">table.bet * 2</inc>
           <set variable="table.phase">4</set>
           <become object="table" sprite="done" />
@@ -334,7 +329,7 @@
           <play sound="win" />
         </condition>
         <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="points"><equal>dealer.points</equal></condition></all>
+          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="worth"><equal>dealer.worth</equal></condition></all>
           <inc variable="table.bank">table.bet</inc>
           <set variable="table.phase">4</set>
           <become object="table" sprite="done" />

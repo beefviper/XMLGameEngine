@@ -1289,6 +1289,18 @@ namespace xge
 					readAcceptRules(*child, pile.takes, pile.takes.rules, at, 0);
 				}
 				else if (tag == "run") { pile.run = true; }
+				else if (tag == "counts")
+				{
+					// What its members are worth added: a variable of each,
+					// <atmost> a limit a member's `high` stays within.
+					pile.counts = requireAttribute(*child, "variable", at);
+					pile.hasPoints = true;
+					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						if (part->getName() != "atmost") { fail(at, "unknown <" + part->getName() + ">; expected an <atmost> if wanted"); }
+						pile.pointsMost = readValue(*part, at + " > <atmost>");
+					}
+				}
 				else if (tag == "top") { pile.topSprite = requireAttribute(*child, "sprite", at); }
 				else if (tag == "lift") { pile.lift = readValue(*child, at); }
 				else if (tag == "order")
@@ -1339,7 +1351,7 @@ namespace xge
 						else { fail(at, "unknown <" + name + ">; expected a <send into>, an <empty> and a <play sound>"); }
 					}
 				}
-				else { fail(here, "unknown <" + tag + ">; expected <spread>s, <accepts>, <run />, <top>, <lift>, <order> and <picked>"); }
+				else { fail(here, "unknown <" + tag + ">; expected <spread>s, <accepts>, <run />, <counts>, <top>, <lift>, <order> and <picked>"); }
 			}
 		}
 
@@ -1674,7 +1686,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal" || name == "call" || name == "shuffle" || name == "redeal" || name == "collect";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal" || name == "call" || name == "shuffle" || name == "redeal" || name == "collect" || name == "order";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1715,7 +1727,31 @@ namespace xge
 				requireAttribute(node, "variable", where);
 				command.amount = readValue(node, where);
 			}
-			if (verb == "send")
+			if (verb == "send" && node.getAttribute("object").empty())
+			{
+				// Members of a held class, holder to holder: how many, or <all />.
+				command.from = requireAttribute(node, "from", where);
+				command.into = requireAttribute(node, "into", where);
+				const std::string here = where + " > <send>";
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "all") { fail(here, "unknown <" + child->getName() + ">; expected how many, or <all />"); }
+					command.all = true;
+				}
+				if (!command.all) { command.amount = readValue(node, where); }
+				else if (!readText(node).empty()) { fail(here, "has <all /> and a number; give one"); }
+			}
+			else if (verb == "order")
+			{
+				command.object = requireAttribute(node, "group", where);
+				const std::string here = where + " > <order>";
+				if (!findChild(&node, "random")) { fail(here, "orders what that holder holds at <random />"); }
+				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+				{
+					if (child->getName() != "random") { fail(here, "unknown <" + child->getName() + ">; expected <random />"); }
+				}
+			}
+			else if (verb == "send")
 			{
 				requireAttribute(node, "object", where);
 				command.from = requireAttribute(node, "from", where);

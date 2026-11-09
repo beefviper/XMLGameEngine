@@ -783,6 +783,10 @@ namespace xge
 
 	// <send object from into>: the object's piece on map `from` goes to map
 	// `into`, in that column and row (left out: the cell it is in).
+	// With no object=, members of a held class: <send from into>N</send>
+	// the top N of holder `from` (or <all />; from a group: every member,
+	// wherever it is) into holder `into`, showing `sprite` if given
+	// (Game::sendHeld).
 	struct CmdSend
 	{
 		std::string target;
@@ -790,6 +794,17 @@ namespace xge
 		std::string into;
 		std::optional<float> column;
 		std::optional<float> row;
+		bool held{ false };
+		int count{};
+		bool all{ false };
+		std::string sprite;
+	};
+
+	// <order group><random /></order>: what that holder holds, in a random
+	// order (Game::orderHeld).
+	struct CmdOrder
+	{
+		std::string group;
 	};
 
 	// <despawn /> - the object takes itself out of the game; with object=,
@@ -846,7 +861,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdCount, CmdThink, CmdTake, CmdLay, CmdDeal, CmdCall, CmdRevealCards, CmdShuffle, CmdRedeal, CmdCollect, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdOrder, CmdCount, CmdThink, CmdTake, CmdLay, CmdDeal, CmdCall, CmdRevealCards, CmdShuffle, CmdRedeal, CmdCollect, CmdLive>;
 
 	struct LoadedCommand
 	{
@@ -1057,6 +1072,7 @@ namespace xge
 		// empty text when left out, or <free />. move: its <wait> is `seconds`.
 		bool random{ false };
 		bool free{ false };
+		bool all{ false };     // send: <all />
 		RawValue column;
 		RawValue row;
 		// spawn: the <below> of its <free>, empty text when left out.

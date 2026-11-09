@@ -842,11 +842,16 @@ namespace
 		Object& pile(const std::string& name) { return get(name); }
 		float table(const std::string& name) { return get("table").variable.at(name); }
 
+		// A card of the pack by name ("A", "hearts"): its column and row.
 		int cardOf(const std::string& rank, const std::string& suit)
 		{
+			const std::vector<std::string> suits{ "spades", "hearts", "clubs", "diamonds" };
+			const std::vector<std::string> ranks{ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
+			const int row = static_cast<int>(std::find(suits.begin(), suits.end(), suit) - suits.begin()) + 1;
+			const int column = static_cast<int>(std::find(ranks.begin(), ranks.end(), rank) - ranks.begin()) + 1;
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.isCard && object.card.suitName == suit && object.card.rankName == rank) { return object.cardNumber; }
+				if (object.isCard && object.card.suit == row && object.card.rank == column) { return object.cardNumber; }
 			}
 			return 0;
 		}

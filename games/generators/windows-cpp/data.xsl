@@ -205,6 +205,25 @@
             <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
         </xsl:when>
+        <!-- members of a held class, holder to holder: how many, or all -->
+        <xsl:when test="$verb = 'send' and not($node/@object)">
+          <xsl:choose>
+            <xsl:when test="$node/all"> command.all = true;</xsl:when>
+            <xsl:otherwise>
+              <xsl:text> command.amount = </xsl:text>
+              <xsl:call-template name="value">
+                <xsl:with-param name="node" select="$node" />
+              </xsl:call-template>
+              <xsl:text>;</xsl:text>
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:when>
+        <!-- what a holder holds, at random -->
+        <xsl:when test="$verb = 'order'">
+          <xsl:text> command.object = </xsl:text>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="$node/@group" /></xsl:call-template>
+          <xsl:text>;</xsl:text>
+        </xsl:when>
         <!-- the turn to a member by its number -->
         <xsl:when test="$verb = 'pass' and $node/@member">
           <xsl:text> command.amount = value(</xsl:text>
@@ -1983,6 +2002,16 @@
         <xsl:with-param name="name" select="concat($to, '.pile.lift')" />
         <xsl:with-param name="node" select="lift" />
       </xsl:call-template>
+      <xsl:if test="counts">
+        <xsl:value-of select="concat(' ', $to, '.pile.hasPoints = true;')" />
+        <xsl:value-of select="concat(' ', $to, '.pile.counts = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="counts/@variable" /></xsl:call-template>
+        <xsl:text>;</xsl:text>
+        <xsl:call-template name="field">
+          <xsl:with-param name="name" select="concat($to, '.pile.pointsMost')" />
+          <xsl:with-param name="node" select="counts/atmost" />
+        </xsl:call-template>
+      </xsl:if>
       <xsl:if test="order">
         <xsl:value-of select="concat(' ', $to, '.pile.orderBy = {')" />
         <xsl:for-each select="order/by">

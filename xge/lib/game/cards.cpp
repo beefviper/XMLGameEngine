@@ -505,6 +505,15 @@ namespace xge
 				catch (const std::exception&) { throw std::runtime_error(where + ": its worth is \"" + given->second.text + "\"; expected a number"); }
 			}
 			object.card.worths = { worth };
+			// `high`: what it may count instead, where a holder counts within a limit (an ace's 11).
+			if (const auto high = object.variable.find("high"); high != object.variable.end())
+			{
+				float more = 0.0f;
+				try { more = std::stof(high->second.text); }
+				catch (const std::exception&) { throw std::runtime_error(where + ": its high is \"" + high->second.text + "\"; expected a number"); }
+				if (more != worth) { object.card.worths.push_back(more); }
+				std::sort(object.card.worths.begin(), object.card.worths.end());
+			}
 			object.variable["suit"] = RawValue::expression(std::to_string(object.card.suit));
 			object.variable["rank"] = RawValue::expression(std::to_string(object.card.rank));
 			object.variable["worth"] = RawValue::expression(formatDisplayNumber(worth));
@@ -530,6 +539,8 @@ namespace xge
 				}
 			};
 			if (!pile.holdsSprite.empty()) { known(pile.holdsSprite, "its"); pile.faces = pile.holdsSprite == face ? "up" : "down"; }
+			// <counts variable>: a variable of its own, kept to the total.
+			if (!pile.counts.empty() && !object.variable.count(pile.counts)) { object.variable[pile.counts] = RawValue::expression("0"); }
 			if (!pile.spreadSprite.empty())
 			{
 				known(pile.spreadSprite, "<spread>");
@@ -1005,10 +1016,19 @@ namespace xge
 		// count higher raised as far as the total stays within the limit.
 		float total = 0.0f;
 		std::vector<const Object*> shown;
+		// <counts variable>: a variable of each other than its worth, as it is.
+		const std::string& counted = pile.pile.counts;
+		const bool byVariable = !counted.empty() && counted != "worth";
 		for (const int number : pile.pile.cards)
 		{
 			const Object* card = cardAt(number);
 			if (!card || !card->faceUp || card->card.worths.empty()) { continue; }
+			if (byVariable)
+			{
+				const auto value = card->variable.find(counted);
+				total += value == card->variable.end() ? 0.0f : value->second;
+				continue;
+			}
 			// <each>: what the first that matches it says, or its worth.
 			if (const auto each = eachPoints(pile, *card))
 			{
@@ -1031,6 +1051,7 @@ namespace xge
 			}
 		}
 		pile.points = total;
+		if (!counted.empty()) { setVariable(pile.name, counted, total); }
 		refreshBoundTexts(pile.name, "cards", pile.cardCount);
 		refreshBoundTexts(pile.name, "held", pile.cardCount);
 		refreshBoundTexts(pile.name, "points", pile.points);
@@ -2024,6 +2045,124 @@ namespace xge
 		from->pile.cards.clear();
 		refreshPile(*from);
 		for (const int card : cards) { putOnPile(*into, card); }
+		layOutCards();
+		return true;
+	}
+
+	namespace
+	{
+		// Which way up a card showing that look is: its face (its first
+		// look) up; another of its looks down; none of its looks, nothing.
+		std::optional<bool> faceFor(const Object& card, const std::string& sprite)
+		{
+			for (std::size_t i = 0; i < card.looks.size(); ++i)
+			{
+				if (card.looks[i].name == sprite) { return i == 0; }
+			}
+			return std::nullopt;
+		}
+	}
+
+	bool Game::sendHeld(const std::string& fromName, const std::string& intoName, int count, bool all, const std::string& sprite)
+	{
+		Object* into = pileNamed(intoName);
+		if (!into) { return false; }
+		std::vector<int> sent;
+		if (Object* from = pileNamed(fromName))
+		{
+			if (from == into || from->pile.cards.empty()) { return false; }
+			const std::size_t many = all ? from->pile.cards.size() : std::min(from->pile.cards.size(), static_cast<std::size_t>(count));
+			// The top ones, the topmost first.
+			for (std::size_t i = 0; i < many; ++i) { sent.push_back(takeTop(*from)); }
+		}
+		else
+		{
+			// A group's name: every member, wherever it is.
+			if (!all) { return false; }
+			for (Object& object : objects)
+			{
+				if (object.isCard && (object.inGroup(fromName) || object.card.deck == fromName || object.inGroup(fullName(fromName)))) { sent.push_back(object.cardNumber); }
+			}
+			if (sent.empty()) { return false; }
+			for (Object& object : objects)
+			{
+				if (object.pile.is)
+				{
+					auto& cards = object.pile.cards;
+					const auto gone = std::remove_if(cards.begin(), cards.end(), [&](int number) { return std::find(sent.begin(), sent.end(), number) != sent.end(); });
+					if (gone != cards.end())
+					{
+						cards.erase(gone, cards.end());
+						object.pile.broken.clear();
+						object.called = 0.0f;
+						refreshPile(object);
+					}
+				}
+				if (object.hand.is)
+				{
+					object.hand.held.clear();
+					object.hand.from.clear();
+				}
+			}
+			std::sort(sent.begin(), sent.end());
+		}
+		for (const int number : sent)
+		{
+			Object* card = cardAt(number);
+			if (card) { card->laidBy = 0; }
+			putOnPile(*into, number);
+			if (card && !sprite.empty())
+			{
+				if (const auto up = faceFor(*card, sprite)) { turnCard(*card, *up); }
+			}
+		}
+		refreshPile(*into);
+		// A hand pointing where cards were: at its own, or at that holder.
+		for (Object& object : objects)
+		{
+			if (!object.hand.is) { continue; }
+			Object* pointed = pileNamed(object.hand.pile);
+			if (pointed && object.hand.at >= static_cast<int>(pointed->pile.cards.size())) { object.hand.at = static_cast<int>(pointed->pile.cards.size()) - 1; }
+		}
+		layOutCards();
+		return true;
+	}
+
+	bool Game::orderHeld(const std::string& name)
+	{
+		Object* holder = pileNamed(name);
+		if (!holder) { return false; }
+		std::vector<int>& cards = holder->pile.cards;
+		for (std::size_t i = cards.size(); i > 1; --i)
+		{
+			const std::size_t j = std::min(i - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(i))));
+			std::swap(cards[i - 1], cards[j]);
+		}
+		// Stacked (tests): those cards last, so on top, the first last of all.
+		for (auto each = stackedDeal.rbegin(); each != stackedDeal.rend(); ++each)
+		{
+			const auto at = std::find(cards.begin(), cards.end(), *each);
+			if (at == cards.end()) { continue; }
+			cards.erase(at);
+			cards.push_back(*each);
+		}
+		stackedDeal.clear();
+		refreshPile(*holder);
+		layOutCards();
+		return true;
+	}
+
+	bool Game::turnHeld(Object& holder, const std::string& sprite)
+	{
+		for (const int number : holder.pile.cards)
+		{
+			Object* card = cardAt(number);
+			if (!card) { continue; }
+			const auto up = faceFor(*card, sprite);
+			if (!up) { return false; }
+			if (card->faceUp != *up) { turnCard(*card, *up); }
+		}
+		refreshPile(holder);
 		layOutCards();
 		return true;
 	}

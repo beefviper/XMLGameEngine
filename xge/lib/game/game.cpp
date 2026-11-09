@@ -1413,6 +1413,14 @@ namespace xge
 			if (object.named(target) && !offTurn && (from.empty() || object.lookName() == from))
 			{
 				const std::string before = object.hand.is ? object.lookName() : std::string();
+				// A holder given a look of what it holds, not its own: what
+				// it holds turned to it (a dealer's hidden card shown).
+				const bool own = std::any_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == sprite; });
+				if (!sprite.empty() && object.pile.is && !own)
+				{
+					turnHeld(object, sprite);
+					continue;
+				}
 				if (!sprite.empty()) { showLookNamed(object, sprite); }
 				if (!style.empty()) { wearPaletteNamed(object, style); }
 				handChanged = handChanged || (object.hand.is && object.lookName() != before);

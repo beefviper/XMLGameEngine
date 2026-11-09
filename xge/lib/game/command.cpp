@@ -435,9 +435,24 @@ namespace xge
 			spawn.freeBelow = below ? static_cast<int>(std::lround(*below)) : 0;
 			return spawn;
 		}
+		if (verb == "order") { return CmdOrder{ raw.object }; }
+		if (verb == "send" && raw.object.empty())
+		{
+			CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt, false, 0, false, {} };
+			send.held = true;
+			send.all = raw.all;
+			send.sprite = raw.sprite;
+			if (!raw.all)
+			{
+				const float count = evaluate(raw.amount);
+				if (count < 1.0f || count != std::floor(count)) { throw std::runtime_error("<send from=\"" + raw.from + "\" into=\"" + raw.into + "\">: sends " + formatDisplayNumber(count) + "; expected a whole number from 1, or <all />"); }
+				send.count = static_cast<int>(count);
+			}
+			return send;
+		}
 		if (verb == "send")
 		{
-			CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt };
+			CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt, false, 0, false, {} };
 			if (!(raw.column.kind == RawValue::Kind::Expression && raw.column.text.empty())) { send.column = evaluate(raw.column); }
 			if (!(raw.row.kind == RawValue::Kind::Expression && raw.row.text.empty())) { send.row = evaluate(raw.row); }
 			return send;
@@ -561,6 +576,7 @@ namespace xge
 			[&](const CmdShuffle& s) { o << "shuffle(" << s.pile << ")"; },
 			[&](const CmdRedeal&) { o << "redeal()"; },
 			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
+			[&](const CmdOrder& r) { o << "order(" << r.group << ", random)"; },
 			[&](const CmdPut& p) { o << "put(" << p.objClass << (p.closeClass.empty() ? "" : ", close " + p.closeClass + " " + p.closeObject) << ")"; },
 			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << ")"; },
 			[&](const CmdSlide& m)

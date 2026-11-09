@@ -1022,6 +1022,7 @@ namespace xge
 			pile.showTop = raw.showTop;
 			pile.sorted = raw.sorted;
 			pile.orderBy = raw.orderBy;
+			pile.counts = raw.counts;
 			pile.lift = number(raw.lift);
 			pile.pointsMost = raw.hasPoints ? number(raw.pointsMost) : 0.0f;
 			for (const auto& each : raw.pointsEach) { pile.pointsEach.push_back({ each.suit, each.rank, number(each.points) }); }

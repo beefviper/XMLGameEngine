@@ -490,6 +490,14 @@ namespace xge
 		// pile after shuffling, the first on top, before the piles are dealt.
 		std::vector<int> stackedDeal;
 		bool collectCards(const std::string& from, const std::string& into);
+		// Members of a held class, holder to holder: the top `count` of
+		// `from` (or all; a group's name: every member, wherever it is)
+		// into `into`, showing `sprite` if given; a holder's cards at
+		// random; a holder's cards turned to a look of theirs. False when
+		// refused (nothing to send, no such holder or look).
+		bool sendHeld(const std::string& from, const std::string& into, int count, bool all, const std::string& sprite);
+		bool orderHeld(const std::string& holder);
+		bool turnHeld(Object& holder, const std::string& sprite);
 		bool callSuit(Object& hand, const std::string& pile);
 		bool hopHand(Object& hand, Direction direction);
 		void trackHand(Object& hand, bool horizontal, float at);
