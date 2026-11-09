@@ -600,19 +600,9 @@
           <become object="cursor" sprite="cpufree" from="whitefree" />
         </condition>
         <!-- the option: the only piece that can move is picked up for you -->
-        <condition>
-          <all>
-            <condition object="options" variable="jumper"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>1</equal></condition>
-          </all>
-          <trigger object="cursor" action="redonly" from="redfree" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="options" variable="jumper"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <trigger object="cursor" action="whiteonly" from="whitefree" />
+        <condition object="options" variable="jumper"><equal>1</equal>
+          <condition object="cursor" variable="turn"><equal>1</equal><trigger object="cursor" action="redonly" from="redfree" /></condition>
+          <condition object="cursor" variable="turn"><equal>2</equal><trigger object="cursor" action="whiteonly" from="whitefree" /></condition>
         </condition>
       </conditions>
       <!-- white's move: four ahead, a king worth three men -->

@@ -50,8 +50,9 @@
     less deadwood, else from the stock, and lets go of the card that
     leaves the least. It knocks as soon as it can: its `discarded`, and
     conditions.
-  * The table's `phase`: 0 a draw, 1 a discard, 4 the hand over,
-    5 shuffling; `knocking`: 1 your knock, 3 a knock that holds.
+  * Where the hand is, is the table's look: dealing, drawing,
+    discarding, done; each look's rules sit inside one condition on it.
+    `knocking`: 1 your knock, 3 a knock that holds.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -195,16 +196,17 @@
           <position><x><centered /></x><y>middle + cardheight + 30</y></position>
         </object>
 
-        <!-- the table: the phase, who goes first, who knocks; between hands, Space deals -->
+        <!-- the table: where the hand is (its look), who goes first, who knocks; between hands, Space deals -->
         <object name="table">
-          <sprite name="playing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="dealing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="drawing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="discarding"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="done"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <drawn>false</drawn>
           <actions>
             <action name="shuffle">
-              <set variable="table.phase">5</set>
-              <become sprite="playing" />
+              <become sprite="dealing" />
               <become object="dealer" sprite="shuffling" />
               <play sound="shuffle" />
             </action>
@@ -213,14 +215,13 @@
               <order group="stock"><random /></order>
               <distribute from="stock" into="players">10</distribute>
               <send from="stock" into="discard">1</send>
-              <set variable="table.phase">0</set>
+              <become sprite="drawing" />
               <pass object="players" member="table.first" />
               <set variable="table.first">3 - table.first</set>
               <play sound="deal" />
             </action>
           </actions>
           <variables>
-            <variable name="phase">5</variable>
             <variable name="first">1</variable>
             <variable name="knocking">0</variable>
           </variables>
@@ -263,7 +264,7 @@
             <!-- holding eleven: back to them, to discard -->
             <action name="drawn">
               <play sound="deal" />
-              <set variable="table.phase">1</set>
+              <become object="table" sprite="discarding" />
               <become sprite="discard" />
               <hop direction="down" />
             </action>
@@ -273,7 +274,7 @@
               <place into="discard" />
               <play sound="card" />
               <set variable="players.discarded">1</set>
-              <set variable="table.phase">0</set>
+              <become object="table" sprite="drawing" />
               <pass />
             </action>
             <action name="back"><drop /></action>
@@ -283,7 +284,7 @@
               <place into="discard" />
               <play sound="knock" />
               <set variable="table.knocking">1</set>
-              <set variable="table.phase">0</set>
+              <become object="table" sprite="drawing" />
               <pass />
             </action>
           </actions>
@@ -330,119 +331,87 @@
         <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
-        <!-- a discard to knock: with ten or less left, the hand is over; gin, an undercut, or the difference -->
-        <condition>
-          <all><condition object="table" variable="knocking"><equal>1</equal></condition><condition object="mine" variable="deadwood"><atmost>10</atmost></condition><condition object="mine" variable="deadwood"><equal>0</equal></condition></all>
-          <inc variable="you.score">25 + northcards.deadwood</inc>
-          <become object="message" sprite="yougin" />
-          <play sound="win" />
-          <set variable="table.knocking">3</set>
-        </condition>
-        <condition>
-          <all><condition object="table" variable="knocking"><equal>1</equal></condition><condition object="mine" variable="deadwood"><atmost>10</atmost></condition><condition object="northcards" variable="deadwood"><atmost>mine.deadwood</atmost></condition></all>
-          <inc variable="north.score">25 + mine.deadwood - northcards.deadwood</inc>
-          <become object="message" sprite="youcut" />
-          <play sound="lose" />
-          <set variable="table.knocking">3</set>
-        </condition>
-        <condition>
-          <all><condition object="table" variable="knocking"><equal>1</equal></condition><condition object="mine" variable="deadwood"><atmost>10</atmost></condition></all>
-          <inc variable="you.score">northcards.deadwood - mine.deadwood</inc>
-          <become object="message" sprite="youknock" />
-          <play sound="win" />
-          <set variable="table.knocking">3</set>
-        </condition>
-        <condition object="table" variable="knocking">
-          <equal>1</equal>
+        <!-- your discard to knock: with ten or less left, the hand is over (gin, an undercut, or the difference); else it was only a discard -->
+        <condition object="table" variable="knocking"><equal>1</equal>
+          <condition object="mine" variable="deadwood"><atmost>10</atmost>
+            <condition object="mine" variable="deadwood"><equal>0</equal>
+              <inc variable="you.score">25 + northcards.deadwood</inc>
+              <become object="message" sprite="yougin" />
+              <play sound="win" />
+              <set variable="table.knocking">3</set>
+            </condition>
+            <condition object="northcards" variable="deadwood"><atmost>mine.deadwood</atmost>
+              <inc variable="north.score">25 + mine.deadwood - northcards.deadwood</inc>
+              <become object="message" sprite="youcut" />
+              <play sound="lose" />
+              <set variable="table.knocking">3</set>
+            </condition>
+            <inc variable="you.score">northcards.deadwood - mine.deadwood</inc>
+            <become object="message" sprite="youknock" />
+            <play sound="win" />
+            <set variable="table.knocking">3</set>
+          </condition>
           <set variable="table.knocking">0</set>
         </condition>
+
         <!-- north knocks whenever its discard leaves it ten or less -->
-        <condition>
-          <all><condition object="north" variable="discarded"><equal>1</equal></condition><condition object="northcards" variable="deadwood"><equal>0</equal></condition></all>
-          <inc variable="north.score">25 + mine.deadwood</inc>
-          <become object="message" sprite="northgin" />
-          <play sound="lose" />
+        <condition object="north" variable="discarded"><equal>1</equal>
+          <condition object="northcards" variable="deadwood"><equal>0</equal>
+            <inc variable="north.score">25 + mine.deadwood</inc>
+            <become object="message" sprite="northgin" />
+            <play sound="lose" />
+            <set variable="north.discarded">0</set>
+            <set variable="table.knocking">3</set>
+          </condition>
+          <condition object="northcards" variable="deadwood"><atmost>10</atmost>
+            <condition object="mine" variable="deadwood"><atmost>northcards.deadwood</atmost>
+              <inc variable="you.score">25 + northcards.deadwood - mine.deadwood</inc>
+              <become object="message" sprite="northcut" />
+              <play sound="win" />
+              <set variable="north.discarded">0</set>
+              <set variable="table.knocking">3</set>
+            </condition>
+            <inc variable="north.score">mine.deadwood - northcards.deadwood</inc>
+            <become object="message" sprite="northknock" />
+            <play sound="lose" />
+            <set variable="north.discarded">0</set>
+            <set variable="table.knocking">3</set>
+          </condition>
           <set variable="north.discarded">0</set>
-          <set variable="table.knocking">3</set>
         </condition>
-        <condition>
-          <all><condition object="north" variable="discarded"><equal>1</equal></condition><condition object="northcards" variable="deadwood"><atmost>10</atmost></condition><condition object="mine" variable="deadwood"><atmost>northcards.deadwood</atmost></condition></all>
-          <inc variable="you.score">25 + northcards.deadwood - mine.deadwood</inc>
-          <become object="message" sprite="northcut" />
-          <play sound="win" />
-          <set variable="north.discarded">0</set>
-          <set variable="table.knocking">3</set>
-        </condition>
-        <condition>
-          <all><condition object="north" variable="discarded"><equal>1</equal></condition><condition object="northcards" variable="deadwood"><atmost>10</atmost></condition></all>
-          <inc variable="north.score">mine.deadwood - northcards.deadwood</inc>
-          <become object="message" sprite="northknock" />
-          <play sound="lose" />
-          <set variable="north.discarded">0</set>
-          <set variable="table.knocking">3</set>
-        </condition>
+
         <!-- after a knock that holds: north's cards shown, the hand over, nobody's turn -->
-        <condition object="table" variable="knocking">
-          <equal>3</equal>
+        <condition object="table" variable="knocking"><equal>3</equal>
           <become object="northcards" sprite="face" />
           <set variable="table.knocking">0</set>
-          <set variable="table.phase">4</set>
           <become object="table" sprite="done" />
           <pass object="players" member="0" />
-        </condition>
-        <condition object="north" variable="discarded">
-          <equal>1</equal>
-          <set variable="north.discarded">0</set>
         </condition>
 
         <!-- the hand over and a score of 100: the higher wins -->
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>4</equal></condition>
-            <any><condition object="you" variable="score"><atleast>100</atleast></condition><condition object="north" variable="score"><atleast>100</atleast></condition></any>
-            <condition object="you" variable="score"><above>north.score</above></condition>
-          </all>
-          <become object="over.winner" sprite="you" />
-          <push state="over" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>4</equal></condition>
-            <any><condition object="you" variable="score"><atleast>100</atleast></condition><condition object="north" variable="score"><atleast>100</atleast></condition></any>
-          </all>
-          <become object="over.winner" sprite="north" />
-          <push state="over" />
+        <condition object="table" sprite="done">
+          <condition class="player" variable="score" total="highest"><atleast>100</atleast>
+            <condition class="player" variable="score"><highest />
+              <become object="over.winner" sprite="self" />
+              <push state="over" />
+            </condition>
+          </condition>
         </condition>
 
-        <!-- a draw made: the player holds eleven -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="mine" variable="cards"><equal>11</equal></condition></all>
-          <trigger object="players" action="drawn" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="northcards" variable="cards"><equal>11</equal></condition></all>
-          <trigger object="players" action="drawn" />
-        </condition>
-
-        <!-- two cards left in the stock at a draw: the hand is void -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="stock" variable="cards"><atmost>2</atmost></condition></all>
-          <set variable="table.phase">4</set>
-          <become object="northcards" sprite="face" />
-          <become object="message" sprite="void" />
-          <become object="table" sprite="done" />
-          <pass object="players" member="0" />
-        </condition>
-
-        <!-- what is happening, shown -->
-        <condition object="table" variable="phase">
-          <equal>0</equal>
+        <!-- a draw: made when the player holds eleven; with two cards left in the stock the hand is void -->
+        <condition object="table" sprite="drawing">
+          <condition object="mine" variable="cards"><equal>11</equal><trigger object="players" action="drawn" /></condition>
+          <condition object="northcards" variable="cards"><equal>11</equal><trigger object="players" action="drawn" /></condition>
+          <condition object="stock" variable="cards"><atmost>2</atmost>
+            <become object="northcards" sprite="face" />
+            <become object="message" sprite="void" />
+            <become object="table" sprite="done" />
+            <pass object="players" member="0" />
+          </condition>
           <become object="message" sprite="none" />
         </condition>
-        <condition object="table" variable="phase">
-          <equal>5</equal>
-          <become object="message" sprite="dealing" />
-        </condition>
+
+        <condition object="table" sprite="dealing"><become object="message" sprite="dealing" /></condition>
       </conditions>
     </state>
     <state name="paused">

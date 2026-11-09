@@ -313,23 +313,17 @@
       </inputs>
       <conditions>
         <!-- every box claimed: more boxes wins -->
-        <condition>
-          <all>
-            <condition object="score" variable="open"><equal>0</equal></condition>
-            <condition object="score" variable="red"><above>score.blue</above></condition>
-          </all>
-          <become object="over.winner" sprite="red" />
-          <play sound="win" />
-          <push state="over" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="score" variable="open"><equal>0</equal></condition>
-            <condition object="score" variable="blue"><above>score.red</above></condition>
-          </all>
-          <become object="over.winner" sprite="blue" />
-          <play sound="win" />
-          <push state="over" />
+        <condition object="score" variable="open"><equal>0</equal>
+          <condition object="score" variable="red"><above>score.blue</above>
+            <become object="over.winner" sprite="red" />
+            <play sound="win" />
+            <push state="over" />
+          </condition>
+          <condition object="score" variable="blue"><above>score.red</above>
+            <become object="over.winner" sprite="blue" />
+            <play sound="win" />
+            <push state="over" />
+          </condition>
         </condition>
         <!-- against the computer, blue's turn is its: the cursor takes its look -->
         <condition>

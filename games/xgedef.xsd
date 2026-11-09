@@ -1975,6 +1975,7 @@
   <xs:complexType name="computerConditionType">
     <xs:sequence minOccurs="0">
       <xs:group ref="conditionHead" minOccurs="0" />
+      <xs:element name="condition" type="computerConditionType" minOccurs="0" maxOccurs="unbounded" />
       <xs:group ref="pressCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attributeGroup ref="conditionAttributes" />

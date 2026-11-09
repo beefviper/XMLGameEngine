@@ -375,33 +375,21 @@
       </inputs>
       <conditions>
         <!-- neither side can move: the one with more discs wins -->
-        <condition>
-          <all>
-            <condition class="black" variable="moves" total="sum"><equal>0</equal></condition>
-            <condition class="white" variable="moves" total="sum"><equal>0</equal></condition>
-            <condition object="score" variable="black"><above>score.white</above></condition>
-          </all>
-          <become object="over.winner" sprite="black" />
-          <play sound="win" />
-          <push state="over" />
-        </condition>
-        <condition>
-          <all>
-            <condition class="black" variable="moves" total="sum"><equal>0</equal></condition>
-            <condition class="white" variable="moves" total="sum"><equal>0</equal></condition>
-            <condition object="score" variable="white"><above>score.black</above></condition>
-          </all>
-          <become object="over.winner" sprite="white" />
-          <play sound="win" />
-          <push state="over" />
-        </condition>
-        <condition>
-          <all>
-            <condition class="black" variable="moves" total="sum"><equal>0</equal></condition>
-            <condition class="white" variable="moves" total="sum"><equal>0</equal></condition>
-          </all>
-          <become object="over.winner" sprite="draw" />
-          <push state="over" />
+        <condition class="black" variable="moves" total="sum"><equal>0</equal>
+          <condition class="white" variable="moves" total="sum"><equal>0</equal>
+            <condition object="score" variable="black"><above>score.white</above>
+              <become object="over.winner" sprite="black" />
+              <play sound="win" />
+              <push state="over" />
+            </condition>
+            <condition object="score" variable="white"><above>score.black</above>
+              <become object="over.winner" sprite="white" />
+              <play sound="win" />
+              <push state="over" />
+            </condition>
+            <become object="over.winner" sprite="draw" />
+            <push state="over" />
+          </condition>
         </condition>
         <!-- a side with nowhere to put a disc on its turn passes -->
         <condition>

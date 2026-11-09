@@ -1285,13 +1285,13 @@ namespace
 	// A light with two looks, green first, and a flag whose n picks which
 	// of the conditions below holds; out says which ran. `conditions` is
 	// the state's <conditions>.
-	std::string lights(const std::string& conditions)
+	std::string lights(const std::string& conditions, const std::string& computer = {})
 	{
 		const std::string look = "<rectangle><width>10</width><height>10</height></rectangle>";
 		return gameXml("<object name=\"light\"><sprite name=\"green\">" + look + "</sprite><sprite name=\"red\">" + look + "</sprite>"
 			"<position><x>0</x><y>0</y></position></object>"
 			+ box("flag", 0, 300, 1, 1, "<enabled>false</enabled>", {}, "<variables><variable name=\"n\">0</variable><variable name=\"out\">0</variable></variables>"),
-			state("playing", { "light", "flag" }, "<input button=\"space\"><pop /></input>", "<conditions>" + conditions + "</conditions>"));
+			state("playing", { "light", "flag" }, "<input button=\"space\"><pop /></input>", "<conditions>" + conditions + "</conditions>" + computer));
 	}
 
 	const std::string kNested =
@@ -1374,6 +1374,11 @@ TEST_CASE("mistakes in nested conditions and look tests stop the load, saying wh
 	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"light\" sprite=\"red\"><set variable=\"flag.out\">1</set>"
 		"<condition object=\"flag\" variable=\"n\"><equal>1</equal></condition></condition>"), XmlBackend::TinyXml2),
 		ContainsSubstring("unexpected element <condition>"));
+	// In <computer> every condition that holds counts, so one holding conditions has no buttons of its own.
+	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"flag\" variable=\"n\"><equal>9</equal></condition>", "<computer>"
+		"<condition object=\"light\" sprite=\"green\"><condition object=\"flag\" variable=\"n\"><equal>0</equal><hold button=\"up\" /></condition>"
+		"<hold button=\"down\" /></condition></computer>")),
+		ContainsSubstring("holds conditions and buttons of its own"));
 	// The schema lets a condition leave out its test (sprite= may be the test), so the engine says it.
 	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"flag\" variable=\"n\"><set variable=\"flag.out\">1</set></condition>")),
 		ContainsSubstring("starts with <set>"));

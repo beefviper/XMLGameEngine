@@ -17,6 +17,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <filesystem>
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <map>
@@ -3686,6 +3687,19 @@ namespace xge
 			if (std::unique_ptr<XmlNode> computer = findChild(&state, "computer"))
 			{
 				readConditions(*computer, where + " > <computer>", conditionSets, rawState.computer);
+				// Every one that holds holds its buttons, so one holding conditions has no "otherwise".
+				const std::function<void(const std::vector<RawCondition>&)> plain = [&](const std::vector<RawCondition>& list)
+				{
+					for (const RawCondition& each : list)
+					{
+						if (!each.inner.empty() && !each.commands.empty())
+						{
+							fail(where + " > <computer> > <condition>", "holds conditions and buttons of its own; in <computer> every condition that holds holds its buttons, so they go in a condition of their own");
+						}
+						plain(each.inner);
+					}
+				};
+				plain(rawState.computer);
 			}
 			rawState.timers = readTimers(findChild(&state, "timers").get(), where, false);
 			return rawState;

@@ -210,67 +210,31 @@
       </conditions>
       <!-- the right paddle, when the computer plays it: its middle kept within 8 of where it wants it -->
       <computer>
-        <!-- easy: under the ball, always -->
-        <condition>
-          <all>
-            <condition object="computer" variable="players"><equal>1</equal></condition>
-            <condition object="computer" variable="level"><equal>1</equal></condition>
-            <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below></condition>
-          </all>
-          <hold button="down" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="computer" variable="players"><equal>1</equal></condition>
-            <condition object="computer" variable="level"><equal>1</equal></condition>
-            <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above></condition>
-          </all>
-          <hold button="up" />
-        </condition>
-        <!-- smart: in the middle, then under the ball once it comes over the net -->
-        <condition>
-          <all>
-            <condition object="computer" variable="players"><equal>1</equal></condition>
-            <condition object="computer" variable="level"><equal>2</equal></condition>
-            <condition object="ball" variable="velocity.x"><above>0</above></condition>
-            <condition object="ball" variable="x"><above>window.width.center</above></condition>
-            <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below></condition>
-          </all>
-          <hold button="down" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="computer" variable="players"><equal>1</equal></condition>
-            <condition object="computer" variable="level"><equal>2</equal></condition>
-            <condition object="ball" variable="velocity.x"><above>0</above></condition>
-            <condition object="ball" variable="x"><above>window.width.center</above></condition>
-            <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above></condition>
-          </all>
-          <hold button="up" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="computer" variable="players"><equal>1</equal></condition>
-            <condition object="computer" variable="level"><equal>2</equal></condition>
-            <any>
-              <condition object="ball" variable="velocity.x"><atmost>0</atmost></condition>
-              <condition object="ball" variable="x"><atmost>window.width.center</atmost></condition>
-            </any>
-            <condition object="paddle2" variable="y"><below>window.height.center - height / 2 - 8</below></condition>
-          </all>
-          <hold button="down" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="computer" variable="players"><equal>1</equal></condition>
-            <condition object="computer" variable="level"><equal>2</equal></condition>
-            <any>
-              <condition object="ball" variable="velocity.x"><atmost>0</atmost></condition>
-              <condition object="ball" variable="x"><atmost>window.width.center</atmost></condition>
-            </any>
-            <condition object="paddle2" variable="y"><above>window.height.center - height / 2 + 8</above></condition>
-          </all>
-          <hold button="up" />
+        <condition object="computer" variable="players"><equal>1</equal>
+          <!-- easy: under the ball, always -->
+          <condition object="computer" variable="level"><equal>1</equal>
+            <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below><hold button="down" /></condition>
+            <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above><hold button="up" /></condition>
+          </condition>
+          <!-- smart: under the ball once it comes over the net, else in the middle -->
+          <condition object="computer" variable="level"><equal>2</equal>
+            <condition>
+              <all>
+                <condition object="ball" variable="velocity.x"><above>0</above></condition>
+                <condition object="ball" variable="x"><above>window.width.center</above></condition>
+              </all>
+              <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below><hold button="down" /></condition>
+              <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above><hold button="up" /></condition>
+            </condition>
+            <condition>
+              <any>
+                <condition object="ball" variable="velocity.x"><atmost>0</atmost></condition>
+                <condition object="ball" variable="x"><atmost>window.width.center</atmost></condition>
+              </any>
+              <condition object="paddle2" variable="y"><below>window.height.center - height / 2 - 8</below><hold button="down" /></condition>
+              <condition object="paddle2" variable="y"><above>window.height.center - height / 2 + 8</above><hold button="up" /></condition>
+            </condition>
+          </condition>
         </condition>
       </computer>
     </state>

@@ -36,8 +36,11 @@
     0 the highest cards to 8 a straight flush), `strength` (compared at
     the showdown) and `odds` (how often they beat two unseen cards, in
     percent).
-  * The betting is the table's variables (pot, owed, raises, acted,
-    street, turn) and conditions; the computer's play is four
+  * Where the hand is, is the look of `hand` (dealing, betting,
+    showdown, done), and the street the look of `street` (preflop, flop,
+    turn, river); each look's rules sit inside one condition on it. The
+    betting is the table's variables (pot, owed, raises, acted, turn) and
+    conditions; the computer's play is four
     <computer> conditions on its odds against the price of a call.
 -->
 
@@ -172,7 +175,8 @@
               <send from="stock" into="theirs" sprite="back">1</send>
               <send from="stock" into="yours">1</send>
               <send from="stock" into="theirs" sprite="back">1</send>
-              <set variable="table.street">0</set>
+              <become object="hand" sprite="betting" />
+              <become object="street" sprite="preflop" />
               <set variable="table.owed">0</set>
               <set variable="table.acted">0</set>
               <set variable="table.raises">0</set>
@@ -182,7 +186,7 @@
             </action>
             <action name="flop">
               <send from="stock" into="board">3</send>
-              <set variable="table.street">1</set>
+              <become object="street" sprite="flop" />
               <set variable="table.acted">0</set>
               <set variable="table.raises">0</set>
               <set variable="table.turn">table.first</set>
@@ -190,7 +194,7 @@
             </action>
             <action name="turn">
               <send from="stock" into="board">1</send>
-              <set variable="table.street">2</set>
+              <become object="street" sprite="turn" />
               <set variable="table.bet">20</set>
               <set variable="table.acted">0</set>
               <set variable="table.raises">0</set>
@@ -199,7 +203,7 @@
             </action>
             <action name="river">
               <send from="stock" into="board">1</send>
-              <set variable="table.street">3</set>
+              <become object="street" sprite="river" />
               <set variable="table.acted">0</set>
               <set variable="table.raises">0</set>
               <set variable="table.turn">table.first</set>
@@ -207,7 +211,7 @@
             </action>
             <action name="showdown">
               <become object="theirs" sprite="face" />
-              <set variable="table.street">4</set>
+              <become object="hand" sprite="showdown" />
             </action>
           </actions>
           <variables>
@@ -215,7 +219,6 @@
             <variable name="owed">0</variable>
             <variable name="raises">0</variable>
             <variable name="acted">0</variable>
-            <variable name="street">5</variable>
             <variable name="turn">1</variable>
             <variable name="bet">10</variable>
             <variable name="first">2</variable>
@@ -242,7 +245,7 @@
               <become object="result" sprite="none" />
               <become object="dealer" sprite="shuffling" />
               <become sprite="wait" />
-              <set variable="table.street">6</set>
+              <become object="hand" sprite="dealing" />
               <play sound="shuffle" />
             </action>
             <action name="call">
@@ -276,7 +279,7 @@
             <action name="fold">
               <inc variable="cpu.chips">table.pot</inc>
               <set variable="table.pot">0</set>
-              <set variable="table.street">5</set>
+              <become object="hand" sprite="done" />
               <become object="result" sprite="youfold" />
               <play sound="fold" />
             </action>
@@ -284,6 +287,24 @@
           <variables>
             <variable name="chips">500</variable>
           </variables>
+        </object>
+
+        <!-- where the hand is (dealing, betting, showdown, done), and the street the betting is on -->
+        <object name="hand">
+          <sprite name="done"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="dealing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="betting"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="showdown"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>0</x><y>0</y></position>
+          <drawn>false</drawn>
+        </object>
+        <object name="street">
+          <sprite name="preflop"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="flop"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="turn"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="river"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>0</x><y>0</y></position>
+          <drawn>false</drawn>
         </object>
 
         <!-- the dealer: a moment to shuffle before the cards come -->
@@ -345,7 +366,7 @@
               <become sprite="idle" />
               <become object="cpusays" sprite="fold" />
               <set variable="table.pot">0</set>
-              <set variable="table.street">5</set>
+              <become object="hand" sprite="done" />
               <become object="result" sprite="cpufolds" />
               <play sound="fold" />
             </action>
@@ -425,104 +446,88 @@
       </inputs>
       <conditions>
         <!-- out of chips between hands: the match is over -->
-        <condition><all><condition object="table" variable="street"><equal>5</equal></condition><condition object="you" variable="chips"><below>5</below></condition></all><become object="over.winner" sprite="computer" /><play sound="lose" /><push state="over" /></condition>
-        <condition><all><condition object="table" variable="street"><equal>5</equal></condition><condition object="cpu" variable="chips"><below>5</below></condition></all><become object="over.winner" sprite="you" /><play sound="win" /><push state="over" /></condition>
+        <condition object="hand" sprite="done">
+          <condition object="you" variable="chips"><below>5</below><become object="over.winner" sprite="computer" /><play sound="lose" /><push state="over" /></condition>
+          <condition object="cpu" variable="chips"><below>5</below><become object="over.winner" sprite="you" /><play sound="win" /><push state="over" /></condition>
+          <become object="you" sprite="done" />
+        </condition>
 
         <!-- the showdown: the stronger best five takes the pot, the same split it -->
-        <condition>
-          <all><condition object="table" variable="street"><equal>4</equal></condition><condition object="yours" variable="strength"><above>theirs.strength</above></condition></all>
-          <inc variable="you.chips">table.pot</inc>
-          <set variable="table.pot">0</set>
-          <set variable="table.street">5</set>
-          <become object="result" sprite="youwin" />
-          <play sound="win" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="street"><equal>4</equal></condition><condition object="yours" variable="strength"><below>theirs.strength</below></condition></all>
-          <inc variable="cpu.chips">table.pot</inc>
-          <set variable="table.pot">0</set>
-          <set variable="table.street">5</set>
-          <become object="result" sprite="cpuwins" />
-          <play sound="lose" />
-        </condition>
-        <condition object="table" variable="street">
-          <equal>4</equal>
+        <condition object="hand" sprite="showdown">
+          <condition object="yours" variable="strength"><above>theirs.strength</above>
+            <inc variable="you.chips">table.pot</inc>
+            <set variable="table.pot">0</set>
+            <become object="hand" sprite="done" />
+            <become object="result" sprite="youwin" />
+            <play sound="win" />
+          </condition>
+          <condition object="yours" variable="strength"><below>theirs.strength</below>
+            <inc variable="cpu.chips">table.pot</inc>
+            <set variable="table.pot">0</set>
+            <become object="hand" sprite="done" />
+            <become object="result" sprite="cpuwins" />
+            <play sound="lose" />
+          </condition>
           <inc variable="you.chips">table.pot / 2</inc>
           <inc variable="cpu.chips">table.pot / 2</inc>
           <set variable="table.pot">0</set>
-          <set variable="table.street">5</set>
+          <become object="hand" sprite="done" />
           <become object="result" sprite="split" />
           <play sound="chip" />
         </condition>
 
-        <!-- a round of betting over (both acted and square, or one all in): the next cards -->
-        <condition>
-          <all><condition object="table" variable="street"><equal>0</equal></condition><condition object="table" variable="owed"><equal>0</equal></condition><any><condition object="table" variable="acted"><atleast>2</atleast></condition><condition object="you" variable="chips"><equal>0</equal></condition><condition object="cpu" variable="chips"><equal>0</equal></condition></any></all>
-          <trigger object="table" action="flop" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="street"><equal>1</equal></condition><condition object="table" variable="owed"><equal>0</equal></condition><any><condition object="table" variable="acted"><atleast>2</atleast></condition><condition object="you" variable="chips"><equal>0</equal></condition><condition object="cpu" variable="chips"><equal>0</equal></condition></any></all>
-          <trigger object="table" action="turn" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="street"><equal>2</equal></condition><condition object="table" variable="owed"><equal>0</equal></condition><any><condition object="table" variable="acted"><atleast>2</atleast></condition><condition object="you" variable="chips"><equal>0</equal></condition><condition object="cpu" variable="chips"><equal>0</equal></condition></any></all>
-          <trigger object="table" action="river" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="street"><equal>3</equal></condition><condition object="table" variable="owed"><equal>0</equal></condition><any><condition object="table" variable="acted"><atleast>2</atleast></condition><condition object="you" variable="chips"><equal>0</equal></condition><condition object="cpu" variable="chips"><equal>0</equal></condition></any></all>
-          <trigger object="table" action="showdown" />
-        </condition>
-
-        <!-- the computer's turn: it thinks a moment -->
-        <condition>
-          <all><condition object="table" variable="street"><below>4</below></condition><condition object="table" variable="turn"><equal>2</equal></condition></all>
-          <become object="cpu" sprite="thinking" from="idle" />
-          <become object="you" sprite="wait" />
-        </condition>
-        <!-- your turn: what you can do -->
-        <condition>
-          <all><condition object="table" variable="street"><below>4</below></condition><condition object="table" variable="raises"><below>3</below></condition><condition object="you" variable="chips"><atleast>table.owed + table.bet</atleast></condition></all>
-          <become object="you" sprite="act" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="street"><below>4</below></condition><condition object="you" variable="chips"><atleast>table.owed</atleast></condition></all>
-          <become object="you" sprite="callonly" />
-        </condition>
-        <condition object="table" variable="street"><below>4</below>
+        <condition object="hand" sprite="betting">
+          <!-- a round of betting over (both acted and square, or one all in): the next cards -->
+          <condition object="table" variable="owed"><equal>0</equal>
+            <condition>
+              <any><condition object="table" variable="acted"><atleast>2</atleast></condition><condition object="you" variable="chips"><equal>0</equal></condition><condition object="cpu" variable="chips"><equal>0</equal></condition></any>
+              <condition object="street" sprite="preflop"><trigger object="table" action="flop" /></condition>
+              <condition object="street" sprite="flop"><trigger object="table" action="turn" /></condition>
+              <condition object="street" sprite="turn"><trigger object="table" action="river" /></condition>
+              <trigger object="table" action="showdown" />
+            </condition>
+          </condition>
+          <!-- the computer's turn: it thinks a moment -->
+          <condition object="table" variable="turn"><equal>2</equal>
+            <become object="cpu" sprite="thinking" from="idle" />
+            <become object="you" sprite="wait" />
+          </condition>
+          <!-- your turn: what you can do -->
+          <condition>
+            <all><condition object="table" variable="raises"><below>3</below></condition><condition object="you" variable="chips"><atleast>table.owed + table.bet</atleast></condition></all>
+            <become object="you" sprite="act" />
+          </condition>
+          <condition object="you" variable="chips"><atleast>table.owed</atleast><become object="you" sprite="callonly" /></condition>
           <become object="you" sprite="allin" />
         </condition>
-        <condition object="table" variable="street"><equal>5</equal>
-          <become object="you" sprite="done" />
-        </condition>
       </conditions>
-      <!-- the computer: raise with good odds, call when the odds beat the price, else fold -->
+      <!-- the computer, on its turn after a moment's thought: raise with good odds, call when the odds beat the price, else fold -->
       <computer>
-        <condition>
-          <all><condition object="table" variable="street"><below>4</below></condition><condition object="table" variable="turn"><equal>2</equal></condition><condition object="cpu" variable="ready"><equal>1</equal></condition>
-            <condition object="theirs" variable="odds"><atleast>65</atleast></condition><condition object="table" variable="raises"><below>3</below></condition><condition object="cpu" variable="chips"><atleast>table.owed + table.bet</atleast></condition>
-          </all>
-          <hold button="f12" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="street"><below>4</below></condition><condition object="table" variable="turn"><equal>2</equal></condition><condition object="cpu" variable="ready"><equal>1</equal></condition>
-            <condition object="cpu" variable="chips"><atleast>table.owed</atleast></condition>
-            <any><condition object="theirs" variable="odds"><below>65</below></condition><condition object="table" variable="raises"><atleast>3</atleast></condition><condition object="cpu" variable="chips"><below>table.owed + table.bet</below></condition></any>
-            <any><condition object="table" variable="owed"><equal>0</equal></condition><condition object="theirs" variable="odds"><atleast>table.owed * 100 / (table.pot + table.owed)</atleast></condition></any>
-          </all>
-          <hold button="f11" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="street"><below>4</below></condition><condition object="table" variable="turn"><equal>2</equal></condition><condition object="cpu" variable="ready"><equal>1</equal></condition>
-            <condition object="cpu" variable="chips"><below>table.owed</below></condition>
-            <condition object="theirs" variable="odds"><atleast>table.owed * 100 / (table.pot + table.owed)</atleast></condition>
-          </all>
-          <hold button="f9" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="street"><below>4</below></condition><condition object="table" variable="turn"><equal>2</equal></condition><condition object="cpu" variable="ready"><equal>1</equal></condition>
-            <condition object="table" variable="owed"><above>0</above></condition><condition object="theirs" variable="odds"><below>table.owed * 100 / (table.pot + table.owed)</below></condition>
-          </all>
-          <hold button="f10" />
+        <condition object="hand" sprite="betting">
+          <condition object="table" variable="turn"><equal>2</equal>
+            <condition object="cpu" variable="ready"><equal>1</equal>
+              <condition>
+                <all><condition object="theirs" variable="odds"><atleast>65</atleast></condition><condition object="table" variable="raises"><below>3</below></condition><condition object="cpu" variable="chips"><atleast>table.owed + table.bet</atleast></condition></all>
+                <hold button="f12" />
+              </condition>
+              <condition>
+                <all>
+                  <condition object="cpu" variable="chips"><atleast>table.owed</atleast></condition>
+                  <any><condition object="theirs" variable="odds"><below>65</below></condition><condition object="table" variable="raises"><atleast>3</atleast></condition><condition object="cpu" variable="chips"><below>table.owed + table.bet</below></condition></any>
+                  <any><condition object="table" variable="owed"><equal>0</equal></condition><condition object="theirs" variable="odds"><atleast>table.owed * 100 / (table.pot + table.owed)</atleast></condition></any>
+                </all>
+                <hold button="f11" />
+              </condition>
+              <condition>
+                <all><condition object="cpu" variable="chips"><below>table.owed</below></condition><condition object="theirs" variable="odds"><atleast>table.owed * 100 / (table.pot + table.owed)</atleast></condition></all>
+                <hold button="f9" />
+              </condition>
+              <condition>
+                <all><condition object="table" variable="owed"><above>0</above></condition><condition object="theirs" variable="odds"><below>table.owed * 100 / (table.pot + table.owed)</below></condition></all>
+                <hold button="f10" />
+              </condition>
+            </condition>
+          </condition>
         </condition>
       </computer>
     </state>

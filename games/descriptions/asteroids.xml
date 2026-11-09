@@ -581,17 +581,11 @@
             <condition object="saucers" variable="due"><equal>1</equal></condition>
             <condition object="saucer"><remaining>0</remaining></condition>
             <condition object="smallsaucer"><remaining>0</remaining></condition>
-            <condition object="saucers" variable="luck"><below>ship.score / 40000</below></condition>
           </all>
-          <reveal object="smallsaucer" />
-          <set variable="saucers.due">0</set>
-        </condition>
-        <condition>
-          <all>
-            <condition object="saucers" variable="due"><equal>1</equal></condition>
-            <condition object="saucer"><remaining>0</remaining></condition>
-            <condition object="smallsaucer"><remaining>0</remaining></condition>
-          </all>
+          <condition object="saucers" variable="luck"><below>ship.score / 40000</below>
+            <reveal object="smallsaucer" />
+            <set variable="saucers.due">0</set>
+          </condition>
           <reveal object="saucer" />
           <set variable="saucers.due">0</set>
         </condition>

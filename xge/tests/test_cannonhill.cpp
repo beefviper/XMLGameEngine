@@ -49,10 +49,13 @@ namespace
 			engine.handleKeyReleased(KeyCode::Space);
 		}
 
+		// Where the turn is: the table's look.
+		std::string look() { return get("table").lookName(); }
+
 		// Frames until the turn is someone's to aim again, at most `most`.
 		void untilAiming(int most = 600)
 		{
-			for (int i = 0; i < most && table("phase") != 0.0f; ++i) { frames(1); }
+			for (int i = 0; i < most && look() != "aiming"; ++i) { frames(1); }
 		}
 	};
 }
@@ -61,7 +64,7 @@ TEST_CASE("cannonhill.xml: the cannons stand on the first field, player 1 to aim
 {
 	Duel duel;
 	REQUIRE(duel.state() == "playing");
-	CHECK(duel.table("phase") == 0.0f);
+	CHECK(duel.look() == "aiming");
 	CHECK(duel.table("turn") == 1.0f);
 	CHECK(duel.get("barrel1").lookName() == "ready");
 	CHECK(duel.get("barrel2").lookName() == "idle");
@@ -111,7 +114,7 @@ TEST_CASE("cannonhill.xml: a shell leaves the tip along the barrel, at the charg
 	REQUIRE(shell);
 	CHECK(duel.get("barrel1").variable.at("last") == Approx(60.0f));
 	CHECK(duel.get("barrel1").lookName() == "idle");
-	CHECK(duel.table("phase") == 1.0f);
+	CHECK(duel.look() == "flying");
 	const float speed = 60.0f * 0.15f;
 	CHECK(shell->acceleration.x == Approx(3.0f * 0.004f));
 	CHECK(shell->acceleration.y == Approx(0.12f));
@@ -130,8 +133,8 @@ TEST_CASE("cannonhill.xml: a shell that lands wide blows a crater and passes the
 	duel.game.setVariable("playing.table", "wind", 0.0f);
 	// A soft shot: it lands on the slope in front.
 	duel.fire(40);
-	for (int i = 0; i < 300 && duel.table("phase") == 1.0f; ++i) { duel.frames(1); }
-	REQUIRE(duel.table("phase") >= 2.0f);
+	for (int i = 0; i < 300 && duel.look() == "flying"; ++i) { duel.frames(1); }
+	REQUIRE(duel.look() != "flying");
 	const Object& ground = duel.get("ground");
 	REQUIRE(ground.bitmap);
 	duel.untilAiming();
@@ -150,12 +153,12 @@ TEST_CASE("cannonhill.xml: the crater is cut where the shell landed", "[cannonhi
 	duel.game.setVariable("playing.table", "wind", 0.0f);
 	duel.fire(40);
 	Vector2f landed{};
-	for (int i = 0; i < 300 && duel.table("phase") == 1.0f; ++i)
+	for (int i = 0; i < 300 && duel.look() == "flying"; ++i)
 	{
 		if (Object* shell = duel.shell()) { landed = duel.middle(*shell); }
 		duel.frames(1);
 	}
-	REQUIRE(duel.table("phase") >= 2.0f);
+	REQUIRE(duel.look() != "flying");
 	const Object& ground = duel.get("ground");
 	const int x = static_cast<int>(landed.x - ground.position.x);
 	const int y = static_cast<int>(landed.y - ground.position.y);

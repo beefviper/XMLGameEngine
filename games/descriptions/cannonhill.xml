@@ -24,7 +24,8 @@
   * The barrel is a bitmap turned about its middle, which sits on top of
     the cannon. Its heading is worked out from its elevation, kept from 0
     to 90 by a <clamp>, so the two cannons share one kit piece.
-  * Turns are a phase on the table: aiming, flying, landed, handing over.
+  * Where a turn is, is the table's look: handing over, aiming, flying,
+    landed, done, a point; each look's rules sit inside one condition on it.
     The blast that a landing leaves says whether a cannon was hit, by a
     distance= condition.
   * The three fields are scenes; each point won puts the next one back as
@@ -127,7 +128,7 @@
           </spawn>
           <set variable="self.last">self.power</set>
           <set variable="self.power">0</set>
-          <set variable="table.phase">1</set>
+          <become object="table" sprite="flying" />
           <become sprite="idle" />
           <play sound="fire" />
         </action>
@@ -150,22 +151,22 @@
       <collisions>
         <collision class="ground">
           <spawn object="blast"><position><x><centered>self.x + self.width / 2</centered></x><y><centered>self.y + self.height / 2</centered></y></position></spawn>
-          <set variable="table.phase">2</set>
+          <become object="table" sprite="landed" />
           <play sound="boom" />
           <despawn />
         </collision>
         <collision class="cannon">
           <spawn object="blast"><position><x><centered>self.x + self.width / 2</centered></x><y><centered>self.y + self.height / 2</centered></y></position></spawn>
-          <set variable="table.phase">2</set>
+          <become object="table" sprite="landed" />
           <play sound="boom" />
           <despawn />
         </collision>
         <collision edge="horizontal">
-          <set variable="table.phase">3</set>
+          <become object="table" sprite="done" />
           <despawn />
         </collision>
         <collision edge="bottom">
-          <set variable="table.phase">3</set>
+          <become object="table" sprite="done" />
           <despawn />
         </collision>
       </collisions>
@@ -227,14 +228,21 @@
 
     <state name="playing">
       <objects>
-        <!-- The table: whose turn, the wind, the points, and the phase of
-             the turn: 0 aiming, 1 a shell flying, 2 landed, 3 missed or
-             done (the turn passes once the blast is gone), 4 a point won,
-             5 handing over. -->
+        <!-- The table: whose turn, the wind, the points, and where the turn
+             is, its look: handing over, aiming, a shell flying, landed,
+             done (missed, or the turn passes once the blast is gone), a
+             point won. -->
         <object name="table">
+          <sprite name="handing"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite name="aiming"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite name="flying"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite name="landed"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite name="done"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite name="point"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <position><x>0</x><y>0</y></position>
+          <drawn>false</drawn>
           <variables>
             <variable name="turn">1</variable>
-            <variable name="phase">5</variable>
             <variable name="wind"><formula><round><value><random><min>-5</min><max>5</max></random></value></round></formula></variable>
             <variable name="score1">0</variable>
             <variable name="score2">0</variable>
@@ -441,36 +449,23 @@
         <input><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <conditions>
-        <!-- landed by a cannon: the other player's point (a shell of your own counts too) -->
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>2</equal></condition>
-            <condition object="cannon1" distance="blast"><below>reach</below></condition>
-          </all>
-          <inc variable="table.score2" />
-          <set variable="table.phase">4</set>
-          <become object="pointshown" sprite="two" />
-          <play sound="point" />
-          <push state="point" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>2</equal></condition>
-            <condition object="cannon2" distance="blast"><below>reach</below></condition>
-          </all>
-          <inc variable="table.score1" />
-          <set variable="table.phase">4</set>
-          <become object="pointshown" sprite="one" />
-          <play sound="point" />
-          <push state="point" />
-        </condition>
-        <!-- landed wide: once its blast is out, the turn is over -->
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>2</equal></condition>
-            <condition object="blast" total="count"><atleast>1</atleast></condition>
-          </all>
-          <set variable="table.phase">3</set>
+        <!-- landed by a cannon: the other player's point (a shell of your own counts too); wide, the turn is over once its blast is out -->
+        <condition object="table" sprite="landed">
+          <condition object="cannon1" distance="blast"><below>reach</below>
+            <inc variable="table.score2" />
+            <become object="table" sprite="point" />
+            <become object="pointshown" sprite="two" />
+            <play sound="point" />
+            <push state="point" />
+          </condition>
+          <condition object="cannon2" distance="blast"><below>reach</below>
+            <inc variable="table.score1" />
+            <become object="table" sprite="point" />
+            <become object="pointshown" sprite="one" />
+            <play sound="point" />
+            <push state="point" />
+          </condition>
+          <condition object="blast" total="count"><atleast>1</atleast><become object="table" sprite="done" /></condition>
         </condition>
         <!-- a point won and shown: the match is over, or on to the next field, whole -->
         <condition object="table" variable="score1">
@@ -483,38 +478,27 @@
           <become object="winner" sprite="two" />
           <push state="over" />
         </condition>
-        <condition object="table" variable="phase">
-          <equal>4</equal>
+        <condition object="table" sprite="point">
           <reset way="next" />
           <enter way="next" />
           <set variable="table.placed">0</set>
-          <set variable="table.phase">3</set>
+          <become object="table" sprite="done" />
         </condition>
         <!-- the turn is over and the blast gone: the other player, a new wind -->
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>3</equal></condition>
-            <condition object="blast"><remaining>0</remaining></condition>
-          </all>
-          <set variable="table.turn">3 - table.turn</set>
-          <set variable="table.wind"><formula><round><value><random><min>-5</min><max>5</max></random></value></round></formula></set>
-          <set variable="table.phase">5</set>
+        <condition object="table" sprite="done">
+          <condition object="blast"><remaining>0</remaining>
+            <set variable="table.turn">3 - table.turn</set>
+            <set variable="table.wind"><formula><round><value><random><min>-5</min><max>5</max></random></value></round></formula></set>
+            <become object="table" sprite="handing" />
+          </condition>
         </condition>
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>5</equal></condition>
-            <condition object="table" variable="turn"><equal>1</equal></condition>
-          </all>
-          <become object="barrel1" sprite="ready" />
-          <set variable="table.phase">0</set>
-        </condition>
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>5</equal></condition>
-            <condition object="table" variable="turn"><equal>2</equal></condition>
-          </all>
+        <condition object="table" sprite="handing">
+          <condition object="table" variable="turn"><equal>1</equal>
+            <become object="barrel1" sprite="ready" />
+            <become object="table" sprite="aiming" />
+          </condition>
           <become object="barrel2" sprite="ready" />
-          <set variable="table.phase">0</set>
+          <become object="table" sprite="aiming" />
         </condition>
       </conditions>
     </state>

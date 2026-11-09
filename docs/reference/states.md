@@ -271,7 +271,7 @@ A state's `<computer>` is a player the game plays itself, pressing the state's k
 </computer>
 ```
 
-A condition can be gated on a mode (an `<all>` with a `players` variable the title sets), so one state serves one player and two. Pong's two levels are both plain conditions.
+A condition can hold conditions, so a mode the title sets (`players`, `level`) is written once above what it governs, and one state serves one player and two: Pong's levels are each a condition holding its two moves. Since every one that holds counts, one holding conditions has no buttons of its own.
 
 ### Thinking
 

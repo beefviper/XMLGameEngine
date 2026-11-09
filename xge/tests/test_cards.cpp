@@ -923,6 +923,10 @@ namespace
 		Object& pile(const std::string& name) { return get(name); }
 		float table(const std::string& name) { return get("table").variable.at(name); }
 		float chips(const std::string& who) { return get(who).variable.at("chips"); }
+		// Where the hand is, and the street the betting is on: their looks.
+		std::string hand() { return get("hand").lookName(); }
+		std::string street() { return get("street").lookName(); }
+		bool preflop() { return hand() == "betting" && street() == "preflop"; }
 
 		int cardOf(const std::string& name) { return cardNamed(game, name); }
 
@@ -961,7 +965,7 @@ namespace
 		{
 			press(KeyCode::Space);
 			stack(next);
-			for (int i = 0; i < 100 && table("street") != 0.0f; ++i) { frames(1); }
+			for (int i = 0; i < 100 && !preflop(); ++i) { frames(1); }
 		}
 
 		// Frames until it is your move, or the hand is over.
@@ -972,7 +976,7 @@ namespace
 				frames(1);
 				const std::string look = get("you").lookName();
 				if (look != "wait" && get("table").variable.at("turn") == 1.0f) { return; }
-				if (table("street") >= 4.0f) { frames(2); return; }
+				if (hand() != "betting") { frames(2); return; }
 			}
 		}
 	};
@@ -1042,7 +1046,7 @@ TEST_CASE("holdem.xml: the deal antes five each; checked through, the better han
 	CHECK(play.get("you").lookName() == "act");
 
 	// You check each round; the computer, with little, checks too.
-	for (int street = 0; street < 4 && play.table("street") < 4.0f; ++street)
+	for (int street = 0; street < 4 && play.hand() == "betting"; ++street)
 	{
 		play.press(KeyCode::Space);
 		play.untilYou();
@@ -1060,7 +1064,7 @@ TEST_CASE("holdem.xml: the same best five splits the pot", "[cards][holdem]")
 {
 	Holdem play;
 	play.deal({ "2 hearts", "2 clubs", "3 hearts", "3 clubs", "A spades", "K spades", "Q spades", "J spades", "10 spades" });
-	for (int street = 0; street < 4 && play.table("street") < 4.0f; ++street)
+	for (int street = 0; street < 4 && play.hand() == "betting"; ++street)
 	{
 		play.press(KeyCode::Space);
 		play.untilYou();
@@ -1077,7 +1081,7 @@ TEST_CASE("holdem.xml: a bet the computer's odds do not pay for, it folds; you f
 	play.deal({ "A hearts", "7 clubs", "A clubs", "2 diamonds", "A spades", "K spades", "9 hearts", "4 hearts", "5 spades" });
 	play.press(KeyCode::Space);
 	play.untilYou();
-	REQUIRE(play.table("street") == 1.0f);
+	REQUIRE(play.street() == "flop");
 	play.press(KeyCode::W);
 	CHECK(play.table("owed") == 10.0f);
 	play.untilYou();
@@ -1103,17 +1107,17 @@ TEST_CASE("holdem.xml: raises stop at three a round; out of chips between hands 
 {
 	Holdem play;
 	play.deal({ "A hearts", "A clubs", "A diamonds", "A spades", "K spades", "K hearts", "9 hearts", "4 hearts", "5 spades" });
-	for (int i = 0; i < 6 && play.table("street") == 0.0f; ++i)
+	for (int i = 0; i < 6 && play.preflop(); ++i)
 	{
 		if (play.get("you").lookName() == "act") { play.press(KeyCode::W); }
 		else { play.press(KeyCode::Space); }
 		play.untilYou();
 	}
 	CHECK(play.table("raises") <= 3.0f);
-	CHECK(play.table("street") >= 1.0f);
+	CHECK(play.street() != "preflop");
 
 	play.get("cpu").variable["chips"] = 0.0f;
-	play.get("table").variable["street"] = 5.0f;
+	showLookNamed(play.get("hand"), "done");
 	play.frames(2);
 	CHECK(play.state() == "over");
 	CHECK(play.get("over.winner").lookName() == "you");
@@ -1126,13 +1130,13 @@ TEST_CASE("holdem.xml: hand after hand, you calling everything, every hand ends 
 	for (; hands < 40 && play.state() == "playing"; ++hands)
 	{
 		play.deal({});
-		for (int i = 0; i < 20 && play.table("street") < 4.0f; ++i)
+		for (int i = 0; i < 20 && play.hand() == "betting"; ++i)
 		{
 			play.untilYou();
-			if (play.table("street") < 4.0f) { play.press(KeyCode::Space); }
+			if (play.hand() == "betting") { play.press(KeyCode::Space); }
 		}
 		play.frames(2);
-		REQUIRE(play.table("street") == 5.0f);
+		REQUIRE(play.hand() == "done");
 		CHECK(play.table("pot") == 0.0f);
 		CHECK(play.chips("you") + play.chips("cpu") == 1000.0f);
 	}
@@ -1620,13 +1624,15 @@ namespace
 			game.stackedDeal = roundRobin(*this, { part(0, 10), part(10, 10) });
 			const std::vector<int> turned = roundRobin(*this, { part(20, 1) });
 			game.stackedDeal.insert(game.stackedDeal.end(), turned.begin(), turned.end());
-			for (int i = 0; i < 100 && table("phase") == 5.0f; ++i) { frames(1); }
+			for (int i = 0; i < 100 && look() == "dealing"; ++i) { frames(1); }
 			frames(2);
 		}
 
 		Object& pile(const std::string& name) { return get(name); }
 		float of(const std::string& player, const std::string& name) { return get(player).variable.at(name); }
 		float table(const std::string& name) { return get("table").variable.at(name); }
+		// Where the hand is: the table's look.
+		std::string look() { return get("table").lookName(); }
 		void set(const std::string& object, const std::string& name, float value) { game.setVariable(get(object).name, name, value); }
 
 		int cardOf(const std::string& name) { return cardNamed(game, name); }
@@ -1673,7 +1679,7 @@ TEST_CASE("gin.xml: cards laid out in the melds that leave the least deadwood, t
 {
 	// The seven of hearts in a run or in the set of sevens: the set leaves less.
 	Gin play(cardsOf({ suitOf("hearts", { "5", "6", "7" }), { "7 spades", "7 diamonds" }, suitOf("spades", { "J", "Q", "K" }), { "A diamonds", "2 spades" }, ginJunk, { "10 hearts" } }));
-	REQUIRE(play.table("phase") == 0.0f);
+	REQUIRE(play.look() == "drawing");
 	CHECK(play.pile("mine").deadwood == 14.0f);
 	CHECK(play.pile("northcards").deadwood == 58.0f);
 	// Melds first, then the deadwood.
@@ -1692,7 +1698,7 @@ TEST_CASE("gin.xml: a draw from the discard pile, then a discard; the deadwood c
 	CHECK(play.pile("mine").deadwood == 10.0f);
 	play.drawDiscard();
 	CHECK(play.pile("mine").pile.cards.size() == 11);
-	CHECK(play.table("phase") == 1.0f);
+	CHECK(play.look() == "discarding");
 	CHECK(play.pile("mine").deadwood == 2.0f);
 	CHECK(play.get("you").lookName() == "discard");
 	play.discard("K diamonds", KeyCode::Space);
@@ -1707,7 +1713,7 @@ TEST_CASE("gin.xml: before the draw, Space on a card of your own does nothing", 
 	CHECK(play.pile("mine").pile.cards.size() == 10);
 	CHECK(play.holds("mine", "K diamonds"));
 	CHECK(play.get("you").hand.held.empty());
-	CHECK(play.table("phase") == 0.0f);
+	CHECK(play.look() == "drawing");
 	CHECK(play.get("you").lookName() == "draw");
 	play.drawDiscard();
 	CHECK(play.pile("mine").pile.cards.size() == 11);
@@ -1720,7 +1726,7 @@ TEST_CASE("gin.xml: a knock with ten or less scores the difference, north's card
 	play.drawDiscard();
 	play.discard("K diamonds", KeyCode::K);
 	play.frames(2);
-	CHECK(play.table("phase") == 4.0f);
+	CHECK(play.look() == "done");
 	CHECK(play.of("you", "score") == 56.0f);
 	CHECK(play.get("message").lookName() == "youknock");
 	for (const int number : play.pile("northcards").pile.cards) { CHECK(play.game.cardAt(number)->faceUp); }
@@ -1757,7 +1763,7 @@ TEST_CASE("gin.xml: a knock with more than ten left is only a discard", "[cards]
 	play.frames(2);
 	CHECK(play.table("knocking") == 0.0f);
 	CHECK(play.of("north", "turn") == 1.0f);
-	CHECK(play.table("phase") != 4.0f);
+	CHECK(play.look() != "done");
 }
 
 TEST_CASE("gin.xml: north draws a discard that melds, and lets go of what melds least", "[cards][gin]")
@@ -1786,8 +1792,8 @@ TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[c
 	stock.push_back(king);
 	play.drawDiscard();
 	play.discard("Q diamonds", KeyCode::Space);
-	for (int i = 0; i < 600 && play.table("phase") != 4.0f; ++i) { play.frames(1); }
-	REQUIRE(play.table("phase") == 4.0f);
+	for (int i = 0; i < 600 && play.look() != "done"; ++i) { play.frames(1); }
+	REQUIRE(play.look() == "done");
 	CHECK(play.get("message").lookName() == "northknock");
 	CHECK(play.of("north", "score") == play.pile("mine").deadwood - play.pile("northcards").deadwood);
 	CHECK(play.of("you", "turn") == 0.0f);
@@ -1800,7 +1806,7 @@ TEST_CASE("gin.xml: at 100 after a hand the higher score wins", "[cards][gin]")
 	Gin play(ginJunk);
 	play.set("you", "score", 105.0f);
 	play.set("north", "score", 40.0f);
-	play.set("table", "phase", 4.0f);
+	showLookNamed(play.get("table"), "done");
 	play.frames(2);
 	CHECK(play.state() == "over");
 	CHECK(play.get("over.winner").lookName() == "you");
