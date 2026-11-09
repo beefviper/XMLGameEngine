@@ -428,6 +428,30 @@ namespace xge
 		void splitChain(Object& piece);
 		// <through />: the refused cell step being asked about is made.
 		void stepThrough() { goThrough = true; }
+		// <shove />: the piece in the way of a refused step goes one cell on
+		// through the side met (`way`, the mover's side); false when it
+		// cannot (after its own touch).
+		bool shoveCells(Object& piece, Edge way);
+		// <merge variable>: the piece in the way, holding the same number,
+		// is taken away and its number added to the mover's; false when
+		// they differ or either has merged in this slide.
+		bool mergeCells(Object& mover, Object& other, const std::string& variable);
+		// <slide class>: every piece of that class, nearest that way first;
+		// false when none moved.
+		bool slideClass(const std::string& objClass, Direction way);
+		// A <condition> in an action: whether its test holds now.
+		bool testHolds(const Condition& condition) { return holds(condition); }
+		// The pieces of that class (any, when empty) in the cells about
+		// `piece` that `place` names, on every map of cells laid where its
+		// own is, in reading order.
+		std::vector<Object*> piecesAbout(const Object& piece, const std::string& objClass, const CellPlace& place);
+
+		// <undo />: back as before the last press that moved a piece on
+		// cells; false when there is none left. A press begins and ends
+		// (Engine::runAsPress) so that each one that moves a piece is kept.
+		bool undo();
+		void pressBegins();
+		void pressEnds();
 
 		// A <spawn><free />: in a free cell, at random (none: taken back,
 		// false).
@@ -632,6 +656,22 @@ namespace xge
 		std::vector<Stepping> stepping;
 		// Set by a <through /> in the rules of a refused cell step.
 		bool goThrough = false;
+		// The pieces that have merged in this slide (or this press).
+		std::vector<const Object*> merged;
+		// <undo />: how every object was before each press that moved a
+		// piece on cells, the last last; the one taken as this press began;
+		// whether the game has an <undo /> at all, and this press undid.
+		struct Kept
+		{
+			std::string name;
+			Moment moment;
+			std::size_t look{};
+		};
+		std::vector<std::vector<Kept>> undoSteps;
+		std::vector<Kept> pressKept;
+		bool keepsUndo = false;
+		bool undoneThisPress = false;
+		std::vector<Kept> keepAll() const;
 		// What a piece is, for a <line> of alike: its group, or for a copy
 		// the group of what it copies.
 		std::string kindOf(const Object& piece) noexcept;

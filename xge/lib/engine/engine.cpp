@@ -458,6 +458,13 @@ namespace xge
 
 	void Engine::runAsPress(const std::vector<Command>& commands)
 	{
+		game.pressBegins();
+		runPress(commands);
+		game.pressEnds();
+	}
+
+	void Engine::runPress(const std::vector<Command>& commands)
+	{
 		game.takeTurnStop();
 		// A <trigger from=> answers the look its object had when the key
 		// was pressed: one trigger's action changing the look (red's turn

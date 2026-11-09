@@ -1468,6 +1468,26 @@ namespace xge
 			}
 		}
 
+		// A <count>'s or <trigger>'s cells: one <here /> or <around>, the
+		// latter holding <straight /> and an <alike variable> if wanted.
+		void readCellPlace(const XmlNode& node, const std::string& where, RawCommand& command)
+		{
+			std::unique_ptr<XmlNode> place = node.getFirstChild();
+			if (!place || place->getNextSibling() || (place->getName() != "here" && place->getName() != "around"))
+			{
+				fail(where, "holds <" + (place ? place->getName() : std::string()) + ">; expected one <here /> or <around />");
+			}
+			command.place = place->getName();
+			for (std::unique_ptr<XmlNode> child = place->getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (command.place == "here") { fail(where + " > <here>", "holds <" + tag + ">; it is empty"); }
+				if (tag == "straight" && !command.straight) { command.straight = true; continue; }
+				if (tag == "alike" && command.alike.empty()) { command.alike = requireAttribute(*child, "variable", where + " > <around> > <alike>"); continue; }
+				fail(where + " > <around>", "holds <" + tag + ">; expected <straight /> and <alike variable=\"...\" />, each once if wanted");
+			}
+		}
+
 		bool isCommandTag(const std::string& name)
 		{
 			return name == "bounce" || name == "deflect" || name == "knock" || name == "hole" || name == "hold" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
@@ -1475,7 +1495,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "call" || name == "order" || name == "distribute";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "shove" || name == "merge" || name == "undo" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "call" || name == "order" || name == "distribute";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1629,7 +1649,18 @@ namespace xge
 			if (verb == "trigger")
 			{
 				requireAttribute(node, "action", where);
-				if (node.getFirstChild()) { fail(where + " > <trigger>", "holds <" + node.getFirstChild()->getName() + ">; for now only a trigger in a key's <input> holds an <otherwise>"); }
+				const std::unique_ptr<XmlNode> child = node.getFirstChild();
+				if (child && child->getName() != "here" && child->getName() != "around")
+				{
+					fail(where + " > <trigger>", "holds <" + child->getName() + ">; for now only a trigger in a key's <input> holds an <otherwise>, and one with class= a <here /> or an <around />");
+				}
+				if (child)
+				{
+					readCellPlace(node, where + " > <trigger>", command);
+					requireAttribute(node, "class", where + " > <trigger> with <" + child->getName() + ">");
+					if (!command.object.empty()) { fail(where + " > <trigger>", "with <" + child->getName() + "> runs the action of pieces about the object running it, so it names no object="); }
+				}
+				else if (!command.objClass.empty()) { fail(where + " > <trigger class>", "class= picks the pieces in a <here /> or an <around />; give one, or leave class= out"); }
 			}
 			if (verb == "hop" && findChild(&node, "onto"))
 			{
@@ -1728,7 +1759,9 @@ namespace xge
 			{
 				requireAttribute(node, "class", where);
 				requireAttribute(node, "into", where);
+				if (node.getFirstChild()) { readCellPlace(node, where + " > <count>", command); }
 			}
+			if (verb == "merge") { requireAttribute(node, "variable", where); }
 			if (verb == "pick")
 			{
 				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
@@ -2410,6 +2443,35 @@ namespace xge
 			return collisionData;
 		}
 
+		// An action's commands: as readCommands, but a <condition> among them
+		// (about the object itself unless it names another) holds commands
+		// run only while it holds.
+		void readCondition(const XmlNode& condition, const std::string& where, std::vector<RawCondition>& out);
+
+		std::vector<RawCommand> readActionCommands(std::unique_ptr<XmlNode> first, const std::string& where)
+		{
+			std::vector<RawCommand> commands;
+			for (std::unique_ptr<XmlNode> node = std::move(first); node != nullptr; node = node->getNextSibling())
+			{
+				if (node->getName() != "condition")
+				{
+					commands.push_back(readCommand(*node, where));
+					continue;
+				}
+				std::vector<RawCondition> read;
+				readCondition(*node, where, read);
+				if (!read.front().inner.empty())
+				{
+					fail(where + " > <condition>", "holds conditions; in an action a condition holds commands, for now");
+				}
+				RawCommand when;
+				when.verb = "condition";
+				when.test = std::make_shared<RawCondition>(std::move(read.front()));
+				commands.push_back(std::move(when));
+			}
+			return commands;
+		}
+
 		// <actions>: named things the object can do, run by a <trigger>. Nothing
 		// is added if `object` has none.
 		void readActions(const XmlNode& object, const std::string& where,
@@ -2420,7 +2482,7 @@ namespace xge
 				for (std::unique_ptr<XmlNode> action = actions->getFirstChild(); action != nullptr; action = action->getNextSibling())
 				{
 					const std::string actionName = requireAttribute(*action, "name", where + " > <actions>");
-					out[actionName] = readCommands(action->getFirstChild(), where + " > <action name=\"" + actionName + "\">");
+					out[actionName] = readActionCommands(action->getFirstChild(), where + " > <action name=\"" + actionName + "\">");
 				}
 			}
 		}

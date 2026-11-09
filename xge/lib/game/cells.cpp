@@ -326,6 +326,7 @@ namespace xge
 		{
 			// While the rules run, the cells it steps into are not free for
 			// a <spawn><free /> (Snake's next food).
+			const std::size_t steppingBefore = stepping.size();
 			for (Object* cell : cells) { stepping.push_back({ mover.mapName, whole(cell->cellColumn) + across, whole(cell->cellRow) + down }); }
 			Touch touch;
 			touch.edge = edge;
@@ -340,7 +341,8 @@ namespace xge
 			back.edge = opposite(edge);
 			back.normal = outOf(edge);
 			reactTo(*blocker, mover, back);
-			stepping.clear();
+			// A shoved piece's own step is asked inside these rules.
+			stepping.resize(steppingBefore);
 
 			// A touch that took what was in the way away (food eaten) lets
 			// the step go on; one that moved the mover (a centipede turning)
@@ -1486,5 +1488,196 @@ namespace xge
 			}
 			objects[i].markCopies = std::move(made);
 		}
+	}
+
+	bool Game::shoveCells(Object& piece, Edge way)
+	{
+		if (!piece.onCells || !piece.exists) { return false; }
+		// A shape's cell is shoved with its shape.
+		Object* shoved = &piece;
+		if (!piece.shapeOwner.empty())
+		{
+			if (Object* owner = tryGetObject(piece.shapeOwner)) { shoved = owner; }
+		}
+		const int across = way == Edge::Left ? -1 : way == Edge::Right ? 1 : 0;
+		const int down = way == Edge::Top ? -1 : way == Edge::Bottom ? 1 : 0;
+		// Its own step is asked about in the middle of the mover's.
+		const bool through = goThrough;
+		const bool moved = stepCells(*shoved, across, down);
+		goThrough = through;
+		return moved;
+	}
+
+	bool Game::mergeCells(Object& mover, Object& other, const std::string& variable)
+	{
+		if (!mover.exists || !other.exists || !mover.onCells || !other.onCells) { return false; }
+		if (std::find(merged.begin(), merged.end(), &mover) != merged.end() || std::find(merged.begin(), merged.end(), &other) != merged.end()) { return false; }
+		const auto mine = mover.variable.find(variable);
+		const auto theirs = other.variable.find(variable);
+		if (mine == mover.variable.end() || theirs == other.variable.end() || mine->second != theirs->second) { return false; }
+
+		const float sum = mine->second + theirs->second;
+		despawn(other);
+		setVariable(mover.name, variable, sum);
+		merged.push_back(&mover);
+		return true;
+	}
+
+	bool Game::slideClass(const std::string& objClass, Direction way)
+	{
+		std::vector<Object*> pieces;
+		for (Object& object : objects)
+		{
+			if (object.objClass == objClass && object.exists && object.onCells && !object.isShape() && !object.awayFromHome() && isShown(object)) { pieces.push_back(&object); }
+		}
+		// The one nearest that way first, so the rest slide up behind it.
+		const auto key = [way](const Object* piece)
+		{
+			const int column = whole(piece->cellColumn);
+			const int row = whole(piece->cellRow);
+			switch (way)
+			{
+			case Direction::Left: return column * 1000 + row;
+			case Direction::Right: return -column * 1000 + row;
+			case Direction::Up: return row * 1000 + column;
+			default: return -row * 1000 + column;
+			}
+		};
+		std::stable_sort(pieces.begin(), pieces.end(), [&](const Object* a, const Object* b) { return key(a) < key(b); });
+
+		merged.clear();
+		bool moved = false;
+		for (Object* piece : pieces)
+		{
+			if (!piece->exists) { continue; }
+			const int column = whole(piece->cellColumn);
+			const int row = whole(piece->cellRow);
+			slideCells(*piece, way);
+			moved = moved || !piece->exists || whole(piece->cellColumn) != column || whole(piece->cellRow) != row;
+		}
+		merged.clear();
+		return moved;
+	}
+
+	std::vector<Object*> Game::piecesAbout(const Object& piece, const std::string& objClass, const CellPlace& place)
+	{
+		std::vector<Object*> found;
+		if (!piece.onCells || !place.any()) { return found; }
+
+		// The cells, in reading order.
+		std::vector<std::pair<int, int>> offsets;
+		if (place.where == CellPlace::Where::Here) { offsets.push_back({ 0, 0 }); }
+		else
+		{
+			for (int down = -1; down <= 1; ++down)
+			{
+				for (int across = -1; across <= 1; ++across)
+				{
+					if (across == 0 && down == 0) { continue; }
+					if (place.straight && across != 0 && down != 0) { continue; }
+					offsets.push_back({ across, down });
+				}
+			}
+		}
+
+		const auto sameLayout = [&](const Object& other)
+		{
+			return std::abs(other.mapOrigin.x - piece.mapOrigin.x) < 0.5f && std::abs(other.mapOrigin.y - piece.mapOrigin.y) < 0.5f
+				&& std::abs(other.mapTile.x - piece.mapTile.x) < 0.5f && std::abs(other.mapTile.y - piece.mapTile.y) < 0.5f;
+		};
+		const auto alike = [&](const Object& other)
+		{
+			if (place.alike.empty()) { return true; }
+			const auto mine = piece.variable.find(place.alike);
+			const auto theirs = other.variable.find(place.alike);
+			return mine != piece.variable.end() && theirs != other.variable.end() && mine->second == theirs->second;
+		};
+		const int column = whole(piece.cellColumn);
+		const int row = whole(piece.cellRow);
+		const auto look = [&](Object& other, bool joined, int wantColumn, int wantRow)
+		{
+			if (&other == &piece || !other.exists || !other.onCells || other.isShape() || other.awayFromHome()) { return; }
+			if (!joined && !isShown(other)) { return; }
+			if (!objClass.empty() && other.objClass != objClass) { return; }
+			if (whole(other.cellColumn) != wantColumn || whole(other.cellRow) != wantRow || !sameLayout(other) || !alike(other)) { return; }
+			found.push_back(&other);
+		};
+		for (const auto& [across, down] : offsets)
+		{
+			for (Object& other : objects) { look(other, false, column + across, row + down); }
+			for (Object& other : spawned) { look(other, true, column + across, row + down); }
+		}
+		return found;
+	}
+
+	std::vector<Game::Kept> Game::keepAll() const
+	{
+		std::vector<Kept> kept;
+		kept.reserve(objects.size());
+		for (const Object& object : objects)
+		{
+			kept.push_back({ object.name, static_cast<const Moment&>(object), object.look });
+		}
+		return kept;
+	}
+
+	void Game::pressBegins()
+	{
+		merged.clear();
+		if (!keepsUndo) { return; }
+		undoneThisPress = false;
+		pressKept = keepAll();
+	}
+
+	void Game::pressEnds()
+	{
+		if (!keepsUndo || pressKept.empty()) { return; }
+		std::vector<Kept> before = std::move(pressKept);
+		pressKept.clear();
+		if (undoneThisPress) { return; }
+
+		// Kept only when a piece on cells moved, came or went.
+		bool changed = false;
+		std::size_t at = 0;
+		for (const Object& object : objects)
+		{
+			const Kept* was = at < before.size() && before[at].name == object.name ? &before[at] : nullptr;
+			++at;
+			if (!object.onCells) { continue; }
+			if (!was || was->moment.exists != object.exists || was->moment.cellColumn != object.cellColumn || was->moment.cellRow != object.cellRow)
+			{
+				changed = true;
+				break;
+			}
+		}
+		changed = changed || before.size() != objects.size() || !spawned.empty();
+		if (changed) { undoSteps.push_back(std::move(before)); }
+	}
+
+	bool Game::undo()
+	{
+		if (undoSteps.empty()) { return false; }
+		std::vector<Kept> back = std::move(undoSteps.back());
+		undoSteps.pop_back();
+		undoneThisPress = true;
+
+		for (Object& made : spawned) { made.exists = false; }
+		for (Object& object : objects)
+		{
+			const auto was = std::find_if(back.begin(), back.end(), [&](const Kept& kept) { return kept.name == object.name; });
+			if (was == back.end())
+			{
+				// Made since: gone again.
+				if (object.exists) { despawn(object); }
+				continue;
+			}
+			static_cast<Moment&>(object) = was->moment;
+			object.placed = true;
+			if (object.look != was->look && was->look < object.looks.size()) { object.showLook(was->look); }
+			for (const auto& [variable, value] : was->moment.variable) { setVariable(object.name, variable, value); }
+			holdVariablesForExpressions(object);
+		}
+		stageChanged();
+		return true;
 	}
 }

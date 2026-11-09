@@ -307,6 +307,15 @@ namespace xge
 					value(command.accelerationY, context);
 					value(command.column, context);
 					value(command.row, context);
+					// A condition in an action: its test and its commands.
+					if (command.test)
+					{
+						command.test = std::make_shared<RawCondition>(*command.test);
+						std::vector<RawCondition> one{ *command.test };
+						conditions(one, context);
+						*command.test = std::move(one.front());
+						this->commands(command.test->commands, context);
+					}
 				}
 			}
 

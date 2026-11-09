@@ -483,6 +483,18 @@ namespace xge
 					object->collisionData.others[i].check = makeTest(check, where, where);
 				}
 			}
+			// Its actions' conditions, tests about itself.
+			std::function<void(std::vector<Command>&, const std::string&)> tests = [&](std::vector<Command>& list, const std::string& here)
+			{
+				for (Command& command : list)
+				{
+					auto* when = std::get_if<CmdWhen>(&command);
+					if (!when || !when->body) { continue; }
+					when->body->test = makeTest(*when->body->raw, here + " > <condition>", here);
+					tests(when->body->commands, here + " > <condition>");
+				}
+			};
+			for (auto& [name, list] : object->action) { tests(list, "object '" + rawObject.name + "' > <action name=\"" + name + "\">"); }
 		}
 
 		for (auto& rawState : rawStates)
@@ -1830,6 +1842,18 @@ namespace xge
 		{
 			for (const RawCommand& each : raw)
 			{
+				// A condition in an action: its commands now, its test once
+				// every object is made (testActionConditions).
+				if (each.verb == "condition" && each.test)
+				{
+					auto body = std::make_shared<WhenBody>();
+					body->raw = each.test;
+					commandValues = false;
+					body->commands = processCommands(each.test->commands, where + " > <condition>");
+					commandValues = true;
+					commands.push_back(CmdWhen{ std::move(body) });
+					continue;
+				}
 				Command made = makeCommand(each, [&](const RawValue& value) { return evaluate(value, where); });
 
 				// One whose numbers can change is made again each time it runs

@@ -186,6 +186,12 @@ namespace xge
 		// for that object or for each member of a group. Whether it ran and
 		// a verb in it was refused.
 		bool runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule);
+		// A <trigger> with <here /> or <around />: the action of each piece of
+		// its class in those cells about `self`, each piece once however the
+		// actions it runs trigger more (aboutReached, aboutDepth).
+		void triggerAbout(Object& self, const CmdTriggerAction& trigger, bool byRule);
+		std::vector<std::string> aboutReached;
+		int aboutDepth = 0;
 
 		// False when every one of the projectiles is in flight.
 		bool spawnProjectile(Object& shooter, const std::string& projectileName);

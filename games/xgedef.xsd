@@ -1170,9 +1170,32 @@
   </xs:complexType>
 
   <!-- slide: on a map with <cells />, a cell at a time that way until the next is refused. -->
+  <!-- slide with class=: every piece of that class on cells, the one nearest that way first; refused when none moved -->
   <xs:complexType name="slideType">
     <xs:attribute name="direction" type="directionType" use="required" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
+
+  <!-- Cells about the object running a <count> or a <trigger>, on any map
+       of cells laid in the same place: here, its own; around, the eight round
+       it (<straight />: the four beside it), with <alike variable> only the
+       pieces whose number is the object's own. -->
+  <xs:complexType name="aroundType">
+    <xs:sequence>
+      <xs:element name="straight" type="emptyType" minOccurs="0" />
+      <xs:element name="alike" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:group name="cellPlace">
+    <xs:choice>
+      <xs:element name="here" type="emptyType" />
+      <xs:element name="around" type="aroundType" />
+    </xs:choice>
+  </xs:group>
 
   <!-- accelerate: a direction, how much to add to the velocity each frame, and optionally the variable it burns. -->
   <xs:complexType name="thrustType" mixed="true">
@@ -1391,8 +1414,12 @@
         </xs:complexType>
       </xs:element>
       <!-- count: the variable into= (owner.variable) takes how many objects of that class are in play now -->
+      <!-- count: how many of that class are in play; with <here /> or <around />, only in those cells about the object running it -->
       <xs:element name="count">
         <xs:complexType>
+          <xs:sequence>
+            <xs:group ref="cellPlace" minOccurs="0" />
+          </xs:sequence>
           <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
           <xs:attribute name="into" type="xs:string" use="required" />
         </xs:complexType>
@@ -1485,11 +1512,14 @@
       <xs:element name="trigger">
         <xs:complexType>
           <!-- in a key's <input>: commands run only when the action it runs is refused (for now only there) -->
-          <xs:sequence>
-            <xs:element name="otherwise" type="stateCommandsType" minOccurs="0" />
-          </xs:sequence>
+          <!-- with <here /> or <around /> and class=: the action of each piece of that class in those cells about the object running it, each once a press however the actions call one another -->
+          <xs:choice minOccurs="0">
+            <xs:element name="otherwise" type="stateCommandsType" />
+            <xs:group ref="cellPlace" />
+          </xs:choice>
           <!-- left out in an object's own collision, action or timer: that object -->
           <xs:attribute name="object" type="xs:string" use="optional" />
+          <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
           <xs:attribute name="action" type="xs:string" use="required" />
           <!-- only those of them showing this look -->
           <xs:attribute name="from" type="xs:string" use="optional" />
@@ -1530,6 +1560,8 @@
       <xs:element name="out" type="emptyType" />
       <!-- demo: the game's recorded <demo> plays, until a key is pressed -->
       <xs:element name="demo" type="emptyType" />
+      <!-- undo: the pieces on cells and every object's numbers back as before the last press that moved a piece; refused when there is none -->
+      <xs:element name="undo" type="emptyType" />
     </xs:choice>
   </xs:group>
 
@@ -1636,6 +1668,14 @@
       <xs:element name="ride" type="emptyType" />
       <!-- through: on a map with <cells />, the refused step is made after all, into the cell with what is there -->
       <xs:element name="through" type="emptyType" />
+      <!-- shove: on cells, what is in the way goes one cell on, the way it was met, and the step goes on; refused when it cannot -->
+      <xs:element name="shove" type="emptyType" />
+      <!-- merge: on cells, a piece in the way with the same number in variable= is taken away, its number added to this one's, and the step goes on; refused when they differ or either merged in this slide -->
+      <xs:element name="merge">
+        <xs:complexType>
+          <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
     </xs:choice>
   </xs:group>
 
@@ -1869,9 +1909,11 @@
 
   <!-- A named thing an object can do, run by a <trigger>. -->
   <xs:complexType name="actionType">
-    <xs:sequence>
-      <xs:group ref="actionCommands" minOccurs="0" maxOccurs="unbounded" />
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="actionCommands" />
+      <!-- a test about the object itself (unless it names another), and the commands it runs while it holds -->
+      <xs:element name="condition" type="actionConditionType" />
+    </xs:choice>
     <xs:attribute name="name" type="xs:string" use="required" />
   </xs:complexType>
 
@@ -2003,6 +2045,14 @@
         </xs:sequence>
         <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
       </xs:choice>
+    </xs:sequence>
+    <xs:attributeGroup ref="conditionAttributes" />
+  </xs:complexType>
+  <!-- A condition in an action: a test, then the action's commands it runs while it holds. -->
+  <xs:complexType name="actionConditionType">
+    <xs:sequence minOccurs="0">
+      <xs:group ref="conditionHead" minOccurs="0" />
+      <xs:group ref="actionCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attributeGroup ref="conditionAttributes" />
   </xs:complexType>

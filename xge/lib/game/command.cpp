@@ -18,6 +18,26 @@ namespace xge
 {
 	namespace
 	{
+		// <here /> or <around /> as written in a <count> or a <trigger>.
+		CellPlace cellPlaceOf(const RawCommand& raw)
+		{
+			CellPlace place;
+			if (raw.place == "here") { place.where = CellPlace::Where::Here; }
+			else if (raw.place == "around") { place.where = CellPlace::Where::Around; }
+			place.straight = raw.straight;
+			place.alike = raw.alike;
+			return place;
+		}
+
+		std::string placeText(const CellPlace& place)
+		{
+			if (!place.any()) { return {}; }
+			std::string text = place.where == CellPlace::Where::Here ? ", here" : ", around";
+			if (place.straight) { text += " straight"; }
+			if (!place.alike.empty()) { text += " alike " + place.alike; }
+			return text;
+		}
+
 		Direction directionFromName(const std::string& name, const std::string& verb)
 		{
 			if (name == "up")    { return Direction::Up; }
@@ -78,6 +98,9 @@ namespace xge
 		if (verb == "grow") { return CmdGrow{}; }
 		if (verb == "split") { return CmdSplit{}; }
 		if (verb == "through") { return CmdThrough{}; }
+		if (verb == "shove") { return CmdShove{}; }
+		if (verb == "merge") { return CmdMerge{ raw.variable }; }
+		if (verb == "undo") { return CmdUndo{}; }
 		if (verb == "pick") { return CmdPick{ raw.objClass, raw.only }; }
 		if (verb == "place") { return CmdPlace{ raw.into }; }
 		if (verb == "call")
@@ -86,8 +109,8 @@ namespace xge
 			return CmdCall{ raw.pile };
 		}
 		if (verb == "put") { return CmdPut{ raw.objClass, raw.closeClass, raw.closeObject }; }
-		if (verb == "count") { return CmdCount{ raw.objClass, VariableName::of(raw.into) }; }
-		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
+		if (verb == "count") { return CmdCount{ raw.objClass, VariableName::of(raw.into), cellPlaceOf(raw) }; }
+		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb), raw.objClass }; }
 
 		// <reset/> puts the object in the rule (or, in a state's input or
 		// condition, the whole game) back; <reset object="name"/> that one object.
@@ -359,7 +382,7 @@ namespace xge
 			return CmdReveal{ raw.object, count };
 		}
 		if (verb == "fire")    { return CmdFire{ raw.object }; }
-		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action, raw.from, raw.otherwise }; }
+		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action, raw.from, raw.otherwise, raw.objClass, cellPlaceOf(raw) }; }
 		if (verb == "follow")
 		{
 			const bool none = raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty();
@@ -555,15 +578,28 @@ namespace xge
 			[&](const CmdGrow&) { o << "grow"; },
 			[&](const CmdSplit&) { o << "split"; },
 			[&](const CmdThrough&) { o << "through"; },
+			[&](const CmdShove&) { o << "shove"; },
+			[&](const CmdMerge& m) { o << "merge(" << m.variable << ")"; },
+			[&](const CmdUndo&) { o << "undo"; },
+			[&](const CmdWhen& when)
+			{
+				o << "when(";
+				if (when.body)
+				{
+					for (std::size_t i = 0; i < when.body->commands.size(); ++i) { o << (i ? ", " : "") << when.body->commands[i]; }
+				}
+				o << ")";
+			},
 			[&](const CmdPick& p) { o << "pick(" << p.objClass << (p.only ? ", only" : "") << ")"; },
 			[&](const CmdPlace& p) { o << "place" << (p.into.empty() ? "" : "(" + p.into + ")"); },
 			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
 			[&](const CmdOrder& r) { o << "order(" << r.group << ", random)"; },
 			[&](const CmdPut& p) { o << "put(" << p.objClass << (p.closeClass.empty() ? "" : ", close " + p.closeClass + " " + p.closeObject) << ")"; },
-			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << ")"; },
+			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << placeText(c.place) << ")"; },
 			[&](const CmdSlide& m)
 			{
 				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");
+				if (!m.objClass.empty()) { o << "(" << m.objClass << ")"; }
 			},
 			[&](const CmdWrap&) { o << "wrap"; },
 			[&](const CmdRide&) { o << "ride"; },
@@ -671,7 +707,7 @@ namespace xge
 			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
 			[&](const CmdPopState& s) { o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; } },
 			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },
-			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << ")"; },
+			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << (a.objClass.empty() ? std::string{} : ", " + a.objClass) << placeText(a.place) << ")"; },
 			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
 			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
 			[&](const CmdSilence& s) { o << "silence(" << s.sound << ")"; },
@@ -906,7 +942,7 @@ namespace xge
 		}
 		else if (command.verb == "slide")
 		{
-			o << "." << command.direction;
+			o << "." << command.direction << (command.objClass.empty() ? "" : "(" + command.objClass + ")");
 		}
 		else if (command.verb == "inc" || command.verb == "dec")
 		{
@@ -945,7 +981,7 @@ namespace xge
 		}
 		else if (command.verb == "trigger")
 		{
-			o << "(" << command.object << "," << command.action << ")";
+			o << "(" << command.object << "," << command.action << (command.place.empty() ? "" : ", " + command.objClass + " " + command.place) << ")";
 		}
 		else if (command.verb == "follow")
 		{

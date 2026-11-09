@@ -121,4 +121,13 @@ namespace xge
 	// "status.lives <= 0", "count of alien <= 2", "all of (...)": a
 	// condition's test in a line, for printing and the inspector.
 	std::string describe(const Condition& condition);
+
+	// A <condition> in an action (CmdWhen): what was written, its test once
+	// made (none until every object is known), and its commands.
+	struct WhenBody
+	{
+		std::shared_ptr<const RawCondition> raw;
+		std::optional<Condition> test;
+		std::vector<Command> commands;
+	};
 }

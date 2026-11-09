@@ -164,6 +164,9 @@ namespace xge
 	struct CmdSlide
 	{
 		Direction direction{};
+		// class=: every piece of that class on cells, the one nearest that
+		// way first; refused when none moved.
+		std::string objClass{};
 	};
 
 	// <clear /> - in a cell map's check: the pieces it found are taken out
@@ -560,6 +563,20 @@ namespace xge
 		std::string projectileName;
 	};
 
+	// Cells about an object on a map of cells, for a <count> or a
+	// <trigger>: <here /> its own cell (on any map of cells laid in the
+	// same place), <around /> the eight cells round it (<straight />: only
+	// the four beside it), there too. <alike variable="v" /> in <around>:
+	// only pieces whose v is the object's own.
+	struct CellPlace
+	{
+		enum class Where { None, Here, Around };
+		Where where{ Where::None };
+		bool straight{ false };
+		std::string alike;
+		bool any() const noexcept { return where != Where::None; }
+	};
+
 	// <trigger object="objectName" action="actionName" /> - only ever appears in a
 	// State's <input> list; triggers one of another object's own named <action> entries.
 	// from="normal": only those of them showing that look run it.
@@ -571,6 +588,11 @@ namespace xge
 		// In a key's commands: how many after it are its <otherwise>, run
 		// only when its action is refused (Engine::runAsPress).
 		int otherwise{ 0 };
+		// <here /> or <around /> with class=: each piece of that class in
+		// those cells about the object running it, each one once a press
+		// however the actions call one another (Minesweeper's flood).
+		std::string objClass{};
+		CellPlace place{};
 	};
 
 	// <reset object="objectName" /> - only ever appears in a State's <input> or
@@ -691,6 +713,36 @@ namespace xge
 	// onto a mushroom).
 	struct CmdThrough {};
 
+	// <shove />: in a rule for a refused cell step, what is in the way is
+	// moved one cell on, the way it was met (a crate pushed); the step goes
+	// on if that left the cell free. The shoved piece's own step touches
+	// what is beyond it, so a crate against a wall or another crate stays.
+	struct CmdShove {};
+
+	// <merge variable="value" />: in a rule for a refused cell step, when
+	// the piece in the way has the same number in that variable, it is
+	// taken away and its number added to the mover's, and the step goes on.
+	// A piece merged once does not merge again in the same <slide>.
+	struct CmdMerge
+	{
+		std::string variable;
+	};
+
+	// <undo />: the pieces on maps of cells, and every object's variables,
+	// back as they were before the last press that moved a piece.
+	struct CmdUndo {};
+
+	// A <condition> in an action: its commands run, in order, while its
+	// test about the object running the action holds (Minesweeper's flood
+	// goes on only from a square with no mines round it). The test is made
+	// once every object is known (WhenBody, in game/condition.h).
+	struct WhenBody;
+	struct CmdWhen
+	{
+		std::shared_ptr<WhenBody> body;
+	};
+
+
 	// <pick class="red" />: a picker over a board game's map of cells takes
 	// up the piece of that class in its cell (column and row), one with a
 	// move it can make; refused when there is none, or while the piece it
@@ -744,6 +796,9 @@ namespace xge
 	{
 		std::string objClass;
 		VariableName target;
+		// <here /> or <around />: only those in those cells about the
+		// object running it.
+		CellPlace place;
 	};
 
 	// <send object from into>: the object's piece on map `from` goes to map
@@ -808,6 +863,7 @@ namespace xge
 	};
 
 	struct RawCommand;
+	struct RawCondition;
 	struct LoadedCommand;
 
 	// A command whose numbers name something that changes while the game
@@ -826,7 +882,7 @@ namespace xge
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
 		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
-		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdPick, CmdPlace, CmdPut, CmdOrder, CmdCount, CmdThink, CmdCall, CmdLive>;
+		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdShove, CmdMerge, CmdUndo, CmdWhen, CmdPick, CmdPlace, CmdPut, CmdOrder, CmdCount, CmdThink, CmdCall, CmdLive>;
 
 	struct LoadedCommand
 	{
@@ -1048,6 +1104,14 @@ namespace xge
 		RawValue row;
 		// spawn: the <below> of its <free>, empty text when left out.
 		RawValue below;
+		// count, trigger on cells: <here /> or <around /> (place: "here",
+		// "around"), <straight /> in <around>, its <alike variable>.
+		std::string place;
+		bool straight{ false };
+		std::string alike;
+		// condition (a <condition> in an action): its test, and its commands
+		// as the test's own (shared; copied before it is changed).
+		std::shared_ptr<RawCondition> test;
 	};
 
 	// A <timer> as written: <every> (again and again) or <after> (once), a

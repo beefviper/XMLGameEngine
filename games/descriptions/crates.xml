@@ -1,0 +1,301 @@
+<!-- crates.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Nov 9, 2026 -->
+
+<!--
+  Crates: a box-pushing puzzle in a stockroom. The worker walks a cell at
+  a time and pushes a crate by walking into it, one crate at a time and
+  never pulling. Put every crate on a marked spot to finish the room.
+  Four rooms, each harder than the last.
+
+  W A S D or the arrows walk. U or Backspace takes the last move back,
+  as many times as you like; R starts the room again. Space starts,
+  pauses and plays again; P or Escape pauses too.
+
+  How it is written:
+  * A room is two maps of <cells /> laid in the same place: the board
+    (walls, crates, the worker) and the floor under it (the spots). A
+    piece only meets pieces of its own map, so the worker walks over a
+    spot.
+  * A step into a crate is refused, and is a touch: the worker's rule
+    <shove />s the crate a cell on, and the step goes on. A crate against
+    a wall or another crate cannot go, so neither does the worker.
+  * The crate's own rule then counts the spots in its cell with
+    <count><here /></count>, and a <condition> in its action picks its
+    look.
+  * <undo /> puts every piece and number back as before the last move.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Crates">
+    <width>640</width>
+    <height>480</height>
+  </window>
+  <variables>
+    <variable name="cell">48</variable>
+    <variable name="left">80</variable>
+    <variable name="top">96</variable>
+  </variables>
+  <styles>
+    <style name="banner"><size>88</size><color>color.orange</color></style>
+    <style name="prompt"><size>32</size></style>
+    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>28</size></style>
+  </styles>
+  <kit>
+    <!-- what stands in a room: each room gives its rows -->
+    <map name="board">
+      <tile><width>cell</width><height>cell</height></tile>
+      <position><x>left</x><y>top</y></position>
+      <cells />
+      <group name="walls" class="wall" char="#">
+        <sprite><rectangle><width>cell</width><height>cell</height><color>color.brown</color></rectangle></sprite>
+      </group>
+      <group name="crates" class="crate" char="$">
+        <sprite name="crate"><rectangle><width>cell - 6</width><height>cell - 6</height><color>color.peach</color></rectangle></sprite>
+        <sprite name="home"><rectangle><width>cell - 6</width><height>cell - 6</height><color>color.gold</color></rectangle></sprite>
+        <collisions>
+          <!-- pushed (or not): is it on a spot now? -->
+          <collision class="worker"><trigger action="look" /></collision>
+        </collisions>
+        <actions>
+          <action name="look">
+            <count class="spot" into="self.home"><here /></count>
+            <condition variable="home"><equal>1</equal><become sprite="home" /></condition>
+            <condition variable="home"><equal>0</equal><become sprite="crate" /></condition>
+          </action>
+        </actions>
+        <variables><variable name="home">0</variable></variables>
+      </group>
+      <object name="worker" class="worker" char="@">
+        <sprite><circle><radius>cell / 2 - 6</radius><color>color.cyan</color></circle></sprite>
+        <collisions>
+          <collision class="crate"><shove /><play sound="push" /></collision>
+        </collisions>
+        <actions>
+          <action name="up"><hop direction="up" /><inc variable="status.moves" /></action>
+          <action name="down"><hop direction="down" /><inc variable="status.moves" /></action>
+          <action name="left"><hop direction="left" /><inc variable="status.moves" /></action>
+          <action name="right"><hop direction="right" /><inc variable="status.moves" /></action>
+        </actions>
+      </object>
+    </map>
+    <!-- the floor under it: the spots the crates go on -->
+    <map name="floor">
+      <tile><width>cell</width><height>cell</height></tile>
+      <position><x>left</x><y>top</y></position>
+      <cells />
+      <group name="spots" class="spot" char=".">
+        <sprite><circle><radius>cell / 5</radius><color>color.red</color></circle></sprite>
+      </group>
+    </map>
+  </kit>
+  <objects>
+    <object name="again">
+      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>CRATES</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 110</centered></y></position>
+        </object>
+        <group name="help">
+          <rows>3</rows>
+          <padding><y>32</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+          <row number="1"><sprite><text><content>push every crate onto a red spot</content></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d or the arrows walk, p pauses</content></text></sprite></row>
+          <row number="3"><sprite><text><content>u or backspace undoes, r starts the room again</content></text></sprite></row>
+        </group>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <object name="status">
+          <variables>
+            <variable name="room">1</variable>
+            <variable name="moves">0</variable>
+          </variables>
+        </object>
+        <object name="roomlabel">
+          <sprite><text style="hud"><content>room </content><number>status.room</number></text></sprite>
+          <position><x>20</x><y>20</y></position>
+        </object>
+        <object name="moveslabel">
+          <sprite><text style="hud"><content>moves </content><number>status.moves</number></text></sprite>
+          <position><x>window.right - 180</x><y>20</y></position>
+        </object>
+      </objects>
+      <scenes>
+        <scene name="room1">
+          <ways>
+            <way name="again" scene="room1" />
+            <way name="next" scene="room2" />
+          </ways>
+          <objects>
+            <map name="board">
+              <row>########</row>
+              <row>#      #</row>
+              <row># @$   #</row>
+              <row>#      #</row>
+              <row>########</row>
+            </map>
+            <map name="floor">
+              <row>--------</row>
+              <row>--------</row>
+              <row>------.-</row>
+              <row>--------</row>
+              <row>--------</row>
+            </map>
+          </objects>
+          <conditions>
+            <!-- every crate on a spot: on to the next room -->
+            <condition name="done" class="crate" variable="home" total="lowest">
+              <atleast>1</atleast>
+              <play sound="done" />
+              <inc variable="status.room" />
+              <set variable="status.moves">0</set>
+              <enter way="next" />
+            </condition>
+          </conditions>
+        </scene>
+        <scene name="room2" from="room1">
+          <ways>
+            <way name="again" scene="room2" />
+            <way name="next" scene="room3" />
+          </ways>
+          <objects>
+            <map name="board">
+              <row>#########</row>
+              <row>#       #</row>
+              <row># $ # $ #</row>
+              <row>#   @   #</row>
+              <row>#       #</row>
+              <row>#########</row>
+            </map>
+            <map name="floor">
+              <row>---------</row>
+              <row>---------</row>
+              <row>---------</row>
+              <row>---------</row>
+              <row>--.---.--</row>
+              <row>---------</row>
+            </map>
+          </objects>
+        </scene>
+        <scene name="room3" from="room1">
+          <ways>
+            <way name="again" scene="room3" />
+            <way name="next" scene="room4" />
+          </ways>
+          <objects>
+            <map name="board">
+              <row>##########</row>
+              <row>#   #    #</row>
+              <row># $ $  $ #</row>
+              <row>#  ## #  #</row>
+              <row># @      #</row>
+              <row>##########</row>
+            </map>
+            <map name="floor">
+              <row>----------</row>
+              <row>-.------.-</row>
+              <row>----------</row>
+              <row>----------</row>
+              <row>-------.--</row>
+              <row>----------</row>
+            </map>
+          </objects>
+        </scene>
+        <scene name="room4" from="room1">
+          <ways>
+            <way name="again" scene="room4" />
+          </ways>
+          <objects>
+            <map name="board">
+              <row>##########</row>
+              <row>#   #    #</row>
+              <row>#  $  $  #</row>
+              <row>## # #   #</row>
+              <row>#  $ @   #</row>
+              <row>#    #   #</row>
+              <row>##########</row>
+            </map>
+            <map name="floor">
+              <row>----------</row>
+              <row>---.------</row>
+              <row>----------</row>
+              <row>--------.-</row>
+              <row>-.--------</row>
+              <row>----------</row>
+              <row>----------</row>
+            </map>
+          </objects>
+          <conditions>
+            <!-- the last room done: the stockroom is in order -->
+            <condition name="done" class="crate" variable="home" total="lowest">
+              <atleast>1</atleast>
+              <play sound="done" />
+              <push state="won" />
+            </condition>
+          </conditions>
+        </scene>
+      </scenes>
+      <inputs>
+        <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="worker" action="up" /></input>
+        <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="worker" action="down" /></input>
+        <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="worker" action="left" /></input>
+        <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="worker" action="right" /></input>
+        <input><button>u</button><button>backspace</button><button>pad1.b</button><undo /></input>
+        <input><button>r</button><button>pad1.y</button><reset way="again" /><set variable="status.moves">0</set></input>
+        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <state name="won">
+      <objects>
+        <object name="message">
+          <sprite><text style="banner"><content>ALL DONE</content><color>color.gold</color></text></sprite>
+          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="again" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button><reset /></input>
+      </inputs>
+    </state>
+  </states>
+  <sounds>
+    <sound name="push"><note pitch="C3">0.05</note></sound>
+    <sound name="done"><note pitch="C5">0.08</note><note pitch="E5">0.08</note><note pitch="G5">0.08</note><note pitch="C6">0.16</note></sound>
+  </sounds>
+</game>

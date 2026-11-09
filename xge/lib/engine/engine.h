@@ -174,6 +174,8 @@ namespace xge
 		// Runs commands as one press each, as a key's press runs its own,
 		// stopping at a refused one or a turn's end.
 		void runAsPress(const std::vector<Command>& commands);
+		// runAsPress's commands, between the game's pressBegins and pressEnds.
+		void runPress(const std::vector<Command>& commands);
 
 		// Sends the release to everything the held keys are driving, and
 		// forgets it; the keys stay down.

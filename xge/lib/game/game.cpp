@@ -69,6 +69,14 @@ namespace xge
 		for (const auto& state : states)
 		{
 			stateTimers[state.name] = state.timers;
+			// An <undo /> on a key: each press that moves a piece is kept.
+			for (const auto* keys : state.keyMaps())
+			{
+				for (const auto& [key, commands] : *keys)
+				{
+					for (const Command& command : commands) { keepsUndo = keepsUndo || std::holds_alternative<CmdUndo>(shapeOf(command)); }
+				}
+			}
 		}
 		startScenes();
 		// The cards shuffled and dealt, piles scored by patterns there are.
@@ -274,6 +282,24 @@ namespace xge
 			Condition check = *original.collisionData.others[i].check;
 			retarget(check);
 			made.collisionData.others[i].check = std::move(check);
+		}
+		// Its actions' conditions, the same way.
+		const std::function<void(const std::vector<Command>&, std::vector<Command>&)> whens = [&](const std::vector<Command>& written, std::vector<Command>& copied)
+		{
+			for (std::size_t i = 0; i < written.size() && i < copied.size(); ++i)
+			{
+				const auto* was = std::get_if<CmdWhen>(&written[i]);
+				auto* now = std::get_if<CmdWhen>(&copied[i]);
+				if (!was || !now || !was->body || !now->body || !was->body->test) { continue; }
+				Condition check = *was->body->test;
+				retarget(check);
+				now->body->test = std::move(check);
+				whens(was->body->commands, now->body->commands);
+			}
+		};
+		for (auto& [actionName, list] : made.action)
+		{
+			if (const auto found = original.action.find(actionName); found != original.action.end()) { whens(found->second, list); }
 		}
 
 		made.copyOf = original.name;
@@ -1752,6 +1778,8 @@ namespace xge
 	{
 		const std::string scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
 		if (!scene.empty()) { enterScene(scene); }
+		// A new level: nothing to undo into the last.
+		undoSteps.clear();
 	}
 
 	void Game::reset(const CmdResetScene& command)

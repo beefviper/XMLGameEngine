@@ -153,6 +153,10 @@ namespace xge
 				[](const CmdGrow&) { return std::string("<grow />"); },
 				[](const CmdSplit&) { return std::string("<split />"); },
 				[](const CmdThrough&) { return std::string("<through />"); },
+				[](const CmdShove&) { return std::string("<shove />"); },
+				[](const CmdMerge&) { return std::string("<merge>"); },
+				[](const CmdUndo&) { return std::string("<undo />"); },
+				[](const CmdWhen&) { return std::string("<condition>"); },
 				[](const CmdPick&) { return std::string("<pick>"); },
 				[](const CmdPlace&) { return std::string("<place />"); },
 				[](const CmdCall&) { return std::string("<call />"); },
@@ -188,16 +192,17 @@ namespace xge
 		{
 			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<shift>", "<enter>",
 				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<send>", "<despawn object>", "<trigger>", "<count>", "<reveal pile>", "<shuffle>", "<redeal />", "<collect>", "<order>" };
-			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />" };
+			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />", "<undo />" };
 			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>", "<cycle />", "<grow />", "<split />", "<pick>", "<place />", "<put>", "<take />", "<lay />", "<deal />", "<call />" };
 			static const std::vector<std::string> steering{ "<aim>", "<chase>", "<hunt>", "<hunt> by <hop>", "<wander>" };
-			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />", "<through />", "<stick />" };
+			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />", "<through />", "<shove />", "<merge>", "<stick />" };
 			static const std::vector<std::string> edge{ "<stick />", "<wrap />" };
 			static const std::vector<std::string> bounce{ "<bounce />" };
 			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<jump>", "<leap>", "<swing>", "<thrust>", "<turn>", "<track />" };
 			static const std::vector<std::string> press{ "<hold>", "<think>" };
 			static const std::vector<std::string> cells{ "<clear />", "<collapse />", "<fall />" };
-			static const std::vector<std::string> turn{ "<pass />" };   // by a member of a group that takes <turns>
+			static const std::vector<std::string> turn{ "<pass />" };
+			static const std::vector<std::string> when{ "<condition>" };     // in an action   // by a member of a group that takes <turns>
 
 			static const std::vector<std::string> stateCommands = commandsOf({ &changes, &flow });
 			static const std::vector<std::string> objectTimeCommands = commandsOf({ &changes, &self, &steering });
@@ -208,7 +213,7 @@ namespace xge
 				{ "a <condition>", stateCommands },
 				{ "a state's <timer>", stateCommands },
 				{ "an object's <timer>", objectTimeCommands },
-				{ "an <action>", commandsOf({ &changes, &self, &steering, &controls, &turn }) },
+				{ "an <action>", commandsOf({ &changes, &self, &steering, &controls, &turn, &when }) },
 				{ "a path's <step>", objectTimeCommands },
 				{ "a <computer>'s <condition>", press },
 				{ "a map's check", commandsOf({ &changes, &cells }) },
@@ -236,7 +241,18 @@ namespace xge
 			path.push_back(step);
 			for (const Command& command : found->second)
 			{
-				if (const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command)))
+				// One about the cells round it may come round: each piece runs
+				// at most once a press (Game::triggerAbout).
+				if (const auto* when = std::get_if<CmdWhen>(&command); when && when->body)
+				{
+					for (const Command& inner : when->body->commands)
+					{
+						const auto* nested = std::get_if<CmdTriggerAction>(&shapeOf(inner));
+						if (nested && !nested->place.any()) { checkTriggerLoop(objects, nested->object, nested->action, path, where); }
+					}
+				}
+				const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command));
+				if (trigger && !trigger->place.any())
 				{
 					checkTriggerLoop(objects, trigger->object, trigger->action, path, where);
 				}
@@ -255,6 +271,8 @@ namespace xge
 				const std::string tag = tagOf(command);
 				if (std::find(rule.tags.begin(), rule.tags.end(), tag) != rule.tags.end())
 				{
+					// A condition's commands go where it is.
+					if (const auto* when = std::get_if<CmdWhen>(&command); when && when->body) { checkPlace(when->body->commands, place, where + " > <condition>"); }
 					continue;
 				}
 
@@ -508,6 +526,16 @@ namespace xge
 				{
 					throw std::runtime_error(where + ": <pop state=\"" + pop->name + "\" /> names no state of the game" + didYouMean(pop->name, stateNames(states)));
 				}
+			}
+			else if (const auto* about = std::get_if<CmdTriggerAction>(&shapeOf(command)); about && about->place.any())
+			{
+				// About the cells round it: some piece of the class has the action.
+				const bool any = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.objClass == about->objClass && object.action.count(about->action); });
+				if (!any) { throw std::runtime_error(where + ": <trigger action=\"" + about->action + "\" class=\"" + about->objClass + "\">: no object of that class has an action of that name"); }
+			}
+			else if (const auto* when = std::get_if<CmdWhen>(&command); when && when->body)
+			{
+				for (const Command& inner : when->body->commands) { checkCommand(inner, states, objects, sounds, paths, styles, wanted, where + " > <condition>"); }
 			}
 			else if (const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command)))
 			{

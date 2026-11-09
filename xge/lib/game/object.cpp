@@ -484,6 +484,33 @@ namespace xge
 	namespace
 	{
 		// self. at the start of a name in a value, made `name`; whether any was.
+		bool nameSelfInValue(RawValue& each, const std::string& name);
+
+		// A rule's or an action's test: self, as a name or in front of a
+		// variable (self.worth), is the object running it, as it is in its
+		// commands; a test naming nothing is about that object.
+		void nameSelfInCheck(RawCondition& condition, const std::string& name)
+		{
+			for (RawCondition& part : condition.parts) { nameSelfInCheck(part, name); }
+			if (condition.join != RawCondition::Join::None) { return; }
+
+			const std::string own = "self.";
+			for (std::string* each : { &condition.filterObject, &condition.distance })
+			{
+				if (*each == "self") { *each = name; }
+			}
+			if (condition.variableName.compare(0, own.size(), own) == 0 && condition.filterClass.empty()
+				&& (condition.filterObject.empty() || condition.filterObject == name))
+			{
+				condition.variableName.erase(0, own.size());
+			}
+			nameSelfInValue(condition.threshold, name);
+			if (condition.filterClass.empty() && condition.filterObject.empty())
+			{
+				condition.filterObject = name;
+			}
+		}
+
 		bool nameSelfInValue(RawValue& each, const std::string& name)
 		{
 			bool changed = false;
@@ -521,6 +548,14 @@ namespace xge
 			{
 				changed = nameSelfInValue(*each, name) || changed;
 			}
+			// A condition in an action: its test and its commands.
+			if (command.test)
+			{
+				command.test = std::make_shared<RawCondition>(*command.test);
+				nameSelfInCheck(*command.test, name);
+				nameSelfIn(command.test->commands, name);
+				changed = true;
+			}
 		}
 		return changed;
 	}
@@ -531,29 +566,7 @@ namespace xge
 		{
 			const std::function<void(RawValue&)> value = [&](RawValue& each) { nameSelfInValue(each, object.name); };
 			const auto commands = [&](std::vector<RawCommand>& list) { nameSelfIn(list, object.name); };
-			const std::function<void(RawCondition&)> check = [&](RawCondition& condition)
-			{
-				for (RawCondition& part : condition.parts) { check(part); }
-				if (condition.join != RawCondition::Join::None) { return; }
-
-				// self, as a name or in front of a variable (self.worth), is
-				// the object running the rule, as it is in its commands.
-				const std::string own = "self.";
-				for (std::string* name : { &condition.filterObject, &condition.distance })
-				{
-					if (*name == "self") { *name = object.name; }
-				}
-				if (condition.variableName.compare(0, own.size(), own) == 0 && condition.filterClass.empty()
-					&& (condition.filterObject.empty() || condition.filterObject == object.name))
-				{
-					condition.variableName.erase(0, own.size());
-				}
-				value(condition.threshold);
-				if (condition.filterClass.empty() && condition.filterObject.empty())
-				{
-					condition.filterObject = object.name;
-				}
-			};
+			const auto check = [&](RawCondition& condition) { nameSelfInCheck(condition, object.name); };
 
 			RawCollisionData& collisions = object.rawCollisionData;
 			for (auto& edge : collisions.edges) { commands(edge.commands); }
@@ -589,10 +602,23 @@ namespace xge
 				each.operations = std::move(operations);
 			}
 		};
-		const auto commands = [&](std::vector<RawCommand>& list)
+		const std::function<void(RawCondition&)> check = [&](RawCondition& condition)
+		{
+			for (RawCondition& part : condition.parts) { check(part); }
+			if (condition.filterObject == from) { condition.filterObject = to; }
+			if (condition.distance == from) { condition.distance = to; }
+			value(condition.threshold);
+		};
+		std::function<void(std::vector<RawCommand>&)> commands = [&](std::vector<RawCommand>& list)
 		{
 			for (RawCommand& command : list)
 			{
+				if (command.test)
+				{
+					command.test = std::make_shared<RawCondition>(*command.test);
+					check(*command.test);
+					commands(command.test->commands);
+				}
 				if (command.verb == "trigger" && command.object == from) { command.object = to; }
 				command.variable = renameStart(command.variable, from, to);
 				command.into = renameStart(command.into, from, to);
@@ -602,11 +628,6 @@ namespace xge
 					value(*each);
 				}
 			}
-		};
-		const std::function<void(RawCondition&)> check = [&](RawCondition& condition)
-		{
-			for (RawCondition& part : condition.parts) { check(part); }
-			if (condition.filterObject == from) { condition.filterObject = to; }
 		};
 
 		object.name = to;

@@ -270,7 +270,11 @@ namespace xge
 			[&](const CmdDespawn& d) { despawn(self, d); },
 			// A cell map's.
 			[&](const CmdSettle&) { if (self) { game.settle(*self); } },
-			[&](const CmdSlide& m) { if (self && self->onCells) { game.slideCells(*self, m.direction); } },
+			[&](const CmdSlide& m)
+			{
+				if (!m.objClass.empty()) { done = game.slideClass(m.objClass, m.direction); }
+				else if (self && self->onCells) { game.slideCells(*self, m.direction); }
+			},
 			[&](const CmdClear&) { if (doer.match) { game.clearCells(*doer.match); } },
 			[&](const CmdCollapse&) { if (doer.match) { game.collapseCells(*doer.match); } },
 			[&](const CmdFall& fall) { if (doer.match) { game.fallCells(doer.match->map, fall.objClass); } },
@@ -278,14 +282,35 @@ namespace xge
 			[&](const CmdGrow&) { if (self && !self->chain.empty()) { ++self->chainGrow; } },
 			[&](const CmdSplit&) { if (self) { game.splitChain(*self); } },
 			[&](const CmdThrough&) { if (self && doer.touch) { game.stepThrough(); } },
+			[&](const CmdShove&) { done = self && doer.touch && doer.other && game.shoveCells(*doer.other, doer.touch->edge); },
+			[&](const CmdMerge& m) { done = self && doer.touch && doer.other && game.mergeCells(*self, *doer.other, m.variable); },
+			[&](const CmdUndo&) { done = game.undo(); },
+			// A condition in an action: its commands while it holds, up to
+			// one refused.
+			[&](const CmdWhen& when)
+			{
+				if (!when.body || !when.body->test || !game.testHolds(*when.body->test)) { return; }
+				for (const Command& inner : when.body->commands)
+				{
+					if (!run(inner, doer)) { break; }
+				}
+			},
 			[&](const CmdPick& p) { done = self && (self->hand.is ? game.pickCards(*self) : game.pickPiece(*self, p.objClass, p.only)); },
 			[&](const CmdPlace& p) { done = self && (self->hand.is ? game.layCards(*self, p.into) : game.placePiece(*self)); },
 			[&](const CmdCall& c) { done = self && game.callSuit(*self, c.pile); },
 			[&](const CmdOrder& r) { done = game.orderHeld(r.group); },
 			[&](const CmdPut& p) { done = self && game.putPiece(*self, p); },
-			[&](const CmdCount& c) { game.setNumber(c.target, game.countClass(c.objClass)); },
+			[&](const CmdCount& c)
+			{
+				if (!c.place.any()) { game.setNumber(c.target, game.countClass(c.objClass)); }
+				else if (self) { game.setNumber(c.target, static_cast<float>(game.piecesAbout(*self, c.objClass, c.place).size())); }
+			},
 			// Another action, of this object or another, as part of this.
-			[&](const CmdTriggerAction& a) { triggerObjectAction(a.object, a.action, pressed, doer.byRule, a.from); },
+			[&](const CmdTriggerAction& a)
+			{
+				if (!a.place.any()) { triggerObjectAction(a.object, a.action, pressed, doer.byRule, a.from); }
+				else if (self && pressed) { triggerAbout(*self, a, doer.byRule); }
+			},
 			// <track /> runs on a pointing control (executeAxis), <hold> in a
 			// <computer>, and a CmdLive is made into its command first.
 			[&](const CmdTrack&) {},
@@ -670,6 +695,23 @@ namespace xge
 		lastTriggerRefused = refused;
 	}
 
+	void CommandExecutor::triggerAbout(Object& self, const CmdTriggerAction& trigger, bool byRule)
+	{
+		// The outermost one starts afresh; those it leads to share its list
+		// of pieces reached, so each runs once and a flood ends.
+		if (aboutDepth == 0) { aboutReached.clear(); }
+		++aboutDepth;
+		lastTriggerRefused = false;
+		for (Object* piece : game.piecesAbout(self, trigger.objClass, trigger.place))
+		{
+			if (!trigger.from.empty() && piece->lookName() != trigger.from) { continue; }
+			if (std::find(aboutReached.begin(), aboutReached.end(), piece->name) != aboutReached.end()) { continue; }
+			aboutReached.push_back(piece->name);
+			runAction(*piece, trigger.action, true, byRule);
+		}
+		--aboutDepth;
+	}
+
 	bool CommandExecutor::runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule)
 	{
 		// An object out of play does not act on a key: a ship that is not
@@ -681,6 +723,12 @@ namespace xge
 		}
 		// A piece sent away from its own map (a next-piece box) is only shown.
 		if (object.awayFromHome())
+		{
+			return false;
+		}
+		// One in a scene that is not current is not there: a key reaches
+		// the worker of the room being played, not every room's.
+		if (game.isAway(object))
 		{
 			return false;
 		}
