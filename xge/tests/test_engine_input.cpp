@@ -246,6 +246,9 @@ TEST_CASE("every shipped game follows the shared key conventions", "[engine_inpu
 	for (const auto& entry : std::filesystem::directory_iterator("descriptions"))
 	{
 		if (entry.path().extension() != ".xml") { continue; }
+		// Other tests write scratch games here while this one runs, side by
+		// side under ctest, and one half written can look like anything.
+		if (entry.path().stem().string().find("_scratch") != std::string::npos) { continue; }
 
 		std::ifstream in(entry.path());
 		const std::string text = fileText(in);
