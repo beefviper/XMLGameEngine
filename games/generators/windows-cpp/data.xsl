@@ -178,6 +178,48 @@
        what it says. -->
   <xsl:template name="command">
     <xsl:param name="node" select="." />
+    <xsl:param name="indent" select="''" />
+    <xsl:variable name="verb" select="local-name($node)" />
+    <xsl:choose>
+      <!-- a <condition> in an action: its test and its commands -->
+      <xsl:when test="$verb = 'condition'">
+        <xsl:call-template name="action-condition">
+          <xsl:with-param name="node" select="$node" />
+          <xsl:with-param name="indent" select="$indent" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="verb-command">
+          <xsl:with-param name="node" select="$node" />
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A <condition> in an action (readActionCommands): when(...) with the
+       RawCondition, its commands on it. -->
+  <xsl:template name="action-condition">
+    <xsl:param name="node" />
+    <xsl:param name="indent" />
+    <xsl:variable name="inner" select="concat($indent, $tab)" />
+    <xsl:value-of select="concat('when(make&lt;RawCondition&gt;([](RawCondition&amp; tested)&#10;', $indent, '{&#10;')" />
+    <xsl:call-template name="condition-test">
+      <xsl:with-param name="node" select="$node" />
+      <xsl:with-param name="var" select="'tested'" />
+      <xsl:with-param name="inner" select="$inner" />
+      <xsl:with-param name="depth" select="1" />
+    </xsl:call-template>
+    <xsl:value-of select="concat($inner, 'tested.commands = ')" />
+    <xsl:call-template name="commands">
+      <xsl:with-param name="nodes" select="$node/*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::all or self::any))]" />
+      <xsl:with-param name="indent" select="$inner" />
+    </xsl:call-template>
+    <xsl:value-of select="concat(';&#10;', $indent, '}))')" />
+  </xsl:template>
+
+  <!-- One verb tag that is not a condition. -->
+  <xsl:template name="verb-command">
+    <xsl:param name="node" />
     <xsl:variable name="verb" select="local-name($node)" />
     <xsl:variable name="fill">
       <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@style | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from | $node/@button | $node/@pile">
@@ -291,6 +333,21 @@
             </xsl:for-each>
             <xsl:text> };</xsl:text>
           </xsl:if>
+        </xsl:when>
+        <!-- the pieces in a cell, or around it, a count or a trigger is about -->
+        <xsl:when test="($verb = 'count' or $verb = 'trigger') and ($node/here or $node/around)">
+          <xsl:choose>
+            <xsl:when test="$node/here"> command.place = "here";</xsl:when>
+            <xsl:otherwise>
+              <xsl:text> command.place = "around";</xsl:text>
+              <xsl:if test="$node/around/straight"> command.straight = true;</xsl:if>
+              <xsl:if test="$node/around/alike">
+                <xsl:text> command.alike = </xsl:text>
+                <xsl:call-template name="string"><xsl:with-param name="text" select="$node/around/alike/@variable" /></xsl:call-template>
+                <xsl:text>;</xsl:text>
+              </xsl:if>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:when>
         <!-- a trigger's <otherwise>: how many commands after it are its -->
         <xsl:when test="$verb = 'trigger' and $node/otherwise">
@@ -572,6 +629,7 @@
         <xsl:text>{ </xsl:text>
         <xsl:call-template name="command">
           <xsl:with-param name="node" select="$all" />
+          <xsl:with-param name="indent" select="$indent" />
         </xsl:call-template>
         <xsl:text> }</xsl:text>
       </xsl:when>
@@ -579,7 +637,9 @@
         <xsl:text>{&#10;</xsl:text>
         <xsl:for-each select="$all">
           <xsl:value-of select="concat($indent, $tab)" />
-          <xsl:call-template name="command" />
+          <xsl:call-template name="command">
+            <xsl:with-param name="indent" select="concat($indent, $tab)" />
+          </xsl:call-template>
           <xsl:text>,&#10;</xsl:text>
         </xsl:for-each>
         <xsl:value-of select="concat($indent, '}')" />

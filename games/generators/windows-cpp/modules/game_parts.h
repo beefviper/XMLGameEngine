@@ -189,6 +189,14 @@ namespace xge::parts
 		return command;
 	}
 
+	// A <condition> in an action: its commands run while it holds.
+	inline RawCommand when(RawCondition test)
+	{
+		RawCommand command = verb("condition");
+		command.test = std::make_shared<RawCondition>(std::move(test));
+		return command;
+	}
+
 	// <timer><every>seconds</every> commands </timer>
 	inline RawTimer every(RawValue seconds, std::vector<RawCommand> commands)
 	{

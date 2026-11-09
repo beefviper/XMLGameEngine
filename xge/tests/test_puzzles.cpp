@@ -14,6 +14,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <map>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -223,4 +224,105 @@ TEST_CASE("<slide class> that moves nothing is refused, so what follows it does 
 	play.frames(1);
 	CHECK(rowOf(play, 4) == std::vector<int>{ 2, 4, 0, 0 });
 	CHECK(play.get("holder").variable.at("moved") == 0.0f);
+}
+
+namespace
+{
+	// Minefield's mines and squares, by cell.
+	struct Field
+	{
+		std::set<std::pair<int, int>> mines;
+		std::map<std::pair<int, int>, const Object*> squares;
+
+		explicit Field(Played& play)
+		{
+			for (const Object& object : play.game.getCurrentObjects())
+			{
+				if (!object.exists || !object.isVisible) { continue; }
+				if (object.objClass == "mine") { mines.insert(cellOf(object)); }
+				if (object.objClass == "square") { squares[cellOf(object)] = &object; }
+			}
+		}
+
+		int around(std::pair<int, int> cell) const
+		{
+			int count = 0;
+			for (int down = -1; down <= 1; ++down)
+			{
+				for (int across = -1; across <= 1; ++across)
+				{
+					if ((across != 0 || down != 0) && mines.count({ cell.first + across, cell.second + down })) { ++count; }
+				}
+			}
+			return count;
+		}
+	};
+}
+
+TEST_CASE("Minefield: ten mines are laid, and an opened square counts the mines round it", "[puzzles][minefield]")
+{
+	Played play("descriptions/minefield.xml");
+	play.tap(KeyCode::Space);
+	play.frames(12);
+	REQUIRE(play.state() == "playing");
+	Field before(play);
+	REQUIRE(before.mines.size() == 10);
+	REQUIRE(before.squares.size() == 81);
+
+	// The cursor starts in the middle: open there.
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	Field after(play);
+	const Object& middle = *after.squares.at({ 5, 5 });
+	CHECK(middle.variable.at("open") == 1.0f);
+	if (after.mines.count({ 5, 5 }))
+	{
+		CHECK(middle.lookName() == "boom");
+		CHECK(play.state() == "lost");
+		return;
+	}
+	CHECK(middle.variable.at("near") == static_cast<float>(after.around({ 5, 5 })));
+
+	// The flood: every open square shows its own count, an open square with
+	// none round it has every neighbour open, and no mine is opened.
+	int opened = 0;
+	for (const auto& [cell, square] : after.squares)
+	{
+		if (square->variable.at("open") != 1.0f) { continue; }
+		++opened;
+		INFO("square " << cell.first << ", " << cell.second);
+		CHECK_FALSE(after.mines.count(cell));
+		CHECK(square->variable.at("near") == static_cast<float>(after.around(cell)));
+		CHECK(square->lookName() == "n" + std::to_string(after.around(cell)));
+		if (after.around(cell) != 0) { continue; }
+		for (int down = -1; down <= 1; ++down)
+		{
+			for (int across = -1; across <= 1; ++across)
+			{
+				const auto next = after.squares.find({ cell.first + across, cell.second + down });
+				if (next != after.squares.end()) { CHECK(next->second->variable.at("open") == 1.0f); }
+			}
+		}
+	}
+	CHECK(play.get("status").variable.at("opened") == static_cast<float>(opened));
+}
+
+TEST_CASE("Minefield: a flag goes on and off, and a flagged square does not open", "[puzzles][minefield]")
+{
+	Played play("descriptions/minefield.xml");
+	play.tap(KeyCode::Space);
+	play.frames(12);
+	play.tap(KeyCode::F);
+	play.frames(1);
+	const Object& middle = *Field(play).squares.at({ 5, 5 });
+	CHECK(middle.lookName() == "flag");
+	CHECK(play.get("status").variable.at("flags") == 1.0f);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(middle.lookName() == "flag");
+	CHECK(play.get("status").variable.at("opened") == 0.0f);
+	play.tap(KeyCode::F);
+	play.frames(1);
+	CHECK(middle.lookName() == "closed");
+	CHECK(play.get("status").variable.at("flags") == 0.0f);
 }
