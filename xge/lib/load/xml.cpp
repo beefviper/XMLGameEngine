@@ -3439,11 +3439,14 @@ namespace xge
 
 			std::unique_ptr<XmlNode> test = node.getFirstChild();
 
-			// sprite= and no test tag: showing that look is the test.
-			static const std::set<std::string> tests{ "atleast", "atmost", "above", "below", "equal", "remaining", "all", "any" };
-			if (!raw.sprite.empty() && (!test || !tests.contains(test->getName())))
+			// No test tag: with sprite=, showing that look is the test; with
+			// class= or object= alone, being there is (each of them, for
+			// commands that name self).
+			static const std::set<std::string> tests{ "atleast", "atmost", "above", "below", "equal", "remaining", "lowest", "highest", "all", "any" };
+			const bool named = !raw.filterClass.empty() || !raw.filterObject.empty();
+			if (named && (!test || !tests.contains(test->getName()))
+				&& (!raw.sprite.empty() || (raw.variableName.empty() && raw.total.empty() && raw.distance.empty())))
 			{
-				if (raw.filterClass.empty() && raw.filterObject.empty()) { fail(here, "sprite=\"" + raw.sprite + "\" tests a look, so it needs object= or class= to say whose"); }
 				if (!raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty())
 				{
 					fail(here, "has variable=, total= or distance= but no test of them; add an <atleast>, <atmost>, <above>, <below> or <equal>");
@@ -3472,7 +3475,18 @@ namespace xge
 			else if (testName == "below") { raw.test = RawCondition::Test::Below; }
 			else if (testName == "equal") { raw.test = RawCondition::Test::Equal; }
 			else if (testName == "remaining") { raw.test = RawCondition::Test::Remaining; }
-			else { fail(here, "starts with <" + testName + ">; expected <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>, or an <all> or <any>"); }
+			else if (testName == "lowest") { raw.test = RawCondition::Test::Lowest; }
+			else if (testName == "highest") { raw.test = RawCondition::Test::Highest; }
+			else { fail(here, "starts with <" + testName + ">; expected <atleast>, <atmost>, <above>, <below>, <equal>, <remaining>, <lowest /> or <highest />, or an <all> or <any>"); }
+
+			// <lowest /> and <highest />: the one whose variable is lowest (or highest) of all those matched.
+			if (raw.test == RawCondition::Test::Lowest || raw.test == RawCondition::Test::Highest)
+			{
+				if (!raw.total.empty()) { fail(here, "<" + testName + " /> holds for one of those matched, so it takes no total= (total=\"" + testName + "\" is the number itself)"); }
+				if (raw.variableName.empty() && raw.distance.empty()) { fail(here, "<" + testName + " /> compares a variable, so it needs variable=\"...\""); }
+				if (test->getFirstChild()) { fail(here, "<" + testName + " /> has nothing in it"); }
+				return test->getNextSibling();
+			}
 
 			const bool remaining = raw.test == RawCondition::Test::Remaining;
 			if (!raw.total.empty() && raw.total != "count" && raw.total != "sum" && raw.total != "highest" && raw.total != "lowest")

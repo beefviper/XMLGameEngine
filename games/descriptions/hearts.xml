@@ -41,9 +41,14 @@
     each of the players' own holders, a card a round.
   * A full trick waits a moment (a timer on the table's look), then is
     sent to the stock in the corner.
-  * The table's `phase`: 0 playing, 1 a full trick showing, 2 taking it,
-    3 the hand over, 4 shuffling; `first`, who leads the hand's first
-    trick; `tricks`, how many taken.
+  * Where the hand is, is the table's look: playing, full (a trick
+    showing), taking, done, dealing; each look's rules sit inside one
+    condition on it. Its `first` is who leads the hand's first trick,
+    `tricks` how many are taken.
+  * A rule for every player is written once, for the class: `self` is the
+    one it holds for (<lowest /> score wins, `self.got` joins its score),
+    `others` the rest (26 to them when the moon is shot), and
+    sprite="self" the look named after it.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -208,17 +213,18 @@
           <position><x><centered /></x><y>trickrow + cardheight + 60</y></position>
         </object>
 
-        <!-- the table: the phase, who leads first, the tricks taken; a full trick shows a moment; between hands, Space deals -->
+        <!-- the table: where the hand is (its look), who leads first, the tricks taken; a full trick shows a moment; between hands, Space deals -->
         <object name="table">
           <sprite name="playing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="full"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="taking"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="done"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="dealing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <drawn>false</drawn>
           <actions>
             <action name="shuffle">
-              <set variable="table.phase">4</set>
-              <become sprite="playing" />
+              <become sprite="dealing" />
               <become object="dealer" sprite="shuffling" />
               <play sound="shuffle" />
             </action>
@@ -231,19 +237,18 @@
               <set variable="north.got">0</set>
               <set variable="east.got">0</set>
               <set variable="table.tricks">0</set>
-              <set variable="table.phase">0</set>
+              <become sprite="playing" />
               <play sound="deal" />
               <inc variable="table.first">1</inc>
               <pass object="players" member="table.first" />
             </action>
           </actions>
           <variables>
-            <variable name="phase">0</variable>
             <variable name="first">1</variable>
             <variable name="tricks">0</variable>
           </variables>
           <timers>
-            <timer sprite="full"><every>1.2</every><become sprite="playing" /><set variable="table.phase">2</set></timer>
+            <timer sprite="full"><every>1.2</every><become sprite="taking" /></timer>
           </timers>
         </object>
 
@@ -314,112 +319,52 @@
           <pass object="players" member="1" />
         </condition>
 
-        <!-- the hand over and someone at 100: the lowest score wins (a tie, the first named) -->
-                <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><any><condition object="you" variable="score"><atleast>100</atleast></condition><condition object="west" variable="score"><atleast>100</atleast></condition><condition object="north" variable="score"><atleast>100</atleast></condition><condition object="east" variable="score"><atleast>100</atleast></condition></any><condition object="you" variable="score"><atmost>west.score</atmost></condition><condition object="you" variable="score"><atmost>north.score</atmost></condition><condition object="you" variable="score"><atmost>east.score</atmost></condition></all>
-          <become object="over.winner" sprite="you" />
-          <play sound="win" />
-          <push state="over" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><any><condition object="you" variable="score"><atleast>100</atleast></condition><condition object="west" variable="score"><atleast>100</atleast></condition><condition object="north" variable="score"><atleast>100</atleast></condition><condition object="east" variable="score"><atleast>100</atleast></condition></any><condition object="west" variable="score"><atmost>you.score</atmost></condition><condition object="west" variable="score"><atmost>north.score</atmost></condition><condition object="west" variable="score"><atmost>east.score</atmost></condition></all>
-          <become object="over.winner" sprite="west" />
-          <play sound="lose" />
-          <push state="over" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><any><condition object="you" variable="score"><atleast>100</atleast></condition><condition object="west" variable="score"><atleast>100</atleast></condition><condition object="north" variable="score"><atleast>100</atleast></condition><condition object="east" variable="score"><atleast>100</atleast></condition></any><condition object="north" variable="score"><atmost>you.score</atmost></condition><condition object="north" variable="score"><atmost>west.score</atmost></condition><condition object="north" variable="score"><atmost>east.score</atmost></condition></all>
-          <become object="over.winner" sprite="north" />
-          <play sound="lose" />
-          <push state="over" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><any><condition object="you" variable="score"><atleast>100</atleast></condition><condition object="west" variable="score"><atleast>100</atleast></condition><condition object="north" variable="score"><atleast>100</atleast></condition><condition object="east" variable="score"><atleast>100</atleast></condition></any><condition object="east" variable="score"><atmost>you.score</atmost></condition><condition object="east" variable="score"><atmost>west.score</atmost></condition><condition object="east" variable="score"><atmost>north.score</atmost></condition></all>
-          <become object="over.winner" sprite="east" />
-          <play sound="lose" />
-          <push state="over" />
-        </condition>
-
-        <!-- all thirteen tricks taken: the points to the scores; one who took all 26 shot the moon -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="you" variable="got"><equal>26</equal></condition></all>
-          <inc variable="west.score">26</inc>
-          <inc variable="north.score">26</inc>
-          <inc variable="east.score">26</inc>
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="done" />
-          <pass object="players" member="0" />
-          <become object="message" sprite="moon" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="west" variable="got"><equal>26</equal></condition></all>
-          <inc variable="you.score">26</inc>
-          <inc variable="north.score">26</inc>
-          <inc variable="east.score">26</inc>
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="done" />
-          <pass object="players" member="0" />
-          <become object="message" sprite="moon" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="north" variable="got"><equal>26</equal></condition></all>
-          <inc variable="you.score">26</inc>
-          <inc variable="west.score">26</inc>
-          <inc variable="east.score">26</inc>
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="done" />
-          <pass object="players" member="0" />
-          <become object="message" sprite="moon" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="east" variable="got"><equal>26</equal></condition></all>
-          <inc variable="you.score">26</inc>
-          <inc variable="west.score">26</inc>
-          <inc variable="north.score">26</inc>
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="done" />
-          <pass object="players" member="0" />
-          <become object="message" sprite="moon" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition></all>
-          <inc variable="you.score">you.got</inc>
-          <inc variable="west.score">west.got</inc>
-          <inc variable="north.score">north.got</inc>
-          <inc variable="east.score">east.got</inc>
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="done" />
-          <pass object="players" member="0" />
-          <become object="message" sprite="done" />
+        <!-- playing -->
+        <condition object="table" sprite="playing">
+          <!-- all thirteen tricks taken: one who took all 26 shot the moon; else each one's points join its score -->
+          <condition object="table" variable="tricks"><equal>13</equal>
+            <condition class="player" variable="got"><equal>26</equal>
+              <inc variable="others.score">26</inc>
+              <become object="message" sprite="moon" />
+              <become object="table" sprite="done" />
+              <pass object="players" member="0" />
+            </condition>
+            <condition class="player">
+              <inc variable="self.score">self.got</inc>
+              <become object="message" sprite="done" />
+              <become object="table" sprite="done" />
+              <pass object="players" member="0" />
+            </condition>
+          </condition>
+          <!-- a full trick: shown a moment, nobody's turn -->
+          <condition object="trick" variable="cards"><equal>4</equal>
+            <become object="table" sprite="full" />
+            <pass object="players" member="0" />
+            <play sound="take" />
+          </condition>
+          <become object="message" sprite="none" />
         </condition>
 
-        <!-- a full trick: shown a moment, nobody's turn -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="trick" variable="cards"><equal>4</equal></condition></all>
-          <set variable="table.phase">1</set>
-          <become object="table" sprite="full" />
-          <pass object="players" member="0" />
-          <play sound="take" />
-        </condition>
         <!-- then taken: the taker's turn, its points to the taker, its cards to the stock -->
-        <condition object="table" variable="phase">
-          <equal>2</equal>
+        <condition object="table" sprite="taking">
           <pass object="players" member="trick.winner" />
           <inc variable="players.got">trick.points</inc>
           <send from="trick" into="stock"><all /></send>
           <inc variable="table.tricks">1</inc>
-          <set variable="table.phase">0</set>
+          <become object="table" sprite="playing" />
         </condition>
 
-        <!-- what is happening, shown -->
-        <condition object="table" variable="phase">
-          <equal>0</equal>
-          <become object="message" sprite="none" />
+        <!-- the hand over and someone at 100: the lowest score wins (a tie, the first named) -->
+        <condition object="table" sprite="done">
+          <condition class="player" variable="score" total="highest"><atleast>100</atleast>
+            <condition class="player" variable="score"><lowest />
+              <become object="over.winner" sprite="self" />
+              <push state="over" />
+            </condition>
+          </condition>
         </condition>
-        <condition object="table" variable="phase">
-          <equal>4</equal>
-          <become object="message" sprite="dealing" />
-        </condition>
+
+        <condition object="table" sprite="dealing"><become object="message" sprite="dealing" /></condition>
       </conditions>
     </state>
     <state name="paused">
@@ -449,6 +394,13 @@
           <sprite name="north"><text style="banner"><content>NORTH WINS</content></text></sprite>
           <sprite name="east"><text style="banner"><content>EAST WINS</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <!-- a cheer if it is you, else a groan -->
+          <timers>
+            <timer sprite="you"><after>0.01</after><play sound="win" /></timer>
+            <timer sprite="west"><after>0.01</after><play sound="lose" /></timer>
+            <timer sprite="north"><after>0.01</after><play sound="lose" /></timer>
+            <timer sprite="east"><after>0.01</after><play sound="lose" /></timer>
+          </timers>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>

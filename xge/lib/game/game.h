@@ -865,7 +865,9 @@ namespace xge
 		// Whether a condition's test holds now: its <all> or <any> of
 		// checks, a total over what it matches, or any one object it
 		// matches passing it.
-		bool holds(const Condition& condition);
+		// Whether it holds; with `who`, every object its test holds for
+		// (the last test of an <all>'s), for commands that name self.
+		bool holds(const Condition& condition, std::vector<const Object*>* who = nullptr);
 
 		// Counts a frame on every object timer of what is shown and every
 		// timer of the current state, and runs the commands of the ones that

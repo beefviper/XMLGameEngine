@@ -2966,7 +2966,7 @@
         </xsl:apply-templates>
         <xsl:value-of select="concat($inner, $var, '.commands = ')" />
         <xsl:call-template name="commands">
-          <xsl:with-param name="nodes" select="*[not(self::condition)][not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::remaining or self::all or self::any))]" />
+          <xsl:with-param name="nodes" select="*[not(self::condition)][not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::remaining or self::lowest or self::highest or self::all or self::any))]" />
           <xsl:with-param name="indent" select="$inner" />
         </xsl:call-template>
         <xsl:value-of select="concat(';&#10;', $in, '}));&#10;')" />
@@ -3003,7 +3003,7 @@
       </xsl:if>
     </xsl:for-each>
     <xsl:choose>
-      <xsl:when test="$node/@sprite and not($test[self::atleast or self::atmost or self::above or self::below or self::equal or self::remaining or self::all or self::any])">
+      <xsl:when test="($node/@class or $node/@object) and ($node/@sprite or not($node/@variable or $node/@total or $node/@distance)) and not($test[self::atleast or self::atmost or self::above or self::below or self::equal or self::remaining or self::lowest or self::highest or self::all or self::any])">
         <xsl:value-of select="concat($inner, $var, '.test = RawCondition::Test::Shows;&#10;')" />
       </xsl:when>
       <xsl:when test="$test[self::all or self::any]">
@@ -3022,15 +3022,19 @@
             <xsl:when test="$test[self::above]">Above</xsl:when>
             <xsl:when test="$test[self::below]">Below</xsl:when>
             <xsl:when test="$test[self::equal]">Equal</xsl:when>
+            <xsl:when test="$test[self::lowest]">Lowest</xsl:when>
+            <xsl:when test="$test[self::highest]">Highest</xsl:when>
             <xsl:otherwise>Remaining</xsl:otherwise>
           </xsl:choose>
           <xsl:text>;&#10;</xsl:text>
         </xsl:if>
-        <xsl:call-template name="assign-value">
-          <xsl:with-param name="indent" select="$inner" />
-          <xsl:with-param name="to" select="concat($var, '.threshold')" />
-          <xsl:with-param name="node" select="$test" />
-        </xsl:call-template>
+        <xsl:if test="not($test[self::lowest or self::highest])">
+          <xsl:call-template name="assign-value">
+            <xsl:with-param name="indent" select="$inner" />
+            <xsl:with-param name="to" select="concat($var, '.threshold')" />
+            <xsl:with-param name="node" select="$test" />
+          </xsl:call-template>
+        </xsl:if>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>

@@ -1378,3 +1378,42 @@ TEST_CASE("mistakes in nested conditions and look tests stop the load, saying wh
 	CHECK_THROWS_WITH(Loaded(lights("<condition object=\"flag\" variable=\"n\"><set variable=\"flag.out\">1</set></condition>")),
 		ContainsSubstring("starts with <set>"));
 }
+
+TEST_CASE("a condition on a class: self is each one it holds for, others the rest; what names neither runs once", "[conditions][self]")
+{
+	// v is 2, 5 and 9; flag.n counts the commands run once.
+	Coins each("class=\"coin\" variable=\"v\"><above>3</above><inc variable=\"self.v\">10</inc>");
+	each.loaded.frames(1);
+	CHECK(each.loaded.variable("coin1", "v") == 2.0f);
+	CHECK(each.loaded.variable("coin2", "v") == 15.0f);
+	CHECK(each.loaded.variable("coin3", "v") == 19.0f);
+	CHECK(each.loaded.variable("flag", "n") == 1.0f);
+
+	Coins others("class=\"coin\" variable=\"v\"><equal>2</equal><inc variable=\"others.v\">1</inc>");
+	others.loaded.frames(1);
+	CHECK(others.loaded.variable("coin1", "v") == 2.0f);
+	CHECK(others.loaded.variable("coin2", "v") == 6.0f);
+	CHECK(others.loaded.variable("coin3", "v") == 10.0f);
+
+	// The lowest and the highest: one each, the first of a tie.
+	Coins lowest("class=\"coin\" variable=\"v\"><lowest /><set variable=\"flag.gap\">self.v</set>");
+	lowest.loaded.frames(1);
+	CHECK(lowest.loaded.variable("flag", "gap") == 2.0f);
+	Coins highest("class=\"coin\" variable=\"v\"><highest /><set variable=\"flag.gap\">self.v</set>");
+	highest.loaded.frames(1);
+	CHECK(highest.loaded.variable("flag", "gap") == 9.0f);
+	Coins tie("class=\"coin\" variable=\"v\"><lowest /><set variable=\"self.v\">9</set>");
+	tie.loaded.frames(1);
+	tie.loaded.frames(1); // coin1 and coin3 9 now: coin2 the lowest
+	CHECK(tie.loaded.variable("coin2", "v") == 9.0f);
+	tie.loaded.frames(1); // all 9: the first
+	CHECK(tie.loaded.variable("coin1", "v") == 9.0f);
+
+	// With no test, each one there.
+	Coins all("class=\"coin\"><inc variable=\"self.v\">1</inc>");
+	all.loaded.frames(1);
+	CHECK(all.loaded.variable("coin1", "v") == 3.0f);
+	CHECK(all.loaded.variable("coin3", "v") == 10.0f);
+
+	CHECK_THROWS_WITH(Coins("class=\"coin\" total=\"count\"><atleast>1</atleast><inc variable=\"self.v\">1</inc>"), ContainsSubstring("no one object holds it"));
+}

@@ -1896,6 +1896,9 @@
       <xs:element name="below" type="compareType" />
       <xs:element name="equal" type="compareType" />
       <xs:element name="remaining" type="valueType" />
+      <!-- the one whose variable is lowest (highest) of all those matched; a tie, the first -->
+      <xs:element name="lowest" type="emptyType" />
+      <xs:element name="highest" type="emptyType" />
     </xs:choice>
   </xs:group>
 

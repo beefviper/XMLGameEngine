@@ -43,7 +43,7 @@ namespace xge
 	// those into the plain list the engine checks.
 	struct RawCondition
 	{
-		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal, Shows };
+		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal, Shows, Lowest, Highest };
 		enum class Join { None, All, Any };
 
 		std::string filterClass;
@@ -68,7 +68,7 @@ namespace xge
 
 	// How a condition's variable is compared, and whether `variable` passes
 	// against `against` that way.
-	enum class Compare { AtLeast, AtMost, Above, Below, Equal, Shows };
+	enum class Compare { AtLeast, AtMost, Above, Below, Equal, Shows, Lowest, Highest };
 	bool passes(Compare compare, float variable, float against) noexcept;
 
 
@@ -105,6 +105,14 @@ namespace xge
 		std::vector<Read> reads;
 		std::optional<float> remaining;
 		std::vector<Command> commands;
+		// Commands that name self or others: a list for each object the
+		// condition may match, run for each one that holds.
+		struct Each
+		{
+			std::string object;
+			std::vector<Command> commands;
+		};
+		std::vector<Each> each;
 	};
 
 	// "status.lives <= 0", "count of alien <= 2", "all of (...)": a

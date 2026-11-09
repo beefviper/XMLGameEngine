@@ -35,6 +35,82 @@ namespace xge
 				[](const RawTextPiece& piece) { return piece.kind != RawTextPiece::Kind::Words; });
 		}
 
+		// `from.` at the start of a name in a value made `to.`; whether any was.
+		bool renameInValue(RawValue& each, const std::string& from, const std::string& to)
+		{
+			bool changed = false;
+			for (std::string* text : { &each.text, &each.min, &each.max })
+			{
+				std::string renamed = renameStart(*text, from, to);
+				if (renamed != *text) { *text = std::move(renamed); changed = true; }
+			}
+			if (each.operations)
+			{
+				auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
+				for (RawOperation& operation : *operations)
+				{
+					for (RawOperand& operand : operation.operands) { changed = renameInValue(operand.value, from, to) || changed; }
+				}
+				each.operations = std::move(operations);
+			}
+			return changed;
+		}
+
+		// A command's `from` (self, others) made the object `to`: as the
+		// object it names, at the start of the variables and values it names,
+		// and, as a look, its own name (sprite="self": the look named after
+		// it). Whether it named `from` at all.
+		bool renameIn(RawCommand& command, const std::string& from, const std::string& to)
+		{
+			bool changed = false;
+			if (command.object == from) { command.object = to; changed = true; }
+			if (command.sprite == from)
+			{
+				command.sprite = to.substr(to.rfind('.') + 1);
+				changed = true;
+			}
+			for (std::string* text : { &command.variable, &command.into })
+			{
+				std::string renamed = renameStart(*text, from, to);
+				if (renamed != *text) { *text = std::move(renamed); changed = true; }
+			}
+			for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
+				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row })
+			{
+				changed = renameInValue(*each, from, to) || changed;
+			}
+			return changed;
+		}
+
+		// A state's condition's commands for the one it matched (self) among
+		// what it looks at: self made that one, and a command naming the
+		// others made once for each of the rest. Whether they name either.
+		bool forMatched(std::vector<RawCommand>& list, const std::string& self, const std::vector<std::string>& others)
+		{
+			bool named = false;
+			std::vector<RawCommand> out;
+			for (const RawCommand& command : list)
+			{
+				RawCommand probe = command;
+				if (renameIn(probe, "others", "others_"))
+				{
+					named = true;
+					for (const std::string& other : others)
+					{
+						RawCommand each = command;
+						renameIn(each, "others", other);
+						renameIn(each, "self", self);
+						out.push_back(std::move(each));
+					}
+					continue;
+				}
+				RawCommand each = command;
+				named = renameIn(each, "self", self) || named;
+				out.push_back(std::move(each));
+			}
+			list = std::move(out);
+			return named;
+		}
 	}
 
 	void game_expr::init(const WindowDesc& windowDesc,
@@ -265,7 +341,7 @@ namespace xge
 			// A number that names something that changes is worked out again
 			// each time the condition is tested (Game::testCondition); now, it
 			// may read where things are as 0, as a command's values may.
-			const bool shows = rawCondition.test == RawCondition::Test::Shows;
+			const bool shows = rawCondition.test == RawCondition::Test::Shows || rawCondition.test == RawCondition::Test::Lowest || rawCondition.test == RawCondition::Test::Highest;
 			const bool live = !shows && namesLive(rawCondition.threshold);
 			commandValues = live;
 			const float threshold = shows ? 0.0f : evaluate(rawCondition.threshold, where);
@@ -302,6 +378,8 @@ namespace xge
 			case RawCondition::Test::Equal:     condition.compare = Compare::Equal; break;
 			case RawCondition::Test::Remaining: condition.remaining = threshold; break;
 			case RawCondition::Test::Shows:     condition.compare = Compare::Shows; break;
+			case RawCondition::Test::Lowest:    condition.compare = Compare::Lowest; break;
+			case RawCondition::Test::Highest:   condition.compare = Compare::Highest; break;
 			}
 			condition.value = threshold;
 
@@ -341,10 +419,51 @@ namespace xge
 			return condition;
 		};
 
-		const auto makeCondition = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner)
+		// A state's condition: its test, and its commands; or, when they name
+		// self or others, its commands for each object it may match (the
+		// last test of an <all>'s, as a condition in a condition is), and
+		// they run for each one that holds.
+		const auto makeCondition = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName)
 		{
 			Condition condition = makeTest(rawCondition, where, owner);
-			condition.commands = processCommands(rawCondition.commands, where);
+			std::vector<RawCommand> probe = rawCondition.commands;
+			if (!forMatched(probe, "self_", { "others_" }))
+			{
+				condition.commands = processCommands(rawCondition.commands, where);
+				return condition;
+			}
+			const RawCondition* test = &rawCondition;
+			while (test->join == RawCondition::Join::All && !test->parts.empty()) { test = &test->parts.back(); }
+			if (test->join != RawCondition::Join::None || (test->filterClass.empty() && test->filterObject.empty()))
+			{
+				throw std::runtime_error(where + ": its commands name self or others, so its test (or the last of its <all>) needs class= or object= to say what they are among");
+			}
+			if (test->total != "" || test->test == RawCondition::Test::Remaining)
+			{
+				throw std::runtime_error(where + ": its commands name self or others, but its test is a total of everything matched, so no one object holds it");
+			}
+			std::vector<std::string> matched;
+			for (const Object& object : objects)
+			{
+				if (matches(*test, object) && (object.ownerState.empty() || object.ownerState == stateName)) { matched.push_back(object.name); }
+			}
+			// What names self or others runs for each one it holds for; the rest once, after.
+			std::vector<RawCommand> eachOne;
+			std::vector<RawCommand> once;
+			for (const RawCommand& command : rawCondition.commands)
+			{
+				std::vector<RawCommand> one{ command };
+				(forMatched(one, "self_", { "others_" }) ? eachOne : once).push_back(command);
+			}
+			for (const std::string& self : matched)
+			{
+				std::vector<std::string> others;
+				for (const std::string& other : matched) { if (other != self) { others.push_back(other); } }
+				std::vector<RawCommand> commands = eachOne;
+				forMatched(commands, self, others);
+				condition.each.push_back({ self, processCommands(commands, where) });
+			}
+			condition.commands = processCommands(once, where);
 			return condition;
 		};
 
@@ -402,11 +521,11 @@ namespace xge
 
 			for (auto& rawCondition : flattened(rawState.conditions))
 			{
-				state.conditions.push_back(makeCondition(rawCondition, where, where));
+				state.conditions.push_back(makeCondition(rawCondition, where, where, rawState.name));
 			}
 			for (auto& rawCondition : flattened(rawState.computer))
 			{
-				state.computer.push_back(makeCondition(rawCondition, where + " > <computer>", where));
+				state.computer.push_back(makeCondition(rawCondition, where + " > <computer>", where, rawState.name));
 			}
 
 			state.timers = processTimers(rawState.timers, where);
@@ -434,7 +553,7 @@ namespace xge
 				}
 				for (const RawCondition& rawCondition : flattened(rawScene.conditions))
 				{
-					scene.conditions.push_back(makeCondition(rawCondition, sceneWhere, sceneWhere));
+					scene.conditions.push_back(makeCondition(rawCondition, sceneWhere, sceneWhere, rawState.name));
 				}
 				scene.timers = processTimers(rawScene.timers, sceneWhere);
 				state.scenes.push_back(std::move(scene));

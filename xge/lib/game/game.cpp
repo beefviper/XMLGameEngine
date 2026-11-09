@@ -2120,11 +2120,24 @@ namespace xge
 	{
 		for (auto& condition : conditions)
 		{
-			if (holds(condition))
+			if (condition.each.empty())
 			{
+				if (!holds(condition)) { continue; }
 				runConditionCommands(condition.commands);
 				return true; // the state may have just changed - stop for this frame
 			}
+			// Commands that name self: for each one it holds for, in order.
+			std::vector<const Object*> who;
+			if (!holds(condition, &who)) { continue; }
+			for (const Condition::Each& each : condition.each)
+			{
+				if (std::any_of(who.begin(), who.end(), [&](const Object* one) { return one->name == each.object; }))
+				{
+					runConditionCommands(each.commands);
+				}
+			}
+			runConditionCommands(condition.commands);
+			return true;
 		}
 		return false;
 	}
@@ -2144,15 +2157,23 @@ namespace xge
 		return found->second;
 	}
 
-	bool Game::holds(const Condition& condition)
+	bool Game::holds(const Condition& condition, std::vector<const Object*>* who)
 	{
 		if (condition.join == RawCondition::Join::All)
 		{
-			return std::all_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part) { return holds(part); });
+			for (std::size_t i = 0; i < condition.parts.size(); ++i)
+			{
+				if (!holds(condition.parts[i], i + 1 == condition.parts.size() ? who : nullptr)) { return false; }
+			}
+			return true;
 		}
 		if (condition.join == RawCondition::Join::Any)
 		{
-			return std::any_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part) { return holds(part); });
+			return std::any_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part)
+				{
+					if (who) { who->clear(); }
+					return holds(part, who);
+				});
 		}
 
 		// A class, or a name every scene has (robots, for playing.robots),
@@ -2250,6 +2271,28 @@ namespace xge
 			return passes(condition.compare, total, against);
 		}
 
+		// The lowest or highest of them: the first that has it.
+		if (condition.compare == Compare::Lowest || condition.compare == Compare::Highest)
+		{
+			const Object* best = nullptr;
+			float extreme = 0.0f;
+			for (const std::size_t index : candidates)
+			{
+				const Object& object = objects[index];
+				if (!considers(object)) { continue; }
+				const std::optional<float> number = measure(object);
+				if (!number) { continue; }
+				if (!best || (condition.compare == Compare::Lowest ? *number < extreme : *number > extreme))
+				{
+					best = &object;
+					extreme = *number;
+				}
+			}
+			if (best && who) { who->push_back(best); }
+			return best != nullptr;
+		}
+
+		bool held = false;
 		for (const std::size_t index : candidates)
 		{
 			const Object& object = objects[index];
@@ -2258,14 +2301,15 @@ namespace xge
 				continue;
 			}
 
-			if (condition.compare == Compare::Shows) { return true; }
-			const std::optional<float> tested = measure(object);
+			const std::optional<float> tested = condition.compare == Compare::Shows ? std::optional<float>{ 0.0f } : measure(object);
 			if (tested && passes(condition.compare, *tested, against))
 			{
-				return true;
+				if (!who) { return true; }
+				who->push_back(&object);
+				held = true;
 			}
 		}
-		return false;
+		return held;
 	}
 
 	// A copy of the commands, not the state's own list: the list belongs to the

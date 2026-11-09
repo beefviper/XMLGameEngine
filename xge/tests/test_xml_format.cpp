@@ -704,7 +704,7 @@ TEST_CASE("a comparison with a variable the game does not have is turned away", 
 	fails("<above>o.scroe</above>", "o.scroe");
 	fails("<above object=\"o\" variable=\"score\" />", "takes its number as content, which may name a variable: <above>o.score</above>");
 	fails("<remaining variable=\"score\" />", "takes its number as content");
-	fails("<over>1</over>", "expected <atleast>, <atmost>, <above>, <below>, <equal> or <remaining>");
+	fails("<over>1</over>", "expected <atleast>, <atmost>, <above>, <below>, <equal>, <remaining>, <lowest /> or <highest />");
 }
 
 TEST_CASE("a condition with no test, a wrong first tag, or no variable to read is turned away", "[xml_format][errors]")

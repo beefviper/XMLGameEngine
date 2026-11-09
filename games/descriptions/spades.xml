@@ -42,9 +42,9 @@
     is <send> back, put in <order> at <random />, and <distribute>d
     thirteen to each player's own holder. A holder of a player's own has the live number `tricks`: how many tricks its cards
     should take, which is each player's bid (at least one).
-  * The table's `phase`: 0 playing, 1 a full trick showing, 2 taking it,
-    3 the hand over, 4 shuffling, 5 your bid (the table's look `bid`
-    answers W, S and Space); `us` and `them` the scores, their bags and
+  * Where the hand is, is the table's look: dealing, bid (answering W,
+    S and Space), playing, full (a trick showing), taking, done; each
+    look's rules sit inside one condition on it. `us` and `them` are the scores, their bags and
     contracts (`usbid`); a side's tricks are its players' `won` added.
 -->
 
@@ -218,9 +218,11 @@
           <position><x><centered /></x><y>trickrow + cardheight + 60</y></position>
         </object>
 
-        <!-- the table: the phase, who leads first, the bids, the tricks, the scores; your bid; a full trick shows a moment; between hands, Space deals -->
+        <!-- the table: where the hand is (its look), who leads first, the bids, the tricks, the scores; your bid; a full trick shows a moment; between hands, Space deals -->
         <object name="table">
+          <sprite name="dealing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="playing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="taking"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="bid"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="full"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="done"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
@@ -228,8 +230,7 @@
           <drawn>false</drawn>
           <actions>
             <action name="shuffle">
-              <set variable="table.phase">4</set>
-              <become sprite="playing" />
+              <become sprite="dealing" />
               <become object="dealer" sprite="shuffling" />
               <play sound="shuffle" />
             </action>
@@ -248,7 +249,6 @@
               <set variable="east.bid"><formula><largest><value>eastcards.tricks</value><value>1</value></largest></formula></set>
               <set variable="table.tricks">0</set>
               <inc variable="table.first">1</inc>
-              <set variable="table.phase">5</set>
               <become sprite="bid" />
               <pass object="players" member="0" />
               <play sound="deal" />
@@ -259,14 +259,12 @@
             <action name="bid">
               <set variable="table.usbid">you.bid + north.bid</set>
               <set variable="table.thembid">west.bid + east.bid</set>
-              <set variable="table.phase">0</set>
               <become sprite="playing" />
               <play sound="card" />
               <pass object="players" member="table.first" />
             </action>
           </actions>
           <variables>
-            <variable name="phase">4</variable>
             <variable name="first">0</variable>
             <variable name="tricks">0</variable>
             <variable name="us">0</variable>
@@ -277,7 +275,7 @@
             <variable name="thembid">0</variable>
           </variables>
           <timers>
-            <timer sprite="full"><every>1.2</every><become sprite="playing" /><set variable="table.phase">2</set></timer>
+            <timer sprite="full"><every>1.2</every><become sprite="taking" /></timer>
           </timers>
         </object>
 
@@ -349,122 +347,91 @@
         </condition>
 
         <!-- your bid kept from 1 to 13 -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>5</equal></condition><condition object="you" variable="bid"><above>13</above></condition></all>
-          <set variable="you.bid">13</set>
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>5</equal></condition><condition object="you" variable="bid"><below>1</below></condition></all>
-          <set variable="you.bid">1</set>
+        <condition object="table" sprite="bid">
+          <condition object="you" variable="bid"><above>13</above><set variable="you.bid">13</set></condition>
+          <condition object="you" variable="bid"><below>1</below><set variable="you.bid">1</set></condition>
+          <become object="message" sprite="bidding" />
         </condition>
 
-        <!-- the hand over: ten bags cost a hundred -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="table" variable="usbags"><atleast>10</atleast></condition></all>
-          <inc variable="table.us">-100</inc>
-          <inc variable="table.usbags">-10</inc>
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="table" variable="thembags"><atleast>10</atleast></condition></all>
-          <inc variable="table.them">-100</inc>
-          <inc variable="table.thembags">-10</inc>
-        </condition>
-
-        <!-- and a side at 500: the higher score wins (a tie plays on) -->
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>3</equal></condition>
+        <!-- the hand over: ten bags cost a hundred; and a side at 500, the higher score wins (a tie plays on) -->
+        <condition object="table" sprite="done">
+          <condition object="table" variable="usbags"><atleast>10</atleast>
+            <inc variable="table.us">-100</inc>
+            <inc variable="table.usbags">-10</inc>
+          </condition>
+          <condition object="table" variable="thembags"><atleast>10</atleast>
+            <inc variable="table.them">-100</inc>
+            <inc variable="table.thembags">-10</inc>
+          </condition>
+          <condition>
             <any><condition object="table" variable="us"><atleast>500</atleast></condition><condition object="table" variable="them"><atleast>500</atleast></condition></any>
-            <condition object="table" variable="us"><above>table.them</above></condition>
-          </all>
-          <become object="over.winner" sprite="us" />
-          <play sound="win" />
-          <push state="over" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>3</equal></condition>
-            <any><condition object="table" variable="us"><atleast>500</atleast></condition><condition object="table" variable="them"><atleast>500</atleast></condition></any>
-            <condition object="table" variable="them"><above>table.us</above></condition>
-          </all>
-          <become object="over.winner" sprite="them" />
-          <play sound="lose" />
-          <push state="over" />
+            <condition object="table" variable="us"><above>table.them</above>
+              <become object="over.winner" sprite="us" />
+              <play sound="win" />
+              <push state="over" />
+            </condition>
+            <condition object="table" variable="them"><above>table.us</above>
+              <become object="over.winner" sprite="them" />
+              <play sound="lose" />
+              <push state="over" />
+            </condition>
+          </condition>
         </condition>
 
-        <!-- all thirteen tricks taken: each side made its bid (ten a trick bid, a point and a bag a trick over) or was set (ten a trick bid lost) -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="table" variable="usbid"><atmost>you.won + north.won</atmost></condition><condition object="table" variable="thembid"><atmost>west.won + east.won</atmost></condition></all>
-          <inc variable="table.us">table.usbid * 9 + you.won + north.won</inc>
-          <inc variable="table.usbags">you.won + north.won - table.usbid</inc>
-          <inc variable="table.them">table.thembid * 9 + west.won + east.won</inc>
-          <inc variable="table.thembags">west.won + east.won - table.thembid</inc>
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="done" />
-          <pass object="players" member="0" />
-          <become object="message" sprite="made11" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="table" variable="usbid"><atmost>you.won + north.won</atmost></condition></all>
-          <inc variable="table.us">table.usbid * 9 + you.won + north.won</inc>
-          <inc variable="table.usbags">you.won + north.won - table.usbid</inc>
-          <inc variable="table.them">0 - table.thembid * 10</inc>
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="done" />
-          <pass object="players" member="0" />
-          <become object="message" sprite="made10" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition><condition object="table" variable="thembid"><atmost>west.won + east.won</atmost></condition></all>
-          <inc variable="table.us">0 - table.usbid * 10</inc>
-          <inc variable="table.them">table.thembid * 9 + west.won + east.won</inc>
-          <inc variable="table.thembags">west.won + east.won - table.thembid</inc>
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="done" />
-          <pass object="players" member="0" />
-          <become object="message" sprite="made01" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="tricks"><equal>13</equal></condition></all>
-          <inc variable="table.us">0 - table.usbid * 10</inc>
-          <inc variable="table.them">0 - table.thembid * 10</inc>
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="done" />
-          <pass object="players" member="0" />
-          <become object="message" sprite="made00" />
+        <!-- playing -->
+        <condition object="table" sprite="playing">
+          <!-- all thirteen tricks taken: a side that made its bid scores ten a trick bid, a point and a bag a trick over; one set loses ten a trick bid -->
+          <condition object="table" variable="tricks"><equal>13</equal>
+            <condition object="table" variable="usbid"><atmost>you.won + north.won</atmost>
+              <condition object="table" variable="thembid"><atmost>west.won + east.won</atmost>
+                <inc variable="table.us">table.usbid * 9 + you.won + north.won</inc>
+                <inc variable="table.usbags">you.won + north.won - table.usbid</inc>
+                <inc variable="table.them">table.thembid * 9 + west.won + east.won</inc>
+                <inc variable="table.thembags">west.won + east.won - table.thembid</inc>
+                <become object="message" sprite="made11" />
+                <become object="table" sprite="done" />
+                <pass object="players" member="0" />
+              </condition>
+              <inc variable="table.us">table.usbid * 9 + you.won + north.won</inc>
+              <inc variable="table.usbags">you.won + north.won - table.usbid</inc>
+              <inc variable="table.them">0 - table.thembid * 10</inc>
+              <become object="message" sprite="made10" />
+              <become object="table" sprite="done" />
+              <pass object="players" member="0" />
+            </condition>
+            <condition object="table" variable="thembid"><atmost>west.won + east.won</atmost>
+              <inc variable="table.us">0 - table.usbid * 10</inc>
+              <inc variable="table.them">table.thembid * 9 + west.won + east.won</inc>
+              <inc variable="table.thembags">west.won + east.won - table.thembid</inc>
+              <become object="message" sprite="made01" />
+              <become object="table" sprite="done" />
+              <pass object="players" member="0" />
+            </condition>
+            <inc variable="table.us">0 - table.usbid * 10</inc>
+            <inc variable="table.them">0 - table.thembid * 10</inc>
+            <become object="message" sprite="made00" />
+            <become object="table" sprite="done" />
+            <pass object="players" member="0" />
+          </condition>
+          <!-- a full trick: shown a moment, nobody's turn -->
+          <condition object="trick" variable="cards"><equal>4</equal>
+            <become object="table" sprite="full" />
+            <pass object="players" member="0" />
+            <play sound="take" />
+          </condition>
+          <become object="message" sprite="none" />
         </condition>
 
-        <!-- a full trick: shown a moment, nobody's turn -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="trick" variable="cards"><equal>4</equal></condition></all>
-          <set variable="table.phase">1</set>
-          <become object="table" sprite="full" />
-          <pass object="players" member="0" />
-          <play sound="take" />
-        </condition>
         <!-- then taken: the taker's turn, a trick to the taker, its cards to the stock -->
-        <condition object="table" variable="phase">
-          <equal>2</equal>
+        <condition object="table" sprite="taking">
           <pass object="players" member="trick.winner" />
           <inc variable="players.won">1</inc>
           <send from="trick" into="stock"><all /></send>
           <inc variable="table.tricks">1</inc>
-          <set variable="table.phase">0</set>
+          <become object="table" sprite="playing" />
         </condition>
 
-        <!-- what is happening, shown -->
-        <condition object="table" variable="phase">
-          <equal>0</equal>
-          <become object="message" sprite="none" />
-        </condition>
-        <condition object="table" variable="phase">
-          <equal>5</equal>
-          <become object="message" sprite="bidding" />
-        </condition>
-        <condition object="table" variable="phase">
-          <equal>4</equal>
-          <become object="message" sprite="dealing" />
-        </condition>
+        <condition object="table" sprite="dealing"><become object="message" sprite="dealing" /></condition>
       </conditions>
     </state>
     <state name="paused">
