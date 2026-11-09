@@ -37,18 +37,6 @@
     <variable name="top">60</variable>
     <variable name="panel">420</variable>
   </variables>
-  <sounds>
-    <sound name="cycle"><note pitch="A5">0.02</note></sound>
-    <sound name="land" wave="triangle"><note pitch="D3">0.06</note></sound>
-    <sound name="match">
-      <note pitch="E5">0.04</note>
-      <note pitch="A5">0.04</note>
-      <note pitch="E6">0.08</note>
-    </sound>
-    <sound name="over" wave="triangle">
-      <note pitch="A4" to="A1">0.9</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>88</size><color>color.yellow</color></style>
     <style name="prompt"><size>32</size></style>
@@ -276,4 +264,16 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="cycle"><note pitch="A5">0.02</note></sound>
+    <sound name="land" wave="triangle"><note pitch="D3">0.06</note></sound>
+    <sound name="match">
+      <note pitch="E5">0.04</note>
+      <note pitch="A5">0.04</note>
+      <note pitch="E6">0.08</note>
+    </sound>
+    <sound name="over" wave="triangle">
+      <note pitch="A4" to="A1">0.9</note>
+    </sound>
+  </sounds>
 </game>

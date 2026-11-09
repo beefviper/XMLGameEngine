@@ -45,16 +45,6 @@
     <variable name="left">100</variable>
     <variable name="top">80</variable>
   </variables>
-  <sounds>
-    <sound name="put" wave="triangle"><note pitch="C4">0.05</note></sound>
-    <sound name="pass"><note pitch="G3">0.1</note><note pitch="C3">0.15</note></sound>
-    <sound name="win">
-      <note pitch="C5">0.12</note>
-      <note pitch="E5">0.12</note>
-      <note pitch="G5">0.12</note>
-      <note pitch="C6">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size></style>
     <style name="prompt"><size>32</size></style>
@@ -172,21 +162,7 @@
 
           <group name="black" class="black" char="b">
             <sprite>
-              <bitmap style="blackdisc">
-                <row>....ddddd....</row>
-                <row>..dd*****dd..</row>
-                <row>.d*********d.</row>
-                <row>.d*********d.</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>.d*********d.</row>
-                <row>.d*********d.</row>
-                <row>..dd*****dd..</row>
-                <row>....ddddd....</row>
-              </bitmap>
+              <bitmap from="black" />
             </sprite>
             <moves>
               <flank class="white" />
@@ -194,21 +170,7 @@
           </group>
           <group name="white" class="white" char="w">
             <sprite>
-              <bitmap style="whitedisc">
-                <row>....ddddd....</row>
-                <row>..dd*****dd..</row>
-                <row>.d*********d.</row>
-                <row>.d*********d.</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>.d*********d.</row>
-                <row>.d*********d.</row>
-                <row>..dd*****dd..</row>
-                <row>....ddddd....</row>
-              </bitmap>
+              <bitmap from="white" />
             </sprite>
             <moves>
               <flank class="black" />
@@ -228,20 +190,7 @@
           </object>
           <object name="lastmark">
             <sprite>
-              <bitmap>
-                <row>**......**</row>
-                <row>*........*</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>*........*</row>
-                <row>**......**</row>
-                <scale>6</scale>
-                <color>color.orange</color>
-              </bitmap>
+              <bitmap from="lastmark" />
             </sprite>
           </object>
         </map>
@@ -263,46 +212,13 @@
           <object name="cursor" char="c">
             <!-- black's turn, white's, and the computer's (white's, with its own key) -->
             <sprite name="blackfree">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>**********</row>
-              </bitmap>
+              <bitmap from="cursor-blackfree" />
             </sprite>
             <sprite name="whitefree">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>**********</row>
-              </bitmap>
+              <bitmap from="cursor-blackfree" />
             </sprite>
             <sprite name="cpufree">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>**********</row>
-              </bitmap>
+              <bitmap from="cursor-blackfree" />
             </sprite>
             <marks>
               <last object="lastmark" />
@@ -457,4 +373,72 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="put" wave="triangle"><note pitch="C4">0.05</note></sound>
+    <sound name="pass"><note pitch="G3">0.1</note><note pitch="C3">0.15</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="black" style="blackdisc">
+      <row>....ddddd....</row>
+      <row>..dd*****dd..</row>
+      <row>.d*********d.</row>
+      <row>.d*********d.</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>.d*********d.</row>
+      <row>.d*********d.</row>
+      <row>..dd*****dd..</row>
+      <row>....ddddd....</row>
+    </bitmap>
+    <bitmap name="white" style="whitedisc">
+      <row>....ddddd....</row>
+      <row>..dd*****dd..</row>
+      <row>.d*********d.</row>
+      <row>.d*********d.</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>.d*********d.</row>
+      <row>.d*********d.</row>
+      <row>..dd*****dd..</row>
+      <row>....ddddd....</row>
+    </bitmap>
+    <bitmap name="lastmark">
+      <row>**......**</row>
+      <row>*........*</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>*........*</row>
+      <row>**......**</row>
+      <scale>6</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="cursor-blackfree" style="cursor">
+      <row>**********</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>**********</row>
+    </bitmap>
+  </pictures>
 </game>

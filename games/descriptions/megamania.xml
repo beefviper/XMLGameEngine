@@ -61,18 +61,6 @@
     <variable name="barwidth">360</variable>
     <variable name="barleft">window.width.center - barwidth / 2</variable>
   </variables>
-  <sounds>
-    <sound name="fire" wave="square"><volume>0.15</volume><note pitch="E6" to="E5">0.07</note></sound>
-    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="3000" to="300">0.25</note></sound>
-    <sound name="lost" wave="noise"><volume>0.45</volume><note pitch="2000" to="80">0.8</note></sound>
-    <sound name="wave" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.08</note>
-      <note pitch="C6">0.2</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.orange</color></style>
     <style name="line"><size>24</size><color>color.white</color></style>
@@ -82,16 +70,7 @@
   <kit>
     <group name="enemies" class="enemy">
       <sprite>
-        <bitmap>
-          <row>..******..</row>
-          <row>.********.</row>
-          <row>**********</row>
-          <row>..........</row>
-          <row>**********</row>
-          <row>.********.</row>
-          <scale>3</scale>
-          <color>color.orange</color>
-        </bitmap>
+        <bitmap from="wave1" />
       </sprite>
       <velocity><x>2</x></velocity>
       <facing>down</facing>
@@ -164,17 +143,7 @@
         <!-- the blaster -->
         <object name="player" class="player">
           <sprite>
-            <bitmap>
-              <row>.....**.....</row>
-              <row>.....**.....</row>
-              <row>....****....</row>
-              <row>.**.****.**.</row>
-              <row>************</row>
-              <row>************</row>
-              <row>**...**...**</row>
-              <scale>3</scale>
-              <color>color.lightgrey</color>
-            </bitmap>
+            <bitmap from="player" />
           </sprite>
           <position><x><centered /></x><y>window.bottom - player.height - 40</y></position>
           <collisions>
@@ -285,17 +254,7 @@
           <objects>
             <group name="enemies">
               <sprite>
-                <bitmap>
-                  <row>..****..</row>
-                  <row>.**.***.</row>
-                  <row>****.***</row>
-                  <row>*.******</row>
-                  <row>***.**.*</row>
-                  <row>.******.</row>
-                  <row>..****..</row>
-                  <scale>3</scale>
-                  <color>color.yellow</color>
-                </bitmap>
+                <bitmap from="wave2" />
               </sprite>
               <velocity><y>1</y></velocity>
             </group>
@@ -313,15 +272,7 @@
           <objects>
             <group name="enemies">
               <sprite>
-                <bitmap>
-                  <row>*..*..*..*</row>
-                  <row>.*.****.*.</row>
-                  <row>..******..</row>
-                  <row>.********.</row>
-                  <row>*.*....*.*</row>
-                  <scale>3</scale>
-                  <color>color.green</color>
-                </bitmap>
+                <bitmap from="wave3" />
               </sprite>
               <velocity><x>-3</x></velocity>
             </group>
@@ -339,17 +290,7 @@
           <objects>
             <group name="enemies">
               <sprite>
-                <bitmap>
-                  <row>..****..</row>
-                  <row>.*.**.*.</row>
-                  <row>**.**.**</row>
-                  <row>********</row>
-                  <row>**.**.**</row>
-                  <row>.*.**.*.</row>
-                  <row>..****..</row>
-                  <scale>3</scale>
-                  <color>color.lightgrey</color>
-                </bitmap>
+                <bitmap from="wave4" />
               </sprite>
               <velocity><x>3</x><y>2</y></velocity>
             </group>
@@ -366,17 +307,7 @@
           <objects>
             <group name="enemies">
               <sprite>
-                <bitmap>
-                  <row>....*....</row>
-                  <row>...***...</row>
-                  <row>..*****..</row>
-                  <row>.*******.</row>
-                  <row>..*****..</row>
-                  <row>...***...</row>
-                  <row>....*....</row>
-                  <scale>3</scale>
-                  <color>color.cyan</color>
-                </bitmap>
+                <bitmap from="wave5" />
               </sprite>
               <velocity><x>-3</x><y>1.5</y></velocity>
             </group>
@@ -393,16 +324,7 @@
           <objects>
             <group name="enemies">
               <sprite>
-                <bitmap>
-                  <row>....******</row>
-                  <row>...*******</row>
-                  <row>..********</row>
-                  <row>.*********</row>
-                  <row>**********</row>
-                  <row>**********</row>
-                  <scale>3</scale>
-                  <color>color.lightgrey</color>
-                </bitmap>
+                <bitmap from="wave6" />
               </sprite>
               <velocity><x>4</x><y>0</y></velocity>
             </group>
@@ -419,15 +341,7 @@
           <objects>
             <group name="enemies">
               <sprite>
-                <bitmap>
-                  <row>**......**</row>
-                  <row>****..****</row>
-                  <row>**********</row>
-                  <row>****..****</row>
-                  <row>**......**</row>
-                  <scale>3</scale>
-                  <color>color.magenta</color>
-                </bitmap>
+                <bitmap from="wave7" />
               </sprite>
               <velocity><x>-3</x><y>2.5</y></velocity>
             </group>
@@ -443,17 +357,7 @@
           <objects>
             <group name="enemies">
               <sprite>
-                <bitmap>
-                  <row>*********</row>
-                  <row>*.*****.*</row>
-                  <row>*********</row>
-                  <row>****.****</row>
-                  <row>*********</row>
-                  <row>*.*****.*</row>
-                  <row>*********</row>
-                  <scale>3</scale>
-                  <color>color.white</color>
-                </bitmap>
+                <bitmap from="wave8" />
               </sprite>
               <velocity><x>4</x><y>2</y></velocity>
             </group>
@@ -525,4 +429,111 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="fire" wave="square"><volume>0.15</volume><note pitch="E6" to="E5">0.07</note></sound>
+    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="3000" to="300">0.25</note></sound>
+    <sound name="lost" wave="noise"><volume>0.45</volume><note pitch="2000" to="80">0.8</note></sound>
+    <sound name="wave" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.2</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="wave1">
+      <row>..******..</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>..........</row>
+      <row>**********</row>
+      <row>.********.</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="player">
+      <row>.....**.....</row>
+      <row>.....**.....</row>
+      <row>....****....</row>
+      <row>.**.****.**.</row>
+      <row>************</row>
+      <row>************</row>
+      <row>**...**...**</row>
+      <scale>3</scale>
+      <color>color.lightgrey</color>
+    </bitmap>
+    <bitmap name="wave2">
+      <row>..****..</row>
+      <row>.**.***.</row>
+      <row>****.***</row>
+      <row>*.******</row>
+      <row>***.**.*</row>
+      <row>.******.</row>
+      <row>..****..</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="wave3">
+      <row>*..*..*..*</row>
+      <row>.*.****.*.</row>
+      <row>..******..</row>
+      <row>.********.</row>
+      <row>*.*....*.*</row>
+      <scale>3</scale>
+      <color>color.green</color>
+    </bitmap>
+    <bitmap name="wave4">
+      <row>..****..</row>
+      <row>.*.**.*.</row>
+      <row>**.**.**</row>
+      <row>********</row>
+      <row>**.**.**</row>
+      <row>.*.**.*.</row>
+      <row>..****..</row>
+      <scale>3</scale>
+      <color>color.lightgrey</color>
+    </bitmap>
+    <bitmap name="wave5">
+      <row>....*....</row>
+      <row>...***...</row>
+      <row>..*****..</row>
+      <row>.*******.</row>
+      <row>..*****..</row>
+      <row>...***...</row>
+      <row>....*....</row>
+      <scale>3</scale>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="wave6">
+      <row>....******</row>
+      <row>...*******</row>
+      <row>..********</row>
+      <row>.*********</row>
+      <row>**********</row>
+      <row>**********</row>
+      <scale>3</scale>
+      <color>color.lightgrey</color>
+    </bitmap>
+    <bitmap name="wave7">
+      <row>**......**</row>
+      <row>****..****</row>
+      <row>**********</row>
+      <row>****..****</row>
+      <row>**......**</row>
+      <scale>3</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="wave8">
+      <row>*********</row>
+      <row>*.*****.*</row>
+      <row>*********</row>
+      <row>****.****</row>
+      <row>*********</row>
+      <row>*.*****.*</row>
+      <row>*********</row>
+      <scale>3</scale>
+      <color>color.white</color>
+    </bitmap>
+  </pictures>
 </game>

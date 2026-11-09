@@ -14,7 +14,7 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 | `<image>` | `<path>`, `<flip>` | an image file, loaded by the window library |
 | `<line>`s | each `<from>`, `<to>`, `<color>`, `<thickness>` | [straight lines](#lines) |
 | `<polygon>`s | each three or more `<point>`s, `<color>` | [filled shapes](#polygons) |
-| `<bitmap>` | `<row>`s, `<scale>`, `<color>`s, `<flip>`; `style=` | a [picture written as text](#bitmaps) |
+| `<bitmap>` | `<row>`s, `<scale>`, `<color>`s, `<flip>`; `style=`; or `from=` a picture of the `<pictures>` | a [picture written as text](#bitmaps) |
 | `<svg>` | `<path>`, a part, `<scale>`, `<hide>`s, `<flip>` | part of an [SVG file](#svg-pictures) |
 | `<tether from="a" to="b">` | `<thickness>`, `<color>` | a line between two objects' middles, redrawn every frame; in play while both are (a fishing line, a missile's trail) |
 
@@ -55,9 +55,13 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 
 ### Bitmaps
 
+A bitmap is written once, by name, in the game's `<pictures>` at the bottom of the file, and a sprite takes it with `from=`:
+
 ```xml
-<sprite>
-  <bitmap>
+<sprite><bitmap from="invader" /></sprite>
+...
+<pictures>
+  <bitmap name="invader">
     <row>..*...*..</row>
     <row>..*****..</row>
     <row>.**w*w**.</row>
@@ -66,8 +70,11 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
     <color>color.green</color>             <!-- the * pixels -->
     <color char="w">color.white</color>    <!-- the w pixels -->
   </bitmap>
-</sprite>
+</pictures>
 ```
+
+- **A take changes what it gives**: its own `<row>`s replace all the picture's, a `<scale>` or `<flip>` the picture's, a `<color>` the one of the same `char=` (or the plain one), and `style=` the picture's. `<bitmap from="invader"><color>color.red</color></bitmap>` is the same invader in red. Two sprites showing one picture take the same name. A name the pictures have not got stops the load.
+- A bitmap can still be written whole inside a sprite; the games keep theirs in `<pictures>`.
 
 - `.` is clear, `*` the plain `<color>`, and each `<color char="x">` names one more character.
 - Each character is a `<scale>` by `<scale>` block (whole, default 1): the picture above is 45 by 20.
@@ -93,17 +100,17 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 
 ### Sheets
 
-One picture holding many: sprites, animation frames and a pack's cards are cut from it by place. The game names its sheets once, after `<styles>`:
+One picture holding many: sprites, animation frames and a pack's cards are cut from it by place. The game names its sheets once, in its `<pictures>`:
 
 ```xml
-<sheets>
+<pictures>
   <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
   <sheet name="hero">
     <path>assets/hero.png</path>
     <cell><width>32</width><height>32</height></cell>
     <margin>2</margin><gap>4</gap>                           <!-- 0 when left out -->
   </sheet>
-</sheets>
+</pictures>
 ```
 
 - **The grid** is `<columns>` and `<rows>` (the picture split evenly), or a `<cell>` size; `<margin>` is the empty border round the picture, `<gap>` the space between cells, both in the picture's pixels and 0 when left out. A sheet need not have a grid if every cut gives its own part.

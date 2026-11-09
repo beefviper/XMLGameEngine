@@ -36,15 +36,6 @@
     <variable name="left">220</variable>
     <variable name="top">110</variable>
   </variables>
-  <sounds>
-    <sound name="mark" wave="triangle"><note pitch="E4">0.05</note></sound>
-    <sound name="win">
-      <note pitch="C5">0.12</note>
-      <note pitch="E5">0.12</note>
-      <note pitch="G5">0.12</note>
-      <note pitch="C6">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size></style>
     <style name="prompt"><size>32</size></style>
@@ -134,37 +125,13 @@
           <cells />
           <group name="x" class="x">
             <sprite>
-              <bitmap style="x">
-                <row>**.......**</row>
-                <row>***.....***</row>
-                <row>.***...***.</row>
-                <row>..***.***..</row>
-                <row>...*****...</row>
-                <row>....***....</row>
-                <row>...*****...</row>
-                <row>..***.***..</row>
-                <row>.***...***.</row>
-                <row>***.....***</row>
-                <row>**.......**</row>
-              </bitmap>
+              <bitmap from="x" />
             </sprite>
             <moves />
           </group>
           <group name="o" class="o">
             <sprite>
-              <bitmap style="o">
-                <row>...*****...</row>
-                <row>..*******..</row>
-                <row>.***...***.</row>
-                <row>***.....***</row>
-                <row>**.......**</row>
-                <row>**.......**</row>
-                <row>**.......**</row>
-                <row>***.....***</row>
-                <row>.***...***.</row>
-                <row>..*******..</row>
-                <row>...*****...</row>
-              </bitmap>
+              <bitmap from="o" />
             </sprite>
             <moves />
           </group>
@@ -184,43 +151,13 @@
           <row>...</row>
           <object name="cursor" char="c">
             <sprite name="x">
-              <bitmap style="cursor">
-                <row>*********</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*********</row>
-              </bitmap>
+              <bitmap from="cursor-x" />
             </sprite>
             <sprite name="o">
-              <bitmap style="cursor">
-                <row>*********</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*********</row>
-              </bitmap>
+              <bitmap from="cursor-x" />
             </sprite>
             <sprite name="cpu">
-              <bitmap style="cursor">
-                <row>*********</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*.......*</row>
-                <row>*********</row>
-              </bitmap>
+              <bitmap from="cursor-x" />
             </sprite>
             <actions>
               <action name="up"><hop direction="up" /></action>
@@ -341,4 +278,52 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="mark" wave="triangle"><note pitch="E4">0.05</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="x" style="x">
+      <row>**.......**</row>
+      <row>***.....***</row>
+      <row>.***...***.</row>
+      <row>..***.***..</row>
+      <row>...*****...</row>
+      <row>....***....</row>
+      <row>...*****...</row>
+      <row>..***.***..</row>
+      <row>.***...***.</row>
+      <row>***.....***</row>
+      <row>**.......**</row>
+    </bitmap>
+    <bitmap name="o" style="o">
+      <row>...*****...</row>
+      <row>..*******..</row>
+      <row>.***...***.</row>
+      <row>***.....***</row>
+      <row>**.......**</row>
+      <row>**.......**</row>
+      <row>**.......**</row>
+      <row>***.....***</row>
+      <row>.***...***.</row>
+      <row>..*******..</row>
+      <row>...*****...</row>
+    </bitmap>
+    <bitmap name="cursor-x" style="cursor">
+      <row>*********</row>
+      <row>*.......*</row>
+      <row>*.......*</row>
+      <row>*.......*</row>
+      <row>*.......*</row>
+      <row>*.......*</row>
+      <row>*.......*</row>
+      <row>*.......*</row>
+      <row>*********</row>
+    </bitmap>
+  </pictures>
 </game>

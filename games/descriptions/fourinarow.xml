@@ -38,15 +38,6 @@
     <variable name="left">176</variable>
     <variable name="top">150</variable>
   </variables>
-  <sounds>
-    <sound name="drop" wave="triangle"><note pitch="G3">0.04</note><note pitch="C3">0.06</note></sound>
-    <sound name="win">
-      <note pitch="C5">0.12</note>
-      <note pitch="E5">0.12</note>
-      <note pitch="G5">0.12</note>
-      <note pitch="C6">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size><color>color.yellow</color></style>
     <style name="prompt"><size>32</size></style>
@@ -264,4 +255,13 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="drop" wave="triangle"><note pitch="G3">0.04</note><note pitch="C3">0.06</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+  </sounds>
 </game>

@@ -78,38 +78,6 @@
     <variable name="letterstep">60</variable>
     <variable name="startlives">3</variable>
   </variables>
-  <sounds>
-    <sound name="shoot" wave="square"><volume>0.15</volume><note pitch="E6" to="E5">0.06</note></sound>
-    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="2000" to="200">0.2</note></sound>
-    <sound name="dive" wave="triangle"><volume>0.2</volume><note pitch="C6" to="C4">0.4</note></sound>
-    <sound name="boom" wave="noise"><volume>0.4</volume><note pitch="3000" to="100">0.6</note></sound>
-    <!-- the swarm, humming under play -->
-    <sound name="swarm" wave="triangle">
-      <loop />
-      <volume>0.1</volume>
-      <note pitch="A2" to="C3">0.3</note>
-      <note pitch="C3" to="A2">0.3</note>
-    </sound>
-    <!-- a game starting -->
-    <sound name="start">
-      <volume>0.2</volume>
-      <part wave="square">
-        <note pitch="C5">0.12</note>
-        <note pitch="E5">0.12</note>
-        <note pitch="G5">0.12</note>
-        <note pitch="C6">0.12</note>
-        <note pitch="B5">0.12</note>
-        <note pitch="G5">0.12</note>
-        <note pitch="A5">0.12</note>
-        <note pitch="C6">0.36</note>
-      </part>
-      <part wave="triangle">
-        <note pitch="C3">0.48</note>
-        <note pitch="G2">0.48</note>
-        <note pitch="C3">0.36</note>
-      </part>
-    </sound>
-  </sounds>
   <paths>
     <!-- the flagships: straight down the middle, a loop to the left, and up into place -->
     <path name="fromtop">
@@ -216,8 +184,8 @@
       <row>....w.......b.</row>
       <row>b.........y...</row>
       <group name="stars">
-        <sprite name="on"><bitmap><row>*</row><scale>2</scale></bitmap></sprite>
-        <sprite name="off"><bitmap><row>.</row><scale>2</scale></bitmap></sprite>
+        <sprite name="on"><bitmap from="stars-on" /></sprite>
+        <sprite name="off"><bitmap from="stars-off" /></sprite>
         <animation><interval>0.4</interval><frame sprite="on" /><frame sprite="on" /><frame sprite="off" /></animation>
         <velocity><y>0.5</y></velocity>
         <collisions>
@@ -371,18 +339,7 @@
         </object>
         <object name="ship">
           <sprite>
-            <bitmap>
-              <row>.....*.....</row>
-              <row>....***....</row>
-              <row>....*r*....</row>
-              <row>.r.*****.r.</row>
-              <row>***********</row>
-              <row>*****.*****</row>
-              <row>**.......**</row>
-              <scale>pixel</scale>
-              <color>color.cyan</color>
-              <color char="r">color.red</color>
-            </bitmap>
+            <bitmap from="ship" />
           </sprite>
           <position><x><centered /></x><y>window.bottom - ship.height - margin * 3</y></position>
           <collisions>
@@ -452,19 +409,7 @@
                 <rows>1</rows>
                 <padding><x>gap * 3 - 11 * pixel</x><y>0</y></padding>
                 <sprite>
-                  <bitmap>
-                    <row>...*...*...</row>
-                    <row>....***....</row>
-                    <row>..*******..</row>
-                    <row>.**.*r*.**.</row>
-                    <row>***********</row>
-                    <row>*.rrrrrrr.*</row>
-                    <row>*.*.....*.*</row>
-                    <row>...**.**...</row>
-                    <scale>pixel</scale>
-                    <color>color.yellow</color>
-                    <color char="r">color.red</color>
-                  </bitmap>
+                  <bitmap from="flagships" />
                 </sprite>
                 <position><x>left + gap * 3</x><y>70</y></position>
                 <!-- a flagship dives with the two escorts nearest it -->
@@ -481,19 +426,7 @@
                 <rows>1</rows>
                 <padding><x>apart</x><y>0</y></padding>
                 <sprite>
-                  <bitmap>
-                    <row>...*...*...</row>
-                    <row>..*******..</row>
-                    <row>.**.*b*.**.</row>
-                    <row>***********</row>
-                    <row>*.*******.*</row>
-                    <row>*.*.....*.*</row>
-                    <row>...*...*...</row>
-                    <row>..*.....*..</row>
-                    <scale>pixel</scale>
-                    <color>color.red</color>
-                    <color char="b">color.cyan</color>
-                  </bitmap>
+                  <bitmap from="escorts" />
                 </sprite>
                 <position><x>left + gap * 2</x><y>100</y></position>
                 <variables><variable name="worth">50</variable><variable name="diving">100</variable><variable name="pays">50</variable></variables>
@@ -503,19 +436,7 @@
                 <rows>1</rows>
                 <padding><x>apart</x><y>0</y></padding>
                 <sprite>
-                  <bitmap>
-                    <row>..*.....*..</row>
-                    <row>...*...*...</row>
-                    <row>..*******..</row>
-                    <row>.**.*b*.**.</row>
-                    <row>***********</row>
-                    <row>*.*******.*</row>
-                    <row>*.*.....*.*</row>
-                    <row>...**.**...</row>
-                    <scale>pixel</scale>
-                    <color>color.magenta</color>
-                    <color char="b">color.cyan</color>
-                  </bitmap>
+                  <bitmap from="purples" />
                 </sprite>
                 <position><x>left + gap</x><y>130</y></position>
                 <variables><variable name="worth">40</variable><variable name="diving">80</variable><variable name="pays">40</variable></variables>
@@ -526,19 +447,7 @@
                 <rows>1</rows>
                 <padding><x>apart</x><y>0</y></padding>
                 <sprite>
-                  <bitmap>
-                    <row>....*.*....</row>
-                    <row>...*****...</row>
-                    <row>..**y*y**..</row>
-                    <row>.*********.</row>
-                    <row>*.*******.*</row>
-                    <row>*.*.....*.*</row>
-                    <row>..*.....*..</row>
-                    <row>.*.......*.</row>
-                    <scale>pixel</scale>
-                    <color>color.cyan</color>
-                    <color char="y">color.yellow</color>
-                  </bitmap>
+                  <bitmap from="blues" />
                 </sprite>
                 <variables><variable name="worth">30</variable><variable name="diving">60</variable><variable name="pays">30</variable></variables>
                 <!-- the top and bottom rows fly in from the left as one line of twenty -->
@@ -730,6 +639,106 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="shoot" wave="square"><volume>0.15</volume><note pitch="E6" to="E5">0.06</note></sound>
+    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="2000" to="200">0.2</note></sound>
+    <sound name="dive" wave="triangle"><volume>0.2</volume><note pitch="C6" to="C4">0.4</note></sound>
+    <sound name="boom" wave="noise"><volume>0.4</volume><note pitch="3000" to="100">0.6</note></sound>
+    <!-- the swarm, humming under play -->
+    <sound name="swarm" wave="triangle">
+      <loop />
+      <volume>0.1</volume>
+      <note pitch="A2" to="C3">0.3</note>
+      <note pitch="C3" to="A2">0.3</note>
+    </sound>
+    <!-- a game starting -->
+    <sound name="start">
+      <volume>0.2</volume>
+      <part wave="square">
+        <note pitch="C5">0.12</note>
+        <note pitch="E5">0.12</note>
+        <note pitch="G5">0.12</note>
+        <note pitch="C6">0.12</note>
+        <note pitch="B5">0.12</note>
+        <note pitch="G5">0.12</note>
+        <note pitch="A5">0.12</note>
+        <note pitch="C6">0.36</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="C3">0.48</note>
+        <note pitch="G2">0.48</note>
+        <note pitch="C3">0.36</note>
+      </part>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="stars-on"><row>*</row><scale>2</scale></bitmap>
+    <bitmap name="stars-off"><row>.</row><scale>2</scale></bitmap>
+    <bitmap name="ship">
+      <row>.....*.....</row>
+      <row>....***....</row>
+      <row>....*r*....</row>
+      <row>.r.*****.r.</row>
+      <row>***********</row>
+      <row>*****.*****</row>
+      <row>**.......**</row>
+      <scale>pixel</scale>
+      <color>color.cyan</color>
+      <color char="r">color.red</color>
+    </bitmap>
+    <bitmap name="flagships">
+      <row>...*...*...</row>
+      <row>....***....</row>
+      <row>..*******..</row>
+      <row>.**.*r*.**.</row>
+      <row>***********</row>
+      <row>*.rrrrrrr.*</row>
+      <row>*.*.....*.*</row>
+      <row>...**.**...</row>
+      <scale>pixel</scale>
+      <color>color.yellow</color>
+      <color char="r">color.red</color>
+    </bitmap>
+    <bitmap name="escorts">
+      <row>...*...*...</row>
+      <row>..*******..</row>
+      <row>.**.*b*.**.</row>
+      <row>***********</row>
+      <row>*.*******.*</row>
+      <row>*.*.....*.*</row>
+      <row>...*...*...</row>
+      <row>..*.....*..</row>
+      <scale>pixel</scale>
+      <color>color.red</color>
+      <color char="b">color.cyan</color>
+    </bitmap>
+    <bitmap name="purples">
+      <row>..*.....*..</row>
+      <row>...*...*...</row>
+      <row>..*******..</row>
+      <row>.**.*b*.**.</row>
+      <row>***********</row>
+      <row>*.*******.*</row>
+      <row>*.*.....*.*</row>
+      <row>...**.**...</row>
+      <scale>pixel</scale>
+      <color>color.magenta</color>
+      <color char="b">color.cyan</color>
+    </bitmap>
+    <bitmap name="blues">
+      <row>....*.*....</row>
+      <row>...*****...</row>
+      <row>..**y*y**..</row>
+      <row>.*********.</row>
+      <row>*.*******.*</row>
+      <row>*.*.....*.*</row>
+      <row>..*.....*..</row>
+      <row>.*.......*.</row>
+      <scale>pixel</scale>
+      <color>color.cyan</color>
+      <color char="y">color.yellow</color>
+    </bitmap>
+  </pictures>
   <!-- the attract mode: a game played by itself, from the title after ten seconds -->
   <demo>
     <seed>20261016</seed>

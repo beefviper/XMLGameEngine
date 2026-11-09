@@ -39,11 +39,6 @@
     <variable name="cell">16</variable>
     <variable name="top">40</variable>
   </variables>
-  <sounds>
-    <sound name="zap"><note pitch="A6" to="A5">0.04</note></sound>
-    <sound name="pop" wave="noise"><note pitch="C4">0.05</note></sound>
-    <sound name="hit" wave="triangle"><note pitch="G4" to="C2">0.6</note></sound>
-  </sounds>
   <styles>
     <style name="banner"><size>72</size><color>color.magenta</color></style>
     <style name="prompt"><size>28</size></style>
@@ -309,4 +304,9 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="zap"><note pitch="A6" to="A5">0.04</note></sound>
+    <sound name="pop" wave="noise"><note pitch="C4">0.05</note></sound>
+    <sound name="hit" wave="triangle"><note pitch="G4" to="C2">0.6</note></sound>
+  </sounds>
 </game>

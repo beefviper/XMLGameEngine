@@ -55,46 +55,6 @@
     <variable name="iglooground">112</variable>
     <variable name="margin">10</variable>
   </variables>
-  <sounds>
-    <sound name="jump" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C5" to="C6">0.08</note>
-    </sound>
-    <sound name="block" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="G5">0.05</note>
-      <note pitch="C6">0.08</note>
-    </sound>
-    <sound name="splash" wave="noise">
-      <volume>0.4</volume>
-      <note pitch="5000" to="300">0.5</note>
-    </sound>
-    <sound name="freeze" wave="sine">
-      <volume>0.4</volume>
-      <note pitch="E6" to="E4">0.8</note>
-    </sound>
-    <sound name="bonus" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C6">0.05</note>
-      <note pitch="E6">0.05</note>
-      <note pitch="G6">0.1</note>
-    </sound>
-    <sound name="home" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-    <sound name="gameover" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="G4">0.25</note>
-      <note pitch="E4">0.25</note>
-      <note pitch="C4" to="C3">0.7</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>110</size><color>color.cyan</color></style>
     <style name="prompt"><size>40</size></style>
@@ -118,26 +78,10 @@
       <rows>1</rows>
       <padding><x>(window.right + 115) / 3 - 115</x></padding>
       <sprite name="white">
-        <bitmap>
-          <row>.******..******..*****.</row>
-          <row>*******.*******.*******</row>
-          <row>ccccccc.ccccccc.ccccccc</row>
-          <row>.ccccc...ccccc...ccccc.</row>
-          <scale>5</scale>
-          <color>color.white</color>
-          <color char="c">color.cyan</color>
-        </bitmap>
+        <bitmap from="ice-white" />
       </sprite>
       <sprite name="blue">
-        <bitmap>
-          <row>.******..******..*****.</row>
-          <row>*******.*******.*******</row>
-          <row>ccccccc.ccccccc.ccccccc</row>
-          <row>.ccccc...ccccc...ccccc.</row>
-          <scale>5</scale>
-          <color>color.blue</color>
-          <color char="c">color.darkblue</color>
-        </bitmap>
+        <bitmap from="ice-blue" />
       </sprite>
       <collisions>
         <collision edge="horizontal"><wrap /></collision>
@@ -229,17 +173,7 @@
         <!-- the thermometer, which holds the temperature -->
         <object name="thermometer">
           <sprite>
-            <bitmap>
-              <row>.ww.</row>
-              <row>.w*.</row>
-              <row>.w*.</row>
-              <row>.w*.</row>
-              <row>****</row>
-              <row>****</row>
-              <scale>4</scale>
-              <color>color.red</color>
-              <color char="w">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="thermometer" />
           </sprite>
           <position><x>window.right - 150</x><y>margin + 4</y></position>
           <variables>
@@ -249,26 +183,10 @@
         <!-- snow geese: they push Bailey along with them if they catch him -->
         <group name="geese" class="goose">
           <sprite name="up">
-            <bitmap>
-              <row>*......*</row>
-              <row>.*....*.</row>
-              <row>..****o.</row>
-              <row>...**...</row>
-              <scale>4</scale>
-              <color>color.lightgrey</color>
-              <color char="o">color.orange</color>
-            </bitmap>
+            <bitmap from="geese-up" />
           </sprite>
           <sprite name="down">
-            <bitmap>
-              <row>........</row>
-              <row>..****o.</row>
-              <row>.*.**.*.</row>
-              <row>*......*</row>
-              <scale>4</scale>
-              <color>color.lightgrey</color>
-              <color char="o">color.orange</color>
-            </bitmap>
+            <bitmap from="geese-down" />
           </sprite>
           <animation>
             <interval>0.2</interval>
@@ -284,14 +202,7 @@
         <!-- a fish along the third row: a bonus, back every so often -->
         <object name="fish" class="fish">
           <sprite>
-            <bitmap>
-              <row>.***..*</row>
-              <row>*k*****</row>
-              <row>.***..*</row>
-              <scale>4</scale>
-              <color>color.green</color>
-              <color char="k">color.black</color>
-            </bitmap>
+            <bitmap from="fish" />
           </sprite>
           <position><x>700</x><y>row1 + 2 * rowgap - 6</y></position>
           <velocity><x>-1</x></velocity>
@@ -303,22 +214,7 @@
         <!-- Frostbite Bailey, in his fur hat and parka -->
         <object name="bailey" class="player">
           <sprite>
-            <bitmap>
-              <row>..bb..</row>
-              <row>.bbbb.</row>
-              <row>.ffff.</row>
-              <row>..ff..</row>
-              <row>.****.</row>
-              <row>******</row>
-              <row>f.**.f</row>
-              <row>.****.</row>
-              <row>.b..b.</row>
-              <row>bb..bb</row>
-              <scale>4</scale>
-              <color>color.orange</color>
-              <color char="b">color.brown</color>
-              <color char="f">color.yellow</color>
-            </bitmap>
+            <bitmap from="bailey" />
           </sprite>
           <position><x>110</x><y>shore - 40 - 5</y></position>
           <collisions>
@@ -504,4 +400,117 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="jump" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C5" to="C6">0.08</note>
+    </sound>
+    <sound name="block" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G5">0.05</note>
+      <note pitch="C6">0.08</note>
+    </sound>
+    <sound name="splash" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="5000" to="300">0.5</note>
+    </sound>
+    <sound name="freeze" wave="sine">
+      <volume>0.4</volume>
+      <note pitch="E6" to="E4">0.8</note>
+    </sound>
+    <sound name="bonus" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C6">0.05</note>
+      <note pitch="E6">0.05</note>
+      <note pitch="G6">0.1</note>
+    </sound>
+    <sound name="home" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="ice-white">
+      <row>.******..******..*****.</row>
+      <row>*******.*******.*******</row>
+      <row>ccccccc.ccccccc.ccccccc</row>
+      <row>.ccccc...ccccc...ccccc.</row>
+      <scale>5</scale>
+      <color>color.white</color>
+      <color char="c">color.cyan</color>
+    </bitmap>
+    <bitmap name="ice-blue">
+      <row>.******..******..*****.</row>
+      <row>*******.*******.*******</row>
+      <row>ccccccc.ccccccc.ccccccc</row>
+      <row>.ccccc...ccccc...ccccc.</row>
+      <scale>5</scale>
+      <color>color.blue</color>
+      <color char="c">color.darkblue</color>
+    </bitmap>
+    <bitmap name="thermometer">
+      <row>.ww.</row>
+      <row>.w*.</row>
+      <row>.w*.</row>
+      <row>.w*.</row>
+      <row>****</row>
+      <row>****</row>
+      <scale>4</scale>
+      <color>color.red</color>
+      <color char="w">color.lightgrey</color>
+    </bitmap>
+    <bitmap name="geese-up">
+      <row>*......*</row>
+      <row>.*....*.</row>
+      <row>..****o.</row>
+      <row>...**...</row>
+      <scale>4</scale>
+      <color>color.lightgrey</color>
+      <color char="o">color.orange</color>
+    </bitmap>
+    <bitmap name="geese-down">
+      <row>........</row>
+      <row>..****o.</row>
+      <row>.*.**.*.</row>
+      <row>*......*</row>
+      <scale>4</scale>
+      <color>color.lightgrey</color>
+      <color char="o">color.orange</color>
+    </bitmap>
+    <bitmap name="fish">
+      <row>.***..*</row>
+      <row>*k*****</row>
+      <row>.***..*</row>
+      <scale>4</scale>
+      <color>color.green</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="bailey">
+      <row>..bb..</row>
+      <row>.bbbb.</row>
+      <row>.ffff.</row>
+      <row>..ff..</row>
+      <row>.****.</row>
+      <row>******</row>
+      <row>f.**.f</row>
+      <row>.****.</row>
+      <row>.b..b.</row>
+      <row>bb..bb</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+      <color char="f">color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

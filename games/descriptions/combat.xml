@@ -47,23 +47,6 @@
     <variable name="turnrate">3</variable>
     <variable name="shellspeed">6</variable>
   </variables>
-  <sounds>
-    <sound name="fire" wave="noise">
-      <volume>0.25</volume>
-      <note pitch="1500" to="300">0.15</note>
-    </sound>
-    <sound name="hit" wave="noise">
-      <volume>0.45</volume>
-      <note pitch="600" to="40">0.6</note>
-    </sound>
-    <sound name="thud"><volume>0.1</volume><note pitch="C3">0.04</note></sound>
-    <!-- the engines, while a tank is driven -->
-    <sound name="engine" wave="noise">
-      <loop />
-      <volume>0.12</volume>
-      <note pitch="90">0.5</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.yellow</color></style>
     <style name="prompt"><size>40</size><color>color.white</color></style>
@@ -114,21 +97,7 @@
         </group>
         <group name="tanks" class="tank">
           <sprite>
-            <bitmap>
-              <row>.....*.....</row>
-              <row>.....*.....</row>
-              <row>.....*.....</row>
-              <row>**..***..**</row>
-              <row>**.*****.**</row>
-              <row>***********</row>
-              <row>**.*****.**</row>
-              <row>**.*****.**</row>
-              <row>***********</row>
-              <row>**.......**</row>
-              <row>**.......**</row>
-              <scale>3</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="tanks" />
           </sprite>
           <drag>0.15</drag>
           <mass>1</mass>
@@ -264,4 +233,38 @@
       </conditions>
     </state>
   </states>
+  <sounds>
+    <sound name="fire" wave="noise">
+      <volume>0.25</volume>
+      <note pitch="1500" to="300">0.15</note>
+    </sound>
+    <sound name="hit" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="600" to="40">0.6</note>
+    </sound>
+    <sound name="thud"><volume>0.1</volume><note pitch="C3">0.04</note></sound>
+    <!-- the engines, while a tank is driven -->
+    <sound name="engine" wave="noise">
+      <loop />
+      <volume>0.12</volume>
+      <note pitch="90">0.5</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="tanks">
+      <row>.....*.....</row>
+      <row>.....*.....</row>
+      <row>.....*.....</row>
+      <row>**..***..**</row>
+      <row>**.*****.**</row>
+      <row>***********</row>
+      <row>**.*****.**</row>
+      <row>**.*****.**</row>
+      <row>***********</row>
+      <row>**.......**</row>
+      <row>**.......**</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

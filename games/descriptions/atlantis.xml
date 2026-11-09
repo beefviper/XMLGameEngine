@@ -53,19 +53,6 @@
     <variable name="shellspeed">7</variable>
     <variable name="rayspeed">5</variable>
   </variables>
-  <sounds>
-    <sound name="fire" wave="square"><volume>0.15</volume><note pitch="A5" to="A4">0.08</note></sound>
-    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="2500" to="200">0.3</note></sound>
-    <sound name="ray" wave="sawtooth"><volume>0.15</volume><note pitch="C3" to="C2">0.25</note></sound>
-    <sound name="lost" wave="triangle"><volume>0.4</volume><note pitch="E4" to="E2">0.6</note></sound>
-    <sound name="wave" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.08</note>
-      <note pitch="C6">0.2</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.cyan</color></style>
     <style name="prompt"><size>40</size></style>
@@ -76,15 +63,7 @@
          each pass; speed and points are the wave's -->
     <group name="gorgons" class="gorgon">
       <sprite>
-        <bitmap>
-          <row>....****....</row>
-          <row>..********..</row>
-          <row>************</row>
-          <row>.*.*.*.*.*.*</row>
-          <row>..********..</row>
-          <scale>3</scale>
-          <color>color.green</color>
-        </bitmap>
+        <bitmap from="gorgons" />
       </sprite>
       <position><x>-50</x></position>
       <velocity><x>speed</x></velocity>
@@ -233,16 +212,7 @@
           </collisions>
           <group name="domes">
             <sprite>
-              <bitmap>
-                <row>....****....</row>
-                <row>..********..</row>
-                <row>.**********.</row>
-                <row>************</row>
-                <row>**.**..**.**</row>
-                <row>************</row>
-                <scale>3</scale>
-                <color>color.cyan</color>
-              </bitmap>
+              <bitmap from="domes" />
             </sprite>
             <position><y>ground - 18</y></position>
             <member><position><x>80</x></position></member>
@@ -251,18 +221,7 @@
           </group>
           <group name="towers">
             <sprite>
-              <bitmap>
-                <row>...**...</row>
-                <row>..****..</row>
-                <row>..*..*..</row>
-                <row>..****..</row>
-                <row>.******.</row>
-                <row>.*.**.*.</row>
-                <row>********</row>
-                <row>********</row>
-                <scale>3</scale>
-                <color>color.lightgrey</color>
-              </bitmap>
+              <bitmap from="towers" />
             </sprite>
             <position><y>ground - 24</y></position>
             <member><position><x>150</x></position></member>
@@ -275,16 +234,7 @@
              shell leaves along -->
         <object name="leftpost" class="post">
           <sprite>
-            <bitmap>
-              <row>...*...</row>
-              <row>...*...</row>
-              <row>...*...</row>
-              <row>..***..</row>
-              <row>.*****.</row>
-              <row>*******</row>
-              <scale>3</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="post" />
           </sprite>
           <position><x>10</x><y>ground - leftpost.height</y></position>
           <heading>45</heading>
@@ -294,16 +244,7 @@
         </object>
         <object name="middlepost" class="post">
           <sprite>
-            <bitmap>
-              <row>...*...</row>
-              <row>...*...</row>
-              <row>...*...</row>
-              <row>..***..</row>
-              <row>.*****.</row>
-              <row>*******</row>
-              <scale>3</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="post" />
           </sprite>
           <position><x><centered /></x><y>ground - middlepost.height</y></position>
           <heading>0</heading>
@@ -313,16 +254,7 @@
         </object>
         <object name="rightpost" class="post">
           <sprite>
-            <bitmap>
-              <row>...*...</row>
-              <row>...*...</row>
-              <row>...*...</row>
-              <row>..***..</row>
-              <row>.*****.</row>
-              <row>*******</row>
-              <scale>3</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="post" />
           </sprite>
           <position><x>window.right - rightpost.width - 10</x><y>ground - rightpost.height</y></position>
           <heading>315</heading>
@@ -380,15 +312,7 @@
           <objects>
             <group name="gorgons">
               <sprite>
-                <bitmap>
-                  <row>.....**.....</row>
-                  <row>*...****...*</row>
-                  <row>************</row>
-                  <row>*...****...*</row>
-                  <row>.....**.....</row>
-                  <scale>3</scale>
-                  <color>color.orange</color>
-                </bitmap>
+                <bitmap from="gorgons2" />
               </sprite>
             </group>
             <object name="label">
@@ -407,15 +331,7 @@
           <objects>
             <group name="gorgons">
               <sprite>
-                <bitmap>
-                  <row>**........**</row>
-                  <row>.**.****.**.</row>
-                  <row>..********..</row>
-                  <row>.**.****.**.</row>
-                  <row>**........**</row>
-                  <scale>3</scale>
-                  <color>color.red</color>
-                </bitmap>
+                <bitmap from="gorgons3" />
               </sprite>
             </group>
             <object name="label">
@@ -492,4 +408,78 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="fire" wave="square"><volume>0.15</volume><note pitch="A5" to="A4">0.08</note></sound>
+    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="2500" to="200">0.3</note></sound>
+    <sound name="ray" wave="sawtooth"><volume>0.15</volume><note pitch="C3" to="C2">0.25</note></sound>
+    <sound name="lost" wave="triangle"><volume>0.4</volume><note pitch="E4" to="E2">0.6</note></sound>
+    <sound name="wave" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.2</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="gorgons">
+      <row>....****....</row>
+      <row>..********..</row>
+      <row>************</row>
+      <row>.*.*.*.*.*.*</row>
+      <row>..********..</row>
+      <scale>3</scale>
+      <color>color.green</color>
+    </bitmap>
+    <bitmap name="domes">
+      <row>....****....</row>
+      <row>..********..</row>
+      <row>.**********.</row>
+      <row>************</row>
+      <row>**.**..**.**</row>
+      <row>************</row>
+      <scale>3</scale>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="towers">
+      <row>...**...</row>
+      <row>..****..</row>
+      <row>..*..*..</row>
+      <row>..****..</row>
+      <row>.******.</row>
+      <row>.*.**.*.</row>
+      <row>********</row>
+      <row>********</row>
+      <scale>3</scale>
+      <color>color.lightgrey</color>
+    </bitmap>
+    <bitmap name="post">
+      <row>...*...</row>
+      <row>...*...</row>
+      <row>...*...</row>
+      <row>..***..</row>
+      <row>.*****.</row>
+      <row>*******</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="gorgons2">
+      <row>.....**.....</row>
+      <row>*...****...*</row>
+      <row>************</row>
+      <row>*...****...*</row>
+      <row>.....**.....</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="gorgons3">
+      <row>**........**</row>
+      <row>.**.****.**.</row>
+      <row>..********..</row>
+      <row>.**.****.**.</row>
+      <row>**........**</row>
+      <scale>3</scale>
+      <color>color.red</color>
+    </bitmap>
+  </pictures>
 </game>

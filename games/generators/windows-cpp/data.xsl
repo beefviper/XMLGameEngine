@@ -3578,9 +3578,9 @@
     <xsl:if test="$game/paths/path">
       <xsl:text>&#9;game.paths = paths();&#10;</xsl:text>
     </xsl:if>
-    <xsl:if test="$game/sheets/sheet">
+    <xsl:if test="$game/pictures/sheet">
       <xsl:text>&#9;game.sheets = {&#10;</xsl:text>
-      <xsl:for-each select="$game/sheets/sheet">
+      <xsl:for-each select="$game/pictures/sheet">
         <xsl:text>&#9;&#9;Sheet{ </xsl:text>
         <xsl:call-template name="string"><xsl:with-param name="text" select="@name" /></xsl:call-template>
         <xsl:text>, </xsl:text>

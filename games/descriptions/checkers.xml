@@ -64,16 +64,6 @@
     <variable name="left">160</variable>
     <variable name="top">80</variable>
   </variables>
-  <sounds>
-    <sound name="pick"><note pitch="E5">0.03</note></sound>
-    <sound name="move" wave="triangle"><note pitch="C4">0.05</note></sound>
-    <sound name="win">
-      <note pitch="C5">0.12</note>
-      <note pitch="E5">0.12</note>
-      <note pitch="G5">0.12</note>
-      <note pitch="C6">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size><color>color.red</color></style>
     <style name="prompt"><size>32</size></style>
@@ -166,19 +156,7 @@
         </object>
         <object name="squares">
           <sprite>
-            <bitmap>
-              <row>l*l*l*l*</row>
-              <row>*l*l*l*l</row>
-              <row>l*l*l*l*</row>
-              <row>*l*l*l*l</row>
-              <row>l*l*l*l*</row>
-              <row>*l*l*l*l</row>
-              <row>l*l*l*l*</row>
-              <row>*l*l*l*l</row>
-              <scale>square</scale>
-              <color>color.darkgreen</color>
-              <color char="l">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="squares" />
           </sprite>
           <position><x>left</x><y>top</y></position>
         </object>
@@ -199,38 +177,10 @@
           <!-- red starts at the bottom and goes up the board -->
           <group name="red" class="red" char="r">
             <sprite name="man">
-              <bitmap style="redpiece">
-                <row>....*****....</row>
-                <row>..*********..</row>
-                <row>.***********.</row>
-                <row>.***ddddd***.</row>
-                <row>***d*****d***</row>
-                <row>***d*****d***</row>
-                <row>***d*****d***</row>
-                <row>***d*****d***</row>
-                <row>***d*****d***</row>
-                <row>.***ddddd***.</row>
-                <row>.***********.</row>
-                <row>..*********..</row>
-                <row>....*****....</row>
-              </bitmap>
+              <bitmap from="red-man" />
             </sprite>
             <sprite name="king">
-              <bitmap style="redpiece">
-                <row>....*****....</row>
-                <row>..*********..</row>
-                <row>.***********.</row>
-                <row>.**y**y**y**.</row>
-                <row>***yy*y*yy***</row>
-                <row>***yyyyyyy***</row>
-                <row>***yyyyyyy***</row>
-                <row>***yyyyyyy***</row>
-                <row>*************</row>
-                <row>.***********.</row>
-                <row>.***********.</row>
-                <row>..*********..</row>
-                <row>....*****....</row>
-              </bitmap>
+              <bitmap from="red-king" />
             </sprite>
             <moves>
               <forced />
@@ -256,38 +206,10 @@
           <!-- white starts at the top and goes down -->
           <group name="white" class="white" char="w">
             <sprite name="man">
-              <bitmap style="whitepiece">
-                <row>....*****....</row>
-                <row>..*********..</row>
-                <row>.***********.</row>
-                <row>.***ddddd***.</row>
-                <row>***d*****d***</row>
-                <row>***d*****d***</row>
-                <row>***d*****d***</row>
-                <row>***d*****d***</row>
-                <row>***d*****d***</row>
-                <row>.***ddddd***.</row>
-                <row>.***********.</row>
-                <row>..*********..</row>
-                <row>....*****....</row>
-              </bitmap>
+              <bitmap from="white-man" />
             </sprite>
             <sprite name="king">
-              <bitmap style="whitepiece">
-                <row>....*****....</row>
-                <row>..*********..</row>
-                <row>.***********.</row>
-                <row>.**y**y**y**.</row>
-                <row>***yy*y*yy***</row>
-                <row>***yyyyyyy***</row>
-                <row>***yyyyyyy***</row>
-                <row>***yyyyyyy***</row>
-                <row>*************</row>
-                <row>.***********.</row>
-                <row>.***********.</row>
-                <row>..*********..</row>
-                <row>....*****....</row>
-              </bitmap>
+              <bitmap from="white-king" />
             </sprite>
             <moves>
               <forced />
@@ -320,22 +242,7 @@
           <cells />
           <object name="heldmark">
             <sprite>
-              <bitmap style="cursor">
-                <row>....*****....</row>
-                <row>..**.....**..</row>
-                <row>.*.........*.</row>
-                <row>.*.........*.</row>
-                <row>*...........*</row>
-                <row>*...........*</row>
-                <row>*...........*</row>
-                <row>*...........*</row>
-                <row>*...........*</row>
-                <row>.*.........*.</row>
-                <row>.*.........*.</row>
-                <row>..**.....**..</row>
-                <row>....*****....</row>
-                <scale>5</scale>
-              </bitmap>
+              <bitmap from="heldmark" />
             </sprite>
           </object>
           <object name="movemark">
@@ -346,20 +253,7 @@
           </object>
           <object name="lastmark">
             <sprite>
-              <bitmap>
-                <row>**......**</row>
-                <row>*........*</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>*........*</row>
-                <row>**......**</row>
-                <scale>6</scale>
-                <color>color.orange</color>
-              </bitmap>
+              <bitmap from="lastmark" />
             </sprite>
           </object>
         </map>
@@ -380,88 +274,22 @@
 
           <object name="cursor" char="c">
             <sprite name="redfree">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>**********</row>
-              </bitmap>
+              <bitmap from="cursor-redfree" />
             </sprite>
             <sprite name="redheld">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>**********</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**********</row>
-                <row>**********</row>
-              </bitmap>
+              <bitmap from="cursor-redheld" />
             </sprite>
             <sprite name="whitefree">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>**********</row>
-              </bitmap>
+              <bitmap from="cursor-redfree" />
             </sprite>
             <sprite name="whiteheld">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>**********</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**********</row>
-                <row>**********</row>
-              </bitmap>
+              <bitmap from="cursor-redheld" />
             </sprite>
             <sprite name="cpufree">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>**********</row>
-              </bitmap>
+              <bitmap from="cursor-redfree" />
             </sprite>
             <sprite name="cpuheld">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>**********</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**......**</row>
-                <row>**********</row>
-                <row>**********</row>
-              </bitmap>
+              <bitmap from="cursor-redheld" />
             </sprite>
             <marks>
               <last object="lastmark" />
@@ -640,4 +468,143 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="pick"><note pitch="E5">0.03</note></sound>
+    <sound name="move" wave="triangle"><note pitch="C4">0.05</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="squares">
+      <row>l*l*l*l*</row>
+      <row>*l*l*l*l</row>
+      <row>l*l*l*l*</row>
+      <row>*l*l*l*l</row>
+      <row>l*l*l*l*</row>
+      <row>*l*l*l*l</row>
+      <row>l*l*l*l*</row>
+      <row>*l*l*l*l</row>
+      <scale>square</scale>
+      <color>color.darkgreen</color>
+      <color char="l">color.lightgrey</color>
+    </bitmap>
+    <bitmap name="red-man" style="redpiece">
+      <row>....*****....</row>
+      <row>..*********..</row>
+      <row>.***********.</row>
+      <row>.***ddddd***.</row>
+      <row>***d*****d***</row>
+      <row>***d*****d***</row>
+      <row>***d*****d***</row>
+      <row>***d*****d***</row>
+      <row>***d*****d***</row>
+      <row>.***ddddd***.</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>....*****....</row>
+    </bitmap>
+    <bitmap name="red-king" style="redpiece">
+      <row>....*****....</row>
+      <row>..*********..</row>
+      <row>.***********.</row>
+      <row>.**y**y**y**.</row>
+      <row>***yy*y*yy***</row>
+      <row>***yyyyyyy***</row>
+      <row>***yyyyyyy***</row>
+      <row>***yyyyyyy***</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>....*****....</row>
+    </bitmap>
+    <bitmap name="white-man" style="whitepiece">
+      <row>....*****....</row>
+      <row>..*********..</row>
+      <row>.***********.</row>
+      <row>.***ddddd***.</row>
+      <row>***d*****d***</row>
+      <row>***d*****d***</row>
+      <row>***d*****d***</row>
+      <row>***d*****d***</row>
+      <row>***d*****d***</row>
+      <row>.***ddddd***.</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>....*****....</row>
+    </bitmap>
+    <bitmap name="white-king" style="whitepiece">
+      <row>....*****....</row>
+      <row>..*********..</row>
+      <row>.***********.</row>
+      <row>.**y**y**y**.</row>
+      <row>***yy*y*yy***</row>
+      <row>***yyyyyyy***</row>
+      <row>***yyyyyyy***</row>
+      <row>***yyyyyyy***</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>....*****....</row>
+    </bitmap>
+    <bitmap name="heldmark" style="cursor">
+      <row>....*****....</row>
+      <row>..**.....**..</row>
+      <row>.*.........*.</row>
+      <row>.*.........*.</row>
+      <row>*...........*</row>
+      <row>*...........*</row>
+      <row>*...........*</row>
+      <row>*...........*</row>
+      <row>*...........*</row>
+      <row>.*.........*.</row>
+      <row>.*.........*.</row>
+      <row>..**.....**..</row>
+      <row>....*****....</row>
+      <scale>5</scale>
+    </bitmap>
+    <bitmap name="lastmark">
+      <row>**......**</row>
+      <row>*........*</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>*........*</row>
+      <row>**......**</row>
+      <scale>6</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="cursor-redfree" style="cursor">
+      <row>**********</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>**********</row>
+    </bitmap>
+    <bitmap name="cursor-redheld" style="cursor">
+      <row>**********</row>
+      <row>**********</row>
+      <row>**......**</row>
+      <row>**......**</row>
+      <row>**......**</row>
+      <row>**......**</row>
+      <row>**......**</row>
+      <row>**......**</row>
+      <row>**********</row>
+      <row>**********</row>
+    </bitmap>
+  </pictures>
 </game>

@@ -46,32 +46,6 @@
     <variable name="step">2</variable>
     <variable name="shieldtop">540</variable>
   </variables>
-  <sounds>
-    <sound name="shoot" wave="square"><volume>0.15</volume><note pitch="C6" to="C5">0.08</note></sound>
-    <sound name="alienhit" wave="noise"><volume>0.3</volume><note pitch="6000" to="1500">0.15</note></sound>
-    <sound name="playerhit" wave="noise"><volume>0.45</volume><note pitch="2000" to="100">0.7</note></sound>
-    <!-- the mystery ship's warble as it comes on -->
-    <sound name="ufo" wave="square">
-      <volume>0.12</volume>
-      <note pitch="G5" to="G6">0.15</note>
-      <note pitch="G6" to="G5">0.15</note>
-      <note pitch="G5" to="G6">0.15</note>
-      <note pitch="G6" to="G5">0.15</note>
-    </sound>
-    <!-- the march: four falling notes, round and round -->
-    <sound name="march" wave="triangle">
-      <loop />
-      <volume>0.35</volume>
-      <note pitch="F2">0.1</note>
-      <rest>0.4</rest>
-      <note pitch="E2">0.1</note>
-      <rest>0.4</rest>
-      <note pitch="D#2">0.1</note>
-      <rest>0.4</rest>
-      <note pitch="D2">0.1</note>
-      <rest>0.4</rest>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>128</size><color>color.green</color></style>
     <style name="hud"><size>36</size><color>color.white</color></style>
@@ -82,10 +56,10 @@
          dropped by any alien (each faces down) after a wait of its own -->
     <object name="bomb" class="bomb">
       <sprite name="a">
-        <bitmap><row>.*</row><row>*.</row><row>.*</row><row>*.</row><row>.*</row><scale>3</scale></bitmap>
+        <bitmap from="bomb-a" />
       </sprite>
       <sprite name="b">
-        <bitmap><row>*.</row><row>.*</row><row>*.</row><row>.*</row><row>*.</row><scale>3</scale></bitmap>
+        <bitmap from="bomb-b" />
       </sprite>
       <animation><interval>0.1</interval><frame sprite="a" /><frame sprite="b" /></animation>
       <velocity><y>5</y></velocity>
@@ -101,17 +75,7 @@
     <!-- what a hit leaves for a moment -->
     <object name="blast" class="blast">
       <sprite>
-        <bitmap>
-          <row>....*...*....</row>
-          <row>.*...*.*...*.</row>
-          <row>..*.......*..</row>
-          <row>...*.....*...</row>
-          <row>**.........**</row>
-          <row>...*.....*...</row>
-          <row>..*..*.*..*..</row>
-          <row>.*..*...*..*.</row>
-          <scale>pixel - 1</scale>
-        </bitmap>
+        <bitmap from="blast" />
       </sprite>
       <most>2</most>
       <timers>
@@ -122,17 +86,7 @@
   <objects>
     <object name="player">
       <sprite>
-        <bitmap>
-          <row>.....*.....</row>
-          <row>....***....</row>
-          <row>....***....</row>
-          <row>.*********.</row>
-          <row>***********</row>
-          <row>***********</row>
-          <row>***********</row>
-          <scale>pixel</scale>
-          <color>color.green</color>
-        </bitmap>
+        <bitmap from="player" />
       </sprite>
       <position><x><centered /></x><y>window.bottom - player.height * 2</y></position>
       <collisions>
@@ -212,26 +166,7 @@
           <rows>1</rows>
           <padding><x>150</x><y>0</y></padding>
           <sprite>
-            <bitmap>
-              <row>....**************....</row>
-              <row>...****************...</row>
-              <row>..******************..</row>
-              <row>.********************.</row>
-              <row>**********************</row>
-              <row>**********************</row>
-              <row>**********************</row>
-              <row>**********************</row>
-              <row>**********************</row>
-              <row>**********************</row>
-              <row>**********************</row>
-              <row>*******........*******</row>
-              <row>******..........******</row>
-              <row>*****............*****</row>
-              <row>*****............*****</row>
-              <row>*****............*****</row>
-              <scale>4</scale>
-              <color>color.green</color>
-            </bitmap>
+            <bitmap from="shields" />
           </sprite>
           <position><x>111</x><y>shieldtop</y></position>
           <collisions>
@@ -247,17 +182,7 @@
         <!-- the mystery ship: across the top now and then, 50 to 200 points -->
         <object name="ufo" class="ufo">
           <sprite>
-            <bitmap>
-              <row>.....******.....</row>
-              <row>...**********...</row>
-              <row>..************..</row>
-              <row>.**.**.**.**.**.</row>
-              <row>****************</row>
-              <row>..***..**..***..</row>
-              <row>...*........*...</row>
-              <scale>pixel - 1</scale>
-              <color>color.red</color>
-            </bitmap>
+            <bitmap from="ufo" />
           </sprite>
           <position><x>0 - ufo.width</x><y>60</y></position>
           <velocity><x>2.5</x></velocity>
@@ -285,32 +210,10 @@
           <rows>5</rows>
           <padding><x>gap</x><y>gap</y></padding>
           <sprite name="a">
-            <bitmap>
-              <row>....***....</row>
-              <row>...*****...</row>
-              <row>..*******..</row>
-              <row>.**.***.**.</row>
-              <row>.*********.</row>
-              <row>...*.*.*...</row>
-              <row>..*..*..*..</row>
-              <row>...*.*.*...</row>
-              <scale>pixel</scale>
-              <color>color.magenta</color>
-            </bitmap>
+            <bitmap from="aliens-a" />
           </sprite>
           <sprite name="b">
-            <bitmap>
-              <row>....***....</row>
-              <row>...*****...</row>
-              <row>..*******..</row>
-              <row>.**.***.**.</row>
-              <row>.*********.</row>
-              <row>..*..*..*..</row>
-              <row>.*...*...*.</row>
-              <row>..*.....*..</row>
-              <scale>pixel</scale>
-              <color>color.magenta</color>
-            </bitmap>
+            <bitmap from="aliens-b" />
           </sprite>
           <animation>
             <interval>animation.seconds</interval>
@@ -342,59 +245,19 @@
           </timers>
           <row><number>2</number><number>3</number>
             <sprite name="a">
-              <bitmap>
-                <row>..*.....*..</row>
-                <row>...*...*...</row>
-                <row>..*******..</row>
-                <row>.**.***.**.</row>
-                <row>***********</row>
-                <row>*.*******.*</row>
-                <row>*.*.....*.*</row>
-                <row>...**.**...</row>
-                <color>color.cyan</color>
-              </bitmap>
+              <bitmap from="aliens-row2-a" />
             </sprite>
             <sprite name="b">
-              <bitmap>
-                <row>..*.....*..</row>
-                <row>*..*...*..*</row>
-                <row>*.*******.*</row>
-                <row>***.***.***</row>
-                <row>***********</row>
-                <row>.*********.</row>
-                <row>..*.....*..</row>
-                <row>.*.......*.</row>
-                <color>color.cyan</color>
-              </bitmap>
+              <bitmap from="aliens-row2-b" />
             </sprite>
             <variables><variable name="worth">20</variable></variables>
           </row>
           <row><number>4</number><number>5</number>
             <sprite name="a">
-              <bitmap>
-                <row>...*****...</row>
-                <row>.*********.</row>
-                <row>***********</row>
-                <row>***..*..***</row>
-                <row>***********</row>
-                <row>...**.**...</row>
-                <row>..**...**..</row>
-                <row>***.....***</row>
-                <color>color.white</color>
-              </bitmap>
+              <bitmap from="aliens-row4-a" />
             </sprite>
             <sprite name="b">
-              <bitmap>
-                <row>...*****...</row>
-                <row>.*********.</row>
-                <row>***********</row>
-                <row>***..*..***</row>
-                <row>***********</row>
-                <row>..***.***..</row>
-                <row>.**.....**.</row>
-                <row>..**...**..</row>
-                <color>color.white</color>
-              </bitmap>
+              <bitmap from="aliens-row4-b" />
             </sprite>
             <variables><variable name="worth">10</variable></variables>
           </row>
@@ -513,4 +376,155 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="shoot" wave="square"><volume>0.15</volume><note pitch="C6" to="C5">0.08</note></sound>
+    <sound name="alienhit" wave="noise"><volume>0.3</volume><note pitch="6000" to="1500">0.15</note></sound>
+    <sound name="playerhit" wave="noise"><volume>0.45</volume><note pitch="2000" to="100">0.7</note></sound>
+    <!-- the mystery ship's warble as it comes on -->
+    <sound name="ufo" wave="square">
+      <volume>0.12</volume>
+      <note pitch="G5" to="G6">0.15</note>
+      <note pitch="G6" to="G5">0.15</note>
+      <note pitch="G5" to="G6">0.15</note>
+      <note pitch="G6" to="G5">0.15</note>
+    </sound>
+    <!-- the march: four falling notes, round and round -->
+    <sound name="march" wave="triangle">
+      <loop />
+      <volume>0.35</volume>
+      <note pitch="F2">0.1</note>
+      <rest>0.4</rest>
+      <note pitch="E2">0.1</note>
+      <rest>0.4</rest>
+      <note pitch="D#2">0.1</note>
+      <rest>0.4</rest>
+      <note pitch="D2">0.1</note>
+      <rest>0.4</rest>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="bomb-a"><row>.*</row><row>*.</row><row>.*</row><row>*.</row><row>.*</row><scale>3</scale></bitmap>
+    <bitmap name="bomb-b"><row>*.</row><row>.*</row><row>*.</row><row>.*</row><row>*.</row><scale>3</scale></bitmap>
+    <bitmap name="blast">
+      <row>....*...*....</row>
+      <row>.*...*.*...*.</row>
+      <row>..*.......*..</row>
+      <row>...*.....*...</row>
+      <row>**.........**</row>
+      <row>...*.....*...</row>
+      <row>..*..*.*..*..</row>
+      <row>.*..*...*..*.</row>
+      <scale>pixel - 1</scale>
+    </bitmap>
+    <bitmap name="player">
+      <row>.....*.....</row>
+      <row>....***....</row>
+      <row>....***....</row>
+      <row>.*********.</row>
+      <row>***********</row>
+      <row>***********</row>
+      <row>***********</row>
+      <scale>pixel</scale>
+      <color>color.green</color>
+    </bitmap>
+    <bitmap name="shields">
+      <row>....**************....</row>
+      <row>...****************...</row>
+      <row>..******************..</row>
+      <row>.********************.</row>
+      <row>**********************</row>
+      <row>**********************</row>
+      <row>**********************</row>
+      <row>**********************</row>
+      <row>**********************</row>
+      <row>**********************</row>
+      <row>**********************</row>
+      <row>*******........*******</row>
+      <row>******..........******</row>
+      <row>*****............*****</row>
+      <row>*****............*****</row>
+      <row>*****............*****</row>
+      <scale>4</scale>
+      <color>color.green</color>
+    </bitmap>
+    <bitmap name="ufo">
+      <row>.....******.....</row>
+      <row>...**********...</row>
+      <row>..************..</row>
+      <row>.**.**.**.**.**.</row>
+      <row>****************</row>
+      <row>..***..**..***..</row>
+      <row>...*........*...</row>
+      <scale>pixel - 1</scale>
+      <color>color.red</color>
+    </bitmap>
+    <bitmap name="aliens-a">
+      <row>....***....</row>
+      <row>...*****...</row>
+      <row>..*******..</row>
+      <row>.**.***.**.</row>
+      <row>.*********.</row>
+      <row>...*.*.*...</row>
+      <row>..*..*..*..</row>
+      <row>...*.*.*...</row>
+      <scale>pixel</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="aliens-b">
+      <row>....***....</row>
+      <row>...*****...</row>
+      <row>..*******..</row>
+      <row>.**.***.**.</row>
+      <row>.*********.</row>
+      <row>..*..*..*..</row>
+      <row>.*...*...*.</row>
+      <row>..*.....*..</row>
+      <scale>pixel</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="aliens-row2-a">
+      <row>..*.....*..</row>
+      <row>...*...*...</row>
+      <row>..*******..</row>
+      <row>.**.***.**.</row>
+      <row>***********</row>
+      <row>*.*******.*</row>
+      <row>*.*.....*.*</row>
+      <row>...**.**...</row>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="aliens-row2-b">
+      <row>..*.....*..</row>
+      <row>*..*...*..*</row>
+      <row>*.*******.*</row>
+      <row>***.***.***</row>
+      <row>***********</row>
+      <row>.*********.</row>
+      <row>..*.....*..</row>
+      <row>.*.......*.</row>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="aliens-row4-a">
+      <row>...*****...</row>
+      <row>.*********.</row>
+      <row>***********</row>
+      <row>***..*..***</row>
+      <row>***********</row>
+      <row>...**.**...</row>
+      <row>..**...**..</row>
+      <row>***.....***</row>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="aliens-row4-b">
+      <row>...*****...</row>
+      <row>.*********.</row>
+      <row>***********</row>
+      <row>***..*..***</row>
+      <row>***********</row>
+      <row>..***.***..</row>
+      <row>.**.....**.</row>
+      <row>..**...**..</row>
+      <color>color.white</color>
+    </bitmap>
+  </pictures>
 </game>

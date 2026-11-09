@@ -44,32 +44,6 @@
     <variable name="ground">40</variable>
     <variable name="slant">1</variable>
   </variables>
-  <sounds>
-    <sound name="pop" wave="noise"><volume>0.3</volume><note pitch="3000" to="800">0.1</note></sound>
-    <sound name="thud" wave="noise"><volume>0.3</volume><note pitch="800" to="100">0.25</note></sound>
-    <sound name="boom" wave="noise"><volume>0.5</volume><note pitch="1500" to="60">0.9</note></sound>
-    <sound name="shoot" wave="square"><volume>0.15</volume><note pitch="C6" to="C4">0.1</note></sound>
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.07</note>
-      <note pitch="E5">0.07</note>
-      <note pitch="G5">0.07</note>
-      <note pitch="C6">0.14</note>
-    </sound>
-    <!-- a spare base -->
-    <sound name="spare" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G5">0.08</note>
-      <note pitch="C6">0.08</note>
-      <note pitch="G6">0.16</note>
-    </sound>
-    <sound name="gameover" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="G4">0.25</note>
-      <note pitch="E4">0.25</note>
-      <note pitch="C4" to="C3">0.7</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>120</size><color>color.orange</color></style>
     <style name="line"><size>32</size><color>color.white</color></style>
@@ -79,13 +53,7 @@
     <!-- what a big rock breaks into: small ones flying apart, eight at most -->
     <object name="chip" class="rocks">
       <sprite>
-        <bitmap>
-          <row>.**.</row>
-          <row>****</row>
-          <row>.**.</row>
-          <scale>5</scale>
-          <color>color.yellow</color>
-        </bitmap>
+        <bitmap from="chip" />
       </sprite>
       <velocity><x><random><min>-2.5</min><max>2.5</max></random></x><y>2.5</y></velocity>
       <most>8</most>
@@ -198,16 +166,7 @@
           <group name="boulders">
             <padding><x>140</x></padding>
             <sprite>
-              <bitmap>
-                <row>..****..</row>
-                <row>.******.</row>
-                <row>********</row>
-                <row>********</row>
-                <row>.******.</row>
-                <row>..***...</row>
-                <scale>5</scale>
-                <color>color.lightgrey</color>
-              </bitmap>
+              <bitmap from="boulders" />
             </sprite>
             <position><x>50</x></position>
             <variables><variable name="worth">10</variable></variables>
@@ -215,13 +174,7 @@
           <group name="pebbles">
             <padding><x>160</x></padding>
             <sprite>
-              <bitmap>
-                <row>.**.</row>
-                <row>****</row>
-                <row>***.</row>
-                <scale>5</scale>
-                <color>color.orange</color>
-              </bitmap>
+              <bitmap from="pebbles" />
             </sprite>
             <position><x>140</x><y><random><min>-800</min><max>-40</max></random></y></position>
             <velocity><y><random><min>2</min><max>3.5</max></random></y></velocity>
@@ -234,26 +187,10 @@
           <rows>1</rows>
           <padding><x>320</x></padding>
           <sprite name="a">
-            <bitmap>
-              <row>*...*</row>
-              <row>.*.*.</row>
-              <row>..*..</row>
-              <row>.*.*.</row>
-              <row>*...*</row>
-              <scale>4</scale>
-              <color>color.magenta</color>
-            </bitmap>
+            <bitmap from="spinners-a" />
           </sprite>
           <sprite name="b">
-            <bitmap>
-              <row>..*..</row>
-              <row>..*..</row>
-              <row>*****</row>
-              <row>..*..</row>
-              <row>..*..</row>
-              <scale>4</scale>
-              <color>color.magenta</color>
-            </bitmap>
+            <bitmap from="spinners-b" />
           </sprite>
           <animation>
             <interval>0.1</interval>
@@ -293,15 +230,7 @@
         <!-- the laser base -->
         <object name="ship">
           <sprite>
-            <bitmap>
-              <row>.....**.....</row>
-              <row>.....**.....</row>
-              <row>....****....</row>
-              <row>.**********.</row>
-              <row>************</row>
-              <scale>5</scale>
-              <color>color.cyan</color>
-            </bitmap>
+            <bitmap from="ship" />
           </sprite>
           <position><x><centered /></x><y>window.bottom - ground - ship.height</y></position>
           <collisions>
@@ -395,4 +324,83 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="pop" wave="noise"><volume>0.3</volume><note pitch="3000" to="800">0.1</note></sound>
+    <sound name="thud" wave="noise"><volume>0.3</volume><note pitch="800" to="100">0.25</note></sound>
+    <sound name="boom" wave="noise"><volume>0.5</volume><note pitch="1500" to="60">0.9</note></sound>
+    <sound name="shoot" wave="square"><volume>0.15</volume><note pitch="C6" to="C4">0.1</note></sound>
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <!-- a spare base -->
+    <sound name="spare" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.08</note>
+      <note pitch="G6">0.16</note>
+    </sound>
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="chip">
+      <row>.**.</row>
+      <row>****</row>
+      <row>.**.</row>
+      <scale>5</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="boulders">
+      <row>..****..</row>
+      <row>.******.</row>
+      <row>********</row>
+      <row>********</row>
+      <row>.******.</row>
+      <row>..***...</row>
+      <scale>5</scale>
+      <color>color.lightgrey</color>
+    </bitmap>
+    <bitmap name="pebbles">
+      <row>.**.</row>
+      <row>****</row>
+      <row>***.</row>
+      <scale>5</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="spinners-a">
+      <row>*...*</row>
+      <row>.*.*.</row>
+      <row>..*..</row>
+      <row>.*.*.</row>
+      <row>*...*</row>
+      <scale>4</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="spinners-b">
+      <row>..*..</row>
+      <row>..*..</row>
+      <row>*****</row>
+      <row>..*..</row>
+      <row>..*..</row>
+      <scale>4</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="ship">
+      <row>.....**.....</row>
+      <row>.....**.....</row>
+      <row>....****....</row>
+      <row>.**********.</row>
+      <row>************</row>
+      <scale>5</scale>
+      <color>color.cyan</color>
+    </bitmap>
+  </pictures>
 </game>

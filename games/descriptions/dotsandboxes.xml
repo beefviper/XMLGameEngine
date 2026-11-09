@@ -45,15 +45,6 @@
     <variable name="left">180</variable>
     <variable name="top">110</variable>
   </variables>
-  <sounds>
-    <sound name="line" wave="triangle"><note pitch="A4">0.04</note></sound>
-    <sound name="win">
-      <note pitch="C5">0.12</note>
-      <note pitch="E5">0.12</note>
-      <note pitch="G5">0.12</note>
-      <note pitch="C6">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size></style>
     <style name="prompt"><size>32</size></style>
@@ -207,46 +198,13 @@
           <row>...........</row>
           <object name="cursor" char="c">
             <sprite name="red">
-              <bitmap style="cursor">
-                <row>**......**</row>
-                <row>*........*</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>*........*</row>
-                <row>**......**</row>
-              </bitmap>
+              <bitmap from="cursor-red" />
             </sprite>
             <sprite name="blue">
-              <bitmap style="cursor">
-                <row>**......**</row>
-                <row>*........*</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>*........*</row>
-                <row>**......**</row>
-              </bitmap>
+              <bitmap from="cursor-red" />
             </sprite>
             <sprite name="cpu">
-              <bitmap style="cursor">
-                <row>**......**</row>
-                <row>*........*</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>*........*</row>
-                <row>**......**</row>
-              </bitmap>
+              <bitmap from="cursor-red" />
             </sprite>
             <marks>
               <last object="lastmark" />
@@ -372,4 +330,27 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="line" wave="triangle"><note pitch="A4">0.04</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="cursor-red" style="cursor">
+      <row>**......**</row>
+      <row>*........*</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>*........*</row>
+      <row>**......**</row>
+    </bitmap>
+  </pictures>
 </game>

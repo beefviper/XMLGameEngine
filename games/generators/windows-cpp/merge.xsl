@@ -610,6 +610,55 @@
     </xsl:call-template>
   </xsl:template>
 
+  <!-- The game with every <bitmap from="..."> outside its <pictures> made
+       the <pictures> bitmap of that name, changed by what it gives itself
+       (withPictures, load/merge.cpp): its own <row>s replace all the
+       picture's, a <scale> or <flip> the picture's, a <color> the picture's
+       of the same char= (or none), and its attributes the picture's. -->
+  <xsl:template match="@*|node()" mode="pictures">
+    <xsl:copy>
+      <xsl:apply-templates select="@*|node()" mode="pictures" />
+    </xsl:copy>
+  </xsl:template>
+  <xsl:template match="pictures" mode="pictures">
+    <xsl:copy-of select="." />
+  </xsl:template>
+  <xsl:template match="bitmap[@from]" mode="pictures">
+    <xsl:variable name="over" select="." />
+    <xsl:variable name="base" select="/game/pictures/bitmap[@name = current()/@from]" />
+    <xsl:if test="not($base)">
+      <xsl:message terminate="yes">
+        <xsl:value-of select="concat('windows-cpp: &lt;bitmap from=&quot;', @from, '&quot;&gt; names no &lt;bitmap&gt; of the &lt;pictures&gt;')" />
+      </xsl:message>
+    </xsl:if>
+    <bitmap>
+      <xsl:copy-of select="$base/@*[name() != 'name']" />
+      <xsl:copy-of select="@*[name() != 'from']" />
+      <xsl:choose>
+        <xsl:when test="row"><xsl:copy-of select="row" /></xsl:when>
+        <xsl:otherwise><xsl:copy-of select="$base/row" /></xsl:otherwise>
+      </xsl:choose>
+      <xsl:choose>
+        <xsl:when test="scale"><xsl:copy-of select="scale" /></xsl:when>
+        <xsl:otherwise><xsl:copy-of select="$base/scale" /></xsl:otherwise>
+      </xsl:choose>
+      <xsl:for-each select="$base/color">
+        <xsl:variable name="mine" select="$over/color[string(@char) = string(current()/@char)]" />
+        <xsl:choose>
+          <xsl:when test="$mine"><xsl:copy-of select="$mine[1]" /></xsl:when>
+          <xsl:otherwise><xsl:copy-of select="." /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:for-each>
+      <xsl:for-each select="color">
+        <xsl:if test="not($base/color[string(@char) = string(current()/@char)])"><xsl:copy-of select="." /></xsl:if>
+      </xsl:for-each>
+      <xsl:choose>
+        <xsl:when test="flip"><xsl:copy-of select="flip" /></xsl:when>
+        <xsl:otherwise><xsl:copy-of select="$base/flip" /></xsl:otherwise>
+      </xsl:choose>
+    </bitmap>
+  </xsl:template>
+
   <!-- The whole game, merged: what data.xsl writes out. -->
   <xsl:template name="merge-game">
     <game>

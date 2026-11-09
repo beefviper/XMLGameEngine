@@ -267,6 +267,43 @@ TEST_CASE("the scale and the color can be left out: one pixel to a character, wh
 	CHECK(thing.bitmap->rgba[2] == 255);
 }
 
+TEST_CASE("a sprite takes a picture of the <pictures> by <bitmap from>, and what it gives changes the picture's", "[bitmap][pictures][xml]")
+{
+	const std::string pictures = "<pictures><bitmap name=\"ship\"><row>.*.</row><row>***</row><scale>pixel</scale><color>color.red</color></bitmap></pictures>";
+	const auto with = [&](const std::string& sprite)
+	{
+		std::string xml = gameXml(objectWith(sprite), "<show object=\"thing\" />");
+		return xml.insert(xml.rfind("</game>"), pictures);
+	};
+
+	// As it is: its rows, scale and red.
+	Loaded taken{ with("<sprite><bitmap from=\"ship\" /></sprite>") };
+	const Object& ship = taken.game.getObject("thing");
+	REQUIRE(ship.bitmap);
+	CHECK(ship.bitmap->width == 9);
+	CHECK(ship.bitmap->height == 6);
+	CHECK(ship.bitmap->solidAt(4, 0));
+	CHECK(ship.bitmap->rgba[(0 * 9 + 4) * 4 + 0] == 255);
+	CHECK(ship.bitmap->rgba[(0 * 9 + 4) * 4 + 1] == 0);
+
+	// Its own scale and colour over the picture's; the rows stay.
+	Loaded changed{ with("<sprite><bitmap from=\"ship\"><scale>1</scale><color>color.green</color></bitmap></sprite>") };
+	const Object& small = changed.game.getObject("thing");
+	REQUIRE(small.bitmap);
+	CHECK(small.bitmap->width == 3);
+	CHECK(small.bitmap->height == 2);
+	CHECK(small.bitmap->rgba[(0 * 3 + 1) * 4 + 0] == 0);
+	CHECK(small.bitmap->rgba[(0 * 3 + 1) * 4 + 1] == 255);
+
+	// Its own rows replace all the picture's.
+	Loaded drawn{ with("<sprite><bitmap from=\"ship\"><row>**</row></bitmap></sprite>") };
+	CHECK(drawn.game.getObject("thing").bitmap->width == 6);
+	CHECK(drawn.game.getObject("thing").bitmap->height == 3);
+
+	// A name the pictures have not got stops the load.
+	CHECK_THROWS_WITH(Loaded{ with("<sprite><bitmap from=\"saucer\" /></sprite>") }, ContainsSubstring("names no <bitmap> of the <pictures>"));
+}
+
 TEST_CASE("a bitmap's size can be used in an expression like any shape's", "[bitmap][xml]")
 {
 	const std::string flag =
@@ -1134,7 +1171,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in bitmaps and anima
 	const Mistake mistakes[] = {
 		{ "an animation with no interval", "<interval>animation.seconds</interval>", "", "interval" },
 		{ "an animation whose frames are not frames", "<frame sprite=\"a\" />", "<picture sprite=\"a\" />", "picture" },
-		{ "a bitmap with its scale before its rows", "<bitmap>\n          <row>.....*.....</row>", "<bitmap>\n          <scale>pixel</scale>\n          <row>.....*.....</row>", "scale" },
+		{ "a bitmap with its scale before its rows", "<bitmap name=\"player\">\n      <row>.....*.....</row>", "<bitmap name=\"player\">\n      <scale>pixel</scale>\n      <row>.....*.....</row>", "scale" },
 		{ "a bitmap row with something inside it", "<row>.....*.....</row>", "<row><x>1</x></row>", "x" },
 		{ "a frame with no sprite", "<frame sprite=\"a\" />", "<frame />", "sprite" },
 	};

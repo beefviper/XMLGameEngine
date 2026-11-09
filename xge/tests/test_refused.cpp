@@ -72,7 +72,7 @@ TEST_CASE("an action runs what comes before a refused verb, and nothing after it
 		std::string text = fileText(in);
 		const std::string sounds = "<sounds><sound name=\"click\" wave=\"square\"><note pitch=\"C5\">0.05</note></sound>"
 			"<sound name=\"bang\" wave=\"square\"><note pitch=\"C4\">0.05</note></sound></sounds>";
-		text.insert(text.find("<states>"), sounds);
+		text.insert(text.find("</states>") + std::string("</states>").size(), sounds);
 		std::ofstream(scratch.path) << text;
 	}
 	Played play(scratch.path);

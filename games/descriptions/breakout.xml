@@ -40,18 +40,6 @@
     <variable name="paddle">64</variable>
     <variable name="step">8</variable>
   </variables>
-  <sounds>
-    <sound name="wall"><note pitch="A3">0.03</note></sound>
-    <sound name="paddle"><note pitch="A4">0.04</note></sound>
-    <sound name="red"><note pitch="C6">0.05</note></sound>
-    <sound name="orange"><note pitch="G5">0.05</note></sound>
-    <sound name="green"><note pitch="C5">0.05</note></sound>
-    <sound name="yellow"><note pitch="G4">0.05</note></sound>
-    <sound name="lost" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="E4" to="E2">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.orange</color></style>
     <style name="prompt"><size>36</size></style>
@@ -293,4 +281,16 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="wall"><note pitch="A3">0.03</note></sound>
+    <sound name="paddle"><note pitch="A4">0.04</note></sound>
+    <sound name="red"><note pitch="C6">0.05</note></sound>
+    <sound name="orange"><note pitch="G5">0.05</note></sound>
+    <sound name="green"><note pitch="C5">0.05</note></sound>
+    <sound name="yellow"><note pitch="G4">0.05</note></sound>
+    <sound name="lost" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="E4" to="E2">0.4</note>
+    </sound>
+  </sounds>
 </game>

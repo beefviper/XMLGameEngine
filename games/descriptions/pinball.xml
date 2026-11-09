@@ -51,22 +51,6 @@
     <variable name="shot">0.14</variable>
     <variable name="balls">3</variable>
   </variables>
-  <sounds>
-    <sound name="flip"><volume>0.2</volume><note pitch="C3">0.03</note></sound>
-    <sound name="wall"><volume>0.1</volume><note pitch="C4">0.02</note></sound>
-    <sound name="bumper" wave="triangle"><volume>0.35</volume><note pitch="E6">0.05</note></sound>
-    <sound name="sling" wave="triangle"><volume>0.3</volume><note pitch="B5">0.04</note></sound>
-    <sound name="lane" wave="triangle"><volume>0.3</volume><note pitch="G5">0.06</note></sound>
-    <sound name="shoot"><volume>0.3</volume><note pitch="G3">0.06</note></sound>
-    <sound name="bonus" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.08</note>
-      <note pitch="C6">0.16</note>
-    </sound>
-    <sound name="drain"><volume>0.3</volume><note pitch="E3">0.12</note><note pitch="C3">0.2</note></sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size><color>color.yellow</color></style>
     <style name="prompt"><size>34</size></style>
@@ -352,4 +336,20 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="flip"><volume>0.2</volume><note pitch="C3">0.03</note></sound>
+    <sound name="wall"><volume>0.1</volume><note pitch="C4">0.02</note></sound>
+    <sound name="bumper" wave="triangle"><volume>0.35</volume><note pitch="E6">0.05</note></sound>
+    <sound name="sling" wave="triangle"><volume>0.3</volume><note pitch="B5">0.04</note></sound>
+    <sound name="lane" wave="triangle"><volume>0.3</volume><note pitch="G5">0.06</note></sound>
+    <sound name="shoot"><volume>0.3</volume><note pitch="G3">0.06</note></sound>
+    <sound name="bonus" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.16</note>
+    </sound>
+    <sound name="drain"><volume>0.3</volume><note pitch="E3">0.12</note><note pitch="C3">0.2</note></sound>
+  </sounds>
 </game>

@@ -82,47 +82,6 @@
     <variable name="walk">2</variable>
   </variables>
 
-  <sounds>
-    <sound name="shoot" wave="square">
-      <volume>0.15</volume>
-      <note pitch="A5" to="A4">0.07</note>
-    </sound>
-    <sound name="robotshoot" wave="square">
-      <volume>0.1</volume>
-      <note pitch="E4" to="E3">0.1</note>
-    </sound>
-    <sound name="boom" wave="noise">
-      <volume>0.4</volume>
-      <note pitch="3000" to="200">0.3</note>
-    </sound>
-    <sound name="zap" wave="noise">
-      <volume>0.45</volume>
-      <note pitch="8000" to="400">0.5</note>
-    </sound>
-    <sound name="otto" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C4" to="C5">0.12</note>
-      <note pitch="C5" to="C4">0.12</note>
-      <note pitch="C4" to="C5">0.12</note>
-    </sound>
-    <sound name="door" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C5">0.05</note>
-      <note pitch="G5">0.08</note>
-    </sound>
-    <sound name="bonus" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G5">0.06</note>
-      <note pitch="C6">0.12</note>
-    </sound>
-    <sound name="extralife" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.08</note>
-      <note pitch="C6">0.2</note>
-    </sound>
-  </sounds>
 
   <styles>
     <style name="banner"><size>96</size></style>
@@ -135,18 +94,10 @@
     <!-- every robot of every room: each room takes its own by name -->
     <group name="robots" class="robot">
       <sprite name="a">
-        <bitmap>
-          <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>*******</row><row>*.***.*</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-          <scale>2</scale>
-          <color>color.yellow</color>
-        </bitmap>
+        <bitmap from="robots-a" />
       </sprite>
       <sprite name="b">
-        <bitmap>
-          <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>.*****.</row><row>*.***.*</row><row>.*...*.</row><row>.*...*.</row><row>**...**</row>
-          <scale>2</scale>
-          <color>color.yellow</color>
-        </bitmap>
+        <bitmap from="robots-b" />
       </sprite>
       <animation>
         <interval>0.25</interval>
@@ -335,24 +286,16 @@
              four looks, and shoots that way. -->
         <object name="player" class="player">
           <sprite name="down">
-            <bitmap style="player">
-              <row>..***..</row><row>.*.*.*.</row><row>..***..</row><row>...*...</row><row>.*****.</row><row>*..*..*</row><row>*..*..*</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-            </bitmap>
+            <bitmap from="player-down" />
           </sprite>
           <sprite name="up">
-            <bitmap style="player">
-              <row>..***..</row><row>.*****.</row><row>..***..</row><row>*..*..*</row><row>*.***.*</row><row>*..*..*</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-            </bitmap>
+            <bitmap from="player-up" />
           </sprite>
           <sprite name="left">
-            <bitmap style="player">
-              <row>..***..</row><row>.**.**.</row><row>..***..</row><row>...*...</row><row>*****..</row><row>*..*...</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-            </bitmap>
+            <bitmap from="player-left" />
           </sprite>
           <sprite name="right">
-            <bitmap style="player">
-              <row>..***..</row><row>.**.**.</row><row>..***..</row><row>...*...</row><row>..*****</row><row>...*..*</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-            </bitmap>
+            <bitmap from="player-right" />
           </sprite>
           <position><x>21</x><y>233</y></position>
           <facing>right</facing>
@@ -461,11 +404,7 @@
         <!-- Evil Otto: comes straight for the man over the walls, cannot be shot -->
         <object name="otto" class="otto">
           <sprite>
-            <bitmap>
-              <row>..*****..</row><row>.*.....*.</row><row>*.**.**.*</row><row>*.**.**.*</row><row>*.......*</row><row>*.*...*.*</row><row>*..***..*</row><row>.*.....*.</row><row>..*****..</row>
-              <scale>3</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="otto" />
           </sprite>
           <position><x>504</x><y>72</y></position>
           <velocity><x>-1.2</x><y>0.9</y></velocity>
@@ -497,9 +436,7 @@
         </object>
         <object name="liveicon">
           <sprite>
-            <bitmap style="player">
-              <row>..***..</row><row>.*.*.*.</row><row>..***..</row><row>...*...</row><row>.*****.</row><row>*..*..*</row><row>*..*..*</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-            </bitmap>
+            <bitmap from="player-down" />
           </sprite>
           <position><x>window.right - lives.width - margin * 2 - 14</x><y>margin</y></position>
         </object>
@@ -747,4 +684,74 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="shoot" wave="square">
+      <volume>0.15</volume>
+      <note pitch="A5" to="A4">0.07</note>
+    </sound>
+    <sound name="robotshoot" wave="square">
+      <volume>0.1</volume>
+      <note pitch="E4" to="E3">0.1</note>
+    </sound>
+    <sound name="boom" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="3000" to="200">0.3</note>
+    </sound>
+    <sound name="zap" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="8000" to="400">0.5</note>
+    </sound>
+    <sound name="otto" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C4" to="C5">0.12</note>
+      <note pitch="C5" to="C4">0.12</note>
+      <note pitch="C4" to="C5">0.12</note>
+    </sound>
+    <sound name="door" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C5">0.05</note>
+      <note pitch="G5">0.08</note>
+    </sound>
+    <sound name="bonus" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G5">0.06</note>
+      <note pitch="C6">0.12</note>
+    </sound>
+    <sound name="extralife" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.2</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="robots-a">
+      <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>*******</row><row>*.***.*</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="robots-b">
+      <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>.*****.</row><row>*.***.*</row><row>.*...*.</row><row>.*...*.</row><row>**...**</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="player-down" style="player">
+      <row>..***..</row><row>.*.*.*.</row><row>..***..</row><row>...*...</row><row>.*****.</row><row>*..*..*</row><row>*..*..*</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+    </bitmap>
+    <bitmap name="player-up" style="player">
+      <row>..***..</row><row>.*****.</row><row>..***..</row><row>*..*..*</row><row>*.***.*</row><row>*..*..*</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+    </bitmap>
+    <bitmap name="player-left" style="player">
+      <row>..***..</row><row>.**.**.</row><row>..***..</row><row>...*...</row><row>*****..</row><row>*..*...</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+    </bitmap>
+    <bitmap name="player-right" style="player">
+      <row>..***..</row><row>.**.**.</row><row>..***..</row><row>...*...</row><row>..*****</row><row>...*..*</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+    </bitmap>
+    <bitmap name="otto">
+      <row>..*****..</row><row>.*.....*.</row><row>*.**.**.*</row><row>*.**.**.*</row><row>*.......*</row><row>*.*...*.*</row><row>*..***..*</row><row>.*.....*.</row><row>..*****..</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

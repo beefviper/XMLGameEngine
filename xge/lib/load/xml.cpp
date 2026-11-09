@@ -618,7 +618,7 @@ namespace xge
 			}
 			else if (kind == "cell")
 			{
-				// A picture cut from one of the game's <sheets>: a cell of
+				// A picture cut from one of the game's <sheet>s: a cell of
 				// its grid, or a part of it by <x>, <y>, <width> and <height>.
 				readCell(shape, sprite, here);
 				if (auto scale = findChild(&shape, "scale"))
@@ -4017,6 +4017,11 @@ namespace xge
 			validation = SchemaValidation::Weak;
 		}
 
+		// The pictures put in where sprites take them (<bitmap from>), so
+		// the rest reads each as if written out there.
+		const ElementPtr pictured = withPictures(copyElement(*root));
+		root = viewOf(pictured);
+
 		const std::string where = "game";
 		std::unique_ptr<XmlNode> window = requireChild(*root, "window", where);
 		std::unique_ptr<XmlNode> variablesNode = requireChild(*root, "variables", where);
@@ -4090,17 +4095,19 @@ namespace xge
 			}
 		}
 
-		// load sheets (optional: the pictures sprites, animations and decks cut theirs from)
-		if (std::unique_ptr<XmlNode> sheetsNode = findChild(root.get(), "sheets"))
+		// load sheets (optional: the pictures sprites, animations and decks
+		// cut theirs from), among the <pictures>
+		if (std::unique_ptr<XmlNode> picturesNode = findChild(root.get(), "pictures"))
 		{
-			for (std::unique_ptr<XmlNode> node = sheetsNode->getFirstChild(); node != nullptr; node = node->getNextSibling())
+			for (std::unique_ptr<XmlNode> node = picturesNode->getFirstChild(); node != nullptr; node = node->getNextSibling())
 			{
+				if (node->getName() != "sheet") { continue; }
 				Sheet sheet;
-				sheet.name = requireAttribute(*node, "name", "<sheets> > <sheet>");
-				const std::string here = "<sheets> > <sheet name=\"" + sheet.name + "\">";
+				sheet.name = requireAttribute(*node, "name", "<pictures> > <sheet>");
+				const std::string here = "<pictures> > <sheet name=\"" + sheet.name + "\">";
 				if (std::any_of(rawSheets.begin(), rawSheets.end(), [&](const Sheet& each) { return each.name == sheet.name; }))
 				{
-					fail("<sheets>", "two <sheet>s are called '" + sheet.name + "'");
+					fail("<pictures>", "two <sheet>s are called '" + sheet.name + "'");
 				}
 				sheet.path = readText(*requireChild(*node, "path", here));
 				const auto plain = [&](const XmlNode& parent, const char* tag, const std::string& at)

@@ -83,77 +83,6 @@
     <variable name="low">160</variable>
     <variable name="ground">208</variable>
   </variables>
-  <sounds>
-    <!-- the arcade's start: the opening of Eine kleine Nachtmusik -->
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G5">0.24</note>
-      <rest>0.06</rest>
-      <note pitch="D5">0.12</note>
-      <note pitch="G5">0.24</note>
-      <rest>0.06</rest>
-      <note pitch="D5">0.12</note>
-      <note pitch="G5">0.12</note>
-      <note pitch="D5">0.12</note>
-      <note pitch="G5">0.12</note>
-      <note pitch="B5">0.12</note>
-      <note pitch="D6">0.36</note>
-    </sound>
-    <sound name="jump" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C5" to="C6">0.12</note>
-    </sound>
-    <sound name="bump" wave="square">
-      <volume>0.3</volume>
-      <note pitch="C3">0.06</note>
-    </sound>
-    <sound name="flip" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G5" to="G4">0.15</note>
-    </sound>
-    <sound name="kick" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.06</note>
-      <note pitch="E5">0.06</note>
-      <note pitch="G5">0.06</note>
-      <note pitch="C6">0.12</note>
-    </sound>
-    <sound name="pow" wave="noise">
-      <volume>0.4</volume>
-      <note pitch="400" to="40">0.4</note>
-    </sound>
-    <sound name="hit">
-      <volume>0.3</volume>
-      <part wave="square">
-        <note pitch="C5">0.1</note>
-        <note pitch="G4">0.1</note>
-        <note pitch="E4">0.1</note>
-        <note pitch="C4">0.3</note>
-      </part>
-      <part wave="triangle">
-        <note pitch="E4" to="E2">0.6</note>
-      </part>
-    </sound>
-    <sound name="coin" wave="square">
-      <volume>0.15</volume>
-      <note pitch="B5">0.05</note>
-      <note pitch="E6">0.15</note>
-    </sound>
-    <sound name="mad" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C4" to="C5">0.1</note>
-      <note pitch="C4" to="C5">0.1</note>
-    </sound>
-    <sound name="phase" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>16</size><color>color.red</color><font>assets/pressstart2p.ttf</font></style>
     <style name="text"><size>8</size><font>assets/pressstart2p.ttf</font></style>
@@ -214,144 +143,25 @@
     <!-- Mario or Luigi: a look for each way he moves, all facing right -->
     <object name="brother" class="brother">
       <sprite name="stand">
-        <bitmap style="mario">
-          <row>...rrrrr....</row>
-          <row>..rrrrrrrrr.</row>
-          <row>..kkksskk...</row>
-          <row>.ksksssskss.</row>
-          <row>.kskksssksss</row>
-          <row>.kksssskkkk.</row>
-          <row>...ssssss...</row>
-          <row>..rrbrrr....</row>
-          <row>.rrrbrrbrrr.</row>
-          <row>rrrrbbbbrrrr</row>
-          <row>ssrbybbybrss</row>
-          <row>sssbbbbbbsss</row>
-          <row>ssbbbbbbbbss</row>
-          <row>..bbb..bbb..</row>
-          <row>.kkk....kkk.</row>
-          <row>kkkk....kkkk</row>
-        </bitmap>
+        <bitmap from="brother-stand" />
       </sprite>
       <sprite name="stepa">
-        <bitmap style="mario">
-          <row>...rrrrr....</row>
-          <row>..rrrrrrrrr.</row>
-          <row>..kkksskk...</row>
-          <row>.ksksssskss.</row>
-          <row>.kskksssksss</row>
-          <row>.kksssskkkk.</row>
-          <row>...ssssss...</row>
-          <row>..rrbrrr....</row>
-          <row>.rrrbrrbrr..</row>
-          <row>.rrrbbbbrrs.</row>
-          <row>.ssbybbybss.</row>
-          <row>.ssbbbbbbss.</row>
-          <row>..bbbbbbbb..</row>
-          <row>.bbb....bbb.</row>
-          <row>kkk......kkk</row>
-          <row>kk........kk</row>
-        </bitmap>
+        <bitmap from="brother-stepa" />
       </sprite>
       <sprite name="stepb">
-        <bitmap style="mario">
-          <row>...rrrrr....</row>
-          <row>..rrrrrrrrr.</row>
-          <row>..kkksskk...</row>
-          <row>.ksksssskss.</row>
-          <row>.kskksssksss</row>
-          <row>.kksssskkkk.</row>
-          <row>...ssssss...</row>
-          <row>...rrbrr....</row>
-          <row>..rrrbbrr...</row>
-          <row>..rrbbbbrr..</row>
-          <row>..sbybbybs..</row>
-          <row>..sbbbbbbs..</row>
-          <row>...bbbbbb...</row>
-          <row>....bbbb....</row>
-          <row>...kkkkkk...</row>
-          <row>...kkkkkk...</row>
-        </bitmap>
+        <bitmap from="brother-stepb" />
       </sprite>
       <sprite name="stepc">
-        <bitmap style="mario">
-          <row>...rrrrr....</row>
-          <row>..rrrrrrrrr.</row>
-          <row>..kkksskk...</row>
-          <row>.ksksssskss.</row>
-          <row>.kskksssksss</row>
-          <row>.kksssskkkk.</row>
-          <row>...ssssss...</row>
-          <row>..rrbrrr....</row>
-          <row>.rrrbrrbrr..</row>
-          <row>rrrrbbbbrs..</row>
-          <row>ssrbybbybs..</row>
-          <row>ssbbbbbbbb..</row>
-          <row>..bbbbbbbbk.</row>
-          <row>..bbb..kkkk.</row>
-          <row>.kkkk..kkk..</row>
-          <row>.kkk........</row>
-        </bitmap>
+        <bitmap from="brother-stepc" />
       </sprite>
       <sprite name="skid">
-        <bitmap style="mario">
-          <row>...rrrrr....</row>
-          <row>..rrrrrrrrr.</row>
-          <row>..kkksskk...</row>
-          <row>.ksksssskss.</row>
-          <row>.kskksssksss</row>
-          <row>.kksssskkkk.</row>
-          <row>...ssssss...</row>
-          <row>...rrbrrr...</row>
-          <row>..rrrbbrrrr.</row>
-          <row>..rrbbbbrrss</row>
-          <row>...bybbybsss</row>
-          <row>..bbbbbbbbss</row>
-          <row>.bbbbbbbbb..</row>
-          <row>kbbbb..bbb..</row>
-          <row>kkk....kkkk.</row>
-          <row>kk.....kkkkk</row>
-        </bitmap>
+        <bitmap from="brother-skid" />
       </sprite>
       <sprite name="rising">
-        <bitmap style="mario">
-          <row>...rrrrr..s.</row>
-          <row>..rrrrrrrrs.</row>
-          <row>..kkksskk.r.</row>
-          <row>.ksksssskrr.</row>
-          <row>.kskksssksss</row>
-          <row>.kksssskkkk.</row>
-          <row>...ssssssr..</row>
-          <row>..rrbrrrr...</row>
-          <row>.rrrbbrr....</row>
-          <row>rrrrbbbb....</row>
-          <row>ssrbybbyb...</row>
-          <row>sssbbbbbbb..</row>
-          <row>ssbbbbbbbbk.</row>
-          <row>..bbbb.bbkk.</row>
-          <row>.kkk....kkk.</row>
-          <row>kkk.........</row>
-        </bitmap>
+        <bitmap from="brother-rising" />
       </sprite>
       <sprite name="falling">
-        <bitmap style="mario">
-          <row>...rrrrr....</row>
-          <row>..rrrrrrrrr.</row>
-          <row>..kkksskk...</row>
-          <row>.ksksssskss.</row>
-          <row>.kskksssksss</row>
-          <row>.kksssskkkk.</row>
-          <row>...ssssss...</row>
-          <row>s.rrbrrr..s.</row>
-          <row>srrrbrrbrrs.</row>
-          <row>.rrrbbbbrr..</row>
-          <row>..rbybbybr..</row>
-          <row>..bbbbbbbb..</row>
-          <row>.bbbbbbbbbb.</row>
-          <row>.bbb....bbb.</row>
-          <row>kkk......kkk</row>
-          <row>kk........kk</row>
-        </bitmap>
+        <bitmap from="brother-falling" />
       </sprite>
       <animation name="walking">
         <interval>0.08</interval>
@@ -420,60 +230,16 @@
          its phase lets it out of a top pipe. -->
     <group name="pest" class="enemy">
       <sprite name="a">
-        <bitmap style="creeper">
-          <row>......GGGG......</row>
-          <row>....GGgGGgGG....</row>
-          <row>...GgggGGgggG...</row>
-          <row>..GGGGGGGGGGGG..</row>
-          <row>..GgggGGGGgggGoo</row>
-          <row>..GGGGGGGGGGGGow</row>
-          <row>...wwwwwwwwwwwoo</row>
-          <row>....oo....oooo..</row>
-          <row>...ooo.....ooo..</row>
-          <row>...oo.......oo..</row>
-        </bitmap>
+        <bitmap from="pest-a" />
       </sprite>
       <sprite name="b">
-        <bitmap style="creeper">
-          <row>......GGGG......</row>
-          <row>....GGgGGgGG....</row>
-          <row>...GgggGGgggG...</row>
-          <row>..GGGGGGGGGGGG..</row>
-          <row>..GgggGGGGgggGoo</row>
-          <row>..GGGGGGGGGGGGow</row>
-          <row>...wwwwwwwwwwwoo</row>
-          <row>.....oooo.ooo...</row>
-          <row>.....ooo..ooo...</row>
-          <row>......oo...oo...</row>
-        </bitmap>
+        <bitmap from="pest-b" />
       </sprite>
       <sprite name="fa">
-        <bitmap style="creeper">
-          <row>................</row>
-          <row>...o..o..o..o...</row>
-          <row>...o..o..o..o...</row>
-          <row>..wwwwwwwwwwww..</row>
-          <row>.GGGGGGGGGGGGGG.</row>
-          <row>.GgggGGGGGgggGG.</row>
-          <row>.GGGGGGGGGGGGGG.</row>
-          <row>..GGgggGGgggGG..</row>
-          <row>...GGGGGGGGGG...</row>
-          <row>.....GGGGGG.....</row>
-        </bitmap>
+        <bitmap from="pest-fa" />
       </sprite>
       <sprite name="fb">
-        <bitmap style="creeper">
-          <row>................</row>
-          <row>....o..o..o..o..</row>
-          <row>..o..o..o..o....</row>
-          <row>..wwwwwwwwwwww..</row>
-          <row>.GGGGGGGGGGGGGG.</row>
-          <row>.GgggGGGGGgggGG.</row>
-          <row>.GGGGGGGGGGGGGG.</row>
-          <row>..GGgggGGgggGG..</row>
-          <row>...GGGGGGGGGG...</row>
-          <row>.....GGGGGG.....</row>
-        </bitmap>
+        <bitmap from="pest-fb" />
       </sprite>
       <animation name="walking">
         <interval>0.2</interval>
@@ -625,88 +391,22 @@
          fast), the second turns it over -->
     <group name="sidesteppers" from="pest">
       <sprite name="a">
-        <bitmap style="sidestepper">
-          <row>................</row>
-          <row>...e........e...</row>
-          <row>...C........C...</row>
-          <row>..cC.CCCCCC.Cc..</row>
-          <row>.cc.CCCCCCCC.cc.</row>
-          <row>.c.CCCCCCCCCC.c.</row>
-          <row>...CCcCCCCcCC...</row>
-          <row>..C.CCCCCCCC.C..</row>
-          <row>.C..C......C..C.</row>
-          <row>C..C........C..C</row>
-        </bitmap>
+        <bitmap from="sidesteppers-a" />
       </sprite>
       <sprite name="b">
-        <bitmap style="sidestepper">
-          <row>................</row>
-          <row>...e........e...</row>
-          <row>...C........C...</row>
-          <row>..cC.CCCCCC.Cc..</row>
-          <row>.cc.CCCCCCCC.cc.</row>
-          <row>.c.CCCCCCCCCC.c.</row>
-          <row>...CCcCCCCcCC...</row>
-          <row>...CCCCCCCCCC...</row>
-          <row>..C.C......C.C..</row>
-          <row>.C..C......C..C.</row>
-        </bitmap>
+        <bitmap from="sidesteppers-b" />
       </sprite>
       <sprite name="ma">
-        <bitmap style="sidestepper">
-          <row>.cc..........cc.</row>
-          <row>.c.e........e.c.</row>
-          <row>.c.C........C.c.</row>
-          <row>..cC.CCCCCC.Cc..</row>
-          <row>....CCCCCCCC....</row>
-          <row>...CCCCCCCCCC...</row>
-          <row>...CCeCCCCeCC...</row>
-          <row>..C.CCCCCCCC.C..</row>
-          <row>.C..C......C..C.</row>
-          <row>C..C........C..C</row>
-        </bitmap>
+        <bitmap from="sidesteppers-ma" />
       </sprite>
       <sprite name="mb">
-        <bitmap style="sidestepper">
-          <row>.cc..........cc.</row>
-          <row>.c.e........e.c.</row>
-          <row>.c.C........C.c.</row>
-          <row>..cC.CCCCCC.Cc..</row>
-          <row>....CCCCCCCC....</row>
-          <row>...CCCCCCCCCC...</row>
-          <row>...CCeCCCCeCC...</row>
-          <row>...CCCCCCCCCC...</row>
-          <row>..C.C......C.C..</row>
-          <row>.C..C......C..C.</row>
-        </bitmap>
+        <bitmap from="sidesteppers-mb" />
       </sprite>
       <sprite name="fa">
-        <bitmap style="sidestepper">
-          <row>................</row>
-          <row>C..C........C..C</row>
-          <row>.C..C......C..C.</row>
-          <row>..C.CCCCCCCC.C..</row>
-          <row>...CCcCCCCcCC...</row>
-          <row>...CCCCCCCCCC...</row>
-          <row>.c..CCCCCCCC..c.</row>
-          <row>.cc..CCCCCC..cc.</row>
-          <row>..cC........Cc..</row>
-          <row>...e........e...</row>
-        </bitmap>
+        <bitmap from="sidesteppers-fa" />
       </sprite>
       <sprite name="fb">
-        <bitmap style="sidestepper">
-          <row>................</row>
-          <row>.C..C......C..C.</row>
-          <row>..C.C......C.C..</row>
-          <row>...CCCCCCCCCC...</row>
-          <row>...CCcCCCCcCC...</row>
-          <row>...CCCCCCCCCC...</row>
-          <row>.c..CCCCCCCC..c.</row>
-          <row>.cc..CCCCCC..cc.</row>
-          <row>..cC........Cc..</row>
-          <row>...e........e...</row>
-        </bitmap>
+        <bitmap from="sidesteppers-fb" />
       </sprite>
       <animation name="mad">
         <interval>0.1</interval>
@@ -770,60 +470,16 @@
          hops, standing on a floor -->
     <group name="fighterflies" from="pest">
       <sprite name="a">
-        <bitmap style="fly">
-          <row>..ff........ff..</row>
-          <row>.ffff......ffff.</row>
-          <row>.fffff.FF.fffff.</row>
-          <row>..ffffFFFFffff..</row>
-          <row>.....FFeeFF.....</row>
-          <row>.....FFFFFF.....</row>
-          <row>......FFFF......</row>
-          <row>.....F.FF.F.....</row>
-          <row>....F..FF..F....</row>
-          <row>...F...FF...F...</row>
-        </bitmap>
+        <bitmap from="fighterflies-a" />
       </sprite>
       <sprite name="b">
-        <bitmap style="fly">
-          <row>................</row>
-          <row>................</row>
-          <row>.......FF.......</row>
-          <row>......FFFF......</row>
-          <row>..fffFFeeFFfff..</row>
-          <row>.ffffFFFFFFffff.</row>
-          <row>.fffffFFFFfffff.</row>
-          <row>..ff.F.FF.F.ff..</row>
-          <row>....F..FF..F....</row>
-          <row>...F...FF...F...</row>
-        </bitmap>
+        <bitmap from="fighterflies-b" />
       </sprite>
       <sprite name="fa">
-        <bitmap style="fly">
-          <row>...F...FF...F...</row>
-          <row>....F..FF..F....</row>
-          <row>.....F.FF.F.....</row>
-          <row>......FFFF......</row>
-          <row>.....FFFFFF.....</row>
-          <row>.....FFeeFF.....</row>
-          <row>..ffffFFFFffff..</row>
-          <row>.fffff.FF.fffff.</row>
-          <row>.ffff......ffff.</row>
-          <row>..ff........ff..</row>
-        </bitmap>
+        <bitmap from="fighterflies-fa" />
       </sprite>
       <sprite name="fb">
-        <bitmap style="fly">
-          <row>....F..FF..F....</row>
-          <row>...F...FF...F...</row>
-          <row>.....F.FF.F.....</row>
-          <row>......FFFF......</row>
-          <row>.....FFFFFF.....</row>
-          <row>.....FFeeFF.....</row>
-          <row>..ffffFFFFffff..</row>
-          <row>.fffff.FF.fffff.</row>
-          <row>.ffff......ffff.</row>
-          <row>..ff........ff..</row>
-        </bitmap>
+        <bitmap from="fighterflies-fb" />
       </sprite>
       <collisions>
         <!-- bumped from below through a floor, a little hop: on its feet
@@ -858,30 +514,10 @@
          floors like a pest, into a pipe at the bottom and gone -->
     <object name="coin" class="coin">
       <sprite name="a">
-        <bitmap style="coin">
-          <row>..yyyy..</row>
-          <row>.yYYYYy.</row>
-          <row>yYYyyYYy</row>
-          <row>yYyYYyYy</row>
-          <row>yYyYYyYy</row>
-          <row>yYyYYyYy</row>
-          <row>yYYyyYYy</row>
-          <row>.yYYYYy.</row>
-          <row>..yyyy..</row>
-        </bitmap>
+        <bitmap from="coin-a" />
       </sprite>
       <sprite name="b">
-        <bitmap style="coin">
-          <row>...yy...</row>
-          <row>..yYYy..</row>
-          <row>..yYYy..</row>
-          <row>..yYYy..</row>
-          <row>..yYYy..</row>
-          <row>..yYYy..</row>
-          <row>..yYYy..</row>
-          <row>..yYYy..</row>
-          <row>...yy...</row>
-        </bitmap>
+        <bitmap from="coin-b" />
       </sprite>
       <animation name="spinning">
         <interval>0.12</interval>
@@ -994,41 +630,13 @@
           <columns>6</columns>
           <rows>1</rows>
           <sprite>
-            <bitmap>
-              <row>****************</row>
-              <row>***.*******.****</row>
-              <row>****************</row>
-              <row>.*******.*******</row>
-              <row>****************</row>
-              <row>**.*****.****.**</row>
-              <row>****************</row>
-              <row>.*.*.*.*.*.*.*.*</row>
-              <color>color.blue</color>
-            </bitmap>
+            <bitmap from="floors" />
           </sprite>
           <collisions />
           <group name="ground">
             <columns>16</columns>
             <sprite>
-              <bitmap>
-                <row>****************</row>
-                <row>****.*******.***</row>
-                <row>****.*******.***</row>
-                <row>****************</row>
-                <row>********.*******</row>
-                <row>********.*******</row>
-                <row>****************</row>
-                <row>****************</row>
-                <row>**.*******.*****</row>
-                <row>**.*******.*****</row>
-                <row>****************</row>
-                <row>****************</row>
-                <row>******.*******.*</row>
-                <row>******.*******.*</row>
-                <row>****************</row>
-                <row>****************</row>
-                <color>color.orange</color>
-              </bitmap>
+              <bitmap from="ground" />
             </sprite>
             <position><x>0</x><y>ground</y></position>
           </group>
@@ -1061,49 +669,13 @@
              it shrinks with each bump, and is gone after three -->
         <object name="pow" class="pow">
           <sprite name="three">
-            <bitmap style="pow">
-              <row>bbbbbbbbbbbbbbbb</row>
-              <row>b**************b</row>
-              <row>b**************b</row>
-              <row>b**************b</row>
-              <row>b**************b</row>
-              <row>b*www*www*w***wb</row>
-              <row>b*w*w*w*w*w***wb</row>
-              <row>b*www*w*w*w*w*wb</row>
-              <row>b*w***w*w*w*w*wb</row>
-              <row>b*w***www**w*w*b</row>
-              <row>b**************b</row>
-              <row>b**************b</row>
-              <row>b**************b</row>
-              <row>b**************b</row>
-              <row>b**************b</row>
-              <row>bbbbbbbbbbbbbbbb</row>
-            </bitmap>
+            <bitmap from="pow-three" />
           </sprite>
           <sprite name="two">
-            <bitmap style="pow">
-              <row>bbbbbbbbbbbbbbbb</row>
-              <row>b**************b</row>
-              <row>b**************b</row>
-              <row>b*www*www*w***wb</row>
-              <row>b*w*w*w*w*w***wb</row>
-              <row>b*www*w*w*w*w*wb</row>
-              <row>b*w***w*w*w*w*wb</row>
-              <row>b*w***www**w*w*b</row>
-              <row>b**************b</row>
-              <row>b**************b</row>
-              <row>bbbbbbbbbbbbbbbb</row>
-            </bitmap>
+            <bitmap from="pow-two" />
           </sprite>
           <sprite name="one">
-            <bitmap style="pow">
-              <row>bbbbbbbbbbbbbbbb</row>
-              <row>b*www*www*w***wb</row>
-              <row>b*www*w*w*w*w*wb</row>
-              <row>b*w***www**w*w*b</row>
-              <row>b**************b</row>
-              <row>bbbbbbbbbbbbbbbb</row>
-            </bitmap>
+            <bitmap from="pow-one" />
           </sprite>
           <position><x>window.width.center - 8</x><y>low</y></position>
           <collisions>
@@ -1125,26 +697,7 @@
              out of, two at the bottom they go into -->
         <group name="pipes">
           <sprite>
-            <bitmap>
-              <row>..................gggggg</row>
-              <row>..................gGGGGg</row>
-              <row>..................gGGGGg</row>
-              <row>gggggggggggggggggggGGGGg</row>
-              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
-              <row>gggggggggggggggggggGGGGg</row>
-              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
-              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
-              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
-              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
-              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
-              <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
-              <row>gggggggggggggggggggGGGGg</row>
-              <row>..................gGGGGg</row>
-              <row>..................gGGGGg</row>
-              <row>..................gggggg</row>
-              <color char="g">color.green</color>
-              <color char="G">color.darkgreen</color>
-            </bitmap>
+            <bitmap from="pipes" />
           </sprite>
           <group name="spouts">
             <position><y>top - 16</y></position>
@@ -1295,30 +848,10 @@
             </object>
             <group name="coins" class="coin">
               <sprite name="a">
-                <bitmap style="coin">
-                  <row>..yyyy..</row>
-                  <row>.yYYYYy.</row>
-                  <row>yYYyyYYy</row>
-                  <row>yYyYYyYy</row>
-                  <row>yYyYYyYy</row>
-                  <row>yYyYYyYy</row>
-                  <row>yYYyyYYy</row>
-                  <row>.yYYYYy.</row>
-                  <row>..yyyy..</row>
-                </bitmap>
+                <bitmap from="coin-a" />
               </sprite>
               <sprite name="b">
-                <bitmap style="coin">
-                  <row>...yy...</row>
-                  <row>..yYYy..</row>
-                  <row>..yYYy..</row>
-                  <row>..yYYy..</row>
-                  <row>..yYYy..</row>
-                  <row>..yYYy..</row>
-                  <row>..yYYy..</row>
-                  <row>..yYYy..</row>
-                  <row>...yy...</row>
-                </bitmap>
+                <bitmap from="coin-b" />
               </sprite>
               <animation name="spinning">
                 <interval>0.12</interval>
@@ -1536,4 +1069,482 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <!-- the arcade's start: the opening of Eine kleine Nachtmusik -->
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G5">0.24</note>
+      <rest>0.06</rest>
+      <note pitch="D5">0.12</note>
+      <note pitch="G5">0.24</note>
+      <rest>0.06</rest>
+      <note pitch="D5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="D5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="B5">0.12</note>
+      <note pitch="D6">0.36</note>
+    </sound>
+    <sound name="jump" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C5" to="C6">0.12</note>
+    </sound>
+    <sound name="bump" wave="square">
+      <volume>0.3</volume>
+      <note pitch="C3">0.06</note>
+    </sound>
+    <sound name="flip" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G5" to="G4">0.15</note>
+    </sound>
+    <sound name="kick" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.06</note>
+      <note pitch="E5">0.06</note>
+      <note pitch="G5">0.06</note>
+      <note pitch="C6">0.12</note>
+    </sound>
+    <sound name="pow" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="400" to="40">0.4</note>
+    </sound>
+    <sound name="hit">
+      <volume>0.3</volume>
+      <part wave="square">
+        <note pitch="C5">0.1</note>
+        <note pitch="G4">0.1</note>
+        <note pitch="E4">0.1</note>
+        <note pitch="C4">0.3</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="E4" to="E2">0.6</note>
+      </part>
+    </sound>
+    <sound name="coin" wave="square">
+      <volume>0.15</volume>
+      <note pitch="B5">0.05</note>
+      <note pitch="E6">0.15</note>
+    </sound>
+    <sound name="mad" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C4" to="C5">0.1</note>
+      <note pitch="C4" to="C5">0.1</note>
+    </sound>
+    <sound name="phase" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="brother-stand" style="mario">
+      <row>...rrrrr....</row>
+      <row>..rrrrrrrrr.</row>
+      <row>..kkksskk...</row>
+      <row>.ksksssskss.</row>
+      <row>.kskksssksss</row>
+      <row>.kksssskkkk.</row>
+      <row>...ssssss...</row>
+      <row>..rrbrrr....</row>
+      <row>.rrrbrrbrrr.</row>
+      <row>rrrrbbbbrrrr</row>
+      <row>ssrbybbybrss</row>
+      <row>sssbbbbbbsss</row>
+      <row>ssbbbbbbbbss</row>
+      <row>..bbb..bbb..</row>
+      <row>.kkk....kkk.</row>
+      <row>kkkk....kkkk</row>
+    </bitmap>
+    <bitmap name="brother-stepa" style="mario">
+      <row>...rrrrr....</row>
+      <row>..rrrrrrrrr.</row>
+      <row>..kkksskk...</row>
+      <row>.ksksssskss.</row>
+      <row>.kskksssksss</row>
+      <row>.kksssskkkk.</row>
+      <row>...ssssss...</row>
+      <row>..rrbrrr....</row>
+      <row>.rrrbrrbrr..</row>
+      <row>.rrrbbbbrrs.</row>
+      <row>.ssbybbybss.</row>
+      <row>.ssbbbbbbss.</row>
+      <row>..bbbbbbbb..</row>
+      <row>.bbb....bbb.</row>
+      <row>kkk......kkk</row>
+      <row>kk........kk</row>
+    </bitmap>
+    <bitmap name="brother-stepb" style="mario">
+      <row>...rrrrr....</row>
+      <row>..rrrrrrrrr.</row>
+      <row>..kkksskk...</row>
+      <row>.ksksssskss.</row>
+      <row>.kskksssksss</row>
+      <row>.kksssskkkk.</row>
+      <row>...ssssss...</row>
+      <row>...rrbrr....</row>
+      <row>..rrrbbrr...</row>
+      <row>..rrbbbbrr..</row>
+      <row>..sbybbybs..</row>
+      <row>..sbbbbbbs..</row>
+      <row>...bbbbbb...</row>
+      <row>....bbbb....</row>
+      <row>...kkkkkk...</row>
+      <row>...kkkkkk...</row>
+    </bitmap>
+    <bitmap name="brother-stepc" style="mario">
+      <row>...rrrrr....</row>
+      <row>..rrrrrrrrr.</row>
+      <row>..kkksskk...</row>
+      <row>.ksksssskss.</row>
+      <row>.kskksssksss</row>
+      <row>.kksssskkkk.</row>
+      <row>...ssssss...</row>
+      <row>..rrbrrr....</row>
+      <row>.rrrbrrbrr..</row>
+      <row>rrrrbbbbrs..</row>
+      <row>ssrbybbybs..</row>
+      <row>ssbbbbbbbb..</row>
+      <row>..bbbbbbbbk.</row>
+      <row>..bbb..kkkk.</row>
+      <row>.kkkk..kkk..</row>
+      <row>.kkk........</row>
+    </bitmap>
+    <bitmap name="brother-skid" style="mario">
+      <row>...rrrrr....</row>
+      <row>..rrrrrrrrr.</row>
+      <row>..kkksskk...</row>
+      <row>.ksksssskss.</row>
+      <row>.kskksssksss</row>
+      <row>.kksssskkkk.</row>
+      <row>...ssssss...</row>
+      <row>...rrbrrr...</row>
+      <row>..rrrbbrrrr.</row>
+      <row>..rrbbbbrrss</row>
+      <row>...bybbybsss</row>
+      <row>..bbbbbbbbss</row>
+      <row>.bbbbbbbbb..</row>
+      <row>kbbbb..bbb..</row>
+      <row>kkk....kkkk.</row>
+      <row>kk.....kkkkk</row>
+    </bitmap>
+    <bitmap name="brother-rising" style="mario">
+      <row>...rrrrr..s.</row>
+      <row>..rrrrrrrrs.</row>
+      <row>..kkksskk.r.</row>
+      <row>.ksksssskrr.</row>
+      <row>.kskksssksss</row>
+      <row>.kksssskkkk.</row>
+      <row>...ssssssr..</row>
+      <row>..rrbrrrr...</row>
+      <row>.rrrbbrr....</row>
+      <row>rrrrbbbb....</row>
+      <row>ssrbybbyb...</row>
+      <row>sssbbbbbbb..</row>
+      <row>ssbbbbbbbbk.</row>
+      <row>..bbbb.bbkk.</row>
+      <row>.kkk....kkk.</row>
+      <row>kkk.........</row>
+    </bitmap>
+    <bitmap name="brother-falling" style="mario">
+      <row>...rrrrr....</row>
+      <row>..rrrrrrrrr.</row>
+      <row>..kkksskk...</row>
+      <row>.ksksssskss.</row>
+      <row>.kskksssksss</row>
+      <row>.kksssskkkk.</row>
+      <row>...ssssss...</row>
+      <row>s.rrbrrr..s.</row>
+      <row>srrrbrrbrrs.</row>
+      <row>.rrrbbbbrr..</row>
+      <row>..rbybbybr..</row>
+      <row>..bbbbbbbb..</row>
+      <row>.bbbbbbbbbb.</row>
+      <row>.bbb....bbb.</row>
+      <row>kkk......kkk</row>
+      <row>kk........kk</row>
+    </bitmap>
+    <bitmap name="pest-a" style="creeper">
+      <row>......GGGG......</row>
+      <row>....GGgGGgGG....</row>
+      <row>...GgggGGgggG...</row>
+      <row>..GGGGGGGGGGGG..</row>
+      <row>..GgggGGGGgggGoo</row>
+      <row>..GGGGGGGGGGGGow</row>
+      <row>...wwwwwwwwwwwoo</row>
+      <row>....oo....oooo..</row>
+      <row>...ooo.....ooo..</row>
+      <row>...oo.......oo..</row>
+    </bitmap>
+    <bitmap name="pest-b" style="creeper">
+      <row>......GGGG......</row>
+      <row>....GGgGGgGG....</row>
+      <row>...GgggGGgggG...</row>
+      <row>..GGGGGGGGGGGG..</row>
+      <row>..GgggGGGGgggGoo</row>
+      <row>..GGGGGGGGGGGGow</row>
+      <row>...wwwwwwwwwwwoo</row>
+      <row>.....oooo.ooo...</row>
+      <row>.....ooo..ooo...</row>
+      <row>......oo...oo...</row>
+    </bitmap>
+    <bitmap name="pest-fa" style="creeper">
+      <row>................</row>
+      <row>...o..o..o..o...</row>
+      <row>...o..o..o..o...</row>
+      <row>..wwwwwwwwwwww..</row>
+      <row>.GGGGGGGGGGGGGG.</row>
+      <row>.GgggGGGGGgggGG.</row>
+      <row>.GGGGGGGGGGGGGG.</row>
+      <row>..GGgggGGgggGG..</row>
+      <row>...GGGGGGGGGG...</row>
+      <row>.....GGGGGG.....</row>
+    </bitmap>
+    <bitmap name="pest-fb" style="creeper">
+      <row>................</row>
+      <row>....o..o..o..o..</row>
+      <row>..o..o..o..o....</row>
+      <row>..wwwwwwwwwwww..</row>
+      <row>.GGGGGGGGGGGGGG.</row>
+      <row>.GgggGGGGGgggGG.</row>
+      <row>.GGGGGGGGGGGGGG.</row>
+      <row>..GGgggGGgggGG..</row>
+      <row>...GGGGGGGGGG...</row>
+      <row>.....GGGGGG.....</row>
+    </bitmap>
+    <bitmap name="sidesteppers-a" style="sidestepper">
+      <row>................</row>
+      <row>...e........e...</row>
+      <row>...C........C...</row>
+      <row>..cC.CCCCCC.Cc..</row>
+      <row>.cc.CCCCCCCC.cc.</row>
+      <row>.c.CCCCCCCCCC.c.</row>
+      <row>...CCcCCCCcCC...</row>
+      <row>..C.CCCCCCCC.C..</row>
+      <row>.C..C......C..C.</row>
+      <row>C..C........C..C</row>
+    </bitmap>
+    <bitmap name="sidesteppers-b" style="sidestepper">
+      <row>................</row>
+      <row>...e........e...</row>
+      <row>...C........C...</row>
+      <row>..cC.CCCCCC.Cc..</row>
+      <row>.cc.CCCCCCCC.cc.</row>
+      <row>.c.CCCCCCCCCC.c.</row>
+      <row>...CCcCCCCcCC...</row>
+      <row>...CCCCCCCCCC...</row>
+      <row>..C.C......C.C..</row>
+      <row>.C..C......C..C.</row>
+    </bitmap>
+    <bitmap name="sidesteppers-ma" style="sidestepper">
+      <row>.cc..........cc.</row>
+      <row>.c.e........e.c.</row>
+      <row>.c.C........C.c.</row>
+      <row>..cC.CCCCCC.Cc..</row>
+      <row>....CCCCCCCC....</row>
+      <row>...CCCCCCCCCC...</row>
+      <row>...CCeCCCCeCC...</row>
+      <row>..C.CCCCCCCC.C..</row>
+      <row>.C..C......C..C.</row>
+      <row>C..C........C..C</row>
+    </bitmap>
+    <bitmap name="sidesteppers-mb" style="sidestepper">
+      <row>.cc..........cc.</row>
+      <row>.c.e........e.c.</row>
+      <row>.c.C........C.c.</row>
+      <row>..cC.CCCCCC.Cc..</row>
+      <row>....CCCCCCCC....</row>
+      <row>...CCCCCCCCCC...</row>
+      <row>...CCeCCCCeCC...</row>
+      <row>...CCCCCCCCCC...</row>
+      <row>..C.C......C.C..</row>
+      <row>.C..C......C..C.</row>
+    </bitmap>
+    <bitmap name="sidesteppers-fa" style="sidestepper">
+      <row>................</row>
+      <row>C..C........C..C</row>
+      <row>.C..C......C..C.</row>
+      <row>..C.CCCCCCCC.C..</row>
+      <row>...CCcCCCCcCC...</row>
+      <row>...CCCCCCCCCC...</row>
+      <row>.c..CCCCCCCC..c.</row>
+      <row>.cc..CCCCCC..cc.</row>
+      <row>..cC........Cc..</row>
+      <row>...e........e...</row>
+    </bitmap>
+    <bitmap name="sidesteppers-fb" style="sidestepper">
+      <row>................</row>
+      <row>.C..C......C..C.</row>
+      <row>..C.C......C.C..</row>
+      <row>...CCCCCCCCCC...</row>
+      <row>...CCcCCCCcCC...</row>
+      <row>...CCCCCCCCCC...</row>
+      <row>.c..CCCCCCCC..c.</row>
+      <row>.cc..CCCCCC..cc.</row>
+      <row>..cC........Cc..</row>
+      <row>...e........e...</row>
+    </bitmap>
+    <bitmap name="fighterflies-a" style="fly">
+      <row>..ff........ff..</row>
+      <row>.ffff......ffff.</row>
+      <row>.fffff.FF.fffff.</row>
+      <row>..ffffFFFFffff..</row>
+      <row>.....FFeeFF.....</row>
+      <row>.....FFFFFF.....</row>
+      <row>......FFFF......</row>
+      <row>.....F.FF.F.....</row>
+      <row>....F..FF..F....</row>
+      <row>...F...FF...F...</row>
+    </bitmap>
+    <bitmap name="fighterflies-b" style="fly">
+      <row>................</row>
+      <row>................</row>
+      <row>.......FF.......</row>
+      <row>......FFFF......</row>
+      <row>..fffFFeeFFfff..</row>
+      <row>.ffffFFFFFFffff.</row>
+      <row>.fffffFFFFfffff.</row>
+      <row>..ff.F.FF.F.ff..</row>
+      <row>....F..FF..F....</row>
+      <row>...F...FF...F...</row>
+    </bitmap>
+    <bitmap name="fighterflies-fa" style="fly">
+      <row>...F...FF...F...</row>
+      <row>....F..FF..F....</row>
+      <row>.....F.FF.F.....</row>
+      <row>......FFFF......</row>
+      <row>.....FFFFFF.....</row>
+      <row>.....FFeeFF.....</row>
+      <row>..ffffFFFFffff..</row>
+      <row>.fffff.FF.fffff.</row>
+      <row>.ffff......ffff.</row>
+      <row>..ff........ff..</row>
+    </bitmap>
+    <bitmap name="fighterflies-fb" style="fly">
+      <row>....F..FF..F....</row>
+      <row>...F...FF...F...</row>
+      <row>.....F.FF.F.....</row>
+      <row>......FFFF......</row>
+      <row>.....FFFFFF.....</row>
+      <row>.....FFeeFF.....</row>
+      <row>..ffffFFFFffff..</row>
+      <row>.fffff.FF.fffff.</row>
+      <row>.ffff......ffff.</row>
+      <row>..ff........ff..</row>
+    </bitmap>
+    <bitmap name="coin-a" style="coin">
+      <row>..yyyy..</row>
+      <row>.yYYYYy.</row>
+      <row>yYYyyYYy</row>
+      <row>yYyYYyYy</row>
+      <row>yYyYYyYy</row>
+      <row>yYyYYyYy</row>
+      <row>yYYyyYYy</row>
+      <row>.yYYYYy.</row>
+      <row>..yyyy..</row>
+    </bitmap>
+    <bitmap name="coin-b" style="coin">
+      <row>...yy...</row>
+      <row>..yYYy..</row>
+      <row>..yYYy..</row>
+      <row>..yYYy..</row>
+      <row>..yYYy..</row>
+      <row>..yYYy..</row>
+      <row>..yYYy..</row>
+      <row>..yYYy..</row>
+      <row>...yy...</row>
+    </bitmap>
+    <bitmap name="floors">
+      <row>****************</row>
+      <row>***.*******.****</row>
+      <row>****************</row>
+      <row>.*******.*******</row>
+      <row>****************</row>
+      <row>**.*****.****.**</row>
+      <row>****************</row>
+      <row>.*.*.*.*.*.*.*.*</row>
+      <color>color.blue</color>
+    </bitmap>
+    <bitmap name="ground">
+      <row>****************</row>
+      <row>****.*******.***</row>
+      <row>****.*******.***</row>
+      <row>****************</row>
+      <row>********.*******</row>
+      <row>********.*******</row>
+      <row>****************</row>
+      <row>****************</row>
+      <row>**.*******.*****</row>
+      <row>**.*******.*****</row>
+      <row>****************</row>
+      <row>****************</row>
+      <row>******.*******.*</row>
+      <row>******.*******.*</row>
+      <row>****************</row>
+      <row>****************</row>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="pow-three" style="pow">
+      <row>bbbbbbbbbbbbbbbb</row>
+      <row>b**************b</row>
+      <row>b**************b</row>
+      <row>b**************b</row>
+      <row>b**************b</row>
+      <row>b*www*www*w***wb</row>
+      <row>b*w*w*w*w*w***wb</row>
+      <row>b*www*w*w*w*w*wb</row>
+      <row>b*w***w*w*w*w*wb</row>
+      <row>b*w***www**w*w*b</row>
+      <row>b**************b</row>
+      <row>b**************b</row>
+      <row>b**************b</row>
+      <row>b**************b</row>
+      <row>b**************b</row>
+      <row>bbbbbbbbbbbbbbbb</row>
+    </bitmap>
+    <bitmap name="pow-two" style="pow">
+      <row>bbbbbbbbbbbbbbbb</row>
+      <row>b**************b</row>
+      <row>b**************b</row>
+      <row>b*www*www*w***wb</row>
+      <row>b*w*w*w*w*w***wb</row>
+      <row>b*www*w*w*w*w*wb</row>
+      <row>b*w***w*w*w*w*wb</row>
+      <row>b*w***www**w*w*b</row>
+      <row>b**************b</row>
+      <row>b**************b</row>
+      <row>bbbbbbbbbbbbbbbb</row>
+    </bitmap>
+    <bitmap name="pow-one" style="pow">
+      <row>bbbbbbbbbbbbbbbb</row>
+      <row>b*www*www*w***wb</row>
+      <row>b*www*w*w*w*w*wb</row>
+      <row>b*w***www**w*w*b</row>
+      <row>b**************b</row>
+      <row>bbbbbbbbbbbbbbbb</row>
+    </bitmap>
+    <bitmap name="pipes">
+      <row>..................gggggg</row>
+      <row>..................gGGGGg</row>
+      <row>..................gGGGGg</row>
+      <row>gggggggggggggggggggGGGGg</row>
+      <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+      <row>gggggggggggggggggggGGGGg</row>
+      <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+      <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+      <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+      <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+      <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+      <row>GGGGGGGGGGGGGGGGGggGGGGg</row>
+      <row>gggggggggggggggggggGGGGg</row>
+      <row>..................gGGGGg</row>
+      <row>..................gGGGGg</row>
+      <row>..................gggggg</row>
+      <color char="g">color.green</color>
+      <color char="G">color.darkgreen</color>
+    </bitmap>
+  </pictures>
 </game>

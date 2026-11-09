@@ -52,31 +52,6 @@
     <!-- how high above the sky a missile starts, at most -->
     <variable name="sky">600</variable>
   </variables>
-  <sounds>
-    <sound name="launch" wave="noise">
-      <volume>0.2</volume>
-      <note pitch="400" to="2500">0.25</note>
-    </sound>
-    <sound name="burst" wave="noise">
-      <volume>0.35</volume>
-      <note pitch="3000" to="200">0.6</note>
-    </sound>
-    <sound name="city" wave="noise">
-      <volume>0.45</volume>
-      <note pitch="800" to="60">0.9</note>
-    </sound>
-    <sound name="wave" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G4">0.1</note>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.2</note>
-    </sound>
-    <sound name="theend" wave="sawtooth">
-      <volume>0.3</volume>
-      <note pitch="C4" to="C2">1.5</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.red</color></style>
     <style name="prompt"><size>40</size><color>color.white</color></style>
@@ -126,51 +101,13 @@
     <!-- a burst: a fireball that swells, flashes and shrinks, then is gone -->
     <object name="burst" class="burst">
       <sprite name="small">
-        <bitmap>
-          <row>.........</row>
-          <row>.........</row>
-          <row>.........</row>
-          <row>...***...</row>
-          <row>...***...</row>
-          <row>...***...</row>
-          <row>.........</row>
-          <row>.........</row>
-          <row>.........</row>
-          <scale>6</scale>
-          <color>color.white</color>
-        </bitmap>
+        <bitmap from="burst-small" />
       </sprite>
       <sprite name="middle">
-        <bitmap>
-          <row>.........</row>
-          <row>...***...</row>
-          <row>..*****..</row>
-          <row>.***o***.</row>
-          <row>.**ooo**.</row>
-          <row>.***o***.</row>
-          <row>..*****..</row>
-          <row>...***...</row>
-          <row>.........</row>
-          <scale>6</scale>
-          <color>color.orange</color>
-          <color char="o">color.yellow</color>
-        </bitmap>
+        <bitmap from="burst-middle" />
       </sprite>
       <sprite name="full">
-        <bitmap>
-          <row>...***...</row>
-          <row>.*******.</row>
-          <row>.**ooo**.</row>
-          <row>**ooooo**</row>
-          <row>**ooooo**</row>
-          <row>**ooooo**</row>
-          <row>.**ooo**.</row>
-          <row>.*******.</row>
-          <row>...***...</row>
-          <scale>6</scale>
-          <color>color.red</color>
-          <color char="o">color.magenta</color>
-        </bitmap>
+        <bitmap from="burst-full" />
       </sprite>
       <animation>
         <interval>0.15</interval>
@@ -227,17 +164,7 @@
         <!-- six cities, three either side of the base -->
         <group name="cities" class="city">
           <sprite>
-            <bitmap>
-              <row>....*.........</row>
-              <row>....*....*....</row>
-              <row>.*..**...*..*.</row>
-              <row>.*.***..***.*.</row>
-              <row>**********.***</row>
-              <row>**************</row>
-              <row>**************</row>
-              <scale>2</scale>
-              <color>color.cyan</color>
-            </bitmap>
+            <bitmap from="cities" />
           </sprite>
           <position><y>ground - 14</y></position>
           <collisions>
@@ -253,14 +180,7 @@
         <!-- the base: always aimed at the sight -->
         <object name="base">
           <sprite>
-            <bitmap>
-              <row>.....**.....</row>
-              <row>.....**.....</row>
-              <row>....****....</row>
-              <row>..********..</row>
-              <row>************</row>
-              <scale>2</scale>
-            </bitmap>
+            <bitmap from="base" />
           </sprite>
           <position><x><centered /></x><y>ground - base.height</y></position>
           <actions>
@@ -280,16 +200,7 @@
         <!-- the sight the player steers -->
         <object name="sight">
           <sprite>
-            <bitmap>
-              <row>...*...</row>
-              <row>...*...</row>
-              <row>.......</row>
-              <row>**...**</row>
-              <row>.......</row>
-              <row>...*...</row>
-              <row>...*...</row>
-              <scale>2</scale>
-            </bitmap>
+            <bitmap from="sight" />
           </sprite>
           <position><x><centered /></x><y><centered /></y></position>
           <collisions>
@@ -432,4 +343,101 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="launch" wave="noise">
+      <volume>0.2</volume>
+      <note pitch="400" to="2500">0.25</note>
+    </sound>
+    <sound name="burst" wave="noise">
+      <volume>0.35</volume>
+      <note pitch="3000" to="200">0.6</note>
+    </sound>
+    <sound name="city" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="800" to="60">0.9</note>
+    </sound>
+    <sound name="wave" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G4">0.1</note>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.2</note>
+    </sound>
+    <sound name="theend" wave="sawtooth">
+      <volume>0.3</volume>
+      <note pitch="C4" to="C2">1.5</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="burst-small">
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>...***...</row>
+      <row>...***...</row>
+      <row>...***...</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>6</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="burst-middle">
+      <row>.........</row>
+      <row>...***...</row>
+      <row>..*****..</row>
+      <row>.***o***.</row>
+      <row>.**ooo**.</row>
+      <row>.***o***.</row>
+      <row>..*****..</row>
+      <row>...***...</row>
+      <row>.........</row>
+      <scale>6</scale>
+      <color>color.orange</color>
+      <color char="o">color.yellow</color>
+    </bitmap>
+    <bitmap name="burst-full">
+      <row>...***...</row>
+      <row>.*******.</row>
+      <row>.**ooo**.</row>
+      <row>**ooooo**</row>
+      <row>**ooooo**</row>
+      <row>**ooooo**</row>
+      <row>.**ooo**.</row>
+      <row>.*******.</row>
+      <row>...***...</row>
+      <scale>6</scale>
+      <color>color.red</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="cities">
+      <row>....*.........</row>
+      <row>....*....*....</row>
+      <row>.*..**...*..*.</row>
+      <row>.*.***..***.*.</row>
+      <row>**********.***</row>
+      <row>**************</row>
+      <row>**************</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="base">
+      <row>.....**.....</row>
+      <row>.....**.....</row>
+      <row>....****....</row>
+      <row>..********..</row>
+      <row>************</row>
+      <scale>2</scale>
+    </bitmap>
+    <bitmap name="sight">
+      <row>...*...</row>
+      <row>...*...</row>
+      <row>.......</row>
+      <row>**...**</row>
+      <row>.......</row>
+      <row>...*...</row>
+      <row>...*...</row>
+      <scale>2</scale>
+    </bitmap>
+  </pictures>
 </game>

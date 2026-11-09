@@ -58,37 +58,6 @@
     <variable name="near">40</variable>
     <variable name="match">260</variable>
   </variables>
-  <sounds>
-    <sound name="strike" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="3000" to="800">0.2</note>
-    </sound>
-    <sound name="found" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="G5">0.12</note>
-    </sound>
-    <sound name="caught" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="A3" to="A2">0.5</note>
-    </sound>
-    <sound name="stairs" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C4">0.06</note>
-      <note pitch="E4">0.06</note>
-      <note pitch="G4">0.06</note>
-    </sound>
-    <sound name="unlock" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G4">0.06</note>
-      <note pitch="G5">0.1</note>
-    </sound>
-    <sound name="wind" wave="noise">
-      <volume>0.25</volume>
-      <note pitch="400" to="1200">0.4</note>
-      <note pitch="1200" to="300">0.5</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>90</size><color>color.orange</color></style>
     <style name="hud"><size>28</size><color>color.lightgrey</color></style>
@@ -98,11 +67,7 @@
     <!-- the tarantula: runs along the halls straight for the eyes -->
     <object name="spider" class="creature">
       <sprite>
-        <bitmap>
-          <row>*.*..*.*</row><row>.******.</row><row>********</row><row>.******.</row><row>*.*..*.*</row>
-          <scale>3</scale>
-          <color>color.orange</color>
-        </bitmap>
+        <bitmap from="spider" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unlit</dark>
@@ -117,11 +82,7 @@
     <!-- the vampire bat: flits about the halls this way and that -->
     <object name="bat" class="creature">
       <sprite>
-        <bitmap>
-          <row>*......*</row><row>**.**.**</row><row>.******.</row><row>...**...</row>
-          <scale>3</scale>
-          <color>color.magenta</color>
-        </bitmap>
+        <bitmap from="bat" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unlit</dark>
@@ -136,10 +97,7 @@
     <!-- the ghost of Zachary Graves: drifts through the walls toward the eyes -->
     <object name="ghost" class="creature">
       <sprite>
-        <bitmap>
-          <row>..****..</row><row>.******.</row><row>**.**.**</row><row>********</row><row>********</row><row>*.*..*.*</row>
-          <scale>3</scale>
-        </bitmap>
+        <bitmap from="ghost" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unlit</dark>
@@ -180,11 +138,7 @@
     <!-- the pieces of the urn, one on each upper floor -->
     <group name="urn" class="urn">
       <sprite>
-        <bitmap>
-          <row>.****.</row><row>******</row><row>.****.</row><row>..**..</row><row>.****.</row>
-          <scale>3</scale>
-          <color>color.yellow</color>
-        </bitmap>
+        <bitmap from="urn" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unseen</dark>
@@ -234,10 +188,7 @@
         <!-- the eyes: always seen, and they light a little round them -->
         <object name="player">
           <sprite>
-            <bitmap>
-              <row>**..**</row><row>*.**.*</row><row>**..**</row>
-              <scale>3</scale>
-            </bitmap>
+            <bitmap from="player" />
           </sprite>
           <position><x>tile + 11</x><y>tile * 12 + 15</y></position>
           <light>near</light>
@@ -334,7 +285,7 @@
               <row>#E     #     #     #</row>
               <row>####################</row>
               <group name="stairs" char="^" class="up">
-                <sprite><bitmap><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="stairs" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
@@ -345,11 +296,7 @@
               <!-- the master key: opens a locked door by touching it -->
               <object name="key" char="k" class="key">
                 <sprite>
-                  <bitmap>
-                    <row>.**.....</row><row>*..*****</row><row>.**..*.*</row>
-                    <scale>3</scale>
-                    <color>color.cyan</color>
-                  </bitmap>
+                  <bitmap from="key" />
                 </sprite>
                 <dark>unseen</dark>
                 <collisions />
@@ -383,12 +330,12 @@
               <row>####################</row>
               <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.blue</color></rectangle></sprite></group>
               <group name="upstairs" char="^" class="up">
-                <sprite><bitmap><row>*...</row><row>**..</row><row>***.</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="upstairs" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
               <group name="downstairs" char="v" class="down">
-                <sprite><bitmap><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="downstairs" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
@@ -424,12 +371,12 @@
               <row>####################</row>
               <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.forestgreen</color></rectangle></sprite></group>
               <group name="upstairs" char="^" class="up">
-                <sprite><bitmap><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="stairs" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
               <group name="downstairs" char="v" class="down">
-                <sprite><bitmap><row>****</row><row>***.</row><row>**..</row><row>*...</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="downstairs2" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
@@ -465,7 +412,7 @@
               <row>####################</row>
               <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.red</color></rectangle></sprite></group>
               <group name="downstairs" char="v" class="down">
-                <sprite><bitmap><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="downstairs" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
@@ -541,4 +488,69 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="strike" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="3000" to="800">0.2</note>
+    </sound>
+    <sound name="found" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="G5">0.12</note>
+    </sound>
+    <sound name="caught" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="A3" to="A2">0.5</note>
+    </sound>
+    <sound name="stairs" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C4">0.06</note>
+      <note pitch="E4">0.06</note>
+      <note pitch="G4">0.06</note>
+    </sound>
+    <sound name="unlock" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G4">0.06</note>
+      <note pitch="G5">0.1</note>
+    </sound>
+    <sound name="wind" wave="noise">
+      <volume>0.25</volume>
+      <note pitch="400" to="1200">0.4</note>
+      <note pitch="1200" to="300">0.5</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="spider">
+      <row>*.*..*.*</row><row>.******.</row><row>********</row><row>.******.</row><row>*.*..*.*</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="bat">
+      <row>*......*</row><row>**.**.**</row><row>.******.</row><row>...**...</row>
+      <scale>3</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="ghost">
+      <row>..****..</row><row>.******.</row><row>**.**.**</row><row>********</row><row>********</row><row>*.*..*.*</row>
+      <scale>3</scale>
+    </bitmap>
+    <bitmap name="urn">
+      <row>.****.</row><row>******</row><row>.****.</row><row>..**..</row><row>.****.</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="player">
+      <row>**..**</row><row>*.**.*</row><row>**..**</row>
+      <scale>3</scale>
+    </bitmap>
+    <bitmap name="stairs"><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap>
+    <bitmap name="key">
+      <row>.**.....</row><row>*..*****</row><row>.**..*.*</row>
+      <scale>3</scale>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="upstairs"><row>*...</row><row>**..</row><row>***.</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap>
+    <bitmap name="downstairs"><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>color.brown</color></bitmap>
+    <bitmap name="downstairs2"><row>****</row><row>***.</row><row>**..</row><row>*...</row><scale>8</scale><color>color.brown</color></bitmap>
+  </pictures>
 </game>

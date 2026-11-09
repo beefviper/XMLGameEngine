@@ -37,23 +37,6 @@
     <variable name="margin">10</variable>
     <variable name="seconds">60</variable>
   </variables>
-  <sounds>
-    <sound name="score" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="E4" to="E5">0.3</note>
-    </sound>
-    <sound name="crash" wave="noise">
-      <volume>0.4</volume>
-      <note pitch="2500" to="200">0.35</note>
-    </sound>
-    <sound name="end">
-      <volume>0.2</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>110</size></style>
     <style name="prompt"><size>40</size></style>
@@ -103,16 +86,7 @@
         </group>
         <group name="rockets" class="rocket">
           <sprite>
-            <bitmap>
-              <row>..*..</row>
-              <row>..*..</row>
-              <row>.***.</row>
-              <row>.***.</row>
-              <row>.***.</row>
-              <row>*****</row>
-              <row>*.*.*</row>
-              <scale>3</scale>
-            </bitmap>
+            <bitmap from="rockets" />
           </sprite>
           <collisions>
             <type>pixel</type>
@@ -206,4 +180,33 @@
       </conditions>
     </state>
   </states>
+  <sounds>
+    <sound name="score" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="E4" to="E5">0.3</note>
+    </sound>
+    <sound name="crash" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="2500" to="200">0.35</note>
+    </sound>
+    <sound name="end">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="rockets">
+      <row>..*..</row>
+      <row>..*..</row>
+      <row>.***.</row>
+      <row>.***.</row>
+      <row>.***.</row>
+      <row>*****</row>
+      <row>*.*.*</row>
+      <scale>3</scale>
+    </bitmap>
+  </pictures>
 </game>

@@ -47,38 +47,6 @@
     <variable name="sway">1</variable>
     <variable name="turnround">6</variable>
   </variables>
-  <sounds>
-    <!-- the low buzz the game makes all the while -->
-    <sound name="hum" wave="noise">
-      <loop />
-      <volume>0.05</volume>
-      <note pitch="90">1</note>
-    </sound>
-    <sound name="nibble" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G5">0.03</note>
-    </sound>
-    <sound name="shoot" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C6" to="C5">0.06</note>
-    </sound>
-    <sound name="cannon" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="900" to="200">0.3</note>
-    </sound>
-    <sound name="swirl" wave="sawtooth">
-      <volume>0.2</volume>
-      <note pitch="C3" to="C6">0.5</note>
-    </sound>
-    <sound name="hit" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5" to="C2">0.4</note>
-    </sound>
-    <sound name="boom" wave="noise">
-      <volume>0.5</volume>
-      <note pitch="2000" to="60">1.5</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>90</size><color>color.green</color></style>
     <style name="help"><size>28</size><color>color.white</color></style>
@@ -96,32 +64,10 @@
     <!-- the Swirl: a spinning Qotile that waits a moment, then flies at where Yar is -->
     <object name="swirl">
       <sprite name="one">
-        <bitmap>
-          <row>..**....</row>
-          <row>...**...</row>
-          <row>*...**.*</row>
-          <row>**.**.**</row>
-          <row>**.**.**</row>
-          <row>*.**...*</row>
-          <row>...**...</row>
-          <row>....**..</row>
-          <scale>3</scale>
-          <color>color.magenta</color>
-        </bitmap>
+        <bitmap from="swirl-one" />
       </sprite>
       <sprite name="two">
-        <bitmap>
-          <row>....**..</row>
-          <row>...**...</row>
-          <row>*.**...*</row>
-          <row>**.**.**</row>
-          <row>**.**.**</row>
-          <row>*...**.*</row>
-          <row>...**...</row>
-          <row>..**....</row>
-          <scale>3</scale>
-          <color>color.magenta</color>
-        </bitmap>
+        <bitmap from="swirl-two" />
       </sprite>
       <animation>
         <interval>0.06</interval>
@@ -174,18 +120,10 @@
           <columns>1</columns>
           <rows>10</rows>
           <sprite name="a">
-            <bitmap style="zone">
-              <row>rbgm</row>
-              <row>gmrb</row>
-              <row>bryg</row>
-            </bitmap>
+            <bitmap from="zone-a" />
           </sprite>
           <sprite name="b">
-            <bitmap style="zone">
-              <row>ygbr</row>
-              <row>rbmg</row>
-              <row>gmrb</row>
-            </bitmap>
+            <bitmap from="zone-b" />
           </sprite>
           <animation>
             <interval>0.05</interval>
@@ -250,16 +188,7 @@
           </group>
           <object name="qotile" char="Q">
             <sprite>
-              <bitmap>
-                <row>..****..</row>
-                <row>.******.</row>
-                <row>**.**.**</row>
-                <row>********</row>
-                <row>.*.**.*.</row>
-                <row>*......*</row>
-                <scale>4</scale>
-                <color>color.red</color>
-              </bitmap>
+              <bitmap from="qotile" />
             </sprite>
             <velocity><x>0</x><y>sway</y></velocity>
             <collisions>
@@ -281,34 +210,10 @@
         </map>
         <object name="yar">
           <sprite name="up">
-            <bitmap>
-              <row>**....**</row>
-              <row>.**..**.</row>
-              <row>..****..</row>
-              <row>.*****o.</row>
-              <row>..****..</row>
-              <row>...**...</row>
-              <row>..*..*..</row>
-              <row>........</row>
-              <scale>3</scale>
-              <color>color.green</color>
-              <color char="o">color.white</color>
-            </bitmap>
+            <bitmap from="yar-up" />
           </sprite>
           <sprite name="down">
-            <bitmap>
-              <row>........</row>
-              <row>........</row>
-              <row>..****..</row>
-              <row>******o*</row>
-              <row>..****..</row>
-              <row>.**..**.</row>
-              <row>**....**</row>
-              <row>........</row>
-              <scale>3</scale>
-              <color>color.green</color>
-              <color char="o">color.white</color>
-            </bitmap>
+            <bitmap from="yar-down" />
           </sprite>
           <animation>
             <interval>0.08</interval>
@@ -369,14 +274,7 @@
         <!-- the Zorlon cannon at the left edge, level with Yar while it is there -->
         <object name="cannon">
           <sprite>
-            <bitmap>
-              <row>****....</row>
-              <row>********</row>
-              <row>********</row>
-              <row>****....</row>
-              <scale>4</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="cannon" />
           </sprite>
           <position><x>0</x><y>292</y></position>
           <facing>right</facing>
@@ -487,4 +385,116 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <!-- the low buzz the game makes all the while -->
+    <sound name="hum" wave="noise">
+      <loop />
+      <volume>0.05</volume>
+      <note pitch="90">1</note>
+    </sound>
+    <sound name="nibble" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G5">0.03</note>
+    </sound>
+    <sound name="shoot" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C6" to="C5">0.06</note>
+    </sound>
+    <sound name="cannon" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="900" to="200">0.3</note>
+    </sound>
+    <sound name="swirl" wave="sawtooth">
+      <volume>0.2</volume>
+      <note pitch="C3" to="C6">0.5</note>
+    </sound>
+    <sound name="hit" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5" to="C2">0.4</note>
+    </sound>
+    <sound name="boom" wave="noise">
+      <volume>0.5</volume>
+      <note pitch="2000" to="60">1.5</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="swirl-one">
+      <row>..**....</row>
+      <row>...**...</row>
+      <row>*...**.*</row>
+      <row>**.**.**</row>
+      <row>**.**.**</row>
+      <row>*.**...*</row>
+      <row>...**...</row>
+      <row>....**..</row>
+      <scale>3</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="swirl-two">
+      <row>....**..</row>
+      <row>...**...</row>
+      <row>*.**...*</row>
+      <row>**.**.**</row>
+      <row>**.**.**</row>
+      <row>*...**.*</row>
+      <row>...**...</row>
+      <row>..**....</row>
+      <scale>3</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="zone-a" style="zone">
+      <row>rbgm</row>
+      <row>gmrb</row>
+      <row>bryg</row>
+    </bitmap>
+    <bitmap name="zone-b" style="zone">
+      <row>ygbr</row>
+      <row>rbmg</row>
+      <row>gmrb</row>
+    </bitmap>
+    <bitmap name="qotile">
+      <row>..****..</row>
+      <row>.******.</row>
+      <row>**.**.**</row>
+      <row>********</row>
+      <row>.*.**.*.</row>
+      <row>*......*</row>
+      <scale>4</scale>
+      <color>color.red</color>
+    </bitmap>
+    <bitmap name="yar-up">
+      <row>**....**</row>
+      <row>.**..**.</row>
+      <row>..****..</row>
+      <row>.*****o.</row>
+      <row>..****..</row>
+      <row>...**...</row>
+      <row>..*..*..</row>
+      <row>........</row>
+      <scale>3</scale>
+      <color>color.green</color>
+      <color char="o">color.white</color>
+    </bitmap>
+    <bitmap name="yar-down">
+      <row>........</row>
+      <row>........</row>
+      <row>..****..</row>
+      <row>******o*</row>
+      <row>..****..</row>
+      <row>.**..**.</row>
+      <row>**....**</row>
+      <row>........</row>
+      <scale>3</scale>
+      <color>color.green</color>
+      <color char="o">color.white</color>
+    </bitmap>
+    <bitmap name="cannon">
+      <row>****....</row>
+      <row>********</row>
+      <row>********</row>
+      <row>****....</row>
+      <scale>4</scale>
+      <color>color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

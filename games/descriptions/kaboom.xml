@@ -55,31 +55,6 @@
     <variable name="margin">20</variable>
     <variable name="roof">104</variable>
   </variables>
-  <sounds>
-    <sound name="catch" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5" to="G5">0.05</note>
-    </sound>
-    <sound name="boom" wave="noise">
-      <volume>0.45</volume>
-      <note pitch="3000" to="200">0.6</note>
-      <note pitch="600" to="60">0.6</note>
-    </sound>
-    <sound name="wave" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C4">0.08</note>
-      <note pitch="E4">0.08</note>
-      <note pitch="G4">0.08</note>
-      <note pitch="C5">0.16</note>
-    </sound>
-    <sound name="gameover" wave="square">
-      <volume>0.2</volume>
-      <note pitch="E4">0.2</note>
-      <note pitch="D#4">0.2</note>
-      <note pitch="D4">0.2</note>
-      <note pitch="C#4" to="C3">0.6</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>128</size><color>color.red</color></style>
     <style name="prompt"><size>48</size></style>
@@ -104,26 +79,7 @@
     <!-- the Mad Bomber: black hat, grin and striped convict's shirt -->
     <object name="bomber" class="bomber">
       <sprite>
-        <bitmap>
-          <row>...kkkkkk...</row>
-          <row>...kkkkkk...</row>
-          <row>.kkkkkkkkkk.</row>
-          <row>...ffffff...</row>
-          <row>...fkffkf...</row>
-          <row>...ffffff...</row>
-          <row>...fkkkkf...</row>
-          <row>....ffff....</row>
-          <row>..********..</row>
-          <row>.kkkkkkkkkk.</row>
-          <row>f**********f</row>
-          <row>.kkkkkkkkkk.</row>
-          <row>..********..</row>
-          <row>...kk..kk...</row>
-          <scale>4</scale>
-          <color>color.white</color>
-          <color char="k">color.black</color>
-          <color char="f">color.orange</color>
-        </bitmap>
+        <bitmap from="bomber" />
       </sprite>
       <position><x><centered /></x><y>roof - bomber.height</y></position>
       <velocity><x>pace</x></velocity>
@@ -145,32 +101,10 @@
     <!-- a bomb, there once the bomber drops it: ten at most -->
     <object name="bomb" class="bomb">
       <sprite name="fizz">
-        <bitmap>
-          <row>....y.</row>
-          <row>...o..</row>
-          <row>.kkk..</row>
-          <row>kkkkk.</row>
-          <row>kkkkk.</row>
-          <row>.kkk..</row>
-          <scale>4</scale>
-          <color char="y">color.yellow</color>
-          <color char="o">color.lightgrey</color>
-          <color char="k">color.black</color>
-        </bitmap>
+        <bitmap from="bomb-fizz" />
       </sprite>
       <sprite name="spark">
-        <bitmap>
-          <row>...y.y</row>
-          <row>...oy.</row>
-          <row>.kkk..</row>
-          <row>kkkkk.</row>
-          <row>kkkkk.</row>
-          <row>.kkk..</row>
-          <scale>4</scale>
-          <color char="y">color.red</color>
-          <color char="o">color.lightgrey</color>
-          <color char="k">color.black</color>
-        </bitmap>
+        <bitmap from="bomb-spark" />
       </sprite>
       <animation>
         <interval>0.1</interval>
@@ -232,37 +166,13 @@
         <!-- the buckets: a stack of three, then two, then one -->
         <object name="bucket">
           <sprite name="three">
-            <bitmap style="bucket">
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-              <row>......................</row>
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-              <row>......................</row>
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-            </bitmap>
+            <bitmap from="bucket-three" />
           </sprite>
           <sprite name="two">
-            <bitmap style="bucket">
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-              <row>......................</row>
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-            </bitmap>
+            <bitmap from="bucket-two" />
           </sprite>
           <sprite name="one">
-            <bitmap style="bucket">
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-            </bitmap>
+            <bitmap from="bucket-one" />
           </sprite>
           <position><x><centered /></x><y>420</y></position>
           <collisions>
@@ -454,4 +364,102 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="catch" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5" to="G5">0.05</note>
+    </sound>
+    <sound name="boom" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="3000" to="200">0.6</note>
+      <note pitch="600" to="60">0.6</note>
+    </sound>
+    <sound name="wave" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C4">0.08</note>
+      <note pitch="E4">0.08</note>
+      <note pitch="G4">0.08</note>
+      <note pitch="C5">0.16</note>
+    </sound>
+    <sound name="gameover" wave="square">
+      <volume>0.2</volume>
+      <note pitch="E4">0.2</note>
+      <note pitch="D#4">0.2</note>
+      <note pitch="D4">0.2</note>
+      <note pitch="C#4" to="C3">0.6</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="bomber">
+      <row>...kkkkkk...</row>
+      <row>...kkkkkk...</row>
+      <row>.kkkkkkkkkk.</row>
+      <row>...ffffff...</row>
+      <row>...fkffkf...</row>
+      <row>...ffffff...</row>
+      <row>...fkkkkf...</row>
+      <row>....ffff....</row>
+      <row>..********..</row>
+      <row>.kkkkkkkkkk.</row>
+      <row>f**********f</row>
+      <row>.kkkkkkkkkk.</row>
+      <row>..********..</row>
+      <row>...kk..kk...</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="k">color.black</color>
+      <color char="f">color.orange</color>
+    </bitmap>
+    <bitmap name="bomb-fizz">
+      <row>....y.</row>
+      <row>...o..</row>
+      <row>.kkk..</row>
+      <row>kkkkk.</row>
+      <row>kkkkk.</row>
+      <row>.kkk..</row>
+      <scale>4</scale>
+      <color char="y">color.yellow</color>
+      <color char="o">color.lightgrey</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="bomb-spark">
+      <row>...y.y</row>
+      <row>...oy.</row>
+      <row>.kkk..</row>
+      <row>kkkkk.</row>
+      <row>kkkkk.</row>
+      <row>.kkk..</row>
+      <scale>4</scale>
+      <color char="y">color.red</color>
+      <color char="o">color.lightgrey</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="bucket-three" style="bucket">
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+      <row>......................</row>
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+      <row>......................</row>
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+    </bitmap>
+    <bitmap name="bucket-two" style="bucket">
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+      <row>......................</row>
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+    </bitmap>
+    <bitmap name="bucket-one" style="bucket">
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+    </bitmap>
+  </pictures>
 </game>

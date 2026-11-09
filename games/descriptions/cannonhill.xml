@@ -54,17 +54,6 @@
     <variable name="crater">18</variable>
     <variable name="points">3</variable>
   </variables>
-  <sounds>
-    <sound name="fire" wave="noise"><volume>0.35</volume><note pitch="400" to="100">0.15</note></sound>
-    <sound name="boom" wave="noise"><volume>0.45</volume><note pitch="200" to="40">0.4</note></sound>
-    <sound name="aim"><volume>0.05</volume><note pitch="C6">0.01</note></sound>
-    <sound name="point" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.2</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>90</size><color>color.yellow</color></style>
     <style name="prompt"><size>34</size></style>
@@ -78,20 +67,10 @@
          for a barrel facing right, -1 for one facing left. -->
     <object name="barrel" class="barrel">
       <sprite name="idle">
-        <bitmap>
-          <row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row>
-          <row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row>
-          <scale>2</scale>
-          <color>color.grey</color>
-        </bitmap>
+        <bitmap from="barrel-idle" />
       </sprite>
       <sprite name="ready">
-        <bitmap>
-          <row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row>
-          <row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row>
-          <scale>2</scale>
-          <color>color.yellow</color>
-        </bitmap>
+        <bitmap from="barrel-ready" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <heading>45</heading>
@@ -183,13 +162,7 @@
     <!-- a cannon's body: a dome on the ground -->
     <object name="cannon" class="cannon">
       <sprite>
-        <bitmap>
-          <row>...****...</row>
-          <row>.********.</row>
-          <row>**********</row>
-          <row>**********</row>
-          <scale>2</scale>
-        </bitmap>
+        <bitmap from="cannon" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <collisions />
@@ -281,26 +254,12 @@
 
         <object name="cannon1" from="cannon">
           <sprite>
-            <bitmap>
-              <row>...****...</row>
-              <row>.********.</row>
-              <row>**********</row>
-              <row>**********</row>
-              <scale>2</scale>
-              <color>color.orange</color>
-            </bitmap>
+            <bitmap from="cannon1" />
           </sprite>
         </object>
         <object name="cannon2" from="cannon">
           <sprite>
-            <bitmap>
-              <row>...****...</row>
-              <row>.********.</row>
-              <row>**********</row>
-              <row>**********</row>
-              <scale>2</scale>
-              <color>color.cyan</color>
-            </bitmap>
+            <bitmap from="cannon2" />
           </sprite>
         </object>
         <object name="barrel1" from="barrel" />
@@ -556,4 +515,52 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="fire" wave="noise"><volume>0.35</volume><note pitch="400" to="100">0.15</note></sound>
+    <sound name="boom" wave="noise"><volume>0.45</volume><note pitch="200" to="40">0.4</note></sound>
+    <sound name="aim"><volume>0.05</volume><note pitch="C6">0.01</note></sound>
+    <sound name="point" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.2</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="barrel-idle">
+      <row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row>
+      <row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row>
+      <scale>2</scale>
+      <color>color.grey</color>
+    </bitmap>
+    <bitmap name="barrel-ready">
+      <row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row>
+      <row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="cannon">
+      <row>...****...</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>**********</row>
+      <scale>2</scale>
+    </bitmap>
+    <bitmap name="cannon1">
+      <row>...****...</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>**********</row>
+      <scale>2</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="cannon2">
+      <row>...****...</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>**********</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+    </bitmap>
+  </pictures>
 </game>

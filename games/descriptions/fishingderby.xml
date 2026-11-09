@@ -49,36 +49,6 @@
     <variable name="reel">2.5</variable>
     <variable name="goal">99</variable>
   </variables>
-  <sounds>
-    <sound name="bite" wave="square">
-      <volume>0.2</volume>
-      <note pitch="E5">0.04</note>
-      <note pitch="A5">0.04</note>
-    </sound>
-    <sound name="landed" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5" to="C6">0.2</note>
-    </sound>
-    <sound name="chomp" wave="noise">
-      <volume>0.35</volume>
-      <note pitch="300" to="80">0.25</note>
-    </sound>
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G4">0.1</note>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.2</note>
-    </sound>
-    <sound name="end" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5">0.15</note>
-      <note pitch="G4">0.15</note>
-      <note pitch="E4">0.15</note>
-      <note pitch="C4">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>90</size><color>color.yellow</color></style>
     <style name="prompt"><size>36</size></style>
@@ -144,17 +114,7 @@
         <!-- the two fishermen, each with a score, the right one flipped -->
         <group name="fishermen">
           <sprite>
-            <bitmap>
-              <row>......................**</row><row>....................**..</row><row>..................**....</row><row>.....hhh........**......</row><row>...hhhhhhh....**........</row><row>....ffkff...**..........</row><row>.....fff..**............</row><row>....sssss*..............</row><row>...sssssss..............</row><row>...sss.sss..............</row><row>...ppppppppp............</row><row>..........pp............</row><row>..........pp............</row><row>.........bbb............</row>
-              <scale>4</scale>
-              <color>color.black</color>
-              <color char="h">color.brown</color>
-              <color char="f">color.orange</color>
-              <color char="k">color.black</color>
-              <color char="s">color.green</color>
-              <color char="p">color.darkblue</color>
-              <color char="b">color.darkgrey</color>
-            </bitmap>
+            <bitmap from="fishermen" />
           </sprite>
           <position><y>surface - 64</y></position>
           <variables><variable name="score">0</variable></variables>
@@ -190,11 +150,7 @@
         <!-- the hooks: before the fish, so a hook's rule runs first at a touch -->
         <group name="hooks">
           <sprite>
-            <bitmap>
-              <row>..*</row><row>..*</row><row>*.*</row><row>***</row>
-              <scale>3</scale>
-              <color>color.white</color>
-            </bitmap>
+            <bitmap from="hooks" />
           </sprite>
           <position><y>surface + 40</y></position>
           <collisions>
@@ -219,15 +175,10 @@
 
         <object name="shark">
           <sprite name="right">
-            <bitmap style="shark">
-              <row>..........*.........</row><row>.........**.........</row><row>*.......*******.....</row><row>***.**************..</row><row>****************k***</row><row>***.wwwwwwwwwwwww*..</row><row>*.......**....**....</row>
-            </bitmap>
+            <bitmap from="shark-right" />
           </sprite>
           <sprite name="left">
-            <bitmap style="shark">
-              <row>..........*.........</row><row>.........**.........</row><row>*.......*******.....</row><row>***.**************..</row><row>****************k***</row><row>***.wwwwwwwwwwwww*..</row><row>*.......**....**....</row>
-              <flip>horizontal</flip>
-            </bitmap>
+            <bitmap from="shark-left" />
           </sprite>
           <sprite name="turning">
             <rectangle><width>80</width><height>28</height><color>color.darkgrey</color></rectangle>
@@ -252,21 +203,10 @@
         <!-- six rows of fish, two of each kind, the deeper worth more -->
         <group name="fish" class="fish">
           <sprite name="right">
-            <bitmap>
-              <row>*....****.</row><row>**.******.</row><row>*******k**</row><row>**.*******</row><row>*....****.</row>
-              <scale>4</scale>
-              <color>color.yellow</color>
-              <color char="k">color.black</color>
-            </bitmap>
+            <bitmap from="fish-right" />
           </sprite>
           <sprite name="left">
-            <bitmap>
-              <row>*....****.</row><row>**.******.</row><row>*******k**</row><row>**.*******</row><row>*....****.</row>
-              <scale>4</scale>
-              <color>color.yellow</color>
-              <color char="k">color.black</color>
-              <flip>horizontal</flip>
-            </bitmap>
+            <bitmap from="fish-left" />
           </sprite>
           <collisions>
             <collision edge="left"><bounce /><become sprite="right" /></collision>
@@ -426,4 +366,72 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="bite" wave="square">
+      <volume>0.2</volume>
+      <note pitch="E5">0.04</note>
+      <note pitch="A5">0.04</note>
+    </sound>
+    <sound name="landed" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5" to="C6">0.2</note>
+    </sound>
+    <sound name="chomp" wave="noise">
+      <volume>0.35</volume>
+      <note pitch="300" to="80">0.25</note>
+    </sound>
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G4">0.1</note>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.2</note>
+    </sound>
+    <sound name="end" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.15</note>
+      <note pitch="G4">0.15</note>
+      <note pitch="E4">0.15</note>
+      <note pitch="C4">0.4</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="fishermen">
+      <row>......................**</row><row>....................**..</row><row>..................**....</row><row>.....hhh........**......</row><row>...hhhhhhh....**........</row><row>....ffkff...**..........</row><row>.....fff..**............</row><row>....sssss*..............</row><row>...sssssss..............</row><row>...sss.sss..............</row><row>...ppppppppp............</row><row>..........pp............</row><row>..........pp............</row><row>.........bbb............</row>
+      <scale>4</scale>
+      <color>color.black</color>
+      <color char="h">color.brown</color>
+      <color char="f">color.orange</color>
+      <color char="k">color.black</color>
+      <color char="s">color.green</color>
+      <color char="p">color.darkblue</color>
+      <color char="b">color.darkgrey</color>
+    </bitmap>
+    <bitmap name="hooks">
+      <row>..*</row><row>..*</row><row>*.*</row><row>***</row>
+      <scale>3</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="shark-right" style="shark">
+      <row>..........*.........</row><row>.........**.........</row><row>*.......*******.....</row><row>***.**************..</row><row>****************k***</row><row>***.wwwwwwwwwwwww*..</row><row>*.......**....**....</row>
+    </bitmap>
+    <bitmap name="shark-left" style="shark">
+      <row>..........*.........</row><row>.........**.........</row><row>*.......*******.....</row><row>***.**************..</row><row>****************k***</row><row>***.wwwwwwwwwwwww*..</row><row>*.......**....**....</row>
+      <flip>horizontal</flip>
+    </bitmap>
+    <bitmap name="fish-right">
+      <row>*....****.</row><row>**.******.</row><row>*******k**</row><row>**.*******</row><row>*....****.</row>
+      <scale>4</scale>
+      <color>color.yellow</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="fish-left">
+      <row>*....****.</row><row>**.******.</row><row>*******k**</row><row>**.*******</row><row>*....****.</row>
+      <scale>4</scale>
+      <color>color.yellow</color>
+      <color char="k">color.black</color>
+      <flip>horizontal</flip>
+    </bitmap>
+  </pictures>
 </game>

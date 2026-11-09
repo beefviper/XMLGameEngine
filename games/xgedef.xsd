@@ -396,13 +396,16 @@
       <xs:element name="bitmap">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
+            <!-- none with from=: the picture's -->
+            <xs:element name="row" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="scale" type="valueType" minOccurs="0" />
             <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="flip" type="flipType" minOccurs="0" />
           </xs:sequence>
           <!-- a <style> of the game's <styles>, for the <scale> and <color>s left out -->
           <xs:attribute name="style" type="xs:string" use="optional" />
+          <!-- a <bitmap> of the <pictures>, changed by what this one gives -->
+          <xs:attribute name="from" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
       <!--
@@ -537,6 +540,8 @@
           </xs:sequence>
           <!-- a <style> of the game's <styles>, for the <scale> and <color>s left out -->
           <xs:attribute name="style" type="xs:string" use="optional" />
+          <!-- a <bitmap> of the <pictures>, changed by what this one gives -->
+          <xs:attribute name="from" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="svg">
@@ -2573,13 +2578,6 @@
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="sounds" minOccurs="0">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="sound" type="soundType" maxOccurs="unbounded" />
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
         <xs:element name="paths" minOccurs="0">
           <xs:complexType>
             <xs:sequence>
@@ -2607,45 +2605,6 @@
                     <xs:element name="font" type="xs:string" minOccurs="0" />
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:string" use="required" />
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <!--
-          Picture files many pictures are cut from: a sprite's <cell>, an
-          animation's <cell>s and runs of <cells>, a deck's faces. A grid of
-          <columns> by <rows> sharing the picture out, or of cells a <cell>
-          size; <margin> round the edge and <gap> between cells, 0 when left
-          out. A picture taken by <x>, <y>, <width> and <height> needs no grid.
-          An SVG's <hide>s leave elements out.
-        -->
-        <xs:element name="sheets" minOccurs="0">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="sheet" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="path" type="xs:string" />
-                    <xs:choice minOccurs="0">
-                      <xs:sequence>
-                        <xs:element name="columns" type="xs:positiveInteger" />
-                        <xs:element name="rows" type="xs:positiveInteger" />
-                      </xs:sequence>
-                      <xs:element name="cell">
-                        <xs:complexType>
-                          <xs:sequence>
-                            <xs:element name="width" type="xs:decimal" />
-                            <xs:element name="height" type="xs:decimal" />
-                          </xs:sequence>
-                        </xs:complexType>
-                      </xs:element>
-                    </xs:choice>
-                    <xs:element name="margin" type="xs:decimal" minOccurs="0" />
-                    <xs:element name="gap" type="xs:decimal" minOccurs="0" />
-                    <xs:element name="hide" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
-                  </xs:sequence>
-                  <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
@@ -2800,6 +2759,72 @@
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <!--
+          The sounds: effects, and tunes of <part>s a state plays as its
+          <music>. At the bottom of the file with the pictures, since they
+          are long and say little about how the game plays.
+        -->
+        <xs:element name="sounds" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="sound" type="soundType" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <!--
+          The pictures: each <bitmap name> a sprite takes with
+          <bitmap from="name" /> (giving, if it likes, its own <scale>,
+          <color>s, <flip>, style= or <row>s over the picture's), and the
+          <sheet>s, picture files many pictures are cut from: a sprite's
+          <cell>, an animation's <cell>s and runs of <cells>, a deck's faces.
+          A sheet is a grid of <columns> by <rows> sharing the picture out, or
+          of cells a <cell> size; <margin> round the edge and <gap> between
+          cells, 0 when left out. A picture taken by <x>, <y>, <width> and
+          <height> needs no grid. An SVG's <hide>s leave elements out.
+        -->
+        <xs:element name="pictures" minOccurs="0">
+          <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+              <xs:element name="bitmap">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="row" type="xs:string" maxOccurs="unbounded" />
+                    <xs:element name="scale" type="valueType" minOccurs="0" />
+                    <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
+                    <xs:element name="flip" type="flipType" minOccurs="0" />
+                  </xs:sequence>
+                  <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+                  <xs:attribute name="style" type="xs:string" use="optional" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="sheet">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="path" type="xs:string" />
+                    <xs:choice minOccurs="0">
+                      <xs:sequence>
+                        <xs:element name="columns" type="xs:positiveInteger" />
+                        <xs:element name="rows" type="xs:positiveInteger" />
+                      </xs:sequence>
+                      <xs:element name="cell">
+                        <xs:complexType>
+                          <xs:sequence>
+                            <xs:element name="width" type="xs:decimal" />
+                            <xs:element name="height" type="xs:decimal" />
+                          </xs:sequence>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:choice>
+                    <xs:element name="margin" type="xs:decimal" minOccurs="0" />
+                    <xs:element name="gap" type="xs:decimal" minOccurs="0" />
+                    <xs:element name="hide" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+                  </xs:sequence>
+                  <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:choice>
           </xs:complexType>
         </xs:element>
         <!--

@@ -62,53 +62,6 @@
     <variable name="bounce">0.35</variable>
     <variable name="height">10</variable>
   </variables>
-  <sounds>
-    <sound name="hop" wave="square">
-      <volume>0.15</volume>
-      <note pitch="A4" to="E5">0.06</note>
-    </sound>
-    <!-- the ball and the egg landing -->
-    <sound name="thud" wave="triangle">
-      <volume>0.2</volume>
-      <note pitch="G3" to="C3">0.06</note>
-    </sound>
-    <sound name="fall" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C6" to="C3">0.8</note>
-    </sound>
-    <!-- his curse: a garble of noise and squawks -->
-    <sound name="curse">
-      <volume>0.3</volume>
-      <part wave="square">
-        <note pitch="E5">0.07</note>
-        <note pitch="A4">0.05</note>
-        <note pitch="F5">0.08</note>
-        <note pitch="C5">0.05</note>
-        <note pitch="G5">0.07</note>
-        <note pitch="D5">0.1</note>
-      </part>
-      <part wave="noise">
-        <note pitch="900" to="300">0.42</note>
-      </part>
-    </sound>
-    <sound name="disc" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5" to="C6">0.25</note>
-      <note pitch="C5" to="C6">0.25</note>
-      <note pitch="C5" to="C7">0.4</note>
-    </sound>
-    <sound name="done">
-      <volume>0.2</volume>
-      <part wave="square">
-        <note pitch="C5">0.1</note>
-        <note pitch="E5">0.1</note>
-        <note pitch="G5">0.1</note>
-        <note pitch="C6">0.1</note>
-        <note pitch="E6">0.1</note>
-        <note pitch="G6">0.3</note>
-      </part>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>16</size><color>color.orange</color><font>assets/pressstart2p.ttf</font></style>
     <style name="text"><size>8</size><color>color.white</color><font>assets/pressstart2p.ttf</font></style>
@@ -206,52 +159,10 @@
                stands on a cube touches it, not the cube behind -->
           <group name="cubes" class="cube">
               <sprite name="unlit">
-                <bitmap>
-                  <row>.......**.......</row>
-                  <row>.....******.....</row>
-                  <row>...**********...</row>
-                  <row>.**************.</row>
-                  <row>l**************r</row>
-                  <row>lll**********rrr</row>
-                  <row>lllll******rrrrr</row>
-                  <row>lllllll**rrrrrrr</row>
-                  <row>llllllllrrrrrrrr</row>
-                  <row>llllllllrrrrrrrr</row>
-                  <row>llllllllrrrrrrrr</row>
-                  <row>llllllllrrrrrrrr</row>
-                  <row>.lllllllrrrrrrr.</row>
-                  <row>...lllllrrrrr...</row>
-                  <row>.....lllrrr.....</row>
-                  <row>.......lr.......</row>
-                  <scale>2</scale>
-                  <color>color.blue</color>
-                  <color char="l">color.brown</color>
-                  <color char="r">color.darkgrey</color>
-                </bitmap>
+                <bitmap from="cubes-unlit" />
               </sprite>
               <sprite name="lit">
-                <bitmap>
-                  <row>.......**.......</row>
-                  <row>.....******.....</row>
-                  <row>...**********...</row>
-                  <row>.**************.</row>
-                  <row>l**************r</row>
-                  <row>lll**********rrr</row>
-                  <row>lllll******rrrrr</row>
-                  <row>lllllll**rrrrrrr</row>
-                  <row>llllllllrrrrrrrr</row>
-                  <row>llllllllrrrrrrrr</row>
-                  <row>llllllllrrrrrrrr</row>
-                  <row>llllllllrrrrrrrr</row>
-                  <row>.lllllllrrrrrrr.</row>
-                  <row>...lllllrrrrr...</row>
-                  <row>.....lllrrr.....</row>
-                  <row>.......lr.......</row>
-                  <scale>2</scale>
-                  <color>color.yellow</color>
-                  <color char="l">color.brown</color>
-                  <color char="r">color.darkgrey</color>
-                </bitmap>
+                <bitmap from="cubes-lit" />
               </sprite>
             <collisions>
               <type>pixel</type>
@@ -282,100 +193,13 @@
                rules go last look first, so a landing changes the look only once -->
           <group name="discs" char="d" class="disc">
             <sprite name="spina">
-              <bitmap style="disc">
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>...cmmmmc...</row>
-                <row>.cmmyyyymmc.</row>
-                <row>..ccmmmmcc..</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-              </bitmap>
+              <bitmap from="discs-spina" />
             </sprite>
             <sprite name="spinb">
-              <bitmap style="disc">
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>...myyyym...</row>
-                <row>.myyccccyym.</row>
-                <row>..mmyyyymm..</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-              </bitmap>
+              <bitmap from="discs-spinb" />
             </sprite>
             <sprite name="spinc">
-              <bitmap style="disc">
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>...yccccy...</row>
-                <row>.yccmmmmccy.</row>
-                <row>..yyccccyy..</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-                <row>............</row>
-              </bitmap>
+              <bitmap from="discs-spinc" />
             </sprite>
             <sprite name="used">
               <rectangle>
@@ -416,50 +240,10 @@
         <!-- Q*bert: facing down or up, drawn turned to the right -->
         <object name="qbert">
           <sprite name="front">
-            <bitmap>
-              <row>.....oooooo.....</row>
-              <row>...oooooooooo...</row>
-              <row>..oowwooowwooo..</row>
-              <row>..owkwoowkwooo..</row>
-              <row>.oowwoooowwoooo.</row>
-              <row>.oooooooooooooo.</row>
-              <row>.oooooooooooooo.</row>
-              <row>..oooooooooooooo</row>
-              <row>..ooooooooookkoo</row>
-              <row>...ooooooooko.ko</row>
-              <row>....ooooooo.ooo.</row>
-              <row>......o..o......</row>
-              <row>.....oo..oo.....</row>
-              <row>.....o...o......</row>
-              <row>....kkk..kkk....</row>
-              <row>...kkkk..kkkk...</row>
-              <color char="o">color.orange</color>
-              <color char="w">color.white</color>
-              <color char="k">color.black</color>
-            </bitmap>
+            <bitmap from="qbert-front" />
           </sprite>
           <sprite name="back">
-            <bitmap>
-              <row>..........okko..</row>
-              <row>.....oooooko.o..</row>
-              <row>...oooooooooo...</row>
-              <row>..oooooooooooo..</row>
-              <row>.oooooooooooooo.</row>
-              <row>.oooooooooooooo.</row>
-              <row>.oooooooooooooo.</row>
-              <row>.oooooooooooooo.</row>
-              <row>..oooooooooooo..</row>
-              <row>...oooooooooo...</row>
-              <row>....oooooooo....</row>
-              <row>......o..o......</row>
-              <row>.....oo..oo.....</row>
-              <row>.....o...o......</row>
-              <row>....kkk..kkk....</row>
-              <row>...kkkk..kkkk...</row>
-              <color char="o">color.orange</color>
-              <color char="w">color.white</color>
-              <color char="k">color.black</color>
-            </bitmap>
+            <bitmap from="qbert-back" />
           </sprite>
           <!-- standing on a top: his feet, all he touches with, on its middle -->
           <position><x>120</x><y>38</y></position>
@@ -529,18 +313,7 @@
         <!-- the red ball: down the pyramid one way or the other, and off it -->
         <object name="ball" class="enemy">
           <sprite>
-            <bitmap>
-              <row>..****..</row>
-              <row>.*ww***.</row>
-              <row>**w*****</row>
-              <row>********</row>
-              <row>********</row>
-              <row>********</row>
-              <row>.******.</row>
-              <row>..****..</row>
-              <color>color.red</color>
-              <color char="w">color.white</color>
-            </bitmap>
+            <bitmap from="ball" />
           </sprite>
           <position><x>140</x><y>70</y></position>
           <collisions>
@@ -577,116 +350,16 @@
              coiling and rearing as he goes -->
         <object name="coily" class="enemy">
           <sprite name="round">
-            <bitmap style="coily">
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>.....pppppp.....</row>
-              <row>....pwwppppp....</row>
-              <row>...pwwppppppp...</row>
-              <row>...pwppppppppp..</row>
-              <row>..pppppppppppp..</row>
-              <row>..pppppppppppp..</row>
-              <row>..pppppppppppp..</row>
-              <row>...pppppppppp...</row>
-              <row>...pppppppppp...</row>
-              <row>....pppppppp....</row>
-              <row>.....pppppp.....</row>
-              <row>................</row>
-            </bitmap>
+            <bitmap from="coily-round" />
           </sprite>
           <sprite name="squashed">
-            <bitmap style="coily">
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>................</row>
-              <row>....pppppppp....</row>
-              <row>...pwwppppppp...</row>
-              <row>..pwwppppppppp..</row>
-              <row>..pwpppppppppp..</row>
-              <row>..pppppppppppp..</row>
-              <row>..pppppppppppp..</row>
-              <row>...pppppppppp...</row>
-              <row>....pppppppp....</row>
-              <row>................</row>
-              <row>................</row>
-            </bitmap>
+            <bitmap from="coily-squashed" />
           </sprite>
           <sprite name="coiled">
-            <bitmap style="coily">
-              <row>................</row>
-              <row>................</row>
-              <row>....pppppp......</row>
-              <row>...pwwppwwp.....</row>
-              <row>...pwkppwkp.....</row>
-              <row>...pppppppp.....</row>
-              <row>....pprrpp......</row>
-              <row>.....pppp.......</row>
-              <row>.....pp.........</row>
-              <row>....pp..........</row>
-              <row>....pp..........</row>
-              <row>.....pp.........</row>
-              <row>......pp........</row>
-              <row>.......pp.......</row>
-              <row>........pp......</row>
-              <row>........pp......</row>
-              <row>.......pp.......</row>
-              <row>......pp........</row>
-              <row>.....pp...pp....</row>
-              <row>......pppppp....</row>
-              <row>.......pppp.....</row>
-              <row>................</row>
-              <row>....pppppppp....</row>
-              <row>...pppppppppp...</row>
-            </bitmap>
+            <bitmap from="coily-coiled" />
           </sprite>
           <sprite name="raised">
-            <bitmap style="coily">
-              <row>....pppppp......</row>
-              <row>...pwwppwwp.....</row>
-              <row>...pwkppwkp.....</row>
-              <row>...pppppppp.....</row>
-              <row>....pprrpp......</row>
-              <row>.....pppp.......</row>
-              <row>......pp........</row>
-              <row>.....pp.........</row>
-              <row>....pp..........</row>
-              <row>....pp..........</row>
-              <row>.....pp.........</row>
-              <row>......pp........</row>
-              <row>.......pp.......</row>
-              <row>........pp......</row>
-              <row>........pp......</row>
-              <row>.......pp.......</row>
-              <row>......pp........</row>
-              <row>.....pp.........</row>
-              <row>.....pp...pp....</row>
-              <row>......pppppp....</row>
-              <row>.......pppp.....</row>
-              <row>................</row>
-              <row>....pppppppp....</row>
-              <row>...pppppppppp...</row>
-            </bitmap>
+            <bitmap from="coily-raised" />
           </sprite>
           <!-- first the egg, which it starts as, squashing as it lands -->
           <animation name="egg">
@@ -810,4 +483,345 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="hop" wave="square">
+      <volume>0.15</volume>
+      <note pitch="A4" to="E5">0.06</note>
+    </sound>
+    <!-- the ball and the egg landing -->
+    <sound name="thud" wave="triangle">
+      <volume>0.2</volume>
+      <note pitch="G3" to="C3">0.06</note>
+    </sound>
+    <sound name="fall" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C6" to="C3">0.8</note>
+    </sound>
+    <!-- his curse: a garble of noise and squawks -->
+    <sound name="curse">
+      <volume>0.3</volume>
+      <part wave="square">
+        <note pitch="E5">0.07</note>
+        <note pitch="A4">0.05</note>
+        <note pitch="F5">0.08</note>
+        <note pitch="C5">0.05</note>
+        <note pitch="G5">0.07</note>
+        <note pitch="D5">0.1</note>
+      </part>
+      <part wave="noise">
+        <note pitch="900" to="300">0.42</note>
+      </part>
+    </sound>
+    <sound name="disc" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5" to="C6">0.25</note>
+      <note pitch="C5" to="C6">0.25</note>
+      <note pitch="C5" to="C7">0.4</note>
+    </sound>
+    <sound name="done">
+      <volume>0.2</volume>
+      <part wave="square">
+        <note pitch="C5">0.1</note>
+        <note pitch="E5">0.1</note>
+        <note pitch="G5">0.1</note>
+        <note pitch="C6">0.1</note>
+        <note pitch="E6">0.1</note>
+        <note pitch="G6">0.3</note>
+      </part>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="cubes-unlit">
+      <row>.......**.......</row>
+      <row>.....******.....</row>
+      <row>...**********...</row>
+      <row>.**************.</row>
+      <row>l**************r</row>
+      <row>lll**********rrr</row>
+      <row>lllll******rrrrr</row>
+      <row>lllllll**rrrrrrr</row>
+      <row>llllllllrrrrrrrr</row>
+      <row>llllllllrrrrrrrr</row>
+      <row>llllllllrrrrrrrr</row>
+      <row>llllllllrrrrrrrr</row>
+      <row>.lllllllrrrrrrr.</row>
+      <row>...lllllrrrrr...</row>
+      <row>.....lllrrr.....</row>
+      <row>.......lr.......</row>
+      <scale>2</scale>
+      <color>color.blue</color>
+      <color char="l">color.brown</color>
+      <color char="r">color.darkgrey</color>
+    </bitmap>
+    <bitmap name="cubes-lit">
+      <row>.......**.......</row>
+      <row>.....******.....</row>
+      <row>...**********...</row>
+      <row>.**************.</row>
+      <row>l**************r</row>
+      <row>lll**********rrr</row>
+      <row>lllll******rrrrr</row>
+      <row>lllllll**rrrrrrr</row>
+      <row>llllllllrrrrrrrr</row>
+      <row>llllllllrrrrrrrr</row>
+      <row>llllllllrrrrrrrr</row>
+      <row>llllllllrrrrrrrr</row>
+      <row>.lllllllrrrrrrr.</row>
+      <row>...lllllrrrrr...</row>
+      <row>.....lllrrr.....</row>
+      <row>.......lr.......</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+      <color char="l">color.brown</color>
+      <color char="r">color.darkgrey</color>
+    </bitmap>
+    <bitmap name="discs-spina" style="disc">
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>...cmmmmc...</row>
+      <row>.cmmyyyymmc.</row>
+      <row>..ccmmmmcc..</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+    </bitmap>
+    <bitmap name="discs-spinb" style="disc">
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>...myyyym...</row>
+      <row>.myyccccyym.</row>
+      <row>..mmyyyymm..</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+    </bitmap>
+    <bitmap name="discs-spinc" style="disc">
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>...yccccy...</row>
+      <row>.yccmmmmccy.</row>
+      <row>..yyccccyy..</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+      <row>............</row>
+    </bitmap>
+    <bitmap name="qbert-front">
+      <row>.....oooooo.....</row>
+      <row>...oooooooooo...</row>
+      <row>..oowwooowwooo..</row>
+      <row>..owkwoowkwooo..</row>
+      <row>.oowwoooowwoooo.</row>
+      <row>.oooooooooooooo.</row>
+      <row>.oooooooooooooo.</row>
+      <row>..oooooooooooooo</row>
+      <row>..ooooooooookkoo</row>
+      <row>...ooooooooko.ko</row>
+      <row>....ooooooo.ooo.</row>
+      <row>......o..o......</row>
+      <row>.....oo..oo.....</row>
+      <row>.....o...o......</row>
+      <row>....kkk..kkk....</row>
+      <row>...kkkk..kkkk...</row>
+      <color char="o">color.orange</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="qbert-back">
+      <row>..........okko..</row>
+      <row>.....oooooko.o..</row>
+      <row>...oooooooooo...</row>
+      <row>..oooooooooooo..</row>
+      <row>.oooooooooooooo.</row>
+      <row>.oooooooooooooo.</row>
+      <row>.oooooooooooooo.</row>
+      <row>.oooooooooooooo.</row>
+      <row>..oooooooooooo..</row>
+      <row>...oooooooooo...</row>
+      <row>....oooooooo....</row>
+      <row>......o..o......</row>
+      <row>.....oo..oo.....</row>
+      <row>.....o...o......</row>
+      <row>....kkk..kkk....</row>
+      <row>...kkkk..kkkk...</row>
+      <color char="o">color.orange</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="ball">
+      <row>..****..</row>
+      <row>.*ww***.</row>
+      <row>**w*****</row>
+      <row>********</row>
+      <row>********</row>
+      <row>********</row>
+      <row>.******.</row>
+      <row>..****..</row>
+      <color>color.red</color>
+      <color char="w">color.white</color>
+    </bitmap>
+    <bitmap name="coily-round" style="coily">
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>.....pppppp.....</row>
+      <row>....pwwppppp....</row>
+      <row>...pwwppppppp...</row>
+      <row>...pwppppppppp..</row>
+      <row>..pppppppppppp..</row>
+      <row>..pppppppppppp..</row>
+      <row>..pppppppppppp..</row>
+      <row>...pppppppppp...</row>
+      <row>...pppppppppp...</row>
+      <row>....pppppppp....</row>
+      <row>.....pppppp.....</row>
+      <row>................</row>
+    </bitmap>
+    <bitmap name="coily-squashed" style="coily">
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>....pppppppp....</row>
+      <row>...pwwppppppp...</row>
+      <row>..pwwppppppppp..</row>
+      <row>..pwpppppppppp..</row>
+      <row>..pppppppppppp..</row>
+      <row>..pppppppppppp..</row>
+      <row>...pppppppppp...</row>
+      <row>....pppppppp....</row>
+      <row>................</row>
+      <row>................</row>
+    </bitmap>
+    <bitmap name="coily-coiled" style="coily">
+      <row>................</row>
+      <row>................</row>
+      <row>....pppppp......</row>
+      <row>...pwwppwwp.....</row>
+      <row>...pwkppwkp.....</row>
+      <row>...pppppppp.....</row>
+      <row>....pprrpp......</row>
+      <row>.....pppp.......</row>
+      <row>.....pp.........</row>
+      <row>....pp..........</row>
+      <row>....pp..........</row>
+      <row>.....pp.........</row>
+      <row>......pp........</row>
+      <row>.......pp.......</row>
+      <row>........pp......</row>
+      <row>........pp......</row>
+      <row>.......pp.......</row>
+      <row>......pp........</row>
+      <row>.....pp...pp....</row>
+      <row>......pppppp....</row>
+      <row>.......pppp.....</row>
+      <row>................</row>
+      <row>....pppppppp....</row>
+      <row>...pppppppppp...</row>
+    </bitmap>
+    <bitmap name="coily-raised" style="coily">
+      <row>....pppppp......</row>
+      <row>...pwwppwwp.....</row>
+      <row>...pwkppwkp.....</row>
+      <row>...pppppppp.....</row>
+      <row>....pprrpp......</row>
+      <row>.....pppp.......</row>
+      <row>......pp........</row>
+      <row>.....pp.........</row>
+      <row>....pp..........</row>
+      <row>....pp..........</row>
+      <row>.....pp.........</row>
+      <row>......pp........</row>
+      <row>.......pp.......</row>
+      <row>........pp......</row>
+      <row>........pp......</row>
+      <row>.......pp.......</row>
+      <row>......pp........</row>
+      <row>.....pp.........</row>
+      <row>.....pp...pp....</row>
+      <row>......pppppp....</row>
+      <row>.......pppp.....</row>
+      <row>................</row>
+      <row>....pppppppp....</row>
+      <row>...pppppppppp...</row>
+    </bitmap>
+  </pictures>
 </game>

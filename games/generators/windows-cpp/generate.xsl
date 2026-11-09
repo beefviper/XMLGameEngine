@@ -56,7 +56,7 @@
        font if it shows text, the fonts it names, and every picture and
        drawing it names; and the engine's licence. -->
   <xsl:variable name="engine" select="document('engine.xml')/engine/file" />
-  <xsl:variable name="pictures" select="//sprite/image/path | //sprite/svg/path | //sheets/sheet/path" />
+  <xsl:variable name="pictures" select="//sprite/image/path | //sprite/svg/path | //pictures/sheet/path" />
   <xsl:variable name="texts" select="//sprite/text" />
   <xsl:variable name="fonts" select="//text/font | //styles/style/font" />
 
@@ -66,8 +66,12 @@
     </xsl:if>
 
     <!-- the game with its <kit> and from= worked out (merge.xsl), written out -->
-    <xsl:variable name="merged">
+    <xsl:variable name="laid-out">
       <xsl:call-template name="merge-game" />
+    </xsl:variable>
+    <!-- and every sprite's <bitmap from> made the picture it takes -->
+    <xsl:variable name="merged">
+      <xsl:apply-templates select="exsl:node-set($laid-out)" mode="pictures" />
     </xsl:variable>
     <exsl:document href="source/{$name}.cpp" method="text" encoding="UTF-8">
       <xsl:for-each select="exsl:node-set($merged)">

@@ -50,25 +50,6 @@
     <variable name="dealerrow">110</variable>
     <variable name="yourrow">470</variable>
   </variables>
-  <sounds>
-    <sound name="deal" wave="noise"><note pitch="G5">0.02</note><note pitch="C6">0.02</note></sound>
-    <sound name="chip"><note pitch="E6">0.04</note></sound>
-    <sound name="win">
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.2</note>
-    </sound>
-    <sound name="blackjack">
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-    <sound name="lose">
-      <note pitch="E4">0.15</note>
-      <note pitch="C4">0.3</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size><color>color.yellow</color></style>
     <style name="prompt"><size>32</size></style>
@@ -76,10 +57,6 @@
     <style name="note"><size>26</size><color>color.white</color></style>
     <style name="result"><size>48</size><color>color.yellow</color></style>
   </styles>
-  <!-- the card sheet: a row for each suit, a column for each rank, then a row of backs -->
-  <sheets>
-    <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
-  </sheets>
   <states>
     <state name="title">
       <objects>
@@ -365,4 +342,27 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="deal" wave="noise"><note pitch="G5">0.02</note><note pitch="C6">0.02</note></sound>
+    <sound name="chip"><note pitch="E6">0.04</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.2</note>
+    </sound>
+    <sound name="blackjack">
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <sound name="lose">
+      <note pitch="E4">0.15</note>
+      <note pitch="C4">0.3</note>
+    </sound>
+  </sounds>
+  <!-- the card sheet: a row for each suit, a column for each rank, then a row of backs -->
+  <pictures>
+    <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
+  </pictures>
 </game>

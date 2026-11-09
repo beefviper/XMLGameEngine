@@ -67,78 +67,6 @@
     <variable name="margin">16</variable>
     <variable name="goal">3</variable>
   </variables>
-  <sounds>
-    <sound name="jump" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5" to="C6">0.12</note>
-    </sound>
-    <!-- a barrel jumped -->
-    <sound name="points" wave="square">
-      <volume>0.15</volume>
-      <note pitch="E6">0.05</note>
-      <note pitch="A6">0.08</note>
-    </sound>
-    <sound name="smash" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="1500" to="200">0.2</note>
-    </sound>
-    <!-- caught: the arcade's falling notes, then three low ones -->
-    <sound name="hit" wave="square">
-      <volume>0.25</volume>
-      <note pitch="D5">0.08</note>
-      <note pitch="C#5">0.08</note>
-      <note pitch="C5">0.08</note>
-      <note pitch="B4">0.08</note>
-      <note pitch="A#4">0.08</note>
-      <note pitch="A4">0.08</note>
-      <note pitch="G#4">0.08</note>
-      <note pitch="G4">0.08</note>
-      <rest>0.12</rest>
-      <note pitch="C4">0.15</note>
-      <rest>0.05</rest>
-      <note pitch="G3">0.15</note>
-      <rest>0.05</rest>
-      <note pitch="C3">0.3</note>
-    </sound>
-    <sound name="rescue">
-      <volume>0.2</volume>
-      <part wave="square">
-        <note pitch="C5">0.1</note>
-        <note pitch="E5">0.1</note>
-        <note pitch="G5">0.1</note>
-        <note pitch="C6">0.1</note>
-        <note pitch="G5">0.1</note>
-        <note pitch="C6">0.3</note>
-      </part>
-      <part wave="triangle">
-        <note pitch="C3">0.2</note>
-        <note pitch="G3">0.2</note>
-        <note pitch="C4">0.4</note>
-      </part>
-    </sound>
-    <!-- play's music: the low beat under the girders -->
-    <sound name="beat" wave="triangle">
-      <loop />
-      <volume>0.25</volume>
-      <note pitch="C3">0.15</note>
-      <rest>0.15</rest>
-      <note pitch="C3">0.15</note>
-      <rest>0.15</rest>
-      <note pitch="G2">0.15</note>
-      <rest>0.15</rest>
-      <note pitch="A#2">0.15</note>
-      <rest>0.15</rest>
-    </sound>
-    <!-- while he holds the hammer -->
-    <sound name="hammertime" wave="square">
-      <loop />
-      <volume>0.1</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="E5">0.1</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>48</size><color>color.red</color><font>assets/pressstart2p.ttf</font></style>
     <style name="prompt"><size>24</size><font>assets/pressstart2p.ttf</font></style>
@@ -155,49 +83,13 @@
          rolling as it goes, and seen end on going down a ladder -->
     <object name="barrel" class="barrel">
       <sprite name="flat">
-        <bitmap style="wood">
-          <row>...*****...</row>
-          <row>.**bbbbb**.</row>
-          <row>.*********.</row>
-          <row>***********</row>
-          <row>*bbbbbbbbb*</row>
-          <row>***********</row>
-          <row>*bbbbbbbbb*</row>
-          <row>***********</row>
-          <row>.*********.</row>
-          <row>.**bbbbb**.</row>
-          <row>...*****...</row>
-        </bitmap>
+        <bitmap from="barrel-flat" />
       </sprite>
       <sprite name="end">
-        <bitmap style="wood">
-          <row>...*b*b*...</row>
-          <row>.***b*b***.</row>
-          <row>.***b*b***.</row>
-          <row>****b*b****</row>
-          <row>****b*b****</row>
-          <row>****b*b****</row>
-          <row>****b*b****</row>
-          <row>****b*b****</row>
-          <row>.***b*b***.</row>
-          <row>.***b*b***.</row>
-          <row>...*b*b*...</row>
-        </bitmap>
+        <bitmap from="barrel-end" />
       </sprite>
       <sprite name="down">
-        <bitmap style="wood">
-          <row>..*******..</row>
-          <row>.*bbbbbbb*.</row>
-          <row>*b*******b*</row>
-          <row>*b*bbbbb*b*</row>
-          <row>*b*b***b*b*</row>
-          <row>*b*b*b*b*b*</row>
-          <row>*b*b***b*b*</row>
-          <row>*b*bbbbb*b*</row>
-          <row>*b*******b*</row>
-          <row>.*bbbbbbb*.</row>
-          <row>..*******..</row>
-        </bitmap>
+        <bitmap from="barrel-down" />
       </sprite>
       <animation name="rolling">
         <interval>0.15</interval>
@@ -263,42 +155,10 @@
          girders, turning now and then, and climbs ladders -->
     <object name="fireball" class="fireball">
       <sprite name="a">
-        <bitmap>
-          <row>....*.....</row>
-          <row>...**..*..</row>
-          <row>..***.**..</row>
-          <row>.**o*****.</row>
-          <row>.*oooo***.</row>
-          <row>**owwooo**</row>
-          <row>*owwwwwo**</row>
-          <row>*owkwkwo*.</row>
-          <row>*owwwwwo*.</row>
-          <row>.*ooooo*..</row>
-          <scale>2</scale>
-          <color>color.yellow</color>
-          <color char="o">color.orange</color>
-          <color char="w">color.white</color>
-          <color char="k">color.black</color>
-        </bitmap>
+        <bitmap from="fireball-a" />
       </sprite>
       <sprite name="b">
-        <bitmap>
-          <row>.....*....</row>
-          <row>..*..**...</row>
-          <row>..**.***..</row>
-          <row>.*****o**.</row>
-          <row>.***oooo*.</row>
-          <row>**oowwo***</row>
-          <row>**owwwwwo*</row>
-          <row>.*owkwkwo*</row>
-          <row>.*owwwwwo*</row>
-          <row>..*ooooo*.</row>
-          <scale>2</scale>
-          <color>color.yellow</color>
-          <color char="o">color.orange</color>
-          <color char="w">color.white</color>
-          <color char="k">color.black</color>
-        </bitmap>
+        <bitmap from="fireball-b" />
       </sprite>
       <animation name="burning">
         <interval>0.12</interval>
@@ -418,14 +278,7 @@
         <group name="ladders" class="ladder">
           <columns>1</columns>
           <sprite>
-            <bitmap>
-              <row>*........*</row>
-              <row>*........*</row>
-              <row>**********</row>
-              <row>*........*</row>
-              <scale>2</scale>
-              <color>color.cyan</color>
-            </bitmap>
+            <bitmap from="ladders" />
           </sprite>
           <collisions />
           <group name="first520"><rows>11</rows><position><x>510</x><y>564</y></position></group>
@@ -472,16 +325,7 @@
           <rows>1</rows>
           <slope>0.5</slope>
           <sprite>
-            <bitmap>
-              <row>********</row>
-              <row>.*....*.</row>
-              <row>..*..*..</row>
-              <row>...**...</row>
-              <row>..*..*..</row>
-              <row>********</row>
-              <scale>2</scale>
-              <color>color.red</color>
-            </bitmap>
+            <bitmap from="girders" />
           </sprite>
           <collisions />
           <group name="floor">
@@ -510,63 +354,14 @@
         </group>
         <object name="oil">
           <sprite>
-            <bitmap>
-              <row>...r.....r..r..</row>
-              <row>..ryr...ryrryr.</row>
-              <row>.ryyyr.ryyyyyr.</row>
-              <row>wwwwwwwwwwwwwww</row>
-              <row>***************</row>
-              <row>***************</row>
-              <row>wwwwwwwwwwwwwww</row>
-              <row>***************</row>
-              <row>**www*w*w******</row>
-              <row>**w*w*w*w******</row>
-              <row>**w*w*w*w******</row>
-              <row>**www*w*www****</row>
-              <row>***************</row>
-              <row>wwwwwwwwwwwwwww</row>
-              <row>***************</row>
-              <row>***************</row>
-              <row>***************</row>
-              <row>wwwwwwwwwwwwwww</row>
-              <scale>2</scale>
-              <color>color.blue</color>
-              <color char="w">color.white</color>
-              <color char="r">color.red</color>
-              <color char="y">color.yellow</color>
-            </bitmap>
+            <bitmap from="oil" />
           </sprite>
           <position><x>4</x><y>660 - oil.height</y></position>
           <collisions />
         </object>
         <object name="kong">
           <sprite>
-            <bitmap>
-              <row>........*******........</row>
-              <row>......***********......</row>
-              <row>.....*************.....</row>
-              <row>....***ooooooooo***....</row>
-              <row>....**ow.ooooo.wo**....</row>
-              <row>....**ooooooooooo**....</row>
-              <row>...****oo.....oo****...</row>
-              <row>..******ooooooo******..</row>
-              <row>.*********ooo*********.</row>
-              <row>****ooo*********ooo****</row>
-              <row>***oooo*********oooo***</row>
-              <row>***ooo****ooo****ooo***</row>
-              <row>***oo****ooooo****oo***</row>
-              <row>****.****ooooo****.****</row>
-              <row>***..*****ooo*****..***</row>
-              <row>oo...*************...oo</row>
-              <row>ooo..******.******..ooo</row>
-              <row>.....*****...*****.....</row>
-              <row>....******...******....</row>
-              <row>...ooooo.......ooooo...</row>
-              <scale>3</scale>
-              <color>color.brown</color>
-              <color char="o">color.orange</color>
-              <color char="w">color.white</color>
-            </bitmap>
+            <bitmap from="kong" />
           </sprite>
           <position><x>20</x><y>160 - kong.height</y></position>
           <facing>right</facing>
@@ -583,28 +378,7 @@
         </object>
         <object name="pauline">
           <sprite>
-            <bitmap>
-              <row>..kkkkk...</row>
-              <row>.kkkkkkk..</row>
-              <row>.kksssk...</row>
-              <row>.kssssk...</row>
-              <row>..sssk....</row>
-              <row>..*****...</row>
-              <row>.*******..</row>
-              <row>s*******s.</row>
-              <row>..*****...</row>
-              <row>.*******..</row>
-              <row>.*******..</row>
-              <row>*********.</row>
-              <row>*********.</row>
-              <row>.*******..</row>
-              <row>..s...s...</row>
-              <row>.ss..ss...</row>
-              <scale>2</scale>
-              <color>color.magenta</color>
-              <color char="k">color.brown</color>
-              <color char="s">color.orange</color>
-            </bitmap>
+            <bitmap from="pauline" />
           </sprite>
           <position><x>300</x><y>85 - pauline.height</y></position>
           <collisions />
@@ -612,18 +386,7 @@
         <!-- the hammer, on the third girder -->
         <object name="hammer">
           <sprite>
-            <bitmap style="wood">
-              <row>.******.</row>
-              <row>********</row>
-              <row>********</row>
-              <row>.******.</row>
-              <row>...bb...</row>
-              <row>...bb...</row>
-              <row>...bb...</row>
-              <row>...bb...</row>
-              <row>...bb...</row>
-              <row>...bb...</row>
-            </bitmap>
+            <bitmap from="hammer" />
           </sprite>
           <position><x>100</x><y>353 - 40 - hammer.height</y></position>
           <collisions>
@@ -634,55 +397,10 @@
         </object>
         <object name="man">
           <sprite name="plain">
-            <bitmap>
-              <row>...*****....</row>
-              <row>..*********.</row>
-              <row>..kkkssks...</row>
-              <row>.ksksssss...</row>
-              <row>.ksskkkkk...</row>
-              <row>...sssss....</row>
-              <row>..bb*bb.....</row>
-              <row>.bbb*bb*b...</row>
-              <row>bbbb****bb..</row>
-              <row>ssb*s**sbs..</row>
-              <row>sss*****ss..</row>
-              <row>ss.**.**.s..</row>
-              <row>..***.***...</row>
-              <row>.***...***..</row>
-              <row>.kkk...kkk..</row>
-              <row>kkkk...kkkk.</row>
-              <scale>2</scale>
-              <color>color.red</color>
-              <color char="b">color.blue</color>
-              <color char="s">color.orange</color>
-              <color char="k">color.brown</color>
-            </bitmap>
+            <bitmap from="man-plain" />
           </sprite>
           <sprite name="hammer">
-            <bitmap>
-              <row>.........ooo</row>
-              <row>...*****.ooo</row>
-              <row>..*******.b.</row>
-              <row>..kkkssksb..</row>
-              <row>.kskssssb...</row>
-              <row>.ksskkkkb...</row>
-              <row>...sssssb...</row>
-              <row>..bb*bbsb...</row>
-              <row>.bbb*bb*b...</row>
-              <row>bbbb****bb..</row>
-              <row>ssb*****bs..</row>
-              <row>ss.**.**.s..</row>
-              <row>..***.***...</row>
-              <row>.***...***..</row>
-              <row>.kkk...kkk..</row>
-              <row>kkkk...kkkk.</row>
-              <scale>2</scale>
-              <color>color.red</color>
-              <color char="b">color.blue</color>
-              <color char="s">color.orange</color>
-              <color char="k">color.brown</color>
-              <color char="o">color.orange</color>
-            </bitmap>
+            <bitmap from="man-hammer" />
           </sprite>
           <position><x>100</x><y>656 - man.height</y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
@@ -874,4 +592,301 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="jump" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5" to="C6">0.12</note>
+    </sound>
+    <!-- a barrel jumped -->
+    <sound name="points" wave="square">
+      <volume>0.15</volume>
+      <note pitch="E6">0.05</note>
+      <note pitch="A6">0.08</note>
+    </sound>
+    <sound name="smash" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="1500" to="200">0.2</note>
+    </sound>
+    <!-- caught: the arcade's falling notes, then three low ones -->
+    <sound name="hit" wave="square">
+      <volume>0.25</volume>
+      <note pitch="D5">0.08</note>
+      <note pitch="C#5">0.08</note>
+      <note pitch="C5">0.08</note>
+      <note pitch="B4">0.08</note>
+      <note pitch="A#4">0.08</note>
+      <note pitch="A4">0.08</note>
+      <note pitch="G#4">0.08</note>
+      <note pitch="G4">0.08</note>
+      <rest>0.12</rest>
+      <note pitch="C4">0.15</note>
+      <rest>0.05</rest>
+      <note pitch="G3">0.15</note>
+      <rest>0.05</rest>
+      <note pitch="C3">0.3</note>
+    </sound>
+    <sound name="rescue">
+      <volume>0.2</volume>
+      <part wave="square">
+        <note pitch="C5">0.1</note>
+        <note pitch="E5">0.1</note>
+        <note pitch="G5">0.1</note>
+        <note pitch="C6">0.1</note>
+        <note pitch="G5">0.1</note>
+        <note pitch="C6">0.3</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="C3">0.2</note>
+        <note pitch="G3">0.2</note>
+        <note pitch="C4">0.4</note>
+      </part>
+    </sound>
+    <!-- play's music: the low beat under the girders -->
+    <sound name="beat" wave="triangle">
+      <loop />
+      <volume>0.25</volume>
+      <note pitch="C3">0.15</note>
+      <rest>0.15</rest>
+      <note pitch="C3">0.15</note>
+      <rest>0.15</rest>
+      <note pitch="G2">0.15</note>
+      <rest>0.15</rest>
+      <note pitch="A#2">0.15</note>
+      <rest>0.15</rest>
+    </sound>
+    <!-- while he holds the hammer -->
+    <sound name="hammertime" wave="square">
+      <loop />
+      <volume>0.1</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="E5">0.1</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="barrel-flat" style="wood">
+      <row>...*****...</row>
+      <row>.**bbbbb**.</row>
+      <row>.*********.</row>
+      <row>***********</row>
+      <row>*bbbbbbbbb*</row>
+      <row>***********</row>
+      <row>*bbbbbbbbb*</row>
+      <row>***********</row>
+      <row>.*********.</row>
+      <row>.**bbbbb**.</row>
+      <row>...*****...</row>
+    </bitmap>
+    <bitmap name="barrel-end" style="wood">
+      <row>...*b*b*...</row>
+      <row>.***b*b***.</row>
+      <row>.***b*b***.</row>
+      <row>****b*b****</row>
+      <row>****b*b****</row>
+      <row>****b*b****</row>
+      <row>****b*b****</row>
+      <row>****b*b****</row>
+      <row>.***b*b***.</row>
+      <row>.***b*b***.</row>
+      <row>...*b*b*...</row>
+    </bitmap>
+    <bitmap name="barrel-down" style="wood">
+      <row>..*******..</row>
+      <row>.*bbbbbbb*.</row>
+      <row>*b*******b*</row>
+      <row>*b*bbbbb*b*</row>
+      <row>*b*b***b*b*</row>
+      <row>*b*b*b*b*b*</row>
+      <row>*b*b***b*b*</row>
+      <row>*b*bbbbb*b*</row>
+      <row>*b*******b*</row>
+      <row>.*bbbbbbb*.</row>
+      <row>..*******..</row>
+    </bitmap>
+    <bitmap name="fireball-a">
+      <row>....*.....</row>
+      <row>...**..*..</row>
+      <row>..***.**..</row>
+      <row>.**o*****.</row>
+      <row>.*oooo***.</row>
+      <row>**owwooo**</row>
+      <row>*owwwwwo**</row>
+      <row>*owkwkwo*.</row>
+      <row>*owwwwwo*.</row>
+      <row>.*ooooo*..</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+      <color char="o">color.orange</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="fireball-b">
+      <row>.....*....</row>
+      <row>..*..**...</row>
+      <row>..**.***..</row>
+      <row>.*****o**.</row>
+      <row>.***oooo*.</row>
+      <row>**oowwo***</row>
+      <row>**owwwwwo*</row>
+      <row>.*owkwkwo*</row>
+      <row>.*owwwwwo*</row>
+      <row>..*ooooo*.</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+      <color char="o">color.orange</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="ladders">
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>**********</row>
+      <row>*........*</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="girders">
+      <row>********</row>
+      <row>.*....*.</row>
+      <row>..*..*..</row>
+      <row>...**...</row>
+      <row>..*..*..</row>
+      <row>********</row>
+      <scale>2</scale>
+      <color>color.red</color>
+    </bitmap>
+    <bitmap name="oil">
+      <row>...r.....r..r..</row>
+      <row>..ryr...ryrryr.</row>
+      <row>.ryyyr.ryyyyyr.</row>
+      <row>wwwwwwwwwwwwwww</row>
+      <row>***************</row>
+      <row>***************</row>
+      <row>wwwwwwwwwwwwwww</row>
+      <row>***************</row>
+      <row>**www*w*w******</row>
+      <row>**w*w*w*w******</row>
+      <row>**w*w*w*w******</row>
+      <row>**www*w*www****</row>
+      <row>***************</row>
+      <row>wwwwwwwwwwwwwww</row>
+      <row>***************</row>
+      <row>***************</row>
+      <row>***************</row>
+      <row>wwwwwwwwwwwwwww</row>
+      <scale>2</scale>
+      <color>color.blue</color>
+      <color char="w">color.white</color>
+      <color char="r">color.red</color>
+      <color char="y">color.yellow</color>
+    </bitmap>
+    <bitmap name="kong">
+      <row>........*******........</row>
+      <row>......***********......</row>
+      <row>.....*************.....</row>
+      <row>....***ooooooooo***....</row>
+      <row>....**ow.ooooo.wo**....</row>
+      <row>....**ooooooooooo**....</row>
+      <row>...****oo.....oo****...</row>
+      <row>..******ooooooo******..</row>
+      <row>.*********ooo*********.</row>
+      <row>****ooo*********ooo****</row>
+      <row>***oooo*********oooo***</row>
+      <row>***ooo****ooo****ooo***</row>
+      <row>***oo****ooooo****oo***</row>
+      <row>****.****ooooo****.****</row>
+      <row>***..*****ooo*****..***</row>
+      <row>oo...*************...oo</row>
+      <row>ooo..******.******..ooo</row>
+      <row>.....*****...*****.....</row>
+      <row>....******...******....</row>
+      <row>...ooooo.......ooooo...</row>
+      <scale>3</scale>
+      <color>color.brown</color>
+      <color char="o">color.orange</color>
+      <color char="w">color.white</color>
+    </bitmap>
+    <bitmap name="pauline">
+      <row>..kkkkk...</row>
+      <row>.kkkkkkk..</row>
+      <row>.kksssk...</row>
+      <row>.kssssk...</row>
+      <row>..sssk....</row>
+      <row>..*****...</row>
+      <row>.*******..</row>
+      <row>s*******s.</row>
+      <row>..*****...</row>
+      <row>.*******..</row>
+      <row>.*******..</row>
+      <row>*********.</row>
+      <row>*********.</row>
+      <row>.*******..</row>
+      <row>..s...s...</row>
+      <row>.ss..ss...</row>
+      <scale>2</scale>
+      <color>color.magenta</color>
+      <color char="k">color.brown</color>
+      <color char="s">color.orange</color>
+    </bitmap>
+    <bitmap name="hammer" style="wood">
+      <row>.******.</row>
+      <row>********</row>
+      <row>********</row>
+      <row>.******.</row>
+      <row>...bb...</row>
+      <row>...bb...</row>
+      <row>...bb...</row>
+      <row>...bb...</row>
+      <row>...bb...</row>
+      <row>...bb...</row>
+    </bitmap>
+    <bitmap name="man-plain">
+      <row>...*****....</row>
+      <row>..*********.</row>
+      <row>..kkkssks...</row>
+      <row>.ksksssss...</row>
+      <row>.ksskkkkk...</row>
+      <row>...sssss....</row>
+      <row>..bb*bb.....</row>
+      <row>.bbb*bb*b...</row>
+      <row>bbbb****bb..</row>
+      <row>ssb*s**sbs..</row>
+      <row>sss*****ss..</row>
+      <row>ss.**.**.s..</row>
+      <row>..***.***...</row>
+      <row>.***...***..</row>
+      <row>.kkk...kkk..</row>
+      <row>kkkk...kkkk.</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="b">color.blue</color>
+      <color char="s">color.orange</color>
+      <color char="k">color.brown</color>
+    </bitmap>
+    <bitmap name="man-hammer">
+      <row>.........ooo</row>
+      <row>...*****.ooo</row>
+      <row>..*******.b.</row>
+      <row>..kkkssksb..</row>
+      <row>.kskssssb...</row>
+      <row>.ksskkkkb...</row>
+      <row>...sssssb...</row>
+      <row>..bb*bbsb...</row>
+      <row>.bbb*bb*b...</row>
+      <row>bbbb****bb..</row>
+      <row>ssb*****bs..</row>
+      <row>ss.**.**.s..</row>
+      <row>..***.***...</row>
+      <row>.***...***..</row>
+      <row>.kkk...kkk..</row>
+      <row>kkkk...kkkk.</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="b">color.blue</color>
+      <color char="s">color.orange</color>
+      <color char="k">color.brown</color>
+      <color char="o">color.orange</color>
+    </bitmap>
+  </pictures>
 </game>

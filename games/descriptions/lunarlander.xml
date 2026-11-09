@@ -49,32 +49,6 @@
     <variable name="upright">10</variable>
     <variable name="margin">20</variable>
   </variables>
-  <sounds>
-    <!-- the engine, for as long as it is held: a low rumble of noise -->
-    <sound name="thrust" wave="noise">
-      <loop />
-      <volume>0.15</volume>
-      <note pitch="150">1</note>
-    </sound>
-    <sound name="land" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C4">0.1</note>
-      <note pitch="E4">0.1</note>
-      <note pitch="G4">0.1</note>
-      <note pitch="C5">0.3</note>
-    </sound>
-    <sound name="crash" wave="noise">
-      <volume>0.45</volume>
-      <note pitch="3000" to="100">0.8</note>
-    </sound>
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.07</note>
-      <note pitch="E5">0.07</note>
-      <note pitch="G5">0.07</note>
-      <note pitch="C6">0.14</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size><color>color.white</color></style>
     <style name="line"><size>28</size><color>color.white</color></style>
@@ -357,4 +331,30 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <!-- the engine, for as long as it is held: a low rumble of noise -->
+    <sound name="thrust" wave="noise">
+      <loop />
+      <volume>0.15</volume>
+      <note pitch="150">1</note>
+    </sound>
+    <sound name="land" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C4">0.1</note>
+      <note pitch="E4">0.1</note>
+      <note pitch="G4">0.1</note>
+      <note pitch="C5">0.3</note>
+    </sound>
+    <sound name="crash" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="3000" to="100">0.8</note>
+    </sound>
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+  </sounds>
 </game>

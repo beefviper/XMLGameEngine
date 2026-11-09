@@ -59,51 +59,6 @@
     <variable name="wall">12</variable>
     <variable name="gap">120</variable>
   </variables>
-  <sounds>
-    <sound name="pickup" wave="square">
-      <volume>0.15</volume>
-      <note pitch="E5">0.04</note>
-      <note pitch="A5">0.05</note>
-    </sound>
-    <sound name="drop" wave="triangle">
-      <volume>0.3</volume>
-      <note pitch="A3">0.06</note>
-    </sound>
-    <sound name="open" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C4" to="C5">0.4</note>
-    </sound>
-    <sound name="slay" wave="noise">
-      <volume>0.4</volume>
-      <note pitch="2000" to="150">0.5</note>
-    </sound>
-    <sound name="roar" wave="sawtooth">
-      <volume>0.25</volume>
-      <note pitch="A1" to="E2">0.5</note>
-    </sound>
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.07</note>
-      <note pitch="E5">0.07</note>
-      <note pitch="G5">0.07</note>
-      <note pitch="C6">0.14</note>
-    </sound>
-    <sound name="win" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-    <sound name="gameover" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="G4">0.25</note>
-      <note pitch="E4">0.25</note>
-      <note pitch="C4" to="C3">0.7</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>50</size><color>color.yellow</color></style>
     <style name="prompt"><size>36</size></style>
@@ -138,30 +93,7 @@
     <!-- the castles: towers, a keep, and an arch for the gate -->
     <group name="castles" class="wall">
       <sprite>
-        <bitmap>
-          <row>*.*.*.*..................*.*.*.*</row>
-          <row>*******..................*******</row>
-          <row>*******..................*******</row>
-          <row>*******..................*******</row>
-          <row>********.*.*.*.*.*.*.*.*.*******</row>
-          <row>********************************</row>
-          <row>********************************</row>
-          <row>********************************</row>
-          <row>********************************</row>
-          <row>********************************</row>
-          <row>********************************</row>
-          <row>********************************</row>
-          <row>************........************</row>
-          <row>************........************</row>
-          <row>************........************</row>
-          <row>************........************</row>
-          <row>************........************</row>
-          <row>************........************</row>
-          <row>************........************</row>
-          <row>************........************</row>
-          <scale>8</scale>
-          <color>color.yellow</color>
-        </bitmap>
+        <bitmap from="castles" />
       </sprite>
       <position><x>window.width.center - 128</x><y>40</y></position>
       <collisions>
@@ -174,36 +106,10 @@
     <!-- the dragons: asleep until the hero comes near, then after him -->
     <group name="dragons" class="dragon">
       <sprite name="asleep">
-        <bitmap>
-          <row>....***.</row>
-          <row>....*.**</row>
-          <row>....****</row>
-          <row>....*...</row>
-          <row>*...**..</row>
-          <row>**..***.</row>
-          <row>.*****..</row>
-          <row>..****..</row>
-          <row>...**...</row>
-          <row>...*.*..</row>
-          <row>..**.**.</row>
-          <scale>5</scale>
-        </bitmap>
+        <bitmap from="dragons-asleep" />
       </sprite>
       <sprite name="awake">
-        <bitmap>
-          <row>....***.</row>
-          <row>....*.**</row>
-          <row>....****</row>
-          <row>....*...</row>
-          <row>*...**..</row>
-          <row>**..***.</row>
-          <row>.*****..</row>
-          <row>..****..</row>
-          <row>...**...</row>
-          <row>...*.*..</row>
-          <row>..**.**.</row>
-          <scale>5</scale>
-        </bitmap>
+        <bitmap from="dragons-asleep" />
       </sprite>
       <collisions>
         <collision edge="all"><stick /></collision>
@@ -355,11 +261,7 @@
             <object name="doorway" />
             <object name="goldgate" class="wall">
               <sprite>
-                <bitmap>
-                  <row>*.*.*.*.</row><row>********</row><row>*.*.*.*.</row><row>*.*.*.*.</row><row>********</row><row>*.*.*.*.</row><row>*.*.*.*.</row><row>********</row>
-                  <scale>8</scale>
-                  <color>color.lightgrey</color>
-                </bitmap>
+                <bitmap from="goldgate" />
               </sprite>
               <position><x>window.width.center - 32</x><y>136</y></position>
               <collisions>
@@ -368,13 +270,7 @@
             </object>
             <object name="sword" class="item">
               <sprite>
-                <bitmap>
-                  <row>.*......</row>
-                  <row>********</row>
-                  <row>.*......</row>
-                  <scale>3</scale>
-                  <color>color.yellow</color>
-                </bitmap>
+                <bitmap from="sword" />
               </sprite>
               <position><x>100</x><y>380</y></position>
               <collisions />
@@ -404,13 +300,7 @@
             </object>
             <object name="blackkey" class="item">
               <sprite>
-                <bitmap>
-                  <row>.***.....</row>
-                  <row>**.******</row>
-                  <row>.***..*.*</row>
-                  <scale>3</scale>
-                  <color>color.darkgrey</color>
-                </bitmap>
+                <bitmap from="blackkey" />
               </sprite>
               <position><x>300</x><y>200</y></position>
               <collisions />
@@ -434,13 +324,7 @@
             <object name="eastexit" />
             <object name="goldkey" class="item">
               <sprite>
-                <bitmap>
-                  <row>.***.....</row>
-                  <row>**.******</row>
-                  <row>.***..*.*</row>
-                  <scale>3</scale>
-                  <color>color.yellow</color>
-                </bitmap>
+                <bitmap from="goldkey" />
               </sprite>
               <position><x>480</x><y>300</y></position>
               <collisions />
@@ -473,11 +357,7 @@
             <object name="doorway" />
             <object name="blackgate" class="wall">
               <sprite>
-                <bitmap>
-                  <row>*.*.*.*.</row><row>********</row><row>*.*.*.*.</row><row>*.*.*.*.</row><row>********</row><row>*.*.*.*.</row><row>*.*.*.*.</row><row>********</row>
-                  <scale>8</scale>
-                  <color>color.lightgrey</color>
-                </bitmap>
+                <bitmap from="goldgate" />
               </sprite>
               <position><x>window.width.center - 32</x><y>136</y></position>
               <collisions>
@@ -505,30 +385,10 @@
             <!-- the chalice, flashing -->
             <object name="chalice" class="item">
               <sprite name="bright">
-                <bitmap>
-                  <row>*.....*</row>
-                  <row>*.....*</row>
-                  <row>.*...*.</row>
-                  <row>..***..</row>
-                  <row>...*...</row>
-                  <row>...*...</row>
-                  <row>.*****.</row>
-                  <scale>3</scale>
-                  <color>color.magenta</color>
-                </bitmap>
+                <bitmap from="chalice-bright" />
               </sprite>
               <sprite name="dim">
-                <bitmap>
-                  <row>*.....*</row>
-                  <row>*.....*</row>
-                  <row>.*...*.</row>
-                  <row>..***..</row>
-                  <row>...*...</row>
-                  <row>...*...</row>
-                  <row>.*****.</row>
-                  <scale>3</scale>
-                  <color>color.purple</color>
-                </bitmap>
+                <bitmap from="chalice-dim" />
               </sprite>
               <animation>
                 <interval>0.15</interval>
@@ -615,4 +475,137 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="pickup" wave="square">
+      <volume>0.15</volume>
+      <note pitch="E5">0.04</note>
+      <note pitch="A5">0.05</note>
+    </sound>
+    <sound name="drop" wave="triangle">
+      <volume>0.3</volume>
+      <note pitch="A3">0.06</note>
+    </sound>
+    <sound name="open" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C4" to="C5">0.4</note>
+    </sound>
+    <sound name="slay" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="2000" to="150">0.5</note>
+    </sound>
+    <sound name="roar" wave="sawtooth">
+      <volume>0.25</volume>
+      <note pitch="A1" to="E2">0.5</note>
+    </sound>
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <sound name="win" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="castles">
+      <row>*.*.*.*..................*.*.*.*</row>
+      <row>*******..................*******</row>
+      <row>*******..................*******</row>
+      <row>*******..................*******</row>
+      <row>********.*.*.*.*.*.*.*.*.*******</row>
+      <row>********************************</row>
+      <row>********************************</row>
+      <row>********************************</row>
+      <row>********************************</row>
+      <row>********************************</row>
+      <row>********************************</row>
+      <row>********************************</row>
+      <row>************........************</row>
+      <row>************........************</row>
+      <row>************........************</row>
+      <row>************........************</row>
+      <row>************........************</row>
+      <row>************........************</row>
+      <row>************........************</row>
+      <row>************........************</row>
+      <scale>8</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dragons-asleep">
+      <row>....***.</row>
+      <row>....*.**</row>
+      <row>....****</row>
+      <row>....*...</row>
+      <row>*...**..</row>
+      <row>**..***.</row>
+      <row>.*****..</row>
+      <row>..****..</row>
+      <row>...**...</row>
+      <row>...*.*..</row>
+      <row>..**.**.</row>
+      <scale>5</scale>
+    </bitmap>
+    <bitmap name="goldgate">
+      <row>*.*.*.*.</row><row>********</row><row>*.*.*.*.</row><row>*.*.*.*.</row><row>********</row><row>*.*.*.*.</row><row>*.*.*.*.</row><row>********</row>
+      <scale>8</scale>
+      <color>color.lightgrey</color>
+    </bitmap>
+    <bitmap name="sword">
+      <row>.*......</row>
+      <row>********</row>
+      <row>.*......</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="blackkey">
+      <row>.***.....</row>
+      <row>**.******</row>
+      <row>.***..*.*</row>
+      <scale>3</scale>
+      <color>color.darkgrey</color>
+    </bitmap>
+    <bitmap name="goldkey">
+      <row>.***.....</row>
+      <row>**.******</row>
+      <row>.***..*.*</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="chalice-bright">
+      <row>*.....*</row>
+      <row>*.....*</row>
+      <row>.*...*.</row>
+      <row>..***..</row>
+      <row>...*...</row>
+      <row>...*...</row>
+      <row>.*****.</row>
+      <scale>3</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="chalice-dim">
+      <row>*.....*</row>
+      <row>*.....*</row>
+      <row>.*...*.</row>
+      <row>..***..</row>
+      <row>...*...</row>
+      <row>...*...</row>
+      <row>.*****.</row>
+      <scale>3</scale>
+      <color>color.purple</color>
+    </bitmap>
+  </pictures>
 </game>

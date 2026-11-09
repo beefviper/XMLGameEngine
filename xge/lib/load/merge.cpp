@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
+#include <map>
 #include <stdexcept>
 
 namespace xge
@@ -324,6 +326,85 @@ namespace xge
 	std::unique_ptr<XmlNode> viewOf(const ElementPtr& element)
 	{
 		return std::make_unique<ElementNode>(element, nullptr, 0);
+	}
+
+	ElementPtr withPictures(const ElementPtr& game)
+	{
+		std::map<std::string, ElementPtr> bitmaps;
+		for (const ElementPtr& child : game->children)
+		{
+			if (child->name != "pictures") { continue; }
+			for (const ElementPtr& picture : child->children)
+			{
+				if (picture->name != "bitmap") { continue; }
+				const std::string name = picture->attribute("name");
+				if (name.empty()) { fail("<pictures> > <bitmap>", "needs a name=, which a sprite's <bitmap from=\"...\" /> takes it by"); }
+				if (!bitmaps.emplace(name, picture).second) { fail("<pictures>", "two <bitmap>s are called '" + name + "'"); }
+			}
+		}
+
+		const auto taken = [&](const ElementPtr& over)
+		{
+			const std::string name = over->attribute("from");
+			const auto found = bitmaps.find(name);
+			if (found == bitmaps.end()) { fail("<bitmap from=\"" + name + "\">", "names no <bitmap> of the <pictures>"); }
+			const ElementPtr& base = found->second;
+
+			Made made = std::make_shared<Element>(*base);
+			dropAttribute(*made, "name");
+			for (const auto& [key, value] : over->attributes)
+			{
+				if (key != "from") { setAttribute(*made, key, value); }
+			}
+			const auto gives = [&](const std::string& tag) { return std::any_of(over->children.begin(), over->children.end(), [&](const ElementPtr& c) { return c->name == tag; }); };
+			const auto sameColor = [](const ElementPtr& a, const ElementPtr& b) { return a->name == "color" && b->name == "color" && a->attribute("char") == b->attribute("char"); };
+
+			// In the schema's order: rows, scale, colors, flip.
+			Children children;
+			for (const char* tag : { "row", "scale", "color", "flip" })
+			{
+				const std::string each = tag;
+				if (each == "color")
+				{
+					for (const ElementPtr& c : base->children)
+					{
+						if (c->name != "color") { continue; }
+						const auto mine = std::find_if(over->children.begin(), over->children.end(), [&](const ElementPtr& o) { return sameColor(o, c); });
+						children.push_back(mine != over->children.end() ? *mine : c);
+					}
+					for (const ElementPtr& o : over->children)
+					{
+						if (o->name == "color" && std::none_of(base->children.begin(), base->children.end(), [&](const ElementPtr& c) { return sameColor(o, c); })) { children.push_back(o); }
+					}
+					continue;
+				}
+				const ElementPtr& from = gives(each) ? over : base;
+				for (const ElementPtr& c : from->children)
+				{
+					if (c->name == each) { children.push_back(c); }
+				}
+			}
+			made->children = std::move(children);
+			return ElementPtr(made);
+		};
+
+		const std::function<ElementPtr(const ElementPtr&)> walk = [&](const ElementPtr& element) -> ElementPtr
+		{
+			if (element->name == "pictures") { return element; }
+			if (element->name == "bitmap" && !element->attribute("from").empty()) { return taken(element); }
+			Children children;
+			bool any = false;
+			for (const ElementPtr& child : element->children)
+			{
+				children.push_back(walk(child));
+				any = any || children.back() != child;
+			}
+			if (!any) { return element; }
+			Made made = std::make_shared<Element>(*element);
+			made->children = std::move(children);
+			return ElementPtr(made);
+		};
+		return walk(game);
 	}
 
 	ElementPtr changed(const ElementPtr& base, const ElementPtr& over, const std::string& where)

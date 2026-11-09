@@ -41,26 +41,6 @@
     <variable name="top">104</variable>
     <variable name="panel">400</variable>
   </variables>
-  <sounds>
-    <sound name="move"><note pitch="E5">0.02</note></sound>
-    <sound name="turn"><note pitch="A5">0.02</note></sound>
-    <sound name="land" wave="triangle"><note pitch="D3">0.06</note></sound>
-    <sound name="match">
-      <note pitch="C5">0.04</note>
-      <note pitch="G5">0.04</note>
-      <note pitch="C6">0.08</note>
-    </sound>
-    <sound name="germ" wave="square"><volume>0.4</volume><note pitch="G6" to="C6">0.06</note></sound>
-    <sound name="level">
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-    <sound name="over" wave="triangle">
-      <note pitch="A4" to="A1">0.9</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size><color>color.yellow</color></style>
     <style name="prompt"><size>32</size></style>
@@ -177,72 +157,10 @@
         <!-- Doc holds the next capsule up, and throws it in -->
         <object name="doctor">
           <sprite name="hold">
-            <bitmap style="doctor">
-              <row>..........yy..........kk.</row>
-              <row>...........k.........kggk</row>
-              <row>.......kkkkkkkkkk....kggk</row>
-              <row>......kwwwrwwrwwwk...kggk</row>
-              <row>......kwwwrrrrwwwk...kgk.</row>
-              <row>......kwwwrwwrwwwk...kgk.</row>
-              <row>......kkkkkkkkkkkk...kgk.</row>
-              <row>......kggggggggggk...kgk.</row>
-              <row>......kgkkkkkkkkgk...kgk.</row>
-              <row>......kgkcckkcckgk...kgk.</row>
-              <row>......kgkcckkcckgk...kgk.</row>
-              <row>......kgkkkkkkkkgk...kgk.</row>
-              <row>......kggggggggggk..kwwk.</row>
-              <row>......kggkrkrkrggk..kwwk.</row>
-              <row>.......kggggggggk..kwwk..</row>
-              <row>........kkkggkkk..kwwk...</row>
-              <row>....kkkkkwwwwwwkkkwwk....</row>
-              <row>...kwwwwwwwkwwwwwwwk.....</row>
-              <row>..kwwwwwwwwkwwwwwwk......</row>
-              <row>..kwkwwwwwwkwwwwwwk......</row>
-              <row>..kwkwwwwwwkwwwwwwk......</row>
-              <row>..kwkwwwwwwkwgggwwk......</row>
-              <row>..kwkwwwwwwkwwwwwwk......</row>
-              <row>..kgkwwwwwwkwwwwwwk......</row>
-              <row>..kgkwwwwwwkwwwwwwk......</row>
-              <row>...k.kwwwwwkwwwwwk.......</row>
-              <row>.....kwwwwwkwwwwwk.......</row>
-              <row>.....kkkkkkkkkkkkk.......</row>
-              <row>......kggk...kggk........</row>
-              <row>.....kkkkk...kkkkk.......</row>
-            </bitmap>
+            <bitmap from="doctor-hold" />
           </sprite>
           <sprite name="throw">
-            <bitmap style="doctor">
-              <row>..........yy.............</row>
-              <row>...........k.............</row>
-              <row>.......kkkkkkkkkk........</row>
-              <row>......kwwwrwwrwwwk.......</row>
-              <row>......kwwwrrrrwwwk.......</row>
-              <row>......kwwwrwwrwwwk.......</row>
-              <row>......kkkkkkkkkkkk.......</row>
-              <row>......kggggggggggk.......</row>
-              <row>......kgkkkkkkkkgk.......</row>
-              <row>......kgkcckkcckgk.......</row>
-              <row>......kgkcckkcckgk.......</row>
-              <row>......kgkkkkkkkkgk.......</row>
-              <row>......kggggggggggk.......</row>
-              <row>......kggkkkkkkggk.......</row>
-              <row>.......kggggggggk........</row>
-              <row>........kkkggkkk.........</row>
-              <row>....kkkkkwwwwwwkkkkkk....</row>
-              <row>...kwwwwwwwkwwwwwwwwwkk..</row>
-              <row>..kwwwwwwwwkwwwwwkkwwwgk.</row>
-              <row>..kwkwwwwwwkwwwwwk.kkkgk.</row>
-              <row>..kwkwwwwwwkwwwwwk...kk..</row>
-              <row>..kwkwwwwwwkwgggwk.......</row>
-              <row>..kwkwwwwwwkwwwwwk.......</row>
-              <row>..kgkwwwwwwkwwwwwk.......</row>
-              <row>..kgkwwwwwwkwwwwwk.......</row>
-              <row>...k.kwwwwwkwwwwwk.......</row>
-              <row>.....kwwwwwkwwwwwk.......</row>
-              <row>.....kkkkkkkkkkkkk.......</row>
-              <row>......kggk...kggk........</row>
-              <row>.....kkkkk...kkkkk.......</row>
-            </bitmap>
+            <bitmap from="doctor-throw" />
           </sprite>
           <position><x>panel + 40</x><y>150</y></position>
           <timers>
@@ -270,104 +188,19 @@
           <!-- a capsule half of each colour; c in a shape is any one of them -->
           <group name="halves" class="pill" char="c">
             <sprite name="alone">
-              <bitmap style="pill">
-                <row>................</row>
-                <row>................</row>
-                <row>....kkkkkkkk....</row>
-                <row>..kk********kk..</row>
-                <row>.k**ww********k.</row>
-                <row>.k*ww*********k.</row>
-                <row>k**w**********dk</row>
-                <row>k*************dk</row>
-                <row>k*************dk</row>
-                <row>k************ddk</row>
-                <row>.k**********ddk.</row>
-                <row>.k********dddk..</row>
-                <row>..kkddddddddkk..</row>
-                <row>....kkkkkkkk....</row>
-                <row>................</row>
-                <row>................</row>
-              </bitmap>
+              <bitmap from="halves-alone" />
             </sprite>
             <sprite name="openleft">
-              <bitmap style="pill">
-                <row>................</row>
-                <row>................</row>
-                <row>kkkkkkkkkkkk....</row>
-                <row>************kk..</row>
-                <row>**********ww**k.</row>
-                <row>***********ww*k.</row>
-                <row>************w**k</row>
-                <row>***************k</row>
-                <row>***************k</row>
-                <row>d**************k</row>
-                <row>dd************k.</row>
-                <row>dddd**********k.</row>
-                <row>ddddddddddddkk..</row>
-                <row>kkkkkkkkkkkk....</row>
-                <row>................</row>
-                <row>................</row>
-              </bitmap>
+              <bitmap from="halves-openleft" />
             </sprite>
             <sprite name="openright">
-              <bitmap style="pill">
-                <row>................</row>
-                <row>................</row>
-                <row>....kkkkkkkkkkkk</row>
-                <row>..kk************</row>
-                <row>.k**ww**********</row>
-                <row>.k*ww***********</row>
-                <row>k**w************</row>
-                <row>k***************</row>
-                <row>k***************</row>
-                <row>k**************d</row>
-                <row>.k************dd</row>
-                <row>.k**********dddd</row>
-                <row>..kkdddddddddddd</row>
-                <row>....kkkkkkkkkkkk</row>
-                <row>................</row>
-                <row>................</row>
-              </bitmap>
+              <bitmap from="halves-openright" />
             </sprite>
             <sprite name="openup">
-              <bitmap style="pill">
-                <row>..k******ddddk..</row>
-                <row>..k*******dddk..</row>
-                <row>..k********ddk..</row>
-                <row>..k********ddk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*w*******dk..</row>
-                <row>..k*ww******dk..</row>
-                <row>...k*ww*****k...</row>
-                <row>...k********k...</row>
-                <row>....kk****kk....</row>
-                <row>......kkkk......</row>
-              </bitmap>
+              <bitmap from="halves-openup" />
             </sprite>
             <sprite name="opendown">
-              <bitmap style="pill">
-                <row>......kkkk......</row>
-                <row>....kk****kk....</row>
-                <row>...k********k...</row>
-                <row>...k*ww*****k...</row>
-                <row>..k*ww******dk..</row>
-                <row>..k*w*******dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k*********dk..</row>
-                <row>..k********ddk..</row>
-                <row>..k********ddk..</row>
-                <row>..k*******dddk..</row>
-                <row>..k******ddddk..</row>
-              </bitmap>
+              <bitmap from="halves-opendown" />
             </sprite>
             <joins>
               <alone sprite="alone" />
@@ -405,44 +238,10 @@
           <!-- the germs, little monsters that wriggle, one of each colour -->
           <group name="germs" class="germ">
             <sprite name="germa">
-              <bitmap style="germ">
-                <row>................</row>
-                <row>...k........k...</row>
-                <row>....k......k....</row>
-                <row>.....kkkkkk.....</row>
-                <row>...kk******kk...</row>
-                <row>..k**********k..</row>
-                <row>.k**wwk**wwk**k.</row>
-                <row>.k**wkk**wkk**k.</row>
-                <row>k**************k</row>
-                <row>k****kkkkkk****k</row>
-                <row>k*****k..k*****k</row>
-                <row>.k****kkkk****k.</row>
-                <row>..kk********kk..</row>
-                <row>.k..kk****kk..k.</row>
-                <row>k...k.kkkk.k...k</row>
-                <row>...k........k...</row>
-              </bitmap>
+              <bitmap from="germs-germa" />
             </sprite>
             <sprite name="germb">
-              <bitmap style="germ">
-                <row>................</row>
-                <row>..k..........k..</row>
-                <row>...k........k...</row>
-                <row>.....kkkkkk.....</row>
-                <row>...kk******kk...</row>
-                <row>..k**********k..</row>
-                <row>.k**kww**kww**k.</row>
-                <row>.k**kkw**kkw**k.</row>
-                <row>k**************k</row>
-                <row>k**************k</row>
-                <row>k****kkkkkk****k</row>
-                <row>.k****k..k****k.</row>
-                <row>..kk***kk***kk..</row>
-                <row>...kkk****kkk...</row>
-                <row>..k..kkkkkk..k..</row>
-                <row>.k............k.</row>
-              </bitmap>
+              <bitmap from="germs-germb" />
             </sprite>
             <animation name="wriggle">
               <interval>0.3</interval>
@@ -593,4 +392,216 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="move"><note pitch="E5">0.02</note></sound>
+    <sound name="turn"><note pitch="A5">0.02</note></sound>
+    <sound name="land" wave="triangle"><note pitch="D3">0.06</note></sound>
+    <sound name="match">
+      <note pitch="C5">0.04</note>
+      <note pitch="G5">0.04</note>
+      <note pitch="C6">0.08</note>
+    </sound>
+    <sound name="germ" wave="square"><volume>0.4</volume><note pitch="G6" to="C6">0.06</note></sound>
+    <sound name="level">
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <sound name="over" wave="triangle">
+      <note pitch="A4" to="A1">0.9</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="doctor-hold" style="doctor">
+      <row>..........yy..........kk.</row>
+      <row>...........k.........kggk</row>
+      <row>.......kkkkkkkkkk....kggk</row>
+      <row>......kwwwrwwrwwwk...kggk</row>
+      <row>......kwwwrrrrwwwk...kgk.</row>
+      <row>......kwwwrwwrwwwk...kgk.</row>
+      <row>......kkkkkkkkkkkk...kgk.</row>
+      <row>......kggggggggggk...kgk.</row>
+      <row>......kgkkkkkkkkgk...kgk.</row>
+      <row>......kgkcckkcckgk...kgk.</row>
+      <row>......kgkcckkcckgk...kgk.</row>
+      <row>......kgkkkkkkkkgk...kgk.</row>
+      <row>......kggggggggggk..kwwk.</row>
+      <row>......kggkrkrkrggk..kwwk.</row>
+      <row>.......kggggggggk..kwwk..</row>
+      <row>........kkkggkkk..kwwk...</row>
+      <row>....kkkkkwwwwwwkkkwwk....</row>
+      <row>...kwwwwwwwkwwwwwwwk.....</row>
+      <row>..kwwwwwwwwkwwwwwwk......</row>
+      <row>..kwkwwwwwwkwwwwwwk......</row>
+      <row>..kwkwwwwwwkwwwwwwk......</row>
+      <row>..kwkwwwwwwkwgggwwk......</row>
+      <row>..kwkwwwwwwkwwwwwwk......</row>
+      <row>..kgkwwwwwwkwwwwwwk......</row>
+      <row>..kgkwwwwwwkwwwwwwk......</row>
+      <row>...k.kwwwwwkwwwwwk.......</row>
+      <row>.....kwwwwwkwwwwwk.......</row>
+      <row>.....kkkkkkkkkkkkk.......</row>
+      <row>......kggk...kggk........</row>
+      <row>.....kkkkk...kkkkk.......</row>
+    </bitmap>
+    <bitmap name="doctor-throw" style="doctor">
+      <row>..........yy.............</row>
+      <row>...........k.............</row>
+      <row>.......kkkkkkkkkk........</row>
+      <row>......kwwwrwwrwwwk.......</row>
+      <row>......kwwwrrrrwwwk.......</row>
+      <row>......kwwwrwwrwwwk.......</row>
+      <row>......kkkkkkkkkkkk.......</row>
+      <row>......kggggggggggk.......</row>
+      <row>......kgkkkkkkkkgk.......</row>
+      <row>......kgkcckkcckgk.......</row>
+      <row>......kgkcckkcckgk.......</row>
+      <row>......kgkkkkkkkkgk.......</row>
+      <row>......kggggggggggk.......</row>
+      <row>......kggkkkkkkggk.......</row>
+      <row>.......kggggggggk........</row>
+      <row>........kkkggkkk.........</row>
+      <row>....kkkkkwwwwwwkkkkkk....</row>
+      <row>...kwwwwwwwkwwwwwwwwwkk..</row>
+      <row>..kwwwwwwwwkwwwwwkkwwwgk.</row>
+      <row>..kwkwwwwwwkwwwwwk.kkkgk.</row>
+      <row>..kwkwwwwwwkwwwwwk...kk..</row>
+      <row>..kwkwwwwwwkwgggwk.......</row>
+      <row>..kwkwwwwwwkwwwwwk.......</row>
+      <row>..kgkwwwwwwkwwwwwk.......</row>
+      <row>..kgkwwwwwwkwwwwwk.......</row>
+      <row>...k.kwwwwwkwwwwwk.......</row>
+      <row>.....kwwwwwkwwwwwk.......</row>
+      <row>.....kkkkkkkkkkkkk.......</row>
+      <row>......kggk...kggk........</row>
+      <row>.....kkkkk...kkkkk.......</row>
+    </bitmap>
+    <bitmap name="halves-alone" style="pill">
+      <row>................</row>
+      <row>................</row>
+      <row>....kkkkkkkk....</row>
+      <row>..kk********kk..</row>
+      <row>.k**ww********k.</row>
+      <row>.k*ww*********k.</row>
+      <row>k**w**********dk</row>
+      <row>k*************dk</row>
+      <row>k*************dk</row>
+      <row>k************ddk</row>
+      <row>.k**********ddk.</row>
+      <row>.k********dddk..</row>
+      <row>..kkddddddddkk..</row>
+      <row>....kkkkkkkk....</row>
+      <row>................</row>
+      <row>................</row>
+    </bitmap>
+    <bitmap name="halves-openleft" style="pill">
+      <row>................</row>
+      <row>................</row>
+      <row>kkkkkkkkkkkk....</row>
+      <row>************kk..</row>
+      <row>**********ww**k.</row>
+      <row>***********ww*k.</row>
+      <row>************w**k</row>
+      <row>***************k</row>
+      <row>***************k</row>
+      <row>d**************k</row>
+      <row>dd************k.</row>
+      <row>dddd**********k.</row>
+      <row>ddddddddddddkk..</row>
+      <row>kkkkkkkkkkkk....</row>
+      <row>................</row>
+      <row>................</row>
+    </bitmap>
+    <bitmap name="halves-openright" style="pill">
+      <row>................</row>
+      <row>................</row>
+      <row>....kkkkkkkkkkkk</row>
+      <row>..kk************</row>
+      <row>.k**ww**********</row>
+      <row>.k*ww***********</row>
+      <row>k**w************</row>
+      <row>k***************</row>
+      <row>k***************</row>
+      <row>k**************d</row>
+      <row>.k************dd</row>
+      <row>.k**********dddd</row>
+      <row>..kkdddddddddddd</row>
+      <row>....kkkkkkkkkkkk</row>
+      <row>................</row>
+      <row>................</row>
+    </bitmap>
+    <bitmap name="halves-openup" style="pill">
+      <row>..k******ddddk..</row>
+      <row>..k*******dddk..</row>
+      <row>..k********ddk..</row>
+      <row>..k********ddk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*w*******dk..</row>
+      <row>..k*ww******dk..</row>
+      <row>...k*ww*****k...</row>
+      <row>...k********k...</row>
+      <row>....kk****kk....</row>
+      <row>......kkkk......</row>
+    </bitmap>
+    <bitmap name="halves-opendown" style="pill">
+      <row>......kkkk......</row>
+      <row>....kk****kk....</row>
+      <row>...k********k...</row>
+      <row>...k*ww*****k...</row>
+      <row>..k*ww******dk..</row>
+      <row>..k*w*******dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k*********dk..</row>
+      <row>..k********ddk..</row>
+      <row>..k********ddk..</row>
+      <row>..k*******dddk..</row>
+      <row>..k******ddddk..</row>
+    </bitmap>
+    <bitmap name="germs-germa" style="germ">
+      <row>................</row>
+      <row>...k........k...</row>
+      <row>....k......k....</row>
+      <row>.....kkkkkk.....</row>
+      <row>...kk******kk...</row>
+      <row>..k**********k..</row>
+      <row>.k**wwk**wwk**k.</row>
+      <row>.k**wkk**wkk**k.</row>
+      <row>k**************k</row>
+      <row>k****kkkkkk****k</row>
+      <row>k*****k..k*****k</row>
+      <row>.k****kkkk****k.</row>
+      <row>..kk********kk..</row>
+      <row>.k..kk****kk..k.</row>
+      <row>k...k.kkkk.k...k</row>
+      <row>...k........k...</row>
+    </bitmap>
+    <bitmap name="germs-germb" style="germ">
+      <row>................</row>
+      <row>..k..........k..</row>
+      <row>...k........k...</row>
+      <row>.....kkkkkk.....</row>
+      <row>...kk******kk...</row>
+      <row>..k**********k..</row>
+      <row>.k**kww**kww**k.</row>
+      <row>.k**kkw**kkw**k.</row>
+      <row>k**************k</row>
+      <row>k**************k</row>
+      <row>k****kkkkkk****k</row>
+      <row>.k****k..k****k.</row>
+      <row>..kk***kk***kk..</row>
+      <row>...kkk****kkk...</row>
+      <row>..k..kkkkkk..k..</row>
+      <row>.k............k.</row>
+    </bitmap>
+  </pictures>
 </game>

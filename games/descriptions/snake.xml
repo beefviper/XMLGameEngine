@@ -33,12 +33,6 @@
   <variables>
     <variable name="cell">20</variable>
   </variables>
-  <sounds>
-    <sound name="eat"><note pitch="C6">0.03</note><note pitch="G6">0.04</note></sound>
-    <sound name="over" wave="triangle">
-      <note pitch="E4" to="E1">0.7</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>88</size><color>color.green</color></style>
     <style name="prompt"><size>32</size></style>
@@ -200,4 +194,10 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="eat"><note pitch="C6">0.03</note><note pitch="G6">0.04</note></sound>
+    <sound name="over" wave="triangle">
+      <note pitch="E4" to="E1">0.7</note>
+    </sound>
+  </sounds>
 </game>

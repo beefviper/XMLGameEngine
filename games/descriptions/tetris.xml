@@ -44,18 +44,6 @@
     <variable name="top">40</variable>
     <variable name="panel">400</variable>
   </variables>
-  <sounds>
-    <sound name="turn"><note pitch="E5">0.02</note></sound>
-    <sound name="land" wave="triangle"><note pitch="C3">0.06</note></sound>
-    <sound name="row">
-      <note pitch="C5">0.05</note>
-      <note pitch="E5">0.05</note>
-      <note pitch="G5">0.08</note>
-    </sound>
-    <sound name="over" wave="triangle">
-      <note pitch="G4" to="C2">0.8</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>88</size><color>color.cyan</color></style>
     <style name="prompt"><size>32</size></style>
@@ -329,4 +317,16 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="turn"><note pitch="E5">0.02</note></sound>
+    <sound name="land" wave="triangle"><note pitch="C3">0.06</note></sound>
+    <sound name="row">
+      <note pitch="C5">0.05</note>
+      <note pitch="E5">0.05</note>
+      <note pitch="G5">0.08</note>
+    </sound>
+    <sound name="over" wave="triangle">
+      <note pitch="G4" to="C2">0.8</note>
+    </sound>
+  </sounds>
 </game>

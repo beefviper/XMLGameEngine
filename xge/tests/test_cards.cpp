@@ -383,7 +383,7 @@ TEST_CASE("klondike.xml: all 52 home wins, and a new game deals again", "[cards]
 namespace
 {
 	// A game of one state holding `objects`, with the card sheet as two
-	// <sheets>: "cards", a grid of 13 by 5, and "loose", no grid but a
+	// <pictures>: "cards", a grid of 13 by 5, and "loose", no grid but a
 	// margin and gap that change nothing (cells by x and y).
 	struct SheetGame
 	{
@@ -395,9 +395,9 @@ namespace
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"sheets\"><width>800</width><height>600</height><background>color.black</background></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
-				"<sheets><sheet name=\"cards\"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>"
-				"<sheet name=\"sized\"><path>assets/cards.png</path><cell><width>192</width><height>280</height></cell></sheet>" << sheets << "</sheets>"
-				"<states><state name=\"playing\"><objects>" << objects << "</objects><inputs><input><button>escape</button><pop /></input></inputs></state></states></game>";
+				"<states><state name=\"playing\"><objects>" << objects << "</objects><inputs><input><button>escape</button><pop /></input></inputs></state></states>"
+				"<pictures><sheet name=\"cards\"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>"
+				"<sheet name=\"sized\"><path>assets/cards.png</path><cell><width>192</width><height>280</height></cell></sheet>" << sheets << "</pictures></game>";
 		}
 		~SheetGame() { std::error_code ignored; std::filesystem::remove(path, ignored); }
 	};

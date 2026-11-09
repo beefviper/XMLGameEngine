@@ -107,13 +107,12 @@ namespace
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"beat\">0.25</variable></variables>"
-			+ sounds +
 			"<objects><object name=\"o\"><sprite><circle><radius>5</radius></circle></sprite>"
 			"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity>"
 			"<collisions><enabled>false</enabled></collisions></object></objects>"
 			"<states><state name=\"playing\"><shows><show object=\"o\" /></shows>"
 			"<inputs><input button=\"space\">" + onSpace + "</input></inputs></state></states>"
-			"</game>";
+			+ sounds + "</game>";
 	}
 
 	// Loads the game, or rethrows what loading it threw.

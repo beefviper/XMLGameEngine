@@ -45,18 +45,6 @@
     <variable name="still">0.08</variable>
     <variable name="holes">6</variable>
   </variables>
-  <sounds>
-    <sound name="putt"><volume>0.35</volume><note pitch="G5">0.04</note></sound>
-    <sound name="wall"><volume>0.15</volume><note pitch="C4">0.03</note></sound>
-    <sound name="post" wave="triangle"><volume>0.3</volume><note pitch="E6">0.06</note></sound>
-    <sound name="cushion" wave="triangle"><volume>0.2</volume><note pitch="A2">0.06</note></sound>
-    <sound name="cup" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.16</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.yellow</color></style>
     <style name="prompt"><size>40</size></style>
@@ -171,23 +159,10 @@
         <object name="arrow">
           <!-- as big as the ready look, all clear, so the arrow keeps its size -->
           <sprite name="waiting">
-            <bitmap>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <scale>2</scale>
-            </bitmap>
+            <bitmap from="arrow-waiting" />
           </sprite>
           <sprite name="ready">
-            <bitmap>
-              <row>.*.</row><row>***</row><row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row><row>.*.</row>
-              <row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <scale>2</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="arrow-ready" />
           </sprite>
           <position><x>0</x><y>0</y></position>
           <heading>90</heading>
@@ -482,4 +457,33 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="putt"><volume>0.35</volume><note pitch="G5">0.04</note></sound>
+    <sound name="wall"><volume>0.15</volume><note pitch="C4">0.03</note></sound>
+    <sound name="post" wave="triangle"><volume>0.3</volume><note pitch="E6">0.06</note></sound>
+    <sound name="cushion" wave="triangle"><volume>0.2</volume><note pitch="A2">0.06</note></sound>
+    <sound name="cup" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.16</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="arrow-waiting">
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <scale>2</scale>
+    </bitmap>
+    <bitmap name="arrow-ready">
+      <row>.*.</row><row>***</row><row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row><row>.*.</row>
+      <row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row>
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

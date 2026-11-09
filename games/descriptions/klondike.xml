@@ -56,25 +56,11 @@
     <variable name="top">24</variable>
     <variable name="low">188</variable>
   </variables>
-  <sounds>
-    <sound name="card" wave="noise"><note pitch="C6">0.03</note></sound>
-    <sound name="deal" wave="noise"><note pitch="G5">0.02</note><note pitch="C6">0.02</note></sound>
-    <sound name="win">
-      <note pitch="C5">0.12</note>
-      <note pitch="E5">0.12</note>
-      <note pitch="G5">0.12</note>
-      <note pitch="C6">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size><color>color.yellow</color></style>
     <style name="prompt"><size>32</size></style>
     <style name="help"><size>22</size><color>color.lightgrey</color></style>
   </styles>
-  <!-- the card sheet: a row for each suit, a column for each rank, then a row of backs -->
-  <sheets>
-    <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
-  </sheets>
   <states>
     <state name="title">
       <objects>
@@ -280,4 +266,18 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="card" wave="noise"><note pitch="C6">0.03</note></sound>
+    <sound name="deal" wave="noise"><note pitch="G5">0.02</note><note pitch="C6">0.02</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+  </sounds>
+  <!-- the card sheet: a row for each suit, a column for each rank, then a row of backs -->
+  <pictures>
+    <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
+  </pictures>
 </game>

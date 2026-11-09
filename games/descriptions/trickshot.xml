@@ -45,18 +45,6 @@
     <variable name="cloth">0.012</variable>
     <variable name="margin">60</variable>
   </variables>
-  <sounds>
-    <sound name="click"><volume>0.2</volume><note pitch="C6">0.03</note></sound>
-    <sound name="cushion"><volume>0.1</volume><note pitch="C4">0.03</note></sound>
-    <sound name="drop" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="G4" to="C4">0.2</note>
-    </sound>
-    <sound name="scratch" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="800">0.25</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>110</size><color>color.yellow</color></style>
     <style name="prompt"><size>40</size></style>
@@ -247,4 +235,16 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="click"><volume>0.2</volume><note pitch="C6">0.03</note></sound>
+    <sound name="cushion"><volume>0.1</volume><note pitch="C4">0.03</note></sound>
+    <sound name="drop" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4" to="C4">0.2</note>
+    </sound>
+    <sound name="scratch" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="800">0.25</note>
+    </sound>
+  </sounds>
 </game>

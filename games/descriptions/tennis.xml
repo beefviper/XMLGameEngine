@@ -52,13 +52,6 @@
     <variable name="spin">0.12</variable>
     <variable name="set">6</variable>
   </variables>
-  <sounds>
-    <sound name="hit"><volume>0.2</volume><note pitch="C5">0.04</note></sound>
-    <sound name="point" wave="triangle">
-      <volume>0.3</volume>
-      <note pitch="E5" to="E4">0.25</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>110</size><color>color.white</color></style>
     <style name="score"><size>32</size><color>color.white</color></style>
@@ -107,19 +100,7 @@
         <!-- the players: a person with a racket; the far one is the computer's -->
         <group name="players" class="racket">
           <sprite>
-            <bitmap>
-              <row>...**.....</row>
-              <row>...**...rr</row>
-              <row>.******.rr</row>
-              <row>...**..r..</row>
-              <row>...**.....</row>
-              <row>..*..*....</row>
-              <row>..*..*....</row>
-              <row>.**..**...</row>
-              <scale>3</scale>
-              <color>color.orange</color>
-              <color char="r">color.white</color>
-            </bitmap>
+            <bitmap from="players" />
           </sprite>
           <collisions>
             <collision edge="all"><stick /></collision>
@@ -305,4 +286,26 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="hit"><volume>0.2</volume><note pitch="C5">0.04</note></sound>
+    <sound name="point" wave="triangle">
+      <volume>0.3</volume>
+      <note pitch="E5" to="E4">0.25</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="players">
+      <row>...**.....</row>
+      <row>...**...rr</row>
+      <row>.******.rr</row>
+      <row>...**..r..</row>
+      <row>...**.....</row>
+      <row>..*..*....</row>
+      <row>..*..*....</row>
+      <row>.**..**...</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+      <color char="r">color.white</color>
+    </bitmap>
+  </pictures>
 </game>

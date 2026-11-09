@@ -52,24 +52,6 @@
     <variable name="dive">2.5</variable>
     <variable name="sway">2</variable>
   </variables>
-  <sounds>
-    <sound name="fire" wave="square"><volume>0.15</volume><note pitch="E6" to="E5">0.07</note></sound>
-    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="3000" to="300">0.25</note></sound>
-    <sound name="hurt" wave="sawtooth"><volume>0.2</volume><note pitch="A3" to="A2">0.15</note></sound>
-    <sound name="lost" wave="noise"><volume>0.45</volume><note pitch="2000" to="80">0.8</note></sound>
-    <sound name="split" wave="triangle">
-      <volume>0.3</volume>
-      <note pitch="C5" to="G5">0.12</note>
-      <note pitch="G5" to="C5">0.12</note>
-    </sound>
-    <sound name="wave" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.08</note>
-      <note pitch="C6">0.2</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.orange</color></style>
     <style name="line"><size>24</size><color>color.white</color></style>
@@ -92,15 +74,7 @@
          to side, and are gone at the ground -->
     <object name="half" class="demon">
       <sprite>
-        <bitmap>
-          <row>.*...*.</row>
-          <row>*******</row>
-          <row>*.***.*</row>
-          <row>*******</row>
-          <row>.*...*.</row>
-          <scale>3</scale>
-          <color>color.yellow</color>
-        </bitmap>
+        <bitmap from="half" />
       </sprite>
       <velocity><x><random><min>-sway</min><max>sway</max></random></x><y>dive</y></velocity>
       <most>8</most>
@@ -163,17 +137,7 @@
         <!-- the laser cannon -->
         <object name="player" class="player">
           <sprite>
-            <bitmap>
-              <row>......*......</row>
-              <row>.....***.....</row>
-              <row>.....***.....</row>
-              <row>..*********..</row>
-              <row>.***********.</row>
-              <row>*************</row>
-              <row>***.......***</row>
-              <scale>3</scale>
-              <color>color.magenta</color>
-            </bitmap>
+            <bitmap from="player" />
           </sprite>
           <position><x><centered /></x><y>window.bottom - ground - player.height</y></position>
           <collisions>
@@ -232,30 +196,10 @@
             <!-- the first wave: six flapping demons, each at a speed of its own, three to a row -->
             <group name="demons" class="demon">
               <sprite name="up">
-                <bitmap>
-                  <row>.*.......*.</row>
-                  <row>.**.....**.</row>
-                  <row>..*.***.*..</row>
-                  <row>..*******..</row>
-                  <row>...*.*.*...</row>
-                  <row>...*****...</row>
-                  <row>....*.*....</row>
-                  <scale>3</scale>
-                  <color>color.orange</color>
-                </bitmap>
+                <bitmap from="demons-up" />
               </sprite>
               <sprite name="down">
-                <bitmap>
-                  <row>...........</row>
-                  <row>..*.....*..</row>
-                  <row>.**.***.**.</row>
-                  <row>.*.*****.*.</row>
-                  <row>...*.*.*...</row>
-                  <row>...*****...</row>
-                  <row>....*.*....</row>
-                  <scale>3</scale>
-                  <color>color.orange</color>
-                </bitmap>
+                <bitmap from="demons-down" />
               </sprite>
               <animation>
                 <interval>0.25</interval>
@@ -311,30 +255,10 @@
             <!-- the second wave: four demons that split in two when they are shot -->
             <group name="demons" class="demon">
               <sprite name="walk">
-                <bitmap>
-                  <row>..***...***..</row>
-                  <row>.*****.*****.</row>
-                  <row>*.*.*****.*.*</row>
-                  <row>*************</row>
-                  <row>.*.*.***.*.*.</row>
-                  <row>..*.*...*.*..</row>
-                  <row>.*...*.*...*.</row>
-                  <scale>3</scale>
-                  <color>color.green</color>
-                </bitmap>
+                <bitmap from="demons-walk" />
               </sprite>
               <sprite name="step">
-                <bitmap>
-                  <row>..***...***..</row>
-                  <row>.*****.*****.</row>
-                  <row>*.*.*****.*.*</row>
-                  <row>*************</row>
-                  <row>.*.*.***.*.*.</row>
-                  <row>.*..*...*..*.</row>
-                  <row>*....*.*....*</row>
-                  <scale>3</scale>
-                  <color>color.green</color>
-                </bitmap>
+                <bitmap from="demons-step" />
               </sprite>
               <animation>
                 <interval>0.25</interval>
@@ -391,32 +315,10 @@
             <!-- the third wave: three big demons that take two hits -->
             <group name="demons" class="demon">
               <sprite name="full">
-                <bitmap>
-                  <row>..*.........*..</row>
-                  <row>.**..*****..**.</row>
-                  <row>***.*******.***</row>
-                  <row>*****.***.*****</row>
-                  <row>.***.*****.***.</row>
-                  <row>..*.*.***.*.*..</row>
-                  <row>.*...*...*...*.</row>
-                  <row>*...*.....*...*</row>
-                  <scale>3</scale>
-                  <color>color.purple</color>
-                </bitmap>
+                <bitmap from="demons-full" />
               </sprite>
               <sprite name="hurt">
-                <bitmap>
-                  <row>..*.........*..</row>
-                  <row>.**..*****..**.</row>
-                  <row>***.*******.***</row>
-                  <row>*****.***.*****</row>
-                  <row>.***.*****.***.</row>
-                  <row>..*.*.***.*.*..</row>
-                  <row>.*...*...*...*.</row>
-                  <row>*...*.....*...*</row>
-                  <scale>3</scale>
-                  <color>color.red</color>
-                </bitmap>
+                <bitmap from="demons-hurt" />
               </sprite>
               <velocity><x>speed</x></velocity>
               <facing>down</facing>
@@ -506,4 +408,112 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="fire" wave="square"><volume>0.15</volume><note pitch="E6" to="E5">0.07</note></sound>
+    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="3000" to="300">0.25</note></sound>
+    <sound name="hurt" wave="sawtooth"><volume>0.2</volume><note pitch="A3" to="A2">0.15</note></sound>
+    <sound name="lost" wave="noise"><volume>0.45</volume><note pitch="2000" to="80">0.8</note></sound>
+    <sound name="split" wave="triangle">
+      <volume>0.3</volume>
+      <note pitch="C5" to="G5">0.12</note>
+      <note pitch="G5" to="C5">0.12</note>
+    </sound>
+    <sound name="wave" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.2</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="half">
+      <row>.*...*.</row>
+      <row>*******</row>
+      <row>*.***.*</row>
+      <row>*******</row>
+      <row>.*...*.</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="player">
+      <row>......*......</row>
+      <row>.....***.....</row>
+      <row>.....***.....</row>
+      <row>..*********..</row>
+      <row>.***********.</row>
+      <row>*************</row>
+      <row>***.......***</row>
+      <scale>3</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="demons-up">
+      <row>.*.......*.</row>
+      <row>.**.....**.</row>
+      <row>..*.***.*..</row>
+      <row>..*******..</row>
+      <row>...*.*.*...</row>
+      <row>...*****...</row>
+      <row>....*.*....</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="demons-down">
+      <row>...........</row>
+      <row>..*.....*..</row>
+      <row>.**.***.**.</row>
+      <row>.*.*****.*.</row>
+      <row>...*.*.*...</row>
+      <row>...*****...</row>
+      <row>....*.*....</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="demons-walk">
+      <row>..***...***..</row>
+      <row>.*****.*****.</row>
+      <row>*.*.*****.*.*</row>
+      <row>*************</row>
+      <row>.*.*.***.*.*.</row>
+      <row>..*.*...*.*..</row>
+      <row>.*...*.*...*.</row>
+      <scale>3</scale>
+      <color>color.green</color>
+    </bitmap>
+    <bitmap name="demons-step">
+      <row>..***...***..</row>
+      <row>.*****.*****.</row>
+      <row>*.*.*****.*.*</row>
+      <row>*************</row>
+      <row>.*.*.***.*.*.</row>
+      <row>.*..*...*..*.</row>
+      <row>*....*.*....*</row>
+      <scale>3</scale>
+      <color>color.green</color>
+    </bitmap>
+    <bitmap name="demons-full">
+      <row>..*.........*..</row>
+      <row>.**..*****..**.</row>
+      <row>***.*******.***</row>
+      <row>*****.***.*****</row>
+      <row>.***.*****.***.</row>
+      <row>..*.*.***.*.*..</row>
+      <row>.*...*...*...*.</row>
+      <row>*...*.....*...*</row>
+      <scale>3</scale>
+      <color>color.purple</color>
+    </bitmap>
+    <bitmap name="demons-hurt">
+      <row>..*.........*..</row>
+      <row>.**..*****..**.</row>
+      <row>***.*******.***</row>
+      <row>*****.***.*****</row>
+      <row>.***.*****.***.</row>
+      <row>..*.*.***.*.*..</row>
+      <row>.*...*...*...*.</row>
+      <row>*...*.....*...*</row>
+      <scale>3</scale>
+      <color>color.red</color>
+    </bitmap>
+  </pictures>
 </game>

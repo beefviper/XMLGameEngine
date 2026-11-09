@@ -45,29 +45,6 @@
     <variable name="sea">420</variable>
     <variable name="shellspeed">6</variable>
   </variables>
-  <sounds>
-    <!-- the planes' drone, all through the battle -->
-    <sound name="drone" wave="sawtooth">
-      <loop />
-      <volume>0.04</volume>
-      <note pitch="A1">0.2</note>
-      <note pitch="A#1">0.2</note>
-    </sound>
-    <sound name="fire" wave="square">
-      <volume>0.15</volume>
-      <note pitch="A5" to="A4">0.08</note>
-    </sound>
-    <sound name="hit" wave="noise">
-      <volume>0.35</volume>
-      <note pitch="2500" to="150">0.4</note>
-    </sound>
-    <sound name="end" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.15</note>
-      <note pitch="G4">0.15</note>
-      <note pitch="C4">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.yellow</color></style>
     <style name="prompt"><size>40</size><color>color.white</color></style>
@@ -162,16 +139,7 @@
           </collisions>
           <group name="jets">
             <sprite>
-              <bitmap>
-                <row>....**......</row>
-                <row>...****.....</row>
-                <row>**********..</row>
-                <row>************</row>
-                <row>.**********.</row>
-                <row>...**.......</row>
-                <scale>3</scale>
-                <color>color.white</color>
-              </bitmap>
+              <bitmap from="jets" />
             </sprite>
             <position><y>60</y></position>
             <velocity><x>2.5</x></velocity>
@@ -181,16 +149,7 @@
           </group>
           <group name="bombers">
             <sprite>
-              <bitmap>
-                <row>......**....</row>
-                <row>.....****...</row>
-                <row>..**********</row>
-                <row>************</row>
-                <row>.**********.</row>
-                <row>.......**...</row>
-                <scale>3</scale>
-                <color>color.yellow</color>
-              </bitmap>
+              <bitmap from="bombers" />
             </sprite>
             <position><y>130</y></position>
             <velocity><x>-1.5</x></velocity>
@@ -200,16 +159,7 @@
           </group>
           <group name="blimps">
             <sprite>
-              <bitmap>
-                <row>..********..</row>
-                <row>.**********.</row>
-                <row>************</row>
-                <row>************</row>
-                <row>.**********.</row>
-                <row>....****....</row>
-                <scale>3</scale>
-                <color>color.lightgrey</color>
-              </bitmap>
+              <bitmap from="blimps" />
             </sprite>
             <position><y>200</y></position>
             <velocity><x>1</x></velocity>
@@ -219,16 +169,7 @@
           </group>
           <group name="choppers">
             <sprite>
-              <bitmap>
-                <row>************</row>
-                <row>.....**.....</row>
-                <row>..*******...</row>
-                <row>.*********.*</row>
-                <row>..*******..*</row>
-                <row>...*...*....</row>
-                <scale>3</scale>
-                <color>color.orange</color>
-              </bitmap>
+              <bitmap from="choppers" />
             </sprite>
             <position><y>270</y></position>
             <velocity><x>-2</x></velocity>
@@ -239,19 +180,7 @@
         <!-- the two guns on the shore, pointing straight up to start with -->
         <group name="guns">
           <sprite>
-            <bitmap>
-              <row>....*....</row>
-              <row>....*....</row>
-              <row>....*....</row>
-              <row>....*....</row>
-              <row>...***...</row>
-              <row>..*****..</row>
-              <row>.*******.</row>
-              <row>*********</row>
-              <row>*********</row>
-              <scale>3</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="guns" />
           </sprite>
           <position><y><centered>sea</centered></y></position>
           <heading>0</heading>
@@ -386,4 +315,82 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <!-- the planes' drone, all through the battle -->
+    <sound name="drone" wave="sawtooth">
+      <loop />
+      <volume>0.04</volume>
+      <note pitch="A1">0.2</note>
+      <note pitch="A#1">0.2</note>
+    </sound>
+    <sound name="fire" wave="square">
+      <volume>0.15</volume>
+      <note pitch="A5" to="A4">0.08</note>
+    </sound>
+    <sound name="hit" wave="noise">
+      <volume>0.35</volume>
+      <note pitch="2500" to="150">0.4</note>
+    </sound>
+    <sound name="end" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.15</note>
+      <note pitch="G4">0.15</note>
+      <note pitch="C4">0.4</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="jets">
+      <row>....**......</row>
+      <row>...****.....</row>
+      <row>**********..</row>
+      <row>************</row>
+      <row>.**********.</row>
+      <row>...**.......</row>
+      <scale>3</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="bombers">
+      <row>......**....</row>
+      <row>.....****...</row>
+      <row>..**********</row>
+      <row>************</row>
+      <row>.**********.</row>
+      <row>.......**...</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="blimps">
+      <row>..********..</row>
+      <row>.**********.</row>
+      <row>************</row>
+      <row>************</row>
+      <row>.**********.</row>
+      <row>....****....</row>
+      <scale>3</scale>
+      <color>color.lightgrey</color>
+    </bitmap>
+    <bitmap name="choppers">
+      <row>************</row>
+      <row>.....**.....</row>
+      <row>..*******...</row>
+      <row>.*********.*</row>
+      <row>..*******..*</row>
+      <row>...*...*....</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="guns">
+      <row>....*....</row>
+      <row>....*....</row>
+      <row>....*....</row>
+      <row>....*....</row>
+      <row>...***...</row>
+      <row>..*****..</row>
+      <row>.*******.</row>
+      <row>*********</row>
+      <row>*********</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

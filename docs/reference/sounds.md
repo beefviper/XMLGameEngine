@@ -1,6 +1,6 @@
 # Sounds
 
-Sounds are written as notes, the bleeps and tunes of an 8-bit sound chip; nothing is loaded from a sound file. A [`<play>`](commands.md#look-and-sound) or a state's [`<music>`](states.md#states) starts one.
+Sounds are written as notes, the bleeps and tunes of an 8-bit sound chip; nothing is loaded from a sound file. They go in `<sounds>` under the states, near the bottom of the file. A [`<play>`](commands.md#look-and-sound) or a state's [`<music>`](states.md#states) starts one.
 
 ```xml
 <sounds>

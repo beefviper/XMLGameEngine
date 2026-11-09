@@ -42,38 +42,6 @@
     <variable name="inset">9</variable>
     <variable name="seconds">136</variable>
   </variables>
-  <sounds>
-    <sound name="hop" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C5" to="G5">0.04</note>
-    </sound>
-    <!-- a chicken hit: a squawk, and a horn -->
-    <sound name="hit">
-      <volume>0.25</volume>
-      <part wave="sawtooth"><note pitch="A5" to="A3">0.25</note></part>
-      <part wave="square"><note pitch="F3">0.2</note></part>
-    </sound>
-    <sound name="cross" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C6">0.05</note>
-      <note pitch="E6">0.05</note>
-      <note pitch="G6">0.1</note>
-    </sound>
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.07</note>
-      <note pitch="E5">0.07</note>
-      <note pitch="G5">0.07</note>
-      <note pitch="C6">0.14</note>
-    </sound>
-    <sound name="end" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>110</size><color>color.yellow</color></style>
     <style name="prompt"><size>44</size></style>
@@ -141,17 +109,7 @@
           <rows>1</rows>
           <padding><x>800 / 3 + 16 - 48</x></padding>
           <sprite>
-            <bitmap>
-              <row>..********..</row>
-              <row>.*kk*kk*kk*.</row>
-              <row>************</row>
-              <row>************</row>
-              <row>************</row>
-              <row>.kk......kk.</row>
-              <row>.kk......kk.</row>
-              <scale>4</scale>
-              <color char="k">color.black</color>
-            </bitmap>
+            <bitmap from="traffic" />
           </sprite>
           <collisions>
             <collision edge="horizontal"><wrap /></collision>
@@ -166,18 +124,7 @@
             <columns>2</columns>
             <padding><x>400 + 44 - 88</x></padding>
             <sprite>
-              <bitmap>
-                <row>****************.*****</row>
-                <row>****************.*kk**</row>
-                <row>****************.*kk**</row>
-                <row>**********************</row>
-                <row>**********************</row>
-                <row>.kk..kk.......kk..kk..</row>
-                <row>.kk..kk.......kk..kk..</row>
-                <scale>4</scale>
-                <color>color.white</color>
-                <color char="k">color.black</color>
-              </bitmap>
+              <bitmap from="lane2" />
             </sprite>
             <position><x>150</x><y>2 * cell + 11</y></position>
             <velocity><x>-1.5</x></velocity>
@@ -215,7 +162,7 @@
           <group name="lane9">
             <columns>2</columns>
             <padding><x>400 + 44 - 88</x></padding>
-            <sprite><bitmap><row>****************.*****</row><row>****************.*kk**</row><row>****************.*kk**</row><row>**********************</row><row>**********************</row><row>.kk..kk.......kk..kk..</row><row>.kk..kk.......kk..kk..</row></bitmap></sprite>
+            <sprite><bitmap from="lane9" /></sprite>
             <position><x>250</x><y>9 * cell + 11</y></position>
             <velocity><x>1.5</x></velocity>
           </group>
@@ -229,21 +176,7 @@
         <!-- the two chickens -->
         <group name="chickens" class="chicken">
           <sprite>
-            <bitmap>
-              <row>...rr...</row>
-              <row>..****..</row>
-              <row>..*k*oo.</row>
-              <row>..****..</row>
-              <row>.*****..</row>
-              <row>*******.</row>
-              <row>.*****..</row>
-              <row>..o.o...</row>
-              <scale>4</scale>
-              <color>color.yellow</color>
-              <color char="r">color.red</color>
-              <color char="k">color.black</color>
-              <color char="o">color.orange</color>
-            </bitmap>
+            <bitmap from="chickens" />
           </sprite>
           <position><y>11 * cell + inset</y></position>
           <collisions>
@@ -357,4 +290,77 @@
       </conditions>
     </state>
   </states>
+  <sounds>
+    <sound name="hop" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C5" to="G5">0.04</note>
+    </sound>
+    <!-- a chicken hit: a squawk, and a horn -->
+    <sound name="hit">
+      <volume>0.25</volume>
+      <part wave="sawtooth"><note pitch="A5" to="A3">0.25</note></part>
+      <part wave="square"><note pitch="F3">0.2</note></part>
+    </sound>
+    <sound name="cross" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C6">0.05</note>
+      <note pitch="E6">0.05</note>
+      <note pitch="G6">0.1</note>
+    </sound>
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <sound name="end" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="traffic">
+      <row>..********..</row>
+      <row>.*kk*kk*kk*.</row>
+      <row>************</row>
+      <row>************</row>
+      <row>************</row>
+      <row>.kk......kk.</row>
+      <row>.kk......kk.</row>
+      <scale>4</scale>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="lane2">
+      <row>****************.*****</row>
+      <row>****************.*kk**</row>
+      <row>****************.*kk**</row>
+      <row>**********************</row>
+      <row>**********************</row>
+      <row>.kk..kk.......kk..kk..</row>
+      <row>.kk..kk.......kk..kk..</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="lane9"><row>****************.*****</row><row>****************.*kk**</row><row>****************.*kk**</row><row>**********************</row><row>**********************</row><row>.kk..kk.......kk..kk..</row><row>.kk..kk.......kk..kk..</row></bitmap>
+    <bitmap name="chickens">
+      <row>...rr...</row>
+      <row>..****..</row>
+      <row>..*k*oo.</row>
+      <row>..****..</row>
+      <row>.*****..</row>
+      <row>*******.</row>
+      <row>.*****..</row>
+      <row>..o.o...</row>
+      <scale>4</scale>
+      <color>color.yellow</color>
+      <color char="r">color.red</color>
+      <color char="k">color.black</color>
+      <color char="o">color.orange</color>
+    </bitmap>
+  </pictures>
 </game>

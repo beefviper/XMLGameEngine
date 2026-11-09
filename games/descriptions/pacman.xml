@@ -77,120 +77,6 @@
     <!-- where the ghost house's way out ends, above the door -->
     <variable name="out">3 * tile</variable>
   </variables>
-  <sounds>
-    <!-- a dot eaten: the wakka -->
-    <sound name="chomp" wave="square">
-      <volume>0.12</volume>
-      <note pitch="A4" to="D4">0.05</note>
-      <note pitch="D4" to="A4">0.05</note>
-    </sound>
-    <sound name="power" wave="triangle">
-      <volume>0.35</volume>
-      <note pitch="C4" to="C6">0.25</note>
-    </sound>
-    <sound name="eatghost" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C4" to="C7">0.25</note>
-    </sound>
-    <sound name="fruit" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G5" to="C6">0.08</note>
-      <note pitch="C6" to="G6">0.12</note>
-    </sound>
-    <sound name="extra" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C6">0.1</note>
-      <rest>0.05</rest>
-      <note pitch="C6">0.1</note>
-      <rest>0.05</rest>
-      <note pitch="C6">0.1</note>
-    </sound>
-    <!-- caught: a falling warble, then two pops -->
-    <sound name="caught" wave="square">
-      <volume>0.25</volume>
-      <note pitch="B5" to="F5">0.12</note>
-      <note pitch="A#5" to="E5">0.12</note>
-      <note pitch="A5" to="D#5">0.12</note>
-      <note pitch="G#5" to="D5">0.12</note>
-      <note pitch="G5" to="C#5">0.12</note>
-      <note pitch="F#5" to="C5">0.12</note>
-      <note pitch="F5" to="B4">0.12</note>
-      <note pitch="E5" to="A#4">0.12</note>
-      <rest>0.1</rest>
-      <note pitch="C4" to="C6">0.08</note>
-      <rest>0.08</rest>
-      <note pitch="C4" to="C6">0.08</note>
-    </sound>
-    <!-- the arcade's opening tune over its bass -->
-    <sound name="start">
-      <volume>0.2</volume>
-      <part wave="square">
-        <note pitch="B4">0.14</note>
-        <note pitch="B5">0.14</note>
-        <note pitch="F#5">0.14</note>
-        <note pitch="D#5">0.14</note>
-        <note pitch="B5">0.07</note>
-        <note pitch="F#5">0.21</note>
-        <note pitch="D#5">0.28</note>
-        <note pitch="C5">0.14</note>
-        <note pitch="C6">0.14</note>
-        <note pitch="G5">0.14</note>
-        <note pitch="E5">0.14</note>
-        <note pitch="C6">0.07</note>
-        <note pitch="G5">0.21</note>
-        <note pitch="E5">0.28</note>
-        <note pitch="B4">0.14</note>
-        <note pitch="B5">0.14</note>
-        <note pitch="F#5">0.14</note>
-        <note pitch="D#5">0.14</note>
-        <note pitch="B5">0.07</note>
-        <note pitch="F#5">0.21</note>
-        <note pitch="D#5">0.28</note>
-        <note pitch="D#5">0.07</note>
-        <note pitch="E5">0.07</note>
-        <note pitch="F5">0.14</note>
-        <note pitch="F5">0.07</note>
-        <note pitch="F#5">0.07</note>
-        <note pitch="G5">0.14</note>
-        <note pitch="G5">0.07</note>
-        <note pitch="G#5">0.07</note>
-        <note pitch="A5">0.14</note>
-        <note pitch="B5">0.28</note>
-      </part>
-      <part wave="triangle">
-        <note pitch="B2">0.42</note>
-        <note pitch="B3">0.14</note>
-        <note pitch="B2">0.42</note>
-        <note pitch="B3">0.14</note>
-        <note pitch="C3">0.42</note>
-        <note pitch="C4">0.14</note>
-        <note pitch="C3">0.42</note>
-        <note pitch="C4">0.14</note>
-        <note pitch="B2">0.42</note>
-        <note pitch="B3">0.14</note>
-        <note pitch="B2">0.42</note>
-        <note pitch="B3">0.14</note>
-        <note pitch="F#3">0.28</note>
-        <note pitch="G#3">0.28</note>
-        <note pitch="A#3">0.28</note>
-        <note pitch="B3">0.28</note>
-      </part>
-    </sound>
-    <!-- play's music: the siren, rising and falling over and over -->
-    <sound name="siren" wave="square">
-      <loop />
-      <volume>0.05</volume>
-      <note pitch="A4" to="E5">0.25</note>
-      <note pitch="E5" to="A4">0.25</note>
-    </sound>
-    <sound name="lose" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G4">0.2</note>
-      <note pitch="F#4">0.2</note>
-      <note pitch="F4">0.2</note>
-      <note pitch="E4" to="C4">0.6</note>
-    </sound>
-  </sounds>
   <paths>
     <!-- out of the ghost house, each ghost from its own place: back to it,
          over to the door and up through it to the tile above -->
@@ -442,139 +328,38 @@
                giving only its rows -->
           <group name="walls" class="wall">
             <sprite>
-              <bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>********</row>
-                <row>********</row>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <scale>2</scale>
-                <color>color.blue</color>
-              </bitmap>
+              <bitmap from="walls" />
             </sprite>
             <group name="across" char="-" />
             <group name="down" char="|">
-              <sprite><bitmap>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
+              <sprite><bitmap from="down" /></sprite>
             </group>
             <group name="topleft" char="r">
-              <sprite><bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>.....***</row>
-                <row>....****</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
+              <sprite><bitmap from="topleft" /></sprite>
             </group>
             <group name="topright" char="7">
-              <sprite><bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>***.....</row>
-                <row>****....</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
+              <sprite><bitmap from="topright" /></sprite>
             </group>
             <group name="bottomleft" char="L">
-              <sprite><bitmap>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>....****</row>
-                <row>.....***</row>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-              </bitmap></sprite>
+              <sprite><bitmap from="bottomleft" /></sprite>
             </group>
             <group name="bottomright" char="J">
-              <sprite><bitmap>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>****....</row>
-                <row>***.....</row>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-              </bitmap></sprite>
+              <sprite><bitmap from="bottomright" /></sprite>
             </group>
             <group name="teedown" char="T">
-              <sprite><bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>********</row>
-                <row>********</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
+              <sprite><bitmap from="teedown" /></sprite>
             </group>
             <group name="teeright" char="E">
-              <sprite><bitmap>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...*****</row>
-                <row>...*****</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
+              <sprite><bitmap from="teeright" /></sprite>
             </group>
             <group name="teeleft" char="3">
-              <sprite><bitmap>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>*****...</row>
-                <row>*****...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
+              <sprite><bitmap from="teeleft" /></sprite>
             </group>
             <group name="endleft" char="[">
-              <sprite><bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>...*****</row>
-                <row>...*****</row>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-              </bitmap></sprite>
+              <sprite><bitmap from="endleft" /></sprite>
             </group>
             <group name="endright" char="]">
-              <sprite><bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>*****...</row>
-                <row>*****...</row>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-              </bitmap></sprite>
+              <sprite><bitmap from="endright" /></sprite>
             </group>
             <!-- the door of the ghost house: a wall piece of its own class, in pink -->
             <group name="door" char="=" class="door">
@@ -603,31 +388,10 @@
             </group>
             <group name="pellets" char="o">
               <sprite name="lit">
-                <bitmap>
-                  <row>..****..</row>
-                  <row>.******.</row>
-                  <row>********</row>
-                  <row>********</row>
-                  <row>********</row>
-                  <row>********</row>
-                  <row>.******.</row>
-                  <row>..****..</row>
-                  <scale>2</scale>
-                  <color>color.orange</color>
-                </bitmap>
+                <bitmap from="pellets-lit" />
               </sprite>
               <sprite name="dim">
-                <bitmap>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <scale>2</scale>
-                </bitmap>
+                <bitmap from="pellets-dim" />
               </sprite>
               <animation>
                 <interval>0.17</interval>
@@ -664,24 +428,7 @@
           <object name="fruit" char="f">
             <sprite name="none"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
             <sprite name="cherry">
-              <bitmap>
-                <row>..........g.</row>
-                <row>.........g..</row>
-                <row>.......gg...</row>
-                <row>.....gg.g...</row>
-                <row>....g....g..</row>
-                <row>..**g....g..</row>
-                <row>.****...***.</row>
-                <row>******.*****</row>
-                <row>*w****.*w***</row>
-                <row>******.*****</row>
-                <row>.****..*****</row>
-                <row>..**....***.</row>
-                <scale>2</scale>
-                <color>color.red</color>
-                <color char="w">color.white</color>
-                <color char="g">color.brown</color>
-              </bitmap>
+              <bitmap from="fruit-cherry" />
             </sprite>
             <collisions>
               <collision object="pacman" sprite="cherry">
@@ -699,61 +446,13 @@
           </object>
           <object name="pacman" char="@">
             <sprite name="closed">
-              <bitmap>
-                <row>....*****....</row>
-                <row>..*********..</row>
-                <row>.***********.</row>
-                <row>.***********.</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>.***********.</row>
-                <row>.***********.</row>
-                <row>..*********..</row>
-                <row>....*****....</row>
-                <scale>2</scale>
-                <color>color.yellow</color>
-              </bitmap>
+              <bitmap from="pacman-closed" />
             </sprite>
             <sprite name="half">
-              <bitmap>
-                <row>.............</row>
-                <row>..**.....**..</row>
-                <row>.***.....***.</row>
-                <row>.****...****.</row>
-                <row>*****...*****</row>
-                <row>******.******</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>.***********.</row>
-                <row>.***********.</row>
-                <row>..*********..</row>
-                <row>....*****....</row>
-                <scale>2</scale>
-                <color>color.yellow</color>
-              </bitmap>
+              <bitmap from="pacman-half" />
             </sprite>
             <sprite name="open">
-              <bitmap>
-                <row>.............</row>
-                <row>.............</row>
-                <row>.............</row>
-                <row>.**.......**.</row>
-                <row>****.....****</row>
-                <row>*****...*****</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>.***********.</row>
-                <row>.***********.</row>
-                <row>..*********..</row>
-                <row>....*****....</row>
-                <scale>2</scale>
-                <color>color.yellow</color>
-              </bitmap>
+              <bitmap from="pacman-open" />
             </sprite>
             <animation>
               <interval>0.05</interval>
@@ -798,69 +497,13 @@
                and way out -->
           <group name="ghosts" class="ghost">
             <sprite name="normal">
-              <bitmap>
-                <row>.....****.....</row>
-                <row>...********...</row>
-                <row>..**********..</row>
-                <row>.*wwww**wwww*.</row>
-                <row>.*wwww**wwww*.</row>
-                <row>**wbbw**wbbw**</row>
-                <row>**wbbw**wbbw**</row>
-                <row>***ww****ww***</row>
-                <row>**************</row>
-                <row>**************</row>
-                <row>**************</row>
-                <row>**************</row>
-                <row>**.***..***.**</row>
-                <row>*...**..**...*</row>
-                <scale>2</scale>
-                <color>color.red</color>
-                <color char="w">color.white</color>
-                <color char="b">color.darkblue</color>
-              </bitmap>
+              <bitmap from="ghosts-normal" />
             </sprite>
             <sprite name="blue">
-              <bitmap>
-                <row>.....****.....</row>
-                <row>...********...</row>
-                <row>..**********..</row>
-                <row>.************.</row>
-                <row>.************.</row>
-                <row>****ww**ww****</row>
-                <row>****ww**ww****</row>
-                <row>**************</row>
-                <row>**************</row>
-                <row>*w**ww**ww**w*</row>
-                <row>**ww**ww**ww**</row>
-                <row>**************</row>
-                <row>**.***..***.**</row>
-                <row>*...**..**...*</row>
-                <scale>2</scale>
-                <color>color.blue</color>
-                <color char="w">color.white</color>
-              </bitmap>
+              <bitmap from="ghosts-blue" />
             </sprite>
             <sprite name="eyes">
-              <bitmap>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..wwww..wwww..</row>
-                <row>..wwww..wwww..</row>
-                <row>..wbbw..wbbw..</row>
-                <row>..wbbw..wbbw..</row>
-                <row>...ww....ww...</row>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..............</row>
-                <scale>2</scale>
-                <color>color.white</color>
-                <color char="w">color.white</color>
-                <color char="b">color.darkblue</color>
-              </bitmap>
+              <bitmap from="ghosts-eyes" />
             </sprite>
             <maze map="maze">
               <wall class="wall" />
@@ -1195,4 +838,383 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <!-- a dot eaten: the wakka -->
+    <sound name="chomp" wave="square">
+      <volume>0.12</volume>
+      <note pitch="A4" to="D4">0.05</note>
+      <note pitch="D4" to="A4">0.05</note>
+    </sound>
+    <sound name="power" wave="triangle">
+      <volume>0.35</volume>
+      <note pitch="C4" to="C6">0.25</note>
+    </sound>
+    <sound name="eatghost" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C4" to="C7">0.25</note>
+    </sound>
+    <sound name="fruit" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G5" to="C6">0.08</note>
+      <note pitch="C6" to="G6">0.12</note>
+    </sound>
+    <sound name="extra" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C6">0.1</note>
+      <rest>0.05</rest>
+      <note pitch="C6">0.1</note>
+      <rest>0.05</rest>
+      <note pitch="C6">0.1</note>
+    </sound>
+    <!-- caught: a falling warble, then two pops -->
+    <sound name="caught" wave="square">
+      <volume>0.25</volume>
+      <note pitch="B5" to="F5">0.12</note>
+      <note pitch="A#5" to="E5">0.12</note>
+      <note pitch="A5" to="D#5">0.12</note>
+      <note pitch="G#5" to="D5">0.12</note>
+      <note pitch="G5" to="C#5">0.12</note>
+      <note pitch="F#5" to="C5">0.12</note>
+      <note pitch="F5" to="B4">0.12</note>
+      <note pitch="E5" to="A#4">0.12</note>
+      <rest>0.1</rest>
+      <note pitch="C4" to="C6">0.08</note>
+      <rest>0.08</rest>
+      <note pitch="C4" to="C6">0.08</note>
+    </sound>
+    <!-- the arcade's opening tune over its bass -->
+    <sound name="start">
+      <volume>0.2</volume>
+      <part wave="square">
+        <note pitch="B4">0.14</note>
+        <note pitch="B5">0.14</note>
+        <note pitch="F#5">0.14</note>
+        <note pitch="D#5">0.14</note>
+        <note pitch="B5">0.07</note>
+        <note pitch="F#5">0.21</note>
+        <note pitch="D#5">0.28</note>
+        <note pitch="C5">0.14</note>
+        <note pitch="C6">0.14</note>
+        <note pitch="G5">0.14</note>
+        <note pitch="E5">0.14</note>
+        <note pitch="C6">0.07</note>
+        <note pitch="G5">0.21</note>
+        <note pitch="E5">0.28</note>
+        <note pitch="B4">0.14</note>
+        <note pitch="B5">0.14</note>
+        <note pitch="F#5">0.14</note>
+        <note pitch="D#5">0.14</note>
+        <note pitch="B5">0.07</note>
+        <note pitch="F#5">0.21</note>
+        <note pitch="D#5">0.28</note>
+        <note pitch="D#5">0.07</note>
+        <note pitch="E5">0.07</note>
+        <note pitch="F5">0.14</note>
+        <note pitch="F5">0.07</note>
+        <note pitch="F#5">0.07</note>
+        <note pitch="G5">0.14</note>
+        <note pitch="G5">0.07</note>
+        <note pitch="G#5">0.07</note>
+        <note pitch="A5">0.14</note>
+        <note pitch="B5">0.28</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="B2">0.42</note>
+        <note pitch="B3">0.14</note>
+        <note pitch="B2">0.42</note>
+        <note pitch="B3">0.14</note>
+        <note pitch="C3">0.42</note>
+        <note pitch="C4">0.14</note>
+        <note pitch="C3">0.42</note>
+        <note pitch="C4">0.14</note>
+        <note pitch="B2">0.42</note>
+        <note pitch="B3">0.14</note>
+        <note pitch="B2">0.42</note>
+        <note pitch="B3">0.14</note>
+        <note pitch="F#3">0.28</note>
+        <note pitch="G#3">0.28</note>
+        <note pitch="A#3">0.28</note>
+        <note pitch="B3">0.28</note>
+      </part>
+    </sound>
+    <!-- play's music: the siren, rising and falling over and over -->
+    <sound name="siren" wave="square">
+      <loop />
+      <volume>0.05</volume>
+      <note pitch="A4" to="E5">0.25</note>
+      <note pitch="E5" to="A4">0.25</note>
+    </sound>
+    <sound name="lose" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G4">0.2</note>
+      <note pitch="F#4">0.2</note>
+      <note pitch="F4">0.2</note>
+      <note pitch="E4" to="C4">0.6</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="walls">
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>********</row>
+      <row>********</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <scale>2</scale>
+      <color>color.blue</color>
+    </bitmap>
+    <bitmap name="down">
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="topleft">
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    <row>.....***</row>
+    <row>....****</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="topright">
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    <row>***.....</row>
+    <row>****....</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="bottomleft">
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>....****</row>
+    <row>.....***</row>
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    </bitmap>
+    <bitmap name="bottomright">
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>****....</row>
+    <row>***.....</row>
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    </bitmap>
+    <bitmap name="teedown">
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    <row>********</row>
+    <row>********</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="teeright">
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...*****</row>
+    <row>...*****</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="teeleft">
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>*****...</row>
+    <row>*****...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="endleft">
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    <row>...*****</row>
+    <row>...*****</row>
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    </bitmap>
+    <bitmap name="endright">
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    <row>*****...</row>
+    <row>*****...</row>
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    </bitmap>
+    <bitmap name="pellets-lit">
+      <row>..****..</row>
+      <row>.******.</row>
+      <row>********</row>
+      <row>********</row>
+      <row>********</row>
+      <row>********</row>
+      <row>.******.</row>
+      <row>..****..</row>
+      <scale>2</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="pellets-dim">
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <scale>2</scale>
+    </bitmap>
+    <bitmap name="fruit-cherry">
+      <row>..........g.</row>
+      <row>.........g..</row>
+      <row>.......gg...</row>
+      <row>.....gg.g...</row>
+      <row>....g....g..</row>
+      <row>..**g....g..</row>
+      <row>.****...***.</row>
+      <row>******.*****</row>
+      <row>*w****.*w***</row>
+      <row>******.*****</row>
+      <row>.****..*****</row>
+      <row>..**....***.</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="w">color.white</color>
+      <color char="g">color.brown</color>
+    </bitmap>
+    <bitmap name="pacman-closed">
+      <row>....*****....</row>
+      <row>..*********..</row>
+      <row>.***********.</row>
+      <row>.***********.</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>....*****....</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="pacman-half">
+      <row>.............</row>
+      <row>..**.....**..</row>
+      <row>.***.....***.</row>
+      <row>.****...****.</row>
+      <row>*****...*****</row>
+      <row>******.******</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>....*****....</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="pacman-open">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.**.......**.</row>
+      <row>****.....****</row>
+      <row>*****...*****</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>....*****....</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="ghosts-normal">
+      <row>.....****.....</row>
+      <row>...********...</row>
+      <row>..**********..</row>
+      <row>.*wwww**wwww*.</row>
+      <row>.*wwww**wwww*.</row>
+      <row>**wbbw**wbbw**</row>
+      <row>**wbbw**wbbw**</row>
+      <row>***ww****ww***</row>
+      <row>**************</row>
+      <row>**************</row>
+      <row>**************</row>
+      <row>**************</row>
+      <row>**.***..***.**</row>
+      <row>*...**..**...*</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="w">color.white</color>
+      <color char="b">color.darkblue</color>
+    </bitmap>
+    <bitmap name="ghosts-blue">
+      <row>.....****.....</row>
+      <row>...********...</row>
+      <row>..**********..</row>
+      <row>.************.</row>
+      <row>.************.</row>
+      <row>****ww**ww****</row>
+      <row>****ww**ww****</row>
+      <row>**************</row>
+      <row>**************</row>
+      <row>*w**ww**ww**w*</row>
+      <row>**ww**ww**ww**</row>
+      <row>**************</row>
+      <row>**.***..***.**</row>
+      <row>*...**..**...*</row>
+      <scale>2</scale>
+      <color>color.blue</color>
+      <color char="w">color.white</color>
+    </bitmap>
+    <bitmap name="ghosts-eyes">
+      <row>..............</row>
+      <row>..............</row>
+      <row>..............</row>
+      <row>..wwww..wwww..</row>
+      <row>..wwww..wwww..</row>
+      <row>..wbbw..wbbw..</row>
+      <row>..wbbw..wbbw..</row>
+      <row>...ww....ww...</row>
+      <row>..............</row>
+      <row>..............</row>
+      <row>..............</row>
+      <row>..............</row>
+      <row>..............</row>
+      <row>..............</row>
+      <scale>2</scale>
+      <color>color.white</color>
+      <color char="w">color.white</color>
+      <color char="b">color.darkblue</color>
+    </bitmap>
+  </pictures>
 </game>

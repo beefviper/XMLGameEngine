@@ -57,62 +57,6 @@
     <variable name="margin">20</variable>
     <variable name="shotlife">1</variable>
   </variables>
-  <sounds>
-    <!-- the heartbeat, two low thumps over and over -->
-    <sound name="beat" wave="triangle">
-      <loop />
-      <volume>0.5</volume>
-      <note pitch="B1">0.1</note>
-      <rest>0.4</rest>
-      <note pitch="A#1">0.1</note>
-      <rest>0.4</rest>
-    </sound>
-    <sound name="thrust" wave="noise">
-      <loop />
-      <volume>0.12</volume>
-      <note pitch="180">1</note>
-    </sound>
-    <sound name="shoot" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C6" to="C4">0.1</note>
-    </sound>
-    <!-- a rock broken: the bigger the rock, the lower the rumble -->
-    <sound name="bangbig" wave="noise">
-      <volume>0.45</volume>
-      <note pitch="1200" to="100">0.45</note>
-    </sound>
-    <sound name="bangmedium" wave="noise">
-      <volume>0.4</volume>
-      <note pitch="2000" to="200">0.3</note>
-    </sound>
-    <sound name="bangsmall" wave="noise">
-      <volume>0.35</volume>
-      <note pitch="3500" to="400">0.2</note>
-    </sound>
-    <sound name="boom" wave="noise">
-      <volume>0.5</volume>
-      <note pitch="3000" to="100">0.8</note>
-    </sound>
-    <sound name="saucer" wave="square">
-      <volume>0.12</volume>
-      <note pitch="B5">0.12</note>
-      <note pitch="F#5">0.12</note>
-    </sound>
-    <sound name="extra" wave="square">
-      <volume>0.2</volume>
-      <note pitch="E6">0.08</note>
-      <rest>0.05</rest>
-      <note pitch="E6">0.08</note>
-      <rest>0.05</rest>
-      <note pitch="E6">0.08</note>
-    </sound>
-    <sound name="gameover" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="G4">0.25</note>
-      <note pitch="E4">0.25</note>
-      <note pitch="C4" to="C3">0.7</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>110</size><color>color.white</color></style>
     <style name="prompt"><size>40</size></style>
@@ -641,4 +585,60 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <!-- the heartbeat, two low thumps over and over -->
+    <sound name="beat" wave="triangle">
+      <loop />
+      <volume>0.5</volume>
+      <note pitch="B1">0.1</note>
+      <rest>0.4</rest>
+      <note pitch="A#1">0.1</note>
+      <rest>0.4</rest>
+    </sound>
+    <sound name="thrust" wave="noise">
+      <loop />
+      <volume>0.12</volume>
+      <note pitch="180">1</note>
+    </sound>
+    <sound name="shoot" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C6" to="C4">0.1</note>
+    </sound>
+    <!-- a rock broken: the bigger the rock, the lower the rumble -->
+    <sound name="bangbig" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="1200" to="100">0.45</note>
+    </sound>
+    <sound name="bangmedium" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="2000" to="200">0.3</note>
+    </sound>
+    <sound name="bangsmall" wave="noise">
+      <volume>0.35</volume>
+      <note pitch="3500" to="400">0.2</note>
+    </sound>
+    <sound name="boom" wave="noise">
+      <volume>0.5</volume>
+      <note pitch="3000" to="100">0.8</note>
+    </sound>
+    <sound name="saucer" wave="square">
+      <volume>0.12</volume>
+      <note pitch="B5">0.12</note>
+      <note pitch="F#5">0.12</note>
+    </sound>
+    <sound name="extra" wave="square">
+      <volume>0.2</volume>
+      <note pitch="E6">0.08</note>
+      <rest>0.05</rest>
+      <note pitch="E6">0.08</note>
+      <rest>0.05</rest>
+      <note pitch="E6">0.08</note>
+    </sound>
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
 </game>

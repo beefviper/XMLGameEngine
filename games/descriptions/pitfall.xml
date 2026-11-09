@@ -79,37 +79,6 @@
     <variable name="bump">50</variable>
     <variable name="knock">24</variable>
   </variables>
-  <sounds>
-    <sound name="jump" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5" to="G5">0.1</note>
-    </sound>
-    <sound name="treasure" wave="square">
-      <volume>0.25</volume>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.08</note>
-      <note pitch="C6">0.08</note>
-      <note pitch="E6">0.2</note>
-    </sound>
-    <!-- caught: the 2600's falling tune -->
-    <sound name="die" wave="square">
-      <volume>0.25</volume>
-      <note pitch="G4">0.12</note>
-      <note pitch="E4">0.12</note>
-      <note pitch="C4">0.12</note>
-      <note pitch="G3">0.12</note>
-      <note pitch="E3">0.12</note>
-      <note pitch="C3">0.36</note>
-    </sound>
-    <sound name="thud" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="400" to="80">0.12</note>
-    </sound>
-    <sound name="snap" wave="noise">
-      <volume>0.2</volume>
-      <note pitch="2000" to="600">0.1</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.yellow</color></style>
     <style name="prompt"><size>40</size></style>
@@ -188,19 +157,7 @@
     <!-- two logs rolling along the path -->
     <group name="logs" class="log">
       <sprite>
-        <bitmap>
-          <row>...******...</row>
-          <row>.*******ooo.</row>
-          <row>**.***.*obbo</row>
-          <row>***.***obbbo</row>
-          <row>**.***.*obbo</row>
-          <row>.*******ooo.</row>
-          <row>...******...</row>
-          <scale>3</scale>
-          <color>color.brown</color>
-          <color char="o">color.orange</color>
-          <color char="b">color.yellow</color>
-        </bitmap>
+        <bitmap from="logs" />
       </sprite>
       <position><y>surface - 21</y></position>
       <velocity><x>-roll</x></velocity>
@@ -216,14 +173,7 @@
     <!-- a tar pit on the path -->
     <object name="tar" class="hazard">
       <sprite>
-        <bitmap>
-          <row>...******************...</row>
-          <row>************************</row>
-          <row>.**********************.</row>
-          <row>....****************....</row>
-          <scale>2</scale>
-          <color>color.black</color>
-        </bitmap>
+        <bitmap from="tar" />
       </sprite>
       <position><x>300</x><y>surface - 1</y></position>
       <collisions />
@@ -244,29 +194,10 @@
     </object>
     <group name="crocs" class="croc">
       <sprite name="shut">
-        <bitmap>
-          <row>....g..g.......</row>
-          <row>.ggwkggwkgggggg</row>
-          <row>ggggggggggggggg</row>
-          <row>.ggggggggggggg.</row>
-          <scale>2</scale>
-          <color char="g">color.darkgreen</color>
-          <color char="w">color.white</color>
-          <color char="k">color.black</color>
-        </bitmap>
+        <bitmap from="crocs-shut" />
       </sprite>
       <sprite name="open">
-        <bitmap>
-          <row>....g..g...gggg</row>
-          <row>.ggwkggwkggrrrr</row>
-          <row>ggggggggggrrrrr</row>
-          <row>.ggggggggggwwww</row>
-          <scale>2</scale>
-          <color char="g">color.darkgreen</color>
-          <color char="w">color.white</color>
-          <color char="k">color.black</color>
-          <color char="r">color.red</color>
-        </bitmap>
+        <bitmap from="crocs-open" />
       </sprite>
       <position><y>surface - 2</y></position>
       <collisions>
@@ -293,28 +224,10 @@
     <!-- a fire on the path -->
     <object name="fire" class="hazard">
       <sprite name="high">
-        <bitmap style="fire">
-          <row>...r....</row>
-          <row>..rr..r.</row>
-          <row>..ror.r.</row>
-          <row>.roooor.</row>
-          <row>.rooyor.</row>
-          <row>rooyyoor</row>
-          <row>royyyyor</row>
-          <row>.kkkkkk.</row>
-        </bitmap>
+        <bitmap from="fire-high" />
       </sprite>
       <sprite name="low">
-        <bitmap style="fire">
-          <row>........</row>
-          <row>....r...</row>
-          <row>.r..rr..</row>
-          <row>.rr.ror.</row>
-          <row>.roooor.</row>
-          <row>rooyyoor</row>
-          <row>royyyyor</row>
-          <row>.kkkkkk.</row>
-        </bitmap>
+        <bitmap from="fire-low" />
       </sprite>
       <animation>
         <interval>0.12</interval>
@@ -328,16 +241,7 @@
     <!-- a scorpion pacing the tunnel -->
     <object name="scorpion" class="hazard">
       <sprite>
-        <bitmap>
-          <row>.......**.</row>
-          <row>........*.</row>
-          <row>.**.....*.</row>
-          <row>*..******.</row>
-          <row>.********.</row>
-          <row>*.*.*.*.*.</row>
-          <scale>2</scale>
-          <color>color.white</color>
-        </bitmap>
+        <bitmap from="scorpion" />
       </sprite>
       <position><x>200</x><y>tunnel - 12</y></position>
       <velocity><x>crawl</x></velocity>
@@ -352,20 +256,7 @@
          otherwise, worth the screen's `worth` -->
     <object name="treasure" class="treasure">
       <sprite>
-        <bitmap>
-          <row>..k**k..</row>
-          <row>...kk...</row>
-          <row>.******.</row>
-          <row>***dd***</row>
-          <row>**d*****</row>
-          <row>***dd***</row>
-          <row>*****d**</row>
-          <row>.**dd**.</row>
-          <scale>2</scale>
-          <color>color.lightgrey</color>
-          <color char="k">color.brown</color>
-          <color char="d">color.darkgrey</color>
-        </bitmap>
+        <bitmap from="treasure" />
       </sprite>
       <position><x>580</x><y>surface - treasure.height</y></position>
       <collisions>
@@ -473,19 +364,7 @@
           <columns>20</columns>
           <rows>3</rows>
           <sprite>
-            <bitmap>
-              <row>.gGgg.gG</row>
-              <row>gggGgggg</row>
-              <row>gGgggGgg</row>
-              <row>ggggggGg</row>
-              <row>GgggGggg</row>
-              <row>ggGggggG</row>
-              <row>gggggGgg</row>
-              <row>.ggGggg.</row>
-              <scale>4</scale>
-              <color char="g">color.forestgreen</color>
-              <color char="G">color.green</color>
-            </bitmap>
+            <bitmap from="canopy" />
           </sprite>
           <position><x>0</x><y>44</y></position>
         </group>
@@ -538,30 +417,7 @@
         <!-- Pitfall Harry -->
         <object name="harry">
           <sprite>
-            <bitmap>
-              <row>...hhh..</row>
-              <row>..hssss.</row>
-              <row>...sss..</row>
-              <row>...ss...</row>
-              <row>.gggggg.</row>
-              <row>s.gggg.s</row>
-              <row>s.gggg.s</row>
-              <row>s.gggg.s</row>
-              <row>..gggg..</row>
-              <row>..wwww..</row>
-              <row>..w..w..</row>
-              <row>..w..w..</row>
-              <row>..w..w..</row>
-              <row>..w..w..</row>
-              <row>..w..w..</row>
-              <row>.kk..kk.</row>
-              <scale>2</scale>
-              <color char="h">color.brown</color>
-              <color char="s">color.orange</color>
-              <color char="g">color.green</color>
-              <color char="w">color.white</color>
-              <color char="k">color.darkgrey</color>
-            </bitmap>
+            <bitmap from="harry" />
           </sprite>
           <position><x>24</x><y>surface - harry.height</y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
@@ -663,15 +519,7 @@
             <object name="scorpion" />
             <object name="treasure">
               <sprite>
-                <bitmap>
-                  <row>..********</row>
-                  <row>.********.</row>
-                  <row>**********</row>
-                  <row>*********.</row>
-                  <row>********..</row>
-                  <scale>2</scale>
-                  <color>color.white</color>
-                </bitmap>
+                <bitmap from="treasure2" />
               </sprite>
               <position><x>570</x></position>
             </object>
@@ -695,15 +543,7 @@
             <group name="crocs" />
             <object name="treasure">
               <sprite>
-                <bitmap>
-                  <row>..********</row>
-                  <row>.********.</row>
-                  <row>**********</row>
-                  <row>*********.</row>
-                  <row>********..</row>
-                  <scale>2</scale>
-                  <color>color.yellow</color>
-                </bitmap>
+                <bitmap from="treasure3" />
               </sprite>
             </object>
             <object name="east" />
@@ -727,19 +567,7 @@
             <object name="fire" />
             <object name="treasure">
               <sprite>
-                <bitmap>
-                  <row>...**...</row>
-                  <row>..****..</row>
-                  <row>...**...</row>
-                  <row>.yy..yy.</row>
-                  <row>y......y</row>
-                  <row>y......y</row>
-                  <row>.yy..yy.</row>
-                  <row>...yy...</row>
-                  <scale>2</scale>
-                  <color>color.cyan</color>
-                  <color char="y">color.yellow</color>
-                </bitmap>
+                <bitmap from="treasure4" />
               </sprite>
               <position><y>tunnel - treasure.height</y></position>
             </object>
@@ -826,4 +654,191 @@
       </objects>
     </state>
   </states>
+  <sounds>
+    <sound name="jump" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5" to="G5">0.1</note>
+    </sound>
+    <sound name="treasure" wave="square">
+      <volume>0.25</volume>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.08</note>
+      <note pitch="E6">0.2</note>
+    </sound>
+    <!-- caught: the 2600's falling tune -->
+    <sound name="die" wave="square">
+      <volume>0.25</volume>
+      <note pitch="G4">0.12</note>
+      <note pitch="E4">0.12</note>
+      <note pitch="C4">0.12</note>
+      <note pitch="G3">0.12</note>
+      <note pitch="E3">0.12</note>
+      <note pitch="C3">0.36</note>
+    </sound>
+    <sound name="thud" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="400" to="80">0.12</note>
+    </sound>
+    <sound name="snap" wave="noise">
+      <volume>0.2</volume>
+      <note pitch="2000" to="600">0.1</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="logs">
+      <row>...******...</row>
+      <row>.*******ooo.</row>
+      <row>**.***.*obbo</row>
+      <row>***.***obbbo</row>
+      <row>**.***.*obbo</row>
+      <row>.*******ooo.</row>
+      <row>...******...</row>
+      <scale>3</scale>
+      <color>color.brown</color>
+      <color char="o">color.orange</color>
+      <color char="b">color.yellow</color>
+    </bitmap>
+    <bitmap name="tar">
+      <row>...******************...</row>
+      <row>************************</row>
+      <row>.**********************.</row>
+      <row>....****************....</row>
+      <scale>2</scale>
+      <color>color.black</color>
+    </bitmap>
+    <bitmap name="crocs-shut">
+      <row>....g..g.......</row>
+      <row>.ggwkggwkgggggg</row>
+      <row>ggggggggggggggg</row>
+      <row>.ggggggggggggg.</row>
+      <scale>2</scale>
+      <color char="g">color.darkgreen</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="crocs-open">
+      <row>....g..g...gggg</row>
+      <row>.ggwkggwkggrrrr</row>
+      <row>ggggggggggrrrrr</row>
+      <row>.ggggggggggwwww</row>
+      <scale>2</scale>
+      <color char="g">color.darkgreen</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+      <color char="r">color.red</color>
+    </bitmap>
+    <bitmap name="fire-high" style="fire">
+      <row>...r....</row>
+      <row>..rr..r.</row>
+      <row>..ror.r.</row>
+      <row>.roooor.</row>
+      <row>.rooyor.</row>
+      <row>rooyyoor</row>
+      <row>royyyyor</row>
+      <row>.kkkkkk.</row>
+    </bitmap>
+    <bitmap name="fire-low" style="fire">
+      <row>........</row>
+      <row>....r...</row>
+      <row>.r..rr..</row>
+      <row>.rr.ror.</row>
+      <row>.roooor.</row>
+      <row>rooyyoor</row>
+      <row>royyyyor</row>
+      <row>.kkkkkk.</row>
+    </bitmap>
+    <bitmap name="scorpion">
+      <row>.......**.</row>
+      <row>........*.</row>
+      <row>.**.....*.</row>
+      <row>*..******.</row>
+      <row>.********.</row>
+      <row>*.*.*.*.*.</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="treasure">
+      <row>..k**k..</row>
+      <row>...kk...</row>
+      <row>.******.</row>
+      <row>***dd***</row>
+      <row>**d*****</row>
+      <row>***dd***</row>
+      <row>*****d**</row>
+      <row>.**dd**.</row>
+      <scale>2</scale>
+      <color>color.lightgrey</color>
+      <color char="k">color.brown</color>
+      <color char="d">color.darkgrey</color>
+    </bitmap>
+    <bitmap name="canopy">
+      <row>.gGgg.gG</row>
+      <row>gggGgggg</row>
+      <row>gGgggGgg</row>
+      <row>ggggggGg</row>
+      <row>GgggGggg</row>
+      <row>ggGggggG</row>
+      <row>gggggGgg</row>
+      <row>.ggGggg.</row>
+      <scale>4</scale>
+      <color char="g">color.forestgreen</color>
+      <color char="G">color.green</color>
+    </bitmap>
+    <bitmap name="harry">
+      <row>...hhh..</row>
+      <row>..hssss.</row>
+      <row>...sss..</row>
+      <row>...ss...</row>
+      <row>.gggggg.</row>
+      <row>s.gggg.s</row>
+      <row>s.gggg.s</row>
+      <row>s.gggg.s</row>
+      <row>..gggg..</row>
+      <row>..wwww..</row>
+      <row>..w..w..</row>
+      <row>..w..w..</row>
+      <row>..w..w..</row>
+      <row>..w..w..</row>
+      <row>..w..w..</row>
+      <row>.kk..kk.</row>
+      <scale>2</scale>
+      <color char="h">color.brown</color>
+      <color char="s">color.orange</color>
+      <color char="g">color.green</color>
+      <color char="w">color.white</color>
+      <color char="k">color.darkgrey</color>
+    </bitmap>
+    <bitmap name="treasure2">
+      <row>..********</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>*********.</row>
+      <row>********..</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="treasure3">
+      <row>..********</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>*********.</row>
+      <row>********..</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="treasure4">
+      <row>...**...</row>
+      <row>..****..</row>
+      <row>...**...</row>
+      <row>.yy..yy.</row>
+      <row>y......y</row>
+      <row>y......y</row>
+      <row>.yy..yy.</row>
+      <row>...yy...</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+      <color char="y">color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

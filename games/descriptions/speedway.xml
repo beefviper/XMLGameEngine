@@ -44,22 +44,6 @@
     <variable name="tarmac">0.03</variable>
     <variable name="hold">0.3</variable>
   </variables>
-  <sounds>
-    <sound name="gate" wave="triangle"><volume>0.15</volume><note pitch="E5">0.04</note></sound>
-    <sound name="lap" wave="triangle">
-      <volume>0.35</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="G5">0.12</note>
-    </sound>
-    <sound name="bump"><volume>0.2</volume><note pitch="C3">0.04</note></sound>
-    <sound name="win" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-  </sounds>
   <paths>
     <!-- the outer lane, from the front of the grid, round and back -->
     <path name="outer">
@@ -225,19 +209,7 @@
         <!-- the players' cars -->
         <object name="p1" class="car" from="racer">
           <sprite>
-            <bitmap>
-              <row>.****.</row>
-              <row>******</row>
-              <row>.*ww*.</row>
-              <row>.****.</row>
-              <row>.****.</row>
-              <row>.*ww*.</row>
-              <row>******</row>
-              <row>.****.</row>
-              <scale>2</scale>
-              <color>color.orange</color>
-              <color char="w">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="p1" />
           </sprite>
           <position><x><centered>440</centered></x><y><centered>160</centered></y></position>
           <drag>tarmac</drag>
@@ -257,19 +229,7 @@
         </object>
         <object name="p2" class="car" from="racer">
           <sprite>
-            <bitmap>
-              <row>.****.</row>
-              <row>******</row>
-              <row>.*ww*.</row>
-              <row>.****.</row>
-              <row>.****.</row>
-              <row>.*ww*.</row>
-              <row>******</row>
-              <row>.****.</row>
-              <scale>2</scale>
-              <color>color.cyan</color>
-              <color char="w">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="p2" />
           </sprite>
           <position><x><centered>440</centered></x><y><centered>200</centered></y></position>
           <drag>tarmac</drag>
@@ -291,19 +251,7 @@
         <!-- the computer's cars, each on its lane's path, round and round -->
         <object name="cpu1" class="cpu" from="racer">
           <sprite>
-            <bitmap>
-              <row>.****.</row>
-              <row>******</row>
-              <row>.*ww*.</row>
-              <row>.****.</row>
-              <row>.****.</row>
-              <row>.*ww*.</row>
-              <row>******</row>
-              <row>.****.</row>
-              <scale>2</scale>
-              <color>color.magenta</color>
-              <color char="w">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="cpu1" />
           </sprite>
           <position><x><centered>520</centered></x><y><centered>140</centered></y></position>
           <timers>
@@ -312,19 +260,7 @@
         </object>
         <object name="cpu2" class="cpu" from="racer">
           <sprite>
-            <bitmap>
-              <row>.****.</row>
-              <row>******</row>
-              <row>.*ww*.</row>
-              <row>.****.</row>
-              <row>.****.</row>
-              <row>.*ww*.</row>
-              <row>******</row>
-              <row>.****.</row>
-              <scale>2</scale>
-              <color>color.yellow</color>
-              <color char="w">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="cpu2" />
           </sprite>
           <position><x><centered>520</centered></x><y><centered>220</centered></y></position>
           <timers>
@@ -427,4 +363,74 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="gate" wave="triangle"><volume>0.15</volume><note pitch="E5">0.04</note></sound>
+    <sound name="lap" wave="triangle">
+      <volume>0.35</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="G5">0.12</note>
+    </sound>
+    <sound name="bump"><volume>0.2</volume><note pitch="C3">0.04</note></sound>
+    <sound name="win" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="p1">
+      <row>.****.</row>
+      <row>******</row>
+      <row>.*ww*.</row>
+      <row>.****.</row>
+      <row>.****.</row>
+      <row>.*ww*.</row>
+      <row>******</row>
+      <row>.****.</row>
+      <scale>2</scale>
+      <color>color.orange</color>
+      <color char="w">color.lightgrey</color>
+    </bitmap>
+    <bitmap name="p2">
+      <row>.****.</row>
+      <row>******</row>
+      <row>.*ww*.</row>
+      <row>.****.</row>
+      <row>.****.</row>
+      <row>.*ww*.</row>
+      <row>******</row>
+      <row>.****.</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+      <color char="w">color.lightgrey</color>
+    </bitmap>
+    <bitmap name="cpu1">
+      <row>.****.</row>
+      <row>******</row>
+      <row>.*ww*.</row>
+      <row>.****.</row>
+      <row>.****.</row>
+      <row>.*ww*.</row>
+      <row>******</row>
+      <row>.****.</row>
+      <scale>2</scale>
+      <color>color.magenta</color>
+      <color char="w">color.lightgrey</color>
+    </bitmap>
+    <bitmap name="cpu2">
+      <row>.****.</row>
+      <row>******</row>
+      <row>.*ww*.</row>
+      <row>.****.</row>
+      <row>.****.</row>
+      <row>.*ww*.</row>
+      <row>******</row>
+      <row>.****.</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+      <color char="w">color.lightgrey</color>
+    </bitmap>
+  </pictures>
 </game>

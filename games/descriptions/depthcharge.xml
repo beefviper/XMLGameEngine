@@ -40,40 +40,6 @@
     <variable name="step">4</variable>
     <variable name="margin">20</variable>
   </variables>
-  <sounds>
-    <!-- the sonar, pinging all through the hunt -->
-    <sound name="sonar" wave="sine">
-      <loop />
-      <volume>0.15</volume>
-      <note pitch="B5" to="A5">0.15</note>
-      <rest>1.6</rest>
-    </sound>
-    <sound name="drop" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G3" to="C3">0.1</note>
-    </sound>
-    <sound name="sink" wave="noise">
-      <volume>0.45</volume>
-      <note pitch="2500" to="150">0.5</note>
-    </sound>
-    <sound name="boom" wave="noise">
-      <volume>0.5</volume>
-      <note pitch="1200" to="60">0.9</note>
-    </sound>
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.07</note>
-      <note pitch="E5">0.07</note>
-      <note pitch="G5">0.07</note>
-      <note pitch="C6">0.14</note>
-    </sound>
-    <sound name="gameover" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="G4">0.25</note>
-      <note pitch="E4">0.25</note>
-      <note pitch="C4" to="C3">0.7</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>110</size><color>color.cyan</color></style>
     <style name="line"><size>30</size><color>color.white</color></style>
@@ -83,14 +49,7 @@
     <!-- a charge, sinking slowly; six at most in the water -->
     <object name="charge" class="charge">
       <sprite>
-        <bitmap>
-          <row>.**.</row>
-          <row>****</row>
-          <row>****</row>
-          <row>.**.</row>
-          <scale>3</scale>
-          <color>color.orange</color>
-        </bitmap>
+        <bitmap from="charge" />
       </sprite>
       <velocity><y>2</y></velocity>
       <most>6</most>
@@ -102,15 +61,7 @@
     <!-- the mines the submarines lay: they rise, and go off at the top of the water or under the destroyer -->
     <object name="mine" class="mine">
       <sprite>
-        <bitmap>
-          <row>*.*.*</row>
-          <row>.***.</row>
-          <row>*****</row>
-          <row>.***.</row>
-          <row>*.*.*</row>
-          <scale>2</scale>
-          <color>color.white</color>
-        </bitmap>
+        <bitmap from="mine" />
       </sprite>
       <velocity><y>-1.2</y></velocity>
       <most>6</most>
@@ -122,26 +73,10 @@
     <!-- a submarine going down -->
     <object name="burst">
       <sprite name="flash">
-        <bitmap>
-          <row>.*..*..*.</row>
-          <row>..*.*.*..</row>
-          <row>*..***..*</row>
-          <row>..*.*.*..</row>
-          <row>.*..*..*.</row>
-          <scale>4</scale>
-          <color>color.white</color>
-        </bitmap>
+        <bitmap from="burst-flash" />
       </sprite>
       <sprite name="spray">
-        <bitmap>
-          <row>*...*...*</row>
-          <row>.*.....*.</row>
-          <row>...*.*...</row>
-          <row>.*.....*.</row>
-          <row>*...*...*</row>
-          <scale>4</scale>
-          <color>color.cyan</color>
-        </bitmap>
+        <bitmap from="burst-spray" />
       </sprite>
       <animation>
         <interval>0.1</interval>
@@ -202,16 +137,7 @@
         <!-- the submarines: four lanes, each deeper, slower to reach and worth more -->
         <group name="subs" class="sub">
           <sprite>
-            <bitmap>
-              <row>.........**.........</row>
-              <row>........****........</row>
-              <row>.******************.</row>
-              <row>********************</row>
-              <row>.******************.</row>
-              <row>..****************..</row>
-              <scale>3</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="subs" />
           </sprite>
           <collisions>
             <type>pixel</type>
@@ -262,18 +188,7 @@
         </group>
         <object name="ship">
           <sprite>
-            <bitmap>
-              <row>..........*...................</row>
-              <row>.........***......*...........</row>
-              <row>....**..*****....***..........</row>
-              <row>..**************************..</row>
-              <row>******************************</row>
-              <row>.****************************.</row>
-              <row>..**************************..</row>
-              <row>...************************...</row>
-              <scale>3</scale>
-              <color>color.lightgrey</color>
-            </bitmap>
+            <bitmap from="ship" />
           </sprite>
           <position><x><centered /></x><y>surface - 20</y></position>
           <collisions>
@@ -365,4 +280,97 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <!-- the sonar, pinging all through the hunt -->
+    <sound name="sonar" wave="sine">
+      <loop />
+      <volume>0.15</volume>
+      <note pitch="B5" to="A5">0.15</note>
+      <rest>1.6</rest>
+    </sound>
+    <sound name="drop" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G3" to="C3">0.1</note>
+    </sound>
+    <sound name="sink" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="2500" to="150">0.5</note>
+    </sound>
+    <sound name="boom" wave="noise">
+      <volume>0.5</volume>
+      <note pitch="1200" to="60">0.9</note>
+    </sound>
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="charge">
+      <row>.**.</row>
+      <row>****</row>
+      <row>****</row>
+      <row>.**.</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="mine">
+      <row>*.*.*</row>
+      <row>.***.</row>
+      <row>*****</row>
+      <row>.***.</row>
+      <row>*.*.*</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="burst-flash">
+      <row>.*..*..*.</row>
+      <row>..*.*.*..</row>
+      <row>*..***..*</row>
+      <row>..*.*.*..</row>
+      <row>.*..*..*.</row>
+      <scale>4</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="burst-spray">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...*.*...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>4</scale>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="subs">
+      <row>.........**.........</row>
+      <row>........****........</row>
+      <row>.******************.</row>
+      <row>********************</row>
+      <row>.******************.</row>
+      <row>..****************..</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="ship">
+      <row>..........*...................</row>
+      <row>.........***......*...........</row>
+      <row>....**..*****....***..........</row>
+      <row>..**************************..</row>
+      <row>******************************</row>
+      <row>.****************************.</row>
+      <row>..**************************..</row>
+      <row>...************************...</row>
+      <scale>3</scale>
+      <color>color.lightgrey</color>
+    </bitmap>
+  </pictures>
 </game>

@@ -42,12 +42,6 @@
     <variable name="height">120</variable>
     <variable name="step">5</variable>
   </variables>
-  <!-- the arcade's three tones: a paddle hit, the wall an octave lower, and a long one for a point -->
-  <sounds>
-    <sound name="paddle"><note pitch="459">0.1</note></sound>
-    <sound name="wall"><note pitch="226">0.02</note></sound>
-    <sound name="score"><note pitch="490">0.26</note></sound>
-  </sounds>
   <styles>
     <style name="banner"><size>160</size></style>
     <style name="prompt"><size>48</size><color>color.lightgrey</color></style>
@@ -273,4 +267,10 @@
       </inputs>
     </state>
   </states>
+  <!-- the arcade's three tones: a paddle hit, the wall an octave lower, and a long one for a point -->
+  <sounds>
+    <sound name="paddle"><note pitch="459">0.1</note></sound>
+    <sound name="wall"><note pitch="226">0.02</note></sound>
+    <sound name="score"><note pitch="490">0.26</note></sound>
+  </sounds>
 </game>
