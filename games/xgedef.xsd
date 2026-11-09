@@ -692,7 +692,7 @@
        <rows> (cards: a row for each suit, a column for each rank), with two looks, the face first and the back.
        spread: each held one on from the one under it (<width>: never wider; with sprite=, for those showing that look);
        accepts: what may be placed on top, as <condition>s on the arriving one (all must hold), comparing its variable=
-       with a number or the top one's (top.suit, top.rank - 1); total="sum": that variable added up over what is laid at
+       with a number or a variable of the top one (top.suit, top.rank - 1); total="sum": that variable added up over what is laid at
        once; total="count" <equal>1: one at a time; <any>: one of these holds too; <empty>: <condition>s on the first
        one; carry: one may be picked with all those on it; top: the top one turns to that look; lift: the one a
        picker points at is lifted by that much; picked: what picking from it does instead, picking nothing up (<send
@@ -830,14 +830,16 @@
     <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
-  <!-- A <condition> of an <accepts>: the arriving one's variable= against a number, or against the top one's
-       (top.suit; top.rank + 1). total="sum": that variable over what is laid at once; total="count": how many. -->
+  <!-- A <condition> of an <accepts>: the arriving one's variable= against a number, or against a variable of the
+       top one, plus or minus a number if wanted (top.suit; top.rank + 1; top.worth). total="sum": that variable over what is laid at once; total="count": how many. -->
   <xs:complexType name="acceptConditionType">
     <xs:choice>
       <xs:element name="equal" type="xs:string" />
       <xs:element name="unequal" type="xs:string" />
-      <xs:element name="atleast" type="xs:decimal" />
-      <xs:element name="atmost" type="xs:decimal" />
+      <xs:element name="above" type="xs:string" />
+      <xs:element name="below" type="xs:string" />
+      <xs:element name="atleast" type="xs:string" />
+      <xs:element name="atmost" type="xs:string" />
     </xs:choice>
     <xs:attribute name="variable" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="total" use="optional">
@@ -1798,8 +1800,13 @@
     rule about another object may also begin with slower and/or faster, which
     hold it to when the object's own speed is under (slower) or at least
     (faster) that number. With sprite, it runs only while the object shows its
-    sprite of that name (see become).
+    sprite of that name (see become). A rule may hold rules, which say what it
+    says too (a holder's attribute is not said again below it), its <first>
+    running as a rule of its own before them.
   -->
+  <xs:complexType name="ruleCommandsType">
+    <xs:group ref="ruleCommands" minOccurs="0" maxOccurs="unbounded" />
+  </xs:complexType>
   <xs:complexType name="collisionType">
     <xs:sequence>
       <xs:element name="slower" type="valueType" minOccurs="0" />
@@ -1811,7 +1818,14 @@
         <xs:element name="all" type="joinType" />
         <xs:element name="any" type="joinType" />
       </xs:choice>
-      <xs:group ref="ruleCommands" minOccurs="0" maxOccurs="unbounded" />
+      <xs:choice>
+        <!-- rules it holds, each saying what this one says too; every one that matches runs, after <first> -->
+        <xs:sequence>
+          <xs:element name="first" type="ruleCommandsType" minOccurs="0" />
+          <xs:element name="collision" type="collisionType" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:group ref="ruleCommands" minOccurs="0" maxOccurs="unbounded" />
+      </xs:choice>
     </xs:sequence>
     <xs:attribute name="edge" type="edgeType" use="optional" />
     <!-- the side of this object the other touched: top, bottom, left, right, horizontal or vertical -->

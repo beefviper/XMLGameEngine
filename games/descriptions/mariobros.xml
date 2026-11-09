@@ -507,38 +507,41 @@
           </any>
           <reset />
         </collision>
-        <!-- on its back it slides on with the hop that turned it over
-             (off a ledge, bumped near one), and lies still once down -->
-        <collision class="floor" sprite="flipped">
-          <condition variable="down"><atleast>1</atleast></condition>
-          <set variable="self.velocity.x">0</set>
+        <!-- on its back: it slides on with the hop that turned it over
+             (off a ledge, bumped near one) and lies still once down; a
+             brother himself, from any side, kicks it off -->
+        <collision sprite="flipped">
+          <collision class="floor">
+            <condition variable="down"><atleast>1</atleast></condition>
+            <set variable="self.velocity.x">0</set>
+          </collision>
+          <collision object="mario">
+            <inc variable="mario.score">800</inc>
+            <trigger action="kicked" />
+          </collision>
+          <collision object="luigi">
+            <inc variable="luigi.score">800</inc>
+            <trigger action="kicked" />
+          </collision>
         </collision>
-        <!-- got up by itself twice: the third colours -->
-        <collision class="floor" sprite="walking">
-          <condition variable="ups"><atleast>2</atleast></condition>
-          <become style="furious" />
-        </collision>
-        <!-- two on their feet that meet turn round -->
-        <collision class="enemy" side="horizontal" sprite="walking">
-          <bounce />
-        </collision>
-        <!-- touched by a brother himself, from any side: kicked off on its
-             back, deadly on its feet unless he is blinking -->
-        <collision object="mario" sprite="flipped">
-          <inc variable="mario.score">800</inc>
-          <trigger action="kicked" />
-        </collision>
-        <collision object="luigi" sprite="flipped">
-          <inc variable="luigi.score">800</inc>
-          <trigger action="kicked" />
-        </collision>
-        <collision object="mario" sprite="walking">
-          <condition object="mario" variable="blink"><atmost>0</atmost></condition>
-          <trigger object="mario" action="lose" />
-        </collision>
-        <collision object="luigi" sprite="walking">
-          <condition object="luigi" variable="blink"><atmost>0</atmost></condition>
-          <trigger object="luigi" action="lose" />
+        <!-- on its feet: got up by itself twice, the third colours; two that
+             meet turn round; deadly to a brother unless he is blinking -->
+        <collision sprite="walking">
+          <collision class="floor">
+            <condition variable="ups"><atleast>2</atleast></condition>
+            <become style="furious" />
+          </collision>
+          <collision class="enemy" side="horizontal">
+            <bounce />
+          </collision>
+          <collision object="mario">
+            <condition object="mario" variable="blink"><atmost>0</atmost></condition>
+            <trigger object="mario" action="lose" />
+          </collision>
+          <collision object="luigi">
+            <condition object="luigi" variable="blink"><atmost>0</atmost></condition>
+            <trigger object="luigi" action="lose" />
+          </collision>
         </collision>
       </collisions>
       <actions>
@@ -604,15 +607,17 @@
       <collisions>
         <!-- bumped from below through a floor, a little hop: on its feet
              it goes over, on its back it gets up -->
-        <collision class="brother" through="floor" sprite="walking">
-          <become sprite="flipped" />
-          <set variable="self.velocity.y">0 - hop</set>
-          <play sound="flip" />
-        </collision>
-        <collision class="brother" through="floor" sprite="flipped">
-          <condition variable="down"><atleast>1</atleast></condition>
-          <trigger action="getup" />
-          <set variable="self.velocity.y">0 - hop</set>
+        <collision class="brother" through="floor">
+          <collision sprite="walking">
+            <become sprite="flipped" />
+            <set variable="self.velocity.y">0 - hop</set>
+            <play sound="flip" />
+          </collision>
+          <collision sprite="flipped">
+            <condition variable="down"><atleast>1</atleast></condition>
+            <trigger action="getup" />
+            <set variable="self.velocity.y">0 - hop</set>
+          </collision>
         </collision>
       </collisions>
     </group>
@@ -710,42 +715,46 @@
       </animation>
       <collisions>
         <!-- mad: on its feet, as deadly and as quick to turn round -->
-        <collision class="enemy" side="horizontal" sprite="mad">
-          <bounce />
-        </collision>
-        <collision object="mario" sprite="mad">
-          <condition object="mario" variable="blink"><atmost>0</atmost></condition>
-          <trigger object="mario" action="lose" />
-        </collision>
-        <collision object="luigi" sprite="mad">
-          <condition object="luigi" variable="blink"><atmost>0</atmost></condition>
-          <trigger object="luigi" action="lose" />
+        <collision sprite="mad">
+          <collision class="enemy" side="horizontal">
+            <bounce />
+          </collision>
+          <collision object="mario">
+            <condition object="mario" variable="blink"><atmost>0</atmost></condition>
+            <trigger object="mario" action="lose" />
+          </collision>
+          <collision object="luigi">
+            <condition object="luigi" variable="blink"><atmost>0</atmost></condition>
+            <trigger object="luigi" action="lose" />
+          </collision>
         </collision>
         <!-- bumped from below through a floor, the look it leads to first:
              mad goes over, on its feet goes mad, on its back gets up -->
-        <collision class="brother" through="floor" sprite="mad">
-          <become sprite="flipped" />
-          <set variable="self.velocity.y">0 - hop</set>
-          <play sound="flip" />
-        </collision>
-        <collision class="brother" through="floor" sprite="walking">
-          <become sprite="mad" />
-          <set variable="self.velocity.x">
-            <formula>
-              <multiply>
-                <multiplicand><sign><value>self.velocity.x</value></sign></multiplicand>
-                <multiplier>self.speed</multiplier>
-                <multiplier>2</multiplier>
-              </multiply>
-            </formula>
-          </set>
-          <set variable="self.velocity.y">0 - hop</set>
-          <play sound="mad" />
-        </collision>
-        <collision class="brother" through="floor" sprite="flipped">
-          <condition variable="down"><atleast>1</atleast></condition>
-          <trigger action="getup" />
-          <set variable="self.velocity.y">0 - hop</set>
+        <collision class="brother" through="floor">
+          <collision sprite="mad">
+            <become sprite="flipped" />
+            <set variable="self.velocity.y">0 - hop</set>
+            <play sound="flip" />
+          </collision>
+          <collision sprite="walking">
+            <become sprite="mad" />
+            <set variable="self.velocity.x">
+              <formula>
+                <multiply>
+                  <multiplicand><sign><value>self.velocity.x</value></sign></multiplicand>
+                  <multiplier>self.speed</multiplier>
+                  <multiplier>2</multiplier>
+                </multiply>
+              </formula>
+            </set>
+            <set variable="self.velocity.y">0 - hop</set>
+            <play sound="mad" />
+          </collision>
+          <collision sprite="flipped">
+            <condition variable="down"><atleast>1</atleast></condition>
+            <trigger action="getup" />
+            <set variable="self.velocity.y">0 - hop</set>
+          </collision>
         </collision>
       </collisions>
       <actions>
@@ -819,15 +828,17 @@
       <collisions>
         <!-- bumped from below through a floor, a little hop: on its feet
              it goes over, on its back it gets up -->
-        <collision class="brother" through="floor" sprite="walking">
-          <become sprite="flipped" />
-          <set variable="self.velocity.y">0 - hop</set>
-          <play sound="flip" />
-        </collision>
-        <collision class="brother" through="floor" sprite="flipped">
-          <condition variable="down"><atleast>1</atleast></condition>
-          <trigger action="getup" />
-          <set variable="self.velocity.y">0 - hop</set>
+        <collision class="brother" through="floor">
+          <collision sprite="walking">
+            <become sprite="flipped" />
+            <set variable="self.velocity.y">0 - hop</set>
+            <play sound="flip" />
+          </collision>
+          <collision sprite="flipped">
+            <condition variable="down"><atleast>1</atleast></condition>
+            <trigger action="getup" />
+            <set variable="self.velocity.y">0 - hop</set>
+          </collision>
         </collision>
       </collisions>
       <actions>

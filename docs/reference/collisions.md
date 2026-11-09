@@ -19,6 +19,14 @@ In order: `<enabled>` (`false` turns it off), `<lockstep>`, `<type>`, `<solid>`s
 - **A screen edge:** `edge="left"`, `right`, `top`, `bottom`, `vertical` (top and bottom), `horizontal` (left and right), `all`. Edges are checked by position, before the frame's move.
 - **Another object:** `class="..."` and/or `object="..."` (one object, a group, a copy's piece), both meaning AND. A `<collision>` with neither is about anything. An edge rule with either stops the load.
 - **Every matching rule runs**, in the order written.
+- **A rule holds rules.** What a `<collision>` says (its attributes, `<slower>`, `<faster>` and checks) every rule it holds says too, so a shared class or look is written once; an attribute it gives is not given again below it. Its `<first>` runs as a rule of its own, before them. Every one that matches runs, so there is no `<otherwise>`, and commands loose beside the rules it holds stop the load.
+
+  ```xml
+  <collision class="shot">
+    <collision sprite="stub"><despawn /></collision>
+    <collision sprite="half"><become sprite="stub" /></collision>
+  </collision>
+  ```
 - What a rule can do is what its place takes ([where commands go](commands.md#where-a-command-can-go)).
 
 ## Rule filters

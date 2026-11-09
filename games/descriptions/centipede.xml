@@ -151,10 +151,12 @@
             <sprite name="half"><rectangle><width>cell</width><height>cell - 9</height><color>color.orange</color></rectangle></sprite>
             <sprite name="stub"><rectangle><width>cell</width><height>cell - 12</height><color>color.orange</color></rectangle></sprite>
             <collisions>
-              <collision class="shot" sprite="stub"><despawn /><inc variable="status.score">1</inc></collision>
-              <collision class="shot" sprite="half"><become sprite="stub" /></collision>
-              <collision class="shot" sprite="worn"><become sprite="half" /></collision>
-              <collision class="shot" sprite="whole"><become sprite="worn" /></collision>
+              <collision class="shot">
+                <collision sprite="stub"><despawn /><inc variable="status.score">1</inc></collision>
+                <collision sprite="half"><become sprite="stub" /></collision>
+                <collision sprite="worn"><become sprite="half" /></collision>
+                <collision sprite="whole"><become sprite="worn" /></collision>
+              </collision>
             </collisions>
           </group>
 
@@ -172,30 +174,38 @@
             <collisions>
               <!-- turned by the side, a mushroom or another centipede: round,
                    and a row down, or up while rising -->
-              <collision edge="horizontal" sprite="rising"><trigger action="rise" /></collision>
-              <collision edge="horizontal" sprite="falling"><trigger action="fall" /></collision>
-              <collision class="mushroom" side="horizontal" sprite="rising"><trigger action="rise" /></collision>
-              <collision class="mushroom" side="horizontal" sprite="falling"><trigger action="fall" /></collision>
-              <collision class="centipede" side="horizontal" sprite="rising"><trigger action="rise" /></collision>
-              <collision class="centipede" side="horizontal" sprite="falling"><trigger action="fall" /></collision>
+              <collision sprite="rising">
+                <collision edge="horizontal"><trigger action="rise" /></collision>
+                <collision class="mushroom" side="horizontal"><trigger action="rise" /></collision>
+                <collision class="centipede" side="horizontal"><trigger action="rise" /></collision>
+              </collision>
+              <collision sprite="falling">
+                <collision edge="horizontal"><trigger action="fall" /></collision>
+                <collision class="mushroom" side="horizontal"><trigger action="fall" /></collision>
+                <collision class="centipede" side="horizontal"><trigger action="fall" /></collision>
+              </collision>
               <!-- turning down or up, nothing stops it -->
-              <collision class="mushroom" side="vertical"><through /></collision>
-              <collision class="centipede" side="vertical"><through /></collision>
+              <collision side="vertical">
+                <collision class="mushroom"><through /></collision>
+                <collision class="centipede"><through /></collision>
+              </collision>
               <!-- the zone's line: crossed going across or down; rising, back down -->
               <collision class="line" side="top" sprite="rising"><become sprite="falling" /><hop direction="down" /></collision>
               <collision class="line"><through /></collision>
               <!-- at the bottom it starts back up, and at the top down again -->
               <collision edge="bottom"><become sprite="rising" /><hop direction="up" /></collision>
               <collision edge="top"><become sprite="falling" /></collision>
-              <!-- shot: cut in two here, and a mushroom where it was -->
-              <collision class="shot" sprite="falling"><inc variable="status.score">90</inc></collision>
-              <collision class="shot" sprite="rising"><inc variable="status.score">90</inc></collision>
+              <!-- shot: cut in two here, and a mushroom where it was; a head is worth 100 -->
               <collision class="shot">
-                <split />
-                <despawn />
-                <spawn object="mushrooms" />
-                <inc variable="status.score">10</inc>
-                <play sound="pop" />
+                <collision sprite="falling"><inc variable="status.score">90</inc></collision>
+                <collision sprite="rising"><inc variable="status.score">90</inc></collision>
+                <collision>
+                  <split />
+                  <despawn />
+                  <spawn object="mushrooms" />
+                  <inc variable="status.score">10</inc>
+                  <play sound="pop" />
+                </collision>
               </collision>
             </collisions>
             <actions>

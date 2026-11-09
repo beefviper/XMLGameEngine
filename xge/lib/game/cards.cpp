@@ -1322,19 +1322,21 @@ namespace xge
 		};
 		for (const PileRule::VarRule& each : rules)
 		{
+			if (each.kind == Kind::Total) { continue; }   // what is laid together, added up (pileTakes)
 			const float mine = valueOf(next, each.variable);
-			const float theirs = !below ? 0.0f : value > 0.0f && each.variable == called ? value : valueOf(*below, each.variable);
+			const std::string& named = each.topVariable.empty() ? each.variable : each.topVariable;
+			const float theirs = !below ? 0.0f : value > 0.0f && named == called ? value : valueOf(*below, named);
+			const float against = each.top ? theirs + each.amount : each.amount;
 			bool holds = true;
 			switch (each.kind)
 			{
-			case Kind::Same: holds = mine == theirs; break;
-			case Kind::Differs: holds = mine != theirs; break;
-			case Kind::Step: holds = mine == theirs + each.amount; break;
-			case Kind::Total: break;   // what is laid together, added up (pileTakes)
-			case Kind::Equal: holds = mine == each.amount; break;
-			case Kind::Unequal: holds = mine != each.amount; break;
-			case Kind::AtLeast: holds = mine >= each.amount; break;
-			case Kind::AtMost: holds = mine <= each.amount; break;
+			case Kind::Equal: holds = mine == against; break;
+			case Kind::Unequal: holds = mine != against; break;
+			case Kind::Above: holds = mine > against; break;
+			case Kind::Below: holds = mine < against; break;
+			case Kind::AtLeast: holds = mine >= against; break;
+			case Kind::AtMost: holds = mine <= against; break;
+			case Kind::Total: break;
 			}
 			if (!holds) { return false; }
 		}

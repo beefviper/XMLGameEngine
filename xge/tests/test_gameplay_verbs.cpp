@@ -1423,6 +1423,56 @@ TEST_CASE("<unequal> holds for what is not that number", "[conditions][self]")
 	CHECK(each.loaded.variable("coin3", "v") == 19.0f);
 }
 
+namespace
+{
+	// An object "a" whose <collisions> are `rules`, beside a wall "w".
+	std::string ruled(const std::string& rules)
+	{
+		return gameXml(box("a", 0, 0, 10, 10, rules, {}, "<variables><variable name=\"n\">0</variable></variables>")
+			+ box("w", 100, 0, 10, 10, {}, {}, {}, "<x>0</x><y>0</y>", " class=\"wall\""),
+			state("playing", { "a", "w" }));
+	}
+}
+
+TEST_CASE("a collision rule holds rules: what it says they say too, its <first> a rule of its own before theirs", "[collision_rules][nested]")
+{
+	Loaded loaded(ruled("<collision class=\"wall\" side=\"left\">"
+		"<condition variable=\"n\"><atleast>0</atleast></condition>"
+		"<first><inc variable=\"self.n\">1</inc></first>"
+		"<collision><condition variable=\"n\"><atmost>5</atmost></condition><inc variable=\"self.n\">2</inc></collision>"
+		"<collision object=\"w\"><faster>1</faster><stop /></collision>"
+		"</collision>"
+		"<collision unless=\"wall\"><collision edge=\"horizontal\"><wrap /></collision></collision>"));
+	const CollisionData& rules = loaded.game.getObject("a").collisionData;
+	REQUIRE(rules.others.size() == 3);
+	for (const CollisionRule& rule : rules.others)
+	{
+		CHECK(rule.filterClass == "wall");
+		CHECK(rule.sides.size() == 1);
+		REQUIRE(rule.check);
+	}
+	CHECK(rules.others[0].check->parts.size() == 1);
+	CHECK(rules.others[1].check->parts.size() == 2);
+	CHECK(rules.others[2].filterObject == "w");
+	CHECK(rules.others[2].faster);
+	const auto& left = rules.edges[edgeIndex(Edge::Left)];
+	REQUIRE(left.guards.size() == 1);
+	CHECK(left.guards[0].unlessClass == "wall");
+}
+
+TEST_CASE("mistakes in rules holding rules stop the load, saying where", "[collision_rules][nested][errors]")
+{
+	CHECK_THROWS_WITH(Loaded(ruled("<collision class=\"wall\"><collision class=\"wall\"><stop /></collision></collision>")),
+		ContainsSubstring("but the <collision> holding it says class=\"wall\" for every rule it holds"));
+	CHECK_THROWS_WITH(Loaded(ruled("<collision edge=\"top\"><collision class=\"wall\"><stop /></collision></collision>")),
+		ContainsSubstring("edge= with class="));
+	// The schema turns away commands loose beside the rules held, and a <first> holding none.
+	CHECK_THROWS_WITH(Loaded(ruled("<collision class=\"wall\"><stop /><collision><stop /></collision></collision>"), XmlBackend::TinyXml2),
+		ContainsSubstring("unexpected element <collision>"));
+	CHECK_THROWS_WITH(Loaded(ruled("<collision class=\"wall\"><first><stop /></first></collision>"), XmlBackend::TinyXml2),
+		ContainsSubstring("unexpected element <first>"));
+}
+
 TEST_CASE("a condition on a class: self is each one it holds for, others the rest; what names neither runs once", "[conditions][self]")
 {
 	// v is 2, 5 and 9; flag.n counts the commands run once.

@@ -461,18 +461,20 @@ namespace xge
 		// <sum>N: the cards laid (all of them, held together) when their
 		// worths add up to N, whatever is on the pile (0: no such rule).
 		int sum{};
-		// <accepts> of a <holds>: rules on the arriving member's variables.
-		// Same, Differs, Step and Total compare it with the top one (Step:
-		// its value is the top's plus `amount`; Total: the two add up to
-		// `amount`); Equal, AtLeast and AtMost compare it with `amount`.
-		// `rules` hold while something is held, `emptyRules` (<empty>) for
-		// the first.
+		// <accepts> of a <holds>: rules on the arriving member's variable.
+		// `kind` compares it with `amount`, or, `top`, with the top one's
+		// `topVariable` (empty: the same variable) plus `amount`
+		// (<equal>top.rank - 1</equal>). Total: what is laid at once, that
+		// variable added up, is `amount`. `rules` hold while something is
+		// held, `emptyRules` (<empty>) for the first.
 		struct VarRule
 		{
-			enum class Kind { Same, Differs, Step, Total, Equal, Unequal, AtLeast, AtMost };
-			Kind kind{ Kind::Same };
+			enum class Kind { Equal, Unequal, Above, Below, AtLeast, AtMost, Total };
+			Kind kind{ Kind::Equal };
 			std::string variable;
 			float amount{};
+			bool top{ false };
+			std::string topVariable;
 		};
 		std::vector<VarRule> rules;
 		std::vector<VarRule> emptyRules;

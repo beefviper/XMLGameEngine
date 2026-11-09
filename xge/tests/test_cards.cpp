@@ -437,33 +437,54 @@ TEST_CASE("klondike.xml: placing rules are conditions on the arriving card again
 		Changed changed({ { from.empty() ? column : from, to } });
 		CHECK_THROWS_WITH(Played(changed.path), Catch::Matchers::ContainsSubstring(message));
 	};
-	fails("<condition variable=\"rank\"><equal>top.suit</equal></condition>", "compares rank with top.suit");
-	fails("<condition variable=\"rank\"><atleast>top.rank</atleast></condition>", "failed to validate"); // the schema: a number
-	fails("<condition variable=\"rank\"><unequal>top.rank - 1</unequal></condition>", "expected <equal>top.rank + N</equal>");
+	fails("<condition variable=\"rank\"><equal>top.rank * 2</equal></condition>", "plus or minus a number if wanted");
+	fails("<condition variable=\"rank\"><equal>top.</equal></condition>", "expected top. and a variable of it");
 	fails("<condition variable=\"rank\"><equal>top.rank - x</equal></condition>", "plus or minus a number");
 	fails("<condition><equal>1</equal></condition>", "needs variable=");
 	fails("<condition total=\"count\"><equal>2</equal></condition>", "<equal>1</equal> for now");
 	fails("<empty><condition variable=\"rank\"><equal>top.rank</equal></condition></empty>", "nothing lies under it", king);
 
-	// A plain number and <unequal> one: a column that takes anything but a queen and never a king, on anything.
-	Changed plain({ { column, "<condition variable=\"rank\"><unequal>12</unequal></condition>" },
+	// A plain number, <unequal> one, and another variable of the top: a column that takes anything but a queen,
+	// a worth below the top's suit (any test of numbers), never a king on an empty one.
+	Changed plain({ { column, "<condition variable=\"rank\"><unequal>12</unequal></condition><condition variable=\"worth\"><below>top.suit + 3</below></condition>" },
 		{ king, "<empty><condition variable=\"rank\"><atmost>12</atmost></condition></empty>" } });
 	Played played(plain.path);
+	using Kind = PileRule::VarRule::Kind;
 	const PileRule& takes = played.get("columns.1.1").pile.takes;
-	REQUIRE(takes.rules.size() == 2);
-	CHECK(takes.rules[0].kind == PileRule::VarRule::Kind::Differs);
-	CHECK(takes.rules[1].kind == PileRule::VarRule::Kind::Unequal);
+	REQUIRE(takes.rules.size() == 3);
+	CHECK(takes.rules[0].kind == Kind::Unequal);
+	CHECK(takes.rules[0].top);
+	CHECK(takes.rules[1].kind == Kind::Unequal);
+	CHECK_FALSE(takes.rules[1].top);
 	CHECK(takes.rules[1].amount == 12.0f);
+	CHECK(takes.rules[2].kind == Kind::Below);
+	CHECK(takes.rules[2].top);
+	CHECK(takes.rules[2].topVariable == "suit");
+	CHECK(takes.rules[2].amount == 3.0f);
 	REQUIRE(takes.emptyRules.size() == 1);
-	CHECK(takes.emptyRules[0].kind == PileRule::VarRule::Kind::AtMost);
+	CHECK(takes.emptyRules[0].kind == Kind::AtMost);
+
+	// So a worth of 3 goes on a top of suit 1 (3 < 4) and of 6 does not.
+	Object top;
+	top.variable["suit"] = 1.0f;
+	Object low;
+	low.variable["rank"] = 2.0f;
+	low.variable["worth"] = 3.0f;
+	Object high = low;
+	high.variable["worth"] = 6.0f;
+	const std::vector<PileRule::VarRule> below{ takes.rules[2] };
+	CHECK(Game::acceptsBy(below, low, &top));
+	CHECK_FALSE(Game::acceptsBy(below, high, &top));
 
 	// Klondike as written: the foundations one at a time, the same suit, one higher.
 	Played klondike("descriptions/klondike.xml");
 	const PileRule& home = klondike.get("foundations.1.1").pile.takes;
 	CHECK(home.one);
 	REQUIRE(home.rules.size() == 2);
-	CHECK(home.rules[0].kind == PileRule::VarRule::Kind::Same);
-	CHECK(home.rules[1].kind == PileRule::VarRule::Kind::Step);
+	CHECK(home.rules[0].kind == PileRule::VarRule::Kind::Equal);
+	CHECK(home.rules[0].top);
+	CHECK(home.rules[0].amount == 0.0f);
+	CHECK(home.rules[1].kind == PileRule::VarRule::Kind::Equal);
 	CHECK(home.rules[1].amount == 1.0f);
 }
 

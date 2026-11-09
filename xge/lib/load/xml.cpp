@@ -1197,10 +1197,11 @@ namespace xge
 
 		// The rules of an <accepts> (or of its <any>, <wild> or <empty>):
 		// <condition>s on the arriving one, which is self. Each compares a
-		// variable with <equal>, <unequal>, <atleast> or <atmost> a number,
-		// or (on a holder holding something) with the top one's:
+		// variable with <equal>, <unequal>, <above>, <below>, <atleast> or
+		// <atmost> a number, or (on a holder holding something) with a
+		// variable of the top one, plus or minus a number:
 		// <equal>top.suit</equal>, <unequal>top.color</unequal>,
-		// <equal>top.rank - 1</equal>. total="sum" adds up that variable over
+		// <equal>top.rank - 1</equal>, <below>top.worth</below>. total="sum" adds up that variable over
 		// what is laid at once; total="count" with <equal>1</equal> lays one
 		// at a time.
 		void readAcceptRules(const XmlNode& node, PileRule& rule, std::vector<PileRule::VarRule>& into, const std::string& here, int level)
@@ -1233,13 +1234,15 @@ namespace xge
 				}
 				const std::unique_ptr<XmlNode> test = part->getFirstChild();
 				const std::string kind = test ? test->getName() : "";
-				if (kind != "equal" && kind != "unequal" && kind != "atleast" && kind != "atmost")
+				PileRule::VarRule each;
+				if (kind != "equal" && kind != "unequal" && kind != "above" && kind != "below" && kind != "atleast" && kind != "atmost")
 				{
-					fail(at, "compares the arriving one with an <equal>, <unequal>, <atleast> or <atmost>");
+					fail(at, "compares the arriving one with an <equal>, <unequal>, <above>, <below>, <atleast> or <atmost>");
 				}
+				each.kind = kind == "equal" ? Kind::Equal : kind == "unequal" ? Kind::Unequal : kind == "above" ? Kind::Above
+					: kind == "below" ? Kind::Below : kind == "atleast" ? Kind::AtLeast : Kind::AtMost;
 				const std::string testAt = at + " > <" + kind + ">";
 				const std::string total = part->getAttribute("total");
-				PileRule::VarRule each;
 				each.variable = part->getAttribute("variable");
 				if (total == "count")
 				{
@@ -1269,18 +1272,14 @@ namespace xge
 					std::size_t end = 4;
 					while (end < text.size() && text[end] != ' ' && text[end] != '+' && text[end] != '-') { ++end; }
 					const std::string named = text.substr(4, end - 4);
-					if (named != each.variable) { fail(testAt, "compares " + each.variable + " with top." + named + "; for now a variable is compared with the top's own (top." + each.variable + ")"); }
+					if (named.empty()) { fail(testAt, "is \"" + text + "\"; expected top. and a variable of it, as top.rank"); }
+					each.top = true;
+					if (named != each.variable) { each.topVariable = named; }
 					std::string rest = text.substr(end);
 					rest.erase(0, rest.find_first_not_of(' '));
-					if (rest.empty())
+					if (!rest.empty())
 					{
-						if (kind == "equal") { each.kind = Kind::Same; }
-						else if (kind == "unequal") { each.kind = Kind::Differs; }
-						else { fail(testAt, "compares with top; for now <equal> or <unequal> it, or <equal> it plus or minus a number"); }
-					}
-					else
-					{
-						if (kind != "equal" || (rest[0] != '+' && rest[0] != '-')) { fail(testAt, "is \"" + text + "\"; expected <equal>top." + each.variable + " + N</equal> or - N"); }
+						if (rest[0] != '+' && rest[0] != '-') { fail(testAt, "is \"" + text + "\"; expected top." + named + ", plus or minus a number if wanted"); }
 						const float sign = rest[0] == '-' ? -1.0f : 1.0f;
 						std::string number = rest.substr(1);
 						number.erase(0, number.find_first_not_of(' '));
@@ -1288,14 +1287,12 @@ namespace xge
 						float value = 0.0f;
 						try { value = std::stof(number, &used); }
 						catch (const std::exception&) { used = 0; }
-						if (number.empty() || used != number.size()) { fail(testAt, "is \"" + text + "\"; expected top." + each.variable + " plus or minus a number"); }
-						each.kind = Kind::Step;
+						if (number.empty() || used != number.size()) { fail(testAt, "is \"" + text + "\"; expected top." + named + " plus or minus a number"); }
 						each.amount = sign * value;
 					}
 				}
 				else
 				{
-					each.kind = kind == "equal" ? Kind::Equal : kind == "unequal" ? Kind::Unequal : kind == "atleast" ? Kind::AtLeast : Kind::AtMost;
 					each.amount = readPlainNumber(*test, testAt);
 				}
 				into.push_back(std::move(each));
@@ -2216,30 +2213,48 @@ namespace xge
 				}
 			}
 
-			for (std::unique_ptr<XmlNode> collision = findChild(&collisions, "collision"); collision != nullptr; collision = collision->getNextSibling())
+			// A rule may hold rules: what it says (its attributes, <slower>,
+			// <faster> and checks) the rules it holds say too, and its <first>
+			// runs as a rule of its own before theirs.
+			struct Said
 			{
-				if (collision->getName() != "collision") { continue; }
-
-				const std::string ruleHere = collisionsHere + " > <collision>";
-				const std::string edge = collision->getAttribute("edge");
+				std::string edge, filterClass, filterObject, unlessClass, throughClass, sprite, side;
+				std::optional<RawValue> slower, faster;
+				std::vector<RawCondition> checks;
+			};
+			std::function<void(const XmlNode&, const Said&, const std::string&)> readRule = [&](const XmlNode& collision, const Said& held, const std::string& ruleHere)
+			{
+				Said said = held;
+				const auto take = [&](std::string& into, const char* attribute)
+				{
+					const std::string own = collision.getAttribute(attribute);
+					if (own.empty()) { return; }
+					if (!into.empty()) { fail(ruleHere, std::string(attribute) + "=\"" + own + "\", but the <collision> holding it says " + attribute + "=\"" + into + "\" for every rule it holds"); }
+					into = own;
+				};
+				take(said.edge, "edge");
+				take(said.filterClass, "class");
+				take(said.filterObject, "object");
+				take(said.unlessClass, "unless");
+				take(said.throughClass, "through");
+				take(said.sprite, "sprite");
+				take(said.side, "side");
+				const std::string& edge = said.edge;
 
 				// A rule about another object may start with a speed filter,
 				// <slower> and/or <faster>; the commands follow.
-				std::optional<RawValue> slower;
-				std::optional<RawValue> faster;
-				std::unique_ptr<XmlNode> firstCommand = collision->getFirstChild();
+				std::unique_ptr<XmlNode> firstCommand = collision.getFirstChild();
 				while (firstCommand && (firstCommand->getName() == "slower" || firstCommand->getName() == "faster"))
 				{
-					(firstCommand->getName() == "slower" ? slower : faster) = readValue(*firstCommand, ruleHere);
+					(firstCommand->getName() == "slower" ? said.slower : said.faster) = readValue(*firstCommand, ruleHere);
 					firstCommand = firstCommand->getNextSibling();
 				}
-				if ((slower || faster) && !edge.empty())
+				if ((said.slower || said.faster) && !edge.empty())
 				{
 					fail(ruleHere, "<slower> and <faster> are about speed against another object; a rule about a screen edge has none");
 				}
 
 				// Then the checks that must all hold for it to run.
-				RawCondition check;
 				while (firstCommand && (firstCommand->getName() == "condition" || firstCommand->getName() == "all" || firstCommand->getName() == "any"))
 				{
 					const std::string name = firstCommand->getName();
@@ -2252,15 +2267,14 @@ namespace xge
 					{
 						readJoin(*firstCommand, ruleHere + " > <" + name + ">", part);
 					}
-					check.join = RawCondition::Join::All;
-					check.parts.push_back(std::move(part));
+					said.checks.push_back(std::move(part));
 					firstCommand = firstCommand->getNextSibling();
 				}
-				if (check.join != RawCondition::Join::None && !edge.empty())
+				if (!said.checks.empty() && !edge.empty())
 				{
 					fail(ruleHere, "a <condition> on a rule about a screen edge is not built yet; one in the state's <conditions> can test the same variable");
 				}
-				const std::string side = collision->getAttribute("side");
+				const std::string& side = said.side;
 				if (!side.empty())
 				{
 					if (!edge.empty()) { fail(ruleHere, "side= is the side of the object another object touches; a rule about a screen edge says which with edge="); }
@@ -2270,48 +2284,81 @@ namespace xge
 					}
 				}
 
-				std::vector<RawCommand> commands = readCommands(std::move(firstCommand), ruleHere);
-
-				// With an edge the rule is about the screen edge. Without one it
-				// is about another object: class and/or object narrow which, and
-				// neither means anything at all.
-				if (!edge.empty())
+				// One rule's commands, as what has been said so far.
+				const auto add = [&](std::vector<RawCommand> commands)
 				{
-
-					// Appends rather than overwrites, so more than one <collision
-					// edge="..."> touching the same edge (e.g. an "all" rule plus a
-					// specific "left" rule) both run instead of the later one
-					// silently winning.
-					// class= and object= pick the other object of a touch; an
-					// edge is no object, so there is nothing for them to pick
-					if (!collision->getAttribute("class").empty() || !collision->getAttribute("object").empty() || !collision->getAttribute("through").empty())
+					// With an edge the rule is about the screen edge. Without one it
+					// is about another object: class and/or object narrow which, and
+					// neither means anything at all.
+					if (!edge.empty())
 					{
-						fail(ruleHere, "edge= with class=, object= or through=; a rule about a screen edge is about no other object"
-							" (unless=\"class\" passes it over while touching that class)");
+						// Appends rather than overwrites, so more than one <collision
+						// edge="..."> touching the same edge (e.g. an "all" rule plus a
+						// specific "left" rule) both run instead of the later one
+						// silently winning.
+						// class= and object= pick the other object of a touch; an
+						// edge is no object, so there is nothing for them to pick
+						if (!said.filterClass.empty() || !said.filterObject.empty() || !said.throughClass.empty())
+						{
+							fail(ruleHere, "edge= with class=, object= or through=; a rule about a screen edge is about no other object"
+								" (unless=\"class\" passes it over while touching that class)");
+						}
+						if (!addEdgeRule(collisionData, edge, commands, said.sprite, said.unlessClass))
+						{
+							fail(ruleHere, "edge=\"" + edge + "\"; expected left, right, top, bottom, horizontal, vertical or all");
+						}
+						return;
 					}
-
-					const std::string sprite = collision->getAttribute("sprite");
-					const std::string unlessClass = collision->getAttribute("unless");
-					if (!addEdgeRule(collisionData, edge, commands, sprite, unlessClass))
-					{
-						fail(ruleHere, "edge=\"" + edge + "\"; expected left, right, top, bottom, horizontal, vertical or all");
-					}
-				}
-				else
-				{
 					RawCollisionRule rule;
-					rule.filterClass = collision->getAttribute("class");
-					rule.filterObject = collision->getAttribute("object");
-					rule.unlessClass = collision->getAttribute("unless");
-					rule.throughClass = collision->getAttribute("through");
-					rule.whileSprite = collision->getAttribute("sprite");
-					rule.slower = std::move(slower);
-					rule.faster = std::move(faster);
+					rule.filterClass = said.filterClass;
+					rule.filterObject = said.filterObject;
+					rule.unlessClass = said.unlessClass;
+					rule.throughClass = said.throughClass;
+					rule.whileSprite = said.sprite;
+					rule.slower = said.slower;
+					rule.faster = said.faster;
 					rule.side = side;
-					rule.check = std::move(check);
+					if (!said.checks.empty())
+					{
+						rule.check.join = RawCondition::Join::All;
+						rule.check.parts = said.checks;
+					}
 					rule.commands = std::move(commands);
 					collisionData.others.push_back(std::move(rule));
+				};
+
+				// Holding rules: a <first>, then the rules, and nothing else.
+				bool holding = false;
+				for (std::unique_ptr<XmlNode> each = collision.getFirstChild(); each; each = each->getNextSibling())
+				{
+					if (each->getName() == "collision") { holding = true; }
 				}
+				if (!holding)
+				{
+					if (firstCommand && firstCommand->getName() == "first") { fail(ruleHere, "has a <first> but holds no rules; its commands go in it directly"); }
+					add(readCommands(std::move(firstCommand), ruleHere));
+					return;
+				}
+				std::unique_ptr<XmlNode> part = std::move(firstCommand);
+				if (part && part->getName() == "first")
+				{
+					std::vector<RawCommand> first = readCommands(part->getFirstChild(), ruleHere + " > <first>");
+					if (!first.empty()) { add(std::move(first)); }
+					part = part->getNextSibling();
+				}
+				for (; part && part->getName() == "collision"; part = part->getNextSibling())
+				{
+					readRule(*part, said, ruleHere + " > <collision>");
+				}
+				if (part)
+				{
+					fail(ruleHere, "holds rules, so <" + part->getName() + "> is out of place; a rule holding rules has a <first> before them, run whenever it holds, and every rule it holds runs too (there is no <otherwise>)");
+				}
+			};
+			for (std::unique_ptr<XmlNode> collision = findChild(&collisions, "collision"); collision != nullptr; collision = collision->getNextSibling())
+			{
+				if (collision->getName() != "collision") { continue; }
+				readRule(*collision, Said{}, collisionsHere + " > <collision>");
 			}
 
 			return collisionData;

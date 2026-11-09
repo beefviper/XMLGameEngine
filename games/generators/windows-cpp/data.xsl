@@ -1264,24 +1264,32 @@
         <xsl:value-of select="concat($indent, $data, '.hitboxY = {};&#10;')" />
       </xsl:if>
     </xsl:for-each>
-    <xsl:for-each select="$node/collision">
-      <xsl:variable name="commands" select="*[not(self::slower or self::faster or self::condition or self::all or self::any)]" />
+    <!-- each rule: one holding none, or a holder's <first>; what the
+         rules holding it say (readCollisions), it says too -->
+    <xsl:for-each select="$node//collision[not(collision) or first]">
+      <xsl:variable name="commands" select="first/*[../../collision] | *[not(self::slower or self::faster or self::condition or self::all or self::any or self::first or self::collision)][not(../collision)]" />
+      <xsl:variable name="edge" select="ancestor-or-self::collision[@edge][1]/@edge" />
+      <xsl:variable name="sprite" select="ancestor-or-self::collision[@sprite][1]/@sprite" />
+      <xsl:variable name="unless" select="ancestor-or-self::collision[@unless][1]/@unless" />
+      <xsl:variable name="slower" select="(ancestor-or-self::collision/slower)[last()]" />
+      <xsl:variable name="faster" select="(ancestor-or-self::collision/faster)[last()]" />
+      <xsl:variable name="checks" select="ancestor-or-self::collision/condition | ancestor-or-self::collision/all | ancestor-or-self::collision/any" />
       <xsl:choose>
-        <xsl:when test="@edge != ''">
-          <xsl:value-of select="concat($indent, 'addEdgeRule(', $data, ', &quot;', @edge, '&quot;, ')" />
+        <xsl:when test="$edge != ''">
+          <xsl:value-of select="concat($indent, 'addEdgeRule(', $data, ', &quot;', $edge, '&quot;, ')" />
           <xsl:call-template name="commands">
             <xsl:with-param name="nodes" select="$commands" />
             <xsl:with-param name="indent" select="$indent" />
           </xsl:call-template>
-          <xsl:if test="@sprite != '' or @unless != ''">
+          <xsl:if test="$sprite != '' or $unless != ''">
             <xsl:text>, </xsl:text>
             <xsl:call-template name="string">
-              <xsl:with-param name="text" select="@sprite" />
+              <xsl:with-param name="text" select="$sprite" />
             </xsl:call-template>
-            <xsl:if test="@unless != ''">
+            <xsl:if test="$unless != ''">
               <xsl:text>, </xsl:text>
               <xsl:call-template name="string">
-                <xsl:with-param name="text" select="@unless" />
+                <xsl:with-param name="text" select="$unless" />
               </xsl:call-template>
             </xsl:if>
           </xsl:if>
@@ -1290,7 +1298,7 @@
         <xsl:otherwise>
           <xsl:variable name="inner" select="concat($indent, $tab)" />
           <xsl:value-of select="concat($indent, $data, '.others.push_back(make&lt;RawCollisionRule&gt;([](RawCollisionRule&amp; rule)&#10;', $indent, '{&#10;')" />
-          <xsl:for-each select="@class | @object | @unless | @through | @sprite | @side">
+          <xsl:for-each select="ancestor-or-self::collision/@class | ancestor-or-self::collision/@object | ancestor-or-self::collision/@unless | ancestor-or-self::collision/@through | ancestor-or-self::collision/@sprite | ancestor-or-self::collision/@side">
             <xsl:if test=". != ''">
               <xsl:value-of select="$inner" />
               <xsl:choose>
@@ -1308,25 +1316,25 @@
               <xsl:text>;&#10;</xsl:text>
             </xsl:if>
           </xsl:for-each>
-          <xsl:if test="slower">
+          <xsl:if test="$slower">
             <xsl:value-of select="concat($inner, 'rule.slower = ')" />
             <xsl:call-template name="value">
-              <xsl:with-param name="node" select="slower[last()]" />
+              <xsl:with-param name="node" select="$slower" />
             </xsl:call-template>
             <xsl:text>;&#10;</xsl:text>
           </xsl:if>
-          <xsl:if test="faster">
+          <xsl:if test="$faster">
             <xsl:value-of select="concat($inner, 'rule.faster = ')" />
             <xsl:call-template name="value">
-              <xsl:with-param name="node" select="faster[last()]" />
+              <xsl:with-param name="node" select="$faster" />
             </xsl:call-template>
             <xsl:text>;&#10;</xsl:text>
           </xsl:if>
-          <!-- its checks, gathered as an <all> (readCollisions) -->
-          <xsl:if test="condition | all | any">
+          <!-- its checks and those of the rules holding it, gathered as an <all> (readCollisions) -->
+          <xsl:if test="$checks">
             <xsl:call-template name="condition-join">
               <xsl:with-param name="join" select="." />
-              <xsl:with-param name="parts" select="condition | all | any" />
+              <xsl:with-param name="parts" select="$checks" />
               <xsl:with-param name="var" select="'rule.check'" />
               <xsl:with-param name="inner" select="$inner" />
               <xsl:with-param name="depth" select="0" />
@@ -2569,22 +2577,23 @@
   </xsl:template>
 
   <!-- A <condition> of an <accepts> (the current node) on the arriving one's
-       variables: list.push_back({ PileRule::VarRule::Kind::Step, "rank", 1 }).
-       Against top.<variable>: <equal> Same, <unequal> Differs, plus or minus N Step. -->
+       variables: list.push_back({ PileRule::VarRule::Kind::Equal, "rank", -1, true, "" }).
+       Against top.<variable>, plus or minus N: top true, that variable when another. -->
   <xsl:template name="accept-rule">
     <xsl:param name="list" />
     <xsl:param name="indent" />
     <xsl:variable name="text" select="normalize-space(*[1])" />
-    <xsl:variable name="rest" select="normalize-space(substring-after($text, concat('top.', @variable)))" />
     <xsl:variable name="against" select="starts-with($text, 'top.')" />
+    <xsl:variable name="after" select="substring-after($text, 'top.')" />
+    <xsl:variable name="named" select="substring-before(concat(translate($after, '+-', '  '), ' '), ' ')" />
+    <xsl:variable name="rest" select="normalize-space(substring-after($after, $named))" />
     <xsl:variable name="kind">
       <xsl:choose>
         <xsl:when test="@total = 'sum'">Total</xsl:when>
-        <xsl:when test="$against and $rest != ''">Step</xsl:when>
-        <xsl:when test="$against and equal">Same</xsl:when>
-        <xsl:when test="$against">Differs</xsl:when>
         <xsl:when test="equal">Equal</xsl:when>
         <xsl:when test="unequal">Unequal</xsl:when>
+        <xsl:when test="above">Above</xsl:when>
+        <xsl:when test="below">Below</xsl:when>
         <xsl:when test="atleast">AtLeast</xsl:when>
         <xsl:otherwise>AtMost</xsl:otherwise>
       </xsl:choose>
@@ -2599,7 +2608,10 @@
     </xsl:variable>
     <xsl:value-of select="concat($indent, $list, '.push_back({ PileRule::VarRule::Kind::', $kind, ', ')" />
     <xsl:call-template name="string"><xsl:with-param name="text" select="@variable" /></xsl:call-template>
-    <xsl:value-of select="concat(', ', $amount, ' });&#10;')" />
+    <xsl:value-of select="concat(', ', $amount)" />
+    <xsl:value-of select="concat(', ', substring('true', 1, 4 * $against), substring('false', 1, 5 * not($against)), ', ')" />
+    <xsl:call-template name="string"><xsl:with-param name="text" select="substring($named, 1, string-length($named) * number($against and $named != current()/@variable))" /></xsl:call-template>
+    <xsl:text> });&#10;</xsl:text>
   </xsl:template>
 
   <!-- What a part of a group is called in the C++: member3, row1, column2, cell1. -->

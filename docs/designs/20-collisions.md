@@ -48,6 +48,7 @@ A screen grid was rejected: it needs a cell size per game, and what is left afte
 - **`side=`** is the side of the rule's own object that was touched; same words as `edge=` but a separate attribute, since `edge=` means a screen edge.
 - **Checks** reuse the condition tests (`<condition>`, `<all>`, `<any>`); one with no `object=` means the object itself. Not yet on edge rules.
 - **`<trigger>` in rules** runs one of the object's actions, so a death is one action that every killing rule names.
+- **Rules in rules** (Beef asked, with conditions in conditions): a rule holds rules that say what it says, so Centipede's shot or a creeper's look is written once over the rules it governs. Made at load into the plain rule list (attributes and checks passed down, `<first>` a rule before them), so detection is untouched. Saying an attribute twice stops the load rather than overriding: a rule below one about the shot about the ball reads as a mistake. No `<otherwise>`: every matching rule runs, so "none ran" would need the engine to track the rules of one touch.
 
 ## Deflect
 

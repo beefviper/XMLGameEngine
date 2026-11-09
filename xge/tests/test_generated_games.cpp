@@ -247,7 +247,7 @@ namespace
 			flag(at + ".pile.takes.one", o.pile.takes.one);
 			const auto rules = [&](const std::string& here, const std::vector<PileRule::VarRule>& list)
 			{
-				for (const PileRule::VarRule& rule : list) { text(here, std::to_string(static_cast<int>(rule.kind)) + " " + rule.variable + " " + std::to_string(rule.amount)); }
+				for (const PileRule::VarRule& rule : list) { text(here, std::to_string(static_cast<int>(rule.kind)) + " " + rule.variable + " " + std::to_string(rule.amount) + (rule.top ? " top " + rule.topVariable : std::string())); }
 			};
 			rules(at + ".pile.takes.rules", o.pile.takes.rules);
 			rules(at + ".pile.takes.empty", o.pile.takes.emptyRules);
