@@ -96,7 +96,7 @@ A holder (Hold'em's: the ace's `high` 14) scores by them with `<score patterns="
 
 - `pattern`: the highest made (from 1; 0 none);
 - `strength`: orders any two the same size (pattern, then the run from its top, else rank groups bigger first, then the rest), so the showdown is `<above>theirs.strength</above>`;
-- `odds`: in percent, how often the cards beat as many unseen ones (a thousand deals, the same each time for the same cards).
+- `odds`: in percent, how often the cards beat as many unseen ones (five hundred deals, the same each time for the same cards), worked out only for a pile something reads them of: a condition, a shown text or an expression.
 
 ### Melds
 

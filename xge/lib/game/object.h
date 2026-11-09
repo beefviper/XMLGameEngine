@@ -1225,6 +1225,9 @@ namespace xge
 		float pattern{};
 		float strength{};
 		float odds{};
+		// Whether anything reads its `odds` (Game::markOddsRead): a thousand
+		// deals are tried to work them out, so piles nobody asks skip them.
+		bool oddsRead{ true };
 		// A <follow /> pile (a trick): `lead`, the suit of its first card
 		// (from 1; 0 empty), and `winner`, the seat of the hand that laid
 		// the card winning it: the highest trump, else the highest of the

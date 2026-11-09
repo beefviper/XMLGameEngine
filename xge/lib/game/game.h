@@ -529,6 +529,9 @@ namespace xge
 		void refreshCall(Object& pile);
 		void refreshPile(Object& pile);
 		void scorePile(Object& pile);
+		// Marks each scored pile whose `odds` nothing reads: no condition,
+		// shown text or expression names them (Object::oddsRead).
+		void markOddsRead();
 		void scoreDuePiles();
 		bool scoresDue{ false };
 		std::optional<KeyCode> thinkCards(const CmdThink& think, Object& hand);

@@ -89,6 +89,7 @@ namespace xge
 				throw std::runtime_error("<object name=\"" + object.name + "\"> > <pile> > <score patterns=\"" + object.pile.melds + "\"> with <melds />: names no <patterns>");
 			}
 		}
+		markOddsRead();
 		dealDecks();
 		scoreDuePiles();
 		// The players: the first one's turn; those the computer plays.

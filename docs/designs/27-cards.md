@@ -26,7 +26,7 @@
 - **Patterns, not poker:** a `<patterns>` set from `<alike variable>` (the grid games' word for sharing a value; once `<same>`) and `<run variable>`, the same parts rummy and dice use. The engine finds the best and orders two by one general tie rule; a holder `<score>`s `<with>` a shared pile, the `<best>` so many. `<run variable="rank">` runs by column (Gin's court cards are worth 10). **Melds** split the whole holder for least deadwood and lay it out that way.
 - **A trick is a holder with a rule:** `<trick variable="suit">`, `<breaks>`, `<trumps>`; it knows who laid each card and gives `lead` and `winner`.
 - **Covering is drawn, not written:** a card is free when no card of a later holder overlaps it. Listing 28 covering pairs was the alternative; overlap serves TriPeaks too.
-- **The computer plays by rules of thumb,** not a search, since hidden cards would be guessed: shedding, melds, tricks (`<avoid />`), bids by the book's `tricks` count; Hold'em by `odds` (a thousand seeded deals). Rejected: bluffing, reading opponents, counting played cards (for now).
+- **The computer plays by rules of thumb,** not a search, since hidden cards would be guessed: shedding, melds, tricks (`<avoid />`), bids by the book's `tricks` count; Hold'em by `odds` (five hundred seeded deals, only for piles something reads them of: the odds were 88% of a Hold'em game's time). Rejected: bluffing, reading opponents, counting played cards (for now).
 
 ## Looked at and left
 

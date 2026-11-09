@@ -839,7 +839,10 @@ namespace xge
 		float bestOf(const RawPatterns& set, const std::vector<Scored>& cards, std::size_t best, float base, int& made)
 		{
 			const std::size_t size = best == 0 ? cards.size() : std::min(best, cards.size());
-			std::vector<float> deciding;
+			// Room reused call after call: the odds call this thousands of times.
+			thread_local std::vector<float> deciding;
+			thread_local std::vector<Scored> some;
+			thread_local std::vector<char> chosen;
 			// What all the cards make is the most any `size` of them can
 			// (every part asks for at least so many), so that is tried
 			// first, and only when none of them makes it, every pattern.
@@ -850,12 +853,11 @@ namespace xge
 				for (const float worth : deciding) { strength = strength * base + worth; }
 				return strength;
 			}
-			std::vector<Scored> some;
 			float strongest = -1.0f;
 			for (const bool onlyTheMost : { true, false })
 			{
-				std::vector<bool> chosen(cards.size(), false);
-				std::fill(chosen.begin(), chosen.begin() + static_cast<std::ptrdiff_t>(size), true);
+				chosen.assign(cards.size(), 0);
+				std::fill(chosen.begin(), chosen.begin() + static_cast<std::ptrdiff_t>(size), char{ 1 });
 				int bestMade = 0;
 				do
 				{
@@ -881,6 +883,54 @@ namespace xge
 				}
 			}
 			return std::max(strongest, 0.0f);
+		}
+	}
+
+	void Game::markOddsRead()
+	{
+		// Generous: a name that might mean the pile counts as reading it.
+		const auto means = [](const Object& pile, const std::string& name)
+		{
+			if (name.empty()) { return false; }
+			if (pile.named(name)) { return true; }
+			const std::string tail = "." + name;
+			return pile.name.size() > tail.size() && pile.name.compare(pile.name.size() - tail.size(), tail.size(), tail) == 0;
+		};
+		const auto readIn = [&](const Object& pile, const std::vector<Condition>& conditions, const auto& self) -> bool
+		{
+			for (const Condition& condition : conditions)
+			{
+				if (condition.variableName == "odds" && (means(pile, condition.filterObject) || (!condition.filterClass.empty() && condition.filterClass == pile.objClass))) { return true; }
+				for (const Condition::Read& read : condition.reads)
+				{
+					if (read.variable == "odds" && means(pile, read.owner)) { return true; }
+				}
+				if (self(pile, condition.parts, self)) { return true; }
+			}
+			return false;
+		};
+		for (Object& pile : objects)
+		{
+			if (pile.pile.score.empty()) { continue; }
+			// Every expression worked out while loading (a condition's
+			// value, a command's), by the names it reads.
+			bool read = false;
+			for (const auto& [text, program] : expr.compiled)
+			{
+				if (text.find("odds") == std::string::npos) { continue; }
+				for (const std::string& name : expr.namesIn(text))
+				{
+					const std::size_t dot = name.rfind('.');
+					read = read || (dot != std::string::npos && name.compare(dot + 1, std::string::npos, "odds") == 0 && means(pile, name.substr(0, dot)));
+				}
+			}
+			for (const Object& other : objects) { read = read || other.showsVariable(pile.name, "odds"); }
+			for (const State& state : states)
+			{
+				read = read || readIn(pile, state.conditions, readIn) || readIn(pile, state.computer, readIn);
+				for (const Scene& scene : state.scenes) { read = read || readIn(pile, scene.conditions, readIn); }
+			}
+			pile.oddsRead = read;
 		}
 	}
 
@@ -934,7 +984,7 @@ namespace xge
 		// the shared pile made up to full from the unseen too; the same
 		// each time for the same cards (its own generator, seeded by them).
 		pile.odds = 0.0f;
-		if (mine > 0)
+		if (mine > 0 && pile.oddsRead)
 		{
 			std::vector<Scored> unseen;
 			for (const Object& object : objects)
@@ -949,7 +999,7 @@ namespace xge
 				std::uint64_t seed = 1469598103934665603ull;
 				for (const int number : seen) { seed = (seed ^ static_cast<std::uint64_t>(static_cast<unsigned>(number))) * std::uint64_t{ 1099511628211u }; }
 				std::mt19937 random(static_cast<std::mt19937::result_type>(seed));
-				constexpr int trials = 1000;
+				constexpr int trials = 500;
 				float won = 0.0f;
 				std::vector<Scored> ours = own;
 				std::vector<Scored> theirs(own.begin() + static_cast<std::ptrdiff_t>(mine), own.end());

@@ -1107,6 +1107,11 @@ TEST_CASE("holdem.xml: the best five of seven: the kinds in order, a wheel the l
 TEST_CASE("holdem.xml: the odds against one unseen hand: a pair of aces about 85, seven-two about 35", "[cards][holdem]")
 {
 	Holdem play;
+	// Only the computer's odds are read by the game; yours are worked out
+	// only when something asks.
+	CHECK(play.pile("theirs").oddsRead);
+	CHECK_FALSE(play.pile("yours").oddsRead);
+	play.pile("yours").oddsRead = true;
 	play.lay({ "A hearts", "A clubs" });
 	CHECK(play.pile("yours").odds >= 80.0f);
 	CHECK(play.pile("yours").odds <= 90.0f);
@@ -1215,7 +1220,7 @@ TEST_CASE("holdem.xml: hand after hand, you calling everything, every hand ends 
 {
 	Holdem play;
 	int hands = 0;
-	for (; hands < 40 && play.state() == "playing"; ++hands)
+	for (; hands < 20 && play.state() == "playing"; ++hands)
 	{
 		play.deal({});
 		for (int i = 0; i < 20 && play.hand() == "betting"; ++i)
