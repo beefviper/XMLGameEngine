@@ -26,20 +26,22 @@
   melds first, deadwood last. Or click. P or Escape pauses.
 
   How it is written:
-  * The deck is the card sheet's, the ace's worth 1 (its place in the order).
-  * The game's <patterns name="rummy">: a set is <same>3, a run
-    <run>3 and <suited>3.
-  * Each player's cards are a pile with <score patterns="rummy"><melds />: laid out
-    in groups that each make a pattern with all their cards, the groups
-    chosen to leave the fewest points over; its live number `deadwood`,
-    those points, counted from its best ten (<best>10): holding eleven,
-    what is left after the best discard. Its <points> count the court
-    cards <each> ten, the others their worth.
-  * Each pile says what it is <dealt>: ten each, one to the discard
-    pile. Between hands, and for the first, <redeal /> gathers, shuffles
-    and deals them again.
-  * The stock and the discard pile both <deals> one into the player who
-    draws; the discard pile <takes /> anything.
+  * The pack is a group, a row for each suit (spades, hearts, clubs,
+    diamonds) and a column for each rank; a card is worth its column (the
+    ace 1), the court cards 10.
+  * The game's <patterns name="rummy">: a set is <same variable="rank">3,
+    a run <run variable="rank">3 and <same variable="suit">3.
+  * Each player's cards are a holder with <score patterns="rummy"><melds />:
+    laid out in groups that each make a pattern with all their cards, the
+    groups chosen to leave the fewest points over; its live number
+    `deadwood`, those points (each card's worth), counted from its best
+    ten (<best>10): holding eleven, what is left after the best discard.
+  * The cards start in the stock; each hand, the first too, every card is
+    <send> back, put in <order> at <random />, <distribute>d ten to each
+    player's own holder, and one sent to the discard pile.
+  * Picked, the stock and the discard pile send their top card to the
+    player's own (<picked><send>); the discard pile <accepts /> anything.
+    A player drawing is holding eleven, which turns the look to discard.
   * The players are a group that takes turns: you, then north, each a
     member that <owns> its cards; a turn is a draw (the look `draw`) and a
     discard (`discard`), then <pass />. Who goes first takes turns
@@ -94,8 +96,8 @@
   </sheets>
   <!-- what melds: a set of three or four of a rank, a run of three or more of a suit -->
   <patterns name="rummy">
-    <pattern name="set"><same>3</same></pattern>
-    <pattern name="run"><run>3</run><suited>3</suited></pattern>
+    <pattern name="set"><same variable="rank">3</same></pattern>
+    <pattern name="run"><run variable="rank">3</run><same variable="suit">3</same></pattern>
   </patterns>
   <states>
     <state name="title">
@@ -131,38 +133,38 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- the pack: the card sheet's, the ace low -->
-        <deck name="cards" pile="stock" sheet="cards">
-          <face><width>96</width><height>140</height></face>
-          <suit name="spades"><color>color.black</color></suit>
-          <suit name="hearts"><color>color.red</color></suit>
-          <suit name="clubs"><color>color.black</color></suit>
-          <suit name="diamonds"><color>color.red</color></suit>
-          <rank>A</rank><rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank><rank>8</rank><rank>9</rank><rank>10</rank><rank>J</rank><rank>Q</rank><rank>K</rank>
-        </deck>
+        <!-- the pack: a row for each suit (spades, hearts, clubs, diamonds), a column for each rank, the ace low; the court cards worth 10 -->
+        <group name="cards" class="card">
+          <columns>13</columns>
+          <rows>4</rows>
+          <sprite name="face"><cell sheet="cards"><scale>0.5</scale></cell></sprite>
+          <sprite name="back"><cell sheet="cards"><column>1</column><row>5</row><scale>0.5</scale></cell></sprite>
+          <position><x>0</x><y>0</y></position>
+          <column><number>11</number><number>12</number><number>13</number><variables><variable name="worth">10</variable></variables></column>
+        </group>
 
-        <!-- the stock and the discard pile: each deals its top card to the hand that draws -->
+        <!-- the stock and the discard pile: picked, each sends its top card to the player's own -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth - 24</x><y>middle</y></position>
-          <pile faces="down"><deals>1</deals></pile>
+          <holds class="card" sprite="back"><picked><send>1</send></picked></holds>
         </object>
         <object name="discard" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center + 24</x><y>middle</y></position>
-          <pile faces="up"><dealt>1</dealt><deals>1</deals><takes /></pile>
+          <holds class="card" sprite="face"><accepts /><picked><send>1</send></picked></holds>
         </object>
 
         <!-- north's cards, face down, and yours: laid out in melds, the deadwood counted -->
         <object name="northcards" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - 168</x><y>theirs</y></position>
-          <pile faces="down"><fan><x>24</x></fan><dealt>10</dealt><score patterns="rummy"><melds /><best>10</best></score><points><each rank="J">10</each><each rank="Q">10</each><each rank="K">10</each></points></pile>
+          <holds class="card" sprite="back"><spread><x>24</x></spread><score patterns="rummy"><melds /><best>10</best></score></holds>
         </object>
         <object name="mine" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>56</x><y>yours</y></position>
-          <pile faces="up"><fan><x>64</x><width>768</width></fan><dealt>10</dealt><lift>16</lift><score patterns="rummy"><melds /><best>10</best></score><points><each rank="J">10</each><each rank="Q">10</each><each rank="K">10</each></points></pile>
+          <holds class="card" sprite="face"><spread><x>64</x><width>768</width></spread><lift>16</lift><score patterns="rummy"><melds /><best>10</best></score></holds>
         </object>
 
         <!-- the scores, whose turn it is, and your deadwood -->
@@ -207,7 +209,10 @@
               <play sound="shuffle" />
             </action>
             <action name="deal">
-              <redeal />
+              <send from="cards" into="stock"><all /></send>
+              <order group="stock"><random /></order>
+              <distribute from="stock" into="players">10</distribute>
+              <send from="stock" into="discard">1</send>
               <set variable="table.phase">0</set>
               <pass object="players" member="table.first" />
               <set variable="table.first">3 - table.first</set>
@@ -247,16 +252,16 @@
             <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
           </sprite>
           <sprite name="waiting"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <hand />
           <actions>
             <action name="left"><hop direction="left" /></action>
             <action name="right"><hop direction="right" /></action>
             <action name="up"><hop direction="up" /></action>
             <action name="down"><hop direction="down" /></action>
             <action name="point"><track /></action>
-            <!-- the top of the pile pointed at into its cards, and back to them -->
-            <action name="draw">
-              <deal />
+            <!-- the pile pointed at sends its top to its cards (an own card picked up goes back: "back" below) -->
+            <action name="draw"><pick class="card" /></action>
+            <!-- holding eleven: back to them, to discard -->
+            <action name="drawn">
               <play sound="deal" />
               <set variable="table.phase">1</set>
               <become sprite="discard" />
@@ -264,8 +269,8 @@
             </action>
             <!-- the card pointed at onto the discard pile, and the other's turn -->
             <action name="play">
-              <take />
-              <lay pile="discard" />
+              <pick class="card" />
+              <place into="discard" />
               <play sound="card" />
               <set variable="players.discarded">1</set>
               <set variable="table.phase">0</set>
@@ -274,8 +279,8 @@
             <action name="back"><drop /></action>
             <!-- the same, and a knock: it holds if the deadwood left is ten or less -->
             <action name="knock">
-              <take />
-              <lay pile="discard" />
+              <pick class="card" />
+              <place into="discard" />
               <play sound="knock" />
               <set variable="table.knocking">1</set>
               <set variable="table.phase">0</set>
@@ -297,6 +302,10 @@
           </member>
         </group>
       </objects>
+      <!-- the cards start in the stock (the table deals them) -->
+      <starts>
+        <send from="cards" into="stock"><all /></send>
+      </starts>
       <inputs>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="players" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="players" action="right" /></input>
@@ -308,6 +317,7 @@
           <trigger object="players" action="play" from="discard" />
           <trigger object="players" action="back" from="discard" />
           <trigger object="players" action="draw" from="draw" />
+          <trigger object="players" action="back" from="draw" />
           <trigger object="table" action="shuffle" from="done" />
         </input>
         <input>
@@ -374,7 +384,7 @@
         <!-- after a knock that holds: north's cards shown, the hand over, nobody's turn -->
         <condition object="table" variable="knocking">
           <equal>3</equal>
-          <reveal pile="northcards" />
+          <become object="northcards" sprite="face" />
           <set variable="table.knocking">0</set>
           <set variable="table.phase">4</set>
           <become object="table" sprite="done" />
@@ -404,11 +414,21 @@
           <push state="over" />
         </condition>
 
+        <!-- a draw made: the player holds eleven -->
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="mine" variable="cards"><equal>11</equal></condition></all>
+          <trigger object="players" action="drawn" />
+        </condition>
+        <condition>
+          <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="northcards" variable="cards"><equal>11</equal></condition></all>
+          <trigger object="players" action="drawn" />
+        </condition>
+
         <!-- two cards left in the stock at a draw: the hand is void -->
         <condition>
           <all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="stock" variable="cards"><atmost>2</atmost></condition></all>
           <set variable="table.phase">4</set>
-          <reveal pile="northcards" />
+          <become object="northcards" sprite="face" />
           <become object="message" sprite="void" />
           <become object="table" sprite="done" />
           <pass object="players" member="0" />

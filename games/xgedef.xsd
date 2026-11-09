@@ -811,6 +811,8 @@
           <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
+      <!-- score patterns=: as a pile's -->
+      <xs:element name="score" type="scoreType" minOccurs="0" />
       <!-- counts: its own variable of that name, what its face-up members' variables of that name add up to; for
            worth, a member's high instead while the total stays <atmost> -->
       <xs:element name="counts" minOccurs="0">
@@ -995,27 +997,7 @@
       <!-- score patterns=: its cards (<with pile=>: and that pile's, which holds <full> when all are dealt) scored as the
            best <best> of them (none: all) by the game's <patterns> of that name: live numbers pattern (the highest made,
            from 1 as written; 0 none), strength (higher wins) and odds (percent, against as many unseen cards) -->
-      <xs:element name="score" minOccurs="0">
-        <xs:complexType>
-          <xs:sequence>
-            <!-- melds: scored instead by laying the cards out in groups, each making one of the patterns with all its
-                 cards (<same>: one rank, <run>: worths in a row, <suited>: one suit, at least as many as the number),
-                 the groups leaving the fewest points over; live number deadwood, the points left over by the best
-                 <best> of them -->
-            <xs:element name="melds" type="emptyType" minOccurs="0" />
-            <xs:element name="with" minOccurs="0">
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:element name="full" type="xs:positiveInteger" minOccurs="0" />
-                </xs:sequence>
-                <xs:attribute name="pile" type="xs:NMTOKEN" use="required" />
-              </xs:complexType>
-            </xs:element>
-            <xs:element name="best" type="xs:positiveInteger" minOccurs="0" />
-          </xs:sequence>
-          <xs:attribute name="patterns" type="xs:NMTOKEN" use="required" />
-        </xs:complexType>
-      </xs:element>
+      <xs:element name="score" type="scoreType" minOccurs="0" />
       <xs:element name="points" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -1390,6 +1372,35 @@
       <xs:element name="random" type="emptyType" />
     </xs:sequence>
     <xs:attribute name="group" type="xs:NMTOKEN" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="scoreType">
+    <xs:sequence>
+      <!-- melds: scored instead by laying the cards out in groups, each making one of the patterns with all its
+           cards (<same>: one rank, <run>: worths in a row, <suited>: one suit, at least as many as the number),
+           the groups leaving the fewest points over; live number deadwood, the points left over by the best
+           <best> of them -->
+      <xs:element name="melds" type="emptyType" minOccurs="0" />
+      <xs:element name="with" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="full" type="xs:positiveInteger" minOccurs="0" />
+          </xs:sequence>
+          <xs:attribute name="pile" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="best" type="xs:positiveInteger" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="patterns" type="xs:NMTOKEN" use="required" />
+  </xs:complexType>
+
+  <!-- A part of a <pattern>: how many, and variable= the one compared. -->
+  <xs:complexType name="patternPartType">
+    <xs:simpleContent>
+      <xs:extension base="xs:positiveInteger">
+        <xs:attribute name="variable" type="xs:NMTOKEN" use="optional" />
+      </xs:extension>
+    </xs:simpleContent>
   </xs:complexType>
 
   <xs:complexType name="distributeType">
@@ -2914,9 +2925,11 @@
         <!--
           What a pile's cards may make, the lowest first, for a pile's
           <score patterns="name">: each <pattern> one or more parts that all
-          hold: <same>N (N cards of one rank; each <same> a rank of its own),
-          <run>N (N worths in a row, a card counting any of its <worth>s) and
-          <suited>N (N cards of one suit).
+          hold: <same variable="rank">N (N cards of one rank; each <same> a
+          rank of its own), <same variable="suit">N (N cards of one suit),
+          <run variable="worth">N (N worths in a row, a card counting its high
+          too; variable="rank": its column, for <melds /> only); without
+          variable=, rank and worth (old: <suited>N for one suit).
         -->
         <xs:element name="patterns" minOccurs="0" maxOccurs="unbounded">
           <xs:complexType>
@@ -2924,8 +2937,8 @@
               <xs:element name="pattern" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:choice maxOccurs="unbounded">
-                    <xs:element name="same" type="xs:positiveInteger" />
-                    <xs:element name="run" type="xs:positiveInteger" />
+                    <xs:element name="same" type="patternPartType" />
+                    <xs:element name="run" type="patternPartType" />
                     <xs:element name="suited" type="xs:positiveInteger" />
                   </xs:choice>
                   <xs:attribute name="name" type="xs:NMTOKEN" use="required" />

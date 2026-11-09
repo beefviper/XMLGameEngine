@@ -513,6 +513,7 @@ namespace xge
 		{
 			std::string name;
 			std::vector<std::pair<Part, int>> parts;
+			std::string runBy{ "worth" };   // <run variable>: worth (a card's high too) or rank
 		};
 		std::string name;
 		std::vector<Pattern> patterns;

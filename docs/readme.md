@@ -82,7 +82,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | cells | `settle`, `slide`, `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |
 | boards | `pick`, `place`, `put`, `flank`, `moves` | [boards](reference/boards.md) |
 | pictures | `sheets`, `sheet`, `cell`, `cells` (sprites, frames and cards cut from one picture) | [sheets](reference/pictures.md#sheets) |
-| holders | `holds`, `spread`, `accepts` (`same`, `differs`, `step`, `total`, `any`, `wild`), `top`, `order`, `counts`, `trick`, `picked`, `owns`, `starts`, `distribute`; in actions `send from into`, `order group`, `distribute`, a holder's `become` | [holders](reference/cards.md#holders) |
+| holders | `holds`, `spread`, `accepts` (`same`, `differs`, `step`, `total`, `any`, `wild`), `top`, `order`, `counts`, `trick`, `score`, `picked`, `owns`, `starts`, `distribute`; in actions `send from into`, `order group`, `distribute`, a holder's `become` | [holders](reference/cards.md#holders) |
 | players | `turns` on a group, `pass` (`member=`), a member's `think`, `owns` and `team`, live `turn` | [players as a group](reference/states.md#players-as-a-group) |
 | cards | `deck` (`sheet=`, `faces`), `deal`, `take`, `lay`, piles, patterns, tricks | [cards](reference/cards.md) |
 | computer | `computer`, `hold`, `think` | [computer players](reference/states.md#computer-players) |

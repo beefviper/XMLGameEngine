@@ -1248,6 +1248,31 @@ namespace xge
 			}
 		}
 
+		// A <score patterns>: its <melds />, <with pile> and <best>.
+		void readScore(const XmlNode& node, RawObject::RawPile& pile, const std::string& at)
+		{
+			pile.score = requireAttribute(node, "patterns", at);
+			for (std::unique_ptr<XmlNode> part = node.getFirstChild(); part != nullptr; part = part->getNextSibling())
+			{
+				if (part->getName() == "with")
+				{
+					pile.scoreWith = requireAttribute(*part, "pile", at + " > <with>");
+					if (auto full = findChild(part.get(), "full")) { pile.scoreFull = readCount(*full, at + " > <with> > <full>"); }
+				}
+				else if (part->getName() == "best") { pile.scoreBest = readCount(*part, at + " > <best>"); }
+				else if (part->getName() == "melds") { pile.melds = pile.score; }
+				else { fail(at, "unknown <" + part->getName() + ">; expected <melds />, <with> and <best>"); }
+			}
+			// <melds />: scored by splitting the cards into groups, not by the best pattern among them.
+			if (!pile.melds.empty())
+			{
+				if (!pile.scoreWith.empty()) { fail(at, "has <melds /> and <with>; melds are a pile's own cards"); }
+				pile.meldsBest = pile.scoreBest;
+				pile.score.clear();
+				pile.scoreBest = 0;
+			}
+		}
+
 		// A <holds class sprite>: the class of what it holds and the look
 		// they show laid there, then its <spread>s, <accepts>, <run />,
 		// <top sprite>, <lift> and <picked>. Read into the pile it is
@@ -1303,6 +1328,7 @@ namespace xge
 				}
 				else if (tag == "top") { pile.topSprite = requireAttribute(*child, "sprite", at); }
 				else if (tag == "lift") { pile.lift = readValue(*child, at); }
+				else if (tag == "score") { readScore(*child, pile, at); }
 				else if (tag == "trick")
 				{
 					// A trick: any card leads, then the value led is followed;
@@ -1367,7 +1393,7 @@ namespace xge
 						else { fail(at, "unknown <" + name + ">; expected a <send into>, an <empty> and a <play sound>"); }
 					}
 				}
-				else { fail(here, "unknown <" + tag + ">; expected <spread>s, <accepts>, <run />, <counts>, <top>, <lift>, <trick>, <order> and <picked>"); }
+				else { fail(here, "unknown <" + tag + ">; expected <spread>s, <accepts>, <run />, <counts>, <top>, <lift>, <trick>, <score>, <order> and <picked>"); }
 			}
 		}
 
@@ -1422,29 +1448,7 @@ namespace xge
 				else if (tag == "showtop") { pile.showTop = true; }
 				else if (tag == "sorted") { pile.sorted = true; }
 				else if (tag == "lift") { pile.lift = readValue(*child, at); }
-				else if (tag == "score")
-				{
-					pile.score = requireAttribute(*child, "patterns", at + " > <score>");
-					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
-					{
-						if (part->getName() == "with")
-						{
-							pile.scoreWith = requireAttribute(*part, "pile", at + " > <score> > <with>");
-							if (auto full = findChild(part.get(), "full")) { pile.scoreFull = readCount(*full, at + " > <score> > <with> > <full>"); }
-						}
-						else if (part->getName() == "best") { pile.scoreBest = readCount(*part, at + " > <score> > <best>"); }
-						else if (part->getName() == "melds") { pile.melds = pile.score; }
-						else { fail(at + " > <score>", "unknown <" + part->getName() + ">; expected <melds />, <with> and <best>"); }
-					}
-					// <melds />: scored by splitting the cards into groups, not by the best pattern among them.
-					if (!pile.melds.empty())
-					{
-						if (!pile.scoreWith.empty()) { fail(at + " > <score>", "has <melds /> and <with>; melds are a pile's own cards"); }
-						pile.meldsBest = pile.scoreBest;
-						pile.score.clear();
-						pile.scoreBest = 0;
-					}
-				}
+				else if (tag == "score") { readScore(*child, pile, at); }
 				else if (tag == "trick")
 				{
 					// A trick: any card leads, then the suit led is followed.
@@ -4267,11 +4271,20 @@ namespace xge
 				for (std::unique_ptr<XmlNode> part = pattern->getFirstChild(); part != nullptr; part = part->getNextSibling())
 				{
 					const std::string tag = part->getName();
-					const RawPatterns::Part kind = tag == "same" ? RawPatterns::Part::Same : tag == "run" ? RawPatterns::Part::Run : RawPatterns::Part::Suited;
-					if (tag != "same" && tag != "run" && tag != "suited") { fail(at, "unknown <" + tag + ">; expected <same>, <run> and <suited>"); }
+					RawPatterns::Part kind = tag == "same" ? RawPatterns::Part::Same : tag == "run" ? RawPatterns::Part::Run : RawPatterns::Part::Suited;
+					if (tag != "same" && tag != "run" && tag != "suited") { fail(at, "unknown <" + tag + ">; expected <same variable> and <run variable>"); }
+					// The variable compared: <same> one value of it, <run> values in a row.
+					const std::string variable = part->getAttribute("variable");
+					if (tag == "same" && variable == "suit") { kind = RawPatterns::Part::Suited; }
+					else if (tag == "same" && !variable.empty() && variable != "rank") { fail(at + " > <same>", "variable=\"" + variable + "\"; for now a pattern compares rank or suit"); }
+					if (tag == "run" && !variable.empty())
+					{
+						if (variable != "worth" && variable != "rank") { fail(at + " > <run>", "variable=\"" + variable + "\"; for now a run is of worth or rank"); }
+						one.runBy = variable;
+					}
 					one.parts.emplace_back(kind, readCount(*part, at + " > <" + tag + ">"));
 				}
-				if (one.parts.empty()) { fail(at, "has no <same>, <run> or <suited>"); }
+				if (one.parts.empty()) { fail(at, "has no <same> or <run>"); }
 				raw.patterns.push_back(std::move(one));
 			}
 			rawPatterns.push_back(std::move(raw));

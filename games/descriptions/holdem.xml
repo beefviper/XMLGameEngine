@@ -24,12 +24,14 @@
   Space after a hand deals the next. P or Escape pauses.
 
   How it is written:
-  * The deck is the card sheet's, its ace worth <worth>1</worth><worth>14</worth>
-    so it plays high, and low in A 2 3 4 5; the other cards are worth
-    their number in order (jack 11, queen 12, king 13).
-  * Poker's hands are a <patterns> set of the game: <same> cards of a
-    rank, a <run> of worths in a row, <suited> cards of one suit. Your
-    cards and the computer's are piles that <score> by them, <with> the
+  * The pack is a group, a row for each suit (spades, hearts, clubs,
+    diamonds) and a column for each rank; a card is worth its column
+    (jack 11, queen 12, king 13), the ace 1 and its `high` 14, so it plays
+    high, and low in A 2 3 4 5.
+  * Poker's hands are a <patterns> set of the game: <same variable="rank">
+    cards of a rank, a <run variable="worth"> of worths in a row, <same
+    variable="suit"> cards of one suit. Your cards and the computer's are
+    holders that <score> by them, <with> the
     board's five, the <best> five: live numbers `pattern` (which hand,
     0 the highest cards to 8 a straight flush), `strength` (compared at
     the showdown) and `odds` (how often they beat two unseen cards, in
@@ -81,14 +83,14 @@
   </sheets>
   <!-- poker's hands, the lowest first; none of them: the highest cards -->
   <patterns name="poker">
-    <pattern name="pair"><same>2</same></pattern>
-    <pattern name="twopair"><same>2</same><same>2</same></pattern>
-    <pattern name="three"><same>3</same></pattern>
-    <pattern name="straight"><run>5</run></pattern>
-    <pattern name="flush"><suited>5</suited></pattern>
-    <pattern name="fullhouse"><same>3</same><same>2</same></pattern>
-    <pattern name="four"><same>4</same></pattern>
-    <pattern name="straightflush"><run>5</run><suited>5</suited></pattern>
+    <pattern name="pair"><same variable="rank">2</same></pattern>
+    <pattern name="twopair"><same variable="rank">2</same><same variable="rank">2</same></pattern>
+    <pattern name="three"><same variable="rank">3</same></pattern>
+    <pattern name="straight"><run variable="worth">5</run></pattern>
+    <pattern name="flush"><same variable="suit">5</same></pattern>
+    <pattern name="fullhouse"><same variable="rank">3</same><same variable="rank">2</same></pattern>
+    <pattern name="four"><same variable="rank">4</same></pattern>
+    <pattern name="straightflush"><run variable="worth">5</run><same variable="suit">5</same></pattern>
   </patterns>
   <states>
     <state name="title">
@@ -120,61 +122,37 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- the pack: the card sheet's; the ace counts high -->
-        <deck name="cards" pile="stock" sheet="cards">
-          <face><width>96</width><height>140</height></face>
-          <suit name="spades"><color>color.black</color></suit>
-          <suit name="hearts"><color>color.red</color></suit>
-          <suit name="clubs"><color>color.black</color></suit>
-          <suit name="diamonds"><color>color.red</color></suit>
-          <rank name="A"><worth>1</worth><worth>14</worth></rank>
-          <rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank><rank>8</rank><rank>9</rank><rank>10</rank><rank>J</rank><rank>Q</rank><rank>K</rank>
-        </deck>
+        <!-- the pack: a row for each suit (spades, hearts, clubs, diamonds), a column for each rank; the ace counts high too -->
+        <group name="cards" class="card">
+          <columns>13</columns>
+          <rows>4</rows>
+          <sprite name="face"><cell sheet="cards"><scale>0.5</scale></cell></sprite>
+          <sprite name="back"><cell sheet="cards"><column>1</column><row>5</row><scale>0.5</scale></cell></sprite>
+          <position><x>0</x><y>0</y></position>
+          <column><number>1</number><variables><variable name="high">14</variable></variables></column>
+        </group>
 
         <object name="stock" class="place">
           <sprite name="spot"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>40</x><y>boardrow</y></position>
-          <pile faces="down"><deals>1</deals></pile>
+          <holds class="card" sprite="back" />
         </object>
 
         <!-- the computer's two cards, yours, and the five shared: each player's scored with the shared -->
         <object name="theirs" class="place">
           <sprite name="spot"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth - 4</x><y>theirrow</y></position>
-          <pile faces="up"><fan><x>cardwidth + 8</x></fan><score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score></pile>
+          <holds class="card" sprite="face"><spread><x>cardwidth + 8</x></spread><score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score></holds>
         </object>
         <object name="board" class="place">
           <sprite><rectangle><width>cardwidth * 5 + 64</width><height>cardheight + 16</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth * 2.5 - 32</x><y>boardrow - 8</y></position>
-          <pile faces="up"><fan><x>cardwidth + 16</x></fan></pile>
+          <holds class="card" sprite="face"><spread><x>cardwidth + 16</x></spread></holds>
         </object>
         <object name="yours" class="place">
           <sprite name="spot"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth - 4</x><y>yourrow</y></position>
-          <pile faces="up"><fan><x>cardwidth + 8</x></fan><score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score></pile>
-        </object>
-
-        <!-- who takes the cards: hands of their own, never seen -->
-        <object name="yourhand">
-          <sprite name="hand"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hand pile="yours" />
-          <drawn>false</drawn>
-          <actions><action name="deal"><deal pile="stock" /></action></actions>
-        </object>
-        <object name="theirhand">
-          <sprite name="hand"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hand pile="theirs" />
-          <drawn>false</drawn>
-          <actions><action name="deal"><deal pile="stock" faces="down" /></action></actions>
-        </object>
-        <object name="boardhand">
-          <sprite name="hand"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hand pile="board" />
-          <drawn>false</drawn>
-          <actions><action name="deal"><deal pile="stock" /></action></actions>
+          <holds class="card" sprite="face"><spread><x>cardwidth + 8</x></spread><score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score></holds>
         </object>
 
         <!-- the table: the pot, what the player to act owes, the raises and actions this round, the round (0 before
@@ -190,10 +168,10 @@
               <dec variable="you.chips">5</dec>
               <dec variable="cpu.chips">5</dec>
               <set variable="table.pot">10</set>
-              <trigger object="yourhand" action="deal" />
-              <trigger object="theirhand" action="deal" />
-              <trigger object="yourhand" action="deal" />
-              <trigger object="theirhand" action="deal" />
+              <send from="stock" into="yours">1</send>
+              <send from="stock" into="theirs" sprite="back">1</send>
+              <send from="stock" into="yours">1</send>
+              <send from="stock" into="theirs" sprite="back">1</send>
               <set variable="table.street">0</set>
               <set variable="table.owed">0</set>
               <set variable="table.acted">0</set>
@@ -203,9 +181,7 @@
               <play sound="deal" />
             </action>
             <action name="flop">
-              <trigger object="boardhand" action="deal" />
-              <trigger object="boardhand" action="deal" />
-              <trigger object="boardhand" action="deal" />
+              <send from="stock" into="board">3</send>
               <set variable="table.street">1</set>
               <set variable="table.acted">0</set>
               <set variable="table.raises">0</set>
@@ -213,7 +189,7 @@
               <play sound="deal" />
             </action>
             <action name="turn">
-              <trigger object="boardhand" action="deal" />
+              <send from="stock" into="board">1</send>
               <set variable="table.street">2</set>
               <set variable="table.bet">20</set>
               <set variable="table.acted">0</set>
@@ -222,7 +198,7 @@
               <play sound="deal" />
             </action>
             <action name="river">
-              <trigger object="boardhand" action="deal" />
+              <send from="stock" into="board">1</send>
               <set variable="table.street">3</set>
               <set variable="table.acted">0</set>
               <set variable="table.raises">0</set>
@@ -230,7 +206,7 @@
               <play sound="deal" />
             </action>
             <action name="showdown">
-              <reveal pile="theirs" />
+              <become object="theirs" sprite="face" />
               <set variable="table.street">4</set>
             </action>
           </actions>
@@ -261,7 +237,8 @@
           <position><x><centered /></x><y>yourrow + cardheight + 70</y></position>
           <actions>
             <action name="next">
-              <shuffle pile="stock" />
+              <send from="cards" into="stock"><all /></send>
+              <order group="stock"><random /></order>
               <become object="result" sprite="none" />
               <become object="dealer" sprite="shuffling" />
               <become sprite="wait" />
@@ -419,6 +396,11 @@
           <position><x><centered /></x><y>yourrow + cardheight + 30</y></position>
         </object>
       </objects>
+      <!-- the cards start in the stock, shuffled -->
+      <starts>
+        <send from="cards" into="stock"><all /></send>
+        <order group="stock"><random /></order>
+      </starts>
       <inputs>
         <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="you" action="raise" from="act" /></input>
         <input>

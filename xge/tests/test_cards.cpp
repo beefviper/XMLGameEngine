@@ -961,6 +961,32 @@ TEST_CASE("blackjack.xml: the bet stays from 10 to 100 and within your chips", "
 
 namespace
 {
+	// A card of the pack (rows spades, hearts, clubs, diamonds; columns A
+	// to K) by its name, "Q spades"; and a card's name.
+	const std::vector<std::string> packSuits{ "spades", "hearts", "clubs", "diamonds" };
+	const std::vector<std::string> packRanks{ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
+
+	int cardNamed(Game& game, const std::string& name)
+	{
+		const auto space = name.find(' ');
+		const auto numberOf = [](const std::vector<std::string>& names, const std::string& given) { return static_cast<int>(std::find(names.begin(), names.end(), given) - names.begin()) + 1; };
+		const int column = numberOf(packRanks, name.substr(0, space));
+		const int row = numberOf(packSuits, name.substr(space + 1));
+		for (Object& object : game.getCurrentObjects())
+		{
+			if (object.isCard && object.card.rank == column && object.card.suit == row) { return object.cardNumber; }
+		}
+		return 0;
+	}
+
+	std::string nameOf(const Object& card)
+	{
+		return packRanks[static_cast<std::size_t>(card.card.rank - 1)] + " " + packSuits[static_cast<std::size_t>(card.card.suit - 1)];
+	}
+}
+
+namespace
+{
 	struct Holdem : Played
 	{
 		Holdem() : Played("descriptions/holdem.xml")
@@ -973,15 +999,7 @@ namespace
 		float table(const std::string& name) { return get("table").variable.at(name); }
 		float chips(const std::string& who) { return get(who).variable.at("chips"); }
 
-		int cardOf(const std::string& name)
-		{
-			const auto space = name.find(' ');
-			for (Object& object : game.getCurrentObjects())
-			{
-				if (object.isCard && object.card.rankName == name.substr(0, space) && object.card.suitName == name.substr(space + 1)) { return object.cardNumber; }
-			}
-			return 0;
-		}
+		int cardOf(const std::string& name) { return cardNamed(game, name); }
 
 		// The stock stacked so these come off it in this order: yours,
 		// the computer's, yours, the computer's, then the board.
@@ -1245,26 +1263,7 @@ namespace
 			return 0.0f;
 		}
 
-		// A card by its name ("Q spades"), or by its column and row ("12 1"):
-		// the pack's rows spades, hearts, clubs, diamonds, its columns A to K.
-		int cardOf(const std::string& name)
-		{
-			const auto space = name.find(' ');
-			const std::vector<std::string> suits{ "spades", "hearts", "clubs", "diamonds" };
-			const std::vector<std::string> ranks{ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
-			const auto numberOf = [](const std::vector<std::string>& names, const std::string& given)
-			{
-				const auto at = std::find(names.begin(), names.end(), given);
-				return at != names.end() ? static_cast<int>(at - names.begin()) + 1 : std::stoi(given);
-			};
-			const int column = numberOf(ranks, name.substr(0, space));
-			const int row = numberOf(suits, name.substr(space + 1));
-			for (Object& object : game.getCurrentObjects())
-			{
-				if (object.isCard && object.card.rank == column && object.card.suit == row) { return object.cardNumber; }
-			}
-			return 0;
-		}
+		int cardOf(const std::string& name) { return cardNamed(game, name); }
 
 		// A new deal from a stacked stock: thirteen each to you, west,
 		// north and east, in that order, the rest of each suit by rank
@@ -1490,7 +1489,7 @@ TEST_CASE("hearts.xml: a whole hand, you playing the first card that goes: 26 po
 		for (const int number : mine)
 		{
 			const Object& card = *play.game.cardAt(number);
-			if (play.play(card.card.rankName + " " + card.card.suitName))
+			if (play.play(nameOf(card)))
 			{
 				played = true;
 				break;
@@ -1658,7 +1657,7 @@ TEST_CASE("spades.xml: a whole hand, you playing the first card that goes: 13 tr
 		for (const int number : mine)
 		{
 			const Object& card = *play.game.cardAt(number);
-			if (play.play(card.card.rankName + " " + card.card.suitName))
+			if (play.play(nameOf(card)))
 			{
 				played = true;
 				break;
@@ -1685,14 +1684,16 @@ namespace
 		{
 			tap(KeyCode::Space);
 			frames(1);
-			// Dealt in rounds to the discard pile (one), north and you, in the file's order.
+			// Dealt a card a round to you and north, then one turned up.
 			const auto part = [&](std::size_t from, std::size_t count)
 			{
 				std::vector<std::string> cards;
 				for (std::size_t i = from; i < std::min(from + count, top.size()); ++i) { cards.push_back(top[i]); }
 				return cards;
 			};
-			game.stackedDeal = roundRobin(*this, { part(20, 1), part(10, 10), part(0, 10) });
+			game.stackedDeal = roundRobin(*this, { part(0, 10), part(10, 10) });
+			const std::vector<int> turned = roundRobin(*this, { part(20, 1) });
+			game.stackedDeal.insert(game.stackedDeal.end(), turned.begin(), turned.end());
 			for (int i = 0; i < 100 && table("phase") == 5.0f; ++i) { frames(1); }
 			frames(2);
 		}
@@ -1702,15 +1703,7 @@ namespace
 		float table(const std::string& name) { return get("table").variable.at(name); }
 		void set(const std::string& object, const std::string& name, float value) { game.setVariable(get(object).name, name, value); }
 
-		int cardOf(const std::string& name)
-		{
-			const auto space = name.find(' ');
-			for (Object& object : game.getCurrentObjects())
-			{
-				if (object.isCard && object.card.rankName == name.substr(0, space) && object.card.suitName == name.substr(space + 1)) { return object.cardNumber; }
-			}
-			return 0;
-		}
+		int cardOf(const std::string& name) { return cardNamed(game, name); }
 
 		bool holds(const std::string& pileName, const std::string& card)
 		{
@@ -1761,7 +1754,7 @@ TEST_CASE("gin.xml: cards laid out in the melds that leave the least deadwood, t
 	const auto& mine = play.pile("mine").pile.cards;
 	REQUIRE(mine.size() == 10);
 	std::vector<std::string> last;
-	for (std::size_t i = 6; i < 10; ++i) { last.push_back(play.game.cardAt(mine[i])->card.rankName + " " + play.game.cardAt(mine[i])->card.suitName); }
+	for (std::size_t i = 6; i < 10; ++i) { last.push_back(nameOf(*play.game.cardAt(mine[i]))); }
 	CHECK(std::find(last.begin(), last.end(), "5 hearts") != last.end());
 	CHECK(std::find(last.begin(), last.end(), "A diamonds") != last.end());
 	CHECK(std::find(last.begin(), last.end(), "7 hearts") == last.end());
@@ -1779,6 +1772,20 @@ TEST_CASE("gin.xml: a draw from the discard pile, then a discard; the deadwood c
 	play.discard("K diamonds", KeyCode::Space);
 	CHECK(play.holds("discard", "K diamonds"));
 	CHECK(play.of("north", "turn") == 1.0f);
+}
+
+TEST_CASE("gin.xml: before the draw, Space on a card of your own does nothing", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "2 spades" } }));
+	play.discard("K diamonds", KeyCode::Space);
+	CHECK(play.pile("mine").pile.cards.size() == 10);
+	CHECK(play.holds("mine", "K diamonds"));
+	CHECK(play.get("you").hand.held.empty());
+	CHECK(play.table("phase") == 0.0f);
+	CHECK(play.get("you").lookName() == "draw");
+	play.drawDiscard();
+	CHECK(play.pile("mine").pile.cards.size() == 11);
+	CHECK(play.get("you").lookName() == "discard");
 }
 
 TEST_CASE("gin.xml: a knock with ten or less scores the difference, north's cards shown", "[cards][gin]")

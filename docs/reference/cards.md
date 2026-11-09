@@ -219,22 +219,22 @@ Crazy Eights gives each player a pile of their own:
 
 ## Patterns
 
-What a set of cards can make is written once in the game, beside `<styles>`, lowest first. Each `<pattern>` is parts that must all hold: `<same>N</same>` (N of one rank; two `<same>`s: two ranks), `<run>N</run>` (N worths in a row, any of a card's worths counting), `<suited>N</suited>` (N of one suit).
+What a set of cards can make is written once in the game, beside `<styles>`, lowest first. Each `<pattern>` is parts that must all hold, each naming the variable it compares: `<same variable="rank">N</same>` (N of one rank; two of them: two ranks), `<same variable="suit">N</same>` (N of one suit), `<run variable="worth">N</run>` (N worths in a row, a card's `high` counting too). `<run variable="rank">` runs by column, the ace low whatever it is worth (Gin's runs, its court cards worth 10); for now only `<melds />` take it. Old forms: no `variable=` (rank, worth) and `<suited>N`.
 
 ```xml
 <patterns name="poker">
-  <pattern name="pair"><same>2</same></pattern>
-  <pattern name="twopair"><same>2</same><same>2</same></pattern>
-  <pattern name="three"><same>3</same></pattern>
-  <pattern name="straight"><run>5</run></pattern>
-  <pattern name="flush"><suited>5</suited></pattern>
-  <pattern name="fullhouse"><same>3</same><same>2</same></pattern>
-  <pattern name="four"><same>4</same></pattern>
-  <pattern name="straightflush"><run>5</run><suited>5</suited></pattern>
+  <pattern name="pair"><same variable="rank">2</same></pattern>
+  <pattern name="twopair"><same variable="rank">2</same><same variable="rank">2</same></pattern>
+  <pattern name="three"><same variable="rank">3</same></pattern>
+  <pattern name="straight"><run variable="worth">5</run></pattern>
+  <pattern name="flush"><same variable="suit">5</same></pattern>
+  <pattern name="fullhouse"><same variable="rank">3</same><same variable="rank">2</same></pattern>
+  <pattern name="four"><same variable="rank">4</same></pattern>
+  <pattern name="straightflush"><run variable="worth">5</run><same variable="suit">5</same></pattern>
 </patterns>
 ```
 
-A pile scores by them with `<score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score>`: with that pile's cards (`<full>`: how many it holds once dealt), the best five of all. Live numbers:
+A pile or a holder (Hold'em's: the ace's `high` 14) scores by them with `<score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score>`: with that pile's cards (`<full>`: how many it holds once dealt), the best five of all. Live numbers:
 
 - `pattern`: the highest made (from 1; 0 none);
 - `strength`: orders any two the same size (pattern, then the run from its top, else rank groups bigger first, then the rest), so the showdown is `<above>theirs.strength</above>`;
@@ -242,12 +242,12 @@ A pile scores by them with `<score patterns="poker"><with pile="board"><full>5</
 
 ### Melds
 
-`<score patterns="rummy"><melds /><best>10</best></score>` splits the cards into groups that each make a pattern with all their cards, leaving the fewest points over. The pile is laid out in its groups. Live `deadwood` is the points left over by the best `<best>` cards.
+`<score patterns="rummy"><melds /><best>10</best></score>` splits the cards into groups that each make a pattern with all their cards, leaving the fewest points over (each card's `worth`). The holder is laid out in its groups. Live `deadwood` is the points left over by the best `<best>` cards.
 
 ```xml
 <patterns name="rummy">
-  <pattern name="set"><same>3</same></pattern>
-  <pattern name="run"><run>3</run><suited>3</suited></pattern>
+  <pattern name="set"><same variable="rank">3</same></pattern>
+  <pattern name="run"><run variable="rank">3</run><same variable="suit">3</same></pattern>
 </patterns>
 ```
 

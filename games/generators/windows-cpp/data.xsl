@@ -2009,6 +2009,30 @@
         <xsl:with-param name="name" select="concat($to, '.pile.lift')" />
         <xsl:with-param name="node" select="lift" />
       </xsl:call-template>
+      <xsl:if test="score[not(melds)]">
+        <xsl:value-of select="concat(' ', $to, '.pile.score = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="score/@patterns" /></xsl:call-template>
+        <xsl:text>;</xsl:text>
+        <xsl:if test="score/with">
+          <xsl:value-of select="concat(' ', $to, '.pile.scoreWith = ')" />
+          <xsl:call-template name="string"><xsl:with-param name="text" select="score/with/@pile" /></xsl:call-template>
+          <xsl:text>;</xsl:text>
+        </xsl:if>
+        <xsl:if test="score/with/full">
+          <xsl:value-of select="concat(' ', $to, '.pile.scoreFull = ', normalize-space(score/with/full), ';')" />
+        </xsl:if>
+        <xsl:if test="score/best">
+          <xsl:value-of select="concat(' ', $to, '.pile.scoreBest = ', normalize-space(score/best), ';')" />
+        </xsl:if>
+      </xsl:if>
+      <xsl:if test="score/melds">
+        <xsl:value-of select="concat(' ', $to, '.pile.melds = ')" />
+        <xsl:call-template name="string"><xsl:with-param name="text" select="score/@patterns" /></xsl:call-template>
+        <xsl:text>;</xsl:text>
+        <xsl:if test="score/best">
+          <xsl:value-of select="concat(' ', $to, '.pile.meldsBest = ', normalize-space(score/best), ';')" />
+        </xsl:if>
+      </xsl:if>
       <xsl:if test="trick">
         <xsl:value-of select="concat(' ', $to, '.pile.takes.given = true; ', $to, '.pile.takes.follow = true; ', $to, '.pile.takes.breakSuits = {')" />
         <xsl:for-each select="trick/breaks">
@@ -4010,13 +4034,16 @@
         <xsl:for-each select="*">
           <xsl:if test="position() &gt; 1">,</xsl:if>
           <xsl:choose>
+            <xsl:when test="local-name() = 'same' and @variable = 'suit'"> { RawPatterns::Part::Suited, </xsl:when>
             <xsl:when test="local-name() = 'same'"> { RawPatterns::Part::Same, </xsl:when>
             <xsl:when test="local-name() = 'run'"> { RawPatterns::Part::Run, </xsl:when>
             <xsl:otherwise> { RawPatterns::Part::Suited, </xsl:otherwise>
           </xsl:choose>
           <xsl:value-of select="concat(normalize-space(.), ' }')" />
         </xsl:for-each>
-        <xsl:text> } }</xsl:text>
+        <xsl:text> }, </xsl:text>
+        <xsl:call-template name="string"><xsl:with-param name="text" select="concat(run/@variable, substring('worth', 1, 5 * not(run/@variable)))" /></xsl:call-template>
+        <xsl:text> }</xsl:text>
       </xsl:for-each>
       <xsl:text> } });&#10;</xsl:text>
     </xsl:for-each>

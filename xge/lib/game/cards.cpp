@@ -760,7 +760,9 @@ namespace xge
 			bool found = false;
 			for (const Object* starter : group)
 			{
-				for (const float start : starter->card.worths)
+				// By worth, a card counting any of its worths; by rank, its column.
+				const auto valuesOf = [&](const Object& card) { return pattern.runBy == "rank" ? std::vector<float>{ static_cast<float>(card.card.rank) } : card.card.worths; };
+				for (const float start : valuesOf(*starter))
 				{
 					std::vector<bool> used(n, false);
 					const auto take = [&](const auto& self, std::size_t step) -> bool
@@ -769,7 +771,7 @@ namespace xge
 						const float wanted = start + static_cast<float>(step);
 						for (std::size_t i = 0; i < n; ++i)
 						{
-							const auto& worths = group[i]->card.worths;
+							const std::vector<float> worths = valuesOf(*group[i]);
 							if (used[i] || std::find(worths.begin(), worths.end(), wanted) == worths.end()) { continue; }
 							used[i] = true;
 							if (self(self, step + 1)) { return true; }
