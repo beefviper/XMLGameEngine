@@ -798,6 +798,19 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="lift" type="valueType" minOccurs="0" />
+      <!-- trick: any member leads, then the value of variable= led is followed
+           while the player holds one; a value <breaks> leads only once played (or
+           when the player holds nothing else), a value <trumps> beats the rest;
+           else the highest worth of the value led wins. For now variable="suit" -->
+      <xs:element name="trick" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="breaks" type="xs:integer" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="trumps" type="xs:integer" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
       <!-- counts: its own variable of that name, what its face-up members' variables of that name add up to; for
            worth, a member's high instead while the total stays <atmost> -->
       <xs:element name="counts" minOccurs="0">
@@ -1379,6 +1392,15 @@
     <xs:attribute name="group" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
+  <xs:complexType name="distributeType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="from" type="xs:NMTOKEN" use="required" />
+        <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
   <!-- move: a direction, and how far a frame; on a map with <cells />, how many cells a second while held, after one at once and a <wait> of so many seconds. -->
   <xs:complexType name="stepType" mixed="true">
     <xs:sequence>
@@ -1708,6 +1730,9 @@
            to the playfield), refused if it has no room there -->
       <xs:element name="send" type="sendType" />
       <xs:element name="order" type="orderType" />
+      <!-- distribute: N each from the holder from= into the holder into=, or
+           into a group's, each member's own (<owns>) a card a round in turn -->
+      <xs:element name="distribute" type="distributeType" />
       <!-- despawn: the object running it, or object= every one of that
            name or group, is taken out of the game -->
       <xs:element name="despawn">

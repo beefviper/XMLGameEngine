@@ -605,7 +605,16 @@ namespace xge
 					throw std::runtime_error(where + ": for now a start sends <all /> of a group into one holder first, then orders and deals from that holder");
 				}
 				if (step.verb == "order") { continue; }   // the cards are always shuffled where they start
-				const std::vector<RawObject*> into = pileFor(step.into, state.name);
+				std::vector<RawObject*> into = pileFor(step.into, state.name);
+				// A group's: each member's own holder.
+				if (into.empty())
+				{
+					for (const RawObject& object : objects)
+					{
+						if (object.ownerState != state.name || object.handPile.empty() || (object.groupName != step.into && object.groupName != state.name + "." + step.into)) { continue; }
+						for (RawObject* own : pileFor(object.handPile, state.name)) { into.push_back(own); }
+					}
+				}
 				if (into.empty()) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no holder of this state"); }
 				for (RawObject* each : into)
 				{
@@ -721,6 +730,11 @@ namespace xge
 	float Game::cardPoints(const Object& pile, const Object& card)
 	{
 		if (const auto each = eachPoints(pile, card)) { return *each; }
+		if (!pile.pile.counts.empty() && pile.pile.counts != "worth")
+		{
+			const auto value = card.variable.find(pile.pile.counts);
+			return value == card.variable.end() ? 0.0f : value->second;
+		}
 		return card.card.worths.empty() ? static_cast<float>(card.card.rank) : card.card.worths.front();
 	}
 
@@ -2066,7 +2080,23 @@ namespace xge
 	bool Game::sendHeld(const std::string& fromName, const std::string& intoName, int count, bool all, const std::string& sprite)
 	{
 		Object* into = pileNamed(intoName);
-		if (!into) { return false; }
+		if (!into)
+		{
+			// A group's: each member's own holder in turn, a card a round.
+			std::vector<std::pair<int, std::string>> owners;
+			for (const Object& object : objects)
+			{
+				if (object.hand.is && !object.hand.own.empty() && (object.inGroup(intoName) || object.inGroup(fullName(intoName)))) { owners.emplace_back(object.hand.seat, object.hand.own); }
+			}
+			if (owners.empty() || all) { return false; }
+			std::stable_sort(owners.begin(), owners.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+			bool any = false;
+			for (int round = 0; round < count; ++round)
+			{
+				for (const auto& [seat, own] : owners) { any = sendHeld(fromName, own, 1, false, sprite) || any; }
+			}
+			return any;
+		}
 		std::vector<int> sent;
 		if (Object* from = pileNamed(fromName))
 		{

@@ -206,6 +206,13 @@
           </xsl:call-template>
         </xsl:when>
         <!-- members of a held class, holder to holder: how many, or all -->
+        <xsl:when test="$verb = 'distribute'">
+          <xsl:text> command.amount = </xsl:text>
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="$node" />
+          </xsl:call-template>
+          <xsl:text>;</xsl:text>
+        </xsl:when>
         <xsl:when test="$verb = 'send' and not($node/@object)">
           <xsl:choose>
             <xsl:when test="$node/all"> command.all = true;</xsl:when>
@@ -2002,6 +2009,21 @@
         <xsl:with-param name="name" select="concat($to, '.pile.lift')" />
         <xsl:with-param name="node" select="lift" />
       </xsl:call-template>
+      <xsl:if test="trick">
+        <xsl:value-of select="concat(' ', $to, '.pile.takes.given = true; ', $to, '.pile.takes.follow = true; ', $to, '.pile.takes.breakSuits = {')" />
+        <xsl:for-each select="trick/breaks">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> </xsl:text>
+          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
+        </xsl:for-each>
+        <xsl:value-of select="concat(' }; ', $to, '.pile.takes.trumpSuits = {')" />
+        <xsl:for-each select="trick/trumps">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> </xsl:text>
+          <xsl:call-template name="text"><xsl:with-param name="node" select="." /></xsl:call-template>
+        </xsl:for-each>
+        <xsl:text> };</xsl:text>
+      </xsl:if>
       <xsl:if test="counts">
         <xsl:value-of select="concat(' ', $to, '.pile.hasPoints = true;')" />
         <xsl:value-of select="concat(' ', $to, '.pile.counts = ')" />

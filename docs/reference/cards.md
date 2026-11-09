@@ -61,7 +61,7 @@ The card words are moving to general ones: a pack is a `<group>`, a pile is anyt
 
   For now it sends all of a pack into one holder, orders it at random, then `<distribute>`s N to each holder of a group (one at a time round; `<more>`: each after the first that many more) or `<send>`s N to one.
 - **`<counts variable="worth"><atmost>21</atmost></counts>`** in a `<holds>`: the holder's own variable of that name (`player.worth`) is what its face-up members' variables of that name add up to. For `worth`, a member's `high` counts instead while the total stays within `<atmost>`.
-- **The verbs, in any action, timer or condition:** `<send from="stock" into="player">1</send>` sends the top one (or `<all />`) from holder to holder; from the pack's name, `<all />` is every card wherever it is. `sprite="back"` lays them showing that look. `<order group="stock"><random /></order>` puts what a holder holds at random. **`<become object="dealer" sprite="face" />`** on a holder, with a look of what it holds rather than its own, turns everything it holds to that look. Each is refused when there is nothing to send or no such holder or look.
+- **The verbs, in any action, timer or condition:** `<send from="stock" into="player">1</send>` sends the top one (or `<all />`) from holder to holder; from the pack's name, `<all />` is every card wherever it is. `sprite="back"` lays them showing that look. `<order group="stock"><random /></order>` puts what a holder holds at random. `<distribute from="stock" into="mine">13</distribute>` sends that many to a holder, or, into a group, that many to each member's own holder, a card a round. **`<become object="dealer" sprite="face" />`** on a holder, with a look of what it holds rather than its own, turns everything it holds to that look. Each is refused when there is nothing to send or no such holder or look.
 
   ```xml
   <action name="next">
@@ -254,18 +254,26 @@ A pile scores by them with `<score patterns="poker"><with pile="board"><full>5</
 ## Tricks
 
 ```xml
-<object name="trick">
-  <pile faces="up"><fan><x>64</x></fan>
-    <trick><breaks><suit>hearts</suit></breaks><trumps><suit>spades</suit></trumps></trick>
-    <points><each suit="hearts">1</each><each suit="spades" rank="Q">13</each></points>
-  </pile>
+<group name="cards" class="card"> ...
+  <row><number>2</number><variables><variable name="points">1</variable></variables></row>
+  <column><number>1</number><variables><variable name="worth">14</variable></variables></column>
+  <cell row="1" column="12"><variables><variable name="points">13</variable></variables></cell>
+</group>
+<object name="trick" class="place"> ...
+  <holds class="card" sprite="face">
+    <spread><x>64</x></spread>
+    <trick variable="suit"><breaks>2</breaks></trick>
+    <counts variable="points" />
+  </holds>
 </object>
-<object name="hand"> ... <hand pile="mine"><seat>1</seat><team>1</team></hand> ... </object>
 ```
 
-- **`<trick>`** (in place of `<takes>`): the first card leads any suit; after it, a hand holding the suit led must follow.
-- **`<breaks>`**: suits that may not lead until one has been laid since the deal, unless the leader holds nothing else.
-- **`<trumps>`**: a card of those suits beats every other suit.
+- **`<trick variable="suit">`** in a `<holds>`: the first card leads any suit; after it, a player holding the suit led must follow. The highest `worth` of the suit led wins (an ace-high pack gives column 1 `worth` 14). For now the variable is always `suit`, the row.
+- **`<breaks>2</breaks>`**: a suit (its row) that may not lead until one has been laid since the deal, unless the leader holds nothing else.
+- **`<trumps>1</trumps>`**: a card of that suit beats every other suit (Spades).
+- Points are card variables (`points` on the hearts row and the queen of spades' cell), added up by the trick's **`<counts variable="points" />`** into `trick.points`; `<think><avoid />` sheds the cards it counts.
+- The deal, in `<starts>` and between hands: `<send from="cards" into="stock"><all /></send>`, `<order group="stock"><random /></order>` and **`<distribute from="stock" into="players">13</distribute>`**, which deals a card a round to each member's own holder (`<owns>`) in turn.
+- Old form, on a `<pile>`: `<trick><breaks><suit>hearts</suit></breaks><trumps><suit>spades</suit></trumps></trick>` with `<points><each suit rank>`.
 - A hand's **`<seat>`** is its place; **`<team>`** its side (partners share one). A member of [players in turn](states.md#players-as-a-group) with a `<hand />` sits at its number in the group, so `<pass member="trick.winner" />` gives the winner the lead (Hearts, Spades); its `<team>` is the member's own.
 - Live **`lead`** (the suit led) and **`winner`** (the seat of the highest card).
 - Live **`tricks`** on a hand's own pile: how many tricks its cards should take, counted as a bidder does (high cards, trump length, short suits).

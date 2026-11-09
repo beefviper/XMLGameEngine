@@ -436,7 +436,7 @@ namespace xge
 			return spawn;
 		}
 		if (verb == "order") { return CmdOrder{ raw.object }; }
-		if (verb == "send" && raw.object.empty())
+		if ((verb == "send" && raw.object.empty()) || verb == "distribute")
 		{
 			CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt, false, 0, false, {} };
 			send.held = true;
@@ -445,7 +445,7 @@ namespace xge
 			if (!raw.all)
 			{
 				const float count = evaluate(raw.amount);
-				if (count < 1.0f || count != std::floor(count)) { throw std::runtime_error("<send from=\"" + raw.from + "\" into=\"" + raw.into + "\">: sends " + formatDisplayNumber(count) + "; expected a whole number from 1, or <all />"); }
+				if (count < 1.0f || count != std::floor(count)) { throw std::runtime_error("<" + verb + " from=\"" + raw.from + "\" into=\"" + raw.into + "\">: sends " + formatDisplayNumber(count) + "; expected a whole number from 1, or <all />"); }
 				send.count = static_cast<int>(count);
 			}
 			return send;

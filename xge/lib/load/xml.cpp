@@ -1303,6 +1303,22 @@ namespace xge
 				}
 				else if (tag == "top") { pile.topSprite = requireAttribute(*child, "sprite", at); }
 				else if (tag == "lift") { pile.lift = readValue(*child, at); }
+				else if (tag == "trick")
+				{
+					// A trick: any card leads, then the value led is followed;
+					// <breaks> one that leads only once played, <trumps> one over the rest.
+					const std::string variable = requireAttribute(*child, "variable", at);
+					if (variable != "suit") { fail(at, "variable=\"" + variable + "\"; for now a trick follows the suit (its row)"); }
+					PileRule& rule = pile.takes;
+					rule.given = true;
+					rule.follow = true;
+					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						const std::string name = part->getName();
+						if (name != "breaks" && name != "trumps") { fail(at, "unknown <" + name + ">; expected <breaks> and <trumps>"); }
+						(name == "breaks" ? rule.breakSuits : rule.trumpSuits).push_back(readText(*part));
+					}
+				}
 				else if (tag == "order")
 				{
 					for (std::unique_ptr<XmlNode> by = child->getFirstChild(); by != nullptr; by = by->getNextSibling())
@@ -1351,7 +1367,7 @@ namespace xge
 						else { fail(at, "unknown <" + name + ">; expected a <send into>, an <empty> and a <play sound>"); }
 					}
 				}
-				else { fail(here, "unknown <" + tag + ">; expected <spread>s, <accepts>, <run />, <counts>, <top>, <lift>, <order> and <picked>"); }
+				else { fail(here, "unknown <" + tag + ">; expected <spread>s, <accepts>, <run />, <counts>, <top>, <lift>, <trick>, <order> and <picked>"); }
 			}
 		}
 
@@ -1686,7 +1702,7 @@ namespace xge
 				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
 				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
 				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal" || name == "call" || name == "shuffle" || name == "redeal" || name == "collect" || name == "order";
+				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "take" || name == "lay" || name == "deal" || name == "call" || name == "shuffle" || name == "redeal" || name == "collect" || name == "order" || name == "distribute";
 		}
 
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
@@ -1727,15 +1743,16 @@ namespace xge
 				requireAttribute(node, "variable", where);
 				command.amount = readValue(node, where);
 			}
-			if (verb == "send" && node.getAttribute("object").empty())
+			if ((verb == "send" && node.getAttribute("object").empty()) || verb == "distribute")
 			{
-				// Members of a held class, holder to holder: how many, or <all />.
+				// Members of a held class, holder to holder: how many, or <all />;
+				// <distribute>: how many each, into a holder or a group's own ones.
 				command.from = requireAttribute(node, "from", where);
 				command.into = requireAttribute(node, "into", where);
-				const std::string here = where + " > <send>";
+				const std::string here = where + " > <" + verb + ">";
 				for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 				{
-					if (child->getName() != "all") { fail(here, "unknown <" + child->getName() + ">; expected how many, or <all />"); }
+					if (child->getName() != "all" || verb == "distribute") { fail(here, "unknown <" + child->getName() + ">; expected how many" + std::string(verb == "send" ? ", or <all />" : " each")); }
 					command.all = true;
 				}
 				if (!command.all) { command.amount = readValue(node, where); }

@@ -25,9 +25,11 @@
   deals the next. P or Escape pauses.
 
   How it is written:
-  * The deck is the card sheet's, its ace <worth>14</worth>.
-  * The trick is a pile with a <trick>: the suit led is followed, with
-    spades its <trumps> and <breaks>; its live numbers `lead` and `winner`
+  * The pack is a group, a row for each suit (spades, hearts, clubs,
+    diamonds) and a column for each rank; a card is worth its column, the
+    ace 14.
+  * The trick is a holder with a <trick variable="suit">: the suit led is
+    followed, with spades (row 1) its <trumps> and <breaks>; its live numbers `lead` and `winner`
     (the seat, which is the number in the players, of who laid the card
     taking it).
   * The players are a group that takes turns: you, then the computer's
@@ -36,9 +38,9 @@
     (<pass member="trick.winner" />), whose `won` goes up by one.
     The computer's three <think>: they take tricks, and let a partner's
     winning card stand.
-  * Each player's pile is <dealt>13</dealt>; between hands, and for the
-    first, <redeal /> gathers, shuffles and deals them again. A pile of a
-    player's own has the live number `tricks`: how many tricks its cards
+  * The cards start in the stock; for each hand, the first too, every card
+    is <send> back, put in <order> at <random />, and <distribute>d
+    thirteen to each player's own holder. A holder of a player's own has the live number `tricks`: how many tricks its cards
     should take, which is each player's bid (at least one).
   * The table's `phase`: 0 playing, 1 a full trick showing, 2 taking it,
     3 the hand over, 4 shuffling, 5 your bid (the table's look `bid`
@@ -121,56 +123,55 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- the pack: the card sheet's, the ace high -->
-        <deck name="cards" pile="stock" sheet="cards">
-          <face><width>96</width><height>140</height></face>
-          <suit name="spades"><color>color.black</color></suit>
-          <suit name="hearts"><color>color.red</color></suit>
-          <suit name="clubs"><color>color.black</color></suit>
-          <suit name="diamonds"><color>color.red</color></suit>
-          <rank name="A"><worth>14</worth></rank>
-          <rank>2</rank><rank>3</rank><rank>4</rank><rank>5</rank><rank>6</rank><rank>7</rank><rank>8</rank><rank>9</rank><rank>10</rank><rank>J</rank><rank>Q</rank><rank>K</rank>
-        </deck>
+        <!-- the pack: a row for each suit (spades, hearts, clubs, diamonds), a column for each rank, the ace high -->
+        <group name="cards" class="card">
+          <columns>13</columns>
+          <rows>4</rows>
+          <sprite name="face"><cell sheet="cards"><scale>0.5</scale></cell></sprite>
+          <sprite name="back"><cell sheet="cards"><column>1</column><row>5</row><scale>0.5</scale></cell></sprite>
+          <position><x>0</x><y>0</y></position>
+          <column><number>1</number><variables><variable name="worth">14</variable></variables></column>
+        </group>
 
         <!-- the stock, top left: the deal comes from it, and every trick taken goes back onto it -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>24</x><y>northrow</y></position>
-          <pile faces="down"><deals>1</deals></pile>
+          <holds class="card" sprite="back" />
         </object>
 
         <!-- the computer's cards, face down: west down the left, north along the top, east down the right -->
         <object name="westcards" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>24</x><y>siderow</y></position>
-          <pile faces="down"><fan><hidden><y>24</y></hidden></fan><dealt>13</dealt><sorted /></pile>
+          <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
         <object name="northcards" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 144</x><y>northrow</y></position>
-          <pile faces="down"><fan><hidden><x>24</x></hidden></fan><dealt>13</dealt><sorted /></pile>
+          <holds class="card" sprite="back"><spread><x>24</x></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
         <object name="eastcards" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center * 2 - cardwidth - 24</x><y>siderow</y></position>
-          <pile faces="down"><fan><hidden><y>24</y></hidden></fan><dealt>13</dealt><sorted /></pile>
+          <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
 
         <!-- your cards, face up along the bottom, in suit and rank order -->
         <object name="mine" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>56</x><y>yours</y></position>
-          <pile faces="up"><fan><x>56</x><width>768</width></fan><dealt>13</dealt><sorted /><lift>16</lift></pile>
+          <holds class="card" sprite="face"><spread><x>56</x><width>768</width></spread><lift>16</lift><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
 
         <!-- the trick: the suit led is followed if it can be; spades are trumps, and lead only once broken -->
         <object name="trick" class="place">
           <sprite><rectangle><width>cardwidth + 3 * 64</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 96</x><y>trickrow</y></position>
-          <pile faces="up">
-            <fan><x>64</x></fan>
-            <trick><breaks><suit>spades</suit></breaks><trumps><suit>spades</suit></trumps></trick>
-          </pile>
+          <holds class="card" sprite="face">
+            <spread><x>64</x></spread>
+            <trick variable="suit"><breaks>1</breaks><trumps>1</trumps></trick>
+          </holds>
         </object>
 
         <!-- each player's bid and tricks taken, and whose turn it is; the sides' scores and bags, top right -->
@@ -234,7 +235,9 @@
             </action>
             <!-- the cards, and each player's bid what its cards should take (at least one) -->
             <action name="deal">
-              <redeal />
+              <send from="cards" into="stock"><all /></send>
+              <order group="stock"><random /></order>
+              <distribute from="stock" into="players">13</distribute>
               <set variable="you.won">0</set>
               <set variable="you.bid"><formula><largest><value>mine.tricks</value><value>1</value></largest></formula></set>
               <set variable="west.won">0</set>
@@ -298,13 +301,12 @@
             <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
           </sprite>
           <sprite name="waiting"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <hand />
           <actions>
             <action name="left"><hop direction="left" /></action>
             <action name="right"><hop direction="right" /></action>
             <action name="point"><track /></action>
             <!-- the card pointed at onto the trick, if it may go there, and the next one's turn -->
-            <action name="play"><take /><lay pile="trick" /><play sound="card" /><pass /></action>
+            <action name="play"><pick class="card" /><place into="trick" /><play sound="card" /><pass /></action>
             <!-- it may not: back -->
             <action name="back"><drop /></action>
           </actions>
@@ -319,6 +321,10 @@
           <member name="east"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>window.width.center * 2 - cardwidth - 27</x><y>siderow - 3</y></position><owns object="eastcards" /><team>2</team><think button="space" /></member>
         </group>
       </objects>
+      <!-- the cards start in the stock (the table deals them) -->
+      <starts>
+        <send from="cards" into="stock"><all /></send>
+      </starts>
       <inputs>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="players" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="players" action="right" /></input>
@@ -441,7 +447,7 @@
           <equal>2</equal>
           <pass object="players" member="trick.winner" />
           <inc variable="players.won">1</inc>
-          <collect pile="trick" into="stock" />
+          <send from="trick" into="stock"><all /></send>
           <inc variable="table.tricks">1</inc>
           <set variable="table.phase">0</set>
         </condition>

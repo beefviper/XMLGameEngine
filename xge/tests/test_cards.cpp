@@ -1245,12 +1245,23 @@ namespace
 			return 0.0f;
 		}
 
+		// A card by its name ("Q spades"), or by its column and row ("12 1"):
+		// the pack's rows spades, hearts, clubs, diamonds, its columns A to K.
 		int cardOf(const std::string& name)
 		{
 			const auto space = name.find(' ');
+			const std::vector<std::string> suits{ "spades", "hearts", "clubs", "diamonds" };
+			const std::vector<std::string> ranks{ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
+			const auto numberOf = [](const std::vector<std::string>& names, const std::string& given)
+			{
+				const auto at = std::find(names.begin(), names.end(), given);
+				return at != names.end() ? static_cast<int>(at - names.begin()) + 1 : std::stoi(given);
+			};
+			const int column = numberOf(ranks, name.substr(0, space));
+			const int row = numberOf(suits, name.substr(space + 1));
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.isCard && object.card.rankName == name.substr(0, space) && object.card.suitName == name.substr(space + 1)) { return object.cardNumber; }
+				if (object.isCard && object.card.rank == column && object.card.suit == row) { return object.cardNumber; }
 			}
 			return 0;
 		}
@@ -1266,8 +1277,8 @@ namespace
 			showLookNamed(get("table"), "done");
 			game.passPlayersTo("players", 0);
 			frames(2);
-			// Dealt a card a round to west, north, east and you, in the file's order.
-			game.stackedDeal = roundRobin(*this, { hands[1], hands[2], hands[3], hands[0] });
+			// Dealt a card a round to the players in turn: you, west, north and east.
+			game.stackedDeal = roundRobin(*this, hands);
 			tap(KeyCode::Space);
 			for (int i = 0; i < 100 && table("phase") != 0.0f && table("phase") != 5.0f; ++i) { frames(1); }
 			frames(2);
@@ -1835,6 +1846,11 @@ TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[c
 	Gin play(cardsOf({ { "2 hearts", "4 hearts", "6 hearts", "8 hearts", "10 hearts", "Q hearts", "2 clubs", "4 clubs", "6 clubs", "8 clubs" },
 		suitOf("spades", { "A", "2", "3" }), suitOf("diamonds", { "4", "5", "6" }), { "9 clubs", "9 hearts", "9 spades", "K spades" }, { "Q diamonds" } }));
 	REQUIRE(play.pile("northcards").deadwood == 10.0f);
+	// North's draw from the stock melds nowhere, so it cannot go gin.
+	auto& stock = play.pile("stock").pile.cards;
+	const int king = play.cardOf("K hearts");
+	stock.erase(std::find(stock.begin(), stock.end(), king));
+	stock.push_back(king);
 	play.drawDiscard();
 	play.discard("Q diamonds", KeyCode::Space);
 	for (int i = 0; i < 600 && play.table("phase") != 4.0f; ++i) { play.frames(1); }
