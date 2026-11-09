@@ -111,7 +111,7 @@ The [documentation](docs/readme.md) has a tour, every word, and an index linking
 
 ## Games
 
-55 games in [games/descriptions/](games/descriptions/), each with a test that plays it frame by frame:
+58 games in [games/descriptions/](games/descriptions/), each with a test that plays it frame by frame:
 
 | Kind | Games |
 |---|---|
@@ -119,7 +119,7 @@ The [documentation](docs/readme.md) has a tour, every word, and an index linking
 | Shooters | Space Invaders (two versions), Galaxian, Asteroids, Missile Command, Megamania, Yars' Revenge, Berserk, Demon Attack, Atlantis, Astrosmash, Air-Sea Battle, Combat, Depth Charge |
 | Platforms and rooms | Donkey Kong, Mario Bros., Q\*bert, Pitfall!, Frostbite, Adventure, Haunted House, Lunar Lander |
 | Mazes, lanes, catching | Pac-Man, Frogger, Freeway, Kaboom!, Fishing Derby |
-| Grid puzzles | Tetris, Columns, Snake, Centipede, Capsules |
+| Grid puzzles | Tetris, Columns, Snake, Centipede, Capsules, Crates, Doubles, Minefield |
 | Tables and tracks | Putt Park, Cannon Hill, Pinball, Speedway, Trick Shot |
 | Board games | Checkers, Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes |
 | Card games | Klondike, Crazy Eights, Blackjack, Texas Hold'em, Hearts, Spades, Gin Rummy, Pyramid |

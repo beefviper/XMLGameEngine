@@ -20,6 +20,7 @@ What the engine cannot do today. Why, and what might come, is in the [design fil
 - A path is straight legs at one speed. Enemies fire on timers from wherever they are (an invader behind others fires through them).
 - Cell pieces jump a cell at a time; nothing glides. A `<go>` on cells keeps its speed until the next turn; a chain cannot wrap round the map.
 - Cell checks cannot find touching groups of alike pieces (Puyo Puyo) or count a chain's rounds. No hold, lock delay, ghost piece or hidden rows; `<random />` is a plain pick, not a bag of seven.
+- `<undo />` cannot bring back a copy despawned since (Doubles' merged numbers), so it suits pushing puzzles. A `<condition>` in an action holds no conditions. A spawn picks no number by weight, so Doubles brings in only 2s. Minefield's first square can be a mine. A look cannot be a live text.
 - `<facing>` is one of four ways (diagonals only from two held keys) and never turns the picture.
 
 ## Pictures and sound

@@ -34,6 +34,7 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 | [tables-and-tracks](25-tables-and-tracks.md) | Mini golf, artillery, pinball, racing | Built |
 | [board-games](26-board-games.md) | Moves, the picker, puts, `<think>` | Built; action lookahead Open |
 | [cards](27-cards.md) | Decks, piles, hands, patterns, tricks, melds | Built; single cards Open |
+| [cell-puzzles](28-cell-puzzles.md) | Pushing, merging, counting around, undo, conditions in actions | Built |
 
 ## Pictures and sound
 

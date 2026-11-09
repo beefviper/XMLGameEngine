@@ -9,10 +9,10 @@ Commands are sorted by what they need. Each place takes only the groups that mea
 | Group | Commands | Needs |
 |---|---|---|
 | changes | `inc`, `dec`, `set`, `copy`, `rank`, `play`, `silence`, `become`, `reveal`, `follow`, `shift`, `enter`, `reset`, `spawn`, `despawn object=`, `trigger` | nothing: they name what they change |
-| flow | `push`, `pop`, `turns`, `pass`, `out`, `demo` | the game's running order |
+| flow | `push`, `pop`, `turns`, `pass`, `out`, `demo`, `undo` | the game's running order |
 | self | `die`, `drop`, `move`, `release`, `reverse`, `stop`, `fire`, `despawn`; on cells `settle`, `slide`, `cycle`, `grow`, `split`, `pick`, `place` | an object running it |
 | steering | `aim`, `chase`, `hunt`, `wander` | an object to steer |
-| touch | `carry`, `deflect`, `hole`, `knock`, `land`, `ride` | another object touched |
+| touch | `carry`, `deflect`, `hole`, `knock`, `land`, `ride`; on cells `shove`, `merge` | another object touched |
 | edge | `stick`, `wrap` | a screen edge |
 | bounce | `bounce` | a screen edge or another object |
 | controls | `accelerate`, `climb`, `go`, `hop`, `jump`, `leap`, `thrust`, `turn`, `track` | a key held or pressed |
@@ -22,7 +22,7 @@ Commands are sorted by what they need. Each place takes only the groups that mea
 |---|---|
 | a `<collision>` with another object | changes, self, steering, touch, bounce |
 | a `<collision edge>` | changes, self, edge, bounce |
-| an object's `<action>` | changes, self, steering, controls |
+| an object's `<action>` | changes, self, steering, controls, and `<condition>`s holding those |
 | an object's `<timer>`, a path's `<step>` | changes, self, steering |
 | a state's or scene's `<input>`, `<condition>`, `<timer>` | changes, flow |
 | a `<computer>`'s `<condition>` | press |
@@ -78,6 +78,7 @@ An object out of play does nothing when its action is pressed or triggered; lett
 | `<bounce />`, `<bounce>0.8</bounce>` | mirrors the velocity about the way the surface faces, keeping that share of its speed (above 1: a bumper). A box's side or screen edge gives the plain flip; a `pixel` picture its drawn slope |
 | `<deflect>45</deflect>` | off another object at up to that angle, by where along the side it hit; speed kept (Pong) |
 | `<knock />`, `<knock>0.5</knock>` | the two meet as things with weight ([knocks](collisions.md#knocks)) |
+| `<shove />`, `<merge variable="value" />` | on cells: pushes the piece in the way on a cell, or joins two equal ones ([pushing and merging](maps.md#pushing-merging-and-counting)) |
 | `<stick />` | stops only the velocity into the edge or side touched, so it slides along |
 | `<wrap />` | once wholly off a screen edge, put back in from the opposite one |
 | `<through />` | a refused [cell](maps.md#cells) step is made anyway; the two share the cell |
@@ -109,7 +110,7 @@ An object out of play does nothing when its action is pressed or triggered; lett
 | `<dec variable="frog.lives" />` | takes 1, or the amount, off; may go below 0 |
 | `<set variable="target">value</set>` | an object's variable or a live number (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`). A group's name sets every member |
 | `<copy variable="ship.score" into="best.score" />` | the second takes the first's number now |
-| `<count class="black" into="score.black" />` | how many of that class are in play |
+| `<count class="black" into="score.black" />` | how many of that class are in play; with [`<here />` or `<around>`](maps.md#pushing-merging-and-counting), how many in those cells |
 | `<rank variable="entry.score" into="table" />` | the entry takes its place in a [table of the best](states.md#a-table-of-the-best) |
 
 The variable must belong to an object; one no object has stops the load.
@@ -129,12 +130,26 @@ The variable must belong to an object; one no object has stops the load.
 | `<push state="paused" />` | puts that state over the current one |
 | `<pop />` | back to the state below (never past the first) |
 | `<pop state="result" />` | this state goes and that one takes its place |
-| `<trigger object="ship" action="fire" />` | runs an object's action as one press. On a group, each member. `from="normal"` only those showing that look (on a key, the look at the press). In an object's own places `object=` may be left out. In a key's input it may hold an [`<otherwise>`](input.md#keys) |
+| `<trigger object="ship" action="fire" />` | runs an object's action as one press. On a group, each member. `from="normal"` only those showing that look (on a key, the look at the press). In an object's own places `object=` may be left out. In a key's input it may hold an [`<otherwise>`](input.md#keys). `class="square"` with [`<around />`](maps.md#pushing-merging-and-counting): those of the class in the cells round it |
 | `<turns>`, `<pass />`, `<out />` | players [taking turns](states.md#taking-turns) |
 | `<demo />` | plays the recorded [`<demo>`](states.md#attract-mode) |
 | `<hold button="l" />` | a computer player holds that key |
 
-Actions that trigger one another in a circle stop the load.
+Actions that trigger one another in a circle stop the load, except through a trigger about the cells around, which reaches each piece once a press.
+
+## Conditions in an action
+
+An action may hold a `<condition>` among its commands. Its test is the same as a state's, with `self` and a bare `variable=` meaning this object; its commands run when it holds, in their place in the list.
+
+```xml
+<action name="look">
+  <count class="spot" into="self.home"><here /></count>
+  <condition variable="home"><equal>1</equal><become sprite="home" /></condition>
+  <condition variable="home"><equal>0</equal><become sprite="crate" /></condition>
+</action>
+```
+
+For now it holds commands only, no conditions.
 
 ## Mistakes the loader catches
 

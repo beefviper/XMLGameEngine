@@ -147,6 +147,8 @@ namespace
 			for (const auto& [look, worth] : c.worths) { out << at << ".worth " << look << " " << worth << "\n"; }
 			flag(at + ".only", c.only);
 			text(at + ".close", c.closeClass + " " + c.closeObject);
+			text(at + ".place", c.place + (c.straight ? " straight " : " ") + c.alike);
+			if (c.test) { conditions(at + ".test", { *c.test }); }
 		}
 
 		void commands(const std::string& at, const std::vector<RawCommand>& list)

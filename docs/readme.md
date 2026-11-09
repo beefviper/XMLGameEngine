@@ -80,7 +80,8 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | look and sound | `become`, `play`, `silence`, `music` | [look and sound](reference/commands.md#look-and-sound) |
 | flow | `push`, `pop`, `enter`, `turns`, `pass`, `out`, `demo`, `trigger` (in a key, `otherwise`) | [flow](reference/commands.md#flow) |
 | rules in rules | a condition holding conditions (`first`, `otherwise`), a collision holding collisions (`first`), `sprite=` tests, `self`/`others`, `lowest`, `highest`, `unequal` | [conditions in conditions](reference/states.md#conditions-in-conditions), [collisions](reference/collisions.md) |
-| cells | `settle`, `slide`, `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |
+| cells | `settle`, `slide` (`class=`), `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |
+| cell puzzles | `shove`, `merge`, `undo`, `here`, `around` (`straight`, `alike`) in `count` and `trigger`; a `condition` in an action | [pushing, merging and counting](reference/maps.md#pushing-merging-and-counting), [conditions in an action](reference/commands.md#conditions-in-an-action) |
 | boards | `pick`, `place`, `put`, `flank`, `moves` | [boards](reference/boards.md) |
 | pictures | `pictures` (a `bitmap name` a sprite takes by `bitmap from`, and each `sheet`), `cell`, `cells` (sprites, frames and cards cut from one picture) | [bitmaps](reference/pictures.md#bitmaps), [sheets](reference/pictures.md#sheets) |
 | holders | `holds`, `spread`, `accepts` (`condition` with `top`, `any`, `wild`, `empty`), `carry`, `top`, `order`, `counts`, `trick`, `score`, `picked`, `owns`, `starts`, `distribute`; in actions `send from into`, `order group`, `distribute`, `pick` (`most`), a holder's `become` | [holders](reference/cards.md#holders) |

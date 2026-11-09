@@ -91,7 +91,7 @@ A map with `<cells />` is a playfield such as Tetris's well: pieces move a whole
 |---|---|
 | `<hop direction="down" />` | one cell (its content: that many) |
 | `<move direction="left">12<wait>0.2</wait></move>` | held: one step, waits, then 12 cells a second |
-| `<slide direction="down" />` | cell by cell at once until refused (Tetris's hard drop) |
+| `<slide direction="down" />` | cell by cell at once until refused (Tetris's hard drop). `class="tile"`: every piece of that class, the one nearest that way first; refused if none moved (Doubles) |
 | `<turn direction="clockwise" />` | a quarter turn of a shape, once a press |
 | `<cycle />` | each cell of a shape moves on along its outline (Columns) |
 | `<go direction="up">8</go>` | keeps going 8 cells a second until another `<go>` |
@@ -126,6 +126,24 @@ Asked after each settle or put:
 - Alike is the same group (a copy is of its piece's group), or with `<alike variable="hue" />` the same value of that variable.
 - `<fall />` drops every loose piece down its column; `<fall class="pill" />` only that class, the rest holding things up.
 - A check runs no `<push>`: set a variable and let a condition answer.
+
+### Pushing, merging and counting
+
+Turn-by-turn puzzles (Crates, Doubles, Minefield) are cell pieces moved by keys and touches:
+
+- **`<shove />`** in a rule for a refused step: the piece in the way is pushed one cell on (its whole shape if it is part of one), and the step goes on. A shove that is itself refused (a crate against a wall) leaves both where they were, so a worker pushes one crate, never two.
+- **`<merge variable="value" />`** in a rule: if the other piece's variable is equal, the other is despawned, this one's variable becomes the sum and the step goes on. A piece merges once a slide.
+- **Maps laid in the same place** (same tile and position) are layers: a piece meets only pieces of its own map, so the worker walks over the floor's spots.
+- **`<here />` and `<around>`** in a `<count>` or a `<trigger class>` name cells: `<here />` this piece's cell, `<around>` the eight round it (`<straight />`: the four beside it; `<alike variable="value" />`: only pieces whose variable equals this one's). Every layer is looked at.
+
+```xml
+<count class="spot" into="self.home"><here /></count>
+<count class="mine" into="self.near"><here /><!-- or --><around /></count>
+<trigger class="square" action="open"><around /></trigger>
+```
+
+- A trigger about the cells around runs each piece once a press, however often it is reached, so a square with no mines near opening those round it floods (Minefield).
+- **`<undo />`** in a key's input puts every piece, look and number back as before the last press that moved a cell piece, as many times as there were such presses. A new scene starts with nothing to undo.
 
 ### A second map: the next-piece box
 

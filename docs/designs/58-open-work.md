@@ -15,6 +15,7 @@
 - **Steering** ([chase-and-paths](24-chase-and-paths.md)): leading a target, chasing round walls, a real maze search as another verb, curved path legs.
 - **Platforms** ([platforming](23-platforming.md)): Donkey Kong's barrels choosing ladders by where Jumpman is, the other three screens, air control.
 - **Cells** ([groups](06-groups.md#cells)): gliding between cells; Tetris hold, lock delay, ghost piece, a bag of seven, row scoring; Columns chain scoring; Centipede's flea, spider and scorpion.
+- **Cell puzzles** ([cell-puzzles](28-cell-puzzles.md#open)): undo of despawned copies, a weighted spawn, a safe first square, conditions in a condition in an action.
 - **Pictures** ([pictures](30-pictures.md), [animation-and-looks](31-animation-and-looks.md)): decals, a hole the shape of a bitmap, light blocked by walls, an interval per frame, an animation that runs once.
 - **Sound** ([sound](33-sound.md)): an envelope; notes that follow a variable (Space Invaders' march keeping time).
 - **Values** ([arithmetic](03-arithmetic.md)): tangent, square root, power, `pick`, when a game needs one.

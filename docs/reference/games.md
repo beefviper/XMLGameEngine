@@ -1,6 +1,6 @@
 # The shipped games
 
-55 games in `games/descriptions/`, each one file. Why each was written and what it left out: [games-classic](../designs/54-games-classic.md), [games-written-by-ai](../designs/55-games-written-by-ai.md), [games-atari](../designs/56-games-atari.md).
+58 games in `games/descriptions/`, each one file. Why each was written and what it left out: [games-classic](../designs/54-games-classic.md), [games-written-by-ai](../designs/55-games-written-by-ai.md), [games-atari](../designs/56-games-atari.md).
 
 ## The key convention
 
@@ -74,6 +74,9 @@ The tables list only keys beyond that.
 | `columns` | A/D move, W/X/Space cycle, S drops faster; P pauses | lines of three alike, chains by `<fall />` |
 | `capsules` | as Tetris, without the drop | an original game of germs and capsules; halves that stay joined ([`<joins>`](maps.md#cells)) |
 | `snake` | W A S D or arrows; Space or P pauses | a [chain](maps.md#cells) for a body, food in a free cell |
+| `crates` | W A S D or arrows walk, U/Backspace undo, R restarts the room; P pauses | four rooms of crates to push onto spots: [`<shove />`](maps.md#pushing-merging-and-counting), a floor layer, `<count><here /></count>`, `<undo />` |
+| `doubles` | W A S D or arrows slide; P pauses | a four by four board of numbers that add up when equal: `<slide class>`, `<merge>`, pairs counted `<around>` |
+| `minefield` | W A S D or arrows or the mouse point, Space/left click opens, F/right click flags; P pauses | nine by nine, ten mines: counts `<around>`, a flood by `<trigger><around /></trigger>` |
 
 ## Tables and tracks
 
