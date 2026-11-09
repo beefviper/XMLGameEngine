@@ -191,6 +191,7 @@ Board and card games share one world, and the players take it in turns. The play
 - **A member's `<think button>`**: the computer plays it on its turn, pointing as it thinks best and pressing that key (`<depth>`, `<avoid />` and `<worth>`s as a [computer's](#computer-players)). No `<computer>` condition is needed.
 - **A verb naming the group** (`<become object="players" sprite="calling" />`) changes the member on its turn.
 - **`<owns object>`**: the holder of its own, a player's cards ([holders](cards.md#holders)).
+- **`<team>`** on a member: its side; partners share one, and a computer's `<think>` lets a partner's winning card stand (Spades).
 
 ## Taking turns
 

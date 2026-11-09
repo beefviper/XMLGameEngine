@@ -2459,6 +2459,8 @@
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
       <xs:element name="variables" type="variablesType" minOccurs="0" />
       <xs:element name="owns" type="ownsType" minOccurs="0" />
+      <!-- team: its side; partners are members on the same team (a computer's think lets a partner's card win) -->
+      <xs:element name="team" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="think" type="memberThinkType" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="optional" />

@@ -1229,13 +1229,9 @@ namespace
 		float of(const std::string& hand, const std::string& name) { return get(hand).variable.at(name); }
 		void set(const std::string& object, const std::string& name, float value) { game.setVariable(get(object).name, name, value); }
 
-		// Your hand, and whether the players are a group taking turns
-		// (then the turn is the number of the member on it, 0 nobody's).
-		std::string me{ "hand" };
-		bool players{ false };
+		// Whose turn it is: the number of the player on it, 0 nobody's.
 		float turn()
 		{
-			if (!players) { return table("turn"); }
 			const char* names[] = { "you", "west", "north", "east" };
 			for (int i = 0; i < 4; ++i)
 			{
@@ -1262,11 +1258,8 @@ namespace
 			set("table", "phase", 3.0f);
 			set("table", "first", static_cast<float>(leader == 1 ? 4 : leader - 1));
 			// As a hand ends: the table done, nobody's turn.
-			if (players)
-			{
-				showLookNamed(get("table"), "done");
-				game.passPlayersTo("players", 0);
-			}
+			showLookNamed(get("table"), "done");
+			game.passPlayersTo("players", 0);
 			frames(2);
 			// Dealt a card a round to west, north, east and you, in the file's order.
 			game.stackedDeal = roundRobin(*this, { hands[1], hands[2], hands[3], hands[0] });
@@ -1281,7 +1274,7 @@ namespace
 			const auto& mine = pile("mine").pile.cards;
 			const auto at = std::find(mine.begin(), mine.end(), cardOf(name));
 			if (at == mine.end()) { return false; }
-			Object& hand = get(me);
+			Object& hand = get("you");
 			hand.hand.pile = "playing.mine";
 			hand.hand.at = static_cast<int>(at - mine.begin());
 			tap(KeyCode::Space);
@@ -1295,7 +1288,7 @@ namespace
 			for (int i = 0; i < 3000; ++i)
 			{
 				if (table("phase") == 3.0f || state() != "playing") { return; }
-				if (table("phase") == 0.0f && turn() == 1.0f && get(me).lookName() == "free")
+				if (table("phase") == 0.0f && turn() == 1.0f && get("you").lookName() == "free")
 				{
 					// The computer's own press of the same key let go first.
 					frames(1);
@@ -1308,11 +1301,7 @@ namespace
 
 	struct Hearts : Tricks
 	{
-		Hearts() : Tricks("descriptions/hearts.xml")
-		{
-			me = "you";
-			players = true;
-		}
+		Hearts() : Tricks("descriptions/hearts.xml") {}
 	};
 
 	// Spades: the first deal comes after a moment; then you bid.
@@ -1513,23 +1502,24 @@ TEST_CASE("spades.xml: everyone bids what their cards should take; you change yo
 {
 	Spades play;
 	REQUIRE(play.table("phase") == 5.0f);
-	CHECK(play.get("hand").lookName() == "bid");
-	for (const auto& [hand, pile] : { std::make_pair("westhand", "west"), std::make_pair("northhand", "north"), std::make_pair("easthand", "east"), std::make_pair("hand", "mine") })
+	CHECK(play.get("table").lookName() == "bid");
+	CHECK(play.turn() == 0.0f);
+	for (const auto& [hand, pile] : { std::make_pair("west", "westcards"), std::make_pair("north", "northcards"), std::make_pair("east", "eastcards"), std::make_pair("you", "mine") })
 	{
 		CHECK(play.of(hand, "bid") == std::max(play.pile(pile).tricks, 1.0f));
 	}
-	const float first = play.of("hand", "bid");
+	const float first = play.of("you", "bid");
 	play.tap(KeyCode::W);
 	play.frames(1);
-	CHECK(play.of("hand", "bid") == std::min(first + 1.0f, 13.0f));
+	CHECK(play.of("you", "bid") == std::min(first + 1.0f, 13.0f));
 	for (int i = 0; i < 16; ++i) { play.tap(KeyCode::S); }
 	play.frames(2);
-	CHECK(play.of("hand", "bid") == 1.0f);
+	CHECK(play.of("you", "bid") == 1.0f);
 	play.tap(KeyCode::Space);
 	play.frames(2);
 	CHECK(play.table("phase") == 0.0f);
-	CHECK(play.table("usbid") == 1.0f + play.of("northhand", "bid"));
-	CHECK(play.table("thembid") == play.of("westhand", "bid") + play.of("easthand", "bid"));
+	CHECK(play.table("usbid") == 1.0f + play.of("north", "bid"));
+	CHECK(play.table("thembid") == play.of("west", "bid") + play.of("east", "bid"));
 }
 
 TEST_CASE("spades.xml: a hand's live number tricks reckons high cards, trumps and short suits", "[cards][spades]")
@@ -1543,9 +1533,9 @@ TEST_CASE("spades.xml: a hand's live number tricks reckons high cards, trumps an
 		joined(suitOf("diamonds", { "Q", "K" }), suitOf("clubs", { "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" })),
 	}, 1);
 	CHECK(play.pile("mine").tricks == 11.0f);
-	CHECK(play.of("hand", "bid") == 11.0f);
+	CHECK(play.of("you", "bid") == 11.0f);
 	// Six small trumps, no clubs or diamonds: three past three, and ruffs for the two missing suits.
-	CHECK(play.pile("west").tricks == 5.0f);
+	CHECK(play.pile("westcards").tricks == 5.0f);
 }
 
 TEST_CASE("spades.xml: spades lead only once broken; a spade takes a trick of another suit", "[cards][spades]")
@@ -1561,14 +1551,14 @@ TEST_CASE("spades.xml: spades lead only once broken; a spade takes a trick of an
 	play.untilYou();
 	REQUIRE(play.pile("trick").pile.cards.size() == 3);
 	CHECK(play.pile("trick").winner == 2.0f);
-	CHECK(play.pile("east").pile.cards.size() == 12);
-	CHECK(std::find(play.pile("east").pile.cards.begin(), play.pile("east").pile.cards.end(), play.cardOf("A diamonds")) == play.pile("east").pile.cards.end());
+	CHECK(play.pile("eastcards").pile.cards.size() == 12);
+	CHECK(std::find(play.pile("eastcards").pile.cards.begin(), play.pile("eastcards").pile.cards.end(), play.cardOf("A diamonds")) == play.pile("eastcards").pile.cards.end());
 	// No club: your two of spades trumps the ace.
 	CHECK(play.play("2 spades"));
 	CHECK(play.pile("trick").winner == 1.0f);
 	play.untilYou();
-	CHECK(play.of("hand", "won") == 1.0f);
-	CHECK(play.table("uswon") == 1.0f);
+	CHECK(play.of("you", "won") == 1.0f);
+	CHECK(play.of("north", "won") == 0.0f);
 }
 
 TEST_CASE("spades.xml: no spade leads before spades are broken, unless only spades are held", "[cards][spades]")
@@ -1595,8 +1585,8 @@ TEST_CASE("spades.xml: a partner's winning ace stands: north plays low under it"
 	}, 1);
 	CHECK(play.play("A hearts"));
 	play.untilYou();
-	CHECK(play.of("hand", "won") == 1.0f);
-	const auto& north = play.pile("north").pile.cards;
+	CHECK(play.of("you", "won") == 1.0f);
+	const auto& north = play.pile("northcards").pile.cards;
 	CHECK(std::find(north.begin(), north.end(), play.cardOf("K hearts")) != north.end());
 	CHECK(std::find(north.begin(), north.end(), play.cardOf("2 hearts")) == north.end());
 }
@@ -1607,9 +1597,11 @@ TEST_CASE("spades.xml: a side that makes its bid scores ten a trick and a bag ea
 	play.tap(KeyCode::Space);
 	play.frames(2);
 	play.set("table", "usbid", 4.0f);
-	play.set("table", "uswon", 5.0f);
+	play.set("you", "won", 3.0f);
+	play.set("north", "won", 2.0f);
 	play.set("table", "thembid", 9.0f);
-	play.set("table", "themwon", 8.0f);
+	play.set("west", "won", 4.0f);
+	play.set("east", "won", 4.0f);
 	play.set("table", "tricks", 13.0f);
 	play.frames(2);
 	CHECK(play.table("us") == 41.0f);
@@ -1661,8 +1653,7 @@ TEST_CASE("spades.xml: a whole hand, you playing the first card that goes: 13 tr
 	}
 	play.untilYou();
 	REQUIRE(play.table("phase") == 3.0f);
-	CHECK(play.table("uswon") + play.table("themwon") == 13.0f);
-	CHECK(play.of("hand", "won") + play.of("northhand", "won") == play.table("uswon"));
+	CHECK(play.of("you", "won") + play.of("north", "won") + play.of("west", "won") + play.of("east", "won") == 13.0f);
 	CHECK(play.table("us") != 0.0f);
 	CHECK(play.table("them") != 0.0f);
 	CHECK(play.pile("stock").pile.cards.size() == 52);

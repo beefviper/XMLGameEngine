@@ -2978,6 +2978,9 @@
       <xsl:call-template name="string"><xsl:with-param name="text" select="owns/@object" /></xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
+    <xsl:if test="team">
+      <xsl:value-of select="concat($indent, 'member.object.handTeam = ', normalize-space(team), ';&#10;')" />
+    </xsl:if>
     <!-- the computer plays it -->
     <xsl:if test="think">
       <xsl:value-of select="concat($indent, 'member.object.think = { ')" />

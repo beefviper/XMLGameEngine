@@ -329,7 +329,7 @@ TEST_CASE("a group or member that is incomplete says where", "[group][errors]")
 	{
 		REQUIRE_THROWS_WITH(Loaded(gameXml(groupWith(kSprite + kPosition + kVelocity + kCollisions,
 			"<member><collisions><enabled>true</enabled></collisions></member>"))),
-			ContainsSubstring("object 'lane.1'") && ContainsSubstring("a member can give <sprite>s, an <animation>, a <position>, a <velocity>, <variables>, an <owns> and a <think>"));
+			ContainsSubstring("object 'lane.1'") && ContainsSubstring("a member can give <sprite>s, an <animation>, a <position>, a <velocity>, <variables>, an <owns>, a <team> and a <think>"));
 	}
 
 	SECTION("something a group cannot say")

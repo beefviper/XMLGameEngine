@@ -2890,6 +2890,7 @@ namespace xge
 			std::map<std::string, RawValue> variables;
 			std::string owns;                       // <owns object=>
 			std::vector<RawCommand> think;          // <think>
+			int team{};                             // <team>: its side, partners alike
 		};
 
 		// The parts of a member, row, column or cell, as far as they are its
@@ -2912,6 +2913,7 @@ namespace xge
 				else if (tag == "padding") { part.padding = readPartialVector2(*child, where); }
 				else if (tag == "owns") { part.owns = requireAttribute(*child, "object", where + " > <owns>"); }
 				else if (tag == "think") { part.think = { readCommand(*child, where) }; }
+				else if (tag == "team") { part.team = readCount(*child, where + " > <team>"); }
 			}
 			readObjectVariables(*node, where, part.variables);
 			part.animations = readAnimations(*node, where);
@@ -3174,6 +3176,7 @@ namespace xge
 					for (const auto& [variable, value] : part->variables) { rawObject.variable[variable] = value; }
 					if (!part->owns.empty()) { rawObject.handPile = part->owns; }
 					if (!part->think.empty()) { rawObject.think = part->think; }
+					if (part->team != 0) { rawObject.handTeam = part->team; }
 				}
 
 				if (!rawObject.shapeRows.empty())
@@ -3269,8 +3272,8 @@ namespace xge
 					const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
 					const std::string here = "object '" + memberName + "' (a member of " + where + ")";
 
-					const GroupPart member = readGroupPart(std::move(child), here, { "sprite", "animation", "position", "velocity", "variables", "owns", "think" },
-						"a member can give <sprite>s, an <animation>, a <position>, a <velocity>, <variables>, an <owns> and a <think>");
+					const GroupPart member = readGroupPart(std::move(child), here, { "sprite", "animation", "position", "velocity", "variables", "owns", "team", "think" },
+						"a member can give <sprite>s, an <animation>, a <position>, a <velocity>, <variables>, an <owns>, a <team> and a <think>");
 					out.push_back(make(memberName, here, { &member }));
 				}
 
