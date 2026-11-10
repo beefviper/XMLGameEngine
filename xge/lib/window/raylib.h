@@ -73,13 +73,11 @@ namespace xge
 		std::array<bool, 512> keyWasDown{};
 
 		// Whether display() has to finish the frame itself - swap the buffers,
-		// read the keyboard and window, and wait out the frame time - because
+		// read the keyboard and window - because
 		// this raylib was built with SUPPORT_CUSTOM_FRAME_CONTROL, which makes
-		// EndDrawing() do none of that. Worked out once, after the first frame.
+		// EndDrawing() do neither. Worked out once, after the first frame.
 		bool frameControlChecked{ false };
 		bool manualFrameControl{ false };
-		double frameTarget{ 0.0 };
-		double frameStart{ 0.0 };
 		// Each font file opened, by its name; null for one that could not be
 		// loaded, whose text is then drawn from the engine's built-in font
 		// (see picture/font.h).

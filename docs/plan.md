@@ -13,7 +13,7 @@ How to use this file: read [The short version](#the-short-version) and [What I w
 1. **A misspelt name can load and silently do nothing.** `<collision class="padle">`, `<condition object="bal" ...>`, `<condition ... variable="scor">` and `<show object="computr">` all load; the rule just never fires. Two objects of one name in the same `<objects>` are silently merged into one, and two states of one name are accepted. This is the largest correctness gap, because the project's promise is "mistakes stop the load" (B2, done; B3, done).
 2. **The vocabulary is growing faster than it is being reduced.** 327 element names; 77 are used by exactly one game, 15 by none. Several concepts have two or three spellings: three jumps, two ways into and out of play, three ways to take turns, two ways to end a game, five booleans in a language that otherwise has none. Every simplification the author found so far (kit into objects, grid into group, pools into copies, phase numbers into looks, card nouns into holders) left the older form alive somewhere. The list is in [Simplification and consistency](#simplification-and-consistency).
 3. **A new word costs about ten edits in ten places.** Schema, `isCommandTag`, `readCommand`, `RawCommand`, `makeCommand`, the `Cmd*` struct and variant, `CommandExecutor::run`, `ruleFor`, `data.xsl`, the describer in the generated test, two doc pages. That is why words are cheap to add and expensive to remove, and it is the debt that grows with every game ([A1](#a1-a-verb-is-one-file)).
-4. **Frame pacing is each window library's own business.** SDL2 paces by vsync only, so on a 144 Hz monitor a game runs 2.4 times too fast; SFML sleeps; raylib and OpenGL count time themselves. Movement is per frame, so pacing is game speed ([B5](#b5-one-frame-pacer-in-the-engine)).
+4. **Frame pacing is each window library's own business.** SDL2 paces by vsync only, so on a 144 Hz monitor a game runs 2.4 times too fast; SFML sleeps; raylib and OpenGL count time themselves. Movement is per frame, so pacing is game speed (B5, done).
 
 **What I would stop doing:** adding games and genres for now. See the next section.
 
@@ -71,7 +71,7 @@ The scripts used are small and are described in T1, done (now `xge/tests/engine/
 | 2 | A class, object, variable or look named in a filter or test is not checked | In `pong.xml`: `<collision class="padle">`, `<condition class="padle" variable="score">`, `<condition class="paddle" variable="scor">`, `<condition object="bal" variable="x">`, `<condition object="ball" variable="xx">`, `<show object="computr" />` all load and play | B2, done |
 | 3 | Two objects of one name in the same `<objects>` become one, silently; two states of one name are accepted; one key bound twice in a state is accepted | `score2` renamed `score1` in `pong.xml`: 28 objects instead of 29, no message. `mainmenu` renamed `playing`: loads | B3, done |
 | 4 | Text arithmetic that divides by zero gives infinity, which becomes a position or a size | `<x>1 / 0</x>` in 22 damaged files: loads, object at infinity | B4, done |
-| 5 | Game speed depends on the window library and the monitor | `window/sdl2.cpp`: `SDL_RENDERER_PRESENTVSYNC` and no other pacing. `sfml.cpp`: `setFramerateLimit`. `raylib.cpp`, `opengl.cpp`: their own clocks. `gui/game_session.cpp`: a fifth | [B5](#b5-one-frame-pacer-in-the-engine) |
+| 5 | Game speed depends on the window library and the monitor | `window/sdl2.cpp`: `SDL_RENDERER_PRESENTVSYNC` and no other pacing. `sfml.cpp`: `setFramerateLimit`. `raylib.cpp`, `opengl.cpp`: their own clocks. `gui/game_session.cpp`: a fifth | B5, done |
 | 6 | Nonsense sizes and times are accepted | `<width>0</width>` on the window, a text `<size>0</size>`, `<after>-1</after>`, `<framerate>0</framerate>` all load | B6, done |
 | 7 | Load errors from the reader say which tag but not which line | Only Xerces' schema errors carry `line N column M`; the reader's own `fail(where, ...)` has a path of tags | [B7](#b7-line-numbers-in-load-errors) |
 | 8 | Stale text | `ruleFor` in `load/check.cpp` still lists `<reveal pile>`, `<shuffle>`, `<redeal />`, `<collect>`; the schema's comment at the patterns type names `<suited>`; `RawCommand::pile`'s comment lists removed verbs; `docs/agents/notes.md` says 55 games; `docs/reference/engine.md` says `<sheets>`; `docs/designs/27-cards.md` line 13 gives a name where the privacy rule in the notes says "the author" | B8, done |
@@ -189,19 +189,6 @@ These repeat what `AGENTS.md` and `docs/agents/notes.md` say, so a task can be d
 Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be split into its substeps. "Blocks" and "needs" give the dependencies.
 
 ### Phase 1: correctness
-
-#### B5. One frame pacer in the engine
-
-- **Size** M. **Needs** nothing. **Blocks** F1.
-- **Why.** Finding 5. Movement is pixels per frame, so pacing is the game's speed, and it must not depend on the library or the monitor.
-- **Files.** `xge/lib/engine/engine.cpp` (`Engine::loop`), `engine.h`; `xge/lib/window/sfml.cpp` (remove `setFramerateLimit`), `sdl2.cpp` (keep vsync off or on, but no longer rely on it), `raylib.cpp` (remove `SetTargetFPS` and the `frameTarget` wait), `opengl.cpp` (remove its clock); `xge/gui/source/game_session.cpp` (it already keeps `framePeriodNs`: leave it, since the GUI drives `step()` itself); `xge/tests/engine/test_backends.cpp`; `docs/reference/engine.md`, `docs/designs/50-backends.md`.
-- **Do.**
-  1. In `Engine::loop`, after `render()`, wait until the next frame time with `std::chrono::steady_clock` and `std::this_thread::sleep_until`, keeping a running deadline (`next += period`), and if the loop has fallen more than a few frames behind, reset the deadline instead of racing to catch up. The period comes from the window description's frame rate (default 60; with B6, never 0).
-  2. Remove each library's own pacing. Vsync may stay on to avoid tearing, but with a 60 Hz game on a faster monitor the engine's wait is what sets the speed.
-  3. A test with the fake window (`xge/tests/helpers/played.h`): 120 frames of `loop` take between 1.9 and 2.2 seconds. Mark it so it is not run under `ctest -j` with a tight bound if it proves noisy: tag `[.pace]` and document it.
-- **Careful.** `docs/agents/notes.md`, "Backends and build": raylib's `pollEvents()` must not call `PollInputEvents()`, and a paused front end calls `Engine::pump()`. Do not change those.
-- **Done.** No window file mentions a frame rate. `xgecli pong -w sdl2`, `-w raylib`, `-w opengl` and the default all take the same time to play the same demo.
-- **Verify.** Build with every backend and with none of the options (`cmake -S . -B /tmp/plain`), `ctest`. Time `xgecli galaxian -a none` under each `-w` with Xvfb for ten seconds of the attract demo and compare frame counts (print the count on exit behind an environment variable, or use F1 once it exists). The author checks on a monitor faster than 60 Hz.
 
 #### B7. Line numbers in load errors
 
@@ -489,7 +476,7 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
 
 #### F1. A game you can step and read from the command line
 
-- **Size** L. **Needs** B5.
+- **Size** L. **Needs** nothing (B5 is done).
 - **Why.** Missing feature 1. Agents build this project and cannot see it; the notes say so in three places. The engine already plays with no window in tests, draws every picture itself into pixels (a window library only shows a bitmap), and can copy a whole board to search it. What is missing is the front door.
 - **Substeps.**
   1. **`xgecli <game> --frames N [--keys file] [--seed S]` (M).** Plays N frames with no window and no sound (a null `Window` like `played::FakeWindow`, moved from the tests into `xge/lib/window/none.cpp` and offered as `-w none`), then exits. The keys file is the `<demo>` format (`<press button="space">1005</press>`, `<release button="space">1009</release>`: a button and the frame), so a recording made with `--record` replays.
@@ -557,7 +544,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Block 2  (the loud-typos work, then the net; Block 1 is done)
-  B5  one frame pacer
   T4  Windows check list              (or the build job, by D3)
 
       -- the author settles D4, D5 here --
@@ -609,7 +595,6 @@ What blocks what, in one place:
 | A1 substep 3 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
 | A6 | R1 |
-| F1 | B5 |
 | F8 | D7 lifted |
 
-If only five things are ever done from this file, do B5 and R1 (B2, B3 and T1 are done).
+If only a few more things are ever done from this file, start with R1 (B2, B3, B5 and T1 are done).

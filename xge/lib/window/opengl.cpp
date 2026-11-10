@@ -22,7 +22,6 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <thread>
 
 namespace xge
 {
@@ -117,10 +116,9 @@ namespace xge
 
 		glfwMakeContextCurrent(window);
 
-		// The window waits out the frame time itself (display()); waiting for
-		// the display's refresh as well would make a 60 frame a second game
-		// run at whatever the refresh divides into.
-		glfwSwapInterval(0);
+		// The engine sets the game's speed (Engine::loop); the window only waits
+		// for the screen's refresh, so a picture is never torn.
+		glfwSwapInterval(1);
 
 		glfwSetWindowUserPointer(window, this);
 		glfwSetKeyCallback(window, &OpenGLWindow::keyCallback);
@@ -133,10 +131,6 @@ namespace xge
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		framePeriod = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-			std::chrono::duration<double>(windowDesc.framerate > 0 ? 1.0 / windowDesc.framerate : 0.0));
-		lastFrame = std::chrono::steady_clock::now();
 	}
 
 	OpenGLWindow::~OpenGLWindow()
@@ -335,30 +329,6 @@ namespace xge
 	void OpenGLWindow::display()
 	{
 		glfwSwapBuffers(window);
-
-		// Wait out what is left of the frame time. Sleeping is only good to
-		// a few milliseconds, so the last of it is spent yielding.
-		const auto target = lastFrame + framePeriod;
-		for (;;)
-		{
-			const auto now = std::chrono::steady_clock::now();
-			if (now >= target)
-			{
-				break;
-			}
-
-			const auto remaining = target - now;
-			if (remaining > std::chrono::milliseconds(2))
-			{
-				std::this_thread::sleep_for(remaining - std::chrono::milliseconds(2));
-			}
-			else
-			{
-				std::this_thread::yield();
-			}
-		}
-
-		lastFrame = std::chrono::steady_clock::now();
 	}
 
 	void OpenGLWindow::keyCallback(GLFWwindow* window, int key, int, int action, int)

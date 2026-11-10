@@ -47,6 +47,9 @@ namespace xge
 		Engine(const Engine&) = delete;
 		Engine& operator=(const Engine&) = delete;
 
+		// Plays the game until the window closes, at its <framerate>: the clock
+		// says how many frames are owed, each is played whole by step(), then
+		// render() draws once (the window waits for the screen's refresh).
 		void loop(void);
 
 		// Records the game being played, for its attract mode: a new game

@@ -37,7 +37,9 @@ namespace xge
 		// mouse is mapped back through the same view).
 		view = sf::View(sf::FloatRect({ 0.0f, 0.0f }, { windowDesc.width, windowDesc.height }));
 		fitView();
-		window.setFramerateLimit(static_cast<unsigned int>(windowDesc.framerate));
+		// The engine sets the game's speed (Engine::loop); the window only waits
+		// for the screen's refresh, so a picture is never torn.
+		window.setVerticalSyncEnabled(true);
 	}
 
 	// The game's picture in the window as it is now: as large as fits with

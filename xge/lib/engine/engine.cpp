@@ -8,6 +8,7 @@
 #include "game/random.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <exception>
 #include <filesystem>
@@ -16,10 +17,27 @@
 #include <random>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 #include <utility>
 
 namespace xge
 {
+	namespace
+	{
+		// The most frames Engine::loop plays to catch up before drawing again.
+		constexpr int kMostFramesOwed = 4;
+
+		// Sleeping wakes late by a few milliseconds on some systems (Windows
+		// wakes on its own tick), so the last of the wait is spent yielding.
+		void waitFor(std::chrono::steady_clock::duration time)
+		{
+			const auto until = std::chrono::steady_clock::now() + time;
+			const auto margin = std::chrono::milliseconds(2);
+			if (time > margin) { std::this_thread::sleep_for(time - margin); }
+			while (std::chrono::steady_clock::now() < until) { std::this_thread::yield(); }
+		}
+	}
+
 	Engine::Engine(Game& gameToRun, std::unique_ptr<Window> newWindow, std::unique_ptr<Audio> newAudio) :
 		game(gameToRun),
 		commandExecutor(gameToRun),
@@ -132,12 +150,41 @@ namespace xge
 
 	void Engine::loop(void)
 	{
+		using Clock = std::chrono::steady_clock;
+
 		// A computer thinks beside the game, which goes on being drawn.
 		game.thinkInBackground(true);
+
+		// A fixed step: the clock says how many frames the time passed owes,
+		// each is played whole, then the picture is drawn once (the window waits
+		// for the screen's refresh). Every number in a game counts frames, so
+		// the game plays the same on any machine and any screen.
+		const Clock::duration period = std::chrono::duration_cast<Clock::duration>(
+			std::chrono::duration<double>(1.0 / std::max(1, game.getWindowDesc().framerate)));
+		// After a stall (the window dragged, a breakpoint) the game goes on
+		// from now rather than racing through every frame it missed.
+		const Clock::duration mostOwed = period * kMostFramesOwed;
+
+		Clock::time_point last = Clock::now();
+		Clock::duration owed = period;
 		while (isWindowOpen())
 		{
-			step();
-			render();
+			const Clock::time_point now = Clock::now();
+			owed += now - last;
+			last = now;
+			if (owed > mostOwed) { owed = period; }
+
+			if (owed < period)
+			{
+				waitFor(period - owed);
+				continue;
+			}
+
+			for (; owed >= period && isWindowOpen(); owed -= period)
+			{
+				step();
+			}
+			if (isWindowOpen()) { render(); }
 		}
 	}
 

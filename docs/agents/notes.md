@@ -101,6 +101,7 @@ Each rests on something that never changes while a game runs: `FrameRules::partn
 ## Backends and build
 
 - Never destroy a library's window after creating the next (raylib, GLFW). A front end that pauses calls `Engine::pump()`.
+- Pace is `Engine::loop`'s alone: no window sets a frame rate or waits out a frame (vsync on is fine). `xgetest-long "[pace]"` checks it in real time.
 - raylib: `pollEvents()` must not call `PollInputEvents()`; Escape is not its exit key; a texture drawn into a render texture must live until `EndTextureMode()`.
 - SDL is shared: each of window and sound starts only its subsystem; the last out calls `SDL_Quit()`.
 - Backend files compile only behind `XGE_WITH_<NAME>`: build with no options as well as with tests when touching factories, `cli.cpp` or `session_options.cpp`.

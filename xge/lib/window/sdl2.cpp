@@ -117,6 +117,8 @@ namespace xge
 			throw std::runtime_error("SDL2 could not make a window: " + why);
 		}
 
+		// The engine sets the game's speed (Engine::loop); the window only waits
+		// for the screen's refresh, so a picture is never torn.
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 		if (!renderer)

@@ -91,6 +91,9 @@ namespace xge
 		// raylib logs every texture it makes; only problems are worth printing.
 		SetTraceLogLevel(LOG_WARNING);
 		scale = static_cast<float>(std::max(1, windowDesc.scale));
+		// The engine sets the game's speed (Engine::loop); the window only waits
+		// for the screen's refresh, so a picture is never torn.
+		SetConfigFlags(FLAG_VSYNC_HINT);
 		InitWindow(static_cast<int>(windowDesc.width * scale), static_cast<int>(windowDesc.height * scale), windowDesc.name.c_str());
 
 		if (!IsWindowReady())
@@ -102,9 +105,6 @@ namespace xge
 		{
 			ToggleFullscreen();
 		}
-
-		SetTargetFPS(windowDesc.framerate);
-		frameTarget = windowDesc.framerate > 0 ? 1.0 / windowDesc.framerate : 0.0;
 
 		// Raylib closes the window on Escape by default. Escape is just a key
 		// here (a game can bind it, Lunar Lander pauses with it), as it is on
@@ -287,7 +287,7 @@ namespace xge
 
 			if (manualFrameControl)
 			{
-				std::cout << "raylib: built with custom frame control, so the window swaps, polls and waits for each frame itself" << std::endl;
+				std::cout << "raylib: built with custom frame control, so the window swaps and polls for each frame itself" << std::endl;
 			}
 		}
 
@@ -295,13 +295,6 @@ namespace xge
 		{
 			SwapScreenBuffer();
 			PollInputEvents();
-
-			const double elapsed = GetTime() - frameStart;
-			if (elapsed < frameTarget)
-			{
-				WaitTime(frameTarget - elapsed);
-			}
-			frameStart = GetTime();
 		}
 	}
 

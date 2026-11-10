@@ -9,7 +9,6 @@
 
 #include <SDL_ttf.h>
 
-#include <chrono>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -86,12 +85,6 @@ namespace xge
 
 		// Keys the GLFW callback has seen since pollEvents() last looked.
 		std::vector<std::pair<KeyCode, bool>> pendingKeys;
-
-		// The time one frame takes, and when the last one ended: a window of
-		// its own waits out what is left of the frame time (as SFML's frame
-		// limit does), because the display's refresh may be faster than the game.
-		std::chrono::steady_clock::duration framePeriod{};
-		std::chrono::steady_clock::time_point lastFrame{};
 
 		std::unordered_map<std::string, TTF_Font*> fontsBySize;   // by file@size
 		// The font files that could not be loaded, said once each.

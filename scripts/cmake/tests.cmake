@@ -257,6 +257,7 @@ add_executable(xgetest-long EXCLUDE_FROM_ALL
 	"xge/tests/long/test_random_keys.cpp"
 	"xge/tests/long/test_damaged.cpp"
 	"xge/tests/long/test_speed.cpp"
+	"xge/tests/long/test_pace.cpp"
 	"xge/cli/source/cli.cpp"
 	"xge/cli/source/generate.cpp"
 )

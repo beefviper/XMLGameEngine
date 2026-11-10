@@ -21,6 +21,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 
 - **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. The one thing only a backend can measure is a text's or image's size. Every library opens a window of its own and throws if it cannot start.
 - **`Audio`**: `load`, `play`, `loop`, `stop`, `stopAll`, `update` ([sound](33-sound.md)).
+- **Pace** is the engine's, not a library's: each library once kept time its own way (SFML's frame limit, raylib's target, a clock in the OpenGL window, only vsync in SDL2, which ran a game too fast on a fast screen). Now `Engine::loop` steps whole frames by the clock and every window waits for the refresh, so the picture never tears and the speed never depends on the screen. A variable time step was not taken: every number in a game counts frames, and play, demos and tests must come out the same on every machine. Drawing between two frames on a screen faster than the game is open.
 - **Factories** are the only places that know every library; a new one is one branch and a pair of files. Choice is at run time; CMake decides only what is built.
 - "Backend" stayed over module, provider or adapter: it says "interchangeable lower layer".
 - lunasvg is not a backend: it draws inside the engine ([pictures](30-pictures.md)).
