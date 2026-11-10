@@ -17,6 +17,7 @@
 #include "load/xml.h"
 #include "generated_games.h"
 #include "window/window.h"
+#include "window/null.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -32,20 +33,6 @@ using namespace xge;
 
 namespace
 {
-	// Just enough of a Window for Engine: nothing is drawn, and the keys are
-	// pressed by the test (Engine::handleKey*).
-	class FakeWindow : public Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<Object>&) override {}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(Object&) override {}
-		void display() override {}
-	};
-
 	// Everything about a frame that playing shows: the state, and each
 	// object's place, motion, whether it is in play, its look and variables.
 	std::string snapshot(Game& game)
@@ -80,7 +67,7 @@ namespace
 	// The game played for `frames` frames, a snapshot a frame.
 	std::vector<std::string> play(Game& game)
 	{
-		Engine engine(game, std::make_unique<FakeWindow>());
+		Engine engine(game, std::make_unique<NullWindow>());
 		std::vector<std::string> shots;
 		for (int frame = 0; frame < frames; ++frame)
 		{

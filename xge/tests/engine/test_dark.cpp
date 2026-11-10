@@ -25,7 +25,7 @@ using Catch::Matchers::ContainsSubstring;
 namespace
 {
 	// A window that notes what it drew.
-	class SeeingWindow : public FakeWindow
+	class SeeingWindow : public NullWindow
 	{
 	public:
 		void draw(Object& object) override { drawn.push_back(object.name); }

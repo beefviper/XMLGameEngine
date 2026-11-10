@@ -15,6 +15,7 @@
 #include "play/executor.h"
 #include "engine/engine.h"
 #include "game/game.h"
+#include "window/null.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -98,18 +99,6 @@ namespace
 		}
 	};
 
-	// Just enough of a Window for Engine's constructor.
-	class FakeWindow : public Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<Object>&) override {}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(Object&) override {}
-		void display() override {}
-	};
 }
 
 TEST_CASE("freeway.xml loads two chickens at the bottom and ten lanes of traffic", "[freeway]")
@@ -334,7 +323,7 @@ TEST_CASE("the keys drive the right chicken through the whole game", "[freeway][
 {
 	Game game{ "descriptions/freeway.xml" };
 	measure(game);
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 
 	engine.handleKeyPressed(KeyCode::Space); // mainmenu -> playing
 	REQUIRE(game.getCurrentState().name == "playing");

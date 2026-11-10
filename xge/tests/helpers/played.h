@@ -13,6 +13,7 @@
 #include "engine/engine.h"
 #include "game/game.h"
 #include "play/collision.h"
+#include "window/null.h"
 
 #include <filesystem>
 #include <fstream>
@@ -23,25 +24,14 @@
 
 namespace played
 {
-	class FakeWindow : public xge::Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<xge::Object>&) override {}
-		std::vector<std::pair<xge::KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(xge::Object&) override {}
-		void display() override {}
-	};
-
-	// A game played with no window, each shape the size its sprite implies.
+	// A game played with no window (window/null.h): each object measured as a
+	// window would, text in the built-in font.
 	struct Played
 	{
 		xge::Game game;
 		xge::Engine engine;
 
-		explicit Played(const std::string& file) : game(file), engine(game, std::make_unique<FakeWindow>())
+		explicit Played(const std::string& file) : game(file), engine(game, std::make_unique<xge::NullWindow>(game.getWindowDesc()))
 		{
 			for (auto& object : game.getCurrentObjects())
 			{

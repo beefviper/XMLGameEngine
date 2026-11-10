@@ -16,6 +16,7 @@
 #include "game/game.h"
 #include "load/xml.h"
 #include "audio/sound.h"
+#include "window/null.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -40,19 +41,6 @@ using Catch::Matchers::ContainsSubstring;
 
 namespace
 {
-	// Just enough of a Window for Engine's constructor (see test_engine_input.cpp).
-	class FakeWindow : public Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<Object>&) override {}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(Object&) override {}
-		void display() override {}
-	};
-
 	// What an Audio was asked to do, kept outside it so a test can read it
 	// after Engine has destroyed the Audio.
 	struct AudioLog
@@ -419,7 +407,7 @@ TEST_CASE("Engine loads the game's sounds into its Audio and plays what each fra
 {
 	Game game{ "descriptions/pong.xml" };
 	AudioLog log;
-	Engine engine(game, std::make_unique<FakeWindow>(), std::make_unique<RecordingAudio>(log));
+	Engine engine(game, std::make_unique<NullWindow>(), std::make_unique<RecordingAudio>(log));
 
 	CHECK(log.loaded == std::vector<std::string>{ "paddle", "wall", "score" });
 
@@ -441,7 +429,7 @@ TEST_CASE("Engine loads the game's sounds into its Audio and plays what each fra
 TEST_CASE("Engine without an Audio is silent, and replaceAudio hands the sounds over", "[sound][engine]")
 {
 	Game game{ "descriptions/pong.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 
 	REQUIRE(engine.currentAudio() != nullptr);
 	CHECK(dynamic_cast<NullAudio*>(engine.currentAudio()) != nullptr);
@@ -564,7 +552,7 @@ TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when le
 {
 	Game game{ "descriptions/lunarlander.xml" };
 	AudioLog log;
-	Engine engine(game, std::make_unique<FakeWindow>(), std::make_unique<RecordingAudio>(log));
+	Engine engine(game, std::make_unique<NullWindow>(), std::make_unique<RecordingAudio>(log));
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
@@ -629,7 +617,7 @@ TEST_CASE("Asteroids: the heartbeat plays in play, and the ship's engine hums wh
 {
 	Game game{ "descriptions/asteroids.xml" };
 	AudioLog log;
-	Engine engine(game, std::make_unique<FakeWindow>(), std::make_unique<RecordingAudio>(log));
+	Engine engine(game, std::make_unique<NullWindow>(), std::make_unique<RecordingAudio>(log));
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
@@ -732,7 +720,7 @@ TEST_CASE("Pac-Man's music: the opening tune plays over READY!, the siren loops 
 {
 	Game game{ "descriptions/pacman.xml" };
 	AudioLog log;
-	Engine engine(game, std::make_unique<FakeWindow>(), std::make_unique<RecordingAudio>(log));
+	Engine engine(game, std::make_unique<NullWindow>(), std::make_unique<RecordingAudio>(log));
 
 	engine.step();
 	CHECK(log.looped.empty()); // the title is quiet

@@ -20,6 +20,7 @@
 
 #include "engine/engine.h"
 #include "game/game.h"
+#include "window/null.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -35,18 +36,6 @@ using Catch::Approx;
 
 namespace
 {
-	class FakeWindow : public Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<Object>&) override {}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(Object&) override {}
-		void display() override {}
-	};
-
 	// A room is 5 cells across and 3 down, each cell 112 by 128 with an 8
 	// pixel wall, starting 48 pixels down the window (below the score); the
 	// exits are the middle of each side. The man is 14 by 22 and the robots
@@ -65,7 +54,7 @@ namespace
 		Engine engine;
 
 		explicit Play(const char* file = "descriptions/berserk.xml")
-			: game(file), engine(game, std::make_unique<FakeWindow>())
+			: game(file), engine(game, std::make_unique<NullWindow>())
 		{
 			for (auto& object : game.getCurrentObjects())
 			{

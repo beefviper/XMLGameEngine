@@ -15,6 +15,7 @@
 
 #include "engine/engine.h"
 #include "game/game.h"
+#include "window/null.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -33,22 +34,11 @@ namespace
 	constexpr int kJumpFrames = 21; // 0.35 seconds
 	constexpr float kRowGap = 90.0f;
 
-	class FakeWindow : public Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<Object>&) override {}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(Object&) override {}
-		void display() override {}
-	};
 
 	struct Frostbite
 	{
 		Game game{ "descriptions/frostbite.xml" };
-		Engine engine{ game, std::make_unique<FakeWindow>() };
+		Engine engine{ game, std::make_unique<NullWindow>() };
 
 		Frostbite()
 		{

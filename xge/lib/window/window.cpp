@@ -4,6 +4,7 @@
 // date: Sept 28, 2026
 
 #include "window/window.h"
+#include "window/null.h"
 
 #include <stdexcept>
 
@@ -56,6 +57,7 @@ namespace xge
 #else
 			{ WindowBackend::OpenGL, "opengl", false },
 #endif
+			{ WindowBackend::None, "none", true },
 		};
 	}
 
@@ -89,8 +91,7 @@ namespace xge
 
 	WindowBackend WindowFactory::defaultBackend()
 	{
-		const std::vector<WindowBackend> built = availableBackends();
-		return built.empty() ? WindowBackend::SFML3 : built.front();
+		return availableBackends().front(); // None is always there, and last
 	}
 
 	std::unique_ptr<Window> WindowFactory::create(const WindowDesc& windowDesc, WindowBackend backend)
@@ -107,6 +108,7 @@ namespace xge
 #ifdef XGE_WITH_OPENGL
 		if (backend == WindowBackend::OpenGL) { return std::make_unique<OpenGLWindow>(windowDesc); }
 #endif
+		if (backend == WindowBackend::None) { return std::make_unique<NullWindow>(windowDesc); }
 
 		std::string built;
 		for (const WindowBackend each : availableBackends())
@@ -114,6 +116,6 @@ namespace xge
 			built += (built.empty() ? "" : ", ") + name(each);
 		}
 		throw std::runtime_error("the " + name(backend) + " window library is not built into this program (built with: "
-			+ (built.empty() ? "none" : built) + ")");
+			+ built + ")");
 	}
 }

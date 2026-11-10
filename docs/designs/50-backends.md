@@ -1,6 +1,6 @@
 # Backends and the library
 
-**Status:** Built: 4 XML, 4 window and 3 sound libraries plus silence; a library and two programs. Reference: [the engine](../reference/engine.md#backends).
+**Status:** Built: 4 XML, 4 window and 3 sound libraries plus a null window and silence; a library and two programs. Reference: [the engine](../reference/engine.md#backends).
 
 ## Why backends
 
@@ -35,4 +35,5 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 - The engine is a library, `xgelib`; `xgecli` and `xgegui` are programs; `xgetest` links the library. A new front end is a `main()` and a few lines in `executables.cmake`.
 - **Static by default,** `-DXGE_BUILD_SHARED=ON` for shared. Static `xgecli` is one file that runs beside its games; with two small programs always built together, sharing gains nothing.
 - Rejected: one executable with a `--gui` switch; third-party libraries `PRIVATE` (the engine's headers include them; hiding them is a separate change).
-- Ideas: null implementations of every subsystem so the engine never checks for absence; forward declarations to keep library types out of headers.
+- **Null backends** (the author's idea, as in the classic media players): `-a none` (`NullAudio`) and `-w none` (`NullWindow`, `window/null.h`). The null window takes the game's own size, measures every object as a window would (text in the built-in 8x8 font, since it has no font file's letters; image files by their pixels) and draws nothing, so a game runs headless with the same sizes and positions. It is what the tests play through (24 hand-written fake windows went), and what `--record`, the long tests and stepping from the command line run on. Always built, never the default.
+- Ideas: a null XML library is not wanted (a game needs reading); forward declarations to keep library types out of headers.

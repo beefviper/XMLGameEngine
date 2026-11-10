@@ -16,6 +16,7 @@
 #include "engine/engine.h"
 #include "game/game.h"
 #include "load/xml.h"
+#include "window/null.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -85,18 +86,6 @@ namespace
 		}
 	};
 
-	// Just enough of a Window for Engine's constructor.
-	class FakeWindow : public Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<Object>&) override {}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(Object&) override {}
-		void display() override {}
-	};
 }
 
 TEST_CASE("frogger.xml loads with a frog, five bays and three lives", "[frogger]")
@@ -195,7 +184,7 @@ TEST_CASE("a held hop key hops once, and a state change never repeats it", "[fro
 {
 	Game game{ "descriptions/frogger.xml" };
 	measure(game);
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& frog = game.getObject("frog");
 	const float startY = frog.position.y;
 

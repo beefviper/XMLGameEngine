@@ -16,7 +16,7 @@ xgecli pong --generate windows-cpp -o out/pong
 | Option | Means |
 |---|---|
 | *game*, `-g`, `--game` | the game, bare or with `-g` (not both). Default `pong` |
-| `-w`, `--window` | `sfml3` (default), `raylib`, `sdl2`, `opengl` |
+| `-w`, `--window` | `sfml3` (default), `raylib`, `sdl2`, `opengl`, `none` (no window: the game runs at its own size, nothing drawn, no keys; text measured in the built-in font) |
 | `-x`, `--xml` | `xerces` (default), `tinyxml2`, `pugixml`, `rapidxml` |
 | `-a`, `--audio` | `sfml3` (default), `raylib`, `sdl2`, `none` |
 | `--record` | play from a new seed; when the window closes, write the play into the game file as its [`<demo>`](states.md#attract-mode) |

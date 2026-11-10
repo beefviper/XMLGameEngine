@@ -18,6 +18,7 @@
 #include "play/executor.h"
 #include "engine/engine.h"
 #include "game/game.h"
+#include "window/null.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -114,18 +115,6 @@ namespace
 		}
 	};
 
-	// Just enough of a Window for Engine's constructor.
-	class FakeWindow : public Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<Object>&) override {}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(Object&) override {}
-		void display() override {}
-	};
 }
 
 TEST_CASE("kaboom.xml loads a stack of buckets, and a bomber and a bomb that does not exist yet in each of eight waves", "[kaboom]")
@@ -354,7 +343,7 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 {
 	Game game{ "descriptions/kaboom.xml" };
 	measure(game);
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
@@ -383,7 +372,7 @@ TEST_CASE("the keys carry on from wave to wave, and P or Space pauses over the g
 {
 	Game game{ "descriptions/kaboom.xml" };
 	measure(game);
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& bucket = game.getObject("bucket");
 
 	engine.handleKeyPressed(KeyCode::Space);

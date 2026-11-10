@@ -20,6 +20,7 @@
 #include "engine/engine.h"
 #include "file_text.h"
 #include "game/game.h"
+#include "window/null.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -35,23 +36,9 @@ using namespace xge;
 
 namespace
 {
-	// Just enough of a Window for Engine's constructor: nothing is drawn and
-	// no events are ever produced (the tests call handleKey* directly).
-	class FakeWindow : public Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<Object>&) override {}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(Object&) override {}
-		void display() override {}
-	};
-
 	// A Window that reports the key changes it is given, once, and can be
 	// closed: what Engine::pump() and isWindowOpen() are tested with.
-	class ScriptedWindow : public FakeWindow
+	class ScriptedWindow : public NullWindow
 	{
 	public:
 		bool isOpen() const override { return open; }
@@ -74,7 +61,7 @@ namespace
 TEST_CASE("a held key stops driving the player while a state without it is up, and resumes on return", "[engine_input]")
 {
 	Game game{ "descriptions/breakout.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.getObject("player");
 
 	tap(engine, KeyCode::Space); // mainmenu -> playing
@@ -97,7 +84,7 @@ TEST_CASE("a held key stops driving the player while a state without it is up, a
 TEST_CASE("a key pressed in a state that does not bind it starts driving the player once a state that does is entered", "[engine_input]")
 {
 	Game game{ "descriptions/breakout.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.getObject("player");
 
 	tap(engine, KeyCode::Space); // mainmenu -> playing
@@ -116,7 +103,7 @@ TEST_CASE("a key pressed in a state that does not bind it starts driving the pla
 TEST_CASE("releasing a key while paused leaves the player stopped after unpausing", "[engine_input]")
 {
 	Game game{ "descriptions/breakout.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.getObject("player");
 
 	tap(engine, KeyCode::Space); // mainmenu -> playing
@@ -132,7 +119,7 @@ TEST_CASE("releasing a key while paused leaves the player stopped after unpausin
 TEST_CASE("a key pressed and released while paused never moves the player", "[engine_input]")
 {
 	Game game{ "descriptions/breakout.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.getObject("player");
 
 	tap(engine, KeyCode::Space); // mainmenu -> playing
@@ -147,7 +134,7 @@ TEST_CASE("a key pressed and released while paused never moves the player", "[en
 TEST_CASE("holding a state-changing key through the change does not trigger it again", "[engine_input]")
 {
 	Game game{ "descriptions/breakout.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 
 	// Space is bound to a state change in mainmenu, playing and paused. Held
 	// down, it must take mainmenu to playing once, not straight on to paused.
@@ -161,7 +148,7 @@ TEST_CASE("holding a state-changing key through the change does not trigger it a
 TEST_CASE("an ordinary press and release in one state is unchanged", "[engine_input]")
 {
 	Game game{ "descriptions/breakout.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.getObject("player");
 
 	tap(engine, KeyCode::Space); // mainmenu -> playing
@@ -175,7 +162,7 @@ TEST_CASE("an ordinary press and release in one state is unchanged", "[engine_in
 TEST_CASE("a held fire key does not shoot again when its state returns", "[engine_input]")
 {
 	Game game{ "descriptions/spaceinvaders.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& bullet = game.getObject("bullet");
 
 	tap(engine, KeyCode::Space); // mainmenu -> playing
@@ -194,7 +181,7 @@ TEST_CASE("a held fire key does not shoot again when its state returns", "[engin
 TEST_CASE("the key that starts Space Invaders does not also fire a shot", "[engine_input]")
 {
 	Game game{ "descriptions/spaceinvaders.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& bullet = game.getObject("bullet");
 
 	// Space starts the game from the menu and fires in play. Held down through

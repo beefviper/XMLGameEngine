@@ -14,6 +14,8 @@
 
 #include "audio/audio.h"
 #include "cli.h"
+#include "picture/font.h"
+#include "window/null.h"
 #include "window/window.h"
 #include "xml/document.h"
 
@@ -39,7 +41,7 @@ namespace
 TEST_CASE("a test build has every backend", "[backends]")
 {
 	CHECK(WindowFactory::availableBackends() == std::vector<WindowBackend>{
-		WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL });
+		WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL, WindowBackend::None });
 	CHECK(XmlDocumentFactory::availableBackends() == std::vector<XmlBackend>{
 		XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml });
 	CHECK(AudioFactory::availableBackends() == std::vector<AudioBackend>{
@@ -48,7 +50,7 @@ TEST_CASE("a test build has every backend", "[backends]")
 
 TEST_CASE("available() agrees with the list", "[backends]")
 {
-	for (const WindowBackend backend : { WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL })
+	for (const WindowBackend backend : { WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL, WindowBackend::None })
 	{
 		CHECK(WindowFactory::available(backend) == contains(WindowFactory::availableBackends(), backend));
 	}
@@ -67,8 +69,11 @@ TEST_CASE("available() agrees with the list", "[backends]")
 	CHECK_FALSE(AudioFactory::available(static_cast<AudioBackend>(99)));
 }
 
-TEST_CASE("sound is never missing: None is always the last choice", "[backends]")
+TEST_CASE("sound and a window are never missing: None is always the last choice", "[backends]")
 {
+	CHECK(WindowFactory::available(WindowBackend::None));
+	CHECK(WindowFactory::availableBackends().back() == WindowBackend::None);
+	CHECK(WindowFactory::name(WindowBackend::None) == "none");
 	CHECK(AudioFactory::available(AudioBackend::None));
 	CHECK(AudioFactory::availableBackends().back() == AudioBackend::None);
 }
@@ -140,7 +145,47 @@ TEST_CASE("the usage text lists the libraries that are built, and the defaults",
 {
 	const std::string usage = usageText();
 
-	CHECK_THAT(usage, ContainsSubstring("window library: sfml3, raylib, sdl2, opengl (default sfml3)"));
+	CHECK_THAT(usage, ContainsSubstring("window library: sfml3, raylib, sdl2, opengl, none (default sfml3)"));
 	CHECK_THAT(usage, ContainsSubstring("XML library: xerces, tinyxml2, pugixml, rapidxml (default xerces)"));
 	CHECK_THAT(usage, ContainsSubstring("sound library: sfml3, raylib, sdl2, none (default sfml3)"));
+}
+
+TEST_CASE("the null window opens nothing but measures every object as a window would", "[backends]")
+{
+	const auto measured = [](auto setUp)
+	{
+		Object object;
+		setUp(object.picture);
+		object.visualDirty = true;
+		std::vector<Object> objects{ object };
+		NullWindow window;
+		window.init(objects);
+		CHECK(objects.front().sizeKnown);
+		CHECK_FALSE(objects.front().visualDirty);
+		return objects.front().size;
+	};
+
+	const Vector2f circle = measured([](Picture& picture) { picture.kind = ShapeKind::Circle; picture.radius = 4.5f; });
+	CHECK(circle.x == 9.0f);
+	CHECK(circle.y == 9.0f);
+
+	const Vector2f box = measured([](Picture& picture) { picture.kind = ShapeKind::Rectangle; picture.size = { 10.0f, 2.5f }; });
+	CHECK(box.x == 10.0f);
+	CHECK(box.y == 3.0f);
+
+	// In the built-in font: a cell a character, two lines.
+	const Vector2f text = measured([](Picture& picture) { picture.kind = ShapeKind::Text; picture.text = "SCORE\n12"; picture.textSize = 32; });
+	CHECK(text.x == 5.0f * static_cast<float>(builtinCellWidth(32)));
+	CHECK(text.y == 2.0f * static_cast<float>(builtinCellHeight(32)));
+
+	// An image file by its pixels (the tests run in games/).
+	const Vector2f image = measured([](Picture& picture) { picture.kind = ShapeKind::Image; picture.file = "assets/paddle.jpg"; });
+	CHECK(image.x == 30.0f);
+	CHECK(image.y == 150.0f);
+
+	NullWindow window;
+	CHECK(window.isOpen());
+	CHECK(window.pollEvents().empty());
+	window.close();
+	CHECK_FALSE(window.isOpen());
 }

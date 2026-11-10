@@ -40,6 +40,7 @@ namespace xge
 			{ "raylib", WindowBackend::Raylib },
 			{ "sdl2",   WindowBackend::SDL2 },
 			{ "opengl", WindowBackend::OpenGL },
+			{ "none",   WindowBackend::None },
 		};
 
 		constexpr XmlName xmlNames[] = {

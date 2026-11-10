@@ -15,6 +15,7 @@
 #include "engine/keys.h"
 #include "play/verbs.h"
 #include "window/window.h"
+#include "window/null.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -34,18 +35,6 @@ using Catch::Matchers::ContainsSubstring;
 
 namespace
 {
-	class FakeWindow : public Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<Object>&) override {}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(Object&) override {}
-		void display() override {}
-	};
-
 	Controls mouseAt(float x, float y)
 	{
 		Controls controls;
@@ -136,7 +125,7 @@ TEST_CASE("the mouse's and the pads' buttons and the controls that point have na
 TEST_CASE("a pad's start button starts Kaboom and its d-pad moves the bucket", "[controls]")
 {
 	Game game{ "descriptions/kaboom.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& bucket = game.getObject("bucket");
 
 	engine.handleControls(Controls{});  // the first look only notes where things are
@@ -153,7 +142,7 @@ TEST_CASE("a pad's start button starts Kaboom and its d-pad moves the bucket", "
 TEST_CASE("a pad's stick pushed past halfway is its direction", "[controls]")
 {
 	Game game{ "descriptions/kaboom.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& bucket = game.getObject("bucket");
 	engine.handleControls(Controls{});
 	engine.handleKeyPressed(KeyCode::Space);
@@ -175,7 +164,7 @@ TEST_CASE("a pad's stick pushed past halfway is its direction", "[controls]")
 TEST_CASE("the mouse moves Kaboom's bucket across the window as the paddle did", "[controls]")
 {
 	Game game{ "descriptions/kaboom.xml" };
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& bucket = game.getObject("bucket");
 	const float width = game.getWindowDesc().width;
 	const float start = bucket.position.x;
@@ -209,7 +198,7 @@ TEST_CASE("a mouse button is a key", "[controls]")
 {
 	ScratchGame file(gameWith(R"(<input button="mouse.left"><trigger object="paddle" action="right" /></input>)"));
 	Game game(file.path.string());
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& paddle = game.getObject("paddle");
 
 	engine.handleControls(Controls{});
@@ -243,7 +232,7 @@ TEST_CASE("a vertical control tracks up and down", "[controls]")
 {
 	ScratchGame file(gameWith(R"(<input axis="mouse.y"><trigger object="paddle" action="steer" /></input>)"));
 	Game game(file.path.string());
-	Engine engine(game, std::make_unique<FakeWindow>());
+	Engine engine(game, std::make_unique<NullWindow>());
 	Object& paddle = game.getObject("paddle");
 
 	engine.handleControls(mouseAt(10.0f, 10.0f));

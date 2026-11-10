@@ -149,7 +149,8 @@ namespace xge
 		SFML3,
 		Raylib,
 		SDL2,
-		OpenGL
+		OpenGL,
+		None   // a window never opened (window/null.h): always built, never the default
 	};
 
 	// Builds the concrete Window for the given description and backend - the
@@ -176,11 +177,12 @@ namespace xge
 		// The backends this program was built with, in WindowBackend's order.
 		static std::vector<WindowBackend> availableBackends();
 
-		// SFML 3 when it is built, otherwise the first one that is.
+		// SFML 3 when it is built, otherwise the first one that is; None only
+		// when none is.
 		static WindowBackend defaultBackend();
 
 		// The backend's plain lower case name, as -w takes it: "sfml3", "raylib",
-		// "sdl2", "opengl".
+		// "sdl2", "opengl", "none".
 		static std::string name(WindowBackend backend);
 	};
 }

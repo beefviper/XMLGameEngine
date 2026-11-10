@@ -73,6 +73,7 @@ set(ENGINE_SOURCES
 	"xge/lib/play/collision.cpp"
 	"xge/lib/play/executor.cpp"
 	"xge/lib/window/window.cpp"
+	"xge/lib/window/null.cpp"
 	"xge/lib/audio/sound.cpp"
 	"xge/lib/audio/audio.cpp"
 )
@@ -110,6 +111,7 @@ set(ENGINE_HEADERS
 	"xge/lib/play/collision.h"
 	"xge/lib/play/executor.h"
 	"xge/lib/window/window.h"
+	"xge/lib/window/null.h"
 	"xge/lib/audio/sound.h"
 	"xge/lib/audio/audio.h"
 )
