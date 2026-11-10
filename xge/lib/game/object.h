@@ -147,8 +147,7 @@ namespace xge
 		// against the window's edges above.
 		std::vector<RawCollisionRule> others;
 
-		// TODO: add operator<< to RawCollisionData
-
+		friend std::ostream& operator<<(std::ostream& o, RawCollisionData const& f);
 	};
 
 	// A parsed, ready-to-run version of RawCollisionRule.
@@ -187,8 +186,7 @@ namespace xge
 		// Rules about another object (see RawCollisionData::others).
 		std::vector<CollisionRule> others;
 
-		// TODO: add operator<< to CollisionData
-
+		friend std::ostream& operator<<(std::ostream& o, CollisionData const& f);
 	};
 
 	// An <x>/<y> pair, each still a RawValue.
@@ -681,7 +679,7 @@ namespace xge
 			// looks its words name (the look laid members show, the one a
 			// second <spread> is for, <top sprite>'s); worked out into
 			// faces, the hidden fan and showTop by settleHolders
-			// (game/holders.h). Empty for a <pile>.
+			// (game/cards.h). Empty for a <pile>.
 			std::string holdsClass;
 			std::string holdsSprite;
 			std::string spreadSprite;

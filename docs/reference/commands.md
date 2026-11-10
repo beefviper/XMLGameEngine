@@ -8,14 +8,15 @@ Commands are sorted by what they need. Each place takes only the groups that mea
 
 | Group | Commands | Needs |
 |---|---|---|
-| changes | `inc`, `dec`, `set`, `copy`, `rank`, `play`, `silence`, `become`, `reveal`, `follow`, `shift`, `enter`, `reset`, `spawn`, `despawn object=`, `trigger` | nothing: they name what they change |
+| changes | `inc`, `dec`, `set`, `copy`, `rank`, `play`, `silence`, `become`, `reveal`, `follow`, `shift`, `enter`, `reset`, `spawn`, `despawn object=`, `trigger`, `count`; for [holders](cards.md#holders) `send`, `distribute`, `order` | nothing: they name what they change |
 | flow | `push`, `pop`, `turns`, `pass`, `out`, `demo`, `undo` | the game's running order |
-| self | `die`, `drop`, `move`, `release`, `reverse`, `stop`, `fire`, `despawn`; on cells `settle`, `slide`, `cycle`, `grow`, `split`, `pick`, `place` | an object running it |
+| self | `die`, `drop`, `move`, `release`, `reverse`, `stop`, `fire`, `despawn`; on cells `settle`, `slide`, `cycle`, `grow`, `split`, `pick`, `place`, [`put`](boards.md#pieces-put-not-moved); a hand's [`call`](cards.md#holders) | an object running it |
 | steering | `aim`, `chase`, `hunt`, `wander` | an object to steer |
-| touch | `carry`, `deflect`, `hole`, `knock`, `land`, `ride`; on cells `shove`, `merge` | another object touched |
+| touch | `carry`, `deflect`, `hole`, `knock`, `land`, `ride`; on cells `shove`, `merge`, `through` | another object touched |
 | edge | `stick`, `wrap` | a screen edge |
 | bounce | `bounce` | a screen edge or another object |
-| controls | `accelerate`, `climb`, `go`, `hop`, `jump`, `leap`, `thrust`, `turn`, `track` | a key held or pressed |
+| controls | `accelerate`, `climb`, `go`, `hop`, `jump`, `leap`, `swing`, `thrust`, `turn`, `track` | a key held or pressed |
+| cells | `clear`, `collapse`, `fall` | what a [map's check](maps.md#checks) found |
 | press | `hold`, `think` | a [computer player](states.md#computer-players) |
 
 | Place | Takes |

@@ -178,9 +178,12 @@ xge_dependency(SDL2_ttf WHEN XGE_NEEDS_SDL2
 # is asked of find_package on purpose: TinyXML2's package is SameMajorVersion, so
 # `10` refuses 11, `11` refuses 10, and a range across the two (10...<12) is
 # refused by both, finding nothing at all. The pin is for the copy that is fetched.
+# Its own xmltest is registered with ctest whenever BUILD_TESTING is on, but it
+# is EXCLUDE_FROM_ALL here, so never built: ctest would list it as a failure.
 xge_dependency(TinyXML2 WHEN XGE_WITH_TINYXML2
 	PACKAGE tinyxml2
-	REPO https://github.com/leethomason/tinyxml2.git TAG 11.0.0)
+	REPO https://github.com/leethomason/tinyxml2.git TAG 11.0.0
+	SETTINGS tinyxml2_BUILD_TESTING=OFF)
 
 xge_dependency(PugiXML WHEN XGE_WITH_PUGIXML
 	PACKAGE pugixml

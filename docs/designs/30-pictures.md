@@ -38,9 +38,9 @@ Text and `<image>` files are the exception: only a backend can measure them, so 
 
 ## Sheets
 
-- Beef: sprite animations and card sheets are the same idea, so one neutral word for both, dead simple for a plain grid and able to say groups, margins, gaps, split runs and scattered pictures when needed.
+- the author: sprite animations and card sheets are the same idea, so one neutral word for both, dead simple for a plain grid and able to say groups, margins, gaps, split runs and scattered pictures when needed.
 - **Sheets named once, in the `<pictures>`** (once a game-level `<sheets>`): a path, a grid (`<columns>`/`<rows>` or a `<cell>` size), `<margin>` and `<gap>` (0 when left out), `<hide>` for SVG. Sprites take `<cell sheet>` by column and row or by x, y, width, height; animations take `<cell>`s and runs of `<cells>` (`<count>`, `<down />`); a deck takes `sheet=` and optional `<faces>` runs. One reader (`picture/image.cpp`, plutovg for PNG, JPEG, BMP; lunasvg for SVG), one cutter, area-average shrink.
-- **Runs mirror group layout:** start, count, along or down. A run never wraps at the row's end; a split animation is two runs, as Beef described it.
+- **Runs mirror group layout:** start, count, along or down. A run never wraps at the row's end; a split animation is two runs, as the author described it.
 - **Animation cells need no sprites:** each is a sprite named `walk.N`, so `<become>`, looks and `from=` treat it like any other.
 - A cell is a whole sprite: a member changing one replaces it. Open: a row or member changing only a cell's column or row (what Space Invaders 2's SVG parts do), which would let that game move onto a sheet.
 - Rejected: a sheet per sprite (the path and grid said again and again); a list of cells in one string (the format's rule); wrapping runs (a hidden rule about where a row ends).

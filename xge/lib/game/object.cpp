@@ -836,33 +836,67 @@ namespace xge
 		return o;
 	}
 
+	namespace
+	{
+		// A rule's selectors and speeds, as both kinds of rule print them.
+		template <typename Rule>
+		void printRuleFilters(std::ostream& o, const Rule& rule)
+		{
+			if (!rule.filterClass.empty()) { o << " (class=" << rule.filterClass << ")"; }
+			if (!rule.filterObject.empty()) { o << " (object=" << rule.filterObject << ")"; }
+			if (!rule.unlessClass.empty()) { o << " (unless=" << rule.unlessClass << ")"; }
+			if (!rule.throughClass.empty()) { o << " (through=" << rule.throughClass << ")"; }
+			if (rule.slower) { o << " (slower=" << *rule.slower << ")"; }
+			if (rule.faster) { o << " (faster=" << *rule.faster << ")"; }
+		}
+
+		void printCommands(std::ostream& o, const std::vector<Command>& commands)
+		{
+			for (std::size_t i = 0; i < commands.size(); ++i) { o << (i ? ";" : "") << commands[i]; }
+		}
+	}
+
+	std::ostream& operator<<(std::ostream& o, const RawCollisionData& f)
+	{
+		if (f.type == CollisionType::Pixel) { o << ", type=pixel"; }
+		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+		{
+			const auto& rules = f.edges[edgeIndex(edge)].commands;
+			if (!rules.empty()) { o << ", " << edgeName(edge) << "=" << rules; }
+		}
+		for (const auto& rule : f.others)
+		{
+			o << ", others=" << rule.commands;
+			printRuleFilters(o, rule);
+		}
+		return o;
+	}
+
+	std::ostream& operator<<(std::ostream& o, const CollisionData& f)
+	{
+		if (f.type == CollisionType::Pixel) { o << ", type=pixel"; }
+		if (f.lockstep > 0) { o << ", lockstep=" << f.lockstep; }
+		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+		{
+			const auto& commands = f.edges[edgeIndex(edge)].commands;
+			if (!commands.empty()) { o << ", " << edgeName(edge) << "="; printCommands(o, commands); }
+		}
+		for (const auto& rule : f.others)
+		{
+			o << ", others=";
+			printCommands(o, rule.commands);
+			printRuleFilters(o, rule);
+		}
+		return o;
+	}
+
 	std::ostream& operator<<(std::ostream& o, const RawObject& f) {
 		o << "rawObject: " << "name=" << f.name << (f.groupName.empty() ? "" : ", group=" + f.groupName) << ", sprite=" << f.sprite.kind
 			<< (f.cell.column > 0 ? " (cell " + std::to_string(f.cell.column) + "." + std::to_string(f.cell.row) + ")" : "")
 			<< (f.hasAnimation ? " (animated, " + std::to_string(f.animation.frames.size()) + " frames)" : "") << '\n'
 			<< "\tpos.x=" << f.rawPosition.x << ", pos.y=" << f.rawPosition.y << '\n'
 			<< "\tvel.x=" << f.rawVelocity.x << ", vel.y=" << f.rawVelocity.y << '\n'
-
-			// TODO: replace with operator<< for rawCollisionData
-			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false")
-			<< (f.rawCollisionData.type == CollisionType::Pixel ? ", type=pixel" : "");
-
-		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
-		{
-			const auto& rules = f.rawCollisionData.edges[edgeIndex(edge)].commands;
-			if (!rules.empty()) { o << ", " << edgeName(edge) << "=" << rules; }
-		}
-
-		for (auto& rawRule : f.rawCollisionData.others)
-		{
-			o << ", others=" << rawRule.commands;
-			if (!rawRule.filterClass.empty()) { o << " (class=" << rawRule.filterClass << ")"; }
-			if (!rawRule.filterObject.empty()) { o << " (object=" << rawRule.filterObject << ")"; }
-			if (!rawRule.unlessClass.empty()) { o << " (unless=" << rawRule.unlessClass << ")"; }
-			if (!rawRule.throughClass.empty()) { o << " (through=" << rawRule.throughClass << ")"; }
-			if (rawRule.slower) { o << " (slower=" << *rawRule.slower << ")"; }
-			if (rawRule.faster) { o << " (faster=" << *rawRule.faster << ")"; }
-		}
+			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false") << f.rawCollisionData;
 		o << '\n';
 
 		for (auto& action : f.action)
@@ -870,9 +904,9 @@ namespace xge
 			o << "\taction=" << action.first << ", value=" << action.second << '\n';
 		}
 
-		for (auto& varible : f.variable)
+		for (auto& variable : f.variable)
 		{
-			o << "\tvariable=" << varible.first << ", value=" << varible.second << '\n';
+			o << "\tvariable=" << variable.first << ", value=" << variable.second << '\n';
 		}
 
 		return o;
@@ -940,48 +974,7 @@ namespace xge
 			o << "\tsize= ( Unknown, not yet initialized by Engine )\n";
 		}
 
-		o << "\tcollision=" << (f.collisionsOn ? "true" : "false")
-			<< (f.collisionData.type == CollisionType::Pixel ? ", type=pixel" : "");
-
-
-		// TODO: replace with operator<< for CollisionData
-		auto printCollisionData = [&](const std::vector<Command>& commands, std::string edge)
-		{
-			if (commands.size() > 0)
-			{
-				o << ", " << edge << "=";
-				for (auto& command : commands)
-				{
-					o << command << (&command != &commands.back() ? ";" : "");
-				}
-			}
-		};
-
-		if (f.collisionData.lockstep > 0)
-		{
-			o << ", lockstep=" << f.collisionData.lockstep;
-		}
-
-		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
-		{
-			printCollisionData(f.collisionData.edges[edgeIndex(edge)].commands, edgeName(edge));
-		}
-
-		for (auto& rule : f.collisionData.others)
-		{
-			o << ", others=";
-			for (auto& command : rule.commands)
-			{
-				o << command << (&command != &rule.commands.back() ? ";" : "");
-			}
-			if (!rule.filterClass.empty()) { o << " (class=" << rule.filterClass << ")"; }
-			if (!rule.filterObject.empty()) { o << " (object=" << rule.filterObject << ")"; }
-			if (!rule.unlessClass.empty()) { o << " (unless=" << rule.unlessClass << ")"; }
-			if (!rule.throughClass.empty()) { o << " (through=" << rule.throughClass << ")"; }
-			if (rule.slower) { o << " (slower=" << *rule.slower << ")"; }
-			if (rule.faster) { o << " (faster=" << *rule.faster << ")"; }
-		}
-
+		o << "\tcollision=" << (f.collisionsOn ? "true" : "false") << f.collisionData;
 		o << '\n';
 
 		for (auto& action : f.action)

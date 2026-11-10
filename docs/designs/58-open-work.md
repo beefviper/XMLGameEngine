@@ -35,6 +35,8 @@ The [plan](../plan.md) reviews this backlog, argues with parts of it, and orders
 ## Code
 
 - `data.xsl` reads the file a second time; a new field in `load/xml.cpp` needs the same there ([generator](40-generator.md#open)).
+- `Engine::handleKeyPressed`/`handleKeyReleased` are public only because the tests and `played.h` press keys through them; a test seam would let them go private.
+- Objects not shown (`isShown`) are left out of the swept collision pass in `play/frame.cpp`, so nothing hidden can touch or be touched; a game with invisible things that collide would need them in it.
 - Building generated programs is by hand: `scripts/shell/windows/games-run-all.bat` generates, builds at MSVC `/W4` and tests them all.
 
 ## Known untested

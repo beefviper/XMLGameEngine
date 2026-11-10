@@ -48,7 +48,7 @@ Direct answers, as asked. Each is argued once here and turned into tasks below.
 | Check | Result |
 |---|---|
 | Configure and build, every backend, GCC 13, Release, Ninja (`-DBUILD_TESTING=ON -DFORCE_LOCAL_GLFW=ON -DBUILD_SHARED_LIBS=ON`) | 513 steps, 0 warnings |
-| `ctest -j4` | 1,135 of 1,136 pass. The one failure is not ours: `xmltest`, registered by the fetched TinyXML2, "Not Run" ([B1](#b1-ctest-reports-a-failure-that-is-not-ours)) |
+| `ctest -j4` | 1,135 of 1,136 pass. The one failure is not ours: `xmltest`, registered by the fetched TinyXML2, "Not Run" (B1, done) |
 | `xgetest` whole, 60 runs, `--rng-seed 7001` to `7060` | 58 of 60 clean. Seeds 7029 and 7036 fail the same Crazy Eights test, every time ([B9](#b9-crazy-eights-that-never-ends)). Nothing else varied |
 | `xgetest-generated` (all 58 games generated, compiled, compared, played) | pass, 0 warnings |
 | Random keys: each game, 20,000 frames, 2 seeds, 25 keys toggled at random | 116 of 116 clean |
@@ -67,14 +67,14 @@ The scripts used are small and are described in [T1](#t1-keep-the-reviews-checks
 
 | # | What | Evidence | Task |
 |---|---|---|---|
-| 1 | `ctest` exits with a failure on a clean tree | `xmltest (Not Run)` from `build/_deps/tinyxml2-build` | [B1](#b1-ctest-reports-a-failure-that-is-not-ours) |
+| 1 | `ctest` exits with a failure on a clean tree | `xmltest (Not Run)` from `build/_deps/tinyxml2-build` | B1, done |
 | 2 | A class, object, variable or look named in a filter or test is not checked | In `pong.xml`: `<collision class="padle">`, `<condition class="padle" variable="score">`, `<condition class="paddle" variable="scor">`, `<condition object="bal" variable="x">`, `<condition object="ball" variable="xx">`, `<show object="computr" />` all load and play | [B2](#b2-names-that-match-nothing-stop-the-load) |
 | 3 | Two objects of one name in the same `<objects>` become one, silently; two states of one name are accepted; one key bound twice in a state is accepted | `score2` renamed `score1` in `pong.xml`: 28 objects instead of 29, no message. `mainmenu` renamed `playing`: loads | [B3](#b3-two-things-of-one-name-stop-the-load) |
 | 4 | Text arithmetic that divides by zero gives infinity, which becomes a position or a size | `<x>1 / 0</x>` in 22 damaged files: loads, object at infinity | [B4](#b4-a-number-that-is-not-finite-stops-the-load) |
 | 5 | Game speed depends on the window library and the monitor | `window/sdl2.cpp`: `SDL_RENDERER_PRESENTVSYNC` and no other pacing. `sfml.cpp`: `setFramerateLimit`. `raylib.cpp`, `opengl.cpp`: their own clocks. `gui/game_session.cpp`: a fifth | [B5](#b5-one-frame-pacer-in-the-engine) |
 | 6 | Nonsense sizes and times are accepted | `<width>0</width>` on the window, a text `<size>0</size>`, `<after>-1</after>`, `<framerate>0</framerate>` all load | [B6](#b6-ranges-for-the-numbers-that-have-one) |
 | 7 | Load errors from the reader say which tag but not which line | Only Xerces' schema errors carry `line N column M`; the reader's own `fail(where, ...)` has a path of tags | [B7](#b7-line-numbers-in-load-errors) |
-| 8 | Stale text | `ruleFor` in `load/check.cpp` still lists `<reveal pile>`, `<shuffle>`, `<redeal />`, `<collect>`; the schema's comment at the patterns type names `<suited>`; `RawCommand::pile`'s comment lists removed verbs; `docs/agents/notes.md` says 55 games; `docs/reference/engine.md` says `<sheets>`; `docs/designs/27-cards.md` line 13 gives a name where the privacy rule in the notes says "the author" | [B8](#b8-stale-text) |
+| 8 | Stale text | `ruleFor` in `load/check.cpp` still lists `<reveal pile>`, `<shuffle>`, `<redeal />`, `<collect>`; the schema's comment at the patterns type names `<suited>`; `RawCommand::pile`'s comment lists removed verbs; `docs/agents/notes.md` says 55 games; `docs/reference/engine.md` says `<sheets>`; `docs/designs/27-cards.md` line 13 gives a name where the privacy rule in the notes says "the author" | B8, done |
 | 9 | One test is flaky, and behind it Crazy Eights can fail to end | `crazyeights.xml: a whole game against the computer, playing the first card that goes, ends` (`xge/tests/test_cards.cpp:807`) fails on 2 seeds of 60: `xgetest --rng-seed 7029` and `7036`. The game is still `playing` after 300 turns | [B9](#b9-crazy-eights-that-never-ends) |
 
 Known and documented, not counted as bugs: screen edges are tested by position and can be skipped by something very fast; a pair where nothing moves is not looked at; only the first hit of a pair per frame is handled ([limits](reference/limits.md)). [F6](#f6-rules-that-are-looked-at-when-nothing-moves) covers the second.
@@ -189,15 +189,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 
 ### Phase 1: correctness
 
-#### B1. ctest reports a failure that is not ours
-
-- **Size** S. **Needs** nothing.
-- **Why.** `cd build && ctest` ends "1 tests failed": `xmltest`, which the fetched TinyXML2 registers when `BUILD_TESTING` is on and which is never built. Anyone reading the summary sees a red run.
-- **Files.** `scripts/cmake/dependencies.cmake` (the `xge_dependency(TinyXML2 ...)` call and the macro above it).
-- **Do.** Before TinyXML2 is fetched, `set(tinyxml2_BUILD_TESTING OFF CACHE BOOL "" FORCE)`. Check the other fetched libraries for the same (`ctest -N | grep -v` our names should list nothing).
-- **Done.** `ctest -N` lists only this project's tests; `ctest -j4` ends "100% tests passed".
-- **Verify.** A fresh configure in an empty build folder, then `ctest -N | tail -3`.
-
 #### B2. Names that match nothing stop the load
 
 - **Size** M. **Needs** nothing. **Blocks** R1 (removing words is safer once typos are loud).
@@ -260,12 +251,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 - **Do, in steps.** (1) `XmlNode::line()` for Xerces (it already reports lines for schema errors; the DOM needs a user-data handler or a locator, see `xerces.cpp` near line 130) and TinyXML2 (`GetLineNum()`); PugiXML and RapidXML give an offset into the buffer: count newlines to it. (2) `fail()` in the reader appends "(line N)". (3) Carry `line` on `RawObject` and `RawCommand` and use it in `check.cpp` and `expr.cpp`. (4) The generated program has no file: `line` stays 0 and nothing is printed; `data.xsl` need not write it, and the describer in `test_generated_games.cpp` must skip the field.
 - **Done.** Every message from a misspelling in B2's tests ends with the right line under each of the four XML libraries.
 - **Verify.** `ctest`, `xgetest-generated`.
-
-#### B8. Stale text
-
-- **Size** S. **Needs** nothing.
-- **Do.** `xge/lib/load/check.cpp` `ruleFor`: delete `"<reveal pile>"`, `"<shuffle>"`, `"<redeal />"`, `"<collect>"`. `games/xgedef.xsd` near the patterns type: the comment names `<suited>` and "deck"; rewrite it to today's words. `xge/lib/game/command.h` `RawCommand::pile`: the comment lists removed verbs. `load/xml.cpp:1339`, `game/states.h:79`, `game/object.h:684`: comments name `game/holders.h`, which does not exist (it is `game/cards.h`). `docs/agents/notes.md`: "55 games" becomes a sentence with no number. `docs/reference/engine.md` source map: `<sheets>` becomes `<pictures>`. `docs/designs/27-cards.md` line 13: the name in brackets becomes "the author". `xge/lib/engine/engine.h:122` and `xge/lib/game/object.h:150,190`, `object.cpp:846,947`, `play/frame.cpp:761`: do each TODO or delete it. `docs/reference/commands.md`: add `call`, `clear`, `collapse`, `fall`, `order` to the table of where a command can go, linking to the maps and cards pages.
-- **Done.** `grep -rn "TODO" xge` is empty; `grep -rn "suited\|redeal\|<deck" xge games/xgedef.xsd docs` shows only history in design files.
 
 #### B9. Crazy Eights that never ends
 
@@ -481,7 +466,7 @@ Each is **S**, independent, one commit.
 - **Why.** Debt 3. The words were generalised in November; the engine was not. `settleHolders` translates `<holds>` into the old pile fields.
 - **Substeps.**
   1. **Dead fields out (S).** In `RawObject::RawPile` and `Object::Pile` (`xge/lib/game/object.h` near lines 648 to 700), find every field no reader writes any more since the old words were removed (`dealt`, `dealtMore`, `dealsInto`, `deals`, `refillFrom`, `refillShuffle`, `refillLeave`, `faces`, `sorted`, ...): for each, `grep` for a writer in `load/xml.cpp` and `game/cards.cpp`; if only `settleHolders` writes it from a holder word, keep it for step 3; if nothing does, delete it and the code that reads it.
-  2. **Rename (M).** `Pile` to `Holder`, `RawPile` to `RawHolder`, `isCard` to `held` (or `inHolder`), `game/cards.cpp` and `cards.h` to `game/holders.cpp` and `holders.h` (three comments already point at a `game/holders.h` that does not exist: `load/xml.cpp:1339`, `game/states.h:79`, `game/object.h:684`), `thinkCards` to `thinkHeld`. Mechanical; one commit; update `engine.xml`, `ENGINE_SOURCES` in the top `CMakeLists.txt`, `data.xsl` field names and the describer.
+  2. **Rename (M).** `Pile` to `Holder`, `RawPile` to `RawHolder`, `isCard` to `held` (or `inHolder`), `game/cards.cpp` and `cards.h` to `game/holders.cpp` and `holders.h` (three comments name `game/cards.h` as the home of `settleHolders`: in `load/xml.cpp`, `game/states.h` and `game/object.h`), `thinkCards` to `thinkHeld`. Mechanical; one commit; update `engine.xml`, `ENGINE_SOURCES` in the top `CMakeLists.txt`, `data.xsl` field names and the describer.
   3. **Remove the translation (L).** Make the holder fields the holder words themselves (`holdsClass`, `spread`, `orderBy`, `counts`, `accepts` as conditions) and delete `settleHolders`' mapping, so the engine reads what the game wrote.
   4. **`suit` and `rank` (M).** Wherever the engine reads a held member's `suit` or `rank`, read its row and column in its group, under the names R11 chose.
 - **Done.** `grep -rniE "pile|isCard|suit|rank|deal|shuffle" xge/lib` finds nothing but comments explaining a card game example. The eight card games' tests pass unchanged.
@@ -645,8 +630,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Block 1  (a day or two; no decisions needed)
-  B1  ctest clean
-  B8  stale text
   B9  Crazy Eights that never ends
   B3  duplicate names refused
   B4  non-finite numbers refused

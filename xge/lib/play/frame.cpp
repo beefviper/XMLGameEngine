@@ -758,7 +758,7 @@ namespace xge
 				played = total;
 				for (std::size_t i = 0; i < all.size(); ++i)
 				{
-					if (playing[i]) // TODO: at some point you might wanna collide with invisible objects
+					if (playing[i])
 					{
 						all[i].position = origin[i] + motionOf(all[i]) * (total - since[i]);
 						if (spinning(i))

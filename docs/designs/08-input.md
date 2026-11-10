@@ -35,7 +35,7 @@ Built by a state change count compared in `Engine::syncHeldKeysToState()` after 
 
 ## Otherwise
 
-- **A trigger's `<otherwise>`** (Beef agreed, from the readable-rules work): card and board games tried one action and then another on the same key (lay, then put back; place, then pick), which worked only because the first left the second nothing to do. Now the second is written as what happens when the first is refused. Kept in the key's flat command list (the trigger counts the commands after it), so every walker over commands is unchanged; the engine skips them unless the action was refused (`Engine::runAsPress`). Looked at first and rejected: nesting a key's triggers under the looks they answer, which made nothing shorter. Open: an `<otherwise>` in actions, rules and timers.
+- **A trigger's `<otherwise>`** (the author agreed, from the readable-rules work): card and board games tried one action and then another on the same key (lay, then put back; place, then pick), which worked only because the first left the second nothing to do. Now the second is written as what happens when the first is refused. Kept in the key's flat command list (the trigger counts the commands after it), so every walker over commands is unchanged; the engine skips them unless the action was refused (`Engine::runAsPress`). Looked at first and rejected: nesting a key's triggers under the looks they answer, which made nothing shorter. Open: an `<otherwise>` in actions, rules and timers.
 
 ## Mouse and pads
 

@@ -4,7 +4,7 @@ Gotchas that are easy to get wrong. How the engine works is the [reference](../r
 
 ## The repository
 
-- 55 games in `games/descriptions/`, one test file per area in `xge/tests/`. New work lands on `working` ahead of `master`: check `git branch -r` and `git log` first.
+- The games are in `games/descriptions/`, one test file per area in `xge/tests/`. New work lands on `working` ahead of `master`: check `git branch -r` and `git log` first.
 - The author builds on Windows (Visual Studio, vcpkg). Agents build on Linux, often without Qt, and cannot watch or listen.
 - Windows headers define macros a Linux build never sees: `near`, `far`, `min`, `max`, `small`, `interface`, `ERROR`. Never name anything one of them (`-Dnear= -Dfar=` on a syntax-only compile catches it).
 - MSVC flags what GCC misses, in tests too: C4702 (unreachable code), C4459 (a local hiding a file-level name).

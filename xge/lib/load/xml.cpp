@@ -958,7 +958,7 @@ namespace xge
 		// they show laid there, then its <spread>s, <accepts>, <run />,
 		// <top sprite>, <lift> and <picked>. Read into the pile it is
 		// (Object::Pile); the looks it names are worked out once the
-		// members they belong to are known (settleHolders, game/holders.h).
+		// members they belong to are known (settleHolders, game/cards.h).
 		void readHolds(const XmlNode& node, RawObject::RawPile& pile, const std::string& here)
 		{
 			pile.is = true;

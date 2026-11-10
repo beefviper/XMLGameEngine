@@ -119,7 +119,8 @@ namespace xge
 		// while it is not running.
 		void pump(void);
 
-		// TODO: make handleKeyPressed and handleKeyReleased private
+		// A key going down or up, as the window reports it; public so the
+		// tests can press keys the same way.
 		void handleKeyPressed(KeyCode key);
 		void handleKeyReleased(KeyCode key);
 

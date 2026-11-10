@@ -1075,7 +1075,7 @@ namespace xge
 		std::string closeClass;  // put: <close class=...>
 		std::string closeObject; // put: <close object=...>
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
-		std::string pile;      // lay: pile= the piles to lay on; deal, reveal, shuffle, call: the pile
+		std::string pile;      // call: pile=, the pile whose wild card the suit is called for
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)

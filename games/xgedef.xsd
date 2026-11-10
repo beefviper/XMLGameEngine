@@ -1124,10 +1124,9 @@
 
   <xs:complexType name="scoreType">
     <xs:sequence>
-      <!-- melds: scored instead by laying the cards out in groups, each making one of the patterns with all its
-           cards (<same>: one rank, <run>: worths in a row, <suited>: one suit, at least as many as the number),
-           the groups leaving the fewest points over; live number deadwood, the points left over by the best
-           <best> of them -->
+      <!-- melds: scored instead by laying the things held out in groups, each making one of the named
+           <patterns> with all its members (<alike variable>: N alike, <run variable>: N in a row), the groups
+           leaving the fewest points over; live number deadwood, the points left over by the best <best> of them -->
       <xs:element name="melds" type="emptyType" minOccurs="0" />
       <xs:element name="with" minOccurs="0">
         <xs:complexType>
@@ -2873,7 +2872,7 @@
           <bitmap from="name" /> (giving, if it likes, its own <scale>,
           <color>s, <flip>, style= or <row>s over the picture's), and the
           <sheet>s, picture files many pictures are cut from: a sprite's
-          <cell>, an animation's <cell>s and runs of <cells>, a deck's faces.
+          <cell>, an animation's <cell>s and runs of <cells>, a group's members.
           A sheet is a grid of <columns> by <rows> sharing the picture out, or
           of cells a <cell> size; <margin> round the edge and <gap> between
           cells, 0 when left out. A picture taken by <x>, <y>, <width> and
