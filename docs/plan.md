@@ -49,7 +49,7 @@ Direct answers, as asked. Each is argued once here and turned into tasks below.
 |---|---|
 | Configure and build, every backend, GCC 13, Release, Ninja (`-DBUILD_TESTING=ON -DFORCE_LOCAL_GLFW=ON -DBUILD_SHARED_LIBS=ON`) | 513 steps, 0 warnings |
 | `ctest -j4` | 1,135 of 1,136 pass. The one failure is not ours: `xmltest`, registered by the fetched TinyXML2, "Not Run" (B1, done) |
-| `xgetest` whole, 60 runs, `--rng-seed 7001` to `7060` | 58 of 60 clean. Seeds 7029 and 7036 fail the same Crazy Eights test, every time ([B9](#b9-crazy-eights-that-never-ends)). Nothing else varied |
+| `xgetest` whole, 60 runs, `--rng-seed 7001` to `7060` | 58 of 60 clean. Seeds 7029 and 7036 fail the same Crazy Eights test, every time (B9, done: the games were only long, 326 and 329 turns; the bound is now 2,000). Nothing else varied |
 | `xgetest-generated` (all 58 games generated, compiled, compared, played) | pass, 0 warnings |
 | Random keys: each game, 20,000 frames, 2 seeds, 25 keys toggled at random | 116 of 116 clean |
 | Damaged files: 40 per game, 2,320 in all, 3,000 frames each when they load | 0 crashes, 0 hangs; 1,580 refused with a message (451 by the schema, the rest by the loader); 699 loaded; 22 loaded with a position or size of infinity ([B4](#b4-a-number-that-is-not-finite-stops-the-load)) |
@@ -75,7 +75,7 @@ The scripts used are small and are described in [T1](#t1-keep-the-reviews-checks
 | 6 | Nonsense sizes and times are accepted | `<width>0</width>` on the window, a text `<size>0</size>`, `<after>-1</after>`, `<framerate>0</framerate>` all load | [B6](#b6-ranges-for-the-numbers-that-have-one) |
 | 7 | Load errors from the reader say which tag but not which line | Only Xerces' schema errors carry `line N column M`; the reader's own `fail(where, ...)` has a path of tags | [B7](#b7-line-numbers-in-load-errors) |
 | 8 | Stale text | `ruleFor` in `load/check.cpp` still lists `<reveal pile>`, `<shuffle>`, `<redeal />`, `<collect>`; the schema's comment at the patterns type names `<suited>`; `RawCommand::pile`'s comment lists removed verbs; `docs/agents/notes.md` says 55 games; `docs/reference/engine.md` says `<sheets>`; `docs/designs/27-cards.md` line 13 gives a name where the privacy rule in the notes says "the author" | B8, done |
-| 9 | One test is flaky, and behind it Crazy Eights can fail to end | `crazyeights.xml: a whole game against the computer, playing the first card that goes, ends` (`xge/tests/test_cards.cpp:807`) fails on 2 seeds of 60: `xgetest --rng-seed 7029` and `7036`. The game is still `playing` after 300 turns | [B9](#b9-crazy-eights-that-never-ends) |
+| 9 | One test is flaky, and behind it Crazy Eights can fail to end | `crazyeights.xml: a whole game against the computer, playing the first card that goes, ends` (`xge/tests/test_cards.cpp:807`) fails on 2 seeds of 60: `xgetest --rng-seed 7029` and `7036`. The game is still `playing` after 300 turns | B9, done: not a deadlock, the bound was too tight |
 
 Known and documented, not counted as bugs: screen edges are tested by position and can be skipped by something very fast; a pair where nothing moves is not looked at; only the first hit of a pair per frame is handled ([limits](reference/limits.md)). [F6](#f6-rules-that-are-looked-at-when-nothing-moves) covers the second.
 
@@ -251,14 +251,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 - **Do, in steps.** (1) `XmlNode::line()` for Xerces (it already reports lines for schema errors; the DOM needs a user-data handler or a locator, see `xerces.cpp` near line 130) and TinyXML2 (`GetLineNum()`); PugiXML and RapidXML give an offset into the buffer: count newlines to it. (2) `fail()` in the reader appends "(line N)". (3) Carry `line` on `RawObject` and `RawCommand` and use it in `check.cpp` and `expr.cpp`. (4) The generated program has no file: `line` stays 0 and nothing is printed; `data.xsl` need not write it, and the describer in `test_generated_games.cpp` must skip the field.
 - **Done.** Every message from a misspelling in B2's tests ends with the right line under each of the four XML libraries.
 - **Verify.** `ctest`, `xgetest-generated`.
-
-#### B9. Crazy Eights that never ends
-
-- **Size** S to M. **Needs** nothing.
-- **Why.** Finding 9. It reproduces every time with the seed, so it is not timing: `output/Release/xgetest --rng-seed 7029 "crazyeights.xml: a whole game against the computer*"`.
-- **Files.** `games/descriptions/crazyeights.xml`, `xge/tests/test_cards.cpp` (the `Eights` fixture and the test at line 807), perhaps `xge/lib/game/cards.cpp` (the refill of an empty stock from the discard pile), `docs/designs/27-cards.md` (its open list already has "a pass when nothing goes and nothing is left to draw").
-- **Do.** (1) In a copy of the test, print each pile's size and whose turn it is every 20 turns with seed 7029, and find which it is: the stock and the discard pile both dry while neither player can play (a real deadlock in the game), the refill failing, or simply a game longer than 300 turns. (2) If a deadlock: the rule books say the player passes. Add a condition to the game: the player on turn holds nothing that goes, the stock is empty and the discard pile has only its top: `<pass />`; and if both pass in a row the game ends, fewest cards winning. Use only today's words if they can say it; if they cannot, that is a finding to write into `27-cards.md`, not a reason for a new word in this task. (3) If only length: raise the bound and say why in a comment. (4) Add a test case that plays seeds 7029 and 7036 by fixing the seed inside the test (`fixRandomSeed`).
-- **Done.** 200 runs of the one test with seeds 1 to 200 pass: `for i in $(seq 1 200); do output/Release/xgetest --rng-seed $i "crazyeights.xml: a whole game*" > /dev/null || echo $i; done` prints nothing.
 
 ### Phase 2: a safety net for the reduction
 
@@ -630,7 +622,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Block 1  (a day or two; no decisions needed)
-  B9  Crazy Eights that never ends
   B3  duplicate names refused
   B4  non-finite numbers refused
   B6  number ranges

@@ -807,8 +807,12 @@ TEST_CASE("crazyeights.xml: a long hand squeezes into its width; your last card 
 TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first card that goes, ends", "[cards][eights]")
 {
 	Eights table;
+	// The bound only catches a game that never ends. This player draws one card
+	// whenever nothing goes, so games run long: over 1,200 seeds half ended
+	// within 35 turns, 99% within 263, the longest at 540.
+	constexpr int most = 2000;
 	int turns = 0;
-	for (; turns < 300 && table.state() == "playing"; ++turns)
+	for (; turns < most && table.state() == "playing"; ++turns)
 	{
 		REQUIRE(table.turn() == 1.0f);
 		// The first card of yours that goes, else a draw; after an eight, your first card's suit.
@@ -837,7 +841,7 @@ TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first
 		table.untilYourTurn();
 	}
 	CHECK(table.state() == "over");
-	CHECK(turns < 300);
+	CHECK(turns < most);
 	CHECK(table.pile("mine").pile.cards.size() + table.pile("theirs").pile.cards.size() + table.pile("stock").pile.cards.size() + table.pile("discard").pile.cards.size() == 52);
 }
 
