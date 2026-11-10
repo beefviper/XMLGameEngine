@@ -79,7 +79,7 @@ Gotchas that are easy to get wrong. How the engine works is the [reference](../r
 
 Each rests on something that never changes while a game runs: `FrameRules::partners` and `mazeGrid`; `tryGetObject`'s answers and `matching`; `game_expr::compiled`; `isShown`, kept until `stageChanged()`. Anything new that changes the state stack, a scene or an object's owner calls `stageChanged()`.
 
-`xgetest "[.speed]"` prints every game's load and frame times to compare builds.
+`xgetest-long "[speed]"` prints every game's load and frame times to compare builds.
 
 ## Loading
 

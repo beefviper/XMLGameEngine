@@ -59,7 +59,7 @@ Direct answers, as asked. Each is argued once here and turned into tasks below.
 
 Not checked, because it cannot be from a Linux container: MSVC, Windows, how any game looks, sounds or feels.
 
-The scripts used are small and are described in [T1](#t1-keep-the-reviews-checks-as-tests) and [T2](#t2-xgecli---check) so they can be rebuilt as permanent tests.
+The scripts used are small and are described in [T1](#t1-keep-the-reviews-checks-as-tests) (the damaged files and random keys are now `xgetest-long`, T2, done) so they can be rebuilt as permanent tests.
 
 ## Findings
 
@@ -145,7 +145,7 @@ Measured against what a description language of this kind should do, within vers
 
 | # | Missing | Who wants it | Task |
 |---|---|---|---|
-| 1 | A way to check a game without a window, and to read a running game as data | Authors, tests, and any agent, which today cannot see a game at all. This is also what the research descendants of VGDL offer (a forward model: step the game, read its state) | [T2](#t2-xgecli---check), [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) |
+| 1 | A way to check a game without a window, and to read a running game as data | Authors, tests, and any agent, which today cannot see a game at all. This is also what the research descendants of VGDL offer (a forward model: step the game, read its state) | T2, done, [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) |
 | 2 | An animation that runs once, with a time per frame, started by a command | Explosions, deaths, flips and bursts in a dozen games use look timers to fake it; fighting games need it | [F2](#f2-animations-that-run-once) |
 | 3 | A search of a maze | Pac-Man's ghosts can circle behind a wall; Lode Runner kind; Berserk's robots | [F3](#f3-a-maze-search) |
 | 4 | A list the game builds and compares | Simon, Mastermind, key sequences, a bag of seven for Tetris, Pac-Man's schedule | [F4](#f4-a-list-of-numbers) |
@@ -204,7 +204,7 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
   6. Reserved names: an object, group, state, variable or sound may not be called `self`, `others`, `touch`, `top`, `window`, `color`, or a number.
 - **Careful.** A class may be given only by a piece nothing takes yet; a scene's objects are named by path (`playing.room2.robots`) and `tryGetObject` falls back to the end of a path. Use the same lookup the running game uses, or the check will refuse valid games. All 58 games must still load: that is the test that the check is not too strict.
 - **Done.** Each of the six misspellings in finding 2 stops the load with a message that names the tag, the name, and a "did you mean". A test case per kind.
-- **Verify.** `ctest`; `xgetest-generated`; rebuild the damaged-file run of [T2](#t2-xgecli---check) and confirm that changed-attribute files that still load are down from 97 to the ones that are truly harmless (an object renamed that nothing names).
+- **Verify.** `ctest`; `xgetest-generated`; run `xgetest-long "[damaged]"` (T2, done) and confirm that changed-attribute files that still load are down from 97 to the ones that are truly harmless (an object renamed that nothing names).
 
 #### B5. One frame pacer in the engine
 
@@ -234,29 +234,20 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 
 - **Size** M. **Needs** nothing. **Blocks** R1 and every later R task.
 - **Why.** The review's scripts found real things and were thrown away. As tests they keep the language honest while it is cut.
-- **Files.** New `xge/tests/test_vocabulary.cpp` and `xge/tests/test_monkey.cpp` (both in `scripts/cmake/tests.cmake`); they read `../xgedef.xsd` through `findSchema("descriptions/pong.xml", "../xgedef.xsd")` and every file in `descriptions/` (skip `*_scratch_*`, as the key-convention test does).
+- **Files.** New `xge/tests/test_vocabulary.cpp` and a short random-keys test in `xge/tests/engine/` (both in `scripts/cmake/tests.cmake`); they read `../xgedef.xsd` through `findSchema("descriptions/pong.xml", "../xgedef.xsd")` and every file in `descriptions/` (skip `*_scratch_*`, as the key-convention test does).
 - **Do.**
   1. **Every word is used.** Read the element names from the schema (the engine's own `XmlDocument` can read the XSD as XML: collect every `xs:element` `name=`). For each, some game must use it, or it must be in a short list in the test file with a reason beside it. The list starts as the 15 unused words and shrinks under R1. Print the words used by exactly one game as information (Catch2 `INFO`/`WARN`), not as a failure.
   2. **Every command is everywhere.** The command names are `isCommandTag`'s list (expose it from `load/xml.h` as a function returning the names). Each must be a schema element and must make a `Command` through `makeCommand` for a minimal `RawCommand`, or be on a short list. This becomes trivial once A1 lands.
-  3. **Random keys.** For each game: fix the seed, build `played::Played`, and for 5,000 frames toggle one of about 25 keys (Space, W A S D, arrows, P, Escape, 1, 2, N, U, E, C, X, M, V, J, Backspace, Enter, F12) on one frame in four; every 50 frames check each object's position and velocity are finite. Tag `[.monkey]` (hidden) with 20,000 frames and two seeds, and a short always-on version of 1,000 frames.
+  3. **Random keys.** For each game: fix the seed, build `played::Played`, and for 5,000 frames toggle one of about 25 keys (Space, W A S D, arrows, P, Escape, 1, 2, N, U, E, C, X, M, V, J, Backspace, Enter, F12) on one frame in four; every 50 frames check each object's position and velocity are finite. The long version (20,000 frames, two seeds, every key a state binds) is done in T2 as `xge/tests/long/test_random_keys.cpp` in `xgetest-long`; what is left is a short always-on version of 1,000 frames in `xgetest`.
   4. **Docs name every word.** Each element name appears in some `docs/reference/*.md` as `` `<name` `` or `` `name` ``. Reads the files from `../docs` when present (a plain run from the repository) and is skipped when not (ctest's copy has no docs).
 - **Done.** Four test cases, green; deliberately adding an unused element to the schema turns the first red.
-- **Verify.** `ctest`; `output/Release/xgetest "[.monkey]"`.
-
-#### T2. `xgecli --check`
-
-- **Size** S. **Needs** nothing.
-- **Why.** There is no way to ask "does this game load" without opening a window. Authors, scripts and agents all want it, and it makes the damaged-file run a one-liner.
-- **Files.** `xge/cli/source/cli.cpp`, `xge/cli/include/cli.h`, `xge/cli/source/main.cpp`, `xge/tests/engine/test_cli.cpp`, `docs/reference/programs.md`, `docs/designs/52-cli.md`.
-- **Do.** `xgecli <game> --check` loads the game exactly as for play (`readGame`, `Game`), prints `ok` or the message, and exits 0 or 1 without making a window or sound. With several games (`xgecli --check descriptions/*.xml`, or `--check` with no game meaning every file in `descriptions/`) it prints a line each and exits 1 if any failed. Not with `--record` or `--generate`.
-- **Then,** as a script outside the test suite (`scripts/shell/linux/damage.py`, documented in `docs/agents/notes.md`): for each game write N damaged copies into a scratch folder that has `descriptions/` and a link to `xgedef.xsd` beside it (remove a random element; remove a random attribute; duplicate an element; set an attribute to `nosuch`, `self`, `0`, `a.b.c.d` or empty; replace a leaf's text with `0`, `-1`, `1000000000`, `abc`, empty, `1 / 0`, `nosuch.thing`), run `xgecli --check` on each with a time limit, and report any that crash or hang, and how many of each kind loaded.
-- **Done.** `xgecli --check` passes on all 58; the script reports 0 crashes and 0 hangs.
+- **Verify.** `ctest`; `output/Release/xgetest-long "[keys]"`.
 
 #### T3. A sanitizer run that is one command
 
 - **Size** S. **Needs** nothing.
 - **Files.** `scripts/cmake/options.cmake` (an option `XGE_SANITIZE`, off by default, adding `-fsanitize=address,undefined -fno-omit-frame-pointer` to `xgelib`, `xgecli` and `xgetest` only, GCC and Clang only), `docs/reference/engine.md` "Building", `docs/agents/notes.md`.
-- **Do.** The option; a note that fetched libraries are not instrumented, so run with `ASAN_OPTIONS=detect_container_overflow=0`. Turn the strict warnings off in a sanitized build (`-w` in place of `xge_warnings`): with both, GCC 13 at `-O1` took more than fifteen minutes on each large file in the review, and a few seconds without. Run the whole of `xgetest` and the hidden monkey test under it once and fix or list what it finds. The board-game search runs on its own thread in a window (`thinkInBackground`): add one test that plays a Checkers computer move through `Engine::loop` with the fake window so the threaded path is covered, and run it under `-fsanitize=thread` once.
+- **Do.** The option; a note that fetched libraries are not instrumented, so run with `ASAN_OPTIONS=detect_container_overflow=0`. Turn the strict warnings off in a sanitized build (`-w` in place of `xge_warnings`): with both, GCC 13 at `-O1` took more than fifteen minutes on each large file in the review, and a few seconds without. Run the whole of `xgetest` and `xgetest-long` under it once and fix or list what it finds. The board-game search runs on its own thread in a window (`thinkInBackground`): add one test that plays a Checkers computer move through `Engine::loop` with the fake window so the threaded path is covered, and run it under `-fsanitize=thread` once.
 - **Done.** A clean run recorded in `docs/designs/58-open-work.md` under "Known untested" (remove the line that says a sanitizer run was never completed).
 
 #### T4. A Windows check list kept in the repository
@@ -319,7 +310,7 @@ Work R1 first (it decides what the others delete). The rest are independent of e
 - **Files.** The games; `games/xgedef.xsd`; `xge/lib/load/xml.cpp`; `xge/lib/game/game.cpp` (`fire`, `release`, `reveal`, `settleSpawns`); `xge/lib/play/executor.cpp`; `load/check.cpp`; `data.xsl`; `xge/tests/engine/test_spawn.cpp` and each game's test; `docs/reference/commands.md` "In and out of play", `objects.md` "Spawn and despawn", `docs/designs/10-pools-and-enemies.md`.
 - **Careful.** A copy is named `shot.1` and lives beside its spawner (`playing.wave1.bomb.1`); tests and conditions that named the pool member (`shot`) must count the piece's copies instead. Copies join at the end of the frame (`settleSpawns`), a pool member was in play at once: a test that fires and checks in the same frame needs one more frame.
 - **Done.** The table in `commands.md` has `spawn`, `fire`, `despawn`, `die`, `reveal` and no sentence containing "or from a pool". No game has an object that is out of play only to be fired.
-- **Verify.** After each game: its own test, then `ctest`, `xgetest-generated`, and the monkey test.
+- **Verify.** After each game: its own test, then `ctest`, `xgetest-generated`, and `xgetest-long "[keys]"`.
 
 #### R4. One way to take turns
 
@@ -438,7 +429,7 @@ Each is **S**, independent, one commit.
 - **Careful.** The folder is compiled as one unit: name a file's functions for its verb (`readBounce`), never in an unnamed namespace. A refused verb returns false and ends its list: keep each `run`'s answer exactly. The generated programs compile the same files: after each substep, `cmake --build build --target xgetest-generated`.
 - **Files.** `xge/lib/verbs/*`, `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/notes.md` "Loading".
 - **Done.** To add a verb: one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element, the docs.
-- **Verify.** After each commit: `ctest`, `xgetest-generated`, and `xgetest "[.speed]"` before and after (load and frame times must not rise).
+- **Verify.** After each commit: `ctest`, `xgetest-generated`, and `xgetest-long "[speed]"` before and after (load and frame times must not rise).
 
 #### A2. Holders in the engine, not piles
 
@@ -467,7 +458,7 @@ Each is **S**, independent, one commit.
 - **Size** L. **Needs** A2 (the holder part is then clean). Lowest priority in this phase.
 - **Why.** About 200 fields. The October review left it "because it touches nearly every test line that says `object.position`".
 - **Do.** Leave `Moment` (position, velocity and the rest that tests name) exactly as it is. Group the rest by feature into members that most objects never use and tests rarely name: `object.maze` (walker state), `object.cell` (cells and chains), `object.holder`, `object.moves` and `object.marks` (boards), `object.swing`, `object.path`, `object.jump`. One group per commit; a group that is unused could later become `std::optional` or a pointer, which also shrinks every object (58 games load thousands).
-- **Done.** `struct Object` itself declares under 60 fields; `xgetest "[.speed]"` no slower.
+- **Done.** `struct Object` itself declares under 60 fields; `xgetest-long "[speed]"` no slower.
 
 #### A5. A game written out as if by hand
 
@@ -542,7 +533,7 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
 
 #### F1. A game you can step and read from the command line
 
-- **Size** L. **Needs** B5, T2.
+- **Size** L. **Needs** B5.
 - **Why.** Missing feature 1. Agents build this project and cannot see it; the notes say so in three places. The engine already plays with no window in tests, draws every picture itself into pixels (a window library only shows a bitmap), and can copy a whole board to search it. What is missing is the front door.
 - **Substeps.**
   1. **`xgecli <game> --frames N [--keys file] [--seed S]` (M).** Plays N frames with no window and no sound (a null `Window` like `played::FakeWindow`, moved from the tests into `xge/lib/window/none.cpp` and offered as `-w none`), then exits. The keys file is the `<demo>` format (`<press button="space">1005</press>`, `<release button="space">1009</release>`: a button and the frame), so a recording made with `--record` replays.
@@ -610,7 +601,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Block 1  (a day or two; no decisions needed)
-  T2  xgecli --check
   R2  <jump> becomes <hop>            (the practice run for a removal)
 
 Block 2  (the loud-typos work, then the net)
@@ -670,7 +660,7 @@ What blocks what, in one place:
 | A1 substep 3 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
 | A6 | R1 |
-| F1 | B5, T2 |
+| F1 | B5 |
 | F8 | D7 lifted |
 
 If only five things are ever done from this file, do B2, B5, T1 and R1 (B3 is done).

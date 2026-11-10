@@ -92,7 +92,6 @@ add_executable(xgetest
 	"xge/tests/games/test_asteroids.cpp"
 	"xge/tests/games/test_demonattack.cpp"
 	"xge/tests/engine/test_builtin_font.cpp"
-	"xge/tests/engine/test_speed.cpp"
 	"xge/tests/engine/test_gameplay_verbs.cpp"
 	"xge/tests/engine/test_pieces.cpp"
 	"xge/tests/engine/test_scenes.cpp"
@@ -245,3 +244,25 @@ file(WRITE "${XGE_GENERATED_DIR}/generated_games.h.in"
 	"inline const GeneratedGame generatedGames[] = {\n${generated_entries}};\n")
 configure_file("${XGE_GENERATED_DIR}/generated_games.h.in" "${XGE_GENERATED_DIR}/generated_games.h" COPYONLY)
 target_include_directories(xgetest-generated PRIVATE "${XGE_GENERATED_DIR}" xge/tests/helpers)
+
+# The long tests are a third test program, xgetest-long, built and run only
+# when asked for (cmake --build build --target xgetest-long, then
+# output/<config>/xgetest-long): every game with random keys for a long while,
+# every game damaged many ways, and every game's load and frame times. They
+# take minutes, so they stay out of xgetest and ctest.
+add_executable(xgetest-long EXCLUDE_FROM_ALL
+	"xge/tests/helpers/test_main.cpp"
+	"xge/tests/long/test_random_keys.cpp"
+	"xge/tests/long/test_damaged.cpp"
+	"xge/tests/long/test_speed.cpp"
+	"xge/cli/source/cli.cpp"
+	"xge/cli/source/generate.cpp"
+)
+set_target_properties(xgetest-long PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD ON)
+target_include_directories(xgetest-long PRIVATE xge/cli/include xge/tests/helpers)
+target_compile_features(xgetest-long PRIVATE cxx_std_20)
+xge_warnings(xgetest-long)
+target_link_libraries(xgetest-long PRIVATE xgelib Catch2::Catch2WithMain)
+xge_link_xslt(xgetest-long)
+add_dependencies(xgetest-long xgedata)
+xge_place_program(xgetest-long)

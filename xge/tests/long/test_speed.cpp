@@ -4,8 +4,8 @@
 // date: Oct 19, 2026
 //
 // How long every game takes to load and to play a frame, with no window. Not
-// a check (hidden behind the [.speed] tag, so a plain run skips it): run
-// `xgetest "[.speed]"` to print the table, and compare a build before and
+// a check, and part of xgetest-long, so ordinary runs skip it: run
+// `xgetest-long "[speed]"` to print the table, and compare a build before and
 // after a change. Each game is started with Space and then played for a
 // while with the movement keys held in turn, so things get going on screen.
 // The random numbers start the same way every run, so two builds play the
@@ -34,7 +34,7 @@ namespace
 	}
 }
 
-TEST_CASE("Every game's load and frame times", "[.speed]")
+TEST_CASE("Every game's load and frame times", "[long][speed]")
 {
 	std::vector<std::string> games;
 	for (const auto& entry : std::filesystem::directory_iterator("descriptions"))

@@ -54,13 +54,14 @@ output/Debug/xgecli frogger
 cmake -B build -DBUILD_TESTING=ON   # every backend, and the tests
 output/Debug/xgetest                # Catch2 filters work: "[kaboom]"
 cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
+cmake --build build --target xgetest-long && output/Debug/xgetest-long   # minutes
 ```
 
 | Target | What |
 |---|---|
 | `xgelib` | the engine (`xge/lib/`), static by default (`-DXGE_BUILD_SHARED=ON` for shared) |
 | `xgecli`, `xgegui` | the programs (`xge/cli/`, `xge/gui/`; the second only when Qt 6 is found) |
-| `xgetest`, `xgetest-generated` | the tests; the second generates every game and is never in an ordinary build |
+| `xgetest`, `xgetest-generated`, `xgetest-long` | the tests; the second generates every game, the third runs for minutes (every game played 20,000 frames on random keys from two seeds, every game damaged 40 ways, load and frame times); neither is in an ordinary build |
 | `xgedata` | copies `games/` beside the programs |
 
 - **Output.** Everything to run lands in `output/<Config>/`: the programs, a copy of `games/` with the schema, and the libraries in `libraries/` (found through a manifest on Windows, a relative run path elsewhere). The folder can be copied anywhere.
@@ -96,4 +97,4 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
 | | `xge/gui/source/` | `main_window`, `game_session`, `game_stage`, `game_view`, `qt_window`, `key_queue`, `options_dialog`, `session_options`, `app_settings` (`xgegui.ini`), `inspector`, `theme` |
 | generator | `games/generators/windows-cpp/` | `generate.xsl`, `merge.xsl`, `data.xsl`, `program.xsl`, `text.xsl`, `engine.xml`, `modules/game_parts.h` |
-| tests | `xge/tests/` | `engine/` one `test_<topic>.cpp` per area; `games/` one per game (played frame by frame); `generated/` the generated games (`xgetest-generated`); `helpers/` what they share: `played.h`, `invaders_fixture.h` a frozen Space Invaders, `scratch.h` a scratch name per run, `test_main.cpp`. `xgetest "[.speed]"` prints load and frame times |
+| tests | `xge/tests/` | `engine/` one `test_<topic>.cpp` per area; `games/` one per game (played frame by frame); `generated/` the generated games (`xgetest-generated`); `long/` the long runs (`xgetest-long`: random keys, damaged files, load and frame times); `helpers/` what they share: `played.h`, `invaders_fixture.h` a frozen Space Invaders, `scratch.h` a scratch name per run, `test_main.cpp` |

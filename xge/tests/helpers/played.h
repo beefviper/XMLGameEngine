@@ -24,8 +24,8 @@
 
 namespace played
 {
-	// A game played with no window (window/null.h): each object measured as a
-	// window would, text in the built-in font.
+	// A game played with no window (window/null.h), each shape the size its
+	// sprite implies: a text or an image is 0 by 0, as the tests were written for.
 	struct Played
 	{
 		xge::Game game;

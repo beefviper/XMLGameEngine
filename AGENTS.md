@@ -17,7 +17,7 @@ The root [readme.md](readme.md) is the short public overview.
 |---|---|
 | `xge/lib/` | `xgelib`, the engine, a folder per part (`game/`, `play/`, `verbs/`, `load/`, `xml/`, `window/`, `audio/`, `picture/`, `engine/`), each header beside its source, included as `"game/game.h"`. Throws, never `exit()`s |
 | `xge/cli/`, `xge/gui/` | `xgecli`; `xgegui` (Qt 6, built only when Qt is found) |
-| `xge/tests/` | Catch2 (`xgetest`): `engine/` a `test_<topic>.cpp` per area, `games/` one per game (played frame by frame), `generated/` the generated games (`xgetest-generated`), `helpers/` what they share |
+| `xge/tests/` | Catch2 (`xgetest`): `engine/` a `test_<topic>.cpp` per area, `games/` one per game (played frame by frame), `generated/` the generated games (`xgetest-generated`), `long/` the runs that take minutes (`xgetest-long`), `helpers/` what they share |
 | `games/xgedef.xsd` | the schema, the definition of the language; games name it `../xgedef.xsd` |
 | `games/descriptions/`, `games/assets/` | the games; their media |
 | `games/generators/` | the XSLT stylesheets `xgecli --generate` runs, a folder per target |
@@ -35,6 +35,7 @@ cmake --build build --parallel
 output/Debug/xgetest            # Catch2 filters work, e.g. "[kaboom]"
 cd build && ctest -j16          # each case its own run, side by side
 cmake --build build --target xgetest-generated && output/Debug/xgetest-generated   # generated games, separate
+cmake --build build --target xgetest-long && output/Debug/xgetest-long   # random keys, damaged files, speed: minutes
 output/Debug/xgecli frogger     # -w window, -x xml, -a audio libraries
 ```
 
