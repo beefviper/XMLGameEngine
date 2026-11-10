@@ -1387,6 +1387,25 @@ namespace xge
 		}
 
 		// A value and its name, such as <variable name="score">0</variable>.
+		// A name the engine's own words would hide. What starts a dotted
+		// name (an object, group, member, map or state) may not be one of the
+		// engine's words that start one (self.x, others, touch.x,
+		// window.width, color.red); nothing may be a number. A variable is
+		// only ever after the dot, so its name may be a word (a card's
+		// color, a game's top). top.rank in a holder's rules is read
+		// before any name, so top is free. See docs/designs/58-open-work.md:
+		// a way to need no reserved names is open.
+		void refuseReserved(const std::string& name, const char* kind, const std::string& where, bool startsNames = true)
+		{
+			static const std::set<std::string> reserved{ "self", "others", "touch", "window", "color" };
+			const bool number = !name.empty() && std::any_of(name.begin(), name.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0; })
+				&& std::all_of(name.begin(), name.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0 || c == '.' || c == '-'; });
+			if ((startsNames && reserved.count(name)) || number)
+			{
+				fail(where, std::string(kind) + " may not be called '" + name + "': " + (number ? "a number" : "the engine's own word") + " reads that way; give it another name");
+			}
+		}
+
 		void readVariables(const XmlNode* variablesNode, const std::string& where,
 			std::vector<std::pair<std::string, RawValue>>& out)
 		{
@@ -1395,6 +1414,7 @@ namespace xge
 			for (std::unique_ptr<XmlNode> variable = variablesNode->getFirstChild(); variable != nullptr; variable = variable->getNextSibling())
 			{
 				const std::string name = requireAttribute(*variable, "name", where);
+				refuseReserved(name, "a variable", where, false);
 				RawValue value = readValue(*variable, where + " > <variable name=\"" + name + "\">");
 
 				// Declaring a name twice keeps the later value, in the earlier place.
@@ -1847,6 +1867,7 @@ namespace xge
 		{
 			RawObject rawObject;
 			rawObject.name = requireAttribute(object, "name", "<object>");
+			refuseReserved(rawObject.name, "an object", "<object name=\"" + rawObject.name + "\">");
 			rawObject.objClass = getAttribute(&object, "class");
 
 			const std::string where = "object '" + rawObject.name + "'";
@@ -2136,6 +2157,7 @@ namespace xge
 		{
 			const std::string name = requireAttribute(group, "name", "<group>");
 			const std::string where = "group '" + name + "'";
+			refuseReserved(name, "a group", where);
 
 			GroupShared own = outer;
 			RawObject& shared = own.object;
@@ -2399,6 +2421,7 @@ namespace xge
 
 					++count;
 					const std::string ownName = child->getAttribute("name");
+					if (!ownName.empty()) { refuseReserved(ownName, "a member", where); }
 					const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
 					const std::string here = "object '" + memberName + "' (a member of " + where + ")";
 
@@ -2534,6 +2557,7 @@ namespace xge
 			MapLayout map;
 			map.name = requireAttribute(node, "name", "<map>");
 			const std::string where = "map '" + map.name + "'";
+			refuseReserved(map.name, "a map", where);
 
 			const std::unique_ptr<XmlNode> tile = requireChild(node, "tile", where);
 			map.tileWidth = readValueOf(*tile, "width", where + " > <tile>");
@@ -2625,6 +2649,7 @@ namespace xge
 		{
 			RawSound raw;
 			raw.name = requireAttribute(sound, "name", "<sounds>");
+			refuseReserved(raw.name, "a sound", "<sound name=\"" + raw.name + "\">", false);
 			raw.wave = sound.getAttribute("wave");
 
 			const std::string where = "sound '" + raw.name + "'";
@@ -3127,6 +3152,7 @@ namespace xge
 		{
 			RawState rawState{};
 			rawState.name = requireAttribute(state, "name", "<state>");
+			refuseReserved(rawState.name, "a state", "<state name=\"" + rawState.name + "\">");
 			rawState.from = state.getAttribute("from");
 
 			const std::string where = "state '" + rawState.name + "'";

@@ -10,7 +10,7 @@ How to use this file: read [The short version](#the-short-version) and [What I w
 
 **The four findings that matter most.**
 
-1. **A misspelt name can load and silently do nothing.** `<collision class="padle">`, `<condition object="bal" ...>`, `<condition ... variable="scor">` and `<show object="computr">` all load; the rule just never fires. Two objects of one name in the same `<objects>` are silently merged into one, and two states of one name are accepted. This is the largest correctness gap, because the project's promise is "mistakes stop the load" ([B2](#b2-names-that-match-nothing-stop-the-load); B3, done).
+1. **A misspelt name can load and silently do nothing.** `<collision class="padle">`, `<condition object="bal" ...>`, `<condition ... variable="scor">` and `<show object="computr">` all load; the rule just never fires. Two objects of one name in the same `<objects>` are silently merged into one, and two states of one name are accepted. This is the largest correctness gap, because the project's promise is "mistakes stop the load" (B2, done; B3, done).
 2. **The vocabulary is growing faster than it is being reduced.** 327 element names; 77 are used by exactly one game, 15 by none. Several concepts have two or three spellings: three jumps, two ways into and out of play, three ways to take turns, two ways to end a game, five booleans in a language that otherwise has none. Every simplification the author found so far (kit into objects, grid into group, pools into copies, phase numbers into looks, card nouns into holders) left the older form alive somewhere. The list is in [Simplification and consistency](#simplification-and-consistency).
 3. **A new word costs about ten edits in ten places.** Schema, `isCommandTag`, `readCommand`, `RawCommand`, `makeCommand`, the `Cmd*` struct and variant, `CommandExecutor::run`, `ruleFor`, `data.xsl`, the describer in the generated test, two doc pages. That is why words are cheap to add and expensive to remove, and it is the debt that grows with every game ([A1](#a1-a-verb-is-one-file)).
 4. **Frame pacing is each window library's own business.** SDL2 paces by vsync only, so on a 144 Hz monitor a game runs 2.4 times too fast; SFML sleeps; raylib and OpenGL count time themselves. Movement is per frame, so pacing is game speed ([B5](#b5-one-frame-pacer-in-the-engine)).
@@ -68,7 +68,7 @@ The scripts used are small and are described in [T1](#t1-keep-the-reviews-checks
 | # | What | Evidence | Task |
 |---|---|---|---|
 | 1 | `ctest` exits with a failure on a clean tree | `xmltest (Not Run)` from `build/_deps/tinyxml2-build` | B1, done |
-| 2 | A class, object, variable or look named in a filter or test is not checked | In `pong.xml`: `<collision class="padle">`, `<condition class="padle" variable="score">`, `<condition class="paddle" variable="scor">`, `<condition object="bal" variable="x">`, `<condition object="ball" variable="xx">`, `<show object="computr" />` all load and play | [B2](#b2-names-that-match-nothing-stop-the-load) |
+| 2 | A class, object, variable or look named in a filter or test is not checked | In `pong.xml`: `<collision class="padle">`, `<condition class="padle" variable="score">`, `<condition class="paddle" variable="scor">`, `<condition object="bal" variable="x">`, `<condition object="ball" variable="xx">`, `<show object="computr" />` all load and play | B2, done |
 | 3 | Two objects of one name in the same `<objects>` become one, silently; two states of one name are accepted; one key bound twice in a state is accepted | `score2` renamed `score1` in `pong.xml`: 28 objects instead of 29, no message. `mainmenu` renamed `playing`: loads | B3, done |
 | 4 | Text arithmetic that divides by zero gives infinity, which becomes a position or a size | `<x>1 / 0</x>` in 22 damaged files: loads, object at infinity | B4, done |
 | 5 | Game speed depends on the window library and the monitor | `window/sdl2.cpp`: `SDL_RENDERER_PRESENTVSYNC` and no other pacing. `sfml.cpp`: `setFramerateLimit`. `raylib.cpp`, `opengl.cpp`: their own clocks. `gui/game_session.cpp`: a fifth | [B5](#b5-one-frame-pacer-in-the-engine) |
@@ -190,22 +190,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 
 ### Phase 1: correctness
 
-#### B2. Names that match nothing stop the load
-
-- **Size** M. **Needs** nothing. **Blocks** R1 (removing words is safer once typos are loud).
-- **Why.** Finding 2 above. The engine already has the machinery (`didYouMean`, `listOf`, `checkReferences` in `xge/lib/load/check.cpp`); these places were never wired to it.
-- **Files.** `xge/lib/load/check.cpp` (`checkReferences`, `checkCommand`), perhaps `xge/lib/load/expr.cpp` where conditions are built; a new `xge/tests/test_names.cpp` (add to `scripts/cmake/tests.cmake`); `docs/reference/commands.md` section "Mistakes the loader catches".
-- **Do, one commit each:**
-  1. A `<collision>`'s `class=`, `object=` and `unless=`: the class must be the class of at least one object, group or map piece of the game (pieces only ever spawned count); the object must be a name or a group name.
-  2. A `<condition>`'s `object=` and `class=`, at state, scene, rule and action level, and inside `<computer>`.
-  3. A `<condition>`'s `variable=`: a variable of the named object or of every member of the named class, or one of the built-in numbers (`x`, `y`, `velocity.x`, `count`, a named timer, `moves`, `turn`, ...). Build the list of built-ins from `liveParts` in `game/object.cpp`, not by hand.
-  4. `<show object=>`, a `<trigger from=>` and any `sprite=` test: the look must exist on the object or class named.
-  5. Holders and patterns: `<by variable=>`, `<counts variable=>`, `<alike variable=>`, `<wild variable=>`, `<holds class=>`.
-  6. Reserved names: an object, group, state, variable or sound may not be called `self`, `others`, `touch`, `top`, `window`, `color`, or a number.
-- **Careful.** A class may be given only by a piece nothing takes yet; a scene's objects are named by path (`playing.room2.robots`) and `tryGetObject` falls back to the end of a path. Use the same lookup the running game uses, or the check will refuse valid games. All 58 games must still load: that is the test that the check is not too strict.
-- **Done.** Each of the six misspellings in finding 2 stops the load with a message that names the tag, the name, and a "did you mean". A test case per kind.
-- **Verify.** `ctest`; `xgetest-generated`; run `xgetest-long "[damaged]"` (T2, done) and confirm that changed-attribute files that still load are down from 97 to the ones that are truly harmless (an object renamed that nothing names).
-
 #### B5. One frame pacer in the engine
 
 - **Size** M. **Needs** nothing. **Blocks** F1.
@@ -225,7 +209,7 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 - **Why.** In a 1,500-line game "object 'playing.ground.1.1' > `<position>` > `<y>`" is slow to find, and a member of a group is named by a path that does not appear in the file.
 - **Files.** `xge/lib/xml/document.h` (`XmlNode`: add `int line() const`, 0 when unknown), the four files `xge/lib/xml/xerces.cpp`, `tinyxml2.cpp`, `pugixml.cpp`, `rapidxml.cpp`; `xge/lib/load/xml.cpp` (`fail`), `xge/lib/load/merge.cpp` (the merged tree must carry each element's line from the file); `Raw*` structs that are checked later (`RawObject`, `RawCommand`, `RawCondition` each get an `int line`); messages thrown in `load/expr.cpp` and `load/check.cpp`.
 - **Do, in steps.** (1) `XmlNode::line()` for Xerces (it already reports lines for schema errors; the DOM needs a user-data handler or a locator, see `xerces.cpp` near line 130) and TinyXML2 (`GetLineNum()`); PugiXML and RapidXML give an offset into the buffer: count newlines to it. (2) `fail()` in the reader appends "(line N)". (3) Carry `line` on `RawObject` and `RawCommand` and use it in `check.cpp` and `expr.cpp`. (4) The generated program has no file: `line` stays 0 and nothing is printed; `data.xsl` need not write it, and the describer in `test_generated_games.cpp` must skip the field.
-- **Done.** Every message from a misspelling in B2's tests ends with the right line under each of the four XML libraries.
+- **Done.** Every message from a misspelling in B2's tests (`xge/tests/engine/test_names.cpp`) ends with the right line under each of the four XML libraries.
 - **Verify.** `ctest`, `xgetest-generated`.
 
 ### Phase 2: a safety net for the reduction
@@ -263,7 +247,7 @@ Work R1 first (it decides what the others delete). The rest are independent of e
 
 #### R1. Decide every word fewer than two games use
 
-- **Size** M for the decisions, then S per word. **Needs** T1, B2.
+- **Size** M for the decisions, then S per word. **Needs** T1 (B2 is done).
 - **Why.** 15 words no game uses and 77 that one game uses are where the fraction reduces. Not all should go: some are real mechanics waiting for a second game. But each should be a decision, written down.
 - **Files.** A table added to `docs/designs/11-vocabulary-map.md` (keep it under the 6 KB guide by listing only words with a verdict other than "keep"); then the usual language-change files per word.
 - **Do.**
@@ -593,7 +577,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Block 2  (the loud-typos work, then the net; Block 1 is done)
-  B2  names that match nothing        (six commits)
   T1  the review's checks as tests
   T3  sanitizer option and one clean run
   B5  one frame pacer
@@ -639,7 +622,7 @@ What blocks what, in one place:
 
 | Task | Needs first |
 |---|---|
-| R1 | T1, B2 |
+| R1 | T1 |
 | R12 | D8, T1 (best after R7) |
 | R6 | R3, D4 |
 | R7 | D4 |
@@ -652,4 +635,4 @@ What blocks what, in one place:
 | F1 | B5 |
 | F8 | D7 lifted |
 
-If only five things are ever done from this file, do B2, B5, T1 and R1 (B3 is done).
+If only five things are ever done from this file, do B5, T1 and R1 (B2 and B3 are done).

@@ -180,3 +180,13 @@ TEST_CASE("what a holder keeps its cards in order by is a variable some object h
 	std::filesystem::remove(path, ignored);
 	CHECK_THAT(message, ContainsSubstring("<by variable=\"siut\">: no object has a variable or number of that name") && ContainsSubstring("did you mean 'suit'"));
 }
+
+TEST_CASE("an object, group, map or state may not take a name the engine's words start with, and nothing is a number", "[names]")
+{
+	CHECK_THAT(errorOf(played::box("self", 0, 0)), ContainsSubstring("an object may not be called 'self'"));
+	CHECK_THAT(errorOf(played::box("window", 0, 0)), ContainsSubstring("an object may not be called 'window'"));
+	CHECK_THAT(errorOf(played::box("7", 0, 0)), ContainsSubstring("an object may not be called '7': a number reads that way"));
+	CHECK_THAT(errorOf(played::box("o", 0, 0, "<variables><variable name=\"2\">0</variable></variables>")), ContainsSubstring("a variable may not be called '2'"));
+	// A variable is only read after a dot, so a word is free there.
+	CHECK(errorOf(played::box("card", 0, 0, "<variables><variable name=\"color\">1</variable><variable name=\"top\">0</variable></variables>")).empty());
+}
