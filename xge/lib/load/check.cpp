@@ -489,6 +489,43 @@ namespace xge
 			}
 		}
 
+		// The variables a holder, a pattern or a cell check go by are ones
+		// some object has (a card's rank, a jewel's hue), or a number the
+		// engine keeps; a misspelt one read nothing, and nothing ever matched.
+		std::set<std::string> variableSet(liveNumberParts().begin(), liveNumberParts().end());
+		for (const Object& object : objects)
+		{
+			for (const auto& [name, value] : object.variable) { variableSet.insert(name); }
+		}
+		const std::vector<std::string> gameVariables(variableSet.begin(), variableSet.end());
+		const auto checkVariable = [&](const Object& object, const std::string& tag, const std::string& name)
+		{
+			if (name.empty() || variableSet.count(name)) { return; }
+			throw std::runtime_error("object '" + object.name + "' > <" + tag + " variable=\"" + name + "\">: no object has a variable or number of that name" + didYouMean(name, gameVariables));
+		};
+		for (const Object& object : objects)
+		{
+			for (const std::string& by : object.pile.orderBy) { checkVariable(object, "by", by); }
+			// A holder that counts gets a variable of that name itself
+			// (game/cards.cpp), so what it adds up is another's: a member's.
+			const std::string& counts = object.pile.counts;
+			if (!counts.empty() && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.pile.counts != counts && numberOf(other, counts); }))
+			{
+				throw std::runtime_error("object '" + object.name + "' > <counts variable=\"" + counts + "\">: no object has a variable or number of that name" + didYouMean(counts, gameVariables));
+			}
+			const PileRule& takes = object.pile.takes;
+			checkVariable(object, "wild", takes.wildVariable);
+			for (const auto* rules : { &takes.rules, &takes.emptyRules, &takes.anyRules, &takes.wildRules })
+			{
+				for (const PileRule::VarRule& rule : *rules)
+				{
+					checkVariable(object, "condition", rule.variable);
+					checkVariable(object, "condition", rule.topVariable);
+				}
+			}
+			for (const auto& check : object.cellChecks) { checkVariable(object, "alike", check.alike); }
+		}
+
 		// What a state's <shows> name is something the game has: a misspelt
 		// one was never drawn.
 		for (const State& state : states)

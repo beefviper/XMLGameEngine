@@ -166,6 +166,7 @@ there is no key named 'spcae' (did you mean 'space'?)
 - a condition's `class=` or `object=` (in a state, a scene, an action, a rule or a `<computer>`) that matches no object, with the classes there are;
 - a condition's `variable=` that nothing it looks at has, as its own variable or as a number the engine keeps (`x`, `moves`, ...);
 - a `<show object=>` that names no object or group, and a `<trigger from=>` that is no look of what it names (a condition's or a rule's `sprite=` was already checked);
+- a holder's `<by variable=>`, `<counts variable=>`, `<wild variable=>` or `<accepts>` condition, or a cell check's `<alike variable=>`, naming a variable no object has;
 - a key the engine does not have, a colour that is not a `color.` name;
 - a command where it does nothing (a `<move>` in an `<input>`), listing what can go there;
 - an `<inc>` or `<dec>` of a variable no object has.

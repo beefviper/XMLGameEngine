@@ -7,6 +7,7 @@
 // what was meant: a misspelt class or object in a rule would never match,
 // and the game would quietly do nothing.
 
+#include "file_text.h"
 #include "played.h"
 #include "scratch.h"
 #include "game/game.h"
@@ -155,4 +156,27 @@ TEST_CASE("a state shows what the game has, and a trigger's from= is a look it h
 	CHECK(loads(lamp, "<trigger object=\"lamp\" action=\"flip\" from=\"off\" />").empty());
 	CHECK_THAT(loads(lamp, "<trigger object=\"lamp\" action=\"flip\" from=\"of\" />"),
 		ContainsSubstring("from=\"of\">: 'playing.lamp' has no look of that name") && ContainsSubstring("did you mean 'off'") && ContainsSubstring("its looks are: off, on"));
+}
+
+TEST_CASE("what a holder keeps its cards in order by is a variable some object has", "[names]")
+{
+	std::ifstream in("descriptions/hearts.xml", std::ios::binary);
+	std::string text = fileText(in);
+	const std::string by = "<by variable=\"suit\" />";
+	REQUIRE(text.find(by) != std::string::npos);
+	text.replace(text.find(by), by.size(), "<by variable=\"siut\" />");
+	const std::string path = scratchName("descriptions/names_scratch.xml");
+	std::ofstream(path, std::ios::binary | std::ios::trunc) << text;
+	std::string message;
+	try
+	{
+		Game game(path);
+	}
+	catch (const std::exception& error)
+	{
+		message = error.what();
+	}
+	std::error_code ignored;
+	std::filesystem::remove(path, ignored);
+	CHECK_THAT(message, ContainsSubstring("<by variable=\"siut\">: no object has a variable or number of that name") && ContainsSubstring("did you mean 'suit'"));
 }
