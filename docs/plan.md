@@ -12,7 +12,7 @@ How to use this file: read [The short version](#the-short-version) and [What I w
 
 1. **A misspelt name can load and silently do nothing.** `<collision class="padle">`, `<condition object="bal" ...>`, `<condition ... variable="scor">` and `<show object="computr">` all load; the rule just never fires. Two objects of one name in the same `<objects>` are silently merged into one, and two states of one name are accepted. This is the largest correctness gap, because the project's promise is "mistakes stop the load" ([B2](#b2-names-that-match-nothing-stop-the-load), [B3](#b3-two-things-of-one-name-stop-the-load)).
 2. **The vocabulary is growing faster than it is being reduced.** 327 element names; 77 are used by exactly one game, 15 by none. Several concepts have two or three spellings: three jumps, two ways into and out of play, three ways to take turns, two ways to end a game, five booleans in a language that otherwise has none. Every simplification the author found so far (kit into objects, grid into group, pools into copies, phase numbers into looks, card nouns into holders) left the older form alive somewhere. The list is in [Simplification and consistency](#simplification-and-consistency).
-3. **A new word costs about ten edits in ten places.** Schema, `isCommandTag`, `readCommand`, `RawCommand`, `makeCommand`, the `Cmd*` struct and variant, `CommandExecutor::run`, `ruleFor`, `data.xsl`, the describer in the generated test, two doc pages. That is why words are cheap to add and expensive to remove, and it is the debt that grows with every game ([A1](#a1-one-table-of-verbs)).
+3. **A new word costs about ten edits in ten places.** Schema, `isCommandTag`, `readCommand`, `RawCommand`, `makeCommand`, the `Cmd*` struct and variant, `CommandExecutor::run`, `ruleFor`, `data.xsl`, the describer in the generated test, two doc pages. That is why words are cheap to add and expensive to remove, and it is the debt that grows with every game ([A1](#a1-a-verb-is-one-file)).
 4. **Frame pacing is each window library's own business.** SDL2 paces by vsync only, so on a 144 Hz monitor a game runs 2.4 times too fast; SFML sleeps; raylib and OpenGL count time themselves. Movement is per frame, so pacing is game speed ([B5](#b5-one-frame-pacer-in-the-engine)).
 
 **What I would stop doing:** adding games and genres for now. See the next section.
@@ -33,11 +33,11 @@ Direct answers, as asked. Each is argued once here and turned into tasks below.
 | A deck of single cards | Cut until a game cannot be written without it (the project's own rule) |
 | More card games, more rooms, more levels | Cut. Depth in one game teaches the language nothing new |
 
-**3. Spend the next weeks in this order instead:** correctness holes (small, high value), then the reduction pass, then the verb table (so later words are cheap to add *and* remove), then tools that let an agent see and check a game without a window, and only then new capabilities, chosen because several existing games want them.
+**3. Spend the next weeks in this order instead:** correctness holes (small, high value), then the reduction pass, then one file per verb (so later words are cheap to add *and* remove), then tools that let an agent see and check a game without a window, and only then new capabilities, chosen because several existing games want them.
 
-**4. The generator's second reader is the most expensive duplicate in the project, and I would end it.** `data.xsl` (3,806 lines), `merge.xsl` (748) and `game_parts.h` (502) re-implement `load/xml.cpp` and `load/merge.cpp` in XSLT. Every new word is written twice and a test exists only to catch the two drifting. The rule "XSLT stays, and a generated game plays exactly like the engine" can be kept at a fraction of the cost: let XSLT write the game's XML tree as a C++ literal (about 100 lines of stylesheet), and let the generated program read that tree with the engine's own reader through an in-memory `XmlDocument`. No XML library in the generated program, no second reader, nothing to keep in step. The cost is that the generated source is the game's tree, not `GameData` line by line. See [D1](#decisions-for-the-author) and [A5](#a5-the-generator-without-a-second-reader).
+**4. The generator should write games that read as hand-written, and today it does the opposite.** `data.xsl` (3,806 lines), `merge.xsl` (748) and `game_parts.h` (502) re-implement `load/xml.cpp` and `load/merge.cpp` in XSLT, and what they write is the engine with one game's data baked in: nobody would write that over a weekend. My first advice was to make that target cheaper still (XSLT writes the XML tree, the engine reads it). The author's answer changes the aim: the point of the descriptions is to free a game from its platform, so a target should write *the game*, standing alone, in that platform's own terms. That is the first generator again (the one that drifted), and it can work now for three reasons it could not then: the frame order is one shared function (`play/frame.cpp`), the verbs' work is shared functions with no game file in them (`play/verbs.cpp`, `play/geometry.cpp`), and arithmetic is the engine's own exact `load/calc`. So: keep `windows-cpp` as it is, as the target that covers every game exactly, stop investing in it, and build a second target beside it that grows verb by verb and is tested frame by frame against the engine ([A5](#a5-a-game-written-out-as-if-by-hand)). One file per verb ([A1](#a1-a-verb-is-one-file)) is what makes that affordable: a verb's C++ and its template for each target sit side by side.
 
-**5. Four XML libraries, four window libraries and three sound libraries are a tax with no user.** Every `XmlNode` feature is written four times; the 842-line weak validator exists only because three of the four XML libraries cannot validate; `BUILD_TESTING` forces all of them, which is most of an hour-long clean build. I would keep Xerces plus one small parser (PugiXML), SFML plus one other window library, and drop the rest. This was the author's call before and is again ([D2](#decisions-for-the-author)); nothing else in the plan depends on it.
+**5. The backends are a feature, so make the next one cheap rather than cutting any.** I called twelve libraries a tax. The author's answer: wide support for libraries is part of what the project is (as RetroArch does it), lower-level ones are wanted next (OpenGL is there; DirectX and Vulkan to come), and Xerces with a weaker built-in validator behind the lighter parsers is the intended design. Accepted. What follows from it is different work: a new window backend today has to draw text and load image files itself, which is most of its code and the reason no two backends measure a text the same. If the engine drew text and decoded images into bitmaps, as it already does every other picture, a backend would be "open a window, show bitmaps, read keys", and a Direct3D or Vulkan one would be a few hundred lines ([A7](#a7-the-next-backend-is-cheap)).
 
 **6. "No CI" is costing more than it saves.** More than a dozen features are still waiting for a first look on Windows. MSVC-only warnings (C4702, C4459, C4458) and Windows header macros (`near`, `far`) have each broken the build more than once. A build-only job on a Windows runner (no tests, no gate) would catch those without changing how the author tests play. If the answer is still no, do [T4](#t4-a-windows-check-list-kept-in-the-repository) instead ([D3](#decisions-for-the-author)).
 
@@ -104,8 +104,8 @@ Each row is one concept done more than one way. Counts are games using each form
 | 17 | Card words | The rule is "tags name mechanics, never one game". Still card-shaped: `<call pile=>`, `<with pile=>`, `<trick>`, `<trumps>`, `<breaks>`, `<melds />`, `<wild>`, and `suit`/`rank` as fixed variable names | See the task | [R11](#r11-card-words-that-are-still-card-words) |
 | 18 | Steering | `<chase>`, `<aim>`, `<hunt>`, `<wander>`, `<go>`, `<follow>`, `<track>`, `<seek>` (1 game), `<pull>` (0 games) | Review as one family; at least decide `<seek>` and `<pull>` | [R1](#r1-decide-every-word-fewer-than-two-games-use) |
 | 19 | Words nobody uses | In the schema, in no game: `accelerate`, `pull`, `rise`, `image`, `gap`, `margin`, `near`, `faster`, `framerate`, `fullscreen`, `absolute`, `floor`, `negate`, `remainder`, `odd`. `touch.` is a documented name no game reads | Use in a game, keep with a reason, or remove | [R1](#r1-decide-every-word-fewer-than-two-games-use) |
-| 20 | Where a command may go | Written twice: the schema's command groups and `ruleFor` in `load/check.cpp` | One table ([A1](#a1-one-table-of-verbs)) | A1 |
-| 21 | What a tag may hold | Written three times: the schema, hand-written "unknown `<x>`; expected ..." checks through `load/xml.cpp`, and `data.xsl` | The schema, plus [A5](#a5-the-generator-without-a-second-reader) | A1, A5 |
+| 20 | Where a command may go | Written twice: the schema's command groups and `ruleFor` in `load/check.cpp` | Each verb's own file, checked against the schema ([A1](#a1-a-verb-is-one-file)) | A1 |
+| 21 | What a tag may hold | Written three times: the schema, hand-written "unknown `<x>`; expected ..." checks through `load/xml.cpp`, and `data.xsl` | The schema, plus [A5](#a5-a-game-written-out-as-if-by-hand) | A1, A5 |
 
 **The pattern in the history.** Reading the log from the first tag-based commit to now, the same thing happened at least nine times: a first form was built, grew by additions, and was later replaced by something smaller, usually on the author's suggestion.
 
@@ -119,7 +119,7 @@ Each row is one concept done more than one way. Counts are games using each form
 | Phase numbers | 20 to 30 per card game | A look, tested by `sprite=` | Row 3: `turn` variables are phase numbers |
 | `<deck>`, `<pile>`, `<hand>` | fifteen card verbs | Groups, holders, general verbs | Row 17, and the whole of [A2](#a2-holders-in-the-engine-not-piles) |
 | Two win screens | | One end state with looks | Row 4 |
-| Six verb dispatch tables, string pictures, hand-kept resets | | One dispatcher, `Picture`, `Moment` | `RawCommand`, `makeCommand`, `readCommand` are still one big list each ([A1](#a1-one-table-of-verbs)) |
+| Six verb dispatch tables, string pictures, hand-kept resets | | One dispatcher, `Picture`, `Moment` | `RawCommand`, `makeCommand`, `readCommand` are still one big list each ([A1](#a1-a-verb-is-one-file)) |
 
 Two lessons for whoever works this plan. First, **when a simpler form lands, finish the job in the same change**: move every game, remove the old word from the schema, reader, generator, checker and docs, and rename the C++ to match. Second, **a suggestion that "worked and was added to" is the warning sign**: when a feature needs its third addition, stop and ask which assumption made it necessary.
 
@@ -127,15 +127,15 @@ Two lessons for whoever works this plan. First, **when a simpler form lands, fin
 
 | # | Debt | Why it gets worse with time | Task |
 |---|---|---|---|
-| 1 | A verb is described in about ten places | Each new verb widens every list; removing one is as costly as adding it, so none are removed | [A1](#a1-one-table-of-verbs) |
-| 2 | `RawCommand` is one struct of about 50 fields shared by 74 verbs, each field meaning something different per verb (`seconds` is a move's wait; `distance` is a swing's degrees; `positionX` is a hop's `<x>`) | A reader has to know which verb borrows which field; a mistake compiles | [A1](#a1-one-table-of-verbs) |
+| 1 | A verb is described in about ten places | Each new verb widens every list; removing one is as costly as adding it, so none are removed | [A1](#a1-a-verb-is-one-file) |
+| 2 | `RawCommand` is one struct of about 50 fields shared by 74 verbs, each field meaning something different per verb (`seconds` is a move's wait; `distance` is a swing's degrees; `positionX` is a hop's `<x>`) | A reader has to know which verb borrows which field; a mistake compiles | [A1](#a1-a-verb-is-one-file) |
 | 3 | The engine underneath the holder words is still the old card engine: `Object::Pile`, `RawPile` with `dealt`, `refillShuffle`, `isCard`, `suit`, `rank`, and `settleHolders` mapping the new words onto it. `game/cards.cpp` is 2,167 lines | The language says "no card nouns" and the code says the opposite. Every non-card use of holders will fight it | [A2](#a2-holders-in-the-engine-not-piles) |
 | 4 | Very long functions: `makeObject` 575 lines, `game_expr::init` 453, `makeCommand` 367, `readCommand` 358, `readGroup` 343, `checkCommand` 316, `checkReferences` 259, `game_xml::init` 247 | Each new feature adds a branch to the middle of one of these | [A3](#a3-split-the-long-functions) |
 | 5 | `Object` has about 200 fields in one struct; `game.h` is 934 lines | Same | [A4](#a4-object-in-parts) |
-| 6 | The generator is a second reader (4,500 lines of XSLT and helper) | Every reader change is made twice | [A5](#a5-the-generator-without-a-second-reader) |
+| 6 | The generator is a second reader (4,500 lines of XSLT and helper) that writes the engine's data, not a game anyone could read | Every reader change is made twice, for output that is not what the generator is for | [A5](#a5-a-game-written-out-as-if-by-hand) |
 | 7 | The schema has no `xs:annotation`; 165 attributes are plain `xs:string`; the word index in `docs/readme.md` is kept by hand | The XSD is the definition of the language but an editor shows nothing on hover, and the docs can drift | [A6](#a6-the-schema-documents-itself) |
-| 8 | A command with a live number (`CmdLive`) is rebuilt from its `RawCommand` through `makeCommand`'s chain of string compares each time it runs | Fine at today's sizes (measured in October); it is the first thing a busier game will hit | [A1](#a1-one-table-of-verbs) removes the string chain |
-| 9 | Twelve backends | Above | [D2](#decisions-for-the-author) |
+| 8 | A command with a live number (`CmdLive`) is rebuilt from its `RawCommand` through `makeCommand`'s chain of string compares each time it runs | Fine at today's sizes (measured in October); it is the first thing a busier game will hit | [A1](#a1-a-verb-is-one-file) removes the string chain |
+| 9 | Each window backend draws text and loads image files itself | Every new backend repeats it, and the author wants several more | [A7](#a7-the-next-backend-is-cheap) |
 
 What is sound and should be left alone: the layering (`play/frame.cpp` decides order, `play/verbs.cpp` and `play/geometry.cpp` do the work, `Game` decides what to call); `Moment` with `start` and `before`; the one dispatcher; the load-time checks with "did you mean"; the seeded tests; the reference docs, which matched the code everywhere I compared them.
 
@@ -162,8 +162,8 @@ Each has a default the plan assumes, so work is not blocked. Changing one change
 
 | # | Decision | Default assumed | Affects |
 |---|---|---|---|
-| D1 | Replace the generator's second reader with "XSLT writes the tree, the engine reads it" | **Not yet.** Keep `data.xsl` working; every language task below lists it as a file to change. If yes, do A5 first and every later task loses its `data.xsl` step | A5, all R tasks |
-| D2 | Drop XML, window and sound libraries | Keep all twelve | Build time only |
+| D1 | What the generator is for | **Settled by the author:** stand-alone games that read as hand-written, for any platform. `windows-cpp` (engine plus data) stays as the exact, complete target and gets no new design work; `data.xsl` is still updated with each language change until A5 covers enough games to retire it | A5, all R tasks |
+| D2 | Drop XML, window and sound libraries | **Settled by the author:** keep all, and add lower-level ones (DirectX, Vulkan). See A7 | A7 |
 | D3 | A Windows build-only job, or none | None; do T4 | T4 |
 | D4 | The words for R6 (booleans) and R7 (window names, centred offset) | The task proposes words; the author picks before it starts | R6, R7 |
 | D5 | Whether pools go entirely (R3) | Yes for things that come and go; `<die />` and `<reveal>` stay for fixed members | R3 |
@@ -462,29 +462,74 @@ Each is **S**, independent, one commit.
 
 ### Phase 4: architecture
 
-#### A1. One table of verbs
+#### A1. A verb is one file
 
-- **Size** L. **Needs** B8. **Blocks** nothing, but every later language task is cheaper after it.
-- **Why.** Debts 1, 2 and 8. Today a verb is: an element in a schema command group; a name in `isCommandTag`; a branch in `readCommand` (358 lines) filling shared fields of `RawCommand`; a branch in `makeCommand` (367 lines of `if (verb == ...)`); a `Cmd*` struct in the variant; a line in `CommandExecutor::run`; a string in `ruleFor`; a `tagOf` case; templates in `data.xsl`; a describer in the generated test.
-- **The idea.** One `struct VerbInfo` per verb in one file (`xge/lib/game/verbs_table.cpp`), found by name once at load:
+- **Size** L, in six substeps. **Needs** B8. **Blocks** A5; every later language task is cheaper after it.
+- **Why.** Debts 1, 2 and 8, and the author's question: can the verbs live in one central place, each in its own file, registered with a command processor? Yes. Today one verb is spread over: an element in a schema command group; a name in `isCommandTag`; a branch of `readCommand` (358 lines) filling shared fields of `RawCommand`; a branch of `makeCommand` (367 lines of `if (verb == ...)`); a `Cmd*` struct in the `Command` variant; a lambda in `CommandExecutor::run`; a case in `checkCommand`; a string in `ruleFor`; a `tagOf` case; templates in `data.xsl`. The *work* of most verbs is already in one place and free of the game file (`xge::bounce`, `xge::deflect`, `knock`, `land` in `play/verbs.cpp` and `play/geometry.cpp`): that stays. What moves is everything about a verb that is not its work.
+- **The shape.**
 
   ```
-  name        "hop"
-  places      which of the ten places it may go (bit set; replaces ruleFor's lists)
-  attributes  which attributes it reads, and which are required
-  parts       its child elements: name, kind (value, flag, name), required or not
-  make        function: RawCommand -> Command   (its branch of makeCommand, moved)
+  xge/lib/verbs/
+    verb.h        what a verb is (below), the Doer, the places
+    all.cpp       the one list: every verb, by name, in the order of the docs
+    bounce.cpp    one verb each: hop.cpp, spawn.cpp, inc.cpp, push.cpp ...
+  games/generators/<target>/verbs/
+    bounce.xsl    one template each, for targets that write code (A5)
   ```
 
-  `isCommandTag`, the generic part of `readCommand` (attributes, required ones, unknown children), `ruleFor` and `tagOf` become loops over the table. The verb-specific parsing that is more than "a value or a flag in a named child" stays as a function the row points to.
+  ```cpp
+  // verbs/verb.h
+  struct Verb
+  {
+      const char* name;          // "bounce"
+      Places places;             // where it may go: edge rule, touch rule, input, condition,
+                                 // state timer, object timer, action, path step, computer, map check
+      bool onRelease;            // acts when a key is let go (a held verb)
+      RawCommand (*read)(const XmlNode&, const std::string& where);     // its attributes and children
+      Command (*make)(const RawCommand&, const ValueEvaluator&);        // numbers worked out
+      void (*check)(const Command&, const CheckContext&);               // the names it uses exist
+      bool (*run)(const Command&, const Doer&, Game&);                  // do it; false when refused
+  };
+
+  // verbs/bounce.cpp: everything the engine knows about <bounce>, and nothing else
+  namespace
+  {
+      RawCommand read(const XmlNode& node, const std::string& where) { ... }
+      Command make(const RawCommand& raw, const ValueEvaluator& evaluate) { ... return CmdBounce{ share }; }
+      bool run(const Command& command, const Doer& doer, Game&)
+      {
+          const CmdBounce& b = std::get<CmdBounce>(command);
+          if (doer.self && doer.touch && doer.other) { xge::bounce(*doer.self, *doer.other, *doer.touch, b.share); }
+          else if (doer.self && doer.screenEdge) { bounceScreenEdge(*doer.self, *doer.screenEdge, b.share); }
+          return true;
+      }
+  }
+  extern const Verb bounceVerb{ "bounce", Places::EdgeRule | Places::TouchRule, false, read, make, nullptr, run };
+
+  // verbs/all.cpp: the registration, written out
+  const std::vector<const Verb*>& allVerbs()
+  {
+      static const std::vector<const Verb*> verbs{ &bounceVerb, &deflectVerb, &knockVerb, ... };
+      return verbs;
+  }
+  const Verb* findVerb(std::string_view name);   // looked up once at load; a Command keeps the pointer
+  ```
+
+  The command processor is then small: the reader asks `findVerb(tag)` and calls `read`; the loader calls `make` and `check`; `CommandExecutor::run` calls `verb->run`. `isCommandTag`, `ruleFor`, `tagOf` and `actsOnLettingGo` become loops over `allVerbs()`.
+- **Two choices made here, and why.**
+  - **Registered by a written list, not by each file registering itself.** A file-level object that adds itself to a registry is the usual trick, but `xgelib` is a static library, and a linker leaves out an object file nothing refers to, so verbs would vanish silently from some builds (and the generated programs copy files one by one). The list in `all.cpp` is one line a verb, fixes the order, and fails to link if a file is missing.
+  - **The `Cmd*` structs and the `Command` variant stay where they are for now** (`game/command.h`). They are small, tests construct them, and `run` takes the variant and reads its own struct with `std::get`. Moving each struct into its verb's file needs the variant replaced by a pointer to the verb plus its data, which is substep 6, optional.
 - **Substeps, each green.**
-  1. **Table with names and places only (M).** Add the table with `name` and `places`. `isCommandTag` reads it. `ruleFor` builds its lists from it. Add a test that the table's places agree with the schema's command groups (read the XSD: `changesCommands`, `flowCommands`, `selfCommands`, `steeringCommands`, `touchCommands`, `edgeCommands`, `bounceCommands`, `controlsCommands`, `pressCommands`, `cellsCommands`, `checkCommands` and which groups each place's type refers to). This test alone removes consistency row 20.
-  2. **`make` per row (M).** Move each `if (verb == "x")` body of `makeCommand` into a small function named in the row; `makeCommand` becomes a lookup and a call. No behaviour change: the tests and `xgetest-generated` are the proof. `Game::makeNow` (live commands) then pays one lookup, not a chain of compares; keep the pointer to the row in `CmdLive` so it pays none.
-  3. **Attributes and simple parts from the table (M).** `readCommand` reads the attributes each row lists and refuses the rest by name ("`<hop>` takes no `state=`"); for rows whose children are all simple, the generic loop reads them. Verbs with real structure (`spawn`, `send`, `hunt`, `think`, `put`, `swing`) keep a reader function.
-  4. **Split `RawCommand` (L, optional).** Replace the shared fields with a small map from part name to `RawValue` plus the attributes, so no verb borrows another's field. This changes `data.xsl` and the describer heavily; do it only if D1 is "yes" (then there is no `data.xsl`), otherwise leave `RawCommand` and stop after step 3.
-- **Files.** New `xge/lib/game/verbs_table.h`/`.cpp` (add to `ENGINE_SOURCES` in the top `CMakeLists.txt`, to `games/generators/windows-cpp/engine.xml`); `xge/lib/load/xml.cpp`; `xge/lib/game/command.cpp`; `xge/lib/load/check.cpp`; `xge/tests/test_command_parsing.cpp`; `docs/agents/notes.md` "Loading" (the recipe for a new verb), `docs/reference/engine.md` source map.
-- **Done.** The recipe in the notes for a new verb is: a row in the table, a `Cmd*` struct, a case in `CommandExecutor::run`, the schema element, the docs. `makeCommand` and `isCommandTag` are under 20 lines each.
-- **Verify.** After each substep: `ctest`, `xgetest-generated`, `xgetest "[.speed]"` before and after (load time must not rise).
+  1. **`verb.h` and `all.cpp` with names and places only (M).** Every verb gets a file holding just its `Verb` with `name`, `places`, `onRelease` and null functions. `isCommandTag` and `ruleFor` read the list. Add a test that the places agree with the schema's command groups (read the XSD: `changesCommands`, `flowCommands`, `selfCommands`, `steeringCommands`, `touchCommands`, `edgeCommands`, `bounceCommands`, `controlsCommands`, `pressCommands`, `cellsCommands`, `checkCommands`, and which groups each place's type refers to). That test alone removes consistency row 20. Add the new files to `ENGINE_SOURCES` in the top `CMakeLists.txt` and to `games/generators/windows-cpp/engine.xml`.
+  2. **`make` moves (M).** Each `if (verb == "x")` body of `makeCommand` (`game/command.cpp`) moves into its verb's file; `makeCommand` becomes a lookup and a call. Do it a family at a time, one commit each, in the order of `docs/reference/commands.md`: touching, moving, steering, in and out of play, numbers, look and sound, flow, then cells, boards, holders. `Game::makeNow` (live commands) keeps the `Verb*` in `CmdLive`, so it pays no lookup.
+  3. **`run` moves (M).** Each lambda of the `std::visit` in `CommandExecutor::run` (`play/executor.cpp`) moves into its verb's `run`. The helpers the lambdas call that belong to one verb (`holdMove`, `spawnProjectile`, `huntByHop`) move with it; those shared by several stay in the executor or `play/verbs.cpp`. Verbs whose work is in `Game` (cells, holders, the board search) call `Game` as now.
+  4. **`check` moves (M).** The cases of `checkCommand` (`load/check.cpp`, 316 lines).
+  5. **`read` moves (M).** The branches of `readCommand` (`load/xml.cpp`). First give `verb.h` a small helper for the common shapes (a verb with no parts; one number as content; named value children), so `die.cpp` is fifteen lines and only verbs with real structure (`spawn`, `send`, `hunt`, `think`, `put`, `swing`) have a reader of any length.
+  6. **Optional: each verb owns its data (L).** `Command` becomes `{ const Verb* verb; std::shared_ptr<const void> data; }` or a small base struct, and `RawCommand`'s 50 shared fields become the verb's own. This is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer in the generated test heavily, so do it only after A5 has made `data.xsl` retire, or not at all.
+- **Careful.** `Doer` (`play/executor.h` line 88) is what a verb knows about who is running it; it moves to `verb.h` unchanged. A refused verb returns false and ends its list (`docs/reference/commands.md`, "A press that cannot be done"): keep each lambda's `done` exactly. `shapeOf` gives the load-time command of a live one: `run` must be reached through it as today. The generated programs compile the same files: after each family, `cmake --build build --target xgetest-generated`.
+- **Files.** New `xge/lib/verbs/*`; `xge/lib/load/xml.cpp`, `xge/lib/game/command.cpp`, `xge/lib/load/check.cpp`, `xge/lib/play/executor.cpp` and `.h` (each shrinks); `CMakeLists.txt`, `engine.xml`; `xge/tests/test_command_parsing.cpp`; `AGENTS.md` layout table, `docs/agents/notes.md` "Loading", `docs/reference/engine.md` source map, a short `docs/designs/` entry in `05-objects.md` or a new `14-verbs.md` saying why a list and not self-registration.
+- **Done.** To add a verb: one file in `xge/lib/verbs/`, one line in `all.cpp`, its `Cmd*` struct, the schema element, the docs (and, once A5 exists, one template per code-writing target). `makeCommand`, `readCommand`, `checkCommand` and `CommandExecutor::run` are each under 30 lines.
+- **Verify.** After each commit: `ctest`, `xgetest-generated`, and `xgetest "[.speed]"` before and after (load and frame times must not rise: a call through a pointer replaces a `std::visit`, which should be even).
 
 #### A2. Holders in the engine, not piles
 
@@ -500,7 +545,7 @@ Each is **S**, independent, one commit.
 
 #### A3. Split the long functions
 
-- **Size** M each, independent. **Needs** A1 for `readCommand` and `makeCommand` (it dissolves them).
+- **Size** M each, independent. **Needs** A1 for `readCommand`, `makeCommand` and `checkCommand` (it dissolves them).
 - **Do.** Moves only; no behaviour change; one function per commit.
   - `game_expr::makeObject` (`xge/lib/load/expr.cpp` lines 762 to 1434) into `load/build.cpp` as a sequence of named steps: `buildNumbers`, `buildLooks`, `buildRules`, `buildActions`, `buildTimers`, `buildHolder`, `buildMoves`, ... each taking the `RawObject` and the `Object` being made. This is step 7 of the October source review, which was only half done (the checks moved; the building did not).
   - `game_expr::init` (lines 116 to 672) into steps named for what `docs/reference/engine.md` "Loading" lists: names, variables, sounds, objects, states, checks.
@@ -515,17 +560,49 @@ Each is **S**, independent, one commit.
 - **Do.** Leave `Moment` (position, velocity and the rest that tests name) exactly as it is. Group the rest by feature into members that most objects never use and tests rarely name: `object.maze` (walker state), `object.cell` (cells and chains), `object.holder`, `object.moves` and `object.marks` (boards), `object.swing`, `object.path`, `object.jump`. One group per commit; a group that is unused could later become `std::optional` or a pointer, which also shrinks every object (58 games load thousands).
 - **Done.** `struct Object` itself declares under 60 fields; `xgetest "[.speed]"` no slower.
 
-#### A5. The generator without a second reader
+#### A5. A game written out as if by hand
 
-- **Size** L. **Needs** D1 = yes. If no, skip.
-- **Why.** Debt 6 and section "What I would do differently", point 4.
+- **Size** L, open-ended; the first three substeps are a few days. **Needs** A1 substeps 1 to 3.
+- **Why.** The author's aim for the generator: a stand-alone version of a game that looks hand-coded over a weekend, as the route to any platform. `windows-cpp` writes the engine with the game's data built in (complete and exact, and unreadable as a game). The first generator wrote readable programs and drifted from the engine; a hand-written Pong on the shared frame later matched the engine frame for frame over ten seeds of 3,600 frames, and was set aside (`git show 7163ea2^:games/prototypes/pong_min/source/pong_min.cpp`; `docs/designs/40-generator.md`, "A readable game on the shared frame").
+- **The rule that keeps it honest.** A generated game never re-implements behaviour. It is written out plainly (its numbers as constants, its objects as variables, its rules as functions and `switch`es) and *calls* the same small work functions the engine calls: `bounce`, `deflect`, `stick`, the sweep, the frame order. Those travel with it as a small runtime folder (`play/`, `picture/`, `audio/sound`, one window file): no `Game`, no reader, no XML. A person writing Pong over a weekend would also have a `bounce()` helper; what they would not have is an interpreter, and neither does this.
+- **What a generated Pong should look like** (the target to write towards; about 150 lines):
+
+  ```cpp
+  const float margin = 30, size = 16, width = 20, height = 120, step = 5;      // <variables>
+
+  Object ball, paddle1, paddle2;
+
+  void serve()                                   // the ball's <velocity>, drawn again on a reset
+  {
+      const float angle = randomBetween(-30, 30), side = randomBetween(-1, 1);
+      ball.velocity = { sign(side) * speed * cosine(angle), speed * sine(angle) };
+  }
+
+  void ballMeetsEdge(Edge edge)                  // the ball's edge rules
+  {
+      if (edge == Edge::Top || edge == Edge::Bottom) { bounceScreenEdge(ball, edge); }
+      else { reset(ball); serve(); }
+  }
+
+  void ballMeets(Object& other, const Touch& touch) { deflect(ball, other, touch.edge, 45); }
+
+  void keys(const Keys& down)                    // the playing state's <inputs>
+  {
+      if (down[Key::W]) { moveByStep(paddle1, Direction::Up, step); }
+      ...
+  }
+  ```
+
 - **Substeps.**
-  1. **An in-memory XML backend (S).** `xge/lib/xml/tree.h`/`.cpp`: an `XmlDocument` and `XmlNode` over a plain struct tree `{ name, attributes, text, children }`. No parsing. A test builds a tree by hand and reads Pong from it with `readGame`'s inner function (split `readGame(file)` into "parse" and "read from a document" if it is not already).
-  2. **`tree.xsl` (S).** A stylesheet of about 100 lines that writes any game file as a C++ function returning that struct tree (escape strings; one helper call per element to keep statements small for the 1 MB Debug stack: see the notes on `addCell`).
-  3. **The generated program (M).** `program.xsl`'s `main.cpp` builds the tree, runs `load/merge` and the reader on it, then `Game` and `Engine` as now. `engine.xml` adds `load/xml.cpp`, `load/merge.cpp`, `load/check.cpp`, `xml/tree.cpp`, and still no XML library and no validator (the game was validated when generated).
-  4. **Prove it (S).** `xgetest-generated` keeps its second half (900 frames side by side, every game). Its first half (field-by-field data compare) is no longer needed, since both sides run the same reader; keep it one release as a check that the tree round-trips.
-  5. **Delete (S).** `data.xsl`, `merge.xsl`, `modules/game_parts.h`, the describer in `test_generated_games.cpp`; rewrite `docs/designs/40-generator.md` (add this as the chosen option and why G4 was replaced) and `docs/reference/programs.md`.
-- **Done.** `games/generators/windows-cpp/` holds `generate.xsl`, `tree.xsl`, `program.xsl`, `text.xsl`, `engine.xml`; adding a word to the language no longer touches the generator.
+  1. **Bring the prototype back and make it current (M).** Restore `pong_min.cpp` from the commit above into `games/prototypes/pong_min/`, port it to today's `Object`/`Moment`, `FrameRules` and `load/calc` (the note in it about the old expression library regrouping constants no longer applies), and restore its test: ten seeds, 3,600 frames, every object equal to the engine's each frame. This is the specification by example.
+  2. **A new target folder (M).** `games/generators/standalone-cpp/`: `generate.xsl`, `program.xsl` (main, CMake), `runtime.xml` (the engine files it copies: no `game/game.cpp`, no `load/`), and `verbs/` with one template per verb it can write (`bounce.xsl`: `<xsl:template match="bounce" mode="statement">`). `xgecli pong_min --generate standalone-cpp` must reproduce the hand-written file closely enough that a diff is a few lines.
+  3. **Say what it cannot write (S).** Before running, the generator walks the game and lists every verb or part with no template in this target; if any, it stops and prints them with "use `windows-cpp` for this game". Nothing is silently approximated. A test holds the list of games each target covers.
+  4. **Grow by game, simplest first (M each).** `pong.xml` (states, conditions, text, sounds, a computer player), Breakout (groups in columns and rows, looks), Space Race, Kaboom, Freeway, Frogger (`ride`, lanes), Space Invaders (lockstep, timers, spawn). Each new game adds a few templates and a line in the covered list. Stop and review with the author after Pong and after Breakout: the look of the output is the point, and only the author can judge it.
+  5. **The side-by-side test (M).** `xgetest-generated` gains, per covered game, the same proof `windows-cpp` has: generated and engine play with the same seed and keys, every object compared each frame. The generated program needs a `step(keys)` and a way to list its objects for this; write them into `program.xsl` behind a macro so they vanish from a normal build.
+  6. **Later, another platform (L, not planned in detail).** A second code-writing target is a folder of templates plus that platform's runtime (the work functions ported). The templates are the cheap half; the runtime is a port. `docs/designs/57-ideas.md` "Targets and capability profiles" is the design to pick up then.
+- **Not doing.** Cards, the board-game search and cell puzzles in this target: they are large engines in themselves (`game/cards.cpp`, `think.cpp`, `cells.cpp`), and a "weekend" version would be those files copied. They stay on `windows-cpp` until the author asks otherwise.
+- **Files.** `games/prototypes/pong_min/`, `games/generators/standalone-cpp/`, `xge/cli/source/generate.cpp` (targets are folders already; add the coverage check), `xge/tests/test_generated_games.cpp`, `scripts/cmake/assets.cmake` (`data_generators`), `scripts/shell/windows/games-*.bat` (a target argument), `docs/reference/programs.md`, `docs/designs/40-generator.md`.
+- **Done, first milestone.** `xgecli pong --generate standalone-cpp` writes a program under 300 lines of its own code that builds with no warnings at `/W4` and GCC's strict set, and matches the engine frame for frame for ten seeds.
 
 #### A6. The schema documents itself
 
@@ -536,6 +613,19 @@ Each is **S**, independent, one commit.
   2. **`docs/reference/words.md` made from the schema by XSLT (M).** `games/generators/docs/words.xsl`: every element, its documentation, what it may hold, grouped by the schema's own groups. Run by `xgecli --generate docs` (the generator already runs stylesheets with libxslt) or by `xsltproc`. A test regenerates it and compares with the file in the repository, so the page cannot go stale. The hand-kept word index in `docs/readme.md` then links to it and can shrink.
   3. **Tighter attribute types (S).** Of the 165 `xs:string` attributes, those that hold one name become `xs:NMTOKEN` (63 already are), and those that pick from a list (`on=`, `side=`, `total=`) an enumeration. Dotted names (`variable="ball.hits"`) stay strings or get a pattern.
 - **Done.** Hovering `<deflect>` in VS Code with the XML extension shows its sentence; `words.md` is generated and tested.
+
+#### A7. The next backend is cheap
+
+- **Size** M, then a backend at a time. **Needs** nothing.
+- **Why.** The author wants more backends, lower-level ones included (Direct3D 9, 11, 12, Vulkan), in the spirit of programs that support every library. Today each window backend is 500 to 650 lines, and most of it is the two jobs the engine does not do itself: drawing text with the library's own font code, and loading image files with the library's own decoder. That is also why text widths differ between backends and from the built-in font (a listed limit).
+- **Substeps.**
+  1. **Write the contract down (S).** In `docs/reference/engine.md` "Backends" and at the top of `window/window.h`: exactly what a `Window` must do, as a numbered list, and what it may assume (pictures arrive as bitmaps).
+  2. **Text drawn by the engine (M).** Glyphs into a bitmap with one font library for every backend (FreeType through plutovg, which is already linked for SVG, or `stb_truetype`, a single header), in `picture/font.cpp` beside the 8x8 fallback. A text object then reaches the window as a bitmap like any other picture, and its size is known before a window exists (so sizes no longer wait for `Engine`, and tests measure real widths). Each backend loses its font code. Check every game's text positions before and after, since widths will change slightly: compare with the SFML widths and tune the one font path until titles still fit.
+  3. **Image files decoded by the engine (S).** `picture/image.cpp` already cuts sheets with plutovg; use it for `<image>` too and delete each backend's loader (and the SDL2_image dependency).
+  4. **One conformance test for every window backend (M).** `xge/tests/test_backends.cpp`: for each backend built, open a small window (under Xvfb on Linux), show three known bitmaps, read the pixels back where the library allows, feed a key, close. A new backend passes this and is done.
+  5. **Then the backends, in this order:** Direct3D 11 (the simplest modern one: a window from Win32, a textured quad per object), Direct3D 9 (older machines), Vulkan (the most code for the same quad), Direct3D 12 last. Each is `xge/lib/window/<name>.cpp` behind `XGE_WITH_<NAME>`, a row in `scripts/cmake/dependencies.cmake` and the factory. **The Direct3D ones cannot be built or run in a Linux container:** they are written blind there and compiled, fixed and tested by the author on Windows, so keep each to one small file and expect a round or two.
+- **Also gains.** [F1](#f1-a-game-you-can-step-and-read-from-the-command-line)'s picture of a frame becomes trivial once text is a bitmap, and `xgegui`'s Qt renderer shrinks the same way.
+- **Done.** A window backend's file holds no font or image-file code; the conformance test runs over each; the first new low-level backend is under 300 lines.
 
 ### Phase 5: additions
 
@@ -627,7 +717,7 @@ Block 2  (the loud-typos work, then the net)
   B5  one frame pacer
   T4  Windows check list              (or the build job, by D3)
 
-      -- the author settles D1, D4, D5 here --
+      -- the author settles D4, D5 here --
 
 Block 3  (reduction; R1 first, then any order)
   R1  a verdict for every rare word
@@ -641,9 +731,10 @@ Block 3  (reduction; R1 first, then any order)
   R4  turns                               (four substeps)
   R11 card words
 
-Block 4  (architecture; A5 first if D1 is yes)
-  A5  generator reads the tree            (only if D1)
-  A1  verb table, substeps 1 to 3
+Block 4  (architecture)
+  A1  a verb is one file, substeps 1 to 5
+  A5  a game written out as if by hand, substeps 1 to 3, then a game at a time
+  A7  backends: text and images drawn by the engine, then Direct3D 11
   A2  holders, substeps 1 to 4
   A3  long functions, one per commit
   A6  schema annotations, words.md
@@ -671,11 +762,11 @@ What blocks what, in one place:
 | R9 | R5 |
 | R3 | D5 |
 | A3 (`readCommand`, `makeCommand`) | A1 |
-| A1 substep 4 | D1 = yes (A5) |
+| A5 | A1 substeps 1 to 3 |
+| A1 substep 6 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
 | A6 | R1 |
 | F1 | B5, T2 |
 | F8 | D7 lifted |
-| every R, A and F task | loses its `data.xsl` step if A5 is done first |
 
 If only five things are ever done from this file, do B2, B3, B5, T1 and R1.
