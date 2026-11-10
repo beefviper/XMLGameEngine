@@ -32,7 +32,7 @@ namespace xge
 		}
 
 		// Whether a and b can touch at all, whatever their rules: both have
-		// their collisions on, neither is in the middle of a jump (it is over
+		// their collisions on, neither is in the middle of a timed hop (it is over
 		// everything), and they are not one lockstep block (the invaders
 		// never collide with each other). Whether a rule answers is the
 		// game's (FrameRules::canCollide), asked once (FrameRules::partners).
@@ -139,7 +139,7 @@ namespace xge
 					continue;
 				}
 
-				if (!wasClimbing) { object.leaping = false; }
+				if (!wasClimbing) { object.jumping = false; }
 				if (wasClimbing && !object.climbing && object.climbOnce)
 				{
 					object.activeClimb = {};
@@ -190,7 +190,7 @@ namespace xge
 
 		// <grip>: what an object's held moves ask for, it goes a part of the way
 		// to each frame, so it slides into a walk and out of one. Across,
-		// unless a leap holds it; up and down too, when nothing pulls it.
+		// unless a jump holds it; up and down too, when nothing pulls it.
 		// With a <heading> it is a wheel's grip instead: each frame its speed
 		// across the way it faces loses that share, so it goes where it
 		// points and slides when the grip is low (a car on oil).
@@ -215,7 +215,7 @@ namespace xge
 					if (std::abs(wanted - velocity) < 0.05f) { velocity = wanted; }
 				};
 				const auto& step = object.activeMoveStep;
-				if (!object.leaping)
+				if (!object.jumping)
 				{
 					ease(object.velocity.x, step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)]);
 				}
@@ -226,7 +226,7 @@ namespace xge
 			}
 		}
 
-		// How an object is moving, for its <poses>: in the air (a jump under
+		// How an object is moving, for its <poses>: in the air (a timed hop under
 		// way, or nothing under it while something pulls it) rising or
 		// falling; on the ground standing, walking, or, with a <grip> below 1,
 		// skidding while it slides another way to the one its keys ask for.
@@ -241,7 +241,7 @@ namespace xge
 			}
 			if (object.isAirborne())
 			{
-				return object.jumpFramesLeft * 2 > object.jumpFrames ? Object::Pose::Rising : Object::Pose::Falling;
+				return object.flightFramesLeft * 2 > object.flightFrames ? Object::Pose::Rising : Object::Pose::Falling;
 			}
 			const bool pulled = object.acceleration.y != 0.0f;
 			if (pulled && !object.grounded)
@@ -273,7 +273,7 @@ namespace xge
 					const auto& step = object.activeMoveStep;
 					const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
 					if (wanted != 0.0f) { object.goingLeft = wanted < 0.0f; }
-					else if (object.isAirborne() && object.jumpStep.x != 0.0f) { object.goingLeft = object.jumpStep.x < 0.0f; }
+					else if (object.isAirborne() && object.flightStep.x != 0.0f) { object.goingLeft = object.flightStep.x < 0.0f; }
 					else if (object.velocity.x != 0.0f) { object.goingLeft = object.velocity.x < 0.0f; }
 					object.faceMirror();
 				}
@@ -410,7 +410,7 @@ namespace xge
 			}
 		}
 
-		// Makes the hops queued by hop.*() actions. A hop is a jump, not a
+		// Makes the hops queued by hop.*() actions. A hop is a step, not a
 		// slide: the object is simply somewhere else, one step away, before
 		// this frame's collisions are worked out, so it is judged by where it
 		// lands and not by what it would have brushed past on the way (being
@@ -433,17 +433,17 @@ namespace xge
 				{
 					if (rules.inPlay(object))
 					{
-						const Vector2f target = object.position + object.jumpStep;
+						const Vector2f target = object.position + object.flightStep;
 						if (insideWindow({ target, object.size }, windowSize)) { object.position = target; }
 					}
-					--object.jumpFramesLeft;
+					--object.flightFramesLeft;
 
 					// An arc: drawn up off its way and back down, highest
 					// halfway, on the ground again as it lands.
-					if (object.jumpArc > 0.0f)
+					if (object.flightArc > 0.0f)
 					{
-						const float t = 1.0f - static_cast<float>(object.jumpFramesLeft) / static_cast<float>(object.jumpFrames);
-						object.altitude = object.jumpFramesLeft > 0 ? 4.0f * object.jumpArc * t * (1.0f - t) : 0.0f;
+						const float t = 1.0f - static_cast<float>(object.flightFramesLeft) / static_cast<float>(object.flightFrames);
+						object.altitude = object.flightFramesLeft > 0 ? 4.0f * object.flightArc * t * (1.0f - t) : 0.0f;
 					}
 				}
 

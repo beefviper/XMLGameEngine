@@ -8,7 +8,7 @@ The author listed about thirty non-scrolling Atari 2600 games and asked for five
 
 | Game | Written for | Left out |
 |---|---|---|
-| Pitfall! | scenes from pieces, leaps, ladders | vines, quicksand, the tunnel, 255 screens |
+| Pitfall! | scenes from pieces, jumps, ladders | vines, quicksand, the tunnel, 255 screens |
 | Missile Command | aiming, tethers, waves as scenes | limited missiles, bombers, smart bombs |
 | Combat | headings, thrust, knocks | guided shells, the plane games |
 | Air-Sea Battle | shells at an angle, wrapping lanes | the other games on the cartridge |
@@ -26,7 +26,7 @@ The author listed about thirty non-scrolling Atari 2600 games and asked for five
 
 ## Decisions in the games
 
-- **Pitfall!** Screens are scenes built from pieces; each is entered through an unseen strip at each side. A never-drawn `status` object holds score, lives and clock, so resetting Harry costs nothing. A rolling log knocks Harry back, so only a leap passes. Crocodiles are two looks with a timer each.
+- **Pitfall!** Screens are scenes built from pieces; each is entered through an unseen strip at each side. A never-drawn `status` object holds score, lives and clock, so resetting Harry costs nothing. A rolling log knocks Harry back, so only a jump passes. Crocodiles are two looks with a timer each.
 - **Missile Command.** The base `<aim>`s at the sight and fires; each counter-missile trails a `<tether>`. Its burst is an animation tested by pixel. Waves are scenes, each `from=` the one before.
 - **Combat.** One group of tanks with an inner group per player; shells `<knock>` the tank back; pixel tanks bounce off box walls.
 - **Air-Sea Battle.** Guns with a heading, pointed by `<set variable="self.heading">`. Plane lanes start off the side they fly in from, so a revealed plane comes back from there.
@@ -52,7 +52,7 @@ The author listed about thirty non-scrolling Atari 2600 games and asked for five
 ## Found on the way
 
 - **A rule can stop the touch that would come next.** Harry's `<land />` on a crocodile and its jaws meet at one moment; touches at one moment run in file order and a still pair is not looked at again, so the jaws are written before the crocodiles.
-- **The tar pit is 6 pixels tall,** 1 pixel into the path: a taller one was touched by a leap just leaving the ground.
+- **The tar pit is 6 pixels tall,** 1 pixel into the path: a taller one was touched by a jump just leaving the ground.
 
 ## Near misses
 

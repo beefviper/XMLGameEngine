@@ -510,7 +510,7 @@ namespace xge
 	// which is when its rules about the edge run.
 	bool pastWindowEdge(const Box& thing, const Vector2f& window, Edge edge) noexcept;
 
-	// Whether all of the box is inside the window: where a hop or a jump may land.
+	// Whether all of the box is inside the window: where a hop may land.
 	bool insideWindow(const Box& at, const Vector2f& window) noexcept;
 
 	// --- What the verbs do. `edge` is always the thing's own edge that was
@@ -574,11 +574,11 @@ namespace xge
 	// so a platform can be walked past and jumped up through.
 	bool landOn(Vector2f& position, Vector2f& velocity, const Vector2f& size, const Box& other, Edge edge, bool climbing) noexcept;
 
-	// <leap>: the speed up that, under a pull of `pull` a frame, rises
+	// <jump>: the speed up that, under a pull of `pull` a frame, rises
 	// `height`: v * v = 2 * pull * height.
-	float leapSpeed(float pull, float height) noexcept;
+	float jumpSpeed(float pull, float height) noexcept;
 
-	// A distance one of the four ways: a <hop>, or a <jump>'s whole way.
+	// A distance one of the four ways: a <hop>'s whole way.
 	Vector2f stepToward(Direction direction, float distance) noexcept;
 
 	// The way of the four nearest to `way`: the axis it goes further along.

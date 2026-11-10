@@ -12,7 +12,7 @@
 ## A press that cannot be done
 
 - A ship played its firing sound with its shot already in flight; Q*bert squeaked when pressed in the air.
-- **Chosen: a list stops at the first verb refused** (`<fire>` with none free, a hop in the air, `<leap>` off the ground). Each verb already knew; it now says so. Commands before it still run, which Berserk's `<aim>` before `<fire>` needs. The same holds in rules, keys and conditions; later rules still run.
+- **Chosen: a list stops at the first verb refused** (`<fire>` with none free, a hop in the air, `<jump>` off the ground). Each verb already knew; it now says so. Commands before it still run, which Berserk's `<aim>` before `<fire>` needs. The same holds in rules, keys and conditions; later rules still run.
 - Rejected: running verbs first and the rest after (breaks aim-then-fire), a `<try><then>` wrapper (the same order in more tags).
 - **An object out of play does not act:** its press or trigger does nothing, though letting go still lets go. Yars' hidden cannon fired from where it waited. Rejected: a test in every action, a state per case.
 

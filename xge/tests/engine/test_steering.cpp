@@ -222,10 +222,10 @@ TEST_CASE("a <hop> with <seconds> goes through the air that long, and a second w
 	CHECK_THROWS_WITH(load("<hop direction=\"up\"><x>4</x><y>4</y></hop>"), ContainsSubstring("is not diagonal"));
 }
 
-TEST_CASE("a timed <hop> or <jump> with an <arc> is drawn up off its way and back down, highest halfway", "[steering]")
+TEST_CASE("a timed <hop> with an <arc> is drawn up off its way and back down, highest halfway", "[steering]")
 {
 	const Scratch file(box("ball", 100, 300, "<actions><action name=\"hop\"><hop direction=\"down-right\"><x>40</x><y>20</y><seconds>0.5</seconds><arc>12</arc></hop></action>"
-		"<action name=\"jump\"><jump direction=\"left\">40<seconds>0.5</seconds><arc>8</arc></jump></action></actions>"),
+		"<action name=\"left\"><hop direction=\"left\">40<seconds>0.5</seconds><arc>8</arc></hop></action></actions>"),
 		"<trigger object=\"ball\" action=\"hop\" />");
 	Played play(file.path);
 	Object& ball = play.get("ball");
@@ -245,7 +245,7 @@ TEST_CASE("a timed <hop> or <jump> with an <arc> is drawn up off its way and bac
 	CHECK(ball.altitude == 0.0f);
 	CHECK(ball.position.y == Approx(320));
 
-	executor.executeInput(CmdTriggerAction{ "ball", "jump" }, true);
+	executor.executeInput(CmdTriggerAction{ "ball", "left" }, true);
 	play.frames(15);
 	CHECK(ball.altitude == Approx(8));
 	play.game.resetObject("ball");
@@ -258,7 +258,7 @@ TEST_CASE("a timed <hop> or <jump> with an <arc> is drawn up off its way and bac
 		Game game(bad.path);
 	};
 	CHECK_THROWS_WITH(load("<hop direction=\"up\">4<arc>3</arc></hop>"), ContainsSubstring("has an <arc> but no <seconds>"));
-	CHECK_THROWS_WITH(load("<jump direction=\"up\">4<arc>-1</arc></jump>"), ContainsSubstring("expected 0 or more"));
+	CHECK_THROWS_WITH(load("<hop direction=\"up\">4<seconds>0.5</seconds><arc>-1</arc></hop>"), ContainsSubstring("expected 0 or more"));
 }
 
 TEST_CASE("a <hunt> by <hop>s makes the one hop that lands nearest what it hunts", "[steering]")

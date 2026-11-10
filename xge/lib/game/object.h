@@ -1058,7 +1058,7 @@ namespace xge
 		Vector2f velocityAt(const Vector2f& at) const;
 
 		// Whether it has a <facing> (Moment::facing): which way it faces, one
-		// of the four directions, without turning its picture. It follows the last <move>, <hop> or <jump> made, and a <fire> leaves the
+		// of the four directions, without turning its picture. It follows the last <move> or <hop> made, and a <fire> leaves the
 		// middle of that side, moving that way at the projectile's own speed:
 		// a man in a maze shoots the way he last walked, an invader facing
 		// down drops its bombs below it. An object with no <facing> fires from
@@ -1348,28 +1348,28 @@ namespace xge
 		Walk walk;
 		bool walksMaze() const noexcept { return !mazeMap.empty(); }
 
-		// A <jump> under way: how far the object travels each frame, and how
+		// A timed <hop> under way (a flight): how far the object travels each frame, and how
 		// many frames are left. While framesLeft is above 0 the object is in
 		// the air: it touches no other object (playOneFrame). A reset
-		// lands it where it starts. jumpArc is how high it is drawn at the
-		// halfway point (its altitude, up then down), jumpFrames the whole
+		// lands it where it starts. flightArc is how high it is drawn at the
+		// halfway point (its altitude, up then down), flightFrames the whole
 		// flight's frames.
-		Vector2f jumpStep{};
-		int jumpFramesLeft{ 0 };
-		int jumpFrames{ 0 };
-		float jumpArc{};
-		bool isAirborne() const noexcept { return jumpFramesLeft > 0; }
+		Vector2f flightStep{};
+		int flightFramesLeft{ 0 };
+		int flightFrames{ 0 };
+		float flightArc{};
+		bool isAirborne() const noexcept { return flightFramesLeft > 0; }
 
-		// Standing, leaping and climbing. `grounded` is true for the frame
+		// Standing, jumping and climbing. `grounded` is true for the frame
 		// after a <land /> stood the object on something (playOneFrame
 		// clears it as each frame's move starts, so it lasts exactly until the
-		// next landing is worked out); a <leap> needs it. `leaping` is a leap
+		// next landing is worked out); a <jump> needs it. `jumping` is a jump
 		// under way: the way across stays as it was at the take-off until the
 		// next landing. `climbing` is on a ladder (playOneFrame): no
 		// pull, no landing, no walking off. `activeClimb` is the step held up
 		// (0) and down (1), and `climbClass` what it climbs.
 		bool grounded{ false };
-		bool leaping{ false };
+		bool jumping{ false };
 		bool climbing{ false };
 		std::array<float, 2> activeClimb{};
 		std::string climbClass;
@@ -1615,7 +1615,7 @@ namespace xge
 		// with <ride />, e.g. a frog on a log): worked out again every frame,
 		// it counts for movement and for edge checks like velocity does, but
 		// is not the object's own, so an object that steps off is at rest.
-		// `hopPending` is a jump queued by a hop.*() action, made at the start
+		// `hopPending` is a hop queued by a hop.*() action, made at the start
 		// of the next frame's move (playOneFrame).
 		Vector2f riding{};
 		Vector2f hopPending{};

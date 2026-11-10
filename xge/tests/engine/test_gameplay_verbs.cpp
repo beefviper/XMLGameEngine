@@ -4,7 +4,7 @@
 // date: Oct 3, 2026
 //
 // Catch2 tests for timers (an object's and a state's, <every> and <after>),
-// <facing> and firing along it, <jump>, <reverse />, <reset object> in a
+// <facing> and firing along it, a timed <hop>, <reverse />, <reset object> in a
 // collision, several keys to one <input>, a <text>
 // of pieces with <letter>s, and <rank>.
 //
@@ -305,9 +305,9 @@ TEST_CASE("an object with a <facing> faces the way it last moved, and fires that
 	CHECK(man.facing == Direction::Up);
 }
 
-TEST_CASE("a jump takes its time, passes over what is in the way, and meets what it lands on", "[jump]")
+TEST_CASE("a timed hop takes its time, passes over what is in the way, and meets what it lands on", "[hop]")
 {
-	const std::string actions = "<actions><action name=\"down\"><jump direction=\"down\">60<seconds>0.5</seconds></jump></action></actions>"
+	const std::string actions = "<actions><action name=\"down\"><hop direction=\"down\">60<seconds>0.5</seconds></hop></action></actions>"
 		"<variables><variable name=\"hits\">0</variable></variables>";
 	const std::string rules = "<enabled>true</enabled><collision class=\"hazard\"><inc variable=\"man.hits\" /></collision>";
 
@@ -338,9 +338,9 @@ TEST_CASE("a jump takes its time, passes over what is in the way, and meets what
 	CHECK(onLanding <= 2);
 }
 
-TEST_CASE("nothing is touched in the air: a jump over a hazard and clear of it costs nothing", "[jump]")
+TEST_CASE("nothing is touched in the air: a timed hop over a hazard and clear of it costs nothing", "[hop]")
 {
-	const std::string actions = "<actions><action name=\"down\"><jump direction=\"down\">80</jump></action></actions>"
+	const std::string actions = "<actions><action name=\"down\"><hop direction=\"down\">80<seconds>0.3</seconds></hop></action></actions>"
 		"<variables><variable name=\"hits\">0</variable></variables>";
 
 	Loaded loaded(gameXml(
@@ -350,7 +350,7 @@ TEST_CASE("nothing is touched in the air: a jump over a hazard and clear of it c
 
 	CommandExecutor executor(loaded.game);
 	executor.executeInput(CmdTriggerAction{ "man", "down" }, true);
-	loaded.frames(18); // 0.3 seconds, the default
+	loaded.frames(18); // 0.3 seconds
 	CHECK(loaded.game.getObject("man").position.y == Approx(180));
 	loaded.frames(5);
 	CHECK(loaded.variable("man", "hits") == 0);
@@ -459,14 +459,16 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><every>0</every></timer></timers>"), plain, "<every> is 0");
 	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><after>1</after><push state=\"nowhere\" /></timer></timers>"), plain,
 		"<push state=\"nowhere\" /> names no state");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump direction=\"up\"><seconds>1</seconds></jump></action></actions>"),
-		plain, "has no value; its number goes between its tags");
+	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump /></action></actions>"),
+		plain, "> <jump>: has no value");
 	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"c\"><chase object=\"o\"><speed>2</speed></chase></action></actions>"),
 		plain, "unknown <speed>; expected its speed, then <near> if wanted");
 	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"c\"><chase object=\"o\">2<random><min>1</min><max>3</max></random></chase></action></actions>"),
 		plain, "holds both the text \"2\" and a <random> tag");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump direction=\"up\">5<seconds>0</seconds></jump></action></actions>"),
-		plain, "<jump> has <seconds> of 0");
+	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><hop direction=\"up\">5<seconds>0</seconds></hop></action></actions>"),
+		plain, "<hop> has <seconds> of 0");
+	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump direction=\"up\">5</jump></action></actions>"),
+		plain, "is now <hop direction=...> with <seconds>");
 	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
 	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show set=\"nothing\" /></shows>" + inputs + "</state>",
 		"set=\"nothing\" names no <shows> set before it");

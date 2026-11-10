@@ -14,7 +14,7 @@ What the engine cannot do today. Why, and what might come, is in the [design fil
 
 ## Jumping, steering and paths
 
-- Jumps are an instant step (`<hop>`), a timed straight line with an optional drawn arc, or a fixed arc under a pull (`<leap>`). No air control.
+- Jumps are an instant step (`<hop>`), a timed straight line with an optional drawn arc, or a fixed arc under a pull (`<jump>`). No air control.
 - `<chase>` and `<aim>` go straight, through walls, with no lead.
 - A maze walker steers by the next tile nearest a target, with no search, so a target behind a wall can leave it circling. Pac-Man's ghosts keep the first level's schedule on every level.
 - A path is straight legs at one speed. Enemies fire on timers from wherever they are (an invader behind others fires through them).

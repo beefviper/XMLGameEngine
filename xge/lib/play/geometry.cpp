@@ -654,7 +654,7 @@ namespace xge
 		return true;
 	}
 
-	float leapSpeed(float pull, float height) noexcept
+	float jumpSpeed(float pull, float height) noexcept
 	{
 		return std::sqrt(2.0f * pull * height);
 	}

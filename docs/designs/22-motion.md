@@ -17,9 +17,9 @@
 | `<line>`, `pixel`, `<acceleration>`, `<accelerate burn>`, `<stop />`, `slower`/`faster` | Lunar Lander |
 | `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<release>`, amounts on `inc`/`dec` | Asteroids |
 | `<knock>`, `<mass>` | Trick Shot, Mario Bros. |
-| timers, `<facing>`, `<jump>`, `<reverse />`, looks, `<reveal>` | a read of every game for workarounds |
+| timers, `<facing>`, timed `<hop>`, `<reverse />`, looks, `<reveal>` | a read of every game for workarounds |
 | `<paths>`, `<follow>` | Galaxian |
-| `<land />`, `<leap>`, `<climb>` | Donkey Kong |
+| `<land />`, `<jump>`, `<climb>` | Donkey Kong |
 | `<chase>`, `<aim>` | Berserk |
 | `<pull>`, `<seek>`, diagonal hops, `<track path>` | Yars' Revenge, Q*bert |
 | nothing new | Space Race, Freeway, Depth Charge, Astrosmash |
@@ -38,8 +38,7 @@
 ## Steps and jumps
 
 - **`<hop>`** is one instant step per press, judged where it lands; never repeated while held.
-- **`<jump>`** is a straight timed move that touches nothing in the air; refused if it would land off screen. `<arc>` lifts it on the way. No air control.
-- **`<seconds>` in a `<hop>`** makes it fly as a jump does (Q*bert), sharing `startFlight`.
+- **`<seconds>` in a `<hop>`** makes it a straight timed move that touches nothing in the air (Q*bert, Frostbite); refused if it would land off screen. `<arc>` lifts it on the way. No air control. A separate `<jump>` for this was merged into `<hop>`: it differed only in a default time; `<jump>` is now the platform jump ([platforming](23-platforming.md)).
 - **`<facing>`** follows the last move; `<fire>` leaves the middle of that side. Chosen over a heading in 90-degree steps, which would turn the picture.
 - **Diagonal hops are direction words** (`up-left`), with one distance or `<x>` and `<y>`.
 - **`<hunt>` with a `<hop>` inside** takes the hop landing nearest the target, run by a timer at the hunter's own pace. Rejected: a new `<pursue>` verb, `<chase>` with steps (chase is a velocity).

@@ -21,8 +21,8 @@
   walk. Space or P pauses.
 
   How it is written:
-  * <jump>: a jump between rows takes a moment and passes over the water; he
-    only meets what he lands on. Water drowns him unless he is on a floe
+  * <hop> with <seconds>: a hop between rows takes a moment and passes over
+    the water; he only meets what he lands on. Water drowns him unless he is on a floe
     (unless="floe"), and he rides a floe (<ride />).
   * The nights are the <scenes> of the playing state. The ice, the igloo and
     its door are pieces, taken by the first night; each later night is the
@@ -50,7 +50,7 @@
     <variable name="row1">192</variable>
     <variable name="rowgap">90</variable>
     <variable name="walk">2</variable>
-    <variable name="leap">0.35</variable>
+    <variable name="hoptime">0.35</variable>
     <variable name="igloox">520</variable>
     <variable name="iglooground">112</variable>
     <variable name="margin">10</variable>
@@ -248,11 +248,11 @@
             <action name="left"><move direction="left">walk</move></action>
             <action name="right"><move direction="right">walk</move></action>
             <action name="up">
-              <jump direction="up">rowgap<seconds>leap</seconds></jump>
+              <hop direction="up">rowgap<seconds>hoptime</seconds></hop>
               <play sound="jump" />
             </action>
             <action name="down">
-              <jump direction="down">rowgap<seconds>leap</seconds></jump>
+              <hop direction="down">rowgap<seconds>hoptime</seconds></hop>
               <play sound="jump" />
             </action>
             <action name="home"><reset /></action>

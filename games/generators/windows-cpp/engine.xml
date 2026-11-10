@@ -76,7 +76,6 @@
   <file>lib/verbs/move.cpp</file>
   <file>lib/verbs/hop.cpp</file>
   <file>lib/verbs/jump.cpp</file>
-  <file>lib/verbs/leap.cpp</file>
   <file>lib/verbs/climb.cpp</file>
   <file>lib/verbs/go.cpp</file>
   <file>lib/verbs/accelerate.cpp</file>

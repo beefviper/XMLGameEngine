@@ -86,7 +86,7 @@ Each row is one concept done more than one way. Counts are games using each form
 | # | Concept | The forms today | Reduce to | Task |
 |---|---|---|---|---|
 | 1 | Into and out of play | Pools: `<active>false</active>` (14 games) with `<reveal>` (11) and `<die />` (24). Copies: `<spawn>` (12), `<despawn>` (21). In between: `<fire>` (16) and `<release>` (9), which take "a copy, or from a pool" | Copies only for things that come and go; `<die />` and `<reveal>` only for fixed things that return (bricks, aliens). `<release>` is a `<spawn>` at the spawner's middle | [R3](#r3-one-way-into-and-out-of-play) |
-| 2 | A jump | `<hop>` (20 games; instant, or timed with `<seconds>` and `<arc>`), `<jump>` (Frostbite only; a timed hop), `<leap>` (3; under a pull) | `<hop>` and `<leap>` | [R2](#r2-jump-becomes-hop) |
+| 2 | A jump | `<hop>` (20 games; instant, or timed with `<seconds>` and `<arc>`), `<jump>` (Frostbite only; a timed hop), `<leap>` (3; under a pull) | `<hop>` and `<jump>` (the old `<leap>`) | R2, done |
 | 3 | Whose turn | A group with `<turns>` (Crazy Eights, Hearts, Spades, Gin). A `turn` variable on a cursor or table, tested everywhere (Checkers, Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes, Hold'em, Cannon Hill). A state's `<turns>` (Galaxian: each player their own game), which is a different idea under the same word | Players as a group for every shared-world game. Rename the arcade one | [R4](#r4-one-way-to-take-turns) |
 | 4 | The end of a game | One end state whose object has a look per outcome (the form chosen in October). Separate win and lose states: Atlantis, Breakout, Demon Attack, Donkey Kong, Doubles, Frogger, Frostbite, Haunted House, Kaboom, Mario Bros., Megamania, Minefield, Pitfall, Q\*bert, Tennis | One end state with looks, or a lose state `from=` the win state | [R5](#r5-one-end-screen-and-one-set-of-state-names) |
 | 5 | State names | `title` (34) or `mainmenu` (23); `gameover` (27), `over` (13) or `lost` (6); `youwin` (11), `won` (9) or `wins` (4) | `title`, `playing`, `paused`, `over` | [R5](#r5-one-end-screen-and-one-set-of-state-names) |
@@ -273,7 +273,7 @@ Work R1 first (it decides what the others delete). The rest are independent of e
 
      | Word (game) | Likely the same as |
      |---|---|
-     | `<jump>` (Frostbite) | `<hop>` with `<seconds>`: [R2](#r2-jump-becomes-hop) |
+     | `<jump>` (Frostbite) | `<hop>` with `<seconds>`: R2, done (Frostbite hops; `<leap>` became `<jump>`) |
      | `<slower>` (Lunar Lander) | a rule's condition on `speed`: [R8](#r8-small-sweeps) |
      | `<hide>` (Space Invaders 2: layers of an SVG) | leave: it is about the picture, not the object; but rename if R6 picks `hidden` |
      | `<seek>` (Yars' Revenge) and `<pull>` (none) | one word with a pick of what changes: the heading or the velocity |
@@ -288,14 +288,6 @@ Work R1 first (it decides what the others delete). The rest are independent of e
      | `<all>` (Tennis) | [R8](#r8-small-sweeps) |
   4. Record each verdict in one line. Remove what is to be removed, one word per commit, each with the reader refusing the old word by name.
 - **Done.** T1's exception list holds only "keep" words, each with its reason; the element count in the schema is lower and is written in `11-vocabulary-map.md` so the next review can compare.
-
-#### R2. `<jump>` becomes `<hop>`
-
-- **Size** S. **Needs** nothing. A good first reduction: one game, one word.
-- **Why.** `<jump direction="up">rowgap<seconds>leap</seconds></jump>` and `<hop direction="up">rowgap<seconds>leap</seconds></hop>` are documented as the same thing; `<jump>` defaults to 0.3 seconds, and `<jump class>` in a board piece's `<moves>` is an unrelated use of the same word.
-- **Files.** `games/descriptions/frostbite.xml` (2 uses), `games/xgedef.xsd` (`jumpType`, `controlsCommands`), `xge/lib/load/xml.cpp` (`isCommandTag`, `readCommand`), `xge/lib/game/command.h`/`.cpp` (`CmdJump`), `xge/lib/play/executor.cpp`, `xge/lib/load/check.cpp` (`ruleFor`, and the hint text that lists `<jump>`), `games/generators/windows-cpp/data.xsl`, `xge/tests/games/test_frostbite.cpp`, `test_gameplay_verbs.cpp`, `docs/reference/commands.md`, `docs/readme.md` word index, `docs/designs/22-motion.md`.
-- **Do.** (1) Read `CmdJump` and `CmdHop` in `executor.cpp` and `play/verbs.cpp` and list every difference (the default time; a hop is "once a press", a jump is a control verb: check held-key behaviour). (2) If a difference matters to Frostbite, give `<hop>` that part. (3) Move Frostbite; its test must pass unchanged, position for position. (4) Remove `<jump>` as a command; the reader says "`<jump>` is now `<hop>` with `<seconds>`".
-- **Done.** `grep -rn "CmdJump" xge` is empty; Frostbite's tests pass without edits to their expected numbers.
 
 #### R3. One way into and out of play
 
@@ -600,10 +592,7 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
 Small, safe steps; the tests are green after every line. A line is one branch off `working`, merged when its checks pass. Lines in the same block can be done in any order or by different sessions at once.
 
 ```
-Block 1  (a day or two; no decisions needed)
-  R2  <jump> becomes <hop>            (the practice run for a removal)
-
-Block 2  (the loud-typos work, then the net)
+Block 2  (the loud-typos work, then the net; Block 1 is done)
   B2  names that match nothing        (six commits)
   T1  the review's checks as tests
   T3  sanitizer option and one clean run

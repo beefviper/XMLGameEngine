@@ -219,17 +219,8 @@ namespace xge
 					<< (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
 					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{}) << ")";
 			},
-			[&](const CmdJump& j)
-			{
-				const char* direction = (j.direction == Direction::Up) ? "up"
-					: (j.direction == Direction::Down) ? "down"
-					: (j.direction == Direction::Left) ? "left"
-					: "right";
-				o << "jump." << direction << "(" << j.distance << ", " << j.seconds << "s"
-					<< (j.arc > 0.0f ? ", arc " + formatDisplayNumber(j.arc) : std::string{}) << ")";
-			},
 			[&](const CmdLand&) { o << "land()"; },
-			[&](const CmdLeap& l) { o << "leap(" << l.height << ")"; },
+			[&](const CmdJump& j) { o << "jump(" << j.height << ")"; },
 			[&](const CmdClimb& c) { o << "climb." << (c.direction == Direction::Up ? "up" : "down") << "(" << c.step << ", " << c.ladderClass << ")"; },
 			[&](const CmdChase& c) { o << "chase(" << c.target << ", " << c.speed << (c.stopWithin > 0.0f ? ", near " + formatDisplayNumber(c.stopWithin) : std::string{}) << ")"; },
 			[&](const CmdGo& g)
@@ -489,11 +480,7 @@ namespace xge
 		{
 			o << "(" << command.object << ", " << command.amount << ")";
 		}
-		else if (command.verb == "jump")
-		{
-			o << "." << command.direction << "(" << command.amount << ", " << command.seconds << ")";
-		}
-		else if (command.verb == "leap" || ((command.verb == "knock" || command.verb == "bounce") && (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())))
+		else if (command.verb == "jump" || ((command.verb == "knock" || command.verb == "bounce") && (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())))
 		{
 			o << "(" << command.amount << ")";
 		}

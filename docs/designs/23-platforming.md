@@ -1,6 +1,6 @@
-# Standing, leaping and climbing
+# Standing, jumping and climbing
 
-**Status:** Built for Donkey Kong, Pitfall!, Mario Bros. and Q*bert: `<land />`, `<leap>`, `<climb>`, slopes, `<arc>`, `<grip>`. Air control is an idea. Reference: [moving](../reference/commands.md#moving).
+**Status:** Built for Donkey Kong, Pitfall!, Mario Bros. and Q*bert: `<land />`, `<jump>`, `<climb>`, slopes, `<arc>`, `<grip>`. Air control is an idea. Reference: [moving](../reference/commands.md#moving).
 
 ## What we looked for
 
@@ -9,13 +9,13 @@ Donkey Kong: Jumpman and barrels stand on girders, a barrel rolls off an open en
 ## What we looked at
 
 - Standing: a "solid" flag on platforms (a world rule, the same objection as world gravity); **a collision verb, `<land />`, on the faller's rule**; reusing `<stop />` (takes the pull away, so nothing walks off an edge).
-- The jump: more children on the straight `<jump>`; **a new verb giving an upward speed under the object's own pull.**
+- The jump: more children on the straight timed move; **a new verb giving an upward speed under the object's own pull.**
 - Ladders: a collision rule with the ladder (runs only while moving, so a man resting would lose it); **a held action that finds the ladder itself.**
 
 ## Chosen
 
 - **`<land />`** acts only on the faller's bottom against the other's top, only when not going up, and marks it on the ground until the next frame. The pull keeps acting, so it walks off an open end by itself. One-way platforms: jumped up through.
-- **`<leap>height</leap>`:** the speed up is `sqrt(2 * pull * height)`, so the author gives the height. Only from the ground; no air control. The loader refuses a leap with no pull or no `<land />` rule.
+- **`<jump>height</jump>`:** the speed up is `sqrt(2 * pull * height)`, so the author gives the height. Only from the ground; no air control. The loader refuses a jump with no pull or no `<land />` rule. First called `<leap>`, while `<jump>` was a straight timed move used only by Frostbite; that move was a timed `<hop>` under another name, so Frostbite took `<hop>` and the platform jump took the word every 2D platformer uses. A hop goes to a place (Frogger, Q*bert, Frostbite); a jump goes up and falls.
 - **`<climb direction class>step</climb>`:** finds a ladder under the climber's middle, lines it up, moves it with no pull. **The step is a velocity**, so the sweep sees two climbers on one ladder. Rejected: a special pass for climbers.
 - A move key changes only its own axis, so walking does not stop a fall.
 - **Sloped girders are a layout:** `<slope>` drops each column so much, a staircase of pieces half a pixel apart, as the arcade drew them. Rejected: landing on a line at an angle.
@@ -27,7 +27,7 @@ Donkey Kong: Jumpman and barrels stand on girders, a barrel rolls off an open en
 
 ## Arc and grip
 
-- **`<arc>`** after a timed hop's or jump's `<seconds>`: the altitude follows `4 * arc * t * (1 - t)`, drawn up and over while what it touches moves straight. Q*bert's hops must land on a cube exactly, so a real pull was rejected.
+- **`<arc>`** after a timed hop's `<seconds>`: the altitude follows `4 * arc * t * (1 - t)`, drawn up and over while what it touches moves straight. Q*bert's hops must land on a cube exactly, so a real pull was rejected.
 - **`<grip>`** eases the speed toward what the held keys ask, that share a frame: a slow start and a slide. Skidding is read from it. On ground pieces, `<surface>` changes it ([tables and tracks](25-tables-and-tracks.md)).
 
 ## Jumps (idea)

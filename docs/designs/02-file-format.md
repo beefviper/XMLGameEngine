@@ -9,7 +9,7 @@
 - **One file, not rules plus level:** blocks are a group in columns and rows or an ASCII `<map>`; pictures are bitmaps. No level files, XInclude or shared files across games.
 - **One list of object parts** (`objectParts`), used by objects, groups and map pieces, so they cannot drift apart. Before, four copies had drifted.
 - **Three flags, three jobs:** `<active>false</active>` is out of play until revealed; `<drawn>false</drawn>` is in play but unseen; `<enabled>false</enabled>` in collisions is seen but touches nothing. `active` was `hidden`, which read as "not drawn".
-- **A verb's one number is its content:** `<chase object="hero">2</chase>`; extras follow as named tags (`<jump direction="up">40<seconds>0.3</seconds></jump>`). One rule beats remembering which verbs wrap their number.
+- **A verb's one number is its content:** `<chase object="hero">2</chase>`; extras follow as named tags (`<hop direction="up">40<seconds>0.3</seconds></hop>`). One rule beats remembering which verbs wrap their number.
 - **Defaults for boilerplate:** background black, not fullscreen, 60 frames a second, and a written `<collisions>` is on. No `<collisions>` still touches nothing.
 - The schema fixes child order; the engine looks elements up by name. A game with no schema location skips validation.
 

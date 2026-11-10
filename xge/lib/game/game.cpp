@@ -1368,12 +1368,12 @@ namespace xge
 			object.carrying.clear();
 			object.dropped.clear();
 			object.hopPending = {};
-			object.jumpStep = {};
-			object.jumpFramesLeft = 0;
-			object.jumpFrames = 0;
-			object.jumpArc = 0.0f;
+			object.flightStep = {};
+			object.flightFramesLeft = 0;
+			object.flightFrames = 0;
+			object.flightArc = 0.0f;
 			object.grounded = false;
-			object.leaping = false;
+			object.jumping = false;
 			object.climbing = false;
 			object.climbOnce = false;
 			object.shifted = {};

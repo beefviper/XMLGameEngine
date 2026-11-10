@@ -46,7 +46,7 @@ The tables list only keys beyond that.
 | `frogger` | W A S D hop | [`<ride />`](commands.md#touching), [`unless=`](collisions.md#rule-filters), diving turtles, five bays |
 | `freeway` | W/S, Up/Down | two chickens across ten lanes; a hit knocks one back a lane |
 | `kaboom` | A/D, the mouse | eight waves as [scenes](states.md#scenes); the bucket stack as looks |
-| `frostbite` | W/S jump rows, A/D walk | [`<jump>`](commands.md#moving), looks that turn the floes, three nights |
+| `frostbite` | W/S hop rows, A/D walk | timed [`<hop>`](commands.md#moving), looks that turn the floes, three nights |
 | `combat` | W/S drive, A/D turn, F or Left Shift fires; Up/Down, Left/Right, Right Shift or Right Control | two tanks; a hit [knocks](collisions.md#knocks) the tank back |
 | `airseabattle` | A S D point, W fires; Left Down Right, Up | two guns, four lanes of planes, 2:16 |
 | `fishingderby` | W A S D move the hook | tethers for lines, values [read when used](format.md#values-read-when-used), a computer fisherman |

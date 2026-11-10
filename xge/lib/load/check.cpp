@@ -177,7 +177,7 @@ namespace xge
 				if (form && (form->places & in(place))) { continue; }
 
 				std::string hint;
-				if (place == Place::Input && (tag == "<move>" || tag == "<fire>" || tag == "<hop>" || tag == "<jump>" || tag == "<leap>" || tag == "<climb>" || tag == "<accelerate>"))
+				if (place == Place::Input && (tag == "<move>" || tag == "<fire>" || tag == "<hop>" || tag == "<jump>" || tag == "<climb>" || tag == "<accelerate>"))
 				{
 					hint = " A key moves or fires an object through one of its <action>s: <trigger object=\"...\" action=\"...\" />.";
 				}
@@ -656,17 +656,17 @@ namespace xge
 						throw std::runtime_error(where + ": action '" + name + "' turns it or thrusts along its heading, and it has no <heading>");
 					}
 
-					// A leap rises against the object's own pull, and only
+					// A jump rises against the object's own pull, and only
 					// from the ground, which a <land /> rule gives it.
-					if (std::holds_alternative<CmdLeap>(shapeOf(command)) && !(object.acceleration.y > 0.0f))
+					if (std::holds_alternative<CmdJump>(shapeOf(command)) && !(object.acceleration.y > 0.0f))
 					{
-						throw std::runtime_error(where + ": action '" + name + "' has a <leap>, and nothing pulls the object down to come back:"
+						throw std::runtime_error(where + ": action '" + name + "' has a <jump>, and nothing pulls the object down to come back:"
 							" give it an <acceleration> with a <y> above 0, and a <collision> with <land /> to stand on");
 					}
-					if (std::holds_alternative<CmdLeap>(shapeOf(command)) && std::none_of(object.collisionData.others.begin(), object.collisionData.others.end(),
+					if (std::holds_alternative<CmdJump>(shapeOf(command)) && std::none_of(object.collisionData.others.begin(), object.collisionData.others.end(),
 						[](const CollisionRule& rule) { return std::any_of(rule.commands.begin(), rule.commands.end(), [](const Command& c) { return std::holds_alternative<CmdLand>(shapeOf(c)); }); }))
 					{
-						throw std::runtime_error(where + ": action '" + name + "' has a <leap>, and the object never stands on anything to leap from:"
+						throw std::runtime_error(where + ": action '" + name + "' has a <jump>, and the object never stands on anything to jump from:"
 							" give it a <collision> with <land /> (<collision class=\"girder\"><land /></collision>)");
 					}
 					if (const auto* climb = std::get_if<CmdClimb>(&shapeOf(command)))

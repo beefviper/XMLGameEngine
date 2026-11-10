@@ -4,7 +4,7 @@
 // date: Oct 3, 2026
 //
 // Catch2 tests for games/descriptions/frostbite.xml, played through a real xge::Engine
-// with no window and the keys a player would press. Bailey jumps (<jump>)
+// with no window and the keys a player would press. Bailey hops (<hop>)
 // between the shore and four rows of drifting ice; a row he lands on while
 // it is white turns blue (<become>, and a rule with sprite="white") and puts
 // a block on the igloo (<reveal>); the water drowns him unless he is on a

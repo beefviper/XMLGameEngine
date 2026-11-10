@@ -364,23 +364,6 @@ namespace xge
 		}
 	}
 
-	// A jump asked for by a hop.*() action. It is only queued here:
-	// playOneFrame makes it at the start of the frame's move, where it can be
-	// refused if it would leave the window. Asking twice in one frame keeps
-	// the later one, so a hop is always a single step in one direction.
-	bool CommandExecutor::startJump(Object& object, const CmdJump& jump)
-	{
-		if (!startFlight(object, stepToward(jump.direction, jump.distance), jump.seconds, jump.arc))
-		{
-			return false;
-		}
-
-		object.facing = jump.direction;
-		if (jump.direction == Direction::Left || jump.direction == Direction::Right) { object.goingLeft = jump.direction == Direction::Left; }
-		object.hasAim = false;
-		return true;
-	}
-
 	bool CommandExecutor::startFlight(Object& object, Vector2f whole, float seconds, float arc)
 	{
 		if (object.isAirborne())
@@ -398,10 +381,10 @@ namespace xge
 		}
 
 		const int frames = game.framesFor(seconds);
-		object.jumpStep = whole * (1.0f / static_cast<float>(frames));
-		object.jumpFramesLeft = frames;
-		object.jumpFrames = frames;
-		object.jumpArc = arc;
+		object.flightStep = whole * (1.0f / static_cast<float>(frames));
+		object.flightFramesLeft = frames;
+		object.flightFrames = frames;
+		object.flightArc = arc;
 		return true;
 	}
 
@@ -616,7 +599,7 @@ namespace xge
 
 	// Coming down onto the top of `other` (its own bottom edge touched, not
 	// going up): it stands there. Put on the top, its fall stopped, on the
-	// ground until the next frame's landing is worked out; a leap ends, and
+	// ground until the next frame's landing is worked out; a jump ends, and
 	// the keys held now decide the way across. Any other touch does nothing,
 	// so a platform can be jumped up through and walked past, and nothing
 	// lands while it climbs.
@@ -629,9 +612,9 @@ namespace xge
 
 		object.grounded = true;
 
-		if (object.leaping)
+		if (object.jumping)
 		{
-			object.leaping = false;
+			object.jumping = false;
 			// One with a <grip> below 1 slides on from the speed it landed at.
 			if (object.grip >= 1.0f)
 			{
@@ -692,16 +675,16 @@ namespace xge
 	// Up off the ground at the speed that, under the object's own pull, rises
 	// `height` pixels: v * v = 2 * pull * height. Only from the ground and not
 	// on a ladder; nothing without a pull down (the loader refuses that).
-	bool CommandExecutor::leap(Object& object, float height)
+	bool CommandExecutor::jump(Object& object, float height)
 	{
 		if (!object.grounded || object.climbing || object.acceleration.y <= 0.0f)
 		{
 			return false;
 		}
 
-		object.velocity.y = -leapSpeed(object.acceleration.y, height);
+		object.velocity.y = -jumpSpeed(object.acceleration.y, height);
 		object.grounded = false;
-		object.leaping = true;
+		object.jumping = true;
 		return true;
 	}
 

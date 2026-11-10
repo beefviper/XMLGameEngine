@@ -23,7 +23,7 @@
   * Jumpman and the barrels fall (an <acceleration> with only a <y>) and
     <land /> on the girders: coming down onto a girder's top, they stand on
     it, and a girder can be walked past or jumped up through from below.
-  * <leap> is Jumpman's jump: up under his own pull, from the ground only,
+  * <jump> is Jumpman's jump: up under his own pull, from the ground only,
     and the way across fixed until he lands, as in the arcade game.
   * <climb class="ladder"> takes him up and down a ladder while he stands at
     one; on it nothing pulls him and he cannot walk off.
@@ -36,7 +36,7 @@
     rule for the girder sees, and it rolls on the other way. A fireball
     climbs up the same way.
   * Jumping a barrel: a condition sees a barrel near Jumpman while his jump
-    lasts (man.leapt) and marks it (man.over); landing scores it.
+    lasts (man.jumped) and marks it (man.over); landing scores it.
 
   How it is written:
   * Each girder is a row of truss pieces, one bitmap, in a group of girders
@@ -62,7 +62,7 @@
     <variable name="pull">0.4</variable>
     <variable name="walk">2.5</variable>
     <variable name="climbstep">2</variable>
-    <variable name="leapheight">44</variable>
+    <variable name="jumpheight">44</variable>
     <variable name="roll">2.5</variable>
     <variable name="margin">16</variable>
     <variable name="goal">3</variable>
@@ -415,7 +415,7 @@
             </collision>
             <collision class="girder">
               <land />
-              <set variable="self.leapt">0</set>
+              <set variable="self.jumped">0</set>
             </collision>
             <!-- down from a jump over a barrel -->
             <collision class="girder">
@@ -462,8 +462,8 @@
               <climb direction="down" class="ladder">climbstep</climb>
             </action>
             <action name="jump">
-              <leap>leapheight</leap>
-              <set variable="man.leapt">1</set>
+              <jump>jumpheight</jump>
+              <set variable="man.jumped">1</set>
               <play sound="jump" />
             </action>
             <action name="lose">
@@ -485,7 +485,7 @@
             <variable name="hammer">0</variable>
             <variable name="bonus">5000</variable>
             <!-- in a jump, and a barrel passed under it -->
-            <variable name="leapt">0</variable>
+            <variable name="jumped">0</variable>
             <variable name="over">0</variable>
           </variables>
           <timers>
@@ -537,9 +537,9 @@
           <trigger object="man" action="lose" />
         </condition>
         <!-- a barrel under him in a jump: scored when he lands -->
-        <condition object="man" variable="leapt"><equal>1</equal>
+        <condition object="man" variable="jumped"><equal>1</equal>
           <condition class="barrel" distance="man"><below>64</below>
-            <set variable="man.leapt">0</set>
+            <set variable="man.jumped">0</set>
             <set variable="man.over">1</set>
           </condition>
         </condition>

@@ -28,7 +28,7 @@ Adverbs are each verb's own: there is no shared "how" vocabulary. Its likely mem
 |---|---|
 | Data model: objects, groups, maps, cells, pieces, states and scenes, keeps | solid |
 | Appearance: shapes, bitmaps with inks, SVG, animation, looks, poses, turning, light, shadows, holes | solid |
-| Kinematics: velocity, acceleration, heading, drag, mass, pull, seek, altitude, grip, swing | good; no air control in a `<leap>` |
+| Kinematics: velocity, acceleration, heading, drag, mass, pull, seek, altitude, grip, swing | good; no air control in a `<jump>` |
 | Steering: chase, aim, paths, maze walking | good; no search of a maze, straight legs only |
 | Collision: edges, filters, conditions, pixel tests, the touching verbs | the largest layer, where verbs, adjectives and prepositions meet |
 | Time: timers, intervals, seconds | built; counts frames |

@@ -282,7 +282,7 @@ namespace xge
 	// from cube to cube of Q*bert's pyramid. `direction` is the way it then
 	// faces (the up or down of a diagonal), `step` the whole of the hop.
 	// With <seconds> after the distance it takes that
-	// long, through the air as a <jump> does: touching nothing until it
+	// long, through the air: touching nothing until it
 	// lands, and a second hop waits for the landing. 0: at once. Its <arc>
 	// is how high it is drawn above its way at the halfway point (a parabola
 	// through its altitude, up then down): a timed hop that leaves the ground.
@@ -316,34 +316,19 @@ namespace xge
 		float arc{};
 	};
 
-	// <jump direction="down">40<seconds>0.4</seconds></jump>
-	// (also up, left, right) - only ever in an object's own <action>: once for
-	// each press, the object travels `distance` pixels that way over `seconds`
-	// (0.3 when left out), through the air: while it is in the air it touches
-	// no other object, so it cannot be hit, ride or drown until it lands, and a
-	// second jump waits for the landing. Unlike <hop> (an instant step) it
-	// takes time and passes over what is between. See playOneFrame.
-	struct CmdJump
-	{
-		Direction direction{};
-		float distance{};
-		float seconds{ 0.3f };
-		float arc{};
-	};
-
 	// <land /> - in a collision rule about another object: coming down onto
 	// its top, the object stands on it. It is put on the top, its fall stops,
-	// and for the next frame it is on the ground, which a <leap> needs. Touching
+	// and for the next frame it is on the ground, which a <jump> needs. Touching
 	// any other side, or going up, does nothing, so a platform is solid from
 	// above only. See CommandExecutor::land.
 	struct CmdLand {};
 
-	// <leap>height</leap> - only ever in an object's own <action>: a jump up
+	// <jump>height</jump> - only ever in an object's own <action>: a jump up
 	// under the object's own pull (its <acceleration>), rising `height`
 	// pixels before it falls again. Only from the ground (after a <land />),
 	// and the way across is fixed at the take-off: a held key does not steer
-	// it until it lands. Donkey Kong's jump. See CommandExecutor::leap.
-	struct CmdLeap
+	// it until it lands. Donkey Kong's jump. See CommandExecutor::jump.
+	struct CmdJump
 	{
 		float height{};
 	};
@@ -881,7 +866,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
-		CmdMove, CmdHop, CmdHuntHop, CmdJump, CmdLand, CmdLeap, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdHuntHop, CmdLand, CmdJump, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdShove, CmdMerge, CmdUndo, CmdWhen, CmdPick, CmdPlace, CmdPut, CmdOrder, CmdCount, CmdThink, CmdCall, CmdLive>;
 
 	struct LoadedCommand
@@ -1077,7 +1062,7 @@ namespace xge
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
 		std::string pile;      // call: pile=, the pile whose wild card the suit is called for
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
-		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (distance), leap (height), climb, go, hunt and wander (the speed)
+		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)
 		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
 		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)

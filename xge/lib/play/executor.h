@@ -111,7 +111,6 @@ namespace xge
 		void bounceScreenEdge(Object& object, Edge edge, float share);
 		void moveByStep(Object& object, Direction direction, float step);
 		void queueHop(Object& object, Vector2f step);
-		bool startJump(Object& object, const CmdJump& jump);
 
 		// A <hop>: at once (queued), or with <seconds> through the air, as a
 		// jump goes; either way the object then faces that way. False when
@@ -122,7 +121,7 @@ namespace xge
 		bool huntByHop(Object& object, const CmdHuntHop& hunt);
 
 		// Through the air by `whole` over `seconds`, touching nothing until it
-		// lands: a <jump>, or a <hop> that takes time. Not when it is in the
+		// lands: a <hop> that takes time. Not when it is in the
 		// air already, nor when it would land outside the window. With an
 		// arc it is drawn that high above its way halfway there.
 		bool startFlight(Object& object, Vector2f whole, float seconds, float arc);
@@ -131,7 +130,7 @@ namespace xge
 		// <knock>: see CmdKnock. Into a thing with no mass, through it, to
 		// everything with a mass resting against its far side.
 		void knock(Object& object, Object& other, const Touch& touch, float bounce);
-		bool leap(Object& object, float height);
+		bool jump(Object& object, float height);
 		void chase(Object& object, const CmdChase& chase);
 		bool aim(Object& object, const CmdAim& command);
 		void reverse(Object& object);
@@ -150,8 +149,8 @@ namespace xge
 		void restart(Object& object);
 
 		// Runs an action's commands in order. On the press, a verb that can
-		// be refused (<fire> with nothing left to fire, a <hop>, <jump>,
-		// <leap> or hunt by hops that cannot be made, an <aim> not lined up)
+		// be refused (<fire> with nothing left to fire, a <hop>, <jump>
+		// or hunt by hops that cannot be made, an <aim> not lined up)
 		// and is refused ends the action there: what it would have done
 		// after (a sound, a look) is not done.
 		// With `from`, only those showing that look run it. `byRule`: run by

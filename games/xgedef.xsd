@@ -1270,16 +1270,6 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- jump: a direction, how far as its value, how many seconds it takes (0.3 if left out), and how high it goes on the way (none if left out). -->
-  <xs:complexType name="jumpType" mixed="true">
-    <xs:sequence>
-      <xs:group ref="valueTag" minOccurs="0" />
-      <xs:element name="seconds" type="valueType" minOccurs="0" />
-      <xs:element name="arc" type="valueType" minOccurs="0" />
-    </xs:sequence>
-    <xs:attribute name="direction" type="directionType" use="required" />
-  </xs:complexType>
-
   <!-- climb: up or down, the class of what is climbed (a ladder), and the step a frame. -->
   <xs:complexType name="climbType" mixed="true">
     <xs:sequence>
@@ -1669,7 +1659,7 @@
       <xs:element name="deflect" type="deflectType" />
       <xs:element name="hole" type="holeType" />
       <xs:element name="knock" type="knockType" />
-      <!-- land: stand on top of the object touched; leap: a jump of that height under the object's own pull -->
+      <!-- land: stand on top of the object touched; jump: up off the ground that high, under the object's own pull -->
       <xs:element name="land" type="emptyType" />
       <xs:element name="ride" type="emptyType" />
       <!-- through: on a map with <cells />, the refused step is made after all, into the cell with what is there -->
@@ -1708,8 +1698,7 @@
       <xs:element name="accelerate" type="thrustType" />
       <xs:element name="climb" type="climbType" />
       <xs:element name="go" type="goType" />
-      <xs:element name="jump" type="jumpType" />
-      <xs:element name="leap" type="valueType" />
+      <xs:element name="jump" type="valueType" />
       <!-- swing: held, the heading turns <degrees> that way in one eased stroke <seconds> long; let go, back to the heading it started with -->
       <xs:element name="swing" type="swingType" />
       <xs:element name="thrust" type="aheadType" />

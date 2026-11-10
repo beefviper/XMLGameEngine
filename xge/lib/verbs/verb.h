@@ -181,7 +181,7 @@ namespace xge
 	CellPlace cellPlaceOf(const RawCommand& raw);
 	// How long a <hop> takes: no <seconds>, none at all.
 	float hopSeconds(const RawCommand& raw, const ValueEvaluator& evaluate);
-	// How high a timed <hop> or <jump> goes: no <arc>, not at all.
+	// How high a timed <hop> goes: no <arc>, not at all.
 	float arcOf(const RawCommand& raw, const char* what, float seconds, const ValueEvaluator& evaluate);
 	// The speed of a <go>, <hunt> or <wander>, which may not be below 0.
 	float speedOf(const RawCommand& raw, const char* what, const ValueEvaluator& evaluate);

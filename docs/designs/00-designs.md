@@ -30,7 +30,7 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 | [collisions](20-collisions.md) | Detection, sweeps, pixels, riding and carrying, contacts, knocks, bounce by the normal | Built |
 | [collisions-open](21-collisions-open.md) | Weaknesses, response alternatives | Open |
 | [motion](22-motion.md) | The verb principle, gravity, thrust, headings, hops, pulls, altitude | Built |
-| [platforming](23-platforming.md) | Standing, leaping, ladders, arc and grip | Built; air control Idea |
+| [platforming](23-platforming.md) | Standing, jumping, ladders, arc and grip | Built; air control Idea |
 | [chase-and-paths](24-chase-and-paths.md) | Chasing, aiming, mazes, paths, computer players | Built; curves Idea |
 | [tables-and-tracks](25-tables-and-tracks.md) | Mini golf, artillery, pinball, racing | Built |
 | [board-games](26-board-games.md) | Moves, the picker, puts, `<think>` | Built; action lookahead Open |

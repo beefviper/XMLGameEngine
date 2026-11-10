@@ -47,7 +47,7 @@ namespace
 			"<actions>"
 			"<action name=\"left\"><move direction=\"left\">2</move></action>"
 			"<action name=\"right\"><move direction=\"right\">2</move></action>"
-			"<action name=\"jump\"><leap>40</leap></action>"
+			"<action name=\"jump\"><jump>40</jump></action>"
 			"<action name=\"hurt\"><become sprite=\"hurt\" /></action>"
 			"<action name=\"well\"><become sprite=\"stand\" /></action>"
 			"</actions></object>";

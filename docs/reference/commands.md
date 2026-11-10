@@ -15,7 +15,7 @@ Commands are sorted by what they need. Each place takes only the groups that mea
 | touch | `carry`, `deflect`, `hole`, `knock`, `land`, `ride`; on cells `shove`, `merge`, `through` | another object touched |
 | edge | `stick`, `wrap` | a screen edge |
 | bounce | `bounce` | a screen edge or another object |
-| controls | `accelerate`, `climb`, `go`, `hop`, `jump`, `leap`, `swing`, `thrust`, `turn`, `track` | a key held or pressed |
+| controls | `accelerate`, `climb`, `go`, `hop`, `jump`, `swing`, `thrust`, `turn`, `track` | a key held or pressed |
 | cells | `clear`, `collapse`, `fall` | what a [map's check](maps.md#checks) found |
 | press | `hold`, `think` | a [computer player](states.md#computer-players) |
 
@@ -36,7 +36,7 @@ Commands are sorted by what they need. Each place takes only the groups that mea
 <fire object="bullet" /><play sound="shoot" />   <!-- sounds only when a shot leaves -->
 ```
 
-Refused are: a `<fire>` or `<spawn>` at its `<most>`; a `<hop>`, `<jump>` or hunt by hops in the air or landing outside the window; a `<leap>` off the ground; an `<aim>` with `<lined>` not lined up; a [`<pick>`, `<place>` or `<put>`](boards.md#the-picker) that is no move; a card [`<send>` or `<distribute>`](cards.md#holders) with nothing to send; a spawn into a taken cell. So write the verb first and its answers after.
+Refused are: a `<fire>` or `<spawn>` at its `<most>`; a `<hop>` or hunt by hops in the air or landing outside the window; a `<jump>` off the ground; an `<aim>` with `<lined>` not lined up; a [`<pick>`, `<place>` or `<put>`](boards.md#the-picker) that is no move; a card [`<send>` or `<distribute>`](cards.md#holders) with nothing to send; a spawn into a taken cell. So write the verb first and its answers after.
 
 An object out of play does nothing when its action is pressed or triggered; letting go still lets go.
 
@@ -46,9 +46,8 @@ An object out of play does nothing when its action is pressed or triggered; lett
 |---|---|
 | `<move direction="up">step</move>` | in an action, held: `step` pixels a frame while the key is down ([held keys](input.md#held-keys-and-state-changes)). In a rule: shifts it once |
 | `<hop direction="up">distance</hop>` | once a press: a step made before collisions, judged where it lands; refused off the window. Diagonals `up-left` ... `down-right`, by `distance` or `<x>` and `<y>` |
-| `<seconds>`, `<arc>` in a `<hop>` or `<jump>` | it takes that long through the air, touching nothing until it lands; `<arc>` lifts its [altitude](pictures.md#height-and-shadows) to that height half way |
-| `<jump direction="down">90<seconds>0.35</seconds></jump>` | a timed straight jump (0.3 s by default), refused off the screen |
-| `<leap>height</leap>` | a jump up under its own pull to about that height; only from the ground, fixed sideways until a `<land />`. Needs an acceleration down and a `<land />` rule |
+| `<seconds>`, `<arc>` in a `<hop>` | it takes that long through the air, touching nothing until it lands; `<arc>` lifts its [altitude](pictures.md#height-and-shadows) to that height half way |
+| `<jump>height</jump>` | a jump up under its own pull to about that height; only from the ground, fixed sideways until a `<land />`. Needs an acceleration down and a `<land />` rule |
 | `<land />` | in a rule: coming down onto the other's top, it stands there. Any other side, or going up, does nothing (one-way platforms) |
 | `<climb direction="up" class="ladder">step</climb>` | held: at an object of that class, gets on, lines up and climbs; at an end steps off onto what it lands on, or holds there if nothing is. Stacked pieces are one ladder. Run by a rule or timer, it takes one ladder and lets go |
 | `<accelerate direction="up" burn="fuel">amount</accelerate>` | held: adds to the velocity every frame; `burn` takes 1 off its own variable each frame and stops at 0 |

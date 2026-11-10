@@ -45,7 +45,7 @@
   <xsl:template name="value-body">
     <xsl:param name="node" />
     <!-- a value tag, or the text, beside the named parts of a verb whose
-         number is its content (readLeadValue): <jump>rowgap<seconds>... -->
+         number is its content (readLeadValue): <hop>rowgap<seconds>... -->
     <xsl:variable name="tag" select="$node/*[self::random or self::formula or self::centered][1]" />
     <xsl:choose>
       <xsl:when test="$tag[self::random]">
@@ -385,7 +385,7 @@
             <xsl:with-param name="node" select="$node/wait" />
           </xsl:call-template>
         </xsl:when>
-        <xsl:when test="$verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'leap' or $verb = 'climb' or $verb = 'go' or $verb = 'set'">
+        <xsl:when test="$verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'jump' or $verb = 'climb' or $verb = 'go' or $verb = 'set'">
           <xsl:text> command.amount = </xsl:text>
           <xsl:call-template name="value">
             <xsl:with-param name="node" select="$node" />
@@ -399,20 +399,6 @@
             <xsl:with-param name="node" select="$node" />
           </xsl:call-template>
           <xsl:text>;</xsl:text>
-        </xsl:when>
-        <xsl:when test="$verb = 'jump'">
-          <xsl:call-template name="field">
-            <xsl:with-param name="name" select="'command.amount'" />
-            <xsl:with-param name="node" select="$node" />
-          </xsl:call-template>
-          <xsl:call-template name="field">
-            <xsl:with-param name="name" select="'command.seconds'" />
-            <xsl:with-param name="node" select="$node/seconds" />
-          </xsl:call-template>
-          <xsl:call-template name="field">
-            <xsl:with-param name="name" select="'command.arc'" />
-            <xsl:with-param name="node" select="$node/arc" />
-          </xsl:call-template>
         </xsl:when>
         <xsl:when test="$verb = 'chase'">
           <xsl:call-template name="field">

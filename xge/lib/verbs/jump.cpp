@@ -9,33 +9,27 @@
 #include "load/reading.h"
 
 #include <stdexcept>
-#include <string>
 
 namespace xge
 {
-	// <jump>: Through the air to a place, touching nothing until it lands.
+	// <jump>: Up off the ground against the pull on it.
 	static void readJump(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
-		// How far as its content, then how long and how high.
-		requireAttribute(node, "direction", where);
-		const std::string here = where + " > <jump>";
-		command.amount = readLeadValue(node, { "seconds", "arc" }, "its distance, then <seconds> and <arc>, each if wanted", where);
-		if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
-		if (auto arc = findChild(&node, "arc")) { command.arc = readValue(*arc, here); }
+		// The old <jump>, to a place: that is a <hop> with <seconds> now.
+		if (!getAttribute(&node, "direction").empty()) { fail(where, "<jump direction=...> to a place is now <hop direction=...> with <seconds>; <jump> is up off the ground, its height as its content"); }
+		command.amount = readValue(node, where);
 	}
 
 	static Command makeJump(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		CmdJump jump{ directionFromName(raw.direction, raw.verb), evaluate(raw.amount) };
-		if (isWritten(raw.seconds)) { jump.seconds = evaluate(raw.seconds); }
-		if (!(jump.seconds > 0.0f)) { throw std::runtime_error("<jump> has <seconds> of " + std::to_string(jump.seconds) + "; expected more than 0"); }
-		jump.arc = arcOf(raw, "jump", jump.seconds, evaluate);
-		return jump;
+		const float height = evaluate(raw.amount);
+		if (!(height > 0.0f)) { throw std::runtime_error("<jump> has a height of " + formatDisplayNumber(height) + "; expected more than 0"); }
+		return CmdJump{ height };
 	}
 
 	static bool runJump(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
-		return !(doer.self && doer.action) || executor.startJump(*doer.self, std::get<CmdJump>(command));
+		return !(doer.self && doer.action) || executor.jump(*doer.self, std::get<CmdJump>(command).height);
 	}
 
 	extern const Verb jumpVerb;

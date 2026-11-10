@@ -322,7 +322,7 @@ namespace xge
 		object.activeMoveStep = {};
 		object.activeClimb = {};
 		object.climbing = false;
-		object.leaping = false;
+		object.jumping = false;
 		object.activeThrust = {};
 		object.activeThrustBurn = {};
 		object.activeTurn = {};
@@ -335,7 +335,7 @@ namespace xge
 	{
 		object.position = object.start.position;
 		object.climbing = false;
-		object.leaping = false;
+		object.jumping = false;
 		object.grounded = false;
 		object.hasAim = false;
 		const bool keyHeld = std::any_of(object.activeMoveStep.begin(), object.activeMoveStep.end(), [](float step) { return step != 0.0f; });
@@ -358,7 +358,7 @@ namespace xge
 		const bool slides = object.grip < 1.0f;
 		if (direction == Direction::Left || direction == Direction::Right)
 		{
-			if (!object.leaping && !slides)
+			if (!object.jumping && !slides)
 			{
 				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
 					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];

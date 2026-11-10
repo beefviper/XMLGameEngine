@@ -38,7 +38,7 @@
     jungle goes round. A screen left stays as it was:
     a treasure taken stays taken, a log rolls on from where it was.
   * Harry falls (an <acceleration>), stands on the ground with <land />,
-    jumps with <leap> and climbs the ladder of the fourth screen with
+    jumps (<jump>) and climbs the ladder of the fourth screen with
     <climb>, as Jumpman does in Donkey Kong.
   * The score, the lives, the clock and the treasures found are variables
     of `status`, an object never drawn, so any rule can put Harry back where
@@ -71,7 +71,7 @@
     <variable name="pull">0.4</variable>
     <variable name="run">2.5</variable>
     <variable name="climbstep">2</variable>
-    <variable name="leapheight">48</variable>
+    <variable name="jumpheight">48</variable>
     <variable name="roll">1.5</variable>
     <variable name="crawl">1</variable>
     <!-- what a rolling log does to Harry each time it knocks into him: the
@@ -435,7 +435,7 @@
             <collision class="croc">
               <land />
             </collision>
-            <!-- a log knocks Harry back the way it rolls; only a leap gets
+            <!-- a log knocks Harry back the way it rolls; only a jump gets
                  him over it -->
             <collision class="log">
               <dec variable="status.score">bump</dec>
@@ -464,7 +464,7 @@
               <climb direction="down" class="ladder">climbstep</climb>
             </action>
             <action name="jump">
-              <leap>leapheight</leap>
+              <jump>jumpheight</jump>
               <play sound="jump" />
             </action>
           </actions>

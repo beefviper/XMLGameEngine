@@ -40,7 +40,7 @@ One `<game>` root, its children in this order (the schema enforces it):
 <collision edge="left"> ... </collision>                  <!-- picks -->
 <radius>10</radius>                                       <!-- a number: content -->
 <chase object="hero">2</chase>                            <!-- a verb's one number: content -->
-<jump direction="up">rowgap<seconds>leap</seconds></jump> <!-- more numbers: named tags -->
+<hop direction="up">rowgap<seconds>hoptime</seconds></hop> <!-- more numbers: named tags -->
 ```
 
 - Attributes are labels that cannot be computed: `name`, `class`, `object`, `variable`, `state`, `action`, `button`, `edge`, `direction`, `unless`, `sound`, `wave`, `pitch`, `to`.

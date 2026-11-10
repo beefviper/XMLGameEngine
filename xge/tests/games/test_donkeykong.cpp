@@ -5,7 +5,7 @@
 //
 // Catch2 tests for games/descriptions/donkeykong.xml, played through a real xge::Engine
 // with no window and the keys a player would press: Jumpman standing on the
-// girders (<land />), which slope (<slope>), leaping (<leap>) and climbing
+// girders (<land />), which slope (<slope>), jumping (<jump>) and climbing
 // (<climb>) ladders of rungs, the barrels Kong throws rolling down to the oil
 // drum and now and then down a ladder, the fireballs the oil lets out, a
 // barrel costing a life and one jumped scoring, the hammer smashing them, the
@@ -164,7 +164,7 @@ TEST_CASE("Jumpman walks along a girder without sinking, and falls off its open 
 	CHECK(play.man().grounded);
 }
 
-TEST_CASE("a leap rises about its height and lands, and only from the ground", "[donkeykong]")
+TEST_CASE("a jump rises about its height and lands, and only from the ground", "[donkeykong]")
 {
 	DonkeyKong play;
 	play.start();
@@ -186,16 +186,16 @@ TEST_CASE("a leap rises about its height and lands, and only from the ground", "
 	CHECK(airborne > 20);
 	CHECK(airborne < 35);
 	CHECK(play.feet() == Approx(floor).margin(1.0f));
-	CHECK_FALSE(play.man().leaping);
+	CHECK_FALSE(play.man().jumping);
 }
 
-TEST_CASE("the way across a leap is fixed at the take-off", "[donkeykong]")
+TEST_CASE("the way across a jump is fixed at the take-off", "[donkeykong]")
 {
 	DonkeyKong play;
 	play.start();
 	play.standAt(300.0f, "floor");
 
-	// Walking right, he leaps and lets go: he keeps going right in the air...
+	// Walking right, he jumps and lets go: he keeps going right in the air...
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(2);
 	play.tap(KeyCode::Space);
@@ -303,7 +303,7 @@ TEST_CASE("Kong's barrel rolls down every girder to the oil drum", "[donkeykong]
 	CHECK(play.variable("lives") == 3);
 }
 
-TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; leaping over it does not", "[donkeykong]")
+TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; jumping over it does not", "[donkeykong]")
 {
 	DonkeyKong play;
 	play.start();
@@ -312,7 +312,7 @@ TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; le
 	// A barrel rolling left along the floor, towards him.
 	Object& barrel = play.barrelAt(450.0f, "floor", -2.5f);
 
-	// Leap as it comes close: it passes under him, and that is 100 when he lands.
+	// Jump as it comes close: it passes under him, and that is 100 when he lands.
 	while (barrel.position.x > play.man().position.x + play.man().size.x + 20.0f) { play.frames(1); }
 	play.tap(KeyCode::Space);
 	play.frames(60);
@@ -414,7 +414,7 @@ TEST_CASE("with the hammer a barrel is smashed for points, and the hammer wears 
 	DonkeyKong play;
 	play.start();
 	Object& hammer = play.game.getObject("hammer");
-	// It hangs above the girder: he leaps to take it.
+	// It hangs above the girder: he jumps to take it.
 	play.standAt(hammer.position.x, "third");
 	play.tap(KeyCode::Space);
 	play.frames(40);

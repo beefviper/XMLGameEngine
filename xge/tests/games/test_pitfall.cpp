@@ -7,7 +7,7 @@
 // no window and the keys a player would press: Harry running from screen to
 // screen (the scenes of the playing state, entered through the unseen strip
 // down each side), a screen kept as it was when left, the logs, the tar pit
-// leapt over and fallen into, the crocodiles opening their jaws, the ladder down
+// jumped over and fallen into, the crocodiles opening their jaws, the ladder down
 // to the tunnel, the treasures, the clock, and the jungle still under the
 // pause.
 //
@@ -156,7 +156,7 @@ TEST_CASE("running off one side of a screen is the next screen, and the jungle g
 	CHECK(play.state() == "playing");
 }
 
-TEST_CASE("a log knocks Harry back and costs points; a leap clears it", "[pitfall]")
+TEST_CASE("a log knocks Harry back and costs points; a jump clears it", "[pitfall]")
 {
 	Pitfall play;
 	play.start();
@@ -175,21 +175,21 @@ TEST_CASE("a log knocks Harry back and costs points; a leap clears it", "[pitfal
 	CHECK(play.status("score") < 2000);
 	CHECK(play.status("lives") == 3);
 
-	// Leaping as he runs at it, he lands past it with nothing taken.
-	Pitfall leap;
-	leap.start();
-	Object& rolling = leap.game.getObject("playing.screen1.logs.1");
-	leap.standAt(rolling.position.x - 40.0f);
-	leap.engine.handleKeyPressed(KeyCode::D);
-	leap.tap(KeyCode::Space);
-	leap.frames(30);
-	leap.engine.handleKeyReleased(KeyCode::D);
-	leap.frames(2);
-	CHECK(leap.harry().position.x > rolling.position.x + rolling.size.x);
-	CHECK(leap.status("score") == 2000);
+	// Jumping as he runs at it, he lands past it with nothing taken.
+	Pitfall jump;
+	jump.start();
+	Object& rolling = jump.game.getObject("playing.screen1.logs.1");
+	jump.standAt(rolling.position.x - 40.0f);
+	jump.engine.handleKeyPressed(KeyCode::D);
+	jump.tap(KeyCode::Space);
+	jump.frames(30);
+	jump.engine.handleKeyReleased(KeyCode::D);
+	jump.frames(2);
+	CHECK(jump.harry().position.x > rolling.position.x + rolling.size.x);
+	CHECK(jump.status("score") == 2000);
 }
 
-TEST_CASE("the tar pit costs a life, unless Harry leaps over it", "[pitfall]")
+TEST_CASE("the tar pit costs a life, unless Harry jumps over it", "[pitfall]")
 {
 	Pitfall play;
 	play.start();
@@ -205,7 +205,7 @@ TEST_CASE("the tar pit costs a life, unless Harry leaps over it", "[pitfall]")
 	CHECK(play.status("lives") == 2);
 	CHECK(play.harry().position.x < 100.0f);
 
-	// Leaping from just short of it.
+	// Jumping from just short of it.
 	play.standAt(tar - 20.0f);
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(1);
@@ -341,7 +341,7 @@ TEST_CASE("the clock counts down a second at a time, and running out ends the ga
 	CHECK(play.screen() == "playing.screen1");
 }
 
-TEST_CASE("the pond can be crossed by leaping from head to head between bites", "[pitfall]")
+TEST_CASE("the pond can be crossed by jumping from head to head between bites", "[pitfall]")
 {
 	Pitfall play;
 	play.start();
@@ -352,10 +352,10 @@ TEST_CASE("the pond can be crossed by leaping from head to head between bites", 
 		play.game.getObject(croc).timers.at(0).framesLeft = 170;
 	}
 
-	// From the edge of the bank, one leap to each head and one to the far bank.
+	// From the edge of the bank, one jump to each head and one to the far bank.
 	play.standAt(200.0f);
 	play.engine.handleKeyPressed(KeyCode::D);
-	for (int leap = 0; leap < 4; ++leap)
+	for (int jump = 0; jump < 4; ++jump)
 	{
 		play.tap(KeyCode::Space);
 		play.frames(32);

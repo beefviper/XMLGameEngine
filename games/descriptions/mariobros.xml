@@ -76,7 +76,7 @@
     <variable name="hop">2.5</variable>
     <!-- a fighter fly's hop -->
     <variable name="flyhop">18</variable>
-    <variable name="leapheight">56</variable>
+    <variable name="jumpheight">56</variable>
     <!-- the top of each level of floor -->
     <variable name="top">64</variable>
     <variable name="middle">112</variable>
@@ -210,7 +210,7 @@
           <move direction="right">walk</move>
         </action>
         <action name="jump">
-          <leap>leapheight</leap>
+          <jump>jumpheight</jump>
           <play sound="jump" />
         </action>
         <action name="lose">
@@ -317,9 +317,9 @@
           <set variable="self.down">0</set>
         </action>
         <!-- the POW: one standing on a floor hops, and on its feet goes
-             over; one in the air cannot leap, and is left alone -->
+             over; one in the air cannot jump, and is left alone -->
         <action name="powed">
-          <leap>10</leap>
+          <jump>10</jump>
           <become sprite="flipped" from="walking" />
         </action>
         <!-- off for good, and a coin comes out of a top pipe -->
@@ -460,7 +460,7 @@
       <actions>
         <!-- the POW counts as a bump: mad goes over, on its feet goes mad -->
         <action name="powed">
-          <leap>10</leap>
+          <jump>10</jump>
           <become sprite="flipped" from="mad" />
           <become sprite="mad" from="walking" />
         </action>
@@ -499,7 +499,7 @@
       </collisions>
       <actions>
         <action name="hop">
-          <leap>flyhop</leap>
+          <jump>flyhop</jump>
         </action>
       </actions>
       <timers>

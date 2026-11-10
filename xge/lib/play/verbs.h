@@ -131,7 +131,7 @@ namespace xge
 
 	// A direction held at `step` (0: let go), recombined with the others held
 	// into the velocity: Left/Right and Up/Down are separate axes, and in a
-	// <leap> the way across waits for the landing.
+	// <jump> the way across waits for the landing.
 	void holdStep(Object& object, Direction direction, float step);
 
 	// A <move> in an action, as its key goes down (pressed) or up: that
