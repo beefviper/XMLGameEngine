@@ -1445,7 +1445,13 @@ TEST_CASE("a key's trigger holds an <otherwise>, run only when its action is ref
 	const std::string path = scratchName("descriptions/otherwise_scratch.xml");
 	{
 		std::ofstream out(path);
-		out << gameXml(box("a", 100, 0, 10, 10, "<enabled>false</enabled>", {}, actions), state("playing", { "a" }, inputs));
+		// Two looks, so from="other" names one it is not showing.
+		std::string a = box("a", 100, 0, 10, 10, "<enabled>false</enabled>", {}, actions);
+		const std::size_t from = a.find("<sprite>");
+		const std::size_t to = a.find("</sprite>") + 9;
+		const std::string shape = a.substr(from + 8, to - from - 17);
+		a.replace(from, to - from, "<sprite name=\"plain\">" + shape + "</sprite><sprite name=\"other\">" + shape + "</sprite>");
+		out << gameXml(a, state("playing", { "a" }, inputs));
 	}
 	{
 		played::Played played(path);

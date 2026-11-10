@@ -489,6 +489,19 @@ namespace xge
 			}
 		}
 
+		// What a state's <shows> name is something the game has: a misspelt
+		// one was never drawn.
+		for (const State& state : states)
+		{
+			for (const std::string& shown : state.show)
+			{
+				if (!findObject(objects, shown))
+				{
+					throw std::runtime_error("state '" + state.name + "' > <show object=\"" + shown + "\" />: there is no object or group of that name" + didYouMean(shown, objectNames(objects)));
+				}
+			}
+		}
+
 		// A state's <music> names one of the game's sounds.
 		for (const State& state : states)
 		{

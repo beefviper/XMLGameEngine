@@ -158,6 +158,7 @@ TEST_CASE("<random> gives a number between its two ends, and a different one eac
 		o.velocityY = "<random><min>window.width.center</min><max>window.width.center - 10</max></random>"; // expressions, either order
 		objects += objectXml(o);
 	}
+	objects += objectXml({}); // o, which the state shows
 	Loaded loaded(gameXml("", objects));
 
 	std::set<float> seen;
@@ -543,6 +544,7 @@ TEST_CASE("sprites: each shape's parts", "[xml_format][sprite]")
 {
 	std::string objects;
 
+	objects += objectXml({}); // o, which the state shows
 	ObjectXml circle; circle.name = "circle";
 	circle.sprite = "<circle><radius>4</radius><color>color.red</color></circle>";
 	objects += objectXml(circle);
@@ -590,7 +592,7 @@ TEST_CASE("a text's <number> stays live only when it is a lone owner.variable", 
 	ObjectXml label; label.name = "label";
 	label.sprite = "<text><content>paddle.score</content><size>20</size></text>";
 
-	Loaded loaded(gameXml("", objectXml(owner) + objectXml(bound) + objectXml(sum) + objectXml(label)));
+	Loaded loaded(gameXml("", objectXml({}) + objectXml(owner) + objectXml(bound) + objectXml(sum) + objectXml(label)));
 	Game& game = loaded.game;
 
 	CHECK(game.getObject("bound").showsVariable("paddle", "score"));

@@ -68,6 +68,21 @@ namespace xge
 			throw std::runtime_error(checking.where + ": '" + trigger.object + "' has no action named '" + trigger.action + "'" + didYouMean(trigger.action, names)
 				+ (names.empty() ? std::string(" (it has no <actions>)") : "; its actions are: " + listOf(names)));
 		}
+		// from= is a look of what it names, or the action would never run.
+		if (!trigger.from.empty())
+		{
+			std::vector<std::string> looks;
+			for (const Object& each : objects)
+			{
+				if (&each != object && !each.named(trigger.object)) { continue; }
+				for (const auto& look : each.looks) { looks.push_back(look.name); }
+			}
+			if (std::find(looks.begin(), looks.end(), trigger.from) == looks.end())
+			{
+				throw std::runtime_error(checking.where + ": <trigger object=\"" + trigger.object + "\" from=\"" + trigger.from + "\">: '" + trigger.object + "' has no look of that name" + didYouMean(trigger.from, looks)
+					+ (looks.empty() ? std::string(" (it has no named <sprite>s)") : "; its looks are: " + listOf(looks)));
+			}
+		}
 	}
 
 	static bool runTrigger(const Command& command, const Doer& doer, CommandExecutor& executor)

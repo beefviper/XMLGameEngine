@@ -8,11 +8,14 @@
 // and the game would quietly do nothing.
 
 #include "played.h"
+#include "scratch.h"
 #include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 
@@ -114,4 +117,42 @@ TEST_CASE("a condition's variable is one that what it looks at has, or a number 
 	CHECK_THAT(stateWith("<condition object=\"status\" variable=\"lifes\"><atmost>0</atmost><pop /></condition>"),
 		ContainsSubstring("variable=\"lifes\": nothing the condition looks at has a variable or number of that name")
 		&& ContainsSubstring("did you mean 'lives'") && ContainsSubstring("its variables are: lives"));
+}
+
+TEST_CASE("a state shows what the game has, and a trigger's from= is a look it has", "[names]")
+{
+	const auto loads = [](const std::string& objects, const std::string& onSpace, const std::string& shows = {})
+	{
+		const std::string path = scratchName("descriptions/names_scratch.xml");
+		{
+			std::ofstream out(path);
+			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+				"<window name=\"scratch\"><width>800</width><height>600</height><background>color.black</background>"
+				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+				"<variables><variable name=\"unused\">0</variable></variables>"
+				"<states><state name=\"playing\"><objects>" << objects << "</objects>" << shows
+				<< "<inputs><input button=\"space\">" << onSpace << "</input></inputs></state></states></game>";
+		}
+		std::string message;
+		try
+		{
+			Game game(path);
+		}
+		catch (const std::exception& error)
+		{
+			message = error.what();
+		}
+		std::error_code ignored;
+		std::filesystem::remove(path, ignored);
+		return message;
+	};
+	CHECK_THAT(loads(pond(""), "<pop />", "<shows><show object=\"forg\" /></shows>"),
+		ContainsSubstring("<show object=\"forg\" />: there is no object or group of that name") && ContainsSubstring("did you mean 'frog'"));
+
+	const std::string lamp = "<object name=\"lamp\"><sprite name=\"off\"><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<sprite name=\"on\"><rectangle><width>10</width><height>10</height></rectangle></sprite><position><x>0</x><y>0</y></position>"
+		"<actions><action name=\"flip\"><become sprite=\"on\" /></action></actions></object>";
+	CHECK(loads(lamp, "<trigger object=\"lamp\" action=\"flip\" from=\"off\" />").empty());
+	CHECK_THAT(loads(lamp, "<trigger object=\"lamp\" action=\"flip\" from=\"of\" />"),
+		ContainsSubstring("from=\"of\">: 'playing.lamp' has no look of that name") && ContainsSubstring("did you mean 'off'") && ContainsSubstring("its looks are: off, on"));
 }

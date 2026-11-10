@@ -276,7 +276,7 @@ TEST_CASE("members of a group with lockstep move as one block", "[group][lockste
 		+ "<collisions><enabled>true</enabled><lockstep>true</lockstep></collisions></object>";
 
 	Loaded loaded{ gameXml(lane("a", "<lockstep>true</lockstep>") + lane("b", "<lockstep>true</lockstep>")
-		+ lane("c", "") + plainLockstep) };
+		+ lane("c", "") + plainLockstep, "<show object=\"a\" />") };
 
 	const int a1 = loaded.game.getObject("a.1").collisionData.lockstep;
 	const int a2 = loaded.game.getObject("a.2").collisionData.lockstep;
