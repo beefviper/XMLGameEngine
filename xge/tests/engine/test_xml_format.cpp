@@ -626,7 +626,16 @@ TEST_CASE("a condition is a test tag, then the commands it runs", "[xml_format][
 		"<condition object=\"frog\" variable=\"lives\"><atmost>0</atmost><push state=\"a\" /><push state=\"b\" /></condition>"
 		"<condition class=\"aliens\"><remaining>window.width.center / 400</remaining><pop /></condition>"
 		"</conditions>";
-	Loaded loaded(gameXml("", objectXml({}), conditions, idleState("gameover") + idleState("a") + idleState("b")));
+	// What the conditions look at.
+	ObjectXml paddle, frog, alien;
+	paddle.name = "paddle";
+	paddle.attributes = "class=\"paddle\"";
+	paddle.extra = "<variables><variable name=\"score\">0</variable></variables>";
+	frog.name = "frog";
+	frog.extra = "<variables><variable name=\"lives\">3</variable></variables>";
+	alien.name = "alien";
+	alien.attributes = "class=\"aliens\"";
+	Loaded loaded(gameXml("", objectXml({}) + objectXml(paddle) + objectXml(frog) + objectXml(alien), conditions, idleState("gameover") + idleState("a") + idleState("b")));
 	loaded.game.setCurrentState("playing");
 
 	const auto& all = loaded.game.getCurrentState().conditions;

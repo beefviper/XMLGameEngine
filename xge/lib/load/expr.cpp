@@ -330,6 +330,22 @@ namespace xge
 
 			condition.filterClass = rawCondition.filterClass;
 			condition.filterObject = rawCondition.filterObject;
+
+			// What it looks at is something the game has: a misspelt class or
+			// object would match nothing, and the condition would quietly
+			// never hold (or always, for an <atmost>).
+			if (!condition.filterClass.empty() && std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return object.objClass == condition.filterClass; }))
+			{
+				std::set<std::string> classes;
+				for (const Object& object : objects) { if (!object.objClass.empty()) { classes.insert(object.objClass); } }
+				const std::vector<std::string> names(classes.begin(), classes.end());
+				throw std::runtime_error(where + ": class=\"" + condition.filterClass + "\": no object has that class" + didYouMean(condition.filterClass, names)
+					+ (names.empty() ? std::string("; no object has a class") : ". The classes are: " + listOf(names)));
+			}
+			if (!condition.filterObject.empty() && !findObject(objects, condition.filterObject))
+			{
+				throw std::runtime_error(where + ": object=\"" + condition.filterObject + "\" names no object or group" + didYouMean(condition.filterObject, objectNames(objects)));
+			}
 			condition.variableName = rawCondition.variableName;
 			condition.distanceTo = rawCondition.distance;
 			condition.sprite = rawCondition.sprite;

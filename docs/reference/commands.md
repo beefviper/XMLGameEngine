@@ -163,6 +163,7 @@ there is no key named 'spcae' (did you mean 'space'?)
 - an unknown command, or one missing an attribute;
 - a state, object, action, projectile, sound, look, scene or way that does not exist;
 - a collision rule's `class=`, `unless=` or `through=` that no object has as its class, or an `object=` that names no object or group: such a rule would never run (a piece only ever spawned counts);
+- a condition's `class=` or `object=` (in a state, a scene, an action, a rule or a `<computer>`) that matches no object, with the classes there are;
 - a key the engine does not have, a colour that is not a `color.` name;
 - a command where it does nothing (a `<move>` in an `<input>`), listing what can go there;
 - an `<inc>` or `<dec>` of a variable no object has.

@@ -60,3 +60,36 @@ TEST_CASE("a collision rule's class, object, unless and through name something t
 	CHECK_THAT(errorOf(pond("<collision edge=\"bottom\" unless=\"lgo\"><reset /></collision>")),
 		ContainsSubstring("<collision unless=\"lgo\">: no object has the class 'lgo'"));
 }
+
+TEST_CASE("a condition's class and object name something the game has", "[names]")
+{
+	const auto stateWith = [](const std::string& condition)
+	{
+		const Scratch file(pond(""), "<pop />", "<conditions>" + condition + "</conditions>");
+		try
+		{
+			Game game(file.path);
+		}
+		catch (const std::exception& error)
+		{
+			return std::string(error.what());
+		}
+		return std::string();
+	};
+	CHECK(stateWith("<condition class=\"log\" total=\"count\"><atmost>0</atmost><pop /></condition>").empty());
+	CHECK_THAT(stateWith("<condition class=\"lgo\" total=\"count\"><atmost>0</atmost><pop /></condition>"),
+		ContainsSubstring("class=\"lgo\": no object has that class") && ContainsSubstring("did you mean 'log'"));
+	CHECK_THAT(stateWith("<condition object=\"forg\" variable=\"x\"><atmost>0</atmost><pop /></condition>"),
+		ContainsSubstring("object=\"forg\" names no object or group") && ContainsSubstring("did you mean 'frog'"));
+	CHECK_THAT(stateWith("<condition><any><condition object=\"frog\" variable=\"x\"><atleast>0</atleast></condition>"
+		"<condition class=\"lgo\" total=\"count\"><atleast>1</atleast></condition></any><pop /></condition>"),
+		ContainsSubstring("class=\"lgo\""));
+}
+
+TEST_CASE("a condition in an action or a rule's check names something the game has too", "[names]")
+{
+	CHECK_THAT(errorOf(pond("") + played::box("hero", 300, 300, "<actions><action name=\"go\"><condition class=\"lgo\" total=\"count\"><atleast>1</atleast><reverse /></condition></action></actions>")),
+		ContainsSubstring("class=\"lgo\": no object has that class"));
+	CHECK_THAT(errorOf(pond("<collision class=\"log\"><condition object=\"forg\" variable=\"x\"><atleast>0</atleast></condition><ride /></collision>")),
+		ContainsSubstring("object=\"forg\" names no object or group"));
+}
