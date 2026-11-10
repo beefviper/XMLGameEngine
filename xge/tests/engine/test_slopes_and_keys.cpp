@@ -116,7 +116,10 @@ TEST_CASE("off a box a bounce is the plain flip, with or without a share of the 
 
 TEST_CASE("off a screen edge a bounce keeps its share of the speed too", "[slopes][bounce]")
 {
-	Written file(playing(ball(20.0f, 300.0f, -4.0f, 0.0f, "<bounce>0.25</bounce>")));
+	// A wall out of its way, for its rule about walls to name.
+	const std::string wall = "<object name=\"wall\" class=\"wall\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>700</x><y>50</y></position></object>";
+	Written file(playing(ball(20.0f, 300.0f, -4.0f, 0.0f, "<bounce>0.25</bounce>") + wall));
 	Played play(file.path);
 	play.frames(20);
 	CHECK(play.get("ball").velocity.x == Approx(1.0f));

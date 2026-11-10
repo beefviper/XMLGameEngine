@@ -606,7 +606,7 @@ namespace
 		"</group>"
 		"<group name=\"fast\" class=\"hazard\">"
 		"<position><y>40</y></position><velocity><x>-3</x></velocity>"
-		"<collisions><enabled>true</enabled><collision class=\"frog\"><die /></collision></collisions>"
+		"<collisions><enabled>true</enabled><collision class=\"logs\"><die /></collision></collisions>"
 		"<variables><variable name=\"weight\">5</variable></variables>"
 		"<member><position><x>50</x></position></member>"
 		"</group>"

@@ -311,7 +311,14 @@ TEST_CASE("a collision without an edge is about another object; naming nothing m
 		"<collision><bounce /></collision>"
 		"<collision class=\"bricks\"><die /></collision>"
 		"<collision object=\"wall\" unless=\"logs\"><reverse /></collision>";
-	Loaded loaded(gameXml("", objectXml(o)));
+	// What the rules name, so that they name something.
+	ObjectXml wall, brick, log;
+	wall.name = "wall";
+	brick.name = "brick";
+	brick.attributes = "class=\"bricks\"";
+	log.name = "log";
+	log.attributes = "class=\"logs\"";
+	Loaded loaded(gameXml("", objectXml(o) + objectXml(wall) + objectXml(brick) + objectXml(log)));
 
 	const auto& others = loaded.game.getObject("o").collisionData.others;
 	REQUIRE(others.size() == 3);

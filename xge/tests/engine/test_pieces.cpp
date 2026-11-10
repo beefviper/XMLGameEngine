@@ -72,12 +72,12 @@ TEST_CASE("a take changes its piece: sprites by name, whole; variables one by on
 		"<sprite name=\"whole\"><rectangle><width>20</width><height>10</height></rectangle></sprite>"
 		"<sprite name=\"cracked\"><rectangle><width>20</width><height>8</height></rectangle></sprite>"
 		"<position><x>100</x><y>100</y></position>"
-		"<collisions><enabled>true</enabled><collision class=\"ball\"><inc variable=\"self.hits\" /></collision></collisions>"
+		"<collisions><enabled>true</enabled><collision class=\"treasure\"><inc variable=\"self.hits\" /></collision></collisions>"
 		"<variables><variable name=\"hits\">0</variable><variable name=\"worth\">10</variable></variables></object>";
 	const Scratch file("<object name=\"gold\" from=\"brick\" class=\"treasure\">"
 		"<sprite name=\"cracked\"><rectangle><width>20</width><height>4</height></rectangle></sprite>"
 		"<sprite name=\"shining\"><rectangle><width>20</width><height>12</height></rectangle></sprite>"
-		"<collisions><enabled>true</enabled><collision class=\"shot\"><inc variable=\"self.worth\" /></collision></collisions>"
+		"<collisions><enabled>true</enabled><collision class=\"treasure\"><inc variable=\"self.worth\" /></collision></collisions>"
 		"<variables><variable name=\"worth\">50</variable><variable name=\"shine\">1</variable></variables></object>",
 		"<pop />", {}, piece);
 	Played play(file.path);

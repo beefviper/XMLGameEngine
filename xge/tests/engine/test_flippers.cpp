@@ -54,12 +54,13 @@ namespace
 	// A flipper 80 long, hinged at its left end, which sits at 300, 400; it
 	// rests tilted 30 degrees down to the right and swings up to 30 above
 	// level in a stroke `frames` frames long (the game runs at 60 a second).
-	std::string flipper(int frames)
+	// Its rule knocks a ball; with no ball in the game, give it none.
+	std::string flipper(int frames, const std::string& rules = "<collision class=\"ball\"><knock>0.5</knock></collision>")
 	{
 		return "<object name=\"flipper\" class=\"flipper\"><sprite><line><from><x>0</x><y>0</y></from><to><x>80</x><y>0</y></to>"
 			"<color>color.white</color><thickness>8</thickness></line></sprite>"
 			"<position><x>300</x><y>400</y></position><heading>30</heading><pivot><x>0</x><y>0</y></pivot>"
-			"<collisions><type>pixel</type><collision class=\"ball\"><knock>0.5</knock></collision></collisions>"
+			"<collisions><type>pixel</type>" + rules + "</collisions>"
 			"<actions><action name=\"flip\"><swing direction=\"counterclockwise\"><degrees>60</degrees><seconds>" + std::to_string(static_cast<float>(frames) / 60.0f) + "</seconds></swing></action></actions></object>";
 	}
 
@@ -82,7 +83,7 @@ namespace
 
 TEST_CASE("a picture turned about its pivot keeps the pivot where it is", "[flippers][pivot]")
 {
-	Written file(flipper(4));
+	Written file(flipper(4, ""));
 	Played play(file.path);
 	Object& flip = play.get("flipper");
 
@@ -101,7 +102,7 @@ TEST_CASE("a picture turned about its pivot keeps the pivot where it is", "[flip
 
 TEST_CASE("a swing is one eased stroke: from still, fastest half way, to still, and back when let go", "[flippers][swing]")
 {
-	Written file(flipper(6));
+	Written file(flipper(6, ""));
 	Played play(file.path);
 	Object& flip = play.get("flipper");
 
@@ -140,7 +141,7 @@ TEST_CASE("a swing turns the way it says, by as many degrees as it says, past ha
 {
 	// Clockwise adds to the heading, as <turn direction="clockwise"> does; 270 goes
 	// the long way round, not the shorter 90 back.
-	std::string object = flipper(6);
+	std::string object = flipper(6, "");
 	const std::string counter = "<swing direction=\"counterclockwise\"><degrees>60</degrees>";
 	object.replace(object.find(counter), counter.size(), "<swing direction=\"clockwise\"><degrees>270</degrees>");
 	Written file(object);
@@ -286,7 +287,10 @@ TEST_CASE("a ball at rest on a flipper wakes when the flipper moves", "[friction
 	const std::string up = "<swing direction=\"counterclockwise\"><degrees>60</degrees>";
 	level.replace(level.find(up), up.size(), "<swing direction=\"clockwise\"><degrees>30</degrees>");
 	const Vector2f at = onFlipper(40.0f, 0.0f, 11.0f);
-	Written file(level + rubbing(at.x, at.y, "<friction>0.2</friction>"));
+	std::string resting = rubbing(at.x, at.y, "<friction>0.2</friction>");
+	const std::string offWalls = "<collision class=\"wall\"><bounce>0.5</bounce></collision>"; // there are none here
+	resting.replace(resting.find(offWalls), offWalls.size(), "");
+	Written file(level + resting);
 	Played play(file.path);
 	Object& ball = play.get("ball");
 	play.frames(30);

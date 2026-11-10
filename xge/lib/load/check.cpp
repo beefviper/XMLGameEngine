@@ -54,9 +54,23 @@ namespace xge
 		std::set<std::string> names;
 		for (const Object& object : objects)
 		{
-			names.insert(object.name);
-			if (!object.groupName.empty()) { names.insert(object.groupName); }
-			names.insert(object.outerGroups.begin(), object.outerGroups.end());
+			// Each also as written in its state or scene (log, for
+			// playing.log), the way a misspelt name was most likely meant.
+			const auto add = [&](const std::string& name)
+			{
+				names.insert(name);
+				for (const std::string* owner : { &object.ownerScene, &object.ownerState })
+				{
+					if (!owner->empty() && name.size() > owner->size() + 1 && name.compare(0, owner->size() + 1, *owner + ".") == 0)
+					{
+						names.insert(name.substr(owner->size() + 1));
+						break;
+					}
+				}
+			};
+			add(object.name);
+			if (!object.groupName.empty()) { add(object.groupName); }
+			for (const std::string& group : object.outerGroups) { add(group); }
 		}
 		return { names.begin(), names.end() };
 	}
@@ -437,6 +451,41 @@ namespace xge
 				{
 					throw std::runtime_error("object '" + object.name + "' > <tether>: there is no object named '" + *end + "'" + didYouMean(*end, objectNames(objects)));
 				}
+			}
+		}
+
+		// A collision rule's class=, unless= and through= name a class that
+		// some object has (a piece only ever spawned counts: it is among the
+		// objects, not yet in play), and its object= an object or a group.
+		// A misspelt one would never match and the rule would never run.
+		std::set<std::string> classSet;
+		for (const Object& object : objects)
+		{
+			if (!object.objClass.empty()) { classSet.insert(object.objClass); }
+		}
+		const std::vector<std::string> gameClasses(classSet.begin(), classSet.end());
+		const auto checkClass = [&](const Object& object, const char* tag, const char* attribute, const std::string& name)
+		{
+			if (name.empty() || classSet.count(name)) { return; }
+			throw std::runtime_error("object '" + object.name + "' > <" + tag + " " + attribute + "=\"" + name + "\">: no object has the class '" + name + "'"
+				+ didYouMean(name, gameClasses) + (gameClasses.empty() ? std::string("; no object has a class") : ". The classes are: " + listOf(gameClasses)));
+		};
+		for (const Object& object : objects)
+		{
+			for (const CollisionRule& rule : object.collisionData.others)
+			{
+				checkClass(object, "collision", "class", rule.filterClass);
+				checkClass(object, "collision", "unless", rule.unlessClass);
+				checkClass(object, "collision", "through", rule.throughClass);
+				if (!rule.filterObject.empty() && !findObject(objects, rule.filterObject))
+				{
+					throw std::runtime_error("object '" + object.name + "' > <collision object=\"" + rule.filterObject + "\">: there is no object or group named '" + rule.filterObject + "'"
+						+ didYouMean(rule.filterObject, objectNames(objects)));
+				}
+			}
+			for (const auto& edge : object.collisionData.edges)
+			{
+				for (const EdgeGuard& guard : edge.guards) { checkClass(object, "collision", "unless", guard.unlessClass); }
 			}
 		}
 
