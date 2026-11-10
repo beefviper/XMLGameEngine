@@ -90,6 +90,7 @@ Each rests on something that never changes while a game runs: `FrameRules::partn
 
 ## Tests
 
+- A new schema word needs a game that uses it and a mention in `docs/reference/` (`xgetest "[vocabulary]"`); one no game uses goes in `kUnused` in `test_vocabulary.cpp` with why it stays.
 - A test that builds a `Game` without an `Engine` calls `setCurrentState(0)` and `measureShapeSize`, or nothing is shown and sizes are 0.
 - A command run between frames leaves its copies waiting: call `settleSpawns()` first. Never hold a reference to a copy across frames; look it up by name.
 - The working directory is `games/`, so a test names `descriptions/<game>.xml` and finds the schema with `findSchema("descriptions/pong.xml", "../xgedef.xsd")`. ctest runs from `output/<config>/games`, a plain run from the repository's `games/`: check a new schema test both ways.

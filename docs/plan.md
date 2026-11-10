@@ -59,7 +59,7 @@ Direct answers, as asked. Each is argued once here and turned into tasks below.
 
 Not checked, because it cannot be from a Linux container: MSVC, Windows, how any game looks, sounds or feels.
 
-The scripts used are small and are described in [T1](#t1-keep-the-reviews-checks-as-tests) (the damaged files and random keys are now `xgetest-long`, T2, done) so they can be rebuilt as permanent tests.
+The scripts used are small and are described in T1, done (now `xge/tests/engine/test_vocabulary.cpp`; the damaged files and random keys are now `xgetest-long`, T2, done) so they can be rebuilt as permanent tests.
 
 ## Findings
 
@@ -214,19 +214,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 
 ### Phase 2: a safety net for the reduction
 
-#### T1. Keep the review's checks as tests
-
-- **Size** M. **Needs** nothing. **Blocks** R1 and every later R task.
-- **Why.** The review's scripts found real things and were thrown away. As tests they keep the language honest while it is cut.
-- **Files.** New `xge/tests/test_vocabulary.cpp` and a short random-keys test in `xge/tests/engine/` (both in `scripts/cmake/tests.cmake`); they read `../xgedef.xsd` through `findSchema("descriptions/pong.xml", "../xgedef.xsd")` and every file in `descriptions/` (skip `*_scratch_*`, as the key-convention test does).
-- **Do.**
-  1. **Every word is used.** Read the element names from the schema (the engine's own `XmlDocument` can read the XSD as XML: collect every `xs:element` `name=`). For each, some game must use it, or it must be in a short list in the test file with a reason beside it. The list starts as the 15 unused words and shrinks under R1. Print the words used by exactly one game as information (Catch2 `INFO`/`WARN`), not as a failure.
-  2. **Every command is everywhere.** The command names are `isCommandTag`'s list (expose it from `load/xml.h` as a function returning the names). Each must be a schema element and must make a `Command` through `makeCommand` for a minimal `RawCommand`, or be on a short list. This becomes trivial once A1 lands.
-  3. **Random keys.** For each game: fix the seed, build `played::Played`, and for 5,000 frames toggle one of about 25 keys (Space, W A S D, arrows, P, Escape, 1, 2, N, U, E, C, X, M, V, J, Backspace, Enter, F12) on one frame in four; every 50 frames check each object's position and velocity are finite. The long version (20,000 frames, two seeds, every key a state binds) is done in T2 as `xge/tests/long/test_random_keys.cpp` in `xgetest-long`; what is left is a short always-on version of 1,000 frames in `xgetest`.
-  4. **Docs name every word.** Each element name appears in some `docs/reference/*.md` as `` `<name` `` or `` `name` ``. Reads the files from `../docs` when present (a plain run from the repository) and is skipped when not (ctest's copy has no docs).
-- **Done.** Four test cases, green; deliberately adding an unused element to the schema turns the first red.
-- **Verify.** `ctest`; `output/Release/xgetest-long "[keys]"`.
-
 #### T3. A sanitizer run that is one command
 
 - **Size** S. **Needs** nothing.
@@ -247,11 +234,11 @@ Work R1 first (it decides what the others delete). The rest are independent of e
 
 #### R1. Decide every word fewer than two games use
 
-- **Size** M for the decisions, then S per word. **Needs** T1 (B2 is done).
+- **Size** M for the decisions, then S per word. **Needs** nothing now (T1 and B2 are done).
 - **Why.** 15 words no game uses and 77 that one game uses are where the fraction reduces. Not all should go: some are real mechanics waiting for a second game. But each should be a decision, written down.
 - **Files.** A table added to `docs/designs/11-vocabulary-map.md` (keep it under the 6 KB guide by listing only words with a verdict other than "keep"); then the usual language-change files per word.
 - **Do.**
-  1. Print the table from T1's first test: word, how many games, which.
+  1. Print the table from `xgetest "[vocabulary]"` (its warning lists the words one game alone uses; `kUnused` in `test_vocabulary.cpp` the words none uses).
   2. For each of the 15 unused words, pick one: **use** (a shipped game is better with it: for example `<accelerate>` is the documented way to push without a heading, and no game does), **keep** (cheap and obviously paired: `absolute`, `floor`, `negate`, `remainder`, `odd` beside `even`, `fullscreen`, `framerate`), or **remove** (`pull`, `rise`, `image`, `gap`, `margin`, `near`, `faster` unless a game is changed to use them). `<image>` is a special case: the engine can show a picture file and `games/assets/paddle.jpg` exists only for that; either a game uses it or both go.
   3. For each word one game uses, ask the fraction question: is it another word with one more part? Candidates found in review, each to confirm by reading the engine code for both words:
 
@@ -271,7 +258,7 @@ Work R1 first (it decides what the others delete). The rest are independent of e
      | `<letter>`, `<rank>` (Galaxian's best table) | keep |
      | `<all>` (Tennis) | [R8](#r8-small-sweeps) |
   4. Record each verdict in one line. Remove what is to be removed, one word per commit, each with the reader refusing the old word by name.
-- **Done.** T1's exception list holds only "keep" words, each with its reason; the element count in the schema is lower and is written in `11-vocabulary-map.md` so the next review can compare.
+- **Done.** `kUnused` in `test_vocabulary.cpp` holds only "keep" words, each with its reason; the element count in the schema is lower and is written in `11-vocabulary-map.md` so the next review can compare.
 
 #### R3. One way into and out of play
 
@@ -382,7 +369,7 @@ Each is **S**, independent, one commit.
 
 #### R12. No arithmetic in text
 
-- **Size** L, in substeps. **Needs** D8, T1; best after R7 (which takes away the 289 `window.height.center + N`).
+- **Size** L, in substeps. **Needs** D8; best after R7 (which takes away the 289 `window.height.center + N`).
 - **Why.** Finding 7, the author's call: a calculation hidden in a string is data encoded in a string, which the format otherwise never allows, and `load/calc` is a second language inside the first. About 1,170 texts in all 58 games calculate (Mario Bros. 70, the card games 40 to 53 each). Tags are what the schema, the generator and any later tool can see.
 - **Do.**
   1. **Survey (S).** Count the shapes the 1,170 take: a name plus or minus a number, a name times a number, `a - b / 2` (centring by hand), a name's half, longer ones. Write the counts into `docs/designs/03-arithmetic.md`.
@@ -577,7 +564,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Block 2  (the loud-typos work, then the net; Block 1 is done)
-  T1  the review's checks as tests
   T3  sanitizer option and one clean run
   B5  one frame pacer
   T4  Windows check list              (or the build job, by D3)
@@ -622,8 +608,7 @@ What blocks what, in one place:
 
 | Task | Needs first |
 |---|---|
-| R1 | T1 |
-| R12 | D8, T1 (best after R7) |
+| R12 | D8 (best after R7) |
 | R6 | R3, D4 |
 | R7 | D4 |
 | R9 | R5 |
@@ -635,4 +620,4 @@ What blocks what, in one place:
 | F1 | B5 |
 | F8 | D7 lifted |
 
-If only five things are ever done from this file, do B5, T1 and R1 (B2 and B3 are done).
+If only five things are ever done from this file, do B5 and R1 (B2, B3 and T1 are done).

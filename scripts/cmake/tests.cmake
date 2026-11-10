@@ -51,6 +51,7 @@ add_executable(xgetest
 	"xge/tests/helpers/test_main.cpp"
 	"xge/tests/engine/test_xml_libraries.cpp"
 	"xge/tests/engine/test_names.cpp"
+	"xge/tests/engine/test_vocabulary.cpp"
 	"xge/tests/games/test_pacman.cpp"
 	"xge/tests/engine/test_sound.cpp"
 	"xge/tests/games/test_donkeykong.cpp"
