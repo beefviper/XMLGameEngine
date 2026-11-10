@@ -2,6 +2,8 @@
 
 **Status:** A backlog; nothing here is decided. Each item points at the file that holds the reasoning.
 
+The [plan](../plan.md) reviews this backlog, argues with parts of it, and orders the work as tasks.
+
 ## Next classes of game
 
 - **Dice** (backgammon) was agreed as the next board or card step ([cards](27-cards.md)).

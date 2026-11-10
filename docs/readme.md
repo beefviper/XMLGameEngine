@@ -9,6 +9,7 @@ A game is one XML file of tags, checked against `games/xgedef.xsd`. The engine r
 | [reference/](reference/) | how the engine works **today**: every tag, what it does, the programs, the build | writing a game, or checking what a tag does. The code is the truth; these pages follow it |
 | [designs/](designs/00-designs.md) | one small file per topic: what was looked at, what was chosen and why, what is open | changing the language or the engine |
 | [agents/notes.md](agents/notes.md) | gotchas and working rules for anyone (or any AI) changing the code | before a change |
+| [plan.md](plan.md) | a review of the whole project and the tasks that follow from it, each written to be picked up cold | choosing what to do next |
 
 New to it: read the tour below, then [the game file](reference/format.md), [objects](reference/objects.md), [collisions](reference/collisions.md), [input](reference/input.md) and [states](reference/states.md), with a game from [the shipped games](reference/games.md) open beside them.
 
