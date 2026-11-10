@@ -951,7 +951,7 @@ TEST_CASE("a command that names a state, object or action the game does not have
 		ContainsSubstring("nobody"));
 
 	// A condition is checked the same way as a key.
-	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml({}), "<conditions><condition object=\"o\" variable=\"v\"><atleast>1</atleast><push state=\"over\" /></condition></conditions>")),
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml({}), "<conditions><condition object=\"o\" variable=\"x\"><atleast>1</atleast><push state=\"over\" /></condition></conditions>")),
 		ContainsSubstring("over"));
 
 	// The names that are there load as before.

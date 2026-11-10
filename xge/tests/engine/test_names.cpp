@@ -93,3 +93,25 @@ TEST_CASE("a condition in an action or a rule's check names something the game h
 	CHECK_THAT(errorOf(pond("<collision class=\"log\"><condition object=\"forg\" variable=\"x\"><atleast>0</atleast></condition><ride /></collision>")),
 		ContainsSubstring("object=\"forg\" names no object or group"));
 }
+
+TEST_CASE("a condition's variable is one that what it looks at has, or a number the engine keeps", "[names]")
+{
+	const auto stateWith = [](const std::string& condition)
+	{
+		const Scratch file(pond("") + played::box("status", 0, 0, "<variables><variable name=\"lives\">3</variable></variables>"), "<pop />", "<conditions>" + condition + "</conditions>");
+		try
+		{
+			Game game(file.path);
+		}
+		catch (const std::exception& error)
+		{
+			return std::string(error.what());
+		}
+		return std::string();
+	};
+	CHECK(stateWith("<condition object=\"status\" variable=\"lives\"><atmost>0</atmost><pop /></condition>").empty());
+	CHECK(stateWith("<condition object=\"frog\" variable=\"x\"><atmost>0</atmost><pop /></condition>").empty());
+	CHECK_THAT(stateWith("<condition object=\"status\" variable=\"lifes\"><atmost>0</atmost><pop /></condition>"),
+		ContainsSubstring("variable=\"lifes\": nothing the condition looks at has a variable or number of that name")
+		&& ContainsSubstring("did you mean 'lives'") && ContainsSubstring("its variables are: lives"));
+}

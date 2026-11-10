@@ -428,6 +428,25 @@ namespace xge
 				throw std::runtime_error(where + ": total=\"" + rawCondition.total + "\" of variable=\"" + condition.variableName + "\", and no object it looks at has a variable of that name");
 			}
 
+			// One object's variable: something it looks at has it, as a
+			// variable of its own or as a number the engine keeps (x,
+			// moves, ...). A misspelt one was never there to compare.
+			if (condition.total == Total::None && !condition.remaining && condition.distanceTo.empty() && !condition.variableName.empty()
+				&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matches(rawCondition, object) && numberOf(object, condition.variableName); }))
+			{
+				std::set<std::string> own;
+				for (const Object& object : objects)
+				{
+					if (!matches(rawCondition, object)) { continue; }
+					for (const auto& [name, value] : object.variable) { own.insert(name); }
+				}
+				std::vector<std::string> names(own.begin(), own.end());
+				std::vector<std::string> all = names;
+				all.insert(all.end(), liveNumberParts().begin(), liveNumberParts().end());
+				throw std::runtime_error(where + ": variable=\"" + condition.variableName + "\": nothing the condition looks at has a variable or number of that name"
+					+ didYouMean(condition.variableName, all) + (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
+			}
+
 			if ((condition.remaining || condition.total == Total::Count) && std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matches(rawCondition, object); }))
 			{
 				std::cout << "warning: " << owner << (condition.remaining ? ": a condition with remaining= matches no object at all, so it would fire at once\n"
