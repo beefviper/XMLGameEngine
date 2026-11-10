@@ -61,7 +61,9 @@ namespace xge
 		Program compile(const std::string& text) const;
 
 		// The program's answer, from its names' numbers as they are now.
-		static float run(const Program& program);
+		// A division by 0 gives 0 (as a <divide> does), and sets
+		// `dividedByZero` when it is given, so the caller can say so.
+		static float run(const Program& program, bool* dividedByZero = nullptr);
 
 	private:
 		std::unordered_map<std::string, const float*> names;

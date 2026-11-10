@@ -1587,7 +1587,14 @@ namespace xge
 		}
 
 		case RawValue::Kind::Formula:
-			return evaluateOperation(value.operations->front(), where + " > <formula>").value;
+		{
+			const float answer = evaluateOperation(value.operations->front(), where + " > <formula>").value;
+			if (loading && !std::isfinite(answer))
+			{
+				throw std::runtime_error(where + " > <formula>: comes out as " + (std::isnan(answer) ? std::string("not a number") : std::string("infinity")));
+			}
+			return answer;
+		}
 
 		case RawValue::Kind::Centered:
 			throw std::runtime_error(where + ": <centered> is only for an object's <position>");
@@ -1746,7 +1753,32 @@ namespace xge
 			}
 			loadCheckedTexts.insert(text);
 		}
-		return Calc::run(found->second);
+
+		// A division by 0 gives 0, as a <divide>'s does: at load it stops the
+		// load unless a name it reads is not known yet (it is worked out again);
+		// while running it is said once for each place.
+		bool dividedByZero = false;
+		const float value = Calc::run(found->second, &dividedByZero);
+		if (dividedByZero)
+		{
+			if (loading)
+			{
+				const std::vector<std::string>& names = namesIn(text);
+				if (std::none_of(names.begin(), names.end(), [&](const std::string& name) { return isLate(name); }))
+				{
+					throw std::runtime_error(where + ": \"" + text + "\" divides by 0");
+				}
+			}
+			else if (warnedDivisions.insert(where + " \"" + text + "\"").second)
+			{
+				std::cerr << "warning: " << where + ": \"" + text + "\" divides by 0; using 0 for the answer" << std::endl;
+			}
+		}
+		if (loading && !std::isfinite(value))
+		{
+			throw std::runtime_error(where + ": \"" + text + "\" comes out as " + (std::isnan(value) ? "not a number" : "infinity"));
+		}
+		return value;
 	}
 
 	void game_expr::bind(const std::string& name, float& value)

@@ -239,7 +239,7 @@ namespace xge
 		return Reader(text, names).read();
 	}
 
-	float Calc::run(const Program& program)
+	float Calc::run(const Program& program, bool* dividedByZero)
 	{
 		std::array<float, kDeepest + 1> stack{};
 		std::size_t top = 0;
@@ -253,7 +253,15 @@ namespace xge
 			case Step::Kind::Add:      --top; stack[top - 1] += stack[top]; break;
 			case Step::Kind::Subtract: --top; stack[top - 1] -= stack[top]; break;
 			case Step::Kind::Multiply: --top; stack[top - 1] *= stack[top]; break;
-			case Step::Kind::Divide:   --top; stack[top - 1] /= stack[top]; break;
+			case Step::Kind::Divide:
+				--top;
+				if (stack[top] == 0.0f)
+				{
+					stack[top - 1] = 0.0f;
+					if (dividedByZero) { *dividedByZero = true; }
+				}
+				else { stack[top - 1] /= stack[top]; }
+				break;
 			}
 		}
 		return top == 0 ? 0.0f : stack[top - 1];

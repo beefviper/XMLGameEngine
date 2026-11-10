@@ -82,3 +82,14 @@ TEST_CASE("calc: the names a text reads, each once, lowercased", "[calc]")
 	CHECK(Calc::namesIn("Paddle1.score + 2e-3 * paddle1.SCORE - window.width.center / 2") == std::vector<std::string>{ "paddle1.score", "window.width.center" });
 	CHECK(Calc::namesIn("12 * (3 - 1)").empty());
 }
+
+TEST_CASE("calc: dividing by 0 gives 0 and says so", "[calc]")
+{
+	const Calc calc;
+	bool dividedByZero = false;
+	CHECK(Calc::run(calc.compile("1 + 6 / 0"), &dividedByZero) == 1.0f);
+	CHECK(dividedByZero);
+	dividedByZero = false;
+	CHECK(Calc::run(calc.compile("6 / 2"), &dividedByZero) == 3.0f);
+	CHECK_FALSE(dividedByZero);
+}

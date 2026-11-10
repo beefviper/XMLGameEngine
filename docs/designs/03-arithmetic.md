@@ -29,6 +29,8 @@ Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from 
 
 - The text was once worked out by exprtk, so it had functions (`max(...)`, `cos(... * pi / 180)`) and comparisons: a second, hidden maths vocabulary beside the tags.
 - **Chosen: one small library of our own,** `load/calc`: numbers, names, `+ - * /`, a leading sign, brackets, nothing else. It compiles a text once into steps that read each name's number where it lives, and works left to right exactly as written. A function call stops the load and says to write a `<formula>`.
+- **A text divides by 0 as a `<divide>` does:** 0, stopping the load when the divisor is certainly 0, and a value that comes out as infinity at load stops it too. Before, text gave infinity and an object went nowhere.
+- **Open, the author's call: no arithmetic in text at all.** A text would hold one number or one name, every calculation tags, with `<formula>` made short for the common shapes. Plan task R12 surveys the shapes first.
 - Rejected: an expression backend behind a factory with exprtk as an option. Nothing a game writes would differ between them, and a game would fail on one the first time someone used a function.
 
 ## Schema

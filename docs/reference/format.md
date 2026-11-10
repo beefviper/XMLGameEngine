@@ -147,7 +147,8 @@ A `<formula>` is one operation whose operands are elements, each a name, a numbe
 - An operand is a **name or a number**, never an expression.
 - Several second operands chain left to right: `a - b - c` is one `<subtract>` with two `<subtrahend>`s.
 - `<compare>` uses a [condition's test words](states.md#conditions). Pac-Man chases for ever from wave four: `20 + 100000 ×` a `<compare><value>mode.waves</value><atleast>4</atleast></compare>`.
-- **Dividing by 0.** A divisor certainly 0 at load stops the load, naming the `<divide>`. One that is 0 only because it is not known yet (another object's variable, an unmeasured text) gives 0, and a position or interval made from it is worked out again later. While running, it gives 0 and one warning per place.
+- **Dividing by 0**, in a `<divide>` or in text (`1 / 0`). A divisor certainly 0 at load stops the load, naming the `<divide>` or quoting the text. One that is 0 only because it is not known yet (another object's variable, an unmeasured text) gives 0, and a position or interval made from it is worked out again later. While running, it gives 0 and one warning per place.
+- **Too big a number.** A value that comes out as infinity or not a number at load (`1e30 * 1e30`) stops the load.
 
 ## Names
 

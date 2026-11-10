@@ -632,11 +632,43 @@ TEST_CASE("only a divisor matters: 0 as a dividend, or in other operations, is f
 	CHECK(xOf("<formula><subtract><minuend>4</minuend><subtrahend>0</subtrahend></subtract></formula>") == 4.0f);
 }
 
-TEST_CASE("a text is left alone: it divides by 0 as it always did", "[formulas][zero]")
+TEST_CASE("a text that divides by 0 stops the load as a <divide> does, quoting the text", "[formulas][errors][zero]")
 {
-	// Not an error, as before; the tags are where the engine looks.
-	Loaded loaded(gameXml("1 / zero", "0", "<variable name=\"zero\">0</variable>"));
-	CHECK(std::isinf(loaded.x()));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("1 / 0", "0")), ContainsSubstring("object 'o'") && ContainsSubstring("\"1 / 0\" divides by 0"));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("1 / zero", "0", "<variable name=\"zero\">0</variable>")), ContainsSubstring("\"1 / zero\" divides by 0"));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("10 / (2 - 2)", "0")), ContainsSubstring("divides by 0"));
+	// 0 divided is fine.
+	CHECK(xOf("0 / 5") == 0.0f);
+}
+
+TEST_CASE("a number too big to be one stops the load", "[formulas][errors][zero]")
+{
+	REQUIRE_THROWS_WITH(Loaded(gameXml("1e30 * 1e30", "0")), ContainsSubstring("\"1e30 * 1e30\" comes out as infinity"));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("<formula><multiply><multiplicand>1e30</multiplicand><multiplier>1e30</multiplier></multiply></formula>", "0")),
+		ContainsSubstring("<formula>: comes out as infinity"));
+}
+
+TEST_CASE("a text position finished once a text is measured as 0 wide gives 0, with one warning", "[formulas][zero]")
+{
+	const std::string xml = gameWithObject("t", "<text><content>hi</content><size>20</size></text>", "100 / t.width");
+
+	Loaded loaded(xml);
+	Object& text = loaded.game.getObject("t");
+	loaded.game.setCurrentState(0);
+	CHECK(text.positionUsesSize);
+
+	CaptureStderr captured;
+	measure(text, 0.0f, 10.0f);
+	REQUIRE_NOTHROW(loaded.game.resolveSizeDependentPositions());
+	CHECK(text.position.x == 0.0f);
+	measure(text, 0.0f, 12.0f);
+	REQUIRE_NOTHROW(loaded.game.resolveSizeDependentPositions());
+	CHECK(text.position.x == 0.0f);
+	CHECK(countOf(captured.text.str(), "\"100 / t.width\" divides by 0; using 0 for the answer") == 1);
+
+	measure(text, 50.0f, 12.0f);
+	loaded.game.resolveSizeDependentPositions();
+	CHECK(text.position.x == 2.0f);
 }
 
 TEST_CASE("a position finished once a text is measured warns, once, instead of ending the game", "[formulas][zero]")

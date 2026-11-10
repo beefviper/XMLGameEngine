@@ -52,7 +52,7 @@ Direct answers, as asked. Each is argued once here and turned into tasks below.
 | `xgetest` whole, 60 runs, `--rng-seed 7001` to `7060` | 58 of 60 clean. Seeds 7029 and 7036 fail the same Crazy Eights test, every time (B9, done: the games were only long, 326 and 329 turns; the bound is now 2,000). Nothing else varied |
 | `xgetest-generated` (all 58 games generated, compiled, compared, played) | pass, 0 warnings |
 | Random keys: each game, 20,000 frames, 2 seeds, 25 keys toggled at random | 116 of 116 clean |
-| Damaged files: 40 per game, 2,320 in all, 3,000 frames each when they load | 0 crashes, 0 hangs; 1,580 refused with a message (451 by the schema, the rest by the loader); 699 loaded; 22 loaded with a position or size of infinity ([B4](#b4-a-number-that-is-not-finite-stops-the-load)) |
+| Damaged files: 40 per game, 2,320 in all, 3,000 frames each when they load | 0 crashes, 0 hangs; 1,580 refused with a message (451 by the schema, the rest by the loader); 699 loaded; 22 loaded with a position or size of infinity (B4, done) |
 | The engine rebuilt with the address sanitizer (18 of its 47 files with the undefined-behaviour one too), every game played 6,000 frames of random keys | 58 of 58 clean. The test files were not run under it: with the strict warnings on, GCC took over fifteen minutes a file ([T3](#t3-a-sanitizer-run-that-is-one-command)) |
 | Plain build (no options) and `xgegui` with Qt 6 | 277 steps, 0 warnings; `xgecli` and `xgegui` link (Qt 6.4). Not run: no display |
 | Agreement scripts: every schema element against the reader, the generator, the reference docs, the tests and the games; every command against `makeCommand`, the schema, `data.xsl`, `commands.md` | All agree. Gaps: 15 elements no game uses, 45 no test names in XML, `call`, `clear`, `collapse`, `fall`, `order` are not in `commands.md` (they are on the maps and cards pages) |
@@ -70,7 +70,7 @@ The scripts used are small and are described in [T1](#t1-keep-the-reviews-checks
 | 1 | `ctest` exits with a failure on a clean tree | `xmltest (Not Run)` from `build/_deps/tinyxml2-build` | B1, done |
 | 2 | A class, object, variable or look named in a filter or test is not checked | In `pong.xml`: `<collision class="padle">`, `<condition class="padle" variable="score">`, `<condition class="paddle" variable="scor">`, `<condition object="bal" variable="x">`, `<condition object="ball" variable="xx">`, `<show object="computr" />` all load and play | [B2](#b2-names-that-match-nothing-stop-the-load) |
 | 3 | Two objects of one name in the same `<objects>` become one, silently; two states of one name are accepted; one key bound twice in a state is accepted | `score2` renamed `score1` in `pong.xml`: 28 objects instead of 29, no message. `mainmenu` renamed `playing`: loads | B3, done |
-| 4 | Text arithmetic that divides by zero gives infinity, which becomes a position or a size | `<x>1 / 0</x>` in 22 damaged files: loads, object at infinity | [B4](#b4-a-number-that-is-not-finite-stops-the-load) |
+| 4 | Text arithmetic that divides by zero gives infinity, which becomes a position or a size | `<x>1 / 0</x>` in 22 damaged files: loads, object at infinity | B4, done |
 | 5 | Game speed depends on the window library and the monitor | `window/sdl2.cpp`: `SDL_RENDERER_PRESENTVSYNC` and no other pacing. `sfml.cpp`: `setFramerateLimit`. `raylib.cpp`, `opengl.cpp`: their own clocks. `gui/game_session.cpp`: a fifth | [B5](#b5-one-frame-pacer-in-the-engine) |
 | 6 | Nonsense sizes and times are accepted | `<width>0</width>` on the window, a text `<size>0</size>`, `<after>-1</after>`, `<framerate>0</framerate>` all load | [B6](#b6-ranges-for-the-numbers-that-have-one) |
 | 7 | Load errors from the reader say which tag but not which line | Only Xerces' schema errors carry `line N column M`; the reader's own `fail(where, ...)` has a path of tags | [B7](#b7-line-numbers-in-load-errors) |
@@ -205,16 +205,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 - **Careful.** A class may be given only by a piece nothing takes yet; a scene's objects are named by path (`playing.room2.robots`) and `tryGetObject` falls back to the end of a path. Use the same lookup the running game uses, or the check will refuse valid games. All 58 games must still load: that is the test that the check is not too strict.
 - **Done.** Each of the six misspellings in finding 2 stops the load with a message that names the tag, the name, and a "did you mean". A test case per kind.
 - **Verify.** `ctest`; `xgetest-generated`; rebuild the damaged-file run of [T2](#t2-xgecli---check) and confirm that changed-attribute files that still load are down from 97 to the ones that are truly harmless (an object renamed that nothing names).
-
-#### B4. A number that is not finite stops the load
-
-- **Size** S. **Needs** nothing.
-- **Why.** Finding 4. `<divide>` already refuses a zero divisor known at load; text arithmetic does not.
-- **Files.** `xge/lib/load/calc.cpp` (the divide step), `xge/lib/load/expr.cpp` (`evaluate`), `xge/tests/test_calc.cpp`.
-- **Do.** At load, a text or formula whose answer is infinity or not a number stops the load, naming the text. While playing (a `CmdLive`, a live condition), keep today's rule for `<divide>` (0) and make text division by zero follow it, so the two agree. Say so in `docs/reference/format.md` and `limits.md`.
-- **Done.** `<x>1 / 0</x>` is refused at load with the text in the message; a test for each of load and play.
-- **Verify.** `ctest "[calc]"`, then all.
-- **Note.** The text half lives only until R12 takes arithmetic out of text; it is still worth doing first, since R12 is long and a bad text should stop the load meanwhile.
 
 #### B5. One frame pacer in the engine
 
@@ -440,7 +430,7 @@ Each is **S**, independent, one commit.
   3. **The reader (M).** A text value is one number (with its sign) or one name. Anything else stops the load, naming the text and showing the tag form. `load/calc` keeps only what `<formula>` needs (it may go entirely: `<formula>` is evaluated by `load/expr`); `data.xsl` and the describer follow.
   4. **The games (L).** One game first as the proof (Pong), then groups of about ten. Values must not change: for each game dump every object's start position, size and variables before and after, and compare; then the group's tests.
   5. **Docs.** `docs/reference/format.md` (values), `docs/designs/03-arithmetic.md`, `docs/readme.md`'s tour and the root `readme.md` if their examples calculate in text.
-- **Done.** No game text holds an operator; `load/calc`'s text parser is gone or used by nothing a game writes; B4's text half is moot (its `<divide>` half stays).
+- **Done.** No game text holds an operator; `load/calc`'s text parser is gone or used by nothing a game writes; the text half of B4's check (a `/` in text by 0) goes with it, the `<divide>` half stays.
 
 ### Phase 4: architecture
 
@@ -627,7 +617,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Block 1  (a day or two; no decisions needed)
-  B4  non-finite numbers refused
   B6  number ranges
   T2  xgecli --check
   R2  <jump> becomes <hop>            (the practice run for a removal)
