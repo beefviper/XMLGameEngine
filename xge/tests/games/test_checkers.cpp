@@ -467,3 +467,21 @@ TEST_CASE("checkers.xml: the cursor follows the mouse, and a click picks up and 
 	CHECK(cell(board.cursor().cellColumn) == 4);
 	CHECK(cell(board.cursor().cellRow) == 5);
 }
+
+TEST_CASE("checkers.xml: the computer thinks on its own thread, as it does in a window, and answers the same way", "[checkers][think]")
+{
+	// Engine::loop thinks beside the game; frame by frame the tests think at
+	// once. This plays the loop's way, so the thread is run (and, in a
+	// XGE_SANITIZE=thread build, checked).
+	Board board(true);
+	board.game.thinkInBackground(true);
+	board.space(3, 6);
+	board.space(4, 5);
+	REQUIRE(board.cursor().variable.at("turn") == 2.0f);
+	board.untilRed(3000);
+	CHECK(board.cursor().variable.at("turn") == 1.0f);
+	CHECK(board.count("white") == 12);
+	int moved = 0;
+	for (int column = 1; column <= 8; ++column) { moved += board.at("white", column, 4) ? 1 : 0; }
+	CHECK(moved == 1);
+}

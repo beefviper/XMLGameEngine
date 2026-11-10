@@ -35,6 +35,17 @@ endif()
 # which is every Catch::Approx(float) in the tests), repeated conditions and
 # branches, pointless casts and && / || on the same operand.
 function(xge_warnings target)
+	# A sanitizer build (XGE_SANITIZE, options.cmake): instrumented, and
+	# without the strict warnings, which make it many times slower to compile.
+	if (XGE_SANITIZE)
+		set(flags -fsanitize=address,undefined -fno-omit-frame-pointer)
+		if (XGE_SANITIZE STREQUAL "thread")
+			set(flags -fsanitize=thread -fno-omit-frame-pointer)
+		endif()
+		target_compile_options(${target} PRIVATE ${flags} -w -g)
+		target_link_options(${target} PUBLIC ${flags})
+		return()
+	endif()
 	target_compile_options(${target} PRIVATE
 		$<$<CXX_COMPILER_ID:MSVC>:/W4
 			/w14242 /w14254 /w14263 /w14265 /w14287 /w14296 /w14311 /w14545 /w14546 /w14547

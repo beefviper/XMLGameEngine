@@ -39,6 +39,22 @@ option(BUILD_TESTING "Build the Catch2-based test suite in xge/tests/" OFF)
 # docs/reference/engine.md, "Building".
 option(XGE_BUILD_SHARED "Build the engine as a shared library instead of a static one" OFF)
 
+# A sanitizer build, for GCC and Clang, off unless asked for: "address"
+# checks memory and undefined behaviour (-fsanitize=address,undefined),
+# "thread" checks data races (-fsanitize=thread). Only the project's own
+# targets are instrumented (xge_warnings in platform.cmake), not the fetched
+# libraries; their strict warnings are turned off, because with both GCC
+# takes many minutes a file. Run with ASAN_OPTIONS=detect_container_overflow=0
+# (the libraries' containers are not instrumented). See docs/reference/engine.md.
+set(XGE_SANITIZE "" CACHE STRING "Sanitizer build for GCC and Clang: address (with undefined) or thread; empty for none")
+set_property(CACHE XGE_SANITIZE PROPERTY STRINGS "" address thread)
+if (XGE_SANITIZE AND NOT XGE_SANITIZE MATCHES "^(address|thread)$")
+	message(FATAL_ERROR "XGE_SANITIZE is '${XGE_SANITIZE}'; expected address or thread")
+endif()
+if (XGE_SANITIZE AND MSVC)
+	message(FATAL_ERROR "XGE_SANITIZE is for GCC and Clang; MSVC has only /fsanitize=address, which this option does not set")
+endif()
+
 # Which window, sound and XML backends are built into the engine. The default
 # is one of each, SFML 3 (window and sound) and Xerces (XML), which is all a
 # game needs and the least there is to find, fetch and compile. The others are
