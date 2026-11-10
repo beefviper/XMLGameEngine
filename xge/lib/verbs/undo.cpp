@@ -26,6 +26,7 @@ namespace xge
 		.forms = { { "<undo />", places::flow, kindOf<CmdUndo>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeUndo,
 		.check = nullptr,
 		.run = runUndo,

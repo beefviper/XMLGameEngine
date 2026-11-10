@@ -7,14 +7,39 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include <cmath>
+#include <memory>
 #include <optional>
+#include <string>
 
 namespace xge
 {
 	// <send>: A piece from one map to another, or what one holder holds to
 	// another.
+	static void readSend(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		// With no object=, members of a held class, holder to holder.
+		if (node.getAttribute("object").empty())
+		{
+			readSendHeld(node, where, command);
+			return;
+		}
+		command.from = requireAttribute(node, "from", where);
+		command.into = requireAttribute(node, "into", where);
+		const std::string here = where + " > <send>";
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+		{
+			if (child->getName() != "column" && child->getName() != "row") { fail(here, "unknown <" + child->getName() + ">; expected a <column> and a <row>, if wanted"); }
+		}
+		const auto column = findChild(&node, "column");
+		const auto row = findChild(&node, "row");
+		if (!column != !row) { fail(here, "has a <column> or a <row> and not the other; give both, or neither to keep its cell"); }
+		if (column) { command.column = readValue(*column, here); }
+		if (row) { command.row = readValue(*row, here); }
+	}
+
 	static Command makeSend(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// With no object=, members of a held class go holder to holder, as a
@@ -53,6 +78,7 @@ namespace xge
 		.forms = { { "<send>", places::changes, kindOf<CmdSend>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readSend,
 		.make = makeSend,
 		.check = checkSend,
 		.run = runSend,

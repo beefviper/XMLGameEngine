@@ -26,6 +26,7 @@ namespace xge
 		.forms = { { "<die />", places::self, kindOf<CmdDie>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeDie,
 		.check = nullptr,
 		.run = runDie,

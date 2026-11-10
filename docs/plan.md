@@ -464,16 +464,15 @@ Each is **S**, independent, one commit.
 
 #### A1. A verb is one file
 
-- **Done so far.** Each verb is a file in `xge/lib/verbs/` with its name, forms and places, `onRelease`, `make`, `check` and `run`; `verbs/all.cpp` lists them; `makeCommand`, `CommandExecutor::run`, the place check and the load-time check look the verb up; `xgetest "[verbs]"` holds the list against the schema. Why a written list and the other choices: [verbs](designs/14-verbs.md). What is left, each independent:
-- **Size** M, M, S, L. **Blocks** nothing; A5 needs only what is done.
+- **Done so far.** Each verb is a file in `xge/lib/verbs/` with its name, forms and places, `onRelease`, `read`, `make`, `check` and `run`; `verbs/all.cpp` lists them; `readCommand`, `makeCommand`, `CommandExecutor::run`, the place check and the load-time check look the verb up; `xgetest "[verbs]"` holds the list against the schema. Why a written list and the other choices: [verbs](designs/14-verbs.md). What is left, each independent:
+- **Size** M, S, L. **Blocks** nothing; A5 needs only what is done.
 - **Substeps, each green.**
-  1. **`read` moves (M).** The branches of `readCommand` (`load/xml.cpp`, about 350 lines) into each verb's file, as `Verb::read`. Two things first. The helpers they call (`fail`, `requireAttribute`, the value readers) are in an unnamed namespace of `load/xml.cpp`: move the ones a reader needs to a small `load/reading.h` and `.cpp` that depend only on the abstract `XmlNode` (`xml/document.h`). And a decision, because a generated program compiles the verbs but not the XML reader: **assumed** it then also compiles `load/reading.cpp` and carries the readers unused, rather than the readers living in a second folder. Give `verb.h` helpers for the common shapes (a verb with no parts; one number as content; named value children), so `die.cpp` gains two lines and only verbs with real structure (`spawn`, `send`, `hunt`, `think`, `put`, `swing`) have a reader of any length.
-  2. **Printing moves (M).** The cases of `operator<<` for `Command` and for `RawCommand` (`game/command.cpp`) into each verb, as `Verb::print`. The generated-games test compares these dumps, so the text must not change by a character.
-  3. **A verb's own helpers move beside it (S).** `hop`, `startFlight`, `huntByHop`, `spawnProjectile`, `leap`, `aim`, `chase`, `land`, `knock`, `release` in `play/executor.cpp` are each used by one verb (check with grep first); move each into its verb's file as a function there. Those several verbs use stay.
-  4. **Optional: each verb owns its data (L).** `Command` becomes `{ const Verb* verb; data }` and `RawCommand`'s 50 shared fields become the verb's own. This is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer in the generated test heavily, so do it only after A5 has made `data.xsl` retire, or not at all.
+  1. **Printing moves (M).** The cases of `operator<<` for `Command` and for `RawCommand` (`game/command.cpp`) into each verb, as `Verb::print`. The generated-games test compares these dumps, so the text must not change by a character.
+  2. **A verb's own helpers move beside it (S).** `hop`, `startFlight`, `huntByHop`, `spawnProjectile`, `leap`, `aim`, `chase`, `land`, `knock`, `release` in `play/executor.cpp` are each used by one verb (check with grep first); move each into its verb's file as a function there. Those several verbs use stay.
+  3. **Optional: each verb owns its data (L).** `Command` becomes `{ const Verb* verb; data }` and `RawCommand`'s 50 shared fields become the verb's own. This is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer in the generated test heavily, so do it only after A5 has made `data.xsl` retire, or not at all.
 - **Careful.** The folder is compiled as one unit: name a file's functions for its verb (`readBounce`), never in an unnamed namespace. A refused verb returns false and ends its list: keep each `run`'s answer exactly. The generated programs compile the same files: after each substep, `cmake --build build --target xgetest-generated`.
-- **Files.** `xge/lib/verbs/*`, `xge/lib/load/xml.cpp`, new `xge/lib/load/reading.*` (and in `ENGINE_SOURCES`, `engine.xml`), `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/notes.md` "Loading".
-- **Done.** To add a verb: one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element, the docs. `readCommand` is a lookup and a call.
+- **Files.** `xge/lib/verbs/*`, `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/notes.md` "Loading".
+- **Done.** To add a verb: one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element, the docs.
 - **Verify.** After each commit: `ctest`, `xgetest-generated`, and `xgetest "[.speed]"` before and after (load and frame times must not rise).
 
 #### A2. Holders in the engine, not piles
@@ -677,7 +676,7 @@ Block 3  (reduction; R1 first, then any order)
   R11 card words
 
 Block 4  (architecture)
-  A1  a verb is one file: what is left (reading, printing)
+  A1  a verb is one file: what is left (printing)
   A5  a game written out as if by hand, substeps 1 to 3, then a game at a time
   A7  backends: text and images drawn by the engine, then Direct3D 11
   A2  holders, substeps 1 to 4
@@ -707,7 +706,7 @@ What blocks what, in one place:
 | R9 | R5 |
 | R3 | D5 |
 | A3 (`readCommand`, `makeCommand`) | A1 |
-| A1 substep 4 | A5 far enough along to retire `data.xsl` |
+| A1 substep 3 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
 | A6 | R1 |
 | F1 | B5, T2 |

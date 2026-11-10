@@ -74,6 +74,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | Part | Files | What |
 |---|---|---|
 | reading | `load/xml.cpp` | tags into a `GameData` (`readGame()`) |
+| | `load/reading.cpp` | what every reader shares: a child, an attribute, a value, `fail` |
 | | `load/merge.cpp` | pieces and `from=` on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
 | | `load/expr.cpp` | values, `<formula>`, building `Object`s and `State`s, pictures (`buildPicture`) |
 | | `load/calc.cpp` | arithmetic in text, compiled once into steps |
@@ -82,7 +83,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | the game | `game/game.cpp` | the interpreter: objects, the state stack, scenes, conditions, resets, paths, spawns, the answers to `FrameRules` |
 | | `game/scenes.cpp` | `layOutScenes`, states `from=` others |
 | | `game/command.cpp` | raw command tags into typed `Command`s (`makeCommand`, by the verb), printing them; `operationShape` |
-| | `verbs/` | a file per verb: its name, the places it may go, `make`, `check` and `run`; `verb.h` says what a verb is, `all.cpp` lists them |
+| | `verbs/` | a file per verb: its name, the places it may go, `read`, `make`, `check` and `run`; `verb.h` says what a verb is, `all.cpp` lists them |
 | | `game/object.*`, `game/states.*`, `game/data.h`, `game/random.cpp` | the data model; the one random source |
 | | `game/cells.cpp`, `game/cards.cpp`, `game/think.cpp` | maps of cells and board games; cards; the board-game search |
 | the frame | `play/frame.cpp` | `playOneFrame`: the order of a frame and the moving |

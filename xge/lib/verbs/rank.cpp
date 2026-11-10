@@ -7,6 +7,7 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 #include "load/spelling.h"
 
 #include <stdexcept>
@@ -15,6 +16,12 @@
 namespace xge
 {
 	// <rank>: Enters a score in a table that lasts.
+	static void readRank(const XmlNode& node, const std::string& where, RawCommand&)
+	{
+		requireAttribute(node, "variable", where);
+		requireAttribute(node, "into", where);
+	}
+
 	static Command makeRank(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdRank{ VariableName::of(raw.variable), raw.into };
@@ -57,6 +64,7 @@ namespace xge
 		.forms = { { "<rank>", places::changes, kindOf<CmdRank>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readRank,
 		.make = makeRank,
 		.check = checkRank,
 		.run = runRank,

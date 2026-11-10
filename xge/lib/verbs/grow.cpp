@@ -25,6 +25,7 @@ namespace xge
 		.forms = { { "<grow />", places::self, kindOf<CmdGrow>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeGrow,
 		.check = nullptr,
 		.run = runGrow,

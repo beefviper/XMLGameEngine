@@ -28,6 +28,7 @@ namespace xge
 		.forms = { { "<wrap />", places::edge, kindOf<CmdWrap>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeWrap,
 		.check = nullptr,
 		.run = runWrap,

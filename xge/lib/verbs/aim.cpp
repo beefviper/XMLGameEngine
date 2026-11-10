@@ -7,6 +7,7 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include <stdexcept>
 
@@ -14,6 +15,13 @@ namespace xge
 {
 	// <aim>: Faces another object; with <lined>, refused unless it is lined
 	// up.
+	static void readAim(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		// Optionally only when lined up, within so many pixels.
+		requireAttribute(node, "object", where);
+		if (auto lined = findChild(&node, "lined")) { command.distance = readValue(*lined, where + " > <aim>"); }
+	}
+
 	static Command makeAim(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const bool lined = isWritten(raw.distance);
@@ -38,6 +46,7 @@ namespace xge
 		.forms = { { "<aim>", places::steering, kindOf<CmdAim>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readAim,
 		.make = makeAim,
 		.check = checkAim,
 		.run = runAim,

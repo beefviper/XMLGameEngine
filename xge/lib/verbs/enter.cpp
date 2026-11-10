@@ -7,10 +7,19 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <enter>: Goes to another scene of the state.
+	static void readEnter(const XmlNode&, const std::string& where, RawCommand& command)
+	{
+		if (command.scene.empty() == command.way.empty())
+		{
+			fail(where, "<enter> names a scene=\"...\" or a way=\"...\", one of them");
+		}
+	}
+
 	static Command makeEnter(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdEnterScene{ raw.scene, raw.way };
@@ -34,6 +43,7 @@ namespace xge
 		.forms = { { "<enter>", places::changes, kindOf<CmdEnterScene>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readEnter,
 		.make = makeEnter,
 		.check = checkEnter,
 		.run = runEnter,

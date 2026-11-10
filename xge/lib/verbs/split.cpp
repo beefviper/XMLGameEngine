@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<split />", places::self, kindOf<CmdSplit>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeSplit,
 		.check = nullptr,
 		.run = runSplit,

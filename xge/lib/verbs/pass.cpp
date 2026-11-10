@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -13,6 +14,11 @@
 namespace xge
 {
 	// <pass>: The turn goes to the next player.
+	static void readPass(const XmlNode& node, const std::string&, RawCommand& command)
+	{
+		if (!node.getAttribute("member").empty()) { command.amount = RawValue::expression(node.getAttribute("member")); }
+	}
+
 	static Command makePass(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		if (!isWritten(raw.amount)) { return CmdPass{ raw.object, -1 }; }
@@ -42,6 +48,7 @@ namespace xge
 		.forms = { { "<pass />", places::flow | in(Place::Action), kindOf<CmdPass>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readPass,
 		.make = makePass,
 		.check = nullptr,
 		.run = runPass,

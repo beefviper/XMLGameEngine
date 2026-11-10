@@ -6,7 +6,9 @@
 
 <!-- The engine's own files a generated program compiles, as they are in xge/lib/
      (copied to engine/ by xgecli): everything Game and Engine are made of,
-     with SFML's window and sound; not load/xml (the game is C++ already),
+     with SFML's window and sound; not load/xml (the game is C++ already;
+     load/reading and xml/document.h only because each verb's file holds its
+     reader too),
      the other libraries, or the factories that choose among them
      (window/window.cpp, audio/audio.cpp, engine/backends.cpp). The verbs are a file
      each (lib/verbs/, listed in its all.cpp): a new one is added here too. -->
@@ -54,6 +56,9 @@
   <file>lib/load/calc.cpp</file>
   <file>lib/play/collision.h</file>
   <file>lib/play/collision.cpp</file>
+  <file>lib/xml/document.h</file>
+  <file>lib/load/reading.h</file>
+  <file>lib/load/reading.cpp</file>
   <file>lib/verbs/verb.h</file>
   <file>lib/verbs/all.cpp</file>
   <file>lib/verbs/bounce.cpp</file>

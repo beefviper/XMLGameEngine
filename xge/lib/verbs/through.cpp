@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<through />", places::touch, kindOf<CmdThrough>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeThrough,
 		.check = nullptr,
 		.run = runThrough,

@@ -6,10 +6,16 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <merge>: Two alike pieces become one.
+	static void readMerge(const XmlNode& node, const std::string& where, RawCommand&)
+	{
+		requireAttribute(node, "variable", where);
+	}
+
 	static Command makeMerge(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdMerge{ raw.variable };
@@ -27,6 +33,7 @@ namespace xge
 		.forms = { { "<merge>", places::touch, kindOf<CmdMerge>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readMerge,
 		.make = makeMerge,
 		.check = nullptr,
 		.run = runMerge,

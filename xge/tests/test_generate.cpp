@@ -156,7 +156,12 @@ TEST_CASE("a generated program carries the engine's files unchanged, and none of
 	REQUIRE(copied.count("engine/engine.cpp") == 1);
 	REQUIRE(copied.count("game/game.cpp") == 1);
 	copied.insert("game_parts.h");
-	for (const char* left : { "load/xml.h", "load/xml.cpp", "xml/document.h", "load/xsd.h", "window/window.cpp", "audio/audio.cpp", "engine/backends.cpp",
+	// Each verb's file holds its reader, so what a reader is given comes too
+	// (the node every XML library is read through, and the shared readers),
+	// but no XML library and nothing that reads a game.
+	CHECK(copied.count("xml/document.h") == 1);
+	CHECK(copied.count("load/reading.cpp") == 1);
+	for (const char* left : { "load/xml.h", "load/xml.cpp", "xml/document.cpp", "load/xsd.h", "window/window.cpp", "audio/audio.cpp", "engine/backends.cpp",
 		"window/raylib.h", "window/sdl2.h", "window/opengl.h", "audio/raylib.h", "audio/sdl2.h", "engine/folder.h" })
 	{
 		INFO(left);

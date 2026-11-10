@@ -7,12 +7,18 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include <string>
 
 namespace xge
 {
 	// <push>: Goes to another state, on top of this one.
+	static void readPush(const XmlNode& node, const std::string& where, RawCommand&)
+	{
+		requireAttribute(node, "state", where);
+	}
+
 	static Command makePush(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdPushState{ raw.state };
@@ -36,6 +42,7 @@ namespace xge
 		.forms = { { "<push>", places::flow, kindOf<CmdPushState>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readPush,
 		.make = makePush,
 		.check = checkPush,
 		.run = runPush,

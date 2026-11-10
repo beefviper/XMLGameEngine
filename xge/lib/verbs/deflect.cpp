@@ -5,12 +5,18 @@
 
 #include "verbs/verb.h"
 #include "play/verbs.h"
+#include "load/reading.h"
 
 #include <stdexcept>
 
 namespace xge
 {
 	// <deflect>: Off a paddle, at an angle by where along it the touch was.
+	static void readDeflect(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		command.amount = readValue(node, where);
+	}
+
 	static Command makeDeflect(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const float maxAngle = evaluate(raw.amount);
@@ -34,6 +40,7 @@ namespace xge
 		.forms = { { "<deflect>", places::touch, kindOf<CmdDeflect>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readDeflect,
 		.make = makeDeflect,
 		.check = nullptr,
 		.run = runDeflect,

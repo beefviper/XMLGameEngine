@@ -6,12 +6,18 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 #include <stdexcept>
 
 namespace xge
 {
 	// <leap>: Up off the ground against the pull on it.
+	static void readLeap(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		command.amount = readValue(node, where);
+	}
+
 	static Command makeLeap(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const float height = evaluate(raw.amount);
@@ -30,6 +36,7 @@ namespace xge
 		.forms = { { "<leap>", places::controls, kindOf<CmdLeap>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readLeap,
 		.make = makeLeap,
 		.check = nullptr,
 		.run = runLeap,

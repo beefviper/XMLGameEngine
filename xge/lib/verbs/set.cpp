@@ -7,6 +7,7 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 #include "load/spelling.h"
 
 #include <stdexcept>
@@ -17,6 +18,12 @@
 namespace xge
 {
 	// <set>: Gives a variable, or one of an object's own numbers, a value.
+	static void readSet(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "variable", where);
+		command.amount = readValue(node, where);
+	}
+
 	static Command makeSet(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// One of the numbers every object has (ship.velocity.x) is split before
@@ -72,6 +79,7 @@ namespace xge
 		.forms = { { "<set>", places::changes, kindOf<CmdSet>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readSet,
 		.make = makeSet,
 		.check = checkSet,
 		.run = runSet,

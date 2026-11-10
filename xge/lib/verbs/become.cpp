@@ -7,6 +7,7 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -15,6 +16,14 @@
 namespace xge
 {
 	// <become>: Shows another of its looks, or wears another style's colours.
+	static void readBecome(const XmlNode&, const std::string& where, RawCommand& command)
+	{
+		if (command.sprite.empty() && command.style.empty())
+		{
+			fail(where, "<become> needs a sprite= (a look), a style= (a palette), or both");
+		}
+	}
+
 	static Command makeBecome(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdBecome{ raw.sprite, raw.object, raw.from, raw.style };
@@ -60,6 +69,7 @@ namespace xge
 		.forms = { { "<become>", places::changes, kindOf<CmdBecome>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readBecome,
 		.make = makeBecome,
 		.check = checkBecome,
 		.run = runBecome,

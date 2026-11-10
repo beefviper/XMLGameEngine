@@ -5,10 +5,16 @@
 
 #include "verbs/verb.h"
 #include "play/maze.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <wander>: Through a maze, any way at each corner.
+	static void readWander(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		command.amount = readValue(node, where);
+	}
+
 	static Command makeWander(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		return CmdWander{ speedOf(raw, "wander", evaluate) };
@@ -26,6 +32,7 @@ namespace xge
 		.forms = { { "<wander>", places::steering, kindOf<CmdWander>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readWander,
 		.make = makeWander,
 		.check = nullptr,
 		.run = runWander,

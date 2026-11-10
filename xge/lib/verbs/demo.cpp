@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<demo />", places::flow, kindOf<CmdDemo>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeDemo,
 		.check = nullptr,
 		.run = runDemo,

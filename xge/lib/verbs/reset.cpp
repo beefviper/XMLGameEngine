@@ -7,6 +7,7 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 #include "load/spelling.h"
 
 #include <stdexcept>
@@ -15,6 +16,14 @@ namespace xge
 {
 	// <reset>: Back to how it started: the object running it, a named one, a
 	// scene, or the whole game.
+	static void readReset(const XmlNode&, const std::string& where, RawCommand& command)
+	{
+		if ((!command.object.empty()) + (!command.scene.empty()) + (!command.way.empty()) > 1)
+		{
+			fail(where, "<reset> puts back an object=, a scene= or a way=, one of them");
+		}
+	}
+
 	static Command makeReset(const RawCommand& raw, const ValueEvaluator&)
 	{
 		// <reset /> puts the object in the rule (or, in a state's input or
@@ -51,6 +60,7 @@ namespace xge
 		.forms = { { "<reset />", places::changes, kindOf<CmdReset>() }, { "<reset object>", places::changes, kindOf<CmdResetObject>() }, { "<reset scene>", places::changes, kindOf<CmdResetScene>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readReset,
 		.make = makeReset,
 		.check = checkReset,
 		.run = runReset,

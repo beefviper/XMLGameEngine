@@ -26,6 +26,7 @@ namespace xge
 		.forms = { { "<shove />", places::touch, kindOf<CmdShove>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeShove,
 		.check = nullptr,
 		.run = runShove,

@@ -29,6 +29,7 @@ namespace xge
 		.forms = { { "<stick />", places::edge | places::touch, kindOf<CmdStick>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeStick,
 		.check = nullptr,
 		.run = runStick,

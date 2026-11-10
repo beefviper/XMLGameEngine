@@ -8,12 +8,49 @@
 #include "play/executor.h"
 #include "play/maze.h"
 #include "load/check.h"
+#include "load/reading.h"
 
+#include <memory>
 #include <stdexcept>
+#include <string>
 
 namespace xge
 {
 	// <hunt>: After another object through a maze, or towards it hop by hop.
+	static void readHunt(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "object", where);
+		const std::string here = where + " > <hunt>";
+		if (findChild(&node, "hop"))
+		{
+			// A hunt by hops: the one hop it makes toward what it hunts.
+			std::unique_ptr<XmlNode> hop = node.getFirstChild();
+			if (hop->getName() != "hop" || hop->getNextSibling() || !readText(node).empty())
+			{
+				fail(here, "a hunt by hops has its <hop> and nothing else (no speed, <ahead>, <with> or <retreat>: those are for a maze)");
+			}
+			if (!hop->getAttribute("direction").empty()) { fail(here + " > <hop>", "has a direction=; the hunt chooses the way"); }
+			command.byHops = true;
+			readHopParts(*hop, here, command);
+			return;
+		}
+
+		// What it hunts, how fast, and how its target is found from that: tiles
+		// ahead of it, with a partner, or backing off when near.
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+		{
+			const std::string tag = child->getName();
+			if (tag == "with") { command.partner = requireAttribute(*child, "object", here + " > <with>"); }
+			else if (tag == "retreat")
+			{
+				command.retreat = requireAttribute(*child, "object", here + " > <retreat>");
+				command.distance = readValue(*child, here + " > <retreat>");
+			}
+		}
+		command.amount = readLeadValue(node, { "ahead", "with", "retreat" }, "its speed, then <ahead>, <with> and <retreat>, each if wanted", where);
+		if (auto ahead = findChild(&node, "ahead")) { command.ahead = readValue(*ahead, here); }
+	}
+
 	static Command makeHunt(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		if (raw.byHops)
@@ -61,6 +98,7 @@ namespace xge
 		.forms = { { "<hunt>", places::steering, kindOf<CmdHunt>() }, { "<hunt> by <hop>", places::steering, kindOf<CmdHuntHop>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readHunt,
 		.make = makeHunt,
 		.check = checkHunt,
 		.run = runHunt,

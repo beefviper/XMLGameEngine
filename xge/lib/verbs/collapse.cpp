@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<collapse />", places::cells, kindOf<CmdCollapse>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeCollapse,
 		.check = nullptr,
 		.run = runCollapse,

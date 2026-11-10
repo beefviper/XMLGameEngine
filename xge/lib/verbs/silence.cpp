@@ -7,10 +7,16 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <silence>: Stops a sound that loops.
+	static void readSilence(const XmlNode& node, const std::string& where, RawCommand&)
+	{
+		requireAttribute(node, "sound", where);
+	}
+
 	static Command makeSilence(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdSilence{ raw.sound };
@@ -33,6 +39,7 @@ namespace xge
 		.forms = { { "<silence>", places::changes, kindOf<CmdSilence>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readSilence,
 		.make = makeSilence,
 		.check = checkSilence,
 		.run = runSilence,

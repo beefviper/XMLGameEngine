@@ -6,10 +6,16 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <slide>: As far as it can go one way over the cells.
+	static void readSlide(const XmlNode& node, const std::string& where, RawCommand&)
+	{
+		requireAttribute(node, "direction", where);
+	}
+
 	static Command makeSlide(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdSlide{ directionFromName(raw.direction, raw.verb), raw.objClass };
@@ -29,6 +35,7 @@ namespace xge
 		.forms = { { "<slide>", places::self, kindOf<CmdSlide>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readSlide,
 		.make = makeSlide,
 		.check = nullptr,
 		.run = runSlide,

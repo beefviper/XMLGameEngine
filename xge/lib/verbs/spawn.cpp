@@ -7,15 +7,62 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include <cmath>
+#include <memory>
 #include <optional>
 #include <stdexcept>
+#include <string>
 
 namespace xge
 {
 	// <spawn>: Makes a copy of an object; refused when no more of it may
 	// exist.
+	static void readSpawn(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "object", where);
+		const std::string here = where + " > <spawn>";
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+		{
+			const std::string tag = child->getName();
+			if (tag != "position" && tag != "velocity" && tag != "acceleration" && tag != "random" && tag != "column" && tag != "row" && tag != "free")
+			{
+				fail(here, "unknown <" + tag + ">; expected <random />, a <position> (or a <column> and a <row>, or <free />), a <velocity> and an <acceleration>, each if wanted");
+			}
+		}
+		command.random = findChild(&node, "random") != nullptr;
+		if (auto free = findChild(&node, "free"))
+		{
+			command.free = true;
+			for (std::unique_ptr<XmlNode> child = free->getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				if (child->getName() != "below") { fail(here + " > <free>", "unknown <" + child->getName() + ">; expected only a <below>: the row it goes under"); }
+				command.below = readValue(*child, here + " > <free> > <below>");
+			}
+		}
+		if (auto column = findChild(&node, "column")) { command.column = readValue(*column, here); }
+		if (auto row = findChild(&node, "row")) { command.row = readValue(*row, here); }
+		if (auto position = findChild(&node, "position"))
+		{
+			const PartialVector2 given = readPartialVector2(*position, here);
+			if (given.x) { command.positionX = *given.x; }
+			if (given.y) { command.positionY = *given.y; }
+		}
+		if (auto velocity = findChild(&node, "velocity"))
+		{
+			const PartialVector2 given = readPartialVector2(*velocity, here);
+			if (given.x) { command.velocityX = *given.x; }
+			if (given.y) { command.velocityY = *given.y; }
+		}
+		if (auto acceleration = findChild(&node, "acceleration"))
+		{
+			const PartialVector2 given = readPartialVector2(*acceleration, here);
+			if (given.x) { command.accelerationX = *given.x; }
+			if (given.y) { command.accelerationY = *given.y; }
+		}
+	}
+
 	static Command makeSpawn(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		CmdSpawn spawn;
@@ -72,6 +119,7 @@ namespace xge
 		.forms = { { "<spawn>", places::changes, kindOf<CmdSpawn>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readSpawn,
 		.make = makeSpawn,
 		.check = checkSpawn,
 		.run = runSpawn,

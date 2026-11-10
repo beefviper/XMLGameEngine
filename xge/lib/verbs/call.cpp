@@ -29,6 +29,7 @@ namespace xge
 		.forms = { { "<call />", places::self, kindOf<CmdCall>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeCall,
 		.check = nullptr,
 		.run = runCall,

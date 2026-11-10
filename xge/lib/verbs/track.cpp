@@ -5,6 +5,7 @@
 
 #include "verbs/verb.h"
 #include "load/check.h"
+#include "load/reading.h"
 #include "load/spelling.h"
 
 #include <stdexcept>
@@ -15,6 +16,11 @@ namespace xge
 {
 	// <track>: Follows a control that points (a mouse, a stick): run by
 	// CommandExecutor::executeAxis.
+	static void readTrack(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		if (node.getFirstChild()) { readOnto(node, where + " > <track>", command); }
+	}
+
 	static Command makeTrack(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdTrack{ raw.path, raw.onto };
@@ -43,6 +49,7 @@ namespace xge
 		.forms = { { "<track />", places::controls, kindOf<CmdTrack>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readTrack,
 		.make = makeTrack,
 		.check = checkTrack,
 		.run = nullptr,

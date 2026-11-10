@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 #include <stdexcept>
 #include <string>
@@ -13,6 +14,16 @@
 namespace xge
 {
 	// <jump>: Through the air to a place, touching nothing until it lands.
+	static void readJump(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		// How far as its content, then how long and how high.
+		requireAttribute(node, "direction", where);
+		const std::string here = where + " > <jump>";
+		command.amount = readLeadValue(node, { "seconds", "arc" }, "its distance, then <seconds> and <arc>, each if wanted", where);
+		if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
+		if (auto arc = findChild(&node, "arc")) { command.arc = readValue(*arc, here); }
+	}
+
 	static Command makeJump(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		CmdJump jump{ directionFromName(raw.direction, raw.verb), evaluate(raw.amount) };
@@ -33,6 +44,7 @@ namespace xge
 		.forms = { { "<jump>", places::controls, kindOf<CmdJump>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readJump,
 		.make = makeJump,
 		.check = nullptr,
 		.run = runJump,

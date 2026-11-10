@@ -7,9 +7,11 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 #include "load/spelling.h"
 
 #include <cmath>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -17,6 +19,22 @@
 namespace xge
 {
 	// <follow>: Sets off along a path.
+	static void readFollow(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "path", where);
+		const std::string here = where + " > <follow>";
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+		{
+			if (child->getName() != "stagger" && child->getName() != "nearest") { fail(here, "unknown <" + child->getName() + ">; expected <stagger> and <nearest>"); }
+		}
+		if (auto stagger = findChild(&node, "stagger")) { command.seconds = readValue(*stagger, here); }
+		if (auto nearest = findChild(&node, "nearest"))
+		{
+			if (node.getAttribute("object").empty()) { fail(here, "<nearest> picks among the objects object= names; this <follow> names none"); }
+			command.amount = readValue(*nearest, here);
+		}
+	}
+
 	static Command makeFollow(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const float stagger = valueOr(raw.seconds, 0.0f, evaluate);
@@ -51,6 +69,7 @@ namespace xge
 		.forms = { { "<follow>", places::changes, kindOf<CmdFollow>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readFollow,
 		.make = makeFollow,
 		.check = checkFollow,
 		.run = runFollow,

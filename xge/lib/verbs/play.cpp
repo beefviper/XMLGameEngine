@@ -7,10 +7,16 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <play>: A sound; one that loops stops when its key is let go.
+	static void readPlay(const XmlNode& node, const std::string& where, RawCommand&)
+	{
+		requireAttribute(node, "sound", where);
+	}
+
 	static Command makePlay(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdPlay{ raw.sound };
@@ -33,6 +39,7 @@ namespace xge
 		.forms = { { "<play>", places::changes, kindOf<CmdPlay>() } },
 		.formOf = nullptr,
 		.onRelease = true,
+		.read = readPlay,
 		.make = makePlay,
 		.check = checkPlay,
 		.run = runPlay,

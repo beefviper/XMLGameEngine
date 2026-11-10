@@ -35,6 +35,7 @@ namespace xge
 		.forms = { { "<reverse />", places::self, kindOf<CmdReverse>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeReverse,
 		.check = nullptr,
 		.run = runReverse,

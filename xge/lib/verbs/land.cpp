@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<land />", places::touch, kindOf<CmdLand>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeLand,
 		.check = nullptr,
 		.run = runLand,

@@ -6,11 +6,19 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <count>: How many of a class there are, or lie about it, into a
 	// variable.
+	static void readCount(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "class", where);
+		requireAttribute(node, "into", where);
+		if (node.getFirstChild()) { readCellPlace(node, where + " > <count>", command); }
+	}
+
 	static Command makeCount(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdCount{ raw.objClass, VariableName::of(raw.into), cellPlaceOf(raw) };
@@ -30,6 +38,7 @@ namespace xge
 		.forms = { { "<count>", places::changes, kindOf<CmdCount>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readCount,
 		.make = makeCount,
 		.check = nullptr,
 		.run = runCount,

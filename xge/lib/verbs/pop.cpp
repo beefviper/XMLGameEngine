@@ -36,6 +36,7 @@ namespace xge
 		.forms = { { "<pop>", places::flow, kindOf<CmdPopState>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makePop,
 		.check = checkPop,
 		.run = runPop,

@@ -5,8 +5,11 @@
 
 #include "verbs/verb.h"
 
+#include "load/reading.h"
+
 #include <array>
 #include <cmath>
+#include <memory>
 #include <stdexcept>
 
 namespace xge
@@ -100,6 +103,116 @@ namespace xge
 		const Owner& owner = owners()[shape.index()];
 		if (owner.verb && owner.verb->formOf) { return &owner.verb->forms[owner.verb->formOf(shape)]; }
 		return owner.form;
+	}
+
+	RawCommand readCommand(const XmlNode& node, const std::string& where)
+	{
+		RawCommand command;
+		command.verb = node.getName();
+
+		const Verb* verb = findVerb(command.verb);
+		if (!verb) { fail(where, "unknown command <" + command.verb + ">"); }
+
+		// The names any command may have, each an attribute.
+		command.object = node.getAttribute("object");
+		command.pile = node.getAttribute("pile");
+		command.variable = node.getAttribute("variable");
+		command.state = node.getAttribute("state");
+		command.action = node.getAttribute("action");
+		command.direction = node.getAttribute("direction");
+		command.burn = node.getAttribute("burn");
+		command.sound = node.getAttribute("sound");
+		command.sprite = node.getAttribute("sprite");
+		command.style = node.getAttribute("style");
+		command.path = node.getAttribute("path");
+		command.objClass = node.getAttribute("class");
+		command.scene = node.getAttribute("scene");
+		command.way = node.getAttribute("way");
+		command.into = node.getAttribute("into");
+		command.from = node.getAttribute("from");
+
+		if (verb->read) { verb->read(node, where, command); }
+		return command;
+	}
+
+	bool hasContent(const XmlNode& node)
+	{
+		return node.getFirstChild() || !readText(node).empty();
+	}
+
+	bool readHopParts(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		const std::string here = where + " > <hop>";
+		if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
+		if (auto arc = findChild(&node, "arc")) { command.arc = readValue(*arc, here); }
+
+		// Nothing written: one cell, on a cell map.
+		if (!node.getFirstChild() && readText(node).empty()) { return false; }
+		if (!findChild(&node, "x") && !findChild(&node, "y"))
+		{
+			command.amount = readLeadValue(node, { "seconds", "arc" }, "its distance, or an <x> and a <y>, then <seconds> and <arc> if wanted", where);
+			return false;
+		}
+
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+		{
+			const std::string tag = child->getName();
+			if (tag != "x" && tag != "y" && tag != "seconds" && tag != "arc")
+			{
+				fail(here, "unknown <" + tag + ">; expected its distance, or an <x> and a <y>, then <seconds> and <arc> if wanted");
+			}
+		}
+		const PartialVector2 step = readPartialVector2(node, where);
+		if (!step.x || !step.y || !readText(node).empty()) { fail(where, "<hop> gives one distance, or an <x> across and a <y> up or down, both"); }
+		command.positionX = *step.x;
+		command.positionY = *step.y;
+		return true;
+	}
+
+
+	void readOnto(const XmlNode& node, const std::string& here, RawCommand& command)
+	{
+		if (!readText(node).empty()) { fail(here, "has text; with <onto> it says nothing else"); }
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+		{
+			if (child->getName() != "onto") { fail(here, "unknown <" + child->getName() + ">; with <onto> it says nothing else"); }
+			command.onto.push_back(requireAttribute(*child, "class", here + " > <onto>"));
+		}
+	}
+
+
+	void readCellPlace(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		std::unique_ptr<XmlNode> place = node.getFirstChild();
+		if (!place || place->getNextSibling() || (place->getName() != "here" && place->getName() != "around"))
+		{
+			fail(where, "holds <" + (place ? place->getName() : std::string()) + ">; expected one <here /> or <around />");
+		}
+		command.place = place->getName();
+		for (std::unique_ptr<XmlNode> child = place->getFirstChild(); child != nullptr; child = child->getNextSibling())
+		{
+			const std::string tag = child->getName();
+			if (command.place == "here") { fail(where + " > <here>", "holds <" + tag + ">; it is empty"); }
+			if (tag == "straight" && !command.straight) { command.straight = true; continue; }
+			if (tag == "alike" && command.alike.empty()) { command.alike = requireAttribute(*child, "variable", where + " > <around> > <alike>"); continue; }
+			fail(where + " > <around>", "holds <" + tag + ">; expected <straight /> and <alike variable=\"...\" />, each once if wanted");
+		}
+	}
+
+
+	void readSendHeld(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		const std::string& verb = command.verb;
+		command.from = requireAttribute(node, "from", where);
+		command.into = requireAttribute(node, "into", where);
+		const std::string here = where + " > <" + verb + ">";
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+		{
+			if (child->getName() != "all" || verb == "distribute") { fail(here, "unknown <" + child->getName() + ">; expected how many" + std::string(verb == "send" ? ", or <all />" : " each")); }
+			command.all = true;
+		}
+		if (!command.all) { command.amount = readValue(node, where); }
+		else if (!readText(node).empty()) { fail(here, "has <all /> and a number; give one"); }
 	}
 
 	bool isWritten(const RawValue& value) noexcept

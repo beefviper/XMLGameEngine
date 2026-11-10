@@ -4,12 +4,20 @@
 // date: Nov 10, 2026
 
 #include "verbs/verb.h"
+#include "load/reading.h"
 
 #include <stdexcept>
 
 namespace xge
 {
 	// <climb>: Up or down a ladder while held.
+	static void readClimb(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "direction", where);
+		requireAttribute(node, "class", where);
+		command.amount = readValue(node, where);
+	}
+
 	static Command makeClimb(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const Direction direction = directionFromName(raw.direction, raw.verb);
@@ -37,6 +45,7 @@ namespace xge
 		.forms = { { "<climb>", places::controls, kindOf<CmdClimb>() } },
 		.formOf = nullptr,
 		.onRelease = true,
+		.read = readClimb,
 		.make = makeClimb,
 		.check = nullptr,
 		.run = runClimb,

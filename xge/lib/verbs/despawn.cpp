@@ -43,6 +43,7 @@ namespace xge
 		.forms = { { "<despawn />", places::self, kindOf<CmdDespawn>() }, { "<despawn object>", places::changes, kindOf<CmdDespawn>() } },
 		.formOf = formOfDespawn,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeDespawn,
 		.check = checkDespawn,
 		.run = runDespawn,

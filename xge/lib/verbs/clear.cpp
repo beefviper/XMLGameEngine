@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<clear />", places::cells, kindOf<CmdClear>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeClear,
 		.check = nullptr,
 		.run = runClear,

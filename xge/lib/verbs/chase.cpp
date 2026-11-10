@@ -7,12 +7,23 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include <stdexcept>
+#include <string>
 
 namespace xge
 {
 	// <chase>: Heads straight for another object.
+	static void readChase(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		// Its speed as its content, then how near is near enough.
+		requireAttribute(node, "object", where);
+		const std::string here = where + " > <chase>";
+		command.amount = readLeadValue(node, { "near" }, "its speed, then <near> if wanted", where);
+		if (auto nearNode = findChild(&node, "near")) { command.distance = readValue(*nearNode, here); }
+	}
+
 	static Command makeChase(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const float speed = evaluate(raw.amount);
@@ -39,6 +50,7 @@ namespace xge
 		.forms = { { "<chase>", places::steering, kindOf<CmdChase>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readChase,
 		.make = makeChase,
 		.check = checkChase,
 		.run = runChase,

@@ -7,9 +7,11 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 #include "load/spelling.h"
 
 #include <algorithm>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -17,6 +19,23 @@
 namespace xge
 {
 	// <trigger>: Runs an object's action.
+	static void readTrigger(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "action", where);
+		const std::unique_ptr<XmlNode> child = node.getFirstChild();
+		if (child && child->getName() != "here" && child->getName() != "around")
+		{
+			fail(where + " > <trigger>", "holds <" + child->getName() + ">; for now only a trigger in a key's <input> holds an <otherwise>, and one with class= a <here /> or an <around />");
+		}
+		if (child)
+		{
+			readCellPlace(node, where + " > <trigger>", command);
+			requireAttribute(node, "class", where + " > <trigger> with <" + child->getName() + ">");
+			if (!command.object.empty()) { fail(where + " > <trigger>", "with <" + child->getName() + "> runs the action of pieces about the object running it, so it names no object="); }
+		}
+		else if (!command.objClass.empty()) { fail(where + " > <trigger class>", "class= picks the pieces in a <here /> or an <around />; give one, or leave class= out"); }
+	}
+
 	static Command makeTrigger(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdTriggerAction{ raw.object, raw.action, raw.from, raw.otherwise, raw.objClass, cellPlaceOf(raw) };
@@ -66,6 +85,7 @@ namespace xge
 		.forms = { { "<trigger>", places::changes, kindOf<CmdTriggerAction>() } },
 		.formOf = nullptr,
 		.onRelease = true,
+		.read = readTrigger,
 		.make = makeTrigger,
 		.check = checkTrigger,
 		.run = runTrigger,

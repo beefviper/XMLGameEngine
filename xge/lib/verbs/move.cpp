@@ -7,12 +7,21 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "play/verbs.h"
+#include "load/reading.h"
 
 #include <stdexcept>
 
 namespace xge
 {
 	// <move>: A step: held in an action, one step anywhere else.
+	static void readMove(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		// Its step, then on a cell map how long it waits before it repeats.
+		requireAttribute(node, "direction", where);
+		command.amount = readLeadValue(node, { "wait" }, "its step, then <wait> if wanted", where);
+		if (auto wait = findChild(&node, "wait")) { command.seconds = readValue(*wait, where + " > <move>"); }
+	}
+
 	static Command makeMove(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		CmdMove move{ directionFromName(raw.direction, raw.verb), evaluate(raw.amount) };
@@ -42,6 +51,7 @@ namespace xge
 		.forms = { { "<move>", places::self, kindOf<CmdMove>() } },
 		.formOf = nullptr,
 		.onRelease = true,
+		.read = readMove,
 		.make = makeMove,
 		.check = nullptr,
 		.run = runMove,

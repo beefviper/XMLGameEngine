@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<cycle />", places::self, kindOf<CmdCycle>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeCycle,
 		.check = nullptr,
 		.run = runCycle,

@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<out />", places::flow, kindOf<CmdOut>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeOut,
 		.check = nullptr,
 		.run = runOut,

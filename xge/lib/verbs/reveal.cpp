@@ -7,6 +7,7 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -14,6 +15,13 @@
 namespace xge
 {
 	// <reveal>: Puts some of an object that is out of play back in.
+	static void readReveal(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "object", where);
+		// How many is optional: a bare <reveal object="..." /> is one.
+		command.amount = hasContent(node) ? readValue(node, where) : RawValue::expression("1");
+	}
+
 	static Command makeReveal(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
@@ -39,6 +47,7 @@ namespace xge
 		.forms = { { "<reveal>", places::changes, kindOf<CmdReveal>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readReveal,
 		.make = makeReveal,
 		.check = checkReveal,
 		.run = runReveal,

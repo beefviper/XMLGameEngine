@@ -6,10 +6,17 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <accelerate>: A push one way while held.
+	static void readAccelerate(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "direction", where);
+		command.amount = readValue(node, where);
+	}
+
 	static Command makeAccelerate(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		return CmdAccelerate{ directionFromName(raw.direction, raw.verb), evaluate(raw.amount), raw.burn };
@@ -28,6 +35,7 @@ namespace xge
 		.forms = { { "<accelerate>", places::controls, kindOf<CmdAccelerate>() } },
 		.formOf = nullptr,
 		.onRelease = true,
+		.read = readAccelerate,
 		.make = makeAccelerate,
 		.check = nullptr,
 		.run = runAccelerate,

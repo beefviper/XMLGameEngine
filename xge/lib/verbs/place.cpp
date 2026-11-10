@@ -28,6 +28,7 @@ namespace xge
 		.forms = { { "<place />", places::self, kindOf<CmdPlace>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makePlace,
 		.check = nullptr,
 		.run = runPlace,

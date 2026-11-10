@@ -7,12 +7,19 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include <string>
 
 namespace xge
 {
 	// <copy>: One variable's value into another.
+	static void readCopy(const XmlNode& node, const std::string& where, RawCommand&)
+	{
+		requireAttribute(node, "variable", where);
+		requireAttribute(node, "into", where);
+	}
+
 	static Command makeCopy(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdCopy{ VariableName::of(raw.variable), VariableName::of(raw.into) };
@@ -42,6 +49,7 @@ namespace xge
 		.forms = { { "<copy>", places::changes, kindOf<CmdCopy>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readCopy,
 		.make = makeCopy,
 		.check = checkCopy,
 		.run = runCopy,

@@ -7,6 +7,7 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -14,6 +15,13 @@
 namespace xge
 {
 	// <release>: Lets some of another object go from where it is.
+	static void readRelease(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "object", where);
+		// How many is optional: a bare <release object="..." /> is one.
+		command.amount = hasContent(node) ? readValue(node, where) : RawValue::expression("1");
+	}
+
 	static Command makeRelease(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
@@ -39,6 +47,7 @@ namespace xge
 		.forms = { { "<release>", places::self, kindOf<CmdRelease>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readRelease,
 		.make = makeRelease,
 		.check = checkRelease,
 		.run = runRelease,

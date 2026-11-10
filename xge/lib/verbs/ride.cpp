@@ -26,6 +26,7 @@ namespace xge
 		.forms = { { "<ride />", places::touch, kindOf<CmdRide>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeRide,
 		.check = nullptr,
 		.run = runRide,

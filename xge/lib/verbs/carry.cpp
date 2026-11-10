@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<carry />", places::touch, kindOf<CmdCarry>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeCarry,
 		.check = nullptr,
 		.run = runCarry,

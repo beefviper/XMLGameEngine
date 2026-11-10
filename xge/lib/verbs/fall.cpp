@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<fall />", places::cells, kindOf<CmdFall>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeFall,
 		.check = nullptr,
 		.run = runFall,

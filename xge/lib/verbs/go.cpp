@@ -7,10 +7,17 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "play/maze.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <go>: Sets off along a maze's corridors, or cell by cell.
+	static void readGo(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "direction", where);
+		command.amount = readValue(node, where);
+	}
+
 	static Command makeGo(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		return CmdGo{ directionFromName(raw.direction, raw.verb), speedOf(raw, "go", evaluate) };
@@ -30,6 +37,7 @@ namespace xge
 		.forms = { { "<go>", places::controls, kindOf<CmdGo>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readGo,
 		.make = makeGo,
 		.check = nullptr,
 		.run = runGo,

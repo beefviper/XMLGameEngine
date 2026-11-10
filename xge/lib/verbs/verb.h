@@ -25,6 +25,7 @@
 namespace xge
 {
 	class CommandExecutor;
+	class XmlNode;
 	struct Checking;
 
 	// Where a list of commands runs.
@@ -114,6 +115,11 @@ namespace xge
 		std::size_t (*formOf)(const Command& command);
 		// Acts when a key is let go as well: a held verb stops.
 		bool onRelease;
+		// What its tag says besides the names every command may have (see
+		// readCommand): the attributes it must have, its content and its
+		// children, into `command`. None: it says nothing more. Stops the
+		// load (fail, load/reading.h) at anything missing or unknown.
+		void (*read)(const XmlNode& node, const std::string& where, RawCommand& command);
 		// What was written, its numbers worked out. Throws
 		// std::runtime_error naming what is wrong with it.
 		Command (*make)(const RawCommand& raw, const ValueEvaluator& evaluate);
@@ -136,6 +142,28 @@ namespace xge
 	// shapeOf).
 	const Verb* verbOf(const Command& command) noexcept;
 	const Form* formOf(const Command& command) noexcept;
+
+	// A command tag as written, read by its verb; an unknown tag stops the
+	// load.
+	RawCommand readCommand(const XmlNode& node, const std::string& where);
+
+	// --- What several verbs' read() share (more in load/reading.h).
+
+	// Whether a tag holds anything: text or a child.
+	bool hasContent(const XmlNode& node);
+	// What a <hop> says besides its direction: one distance as its content,
+	// or an <x> across and a <y> up or down; then how long it takes, its
+	// <seconds>, and how high it goes, its <arc>. True for an <x> and a <y>.
+	bool readHopParts(const XmlNode& node, const std::string& where, RawCommand& command);
+	// <onto class="hslot" />, one or more and nothing else: the cells a hop
+	// or a track on cells may go to.
+	void readOnto(const XmlNode& node, const std::string& here, RawCommand& command);
+	// A <count>'s or <trigger>'s cells: one <here /> or <around>, the latter
+	// holding <straight /> and an <alike variable> if wanted.
+	void readCellPlace(const XmlNode& node, const std::string& where, RawCommand& command);
+	// Members of a held class, holder to holder: how many, or <all />; a
+	// <distribute>: how many each, into a holder or a group's own ones.
+	void readSendHeld(const XmlNode& node, const std::string& where, RawCommand& command);
 
 	// --- What several verbs' make() share.
 

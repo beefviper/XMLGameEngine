@@ -6,10 +6,16 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <thrust>: A push the way it faces while held.
+	static void readThrust(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		command.amount = readValue(node, where);
+	}
+
 	static Command makeThrust(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		return CmdThrust{ evaluate(raw.amount), raw.burn };
@@ -28,6 +34,7 @@ namespace xge
 		.forms = { { "<thrust>", places::controls, kindOf<CmdThrust>() } },
 		.formOf = nullptr,
 		.onRelease = true,
+		.read = readThrust,
 		.make = makeThrust,
 		.check = nullptr,
 		.run = runThrust,

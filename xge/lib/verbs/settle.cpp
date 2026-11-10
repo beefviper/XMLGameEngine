@@ -27,6 +27,7 @@ namespace xge
 		.forms = { { "<settle />", places::self, kindOf<CmdSettle>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeSettle,
 		.check = nullptr,
 		.run = runSettle,

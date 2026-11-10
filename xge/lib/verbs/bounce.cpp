@@ -7,6 +7,7 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "play/verbs.h"
+#include "load/reading.h"
 
 #include <stdexcept>
 
@@ -14,6 +15,11 @@ namespace xge
 {
 	// <bounce>: Off what it touched, or off the window's edge, keeping a share
 	// of its speed.
+	static void readBounce(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		if (hasContent(node)) { command.amount = readValue(node, where); }
+	}
+
 	static Command makeBounce(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const float share = valueOr(raw.amount, 1.0f, evaluate);
@@ -38,6 +44,7 @@ namespace xge
 		.forms = { { "<bounce />", places::edge | places::touch, kindOf<CmdBounce>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readBounce,
 		.make = makeBounce,
 		.check = nullptr,
 		.run = runBounce,

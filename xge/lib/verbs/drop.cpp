@@ -33,6 +33,7 @@ namespace xge
 		.forms = { { "<drop />", places::self, kindOf<CmdDrop>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeDrop,
 		.check = nullptr,
 		.run = runDrop,

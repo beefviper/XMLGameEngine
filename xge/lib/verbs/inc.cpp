@@ -7,12 +7,20 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include <string>
 
 namespace xge
 {
 	// <inc>: Adds to a variable.
+	static void readInc(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "variable", where);
+		// The amount is optional: a bare <inc variable="..." /> is 1.
+		command.amount = hasContent(node) ? readValue(node, where) : RawValue::expression("1");
+	}
+
 	static Command makeInc(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// By its amount, or by 1 when it has none.
@@ -42,6 +50,7 @@ namespace xge
 		.forms = { { "<inc>", places::changes, kindOf<CmdIncrement>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readInc,
 		.make = makeInc,
 		.check = checkInc,
 		.run = runInc,

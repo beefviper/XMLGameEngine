@@ -6,10 +6,18 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 namespace xge
 {
 	// <turn>: Round while held; a quarter turn for a shape of cells.
+	static void readTurn(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		// On a cell map a quarter turn, with nothing written.
+		requireAttribute(node, "direction", where);
+		if (hasContent(node)) { command.amount = readValue(node, where); }
+	}
+
 	static Command makeTurn(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// Nothing written: none (a turn on a cell map, a quarter).
@@ -32,6 +40,7 @@ namespace xge
 		.forms = { { "<turn>", places::controls, kindOf<CmdTurn>() } },
 		.formOf = nullptr,
 		.onRelease = true,
+		.read = readTurn,
 		.make = makeTurn,
 		.check = nullptr,
 		.run = runTurn,

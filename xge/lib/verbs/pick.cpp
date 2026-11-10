@@ -6,10 +6,23 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
+
+#include <memory>
 
 namespace xge
 {
 	// <pick>: Takes up the piece, or the cards, under it.
+	static void readPick(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+		{
+			if (child->getName() == "most") { command.most = readCount(*child, where + " > <pick> > <most>"); continue; }
+			if (child->getName() != "only") { fail(where + " > <pick>", "unknown <" + child->getName() + ">; expected <only /> and <most> if wanted"); }
+			command.only = true;
+		}
+	}
+
 	static Command makePick(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdPick{ raw.objClass, raw.only };
@@ -28,6 +41,7 @@ namespace xge
 		.forms = { { "<pick>", places::self, kindOf<CmdPick>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readPick,
 		.make = makePick,
 		.check = nullptr,
 		.run = runPick,

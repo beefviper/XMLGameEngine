@@ -6,12 +6,18 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 #include <stdexcept>
 
 namespace xge
 {
 	// <knock>: Two things with a mass trade their speed.
+	static void readKnock(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		if (hasContent(node)) { command.amount = readValue(node, where); }
+	}
+
 	static Command makeKnock(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const float bounce = valueOr(raw.amount, 1.0f, evaluate);
@@ -35,6 +41,7 @@ namespace xge
 		.forms = { { "<knock>", places::touch, kindOf<CmdKnock>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readKnock,
 		.make = makeKnock,
 		.check = nullptr,
 		.run = runKnock,

@@ -26,6 +26,7 @@ namespace xge
 		.forms = { { "<stop />", places::self, kindOf<CmdStop>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = nullptr,
 		.make = makeStop,
 		.check = nullptr,
 		.run = runStop,

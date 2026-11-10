@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/reading.h"
 
 #include <stdexcept>
 #include <string>
@@ -13,6 +14,20 @@
 namespace xge
 {
 	// <hop>: At once, or with <seconds> through the air.
+	static void readHop(const XmlNode& node, const std::string& where, RawCommand& command)
+	{
+		requireAttribute(node, "direction", where);
+		if (findChild(&node, "onto"))
+		{
+			readOnto(node, where + " > <hop>", command);
+			if (command.direction.find('-') != std::string::npos) { fail(where, "<hop direction=\"" + command.direction + "\"> with <onto>: only up, down, left or right"); }
+		}
+		else if (readHopParts(node, where, command) && command.direction.find('-') == std::string::npos)
+		{
+			fail(where, "<hop direction=\"" + command.direction + "\"> is not diagonal; it gives one distance");
+		}
+	}
+
 	static Command makeHop(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// up-left and the rest: one of up/down, then one of left/right.
@@ -55,6 +70,7 @@ namespace xge
 		.forms = { { "<hop>", places::self, kindOf<CmdHop>() } },
 		.formOf = nullptr,
 		.onRelease = false,
+		.read = readHop,
 		.make = makeHop,
 		.check = nullptr,
 		.run = runHop,
