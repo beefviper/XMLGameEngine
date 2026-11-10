@@ -6,6 +6,9 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
+
+#include <string>
 
 namespace xge
 {
@@ -13,6 +16,12 @@ namespace xge
 	static Command makePop(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdPopState{ raw.state };
+	}
+
+	static void checkPop(const Command& command, const Checking& checking)
+	{
+		const std::string& name = std::get<CmdPopState>(command).name;
+		if (!name.empty()) { checkState(checking, name, "<pop state=\"" + name + "\" />"); }
 	}
 
 	static bool runPop(const Command& command, const Doer&, CommandExecutor& executor)
@@ -28,6 +37,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makePop,
+		.check = checkPop,
 		.run = runPop,
 	};
 }

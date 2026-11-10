@@ -36,6 +36,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeReverse,
+		.check = nullptr,
 		.run = runReverse,
 	};
 }

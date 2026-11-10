@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
 
 #include <stdexcept>
 
@@ -21,6 +22,11 @@ namespace xge
 		return CmdAim{ raw.object, lined, within };
 	}
 
+	static void checkAim(const Command& command, const Checking& checking)
+	{
+		checkObject(checking, std::get<CmdAim>(command).target, "<aim>");
+	}
+
 	static bool runAim(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
 		return !doer.self || executor.aim(*doer.self, std::get<CmdAim>(command));
@@ -33,6 +39,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeAim,
+		.check = checkAim,
 		.run = runAim,
 	};
 }

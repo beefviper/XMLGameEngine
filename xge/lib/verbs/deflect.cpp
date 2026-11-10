@@ -35,6 +35,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeDeflect,
+		.check = nullptr,
 		.run = runDeflect,
 	};
 }

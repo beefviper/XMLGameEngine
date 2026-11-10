@@ -464,72 +464,17 @@ Each is **S**, independent, one commit.
 
 #### A1. A verb is one file
 
-- **Size** L, in six substeps. **Needs** B8. **Blocks** A5; every later language task is cheaper after it.
-- **Why.** Debts 1, 2 and 8, and the author's question: can the verbs live in one central place, each in its own file, registered with a command processor? Yes. Today one verb is spread over: an element in a schema command group; a name in `isCommandTag`; a branch of `readCommand` (358 lines) filling shared fields of `RawCommand`; a branch of `makeCommand` (367 lines of `if (verb == ...)`); a `Cmd*` struct in the `Command` variant; a lambda in `CommandExecutor::run`; a case in `checkCommand`; a string in `ruleFor`; a `tagOf` case; templates in `data.xsl`. The *work* of most verbs is already in one place and free of the game file (`xge::bounce`, `xge::deflect`, `knock`, `land` in `play/verbs.cpp` and `play/geometry.cpp`): that stays. What moves is everything about a verb that is not its work.
-- **The shape.**
-
-  ```
-  xge/lib/verbs/
-    verb.h        what a verb is (below), the Doer, the places
-    all.cpp       the one list: every verb, by name, in the order of the docs
-    bounce.cpp    one verb each: hop.cpp, spawn.cpp, inc.cpp, push.cpp ...
-  games/generators/<target>/verbs/
-    bounce.xsl    one template each, for targets that write code (A5)
-  ```
-
-  ```cpp
-  // verbs/verb.h
-  struct Verb
-  {
-      const char* name;          // "bounce"
-      Places places;             // where it may go: edge rule, touch rule, input, condition,
-                                 // state timer, object timer, action, path step, computer, map check
-      bool onRelease;            // acts when a key is let go (a held verb)
-      RawCommand (*read)(const XmlNode&, const std::string& where);     // its attributes and children
-      Command (*make)(const RawCommand&, const ValueEvaluator&);        // numbers worked out
-      void (*check)(const Command&, const CheckContext&);               // the names it uses exist
-      bool (*run)(const Command&, const Doer&, Game&);                  // do it; false when refused
-  };
-
-  // verbs/bounce.cpp: everything the engine knows about <bounce>, and nothing else
-  namespace
-  {
-      RawCommand read(const XmlNode& node, const std::string& where) { ... }
-      Command make(const RawCommand& raw, const ValueEvaluator& evaluate) { ... return CmdBounce{ share }; }
-      bool run(const Command& command, const Doer& doer, Game&)
-      {
-          const CmdBounce& b = std::get<CmdBounce>(command);
-          if (doer.self && doer.touch && doer.other) { xge::bounce(*doer.self, *doer.other, *doer.touch, b.share); }
-          else if (doer.self && doer.screenEdge) { bounceScreenEdge(*doer.self, *doer.screenEdge, b.share); }
-          return true;
-      }
-  }
-  extern const Verb bounceVerb{ "bounce", Places::EdgeRule | Places::TouchRule, false, read, make, nullptr, run };
-
-  // verbs/all.cpp: the registration, written out
-  const std::vector<const Verb*>& allVerbs()
-  {
-      static const std::vector<const Verb*> verbs{ &bounceVerb, &deflectVerb, &knockVerb, ... };
-      return verbs;
-  }
-  const Verb* findVerb(std::string_view name);   // looked up once at load; a Command keeps the pointer
-  ```
-
-  The command processor is then small: the reader asks `findVerb(tag)` and calls `read`; the loader calls `make` and `check`; `CommandExecutor::run` calls `verb->run`. `isCommandTag`, `ruleFor`, `tagOf` and `actsOnLettingGo` become loops over `allVerbs()`.
-- **Two choices made here, and why.**
-  - **Registered by a written list, not by each file registering itself.** A file-level object that adds itself to a registry is the usual trick, but `xgelib` is a static library, and a linker leaves out an object file nothing refers to, so verbs would vanish silently from some builds (and the generated programs copy files one by one). The list in `all.cpp` is one line a verb, fixes the order, and fails to link if a file is missing.
-  - **The `Cmd*` structs and the `Command` variant stay where they are for now** (`game/command.h`). They are small, tests construct them, and `run` takes the variant and reads its own struct with `std::get`. Moving each struct into its verb's file needs the variant replaced by a pointer to the verb plus its data, which is substep 6, optional.
+- **Done so far.** Each verb is a file in `xge/lib/verbs/` with its name, forms and places, `onRelease`, `make`, `check` and `run`; `verbs/all.cpp` lists them; `makeCommand`, `CommandExecutor::run`, the place check and the load-time check look the verb up; `xgetest "[verbs]"` holds the list against the schema. Why a written list and the other choices: [verbs](designs/14-verbs.md). What is left, each independent:
+- **Size** M, M, S, L. **Blocks** nothing; A5 needs only what is done.
 - **Substeps, each green.**
-  1. **`verb.h` and `all.cpp` with names and places only (M).** Every verb gets a file holding just its `Verb` with `name`, `places`, `onRelease` and null functions. `isCommandTag` and `ruleFor` read the list. Add a test that the places agree with the schema's command groups (read the XSD: `changesCommands`, `flowCommands`, `selfCommands`, `steeringCommands`, `touchCommands`, `edgeCommands`, `bounceCommands`, `controlsCommands`, `pressCommands`, `cellsCommands`, `checkCommands`, and which groups each place's type refers to). That test alone removes consistency row 20. Add the new files to `ENGINE_SOURCES` in the top `CMakeLists.txt` and to `games/generators/windows-cpp/engine.xml`.
-  2. **`make` moves (M).** Each `if (verb == "x")` body of `makeCommand` (`game/command.cpp`) moves into its verb's file; `makeCommand` becomes a lookup and a call. Do it a family at a time, one commit each, in the order of `docs/reference/commands.md`: touching, moving, steering, in and out of play, numbers, look and sound, flow, then cells, boards, holders. `Game::makeNow` (live commands) keeps the `Verb*` in `CmdLive`, so it pays no lookup.
-  3. **`run` moves (M).** Each lambda of the `std::visit` in `CommandExecutor::run` (`play/executor.cpp`) moves into its verb's `run`. The helpers the lambdas call that belong to one verb (`holdMove`, `spawnProjectile`, `huntByHop`) move with it; those shared by several stay in the executor or `play/verbs.cpp`. Verbs whose work is in `Game` (cells, holders, the board search) call `Game` as now.
-  4. **`check` moves (M).** The cases of `checkCommand` (`load/check.cpp`, 316 lines).
-  5. **`read` moves (M).** The branches of `readCommand` (`load/xml.cpp`). First give `verb.h` a small helper for the common shapes (a verb with no parts; one number as content; named value children), so `die.cpp` is fifteen lines and only verbs with real structure (`spawn`, `send`, `hunt`, `think`, `put`, `swing`) have a reader of any length.
-  6. **Optional: each verb owns its data (L).** `Command` becomes `{ const Verb* verb; std::shared_ptr<const void> data; }` or a small base struct, and `RawCommand`'s 50 shared fields become the verb's own. This is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer in the generated test heavily, so do it only after A5 has made `data.xsl` retire, or not at all.
-- **Careful.** `Doer` (`play/executor.h` line 88) is what a verb knows about who is running it; it moves to `verb.h` unchanged. A refused verb returns false and ends its list (`docs/reference/commands.md`, "A press that cannot be done"): keep each lambda's `done` exactly. `shapeOf` gives the load-time command of a live one: `run` must be reached through it as today. The generated programs compile the same files: after each family, `cmake --build build --target xgetest-generated`.
-- **Files.** New `xge/lib/verbs/*`; `xge/lib/load/xml.cpp`, `xge/lib/game/command.cpp`, `xge/lib/load/check.cpp`, `xge/lib/play/executor.cpp` and `.h` (each shrinks); `CMakeLists.txt`, `engine.xml`; `xge/tests/test_command_parsing.cpp`; `AGENTS.md` layout table, `docs/agents/notes.md` "Loading", `docs/reference/engine.md` source map, a short `docs/designs/` entry in `05-objects.md` or a new `14-verbs.md` saying why a list and not self-registration.
-- **Done.** To add a verb: one file in `xge/lib/verbs/`, one line in `all.cpp`, its `Cmd*` struct, the schema element, the docs (and, once A5 exists, one template per code-writing target). `makeCommand`, `readCommand`, `checkCommand` and `CommandExecutor::run` are each under 30 lines.
-- **Verify.** After each commit: `ctest`, `xgetest-generated`, and `xgetest "[.speed]"` before and after (load and frame times must not rise: a call through a pointer replaces a `std::visit`, which should be even).
+  1. **`read` moves (M).** The branches of `readCommand` (`load/xml.cpp`, about 350 lines) into each verb's file, as `Verb::read`. Two things first. The helpers they call (`fail`, `requireAttribute`, the value readers) are in an unnamed namespace of `load/xml.cpp`: move the ones a reader needs to a small `load/reading.h` and `.cpp` that depend only on the abstract `XmlNode` (`xml/document.h`). And a decision, because a generated program compiles the verbs but not the XML reader: **assumed** it then also compiles `load/reading.cpp` and carries the readers unused, rather than the readers living in a second folder. Give `verb.h` helpers for the common shapes (a verb with no parts; one number as content; named value children), so `die.cpp` gains two lines and only verbs with real structure (`spawn`, `send`, `hunt`, `think`, `put`, `swing`) have a reader of any length.
+  2. **Printing moves (M).** The cases of `operator<<` for `Command` and for `RawCommand` (`game/command.cpp`) into each verb, as `Verb::print`. The generated-games test compares these dumps, so the text must not change by a character.
+  3. **A verb's own helpers move beside it (S).** `hop`, `startFlight`, `huntByHop`, `spawnProjectile`, `leap`, `aim`, `chase`, `land`, `knock`, `release` in `play/executor.cpp` are each used by one verb (check with grep first); move each into its verb's file as a function there. Those several verbs use stay.
+  4. **Optional: each verb owns its data (L).** `Command` becomes `{ const Verb* verb; data }` and `RawCommand`'s 50 shared fields become the verb's own. This is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer in the generated test heavily, so do it only after A5 has made `data.xsl` retire, or not at all.
+- **Careful.** The folder is compiled as one unit: name a file's functions for its verb (`readBounce`), never in an unnamed namespace. A refused verb returns false and ends its list: keep each `run`'s answer exactly. The generated programs compile the same files: after each substep, `cmake --build build --target xgetest-generated`.
+- **Files.** `xge/lib/verbs/*`, `xge/lib/load/xml.cpp`, new `xge/lib/load/reading.*` (and in `ENGINE_SOURCES`, `engine.xml`), `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/notes.md` "Loading".
+- **Done.** To add a verb: one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element, the docs. `readCommand` is a lookup and a call.
+- **Verify.** After each commit: `ctest`, `xgetest-generated`, and `xgetest "[.speed]"` before and after (load and frame times must not rise).
 
 #### A2. Holders in the engine, not piles
 
@@ -562,7 +507,7 @@ Each is **S**, independent, one commit.
 
 #### A5. A game written out as if by hand
 
-- **Size** L, open-ended; the first three substeps are a few days. **Needs** A1 substeps 1 to 3.
+- **Size** L, open-ended; the first three substeps are a few days. **Needs** A1 as it stands (done).
 - **Why.** The author's aim for the generator: a stand-alone version of a game that looks hand-coded over a weekend, as the route to any platform. `windows-cpp` writes the engine with the game's data built in (complete and exact, and unreadable as a game). The first generator wrote readable programs and drifted from the engine; a hand-written Pong on the shared frame later matched the engine frame for frame over ten seeds of 3,600 frames, and was set aside (`git show 7163ea2^:games/prototypes/pong_min/source/pong_min.cpp`; `docs/designs/40-generator.md`, "A readable game on the shared frame").
 - **The rule that keeps it honest.** A generated game never re-implements behaviour. It is written out plainly (its numbers as constants, its objects as variables, its rules as functions and `switch`es) and *calls* the same small work functions the engine calls: `bounce`, `deflect`, `stick`, the sweep, the frame order. Those travel with it as a small runtime folder (`play/`, `picture/`, `audio/sound`, one window file): no `Game`, no reader, no XML. A person writing Pong over a weekend would also have a `bounce()` helper; what they would not have is an interpreter, and neither does this.
 - **What a generated Pong should look like** (the target to write towards; about 150 lines):
@@ -732,7 +677,7 @@ Block 3  (reduction; R1 first, then any order)
   R11 card words
 
 Block 4  (architecture)
-  A1  a verb is one file, substeps 1 to 5
+  A1  a verb is one file: what is left (reading, printing)
   A5  a game written out as if by hand, substeps 1 to 3, then a game at a time
   A7  backends: text and images drawn by the engine, then Direct3D 11
   A2  holders, substeps 1 to 4
@@ -762,8 +707,7 @@ What blocks what, in one place:
 | R9 | R5 |
 | R3 | D5 |
 | A3 (`readCommand`, `makeCommand`) | A1 |
-| A5 | A1 substeps 1 to 3 |
-| A1 substep 6 | A5 far enough along to retire `data.xsl` |
+| A1 substep 4 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
 | A6 | R1 |
 | F1 | B5, T2 |

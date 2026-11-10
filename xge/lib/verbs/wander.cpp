@@ -27,6 +27,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeWander,
+		.check = nullptr,
 		.run = runWander,
 	};
 }

@@ -31,6 +31,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeLeap,
+		.check = nullptr,
 		.run = runLeap,
 	};
 }

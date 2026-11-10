@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
 
 #include <cmath>
 #include <optional>
@@ -25,6 +26,18 @@ namespace xge
 		return send;
 	}
 
+	static void checkSend(const Command& command, const Checking& checking)
+	{
+		// Holder to holder (from a group: its members): the holders are known
+		// only once settled (settleHolders), so a name that is none is a send
+		// refused.
+		const CmdSend& send = std::get<CmdSend>(command);
+		if (send.held) { return; }
+		checkObject(checking, send.target, "<send>", "object or group");
+		checkCellMap(checking, send.from, "<send from=\"" + send.from + "\">");
+		checkCellMap(checking, send.into, "<send into=\"" + send.into + "\">");
+	}
+
 	static bool runSend(const Command& command, const Doer&, CommandExecutor& executor)
 	{
 		// Members of a held class, holder to holder; else a piece, map to map.
@@ -41,6 +54,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeSend,
+		.check = checkSend,
 		.run = runSend,
 	};
 }

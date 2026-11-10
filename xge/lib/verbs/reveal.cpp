@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -18,6 +19,11 @@ namespace xge
 		const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
 		if (count < 1) { throw std::runtime_error("<reveal> of " + raw.object + " has a count under 1"); }
 		return CmdReveal{ raw.object, count };
+	}
+
+	static void checkReveal(const Command& command, const Checking& checking)
+	{
+		checkObject(checking, std::get<CmdReveal>(command).target, "<reveal>");
 	}
 
 	static bool runReveal(const Command& command, const Doer&, CommandExecutor& executor)
@@ -34,6 +40,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeReveal,
+		.check = checkReveal,
 		.run = runReveal,
 	};
 }

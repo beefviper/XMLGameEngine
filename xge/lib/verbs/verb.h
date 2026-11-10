@@ -25,6 +25,7 @@
 namespace xge
 {
 	class CommandExecutor;
+	struct Checking;
 
 	// Where a list of commands runs.
 	enum class Place { Edge, Touch, Input, Condition, StateTimer, ObjectTimer, Action, PathStep, Computer, Check };
@@ -116,6 +117,9 @@ namespace xge
 		// What was written, its numbers worked out. Throws
 		// std::runtime_error naming what is wrong with it.
 		Command (*make)(const RawCommand& raw, const ValueEvaluator& evaluate);
+		// The names it uses exist (load/check.h); none: it names nothing.
+		// Throws std::runtime_error saying which does not.
+		void (*check)(const Command& command, const Checking& checking);
 		// Does it, as `doer` says. False when it is refused, which ends the
 		// list it is in.
 		bool (*run)(const Command& command, const Doer& doer, CommandExecutor& executor);

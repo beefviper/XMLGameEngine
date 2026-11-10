@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
 
 #include <stdexcept>
 
@@ -21,6 +22,11 @@ namespace xge
 		return CmdChase{ raw.object, speed, stopWithin };
 	}
 
+	static void checkChase(const Command& command, const Checking& checking)
+	{
+		checkObject(checking, std::get<CmdChase>(command).target, "<chase>");
+	}
+
 	static bool runChase(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
 		if (doer.self) { executor.chase(*doer.self, std::get<CmdChase>(command)); }
@@ -34,6 +40,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeChase,
+		.check = checkChase,
 		.run = runChase,
 	};
 }

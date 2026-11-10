@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
 
 #include <cmath>
 #include <optional>
@@ -53,6 +54,13 @@ namespace xge
 		return spawn;
 	}
 
+	static void checkSpawn(const Command& command, const Checking& checking)
+	{
+		const CmdSpawn& spawn = std::get<CmdSpawn>(command);
+		checkObject(checking, spawn.target, "<spawn>", "object or group");
+		if (!spawn.into.empty()) { checkCellMap(checking, spawn.into, "<spawn into=\"" + spawn.into + "\">"); }
+	}
+
 	static bool runSpawn(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
 		return executor.spawn(std::get<CmdSpawn>(command), doer.self);
@@ -65,6 +73,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeSpawn,
+		.check = checkSpawn,
 		.run = runSpawn,
 	};
 }

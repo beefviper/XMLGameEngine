@@ -29,6 +29,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = true,
 		.make = makeThrust,
+		.check = nullptr,
 		.run = runThrust,
 	};
 }

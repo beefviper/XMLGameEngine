@@ -28,6 +28,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeCollapse,
+		.check = nullptr,
 		.run = runCollapse,
 	};
 }

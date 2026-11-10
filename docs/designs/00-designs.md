@@ -21,6 +21,7 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 | [vocabulary-map](11-vocabulary-map.md) | How the words fit together, and what kinds are missing | Map |
 | [scenes](12-scenes.md) | Scenes inside a state, ways, what conditions count | Built |
 | [pieces](13-pieces.md) | Pieces (the top-level `<objects>`), `from=` and the one change rule | Built |
+| [verbs](14-verbs.md) | A file per verb, the list, and why it is written out | Built; reading open |
 
 ## Behaviour
 

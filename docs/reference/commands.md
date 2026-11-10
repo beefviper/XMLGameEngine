@@ -4,7 +4,7 @@ A command is a tag in a list: a collision rule, an action, a key's `<input>`, a 
 
 ## Where a command can go
 
-Commands are sorted by what they need. Each place takes only the groups that mean something there; anything else is a schema error (and, read without the schema, a load error listing what can go there: `ruleFor` in `load/check.cpp`).
+Commands are sorted by what they need. Each place takes only the groups that mean something there; anything else is a schema error (and, read without the schema, a load error listing what can go there, from each verb's places in `xge/lib/verbs/`).
 
 | Group | Commands | Needs |
 |---|---|---|

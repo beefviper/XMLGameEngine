@@ -84,7 +84,7 @@ Each rests on something that never changes while a game runs: `FrameRules::partn
 ## Loading
 
 - The schema checks shape and where commands go; the loader checks names.
-- A verb is done in one place, `CommandExecutor::run`. A new verb needs a line there, in `ruleFor` (`load/check.cpp`) and in the schema's command groups. Use `didYouMean` and `listOf` in any name error.
+- A verb is one file in `xge/lib/verbs/`: its name, places, `make`, `check` and `run`. A new verb needs that file, a line in `verbs/all.cpp` and in `games/generators/windows-cpp/engine.xml`, its `Cmd*` struct in `game/command.h`, its branch of `readCommand` (`load/xml.cpp`) and the schema's command group; `xgetest "[verbs]"` says which is missing. The folder is compiled as one unit, so name a file's functions for its verb (`makeBounce`), never in an unnamed namespace. Use `didYouMean` and `listOf` in any name error.
 - `on="hold"` and `on="release"` answer only a press made in the current state.
 
 ## Tests

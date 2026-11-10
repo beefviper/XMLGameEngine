@@ -6,6 +6,9 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
+
+#include <string>
 
 namespace xge
 {
@@ -13,6 +16,12 @@ namespace xge
 	static Command makePush(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdPushState{ raw.state };
+	}
+
+	static void checkPush(const Command& command, const Checking& checking)
+	{
+		const std::string& name = std::get<CmdPushState>(command).name;
+		checkState(checking, name, "<push state=\"" + name + "\" />");
 	}
 
 	static bool runPush(const Command& command, const Doer&, CommandExecutor& executor)
@@ -28,6 +37,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makePush,
+		.check = checkPush,
 		.run = runPush,
 	};
 }

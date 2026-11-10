@@ -42,6 +42,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = true,
 		.make = makeSwing,
+		.check = nullptr,
 		.run = runSwing,
 	};
 }

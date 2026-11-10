@@ -7,6 +7,7 @@
 #include "game/game.h"
 #include "play/executor.h"
 #include "play/maze.h"
+#include "load/check.h"
 
 #include <stdexcept>
 
@@ -33,6 +34,19 @@ namespace xge
 		return hunt;
 	}
 
+	static void checkHunt(const Command& command, const Checking& checking)
+	{
+		if (const auto* byHops = std::get_if<CmdHuntHop>(&command))
+		{
+			checkObject(checking, byHops->target, "<hunt>");
+			return;
+		}
+		const CmdHunt& hunt = std::get<CmdHunt>(command);
+		if (!hunt.target.empty()) { checkObject(checking, hunt.target, "<hunt>"); }
+		if (!hunt.partner.empty()) { checkObject(checking, hunt.partner, "<hunt> > <with>"); }
+		if (!hunt.retreatTo.empty()) { checkObject(checking, hunt.retreatTo, "<hunt> > <retreat>"); }
+	}
+
 	static bool runHunt(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
 		if (!doer.self) { return true; }
@@ -48,6 +62,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeHunt,
+		.check = checkHunt,
 		.run = runHunt,
 	};
 }

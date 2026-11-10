@@ -6,6 +6,9 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
+
+#include <string>
 
 namespace xge
 {
@@ -14,6 +17,12 @@ namespace xge
 	static Command makeDespawn(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdDespawn{ raw.object };
+	}
+
+	static void checkDespawn(const Command& command, const Checking& checking)
+	{
+		const std::string& target = std::get<CmdDespawn>(command).target;
+		if (!target.empty()) { checkObject(checking, target, "<despawn>", "object or group"); }
 	}
 
 	static bool runDespawn(const Command& command, const Doer& doer, CommandExecutor& executor)
@@ -35,6 +44,7 @@ namespace xge
 		.formOf = formOfDespawn,
 		.onRelease = false,
 		.make = makeDespawn,
+		.check = checkDespawn,
 		.run = runDespawn,
 	};
 }

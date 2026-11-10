@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
 
 namespace xge
 {
@@ -13,6 +14,12 @@ namespace xge
 	static Command makeEnter(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdEnterScene{ raw.scene, raw.way };
+	}
+
+	static void checkEnter(const Command& command, const Checking& checking)
+	{
+		const CmdEnterScene& enter = std::get<CmdEnterScene>(command);
+		checkScene(checking, "enter", enter.scene, enter.way);
 	}
 
 	static bool runEnter(const Command& command, const Doer&, CommandExecutor& executor)
@@ -28,6 +35,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeEnter,
+		.check = checkEnter,
 		.run = runEnter,
 	};
 }

@@ -15,7 +15,7 @@ The root [readme.md](readme.md) is the short public overview.
 
 | Path | What |
 |---|---|
-| `xge/lib/` | `xgelib`, the engine, a folder per part (`game/`, `play/`, `load/`, `xml/`, `window/`, `audio/`, `picture/`, `engine/`), each header beside its source, included as `"game/game.h"`. Throws, never `exit()`s |
+| `xge/lib/` | `xgelib`, the engine, a folder per part (`game/`, `play/`, `verbs/`, `load/`, `xml/`, `window/`, `audio/`, `picture/`, `engine/`), each header beside its source, included as `"game/game.h"`. Throws, never `exit()`s |
 | `xge/cli/`, `xge/gui/` | `xgecli`; `xgegui` (Qt 6, built only when Qt is found) |
 | `xge/tests/` | Catch2 (`xgetest`), one `test_<topic>.cpp` per area; games are played frame by frame |
 | `games/xgedef.xsd` | the schema, the definition of the language; games name it `../xgedef.xsd` |
@@ -25,7 +25,7 @@ The root [readme.md](readme.md) is the short public overview.
 
 The programs make `games/` their working directory (`engine/folder.h`), so asset paths in a game file (`assets/paddle.jpg`) and the tests' paths (`descriptions/pong.xml`) are relative to it.
 
-Flow: `load/xml` (parse, validate; `load/merge` works out the pieces (the top-level `<objects>`) and every `from=` on the XML first) → `game/scenes` (`layOutScenes`: states' and scenes' objects named by path) → `load/expr` (evaluate; `load/calc` works out the arithmetic in text) → `Object`/`State` → `Game` with `play/frame` (one frame) + `Engine` (loop, windows, sound). Backends sit behind `XmlDocument`, `Window` and `Audio` factories.
+Flow: `load/xml` (parse, validate; `load/merge` works out the pieces (the top-level `<objects>`) and every `from=` on the XML first) → `game/scenes` (`layOutScenes`: states' and scenes' objects named by path) → `load/expr` (evaluate; `load/calc` works out the arithmetic in text) → `Object`/`State` → `Game` with `play/frame` (one frame) + `Engine` (loop, windows, sound). Each command tag is a file in `verbs/` (its places, `make`, `check`, `run`), listed in `verbs/all.cpp`. Backends sit behind `XmlDocument`, `Window` and `Audio` factories.
 
 ## Build and test
 
@@ -53,7 +53,7 @@ A plain build has one backend of each kind (SFML 3, Xerces); `-DXGE_WITH_<NAME>=
 
 - Files end with exactly one trailing newline; stored LF (`.gitattributes` checks out CRLF on Windows).
 - **Docs move with code:** update the matching `docs/reference/` page (and the word index in `docs/readme.md` and the root `readme.md` when a game, verb or dependency changes) and the matching `docs/designs/` file in the same change. The code is the truth. Design files hold: what we looked for, looked at, chose and why, what is open; near 6 KB each, no dates, diaries or test logs.
-- A new game goes in `games/descriptions/` and in `data_xml` in `scripts/cmake/assets.cmake`; a test file in `scripts/cmake/tests.cmake`; an engine source in `ENGINE_SOURCES` in the top `CMakeLists.txt`.
+- A new game goes in `games/descriptions/` and in `data_xml` in `scripts/cmake/assets.cmake`; a test file in `scripts/cmake/tests.cmake`; an engine source in `ENGINE_SOURCES` in the top `CMakeLists.txt`; a verb is a file in `xge/lib/verbs/` and a line in its `all.cpp` (and in `games/generators/windows-cpp/engine.xml`).
 - **Warnings stay at zero** (`xge_warnings()` in `scripts/cmake/platform.cmake`; clean on GCC and Clang). Fix, do not silence. A constructor parameter named like its member counts (`-Wshadow`, C4458).
 - Games share one key convention: Space starts, pauses and restarts (never Enter); player one is W A S D plus the arrows; where Space fires, pause is P or Escape. Colors are `color.` names only.
 - The format's one rule: an attribute names or picks something; everything else is element content. A new verb is added only when a game cannot be said without it, and names a behavior.

@@ -186,400 +186,145 @@ namespace xge
 			}
 		}
 
-		// Every state, object and action a command names has to exist. Found
-		// here, when the game loads, rather than the first time the command
-		// runs: pressing a key bound to <push state="pasued" /> would otherwise
-		// stop the game in the middle of play (and used to read past the end of
-		// the list of states).
-		// A map of cells a command names (a spawn's or a send's into=).
-		void checkCellMap(const std::vector<Object>& objects, const std::string& map, const std::string& tag, const std::string& where)
-		{
-			const bool found = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.onCells && object.mapName == map; });
-			if (!found) { throw std::runtime_error(where + ": " + tag + " names no map with <cells />"); }
-		}
+	}
 
-		// A command writing what its object follows (update="live"): it would
-		// be undone at the end of the frame, so it is a mistake.
-		void refuseFollowed(const VariableName& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where)
+	void checkObject(const Checking& checking, const std::string& name, const std::string& what, const char* kind)
+	{
+		if (!findObject(checking.objects, name))
 		{
-			const Object* owner = target.variable.empty() ? nullptr : findObject(objects, target.owner);
-			if (owner && owner->followsPart(target.variable))
-			{
-				throw std::runtime_error(where + ": " + tag + ": '" + target.written() + "' is update=\"live\", worked out every frame from what it reads;"
-					" no command can change it. Change what it reads, or leave out update=\"live\"");
-			}
+			throw std::runtime_error(checking.where + ": " + what + " names '" + name + "', and there is no " + kind + " of that name" + didYouMean(name, objectNames(checking.objects)));
 		}
+	}
 
-		// The variable a command names: owner.variable, the variable after the
-		// last dot (the owner may be a path).
-		void checkVariable(const VariableName& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where)
+	void checkState(const Checking& checking, const std::string& name, const std::string& what)
+	{
+		const bool known = std::any_of(checking.states.begin(), checking.states.end(), [&](const State& state) { return state.name == name; });
+		if (!known)
 		{
-			if (target.variable.empty())
-			{
-				throw std::runtime_error(where + ": " + tag + ": '" + target.owner + "' is no variable; name one as owner.variable (player.score)"
-					+ ". A variable that changes belongs to an object; the game's own <variables> are fixed numbers");
-			}
-			const std::string& ownerName = target.owner;
-			const Object* owner = findObject(objects, ownerName);
-			if (!owner)
-			{
-				throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects))
-					+ ". A variable that changes belongs to an object (paddle1.score is paddle1's <variable name=\"score\">); the game's own <variables> are fixed numbers");
-			}
-			const std::string& variableName = target.variable;
-			if (!owner->variable.count(variableName))
-			{
-				std::vector<std::string> names;
-				for (const auto& entry : owner->variable) { names.push_back(entry.first); }
-				throw std::runtime_error(where + ": " + tag + ": '" + ownerName + "' has no variable named '" + variableName + "'" + didYouMean(variableName, names)
-					+ (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
-			}
+			throw std::runtime_error(checking.where + ": " + what + " names no state of the game" + didYouMean(name, stateNames(checking.states)));
 		}
+	}
 
-		void wantPalette(WantedPalettes& wanted, const std::vector<RawStyle>& styles, const Object& object, const std::string& style, const std::string& where)
+	void checkSound(const Checking& checking, const char* verb, const std::string& name)
+	{
+		const bool known = std::any_of(checking.sounds.begin(), checking.sounds.end(), [&](const SoundDesc& sound) { return sound.name == name; });
+		if (!known)
 		{
-			if (std::none_of(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == style; }))
-			{
-				std::vector<std::string> names;
-				for (const RawStyle& each : styles) { names.push_back(each.name); }
-				throw std::runtime_error(where + ": <become style=\"" + style + "\" /> names no <style> of the game's <styles>" + didYouMean(style, names));
-			}
-			std::vector<std::string>& list = wanted[object.name];
-			if (std::find(list.begin(), list.end(), style) == list.end()) { list.push_back(style); }
+			std::vector<std::string> names;
+			for (const SoundDesc& sound : checking.sounds) { names.push_back(sound.name); }
+			throw std::runtime_error(checking.where + ": <" + verb + " sound=\"" + name + "\" /> names no sound of the game" + didYouMean(name, names));
 		}
+	}
 
-		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects,
-			const std::vector<SoundDesc>& sounds, const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles,
-			WantedPalettes& wanted, const std::string& where)
+	void checkScene(const Checking& checking, const char* verb, const std::string& scene, const std::string& way)
+	{
+		std::vector<std::string> names;
+		std::vector<std::string> ways;
+		for (const State& state : checking.states)
 		{
-			if (std::holds_alternative<CmdEnterScene>(shapeOf(command)) || std::holds_alternative<CmdResetScene>(shapeOf(command)))
+			for (const Scene& each : state.scenes)
 			{
-				const bool enter = std::holds_alternative<CmdEnterScene>(shapeOf(command));
-				const std::string& scene = enter ? std::get<CmdEnterScene>(shapeOf(command)).scene : std::get<CmdResetScene>(shapeOf(command)).scene;
-				const std::string& way = enter ? std::get<CmdEnterScene>(shapeOf(command)).way : std::get<CmdResetScene>(shapeOf(command)).way;
-				std::vector<std::string> names;
-				std::vector<std::string> ways;
-				for (const State& state : states)
+				names.push_back(each.name);
+				for (const auto& entry : each.ways)
 				{
-					for (const Scene& each : state.scenes)
-					{
-						names.push_back(each.name);
-						for (const auto& entry : each.ways)
-						{
-							if (std::find(ways.begin(), ways.end(), entry.first) == ways.end()) { ways.push_back(entry.first); }
-						}
-					}
-				}
-				if (!way.empty())
-				{
-					// Which scene's way it is, is known only when it runs; one
-					// that no scene has can never lead anywhere.
-					if (std::find(ways.begin(), ways.end(), way) == ways.end())
-					{
-						throw std::runtime_error(where + ": <" + (enter ? "enter" : "reset") + " way=\"" + way + "\" /> names no way of any scene" + didYouMean(way, ways)
-							+ (ways.empty() ? std::string(" (no scene has <ways>)") : ". The ways are: " + listOf(ways)));
-					}
-				}
-				else if (std::find(names.begin(), names.end(), scene) == names.end())
-				{
-					throw std::runtime_error(where + ": <" + (enter ? "enter" : "reset") + " scene=\"" + scene + "\" /> names no scene of the game" + didYouMean(scene, names)
-						+ (names.empty() ? std::string(" (no state has <scenes>)") : ". The scenes are: " + listOf(names)));
-				}
-			}
-			else if (const auto* follow = std::get_if<CmdFollow>(&shapeOf(command)))
-			{
-				if (!paths.count(follow->path))
-				{
-					std::vector<std::string> names;
-					for (const auto& entry : paths) { names.push_back(entry.first); }
-					throw std::runtime_error(where + ": <follow path=\"" + follow->path + "\" /> names no path of the game" + didYouMean(follow->path, names));
-				}
-				if (!follow->target.empty() && !findObject(objects, follow->target))
-				{
-					throw std::runtime_error(where + ": <follow> names '" + follow->target + "', and there is no object of that name" + didYouMean(follow->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* along = std::get_if<CmdTrack>(&shapeOf(command)); along && !along->path.empty())
-			{
-				const auto path = paths.find(along->path);
-				if (path == paths.end())
-				{
-					std::vector<std::string> names;
-					for (const auto& entry : paths) { names.push_back(entry.first); }
-					throw std::runtime_error(where + ": <track path=\"" + along->path + "\" /> names no path of the game" + didYouMean(along->path, names));
-				}
-				if (!path->second.hasStart)
-				{
-					throw std::runtime_error(where + ": <track path=\"" + along->path + "\" />: the path needs a <start>, where 0 is");
-				}
-			}
-			else if (const auto* become = std::get_if<CmdBecome>(&shapeOf(command)))
-			{
-				if (!become->target.empty())
-				{
-					bool any = false;
-					for (const Object& object : objects)
-					{
-						const bool named = object.named(become->target);
-						if (!named) { continue; }
-						any = true;
-						if (!become->style.empty()) { wantPalette(wanted, styles, object, become->style, where); }
-						const auto hasLook = [&](const Object& of) { return std::any_of(of.looks.begin(), of.looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }); };
-						// A holder may take a look of what it holds: they turn to it.
-						const bool heldLook = object.pile.is && std::any_of(objects.begin(), objects.end(), [&](const Object& card) { return card.isCard && hasLook(card); });
-						if (!become->sprite.empty() && !hasLook(object) && !heldLook)
-						{
-							throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" object=\"" + become->target + "\" />: '" + object.name + "' has no look of that name");
-						}
-						if (!become->from.empty() && std::none_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == become->from; }))
-						{
-							throw std::runtime_error(where + ": <become from=\"" + become->from + "\" object=\"" + become->target + "\" />: '" + object.name + "' has no look of that name");
-						}
-					}
-					if (!any)
-					{
-						throw std::runtime_error(where + ": <become> names '" + become->target + "', and there is no object of that name" + didYouMean(become->target, objectNames(objects)));
-					}
-				}
-			}
-			else if (const auto* hunt = std::get_if<CmdHunt>(&shapeOf(command)))
-			{
-				for (const auto& [name, what] : { std::pair<const std::string*, const char*>{ &hunt->target, "<hunt>" },
-					{ &hunt->partner, "<hunt> > <with>" }, { &hunt->retreatTo, "<hunt> > <retreat>" } })
-				{
-					if (!name->empty() && !findObject(objects, *name))
-					{
-						throw std::runtime_error(where + ": " + what + " names '" + *name + "', and there is no object of that name" + didYouMean(*name, objectNames(objects)));
-					}
-				}
-			}
-			else if (const auto* huntHop = std::get_if<CmdHuntHop>(&shapeOf(command)))
-			{
-				if (!findObject(objects, huntHop->target))
-				{
-					throw std::runtime_error(where + ": <hunt> names '" + huntHop->target + "', and there is no object of that name" + didYouMean(huntHop->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* chase = std::get_if<CmdChase>(&shapeOf(command)))
-			{
-				if (!findObject(objects, chase->target))
-				{
-					throw std::runtime_error(where + ": <chase> names '" + chase->target + "', and there is no object of that name" + didYouMean(chase->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* aim = std::get_if<CmdAim>(&shapeOf(command)))
-			{
-				if (!findObject(objects, aim->target))
-				{
-					throw std::runtime_error(where + ": <aim> names '" + aim->target + "', and there is no object of that name" + didYouMean(aim->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* reveal = std::get_if<CmdReveal>(&shapeOf(command)))
-			{
-				if (!findObject(objects, reveal->target))
-				{
-					throw std::runtime_error(where + ": <reveal> names '" + reveal->target + "', and there is no object of that name" + didYouMean(reveal->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* shift = std::get_if<CmdShift>(&shapeOf(command)))
-			{
-				if (!findObject(objects, shift->target))
-				{
-					throw std::runtime_error(where + ": <shift> names '" + shift->target + "', and there is no object of that name" + didYouMean(shift->target, objectNames(objects)));
-				}
-			}
-			else if (std::holds_alternative<CmdPlay>(shapeOf(command)) || std::holds_alternative<CmdSilence>(shapeOf(command)))
-			{
-				const auto* play = std::get_if<CmdPlay>(&shapeOf(command));
-				const std::string& name = play ? play->sound : std::get<CmdSilence>(shapeOf(command)).sound;
-				const bool known = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == name; });
-				if (!known)
-				{
-					std::vector<std::string> names;
-					for (const SoundDesc& sound : sounds) { names.push_back(sound.name); }
-					throw std::runtime_error(where + ": <" + (play ? "play" : "silence") + " sound=\"" + name + "\" /> names no sound of the game" + didYouMean(name, names));
-				}
-			}
-			else if (const auto* push = std::get_if<CmdPushState>(&shapeOf(command)))
-			{
-				const bool known = std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == push->name; });
-				if (!known)
-				{
-					throw std::runtime_error(where + ": <push state=\"" + push->name + "\" /> names no state of the game" + didYouMean(push->name, stateNames(states)));
-				}
-			}
-			else if (const auto* turns = std::get_if<CmdTurns>(&shapeOf(command)))
-			{
-				for (const std::string& player : turns->players)
-				{
-					const bool known = player.empty() || std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == player; });
-					if (!known)
-					{
-						throw std::runtime_error(where + ": <turns> > <player state=\"" + player + "\" /> names no state of the game" + didYouMean(player, stateNames(states)));
-					}
-				}
-			}
-			else if (const auto* pop = std::get_if<CmdPopState>(&shapeOf(command)); pop && !pop->name.empty())
-			{
-				const bool known = std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == pop->name; });
-				if (!known)
-				{
-					throw std::runtime_error(where + ": <pop state=\"" + pop->name + "\" /> names no state of the game" + didYouMean(pop->name, stateNames(states)));
-				}
-			}
-			else if (const auto* about = std::get_if<CmdTriggerAction>(&shapeOf(command)); about && about->place.any())
-			{
-				// About the cells round it: some piece of the class has the action.
-				const bool any = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.objClass == about->objClass && object.action.count(about->action); });
-				if (!any) { throw std::runtime_error(where + ": <trigger action=\"" + about->action + "\" class=\"" + about->objClass + "\">: no object of that class has an action of that name"); }
-			}
-			else if (const auto* when = std::get_if<CmdWhen>(&command); when && when->body)
-			{
-				for (const Command& inner : when->body->commands) { checkCommand(inner, states, objects, sounds, paths, styles, wanted, where + " > <condition>"); }
-			}
-			else if (const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command)))
-			{
-				if (trigger->object.empty())
-				{
-					throw std::runtime_error(where + ": <trigger action=\"" + trigger->action + "\" /> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
-				}
-				const Object* object = findObject(objects, trigger->object);
-				if (!object)
-				{
-					throw std::runtime_error(where + ": an action of '" + trigger->object + "' is asked for, and there is no object of that name" + didYouMean(trigger->object, objectNames(objects)));
-				}
-				if (!object->action.count(trigger->action))
-				{
-					std::vector<std::string> names;
-					for (const auto& entry : object->action) { names.push_back(entry.first); }
-					throw std::runtime_error(where + ": '" + trigger->object + "' has no action named '" + trigger->action + "'" + didYouMean(trigger->action, names)
-						+ (names.empty() ? std::string(" (it has no <actions>)") : "; its actions are: " + listOf(names)));
-				}
-			}
-			else if (const auto* fire = std::get_if<CmdFire>(&shapeOf(command)))
-			{
-				if (!findObject(objects, fire->projectileName))
-				{
-					throw std::runtime_error(where + ": <fire> names '" + fire->projectileName + "', and there is no object of that name" + didYouMean(fire->projectileName, objectNames(objects)));
-				}
-			}
-			else if (const auto* release = std::get_if<CmdRelease>(&shapeOf(command)))
-			{
-				if (!findObject(objects, release->target))
-				{
-					throw std::runtime_error(where + ": <release> names '" + release->target + "', and there is no object of that name" + didYouMean(release->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* reset = std::get_if<CmdResetObject>(&shapeOf(command)))
-			{
-				if (!findObject(objects, reset->target))
-				{
-					throw std::runtime_error(where + ": <reset object=\"" + reset->target + "\" /> names no object of the game" + didYouMean(reset->target, objectNames(objects)));
-				}
-			}
-			else if (std::holds_alternative<CmdIncrement>(shapeOf(command)) || std::holds_alternative<CmdDecrement>(shapeOf(command)))
-			{
-				// A variable belongs to an object: paddle1.score is paddle1's
-				// <variable name="score">.
-				const bool inc = std::holds_alternative<CmdIncrement>(shapeOf(command));
-				const VariableName& target = inc ? std::get<CmdIncrement>(shapeOf(command)).target : std::get<CmdDecrement>(shapeOf(command)).target;
-				const std::string written = target.variable.empty() ? target.owner : target.written();
-				checkVariable(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + written + "\" />", objects, where);
-				refuseFollowed(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + written + "\" />", objects, where);
-			}
-			else if (const auto* set = std::get_if<CmdSet>(&shapeOf(command)))
-			{
-				// A variable of an object's, or one of the numbers every
-				// object has (where it is, how it is going, its heading).
-				const std::string tag = "<set variable=\"" + (set->target.variable.empty() ? set->target.owner : set->target.written()) + "\">";
-				refuseFollowed(set->target, tag, objects, where);
-				const std::string part = liveNumberPart(set->target.written());
-				const Object* holder = part.empty() ? nullptr : findObject(objects, set->target.owner);
-				if (part.empty() || (holder && holder->variable.count(part)))
-				{
-					checkVariable(set->target, tag, objects, where);
-				}
-				else
-				{
-					const std::string& owner = set->target.owner;
-					const Object* found = findObject(objects, owner);
-					if (!found)
-					{
-						throw std::runtime_error(where + ": " + tag + ": there is no object named '" + owner + "'" + didYouMean(owner, objectNames(objects)));
-					}
-					if (part == "heading" && !found->hasHeading)
-					{
-						throw std::runtime_error(where + ": " + tag + ": '" + owner + "' has no <heading> to set");
-					}
-					if ((part == "altitude" || part == "rise") && !found->hasAltitude)
-					{
-						throw std::runtime_error(where + ": " + tag + ": '" + owner + "' has no <altitude> to set");
-					}
-				}
-			}
-			else if (const auto* despawn = std::get_if<CmdDespawn>(&shapeOf(command)); despawn && !despawn->target.empty())
-			{
-				if (!findObject(objects, despawn->target))
-				{
-					throw std::runtime_error(where + ": <despawn> names '" + despawn->target + "', and there is no object or group of that name" + didYouMean(despawn->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* spawn = std::get_if<CmdSpawn>(&shapeOf(command)))
-			{
-				if (!findObject(objects, spawn->target))
-				{
-					throw std::runtime_error(where + ": <spawn> names '" + spawn->target + "', and there is no object or group of that name" + didYouMean(spawn->target, objectNames(objects)));
-				}
-				if (!spawn->into.empty()) { checkCellMap(objects, spawn->into, "<spawn into=\"" + spawn->into + "\">", where); }
-			}
-			else if (const auto* held = std::get_if<CmdSend>(&shapeOf(command)); held && held->held)
-			{
-				// Holder to holder (from a group: its members): the holders
-				// are known only once settled (settleHolders), so a name that
-				// is none is a send refused.
-			}
-			else if (const auto* send = std::get_if<CmdSend>(&shapeOf(command)))
-			{
-				if (!findObject(objects, send->target))
-				{
-					throw std::runtime_error(where + ": <send> names '" + send->target + "', and there is no object or group of that name" + didYouMean(send->target, objectNames(objects)));
-				}
-				checkCellMap(objects, send->from, "<send from=\"" + send->from + "\">", where);
-				checkCellMap(objects, send->into, "<send into=\"" + send->into + "\">", where);
-			}
-			else if (const auto* copy = std::get_if<CmdCopy>(&shapeOf(command)))
-			{
-				// Both are owner.variable: a copy reads one object's variable
-				// and writes another's.
-				const std::string tag = "<copy variable=\"" + copy->from.written() + "\" into=\"" + copy->into.written() + "\" />";
-				checkVariable(copy->from, tag, objects, where);
-				checkVariable(copy->into, tag, objects, where);
-				refuseFollowed(copy->into, tag, objects, where);
-			}
-			else if (const auto* rank = std::get_if<CmdRank>(&shapeOf(command)))
-			{
-				// The entry's variable, and a group whose every member has one
-				// of that name to be ordered by.
-				const std::string tag = "<rank variable=\"" + rank->entry.written() + "\" into=\"" + rank->table + "\" />";
-				checkVariable(rank->entry, tag, objects, where);
-				const std::string& variableName = rank->entry.variable;
-				bool any = false;
-				for (const Object& object : objects)
-				{
-					if (!object.inGroup(rank->table)) { continue; }
-					any = true;
-					if (!object.variable.count(variableName))
-					{
-						throw std::runtime_error(where + ": " + tag + ": '" + object.name + "' has no variable named '" + variableName + "' to be ranked by");
-					}
-				}
-				if (!any)
-				{
-					throw std::runtime_error(where + ": " + tag + ": into= names no <group> of the game" + didYouMean(rank->table, objectNames(objects)));
+					if (std::find(ways.begin(), ways.end(), entry.first) == ways.end()) { ways.push_back(entry.first); }
 				}
 			}
 		}
+		if (!way.empty())
+		{
+			// Which scene's way it is, is known only when it runs; one
+			// that no scene has can never lead anywhere.
+			if (std::find(ways.begin(), ways.end(), way) == ways.end())
+			{
+				throw std::runtime_error(checking.where + ": <" + verb + " way=\"" + way + "\" /> names no way of any scene" + didYouMean(way, ways)
+					+ (ways.empty() ? std::string(" (no scene has <ways>)") : ". The ways are: " + listOf(ways)));
+			}
+		}
+		else if (std::find(names.begin(), names.end(), scene) == names.end())
+		{
+			throw std::runtime_error(checking.where + ": <" + verb + " scene=\"" + scene + "\" /> names no scene of the game" + didYouMean(scene, names)
+				+ (names.empty() ? std::string(" (no state has <scenes>)") : ". The scenes are: " + listOf(names)));
+		}
+	}
 
+	void checkCellMap(const Checking& checking, const std::string& map, const std::string& tag)
+	{
+		const bool found = std::any_of(checking.objects.begin(), checking.objects.end(), [&](const Object& object) { return object.onCells && object.mapName == map; });
+		if (!found) { throw std::runtime_error(checking.where + ": " + tag + " names no map with <cells />"); }
+	}
+
+	void refuseFollowed(const Checking& checking, const VariableName& target, const std::string& tag)
+	{
+		const Object* owner = target.variable.empty() ? nullptr : findObject(checking.objects, target.owner);
+		if (owner && owner->followsPart(target.variable))
+		{
+			throw std::runtime_error(checking.where + ": " + tag + ": '" + target.written() + "' is update=\"live\", worked out every frame from what it reads;"
+				" no command can change it. Change what it reads, or leave out update=\"live\"");
+		}
+	}
+
+	void checkVariable(const Checking& checking, const VariableName& target, const std::string& tag)
+	{
+		const std::vector<Object>& objects = checking.objects;
+		const std::string& where = checking.where;
+		if (target.variable.empty())
+		{
+			throw std::runtime_error(where + ": " + tag + ": '" + target.owner + "' is no variable; name one as owner.variable (player.score)"
+				+ ". A variable that changes belongs to an object; the game's own <variables> are fixed numbers");
+		}
+		const std::string& ownerName = target.owner;
+		const Object* owner = findObject(objects, ownerName);
+		if (!owner)
+		{
+			throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects))
+				+ ". A variable that changes belongs to an object (paddle1.score is paddle1's <variable name=\"score\">); the game's own <variables> are fixed numbers");
+		}
+		const std::string& variableName = target.variable;
+		if (!owner->variable.count(variableName))
+		{
+			std::vector<std::string> names;
+			for (const auto& entry : owner->variable) { names.push_back(entry.first); }
+			throw std::runtime_error(where + ": " + tag + ": '" + ownerName + "' has no variable named '" + variableName + "'" + didYouMean(variableName, names)
+				+ (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
+		}
+	}
+
+	void wantPalette(const Checking& checking, const Object& object, const std::string& style)
+	{
+		const std::vector<RawStyle>& styles = checking.styles;
+		if (std::none_of(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == style; }))
+		{
+			std::vector<std::string> names;
+			for (const RawStyle& each : styles) { names.push_back(each.name); }
+			throw std::runtime_error(checking.where + ": <become style=\"" + style + "\" /> names no <style> of the game's <styles>" + didYouMean(style, names));
+		}
+		std::vector<std::string>& list = checking.wanted[object.name];
+		if (std::find(list.begin(), list.end(), style) == list.end()) { list.push_back(style); }
+	}
+
+	namespace
+	{
+		// Every state, object and action a command names has to exist: each
+		// verb checks its own (Verb::check). Found here, when the game loads,
+		// rather than the first time the command runs: pressing a key bound
+		// to <push state="pasued" /> would otherwise stop the game in the
+		// middle of play.
+		void checkCommand(const Command& command, const Checking& checking)
+		{
+			if (const auto* when = std::get_if<CmdWhen>(&command))
+			{
+				if (!when->body) { return; }
+				const std::string inside = checking.where + " > <condition>";
+				for (const Command& inner : when->body->commands)
+				{
+					checkCommand(inner, { checking.states, checking.objects, checking.sounds, checking.paths, checking.styles, checking.wanted, inside });
+				}
+				return;
+			}
+			const Verb* verb = verbOf(command);
+			if (verb && verb->check) { verb->check(shapeOf(command), checking); }
+		}
 	}
 
 	// Which objects can fly each path: those a <follow> anywhere sends
@@ -710,7 +455,7 @@ namespace xge
 		{
 			for (const auto& command : commands)
 			{
-				checkCommand(command, states, objects, sounds, paths, styles, wanted, where);
+				checkCommand(command, { states, objects, sounds, paths, styles, wanted, where });
 			}
 		};
 
@@ -765,7 +510,7 @@ namespace xge
 				{
 					throw std::runtime_error(where + ": <become> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
 				}
-				if (!become->style.empty()) { wantPalette(wanted, styles, *self, become->style, where); }
+				if (!become->style.empty()) { wantPalette({ states, objects, sounds, paths, styles, wanted, where }, *self, become->style); }
 				if (!become->sprite.empty() && std::none_of(self->looks.begin(), self->looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
 				{
 					throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" />: it has no look of that name (a look is one of several named <sprite>s)");

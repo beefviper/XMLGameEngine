@@ -38,6 +38,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = true,
 		.make = makeClimb,
+		.check = nullptr,
 		.run = runClimb,
 	};
 }

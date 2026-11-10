@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
 
 namespace xge
 {
@@ -14,6 +15,11 @@ namespace xge
 	static Command makeFire(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdFire{ raw.object };
+	}
+
+	static void checkFire(const Command& command, const Checking& checking)
+	{
+		checkObject(checking, std::get<CmdFire>(command).projectileName, "<fire>");
 	}
 
 	static bool runFire(const Command& command, const Doer& doer, CommandExecutor& executor)
@@ -28,6 +34,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeFire,
+		.check = checkFire,
 		.run = runFire,
 	};
 }

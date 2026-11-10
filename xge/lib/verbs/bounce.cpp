@@ -39,6 +39,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeBounce,
+		.check = nullptr,
 		.run = runBounce,
 	};
 }

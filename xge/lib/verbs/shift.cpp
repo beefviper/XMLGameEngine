@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
 
 namespace xge
 {
@@ -13,6 +14,11 @@ namespace xge
 	static Command makeShift(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		return CmdShift{ raw.object, { valueOr(raw.positionX, 0.0f, evaluate), valueOr(raw.positionY, 0.0f, evaluate) } };
+	}
+
+	static void checkShift(const Command& command, const Checking& checking)
+	{
+		checkObject(checking, std::get<CmdShift>(command).target, "<shift>");
 	}
 
 	static bool runShift(const Command& command, const Doer&, CommandExecutor& executor)
@@ -29,6 +35,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeShift,
+		.check = checkShift,
 		.run = runShift,
 	};
 }

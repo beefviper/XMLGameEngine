@@ -28,6 +28,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeMerge,
+		.check = nullptr,
 		.run = runMerge,
 	};
 }

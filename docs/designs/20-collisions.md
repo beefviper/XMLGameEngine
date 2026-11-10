@@ -7,7 +7,7 @@
 - The prototype found an edge hit and acted on it in one function, parsing action tokens by hand. Split into three:
   1. **Detection**: geometry only, no side effects (`play/collision.h`, `play/geometry.h`).
   2. **Dispatch**: what the XML declared for that touch (typed `Command`s from `game/command.cpp`).
-  3. **Execution**: `CommandExecutor::run`, one `std::visit` for every place a command runs, told by a `Doer` what it has (an object, what it touched, a key, an action).
+  3. **Execution**: `CommandExecutor::run`, one way in for every place a command runs: it calls the command's verb ([verbs](14-verbs.md)), told by a `Doer` what it has (an object, what it touched, a key, an action).
 - Declarative: the ball *has* a collision with the vertical edge whose answer is `<bounce />`; the "if" lives in detection.
 
 ## The algorithm

@@ -6,6 +6,10 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
+#include "load/spelling.h"
+
+#include <stdexcept>
 
 namespace xge
 {
@@ -18,6 +22,18 @@ namespace xge
 		if (!raw.scene.empty() || !raw.way.empty()) { return CmdResetScene{ raw.scene, raw.way }; }
 		if (raw.object.empty()) { return CmdReset{}; }
 		return CmdResetObject{ raw.object };
+	}
+
+	static void checkReset(const Command& command, const Checking& checking)
+	{
+		if (const auto* scene = std::get_if<CmdResetScene>(&command)) { checkScene(checking, "reset", scene->scene, scene->way); }
+		else if (const auto* object = std::get_if<CmdResetObject>(&command))
+		{
+			if (!findObject(checking.objects, object->target))
+			{
+				throw std::runtime_error(checking.where + ": <reset object=\"" + object->target + "\" /> names no object of the game" + didYouMean(object->target, objectNames(checking.objects)));
+			}
+		}
 	}
 
 	static bool runReset(const Command& command, const Doer& doer, CommandExecutor& executor)
@@ -36,6 +52,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeReset,
+		.check = checkReset,
 		.run = runReset,
 	};
 }

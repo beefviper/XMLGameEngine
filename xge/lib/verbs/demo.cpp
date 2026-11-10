@@ -28,6 +28,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeDemo,
+		.check = nullptr,
 		.run = runDemo,
 	};
 }

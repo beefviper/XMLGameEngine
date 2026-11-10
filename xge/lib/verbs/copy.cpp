@@ -6,6 +6,9 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
+
+#include <string>
 
 namespace xge
 {
@@ -13,6 +16,17 @@ namespace xge
 	static Command makeCopy(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdCopy{ VariableName::of(raw.variable), VariableName::of(raw.into) };
+	}
+
+	static void checkCopy(const Command& command, const Checking& checking)
+	{
+		// Both are owner.variable: a copy reads one object's variable and writes
+		// another's.
+		const CmdCopy& copy = std::get<CmdCopy>(command);
+		const std::string tag = "<copy variable=\"" + copy.from.written() + "\" into=\"" + copy.into.written() + "\" />";
+		checkVariable(checking, copy.from, tag);
+		checkVariable(checking, copy.into, tag);
+		refuseFollowed(checking, copy.into, tag);
 	}
 
 	static bool runCopy(const Command& command, const Doer&, CommandExecutor& executor)
@@ -29,6 +43,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeCopy,
+		.check = checkCopy,
 		.run = runCopy,
 	};
 }

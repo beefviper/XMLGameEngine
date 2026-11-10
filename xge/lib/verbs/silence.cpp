@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 #include "game/game.h"
 #include "play/executor.h"
+#include "load/check.h"
 
 namespace xge
 {
@@ -13,6 +14,11 @@ namespace xge
 	static Command makeSilence(const RawCommand& raw, const ValueEvaluator&)
 	{
 		return CmdSilence{ raw.sound };
+	}
+
+	static void checkSilence(const Command& command, const Checking& checking)
+	{
+		checkSound(checking, "silence", std::get<CmdSilence>(command).sound);
 	}
 
 	static bool runSilence(const Command& command, const Doer&, CommandExecutor& executor)
@@ -28,6 +34,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeSilence,
+		.check = checkSilence,
 		.run = runSilence,
 	};
 }

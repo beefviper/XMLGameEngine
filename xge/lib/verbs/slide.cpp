@@ -30,6 +30,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeSlide,
+		.check = nullptr,
 		.run = runSlide,
 	};
 }

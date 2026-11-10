@@ -33,6 +33,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = true,
 		.make = makeTurn,
+		.check = nullptr,
 		.run = runTurn,
 	};
 }

@@ -30,6 +30,7 @@ namespace xge
 		.formOf = nullptr,
 		.onRelease = false,
 		.make = makeStick,
+		.check = nullptr,
 		.run = runStick,
 	};
 }
