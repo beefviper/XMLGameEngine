@@ -25,7 +25,7 @@
     off the sides, turning round on a timer drawn anew each time and dropping
     bombs from under it (<facing>down</facing>, <fire>) on another.
   * The second wave's demons <release> two small demons where they were
-    shot, copies of a piece of the <kit> that is not in play until then. A
+    shot, copies of a piece (top-level <objects>) that is not in play until then. A
     wave is over when none of the class is left in play, small ones too.
   * The third wave's demons have two looks, whole and hurt: a hit turns the
     first into the second, and the next takes it out (Breakout's bricks).
@@ -58,7 +58,7 @@
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>28</size><color>color.yellow</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- a demon's bomb, there once one is dropped: eight at most -->
     <object name="bomb" class="bomb">
       <sprite><rectangle><width>4</width><height>12</height><color>color.red</color></rectangle></sprite>
@@ -89,15 +89,15 @@
         <collision object="player"><despawn /></collision>
       </collisions>
     </object>
-  </kit>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <!-- after a game, in both endings -->
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

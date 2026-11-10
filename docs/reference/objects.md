@@ -1,6 +1,6 @@
 # Objects
 
-An object is anything drawn, moved or touched. `name` is required; `class` is optional (a kind that rules and conditions match); `from=` takes a piece of the [kit](#the-kit-and-from).
+An object is anything drawn, moved or touched. `name` is required; `class` is optional (a kind that rules and conditions match); `from=` takes a [piece](#pieces-and-from).
 
 ```xml
 <object name="ball" class="ball">
@@ -45,7 +45,7 @@ An object is anything drawn, moved or touched. `name` is required; `class` is op
 | `<variables>` | its own numbers, read anywhere as `name.variable`; one written `update="live"` [follows](format.md#live-numbers-of-an-object) what it reads |
 | `<timers>` | what it does every so often, or once after a while ([timers](timers.md)) |
 
-A group's member, a map's piece and a kit piece have the same parts (the schema's `objectParts`), so they cannot drift apart.
+A group's member, a map's piece and a piece of the top-level `<objects>` have the same parts (the schema's `objectParts`), so they cannot drift apart.
 
 ### Numbers only
 
@@ -161,19 +161,22 @@ Instead of members, a group can lay out a block: `<columns>` and `<rows>` make a
 - Each line is centred on its own width.
 - Only a group's text may leave out its words; a cell that ends up with none stops the load.
 
-## The kit and from=
+## Pieces and from=
 
-The `<kit>` holds objects, groups and maps written once, called **pieces**. A piece is never in play itself: it comes into play where an `<objects>` takes it, or as copies a [spawn](#spawn-and-despawn) makes.
+The game's top-level `<objects>` holds objects, groups and maps written once, called **pieces**. A piece is never in play itself: it comes into play where a deeper `<objects>` takes it (of `<states>`, a state or a scene), or as copies a [spawn](#spawn-and-despawn) makes. An object is only a definition; where it is written says whether, and for how long, it is in play.
 
 ```xml
-<kit>
+<objects>                                         <!-- pieces -->
   <object name="paddle" class="paddle"> ... </object>
   <object name="bomb" class="bomb"> ... <most>6</most> </object>   <!-- only ever spawned -->
-</kit>
-<objects>
-  <object name="paddle1" from="paddle"><position><x>10</x></position></object>
-  <object name="paddle2" from="paddle"><position><x>780</x></position></object>
 </objects>
+<states>
+  <objects>                                       <!-- in play the whole game -->
+    <object name="paddle1" from="paddle"><position><x>10</x></position></object>
+    <object name="paddle2" from="paddle"><position><x>780</x></position></object>
+  </objects>
+  ...
+</states>
 ```
 
 - **Taking.** `from="piece"` takes a piece under the name written, changed by what is written. An object with no `from=` named like a piece takes it as it is (`<object name="topwall" />`).
@@ -207,11 +210,11 @@ Objects can be made and taken away while the game runs, and **a copy is the same
 
 ```xml
 <action name="fire">
-  <fire object="shot" />                 <!-- a new copy of the kit's shot -->
+  <fire object="shot" />                 <!-- a new copy of the shot piece -->
   <play sound="zap" />                   <!-- only if one left -->
 </action>
 ...
-<object name="shot" class="shot">        <!-- in the kit -->
+<object name="shot" class="shot">        <!-- a piece: in the top-level <objects> -->
   <sprite> ... </sprite>
   <velocity><y>-8</y></velocity>
   <most>3</most>

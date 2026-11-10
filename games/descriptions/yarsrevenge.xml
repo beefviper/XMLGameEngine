@@ -60,7 +60,7 @@
       <color char="y">color.yellow</color>
     </style>
   </styles>
-  <kit>
+  <objects>
     <!-- the Swirl: a spinning Qotile that waits a moment, then flies at where Yar is -->
     <object name="swirl">
       <sprite name="one">
@@ -88,7 +88,7 @@
         <timer><after>1</after><chase object="yar">4</chase></timer>
       </timers>
     </object>
-  </kit>
+  </objects>
   <states>
     <state name="mainmenu">
       <objects>

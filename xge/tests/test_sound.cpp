@@ -107,10 +107,10 @@ namespace
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"beat\">0.25</variable></variables>"
-			"<objects><object name=\"o\"><sprite><circle><radius>5</radius></circle></sprite>"
+			"<states><objects><object name=\"o\"><sprite><circle><radius>5</radius></circle></sprite>"
 			"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity>"
 			"<collisions><enabled>false</enabled></collisions></object></objects>"
-			"<states><state name=\"playing\"><shows><show object=\"o\" /></shows>"
+			"<state name=\"playing\"><shows><show object=\"o\" /></shows>"
 			"<inputs><input button=\"space\">" + onSpace + "</input></inputs></state></states>"
 			+ sounds + "</game>";
 	}

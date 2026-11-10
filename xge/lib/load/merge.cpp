@@ -257,7 +257,7 @@ namespace xge
 			if (!asGroup && (!rest->children.empty() || !rest->attributes.empty()))
 			{
 				fail(where, "changes '" + member + "', a member of group '" + group->attribute("name")
-					+ "', and a member changes only its <sprite>s, <animation>s, <position> and <velocity>; change the group, or take the member on its own from the <kit>");
+					+ "', and a member changes only its <sprite>s, <animation>s, <position> and <velocity>; change the group, or take the member on its own from the top-level <objects>");
 			}
 
 			const auto apply = [&](const auto& self, const ElementPtr& holder) -> ElementPtr
@@ -449,12 +449,12 @@ namespace xge
 		if (piece->name != "object" && piece->name != "group" && piece->name != "map") { fail(where, "holds <object>s, <group>s and <map>s, not a <" + piece->name + ">"); }
 		if (name.empty()) { fail(where, "has a <" + piece->name + "> with no name=\"...\""); }
 		if (name.find('.') != std::string::npos) { fail(here, "a piece's name has no dots: they join the parts of a path"); }
-		if (has(name)) { fail(here, "the <kit> has another piece (or a member of one) called '" + name + "'"); }
+		if (has(name)) { fail(here, "the top-level <objects> has another piece (or a member of one) called '" + name + "'"); }
 
 		ElementPtr made = piece;
 		if (const std::string from = piece->attribute("from"); !from.empty())
 		{
-			if (!isPiece(from)) { fail(here, "from=\"" + from + "\" names no piece of the <kit> before it" + didYouMean(from, names())); }
+			if (!isPiece(from)) { fail(here, "from=\"" + from + "\" names no piece of the top-level <objects> before it" + didYouMean(from, names())); }
 			if (isMap(from) != (piece->name == "map")) { fail(here, "from=\"" + from + "\": a <map> is from= a <map>, and an object or a group from= an object or a group"); }
 			made = take(from, piece, here);
 		}
@@ -469,7 +469,7 @@ namespace xge
 					const std::string member = child->attribute("name");
 					if (has(member) || member == name || std::any_of(named.begin(), named.end(), [&](const auto& each) { return each.first == member; }))
 					{
-						fail(here, "has a member called '" + member + "', and the <kit> has another piece or member of that name");
+						fail(here, "has a member called '" + member + "', and the top-level <objects> has another piece or member of that name");
 					}
 					named.emplace_back(member, name);
 				}
@@ -507,7 +507,7 @@ namespace xge
 			return changed(piece->second, over, where);
 		}
 		const auto member = members.find(name);
-		if (member == members.end()) { fail(where, "takes '" + name + "', which the <kit> has no piece or member called" + didYouMean(name, names())); }
+		if (member == members.end()) { fail(where, "takes '" + name + "', which the top-level <objects> has no piece or member called" + didYouMean(name, names())); }
 		const ElementPtr only = onlyMember(pieces.at(member->second), name);
 		return changedMember(only, name, over, true, overName, where);
 	}
@@ -556,11 +556,11 @@ namespace xge
 			const auto same = std::find_if(list.begin(), list.end(), [&](const ElementPtr& each) { return each->attribute("name") == name; });
 			if (!from.empty())
 			{
-				if (!kit.has(from)) { fail(here, "from=\"" + from + "\" names no piece of the <kit>" + didYouMean(from, kit.names())); }
+				if (!kit.has(from)) { fail(here, "from=\"" + from + "\" names no piece of the top-level <objects>" + didYouMean(from, kit.names())); }
 				if (kit.isMap(from) != (tag == "map"))
 				{
-					fail(here, tag == "map" ? "from=\"" + from + "\" names a piece that is not a <map>; a <map> takes a <map> of the kit"
-						: "from=\"" + from + "\" names a <map> of the kit, which only a <map> takes");
+					fail(here, tag == "map" ? "from=\"" + from + "\" names a piece that is not a <map>; a <map> takes a <map> piece"
+						: "from=\"" + from + "\" names a <map> piece, which only a <map> takes");
 				}
 				if (same != list.end()) { fail(here, "there is already an object or group called '" + name + "' here"); }
 				list.push_back(kit.take(from, written, here));
@@ -583,7 +583,7 @@ namespace xge
 				*outer = changedInner(*outer, name, written, here);
 				continue;
 			}
-			// by its name: a map a map of the kit, anything else an object
+			// by its name: a map a map piece, anything else an object
 			// or a group (or a member)
 			if (kit.has(name) && kit.isMap(name) == (tag == "map"))
 			{

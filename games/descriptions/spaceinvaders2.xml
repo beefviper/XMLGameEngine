@@ -50,7 +50,7 @@
     <style name="hud"><size>36</size><color>color.white</color></style>
     <style name="prompt"><size>48</size><color>color.white</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- the aliens' plasma bolts, the sheet's enemy bolt (0,1) flipped to
          fly down: three at most -->
     <object name="bomb" class="bomb">
@@ -119,55 +119,55 @@
         <timer><after>0.32</after><despawn /></timer>
       </timers>
     </object>
-  </kit>
-  <objects>
-    <object name="player">
-      <sprite>
-        <svg>
-          <path>assets/Space Invaders Color Sprites.svg</path>
-          <x>4</x><y>3.5</y><width>24</width><height>26</height>
-          <scale>zoom</scale>
-          <hide>backdrop</hide>
-        </svg>
-      </sprite>
-      <position><x><centered /></x><y>window.bottom - player.height * 2</y></position>
-      <collisions>
-        <collision edge="horizontal"><stick /></collision>
-        <collision class="bomb">
-          <dec variable="player.lives" />
-          <inc variable="player.struck" />
-          <release object="blast" />
-          <play sound="playerhit" />
-        </collision>
-      </collisions>
-      <actions>
-        <action name="left"><move direction="left">step</move></action>
-        <action name="right"><move direction="right">step</move></action>
-        <action name="gun">
-          <fire object="bullet" />
-          <play sound="shoot" />
-        </action>
-      </actions>
-      <variables>
-        <variable name="score">0</variable>
-        <variable name="lives">3</variable>
-        <variable name="struck">0</variable>
-      </variables>
-    </object>
-    <object name="best">
-      <sprite><text style="hud"><content>HI-SCORE</content><number>best.score</number></text></sprite>
-      <position><x><centered /></x><y>10</y></position>
-      <variables><variable name="score">0</variable></variables>
-    </object>
-    <object name="continue">
-      <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
-      <position><x><centered /></x><y>window.height.center + 60</y></position>
-    </object>
   </objects>
   <keeps>
     <keep object="best" />
   </keeps>
   <states>
+    <objects>
+      <object name="player">
+        <sprite>
+          <svg>
+            <path>assets/Space Invaders Color Sprites.svg</path>
+            <x>4</x><y>3.5</y><width>24</width><height>26</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </sprite>
+        <position><x><centered /></x><y>window.bottom - player.height * 2</y></position>
+        <collisions>
+          <collision edge="horizontal"><stick /></collision>
+          <collision class="bomb">
+            <dec variable="player.lives" />
+            <inc variable="player.struck" />
+            <release object="blast" />
+            <play sound="playerhit" />
+          </collision>
+        </collisions>
+        <actions>
+          <action name="left"><move direction="left">step</move></action>
+          <action name="right"><move direction="right">step</move></action>
+          <action name="gun">
+            <fire object="bullet" />
+            <play sound="shoot" />
+          </action>
+        </actions>
+        <variables>
+          <variable name="score">0</variable>
+          <variable name="lives">3</variable>
+          <variable name="struck">0</variable>
+        </variables>
+      </object>
+      <object name="best">
+        <sprite><text style="hud"><content>HI-SCORE</content><number>best.score</number></text></sprite>
+        <position><x><centered /></x><y>10</y></position>
+        <variables><variable name="score">0</variable></variables>
+      </object>
+      <object name="continue">
+        <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
+        <position><x><centered /></x><y>window.height.center + 60</y></position>
+      </object>
+    </objects>
     <state name="mainmenu">
       <objects>
         <object name="title">

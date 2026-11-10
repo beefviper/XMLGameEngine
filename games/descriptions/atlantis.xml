@@ -19,7 +19,7 @@
   * The city's six buildings, the three posts, their shells, the death rays,
     the score and the tally of ships brought down in this wave are the
     playing state's own objects, there in every wave.
-  * The ships are the kit's pool, a <group> of four lanes, each a <group> of
+  * The ships are a pool piece, a <group> of four lanes, each a <group> of
     hidden ships with its own height. A timer of the wave, named "launch",
     <reveal>s a ship at the top. A ship that reaches the right edge <die />s
     and <reveal>s one in the lane below; in the lowest lane it <wrap />s
@@ -58,7 +58,7 @@
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>28</size></style>
   </styles>
-  <kit>
+  <objects>
     <!-- the Gorgon ships: four lanes of hidden ships, a lane lower
          each pass; speed and points are the wave's -->
     <group name="gorgons" class="gorgon">
@@ -150,15 +150,15 @@
         <collision class="ground"><despawn /></collision>
       </collisions>
     </object>
-  </kit>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <!-- after a game, in both endings -->
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

@@ -24,11 +24,11 @@
     <become from=>s, the two of them first, so only one of them changes it.
     A shorter stack is a smaller picture, so it catches less.
   * The waves are the <scenes> of the playing state. The bomber, his
-    bombs and the wave's label are in the <kit>; the first wave takes them, and
+    bombs and the wave's label are pieces (top-level <objects>); the first wave takes them, and
     each later wave is the one before (from=) with its own <variables>: its
     number, the score it ends at, how fast the bomber paces, how often he
     drops a bomb (drop, seconds), how fast it falls and what it is worth,
-    read by plain names in the kit (the label shows <number>wave</number>).
+    read by plain names in the pieces (the label shows <number>wave</number>).
   * The bomber has two <timers>. One <reverse />s him after a random wait
     (worked out again each time), so his path is never the same; the other
     <fire>s a bomb every `drop` seconds. He has <facing>down</facing>, so a
@@ -66,7 +66,7 @@
       <color char="b">color.blue</color>
     </style>
   </styles>
-  <kit>
+  <objects>
     <!-- the wall of the building, and the ledge the bomber walks along -->
     <object name="rooftop">
       <sprite><rectangle><width>window.right</width><height>roof</height><color>color.darkgrey</color></rectangle></sprite>
@@ -132,7 +132,7 @@
       <sprite><text style="hud"><content>WAVE</content><number>wave</number></text></sprite>
       <position><x>window.right - wavelabel.width - margin</x><y>12</y></position>
     </object>
-  </kit>
+  </objects>
   <states>
     <state name="mainmenu">
       <objects>

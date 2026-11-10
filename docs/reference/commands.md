@@ -97,7 +97,7 @@ An object out of play does nothing when its action is pressed or triggered; lett
 | `<reset scene="room1" />`, `<reset way="out" />` | a [scene](states.md#scenes) back as it started |
 | `<enter scene="room2" />`, `<enter way="east" />` | makes that scene current; the one left stays as it was |
 | `<reveal object="blocks">count</reveal>` | brings back the first `count` (default 1) out of play, where they started |
-| `<release object="debris">count</release>` | puts `count` into play at the middle of the object running it: copies of a kit piece, or from a pool |
+| `<release object="debris">count</release>` | puts `count` into play at the middle of the object running it: copies of a piece, or from a pool |
 | `<fire object="shot" />` | launches a copy (or pool member): along an aim; else from its facing side; else from its nose along a heading; else from its top with the shot's own velocity |
 | `<spawn object="ball">` | a new copy, placed and moving as its `<position>`, `<velocity>`, `<acceleration>` say, read as it runs: `<x><centered>self.x + 5</centered></x>` |
 | `<despawn />`, `<despawn object="bomb" />` | takes it, or every copy of that name, out of the game ([spawn and despawn](objects.md#spawn-and-despawn)) |

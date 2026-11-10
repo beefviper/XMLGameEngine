@@ -78,7 +78,7 @@
     <style name="help"><size>24</size></style>
     <style name="hud"><size>22</size><color>color.lightgrey</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- What every car has: its laps, and the gates. Starting just past the
          finish line, the next gate is the second; crossing the finish line
          when the fourth was the last finishes a lap. -->
@@ -108,14 +108,14 @@
       <position><x>0</x><y>0</y></position>
       <collisions />
     </object>
-  </kit>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to race again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to race again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

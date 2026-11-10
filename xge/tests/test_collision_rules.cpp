@@ -123,7 +123,7 @@ namespace
 				out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 					"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
 					"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
-					"<variables><variable name=\"unused\">0</variable></variables><objects>"
+					"<variables><variable name=\"unused\">0</variable></variables><states><objects>"
 					"<object name=\"ball\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 					"<position><x>100</x><y>0</y></position><velocity><y>5</y></velocity>"
 					"<collisions><enabled>true</enabled>" << rule << "</collisions>"
@@ -131,7 +131,7 @@ namespace
 					"<variables><variable name=\"armed\">" << armed << "</variable></variables></object>"
 					"<object name=\"block\" class=\"block\"><sprite><rectangle><width>100</width><height>20</height></rectangle></sprite>"
 					"<position><x>50</x><y>100</y></position><collisions><enabled>true</enabled></collisions></object>"
-					"</objects><states><state name=\"playing\"><shows><show object=\"ball\" /><show object=\"block\" /></shows>"
+					"</objects><state name=\"playing\"><shows><show object=\"ball\" /><show object=\"block\" /></shows>"
 					"<inputs><input button=\"space\"><pop /></input></inputs></state></states></game>";
 			}
 			game.emplace(readGame(path.string(), backend));
@@ -205,10 +205,10 @@ TEST_CASE("a <trigger> with no object= outside an object's own lists stops the l
 		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
-			"<variables><variable name=\"unused\">0</variable></variables><objects>"
+			"<variables><variable name=\"unused\">0</variable></variables><states><objects>"
 			"<object name=\"ball\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 			"<position><x>100</x><y>0</y></position><actions><action name=\"hit\"><reset /></action></actions></object>"
-			"</objects><states><state name=\"playing\"><inputs><input button=\"space\"><trigger action=\"hit\" /></input></inputs></state></states></game>";
+			"</objects><state name=\"playing\"><inputs><input button=\"space\"><trigger action=\"hit\" /></input></inputs></state></states></game>";
 	}
 	CHECK_THROWS_WITH(Game(readGame(path.string(), XmlBackend::Xerces)), Catch::Matchers::ContainsSubstring("needs object="));
 	std::error_code ignored;
@@ -260,13 +260,13 @@ TEST_CASE("an object put somewhere has moved: it touches what it is put on, with
 		std::ofstream out(path);
 		out << "<game><window name=\"moved\"><width>200</width><height>100</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
-			"<objects>"
+			"<states><objects>"
 			"<object name=\"a\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
 			"<position><x>10</x><y>10</y></position><variables><variable name=\"hits\">0</variable></variables>"
 			"<collisions><collision object=\"b\"><inc variable=\"self.hits\" /></collision></collisions></object>"
 			"<object name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
 			"<position><x>100</x><y>50</y></position><collisions><enabled>true</enabled></collisions></object>"
-						"</objects><states><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
+						"</objects><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
 			"<inputs></inputs></state></states></game>";
 	}
 	Game game(path.string());

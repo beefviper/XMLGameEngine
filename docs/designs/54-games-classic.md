@@ -13,7 +13,7 @@
 | Depth Charge | many charges against a clock | nothing | the charges' depth setting |
 | Astrosmash | Kaboom's pieces plus a gun | nothing | levels, guided missiles, the UFO |
 | Lunar Lander | gravity, limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, `burn`, `stop`, `slower`/`faster` | scrolling close-up, abort, hard landings |
-| Asteroids | facing, coasting, wrapping, breaking | heading, turn, thrust, drag, kit copies, despawn, a distance total, a thrusting pose | saucer shots breaking rocks |
+| Asteroids | facing, coasting, wrapping, breaking | heading, turn, thrust, drag, piece copies, despawn, a distance total, a thrusting pose | saucer shots breaking rocks |
 | Pac-Man | a tile maze, steering, four ghosts | `<map>`, `<maze>`, `<go>`, `<hunt>`, `<wander>`, look timers, `<become from>` | later levels' schedules, other fruit |
 
 ## Frogger
@@ -45,7 +45,7 @@ Lanes are groups inside one `lanes` group that gives the `<wrap />`; each lays i
 
 - Rocks are one group with a group per size and shape; ship and shots share class `breaker`, so each size has one rule for being broken.
 - A hit ship returns when the nearest hazard is over 150 away: `distance=` with `total="lowest"`.
-- Two saucers, the small one `from=` the big with its timers replaced; they are one kit group `ufos` so rocks can break them.
+- Two saucers, the small one `from=` the big with its timers replaced; they are one group piece `ufos` so rocks can break them.
 - **The flame** is a `thrusting` pose over a two-frame animation. That needed looks with a `<heading>`: each look now keeps its own turned pictures. Chosen over a tethered flame object (needs its heading kept in step) and a `<become>` on the key (nothing puts it back).
 
 ## Space Invaders

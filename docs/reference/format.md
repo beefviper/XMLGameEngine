@@ -14,10 +14,12 @@ One `<game>` root, its children in this order (the schema enforces it):
   <paths> ... </paths>                 <!-- optional: routes objects fly -->
   <styles> ... </styles>               <!-- optional: named text and bitmap looks -->
   <patterns> ... </patterns>           <!-- optional: what cards may make -->
-  <kit> ... </kit>                     <!-- optional: pieces written once, taken below -->
-  <objects> ... </objects>             <!-- optional: what every state shares -->
+  <objects> ... </objects>             <!-- optional: pieces, written once, never in play themselves -->
   <keeps> ... </keeps>                 <!-- optional: what a new game passes over -->
-  <states> ... </states>               <!-- title, playing, paused, game over ... -->
+  <states>                             <!-- title, playing, paused, game over ... -->
+    <objects> ... </objects>           <!-- optional: what every state shares -->
+    <state> ... </state>
+  </states>
   <sounds> ... </sounds>               <!-- optional: notes and music -->
   <pictures> ... </pictures>           <!-- optional: bitmaps sprites take, sheets -->
   <demo> ... </demo>                   <!-- optional: a recorded game -->
@@ -26,7 +28,7 @@ One `<game>` root, its children in this order (the schema enforces it):
 
 - **How it plays comes first; what it sounds and looks like last.** Sounds and pictures are long and say little about the rules, so they sit under the states, and a sprite takes a picture by name: `<bitmap from="ship" />` ([bitmaps](pictures.md#bitmaps)).
 
-- **Where an object is written says how long it lasts:** the game's `<objects>` for the whole game, a [state](states.md#states)'s while it is current, a [scene](states.md#scenes)'s while that scene is current. What is written once and used in several places, or only spawned, goes in the [`<kit>`](objects.md#the-kit-and-from).
+- **Where an object is written says how long it lasts,** and the deeper it is written, the shorter: the top-level `<objects>` never (they are [pieces](objects.md#pieces-and-from), taken below or only spawned), `<states>`' own `<objects>` for the whole game, a [state](states.md#states)'s while it is current, a [scene](states.md#scenes)'s while that scene is current. An object is only a definition; where it stands says whether, and for how long, it is in play.
 - A game with no `xsi:noNamespaceSchemaLocation` is not validated. The schema checks shape and where each command may go; the loader checks names and meaning once everything is read.
 
 ## The format's one rule

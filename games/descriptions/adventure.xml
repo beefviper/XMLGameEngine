@@ -26,7 +26,7 @@
   * The rooms are the <scenes> of the playing state, and the hero and the
     score he plays for (status) the state's own, there in every room. A room
     left stays as it was until he comes back.
-  * The kit: the walls (one group; a room takes the walls it has, a member
+  * The pieces: the walls (one group; a room takes the walls it has, a member
     at a time, in its own colour), the two castles (members of one group),
     the two dragons (members of one group, each in its own colours), and
     four unseen strips, the ways out: east, west, in through a castle's
@@ -64,7 +64,7 @@
     <style name="prompt"><size>36</size></style>
     <style name="help"><size>22</size><color>color.white</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- the walls a room can have, taken a member at a time -->
     <group name="walls" class="wall">
       <sprite><rectangle><width>window.right</width><height>wall</height><color>color.yellow</color></rectangle></sprite>
@@ -175,7 +175,7 @@
         <collision object="hero"><enter way="out" /></collision>
       </collisions>
     </object>
-  </kit>
+  </objects>
   <states>
     <state name="title">
       <objects>

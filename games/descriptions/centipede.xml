@@ -45,7 +45,7 @@
     <style name="help"><size>20</size><color>color.lightgrey</color></style>
     <style name="hud"><size>24</size></style>
   </styles>
-  <kit>
+  <objects>
     <!-- the wand's shot: one at a time, straight up -->
     <object name="shot" class="shot">
       <sprite><rectangle><width>2</width><height>8</height><color>color.white</color></rectangle></sprite>
@@ -57,14 +57,14 @@
         <collision class="centipede"><despawn /></collision>
       </collisions>
     </object>
-  </kit>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

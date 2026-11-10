@@ -3808,7 +3808,7 @@ namespace xge
 		}
 
 		// What a <spawn>, <fire> or <release> in those children of a state or
-		// scene names (load/merge spawnedIn): a piece of the <kit> named so
+		// scene names (load/merge spawnedIn): a piece of the top-level <objects> named so
 		// comes into the list they run beside (addWaiting).
 		std::set<std::string> spawnedBy(const XmlNode& node, const std::vector<std::string>& tags, const Kit& kit)
 		{
@@ -3836,13 +3836,13 @@ namespace xge
 
 		// <scenes>: each <scene>, its objects laid out by load/merge: those of
 		// the scene it is from=, changed by its own of the same names, then its
-		// own and the <kit> pieces it takes. `seen` is every name of its state's
+		// own and the top-level <objects> pieces it takes. `seen` is every name of its state's
 		// objects and the game's.
 		void readScenes(const XmlNode& scenes, const std::string& stateWhere, const Kit& kit, const std::set<std::string>& seen, RawState& state)
 		{
 			if (findChild(&scenes, "objects"))
 			{
-				fail(stateWhere + " > <scenes>", "has an <objects>, a kit of its own: the pieces the scenes take go in the game's <kit>");
+				fail(stateWhere + " > <scenes>", "has an <objects> of its own: the pieces the scenes take go in the top-level <objects>");
 			}
 
 			// Each scene so far, laid out, for a scene that is from= it.
@@ -3934,7 +3934,7 @@ namespace xge
 
 		// A <state>. Its objects are laid out by load/merge: those of the state
 		// it is from= (`lists`, each state so far laid out), changed by its own
-		// of the same names, then its own and the <kit> pieces it takes.
+		// of the same names, then its own and the top-level <objects> pieces it takes.
 		RawState readState(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists,
 			const ShowSets& showSets, const Kit& kit, const std::set<std::string>& gameNames)
 		{
@@ -4020,7 +4020,7 @@ namespace xge
 			}
 			rawState = finishState(state, where, std::move(rawState));
 
-			// What its own inputs, conditions and timers spawn (a <kit> piece
+			// What its own inputs, conditions and timers spawn (a piece of the top-level <objects>
 			// comes into its objects), then its scenes, then its objects read.
 			addWaiting(list, spawnedBy(state, { "inputs", "conditions", "computer", "timers" }, kit), gameNames, kit, where);
 
@@ -4097,9 +4097,9 @@ namespace xge
 		const std::string where = "game";
 		std::unique_ptr<XmlNode> window = requireChild(*root, "window", where);
 		std::unique_ptr<XmlNode> variablesNode = requireChild(*root, "variables", where);
-		std::unique_ptr<XmlNode> kitNode = findChild(root.get(), "kit");         // none: nothing is taken
-		std::unique_ptr<XmlNode> objectsNode = findChild(root.get(), "objects"); // none: every object is a state's own
+		std::unique_ptr<XmlNode> piecesNode = findChild(root.get(), "objects");  // none: nothing is taken
 		std::unique_ptr<XmlNode> states = requireChild(*root, "states", where);
+		std::unique_ptr<XmlNode> objectsNode = findChild(states.get(), "objects"); // none: every object is a state's own
 
 		// load window description: <window name="..."> and its settings. These
 		// are plain numbers, not expressions - the expressions in the rest of
@@ -4251,14 +4251,14 @@ namespace xge
 			rawPatterns.push_back(std::move(raw));
 		}
 
-		// load the kit: pieces written once, in play only where something
-		// takes them (load/merge)
+		// load the pieces, the top-level <objects>: written once, in play
+		// only where something takes them (load/merge)
 		Kit kit;
-		if (kitNode)
+		if (piecesNode)
 		{
-			for (std::unique_ptr<XmlNode> piece = kitNode->getFirstChild(); piece != nullptr; piece = piece->getNextSibling())
+			for (std::unique_ptr<XmlNode> piece = piecesNode->getFirstChild(); piece != nullptr; piece = piece->getNextSibling())
 			{
-				kit.add(copyElement(*piece), "<kit>");
+				kit.add(copyElement(*piece), "the top-level <objects>");
 			}
 		}
 		if (std::unique_ptr<XmlNode> pathsNode = findChild(root.get(), "paths"))
@@ -4269,10 +4269,11 @@ namespace xge
 			}
 		}
 
-		// load objects: the game's own, in play in every state that shows them
+		// load objects: the game's own (<states> > <objects>), in play in
+		// every state that shows them
 		std::vector<ElementPtr> gameList;
-		if (objectsNode) { gameList = layOut(*objectsNode, {}, kit, "the game's <objects>"); }
-		addWaiting(gameList, {}, {}, kit, "the game's <objects>");
+		if (objectsNode) { gameList = layOut(*objectsNode, {}, kit, "<states> > <objects>"); }
+		addWaiting(gameList, {}, {}, kit, "<states> > <objects>");
 		readAll(gameList, rawObjects);
 		const std::set<std::string> gameNames = namesOf(gameList, {});
 

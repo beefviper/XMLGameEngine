@@ -5,7 +5,7 @@ How a game is loaded and played, the libraries behind it, how to build it, and w
 ## Loading
 
 1. **Parse and validate** (`load/xml`). If the file names a schema it is validated: Xerces fully ("strong"); the other XML libraries with a small built-in validator for the XSD the schema uses ("weak", `load/xsd`).
-2. **Work out the kit and every `from=`** on the XML (`load/merge`).
+2. **Work out the pieces and every `from=`** on the XML (`load/merge`).
 3. **Read** the tags into a `GameData` (`game/data.h`), a group as one raw object per member. A generated program starts here, with its `GameData` compiled in.
 4. **Lay out states and scenes** (`layOutScenes`, `game/scenes.cpp`): owned objects named by path, every name written out in full.
 5. **Evaluate** (`load/expr`, `load/calc`): every value worked out (`<random>` drawn), objects, states and sounds built, every name checked. Nothing needs a window yet.
@@ -74,7 +74,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | Part | Files | What |
 |---|---|---|
 | reading | `load/xml.cpp` | tags into a `GameData` (`readGame()`) |
-| | `load/merge.cpp` | the kit and `from=` on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
+| | `load/merge.cpp` | pieces and `from=` on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
 | | `load/expr.cpp` | values, `<formula>`, building `Object`s and `State`s, pictures (`buildPicture`) |
 | | `load/calc.cpp` | arithmetic in text, compiled once into steps |
 | | `load/check.cpp` | load-time checks of names, and where commands may go (`ruleFor`) |

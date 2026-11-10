@@ -27,7 +27,7 @@
   * Each room is the arcade's five cells across and three down, written as
     a <map>: a pillar (+) at every corner of a cell and a wall (- or |)
     between two, on tiles half a cell across, so the file shows the room as
-    it looks. The kit's map "maze" says what each character is, and each
+    it looks. The map piece "maze" says what each character is, and each
     room takes it and gives only its <row>s. n, s, w and e are the gaps of
     the outer wall, the exits, never drawn, each a class of its side and a
     way of its own. The four rooms are a square of two by two that goes
@@ -41,7 +41,7 @@
     arcade does, and shuts that doorway behind him: the state's group
     "doors" has one just inside each gap, out of play until revealed, and
     electrified like the walls. No robot starts where he comes in.
-  * The robots are one group of the kit, a member for every robot of every
+  * The robots are one group piece, a member for every robot of every
     room, each room taking its own by name and saying where it stands. An
     inner group gives each room's robots their colour, and every group but
     the first room's an <aim> and <fire> timer, whose wait is drawn again
@@ -90,7 +90,7 @@
     <style name="hud"><size>28</size></style>
     <style name="player"><scale>2</scale><color>color.green</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- every robot of every room: each room takes its own by name -->
     <group name="robots" class="robot">
       <sprite name="a">
@@ -250,7 +250,7 @@
         </group>
       </group>
     </map>
-  </kit>
+  </objects>
   <states>
     <state name="title">
       <objects>

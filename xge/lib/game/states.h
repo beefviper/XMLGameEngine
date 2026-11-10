@@ -21,7 +21,7 @@ namespace xge
 	// A <scene> as written: its name inside its state, the earlier scene it
 	// is from= (or empty), its <ways> (each a name and the scene it leads to,
 	// as written), its own <variables>, its objects (those of the scene it is
-	// from= too, and the <kit> pieces it takes, all as load/merge made them),
+	// from= too, and the top-level <objects> pieces it takes, all as load/merge made them),
 	// and what runs while it is its state's current scene.
 	struct RawScene
 	{
@@ -86,7 +86,7 @@ namespace xge
 		std::string music;
 
 		// Its own <objects>, in play in every scene of it, as read (names
-		// as written; with those of the state it is from=, and the <kit> pieces
+		// as written; with those of the state it is from=, and the top-level <objects> pieces
 		// it takes, all as load/merge made them); then its scenes.
 		// game/scenes.h lays them out among the game's objects.
 		std::vector<RawObject> objects;

@@ -35,7 +35,7 @@ namespace
 		"<timers><timer><every>0.01</every><inc variable=\"self.age\" /></timer></timers></object>";
 }
 
-TEST_CASE("a piece of the kit is not in play until a copy of it is spawned", "[spawn]")
+TEST_CASE("a piece is not in play until a copy of it is spawned", "[spawn]")
 {
 	const Scratch file(box("ship", 300, 400),
 		"<spawn object=\"shot\"><position><x>ship.x</x><y>ship.y</y></position></spawn>", {}, kShot);
@@ -62,7 +62,7 @@ TEST_CASE("a piece of the kit is not in play until a copy of it is spawned", "[s
 	play.frames(1);
 	CHECK(play.has("shot.2"));
 	CHECK(play.count("shot") == 2);
-	CHECK_FALSE(play.get("shot").exists); // the one the kit's makes copies of, never in play
+	CHECK_FALSE(play.get("shot").exists); // the piece it makes copies of, never in play
 }
 
 TEST_CASE("a copy's own rules and values are about the copy, not the object it was copied from", "[spawn]")
@@ -145,7 +145,7 @@ TEST_CASE("<most> caps how many copies exist, and a refused spawn stops what com
 	CHECK(play.count("shot") == 0);
 }
 
-TEST_CASE("<fire> and <release> of a piece of the kit make copies of it", "[spawn]")
+TEST_CASE("<fire> and <release> of a piece make copies of it", "[spawn]")
 {
 	const Scratch file(box("ship", 300, 400, "<collisions><enabled>true</enabled></collisions>"
 		"<actions><action name=\"shoot\"><fire object=\"shot\" /></action></actions>")
@@ -232,7 +232,7 @@ TEST_CASE("a new game takes away every copy, and a spawned object can be of one 
 	CHECK(play.count("ball") == 1);
 }
 
-TEST_CASE("a <despawn object> must name an object, and a piece of the kit may leave out its <position>", "[spawn]")
+TEST_CASE("a <despawn object> must name an object, and a piece may leave out its <position>", "[spawn]")
 {
 	const auto load = [](const std::string& objects, const std::string& onSpace, const std::string& kit = {})
 	{

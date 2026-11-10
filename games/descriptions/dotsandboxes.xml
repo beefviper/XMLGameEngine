@@ -52,25 +52,25 @@
     <style name="hud"><size>32</size></style>
     <style name="cursor"><scale>4</scale><color>color.yellow</color></style>
   </styles>
-  <objects>
-    <!-- how many play: 1 against the computer, 2 at one keyboard -->
-    <object name="match">
-      <variables><variable name="players">1</variable></variables>
-    </object>
-    <!-- boxes each side has, and boxes still open -->
-    <object name="score">
-      <variables>
-        <variable name="red">0</variable>
-        <variable name="blue">0</variable>
-        <variable name="open">25</variable>
-      </variables>
-    </object>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <states>
+    <objects>
+      <!-- how many play: 1 against the computer, 2 at one keyboard -->
+      <object name="match">
+        <variables><variable name="players">1</variable></variables>
+      </object>
+      <!-- boxes each side has, and boxes still open -->
+      <object name="score">
+        <variables>
+          <variable name="red">0</variable>
+          <variable name="blue">0</variable>
+          <variable name="open">25</variable>
+        </variables>
+      </object>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

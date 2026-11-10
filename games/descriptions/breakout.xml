@@ -46,13 +46,13 @@
     <style name="help"><size>26</size><color>color.lightgrey</color></style>
     <style name="hud"><size>64</size></style>
   </styles>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+    </objects>
     <state name="mainmenu">
       <objects>
         <object name="title">

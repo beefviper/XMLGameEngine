@@ -49,7 +49,7 @@
     <style name="line"><size>32</size><color>color.white</color></style>
     <style name="hud"><size>40</size><color>color.white</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- what a big rock breaks into: small ones flying apart, eight at most -->
     <object name="chip" class="rocks">
       <sprite>
@@ -86,7 +86,7 @@
         </collision>
       </collisions>
     </object>
-  </kit>
+  </objects>
   <states>
     <state name="mainmenu">
       <objects>

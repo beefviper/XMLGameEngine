@@ -51,13 +51,13 @@
     <style name="flag"><size>32</size><color>color.orange</color></style>
     <style name="cursor"><scale>4</scale><color>color.yellow</color></style>
   </styles>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y>40</y></position>
-    </object>
-  </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y>40</y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

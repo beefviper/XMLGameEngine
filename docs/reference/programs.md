@@ -55,7 +55,7 @@ This writes a C++ program on SFML 3 that is **the engine with the game built in*
 
 | Written | By | What |
 |---|---|---|
-| `source/<game>.cpp` | `merge.xsl`, then `data.xsl` | the game as the engine's own `GameData` (`game/data.h`), a line of C++ per tag, with the [kit and every `from=`](objects.md#the-kit-and-from) worked out first. One function returns it (`pongMinGame()`) |
+| `source/<game>.cpp` | `merge.xsl`, then `data.xsl` | the game as the engine's own `GameData` (`game/data.h`), a line of C++ per tag, with the [pieces and every `from=`](objects.md#pieces-and-from) worked out first. One function returns it (`pongMinGame()`) |
 | `source/game_parts.h` | copied from `modules/` | the small functions those lines call |
 | `source/main.cpp`, `CMakeLists.txt`, `README.md`, `.gitignore` | `program.xsl` | makes the `Game`, an `SFMLWindow` and an `SFMLAudio` and runs `Engine::loop`; the build finds or fetches SFML 3 and lunasvg |
 | `engine/` | listed in `engine.xml` | the engine's files, copied unchanged from `xge/lib/` of the repository `xgecli` was built from, less XML reading and the other libraries |

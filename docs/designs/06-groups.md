@@ -14,7 +14,7 @@
 |---|---|
 | **One group, members override what differs** | Chosen: one rule |
 | Group position as an origin | Reads worse, hides off-screen starts |
-| Reusable named templates | A different idea (opt-in parts; later the [kit](13-kit.md)) |
+| Reusable named templates | A different idea (opt-in parts; later [pieces](13-pieces.md)) |
 | Members overriding collisions or actions | Not allowed |
 
 ## Columns and rows
@@ -44,7 +44,7 @@
 - **Chosen: `<map>`, rows of characters.** Pieces pick their character with `char=`; a group gets a member on every tile of it, an object takes the one tile it is on. Any character can be any piece.
 - A map's members are named under the map (`maze.dots.17`), so two maps can each have `walls`; the group's own name still means all of them.
 - The layout is shared code (`RawMap`, `tilesOf`, `placeOnMap`), so a generated game lays a map out the same.
-- Rejected: one element per piece kind, a separate legend. Open: a map taking pieces one by one from the kit.
+- Rejected: one element per piece kind, a separate legend. Open: a map taking pieces one by one from the pieces.
 
 ## Cells
 

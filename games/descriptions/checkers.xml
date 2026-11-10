@@ -84,28 +84,28 @@
     <style name="cursor"><scale>6</scale><color>color.yellow</color></style>
     <style name="option"><size>22</size></style>
   </styles>
-  <objects>
-    <!-- how many play: 1 against the computer, 2 at one keyboard -->
-    <object name="match">
-      <variables><variable name="players">1</variable></variables>
-    </object>
-    <!-- the player's options, kept: 1 on, 0 off -->
-    <object name="options">
-      <variables>
-        <variable name="moves">1</variable>
-        <variable name="movable">0</variable>
-        <variable name="jumper">0</variable>
-      </variables>
-    </object>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <keeps>
     <keep object="options" />
   </keeps>
   <states>
+    <objects>
+      <!-- how many play: 1 against the computer, 2 at one keyboard -->
+      <object name="match">
+        <variables><variable name="players">1</variable></variables>
+      </object>
+      <!-- the player's options, kept: 1 on, 0 off -->
+      <object name="options">
+        <variables>
+          <variable name="moves">1</variable>
+          <variable name="movable">0</variable>
+          <variable name="jumper">0</variable>
+        </variables>
+      </object>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

@@ -47,22 +47,22 @@
     <style name="prompt"><size>48</size><color>color.lightgrey</color></style>
     <style name="hud"><size>128</size></style>
   </styles>
-  <objects>
-    <!-- who plays the right paddle: 1 the computer, 2 a second player; and how well the computer plays -->
-    <object name="computer">
-      <sprite name="easy"><text style="prompt"><content>a d: the computer plays easy</content></text></sprite>
-      <sprite name="smart"><text style="prompt"><content>a d: the computer plays smart</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 190</centered></y></position>
-      <variables>
-        <variable name="players">1</variable>
-        <variable name="level">1</variable>
-      </variables>
-    </object>
-  </objects>
   <keeps>
     <keep object="computer" />
   </keeps>
   <states>
+    <objects>
+      <!-- who plays the right paddle: 1 the computer, 2 a second player; and how well the computer plays -->
+      <object name="computer">
+        <sprite name="easy"><text style="prompt"><content>a d: the computer plays easy</content></text></sprite>
+        <sprite name="smart"><text style="prompt"><content>a d: the computer plays smart</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 190</centered></y></position>
+        <variables>
+          <variable name="players">1</variable>
+          <variable name="level">1</variable>
+        </variables>
+      </object>
+    </objects>
     <state name="mainmenu">
       <objects>
         <object name="title">

@@ -52,7 +52,7 @@
     <style name="hud"><size>40</size><color>color.yellow</color></style>
     <style name="outcome"><size>50</size><color>color.white</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- each gun's shell, made when it fires: two each in the air at most -->
     <group name="shells">
       <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
@@ -65,19 +65,19 @@
       <member name="shell1" />
       <member name="shell2"><sprite><rectangle><color>color.white</color></rectangle></sprite></member>
     </group>
-  </kit>
-  <objects>
-    <!-- on every end screen -->
-    <object name="timeup">
-      <sprite><text style="banner"><content>TIME UP</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-    </object>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <!-- on every end screen -->
+      <object name="timeup">
+        <sprite><text style="banner"><content>TIME UP</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+      </object>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+    </objects>
     <!-- what every end screen shows over the battle -->
     <shows name="end">
       <show object="timeup" />

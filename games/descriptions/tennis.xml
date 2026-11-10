@@ -57,13 +57,13 @@
     <style name="score"><size>32</size><color>color.white</color></style>
     <style name="prompt"><size>40</size><color>color.white</color></style>
   </styles>
-  <objects>
-    <object name="continue">
-      <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
-      <position><x><centered /></x><y>window.height.center + 60</y></position>
-    </object>
-  </objects>
   <states>
+    <objects>
+      <object name="continue">
+        <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
+        <position><x><centered /></x><y>window.height.center + 60</y></position>
+      </object>
+    </objects>
     <state name="mainmenu">
       <objects>
         <object name="title">

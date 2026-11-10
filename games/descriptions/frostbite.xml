@@ -25,7 +25,7 @@
     only meets what he lands on. Water drowns him unless he is on a floe
     (unless="floe"), and he rides a floe (<ride />).
   * The nights are the <scenes> of the playing state. The ice, the igloo and
-    its door are the kit, taken by the first night; each later night is the
+    its door are pieces, taken by the first night; each later night is the
     one before (from=) with its own <variables>: how fast the ice drifts and
     what a floe is worth. Walking in through the door goes the way "next".
   * The ice is one <group> of four rows, each with two looks, white and blue,
@@ -61,7 +61,7 @@
     <style name="help"><size>30</size></style>
     <style name="hud"><size>26</size><color>color.darkblue</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- the snowy shore along the top; below it all is water -->
     <object name="snow">
       <sprite><rectangle><width>window.right</width><height>shore</height><color>color.white</color></rectangle></sprite>
@@ -143,7 +143,7 @@
       <active>false</active>
       <collisions />
     </object>
-  </kit>
+  </objects>
   <states>
     <state name="mainmenu">
       <objects>

@@ -61,8 +61,8 @@ namespace
 			"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
-			"<objects>" + objects + "</objects>"
-			"<states>" + keys + states + "</states>"
+			"<states><objects>" + objects + "</objects>"
+			+ keys + states + "</states>"
 			"</game>";
 	}
 
@@ -443,7 +443,7 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 		INFO(objects << states);
 		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
-			"<objects>" + objects + "</objects><states>" + states + "</states></game>";
+			"<states><objects>" + objects + "</objects>" + states + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
 		{
 			std::ofstream out(scratch.path);
@@ -662,7 +662,7 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 		INFO(objects << states);
 		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
-			"<objects>" + objects + "</objects><states>" + states + "</states></game>";
+			"<states><objects>" + objects + "</objects>" + states + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
 		{
 			std::ofstream out(scratch.path);
@@ -817,9 +817,8 @@ TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes ob
 		"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 		"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 		"<variables><variable name=\"unused\">0</variable></variables>"
-		"<objects>" + objects + "</objects>"
 		"<keeps><keep object=\"best\" /><keep object=\"lamps\" /></keeps>"
-		"<states>" + state("playing", { "player", "best", "shown", "lamps" },
+		"<states><objects>" + objects + "</objects>" + state("playing", { "player", "best", "shown", "lamps" },
 			"<input button=\"space\"><copy variable=\"player.score\" into=\"best.score\" /></input>",
 			"<conditions><condition object=\"player\" variable=\"score\"><atleast>5</atleast><push state=\"over\" /></condition></conditions>")
 		+ state("over", { "best" }, "<input button=\"space\"><reset /></input>") + "</states></game>";
@@ -864,8 +863,8 @@ TEST_CASE("a <copy> or <keep> that names nothing is turned away when the game lo
 		INFO(keeps << inputs);
 		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
-			"<objects>" + box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">0</variable></variables>")
-			+ "</objects>" + keeps + "<states>" + state("playing", { "o" }, inputs) + "</states></game>";
+			+ keeps + "<states><objects>" + box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">0</variable></variables>")
+			+ "</objects>" + state("playing", { "o" }, inputs) + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
 		{
 			std::ofstream out(scratch.path);

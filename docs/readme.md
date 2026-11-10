@@ -52,7 +52,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | Page | What is in it |
 |---|---|
 | [The game file](reference/format.md) | layout, the one rule, values and arithmetic, names, window, variables, styles, colours |
-| [Objects](reference/objects.md) | parts of an object, groups, columns and rows, lines of text, the kit and `from=`, spawn and despawn |
+| [Objects](reference/objects.md) | parts of an object, groups, columns and rows, lines of text, pieces and `from=`, spawn and despawn |
 | [Pictures](reference/pictures.md) | shapes, lines, polygons, bitmaps, SVG, sheets, text, animation, looks, poses, turning, light, height |
 | [Sounds](reference/sounds.md) | notes, waves, music, playing |
 | [Collisions](reference/collisions.md) | rules, filters, how a touch is found, knocks |

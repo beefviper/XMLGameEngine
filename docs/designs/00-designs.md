@@ -20,7 +20,7 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 | [pools-and-enemies](10-pools-and-enemies.md) | Spawn and despawn, enemies firing back | Built |
 | [vocabulary-map](11-vocabulary-map.md) | How the words fit together, and what kinds are missing | Map |
 | [scenes](12-scenes.md) | Scenes inside a state, ways, what conditions count | Built |
-| [kit](13-kit.md) | The kit, `from=` and the one change rule | Built |
+| [pieces](13-pieces.md) | Pieces (the top-level `<objects>`), `from=` and the one change rule | Built |
 
 ## Behaviour
 

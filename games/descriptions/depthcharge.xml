@@ -45,7 +45,7 @@
     <style name="line"><size>30</size><color>color.white</color></style>
     <style name="hud"><size>30</size><color>color.white</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- a charge, sinking slowly; six at most in the water -->
     <object name="charge" class="charge">
       <sprite>
@@ -87,7 +87,7 @@
         <timer><every>0.6</every><despawn /></timer>
       </timers>
     </object>
-  </kit>
+  </objects>
   <states>
     <state name="mainmenu">
       <objects>

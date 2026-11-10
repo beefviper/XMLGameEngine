@@ -136,7 +136,7 @@ namespace
 			std::ofstream out(path);
 			out << "<game><window name=\"paths\"><width>200</width><height>100</height><background>color.black</background>"
 				"<fullscreen>false</fullscreen><framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
-				<< paths << "<objects>" << objects << "</objects><states><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
+				<< paths << "<states><objects>" << objects << "</objects><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
 				"<inputs></inputs>" << stateExtra << "</state></states></game>";
 			return path;
 		}

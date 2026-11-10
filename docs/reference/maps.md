@@ -1,6 +1,6 @@
 # Maps
 
-A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one character a tile, so the file shows the level as it looks. It stands in any `<objects>`, or in the kit. With `<cells />` it is a playfield of cells for grid puzzles and [board games](boards.md).
+A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one character a tile, so the file shows the level as it looks. It stands in any `<objects>`, the top-level one making it a piece. With `<cells />` it is a playfield of cells for grid puzzles and [board games](boards.md).
 
 ## Drawing a map
 
@@ -26,7 +26,7 @@ A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one chara
 - **An object** picks a character found on exactly one tile, where it starts.
 - A character nothing picks is an empty tile; two pieces may not pick one character. Rows are trimmed, so an empty tile at an end is a character nobody picks (Pac-Man's `,`), not a space.
 - The map's name means everything on it (`<reset object="maze" />`).
-- **A map in the kit.** Maps that share their tile, place and pieces (Berserk's rooms) take one kit map and give only what differs, usually the rows: `<map name="maze"><row>+-+x+-+</row> ... </map>`.
+- **A map piece.** Maps that share their tile, place and pieces (Berserk's rooms) take one map piece and give only what differs, usually the rows: `<map name="maze"><row>+-+x+-+</row> ... </map>`.
 
 ## Walking a map
 

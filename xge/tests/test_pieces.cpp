@@ -1,13 +1,13 @@
-// test_kit.cpp
+// test_pieces.cpp
 // XML Game Engine
 // author: beefviper
 // date: Oct 25, 2026
 //
-// Catch2 tests for the game's <kit> and from=: pieces written once, in play
-// only where an <objects> takes them (by from= or by a piece's name), each
+// Catch2 tests for pieces and from=: the top-level <objects>, written once,
+// in play only where a deeper <objects> takes them (by from= or by a piece's name), each
 // take changing the piece by the one rule every start-from follows; a piece
 // from= an earlier one; a named member of a group piece taken on its own;
-// a map of the kit taken by a map that gives only its rows;
+// a map piece taken by a map that gives only its rows;
 // what a <spawn>, <fire> or <release> names coming in beside what runs it;
 // and the mistakes that stop the load. Small games are written out and
 // played with no window (played.h).
@@ -44,7 +44,7 @@ namespace
 	}
 }
 
-TEST_CASE("a piece of the kit is in play only where an <objects> takes it, by from= or by its name", "[kit]")
+TEST_CASE("a piece is in play only where an <objects> takes it, by from= or by its name", "[pieces]")
 {
 	const Scratch file("<object name=\"paddle\" />"
 		"<object name=\"paddle2\" from=\"paddle\"><position><x>780</x></position><velocity><y>-2</y></velocity></object>",
@@ -66,7 +66,7 @@ TEST_CASE("a piece of the kit is in play only where an <objects> takes it, by fr
 	CHECK(play.game.getCurrentObjects().size() == 2); // the piece itself is never in play
 }
 
-TEST_CASE("a take changes its piece: sprites by name, whole; variables one by one; collision rules after the piece's", "[kit]")
+TEST_CASE("a take changes its piece: sprites by name, whole; variables one by one; collision rules after the piece's", "[pieces]")
 {
 	const std::string piece = "<object name=\"brick\" class=\"wall\">"
 		"<sprite name=\"whole\"><rectangle><width>20</width><height>10</height></rectangle></sprite>"
@@ -96,7 +96,7 @@ TEST_CASE("a take changes its piece: sprites by name, whole; variables one by on
 	CHECK(gold.collisionData.others.size() == 2); // its rule after the piece's
 }
 
-TEST_CASE("a piece can be from= an earlier one, and a named member of a group piece is taken on its own", "[kit]")
+TEST_CASE("a piece can be from= an earlier one, and a named member of a group piece is taken on its own", "[pieces]")
 {
 	const std::string kit = box("rock", 0, 0, "<velocity><x>1</x><y>0</y></velocity>")
 		+ "<object name=\"boulder\" from=\"rock\"><sprite><rectangle><width>30</width><height>30</height></rectangle></sprite></object>"
@@ -118,7 +118,7 @@ TEST_CASE("a piece can be from= an earlier one, and a named member of a group pi
 	CHECK(play.game.getCurrentObjects().size() == 2);
 }
 
-TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads its scene's variables", "[kit][spawn]")
+TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads its scene's variables", "[pieces][spawn]")
 {
 	const std::string kit = "<object name=\"bomb\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
 		"<velocity><x>0</x><y>pace</y></velocity><most>3</most></object>";
@@ -128,7 +128,7 @@ TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads it
 		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"kit\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
-			"<variables><variable name=\"unused\">0</variable></variables><kit>" << kit << "</kit>"
+			"<variables><variable name=\"unused\">0</variable></variables><objects>" << kit << "</objects>"
 			"<states><state name=\"playing\"><objects>" << box("ship", 300, 500) << "</objects><scenes>"
 			"<scene name=\"wave1\"><variables><variable name=\"pace\">2</variable></variables><objects>"
 			<< box("dropper", 300, 100, "<timers><timer><every>0.05</every><fire object=\"bomb\" /></timer></timers>") << "</objects></scene>"
@@ -155,7 +155,7 @@ TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads it
 	CHECK(play.get("wave2.bomb.1").velocity.y == Approx(5));
 }
 
-TEST_CASE("a map of the kit is taken by a map, which gives its rows and changes what it will", "[kit][map]")
+TEST_CASE("a map piece is taken by a map, which gives its rows and changes what it will", "[pieces][map]")
 {
 	// A tile 10 across at 100, 50; # a wall, picked by the piece.
 	const std::string maze = "<map name=\"maze\"><tile><width>10</width><height>10</height></tile>"
@@ -205,13 +205,13 @@ TEST_CASE("a map of the kit is taken by a map, which gives its rows and changes 
 	}
 }
 
-TEST_CASE("mistakes with the kit and from= stop the load", "[kit][errors]")
+TEST_CASE("mistakes with pieces and from= stop the load", "[pieces][errors]")
 {
 	SECTION("an object from= a map, or a map from= an object")
 	{
 		const std::string maze = "<map name=\"maze\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position>"
 			"<group name=\"walls\" char=\"#\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite></group></map>";
-		fails("<object name=\"bat\" from=\"maze\" />", maze, "names a <map> of the kit, which only a <map> takes");
+		fails("<object name=\"bat\" from=\"maze\" />", maze, "names a <map> piece, which only a <map> takes");
 		fails("<map name=\"room\" from=\"paddle\"><row>#</row></map>", kPaddle, "names a piece that is not a <map>");
 	}
 	SECTION("a map that, with the piece it takes, still has no tile")
@@ -221,7 +221,7 @@ TEST_CASE("mistakes with the kit and from= stop the load", "[kit][errors]")
 	}
 	SECTION("from= a piece there is not")
 	{
-		fails("<object name=\"bat\" from=\"padle\" />", kPaddle, "from=\"padle\" names no piece of the <kit>");
+		fails("<object name=\"bat\" from=\"padle\" />", kPaddle, "from=\"padle\" names no piece of the top-level <objects>");
 	}
 	SECTION("a take by a name already in the list")
 	{
@@ -229,11 +229,11 @@ TEST_CASE("mistakes with the kit and from= stop the load", "[kit][errors]")
 	}
 	SECTION("a piece from= one after it")
 	{
-		fails(box("ball", 0, 0), "<object name=\"wide\" from=\"paddle\" />" + kPaddle, "names no piece of the <kit> before it");
+		fails(box("ball", 0, 0), "<object name=\"wide\" from=\"paddle\" />" + kPaddle, "names no piece of the top-level <objects> before it");
 	}
 	SECTION("two pieces of one name")
 	{
-		fails(box("ball", 0, 0), kPaddle + kPaddle, "the <kit> has another piece (or a member of one) called 'paddle'");
+		fails(box("ball", 0, 0), kPaddle + kPaddle, "the top-level <objects> has another piece (or a member of one) called 'paddle'");
 	}
 	SECTION("a piece with a dot in its name")
 	{

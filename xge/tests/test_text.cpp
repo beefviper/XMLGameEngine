@@ -43,8 +43,8 @@ namespace
 				"<window name=\"text\"><width>800</width><height>600</height><background>color.black</background>"
 				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 				"<variables><variable name=\"big\">90</variable></variables>"
-				<< styles << "<objects>" << objects << "</objects>"
-				"<states><state name=\"playing\">"
+				<< styles << "<states><objects>" << objects << "</objects>"
+				"<state name=\"playing\">"
 				"<inputs><input button=\"space\"><pop /></input></inputs></state></states></game>";
 		}
 		Written(const Written&) = delete;

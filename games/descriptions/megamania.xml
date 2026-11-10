@@ -18,9 +18,9 @@
   How it is written:
   * The eight waves are the <scenes> of the playing state. The blaster, its
     shot, the energy bar and the numbers along the top are the state's own
-    objects, there in every wave. The bomb is the kit's, so each wave has
+    objects, there in every wave. The bomb is a piece, so each wave has
     the bombs its enemies drop.
-  * A wave is the kit's <group> of eight, moving with one velocity and
+  * A wave is a <group> piece of eight, moving with one velocity and
     <wrap />ping round the sides, so the formation goes off one side and
     comes back on the other, and <bounce />ing off the top and bottom (only
     the waves that come down at a slant ever reach them). Each wave takes it
@@ -67,7 +67,7 @@
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>28</size><color>color.yellow</color></style>
   </styles>
-  <kit>
+  <objects>
     <group name="enemies" class="enemy">
       <sprite>
         <bitmap from="wave1" />
@@ -105,15 +105,15 @@
         <collision object="player"><despawn /></collision>
       </collisions>
     </object>
-  </kit>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <!-- after a game, in both endings -->
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

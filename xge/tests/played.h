@@ -101,8 +101,8 @@ namespace played
 	};
 
 	// A game of one state, "playing", with these objects, these commands on
-	// the space bar and whatever else the state is given, and these pieces in
-	// its <kit>, written out to be loaded and played, and taken away again.
+	// the space bar and whatever else the state is given, and these pieces
+	// (its top-level <objects>), written out to be loaded and played, and taken away again.
 	class Scratch
 	{
 	public:
@@ -113,7 +113,7 @@ namespace played
 				"<window name=\"scratch\"><width>800</width><height>600</height><background>color.black</background>"
 				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
-				<< (kit.empty() ? std::string{} : "<kit>" + kit + "</kit>") <<
+				<< (kit.empty() ? std::string{} : "<objects>" + kit + "</objects>") <<
 				"<states><state name=\"playing\"><objects>" << objects << "</objects>"
 				"<inputs><input button=\"space\">" << onSpace << "</input></inputs>" << more << "</state></states></game>";
 		}

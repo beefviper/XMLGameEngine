@@ -44,21 +44,21 @@
     <style name="help"><size>22</size><color>color.lightgrey</color></style>
     <style name="hud"><size>32</size></style>
   </styles>
-  <objects>
-    <!-- how many play: 1 against the computer, 2 at one keyboard; discs put; 1 once a line is made -->
-    <object name="match">
-      <variables>
-        <variable name="players">1</variable>
-        <variable name="made">0</variable>
-        <variable name="won">0</variable>
-      </variables>
-    </object>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <states>
+    <objects>
+      <!-- how many play: 1 against the computer, 2 at one keyboard; discs put; 1 once a line is made -->
+      <object name="match">
+        <variables>
+          <variable name="players">1</variable>
+          <variable name="made">0</variable>
+          <variable name="won">0</variable>
+        </variables>
+      </object>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

@@ -8,7 +8,7 @@ The author listed about thirty non-scrolling Atari 2600 games and asked for five
 
 | Game | Written for | Left out |
 |---|---|---|
-| Pitfall! | scenes from a kit, leaps, ladders | vines, quicksand, the tunnel, 255 screens |
+| Pitfall! | scenes from pieces, leaps, ladders | vines, quicksand, the tunnel, 255 screens |
 | Missile Command | aiming, tethers, waves as scenes | limited missiles, bombers, smart bombs |
 | Combat | headings, thrust, knocks | guided shells, the plane games |
 | Air-Sea Battle | shells at an angle, wrapping lanes | the other games on the cartridge |
@@ -26,7 +26,7 @@ The author listed about thirty non-scrolling Atari 2600 games and asked for five
 
 ## Decisions in the games
 
-- **Pitfall!** Screens are scenes built from a kit; each is entered through an unseen strip at each side. A never-drawn `status` object holds score, lives and clock, so resetting Harry costs nothing. A rolling log knocks Harry back, so only a leap passes. Crocodiles are two looks with a timer each.
+- **Pitfall!** Screens are scenes built from pieces; each is entered through an unseen strip at each side. A never-drawn `status` object holds score, lives and clock, so resetting Harry costs nothing. A rolling log knocks Harry back, so only a leap passes. Crocodiles are two looks with a timer each.
 - **Missile Command.** The base `<aim>`s at the sight and fires; each counter-missile trails a `<tether>`. Its burst is an animation tested by pixel. Waves are scenes, each `from=` the one before.
 - **Combat.** One group of tanks with an inner group per player; shells `<knock>` the tank back; pixel tanks bounce off box walls.
 - **Air-Sea Battle.** Guns with a heading, pointed by `<set variable="self.heading">`. Plane lanes start off the side they fly in from, so a revealed plane comes back from there.
@@ -44,9 +44,9 @@ The author listed about thirty non-scrolling Atari 2600 games and asked for five
 
 - **The knock through a floor:** Mario and the floors have no mass, so a bump from below is a `<knock>0</knock>` passed through the tile to the creeper on it, whose `side="bottom" through="floor"` rule flips it. A creeper hanging off a ledge touched directly is not flipped.
 - **Six phases** as scenes, each counting kicks up to its `upto`.
-- **One kit piece per kind from one `pest`** that holds what they share. A sidestepper goes `mad` on the first bump; a fighter fly hops, so a bump reaches it only between hops. Rejected: one group of all kinds (bump rules differ by kind, and rules are a group's).
+- **One piece per kind from one `pest`** that holds what they share. A sidestepper goes `mad` on the first bump; a fighter fly hops, so a bump reaches it only between hops. Rejected: one group of all kinds (bump rules differ by kind, and rules are a group's).
 - **A flip** is a hop that keeps its sideways way. One that gets up by itself turns red by a palette swap; a second time, blue, by a rule on the floor. Rejected: `from=` on a style-only `<become>` (a second meaning for `from=`).
-- **Two players at once:** Mario and Luigi are one kit piece taken twice; Luigi wears green by `<become style="luigi">`. A pest's rules about a brother are written once per brother, since a rule cannot name "whoever touched me". A word for that (`other`) would be worth having if more two-player games need it.
+- **Two players at once:** Mario and Luigi are one piece taken twice; Luigi wears green by `<become style="luigi">`. A pest's rules about a brother are written once per brother, since a rule cannot name "whoever touched me". A word for that (`other`) would be worth having if more two-player games need it.
 - Drawn at 256 by 224 with `<scale>3</scale>`; `<poses>` with `<mirror>`, a `<grip>` of 0.15.
 
 ## Found on the way

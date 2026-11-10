@@ -75,8 +75,8 @@ namespace
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"row\">100</variable></variables>"
-			"<objects>" + objects + "</objects>"
-			"<states><state name=\"playing\"><shows>" + shows + "</shows>"
+			"<states><objects>" + objects + "</objects>"
+			"<state name=\"playing\"><shows>" + shows + "</shows>"
 			"<inputs><input button=\"space\"><pop /></input></inputs></state></states>"
 			"</game>";
 	}

@@ -1794,7 +1794,7 @@ namespace xge
 	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row, char character = '\0');
 
 	// A piece of a cell map on none of its tiles: put on the map, not in
-	// the game, waiting to be spawned, as a piece of the kit does.
+	// the game, waiting to be spawned, as a piece does.
 	void waitOnMap(RawObject& object, const RawMap& map, char character = '\0');
 
 	// What a cell map with nothing on it (a next-piece box) is in the game:

@@ -1,6 +1,6 @@
-# The kit and from=
+# Pieces and from=
 
-**Status:** Built. Reference: [the kit and from=](../reference/objects.md#the-kit-and-from).
+**Status:** Built. Reference: [pieces and from=](../reference/objects.md#pieces-and-from).
 
 ## What we looked for
 
@@ -13,15 +13,17 @@ The wish: define objects once, up top, and customize them lower down.
 | Option | Verdict |
 |---|---|
 | Top-level definitions by `class=`, an object made where a name with that class is written | `class=` is a rule category shared by unlike things (Asteroids' `hazard` is rocks, saucer and shot), so every enemy of one class would be written out in full |
-| **The scene kit moved up to the game,** taken by name or `from=` | Chosen: it matches what `from=` already means on states and scenes |
+| **The scene kit moved up to the game,** taken by name or `from=` | Chosen first, as a `<kit>` beside the game's `<objects>`: it matches what `from=` already means on states and scenes |
 | Keeping `<exists>false</exists>` beside it | Two ways to say "only spawned"; dropped |
+| A nameless object with only a class, as a partly made one | Takes, spawns and rules all point at a name; a class is shared by unlike things, so it cannot pick one pattern |
+| **The top-level `<objects>` as the pieces,** the game's own objects under `<states>` | Chosen in place of `<kit>`: a piece is an object, and only where it is written differed. "An object is in play" was never decided, only grew out of the first simple games |
 
 ## Chosen
 
-- **`<kit>`** holds objects, groups and maps; nothing in it is in play. A piece can be `from=` an earlier piece.
+- **The top-level `<objects>`** holds objects, groups and maps, the pieces; nothing in it is in play. A piece can be `from=` an earlier piece.
+- **Lifetime follows nesting:** the top level never, `<states>`' own `<objects>` the whole game, a state's while it is current, a scene's while that scene is. The deeper, the shorter.
 - **In any `<objects>`, `from="piece"` takes a piece** under the name written; an object named after a piece takes it by that name.
 - **One change rule** for a take, a state `from=` and a scene `from=`: sprites and animations by name, whole; x and y halves of position, velocity, acceleration and padding apart; variables, actions and timers by name; collision rules added after; members, rows and cells in place of all; inner groups by name; anything else in place of its tag.
-- **Lifetime is where a thing is placed:** the game's, a state's, a scene's.
 - **`<spawn>`, `<fire>` and `<release>` can name a piece;** its waiting copies sit beside the spawner, so they read its scene's variables (Kaboom's bombs fall at their wave's speed).
 - A member taken alone keeps its group's class, rules and picture.
 - **A map is a piece too:** Berserk's four rooms share tile, place, walls and exits, and each gives only its rows. Rejected: a scene `from=` the first room (it copies the robots, and a copy cannot be dropped).
@@ -36,4 +38,4 @@ The wish: define objects once, up top, and customize them lower down.
 
 - Placing a waiting piece somewhere other than beside its spawner.
 - Generated code size: each take is written out whole in each scene.
-- A map's pieces taken from the kit one by one; changing a numbered member (`rocks.2`) without naming it.
+- A map's pieces taken from the pieces one by one; changing a numbered member (`rocks.2`) without naming it.

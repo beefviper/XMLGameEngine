@@ -19,7 +19,7 @@ The format was chosen partly so a game could be transformed with XML's own tools
 ## How it runs
 
 - xgecli first loads the game as it would to play it, so a broken game never reaches the stylesheets. Then `generate.xsl` runs with libxslt and xgecli copies what it lists.
-- **`merge.xsl`** works out the kit and every `from=`, as `load/merge.cpp` does.
+- **`merge.xsl`** works out the pieces and every `from=`, as `load/merge.cpp` does.
 - **`data.xsl`** writes `source/<game>.cpp`: each tag becomes the line of C++ that makes what `load/xml.cpp` makes of it. A group is written as it is in the file: what it gives, a function per member, row or cell, and a line per cell naming its changes, so the data is about the file's size. Each cell is a call of its own, since inline cells overflowed a 1 MB Debug stack.
 - **`modules/game_parts.h`** holds the small functions those lines call, where `load/xml`'s rules for combining parts live in C++.
 - **`program.xsl`** writes `main.cpp`, `CMakeLists.txt` and a readme; **`engine.xml`** lists the engine files copied byte for byte from `xge/lib/` (none of the XML readers, other backends or factories).

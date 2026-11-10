@@ -107,32 +107,32 @@
     <style name="prompt"><size>16</size><font>assets/pressstart2p.ttf</font></style>
     <style name="hud"><size>16</size><font>assets/pressstart2p.ttf</font></style>
   </styles>
-  <objects>
-    <!-- the best score, kept from game to game -->
-    <object name="best">
-      <sprite>
-        <text style="hud">
-          <number>best.score</number>
-        </text>
-      </sprite>
-      <position><x><centered /></x><y>22</y></position>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
-    <object name="highlabel">
-      <sprite>
-        <text style="hud">
-          <content>HIGH SCORE</content>
-        </text>
-      </sprite>
-      <position><x><centered /></x><y>2</y></position>
-    </object>
-  </objects>
   <keeps>
     <keep object="best" />
   </keeps>
   <states>
+    <objects>
+      <!-- the best score, kept from game to game -->
+      <object name="best">
+        <sprite>
+          <text style="hud">
+            <number>best.score</number>
+          </text>
+        </sprite>
+        <position><x><centered /></x><y>22</y></position>
+        <variables>
+          <variable name="score">0</variable>
+        </variables>
+      </object>
+      <object name="highlabel">
+        <sprite>
+          <text style="hud">
+            <content>HIGH SCORE</content>
+          </text>
+        </sprite>
+        <position><x><centered /></x><y>2</y></position>
+      </object>
+    </objects>
     <state name="mainmenu">
       <objects>
         <object name="title">

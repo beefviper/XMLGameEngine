@@ -24,7 +24,7 @@
   * The barrel is a bitmap turned about its middle, which sits on top of
     the cannon. Its heading, and where its tip is, follow its elevation
     (update="live"), kept from 0 to 90 by a <clamp>, so the two cannons
-    share one kit piece and aiming only changes the elevation.
+    share one piece and aiming only changes the elevation.
   * Where a turn is, is the table's look: handing over, aiming, flying,
     landed, done, a point; each look's rules sit inside one condition on it.
     The blast that a landing leaves says whether a cannon was hit, by a
@@ -61,7 +61,7 @@
     <style name="help"><size>24</size></style>
     <style name="hud"><size>22</size><color>color.lightgrey</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- A barrel: two pixels' worth of bars above its middle, clear below, so
          it turns about the middle, which sits on top of the cannon. Its
          heading follows its elevation: level - side * elevation, side 1
@@ -164,14 +164,14 @@
       <position><x>0</x><y>0</y></position>
       <collisions />
     </object>
-  </kit>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

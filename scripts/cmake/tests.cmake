@@ -90,7 +90,7 @@ add_executable(xgetest
 	"xge/tests/test_builtin_font.cpp"
 	"xge/tests/test_speed.cpp"
 	"xge/tests/test_gameplay_verbs.cpp"
-	"xge/tests/test_kit.cpp"
+	"xge/tests/test_pieces.cpp"
 	"xge/tests/test_scenes.cpp"
 	"xge/tests/test_text.cpp"
 	"xge/tests/test_frostbite.cpp"

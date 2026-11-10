@@ -4,15 +4,16 @@
 <!-- author: beefviper -->
 <!-- date: Oct 25, 2026 -->
 
-<!-- The game with its <kit> and from= worked out, as the engine works them
+<!-- The game with its pieces (the top-level <objects>) and from= worked out, as the engine works them
      out before it reads a game (xge/lib/load/merge.cpp, the same rule step
      for step): every <objects> holds whole objects and groups, a piece of
-     the kit taken (by from= or by its name) written out changed by the
+     the top-level <objects> taken (by from= or by its name) written out changed by the
      take, a state's and a scene's objects those of the one it is from=
      changed by its own, and a piece that a <spawn>, <fire> or <release>
      names put in beside what spawns it with <exists>false</exists>, as
      the one its copies are made from. data.xsl then writes out that game,
-     with no <kit> left in it. -->
+     its <objects> those of <states> (in play the whole game), with no
+     piece left in it. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:exsl="http://exslt.org/common"
@@ -20,9 +21,9 @@
 
   <xsl:variable name="merge-source" select="/game" />
 
-  <!-- The kit's pieces, each one from= an earlier piece written out whole. -->
+  <!-- The pieces, each one from= an earlier piece written out whole. -->
   <xsl:variable name="merge-pieces-tree">
-    <xsl:for-each select="/game/kit/*">
+    <xsl:for-each select="/game/objects/*">
       <xsl:call-template name="merge-piece" />
     </xsl:for-each>
   </xsl:variable>
@@ -470,7 +471,7 @@
     </xsl:if>
   </xsl:template>
 
-  <!-- $list, then a waiting copy of each piece of the kit that $spawned (or
+  <!-- $list, then a waiting copy of each piece that $spawned (or
        an element of the list) names and that nothing in the list or $seen
        is called; and so on for what those name. Alphabetical, round by round. -->
   <xsl:template name="merge-add-waiting">
@@ -536,7 +537,7 @@
     <xsl:variable name="laid">
       <xsl:call-template name="merge-lay-out">
         <xsl:with-param name="list" select="/.." />
-        <xsl:with-param name="written" select="/game/objects/*" />
+        <xsl:with-param name="written" select="/game/states/objects/*" />
       </xsl:call-template>
     </xsl:variable>
     <xsl:call-template name="merge-add-waiting">
@@ -665,15 +666,15 @@
       <xsl:copy-of select="/game/@*" />
       <xsl:for-each select="/game/*">
         <xsl:choose>
-          <xsl:when test="self::kit" />
-          <xsl:when test="self::objects">
-            <objects>
-              <xsl:copy-of select="$merge-game-list" />
-            </objects>
-          </xsl:when>
+          <xsl:when test="self::objects" />
           <xsl:when test="self::states">
+            <xsl:if test="$merge-game-list">
+              <objects>
+                <xsl:copy-of select="$merge-game-list" />
+              </objects>
+            </xsl:if>
             <states>
-              <xsl:for-each select="*">
+              <xsl:for-each select="*[not(self::objects)]">
                 <xsl:choose>
                   <xsl:when test="self::state">
                     <xsl:call-template name="merge-state" />

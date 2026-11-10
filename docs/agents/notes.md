@@ -22,7 +22,7 @@ Gotchas that are easy to get wrong. How the engine works is the [reference](../r
 ## Objects, states and scenes
 
 - An object's changing numbers are its `Moment` (`game/object.h`), with `start` and `before`. A number a reset should put back goes in `Moment` and nowhere else. `placed` marks a reset or load between frames, whose place is not a move.
-- The kit and every `from=` are worked out on the XML first (`load/merge.cpp`), and the same in `merge.xsl`. Change one, change the other step for step: `xgetest-generated` compares the order of objects.
+- The pieces (top-level `<objects>`) and every `from=` are worked out on the XML first (`load/merge.cpp`), and the same in `merge.xsl`. Change one, change the other step for step: `xgetest-generated` compares the order of objects.
 - `layOutScenes` flattens owned objects into `data.objects` named by path and writes every name out in full.
 - `isShown` is visible and running in the top state; `isStill` is drawn under a `<show state>`; `isAway` is in a scene not current.
 - `Game::tryGetObject` falls back to the end of one path, so tests may say `getObject("ball")`; `carrying` and owners hold full names.

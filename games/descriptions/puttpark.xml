@@ -51,7 +51,7 @@
     <style name="help"><size>28</size></style>
     <style name="hud"><size>26</size><color>color.lightgrey</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- a round post: kicks the ball off faster than it came -->
     <object name="post" class="post">
       <sprite><circle><radius>16</radius><color>color.red</color></circle></sprite>
@@ -62,14 +62,14 @@
       <sprite><rectangle><width>70</width><height>12</height><color>color.orange</color></rectangle></sprite>
       <collisions />
     </object>
-  </kit>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

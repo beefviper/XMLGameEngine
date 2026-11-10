@@ -245,7 +245,7 @@ TEST_CASE("each wave cleared is the next with the energy full, and the eighth wi
 	CHECK(play.enemy("wave1", 1).isVisible);
 }
 
-TEST_CASE("each wave is the kit's formation with its own speed, rows and score", "[megamania]")
+TEST_CASE("each wave is the formation piece with its own speed, rows and score", "[megamania]")
 {
 	Megamania play;
 	CHECK(play.enemy("wave1", 1).velocity.x == Approx(2.0f));

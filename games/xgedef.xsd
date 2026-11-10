@@ -2246,7 +2246,7 @@
     holds numbers (a score, the lives): it is never drawn, and its position,
     0, 0 if left out, is only where it is.
 
-    from= starts it as a copy of a piece of the game's <kit> (or of a named
+    from= starts it as a copy of a piece of the top-level <objects> (or of a named
     member of a group piece), changed by what it gives; one named after a
     piece takes it the same way without from=. In a state or scene from=
     another, one named after an object the other has changes that object.
@@ -2258,7 +2258,7 @@
   -->
   <!--
     What every object-like thing may have after its sprites, animations and
-    position: an object, a group (for all its members), a piece of the <kit>,
+    position: an object, a group (for all its members), a piece,
     an object or group on a <map>. Written once so they cannot drift apart.
   -->
   <xs:group name="objectParts">
@@ -2441,7 +2441,7 @@
     </xs:choice>
   </xs:group>
 
-  <!-- A group, as an object can be, can start from a piece of the <kit>
+  <!-- A group, as an object can be, can start from a piece
        (from=, or named after it); then its members may be left out, and
        given, they replace the piece's. -->
   <xs:complexType name="groupType">
@@ -2514,7 +2514,7 @@
     <row>s of characters (a character a tile, every row as wide), and the
     groups and objects that say what each character is. A character nothing
     picks is an empty tile. The map's name means everything on it. A map that
-    takes a map of the kit (from=, or by its name) gives only what it changes,
+    takes a map piece (from=, or by its name) gives only what it changes,
     most often its <row>s; each part is then left out here, and the loader
     asks for any the map still lacks.
   -->
@@ -2632,13 +2632,14 @@
   </xs:complexType>
 
   <!--
-    The kit: objects, groups and maps written once, in play only where something
-    takes them: an object or group of the game's, a state's or a scene's
-    that is from= one (or named after one), or a <spawn>, <fire> or
-    <release> that names one, whose copies come into the game beside what
-    spawns them. A piece can be from= an earlier piece.
+    The top-level <objects>: pieces, objects, groups and maps written once,
+    never in play themselves. A piece comes into play where an <objects> of
+    <states>, of a state or of a scene takes it (an object or group from=
+    one, or named after one), or as copies a <spawn>, <fire> or <release>
+    that names it makes, which come into the game beside what spawns them.
+    A piece can be from= an earlier piece.
   -->
-  <xs:complexType name="kitType">
+  <xs:complexType name="piecesType">
     <xs:choice maxOccurs="unbounded">
       <xs:element name="object" type="objectType" />
       <xs:element name="group" type="groupType" />
@@ -2727,8 +2728,7 @@
             <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
           </xs:complexType>
         </xs:element>
-        <xs:element name="kit" type="kitType" minOccurs="0" />
-        <xs:element name="objects" type="objectsType" minOccurs="0" />
+        <xs:element name="objects" type="piecesType" minOccurs="0" />
         <!--
           What a full <reset /> passes over: each <keep> names an object or a
           group, which keeps what it holds (a best score) into the next game.
@@ -2747,6 +2747,8 @@
         <xs:element name="states">
           <xs:complexType>
             <xs:sequence>
+              <!-- the game's own objects, in play in every state that shows them -->
+              <xs:element name="objects" type="objectsType" minOccurs="0" />
               <!--
                 A named set of objects that states can share: a state's
                 <show set="name" /> shows them, in order, where it stands.

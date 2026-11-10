@@ -107,8 +107,8 @@ namespace
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables>" + variables + "</variables>"
-			"<objects>" + objects + "</objects>"
-			"<states><state name=\"playing\"><shows><show object=\"o\" /></shows>"
+			"<states><objects>" + objects + "</objects>"
+			"<state name=\"playing\"><shows><show object=\"o\" /></shows>"
 			"<inputs><input button=\"space\"><pop /></input></inputs>" + conditions + "</state>" + moreStates + "</states>"
 			"</game>";
 	}
@@ -359,7 +359,7 @@ TEST_CASE("state commands: push, pop, trigger and reset with and without an obje
 	ObjectXml o;
 	o.extra = "<actions><action name=\"go\"><move direction=\"left\">1</move></action></actions>";
 	std::string xml = gameXml("", objectXml(o));
-	xml.replace(xml.find("<states>"), xml.find("</states>") + 9 - xml.find("<states>"), states);
+	xml.replace(xml.find("<state name"), xml.find("</states>") + 9 - xml.find("<state name"), states.substr(std::string("<states>").size()));
 	Loaded loaded(xml);
 	loaded.game.setCurrentState("playing");
 
@@ -410,7 +410,7 @@ TEST_CASE("<pop state> puts that state in place of this one, so the stack does n
 		"<state name=\"wave2\"><shows><show object=\"o\" /></shows><inputs><input button=\"space\"><pop /></input></inputs></state>"
 		"</states>";
 	std::string xml = gameXml("", objectXml(ObjectXml{}));
-	xml.replace(xml.find("<states>"), xml.find("</states>") + 9 - xml.find("<states>"), states);
+	xml.replace(xml.find("<state name"), xml.find("</states>") + 9 - xml.find("<state name"), states.substr(std::string("<states>").size()));
 	Loaded loaded(xml);
 	Game& game = loaded.game;
 	game.setCurrentState("menu");
@@ -440,7 +440,7 @@ TEST_CASE("a mistake the schema lets through stops the load, saying what to writ
 	};
 	const auto withStates = [](std::string xml, const std::string& states)
 	{
-		xml.replace(xml.find("<states>"), xml.find("</states>") + 9 - xml.find("<states>"), states);
+		xml.replace(xml.find("<state name"), xml.find("</states>") + 9 - xml.find("<state name"), states.substr(std::string("<states>").size()));
 		return xml;
 	};
 

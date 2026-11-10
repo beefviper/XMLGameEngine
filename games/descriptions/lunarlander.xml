@@ -54,7 +54,7 @@
     <style name="line"><size>28</size><color>color.white</color></style>
     <style name="hud"><size>26</size><color>color.white</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- what is left of a wrecked lander, flung out and falling -->
     <group name="debris">
       <sprite><line><from><x>0</x><y>0</y></from><to><x>8</x><y>6</y></to><thickness>2</thickness></line></sprite>
@@ -64,7 +64,7 @@
       <member><velocity><x>-0.6</x><y>-3</y></velocity></member>
       <member><velocity><x>0.8</x><y>-1.6</y></velocity></member>
     </group>
-  </kit>
+  </objects>
   <states>
     <state name="mainmenu">
       <objects>

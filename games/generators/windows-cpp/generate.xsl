@@ -6,7 +6,7 @@
 
 <!-- The windows-cpp target: a game file in, a program of its own out, that
      plays the game as xgecli and xgegui play it, on SFML 3. The game, its
-     <kit> and from= worked out as the engine works them out (merge.xsl), is
+     pieces and from= worked out as the engine works them out (merge.xsl), is
      written out as the engine's own data (data.xsl), and everything that
      plays it is the engine's own code, copied in unchanged.
 
@@ -65,7 +65,7 @@
       <xsl:message terminate="yes">windows-cpp: this is not a game file (no &lt;game&gt;)</xsl:message>
     </xsl:if>
 
-    <!-- the game with its <kit> and from= worked out (merge.xsl), written out -->
+    <!-- the game with its pieces and from= worked out (merge.xsl), written out -->
     <xsl:variable name="laid-out">
       <xsl:call-template name="merge-game" />
     </xsl:variable>

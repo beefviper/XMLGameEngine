@@ -18,7 +18,7 @@ namespace xge
 {
 	// An element of the file copied out of it, so that what something starts
 	// from can be changed by what is written over it, and then read as if it
-	// had been written out whole: a piece of the <kit> taken, an object of a
+	// had been written out whole: a piece of the top-level <objects> taken, an object of a
 	// state or scene that another is from=.
 	struct Element;
 	using ElementPtr = std::shared_ptr<const Element>;
@@ -74,9 +74,9 @@ namespace xge
 	// path it <follow>s.
 	std::set<std::string> spawnedIn(const ElementPtr& element, const Kit& kit);
 
-	// The game's <kit>: pieces written once (objects, groups and maps), which
-	// are in play only where something takes them. A piece can be from= an
-	// earlier one.
+	// The pieces, the top-level <objects> (the kit, in the code): written
+	// once (objects, groups and maps), in play only where something takes
+	// them. A piece can be from= an earlier one.
 	class Kit
 	{
 	public:
@@ -112,11 +112,11 @@ namespace xge
 	// The objects of an <objects>: those of what it is from= (`inherited`),
 	// each changed by an object or group written of the same name (or of
 	// the name of a member or a group inside one of them), then the rest
-	// written, in order, each its own, or a piece of the kit taken (by
+	// written, in order, each its own, or a piece taken (by
 	// from=, or by having the name of a piece or of a named member).
 	std::vector<ElementPtr> layOut(const XmlNode& objects, std::vector<ElementPtr> inherited, const Kit& kit, const std::string& where);
 
-	// A piece of the kit a <spawn>, <fire> or <release> names (in `spawned`,
+	// A piece a <spawn>, <fire> or <release> names (in `spawned`,
 	// or in an object of the list), and that nothing in `list` or `seen`
 	// is called, is added to the list as one that does not exist until it is
 	// spawned; and so on for what those name. Alphabetical, round by round.

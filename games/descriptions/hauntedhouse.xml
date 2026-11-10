@@ -22,15 +22,15 @@
   How it is written:
   * The floors are the <scenes> of the playing state, each a <map>: # is a
     wall, ^ the stairs up and v the stairs down (a way of the floor's own,
-    <enter way>), and D marks where a locked door of the kit is put. Each
-    floor's map takes the kit's map "house" (its tile, place and walls) and
+    <enter way>), and D marks where a locked door piece is put. Each
+    floor's map takes the map piece "house" (its tile, place and walls) and
     gives its rows, its stairs and the colour of its walls. The eyes pick
     the key up by touching it (<carry />, so it goes with them up and down
     the stairs), and a door opens to the eyes while the key is by them (its
     rule's <condition distance>).
     The stairs of one floor are a few tiles from where the next floor's
     lead back, so the eyes do not arrive on them.
-  * The creatures are the kit's, each floor taking the ones it has and
+  * The creatures are pieces, each floor taking the ones it has and
     saying where they start. The tarantula <hunt>s the eyes along the halls
     and the bat <wander>s them (both walk the floor's map, <maze>); the ghost
     <chase>s through the walls. One that touches the eyes goes back to its
@@ -63,7 +63,7 @@
     <style name="hud"><size>28</size><color>color.lightgrey</color></style>
     <style name="prompt"><size>40</size></style>
   </styles>
-  <kit>
+  <objects>
     <!-- the tarantula: runs along the halls straight for the eyes -->
     <object name="spider" class="creature">
       <sprite>
@@ -160,14 +160,14 @@
         <collisions />
       </group>
     </map>
-  </kit>
-  <objects>
-    <object name="continue">
-      <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
-      <position><x><centered /></x><y>window.height.center + 60</y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <object name="continue">
+        <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
+        <position><x><centered /></x><y>window.height.center + 60</y></position>
+      </object>
+    </objects>
     <state name="mainmenu">
       <objects>
         <object name="title">

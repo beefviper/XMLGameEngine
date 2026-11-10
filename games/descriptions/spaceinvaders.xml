@@ -51,7 +51,7 @@
     <style name="hud"><size>36</size><color>color.white</color></style>
     <style name="prompt"><size>48</size><color>color.white</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- a bomb, three at most, a zigzag that wriggles as it falls,
          dropped by any alien (each faces down) after a wait of its own -->
     <object name="bomb" class="bomb">
@@ -82,51 +82,51 @@
         <timer><after>0.25</after><despawn /></timer>
       </timers>
     </object>
-  </kit>
-  <objects>
-    <object name="player">
-      <sprite>
-        <bitmap from="player" />
-      </sprite>
-      <position><x><centered /></x><y>window.bottom - player.height * 2</y></position>
-      <collisions>
-        <collision edge="horizontal"><stick /></collision>
-        <collision class="bomb">
-          <dec variable="player.lives" />
-          <inc variable="player.struck" />
-          <release object="blast" />
-          <play sound="playerhit" />
-        </collision>
-      </collisions>
-      <actions>
-        <action name="left"><move direction="left">step</move></action>
-        <action name="right"><move direction="right">step</move></action>
-        <action name="gun">
-          <fire object="bullet" />
-          <play sound="shoot" />
-        </action>
-      </actions>
-      <variables>
-        <variable name="score">0</variable>
-        <variable name="lives">3</variable>
-        <variable name="struck">0</variable>
-      </variables>
-    </object>
-    <!-- the best score, kept from game to game -->
-    <object name="best">
-      <sprite><text style="hud"><content>HI-SCORE</content><number>best.score</number></text></sprite>
-      <position><x><centered /></x><y>10</y></position>
-      <variables><variable name="score">0</variable></variables>
-    </object>
-    <object name="continue">
-      <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
-      <position><x><centered /></x><y>window.height.center + 60</y></position>
-    </object>
   </objects>
   <keeps>
     <keep object="best" />
   </keeps>
   <states>
+    <objects>
+      <object name="player">
+        <sprite>
+          <bitmap from="player" />
+        </sprite>
+        <position><x><centered /></x><y>window.bottom - player.height * 2</y></position>
+        <collisions>
+          <collision edge="horizontal"><stick /></collision>
+          <collision class="bomb">
+            <dec variable="player.lives" />
+            <inc variable="player.struck" />
+            <release object="blast" />
+            <play sound="playerhit" />
+          </collision>
+        </collisions>
+        <actions>
+          <action name="left"><move direction="left">step</move></action>
+          <action name="right"><move direction="right">step</move></action>
+          <action name="gun">
+            <fire object="bullet" />
+            <play sound="shoot" />
+          </action>
+        </actions>
+        <variables>
+          <variable name="score">0</variable>
+          <variable name="lives">3</variable>
+          <variable name="struck">0</variable>
+        </variables>
+      </object>
+      <!-- the best score, kept from game to game -->
+      <object name="best">
+        <sprite><text style="hud"><content>HI-SCORE</content><number>best.score</number></text></sprite>
+        <position><x><centered /></x><y>10</y></position>
+        <variables><variable name="score">0</variable></variables>
+      </object>
+      <object name="continue">
+        <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
+        <position><x><centered /></x><y>window.height.center + 60</y></position>
+      </object>
+    </objects>
     <state name="mainmenu">
       <objects>
         <object name="title">

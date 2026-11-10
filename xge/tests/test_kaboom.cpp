@@ -9,7 +9,7 @@
 // not exist, on another timer, from under himself (<facing>down</facing>). A
 // bomb caught is despawned; one on the ground costs a bucket and takes every
 // bomb of the wave away at once (<despawn object>). The eight waves are the
-// scenes of the playing state, each taking the bomber and his bomb from the kit with its own
+// scenes of the playing state, each taking the bomber and his bomb from the pieces with its own
 // pace, drop, fall and points, and the bucket stack (three looks) is the state's own.
 //
 // Window::init() normally measures each object's size once a backend exists;

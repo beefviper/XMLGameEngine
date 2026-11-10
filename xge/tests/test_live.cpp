@@ -86,7 +86,7 @@ namespace
 				"<window name=\"live\"><width>800</width><height>600</height><background>color.black</background>"
 				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
-				<< (kit.empty() ? std::string{} : "<kit>" + kit + "</kit>") <<
+				<< (kit.empty() ? std::string{} : "<objects>" + kit + "</objects>") <<
 				"<states><state name=\"playing\"><objects>" << objects << "</objects>"
 				"<inputs><input button=\"space\">" << onSpace << "</input></inputs></state></states></game>";
 		}

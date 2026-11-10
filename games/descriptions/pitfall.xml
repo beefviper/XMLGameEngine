@@ -22,15 +22,15 @@
     tunnel floor), the score, the clock and the lives are the playing
     state's own objects, there on every screen. The clock is a timer of the
     state taking a second off status.time.
-  * The four jungle screens are the <scenes> of the playing state. The kit
-    holds the pieces a screen is made of: the whole path, the banks of a
-    pond, a path with a ladder hole, the ladder, the logs, a tar pit, the
-    pond with its crocodiles, a fire, a scorpion and a
+  * The four jungle screens are the <scenes> of the playing state. The
+    pieces (top-level <objects>) are what a screen is made of: the whole
+    path, the banks of a pond, a path with a ladder hole, the ladder, the
+    logs, a tar pit, the pond with its crocodiles, a fire, a scorpion and a
     treasure. Each screen takes what it has and changes what differs: the
     fourth screen's scorpion is further along, and each treasure has its own
     look and place. What a screen's treasure is worth is the screen's
     variable `worth`.
-  * The kit also holds an unseen strip (<drawn>false</drawn>) for each side,
+  * The pieces also hold an unseen strip (<drawn>false</drawn>) for each side,
     and every screen takes both. Harry walking into one goes that way: each
     screen's <ways> say which screen lies east and which west, and the
     strip says <enter way="east" />. His own rule for that side <move>s him
@@ -91,7 +91,7 @@
       <color char="k">color.brown</color>
     </style>
   </styles>
-  <kit>
+  <objects>
     <!-- what Harry stands on: the whole path, the banks of a pond, or a
          path with a ladder hole too narrow to fall down -->
     <object name="path" class="ground">
@@ -300,26 +300,26 @@
         </collision>
       </collisions>
     </object>
-  </kit>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-    <!-- the best score, kept from game to game -->
-    <object name="best">
-      <sprite><text style="hud"><content>BEST</content><number>best.score</number><color>color.lightgrey</color></text></sprite>
-      <position><x><centered /></x><y>window.bottom - best.height - 4</y></position>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
   </objects>
   <keeps>
     <keep object="best" />
   </keeps>
   <states>
+    <objects>
+      <!-- after a game, in both endings -->
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+      <!-- the best score, kept from game to game -->
+      <object name="best">
+        <sprite><text style="hud"><content>BEST</content><number>best.score</number><color>color.lightgrey</color></text></sprite>
+        <position><x><centered /></x><y>window.bottom - best.height - 4</y></position>
+        <variables>
+          <variable name="score">0</variable>
+        </variables>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

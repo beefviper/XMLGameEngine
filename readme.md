@@ -89,7 +89,7 @@ A collision rule reads like a sentence: this ball, when it touches the top or bo
 - **A value is a number:** plain arithmetic as text (`window.right - margin`), a `<random>`, or a `<formula>` of tags.
 - **Names are dotted:** `ball.radius`, `aliens.3.2`, `playing.room2.robots`; `self.` and `touch.` inside a rule.
 - **Keys are bound in states, never in objects,** so changing a key is one edit.
-- **Say a thing once:** groups write what members share; a kit holds pieces taken by name; states and scenes copy others with `from=` and say only what differs.
+- **Say a thing once:** groups write what members share; the top-level `<objects>` holds pieces taken by name; states and scenes copy others with `from=` and say only what differs.
 - **Mistakes stop the load** with a message that says where, and "did you mean" for a misspelt name.
 
 ```
@@ -99,10 +99,10 @@ A collision rule reads like a sentence: this ball, when it touches the top or bo
   <sounds>      chip notes and music                  (optional)
   <paths>       routes that objects fly               (optional)
   <styles>      named text and bitmap looks           (optional)
-  <kit>         pieces written once, taken later      (optional)
-  <objects>     what every state shares               (optional)
+  <objects>     pieces written once, taken later      (optional)
   <keeps>       objects kept between games            (optional)
   <states>      title, playing, paused, game over ...
+    <objects>   what every state shares               (optional)
   <demo>        a recorded game for attract mode      (optional)
 </game>
 ```

@@ -4,7 +4,7 @@ A **state** is a mode of the game (title, playing, paused, game over). A state p
 
 ## States
 
-The first state in the file is where the game starts. `name` is required; `from` copies an earlier state. Children, in this order:
+`<states>` holds, in order, the game's own `<objects>` (in play the whole game, in each state that shows them), the shared [`<shows>` sets](#shared-sets), then the states. The first state in the file is where the game starts. `name` is required; `from` copies an earlier state. Children, in this order:
 
 | Element | What it does |
 |---|---|
@@ -63,8 +63,8 @@ One scene is current, and only its objects are in play, beside the state's own.
       <ways><way name="out" scene="room2" /></ways>
       <variables><variable name="pace">2</variable></variables>
       <objects>
-        <object name="topwall" />                   <!-- the kit's, as it is -->
-        <group name="robots"><velocity><x>pace</x></velocity></group>   <!-- the kit's, changed -->
+        <object name="topwall" />                   <!-- the piece, as it is -->
+        <group name="robots"><velocity><x>pace</x></velocity></group>   <!-- the piece, changed -->
         <object name="exit"> ... </object>          <!-- its own -->
       </objects>
       <conditions> ... </conditions>
@@ -81,7 +81,7 @@ One scene is current, and only its objects are in play, beside the state's own.
 - **Each scene has its own copies.** Two scenes that take the robots each have their own.
 - **Moving between scenes** is a command where the move happens: `<enter scene="room2" />` in an exit's rule, a condition, a timer. What an object of the state carries goes along.
 - **A scene left stays as it was** until entered again. `<reset scene="room1" />` puts it back as it started; a new game starts every scene again.
-- **Ways** let one kit piece lead somewhere different in each scene: `<enter way="east" />` looks the way up in the current scene as it runs.
+- **Ways** let one piece lead somewhere different in each scene: `<enter way="east" />` looks the way up in the current scene as it runs.
 - A scene's **`<variables>`** are its own numbers, read by its objects.
 - Its **conditions and timers** count only while it is current, after the state's own.
 - **`from="room1"`** copies a scene (objects, variables, ways, conditions, timers). What it writes is added; one **of the same name** replaces the copied one in its place. A copied condition is read in the new scene, so its plain names are that scene's.

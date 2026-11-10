@@ -59,7 +59,7 @@ The tables list only keys beyond that.
 |---|---|---|
 | `donkeykong` | A/D walk, W/S climb, Space jumps | sloping girders, ladders, barrels that sometimes take one, fireballs |
 | `mariobros` | A/D walk, W or Space jumps; 2 on the title for Luigi on the arrows | a knock through a floor, [`<poses>`](pictures.md#poses-mirror-grip-and-blinking), a window [`<scale>`](format.md#window), [palette swaps](format.md#palette-swap), six phases |
-| `pitfall` | A/D run, Space jumps, W/S climb | screens built from a [kit](objects.md#the-kit-and-from), logs, tar, crocodiles |
+| `pitfall` | A/D run, Space jumps, W/S climb | screens built from [pieces](objects.md#pieces-and-from), logs, tar, crocodiles |
 | `berserk` | W A S D walk and face, Space fires | rooms as [maps](maps.md), robots that line up and fire, Evil Otto |
 | `adventure` | W A S D walk, Space drops | five rooms, [`<carry />`](commands.md#touching), dragons that wake |
 | `hauntedhouse` | W A S D walk, Space strikes a match | a house seen only by [light](pictures.md#light-and-dark) |

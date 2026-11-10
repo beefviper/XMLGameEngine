@@ -31,7 +31,7 @@
     nearest city still standing, worked out again on a timer, and turns
     to point the way it goes. One that is done (shot down, or landed) is
     <reset /> above the sky, drawn again from its <random>s, and counted.
-  * The missiles are the kit's pool of eight, in three groups inside it:
+  * The missiles are a pool piece of eight, in three groups inside it:
     the first wave has the salvo of four, the second two more and the third
     the last two. Each wave is the one before it (from=) with its own speed
     and total, colour and way on; the last one's "cleared" condition wins.
@@ -57,7 +57,7 @@
     <style name="prompt"><size>40</size><color>color.white</color></style>
     <style name="hud"><size>24</size><color>color.lightgrey</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- the missiles: streaks that start somewhere above the sky and make for the nearest city, at the wave's speed -->
     <group name="missiles" class="missile">
       <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.red</color><thickness>2</thickness></line></sprite>
@@ -125,7 +125,7 @@
         <timer><every>0.75</every><despawn /></timer>
       </timers>
     </object>
-  </kit>
+  </objects>
   <states>
     <state name="title">
       <objects>

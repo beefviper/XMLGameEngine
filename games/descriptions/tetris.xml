@@ -18,7 +18,7 @@
   * The well is a <map> with no rows of its own: <columns> and <rows> say
     how big it is, and <cells /> makes its pieces move a cell at a time.
   * Each colour of block is a group picking a character (i, o, t, ...) that
-    is on no tile, so it waits to be spawned, as a piece of the kit does.
+    is on no tile, so it waits to be spawned, as a piece does.
   * Each shape is drawn in the smallest square it turns in, with those
     characters, and turns as the modern rules have it (the standard kicks
     off walls and the floor). Its cells are blocks, spawned with it.
@@ -51,13 +51,13 @@
     <style name="label"><size>24</size><color>color.lightgrey</color></style>
     <style name="hud"><size>40</size></style>
   </styles>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

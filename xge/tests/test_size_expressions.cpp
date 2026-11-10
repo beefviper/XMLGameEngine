@@ -150,13 +150,13 @@ namespace
 	const char* const kSizes = R"(<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="sizes"><width>1280</width><height>720</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>
   <variables><variable name="logo.radius">100</variable></variables>
-  <objects>
-    <object name="logo">
-      <sprite><circle><radius>logo.radius</radius></circle></sprite>
-      <position><x>window.width.center - logo.radius</x><y>window.height.center - logo.radius</y></position>
-    </object>
-  </objects>
   <states>
+    <objects>
+      <object name="logo">
+        <sprite><circle><radius>logo.radius</radius></circle></sprite>
+        <position><x>window.width.center - logo.radius</x><y>window.height.center - logo.radius</y></position>
+      </object>
+    </objects>
     <state name="mainmenu">
       <objects>
         <object name="title"><sprite><text><content>PONG</content><size>128</size></text></sprite><position><x>0</x><y>0</y></position></object>

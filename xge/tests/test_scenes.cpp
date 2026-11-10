@@ -3,7 +3,7 @@
 // author: beefviper
 // date: Oct 15, 2026
 //
-// Catch2 tests for objects a state owns and for <scenes>: the game's <kit>,
+// Catch2 tests for objects a state owns and for <scenes>: the pieces,
 // scenes that take its pieces and change them, from=, names looked for from the
 // inside out, <enter>, <reset scene>, what is carried going along, <drawn>
 // and <show state>. Each game is written beside the shipped ones so that
@@ -56,8 +56,8 @@ namespace
 			+ (velocity.empty() ? std::string{} : "<velocity>" + velocity + "</velocity>") + after + "</object>";
 	}
 
-	// A whole game file: 800 by 600 at 60 frames a second, the pieces of its
-	// <kit> given, the game's own objects (one, `marker`, when none are
+	// A whole game file: 800 by 600 at 60 frames a second, the pieces given
+	// (its top-level <objects>), the game's own objects (one, `marker`, when none are
 	// given) and the states given.
 	std::string gameXml(const std::string& states, const std::string& objects = {}, const std::string& variables = {}, const std::string& kit = {})
 	{
@@ -65,9 +65,9 @@ namespace
 			"<window name=\"scenes\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable>" + variables + "</variables>"
-			+ (kit.empty() ? std::string{} : "<kit>" + kit + "</kit>") +
-			"<objects>" + (objects.empty() ? box("marker", 0, 0) : objects) + "</objects>"
-			"<states>" + states + "</states>"
+			+ (kit.empty() ? std::string{} : "<objects>" + kit + "</objects>") +
+			"<states><objects>" + (objects.empty() ? box("marker", 0, 0) : objects) + "</objects>"
+			+ states + "</states>"
 			"</game>";
 	}
 
@@ -119,7 +119,7 @@ namespace
 
 	const std::string kSpace = "<inputs><input button=\"space\"><pop /></input></inputs>";
 
-	// A kit of one rock that drifts right, and a state of three rooms: the
+	// A piece, one rock that drifts right, and a state of three rooms: the
 	// first takes it as it is, the second changes its speed, the third is
 	// the second with a sign of its own.
 	const std::string kRock = box("rock", 100, 100, "<x>1</x>");
@@ -179,7 +179,7 @@ TEST_CASE("each scene that takes a piece gets its own copy, named by its path, a
 	REQUIRE(loaded.has("playing.room2.rock"));
 	REQUIRE(loaded.has("playing.room3.rock"));
 	REQUIRE(loaded.has("playing.room3.sign"));
-	CHECK_FALSE(loaded.has("rock"));          // the kit itself is never in play
+	CHECK_FALSE(loaded.has("rock"));          // the piece itself is never in play
 	CHECK_FALSE(loaded.has("playing.room2.sign"));
 
 	CHECK(loaded.game.currentScene("playing") == "playing.room1");
@@ -506,10 +506,10 @@ TEST_CASE("names that could mean two things, and takes of nothing, stop the load
 			"<scene name=\"room1\" /><scene name=\"room2\" from=\"room9\" /></scenes>" + kSpace + "</state>"),
 			"from=\"room9\" names no scene before it");
 	}
-	SECTION("a take of a piece the kit does not have")
+	SECTION("a take of a piece that is not there")
 	{
 		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><objects><object name=\"stone\" from=\"rocks\" /></objects></scene></scenes>" + kSpace + "</state>",
-			{}, {}, kRock), "from=\"rocks\" names no piece of the <kit>");
+			{}, {}, kRock), "from=\"rocks\" names no piece of the top-level <objects>");
 	}
 	SECTION("an own object that is not complete")
 	{

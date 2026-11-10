@@ -57,7 +57,7 @@
     <style name="help"><size>24</size></style>
     <style name="hud"><size>22</size><color>color.lightgrey</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- a round bumper: kicks the ball off faster than it came, and lights -->
     <object name="bumper" class="bumper">
       <sprite name="dark"><circle><radius>18</radius><color>color.red</color></circle></sprite>
@@ -101,14 +101,14 @@
         <collision class="ball"><knock>0.3</knock></collision>
       </collisions>
     </object>
-  </kit>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">

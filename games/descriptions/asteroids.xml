@@ -18,10 +18,10 @@
   * Everything is drawn from <line>s and tested by pixel. The ship has a
     <heading>, which <turn> and <thrust> use, and its shots leave its nose.
   * What every rock is (a hazard, tested by pixel, wrapping) is said once,
-    as the rock of the <kit>, and each size is from= it, saying its picture
+    as the rock piece, and each size is from= it, saying its picture
     and how it breaks: its points and what it breaks into. A size with
     several shapes has a member per shape. The big rocks are in play; the
-    medium and small ones are the kit's, not in play until a bigger rock
+    medium and small ones are pieces, not in play until a bigger rock
     breaks: it <release>s two, spawned where it was,
     the shapes in turn, each going its own way (a <random> velocity drawn
     as it is made, never slower than its shape's least up or down), and a broken one <despawn>s.
@@ -35,7 +35,7 @@
   * A saucer falls due on a timer of the playing state, with a luck drawn;
     a condition sends the small one when the luck is below the score over
     40000, else the big one, and only when neither is out. The two are
-    members of one kit group, "ufos", so a rock size names them both in
+    members of one group piece, "ufos", so a rock size names them both in
     one rule (it breaks, no points), and they name each rock size to die.
   * The heartbeat is the playing state's <music>; the saucer warbles on a
     timer of its own, so a pause is quiet.
@@ -62,7 +62,7 @@
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>30</size></style>
   </styles>
-  <kit>
+  <objects>
     <!-- four shots in the air at most, wrapping, each gone after a second -->
     <object name="shot" class="breaker">
       <sprite><rectangle><width>3</width><height>3</height></rectangle></sprite>
@@ -259,18 +259,18 @@
         <velocity><x>2.5</x></velocity>
       </member>
     </group>
-  </kit>
-  <objects>
-    <object name="best">
-      <sprite><text style="hud"><number>best.score</number><color>color.lightgrey</color></text></sprite>
-      <position><x><centered /></x><y>margin</y></position>
-      <variables><variable name="score">0</variable></variables>
-    </object>
   </objects>
   <keeps>
     <keep object="best" />
   </keeps>
   <states>
+    <objects>
+      <object name="best">
+        <sprite><text style="hud"><number>best.score</number><color>color.lightgrey</color></text></sprite>
+        <position><x><centered /></x><y>margin</y></position>
+        <variables><variable name="score">0</variable></variables>
+      </object>
+    </objects>
     <state name="mainmenu">
       <objects>
         <object name="title">

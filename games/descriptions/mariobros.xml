@@ -36,11 +36,11 @@
   pauses.
 
   How it is written:
-  * Mario and Luigi are one kit piece, the brother, taken twice; Luigi
+  * Mario and Luigi are one piece, the brother, taken twice; Luigi
     wears the same pictures in green (<become style="luigi">). He is out of
     play until the title's 2 key sets players.count to 2, and a condition
     of the playing state brings him in.
-  * Every pest is a kit group from one piece, the pest, which holds what
+  * Every pest is a group piece from one piece, the pest, which holds what
     they share: landing, wrapping, the pipes at the bottom, lying still
     once down, kicked off by a brother, deadly to one on its feet, getting
     up by itself after eight seconds, the third colour once it has got up
@@ -139,7 +139,7 @@
       <color char="w">color.darkblue</color>
     </style>
   </styles>
-  <kit>
+  <objects>
     <!-- Mario or Luigi: a look for each way he moves, all facing right -->
     <object name="brother" class="brother">
       <sprite name="stand">
@@ -564,32 +564,32 @@
         </timer>
       </timers>
     </object>
-  </kit>
-  <objects>
-    <object name="again">
-      <sprite><text style="text"><content>space to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
-    </object>
-    <!-- the best score, kept from game to game -->
-    <object name="best">
-      <sprite><text style="text"><content>TOP</content><number>best.score</number></text></sprite>
-      <position><x><centered /></x><y>4</y></position>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
-    <!-- how many play: the title's 2 key makes it 2, and the playing
-         state brings Luigi in (then 3, so only once) -->
-    <object name="players">
-      <variables>
-        <variable name="count">1</variable>
-      </variables>
-    </object>
   </objects>
   <keeps>
     <keep object="best" />
   </keeps>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="text"><content>space to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
+      </object>
+      <!-- the best score, kept from game to game -->
+      <object name="best">
+        <sprite><text style="text"><content>TOP</content><number>best.score</number></text></sprite>
+        <position><x><centered /></x><y>4</y></position>
+        <variables>
+          <variable name="score">0</variable>
+        </variables>
+      </object>
+      <!-- how many play: the title's 2 key makes it 2, and the playing
+           state brings Luigi in (then 3, so only once) -->
+      <object name="players">
+        <variables>
+          <variable name="count">1</variable>
+        </variables>
+      </object>
+    </objects>
     <state name="mainmenu">
       <objects>
         <object name="title">

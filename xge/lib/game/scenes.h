@@ -14,7 +14,7 @@ namespace xge
 	// read from its file and one a generated program wrote out.
 	//
 	// Each scene's objects are made: what it is from= first, then, in the
-	// order written, the pieces it takes from its state's kit (or from that
+	// order written, the pieces it takes from its state's pieces (or from that
 	// scene) with what it changes in them, and its own. Each copy is its own
 	// object, named by its path: the state, the scene and the name as
 	// written (playing.room1.robots.3); a state's own objects by the state and

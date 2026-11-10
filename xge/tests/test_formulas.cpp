@@ -79,11 +79,11 @@ namespace
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables>" + variables + "</variables>"
-			"<objects><object name=\"o\"><sprite><circle><radius>5</radius></circle></sprite>"
+			"<states><objects><object name=\"o\"><sprite><circle><radius>5</radius></circle></sprite>"
 			"<position><x>" + x + "</x><y>" + y + "</y></position>"
 			"<velocity><x>0</x><y>0</y></velocity>"
 			"<collisions><enabled>false</enabled></collisions></object></objects>"
-			"<states><state name=\"playing\"><shows><show object=\"o\" /></shows>"
+			"<state name=\"playing\"><shows><show object=\"o\" /></shows>"
 			"<inputs><input button=\"space\"><pop /></input></inputs></state></states>"
 			"</game>";
 	}
@@ -571,11 +571,11 @@ namespace
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"zero\">0</variable></variables>"
-			"<objects><object name=\"" + name + "\"><sprite>" + sprite + "</sprite>"
+			"<states><objects><object name=\"" + name + "\"><sprite>" + sprite + "</sprite>"
 			"<position><x>" + x + "</x><y>0</y></position>"
 			"<velocity><x>0</x><y>0</y></velocity>"
 			"<collisions><enabled>false</enabled></collisions>" + more + "</object></objects>"
-			"<states><state name=\"playing\"><shows><show object=\"" + name + "\" /></shows>"
+			"<state name=\"playing\"><shows><show object=\"" + name + "\" /></shows>"
 			"<inputs><input button=\"space\"><pop /></input></inputs></state></states>"
 			"</game>";
 	}
@@ -707,7 +707,7 @@ TEST_CASE("a divisor that is 0 only because it is not known yet is not refused a
 		"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 		"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 		"<variables></variables>"
-		"<objects>"
+		"<states><objects>"
 		"<object name=\"a\"><sprite><circle><radius>5</radius></circle></sprite>"
 		"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity>"
 		"<collisions><enabled>false</enabled></collisions>"
@@ -717,7 +717,7 @@ TEST_CASE("a divisor that is 0 only because it is not known yet is not refused a
 		"<velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions>"
 		"<variables><variable name=\"w\">4</variable></variables></object>"
 		"</objects>"
-		"<states><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
+		"<state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
 		"<inputs><input button=\"space\"><pop /></input></inputs></state></states>"
 		"</game>";
 
