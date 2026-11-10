@@ -67,6 +67,7 @@ namespace xge
 				+ std::to_string(drawingWidth) + " by " + std::to_string(drawingHeight));
 		}
 
+		refusePictureSize(std::ceil(part.width * scale), std::ceil(part.height * scale), "an svg picture from " + path);
 		const int width = std::max(1, static_cast<int>(std::ceil(part.width * scale - 0.001f)));
 		const int height = std::max(1, static_cast<int>(std::ceil(part.height * scale - 0.001f)));
 

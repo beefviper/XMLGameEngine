@@ -9,12 +9,22 @@
 #include <cmath>
 #include <cstdlib>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace xge
 {
 	namespace
 	{
+		void refuseFar(float value, const char* what)
+		{
+			if (!(value <= static_cast<float>(kLargestPictureSide)))
+			{
+				throw std::invalid_argument(std::string(what) + " has a coordinate of " + std::to_string(value)
+					+ "; a picture is at most " + std::to_string(kLargestPictureSide) + " pixels on a side");
+			}
+		}
+
 		struct Point
 		{
 			int x{};
@@ -93,6 +103,7 @@ namespace xge
 			}
 		}
 
+		refusePictureSize(static_cast<double>(columns) * scale, static_cast<double>(rows.size()) * scale, "a bitmap");
 		Bitmap bitmap;
 		bitmap.width = static_cast<int>(columns) * scale;
 		bitmap.height = static_cast<int>(rows.size()) * scale;
@@ -133,6 +144,15 @@ namespace xge
 		return bitmap;
 	}
 
+	void refusePictureSize(double width, double height, const std::string& what)
+	{
+		if (width > kLargestPictureSide || height > kLargestPictureSide)
+		{
+			throw std::invalid_argument(what + " would be " + std::to_string(static_cast<long long>(width)) + " by "
+				+ std::to_string(static_cast<long long>(height)) + " pixels; at most " + std::to_string(kLargestPictureSide) + " on a side");
+		}
+	}
+
 	Bitmap rasterizeLines(const std::vector<LineSegment>& lines, int minWidth, int minHeight)
 	{
 		Bitmap bitmap;
@@ -147,6 +167,8 @@ namespace xge
 			{
 				throw std::invalid_argument("a line has a negative coordinate; a sprite's lines are measured from its top left corner");
 			}
+			for (const float value : { line.x1, line.y1, line.x2, line.y2 }) { refuseFar(value, "a line"); }
+			refusePictureSize(line.thickness, line.thickness, "a line's thickness");
 
 			const int thickness = std::max(line.thickness, 1);
 			for (const Point end : { rounded(line.x1, line.y1), rounded(line.x2, line.y2) })
@@ -158,6 +180,7 @@ namespace xge
 
 		bitmap.width = std::max(right, minWidth);
 		bitmap.height = std::max(bottom, minHeight);
+		refusePictureSize(bitmap.width, bitmap.height, "a picture of lines");
 		bitmap.rgba.assign(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4, 0);
 
 		for (const LineSegment& line : lines)
@@ -239,6 +262,8 @@ namespace xge
 				{
 					throw std::invalid_argument("a polygon has a negative coordinate; a sprite's points are measured from its top left corner");
 				}
+				refuseFar(x, "a polygon");
+				refuseFar(y, "a polygon");
 				right = std::max(right, x);
 				bottom = std::max(bottom, y);
 			}

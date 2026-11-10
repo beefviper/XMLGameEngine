@@ -141,6 +141,7 @@ namespace xge
 	Bitmap SheetPicture::cut(const SheetPart& part, int toWidth, int toHeight) const
 	{
 		if (toWidth < 1 || toHeight < 1) { throw std::invalid_argument("a picture cut from a sheet must be at least 1 by 1"); }
+		refusePictureSize(toWidth, toHeight, "a picture cut from " + sheet.path);
 		if (picture->surface == nullptr)
 		{
 			const Bitmap drawn = rasterizeSvg(sheet.path, { part.x, part.y, part.width, part.height }, static_cast<float>(toWidth) / part.width, sheet.hide);

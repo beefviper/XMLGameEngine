@@ -36,13 +36,15 @@ endif()
 # branches, pointless casts and && / || on the same operand.
 function(xge_warnings target)
 	# A sanitizer build (XGE_SANITIZE, options.cmake): instrumented, and
-	# without the strict warnings, which make it many times slower to compile.
+	# without the strict warnings, which make it many times slower to compile,
+	# and not optimized: with GCC 13 the verbs' one unit took over two hours
+	# at -O1 with the sanitizers, and 14 seconds at -O0.
 	if (XGE_SANITIZE)
 		set(flags -fsanitize=address,undefined -fno-omit-frame-pointer)
 		if (XGE_SANITIZE STREQUAL "thread")
 			set(flags -fsanitize=thread -fno-omit-frame-pointer)
 		endif()
-		target_compile_options(${target} PRIVATE ${flags} -w -g)
+		target_compile_options(${target} PRIVATE ${flags} -w -g -O0)
 		target_link_options(${target} PUBLIC ${flags})
 		return()
 	endif()

@@ -53,7 +53,7 @@ Direct answers, as asked. Each is argued once here and turned into tasks below.
 | `xgetest-generated` (all 58 games generated, compiled, compared, played) | pass, 0 warnings |
 | Random keys: each game, 20,000 frames, 2 seeds, 25 keys toggled at random | 116 of 116 clean |
 | Damaged files: 40 per game, 2,320 in all, 3,000 frames each when they load | 0 crashes, 0 hangs; 1,580 refused with a message (451 by the schema, the rest by the loader); 699 loaded; 22 loaded with a position or size of infinity (B4, done) |
-| The engine rebuilt with the address sanitizer (18 of its 47 files with the undefined-behaviour one too), every game played 6,000 frames of random keys | 58 of 58 clean. The test files were not run under it: with the strict warnings on, GCC took over fifteen minutes a file ([T3](#t3-a-sanitizer-run-that-is-one-command)) |
+| The engine rebuilt with the address sanitizer (18 of its 47 files with the undefined-behaviour one too), every game played 6,000 frames of random keys | 58 of 58 clean. The test files were not run under it: with the strict warnings on, GCC took over fifteen minutes a file (T3, done) |
 | Plain build (no options) and `xgegui` with Qt 6 | 277 steps, 0 warnings; `xgecli` and `xgegui` link (Qt 6.4). Not run: no display |
 | Agreement scripts: every schema element against the reader, the generator, the reference docs, the tests and the games; every command against `makeCommand`, the schema, `data.xsl`, `commands.md` | All agree. Gaps: 15 elements no game uses, 45 no test names in XML, `call`, `clear`, `collapse`, `fall`, `order` are not in `commands.md` (they are on the maps and cards pages) |
 
@@ -213,13 +213,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 - **Verify.** `ctest`, `xgetest-generated`.
 
 ### Phase 2: a safety net for the reduction
-
-#### T3. A sanitizer run that is one command
-
-- **Size** S. **Needs** nothing.
-- **Files.** `scripts/cmake/options.cmake` (an option `XGE_SANITIZE`, off by default, adding `-fsanitize=address,undefined -fno-omit-frame-pointer` to `xgelib`, `xgecli` and `xgetest` only, GCC and Clang only), `docs/reference/engine.md` "Building", `docs/agents/notes.md`.
-- **Do.** The option; a note that fetched libraries are not instrumented, so run with `ASAN_OPTIONS=detect_container_overflow=0`. Turn the strict warnings off in a sanitized build (`-w` in place of `xge_warnings`): with both, GCC 13 at `-O1` took more than fifteen minutes on each large file in the review, and a few seconds without. Run the whole of `xgetest` and `xgetest-long` under it once and fix or list what it finds. The board-game search runs on its own thread in a window (`thinkInBackground`): add one test that plays a Checkers computer move through `Engine::loop` with the fake window so the threaded path is covered, and run it under `-fsanitize=thread` once.
-- **Done.** A clean run recorded in `docs/designs/58-open-work.md` under "Known untested" (remove the line that says a sanitizer run was never completed).
 
 #### T4. A Windows check list kept in the repository
 
@@ -564,7 +557,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Block 2  (the loud-typos work, then the net; Block 1 is done)
-  T3  sanitizer option and one clean run
   B5  one frame pacer
   T4  Windows check list              (or the build job, by D3)
 

@@ -16,6 +16,7 @@
 #include "scratch.h"
 #include "file_text.h"
 #include "picture/bitmap.h"
+#include "picture/font.h"
 #include "play/collision.h"
 #include "play/executor.h"
 #include "engine/folder.h"
@@ -261,6 +262,16 @@ TEST_CASE("endpoints are rounded to whole pixels, no lines make an empty bitmap,
 	CHECK_FALSE(none.solidAt(0, 0));
 
 	CHECK_THROWS_AS(rasterizeLines({ segment(-1, 0, 4, 0) }), std::invalid_argument);
+}
+
+TEST_CASE("a picture or text larger than 4096 pixels on a side is refused before it is drawn", "[lines]")
+{
+	// A damaged file once asked for a line out at 1e9, which wanted hundreds of gigabytes.
+	CHECK_THROWS_AS(rasterizeLines({ segment(0, 0, 1.0e9f, 4) }), std::invalid_argument);
+	CHECK_THROWS_AS(rasterizeLines({ segment(0, 0, 5000, 4) }), std::invalid_argument);
+	CHECK_THROWS_AS(rasterizePolygons({ FilledPolygon{ { { 0.0f, 0.0f }, { 1.0e9f, 0.0f }, { 0.0f, 9.0f } }, {} } }), std::invalid_argument);
+	CHECK(rasterizeLines({ segment(0, 0, 4000, 4) }).width == 4001);
+	CHECK_THROWS_AS(rasterizeText("hello", 100000, Color{}), std::invalid_argument);
 }
 
 TEST_CASE("two one-pixel lines can cross without touching a pixel, two-pixel lines cannot", "[lines]")

@@ -67,6 +67,12 @@ namespace xge
 		int thickness{ 1 };
 	};
 
+	// The largest side of any picture the engine makes, far beyond any screen.
+	// refusePictureSize throws std::invalid_argument for a larger one, before
+	// anything is allocated: a damaged size of 1e9 would ask for gigabytes.
+	constexpr int kLargestPictureSide = 4096;
+	void refusePictureSize(double width, double height, const std::string& what);
+
 	// Draws the lines, in the order given (a later one covers an earlier one
 	// where they meet), onto a transparent bitmap just large enough to hold
 	// them: it reaches the right-most and bottom-most point plus the

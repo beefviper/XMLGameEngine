@@ -42,6 +42,7 @@ The [plan](../plan.md) reviews this backlog, argues with parts of it, and orders
 
 ## Known untested
 
+- Sanitizers: the whole of `xgetest` is clean under `-DXGE_SANITIZE=address` (address and undefined behaviour), as are `xgetest-long`'s random keys and damaged files; the board-game search on its own thread is clean under `-DXGE_SANITIZE=thread`. The damaged files found one fault: a line out at 1e9 or a text of a huge size asked for hundreds of gigabytes. Pictures and texts are now at most 4096 pixels a side (`refusePictureSize`). Generated programs and `xgegui` have not been run under one.
 - MSVC is checked by hand, not automatically; older versions are untested.
 - A default build (no options) and one with only `-DXGE_WITH_OPENGL=ON` have no automatic check ([build-and-layout](51-build-and-layout.md)).
 - Agents build in a Linux sandbox and cannot watch or listen, so how a game feels and sounds is unchecked.

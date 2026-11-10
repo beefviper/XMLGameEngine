@@ -195,6 +195,7 @@ namespace xge
 			return bitmap;
 		}
 
+		refusePictureSize(static_cast<double>(longest) * cellWidth, static_cast<double>(lines.size()) * cellHeight, "a text");
 		bitmap.width = static_cast<int>(longest) * cellWidth;
 		bitmap.height = static_cast<int>(lines.size()) * cellHeight;
 		bitmap.rgba.assign(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4, 0);
