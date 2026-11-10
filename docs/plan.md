@@ -72,7 +72,7 @@ The scripts used are small and are described in [T1](#t1-keep-the-reviews-checks
 | 3 | Two objects of one name in the same `<objects>` become one, silently; two states of one name are accepted; one key bound twice in a state is accepted | `score2` renamed `score1` in `pong.xml`: 28 objects instead of 29, no message. `mainmenu` renamed `playing`: loads | B3, done |
 | 4 | Text arithmetic that divides by zero gives infinity, which becomes a position or a size | `<x>1 / 0</x>` in 22 damaged files: loads, object at infinity | B4, done |
 | 5 | Game speed depends on the window library and the monitor | `window/sdl2.cpp`: `SDL_RENDERER_PRESENTVSYNC` and no other pacing. `sfml.cpp`: `setFramerateLimit`. `raylib.cpp`, `opengl.cpp`: their own clocks. `gui/game_session.cpp`: a fifth | [B5](#b5-one-frame-pacer-in-the-engine) |
-| 6 | Nonsense sizes and times are accepted | `<width>0</width>` on the window, a text `<size>0</size>`, `<after>-1</after>`, `<framerate>0</framerate>` all load | [B6](#b6-ranges-for-the-numbers-that-have-one) |
+| 6 | Nonsense sizes and times are accepted | `<width>0</width>` on the window, a text `<size>0</size>`, `<after>-1</after>`, `<framerate>0</framerate>` all load | B6, done |
 | 7 | Load errors from the reader say which tag but not which line | Only Xerces' schema errors carry `line N column M`; the reader's own `fail(where, ...)` has a path of tags | [B7](#b7-line-numbers-in-load-errors) |
 | 8 | Stale text | `ruleFor` in `load/check.cpp` still lists `<reveal pile>`, `<shuffle>`, `<redeal />`, `<collect>`; the schema's comment at the patterns type names `<suited>`; `RawCommand::pile`'s comment lists removed verbs; `docs/agents/notes.md` says 55 games; `docs/reference/engine.md` says `<sheets>`; `docs/designs/27-cards.md` line 13 gives a name where the privacy rule in the notes says "the author" | B8, done |
 | 9 | One test is flaky, and behind it Crazy Eights can fail to end | `crazyeights.xml: a whole game against the computer, playing the first card that goes, ends` (`xge/tests/test_cards.cpp:807`) fails on 2 seeds of 60: `xgetest --rng-seed 7029` and `7036`. The game is still `playing` after 300 turns | B9, done: not a deadlock, the bound was too tight |
@@ -218,13 +218,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 - **Careful.** `docs/agents/notes.md`, "Backends and build": raylib's `pollEvents()` must not call `PollInputEvents()`, and a paused front end calls `Engine::pump()`. Do not change those.
 - **Done.** No window file mentions a frame rate. `xgecli pong -w sdl2`, `-w raylib`, `-w opengl` and the default all take the same time to play the same demo.
 - **Verify.** Build with every backend and with none of the options (`cmake -S . -B /tmp/plain`), `ctest`. Time `xgecli galaxian -a none` under each `-w` with Xvfb for ten seconds of the attract demo and compare frame counts (print the count on exit behind an environment variable, or use F1 once it exists). The author checks on a monitor faster than 60 Hz.
-
-#### B6. Ranges for the numbers that have one
-
-- **Size** S. **Needs** nothing.
-- **Files.** `games/xgedef.xsd` (window `width`, `height`, `framerate`, `scale`), `xge/lib/load/xml.cpp` and `expr.cpp` for what the schema cannot see because it is a value (`<size>` of a text, `<after>`, `<seconds>`, `<radius>`, `<thickness>`), tests in `xge/tests/test_xml_format.cpp`.
-- **Do.** Window width and height at least 1; frame rate 1 to 240; a text size above 0; `<after>` 0 or more; `<seconds>` 0 or more; a radius, width, height, thickness 0 or more (0 is used for objects that only hold numbers: check before refusing). Follow the wording of the existing "`<every>` is 0; expected a number of seconds above 0".
-- **Done.** A test per number; all games load.
 
 #### B7. Line numbers in load errors
 
@@ -617,7 +610,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Block 1  (a day or two; no decisions needed)
-  B6  number ranges
   T2  xgecli --check
   R2  <jump> becomes <hop>            (the practice run for a removal)
 

@@ -25,8 +25,10 @@ namespace xge
 	//     may contain itself, through its elements, as a <formula>'s operands
 	//     do; a group may not);
 	//   * xs:attribute (name/type/use) on any complexType;
-	//   * xs:simpleType > xs:restriction > xs:enumeration, and the built-ins
-	//     xs:string, xs:boolean, xs:integer, xs:unsignedByte, xs:unsignedShort.
+	//   * xs:simpleType > xs:restriction > xs:enumeration or (of a whole
+	//     number) xs:minInclusive, and the built-ins xs:string, xs:boolean,
+	//     xs:integer, xs:unsignedByte, xs:unsignedShort, xs:positiveInteger,
+	//     xs:nonNegativeInteger and xs:NMTOKEN.
 	//
 	// No xs:import/include, xs:extension, xs:simpleContent, xs:all, keys...
 	// Exists only because Xerces is the one backend able to run *real* schema

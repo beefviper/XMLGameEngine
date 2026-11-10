@@ -12,6 +12,7 @@
 #include <charconv>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <set>
 #include <vector>
 
@@ -83,6 +84,7 @@ namespace xge
 		{
 			std::vector<std::string> enumeration; // empty: any value the built-in base allows
 			std::string base;
+			std::optional<long long> minInclusive; // a whole number's lowest (integer bases only)
 		};
 
 		struct ComplexType;
@@ -211,6 +213,10 @@ namespace xge
 				if (localName(facet->getName()) == "enumeration")
 				{
 					simpleType.enumeration.push_back(facet->getAttribute("value"));
+				}
+				else if (localName(facet->getName()) == "minInclusive")
+				{
+					simpleType.minInclusive = std::stoll(facet->getAttribute("value"));
 				}
 			}
 		}
@@ -534,6 +540,10 @@ namespace xge
 		{
 			const auto& enumeration = simple->second.enumeration;
 			if (!enumeration.empty() && std::find(enumeration.begin(), enumeration.end(), value) == enumeration.end())
+			{
+				return false;
+			}
+			if (simple->second.minInclusive && !isIntegerInRange(value, *simple->second.minInclusive, INT64_MAX))
 			{
 				return false;
 			}

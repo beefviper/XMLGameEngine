@@ -3295,6 +3295,10 @@ namespace xge
 		windowDesc.name = requireAttribute(*window, "name", windowHere);
 		windowDesc.width = std::stof(readText(*requireChild(*window, "width", windowHere)));
 		windowDesc.height = std::stof(readText(*requireChild(*window, "height", windowHere)));
+		for (const auto& [side, size] : { std::pair{ "width", windowDesc.width }, std::pair{ "height", windowDesc.height } })
+		{
+			if (!(size >= 1.0f)) { fail(windowHere, std::string("<") + side + "> is " + formatDisplayNumber(size) + "; expected a number of pixels, 1 or more"); }
+		}
 		if (std::unique_ptr<XmlNode> scale = findChild(window.get(), "scale"))
 		{
 			windowDesc.scale = std::stoi(readText(*scale));
@@ -3307,6 +3311,7 @@ namespace xge
 		windowDesc.background = background ? readText(*background) : "color.black";
 		windowDesc.fullscreen = fullscreen && readBool(*fullscreen, windowHere) ? "true" : "false";
 		windowDesc.framerate = framerate ? std::stoi(readText(*framerate)) : 60;
+		if (windowDesc.framerate < 1) { fail(windowHere, "<framerate> is " + std::to_string(windowDesc.framerate) + "; expected a number of frames a second, 1 or more"); }
 
 		// load variables
 		readVariables(variablesNode.get(), "<variables>", rawVariables);

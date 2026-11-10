@@ -803,6 +803,8 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 		{ "a command that does not exist", "<bounce />", "<explode />", "explode" },
 		{ "a window width that is not a number", "<width>1280</width>", "<width>huge</width>", "not a valid" },
 		{ "a window scale of nothing", "<height>720</height>", "<height>720</height><scale>0</scale>", "not a valid" },
+		{ "a window width of 0", "<width>1280</width>", "<width>0</width>", "not a valid" },
+		{ "a framerate of 0", "<height>720</height>", "<height>720</height><framerate>0</framerate>", "not a valid" },
 		{ "an edge that is not one", "<collision edge=\"vertical\">", "<collision edge=\"middle\">", "edge" },
 		{ "a <random> with no max", "<random><min>-30</min><max>30</max></random>", "<random><min>-30</min></random>", "max" },
 		{ "several keys in one button=", "<input button=\"w\">", "<input button=\"w up\">", "not a valid" },
@@ -843,6 +845,34 @@ TEST_CASE("an input names one key by button=, or several by a <button> each", "[
 		ContainsSubstring("has button=\"space\" and a <button>; use one or the other"));
 	REQUIRE_THROWS_WITH(Loaded(withInput("<input><pop /></input>")),
 		ContainsSubstring("names a button"));
+}
+
+TEST_CASE("a number with a range stops the load outside it, read without the schema too", "[xml_format][errors]")
+{
+	const std::string good = gameXml("", objectXml(ObjectXml{}));
+	const auto with = [&](const std::string& from, const std::string& to)
+	{
+		std::string xml = good;
+		xml.replace(xml.find(from), from.size(), to);
+		return xml;
+	};
+
+	REQUIRE_THROWS_WITH(Loaded(with("<width>800</width>", "<width>0</width>")), ContainsSubstring("<window>: <width> is 0; expected a number of pixels, 1 or more"));
+	REQUIRE_THROWS_WITH(Loaded(with("<height>600</height>", "<height>-5</height>")), ContainsSubstring("<height> is -5; expected a number of pixels, 1 or more"));
+	REQUIRE_THROWS_WITH(Loaded(with("<framerate>60</framerate>", "<framerate>0</framerate>")), ContainsSubstring("<framerate> is 0; expected a number of frames a second, 1 or more"));
+	CHECK_NOTHROW(Loaded(with("<framerate>60</framerate>", "<framerate>500</framerate>")));
+
+	ObjectXml circle;
+	circle.sprite = "<circle><radius>-2</radius></circle>";
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(circle))), ContainsSubstring("<circle> > <radius> is -2; expected a number of pixels, 0 or more"));
+	ObjectXml box;
+	box.sprite = "<rectangle><width>10</width><height>-1</height></rectangle>";
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(box))), ContainsSubstring("<rectangle> > <height> is -1; expected a number of pixels, 0 or more"));
+	box.sprite = "<rectangle><width>0</width><height>0</height></rectangle>";
+	CHECK_NOTHROW(Loaded(gameXml("", objectXml(box))));
+	ObjectXml text;
+	text.sprite = "<text><content>hi</content><size>0</size></text>";
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(text))), ContainsSubstring("<text> > <size> is 0; expected a number of pixels above 0"));
 }
 
 TEST_CASE("two things of one name in one place stop the load", "[xml_format][errors]")

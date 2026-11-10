@@ -815,10 +815,10 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 			ContainsSubstring("above 0"));
 	}
 
-	SECTION("seconds in a window with no framerate to count them in")
+	SECTION("a window with a framerate of 0, which could count no seconds")
 	{
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, kTwoFrames), shows, 0)),
-			ContainsSubstring("object 'thing'") && ContainsSubstring("framerate"));
+			ContainsSubstring("<framerate> is 0; expected a number of frames a second, 1 or more"));
 	}
 
 	SECTION("frames that are not all the same size")

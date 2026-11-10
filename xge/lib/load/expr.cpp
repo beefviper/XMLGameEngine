@@ -1969,6 +1969,16 @@ namespace xge
 		return pieces;
 	}
 
+	namespace
+	{
+		// A size that cannot be negative (0 is an object that only holds numbers).
+		float atLeastZero(float value, const std::string& where)
+		{
+			if (value < 0.0f) { throw std::runtime_error(where + " is " + formatDisplayNumber(value) + "; expected a number of pixels, 0 or more"); }
+			return value;
+		}
+	}
+
 	Picture game_expr::buildPicture(const RawSprite& sprite, const std::string& where,
 		std::shared_ptr<const Bitmap>* bitmap, std::shared_ptr<const Turnable>* turnable, const RawObject* self)
 	{
@@ -2149,13 +2159,13 @@ namespace xge
 		else if (sprite.kind == "circle")
 		{
 			picture.kind = ShapeKind::Circle;
-			picture.radius = evaluate(sprite.radius, where);
+			picture.radius = atLeastZero(evaluate(sprite.radius, where), where + " > <circle> > <radius>");
 		}
 		else if (sprite.kind == "rectangle")
 		{
 			picture.kind = ShapeKind::Rectangle;
-			picture.size.x = evaluate(sprite.width, where);
-			picture.size.y = evaluate(sprite.height, where);
+			picture.size.x = atLeastZero(evaluate(sprite.width, where), where + " > <rectangle> > <width>");
+			picture.size.y = atLeastZero(evaluate(sprite.height, where), where + " > <rectangle> > <height>");
 		}
 		else if (sprite.kind == "text")
 		{
@@ -2168,7 +2178,9 @@ namespace xge
 			}
 			picture.kind = ShapeKind::Text;
 			picture.text = joinText(textPieces(sprite, where, self));
-			picture.textSize = static_cast<int>(evaluate(sprite.size, where));
+			const float size = evaluate(sprite.size, where);
+			if (!(size > 0.0f)) { throw std::runtime_error(where + " > <text> > <size> is " + formatDisplayNumber(size) + "; expected a number of pixels above 0"); }
+			picture.textSize = static_cast<int>(size);
 			picture.font = sprite.font;
 		}
 		else if (sprite.kind == "image")

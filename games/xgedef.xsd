@@ -1122,6 +1122,13 @@
     <xs:attribute name="group" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
+  <!-- a window's width or height in pixels: 1 or more -->
+  <xs:simpleType name="windowSizeType">
+    <xs:restriction base="xs:unsignedShort">
+      <xs:minInclusive value="1" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:complexType name="scoreType">
     <xs:sequence>
       <!-- melds: scored instead by laying the things held out in groups, each making one of the named
@@ -2652,14 +2659,14 @@
         <xs:element name="window">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="width" type="xs:unsignedShort" />
-              <xs:element name="height" type="xs:unsignedShort" />
+              <xs:element name="width" type="windowSizeType" />
+              <xs:element name="height" type="windowSizeType" />
               <!-- scale: each of the game's pixels drawn as a square this many window pixels across -->
               <xs:element name="scale" type="xs:positiveInteger" minOccurs="0" />
               <!-- left out: color.black, false and 60 -->
               <xs:element name="background" type="xs:string" minOccurs="0" />
               <xs:element name="fullscreen" type="xs:boolean" minOccurs="0" />
-              <xs:element name="framerate" type="xs:unsignedByte" minOccurs="0" />
+              <xs:element name="framerate" type="xs:positiveInteger" minOccurs="0" />
             </xs:sequence>
             <xs:attribute name="name" type="xs:string" use="required" />
           </xs:complexType>
