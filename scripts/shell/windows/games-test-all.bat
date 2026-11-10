@@ -4,7 +4,7 @@ rem XML Game Engine
 rem author: beefviper
 rem
 rem Builds and runs xgetest-generated, the generated games' tests
-rem (xge/tests/test_generated_games.cpp): building it generates every game
+rem (xge/tests/generated/test_generated_games.cpp): building it generates every game
 rem into build\generated\ and compiles each one's data in, and each is played
 rem beside the engine playing its file, every object compared every frame.
 rem An ordinary build never builds it. Run it from the repo root:

@@ -96,4 +96,4 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
 | | `xge/gui/source/` | `main_window`, `game_session`, `game_stage`, `game_view`, `qt_window`, `key_queue`, `options_dialog`, `session_options`, `app_settings` (`xgegui.ini`), `inspector`, `theme` |
 | generator | `games/generators/windows-cpp/` | `generate.xsl`, `merge.xsl`, `data.xsl`, `program.xsl`, `text.xsl`, `engine.xml`, `modules/game_parts.h` |
-| tests | `xge/tests/` | one `test_<topic>.cpp` per area and per game (played frame by frame). `played.h` is shared, `invaders_fixture.h` a frozen Space Invaders, `scratch.h` a scratch name per run. `xgetest "[.speed]"` prints load and frame times |
+| tests | `xge/tests/` | `engine/` one `test_<topic>.cpp` per area; `games/` one per game (played frame by frame); `generated/` the generated games (`xgetest-generated`); `helpers/` what they share: `played.h`, `invaders_fixture.h` a frozen Space Invaders, `scratch.h` a scratch name per run, `test_main.cpp`. `xgetest "[.speed]"` prints load and frame times |

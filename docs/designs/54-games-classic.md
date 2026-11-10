@@ -1,6 +1,6 @@
 # Games as tests: the first games
 
-**Status:** Every game in `games/descriptions/` is built; most are played frame by frame in `xge/tests/test_<game>.cpp`. All were rewritten once with the newer vocabulary, closer to the originals in graphics, sound and play. The list: [the shipped games](../reference/games.md).
+**Status:** Every game in `games/descriptions/` is built; most are played frame by frame in `xge/tests/games/test_<game>.cpp`. All were rewritten once with the newer vocabulary, closer to the originals in graphics, sound and play. The list: [the shipped games](../reference/games.md).
 
 ## What each game forced
 
