@@ -1,0 +1,33 @@
+// silence.cpp
+// XML Game Engine
+// author: beefviper
+// date: Nov 10, 2026
+
+#include "verbs/verb.h"
+#include "game/game.h"
+#include "play/executor.h"
+
+namespace xge
+{
+	// <silence>: Stops a sound that loops.
+	static Command makeSilence(const RawCommand& raw, const ValueEvaluator&)
+	{
+		return CmdSilence{ raw.sound };
+	}
+
+	static bool runSilence(const Command& command, const Doer&, CommandExecutor& executor)
+	{
+		executor.game.silenceSound(std::get<CmdSilence>(command).sound);
+		return true;
+	}
+
+	extern const Verb silenceVerb;
+	const Verb silenceVerb{
+		.name = "silence",
+		.forms = { { "<silence>", places::changes, kindOf<CmdSilence>() } },
+		.formOf = nullptr,
+		.onRelease = false,
+		.make = makeSilence,
+		.run = runSilence,
+	};
+}

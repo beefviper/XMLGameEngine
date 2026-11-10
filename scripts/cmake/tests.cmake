@@ -101,6 +101,7 @@ add_executable(xgetest
 	"xge/tests/test_galaxian.cpp"
 	"xge/tests/test_pitfall.cpp"
 	"xge/tests/test_places.cpp"
+	"xge/tests/test_verbs.cpp"
 	"xge/tests/test_missilecommand.cpp"
 	"xge/tests/test_combat.cpp"
 	"xge/tests/test_airseabattle.cpp"

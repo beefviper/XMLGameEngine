@@ -114,211 +114,34 @@ namespace xge
 		return run(command, doer);
 	}
 
-	namespace
-	{
-		// What a let-go key still does: a held verb stops (a move, a climb,
-		// a thrust, a turn, a sound that loops), and an action it runs is
-		// let go too. Anything else belongs to the press alone.
-		bool actsOnLettingGo(const Command& command) noexcept
-		{
-			return std::holds_alternative<CmdMove>(command) || std::holds_alternative<CmdClimb>(command)
-				|| std::holds_alternative<CmdAccelerate>(command) || std::holds_alternative<CmdTurn>(command)
-				|| std::holds_alternative<CmdThrust>(command) || std::holds_alternative<CmdSwing>(command) || std::holds_alternative<CmdPlay>(command)
-				|| std::holds_alternative<CmdTriggerAction>(command);
-		}
-	}
-
 	bool CommandExecutor::run(const Command& command, const Doer& doer)
 	{
-		if (!doer.pressed && !actsOnLettingGo(shapeOf(command))) { return true; }
+		// A let-go key: only a held verb still acts (a move, a climb, a
+		// thrust, a turn, a sound that loops stops; an action it runs is let
+		// go too). Anything else belongs to the press alone.
+		const Verb* shape = verbOf(command);
+		if (!doer.pressed && !(shape && shape->onRelease)) { return true; }
 
-		Object* const self = doer.self;
-		const bool pressed = doer.pressed;
+		// A command whose numbers change as the game runs is made again first.
 		Command made;
-		bool done = true;
-		std::visit(overload{
-			// About the object running it; a state's lists have none.
-			[&](const CmdReset&) { if (self) { restart(*self); } else { game.resetAll(); } },
-			[&](const CmdDie&) { if (self) { xge::die(*self); } },
-			[&](const CmdStop&) { if (self) { xge::stop(*self); } },
-			// A picker puts back the piece it holds; refused in the middle
-			// of a run of jumps.
-			[&](const CmdDrop&)
+		const Command& current = doer.pressed ? now(command, made) : shapeOf(command);
+
+		// A condition in an action: its commands while it holds, up to one
+		// refused.
+		if (const auto* when = std::get_if<CmdWhen>(&current))
+		{
+			if (!when->body || !when->body->test || !game.testHolds(*when->body->test)) { return true; }
+			for (const Command& inner : when->body->commands)
 			{
-				if (self && self->hand.is) { done = game.dropCards(*self); }
-				else if (self && !self->picked.empty()) { done = game.dropPiece(*self); }
-				else if (self) { xge::drop(*self); }
-			},
-			[&](const CmdReverse&)
-			{
-				// On a map of cells, a <go> turns round.
-				if (self && self->onCells && self->cellGoing)
-				{
-					const Direction way = self->cellGoWay;
-					self->cellGoWay = way == Direction::Up ? Direction::Down : way == Direction::Down ? Direction::Up : way == Direction::Left ? Direction::Right : Direction::Left;
-					self->facing = self->cellGoWay;
-				}
-				else if (self) { reverse(*self); }
-			},
-			[&](const CmdRelease& r) { if (self) { release(*self, r.target, r.count); } },
-			[&](const CmdFire& f) { if (self) { done = spawnProjectile(*self, f.projectileName); } },
-			[&](const CmdChase& c) { if (self) { chase(*self, c); } },
-			[&](const CmdAim& a) { if (self) { done = aim(*self, a); } },
-			[&](const CmdHunt& h) { if (self) { startHunt(*self, h); } },
-			[&](const CmdHuntHop& h) { if (self) { done = huntByHop(*self, h); } },
-			[&](const CmdWander& w) { if (self) { startWander(*self, w); } },
-			// In an action a move is held, like a key; anywhere else it is
-			// one step, the whole block in lockstep with it.
-			[&](const CmdMove& m)
-			{
-				if (!self) { return; }
-				if (doer.action && self->onCells) { game.holdCellMove(*self, m, pressed); }
-				else if (doer.action) { holdMove(*self, m.direction, m.step, pressed); }
-				else { moveByStep(*self, m.direction, m.step); }
-			},
-			// A bounce off what it touched, or off the screen's edge.
-			[&](const CmdBounce& b)
-			{
-				if (self && doer.touch && doer.other) { xge::bounce(*self, *doer.other, *doer.touch, b.share); }
-				else if (self && doer.screenEdge) { bounceScreenEdge(*self, *doer.screenEdge, b.share); }
-			},
-			// The screen edge's own.
-			[&](const CmdStick&)
-			{
-				if (self && doer.screenEdge) { xge::stick(*self, game.getWindowDesc(), *doer.screenEdge); }
-				else if (self && doer.touch) { stickAgainst(*self, doer.touch->edge); }
-			},
-			[&](const CmdWrap&) { if (self && doer.screenEdge) { xge::wrap(*self, game.getWindowDesc(), *doer.screenEdge); } },
-			// What it touched.
-			[&](const CmdDeflect& d) { if (self && doer.touch) { xge::deflect(*self, *doer.other, doer.touch->edge, d.maxAngle); } },
-			[&](const CmdKnock& k) { if (self && doer.touch) { knock(*self, *doer.other, *doer.touch, k.bounce); } },
-			[&](const CmdHole& h) { if (self && doer.touch) { cutHole(*self, *doer.other, h.radius, h.rough); } },
-			[&](const CmdRide&) { if (self && doer.touch) { xge::ride(*self, *doer.other); } },
-			[&](const CmdCarry&) { if (self && doer.touch) { carry(*self, *doer.other); } },
-			[&](const CmdLand&) { if (self && doer.touch) { land(*self, *doer.other, doer.touch->edge); } },
-			// The controls an action holds: a press, or on while it is down.
-			[&](const CmdHop& h) { if (self) { done = hop(*self, h); } },
-			[&](const CmdJump& j) { if (self && doer.action) { done = startJump(*self, j); } },
-			[&](const CmdGo& g)
-			{
-				if (self && self->onCells) { done = game.goCells(*self, g.direction, g.speed); }
-				else if (self && doer.action) { startGo(*self, g); }
-			},
-			[&](const CmdLeap& l) { if (self && doer.action) { done = leap(*self, l.height); } },
-			[&](const CmdClimb& c)
-			{
-				if (!self || !doer.action) { return; }
-				self->activeClimb[c.direction == Direction::Up ? 0 : 1] = pressed ? c.step : 0.0f;
-				self->climbClass = c.ladderClass;
-				self->climbOnce = pressed && doer.byRule;
-			},
-			[&](const CmdAccelerate& a) { if (self && doer.action) { applyActionThrust(*self, a.direction, pressed ? a.amount : 0.0f, a.burn); } },
-			[&](const CmdTurn& t)
-			{
-				if (!self || !doer.action) { return; }
-				// A shape on a cell map: a quarter turn on the press.
-				if (self->isShape()) { if (pressed) { done = game.turnCells(*self, t.direction == Direction::Right); } }
-				else { applyActionTurn(*self, t.direction, pressed ? t.rate : 0.0f); }
-			},
-			[&](const CmdThrust& t) { if (self && doer.action) { applyActionThrustAhead(*self, *doer.action, pressed ? t.amount : 0.0f, t.burn); } },
-			[&](const CmdSwing& s)
-			{
-				if (!self || !doer.action) { return; }
-				self->swingFrames = std::max(1, game.framesFor(s.seconds));
-				self->swingBy = s.by;
-				self->swingHeld = pressed;
-			},
-			// The game's own: a state's list, and the rest.
-			[&](const CmdPushState& c) { game.pushState(c.name); },
-			[&](const CmdPopState& c) { game.popState(c.name); },
-			[&](const CmdTurns& t) { if (!self) { game.startTurns(t.players); } },
-			[&](const CmdPass& p)
-			{
-				if (p.member >= 0) { done = game.passPlayersTo(p.group.empty() && self ? self->groupName : p.group, p.member); }
-				else if (!p.group.empty()) { if (Object* on = game.onTurn(p.group)) { done = game.passPlayers(*on); } }
-				else if (!self) { game.passTurn(false); }
-				else if (self->takesTurns) { done = game.passPlayers(*self); }
-			},
-			[&](const CmdOut&) { if (!self) { game.passTurn(true); } },
-			[&](const CmdDemo&) { if (!self) { game.requestDemo(); } },
-			[&](const CmdIncrement& i) { game.addTo(i.target, i.amount); },
-			[&](const CmdDecrement& d) { game.addTo(d.target, -d.amount); },
-			[&](const CmdCopy& c) { game.copyVariable(c.from, c.into); },
-			[&](const CmdRank& c) { game.rank(c.entry, c.table); },
-			[&](const CmdSet& c) { game.setNumber(c.target, c.value); },
-			[&](const CmdPlay& p) { playHeld(p.sound, pressed); },
-			[&](const CmdSilence& c) { game.silenceSound(c.sound); },
-			[&](const CmdResetObject& r) { game.resetObject(r.target); },
-			[&](const CmdBecome& b) { become(self, b); },
-			[&](const CmdReveal& r) { game.reveal(r.target, r.count); },
-			[&](const CmdShift& m) { game.shift(m.target, m.by); },
-			[&](const CmdFollow& f) { follow(self, f); },
-			[&](const CmdEnterScene& e) { game.enter(e); },
-			[&](const CmdResetScene& r) { game.reset(r); },
-			[&](const CmdSpawn& c) { done = spawn(c, self); },
-			[&](const CmdSend& s)
-			{
-				// Members of a held class, holder to holder; else a piece, map to map.
-				if (s.held)
-				{
-					done = game.sendHeld(s.from, s.into, s.count, s.all, s.sprite);
-					return;
-				}
-				const auto cell = [](const std::optional<float>& given) { return given ? std::optional<int>(static_cast<int>(std::lround(*given))) : std::nullopt; };
-				done = game.sendCells(s.target, s.from, s.into, cell(s.column), cell(s.row));
-			},
-			[&](const CmdDespawn& d) { despawn(self, d); },
-			// A cell map's.
-			[&](const CmdSettle&) { if (self) { game.settle(*self); } },
-			[&](const CmdSlide& m)
-			{
-				if (!m.objClass.empty()) { done = game.slideClass(m.objClass, m.direction); }
-				else if (self && self->onCells) { game.slideCells(*self, m.direction); }
-			},
-			[&](const CmdClear&) { if (doer.match) { game.clearCells(*doer.match); } },
-			[&](const CmdCollapse&) { if (doer.match) { game.collapseCells(*doer.match); } },
-			[&](const CmdFall& fall) { if (doer.match) { game.fallCells(doer.match->map, fall.objClass); } },
-			[&](const CmdCycle&) { if (self) { game.cycleCells(*self); } },
-			[&](const CmdGrow&) { if (self && !self->chain.empty()) { ++self->chainGrow; } },
-			[&](const CmdSplit&) { if (self) { game.splitChain(*self); } },
-			[&](const CmdThrough&) { if (self && doer.touch) { game.stepThrough(); } },
-			[&](const CmdShove&) { done = self && doer.touch && doer.other && game.shoveCells(*doer.other, doer.touch->edge); },
-			[&](const CmdMerge& m) { done = self && doer.touch && doer.other && game.mergeCells(*self, *doer.other, m.variable); },
-			[&](const CmdUndo&) { done = game.undo(); },
-			// A condition in an action: its commands while it holds, up to
-			// one refused.
-			[&](const CmdWhen& when)
-			{
-				if (!when.body || !when.body->test || !game.testHolds(*when.body->test)) { return; }
-				for (const Command& inner : when.body->commands)
-				{
-					if (!run(inner, doer)) { break; }
-				}
-			},
-			[&](const CmdPick& p) { done = self && (self->hand.is ? game.pickCards(*self) : game.pickPiece(*self, p.objClass, p.only)); },
-			[&](const CmdPlace& p) { done = self && (self->hand.is ? game.layCards(*self, p.into) : game.placePiece(*self)); },
-			[&](const CmdCall& c) { done = self && game.callSuit(*self, c.pile); },
-			[&](const CmdOrder& r) { done = game.orderHeld(r.group); },
-			[&](const CmdPut& p) { done = self && game.putPiece(*self, p); },
-			[&](const CmdCount& c)
-			{
-				if (!c.place.any()) { game.setNumber(c.target, game.countClass(c.objClass)); }
-				else if (self) { game.setNumber(c.target, static_cast<float>(game.piecesAbout(*self, c.objClass, c.place).size())); }
-			},
-			// Another action, of this object or another, as part of this.
-			[&](const CmdTriggerAction& a)
-			{
-				if (!a.place.any()) { triggerObjectAction(a.object, a.action, pressed, doer.byRule, a.from); }
-				else if (self && pressed) { triggerAbout(*self, a, doer.byRule); }
-			},
-			// <track /> runs on a pointing control (executeAxis), <hold> in a
-			// <computer>, and a CmdLive is made into its command first.
-			[&](const CmdTrack&) {},
-			[&](const CmdHold&) {},
-			[&](const CmdThink&) {},
-			[&](const CmdLive&) {},
-		}, pressed ? now(command, made) : shapeOf(command));
-		return done;
+				if (!run(inner, doer)) { break; }
+			}
+			return true;
+		}
+
+		// <track /> runs on a pointing control (executeAxis), <hold> and
+		// <think> in a <computer>: they have no run of their own.
+		const Verb* verb = verbOf(current);
+		return !verb || !verb->run || verb->run(current, doer, *this);
 	}
 
 	void CommandExecutor::become(Object* self, const CmdBecome& command)

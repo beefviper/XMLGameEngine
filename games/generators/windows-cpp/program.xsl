@@ -134,6 +134,14 @@ add_executable(</xsl:text>
     </xsl:for-each>
     <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio lunasvg::lunasvg plutovg::plutovg Threads::Threads)&#10;')" />
     <xsl:text>
+# The verbs are a small file each (engine/verbs/): compiled as one.
+file(GLOB verbs CONFIGURE_DEPENDS engine/verbs/*.cpp)
+set_source_files_properties(${verbs} PROPERTIES UNITY_GROUP verbs)
+set_target_properties(</xsl:text>
+    <xsl:value-of select="$name" />
+    <xsl:text> PROPERTIES UNITY_BUILD ON UNITY_BUILD_MODE GROUP)
+</xsl:text>
+    <xsl:text>
 # The warnings the engine is built with (xge_warnings in its
 # scripts/cmake/platform.cmake), for its code and the game's alike, /bigobj
 # included.

@@ -8,8 +8,8 @@
      (copied to engine/ by xgecli): everything Game and Engine are made of,
      with SFML's window and sound; not load/xml (the game is C++ already),
      the other libraries, or the factories that choose among them
-     (window/window.cpp, audio/audio.cpp, engine/backends.cpp). data_engine in
-     scripts/cmake/assets.cmake puts the same files beside xgecli. -->
+     (window/window.cpp, audio/audio.cpp, engine/backends.cpp). The verbs are a file
+     each (lib/verbs/, listed in its all.cpp): a new one is added here too. -->
 <engine>
   <file>lib/game/types.h</file>
   <file>lib/play/geometry.h</file>
@@ -54,6 +54,82 @@
   <file>lib/load/calc.cpp</file>
   <file>lib/play/collision.h</file>
   <file>lib/play/collision.cpp</file>
+  <file>lib/verbs/verb.h</file>
+  <file>lib/verbs/all.cpp</file>
+  <file>lib/verbs/bounce.cpp</file>
+  <file>lib/verbs/deflect.cpp</file>
+  <file>lib/verbs/knock.cpp</file>
+  <file>lib/verbs/stick.cpp</file>
+  <file>lib/verbs/wrap.cpp</file>
+  <file>lib/verbs/hole.cpp</file>
+  <file>lib/verbs/ride.cpp</file>
+  <file>lib/verbs/carry.cpp</file>
+  <file>lib/verbs/land.cpp</file>
+  <file>lib/verbs/through.cpp</file>
+  <file>lib/verbs/shove.cpp</file>
+  <file>lib/verbs/merge.cpp</file>
+  <file>lib/verbs/move.cpp</file>
+  <file>lib/verbs/hop.cpp</file>
+  <file>lib/verbs/jump.cpp</file>
+  <file>lib/verbs/leap.cpp</file>
+  <file>lib/verbs/climb.cpp</file>
+  <file>lib/verbs/go.cpp</file>
+  <file>lib/verbs/accelerate.cpp</file>
+  <file>lib/verbs/turn.cpp</file>
+  <file>lib/verbs/thrust.cpp</file>
+  <file>lib/verbs/swing.cpp</file>
+  <file>lib/verbs/stop.cpp</file>
+  <file>lib/verbs/reverse.cpp</file>
+  <file>lib/verbs/track.cpp</file>
+  <file>lib/verbs/follow.cpp</file>
+  <file>lib/verbs/shift.cpp</file>
+  <file>lib/verbs/chase.cpp</file>
+  <file>lib/verbs/aim.cpp</file>
+  <file>lib/verbs/hunt.cpp</file>
+  <file>lib/verbs/wander.cpp</file>
+  <file>lib/verbs/die.cpp</file>
+  <file>lib/verbs/reset.cpp</file>
+  <file>lib/verbs/spawn.cpp</file>
+  <file>lib/verbs/despawn.cpp</file>
+  <file>lib/verbs/fire.cpp</file>
+  <file>lib/verbs/release.cpp</file>
+  <file>lib/verbs/reveal.cpp</file>
+  <file>lib/verbs/drop.cpp</file>
+  <file>lib/verbs/inc.cpp</file>
+  <file>lib/verbs/dec.cpp</file>
+  <file>lib/verbs/set.cpp</file>
+  <file>lib/verbs/copy.cpp</file>
+  <file>lib/verbs/count.cpp</file>
+  <file>lib/verbs/rank.cpp</file>
+  <file>lib/verbs/become.cpp</file>
+  <file>lib/verbs/play.cpp</file>
+  <file>lib/verbs/silence.cpp</file>
+  <file>lib/verbs/push.cpp</file>
+  <file>lib/verbs/pop.cpp</file>
+  <file>lib/verbs/enter.cpp</file>
+  <file>lib/verbs/trigger.cpp</file>
+  <file>lib/verbs/turns.cpp</file>
+  <file>lib/verbs/pass.cpp</file>
+  <file>lib/verbs/out.cpp</file>
+  <file>lib/verbs/demo.cpp</file>
+  <file>lib/verbs/undo.cpp</file>
+  <file>lib/verbs/settle.cpp</file>
+  <file>lib/verbs/slide.cpp</file>
+  <file>lib/verbs/cycle.cpp</file>
+  <file>lib/verbs/grow.cpp</file>
+  <file>lib/verbs/split.cpp</file>
+  <file>lib/verbs/clear.cpp</file>
+  <file>lib/verbs/collapse.cpp</file>
+  <file>lib/verbs/fall.cpp</file>
+  <file>lib/verbs/pick.cpp</file>
+  <file>lib/verbs/place.cpp</file>
+  <file>lib/verbs/put.cpp</file>
+  <file>lib/verbs/call.cpp</file>
+  <file>lib/verbs/send.cpp</file>
+  <file>lib/verbs/distribute.cpp</file>
+  <file>lib/verbs/order.cpp</file>
+  <file>lib/verbs/hold.cpp</file>
+  <file>lib/verbs/think.cpp</file>
   <file>lib/play/executor.h</file>
   <file>lib/play/executor.cpp</file>
   <file>lib/game/game.h</file>

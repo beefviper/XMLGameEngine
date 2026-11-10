@@ -140,10 +140,18 @@ foreach(backend IN ITEMS sfml raylib sdl2 opengl)
 	endif()
 endforeach()
 
+# The verbs: a file each in xge/lib/verbs/, listed in its all.cpp. They are
+# small, so they are compiled as one.
+file(GLOB ENGINE_VERBS CONFIGURE_DEPENDS "xge/lib/verbs/*.cpp")
+list(APPEND ENGINE_SOURCES ${ENGINE_VERBS})
+list(APPEND ENGINE_HEADERS "xge/lib/verbs/verb.h")
+set_source_files_properties(${ENGINE_VERBS} PROPERTIES UNITY_GROUP verbs)
+
 target_sources(xgelib PRIVATE
 	${ENGINE_SOURCES}
 	${ENGINE_HEADERS}
 )
+set_target_properties(xgelib PROPERTIES UNITY_BUILD ON UNITY_BUILD_MODE GROUP)
 
 include(scripts/cmake/executables.cmake)
 

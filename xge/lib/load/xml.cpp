@@ -12,6 +12,7 @@
 #include "load/merge.h"
 #include "load/spelling.h"
 #include "load/xsd.h"
+#include "verbs/verb.h"
 
 #include <algorithm>
 #include <cctype>
@@ -1488,22 +1489,12 @@ namespace xge
 			}
 		}
 
-		bool isCommandTag(const std::string& name)
-		{
-			return name == "bounce" || name == "deflect" || name == "knock" || name == "hole" || name == "hold" || name == "stick" || name == "wrap" || name == "ride" || name == "carry" || name == "drop" || name == "track" || name == "die"
-				|| name == "reset" || name == "inc" || name == "dec" || name == "copy" || name == "rank" || name == "turns" || name == "pass" || name == "out" || name == "demo" || name == "move" || name == "hop"
-				|| name == "accelerate" || name == "turn" || name == "thrust" || name == "swing" || name == "release" || name == "stop"
-				|| name == "push" || name == "pop" || name == "fire" || name == "trigger" || name == "play" || name == "silence"
-				|| name == "jump" || name == "land" || name == "leap" || name == "climb" || name == "chase" || name == "go" || name == "hunt" || name == "wander" || name == "aim" || name == "reverse" || name == "become" || name == "reveal" || name == "follow" || name == "shift" || name == "enter" || name == "set" || name == "spawn" || name == "send" || name == "despawn"
-				|| name == "settle" || name == "slide" || name == "clear" || name == "collapse" || name == "fall" || name == "cycle" || name == "grow" || name == "split" || name == "through" || name == "shove" || name == "merge" || name == "undo" || name == "pick" || name == "place" || name == "put" || name == "count" || name == "think" || name == "call" || name == "order" || name == "distribute";
-		}
-
 		RawCommand readCommand(const XmlNode& node, const std::string& where)
 		{
 			RawCommand command;
 			command.verb = node.getName();
 
-			if (!isCommandTag(command.verb)) { fail(where, "unknown command <" + command.verb + ">"); }
+			if (!findVerb(command.verb)) { fail(where, "unknown command <" + command.verb + ">"); }
 
 			command.object = node.getAttribute("object");
 			command.pile = node.getAttribute("pile");

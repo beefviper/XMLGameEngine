@@ -1,0 +1,36 @@
+// go.cpp
+// XML Game Engine
+// author: beefviper
+// date: Nov 10, 2026
+
+#include "verbs/verb.h"
+#include "game/game.h"
+#include "play/executor.h"
+#include "play/maze.h"
+
+namespace xge
+{
+	// <go>: Sets off along a maze's corridors, or cell by cell.
+	static Command makeGo(const RawCommand& raw, const ValueEvaluator& evaluate)
+	{
+		return CmdGo{ directionFromName(raw.direction, raw.verb), speedOf(raw, "go", evaluate) };
+	}
+
+	static bool runGo(const Command& command, const Doer& doer, CommandExecutor& executor)
+	{
+		const CmdGo& go = std::get<CmdGo>(command);
+		if (doer.self && doer.self->onCells) { return executor.game.goCells(*doer.self, go.direction, go.speed); }
+		if (doer.self && doer.action) { startGo(*doer.self, go); }
+		return true;
+	}
+
+	extern const Verb goVerb;
+	const Verb goVerb{
+		.name = "go",
+		.forms = { { "<go>", places::controls, kindOf<CmdGo>() } },
+		.formOf = nullptr,
+		.onRelease = false,
+		.make = makeGo,
+		.run = runGo,
+	};
+}

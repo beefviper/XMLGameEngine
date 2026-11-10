@@ -9,6 +9,7 @@
 #include "engine/keys.h"
 #include "game/object.h"
 #include "play/geometry.h"
+#include "verbs/verb.h"
 
 #include <optional>
 #include <string>
@@ -78,37 +79,13 @@ namespace xge
 		// it reached was refused: what its <otherwise> answers.
 		bool triggerRefused() const noexcept { return lastTriggerRefused; }
 
-	private:
+		// --- What the verbs use (verbs/, a file each): the game, and the work
+		// that needs it.
+
 		Game& game;
-		bool lastTriggerRefused{ false };
 
-		// Who runs a command, and where: what every verb looks at to know
-		// what to do. The places a verb may be written are the loader's
-		// (ruleFor in load/check.cpp); this runs whatever got there.
-		struct Doer
-		{
-			// The object the command is about (a rule's, a timer's, an
-			// action's); none for a state's list, where a bare <reset /> is
-			// the whole game.
-			Object* self{ nullptr };
-			// What it touched, for a rule about another object.
-			Object* other{ nullptr };
-			const Touch* touch{ nullptr };
-			// The window edge, for a screen-edge rule.
-			std::optional<Edge> screenEdge;
-			// False for a key let go: only what is held stops (actsOnLettingGo).
-			bool pressed{ true };
-			// Run by a rule, a timer or a condition, not by a key.
-			bool byRule{ true };
-			// In an object's action of this name: a <move> is held, and the
-			// controls (<hop>, <jump>, <climb>, <thrust>...) work.
-			const std::string* action{ nullptr };
-			// In a cell map's check: what it found.
-			const Object::CellMatch* match{ nullptr };
-		};
-
-		// Every verb, done as `doer` says. False when the verb is refused,
-		// which ends the list it is in.
+		// A command, done as `doer` says by its verb (Verb::run). False when
+		// the verb is refused, which ends the list it is in.
 		bool run(const Command& command, const Doer& doer);
 
 
@@ -190,10 +167,13 @@ namespace xge
 		// its class in those cells about `self`, each piece once however the
 		// actions it runs trigger more (aboutReached, aboutDepth).
 		void triggerAbout(Object& self, const CmdTriggerAction& trigger, bool byRule);
-		std::vector<std::string> aboutReached;
-		int aboutDepth = 0;
 
 		// False when every one of the projectiles is in flight.
 		bool spawnProjectile(Object& shooter, const std::string& projectileName);
+
+	private:
+		bool lastTriggerRefused{ false };
+		std::vector<std::string> aboutReached;
+		int aboutDepth = 0;
 	};
 }

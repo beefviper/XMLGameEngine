@@ -8,6 +8,7 @@
 #include "picture/color.h"
 #include "engine/keys.h"
 #include "load/spelling.h"
+#include "verbs/verb.h"
 
 #include <algorithm>
 #include <cctype>
@@ -85,140 +86,38 @@ namespace xge
 		// The tag a command was written as, for a message about it.
 		std::string tagOf(const Command& command)
 		{
-			return std::visit(overload{
-				[](const CmdBounce&) { return std::string("<bounce />"); },
-				[](const CmdStick&) { return std::string("<stick />"); },
-				[](const CmdReset&) { return std::string("<reset />"); },
-				[](const CmdDie&) { return std::string("<die />"); },
-				[](const CmdWrap&) { return std::string("<wrap />"); },
-				[](const CmdRide&) { return std::string("<ride />"); },
-				[](const CmdCarry&) { return std::string("<carry />"); },
-				[](const CmdDrop&) { return std::string("<drop />"); },
-				[](const CmdTrack&) { return std::string("<track />"); },
-				[](const CmdDeflect&) { return std::string("<deflect>"); },
-				[](const CmdKnock&) { return std::string("<knock>"); },
-				[](const CmdHole&) { return std::string("<hole>"); },
-				[](const CmdHold&) { return std::string("<hold>"); },
-				[](const CmdThink&) { return std::string("<think>"); },
-				[](const CmdReverse&) { return std::string("<reverse />"); },
-				[](const CmdMove&) { return std::string("<move>"); },
-				[](const CmdHop&) { return std::string("<hop>"); },
-				[](const CmdJump&) { return std::string("<jump>"); },
-				[](const CmdLand&) { return std::string("<land />"); },
-				[](const CmdLeap&) { return std::string("<leap>"); },
-				[](const CmdClimb&) { return std::string("<climb>"); },
-				[](const CmdChase&) { return std::string("<chase>"); },
-				[](const CmdGo&) { return std::string("<go>"); },
-				[](const CmdHunt&) { return std::string("<hunt>"); },
-				[](const CmdHuntHop&) { return std::string("<hunt> by <hop>"); },
-				[](const CmdWander&) { return std::string("<wander>"); },
-				[](const CmdAim&) { return std::string("<aim>"); },
-				[](const CmdAccelerate&) { return std::string("<accelerate>"); },
-				[](const CmdTurn&) { return std::string("<turn>"); },
-				[](const CmdThrust&) { return std::string("<thrust>"); },
-				[](const CmdSwing&) { return std::string("<swing>"); },
-				[](const CmdRelease&) { return std::string("<release>"); },
-				[](const CmdStop&) { return std::string("<stop />"); },
-				[](const CmdIncrement&) { return std::string("<inc>"); },
-				[](const CmdCopy&) { return std::string("<copy>"); },
-				[](const CmdRank&) { return std::string("<rank>"); },
-				[](const CmdTurns&) { return std::string("<turns>"); },
-				[](const CmdPass&) { return std::string("<pass />"); },
-				[](const CmdOut&) { return std::string("<out />"); },
-				[](const CmdDemo&) { return std::string("<demo />"); },
-				[](const CmdDecrement&) { return std::string("<dec>"); },
-				[](const CmdPushState&) { return std::string("<push>"); },
-				[](const CmdPopState&) { return std::string("<pop>"); },
-				[](const CmdFire&) { return std::string("<fire>"); },
-				[](const CmdTriggerAction&) { return std::string("<trigger>"); },
-				[](const CmdResetObject&) { return std::string("<reset object>"); },
-				[](const CmdPlay&) { return std::string("<play>"); },
-				[](const CmdSilence&) { return std::string("<silence>"); },
-				[](const CmdBecome&) { return std::string("<become>"); },
-				[](const CmdReveal&) { return std::string("<reveal>"); },
-				[](const CmdFollow&) { return std::string("<follow>"); },
-				[](const CmdShift&) { return std::string("<shift>"); },
-				[](const CmdEnterScene&) { return std::string("<enter>"); },
-				[](const CmdResetScene&) { return std::string("<reset scene>"); },
-				[](const CmdSet&) { return std::string("<set>"); },
-				[](const CmdSpawn&) { return std::string("<spawn>"); },
-				[](const CmdSend&) { return std::string("<send>"); },
-				[](const CmdDespawn& d) { return std::string(d.target.empty() ? "<despawn />" : "<despawn object>"); },
-				[](const CmdSettle&) { return std::string("<settle />"); },
-				[](const CmdSlide&) { return std::string("<slide>"); },
-				[](const CmdClear&) { return std::string("<clear />"); },
-				[](const CmdCollapse&) { return std::string("<collapse />"); },
-				[](const CmdFall& fall) { return fall.objClass.empty() ? std::string("<fall />") : "<fall class=\"" + fall.objClass + "\" />"; },
-				[](const CmdCycle&) { return std::string("<cycle />"); },
-				[](const CmdGrow&) { return std::string("<grow />"); },
-				[](const CmdSplit&) { return std::string("<split />"); },
-				[](const CmdThrough&) { return std::string("<through />"); },
-				[](const CmdShove&) { return std::string("<shove />"); },
-				[](const CmdMerge&) { return std::string("<merge>"); },
-				[](const CmdUndo&) { return std::string("<undo />"); },
-				[](const CmdWhen&) { return std::string("<condition>"); },
-				[](const CmdPick&) { return std::string("<pick>"); },
-				[](const CmdPlace&) { return std::string("<place />"); },
-				[](const CmdCall&) { return std::string("<call />"); },
-				[](const CmdPut&) { return std::string("<put>"); },
-				[](const CmdOrder&) { return std::string("<order>"); },
-				[](const CmdCount&) { return std::string("<count>"); },
-				[](const CmdLive& live) { return tagOf(live.loaded->command); },
-			}, command);
+			if (std::holds_alternative<CmdWhen>(command)) { return "<condition>"; }
+			if (const auto* fall = std::get_if<CmdFall>(&shapeOf(command)); fall && !fall->objClass.empty()) { return "<fall class=\"" + fall->objClass + "\" />"; }
+			const Form* form = formOf(command);
+			return form ? form->tag : std::string();
 		}
 
-		// Where a list of commands runs, and what each place does something
-		// with. CommandExecutor::run (play/executor.cpp) does each verb as
-		// its Doer says, and does nothing with one that has no object, touch
-		// or action it needs; this is what keeps such a verb out of a place.
-		enum class Place { Edge, Touch, Input, Condition, StateTimer, ObjectTimer, Action, PathStep, Computer, Check };
-
-		struct PlaceRule
+		// What a place is called in a message. A command the schema lets
+		// through where the engine does nothing with it is kept out by the
+		// places its verb's forms name (verbs/verb.h).
+		const char* nameOf(Place place)
 		{
-			const char* what;
-			std::vector<std::string> tags;
-		};
-
-		// The commands in the groups the schema has them in (xgedef.xsd,
-		// changesCommands and the rest), and the groups each place takes.
-		std::vector<std::string> commandsOf(std::initializer_list<const std::vector<std::string>*> groups)
-		{
-			std::vector<std::string> tags;
-			for (const auto* group : groups) { tags.insert(tags.end(), group->begin(), group->end()); }
-			return tags;
-		}
-
-		const PlaceRule& ruleFor(Place place)
-		{
-			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<shift>", "<enter>",
-				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<send>", "<despawn object>", "<trigger>", "<count>", "<reveal pile>", "<shuffle>", "<redeal />", "<collect>", "<order>" };
-			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />", "<undo />" };
-			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>", "<cycle />", "<grow />", "<split />", "<pick>", "<place />", "<put>", "<take />", "<lay />", "<deal />", "<call />" };
-			static const std::vector<std::string> steering{ "<aim>", "<chase>", "<hunt>", "<hunt> by <hop>", "<wander>" };
-			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />", "<through />", "<shove />", "<merge>", "<stick />" };
-			static const std::vector<std::string> edge{ "<stick />", "<wrap />" };
-			static const std::vector<std::string> bounce{ "<bounce />" };
-			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<jump>", "<leap>", "<swing>", "<thrust>", "<turn>", "<track />" };
-			static const std::vector<std::string> press{ "<hold>", "<think>" };
-			static const std::vector<std::string> cells{ "<clear />", "<collapse />", "<fall />" };
-			static const std::vector<std::string> turn{ "<pass />" };
-			static const std::vector<std::string> when{ "<condition>" };     // in an action   // by a member of a group that takes <turns>
-
-			static const std::vector<std::string> stateCommands = commandsOf({ &changes, &flow });
-			static const std::vector<std::string> objectTimeCommands = commandsOf({ &changes, &self, &steering });
-			static const PlaceRule rules[] = {
-				{ "a screen-edge <collision>", commandsOf({ &changes, &self, &edge, &bounce }) },
-				{ "a <collision> with another object", commandsOf({ &changes, &self, &steering, &touch, &bounce }) },
-				{ "an <input>", stateCommands },
-				{ "a <condition>", stateCommands },
-				{ "a state's <timer>", stateCommands },
-				{ "an object's <timer>", objectTimeCommands },
-				{ "an <action>", commandsOf({ &changes, &self, &steering, &controls, &turn, &when }) },
-				{ "a path's <step>", objectTimeCommands },
-				{ "a <computer>'s <condition>", press },
-				{ "a map's check", commandsOf({ &changes, &cells }) },
+			static const char* const names[] = {
+				"a screen-edge <collision>", "a <collision> with another object", "an <input>", "a <condition>", "a state's <timer>",
+				"an object's <timer>", "an <action>", "a path's <step>", "a <computer>'s <condition>", "a map's check",
 			};
-			return rules[static_cast<std::size_t>(place)];
+			return names[static_cast<std::size_t>(place)];
+		}
+
+		// Every command that does something in a place, as a message lists them.
+		std::vector<std::string> tagsFor(Place place)
+		{
+			std::vector<std::string> tags;
+			for (const Verb* verb : allVerbs())
+			{
+				for (const Form& form : verb->forms)
+				{
+					if (form.tag && (form.places & in(place)) && std::find(tags.begin(), tags.end(), form.tag) == tags.end()) { tags.push_back(form.tag); }
+				}
+			}
+			// A condition among an action's commands.
+			if (place == Place::Action) { tags.push_back("<condition>"); }
+			return tags;
 		}
 
 		// An action that runs another (<trigger>) must not come round to
@@ -265,24 +164,25 @@ namespace xge
 		// saying what can go there.
 		void checkPlace(const std::vector<Command>& commands, Place place, const std::string& where)
 		{
-			const PlaceRule& rule = ruleFor(place);
 			for (const Command& command : commands)
 			{
 				const std::string tag = tagOf(command);
-				if (std::find(rule.tags.begin(), rule.tags.end(), tag) != rule.tags.end())
+				// A condition's commands go where it is.
+				if (const auto* when = std::get_if<CmdWhen>(&command); when && place == Place::Action)
 				{
-					// A condition's commands go where it is.
-					if (const auto* when = std::get_if<CmdWhen>(&command); when && when->body) { checkPlace(when->body->commands, place, where + " > <condition>"); }
+					if (when->body) { checkPlace(when->body->commands, place, where + " > <condition>"); }
 					continue;
 				}
+				const Form* form = formOf(command);
+				if (form && (form->places & in(place))) { continue; }
 
 				std::string hint;
 				if (place == Place::Input && (tag == "<move>" || tag == "<fire>" || tag == "<hop>" || tag == "<jump>" || tag == "<leap>" || tag == "<climb>" || tag == "<accelerate>"))
 				{
 					hint = " A key moves or fires an object through one of its <action>s: <trigger object=\"...\" action=\"...\" />.";
 				}
-				throw std::runtime_error(where + ": " + tag + " does nothing in " + rule.what + ", so it would be ignored." + hint
-					+ " What can go there: " + listOf(rule.tags));
+				throw std::runtime_error(where + ": " + tag + " does nothing in " + nameOf(place) + ", so it would be ignored." + hint
+					+ " What can go there: " + listOf(tagsFor(place)));
 			}
 		}
 
