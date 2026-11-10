@@ -10,13 +10,16 @@
 // Test names must not start with "-" or contain a comma: ctest hands the name to
 // Catch2 on its command line, which reads them as an option or a list.
 
+#include "file_text.h"
 #include "scratch.h"
 #include "cli.h"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <filesystem>
+#include <algorithm>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -236,6 +239,53 @@ TEST_CASE("record writes the game played into the game file, once and not when g
 	CHECK_THROWS_AS(parseCommandLine({ "--record", "--record" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--record", "--generate", "windows-cpp" }), CliError);
 	CHECK(usageText().find("--record") != std::string::npos);
+}
+
+TEST_CASE("check takes any number of games, and nothing that plays", "[cli][check]")
+{
+	CHECK_FALSE(parseCommandLine({ "pong" }).check);
+	const CliOptions none = parseCommandLine({ "--check" });
+	CHECK(none.check);
+	CHECK(none.games.empty());
+	const CliOptions several = parseCommandLine({ "pong", "frogger", "--check", "-x", "tinyxml2" });
+	CHECK(several.check);
+	CHECK(several.games == std::vector<std::string>{ "pong", "frogger" });
+	CHECK(several.xml == XmlBackend::TinyXml2);
+
+	CHECK_THROWS_AS(parseCommandLine({ "-c" }), CliError); // long form only
+	CHECK_THROWS_AS(parseCommandLine({ "--check", "--check" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--check", "--record" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--check", "--generate", "windows-cpp" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--check", "-w", "sdl2" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--check", "-a", "none" }), CliError);
+	CHECK(usageText().find("--check") != std::string::npos);
+}
+
+TEST_CASE("check loads each game as for play and says ok or what is wrong", "[cli][check]")
+{
+	const std::filesystem::path broken = scratchName("descriptions/check_broken.xml");
+	{
+		std::ifstream in("descriptions/pong.xml");
+		std::string text = fileText(in);
+		text.replace(text.find("<width>1280</width>"), 19, "<width>0</width>");
+		std::ofstream(broken) << text;
+	}
+
+	std::ostringstream out;
+	CHECK(checkGames({ "descriptions/pong.xml", broken.string(), "descriptions/frogger.xml" }, XmlBackend::TinyXml2, out) == 1);
+	const std::string said = out.str();
+	CHECK(said.find("pong.xml: ok\n") != std::string::npos);
+	CHECK(said.find("frogger.xml: ok\n") != std::string::npos);
+	CHECK(said.find(broken.filename().string() + ": ") != std::string::npos);
+	INFO(said);
+	CHECK(said.find("width") != std::string::npos);
+	CHECK(said.find("Loading file") == std::string::npos);
+	std::filesystem::remove(broken);
+
+	// With no game, every one in the folder.
+	const std::vector<std::string> all = gameFilesIn("descriptions");
+	CHECK(all.size() > 50);
+	CHECK(std::is_sorted(all.begin(), all.end()));
 }
 
 TEST_CASE("the help options ask for the usage", "[cli]")

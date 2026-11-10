@@ -7,12 +7,13 @@
 ```
 xgecli [game] [options]
   -g, --game <game>    the game, same as giving it bare
-  -w, --window <name>  sfml3 (default), raylib, sdl2, opengl
+  -w, --window <name>  sfml3 (default), raylib, sdl2, opengl, none
   -x, --xml <name>     xerces (default), tinyxml2, pugixml, rapidxml
   -a, --audio <name>   sfml3 (default), raylib, sdl2, none
   --generate <target>  write the game out as a program (windows-cpp) instead of playing it
   -o, --output <dir>   where --generate writes (default <game>-<target>)
   --record             play, and write what was played into the game file as its <demo>
+  --check              load the games (none: all) and say ok or what is wrong
   -h, --help
 ```
 
@@ -24,4 +25,5 @@ xgecli [game] [options]
 - **Generating** ([generator](40-generator.md)): `--generate` takes a platform-language target (`windows-cpp`), long form only because `-g` is the game; `-o` is an error without it. It is resolved before the working directory changes, so the default folder and a relative `-o` are where the user started; the stylesheets are found in `generators/` of the data folder, and the engine's files it copies from `lib/` of the repository's `xge/` it was built from (`GenerateRequest::engineFolder`, set from `XGE_ENGINE_FOLDER`). It prints the files written and the assets copied, and does not start a window. `generate.cpp` is compiled into `xgetest` too.
 - **Recording** ([states-and-conditions](07-states-and-conditions.md), attract mode): `--record` plays as usual from a new seed and, when the window closes, writes the `<demo>` into the game file (`withDemo`), replacing the one there and keeping the file's line endings. Long form only, like `--generate`, with which it cannot go. It writes the repository's file on purpose: the demo is part of the game.
 - - A backend that this build leaves out is refused by name, with the list of those built in.
+- **Checking** (`--check`): "does this game load?" with no window, for authors, scripts and the long tests. It loads as play does (the reader, then the engine on the null window, so positions made from text sizes are worked out too), hides the libraries' loading chatter, and prints one line a game. Several games only here; none means all. `-w`/`-a` are refused with it, since it opens and plays nothing.
 - Rejected: `-g` for generate (it is the game); `--game=pong`; last-one-wins; short backend aliases (`sfml`, `xerxes`).

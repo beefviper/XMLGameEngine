@@ -45,6 +45,35 @@ int main(int argc, char* argv[])
 		dataFolder = xge::findDataFolder(std::filesystem::current_path(), xge::programDirectory());
 
 		const std::filesystem::path gamesDirectory = dataFolder.empty() ? std::filesystem::path("games/descriptions") : dataFolder / "descriptions";
+
+		// --check: each game loaded, a line each, nothing played.
+		if (options.check)
+		{
+			std::vector<std::string> files;
+			int missing = 0;
+			if (options.games.empty()) { files = xge::gameFilesIn(gamesDirectory); }
+			for (const std::string& game : options.games)
+			{
+				try
+				{
+					files.push_back(std::filesystem::absolute(xge::findGameFile(game, gamesDirectory)).string());
+				}
+				catch (const xge::CliError& error)
+				{
+					std::cout << game << ": " << error.what() << '\n';
+					++missing;
+				}
+			}
+			if (files.empty() && missing == 0) { throw xge::CliError("no games to check in " + gamesDirectory.string()); }
+			if (!dataFolder.empty())
+			{
+				std::error_code ignored;
+				std::filesystem::current_path(dataFolder, ignored);
+			}
+			const int failed = xge::checkGames(files, options.xml, std::cout) + missing;
+			return failed == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+		}
+
 		filename = std::filesystem::absolute(xge::findGameFile(options.game, gamesDirectory)).string();
 	}
 	catch (const xge::CliError& error)

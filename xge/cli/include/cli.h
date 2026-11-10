@@ -10,6 +10,7 @@
 #include "xml/document.h"
 
 #include <filesystem>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -47,6 +48,12 @@ namespace xge
 		// --record: play the game and write what was played into the game
 		// file as its <demo> when the window closes.
 		bool record = false;
+
+		// --check: load each game (`games`; none given, every one in
+		// games/descriptions/) as for play, print ok or what is wrong, and
+		// play nothing (checkGames).
+		bool check = false;
+		std::vector<std::string> games;
 
 		bool showHelp = false;
 	};
@@ -108,4 +115,14 @@ namespace xge
 
 	// The usage text, for --help and after an error.
 	std::string usageText();
+
+	// Every .xml file in the folder, sorted: what --check with no game checks.
+	std::vector<std::string> gameFilesIn(const std::filesystem::path& gamesDirectory);
+
+	// Loads each game file as for play (the reader, then the engine with a
+	// null window and no sound, so sizes and the positions made from them are
+	// worked out too), and writes a line each to `out`: "pong.xml: ok", or
+	// "pong.xml: " and what stopped it. What the libraries say while reading is
+	// not shown; warnings still go to std::cerr. Gives back how many failed.
+	int checkGames(const std::vector<std::string>& files, XmlBackend xml, std::ostream& out);
 }

@@ -4,10 +4,16 @@
 // date: Sept 28, 2026
 
 #include "cli.h"
+#include "engine/engine.h"
 #include "engine/folder.h"
+#include "game/game.h"
+#include "load/xml.h"
 
 #include <algorithm>
 #include <cctype>
+#include <exception>
+#include <iostream>
+#include <memory>
 #include <optional>
 #include <string_view>
 
@@ -131,13 +137,14 @@ namespace xge
 			if (arg == "--generate") return 'G';
 			if (arg == "--output") return 'o';
 			if (arg == "--record") return 'r';
+			if (arg == "--check")  return 'c';
 			if (arg == "--help")   return 'h';
 			return std::nullopt;
 		}
 
 		bool takesValue(char key)
 		{
-			return key != 'h' && key != 'r';
+			return key != 'h' && key != 'r' && key != 'c';
 		}
 
 		std::string optionName(char key)
@@ -166,13 +173,11 @@ namespace xge
 		bool haveGenerate = false;
 		bool haveOutput = false;
 
+		// Several only for --check, which may come after them: worked out at the end.
 		auto setGame = [&](const std::string& game)
 		{
-			if (haveGame)
-			{
-				throw CliError("more than one game given ('" + options.game + "' and '" + game + "')");
-			}
-			options.game = game;
+			if (!haveGame) { options.game = game; }
+			options.games.push_back(game);
 			haveGame = true;
 		};
 
@@ -286,6 +291,15 @@ namespace xge
 				}
 			}
 
+			if (match.key == 'c')
+			{
+				if (options.check)
+				{
+					throw CliError("--check was given more than once");
+				}
+				options.check = true;
+				continue;
+			}
 			if (match.key == 'r')
 			{
 				if (options.record)
@@ -321,6 +335,14 @@ namespace xge
 			setOption(match.key, value);
 		}
 
+		if (options.games.size() > 1 && !options.check)
+		{
+			throw CliError("more than one game given ('" + options.games[0] + "' and '" + options.games[1] + "'); only --check takes several");
+		}
+		if (options.check && (options.record || haveGenerate || haveWindow || haveAudio))
+		{
+			throw CliError("--check only loads the games: it opens no window, plays no sound, and does not --record or --generate");
+		}
 		if (haveOutput && !haveGenerate)
 		{
 			throw CliError("an output folder is only for --generate");
@@ -408,9 +430,59 @@ namespace xge
 			"  -o, --output <dir>   where --generate writes it (default <game>-<target>)\n"
 			"  --record             play, and write what was played into the game file as\n"
 			"                       its <demo> when the window closes (the attract mode)\n"
+			"  --check              load the games given (several, or none for every game in\n"
+			"                       games/descriptions/) and print ok or what is wrong with\n"
+			"                       each; exits 1 if any is wrong\n"
 			"  -h, --help           show this text\n"
 			"\n"
 			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"
 			"long option needs a space (--game pong).\n";
+	}
+
+	std::vector<std::string> gameFilesIn(const std::filesystem::path& gamesDirectory)
+	{
+		std::vector<std::string> files;
+		std::error_code error;
+		for (const auto& entry : std::filesystem::directory_iterator(gamesDirectory, error))
+		{
+			if (entry.is_regular_file() && entry.path().extension() == ".xml") { files.push_back(entry.path().string()); }
+		}
+		std::sort(files.begin(), files.end());
+		return files;
+	}
+
+	int checkGames(const std::vector<std::string>& files, XmlBackend xml, std::ostream& out)
+	{
+		int failed = 0;
+		for (const std::string& file : files)
+		{
+			std::string problem;
+			{
+				// The libraries' "loading, parsed" lines are not the answer.
+				struct Unheard : std::streambuf
+				{
+					int overflow(int c) override { return traits_type::not_eof(c); }
+				} unheard;
+				std::streambuf* const before = std::cout.rdbuf(&unheard);
+				try
+				{
+					Game game{ readGame(file, xml) };
+					Engine engine(game, WindowBackend::None, AudioBackend::None);
+				}
+				catch (const std::exception& error)
+				{
+					problem = error.what();
+					if (problem.empty()) { problem = "it does not load"; }
+				}
+				catch (...)
+				{
+					problem = "it does not load";
+				}
+				std::cout.rdbuf(before);
+			}
+			out << std::filesystem::path(file).filename().string() << ": " << (problem.empty() ? "ok" : problem) << '\n';
+			if (!problem.empty()) { ++failed; }
+		}
+		return failed;
 	}
 }
