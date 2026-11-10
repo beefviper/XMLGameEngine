@@ -126,6 +126,7 @@ Each rests on something that never changes while a game runs: `FrameRules::partn
 
 - Docs move with code: a tag or behaviour change updates its [reference](../reference/) page and the matching design file in the same commit.
 - Reference pages say what is, with short sections and small examples. Design files say why, near 6 KB each, with no dates or diaries.
+- A change only eyes, ears or MSVC can check adds a line to "Waiting for a look on Windows" in `docs/designs/58-open-work.md`; the author deletes it once seen.
 
 ## Privacy
 

@@ -39,7 +39,7 @@ Direct answers, as asked. Each is argued once here and turned into tasks below.
 
 **5. The backends are a feature, so make the next one cheap rather than cutting any.** I called twelve libraries a tax. The author's answer: wide support for libraries is part of what the project is (as RetroArch does it), lower-level ones are wanted next (OpenGL is there; DirectX and Vulkan to come), and Xerces with a weaker built-in validator behind the lighter parsers is the intended design. Accepted. What follows from it is different work: a new window backend today has to draw text and load image files itself, which is most of its code and the reason no two backends measure a text the same. If the engine drew text and decoded images into bitmaps, as it already does every other picture, a backend would be "open a window, show bitmaps, read keys", and a Direct3D or Vulkan one would be a few hundred lines ([A7](#a7-the-next-backend-is-cheap)).
 
-**6. "No CI" is costing more than it saves.** More than a dozen features are still waiting for a first look on Windows. MSVC-only warnings (C4702, C4459, C4458) and Windows header macros (`near`, `far`) have each broken the build more than once. A build-only job on a Windows runner (no tests, no gate) would catch those without changing how the author tests play. If the answer is still no, do [T4](#t4-a-windows-check-list-kept-in-the-repository) instead ([D3](#decisions-for-the-author)).
+**6. "No CI" is costing more than it saves.** More than a dozen features are still waiting for a first look on Windows. MSVC-only warnings (C4702, C4459, C4458) and Windows header macros (`near`, `far`) have each broken the build more than once. A build-only job on a Windows runner (no tests, no gate) would catch those without changing how the author tests play. If the answer is still no, do T4 (done) instead ([D3](#decisions-for-the-author)).
 
 **7. Stop writing arithmetic two ways.** Text arithmetic and `<formula>` both do `+ - * /`. Pong's title is centred with a twelve-line formula where every other game writes `<centered />`. **The author's call:** no arithmetic in strings. A text value holds one number or one name; every calculation is tags, with `<formula>` made short enough for the everyday cases ([R12](#r12-no-arithmetic-in-text)). The review's first advice (text for `+ - * /`, `<formula>` for the rest) is withdrawn: hiding a calculation in a string is the thing the format otherwise avoids, and it is a second parser to keep.
 
@@ -164,7 +164,7 @@ Each has a default the plan assumes, so work is not blocked. Changing one change
 |---|---|---|---|
 | D1 | What the generator is for | **Settled by the author:** stand-alone games that read as hand-written, for any platform. `windows-cpp` (engine plus data) stays as the exact, complete target and gets no new design work; `data.xsl` is still updated with each language change until A5 covers enough games to retire it | A5, all R tasks |
 | D2 | Drop XML, window and sound libraries | **Settled by the author:** keep all, and add lower-level ones (DirectX, Vulkan). See A7 | A7 |
-| D3 | A Windows build-only job, or none | None; do T4 | T4 |
+| D3 | A Windows build-only job, or none | None (the author); T4 done | |
 | D4 | The words for R6 (booleans) and R7 (window names, centred offset) | The task proposes words; the author picks before it starts | R6, R7 |
 | D5 | Whether pools go entirely (R3) | Yes for things that come and go; `<die />` and `<reveal>` stay for fixed members | R3 |
 | D6 | Whether the standard pause and title screens become a built-in default | **No.** A hidden default breaks "one file is the whole game". Standardise the spelling instead | R9 |
@@ -200,13 +200,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 - **Verify.** `ctest`, `xgetest-generated`.
 
 ### Phase 2: a safety net for the reduction
-
-#### T4. A Windows check list kept in the repository
-
-- **Size** S. **Needs** D3. Skip if a Windows build job is adopted.
-- **Why.** What is waiting for the author's Windows test lives only in chat and memory.
-- **Files.** `docs/designs/58-open-work.md`, a new section "Waiting for a look on Windows".
-- **Do.** One line per thing that only eyes, ears or MSVC can check, added by whoever lands it and deleted by the author: the build at `/W4`, then per game what to try (for example "Pinball: the ball rests on a raised flipper without hopping"). Seed it from what has landed since the author's last full Windows pass (Mario Bros. enemies, Pinball's resting ball, the cell puzzles, the card games on holders, the board-game computers, live numbers, the pictures block). Every task in this plan that changes behaviour adds its line.
 
 ### Phase 3: the reduction pass
 
@@ -543,8 +536,7 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
 Small, safe steps; the tests are green after every line. A line is one branch off `working`, merged when its checks pass. Lines in the same block can be done in any order or by different sessions at once.
 
 ```
-Block 2  (the loud-typos work, then the net; Block 1 is done)
-  T4  Windows check list              (or the build job, by D3)
+Blocks 1 and 2 are done.
 
       -- the author settles D4, D5 here --
 

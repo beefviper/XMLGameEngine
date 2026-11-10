@@ -40,6 +40,33 @@ The [plan](../plan.md) reviews this backlog, argues with parts of it, and orders
 - Objects not shown (`isShown`) are left out of the swept collision pass in `play/frame.cpp`, so nothing hidden can touch or be touched; a game with invisible things that collide would need them in it.
 - Building generated programs is by hand: `scripts/shell/windows/games-run-all.bat` generates, builds at MSVC `/W4` and tests them all.
 
+## Waiting for a look on Windows
+
+What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
+
+1. The build at MSVC `/W4` with no warnings, and `games-run-all.bat`.
+2. Pace: every game at the same speed under `-w sfml3`, `sdl2`, `raylib` and `opengl`, also on a screen faster than 60 Hz; no tearing.
+3. xgegui: Press Start 2P games show their font; the size bar and -/100%/+ keep the window's size.
+4. Frostbite: hopping between floes; Donkey Kong, Mario Bros. and Pitfall jump as before.
+5. Mario Bros.: a flipped enemy keeps its sideways way; POW spares those in the air; creepers turn when they meet; a shellcreeper that gets up by itself turns red.
+6. Q*bert: the disc sets Q*bert down and the top cube lights; Donkey Kong's scale and arcs.
+7. Tetris: E and C turn, lines clear.
+8. Columns: jewels cycle and lines of three clear, chains fall.
+9. Snake: grows on eating, dies on itself.
+10. Centipede: heads never stick; a shot centipede splits; the player stays in the bottom zone.
+11. Capsules: only pills fall, germs hold things up; the first match does not clear the screen.
+12. Putt Park: the ball bounces off angled walls and drops in the cup.
+13. Pinball: flippers swing and back; the ball rests on a raised flipper without hopping; the plunger launches on release.
+14. Cannon Hill: aim, charge and fire; wind bends the shot; holes in the ground.
+15. Speedway: the car grips on road, slides on grass; laps count.
+16. Pong: Space against the computer (A and D for easy and smart), 2 for two players.
+17. Checkers: the computer answers on Space; X or Backspace or right click puts back; the mouse picks and places; marks show the held piece and its moves.
+18. Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes: a game against the computer to the end, the window answering while it thinks.
+19. Klondike and Pyramid: deal, move, win.
+20. Crazy Eights: an eight calls a suit; the computer players finish a game.
+21. Blackjack, Texas Hold'em, Hearts, Spades, Gin Rummy: one hand each to the end.
+22. Crates, Doubles, Minefield: a level each, with undo in Crates.
+
 ## Known untested
 
 - Sanitizers: the whole of `xgetest` is clean under `-DXGE_SANITIZE=address` (address and undefined behaviour), as are `xgetest-long`'s random keys and damaged files; the board-game search on its own thread is clean under `-DXGE_SANITIZE=thread`. The damaged files found one fault: a line out at 1e9 or a text of a huge size asked for hundreds of gigabytes. Pictures and texts are now at most 4096 pixels a side (`refusePictureSize`). Generated programs and `xgegui` have not been run under one.
