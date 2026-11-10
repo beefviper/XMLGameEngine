@@ -845,6 +845,43 @@ TEST_CASE("an input names one key by button=, or several by a <button> each", "[
 		ContainsSubstring("names a button"));
 }
 
+TEST_CASE("two things of one name in one place stop the load", "[xml_format][errors]")
+{
+	const auto withInputs = [](const std::string& inputs)
+	{
+		std::string xml = gameXml("", objectXml(ObjectXml{}));
+		const std::string written = "<input button=\"space\"><pop /></input>";
+		xml.replace(xml.find(written), written.size(), inputs);
+		return xml;
+	};
+
+	SECTION("a button bound twice in one state, by button= or in a list of <button>s")
+	{
+		REQUIRE_THROWS_WITH(Loaded(withInputs("<input button=\"space\"><pop /></input><input button=\"space\"><pop /></input>")),
+			ContainsSubstring("binds 'space' again: this state's <inputs> already has it"));
+		REQUIRE_THROWS_WITH(Loaded(withInputs("<input button=\"p\"><pop /></input><input><button>space</button><button>p</button><pop /></input>")),
+			ContainsSubstring("binds 'p' again"));
+		REQUIRE_THROWS_WITH(Loaded(withInputs("<input button=\"space\" on=\"release\"><pop /></input><input button=\"space\" on=\"release\"><pop /></input>")),
+			ContainsSubstring("binds 'space' again: this state's <inputs> already has it on=\"release\""));
+	}
+	SECTION("one button at two moments is two bindings, not one twice")
+	{
+		Loaded loaded(withInputs("<input button=\"space\"><pop /></input><input button=\"space\" on=\"release\"><pop /></input>"));
+		CHECK(loaded.game.getStates().front().input.count(KeyCode::Space) == 1);
+	}
+	SECTION("two states of one name")
+	{
+		REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(ObjectXml{}), {}, idleState("playing"))),
+			ContainsSubstring("has two states called 'playing'"));
+	}
+	SECTION("two objects of one name in one <objects>")
+	{
+		ObjectXml o;
+		REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(o) + objectXml(o))),
+			ContainsSubstring("this <objects> already has an object, group or map called 'o'"));
+	}
+}
+
 TEST_CASE("a command that names a state, object or action the game does not have stops the load", "[xml_format][commands]")
 {
 	const auto withInput = [](const std::string& commands, const std::string& extra = {})

@@ -10,7 +10,7 @@ How to use this file: read [The short version](#the-short-version) and [What I w
 
 **The four findings that matter most.**
 
-1. **A misspelt name can load and silently do nothing.** `<collision class="padle">`, `<condition object="bal" ...>`, `<condition ... variable="scor">` and `<show object="computr">` all load; the rule just never fires. Two objects of one name in the same `<objects>` are silently merged into one, and two states of one name are accepted. This is the largest correctness gap, because the project's promise is "mistakes stop the load" ([B2](#b2-names-that-match-nothing-stop-the-load), [B3](#b3-two-things-of-one-name-stop-the-load)).
+1. **A misspelt name can load and silently do nothing.** `<collision class="padle">`, `<condition object="bal" ...>`, `<condition ... variable="scor">` and `<show object="computr">` all load; the rule just never fires. Two objects of one name in the same `<objects>` are silently merged into one, and two states of one name are accepted. This is the largest correctness gap, because the project's promise is "mistakes stop the load" ([B2](#b2-names-that-match-nothing-stop-the-load); B3, done).
 2. **The vocabulary is growing faster than it is being reduced.** 327 element names; 77 are used by exactly one game, 15 by none. Several concepts have two or three spellings: three jumps, two ways into and out of play, three ways to take turns, two ways to end a game, five booleans in a language that otherwise has none. Every simplification the author found so far (kit into objects, grid into group, pools into copies, phase numbers into looks, card nouns into holders) left the older form alive somewhere. The list is in [Simplification and consistency](#simplification-and-consistency).
 3. **A new word costs about ten edits in ten places.** Schema, `isCommandTag`, `readCommand`, `RawCommand`, `makeCommand`, the `Cmd*` struct and variant, `CommandExecutor::run`, `ruleFor`, `data.xsl`, the describer in the generated test, two doc pages. That is why words are cheap to add and expensive to remove, and it is the debt that grows with every game ([A1](#a1-a-verb-is-one-file)).
 4. **Frame pacing is each window library's own business.** SDL2 paces by vsync only, so on a 144 Hz monitor a game runs 2.4 times too fast; SFML sleeps; raylib and OpenGL count time themselves. Movement is per frame, so pacing is game speed ([B5](#b5-one-frame-pacer-in-the-engine)).
@@ -69,7 +69,7 @@ The scripts used are small and are described in [T1](#t1-keep-the-reviews-checks
 |---|---|---|---|
 | 1 | `ctest` exits with a failure on a clean tree | `xmltest (Not Run)` from `build/_deps/tinyxml2-build` | B1, done |
 | 2 | A class, object, variable or look named in a filter or test is not checked | In `pong.xml`: `<collision class="padle">`, `<condition class="padle" variable="score">`, `<condition class="paddle" variable="scor">`, `<condition object="bal" variable="x">`, `<condition object="ball" variable="xx">`, `<show object="computr" />` all load and play | [B2](#b2-names-that-match-nothing-stop-the-load) |
-| 3 | Two objects of one name in the same `<objects>` become one, silently; two states of one name are accepted; one key bound twice in a state is accepted | `score2` renamed `score1` in `pong.xml`: 28 objects instead of 29, no message. `mainmenu` renamed `playing`: loads | [B3](#b3-two-things-of-one-name-stop-the-load) |
+| 3 | Two objects of one name in the same `<objects>` become one, silently; two states of one name are accepted; one key bound twice in a state is accepted | `score2` renamed `score1` in `pong.xml`: 28 objects instead of 29, no message. `mainmenu` renamed `playing`: loads | B3, done |
 | 4 | Text arithmetic that divides by zero gives infinity, which becomes a position or a size | `<x>1 / 0</x>` in 22 damaged files: loads, object at infinity | [B4](#b4-a-number-that-is-not-finite-stops-the-load) |
 | 5 | Game speed depends on the window library and the monitor | `window/sdl2.cpp`: `SDL_RENDERER_PRESENTVSYNC` and no other pacing. `sfml.cpp`: `setFramerateLimit`. `raylib.cpp`, `opengl.cpp`: their own clocks. `gui/game_session.cpp`: a fifth | [B5](#b5-one-frame-pacer-in-the-engine) |
 | 6 | Nonsense sizes and times are accepted | `<width>0</width>` on the window, a text `<size>0</size>`, `<after>-1</after>`, `<framerate>0</framerate>` all load | [B6](#b6-ranges-for-the-numbers-that-have-one) |
@@ -204,15 +204,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 - **Careful.** A class may be given only by a piece nothing takes yet; a scene's objects are named by path (`playing.room2.robots`) and `tryGetObject` falls back to the end of a path. Use the same lookup the running game uses, or the check will refuse valid games. All 58 games must still load: that is the test that the check is not too strict.
 - **Done.** Each of the six misspellings in finding 2 stops the load with a message that names the tag, the name, and a "did you mean". A test case per kind.
 - **Verify.** `ctest`; `xgetest-generated`; rebuild the damaged-file run of [T2](#t2-xgecli---check) and confirm that changed-attribute files that still load are down from 97 to the ones that are truly harmless (an object renamed that nothing names).
-
-#### B3. Two things of one name stop the load
-
-- **Size** S. **Needs** nothing.
-- **Why.** Finding 3. The one change rule merges a take with its piece by name; the same code merges two siblings in one `<objects>` list that happen to share a name, so a copy-and-paste mistake silently loses an object.
-- **Files.** `xge/lib/load/merge.cpp` (`mergeChildren` and where an `<objects>` list is laid out), `games/generators/windows-cpp/merge.xsl` (nothing to change if the engine refuses first; confirm), `xge/lib/load/xml.cpp` (states, inputs), tests in `xge/tests/test_pieces.cpp` and `test_xml_format.cpp`.
-- **Do.** Refuse: two `<object>`, `<group>` or `<map>` of one name in the same `<objects>`; two `<state>`s of one name; two `<scene>`s of one name in a state; in one state, the same button under the same `on=` moment bound twice (a state `from=` another replacing a copied key is not a duplicate). Sounds and styles are already refused.
-- **Done.** Four messages, four tests; all games load.
-- **Verify.** `ctest`. In `pong.xml` rename `score2` to `score1` by hand and run `output/Release/xgecli pong -a none`: it must refuse.
 
 #### B4. A number that is not finite stops the load
 
@@ -622,7 +613,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Block 1  (a day or two; no decisions needed)
-  B3  duplicate names refused
   B4  non-finite numbers refused
   B6  number ranges
   T2  xgecli --check
@@ -686,4 +676,4 @@ What blocks what, in one place:
 | F1 | B5, T2 |
 | F8 | D7 lifted |
 
-If only five things are ever done from this file, do B2, B3, B5, T1 and R1.
+If only five things are ever done from this file, do B2, B5, T1 and R1 (B3 is done).

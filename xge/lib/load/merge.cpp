@@ -540,6 +540,9 @@ namespace xge
 	std::vector<ElementPtr> layOut(const XmlNode& objects, std::vector<ElementPtr> inherited, const Kit& kit, const std::string& where)
 	{
 		std::vector<ElementPtr> list = std::move(inherited);
+		// The names written in this list: a second is a mistake, never a change
+		// (changing is for what an outer list or a piece gave).
+		std::set<std::string> writtenHere;
 		for (std::unique_ptr<XmlNode> node = objects.getFirstChild(); node != nullptr; node = node->getNextSibling())
 		{
 			const ElementPtr written = copyElement(*node);
@@ -563,9 +566,11 @@ namespace xge
 						: "from=\"" + from + "\" names a <map> piece, which only a <map> takes");
 				}
 				if (same != list.end()) { fail(here, "there is already an object or group called '" + name + "' here"); }
+				writtenHere.insert(name);
 				list.push_back(kit.take(from, written, here));
 				continue;
 			}
+			if (!writtenHere.insert(name).second) { fail(here, "this <objects> already has an object, group or map called '" + name + "'"); }
 			if (same != list.end())
 			{
 				*same = changed(*same, written, here);

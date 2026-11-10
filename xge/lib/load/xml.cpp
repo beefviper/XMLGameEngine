@@ -2735,6 +2735,7 @@ namespace xge
 				if (!axis.empty())
 				{
 					if (!on.empty()) { fail(where + " > <input axis=\"" + axis + "\">", "on=\"" + on + "\" is for a button; a control that points runs as it moves"); }
+					if (out.axes.count(axis)) { fail(where + " > <input axis=\"" + axis + "\">", "binds axis '" + axis + "' again: this state's <inputs> already has it"); }
 					out.axes[axis] = readCommands(input->getFirstChild(), where + " > <input axis=\"" + axis + "\">");
 					continue;
 				}
@@ -2749,7 +2750,11 @@ namespace xge
 				}
 				const std::vector<RawCommand> commands = readKeyCommands(std::move(commandsStart), where + " > <input " + written + ">");
 				auto& to = out.buttons[static_cast<std::size_t>(moment - keyMoments.begin())];
-				for (const std::string& button : buttons) { to[button] = commands; }
+				for (const std::string& button : buttons)
+				{
+					if (to.count(button)) { fail(where + " > <input " + written + ">", "binds '" + button + "' again: this state's <inputs> already has it" + (on.empty() ? std::string() : " on=\"" + on + "\"")); }
+					to[button] = commands;
+				}
 			}
 		}
 
@@ -3520,6 +3525,11 @@ namespace xge
 		for (std::unique_ptr<XmlNode> state = states->getFirstChild(); state != nullptr; state = state->getNextSibling())
 		{
 			if (state->getName() != "state") { continue; }
+			const std::string name = state->getAttribute("name");
+			if (std::any_of(rawStates.begin(), rawStates.end(), [&](const RawState& each) { return each.name == name; }))
+			{
+				fail("<states>", "has two states called '" + name + "'");
+			}
 			rawStates.push_back(readState(*state, stateLists, showSets, kit, gameNames));
 		}
 	}

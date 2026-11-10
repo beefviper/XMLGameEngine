@@ -500,6 +500,12 @@ TEST_CASE("names that could mean two things, and takes of nothing, stop the load
 		fails(gameXml(kRooms + "<state name=\"practice\"><objects>" + box("rock", 0, 0) + "</objects>" + kSpace + "</state>",
 			box("label", 0, 0, "<x>rock.width</x>"), {}, kRock), "'rock' could be");
 	}
+	SECTION("two scenes of one name in a state")
+	{
+		fails(gameXml("<state name=\"playing\"><scenes>"
+			"<scene name=\"room1\" /><scene name=\"room1\" /></scenes>" + kSpace + "</state>"),
+			"has two scenes called 'room1'");
+	}
 	SECTION("a scene from= one there is not")
 	{
 		fails(gameXml("<state name=\"playing\"><scenes>"

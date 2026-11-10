@@ -49,7 +49,7 @@ So remapping a key is one edit in one state, a key can do different things in di
 <input button="space" on="release"><trigger object="arrow" action="putt" from="ready" /></input>
 ```
 
-- A key may have all three, each its own `<input>`.
+- A key may have all three, each its own `<input>`. The same key at the same moment twice in one state's `<inputs>` (by `button=` or among `<button>`s) stops the load; a state `from=` another may rebind a key it copied.
 - **`hold` and `release` answer only a press made in the current state**: Space held from the title into the game neither charges nor strikes.
 - Putt Park builds a putt this way: held, an `<inc>` adds power and a `<smallest>` keeps it at 100; let go, a `<set>` gives the ball its speed.
 

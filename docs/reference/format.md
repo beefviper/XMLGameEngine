@@ -164,7 +164,7 @@ Names are dotted, and every dot means "inside":
 
 - **Inside out.** A name is looked for from where it is written: the scene's own, the state's, the game's, then as the end of exactly one path. So inside a scene `robots` means its own, and `hero` means `playing.hero` anywhere.
 - **Every scene's.** A scene's object also answers to `state.name` (`playing.robots`), the robots of whichever scene is met. Where a short name could mean two things the shortest path wins; two as short stop the load.
-- A name given twice where both can be seen, or two scenes of one name, stop the load.
+- A name given twice where both can be seen stops the load: two objects, groups or maps of one name in one `<objects>` (changing one is for what a `from=` state or scene, or a piece, gave), two states of one name, or two scenes of one name in a state.
 - A reference splits at its **last** dot into owner and variable.
 - `class="..."` puts an object in a kind that rules and conditions match, as in CSS: a name picks one object, a class all of its kind.
 
