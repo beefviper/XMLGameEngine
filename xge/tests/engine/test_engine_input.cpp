@@ -227,8 +227,8 @@ TEST_CASE("the engine knows when its window has been closed", "[engine_input]")
 TEST_CASE("every shipped game follows the shared key conventions", "[engine_input]")
 {
 	// Space starts, pauses and plays again (never Enter), and player one is on
-	// W, A, S and D (never Q and Z). A game of one screen (pong_min) has nothing
-	// for Space to do.
+	// W, A, S and D (never Z; Q turns or cycles back beside E). A game of one
+	// screen (pong_min) has nothing for Space to do.
 	int checked = 0;
 	for (const auto& entry : std::filesystem::directory_iterator("descriptions"))
 	{
@@ -247,7 +247,6 @@ TEST_CASE("every shipped game follows the shared key conventions", "[engine_inpu
 			return text.find("button=\"" + key + "\"") != std::string::npos || text.find("<button>" + key + "</button>") != std::string::npos;
 		};
 		CHECK_FALSE(names("enter"));
-		CHECK_FALSE(names("q"));
 		CHECK_FALSE(names("z"));
 		const bool oneScreen = text.find("<state ") == text.rfind("<state ");
 		CHECK((oneScreen || names("space")));

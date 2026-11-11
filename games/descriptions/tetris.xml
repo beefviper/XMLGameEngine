@@ -10,7 +10,7 @@
   fall faster. The game is over when a new shape has no room to come in.
 
   A and D or the arrows move the shape (held, it steps once, waits, then
-  slides along); W, Up or X turns it clockwise, E or C the other way; S or
+  slides along); W, Up, E or X turns it clockwise, Q the other way; S or
   Down drops it faster while held, and Space drops it all the way. P or
   Escape pauses; Space starts and plays again.
 
@@ -69,7 +69,7 @@
           <padding><y>36</y></padding>
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
-          <row number="1"><sprite><text><content>a and d or the arrows move, w or x turns, e or c turns back</content></text></sprite></row>
+          <row number="1"><sprite><text><content>a and d or the arrows move, w or e turns, q turns back</content></text></sprite></row>
           <row number="2"><sprite><text><content>s or down drops faster, spacebar drops at once, p pauses</content></text></sprite></row>
         </group>
         <object name="start">
@@ -260,8 +260,8 @@
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="pieces" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="pieces" action="right" /></input>
         <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="pieces" action="faster" /></input>
-        <input><button>w</button><button>up</button><button>x</button><button>pad1.a</button><trigger object="pieces" action="clockwise" /></input>
-        <input><button>e</button><button>c</button><button>pad1.b</button><trigger object="pieces" action="counter" /></input>
+        <input><button>w</button><button>up</button><button>e</button><button>x</button><button>pad1.a</button><trigger object="pieces" action="clockwise" /></input>
+        <input><button>q</button><button>pad1.b</button><trigger object="pieces" action="counter" /></input>
         <input><button>space</button><button>pad1.y</button><trigger object="pieces" action="drop" /></input>
         <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>

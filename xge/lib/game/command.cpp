@@ -145,7 +145,7 @@ namespace xge
 			[&](const CmdClear&) { o << "clear"; },
 			[&](const CmdCollapse&) { o << "collapse"; },
 			[&](const CmdFall& fall) { o << "fall"; if (!fall.objClass.empty()) { o << "(" << fall.objClass << ")"; } },
-			[&](const CmdCycle&) { o << "cycle"; },
+			[&](const CmdCycle& c) { o << (c.backward ? "cycle backward" : "cycle"); },
 			[&](const CmdGrow&) { o << "grow"; },
 			[&](const CmdSplit&) { o << "split"; },
 			[&](const CmdThrough&) { o << "through"; },

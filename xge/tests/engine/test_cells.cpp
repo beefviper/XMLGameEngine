@@ -310,6 +310,21 @@ TEST_CASE("Tetris plays: a shape comes in, falls, lands and the next comes", "[c
 	CHECK(play.get("playing.status").variable.at("over") == 0.0f);
 }
 
+TEST_CASE("Tetris turns clockwise on W, Up, E or X and counterclockwise on Q", "[cells][tetris]")
+{
+	Played play("descriptions/tetris.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	const std::vector<std::pair<KeyCode, int>> turns{ { KeyCode::W, 1 }, { KeyCode::E, 2 }, { KeyCode::Up, 3 }, { KeyCode::X, 0 }, { KeyCode::Q, 3 }, { KeyCode::Q, 2 } };
+	for (const auto& [key, quarter] : turns)
+	{
+		play.tap(key);
+		play.frames(1);
+		REQUIRE(falling(play.game));
+		CHECK(falling(play.game)->quarter == quarter);
+	}
+}
+
 TEST_CASE("Tetris shows the next shape in its box, still, and sends it in when one lands", "[cells][tetris]")
 {
 	Played play("descriptions/tetris.xml");
@@ -527,6 +542,15 @@ TEST_CASE("Columns plays: a column comes in, cycles, lands and the next comes", 
 	play.tap(KeyCode::W);
 	play.frames(1);
 	CHECK(falling(play.game)->shapeParts[1] == top);
+	// E cycles the same way, Q back: the top jewel is in the middle, then back on top.
+	play.tap(KeyCode::E);
+	play.frames(1);
+	CHECK(falling(play.game)->shapeParts[2] == top);
+	play.tap(KeyCode::Q);
+	play.frames(1);
+	play.tap(KeyCode::Q);
+	play.frames(1);
+	CHECK(falling(play.game)->shapeParts[0] == top);
 
 	// Left to fall, it lands within thirteen rows' time, and the next comes.
 	for (int i = 0; i < 13 * 50 && falling(play.game) && falling(play.game)->name == name; ++i) { play.frames(1); }

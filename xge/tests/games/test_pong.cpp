@@ -234,6 +234,29 @@ TEST_CASE("Space plays the computer, which keeps the right paddle under the ball
 	}
 }
 
+TEST_CASE("the second player's Up and Down do nothing while the computer plays the right paddle", "[pong][computer]")
+{
+	for (const KeyCode start : { KeyCode::Space, KeyCode::Num2 })
+	{
+		Pong pong;
+		pong.tap(start);
+		REQUIRE(pong.state() == "playing");
+		// The ball level with the right paddle's middle and going away: the
+		// computer has nothing to do.
+		Object& ball = pong.object("ball");
+		ball.position = { 600.0f, pong.middle("paddle2") - ball.size.y / 2 };
+		ball.velocity = { -1.0f, 0.0f };
+		const float y = pong.object("paddle2").position.y;
+
+		pong.engine.handleKeyPressed(KeyCode::Up);
+		pong.frames(10);
+		pong.engine.handleKeyReleased(KeyCode::Up);
+		pong.frames(1);
+		if (start == KeyCode::Space) { CHECK(pong.object("paddle2").position.y == y); }
+		else { CHECK(pong.object("paddle2").position.y < y - 20.0f); }
+	}
+}
+
 TEST_CASE("Pong's easy computer is beaten by a ball from the top corner to the bottom one, once it is fast", "[pong][computer]")
 {
 	Pong pong;

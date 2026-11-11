@@ -93,7 +93,7 @@ A map with `<cells />` is a playfield such as Tetris's well: pieces move a whole
 | `<move direction="left">12<wait>0.2</wait></move>` | held: one step, waits, then 12 cells a second |
 | `<slide direction="down" />` | cell by cell at once until refused (Tetris's hard drop). `class="tile"`: every piece of that class, the one nearest that way first; refused if none moved (Doubles) |
 | `<turn direction="clockwise" />` | a quarter turn of a shape, once a press |
-| `<cycle />` | each cell of a shape moves on along its outline (Columns) |
+| `<cycle />` | each cell of a shape moves on along its outline (Columns); `direction="backward"` the other way |
 | `<go direction="up">8</go>` | keeps going 8 cells a second until another `<go>` |
 
 - **A refused move is a touch.** A step into a taken cell or off the map is not made, and runs both sides' rules: `<collision class="block" side="bottom">`, `<collision edge="bottom">`. If the rules take away what was in the way (`<despawn />`), the step goes on: that is how Snake eats. A [`<through />`](commands.md#touching) makes the step into the taken cell anyway, the two sharing it.

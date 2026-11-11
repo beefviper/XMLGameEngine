@@ -847,20 +847,21 @@ namespace xge
 		for (Object& object : objects) { join(object); }
 	}
 
-	void Game::cycleCells(Object& shape)
+	void Game::cycleCells(Object& shape, bool backward)
 	{
 		if (!shape.isShape()) { return; }
 		const std::vector<Object*> cells = cellsOf(shape);
 		const std::size_t count = cells.size();
 		if (count < 2 || count != shape.shapeCells.size()) { return; }
 
-		// The cell at place i goes to place i + 1; the places stay.
+		// The cell at place i goes to place i + 1 (backward: i - 1); the places stay.
 		std::vector<std::string> parts(count);
 		std::vector<std::string> pieces(count);
 		for (std::size_t i = 0; i < count; ++i)
 		{
-			parts[(i + 1) % count] = shape.shapeParts[i];
-			pieces[(i + 1) % count] = shape.shapeCells[i].piece;
+			const std::size_t to = backward ? (i + count - 1) % count : (i + 1) % count;
+			parts[to] = shape.shapeParts[i];
+			pieces[to] = shape.shapeCells[i].piece;
 		}
 		const int column = whole(shape.cellColumn);
 		const int row = whole(shape.cellRow);

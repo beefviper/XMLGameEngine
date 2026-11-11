@@ -183,7 +183,7 @@ namespace xge
 
 	// <cycle /> - a shape's cells each move on to the next cell of its
 	// outline, in reading order, the last to the first.
-	struct CmdCycle {};
+	struct CmdCycle { bool backward{ false }; };
 
 	// A variable a command names, owner.variable, taken apart once when the
 	// command is made: the owner (an object, a path to one, or for <set> a

@@ -10,8 +10,8 @@
   the gaps, which can make new lines: a chain. Every ten lines the jewels
   fall faster. The game is over when a new column has no room to come in.
 
-  A and D or the arrows move the column; W, Up, X or Space cycles its
-  jewels (each one down, the bottom one to the top); S or Down drops it
+  A and D or the arrows move the column; W, Up, E, X or Space cycles its
+  jewels (each one down, the bottom one to the top), Q the other way; S or Down drops it
   faster while held. P or Escape pauses; Space starts and plays again.
 
   How it is written:
@@ -62,7 +62,7 @@
           <padding><y>36</y></padding>
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
-          <row number="1"><sprite><text><content>a and d or the arrows move, w, x or spacebar cycles the jewels</content></text></sprite></row>
+          <row number="1"><sprite><text><content>a and d or the arrows move, w, e or spacebar cycles, q cycles back</content></text></sprite></row>
           <row number="2"><sprite><text><content>s or down drops faster, p pauses</content></text></sprite></row>
         </group>
         <object name="start">
@@ -171,6 +171,7 @@
               <action name="right"><move direction="right">10<wait>0.2</wait></move></action>
               <action name="faster"><move direction="down">20</move></action>
               <action name="cycle"><cycle /><play sound="cycle" /></action>
+              <action name="back"><cycle direction="backward" /><play sound="cycle" /></action>
               <action name="land">
                 <settle />
                 <play sound="land" />
@@ -209,7 +210,8 @@
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="pieces" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="pieces" action="right" /></input>
         <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="pieces" action="faster" /></input>
-        <input><button>w</button><button>up</button><button>x</button><button>space</button><button>pad1.a</button><trigger object="pieces" action="cycle" /></input>
+        <input><button>w</button><button>up</button><button>x</button><button>e</button><button>space</button><button>pad1.a</button><trigger object="pieces" action="cycle" /></input>
+        <input><button>q</button><button>pad1.b</button><trigger object="pieces" action="back" /></input>
         <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>

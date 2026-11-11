@@ -52,6 +52,14 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <!-- The two ways a cycle goes: forward each cell to the next place, backward each to the one before. -->
+  <xs:simpleType name="cycleDirectionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="forward" />
+      <xs:enumeration value="backward" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="flipType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="horizontal" />
@@ -1580,8 +1588,12 @@
       <!-- settle: on a map with <cells />, a shape's cells stay as loose pieces and the shape is gone; then the map's checks -->
       <xs:element name="settle" type="emptyType" />
       <xs:element name="slide" type="slideType" />
-      <!-- cycle: on a map with <cells />, a shape's cells each move on to the next cell of its outline, in reading order, the last to the first (Columns' jewels) -->
-      <xs:element name="cycle" type="emptyType" />
+      <!-- cycle: on a map with <cells />, a shape's cells each move on to the next cell of its outline, in reading order, the last to the first (Columns' jewels); direction="backward" the other way -->
+      <xs:element name="cycle">
+        <xs:complexType>
+          <xs:attribute name="direction" type="cycleDirectionType" />
+        </xs:complexType>
+      </xs:element>
       <!-- grow: an object with a <chain> gets one link longer, at its tail, on its next step -->
       <xs:element name="grow" type="emptyType" />
       <!-- split: a piece of a chain cuts it there: it leaves the chain, and the links behind it are a chain of their own, led by the first of them -->

@@ -281,7 +281,7 @@ A game's `<demo>`, after `<states>`, is a recorded game: the random seed, how ma
 
 ## Computer players
 
-A state's `<computer>` is a player the game plays itself, pressing the state's keys as a person would: conditions whose commands are `<hold button>`s. **Every** condition is tested every frame; the keys of those that hold are held, the rest let go.
+A state's `<computer>` is a player the game plays itself, pressing the state's keys as a person would: conditions whose commands are `<hold button>`s. **Every** condition is tested every frame; the keys of those that hold are held, the rest let go. Give it keys of its own (Pong's F11 and F12) where a person's keys for the same thing should do nothing while it plays.
 
 ```xml
 <computer>

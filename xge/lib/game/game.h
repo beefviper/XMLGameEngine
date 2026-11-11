@@ -464,7 +464,7 @@ namespace xge
 		// piece it is joined to lies; at the end of every frame.
 		void showJoins();
 		// <cycle />: a shape's cells each on to the next of its outline.
-		void cycleCells(Object& shape);
+		void cycleCells(Object& shape, bool backward = false);
 
 		// --- A board game on a map of cells (game/cells.cpp): pieces with
 		// <moves>, taken up and put down by a picker, an object on a map of

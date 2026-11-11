@@ -22,10 +22,11 @@
     a point and is served again, its <random>s and its hits drawn anew.
   * The net is a group of one column and many rows.
   * Paused and game over draw the game still underneath (<show state>).
-  * The computer plays the right paddle with a <computer>, holding Up or
-    Down as a second player would. Easy follows the ball's height all the
-    time; smart goes back to the middle once the ball has left it, and
-    follows the ball only once it comes over the net. Its choice is kept.
+  * The computer plays the right paddle with a <computer>, holding F11 and
+    F12, keys of its own, so the second player's Up and Down do nothing
+    while it plays. Easy follows the ball's height all the time; smart goes
+    back to the middle once the ball has left it, and follows the ball only
+    once it comes over the net. Its choice is kept.
   * The speeds make either beatable: a paddle goes 5 a frame, the ball 9,
     then 11.7 from the fourth hit and 15.2 from the twelfth. From the fourth
     hit on, a ball sent from the top corner to the bottom one crosses
@@ -113,6 +114,9 @@
           <actions>
             <action name="up"><move direction="up">step</move></action>
             <action name="down"><move direction="down">step</move></action>
+            <!-- the second player's keys, which do nothing while the computer plays -->
+            <action name="secondup"><condition object="computer" variable="players"><equal>2</equal><move direction="up">step</move></condition></action>
+            <action name="seconddown"><condition object="computer" variable="players"><equal>2</equal><move direction="down">step</move></condition></action>
           </actions>
           <variables>
             <variable name="score">0</variable>
@@ -192,8 +196,11 @@
       <inputs>
         <input button="w"><trigger object="paddle1" action="up" /></input>
         <input button="s"><trigger object="paddle1" action="down" /></input>
-        <input button="up"><trigger object="paddle2" action="up" /></input>
-        <input button="down"><trigger object="paddle2" action="down" /></input>
+        <input button="up"><trigger object="paddle2" action="secondup" /></input>
+        <input button="down"><trigger object="paddle2" action="seconddown" /></input>
+        <!-- the computer's own keys for the right paddle -->
+        <input button="f11"><trigger object="paddle2" action="up" /></input>
+        <input button="f12"><trigger object="paddle2" action="down" /></input>
         <input button="space"><push state="paused" /></input>
       </inputs>
       <conditions>
@@ -207,18 +214,18 @@
         <condition object="computer" variable="players"><equal>1</equal>
           <!-- easy: under the ball, always -->
           <condition object="computer" variable="level"><equal>1</equal>
-            <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below><hold button="down" /></condition>
-            <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above><hold button="up" /></condition>
+            <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below><hold button="f12" /></condition>
+            <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above><hold button="f11" /></condition>
           </condition>
           <!-- smart: under the ball once it comes over the net, else in the middle -->
           <condition object="computer" variable="level"><equal>2</equal>
             <condition object="ball" variable="velocity.x"><above>0</above>
               <condition object="ball" variable="x"><above>window.width.center</above>
                 <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below>
-                  <hold button="down" />
+                  <hold button="f12" />
                 </condition>
                 <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above>
-                  <hold button="up" />
+                  <hold button="f11" />
                 </condition>
               </condition>
             </condition>
@@ -227,8 +234,8 @@
                 <condition object="ball" variable="velocity.x"><atmost>0</atmost></condition>
                 <condition object="ball" variable="x"><atmost>window.width.center</atmost></condition>
               </any>
-              <condition object="paddle2" variable="y"><below>window.height.center - height / 2 - 8</below><hold button="down" /></condition>
-              <condition object="paddle2" variable="y"><above>window.height.center - height / 2 + 8</above><hold button="up" /></condition>
+              <condition object="paddle2" variable="y"><below>window.height.center - height / 2 - 8</below><hold button="f12" /></condition>
+              <condition object="paddle2" variable="y"><above>window.height.center - height / 2 + 8</above><hold button="f11" /></condition>
             </condition>
           </condition>
         </condition>

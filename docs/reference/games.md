@@ -17,7 +17,7 @@ The tables list only keys beyond that.
 
 | Game | Keys | Shows |
 |---|---|---|
-| `pong` | W/S; on the title Space plays the computer (A/D easy or smart), 2 two players on Up/Down | [`<deflect>`](commands.md#touching) off the paddles, a [computer](states.md#computer-players) of two levels |
+| `pong` | W/S; on the title Space plays the computer (A/D easy or smart), 2 two players on Up/Down | [`<deflect>`](commands.md#touching) off the paddles, a [computer](states.md#computer-players) of two levels on keys of its own (F11, F12), so Up and Down do nothing against it |
 | `pong_min` | W/S, Up/Down | two paddles and a ball, nothing else; the game [`--generate`](programs.md#generating-a-program) was grown on |
 | `breakout` | A/D, the mouse | eight rows of bricks as one group, a half paddle at the top, the mouse by [`<track />`](input.md#pointing-controls) |
 | `spacerace` | W/S, Up/Down | two rockets through drifting debris, the most crossings in a minute |
@@ -70,8 +70,8 @@ The tables list only keys beyond that.
 
 | Game | Keys | Shows |
 |---|---|---|
-| `tetris` | A/D move, W/X turn, E/C turn back, S drops faster, Space drops at once; P pauses | [cells](maps.md#cells), standard turns and kicks, full rows cleared, the next shape by `<send>` |
-| `columns` | A/D move, W/X/Space cycle, S drops faster; P pauses | lines of three alike, chains by `<fall />` |
+| `tetris` | A/D move, W/E/X turn clockwise, Q counterclockwise, S drops faster, Space drops at once; P pauses | [cells](maps.md#cells), standard turns and kicks, full rows cleared, the next shape by `<send>` |
+| `columns` | A/D move, W/E/X/Space cycle, Q cycles back, S drops faster; P pauses | lines of three alike, chains by `<fall />` |
 | `capsules` | as Tetris, without the drop | an original game of germs and capsules; halves that stay joined ([`<joins>`](maps.md#cells)) |
 | `snake` | W A S D or arrows; Space or P pauses | a [chain](maps.md#cells) for a body, food in a free cell |
 | `crates` | W A S D or arrows walk, U/Backspace undo, R restarts the room; P pauses | four rooms of crates to push onto spots: [`<shove />`](maps.md#pushing-merging-and-counting), a floor layer, `<count><here /></count>`, `<undo />` |
