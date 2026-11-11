@@ -126,18 +126,15 @@ A condition is checked every frame while its state (or scene) is current. It hol
 </condition>
 ```
 
-- **`<any>`** holds when one of its tests does. Inside it a `<condition>` is a test alone, with no commands, and an `<all>` is tests that must all hold; they nest. An `<all>` goes only in an `<any>`.
+- **`<any>`** holds when one of its tests does. Inside it a `<condition>` is a test alone, with no commands; an `<any>` can hold another. There is no `<all>`: an "or" whose choice needs two tests is two conditions, one for each way (Tennis: five points, or four against thirty or less).
 
 ```xml
-<condition>
+<condition>                                  <!-- Asteroids: the field clear, or the rocks far from the middle -->
   <any>
-    <condition object="player" variable="points"><atleast>5</atleast></condition>
-    <all>
-      <condition object="player" variable="points"><atleast>4</atleast></condition>
-      <condition object="cpu" variable="points"><atmost>2</atmost></condition>
-    </all>
+    <condition class="hazard"><remaining>0</remaining></condition>
+    <condition class="hazard" distance="centre" total="lowest"><above>150</above></condition>
   </any>
-  <inc variable="player.games" />
+  <reveal object="ship" />
 </condition>
 ```
 

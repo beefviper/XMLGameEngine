@@ -1176,36 +1176,34 @@ TEST_CASE("a condition can test how far each object it matches is from the neare
 	CHECK(clear.fires());
 }
 
-TEST_CASE("<any> holds when one check does, an <all> in it when every one does, and they nest", "[conditions][join]")
+TEST_CASE("<any> holds when one check does, and they nest", "[conditions][join]")
 {
 	const std::string yes = "<condition object=\"coin1\" variable=\"v\"><equal>2</equal></condition>";
 	const std::string no = "<condition object=\"coin2\" variable=\"v\"><equal>2</equal></condition>";
 
-	CHECK(Coins("><any><all>" + yes + yes + "</all></any>").fires());
-	CHECK_FALSE(Coins("><any><all>" + yes + no + "</all></any>").fires());
 	CHECK(Coins("><any>" + no + yes + "</any>").fires());
 	CHECK_FALSE(Coins("><any>" + no + no + "</any>").fires());
-	CHECK(Coins("><any><all>" + yes + "<any>" + no + "<condition class=\"coin\" total=\"count\"><equal>3</equal></condition></any></all></any>").fires());
-	CHECK_FALSE(Coins("><any>" + no + "<all>" + yes + no + "</all></any>").fires());
+	CHECK(Coins("><any>" + no + "<any>" + no + "<condition class=\"coin\" total=\"count\"><equal>3</equal></condition></any></any>").fires());
+	CHECK_FALSE(Coins("><any>" + no + "<any>" + no + no + "</any></any>").fires());
 
 	// Each check its own kind of test, read every frame.
-	Coins coins("><any><all><condition object=\"ball\" distance=\"coin1\"><below>60</below></condition>"
-		"<condition object=\"flag\" variable=\"n\"><equal>0</equal></condition></all></any>");
+	Coins coins("><any><condition object=\"ball\" distance=\"coin1\"><above>60</above></condition>"
+		"<condition object=\"flag\" variable=\"n\"><equal>0</equal></condition></any>");
 	CHECK(coins.fires());
 	CHECK_FALSE(coins.fires()); // n is 1 now
 }
 
-TEST_CASE("totals, distances, <any> and <all> in it load with every XML library", "[conditions][xml]")
+TEST_CASE("totals, distances and <any> load with every XML library", "[conditions][xml]")
 {
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 	{
 		INFO(static_cast<int>(backend));
-		CHECK(Coins("><any><all><condition class=\"coin\" variable=\"v\" total=\"sum\"><atleast>1</atleast></condition>"
-			"<any><condition object=\"ball\" distance=\"coin1\"><below>60</below></condition></any></all></any>", backend).fires());
+		CHECK(Coins("><any><condition class=\"coin\" variable=\"v\" total=\"sum\"><atleast>1</atleast></condition>"
+			"<any><condition object=\"ball\" distance=\"coin1\"><below>60</below></condition></any></any>", backend).fires());
 	}
 }
 
-TEST_CASE("mistakes in totals, distances, <any> and <all> stop the load, saying where", "[conditions][errors]")
+TEST_CASE("mistakes in totals, distances and <any> stop the load, saying where", "[conditions][errors]")
 {
 	// With no schema named, so these are the engine's own checks.
 	const auto fails = [](const std::string& condition, const std::string& expected)
@@ -1222,11 +1220,12 @@ TEST_CASE("mistakes in totals, distances, <any> and <all> stop the load, saying 
 	fails("object=\"ball\" distance=\"coin1\" total=\"count\"><below>5</below>", "measures no distance=");
 	fails("class=\"coin\" total=\"count\"><remaining>1</remaining>", "<remaining> counts what is in play");
 	fails("object=\"ball\"><any><condition object=\"ball\" variable=\"n\"><below>5</below></condition></any>", "so the condition has no class=");
-	fails("><all><condition object=\"ball\" variable=\"n\"><below>5</below></condition></all>", "an <all> goes only in an <any>");
-	fails("><any><all></all></any>", "<all>: has no <condition>");
+	fails("><all><condition object=\"ball\" variable=\"n\"><below>5</below></condition></all>", "<all>: is gone; tests that must all hold are a condition in a condition");
+	fails("><any><all></all></any>", "<all>: is gone");
+	fails("><any></any>", "<any>: has no <condition>");
 	fails("><any><condition object=\"coin1\" variable=\"v\"><below>5</below><inc variable=\"flag.n\" /></condition></any>", "the commands go at the end");
 	fails("><any><when /></any>", "unknown <when>");
-	fails("><any><all><condition object=\"coin1\"><below>5</below></condition></all></any>", "<all> > <condition>: <below> reads a variable");
+	fails("><any><condition object=\"coin1\"><below>5</below></condition></any>", "<any> > <condition>: <below> reads a variable");
 
 	// The schema turns the shapes away first.
 	CHECK_THROWS_WITH(Coins("class=\"coin\" total=\"most\"><atleast>1</atleast>", XmlBackend::TinyXml2), ContainsSubstring("is not a valid totalType"));

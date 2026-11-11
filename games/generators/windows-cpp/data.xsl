@@ -217,7 +217,7 @@
     </xsl:call-template>
     <xsl:value-of select="concat($inner, 'tested.commands = ')" />
     <xsl:call-template name="commands">
-      <xsl:with-param name="nodes" select="$node/*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::all or self::any))]" />
+      <xsl:with-param name="nodes" select="$node/*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::any))]" />
       <xsl:with-param name="indent" select="$inner" />
     </xsl:call-template>
     <xsl:value-of select="concat(';&#10;', $indent, '}))')" />
@@ -1344,11 +1344,11 @@
     <!-- each rule: one holding none, or a holder's <first>; what the
          rules holding it say (readCollisions), it says too -->
     <xsl:for-each select="$node//collision[not(collision) or first]">
-      <xsl:variable name="commands" select="first/*[../../collision] | *[not(self::condition or self::all or self::any or self::first or self::collision)][not(../collision)]" />
+      <xsl:variable name="commands" select="first/*[../../collision] | *[not(self::condition or self::any or self::first or self::collision)][not(../collision)]" />
       <xsl:variable name="edge" select="ancestor-or-self::collision[@edge][1]/@edge" />
       <xsl:variable name="sprite" select="ancestor-or-self::collision[@sprite][1]/@sprite" />
       <xsl:variable name="unless" select="ancestor-or-self::collision[@unless][1]/@unless" />
-      <xsl:variable name="checks" select="ancestor-or-self::collision/condition | ancestor-or-self::collision/all | ancestor-or-self::collision/any" />
+      <xsl:variable name="checks" select="ancestor-or-self::collision/condition | ancestor-or-self::collision/any" />
       <xsl:choose>
         <xsl:when test="$edge != ''">
           <xsl:value-of select="concat($indent, 'addEdgeRule(', $data, ', &quot;', $edge, '&quot;, ')" />
@@ -3036,7 +3036,7 @@
       <xsl:otherwise>
         <xsl:value-of select="concat($inner, $var, '.commands = ')" />
         <xsl:call-template name="commands">
-          <xsl:with-param name="nodes" select="*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::all or self::any))]" />
+          <xsl:with-param name="nodes" select="*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::any))]" />
           <xsl:with-param name="indent" select="$inner" />
         </xsl:call-template>
       </xsl:otherwise>
@@ -3073,10 +3073,10 @@
       </xsl:if>
     </xsl:for-each>
     <xsl:choose>
-      <xsl:when test="($node/@class or $node/@object) and ($node/@sprite or not($node/@variable or $node/@total or $node/@distance)) and not($test[self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::all or self::any])">
+      <xsl:when test="($node/@class or $node/@object) and ($node/@sprite or not($node/@variable or $node/@total or $node/@distance)) and not($test[self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::any])">
         <xsl:value-of select="concat($inner, $var, '.test = RawCondition::Test::Shows;&#10;')" />
       </xsl:when>
-      <xsl:when test="$test[self::all or self::any]">
+      <xsl:when test="$test[self::any]">
         <xsl:call-template name="condition-join">
           <xsl:with-param name="join" select="$test" />
           <xsl:with-param name="var" select="$var" />

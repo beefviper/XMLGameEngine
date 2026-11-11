@@ -30,7 +30,7 @@
     holds J or L down while the ball is to one side of it, the keys a second
     player would use, so a person could play that end instead.
   * The score is words: a <choose> shows LOVE, 15, 30, 40 or AD from the
-    points. Conditions of <all> and <any> say who takes the game: four
+    points. Conditions in conditions say who takes the game: four
     points with the other on 30 or less, or five, after four all has gone
     back to deuce (three all).
   * A ball out at the far end is a point to the near player, and the other
@@ -215,27 +215,25 @@
           </condition>
         </condition>
         <!-- four points against thirty or less, or five (after advantage), take the game -->
-        <condition>
-          <any>
-            <condition object="player" variable="points"><atleast>5</atleast></condition>
-            <all>
-              <condition object="player" variable="points"><atleast>4</atleast></condition>
-              <condition object="cpu" variable="points"><atmost>2</atmost></condition>
-            </all>
-          </any>
+        <condition object="player" variable="points"><atleast>5</atleast>
           <inc variable="player.games" />
           <set variable="players.points">0</set>
         </condition>
-        <condition>
-          <any>
-            <condition object="cpu" variable="points"><atleast>5</atleast></condition>
-            <all>
-              <condition object="cpu" variable="points"><atleast>4</atleast></condition>
-              <condition object="player" variable="points"><atmost>2</atmost></condition>
-            </all>
-          </any>
+        <condition object="player" variable="points"><atleast>4</atleast>
+          <condition object="cpu" variable="points"><atmost>2</atmost>
+            <inc variable="player.games" />
+            <set variable="players.points">0</set>
+          </condition>
+        </condition>
+        <condition object="cpu" variable="points"><atleast>5</atleast>
           <inc variable="cpu.games" />
           <set variable="players.points">0</set>
+        </condition>
+        <condition object="cpu" variable="points"><atleast>4</atleast>
+          <condition object="player" variable="points"><atmost>2</atmost>
+            <inc variable="cpu.games" />
+            <set variable="players.points">0</set>
+          </condition>
         </condition>
       </conditions>
       <!-- the computer keeps its racket under the ball -->

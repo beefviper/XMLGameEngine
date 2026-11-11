@@ -2810,11 +2810,10 @@ namespace xge
 			}
 		}
 
-		// An <all> or an <any>, into `raw`: which, and its <condition>s, <all>s
-		// and <any>s in order.
+		// An <any>, into `raw`: its <condition>s and <any>s in order.
 		void readJoin(const XmlNode& join, const std::string& here, RawCondition& raw)
 		{
-			raw.join = join.getName() == "all" ? RawCondition::Join::All : RawCondition::Join::Any;
+			raw.join = RawCondition::Join::Any;
 			for (std::unique_ptr<XmlNode> part = join.getFirstChild(); part != nullptr; part = part->getNextSibling())
 			{
 				const std::string partName = part->getName();
@@ -2824,13 +2823,17 @@ namespace xge
 					const std::string checkHere = here + " > <condition>";
 					if (readCheck(*part, checkHere, check)) { fail(checkHere, "has its one test and nothing after it; the commands go at the end of the <condition>"); }
 				}
-				else if (partName == "all" || partName == "any")
+				else if (partName == "all")
+				{
+					fail(here + " > <all>", "is gone; tests that must all hold are a condition in a condition, so write this <any> as two conditions: one for each way it can hold");
+				}
+				else if (partName == "any")
 				{
 					readJoin(*part, here + " > <" + partName + ">", check);
 				}
 				else
 				{
-					fail(here, "unknown <" + partName + ">; expected <condition>s, <all>s and <any>s");
+					fail(here, "unknown <" + partName + ">; expected <condition>s and <any>s");
 				}
 				raw.parts.push_back(std::move(check));
 			}
@@ -2871,11 +2874,11 @@ namespace xge
 			const std::string testName = test->getName();
 			if (testName == "all")
 			{
-				fail(here + " > <all>", "tests that must all hold are a condition in a condition: the first test here, the next in a <condition> inside it (an <all> goes only in an <any>)");
+				fail(here + " > <all>", "is gone; tests that must all hold are a condition in a condition: the first test here, the next in a <condition> inside it");
 			}
 
-			// <all> / <any>: several checks, each a test of its own.
-			if (testName == "all" || testName == "any")
+			// <any>: several checks, each a test of its own.
+			if (testName == "any")
 			{
 				if (!raw.filterClass.empty() || !raw.filterObject.empty() || !raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty() || !raw.sprite.empty())
 				{
@@ -2894,7 +2897,7 @@ namespace xge
 			else if (testName == "remaining") { raw.test = RawCondition::Test::Remaining; }
 			else if (testName == "lowest") { raw.test = RawCondition::Test::Lowest; }
 			else if (testName == "highest") { raw.test = RawCondition::Test::Highest; }
-			else { fail(here, "starts with <" + testName + ">; expected <atleast>, <atmost>, <above>, <below>, <equal>, <unequal>, <remaining>, <lowest /> or <highest />, or an <all> or <any>"); }
+			else { fail(here, "starts with <" + testName + ">; expected <atleast>, <atmost>, <above>, <below>, <equal>, <unequal>, <remaining>, <lowest /> or <highest />, or an <any>"); }
 
 			// <lowest /> and <highest />: the one whose variable is lowest (or highest) of all those matched.
 			if (raw.test == RawCondition::Test::Lowest || raw.test == RawCondition::Test::Highest)
