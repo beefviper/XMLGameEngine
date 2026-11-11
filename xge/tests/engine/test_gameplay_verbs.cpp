@@ -600,7 +600,7 @@ TEST_CASE("<reveal> brings hidden members of a pool back where they started, as 
 	CHECK(shown() == 3);
 }
 
-TEST_CASE("coming back into play draws a <random> again: a reveal and a release (a fired copy draws its own)", "[random][reveal]")
+TEST_CASE("a <reveal> back into play draws a <random> again (a copy, fired or spawned, draws its own)", "[random][reveal]")
 {
 	// A rock that dies a moment after it is back, so it comes back again and
 	// again; what it comes back with is noted each time.
@@ -619,21 +619,10 @@ TEST_CASE("coming back into play draws a <random> again: a reveal and a release 
 		return seen.size();
 	};
 
-	SECTION("<reveal>")
-	{
-		Loaded loaded(gameXml(rock + box("keeper", 0, 0, 1, 1, "<enabled>false</enabled>", {},
-			"<timers><timer><every>0.1</every><reveal object=\"rock\" /></timer></timers>"),
-			state("playing", { "rock", "keeper" })));
-		CHECK(distinctSpeeds(loaded) > 3);
-	}
-
-	SECTION("<release>")
-	{
-		Loaded loaded(gameXml(rock + box("keeper", 400, 300, 1, 1, "<enabled>false</enabled>", {},
-			"<timers><timer><every>0.1</every><release object=\"rock\" /></timer></timers>"),
-			state("playing", { "rock", "keeper" })));
-		CHECK(distinctSpeeds(loaded) > 3);
-	}
+	Loaded loaded(gameXml(rock + box("keeper", 0, 0, 1, 1, "<enabled>false</enabled>", {},
+		"<timers><timer><every>0.1</every><reveal object=\"rock\" /></timer></timers>"),
+		state("playing", { "rock", "keeper" })));
+	CHECK(distinctSpeeds(loaded) > 3);
 }
 
 TEST_CASE("a condition can change a variable, so it can count and start over", "[conditions]")

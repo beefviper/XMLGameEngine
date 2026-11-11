@@ -6,7 +6,7 @@
 // Catch2 tests for games/descriptions/missilecommand.xml, played through a real
 // xge::Engine with no window and the keys a player would press: the missiles
 // making for the cities (<chase>), the base aimed at the sight (<aim>), a
-// counter-missile bursting at the sight (<release>) and the burst taking the
+// counter-missile bursting at the sight (<spawn>) and the burst taking the
 // missiles that fly into it, a city lost, the waves (the scenes of the
 // playing state, each with its own share of one pool of missiles), the
 // pause drawing the game still, and the end.

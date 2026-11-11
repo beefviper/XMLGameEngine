@@ -10,7 +10,7 @@ Commands are sorted by what they need. Each place takes only the groups that mea
 |---|---|---|
 | changes | `inc`, `dec`, `set`, `copy`, `rank`, `play`, `silence`, `become`, `reveal`, `follow`, `shift`, `enter`, `reset`, `spawn`, `despawn object=`, `trigger`, `count`; for [holders](cards.md#holders) `send`, `distribute`, `order` | nothing: they name what they change |
 | flow | `push`, `pop`, `turns`, `pass`, `out`, `demo`, `undo` | the game's running order |
-| self | `die`, `drop`, `move`, `release`, `reverse`, `stop`, `fire`, `despawn`; on cells `settle`, `slide`, `cycle`, `grow`, `split`, `pick`, `place`, [`put`](boards.md#pieces-put-not-moved); a hand's [`call`](cards.md#holders) | an object running it |
+| self | `die`, `drop`, `move`, `reverse`, `stop`, `fire`, `despawn`; on cells `settle`, `slide`, `cycle`, `grow`, `split`, `pick`, `place`, [`put`](boards.md#pieces-put-not-moved); a hand's [`call`](cards.md#holders) | an object running it |
 | steering | `aim`, `chase`, `hunt`, `wander` | an object to steer |
 | touch | `carry`, `deflect`, `hole`, `knock`, `land`, `ride`; on cells `shove`, `merge`, `through` | another object touched |
 | edge | `stick`, `wrap` | a screen edge |
@@ -97,9 +97,8 @@ An object out of play does nothing when its action is pressed or triggered; lett
 | `<reset scene="room1" />`, `<reset way="out" />` | a [scene](states.md#scenes) back as it started |
 | `<enter scene="room2" />`, `<enter way="east" />` | makes that scene current; the one left stays as it was |
 | `<reveal object="blocks">count</reveal>` | brings back the first `count` (default 1) out of play, where they started |
-| `<release object="debris">count</release>` | puts `count` into play at the middle of the object running it: copies of a piece, or from a pool |
-| `<fire object="shot" />` | launches a copy (or pool member): along an aim; else from its facing side; else from its nose along a heading; else from its top with the shot's own velocity |
-| `<spawn object="ball">` | a new copy, placed and moving as its `<position>`, `<velocity>`, `<acceleration>` say, read as it runs: `<x><centered>self.x + 5</centered></x>` |
+| `<fire object="shot" />` | launches a copy of a piece (a top-level `<objects>` entry; anything else stops the load): along an aim; else from its facing side; else from its nose along a heading; else from its top with the shot's own velocity |
+| `<spawn object="ball">`, `<spawn object="debris"><count>4</count></spawn>` | a new copy (or `<count>` of them), placed and moving as its `<position>`, `<velocity>`, `<acceleration>` say, read as it runs: `<x><centered>self.x + 5</centered></x>`. A half of the position left out is the middle of the object running it (with none, where the piece says); its velocity left out is the piece's own. Refused only when not one may be made |
 | `<despawn />`, `<despawn object="bomb" />` | takes it, or every copy of that name, out of the game ([spawn and despawn](objects.md#spawn-and-despawn)) |
 
 ## Numbers

@@ -9,7 +9,7 @@
      for step): every <objects> holds whole objects and groups, a piece of
      the top-level <objects> taken (by from= or by its name) written out changed by the
      take, a state's and a scene's objects those of the one it is from=
-     changed by its own, and a piece that a <spawn>, <fire> or <release>
+     changed by its own, and a piece that a <spawn> or <fire>
      names put in beside what spawns it with <exists>false</exists>, as
      the one its copies are made from. data.xsl then writes out that game,
      its <objects> those of <states> (in play the whole game), with no
@@ -447,13 +447,13 @@
     </xsl:for-each>
   </xsl:template>
 
-  <!-- What a <spawn>, <fire> or <release> in $nodes names (spawnedIn), and
+  <!-- What a <spawn> or <fire> in $nodes names (spawnedIn), and
        in a path they <follow>, each between spaces.
        $taken: the sets already looked in. -->
   <xsl:template name="merge-spawned">
     <xsl:param name="nodes" />
     <xsl:param name="taken" select="' '" />
-    <xsl:for-each select="($nodes | $nodes//*)[self::spawn or self::fire or self::release][@object != '']">
+    <xsl:for-each select="($nodes | $nodes//*)[self::spawn or self::fire][@object != '']">
       <xsl:value-of select="concat(' ', @object, ' ')" />
     </xsl:for-each>
     <xsl:variable name="more"

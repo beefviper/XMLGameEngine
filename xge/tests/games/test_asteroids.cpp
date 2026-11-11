@@ -9,7 +9,7 @@
 // and loses speed to <drag>; a drawing of lines made at every heading
 // (rasterizeTurned, whole degrees) and the picture for the current heading
 // being the one that is shown and tested; <fire> along the heading, each shot
-// a copy of a shot that does not <exist>; <release>, which is how a rock that
+// a copy of a shot that does not <exist>; <spawn> with a <count>, which is how a rock that
 // breaks spawns two smaller ones; and wrapping round the screen.
 //
 // Window::init() normally measures each object's size once a backend exists;
@@ -83,7 +83,7 @@ namespace
 			return members;
 		}
 
-		// A copy of a rock or shot, made as a <release> or <fire> would make it,
+		// A copy of a rock or shot, made as a <spawn> or <fire> would make it,
 		// in the game at once.
 		Object& spawn(const std::string& name)
 		{
@@ -299,7 +299,7 @@ TEST_CASE("asteroids.xml loads with a ship that has a heading, shots, rocks and 
 	CHECK(field.group("bigrocks").size() == 4);
 
 	// Only the big rocks exist to begin with; the shots and the smaller rocks
-	// are descriptions, copied when they are fired or released.
+	// are descriptions, copied when they are fired or spawned.
 	CHECK_FALSE(field.named("shot").exists);
 	CHECK_FALSE(field.named("mediumA").exists);
 	CHECK_FALSE(field.named("smallC").exists);
@@ -327,7 +327,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 		int descriptions = 0;
 		int turns = 0;
 		int thrusts = 0;
-		int releases = 0;
+		int breaks = 0;
 		for (const Object& object : game.getCurrentObjects())
 		{
 			if (!object.exists) { ++descriptions; }
@@ -343,7 +343,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 			{
 				for (const Command& command : rule.commands)
 				{
-					if (std::holds_alternative<CmdRelease>(command)) { ++releases; }
+					if (const auto* live = std::get_if<CmdLive>(&command); live && live->raw->verb == "spawn") { ++breaks; }
 				}
 			}
 		}
@@ -351,7 +351,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 		CHECK(descriptions == 3 + 3 + 3); // three shapes of each smaller rock, and the three shots
 		CHECK(turns == 2);
 		CHECK(thrusts == 1);
-		CHECK(releases == (4 + 3) * 2); // every big rock and medium shape hands out smaller ones, hit by a shot or a saucer
+		CHECK(breaks == (4 + 3) * 2); // every big rock and medium shape hands out smaller ones, hit by a shot or a saucer
 	}
 }
 
@@ -772,7 +772,7 @@ namespace
 	}
 }
 
-TEST_CASE("a shot breaks a big rock into two medium ones where it was", "[asteroids][release]")
+TEST_CASE("a shot breaks a big rock into two medium ones where it was", "[asteroids][break]")
 {
 	Field field;
 	Object& rock = *field.group("bigrocks")[0];
@@ -796,7 +796,7 @@ TEST_CASE("a shot breaks a big rock into two medium ones where it was", "[astero
 	}
 }
 
-TEST_CASE("the two medium rocks are released the moment of the hit, centred on the big one", "[asteroids][release]")
+TEST_CASE("the two medium rocks are spawned the moment of the hit, centred on the big one", "[asteroids][break]")
 {
 	Field field;
 	Object& rock = *field.group("bigrocks")[1];
@@ -827,7 +827,7 @@ TEST_CASE("the two medium rocks are released the moment of the hit, centred on t
 	CHECK(found == 2);
 }
 
-TEST_CASE("a medium rock breaks into two small ones, and a small one into none", "[asteroids][release]")
+TEST_CASE("a medium rock breaks into two small ones, and a small one into none", "[asteroids][break]")
 {
 	Field field;
 	// Bring one medium rock into play (as a hit on a big rock would) and shoot it.
@@ -849,7 +849,7 @@ TEST_CASE("a medium rock breaks into two small ones, and a small one into none",
 	CHECK(field.inPlay("smallrocks") == 2); // the two from before, which clearTheMiddle moved aside
 }
 
-TEST_CASE("every rock of a wave can be broken down to nothing, and the next wave comes", "[asteroids][release]")
+TEST_CASE("every rock of a wave can be broken down to nothing, and the next wave comes", "[asteroids][break]")
 {
 	Field field;
 	field.saucersKeptOut = true;
@@ -880,7 +880,7 @@ TEST_CASE("every rock of a wave can be broken down to nothing, and the next wave
 	CHECK(field.inPlay("mediumrocks") + field.inPlay("smallrocks") == 0);
 }
 
-TEST_CASE("there is no limit to the smaller rocks: a break always releases two more", "[asteroids][release]")
+TEST_CASE("there is no limit to the smaller rocks: a break always spawns two more", "[asteroids][break]")
 {
 	Field field;
 
@@ -1270,9 +1270,9 @@ TEST_CASE("a turn or a thrust on an object with no heading is reported when the 
 	CHECK_THROWS_WITH(Game{ scratch.path.string() }, ContainsSubstring("heading"));
 }
 
-TEST_CASE("a release of something that is not in the game is reported when it loads", "[asteroids][errors]")
+TEST_CASE("a spawn of something that is not in the game is reported when it loads", "[asteroids][errors]")
 {
-	const Scratch scratch{ asteroidsWith("<release object=\"mediumrocks\">", "<release object=\"nosuchrocks\">") };
+	const Scratch scratch{ asteroidsWith("<spawn object=\"mediumrocks\">", "<spawn object=\"nosuchrocks\">") };
 	CHECK_THROWS_WITH(Game{ scratch.path.string() }, ContainsSubstring("nosuchrocks"));
 }
 

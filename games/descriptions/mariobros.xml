@@ -317,7 +317,7 @@
         <action name="kicked">
           <inc variable="tally.kicked" />
           <play sound="kick" />
-          <spawn object="coin" />
+          <spawn object="coin"><position><x>6</x><y>top - 9</y></position></spawn>
           <die />
         </action>
       </actions>
@@ -511,7 +511,6 @@
         <frame sprite="a" />
         <frame sprite="b" />
       </animation>
-      <position><x>6</x><y>top - 9</y></position>
       <velocity><x>crawl</x></velocity>
       <acceleration><x>0</x><y>pull</y></acceleration>
       <collisions>

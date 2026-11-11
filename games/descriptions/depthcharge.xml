@@ -18,11 +18,11 @@
     its two sides (positions read as Space is pressed); six at most are in
     the water, and one that hits a boat or the bottom is <despawn>ed.
   * The submarines are one group, which says once what every submarine
-    does (wrap round, lay a mine now and then with <release>, sink to a
+    does (wrap round, lay a mine now and then with <spawn>, sink to a
     charge for its lane's worth, self.worth), with a group inside it for
     each lane: its color, depth, speed, worth and boats. A sunk boat comes
     back where it started, on a timer of the playing state.
-  * A sunk boat <release>s a burst, an animated picture spawned where it
+  * A sunk boat <spawn>s a burst, an animated picture, where it
     sank, which <despawn>s itself on its own timer. Mines are spawned the
     same way.
   * The sonar ping is the playing state's <music>.
@@ -145,12 +145,12 @@
             <collision class="charge">
               <inc variable="status.score">self.worth</inc>
               <play sound="sink" />
-              <release object="burst" />
+              <spawn object="burst" />
               <die />
             </collision>
           </collisions>
           <timers>
-            <timer><every><random><min>3</min><max>9</max></random></every><release object="mine" /></timer>
+            <timer><every><random><min>3</min><max>9</max></random></every><spawn object="mine" /></timer>
           </timers>
           <group name="lane1">
             <position><y>170</y></position>

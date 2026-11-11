@@ -244,7 +244,7 @@
       </xsl:for-each>
       <xsl:choose>
         <!-- how many is optional, and one when left out -->
-        <xsl:when test="$verb = 'inc' or $verb = 'dec' or $verb = 'reveal' or $verb = 'release'">
+        <xsl:when test="$verb = 'inc' or $verb = 'dec' or $verb = 'reveal'">
           <xsl:text> command.amount = </xsl:text>
           <xsl:choose>
             <xsl:when test="$node/* or normalize-space($node) != ''">
@@ -498,6 +498,10 @@
           </xsl:call-template>
         </xsl:when>
         <xsl:when test="$verb = 'spawn'">
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.amount'" />
+            <xsl:with-param name="node" select="$node/count" />
+          </xsl:call-template>
           <xsl:if test="$node/random">
             <xsl:text> command.random = true;</xsl:text>
           </xsl:if>

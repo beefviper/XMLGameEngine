@@ -24,7 +24,7 @@
   * A wave is a <group> of demons, each with a velocity of its own, bouncing
     off the sides, turning round on a timer drawn anew each time and dropping
     bombs from under it (<facing>down</facing>, <fire>) on another.
-  * The second wave's demons <release> two small demons where they were
+  * The second wave's demons <spawn> two small demons where they were
     shot, copies of a piece (top-level <objects>) that is not in play until then. A
     wave is over when none of the class is left in play, small ones too.
   * The third wave's demons have two looks, whole and hurt: a hit turns the
@@ -267,7 +267,7 @@
                 <collision object="laser">
                   <inc variable="player.score">50</inc>
                   <play sound="split" />
-                  <release object="half">2</release>
+                  <spawn object="half"><count>2</count></spawn>
                   <die />
                 </collision>
               </collisions>

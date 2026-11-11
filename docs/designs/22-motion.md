@@ -15,7 +15,7 @@
 | `bounce`, `stick`, `die`, `reset`, `inc` | Pong, Breakout, Invaders |
 | `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless` | Frogger |
 | `<line>`, `pixel`, `<acceleration>`, `<accelerate burn>`, `<stop />`, a condition on `speed` | Lunar Lander |
-| `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<release>`, amounts on `inc`/`dec` | Asteroids |
+| `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<spawn>` with a `<count>`, amounts on `inc`/`dec` | Asteroids |
 | `<knock>`, `<mass>` | Trick Shot, Mario Bros. |
 | timers, `<facing>`, timed `<hop>`, `<reverse />`, looks, `<reveal>` | a read of every game for workarounds |
 | `<paths>`, `<follow>` | Galaxian |

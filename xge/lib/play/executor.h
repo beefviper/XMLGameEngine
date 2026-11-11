@@ -56,7 +56,7 @@ namespace xge
 
 		// A <timer> that has gone off: on an object (owner) or in a state (no
 		// owner). The state commands, inc, dec, play and trigger work in both;
-		// on an object, fire, reverse, move, die, stop, release and a bare reset
+		// on an object, fire, reverse, move, die, stop and a bare reset
 		// act on that object (a bare reset in a state resets the game).
 		// False when the command is a verb that could not happen (see
 		// triggerObjectAction), and the timer's other commands are skipped.
@@ -145,7 +145,6 @@ namespace xge
 		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
 		void applyActionTurn(Object& object, Direction direction, float rate);
 		void applyActionThrustAhead(Object& object, const std::string& action, float amount, const std::string& burn);
-		void release(const Object& from, const std::string& target, int count);
 		void restart(Object& object);
 
 		// Runs an action's commands in order. On the press, a verb that can
@@ -169,6 +168,7 @@ namespace xge
 
 		// False when every one of the projectiles is in flight.
 		bool spawnProjectile(Object& shooter, const std::string& projectileName);
+		bool spawnOne(const CmdSpawn& command, const Object* self);
 
 	private:
 		bool lastTriggerRefused{ false };

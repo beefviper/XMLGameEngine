@@ -25,7 +25,7 @@ namespace xge
 	// Steering.
 	extern const Verb chaseVerb, aimVerb, huntVerb, wanderVerb;
 	// In and out of play.
-	extern const Verb dieVerb, resetVerb, spawnVerb, despawnVerb, fireVerb, releaseVerb, revealVerb, dropVerb;
+	extern const Verb dieVerb, resetVerb, spawnVerb, despawnVerb, fireVerb, revealVerb, dropVerb;
 	// Numbers.
 	extern const Verb incVerb, decVerb, setVerb, copyVerb, countVerb, rankVerb;
 	// Look and sound.
@@ -45,7 +45,7 @@ namespace xge
 			&bounceVerb, &deflectVerb, &knockVerb, &stickVerb, &wrapVerb, &holeVerb, &rideVerb, &carryVerb, &landVerb, &throughVerb, &shoveVerb, &mergeVerb,
 			&moveVerb, &hopVerb, &jumpVerb, &climbVerb, &goVerb, &turnVerb, &thrustVerb, &swingVerb, &stopVerb, &reverseVerb, &trackVerb, &followVerb, &shiftVerb,
 			&chaseVerb, &aimVerb, &huntVerb, &wanderVerb,
-			&dieVerb, &resetVerb, &spawnVerb, &despawnVerb, &fireVerb, &releaseVerb, &revealVerb, &dropVerb,
+			&dieVerb, &resetVerb, &spawnVerb, &despawnVerb, &fireVerb, &revealVerb, &dropVerb,
 			&incVerb, &decVerb, &setVerb, &copyVerb, &countVerb, &rankVerb,
 			&becomeVerb, &playVerb, &silenceVerb,
 			&pushVerb, &popVerb, &enterVerb, &triggerVerb, &turnsVerb, &passVerb, &outVerb, &demoVerb, &undoVerb,

@@ -8,7 +8,7 @@
 // take changing the piece by the one rule every start-from follows; a piece
 // from= an earlier one; a named member of a group piece taken on its own;
 // a map piece taken by a map that gives only its rows;
-// what a <spawn>, <fire> or <release> names coming in beside what runs it;
+// what a <spawn> or <fire> names coming in beside what runs it;
 // and the mistakes that stop the load. Small games are written out and
 // played with no window (played.h).
 

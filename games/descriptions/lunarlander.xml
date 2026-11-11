@@ -28,7 +28,7 @@
     in around the reset, and the game is over when what was copied out is
     nothing; the score is kept apart. A landing pushes a state
     that holds the lander still on the pad; a wreck breaks it into pieces
-    (<release>d at the lander) under a message whose timer says when the
+    (<spawn>ed at the lander) under a message whose timer says when the
     next one may come.
   Not in it: the terrain scrolling and the close-up view, the abort button,
   hard landings.
@@ -166,7 +166,7 @@
             <collision class="ground">
               <condition variable="landed"><equal>0</equal></condition>
               <set variable="lander.crashed">1</set>
-              <release object="debris">4</release>
+              <spawn object="debris"><count>4</count></spawn>
               <die />
             </collision>
           </collisions>

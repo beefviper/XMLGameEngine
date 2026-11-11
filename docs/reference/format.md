@@ -69,7 +69,7 @@ Once, at load, except:
 - a command's values and a condition's test, read as they run ([below](#values-read-when-used));
 - an object's number written `update="live"` ([below](#live-numbers-of-an-object)).
 
-A `<random>` is drawn at load and again whenever its object comes back into play: a reset (of it, its scene or the game), a `<reveal>`, `<release>` or `<fire>`, or a new copy. So each Pong serve is new. A game-level `<random>` is drawn once; entering a scene draws nothing.
+A `<random>` is drawn at load and again whenever its object comes back into play: a reset (of it, its scene or the game), a `<reveal>`, or a new copy. So each Pong serve is new. A game-level `<random>` is drawn once; entering a scene draws nothing.
 
 ### Names a value can use
 

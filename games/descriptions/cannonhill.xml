@@ -126,13 +126,13 @@
       <most>1</most>
       <collisions>
         <collision class="ground">
-          <spawn object="blast"><position><x><centered>self.x + self.width / 2</centered></x><y><centered>self.y + self.height / 2</centered></y></position></spawn>
+          <spawn object="blast" />
           <become object="table" sprite="landed" />
           <play sound="boom" />
           <despawn />
         </collision>
         <collision class="cannon">
-          <spawn object="blast"><position><x><centered>self.x + self.width / 2</centered></x><y><centered>self.y + self.height / 2</centered></y></position></spawn>
+          <spawn object="blast" />
           <become object="table" sprite="landed" />
           <play sound="boom" />
           <despawn />

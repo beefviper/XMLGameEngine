@@ -72,7 +72,7 @@ namespace xge
 
 	class Kit;
 
-	// The objects that a <spawn>, <fire> or <release> in it names, and in a
+	// The objects that a <spawn> or <fire> in it names, and in a
 	// path it <follow>s.
 	std::set<std::string> spawnedIn(const ElementPtr& element, const Kit& kit);
 
@@ -118,7 +118,7 @@ namespace xge
 	// from=, or by having the name of a piece or of a named member).
 	std::vector<ElementPtr> layOut(const XmlNode& objects, std::vector<ElementPtr> inherited, const Kit& kit, const std::string& where);
 
-	// A piece a <spawn>, <fire> or <release> names (in `spawned`,
+	// A piece a <spawn> or <fire> names (in `spawned`,
 	// or in an object of the list), and that nothing in `list` or `seen`
 	// is called, is added to the list as one that does not exist until it is
 	// spawned; and so on for what those name. Alphabetical, round by round.

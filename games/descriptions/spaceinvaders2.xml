@@ -25,7 +25,7 @@
   changes (a row of crabs only its <x>, <y> and <height>).
 
   The aliens step through three frames each; a hit leaves the four explosion
-  frames, <release>d where it was; the saucer is the mystery ship and turns
+  frames, spawned where it was; the saucer is the mystery ship and turns
   its lights as it goes. Not used yet: banking, the hit flash, the charged
   bolt and the enemy bomb.
 -->
@@ -159,7 +159,7 @@
           <collision class="bomb">
             <dec variable="player.lives" />
             <inc variable="player.struck" />
-            <release object="blast" />
+            <spawn object="blast" />
             <play sound="playerhit" />
           </collision>
         </collisions>
@@ -267,7 +267,7 @@
                   </multiply>
                 </formula>
               </inc>
-              <release object="blast" />
+              <spawn object="blast" />
               <play sound="alienhit" />
               <die />
             </collision>
@@ -319,7 +319,7 @@
             </collision>
             <collision object="bullet">
               <inc variable="player.score">self.worth</inc>
-              <release object="blast" />
+              <spawn object="blast" />
               <play sound="alienhit" />
               <die />
             </collision>

@@ -85,7 +85,7 @@ Each row is one concept done more than one way. Counts are games using each form
 
 | # | Concept | The forms today | Reduce to | Task |
 |---|---|---|---|---|
-| 1 | Into and out of play | Pools: `<active>false</active>` (14 games) with `<reveal>` (11) and `<die />` (24). Copies: `<spawn>` (12), `<despawn>` (21). In between: `<fire>` (16) and `<release>` (9), which take "a copy, or from a pool" | Copies only for things that come and go; `<die />` and `<reveal>` only for fixed things that return (bricks, aliens). `<release>` is a `<spawn>` at the spawner's middle | [R3](#r3-one-way-into-and-out-of-play) |
+| 1 | Into and out of play | Pools: `<active>false</active>` (14 games) with `<reveal>` (11) and `<die />` (24). Copies: `<spawn>` (12), `<despawn>` (21). In between: `<fire>` (16) and `<release>` (9), which take "a copy, or from a pool" | Copies only for things that come and go; `<die />` and `<reveal>` only for fixed things that return (bricks, aliens). `<release>` is a `<spawn>` at the spawner's middle | R3, done |
 | 2 | A jump | `<hop>` (20 games; instant, or timed with `<seconds>` and `<arc>`), `<jump>` (Frostbite only; a timed hop), `<leap>` (3; under a pull) | `<hop>` and `<jump>` (the old `<leap>`) | R2, done |
 | 3 | Whose turn | A group with `<turns>` (Crazy Eights, Hearts, Spades, Gin). A `turn` variable on a cursor or table, tested everywhere (Checkers, Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes, Hold'em, Cannon Hill). A state's `<turns>` (Galaxian: each player their own game), which is a different idea under the same word | Players as a group for every shared-world game. Rename the arcade one | [R4](#r4-one-way-to-take-turns) |
 | 4 | The end of a game | One end state whose object has a look per outcome (the form chosen in October). Separate win and lose states: Atlantis, Breakout, Demon Attack, Donkey Kong, Doubles, Frogger, Frostbite, Haunted House, Kaboom, Mario Bros., Megamania, Minefield, Pitfall, Q\*bert, Tennis | One end state with looks, or a lose state `from=` the win state | R5, done |
@@ -166,7 +166,7 @@ Each has a default the plan assumes, so work is not blocked. Changing one change
 | D2 | Drop XML, window and sound libraries | **Settled by the author:** keep all, and add lower-level ones (DirectX, Vulkan). See A7 | A7 |
 | D3 | A Windows build-only job, or none | None (the author); T4 done | |
 | D4 | The words for R6 (booleans) and R7 (window names, centred offset) | **Settled by the author:** `<waiting />` (and `<ready />` to turn it back on) where `<active>false` is still needed, `<hidden />` for `<drawn>false`, `<off />` for a collision's `<enabled>false`, `<lockstep />`, `<fullscreen />`; `<centered><offset>70</offset></centered>`; `window.width`, `window.height` become names and `window.width.center`, `window.height.center` stay (cheap engine constants) | R6, R7 |
-| D5 | Whether pools go entirely (R3) | **Settled by the author:** yes, pools were a stand-in from before spawning; `<die />` and `<reveal>` stay for fixed members | R3 |
+| D5 | Whether pools go entirely (R3) | **Settled by the author:** yes, pools were a stand-in from before spawning; `<die />` and `<reveal>` stay for fixed members | R3, done |
 | D6 | Whether the standard pause and title screens become a built-in default | **No.** A hidden default breaks "one file is the whole game". Standardise the spelling instead | R9 |
 | D7 | Pause on new games and genres until phases 1 to 3 are done | Yes | Order of work |
 | D8 | The short tag forms that replace arithmetic in text | **Settled in part by the author:** no arithmetic in strings. The forms are proposed after R12's survey and the author picks | R12 (R7, done) |
@@ -205,21 +205,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 
 R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest are independent of each other unless noted, and each is one branch.
 
-#### R3. One way into and out of play
-
-- **Size** L. **Needs** nothing (R1 and D5 are done).
-- **Why.** Row 1 of the consistency table. In October "pools become copies" moved sixteen games, but `<fire>` and `<release>` were left able to take from a pool, and 14 games still write `<active>false</active>`. A reader meets `die`, `despawn`, `reveal`, `spawn`, `fire`, `release`, `active`, `most` and has to learn which pairs with which.
-- **Substeps.**
-  1. **Survey (S).** For each of the 14 games with `<active>false</active>` (Asteroids, Atlantis, Berserk, Combat, Demon Attack, Frostbite, Galaxian, Lunar Lander, Mario Bros., Megamania, Missile Command, Space Invaders 1 and 2, Yars' Revenge), list each such object and why it starts out of play: a single shot fired again and again (a pool of one), a thing revealed once later, a fixed member that comes back. Write the list into `docs/designs/10-pools-and-enemies.md`.
-  2. **Pools of one become pieces (M).** A shot that is `active` false and `<fire>`d becomes a top-level piece with `<most>1</most>`; `<fire>` then makes a copy. Rules that said `<die />` on it say `<despawn />`. Move one game (Space Invaders), run its tests, then the rest.
-  3. **`<fire>` and `<release>` take only pieces (S).** Remove the "or from a pool" path in `Game` (`fire`, `release` in `game/game.cpp`; search `pool`), with a load error if the object named is in play rather than a piece.
-  4. **`<release>` is a `<spawn>` (M).** A `<spawn>` with no `<position>` already has a default: confirm what it is. Make "at the spawner's middle" that default, give `<spawn>` the count `<release>` takes, move the 9 games, remove `<release>`.
-  5. **What is left of `<active>` (S).** After 2, `<active>false</active>` should remain only on fixed things revealed later. If fewer than three games still need it, replace those by pieces spawned when wanted and remove `<active>` and `<reveal>`'s "out of play at the start" case; `<reveal>` then only brings back what `<die />` took. If more, keep it and rename under R6.
-- **Files.** The games; `games/xgedef.xsd`; `xge/lib/load/xml.cpp`; `xge/lib/game/game.cpp` (`fire`, `release`, `reveal`, `settleSpawns`); `xge/lib/play/executor.cpp`; `load/check.cpp`; `data.xsl`; `xge/tests/engine/test_spawn.cpp` and each game's test; `docs/reference/commands.md` "In and out of play", `objects.md` "Spawn and despawn", `docs/designs/10-pools-and-enemies.md`.
-- **Careful.** A copy is named `shot.1` and lives beside its spawner (`playing.wave1.bomb.1`); tests and conditions that named the pool member (`shot`) must count the piece's copies instead. Copies join at the end of the frame (`settleSpawns`), a pool member was in play at once: a test that fires and checks in the same frame needs one more frame.
-- **Done.** The table in `commands.md` has `spawn`, `fire`, `despawn`, `die`, `reveal` and no sentence containing "or from a pool". No game has an object that is out of play only to be fired.
-- **Verify.** After each game: its own test, then `ctest`, `xgetest-generated`, and `xgetest-long "[keys]"`.
-
 #### R4. One way to take turns
 
 - **Size** L. **Needs** nothing.
@@ -234,9 +219,9 @@ R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest a
 
 #### R6. No booleans
 
-- **Size** M. **Needs** D4, and R3 (which may remove `<active>`).
+- **Size** M. **Needs** D4 (R3 is done: `<active>` stays, on about fifteen games' things revealed later).
 - **Why.** Row 6. The author's own rule when `update="live"` was chosen: a pick, not a boolean. `<active>false</active>` reads as code.
-- **Do.** Propose and let the author pick: `<active>false</active>` becomes `<waiting />` (or goes, by R3); `<drawn>false</drawn>` becomes `<unseen />`; `<enabled>false</enabled>` on collisions and `<lockstep>true</lockstep>` become `<off />` and `<lockstep />`; `<fullscreen>true</fullscreen>` becomes `<fullscreen />`. A take that turns one back on needs the opposite word or the one change rule needs "an empty tag written again removes it": check how `from=` handles `<active>true</active>` today (Frostbite, Mario Bros.) before choosing.
+- **Do.** Propose and let the author pick: `<active>false</active>` becomes `<waiting />`; `<drawn>false</drawn>` becomes `<unseen />`; `<enabled>false</enabled>` on collisions and `<lockstep>true</lockstep>` become `<off />` and `<lockstep />`; `<fullscreen>true</fullscreen>` becomes `<fullscreen />`. A take that turns one back on needs the opposite word or the one change rule needs "an empty tag written again removes it": check how `from=` handles `<active>true</active>` today (Frostbite, Mario Bros.) before choosing.
 - **Files.** The schema (five elements), `load/xml.cpp`, `load/merge.cpp` and `merge.xsl` (the change rule for these), `data.xsl`, 20-odd games, `docs/reference/objects.md`, `collisions.md`, `format.md`.
 - **Done.** `grep -c "xs:boolean" games/xgedef.xsd` is 0.
 
@@ -266,7 +251,7 @@ R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest a
 - **Size** M, S, L. **Blocks** nothing; A5 needs only what is done.
 - **Substeps, each green.**
   1. **Printing moves (M).** The cases of `operator<<` for `Command` and for `RawCommand` (`game/command.cpp`) into each verb, as `Verb::print`. The generated-games test compares these dumps, so the text must not change by a character.
-  2. **A verb's own helpers move beside it (S).** `hop`, `startFlight`, `huntByHop`, `spawnProjectile`, `leap`, `aim`, `chase`, `land`, `knock`, `release` in `play/executor.cpp` are each used by one verb (check with grep first); move each into its verb's file as a function there. Those several verbs use stay.
+  2. **A verb's own helpers move beside it (S).** `hop`, `startFlight`, `huntByHop`, `spawnProjectile`, `leap`, `aim`, `chase`, `land`, `knock` in `play/executor.cpp` are each used by one verb (check with grep first); move each into its verb's file as a function there. Those several verbs use stay.
   3. **Optional: each verb owns its data (L).** `Command` becomes `{ const Verb* verb; data }` and `RawCommand`'s 50 shared fields become the verb's own. This is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer in the generated test heavily, so do it only after A5 has made `data.xsl` retire, or not at all.
 - **Careful.** The folder is compiled as one unit: name a file's functions for its verb (`readBounce`), never in an unnamed namespace. A refused verb returns false and ends its list: keep each `run`'s answer exactly. The generated programs compile the same files: after each substep, `cmake --build build --target xgetest-generated`.
 - **Files.** `xge/lib/verbs/*`, `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/notes.md` "Loading".
@@ -445,8 +430,7 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 Blocks 1 and 2 are done.
 
 Block 3  (reduction, any order; R1 is done)
-  R3  one way into and out of play        (five substeps)
-  R6  no booleans                         (after R3)
+  R6  no booleans
   R4  turns                               (four substeps)
   R11 card words
   R12 no arithmetic in text            (survey, then D8, then the sweep)
@@ -477,11 +461,10 @@ What blocks what, in one place:
 | Task | Needs first |
 |---|---|
 | R12 | D8 |
-| R6 | R3, D4 |
-| R3 | D5 |
+| R6 | D4 |
 | A3 (`readCommand`, `makeCommand`) | A1 |
 | A1 substep 3 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R3 (B2, B3, B5, R1, R5, R7, R8, R9, R10 and T1 are done).
+If only a few more things are ever done from this file, start with R6 (B2, B3, B5, R1, R3, R5, R7, R8, R9, R10 and T1 are done).

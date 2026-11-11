@@ -292,7 +292,7 @@ namespace xge
 				if (set && taken.emplace(tag, name).second) { collect(set, kit, names, taken); }
 			};
 			const std::string& tag = element->name;
-			if (tag == "spawn" || tag == "fire" || tag == "release")
+			if (tag == "spawn" || tag == "fire")
 			{
 				if (const std::string object = element->attribute("object"); !object.empty()) { names.insert(object); }
 			}

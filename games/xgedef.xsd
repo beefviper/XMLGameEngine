@@ -1090,6 +1090,8 @@
   <!-- spawn: which object or group (<random />: one of its members at random, not in turn), into= the map of cells it goes on (left out: its own), where (a half may be <centered>; on a map with <cells />, the <column> and <row> of its top left cell), and how fast. -->
   <xs:complexType name="spawnType">
     <xs:sequence>
+      <!-- count: how many copies (one if left out) -->
+      <xs:element name="count" type="valueType" minOccurs="0" />
       <xs:element name="random" type="emptyType" minOccurs="0" />
       <xs:choice minOccurs="0">
         <xs:element name="position" type="spawnPositionType" />
@@ -1249,14 +1251,6 @@
   </xs:complexType>
 
   <!-- thrust: how much to add to the velocity each frame along the heading, and optionally the variable it burns. -->
-  <!-- release: the objects (a pool, a group) to put back in play, and how many (one if left out). -->
-  <xs:complexType name="releaseType" mixed="true">
-    <xs:sequence>
-      <xs:group ref="valueTag" minOccurs="0" />
-    </xs:sequence>
-    <xs:attribute name="object" type="xs:string" use="required" />
-  </xs:complexType>
-
   <!-- deflect: the widest angle, in degrees, a bounce off another object leaves at (at the ends of the side it hit). -->
   <xs:complexType name="deflectType" mixed="true">
     <xs:sequence>
@@ -1457,7 +1451,7 @@
           <xs:attribute name="from" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- reveal: as release -->
+      <!-- reveal: the objects (a group) out of play to bring in, and how many (one if left out) -->
       <xs:element name="reveal">
         <xs:complexType mixed="true">
           <xs:sequence>
@@ -1579,7 +1573,6 @@
       <!-- hop: a step at once; on a map with <cells />, whole cells (one with nothing written), refused and touching what is in the way -->
       <xs:element name="hop" type="hopType" />
       <xs:element name="move" type="stepType" />
-      <xs:element name="release" type="releaseType" />
       <xs:element name="reverse" type="emptyType" />
       <xs:element name="stop" type="emptyType" />
       <xs:element name="fire">
@@ -2303,7 +2296,7 @@
           <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- false: out of play (not drawn, touching nothing, not counted) until a <reveal>, <release> or <fire> brings it in -->
+      <!-- false: out of play (not drawn, touching nothing, not counted) until a <reveal> brings it in -->
       <xs:element name="active" type="xs:boolean" minOccurs="0" />
       <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
       <!-- most: how many copies a <spawn> may have made of it at once -->
@@ -2646,7 +2639,7 @@
     The top-level <objects>: pieces, objects, groups and maps written once,
     never in play themselves. A piece comes into play where an <objects> of
     <states>, of a state or of a scene takes it (an object or group from=
-    one, or named after one), or as copies a <spawn>, <fire> or <release>
+    one, or named after one), or as copies a <spawn> or <fire>
     that names it makes, which come into the game beside what spawns them.
     A piece can be from= an earlier piece.
   -->

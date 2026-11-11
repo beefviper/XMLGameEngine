@@ -280,46 +280,6 @@ namespace xge
 		xge::restart(object);
 	}
 
-	// Puts `count` of the objects called `target` that are out of play back in,
-	// each centred on `from` and at its own starting velocity. A pool of them is
-	// a <group>: the first ones found that are not in play are the ones used, and
-	// when there are fewer than asked for the rest are simply not released.
-	void CommandExecutor::release(const Object& from, const std::string& target, int count)
-	{
-		const Vector2f middle = from.position + sizeOf(from) * 0.5f;
-		int released = 0;
-
-		// Of an object that does not exist at the start, new copies.
-		if (game.isDescription(target))
-		{
-			for (; released < count; ++released)
-			{
-				Object* made = game.spawn(target);
-				if (!made) { break; }
-				made->position = middle - sizeOf(*made) * 0.5f;
-				made->velocity = made->start.velocity;
-			}
-			return;
-		}
-
-		for (auto& candidate : game.getCurrentObjects())
-		{
-			if (released >= count) { break; }
-			if (candidate.isVisible || !candidate.exists || &candidate == &from || !candidate.named(target) || game.isAway(candidate)) { continue; }
-
-			// Back in play is a new start: a <random> in it is drawn again,
-			// and its timers and animation start over.
-			game.drawStartAgain(candidate);
-			candidate.startOver();
-			candidate.position = middle - sizeOf(candidate) * 0.5f;
-			candidate.velocity = candidate.start.velocity;
-			candidate.riding = {};
-			candidate.isVisible = true;
-			candidate.collisionsOn = true;
-			++released;
-		}
-	}
-
 	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge, float share)
 	{
 		// An object in lockstep (e.g. the invader block in spaceinvaders) bounces as a
@@ -762,10 +722,20 @@ namespace xge
 		return true;
 	}
 
-	// A new object, a copy of `spawn.target` (Game::spawn), put and sent
-	// where the command says; what it leaves out is as the file says it
-	// starts. False when no more of it may exist.
+	// `command.count` new objects, copies of `spawn.target` (Game::spawn),
+	// each put and sent where the command says. False only when not one more
+	// of it may exist; past its <most> the rest are simply not made.
 	bool CommandExecutor::spawn(const CmdSpawn& command, const Object* self)
+	{
+		bool made = false;
+		for (int each = 0; each < command.count && spawnOne(command, self); ++each) { made = true; }
+		return made;
+	}
+
+	// One of them. A half of the position left out is the spawner's middle
+	// (with no spawner, where the file says it starts); on a cell map, the
+	// spawner's cell. Velocity and acceleration left out are its own.
+	bool CommandExecutor::spawnOne(const CmdSpawn& command, const Object* self)
 	{
 		Object* made = game.spawn(command.target, command.random);
 		if (!made) { return false; }
@@ -796,8 +766,9 @@ namespace xge
 		}
 
 		const Vector2f size = sizeOf(*made);
-		if (command.x) { made->position.x = command.centerX ? *command.x - size.x * 0.5f : *command.x; }
-		if (command.y) { made->position.y = command.centerY ? *command.y - size.y * 0.5f : *command.y; }
+		const Vector2f middle = self ? self->position + sizeOf(*self) * 0.5f - size * 0.5f : made->position;
+		made->position.x = !command.x ? middle.x : command.centerX ? *command.x - size.x * 0.5f : *command.x;
+		made->position.y = !command.y ? middle.y : command.centerY ? *command.y - size.y * 0.5f : *command.y;
 		if (command.velocityX) { made->velocity.x = *command.velocityX; }
 		if (command.velocityY) { made->velocity.y = *command.velocityY; }
 		if (command.accelerationX) { made->acceleration.x = *command.accelerationX; }

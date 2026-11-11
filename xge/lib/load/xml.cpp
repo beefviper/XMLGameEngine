@@ -2993,7 +2993,7 @@ namespace xge
 			}
 		}
 
-		// What a <spawn>, <fire> or <release> in those children of a state or
+		// What a <spawn> or <fire> in those children of a state or
 		// scene names (load/merge spawnedIn): a piece of the top-level <objects> named so
 		// comes into the list they run beside (addWaiting).
 		std::set<std::string> spawnedBy(const XmlNode& node, const std::vector<std::string>& tags, const Kit& kit)

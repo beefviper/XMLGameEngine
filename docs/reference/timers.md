@@ -18,7 +18,7 @@
 A `<timer>` goes off `<every>` so many seconds, again and again, or once `<after>` that long, and runs the commands after it.
 
 - **Whose clock.** An object's timers (a group's are every member's) count while it is in play; a state's while it is current; a scene's while it is current. So a pause stops them.
-- **Starting over.** A reset starts a timer over, and so does its object coming back into play (fired, released, revealed, spawned). A push starts a state's timers over, so a state that pops itself after a while says `<after>`; a pop back lets them carry on.
+- **Starting over.** A reset starts a timer over, and so does its object coming back into play (revealed, or a new copy fired or spawned). A push starts a state's timers over, so a state that pops itself after a while says `<after>`; a pop back lets them carry on.
 - **The interval is worked out again each round**, after the commands, so a `<random>` waits a new time each time (Kaboom's bomber turns whenever he likes).
 - Seconds become frames by the `<framerate>`; a timer never waits less than a frame, and `<after>0</after>` goes off on the first frame it counts.
 - Conditions run last in a frame, so a scene a condition puts back is drawn once before its timers count: what must happen first goes in that condition.

@@ -95,7 +95,6 @@
   <file>lib/verbs/spawn.cpp</file>
   <file>lib/verbs/despawn.cpp</file>
   <file>lib/verbs/fire.cpp</file>
-  <file>lib/verbs/release.cpp</file>
   <file>lib/verbs/reveal.cpp</file>
   <file>lib/verbs/drop.cpp</file>
   <file>lib/verbs/inc.cpp</file>

@@ -495,17 +495,6 @@ namespace xge
 	};
 
 	// <release object="mediumrocks">2</release> - in a collision rule: puts
-	// `count` (1 if it is left out) of the objects of that name that are out of
-	// play - inactive at the start, or taken out with <die /> - back in play, in
-	// the middle of the object that is running the rule, at their own starting
-	// velocity. A group is how a pool of them is named: a rock that breaks
-	// into smaller rocks releases them from the pool of smaller rocks.
-	struct CmdRelease
-	{
-		std::string target;
-		int count{ 1 };
-	};
-
 	// <stop /> - in a collision rule: the object comes to rest where it is and
 	// stays there. Its velocity goes to 0, it is no longer pulled by its
 	// <acceleration> or pushed by a held <thrust>, until a reset gives
@@ -650,18 +639,19 @@ namespace xge
 		float value{};
 	};
 
-	// <spawn object="shots"> with a <position>, a <velocity> and an
-	// <acceleration>, each half
-	// optional - one of `target` (a <group> used as a pool, or an object)
-	// that is out of play comes in, put where the position says (its top
-	// left, or, for a half that is <centered>, its middle) and going as the
-	// velocity says; what is left out stays as it was. None out of play:
-	// nothing. The values are worked out as it runs, so they can say where
-	// the object spawning it is (self.x) and how it is going. See
+	// <spawn object="shots"> with a <count>, a <position>, a <velocity> and
+	// an <acceleration>, each optional - `count` new copies of the piece
+	// `target` (a group: its members in turn, or at random), each put where the position says (its
+	// top left, or, for a half that is <centered>, its middle; a half left
+	// out, the spawner's middle) and going as the velocity says. Past its
+	// <most>: no more. The values are worked out as it runs, so they can say
+	// where the object spawning it is (self.x) and how it is going. See
 	// CommandExecutor::spawn.
 	struct CmdSpawn
 	{
 		std::string target;
+		// <count>N</count>: how many copies (1 when left out).
+		int count{ 1 };
 		std::optional<float> x;
 		std::optional<float> y;
 		bool centerX{ false };
@@ -866,7 +856,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
-		CmdMove, CmdHop, CmdHuntHop, CmdLand, CmdJump, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdThrustAcross, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdHuntHop, CmdLand, CmdJump, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdThrustAcross, CmdTurn, CmdThrust, CmdSwing, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdShove, CmdMerge, CmdUndo, CmdWhen, CmdPick, CmdPlace, CmdPut, CmdOrder, CmdCount, CmdThink, CmdCall, CmdLive>;
 
 	struct LoadedCommand
@@ -1068,7 +1058,7 @@ namespace xge
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
 		std::string pile;      // call: pile=, the pile whose wild card the suit is called for
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
-		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (height), climb, go, hunt and wander (the speed)
+		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), spawn (how many), jump (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)
 		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
 		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)

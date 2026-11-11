@@ -5,11 +5,12 @@
 //
 // Catch2 tests for objects that come and go while a game runs: an object
 // that does not exist until a <spawn> makes a copy of it, the copies'
-// names and their own rules, <despawn />, <most>, <fire> and <release>
+// names and their own rules, <despawn />, <most>, <fire> and a <spawn> with a <count>
 // making copies, a group spawned in turn, what other rules and conditions
 // see of copies, a copy's rule conditions, and resets.
 
 #include "played.h"
+#include "play/executor.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -145,11 +146,11 @@ TEST_CASE("<most> caps how many copies exist, and a refused spawn stops what com
 	CHECK(play.count("shot") == 0);
 }
 
-TEST_CASE("<fire> and <release> of a piece make copies of it", "[spawn]")
+TEST_CASE("<fire> and <spawn> of a piece make copies of it", "[spawn]")
 {
 	const Scratch file(box("ship", 300, 400, "<collisions><enabled>true</enabled></collisions>"
 		"<actions><action name=\"shoot\"><fire object=\"shot\" /></action></actions>")
-		+ box("rock", 300, 380, "<collisions><enabled>true</enabled><collision object=\"ship\"><release object=\"piece\">3</release><despawn /></collision></collisions>"),
+		+ box("rock", 300, 380, "<collisions><enabled>true</enabled><collision object=\"ship\"><spawn object=\"piece\"><count>3</count></spawn><despawn /></collision></collisions>"),
 		"<trigger object=\"ship\" action=\"shoot\" />", {},
 		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
 		"<velocity><x>0</x><y>-6</y></velocity><most>1</most></object>"
@@ -169,6 +170,54 @@ TEST_CASE("<fire> and <release> of a piece make copies of it", "[spawn]")
 	play.get("ship").velocity = { 0, -3 };
 	play.frames(8);
 	CHECK(play.count("piece") == 3);
+}
+
+TEST_CASE("a <spawn> with a <count> makes that many, at the spawner's middle unless a <position> says, up to the <most>", "[spawn]")
+{
+	const Scratch file(box("rock", 300, 380, "<actions><action name=\"break\">"
+		"<spawn object=\"piece\"><count>3</count></spawn><inc variable=\"self.breaks\" /></action></actions>"
+		"<variables><variable name=\"breaks\">0</variable></variables>")
+		+ box("cliff", 100, 100, "<actions><action name=\"drop\"><spawn object=\"piece\"><count>2</count><position><x>10</x></position></spawn></action></actions>"),
+		"<trigger object=\"rock\" action=\"break\" />", {},
+		"<object name=\"piece\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite><most>4</most></object>");
+	Played play(file.path);
+
+	// Three, each in the middle of the rock.
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	REQUIRE(play.count("piece") == 3);
+	for (const char* name : { "piece.1", "piece.2", "piece.3" })
+	{
+		CHECK(play.get(name).position.x == Approx(304));
+		CHECK(play.get(name).position.y == Approx(384));
+	}
+	CHECK(play.get("rock").variable.at("breaks") == 1.0f);
+
+	// A half given is the given one; the other is still the spawner's middle.
+	// Only one more may exist, so one is made, and the spawn is not refused.
+	CommandExecutor executor(play.game);
+	CmdSpawn two;
+	two.target = "piece";
+	two.count = 2;
+	two.x = 10.0f;
+	REQUIRE(executor.spawn(two, &play.get("cliff")));
+	play.frames(1);
+	REQUIRE(play.count("piece") == 4);
+	CHECK(play.get("piece.4").position.x == Approx(10));
+	CHECK(play.get("piece.4").position.y == Approx(104));
+
+	// None may be made: refused, so what comes after it does not run.
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.count("piece") == 4);
+	CHECK(play.get("rock").variable.at("breaks") == 1.0f);
+}
+
+TEST_CASE("a <spawn> with a <count> under 1 stops the load", "[spawn][errors]")
+{
+	const Scratch file(box("rock", 300, 380), "<spawn object=\"piece\"><count>0</count></spawn>", {},
+		"<object name=\"piece\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite></object>");
+	CHECK_THROWS_WITH(Game{ file.path }, ContainsSubstring("<count> under 1"));
 }
 
 TEST_CASE("other rules and conditions see the copies by the name of what they were copied from", "[spawn]")

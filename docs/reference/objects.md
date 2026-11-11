@@ -37,7 +37,7 @@ An object is anything drawn, moved or touched. `name` is required; `class` is op
 | `<facing>` | `up`, `down`, `left`, `right`, without turning the picture: follows its last move; a `<fire>` leaves that way |
 | `<poses>`, `<mirror>`, `<grip>` | looks picked by how it moves, flipped pictures, how its speed follows the keys ([poses](pictures.md#poses-mirror-grip-and-blinking)) |
 | `<maze map="maze">` | walks that map's tiles ([walking a map](maps.md#walking-a-map)) |
-| `<active>` | `false`: starts out of play (not drawn, touching nothing, not counted) until a `<reveal>`, `<release>` or `<fire>` |
+| `<active>` | `false`: starts out of play (not drawn, touching nothing, not counted) until a `<reveal>` |
 | `<drawn>` | `false`: in play but never drawn: an exit, a trigger zone |
 | `<most>` | how many [copies](#spawn-and-despawn) may be out at once |
 | `<collisions>` | how and what it touches ([collisions](collisions.md)). Written, it is on unless `<enabled>false</enabled>`; `<collisions />` alone is something others touch |
@@ -183,7 +183,7 @@ The game's top-level `<objects>` holds objects, groups and maps written once, ca
 - A named member of a group piece can be taken alone; it keeps the group's class, rules and picture.
 - A piece can be `from=` an earlier piece (Asteroids' medium and small rocks are `from="rock"`).
 - **Where it is taken says how long it lasts:** the game's, a state's or a scene's `<objects>`.
-- **Only ever spawned.** A piece a `<spawn>`, `<fire>` or `<release>` names and nothing takes is put beside its spawner, so its copies belong where the spawner does and read that scene's variables.
+- **Only ever spawned.** A piece a `<spawn>` or `<fire>` names and nothing takes is put beside its spawner, so its copies belong where the spawner does and read that scene's variables.
 
 ### The one change rule
 
@@ -225,7 +225,7 @@ Objects can be made and taken away while the game runs, and **a copy is the same
 </object>
 ```
 
-- `<spawn>`, `<fire>` and `<release>` each make a copy named with the first free number (`shot.1`, `shot.2`, then `shot.1` again once that one is gone).
+- `<spawn>` and `<fire>` each make a copy named with the first free number (`shot.1`, `shot.2`, then `shot.1` again once that one is gone).
 - A copy moves, touches, counts its own timers, holds its own variables and draws its own `<random>`s. In its rules, `self` is the copy.
 - **The piece's name means every copy:** `<collision object="shot">`, a condition counting `object="shot"`, `<despawn object="shot" />`. A copy's own name works too (`<tether from="base" to="abm.1">`).
 - **A group piece** spawns its members in turn, or one at random with `<random />`.
@@ -235,4 +235,4 @@ Objects can be made and taken away while the game runs, and **a copy is the same
 - A full reset takes every copy away; `<reset object>` and `<reset scene>` take away copies of what they reset.
 - Any object can be spawned: `<spawn object="ball">` makes a second ball.
 
-A group of `<active>false</active>` members is still a **pool** that `<fire>`, `<release>` and `<reveal>` take from; it suits things that come back where they were (Frostbite's igloo blocks).
+`<fire>` sends only copies of a piece. An object that starts `<active>false</active>` waits out of play for a `<reveal>`, and `<die />` puts it back out: that suits fixed things that come back where they were (Frostbite's igloo blocks, a door, a saucer).

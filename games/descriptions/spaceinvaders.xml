@@ -20,7 +20,7 @@
     lockstep, so they march, bounce and step down as one block; the squids'
     two pictures and their <animation> are the group's, and rows 2 and 3
     (crabs) and 4 and 5 (octopuses) change the pictures and the worth.
-  * A hit alien leaves a blast, <release>d where it was, that
+  * A hit alien leaves a blast, spawned where it was, that
     goes after a quarter of a second.
   * The march speeds up: whenever no more aliens are left than pace.next,
     a condition sets the block's speed half as fast again and halves next.
@@ -110,7 +110,7 @@
           <collision class="bomb">
             <dec variable="player.lives" />
             <inc variable="player.struck" />
-            <release object="blast" />
+            <spawn object="blast" />
             <play sound="playerhit" />
           </collision>
         </collisions>
@@ -197,7 +197,7 @@
                   </multiply>
                 </formula>
               </inc>
-              <release object="blast" />
+              <spawn object="blast" />
               <play sound="alienhit" />
               <die />
             </collision>
@@ -230,7 +230,7 @@
             </collision>
             <collision object="bullet">
               <inc variable="player.score">self.worth</inc>
-              <release object="blast" />
+              <spawn object="blast" />
               <play sound="alienhit" />
               <die />
             </collision>

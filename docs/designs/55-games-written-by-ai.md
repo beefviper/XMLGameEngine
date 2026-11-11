@@ -16,7 +16,7 @@ The author asked another AI to write three games (Berserk, Demon Attack, Frostbi
 
 ## The rewrites
 
-- **Demon Attack:** three waves; demons that `<release>` two small ones when shot; big demons with `whole` and `hurt` looks; the shot steered over the cannon by a timer that sets `laser.x`, as the original does.
+- **Demon Attack:** three waves; demons that `<spawn>` two small ones when shot; big demons with `whole` and `hurt` looks; the shot steered over the cannon by a timer that sets `laser.x`, as the original does.
 - **Frostbite:** three nights as scenes of a `from=` chain giving the drift; the four rows one group whose `sprite="white"` rule turns its row blue and builds a block of the igloo; the igloo built bottom up by `<reveal>` in order.
 - **Berserk:** after Stern's 1980 game. Four rooms as scenes, each a `<map>` of the arcade's five-by-three frame on half-cell tiles; robots a group piece with a member per robot per room; Otto out of play until a room timer reveals him.
   - **Every rule that costs a life is the man's own:** `<reset object="player" />` from another's rule would reset his score and lives too, since a reset object resets every variable.

@@ -22,7 +22,7 @@
     and how it breaks: its points and what it breaks into. A size with
     several shapes has a member per shape. The big rocks are in play; the
     medium and small ones are pieces, not in play until a bigger rock
-    breaks: it <release>s two, spawned where it was,
+    breaks: it <spawn>s two where it was,
     the shapes in turn, each going its own way (a <random> velocity drawn
     as it is made, never slower than its shape's least up or down), and a broken one <despawn>s.
   * Shots wrap round the edges like everything else and run out after a
@@ -92,12 +92,12 @@
         <collision class="breaker">
           <despawn />
           <inc variable="ship.score">50</inc>
-          <release object="smallrocks">2</release>
+          <spawn object="smallrocks"><count>2</count></spawn>
           <play sound="bangmedium" />
         </collision>
         <collision object="ufos">
           <despawn />
-          <release object="smallrocks">2</release>
+          <spawn object="smallrocks"><count>2</count></spawn>
           <play sound="bangmedium" />
         </collision>
       </collisions>
@@ -282,12 +282,12 @@
               <collision class="breaker">
                 <die />
                 <inc variable="ship.score">20</inc>
-                <release object="mediumrocks">2</release>
+                <spawn object="mediumrocks"><count>2</count></spawn>
                 <play sound="bangbig" />
               </collision>
               <collision object="ufos">
                 <die />
-                <release object="mediumrocks">2</release>
+                <spawn object="mediumrocks"><count>2</count></spawn>
                 <play sound="bangbig" />
               </collision>
             </collisions>

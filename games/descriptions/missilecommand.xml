@@ -23,7 +23,7 @@
   * The base <aim>s at the sight on a timer, all the time, so whatever it
     <fire>s goes straight at where the sight is. Each trail is a <tether>
     from the base to one counter-missile, in play while it is.
-  * A counter-missile that meets the sight <release>s a burst there, whose
+  * A counter-missile that meets the sight <spawn>s a burst there, whose
     <animation> grows and shrinks, tested by its pixels, and which
     <despawn />s on a timer of its own.
   * A missile is a streak of one line with a <heading>; it <chase>s the
@@ -91,7 +91,7 @@
       <collisions>
         <collision edge="all"><despawn /></collision>
         <collision object="sight">
-          <release object="burst" />
+          <spawn object="burst" />
           <play sound="burst" />
           <despawn />
         </collision>

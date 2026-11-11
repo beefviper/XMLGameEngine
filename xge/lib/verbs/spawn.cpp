@@ -17,8 +17,9 @@
 
 namespace xge
 {
-	// <spawn>: Makes a copy of an object; refused when no more of it may
-	// exist.
+	// <spawn>: Makes copies of a piece (one, or a <count> of them), put at
+	// the spawner's middle unless a <position> says; refused when no more
+	// of it may exist.
 	static void readSpawn(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
 		requireAttribute(node, "object", where);
@@ -26,11 +27,12 @@ namespace xge
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			const std::string tag = child->getName();
-			if (tag != "position" && tag != "velocity" && tag != "acceleration" && tag != "random" && tag != "column" && tag != "row" && tag != "free")
+			if (tag != "count" && tag != "position" && tag != "velocity" && tag != "acceleration" && tag != "random" && tag != "column" && tag != "row" && tag != "free")
 			{
-				fail(here, "unknown <" + tag + ">; expected <random />, a <position> (or a <column> and a <row>, or <free />), a <velocity> and an <acceleration>, each if wanted");
+				fail(here, "unknown <" + tag + ">; expected a <count>, <random />, a <position> (or a <column> and a <row>, or <free />), a <velocity> and an <acceleration>, each if wanted");
 			}
 		}
+		if (auto count = findChild(&node, "count")) { command.amount = readValue(*count, here + " > <count>"); }
 		command.random = findChild(&node, "random") != nullptr;
 		if (auto free = findChild(&node, "free"))
 		{
@@ -67,6 +69,11 @@ namespace xge
 	{
 		CmdSpawn spawn;
 		spawn.target = raw.object;
+		if (isWritten(raw.amount))
+		{
+			spawn.count = static_cast<int>(std::lround(evaluate(raw.amount)));
+			if (spawn.count < 1) { throw std::runtime_error("<spawn object=\"" + raw.object + "\">: a <count> under 1"); }
+		}
 		// A <centered> half holds where the middle goes; left empty, the
 		// middle of the window.
 		const auto half = [&](const RawValue& value, std::optional<float>& into, bool* centered, const char* middle)

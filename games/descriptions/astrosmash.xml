@@ -21,7 +21,7 @@
     fall speeds, slants and starting heights are <random>, drawn again each
     time one is reset to the top.
   * A big rock (worth 10, a <condition> in the rocks' rule about the shot)
-    <release>s two chips where it is hit, small rocks that do not exist
+    <spawn>s two chips where it is hit, small rocks that do not exist
     until then.
   * A hit on the base resets every rock and spinner (<reset object>): the
     sky clears, as it does on the Intellivision.
@@ -157,7 +157,7 @@
             <!-- a big rock breaks where the shot hits it -->
             <collision object="shot">
               <condition variable="worth"><equal>10</equal></condition>
-              <release object="chip">2</release>
+              <spawn object="chip"><count>2</count></spawn>
             </collision>
             <collision object="shot">
               <inc variable="ship.score">self.worth</inc>

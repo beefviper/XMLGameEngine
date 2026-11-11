@@ -15,6 +15,7 @@
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
+#include <string>
 
 namespace xge
 {
@@ -252,7 +253,6 @@ namespace xge
 			[&](const CmdTurn& t) { o << "turn." << (t.direction == Direction::Left ? "counterclockwise" : "clockwise") << "(" << t.rate << ")"; },
 			[&](const CmdSwing& s) { o << "swing(" << s.by << " degrees, " << s.seconds << "s)"; },
 			[&](const CmdThrust& t) { o << "thrust(" << t.amount << (t.burn.empty() ? "" : ", burn " + t.burn) << ")"; },
-			[&](const CmdRelease& r) { o << "release(" << r.target << ", " << r.count << ")"; },
 			[&](const CmdIncrement& c) { o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdDecrement& c) { o << "dec(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdCopy& c) { o << "copy(" << c.from.written() << ", " << c.into.written() << ")"; },
@@ -287,7 +287,7 @@ namespace xge
 					if (!value) { o << "-"; return; }
 					o << (centered ? "centered " : "") << *value;
 				};
-				o << "spawn(" << s.target << ", ";
+				o << "spawn(" << s.target << (s.count != 1 ? " x" + std::to_string(s.count) : "") << ", ";
 				half(s.x, s.centerX);
 				o << " ";
 				half(s.y, s.centerY);
@@ -477,10 +477,6 @@ namespace xge
 		{
 			o << "(" << command.amount << ", " << command.distance << ")";
 		}
-		else if (command.verb == "release")
-		{
-			o << "(" << command.object << ", " << command.amount << ")";
-		}
 		else if (command.verb == "jump" || ((command.verb == "knock" || command.verb == "bounce") && (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())))
 		{
 			o << "(" << command.amount << ")";
@@ -556,7 +552,7 @@ namespace xge
 		}
 		else if (command.verb == "spawn")
 		{
-			o << "(" << command.object << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY << ", " << command.accelerationX << " " << command.accelerationY
+			o << "(" << command.object << ", " << command.amount << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY << ", " << command.accelerationX << " " << command.accelerationY
 				<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << " " << command.below << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
 		}
 		else if (command.verb == "send")

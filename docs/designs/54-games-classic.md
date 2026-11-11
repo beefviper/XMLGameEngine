@@ -38,7 +38,7 @@ Lanes are groups inside one `lanes` group that gives the `<wrap />`; each lays i
 
 ## Astrosmash and Lunar Lander
 
-- Astrosmash: a big rock's rule `<release>`s two chips; worth is `self.worth` so one rule serves every size. A check in a rule once failed on `variable="self.worth"`; checks take `self` now.
+- Astrosmash: a big rock's rule `<spawn>`s two chips; worth is `self.worth` so one rule serves every size. A check in a rule once failed on `variable="self.worth"`; checks take `self` now.
 - Lunar Lander: a landing is one rule about the pads, slower than `safespeed` and nearly upright (an `<any>` of two heading tests). The next lander is the same one reset, so fuel is copied out and back around the reset.
 
 ## Asteroids
