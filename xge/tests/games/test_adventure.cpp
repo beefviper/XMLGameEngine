@@ -225,7 +225,8 @@ TEST_CASE("a dragon chases the hero and eats him; the sword slays it", "[adventu
 		play.put("hero", 300, 200);
 		play.put("yorgle", 350, 200);
 		play.frames(120);
-		CHECK(play.state() == "eaten");
+		CHECK(play.state() == "over");
+		CHECK(play.game.getObject("over.message").lookName() == "lost");
 	}
 	{
 		// The sword lying between them: the dragon runs into it.
@@ -340,7 +341,8 @@ TEST_CASE("the chalice carried from the dungeon into the gold castle's hall wins
 	REQUIRE(play.carrying("chalice"));
 	play.put("hero", 318, 230);
 	play.hold(KeyCode::Up, 60);
-	CHECK(play.state() == "won");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "won");
 	CHECK(play.game.isStill(play.hero()));
 
 	play.tap(KeyCode::Space);

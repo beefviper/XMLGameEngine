@@ -325,12 +325,14 @@
       <conditions>
         <condition object="bailey" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
           <play sound="gameover" />
         </condition>
         <condition object="bailey" variable="nights">
           <atleast>3</atleast>
-          <push state="youwin" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
         <condition object="thermometer" variable="degrees">
           <atmost>0</atmost>
@@ -374,10 +376,11 @@
         <input><button>space</button><button>p</button><pop /></input>
       </inputs>
     </state>
-    <state name="youwin">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>HOME AND WARM</content><size>90</size><color>color.yellow</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>HOME AND WARM</content><size>90</size><color>color.yellow</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>FROZEN SOLID</content><size>90</size></text></sprite>
           <position><x><centered /></x><y>230</y></position>
         </object>
         <object name="again">
@@ -391,13 +394,6 @@
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
-    </state>
-    <state name="gameover" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>FROZEN SOLID</content><size>90</size></text></sprite>
-        </object>
-      </objects>
     </state>
   </states>
   <sounds>

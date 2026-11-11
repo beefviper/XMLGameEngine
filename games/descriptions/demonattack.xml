@@ -348,7 +348,8 @@
             <condition class="demon">
               <remaining>0</remaining>
               <play sound="wave" />
-              <push state="youwin" />
+              <become object="over.message" sprite="won" />
+              <push state="over" />
             </condition>
           </conditions>
         </scene>
@@ -363,7 +364,8 @@
         <!-- out of cannons -->
         <condition object="player" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
       </conditions>
     </state>
@@ -382,10 +384,11 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="youwin">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
@@ -396,13 +399,6 @@
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
-    </state>
-    <state name="gameover" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
-        </object>
-      </objects>
     </state>
   </states>
   <sounds>

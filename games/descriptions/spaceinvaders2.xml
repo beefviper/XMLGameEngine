@@ -371,15 +371,18 @@
       <conditions>
         <condition class="aliens">
           <remaining>0</remaining>
-          <push state="gameover" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
-          <push state="lost" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
         <condition class="aliens" variable="y" total="highest">
           <atleast>shieldtop - 50</atleast>
-          <push state="lost" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
         <condition object="player" variable="struck">
           <atleast>1</atleast>
@@ -433,10 +436,11 @@
         </timer>
       </timers>
     </state>
-    <state name="lost">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content></text></sprite>
           <position><x><centered /></x><y>window.height.center - 150</y></position>
         </object>
       </objects>
@@ -447,13 +451,6 @@
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
-    </state>
-    <state name="gameover" from="lost">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>YOU WIN</content></text></sprite>
-        </object>
-      </objects>
     </state>
   </states>
   <sounds>

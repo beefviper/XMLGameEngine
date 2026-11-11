@@ -375,7 +375,8 @@ TEST_CASE("all five pads is a win", "[frogger][pads]")
 	}
 
 	CHECK(table.homes() == 5.0f);
-	CHECK(table.game.getCurrentState().name == "youwin");
+	CHECK(table.game.getCurrentState().name == "over");
+	CHECK(table.game.getObject("over.message").lookName() == "won");
 }
 
 TEST_CASE("running out of lives is game over, and space starts again", "[frogger][conditions]")
@@ -391,7 +392,8 @@ TEST_CASE("running out of lives is game over, and space starts again", "[frogger
 	}
 
 	CHECK(table.lives() == 0.0f);
-	CHECK(table.game.getCurrentState().name == "gameover");
+	CHECK(table.game.getCurrentState().name == "over");
+	CHECK(table.game.getObject("over.message").lookName() == "lost");
 
 	table.executor.executeInput(Command{ CmdReset{} }, true);
 	CHECK(table.game.getCurrentState().name == "title");
@@ -543,12 +545,12 @@ TEST_CASE("game over and the win draw the board still, with their own words over
 		table.hop("up"); // into a hedge
 		table.frames(1);
 	}
-	REQUIRE(table.game.getCurrentState().name == "gameover");
+	REQUIRE(table.game.getCurrentState().name == "over");
+	CHECK(table.game.getObject("over.message").lookName() == "lost");
 	CHECK(table.game.isStill(table.frog()));
 	CHECK(table.game.isStill(table.game.getObject("pads.1.1")));
-	CHECK(table.game.isShown(table.game.getObject("gameover.message")));
-	CHECK(table.game.isShown(table.game.getObject("gameover.continue")));
-	CHECK_FALSE(table.game.isShown(table.game.getObject("youwin.message")));
+	CHECK(table.game.isShown(table.game.getObject("over.message")));
+	CHECK(table.game.isShown(table.game.getObject("over.continue")));
 
 	Table won;
 	for (int i = 0; i < 5; ++i)
@@ -557,9 +559,10 @@ TEST_CASE("game over and the win draw the board still, with their own words over
 		won.hop("up");
 		won.frames(1);
 	}
-	REQUIRE(won.game.getCurrentState().name == "youwin");
+	REQUIRE(won.game.getCurrentState().name == "over");
+	CHECK(won.game.getObject("over.message").lookName() == "won");
 	CHECK(won.game.isStill(won.frog()));
 	CHECK(won.game.isStill(won.game.getObject("pads.5.1")));
-	CHECK(won.game.isShown(won.game.getObject("youwin.message")));
-	CHECK(won.game.isShown(won.game.getObject("youwin.continue")));
+	CHECK(won.game.isShown(won.game.getObject("over.message")));
+	CHECK(won.game.isShown(won.game.getObject("over.continue")));
 }

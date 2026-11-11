@@ -315,7 +315,8 @@ TEST_CASE("a finished igloo opens its door; walking in is a bonus and the next n
 	play.engine.handleKeyPressed(KeyCode::D);
 	for (int frame = 0; frame < 400 && play.state() == "playing"; ++frame) { play.frames(1); }
 	play.engine.handleKeyReleased(KeyCode::D);
-	CHECK(play.state() == "youwin");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "won");
 }
 
 TEST_CASE("the fish is worth a bonus, and comes back a while later", "[frostbite]")
@@ -349,7 +350,8 @@ TEST_CASE("no lives left is game over, and Space starts over with the ice white 
 
 	play.bailey().variable["lives"] = 0;
 	play.frames(1);
-	CHECK(play.state() == "gameover");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "lost");
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
@@ -391,7 +393,7 @@ TEST_CASE("each state owns what it draws, and frozen draws the ice still under i
 	Frostbite play;
 	CHECK(play.bailey().ownerState == "playing");
 	CHECK(play.game.getObject("title").ownerState == "title");
-	CHECK(play.game.getObject("youwin.again").ownerState == "youwin");
+	CHECK(play.game.getObject("over.again").ownerState == "over");
 	CHECK(play.game.isShown(play.game.getObject("title")));
 	CHECK_FALSE(play.game.isShown(play.bailey()));
 	CHECK_FALSE(play.game.isStill(play.bailey()));
@@ -399,10 +401,10 @@ TEST_CASE("each state owns what it draws, and frozen draws the ice still under i
 	play.startStill();
 	play.bailey().variable["lives"] = 0;
 	play.frames(1);
-	REQUIRE(play.state() == "gameover");
+	REQUIRE(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "lost");
 	CHECK(play.game.isStill(play.game.getObject("score")));
 	CHECK(play.game.isStill(play.game.getObject("night1.row4.3.1")));
-	CHECK(play.game.isShown(play.game.getObject("gameover.message")));
-	CHECK(play.game.isShown(play.game.getObject("gameover.again")));
-	CHECK_FALSE(play.game.isShown(play.game.getObject("youwin.message")));
+	CHECK(play.game.isShown(play.game.getObject("over.message")));
+	CHECK(play.game.isShown(play.game.getObject("over.again")));
 }

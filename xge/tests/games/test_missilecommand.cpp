@@ -208,7 +208,8 @@ TEST_CASE("a missile that reaches a city destroys it, and losing them all is the
 		if (object.groupName == "playing.cities") { object.isVisible = false; }
 	}
 	play.frames(2);
-	CHECK(play.state() == "theend");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "lost");
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
@@ -238,7 +239,8 @@ TEST_CASE("each wave ends when enough missiles are done with, and the third wins
 	play.holdMissiles("wave3");
 	play.game.getObject("status").variable["spent"] = 24;
 	play.frames(2);
-	CHECK(play.state() == "youwin");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "won");
 	CHECK(play.game.isStill(play.game.getObject("playing.base")));
 
 	play.tap(KeyCode::Space);

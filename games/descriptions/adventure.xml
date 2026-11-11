@@ -423,12 +423,14 @@
         <condition object="status" variable="eaten">
           <atleast>1</atleast>
           <play sound="gameover" />
-          <push state="eaten" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
         <condition object="status" variable="won">
           <atleast>1</atleast>
           <play sound="win" />
-          <push state="won" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
       </conditions>
     </state>
@@ -448,10 +450,11 @@
       </inputs>
     </state>
 
-    <state name="won">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>THE CHALICE IS HOME</content><color>color.magenta</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>THE CHALICE IS HOME</content><color>color.magenta</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>EATEN BY A DRAGON</content><color>color.green</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center + 20</centered></y></position>
         </object>
         <object name="again">
@@ -467,13 +470,6 @@
       </inputs>
     </state>
 
-    <state name="eaten" from="won">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>EATEN BY A DRAGON</content><color>color.green</color></text></sprite>
-        </object>
-      </objects>
-    </state>
   </states>
   <sounds>
     <sound name="pickup" wave="square">

@@ -187,11 +187,13 @@
       <conditions>
         <condition object="rack">
           <remaining>0</remaining>
-          <push state="cleared" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
         <condition object="player" variable="time">
           <atmost>0</atmost>
-          <push state="timeup" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
       </conditions>
       <timers>
@@ -212,10 +214,11 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="cleared">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>TABLE CLEARED</content><size>80</size></text></sprite>
+          <sprite name="won"><text style="banner"><content>TABLE CLEARED</content><size>80</size></text></sprite>
+          <sprite name="lost"><text style="banner"><content>TIME UP</content><color>color.red</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
@@ -226,13 +229,6 @@
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
-    </state>
-    <state name="timeup" from="cleared">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>TIME UP</content><color>color.red</color></text></sprite>
-        </object>
-      </objects>
     </state>
   </states>
   <sounds>

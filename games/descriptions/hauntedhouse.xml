@@ -441,12 +441,14 @@
         <!-- the whole urn, carried out of the door it came in by -->
         <condition object="player" variable="urns"><atleast>3</atleast>
           <condition object="player" distance="entrance"><below>tile * 1.5</below>
-            <push state="won" />
+            <become object="over.message" sprite="won" />
+            <push state="over" />
           </condition>
         </condition>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
-          <push state="lost" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
       </conditions>
     </state>
@@ -465,10 +467,11 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="lost">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>THE HOUSE WINS</content><color>color.red</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>THE HOUSE WINS</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>THE URN IS WHOLE</content><color>color.yellow</color></text></sprite>
           <position><x><centered /></x><y>window.height.center - 150</y></position>
         </object>
       </objects>
@@ -479,13 +482,6 @@
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
-    </state>
-    <state name="won" from="lost">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>THE URN IS WHOLE</content><color>color.yellow</color></text></sprite>
-        </object>
-      </objects>
     </state>
   </states>
   <sounds>

@@ -186,7 +186,8 @@ TEST_CASE("three balls lost is the end of Breakout", "[breakout]")
 		if (lost < 3) { CHECK(game.getCurrentState().name == "playing"); }
 	}
 	game.updateObjects();
-	CHECK(game.getCurrentState().name == "gameover");
+	CHECK(game.getCurrentState().name == "over");
+	CHECK(game.getObject("over.message").lookName() == "lost");
 }
 
 TEST_CASE("clearing the first wall builds a second, and clearing that wins", "[breakout]")
@@ -205,7 +206,8 @@ TEST_CASE("clearing the first wall builds a second, and clearing that wins", "[b
 
 	clearWall(game);
 	game.updateObjects();
-	CHECK(game.getCurrentState().name == "youwin");
+	CHECK(game.getCurrentState().name == "over");
+	CHECK(game.getObject("over.message").lookName() == "won");
 }
 
 TEST_CASE("each state of Breakout has its own objects, and paused and the endings draw the game still", "[breakout][scenes][shows]")
@@ -238,11 +240,13 @@ TEST_CASE("each state of Breakout has its own objects, and paused and the ending
 	CHECK_FALSE(game.isStill(game.getObject("ball")));
 
 	// Each ending is written over the game still, with the shared line under it.
-	for (const char* ending : { "youwin", "gameover" })
+	for (const char* ending : { "won", "lost" })
 	{
 		INFO(ending);
-		game.pushState(ending);
-		CHECK(game.isShown(game.getObject(std::string(ending) + ".message")));
+		game.become("over.message", ending);
+		game.pushState("over");
+		CHECK(game.isShown(game.getObject("over.message")));
+		CHECK(game.getObject("over.message").lookName() == ending);
 		CHECK(game.isShown(game.getObject("again")));
 		CHECK(game.isStill(game.getObject("red.1.1")));
 		CHECK_FALSE(game.isShown(game.getObject("paused")));

@@ -225,7 +225,8 @@ TEST_CASE("each wave cleared is the next with the energy full, and the eighth wi
 	}
 	play.clear("wave8");
 	play.frames(2);
-	CHECK(play.state() == "youwin");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "won");
 	CHECK(play.game.isStill(play.player()));
 
 	play.tap(KeyCode::Space);

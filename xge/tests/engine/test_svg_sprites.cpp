@@ -678,9 +678,9 @@ TEST_CASE("paused, Space Invaders 2 draws the invasion still under the word", "[
 	game.popState();
 	CHECK(game.isShown(game.getObject("aliens.1.1")));
 
-	game.pushState("gameover");
+	game.pushState("over");
 	CHECK(game.isStill(game.getObject("aliens.1.1")));
-	CHECK(game.isShown(game.getObject("gameover.message")));
+	CHECK(game.isShown(game.getObject("over.message")));
 	CHECK(game.isShown(game.getObject("continue")));
 }
 

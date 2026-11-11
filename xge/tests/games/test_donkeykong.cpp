@@ -351,7 +351,8 @@ TEST_CASE("saving Pauline scores the bonus, starts the climb again with Kong qui
 		}
 	}
 	play.frames(1);
-	CHECK(play.state() == "youwin");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "won");
 
 	// Space plays again from the start.
 	play.tap(KeyCode::Space);
@@ -401,12 +402,12 @@ TEST_CASE("each state owns what it draws, and game over draws the girders still 
 	play.start();
 	play.man().variable["lives"] = 0;
 	play.frames(1);
-	REQUIRE(play.state() == "gameover");
+	REQUIRE(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "lost");
 	CHECK(play.game.isStill(play.man()));
 	CHECK(play.game.isStill(play.game.getObject("score")));
-	CHECK(play.game.isShown(play.game.getObject("gameover.message")));
+	CHECK(play.game.isShown(play.game.getObject("over.message")));
 	CHECK(play.game.isShown(play.game.getObject("again")));
-	CHECK_FALSE(play.game.isShown(play.game.getObject("youwin.message")));
 }
 
 TEST_CASE("with the hammer a barrel is smashed for points, and the hammer wears off", "[donkeykong]")

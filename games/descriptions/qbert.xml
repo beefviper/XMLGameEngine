@@ -432,11 +432,13 @@
         <condition object="player" variable="cubes">
           <atleast>28</atleast>
           <play sound="done" />
-          <push state="won" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
-          <push state="lost" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
         <condition object="player" variable="score">
           <above>best.score</above>
@@ -458,10 +460,11 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="won">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>PYRAMID DONE</content></text></sprite>
+          <sprite name="won"><text style="banner"><content>PYRAMID DONE</content></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
         </object>
       </objects>
@@ -474,13 +477,6 @@
           <reset />
         </input>
       </inputs>
-    </state>
-    <state name="lost" from="won">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
-        </object>
-      </objects>
     </state>
   </states>
   <sounds>

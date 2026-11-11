@@ -301,7 +301,8 @@
             <condition name="reached" object="bucket" variable="score">
               <atleast>upto</atleast>
               <despawn object="bomb" />
-              <push state="youwin" />
+              <become object="over.message" sprite="won" />
+              <push state="over" />
               <play sound="wave" />
             </condition>
           </conditions>
@@ -318,7 +319,8 @@
       <conditions>
         <condition object="bucket" variable="buckets">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
           <play sound="gameover" />
         </condition>
       </conditions>
@@ -338,10 +340,11 @@
         <input><button>space</button><button>p</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="youwin">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>YOU WIN</content><color>color.yellow</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.yellow</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
         <object name="again">
@@ -355,13 +358,6 @@
       <inputs>
         <input><button>space</button><button>pad1.start</button><reset /></input>
       </inputs>
-    </state>
-    <state name="gameover" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
-        </object>
-      </objects>
     </state>
   </states>
   <sounds>

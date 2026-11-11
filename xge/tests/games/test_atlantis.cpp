@@ -142,9 +142,9 @@ TEST_CASE("the second wave copies the first's named launch and quota; the third 
 	CHECK(playing.scenes[0].timers[0].commands.size() == 1);
 	CHECK(playing.scenes[1].timers[0].commands.size() == 1);
 	CHECK(playing.scenes[2].timers[0].commands.size() == 2);
-	// quota: on to the next wave (play, three resets, enter), then a win (play, push)
+	// quota: on to the next wave (play, three resets, enter), then a win (play, become, push)
 	CHECK(playing.scenes[1].conditions[0].commands.size() == 5);
-	CHECK(playing.scenes[2].conditions[0].commands.size() == 2);
+	CHECK(playing.scenes[2].conditions[0].commands.size() == 3);
 	CHECK(playing.scenes[1].ways.at("next") == "playing.wave3");
 }
 
@@ -261,7 +261,8 @@ TEST_CASE("the quota moves the game on from wave to wave, with the tally and the
 
 	city.game.getObject("tally").variable["downed"] = 20;
 	city.frames(1);
-	CHECK(city.state() == "youwin");
+	CHECK(city.state() == "over");
+	CHECK(city.game.getObject("over.message").lookName() == "won");
 }
 
 TEST_CASE("the city gone is game over, and space plays again with everything back", "[atlantis]")
@@ -279,7 +280,8 @@ TEST_CASE("the city gone is game over, and space plays again with everything bac
 		if (object.objClass == "building") { object.isVisible = false; }
 	}
 	engine.step();
-	REQUIRE(game.getCurrentState().name == "gameover");
+	REQUIRE(game.getCurrentState().name == "over");
+	CHECK(game.getObject("over.message").lookName() == "lost");
 	CHECK(game.isStill(game.getObject("leftpost")));
 
 	engine.handleKeyPressed(KeyCode::Space);

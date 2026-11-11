@@ -1061,7 +1061,8 @@ TEST_CASE("the aliens still win the game for the player when they are all gone, 
 	REQUIRE(invasion.alive() == 0);
 
 	frames(game, 1);
-	CHECK(game.getCurrentState().name == "gameover");
+	CHECK(game.getCurrentState().name == "over");
+	CHECK(game.getObject("over.message").lookName() == "won");
 
 	game.resetAll();
 	CHECK(invasion.alive() == 55);
@@ -1099,17 +1100,10 @@ TEST_CASE("each state of Space Invaders has its own objects, and paused and the 
 	frames(game, 30);
 	CHECK(game.getObject("aliens.1.1").position.x != at.x);
 
-	for (const char* ending : { "lost", "gameover" })
-	{
-		INFO(ending);
-		game.pushState(ending);
-		CHECK(game.isStill(game.getObject("aliens.1.1")));
-		CHECK(game.isShown(game.getObject("continue")));
-		game.popState();
-	}
-	game.pushState("lost");
-	CHECK(game.isShown(game.getObject("lost.message")));
-	CHECK_FALSE(game.isShown(game.getObject("gameover.message")));
+	game.pushState("over");
+	CHECK(game.isStill(game.getObject("aliens.1.1")));
+	CHECK(game.isShown(game.getObject("over.message")));
+	CHECK(game.isShown(game.getObject("continue")));
 }
 
 // ------------------------------------------------------------------ schema
@@ -1241,7 +1235,7 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	Object& player = game.getObject("player");
 	player.collisionsOn = true;
 	bool blasted = false;
-	for (int frame = 0; frame < 20000 && game.getCurrentState().name != "lost"; ++frame)
+	for (int frame = 0; frame < 20000 && game.getCurrentState().name != "over"; ++frame)
 	{
 		game.updateObjects();
 		if (game.getCurrentState().name == "blasted") { blasted = true; continue; }
@@ -1256,7 +1250,8 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	}
 	CHECK(blasted);
 	CHECK(player.variable.at("lives") <= 0);
-	CHECK(game.getCurrentState().name == "lost");
+	CHECK(game.getCurrentState().name == "over");
+	CHECK(game.getObject("over.message").lookName() == "lost");
 }
 
 TEST_CASE("each kind of alien scores its own, and the block marches faster as it thins", "[spaceinvaders]")
@@ -1335,5 +1330,6 @@ TEST_CASE("the invasion landing on the shields ends the game", "[spaceinvaders]"
 	Game& game = invasion.game;
 	for (const Object* alien : aliensOf(game)) { const_cast<Object*>(alien)->position.y += 300.0f; }
 	frames(game, 1);
-	CHECK(game.getCurrentState().name == "lost");
+	CHECK(game.getCurrentState().name == "over");
+	CHECK(game.getObject("over.message").lookName() == "lost");
 }

@@ -319,7 +319,8 @@ TEST_CASE("a treasure is taken once, a screen left keeps it taken, and all four 
 	play.game.getObject("playing.screen1.logs.2").position.x = 200.0f;
 	play.standAt(560.0f);
 	play.hold(KeyCode::D, 15);
-	CHECK(play.state() == "youwin");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "won");
 	CHECK(play.status("found") == 4);
 }
 
@@ -333,7 +334,8 @@ TEST_CASE("the clock counts down a second at a time, and running out ends the ga
 
 	play.game.getObject("status").variable["time"] = 1;
 	play.frames(61);
-	CHECK(play.state() == "gameover");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "lost");
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");

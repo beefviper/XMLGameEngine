@@ -95,7 +95,8 @@ TEST_CASE("mariobros.xml: each phase cleared leads to the next, the bonus phase 
 	CHECK(play.scene() == "playing.phase6");
 	play.game.setVariable("tally", "kicked", 24.0f);
 	play.frames(2);
-	CHECK(play.state() == "youwin");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "won");
 }
 
 TEST_CASE("mariobros.xml: catching all ten coins of the bonus phase ends it at once", "[mariobros]")
@@ -233,7 +234,8 @@ TEST_CASE("mariobros.xml: one player leaves Luigi out; 2 on the title brings him
 	CHECK_FALSE(one.get("score2").isVisible);
 	one.game.setVariable("mario", "lives", 0.0f);
 	one.frames(2);
-	CHECK(one.state() == "gameover");
+	CHECK(one.state() == "over");
+	CHECK(one.game.getObject("over.message").lookName() == "lost");
 
 	Mario two(KeyCode::Num2);
 	REQUIRE(two.luigi().isVisible);
@@ -257,7 +259,8 @@ TEST_CASE("mariobros.xml: one player leaves Luigi out; 2 on the title brings him
 	CHECK_FALSE(two.has("mario"));
 	two.game.setVariable("luigi", "lives", 0.0f);
 	two.frames(2);
-	CHECK(two.state() == "gameover");
+	CHECK(two.state() == "over");
+	CHECK(two.game.getObject("over.message").lookName() == "lost");
 }
 
 TEST_CASE("mariobros.xml: Luigi's kicks and coins are his own score", "[mariobros]")

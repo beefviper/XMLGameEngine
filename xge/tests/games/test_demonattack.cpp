@@ -226,7 +226,8 @@ TEST_CASE("a big demon of the third wave takes two shots", "[demonattack]")
 	CHECK(play.object("player").variable["score"] == 120.0f);
 
 	clearWave(play, "wave3");
-	CHECK(play.state() == "youwin");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "won");
 }
 
 TEST_CASE("a demon on the cannon costs a life, and three is game over", "[demonattack]")
@@ -245,7 +246,8 @@ TEST_CASE("a demon on the cannon costs a life, and three is game over", "[demona
 
 	player.variable["lives"] = 0.0f;
 	play.frames(2);
-	CHECK(play.state() == "gameover");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "lost");
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
@@ -297,7 +299,8 @@ TEST_CASE("only the wave being played runs: the later waves wait where they star
 	REQUIRE(play.wave() == "playing.wave2");
 	play.object("player").variable["lives"] = 0.0f;
 	play.frames(2);
-	REQUIRE(play.state() == "gameover");
+	REQUIRE(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "lost");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 	CHECK(play.wave() == "playing.wave1");

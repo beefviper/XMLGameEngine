@@ -297,12 +297,14 @@ TEST_CASE("hauntedhouse.xml: the whole urn brought back to the door wins, and no
 	CHECK(play.state() == "playing");
 	play.place(1, 11);
 	play.frames(2);
-	CHECK(play.state() == "won");
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.message").lookName() == "won");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 
 	House again;
 	again.game.addTo({ "player", "lives" }, -9.0f);
 	again.frames(2);
-	CHECK(again.state() == "lost");
+	CHECK(again.state() == "over");
+	CHECK(again.game.getObject("over.message").lookName() == "lost");
 }

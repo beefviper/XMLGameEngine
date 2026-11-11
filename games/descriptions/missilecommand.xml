@@ -278,7 +278,8 @@
             <condition name="cleared" object="status" variable="spent">
               <atleast>total</atleast>
               <play sound="wave" />
-              <push state="youwin" />
+              <become object="over.message" sprite="won" />
+              <push state="over" />
             </condition>
           </conditions>
         </scene>
@@ -296,7 +297,8 @@
         <condition class="city">
           <remaining>0</remaining>
           <play sound="theend" />
-          <push state="theend" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
       </conditions>
     </state>
@@ -316,10 +318,11 @@
       </inputs>
     </state>
 
-    <state name="youwin">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>THE END</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
         <object name="again">
@@ -335,13 +338,6 @@
       </inputs>
     </state>
 
-    <state name="theend" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>THE END</content></text></sprite>
-        </object>
-      </objects>
-    </state>
   </states>
   <sounds>
     <sound name="launch" wave="noise">

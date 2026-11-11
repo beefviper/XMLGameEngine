@@ -309,12 +309,14 @@
       <conditions>
         <condition object="frog" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
           <play sound="gameover" />
         </condition>
         <condition object="frog" variable="homes">
           <atleast>5</atleast>
-          <push state="youwin" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
           <play sound="win" />
         </condition>
         <condition object="clock" variable="time">
@@ -343,10 +345,11 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
         <object name="continue">
@@ -360,13 +363,6 @@
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
-    </state>
-    <state name="youwin" from="gameover">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>YOU WIN</content></text></sprite>
-        </object>
-      </objects>
     </state>
   </states>
   <sounds>

@@ -201,11 +201,13 @@
       <conditions>
         <condition object="player" variable="games">
           <atleast>set</atleast>
-          <push state="won" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
         <condition object="cpu" variable="games">
           <atleast>set</atleast>
-          <push state="lost" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
         <!-- four all is deuce again: forty all -->
         <condition object="player" variable="points"><atleast>4</atleast>
@@ -263,10 +265,11 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="lost">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>SET, CPU</content><color>color.red</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>SET, CPU</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>SET, YOU</content><color>color.yellow</color></text></sprite>
           <position><x><centered /></x><y>window.height.center - 150</y></position>
         </object>
       </objects>
@@ -277,13 +280,6 @@
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
-    </state>
-    <state name="won" from="lost">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>SET, YOU</content><color>color.yellow</color></text></sprite>
-        </object>
-      </objects>
     </state>
   </states>
   <sounds>

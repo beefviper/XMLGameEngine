@@ -525,11 +525,13 @@
       <conditions>
         <condition object="man" variable="rescues">
           <atleast>goal</atleast>
-          <push state="youwin" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
         <condition object="man" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
         <!-- the bonus run out -->
         <condition object="man" variable="bonus">
@@ -569,10 +571,11 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="youwin">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>
@@ -583,13 +586,6 @@
       <inputs>
         <input button="space"><reset /></input>
       </inputs>
-    </state>
-    <state name="gameover" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
-        </object>
-      </objects>
     </state>
   </states>
   <sounds>

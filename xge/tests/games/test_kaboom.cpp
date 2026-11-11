@@ -269,7 +269,8 @@ TEST_CASE("the third bucket lost ends the game", "[kaboom]")
 	CHECK(table.buckets() == 0);
 	CHECK(table.bucket().lookName() == "one");
 	table.frames(1);
-	CHECK(table.state() == "gameover");
+	CHECK(table.state() == "over");
+	CHECK(table.game.getObject("over.message").lookName() == "lost");
 }
 
 TEST_CASE("the score moves the game on from wave to wave and to a win", "[kaboom]")
@@ -287,7 +288,8 @@ TEST_CASE("the score moves the game on from wave to wave and to a win", "[kaboom
 
 	table.bucket().variable["score"] = 2900;
 	table.frames(1);
-	CHECK(table.state() == "youwin");
+	CHECK(table.state() == "over");
+	CHECK(table.game.getObject("over.message").lookName() == "won");
 }
 
 TEST_CASE("a wave left is away: its bomber stops where he was and drops nothing more", "[kaboom][scenes]")
@@ -354,7 +356,8 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 	REQUIRE(game.currentScene("playing") == "playing.wave2");
 	game.getObject("bucket").variable["buckets"] = 0;
 	engine.step();
-	REQUIRE(game.getCurrentState().name == "gameover");
+	REQUIRE(game.getCurrentState().name == "over");
+	CHECK(game.getObject("over.message").lookName() == "lost");
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
