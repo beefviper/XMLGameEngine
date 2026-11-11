@@ -898,7 +898,7 @@
 
   <!-- marks: on a picker, pieces it shows in cells of their own map of cells, a copy of object= in each:
        held, the piece it holds; moves, each cell that piece can move to; movable, each piece of class= that can be picked;
-       put, each cell a piece of class= can be <put> in;
+       put, each cell a piece of class= can be <put> in (movable and put with no class=: the pieces the player on its turn <owns>);
        last, the cells the last move it placed went from and to (a piece put: its cell). sprite=: only while it shows that look.
        variable=: only while that variable is not 0 (an option) -->
   <xs:complexType name="marksType">

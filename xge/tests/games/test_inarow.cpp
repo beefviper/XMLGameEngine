@@ -9,6 +9,7 @@
 // after a put, and the computer reading wins from them.
 
 #include "played.h"
+#include "turns.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -32,19 +33,7 @@ namespace
 		}
 
 		Object& cursor() { return get("cursor"); }
-		// Whose turn: the number of the member of `players` on it (from 1).
-		float turn()
-		{
-			const Object* on = game.onTurn("players");
-			float number = 0.0f;
-			for (const Object& each : game.getCurrentObjects())
-			{
-				if (!on || !each.takesTurns || each.groupName != on->groupName) { continue; }
-				number += 1.0f;
-				if (&each == on) { return number; }
-			}
-			return 0.0f;
-		}
+		float turn() { return turns::number(game); }
 
 		void to(int column, int row)
 		{

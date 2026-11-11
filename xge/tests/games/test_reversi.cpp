@@ -8,6 +8,7 @@
 // that cannot move passing, and the computer playing a game of puts.
 
 #include "played.h"
+#include "turns.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -36,7 +37,7 @@ namespace
 		}
 
 		Object& cursor() { return get("cursor"); }
-		float turn() { return cursor().variable.at("turn"); }
+		float turn() { return turns::number(game); }
 		float score(const std::string& side) { return get("score").variable.at(side); }
 
 		void to(int column, int row)
@@ -129,7 +130,7 @@ TEST_CASE("reversi.xml: two discs each in the middle, black to move with four pl
 	CHECK(board.at(4, 5) == "black");
 	CHECK(board.at(5, 5) == "white");
 	CHECK(board.turn() == 1.0f);
-	CHECK(board.cursor().lookName() == "blackfree");
+	CHECK(board.get("blacks").lookName() == "moving");
 	// Each of a side's discs counts the side's places.
 	CHECK(board.sum("black") == 8.0f);
 	CHECK(board.sum("white") == 8.0f);
@@ -146,7 +147,7 @@ TEST_CASE("reversi.xml: a disc put traps a line and turns it, and the turn passe
 	CHECK(board.score("black") == 4.0f);
 	CHECK(board.score("white") == 1.0f);
 	CHECK(board.turn() == 2.0f);
-	CHECK(board.cursor().lookName() == "whitefree");
+	CHECK(board.get("whites").lookName() == "moving");
 	board.frames(1);
 	CHECK(board.marks("lastmark") == Cells{ { 5, 6 } });
 	CHECK(board.marks("putmark") == Cells{ { 4, 6 }, { 6, 4 }, { 6, 6 } });
@@ -183,8 +184,7 @@ TEST_CASE("reversi.xml: a side that cannot move passes", "[reversi]")
 	// White's one disc is hemmed in a corner's line: it has nowhere to go.
 	board.frames(2);
 	CHECK(board.turn() == 1.0f);
-	CHECK(board.cursor().lookName() == "blackfree");
-	CHECK(board.get("whoseturn").lookName() == "blackagain");
+	CHECK(board.get("blacks").lookName() == "again");
 	board.space(3, 3);
 	CHECK(board.at(2, 2) == "black");
 }
@@ -221,7 +221,10 @@ TEST_CASE("reversi.xml: the computer answers black's disc with one of its own", 
 	board.space(5, 6);
 	REQUIRE(board.turn() == 2.0f);
 	board.frames(1);
-	CHECK(board.cursor().lookName() == "cpufree");
+	// Your keys do not reach the cursor while the computer thinks.
+	const int column = cell(board.cursor().cellColumn);
+	board.tap(KeyCode::A);
+	CHECK(cell(board.cursor().cellColumn) == column);
 	for (int i = 0; i < 600 && board.turn() != 1.0f; ++i) { board.frames(1); }
 	CHECK(board.turn() == 1.0f);
 	CHECK(board.score("black") + board.score("white") == 6.0f);
@@ -261,7 +264,7 @@ TEST_CASE("reversi.xml: a whole game against the computer comes to an end", "[re
 	// when it has none, until the game is over.
 	for (int i = 0; i < 6000 && board.state() == "playing"; ++i)
 	{
-		if (board.turn() == 1.0f && board.cursor().lookName() == "blackfree")
+		if (board.turn() == 1.0f)
 		{
 			const Cells places = board.marks("putmark");
 			if (!places.empty()) { board.space(places.front().first, places.front().second); }

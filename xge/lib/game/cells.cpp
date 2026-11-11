@@ -1432,6 +1432,8 @@ namespace xge
 					for (const Object::Mark& mark : set.marks)
 					{
 						if (!on(mark.variable)) { continue; }
+						// No class=: the pieces of the player on its turn.
+						const std::string markClass = mark.objClass.empty() ? turnClass() : mark.objClass;
 						switch (mark.kind)
 						{
 						case Object::Mark::Kind::Held:
@@ -1446,12 +1448,12 @@ namespace xge
 						case Object::Mark::Kind::Movable:
 							for (Object& piece : objects)
 							{
-								if (piece.moveSets.empty() || piece.objClass != mark.objClass || !piece.onCells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
+								if (piece.moveSets.empty() || piece.objClass != markClass || !piece.onCells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
 								want.push_back({ mark.object, whole(piece.cellColumn), whole(piece.cellRow) });
 							}
 							break;
 						case Object::Mark::Kind::Put:
-							if (const Object* kind = putTemplate(mark.objClass))
+							if (const Object* kind = markClass.empty() ? nullptr : putTemplate(markClass))
 							{
 								const CellsStill still(*this);
 								for (const auto& [column, row] : putCells(*kind)) { want.push_back({ mark.object, column, row }); }

@@ -22,13 +22,15 @@
   * The board is a <map> of <cells />: b black discs, w white. Each side
     is a group whose <moves> hold one <flank>: where a new disc of its
     kind may go, and what it turns.
-  * The cursor is on a map of its own over the board. <put class="black" />
-    puts a black disc in its cell; a put that traps nothing is refused,
-    so the turn passes (the commands after it) only when a disc is put.
+  * The players are a group that takes <turns>, each <owns> its discs.
+    The cursor is on a map of its own over the board. <put /> puts a disc
+    of the one on its turn in its cell; a put that traps nothing is
+    refused, so the turn passes (the commands after it) only when a disc
+    is put.
   * <count class="black" into="score.black" /> after each put keeps the
     score that the words beside the board show.
   * The live number `moves` of a side's discs is how many places it could
-    put one: none on its turn and it passes, none for either and the game
+    put one: none on its turn and it <pass>es, none for either and the game
     is over.
   * The cursor's <marks>: a dot where a disc can go, corners on the last
     one put.
@@ -119,13 +121,24 @@
     </state>
     <state name="playing">
       <objects>
-        <object name="whoseturn">
-          <sprite name="black"><text style="hud"><content>black to move</content></text></sprite>
-          <sprite name="white"><text style="hud"><content>white to move</content></text></sprite>
-          <sprite name="blackagain"><text style="hud"><content>white cannot move: black again</content></text></sprite>
-          <sprite name="whiteagain"><text style="hud"><content>black cannot move: white again</content></text></sprite>
+        <!-- the players, black first: each the words over the board on its turn, nothing off it -->
+        <group name="players">
+          <sprite name="moving"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite name="again"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite name="waiting"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
           <position><x><centered /></x><y>24</y></position>
-        </object>
+          <turns sprite="waiting" />
+          <member name="blacks">
+            <sprite name="moving"><text style="hud"><content>black to move</content></text></sprite>
+            <sprite name="again"><text style="hud"><content>white cannot move: black again</content></text></sprite>
+            <owns class="black" />
+          </member>
+          <member name="whites">
+            <sprite name="moving"><text style="hud"><content>white to move</content></text></sprite>
+            <sprite name="again"><text style="hud"><content>black cannot move: white again</content></text></sprite>
+            <owns class="white" />
+          </member>
+        </group>
         <object name="blackscore">
           <sprite><text style="hud"><content>black </content><number>score.black</number></text></sprite>
           <position><x>left + square * 8 + 30</x><y>top + 20</y></position>
@@ -210,24 +223,13 @@
           <row>........</row>
 
           <object name="cursor" char="c">
-            <!-- black's turn, white's, and the computer's (white's, with its own key) -->
-            <sprite name="blackfree">
-              <bitmap from="cursor-blackfree" />
+            <sprite>
+              <bitmap from="cursor" />
             </sprite>
-            <sprite name="whitefree">
-              <bitmap from="cursor-blackfree" />
-            </sprite>
-            <sprite name="cpufree">
-              <bitmap from="cursor-blackfree" />
-            </sprite>
+            <!-- the last move, and where the player on its turn may put a disc -->
             <marks>
               <last object="lastmark" />
-            </marks>
-            <marks sprite="blackfree">
-              <put class="black" object="putmark" variable="options.moves" />
-            </marks>
-            <marks sprite="whitefree">
-              <put class="white" object="putmark" variable="options.moves" />
+              <put object="putmark" variable="options.moves" />
             </marks>
             <actions>
               <action name="up"><hop direction="up" /></action>
@@ -236,30 +238,15 @@
               <action name="right"><hop direction="right" /></action>
               <!-- where the mouse is -->
               <action name="point"><track /></action>
-              <!-- a disc put: the score counted, the turn passes -->
-              <action name="blackput">
-                <put class="black" />
+              <!-- a disc of the player on its turn put: the score counted, the turn passes -->
+              <action name="put">
+                <put />
                 <play sound="put" />
                 <count class="black" into="score.black" />
                 <count class="white" into="score.white" />
-                <set variable="cursor.turn">2</set>
-                <become sprite="whitefree" />
-                <become object="whoseturn" sprite="white" />
-              </action>
-              <action name="whiteput">
-                <put class="white" />
-                <play sound="put" />
-                <count class="black" into="score.black" />
-                <count class="white" into="score.white" />
-                <set variable="cursor.turn">1</set>
-                <become sprite="blackfree" />
-                <become object="whoseturn" sprite="black" />
+                <pass object="players" />
               </action>
             </actions>
-            <!-- whose turn: 1 black, 2 white -->
-            <variables>
-              <variable name="turn">1</variable>
-            </variables>
           </object>
         </map>
       </objects>
@@ -270,20 +257,10 @@
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" /></input>
         <input>
           <button>space</button><button>pad1.a</button><button>mouse.left</button>
-          <trigger object="cursor" action="blackput" from="blackfree" />
-          <trigger object="cursor" action="whiteput" from="whitefree" />
+          <trigger object="cursor" action="put" />
         </input>
-        <!-- the mouse moves the cursor, but not on the computer's turn -->
-        <input axis="mouse.x">
-          <trigger object="cursor" action="point" from="blackfree" />
-          <trigger object="cursor" action="point" from="whitefree" />
-        </input>
-        <input axis="mouse.y">
-          <trigger object="cursor" action="point" from="blackfree" />
-          <trigger object="cursor" action="point" from="whitefree" />
-        </input>
-        <!-- the computer's key: only its look answers it -->
-        <input><button>f12</button><trigger object="cursor" action="whiteput" from="cpufree" /></input>
+        <input axis="mouse.x"><trigger object="cursor" action="point" /></input>
+        <input axis="mouse.y"><trigger object="cursor" action="point" /></input>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
@@ -307,34 +284,26 @@
           </condition>
         </condition>
         <!-- a side with nowhere to put a disc on its turn passes -->
-        <condition object="cursor" variable="turn"><equal>1</equal>
+        <condition object="blacks" variable="turn"><equal>1</equal>
           <condition class="black" variable="moves" total="sum"><equal>0</equal>
             <play sound="pass" />
-            <set variable="cursor.turn">2</set>
-            <become object="cursor" sprite="whitefree" />
-            <become object="whoseturn" sprite="whiteagain" />
+            <become object="whites" sprite="again" />
+            <pass object="players" />
           </condition>
         </condition>
-        <condition object="cursor" variable="turn"><equal>2</equal>
+        <condition object="whites" variable="turn"><equal>1</equal>
           <condition class="white" variable="moves" total="sum"><equal>0</equal>
             <play sound="pass" />
-            <set variable="cursor.turn">1</set>
-            <become object="cursor" sprite="blackfree" />
-            <become object="whoseturn" sprite="blackagain" />
-          </condition>
-        </condition>
-        <!-- against the computer, white's turn is its: the cursor takes its look -->
-        <condition object="cursor" variable="turn"><equal>2</equal>
-          <condition object="match" variable="players"><equal>1</equal>
-            <become object="cursor" sprite="cpufree" from="whitefree" />
+            <become object="blacks" sprite="again" />
+            <pass object="players" />
           </condition>
         </condition>
       </conditions>
-      <!-- white's move: four ahead -->
+      <!-- against the computer, white's move: four ahead -->
       <computer>
         <condition object="match" variable="players"><equal>1</equal>
-          <condition object="cursor" variable="turn"><equal>2</equal>
-            <think class="white" object="cursor" button="f12">
+          <condition object="whites" variable="turn"><equal>1</equal>
+            <think object="cursor" button="space">
               <depth>4</depth>
             </think>
           </condition>
@@ -428,7 +397,7 @@
       <scale>6</scale>
       <color>color.orange</color>
     </bitmap>
-    <bitmap name="cursor-blackfree" style="cursor">
+    <bitmap name="cursor" style="cursor">
       <row>**********</row>
       <row>*........*</row>
       <row>*........*</row>

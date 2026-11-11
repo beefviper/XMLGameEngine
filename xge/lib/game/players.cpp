@@ -126,8 +126,10 @@ namespace xge
 			const bool on = each == next;
 			if (on == (each->variable["turn"] != 0.0f)) { continue; }
 			setVariable(each->name, "turn", on ? 1.0f : 0.0f);
-			if (on) { each->showLook(0); }
-			else if (!each->turnsSprite.empty()) { showLookNamed(*each, each->turnsSprite); }
+			// Onto its turn it leaves its off-turn look, for its first; a look
+			// given it while it waited (a pass's "again") stays.
+			if (on && (each->turnsSprite.empty() || each->lookName() == each->turnsSprite)) { each->showLook(0); }
+			else if (!on && !each->turnsSprite.empty()) { showLookNamed(*each, each->turnsSprite); }
 		}
 		// A moment before the computer plays the one whose turn came, and the
 		// game's conditions see the turn change first.

@@ -1311,7 +1311,7 @@ namespace xge
 					}
 					const std::string at = here + " > <" + each.kind + ">";
 					each.object = requireAttribute(*mark, "object", at);
-					if (each.kind == "movable" || each.kind == "put") { each.objClass = requireAttribute(*mark, "class", at); }
+					each.objClass = mark->getAttribute("class");
 					each.variable = mark->getAttribute("variable");
 					set.marks.push_back(std::move(each));
 				}
