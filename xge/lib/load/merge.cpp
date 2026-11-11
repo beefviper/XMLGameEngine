@@ -110,10 +110,18 @@ namespace xge
 			return isLayout(tag) ? Match::All : Match::Tag;
 		}
 
+		// Two tags that are one setting said either way: <ready /> written over
+		// a <waiting /> takes its place, as a tag does its own.
+		bool alike(const std::string& one, const std::string& other)
+		{
+			const auto kind = [](const std::string& tag) { return tag == "ready" ? std::string("waiting") : tag; };
+			return kind(one) == kind(other);
+		}
+
 		bool sameKind(Match match, const ElementPtr& one, const ElementPtr& other)
 		{
 			if (match == Match::All && isLayout(one->name)) { return isLayout(other->name); }
-			if (one->name != other->name) { return false; }
+			if (!alike(one->name, other->name)) { return false; }
 			if (match == Match::Whole || match == Match::Deep || match == Match::Named) { return one->attribute("name") == other->attribute("name"); }
 			return true;
 		}
@@ -147,10 +155,10 @@ namespace xge
 				if (match == Match::Tag && like)
 				{
 					// all of over's of the tag, where base's first of it was
-					const bool first = std::none_of(base.begin(), base.begin() + static_cast<std::ptrdiff_t>(i), [&](const ElementPtr& each) { return each->name == child->name; });
+					const bool first = std::none_of(base.begin(), base.begin() + static_cast<std::ptrdiff_t>(i), [&](const ElementPtr& each) { return alike(each->name, child->name); });
 					if (first)
 					{
-						for (const ElementPtr& each : over) { if (each->name == child->name) { made.push_back(each); } }
+						for (const ElementPtr& each : over) { if (alike(each->name, child->name)) { made.push_back(each); } }
 					}
 					continue;
 				}
@@ -163,7 +171,7 @@ namespace xge
 				if (match == Match::All || match == Match::Added) { made.push_back(child); continue; }
 				if (match == Match::Tag)
 				{
-					if (std::none_of(base.begin(), base.end(), [&](const ElementPtr& each) { return each->name == child->name; })) { made.push_back(child); }
+					if (std::none_of(base.begin(), base.end(), [&](const ElementPtr& each) { return alike(each->name, child->name); })) { made.push_back(child); }
 					continue;
 				}
 				if (match == Match::Named && child->attribute("name").empty()) { made.push_back(child); continue; }

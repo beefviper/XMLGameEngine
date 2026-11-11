@@ -29,7 +29,7 @@ namespace
 		std::string rows;
 		for (int i = 0; i < 10; ++i) { rows += "<row>**********</row>"; }
 		return "<object name=\"wall\"><sprite><bitmap>" + rows + "<scale>4</scale><color>color.green</color></bitmap></sprite>"
-			"<position><x>100</x><y>100</y></position>" + extra + "<collisions><enabled>true</enabled><type>pixel</type>" + rule + "</collisions></object>";
+			"<position><x>100</x><y>100</y></position>" + extra + "<collisions><type>pixel</type>" + rule + "</collisions></object>";
 	}
 
 	int solidPixels(const Bitmap& bitmap)
@@ -47,7 +47,7 @@ namespace
 
 TEST_CASE("a <hole> is cut round the middle of what hit, and the next shot goes through it", "[hole]")
 {
-	const std::string shot = box("shot", 115, 300, "<velocity><x>0</x><y>-8</y></velocity><collisions><enabled>true</enabled>"
+	const std::string shot = box("shot", 115, 300, "<velocity><x>0</x><y>-8</y></velocity><collisions>"
 		"<collision object=\"wall\"><reset /></collision></collisions>");
 	const Scratch file(wall("<collision object=\"shot\"><hole>8</hole></collision>") + shot
 		+ box("another", 600, 100), "<reset object=\"wall\" />");
@@ -91,7 +91,7 @@ TEST_CASE("a rough hole keeps some pixels at its edge, never more than it would 
 	const auto cut = [](const std::string& rough)
 	{
 		const Scratch file(wall("<collision object=\"shot\"><hole>12" + rough + "</hole></collision>")
-			+ box("shot", 115, 115, "<velocity><x>0</x><y>-1</y></velocity><collisions><enabled>true</enabled></collisions>"), "<pop />");
+			+ box("shot", 115, 115, "<velocity><x>0</x><y>-1</y></velocity><collisions></collisions>"), "<pop />");
 		Played play(file.path);
 		play.frames(1);
 		return 1600 - solidPixels(play.get("wall"));
@@ -112,7 +112,7 @@ TEST_CASE("a <hole> is cut only in a picture that stays as it is", "[hole]")
 		Game game(file.path);
 	};
 
-	CHECK_THROWS_WITH(load(box("wall", 0, 0, "<collisions><enabled>true</enabled><collision object=\"shot\"><hole>4</hole></collision></collisions>") + box("shot", 50, 50)),
+	CHECK_THROWS_WITH(load(box("wall", 0, 0, "<collisions><collision object=\"shot\"><hole>4</hole></collision></collisions>") + box("shot", 50, 50)),
 		ContainsSubstring("<hole> cuts a picture that stays as it is"));
 	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole>0</hole></collision>") + box("shot", 300, 300)), ContainsSubstring("a radius of 0"));
 	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole>3<rough>2</rough></hole></collision>") + box("shot", 300, 300)), ContainsSubstring("<rough> of 2"));
@@ -158,8 +158,8 @@ TEST_CASE("a sprite of <polygon>s is filled, tested by its pixels, and holed whe
 		"<point><x>0</x><y>100</y></point><point><x>50</x><y>40</y></point><point><x>100</x><y>100</y></point>"
 		"<color>color.green</color></polygon></sprite>"
 		"<position><x>100</x><y>100</y></position>"
-		"<collisions><enabled>true</enabled><type>pixel</type><collision class=\"shell\"><hole>8</hole></collision></collisions></object>";
-	const std::string shell = box("shell", 148, 100, "<velocity><x>0</x><y>3</y></velocity><collisions><enabled>true</enabled>"
+		"<collisions><type>pixel</type><collision class=\"shell\"><hole>8</hole></collision></collisions></object>";
+	const std::string shell = box("shell", 148, 100, "<velocity><x>0</x><y>3</y></velocity><collisions>"
 		"<collision class=\"ground\"><stop /></collision></collisions>");
 	const Scratch file(hill + shell.substr(0, shell.find('>')) + " class=\"shell\"" + shell.substr(shell.find('>')), "<reset object=\"hill\" />");
 	Played play(file.path);

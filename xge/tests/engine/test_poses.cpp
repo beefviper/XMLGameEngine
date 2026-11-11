@@ -36,14 +36,14 @@ namespace
 	std::string walker(const std::string& extra = "<grip>0.25</grip>")
 	{
 		return "<object name=\"floor\" class=\"floor\"><sprite><rectangle><width>600</width><height>10</height></rectangle></sprite>"
-			"<position><x>0</x><y>300</y></position><collisions><enabled>true</enabled></collisions></object>"
+			"<position><x>0</x><y>300</y></position><collisions></collisions></object>"
 			"<object name=\"guy\">" + dot("stand", 0) + dot("stepa", 1) + dot("stepb", 2) + dot("skid", 3) + dot("up", 0) + dot("down", 1) + dot("hurt", 2)
 			+ "<animation name=\"walk\"><interval>0.1</interval><frame sprite=\"stepa\" /><frame sprite=\"stepb\" /></animation>"
 			"<position><x>300</x><y>290</y></position>"
 			"<acceleration><x>0</x><y>0.5</y></acceleration>"
 			"<poses><standing sprite=\"stand\" /><walking sprite=\"walk\" /><skidding sprite=\"skid\" /><rising sprite=\"up\" /><falling sprite=\"down\" /></poses>"
 			"<mirror>left</mirror>" + extra +
-			"<collisions><enabled>true</enabled><collision class=\"floor\"><land /></collision></collisions>"
+			"<collisions><collision class=\"floor\"><land /></collision></collisions>"
 			"<actions>"
 			"<action name=\"left\"><move direction=\"left\">2</move></action>"
 			"<action name=\"right\"><move direction=\"right\">2</move></action>"

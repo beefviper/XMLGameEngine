@@ -30,7 +30,7 @@ namespace
 	std::string pond(const std::string& rules)
 	{
 		return "<object name=\"frog\" class=\"frog\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-			"<position><x>100</x><y>100</y></position><collisions><enabled>true</enabled>" + rules + "</collisions></object>"
+			"<position><x>100</x><y>100</y></position><collisions>" + rules + "</collisions></object>"
 			+ "<object name=\"log\" class=\"log\"><sprite><rectangle><width>40</width><height>10</height></rectangle></sprite>"
 			"<position><x>100</x><y>100</y></position></object>";
 	}
@@ -129,7 +129,7 @@ TEST_CASE("a state shows what the game has, and a trigger's from= is a look it h
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"scratch\"><width>800</width><height>600</height><background>color.black</background>"
-				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				"<states><state name=\"playing\"><objects>" << objects << "</objects>" << shows
 				<< "<inputs><input button=\"space\">" << onSpace << "</input></inputs></state></states></game>";

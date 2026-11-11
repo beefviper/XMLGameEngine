@@ -72,7 +72,7 @@ namespace
 	const std::string kOther =
 		"<object name=\"another\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity>"
-		"<collisions><enabled>false</enabled></collisions></object>";
+		"<collisions><off /></collisions></object>";
 
 	// A game with these objects (and `other`), whose `playing` state shows the
 	// named ones and whose `away` state shows only `other`.
@@ -80,7 +80,7 @@ namespace
 	{
 		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>" + std::to_string(framerate) + "</framerate></window>"
+			"<framerate>" + std::to_string(framerate) + "</framerate></window>"
 			"<variables><variable name=\"pixel\">3</variable></variables>"
 			"<states><objects>" + objects + kOther + "</objects>"
 			""
@@ -120,7 +120,7 @@ namespace
 	{
 		return "<object name=\"thing\">" + sprites + animation + extra +
 			"<position><x>10</x><y>20</y></position><velocity><x>0</x><y>0</y></velocity>"
-			"<collisions><enabled>false</enabled></collisions></object>";
+			"<collisions><off /></collisions></object>";
 	}
 
 	// A group "thing" of 3 columns and 2 rows of the sprites (and animation)
@@ -129,7 +129,7 @@ namespace
 	{
 		return "<group name=\"thing\"><columns>3</columns><rows>2</rows>" + padding + sprites +
 			"<position><x>10</x><y>20</y></position><velocity><x>0</x><y>0</y></velocity>"
-			"<collisions><enabled>false</enabled></collisions></group>";
+			"<collisions><off /></collisions></group>";
 	}
 
 	// Two 2 by 2 pictures, 4 by 4 pixels at a scale of 2: a has its solid
@@ -337,7 +337,7 @@ TEST_CASE("a bitmap's size can be used in an expression like any shape's", "[bit
 	const std::string flag =
 		"<object name=\"flag\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		"<position><x>window.right - thing.width</x><y>thing.height</y></position>"
-		"<velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions></object>";
+		"<velocity><x>0</x><y>0</y></velocity><collisions><off /></collisions></object>";
 	Loaded loaded{ gameXml(objectWith("<sprite><bitmap><row>*.*.*</row><row>*.*.*</row><scale>2</scale></bitmap></sprite>") + flag,
 		"<show object=\"thing\" /><show object=\"flag\" />") };
 
@@ -725,7 +725,7 @@ TEST_CASE("the members of a group can each have sprites and an animation of thei
 		"<sprite name=\"b\"><bitmap><row>.*</row><row>*.</row><scale>2</scale></bitmap></sprite>"
 		"<animation><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
 		"<position><y>50</y></position><velocity><x>0</x><y>0</y></velocity>"
-		"<collisions><enabled>false</enabled></collisions>"
+		"<collisions><off /></collisions>"
 		// shares everything the group gives
 		"<member name=\"same\"><position><x>10</x></position></member>"
 		// its own interval, the group's sprites
@@ -884,7 +884,7 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 		const std::string group =
 			"<group name=\"pair\">" + kA + kB + kTwoFrames +
 			"<position><y>50</y></position><velocity><x>0</x><y>0</y></velocity>"
-			"<collisions><enabled>false</enabled></collisions>"
+			"<collisions><off /></collisions>"
 			"<member name=\"odd\"><position><x>10</x></position><sprite name=\"only\"><bitmap><row>*</row></bitmap></sprite></member>"
 			"</group>";
 		CHECK_THROWS_WITH(Loaded(gameXml(group, "<show object=\"pair\" />")),

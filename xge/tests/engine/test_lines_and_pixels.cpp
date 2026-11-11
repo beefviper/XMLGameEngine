@@ -122,7 +122,7 @@ namespace
 	{
 		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"g\">0.5</variable></variables>"
 			"<states><objects>" + objects + "</objects>"
 			"<state name=\"playing\"><shows>" + shows + "</shows>"
@@ -158,11 +158,11 @@ namespace
 		"</sprite>"
 		"<position><x>30</x><y>40</y></position>"
 		"<velocity><x>0</x><y>0</y></velocity>"
-		"<collisions><enabled>true</enabled><type>pixel</type></collisions>"
+		"<collisions><type>pixel</type></collisions>"
 		"</object>";
 
 	// One object with a mistake to make: what goes between <sprite> and <position>.
-	std::string objectWith(const std::string& sprite, const std::string& collisions = "<enabled>true</enabled>")
+	std::string objectWith(const std::string& sprite, const std::string& collisions = "")
 	{
 		return "<object name=\"thing\"><sprite>" + sprite + "</sprite>"
 			"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity>"
@@ -426,7 +426,7 @@ TEST_CASE("the size of a sprite of lines can be used in an expression like any s
 		"<object name=\"flag\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		"<position><x>window.right - hut.width</x><y>hut.height</y></position>"
 		"<velocity><x>0</x><y>0</y></velocity>"
-		"<collisions><enabled>false</enabled></collisions></object>";
+		"<collisions><off /></collisions></object>";
 	Loaded loaded{ gameXml(kHut + second, "<show object=\"hut\" /><show object=\"flag\" />") };
 
 	const Object& flag = loaded.game.getObject("flag");
@@ -482,14 +482,14 @@ TEST_CASE("mistakes in a sprite of lines are reported where they are", "[lines][
 
 	SECTION("a collision type that is not one")
 	{
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(line, "<enabled>true</enabled><type>round</type>"), "<show object=\"thing\" />")),
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(line, "<type>round</type>"), "<show object=\"thing\" />")),
 			ContainsSubstring("expected box or pixel"));
 	}
 
 	SECTION("pixel collisions on text, which only a window can draw")
 	{
 		const std::string text = "<text><content>hi</content><size>20</size></text>";
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(text, "<enabled>true</enabled><type>pixel</type>"), "<show object=\"thing\" />")),
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(text, "<type>pixel</type>"), "<show object=\"thing\" />")),
 			ContainsSubstring("object 'thing'") && ContainsSubstring("type>pixel"));
 	}
 
@@ -503,7 +503,7 @@ TEST_CASE("type is box when it is left out, and a circle or rectangle can be pix
 	CHECK(plain.game.getObject("thing").collisionData.type == CollisionType::Box);
 	CHECK_FALSE(plain.game.getObject("thing").bitmap);
 
-	Loaded pixel{ gameXml(objectWith(circle, "<enabled>true</enabled><type>pixel</type>"), "<show object=\"thing\" />") };
+	Loaded pixel{ gameXml(objectWith(circle, "<type>pixel</type>"), "<show object=\"thing\" />") };
 	CHECK(pixel.game.getObject("thing").collisionData.type == CollisionType::Pixel);
 }
 
@@ -519,7 +519,7 @@ namespace
 		"<position><x>100</x><y>0</y></position>"
 		"<velocity><x>0</x><y>0</y></velocity>"
 		"<acceleration><x>0</x><y>g</y></acceleration>"
-		"<collisions><enabled>true</enabled>"
+		"<collisions>"
 		"<collision object=\"floor\"><condition variable=\"speed\"><below>3</below></condition><inc variable=\"ship.landed\" /><stop /></collision>"
 		"<collision object=\"floor\"><condition variable=\"speed\"><atleast>3</atleast></condition><inc variable=\"ship.crashed\" /><stop /></collision>"
 		"</collisions>"
@@ -533,7 +533,7 @@ namespace
 		"<sprite><rectangle><width>400</width><height>20</height></rectangle></sprite>"
 		"<position><x>0</x><y>500</y></position>"
 		"<velocity><x>0</x><y>0</y></velocity>"
-		"<collisions><enabled>true</enabled></collisions>"
+		"<collisions></collisions>"
 		"</object>";
 
 	struct Flight

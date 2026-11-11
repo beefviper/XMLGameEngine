@@ -96,7 +96,7 @@ TEST_CASE("a collision rule can fire", "[places][fire]")
 	const std::string shot = "<object name=\"shot\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite>"
 		"<velocity><x>0</x><y>-4</y></velocity><most>1</most></object>";
 	const std::string bumper = box("bumper", 400, 100, "<velocity><x>0</x><y>-5</y></velocity>"
-		"<collisions><enabled>true</enabled><collision edge=\"top\"><fire object=\"shot\" /><stop /></collision></collisions>");
+		"<collisions><collision edge=\"top\"><fire object=\"shot\" /><stop /></collision></collisions>");
 	const Scratch file(bumper, "<pop />", {}, shot);
 	Played play(file.path);
 
@@ -123,7 +123,7 @@ TEST_CASE("a command out of its place: the schema turns it away, and so does the
 		bool schemaSays; // a rule's kind is in its attributes, which the schema cannot tell apart
 	};
 	const Misplaced cases[] = {
-		{ "a <wrap /> in a rule about another object", box("a", 0, 0, "<collisions><enabled>true</enabled><collision object=\"b\"><wrap /></collision></collisions>") + box("b", 50, 0), "<pop />",
+		{ "a <wrap /> in a rule about another object", box("a", 0, 0, "<collisions><collision object=\"b\"><wrap /></collision></collisions>") + box("b", 50, 0), "<pop />",
 			"<wrap /> does nothing in a <collision> with another object", false },
 		{ "a <move> on a key", box("a", 0, 0), "<move direction=\"left\">2</move>", "<move> does nothing in an <input>", true },
 		{ "a <push> in an object's timer", box("a", 0, 0, "<timers><timer><every>1</every><push state=\"playing\" /></timer></timers>"), "<pop />",

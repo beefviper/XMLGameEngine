@@ -105,13 +105,15 @@
     <xsl:param name="over" />
     <xsl:for-each select="$base">
       <xsl:variable name="child" select="." />
+      <!-- <ready /> written over a <waiting /> takes its place, as a tag does its own -->
+      <xsl:variable name="kind" select="concat(substring('waiting', 1, 7 * (name() = 'ready')), substring(name(), 1, 99 * not(name() = 'ready')))" />
       <xsl:variable name="match">
         <xsl:call-template name="merge-match">
           <xsl:with-param name="parent" select="$parent" />
           <xsl:with-param name="tag" select="name()" />
         </xsl:call-template>
       </xsl:variable>
-      <xsl:variable name="like" select="($over[name() = name($child)][
+      <xsl:variable name="like" select="($over[name() = $kind or ($kind = 'waiting' and name() = 'ready')][
           (($match = 'whole' or $match = 'deep') and string(@name) = string($child/@name))
           or ($match = 'named' and string($child/@name) != '' and string(@name) = string($child/@name))
           or $match = 'inner' or $match = 'tag' or $match = 'all']
@@ -131,7 +133,7 @@
         <xsl:when test="$match = 'tag' and $like">
           <!-- all of over's of the tag, where base's first of it was -->
           <xsl:if test="not(preceding-sibling::*[name() = name($child)])">
-            <xsl:copy-of select="$over[name() = name($child)]" />
+            <xsl:copy-of select="$over[name() = $kind or ($kind = 'waiting' and name() = 'ready')]" />
           </xsl:if>
         </xsl:when>
         <xsl:otherwise>
@@ -141,6 +143,7 @@
     </xsl:for-each>
     <xsl:for-each select="$over">
       <xsl:variable name="child" select="." />
+      <xsl:variable name="kind" select="concat(substring('waiting', 1, 7 * (name() = 'ready')), substring(name(), 1, 99 * not(name() = 'ready')))" />
       <xsl:variable name="match">
         <xsl:call-template name="merge-match">
           <xsl:with-param name="parent" select="$parent" />
@@ -152,7 +155,7 @@
           <xsl:copy-of select="." />
         </xsl:when>
         <xsl:when test="$match = 'tag'">
-          <xsl:if test="not($base[name() = name($child)])">
+          <xsl:if test="not($base[name() = $kind or ($kind = 'waiting' and name() = 'ready')])">
             <xsl:copy-of select="." />
           </xsl:if>
         </xsl:when>

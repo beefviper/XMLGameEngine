@@ -210,7 +210,7 @@
           <sprite name="done"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
           <sprite name="point"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
+          <hidden />
           <variables>
             <variable name="turn">1</variable>
             <variable name="wind"><formula><round><value><random><min>-5</min><max>5</max></random></value></round></formula></variable>

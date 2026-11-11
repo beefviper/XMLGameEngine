@@ -288,7 +288,7 @@
           </sprite>
           <position><x>0</x><y update="live">yar.y + 4</y></position>
           <facing>right</facing>
-          <active>false</active>
+          <waiting />
           <actions>
             <action name="fire">
               <fire object="blast" />

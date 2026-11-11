@@ -12,7 +12,7 @@
 </collisions>
 ```
 
-In order: `<enabled>` (`false` turns it off), `<lockstep>`, `<type>`, `<solid>`s, a `<hitbox>`, then the rules. Only objects in play with collisions on take part.
+In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<type>`, `<solid>`s, a `<hitbox>`, then the rules. Only objects in play with collisions on take part.
 
 ## Rules
 
@@ -60,7 +60,7 @@ In order: `<enabled>` (`false` turns it off), `<lockstep>`, `<type>`, `<solid>`s
 
 ## Lockstep
 
-`<lockstep>true</lockstep>` in a group's `<collisions>` makes each innermost group one block: its members never touch each other, a rule's `<move>` moves them all, and one hitting a side with `<bounce />` turns the whole block. Each cell is still swept on its own, so a bullet meets only the cells alive. This is the invaders' march.
+`<lockstep />` in a group's `<collisions>` makes each innermost group one block: its members never touch each other, a rule's `<move>` moves them all, and one hitting a side with `<bounce />` turns the whole block. Each cell is still swept on its own, so a bullet meets only the cells alive. This is the invaders' march.
 
 ## Knocks
 

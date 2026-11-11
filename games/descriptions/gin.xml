@@ -176,7 +176,7 @@
           <sprite name="discarding"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="done"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
+          <hidden />
           <actions>
             <action name="shuffle">
               <become sprite="dealing" />
@@ -205,7 +205,7 @@
           <sprite name="shuffling"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
+          <hidden />
           <timers>
             <timer sprite="shuffling"><every>0.4</every><become sprite="idle" /><trigger object="table" action="deal" /></timer>
           </timers>

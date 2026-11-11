@@ -162,7 +162,7 @@
     <!-- the two saucers: they cross now and then, wandering up and down and shooting; a rock that meets one breaks it -->
     <group name="ufos" class="hazard">
       <position><x>-30</x><y><random><min>80</min><max>window.bottom - 80</max></random></y></position>
-      <active>false</active>
+      <waiting />
       <collisions>
         <type>pixel</type>
         <collision edge="vertical"><wrap /></collision>
@@ -344,7 +344,7 @@
         <!-- Where a ship that was hit comes back: in play while it waits, ready two seconds on. -->
         <object name="centre">
           <position><x>window.width.center</x><y>window.height.center</y></position>
-          <active>false</active>
+          <waiting />
           <variables><variable name="ready">0</variable></variables>
           <timers>
             <timer><after>2</after><set variable="centre.ready">1</set></timer>

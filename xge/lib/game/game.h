@@ -71,7 +71,7 @@ namespace xge
 		WindowDesc& getWindowDesc(void) noexcept;
 
 		// Whether the object is in play: it moves, animates, counts its timers
-		// and collides (and is drawn, unless it is <drawn>false</drawn>). It
+		// and collides (and is drawn, unless it is <hidden />). It
 		// is, when it is not hidden or dead, and is the current state's (or
 		// of its current scene), or the current state shows it.
 		bool isShown(const Object& object) noexcept;

@@ -1268,24 +1268,12 @@
     <xsl:param name="to" />
     <xsl:param name="indent" />
     <xsl:variable name="data" select="concat($to, '.rawCollisionData')" />
-    <!-- a <collisions> is on unless it says <enabled>false</enabled> -->
+    <!-- a <collisions> is on unless it says <off /> -->
     <xsl:variable name="enabled">
-      <xsl:choose>
-        <xsl:when test="$node and not($node/enabled)">true</xsl:when>
-        <xsl:otherwise>
-          <xsl:call-template name="is-true">
-            <xsl:with-param name="node" select="$node/enabled" />
-          </xsl:call-template>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
-    <xsl:variable name="lockstep">
-      <xsl:call-template name="is-true">
-        <xsl:with-param name="node" select="$node/lockstep" />
-      </xsl:call-template>
+      <xsl:if test="$node and not($node/off)">true</xsl:if>
     </xsl:variable>
     <!-- an inner group's <collisions> changes what the outer's set, so it
-         says false and box too -->
+         says off and box too -->
     <xsl:variable name="nested" select="boolean($node/../parent::group)" />
     <xsl:choose>
       <xsl:when test="$enabled != ''">
@@ -1296,11 +1284,8 @@
       </xsl:when>
     </xsl:choose>
     <xsl:choose>
-      <xsl:when test="$lockstep != ''">
+      <xsl:when test="$node/lockstep">
         <xsl:value-of select="concat($indent, $data, '.lockstep = true;&#10;')" />
-      </xsl:when>
-      <xsl:when test="$nested and $node/lockstep">
-        <xsl:value-of select="concat($indent, $data, '.lockstep = false;&#10;')" />
       </xsl:when>
     </xsl:choose>
     <xsl:choose>
@@ -1755,7 +1740,7 @@
   </xsl:template>
 
   <!-- What an <object> and a <group> both have: <facing>, <poses>, <moves>, <joins>, <mirror>, <grip>, <timers>,
-       <active>, <collisions>, <actions> and <variables>, into $to. -->
+       <waiting />, <collisions>, <actions> and <variables>, into $to. -->
   <xsl:template name="shared">
     <xsl:param name="node" />
     <xsl:param name="to" />
@@ -2129,35 +2114,17 @@
       <xsl:with-param name="list" select="concat($to, '.timers')" />
       <xsl:with-param name="indent" select="$indent" />
     </xsl:call-template>
-    <xsl:variable name="active">
-      <xsl:call-template name="is-true">
-        <xsl:with-param name="node" select="$node/active[last()]" />
-      </xsl:call-template>
-    </xsl:variable>
     <xsl:choose>
-      <xsl:when test="$node/active and $active = ''">
+      <xsl:when test="$node/waiting">
         <xsl:value-of select="concat($indent, $to, '.isVisible = false;&#10;')" />
       </xsl:when>
-      <!-- an inner group that says it is active, inside one that is not -->
-      <xsl:when test="$node/parent::group and $node/active">
+      <!-- in play after all: a take of a waiting piece, an inner group of a waiting one -->
+      <xsl:when test="$node/ready">
         <xsl:value-of select="concat($indent, $to, '.isVisible = true;&#10;')" />
       </xsl:when>
     </xsl:choose>
-    <xsl:if test="$node/drawn">
-      <xsl:variable name="drawn">
-        <xsl:call-template name="is-true">
-          <xsl:with-param name="node" select="$node/drawn[last()]" />
-        </xsl:call-template>
-      </xsl:variable>
-      <xsl:choose>
-        <xsl:when test="$drawn = ''">
-          <xsl:value-of select="concat($indent, $to, '.isDrawn = false;&#10;')" />
-        </xsl:when>
-        <!-- an inner group that is drawn, inside one that is not -->
-        <xsl:when test="$node/parent::group">
-          <xsl:value-of select="concat($indent, $to, '.isDrawn = true;&#10;')" />
-        </xsl:when>
-      </xsl:choose>
+    <xsl:if test="$node/hidden">
+      <xsl:value-of select="concat($indent, $to, '.isDrawn = false;&#10;')" />
     </xsl:if>
     <xsl:if test="$node/exists">
       <xsl:variable name="exists">
@@ -3597,7 +3564,7 @@
     </xsl:choose>
     <xsl:text>;&#10;&#9;game.window.fullscreen = "</xsl:text>
     <xsl:choose>
-      <xsl:when test="normalize-space($game/window/fullscreen) = 'true' or normalize-space($game/window/fullscreen) = '1'">true</xsl:when>
+      <xsl:when test="$game/window/fullscreen">true</xsl:when>
       <xsl:otherwise>false</xsl:otherwise>
     </xsl:choose>
     <xsl:text>";&#10;&#9;game.window.framerate = </xsl:text>

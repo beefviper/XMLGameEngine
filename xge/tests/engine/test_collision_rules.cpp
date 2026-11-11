@@ -118,15 +118,15 @@ namespace
 				std::ofstream out(path);
 				out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 					"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
-					"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+					"<framerate>60</framerate></window>"
 					"<variables><variable name=\"unused\">0</variable></variables><states><objects>"
 					"<object name=\"ball\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 					"<position><x>100</x><y>0</y></position><velocity><y>5</y></velocity>"
-					"<collisions><enabled>true</enabled>" << rule << "</collisions>"
+					"<collisions>" << rule << "</collisions>"
 					"<actions><action name=\"hit\"><reset /></action></actions>"
 					"<variables><variable name=\"armed\">" << armed << "</variable></variables></object>"
 					"<object name=\"block\" class=\"block\"><sprite><rectangle><width>100</width><height>20</height></rectangle></sprite>"
-					"<position><x>50</x><y>100</y></position><collisions><enabled>true</enabled></collisions></object>"
+					"<position><x>50</x><y>100</y></position><collisions></collisions></object>"
 					"</objects><state name=\"playing\"><shows><show object=\"ball\" /><show object=\"block\" /></shows>"
 					"<inputs><input button=\"space\"><pop /></input></inputs></state></states></game>";
 			}
@@ -200,7 +200,7 @@ TEST_CASE("a <trigger> with no object= outside an object's own lists stops the l
 		std::ofstream out(path);
 		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><states><objects>"
 			"<object name=\"ball\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 			"<position><x>100</x><y>0</y></position><actions><action name=\"hit\"><reset /></action></actions></object>"
@@ -229,12 +229,12 @@ TEST_CASE("a rule written on a group of groups, with a check about itself, looks
 	};
 	const played::Scratch file(
 		"<group name=\"rocks\" class=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-		"<collisions><enabled>true</enabled><collision object=\"shot\"><condition variable=\"" + variable + "\"><equal>10</equal></condition>"
+		"<collisions><collision object=\"shot\"><condition variable=\"" + variable + "\"><equal>10</equal></condition>"
 		"<inc variable=\"tally.splits\" /><die /></collision></collisions>"
 		"<group name=\"big\">" + inGroup(big, "10") + "</group>"
 		"<group name=\"small\">" + inGroup(small, "20") + "</group>"
 		"</group>"
-		+ played::box("shot", 300, 130, "<velocity><x>0</x><y>-4</y></velocity><collisions><enabled>true</enabled></collisions>")
+		+ played::box("shot", 300, 130, "<velocity><x>0</x><y>-4</y></velocity><collisions></collisions>")
 		+ played::box("tally", 700, 500, "<variables><variable name=\"splits\">0</variable></variables>"),
 		"<pop />");
 	played::Played play(file.path);
@@ -255,13 +255,13 @@ TEST_CASE("an object put somewhere has moved: it touches what it is put on, with
 	{
 		std::ofstream out(path);
 		out << "<game><window name=\"moved\"><width>200</width><height>100</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
+			"<framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>"
 			"<object name=\"a\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
 			"<position><x>10</x><y>10</y></position><variables><variable name=\"hits\">0</variable></variables>"
 			"<collisions><collision object=\"b\"><inc variable=\"self.hits\" /></collision></collisions></object>"
 			"<object name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
-			"<position><x>100</x><y>50</y></position><collisions><enabled>true</enabled></collisions></object>"
+			"<position><x>100</x><y>50</y></position><collisions></collisions></object>"
 						"</objects><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
 			"<inputs></inputs></state></states></game>";
 	}
@@ -297,14 +297,14 @@ TEST_CASE("a rule names the object it touched other, whichever of its class that
 {
 	// Two players of one class; the coin's one rule pays whichever touched it,
 	// and only while that one has no shield up, which paying puts up.
-	const std::string player = "<collisions><enabled>true</enabled></collisions>"
+	const std::string player = "<collisions></collisions>"
 		"<variables><variable name=\"score\">0</variable><variable name=\"shield\">0</variable></variables>";
 	const played::Scratch file(
 		"<object name=\"p1\" class=\"player\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<position><x>100</x><y>100</y></position>" + player + "</object>"
 		"<object name=\"p2\" class=\"player\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<position><x>400</x><y>100</y></position>" + player + "</object>"
-		+ played::box("coin", 600, 400, "<collisions><enabled>true</enabled><collision class=\"player\">"
+		+ played::box("coin", 600, 400, "<collisions><collision class=\"player\">"
 			"<condition object=\"other\" variable=\"shield\"><atmost>0</atmost></condition>"
 			"<inc variable=\"other.score\">5</inc><set variable=\"other.shield\">1</set></collision></collisions>"),
 		"<pop />");
@@ -334,10 +334,10 @@ TEST_CASE("a rule names the object it touched other, whichever of its class that
 TEST_CASE("other is a spawned copy when a copy is what was touched", "[collision_rules][other][spawn]")
 {
 	const std::string shot = "<object name=\"shot\" class=\"bullet\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>-5</y></velocity><collisions><enabled>true</enabled></collisions>"
+		"<velocity><x>0</x><y>-5</y></velocity><collisions></collisions>"
 		"<variables><variable name=\"hits\">0</variable></variables></object>";
 	const played::Scratch file(
-		played::box("wall", 300, 300, "<collisions><enabled>true</enabled><collision class=\"bullet\"><inc variable=\"other.hits\" /></collision></collisions>"),
+		played::box("wall", 300, 300, "<collisions><collision class=\"bullet\"><inc variable=\"other.hits\" /></collision></collisions>"),
 		"<spawn object=\"shot\"><position><x>302</x><y>340</y></position></spawn>", {}, shot);
 	played::Played play(file.path);
 

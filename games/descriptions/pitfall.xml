@@ -30,7 +30,7 @@
     fourth screen's scorpion is further along, and each treasure has its own
     look and place. What a screen's treasure is worth is the screen's
     variable `worth`.
-  * The pieces also hold an unseen strip (<drawn>false</drawn>) for each side,
+  * The pieces also hold an unseen strip (<hidden />) for each side,
     and every screen takes both. Harry walking into one goes that way: each
     screen's <ways> say which screen lies east and which west, and the
     strip says <enter way="east" />. His own rule for that side <move>s him
@@ -269,7 +269,7 @@
         </rectangle>
       </sprite>
       <position><x>window.right - 4</x><y>0</y></position>
-      <drawn>false</drawn>
+      <hidden />
       <collisions>
         <collision object="harry">
           <enter way="east" />
@@ -285,7 +285,7 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <drawn>false</drawn>
+      <hidden />
       <collisions>
         <collision object="harry">
           <enter way="west" />

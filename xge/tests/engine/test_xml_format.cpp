@@ -80,7 +80,7 @@ namespace
 		std::string y = "0";
 		std::string velocityX = "0";
 		std::string velocityY = "0";
-		std::string collisions = "<enabled>false</enabled>";
+		std::string collisions = "<off />";
 		std::string extra;
 	};
 
@@ -105,7 +105,7 @@ namespace
 	{
 		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+			"<framerate>60</framerate></window>"
 			"<variables>" + variables + "</variables>"
 			"<states><objects>" + objects + "</objects>"
 			"<state name=\"playing\"><shows><show object=\"o\" /></shows>"
@@ -212,7 +212,7 @@ TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' 
 	ObjectXml none;
 	none.name = "none";
 	std::string bare = gameXml("", objectXml({}) + objectXml(on) + objectXml(none));
-	for (const std::string tag : { "<background>color.black</background>", "<fullscreen>false</fullscreen>", "<framerate>60</framerate>" })
+	for (const std::string tag : { "<background>color.black</background>", "", "<framerate>60</framerate>" })
 	{
 		bare.erase(bare.find(tag), tag.size());
 	}
@@ -274,7 +274,7 @@ TEST_CASE("an expression that does not compile says whose it is", "[xml_format][
 TEST_CASE("commands run in the order they are written", "[xml_format][commands]")
 {
 	ObjectXml o;
-	o.collisions = "<enabled>true</enabled>"
+	o.collisions = ""
 		"<collision edge=\"left\"><inc variable=\"o.score\" /><reset /><die /></collision>";
 	o.extra = "<variables><variable name=\"score\">0</variable></variables>";
 	Loaded loaded(gameXml("", objectXml(o)));
@@ -289,7 +289,7 @@ TEST_CASE("commands run in the order they are written", "[xml_format][commands]"
 TEST_CASE("an edge rule reaches the edges it names, and several rules on one edge all run", "[xml_format][commands]")
 {
 	ObjectXml o;
-	o.collisions = "<enabled>true</enabled>"
+	o.collisions = ""
 		"<collision edge=\"all\"><bounce /></collision>"
 		"<collision edge=\"left\"><die /></collision>"
 		"<collision edge=\"vertical\"><stick /></collision>";
@@ -308,7 +308,7 @@ TEST_CASE("an edge rule reaches the edges it names, and several rules on one edg
 TEST_CASE("a collision without an edge is about another object; naming nothing means anything", "[xml_format][commands]")
 {
 	ObjectXml o;
-	o.collisions = "<enabled>true</enabled>"
+	o.collisions = ""
 		"<collision><bounce /></collision>"
 		"<collision class=\"bricks\"><die /></collision>"
 		"<collision object=\"wall\" unless=\"logs\"><reverse /></collision>";
@@ -393,16 +393,16 @@ TEST_CASE("state commands: push, pop, trigger and reset with and without an obje
 TEST_CASE("an unknown command, or one missing its attribute, says where", "[xml_format][errors]")
 {
 	ObjectXml unknown;
-	unknown.collisions = "<enabled>true</enabled><collision edge=\"left\"><explode /></collision>";
+	unknown.collisions = "<collision edge=\"left\"><explode /></collision>";
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(unknown))),
 		ContainsSubstring("object 'o' > <collisions> > <collision>") && ContainsSubstring("unknown command <explode>"));
 
 	ObjectXml missing;
-	missing.collisions = "<enabled>true</enabled><collision edge=\"left\"><inc /></collision>";
+	missing.collisions = "<collision edge=\"left\"><inc /></collision>";
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(missing))), ContainsSubstring("<inc> needs variable="));
 
 	ObjectXml badEdge;
-	badEdge.collisions = "<enabled>true</enabled><collision edge=\"middle\"><bounce /></collision>";
+	badEdge.collisions = "<collision edge=\"middle\"><bounce /></collision>";
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(badEdge))), ContainsSubstring("edge=\"middle\""));
 
 	ObjectXml badDirection;
@@ -481,11 +481,11 @@ TEST_CASE("a mistake the schema lets through stops the load, saying what to writ
 		CHECK_THAT(error, ContainsSubstring("<trigger object=\"...\" action=\"...\" />"));
 
 		ObjectXml edge;
-		edge.collisions = "<enabled>true</enabled><collision edge=\"left\"><push state=\"playing\" /></collision>";
+		edge.collisions = "<collision edge=\"left\"><push state=\"playing\" /></collision>";
 		CHECK_THAT(errorOf(gameXml("", objectXml(edge))), ContainsSubstring("object 'o' > <collision edge>: <push> does nothing in a screen-edge <collision>"));
 
 		ObjectXml touch;
-		touch.collisions = "<enabled>true</enabled><collision><wrap /></collision>";
+		touch.collisions = "<collision><wrap /></collision>";
 		CHECK_THAT(errorOf(gameXml("", objectXml(touch))), ContainsSubstring("<wrap /> does nothing in a <collision> with another object"));
 	}
 
@@ -516,12 +516,12 @@ TEST_CASE("a mistake the schema lets through stops the load, saying what to writ
 	SECTION("a variable no object has")
 	{
 		ObjectXml o;
-		o.collisions = "<enabled>true</enabled><collision edge=\"left\"><inc variable=\"score\" /></collision>";
+		o.collisions = "<collision edge=\"left\"><inc variable=\"score\" /></collision>";
 		CHECK_THAT(errorOf(gameXml("<variable name=\"score\">0</variable>", objectXml(o))),
 			ContainsSubstring("<inc variable=\"score\" />: 'score' is no variable; name one as owner.variable") && ContainsSubstring("the game's own <variables> are fixed numbers"));
 
 		ObjectXml owned;
-		owned.collisions = "<enabled>true</enabled><collision edge=\"left\"><dec variable=\"o.lifes\" /></collision>";
+		owned.collisions = "<collision edge=\"left\"><dec variable=\"o.lifes\" /></collision>";
 		owned.extra = "<variables><variable name=\"lives\">3</variable></variables>";
 		CHECK_THAT(errorOf(gameXml("", objectXml(owned))),
 			ContainsSubstring("'o' has no variable named 'lifes' (did you mean 'lives'?); its variables are: lives"));
@@ -816,7 +816,6 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 		{ "an unknown tag where a value goes", "<x>margin</x>", "<x><bogus /></x>", "unexpected element <bogus>" },
 		{ "a rectangle with no width", "<width>ball.size</width>", "", "expected <width>" },
 		{ "text in an element that holds elements", "<object name=\"title\">", "<object name=\"title\">oops", "unexpected text \"oops\"" },
-		{ "a flag that is not true or false", "<height>720</height>", "<height>720</height><fullscreen>maybe</fullscreen>", "\"maybe\" is not a valid" },
 		{ "a command missing its attribute", "<push state=\"playing\" />", "<push />", "missing required attribute 'state'" },
 		{ "a command that does not exist", "<bounce />", "<explode />", "explode" },
 		{ "a window width that is not a number", "<width>1280</width>", "<width>huge</width>", "not a valid" },

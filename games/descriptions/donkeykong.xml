@@ -302,7 +302,7 @@
         <!-- the tops of the ladders a barrel may go down -->
         <group name="laddertops" class="laddertop">
           <sprite><rectangle><width>2</width><height>6</height><color>color.black</color></rectangle></sprite>
-          <drawn>false</drawn>
+          <hidden />
           <collisions />
           <member><position><x>519</x><y>558</y></position></member>
           <member><position><x>215</x><y>460.5</y></position></member>

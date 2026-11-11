@@ -273,7 +273,7 @@
           <sprite name="betting"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="showdown"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
+          <hidden />
         </object>
         <object name="street">
           <sprite name="preflop"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
@@ -281,7 +281,7 @@
           <sprite name="turn"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="river"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
+          <hidden />
         </object>
 
         <!-- the dealer: a moment to shuffle before the cards come -->
@@ -289,7 +289,7 @@
           <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="shuffling"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
+          <hidden />
           <timers>
             <timer sprite="shuffling"><every>0.4</every><become sprite="idle" /><trigger object="table" action="deal" /></timer>
           </timers>

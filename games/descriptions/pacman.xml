@@ -214,7 +214,7 @@
           <sprite name="scatter"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
           <sprite name="chase"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
+          <hidden />
           <actions>
             <action name="scatter"><trigger object="ghosts" action="scatter" from="normal" /></action>
             <action name="chase"><trigger object="ghosts" action="chase" from="normal" /></action>
@@ -281,7 +281,7 @@
         <!-- the corners the ghosts scatter to, off the maze -->
         <group name="corners">
           <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <drawn>false</drawn>
+          <hidden />
           <member name="topright"><position><x>25 * tile</x><y>0</y></position></member>
           <member name="topleft"><position><x>2 * tile</x><y>0</y></position></member>
           <member name="bottomright"><position><x>27 * tile</x><y>window.bottom - 1</y></position></member>
@@ -416,12 +416,12 @@
           <!-- the tunnel at the sides, where a ghost goes at half speed -->
           <group name="tunnel" char="t" class="tunnel">
             <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-            <drawn>false</drawn>
+            <hidden />
           </group>
           <!-- what the eyes of an eaten ghost make for, inside the ghost house -->
           <object name="pen" char="h">
             <sprite><rectangle><width>4</width><height>4</height><color>color.black</color></rectangle></sprite>
-            <drawn>false</drawn>
+            <hidden />
             <collisions />
           </object>
           <!-- the cherry: none until enough dots are eaten, then for a while -->

@@ -90,7 +90,7 @@ Each row is one concept done more than one way. Counts are games using each form
 | 3 | Whose turn | A group with `<turns>` (Crazy Eights, Hearts, Spades, Gin). A `turn` variable on a cursor or table, tested everywhere (Checkers, Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes, Hold'em, Cannon Hill). A state's `<turns>` (Galaxian: each player their own game), which is a different idea under the same word | Players as a group for every shared-world game. Rename the arcade one | [R4](#r4-one-way-to-take-turns) |
 | 4 | The end of a game | One end state whose object has a look per outcome (the form chosen in October). Separate win and lose states: Atlantis, Breakout, Demon Attack, Donkey Kong, Doubles, Frogger, Frostbite, Haunted House, Kaboom, Mario Bros., Megamania, Minefield, Pitfall, Q\*bert, Tennis | One end state with looks, or a lose state `from=` the win state | R5, done |
 | 5 | State names | `title` (34) or `mainmenu` (23); `gameover` (27), `over` (13) or `lost` (6); `youwin` (11), `won` (9) or `wins` (4) | `title`, `playing`, `paused`, `over` | R5, done |
-| 6 | Yes or no | `xs:boolean` content: `<active>`, `<drawn>`, `<enabled>`, `<lockstep>`, `<fullscreen>`. Empty tags elsewhere (`<loop />`, `<forced />`, `<cells />`). A pick elsewhere (`update="live"`) | Empty tags: `<hidden />`-style words chosen by the author | [R6](#r6-no-booleans) |
+| 6 | Yes or no | `xs:boolean` content: `<active>`, `<drawn>`, `<enabled>`, `<lockstep>`, `<fullscreen>`. Empty tags elsewhere (`<loop />`, `<forced />`, `<cells />`). A pick elsewhere (`update="live"`) | Empty tags: `<hidden />`-style words chosen by the author | R6, done |
 | 7 | The middle of the window | `<centered />` (433 uses), `<centered>window.height.center + 70</centered>` (289 of the 297 with content name the window's own middle), `window.width.center - title.width / 2` by hand (4 games), a `<formula>` (Pong) | `<centered />` and `<centered>` holding only the offset | R7, done |
 | 8 | Names of the window | `window.right`, `window.bottom`, `window.width.center`, `window.height.center`; `window.width` is not a name | `window.width`, `window.height`, `window.middle.x`/`.y` or the author's choice; one scheme | R7, done |
 | 9 | Arithmetic | Text and `<formula>` both do `+ - * /` (about 1,170 texts in all 58 games calculate) | Tags only: a text is one number or one name (the author's call) | [R12](#r12-no-arithmetic-in-text) |
@@ -165,7 +165,7 @@ Each has a default the plan assumes, so work is not blocked. Changing one change
 | D1 | What the generator is for | **Settled by the author:** stand-alone games that read as hand-written, for any platform. `windows-cpp` (engine plus data) stays as the exact, complete target and gets no new design work; `data.xsl` is still updated with each language change until A5 covers enough games to retire it | A5, all R tasks |
 | D2 | Drop XML, window and sound libraries | **Settled by the author:** keep all, and add lower-level ones (DirectX, Vulkan). See A7 | A7 |
 | D3 | A Windows build-only job, or none | None (the author); T4 done | |
-| D4 | The words for R6 (booleans) and R7 (window names, centred offset) | **Settled by the author:** `<waiting />` (and `<ready />` to turn it back on) where `<active>false` is still needed, `<hidden />` for `<drawn>false`, `<off />` for a collision's `<enabled>false`, `<lockstep />`, `<fullscreen />`; `<centered><offset>70</offset></centered>`; `window.width`, `window.height` become names and `window.width.center`, `window.height.center` stay (cheap engine constants) | R6, R7 |
+| D4 | The words for R6 (booleans) and R7 (window names, centred offset) | **Settled by the author:** `<waiting />` (and `<ready />` to turn it back on) where `<active>false` is still needed, `<hidden />` for `<drawn>false`, `<off />` for a collision's `<enabled>false`, `<lockstep />`, `<fullscreen />`; `<centered><offset>70</offset></centered>`; `window.width`, `window.height` become names and `window.width.center`, `window.height.center` stay (cheap engine constants) | R6, done; R7, done |
 | D5 | Whether pools go entirely (R3) | **Settled by the author:** yes, pools were a stand-in from before spawning; `<die />` and `<reveal>` stay for fixed members | R3, done |
 | D6 | Whether the standard pause and title screens become a built-in default | **No.** A hidden default breaks "one file is the whole game". Standardise the spelling instead | R9 |
 | D7 | Pause on new games and genres until phases 1 to 3 are done | Yes | Order of work |
@@ -216,14 +216,6 @@ R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest a
   4. **Cannon Hill and Hold'em (M).** Cannon Hill's "phase of the table" is two players and looks; Hold'em was left on its own turn numbers because it needs to name "the other player" and a member played by conditions rather than `<think>`; R10 (done) only names the object touched, so "the other player" is still open. Do these last or leave them with a line in open-work.
 - **Files.** The games; `xge/lib/game/players.cpp` (the group-turns engine); `xge/lib/game/think.cpp` (the board search reads whose move it is: find how and feed it from the group); tests `test_checkers.cpp`, `test_reversi.cpp`, `test_inarow.cpp`, `test_dotsandboxes.cpp`; `docs/reference/states.md` "Players as a group" and "Taking turns", `boards.md`, `docs/designs/26-board-games.md`.
 - **Done.** No board game has a variable named `turn`; `docs/reference/boards.md` shows turns the same way `cards.md` does.
-
-#### R6. No booleans
-
-- **Size** M. **Needs** D4 (R3 is done: `<active>` stays, on about fifteen games' things revealed later).
-- **Why.** Row 6. The author's own rule when `update="live"` was chosen: a pick, not a boolean. `<active>false</active>` reads as code.
-- **Do.** Propose and let the author pick: `<active>false</active>` becomes `<waiting />`; `<drawn>false</drawn>` becomes `<unseen />`; `<enabled>false</enabled>` on collisions and `<lockstep>true</lockstep>` become `<off />` and `<lockstep />`; `<fullscreen>true</fullscreen>` becomes `<fullscreen />`. A take that turns one back on needs the opposite word or the one change rule needs "an empty tag written again removes it": check how `from=` handles `<active>true</active>` today (Frostbite, Mario Bros.) before choosing.
-- **Files.** The schema (five elements), `load/xml.cpp`, `load/merge.cpp` and `merge.xsl` (the change rule for these), `data.xsl`, 20-odd games, `docs/reference/objects.md`, `collisions.md`, `format.md`.
-- **Done.** `grep -c "xs:boolean" games/xgedef.xsd` is 0.
 
 #### R11. Card words that are still card words
 
@@ -430,7 +422,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 Blocks 1 and 2 are done.
 
 Block 3  (reduction, any order; R1 is done)
-  R6  no booleans
   R4  turns                               (four substeps)
   R11 card words
   R12 no arithmetic in text            (survey, then D8, then the sweep)
@@ -461,10 +452,9 @@ What blocks what, in one place:
 | Task | Needs first |
 |---|---|
 | R12 | D8 |
-| R6 | D4 |
 | A3 (`readCommand`, `makeCommand`) | A1 |
 | A1 substep 3 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R6 (B2, B3, B5, R1, R3, R5, R7, R8, R9, R10 and T1 are done).
+If only a few more things are ever done from this file, start with R4 (B2, B3, B5, R1, R3, R5, R6, R7, R8, R9, R10 and T1 are done).

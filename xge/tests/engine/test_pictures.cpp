@@ -57,14 +57,14 @@ namespace
 				const std::string name = "o" + std::to_string(i + 1);
 				objects += "<object name=\"" + name + "\"><sprite>" + sprites[i] + "</sprite>"
 					"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity>" + extra
-					+ "<collisions><enabled>false</enabled></collisions></object>";
+					+ "<collisions><off /></collisions></object>";
 				shows += "<show object=\"" + name + "\" />";
 			}
 
 			{
 				std::ofstream out(file.path);
 				out << "<game><window name=\"pictures\"><width>800</width><height>600</height><background>color.black</background>"
-					"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
+					"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 					"<states><objects>" + objects + "</objects><state name=\"s\"><shows>" + shows + "</shows>"
 					"<inputs><input button=\"space\"><pop /></input></inputs></state></states></game>";
 			}

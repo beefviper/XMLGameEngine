@@ -148,7 +148,7 @@ namespace
 	// occurrence of each), written beside the real games so its relative
 	// schema path still resolves.
 	const char* const kSizes = R"(<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
-  <window name="sizes"><width>1280</width><height>720</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>
+  <window name="sizes"><width>1280</width><height>720</height><background>color.black</background><framerate>60</framerate></window>
   <variables><variable name="logo.radius">100</variable></variables>
   <states>
     <objects>

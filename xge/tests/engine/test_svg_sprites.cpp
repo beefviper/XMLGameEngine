@@ -117,13 +117,13 @@ namespace
 	const std::string kOther =
 		"<object name=\"another\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity>"
-		"<collisions><enabled>false</enabled></collisions></object>";
+		"<collisions><off /></collisions></object>";
 
 	std::string gameXml(const std::string& objects, const std::string& shows, int framerate = 60)
 	{
 		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>" + std::to_string(framerate) + "</framerate></window>"
+			"<framerate>" + std::to_string(framerate) + "</framerate></window>"
 			"<variables><variable name=\"pixel\">3</variable></variables>"
 			"<states><objects>" + objects + kOther + "</objects>"
 			""
@@ -149,7 +149,7 @@ namespace
 	{
 		return "<object name=\"thing\">" + sprites + animation +
 			"<position><x>10</x><y>20</y></position><velocity><x>0</x><y>0</y></velocity>"
-			"<collisions><enabled>false</enabled></collisions></object>";
+			"<collisions><off /></collisions></object>";
 	}
 
 	// An <svg> sprite's tags, with whatever is wanted after the path.
@@ -391,7 +391,7 @@ TEST_CASE("the cells of a group of an svg are one object each, all sharing one p
 	Loaded loaded{ gameXml("<group name=\"thing\"><columns>3</columns><rows>2</rows><padding><x>2</x><y>2</y></padding><sprite>"
 		+ svgTag(drawing, "<x>0</x><y>0</y><width>4</width><height>4</height><scale>2</scale>") + "</sprite>"
 		"<position><x>10</x><y>20</y></position><velocity><x>0</x><y>0</y></velocity>"
-		"<collisions><enabled>false</enabled></collisions></group>",
+		"<collisions><off /></collisions></group>",
 		"<show object=\"thing\" />") };
 	Game& game = loaded.game;
 	measure(game);

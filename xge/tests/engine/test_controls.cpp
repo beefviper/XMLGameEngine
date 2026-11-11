@@ -77,7 +77,7 @@ namespace
 	std::string gameWith(const std::string& inputs)
 	{
 		return R"(<game>
-  <window name="t"><width>200</width><height>100</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>
+  <window name="t"><width>200</width><height>100</height><background>color.black</background><framerate>60</framerate></window>
   <variables />
   <states>
     <state name="playing">

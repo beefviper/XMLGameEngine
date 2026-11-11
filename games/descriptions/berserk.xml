@@ -243,7 +243,7 @@
            come in at in the next room -->
       <group name="exits">
         <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
-        <drawn>false</drawn>
+        <hidden />
         <group name="north" char="n" class="northexit">
           <collisions><collision object="player"><reset way="north" /><enter way="north" /></collision></collisions>
         </group>
@@ -384,7 +384,7 @@
              inside the gap, so he touches it before the way out -->
         <group name="doors" class="wall">
           <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-          <active>false</active>
+          <waiting />
           <collisions />
           <member name="northdoor"><position><x>232</x><y>56</y></position></member>
           <member name="southdoor"><position><x>232</x><y>424</y></position></member>
@@ -405,7 +405,7 @@
           </sprite>
           <position><x>504</x><y>72</y></position>
           <velocity><x>-1.2</x><y>0.9</y></velocity>
-          <active>false</active>
+          <waiting />
           <collisions>
             <collision edge="all"><bounce /></collision>
             <collision object="player"><die /></collision>

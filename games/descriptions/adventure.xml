@@ -144,7 +144,7 @@
     <object name="eastexit" class="eastside">
       <sprite><rectangle><width>4</width><height>window.bottom</height><color>color.black</color></rectangle></sprite>
       <position><x>window.right - 4</x><y>0</y></position>
-      <drawn>false</drawn>
+      <hidden />
       <collisions>
         <collision object="hero"><enter way="east" /></collision>
       </collisions>
@@ -152,7 +152,7 @@
     <object name="westexit" class="westside">
       <sprite><rectangle><width>4</width><height>window.bottom</height><color>color.black</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
-      <drawn>false</drawn>
+      <hidden />
       <collisions>
         <collision object="hero"><enter way="west" /></collision>
       </collisions>
@@ -161,7 +161,7 @@
     <object name="doorway" class="inside">
       <sprite><rectangle><width>64</width><height>6</height><color>color.black</color></rectangle></sprite>
       <position><x>window.width.center - 32</x><y>136</y></position>
-      <drawn>false</drawn>
+      <hidden />
       <collisions>
         <collision object="hero"><enter way="in" /></collision>
       </collisions>
@@ -170,7 +170,7 @@
     <object name="doorout" class="outside">
       <sprite><rectangle><width>gap</width><height>6</height><color>color.black</color></rectangle></sprite>
       <position><x>(window.right - gap) / 2</x><y>window.bottom - 6</y></position>
-      <drawn>false</drawn>
+      <hidden />
       <collisions>
         <collision object="hero"><enter way="out" /></collision>
       </collisions>
@@ -293,7 +293,7 @@
             <object name="home">
               <sprite><rectangle><width>window.right - 2 * wall</width><height>window.bottom - 3 * wall</height><color>color.black</color></rectangle></sprite>
               <position><x>wall</x><y>wall</y></position>
-              <drawn>false</drawn>
+              <hidden />
               <collisions>
                 <collision object="chalice"><inc variable="status.won" /></collision>
               </collisions>

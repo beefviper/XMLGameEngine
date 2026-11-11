@@ -76,7 +76,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | moving | `move`, `hop`, `jump`, `land`, `climb`, `thrust`, `turn`, `swing`, `reverse`, `stop`, `track` | [moving](reference/commands.md#moving) |
 | steering | `aim`, `chase`, `hunt`, `wander`, `follow`, `go` | [steering](reference/commands.md#steering), [paths](reference/timers.md#paths), [mazes](reference/maps.md#walking-a-map) |
 | touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `hole` | [touching](reference/commands.md#touching), [knocks](reference/collisions.md#knocks) |
-| in and out of play | `die`, `reveal`, `fire`, `drop`, `spawn`, `despawn`, `reset` | [in and out of play](reference/commands.md#in-and-out-of-play), [spawn](reference/objects.md#spawn-and-despawn) |
+| in and out of play | `die`, `reveal`, `fire`, `drop`, `spawn`, `despawn`, `reset`; `waiting` (`ready`), `hidden` on an object | [in and out of play](reference/commands.md#in-and-out-of-play), [spawn](reference/objects.md#spawn-and-despawn) |
 | numbers | `inc`, `dec`, `set`, `copy`, `rank`, `formula`; `update="live"` on a variable, position or heading | [numbers](reference/commands.md#numbers), [arithmetic](reference/format.md#arithmetic-as-tags), [live numbers](reference/format.md#live-numbers-of-an-object) |
 | look and sound | `become`, `play`, `silence`, `music` | [look and sound](reference/commands.md#look-and-sound) |
 | flow | `push`, `pop`, `enter`, `turns`, `pass`, `out`, `demo`, `trigger` (in a key, `otherwise`) | [flow](reference/commands.md#flow) |

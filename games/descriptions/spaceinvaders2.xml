@@ -255,7 +255,7 @@
           <animation><interval>0.15</interval><frame sprite="a" /><frame sprite="b" /><frame sprite="c" /></animation>
           <position><x>0 - ufo.width</x><y>55</y></position>
           <velocity><x>2.5</x></velocity>
-          <active>false</active>
+          <waiting />
           <collisions>
             <collision edge="right"><die /></collision>
             <collision object="bullet">
@@ -312,7 +312,7 @@
           <velocity><x>2</x></velocity>
           <facing>down</facing>
           <collisions>
-            <lockstep>true</lockstep>
+            <lockstep />
             <collision edge="horizontal">
               <bounce />
               <move direction="down">10</move>

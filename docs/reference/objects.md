@@ -37,10 +37,10 @@ An object is anything drawn, moved or touched. `name` is required; `class` is op
 | `<facing>` | `up`, `down`, `left`, `right`, without turning the picture: follows its last move; a `<fire>` leaves that way |
 | `<poses>`, `<mirror>`, `<grip>` | looks picked by how it moves, flipped pictures, how its speed follows the keys ([poses](pictures.md#poses-mirror-grip-and-blinking)) |
 | `<maze map="maze">` | walks that map's tiles ([walking a map](maps.md#walking-a-map)) |
-| `<active>` | `false`: starts out of play (not drawn, touching nothing, not counted) until a `<reveal>` |
-| `<drawn>` | `false`: in play but never drawn: an exit, a trigger zone |
+| `<waiting />` | starts out of play (not drawn, touching nothing, not counted) until a `<reveal>`. `<ready />` in a take of a waiting piece, or an inner group of a waiting one, is in play after all (the one change rule: either written replaces the other) |
+| `<hidden />` | in play but never drawn: an exit, a trigger zone |
 | `<most>` | how many [copies](#spawn-and-despawn) may be out at once |
-| `<collisions>` | how and what it touches ([collisions](collisions.md)). Written, it is on unless `<enabled>false</enabled>`; `<collisions />` alone is something others touch |
+| `<collisions>` | how and what it touches ([collisions](collisions.md)). Written, it is on unless it says `<off />`; `<collisions />` alone is something others touch |
 | `<actions>` | named `<action>`s that a key or a rule runs |
 | `<variables>` | its own numbers, read anywhere as `name.variable`; one written `update="live"` [follows](format.md#live-numbers-of-an-object) what it reads |
 | `<timers>` | what it does every so often, or once after a while ([timers](timers.md)) |
@@ -235,4 +235,4 @@ Objects can be made and taken away while the game runs, and **a copy is the same
 - A full reset takes every copy away; `<reset object>` and `<reset scene>` take away copies of what they reset.
 - Any object can be spawned: `<spawn object="ball">` makes a second ball.
 
-`<fire>` sends only copies of a piece. An object that starts `<active>false</active>` waits out of play for a `<reveal>`, and `<die />` puts it back out: that suits fixed things that come back where they were (Frostbite's igloo blocks, a door, a saucer).
+`<fire>` sends only copies of a piece. An object that starts `<waiting />` waits out of play for a `<reveal>`, and `<die />` puts it back out: that suits fixed things that come back where they were (Frostbite's igloo blocks, a door, a saucer).

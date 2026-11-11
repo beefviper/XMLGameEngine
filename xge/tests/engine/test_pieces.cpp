@@ -72,12 +72,12 @@ TEST_CASE("a take changes its piece: sprites by name, whole; variables one by on
 		"<sprite name=\"whole\"><rectangle><width>20</width><height>10</height></rectangle></sprite>"
 		"<sprite name=\"cracked\"><rectangle><width>20</width><height>8</height></rectangle></sprite>"
 		"<position><x>100</x><y>100</y></position>"
-		"<collisions><enabled>true</enabled><collision class=\"treasure\"><inc variable=\"self.hits\" /></collision></collisions>"
+		"<collisions><collision class=\"treasure\"><inc variable=\"self.hits\" /></collision></collisions>"
 		"<variables><variable name=\"hits\">0</variable><variable name=\"worth\">10</variable></variables></object>";
 	const Scratch file("<object name=\"gold\" from=\"brick\" class=\"treasure\">"
 		"<sprite name=\"cracked\"><rectangle><width>20</width><height>4</height></rectangle></sprite>"
 		"<sprite name=\"shining\"><rectangle><width>20</width><height>12</height></rectangle></sprite>"
-		"<collisions><enabled>true</enabled><collision class=\"treasure\"><inc variable=\"self.worth\" /></collision></collisions>"
+		"<collisions><collision class=\"treasure\"><inc variable=\"self.worth\" /></collision></collisions>"
 		"<variables><variable name=\"worth\">50</variable><variable name=\"shine\">1</variable></variables></object>",
 		"<pop />", {}, piece);
 	Played play(file.path);
@@ -94,6 +94,18 @@ TEST_CASE("a take changes its piece: sprites by name, whole; variables one by on
 	CHECK(gold.variable.at("shine") == Approx(1));
 	CHECK(gold.collisionsOn);
 	CHECK(gold.collisionData.others.size() == 2); // its rule after the piece's
+}
+
+TEST_CASE("a take of a <waiting /> piece waits too, and one that says <ready /> is in play: either written replaces the other", "[pieces]")
+{
+	const std::string piece = "<object name=\"door\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>100</x><y>100</y></position><waiting /><hidden /></object>";
+	const Scratch file("<object name=\"door\" /><object name=\"open\" from=\"door\"><ready /></object>", "<pop />", {}, piece);
+	Played play(file.path);
+
+	CHECK_FALSE(play.get("door").isVisible);
+	CHECK(play.get("open").isVisible);
+	CHECK_FALSE(play.get("open").isDrawn);
 }
 
 TEST_CASE("a piece can be from= an earlier one, and a named member of a group piece is taken on its own", "[pieces]")
@@ -127,7 +139,7 @@ TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads it
 		std::ofstream out(path);
 		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"kit\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><objects>" << kit << "</objects>"
 			"<states><state name=\"playing\"><objects>" << box("ship", 300, 500) << "</objects><scenes>"
 			"<scene name=\"wave1\"><variables><variable name=\"pace\">2</variable></variables><objects>"

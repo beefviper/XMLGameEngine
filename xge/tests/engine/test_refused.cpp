@@ -124,7 +124,7 @@ TEST_CASE("a rule about another object stops at a refused spawn", "[refused][spa
 		"<collisions><collision object=\"rock\"><spawn object=\"shot\" /><inc variable=\"self.shots\" /></collision>"
 		"<collision object=\"rock\"><inc variable=\"self.touches\" /></collision></collisions>"
 		"<variables><variable name=\"shots\">0</variable><variable name=\"touches\">0</variable></variables>")
-		+ played::box("rock", 312, 400, "<velocity><x>-1</x><y>0</y></velocity><collisions><enabled>true</enabled></collisions>"),
+		+ played::box("rock", 312, 400, "<velocity><x>-1</x><y>0</y></velocity><collisions></collisions>"),
 		"", {}, kCappedShot);
 	Played play(file.path);
 

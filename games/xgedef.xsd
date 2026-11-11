@@ -2178,12 +2178,13 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- Whether collisions are on, whether the object moves in lockstep with the others of its group, how its shape is tested, then the rules. -->
+  <!-- Whether collisions are off, whether the object moves in lockstep with the others of its group, how its shape is tested, then the rules. -->
   <xs:complexType name="collisionsType">
     <xs:sequence>
-      <!-- enabled: left out, true; a <collisions> is written to be touched -->
-      <xs:element name="enabled" type="xs:boolean" minOccurs="0" />
-      <xs:element name="lockstep" type="xs:boolean" minOccurs="0" />
+      <!-- off: no touches until a rule turns them on; left out, a <collisions> is on -->
+      <xs:element name="off" type="emptyType" minOccurs="0" />
+      <!-- lockstep: the group moves as one block (a member at an edge turns them all) -->
+      <xs:element name="lockstep" type="emptyType" minOccurs="0" />
       <xs:element name="type" type="collisionShapeType" minOccurs="0" />
       <xs:element name="solid" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
@@ -2296,9 +2297,14 @@
           <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- false: out of play (not drawn, touching nothing, not counted) until a <reveal> brings it in -->
-      <xs:element name="active" type="xs:boolean" minOccurs="0" />
-      <xs:element name="drawn" type="xs:boolean" minOccurs="0" />
+      <!-- waiting: out of play (not drawn, touching nothing, not counted) until a <reveal> brings it in;
+           ready: in play after all, in a take of a waiting piece or an inner group of a waiting one -->
+      <xs:choice minOccurs="0">
+        <xs:element name="waiting" type="emptyType" />
+        <xs:element name="ready" type="emptyType" />
+      </xs:choice>
+      <!-- hidden: in play, touching and counted, but never drawn -->
+      <xs:element name="hidden" type="emptyType" minOccurs="0" />
       <!-- most: how many copies a <spawn> may have made of it at once -->
       <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
       <xs:element name="collisions" type="collisionsType" minOccurs="0" />
@@ -2661,9 +2667,9 @@
               <xs:element name="height" type="windowSizeType" />
               <!-- scale: each of the game's pixels drawn as a square this many window pixels across -->
               <xs:element name="scale" type="xs:positiveInteger" minOccurs="0" />
-              <!-- left out: color.black, false and 60 -->
+              <!-- left out: color.black, a window and 60; fullscreen: the whole screen -->
               <xs:element name="background" type="xs:string" minOccurs="0" />
-              <xs:element name="fullscreen" type="xs:boolean" minOccurs="0" />
+              <xs:element name="fullscreen" type="emptyType" minOccurs="0" />
               <xs:element name="framerate" type="xs:positiveInteger" minOccurs="0" />
             </xs:sequence>
             <xs:attribute name="name" type="xs:string" use="required" />

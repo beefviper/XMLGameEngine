@@ -73,7 +73,7 @@ namespace
 	{
 		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"row\">100</variable></variables>"
 			"<states><objects>" + objects + "</objects>"
 			"<state name=\"playing\"><shows>" + shows + "</shows>"
@@ -100,7 +100,7 @@ namespace
 		"<sprite><rectangle><width>40</width><height>20</height><color>color.brown</color></rectangle></sprite>"
 		"<position><y>row</y></position>"
 		"<velocity><x>-2</x><y>0</y></velocity>"
-		"<collisions><enabled>true</enabled><collision edge=\"horizontal\"><wrap /></collision></collisions>"
+		"<collisions><collision edge=\"horizontal\"><wrap /></collision></collisions>"
 		"<variables><variable name=\"weight\">3</variable></variables>"
 		"<member><position><x>10</x></position></member>"
 		"<member><position><x>200</x></position></member>"
@@ -120,7 +120,7 @@ namespace
 	const std::string kSprite = "<sprite><circle><radius>5</radius></circle></sprite>";
 	const std::string kPosition = "<position><x>0</x><y>0</y></position>";
 	const std::string kVelocity = "<velocity><x>0</x><y>0</y></velocity>";
-	const std::string kCollisions = "<collisions><enabled>false</enabled></collisions>";
+	const std::string kCollisions = "<collisions><off /></collisions>";
 	const std::string kMember = "<member />";
 }
 
@@ -269,13 +269,13 @@ TEST_CASE("members of a group with lockstep move as one block", "[group][lockste
 	const auto lane = [](const std::string& name, const std::string& lockstep)
 	{
 		return "<group name=\"" + name + "\">" + kSprite + kPosition + kVelocity
-			+ "<collisions><enabled>true</enabled>" + lockstep + "</collisions>"
+			+ "<collisions>" + lockstep + "</collisions>"
 			"<member /><member /></group>";
 	};
 	const std::string plainLockstep = "<object name=\"alone\">" + kSprite + kPosition + kVelocity
-		+ "<collisions><enabled>true</enabled><lockstep>true</lockstep></collisions></object>";
+		+ "<collisions><lockstep /></collisions></object>";
 
-	Loaded loaded{ gameXml(lane("a", "<lockstep>true</lockstep>") + lane("b", "<lockstep>true</lockstep>")
+	Loaded loaded{ gameXml(lane("a", "<lockstep />") + lane("b", "<lockstep />")
 		+ lane("c", "") + plainLockstep, "<show object=\"a\" />") };
 
 	const int a1 = loaded.game.getObject("a.1").collisionData.lockstep;
@@ -328,7 +328,7 @@ TEST_CASE("a group or member that is incomplete says where", "[group][errors]")
 	SECTION("something a member cannot say")
 	{
 		REQUIRE_THROWS_WITH(Loaded(gameXml(groupWith(kSprite + kPosition + kVelocity + kCollisions,
-			"<member><collisions><enabled>true</enabled></collisions></member>"))),
+			"<member><collisions></collisions></member>"))),
 			ContainsSubstring("object 'lane.1'") && ContainsSubstring("a member can give <sprite>s, an <animation>, a <position>, a <velocity>, <variables>, an <owns>, a <team> and a <think>"));
 	}
 
@@ -356,7 +356,7 @@ namespace
 		return "<group name=\"wall\" class=\"bricks\"><columns>3</columns><rows>" + rows + "</rows>" + padding +
 			"<sprite><rectangle><width>20</width><height>10</height><color>color.red</color></rectangle></sprite>"
 			"<position><x>100</x><y>50</y></position><velocity><x>0</x><y>0</y></velocity>"
-			"<collisions><enabled>true</enabled></collisions>"
+			"<collisions></collisions>"
 			"<variables><variable name=\"points\">1</variable></variables>" + changes + "</group>";
 	}
 
@@ -596,7 +596,7 @@ namespace
 	const std::string kNested =
 		"<group name=\"lanes\" class=\"logs\">"
 		"<sprite><rectangle><width>30</width><height>10</height><color>color.brown</color></rectangle></sprite>"
-		"<collisions><enabled>true</enabled><collision edge=\"horizontal\"><wrap /></collision></collisions>"
+		"<collisions><collision edge=\"horizontal\"><wrap /></collision></collisions>"
 		"<variables><variable name=\"weight\">3</variable></variables>"
 		"<group name=\"slow\">"
 		"<sprite><rectangle><color>color.red</color></rectangle></sprite>"
@@ -606,7 +606,7 @@ namespace
 		"</group>"
 		"<group name=\"fast\" class=\"hazard\">"
 		"<position><y>40</y></position><velocity><x>-3</x></velocity>"
-		"<collisions><enabled>true</enabled><collision class=\"logs\"><die /></collision></collisions>"
+		"<collisions><collision class=\"logs\"><die /></collision></collisions>"
 		"<variables><variable name=\"weight\">5</variable></variables>"
 		"<member><position><x>50</x></position></member>"
 		"</group>"
@@ -696,7 +696,7 @@ TEST_CASE("groups inside a group can each be laid out in cells from the outer's 
 		"<position><y>10</y></position></group>"
 		"<group name=\"block\"><rows>2</rows><padding><y>7</y></padding>"
 		"<position><y>50</y></position>"
-		"<collisions><enabled>true</enabled><lockstep>true</lockstep></collisions></group>"
+		"<collisions><lockstep /></collisions></group>"
 		"</group>";
 	Loaded loaded{ gameXml(wall, "<show object=\"wall\" />") };
 	Game& game = loaded.game;
@@ -885,12 +885,11 @@ TEST_CASE("both schema checkers turn away the same mistakes in a group", "[group
 	};
 
 	const Mistake mistakes[] = {
-		{ "a member that gives collisions", "descriptions/combat.xml", "<member><position>", "<member><collisions><enabled>true</enabled></collisions><position>", "collisions" },
+		{ "a member that gives collisions", "descriptions/combat.xml", "<member><position>", "<member><collisions></collisions><position>", "collisions" },
 		{ "a group with something it cannot hold", "descriptions/spacerace.xml", "<columns>8</columns>", "<columns>8</columns><speed />", "speed" },
 		{ "a member with something it cannot hold", "descriptions/combat.xml", "<member><position>", "<member><speed /><position>", "speed" },
 		{ "a position that is not an x and a y", "descriptions/spacerace.xml", "<y>50</y>", "<z>50</z>", "z" },
 		{ "a group with no name", "descriptions/combat.xml", "<group name=\"yellow\">", "<group>", "missing required attribute 'name'" },
-		{ "a lockstep flag that is not true or false", "descriptions/spacerace.xml", "<collisions>", "<collisions><lockstep>maybe</lockstep>", "\"maybe\" is not a valid" },
 		{ "a member in a group of cells", "descriptions/spacerace.xml", "<row><number>1</number><number>5</number><number>9</number>", "<member /><row><number>1</number><number>5</number><number>9</number>", "row" },
 		{ "a member beside a group inside a group", "descriptions/combat.xml", "<group name=\"yellow\">", "<member /><group name=\"yellow\">", "group" },
 		{ "a member's tether that leaves out an end", "descriptions/fishingderby.xml", "<member name=\"rod1\"><position><x>206</x></position></member>",

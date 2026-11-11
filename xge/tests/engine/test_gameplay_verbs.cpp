@@ -60,7 +60,7 @@ namespace
 	{
 		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
 			+ (pieces.empty() ? std::string() : "<objects>" + pieces + "</objects>") +
 			"<states><objects>" + objects + "</objects>"
@@ -70,7 +70,7 @@ namespace
 
 	// A rectangle object; `extra` goes after <velocity> (facing, active), and
 	// `after` after <collisions> (actions, variables, timers).
-	std::string box(const std::string& name, float x, float y, float w, float h, const std::string& collisions = "<enabled>false</enabled>",
+	std::string box(const std::string& name, float x, float y, float w, float h, const std::string& collisions = "<off />",
 		const std::string& extra = {}, const std::string& after = {}, const std::string& velocity = "<x>0</x><y>0</y>", const std::string& attributes = {})
 	{
 		return "<object name=\"" + name + "\"" + attributes + "><sprite><rectangle><width>" + std::to_string(w) + "</width><height>" + std::to_string(h)
@@ -138,7 +138,7 @@ namespace
 TEST_CASE("an object's <every> timer goes off again and again, a frame count of seconds apart", "[timers]")
 {
 	Loaded loaded(gameXml(
-		box("clock", 0, 0, 1, 1, "<enabled>false</enabled>", {}, kCounter + "<timers><timer><every>0.5</every><inc variable=\"clock.n\" /></timer></timers>"),
+		box("clock", 0, 0, 1, 1, "<off />", {}, kCounter + "<timers><timer><every>0.5</every><inc variable=\"clock.n\" /></timer></timers>"),
 		state("playing", { "clock" })));
 
 	loaded.frames(29);
@@ -152,7 +152,7 @@ TEST_CASE("an object's <every> timer goes off again and again, a frame count of 
 TEST_CASE("an <after> timer goes off once", "[timers]")
 {
 	Loaded loaded(gameXml(
-		box("clock", 0, 0, 1, 1, "<enabled>false</enabled>", {}, kCounter + "<timers><timer><after>1</after><inc variable=\"clock.n\">5</inc></timer></timers>"),
+		box("clock", 0, 0, 1, 1, "<off />", {}, kCounter + "<timers><timer><after>1</after><inc variable=\"clock.n\">5</inc></timer></timers>"),
 		state("playing", { "clock" })));
 
 	loaded.frames(59);
@@ -164,7 +164,7 @@ TEST_CASE("an <after> timer goes off once", "[timers]")
 TEST_CASE("an object's timer counts only while it is shown, and a reset starts it over", "[timers]")
 {
 	Loaded loaded(gameXml(
-		box("clock", 0, 0, 1, 1, "<enabled>false</enabled>", {}, kCounter + "<timers><timer><every>1</every><inc variable=\"clock.n\" /></timer></timers>")
+		box("clock", 0, 0, 1, 1, "<off />", {}, kCounter + "<timers><timer><every>1</every><inc variable=\"clock.n\" /></timer></timers>")
 		+ box("another", 0, 0, 1, 1),
 		state("menu", { "another" }) + state("playing", { "clock" })));
 
@@ -183,7 +183,7 @@ TEST_CASE("an object's timer counts only while it is shown, and a reset starts i
 TEST_CASE("a state's timer counts while it is the current state and carries on after a pause", "[timers]")
 {
 	Loaded loaded(gameXml(
-		box("score", 0, 0, 1, 1, "<enabled>false</enabled>", {}, kCounter),
+		box("score", 0, 0, 1, 1, "<off />", {}, kCounter),
 		state("playing", { "score" }, "<input button=\"space\"><push state=\"paused\" /></input>",
 			"<timers><timer><every>1</every><inc variable=\"score.n\" /></timer><timer><after>3</after><push state=\"over\" /></timer></timers>")
 		+ state("paused", { "score" }) + state("over", { "score" })));
@@ -213,7 +213,7 @@ TEST_CASE("an interval is worked out again every round, so it can follow a varia
 	SECTION("a variable")
 	{
 		Loaded loaded(gameXml(
-			box("clock", 0, 0, 1, 1, "<enabled>false</enabled>", {}, kCounter
+			box("clock", 0, 0, 1, 1, "<off />", {}, kCounter
 				+ "<timers><timer><every>clock.gap</every><inc variable=\"clock.n\" /><inc variable=\"clock.gap\" /></timer></timers>"),
 			state("playing", { "clock" })));
 
@@ -228,7 +228,7 @@ TEST_CASE("an interval is worked out again every round, so it can follow a varia
 	SECTION("a random number")
 	{
 		Loaded loaded(gameXml(
-			box("clock", 0, 0, 1, 1, "<enabled>false</enabled>", {}, kCounter
+			box("clock", 0, 0, 1, 1, "<off />", {}, kCounter
 				+ "<timers><timer><every><random><min>0.1</min><max>1</max></random></every><inc variable=\"clock.n\" /></timer></timers>"),
 			state("playing", { "clock" })));
 
@@ -254,7 +254,7 @@ TEST_CASE("an interval is worked out again every round, so it can follow a varia
 TEST_CASE("a timer on an enemy fires its shots the way it faces", "[timers][facing]")
 {
 	Loaded loaded(gameXml(
-		box("enemy", 100, 100, 20, 10, "<enabled>true</enabled>", "<facing>down</facing>", "<timers><timer><every>0.5</every><fire object=\"bomb\" /></timer></timers>"),
+		box("enemy", 100, 100, 20, 10, "", "<facing>down</facing>", "<timers><timer><every>0.5</every><fire object=\"bomb\" /></timer></timers>"),
 		state("playing", { "enemy", "bomb" }), {},
 		shotPiece("bomb", 4, 6, "<x>0</x><y>-3</y>")));
 
@@ -280,7 +280,7 @@ TEST_CASE("an object with a <facing> faces the way it last moved, and fires that
 		"<action name=\"gun\"><fire object=\"shot\" /></action></actions>";
 
 	Loaded loaded(gameXml(
-		box("man", 100, 100, 20, 20, "<enabled>true</enabled>", "<facing>up</facing>", actions),
+		box("man", 100, 100, 20, 20, "", "<facing>up</facing>", actions),
 		state("playing", { "man", "shot" }), {},
 		shotPiece("shot", 4, 4, "<x>0</x><y>-6</y>")));
 
@@ -325,12 +325,12 @@ TEST_CASE("a timed hop takes its time, passes over what is in the way, and meets
 {
 	const std::string actions = "<actions><action name=\"down\"><hop direction=\"down\">60<seconds>0.5</seconds></hop></action></actions>"
 		"<variables><variable name=\"hits\">0</variable></variables>";
-	const std::string rules = "<enabled>true</enabled><collision class=\"hazard\"><inc variable=\"man.hits\" /></collision>";
+	const std::string rules = "<collision class=\"hazard\"><inc variable=\"man.hits\" /></collision>";
 
 	Loaded loaded(gameXml(
 		box("man", 100, 100, 20, 20, rules, {}, actions)
-		+ box("bar", 0, 130, 800, 10, "<enabled>true</enabled>", {}, {}, "<x>0</x><y>0</y>", " class=\"hazard\"")
-		+ box("pit", 0, 170, 800, 30, "<enabled>true</enabled>", {}, {}, "<x>0</x><y>0</y>", " class=\"hazard\""),
+		+ box("bar", 0, 130, 800, 10, "", {}, {}, "<x>0</x><y>0</y>", " class=\"hazard\"")
+		+ box("pit", 0, 170, 800, 30, "", {}, {}, "<x>0</x><y>0</y>", " class=\"hazard\""),
 		state("playing", { "man", "bar", "pit" })));
 
 	CommandExecutor executor(loaded.game);
@@ -360,8 +360,8 @@ TEST_CASE("nothing is touched in the air: a timed hop over a hazard and clear of
 		"<variables><variable name=\"hits\">0</variable></variables>";
 
 	Loaded loaded(gameXml(
-		box("man", 100, 100, 20, 20, "<enabled>true</enabled><collision class=\"hazard\"><inc variable=\"man.hits\" /></collision>", {}, actions)
-		+ box("bar", 0, 140, 800, 20, "<enabled>true</enabled>", {}, {}, "<x>0</x><y>0</y>", " class=\"hazard\""),
+		box("man", 100, 100, 20, 20, "<collision class=\"hazard\"><inc variable=\"man.hits\" /></collision>", {}, actions)
+		+ box("bar", 0, 140, 800, 20, "", {}, {}, "<x>0</x><y>0</y>", " class=\"hazard\""),
 		state("playing", { "man", "bar" })));
 
 	CommandExecutor executor(loaded.game);
@@ -375,9 +375,9 @@ TEST_CASE("nothing is touched in the air: a timed hop over a hazard and clear of
 TEST_CASE("<reverse /> turns an object round, and a collision can reset another object", "[reverse]")
 {
 	Loaded loaded(gameXml(
-		box("walker", 400, 100, 10, 10, "<enabled>true</enabled><collision edge=\"right\"><reset object=\"marker\" /><reverse /></collision>",
+		box("walker", 400, 100, 10, 10, "<collision edge=\"right\"><reset object=\"marker\" /><reverse /></collision>",
 			{}, "<timers><timer><every>0.5</every><reverse /></timer></timers>", "<x>3</x><y>1</y>")
-		+ box("marker", 50, 50, 10, 10, "<enabled>false</enabled>", {}, {}, "<x>1</x><y>0</y>"),
+		+ box("marker", 50, 50, 10, 10, "<off />", {}, {}, "<x>1</x><y>0</y>"),
 		state("playing", { "walker", "marker" })));
 
 	Object& walker = loaded.game.getObject("walker");
@@ -404,7 +404,7 @@ TEST_CASE("one <input> can name several keys, and a state from= another takes it
 	const std::string actions = "<actions><action name=\"left\"><move direction=\"left\">2</move></action></actions>";
 
 	Loaded loaded(gameXml(
-		box("man", 100, 100, 20, 20, "<enabled>false</enabled>", {}, actions),
+		box("man", 100, 100, 20, 20, "<off />", {}, actions),
 		state("playing", { "man" }, inputs)
 		+ "<state name=\"special\" from=\"playing\"><inputs><input button=\"a\"><push state=\"paused\" /></input></inputs></state>"
 		+ state("paused", { "man" })), XmlBackend::TinyXml2);
@@ -447,7 +447,7 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 	{
 		INFO(objects << states);
 		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
+			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>" + objects + "</objects>" + states + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
 		{
@@ -459,20 +459,20 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 
 	const std::string plain = state("playing", { "o" });
 
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", "<facing>north</facing>"), plain, "<facing> is \"north\"");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><pop /></timer></timers>"), plain, "needs an <every> or an <after>");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><every>0</every></timer></timers>"), plain, "<every> is 0");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><after>1</after><push state=\"nowhere\" /></timer></timers>"), plain,
+	fails(box("o", 0, 0, 1, 1, "<off />", "<facing>north</facing>"), plain, "<facing> is \"north\"");
+	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<timers><timer><pop /></timer></timers>"), plain, "needs an <every> or an <after>");
+	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<timers><timer><every>0</every></timer></timers>"), plain, "<every> is 0");
+	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<timers><timer><after>1</after><push state=\"nowhere\" /></timer></timers>"), plain,
 		"<push state=\"nowhere\" /> names no state");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump /></action></actions>"),
+	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"j\"><jump /></action></actions>"),
 		plain, "> <jump>: has no value");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"c\"><chase object=\"o\"><speed>2</speed></chase></action></actions>"),
+	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"c\"><chase object=\"o\"><speed>2</speed></chase></action></actions>"),
 		plain, "unknown <speed>; expected its speed, then <near> if wanted");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"c\"><chase object=\"o\">2<random><min>1</min><max>3</max></random></chase></action></actions>"),
+	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"c\"><chase object=\"o\">2<random><min>1</min><max>3</max></random></chase></action></actions>"),
 		plain, "holds both the text \"2\" and a <random> tag");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><hop direction=\"up\">5<seconds>0</seconds></hop></action></actions>"),
+	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"j\"><hop direction=\"up\">5<seconds>0</seconds></hop></action></actions>"),
 		plain, "<hop> has <seconds> of 0");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"j\"><jump direction=\"up\">5</jump></action></actions>"),
+	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"j\"><jump direction=\"up\">5</jump></action></actions>"),
 		plain, "is now <hop direction=...> with <seconds>");
 	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
 	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show set=\"nothing\" /></shows>" + inputs + "</state>",
@@ -487,10 +487,10 @@ TEST_CASE("an object with several named sprites can <become> each of them, and a
 		"<sprite name=\"off\"><rectangle><width>10</width><height>10</height><color>color.grey</color></rectangle></sprite>"
 		"<sprite name=\"on\"><rectangle><width>10</width><height>10</height><color>color.yellow</color></rectangle></sprite>"
 		"<position><x>100</x><y>100</y></position><velocity><x>0</x><y>0</y></velocity>"
-		"<collisions><enabled>true</enabled>"
+		"<collisions>"
 		"<collision class=\"ball\" sprite=\"off\"><become sprite=\"on\" /><inc variable=\"lamp.lit\" /></collision>"
 		"</collisions><variables><variable name=\"lit\">0</variable></variables></object>";
-	const std::string ball = box("ball", 60, 100, 10, 10, "<enabled>true</enabled>", {}, {}, "<x>2</x><y>0</y>", " class=\"ball\"");
+	const std::string ball = box("ball", 60, 100, 10, 10, "", {}, {}, "<x>2</x><y>0</y>", " class=\"ball\"");
 
 	Loaded loaded(gameXml(lamp + ball,
 		state("playing", { "lamp", "ball" }, "<input button=\"space\"><become object=\"lamp\" sprite=\"off\" /></input>")));
@@ -523,7 +523,7 @@ TEST_CASE("an edge rule with sprite= runs only while the object shows that look,
 		"<sprite name=\"whole\"><rectangle><width>10</width><height>10</height><color>color.grey</color></rectangle></sprite>"
 		"<sprite name=\"cracked\"><rectangle><width>10</width><height>10</height><color>color.darkgrey</color></rectangle></sprite>"
 		"<position><x>20</x><y>100</y></position><velocity><x>-4</x><y>0</y></velocity>"
-		"<collisions><enabled>true</enabled>"
+		"<collisions>"
 		"<collision edge=\"left\" sprite=\"cracked\"><die /></collision>"
 		"<collision edge=\"left\" sprite=\"whole\"><become sprite=\"cracked\" /><bounce /></collision>"
 		"<collision edge=\"horizontal\"><inc variable=\"puck.hits\" /></collision>"
@@ -549,13 +549,13 @@ TEST_CASE("an edge rule with unless= is passed over while the object touches som
 {
 	// Two balls at the bottom edge, one of them over a pad: the bottom takes
 	// out the one with nothing under it, and the other only bounces.
-	const std::string rules = "<enabled>true</enabled>"
+	const std::string rules = ""
 		"<collision edge=\"bottom\" unless=\"pad\"><die /></collision>"
 		"<collision edge=\"bottom\"><bounce /></collision>";
 	Loaded loaded(gameXml(
 		box("safe", 100, 592, 10, 10, rules, {}, {}, "<x>0</x><y>1</y>")
 			+ box("lost", 400, 592, 10, 10, rules, {}, {}, "<x>0</x><y>1</y>")
-			+ box("pad", 90, 590, 40, 10, "<enabled>true</enabled>", {}, {}, "<x>0</x><y>0</y>", " class=\"pad\""),
+			+ box("pad", 90, 590, 40, 10, "", {}, {}, "<x>0</x><y>0</y>", " class=\"pad\""),
 		state("playing", { "safe", "lost", "pad" })));
 
 	loaded.frames(3);
@@ -567,11 +567,11 @@ TEST_CASE("an edge rule with unless= is passed over while the object touches som
 TEST_CASE("<reveal> brings hidden members of a pool back where they started, as many as asked", "[reveal]")
 {
 	const std::string pool = "<group name=\"blocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>0</y></velocity><active>false</active><collisions><enabled>false</enabled></collisions>"
+		"<velocity><x>0</x><y>0</y></velocity><waiting /><collisions><off /></collisions>"
 		"<member><position><x>10</x><y>10</y></position></member>"
 		"<member><position><x>30</x><y>10</y></position></member>"
 		"<member><position><x>50</x><y>10</y></position></member></group>";
-	const std::string builder = box("builder", 0, 0, 1, 1, "<enabled>false</enabled>", {},
+	const std::string builder = box("builder", 0, 0, 1, 1, "<off />", {},
 		"<variables><variable name=\"n\">0</variable></variables><timers><timer><every>1</every><reveal object=\"blocks\" /></timer></timers>");
 
 	Loaded loaded(gameXml(pool + builder,
@@ -604,7 +604,7 @@ TEST_CASE("a <reveal> back into play draws a <random> again (a copy, fired or sp
 {
 	// A rock that dies a moment after it is back, so it comes back again and
 	// again; what it comes back with is noted each time.
-	const std::string rock = box("rock", 0, 0, 10, 10, "<enabled>false</enabled>", "<active>false</active>",
+	const std::string rock = box("rock", 0, 0, 10, 10, "<off />", "<waiting />",
 		"<timers><timer><every>0.05</every><die /></timer></timers>",
 		"<x><random><min>-50</min><max>50</max></random></x><y>0</y>", " class=\"projectile\"");
 	const auto distinctSpeeds = [](Loaded& loaded)
@@ -619,7 +619,7 @@ TEST_CASE("a <reveal> back into play draws a <random> again (a copy, fired or sp
 		return seen.size();
 	};
 
-	Loaded loaded(gameXml(rock + box("keeper", 0, 0, 1, 1, "<enabled>false</enabled>", {},
+	Loaded loaded(gameXml(rock + box("keeper", 0, 0, 1, 1, "<off />", {},
 		"<timers><timer><every>0.1</every><reveal object=\"rock\" /></timer></timers>"),
 		state("playing", { "rock", "keeper" })));
 	CHECK(distinctSpeeds(loaded) > 3);
@@ -628,7 +628,7 @@ TEST_CASE("a <reveal> back into play draws a <random> again (a copy, fired or sp
 TEST_CASE("a condition can change a variable, so it can count and start over", "[conditions]")
 {
 	Loaded loaded(gameXml(
-		box("counter", 0, 0, 1, 1, "<enabled>false</enabled>", {}, kCounter + "<timers><timer><every>0.1</every><inc variable=\"counter.n\" /></timer></timers>"),
+		box("counter", 0, 0, 1, 1, "<off />", {}, kCounter + "<timers><timer><every>0.1</every><inc variable=\"counter.n\" /></timer></timers>"),
 		state("playing", { "counter" }, "<input button=\"space\"><pop /></input>",
 			"<conditions><condition object=\"counter\" variable=\"n\"><atleast>3</atleast><dec variable=\"counter.n\">3</dec><inc variable=\"counter.gap\" /></condition></conditions>")));
 
@@ -645,7 +645,7 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 	{
 		INFO(objects << states);
 		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
+			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>" + objects + "</objects>" + states + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
 		{
@@ -657,29 +657,29 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 
 	const std::string twoLooks = "<object name=\"o\"><sprite name=\"a\"><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		"<sprite name=\"b\"><rectangle><width>5</width><height>5</height></rectangle></sprite>"
-		"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions></object>";
+		"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity><collisions><off /></collisions></object>";
 
 	fails(twoLooks, state("playing", { "o" }, "<input button=\"space\"><become sprite=\"a\" /></input>"), "needs object=");
 	fails(twoLooks, state("playing", { "o" }, "<input button=\"space\"><become object=\"o\" sprite=\"c\" /></input>"), "has no look of that name");
 	fails(twoLooks, state("playing", { "o" }, "<input button=\"space\"><become object=\"nobody\" sprite=\"a\" /></input>"), "no object of that name");
-	fails(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<actions><action name=\"x\"><become sprite=\"a\" /></action></actions>"),
+	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"x\"><become sprite=\"a\" /></action></actions>"),
 		state("playing", { "o" }), "it has no look of that name");
-	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision class=\"x\" sprite=\"lit\"><die /></collision>"), state("playing", { "o" }),
+	fails(box("o", 0, 0, 1, 1, "<collision class=\"x\" sprite=\"lit\"><die /></collision>"), state("playing", { "o" }),
 		"names no look of the object");
-	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"left\" sprite=\"lit\"><die /></collision>"), state("playing", { "o" }),
+	fails(box("o", 0, 0, 1, 1, "<collision edge=\"left\" sprite=\"lit\"><die /></collision>"), state("playing", { "o" }),
 		"<collision edge sprite=\"lit\"> names no look of the object");
-	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"left\" class=\"wall\"><die /></collision>"), state("playing", { "o" }),
+	fails(box("o", 0, 0, 1, 1, "<collision edge=\"left\" class=\"wall\"><die /></collision>"), state("playing", { "o" }),
 		"a rule about a screen edge is about no other object");
-	fails(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"left\" object=\"o\"><die /></collision>"), state("playing", { "o" }),
+	fails(box("o", 0, 0, 1, 1, "<collision edge=\"left\" object=\"o\"><die /></collision>"), state("playing", { "o" }),
 		"a rule about a screen edge is about no other object");
 	fails(box("o", 0, 0, 1, 1), state("playing", { "o" }, "<input button=\"space\"><reveal object=\"ghost\" /></input>"), "<reveal> names 'ghost'");
 }
 
 TEST_CASE("<chase> heads straight for the nearest one in play, and stops when near enough", "[chase]")
 {
-	const std::string chaser = box("hunter", 100, 100, 20, 20, "<enabled>true</enabled>", "<facing>up</facing>",
+	const std::string chaser = box("hunter", 100, 100, 20, 20, "", "<facing>up</facing>",
 		"<timers><timer><every>0.1</every><chase object=\"prey\">2<near>50</near></chase></timer></timers>");
-	Loaded loaded(gameXml(chaser + box("prey", 400, 500, 20, 20) + box("prey2", 0, 0, 20, 20, "<enabled>false</enabled>", "<active>false</active>"),
+	Loaded loaded(gameXml(chaser + box("prey", 400, 500, 20, 20) + box("prey2", 0, 0, 20, 20, "<off />", "<waiting />"),
 		state("playing", { "hunter", "prey", "prey2" })));
 
 	Object& hunter = loaded.game.getObject("hunter");
@@ -701,7 +701,7 @@ TEST_CASE("<chase> heads straight for the nearest one in play, and stops when ne
 
 TEST_CASE("<aim> sends the next shots straight at the target, at any angle, until a key moves the shooter", "[aim]")
 {
-	const std::string gun = box("gun", 100, 100, 20, 20, "<enabled>true</enabled>", {},
+	const std::string gun = box("gun", 100, 100, 20, 20, "", {},
 		"<actions><action name=\"left\"><move direction=\"left\">1</move></action></actions>"
 		"<timers><timer><every>0.5</every><aim object=\"target\" /><fire object=\"shot\" /></timer></timers>");
 	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20),
@@ -726,7 +726,7 @@ TEST_CASE("<aim> sends the next shots straight at the target, at any angle, unti
 
 TEST_CASE("<aim> with <lined> fires only along one of the eight ways, when the target is lined up", "[aim]")
 {
-	const std::string gun = box("gun", 100, 100, 20, 20, "<enabled>true</enabled>", {}, 
+	const std::string gun = box("gun", 100, 100, 20, 20, "", {}, 
 		"<timers><timer><every>0.5</every><aim object=\"target\"><lined>8</lined></aim><fire object=\"shot\" /></timer></timers>");
 	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20),
 		state("playing", { "gun", "target", "shot" }), {}, shotPiece("shot", 4, 4, "<x>0</x><y>-5</y>")));
@@ -752,7 +752,7 @@ TEST_CASE("<aim> with <lined> fires only along one of the eight ways, when the t
 
 TEST_CASE("two move keys held across each other face the diagonal, and a <fire> goes along it", "[aim][facing]")
 {
-	const std::string gun = box("gun", 300, 300, 20, 20, "<enabled>true</enabled>", "<facing>up</facing>",
+	const std::string gun = box("gun", 300, 300, 20, 20, "", "<facing>up</facing>",
 		"<actions><action name=\"up\"><move direction=\"up\">1</move></action>"
 		"<action name=\"right\"><move direction=\"right\">1</move></action>"
 		"<action name=\"gun\"><fire object=\"shot\" /></action></actions>");
@@ -777,9 +777,9 @@ TEST_CASE("two move keys held across each other face the diagonal, and a <fire> 
 
 TEST_CASE("<chase> and <aim> that name nothing are turned away when the game loads", "[chase][aim][errors]")
 {
-	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><every>1</every><chase object=\"playr\">1</chase></timer></timers>")
+	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<off />", {}, "<timers><timer><every>1</every><chase object=\"playr\">1</chase></timer></timers>")
 		+ box("player", 0, 0, 1, 1), state("playing", { "o" }))), ContainsSubstring("<chase> names 'playr', and there is no object of that name (did you mean 'player'?)"));
-	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<timers><timer><every>1</every><aim object=\"nobody\" /></timer></timers>"),
+	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<off />", {}, "<timers><timer><every>1</every><aim object=\"nobody\" /></timer></timers>"),
 		state("playing", { "o" }))), ContainsSubstring("<aim> names 'nobody'"));
 	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show object=\"o\" /></shows><inputs><input button=\"a\"><aim object=\"o\" /></input></inputs></state>"), XmlBackend::PugiXml),
 		ContainsSubstring("unexpected element <aim>"));
@@ -788,15 +788,15 @@ TEST_CASE("<chase> and <aim> that name nothing are turned away when the game loa
 TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes objects over on a full reset", "[keeps][copy]")
 {
 	// A score, a best kept from game to game, and a row of two lamps kept too.
-	const std::string objects = box("player", 0, 0, 10, 10, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">0</variable></variables>")
-		+ box("best", 0, 20, 10, 10, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">0</variable></variables>")
+	const std::string objects = box("player", 0, 0, 10, 10, "<off />", {}, "<variables><variable name=\"score\">0</variable></variables>")
+		+ box("best", 0, 20, 10, 10, "<off />", {}, "<variables><variable name=\"score\">0</variable></variables>")
 		+ "<object name=\"shown\"><sprite><text><number>best.score</number><size>20</size><color>color.white</color></text></sprite>"
 		  "<position><x>0</x><y>40</y></position></object>"
 		+ "<group name=\"lamps\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		  "<position><x>0</x><y>60</y></position><member><position><x>0</x></position></member><member><position><x>10</x></position></member></group>";
 	const std::string xml = "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 		"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
-		"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+		"<framerate>60</framerate></window>"
 		"<variables><variable name=\"unused\">0</variable></variables>"
 		"<keeps><keep object=\"best\" /><keep object=\"lamps\" /></keeps>"
 		"<states><objects>" + objects + "</objects>" + state("playing", { "player", "best", "shown", "lamps" },
@@ -843,8 +843,8 @@ TEST_CASE("a <copy> or <keep> that names nothing is turned away when the game lo
 	{
 		INFO(keeps << inputs);
 		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
-			+ keeps + "<states><objects>" + box("o", 0, 0, 1, 1, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">0</variable></variables>")
+			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
+			+ keeps + "<states><objects>" + box("o", 0, 0, 1, 1, "<off />", {}, "<variables><variable name=\"score\">0</variable></variables>")
 			+ "</objects>" + state("playing", { "o" }, inputs) + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
 		{
@@ -864,7 +864,7 @@ TEST_CASE("a <copy> or <keep> that names nothing is turned away when the game lo
 
 TEST_CASE("a <text> is its pieces: labels, numbers and letters, each following its variable", "[scores][text]")
 {
-	const std::string owner = box("p", 0, 0, 10, 10, "<enabled>false</enabled>", {}, "<variables><variable name=\"score\">120</variable>"
+	const std::string owner = box("p", 0, 0, 10, 10, "<off />", {}, "<variables><variable name=\"score\">120</variable>"
 		"<variable name=\"a\">7</variable><variable name=\"b\">-1</variable><variable name=\"c\">27</variable></variables>");
 	const std::string label = "<object name=\"label\"><sprite><text><content>SCORE</content><number>p.score</number>"
 		"<letter>p.a</letter><letter>p.b</letter><letter>p.c</letter><number>p.score * 2</number><size>20</size></text></sprite>"
@@ -887,7 +887,7 @@ TEST_CASE("a <text> is its pieces: labels, numbers and letters, each following i
 
 TEST_CASE("a <choose> piece shows one of its words, picked by a number as it is now", "[scores][text][choose]")
 {
-	const std::string owner = box("p", 0, 0, 10, 10, "<enabled>false</enabled>", {}, "<variables><variable name=\"mood\">0</variable></variables>");
+	const std::string owner = box("p", 0, 0, 10, 10, "<off />", {}, "<variables><variable name=\"mood\">0</variable></variables>");
 	const std::string label = "<object name=\"label\"><sprite><text><content>THE DRAGON IS</content><choose><by>p.mood</by>"
 		"<word>ASLEEP</word><word>HUNGRY</word><word>VERY ANGRY</word></choose><size>20</size></text></sprite>"
 		"<position><x>0</x><y>0</y></position></object>";
@@ -927,7 +927,7 @@ TEST_CASE("a group's text naming the group's variables shows each member's own",
 TEST_CASE("<rank> puts an entry into its place in a table, the rest moving down", "[scores][rank]")
 {
 	const std::string vars = "<variables><variable name=\"score\">0</variable><variable name=\"tag\">0</variable></variables>";
-	const std::string entry = box("entry", 0, 0, 10, 10, "<enabled>false</enabled>", {}, vars);
+	const std::string entry = box("entry", 0, 0, 10, 10, "<off />", {}, vars);
 	const std::string table = "<group name=\"table\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		"<position><x>0</x></position>" + vars + "<member><position><y>0</y></position></member><member><position><y>10</y></position></member>"
 		"<member><position><y>20</y></position></member></group>";
@@ -961,7 +961,7 @@ TEST_CASE("<rank> puts an entry into its place in a table, the rest moving down"
 TEST_CASE("<rank> names a variable and a group that has it", "[scores][rank]")
 {
 	const std::string vars = "<variables><variable name=\"score\">0</variable></variables>";
-	const std::string entry = box("entry", 0, 0, 10, 10, "<enabled>false</enabled>", {}, vars);
+	const std::string entry = box("entry", 0, 0, 10, 10, "<off />", {}, vars);
 	const std::string table = "<group name=\"table\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		"<position><x>0</x></position><member><position><y>0</y></position></member></group>";
 	const auto load = [&](const std::string& objects, const std::string& rank)
@@ -982,7 +982,7 @@ TEST_CASE("<turns> names the players' states, and goes only where a state's comm
 	CHECK_NOTHROW(load("<input button=\"space\"><turns><player state=\"s\" /><player /></turns></input><input button=\"p\"><pass /><out /></input>"));
 	CHECK_THROWS_WITH(load("<input button=\"space\"><turns><player state=\"t\" /></turns></input>"), ContainsSubstring("<player state=\"t\" /> names no state"));
 	CHECK_THROWS_WITH(load("<input button=\"space\"><turns /></input>", XmlBackend::PugiXml), ContainsSubstring("expected <player>"));
-	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<enabled>true</enabled><collision edge=\"all\"><pass /></collision>"), state("s", { "o" })), XmlBackend::PugiXml),
+	CHECK_THROWS_WITH(Loaded(gameXml(box("o", 0, 0, 1, 1, "<collision edge=\"all\"><pass /></collision>"), state("s", { "o" })), XmlBackend::PugiXml),
 		ContainsSubstring("unexpected element <pass>"));
 }
 
@@ -1052,9 +1052,9 @@ namespace
 
 		explicit Coins(const std::string& condition, XmlBackend backend = XmlBackend::Xerces, bool schema = true) :
 			loaded(withSchema(schema, gameXml(coin("coin1", 0, 2) + coin("coin2", 100, 5) + coin("coin3", 200, 9)
-				+ box("ball", 50, 0, 10, 10) + box("flag", 0, 300, 1, 1, "<enabled>false</enabled>", {}, kCounter)
+				+ box("ball", 50, 0, 10, 10) + box("flag", 0, 300, 1, 1, "<off />", {}, kCounter)
 				+ "<group name=\"posts\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-				"<position><y>100</y></position><velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions>"
+				"<position><y>100</y></position><velocity><x>0</x><y>0</y></velocity><collisions><off /></collisions>"
 				"<member><position><x>300</x></position></member><member><position><x>500</x></position></member></group>",
 				state("playing", { "coin1", "coin2", "coin3", "ball", "flag", "posts" }, "<input button=\"space\"><pop /></input>",
 					"<conditions><condition " + condition + "<inc variable=\"flag.n\" /></condition></conditions>"))), backend)
@@ -1072,7 +1072,7 @@ namespace
 
 		static std::string coin(const std::string& name, float x, float v)
 		{
-			return box(name, x, 0, 10, 10, "<enabled>false</enabled>", {}, "<variables><variable name=\"v\">" + std::to_string(v) + "</variable></variables>",
+			return box(name, x, 0, 10, 10, "<off />", {}, "<variables><variable name=\"v\">" + std::to_string(v) + "</variable></variables>",
 				"<x>0</x><y>0</y>", " class=\"coin\"");
 		}
 
@@ -1221,7 +1221,7 @@ namespace
 		const std::string look = "<rectangle><width>10</width><height>10</height></rectangle>";
 		return gameXml("<object name=\"light\"><sprite name=\"green\">" + look + "</sprite><sprite name=\"red\">" + look + "</sprite>"
 			"<position><x>0</x><y>0</y></position></object>"
-			+ box("flag", 0, 300, 1, 1, "<enabled>false</enabled>", {}, "<variables><variable name=\"n\">0</variable><variable name=\"out\">0</variable></variables>"),
+			+ box("flag", 0, 300, 1, 1, "<off />", {}, "<variables><variable name=\"n\">0</variable><variable name=\"out\">0</variable></variables>"),
 			state("playing", { "light", "flag" }, "<input button=\"space\"><pop /></input>", "<conditions>" + conditions + "</conditions>" + computer));
 	}
 
@@ -1423,7 +1423,7 @@ TEST_CASE("a key's trigger holds an <otherwise>, run only when its action is ref
 	{
 		std::ofstream out(path);
 		// Two looks, so from="other" names one it is not showing.
-		std::string a = box("a", 100, 0, 10, 10, "<enabled>false</enabled>", {}, actions);
+		std::string a = box("a", 100, 0, 10, 10, "<off />", {}, actions);
 		const std::size_t from = a.find("<sprite>");
 		const std::size_t to = a.find("</sprite>") + 9;
 		const std::string shape = a.substr(from + 8, to - from - 17);
@@ -1451,7 +1451,7 @@ TEST_CASE("a key's trigger holds an <otherwise>, run only when its action is ref
 	std::filesystem::remove(path, ignored);
 
 	// Only a key's trigger holds one, for now.
-	CHECK_THROWS_WITH(Loaded(gameXml(box("a", 100, 0, 10, 10, "<enabled>false</enabled>", {}, actions), state("playing", { "a" }, "<input button=\"escape\"><pop /></input>",
+	CHECK_THROWS_WITH(Loaded(gameXml(box("a", 100, 0, 10, 10, "<off />", {}, actions), state("playing", { "a" }, "<input button=\"escape\"><pop /></input>",
 		"<timers><timer><every>1</every><trigger object=\"a\" action=\"stuck\"><otherwise><trigger object=\"a\" action=\"mark\" /></otherwise></trigger></timer></timers>"))),
 		ContainsSubstring("for now only a trigger in a key's <input> holds an <otherwise>"));
 }

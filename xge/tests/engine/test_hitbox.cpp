@@ -68,7 +68,7 @@ namespace
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"hitbox\"><width>800</width><height>600</height><background>color.black</background>"
-				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				"<states><state name=\"playing\"><objects>" << objects << "</objects>"
 				"<inputs><input button=\"space\"><pop /></input></inputs></state></states></game>";
@@ -90,14 +90,14 @@ namespace
 			actions += "<action name=\"" + std::to_string(i + 1) + "\"><hop direction=\"up\">" + std::to_string(hops[i]) + "</hop></action>";
 		}
 		return "<object name=\"probe\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-			"<position><x>105</x><y>200</y></position><collisions><enabled>true</enabled></collisions><actions>" + actions + "</actions></object>";
+			"<position><x>105</x><y>200</y></position><collisions></collisions><actions>" + actions + "</actions></object>";
 	}
 
 	// At 100, 100, counting the probe's touches, with `collisions` before its rule.
 	std::string target(const std::string& sprite, const std::string& collisions)
 	{
 		return "<object name=\"target\"><sprite>" + sprite + "</sprite><position><x>100</x><y>100</y></position>"
-			"<collisions><enabled>true</enabled>" + collisions + "<collision object=\"probe\"><inc variable=\"target.hits\" /></collision></collisions>"
+			"<collisions>" + collisions + "<collision object=\"probe\"><inc variable=\"target.hits\" /></collision></collisions>"
 			"<variables><variable name=\"hits\">0</variable></variables></object>";
 	}
 

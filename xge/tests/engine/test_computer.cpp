@@ -41,7 +41,7 @@ namespace
 	{
 		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"computer\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><states><state name=\"playing\"><objects>" + bat + ball + "</objects>"
 			"<inputs>" + keys + "</inputs>" + more + "</state></states></game>";
 	}

@@ -67,7 +67,7 @@
       </sprite>
       <position><x>-50</x></position>
       <velocity><x>speed</x></velocity>
-      <active>false</active>
+      <waiting />
       <collisions>
         <collision class="shell">
           <inc variable="status.score">points</inc>

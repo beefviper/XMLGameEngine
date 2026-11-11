@@ -135,7 +135,7 @@ namespace
 			const std::filesystem::path path = std::filesystem::temp_directory_path() / scratchName("xge_paths_scratch.xml");
 			std::ofstream out(path);
 			out << "<game><window name=\"paths\"><width>200</width><height>100</height><background>color.black</background>"
-				"<fullscreen>false</fullscreen><framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
+				"<framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 				<< paths << "<states><objects>" << objects << "</objects><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
 				"<inputs></inputs>" << stateExtra << "</state></states></game>";
 			return path;
@@ -151,7 +151,7 @@ namespace
 	{
 		return "<object name=\"" + name + "\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
 			"<position><x>" + std::to_string(x) + "</x><y>" + std::to_string(y) + "</y></position><velocity><x>0</x><y>0</y></velocity>"
-			"<collisions><enabled>false</enabled></collisions>" + extra + "</object>";
+			"<collisions><off /></collisions>" + extra + "</object>";
 	}
 
 	const std::string kSquare = "<paths><path name=\"square\"><speed>2</speed>"
@@ -190,7 +190,7 @@ TEST_CASE("a path with a start puts the object there first, and a stagger sends 
 	const std::string paths = "<paths><path name=\"in\"><speed>5</speed><start><x>-20</x><y>10</y></start>"
 		"<step><x>20</x><y>0</y></step><home /></path></paths>";
 	const std::string group = "<group name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
-		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions>"
+		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><off /></collisions>"
 		"<member><position><x>100</x></position></member><member><position><x>120</x></position></member><member><position><x>140</x></position></member></group>";
 	Loaded loaded(paths, box("a", 0, 0) + group);
 
@@ -272,7 +272,7 @@ TEST_CASE("a <follow> in a timer sends its own object, and in a state needs obje
 TEST_CASE("<nearest> in a <follow> sends only that many, the nearest to the one doing it", "[paths]")
 {
 	const std::string group = "<group name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
-		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions>"
+		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><off /></collisions>"
 		"<member><position><x>100</x></position></member><member><position><x>120</x></position></member><member><position><x>140</x></position></member></group>";
 	Loaded loaded(kSquare, box("a", 135, 0,
 		"<timers><timer><after>0.1</after><follow path=\"square\" object=\"b\"><nearest>2</nearest></follow></timer></timers>") + group);
@@ -332,7 +332,7 @@ TEST_CASE("a step's commands can name the one flying it as self, whoever sent it
 	const std::string paths = "<paths><path name=\"count\"><speed>1</speed>"
 		"<step><x>3</x><y>0</y><inc variable=\"self.n\">self.x</inc></step></path></paths>";
 	const std::string group = "<group name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
-		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><enabled>false</enabled></collisions>"
+		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><off /></collisions>"
 		"<variables><variable name=\"n\">0</variable></variables>"
 		"<member><position><x>100</x></position></member><member><position><x>120</x></position></member></group>";
 	Loaded loaded(paths, box("a", 0, 0, "<timers><timer><after>0.1</after><follow path=\"count\" object=\"b\" /></timer></timers>") + group);

@@ -5,7 +5,7 @@
 //
 // Catch2 tests for objects a state owns and for <scenes>: the pieces,
 // scenes that take its pieces and change them, from=, names looked for from the
-// inside out, <enter>, <reset scene>, what is carried going along, <drawn>
+// inside out, <enter>, <reset scene>, what is carried going along, <hidden />
 // and <show state>. Each game is written beside the shipped ones so that
 // its schema path resolves, and loaded with Xerces (full validation) and
 // TinyXml2 (the built-in validator). Frames are played with
@@ -63,7 +63,7 @@ namespace
 	{
 		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"scenes\"><width>800</width><height>600</height><background>color.black</background>"
-			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable>" + variables + "</variables>"
 			+ (kit.empty() ? std::string{} : "<objects>" + kit + "</objects>") +
 			"<states><objects>" + (objects.empty() ? box("marker", 0, 0) : objects) + "</objects>"
@@ -210,9 +210,9 @@ TEST_CASE("names inside a scene mean its own first, then its state's, then the g
 	// the state's, and a game-level label reads a room's rock by its path.
 	const std::string tally = "<variables><variable name=\"hits\">0</variable></variables>";
 	const std::string rock = "<object name=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-		"<position><x>100</x><y>100</y></position><collisions><enabled>true</enabled>"
+		"<position><x>100</x><y>100</y></position><collisions>"
 		"<collision class=\"shot\"><inc variable=\"tally.hits\" /><inc variable=\"hero.score\" /></collision></collisions></object>";
-	const std::string shot = box("shot", 100, 300, "<y>-20</y>", "<collisions><enabled>true</enabled><collision object=\"rock\"><die /></collision></collisions>", " class=\"shot\"");
+	const std::string shot = box("shot", 100, 300, "<y>-20</y>", "<collisions><collision object=\"rock\"><die /></collision></collisions>", " class=\"shot\"");
 	const std::string states =
 		"<state name=\"playing\">"
 		"<objects>" + box("hero", 400, 500, {}, "<variables><variable name=\"score\">0</variable></variables>") + shot + "</objects>"
@@ -411,12 +411,12 @@ TEST_CASE("<reset scene> puts back what started in it, and leaves the other scen
 
 TEST_CASE("what a state's own object carries goes along into the next scene, and stays where it is dropped", "[scenes][carry]")
 {
-	const std::string hero = box("hero", 100, 100, "<x>1</x>", "<collisions><enabled>true</enabled><collision class=\"item\"><carry /></collision></collisions>"
+	const std::string hero = box("hero", 100, 100, "<x>1</x>", "<collisions><collision class=\"item\"><carry /></collision></collisions>"
 		"<actions><action name=\"drop\"><drop /></action></actions>");
 	const std::string states =
 		"<state name=\"playing\"><objects>" + hero + "</objects><scenes>"
-		"<scene name=\"room1\"><objects>" + box("sword", 105, 100, {}, "<collisions><enabled>true</enabled></collisions>", " class=\"item\"") + "</objects></scene>"
-		"<scene name=\"room2\"><objects>" + box("key", 600, 100, {}, "<collisions><enabled>true</enabled></collisions>", " class=\"item\"") + "</objects></scene>"
+		"<scene name=\"room1\"><objects>" + box("sword", 105, 100, {}, "<collisions></collisions>", " class=\"item\"") + "</objects></scene>"
+		"<scene name=\"room2\"><objects>" + box("key", 600, 100, {}, "<collisions></collisions>", " class=\"item\"") + "</objects></scene>"
 		"</scenes><inputs><input button=\"space\"><trigger object=\"hero\" action=\"drop\" /></input></inputs></state>";
 	Loaded loaded(gameXml(states));
 
@@ -448,10 +448,10 @@ TEST_CASE("what a state's own object carries goes along into the next scene, and
 	CHECK(sword.ownerScene == "playing.room1");
 }
 
-TEST_CASE("an object that is not <drawn> still runs and collides: an exit", "[scenes][drawn]")
+TEST_CASE("a <hidden /> object still runs and collides: an exit", "[scenes][hidden]")
 {
-	const std::string hero = box("hero", 100, 100, "<x>5</x>", "<collisions><enabled>true</enabled></collisions>", " class=\"hero\"");
-	const std::string exit = box("exit", 300, 100, {}, "<drawn>false</drawn><collisions><enabled>true</enabled>"
+	const std::string hero = box("hero", 100, 100, "<x>5</x>", "<collisions></collisions>", " class=\"hero\"");
+	const std::string exit = box("exit", 300, 100, {}, "<hidden /><collisions>"
 		"<collision class=\"hero\"><enter scene=\"room2\" /></collision></collisions>");
 	const std::string states =
 		"<state name=\"playing\"><objects>" + hero + "</objects><scenes>"
@@ -522,17 +522,17 @@ TEST_CASE("names that could mean two things, and takes of nothing, stop the load
 		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><objects><object name=\"rock\" /></objects></scene></scenes>" + kSpace + "</state>"),
 			"rock");
 	}
-	SECTION("an object with no picture that asks to be drawn")
+	SECTION("an object with no picture that says <hidden />")
 	{
-		fails(gameXml("<state name=\"playing\"><objects><object name=\"tally\"><drawn>true</drawn><variables><variable name=\"kills\">0</variable></variables></object></objects>" + kSpace + "</state>"),
-			"it has no <drawn>");
+		fails(gameXml("<state name=\"playing\"><objects><object name=\"tally\"><hidden /><variables><variable name=\"kills\">0</variable></variables></object></objects>" + kSpace + "</state>"),
+			"<hidden /> is for something with a picture");
 	}
 	SECTION("a take of a numbered member of a group, which only the group's name or a member's own name can take")
 	{
 		const std::string rocks = "<group name=\"rocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 			"<member><position><x>0</x><y>0</y></position></member><member><position><x>20</x><y>0</y></position></member></group>";
 		fails(gameXml("<state name=\"playing\"><scenes>"
-			"<scene name=\"room1\"><objects><object name=\"rocks.2\"><active>false</active></object></objects></scene></scenes>" + kSpace + "</state>",
+			"<scene name=\"room1\"><objects><object name=\"rocks.2\"><waiting /></object></objects></scene></scenes>" + kSpace + "</state>",
 			{}, {}, rocks), "a numbered member of a group");
 	}
 	SECTION("a scene no state has")
@@ -572,12 +572,12 @@ TEST_CASE("a scene's <ways> say where its <enter way> and <reset way> lead, so o
 	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
 	// One door of the kit, taken by every room; walking into it enters the
 	// room its way leads to, and that room starts again first.
-	const std::string door = box("door", 200, 100, {}, "<drawn>false</drawn><collisions><enabled>true</enabled>"
+	const std::string door = box("door", 200, 100, {}, "<hidden /><collisions>"
 		"<collision object=\"hero\"><reset way=\"on\" /><enter way=\"on\" /></collision></collisions>");
 	const std::string rock = box("rock", 500, 500, "<x>1</x>");
 	Loaded loaded(gameXml(
 		"<state name=\"playing\"><objects>" + box("hero", 100, 100, "<x>4</x>",
-			"<collisions><enabled>true</enabled><collision object=\"door\"><move direction=\"left\">150</move></collision></collisions>") + "</objects>"
+			"<collisions><collision object=\"door\"><move direction=\"left\">150</move></collision></collisions>") + "</objects>"
 		"<scenes>"
 		"<scene name=\"room1\"><ways><way name=\"on\" scene=\"room2\" /></ways><objects><object name=\"door\" /><object name=\"rock\" /></objects></scene>"
 		"<scene name=\"room2\"><ways><way name=\"on\" scene=\"playing.room1\" /></ways><objects><object name=\"door\" /><object name=\"rock\" /></objects></scene>"
@@ -617,7 +617,7 @@ TEST_CASE("mistakes with ways stop the load", "[scenes][ways][errors]")
 	SECTION("a way its scene does not have, inside the scene")
 	{
 		fails(gameXml("<state name=\"playing\"><scenes><scene name=\"room1\"><ways><way name=\"on\" scene=\"room2\" /></ways>"
-			"<objects>" + box("door", 0, 0, {}, "<collisions><enabled>true</enabled><collision><enter way=\"off\" /></collision></collisions>") + "</objects></scene>"
+			"<objects>" + box("door", 0, 0, {}, "<collisions><collision><enter way=\"off\" /></collision></collisions>") + "</objects></scene>"
 			"<scene name=\"room2\" /></scenes>" + kSpace + "</state>"),
 			"is no way of scene 'playing.room1'");
 	}

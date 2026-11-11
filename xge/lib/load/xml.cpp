@@ -1437,13 +1437,10 @@ namespace xge
 			const std::string collisionsHere = where + " > <collisions>";
 			RawCollisionData collisionData = std::move(base);
 
-			// A <collisions> is on unless it says <enabled>false</enabled>.
-			const auto enabled = findChild(&collisions, "enabled");
-			collisionData.enabled = enabled ? readBool(*enabled, collisionsHere) : true;
-			if (auto lockstep = findChild(&collisions, "lockstep"))
-			{
-				collisionData.lockstep = readBool(*lockstep, collisionsHere);
-			}
+			// A <collisions> is on unless it says <off />; <lockstep /> adds to
+			// what an outer group said.
+			collisionData.enabled = findChild(&collisions, "off") == nullptr;
+			if (findChild(&collisions, "lockstep")) { collisionData.lockstep = true; }
 			if (auto type = findChild(&collisions, "type"))
 			{
 				const std::string text = readText(*type);
@@ -1881,7 +1878,7 @@ namespace xge
 			{
 				rawObject.sprite = nothingSprite();
 				rawObject.isDrawn = false;
-				if (findChild(&object, "drawn")) { fail(where, "has no <sprite>, so it is never drawn; it has no <drawn>"); }
+				if (findChild(&object, "hidden")) { fail(where, "has no <sprite>, so it is never drawn; <hidden /> is for something with a picture"); }
 				if (!findChild(&object, "variables") && !findChild(&object, "timers")) { fail(where, "has no <sprite> and no <variables> or <timers>, so it is nothing"); }
 			}
 			else
@@ -1955,11 +1952,11 @@ namespace xge
 				rawObject.chain = requireAttribute(*chain, "object", where + " > <chain>");
 			}
 			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
-			if (auto active = findChild(&object, "active"))
-			{
-				if (!readBool(*active, where)) { rawObject.isVisible = false; }
-			}
-			if (auto drawn = findChild(&object, "drawn")) { rawObject.isDrawn = readBool(*drawn, where); }
+			// <waiting />: out of play until a <reveal>; <ready />, in play after
+			// all (a take of a waiting piece). <hidden />: in play, never drawn.
+			if (findChild(&object, "waiting")) { rawObject.isVisible = false; }
+			if (findChild(&object, "ready")) { rawObject.isVisible = true; }
+			if (findChild(&object, "hidden")) { rawObject.isDrawn = false; }
 			rawObject.exists = rawObject.exists && readExists(object, where);
 			if (auto most = findChild(&object, "most")) { rawObject.most = readCount(*most, where); }
 			if (auto collisions = findChild(&object, "collisions")) { rawObject.rawCollisionData = readCollisions(*collisions, where); }
@@ -2166,8 +2163,8 @@ namespace xge
 					fail(where, "is on map '" + own.map->name + "', whose rows say where its members are, so it has no <" + tag + ">");
 				}
 
-				if (tag == "active") { shared.isVisible = readBool(*child, where); }
-				else if (tag == "drawn") { shared.isDrawn = readBool(*child, where); }
+				if (tag == "waiting" || tag == "ready") { shared.isVisible = tag == "ready"; }
+				else if (tag == "hidden") { shared.isDrawn = false; }
 				else if (tag == "exists") { shared.exists = readBool(*child, where); }
 				else if (tag == "most") { shared.most = readCount(*child, where); }
 				else if (tag == "columns") { own.columns = readCount(*child, where); }
@@ -2241,7 +2238,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <pile> or <holds>, <hand />, <owns>, <turns>, <maze>, <chain>, <shape>, <active>, <drawn>, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <pile> or <holds>, <hand />, <owns>, <turns>, <maze>, <chain>, <shape>, <waiting /> or <ready />, <hidden />, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -3309,7 +3306,7 @@ namespace xge
 		const auto fullscreen = findChild(window.get(), "fullscreen");
 		const auto framerate = findChild(window.get(), "framerate");
 		windowDesc.background = background ? readText(*background) : "color.black";
-		windowDesc.fullscreen = fullscreen && readBool(*fullscreen, windowHere) ? "true" : "false";
+		windowDesc.fullscreen = fullscreen ? "true" : "false";
 		windowDesc.framerate = framerate ? std::stoi(readText(*framerate)) : 60;
 		if (windowDesc.framerate < 1) { fail(windowHere, "<framerate> is " + std::to_string(windowDesc.framerate) + "; expected a number of frames a second, 1 or more"); }
 

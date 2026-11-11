@@ -31,7 +31,7 @@ namespace
 	// own frames in a variable of its own, and gone at the top.
 	const std::string kShot = "<object name=\"shot\" class=\"bullet\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
 		"<velocity><x>0</x><y>-5</y></velocity>"
-		"<collisions><enabled>true</enabled><collision edge=\"top\"><despawn /></collision></collisions>"
+		"<collisions><collision edge=\"top\"><despawn /></collision></collisions>"
 		"<variables><variable name=\"age\">0</variable></variables>"
 		"<timers><timer><every>0.01</every><inc variable=\"self.age\" /></timer></timers></object>";
 }
@@ -148,9 +148,9 @@ TEST_CASE("<most> caps how many copies exist, and a refused spawn stops what com
 
 TEST_CASE("<fire> and <spawn> of a piece make copies of it", "[spawn]")
 {
-	const Scratch file(box("ship", 300, 400, "<collisions><enabled>true</enabled></collisions>"
+	const Scratch file(box("ship", 300, 400, "<collisions></collisions>"
 		"<actions><action name=\"shoot\"><fire object=\"shot\" /></action></actions>")
-		+ box("rock", 300, 380, "<collisions><enabled>true</enabled><collision object=\"ship\"><spawn object=\"piece\"><count>3</count></spawn><despawn /></collision></collisions>"),
+		+ box("rock", 300, 380, "<collisions><collision object=\"ship\"><spawn object=\"piece\"><count>3</count></spawn><despawn /></collision></collisions>"),
 		"<trigger object=\"ship\" action=\"shoot\" />", {},
 		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
 		"<velocity><x>0</x><y>-6</y></velocity><most>1</most></object>"
@@ -222,12 +222,12 @@ TEST_CASE("a <spawn> with a <count> under 1 stops the load", "[spawn][errors]")
 
 TEST_CASE("other rules and conditions see the copies by the name of what they were copied from", "[spawn]")
 {
-	const Scratch file(box("ship", 300, 400, "<collisions><enabled>true</enabled></collisions>")
-		+ box("target", 0, 0, "<collisions><enabled>true</enabled></collisions><variables><variable name=\"done\">0</variable></variables>"),
+	const Scratch file(box("ship", 300, 400, "<collisions></collisions>")
+		+ box("target", 0, 0, "<collisions></collisions><variables><variable name=\"done\">0</variable></variables>"),
 		"<spawn object=\"rock\"><position><x>300</x><y>380</y></position><velocity><y>4</y></velocity></spawn>",
 		"<conditions><condition object=\"rock\"><remaining>0</remaining><set variable=\"target.done\">1</set></condition></conditions>",
 		"<object name=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-		"<collisions><enabled>true</enabled><collision object=\"ship\"><despawn /></collision></collisions></object>");
+		"<collisions><collision object=\"ship\"><despawn /></collision></collisions></object>");
 	Played play(file.path);
 
 	// None yet: none remaining.

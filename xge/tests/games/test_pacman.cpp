@@ -154,7 +154,7 @@ namespace
 	std::string mapGame(const std::string& objects)
 	{
 		return R"(<game>
-  <window name="t"><width>200</width><height>200</height><background>color.black</background><fullscreen>false</fullscreen><framerate>60</framerate></window>
+  <window name="t"><width>200</width><height>200</height><background>color.black</background><framerate>60</framerate></window>
   <variables><variable name="tile">10</variable></variables>
   <states>
     <state name="playing">

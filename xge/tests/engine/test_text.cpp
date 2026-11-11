@@ -41,7 +41,7 @@ namespace
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"text\"><width>800</width><height>600</height><background>color.black</background>"
-				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"big\">90</variable></variables>"
 				<< styles << "<states><objects>" << objects << "</objects>"
 				"<state name=\"playing\">"

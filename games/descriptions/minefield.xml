@@ -106,7 +106,7 @@
           <cells />
           <object name="mine" class="mine">
             <sprite><circle><radius>4</radius><color>color.black</color></circle></sprite>
-            <drawn>false</drawn>
+            <hidden />
           </object>
         </map>
 

@@ -185,7 +185,7 @@
                 <height>28</height>
               </rectangle>
             </sprite>
-            <drawn>false</drawn>
+            <hidden />
             <collisions />
           </group>
           <!-- a disc floats where Q*bert's feet land, in a box as tall as the

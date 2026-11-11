@@ -96,8 +96,8 @@ TEST_CASE("it is drawn raised by its altitude, and its <shadow> lies under it on
 TEST_CASE("a rule can check how high it is: what flies over goes past", "[altitude]")
 {
 	const Scratch file(box("ball", 100, 100, "<velocity><x>4</x><y>0</y></velocity><altitude><start>30</start></altitude>"
-		"<collisions><enabled>true</enabled><collision object=\"wall\"><condition variable=\"altitude\"><below>10</below></condition><bounce /></collision></collisions>")
-		+ box("wall", 160, 100, "<collisions><enabled>true</enabled></collisions>"), "<set variable=\"ball.altitude\">0</set><reset object=\"wall\" />");
+		"<collisions><collision object=\"wall\"><condition variable=\"altitude\"><below>10</below></condition><bounce /></collision></collisions>")
+		+ box("wall", 160, 100, "<collisions></collisions>"), "<set variable=\"ball.altitude\">0</set><reset object=\"wall\" />");
 	Played play(file.path);
 
 	play.frames(30);

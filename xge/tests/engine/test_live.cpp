@@ -74,7 +74,7 @@ namespace
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"live\"><width>800</width><height>600</height><background>color.black</background>"
-				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				<< (kit.empty() ? std::string{} : "<objects>" + kit + "</objects>") <<
 				"<states><state name=\"playing\"><objects>" << objects << "</objects>"
@@ -164,9 +164,9 @@ TEST_CASE("<spawn> makes a new object where and going as it says, read as it run
 
 TEST_CASE("touch.x and the other numbers of a touch are gone: no name reads them", "[live]")
 {
-	const Scratch file(box("ball", 100, 100, "<velocity><x>20</x><y>0</y></velocity><collisions><enabled>true</enabled>"
+	const Scratch file(box("ball", 100, 100, "<velocity><x>20</x><y>0</y></velocity><collisions>"
 		"<collision object=\"wall\"><set variable=\"marker.x\">touch.x</set><stop /></collision></collisions>")
-		+ box("wall", 200, 95, "<collisions><enabled>true</enabled></collisions>") + box("marker", 0, 0), "<pop />");
+		+ box("wall", 200, 95, "<collisions></collisions>") + box("marker", 0, 0), "<pop />");
 	CHECK_THROWS(Played(file.path));
 }
 
@@ -200,7 +200,7 @@ TEST_CASE("a <tether> is drawn from one object's middle to another's, wherever t
 
 TEST_CASE("a <tether> is in play only while both its ends are", "[live]")
 {
-	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<active>false</active>")
+	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<waiting />")
 		+ "<object name=\"line\"><sprite><tether from=\"rod\" to=\"hook\" /></sprite>"
 		"<position><x>0</x><y>0</y></position></object>", "<reveal object=\"hook\" />");
 	Played play(file.path);
@@ -216,7 +216,7 @@ TEST_CASE("a <tether> is in play only while both its ends are", "[live]")
 TEST_CASE("an object brought back into play starts its timers over", "[live]")
 {
 	// A shot that goes out half a second after it comes in.
-	const Scratch file(box("shot", 100, 100, "<active>false</active><timers><timer><every>0.5</every><die /></timer></timers>"), "<reveal object=\"shot\" />");
+	const Scratch file(box("shot", 100, 100, "<waiting /><timers><timer><every>0.5</every><die /></timer></timers>"), "<reveal object=\"shot\" />");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -263,7 +263,7 @@ TEST_CASE("a group gives its members a <heading>, each turned on its own", "[liv
 
 TEST_CASE("an object out of play does not act on a key", "[live]")
 {
-	const Scratch file(box("gun", 100, 300, "<active>false</active><actions><action name=\"fire\"><fire object=\"shot\" /></action></actions>")
+	const Scratch file(box("gun", 100, 300, "<waiting /><actions><action name=\"fire\"><fire object=\"shot\" /></action></actions>")
 , "<trigger object=\"gun\" action=\"fire\" />",
 		box("shot", 0, 0, "<velocity><x>0</x><y>-4</y></velocity><most>1</most>"));
 	Played play(file.path);

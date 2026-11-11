@@ -178,7 +178,7 @@ Names are dotted, and every dot means "inside":
 | `<width>`, `<height>` | required | the game's size in pixels, plain whole numbers, 1 or more |
 | `<scale>` | 1 | each game pixel drawn this many window pixels across. Mario Bros. is 256 by 224 at `<scale>3</scale>`. The mouse is read back in game pixels |
 | `<background>` | `color.black` | a [colour](#colours) |
-| `<fullscreen>` | `false` | |
+| `<fullscreen />` | a window | the whole screen |
 | `<framerate>` | 60 | frames a second, 1 or more. It is how often the whole engine runs, keys and timers too, so a slow game keeps 60 and steps on a timer |
 
 ## Variables

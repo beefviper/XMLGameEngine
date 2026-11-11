@@ -89,8 +89,8 @@ TEST_CASE("what is <dark> is drawn only while a <light> reaches some part of it,
 
 TEST_CASE("a <dark> object still moves and touches while it is not drawn", "[dark]")
 {
-	const Scratch file(box("ghost", 100, 100, "<velocity><x>5</x><y>0</y></velocity><dark>unlit</dark><collisions><enabled>true</enabled>"
-		"<collision object=\"wall\"><stop /></collision></collisions>") + box("wall", 150, 100, "<collisions><enabled>true</enabled></collisions>"), "<pop />");
+	const Scratch file(box("ghost", 100, 100, "<velocity><x>5</x><y>0</y></velocity><dark>unlit</dark><collisions>"
+		"<collision object=\"wall\"><stop /></collision></collisions>") + box("wall", 150, 100, "<collisions></collisions>"), "<pop />");
 	Played play(file.path);
 	play.frames(20);
 	CHECK(play.get("ghost").inDark);

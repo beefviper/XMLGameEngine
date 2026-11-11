@@ -195,7 +195,7 @@ TEST_CASE("a mass is more than 0, and a knock's bounce 0 up to 1", "[knock]")
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"knock\"><width>800</width><height>600</height><background>color.black</background>"
-				"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
+				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables><states><objects>" << object << "<object name=\"wall\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 				"<position><x>0</x><y>0</y></position></object></objects>"
 				"<state name=\"playing\"><inputs><input button=\"space\"><pop /></input></inputs></state></states></game>";
@@ -215,10 +215,10 @@ TEST_CASE("a mass is more than 0, and a knock's bounce 0 up to 1", "[knock]")
 	CHECK_THROWS_WITH(load("<object name=\"ball\"><sprite><circle><radius>5</radius></circle></sprite><position><x>0</x><y>0</y></position>"
 		"<mass>0</mass></object>"), ContainsSubstring("<mass> is 0; expected more than 0"));
 	CHECK_THROWS_WITH(load("<object name=\"ball\"><sprite><circle><radius>5</radius></circle></sprite><position><x>0</x><y>0</y></position>"
-		"<collisions><enabled>true</enabled><collision object=\"wall\"><knock>2</knock></collision></collisions></object>"),
+		"<collisions><collision object=\"wall\"><knock>2</knock></collision></collisions></object>"),
 		ContainsSubstring("<knock> has a bounce of 2"));
 	CHECK_NOTHROW(load("<object name=\"ball\"><sprite><circle><radius>5</radius></circle></sprite><position><x>0</x><y>0</y></position>"
-		"<mass>2</mass><collisions><enabled>true</enabled><collision object=\"wall\"><knock>0.5</knock></collision></collisions></object>"));
+		"<mass>2</mass><collisions><collision object=\"wall\"><knock>0.5</knock></collision></collisions></object>"));
 }
 
 TEST_CASE("trickshot.xml: the white ball straight into the rack stops, and the rack takes it on", "[knock][trickshot]")

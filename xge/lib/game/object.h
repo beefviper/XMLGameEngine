@@ -548,7 +548,7 @@ namespace xge
 		std::vector<RawSprite> looks;
 		bool isVisible{ true };
 
-		// <drawn>false</drawn>: in play, moving and colliding, but never drawn
+		// <hidden />: in play, moving and colliding, but never drawn
 		// (an exit, a trigger zone).
 		bool isDrawn{ true };
 

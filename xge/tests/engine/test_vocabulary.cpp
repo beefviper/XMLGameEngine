@@ -71,16 +71,16 @@ namespace
 	// each: a game takes it up, or it goes from the schema and this list.
 	const std::map<std::string, std::string> kUnused{
 		{ "absolute", "a <formula>, beside sign and negate" },
-		{ "enabled", "a <collisions> written but off until a rule turns it on; its pair is collisions on by default" },
 		{ "floor", "a <formula>, beside ceiling and round" },
 		{ "framerate", "a window's; 60 when left out" },
-		{ "fullscreen", "a window's; false when left out" },
+		{ "fullscreen", "a window's whole screen; a window when left out" },
 		{ "gap", "a group's, between cells" },
 		{ "image", "a picture file as a sprite, such as a still background" },
 		{ "margin", "a group's, round its cells" },
 		{ "near", "a chase that stops short" },
 		{ "negate", "a <formula>, beside sign and absolute" },
 		{ "odd", "the pair of <even> in rows and columns" },
+		{ "off", "a <collisions> written but off until a rule turns it on; its pair is collisions on by default" },
 		{ "pull", "one object drawn to another" },
 		{ "remainder", "a <formula>" },
 		{ "rise", "a live number, how fast the altitude changes" },

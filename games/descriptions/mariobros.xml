@@ -255,7 +255,7 @@
       <acceleration><x>0</x><y>pull</y></acceleration>
       <mass>1</mass>
       <mirror>left</mirror>
-      <active>false</active>
+      <waiting />
       <collisions>
         <collision edge="horizontal">
           <wrap />
@@ -703,7 +703,7 @@
         <!-- in play only for two players -->
         <object name="luigi" from="brother">
           <position><x>window.width.center + 28</x></position>
-          <active>false</active>
+          <waiting />
           <variables>
             <variable name="lives">0</variable>
           </variables>
@@ -731,12 +731,12 @@
         <object name="score2">
           <sprite><text style="text"><content>II</content><number>luigi.score</number></text></sprite>
           <position><x>window.right - score2.width - 8</x><y>4</y></position>
-          <active>false</active>
+          <waiting />
         </object>
         <object name="lives2">
           <sprite><text style="text"><content>L x</content><number>luigi.lives</number><color>color.green</color></text></sprite>
           <position><x>window.right - lives2.width - 8</x><y>14</y></position>
-          <active>false</active>
+          <waiting />
         </object>
       </objects>
       <scenes>

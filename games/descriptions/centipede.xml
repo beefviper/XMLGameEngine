@@ -159,7 +159,7 @@
                back down and holds the wand in -->
           <group name="line" class="line" char="-">
             <sprite><rectangle><width>cell</width><height>cell</height><color>color.black</color></rectangle></sprite>
-            <drawn>false</drawn>
+            <hidden />
             <collisions />
           </group>
 

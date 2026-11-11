@@ -31,7 +31,7 @@ It had to need no XSLT to load, and pack nothing into strings.
 - **Going to a scene is a command,** `<enter scene>`, run where the move happens (an exit's rule, an edge rule, a condition). A verb rather than a map, since every game already has that place.
 - **What is carried goes along; a scene left keeps its state.** `<reset scene>` starts one again; a new game starts every scene again.
 - **Names are dotted paths** (`playing.room1.walls`). A plain name is looked for inside out: the scene's, the state's, the game's. A name that could be read two ways (shadowing) stops the load. Where a short name ends several paths, the shortest wins.
-- **Being in play is split:** running (moves, times, collides), drawn (running, or under a state that shows it still), and seen (`<drawn>false</drawn>` runs unseen, so an exit zone is an ordinary object).
+- **Being in play is split:** running (moves, times, collides), drawn (running, or under a state that shows it still), and seen (`<hidden />` runs unseen, so an exit zone is an ordinary object).
 - **Information** between scenes goes through the state's own objects; between states, a look of the end state's object picked by the condition that pushes it.
 
 ## How it was built

@@ -35,7 +35,7 @@ namespace invaders_fixture
     <width>1024</width>
     <height>768</height>
     <background>color.black</background>
-    <fullscreen>false</fullscreen>
+    
     <framerate>60</framerate>
   </window>
   <variables>
@@ -85,7 +85,7 @@ namespace invaders_fixture
           <y>0</y>
         </velocity>
         <collisions>
-          <enabled>true</enabled>
+          
           <collision edge="horizontal">
             <stick />
           </collision>
@@ -124,8 +124,8 @@ namespace invaders_fixture
           <y>0</y>
         </velocity>
         <collisions>
-          <enabled>true</enabled>
-          <lockstep>true</lockstep>
+          
+          <lockstep />
           <collision edge="horizontal">
             <bounce />
             <move direction="down">10</move>
@@ -152,7 +152,7 @@ namespace invaders_fixture
           <y>0</y>
         </velocity>
         <collisions>
-          <enabled>false</enabled>
+          <off />
         </collisions>
       </object>
       <object name="youwin">
@@ -172,7 +172,7 @@ namespace invaders_fixture
           <y>0</y>
         </velocity>
         <collisions>
-          <enabled>false</enabled>
+          <off />
         </collisions>
       </object>
       <object name="continue">
@@ -192,7 +192,7 @@ namespace invaders_fixture
           <y>0</y>
         </velocity>
         <collisions>
-          <enabled>false</enabled>
+          <off />
         </collisions>
       </object>
       <object name="settings">
@@ -212,7 +212,7 @@ namespace invaders_fixture
           <y>0</y>
         </velocity>
         <collisions>
-          <enabled>false</enabled>
+          <off />
         </collisions>
       </object>
       <object name="paused">
@@ -232,7 +232,7 @@ namespace invaders_fixture
           <y>0</y>
         </velocity>
         <collisions>
-          <enabled>false</enabled>
+          <off />
         </collisions>
       </object>
     </objects>
