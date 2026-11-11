@@ -10,7 +10,8 @@
 
 namespace xge
 {
-	// <thrust>: A push the way it faces while held.
+	// <thrust>: A push while held, the way it faces, or with direction= one
+	// way across the screen whatever its heading.
 	static void readThrust(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
 		command.amount = readValue(node, where);
@@ -18,20 +19,27 @@ namespace xge
 
 	static Command makeThrust(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
+		if (!raw.direction.empty()) { return CmdThrustAcross{ directionFromName(raw.direction, raw.verb), evaluate(raw.amount), raw.burn }; }
 		return CmdThrust{ evaluate(raw.amount), raw.burn };
 	}
 
 	static bool runThrust(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
+		if (!doer.self || !doer.action) { return true; }
+		if (const auto* way = std::get_if<CmdThrustAcross>(&command))
+		{
+			executor.applyActionThrust(*doer.self, way->direction, doer.pressed ? way->amount : 0.0f, way->burn);
+			return true;
+		}
 		const CmdThrust& thrust = std::get<CmdThrust>(command);
-		if (doer.self && doer.action) { executor.applyActionThrustAhead(*doer.self, *doer.action, doer.pressed ? thrust.amount : 0.0f, thrust.burn); }
+		executor.applyActionThrustAhead(*doer.self, *doer.action, doer.pressed ? thrust.amount : 0.0f, thrust.burn);
 		return true;
 	}
 
 	extern const Verb thrustVerb;
 	const Verb thrustVerb{
 		.name = "thrust",
-		.forms = { { "<thrust>", places::controls, kindOf<CmdThrust>() } },
+		.forms = { { "<thrust>", places::controls, kindOf<CmdThrust>() }, { "<thrust direction>", places::controls, kindOf<CmdThrustAcross>() } },
 		.formOf = nullptr,
 		.onRelease = true,
 		.read = readThrust,

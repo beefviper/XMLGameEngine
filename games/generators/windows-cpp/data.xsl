@@ -385,7 +385,7 @@
             <xsl:with-param name="node" select="$node/wait" />
           </xsl:call-template>
         </xsl:when>
-        <xsl:when test="$verb = 'hop' or $verb = 'accelerate' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'jump' or $verb = 'climb' or $verb = 'go' or $verb = 'set'">
+        <xsl:when test="$verb = 'hop' or $verb = 'turn' or $verb = 'thrust' or $verb = 'deflect' or $verb = 'jump' or $verb = 'climb' or $verb = 'go' or $verb = 'set'">
           <xsl:text> command.amount = </xsl:text>
           <xsl:call-template name="value">
             <xsl:with-param name="node" select="$node" />

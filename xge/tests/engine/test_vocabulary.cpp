@@ -71,7 +71,6 @@ namespace
 	// each: a game takes it up, or it goes from the schema and this list.
 	const std::map<std::string, std::string> kUnused{
 		{ "absolute", "a <formula>, beside sign and negate" },
-		{ "accelerate", "the way to push without a heading" },
 		{ "floor", "a <formula>, beside ceiling and round" },
 		{ "framerate", "a window's; 60 when left out" },
 		{ "fullscreen", "a window's; false when left out" },

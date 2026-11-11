@@ -1589,7 +1589,7 @@ namespace xge
 
 		// Per-direction thrust currently being held for this object, the way
 		// activeMoveStep holds a <move>'s step, and the variable (if any) each
-		// one burns; set by an <accelerate> in an action, cleared when the key
+		// one burns; set by a <thrust direction> in an action, cleared when the key
 		// is let go.
 		std::array<float, 4> activeThrust{};
 		std::array<std::string, 4> activeThrustBurn{};

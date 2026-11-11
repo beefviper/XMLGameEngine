@@ -21,7 +21,7 @@ namespace xge
 	// Touching.
 	extern const Verb bounceVerb, deflectVerb, knockVerb, stickVerb, wrapVerb, holeVerb, rideVerb, carryVerb, landVerb, throughVerb, shoveVerb, mergeVerb;
 	// Moving.
-	extern const Verb moveVerb, hopVerb, jumpVerb, climbVerb, goVerb, accelerateVerb, turnVerb, thrustVerb, swingVerb, stopVerb, reverseVerb, trackVerb, followVerb, shiftVerb;
+	extern const Verb moveVerb, hopVerb, jumpVerb, climbVerb, goVerb, turnVerb, thrustVerb, swingVerb, stopVerb, reverseVerb, trackVerb, followVerb, shiftVerb;
 	// Steering.
 	extern const Verb chaseVerb, aimVerb, huntVerb, wanderVerb;
 	// In and out of play.
@@ -43,7 +43,7 @@ namespace xge
 	{
 		static const std::vector<const Verb*> verbs{
 			&bounceVerb, &deflectVerb, &knockVerb, &stickVerb, &wrapVerb, &holeVerb, &rideVerb, &carryVerb, &landVerb, &throughVerb, &shoveVerb, &mergeVerb,
-			&moveVerb, &hopVerb, &jumpVerb, &climbVerb, &goVerb, &accelerateVerb, &turnVerb, &thrustVerb, &swingVerb, &stopVerb, &reverseVerb, &trackVerb, &followVerb, &shiftVerb,
+			&moveVerb, &hopVerb, &jumpVerb, &climbVerb, &goVerb, &turnVerb, &thrustVerb, &swingVerb, &stopVerb, &reverseVerb, &trackVerb, &followVerb, &shiftVerb,
 			&chaseVerb, &aimVerb, &huntVerb, &wanderVerb,
 			&dieVerb, &resetVerb, &spawnVerb, &despawnVerb, &fireVerb, &releaseVerb, &revealVerb, &dropVerb,
 			&incVerb, &decVerb, &setVerb, &copyVerb, &countVerb, &rankVerb,
@@ -111,6 +111,7 @@ namespace xge
 		command.verb = node.getName();
 
 		const Verb* verb = findVerb(command.verb);
+		if (!verb && command.verb == "accelerate") { fail(where, "<accelerate direction=...> is now <thrust direction=...>"); }
 		if (!verb) { fail(where, "unknown command <" + command.verb + ">"); }
 
 		// The names any command may have, each an attribute.

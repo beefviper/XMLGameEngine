@@ -565,7 +565,7 @@ TEST_CASE("a thrust held across a pause is still held afterwards", "[asteroids][
 	Field field;
 	field.clearTheMiddle();
 
-	// The same resume as for accelerate: the key was down when the state changed.
+	// The same resume as for a thrust one way: the key was down when the state changed.
 	field.key("thrust", true);
 	field.frames(2);
 

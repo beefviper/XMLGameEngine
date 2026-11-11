@@ -1211,12 +1211,12 @@
     </xs:choice>
   </xs:group>
 
-  <!-- accelerate: a direction, how much to add to the velocity each frame, and optionally the variable it burns. -->
+  <!-- thrust: how much to add to the velocity each frame while held, the way it faces (its heading), or with direction= one way across the screen; and optionally the variable it burns. -->
   <xs:complexType name="thrustType" mixed="true">
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="direction" type="directionType" use="required" />
+    <xs:attribute name="direction" type="directionType" use="optional" />
     <xs:attribute name="burn" type="xs:string" use="optional" />
   </xs:complexType>
 
@@ -1240,13 +1240,6 @@
   </xs:complexType>
 
   <!-- thrust: how much to add to the velocity each frame along the heading, and optionally the variable it burns. -->
-  <xs:complexType name="aheadType" mixed="true">
-    <xs:sequence>
-      <xs:group ref="valueTag" minOccurs="0" />
-    </xs:sequence>
-    <xs:attribute name="burn" type="xs:string" use="optional" />
-  </xs:complexType>
-
   <!-- release: the objects (a pool, a group) to put back in play, and how many (one if left out). -->
   <xs:complexType name="releaseType" mixed="true">
     <xs:sequence>
@@ -1707,13 +1700,12 @@
   <!-- controls: how an object moves when its action is asked for -->
   <xs:group name="controlsCommands">
     <xs:choice>
-      <xs:element name="accelerate" type="thrustType" />
       <xs:element name="climb" type="climbType" />
       <xs:element name="go" type="goType" />
       <xs:element name="jump" type="valueType" />
       <!-- swing: held, the heading turns <degrees> that way in one eased stroke <seconds> long; let go, back to the heading it started with -->
       <xs:element name="swing" type="swingType" />
-      <xs:element name="thrust" type="aheadType" />
+      <xs:element name="thrust" type="thrustType" />
       <xs:element name="turn" type="turnType" />
       <!-- track: where a control points; path= along that path instead of across the window; on cells, <onto>s: the cell nearest the pointer holding one of those classes -->
       <xs:element name="track">

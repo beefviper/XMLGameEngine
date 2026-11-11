@@ -244,7 +244,7 @@ namespace xge
 				object.activeClimb[climb->direction == Direction::Up ? 0 : 1] = climb->step;
 				object.climbClass = climb->ladderClass;
 			}
-			else if (const auto* thrust = std::get_if<CmdAccelerate>(&actionCommand))
+			else if (const auto* thrust = std::get_if<CmdThrustAcross>(&actionCommand))
 			{
 				applyActionThrust(object, thrust->direction, thrust->amount, thrust->burn);
 			}

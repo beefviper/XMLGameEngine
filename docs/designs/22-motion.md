@@ -27,7 +27,7 @@
 ## Gravity and thrust
 
 - **Gravity is a property of the object** (`<acceleration>`), not a world setting: most games want some things to float.
-- **Thrust is a held verb that burns a variable:** `<accelerate burn="fuel">` adds every frame while held and stops at 0. Rejected: a plain rule on the key (needs "while held" and "until empty" spelled out).
+- **Thrust is a held verb that burns a variable:** `<thrust burn="fuel">` adds every frame while held and stops at 0; along the heading, or with `direction=` one way across the screen (once `<accelerate>`, a second word for the same push). Rejected: a plain rule on the key (needs "while held" and "until empty" spelled out).
 - `<stop />` clears velocity, acceleration and held thrust, so a landed lander stays landed.
 
 ## Headings

@@ -241,13 +241,13 @@ namespace xge
 			},
 			[&](const CmdWander& w) { o << "wander(" << w.speed << ")"; },
 			[&](const CmdAim& a) { o << "aim(" << a.target << (a.lined ? ", lined " + std::to_string(a.within) : std::string()) << ")"; },
-			[&](const CmdAccelerate& a)
+			[&](const CmdThrustAcross& a)
 			{
 				const char* direction = (a.direction == Direction::Up) ? "up"
 					: (a.direction == Direction::Down) ? "down"
 					: (a.direction == Direction::Left) ? "left"
 					: "right";
-				o << "accelerate." << direction << "(" << a.amount << (a.burn.empty() ? "" : ", burn " + a.burn) << ")";
+				o << "thrust." << direction << "(" << a.amount << (a.burn.empty() ? "" : ", burn " + a.burn) << ")";
 			},
 			[&](const CmdTurn& t) { o << "turn." << (t.direction == Direction::Left ? "counterclockwise" : "clockwise") << "(" << t.rate << ")"; },
 			[&](const CmdSwing& s) { o << "swing(" << s.by << " degrees, " << s.seconds << "s)"; },
@@ -493,7 +493,7 @@ namespace xge
 			o << (command.byHops ? "(" + command.object + ", by hops of " : "." + command.direction + "(") << command.amount << ", " << command.positionX << " " << command.positionY
 				<< ", " << command.seconds << ")";
 		}
-		else if (command.verb == "move" || command.verb == "accelerate" || command.verb == "turn" || command.verb == "go")
+		else if (command.verb == "move" || command.verb == "turn" || command.verb == "go")
 		{
 			o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
 			if (command.verb == "move" && !(command.seconds.kind == RawValue::Kind::Expression && command.seconds.text.empty())) { o << "(wait " << command.seconds << ")"; }

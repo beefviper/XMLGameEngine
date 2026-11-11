@@ -447,14 +447,14 @@ namespace xge
 	// or anything bouncing back off something it has no edge to bounce from.
 	struct CmdReverse {};
 
-	// <accelerate direction="up" burn="fuel">0.04</accelerate> - only ever in an
+	// <thrust direction="up" burn="fuel">0.04</thrust> - only ever in an
 	// object's own <action>: while the key is held the object's velocity
 	// changes by `amount` every frame in that direction (a thruster), where
 	// <move> would set the velocity itself. burn names one of the object's own
 	// <variable>s that one is taken off every frame the thrust is on, and the
 	// thrust does nothing while it is at 0 or below (fuel); empty means free
 	// (see playOneFrame).
-	struct CmdAccelerate
+	struct CmdThrustAcross
 	{
 		Direction direction{};
 		float amount{};
@@ -473,8 +473,8 @@ namespace xge
 
 	// <thrust burn="fuel">0.12</thrust> - only ever in an object's own <action>:
 	// while the key is held the object's velocity changes by `amount` every
-	// frame along the way it is facing (its heading), where <accelerate> pushes
-	// along an axis. burn works as it does for <accelerate>.
+	// frame along the way it is facing (its heading), where <thrust direction> pushes
+	// along an axis. burn works as it does there.
 	struct CmdThrust
 	{
 		float amount{};
@@ -508,7 +508,7 @@ namespace xge
 
 	// <stop /> - in a collision rule: the object comes to rest where it is and
 	// stays there. Its velocity goes to 0, it is no longer pulled by its
-	// <acceleration> or pushed by a held <accelerate>, until a reset gives
+	// <acceleration> or pushed by a held <thrust>, until a reset gives
 	// those back. A landing.
 	struct CmdStop {};
 
@@ -866,7 +866,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
-		CmdMove, CmdHop, CmdHuntHop, CmdLand, CmdJump, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdAccelerate, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdHuntHop, CmdLand, CmdJump, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdThrustAcross, CmdTurn, CmdThrust, CmdSwing, CmdRelease, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdShove, CmdMerge, CmdUndo, CmdWhen, CmdPick, CmdPlace, CmdPut, CmdOrder, CmdCount, CmdThink, CmdCall, CmdLive>;
 
 	struct LoadedCommand
@@ -1040,8 +1040,8 @@ namespace xge
 		std::string into;      // copy (the one written)
 		std::string state;     // push
 		std::string action;    // trigger
-		std::string direction; // move, hop, accelerate, turn, climb
-		std::string burn;      // accelerate, thrust
+		std::string direction; // move, hop, thrust, turn, climb
+		std::string burn;      // thrust
 		std::string sound;     // play
 		std::string sprite;    // become
 		std::string style;     // become: the palette its bitmaps take
@@ -1062,7 +1062,7 @@ namespace xge
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
 		std::string pile;      // call: pile=, the pile whose wild card the suit is called for
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
-		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, accelerate, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (height), climb, go, hunt and wander (the speed)
+		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), release (how many), jump (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)
 		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
 		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)

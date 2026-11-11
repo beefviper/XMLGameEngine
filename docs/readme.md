@@ -73,7 +73,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 
 | Family | Words | Page |
 |---|---|---|
-| moving | `move`, `hop`, `jump`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `swing`, `reverse`, `stop`, `track` | [moving](reference/commands.md#moving) |
+| moving | `move`, `hop`, `jump`, `land`, `climb`, `thrust`, `turn`, `swing`, `reverse`, `stop`, `track` | [moving](reference/commands.md#moving) |
 | steering | `aim`, `chase`, `hunt`, `wander`, `follow`, `go` | [steering](reference/commands.md#steering), [paths](reference/timers.md#paths), [mazes](reference/maps.md#walking-a-map) |
 | touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `hole` | [touching](reference/commands.md#touching), [knocks](reference/collisions.md#knocks) |
 | in and out of play | `die`, `reveal`, `fire`, `release`, `drop`, `spawn`, `despawn`, `reset` | [in and out of play](reference/commands.md#in-and-out-of-play), [spawn](reference/objects.md#spawn-and-despawn) |

@@ -15,7 +15,7 @@ Commands are sorted by what they need. Each place takes only the groups that mea
 | touch | `carry`, `deflect`, `hole`, `knock`, `land`, `ride`; on cells `shove`, `merge`, `through` | another object touched |
 | edge | `stick`, `wrap` | a screen edge |
 | bounce | `bounce` | a screen edge or another object |
-| controls | `accelerate`, `climb`, `go`, `hop`, `jump`, `swing`, `thrust`, `turn`, `track` | a key held or pressed |
+| controls | `climb`, `go`, `hop`, `jump`, `swing`, `thrust`, `turn`, `track` | a key held or pressed |
 | cells | `clear`, `collapse`, `fall` | what a [map's check](maps.md#checks) found |
 | press | `hold`, `think` | a [computer player](states.md#computer-players) |
 
@@ -50,8 +50,8 @@ An object out of play does nothing when its action is pressed or triggered; lett
 | `<jump>height</jump>` | a jump up under its own pull to about that height; only from the ground, fixed sideways until a `<land />`. Needs an acceleration down and a `<land />` rule |
 | `<land />` | in a rule: coming down onto the other's top, it stands there. Any other side, or going up, does nothing (one-way platforms) |
 | `<climb direction="up" class="ladder">step</climb>` | held: at an object of that class, gets on, lines up and climbs; at an end steps off onto what it lands on, or holds there if nothing is. Stacked pieces are one ladder. Run by a rule or timer, it takes one ladder and lets go |
-| `<accelerate direction="up" burn="fuel">amount</accelerate>` | held: adds to the velocity every frame; `burn` takes 1 off its own variable each frame and stops at 0 |
-| `<thrust burn="fuel">amount</thrust>` | held: the same along its `<heading>` |
+| `<thrust burn="fuel">amount</thrust>` | held: adds to the velocity every frame along its `<heading>`; `burn` takes 1 off its own variable each frame and stops at 0 |
+| `<thrust direction="up">amount</thrust>` | held: the same one way across the screen, whatever its heading (it needs none) |
 | `<turn direction="clockwise">degrees</turn>` | held: turns the heading that much a frame |
 | `<swing direction="counterclockwise"><degrees>60</degrees><seconds>0.1</seconds></swing>` | held: one eased, swept stroke, and back when let go ([turning about a pivot](pictures.md#turning-about-a-pivot)) |
 | `<reverse />` | the velocity turns round |

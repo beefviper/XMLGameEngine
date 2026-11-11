@@ -174,7 +174,7 @@ TEST_CASE("verbs: the keys that act when let go", "[verbs]")
 	{
 		if (verb->onRelease) { held.insert(verb->name); }
 	}
-	CHECK(held == std::set<std::string>{ "move", "climb", "accelerate", "turn", "thrust", "swing", "play", "trigger" });
+	CHECK(held == std::set<std::string>{ "move", "climb", "turn", "thrust", "swing", "play", "trigger" });
 }
 
 TEST_CASE("verbs: a generated program is given every verb's file", "[verbs]")

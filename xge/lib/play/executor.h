@@ -63,7 +63,7 @@ namespace xge
 		bool executeTimer(const Command& command, Object* owner);
 
 		// A key that was already down when a state began: applies only the
-		// continuous part of its binding (an action's move.* and accelerate.*,
+		// continuous part of its binding (an action's move.* and thrust.*,
 		// a sound that loops) and returns true
 		// if the command was one of those. One-shot commands (state changes,
 		// fire) are left alone, since the key was never pressed in this state.

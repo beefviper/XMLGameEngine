@@ -78,7 +78,6 @@
   <file>lib/verbs/jump.cpp</file>
   <file>lib/verbs/climb.cpp</file>
   <file>lib/verbs/go.cpp</file>
-  <file>lib/verbs/accelerate.cpp</file>
   <file>lib/verbs/turn.cpp</file>
   <file>lib/verbs/thrust.cpp</file>
   <file>lib/verbs/swing.cpp</file>

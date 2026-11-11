@@ -191,7 +191,7 @@ namespace xge
 				if (form && (form->places & in(place))) { continue; }
 
 				std::string hint;
-				if (place == Place::Input && (tag == "<move>" || tag == "<fire>" || tag == "<hop>" || tag == "<jump>" || tag == "<climb>" || tag == "<accelerate>"))
+				if (place == Place::Input && (tag == "<move>" || tag == "<fire>" || tag == "<hop>" || tag == "<jump>" || tag == "<climb>"))
 				{
 					hint = " A key moves or fires an object through one of its <action>s: <trigger object=\"...\" action=\"...\" />.";
 				}

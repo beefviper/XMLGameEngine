@@ -231,7 +231,7 @@ namespace xge
 		// falling; on the ground standing, walking, or, with a <grip> below 1,
 		// skidding while it slides another way to the one its keys ask for.
 		// Thrusting, before any of those, while a held <thrust> or
-		// <accelerate> is on.
+		// <thrust direction> is on.
 		Object::Pose poseOf(const Object& object)
 		{
 			if (!object.activeThrustAheadBy.empty()
@@ -288,7 +288,7 @@ namespace xge
 		}
 
 		// A constant pull (<acceleration>, gravity being one with only a y)
-		// and held thrust (<accelerate>) both change an object's velocity,
+		// and held thrust (<thrust direction>) both change an object's velocity,
 		// once a frame, before it is moved. Thrust that burns a variable takes
 		// 1 off it every frame it is on, and does nothing while the variable
 		// is at 0 or below: a ship out of fuel still falls.

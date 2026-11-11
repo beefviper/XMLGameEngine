@@ -7,7 +7,7 @@
 // drawn into a bitmap when the game loads, a sprite made of them, and a
 // collision that sweeps the bounding boxes first and then asks whether pixels
 // really touch. Also the other things Lunar Lander needed that are small
-// enough to test here: <acceleration>, <accelerate>, <stop /> and a
+// enough to test here: <acceleration>, <thrust direction>, <stop /> and a
 // collision rule's condition on the speed as the touch happened.
 //
 // Objects for the geometry tests are built by hand; small games are written to
@@ -524,8 +524,8 @@ namespace
 		"<collision object=\"floor\"><condition variable=\"speed\"><atleast>3</atleast></condition><inc variable=\"ship.crashed\" /><stop /></collision>"
 		"</collisions>"
 		"<actions>"
-		"<action name=\"burn\"><accelerate direction=\"up\" burn=\"fuel\">1.5</accelerate></action>"
-		"<action name=\"free\"><accelerate direction=\"right\">0.25</accelerate></action>"
+		"<action name=\"burn\"><thrust direction=\"up\" burn=\"fuel\">1.5</thrust></action>"
+		"<action name=\"free\"><thrust direction=\"right\">0.25</thrust></action>"
 		"</actions>"
 		"<variables><variable name=\"fuel\">3</variable><variable name=\"landed\">0</variable><variable name=\"crashed\">0</variable></variables>"
 		"</object>"
@@ -579,7 +579,7 @@ TEST_CASE("only what is shown is pulled", "[acceleration]")
 	CHECK(flight.ship().velocity.y == 0.0f);
 }
 
-TEST_CASE("accelerate adds to the velocity while the key is held and stops when it is let go", "[acceleration]")
+TEST_CASE("thrust one way adds to the velocity while the key is held and stops when it is let go", "[acceleration]")
 {
 	Flight flight;
 	flight.ship().acceleration = {};
@@ -731,13 +731,13 @@ TEST_CASE("the new tags read back the way they were written", "[rules][xml]")
 	CHECK(ship.collisionData.others[1].check);
 
 	REQUIRE(ship.action.at("burn").size() == 1);
-	const auto* burn = std::get_if<CmdAccelerate>(&ship.action.at("burn")[0]);
+	const auto* burn = std::get_if<CmdThrustAcross>(&ship.action.at("burn")[0]);
 	REQUIRE(burn);
 	CHECK(burn->direction == Direction::Up);
 	CHECK(burn->amount == 1.5f);
 	CHECK(burn->burn == "fuel");
 
-	const auto* free = std::get_if<CmdAccelerate>(&ship.action.at("free")[0]);
+	const auto* free = std::get_if<CmdThrustAcross>(&ship.action.at("free")[0]);
 	REQUIRE(free);
 	CHECK(free->burn.empty());
 
