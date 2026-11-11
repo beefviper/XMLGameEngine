@@ -56,27 +56,27 @@
       </object>
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
       </object>
     </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>FOUR IN A ROW</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-170</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>3</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>you play red, and go first; 2 for two players</content></text></sprite></row>
           <row number="2"><sprite><text><content>four in a line, across, down or on a slant, wins</content></text></sprite></row>
           <row number="3"><sprite><text><content>a d or the arrows move, spacebar or a click drops, p pauses</content></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -243,7 +243,7 @@
           <sprite name="red"><text style="banner"><content>RED WINS</content><color>color.red</color></text></sprite>
           <sprite name="yellow"><text style="banner"><content>YELLOW WINS</content></text></sprite>
           <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
       </objects>
       <shows>

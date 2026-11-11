@@ -76,13 +76,13 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>HEARTS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 190</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-190</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>4</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>follow the suit led if you can; the highest card of it takes the trick.</content></text></sprite></row>
           <row number="2"><sprite><text><content>each heart taken is a point, the queen of spades thirteen: keep them low.</content></text></sprite></row>
           <row number="3"><sprite><text><content>take them all and the others get 26. at 100, the lowest score wins.</content></text></sprite></row>
@@ -90,7 +90,7 @@
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -131,7 +131,7 @@
         </object>
         <object name="eastcards" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>window.width.center * 2 - cardwidth - 24</x><y>siderow</y></position>
+          <position><x>window.width - cardwidth - 24</x><y>siderow</y></position>
           <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
 
@@ -164,7 +164,7 @@
         </object>
         <object name="eastscore">
           <sprite><text style="note"><content>east</content><number>east.score</number><content>+</content><number>east.got</number><choose><by>east.turn</by><word /><word>to play</word></choose></text></sprite>
-          <position><x>window.width.center * 2 - 200</x><y>siderow - 34</y></position>
+          <position><x>window.width - 200</x><y>siderow - 34</y></position>
         </object>
         <object name="yourscore">
           <sprite><text style="note"><content>you</content><number>you.score</number><content>+</content><number>you.got</number><choose><by>you.turn</by><word /><word>your turn: play a card</word></choose></text></sprite>
@@ -262,7 +262,7 @@
           <member name="you"><position><x>53</x><y>yours - 3</y></position><owns object="mine" /></member>
           <member name="west"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>21</x><y>siderow - 3</y></position><owns object="westcards" /><think button="space"><avoid /></think></member>
           <member name="north"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>window.width.center - cardwidth / 2 - 147</x><y>northrow - 3</y></position><owns object="northcards" /><think button="space"><avoid /></think></member>
-          <member name="east"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>window.width.center * 2 - cardwidth - 27</x><y>siderow - 3</y></position><owns object="eastcards" /><think button="space"><avoid /></think></member>
+          <member name="east"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>window.width - cardwidth - 27</x><y>siderow - 3</y></position><owns object="eastcards" /><think button="space"><avoid /></think></member>
         </group>
       </objects>
       <!-- the cards start in the stock, shuffled and dealt thirteen to each player -->
@@ -346,11 +346,11 @@
       <objects>
         <object name="paused">
           <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="newgame">
           <sprite><text style="prompt"><content>n for a new game</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -368,7 +368,7 @@
           <sprite name="west"><text style="banner"><content>WEST WINS</content></text></sprite>
           <sprite name="north"><text style="banner"><content>NORTH WINS</content></text></sprite>
           <sprite name="east"><text style="banner"><content>EAST WINS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <!-- a cheer if it is you, else a groan -->
           <timers>
             <timer sprite="you"><after>0.01</after><play sound="win" /></timer>
@@ -379,7 +379,7 @@
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>

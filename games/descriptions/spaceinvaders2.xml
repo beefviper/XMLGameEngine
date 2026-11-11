@@ -172,7 +172,7 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>SPACE INVADERS</content><size>110</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 100</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-100</offset></centered></y></position>
         </object>
         <object name="table">
           <sprite><text style="hud"><content>squid 30   crab 20   octopus 10   saucer ?</content><size>28</size></text></sprite>

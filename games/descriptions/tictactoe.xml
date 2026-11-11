@@ -64,30 +64,30 @@
       </object>
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
       </object>
     </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>TIC-TAC-TOE</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-170</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>2</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>you play x, and go first; 2 for two players</content></text></sprite></row>
           <row number="2"><sprite><text><content>w a s d or the arrows move, spacebar or a click marks, p pauses</content></text></sprite></row>
         </group>
         <object name="level">
           <sprite><text style="help"><content>a d: the computer plays </content><choose><by>options.smart</by><word>easy</word><word>smart</word></choose></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>10</offset></centered></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -266,7 +266,7 @@
           <sprite name="x"><text style="banner"><content>X WINS</content><color>color.red</color></text></sprite>
           <sprite name="o"><text style="banner"><content>O WINS</content><color>color.cyan</color></text></sprite>
           <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.yellow</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
       </objects>
       <shows>

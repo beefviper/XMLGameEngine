@@ -674,7 +674,8 @@ namespace xge
 			const auto center = [&](RawValue& value, const char* windowMiddle, const char* size)
 			{
 				if (value.kind != RawValue::Kind::Centered) { return; }
-				const std::string middle = value.text.empty() ? windowMiddle : "(" + value.text + ")";
+				const std::string middle = !value.offset.empty() ? std::string(windowMiddle) + " + (" + value.offset + ")"
+					: value.text.empty() ? windowMiddle : "(" + value.text + ")";
 				const bool live = value.live;
 				value = RawValue::expression(middle + " - " + object.name + "." + size + " / 2");
 				value.live = live;

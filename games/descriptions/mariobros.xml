@@ -556,7 +556,7 @@
     <!-- PHASE n, for a moment as a phase starts -->
     <object name="label">
       <sprite><text style="text"><content>PHASE</content><number>phase</number></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center - 24</centered></y></position>
+      <position><x><centered /></x><y><centered><offset>-24</offset></centered></y></position>
       <timers>
         <timer>
           <after>2.5</after>
@@ -572,7 +572,7 @@
     <objects>
       <object name="again">
         <sprite><text style="text"><content>space to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>30</offset></centered></y></position>
       </object>
       <!-- the best score, kept from game to game -->
       <object name="best">
@@ -594,13 +594,13 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>MARIO BROS.</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 56</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-56</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>4</rows>
           <padding><y>12</y></padding>
           <sprite><text style="text" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 12</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-12</offset></centered></y></position>
           <row number="1"><sprite><text><content>bump a shellcreeper from below</content></text></sprite></row>
           <row number="2"><sprite><text><content>then kick it off</content></text></sprite></row>
           <row number="3"><sprite><text><content>a d walk, w or space jumps</content><color>color.lightgrey</color></text></sprite><padding><y>20</y></padding></row>
@@ -832,7 +832,7 @@
           <objects>
             <object name="label">
               <sprite><text style="text"><content>TEST YOUR SKILL!</content></text></sprite>
-              <position><x><centered /></x><y><centered>window.height.center - 24</centered></y></position>
+              <position><x><centered /></x><y><centered><offset>-24</offset></centered></y></position>
             </object>
             <!-- the time left, a named timer read as clock.left -->
             <object name="clock">
@@ -1051,7 +1051,7 @@
         <object name="message">
           <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>GAME OVER</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
         </object>
       </objects>
       <shows>

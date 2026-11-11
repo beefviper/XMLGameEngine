@@ -9,7 +9,7 @@
       pitch, to, keys. These are labels, and they cannot be computed.
     * Everything else is the content of an element. Wherever the content is a
       number (valueType below) it is either a math expression written out as
-      text - window.width.center - title.width / 2 - or a single value tag that
+      text - window.width - score.width - or a single value tag that
       makes the number, such as <random><min>-7</min><max>7</max></random>. To add a new kind
       of value, add it to the valueTag group and teach load/xml and load/expr
       about it; every place that takes a value takes it.
@@ -2121,21 +2121,30 @@
   <!--
     Where an object starts: a value, or <centered>, its middle at the
     expression it holds, less half its own width (or height); left empty, at
-    the window's middle: <x><centered /></x>, <y><centered>cell / 2</centered></y>.
+    the window's middle; with an <offset>, that far from the window's middle
+    (right or down, a negative number left or up): <x><centered /></x>,
+    <y><centered><offset>-60</offset></centered></y>, <y><centered>cell / 2</centered></y>.
   -->
   <xs:complexType name="positionValueType" mixed="true">
     <xs:choice minOccurs="0">
       <xs:group ref="valueTag" />
-      <xs:element name="centered" type="xs:string" />
+      <xs:element name="centered" type="centeredType" />
     </xs:choice>
     <xs:attribute name="update" type="updateType" use="optional" />
+  </xs:complexType>
+
+  <!-- <centered>: where the middle goes as text, or one <offset> from the window's middle. -->
+  <xs:complexType name="centeredType" mixed="true">
+    <xs:sequence>
+      <xs:element name="offset" type="xs:string" minOccurs="0" />
+    </xs:sequence>
   </xs:complexType>
 
   <!-- Where a <spawn> puts its copy: worked out as it spawns. -->
   <xs:complexType name="placeValueType" mixed="true">
     <xs:choice minOccurs="0">
       <xs:group ref="valueTag" />
-      <xs:element name="centered" type="xs:string" />
+      <xs:element name="centered" type="centeredType" />
     </xs:choice>
   </xs:complexType>
   <xs:complexType name="spawnPositionType">

@@ -891,9 +891,10 @@ namespace xge
 	//   * a <formula>: arithmetic as one operation whose operands are
 	//     themselves numbers, operations included (Formula);
 	//   * in a <position> only, <centered>: the object's middle at the
-	//     expression it holds (the window's middle when empty), on that axis
-	//     (Centered). centerOnOwnSize makes it an Expression once the
-	//     object's name is final, so nothing evaluates it as it is.
+	//     expression it holds, or that <offset> from the window's middle
+	//     (the window's middle when empty), on that axis (Centered).
+	//     centerOnOwnSize makes it an Expression once the object's name is
+	//     final, so nothing evaluates it as it is.
 	// load/expr evaluates it (see load/expr::evaluate), so a new kind of value
 	// tag is one more Kind here, one more case in load/xml's readValue and one
 	// more in load/expr's evaluate.
@@ -906,6 +907,11 @@ namespace xge
 		// Expression: the expression. Centered: where the middle goes, or
 		// empty. Otherwise unused.
 		std::string text;
+
+		// Centered with an <offset>: how far from the window's middle the
+		// object's middle goes (right or down; negative, left or up), an
+		// expression. `text` is then empty. Otherwise empty.
+		std::string offset;
 
 		// Random: the two ends, each itself an expression.
 		std::string min;

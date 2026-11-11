@@ -21,7 +21,7 @@ An object is anything drawn, moved or touched. `name` is required; `class` is op
 |---|---|
 | `<sprite>` | what it looks like: one [shape](pictures.md#sprites). Several named sprites are [looks](pictures.md#looks) or [animation](pictures.md#animation) frames |
 | `<animation>` | which sprites show, in what order, for how long |
-| `<position>` | where it starts, `<x>` and `<y>` from the top left. `<centered>value</centered>` puts its middle there instead (empty: the window's middle). A half written `update="live"` [follows](format.md#live-numbers-of-an-object) what it reads every frame. Required unless it has no sprite |
+| `<position>` | where it starts, `<x>` and `<y>` from the top left. `<centered>value</centered>` puts its middle there instead (empty: the window's middle); `<centered><offset>-60</offset></centered>` puts it that far from the window's middle, right or down (a negative number left or up). A half written `update="live"` [follows](format.md#live-numbers-of-an-object) what it reads every frame. Required unless it has no sprite |
 | `<velocity>` | pixels a frame, `<x>` and `<y>`; a half left out is 0 |
 | `<acceleration>` | added to the velocity every frame: gravity is a `<y>`. `<stop />` takes it away, a reset gives it back |
 | `<heading>` | degrees clockwise from straight up. Lets `<turn>`, `<thrust>`, `<swing>` work, and turns the picture. `update="live"`: [follows](format.md#live-numbers-of-an-object) what it reads |
@@ -150,7 +150,7 @@ Instead of members, a group can lay out a block: `<columns>` and `<rows>` make a
   <rows>3</rows>
   <padding><y>30</y></padding>
   <sprite><text style="help" /></sprite>
-  <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+  <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
   <row number="1"><sprite><text><content>build the columns down in alternating colours,</content></text></sprite></row>
   <row number="2"><sprite><text><content>each suit up from ace to king on the foundations</content></text></sprite></row>
   <row number="3"><sprite><text><content>w a s d or the arrows move</content><color>color.lightgrey</color></text></sprite><padding><y>40</y></padding></row>

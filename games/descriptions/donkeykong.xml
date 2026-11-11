@@ -231,7 +231,7 @@
       <!-- after a game, in both endings -->
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
       </object>
       <!-- the best score, kept from game to game -->
       <object name="best">
@@ -246,19 +246,19 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>DONKEY KONG</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 150</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-150</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>2</rows>
           <padding><y>50</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>how high can you get?</content></text></sprite></row>
           <row number="2"><sprite><text><content>a d walk, w s climb (or arrows), space jumps</content><color>color.lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>120</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -576,7 +576,7 @@
         <object name="message">
           <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>GAME OVER</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
       <shows>

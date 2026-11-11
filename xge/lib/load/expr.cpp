@@ -129,6 +129,8 @@ namespace xge
 		calc.constant("window.bottom", windowDesc.height);
 		calc.constant("window.left", 0);
 		calc.constant("window.right", windowDesc.width);
+		calc.constant("window.width", windowDesc.width);
+		calc.constant("window.height", windowDesc.height);
 		calc.constant("window.width.center", windowDesc.width / 2);
 		calc.constant("window.height.center", windowDesc.height / 2);
 

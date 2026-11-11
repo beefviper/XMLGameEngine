@@ -246,6 +246,7 @@ namespace xge
 				case RawValue::Kind::Expression:
 				case RawValue::Kind::Centered:
 					value.text = names_.expression(value.text, context);
+					if (!value.offset.empty()) { value.offset = names_.expression(value.offset, context); }
 					break;
 				case RawValue::Kind::Random:
 					// with a formula end, its ends are an operation (below)

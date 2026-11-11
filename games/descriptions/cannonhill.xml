@@ -169,26 +169,26 @@
     <objects>
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>90</offset></centered></y></position>
       </object>
     </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>CANNON HILL</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>2</rows>
           <padding><y>46</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>two players take turns: land a shell by the other cannon, first to three</content></text></sprite></row>
           <row number="2"><sprite><text><content>w and s or up and down aim, hold spacebar and let go to fire; mind the wind</content><color>color.lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -463,7 +463,7 @@
         <object name="pointshown">
           <sprite name="one"><text style="banner"><content>POINT TO PLAYER 1</content><color>color.orange</color></text></sprite>
           <sprite name="two"><text style="banner"><content>POINT TO PLAYER 2</content><color>color.cyan</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-120</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -497,7 +497,7 @@
         <object name="winner">
           <sprite name="one"><text style="banner"><content>PLAYER 1 WINS</content><color>color.orange</color></text></sprite>
           <sprite name="two"><text style="banner"><content>PLAYER 2 WINS</content><color>color.cyan</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
       </objects>
       <shows>

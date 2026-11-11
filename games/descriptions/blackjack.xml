@@ -62,20 +62,20 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>BLACKJACK</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-170</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>3</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>get nearer 21 than the dealer without going over;</content></text></sprite></row>
           <row number="2"><sprite><text><content>court cards count 10, an ace 1 or 11. the dealer draws to 17</content></text></sprite></row>
           <row number="3"><sprite><text><content>a d or the arrows bet, spacebar deals; w or up hits, s or down stands</content></text></sprite><padding><y>40</y></padding></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -99,7 +99,7 @@
         <!-- the stock, top right -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center * 2 - cardwidth - 40</x><y>dealerrow</y></position>
+          <position><x>window.width - cardwidth - 40</x><y>dealerrow</y></position>
           <holds class="card" sprite="back" />
         </object>
 
@@ -199,7 +199,7 @@
 
         <object name="money">
           <sprite><text style="note"><content>chips </content><number>table.bank</number><content>    bet </content><number>table.bet</number></text></sprite>
-          <position><x><centered /></x><y>window.height.center * 2 - 60</y></position>
+          <position><x><centered /></x><y>window.height - 60</y></position>
         </object>
       </objects>
       <!-- the pack into the stock, shuffled -->
@@ -313,11 +313,11 @@
       <objects>
         <object name="over">
           <sprite><text style="banner"><content>OUT OF CHIPS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to start again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>

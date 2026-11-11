@@ -824,7 +824,7 @@
               <content>spacebar to play again</content>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>

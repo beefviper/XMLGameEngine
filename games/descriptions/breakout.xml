@@ -50,49 +50,26 @@
     <objects>
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
       </object>
     </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>BREAKOUT</content></text></sprite>
-          <!-- x is window.width.center - title.width / 2 and y is window.height.center - title.height / 2 + (-110), written as <formula>s: one operation, its operands nested inside it -->
-          <position>
-            <x>
-              <formula>
-                <subtract>
-                  <minuend>window.width.center</minuend>
-                  <subtrahend><divide><dividend>title.width</dividend><divisor>2</divisor></divide></subtrahend>
-                </subtract>
-              </formula>
-            </x>
-            <y>
-              <formula>
-                <add>
-                  <augend>
-                    <subtract>
-                      <minuend>window.height.center</minuend>
-                      <subtrahend><divide><dividend>title.height</dividend><divisor>2</divisor></divide></subtrahend>
-                    </subtract>
-                  </augend>
-                  <addend>-110</addend>
-                </add>
-              </formula>
-            </y>
-          </position>
+          <position><x><centered /></x><y><centered><offset>-110</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>2</rows>
           <padding><y>40</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 10</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-10</offset></centered></y></position>
           <row number="1"><sprite><text><content>three balls, two walls: yellow 1, green 3, orange 5, red 7</content></text></sprite></row>
           <row number="2"><sprite><text><content>a and d, the arrows or the mouse move the paddle</content></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>120</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -265,7 +242,7 @@
         <object name="message">
           <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
       <shows>

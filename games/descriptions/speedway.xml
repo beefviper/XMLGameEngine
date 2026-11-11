@@ -113,26 +113,26 @@
     <objects>
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to race again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>90</offset></centered></y></position>
       </object>
     </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>SPEEDWAY</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>2</rows>
           <padding><y>46</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>three laps against each other and two computer cars: keep off the grass, mind the oil</content></text></sprite></row>
           <row number="2"><sprite><text><content>player one w a s d, player two the arrows: up goes, down brakes, left and right steer</content><color>color.lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -316,7 +316,7 @@
       <objects>
         <object name="ready">
           <sprite><text style="banner"><content>GET READY</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -351,7 +351,7 @@
           <sprite name="p1"><text style="banner"><content>PLAYER 1 WINS</content><color>color.orange</color></text></sprite>
           <sprite name="p2"><text style="banner"><content>PLAYER 2 WINS</content><color>color.cyan</color></text></sprite>
           <sprite name="cpu"><text style="banner"><content>THE COMPUTER WINS</content><color>color.magenta</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
       </objects>
       <shows>

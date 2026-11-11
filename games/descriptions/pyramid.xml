@@ -59,13 +59,13 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>PYRAMID</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 190</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-190</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>4</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>take away two free cards that add up to 13, or a king alone;</content></text></sprite></row>
           <row number="2"><sprite><text><content>a card is free when nothing lies over it. clear the pyramid to win.</content></text></sprite></row>
           <row number="3"><sprite><text><content>the jack is 11, the queen 12, the king 13. the stock turns onto the waste.</content></text></sprite></row>
@@ -73,7 +73,7 @@
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -164,7 +164,7 @@
         <!-- the pairs taken away: what adds up to 13 -->
         <object name="pairs" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center * 2 - 56 - cardwidth</x><y>low</y></position>
+          <position><x>window.width - 56 - cardwidth</x><y>low</y></position>
           <holds class="card" sprite="face"><accepts><condition variable="worth" total="sum"><equal>13</equal></condition></accepts></holds>
         </object>
 
@@ -268,11 +268,11 @@
       <objects>
         <object name="paused">
           <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="newgame">
           <sprite><text style="prompt"><content>n for a new game</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -287,11 +287,11 @@
       <objects>
         <object name="winner">
           <sprite><text style="banner"><content>CLEARED</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>

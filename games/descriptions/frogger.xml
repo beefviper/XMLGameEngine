@@ -58,11 +58,11 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>FROGGER</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -350,11 +350,11 @@
         <object name="message">
           <sprite name="lost"><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>
           <sprite name="won"><text style="banner"><content>YOU WIN</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="continue">
           <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>

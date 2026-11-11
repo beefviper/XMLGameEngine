@@ -236,3 +236,29 @@ TEST_CASE("<centered> puts an object's middle at the window's middle, or at the 
 	CHECK(game.getObject("row.1").position.y == Approx(300 - 5));
 	CHECK(game.getObject("row.2").position.y == Approx(300 - 15));
 }
+
+TEST_CASE("<centered><offset> puts an object's middle that far from the window's middle", "[text]")
+{
+	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
+	Game game = load(
+		"<object name=\"up\"><sprite><rectangle><width>100</width><height>40</height></rectangle></sprite>"
+		"<position><x><centered><offset>50</offset></centered></x><y><centered><offset>-60</offset></centered></y></position></object>"
+		"<object name=\"edge\"><sprite><rectangle><width>20</width><height>10</height></rectangle></sprite>"
+		"<position><x>window.width - 20</x><y>window.height - 10</y></position></object>",
+		"", backend);
+
+	CHECK(game.getObject("up").position.x == Approx(400 + 50 - 50));
+	CHECK(game.getObject("up").position.y == Approx(300 - 60 - 20));
+	// window.width and window.height are names, the same as window.right and window.bottom.
+	CHECK(game.getObject("edge").position.x == Approx(780));
+	CHECK(game.getObject("edge").position.y == Approx(590));
+
+	SECTION("an offset beside a place, or another tag, stops the load")
+	{
+		const std::string sprite = "<sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>";
+		REQUIRE_THROWS_WITH(load("<object name=\"x\">" + sprite + "<position><x><centered>40<offset>5</offset></centered></x><y>0</y></position></object>", "", XmlBackend::TinyXml2),
+			ContainsSubstring("and an <offset>; use one or the other"));
+		REQUIRE_THROWS_WITH(load("<object name=\"x\">" + sprite + "<position><x><centered><middle>5</middle></centered></x><y>0</y></position></object>", "", XmlBackend::TinyXml2),
+			ContainsSubstring("unexpected element <middle>"));
+	}
+}

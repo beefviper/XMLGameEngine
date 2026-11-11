@@ -84,7 +84,7 @@
     <objects>
       <object name="again">
         <sprite><text style="text"><content>space to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>30</offset></centered></y></position>
       </object>
       <!-- the best score, kept from game to game -->
       <object name="best">
@@ -99,13 +99,13 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>Q*BERT</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 56</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-56</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>3</rows>
           <padding><y>20</y></padding>
           <sprite><text style="text" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 12</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-12</offset></centered></y></position>
           <row number="1"><sprite><text><content>turn every cube yellow</content></text></sprite></row>
           <row number="2"><sprite><text><content>w d s a or arrows hop</content><color>color.lightgrey</color></text></sprite></row>
           <row number="3"><sprite><text><content>space to start</content></text></sprite><padding><y>32</y></padding></row>
@@ -465,7 +465,7 @@
         <object name="message">
           <sprite name="won"><text style="banner"><content>PYRAMID DONE</content></text></sprite>
           <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
         </object>
       </objects>
       <shows>

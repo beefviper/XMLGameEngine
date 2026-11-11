@@ -50,10 +50,12 @@
 - Centring a text needs a width only a backend can measure; games used hand-tuned offsets that broke on any wording change.
 - **Built:** `name.width` and `.height` in positions. A text's position is unknown until the window measures it, then worked out again whenever a size it names changes.
 - **Wart:** an object's own variable `width` shadows its size (the variable wins, keeping old games working).
+- **Built: `<centered>`** puts an object's middle at a place (empty: the window's middle), so a game never writes `name.width / 2`. Nine in ten of them said `window.height.center - 60`, so `<centered><offset>-60</offset></centered>` is that far from the window's middle, right or down, a negative number the other way: a child, never a sign in text (no arithmetic in strings). Rejected: an `offset=` attribute (a number is content, not a pick).
+- **Window names:** `window.width` and `window.height` are names beside the edges `window.right` and `window.bottom` (the same numbers), so a size reads as a size; `window.width.center` and `window.height.center` stay as cheap constants.
 
 ## Reference points and axes (idea)
 
-- `window.width.center - name.width / 2` was written 330 times in 23 games, because positions name an object's top-left corner.
+- `window.width.center - name.width / 2` was written 330 times in 23 games, because positions name an object's top-left corner; `<centered>` (above) took those, and what is left is cards laid out from the middle.
 - The idea: let a game say **which point of an object its position names** (top-left, centre, any of nine), and perhaps where the origin is and which way y runs.
 - Forms, none chosen: `anchor="center"` on a position (an attribute: it picks a point); one setting in `<window>`; a game-wide default a position can change. It must stay an element or attribute, never parsed from a string.
 - Open: whether velocity follows a flipped y; what the generator writes.

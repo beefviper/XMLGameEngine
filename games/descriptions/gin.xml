@@ -84,13 +84,13 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>GIN RUMMY</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 190</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-190</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>4</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>draw a card, then discard one. meld sets of a rank and runs of a suit;</content></text></sprite></row>
           <row number="2"><sprite><text><content>the rest is deadwood. at ten or less, knock: score the difference.</content></text></sprite></row>
           <row number="3"><sprite><text><content>gin, no deadwood, scores 25 more; an undercut gives them 25. 100 wins.</content></text></sprite></row>
@@ -98,7 +98,7 @@
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -152,7 +152,7 @@
         </object>
         <object name="deadwood">
           <sprite><text style="note"><content>deadwood</content><number>mine.deadwood</number></text></sprite>
-          <position><x>window.width.center * 2 - 210</x><y>yours - 52</y></position>
+          <position><x>window.width - 210</x><y>yours - 52</y></position>
         </object>
 
         <!-- how a hand ended -->
@@ -395,11 +395,11 @@
       <objects>
         <object name="paused">
           <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="newgame">
           <sprite><text style="prompt"><content>n for a new game</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -415,11 +415,11 @@
         <object name="winner">
           <sprite name="you"><text style="banner"><content>YOU WIN</content></text></sprite>
           <sprite name="north"><text style="banner"><content>NORTH WINS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>

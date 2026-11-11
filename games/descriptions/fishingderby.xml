@@ -66,19 +66,19 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>FISHING DERBY</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>2</rows>
           <padding><y>50</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>hook a fish, reel it up past the shark, first to 99 pounds</content></text></sprite></row>
           <row number="2"><sprite><text><content>w a s d or the arrows move your hook</content><color>color.lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -351,11 +351,11 @@
         <object name="winner">
           <sprite name="you"><text style="banner"><content>YOU WIN</content></text></sprite>
           <sprite name="computer"><text style="banner"><content>THE COMPUTER WINS</content><size>70</size><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
         </object>
       </objects>
       <shows>

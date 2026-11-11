@@ -47,15 +47,15 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>SPACE RACE</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 80</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-80</offset></centered></y></position>
         </object>
         <object name="help">
           <sprite><text style="prompt"><content>w s and up down, the most crossings in a minute</content><size>24</size><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>10</offset></centered></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>90</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -155,11 +155,11 @@
           <sprite name="draw"><text style="banner"><content>A DRAW</content><size>80</size></text></sprite>
           <sprite name="player1"><text style="banner"><content>PLAYER 1 WINS</content><size>80</size></text></sprite>
           <sprite name="player2"><text style="banner"><content>PLAYER 2 WINS</content><size>80</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="continue">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 50</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>50</offset></centered></y></position>
         </object>
       </objects>
       <shows>

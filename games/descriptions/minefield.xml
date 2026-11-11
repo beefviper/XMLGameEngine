@@ -62,13 +62,13 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>MINEFIELD</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-130</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>4</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-30</offset></centered></y></position>
           <row number="1"><sprite><text><content>open every square that hides no mine</content></text></sprite></row>
           <row number="2"><sprite><text><content>a number is how many mines touch it</content></text></sprite></row>
           <row number="3"><sprite><text><content>w a s d or the arrows move, the mouse too</content></text></sprite></row>
@@ -76,7 +76,7 @@
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 130</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>130</offset></centered></y></position>
         </object>
       </objects>
       <inputs>

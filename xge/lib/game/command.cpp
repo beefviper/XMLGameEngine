@@ -402,7 +402,7 @@ namespace xge
 			return "random(" + value.min + ", " + value.max + ")";
 
 		case RawValue::Kind::Centered:
-			return "centered(" + value.text + ")";
+			return value.offset.empty() ? "centered(" + value.text + ")" : "centered(offset " + value.offset + ")";
 
 		case RawValue::Kind::Formula:
 			return value.operations && !value.operations->empty() ? operationText(value.operations->front()) : "";
@@ -434,6 +434,7 @@ namespace xge
 			return all;
 		}
 
+		if (kind == Kind::Centered && !offset.empty()) { return { &text, &offset }; }
 		return { &text };
 	}
 

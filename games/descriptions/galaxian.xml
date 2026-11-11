@@ -285,18 +285,18 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>GALAXIAN</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 230</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-230</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>2</rows>
           <padding><y>35</y></padding>
-          <position><x><centered /></x><y><centered>window.height.center - 150</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-150</offset></centered></y></position>
           <row number="1"><sprite><text><content>blue 30  purple 40  red 50  flagship 60</content><size>26</size><color>color.white</color></text></sprite></row>
           <row number="2"><sprite><text><content>a and d, or the arrows, to move; space to fire; p to pause</content><size>20</size><color>color.lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start, 2 for two players</content><size>32</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 230</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>230</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -545,11 +545,11 @@
       <objects>
         <object name="gameover">
           <sprite><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to go on</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>60</offset></centered></y></position>
         </object>
       </objects>
       <shows>

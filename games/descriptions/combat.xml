@@ -58,11 +58,11 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>COMBAT</content><size>110</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
         <object name="help">
           <sprite><text style="prompt"><content>two players, the most hits in 2:16</content><size>30</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 50</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-50</offset></centered></y></position>
         </object>
         <group name="keys">
           <rows>2</rows>
@@ -74,7 +74,7 @@
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>120</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -208,11 +208,11 @@
           <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.white</color></text></sprite>
           <sprite name="yellow"><text style="banner"><content>YELLOW WINS</content><size>90</size></text></sprite>
           <sprite name="blue"><text style="banner"><content>BLUE WINS</content><size>90</size><color>color.cyan</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
         </object>
       </objects>
       <shows>

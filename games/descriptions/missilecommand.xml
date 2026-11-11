@@ -131,7 +131,7 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>MISSILE COMMAND</content><size>72</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-120</offset></centered></y></position>
         </object>
         <object name="keys">
           <sprite><text style="hud"><content>w a s d or the arrows move the sight, space launches</content><size>20</size></text></sprite>
@@ -139,7 +139,7 @@
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 100</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>100</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -323,11 +323,11 @@
         <object name="message">
           <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>THE END</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
         </object>
       </objects>
       <shows>

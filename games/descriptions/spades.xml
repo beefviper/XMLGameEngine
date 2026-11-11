@@ -73,13 +73,13 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>SPADES</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 190</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-190</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>4</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>you and north against west and east. follow the suit led if you can;</content></text></sprite></row>
           <row number="2"><sprite><text><content>spades are trumps. bid your tricks: make your side's bid for ten a trick,</content></text></sprite></row>
           <row number="3"><sprite><text><content>one for each over; ten overs cost 100. short, lose ten a trick. 500 wins.</content></text></sprite></row>
@@ -87,7 +87,7 @@
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to deal</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -126,7 +126,7 @@
         </object>
         <object name="eastcards" class="place">
           <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>window.width.center * 2 - cardwidth - 24</x><y>siderow</y></position>
+          <position><x>window.width - cardwidth - 24</x><y>siderow</y></position>
           <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
 
@@ -158,7 +158,7 @@
         </object>
         <object name="eastscore">
           <sprite><text style="note"><content>east bid</content><number>east.bid</number><content>took</content><number>east.won</number><choose><by>east.turn</by><word /><word>to play</word></choose></text></sprite>
-          <position><x>window.width.center * 2 - 250</x><y>siderow - 34</y></position>
+          <position><x>window.width - 250</x><y>siderow - 34</y></position>
         </object>
         <object name="yourscore">
           <sprite><text style="note"><content>you bid</content><number>you.bid</number><content>took</content><number>you.won</number><choose><by>you.turn</by><word /><word>your turn: play a card</word></choose></text></sprite>
@@ -166,11 +166,11 @@
         </object>
         <object name="usscore">
           <sprite><text style="note"><content>us</content><number>table.us</number><content>bags</content><number>table.usbags</number><color>color.yellow</color></text></sprite>
-          <position><x>window.width.center * 2 - 200</x><y>northrow</y></position>
+          <position><x>window.width - 200</x><y>northrow</y></position>
         </object>
         <object name="themscore">
           <sprite><text style="note"><content>them</content><number>table.them</number><content>bags</content><number>table.thembags</number></text></sprite>
-          <position><x>window.width.center * 2 - 200</x><y>northrow + 34</y></position>
+          <position><x>window.width - 200</x><y>northrow + 34</y></position>
         </object>
 
         <!-- who the trick goes to, as it stands -->
@@ -288,7 +288,7 @@
           <member name="you"><position><x>53</x><y>yours - 3</y></position><owns object="mine" /><team>1</team></member>
           <member name="west"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>21</x><y>siderow - 3</y></position><owns object="westcards" /><team>2</team><think button="space" /></member>
           <member name="north"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>window.width.center - cardwidth / 2 - 147</x><y>northrow - 3</y></position><owns object="northcards" /><team>1</team><think button="space" /></member>
-          <member name="east"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>window.width.center * 2 - cardwidth - 27</x><y>siderow - 3</y></position><owns object="eastcards" /><team>2</team><think button="space" /></member>
+          <member name="east"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>window.width - cardwidth - 27</x><y>siderow - 3</y></position><owns object="eastcards" /><team>2</team><think button="space" /></member>
         </group>
       </objects>
       <!-- the cards start in the stock (the table deals them) -->
@@ -415,11 +415,11 @@
       <objects>
         <object name="paused">
           <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="newgame">
           <sprite><text style="prompt"><content>n for a new game</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -435,11 +435,11 @@
         <object name="winner">
           <sprite name="us"><text style="banner"><content>WE WIN</content></text></sprite>
           <sprite name="them"><text style="banner"><content>THEY WIN</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>

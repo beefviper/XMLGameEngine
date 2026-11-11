@@ -49,27 +49,27 @@
     <objects>
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
       </object>
     </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>DOUBLES</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-120</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>3</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
           <row number="1"><sprite><text><content>w a s d or the arrows slide every number</content></text></sprite></row>
           <row number="2"><sprite><text><content>equal numbers that meet add up</content></text></sprite></row>
           <row number="3"><sprite><text><content>make 2048, p pauses</content></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>120</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -197,7 +197,7 @@
         <object name="message">
           <sprite name="won"><text style="banner"><content>2048!</content><color>color.gold</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>NO MOVES</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
       <shows>

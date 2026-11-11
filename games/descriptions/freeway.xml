@@ -53,19 +53,19 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>FREEWAY</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-130</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>2</rows>
           <padding><y>60</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
           <row number="1"><sprite><text><content>cross the highway as often as you can</content><color>color.white</color></text></sprite></row>
           <row number="2"><sprite><text><content>player 1: w and s    player 2: up and down</content></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 150</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>150</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -265,11 +265,11 @@
           <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.white</color></text></sprite>
           <sprite name="player1"><text style="banner"><content>PLAYER 1 WINS</content><size>90</size></text></sprite>
           <sprite name="player2"><text style="banner"><content>PLAYER 2 WINS</content><size>90</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>60</offset></centered></y></position>
         </object>
       </objects>
       <shows>

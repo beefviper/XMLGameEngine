@@ -106,26 +106,26 @@
     <objects>
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>90</offset></centered></y></position>
       </object>
     </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>PINBALL</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>2</rows>
           <padding><y>46</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>three balls: light the three lanes for a bonus</content></text></sprite></row>
           <row number="2"><sprite><text><content>a and d or the arrows flip, hold spacebar and let go to shoot</content><color>color.lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -320,11 +320,11 @@
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
         <object name="final">
           <sprite><text style="prompt"><content>SCORE</content><number>table.score</number></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>

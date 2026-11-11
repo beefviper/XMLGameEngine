@@ -68,7 +68,7 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>TENNIS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 80</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-80</offset></centered></y></position>
         </object>
       </objects>
       <shows>

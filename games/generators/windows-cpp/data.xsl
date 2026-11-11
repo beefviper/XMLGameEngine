@@ -56,8 +56,14 @@
       <xsl:when test="$tag[self::centered]">
         <xsl:text>centered(</xsl:text>
         <xsl:call-template name="text">
-          <xsl:with-param name="node" select="$tag" />
+          <xsl:with-param name="node" select="$tag/text()[normalize-space()][1]" />
         </xsl:call-template>
+        <xsl:if test="$tag/offset">
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="text">
+            <xsl:with-param name="node" select="$tag/offset" />
+          </xsl:call-template>
+        </xsl:if>
         <xsl:text>)</xsl:text>
       </xsl:when>
       <xsl:when test="$tag[self::formula]">

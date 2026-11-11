@@ -103,20 +103,20 @@
       </object>
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
       </object>
     </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>CHECKERS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-170</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>3</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>you play red, and move first; 2 for two players</content></text></sprite></row>
           <row number="2"><sprite><text><content>w a s d or the arrows move, spacebar picks up and puts down</content></text></sprite></row>
           <row number="3"><sprite><text><content>x or backspace puts back, p pauses; or click, and right click to put back</content></text></sprite></row>
@@ -125,14 +125,14 @@
           <rows>3</rows>
           <padding><y>30</y></padding>
           <sprite><text style="option" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>30</offset></centered></y></position>
           <row number="1"><sprite><text><content>m: show where it can go</content><choose><by>options.moves</by><word>off</word><word>on</word></choose></text></sprite></row>
           <row number="2"><sprite><text><content>v: show which pieces can move</content><choose><by>options.movable</by><word>off</word><word>on</word></choose></text></sprite></row>
           <row number="3"><sprite><text><content>j: pick up the only piece that can move</content><choose><by>options.jumper</by><word>off</word><word>on</word></choose></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -456,7 +456,7 @@
         <object name="winner">
           <sprite name="red"><text style="banner"><content>RED WINS</content><color>color.red</color></text></sprite>
           <sprite name="white"><text style="banner"><content>WHITE WINS</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
       </objects>
       <shows>

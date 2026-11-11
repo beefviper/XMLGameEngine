@@ -43,22 +43,22 @@
     <objects>
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
       </object>
     </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>SNAKE</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 100</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-100</offset></centered></y></position>
         </object>
         <object name="help">
           <sprite><text style="help"><content>w a s d or the arrows turn, p pauses</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 80</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>80</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -182,7 +182,7 @@
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
       <shows>

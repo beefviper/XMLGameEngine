@@ -275,15 +275,15 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>ASTEROIDS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-110</offset></centered></y></position>
         </object>
         <object name="keys">
           <sprite><text style="prompt"><content>turn a d   thrust w   fire space   hyperspace s</content><size>24</size><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>10</offset></centered></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 100</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>100</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -570,11 +570,11 @@
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
         </object>
       </objects>
       <shows>

@@ -76,7 +76,8 @@ A `<random>` is drawn at load and again whenever its object comes back into play
 | Name | Value |
 |---|---|
 | `window.top`, `window.left` | 0 |
-| `window.bottom`, `window.right` | the window's height, its width |
+| `window.bottom`, `window.right` | the window's height, its width (its bottom and right edges) |
+| `window.height`, `window.width` | the same numbers, for a size |
 | `window.width.center`, `window.height.center` | half the width, half the height |
 | a game `<variable>` | its value (worked out in the order written) |
 | `object.variable` | that object's variable, wherever the object is written |

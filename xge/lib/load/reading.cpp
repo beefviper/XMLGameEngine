@@ -293,9 +293,17 @@ namespace xge
 		if (tagName == "formula") { return readFormula(*tag, here); }
 		if (tagName == "centered")
 		{
-			if (tag->getFirstChild()) { fail(here + " > <centered>", "holds a tag; it holds where the middle goes, as text, or nothing for the window's middle"); }
 			RawValue value = RawValue::expression(readText(*tag));
 			value.kind = RawValue::Kind::Centered;
+			// <centered><offset>-60</offset></centered>: that far from the window's middle
+			if (std::unique_ptr<XmlNode> offset = tag->getFirstChild())
+			{
+				const std::string centered = here + " > <centered>";
+				if (offset->getName() != "offset" || offset->getNextSibling() || offset->getFirstChild()) { fail(centered, "holds where the middle goes, as text, one <offset> from the window's middle, or nothing for the window's middle"); }
+				if (!value.text.empty()) { fail(centered, "holds both the text \"" + value.text + "\" and an <offset>; use one or the other"); }
+				value.offset = readText(*offset);
+				if (value.offset.empty()) { fail(centered + " > <offset>", "has no value"); }
+			}
 			return value;
 		}
 

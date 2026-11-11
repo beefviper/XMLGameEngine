@@ -57,7 +57,7 @@
       <object name="computer">
         <sprite name="easy"><text style="prompt"><content>a d: the computer plays easy</content></text></sprite>
         <sprite name="smart"><text style="prompt"><content>a d: the computer plays smart</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 190</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>190</offset></centered></y></position>
         <variables>
           <variable name="players">1</variable>
           <variable name="level">1</variable>
@@ -68,22 +68,11 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>PONG</content></text></sprite>
-          <!-- x is window.width.center - title.width / 2, written as a <formula>: one operation, its operands nested inside it -->
-          <position>
-            <x>
-              <formula>
-                <subtract>
-                  <minuend>window.width.center</minuend>
-                  <subtrahend><divide><dividend>title.width</dividend><divisor>2</divisor></divide></subtrahend>
-                </subtract>
-              </formula>
-            </x>
-            <y>margin * 4</y>
-          </position>
+          <position><x><centered /></x><y>margin * 4</y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to play the computer, 2 for two players</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>120</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -263,7 +252,7 @@
         </object>
         <object name="continue">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>120</offset></centered></y></position>
         </object>
       </objects>
       <shows>

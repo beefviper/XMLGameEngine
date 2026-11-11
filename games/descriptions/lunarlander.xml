@@ -70,19 +70,19 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>LUNAR LANDER</content><size>100</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-130</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>2</rows>
           <padding><y>45</y></padding>
           <sprite><text style="line" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
           <row number="1"><sprite><text><content>land upright and slowly on a pad: 2X, 3X or 5X the points</content></text></sprite></row>
           <row number="2"><sprite><text><content>left and right turn, up fires the engine</content><color>color.lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="line"><content>spacebar to start</content><size>48</size><color>color.green</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -295,11 +295,11 @@
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>THE EAGLE HAS LANDED</content><size>56</size><color>color.green</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 150</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-150</offset></centered></y></position>
         </object>
         <object name="points">
           <sprite><text style="line"><number>lander.worth</number><content> POINTS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -316,11 +316,11 @@
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>OUT OF FUEL</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="line"><content>spacebar to play again</content><size>48</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
       <shows>

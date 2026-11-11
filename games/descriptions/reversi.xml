@@ -84,31 +84,31 @@
       </object>
       <object name="again">
         <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-        <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
       </object>
     </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>REVERSI</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-170</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>3</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>you play black, and go first; 2 for two players</content></text></sprite></row>
           <row number="2"><sprite><text><content>trap a line of the other side's discs to turn them over</content></text></sprite></row>
           <row number="3"><sprite><text><content>w a s d or the arrows move, spacebar or a click puts a disc, p pauses</content></text></sprite></row>
         </group>
         <object name="option1">
           <sprite><text style="help"><content>m: show where a disc can go </content><choose><by>options.moves</by><word>off</word><word>on</word></choose></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -361,7 +361,7 @@
           <sprite name="black"><text style="banner"><content>BLACK WINS</content><color>color.yellow</color></text></sprite>
           <sprite name="white"><text style="banner"><content>WHITE WINS</content><color>color.yellow</color></text></sprite>
           <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.yellow</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
       </objects>
       <shows>

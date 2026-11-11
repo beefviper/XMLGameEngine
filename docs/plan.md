@@ -91,8 +91,8 @@ Each row is one concept done more than one way. Counts are games using each form
 | 4 | The end of a game | One end state whose object has a look per outcome (the form chosen in October). Separate win and lose states: Atlantis, Breakout, Demon Attack, Donkey Kong, Doubles, Frogger, Frostbite, Haunted House, Kaboom, Mario Bros., Megamania, Minefield, Pitfall, Q\*bert, Tennis | One end state with looks, or a lose state `from=` the win state | R5, done |
 | 5 | State names | `title` (34) or `mainmenu` (23); `gameover` (27), `over` (13) or `lost` (6); `youwin` (11), `won` (9) or `wins` (4) | `title`, `playing`, `paused`, `over` | R5, done |
 | 6 | Yes or no | `xs:boolean` content: `<active>`, `<drawn>`, `<enabled>`, `<lockstep>`, `<fullscreen>`. Empty tags elsewhere (`<loop />`, `<forced />`, `<cells />`). A pick elsewhere (`update="live"`) | Empty tags: `<hidden />`-style words chosen by the author | [R6](#r6-no-booleans) |
-| 7 | The middle of the window | `<centered />` (433 uses), `<centered>window.height.center + 70</centered>` (289 of the 297 with content name the window's own middle), `window.width.center - title.width / 2` by hand (4 games), a `<formula>` (Pong) | `<centered />` and `<centered>` holding only the offset | [R7](#r7-centred-with-an-offset) |
-| 8 | Names of the window | `window.right`, `window.bottom`, `window.width.center`, `window.height.center`; `window.width` is not a name | `window.width`, `window.height`, `window.middle.x`/`.y` or the author's choice; one scheme | [R7](#r7-centred-with-an-offset) |
+| 7 | The middle of the window | `<centered />` (433 uses), `<centered>window.height.center + 70</centered>` (289 of the 297 with content name the window's own middle), `window.width.center - title.width / 2` by hand (4 games), a `<formula>` (Pong) | `<centered />` and `<centered>` holding only the offset | R7, done |
+| 8 | Names of the window | `window.right`, `window.bottom`, `window.width.center`, `window.height.center`; `window.width` is not a name | `window.width`, `window.height`, `window.middle.x`/`.y` or the author's choice; one scheme | R7, done |
 | 9 | Arithmetic | Text and `<formula>` both do `+ - * /` (about 1,170 texts in all 58 games calculate) | Tags only: a text is one number or one name (the author's call) | [R12](#r12-no-arithmetic-in-text) |
 | 10 | Where bitmaps live | `<pictures>` with `<bitmap from>` (36 games); inline `<bitmap>` rows in a sprite (14 games, 65 bitmaps) | `<pictures>` whenever a bitmap is used twice or is more than a few rows | [R8](#r8-small-sweeps) |
 | 11 | All of several tests | Nested conditions (everywhere); `<all>` inside `<any>` (Tennis only, 3 uses) | Decide whether Tennis can nest; if so remove `<all>` | [R8](#r8-small-sweeps) |
@@ -169,7 +169,7 @@ Each has a default the plan assumes, so work is not blocked. Changing one change
 | D5 | Whether pools go entirely (R3) | **Settled by the author:** yes, pools were a stand-in from before spawning; `<die />` and `<reveal>` stay for fixed members | R3 |
 | D6 | Whether the standard pause and title screens become a built-in default | **No.** A hidden default breaks "one file is the whole game". Standardise the spelling instead | R9 |
 | D7 | Pause on new games and genres until phases 1 to 3 are done | Yes | Order of work |
-| D8 | The short tag forms that replace arithmetic in text | **Settled in part by the author:** no arithmetic in strings. The forms are proposed after R12's survey and the author picks | R12, R7 |
+| D8 | The short tag forms that replace arithmetic in text | **Settled in part by the author:** no arithmetic in strings. The forms are proposed after R12's survey and the author picks | R12 (R7, done) |
 
 ## Rules for every task
 
@@ -240,18 +240,6 @@ R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest a
 - **Files.** The schema (five elements), `load/xml.cpp`, `load/merge.cpp` and `merge.xsl` (the change rule for these), `data.xsl`, 20-odd games, `docs/reference/objects.md`, `collisions.md`, `format.md`.
 - **Done.** `grep -c "xs:boolean" games/xgedef.xsd` is 0.
 
-#### R7. Centred with an offset
-
-- **Size** M. **Needs** D4.
-- **Why.** Rows 7 and 8. 289 of 297 non-empty `<centered>` tags say `window.height.center` plus or minus a number (or `window.width.center`). The name is odd beside `window.right` and `window.bottom`, and `window.width` alone is not a name.
-- **Do.**
-  1. Names: make `window.width` and `window.height` names (they are `window.right` and `window.bottom` when the origin is the top left); keep `window.right`/`window.bottom` for edges, and `window.width.center`/`window.height.center` (the author keeps them: cheap engine constants).
-  2. The window's middle moved by a number is a child, `<centered><offset>70</offset></centered>` (a negative number for the other way), never a sign in text: there is no arithmetic in strings (R12). Other content keeps today's meaning (the object's middle at that value), and after R12 that content is one name or number, or a `<formula>`. The word `offset` is the author's to confirm under D4.
-  3. Sweep the 289. Positions must not move: for each game compare every object's start position before and after with a scratch test or by dumping `getCurrentObjects()` from both builds.
-  4. The four games that centre by hand (`window.width.center - x.width / 2`) and Pong's formula use `<centered />`.
-- **Files.** `xge/lib/load/xml.cpp` (`readValue`, centred), `xge/lib/game/object.cpp` (`centerOnOwnSize`), `load/expr.cpp` (window names), `data.xsl` (`centered(`), the schema's comment at the top (it still shows `window.width.center - title.width / 2` as the example), all games, `docs/reference/format.md`, `docs/designs/04-values-and-names.md`.
-- **Done.** `grep -c "window.height.center\|window.width.center" games/descriptions/*.xml` sums to under 20, each a real computation.
-
 #### R8. Small sweeps
 
 Each is **S**, independent, one commit.
@@ -303,7 +291,7 @@ Each is **S**, independent, one commit.
 
 #### R12. No arithmetic in text
 
-- **Size** L, in substeps. **Needs** D8; best after R7 (which takes away the 289 `window.height.center + N`).
+- **Size** L, in substeps. **Needs** D8; R7 is done (the 266 `window.height.center + N` in `<centered>` are `<offset>`s; the 63 uses of `window.*.center` left are card layouts and offsets of a top-left corner, which are this task's).
 - **Why.** Finding 7, the author's call: a calculation hidden in a string is data encoded in a string, which the format otherwise never allows, and `load/calc` is a second language inside the first. About 1,170 texts in all 58 games calculate (Mario Bros. 70, the card games 40 to 53 each). Tags are what the schema, the generator and any later tool can see.
 - **Do.**
   1. **Survey (S).** Count the shapes the 1,170 take: a name plus or minus a number, a name times a number, `a - b / 2` (centring by hand), a name's half, longer ones. Write the counts into `docs/designs/03-arithmetic.md`.
@@ -505,7 +493,6 @@ Block 3  (reduction, any order; R1 is done)
   R10 other
   R3  one way into and out of play        (five substeps)
   R6  no booleans                         (after R3)
-  R7  centred offset, window names
   R4  turns                               (four substeps)
   R11 card words
   R12 no arithmetic in text            (survey, then D8, then the sweep)
@@ -535,13 +522,12 @@ What blocks what, in one place:
 
 | Task | Needs first |
 |---|---|
-| R12 | D8 (best after R7) |
+| R12 | D8 |
 | R6 | R3, D4 |
-| R7 | D4 |
 | R3 | D5 |
 | A3 (`readCommand`, `makeCommand`) | A1 |
 | A1 substep 3 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R9 (B2, B3, B5, R1, R5 and T1 are done).
+If only a few more things are ever done from this file, start with R9 (B2, B3, B5, R1, R5, R7 and T1 are done).

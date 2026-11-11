@@ -93,10 +93,12 @@ namespace xge::parts
 		return value;
 	}
 
-	inline RawValue centered(std::string text)
+	// centered("", "-60"): an <offset> from the window's middle.
+	inline RawValue centered(std::string text, std::string offset = {})
 	{
 		RawValue middle = RawValue::expression(std::move(text));
 		middle.kind = RawValue::Kind::Centered;
+		middle.offset = std::move(offset);
 		return middle;
 	}
 

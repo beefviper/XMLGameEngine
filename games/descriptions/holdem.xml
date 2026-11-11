@@ -80,20 +80,20 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>TEXAS HOLD'EM</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-170</offset></centered></y></position>
         </object>
         <group name="help">
           <rows>3</rows>
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>two cards of your own and five shared: the best five win the pot.</content></text></sprite></row>
           <row number="2"><sprite><text><content>bets of 10, then 20 after the turn card; three raises a round at most</content></text></sprite></row>
           <row number="3"><sprite><text><content>w or up bets or raises, spacebar checks or calls, x folds</content></text></sprite><padding><y>40</y></padding></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -526,11 +526,11 @@
         <object name="winner">
           <sprite name="you"><text style="banner"><content>YOU WIN</content></text></sprite>
           <sprite name="computer"><text style="banner"><content>THE COMPUTER WINS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>
