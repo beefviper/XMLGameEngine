@@ -179,12 +179,12 @@ TEST_CASE("after two minutes sixteen the most hits win, and space plays again", 
 	play.frames(135 * 60);
 	CHECK(play.state() == "playing");
 	play.frames(62);
-	REQUIRE(play.state() == "wins");
-	CHECK(play.game.getObject("wins.winner").lookName() == "blue");
+	REQUIRE(play.state() == "over");
+	CHECK(play.game.getObject("over.winner").lookName() == "blue");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 	CHECK(play.game.getObject("shell2").variable.at("hits") == 0);
-	CHECK(play.game.getObject("wins.winner").lookName() == "draw");
+	CHECK(play.game.getObject("over.winner").lookName() == "draw");
 }
 
 TEST_CASE("paused, the field is drawn still: a shell in flight stops where it is", "[combat]")
@@ -220,18 +220,18 @@ TEST_CASE("each state owns what it draws, and a win draws the field still under 
 	Combat play;
 	CHECK(play.tank1().ownerState == "playing");
 	CHECK(play.game.getObject("keys.1").ownerState == "title");
-	CHECK(play.game.getObject("again").ownerState == "wins");
+	CHECK(play.game.getObject("again").ownerState == "over");
 	CHECK(play.game.isShown(play.game.getObject("title.title")));
 	CHECK_FALSE(play.game.isShown(play.tank1()));
 
 	play.start();
 	play.game.getObject("shell1").variable["hits"] = 5;
-	play.game.pushState("wins");
+	play.game.pushState("over");
 	play.frames(1);
-	REQUIRE(play.state() == "wins");
+	REQUIRE(play.state() == "over");
 	CHECK(play.game.isStill(play.tank2()));
 	CHECK(play.game.isStill(play.game.getObject("score1")));
-	CHECK(play.game.isShown(play.game.getObject("wins.winner")));
-	CHECK(play.game.getObject("wins.winner").lookName() == "yellow");
+	CHECK(play.game.isShown(play.game.getObject("over.winner")));
+	CHECK(play.game.getObject("over.winner").lookName() == "yellow");
 	CHECK(play.game.isShown(play.game.getObject("again")));
 }

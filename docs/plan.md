@@ -88,8 +88,8 @@ Each row is one concept done more than one way. Counts are games using each form
 | 1 | Into and out of play | Pools: `<active>false</active>` (14 games) with `<reveal>` (11) and `<die />` (24). Copies: `<spawn>` (12), `<despawn>` (21). In between: `<fire>` (16) and `<release>` (9), which take "a copy, or from a pool" | Copies only for things that come and go; `<die />` and `<reveal>` only for fixed things that return (bricks, aliens). `<release>` is a `<spawn>` at the spawner's middle | [R3](#r3-one-way-into-and-out-of-play) |
 | 2 | A jump | `<hop>` (20 games; instant, or timed with `<seconds>` and `<arc>`), `<jump>` (Frostbite only; a timed hop), `<leap>` (3; under a pull) | `<hop>` and `<jump>` (the old `<leap>`) | R2, done |
 | 3 | Whose turn | A group with `<turns>` (Crazy Eights, Hearts, Spades, Gin). A `turn` variable on a cursor or table, tested everywhere (Checkers, Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes, Hold'em, Cannon Hill). A state's `<turns>` (Galaxian: each player their own game), which is a different idea under the same word | Players as a group for every shared-world game. Rename the arcade one | [R4](#r4-one-way-to-take-turns) |
-| 4 | The end of a game | One end state whose object has a look per outcome (the form chosen in October). Separate win and lose states: Atlantis, Breakout, Demon Attack, Donkey Kong, Doubles, Frogger, Frostbite, Haunted House, Kaboom, Mario Bros., Megamania, Minefield, Pitfall, Q\*bert, Tennis | One end state with looks, or a lose state `from=` the win state | [R5](#r5-one-end-screen-and-one-set-of-state-names) |
-| 5 | State names | `title` (34) or `mainmenu` (23); `gameover` (27), `over` (13) or `lost` (6); `youwin` (11), `won` (9) or `wins` (4) | `title`, `playing`, `paused`, `over` | [R5](#r5-one-end-screen-and-one-set-of-state-names) |
+| 4 | The end of a game | One end state whose object has a look per outcome (the form chosen in October). Separate win and lose states: Atlantis, Breakout, Demon Attack, Donkey Kong, Doubles, Frogger, Frostbite, Haunted House, Kaboom, Mario Bros., Megamania, Minefield, Pitfall, Q\*bert, Tennis | One end state with looks, or a lose state `from=` the win state | R5, done |
+| 5 | State names | `title` (34) or `mainmenu` (23); `gameover` (27), `over` (13) or `lost` (6); `youwin` (11), `won` (9) or `wins` (4) | `title`, `playing`, `paused`, `over` | R5, done |
 | 6 | Yes or no | `xs:boolean` content: `<active>`, `<drawn>`, `<enabled>`, `<lockstep>`, `<fullscreen>`. Empty tags elsewhere (`<loop />`, `<forced />`, `<cells />`). A pick elsewhere (`update="live"`) | Empty tags: `<hidden />`-style words chosen by the author | [R6](#r6-no-booleans) |
 | 7 | The middle of the window | `<centered />` (433 uses), `<centered>window.height.center + 70</centered>` (289 of the 297 with content name the window's own middle), `window.width.center - title.width / 2` by hand (4 games), a `<formula>` (Pong) | `<centered />` and `<centered>` holding only the offset | [R7](#r7-centred-with-an-offset) |
 | 8 | Names of the window | `window.right`, `window.bottom`, `window.width.center`, `window.height.center`; `window.width` is not a name | `window.width`, `window.height`, `window.middle.x`/`.y` or the author's choice; one scheme | [R7](#r7-centred-with-an-offset) |
@@ -232,16 +232,6 @@ R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest a
 - **Files.** The games; `xge/lib/game/players.cpp` (the group-turns engine); `xge/lib/game/think.cpp` (the board search reads whose move it is: find how and feed it from the group); tests `test_checkers.cpp`, `test_reversi.cpp`, `test_inarow.cpp`, `test_dotsandboxes.cpp`; `docs/reference/states.md` "Players as a group" and "Taking turns", `boards.md`, `docs/designs/26-board-games.md`.
 - **Done.** No board game has a variable named `turn`; `docs/reference/boards.md` shows turns the same way `cards.md` does.
 
-#### R5. One end screen and one set of state names
-
-- **Size** M. **Needs** nothing.
-- **Why.** Rows 4 and 5. The October decision was "one win screen per game: the winning condition picks a look". Fifteen games still have a win state and a lose state with the same keys and layout.
-- **Do.**
-  1. In each of the fifteen, make one end state `over` holding one object with a look per outcome; the conditions that pushed `youwin` or `gameover` do `<become object="over.message" sprite="won" />` (or `lost`) and `<push state="over" />`. Where the two screens really differ (different music, different objects), keep two but write the second `from=` the first.
-  2. Rename across all games: `mainmenu` to `title`; `gameover`, `lost` to `over`; `youwin`, `won`, `wins` fold into `over`. Tests name states in strings (`REQUIRE(played.state() == "gameover")`): change them with the game, one game per commit so a failure points at one file.
-- **Files.** 40-odd games and their tests; `docs/reference/games.md` if it names states; `docs/reference/states.md` examples.
-- **Done.** `grep -ho '<state name="[a-z0-9]*"' games/descriptions/*.xml | sort | uniq -c` shows `title`, `playing`, `paused`, `over` and only game-specific extras (`ready`, `point`, `initial1`).
-
 #### R6. No booleans
 
 - **Size** M. **Needs** D4, and R3 (which may remove `<active>`).
@@ -274,7 +264,7 @@ Each is **S**, independent, one commit.
 
 #### R9. The screens every game repeats
 
-- **Size** M. **Needs** R5 (state names), D6.
+- **Size** M. **Needs** D6 (R5, done: state names).
 - **Why.** Row 14. 835 lines of pause states in 18 variants; the differences are accidents (some pop on Space, P and Escape, some on Space only; 24 games bind the pad's Start and 34 do not; some set the text white, some rely on the style).
 - **Do.** Pick one spelling for each of: the pause state, "press to start" on the title, "press to play again" on the end screen, and the keys in `playing` that pause. Suggested pause, 9 lines:
 
@@ -510,8 +500,7 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 Blocks 1 and 2 are done.
 
 Block 3  (reduction, any order; R1 is done)
-  R5  one end screen, state names
-  R9  pause and title spelled one way     (after R5)
+  R9  pause and title spelled one way
   R8  the six small sweeps
   R10 other
   R3  one way into and out of play        (five substeps)
@@ -549,11 +538,10 @@ What blocks what, in one place:
 | R12 | D8 (best after R7) |
 | R6 | R3, D4 |
 | R7 | D4 |
-| R9 | R5 |
 | R3 | D5 |
 | A3 (`readCommand`, `makeCommand`) | A1 |
 | A1 substep 3 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R5 (B2, B3, B5, R1 and T1 are done).
+If only a few more things are ever done from this file, start with R9 (B2, B3, B5, R1, R5 and T1 are done).

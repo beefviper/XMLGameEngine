@@ -52,7 +52,7 @@
     the logs, the tar pit, the crocodiles, the flickering fire (an
     <animation>) and the treasures as bitmaps of several inks, the ladder
     as <line>s.
-  * Paused, won and game over draw the jungle still underneath (<show state>).
+  * Paused and over draw the jungle still underneath (<show state>).
   Not in it: the swinging vines, quicksand, the wall at the end of the tunnel,
   and a tunnel that goes three screens at a time.
 -->

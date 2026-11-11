@@ -27,9 +27,9 @@
     <columns>, so they are evenly spaced round the loop the <wrap /> makes.
   * Being hit is a <move direction="down"> in the chicken's rule: shoved
     back one lane, once.
-  * The clock is a state <timer>. When it runs out, wins is pushed with its
+  * The clock is a state <timer>. When it runs out, over is pushed with its
     "draw" look; that state's own two conditions pick the winner's look.
-  * Paused and wins draw the road still underneath (<show state>).
+  * Paused and over draw the road still underneath (<show state>).
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -233,7 +233,7 @@
       <conditions>
         <condition object="clock" variable="seconds">
           <atmost>0</atmost>
-          <push state="wins" />
+          <push state="over" />
           <play sound="end" />
         </condition>
       </conditions>
@@ -259,7 +259,7 @@
       </inputs>
     </state>
     <!-- time up: a draw, unless one chicken crossed more often -->
-    <state name="wins">
+    <state name="over">
       <objects>
         <object name="winner">
           <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.white</color></text></sprite>
@@ -281,11 +281,11 @@
       <conditions>
         <condition object="chicken1" variable="score">
           <above>chicken2.score</above>
-          <become object="wins.winner" sprite="player1" />
+          <become object="over.winner" sprite="player1" />
         </condition>
         <condition object="chicken2" variable="score">
           <above>chicken1.score</above>
-          <become object="wins.winner" sprite="player2" />
+          <become object="over.winner" sprite="player2" />
         </condition>
       </conditions>
     </state>

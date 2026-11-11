@@ -122,7 +122,7 @@ TEST_CASE("Crates: every room can be finished, and the last one wins the game", 
 		}
 		play.frames(2);
 	}
-	CHECK(play.state() == "won");
+	CHECK(play.state() == "over");
 }
 
 namespace
@@ -278,7 +278,8 @@ TEST_CASE("Minefield: ten mines are laid, and an opened square counts the mines 
 	if (after.mines.count({ 5, 5 }))
 	{
 		CHECK(middle.lookName() == "boom");
-		CHECK(play.state() == "lost");
+		CHECK(play.state() == "over");
+		CHECK(play.game.getObject("over.message").lookName() == "lost");
 		return;
 	}
 	CHECK(middle.variable.at("near") == static_cast<float>(after.around({ 5, 5 })));

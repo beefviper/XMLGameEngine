@@ -185,7 +185,7 @@
         <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
       </inputs>
       <timers>
-        <timer><after>136</after><push state="wins" /></timer>
+        <timer><after>136</after><push state="over" /></timer>
       </timers>
     </state>
     <state name="paused">
@@ -202,7 +202,7 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="wins">
+    <state name="over">
       <objects>
         <object name="winner">
           <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.white</color></text></sprite>

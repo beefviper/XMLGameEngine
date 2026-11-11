@@ -224,7 +224,7 @@
         <condition object="foundations" variable="held" total="sum">
           <atleast>52</atleast>
           <play sound="win" />
-          <push state="won" />
+          <push state="over" />
         </condition>
       </conditions>
     </state>
@@ -247,7 +247,7 @@
         <input><button>n</button><reset /></input>
       </inputs>
     </state>
-    <state name="won">
+    <state name="over">
       <objects>
         <object name="winner">
           <sprite><text style="banner"><content>YOU WIN</content></text></sprite>

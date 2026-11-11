@@ -1,6 +1,6 @@
 # States and scenes
 
-A **state** is a mode of the game (title, playing, paused, game over). A state played in several places holds them as **scenes**. **Conditions** are tests checked every frame.
+A **state** is a mode of the game. Every game names its four the same: `title`, `playing`, `paused` and `over`, the one end screen, whose message has a look per outcome picked by the condition that ends the game (`<become object="over.message" sprite="won" />` then `<push state="over" />`). Other states are moments inside play (`ready`, `point`). A state played in several places holds them as **scenes**. **Conditions** are tests checked every frame.
 
 ## States
 
@@ -37,15 +37,16 @@ A **state** is a mode of the game (title, playing, paused, game over). A state p
 
 ### A state from another
 
-`<state name="gameover" from="youwin">` is a copy of an earlier state with what it writes over it, by the [one change rule](objects.md#the-one-change-rule). Its objects are named by the new state (`gameover.message`). Its `<input>`s replace the copied ones of the same key, conditions and timers those of the same `name=`, music the copied. A state with scenes cannot be copied yet.
+`<state name="initial2" from="initial1">` is a copy of an earlier state with what it writes over it, by the [one change rule](objects.md#the-one-change-rule). Its objects are named by the new state (`initial2.cursor`). Its `<input>`s replace the copied ones of the same key, conditions and timers those of the same `name=`, music the copied. A state with scenes cannot be copied yet.
 
 ```xml
-<state name="gameover" from="youwin">
+<state name="initial2" from="initial1">     <!-- Galaxian: the second letter of a high score -->
   <objects>
-    <object name="message">
-      <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
-    </object>
+    <object name="cursor"><position><x>letters + letterstep</x></position></object>
   </objects>
+  <inputs>
+    <input><button>space</button><pop state="initial3" /></input>
+  </inputs>
 </state>
 ```
 
@@ -96,7 +97,8 @@ At the top of `<states>`, a named `<shows name>` set holds shows several states 
 ```xml
 <condition object="frog" variable="lives">
   <atmost>0</atmost>
-  <push state="gameover" />
+  <become object="over.message" sprite="lost" />
+  <push state="over" />
 </condition>
 ```
 

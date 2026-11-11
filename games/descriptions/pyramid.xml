@@ -254,7 +254,7 @@
                   <condition object="row6" variable="cards" total="sum"><equal>0</equal>
                     <condition object="row7" variable="cards" total="sum"><equal>0</equal>
                       <play sound="win" />
-                      <push state="won" />
+                      <push state="over" />
                     </condition>
                   </condition>
                 </condition>
@@ -283,7 +283,7 @@
         <input><button>n</button><reset /></input>
       </inputs>
     </state>
-    <state name="won">
+    <state name="over">
       <objects>
         <object name="winner">
           <sprite><text style="banner"><content>CLEARED</content></text></sprite>

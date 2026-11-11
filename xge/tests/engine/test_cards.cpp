@@ -371,7 +371,7 @@ TEST_CASE("klondike.xml: all 52 home wins, and a new game deals again", "[cards]
 	pointAt(table, "waste");
 	table.tap(KeyCode::F);
 	table.frames(2);
-	CHECK(table.state() == "won");
+	CHECK(table.state() == "over");
 	table.tap(KeyCode::Space);
 	table.frames(2);
 	CHECK(table.state() == "title");
@@ -973,7 +973,7 @@ TEST_CASE("blackjack.xml: the bet stays from 10 to 100 and within your chips", "
 	CHECK(play.table("bet") == 40.0f);
 	play.get("table").variable["bank"] = 5.0f;
 	play.frames(2);
-	CHECK(play.state() == "broke");
+	CHECK(play.state() == "over");
 }
 
 namespace
@@ -2054,5 +2054,5 @@ TEST_CASE("pyramid.xml: the pyramid cleared wins", "[cards][pyramid]")
 		}
 	}
 	play.frames(2);
-	CHECK(play.state() == "won");
+	CHECK(play.state() == "over");
 }

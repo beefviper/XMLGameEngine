@@ -316,7 +316,7 @@
       <conditions>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
         </condition>
         <condition object="qotile">
           <remaining>0</remaining>
@@ -363,7 +363,7 @@
         </timer>
       </timers>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>

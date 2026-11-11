@@ -417,7 +417,7 @@
         </condition>
         <condition object="card" variable="sunk">
           <atleast>holes</atleast>
-          <push state="finished" />
+          <push state="over" />
         </condition>
       </conditions>
     </state>
@@ -437,7 +437,7 @@
       </inputs>
     </state>
 
-    <state name="finished">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>ROUND OVER</content><size>80</size></text></sprite>

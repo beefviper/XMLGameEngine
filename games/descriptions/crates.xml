@@ -249,7 +249,7 @@
             <condition name="done" class="crate" variable="home" total="lowest">
               <atleast>1</atleast>
               <play sound="done" />
-              <push state="won" />
+              <push state="over" />
             </condition>
           </conditions>
         </scene>
@@ -278,7 +278,7 @@
         <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="won">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>ALL DONE</content><color>color.gold</color></text></sprite>

@@ -130,7 +130,7 @@
       <conditions>
         <condition object="clock" variable="y">
           <atleast>window.bottom</atleast>
-          <push state="wins" />
+          <push state="over" />
           <play sound="end" />
         </condition>
       </conditions>
@@ -149,7 +149,7 @@
         <input><button>space</button><button>p</button><pop /></input>
       </inputs>
     </state>
-    <state name="wins">
+    <state name="over">
       <objects>
         <object name="winner">
           <sprite name="draw"><text style="banner"><content>A DRAW</content><size>80</size></text></sprite>

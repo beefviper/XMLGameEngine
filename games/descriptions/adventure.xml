@@ -44,7 +44,7 @@
     of its room, how far the hero is (distance=) holding that it is still
     asleep, wakes it with a roar. Its timer follows the awake look, so
     only then does it <chase> him, at its room's dragonspeed.
-  * Paused, won and eaten draw the room still underneath (<show state>).
+  * Paused and over draw the room still underneath (<show state>).
   Not in it: the other rooms and the blue labyrinth, the white castle, Rhindle
   the red dragon, the bat, the bridge, the magnet and the hidden dot.
 -->

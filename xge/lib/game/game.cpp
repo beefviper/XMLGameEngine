@@ -1692,8 +1692,8 @@ namespace xge
 		// display instead of one object's worth).
 		refreshAllBoundTexts();
 
-		// Collapse the whole state stack. mainmenu -> playing -> gameover ->
-		// mainmenu -> ... is push-only (see pushState/setCurrentState) - only
+		// Collapse the whole state stack. title -> playing -> over ->
+		// title -> ... is push-only (see pushState/setCurrentState) - only
 		// settings and paused ever pop back off - so left alone it grows for as
 		// long as the game keeps getting played. Clear it and start fresh from
 		// the very first state, exactly like Engine's constructor does once at

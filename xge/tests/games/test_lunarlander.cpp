@@ -396,9 +396,9 @@ TEST_CASE("the last lander down with no fuel ends the game, and Space starts it 
 	REQUIRE(moon.wrecked());
 	moon.frames(170);
 
-	REQUIRE(moon.state() == "gameover");
+	REQUIRE(moon.state() == "over");
 	CHECK(moon.fuel() == 0.0f);
-	CHECK(moon.game.isShown(moon.game.getObject("gameover.message")));
+	CHECK(moon.game.isShown(moon.game.getObject("over.message")));
 
 	moon.game.resetAll();
 	CHECK(moon.state() == "title");

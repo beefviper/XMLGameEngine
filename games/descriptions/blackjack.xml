@@ -224,7 +224,7 @@
         <condition object="table" sprite="betting">
           <condition object="table" variable="bank"><below>10</below>
             <play sound="lose" />
-            <push state="broke" />
+            <push state="over" />
           </condition>
           <condition object="table" variable="bet"><above>table.bank</above><set variable="table.bet">table.bank</set></condition>
           <condition object="table" variable="bet"><below>10</below><set variable="table.bet">10</set></condition>
@@ -309,7 +309,7 @@
         </condition>
       </conditions>
     </state>
-    <state name="broke">
+    <state name="over">
       <objects>
         <object name="over">
           <sprite><text style="banner"><content>OUT OF CHIPS</content></text></sprite>

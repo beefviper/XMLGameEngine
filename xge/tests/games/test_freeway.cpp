@@ -282,22 +282,22 @@ TEST_CASE("the clock counts down from 136, and the one with more crossings wins 
 		Table table;
 		table.clearTraffic();
 		table.timeUp(4.0f, 2.0f);
-		CHECK(table.game.getCurrentState().name == "wins");
-		CHECK(table.game.getObject("wins.winner").lookName() == "player1");
+		CHECK(table.game.getCurrentState().name == "over");
+		CHECK(table.game.getObject("over.winner").lookName() == "player1");
 	}
 	{
 		Table table;
 		table.clearTraffic();
 		table.timeUp(1.0f, 3.0f);
-		CHECK(table.game.getCurrentState().name == "wins");
-		CHECK(table.game.getObject("wins.winner").lookName() == "player2");
+		CHECK(table.game.getCurrentState().name == "over");
+		CHECK(table.game.getObject("over.winner").lookName() == "player2");
 	}
 	{
 		Table table;
 		table.clearTraffic();
 		table.timeUp(2.0f, 2.0f);
-		CHECK(table.game.getCurrentState().name == "wins");
-		CHECK(table.game.getObject("wins.winner").lookName() == "draw");
+		CHECK(table.game.getCurrentState().name == "over");
+		CHECK(table.game.getObject("over.winner").lookName() == "draw");
 	}
 }
 
@@ -306,7 +306,7 @@ TEST_CASE("space starts a new game from the end screen, with both scores and the
 	Table table;
 	table.clearTraffic();
 	table.timeUp(2.0f, 4.0f);
-	REQUIRE(table.game.getCurrentState().name == "wins");
+	REQUIRE(table.game.getCurrentState().name == "over");
 
 	table.executor.executeInput(Command{ CmdReset{} }, true);
 
@@ -316,7 +316,7 @@ TEST_CASE("space starts a new game from the end screen, with both scores and the
 	CHECK(table.game.getObject("score1").picture.text == "0");
 	CHECK(table.game.getObject("score2").picture.text == "0");
 	CHECK(table.game.getObject("clock").variable["seconds"] == 136.0f);
-	CHECK(table.game.getObject("wins.winner").lookName() == "draw");
+	CHECK(table.game.getObject("over.winner").lookName() == "draw");
 }
 
 TEST_CASE("the keys drive the right chicken through the whole game", "[freeway][engine_input]")
@@ -417,11 +417,11 @@ TEST_CASE("paused and the endings draw the road still underneath, scores and all
 	CHECK(table.game.isShown(car));
 
 	table.timeUp(5.0f, 0.0f);
-	REQUIRE(table.game.getCurrentState().name == "wins");
+	REQUIRE(table.game.getCurrentState().name == "over");
 	CHECK(table.game.isStill(table.game.getObject("score1")));
 	CHECK(table.game.isStill(table.game.getObject("score2")));
 	CHECK(table.game.isStill(car));
-	CHECK(table.game.isShown(table.game.getObject("wins.winner")));
-	CHECK(table.game.getObject("wins.winner").lookName() == "player1");
-	CHECK(table.game.isShown(table.game.getObject("wins.again")));
+	CHECK(table.game.isShown(table.game.getObject("over.winner")));
+	CHECK(table.game.getObject("over.winner").lookName() == "player1");
+	CHECK(table.game.isShown(table.game.getObject("over.again")));
 }

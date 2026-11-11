@@ -155,7 +155,8 @@
         <condition class="tile" variable="value">
           <atleast>2048</atleast>
           <play sound="won" />
-          <push state="won" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
         <!-- full, and no two equal side by side: no move is left -->
         <condition class="tile" total="count">
@@ -163,7 +164,8 @@
           <condition class="tile" variable="pairs" total="sum">
             <equal>0</equal>
             <play sound="over" />
-            <push state="gameover" />
+            <become object="over.message" sprite="lost" />
+            <push state="over" />
           </condition>
         </condition>
       </conditions>
@@ -190,25 +192,11 @@
         <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="won">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>2048!</content><color>color.gold</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-        <show object="again" />
-      </shows>
-      <inputs>
-        <input><button>space</button><button>pad1.start</button><reset /></input>
-      </inputs>
-    </state>
-    <state name="gameover">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>NO MOVES</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>2048!</content><color>color.gold</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>NO MOVES</content><color>color.red</color></text></sprite>
           <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
         </object>
       </objects>

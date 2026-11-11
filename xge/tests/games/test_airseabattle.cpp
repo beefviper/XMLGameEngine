@@ -63,7 +63,7 @@ namespace
 		void start()
 		{
 			tap(KeyCode::Space);
-			REQUIRE(state() == "battle");
+			REQUIRE(state() == "playing");
 		}
 
 		std::string state() { return game.getCurrentState().name; }
@@ -170,8 +170,8 @@ TEST_CASE("the battle lasts 2:16", "[airseabattle]")
 
 	play.game.getObject("status").variable["time"] = 1;
 	play.frames(61);
-	CHECK(play.state() == "result");
-	CHECK(play.game.getObject("result.outcome").lookName() == "draw"); // no hits either side
+	CHECK(play.state() == "over");
+	CHECK(play.game.getObject("over.outcome").lookName() == "draw"); // no hits either side
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 }
@@ -186,8 +186,8 @@ TEST_CASE("at time up the scores are compared, and the screen says who won", "[a
 		play.game.getObject("gun2").variable["score"] = white;
 		play.game.getObject("status").variable["time"] = 1;
 		play.frames(62);
-		REQUIRE(play.state() == "result");
-		return play.game.getObject("result.outcome").lookName();
+		REQUIRE(play.state() == "over");
+		return play.game.getObject("over.outcome").lookName();
 	};
 
 	CHECK(endWith(7, 3) == "yellow");
@@ -217,11 +217,11 @@ TEST_CASE("paused, the battle is drawn still: the planes stop and the clock neve
 
 	// The clock's holder runs in the battle but is never drawn.
 	Object& status = play.game.getObject("status");
-	CHECK(status.ownerState == "battle");
+	CHECK(status.ownerState == "playing");
 	CHECK_FALSE(status.isDrawn);
 
 	play.tap(KeyCode::Space);
-	REQUIRE(play.state() == "battle");
+	REQUIRE(play.state() == "playing");
 	play.frames(1);
 	CHECK(jet.position != jetAt);
 }
@@ -237,7 +237,7 @@ TEST_CASE("each end screen draws the battle still under TIME UP and its message"
 	play.game.getObject("gun1").variable["score"] = 7;
 	play.game.getObject("status").variable["time"] = 1;
 	play.frames(62);
-	REQUIRE(play.state() == "result");
+	REQUIRE(play.state() == "over");
 	CHECK(play.game.isStill(play.game.getObject("score1")));
 	CHECK(play.game.isStill(play.game.getObject("sea")));
 	CHECK(play.game.isShown(play.game.getObject("timeup")));

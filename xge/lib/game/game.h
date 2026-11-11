@@ -334,7 +334,7 @@ namespace xge
 		// every <variable>), refreshes every bound text display, and collapses
 		// the whole state stack back down to the very first state - the same
 		// state Engine's constructor pushes via setCurrentState(0) - so
-		// mainmenu -> playing -> gameover -> mainmenu -> ... doesn't grow the
+		// title -> playing -> over -> title -> ... doesn't grow the
 		// stack forever.
 		void resetAll();
 

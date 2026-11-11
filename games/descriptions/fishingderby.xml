@@ -301,14 +301,14 @@
       <conditions>
         <condition object="left" variable="score">
           <atleast>goal</atleast>
-          <become object="wins.winner" sprite="you" />
-          <push state="wins" />
+          <become object="over.winner" sprite="you" />
+          <push state="over" />
           <play sound="end" />
         </condition>
         <condition object="right" variable="score">
           <atleast>goal</atleast>
-          <become object="wins.winner" sprite="computer" />
-          <push state="wins" />
+          <become object="over.winner" sprite="computer" />
+          <push state="over" />
           <play sound="end" />
         </condition>
       </conditions>
@@ -346,7 +346,7 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="wins">
+    <state name="over">
       <objects>
         <object name="winner">
           <sprite name="you"><text style="banner"><content>YOU WIN</content></text></sprite>

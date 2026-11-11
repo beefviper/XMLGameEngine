@@ -237,7 +237,7 @@
         <!-- the last lander down with no fuel left -->
         <condition object="status" variable="fuel">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
         </condition>
         <!-- the next lander, from the top -->
         <condition object="lander" variable="ready">
@@ -312,7 +312,7 @@
         <timer><every>2.5</every><inc variable="lander.ready" /><pop /></timer>
       </timers>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>OUT OF FUEL</content><color>color.red</color></text></sprite>

@@ -234,12 +234,14 @@
         <condition object="status" variable="lost">
           <equal>1</equal>
           <play sound="boom" />
-          <push state="lost" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
         <condition object="status" variable="opened">
           <atleast>71</atleast>
           <play sound="won" />
-          <push state="won" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
       </conditions>
     </state>
@@ -257,25 +259,11 @@
         <input><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="lost">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>BOOM</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.bottom - 30</centered></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-        <show object="again" />
-      </shows>
-      <inputs>
-        <input><button>space</button><button>pad1.start</button><reset /></input>
-      </inputs>
-    </state>
-    <state name="won">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>CLEARED</content><color>color.green</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>CLEARED</content><color>color.green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>BOOM</content><color>color.red</color></text></sprite>
           <position><x><centered /></x><y><centered>window.bottom - 30</centered></y></position>
         </object>
       </objects>

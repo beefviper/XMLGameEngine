@@ -48,7 +48,7 @@
   * The hammer is a look: touching the hammer gives Jumpman the look
     "hammer" and sets man.hammer, which a barrel's rule <condition>s; a timer of
     that look takes it away again, with the hammer's tune.
-  * Paused, won and game over draw the girders still underneath
+  * Paused and over draw the girders still underneath
     (<show state="playing" />), the barrels stopped where they were.
 -->
 

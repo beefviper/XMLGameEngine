@@ -35,7 +35,7 @@
     run the frog's own actions: home, or lose.
   * The time is a variable of the clock that a state <timer> counts down;
     every new frog puts the clock back (<reset object="clock" />).
-  * Paused, game over and the win draw the board still underneath
+  * Paused and over draw the board still underneath
     (<show state>).
 -->
 

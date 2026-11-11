@@ -27,9 +27,9 @@
     and each player's has a name of its own, which says whose it is.
   * The clock is a timer of the battle taking a second off status.time.
   * At time up the two scores are compared (<above>gun2.score</above>,
-    <equal>), and the result screen takes the place of
-    time up, its words picked to say who won, or a draw (<become
-    object="result.outcome" sprite="white" />).
+    <equal>), and the end screen comes up with
+    its words picked to say who won, or a draw (<become
+    object="over.outcome" sprite="white" />).
   Not in it: the planes falling as they are hit, and the other games on the
   cartridge (the submarines, the torpedoes, the shooting gallery).
 -->
@@ -107,10 +107,10 @@
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="battle" /></input>
+        <input button="space"><push state="playing" /></input>
       </inputs>
     </state>
-    <state name="battle">
+    <state name="playing">
       <objects>
         <!-- the clock; never drawn -->
         <object name="status">
@@ -240,8 +240,24 @@
       <conditions>
         <condition object="status" variable="time">
           <atmost>0</atmost>
-          <play sound="end" />
-          <push state="timeup" />
+          <condition object="gun1" variable="score">
+            <above>gun2.score</above>
+            <play sound="end" />
+            <become object="over.outcome" sprite="yellow" />
+            <push state="over" />
+          </condition>
+          <condition object="gun2" variable="score">
+            <above>gun1.score</above>
+            <play sound="end" />
+            <become object="over.outcome" sprite="white" />
+            <push state="over" />
+          </condition>
+          <condition object="gun1" variable="score">
+            <equal>gun2.score</equal>
+            <play sound="end" />
+            <become object="over.outcome" sprite="draw" />
+            <push state="over" />
+          </condition>
         </condition>
       </conditions>
       <timers>
@@ -263,40 +279,13 @@
         </object>
       </objects>
       <shows>
-        <show state="battle" />
+        <show state="playing" />
       </shows>
       <inputs>
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <!-- Time up: the scores are compared, and the state that says who won takes this one's place. -->
-    <state name="timeup">
-      <shows>
-        <show state="battle" />
-        <show set="end" />
-      </shows>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
-      <conditions>
-        <condition object="gun1" variable="score">
-          <above>gun2.score</above>
-          <become object="result.outcome" sprite="yellow" />
-          <pop state="result" />
-        </condition>
-        <condition object="gun2" variable="score">
-          <above>gun1.score</above>
-          <become object="result.outcome" sprite="white" />
-          <pop state="result" />
-        </condition>
-        <condition object="gun1" variable="score">
-          <equal>gun2.score</equal>
-          <become object="result.outcome" sprite="draw" />
-          <pop state="result" />
-        </condition>
-      </conditions>
-    </state>
-    <state name="result">
+    <state name="over">
       <objects>
         <!-- who won, or a draw: under TIME UP -->
         <object name="outcome">
@@ -307,7 +296,7 @@
         </object>
       </objects>
       <shows>
-        <show state="battle" />
+        <show state="playing" />
         <show set="end" />
       </shows>
       <inputs>

@@ -41,7 +41,7 @@
     <enter>s its way "next". The later waves are the first (from=), so they
     have that condition too and say only where "next" leads; the last writes
     a "cleared" of its own, which takes the copied one's place and wins.
-  * Paused, won and lost draw the game still underneath (<show state>).
+  * Paused and over draw the game still underneath (<show state>).
   Not in it: the waves coming round again faster after the eighth, and a
   blaster for every 10,000 points.
 -->

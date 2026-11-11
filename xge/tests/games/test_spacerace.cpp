@@ -164,7 +164,7 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 		table.frames(60 * 60 - 2);
 		CHECK(table.game.getCurrentState().name == "playing");
 		table.frames(3);
-		CHECK(table.game.getCurrentState().name == "wins");
+		CHECK(table.game.getCurrentState().name == "over");
 	}
 
 	SECTION("player 1")
@@ -173,9 +173,9 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 		table.game.setVariable("rocket1", "score", 3.0f);
 		table.game.setVariable("rocket2", "score", 2.0f);
 		table.timeUp();
-		REQUIRE(table.game.getCurrentState().name == "wins");
+		REQUIRE(table.game.getCurrentState().name == "over");
 		table.frames(1);
-		CHECK(table.game.getObject("wins.winner").lookName() == "player1");
+		CHECK(table.game.getObject("over.winner").lookName() == "player1");
 	}
 
 	SECTION("player 2, then a new game from the menu")
@@ -184,13 +184,13 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 		table.game.setVariable("rocket2", "score", 1.0f);
 		table.timeUp();
 		table.frames(1);
-		CHECK(table.game.getObject("wins.winner").lookName() == "player2");
+		CHECK(table.game.getObject("over.winner").lookName() == "player2");
 
 		// Space starts a new game from the menu with the scores back at 0.
 		table.executor.executeInput(Command{ CmdReset{} }, true);
 		CHECK(table.game.getCurrentState().name == "title");
 		CHECK(table.score(2) == 0.0f);
-		CHECK(table.game.getObject("wins.winner").lookName() == "draw");
+		CHECK(table.game.getObject("over.winner").lookName() == "draw");
 		CHECK(table.game.getObject("score2").picture.text == "0");
 	}
 
@@ -201,7 +201,7 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 		table.game.setVariable("rocket2", "score", 2.0f);
 		table.timeUp();
 		table.frames(1);
-		CHECK(table.game.getObject("wins.winner").lookName() == "draw");
+		CHECK(table.game.getObject("over.winner").lookName() == "draw");
 	}
 }
 
@@ -286,11 +286,11 @@ TEST_CASE("paused and the win screen draw the race still underneath", "[spacerac
 
 	table.game.setVariable("rocket2", "score", 2.0f);
 	table.timeUp();
-	REQUIRE(table.game.getCurrentState().name == "wins");
+	REQUIRE(table.game.getCurrentState().name == "over");
 	table.frames(1);
 	CHECK(table.game.isStill(table.rocket(2)));
 	CHECK(table.game.isStill(table.game.getObject("score2")));
-	CHECK(table.game.isShown(table.game.getObject("wins.winner")));
-	CHECK(table.game.getObject("wins.winner").lookName() == "player2");
+	CHECK(table.game.isShown(table.game.getObject("over.winner")));
+	CHECK(table.game.getObject("over.winner").lookName() == "player2");
 	CHECK(table.game.isShown(table.game.getObject("continue")));
 }
