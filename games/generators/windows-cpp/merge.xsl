@@ -53,11 +53,18 @@
        =================================================================== -->
 
   <!-- $base changed by $over: over's attributes over base's (from= dropped),
-       and their children merged. -->
+       and their children merged. A group from= an object is a group, its members
+       sharing what the object has. -->
   <xsl:template name="merge-changed">
     <xsl:param name="base" />
     <xsl:param name="over" />
-    <xsl:element name="{name($base)}">
+    <xsl:variable name="tag">
+      <xsl:choose>
+        <xsl:when test="name($base) = 'object' and name($over) = 'group'">group</xsl:when>
+        <xsl:otherwise><xsl:value-of select="name($base)" /></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:element name="{$tag}">
       <xsl:for-each select="$base/@*[name() != 'from']">
         <xsl:if test="not($over/@*[name() = name(current())])">
           <xsl:copy-of select="." />

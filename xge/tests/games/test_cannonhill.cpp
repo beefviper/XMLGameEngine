@@ -10,6 +10,7 @@
 // point and the next field.
 
 #include "played.h"
+#include "turns.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -65,7 +66,7 @@ TEST_CASE("cannonhill.xml: the cannons stand on the first field, player 1 to aim
 	Duel duel;
 	REQUIRE(duel.state() == "playing");
 	CHECK(duel.look() == "aiming");
-	CHECK(duel.table("turn") == 1.0f);
+	CHECK(turns::number(duel.game, "barrels") == 1.0f);
 	CHECK(duel.get("barrel1").lookName() == "ready");
 	CHECK(duel.get("barrel2").lookName() == "idle");
 
@@ -138,7 +139,7 @@ TEST_CASE("cannonhill.xml: a shell that lands wide blows a crater and passes the
 	const Object& ground = duel.get("ground");
 	REQUIRE(ground.bitmap);
 	duel.untilAiming();
-	CHECK(duel.table("turn") == 2.0f);
+	CHECK(turns::number(duel.game, "barrels") == 2.0f);
 	CHECK(duel.get("barrel2").lookName() == "ready");
 	CHECK(duel.get("barrel1").lookName() == "idle");
 	CHECK(duel.table("score1") == 0.0f);
@@ -190,7 +191,7 @@ TEST_CASE("cannonhill.xml: a shell landing by the other cannon wins the point an
 	duel.untilAiming();
 	// The second field, its cannons on its own ground, and the turn passed.
 	CHECK(duel.get("cannon1").position.y + duel.get("cannon1").size.y == Approx(470.0f));
-	CHECK(duel.table("turn") == 2.0f);
+	CHECK(turns::number(duel.game, "barrels") == 2.0f);
 	CHECK(duel.table("score1") == 1.0f);
 }
 

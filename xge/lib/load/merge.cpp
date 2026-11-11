@@ -437,6 +437,8 @@ namespace xge
 	{
 		Made made = std::make_shared<Element>(*base);
 		dropAttribute(*made, "from");
+		// A group from= an object is a group, its members sharing what the object has.
+		if (base->name == "object" && over->name == "group") { made->name = "group"; }
 		for (const auto& [key, value] : over->attributes)
 		{
 			if (key != "from") { setAttribute(*made, key, value); }

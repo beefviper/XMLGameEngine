@@ -25,8 +25,11 @@
     the cannon. Its heading, and where its tip is, follow its elevation
     (update="live"), kept from 0 to 90 by a <clamp>, so the two cannons
     share one piece and aiming only changes the elevation.
-  * Where a turn is, is the table's look: handing over, aiming, flying,
-    landed, done, a point; each look's rules sit inside one condition on it.
+  * The barrels are a players group that takes <turns>: the one on its
+    turn shows ready, the other idle, and keys reach only the one ready.
+    <pass> hands the turn on once a shot is over.
+  * Where a turn is, is the table's look: aiming, flying, landed, done,
+    a point; each look's rules sit inside one condition on it.
     The blast that a landing leaves says whether a cannon was hit, by a
     distance= condition.
   * The three fields are scenes; each point won puts the next one back as
@@ -67,11 +70,11 @@
          heading follows its elevation: level - side * elevation, side 1
          for a barrel facing right, -1 for one facing left. -->
     <object name="barrel" class="barrel">
-      <sprite name="idle">
-        <bitmap from="barrel-idle" />
-      </sprite>
       <sprite name="ready">
         <bitmap from="barrel-ready" />
+      </sprite>
+      <sprite name="idle">
+        <bitmap from="barrel-idle" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <heading update="live">self.level - self.side * self.elevation</heading>
@@ -198,12 +201,11 @@
 
     <state name="playing">
       <objects>
-        <!-- The table: whose turn, the wind, the points, and where the turn
-             is, its look: handing over, aiming, a shell flying, landed,
+        <!-- The table: the wind, the points, and where the turn
+             is, its look: aiming, a shell flying, landed,
              done (missed, or the turn passes once the blast is gone), a
              point won. -->
         <object name="table">
-          <sprite name="handing"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
           <sprite name="aiming"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
           <sprite name="flying"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
           <sprite name="landed"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
@@ -212,7 +214,6 @@
           <position><x>0</x><y>0</y></position>
           <hidden />
           <variables>
-            <variable name="turn">1</variable>
             <variable name="wind"><formula><round><value><random><min>-5</min><max>5</max></random></value></round></formula></variable>
             <variable name="score1">0</variable>
             <variable name="score2">0</variable>
@@ -259,13 +260,17 @@
             <bitmap from="cannon2" />
           </sprite>
         </object>
-        <object name="barrel1" from="barrel" />
-        <object name="barrel2" from="barrel">
-          <variables>
-            <variable name="level">270</variable>
-            <variable name="side">-1</variable>
-          </variables>
-        </object>
+        <!-- the players are the barrels, taking turns: ready on its turn, idle off it -->
+        <group name="barrels" from="barrel">
+          <turns sprite="idle" />
+          <member name="barrel1" />
+          <member name="barrel2">
+            <variables>
+              <variable name="level">270</variable>
+              <variable name="side">-1</variable>
+            </variables>
+          </member>
+        </group>
       </objects>
       <scenes>
         <!-- 1: one hill between them -->
@@ -395,10 +400,10 @@
         </scene>
       </scenes>
       <inputs>
-        <input on="hold"><button>w</button><button>up</button><trigger object="barrel1" action="raise" from="ready" /><trigger object="barrel2" action="raise" from="ready" /></input>
-        <input on="hold"><button>s</button><button>down</button><trigger object="barrel1" action="lower" from="ready" /><trigger object="barrel2" action="lower" from="ready" /></input>
-        <input button="space" on="hold"><trigger object="barrel1" action="charge" from="ready" /><trigger object="barrel2" action="charge" from="ready" /></input>
-        <input button="space" on="release"><trigger object="barrel1" action="fire" from="ready" /><trigger object="barrel2" action="fire" from="ready" /></input>
+        <input on="hold"><button>w</button><button>up</button><trigger object="barrels" action="raise" from="ready" /></input>
+        <input on="hold"><button>s</button><button>down</button><trigger object="barrels" action="lower" from="ready" /></input>
+        <input button="space" on="hold"><trigger object="barrels" action="charge" from="ready" /></input>
+        <input button="space" on="release"><trigger object="barrels" action="fire" from="ready" /></input>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
@@ -440,19 +445,10 @@
         <!-- the turn is over and the blast gone: the other player, a new wind -->
         <condition object="table" sprite="done">
           <condition object="blast"><remaining>0</remaining>
-            <set variable="table.turn">3 - table.turn</set>
             <set variable="table.wind"><formula><round><value><random><min>-5</min><max>5</max></random></value></round></formula></set>
-            <become object="table" sprite="handing" />
+            <become object="table" sprite="aiming" />
+            <pass object="barrels" />
           </condition>
-        </condition>
-        <condition object="table" sprite="handing">
-          <first><become object="table" sprite="aiming" /></first>
-          <condition object="table" variable="turn"><equal>1</equal>
-            <become object="barrel1" sprite="ready" />
-          </condition>
-          <otherwise>
-            <become object="barrel2" sprite="ready" />
-          </otherwise>
         </condition>
       </conditions>
     </state>

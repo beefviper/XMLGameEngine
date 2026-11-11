@@ -130,6 +130,20 @@ TEST_CASE("a piece can be from= an earlier one, and a named member of a group pi
 	CHECK(play.game.getCurrentObjects().size() == 2);
 }
 
+TEST_CASE("a group from= an object piece is a group: each member has what the object has", "[pieces]")
+{
+	const std::string kit = box("cannon", 10, 20, "<variables><variable name=\"power\">5</variable></variables>");
+	const Scratch file("<group name=\"cannons\" from=\"cannon\"><member name=\"left\" /><member name=\"right\"><position><x>50</x></position></member></group>"
+		"<object name=\"shown\"><sprite><text><number>right.power</number><size>10</size></text></sprite><position><x>0</x><y>0</y></position></object>", "<pop />", {}, kit);
+	Played play(file.path);
+
+	CHECK(play.get("left").variable.at("power") == Approx(5));
+	CHECK(play.get("left").position.x == Approx(10));
+	CHECK(play.get("right").variable.at("power") == Approx(5));
+	CHECK(play.get("right").position.x == Approx(50));
+	CHECK(play.get("right").position.y == Approx(20));
+}
+
 TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads its scene's variables", "[pieces][spawn]")
 {
 	const std::string kit = "<object name=\"bomb\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
