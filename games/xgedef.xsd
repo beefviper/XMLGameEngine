@@ -1169,7 +1169,7 @@
           <xs:sequence>
             <xs:element name="full" type="xs:positiveInteger" minOccurs="0" />
           </xs:sequence>
-          <xs:attribute name="pile" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="best" type="xs:positiveInteger" minOccurs="0" />
@@ -1623,11 +1623,11 @@
           <xs:attribute name="into" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- call, on a hand with a pile of its own: the suit of the card it points at there is called for pile=, waiting
+      <!-- call, on a hand with a pile of its own: the suit of the card it points at there is called for the holder object=, waiting
            with a <wild> card on top; refused when it is not waiting -->
       <xs:element name="call">
         <xs:complexType>
-          <xs:attribute name="pile" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
       <!-- put: a new piece of class= (left out: of the pieces the player on its turn <owns>) in the picker's cell of the pieces' map; refused when the cell is taken,

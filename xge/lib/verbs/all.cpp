@@ -116,7 +116,6 @@ namespace xge
 
 		// The names any command may have, each an attribute.
 		command.object = node.getAttribute("object");
-		command.pile = node.getAttribute("pile");
 		command.variable = node.getAttribute("variable");
 		command.state = node.getAttribute("state");
 		command.action = node.getAttribute("action");

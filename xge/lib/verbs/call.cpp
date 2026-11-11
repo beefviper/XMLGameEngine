@@ -14,8 +14,8 @@ namespace xge
 	// <call>: Names what a wild card stands for.
 	static Command makeCall(const RawCommand& raw, const ValueEvaluator&)
 	{
-		if (raw.pile.empty()) { throw std::runtime_error("<call>: needs pile=, the pile whose wild card the suit is called for"); }
-		return CmdCall{ raw.pile };
+		if (raw.object.empty()) { throw std::runtime_error("<call>: needs object=, the holder whose wild card the suit is called for"); }
+		return CmdCall{ raw.object };
 	}
 
 	static bool runCall(const Command& command, const Doer& doer, CommandExecutor& executor)

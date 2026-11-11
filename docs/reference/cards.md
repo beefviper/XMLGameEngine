@@ -36,7 +36,7 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
 - **`<holds class sprite>`** on an object or group makes it a holder: what it holds, in order, the last on top, each showing the look `sprite=` while laid there (none: each keeps its own).
 - **`<spread>`**: each one on from the one under it (`<x>`, `<y>`, `<width>` the most it spreads across); a second with `sprite=` for those showing that look.
 - **`<accepts>`**: what may be placed on top, as `<condition>`s on the arriving one, all of which must hold. Each compares its `variable=` with `<equal>`, `<unequal>`, `<above>`, `<below>`, `<atleast>` or `<atmost>` a number, or with a variable of the top one, plus or minus a number if wanted: `<equal>top.suit</equal>`, `<unequal>top.color</unequal>`, `<equal>top.rank + 1</equal>`, `<below>top.worth</below>`. `total="sum"` adds that variable up over what is laid at once (`<equal>13</equal>`: Pyramid's pairs); `<condition total="count"><equal>1</equal></condition>` lays one at a time. `<any>` holds conditions of which one must hold; `<empty>` holds conditions on the first, where there is no top. `<accepts />` takes anything; no `<accepts>`: nothing.
-- **`<wild variable="suit">`** in `<accepts>`, with `<condition>`s: what keeps them goes on anything. The holder then waits (live `calling` 1) until the one who laid it names a value with `<call pile>`: the `suit` of the one it points at among its own. Live `called` is that value, and the top counts as it until the next one is laid. A wild one dealt on top counts as its own.
+- **`<wild variable="suit">`** in `<accepts>`, with `<condition>`s: what keeps them goes on anything. The holder then waits (live `calling` 1) until the one who laid it names a value with `<call object>`: the `suit` of the one it points at among its own. Live `called` is that value, and the top counts as it until the next one is laid. A wild one dealt on top counts as its own.
 
   ```xml
   <accepts>
@@ -92,7 +92,7 @@ What a set of cards can make is written once in the game, beside `<styles>`, low
 </patterns>
 ```
 
-A holder (Hold'em's: the ace's `high` 14) scores by them with `<score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score>`: with that holder's cards (`<full>`: how many it holds once dealt), the best five of all. Live numbers:
+A holder (Hold'em's: the ace's `high` 14) scores by them with `<score patterns="poker"><with object="board"><full>5</full></with><best>5</best></score>`: with that holder's cards (`<full>`: how many it holds once dealt), the best five of all. Live numbers:
 
 - `pattern`: the highest made (from 1; 0 none);
 - `strength`: orders any two the same size (pattern, then the run from its top, else rank groups bigger first, then the rest), so the showdown is `<above>theirs.strength</above>`;

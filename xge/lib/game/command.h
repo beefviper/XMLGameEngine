@@ -741,7 +741,7 @@ namespace xge
 		std::string into;
 	};
 
-	// <call pile="discard" />: a hand names the suit of the card it points
+	// <call object="discard" />: a hand names the suit of the card it points
 	// at in its own pile for that pile, waiting with a <wild> card on top.
 	// Refused when the pile is not waiting or no card of its own is pointed at.
 	struct CmdCall
@@ -1051,7 +1051,6 @@ namespace xge
 		bool only{ false };    // pick: <only />
 		bool avoid{ false };   // think: <avoid />, a card player that keeps out of tricks
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
-		std::string pile;      // call: pile=, the pile whose wild card the suit is called for
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), spawn (how many), jump (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)

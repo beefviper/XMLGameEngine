@@ -228,7 +228,7 @@
     <xsl:param name="node" />
     <xsl:variable name="verb" select="local-name($node)" />
     <xsl:variable name="fill">
-      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@style | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from | $node/@button | $node/@pile">
+      <xsl:for-each select="$node/@object | $node/@variable | $node/@state | $node/@action | $node/@direction | $node/@burn | $node/@sound | $node/@sprite | $node/@style | $node/@path | $node/@class | $node/@scene | $node/@way | $node/@into | $node/@from | $node/@button">
         <xsl:if test=". != ''">
           <xsl:text> command.</xsl:text>
           <xsl:choose>
@@ -1902,7 +1902,7 @@
         <xsl:text>;</xsl:text>
         <xsl:if test="score/with">
           <xsl:value-of select="concat(' ', $to, '.pile.scoreWith = ')" />
-          <xsl:call-template name="string"><xsl:with-param name="text" select="score/with/@pile" /></xsl:call-template>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="score/with/@object" /></xsl:call-template>
           <xsl:text>;</xsl:text>
         </xsl:if>
         <xsl:if test="score/with/full">

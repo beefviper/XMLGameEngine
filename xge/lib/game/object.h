@@ -684,7 +684,7 @@ namespace xge
 			bool hasPoints{ false };    // <counts>: what its face-up cards add up to
 			RawValue pointsMost;        // <counts><atmost>: highs only while the total stays at most this (empty text: no limit)
 			std::string score;          // <score patterns=>: scored by those patterns (empty: not scored)
-			std::string scoreWith;      // <score><with pile=>: with that pile's cards too
+			std::string scoreWith;      // <score><with object=>: with that pile's cards too
 			int scoreFull{};            // <with><full>: that pile holds this many when all are dealt (0: as it is)
 			int scoreBest{};            // <score><best>: the best this many of the cards (0: all)
 			std::string melds;          // <score patterns=><melds />: its cards laid out in groups that make those patterns (empty: none)

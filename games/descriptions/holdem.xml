@@ -128,7 +128,7 @@
         <object name="theirs" class="place">
           <sprite name="spot"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth - 4</x><y>theirrow</y></position>
-          <holds class="card" sprite="face"><spread><x>cardwidth + 8</x></spread><score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score></holds>
+          <holds class="card" sprite="face"><spread><x>cardwidth + 8</x></spread><score patterns="poker"><with object="board"><full>5</full></with><best>5</best></score></holds>
         </object>
         <object name="board" class="place">
           <sprite><rectangle><width>cardwidth * 5 + 64</width><height>cardheight + 16</height><color>color.forestgreen</color></rectangle></sprite>
@@ -138,7 +138,7 @@
         <object name="yours" class="place">
           <sprite name="spot"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth - 4</x><y>yourrow</y></position>
-          <holds class="card" sprite="face"><spread><x>cardwidth + 8</x></spread><score patterns="poker"><with pile="board"><full>5</full></with><best>5</best></score></holds>
+          <holds class="card" sprite="face"><spread><x>cardwidth + 8</x></spread><score patterns="poker"><with object="board"><full>5</full></with><best>5</best></score></holds>
         </object>
 
         <!-- the table: the pot, what the player to act owes, the raises and actions this round, the round (0 before

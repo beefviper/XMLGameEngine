@@ -174,7 +174,7 @@
             <action name="play"><pick class="card" /><place into="discard" /><play sound="card" /><pass /></action>
             <action name="back"><drop /></action>
             <!-- after an eight: the suit of the card pointed at is named -->
-            <action name="call"><call pile="discard" /><play sound="call" /><become sprite="free" /><pass /></action>
+            <action name="call"><call object="discard" /><play sound="call" /><become sprite="free" /><pass /></action>
           </actions>
           <turns sprite="waiting" />
           <member name="you">

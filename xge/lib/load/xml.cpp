@@ -929,7 +929,7 @@ namespace xge
 			}
 		}
 
-		// A <score patterns>: its <melds />, <with pile> and <best>.
+		// A <score patterns>: its <melds />, <with object> and <best>.
 		void readScore(const XmlNode& node, RawObject::RawPile& pile, const std::string& at)
 		{
 			pile.score = requireAttribute(node, "patterns", at);
@@ -937,7 +937,7 @@ namespace xge
 			{
 				if (part->getName() == "with")
 				{
-					pile.scoreWith = requireAttribute(*part, "pile", at + " > <with>");
+					pile.scoreWith = requireAttribute(*part, "object", at + " > <with>");
 					if (auto full = findChild(part.get(), "full")) { pile.scoreFull = readCount(*full, at + " > <with> > <full>"); }
 				}
 				else if (part->getName() == "best") { pile.scoreBest = readCount(*part, at + " > <best>"); }
