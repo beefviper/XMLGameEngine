@@ -102,8 +102,8 @@ Each row is one concept done more than one way. Counts are games using each form
 | 15 | Either player | Rules written once per player: Pong's left and right edge rules, `score1`/`score2`, `paddle1`/`paddle2` keys; Combat, Cannon Hill, Space Race, Freeway the same | A word for the object touched and for "the other member", already in the backlog as `other` | [R10](#r10-a-word-for-the-other-one) |
 | 16 | A place that holds things | 11 card games give a holder a dummy `<rectangle>` of 4 by 4 in the background colour, because a holder needs a size | A holder with no sprite | [R11](#r11-card-words-that-are-still-card-words) |
 | 17 | Card words | The rule is "tags name mechanics, never one game". Still card-shaped: `<call pile=>`, `<with pile=>`, `<trick>`, `<trumps>`, `<breaks>`, `<melds />`, `<wild>`, and `suit`/`rank` as fixed variable names | See the task | [R11](#r11-card-words-that-are-still-card-words) |
-| 18 | Steering | `<chase>`, `<aim>`, `<hunt>`, `<wander>`, `<go>`, `<follow>`, `<track>`, `<seek>` (1 game), `<pull>` (0 games) | Review as one family; at least decide `<seek>` and `<pull>` | [R1](#r1-decide-every-word-fewer-than-two-games-use) |
-| 19 | Words nobody uses | In the schema, in no game: `accelerate`, `pull`, `rise`, `image`, `gap`, `margin`, `near`, `faster`, `framerate`, `fullscreen`, `absolute`, `floor`, `negate`, `remainder`, `odd`. `touch.` is a documented name no game reads | Use in a game, keep with a reason, or remove | [R1](#r1-decide-every-word-fewer-than-two-games-use) |
+| 18 | Steering | `<chase>`, `<aim>`, `<hunt>`, `<wander>`, `<go>`, `<follow>`, `<track>`, `<seek>` (1 game), `<pull>` (0 games) | Review as one family; at least decide `<seek>` and `<pull>` | R1, done |
+| 19 | Words nobody uses | In the schema, in no game: `accelerate`, `pull`, `rise`, `image`, `gap`, `margin`, `near`, `faster`, `framerate`, `fullscreen`, `absolute`, `floor`, `negate`, `remainder`, `odd`. `touch.` is a documented name no game reads | Use in a game, keep with a reason, or remove | R1, done |
 | 20 | Where a command may go | Written twice: the schema's command groups and `ruleFor` in `load/check.cpp` | Each verb's own file, checked against the schema ([A1](#a1-a-verb-is-one-file)) | A1 |
 | 21 | What a tag may hold | Written three times: the schema, hand-written "unknown `<x>`; expected ..." checks through `load/xml.cpp`, and `data.xsl` | The schema, plus [A5](#a5-a-game-written-out-as-if-by-hand) | A1, A5 |
 
@@ -203,39 +203,11 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 
 ### Phase 3: the reduction pass
 
-Work R1 first (it decides what the others delete). The rest are independent of each other unless noted, and each is one branch.
-
-#### R1. Decide every word fewer than two games use
-
-- **Size** M for the decisions, then S per word. **Needs** nothing now (T1 and B2 are done).
-- **Why.** 15 words no game uses and 77 that one game uses are where the fraction reduces. Not all should go: some are real mechanics waiting for a second game. But each should be a decision, written down.
-- **Files.** A table added to `docs/designs/11-vocabulary-map.md` (keep it under the 6 KB guide by listing only words with a verdict other than "keep"); then the usual language-change files per word.
-- **Do.**
-  1. Print the table from `xgetest "[vocabulary]"` (its warning lists the words one game alone uses; `kUnused` in `test_vocabulary.cpp` the words none uses).
-  2. For each of the 15 unused words, pick one: **use** (a shipped game is better with it: for example `<accelerate>` is the documented way to push without a heading, and no game does), **keep** (cheap and obviously paired: `absolute`, `floor`, `negate`, `remainder`, `odd` beside `even`, `fullscreen`, `framerate`), or **remove** (`pull`, `rise`, `image`, `gap`, `margin`, `near`, `faster` unless a game is changed to use them). `<image>` is a special case: the engine can show a picture file and `games/assets/paddle.jpg` exists only for that; either a game uses it or both go.
-  3. For each word one game uses, ask the fraction question: is it another word with one more part? Candidates found in review, each to confirm by reading the engine code for both words:
-
-     | Word (game) | Likely the same as |
-     |---|---|
-     | `<jump>` (Frostbite) | `<hop>` with `<seconds>`: R2, done (Frostbite hops; `<leap>` became `<jump>`) |
-     | `<slower>` (Lunar Lander) | a rule's condition on `speed`: done |
-     | `<hide>` (Space Invaders 2: layers of an SVG) | leave: it is about the picture, not the object; but rename if R6 picks `hidden` |
-     | `<seek>` (Yars' Revenge) and `<pull>` (none) | one word with a pick of what changes: the heading or the velocity |
-     | `<lined>` in `<aim>` (Berserk) | keep; no other form |
-     | `<shift object>` (Galaxian) | `<move>` given an `object=`, if a rule's `<move>` already shifts once |
-     | `<stagger>`, `<nearest>` in `<follow>` (Galaxian) | keep; a second flying-formation game will tell |
-     | `<slow class>` (Pac-Man) | a `<surface>` with drag (Speedway's word), if maze walkers can read it |
-     | `<retreat>`, `<ahead>`, `<with>` in `<hunt>` (Pac-Man) | keep: these are the four ghosts, and the author asked for them as verbs |
-     | `<promote>`, `<forced />`, `<only />`, `<held>`, `<movable>` (Checkers) | keep until a second moves-game (halma, chess) uses or replaces them |
-     | `<player>` and state `<turns>`, `<out />` (Galaxian) | [R4](#r4-one-way-to-take-turns) |
-     | `<letter>`, `<rank>` (Galaxian's best table) | keep |
-     | `<all>` (Tennis) | [R8](#r8-small-sweeps) |
-  4. Record each verdict in one line. Remove what is to be removed, one word per commit, each with the reader refusing the old word by name.
-- **Done.** `kUnused` in `test_vocabulary.cpp` holds only "keep" words, each with its reason; the element count in the schema is lower and is written in `11-vocabulary-map.md` so the next review can compare.
+R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest are independent of each other unless noted, and each is one branch.
 
 #### R3. One way into and out of play
 
-- **Size** L. **Needs** R1's verdict, D5.
+- **Size** L. **Needs** nothing (R1 and D5 are done).
 - **Why.** Row 1 of the consistency table. In October "pools become copies" moved sixteen games, but `<fire>` and `<release>` were left able to take from a pool, and 14 games still write `<active>false</active>`. A reader meets `die`, `despawn`, `reveal`, `spawn`, `fire`, `release`, `active`, `most` and has to learn which pairs with which.
 - **Substeps.**
   1. **Survey (S).** For each of the 14 games with `<active>false</active>` (Asteroids, Atlantis, Berserk, Combat, Demon Attack, Frostbite, Galaxian, Lunar Lander, Mario Bros., Megamania, Missile Command, Space Invaders 1 and 2, Yars' Revenge), list each such object and why it starts out of play: a single shot fired again and again (a pool of one), a thing revealed once later, a fixed member that comes back. Write the list into `docs/designs/10-pools-and-enemies.md`.
@@ -441,7 +413,7 @@ Each is **S**, independent, one commit.
 
 #### A6. The schema documents itself
 
-- **Size** M, then S. **Needs** R1 (do not document words about to go).
+- **Size** M, then S. **Needs** nothing (R1 is done).
 - **Why.** Debt 7, and the project's own point: use XML's tools. The XSD has good comments, but as `<!-- -->`, which no tool reads.
 - **Substeps.**
   1. **Comments become `xs:annotation`/`xs:documentation` (M).** For every element and type. An XML editor then shows the sentence on hover and in completion. Check the weak validator (`xge/lib/load/xsd.cpp`) skips annotations, and that Xerces still validates all games.
@@ -537,8 +509,7 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 ```
 Blocks 1 and 2 are done.
 
-Block 3  (reduction; R1 first, then any order)
-  R1  a verdict for every rare word
+Block 3  (reduction, any order; R1 is done)
   R5  one end screen, state names
   R9  pause and title spelled one way     (after R5)
   R8  the six small sweeps
@@ -583,7 +554,6 @@ What blocks what, in one place:
 | A3 (`readCommand`, `makeCommand`) | A1 |
 | A1 substep 3 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
-| A6 | R1 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R1 (B2, B3, B5 and T1 are done).
+If only a few more things are ever done from this file, start with R5 (B2, B3, B5, R1 and T1 are done).

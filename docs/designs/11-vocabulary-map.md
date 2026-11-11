@@ -55,3 +55,17 @@ Time, sound, conditions over many objects, maze walking, spawning, `negate`, `fl
 Two grammars, one inside the other. The outer is **noun, property, verb, filter**: regular, checked by the schema, visible to XSLT. The inner is the **value**, with a small vocabulary of its own beside plain `+ - * /` text. Each further value word is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
 
 A verb that means "behave like one particular game" shows that its parameters were not found.
+
+## Rare words
+
+How often a word is used says little about its worth, with some fifty games written of the thousands it should cover. The test is whether two words do the same job; then they become one. Words used by one game or none were judged that way; only those that changed, or were looked at and kept apart, are listed. Schema words: 326 before, 323 after.
+
+| Word | Verdict |
+|---|---|
+| `slower`, `faster` | gone: a rule's condition on the live number `speed`, held as the touch happened |
+| `accelerate` | gone: `<thrust direction>` (one held push, along the heading or one way) |
+| `pull`, `seek` | kept apart: a pull adds speed toward the nearest (a gravity well), a seek turns at the same speed (a homing missile) |
+| `shift object` | kept: moves where something is by an amount; `move` sets a held velocity |
+| `slow class` | kept: one walker slowed on a tile; a `surface` holds back everything gripping it |
+| `image` | kept: a picture file (a still background); `assets/paddle.jpg` serves its tests |
+| `absolute`, `negate`, `floor`, `remainder`, `odd`, `framerate`, `fullscreen`, `margin`, `gap`, `rise`, `near` | kept: each the pair or the inverse of a word in use, or a setting with a default |

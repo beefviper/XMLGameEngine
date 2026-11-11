@@ -75,7 +75,7 @@ namespace
 		{ "framerate", "a window's; 60 when left out" },
 		{ "fullscreen", "a window's; false when left out" },
 		{ "gap", "a group's, between cells" },
-		{ "image", "a picture file as a sprite" },
+		{ "image", "a picture file as a sprite, such as a still background" },
 		{ "margin", "a group's, round its cells" },
 		{ "near", "a chase that stops short" },
 		{ "negate", "a <formula>, beside sign and absolute" },
