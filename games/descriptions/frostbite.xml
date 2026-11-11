@@ -18,7 +18,7 @@
   three nights running to win.
 
   W or Up jumps up a row, S or Down jumps down one, A and D or Left and Right
-  walk. Space or P pauses.
+  walk. Pause pauses.
 
   How it is written:
   * <hop> with <seconds>: a hop between rows takes a moment and passes over
@@ -320,7 +320,7 @@
         <input><button>d</button><button>right</button><trigger object="bailey" action="right" /></input>
         <input><button>w</button><button>up</button><trigger object="bailey" action="up" /></input>
         <input><button>s</button><button>down</button><trigger object="bailey" action="down" /></input>
-        <input><button>space</button><button>p</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="bailey" variable="lives">
@@ -373,7 +373,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

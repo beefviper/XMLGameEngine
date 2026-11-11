@@ -12,7 +12,7 @@
   too. A spare base every 1,000 points; the game goes on until the last
   base is gone, and the peak score reached is shown beside the score.
 
-  A and D or the arrows move, Space fires, P or Escape pauses.
+  A and D or the arrows move, Space fires, Pause pauses.
 
   How it is written:
   * Every falling rock is of one <group>, `rocks`, holding two groups of
@@ -275,7 +275,7 @@
         <input><button>a</button><button>left</button><trigger object="ship" action="left" /></input>
         <input><button>d</button><button>right</button><trigger object="ship" action="right" /></input>
         <input button="space"><trigger object="ship" action="gun" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="ship" variable="score">
@@ -302,7 +302,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

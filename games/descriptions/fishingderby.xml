@@ -14,7 +14,7 @@
   a little faster after every fish landed. The first to 99 pounds wins.
 
   You fish from the left pier: W A S D or the arrows move the hook. The
-  computer fishes from the right, on I J K L. Space, P or Escape pauses;
+  computer fishes from the right, on I J K L. Pause pauses;
   Space starts and plays again.
 
   How it is written:
@@ -296,7 +296,7 @@
         <input button="k"><trigger object="hook2" action="down" /></input>
         <input button="j"><trigger object="hook2" action="left" /></input>
         <input button="l"><trigger object="hook2" action="right" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="left" variable="score">
@@ -343,7 +343,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

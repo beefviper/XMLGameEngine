@@ -11,7 +11,7 @@
   cannons. Squids score 30, crabs 20, octopuses 10, the mystery ship 50 to
   200. The best score is kept.
 
-  A and D or the arrows move, Space fires, P or Escape pauses, Space starts
+  A and D or the arrows move, Space fires, Pause pauses, Space starts
   and plays again.
 
   How it is written:
@@ -284,7 +284,7 @@
         <input><button>a</button><button>left</button><trigger object="player" action="left" /></input>
         <input><button>d</button><button>right</button><trigger object="player" action="right" /></input>
         <input button="space"><trigger object="player" action="gun" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition class="aliens">
@@ -337,7 +337,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <!-- the cannon hit: everything holds still for a second, then the bombs are gone -->

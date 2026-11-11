@@ -22,7 +22,7 @@
   The others bid as the cards are dealt; you bid last, seeing theirs:
   W and S or the arrows change your bid, Space bids. Then A and D or the
   arrows pick a card, Space plays it; or click a card. Space after a hand
-  deals the next. P or Escape pauses.
+  deals the next. Pause pauses.
 
   How it is written:
   * The pack is a group, a row for each suit (spades, hearts, clubs,
@@ -310,7 +310,7 @@
         </input>
         <input axis="mouse.x"><trigger object="players" action="point" /></input>
         <input axis="mouse.y"><trigger object="players" action="point" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- who leads first goes round the table -->
@@ -426,7 +426,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
         <input><button>n</button><reset /></input>
       </inputs>
     </state>

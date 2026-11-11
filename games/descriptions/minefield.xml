@@ -13,7 +13,7 @@
 
   W A S D or the arrows move the cursor, Space opens, F flags. The mouse
   works too: the cursor follows it, a left click opens, a right click
-  flags. P or Escape pauses. Space plays again.
+  flags. Pause pauses. Space plays again.
 
   How it is written:
   * Three maps of <cells /> are laid in the same place: the mines, the
@@ -223,7 +223,7 @@
         <input><button>f</button><button>pad1.x</button><button>mouse.right</button><trigger object="cursor" action="flag" /></input>
         <input axis="mouse.x"><trigger object="cursor" action="point" /></input>
         <input axis="mouse.y"><trigger object="cursor" action="point" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- ten mines, laid one a frame where none is yet -->
@@ -256,7 +256,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

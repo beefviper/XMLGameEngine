@@ -371,7 +371,7 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 	}
 }
 
-TEST_CASE("the keys carry on from wave to wave, and P or Space pauses over the game drawn still", "[kaboom][engine_input]")
+TEST_CASE("the keys carry on from wave to wave, and Pause pauses over the game drawn still", "[kaboom][engine_input]")
 {
 	Game game{ "descriptions/kaboom.xml" };
 	measure(game);
@@ -399,8 +399,8 @@ TEST_CASE("the keys carry on from wave to wave, and P or Space pauses over the g
 	CHECK(bucket.position.x == Approx(startX + 9));
 	engine.handleKeyReleased(KeyCode::Left);
 
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	CHECK(game.getCurrentState().name == "paused");
 
 	// The wave being played is drawn still underneath; the one left is not.
@@ -413,8 +413,8 @@ TEST_CASE("the keys carry on from wave to wave, and P or Space pauses over the g
 	for (int i = 0; i < 30; ++i) { engine.step(); }
 	CHECK(bomber.position.x == Approx(x));
 
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	CHECK(game.getCurrentState().name == "playing");
 	CHECK(game.currentScene("playing") == "playing.wave2");
 }

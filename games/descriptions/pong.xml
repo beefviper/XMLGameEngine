@@ -10,7 +10,7 @@
 
   W and S move the left paddle. On the title, Space plays the computer
   (A and D choose easy or smart), and 2 is for two players, the second on
-  Up and Down. Space pauses and plays again.
+  Up and Down. Pause pauses and plays on.
 
   How it is written:
   * The paddles are one group: their size, the <stick /> at the top and the
@@ -190,7 +190,7 @@
         <!-- the computer's own keys for the right paddle -->
         <input button="f11"><trigger object="paddle2" action="up" /></input>
         <input button="f12"><trigger object="paddle2" action="down" /></input>
-        <input button="space"><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition class="paddle" variable="score">
@@ -241,7 +241,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input button="space"><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

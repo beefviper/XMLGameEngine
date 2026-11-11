@@ -124,13 +124,13 @@ TEST_CASE("each state of Pong has the objects it shows", "[pong][scenes]")
 	CHECK_FALSE(pong.shown("paused"));
 }
 
-TEST_CASE("paused, Pong draws the game still underneath, and Space plays on", "[pong][scenes][shows]")
+TEST_CASE("paused, Pong draws the game still underneath, and Pause plays on", "[pong][scenes][shows]")
 {
 	Pong pong;
 	pong.tap(KeyCode::Space);
 	pong.frames(10);
 
-	pong.tap(KeyCode::Space);
+	pong.tap(KeyCode::Pause);
 	REQUIRE(pong.state() == "paused");
 	const Vector2f at = pong.object("ball").position;
 	pong.frames(30);
@@ -144,7 +144,7 @@ TEST_CASE("paused, Pong draws the game still underneath, and Space plays on", "[
 		CHECK(pong.still(name));
 	}
 
-	pong.tap(KeyCode::Space);
+	pong.tap(KeyCode::Pause);
 	REQUIRE(pong.state() == "playing");
 	CHECK_FALSE(pong.still("ball"));
 	CHECK(pong.object("ball").position.x != at.x);

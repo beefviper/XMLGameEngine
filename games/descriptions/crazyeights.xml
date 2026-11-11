@@ -20,7 +20,7 @@
   A and D or the arrows move along your hand, W and S between your hand
   and the stock. Space plays the card pointed at, or draws from the stock;
   after an eight, Space names the suit of the card pointed at. With the
-  mouse, click a card to play it, the stock to draw. P or Escape pauses.
+  mouse, click a card to play it, the stock to draw. Pause pauses.
 
   How it is written:
   * The pack is a group, a row for each suit and a column for each rank,
@@ -233,7 +233,7 @@
         </input>
         <input axis="mouse.x"><trigger object="players" action="point" /></input>
         <input axis="mouse.y"><trigger object="players" action="point" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- first out wins -->
@@ -271,7 +271,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
         <input><button>n</button><reset /></input>
       </inputs>
     </state>

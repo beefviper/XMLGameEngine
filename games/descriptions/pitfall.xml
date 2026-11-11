@@ -14,8 +14,8 @@
   first again. Take all four treasures before the clock runs out to win.
   Three lives, and the best score is kept.
 
-  A and D (or the arrows) run, Space jumps, W and S climb the ladder, P or
-  Escape pauses.
+  A and D (or the arrows) run, Space jumps, W and S climb the ladder, Pause
+  pauses.
 
   How it is written:
   * Harry, the jungle behind him (the canopy, the trunks, the earth and the
@@ -588,7 +588,7 @@
         <input><button>w</button><button>up</button><trigger object="harry" action="up" /></input>
         <input><button>s</button><button>down</button><trigger object="harry" action="down" /></input>
         <input button="space"><trigger object="harry" action="jump" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <!-- how a game ends: out of lives or time, or every treasure found -->
       <conditions>
@@ -631,7 +631,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

@@ -372,7 +372,7 @@ TEST_CASE("paused, the girders are drawn still and a rolling barrel stops where 
 	Object& barrel = play.game.getObject("barrel.1");
 	const Vector2f barrelAt = barrel.position;
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	play.frames(60);
 	CHECK(barrel.position == barrelAt);
@@ -384,7 +384,7 @@ TEST_CASE("paused, the girders are drawn still and a rolling barrel stops where 
 	CHECK(play.game.isShown(play.game.getObject("paused")));
 	CHECK_FALSE(play.game.isStill(play.game.getObject("barrel"))); // the one written, never thrown itself
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "playing");
 	play.frames(1);
 	CHECK(barrel.position != barrelAt);

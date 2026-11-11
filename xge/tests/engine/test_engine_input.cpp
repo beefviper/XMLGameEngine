@@ -69,11 +69,11 @@ TEST_CASE("a held key stops driving the player while a state without it is up, a
 	engine.handleKeyPressed(KeyCode::Left);
 	REQUIRE(player.velocity.x == -kStep);
 
-	tap(engine, KeyCode::Space); // pause: "paused" binds only Space
+	tap(engine, KeyCode::Pause); // pause: "paused" binds only Pause and the pad's Start
 	CHECK(game.getCurrentState().name == "paused");
 	CHECK(player.velocity.x == 0.0f);
 
-	tap(engine, KeyCode::Space); // unpause, Left still down
+	tap(engine, KeyCode::Pause); // unpause, Left still down
 	CHECK(game.getCurrentState().name == "playing");
 	CHECK(player.velocity.x == -kStep);
 
@@ -88,12 +88,12 @@ TEST_CASE("a key pressed in a state that does not bind it starts driving the pla
 	Object& player = game.getObject("player");
 
 	tap(engine, KeyCode::Space); // title -> playing
-	tap(engine, KeyCode::Space); // pause
+	tap(engine, KeyCode::Pause); // pause
 
 	engine.handleKeyPressed(KeyCode::Left); // no Left binding in "paused"
 	CHECK(player.velocity.x == 0.0f);
 
-	tap(engine, KeyCode::Space); // unpause
+	tap(engine, KeyCode::Pause); // unpause
 	CHECK(player.velocity.x == -kStep);
 
 	engine.handleKeyReleased(KeyCode::Left);
@@ -109,9 +109,9 @@ TEST_CASE("releasing a key while paused leaves the player stopped after unpausin
 	tap(engine, KeyCode::Space); // title -> playing
 
 	engine.handleKeyPressed(KeyCode::Left);
-	tap(engine, KeyCode::Space); // pause
+	tap(engine, KeyCode::Pause); // pause
 	engine.handleKeyReleased(KeyCode::Left);
-	tap(engine, KeyCode::Space); // unpause
+	tap(engine, KeyCode::Pause); // unpause
 
 	CHECK(player.velocity.x == 0.0f);
 }
@@ -123,10 +123,10 @@ TEST_CASE("a key pressed and released while paused never moves the player", "[en
 	Object& player = game.getObject("player");
 
 	tap(engine, KeyCode::Space); // title -> playing
-	tap(engine, KeyCode::Space); // pause
+	tap(engine, KeyCode::Pause); // pause
 
 	tap(engine, KeyCode::Left);
-	tap(engine, KeyCode::Space); // unpause
+	tap(engine, KeyCode::Pause); // unpause
 
 	CHECK(player.velocity.x == 0.0f);
 }
@@ -136,8 +136,8 @@ TEST_CASE("holding a state-changing key through the change does not trigger it a
 	Game game{ "descriptions/breakout.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
 
-	// Space is bound to a state change in title, playing and paused. Held
-	// down, it must take title to playing once, not straight on to paused.
+	// Space is bound to a state change in title and in the end screen. Held
+	// down, it must take title to playing once, and do nothing more.
 	engine.handleKeyPressed(KeyCode::Space);
 	CHECK(game.getCurrentState().name == "playing");
 
@@ -172,8 +172,8 @@ TEST_CASE("a held fire key does not shoot again when its state returns", "[engin
 
 	// Used up: the shot is gone and the key is still down.
 	bullet.collisionsOn = false;
-	tap(engine, KeyCode::P); // pause
-	tap(engine, KeyCode::P); // unpause
+	tap(engine, KeyCode::Pause); // pause
+	tap(engine, KeyCode::Pause); // unpause
 
 	CHECK_FALSE(bullet.collisionsOn);
 }
@@ -226,9 +226,10 @@ TEST_CASE("the engine knows when its window has been closed", "[engine_input]")
 
 TEST_CASE("every shipped game follows the shared key conventions", "[engine_input]")
 {
-	// Space starts, pauses and plays again (never Enter), and player one is on
-	// W, A, S and D (never Z; Q turns or cycles back beside E). A game of one
-	// screen (pong_min) has nothing for Space to do.
+	// Space starts and plays again (never Enter), the Pause key (or the pad's
+	// Start) pauses and plays on, and player one is on W, A, S and D (never Z;
+	// Q turns or cycles back beside E). A game of one screen (pong_min) has
+	// nothing for Space to do.
 	int checked = 0;
 	for (const auto& entry : std::filesystem::directory_iterator("descriptions"))
 	{
@@ -250,6 +251,18 @@ TEST_CASE("every shipped game follows the shared key conventions", "[engine_inpu
 		CHECK_FALSE(names("z"));
 		const bool oneScreen = text.find("<state ") == text.rfind("<state ");
 		CHECK((oneScreen || names("space")));
+		// P and Escape pause nothing: the one pause key is Pause.
+		CHECK_FALSE(names("p"));
+		CHECK_FALSE(names("escape"));
+		// The keys and what they do, however they are laid out.
+		std::string packed = text;
+		std::erase_if(packed, [](char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; });
+		const std::string pauseKeys = "<input><button>pause</button><button>pad1.start</button>";
+		if (text.find("<state name=\"paused\">") != std::string::npos)
+		{
+			CHECK(packed.find(pauseKeys + "<pop/>") != std::string::npos);
+			CHECK(packed.find(pauseKeys + "<pushstate=\"paused\"/>") != std::string::npos);
+		}
 		++checked;
 	}
 	CHECK(checked >= 10);

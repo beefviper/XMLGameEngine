@@ -12,7 +12,7 @@
   three points wins.
 
   W and S or Up and Down raise and lower the barrel, Space held then let go
-  fires, P or Escape pauses, Space starts and plays again.
+  fires, Pause pauses, Space starts and plays again.
 
   It is the game the second stage of tables and tracks was made for:
   * The hill is one <polygon>: its corners, filled. Its collisions are by
@@ -399,7 +399,7 @@
         <input on="hold"><button>s</button><button>down</button><trigger object="barrel1" action="lower" from="ready" /><trigger object="barrel2" action="lower" from="ready" /></input>
         <input button="space" on="hold"><trigger object="barrel1" action="charge" from="ready" /><trigger object="barrel2" action="charge" from="ready" /></input>
         <input button="space" on="release"><trigger object="barrel1" action="fire" from="ready" /><trigger object="barrel2" action="fire" from="ready" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- landed by a cannon: the other player's point (a shell of your own counts too); wide, the turn is over once its blast is out -->
@@ -470,7 +470,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer><after>1.5</after><pop /></timer>
@@ -488,7 +488,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
 

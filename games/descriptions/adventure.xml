@@ -19,8 +19,8 @@
            |                              |
         castle  =====  field  =====  blackcastle
 
-  W A S D or the arrow keys walk, Space puts down what is carried, P or
-  Escape pauses, Space starts.
+  W A S D or the arrow keys walk, Space puts down what is carried, Pause
+  pauses, Space starts.
 
   How it is written:
   * The rooms are the <scenes> of the playing state, and the hero and the
@@ -417,7 +417,7 @@
         <input><button>a</button><button>left</button><trigger object="hero" action="left" /></input>
         <input><button>d</button><button>right</button><trigger object="hero" action="right" /></input>
         <input button="space"><trigger object="hero" action="drop" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="status" variable="eaten">
@@ -446,7 +446,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
 

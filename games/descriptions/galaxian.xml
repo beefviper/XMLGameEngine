@@ -14,7 +14,7 @@
   and 100, flagships 60 and 150. Shoot them all and the next fleet flies in;
   lose three ships and it is over.
 
-  A and D or the arrows move, Space fires and starts, P or Escape pauses, 2
+  A and D or the arrows move, Space fires and starts, Pause pauses, 2
   on the title for two players.
 
   How it is written:
@@ -292,7 +292,7 @@
           <padding><y>35</y></padding>
           <position><x><centered /></x><y><centered><offset>-150</offset></centered></y></position>
           <row number="1"><sprite><text><content>blue 30  purple 40  red 50  flagship 60</content><size>26</size><color>color.white</color></text></sprite></row>
-          <row number="2"><sprite><text><content>a and d, or the arrows, to move; space to fire; p to pause</content><size>20</size><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d, or the arrows, to move; space to fire; pause key to pause</content><size>20</size><color>color.lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start, 2 for two players</content><size>32</size></text></sprite>
@@ -507,7 +507,7 @@
         <input><button>a</button><button>left</button><trigger object="ship" action="left" /></input>
         <input><button>d</button><button>right</button><trigger object="ship" action="right" /></input>
         <input button="space"><trigger object="ship" action="gun" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="ship" variable="lives">
@@ -538,7 +538,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

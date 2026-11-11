@@ -10,7 +10,7 @@
   top (light all three for a bonus). Three balls.
 
   A or Left works the left flipper, D or Right the right one, Space held then
-  let go shoots, P or Escape pauses, Space starts and plays again.
+  let go shoots, Pause pauses, Space starts and plays again.
 
   It is the game the third stage of tables and tracks was made for:
   * A flipper is a <line> turned about its <pivot>, the hinge at one end:
@@ -281,7 +281,7 @@
         <input><button>d</button><button>right</button><trigger object="rightflipper" action="flip" /><play sound="flip" /></input>
         <input button="space" on="hold"><trigger object="plunger" action="pull" from="loaded" /></input>
         <input button="space" on="release"><trigger object="plunger" action="shoot" from="loaded" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- all three lanes lit: a bonus, a flash, and dark again -->
@@ -312,7 +312,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
 

@@ -18,7 +18,7 @@
   first room's yellow robots do not fire at all.
 
   W A S D or the arrow keys walk, two at once on a diagonal, and Space
-  fires the way he last walked, diagonals too. P or Escape pauses.
+  fires the way he last walked, diagonals too. Pause pauses.
 
   How it is written:
   * The rooms are the <scenes> of the playing state. The man, his shot, the
@@ -268,7 +268,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y>270</y></position>
           <row number="1"><sprite><text><content>W A S D or the arrow keys walk, Space fires the way you face</content></text></sprite></row>
-          <row number="2"><sprite><text><content>The walls are electrified: leave by any gap. P pauses.</content></text></sprite></row>
+          <row number="2"><sprite><text><content>The walls are electrified: leave by any gap. Pause pauses.</content></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>Press Space to start</content></text></sprite>
@@ -616,7 +616,7 @@
         <input><button>left</button><button>a</button><trigger object="player" action="left" /></input>
         <input><button>right</button><button>d</button><trigger object="player" action="right" /></input>
         <input button="space"><trigger object="player" action="gun" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- out of lives -->
@@ -661,7 +661,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
 

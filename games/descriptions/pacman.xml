@@ -14,7 +14,7 @@
   life, and a life is won at 10,000 points; with none left it is game over.
   The high score is kept.
 
-  W A S D or the arrows steer; Space starts, pauses and plays again.
+  W A S D or the arrows steer; Space starts and plays again, Pause pauses.
 
   How it is written:
   * The maze is a <map>: each <row> is a row of tiles, a character a tile, so
@@ -661,7 +661,7 @@
         <input><button>s</button><button>down</button><button>pad1.down</button>
           <trigger object="pacman" action="down" />
         </input>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button>
+        <input><button>pause</button><button>pad1.start</button>
           <push state="paused" />
         </input>
       </inputs>
@@ -764,7 +764,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button>
+        <input><button>pause</button><button>pad1.start</button>
           <push state="paused" />
         </input>
       </inputs>
@@ -802,7 +802,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button>
+        <input><button>pause</button><button>pad1.start</button>
           <pop />
         </input>
       </inputs>

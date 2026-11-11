@@ -98,7 +98,7 @@ Each row is one concept done more than one way. Counts are games using each form
 | 11 | All of several tests | Nested conditions (everywhere); `<all>` inside `<any>` (Tennis only, 3 uses) | Decide whether Tennis can nest; if so remove `<all>` | [R8](#r8-small-sweeps) |
 | 12 | A speed test on a touch | `<slower>` (Lunar Lander), `<faster>` (no game): a second comparison vocabulary beside `<above>`/`<below>`/`<atleast>`/`<atmost>` | A rule's `<condition variable="speed"><below>` | done (R1) |
 | 13 | Shared shows | `<shows name>` sets (Air-Sea Battle, Galaxian). The matching `<keys>` and `<conditions>` sets were removed as "state `from=` covers them" | Remove if `from=` covers these two as well | [R8](#r8-small-sweeps) |
-| 14 | Pause, title and game-over boilerplate | 57 `paused` states, 835 lines, 18 variants that differ by accident (which keys, whether the pad's Start is bound, the colour). Pad Start is bound in 24 games | One spelling, copied exactly; a test that holds it | [R9](#r9-the-screens-every-game-repeats) |
+| 14 | Pause, title and game-over boilerplate | 57 `paused` states, 835 lines, 18 variants that differ by accident (which keys, whether the pad's Start is bound, the colour). Pad Start is bound in 24 games | One spelling, copied exactly; a test that holds it | R9, done |
 | 15 | Either player | Rules written once per player: Pong's left and right edge rules, `score1`/`score2`, `paddle1`/`paddle2` keys; Combat, Cannon Hill, Space Race, Freeway the same | A word for the object touched and for "the other member", already in the backlog as `other` | [R10](#r10-a-word-for-the-other-one) |
 | 16 | A place that holds things | 11 card games give a holder a dummy `<rectangle>` of 4 by 4 in the background colour, because a holder needs a size | A holder with no sprite | [R11](#r11-card-words-that-are-still-card-words) |
 | 17 | Card words | The rule is "tags name mechanics, never one game". Still card-shaped: `<call pile=>`, `<with pile=>`, `<trick>`, `<trumps>`, `<breaks>`, `<melds />`, `<wild>`, and `suit`/`rank` as fixed variable names | See the task | [R11](#r11-card-words-that-are-still-card-words) |
@@ -249,31 +249,6 @@ Each is **S**, independent, one commit.
 - **`<all>`.** Tennis uses `<all>` inside `<any>` three times. If each can be written as nested conditions or as two rules, do so and remove `<all>` from the schema, reader and generator. If not, write in `docs/designs/07-states-and-conditions.md` why `<all>` stays.
 - **`<shows name>` sets.** Air-Sea Battle and Galaxian: if a state `from=` another says the same, use it and remove named `<shows>` sets and `<show set=>`.
 - **`touch.`** No game reads it. Either a game is clearer with it (candidates: Breakout's or Pong's deflect, Pinball), or remove the name and its documentation.
-
-#### R9. The screens every game repeats
-
-- **Size** M. **Needs** D6 (R5, done: state names).
-- **Why.** Row 14. 835 lines of pause states in 18 variants; the differences are accidents (some pop on Space, P and Escape, some on Space only; 24 games bind the pad's Start and 34 do not; some set the text white, some rely on the style).
-- **Do.** Pick one spelling for each of: the pause state, "press to start" on the title, "press to play again" on the end screen, and the keys in `playing` that pause. Suggested pause, 9 lines:
-
-  ```xml
-  <state name="paused">
-    <objects>
-      <object name="paused">
-        <sprite><text style="banner"><content>PAUSED</content></text></sprite>
-        <position><x><centered /></x><y><centered /></y></position>
-      </object>
-    </objects>
-    <shows><show state="playing" /></shows>
-    <inputs>
-      <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
-    </inputs>
-  </state>
-  ```
-
-  (where Space fires, leave `space` out). Apply it to every game. Extend the key-convention test so that a `paused` state must pop on P, Escape and `pad1.start`, and a title must start on Space and `pad1.start`.
-- **Not doing,** by D6: a built-in pause. If the author later wants the 835 lines gone, the honest form is a default *state* the engine supplies when a game pushes `paused` and defines none; it would be the only thing in the engine that a game does not say.
-- **Done.** The number of distinct pause states (whitespace removed) is at most 4: plain, Space fires, with "N for a new game", and scaled-screen games.
 
 #### R10. A word for the other one
 
@@ -488,7 +463,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 Blocks 1 and 2 are done.
 
 Block 3  (reduction, any order; R1 is done)
-  R9  pause and title spelled one way
   R8  the six small sweeps
   R10 other
   R3  one way into and out of play        (five substeps)
@@ -530,4 +504,4 @@ What blocks what, in one place:
 | A4 | A2 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R9 (B2, B3, B5, R1, R5, R7 and T1 are done).
+If only a few more things are ever done from this file, start with R8 (B2, B3, B5, R1, R5, R7, R9 and T1 are done).

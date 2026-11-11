@@ -276,7 +276,7 @@ TEST_CASE("paused, the game is drawn still underneath and does not move", "[mega
 	Object& burger = play.enemy("wave1", 1);
 	const float x = burger.position.x;
 	const float energy = play.energy();
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	play.frames(120);
 	CHECK(burger.position.x == Approx(x));
@@ -284,7 +284,7 @@ TEST_CASE("paused, the game is drawn still underneath and does not move", "[mega
 	CHECK(play.game.isStill(burger));
 	CHECK(play.game.isStill(play.player()));
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	play.frames(1);
 	CHECK(play.state() == "playing");
 	CHECK(burger.position.x != Approx(x));

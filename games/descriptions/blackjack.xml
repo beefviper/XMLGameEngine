@@ -18,7 +18,7 @@
   to two, unless the dealer has one too. Out of chips, the game is over.
 
   A and D or the arrows change the bet, Space deals. W or Up hits, S or
-  Down stands. Space after a hand clears the table. P or Escape pauses.
+  Down stands. Space after a hand clears the table. Pause pauses.
 
   How it is written:
   * The pack is a group of class card, a row for each suit and a column
@@ -217,7 +217,7 @@
           <trigger object="table" action="deal" from="betting" />
           <trigger object="table" action="next" from="done" />
         </input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- the bet: 10 to 100, never more than the chips -->
@@ -338,7 +338,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
   </states>

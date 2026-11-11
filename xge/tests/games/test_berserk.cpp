@@ -834,12 +834,12 @@ TEST_CASE("no men left is game over, over the room standing still, and Space pla
 	CHECK(play.game.currentScene("playing") == "playing.room1");
 }
 
-TEST_CASE("P pauses over the room standing still, and Space or P carries on", "[berserk]")
+TEST_CASE("Pause pauses over the room standing still, and only Pause carries on", "[berserk]")
 {
 	Play play;
 	play.begin(false);
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	CHECK(play.state() == "paused");
 	const std::string robot = Play::robot(1, 1);
 	const Vector2f standing = play.object(robot).position;
@@ -855,9 +855,7 @@ TEST_CASE("P pauses over the room standing still, and Space or P carries on", "[
 	CHECK(play.game.isStill(play.object("score")));
 
 	play.tap(KeyCode::Space);
-	CHECK(play.state() == "playing");
-	play.tap(KeyCode::Escape);
 	CHECK(play.state() == "paused");
-	play.tap(KeyCode::Escape);
+	play.tap(KeyCode::Pause);
 	CHECK(play.state() == "playing");
 }

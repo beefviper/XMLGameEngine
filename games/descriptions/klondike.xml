@@ -22,7 +22,7 @@
   where it is moved to; taken from the stock, Space deals. X or Backspace
   puts back what is held, and F sends the card pointed at to its
   foundation. With the mouse, press on a card, drag it and let go; a right
-  click sends a card home. P or Escape pauses, and N there deals a new game.
+  click sends a card home. Pause pauses, and N there deals a new game.
 
   How it is written:
   * The pack is a group of 52 cells in 13 <columns> and 4 <rows>: a row for
@@ -217,7 +217,7 @@
         </input>
         <input axis="mouse.x"><trigger object="hand" action="point" /></input>
         <input axis="mouse.y"><trigger object="hand" action="point" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- all 52 on the foundations -->
@@ -243,7 +243,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
         <input><button>n</button><reset /></input>
       </inputs>
     </state>

@@ -584,7 +584,7 @@ TEST_CASE("paused, the fleet is drawn still underneath and stops where it is", "
 	Object& alien = play.object("blues1.1.1");
 	REQUIRE(alien.isFollowing());
 	const Vector2f where = alien.position;
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	play.frames(60);
 	CHECK(alien.position.x == Approx(where.x));
@@ -592,7 +592,7 @@ TEST_CASE("paused, the fleet is drawn still underneath and stops where it is", "
 	CHECK(play.game.isStill(alien));
 	CHECK(play.game.isStill(play.object("ship")));
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	play.frames(1);
 	CHECK(play.state() == "playing");
 	CHECK((alien.position.x != Approx(where.x) || alien.position.y != Approx(where.y)));

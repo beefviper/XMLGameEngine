@@ -352,7 +352,7 @@ TEST_CASE("paused, the game is drawn still underneath and nothing falls", "[miss
 
 	Object& missile = play.missile("wave1", 1);
 	const float y = missile.position.y;
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	play.frames(60);
 	CHECK(missile.position.y == Approx(y));
@@ -360,7 +360,7 @@ TEST_CASE("paused, the game is drawn still underneath and nothing falls", "[miss
 	CHECK(play.game.isStill(play.sight()));
 	CHECK_FALSE(play.game.isStill(play.missile("wave2", 1)));
 
-	play.tap(KeyCode::Escape);
+	play.tap(KeyCode::Pause);
 	play.frames(1);
 	CHECK(play.state() == "playing");
 	CHECK(missile.position.y > y);

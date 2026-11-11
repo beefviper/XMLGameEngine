@@ -11,8 +11,8 @@
   win; when the board is full and no two neighbours are equal, the game
   is over.
 
-  W A S D or the arrows slide. Space starts, pauses and plays again; P or
-  Escape pauses too.
+  W A S D or the arrows slide. Space starts and plays again;
+  Pause pauses.
 
   How it is written:
   * The numbers are pieces on a <map> of <cells />, each holding its
@@ -65,7 +65,7 @@
           <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
           <row number="1"><sprite><text><content>w a s d or the arrows slide every number</content></text></sprite></row>
           <row number="2"><sprite><text><content>equal numbers that meet add up</content></text></sprite></row>
-          <row number="3"><sprite><text><content>make 2048, p pauses</content></text></sprite></row>
+          <row number="3"><sprite><text><content>make 2048, pause key pauses</content></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -149,7 +149,7 @@
         <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="status" action="down" /></input>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="status" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="status" action="right" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition class="tile" variable="value">
@@ -189,7 +189,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

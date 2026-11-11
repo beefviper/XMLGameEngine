@@ -435,11 +435,11 @@ TEST_CASE("the keys play the game through the engine", "[astrosmash][engine_inpu
 	CHECK(ship.position.x == startX + 7.0f);
 	engine.handleKeyReleased(KeyCode::Right);
 
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	CHECK(game.getCurrentState().name == "paused");
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	CHECK(game.getCurrentState().name == "playing");
 }
 

@@ -19,7 +19,7 @@
   W A S D or the arrows move the hand; Space on the stock turns a card,
   Space on a free card picks it (a king goes at once), Space on a second
   takes the pair away if it makes 13, else both go back. X or Backspace
-  puts back. Or click. P or Escape pauses, and N there deals a new game.
+  puts back. Or click. Pause pauses, and N there deals a new game.
 
   How it is written:
   * The pack is a group, a row for each suit and a column for each rank;
@@ -242,7 +242,7 @@
         <input><button>x</button><button>backspace</button><button>pad1.b</button><button>mouse.right</button><trigger object="hand" action="back" from="held" /></input>
         <input axis="mouse.x"><trigger object="hand" action="point" /></input>
         <input axis="mouse.y"><trigger object="hand" action="point" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- the pyramid cleared -->
@@ -279,7 +279,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
         <input><button>n</button><reset /></input>
       </inputs>
     </state>

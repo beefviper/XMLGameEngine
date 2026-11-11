@@ -355,11 +355,11 @@ TEST_CASE("the keys drive the right chicken through the whole game", "[freeway][
 	CHECK(one.position.y == rowY(11));
 	CHECK(two.position.y == rowY(11));
 
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	CHECK(game.getCurrentState().name == "paused");
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	CHECK(game.getCurrentState().name == "playing");
 }
 

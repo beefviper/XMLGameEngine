@@ -14,7 +14,7 @@
   left and right along a row of them, up and down to the next row (across
   lines and down lines in turn). Space draws the line under it. The mouse
   works too: the cursor goes to the free place nearest the pointer and a
-  left click draws it. While the computer plays, the keys do nothing. P or Escape pauses. On the title, Space
+  left click draws it. While the computer plays, the keys do nothing. Pause pauses. On the title, Space
   plays the computer and 2 is for two players. Space plays again.
 
   How it is written:
@@ -84,7 +84,7 @@
           <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>you play red, and go first; 2 for two players</content></text></sprite></row>
           <row number="2"><sprite><text><content>close a box's fourth side to claim it, and go again</content></text></sprite></row>
-          <row number="3"><sprite><text><content>w a s d or the arrows move, spacebar or a click draws, p pauses</content></text></sprite></row>
+          <row number="3"><sprite><text><content>w a s d or the arrows move, spacebar or a click draws, pause key pauses</content></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -264,7 +264,7 @@
         </input>
         <input axis="mouse.x"><trigger object="cursor" action="point" from="red" /><trigger object="cursor" action="point" from="blue" /></input>
         <input axis="mouse.y"><trigger object="cursor" action="point" from="red" /><trigger object="cursor" action="point" from="blue" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- every box claimed: more boxes wins -->
@@ -310,7 +310,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

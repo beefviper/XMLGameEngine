@@ -12,7 +12,7 @@
   six rows, and down again. A mushroom takes four shots. Clear the centipede and another
   comes; three lives.
 
-  W A S D or the arrows move the wand about its zone, Space fires. P or Escape pauses;
+  W A S D or the arrows move the wand about its zone, Space fires. Pause pauses;
   Space starts and plays again.
 
   How it is written:
@@ -72,7 +72,7 @@
           <position><x><centered /></x><y><centered><offset>-100</offset></centered></y></position>
         </object>
         <object name="help">
-          <sprite><text style="help"><content>a and d or the arrows move, spacebar fires, p pauses</content></text></sprite>
+          <sprite><text style="help"><content>a and d or the arrows move, spacebar fires, pause key pauses</content></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
         <object name="start">
@@ -247,7 +247,7 @@
         <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="wand" action="up" /></input>
         <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="wand" action="down" /></input>
         <input><button>space</button><button>pad1.a</button><trigger object="wand" action="fire" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- caught: a life gone, and the centipede starts again -->
@@ -285,7 +285,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

@@ -12,7 +12,7 @@
   on the cannon costs it; three cannons, and a spare for every wave cleared,
   up to six. Clear the three waves to win.
 
-  A and D (or the arrows) slide, Space fires, P or Escape pauses.
+  A and D (or the arrows) slide, Space fires, Pause pauses.
 
   How it is written:
   * The cannon, its shot, the bombs, the ground and the score are the playing
@@ -358,7 +358,7 @@
         <input><button>a</button><button>left</button><trigger object="player" action="left" /></input>
         <input><button>d</button><button>right</button><trigger object="player" action="right" /></input>
         <input button="space"><trigger object="player" action="fire" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- out of cannons -->
@@ -381,7 +381,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

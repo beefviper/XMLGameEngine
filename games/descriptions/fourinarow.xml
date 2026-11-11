@@ -12,7 +12,7 @@
 
   A and D or the arrows move the disc above the board, Space (or S, or
   Down) drops it. The mouse works too: the disc follows it and a left
-  click drops it. P or Escape pauses. On the title, Space plays the
+  click drops it. Pause pauses. On the title, Space plays the
   computer and 2 is for two players. Space plays again.
 
   How it is written:
@@ -72,7 +72,7 @@
           <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>you play red, and go first; 2 for two players</content></text></sprite></row>
           <row number="2"><sprite><text><content>four in a line, across, down or on a slant, wins</content></text></sprite></row>
-          <row number="3"><sprite><text><content>a d or the arrows move, spacebar or a click drops, p pauses</content></text></sprite></row>
+          <row number="3"><sprite><text><content>a d or the arrows move, spacebar or a click drops, pause key pauses</content></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -191,7 +191,7 @@
         </input>
         <!-- the computer's key: only its look answers it -->
         <input><button>f12</button><trigger object="cursor" action="yellowput" from="cpu" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="match" variable="won">
@@ -234,7 +234,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

@@ -583,14 +583,14 @@ TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when le
 	engine.step();
 	CHECK(log.looped == std::vector<std::string>{ "thrust" });
 	log.looped.clear();
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	engine.step();
 	REQUIRE(game.getCurrentState().name == "paused");
 	CHECK(game.loopingSounds().empty());
 	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	engine.step();
 	REQUIRE(game.getCurrentState().name == "playing");
 	CHECK(log.looped == std::vector<std::string>{ "thrust" });
@@ -741,13 +741,13 @@ TEST_CASE("Pac-Man's music: the opening tune plays over READY!, the siren loops 
 	CHECK(log.looped.size() == 1);
 
 	// Paused: quiet; back: it starts again.
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	engine.step();
 	REQUIRE(game.getCurrentState().name == "paused");
 	CHECK(log.stopped == std::vector<std::string>{ "siren" });
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	engine.step();
 	REQUIRE(game.getCurrentState().name == "playing");
 	CHECK(log.looped == std::vector<std::string>{ "siren", "siren" });

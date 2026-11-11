@@ -13,8 +13,7 @@
   more missiles and faster ones; survive them all to win, and lose every
   city to lose.
 
-  W A S D or the arrow keys move the sight, Space launches, P or Escape
-  pauses.
+  W A S D or the arrow keys move the sight, Space launches, Pause pauses.
 
   How it is written:
   * The three waves are the <scenes> of the playing state. The ground, the
@@ -290,7 +289,7 @@
         <input><button>a</button><button>left</button><trigger object="sight" action="left" /></input>
         <input><button>d</button><button>right</button><trigger object="sight" action="right" /></input>
         <input button="space"><trigger object="base" action="launch" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- every city gone -->
@@ -314,7 +313,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
 

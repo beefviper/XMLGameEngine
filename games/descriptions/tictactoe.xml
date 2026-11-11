@@ -10,8 +10,8 @@
   or two players share the keyboard.
 
   W A S D or the arrows move the cursor, Space puts your mark there. The
-  mouse works too: the cursor follows it and a left click marks. P or
-  Escape pauses. On the title, Space plays the computer, A and D choose
+  mouse works too: the cursor follows it and a left click marks. Pause
+  pauses. On the title, Space plays the computer, A and D choose
   how well it plays, and 2 is for two players. Space plays again.
 
   How it is written:
@@ -79,7 +79,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>you play x, and go first; 2 for two players</content></text></sprite></row>
-          <row number="2"><sprite><text><content>w a s d or the arrows move, spacebar or a click marks, p pauses</content></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d or the arrows move, spacebar or a click marks, pause key pauses</content></text></sprite></row>
         </group>
         <object name="level">
           <sprite><text style="help"><content>a d: the computer plays </content><choose><by>options.smart</by><word>easy</word><word>smart</word></choose></text></sprite>
@@ -209,7 +209,7 @@
         </input>
         <!-- the computer's key: only its look answers it -->
         <input><button>f12</button><trigger object="cursor" action="oput" from="cpu" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="match" variable="won">
@@ -257,7 +257,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

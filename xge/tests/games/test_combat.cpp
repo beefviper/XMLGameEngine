@@ -170,9 +170,9 @@ TEST_CASE("after two minutes sixteen the most hits win, and space plays again", 
 	Combat play;
 	play.start();
 
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Pause);
 	CHECK(play.state() == "paused");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Pause);
 	CHECK(play.state() == "playing");
 
 	play.game.getObject("shell2").variable["hits"] = 3;
@@ -198,7 +198,7 @@ TEST_CASE("paused, the field is drawn still: a shell in flight stops where it is
 	REQUIRE(shell.isVisible);
 	const Vector2f shellAt = shell.position;
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	play.frames(30);
 	CHECK(shell.position == shellAt);
@@ -209,7 +209,7 @@ TEST_CASE("paused, the field is drawn still: a shell in flight stops where it is
 	CHECK_FALSE(play.game.isShown(play.tank1()));
 	CHECK(play.game.isShown(play.game.getObject("paused")));
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "playing");
 	play.frames(1);
 	CHECK(shell.position != shellAt);

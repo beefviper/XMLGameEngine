@@ -9,8 +9,7 @@
   food it eats makes it one longer and a little faster; it dies on the
   wall or on its own body.
 
-  W A S D or the arrows turn it (never straight back). Space starts,
-  pauses and plays again; P or Escape pauses too.
+  W A S D or the arrows turn it (never straight back). Space starts and plays again; Pause pauses.
 
   How it is written:
   * The field is a <map> of <cells />, drawn by its rows: # wall, the
@@ -53,7 +52,7 @@
           <position><x><centered /></x><y><centered><offset>-100</offset></centered></y></position>
         </object>
         <object name="help">
-          <sprite><text style="help"><content>w a s d or the arrows turn, p pauses</content></text></sprite>
+          <sprite><text style="help"><content>w a s d or the arrows turn, pause key pauses</content></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
         <object name="start">
@@ -150,7 +149,7 @@
         <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="head" action="down" /></input>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="head" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="head" action="right" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="status" variable="over">
@@ -175,7 +174,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

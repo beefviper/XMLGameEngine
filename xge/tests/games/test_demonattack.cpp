@@ -313,7 +313,7 @@ TEST_CASE("paused, the wave is drawn still underneath and nothing moves", "[demo
 	play.tap(KeyCode::Space);
 	play.frames(30);
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	Object& demon = play.object("playing.wave1.demons.1");
 	const float x = demon.position.x;
@@ -324,7 +324,7 @@ TEST_CASE("paused, the wave is drawn still underneath and nothing moves", "[demo
 	play.frames(60);
 	CHECK(demon.position.x == Approx(x));
 
-	play.tap(KeyCode::Escape);
+	play.tap(KeyCode::Pause);
 	CHECK(play.state() == "playing");
 	play.frames(5);
 	CHECK(demon.position.x != Approx(x));

@@ -50,3 +50,4 @@ Built by a state change count compared in `Engine::syncHeldKeysToState()` after 
 - A frame-scoped **command queue** (input makes intents, update uses them): determinism, replay, network sync. The three layers are the same idea from the XML side.
 - Many-to-one bindings (two players steering one object); axis inversion as a binding attribute.
 - The shipped games' key convention is in [the shipped games](../reference/games.md#the-key-convention), enforced by `test_engine_input`.
+- **One pause key:** the Pause key (and a pad's Start) pauses and plays on in every game, and nothing else does. Before, games paused on Space, P or Escape in eighteen mixtures, Space only where it did not fire. The author's call: one key, the one named for it; Space is left to start, play again, and jump or fire. All five window libraries read Pause; P was the fallback had one not. Open: a laptop without a Pause key pauses with the pad or not at all.

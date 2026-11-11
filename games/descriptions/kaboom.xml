@@ -16,7 +16,7 @@
   through the eighth to win.
 
   A and D, the arrows, a pad or the mouse (the Atari's paddle) move the
-  buckets; Space starts and pauses, as does P.
+  buckets; Space starts; Pause pauses.
 
   How it is written:
   * The buckets are one object with three looks, a stack of three, two and
@@ -314,7 +314,7 @@
         <!-- the mouse, or a pad's stick, is the Atari's paddle -->
         <input axis="mouse.x"><trigger object="bucket" action="steer" /></input>
         <input axis="pad1.x"><trigger object="bucket" action="steer" /></input>
-        <input><button>space</button><button>p</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="bucket" variable="buckets">
@@ -337,7 +337,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

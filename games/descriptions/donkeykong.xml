@@ -16,8 +16,8 @@
   the climb again, with Kong throwing faster; let it run out and a life is
   lost. Save her three times to win. The high score is kept.
 
-  A and D (or the arrows) walk, W and S climb, Space starts and jumps, P or
-  Escape pauses.
+  A and D (or the arrows) walk, W and S climb, Space starts and jumps, Pause
+  pauses.
 
   It is the game the standing verbs were made for:
   * Jumpman and the barrels fall (an <acceleration> with only a <y>) and
@@ -520,7 +520,7 @@
         <input><button>w</button><button>up</button><trigger object="man" action="up" /></input>
         <input><button>s</button><button>down</button><trigger object="man" action="down" /></input>
         <input button="space"><trigger object="man" action="jump" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="man" variable="rescues">
@@ -568,7 +568,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

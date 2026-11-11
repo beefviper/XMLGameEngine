@@ -17,7 +17,7 @@
   are not limited, but every one struck counts against you.
 
   W A S D or the arrow keys walk, Space strikes a match (and starts and plays
-  again), P or Escape pauses.
+  again), Pause pauses.
 
   How it is written:
   * The floors are the <scenes> of the playing state, each a <map>: # is a
@@ -430,7 +430,7 @@
         </scene>
       </scenes>
       <inputs>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
         <input button="space"><trigger object="player" action="strike" /></input>
         <input><button>w</button><button>up</button><trigger object="player" action="up" /></input>
         <input><button>s</button><button>down</button><trigger object="player" action="down" /></input>
@@ -464,7 +464,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

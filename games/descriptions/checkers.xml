@@ -19,7 +19,7 @@
   pieces picks that one instead, and X or Backspace puts it back (neither
   in the middle of a run of jumps). The mouse works too: the cursor
   follows it, a left click is Space and a right click puts back.
-  P or Escape pauses. On the title, Space plays the computer and 2 is
+  Pause pauses. On the title, Space plays the computer and 2 is
   for two players, and M, V and J turn on or off: showing where the piece
   held can go, showing which pieces can move, and picking up the piece
   for you when it is the only one that can move (a jump that must be
@@ -119,7 +119,7 @@
           <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>you play red, and move first; 2 for two players</content></text></sprite></row>
           <row number="2"><sprite><text><content>w a s d or the arrows move, spacebar picks up and puts down</content></text></sprite></row>
-          <row number="3"><sprite><text><content>x or backspace puts back, p pauses; or click, and right click to put back</content></text></sprite></row>
+          <row number="3"><sprite><text><content>x or backspace puts back, pause key pauses; or click, and right click to put back</content></text></sprite></row>
         </group>
         <group name="choices">
           <rows>3</rows>
@@ -395,7 +395,7 @@
           </trigger>
           <trigger object="cursor" action="cpupick" from="cpufree" />
         </input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- a side with no move on its turn (none left, or all blocked) has lost -->
@@ -448,7 +448,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

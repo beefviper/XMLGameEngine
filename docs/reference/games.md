@@ -6,9 +6,9 @@
 
 Every game follows it, and `test_engine_input` checks it:
 
-- **Space** starts, pauses and plays again (never Enter).
+- **Space** starts and plays again (never Enter); in play it jumps or fires.
+- The **Pause** key pauses and plays on, in every game (and a pad's Start). Nothing else pauses.
 - Player one plays on **W A S D**. The arrows are a second way in one-player games, and player two's keys in two-player ones.
-- Where Space fires, **P or Escape** pauses.
 - Colours are `color.` names only.
 
 The tables list only keys beyond that.
@@ -70,17 +70,17 @@ The tables list only keys beyond that.
 
 | Game | Keys | Shows |
 |---|---|---|
-| `tetris` | A/D move, W/E/X turn clockwise, Q counterclockwise, S drops faster, Space drops at once; P pauses | [cells](maps.md#cells), standard turns and kicks, full rows cleared, the next shape by `<send>` |
-| `columns` | A/D move, W/E/X/Space cycle, Q cycles back, S drops faster; P pauses | lines of three alike, chains by `<fall />` |
+| `tetris` | A/D move, W/E/X turn clockwise, Q counterclockwise, S drops faster, Space drops at once | [cells](maps.md#cells), standard turns and kicks, full rows cleared, the next shape by `<send>` |
+| `columns` | A/D move, W/E/X/Space cycle, Q cycles back, S drops faster | lines of three alike, chains by `<fall />` |
 | `capsules` | as Tetris, without the drop | an original game of germs and capsules; halves that stay joined ([`<joins>`](maps.md#cells)) |
-| `snake` | W A S D or arrows; Space or P pauses | a [chain](maps.md#cells) for a body, food in a free cell |
-| `crates` | W A S D or arrows walk, U/Backspace undo, R restarts the room; P pauses | four rooms of crates to push onto spots: [`<shove />`](maps.md#pushing-merging-and-counting), a floor layer, `<count><here /></count>`, `<undo />` |
-| `doubles` | W A S D or arrows slide; P pauses | a four by four board of numbers that add up when equal: `<slide class>`, `<merge>`, pairs counted `<around>` |
-| `minefield` | W A S D or arrows or the mouse point, Space/left click opens, F/right click flags; P pauses | nine by nine, ten mines: counts `<around>`, a flood by `<trigger><around /></trigger>` |
+| `snake` | W A S D or arrows | a [chain](maps.md#cells) for a body, food in a free cell |
+| `crates` | W A S D or arrows walk, U/Backspace undo, R restarts the room | four rooms of crates to push onto spots: [`<shove />`](maps.md#pushing-merging-and-counting), a floor layer, `<count><here /></count>`, `<undo />` |
+| `doubles` | W A S D or arrows slide | a four by four board of numbers that add up when equal: `<slide class>`, `<merge>`, pairs counted `<around>` |
+| `minefield` | W A S D or arrows or the mouse point, Space/left click opens, F/right click flags | nine by nine, ten mines: counts `<around>`, a flood by `<trigger><around /></trigger>` |
 
 ## Tables and tracks
 
-All original games. P or Escape pauses.
+All original games.
 
 | Game | Keys | Shows |
 |---|---|---|
@@ -91,7 +91,7 @@ All original games. P or Escape pauses.
 
 ## Board games
 
-Each plays the computer, or two players with 2 on the title. Cursor on W A S D or the arrows, the mouse points and clicks; P or Escape pauses.
+Each plays the computer, or two players with 2 on the title. Cursor on W A S D or the arrows, the mouse points and clicks.
 
 | Game | Keys | Shows |
 |---|---|---|
@@ -103,7 +103,7 @@ Each plays the computer, or two players with 2 on the title. Cursor on W A S D o
 
 ## Card games
 
-Space or a click plays; P or Escape pauses (N there deals again where offered).
+Space or a click plays; N in the pause deals again where offered.
 
 | Game | Keys | Shows |
 |---|---|---|

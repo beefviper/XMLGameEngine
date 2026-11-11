@@ -11,8 +11,8 @@
   side it scores and starts again at the bottom. When the clock runs out the
   one with more crossings wins. The five lanes on top drive left, the five
   below right, faster towards the middle, as on the cartridge. Player 1 is W
-  and S, player 2 the up and down arrows; Space starts and pauses, as do P and
-  Escape.
+  and S, player 2 the up and down arrows; Space starts;
+  Pause pauses.
 
   On a grid of 50 pixel cells, 12 rows down: row 0 is the far side (and the
   scores and the clock), rows 1-10 the lanes, row 11 the near side.
@@ -228,7 +228,7 @@
         <input button="s"><trigger object="chicken1" action="down" /></input>
         <input button="up"><trigger object="chicken2" action="up" /></input>
         <input button="down"><trigger object="chicken2" action="down" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="clock" variable="seconds">
@@ -255,7 +255,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <!-- time up: a draw, unless one chicken crossed more often -->

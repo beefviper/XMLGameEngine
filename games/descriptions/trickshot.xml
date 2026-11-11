@@ -10,8 +10,8 @@
   pockets. Sink all six before the two minutes run out; the white ball in a
   pocket costs a point and comes back to its spot.
 
-  W A S D or the arrows move the cue tip (two at once go diagonally), P or
-  Escape pauses, Space starts, pauses and plays again.
+  W A S D or the arrows move the cue tip (two at once go diagonally), Pause
+  pauses, Space starts and plays again.
 
   It is the game <knock> and <mass> were made for:
   * Every ball has a <mass>, so a knock moves it. Ball against ball is
@@ -182,7 +182,7 @@
         <input><button>s</button><button>down</button><trigger object="cue" action="down" /></input>
         <input><button>a</button><button>left</button><trigger object="cue" action="left" /></input>
         <input><button>d</button><button>right</button><trigger object="cue" action="right" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="rack">
@@ -211,7 +211,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

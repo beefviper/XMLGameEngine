@@ -15,7 +15,7 @@
 
   Player one: W and S drive, A and D turn, F or Left Shift fires.
   Player two: Up and Down drive, Left and Right turn, Right Shift or Right
-  Control fires. Space pauses.
+  Control fires. Pause pauses.
 
   How it is written:
   * The tanks are one group: the picture, the <drag>, the rules and the
@@ -182,7 +182,7 @@
         <input button="left"><trigger object="tank2" action="left" /></input>
         <input button="right"><trigger object="tank2" action="right" /></input>
         <input><button>rshift</button><button>rcontrol</button><trigger object="tank2" action="fire" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer><after>136</after><push state="over" /></timer>
@@ -199,7 +199,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

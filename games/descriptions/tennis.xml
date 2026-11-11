@@ -11,8 +11,7 @@
   computer plays the far end. Points go love, 15, 30, 40 and game, with
   deuce and advantage; six games take the set and the match.
 
-  W A S D or the arrow keys walk, Space starts and plays again, P or Escape
-  pauses.
+  W A S D or the arrow keys walk, Space starts and plays again, Pause pauses.
 
   How it is written:
   * The two players are one group: the picture, a person and a white
@@ -189,7 +188,7 @@
         </object>
       </objects>
       <inputs>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
         <input><button>w</button><button>up</button><trigger object="player" action="up" /></input>
         <input><button>s</button><button>down</button><trigger object="player" action="down" /></input>
         <input><button>a</button><button>left</button><trigger object="player" action="left" /></input>
@@ -262,7 +261,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

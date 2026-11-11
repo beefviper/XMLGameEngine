@@ -12,7 +12,7 @@
   the fuel is gone.
 
   A and D or Left and Right turn the lander, W or Up fires the engine the
-  way it points, Space, P or Escape pauses.
+  way it points, Pause pauses.
 
   How it is written:
   * Everything is drawn from <line>s and tested by pixel, so the lander
@@ -231,7 +231,7 @@
         <input><button>up</button><button>w</button><trigger object="lander" action="thrust" /></input>
         <input><button>left</button><button>a</button><trigger object="lander" action="left" /></input>
         <input><button>right</button><button>d</button><trigger object="lander" action="right" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- the last lander down with no fuel left -->
@@ -287,7 +287,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <!-- down on a pad: the lander stays still while the points are shown, then the next one comes -->
@@ -306,7 +306,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer><every>2.5</every><inc variable="lander.ready" /><pop /></timer>

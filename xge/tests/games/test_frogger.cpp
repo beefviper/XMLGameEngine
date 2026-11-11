@@ -201,11 +201,11 @@ TEST_CASE("a held hop key hops once, and a state change never repeats it", "[fro
 	CHECK(frog.position.y == startY - kCell);
 
 	// Pause and come back with the key still down: it has to be pressed again.
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	CHECK(game.getCurrentState().name == "paused");
-	engine.handleKeyPressed(KeyCode::P);
-	engine.handleKeyReleased(KeyCode::P);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	CHECK(game.getCurrentState().name == "playing");
 	for (int i = 0; i < 5; ++i) { game.updateObjects(); }
 	CHECK(frog.position.y == startY - kCell);

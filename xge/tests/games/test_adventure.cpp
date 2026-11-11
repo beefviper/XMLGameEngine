@@ -358,7 +358,7 @@ TEST_CASE("paused, the room is drawn still underneath and nothing in it moves", 
 	Adventure play;
 	play.start();
 	play.enter("dungeon");
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	CHECK(play.game.isStill(play.hero()));
 	CHECK(play.game.isStill(play.object("chalice")));

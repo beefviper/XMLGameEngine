@@ -370,7 +370,7 @@ TEST_CASE("paused, the shore and the ice are drawn still and nothing drifts", "[
 	const float floeAt = floe.position.x;
 	const float degrees = play.degrees();
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	play.frames(3 * kFramerate);
 	CHECK(floe.position.x == floeAt);
@@ -382,7 +382,7 @@ TEST_CASE("paused, the shore and the ice are drawn still and nothing drifts", "[
 	CHECK(play.game.isShown(play.game.getObject("paused")));
 	CHECK_FALSE(play.game.isStill(play.game.getObject("night1.door"))); // still hidden
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "playing");
 	play.frames(1);
 	CHECK(floe.position.x != floeAt);

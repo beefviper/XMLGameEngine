@@ -124,7 +124,7 @@ The [documentation](docs/readme.md) has a tour, every word, and an index linking
 | Board games | Checkers, Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes |
 | Card games | Klondike, Crazy Eights, Blackjack, Texas Hold'em, Hearts, Spades, Gin Rummy, Pyramid |
 
-The [full list](docs/reference/games.md) says what each game needed. They share one key convention: Space starts, pauses and restarts; player one is W A S D plus the arrows; where Space fires, P or Escape pauses.
+The [full list](docs/reference/games.md) says what each game needed. They share one key convention: Space starts and restarts, the Pause key pauses; player one is W A S D plus the arrows.
 
 ## Build and run
 

@@ -21,7 +21,7 @@
   out of chips loses the match. Who acts first changes every hand.
 
   W or Up bets or raises, Space checks or calls, X or Backspace folds.
-  Space after a hand deals the next. P or Escape pauses.
+  Space after a hand deals the next. Pause pauses.
 
   How it is written:
   * The pack is a group, a row for each suit (spades, hearts, clubs,
@@ -419,7 +419,7 @@
         <input><button>f10</button><trigger object="cpu" action="fold" from="thinking" /></input>
         <input><button>f11</button><trigger object="cpu" action="call" from="thinking" /></input>
         <input><button>f12</button><trigger object="cpu" action="raise" from="thinking" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- out of chips between hands: the match is over -->
@@ -551,7 +551,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
   </states>

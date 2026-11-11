@@ -377,7 +377,7 @@ TEST_CASE("paused, the jungle is drawn still underneath and the clock stops", "[
 	const float time = play.status("time");
 	const float x = play.harry().position.x;
 
-	play.tap(KeyCode::P);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	CHECK(play.game.isStill(play.harry()));
 	CHECK(play.game.isStill(play.game.getObject("playing.screen1.logs.1")));
@@ -385,7 +385,7 @@ TEST_CASE("paused, the jungle is drawn still underneath and the clock stops", "[
 	CHECK(play.status("time") == Approx(time));
 	CHECK(play.harry().position.x == Approx(x));
 
-	play.tap(KeyCode::Escape);
+	play.tap(KeyCode::Pause);
 	CHECK(play.state() == "playing");
 	CHECK_FALSE(play.game.isStill(play.harry()));
 }

@@ -15,7 +15,7 @@
 
   W A S D or the arrows fly Yar (two at once go diagonally), Space fires
   his energy missile the way he last flew, and the cannon when it is there,
-  P or Escape pauses, Space starts and plays again.
+  Pause pauses, Space starts and plays again.
 
   How it is written:
   * The shield is a <map>: the cells are drawn as the shape they make, with
@@ -102,7 +102,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>eat through the shield, then fire the cannon into the qotile</content></text></sprite></row>
-          <row number="2"><sprite><text><content>w a s d or the arrows fly, space fires, p pauses</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d or the arrows fly, space fires, pause key pauses</content><color>color.lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="help"><content>spacebar to start</content><size>40</size></text></sprite>
@@ -311,7 +311,7 @@
           <trigger object="cannon" action="fire" />
           <trigger object="yar" action="fire" />
         </input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="player" variable="lives">
@@ -335,7 +335,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <!-- the Qotile hit: a moment to see it, then the shield is back whole -->
@@ -350,7 +350,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer>

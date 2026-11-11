@@ -23,7 +23,7 @@
   A and D or the arrows move along your cards, W and S between your cards
   and the piles. Space draws from the pile pointed at, then discards the
   card pointed at; K discards it and knocks. Your cards are laid out
-  melds first, deadwood last. Or click. P or Escape pauses.
+  melds first, deadwood last. Or click. Pause pauses.
 
   How it is written:
   * The pack is a group, a row for each suit (spades, hearts, clubs,
@@ -303,7 +303,7 @@
         </input>
         <input axis="mouse.x"><trigger object="players" action="point" /></input>
         <input axis="mouse.y"><trigger object="players" action="point" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- your discard to knock: with ten or less left, the hand is over (gin, an undercut, or the difference); else it was only a discard -->
@@ -406,7 +406,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
         <input><button>n</button><reset /></input>
       </inputs>
     </state>

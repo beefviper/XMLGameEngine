@@ -11,7 +11,7 @@
   three laps wins.
 
   Player one drives with W A S D, player two with the arrows: up goes, down
-  brakes and backs, left and right steer. P or Escape pauses, Space starts
+  brakes and backs, left and right steer. Pause pauses, Space starts
   and plays again.
 
   It is the game the fourth stage of tables and tracks was made for:
@@ -277,7 +277,7 @@
         <input button="down"><trigger object="p2" action="brake" /></input>
         <input button="left"><trigger object="p2" action="left" /></input>
         <input button="right"><trigger object="p2" action="right" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- the first time round: on your marks -->
@@ -323,7 +323,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer><after>1.5</after><pop /></timer>
@@ -341,7 +341,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
 

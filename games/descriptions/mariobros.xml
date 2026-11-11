@@ -32,8 +32,7 @@
     them.
 
   Space starts one player, 2 starts two. Mario: A and D walk, W or Space
-  jumps. Luigi: the left and right arrows walk, Up jumps. P or Escape
-  pauses.
+  jumps. Luigi: the left and right arrows walk, Up jumps. Pause pauses.
 
   How it is written:
   * Mario and Luigi are one piece, the brother, taken twice; Luigi
@@ -993,7 +992,7 @@
         <input button="left"><trigger object="luigi" action="left" /></input>
         <input button="right"><trigger object="luigi" action="right" /></input>
         <input button="up"><trigger object="luigi" action="jump" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="mario" variable="lives"><atmost>0</atmost>
@@ -1043,7 +1042,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

@@ -295,7 +295,7 @@ TEST_CASE("the city gone is game over, and space plays again with everything bac
 	CHECK(buildings == 6);
 }
 
-TEST_CASE("the keys fire the posts, and space pauses over the city drawn still", "[atlantis][engine_input]")
+TEST_CASE("the keys fire the posts, and Pause pauses over the city drawn still", "[atlantis][engine_input]")
 {
 	Game game{ "descriptions/atlantis.xml" };
 	measure(game);
@@ -318,8 +318,8 @@ TEST_CASE("the keys fire the posts, and space pauses over the city drawn still",
 	}
 	CHECK(shells == 3);
 
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
 	REQUIRE(game.getCurrentState().name == "paused");
 	CHECK(game.isStill(game.getObject("middlepost")));
 	CHECK(game.isStill(game.getObject("playing.domes.1")));

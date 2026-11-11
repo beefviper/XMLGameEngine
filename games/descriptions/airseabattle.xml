@@ -13,8 +13,7 @@
   2:16 are up wins.
 
   Player one (yellow): A, S and D point the gun left, up and right, W
-  fires. Player two (white): Left, Down and Right point, Up fires. Space,
-  P or Escape pauses.
+  fires. Player two (white): Left, Down and Right point, Up fires. Pause pauses.
 
   How it is written:
   * The planes are one group, which says once what every plane does (wrap
@@ -235,7 +234,7 @@
         <input button="down"><trigger object="gun2" action="up" /></input>
         <input button="right"><trigger object="gun2" action="right" /></input>
         <input button="up"><trigger object="gun2" action="fire" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="status" variable="time">
@@ -282,7 +281,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

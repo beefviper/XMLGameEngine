@@ -14,7 +14,7 @@
 
   W A S D or the arrows move the cursor, Space puts a disc there. The
   mouse works too: the cursor follows it and a left click puts a disc.
-  P or Escape pauses. On the title, Space plays the computer and 2 is
+  Pause pauses. On the title, Space plays the computer and 2 is
   for two players; M turns on or off showing where a disc can go (kept).
   Space plays again.
 
@@ -100,7 +100,7 @@
           <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
           <row number="1"><sprite><text><content>you play black, and go first; 2 for two players</content></text></sprite></row>
           <row number="2"><sprite><text><content>trap a line of the other side's discs to turn them over</content></text></sprite></row>
-          <row number="3"><sprite><text><content>w a s d or the arrows move, spacebar or a click puts a disc, p pauses</content></text></sprite></row>
+          <row number="3"><sprite><text><content>w a s d or the arrows move, spacebar or a click puts a disc, pause key pauses</content></text></sprite></row>
         </group>
         <object name="option1">
           <sprite><text style="help"><content>m: show where a disc can go </content><choose><by>options.moves</by><word>off</word><word>on</word></choose></text></sprite>
@@ -284,7 +284,7 @@
         </input>
         <!-- the computer's key: only its look answers it -->
         <input><button>f12</button><trigger object="cursor" action="whiteput" from="cpufree" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- neither side can move: the one with more discs wins -->
@@ -352,7 +352,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

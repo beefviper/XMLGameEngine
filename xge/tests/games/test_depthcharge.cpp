@@ -199,13 +199,13 @@ TEST_CASE("paused, the sea is drawn still", "[depthcharge]")
 	hunt.frames(5);
 	const float x = sub.position.x;
 
-	hunt.tap(KeyCode::P);
+	hunt.tap(KeyCode::Pause);
 	REQUIRE(hunt.state() == "paused");
 	hunt.frames(30);
 	CHECK(sub.position.x == x);
 	CHECK(hunt.game.isStill(sub));
 
-	hunt.tap(KeyCode::Escape);
+	hunt.tap(KeyCode::Pause);
 	hunt.frames(5);
 	CHECK(sub.position.x != x);
 }

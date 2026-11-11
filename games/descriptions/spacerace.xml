@@ -10,8 +10,8 @@
   back for another go. The clock is the bar down the middle, sinking out of
   sight; when it is gone, the most points win.
 
-  Player 1 is W and S, player 2 the up and down arrows; Space starts,
-  pauses (or P) and plays again.
+  Player 1 is W and S, player 2 the up and down arrows; Space starts
+  and plays again, Pause pauses.
 
   How it is written:
   * The rockets are one group: the picture, the moves, the rules (a point
@@ -125,7 +125,7 @@
         <input button="s"><trigger object="rocket1" action="down" /></input>
         <input button="up"><trigger object="rocket2" action="up" /></input>
         <input button="down"><trigger object="rocket2" action="down" /></input>
-        <input><button>space</button><button>p</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="clock" variable="y">
@@ -146,7 +146,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

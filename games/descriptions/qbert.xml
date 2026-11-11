@@ -15,7 +15,7 @@
 
   W or Up hops up and right, D or Right down and right, S or Down down and
   left, A or Left up and left (the four diagonals, as the arcade's stick
-  was turned). Space starts, pauses and plays again; P or Escape pauses.
+  was turned). Space starts and plays again; Pause pauses.
 
   It is the game diagonal hops were made for:
   * Each key is a <hop direction="down-right"> with an <x> across and a <y>
@@ -426,7 +426,7 @@
         <input><button>d</button><button>right</button><trigger object="qbert" action="downright" /></input>
         <input><button>s</button><button>down</button><trigger object="qbert" action="downleft" /></input>
         <input><button>a</button><button>left</button><trigger object="qbert" action="upleft" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="player" variable="cubes">
@@ -457,7 +457,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">

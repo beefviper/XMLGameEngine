@@ -162,10 +162,10 @@ TEST_CASE("the battle lasts 2:16", "[airseabattle]")
 	play.frames(120);
 	CHECK(play.game.getObject("status").variable.at("time") == Approx(134.0f));
 
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Pause);
 	CHECK(play.state() == "paused");
 	play.frames(120);
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Pause);
 	CHECK(play.game.getObject("status").variable.at("time") == Approx(134.0f));
 
 	play.game.getObject("status").variable["time"] = 1;
@@ -204,7 +204,7 @@ TEST_CASE("paused, the battle is drawn still: the planes stop and the clock neve
 	Object& jet = play.game.getObject("jets.1");
 	const Vector2f jetAt = jet.position;
 
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	play.frames(60);
 	CHECK(jet.position == jetAt);
@@ -220,7 +220,7 @@ TEST_CASE("paused, the battle is drawn still: the planes stop and the clock neve
 	CHECK(status.ownerState == "playing");
 	CHECK_FALSE(status.isDrawn);
 
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "playing");
 	play.frames(1);
 	CHECK(jet.position != jetAt);
