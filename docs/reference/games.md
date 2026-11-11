@@ -85,7 +85,7 @@ All original games.
 | Game | Keys | Shows |
 |---|---|---|
 | `puttpark` | A/D or Left/Right aim, Space held then let go putts | six holes of mini golf; [bounce](commands.md#touching) off sloped walls; a key [held and let go](input.md#a-keys-three-moments) |
-| `cannonhill` | W/S or Up/Down aim, Space held then let go fires | an artillery duel for two; [`<polygon>`](pictures.md#polygons) hills blown into craters; wind as a spawn's `<acceleration>` |
+| `cannonhill` | W/S or Up/Down aim, Space held then let go fires | an artillery duel for two, the barrels a [players group](states.md#players-as-a-group); [`<polygon>`](pictures.md#polygons) hills blown into craters; wind as a spawn's `<acceleration>` |
 | `pinball` | A or Left, D or Right flip; Space held then let go shoots | flippers that [swing about a pivot](pictures.md#turning-about-a-pivot) and lend the ball their speed |
 | `speedway` | player one W A S D, player two the arrows | a top-down race; cars with a heading and [`<grip>`](pictures.md#poses-mirror-grip-and-blinking); grass, sand and oil as [`<surface>`](pictures.md#surfaces)s; computer cars on paths |
 
@@ -95,7 +95,7 @@ Each plays the computer, or two players with 2 on the title. Cursor on W A S D o
 
 | Game | Keys | Shows |
 |---|---|---|
-| `checkers` | Space picks up and puts down, X or Backspace puts back; M, V, J options | [`<moves>`](boards.md), forced jumps, kings by `<promote>`, [`<marks>`](boards.md#marks), a computer that [`<think>`](states.md#computer-players)s |
+| `checkers` | Space picks up and puts down, X or Backspace puts back; M, V, J options | [`<moves>`](boards.md), forced jumps, kings by `<promote>`, [`<marks>`](boards.md#marks), a computer that [`<think>`](states.md#computer-players)s; red and white a [players group](states.md#players-as-a-group) that each `<owns class>` its pieces |
 | `reversi` | Space puts a disc; M option | [`<flank>`](boards.md#pieces-put-not-moved), `<put>`, the score by `<count>` |
 | `fourinarow` | A/D move, Space, S or Down drops | [`<fall />`](boards.md#pieces-put-not-moved) in the moves; the win by a `<line>` check |
 | `tictactoe` | Space marks; A/D on the title for easy or smart | an empty `<moves />`: any free square |
@@ -110,7 +110,7 @@ Space or a click plays; N in the pause deals again where offered.
 | `klondike` | move from pile to pile, Space takes and lays, X puts back, F sends home; the mouse drags | the pack a [group](cards.md#holders) of rows and columns, places that `<holds>` with rules of what they accept, the deal in `<starts>` |
 | `crazyeights` | A/D along your cards, W/S to the stock, Space plays or draws, names the suit after an eight | [players as a group](states.md#players-as-a-group) taking turns, a computer member, `<wild>` and a call |
 | `blackjack` | A/D bet, Space deals, W hits, S stands | a pack whose columns give `worth` (an ace's `high` 11) and holders that [`<counts>`](cards.md#holders) within 21; `<send sprite="back">` for the dealer's hole card |
-| `holdem` | W bets or raises, Space checks or calls, X folds | poker hands as a game's [`<patterns>`](cards.md#patterns) naming their variables, live `pattern`, `strength`, `odds`; a pack group, the ace's `high` 14 |
+| `holdem` | W bets or raises, Space checks or calls, X folds | poker hands as a game's [`<patterns>`](cards.md#patterns) naming their variables, live `pattern`, `strength`, `odds`; a pack group, the ace's `high` 14; you and the computer a players group, the computer played by `<computer>` conditions |
 | `hearts` | A/D along your cards, Space plays | a [`<trick>`](cards.md#tricks) broken by hearts, points as card variables a holder `<counts>`, the deal by `<distribute>`; the players a [group in turn](states.md#players-as-a-group), the trick's winner leading |
 | `spades` | W/S bid, A/D along your cards, Space bids or plays | [trumps and partners](cards.md#tricks) on a holder's `<trick>`, bids from live `tricks`; the players a [group in turn](states.md#players-as-a-group), partners by `<team>` |
 | `gin` | A/D along cards, W/S to the piles, Space draws or discards, K knocks | [melds](cards.md#melds) of sets and runs, live `deadwood`; the players a [group in turn](states.md#players-as-a-group), a turn a draw then a discard (holding eleven turns it to discard) |

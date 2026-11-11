@@ -39,15 +39,17 @@ A state is a **mode**: menu, play, pause, game over. It says what is shown, whic
 
 ## Players as a group
 
-- **Wanted:** board and card games share one world, and the players take turns in it. Before, each game kept a turn variable, looks gating every key, a second hand object for the computer and an F-key for it to press (Crazy Eights: four turn values, F12, a `cpuhand`).
+- **Wanted:** board games, card games, Cannon Hill and Hold'em share one world, and the players take turns in it. Before, each game kept a turn variable, looks gating every key, a second hand object for the computer and an F-key for it to press (Crazy Eights: four turn values, F12, a `cpuhand`).
 - **Chosen (the author agreed):** the players are a `<group>` with `<turns />`, in the order written. Keys reach only the member on its turn; a member with a `<think>` is the computer's, and answers only the presses the computer makes for it, on the same keys a person uses. `<pass />` (the word arcade turns use) hands the turn on. Live `turn` is 1 or 0 on each member, so a live text can say whose turn it is.
 - A member may give its own `<variables>`, `<owns>` and `<think>`: the same take-and-change rule as sprites.
+- **Board games on it:** each member `<owns class>` its pieces, so one cursor and class-less `<put />`, `<pick />`, `<think>` and marks play for the member on its turn. A `<computer>` `<think>` walking the picker keeps people's keys and pointer off it while its condition holds, and taps its key, so a person's next press is never lost. Rejected: a cursor per player (two of everything again).
+- **A member played by `<computer>` conditions** (Hold'em) has no `<think>`, so it answers any press on its turn; its own keys (F9 to F12) trigger it by name. Shared actions written once on the group say "the other" by a condition on each member's `turn`; a word for the other player stays open.
 - A verb naming the group changes the member on its turn; `class=` still means every member.
-- Off its turn a member shows `<turns sprite>`; the one whose turn comes shows its first look (not the look it had: resets stay simple).
+- Off its turn a member shows `<turns sprite>`; the one whose turn comes shows its first look, unless it was given another while it waited (Reversi's "again", set before the `<pass>`).
 - Kept apart: arcade `<alternate><player state>`, where each player has a world of their own.
 - `<pass object member>` gives the turn to a member by number, or nobody (0): a trick's winner leads, the first leader goes round. Numbers, not names, because the trick's `winner` is a seat number and seats are the members' order; a name would need a string value.
 - A turn change waits the computer a moment, so a computer does not play onto a full trick before the conditions that take it run.
-- Open: live `computer` to switch a member between person and computer (one player or two from the title); `others`; a member's name in a text; points and tricks held by members rather than the pack; Checkers on it. A member's `<team>` stands beside `<owns>` rather than inside a `<hand>`: partners are players, not hands.
+- Open: live `computer` to switch a member between person and computer (one player or two from the title); `others`; a member's name in a text; points and tricks held by members rather than the pack. A member's `<team>` stands beside `<owns>` rather than inside a `<hand>`: partners are players, not hands.
 
 ## Open
 

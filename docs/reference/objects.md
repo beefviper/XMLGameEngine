@@ -181,7 +181,7 @@ The game's top-level `<objects>` holds objects, groups and maps written once, ca
 
 - **Taking.** `from="piece"` takes a piece under the name written, changed by what is written. An object with no `from=` named like a piece takes it as it is (`<object name="topwall" />`).
 - A named member of a group piece can be taken alone; it keeps the group's class, rules and picture.
-- A piece can be `from=` an earlier piece (Asteroids' medium and small rocks are `from="rock"`).
+- A piece can be `from=` an earlier piece (Asteroids' medium and small rocks are `from="rock"`). A group `from=` an object piece is a group whose members all have what the object has (Cannon Hill's two barrels, `<group name="barrels" from="barrel">`).
 - **Where it is taken says how long it lasts:** the game's, a state's or a scene's `<objects>`.
 - **Only ever spawned.** A piece a `<spawn>` or `<fire>` names and nothing takes is put beside its spawner, so its copies belong where the spawner does and read that scene's variables.
 

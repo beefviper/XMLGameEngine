@@ -83,10 +83,10 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | rules in rules | a condition holding conditions (`first`, `otherwise`), a collision holding collisions (`first`), `sprite=` tests, `self`/`others`, `other` in a collision rule, `lowest`, `highest`, `unequal` | [conditions in conditions](reference/states.md#conditions-in-conditions), [collisions](reference/collisions.md) |
 | cells | `settle`, `slide` (`class=`), `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |
 | cell puzzles | `shove`, `merge`, `undo`, `here`, `around` (`straight`, `alike`) in `count` and `trigger`; a `condition` in an action | [pushing, merging and counting](reference/maps.md#pushing-merging-and-counting), [conditions in an action](reference/commands.md#conditions-in-an-action) |
-| boards | `pick`, `place`, `put`, `flank`, `moves` | [boards](reference/boards.md) |
+| boards | `pick`, `place`, `put`, `flank`, `close`, `moves` | [boards](reference/boards.md) |
 | pictures | `pictures` (a `bitmap name` a sprite takes by `bitmap from`, a `drawing name` by `drawing from`, and each `sheet`), `cell`, `cells` (sprites, frames and cards cut from one picture) | [bitmaps](reference/pictures.md#bitmaps), [sheets](reference/pictures.md#sheets) |
 | holders | `holds`, `spread`, `accepts` (`condition` with `top`, `any`, `wild`, `empty`), `carry`, `top`, `order`, `counts`, `trick`, `score`, `picked`, `owns`, `starts`, `distribute`; in actions `send from into`, `order group`, `distribute`, `pick` (`most`), a holder's `become` | [holders](reference/cards.md#holders) |
-| players | `turns` on a group, `pass` (`member=`), a member's `think`, `owns` and `team`, live `turn` | [players as a group](reference/states.md#players-as-a-group) |
+| players | `turns` on a group, `pass` (`member=`), a member's `think`, `owns` (`object=` or `class=`) and `team`, live `turn` | [players as a group](reference/states.md#players-as-a-group) |
 | cards | `<holds>` (`<spread>`, `<accepts>`, `<picked>`, `<counts>`, `<trick>`, `<score>`), `send`, `distribute`, `starts`, patterns (`alike`, `run`), tricks | [cards](reference/cards.md) |
 | computer | `computer`, `hold`, `think` | [computer players](reference/states.md#computer-players) |
 

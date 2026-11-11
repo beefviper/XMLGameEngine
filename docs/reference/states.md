@@ -215,7 +215,7 @@ A group whose members are the places, best first, and `<rank variable="entry.sco
 
 ## Players as a group
 
-Board and card games share one world, and the players take it in turns. The players are a group with `<turns />`:
+Board games, card games and any game whose players share one world (Cannon Hill's field, Hold'em's table) take it in turns this way. The players are a group with `<turns />`:
 
 ```xml
 <group name="players" class="player">
@@ -241,6 +241,9 @@ Board and card games share one world, and the players take it in turns. The play
 - **A member's `<think button>`**: the computer plays it on its turn, pointing as it thinks best and pressing that key (`<depth>`, `<avoid />` and `<worth>`s as a [computer's](#computer-players)). No `<computer>` condition is needed.
 - **A verb naming the group** (`<become object="players" sprite="calling" />`) changes the member on its turn.
 - **`<owns object>`**: the holder of its own, a player's cards ([holders](cards.md#holders)).
+- **`<owns class>`**: the pieces of a [board game](boards.md) that are this player's (`<owns class="x" />`). [`<put />`](boards.md#the-picker), `<pick />`, a `<think>` and the marks `<movable>` and `<put>` that leave out `class=` take the class of the member on its turn, so one cursor serves every player.
+- **A look given while it waits stays**: a member that comes onto its turn showing its off-turn look shows its first; one given another look meanwhile (Reversi's "again") keeps it.
+- **Played by `<computer>` conditions.** A member with no `<think>` answers any press on its turn, so a `<computer>` condition on its live `turn` can play it by holding keys whose inputs trigger it (Hold'em's F9 to F12 on `cpu`).
 - **`<team>`** on a member: its side; partners share one, and a computer's `<think>` lets a partner's winning card stand (Spades).
 
 ## Alternating games
@@ -298,8 +301,8 @@ For a [board game](boards.md), a condition may hold a `<think>` instead of `<hol
 ```xml
 <computer>
   <condition object="match" variable="players"><equal>1</equal>
-    <condition object="cursor" variable="turn"><equal>2</equal>
-      <think class="white" object="cursor" button="f12">
+    <condition object="whites" variable="turn"><equal>1</equal>
+      <think object="cursor" button="space">
         <depth>4</depth>
         <worth sprite="king">3</worth>
       </think>
@@ -310,7 +313,7 @@ For a [board game](boards.md), a condition may hold a `<think>` instead of `<hol
 
 - **It searches.** It copies the board and plays out every move, each side in turn, `<depth>` moves deep (default 4, 1 to 9), by the pieces' own `<moves>`.
 - **What it wants is inferred**: its pieces less the other side's, each 1 or its look's `<worth>`; a side with no move loses (or passes, in games of puts); a `<line>` check of the board is a win for whoever makes it; a put that `<close>`s keeps the turn. Equal moves are chosen at random.
-- **It plays as a person would**: it walks the picker `object=` to each cell of its move and presses `button=` there, eight frames apart. Checkers gives it its own key (F12) and cursor looks, so the player's keys do nothing on its turn.
+- **It plays as a person would**: it walks the picker `object=` to each cell of its move and taps `button=` there, eight frames apart. While its condition holds, a person's keys and pointer do not reach that picker, so one cursor and one key serve both sides. With no `class=` it plays the pieces the member on its turn [owns](#players-as-a-group).
 - **It thinks beside the game.** In a window the search runs on a thread of its own, so the game keeps drawing; one no longer wanted is stopped. With no window (the tests) it searches in the frame, so a run is the same every time.
 - **On a hand of cards** (`object=` a hand with its own pile, no `class=`), it [plays cards](cards.md#the-computer).
 

@@ -11,7 +11,7 @@
 | Stage | Words | Game |
 |---|---|---|
 | 1 | `<bounce>` about the touch normal; pixel normals; `on="press|hold|release"` | Putt Park, mini golf |
-| 2 | `<polygon>`; `<acceleration>` on a `<spawn>` (wind); turns as a phase | Cannon Hill, artillery |
+| 2 | `<polygon>`; `<acceleration>` on a `<spawn>` (wind); the barrels a players group | Cannon Hill, artillery |
 | 3 | `<pivot>`, `<swing>`, swept turns, speed at the touch point in `<knock>` | Pinball |
 | 4 | `<surface>`, `<grip>` with a heading, path followers facing their way | Speedway, a racer |
 
@@ -32,6 +32,6 @@
 ## The games
 
 - **Putt Park:** six holes as scenes. Space held adds power, let go strikes, both `from="ready"` so a rolling ball cannot be struck. A condition stops the ball under 0.08 a frame. Open: the cup taking only a slow ball wholly over it, sand and water, a best round.
-- **Cannon Hill:** hills are a `<polygon>` (lines have no fill; a bitmap hill is a page of stairs), cut by the existing `<hole>`. Wind is a spawn's `<acceleration>`, so each shell keeps its turn's wind; a `<pull>` was rejected (a pull is toward a place). Turns are a table phase, not `<turns>`, since both play on one field. One barrel piece serves both sides by `heading = level - side * elevation`. Open: cannons falling into craters, a computer player, a picture-shaped hole (`<hole sprite>`).
+- **Cannon Hill:** hills are a `<polygon>` (lines have no fill; a bitmap hill is a page of stairs), cut by the existing `<hole>`. Wind is a spawn's `<acceleration>`, so each shell keeps its turn's wind; a `<pull>` was rejected (a pull is toward a place). The barrels are a players group (`<group name="barrels" from="barrel">` with `<turns sprite="idle">`), since both play on one field; where a shot is stays the table's look. One barrel piece serves both sides by `heading = level - side * elevation`. Open: cannons falling into craters, a computer player, a picture-shaped hole (`<hole sprite>`).
 - **Pinball:** walls are one pixel picture of lines; bumpers bounce above 1. Flippers are a `<line>` piece with a `<pivot>`, a `<swing>` and `<knock>0.3</knock>`; the slopes end just above the hinge so the ball rolls on with no bump. The plunger is Space held and let go. Open: multiball, drop targets, tilt, ramps (a layer above the table).
 - **Speedway:** `<grip>` with a heading is a wheel's grip, the speed across the heading losing that share; reused rather than a new word. Rejected: turning the velocity to the heading (a skid would lose no speed). `<surface>` is the ground under anything with a grip; rejected the car naming the ground it feels. Laps by four gate rules, no `<gates>` word. Path followers with a heading face their way. Open: steering by speed, computer cars that race, lap times.

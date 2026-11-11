@@ -16,7 +16,7 @@ Turn games on cells. Maps of cells already knew which piece is where; missing we
 
 ## The picker
 
-- **A picker, not a selected piece.** `<pick class>` and `<place />` are self verbs of a cursor using its cell. A refused verb ends its list, so `<place />` then the turn's change passes the turn only when a move is made. Whose turn it is is a variable and the cursor's looks.
+- **A picker, not a selected piece.** `<pick />` and `<place />` are self verbs of a cursor using its cell. A refused verb ends its list, so `<place /><pass object="players" />` passes the turn only when a move is made. Whose turn it is is a [players group](07-states-and-conditions.md#players-as-a-group): each member `<owns class>` its pieces, and the cursor plays the class of the member on its turn (it was a `turn` variable and a cursor look per player).
 - The cursor sits on **a map of its own** over the board, so it walks over pieces without touching them.
 - Rejected: an `<alternate>`-style word (that swaps whole games), crowning by a condition (conditions have no `self`), marking the held piece by its look (every piece would need held looks).
 
@@ -30,18 +30,18 @@ Turn games on cells. Maps of cells already knew which piece is where; missing we
 
 ## Pieces put, not moved
 
-- **`<put class>`** puts a copy of the first piece of the class written, so the board in the file is the start and the pieces are the supply.
+- **`<put />`** (or `<put class>`) puts a copy of the first piece of the class written, so the board in the file is the start and the pieces are the supply.
 - What the piece's `<moves>` say decides where: `<flank class>` (Reversi: a line of the other class ended by one's own), `<fall />` (down a column), nothing (anywhere free), `<on class>` (in place of a piece of that class).
 - **Trapped pieces turn by replacement,** so sides stay classes (what `<jump>`, `total=` and `<think>` go by).
 - **Passing and the end are conditions** on `moves`. **`<count class into>`** gives a score.
 - **Wins by line use the map's `<line>` check.** Checks may not push a state, so a check sets a variable and a condition ends the game.
-- **Dots and Boxes** needed `<on class>` (a line only on its place) and `<close class object>` (claims the boxes walled in; the put counts as refused so the turn does not pass). Each side's lines are its own class.
+- **Dots and Boxes** needed `<on class>` (a line only on its place) and `<close class object>` (claims the boxes walled in; the put counts as refused so the turn does not pass). Each side's lines are its own class. `<close>` sits in the line's `<moves>`, not in the put, so one class-less put serves both players and the box claimed follows the line.
 - **`<onto class>` on a hop or a track** moves only between places of those classes, reading the map as rows like a text cursor. No rule of cell distances alone fits both across and down lines.
 
 ## The computer
 
 - The ask: a generic player that knows the rules and goals, not a strong one. The rules are already data, so the computer need only play them forward.
-- **`<think>`** copies the board into a small table and searches with negamax and alpha-beta, depth 4 by default, by the pieces' own `<moves>`. It presses keys as a person would, walking the picker, so the game's own actions do the move. Its own key and cursor looks keep the player out of its turn.
+- **`<think>`** copies the board into a small table and searches with negamax and alpha-beta, depth 4 by default, by the pieces' own `<moves>`. It presses keys as a person would, walking the picker, so the game's own actions do the move. While its condition holds, people's keys do not reach the picker it walks, so it shares the player's key and cursor.
 - **Goals are inferred:** pieces count 1 (or a `<worth sprite>` hint); a side with no move loses (or passes in games of puts); a `<line>` check is a win, and short of that each open run is worth its pieces squared; a closing put keeps the turn.
 - **Made cheaper:** boards seen are remembered by a key of their pieces; a move is dropped once plainly worse than the best; closing moves first; the free-place counts read one snapshot (`CellsStill`). In games of claims, a **quiet** put (touching nothing) is searched once and its fellows count as equal; used only for claims, not for lines, where corners and edges differ.
 - **It thinks beside the game:** in a window the search runs on a thread on a copied board, so the player's move is drawn first. With no window it runs in the frame, so tests replay the same.

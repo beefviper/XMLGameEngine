@@ -1,6 +1,6 @@
 # Board games
 
-A board game's pieces sit on a [map of cells](maps.md#cells) and move a move at a time, by rules of how each piece may go. A **picker** (a cursor) chooses the piece and where it goes. The computer opponent is a [`<think>`](states.md#computer-players).
+A board game's pieces sit on a [map of cells](maps.md#cells) and move a move at a time, by rules of how each piece may go. A **picker** (a cursor) chooses the piece and where it goes. The players are a [players group](states.md#players-as-a-group) whose members each `<owns class>` their pieces; the computer opponent is a [`<think>`](states.md#thinking).
 
 ## Moves
 
@@ -35,13 +35,26 @@ Any object on a map of cells, usually a cursor on a map of its own laid over the
 
 | Verb | Does | Refused when |
 |---|---|---|
-| `<pick class="red" />` | takes up the piece of that class in its cell (picking again takes another) | that piece has no move, or a run of jumps is under way |
-| `<pick class="red"><only /></pick>` | takes up the one piece with a move, wherever it is, and goes to it | none or several can move, or one is held |
+| `<pick />` | takes up the piece in its cell of the player on its turn (`class="red"`: of that class) (picking again takes another) | that piece has no move, or a run of jumps is under way |
+| `<pick><only /></pick>` | takes up the one piece with a move, wherever it is, and goes to it | none or several can move, or one is held |
 | `<place />` | makes the held piece's move that ends in the picker's cell | no move ends there, or the piece must jump on |
 | `<drop />` | puts the held piece back | nothing held, or a run of jumps has begun |
-| `<put class="black" />` | puts a new piece (a copy of the first one written) in its cell | the cell is taken or the rules forbid it ([below](#pieces-put-not-moved)) |
+| `<put />` | puts a new piece of the player on its turn (a copy of the first one written; `class="black"`: of that class) in its cell | the cell is taken or the rules forbid it ([below](#pieces-put-not-moved)) |
 
-All are self verbs. Since a refused verb ends its list, what is written after `<place />` (passing the turn) runs only when the move is over. Whose turn it is is the game's own: Checkers keeps it in a variable and in the cursor's looks.
+All are self verbs. Since a refused verb ends its list, what is written after `<place />` (passing the turn) runs only when the move is over. So `<place /><pass object="players" />` hands the turn on only once the move is made:
+
+```xml
+<group name="players">
+  <sprite name="moving"> ... </sprite>
+  <sprite name="waiting"> ... </sprite>
+  <turns sprite="waiting" />
+  <member name="reds"><sprite name="moving"> red to move </sprite><owns class="red" /></member>
+  <member name="whites"><sprite name="moving"> white to move </sprite><owns class="white" /></member>
+</group>
+...
+<action name="place"><place /><play sound="move" /><become sprite="free" /><pass object="players" /></action>
+```
+ members are the words saying whose move it is; the one cursor plays for whoever's turn it is.
 
 **The mouse.** A [`<track />`](input.md#pointing-controls) on a map of cells puts the object in the cell under the pointer. `<onto>` narrows it to useful cells:
 
@@ -57,11 +70,11 @@ A hop with `<onto>` goes to the nearest cell holding one of those classes: left 
 `<marks>` on the picker (after its `<moves>`) show the play with objects of their own, copies made and taken away as the play changes:
 
 ```xml
-<marks sprite="redheld">
+<marks sprite="held">
   <held object="heldmark" />                       <!-- the cell of the piece held -->
   <moves object="movemark" variable="options.moves" />  <!-- each cell it can go to -->
-  <movable object="movablemark" class="red" />     <!-- each piece of the class with a move -->
-  <put object="putmark" class="black" />           <!-- each cell a piece can be put -->
+  <movable object="movablemark" />                 <!-- each piece with a move (class= or the player's) -->
+  <put object="putmark" />                         <!-- each cell a piece can be put -->
   <last object="lastmark" />                       <!-- where the last move began and ended -->
 </marks>
 ```
@@ -80,9 +93,9 @@ What a piece's `<moves>` say decides where `<put>` may go:
 | `<fall />` | to the lowest free cell of the picker's column | Four in a Row |
 | nothing (`<moves />`) | any free cell | Tic-Tac-Toe |
 | `<on class="hslot" />` | only on a piece of that class, taking its place | Dots and Boxes |
+| `<close class="box" object="redbox" />` | as the rest say; then each `box` beside it with no free place left on its four sides becomes a copy of `redbox`, and the put counts as refused, so the turn does not pass | Dots and Boxes |
 
-- `<put class="line" />` takes whichever group of the class fits the cell (`across` on an `hslot`, `down` on a `vslot`).
-- `<put class="line"><close class="box" object="redbox" /></put>`: after the put, each `box` beside it with no free place left on its four sides becomes a copy of `redbox`. A put that closes counts as refused, so the turn does not pass.
+- A put takes whichever group of the class fits the cell (`across` on an `hslot`, `down` on a `vslot`), so each player's lines are one class with a `<close>` naming its own box.
 - Live `moves` of a putting piece counts the cells it could go, so a side whose `moves` add up to 0 must pass.
 - The map's `<checks>` are asked after each put, so `<line class="red"><atleast>4</atleast>` finds four in a row.
 - `<count class="black" into="score.black" />` sets the variable to how many of that class are in play, those put this frame included.

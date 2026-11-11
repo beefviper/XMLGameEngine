@@ -87,7 +87,7 @@ Each row is one concept done more than one way. Counts are games using each form
 |---|---|---|---|---|
 | 1 | Into and out of play | Pools: `<active>false</active>` (14 games) with `<reveal>` (11) and `<die />` (24). Copies: `<spawn>` (12), `<despawn>` (21). In between: `<fire>` (16) and `<release>` (9), which take "a copy, or from a pool" | Copies only for things that come and go; `<die />` and `<reveal>` only for fixed things that return (bricks, aliens). `<release>` is a `<spawn>` at the spawner's middle | R3, done |
 | 2 | A jump | `<hop>` (20 games; instant, or timed with `<seconds>` and `<arc>`), `<jump>` (Frostbite only; a timed hop), `<leap>` (3; under a pull) | `<hop>` and `<jump>` (the old `<leap>`) | R2, done |
-| 3 | Whose turn | A group with `<turns>` (Crazy Eights, Hearts, Spades, Gin). A `turn` variable on a cursor or table, tested everywhere (Checkers, Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes, Hold'em, Cannon Hill). A state's `<turns>` (Galaxian: each player their own game), which is a different idea under the same word | Players as a group for every shared-world game. Rename the arcade one | [R4](#r4-one-way-to-take-turns) |
+| 3 | Whose turn | A group with `<turns>` (Crazy Eights, Hearts, Spades, Gin). A `turn` variable on a cursor or table, tested everywhere (Checkers, Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes, Hold'em, Cannon Hill). A state's `<turns>` (Galaxian: each player their own game), which is a different idea under the same word | Players as a group for every shared-world game. Rename the arcade one | R4, done |
 | 4 | The end of a game | One end state whose object has a look per outcome (the form chosen in October). Separate win and lose states: Atlantis, Breakout, Demon Attack, Donkey Kong, Doubles, Frogger, Frostbite, Haunted House, Kaboom, Mario Bros., Megamania, Minefield, Pitfall, Q\*bert, Tennis | One end state with looks, or a lose state `from=` the win state | R5, done |
 | 5 | State names | `title` (34) or `mainmenu` (23); `gameover` (27), `over` (13) or `lost` (6); `youwin` (11), `won` (9) or `wins` (4) | `title`, `playing`, `paused`, `over` | R5, done |
 | 6 | Yes or no | `xs:boolean` content: `<active>`, `<drawn>`, `<enabled>`, `<lockstep>`, `<fullscreen>`. Empty tags elsewhere (`<loop />`, `<forced />`, `<cells />`). A pick elsewhere (`update="live"`) | Empty tags: `<hidden />`-style words chosen by the author | R6, done |
@@ -204,18 +204,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 ### Phase 3: the reduction pass
 
 R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest are independent of each other unless noted, and each is one branch.
-
-#### R4. One way to take turns
-
-- **Size** L. **Needs** nothing.
-- **Why.** Row 3. The players-as-a-group form (`<turns sprite>` on a group, live `turn`, keys only to the member on turn, `<pass />`, a member's `<think>`) was built for cards and is exactly what the board games do by hand with a `turn` variable and a condition per player.
-- **Substeps.**
-  1. **Rename the arcade form (S).** A state's `<turns>` with `<player state=>` (Galaxian only: each player their own game, swapped by the machine) is a different idea. Give it its own word (suggest `<alternate>`, with `<player>` and `<out />` unchanged); the author picks. Then `<turns>` means one thing.
-  2. **Tic-Tac-Toe on a players group (M).** It is the smallest. Two members, `<turns>`, `<pass />` after a put, the computer as a member's `<think>`. Its conditions on `cursor.turn` become `self`/`others` rules written once. Tests in `xge/tests/games/test_inarow.cpp` must pass with the same boards.
-  3. **Four in a Row, Reversi, Dots and Boxes, Checkers (M each).** Same. Reversi has a forced pass when a player cannot move: `<pass />` in a condition on live `moves`. Dots and Boxes gives another turn after a box: do not `<pass />`.
-  4. **Cannon Hill and Hold'em (M).** Cannon Hill's "phase of the table" is two players and looks; Hold'em was left on its own turn numbers because it needs to name "the other player" and a member played by conditions rather than `<think>`; R10 (done) only names the object touched, so "the other player" is still open. Do these last or leave them with a line in open-work.
-- **Files.** The games; `xge/lib/game/players.cpp` (the group-turns engine); `xge/lib/game/think.cpp` (the board search reads whose move it is: find how and feed it from the group); tests `test_checkers.cpp`, `test_reversi.cpp`, `test_inarow.cpp`, `test_dotsandboxes.cpp`; `docs/reference/states.md` "Players as a group" and "Taking turns", `boards.md`, `docs/designs/26-board-games.md`.
-- **Done.** No board game has a variable named `turn`; `docs/reference/boards.md` shows turns the same way `cards.md` does.
 
 #### R11. Card words that are still card words
 
@@ -421,8 +409,7 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 ```
 Blocks 1 and 2 are done.
 
-Block 3  (reduction, any order; R1 is done)
-  R4  turns                               (four substeps)
+Block 3  (reduction, any order; R1 and R4 are done)
   R11 card words
   R12 no arithmetic in text            (survey, then D8, then the sweep)
 
@@ -457,4 +444,4 @@ What blocks what, in one place:
 | A4 | A2 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R4 (B2, B3, B5, R1, R3, R5, R6, R7, R8, R9, R10 and T1 are done).
+If only a few more things are ever done from this file, start with R11 (B2, B3, B5, R1, R3, R4, R5, R6, R7, R8, R9, R10 and T1 are done).
