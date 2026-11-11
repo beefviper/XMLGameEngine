@@ -39,9 +39,15 @@
   * Where the hand is, is the look of `hand` (dealing, betting,
     showdown, done), and the street the look of `street` (preflop, flop,
     turn, river); each look's rules sit inside one condition on it. The
-    betting is the table's variables (pot, owed, raises, acted, turn) and
-    conditions; the computer's play is four
-    <computer> conditions on its odds against the price of a call.
+    betting is the table's variables (pot, owed, raises, acted) and
+    conditions.
+  * You and the computer are a players group that takes <turns>: the
+    actions are written once, on the group, by self; each passes the
+    turn, and a new street gives it to whoever acts first with
+    <pass member="table.first">. Your keys trigger you, the computer's
+    (F9 to F12) trigger it, each only on its turn. The computer's play
+    is four <computer> conditions on its odds against the price of a
+    call.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -136,15 +142,14 @@
         </object>
 
         <!-- the table: the pot, what the player to act owes, the raises and actions this round, the round (0 before
-             the flop, 1 the flop, 2 the turn, 3 the river, 4 the showdown, 5 between hands, 6 shuffling), whose turn (1 you, 2 the
-             computer), the bet, and who acts first this hand -->
+             the flop, 1 the flop, 2 the turn, 3 the river, 4 the showdown, 5 between hands, 6 shuffling), the bet, and who acts first this hand -->
         <object name="table">
           <sprite><text style="note"><content>pot </content><number>table.pot</number></text></sprite>
           <position><x><centered /></x><y>boardrow - 50</y></position>
           <actions>
             <action name="deal">
               <set variable="table.first">3 - table.first</set>
-              <set variable="table.turn">table.first</set>
+              <pass object="players" member="table.first" />
               <dec variable="you.chips">5</dec>
               <dec variable="cpu.chips">5</dec>
               <set variable="table.pot">10</set>
@@ -166,7 +171,7 @@
               <become object="street" sprite="flop" />
               <set variable="table.acted">0</set>
               <set variable="table.raises">0</set>
-              <set variable="table.turn">table.first</set>
+              <pass object="players" member="table.first" />
               <play sound="deal" />
             </action>
             <action name="turn">
@@ -175,7 +180,7 @@
               <set variable="table.bet">20</set>
               <set variable="table.acted">0</set>
               <set variable="table.raises">0</set>
-              <set variable="table.turn">table.first</set>
+              <pass object="players" member="table.first" />
               <play sound="deal" />
             </action>
             <action name="river">
@@ -183,7 +188,7 @@
               <become object="street" sprite="river" />
               <set variable="table.acted">0</set>
               <set variable="table.raises">0</set>
-              <set variable="table.turn">table.first</set>
+              <pass object="players" member="table.first" />
               <play sound="deal" />
             </action>
             <action name="showdown">
@@ -196,7 +201,6 @@
             <variable name="owed">0</variable>
             <variable name="raises">0</variable>
             <variable name="acted">0</variable>
-            <variable name="turn">1</variable>
             <variable name="bet">10</variable>
             <variable name="first">2</variable>
           </variables>
@@ -207,66 +211,7 @@
           <position><x><centered /></x><y>boardrow + cardheight + 24</y></position>
         </object>
 
-        <!-- you: what to do now, your chips, and your actions -->
-        <object name="you">
-          <sprite name="done"><text style="note"><content>spacebar deals the next hand</content></text></sprite>
-          <sprite name="act"><text style="note"><content>w bet or raise, spacebar check or call, x fold</content></text></sprite>
-          <sprite name="callonly"><text style="note"><content>spacebar check or call, x fold</content></text></sprite>
-          <sprite name="allin"><text style="note"><content>spacebar calls with all your chips, x folds</content></text></sprite>
-          <sprite name="wait"><text style="note"><content>the computer is thinking</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y>yourrow + cardheight + 70</y></position>
-          <actions>
-            <action name="next">
-              <send from="cards" into="stock"><all /></send>
-              <order group="stock"><random /></order>
-              <become object="result" sprite="none" />
-              <become object="dealer" sprite="shuffling" />
-              <become sprite="wait" />
-              <become object="hand" sprite="dealing" />
-              <play sound="shuffle" />
-            </action>
-            <action name="call">
-              <dec variable="you.chips">table.owed</dec>
-              <inc variable="table.pot">table.owed</inc>
-              <set variable="table.owed">0</set>
-              <inc variable="table.acted">1</inc>
-              <set variable="table.turn">2</set>
-              <play sound="chip" />
-            </action>
-            <action name="raise">
-              <dec variable="you.chips">table.owed + table.bet</dec>
-              <inc variable="table.pot">table.owed + table.bet</inc>
-              <set variable="table.owed">table.bet</set>
-              <inc variable="table.raises">1</inc>
-              <inc variable="table.acted">1</inc>
-              <set variable="table.turn">2</set>
-              <play sound="raise" />
-            </action>
-            <!-- short: all you have; what you cannot match goes back to the computer -->
-            <action name="allin">
-              <inc variable="cpu.chips">table.owed - you.chips</inc>
-              <dec variable="table.pot">table.owed - you.chips</dec>
-              <inc variable="table.pot">you.chips</inc>
-              <set variable="you.chips">0</set>
-              <set variable="table.owed">0</set>
-              <inc variable="table.acted">1</inc>
-              <set variable="table.turn">2</set>
-              <play sound="chip" />
-            </action>
-            <action name="fold">
-              <inc variable="cpu.chips">table.pot</inc>
-              <set variable="table.pot">0</set>
-              <become object="hand" sprite="done" />
-              <become object="result" sprite="youfold" />
-              <play sound="fold" />
-            </action>
-          </actions>
-          <variables>
-            <variable name="chips">500</variable>
-          </variables>
-        </object>
-
-        <!-- where the hand is (dealing, betting, showdown, done), and the street the betting is on -->
+        <!-- where the hand is (dealing, betting, showdown, done), and the street the betting is on; Space when it is done deals the next -->
         <object name="hand">
           <sprite name="done"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <sprite name="dealing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
@@ -274,6 +219,17 @@
           <sprite name="showdown"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <hidden />
+          <actions>
+            <action name="next">
+              <send from="cards" into="stock"><all /></send>
+              <order group="stock"><random /></order>
+              <become object="result" sprite="none" />
+              <become object="dealer" sprite="shuffling" />
+              <become object="you" sprite="wait" />
+              <become sprite="dealing" />
+              <play sound="shuffle" />
+            </action>
+          </actions>
         </object>
         <object name="street">
           <sprite name="preflop"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
@@ -295,56 +251,56 @@
           </timers>
         </object>
 
-        <!-- the computer: its chips, thinking a moment before it acts (ready), and its actions on F9 to F12 -->
-        <object name="cpu">
-          <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="thinking"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+        <!-- the players, taking turns: you (what to do now) and the computer (it acts on F9 to F12 once
+             ready); off its turn each waits. The actions are each one's own, by self, and pass the turn. -->
+        <group name="players">
           <position><x>0</x><y>0</y></position>
           <actions>
             <action name="call">
-              <dec variable="cpu.chips">table.owed</dec>
+              <condition object="cpu" variable="turn"><equal>1</equal><become object="cpusays" sprite="call" /></condition>
+              <dec variable="self.chips">table.owed</dec>
               <inc variable="table.pot">table.owed</inc>
               <set variable="table.owed">0</set>
               <inc variable="table.acted">1</inc>
-              <set variable="table.turn">1</set>
-              <set variable="cpu.ready">0</set>
-              <become sprite="idle" />
-              <become object="cpusays" sprite="call" />
+              <set variable="self.ready">0</set>
+              <become object="thought" sprite="idle" />
               <play sound="chip" />
+              <pass />
             </action>
             <action name="raise">
-              <dec variable="cpu.chips">table.owed + table.bet</dec>
+              <condition object="cpu" variable="turn"><equal>1</equal><become object="cpusays" sprite="raise" /></condition>
+              <dec variable="self.chips">table.owed + table.bet</dec>
               <inc variable="table.pot">table.owed + table.bet</inc>
               <set variable="table.owed">table.bet</set>
               <inc variable="table.raises">1</inc>
               <inc variable="table.acted">1</inc>
-              <set variable="table.turn">1</set>
-              <set variable="cpu.ready">0</set>
-              <become sprite="idle" />
-              <become object="cpusays" sprite="raise" />
+              <set variable="self.ready">0</set>
+              <become object="thought" sprite="idle" />
               <play sound="raise" />
+              <pass />
             </action>
+            <!-- short: all it has; what it cannot match goes back to the other -->
             <action name="allin">
-              <inc variable="you.chips">table.owed - cpu.chips</inc>
-              <dec variable="table.pot">table.owed - cpu.chips</dec>
-              <inc variable="table.pot">cpu.chips</inc>
-              <set variable="cpu.chips">0</set>
+              <condition object="you" variable="turn"><equal>1</equal><inc variable="cpu.chips">table.owed - you.chips</inc></condition>
+              <condition object="cpu" variable="turn"><equal>1</equal><inc variable="you.chips">table.owed - cpu.chips</inc><become object="cpusays" sprite="call" /></condition>
+              <dec variable="table.pot">table.owed - self.chips</dec>
+              <inc variable="table.pot">self.chips</inc>
+              <set variable="self.chips">0</set>
               <set variable="table.owed">0</set>
               <inc variable="table.acted">1</inc>
-              <set variable="table.turn">1</set>
-              <set variable="cpu.ready">0</set>
-              <become sprite="idle" />
-              <become object="cpusays" sprite="call" />
+              <set variable="self.ready">0</set>
+              <become object="thought" sprite="idle" />
               <play sound="chip" />
+              <pass />
             </action>
+            <!-- the pot to the other -->
             <action name="fold">
-              <inc variable="you.chips">table.pot</inc>
-              <set variable="cpu.ready">0</set>
-              <become sprite="idle" />
-              <become object="cpusays" sprite="fold" />
+              <condition object="you" variable="turn"><equal>1</equal><inc variable="cpu.chips">table.pot</inc><become object="result" sprite="youfold" /></condition>
+              <condition object="cpu" variable="turn"><equal>1</equal><inc variable="you.chips">table.pot</inc><become object="result" sprite="cpufolds" /><become object="cpusays" sprite="fold" /></condition>
               <set variable="table.pot">0</set>
+              <set variable="self.ready">0</set>
+              <become object="thought" sprite="idle" />
               <become object="hand" sprite="done" />
-              <become object="result" sprite="cpufolds" />
               <play sound="fold" />
             </action>
           </actions>
@@ -352,6 +308,26 @@
             <variable name="chips">500</variable>
             <variable name="ready">0</variable>
           </variables>
+          <turns sprite="wait" />
+          <member name="you">
+            <sprite name="wait"><text style="note"><content>the computer is thinking</content><color>color.lightgrey</color></text></sprite>
+            <sprite name="done"><text style="note"><content>spacebar deals the next hand</content></text></sprite>
+            <sprite name="act"><text style="note"><content>w bet or raise, spacebar check or call, x fold</content></text></sprite>
+            <sprite name="callonly"><text style="note"><content>spacebar check or call, x fold</content></text></sprite>
+            <sprite name="allin"><text style="note"><content>spacebar calls with all your chips, x folds</content></text></sprite>
+            <position><x><centered /></x><y>yourrow + cardheight + 70</y></position>
+          </member>
+          <member name="cpu">
+            <sprite name="playing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+            <sprite name="wait"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          </member>
+        </group>
+        <!-- the computer's moment of thought before it is ready -->
+        <object name="thought">
+          <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="thinking"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>0</x><y>0</y></position>
+          <hidden />
           <timers>
             <timer sprite="thinking"><every>0.9</every><set variable="cpu.ready">1</set></timer>
           </timers>
@@ -406,7 +382,7 @@
           <trigger object="you" action="call" from="act" />
           <trigger object="you" action="call" from="callonly" />
           <trigger object="you" action="allin" from="allin" />
-          <trigger object="you" action="next" from="done" />
+          <trigger object="hand" action="next" from="done" />
         </input>
         <input>
           <button>x</button><button>backspace</button><button>pad1.b</button>
@@ -415,10 +391,10 @@
           <trigger object="you" action="fold" from="allin" />
         </input>
         <!-- the computer's keys -->
-        <input><button>f9</button><trigger object="cpu" action="allin" from="thinking" /></input>
-        <input><button>f10</button><trigger object="cpu" action="fold" from="thinking" /></input>
-        <input><button>f11</button><trigger object="cpu" action="call" from="thinking" /></input>
-        <input><button>f12</button><trigger object="cpu" action="raise" from="thinking" /></input>
+        <input><button>f9</button><trigger object="cpu" action="allin" /></input>
+        <input><button>f10</button><trigger object="cpu" action="fold" /></input>
+        <input><button>f11</button><trigger object="cpu" action="call" /></input>
+        <input><button>f12</button><trigger object="cpu" action="raise" /></input>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
@@ -468,27 +444,28 @@
               </otherwise>
             </condition>
           </condition>
-          <!-- the computer's turn: it thinks a moment -->
-          <condition object="table" variable="turn"><equal>2</equal>
-            <become object="cpu" sprite="thinking" from="idle" />
-            <become object="you" sprite="wait" />
+            <!-- the computer's turn: it thinks a moment -->
+          <condition object="cpu" variable="turn"><equal>1</equal>
+            <become object="thought" sprite="thinking" from="idle" />
           </condition>
           <!-- your turn: what you can do -->
+          <condition object="you" variable="turn"><equal>1</equal>
           <condition object="table" variable="raises"><below>3</below>
             <condition object="you" variable="chips"><atleast>table.owed + table.bet</atleast>
               <become object="you" sprite="act" />
             </condition>
           </condition>
           <condition object="you" variable="chips"><atleast>table.owed</atleast><become object="you" sprite="callonly" /></condition>
-          <otherwise>
-            <become object="you" sprite="allin" />
-          </otherwise>
+            <otherwise>
+              <become object="you" sprite="allin" />
+            </otherwise>
+          </condition>
         </condition>
       </conditions>
       <!-- the computer, on its turn after a moment's thought: raise with good odds, call when the odds beat the price, else fold -->
       <computer>
         <condition object="hand" sprite="betting">
-          <condition object="table" variable="turn"><equal>2</equal>
+          <condition object="cpu" variable="turn"><equal>1</equal>
             <condition object="cpu" variable="ready"><equal>1</equal>
               <condition object="theirs" variable="odds"><atleast>65</atleast>
                 <condition object="table" variable="raises"><below>3</below>

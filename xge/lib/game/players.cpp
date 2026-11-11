@@ -78,7 +78,9 @@ namespace xge
 		if (!member.takesTurns) { return true; }
 		const auto onIt = member.variable.find("turn");
 		if (onIt == member.variable.end() || onIt->second == 0.0f) { return false; }
-		return memberThinks.count(member.name) > 0 ? computerPresses : !computerPresses;
+		// A member the computer thinks for answers only its presses; any other
+		// answers whoever presses (a member played by <computer> conditions).
+		return memberThinks.count(member.name) == 0 || computerPresses;
 	}
 
 	bool Game::passPlayers(Object& member)

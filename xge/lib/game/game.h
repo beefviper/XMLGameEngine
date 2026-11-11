@@ -167,8 +167,9 @@ namespace xge
 		// Players as a group (game/players.cpp). The member of the group
 		// `name` on its turn (none: the group takes no turns); whether a
 		// name is such a group; whether a key reaches `member` now (always,
-		// unless it takes turns: then only on its turn, and only a press of
-		// the computer's for a member it plays, a person's for the rest).
+		// unless it takes turns: then only on its turn, and only the computer's
+		// presses for a member it thinks for; the rest, played by people or
+		// by <computer> conditions, answer any press).
 		// <pass /> in a member's action: the next member's turn (false:
 		// not its turn, or a holder waits for a wild card's call).
 		Object* onTurn(const std::string& name);

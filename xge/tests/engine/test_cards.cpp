@@ -1067,7 +1067,7 @@ namespace
 			{
 				frames(1);
 				const std::string look = get("you").lookName();
-				if (look != "wait" && get("table").variable.at("turn") == 1.0f) { return; }
+				if (look != "wait" && get("you").variable.at("turn") == 1.0f) { return; }
 				if (hand() != "betting") { frames(2); return; }
 			}
 		}
