@@ -257,9 +257,9 @@ namespace xge
 			[&](const CmdDecrement& c) { o << "dec(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdCopy& c) { o << "copy(" << c.from.written() << ", " << c.into.written() << ")"; },
 			[&](const CmdRank& c) { o << "rank(" << c.entry.written() << ", " << c.table << ")"; },
-			[&](const CmdTurns& c)
+			[&](const CmdAlternate& c)
 			{
-				o << "turns(";
+				o << "alternate(";
 				for (std::size_t i = 0; i < c.players.size(); ++i) { o << (i ? ", " : "") << (c.players[i].empty() ? "-" : c.players[i]); }
 				o << ")";
 			},

@@ -243,21 +243,21 @@ Board and card games share one world, and the players take it in turns. The play
 - **`<owns object>`**: the holder of its own, a player's cards ([holders](cards.md#holders)).
 - **`<team>`** on a member: its side; partners share one, and a computer's `<think>` lets a partner's winning card stand (Spades).
 
-## Taking turns
+## Alternating games
 
-Players take turns as the arcade machines did: each plays a game of their own, and the machine swaps them.
+Players take turns as the arcade machines did: each plays a game of their own, and the machine swaps them. (Players sharing one field, a board or a table, are a [players group](#players-as-a-group) instead.)
 
 ```xml
 <input button="num2">
   <push state="playing" />
-  <turns>
+  <alternate>
     <player state="player1" />
     <player state="player2" />
-  </turns>
+  </alternate>
 </input>
 ```
 
-- Each player's game starts as the game is when `<turns>` runs: every object but the kept ones, every timer, the current scenes. A `<player>`'s `state=` is pushed when that turn begins.
+- Each player's game starts as the game is when `<alternate>` runs: every object but the kept ones, every timer, the current scenes. A `<player>`'s `state=` is pushed when that turn begins.
 - **`<pass />`**: the turn goes to the next player still in; this game is put away as it is, theirs comes back.
 - **`<out />`**: this player is out and the turn passes. When no one is left, what follows `<out />` runs, so `<out /><reset />` is "the next player, or a new game". With no turns it does nothing, so the file plays one player too.
 - They go where a state's commands go, so a swap never happens mid-frame. A full reset ends the turns.

@@ -130,7 +130,7 @@ The variable must belong to an object; one no object has stops the load.
 | `<pop />` | back to the state below (never past the first) |
 | `<pop state="over" />` | this state goes and that one takes its place |
 | `<trigger object="ship" action="fire" />` | runs an object's action as one press. On a group, each member. `from="normal"` only those showing that look (on a key, the look at the press). In an object's own places `object=` may be left out. In a key's input it may hold an [`<otherwise>`](input.md#keys). `class="square"` with [`<around />`](maps.md#pushing-merging-and-counting): those of the class in the cells round it |
-| `<turns>`, `<pass />`, `<out />` | players [taking turns](states.md#taking-turns) |
+| `<alternate>`, `<pass />`, `<out />` | players taking turns, [each with a game of their own](states.md#alternating-games); `<pass />` also hands on a [players group](states.md#players-as-a-group)'s turn |
 | `<demo />` | plays the recorded [`<demo>`](states.md#attract-mode) |
 | `<hold button="l" />` | a computer player holds that key |
 

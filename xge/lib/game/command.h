@@ -232,12 +232,12 @@ namespace xge
 		std::string table;     // the group
 	};
 
-	// <turns><player state="player1" /><player state="player2" /></turns> -
+	// <alternate><player state="player1" /><player state="player2" /></alternate> -
 	// the game from here is played by that many players taking turns, each
 	// with a game of their own, all starting as the game is now. The first
 	// player plays first; each player's state= (optional) is pushed whenever
 	// their turn comes up, a screen saying whose it is. See Game::startTurns.
-	struct CmdTurns
+	struct CmdAlternate
 	{
 		std::vector<std::string> players;
 	};
@@ -856,7 +856,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
-		CmdMove, CmdHop, CmdHuntHop, CmdLand, CmdJump, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdThrustAcross, CmdTurn, CmdThrust, CmdSwing, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdTurns, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdHuntHop, CmdLand, CmdJump, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdThrustAcross, CmdTurn, CmdThrust, CmdSwing, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdAlternate, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdShove, CmdMerge, CmdUndo, CmdWhen, CmdPick, CmdPlace, CmdPut, CmdOrder, CmdCount, CmdThink, CmdCall, CmdLive>;
 
 	struct LoadedCommand

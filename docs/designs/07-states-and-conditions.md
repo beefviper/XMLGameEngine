@@ -44,7 +44,7 @@ A state is a **mode**: menu, play, pause, game over. It says what is shown, whic
 - A member may give its own `<variables>`, `<owns>` and `<think>`: the same take-and-change rule as sprites.
 - A verb naming the group changes the member on its turn; `class=` still means every member.
 - Off its turn a member shows `<turns sprite>`; the one whose turn comes shows its first look (not the look it had: resets stay simple).
-- Kept apart: arcade `<turns><player state>`, where each player has a world of their own.
+- Kept apart: arcade `<alternate><player state>`, where each player has a world of their own.
 - `<pass object member>` gives the turn to a member by number, or nobody (0): a trick's winner leads, the first leader goes round. Numbers, not names, because the trick's `winner` is a seat number and seats are the members' order; a name would need a string value.
 - A turn change waits the computer a moment, so a computer does not play onto a full trick before the conditions that take it run.
 - Open: live `computer` to switch a member between person and computer (one player or two from the title); `others`; a member's name in a text; points and tricks held by members rather than the pack; Checkers on it. A member's `<team>` stands beside `<owns>` rather than inside a `<hand>`: partners are players, not hands.

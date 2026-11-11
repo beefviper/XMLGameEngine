@@ -31,7 +31,7 @@ The tables list only keys beyond that.
 | `astrosmash` | A/D, Space fires | rocks that split, spinners, a spare base each 1,000 |
 | `asteroids` | Left/Right turn, Up thrusts, Space fires, Down hyperspace | headings, rocks that break, two saucers, a flame [pose](pictures.md#poses-mirror-grip-and-blinking), the best score kept |
 | `demonattack` | A/D, Space fires | three waves of demons that fire back and split |
-| `galaxian` | A/D, Space fires; 2 on the title | [paths](timers.md#paths), a swaying fleet, escorts, [turns](states.md#taking-turns), a top five, an [attract mode](states.md#attract-mode) |
+| `galaxian` | A/D, Space fires; 2 on the title | [paths](timers.md#paths), a swaying fleet, escorts, [alternating games](states.md#alternating-games), a top five, an [attract mode](states.md#attract-mode) |
 | `megamania` | A/D, Space fires | eight wrapping waves; energy as a [timer's time left](timers.md#time-left) |
 | `atlantis` | A, W, D fire the three posts | waves whose named timers and conditions [`from=`](states.md#scenes) replaces |
 | `missilecommand` | W A S D move the sight, Space launches | `<aim>`, counter-missiles trailing a [`<tether>`](pictures.md#sprites), waves as scenes |

@@ -31,7 +31,7 @@ namespace xge
 	// Look and sound.
 	extern const Verb becomeVerb, playVerb, silenceVerb;
 	// Flow.
-	extern const Verb pushVerb, popVerb, enterVerb, triggerVerb, turnsVerb, passVerb, outVerb, demoVerb, undoVerb;
+	extern const Verb pushVerb, popVerb, enterVerb, triggerVerb, alternateVerb, passVerb, outVerb, demoVerb, undoVerb;
 	// Cells.
 	extern const Verb settleVerb, slideVerb, cycleVerb, growVerb, splitVerb, clearVerb, collapseVerb, fallVerb;
 	// Boards and holders.
@@ -48,7 +48,7 @@ namespace xge
 			&dieVerb, &resetVerb, &spawnVerb, &despawnVerb, &fireVerb, &revealVerb, &dropVerb,
 			&incVerb, &decVerb, &setVerb, &copyVerb, &countVerb, &rankVerb,
 			&becomeVerb, &playVerb, &silenceVerb,
-			&pushVerb, &popVerb, &enterVerb, &triggerVerb, &turnsVerb, &passVerb, &outVerb, &demoVerb, &undoVerb,
+			&pushVerb, &popVerb, &enterVerb, &triggerVerb, &alternateVerb, &passVerb, &outVerb, &demoVerb, &undoVerb,
 			&settleVerb, &slideVerb, &cycleVerb, &growVerb, &splitVerb, &clearVerb, &collapseVerb, &fallVerb,
 			&pickVerb, &placeVerb, &putVerb, &callVerb, &sendVerb, &distributeVerb, &orderVerb,
 			&holdVerb, &thinkVerb,

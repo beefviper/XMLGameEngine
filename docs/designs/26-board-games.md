@@ -18,7 +18,7 @@ Turn games on cells. Maps of cells already knew which piece is where; missing we
 
 - **A picker, not a selected piece.** `<pick class>` and `<place />` are self verbs of a cursor using its cell. A refused verb ends its list, so `<place />` then the turn's change passes the turn only when a move is made. Whose turn it is is a variable and the cursor's looks.
 - The cursor sits on **a map of its own** over the board, so it walks over pieces without touching them.
-- Rejected: a `<turns>`-style word (that swaps whole games), crowning by a condition (conditions have no `self`), marking the held piece by its look (every piece would need held looks).
+- Rejected: an `<alternate>`-style word (that swaps whole games), crowning by a condition (conditions have no `self`), marking the held piece by its look (every piece would need held looks).
 
 ## Easier play
 

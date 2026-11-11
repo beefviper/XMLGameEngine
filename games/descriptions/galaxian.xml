@@ -48,7 +48,7 @@
     saves/galaxian.xml. A game over above the fifth asks for initials, a
     letter a state; the second and third letters are the first's state
     (from=) with the cursor moved and their own keys.
-  * Two players take turns (<turns>, <pass />, <out />); each turn begins
+  * Two players take turns (<alternate>, <pass />, <out />); each turn begins
     with a screen saying whose it is, player 2's a copy of player 1's.
   * Left on the title for ten seconds, it plays its <demo>.
   * The swarm hums under play (the playing state's <music>); a short tune
@@ -314,10 +314,10 @@
         <input button="num2">
           <push state="playing" />
           <play sound="start" />
-          <turns>
+          <alternate>
             <player state="player1" />
             <player state="player2" />
-          </turns>
+          </alternate>
         </input>
       </inputs>
       <!-- left alone, the game shows itself being played -->

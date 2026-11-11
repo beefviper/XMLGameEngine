@@ -110,7 +110,7 @@
   <file>lib/verbs/pop.cpp</file>
   <file>lib/verbs/enter.cpp</file>
   <file>lib/verbs/trigger.cpp</file>
-  <file>lib/verbs/turns.cpp</file>
+  <file>lib/verbs/alternate.cpp</file>
   <file>lib/verbs/pass.cpp</file>
   <file>lib/verbs/out.cpp</file>
   <file>lib/verbs/demo.cpp</file>

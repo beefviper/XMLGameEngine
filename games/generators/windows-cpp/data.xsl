@@ -476,7 +476,7 @@
             </xsl:call-template>
           </xsl:if>
         </xsl:when>
-        <xsl:when test="$verb = 'turns'">
+        <xsl:when test="$verb = 'alternate'">
           <xsl:text> command.players = { </xsl:text>
           <xsl:for-each select="$node/player">
             <xsl:if test="position() &gt; 1">, </xsl:if>
