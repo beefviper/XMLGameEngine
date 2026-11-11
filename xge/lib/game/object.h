@@ -1866,11 +1866,6 @@ namespace xge
 	// for neither. What a condition tests and compares with.
 	std::optional<float> numberOf(const Object& object, const std::string& name);
 
-	// What a rule answering a touch can read of it (see Touch): touch.x and
-	// touch.y (the point), touch.along, touch.depth, touch.normal.x and
-	// touch.normal.y.
-	const std::vector<std::string>& touchNumberNames();
-
 	// `text` with every name in it that starts with `from` (a whole word,
 	// followed by a dot) starting with `to` instead.
 	std::string renameStart(const std::string& text, const std::string& from, const std::string& to);

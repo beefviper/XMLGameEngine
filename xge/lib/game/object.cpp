@@ -443,12 +443,6 @@ namespace xge
 		return part->of(const_cast<Object&>(object)); // only read
 	}
 
-	const std::vector<std::string>& touchNumberNames()
-	{
-		static const std::vector<std::string> names{ "touch.x", "touch.y", "touch.along", "touch.depth", "touch.normal.x", "touch.normal.y" };
-		return names;
-	}
-
 	bool Object::followsPart(const std::string& part) const
 	{
 		return std::any_of(follows.begin(), follows.end(), [&](const Follow& each)

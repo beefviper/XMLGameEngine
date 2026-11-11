@@ -56,7 +56,7 @@ Pong's rule: the paddle's middle sends the ball straight back, its ends at 45 de
 
 ## Contacts and knocks
 
-- **A contact is worked out once per touch** (`contactOf`): edges, point, normal, where along each side, depth, time. Each side's rules see it from their own side; commands read `touch.x`, `touch.normal.x` and so on. Chosen over every sweep returning it, or each verb measuring for itself.
+- **A contact is worked out once per touch** (`contactOf`): edges, point, normal, where along each side, depth, time. Each side's rules see it from their own side, through the verbs (bounce, knock, deflect). Its numbers were once names a rule could read (`touch.x`, `touch.normal.x`); no game read them, so they went. Chosen over every sweep returning it, or each verb measuring for itself.
 - **`<knock>`** is a one-dimensional collision along the normal by `<mass>`, its content the bounce. Nothing happens unless closing, so both sides may say it. No mass is as heavy as can be. Chains of balls pass a knock on with no extra mechanism.
 - **Through a thing with no mass** (Mario Bros.' bumped floor): the knock goes to what rests on its far side, which then runs its rules as touched from below. A rule's `through="class"` takes only such felt-through touches.
 - Open: spin, rolling friction apart from `<drag>`.

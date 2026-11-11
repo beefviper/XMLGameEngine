@@ -218,7 +218,6 @@ namespace xge
 				if (!objectVariables.count(name) && !liveNumbers.count(name)) { liveNumbers[name] = 0.0f; }
 			}
 		}
-		for (const std::string& name : touchNumberNames()) { liveNumbers[name] = 0.0f; }
 		for (auto& [name, number] : liveNumbers) { bind(name, number); }
 
 		// Every object's size as name.width / name.height, so an expression can

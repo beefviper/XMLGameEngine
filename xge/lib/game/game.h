@@ -724,11 +724,10 @@ namespace xge
 
 		// Each live number the expressions read, and whose it is and which
 		// part, worked out the first time (objects keep their places in
-		// `objects`); and the numbers of the touch a rule is answering.
+		// `objects`).
 		struct LiveLink { float* number; std::size_t object; std::size_t part; };
 		std::vector<LiveLink> liveLinks;
 		bool liveLinked = false;
-		std::array<float*, 6> touchNumbers{};
 		std::set<std::string> liveWarned;
 
 		// The copy of an object's variables that texts read (load/calc), made

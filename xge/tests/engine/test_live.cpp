@@ -161,16 +161,12 @@ TEST_CASE("<spawn> makes a new object where and going as it says, read as it run
 	CHECK_FALSE(play.get("shot").exists);
 }
 
-TEST_CASE("a rule's value can read the touch it answers", "[live]")
+TEST_CASE("touch.x and the other numbers of a touch are gone: no name reads them", "[live]")
 {
 	const Scratch file(box("ball", 100, 100, "<velocity><x>20</x><y>0</y></velocity><collisions><enabled>true</enabled>"
-		"<collision object=\"wall\"><set variable=\"marker.x\">touch.x</set><set variable=\"marker.y\">touch.normal.x</set><stop /></collision></collisions>")
+		"<collision object=\"wall\"><set variable=\"marker.x\">touch.x</set><stop /></collision></collisions>")
 		+ box("wall", 200, 95, "<collisions><enabled>true</enabled></collisions>") + box("marker", 0, 0), "<pop />");
-	Played play(file.path);
-
-	play.frames(10);
-	CHECK(play.get("marker").position.x == Approx(200));
-	CHECK(play.get("marker").position.y == Approx(-1)); // out of the wall, toward the ball
+	CHECK_THROWS(Played(file.path));
 }
 
 TEST_CASE("a <tether> is drawn from one object's middle to another's, wherever they go", "[live]")

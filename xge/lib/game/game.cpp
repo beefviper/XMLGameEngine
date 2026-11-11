@@ -1969,14 +1969,6 @@ namespace xge
 	{
 		CommandExecutor executor(*this);
 
-		// What the rules' values can read of the touch (touch.x, ...).
-		if (!liveLinked) { refreshLive(); }
-		const float numbers[] = { touch.point.x, touch.point.y, touch.along, touch.depth, touch.normal.x, touch.normal.y };
-		for (std::size_t i = 0; i < touchNumbers.size(); ++i)
-		{
-			if (touchNumbers[i]) { *touchNumbers[i] = numbers[i]; }
-		}
-
 		// How fast it is going at the moment of the touch (its live speed while
 		// the rules run); taken once, so that a rule that stops it does not
 		// change which of the rules after it run.
@@ -2019,12 +2011,6 @@ namespace xge
 					const auto found = expr.liveNumbers.find(objects[i].name + "." + parts[part]);
 					if (found != expr.liveNumbers.end()) { liveLinks.push_back({ &found->second, i, part }); }
 				}
-			}
-			const std::vector<std::string>& touch = touchNumberNames();
-			for (std::size_t i = 0; i < touch.size() && i < touchNumbers.size(); ++i)
-			{
-				const auto found = expr.liveNumbers.find(touch[i]);
-				touchNumbers[i] = found == expr.liveNumbers.end() ? nullptr : &found->second;
 			}
 		}
 

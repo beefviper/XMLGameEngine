@@ -270,9 +270,8 @@ namespace xge
 		std::map<std::string, float> objectVariables;
 
 		// The numbers every object has while the game runs (liveNumberParts:
-		// ball.x, ball.velocity.y, ...) and what a rule answering a touch can
-		// read of it (touchNumberNames), bound into symbolTable as the
-		// variables are. Before a value is worked out while the game runs,
+		// ball.x, ball.velocity.y, ...), bound into symbolTable as the variables
+		// are. Before a value is worked out while the game runs,
 		// Game writes them from where everything is (Game::evaluateNow).
 		// While loading they have no meaning yet, and a value that names one
 		// stops the load, unless it is a command's (see processCommands).

@@ -85,7 +85,6 @@ A `<random>` is drawn at load and again whenever its object comes back into play
 | `object.timer` | a named object timer's [time left](timers.md#time-left) |
 | `object.x`, `.y`, `.velocity.x`, `.velocity.y`, `.heading`, `.altitude`, `.rise`, `.light`, `.blink`, `.speed` | **live numbers**: its top left, how it goes (`speed` how fast, read only; in a touch rule, as the touch happened), its [height](pictures.md#height-and-shadows), [light](pictures.md#light-and-dark), [blinking](pictures.md#poses-mirror-grip-and-blinking) |
 | `self.` before any of these | in an object's own rules, actions, timers and numbers, the object running it |
-| `touch.x`, `.y`, `.along`, `.depth`, `.normal.x`, `.normal.y` | in a rule about another object: the point, where along the object's side (0 to 1), how deep, the way out of the other |
 
 An object's own `<variable>` named like a size or live number (`width`, `x`) wins over it.
 
