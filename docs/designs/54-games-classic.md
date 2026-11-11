@@ -12,7 +12,7 @@
 | Kaboom | `<random>` in a group; states that differ only in what they show | timers, `<facing>` fire, `<reset object>` in a rule | speed-up within a wave |
 | Depth Charge | many charges against a clock | nothing | the charges' depth setting |
 | Astrosmash | Kaboom's pieces plus a gun | nothing | levels, guided missiles, the UFO |
-| Lunar Lander | gravity, limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, `burn`, `stop`, `slower`/`faster` | scrolling close-up, abort, hard landings |
+| Lunar Lander | gravity, limited thrust, landing by speed, pixel terrain | lines, pixel, acceleration, `burn`, `stop`, a condition on `speed` | scrolling close-up, abort, hard landings |
 | Asteroids | facing, coasting, wrapping, breaking | heading, turn, thrust, drag, piece copies, despawn, a distance total, a thrusting pose | saucer shots breaking rocks |
 | Pac-Man | a tile maze, steering, four ghosts | `<map>`, `<maze>`, `<go>`, `<hunt>`, `<wander>`, look timers, `<become from>` | later levels' schedules, other fruit |
 

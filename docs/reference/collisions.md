@@ -19,7 +19,7 @@ In order: `<enabled>` (`false` turns it off), `<lockstep>`, `<type>`, `<solid>`s
 - **A screen edge:** `edge="left"`, `right`, `top`, `bottom`, `vertical` (top and bottom), `horizontal` (left and right), `all`. Edges are checked by position, before the frame's move.
 - **Another object:** `class="..."` and/or `object="..."` (one object, a group, a copy's piece), both meaning AND. A `<collision>` with neither is about anything. An edge rule with either stops the load.
 - **Every matching rule runs**, in the order written.
-- **A rule holds rules.** What a `<collision>` says (its attributes, `<slower>`, `<faster>` and checks) every rule it holds says too, so a shared class or look is written once; an attribute it gives is not given again below it. Its `<first>` runs as a rule of its own, before them. Every one that matches runs, so there is no `<otherwise>`, and commands loose beside the rules it holds stop the load.
+- **A rule holds rules.** What a `<collision>` says (its attributes and checks) every rule it holds says too, so a shared class or look is written once; an attribute it gives is not given again below it. Its `<first>` runs as a rule of its own, before them. Every one that matches runs, so there is no `<otherwise>`, and commands loose beside the rules it holds stop the load.
 
   ```xml
   <collision class="shot">
@@ -37,7 +37,7 @@ In order: `<enabled>` (`false` turns it off), `<lockstep>`, `<type>`, `<solid>`s
 | `sprite="cracked"` (edges too) | while its object shows that [look](pictures.md#looks), as the touch happened |
 | `unless="logs"` (edges too) | when not also touching something of that class right now. Frogger's river: `<collision class="water" unless="logs">` |
 | `through="floor"` | for a touch felt [through](#knocks) something of that class; without it, only a direct touch |
-| `<slower>N</slower>`, `<faster>N</faster>` (first in the rule) | while its speed is under N, or N or more, as the touch happened: a landing and a crash on one pad. Not on edges |
+| `<condition variable="speed"><below>N</below></condition>` | a condition about itself reads `speed` as the touch happened, so a rule that stops it does not change which rules after it run: a landing and a crash on one pad |
 | `<condition>`s, `<any>` (after those) | while every one holds, written as a [condition](states.md#conditions); several in a row all must hold, so there is no `<all>` here. One with no `class=` or `object=` is about the object itself. Not on edges yet |
 
 ## How a touch is found

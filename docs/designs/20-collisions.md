@@ -44,7 +44,7 @@ A screen grid was rejected: it needs a cell size per game, and what is left afte
 
 ## Filters and checks in rules
 
-- **`<slower>`/`<faster>`**: the speed is read once per touch, so a landing rule and a crash rule never both run.
+- **Speed on a touch** is the live number `speed`, held at the speed as the touch happened while the rules run, so a landing rule and a crash rule never both run. `<slower>`/`<faster>` were a second comparison vocabulary beside the conditions, and went.
 - **`side=`** is the side of the rule's own object that was touched; same words as `edge=` but a separate attribute, since `edge=` means a screen edge.
 - **Checks** reuse the condition tests (`<condition>`, `<any>`; several in a row all hold, so no `<all>`); one with no `object=` means the object itself. Not yet on edge rules.
 - **`<trigger>` in rules** runs one of the object's actions, so a death is one action that every killing rule names.

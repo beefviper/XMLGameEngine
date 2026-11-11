@@ -21,6 +21,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include <algorithm>
+#include <functional>
 #include <string>
 
 using namespace xge;
@@ -119,11 +121,15 @@ TEST_CASE("lunarlander.xml loads under every XML backend, checked against the sc
 		CHECK(lander.collisionData.type == CollisionType::Pixel);
 		CHECK(lander.hasHeading);
 
-		// One rule is the landing, kept for slow touches.
+		// One rule is the landing, kept for slow touches: a condition on its speed.
+		const std::function<bool(const Condition&)> onSpeed = [&](const Condition& condition)
+		{
+			return condition.variableName == "speed" || std::any_of(condition.parts.begin(), condition.parts.end(), onSpeed);
+		};
 		int slow = 0;
 		for (const auto& rule : lander.collisionData.others)
 		{
-			if (rule.slower) { ++slow; }
+			if (rule.check && onSpeed(*rule.check)) { ++slow; }
 		}
 		CHECK(slow == 1);
 	}

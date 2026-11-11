@@ -1977,11 +1977,12 @@ namespace xge
 			if (touchNumbers[i]) { *touchNumbers[i] = numbers[i]; }
 		}
 
-		// How fast it is going at the moment of the touch, for the rules with
-		// slower/faster; taken once, so that a rule that stops it does not
+		// How fast it is going at the moment of the touch (its live speed while
+		// the rules run); taken once, so that a rule that stops it does not
 		// change which of the rules after it run.
 		const Vector2f motion = motionOf(self);
-		const float speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
+		self.speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
+		self.speedHeld = true;
 		// Its look as the touch happens, for sprite=, likewise.
 		const std::string look = self.lookName();
 
@@ -1993,8 +1994,6 @@ namespace xge
 			if (!rule.whileSprite.empty() && look != rule.whileSprite) { continue; }
 			if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
 			if (touch.through ? *touch.through != rule.throughClass : !rule.throughClass.empty()) { continue; }
-			if (rule.slower && !(speed < *rule.slower)) { continue; }
-			if (rule.faster && !(speed >= *rule.faster)) { continue; }
 			if (!rule.sides.empty() && std::find(rule.sides.begin(), rule.sides.end(), touch.edge) == rule.sides.end()) { continue; }
 			if (rule.check && !holds(*rule.check)) { continue; }
 
@@ -2004,6 +2003,7 @@ namespace xge
 				if (!executor.executeObjectCollision(command, self, other, touch)) { break; }
 			}
 		}
+		self.speedHeld = false;
 	}
 
 	void Game::refreshLive(void)

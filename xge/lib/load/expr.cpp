@@ -1442,8 +1442,6 @@ namespace xge
 			{
 				throw std::runtime_error(where + ": a <collision sprite=\"" + rule.whileSprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
 			}
-			if (rawRule.slower) { rule.slower = evaluate(*rawRule.slower, where); }
-			if (rawRule.faster) { rule.faster = evaluate(*rawRule.faster, where); }
 			const std::string& side = rawRule.side;
 			if (side == "top" || side == "vertical") { rule.sides.push_back(Edge::Top); }
 			if (side == "bottom" || side == "vertical") { rule.sides.push_back(Edge::Bottom); }

@@ -7,8 +7,8 @@
 // drawn into a bitmap when the game loads, a sprite made of them, and a
 // collision that sweeps the bounding boxes first and then asks whether pixels
 // really touch. Also the other things Lunar Lander needed that are small
-// enough to test here: <acceleration>, <accelerate>, <stop /> and the
-// slower/faster filters on a collision rule.
+// enough to test here: <acceleration>, <accelerate>, <stop /> and a
+// collision rule's condition on the speed as the touch happened.
 //
 // Objects for the geometry tests are built by hand; small games are written to
 // a scratch file and loaded by a real xge::Game. None of it needs a window.
@@ -493,11 +493,6 @@ TEST_CASE("mistakes in a sprite of lines are reported where they are", "[lines][
 			ContainsSubstring("object 'thing'") && ContainsSubstring("type>pixel"));
 	}
 
-	SECTION("a speed filter on a screen edge")
-	{
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(line, "<enabled>true</enabled><collision edge=\"left\"><slower>2</slower><stop /></collision>"), "<show object=\"thing\" />")),
-			ContainsSubstring("screen edge"));
-	}
 }
 
 TEST_CASE("type is box when it is left out, and a circle or rectangle can be pixel too", "[pixel][xml]")
@@ -525,8 +520,8 @@ namespace
 		"<velocity><x>0</x><y>0</y></velocity>"
 		"<acceleration><x>0</x><y>g</y></acceleration>"
 		"<collisions><enabled>true</enabled>"
-		"<collision object=\"floor\"><slower>3</slower><inc variable=\"ship.landed\" /><stop /></collision>"
-		"<collision object=\"floor\"><faster>3</faster><inc variable=\"ship.crashed\" /><stop /></collision>"
+		"<collision object=\"floor\"><condition variable=\"speed\"><below>3</below></condition><inc variable=\"ship.landed\" /><stop /></collision>"
+		"<collision object=\"floor\"><condition variable=\"speed\"><atleast>3</atleast></condition><inc variable=\"ship.crashed\" /><stop /></collision>"
 		"</collisions>"
 		"<actions>"
 		"<action name=\"burn\"><accelerate direction=\"up\" burn=\"fuel\">1.5</accelerate></action>"
@@ -646,7 +641,7 @@ TEST_CASE("a held thrust is forgotten by a reset and the pull is given back by i
 	CHECK(flight.ship().variable["fuel"] == 3.0f);
 }
 
-TEST_CASE("slower and faster pick which rule about the floor runs", "[rules]")
+TEST_CASE("a condition on speed, as the touch happened, picks which rule about the floor runs", "[rules]")
 {
 	SECTION("slow, it lands")
 	{
@@ -686,7 +681,7 @@ TEST_CASE("slower and faster pick which rule about the floor runs", "[rules]")
 		CHECK(flight.ship().variable["crashed"] == 1.0f);
 	}
 
-	SECTION("exactly the limit is faster, not slower")
+	SECTION("exactly the limit is at least it, not below it")
 	{
 		Flight flight;
 		flight.ship().position = { 100, 480 };
@@ -732,11 +727,8 @@ TEST_CASE("the new tags read back the way they were written", "[rules][xml]")
 	const Object& ship = flight.ship();
 
 	REQUIRE(ship.collisionData.others.size() == 2);
-	REQUIRE(ship.collisionData.others[0].slower);
-	CHECK(*ship.collisionData.others[0].slower == 3.0f);
-	CHECK_FALSE(ship.collisionData.others[0].faster);
-	REQUIRE(ship.collisionData.others[1].faster);
-	CHECK(*ship.collisionData.others[1].faster == 3.0f);
+	CHECK(ship.collisionData.others[0].check);
+	CHECK(ship.collisionData.others[1].check);
 
 	REQUIRE(ship.action.at("burn").size() == 1);
 	const auto* burn = std::get_if<CmdAccelerate>(&ship.action.at("burn")[0]);

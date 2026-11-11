@@ -172,7 +172,7 @@
             <collision object="pad3"><set variable="lander.worth">150</set></collision>
             <collision object="pad5"><set variable="lander.worth">250</set></collision>
             <collision object="pads">
-              <slower>safespeed</slower>
+              <condition variable="speed"><below>safespeed</below></condition>
               <any>
                 <condition variable="heading"><atmost>upright</atmost></condition>
                 <condition variable="heading"><atleast>360 - upright</atleast></condition>

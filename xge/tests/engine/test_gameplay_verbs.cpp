@@ -1393,7 +1393,7 @@ TEST_CASE("a collision rule holds rules: what it says they say too, its <first> 
 		"<condition variable=\"n\"><atleast>0</atleast></condition>"
 		"<first><inc variable=\"self.n\">1</inc></first>"
 		"<collision><condition variable=\"n\"><atmost>5</atmost></condition><inc variable=\"self.n\">2</inc></collision>"
-		"<collision object=\"w\"><faster>1</faster><stop /></collision>"
+		"<collision object=\"w\"><stop /></collision>"
 		"</collision>"
 		"<collision unless=\"wall\"><collision edge=\"horizontal\"><wrap /></collision></collision>"));
 	const CollisionData& rules = loaded.game.getObject("a").collisionData;
@@ -1407,7 +1407,6 @@ TEST_CASE("a collision rule holds rules: what it says they say too, its <first> 
 	CHECK(rules.others[0].check->parts.size() == 1);
 	CHECK(rules.others[1].check->parts.size() == 2);
 	CHECK(rules.others[2].filterObject == "w");
-	CHECK(rules.others[2].faster);
 	const auto& left = rules.edges[edgeIndex(Edge::Left)];
 	REQUIRE(left.guards.size() == 1);
 	CHECK(left.guards[0].unlessClass == "wall");

@@ -72,7 +72,6 @@ namespace
 	const std::map<std::string, std::string> kUnused{
 		{ "absolute", "a <formula>, beside sign and negate" },
 		{ "accelerate", "the way to push without a heading" },
-		{ "faster", "the pair of <slower> in a rule" },
 		{ "floor", "a <formula>, beside ceiling and round" },
 		{ "framerate", "a window's; 60 when left out" },
 		{ "fullscreen", "a window's; false when left out" },

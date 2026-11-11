@@ -1506,13 +1506,12 @@ namespace xge
 				}
 			}
 
-			// A rule may hold rules: what it says (its attributes, <slower>,
-			// <faster> and checks) the rules it holds say too, and its <first>
+			// A rule may hold rules: what it says (its attributes and
+			// checks) the rules it holds say too, and its <first>
 			// runs as a rule of its own before theirs.
 			struct Said
 			{
 				std::string edge, filterClass, filterObject, unlessClass, throughClass, sprite, side;
-				std::optional<RawValue> slower, faster;
 				std::vector<RawCondition> checks;
 			};
 			std::function<void(const XmlNode&, const Said&, const std::string&)> readRule = [&](const XmlNode& collision, const Said& held, const std::string& ruleHere)
@@ -1534,17 +1533,10 @@ namespace xge
 				take(said.side, "side");
 				const std::string& edge = said.edge;
 
-				// A rule about another object may start with a speed filter,
-				// <slower> and/or <faster>; the commands follow.
 				std::unique_ptr<XmlNode> firstCommand = collision.getFirstChild();
-				while (firstCommand && (firstCommand->getName() == "slower" || firstCommand->getName() == "faster"))
+				if (firstCommand && (firstCommand->getName() == "slower" || firstCommand->getName() == "faster"))
 				{
-					(firstCommand->getName() == "slower" ? said.slower : said.faster) = readValue(*firstCommand, ruleHere);
-					firstCommand = firstCommand->getNextSibling();
-				}
-				if ((said.slower || said.faster) && !edge.empty())
-				{
-					fail(ruleHere, "<slower> and <faster> are about speed against another object; a rule about a screen edge has none");
+					fail(ruleHere, "<" + firstCommand->getName() + "> is gone; test the speed as the touch happened with <condition variable=\"speed\"><below>N</below></condition> (or <atleast>)");
 				}
 
 				// Then the checks that must all hold for it to run.
@@ -1612,8 +1604,6 @@ namespace xge
 					rule.unlessClass = said.unlessClass;
 					rule.throughClass = said.throughClass;
 					rule.whileSprite = said.sprite;
-					rule.slower = said.slower;
-					rule.faster = said.faster;
 					rule.side = side;
 					if (!said.checks.empty())
 					{

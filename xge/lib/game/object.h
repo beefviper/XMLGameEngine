@@ -60,13 +60,6 @@ namespace xge
 		// itself. Empty means a touch itself.
 		std::string throughClass;
 
-		// <slower>N</slower> / <faster>N</faster> before the commands: the
-		// rule only runs while the object's own speed is under N (slower) or
-		// N or more (faster) at the moment of the touch - a landing pad that
-		// only a slow ship lands on. Unset means any speed.
-		std::optional<RawValue> slower;
-		std::optional<RawValue> faster;
-
 		// sprite="name": the rule only runs while the object running it shows
 		// its sprite of that name (see <become>). Empty means whatever it shows.
 		std::string whileSprite;
@@ -76,7 +69,7 @@ namespace xge
 		// right, vertical for top or bottom). Empty means any side.
 		std::string side;
 
-		// <condition>s, <all>s and <any>s after <slower>/<faster>: the rule only
+		// <condition>s, <all>s and <any>s before the commands: the rule only
 		// runs while every one holds. Gathered as an <all> (join All); join
 		// None means there are none. A <condition> with no class= or object= is
 		// about the object running the rule (see nameSelf).
@@ -158,9 +151,6 @@ namespace xge
 		std::string unlessClass;
 		std::string throughClass;          // see RawCollisionRule
 
-		// The numbers of <slower>/<faster> (see RawCollisionRule).
-		std::optional<float> slower;
-		std::optional<float> faster;
 		std::string whileSprite;
 		std::vector<Edge> sides;           // empty: any side
 		std::optional<Condition> check;    // see RawCollisionRule::check
@@ -1490,6 +1480,13 @@ namespace xge
 		// Seconds of blinking left (owner.blink): while above 0 it is drawn
 		// only every other fifteenth of a second. It is in play all the while.
 		float blink{};
+
+		// How fast it goes (live number speed): worked out when read, except
+		// while its touch rules run, when it is the speed as the touch happened
+		// (speedHeld), so a rule that stops it does not change which rules after
+		// it run: a landing and a crash on one pad.
+		float speed{};
+		bool speedHeld{ false };
 		bool blinkedOut() const noexcept { return blink > 0.0f && static_cast<int>(blink * 15.0f) % 2 == 1; }
 
 		// The object's <timers>, which count while it is shown and in play

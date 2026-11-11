@@ -323,8 +323,6 @@ namespace
 				const std::string here = at + ".rule" + std::to_string(i);
 				out << here << " [" << r.filterClass << "|" << r.filterObject << "|" << r.unlessClass << "|" << r.whileSprite << "|" << r.side << "] join " << static_cast<int>(r.check.join) << "\n";
 				conditions(here + ".check", r.check.parts);
-				if (r.slower) { value(here + ".slower", *r.slower); }
-				if (r.faster) { value(here + ".faster", *r.faster); }
 				commands(here + ".commands", r.commands);
 			}
 			for (const auto& [name, list] : o.action) { commands(at + ".action." + name, list); }

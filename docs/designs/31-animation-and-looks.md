@@ -17,7 +17,7 @@
 - **Several named sprites and no animation are looks.** `<become sprite>` switches; a reset shows the first. A rule with `sprite="white"` runs only while its object shows that look.
 - **The look is the state: what the player sees is what the rule tests.** Chosen over `<become class>` (invisible, and colour would need its own command) and per-object state variables.
 - **Looks count hits:** Breakout's two-hit row is `whole` then `cracked`. A variable could count, but `<die />` has no condition; a look can end the brick, and the player sees the count.
-- **The look as the touch happened** is taken once before the rules run, as `<slower>` is. Before, each rule saw what the rules before it left, so games wrote rules last look first, and a look changed inside a nested touch (Centipede's turn) set off the next rule too.
+- **The look as the touch happened** is taken once before the rules run, as the speed is. Before, each rule saw what the rules before it left, so games wrote rules last look first, and a look changed inside a nested touch (Centipede's turn) set off the next rule too.
 - **Edge rules too:** an edge's rules are one flat list of commands, so a `sprite=` rule is noted as where its commands start and end (`EdgeGuard`). Rejected: a list of rules per edge (every reader of the lists would change for one attribute).
 - **`<become from="look">`** changes only objects showing that look: a pellet turns hunting ghosts blue and leaves eyes as eyes.
 - With a heading each look keeps its own pictures to turn. Recolouring is a palette swap, apart from the look ([pictures](30-pictures.md)).

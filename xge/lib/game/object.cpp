@@ -380,6 +380,7 @@ namespace xge
 			{ "rise", [](Object& o) -> float& { return o.rise; }, false },
 			{ "light", [](Object& o) -> float& { return o.light; }, true },
 			{ "blink", [](Object& o) -> float& { return o.blink; }, true },
+			{ "speed", [](Object& o) -> float& { if (!o.speedHeld) { o.speed = std::hypot(o.velocity.x, o.velocity.y); } return o.speed; }, false },
 			{ "column", [](Object& o) -> float& { return o.cellColumn; }, false },
 			{ "row", [](Object& o) -> float& { return o.cellRow; }, false },
 			{ "moves", [](Object& o) -> float& { return o.moveCount; }, true },
@@ -657,8 +658,6 @@ namespace xge
 		{
 			commands(rule.commands);
 			if (rule.check.join != RawCondition::Join::None) { check(rule.check); }
-			if (rule.slower) { value(*rule.slower); }
-			if (rule.faster) { value(*rule.faster); }
 		}
 		for (RawTimer& timer : object.timers)
 		{
@@ -846,8 +845,6 @@ namespace xge
 			if (!rule.filterObject.empty()) { o << " (object=" << rule.filterObject << ")"; }
 			if (!rule.unlessClass.empty()) { o << " (unless=" << rule.unlessClass << ")"; }
 			if (!rule.throughClass.empty()) { o << " (through=" << rule.throughClass << ")"; }
-			if (rule.slower) { o << " (slower=" << *rule.slower << ")"; }
-			if (rule.faster) { o << " (faster=" << *rule.faster << ")"; }
 		}
 
 		void printCommands(std::ostream& o, const std::vector<Command>& commands)

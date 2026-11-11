@@ -1872,10 +1872,9 @@
     A collision rule. With edge it is about a screen edge, and takes no class
     or object; without, it is about another object, narrowed by class and/or
     object (neither: anything). Either is passed over while the object is
-    touching something of the unless class. A
-    rule about another object may also begin with slower and/or faster, which
-    hold it to when the object's own speed is under (slower) or at least
-    (faster) that number. With sprite, it runs only while the object shows its
+    touching something of the unless class. Its
+    conditions about itself read its speed (the live number speed) as the
+    touch happened. With sprite, it runs only while the object shows its
     sprite of that name (see become). A rule may hold rules, which say what it
     says too (a holder's attribute is not said again below it), its <first>
     running as a rule of its own before them.
@@ -1885,8 +1884,6 @@
   </xs:complexType>
   <xs:complexType name="collisionType">
     <xs:sequence>
-      <xs:element name="slower" type="valueType" minOccurs="0" />
-      <xs:element name="faster" type="valueType" minOccurs="0" />
       <!-- conditions (tests alone, no commands) that must all hold for the
            rule to run; one with no class= or object= is about the object itself -->
       <xs:choice minOccurs="0" maxOccurs="unbounded">

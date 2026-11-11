@@ -96,7 +96,7 @@ Each row is one concept done more than one way. Counts are games using each form
 | 9 | Arithmetic | Text and `<formula>` both do `+ - * /` (about 1,170 texts in all 58 games calculate) | Tags only: a text is one number or one name (the author's call) | [R12](#r12-no-arithmetic-in-text) |
 | 10 | Where bitmaps live | `<pictures>` with `<bitmap from>` (36 games); inline `<bitmap>` rows in a sprite (14 games, 65 bitmaps) | `<pictures>` whenever a bitmap is used twice or is more than a few rows | [R8](#r8-small-sweeps) |
 | 11 | All of several tests | Nested conditions (everywhere); `<all>` inside `<any>` (Tennis only, 3 uses) | Decide whether Tennis can nest; if so remove `<all>` | [R8](#r8-small-sweeps) |
-| 12 | A speed test on a touch | `<slower>` (Lunar Lander), `<faster>` (no game): a second comparison vocabulary beside `<above>`/`<below>`/`<atleast>`/`<atmost>` | A rule's `<condition variable="speed"><below>` | [R8](#r8-small-sweeps) |
+| 12 | A speed test on a touch | `<slower>` (Lunar Lander), `<faster>` (no game): a second comparison vocabulary beside `<above>`/`<below>`/`<atleast>`/`<atmost>` | A rule's `<condition variable="speed"><below>` | done (R1) |
 | 13 | Shared shows | `<shows name>` sets (Air-Sea Battle, Galaxian). The matching `<keys>` and `<conditions>` sets were removed as "state `from=` covers them" | Remove if `from=` covers these two as well | [R8](#r8-small-sweeps) |
 | 14 | Pause, title and game-over boilerplate | 57 `paused` states, 835 lines, 18 variants that differ by accident (which keys, whether the pad's Start is bound, the colour). Pad Start is bound in 24 games | One spelling, copied exactly; a test that holds it | [R9](#r9-the-screens-every-game-repeats) |
 | 15 | Either player | Rules written once per player: Pong's left and right edge rules, `score1`/`score2`, `paddle1`/`paddle2` keys; Combat, Cannon Hill, Space Race, Freeway the same | A word for the object touched and for "the other member", already in the backlog as `other` | [R10](#r10-a-word-for-the-other-one) |
@@ -218,7 +218,7 @@ Work R1 first (it decides what the others delete). The rest are independent of e
      | Word (game) | Likely the same as |
      |---|---|
      | `<jump>` (Frostbite) | `<hop>` with `<seconds>`: R2, done (Frostbite hops; `<leap>` became `<jump>`) |
-     | `<slower>` (Lunar Lander) | a rule's condition on `speed`: [R8](#r8-small-sweeps) |
+     | `<slower>` (Lunar Lander) | a rule's condition on `speed`: done |
      | `<hide>` (Space Invaders 2: layers of an SVG) | leave: it is about the picture, not the object; but rename if R6 picks `hidden` |
      | `<seek>` (Yars' Revenge) and `<pull>` (none) | one word with a pick of what changes: the heading or the velocity |
      | `<lined>` in `<aim>` (Berserk) | keep; no other form |
@@ -297,7 +297,6 @@ Each is **S**, independent, one commit.
 - **Pong's title** becomes `<centered />`, as every other game's is. (Arithmetic itself is R12.)
 - **Bitmaps into `<pictures>`.** The 65 inline `<bitmap>`s in 14 games (Capsules has 21, Freeway 8, Berserk 6): move any used by more than one sprite or longer than eight rows to `<pictures>`. The generated-games test must still pass (identical bitmaps are deduplicated at load).
 - **`<all>`.** Tennis uses `<all>` inside `<any>` three times. If each can be written as nested conditions or as two rules, do so and remove `<all>` from the schema, reader and generator. If not, write in `docs/designs/07-states-and-conditions.md` why `<all>` stays.
-- **`<slower>`, `<faster>`.** Replace with a rule's `<condition>` on the object's speed as the touch happened. Needs a built-in number `speed` (add a row to `liveParts`; in a rule it must be the speed *before* the touch is answered, as `sprite=` is the look as the touch happened: take it once, the same way). Move Lunar Lander; remove both words.
 - **`<shows name>` sets.** Air-Sea Battle and Galaxian: if a state `from=` another says the same, use it and remove named `<shows>` sets and `<show set=>`.
 - **`touch.`** No game reads it. Either a game is clearer with it (candidates: Breakout's or Pong's deflect, Pinball), or remove the name and its documentation.
 

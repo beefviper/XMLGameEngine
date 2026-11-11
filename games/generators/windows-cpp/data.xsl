@@ -1338,12 +1338,10 @@
     <!-- each rule: one holding none, or a holder's <first>; what the
          rules holding it say (readCollisions), it says too -->
     <xsl:for-each select="$node//collision[not(collision) or first]">
-      <xsl:variable name="commands" select="first/*[../../collision] | *[not(self::slower or self::faster or self::condition or self::all or self::any or self::first or self::collision)][not(../collision)]" />
+      <xsl:variable name="commands" select="first/*[../../collision] | *[not(self::condition or self::all or self::any or self::first or self::collision)][not(../collision)]" />
       <xsl:variable name="edge" select="ancestor-or-self::collision[@edge][1]/@edge" />
       <xsl:variable name="sprite" select="ancestor-or-self::collision[@sprite][1]/@sprite" />
       <xsl:variable name="unless" select="ancestor-or-self::collision[@unless][1]/@unless" />
-      <xsl:variable name="slower" select="(ancestor-or-self::collision/slower)[last()]" />
-      <xsl:variable name="faster" select="(ancestor-or-self::collision/faster)[last()]" />
       <xsl:variable name="checks" select="ancestor-or-self::collision/condition | ancestor-or-self::collision/all | ancestor-or-self::collision/any" />
       <xsl:choose>
         <xsl:when test="$edge != ''">
@@ -1387,20 +1385,6 @@
               <xsl:text>;&#10;</xsl:text>
             </xsl:if>
           </xsl:for-each>
-          <xsl:if test="$slower">
-            <xsl:value-of select="concat($inner, 'rule.slower = ')" />
-            <xsl:call-template name="value">
-              <xsl:with-param name="node" select="$slower" />
-            </xsl:call-template>
-            <xsl:text>;&#10;</xsl:text>
-          </xsl:if>
-          <xsl:if test="$faster">
-            <xsl:value-of select="concat($inner, 'rule.faster = ')" />
-            <xsl:call-template name="value">
-              <xsl:with-param name="node" select="$faster" />
-            </xsl:call-template>
-            <xsl:text>;&#10;</xsl:text>
-          </xsl:if>
           <!-- its checks and those of the rules holding it, gathered as an <all> (readCollisions) -->
           <xsl:if test="$checks">
             <xsl:call-template name="condition-join">
