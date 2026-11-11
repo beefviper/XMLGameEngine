@@ -167,9 +167,9 @@ TEST_CASE("the shot follows the cannon as it flies", "[demonattack]")
 	play.freeze("wave1");
 
 	Object& player = play.object("player");
-	Object& laser = play.object("laser");
 	play.tap(KeyCode::Space);
 	play.frames(2);
+	Object& laser = play.object("laser.1");
 	REQUIRE(laser.isVisible);
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(10);

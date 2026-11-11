@@ -8,6 +8,7 @@
 // so the sound and the look written after it are not given either. A
 // collision rule, a key of a state and a condition stop the same way.
 
+#include "copies.h"
 #include "played.h"
 #include "file_text.h"
 
@@ -30,7 +31,8 @@ TEST_CASE("spaceinvaders.xml: a press of fire while the bullet is in flight make
 	(void)play.game.takeSoundRequests();
 
 	play.tap(KeyCode::Space);
-	CHECK(play.get("bullet").collisionsOn);
+	play.game.settleSpawns();
+	CHECK(copies::count(play.game, "bullet") == 1);
 	CHECK(play.game.takeSoundRequests() == std::vector<std::string>{ "shoot" });
 
 	play.frames(2);
@@ -63,9 +65,9 @@ TEST_CASE("an action runs what comes before a refused verb, and nothing after it
 {
 	const played::Scratch scratch(
 		played::box("gun", 100, 300,
-			"<actions><action name=\"shoot\"><play sound=\"click\" /><fire object=\"shot\" /><play sound=\"bang\" /></action></actions>")
-			+ played::box("shot", 100, 200, "<velocity><x>0</x><y>-1</y></velocity>"),
-		"<trigger object=\"gun\" action=\"shoot\" />");
+			"<actions><action name=\"shoot\"><play sound=\"click\" /><fire object=\"shot\" /><play sound=\"bang\" /></action></actions>"),
+		"<trigger object=\"gun\" action=\"shoot\" />", {},
+		played::box("shot", 100, 200, "<velocity><x>0</x><y>-1</y></velocity><most>1</most>"));
 	// The scratch game has no sounds; put two in before it is loaded.
 	{
 		std::ifstream in(scratch.path);

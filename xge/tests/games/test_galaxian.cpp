@@ -523,9 +523,10 @@ TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pa
 	CHECK(play.object("escorts.6.1").variable["pays"] == 50.0f);
 	play.frames(1);
 	CHECK(escort.variable["pays"] == 100.0f);
-	Object& shot = play.object("shot");
-	shot.isVisible = true;
-	shot.collisionsOn = true;
+	// A shot, spawned as the gun does, joins at the end of the frame.
+	Object* fired = play.game.spawn(play.object("shot").name);
+	REQUIRE(fired);
+	Object& shot = *fired;
 	// Put on it (the purples are just below, in the way of one fired).
 	shot.position = { escort.position.x + escort.size.x / 2.0f, escort.position.y + escort.size.y / 2.0f };
 	shot.velocity = {};

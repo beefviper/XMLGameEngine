@@ -50,6 +50,16 @@
     <style name="hud"><size>40</size><color>color.white</color></style>
   </styles>
   <objects>
+    <object name="shot" class="projectile">
+      <sprite><rectangle><width>4</width><height>16</height><color>color.white</color></rectangle></sprite>
+      <velocity><y>-11</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="rocks"><despawn /></collision>
+        <collision class="spinner"><despawn /></collision>
+      </collisions>
+    </object>
     <!-- what a big rock breaks into: small ones flying apart, eight at most -->
     <object name="chip" class="rocks">
       <sprite>
@@ -216,17 +226,6 @@
             </collision>
           </collisions>
         </group>
-        <object name="shot" class="projectile">
-          <sprite><rectangle><width>4</width><height>16</height><color>color.white</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><y>-11</y></velocity>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="rocks"><die /></collision>
-            <collision class="spinner"><die /></collision>
-          </collisions>
-        </object>
         <!-- the laser base -->
         <object name="ship">
           <sprite>

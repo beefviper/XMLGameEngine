@@ -18,6 +18,7 @@
 #include "picture/bitmap.h"
 #include "play/executor.h"
 #include "engine/folder.h"
+#include "copies.h"
 #include "game/game.h"
 #include "picture/svg.h"
 #include "xml/document.h"
@@ -653,11 +654,13 @@ TEST_CASE("a shot from the ship of Space Invaders 2 can still kill an alien", "[
 	REQUIRE(alive() == 55);
 
 	invasion.executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
-	REQUIRE(game.getObject("bullet").isVisible);
+	game.settleSpawns();
+	REQUIRE(copies::count(game, "bullet") == 1);
+	game.getObject("bullet.1").size = measureShapeSize(game.getObject("bullet.1").picture);
 	frames(game, 80);
 
 	CHECK(alive() == 54);
-	CHECK_FALSE(game.getObject("bullet").isVisible);
+	CHECK(copies::count(game, "bullet") == 0);
 }
 
 TEST_CASE("paused, Space Invaders 2 draws the invasion still under the word", "[spaceinvaders2][scenes][shows]")

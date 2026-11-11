@@ -62,6 +62,16 @@ namespace
 
 		std::string state() { return game.getCurrentState().name; }
 		Object& get(const std::string& name) { return game.getObject(name); }
+		// How many copies of a piece are in the game.
+		int count(const std::string& piece)
+		{
+			int found = 0;
+			for (const auto& object : game.getCurrentObjects())
+			{
+				if (object.exists && object.isCopy() && object.groupName.size() >= piece.size() && object.groupName.compare(object.groupName.size() - piece.size(), piece.size(), piece) == 0) { ++found; }
+			}
+			return found;
+		}
 	};
 
 	// A game of one state, "playing", with these objects and these commands
@@ -394,9 +404,9 @@ TEST_CASE("yarsrevenge.xml: a bite brings the cannon level with Yar, and its bla
 	// With no cannon, Space fires only Yar's energy missile.
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK(play.get("energy").isVisible);
+	CHECK(play.count("energy") == 1);
 	CHECK_FALSE(play.get("cannon").isVisible);
-	CHECK_FALSE(play.get("blast").isVisible);
+	CHECK(play.count("blast") == 0);
 
 	// Yar eats a cell of the shield.
 	const Object& cell = play.get("cells.1");
@@ -418,12 +428,12 @@ TEST_CASE("yarsrevenge.xml: a bite brings the cannon level with Yar, and its bla
 	// Space fires it, and it is gone until the next bite.
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK(play.get("blast").isVisible);
+	CHECK(play.count("blast") == 1);
 	CHECK_FALSE(cannon.isVisible);
 
 	// Into the Qotile: 1000, and a moment later the shield is back whole.
 	Object& qotile = play.get("qotile");
-	play.get("blast").position = { qotile.position.x - 25, qotile.position.y + 4 };
+	play.get("blast.1").position = { qotile.position.x - 25, qotile.position.y + 4 };
 	play.frames(4);
 	CHECK_FALSE(qotile.isVisible);
 	CHECK(play.get("player").variable.at("score") >= 1069.0f);

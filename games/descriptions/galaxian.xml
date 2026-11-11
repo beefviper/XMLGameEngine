@@ -151,6 +151,16 @@
     <style name="letter"><size>60</size><color>color.cyan</color></style>
   </styles>
   <objects>
+    <!-- the ship's shot: one at a time, straight up -->
+    <object name="shot" class="projectile">
+      <sprite><rectangle><width>3</width><height>12</height><color>color.white</color></rectangle></sprite>
+      <velocity><y>-10</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="alien"><despawn /></collision>
+      </collisions>
+    </object>
     <!-- an alien's bomb, dropped by divers: six at most -->
     <object name="bomb" class="bomb">
       <sprite><rectangle><width>3</width><height>9</height><color>color.yellow</color></rectangle></sprite>
@@ -317,17 +327,6 @@
     </state>
     <state name="playing">
       <objects>
-        <object name="shot" class="projectile">
-          <sprite><rectangle><width>3</width><height>12</height><color>color.white</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><y>-10</y></velocity>
-          <active>false</active>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="alien"><die /></collision>
-          </collisions>
-        </object>
         <object name="ship">
           <sprite>
             <bitmap from="ship" />

@@ -52,6 +52,18 @@
     <style name="prompt"><size>48</size><color>color.white</color></style>
   </styles>
   <objects>
+    <object name="bullet" class="projectile">
+      <sprite><rectangle><width>4</width><height>24</height></rectangle></sprite>
+      <velocity><y>-12</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="aliens"><despawn /></collision>
+        <collision class="shield"><despawn /></collision>
+        <collision class="bomb"><despawn /></collision>
+        <collision class="ufo"><despawn /></collision>
+      </collisions>
+    </object>
     <!-- a bomb, three at most, a zigzag that wriggles as it falls,
          dropped by any alien (each faces down) after a wait of its own -->
     <object name="bomb" class="bomb">
@@ -148,19 +160,6 @@
     </state>
     <state name="playing">
       <objects>
-        <object name="bullet" class="projectile">
-          <sprite><rectangle><width>4</width><height>24</height></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><y>-12</y></velocity>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="aliens"><die /></collision>
-            <collision class="shield"><die /></collision>
-            <collision class="bomb"><die /></collision>
-            <collision class="ufo"><die /></collision>
-          </collisions>
-        </object>
         <group name="shields" class="shield">
           <columns>4</columns>
           <rows>1</rows>
@@ -277,6 +276,7 @@
       </objects>
       <shows>
         <show object="player" />
+        <show object="bullet" />
         <show object="best" />
       </shows>
       <music sound="march" />

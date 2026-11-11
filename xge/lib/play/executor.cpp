@@ -719,38 +719,13 @@ namespace xge
 		object.activeThrustAheadBy[action] = { amount, burn };
 	}
 
-	// Launches a projectile that is not already in flight. The name can be a
-	// pool of them (a <group>): the first one not in flight is used, and with
-	// all of them in flight nothing happens. From a shooter with a heading the
-	// shot leaves its nose the way it faces, at the projectile's own speed;
-	// from any other it leaves the top centre, at the projectile's own
-	// velocity.
+	// Launches a copy of a piece (Game::spawn), refused when its <most> are
+	// in flight. From a shooter with a heading the shot leaves its nose the
+	// way it faces, at the projectile's own speed; from any other it leaves
+	// the top centre, at the projectile's own velocity.
 	bool CommandExecutor::spawnProjectile(Object& shooter, const std::string& projectileName)
 	{
-		Object* projectile = nullptr;
-		if (game.isDescription(projectileName))
-		{
-			// A new one, as many as its <most> allows.
-			projectile = game.spawn(projectileName);
-		}
-		else
-		{
-			for (auto& candidate : game.getCurrentObjects())
-			{
-				if (candidate.named(projectileName) && candidate.exists && !candidate.collisionsOn && !game.isAway(candidate))
-				{
-					projectile = &candidate;
-					break;
-				}
-			}
-			if (projectile)
-			{
-				// Fired is a new start: a <random> in the projectile's is drawn
-				// again, and its timers and animation start over.
-				game.drawStartAgain(*projectile);
-				projectile->startOver();
-			}
-		}
+		Object* projectile = game.spawn(projectileName);
 		if (!projectile) { return false; }
 
 		const Box from{ shooter.position, sizeOf(shooter) };

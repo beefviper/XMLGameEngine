@@ -91,6 +91,17 @@
     <style name="player"><scale>2</scale><color>color.green</color></style>
   </styles>
   <objects>
+    <!-- his shot: one at a time, like the arcade game -->
+    <object name="bullet" class="bullet">
+      <sprite><rectangle><width>5</width><height>5</height><color>color.green</color></rectangle></sprite>
+      <velocity><y>-8</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="wall"><despawn /></collision>
+        <collision class="otto"><despawn /></collision>
+      </collisions>
+    </object>
     <!-- every robot of every room: each room takes its own by name -->
     <group name="robots" class="robot">
       <sprite name="a">
@@ -114,7 +125,7 @@
         <collision class="eastexit"><reverse /></collision>
         <collision object="bullet">
           <trigger action="destroyed" />
-          <reset object="bullet" />
+          <despawn object="bullet" />
         </collision>
       </collisions>
       <actions>
@@ -335,7 +346,7 @@
               <dec variable="player.lives">1</dec>
               <play sound="zap" />
               <reset />
-              <reset object="bullet" />
+              <despawn object="bullet" />
               <despawn object="robotshot" />
             </action>
             <!-- one room deeper, and the room tidied: the man back at the
@@ -345,7 +356,7 @@
               <set variable="player.kills">0</set>
               <play sound="door" />
               <reset />
-              <reset object="bullet" />
+              <despawn object="bullet" />
               <despawn object="robotshot" />
               <reset object="otto" />
               <reset object="doors" />
@@ -386,20 +397,6 @@
             <position><x>552</x><y>184</y></position>
           </member>
         </group>
-
-        <!-- his shot: one at a time, like the arcade game -->
-        <object name="bullet" class="bullet">
-          <sprite><rectangle><width>5</width><height>5</height><color>color.green</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><y>-8</y></velocity>
-          <active>false</active>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="wall"><die /></collision>
-            <collision class="otto"><die /></collision>
-          </collisions>
-        </object>
 
         <!-- Evil Otto: comes straight for the man over the walls, cannot be shot -->
         <object name="otto" class="otto">

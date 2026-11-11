@@ -17,6 +17,7 @@
 // and a held key kept driving the player through a state that did not bind
 // it.
 
+#include "copies.h"
 #include "engine/engine.h"
 #include "file_text.h"
 #include "game/game.h"
@@ -163,35 +164,36 @@ TEST_CASE("a held fire key does not shoot again when its state returns", "[engin
 {
 	Game game{ "descriptions/spaceinvaders.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& bullet = game.getObject("bullet");
-
 	tap(engine, KeyCode::Space); // title -> playing
 
 	engine.handleKeyPressed(KeyCode::Space); // fire
-	REQUIRE(bullet.collisionsOn);
+	game.settleSpawns();
+	REQUIRE(copies::count(game, "bullet") == 1);
 
 	// Used up: the shot is gone and the key is still down.
-	bullet.collisionsOn = false;
+	game.resetObject("bullet");
+	game.settleSpawns();
 	tap(engine, KeyCode::Pause); // pause
 	tap(engine, KeyCode::Pause); // unpause
+	game.settleSpawns();
 
-	CHECK_FALSE(bullet.collisionsOn);
+	CHECK(copies::count(game, "bullet") == 0);
 }
 
 TEST_CASE("the key that starts Space Invaders does not also fire a shot", "[engine_input]")
 {
 	Game game{ "descriptions/spaceinvaders.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& bullet = game.getObject("bullet");
-
 	// Space starts the game from the menu and fires in play. Held down through
 	// the change, it must only start the game.
 	engine.handleKeyPressed(KeyCode::Space);
 	CHECK(game.getCurrentState().name == "playing");
-	CHECK_FALSE(bullet.collisionsOn);
+	game.settleSpawns();
+	CHECK(copies::count(game, "bullet") == 0);
 
 	engine.handleKeyReleased(KeyCode::Space);
-	CHECK_FALSE(bullet.collisionsOn);
+	game.settleSpawns();
+	CHECK(copies::count(game, "bullet") == 0);
 }
 
 TEST_CASE("keys read by pump() wait for the next step", "[engine_input]")

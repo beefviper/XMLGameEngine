@@ -51,6 +51,25 @@
     <style name="prompt"><size>48</size><color>color.white</color></style>
   </styles>
   <objects>
+    <object name="bullet" class="projectile">
+      <sprite>
+        <svg>
+          <path>assets/Space Invaders Color Sprites.svg</path>
+          <x>140.5</x><y>2.5</y><width>7</width><height>27</height>
+          <scale>boltzoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <velocity><y>-12</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="aliens"><despawn /></collision>
+        <collision class="shield"><despawn /></collision>
+        <collision class="bomb"><despawn /></collision>
+        <collision class="ufo"><despawn /></collision>
+      </collisions>
+    </object>
     <!-- the aliens' plasma bolts, the sheet's enemy bolt (0,1) flipped to
          fly down: three at most -->
     <object name="bomb" class="bomb">
@@ -189,26 +208,6 @@
     </state>
     <state name="playing">
       <objects>
-        <object name="bullet" class="projectile">
-          <sprite>
-            <svg>
-              <path>assets/Space Invaders Color Sprites.svg</path>
-              <x>140.5</x><y>2.5</y><width>7</width><height>27</height>
-              <scale>boltzoom</scale>
-              <hide>backdrop</hide>
-            </svg>
-          </sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><y>-12</y></velocity>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="aliens"><die /></collision>
-            <collision class="shield"><die /></collision>
-            <collision class="bomb"><die /></collision>
-            <collision class="ufo"><die /></collision>
-          </collisions>
-        </object>
         <group name="shields" class="shield">
           <columns>4</columns>
           <rows>1</rows>
@@ -359,6 +358,7 @@
       </objects>
       <shows>
         <show object="player" />
+        <show object="bullet" />
         <show object="best" />
       </shows>
       <music sound="march" />

@@ -154,10 +154,10 @@ TEST_CASE("a shot brings one down, one shot at a time", "[megamania]")
 	play.player().position.x = burger.position.x + burger.size.x / 2 - play.player().size.x / 2;
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	const Vector2f shot = play.game.getObject("laser").position;
+	const Vector2f shot = play.game.getObject("laser.1").position;
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK(play.game.getObject("laser").position.y < shot.y);
+	CHECK(play.game.getObject("laser.1").position.y < shot.y);
 	play.frames(60);
 	CHECK_FALSE(burger.isVisible);
 	CHECK(play.player().variable.at("score") == 20);
@@ -316,7 +316,7 @@ TEST_CASE("the shot is steered with the blaster", "[megamania]")
 
 	play.tap(KeyCode::Space);
 	play.frames(2);
-	Object& laser = play.game.getObject("laser");
+	Object& laser = play.game.getObject("laser.1");
 	REQUIRE(laser.isVisible);
 	play.engine.handleKeyPressed(KeyCode::A);
 	play.frames(10);

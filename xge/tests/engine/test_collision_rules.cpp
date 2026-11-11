@@ -15,6 +15,7 @@
 // rule, so it died the moment it overlapped the ship that fired it.
 
 #include "scratch.h"
+#include "copies.h"
 #include "game/game.h"
 #include "load/xml.h"
 #include "played.h"
@@ -64,7 +65,7 @@ TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules
 	game.setCurrentState("playing");
 
 	Object& player = game.getObject("player");
-	Object& bullet = game.getObject("bullet");
+	Object& bullet = copies::spawned(game, "bullet");
 	player.size = { 50.0f, 50.0f };
 	bullet.size = { 8.0f, 8.0f };
 
@@ -73,25 +74,22 @@ TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules
 	// frames later (6 px a frame, 8 px tall).
 	bullet.position = { player.position.x + 25.0f, player.position.y };
 	bullet.velocity.y = -6.0f;
-	bullet.isVisible = true;
-	bullet.collisionsOn = true;
 
 	for (int frame = 0; frame < 4; ++frame)
 	{
 		game.updateObjects();
-		CHECK(bullet.collisionsOn);
-		CHECK(bullet.isVisible);
+		CHECK(copies::count(game, "bullet") == 1);
 	}
 	CHECK(bullet.position.y < player.position.y - bullet.size.y);
 }
 
-TEST_CASE("a bullet dies on touching an alien", "[collision_rules]")
+TEST_CASE("a bullet is taken away on touching an alien", "[collision_rules]")
 {
 	Game game{ "descriptions/spaceinvaders.xml" };
 	game.setCurrentState("playing");
 
-	Object& bullet = game.getObject("bullet");
 	Object& alien = game.getObject("aliens");
+	Object& bullet = copies::spawned(game, "bullet");
 	alien.size = { 50.0f, 50.0f };
 	bullet.size = { 8.0f, 8.0f };
 
@@ -99,12 +97,10 @@ TEST_CASE("a bullet dies on touching an alien", "[collision_rules]")
 	// edge, so it overlaps by less than its radius.
 	bullet.position = { alien.position.x + 20.0f, alien.position.y + alien.size.y - 2.0f };
 	bullet.velocity.y = -6.0f;
-	bullet.isVisible = true;
-	bullet.collisionsOn = true;
 
 	game.updateObjects();
 
-	CHECK_FALSE(bullet.collisionsOn);
+	CHECK(copies::count(game, "bullet") == 0);
 }
 
 namespace

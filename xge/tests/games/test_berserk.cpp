@@ -95,7 +95,8 @@ namespace
 		static std::string robot(int n, int member) { return inRoom(n, std::string(1, "yrcg"[n - 1]) + std::to_string(member)); }
 		Object& object(const std::string& name) { return game.getObject(name); }
 		Object& man() { return object("player"); }
-		Object& bullet() { return object("bullet"); }
+		// His shot, a copy of the bullet piece, while one is out.
+		Object& bullet() { return object("bullet.1"); }
 		float variable(const char* name) { return man().variable[name]; }
 		float lives() { return variable("lives"); }
 		float score() { return variable("score"); }
@@ -234,7 +235,7 @@ TEST_CASE("berserk.xml loads the man, four rooms of robots, exits, an Otto and a
 	CHECK(play.man().isVisible);
 	CHECK(play.lives() == 3.0f);
 	CHECK(play.score() == 0.0f);
-	CHECK_FALSE(play.bullet().isVisible);
+	CHECK(play.alive("bullet") == 0);
 	CHECK_FALSE(play.object("otto").isVisible);
 	CHECK(play.alive("robotshot") == 0);
 	CHECK(play.game.currentScene("playing") == "playing.room1");
@@ -304,7 +305,6 @@ TEST_CASE("the man shoots the way he faces, one shot at a time", "[berserk]")
 {
 	Play play;
 	play.begin();
-	Object& bullet = play.bullet();
 	play.placeMan(1, 1);
 
 	struct Way { KeyCode key; float vx; float vy; };
@@ -312,7 +312,9 @@ TEST_CASE("the man shoots the way he faces, one shot at a time", "[berserk]")
 	{
 		play.walk(way.key, 1);
 		play.tap(KeyCode::Space);
-		REQUIRE(bullet.isVisible);
+		play.frames(1);
+		REQUIRE(play.alive("bullet") == 1);
+		const Object& bullet = play.bullet();
 		CHECK((bullet.velocity.x > 0.0f) == (way.vx > 0.0f));
 		CHECK((bullet.velocity.x < 0.0f) == (way.vx < 0.0f));
 		CHECK((bullet.velocity.y > 0.0f) == (way.vy > 0.0f));
@@ -320,14 +322,16 @@ TEST_CASE("the man shoots the way he faces, one shot at a time", "[berserk]")
 
 		// It flies on until it meets a wall (or the edge of the window).
 		play.frames(120);
-		CHECK_FALSE(bullet.isVisible);
+		CHECK(play.alive("bullet") == 0);
 		play.placeMan(1, 1);
 	}
 
 	// While one is in flight another cannot be fired.
 	play.tap(KeyCode::Space);
-	REQUIRE(bullet.isVisible);
-	play.frames(2);
+	play.frames(1);
+	REQUIRE(play.alive("bullet") == 1);
+	const Object& bullet = play.bullet();
+	play.frames(1);
 	const Vector2f flying = bullet.position;
 	play.tap(KeyCode::Space);
 	play.frames(1);
@@ -349,7 +353,7 @@ TEST_CASE("a shot robot is gone and scores fifty, and the shot goes with it", "[
 	CHECK(play.score() == 50.0f);
 	// The man counts the robots gone in this room.
 	CHECK(play.variable("kills") == 1.0f);
-	CHECK_FALSE(play.bullet().isVisible);
+	CHECK(play.alive("bullet") == 0);
 }
 
 TEST_CASE("a robot touching the man costs a life and sends him back to the start", "[berserk]")
@@ -790,7 +794,7 @@ TEST_CASE("Otto comes at once and faster when every robot is gone, goes when the
 	play.tap(KeyCode::Space);
 	play.frames(40);
 	CHECK(otto.isVisible);
-	CHECK_FALSE(play.bullet().isVisible);
+	CHECK(play.alive("bullet") == 0);
 	CHECK(play.lives() == 3.0f);
 }
 

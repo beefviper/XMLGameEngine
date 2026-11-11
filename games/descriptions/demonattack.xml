@@ -59,6 +59,17 @@
     <style name="hud"><size>28</size><color>color.yellow</color></style>
   </styles>
   <objects>
+    <!-- one shot at a time, kept over the cannon as it flies -->
+    <object name="laser" class="laser">
+      <sprite><rectangle><width>3</width><height>18</height><color>color.yellow</color></rectangle></sprite>
+      <position><x update="live">player.x + 18</x><y>0</y></position>
+      <velocity><y>-9</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="demon"><despawn /></collision>
+      </collisions>
+    </object>
     <!-- a demon's bomb, there once one is dropped: eight at most -->
     <object name="bomb" class="bomb">
       <sprite><rectangle><width>4</width><height>12</height><color>color.red</color></rectangle></sprite>
@@ -162,19 +173,6 @@
           </variables>
         </object>
 
-        <!-- one shot at a time, kept over the cannon as it flies -->
-        <object name="laser" class="laser">
-          <sprite><rectangle><width>3</width><height>18</height><color>color.yellow</color></rectangle></sprite>
-          <position><x update="live">player.x + 18</x><y>0</y></position>
-          <velocity><y>-9</y></velocity>
-          <active>false</active>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="demon"><die /></collision>
-          </collisions>
-        </object>
-
         <object name="score">
           <sprite><text style="hud"><number>player.score</number></text></sprite>
           <position><x>margin</x><y>margin</y></position>
@@ -230,7 +228,7 @@
               <remaining>0</remaining>
               <play sound="wave" />
               <despawn object="bomb" />
-              <reset object="laser" />
+              <despawn object="laser" />
               <set variable="player.lives">
                 <formula>
                   <smallest>
@@ -290,7 +288,7 @@
               <remaining>0</remaining>
               <play sound="wave" />
               <despawn object="bomb" />
-              <reset object="laser" />
+              <despawn object="laser" />
               <set variable="player.lives">
                 <formula>
                   <smallest>

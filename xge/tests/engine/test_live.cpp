@@ -12,6 +12,7 @@
 
 #include "scratch.h"
 #include "engine/engine.h"
+#include "copies.h"
 #include "game/game.h"
 #include "play/collision.h"
 #include "window/null.h"
@@ -263,17 +264,18 @@ TEST_CASE("a group gives its members a <heading>, each turned on its own", "[liv
 TEST_CASE("an object out of play does not act on a key", "[live]")
 {
 	const Scratch file(box("gun", 100, 300, "<active>false</active><actions><action name=\"fire\"><fire object=\"shot\" /></action></actions>")
-		+ box("shot", 0, 0, "<velocity><x>0</x><y>-4</y></velocity><active>false</active>"), "<trigger object=\"gun\" action=\"fire\" />");
+, "<trigger object=\"gun\" action=\"fire\" />",
+		box("shot", 0, 0, "<velocity><x>0</x><y>-4</y></velocity><most>1</most>"));
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK_FALSE(play.get("shot").isVisible);
+	CHECK(copies::count(play.game, "shot") == 0);
 
 	play.get("gun").isVisible = true;
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK(play.get("shot").isVisible);
+	CHECK(copies::count(play.game, "shot") == 1);
 }
 
 TEST_CASE("fishingderby.xml: a fish that bites is claimed by that hook, landed for its worth, and back in its row", "[live][fishingderby]")

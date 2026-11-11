@@ -68,6 +68,17 @@
     <style name="hud"><size>28</size><color>color.yellow</color></style>
   </styles>
   <objects>
+    <!-- one shot at a time, steered with the blaster -->
+    <object name="laser" class="laser">
+      <sprite><rectangle><width>3</width><height>14</height><color>color.cyan</color></rectangle></sprite>
+      <position><x update="live">player.x + 16.5</x><y>0</y></position>
+      <velocity><y>-9</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="enemy"><despawn /></collision>
+      </collisions>
+    </object>
     <group name="enemies" class="enemy">
       <sprite>
         <bitmap from="wave1" />
@@ -169,19 +180,6 @@
           </variables>
         </object>
 
-        <!-- one shot at a time, steered with the blaster -->
-        <object name="laser" class="laser">
-          <sprite><rectangle><width>3</width><height>14</height><color>color.cyan</color></rectangle></sprite>
-          <position><x update="live">player.x + 16.5</x><y>0</y></position>
-          <velocity><y>-9</y></velocity>
-          <active>false</active>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="enemy"><die /></collision>
-          </collisions>
-        </object>
-
         <!-- the energy that runs down, and its bar: a green strip, and a black
              cover over what is spent -->
         <object name="energy">
@@ -234,7 +232,7 @@
               <play sound="wave" />
               <reset object="energy" />
               <despawn object="bomb" />
-              <reset object="laser" />
+              <despawn object="laser" />
               <enter way="next" />
             </condition>
           </conditions>

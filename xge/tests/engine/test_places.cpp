@@ -94,15 +94,15 @@ TEST_CASE("an action stops, turns back, lets out and runs another action", "[pla
 TEST_CASE("a collision rule can fire", "[places][fire]")
 {
 	const std::string shot = "<object name=\"shot\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite>"
-		"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>-4</y></velocity><active>false</active></object>";
+		"<velocity><x>0</x><y>-4</y></velocity><most>1</most></object>";
 	const std::string bumper = box("bumper", 400, 100, "<velocity><x>0</x><y>-5</y></velocity>"
 		"<collisions><enabled>true</enabled><collision edge=\"top\"><fire object=\"shot\" /><stop /></collision></collisions>");
-	const Scratch file(bumper + shot, "<pop />");
+	const Scratch file(bumper, "<pop />", {}, shot);
 	Played play(file.path);
 
-	CHECK_FALSE(play.get("shot").isVisible);
+	CHECK(play.count("shot") == 0);
 	play.frames(30);
-	CHECK(play.get("shot").isVisible);
+	CHECK(play.count("shot") == 1);
 }
 
 TEST_CASE("an action that runs itself again, round a circle of <trigger>s, is turned away", "[places][errors]")

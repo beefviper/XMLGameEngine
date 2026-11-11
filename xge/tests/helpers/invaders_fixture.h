@@ -45,32 +45,30 @@ namespace invaders_fixture
     <variable name="height">50</variable>
     <variable name="step">2</variable>
   </variables>
+  <objects>
+    <object name="bullet" class="projectile">
+      <sprite>
+        <circle>
+          <radius>bullet.radius</radius>
+        </circle>
+      </sprite>
+      <velocity>
+        <x>0</x>
+        <y>-12</y>
+      </velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all">
+          <despawn />
+        </collision>
+        <collision class="aliens">
+          <despawn />
+        </collision>
+      </collisions>
+    </object>
+  </objects>
   <states>
     <objects>
-      <object name="bullet" class="projectile">
-        <sprite>
-          <circle>
-            <radius>bullet.radius</radius>
-          </circle>
-        </sprite>
-        <position>
-          <x>0</x>
-          <y>0</y>
-        </position>
-        <velocity>
-          <x>0</x>
-          <y>-12</y>
-        </velocity>
-        <collisions>
-          <enabled>false</enabled>
-          <collision edge="all">
-            <die />
-          </collision>
-          <collision class="aliens">
-            <die />
-          </collision>
-        </collisions>
-      </object>
       <object name="player">
         <sprite>
           <rectangle>

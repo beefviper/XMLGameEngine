@@ -70,6 +70,15 @@ namespace
 
 		std::string state() { return game.getCurrentState().name; }
 		Object& tank1() { return game.getObject("tank1"); }
+		// Whether a copy of that name is in the game (a fired shell, shell1.1).
+		bool has(const std::string& name)
+		{
+			for (const auto& object : game.getCurrentObjects())
+			{
+				if (object.exists && object.isCopy() && object.name.size() >= name.size() && object.name.compare(object.name.size() - name.size(), name.size(), name) == 0) { return true; }
+			}
+			return false;
+		}
 		Object& tank2() { return game.getObject("tank2"); }
 	};
 }
@@ -119,7 +128,7 @@ TEST_CASE("a shell flies from the gun, one at a time, and a hit scores and knock
 
 	play.tap(KeyCode::F);
 	play.frames(1);
-	Object& shell = play.game.getObject("shell1");
+	Object& shell = play.game.getObject("shell1.1");
 	REQUIRE(shell.isVisible);
 	CHECK(shell.velocity.x == Approx(6.0f));
 	CHECK(shell.velocity.y == Approx(0.0f).margin(0.01f));
@@ -141,8 +150,8 @@ TEST_CASE("a shell flies from the gun, one at a time, and a hit scores and knock
 	}
 	play.engine.handleKeyReleased(KeyCode::Up);
 	CHECK(knocked);
-	CHECK(shell.variable.at("hits") == 1);
-	CHECK_FALSE(shell.isVisible);
+	CHECK(play.tank1().variable.at("hits") == 1);
+	CHECK_FALSE(play.has("shell1.1"));
 	CHECK(play.tank2().heading == Approx(270.0f)); // knocked, not turned
 }
 
@@ -153,9 +162,9 @@ TEST_CASE("a shell stops at a wall, and a tank bounces off one", "[combat]")
 
 	play.tap(KeyCode::RShift);
 	play.frames(120);
-	CHECK_FALSE(play.game.getObject("shell2").isVisible);
-	CHECK(play.game.getObject("shell1").variable.at("hits") == 0);
-	CHECK(play.game.getObject("shell2").variable.at("hits") == 0);
+	CHECK_FALSE(play.has("shell2.1"));
+	CHECK(play.tank1().variable.at("hits") == 0);
+	CHECK(play.tank2().variable.at("hits") == 0);
 
 	// Straight at the middle wall.
 	const Object& wall = play.game.getObject("walls.1");
@@ -175,7 +184,7 @@ TEST_CASE("after two minutes sixteen the most hits win, and space plays again", 
 	play.tap(KeyCode::Pause);
 	CHECK(play.state() == "playing");
 
-	play.game.getObject("shell2").variable["hits"] = 3;
+	play.tank2().variable["hits"] = 3;
 	play.frames(135 * 60);
 	CHECK(play.state() == "playing");
 	play.frames(62);
@@ -183,7 +192,7 @@ TEST_CASE("after two minutes sixteen the most hits win, and space plays again", 
 	CHECK(play.game.getObject("over.winner").lookName() == "blue");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
-	CHECK(play.game.getObject("shell2").variable.at("hits") == 0);
+	CHECK(play.tank2().variable.at("hits") == 0);
 	CHECK(play.game.getObject("over.winner").lookName() == "draw");
 }
 
@@ -194,7 +203,7 @@ TEST_CASE("paused, the field is drawn still: a shell in flight stops where it is
 	play.game.getObject("walls.1").isVisible = false;
 	play.tap(KeyCode::F);
 	play.frames(5);
-	Object& shell = play.game.getObject("shell1");
+	Object& shell = play.game.getObject("shell1.1");
 	REQUIRE(shell.isVisible);
 	const Vector2f shellAt = shell.position;
 
@@ -205,7 +214,7 @@ TEST_CASE("paused, the field is drawn still: a shell in flight stops where it is
 	CHECK(play.game.isStill(shell));
 	CHECK(play.game.isStill(play.tank1()));
 	CHECK(play.game.isStill(play.game.getObject("walls.2")));
-	CHECK_FALSE(play.game.isStill(play.game.getObject("shell2"))); // never fired
+	CHECK_FALSE(play.has("shell2.1")); // never fired
 	CHECK_FALSE(play.game.isShown(play.tank1()));
 	CHECK(play.game.isShown(play.game.getObject("paused")));
 
@@ -225,7 +234,7 @@ TEST_CASE("each state owns what it draws, and a win draws the field still under 
 	CHECK_FALSE(play.game.isShown(play.tank1()));
 
 	play.start();
-	play.game.getObject("shell1").variable["hits"] = 5;
+	play.tank1().variable["hits"] = 5;
 	play.game.pushState("over");
 	play.frames(1);
 	REQUIRE(play.state() == "over");

@@ -14,6 +14,7 @@
 
 #include "play/executor.h"
 #include "engine/engine.h"
+#include "copies.h"
 #include "game/game.h"
 #include "window/null.h"
 
@@ -51,10 +52,11 @@ namespace
 		}
 
 		Object& ship() { return game.getObject("ship"); }
-		Object& shot() { return game.getObject("shot"); }
+		// The shot in flight, a copy of the shot piece.
+		Object& shot() { return game.getObject("shot.1"); }
 		float score() { return ship().variable["score"]; }
 		float lives() { return ship().variable["lives"]; }
-		bool inFlight() { return shot().isVisible && shot().collisionsOn; }
+		bool inFlight() { return copies::count(game, "shot") == 1; }
 
 		// For tests that play for a while: enough lives that no run of bad luck
 		// ends the game.
@@ -66,6 +68,9 @@ namespace
 		void press(const char* action)
 		{
 			executor.executeInput(Command{ CmdTriggerAction{ "ship", action } }, true);
+			// What it fires joins at once, measured as the rest were.
+			game.settleSpawns();
+			measure(game);
 		}
 
 		void key(const char* direction, bool down)
@@ -412,17 +417,18 @@ TEST_CASE("the keys play the game through the engine", "[astrosmash][engine_inpu
 	measure(game);
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& ship = game.getObject("ship");
-	Object& shot = game.getObject("shot");
 
 	CHECK(game.getCurrentState().name == "title");
 	engine.handleKeyPressed(KeyCode::Space); // space starts the game
 	REQUIRE(game.getCurrentState().name == "playing");
 	engine.handleKeyReleased(KeyCode::Space);
-	CHECK(!shot.isVisible);
+	game.settleSpawns();
+	CHECK(copies::count(game, "shot") == 0);
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
-	CHECK(shot.isVisible);
+	game.settleSpawns();
+	CHECK(copies::count(game, "shot") == 1);
 
 	const float startX = ship.position.x;
 	engine.handleKeyPressed(KeyCode::A);

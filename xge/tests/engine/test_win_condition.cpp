@@ -10,6 +10,7 @@
 
 #include "play/executor.h"
 #include "game/game.h"
+#include "copies.h"
 #include "invaders_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -80,7 +81,6 @@ TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
 	for (auto& object : game.getCurrentObjects())
 	{
 		if (object.groupName == "aliens") { object.size = { 50.0f, 50.0f }; }
-		else if (object.name == "bullet") { object.size = { 8.0f, 8.0f }; }
 	}
 
 	Object& last = game.getObject("aliens.6.3");
@@ -89,10 +89,9 @@ TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
 		if (object.groupName == "aliens" && &object != &last) { kill(object); }
 	}
 
-	Object& bullet = game.getObject("bullet");
+	Object& bullet = copies::spawned(game, "bullet");
+	bullet.size = { 8.0f, 8.0f };
 	bullet.position = { last.position.x + 21.0f, last.position.y + 58.0f };
-	bullet.isVisible = true;
-	bullet.collisionsOn = true;
 
 	game.updateObjects(); // the bullet reaches it and both die...
 	CHECK_FALSE(last.isVisible);

@@ -16,6 +16,7 @@
 #include "scratch.h"
 #include "play/executor.h"
 #include "play/geometry.h"
+#include "copies.h"
 #include "game/game.h"
 #include "load/xml.h"
 #include "played.h"
@@ -55,12 +56,13 @@ namespace
 
 	// A whole game file: 800 by 600 at 60 frames a second, the objects and
 	// states given, and anything given before the states.
-	std::string gameXml(const std::string& objects, const std::string& states, const std::string& keys = {})
+	std::string gameXml(const std::string& objects, const std::string& states, const std::string& keys = {}, const std::string& pieces = {})
 	{
 		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<fullscreen>false</fullscreen><framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
+			+ (pieces.empty() ? std::string() : "<objects>" + pieces + "</objects>") +
 			"<states><objects>" + objects + "</objects>"
 			+ keys + states + "</states>"
 			"</game>";
@@ -74,6 +76,13 @@ namespace
 		return "<object name=\"" + name + "\"" + attributes + "><sprite><rectangle><width>" + std::to_string(w) + "</width><height>" + std::to_string(h)
 			+ "</height></rectangle></sprite><position><x>" + std::to_string(x) + "</x><y>" + std::to_string(y) + "</y></position>"
 			"<velocity>" + velocity + "</velocity>" + extra + "<collisions>" + collisions + "</collisions>" + after + "</object>";
+	}
+
+	// A shot to fire: a piece (in the top-level <objects>), one in flight at
+	// a time, gone at the window's edge.
+	std::string shotPiece(const std::string& name, float w, float h, const std::string& velocity)
+	{
+		return box(name, 0, 0, w, h, "<collision edge=\"all\"><despawn /></collision>", "<most>1</most>", {}, velocity);
 	}
 
 	// One state showing the objects named, with Space popping and the extra
@@ -245,22 +254,23 @@ TEST_CASE("an interval is worked out again every round, so it can follow a varia
 TEST_CASE("a timer on an enemy fires its shots the way it faces", "[timers][facing]")
 {
 	Loaded loaded(gameXml(
-		box("enemy", 100, 100, 20, 10, "<enabled>true</enabled>", "<facing>down</facing>", "<timers><timer><every>0.5</every><fire object=\"bomb\" /></timer></timers>")
-		+ box("bomb", 0, 0, 4, 6, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<active>false</active>", {}, "<x>0</x><y>-3</y>"),
-		state("playing", { "enemy", "bomb" })));
+		box("enemy", 100, 100, 20, 10, "<enabled>true</enabled>", "<facing>down</facing>", "<timers><timer><every>0.5</every><fire object=\"bomb\" /></timer></timers>"),
+		state("playing", { "enemy", "bomb" }), {},
+		shotPiece("bomb", 4, 6, "<x>0</x><y>-3</y>")));
 
-	Object& bomb = loaded.game.getObject("bomb");
 	loaded.frames(29);
-	CHECK_FALSE(bomb.isVisible);
+	CHECK(copies::count(loaded.game, "bomb") == 0);
 	loaded.frames(1);
-	REQUIRE(bomb.isVisible);
+	REQUIRE(copies::count(loaded.game, "bomb") == 1);
+	const Object& bomb = loaded.game.getObject("bomb.1");
 	CHECK(bomb.collisionsOn);
 
-	// Below the middle of the enemy, falling at the bomb's own speed.
+	// Below the middle of the enemy, falling at the bomb's own speed; it
+	// joined as the frame ended, so it has not moved yet.
 	CHECK(bomb.velocity.x == Approx(0));
 	CHECK(bomb.velocity.y == Approx(3));
 	CHECK(bomb.position.x == Approx(108));
-	CHECK(bomb.position.y == Approx(110 + 3)); // and it has made its first move
+	CHECK(bomb.position.y == Approx(110));
 }
 
 TEST_CASE("an object with a <facing> faces the way it last moved, and fires that way", "[facing]")
@@ -270,35 +280,41 @@ TEST_CASE("an object with a <facing> faces the way it last moved, and fires that
 		"<action name=\"gun\"><fire object=\"shot\" /></action></actions>";
 
 	Loaded loaded(gameXml(
-		box("man", 100, 100, 20, 20, "<enabled>true</enabled>", "<facing>up</facing>", actions)
-		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled>", "<active>false</active>", {}, "<x>0</x><y>-6</y>"),
-		state("playing", { "man", "shot" })));
+		box("man", 100, 100, 20, 20, "<enabled>true</enabled>", "<facing>up</facing>", actions),
+		state("playing", { "man", "shot" }), {},
+		shotPiece("shot", 4, 4, "<x>0</x><y>-6</y>")));
 
 	CommandExecutor executor(loaded.game);
 	Object& man = loaded.game.getObject("man");
-	Object& shot = loaded.game.getObject("shot");
+	// Fired: the copy, joined at once; put away again before the next.
+	const auto fire = [&]() -> const Object&
+	{
+		loaded.game.resetObject("shot");
+		loaded.game.settleSpawns();
+		executor.executeInput(CmdTriggerAction{ "man", "gun" }, true);
+		loaded.game.settleSpawns();
+		return loaded.game.getObject("shot.1");
+	};
 
-	executor.executeInput(CmdTriggerAction{ "man", "gun" }, true);
-	CHECK(shot.position.x == Approx(108));
-	CHECK(shot.position.y == Approx(96));
-	CHECK(shot.velocity.y == Approx(-6));
+	const Object& up = fire();
+	CHECK(up.position.x == Approx(108));
+	CHECK(up.position.y == Approx(96));
+	CHECK(up.velocity.y == Approx(-6));
 
-	loaded.game.resetObject("shot");
 	executor.executeInput(CmdTriggerAction{ "man", "left" }, true);
 	executor.executeInput(CmdTriggerAction{ "man", "left" }, false);
 	CHECK(man.facing == Direction::Left);
-	executor.executeInput(CmdTriggerAction{ "man", "gun" }, true);
-	CHECK(shot.position.x == Approx(96));
-	CHECK(shot.position.y == Approx(108));
-	CHECK(shot.velocity.x == Approx(-6));
-	CHECK(shot.velocity.y == Approx(0));
+	const Object& left = fire();
+	CHECK(left.position.x == Approx(96));
+	CHECK(left.position.y == Approx(108));
+	CHECK(left.velocity.x == Approx(-6));
+	CHECK(left.velocity.y == Approx(0));
 
-	loaded.game.resetObject("shot");
 	executor.executeInput(CmdTriggerAction{ "man", "right" }, true);
 	CHECK(man.facing == Direction::Right);
-	executor.executeInput(CmdTriggerAction{ "man", "gun" }, true);
-	CHECK(shot.position.x == Approx(120));
-	CHECK(shot.velocity.x == Approx(6));
+	const Object& right = fire();
+	CHECK(right.position.x == Approx(120));
+	CHECK(right.velocity.x == Approx(6));
 
 	// A reset faces it the way it started.
 	loaded.game.resetObject("man");
@@ -584,7 +600,7 @@ TEST_CASE("<reveal> brings hidden members of a pool back where they started, as 
 	CHECK(shown() == 3);
 }
 
-TEST_CASE("coming back into play draws a <random> again: a reveal, a release and a fire", "[random][reveal]")
+TEST_CASE("coming back into play draws a <random> again: a reveal and a release (a fired copy draws its own)", "[random][reveal]")
 {
 	// A rock that dies a moment after it is back, so it comes back again and
 	// again; what it comes back with is noted each time.
@@ -615,14 +631,6 @@ TEST_CASE("coming back into play draws a <random> again: a reveal, a release and
 	{
 		Loaded loaded(gameXml(rock + box("keeper", 400, 300, 1, 1, "<enabled>false</enabled>", {},
 			"<timers><timer><every>0.1</every><release object=\"rock\" /></timer></timers>"),
-			state("playing", { "rock", "keeper" })));
-		CHECK(distinctSpeeds(loaded) > 3);
-	}
-
-	SECTION("<fire>")
-	{
-		Loaded loaded(gameXml(rock + box("keeper", 400, 300, 1, 1, "<enabled>false</enabled>", {},
-			"<timers><timer><every>0.1</every><fire object=\"rock\" /></timer></timers>"),
 			state("playing", { "rock", "keeper" })));
 		CHECK(distinctSpeeds(loaded) > 3);
 	}
@@ -707,19 +715,18 @@ TEST_CASE("<aim> sends the next shots straight at the target, at any angle, unti
 	const std::string gun = box("gun", 100, 100, 20, 20, "<enabled>true</enabled>", {},
 		"<actions><action name=\"left\"><move direction=\"left\">1</move></action></actions>"
 		"<timers><timer><every>0.5</every><aim object=\"target\" /><fire object=\"shot\" /></timer></timers>");
-	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20)
-		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<active>false</active>", {}, "<x>0</x><y>-5</y>"),
-		state("playing", { "gun", "target", "shot" })));
+	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20),
+		state("playing", { "gun", "target", "shot" }), {}, shotPiece("shot", 4, 4, "<x>0</x><y>-5</y>")));
 
-	Object& shot = loaded.game.getObject("shot");
 	loaded.frames(30);
-	REQUIRE(shot.isVisible);
+	REQUIRE(copies::count(loaded.game, "shot") == 1);
+	const Object& shot = loaded.game.getObject("shot.1");
 	CHECK(shot.velocity.x == Approx(3.0f));
 	CHECK(shot.velocity.y == Approx(4.0f));
 	CHECK(loaded.game.getObject("gun").facing == Direction::Down);
 
 	// It leaves from the middle of the gun, clear of it, along the aim.
-	const Vector2f middle = shot.position - shot.velocity + shot.size * 0.5f;
+	const Vector2f middle = shot.position + shot.size * 0.5f;
 	CHECK((middle.y - 110.0f) / (middle.x - 110.0f) == Approx(4.0f / 3.0f));
 
 	// A key that moves the gun drops the aim: from its top again.
@@ -732,20 +739,19 @@ TEST_CASE("<aim> with <lined> fires only along one of the eight ways, when the t
 {
 	const std::string gun = box("gun", 100, 100, 20, 20, "<enabled>true</enabled>", {}, 
 		"<timers><timer><every>0.5</every><aim object=\"target\"><lined>8</lined></aim><fire object=\"shot\" /></timer></timers>");
-	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20)
-		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<active>false</active>", {}, "<x>0</x><y>-5</y>"),
-		state("playing", { "gun", "target", "shot" })));
+	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20),
+		state("playing", { "gun", "target", "shot" }), {}, shotPiece("shot", 4, 4, "<x>0</x><y>-5</y>")));
 
 	// 300 across and 400 down lies along none of the eight: the aim is
 	// refused, and the <fire> after it with it.
-	Object& shot = loaded.game.getObject("shot");
 	loaded.frames(40);
-	CHECK_FALSE(shot.isVisible);
+	CHECK(copies::count(loaded.game, "shot") == 0);
 
 	// 300 and 304: on the diagonal, within 8. The shot goes down it exactly.
 	loaded.game.getObject("target").position = { 400.0f, 404.0f };
 	loaded.frames(40);
-	REQUIRE(shot.isVisible);
+	REQUIRE(copies::count(loaded.game, "shot") == 1);
+	const Object& shot = loaded.game.getObject("shot.1");
 	CHECK(shot.velocity.x == Approx(5.0f / std::sqrt(2.0f)));
 	CHECK(shot.velocity.y == Approx(5.0f / std::sqrt(2.0f)));
 
@@ -761,17 +767,16 @@ TEST_CASE("two move keys held across each other face the diagonal, and a <fire> 
 		"<actions><action name=\"up\"><move direction=\"up\">1</move></action>"
 		"<action name=\"right\"><move direction=\"right\">1</move></action>"
 		"<action name=\"gun\"><fire object=\"shot\" /></action></actions>");
-	Loaded loaded(gameXml(gun
-		+ box("shot", 0, 0, 4, 4, "<enabled>false</enabled><collision edge=\"all\"><die /></collision>", "<active>false</active>", {}, "<x>0</x><y>-5</y>"),
-		state("playing", { "gun", "shot" })));
+	Loaded loaded(gameXml(gun,
+		state("playing", { "gun", "shot" }), {}, shotPiece("shot", 4, 4, "<x>0</x><y>-5</y>")));
 	CommandExecutor executor(loaded.game);
-	Object& shot = loaded.game.getObject("shot");
 
 	executor.executeInput(CmdTriggerAction{ "gun", "up" }, true);
 	executor.executeInput(CmdTriggerAction{ "gun", "right" }, true);
 	executor.executeInput(CmdTriggerAction{ "gun", "gun" }, true);
 	loaded.frames(1);
-	REQUIRE(shot.isVisible);
+	REQUIRE(copies::count(loaded.game, "shot") == 1);
+	const Object& shot = loaded.game.getObject("shot.1");
 	CHECK(shot.velocity.x == Approx(5.0f / std::sqrt(2.0f)));
 	CHECK(shot.velocity.y == Approx(-5.0f / std::sqrt(2.0f)));
 

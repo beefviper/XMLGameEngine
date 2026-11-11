@@ -18,6 +18,7 @@
 #include "picture/bitmap.h"
 #include "play/executor.h"
 #include "engine/folder.h"
+#include "copies.h"
 #include "game/game.h"
 #include "xml/document.h"
 #include "load/xsd.h"
@@ -1057,7 +1058,7 @@ TEST_CASE("the aliens' two pictures differ, so there is something to see", "[spa
 	CHECK(alien.animationBitmaps[0]->height == alien.animationBitmaps[1]->height);
 }
 
-TEST_CASE("a shot from the ship in the middle kills exactly one alien and is put away", "[spaceinvaders]")
+TEST_CASE("a shot from the ship in the middle kills exactly one alien and is taken away", "[spaceinvaders]")
 {
 	Invasion invasion;
 	Game& game = invasion.game;
@@ -1065,18 +1066,19 @@ TEST_CASE("a shot from the ship in the middle kills exactly one alien and is put
 	REQUIRE(invasion.alive() == 55);
 
 	invasion.executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
-	REQUIRE(game.getObject("bullet").isVisible);
+	game.settleSpawns();
+	REQUIRE(copies::count(game, "bullet") == 1);
 
 	// A thin bullet leaves the middle of the cannon.
 	const Object& cannon = game.getObject("player");
-	const Object& shot = game.getObject("bullet");
+	Object& shot = game.getObject("bullet.1");
+	shot.size = measureShapeSize(shot.picture);
 	CHECK(shot.position.x + 2.0f == Catch::Approx(cannon.position.x + 27.5f));
 
 	frames(game, 80);
 
 	CHECK(invasion.alive() == 54);
-	CHECK_FALSE(game.getObject("bullet").isVisible);
-	CHECK_FALSE(game.getObject("bullet").collisionsOn);
+	CHECK(copies::count(game, "bullet") == 0);
 }
 
 TEST_CASE("the aliens still win the game for the player when they are all gone, and a reset brings them back", "[spaceinvaders]")
@@ -1297,11 +1299,10 @@ TEST_CASE("each kind of alien scores its own, and the block marches faster as it
 		if (alien->name.back() == '4' || alien->name.back() == '5') { const_cast<Object*>(alien)->isVisible = false; }
 	}
 	const Object& crab = game.getObject("aliens.6.3");
-	Object& bullet = game.getObject("bullet");
+	Object& bullet = copies::spawned(game, "bullet");
+	bullet.size = measureShapeSize(bullet.picture);
 	bullet.position = { crab.position.x + crab.size.x / 2.0f, crab.position.y + crab.size.y + 2.0f };
 	bullet.velocity = { 0.0f, -12.0f };
-	bullet.isVisible = true;
-	bullet.collisionsOn = true;
 	frames(game, 1);
 	CHECK_FALSE(crab.isVisible);
 	CHECK(game.getObject("player").variable.at("score") == 20.0f);
@@ -1337,11 +1338,10 @@ TEST_CASE("the mystery ship crosses the top now and then and scores 50 to 200", 
 	REQUIRE(ufo.isVisible);
 
 	Object& player = game.getObject("player");
-	Object& bullet = game.getObject("bullet");
+	Object& bullet = copies::spawned(game, "bullet");
+	bullet.size = measureShapeSize(bullet.picture);
 	bullet.position = { ufo.position.x + ufo.size.x / 2.0f, ufo.position.y + ufo.size.y + 2.0f };
 	bullet.velocity = { 0.0f, -12.0f };
-	bullet.isVisible = true;
-	bullet.collisionsOn = true;
 	const float score = player.variable.at("score");
 	frames(game, 1);
 	CHECK_FALSE(ufo.isVisible);

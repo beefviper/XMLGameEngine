@@ -7,6 +7,7 @@
 // picture where something hit it, which a pixel collision then lets the next
 // thing through; then the shields of games/descriptions/spaceinvaders.xml.
 
+#include "copies.h"
 #include "played.h"
 
 #include <catch2/catch_approx.hpp>
@@ -138,10 +139,12 @@ TEST_CASE("spaceinvaders.xml: shots wear holes in a shield until they pass throu
 	for (int shot = 0; shot < 20 && !through; ++shot)
 	{
 		play.tap(KeyCode::Space);
-		for (int i = 0; i < 70 && play.get("bullet").isVisible; ++i)
+		play.frames(1);
+		for (int i = 0; i < 70 && copies::count(play.game, "bullet") == 1; ++i)
 		{
+			const Object& bullet = play.get("bullet.1");
+			through = through || bullet.position.y + measureShapeSize(bullet.picture).y < shield.position.y;
 			play.frames(1);
-			through = through || play.get("bullet").position.y + play.get("bullet").size.y < shield.position.y;
 		}
 		ship.position.x = shield.position.x + shield.size.x / 2 - ship.size.x / 2;
 	}

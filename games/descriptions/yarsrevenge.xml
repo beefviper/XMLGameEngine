@@ -61,6 +61,28 @@
     </style>
   </styles>
   <objects>
+    <!-- the Zorlon cannon's blast, straight across -->
+    <object name="blast">
+      <sprite><rectangle><width>24</width><height>10</height><color>color.yellow</color></rectangle></sprite>
+      <velocity><x>8</x><y>0</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="right"><despawn /></collision>
+        <collision class="shield"><despawn /></collision>
+        <collision object="qotile"><despawn /></collision>
+        <collision object="swirl"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- Yar's energy missile: one at a time, the way he last flew -->
+    <object name="energy">
+      <sprite><rectangle><width>6</width><height>4</height><color>color.white</color></rectangle></sprite>
+      <velocity><x>7</x><y>0</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="shield"><despawn /></collision>
+      </collisions>
+    </object>
     <!-- the Swirl: a spinning Qotile that waits a moment, then flies at where Yar is -->
     <object name="swirl">
       <sprite name="one">
@@ -251,18 +273,6 @@
             </action>
           </actions>
         </object>
-        <!-- Yar's energy missile: one at a time, the way he last flew -->
-        <object name="energy">
-          <sprite><rectangle><width>6</width><height>4</height><color>color.white</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><x>7</x><y>0</y></velocity>
-          <active>false</active>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="shield"><die /></collision>
-          </collisions>
-        </object>
         <!-- the destroyer missile: always turning toward Yar -->
         <object name="missile">
           <sprite><rectangle><width>6</width><height>6</height><color>color.white</color></rectangle></sprite>
@@ -286,19 +296,6 @@
               <die />
             </action>
           </actions>
-        </object>
-        <object name="blast">
-          <sprite><rectangle><width>24</width><height>10</height><color>color.yellow</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><x>8</x><y>0</y></velocity>
-          <active>false</active>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="right"><die /></collision>
-            <collision class="shield"><die /></collision>
-            <collision object="qotile"><die /></collision>
-            <collision object="swirl"><die /></collision>
-          </collisions>
         </object>
       </objects>
       <music sound="hum" />

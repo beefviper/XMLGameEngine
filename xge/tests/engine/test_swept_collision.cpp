@@ -10,6 +10,7 @@
 
 #include "play/executor.h"
 #include "game/game.h"
+#include "copies.h"
 #include "invaders_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -29,8 +30,15 @@ namespace
 		for (auto& object : game.getCurrentObjects())
 		{
 			if (object.groupName == "aliens" || object.name == "player") { object.size = { 50.0f, 50.0f }; }
-			else if (object.name == "bullet") { object.size = { 8.0f, 8.0f }; }
 		}
+	}
+
+	// A bullet, a copy of the piece, in the game now.
+	Object& bullet(Game& game)
+	{
+		Object& made = copies::spawned(game, "bullet");
+		made.size = { 8.0f, 8.0f };
+		return made;
 	}
 }
 
@@ -91,34 +99,27 @@ TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only 
 	game.setCurrentState("playing");
 	measureInvaders(game);
 
-	Object& bullet = game.getObject("bullet");
 	Object& target = game.getObject("aliens.4.5"); // bottom row: nothing below it to run into first
+	Object& bullet = ::bullet(game);
 
 	// Just below the bottom row, in line with the fourth column, moving 90 px
 	// a frame - the bullet ends the frame 20 px above the alien, having crossed all of it.
 	bullet.position = { target.position.x + 21.0f, target.position.y + 70.0f };
 	bullet.velocity = { 0.0f, -90.0f };
-	bullet.isVisible = true;
-	bullet.collisionsOn = true;
-
-	const float bulletStartY = bullet.position.y;
 	game.updateObjects();
 
-	CHECK_FALSE(bullet.collisionsOn);
-	CHECK_FALSE(bullet.isVisible);
+	// The hit took the bullet away.
+	CHECK(copies::count(game, "bullet") == 0);
 	CHECK_FALSE(target.collisionsOn);
 	CHECK_FALSE(target.isVisible);
 
-	// Nothing else was affected, and the bullet stopped where it hit rather
-	// than carrying on through.
+	// Nothing else was affected.
 	int alive = 0;
 	for (const auto& object : game.getCurrentObjects())
 	{
 		if (object.groupName == "aliens" && object.collisionsOn) { ++alive; }
 	}
 	CHECK(alive == 54);
-	CHECK(bullet.position.y > target.position.y);
-	CHECK(bullet.position.y < bulletStartY);
 }
 
 TEST_CASE("the bullet also hits a cell in the middle of the block, not just the front row", "[swept_collision]")
@@ -127,21 +128,19 @@ TEST_CASE("the bullet also hits a cell in the middle of the block, not just the 
 	game.setCurrentState("playing");
 	measureInvaders(game);
 
-	Object& bullet = game.getObject("bullet");
 	Object& front = game.getObject("aliens.6.5");
 	Object& behind = game.getObject("aliens.6.4");
+	Object& bullet = ::bullet(game);
 
 	bullet.position = { front.position.x + 21.0f, front.position.y + 300.0f };
 	bullet.velocity = { 0.0f, -400.0f };
-	bullet.isVisible = true;
-	bullet.collisionsOn = true;
 
 	game.updateObjects();
 
 	// The nearest one along the path is the one that dies, not one further up.
 	CHECK_FALSE(front.collisionsOn);
 	CHECK(behind.collisionsOn);
-	CHECK_FALSE(bullet.collisionsOn);
+	CHECK(copies::count(game, "bullet") == 0);
 }
 
 TEST_CASE("the rest of the step is played after a bounce", "[swept_collision]")
@@ -188,62 +187,63 @@ TEST_CASE("a ball fast enough to pass the paddle in one step bounces off it inst
 	CHECK(ball.position.x > 130.0f);
 }
 
-TEST_CASE("a bullet waits unseen and still, flies at its own velocity, and can be fired again", "[swept_collision]")
+TEST_CASE("a bullet is a piece: fired, a copy leaves the ship at its own velocity, and once it is gone another can be fired", "[swept_collision]")
 {
 	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 	measureInvaders(game);
 
 	Object& player = game.getObject("player");
-	Object& bullet = game.getObject("bullet");
 	CommandExecutor executor(game);
 
-	// Not fired: hidden, and not moving even though it has a velocity.
-	REQUIRE(bullet.velocity.y == -12.0f);
-	const Vector2f waiting = bullet.position;
+	// Not fired: no bullet in the game.
 	game.updateObjects();
-	CHECK(bullet.position == waiting);
-	CHECK_FALSE(bullet.isVisible);
+	CHECK(copies::count(game, "bullet") == 0);
 
-	// Fired: placed at the ship, visible, moving at its own velocity.
+	// Fired: a copy at the ship, moving at the piece's own velocity.
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
-	CHECK(bullet.isVisible);
+	game.settleSpawns();
+	REQUIRE(copies::count(game, "bullet") == 1);
+	Object& bullet = game.getObject("bullet.1");
 	CHECK(bullet.collisionsOn);
+	CHECK(bullet.velocity.y == -12.0f);
 	CHECK(bullet.position.y == player.position.y);
-	const float launched = bullet.position.y;
-	game.updateObjects();
-	CHECK(bullet.position.y == launched - 12.0f);
 
-	// Off the top: put away, ready to fire again.
-	for (int frame = 0; frame < 200 && bullet.isVisible; ++frame)
+	// One at a time.
+	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
+	game.settleSpawns();
+	CHECK(copies::count(game, "bullet") == 1);
+
+	// Off the top: gone, and the gun is ready again.
+	for (int frame = 0; frame < 200 && copies::count(game, "bullet") > 0; ++frame)
 	{
 		game.updateObjects();
 	}
-	CHECK_FALSE(bullet.isVisible);
-	CHECK_FALSE(bullet.collisionsOn);
-
+	CHECK(copies::count(game, "bullet") == 0);
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
-	CHECK(bullet.isVisible);
-	CHECK(bullet.position.y == player.position.y);
+	game.settleSpawns();
+	CHECK(copies::count(game, "bullet") == 1);
+	CHECK(game.getObject("bullet.1").position.y == player.position.y);
 }
 
-TEST_CASE("a full reset puts away a bullet in flight and brings back a dead alien", "[swept_collision]")
+TEST_CASE("a full reset takes away a bullet in flight and brings back a dead alien", "[swept_collision]")
 {
 	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 
-	Object& bullet = game.getObject("bullet");
 	Object& alien = game.getObject("aliens.2.2");
 	CommandExecutor executor(game);
 
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
+	game.settleSpawns();
+	REQUIRE(copies::count(game, "bullet") == 1);
 	alien.isVisible = false;
 	alien.collisionsOn = false;
 
 	game.resetAll();
+	game.settleSpawns();
 
-	CHECK_FALSE(bullet.isVisible);
-	CHECK_FALSE(bullet.collisionsOn);
+	CHECK(copies::count(game, "bullet") == 0);
 	CHECK(alien.isVisible);
 	CHECK(alien.collisionsOn);
 }

@@ -9,10 +9,13 @@
 #include "load/check.h"
 #include "load/reading.h"
 
+#include <stdexcept>
+#include <string>
+
 namespace xge
 {
-	// <fire>: Sends a shot from where it is; refused when every shot is in
-	// flight.
+	// <fire>: Sends a copy of a piece from where it is; refused when its
+	// <most> are in flight.
 	static void readFire(const XmlNode& node, const std::string& where, RawCommand&)
 	{
 		requireAttribute(node, "object", where);
@@ -25,7 +28,16 @@ namespace xge
 
 	static void checkFire(const Command& command, const Checking& checking)
 	{
-		checkObject(checking, std::get<CmdFire>(command).projectileName, "<fire>");
+		const std::string& shot = std::get<CmdFire>(command).projectileName;
+		checkObject(checking, shot, "<fire>");
+		// What it sends is a copy of a piece, never an object already there.
+		for (const Object& object : checking.objects)
+		{
+			if (object.named(shot) && object.start.exists)
+			{
+				throw std::runtime_error(checking.where + ": <fire object=\"" + shot + "\" />: '" + object.name + "' is in the game from the start; <fire> sends a copy of a piece (an object of the top-level <objects>), so write the shot there, with a <most> for how many may fly at once");
+			}
+		}
 	}
 
 	static bool runFire(const Command& command, const Doer& doer, CommandExecutor& executor)
