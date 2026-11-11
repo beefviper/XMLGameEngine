@@ -2969,15 +2969,10 @@
     </xsl:if>
   </xsl:template>
 
-  <!-- A <show> (readShows): its object's name, or a <shows> set's names in
-       its place, each followed by ", ". -->
+  <!-- A <show> (readShows): its object's name, followed by ", ". -->
   <xsl:template match="show" mode="shown">
     <xsl:choose>
       <xsl:when test="@state" />
-      <xsl:when test="@set">
-        <xsl:variable name="set" select="@set" />
-        <xsl:apply-templates select="ancestor::states/shows[@name = $set][1]/show" mode="shown" />
-      </xsl:when>
       <xsl:otherwise>
         <xsl:call-template name="string">
           <xsl:with-param name="text" select="@object" />

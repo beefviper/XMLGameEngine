@@ -77,11 +77,6 @@
         <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
       </object>
     </objects>
-    <!-- what every end screen shows over the battle -->
-    <shows name="end">
-      <show object="timeup" />
-      <show object="again" />
-    </shows>
     <state name="title">
       <objects>
         <object name="title">
@@ -296,7 +291,8 @@
       </objects>
       <shows>
         <show state="playing" />
-        <show set="end" />
+        <show object="timeup" />
+        <show object="again" />
       </shows>
       <inputs>
         <input button="space"><reset /></input>

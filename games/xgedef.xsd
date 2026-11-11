@@ -2363,7 +2363,6 @@
        are drawn still underneath. One of the three. -->
   <xs:complexType name="showType">
     <xs:attribute name="object" type="xs:string" use="optional" />
-    <xs:attribute name="set" type="xs:string" use="optional" />
     <xs:attribute name="state" type="xs:string" use="optional" />
   </xs:complexType>
 
@@ -2752,20 +2751,6 @@
             <xs:sequence>
               <!-- the game's own objects, in play in every state that shows them -->
               <xs:element name="objects" type="objectsType" minOccurs="0" />
-              <!--
-                A named set of objects that states can share: a state's
-                <show set="name" /> shows them, in order, where it stands.
-                A set can take a set written before it. (Inputs and
-                conditions several states share come with from=.)
-              -->
-              <xs:element name="shows" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="show" type="showType" maxOccurs="unbounded" />
-                  </xs:sequence>
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                </xs:complexType>
-              </xs:element>
               <xs:element name="state" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:sequence>

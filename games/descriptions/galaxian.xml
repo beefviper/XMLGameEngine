@@ -272,15 +272,6 @@
         <position><x><centered /></x><y>440</y></position>
       </object>
     </objects>
-    <!-- what the three states that ask for initials show -->
-    <shows name="initials">
-      <show object="entry" />
-      <show object="entryscore" />
-      <show object="letter1" />
-      <show object="letter2" />
-      <show object="letter3" />
-      <show object="howto" />
-    </shows>
     <state name="title">
       <objects>
         <object name="title">
@@ -605,7 +596,12 @@
         </object>
       </objects>
       <shows>
-        <show set="initials" />
+        <show object="entry" />
+        <show object="entryscore" />
+        <show object="letter1" />
+        <show object="letter2" />
+        <show object="letter3" />
+        <show object="howto" />
       </shows>
       <inputs>
         <input><button>w</button><button>up</button><inc variable="entry.first" /></input>

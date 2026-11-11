@@ -418,22 +418,11 @@ TEST_CASE("named <keys> and <conditions> sets are gone: from= shares a state's k
 		"<conditions name=\"dead\"><condition object=\"man\" variable=\"x\"><atmost>0</atmost><pop /></condition></conditions>")));
 }
 
-TEST_CASE("a <shows> set is shared by states, can take an earlier set, and a state adds its own objects", "[shows]")
+TEST_CASE("named <shows> sets are gone: each state writes its own shows, and from= copies them", "[shows]")
 {
-	const std::string sets = "<shows name=\"hud\"><show object=\"score\" /></shows>"
-		"<shows name=\"field\"><show object=\"man\" /><show set=\"hud\" /></shows>";
 	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
-
-	Loaded loaded(gameXml(
-		box("man", 100, 100, 20, 20) + box("score", 0, 0, 20, 20) + box("paused", 50, 50, 20, 20),
-		"<state name=\"playing\"><shows><show set=\"field\" /></shows>" + inputs + "</state>"
-		"<state name=\"paused\"><shows><show object=\"paused\" /><show set=\"hud\" /></shows>" + inputs + "</state>"
-		, sets), XmlBackend::TinyXml2);
-
-	const auto& states = loaded.game.getStates();
-	CHECK(states.size() == 2);
-	CHECK(states.at(0).show == std::vector<std::string>{ "man", "score" });
-	CHECK(states.at(1).show == std::vector<std::string>{ "paused", "score" });
+	CHECK_THROWS(Loaded(gameXml(box("man", 100, 100, 20, 20),
+		"<state name=\"playing\"><shows><show object=\"man\" /></shows>" + inputs + "</state>", "<shows name=\"hud\"><show object=\"man\" /></shows>"), XmlBackend::TinyXml2));
 }
 
 TEST_CASE("mistakes in the new tags are turned away when the game loads, saying where", "[timers][facing][jump][keys][errors]")
@@ -471,13 +460,9 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 		plain, "is now <hop direction=...> with <seconds>");
 	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
 	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show set=\"nothing\" /></shows>" + inputs + "</state>",
-		"set=\"nothing\" names no <shows> set before it");
-	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show object=\"o\" set=\"o\" /></shows>" + inputs + "</state>",
-		"names an object=\"...\", a set=\"...\" or a state=\"...\", one of them");
-	fails(box("o", 0, 0, 1, 1), "<shows name=\"a\"><show set=\"b\" /></shows><shows name=\"b\"><show object=\"o\" /></shows>" + plain,
-		"set=\"b\" names no <shows> set before it");
-	fails(box("o", 0, 0, 1, 1), "<shows name=\"a\"><show object=\"o\" /></shows><shows name=\"a\"><show object=\"o\" /></shows>" + plain,
-		"two <shows> sets are called 'a'");
+		"<show set=...> is gone");
+	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show object=\"o\" state=\"playing\" /></shows>" + inputs + "</state>",
+		"names an object=\"...\" or a state=\"...\", one of them");
 }
 
 TEST_CASE("an object with several named sprites can <become> each of them, and a reset brings back the first", "[looks]")

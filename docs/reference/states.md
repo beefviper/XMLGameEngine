@@ -4,13 +4,13 @@ A **state** is a mode of the game. Every game names its four the same: `title`, 
 
 ## States
 
-`<states>` holds, in order, the game's own `<objects>` (in play the whole game, in each state that shows them), the shared [`<shows>` sets](#shared-sets), then the states. The first state in the file is where the game starts. `name` is required; `from` copies an earlier state. Children, in this order:
+`<states>` holds, in order, the game's own `<objects>` (in play the whole game, in each state that shows them), then the states. The first state in the file is where the game starts. `name` is required; `from` copies an earlier state. Children, in this order:
 
 | Element | What it does |
 |---|---|
 | `<objects>` | the state's own objects, in play whenever it is current, in every scene of it |
 | `<scenes>` | the places it is played in, one current at a time ([scenes](#scenes)) |
-| `<shows>` | `<show object="best" />` runs another's object as its own; `<show set="end" />` a [shared set](#shared-sets); `<show state="playing" />` draws that state's objects **still** underneath |
+| `<shows>` | `<show object="best" />` runs another's object as its own; `<show state="playing" />` draws that state's objects **still** underneath |
 | `<music sound>` | a looping sound plays while it is current (restarting after a pause); one that does not loop plays as it begins |
 | `<inputs>` | the keys ([input](input.md)). Needed unless the state is `from=` another |
 | `<conditions>` | tests checked every frame ([conditions](#conditions)) |
@@ -88,9 +88,9 @@ One scene is current, and only its objects are in play, beside the state's own.
 - **`from="room1"`** copies a scene (objects, variables, ways, conditions, timers). What it writes is added; one **of the same name** replaces the copied one in its place. A copied condition is read in the new scene, so its plain names are that scene's.
 - **What a condition counts.** A class, or a name every scene shares (`robots`), counts what is in play: the state's, the current scene's and the game's. A path (`room2.robots`) counts that scene's, wherever the game is.
 
-## Shared sets
+## Shared shows, keys and conditions
 
-At the top of `<states>`, a named `<shows name>` set holds shows several states share, taken with `<show set="name" />`; a set can take an earlier set. Keys and conditions several states share come with [`from=`](#a-state-from-another).
+What several states share comes with [`from=`](#a-state-from-another); each state writes its own `<show>`s.
 
 ## Conditions
 

@@ -2773,40 +2773,21 @@ namespace xge
 			}
 		}
 
-		using ShowSets = std::map<std::string, std::vector<std::string>>;
-
-		// The <show>s under a node (a state's <shows>, or a <shows> set), in
-		// order: <show object="..."> names one object (or group), <show
-		// set="..."> takes a named <shows> set's objects in its place, and, in
-		// a state's own (`states` not null), <show state="..."> a state drawn
-		// still underneath.
-		void readShows(const XmlNode& node, const std::string& where, const ShowSets& showSets, std::vector<std::string>& out,
-			std::vector<std::string>* states = nullptr)
+		// A state's <show>s, in order: <show object="..."> names one object (or
+		// group), <show state="..."> a state drawn still underneath.
+		void readShows(const XmlNode& node, const std::string& where, std::vector<std::string>& out, std::vector<std::string>& states)
 		{
 			for (std::unique_ptr<XmlNode> show = node.getFirstChild(); show != nullptr; show = show->getNextSibling())
 			{
 				const std::string object = show->getAttribute("object");
-				const std::string setName = show->getAttribute("set");
 				const std::string stateName = show->getAttribute("state");
-				if (!stateName.empty())
+				if (!show->getAttribute("set").empty())
 				{
-					if (!states) { fail(where, "<show state=\"" + stateName + "\" /> goes in a state's own <shows>, not in a set"); }
-					if (!object.empty() || !setName.empty()) { fail(where, "a <show> names an object=\"...\", a set=\"...\" or a state=\"...\", one of them"); }
-					states->push_back(stateName);
-					continue;
+					fail(where, "<show set=...> is gone; write each <show> in the state (a state from= another takes its shows)");
 				}
-				if (object.empty() == setName.empty())
-				{
-					fail(where, "a <show> names an object=\"...\", a set=\"...\" or a state=\"...\", one of them");
-				}
-				if (!object.empty())
-				{
-					out.push_back(object);
-					continue;
-				}
-				const auto set = showSets.find(setName);
-				if (set == showSets.end()) { fail(where, "set=\"" + setName + "\" names no <shows> set before it"); }
-				out.insert(out.end(), set->second.begin(), set->second.end());
+				if (object.empty() == stateName.empty()) { fail(where, "a <show> names an object=\"...\" or a state=\"...\", one of them"); }
+				if (!stateName.empty()) { states.push_back(stateName); }
+				else { out.push_back(object); }
 			}
 		}
 
@@ -3141,7 +3122,7 @@ namespace xge
 		// it is from= (`lists`, each state so far laid out), changed by its own
 		// of the same names, then its own and the top-level <objects> pieces it takes.
 		RawState readState(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists,
-			const ShowSets& showSets, const Kit& kit, const std::set<std::string>& gameNames)
+			const Kit& kit, const std::set<std::string>& gameNames)
 		{
 			RawState rawState{};
 			rawState.name = requireAttribute(state, "name", "<state>");
@@ -3203,7 +3184,7 @@ namespace xge
 			// taken whole, and states drawn still underneath
 			if (std::unique_ptr<XmlNode> shows = findChild(&state, "shows"))
 			{
-				readShows(*shows, where + " > <shows>", showSets, rawState.show, &rawState.showStates);
+				readShows(*shows, where + " > <shows>", rawState.show, rawState.showStates);
 			}
 
 			// <music sound="..." /> (optional)
@@ -3530,19 +3511,10 @@ namespace xge
 			}
 		}
 
-		// load states: the named <shows> sets first, so any state can use any
-		// of them (a set can take a set written before it)
-		ShowSets showSets;
+		// load states
 		for (std::unique_ptr<XmlNode> node = states->getFirstChild(); node != nullptr; node = node->getNextSibling())
 		{
-			if (node->getName() == "shows")
-			{
-				const std::string name = requireAttribute(*node, "name", "<states> > <shows>");
-				if (showSets.count(name)) { fail("<states>", "two <shows> sets are called '" + name + "'"); }
-				std::vector<std::string> objects;
-				readShows(*node, "<shows name=\"" + name + "\">", showSets, objects);
-				showSets[name] = std::move(objects);
-			}
+			if (node->getName() == "shows") { fail("<states> > <shows name>", "named <shows> sets are gone; write each <show> in the state that shows it (a state from= another takes its shows)"); }
 		}
 
 		std::map<std::string, std::vector<ElementPtr>> stateLists;
@@ -3554,7 +3526,7 @@ namespace xge
 			{
 				fail("<states>", "has two states called '" + name + "'");
 			}
-			rawStates.push_back(readState(*state, stateLists, showSets, kit, gameNames));
+			rawStates.push_back(readState(*state, stateLists, kit, gameNames));
 		}
 	}
 
