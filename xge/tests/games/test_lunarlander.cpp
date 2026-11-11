@@ -401,7 +401,7 @@ TEST_CASE("the last lander down with no fuel ends the game, and Space starts it 
 	CHECK(moon.game.isShown(moon.game.getObject("gameover.message")));
 
 	moon.game.resetAll();
-	CHECK(moon.state() == "mainmenu");
+	CHECK(moon.state() == "title");
 	CHECK(moon.fuel() == 1000.0f);
 	CHECK(moon.score() == 0.0f);
 	CHECK(moon.lander().isVisible);

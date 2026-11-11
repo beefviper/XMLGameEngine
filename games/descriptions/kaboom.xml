@@ -134,7 +134,7 @@
     </object>
   </objects>
   <states>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>KABOOM!</content></text></sprite>

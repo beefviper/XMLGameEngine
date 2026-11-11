@@ -396,7 +396,7 @@ TEST_CASE("space starts a new game from game over with everything back", "[astro
 
 	table.executor.executeInput(Command{ CmdReset{} }, true);
 
-	CHECK(table.game.getCurrentState().name == "mainmenu");
+	CHECK(table.game.getCurrentState().name == "title");
 	CHECK(table.score() == 0.0f);
 	CHECK(table.lives() == 4.0f);
 	CHECK(table.game.getObject("score").picture.text == "0");
@@ -414,7 +414,7 @@ TEST_CASE("the keys play the game through the engine", "[astrosmash][engine_inpu
 	Object& ship = game.getObject("ship");
 	Object& shot = game.getObject("shot");
 
-	CHECK(game.getCurrentState().name == "mainmenu");
+	CHECK(game.getCurrentState().name == "title");
 	engine.handleKeyPressed(KeyCode::Space); // space starts the game
 	REQUIRE(game.getCurrentState().name == "playing");
 	engine.handleKeyReleased(KeyCode::Space);
@@ -477,7 +477,7 @@ TEST_CASE("a crude player who shoots the lowest rock in the sights scores", "[as
 TEST_CASE("each state has its own objects: the title, the sky, the signs", "[astrosmash][states]")
 {
 	Game game{ "descriptions/astrosmash.xml" };
-	game.setCurrentState("mainmenu");
+	game.setCurrentState("title");
 	CHECK(game.isShown(game.getObject("help")));
 	CHECK_FALSE(game.isShown(game.getObject("ship")));
 

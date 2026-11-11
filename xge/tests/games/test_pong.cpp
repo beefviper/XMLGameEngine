@@ -103,8 +103,8 @@ namespace
 TEST_CASE("each state of Pong has the objects it shows", "[pong][scenes]")
 {
 	Pong pong;
-	REQUIRE(pong.state() == "mainmenu");
-	CHECK(pong.object("title").name == "mainmenu.title");
+	REQUIRE(pong.state() == "title");
+	CHECK(pong.object("title").name == "title.title");
 	CHECK(pong.object("ball").name == "playing.ball");
 	CHECK(pong.object("paused").name == "paused.paused");
 	CHECK(pong.object("paddle2").name == "playing.paddle2"); // a member of the paddles
@@ -163,7 +163,7 @@ TEST_CASE("at eleven, game over is written over the game still, and Space starts
 	CHECK(pong.still("score2"));
 
 	pong.tap(KeyCode::Space);
-	CHECK(pong.state() == "mainmenu");
+	CHECK(pong.state() == "title");
 	CHECK(pong.object("paddle2").variable.at("score") == 0);
 	CHECK_FALSE(pong.still("ball"));
 }
@@ -301,7 +301,7 @@ TEST_CASE("Pong's computer choice is kept from one game to the next", "[pong][co
 	pong.frames(2);
 	REQUIRE(pong.state() == "gameover");
 	pong.tap(KeyCode::Space);
-	CHECK(pong.state() == "mainmenu");
+	CHECK(pong.state() == "title");
 	CHECK(pong.object("computer").variable.at("level") == 2);
 	CHECK(pong.object("computer").lookName() == "smart");
 }

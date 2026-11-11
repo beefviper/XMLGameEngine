@@ -64,7 +64,7 @@
         <position><x><centered /></x><y>window.height.center + 60</y></position>
       </object>
     </objects>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>TENNIS</content></text></sprite>

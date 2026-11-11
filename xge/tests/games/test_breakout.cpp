@@ -211,9 +211,9 @@ TEST_CASE("clearing the first wall builds a second, and clearing that wins", "[b
 TEST_CASE("each state of Breakout has its own objects, and paused and the endings draw the game still", "[breakout][scenes][shows]")
 {
 	Game game{ "descriptions/breakout.xml" };
-	game.setCurrentState("mainmenu");
+	game.setCurrentState("title");
 	CHECK(game.getObject("ball").name == "playing.ball");
-	CHECK(game.getObject("title").name == "mainmenu.title");
+	CHECK(game.getObject("title").name == "title.title");
 	CHECK(game.getObject("again").name == "again"); // the game's own: both endings show it
 	CHECK(game.isShown(game.getObject("title")));
 	CHECK_FALSE(game.isShown(game.getObject("ball")));

@@ -64,7 +64,7 @@ TEST_CASE("a held key stops driving the player while a state without it is up, a
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.getObject("player");
 
-	tap(engine, KeyCode::Space); // mainmenu -> playing
+	tap(engine, KeyCode::Space); // title -> playing
 
 	engine.handleKeyPressed(KeyCode::Left);
 	REQUIRE(player.velocity.x == -kStep);
@@ -87,7 +87,7 @@ TEST_CASE("a key pressed in a state that does not bind it starts driving the pla
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.getObject("player");
 
-	tap(engine, KeyCode::Space); // mainmenu -> playing
+	tap(engine, KeyCode::Space); // title -> playing
 	tap(engine, KeyCode::Space); // pause
 
 	engine.handleKeyPressed(KeyCode::Left); // no Left binding in "paused"
@@ -106,7 +106,7 @@ TEST_CASE("releasing a key while paused leaves the player stopped after unpausin
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.getObject("player");
 
-	tap(engine, KeyCode::Space); // mainmenu -> playing
+	tap(engine, KeyCode::Space); // title -> playing
 
 	engine.handleKeyPressed(KeyCode::Left);
 	tap(engine, KeyCode::Space); // pause
@@ -122,7 +122,7 @@ TEST_CASE("a key pressed and released while paused never moves the player", "[en
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.getObject("player");
 
-	tap(engine, KeyCode::Space); // mainmenu -> playing
+	tap(engine, KeyCode::Space); // title -> playing
 	tap(engine, KeyCode::Space); // pause
 
 	tap(engine, KeyCode::Left);
@@ -136,8 +136,8 @@ TEST_CASE("holding a state-changing key through the change does not trigger it a
 	Game game{ "descriptions/breakout.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
 
-	// Space is bound to a state change in mainmenu, playing and paused. Held
-	// down, it must take mainmenu to playing once, not straight on to paused.
+	// Space is bound to a state change in title, playing and paused. Held
+	// down, it must take title to playing once, not straight on to paused.
 	engine.handleKeyPressed(KeyCode::Space);
 	CHECK(game.getCurrentState().name == "playing");
 
@@ -151,7 +151,7 @@ TEST_CASE("an ordinary press and release in one state is unchanged", "[engine_in
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.getObject("player");
 
-	tap(engine, KeyCode::Space); // mainmenu -> playing
+	tap(engine, KeyCode::Space); // title -> playing
 
 	engine.handleKeyPressed(KeyCode::Right);
 	CHECK(player.velocity.x == kStep);
@@ -165,7 +165,7 @@ TEST_CASE("a held fire key does not shoot again when its state returns", "[engin
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& bullet = game.getObject("bullet");
 
-	tap(engine, KeyCode::Space); // mainmenu -> playing
+	tap(engine, KeyCode::Space); // title -> playing
 
 	engine.handleKeyPressed(KeyCode::Space); // fire
 	REQUIRE(bullet.collisionsOn);

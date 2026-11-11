@@ -358,7 +358,7 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
-	CHECK(game.getCurrentState().name == "mainmenu");
+	CHECK(game.getCurrentState().name == "title");
 	CHECK(game.currentScene("playing") == "playing.wave1");
 	CHECK(game.getObject("bucket").variable["buckets"] == 3);
 	CHECK(game.getObject("bucket").variable["score"] == 0);

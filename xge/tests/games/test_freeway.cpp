@@ -310,7 +310,7 @@ TEST_CASE("space starts a new game from the end screen, with both scores and the
 
 	table.executor.executeInput(Command{ CmdReset{} }, true);
 
-	CHECK(table.game.getCurrentState().name == "mainmenu");
+	CHECK(table.game.getCurrentState().name == "title");
 	CHECK(table.score(1) == 0.0f);
 	CHECK(table.score(2) == 0.0f);
 	CHECK(table.game.getObject("score1").picture.text == "0");
@@ -325,7 +325,7 @@ TEST_CASE("the keys drive the right chicken through the whole game", "[freeway][
 	measure(game);
 	Engine engine(game, std::make_unique<NullWindow>());
 
-	engine.handleKeyPressed(KeyCode::Space); // mainmenu -> playing
+	engine.handleKeyPressed(KeyCode::Space); // title -> playing
 	REQUIRE(game.getCurrentState().name == "playing");
 	for (auto& object : game.getCurrentObjects())
 	{
@@ -389,7 +389,7 @@ TEST_CASE("a chicken that just keeps hopping up is hit by the traffic", "[freewa
 TEST_CASE("each state has its own objects: the title, the road, the signs", "[freeway][states]")
 {
 	Game game{ "descriptions/freeway.xml" };
-	game.setCurrentState("mainmenu");
+	game.setCurrentState("title");
 	CHECK(game.isShown(game.getObject("help.2")));
 	CHECK_FALSE(game.isShown(game.getObject("chicken1")));
 

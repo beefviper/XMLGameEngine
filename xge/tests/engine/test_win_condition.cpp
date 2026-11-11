@@ -115,7 +115,7 @@ TEST_CASE("reset() from the win screen starts a fresh game", "[win_condition]")
 	CommandExecutor executor(game);
 	executor.executeInput(Command{ CmdReset{} }, true);
 
-	CHECK(game.getCurrentState().name == "mainmenu");
+	CHECK(game.getCurrentState().name == "title");
 	CHECK(aliensLeft(game) == 55);
 
 	// ...and playing again does not end at once.

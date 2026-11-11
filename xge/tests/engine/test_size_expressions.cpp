@@ -157,7 +157,7 @@ namespace
         <position><x>window.width.center - logo.radius</x><y>window.height.center - logo.radius</y></position>
       </object>
     </objects>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title"><sprite><text><content>PONG</content><size>128</size></text></sprite><position><x>0</x><y>0</y></position></object>
       </objects>
@@ -229,7 +229,7 @@ TEST_CASE("an object can be placed by another object's size", "[size_expressions
 	// The title is a text, so the logo has to wait for it to be measured.
 	CHECK(logo.positionUsesSize);
 	CHECK_FALSE(logo.positionResolved);
-	CHECK(logo.sizeDependencies == std::vector<std::string>{ "mainmenu.title" }); // the title is the main menu's
+	CHECK(logo.sizeDependencies == std::vector<std::string>{ "title.title" }); // the title is the main menu's
 
 	measure(title, 600.0f, 200.0f);
 	game.resolveSizeDependentPositions();

@@ -117,7 +117,7 @@ namespace
 TEST_CASE("frostbite.xml loads a shore, four rows of white ice, a hidden igloo and door, and Bailey", "[frostbite]")
 {
 	Frostbite play;
-	CHECK(play.state() == "mainmenu");
+	CHECK(play.state() == "title");
 
 	for (const char* row : { "row1", "row2", "row3", "row4" })
 	{
@@ -352,7 +352,7 @@ TEST_CASE("no lives left is game over, and Space starts over with the ice white 
 	CHECK(play.state() == "gameover");
 
 	play.tap(KeyCode::Space);
-	CHECK(play.state() == "mainmenu");
+	CHECK(play.state() == "title");
 	CHECK(play.rowIs("row1", "white"));
 	CHECK(play.visible("igloo") == 0);
 	CHECK(play.variable("lives") == 4);
@@ -390,7 +390,7 @@ TEST_CASE("each state owns what it draws, and frozen draws the ice still under i
 {
 	Frostbite play;
 	CHECK(play.bailey().ownerState == "playing");
-	CHECK(play.game.getObject("title").ownerState == "mainmenu");
+	CHECK(play.game.getObject("title").ownerState == "title");
 	CHECK(play.game.getObject("youwin.again").ownerState == "youwin");
 	CHECK(play.game.isShown(play.game.getObject("title")));
 	CHECK_FALSE(play.game.isShown(play.bailey()));

@@ -135,7 +135,7 @@ namespace
 TEST_CASE("donkeykong.xml loads, and Jumpman stands on the floor", "[donkeykong]")
 {
 	DonkeyKong play;
-	CHECK(play.state() == "mainmenu");
+	CHECK(play.state() == "title");
 	play.start();
 
 	play.frames(60);
@@ -355,7 +355,7 @@ TEST_CASE("saving Pauline scores the bonus, starts the climb again with Kong qui
 
 	// Space plays again from the start.
 	play.tap(KeyCode::Space);
-	CHECK(play.state() == "mainmenu");
+	CHECK(play.state() == "title");
 	CHECK(play.variable("rescues") == 0);
 	CHECK(play.kong().variable.at("wait") == Approx(2.8f));
 }
@@ -393,7 +393,7 @@ TEST_CASE("each state owns what it draws, and game over draws the girders still 
 {
 	DonkeyKong play;
 	CHECK(play.man().ownerState == "playing");
-	CHECK(play.game.getObject("title").ownerState == "mainmenu");
+	CHECK(play.game.getObject("title").ownerState == "title");
 	CHECK(play.game.getObject("again").ownerState.empty());
 	CHECK(play.game.isShown(play.game.getObject("title")));
 	CHECK_FALSE(play.game.isShown(play.man()));

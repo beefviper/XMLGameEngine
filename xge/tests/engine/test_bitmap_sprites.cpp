@@ -1078,7 +1078,7 @@ TEST_CASE("each state of Space Invaders has its own objects, and paused and the 
 	CHECK(game.isShown(game.getObject("aliens.1.1")));
 	CHECK_FALSE(game.isShown(game.getObject("title")));
 
-	game.setCurrentState("mainmenu");
+	game.setCurrentState("title");
 	CHECK(game.isShown(game.getObject("title")));
 	CHECK(game.isShown(game.getObject("player")));
 	CHECK_FALSE(game.isShown(game.getObject("aliens.1.1")));

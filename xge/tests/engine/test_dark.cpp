@@ -299,7 +299,7 @@ TEST_CASE("hauntedhouse.xml: the whole urn brought back to the door wins, and no
 	play.frames(2);
 	CHECK(play.state() == "won");
 	play.tap(KeyCode::Space);
-	CHECK(play.state() == "mainmenu");
+	CHECK(play.state() == "title");
 
 	House again;
 	again.game.addTo({ "player", "lives" }, -9.0f);

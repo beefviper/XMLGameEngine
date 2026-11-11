@@ -133,7 +133,7 @@
         <position><x><centered /></x><y>2</y></position>
       </object>
     </objects>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite>

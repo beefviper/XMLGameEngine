@@ -90,7 +90,7 @@
     </object>
   </objects>
   <states>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>YARS' REVENGE</content></text></sprite>

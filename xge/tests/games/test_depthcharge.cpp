@@ -182,7 +182,7 @@ TEST_CASE("the hunt ends when the clock runs out or the ships are gone, and Spac
 	CHECK(hunt.game.isStill(hunt.get("ship")));
 
 	hunt.tap(KeyCode::Space);
-	CHECK(hunt.state() == "mainmenu");
+	CHECK(hunt.state() == "title");
 	CHECK(hunt.status("ships") == 3.0f);
 	CHECK(hunt.status("time") == 90.0f);
 

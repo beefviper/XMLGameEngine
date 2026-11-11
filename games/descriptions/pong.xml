@@ -64,7 +64,7 @@
         </variables>
       </object>
     </objects>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>PONG</content></text></sprite>

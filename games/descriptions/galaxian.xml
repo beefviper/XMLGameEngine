@@ -281,7 +281,7 @@
       <show object="letter3" />
       <show object="howto" />
     </shows>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>GALAXIAN</content></text></sprite>

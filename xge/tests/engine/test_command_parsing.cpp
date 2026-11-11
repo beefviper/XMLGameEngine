@@ -77,7 +77,7 @@ TEST_CASE("a realistic gameover-screen list of commands comes out in order", "[c
 {
 	// What games/descriptions/pong.xml's gameover state used to do on spacebar, before it
 	// was simplified to the single global <reset />.
-	const auto commands = makeCommands({ resetOf("paddle1"), resetOf("paddle2"), pushOf("mainmenu") }, evaluatePlainNumber);
+	const auto commands = makeCommands({ resetOf("paddle1"), resetOf("paddle2"), pushOf("title") }, evaluatePlainNumber);
 
 	REQUIRE(commands.size() == 3);
 
@@ -88,7 +88,7 @@ TEST_CASE("a realistic gameover-screen list of commands comes out in order", "[c
 	CHECK(std::get<CmdResetObject>(commands[1]).target == "paddle2");
 
 	REQUIRE(std::holds_alternative<CmdPushState>(commands[2]));
-	CHECK(std::get<CmdPushState>(commands[2]).name == "mainmenu");
+	CHECK(std::get<CmdPushState>(commands[2]).name == "title");
 }
 
 TEST_CASE("an unknown command tag is an error that names it", "[command_parsing]")

@@ -975,7 +975,7 @@ TEST_CASE("three ships and then it is game over; space plays again from the star
 
 	// Space starts it all over: every rock, shot, score and ship back.
 	field.executor.executeInput(Command{ CmdReset{} }, true);
-	CHECK(field.state() == "mainmenu");
+	CHECK(field.state() == "title");
 	CHECK(field.lives() == 3.0f);
 	CHECK(field.score() == 0.0f);
 	CHECK(field.inPlay("bigrocks") == 4);
@@ -1042,7 +1042,7 @@ TEST_CASE("each state owns what it draws, and game over draws the field still un
 	Field field;
 	CHECK(field.ship().ownerState == "playing");
 	CHECK(field.group("bigrocks")[0]->ownerState == "playing");
-	CHECK(field.named("title").ownerState == "mainmenu");
+	CHECK(field.named("title").ownerState == "title");
 	CHECK(field.named("again").ownerState == "gameover");
 	CHECK(field.named("best").ownerState.empty());
 	CHECK_FALSE(field.game.isShown(field.named("title")));
@@ -1076,7 +1076,7 @@ TEST_CASE("playing again puts everything back: rocks, shots, score and ships", "
 	CHECK(field.lives() == 3.0f);
 	CHECK(field.ship().heading == 0.0f);
 	CHECK(field.ship().turnedDegrees == 0);
-	CHECK(field.state() == "mainmenu");
+	CHECK(field.state() == "title");
 }
 
 // ------------------------------------------------------------ the saucer, hyperspace, extra ships

@@ -49,7 +49,7 @@
     <style name="hud"><size>36</size><color>color.yellow</color></style>
   </styles>
   <states>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>FREEWAY</content></text></sprite>

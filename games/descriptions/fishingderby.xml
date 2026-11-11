@@ -62,7 +62,7 @@
     </style>
   </styles>
   <states>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>FISHING DERBY</content></text></sprite>

@@ -54,7 +54,7 @@
     <style name="hud"><size>30</size></style>
   </styles>
   <states>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>FROGGER</content></text></sprite>

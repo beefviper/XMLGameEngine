@@ -53,7 +53,7 @@
         <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
       </object>
     </objects>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>BREAKOUT</content></text></sprite>

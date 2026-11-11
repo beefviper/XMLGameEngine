@@ -188,7 +188,7 @@ TEST_CASE("a held hop key hops once, and a state change never repeats it", "[fro
 	Object& frog = game.getObject("frog");
 	const float startY = frog.position.y;
 
-	engine.handleKeyPressed(KeyCode::Space); // mainmenu -> playing
+	engine.handleKeyPressed(KeyCode::Space); // title -> playing
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	engine.handleKeyPressed(KeyCode::Up);
@@ -394,7 +394,7 @@ TEST_CASE("running out of lives is game over, and space starts again", "[frogger
 	CHECK(table.game.getCurrentState().name == "gameover");
 
 	table.executor.executeInput(Command{ CmdReset{} }, true);
-	CHECK(table.game.getCurrentState().name == "mainmenu");
+	CHECK(table.game.getCurrentState().name == "title");
 	CHECK(table.lives() == 3.0f);
 	CHECK(table.score() == 0.0f);
 }
@@ -500,7 +500,7 @@ TEST_CASE("an object only wraps once it has gone right off the screen", "[frogge
 TEST_CASE("each state has its own objects: the title, the board, the signs", "[frogger][states]")
 {
 	Game game{ "descriptions/frogger.xml" };
-	game.setCurrentState("mainmenu");
+	game.setCurrentState("title");
 	CHECK(game.isShown(game.getObject("title")));
 	CHECK_FALSE(game.isShown(game.getObject("frog")));
 	CHECK_FALSE(game.isStill(game.getObject("frog")));

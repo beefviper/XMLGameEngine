@@ -188,7 +188,7 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 
 		// Space starts a new game from the menu with the scores back at 0.
 		table.executor.executeInput(Command{ CmdReset{} }, true);
-		CHECK(table.game.getCurrentState().name == "mainmenu");
+		CHECK(table.game.getCurrentState().name == "title");
 		CHECK(table.score(2) == 0.0f);
 		CHECK(table.game.getObject("wins.winner").lookName() == "draw");
 		CHECK(table.game.getObject("score2").picture.text == "0");
@@ -252,7 +252,7 @@ TEST_CASE("the debris loops round without losing its spacing", "[spacerace][wrap
 TEST_CASE("each state has its own objects: the title, the race, the signs", "[spacerace][states]")
 {
 	Game game{ "descriptions/spacerace.xml" };
-	game.setCurrentState("mainmenu");
+	game.setCurrentState("title");
 	CHECK(game.isShown(game.getObject("title")));
 	CHECK_FALSE(game.isShown(game.getObject("rocket1")));
 

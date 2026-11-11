@@ -238,7 +238,7 @@ namespace invaders_fixture
         </collisions>
       </object>
     </objects>
-    <state name="mainmenu">
+    <state name="title">
       <shows>
         <show object="title" />
         <show object="player" />

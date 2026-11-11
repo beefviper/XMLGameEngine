@@ -377,7 +377,7 @@ TEST_CASE("galaxian.xml loads 46 aliens in six rows, a ship and six paths", "[ga
 {
 	Play play("descriptions/galaxian.xml");
 
-	CHECK(play.state() == "mainmenu");
+	CHECK(play.state() == "title");
 	CHECK(play.count([](const Object& object) { return object.isVisible; }) == 46);
 	CHECK(play.game.getPaths().size() == 6);
 	CHECK(play.object("ship").variable["lives"] == 3.0f);
@@ -568,7 +568,7 @@ TEST_CASE("the fleet is the playing state's scene, and the ship and its shot are
 	CHECK(play.object("blues2.5.1").name == "playing.fleet.blues2.5.1");
 	CHECK(play.object("ship").name == "playing.ship");
 	CHECK(play.object("shot").name == "playing.shot");
-	CHECK(play.object("title").name == "mainmenu.title");
+	CHECK(play.object("title").name == "title.title");
 	CHECK_FALSE(play.game.isShown(play.object("ship")));
 	play.tap(KeyCode::Space);
 	CHECK(play.game.isShown(play.object("ship")));
@@ -619,7 +619,7 @@ TEST_CASE("the best score follows the score up, and a new game keeps it", "[gala
 	REQUIRE(play.state() == "gameover");
 	CHECK(play.game.isStill(best));
 	play.tap(KeyCode::Space);
-	REQUIRE(play.state() == "mainmenu");
+	REQUIRE(play.state() == "title");
 	CHECK(ship.variable.at("score") == 0.0f);
 	CHECK(best.variable.at("score") == 240.0f);
 	CHECK(best.picture.text == "240");
@@ -672,7 +672,7 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 	play.tap(KeyCode::Space);
 
 	// Ranked, and a new game: the title shows it at the top.
-	REQUIRE(play.state() == "mainmenu");
+	REQUIRE(play.state() == "title");
 	CHECK(first.picture.text == "ZBA 240");
 	CHECK(play.object("table.2").picture.text == "AAA 0");
 	CHECK(play.object("letter1").picture.text == "A"); // the entry starts again
@@ -687,7 +687,7 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 	play.tap(KeyCode::Space);
 	play.tap(KeyCode::Space);
 	play.tap(KeyCode::Space);
-	REQUIRE(play.state() == "mainmenu");
+	REQUIRE(play.state() == "title");
 	CHECK(first.picture.text == "ZAA 300");
 	CHECK(play.object("table.2").picture.text == "ZBA 240");
 	CHECK(play.object("table.3").picture.text == "AAA 100");
@@ -794,7 +794,7 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	play.frames(1);
 	REQUIRE(play.state() == "gameover");
 	play.tap(KeyCode::Space);
-	CHECK(play.state() == "mainmenu");
+	CHECK(play.state() == "title");
 	CHECK(play.game.playerCount() == 0);
 }
 
@@ -817,7 +817,7 @@ TEST_CASE("one player: <pass /> does nothing and <out /> lets what follows run",
 	play.frames(1);
 	REQUIRE(play.state() == "gameover");
 	play.tap(KeyCode::Space);
-	CHECK(play.state() == "mainmenu");
+	CHECK(play.state() == "title");
 }
 
 TEST_CASE("left on the title, Galaxian plays its demo until a key is pressed", "[galaxian][demo]")
@@ -830,7 +830,7 @@ TEST_CASE("left on the title, Galaxian plays its demo until a key is pressed", "
 	CHECK_FALSE(play.engine.isPlayingDemo());
 	play.frames(2); // ten seconds on the title
 	REQUIRE(play.engine.isPlayingDemo());
-	CHECK(play.state() == "mainmenu"); // a new game, from the start
+	CHECK(play.state() == "title"); // a new game, from the start
 	CHECK(play.object("best").variable.at("score") == 70.0f); // kept
 
 	// The recording presses Space, and then plays.
@@ -846,7 +846,7 @@ TEST_CASE("left on the title, Galaxian plays its demo until a key is pressed", "
 	play.typed = { { KeyCode::Num2, true }, { KeyCode::Num2, false } };
 	play.frames(1);
 	CHECK_FALSE(play.engine.isPlayingDemo());
-	CHECK(play.state() == "mainmenu");
+	CHECK(play.state() == "title");
 	CHECK(play.game.playerCount() == 0); // the 2 did not start a game
 	CHECK(play.object("best").variable.at("score") == 70.0f);
 	CHECK(play.object("best").picture.text == "70");
@@ -866,7 +866,7 @@ TEST_CASE("the demo plays to its end and the title comes back", "[galaxian][demo
 	CHECK(play.engine.isPlayingDemo());
 	play.frames(1);
 	CHECK_FALSE(play.engine.isPlayingDemo());
-	CHECK(play.state() == "mainmenu");
+	CHECK(play.state() == "title");
 	CHECK(play.object("ship").variable.at("score") == 0.0f);
 }
 
