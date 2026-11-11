@@ -94,10 +94,10 @@ Each row is one concept done more than one way. Counts are games using each form
 | 7 | The middle of the window | `<centered />` (433 uses), `<centered>window.height.center + 70</centered>` (289 of the 297 with content name the window's own middle), `window.width.center - title.width / 2` by hand (4 games), a `<formula>` (Pong) | `<centered />` and `<centered>` holding only the offset | R7, done |
 | 8 | Names of the window | `window.right`, `window.bottom`, `window.width.center`, `window.height.center`; `window.width` is not a name | `window.width`, `window.height`, `window.middle.x`/`.y` or the author's choice; one scheme | R7, done |
 | 9 | Arithmetic | Text and `<formula>` both do `+ - * /` (about 1,170 texts in all 58 games calculate) | Tags only: a text is one number or one name (the author's call) | [R12](#r12-no-arithmetic-in-text) |
-| 10 | Where bitmaps live | `<pictures>` with `<bitmap from>` (36 games); inline `<bitmap>` rows in a sprite (14 games, 65 bitmaps) | `<pictures>` whenever a bitmap is used twice or is more than a few rows | [R8](#r8-small-sweeps) |
-| 11 | All of several tests | Nested conditions (everywhere); `<all>` inside `<any>` (Tennis only, 3 uses) | Decide whether Tennis can nest; if so remove `<all>` | [R8](#r8-small-sweeps) |
+| 10 | Where bitmaps live | `<pictures>` with `<bitmap from>` (36 games); inline `<bitmap>` rows in a sprite (14 games, 65 bitmaps) | `<pictures>` whenever a bitmap is used twice or is more than a few rows | R8, done |
+| 11 | All of several tests | Nested conditions (everywhere); `<all>` inside `<any>` (Tennis only, 3 uses) | Decide whether Tennis can nest; if so remove `<all>` | R8, done |
 | 12 | A speed test on a touch | `<slower>` (Lunar Lander), `<faster>` (no game): a second comparison vocabulary beside `<above>`/`<below>`/`<atleast>`/`<atmost>` | A rule's `<condition variable="speed"><below>` | done (R1) |
-| 13 | Shared shows | `<shows name>` sets (Air-Sea Battle, Galaxian). The matching `<keys>` and `<conditions>` sets were removed as "state `from=` covers them" | Remove if `from=` covers these two as well | [R8](#r8-small-sweeps) |
+| 13 | Shared shows | `<shows name>` sets (Air-Sea Battle, Galaxian). The matching `<keys>` and `<conditions>` sets were removed as "state `from=` covers them" | Remove if `from=` covers these two as well | R8, done |
 | 14 | Pause, title and game-over boilerplate | 57 `paused` states, 835 lines, 18 variants that differ by accident (which keys, whether the pad's Start is bound, the colour). Pad Start is bound in 24 games | One spelling, copied exactly; a test that holds it | R9, done |
 | 15 | Either player | Rules written once per player: Pong's left and right edge rules, `score1`/`score2`, `paddle1`/`paddle2` keys; Combat, Cannon Hill, Space Race, Freeway the same | A word for the object touched and for "the other member", already in the backlog as `other` | [R10](#r10-a-word-for-the-other-one) |
 | 16 | A place that holds things | 11 card games give a holder a dummy `<rectangle>` of 4 by 4 in the background colour, because a holder needs a size | A holder with no sprite | [R11](#r11-card-words-that-are-still-card-words) |
@@ -239,16 +239,6 @@ R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest a
 - **Do.** Propose and let the author pick: `<active>false</active>` becomes `<waiting />` (or goes, by R3); `<drawn>false</drawn>` becomes `<unseen />`; `<enabled>false</enabled>` on collisions and `<lockstep>true</lockstep>` become `<off />` and `<lockstep />`; `<fullscreen>true</fullscreen>` becomes `<fullscreen />`. A take that turns one back on needs the opposite word or the one change rule needs "an empty tag written again removes it": check how `from=` handles `<active>true</active>` today (Frostbite, Mario Bros.) before choosing.
 - **Files.** The schema (five elements), `load/xml.cpp`, `load/merge.cpp` and `merge.xsl` (the change rule for these), `data.xsl`, 20-odd games, `docs/reference/objects.md`, `collisions.md`, `format.md`.
 - **Done.** `grep -c "xs:boolean" games/xgedef.xsd` is 0.
-
-#### R8. Small sweeps
-
-Each is **S**, independent, one commit.
-
-- **Pong's title** becomes `<centered />`, as every other game's is. (Arithmetic itself is R12.)
-- **Bitmaps into `<pictures>`.** The 65 inline `<bitmap>`s in 14 games (Capsules has 21, Freeway 8, Berserk 6): move any used by more than one sprite or longer than eight rows to `<pictures>`. The generated-games test must still pass (identical bitmaps are deduplicated at load).
-- **`<all>`.** Tennis uses `<all>` inside `<any>` three times. If each can be written as nested conditions or as two rules, do so and remove `<all>` from the schema, reader and generator. If not, write in `docs/designs/07-states-and-conditions.md` why `<all>` stays.
-- **`<shows name>` sets.** Air-Sea Battle and Galaxian: if a state `from=` another says the same, use it and remove named `<shows>` sets and `<show set=>`.
-- **`touch.`** No game reads it. Either a game is clearer with it (candidates: Breakout's or Pong's deflect, Pinball), or remove the name and its documentation.
 
 #### R10. A word for the other one
 
@@ -463,7 +453,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 Blocks 1 and 2 are done.
 
 Block 3  (reduction, any order; R1 is done)
-  R8  the six small sweeps
   R10 other
   R3  one way into and out of play        (five substeps)
   R6  no booleans                         (after R3)
@@ -504,4 +493,4 @@ What blocks what, in one place:
 | A4 | A2 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R8 (B2, B3, B5, R1, R5, R7, R9 and T1 are done).
+If only a few more things are ever done from this file, start with R10 (B2, B3, B5, R1, R5, R7, R8, R9 and T1 are done).
