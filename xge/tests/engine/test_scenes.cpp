@@ -547,6 +547,27 @@ TEST_CASE("names that could mean two things, and takes of nothing, stop the load
 	}
 }
 
+TEST_CASE("an empty <sprite name> is a look that draws nothing, and an object of only those needs no <position>", "[scenes]")
+{
+	Loaded loaded(gameXml("<state name=\"playing\"><objects>"
+		"<object name=\"phase\"><sprite name=\"dealing\" /><sprite name=\"playing\" /></object>"
+		"<object name=\"note\"><sprite name=\"none\" /><sprite name=\"shown\"><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>40</x><y>50</y></position></object>"
+		"</objects>" + kSpace + "</state>"));
+	const Object& phase = loaded.game.getObject("playing.phase");
+	CHECK(phase.position.x == Approx(0));
+	CHECK(phase.position.y == Approx(0));
+	CHECK(phase.size.x == Approx(0));
+	CHECK(phase.size.y == Approx(0));
+	CHECK(phase.looks.size() == 2);
+	const Object& note = loaded.game.getObject("playing.note");
+	CHECK(note.size.x == Approx(0));
+	CHECK(note.position.x == Approx(40));
+
+	fails(gameXml("<state name=\"playing\"><objects><object name=\"phase\"><sprite name=\"a\" /><sprite name=\"b\" /><hidden /></object></objects>" + kSpace + "</state>"),
+		"draws nothing in any of its looks");
+}
+
 TEST_CASE("a game variable written with a dot stays that variable beside a state's object of its first part", "[scenes]")
 {
 	// ball.radius is the game's; the playing state's ball is another thing.

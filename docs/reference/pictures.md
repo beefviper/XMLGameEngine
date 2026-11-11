@@ -19,7 +19,7 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 | `<svg>` | `<path>`, a part, `<scale>`, `<hide>`s, `<flip>` | part of an [SVG file](#svg-pictures) |
 | `<tether from="a" to="b">` | `<thickness>`, `<color>` | a line between two objects' middles, redrawn every frame; in play while both are (a fishing line, a missile's trail) |
 
-A `<radius>`, `<width>` or `<height>` below 0, or a text `<size>` of 0 or less, stops the load; a rectangle 0 by 0 is fine (an object that only holds numbers).
+A `<radius>`, `<width>` or `<height>` below 0, or a text `<size>` of 0 or less, stops the load; a rectangle 0 by 0 is fine, and so is an empty `<sprite name="x" />`, a look that draws nothing (see [numbers only](objects.md#numbers-only)).
 
 **The engine draws its own pictures.** Lines, polygons, bitmaps and SVGs are drawn once at load into the engine's own `Bitmap` (`buildPicture`, `load/expr.cpp`). So every window library shows the same pixels, an object's size is known with no window, and a `pixel` [collision](collisions.md#how-a-touch-is-found) tests exactly what is drawn. Text and image files are the exception: only a window library can measure them.
 

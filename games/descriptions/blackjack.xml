@@ -132,10 +132,8 @@
 
         <!-- the dealer's draw: while it shows draw, a card each 0.6 seconds -->
         <object name="drawing">
-          <sprite name="wait"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="draw"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="wait" />
+          <sprite name="draw" />
           <timers>
             <timer sprite="draw">
               <every>0.6</every>

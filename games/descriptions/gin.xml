@@ -131,12 +131,10 @@
 
         <!-- north's cards, face down, and yours: laid out in melds, the deadwood counted -->
         <object name="northcards" class="place">
-          <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - 168</x><y>theirs</y></position>
           <holds class="card" sprite="back"><spread><x>24</x></spread><score patterns="rummy"><melds /><best>10</best></score></holds>
         </object>
         <object name="mine" class="place">
-          <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>56</x><y>yours</y></position>
           <holds class="card" sprite="face"><spread><x>64</x><width>768</width></spread><lift>16</lift><score patterns="rummy"><melds /><best>10</best></score></holds>
         </object>
@@ -157,7 +155,7 @@
 
         <!-- how a hand ended -->
         <object name="message">
-          <sprite name="none"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="none" />
           <sprite name="yougin"><text style="note"><content>gin! the hand is yours: spacebar deals</content><color>color.cyan</color></text></sprite>
           <sprite name="youknock"><text style="note"><content>you knock and win the hand: spacebar deals</content><color>color.yellow</color></text></sprite>
           <sprite name="youcut"><text style="note"><content>north undercuts your knock: spacebar deals</content></text></sprite>
@@ -171,12 +169,10 @@
 
         <!-- the table: where the hand is (its look), who goes first, who knocks; between hands, Space deals -->
         <object name="table">
-          <sprite name="dealing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="drawing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="discarding"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="done"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="dealing" />
+          <sprite name="drawing" />
+          <sprite name="discarding" />
+          <sprite name="done" />
           <actions>
             <action name="shuffle">
               <become sprite="dealing" />
@@ -202,10 +198,8 @@
 
         <!-- the dealer: a moment to shuffle before the cards come, the first hand too -->
         <object name="dealer">
-          <sprite name="shuffling"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="shuffling" />
+          <sprite name="idle" />
           <timers>
             <timer sprite="shuffling"><every>0.4</every><become sprite="idle" /><trigger object="table" action="deal" /></timer>
           </timers>
@@ -215,7 +209,7 @@
         <group name="players" class="player">
           <sprite name="draw"><drawing from="playersdraw" /></sprite>
           <sprite name="discard"><drawing from="playersdiscard" /></sprite>
-          <sprite name="waiting"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="waiting" />
           <actions>
             <action name="left"><hop direction="left" /></action>
             <action name="right"><hop direction="right" /></action>
@@ -258,8 +252,8 @@
           <turns sprite="waiting" />
           <member name="you"><position><x>53</x><y>yours - 3</y></position><owns object="mine" /></member>
           <member name="north">
-            <sprite name="draw"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-            <sprite name="discard"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+            <sprite name="draw" />
+            <sprite name="discard" />
             <position><x>0</x><y>0</y></position>
             <owns object="northcards" />
             <think button="space" />

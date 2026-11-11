@@ -219,10 +219,17 @@ namespace xge::parts
 		return timer;
 	}
 
-	// <sprite name="..."> and its shape, what that says filled in by `fill`.
+	// <sprite name="..."> and its shape, what that says filled in by `fill`;
+	// an empty one ("nothing") a look that draws nothing.
 	template <typename Fill>
 	RawSprite sprite(std::string kind, std::string name, Fill fill)
 	{
+		if (kind == "nothing")
+		{
+			RawSprite none = nothingSprite();
+			none.name = std::move(name);
+			return none;
+		}
 		RawSprite drawn;
 		drawn.kind = std::move(kind);
 		drawn.name = std::move(name);

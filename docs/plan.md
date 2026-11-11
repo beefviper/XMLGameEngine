@@ -100,8 +100,8 @@ Each row is one concept done more than one way. Counts are games using each form
 | 13 | Shared shows | `<shows name>` sets (Air-Sea Battle, Galaxian). The matching `<keys>` and `<conditions>` sets were removed as "state `from=` covers them" | Remove if `from=` covers these two as well | R8, done |
 | 14 | Pause, title and game-over boilerplate | 57 `paused` states, 835 lines, 18 variants that differ by accident (which keys, whether the pad's Start is bound, the colour). Pad Start is bound in 24 games | One spelling, copied exactly; a test that holds it | R9, done |
 | 15 | Either player | Rules written once per player: Pong's left and right edge rules, `score1`/`score2`, `paddle1`/`paddle2` keys; Combat, Cannon Hill, Space Race, Freeway the same | A word for the object touched and for "the other member", already in the backlog as `other` | R10, done (Pong's edge rules stay) |
-| 16 | A place that holds things | 11 card games give a holder a dummy `<rectangle>` of 4 by 4 in the background colour, because a holder needs a size | A holder with no sprite | [R11](#r11-card-words-that-are-still-card-words) |
-| 17 | Card words | The rule is "tags name mechanics, never one game". Still card-shaped: `<call pile=>`, `<with pile=>`, `<trick>`, `<trumps>`, `<breaks>`, `<melds />`, `<wild>`, and `suit`/`rank` as fixed variable names | See the task | [R11](#r11-card-words-that-are-still-card-words) |
+| 16 | A place that holds things | 11 card games give a holder a dummy `<rectangle>` of 4 by 4 in the background colour, because a holder needs a size | A holder with no sprite | R11, done |
+| 17 | Card words | The rule is "tags name mechanics, never one game". Still card-shaped: `<call pile=>`, `<with pile=>`, `<trick>`, `<trumps>`, `<breaks>`, `<melds />`, `<wild>`, and `suit`/`rank` as fixed variable names | See the task | R11, done |
 | 18 | Steering | `<chase>`, `<aim>`, `<hunt>`, `<wander>`, `<go>`, `<follow>`, `<track>`, `<seek>` (1 game), `<pull>` (0 games) | Review as one family; at least decide `<seek>` and `<pull>` | R1, done |
 | 19 | Words nobody uses | In the schema, in no game: `accelerate`, `pull`, `rise`, `image`, `gap`, `margin`, `near`, `faster`, `framerate`, `fullscreen`, `absolute`, `floor`, `negate`, `remainder`, `odd`. `touch.` is a documented name no game reads | Use in a game, keep with a reason, or remove | R1, done |
 | 20 | Where a command may go | Written twice: the schema's command groups and `ruleFor` in `load/check.cpp` | Each verb's own file, checked against the schema ([A1](#a1-a-verb-is-one-file)) | A1 |
@@ -205,12 +205,6 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 
 R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest are independent of each other unless noted, and each is one branch.
 
-#### R11. Card words that are still card words
-
-- **Size** M. **Needs** nothing; best done with A2.
-- **Do, each a decision then a sweep.** A holder with no `<sprite>` (remove the dummy 4 by 4 rectangles in 11 games; a holder needs a place, not a size: find where `settleHolders` or the spread reads the holder's size and use the held members' size). `<call pile="discard" />` and `<with pile="board">` use `pile=` where every other tag says `object=`. `suit` and `rank` are fixed names for "row" and "column" of the pack: a pattern's `<alike variable="rank">` could be `<alike variable="column">` so a pack is any grid. `<trick variable="suit">` "for now follows the suit": lift the restriction or say why not. `<trumps>`, `<breaks>`, `<melds />`: keep (they are mechanics with those names in every rule book), and say so in `docs/designs/27-cards.md`.
-- **Done.** No attribute or fixed variable in the schema is named for a card thing except those the design file lists as kept on purpose.
-
 #### R12. No arithmetic in text
 
 - **Size** L, in substeps. **Needs** D8; R7 is done (the 266 `window.height.center + N` in `<centered>` are `<offset>`s; the 63 uses of `window.*.center` left are card layouts and offsets of a top-left corner, which are this task's).
@@ -240,13 +234,13 @@ R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest a
 
 #### A2. Holders in the engine, not piles
 
-- **Size** L. **Needs** nothing; do R11 alongside.
+- **Size** L. **Needs** nothing; R11 (the card words) is done.
 - **Why.** Debt 3. The words were generalised in November; the engine was not. `settleHolders` translates `<holds>` into the old pile fields.
 - **Substeps.**
   1. **Dead fields out (S).** In `RawObject::RawPile` and `Object::Pile` (`xge/lib/game/object.h` near lines 648 to 700), find every field no reader writes any more since the old words were removed (`dealt`, `dealtMore`, `dealsInto`, `deals`, `refillFrom`, `refillShuffle`, `refillLeave`, `faces`, `sorted`, ...): for each, `grep` for a writer in `load/xml.cpp` and `game/cards.cpp`; if only `settleHolders` writes it from a holder word, keep it for step 3; if nothing does, delete it and the code that reads it.
   2. **Rename (M).** `Pile` to `Holder`, `RawPile` to `RawHolder`, `isCard` to `held` (or `inHolder`), `game/cards.cpp` and `cards.h` to `game/holders.cpp` and `holders.h` (three comments name `game/cards.h` as the home of `settleHolders`: in `load/xml.cpp`, `game/states.h` and `game/object.h`), `thinkCards` to `thinkHeld`. Mechanical; one commit; update `engine.xml`, `ENGINE_SOURCES` in the top `CMakeLists.txt`, `data.xsl` field names and the describer.
   3. **Remove the translation (L).** Make the holder fields the holder words themselves (`holdsClass`, `spread`, `orderBy`, `counts`, `accepts` as conditions) and delete `settleHolders`' mapping, so the engine reads what the game wrote.
-  4. **`suit` and `rank` (M).** Wherever the engine reads a held member's `suit` or `rank`, read its row and column in its group, under the names R11 chose.
+  4. **`suit` and `rank` (M).** Wherever the engine reads a held member's `suit` or `rank`, read its row and column in its group, under the names a pack gives them (`<columns name="rank">`, `<rows name="suit">`, R11, done).
 - **Done.** `grep -rniE "pile|isCard|suit|rank|deal|shuffle" xge/lib` finds nothing but comments explaining a card game example. The eight card games' tests pass unchanged.
 - **Verify.** `ctest "[cards]"` and the eight games' tests after every commit; `xgetest-generated`.
 
@@ -409,8 +403,7 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 ```
 Blocks 1 and 2 are done.
 
-Block 3  (reduction, any order; R1 and R4 are done)
-  R11 card words
+Block 3  (reduction; R1, R4 and R11 are done)
   R12 no arithmetic in text            (survey, then D8, then the sweep)
 
 Block 4  (architecture)
@@ -444,4 +437,4 @@ What blocks what, in one place:
 | A4 | A2 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R11 (B2, B3, B5, R1, R3, R4, R5, R6, R7, R8, R9, R10 and T1 are done).
+If only a few more things are ever done from this file, start with R12 (B2, B3, B5, R1, R3, R4, R5, R6, R7, R8, R9, R10, R11 and T1 are done).

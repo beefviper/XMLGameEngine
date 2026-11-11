@@ -119,14 +119,14 @@
         </group>
 
         <object name="stock" class="place">
-          <sprite name="spot"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="spot" />
           <position><x>40</x><y>boardrow</y></position>
           <holds class="card" sprite="back" />
         </object>
 
         <!-- the computer's two cards, yours, and the five shared: each player's scored with the shared -->
         <object name="theirs" class="place">
-          <sprite name="spot"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="spot" />
           <position><x>window.width.center - cardwidth - 4</x><y>theirrow</y></position>
           <holds class="card" sprite="face"><spread><x>cardwidth + 8</x></spread><score patterns="poker"><with object="board"><full>5</full></with><best>5</best></score></holds>
         </object>
@@ -136,7 +136,7 @@
           <holds class="card" sprite="face"><spread><x>cardwidth + 16</x></spread></holds>
         </object>
         <object name="yours" class="place">
-          <sprite name="spot"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="spot" />
           <position><x>window.width.center - cardwidth - 4</x><y>yourrow</y></position>
           <holds class="card" sprite="face"><spread><x>cardwidth + 8</x></spread><score patterns="poker"><with object="board"><full>5</full></with><best>5</best></score></holds>
         </object>
@@ -213,12 +213,10 @@
 
         <!-- where the hand is (dealing, betting, showdown, done), and the street the betting is on; Space when it is done deals the next -->
         <object name="hand">
-          <sprite name="done"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="dealing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="betting"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="showdown"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="done" />
+          <sprite name="dealing" />
+          <sprite name="betting" />
+          <sprite name="showdown" />
           <actions>
             <action name="next">
               <send from="cards" into="stock"><all /></send>
@@ -232,20 +230,16 @@
           </actions>
         </object>
         <object name="street">
-          <sprite name="preflop"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="flop"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="turn"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="river"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="preflop" />
+          <sprite name="flop" />
+          <sprite name="turn" />
+          <sprite name="river" />
         </object>
 
         <!-- the dealer: a moment to shuffle before the cards come -->
         <object name="dealer">
-          <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="shuffling"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="idle" />
+          <sprite name="shuffling" />
           <timers>
             <timer sprite="shuffling"><every>0.4</every><become sprite="idle" /><trigger object="table" action="deal" /></timer>
           </timers>
@@ -318,16 +312,14 @@
             <position><x><centered /></x><y>yourrow + cardheight + 70</y></position>
           </member>
           <member name="cpu">
-            <sprite name="playing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-            <sprite name="wait"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+            <sprite name="playing" />
+            <sprite name="wait" />
           </member>
         </group>
         <!-- the computer's moment of thought before it is ready -->
         <object name="thought">
-          <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="thinking"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="idle" />
+          <sprite name="thinking" />
           <timers>
             <timer sprite="thinking"><every>0.9</every><set variable="cpu.ready">1</set></timer>
           </timers>

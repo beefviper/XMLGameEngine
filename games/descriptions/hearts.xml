@@ -120,24 +120,20 @@
 
         <!-- the computer's cards, face down: west down the left, north along the top, east down the right -->
         <object name="westcards" class="place">
-          <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>24</x><y>siderow</y></position>
           <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
         <object name="northcards" class="place">
-          <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width.center - cardwidth / 2 - 144</x><y>northrow</y></position>
           <holds class="card" sprite="back"><spread><x>24</x></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
         <object name="eastcards" class="place">
-          <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>window.width - cardwidth - 24</x><y>siderow</y></position>
           <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
 
         <!-- your cards, face up along the bottom, in suit and rank order -->
         <object name="mine" class="place">
-          <sprite><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>56</x><y>yours</y></position>
           <holds class="card" sprite="face"><spread><x>56</x><width>768</width></spread><lift>16</lift><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
@@ -179,7 +175,7 @@
 
         <!-- what is happening between hands -->
         <object name="message">
-          <sprite name="none"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="none" />
           <sprite name="moon"><text style="note"><content>the moon is shot: 26 to everyone else. spacebar deals</content><color>color.cyan</color></text></sprite>
           <sprite name="done"><text style="note"><content>the hand is over: spacebar deals the next</content></text></sprite>
           <sprite name="dealing"><text style="note"><content>shuffling</content><color>color.lightgrey</color></text></sprite>
@@ -188,13 +184,11 @@
 
         <!-- the table: where the hand is (its look), who leads first, the tricks taken; a full trick shows a moment; between hands, Space deals -->
         <object name="table">
-          <sprite name="playing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="full"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="taking"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="done"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="dealing"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="playing" />
+          <sprite name="full" />
+          <sprite name="taking" />
+          <sprite name="done" />
+          <sprite name="dealing" />
           <actions>
             <action name="shuffle">
               <become sprite="dealing" />
@@ -227,10 +221,8 @@
 
         <!-- the dealer: a moment to shuffle before the cards come -->
         <object name="dealer">
-          <sprite name="idle"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="shuffling"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="idle" />
+          <sprite name="shuffling" />
           <timers>
             <timer sprite="shuffling"><every>0.4</every><become sprite="idle" /><trigger object="table" action="deal" /></timer>
           </timers>
@@ -239,7 +231,7 @@
         <!-- the players, in turn: you, then the computer's three, who keep out of tricks; each a frame around the card it points at (theirs unseen) -->
         <group name="players" class="player">
           <sprite name="free"><drawing from="playersfree" /></sprite>
-          <sprite name="waiting"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite name="waiting" />
           <actions>
             <action name="left"><hop direction="left" /></action>
             <action name="right"><hop direction="right" /></action>
@@ -255,9 +247,9 @@
           </variables>
           <turns sprite="waiting" />
           <member name="you"><position><x>53</x><y>yours - 3</y></position><owns object="mine" /></member>
-          <member name="west"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>21</x><y>siderow - 3</y></position><owns object="westcards" /><think button="space"><avoid /></think></member>
-          <member name="north"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>window.width.center - cardwidth / 2 - 147</x><y>northrow - 3</y></position><owns object="northcards" /><think button="space"><avoid /></think></member>
-          <member name="east"><sprite name="free"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite><position><x>window.width - cardwidth - 27</x><y>siderow - 3</y></position><owns object="eastcards" /><think button="space"><avoid /></think></member>
+          <member name="west"><sprite name="free" /><position><x>21</x><y>siderow - 3</y></position><owns object="westcards" /><think button="space"><avoid /></think></member>
+          <member name="north"><sprite name="free" /><position><x>window.width.center - cardwidth / 2 - 147</x><y>northrow - 3</y></position><owns object="northcards" /><think button="space"><avoid /></think></member>
+          <member name="east"><sprite name="free" /><position><x>window.width - cardwidth - 27</x><y>siderow - 3</y></position><owns object="eastcards" /><think button="space"><avoid /></think></member>
         </group>
       </objects>
       <!-- the cards start in the stock, shuffled and dealt thirteen to each player -->

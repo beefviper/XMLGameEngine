@@ -294,9 +294,7 @@
         </object>
         <!-- what he says when caught, for a moment, over the top of the pyramid -->
         <object name="curse">
-          <sprite name="quiet">
-            <rectangle><width>1</width><height>1</height><color>color.black</color></rectangle>
-          </sprite>
+          <sprite name="quiet" />
           <sprite name="said">
             <text style="text">
               <content>@!#?@!</content>

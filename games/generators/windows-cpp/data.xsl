@@ -639,11 +639,12 @@
        Sprites
        =================================================================== -->
 
-  <!-- What a <sprite> is: "line" for a drawing of lines, else its shape. -->
+  <!-- What a <sprite> is: "line" for a drawing of lines, "nothing" for an empty one, else its shape. -->
   <xsl:template name="sprite-kind">
     <xsl:param name="node" />
     <xsl:choose>
       <xsl:when test="$node/*[1][self::line]">line</xsl:when>
+      <xsl:when test="not($node/*)">nothing</xsl:when>
       <xsl:otherwise><xsl:value-of select="local-name($node/*[1])" /></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -1141,13 +1142,19 @@
     <xsl:call-template name="string">
       <xsl:with-param name="text" select="$node/@name" />
     </xsl:call-template>
-    <xsl:value-of select="concat(', [](RawSprite&amp; look)&#10;', $indent, '{&#10;')" />
-    <xsl:call-template name="sprite-fill">
-      <xsl:with-param name="node" select="$node" />
-      <xsl:with-param name="indent" select="concat($indent, $tab)" />
-      <xsl:with-param name="change" select="$change" />
-    </xsl:call-template>
-    <xsl:value-of select="concat($indent, '}')" />
+    <xsl:choose>
+      <!-- an empty <sprite />: a look that draws nothing, with nothing to fill -->
+      <xsl:when test="not($node/*)">, [](RawSprite&amp;) {}</xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat(', [](RawSprite&amp; look)&#10;', $indent, '{&#10;')" />
+        <xsl:call-template name="sprite-fill">
+          <xsl:with-param name="node" select="$node" />
+          <xsl:with-param name="indent" select="concat($indent, $tab)" />
+          <xsl:with-param name="change" select="$change" />
+        </xsl:call-template>
+        <xsl:value-of select="concat($indent, '}')" />
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- The <sprite>s $nodes, as a list, a sprite() each, at $indent. -->

@@ -211,10 +211,8 @@
              good. Its look is the mode; each switch turns the ghosts round
              and sends the new one to every normal ghost -->
         <object name="mode">
-          <sprite name="scatter"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <sprite name="chase"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="scatter" />
+          <sprite name="chase" />
           <actions>
             <action name="scatter"><trigger object="ghosts" action="scatter" from="normal" /></action>
             <action name="chase"><trigger object="ghosts" action="chase" from="normal" /></action>
@@ -426,7 +424,7 @@
           </object>
           <!-- the cherry: none until enough dots are eaten, then for a while -->
           <object name="fruit" char="f">
-            <sprite name="none"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+            <sprite name="none" />
             <sprite name="cherry">
               <bitmap from="fruit-cherry" />
             </sprite>

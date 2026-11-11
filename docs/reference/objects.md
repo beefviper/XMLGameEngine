@@ -49,7 +49,9 @@ A group's member, a map's piece and a piece of the top-level `<objects>` have th
 
 ### Numbers only
 
-An object with no `<sprite>` only holds numbers: never drawn, no position, and it must have `<variables>` or `<timers>`. Keep score, lives and clock on one that no state draws (Pitfall's `status`), so resetting the player does not touch them.
+An object with no `<sprite>` only holds numbers or cards: never drawn, at 0, 0 unless it gives a `<position>` (where a hand it `<holds>` spreads from), and it must have `<variables>`, `<timers>` or `<holds>`. Keep score, lives and clock on one that no state draws (Pitfall's `status`), so resetting the player does not touch them.
+
+An empty `<sprite name="dealing" />` is a look that draws nothing. An object whose looks are all empty keeps only where something is up to (Hearts' `table`: playing, full, taking, done, dealing), which rules test and `<become>` changes, and like a holder needs no `<position>`; `<hidden />` on it is an error. A look with a picture beside empty ones draws nothing while it wears an empty one (a message's `none`), and a member's `<sprite name="free" />` leaves it unseen in a look its group draws (the computer's players in Hearts).
 
 ```xml
 <object name="status">

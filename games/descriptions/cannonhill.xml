@@ -206,13 +206,11 @@
              done (missed, or the turn passes once the blast is gone), a
              point won. -->
         <object name="table">
-          <sprite name="aiming"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <sprite name="flying"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <sprite name="landed"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <sprite name="done"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <sprite name="point"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hidden />
+          <sprite name="aiming" />
+          <sprite name="flying" />
+          <sprite name="landed" />
+          <sprite name="done" />
+          <sprite name="point" />
           <variables>
             <variable name="wind"><formula><round><value><random><min>-5</min><max>5</max></random></value></round></formula></variable>
             <variable name="score1">0</variable>

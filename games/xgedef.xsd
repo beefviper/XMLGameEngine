@@ -501,7 +501,7 @@
   </xs:complexType>
 
   <xs:complexType name="spriteType">
-    <xs:choice>
+    <xs:choice minOccurs="0">
       <xs:group ref="shape" />
       <xs:element name="cell" type="sheetCellType" />
       <xs:element name="line" type="lineType" maxOccurs="unbounded" />
@@ -520,7 +520,7 @@
     (the engine says what is missing). A name the group has not got adds one.
   -->
   <xs:complexType name="spriteChangeType">
-    <xs:choice>
+    <xs:choice minOccurs="0">
       <xs:element name="circle">
         <xs:complexType>
           <xs:sequence>

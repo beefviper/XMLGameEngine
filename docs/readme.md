@@ -78,7 +78,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `hole` | [touching](reference/commands.md#touching), [knocks](reference/collisions.md#knocks) |
 | in and out of play | `die`, `reveal`, `fire`, `drop`, `spawn`, `despawn`, `reset`; `waiting` (`ready`), `hidden` on an object | [in and out of play](reference/commands.md#in-and-out-of-play), [spawn](reference/objects.md#spawn-and-despawn) |
 | numbers | `inc`, `dec`, `set`, `copy`, `rank`, `formula`; `update="live"` on a variable, position or heading | [numbers](reference/commands.md#numbers), [arithmetic](reference/format.md#arithmetic-as-tags), [live numbers](reference/format.md#live-numbers-of-an-object) |
-| look and sound | `become`, `play`, `silence`, `music` | [look and sound](reference/commands.md#look-and-sound) |
+| look and sound | `become`, `play`, `silence`, `music`; an empty `sprite name` (a look that draws nothing) | [look and sound](reference/commands.md#look-and-sound), [numbers only](reference/objects.md#numbers-only) |
 | flow | `push`, `pop`, `enter`, `alternate`, `pass`, `out`, `demo`, `trigger` (in a key, `otherwise`) | [flow](reference/commands.md#flow) |
 | rules in rules | a condition holding conditions (`first`, `otherwise`), a collision holding collisions (`first`), `sprite=` tests, `self`/`others`, `other` in a collision rule, `lowest`, `highest`, `unequal` | [conditions in conditions](reference/states.md#conditions-in-conditions), [collisions](reference/collisions.md) |
 | cells | `settle`, `slide` (`class=`), `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |

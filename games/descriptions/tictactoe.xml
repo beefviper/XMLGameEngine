@@ -102,8 +102,8 @@
       <objects>
         <!-- the players, x first: each the words over the grid on its turn, nothing off it -->
         <group name="players">
-          <sprite name="moving"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <sprite name="waiting"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite name="moving" />
+          <sprite name="waiting" />
           <position><x><centered /></x><y>24</y></position>
           <turns sprite="waiting" />
           <member name="crosses">

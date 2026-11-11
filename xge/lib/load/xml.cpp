@@ -400,7 +400,15 @@ namespace xge
 			sprite.name = spriteNode.getAttribute("name");
 
 			std::unique_ptr<XmlNode> first = spriteNode.getFirstChild();
-			if (!first) { fail(here, "is empty; expected a shape"); }
+			// An empty <sprite name="x" />: a look that draws nothing, for an object
+			// that only keeps where something is up to, or a member that is not
+			// seen in a look its group has.
+			if (!first)
+			{
+				RawSprite nothing = nothingSprite();
+				nothing.name = sprite.name;
+				return nothing;
+			}
 
 			if (first->getName() == "line")
 			{
@@ -1881,6 +1889,13 @@ namespace xge
 			// No <sprite>: an object that only holds numbers (a score, the
 			// lives, the clock), never drawn and, unless it says, at 0, 0.
 			const bool holder = sprites.empty() && animations.empty() && !map;
+			// Looks that are all empty: one that only keeps where something is up
+			// to (a look for each), drawn as nothing, and, unless it says, at 0, 0.
+			bool blank = !sprites.empty() && animations.empty() && !map;
+			for (std::unique_ptr<XmlNode> node = object.getFirstChild(); node != nullptr && blank; node = node->getNextSibling())
+			{
+				if (node->getName() == "sprite" && node->getFirstChild()) { blank = false; }
+			}
 			const bool shape = findChild(&object, "shape") != nullptr;
 			if (shape)
 			{
@@ -1895,11 +1910,12 @@ namespace xge
 				rawObject.sprite = nothingSprite();
 				rawObject.isDrawn = false;
 				if (findChild(&object, "hidden")) { fail(where, "has no <sprite>, so it is never drawn; <hidden /> is for something with a picture"); }
-				if (!findChild(&object, "variables") && !findChild(&object, "timers")) { fail(where, "has no <sprite> and no <variables> or <timers>, so it is nothing"); }
+				if (!findChild(&object, "variables") && !findChild(&object, "timers") && !findChild(&object, "holds")) { fail(where, "has no <sprite> and no <variables>, <timers> or <holds>, so it is nothing"); }
 			}
 			else
 			{
 				chooseSprite(std::move(sprites), animations, where, rawObject);
+				if (blank && findChild(&object, "hidden")) { fail(where, "draws nothing in any of its looks; <hidden /> is for something with a picture"); }
 			}
 
 			if (map)
@@ -1911,7 +1927,7 @@ namespace xge
 			{
 				if (!object.getAttribute("char").empty()) { fail(where, "char=\"" + object.getAttribute("char") + "\" picks a character of a <map>'s rows; this object is on no <map>"); }
 				if (auto position = findChild(&object, "position")) { rawObject.rawPosition = readVector2(*position, where); }
-				else if (holder || !readExists(object, where)) { rawObject.rawPosition = { zeroValue(), zeroValue() }; }
+				else if (holder || blank || !readExists(object, where)) { rawObject.rawPosition = { zeroValue(), zeroValue() }; }
 				else { fail(where, "missing <position>"); }
 			}
 			// What a game leaves out is nothing: no <velocity> (or no half of
