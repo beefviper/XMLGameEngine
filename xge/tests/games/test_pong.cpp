@@ -156,7 +156,7 @@ TEST_CASE("at eleven, game over is written over the game still, and Space starts
 	pong.tap(KeyCode::Space);
 	pong.object("paddle2").variable["score"] = 11;
 	pong.frames(1);
-	REQUIRE(pong.state() == "gameover");
+	REQUIRE(pong.state() == "over");
 	CHECK(pong.shown("gameover"));
 	CHECK(pong.shown("continue"));
 	CHECK(pong.still("ball"));
@@ -299,7 +299,7 @@ TEST_CASE("Pong's computer choice is kept from one game to the next", "[pong][co
 	pong.tap(KeyCode::Space);
 	pong.game.setVariable("paddle1", "score", 11.0f);
 	pong.frames(2);
-	REQUIRE(pong.state() == "gameover");
+	REQUIRE(pong.state() == "over");
 	pong.tap(KeyCode::Space);
 	CHECK(pong.state() == "title");
 	CHECK(pong.object("computer").variable.at("level") == 2);

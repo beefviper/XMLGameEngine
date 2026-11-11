@@ -381,7 +381,7 @@ TEST_CASE("the last base ends the game", "[astrosmash]")
 	table.frames(2);
 
 	CHECK(table.lives() == 0.0f);
-	CHECK(table.game.getCurrentState().name == "gameover");
+	CHECK(table.game.getCurrentState().name == "over");
 }
 
 TEST_CASE("space starts a new game from game over with everything back", "[astrosmash]")
@@ -392,7 +392,7 @@ TEST_CASE("space starts a new game from game over with everything back", "[astro
 	table.frames(1);
 	table.ship().variable["lives"] = 0.0f;
 	table.frames(1);
-	REQUIRE(table.game.getCurrentState().name == "gameover");
+	REQUIRE(table.game.getCurrentState().name == "over");
 
 	table.executor.executeInput(Command{ CmdReset{} }, true);
 
@@ -506,9 +506,9 @@ TEST_CASE("paused and the endings draw the sky still underneath, with the score"
 
 	table.ship().variable["lives"] = 0.0f;
 	table.frames(1);
-	REQUIRE(table.game.getCurrentState().name == "gameover");
+	REQUIRE(table.game.getCurrentState().name == "over");
 	CHECK(table.game.isStill(table.ship()));
 	CHECK(table.game.isStill(table.game.getObject("playing.score")));
-	CHECK(table.game.isShown(table.game.getObject("gameover.message")));
-	CHECK(table.game.isShown(table.game.getObject("gameover.again")));
+	CHECK(table.game.isShown(table.game.getObject("over.message")));
+	CHECK(table.game.isShown(table.game.getObject("over.again")));
 }

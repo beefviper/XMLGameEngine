@@ -668,7 +668,7 @@
       <conditions>
         <condition object="status" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
         </condition>
         <!-- caught: READY! again, everyone back in place -->
         <condition object="status" variable="caught">
@@ -807,7 +807,7 @@
         </input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="gameover">
           <sprite>

@@ -269,7 +269,7 @@
         <condition object="status" variable="over">
           <equal>1</equal>
           <play sound="over" />
-          <push state="gameover" />
+          <push state="over" />
         </condition>
         <!-- every ten rows: the next level, a fifth faster -->
         <condition object="status" variable="lines">
@@ -301,7 +301,7 @@
         <input><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>

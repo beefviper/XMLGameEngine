@@ -616,7 +616,7 @@ TEST_CASE("the best score follows the score up, and a new game keeps it", "[gala
 	// Game over, then Space: the score starts again, the best does not.
 	ship.variable["lives"] = 0.0f;
 	play.frames(1);
-	REQUIRE(play.state() == "gameover");
+	REQUIRE(play.state() == "over");
 	CHECK(play.game.isStill(best));
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "title");
@@ -698,7 +698,7 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 		play.object(("table." + std::to_string(i)).c_str()).variable["score"] = 50.0f;
 	}
 	playTo(50.0f);
-	CHECK(play.state() == "gameover");
+	CHECK(play.state() == "over");
 }
 
 TEST_CASE("what Galaxian keeps lasts in a file from one run to the next", "[galaxian][scores][keeps]")
@@ -779,7 +779,7 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	play.tap(KeyCode::Space);
 	ship.variable["lives"] = 0.0f;
 	play.frames(1);
-	REQUIRE(play.state() == "gameover");
+	REQUIRE(play.state() == "over");
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "player2");
 	CHECK(ship.variable.at("score") == 30.0f);
@@ -792,7 +792,7 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	// Player 2 out too: a new game.
 	ship.variable["lives"] = 0.0f;
 	play.frames(1);
-	REQUIRE(play.state() == "gameover");
+	REQUIRE(play.state() == "over");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 	CHECK(play.game.playerCount() == 0);
@@ -815,7 +815,7 @@ TEST_CASE("one player: <pass /> does nothing and <out /> lets what follows run",
 	}
 	ship.variable["lives"] = 0.0f;
 	play.frames(1);
-	REQUIRE(play.state() == "gameover");
+	REQUIRE(play.state() == "over");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 }

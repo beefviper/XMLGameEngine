@@ -382,7 +382,7 @@ TEST_CASE("Tetris is over when the next shape has no room to come in", "[cells][
 		play.tap(KeyCode::Space);
 		play.frames(2);
 	}
-	CHECK(play.state() == "gameover");
+	CHECK(play.state() == "over");
 
 	// Space plays again, with an empty well.
 	play.tap(KeyCode::Space);
@@ -701,7 +701,7 @@ TEST_CASE("Snake plays: it goes, eats the food in its way and dies on the wall",
 	// Up into the wall.
 	play.tap(KeyCode::W);
 	play.frames(12 * 8);
-	CHECK(play.state() == "gameover");
+	CHECK(play.state() == "over");
 	play.tap(KeyCode::Space);
 	play.frames(2);
 	CHECK(play.state() == "title");

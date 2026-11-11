@@ -622,7 +622,7 @@
         <!-- out of lives -->
         <condition object="player" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
         </condition>
         <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
         <condition object="player" variable="lifepoints">
@@ -665,7 +665,7 @@
       </inputs>
     </state>
 
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="gameover">
           <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>

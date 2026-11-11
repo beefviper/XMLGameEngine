@@ -232,12 +232,12 @@
       <conditions>
         <condition object="status" variable="time">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
           <play sound="gameover" />
         </condition>
         <condition object="status" variable="ships">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
           <play sound="gameover" />
         </condition>
       </conditions>
@@ -261,7 +261,7 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>

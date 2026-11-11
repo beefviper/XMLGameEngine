@@ -206,7 +206,7 @@
       <conditions>
         <condition class="paddle" variable="score">
           <atleast>11</atleast>
-          <push state="gameover" />
+          <push state="over" />
         </condition>
       </conditions>
       <!-- the right paddle, when the computer plays it: its middle kept within 8 of where it wants it -->
@@ -255,7 +255,7 @@
         <input button="space"><pop /></input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="gameover">
           <sprite><text style="banner"><content>GAME OVER</content></text></sprite>

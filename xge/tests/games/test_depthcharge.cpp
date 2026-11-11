@@ -178,7 +178,7 @@ TEST_CASE("the hunt ends when the clock runs out or the ships are gone, and Spac
 
 	hunt.get("status").variable["ships"] = 0;
 	hunt.frames(1);
-	CHECK(hunt.state() == "gameover");
+	CHECK(hunt.state() == "over");
 	CHECK(hunt.game.isStill(hunt.get("ship")));
 
 	hunt.tap(KeyCode::Space);
@@ -189,7 +189,7 @@ TEST_CASE("the hunt ends when the clock runs out or the ships are gone, and Spac
 	hunt.tap(KeyCode::Space);
 	hunt.get("status").variable["time"] = 1;
 	hunt.frames(61);
-	CHECK(hunt.state() == "gameover");
+	CHECK(hunt.state() == "over");
 }
 
 TEST_CASE("paused, the sea is drawn still", "[depthcharge]")

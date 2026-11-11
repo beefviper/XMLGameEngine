@@ -820,7 +820,7 @@ TEST_CASE("no men left is game over, over the room standing still, and Space pla
 	play.man().variable["lives"] = 1.0f;
 	play.touchTheWall();
 	play.frames(2);
-	CHECK(play.state() == "gameover");
+	CHECK(play.state() == "over");
 	CHECK(play.game.isStill(play.object(Play::inRoom(2, "maze.post.1"))));
 	CHECK(play.game.isShown(play.object("gameover")));
 	CHECK(play.game.isStill(play.object("score")));

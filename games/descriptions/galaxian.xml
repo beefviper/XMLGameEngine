@@ -512,7 +512,7 @@
       <conditions>
         <condition object="ship" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
         </condition>
         <!-- a ship lost: the other player's turn, with two -->
         <condition object="ship" variable="lost">
@@ -541,7 +541,7 @@
         <input><button>space</button><button>p</button><button>escape</button><pop /></input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="gameover">
           <sprite><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>

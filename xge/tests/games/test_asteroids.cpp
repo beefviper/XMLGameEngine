@@ -966,7 +966,7 @@ TEST_CASE("three ships and then it is game over; space plays again from the star
 	}
 
 	CHECK(field.lives() == 0.0f);
-	CHECK(field.state() == "gameover");
+	CHECK(field.state() == "over");
 
 	// The ship is gone and the rocks that drift on cannot cost it more ships.
 	field.frames(240);
@@ -1043,16 +1043,16 @@ TEST_CASE("each state owns what it draws, and game over draws the field still un
 	CHECK(field.ship().ownerState == "playing");
 	CHECK(field.group("bigrocks")[0]->ownerState == "playing");
 	CHECK(field.named("title").ownerState == "title");
-	CHECK(field.named("again").ownerState == "gameover");
+	CHECK(field.named("again").ownerState == "over");
 	CHECK(field.named("best").ownerState.empty());
 	CHECK_FALSE(field.game.isShown(field.named("title")));
 	CHECK(field.game.isShown(field.named("best")));
 
 	field.ship().variable["lives"] = 0.0f;
 	field.frames(1);
-	REQUIRE(field.state() == "gameover");
+	REQUIRE(field.state() == "over");
 	CHECK(field.game.isStill(field.ship()));
-	CHECK(field.game.isShown(field.named("gameover.message")));
+	CHECK(field.game.isShown(field.named("over.message")));
 	CHECK(field.game.isShown(field.named("again")));
 }
 

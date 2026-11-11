@@ -584,7 +584,7 @@ TEST_CASE("pacman: caught three times is game over; a cleared maze is the next r
 			maze.frames(130);
 		}
 		CHECK(maze.status("lives") == 0.0f);
-		CHECK(maze.state() == "gameover");
+		CHECK(maze.state() == "over");
 	}
 	SECTION("cleared")
 	{

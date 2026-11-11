@@ -756,7 +756,7 @@ TEST_CASE("Pac-Man's music: the opening tune plays over READY!, the siren loops 
 	// The last life lost: the siren stops and the loss plays, once.
 	game.getObject("status").variable["lives"] = 0.0f;
 	engine.step();
-	REQUIRE(game.getCurrentState().name == "gameover");
+	REQUIRE(game.getCurrentState().name == "over");
 	CHECK(log.stopped == std::vector<std::string>{ "siren", "siren" });
 	CHECK(log.played == std::vector<std::string>{ "start", "lose" });
 	engine.step();

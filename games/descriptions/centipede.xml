@@ -261,7 +261,7 @@
         </condition>
         <condition object="status" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
         </condition>
         <!-- all shot: another comes -->
         <condition class="centipede">
@@ -288,7 +288,7 @@
         <input><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
