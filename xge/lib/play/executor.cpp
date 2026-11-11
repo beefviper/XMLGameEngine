@@ -87,6 +87,7 @@ namespace xge
 		Object* turn = game.takesTurns(trigger->object) ? game.onTurn(trigger->object) : nullptr;
 		if (game.takesTurns(trigger->object) && (!turn || !game.answers(*turn))) { return; }
 		Object& object = turn ? *turn : game.getObject(trigger->object);
+		if (!game.answersPicker(object)) { return; }
 		// from=: only while it shows that look.
 		if (!trigger->from.empty() && object.lookName() != trigger->from) { return; }
 		for (const auto& action : object.action[trigger->action])
@@ -440,7 +441,7 @@ namespace xge
 		Object& first = game.getObject(objectName);
 		if (first.name == objectName || !first.inGroup(objectName))
 		{
-			if (showing(first)) { lastTriggerRefused = runAction(first, actionName, keyPressed, byRule); }
+			if (showing(first) && (byRule || game.answersPicker(first))) { lastTriggerRefused = runAction(first, actionName, keyPressed, byRule); }
 			return;
 		}
 

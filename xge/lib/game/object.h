@@ -712,6 +712,7 @@ namespace xge
 		std::vector<RawCommand> think;
 		bool hand{ false };             // <hand />: points at piles and carries cards (Object::Hand)
 		std::string handPile;           // <hand pile=>: its own pile (cards held by a player)
+		std::string ownsClass;          // <owns class=>: the pieces a player of a board game moves
 		int handSeat{};                 // <hand><seat>: which player, for a trick's `winner` (0 none)
 		int handTeam{};                 // <hand><team>: the side it plays for, partners alike (0 none)
 		int handHolds{ 1 };             // <hand><holds>: from how many piles it may hold a card at once
@@ -1286,6 +1287,9 @@ namespace xge
 		// turn (none: as it is). Its live `turn` is 1 on its turn, else 0.
 		bool takesTurns{ false };
 		std::string turnsSprite;
+		// <owns class=>: the pieces it moves; a picker's <put />, <pick /> and
+		// a <think> with no class= take those of the member on its turn.
+		std::string ownsClass;
 		// Drawn after everything with a smaller one; 0 keeps the file's order
 		// (cards and hands are drawn above the rest).
 		int drawOrder{};

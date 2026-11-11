@@ -1238,6 +1238,7 @@ namespace xge
 		object.card = rawObject.card;
 		object.takesTurns = rawObject.takesTurns;
 		object.turnsSprite = rawObject.turnsSprite;
+		object.ownsClass = rawObject.ownsClass;
 
 		if (!rawObject.mirror.empty())
 		{

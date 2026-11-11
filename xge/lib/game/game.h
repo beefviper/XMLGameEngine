@@ -159,8 +159,10 @@ namespace xge
 		bool setNumber(const VariableName& target, float value);
 
 		// The buttons the current state's <computer> holds down this frame:
-		// those its conditions that hold name in their <hold>s.
-		std::set<KeyCode> computerButtons();
+		// those its conditions that hold name in their <hold>s. Into `taps`,
+		// those a <think> presses once (down and up at once, so a person's
+		// press of the same key straight after is never taken for it held).
+		std::set<KeyCode> computerButtons(std::set<KeyCode>& taps);
 
 		// Players as a group (game/players.cpp). The member of the group
 		// `name` on its turn (none: the group takes no turns); whether a
@@ -178,6 +180,13 @@ namespace xge
 		// a group that takes turns means the member on its turn.
 		bool passPlayersTo(const std::string& group, int number);
 		std::string turnOwner(const std::string& owner);
+		// The pieces (<owns class=>) of the player on its turn, in a board
+		// game played by a group that takes turns; empty when there is none.
+		std::string turnClass();
+		// Whether a press reaches `picker` now: while the computer thinks for
+		// it (a <think object=> whose condition holds now), only the
+		// computer's presses do.
+		bool answersPicker(const Object& picker);
 		// The engine says while it presses the computer's keys.
 		void pressingForComputer(bool pressing) noexcept { computerPresses = pressing; }
 

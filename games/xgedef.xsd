@@ -709,8 +709,10 @@
     <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="member" type="xs:string" use="optional" />
   </xs:complexType>
+  <!-- owns: a player's own holder (object=, its cards), or the pieces it moves in a board game (class=) -->
   <xs:complexType name="ownsType">
-    <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
   <!-- think on a member of a group that takes turns: the computer plays it, pressing button= on its turn -->
   <xs:complexType name="memberThinkType">
@@ -1620,7 +1622,7 @@
           <xs:attribute name="pile" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- put: a new piece of that class in the picker's cell of the pieces' map; refused when the cell is taken,
+      <!-- put: a new piece of class= (left out: of the pieces the player on its turn <owns>) in the picker's cell of the pieces' map; refused when the cell is taken,
            or, when the pieces have <flank>s, where it traps nothing; the pieces it traps turn into its kind -->
       <!-- put with <close class object>: each piece of that class beside the piece put, walled in on its four sides
            by pieces of the class put, is replaced by a copy of the object; then the put counts as refused (the turn goes on) -->
@@ -1634,7 +1636,7 @@
               </xs:complexType>
             </xs:element>
           </xs:sequence>
-          <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
     </xs:choice>
@@ -1731,7 +1733,7 @@
           <xs:attribute name="button" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- think: only in a <computer>'s condition: while it holds, the computer plays the board game pieces of class=,
+      <!-- think: only in a <computer>'s condition: while it holds, the computer plays the board game pieces of class= (left out: those the player on its turn <owns>),
            looking <depth> moves ahead (4 when left out), each piece worth 1 or its look's <worth>; it walks the picker
            object= to the piece and each cell of its move, pressing button= on each -->
       <xs:element name="think">

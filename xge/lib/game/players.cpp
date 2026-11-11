@@ -135,6 +135,33 @@ namespace xge
 		layOutCards();
 	}
 
+	std::string Game::turnClass()
+	{
+		for (const Object& object : objects)
+		{
+			if (!object.takesTurns || object.ownsClass.empty() || !object.exists || !isShown(object)) { continue; }
+			const auto onIt = object.variable.find("turn");
+			if (onIt != object.variable.end() && onIt->second != 0.0f) { return object.ownsClass; }
+		}
+		return {};
+	}
+
+	bool Game::answersPicker(const Object& picker)
+	{
+		if (computerPresses || currentState.empty()) { return true; }
+		const auto picks = [&](const CmdThink& think) { return fullName(think.picker) == picker.name; };
+		for (const Condition& condition : currentState.top().computer)
+		{
+			const bool thinks = std::any_of(condition.commands.begin(), condition.commands.end(), [&](const Command& command)
+				{
+					const auto* think = std::get_if<CmdThink>(&shapeOf(command));
+					return think && picks(*think);
+				});
+			if (thinks && holds(condition)) { return false; }
+		}
+		return true;
+	}
+
 	std::string Game::turnOwner(const std::string& owner)
 	{
 		if (!takesTurns(owner)) { return owner; }

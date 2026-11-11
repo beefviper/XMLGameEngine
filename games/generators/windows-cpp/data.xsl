@@ -1834,7 +1834,12 @@
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
     </xsl:if>
-    <xsl:if test="$node/owns">
+    <xsl:if test="$node/owns/@class">
+      <xsl:value-of select="concat($indent, $to, '.ownsClass = ')" />
+      <xsl:call-template name="string"><xsl:with-param name="text" select="$node/owns/@class" /></xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$node/owns/@object">
       <xsl:value-of select="concat($indent, $to, '.handPile = ')" />
       <xsl:call-template name="string"><xsl:with-param name="text" select="$node/owns/@object" /></xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
@@ -2744,7 +2749,12 @@
       <xsl:with-param name="to" select="'member.object'" />
       <xsl:with-param name="indent" select="$indent" />
     </xsl:call-template>
-    <xsl:if test="owns">
+    <xsl:if test="owns/@class">
+      <xsl:value-of select="concat($indent, 'member.object.ownsClass = ')" />
+      <xsl:call-template name="string"><xsl:with-param name="text" select="owns/@class" /></xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="owns/@object">
       <xsl:value-of select="concat($indent, 'member.object.handPile = ')" />
       <xsl:call-template name="string"><xsl:with-param name="text" select="owns/@object" /></xsl:call-template>
       <xsl:text>;&#10;</xsl:text>

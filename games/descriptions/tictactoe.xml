@@ -18,10 +18,11 @@
   * The grid is a <map> of <cells />, empty to begin with: X and O wait
     on it, to be put. Their <moves /> say nothing, so a mark may be put
     in any free cell.
-  * The cursor is on a map of its own over the grid; <put class="x" />
-    marks its cell, and a taken cell refuses it.
+  * The players are a group that takes <turns>, each <owns> its marks;
+    the cursor, on a map of its own over the grid, <put>s the mark of the
+    one on its turn (a taken cell refuses it) and <pass>es the turn on.
   * The grid's <checks> find three in a <line>.
-  * The computer plays O with <think>: easy looks one move ahead (it
+  * The computer plays O with <think> on O's turn: easy looks one move ahead (it
     takes a win, but does not see yours coming); smart looks to the end
     of the game, and cannot be beaten, only drawn with.
 -->
@@ -99,11 +100,21 @@
     </state>
     <state name="playing">
       <objects>
-        <object name="whoseturn">
-          <sprite name="x"><text style="hud"><content>x to move</content><color>color.red</color></text></sprite>
-          <sprite name="o"><text style="hud"><content>o to move</content><color>color.cyan</color></text></sprite>
+        <!-- the players, x first: each the words over the grid on its turn, nothing off it -->
+        <group name="players">
+          <sprite name="moving"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite name="waiting"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
           <position><x><centered /></x><y>24</y></position>
-        </object>
+          <turns sprite="waiting" />
+          <member name="crosses">
+            <sprite name="moving"><text style="hud"><content>x to move</content><color>color.red</color></text></sprite>
+            <owns class="x" />
+          </member>
+          <member name="noughts">
+            <sprite name="moving"><text style="hud"><content>o to move</content><color>color.cyan</color></text></sprite>
+            <owns class="o" />
+          </member>
+        </group>
         <!-- the grid: lines between the squares, the board showing through -->
         <object name="lines">
           <sprite><rectangle><width>square * 3</width><height>square * 3</height><color>color.darkgrey</color></rectangle></sprite>
@@ -150,14 +161,8 @@
           <row>.c.</row>
           <row>...</row>
           <object name="cursor" char="c">
-            <sprite name="x">
-              <bitmap from="cursor-x" />
-            </sprite>
-            <sprite name="o">
-              <bitmap from="cursor-x" />
-            </sprite>
-            <sprite name="cpu">
-              <bitmap from="cursor-x" />
+            <sprite>
+              <bitmap from="cursor" />
             </sprite>
             <actions>
               <action name="up"><hop direction="up" /></action>
@@ -165,27 +170,14 @@
               <action name="left"><hop direction="left" /></action>
               <action name="right"><hop direction="right" /></action>
               <action name="point"><track /></action>
-              <action name="xput">
-                <put class="x" />
+              <!-- the mark of the player on its turn, and the next one's turn -->
+              <action name="put">
+                <put />
                 <play sound="mark" />
                 <inc variable="match.made" />
-                <set variable="cursor.turn">2</set>
-                <become sprite="o" />
-                <become object="whoseturn" sprite="o" />
-              </action>
-              <action name="oput">
-                <put class="o" />
-                <play sound="mark" />
-                <inc variable="match.made" />
-                <set variable="cursor.turn">1</set>
-                <become sprite="x" />
-                <become object="whoseturn" sprite="x" />
+                <pass object="players" />
               </action>
             </actions>
-            <!-- whose turn: 1 x, 2 o -->
-            <variables>
-              <variable name="turn">1</variable>
-            </variables>
           </object>
         </map>
       </objects>
@@ -196,19 +188,10 @@
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" /></input>
         <input>
           <button>space</button><button>pad1.a</button><button>mouse.left</button>
-          <trigger object="cursor" action="xput" from="x" />
-          <trigger object="cursor" action="oput" from="o" />
+          <trigger object="cursor" action="put" />
         </input>
-        <input axis="mouse.x">
-          <trigger object="cursor" action="point" from="x" />
-          <trigger object="cursor" action="point" from="o" />
-        </input>
-        <input axis="mouse.y">
-          <trigger object="cursor" action="point" from="x" />
-          <trigger object="cursor" action="point" from="o" />
-        </input>
-        <!-- the computer's key: only its look answers it -->
-        <input><button>f12</button><trigger object="cursor" action="oput" from="cpu" /></input>
+        <input axis="mouse.x"><trigger object="cursor" action="point" /></input>
+        <input axis="mouse.y"><trigger object="cursor" action="point" /></input>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
@@ -223,24 +206,16 @@
           <become object="over.winner" sprite="draw" />
           <push state="over" />
         </condition>
-        <!-- against the computer, O's turn is its: the cursor takes its look -->
-        <condition object="match" variable="players"><equal>1</equal>
-          <condition object="cursor" variable="turn"><equal>2</equal>
-            <become object="cursor" sprite="cpu" from="o" />
-          </condition>
-        </condition>
       </conditions>
-      <!-- O's move: easy looks one ahead, smart to the end -->
+      <!-- against the computer, O's move: easy looks one ahead, smart to the end -->
       <computer>
         <condition object="match" variable="players"><equal>1</equal>
-          <condition object="options" variable="smart"><equal>0</equal>
-            <condition object="cursor" variable="turn"><equal>2</equal>
-              <think class="o" object="cursor" button="f12"><depth>1</depth></think>
+          <condition object="noughts" variable="turn"><equal>1</equal>
+            <condition object="options" variable="smart"><equal>0</equal>
+              <think object="cursor" button="space"><depth>1</depth></think>
             </condition>
-          </condition>
-          <condition object="options" variable="smart"><equal>1</equal>
-            <condition object="cursor" variable="turn"><equal>2</equal>
-              <think class="o" object="cursor" button="f12"><depth>9</depth></think>
+            <condition object="options" variable="smart"><equal>1</equal>
+              <think object="cursor" button="space"><depth>9</depth></think>
             </condition>
           </condition>
         </condition>
@@ -314,7 +289,7 @@
       <row>..*******..</row>
       <row>...*****...</row>
     </bitmap>
-    <bitmap name="cursor-x" style="cursor">
+    <bitmap name="cursor" style="cursor">
       <row>*********</row>
       <row>*.......*</row>
       <row>*.......*</row>

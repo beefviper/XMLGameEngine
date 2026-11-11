@@ -1319,12 +1319,21 @@ namespace xge
 			}
 		}
 
+		// <owns object="mine" />, a player's own holder, or <owns class="x" />,
+		// the pieces a player of a board game moves: one of them.
+		void readOwns(const XmlNode& owns, const std::string& where, std::string& holder, std::string& pieces)
+		{
+			holder = owns.getAttribute("object");
+			pieces = owns.getAttribute("class");
+			if (holder.empty() == pieces.empty()) { fail(where, "names its holder with object= or its pieces with class=, one of them"); }
+		}
+
 		// What an object's looks and steps do as it moves, as far as `node`
 		// says: its <poses>, <mirror> and <grip>.
 		void readMoves(const XmlNode& node, RawObject& object, const std::string& where)
 		{
 			if (auto holds = findChild(&node, "holds")) { readHolds(*holds, object.pile, where + " > <holds>"); }
-			if (auto owns = findChild(&node, "owns")) { object.handPile = requireAttribute(*owns, "object", where + " > <owns>"); }
+			if (auto owns = findChild(&node, "owns")) { readOwns(*owns, where + " > <owns>", object.handPile, object.ownsClass); }
 			if (auto poses = findChild(&node, "poses"))
 			{
 				const std::string here = where + " > <poses>";
@@ -2028,6 +2037,7 @@ namespace xge
 			PartialVector2 padding;
 			std::map<std::string, RawValue> variables;
 			std::string owns;                       // <owns object=>
+			std::string ownsClass;                  // <owns class=>
 			std::vector<RawCommand> think;          // <think>
 			int team{};                             // <team>: its side, partners alike
 		};
@@ -2050,7 +2060,7 @@ namespace xge
 				else if (tag == "position") { part.position = readPartialVector2(*child, where); }
 				else if (tag == "velocity") { part.velocity = readPartialVector2(*child, where); }
 				else if (tag == "padding") { part.padding = readPartialVector2(*child, where); }
-				else if (tag == "owns") { part.owns = requireAttribute(*child, "object", where + " > <owns>"); }
+				else if (tag == "owns") { readOwns(*child, where + " > <owns>", part.owns, part.ownsClass); }
 				else if (tag == "think") { part.think = { readCommand(*child, where) }; }
 				else if (tag == "team") { part.team = readCount(*child, where + " > <team>"); }
 			}
@@ -2314,6 +2324,7 @@ namespace xge
 					if (part->velocity.y) { velocityY = part->velocity.y; }
 					for (const auto& [variable, value] : part->variables) { rawObject.variable[variable] = value; }
 					if (!part->owns.empty()) { rawObject.handPile = part->owns; }
+					if (!part->ownsClass.empty()) { rawObject.ownsClass = part->ownsClass; }
 					if (!part->think.empty()) { rawObject.think = part->think; }
 					if (part->team != 0) { rawObject.handTeam = part->team; }
 				}

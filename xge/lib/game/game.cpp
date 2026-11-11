@@ -2161,21 +2161,25 @@ namespace xge
 		if (found != state.scenes.end()) { checkConditionList(found->conditions); }
 	}
 
-	std::set<KeyCode> Game::computerButtons()
+	std::set<KeyCode> Game::computerButtons(std::set<KeyCode>& taps)
 	{
 		std::set<KeyCode> held;
 		bool thought = false;
+		// A <think> with no class= plays the pieces of the player on its turn.
+		const auto play = [&](const CmdThink& written)
+		{
+			thought = true;
+			CmdThink each = written;
+			if (each.objClass.empty()) { each.objClass = turnClass(); }
+			if (const auto key = think(each)) { taps.insert(*key); }
+		};
 		for (const Condition& condition : currentState.top().computer)
 		{
 			if (!holds(condition)) { continue; }
 			for (const Command& command : condition.commands)
 			{
 				if (const auto* hold = std::get_if<CmdHold>(&shapeOf(command))) { held.insert(hold->button); }
-				if (const auto* each = std::get_if<CmdThink>(&shapeOf(command)))
-				{
-					thought = true;
-					if (const auto key = think(*each)) { held.insert(*key); }
-				}
+				if (const auto* each = std::get_if<CmdThink>(&shapeOf(command))) { play(*each); }
 			}
 		}
 		// A player the computer plays, on its turn.
@@ -2183,8 +2187,7 @@ namespace xge
 		{
 			const Object* member = tryGetObject(name);
 			if (!member || !member->exists || !isShown(*member) || member->variable.find("turn")->second == 0.0f) { continue; }
-			thought = true;
-			if (const auto key = think(plays)) { held.insert(*key); }
+			play(plays);
 		}
 		// Its turn is over (or the game was put back): the next is planned anew.
 		if (!thought)

@@ -32,7 +32,19 @@ namespace
 		}
 
 		Object& cursor() { return get("cursor"); }
-		float turn() { return cursor().variable.at("turn"); }
+		// Whose turn: the number of the member of `players` on it (from 1).
+		float turn()
+		{
+			const Object* on = game.onTurn("players");
+			float number = 0.0f;
+			for (const Object& each : game.getCurrentObjects())
+			{
+				if (!on || !each.takesTurns || each.groupName != on->groupName) { continue; }
+				number += 1.0f;
+				if (&each == on) { return number; }
+			}
+			return 0.0f;
+		}
 
 		void to(int column, int row)
 		{
@@ -193,7 +205,11 @@ TEST_CASE("fourinarow.xml: the computer's disc is dropped from its row", "[fouri
 	board.drop(4);
 	REQUIRE(board.turn() == 2.0f);
 	board.frames(1);
-	CHECK(board.cursor().lookName() == "cpu");
+	CHECK(board.cursor().lookName() == "yellow");
+	// Your keys do not reach the cursor while the computer thinks.
+	const int column = cell(board.cursor().cellColumn);
+	board.tap(KeyCode::A);
+	CHECK(cell(board.cursor().cellColumn) == column);
 	board.untilFirst();
 	CHECK(board.turn() == 1.0f);
 	CHECK(board.get("match").variable.at("made") == 2.0f);

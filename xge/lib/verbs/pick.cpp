@@ -32,7 +32,7 @@ namespace xge
 	{
 		const CmdPick& pick = std::get<CmdPick>(command);
 		Object* const self = doer.self;
-		return self && (self->hand.is ? executor.game.pickCards(*self) : executor.game.pickPiece(*self, pick.objClass, pick.only));
+		return self && (self->hand.is ? executor.game.pickCards(*self) : executor.game.pickPiece(*self, pick.objClass.empty() ? executor.game.turnClass() : pick.objClass, pick.only));
 	}
 
 	extern const Verb pickVerb;
