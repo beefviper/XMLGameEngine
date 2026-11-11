@@ -165,8 +165,8 @@ Each has a default the plan assumes, so work is not blocked. Changing one change
 | D1 | What the generator is for | **Settled by the author:** stand-alone games that read as hand-written, for any platform. `windows-cpp` (engine plus data) stays as the exact, complete target and gets no new design work; `data.xsl` is still updated with each language change until A5 covers enough games to retire it | A5, all R tasks |
 | D2 | Drop XML, window and sound libraries | **Settled by the author:** keep all, and add lower-level ones (DirectX, Vulkan). See A7 | A7 |
 | D3 | A Windows build-only job, or none | None (the author); T4 done | |
-| D4 | The words for R6 (booleans) and R7 (window names, centred offset) | The task proposes words; the author picks before it starts | R6, R7 |
-| D5 | Whether pools go entirely (R3) | Yes for things that come and go; `<die />` and `<reveal>` stay for fixed members | R3 |
+| D4 | The words for R6 (booleans) and R7 (window names, centred offset) | **Settled by the author:** `<waiting />` (and `<ready />` to turn it back on) where `<active>false` is still needed, `<hidden />` for `<drawn>false`, `<off />` for a collision's `<enabled>false`, `<lockstep />`, `<fullscreen />`; `<centered><offset>70</offset></centered>`; `window.width`, `window.height` become names and `window.width.center`, `window.height.center` stay (cheap engine constants) | R6, R7 |
+| D5 | Whether pools go entirely (R3) | **Settled by the author:** yes, pools were a stand-in from before spawning; `<die />` and `<reveal>` stay for fixed members | R3 |
 | D6 | Whether the standard pause and title screens become a built-in default | **No.** A hidden default breaks "one file is the whole game". Standardise the spelling instead | R9 |
 | D7 | Pause on new games and genres until phases 1 to 3 are done | Yes | Order of work |
 | D8 | The short tag forms that replace arithmetic in text | **Settled in part by the author:** no arithmetic in strings. The forms are proposed after R12's survey and the author picks | R12, R7 |
@@ -283,7 +283,7 @@ Work R1 first (it decides what the others delete). The rest are independent of e
 - **Size** M. **Needs** D4.
 - **Why.** Rows 7 and 8. 289 of 297 non-empty `<centered>` tags say `window.height.center` plus or minus a number (or `window.width.center`). The name is odd beside `window.right` and `window.bottom`, and `window.width` alone is not a name.
 - **Do.**
-  1. Names: make `window.width` and `window.height` names (they are `window.right` and `window.bottom` when the origin is the top left); keep `window.right`/`window.bottom` for edges. Keep `window.width.center` working until step 3 ends, then remove.
+  1. Names: make `window.width` and `window.height` names (they are `window.right` and `window.bottom` when the origin is the top left); keep `window.right`/`window.bottom` for edges, and `window.width.center`/`window.height.center` (the author keeps them: cheap engine constants).
   2. The window's middle moved by a number is a child, `<centered><offset>70</offset></centered>` (a negative number for the other way), never a sign in text: there is no arithmetic in strings (R12). Other content keeps today's meaning (the object's middle at that value), and after R12 that content is one name or number, or a `<formula>`. The word `offset` is the author's to confirm under D4.
   3. Sweep the 289. Positions must not move: for each game compare every object's start position before and after with a scratch test or by dumping `getCurrentObjects()` from both builds.
   4. The four games that centre by hand (`window.width.center - x.width / 2`) and Pong's formula use `<centered />`.
@@ -537,8 +537,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 
 ```
 Blocks 1 and 2 are done.
-
-      -- the author settles D4, D5 here --
 
 Block 3  (reduction; R1 first, then any order)
   R1  a verdict for every rare word
