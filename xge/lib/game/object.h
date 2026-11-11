@@ -386,6 +386,8 @@ namespace xge
 	{
 		int column{ 0 };             // from 1; 0 for anything that is not a cell
 		int row{ 0 };                // from 1
+		std::string columnName;      // <columns name=>: what its column is also called (a card's rank)
+		std::string rowName;         // <rows name=>: what its row is also called (a card's suit)
 		RawSprite slot;              // its row's sprite, as the row first shows it
 		RawValue gapBefore;          // the gap before its column, in its row (0 in column 1)
 		RawValue gapAbove;           // the gap above its row (0 in row 1)
@@ -466,7 +468,11 @@ namespace xge
 		// laid on the pile since the cards were gathered, unless the hand
 		// holds nothing else. <trumps>: a card of these suits beats every
 		// card of the others, whatever was led.
+		// trickBy: the variable followed as written (its row, column or the
+		// name either is given); followColumn: it is the column, not the row.
 		bool follow{ false };
+		std::string trickBy;
+		bool followColumn{ false };
 		std::vector<std::string> breakSuits;
 		std::vector<std::string> trumpSuits;
 		// <sum>N: the cards laid (all of them, held together) when their
@@ -498,16 +504,16 @@ namespace xge
 		std::string wildVariable;
 	};
 
-	// A card of a <deck> (see game/cards.h): which deck, its suit and rank
-	// (numbers from 1 in the order written), their names, the suit's color
+	// A card (see game/cards.h): which pack (its group), its row and column
+	// there (from 1; Hearts calls them suit and rank), as text too, its color
 	// (what <othercolor /> compares) and the pile the deck starts in.
 	struct CardOf
 	{
 		std::string deck;
-		int suit{};
-		int rank{};
-		std::string suitName;
-		std::string rankName;
+		int row{};
+		int column{};
+		std::string rowName;
+		std::string columnName;
 		std::string color;
 		std::string startPile;
 		std::vector<float> worths;
@@ -516,9 +522,11 @@ namespace xge
 	// <patterns name="poker">: what a pile's cards may make, the lowest
 	// first; a pile with <score patterns="poker"> is scored by them. Each
 	// <pattern> is one or more parts that must all hold among the cards
-	// scored: <same>N (N cards of one rank; two <same>s, two ranks),
-	// <run>N (N worths in a row, a card counting any of its worths) and
-	// <suited>N (N cards of one suit).
+	// scored: <alike variable>N (N cards of one column, Same, or of one row,
+	// Suited: by its column or row or the name given either; two <alike>s,
+	// two columns) and <run variable>N (N worths, or columns, in a row, a
+	// card counting any of its worths). Rows and columns are worked out
+	// once the groups are known (settleHolders).
 	struct RawPatterns
 	{
 		enum class Part { Same, Run, Suited };
@@ -526,7 +534,8 @@ namespace xge
 		{
 			std::string name;
 			std::vector<std::pair<Part, int>> parts;
-			std::string runBy{ "worth" };   // <run variable>: worth (a card's high too) or rank
+			std::string runBy{ "worth" };   // <run variable>: worth (a card's high too) or column
+			std::vector<std::string> by;    // each part's variable= as written: a row or column, or what either is called
 		};
 		std::string name;
 		std::vector<Pattern> patterns;

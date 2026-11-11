@@ -1014,9 +1014,9 @@ namespace xge
 				{
 					// A trick: any card leads, then the value led is followed;
 					// <breaks> one that leads only once played, <trumps> one over the rest.
-					const std::string variable = requireAttribute(*child, "variable", at);
-					if (variable != "suit") { fail(at, "variable=\"" + variable + "\"; for now a trick follows the suit (its row)"); }
 					PileRule& rule = pile.takes;
+					// Its row or column: worked out once the groups are known (settleHolders).
+					rule.trickBy = requireAttribute(*child, "variable", at);
 					rule.given = true;
 					rule.follow = true;
 					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
@@ -2184,8 +2184,13 @@ namespace xge
 				else if (tag == "hidden") { shared.isDrawn = false; }
 				else if (tag == "exists") { shared.exists = readBool(*child, where); }
 				else if (tag == "most") { shared.most = readCount(*child, where); }
-				else if (tag == "columns") { own.columns = readCount(*child, where); }
-				else if (tag == "rows") { own.rows = readCount(*child, where); }
+				else if (tag == "columns" || tag == "rows")
+				{
+					(tag == "columns" ? own.columns : own.rows) = readCount(*child, where);
+					// What its members' column or row is also called, beside column and row.
+					const std::string alias = child->getAttribute("name");
+					if (!alias.empty()) { (tag == "columns" ? shared.cell.columnName : shared.cell.rowName) = alias; }
+				}
 				else if (tag == "padding")
 				{
 					const PartialVector2 given = readPartialVector2(*child, where);
@@ -3443,13 +3448,10 @@ namespace xge
 					if (tag != "alike" && tag != "run") { fail(at, "unknown <" + tag + ">; expected <alike variable> and <run variable>"); }
 					// The variable compared: <alike> one value of it, <run> values in a row.
 					const std::string variable = requireAttribute(*part, "variable", at + " > <" + tag + ">");
-					RawPatterns::Part kind = tag == "run" ? RawPatterns::Part::Run : variable == "suit" ? RawPatterns::Part::Suited : RawPatterns::Part::Same;
-					if (tag == "alike" && variable != "rank" && variable != "suit") { fail(at + " > <alike>", "variable=\"" + variable + "\"; for now a pattern compares rank or suit"); }
-					if (tag == "run")
-					{
-						if (variable != "worth" && variable != "rank") { fail(at + " > <run>", "variable=\"" + variable + "\"; for now a run is of worth or rank"); }
-						one.runBy = variable;
-					}
+					// Row or column: worked out once the groups are known (settleHolders).
+					const RawPatterns::Part kind = tag == "run" ? RawPatterns::Part::Run : RawPatterns::Part::Same;
+					if (tag == "run") { one.runBy = variable; }
+					one.by.push_back(variable);
 					one.parts.emplace_back(kind, readCount(*part, at + " > <" + tag + ">"));
 				}
 				if (one.parts.empty()) { fail(at, "has no <alike> or <run>"); }

@@ -87,8 +87,8 @@
       <objects>
         <!-- the pack: a row for each suit (spades, hearts, clubs, diamonds), a column for each rank, each face its own cell of the card sheet -->
         <group name="cards" class="card">
-          <columns>13</columns>
-          <rows>4</rows>
+          <columns name="rank">13</columns>
+          <rows name="suit">4</rows>
           <sprite name="face"><cell sheet="cards"><scale>0.5</scale></cell></sprite>
           <sprite name="back"><cell sheet="cards"><column>1</column><row>5</row><scale>0.5</scale></cell></sprite>
           <position><x>0</x><y>0</y></position>

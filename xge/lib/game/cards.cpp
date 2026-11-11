@@ -19,6 +19,7 @@
 #include <bit>
 #include <cmath>
 #include <cstdint>
+#include <set>
 #include <map>
 #include <optional>
 #include <random>
@@ -27,6 +28,14 @@
 
 namespace xge
 {
+	namespace
+	{
+		// What a trick follows on a card: its row (a suit), or its column; and
+		// the same as text, as <breaks> and <trumps> are written.
+		int followed(const PileRule& rule, const Object& card) { return rule.followColumn ? card.card.column : card.card.row; }
+		std::string followedName(const PileRule& rule, const Object& card) { return rule.followColumn ? card.card.columnName : card.card.rowName; }
+	}
+
 	// ===================================================================
 	// The game's piles and hands
 	// ===================================================================
@@ -44,20 +53,22 @@ namespace xge
 		if (held.empty()) { return; }
 
 		std::map<std::string, const RawObject*> sample;  // a member of each class held
+		std::set<std::string> rowNames{ "row" };      // what the held members' rows are called
+		std::set<std::string> columnNames{ "column" };
 		for (RawObject& object : objects)
 		{
 			if (object.objClass.empty() || std::find(held.begin(), held.end(), object.objClass) == held.end()) { continue; }
 			const std::string where = "object '" + object.name + "' (of class " + object.objClass + ", which a <holds> holds)";
-			if (object.groupName.empty() || object.cell.column < 1) { throw std::runtime_error(where + ": is a member of a <group> laid out in <columns> and <rows>, its suit its row and its rank its column"); }
+			if (object.groupName.empty() || object.cell.column < 1) { throw std::runtime_error(where + ": is a member of a <group> laid out in <columns> and <rows>, its row and column what sort of card it is"); }
 			if (object.looks.size() < 2) { throw std::runtime_error(where + ": has two looks, its face first and its back"); }
 			object.isCard = true;
 			object.card.deck = object.groupName;
-			object.card.suit = object.cell.row;
-			object.card.rank = object.cell.column;
-			object.card.suitName = std::to_string(object.cell.row);
-			object.card.rankName = std::to_string(object.cell.column);
+			object.card.row = object.cell.row;
+			object.card.column = object.cell.column;
+			object.card.rowName = std::to_string(object.cell.row);
+			object.card.columnName = std::to_string(object.cell.column);
 			if (const auto color = object.variable.find("color"); color != object.variable.end()) { object.card.color = color->second.text; }
-			float worth = static_cast<float>(object.card.rank);
+			float worth = static_cast<float>(object.card.column);
 			if (const auto given = object.variable.find("worth"); given != object.variable.end())
 			{
 				try { worth = std::stof(given->second.text); }
@@ -73,11 +84,57 @@ namespace xge
 				if (more != worth) { object.card.worths.push_back(more); }
 				std::sort(object.card.worths.begin(), object.card.worths.end());
 			}
-			object.variable["suit"] = RawValue::expression(std::to_string(object.card.suit));
-			object.variable["rank"] = RawValue::expression(std::to_string(object.card.rank));
+			// Its row and column, and the same under the names its group gives them (suit, rank).
+			for (const auto& [variable, number] : { std::pair{ std::string("row"), object.card.row }, std::pair{ std::string("column"), object.card.column },
+				std::pair{ object.cell.rowName, object.card.row }, std::pair{ object.cell.columnName, object.card.column } })
+			{
+				if (variable.empty()) { continue; }
+				if (variable == "worth" || variable == "high" || variable == "color") { throw std::runtime_error(where + ": its group names its rows or columns '" + variable + "', which a card has of its own"); }
+				object.variable[variable] = RawValue::expression(std::to_string(number));
+			}
+			rowNames.insert(object.cell.rowName);
+			columnNames.insert(object.cell.columnName);
 			object.variable["worth"] = RawValue::expression(formatDisplayNumber(worth));
 			object.sprite = object.looks.front();
 			sample.emplace(object.objClass, &object);
+		}
+
+		// Row or column: a name either is called by. Patterns compare cards by
+		// them, and a trick follows one.
+		const auto axis = [&](const std::string& variable, const std::string& where) -> bool
+		{
+			if (columnNames.count(variable)) { return true; }
+			if (rowNames.count(variable)) { return false; }
+			std::string names;
+			for (const std::set<std::string>* each : { &rowNames, &columnNames })
+			{
+				for (const std::string& name : *each) { if (!name.empty()) { names += (names.empty() ? "" : ", ") + name; } }
+			}
+			throw std::runtime_error(where + ": variable=\"" + variable + "\"; it goes by a held member's row or column (" + names + ")");
+		};
+		for (RawPatterns& set : data.patterns)
+		{
+			for (RawPatterns::Pattern& pattern : set.patterns)
+			{
+				const std::string where = "<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">";
+				for (std::size_t i = 0; i < pattern.parts.size() && i < pattern.by.size(); ++i)
+				{
+					RawPatterns::Part& part = pattern.parts[i].first;
+					if (part == RawPatterns::Part::Run)
+					{
+						if (pattern.by[i] == "worth") { continue; }
+						if (!axis(pattern.by[i], where + " > <run>")) { throw std::runtime_error(where + " > <run>: variable=\"" + pattern.by[i] + "\"; for now a run is of worth or the column"); }
+						pattern.runBy = "column";
+						continue;
+					}
+					part = axis(pattern.by[i], where + " > <alike>") ? RawPatterns::Part::Same : RawPatterns::Part::Suited;
+				}
+			}
+		}
+		for (RawObject& object : objects)
+		{
+			PileRule& rule = object.pile.takes;
+			if (rule.follow && !rule.trickBy.empty()) { rule.followColumn = axis(rule.trickBy, "object '" + object.name + "' > <trick>"); }
 		}
 
 		// Each holder: which way up its looks turn what is laid there.
@@ -260,7 +317,7 @@ namespace xge
 		{
 			// Suit by suit, each by its highest worth (in rank order,
 			// unless a worth puts a card elsewhere: an ace worth 14 last).
-			const auto order = [](const Object& of) { return std::make_tuple(of.card.suit, of.card.worths.empty() ? 0.0f : of.card.worths.back(), of.card.rank); };
+			const auto order = [](const Object& of) { return std::make_tuple(of.card.row, of.card.worths.empty() ? 0.0f : of.card.worths.back(), of.card.column); };
 			const auto before = [&](int other)
 			{
 				const Object* each = cardAt(other);
@@ -271,10 +328,10 @@ namespace xge
 		pile.pile.cards.insert(at, number);
 		// A suit that <breaks>, broken.
 		const std::vector<std::string>& breaks = pile.pile.takes.breakSuits;
-		if (std::find(breaks.begin(), breaks.end(), card->card.suitName) != breaks.end()
-			&& std::find(pile.pile.broken.begin(), pile.pile.broken.end(), card->card.suit) == pile.pile.broken.end())
+		if (std::find(breaks.begin(), breaks.end(), followedName(pile.pile.takes, *card)) != breaks.end()
+			&& std::find(pile.pile.broken.begin(), pile.pile.broken.end(), followed(pile.pile.takes, *card)) == pile.pile.broken.end())
 		{
-			pile.pile.broken.push_back(card->card.suit);
+			pile.pile.broken.push_back(followed(pile.pile.takes, *card));
 		}
 		// A card laid answers any call.
 		pile.called = 0.0f;
@@ -288,7 +345,7 @@ namespace xge
 			const auto value = card.variable.find(pile.pile.counts);
 			return value == card.variable.end() ? 0.0f : value->second;
 		}
-		return card.card.worths.empty() ? static_cast<float>(card.card.rank) : card.card.worths.front();
+		return card.card.worths.empty() ? static_cast<float>(card.card.column) : card.card.worths.front();
 	}
 
 	// Whether these cards, every one of them, make the pattern: each part
@@ -305,7 +362,7 @@ namespace xge
 			{
 				for (const Object* card : group)
 				{
-					if (part == RawPatterns::Part::Same ? card->card.rank != group.front()->card.rank : card->card.suit != group.front()->card.suit) { return false; }
+					if (part == RawPatterns::Part::Same ? card->card.column != group.front()->card.column : card->card.row != group.front()->card.row) { return false; }
 				}
 				continue;
 			}
@@ -314,7 +371,7 @@ namespace xge
 			for (const Object* starter : group)
 			{
 				// By worth, a card counting any of its worths; by rank, its column.
-				const auto valuesOf = [&](const Object& card) { return pattern.runBy == "rank" ? std::vector<float>{ static_cast<float>(card.card.rank) } : card.card.worths; };
+				const auto valuesOf = [&](const Object& card) { return pattern.runBy == "column" ? std::vector<float>{ static_cast<float>(card.card.column) } : card.card.worths; };
 				for (const float start : valuesOf(*starter))
 				{
 					std::vector<bool> used(n, false);
@@ -448,7 +505,7 @@ namespace xge
 		{
 			const Object& x = *cardAt(cards[static_cast<std::size_t>(a)]);
 			const Object& y = *cardAt(cards[static_cast<std::size_t>(b)]);
-			return std::make_tuple(x.card.suit, x.card.rank) < std::make_tuple(y.card.suit, y.card.rank);
+			return std::make_tuple(x.card.row, x.card.column) < std::make_tuple(y.card.row, y.card.column);
 		};
 		for (auto& meld : melds)
 		{
@@ -472,7 +529,7 @@ namespace xge
 
 	bool Game::isTrump(const PileRule& rule, const Object& card)
 	{
-		return std::find(rule.trumpSuits.begin(), rule.trumpSuits.end(), card.card.suitName) != rule.trumpSuits.end();
+		return std::find(rule.trumpSuits.begin(), rule.trumpSuits.end(), followedName(rule, card)) != rule.trumpSuits.end();
 	}
 
 	// Whether `card` laid now takes the trick from `best`: a trump over
@@ -481,7 +538,7 @@ namespace xge
 	{
 		const bool trump = isTrump(rule, card);
 		if (trump != isTrump(rule, best)) { return trump; }
-		return card.card.suit == best.card.suit && card.card.worths.back() > best.card.worths.back();
+		return followed(rule, card) == followed(rule, best) && card.card.worths.back() > best.card.worths.back();
 	}
 
 	const Object* Game::trickWinning(const Object& pile)
@@ -510,7 +567,7 @@ namespace xge
 		{
 			if (!object.isCard || object.card.worths.empty()) { continue; }
 			top = std::max(top, object.card.worths.back());
-			if (std::find(suits.begin(), suits.end(), object.card.suit) == suits.end()) { suits.push_back(object.card.suit); }
+			if (std::find(suits.begin(), suits.end(), followed(trick, object)) == suits.end()) { suits.push_back(followed(trick, object)); }
 		}
 		std::map<int, std::vector<float>> held;
 		std::map<int, bool> trumpSuit;
@@ -519,10 +576,10 @@ namespace xge
 		{
 			const Object* card = cardAt(number);
 			if (!card || card->card.worths.empty()) { continue; }
-			held[card->card.suit].push_back(card->card.worths.back());
+			held[followed(trick, *card)].push_back(card->card.worths.back());
 			if (isTrump(trick, *card))
 			{
-				trumpSuit[card->card.suit] = true;
+				trumpSuit[followed(trick, *card)] = true;
 				++trumps;
 			}
 		}
@@ -572,7 +629,7 @@ namespace xge
 
 	bool Game::isWild(const PileRule& rule, const Object& card)
 	{
-		return std::find(rule.wildRanks.begin(), rule.wildRanks.end(), card.card.rankName) != rule.wildRanks.end()
+		return std::find(rule.wildRanks.begin(), rule.wildRanks.end(), card.card.columnName) != rule.wildRanks.end()
 			|| (!rule.wildRules.empty() && acceptsBy(rule.wildRules, card, nullptr));
 	}
 
@@ -638,7 +695,7 @@ namespace xge
 		{
 			const Object* lead = pile.pile.cards.empty() ? nullptr : cardAt(pile.pile.cards.front());
 			const Object* best = trickWinning(pile);
-			pile.lead = lead ? static_cast<float>(lead->card.suit) : 0.0f;
+			pile.lead = lead ? static_cast<float>(followed(pile.pile.takes, *lead)) : 0.0f;
 			pile.winner = best ? static_cast<float>(best->laidBy) : 0.0f;
 			refreshBoundTexts(pile.name, "lead", pile.lead);
 			refreshBoundTexts(pile.name, "winner", pile.winner);
@@ -673,12 +730,12 @@ namespace xge
 
 	namespace
 	{
-		// A card as patterns see it: its rank and suit (numbered from 1)
+		// A card as patterns see it: its column and row (from 1)
 		// and the worths it may count for, lowest first.
 		struct Scored
 		{
-			int rank;
-			int suit;
+			int column;
+			int row;
 			const std::vector<float>* worths;
 			// A bit for each worth when all are whole numbers under 64
 			// (the usual), else 0: runs are then found by bits.
@@ -714,9 +771,9 @@ namespace xge
 			bool byBits = true;
 			for (const Scored& card : cards)
 			{
-				const auto rank = static_cast<std::size_t>(card.rank);
-				if (ofRank[rank]++ == 0) { ranks[rankCount++] = card.rank; }
-				mostSuited = std::max(mostSuited, ++ofSuit[static_cast<std::size_t>(card.suit)]);
+				const auto rank = static_cast<std::size_t>(card.column);
+				if (ofRank[rank]++ == 0) { ranks[rankCount++] = card.column; }
+				mostSuited = std::max(mostSuited, ++ofSuit[static_cast<std::size_t>(card.row)]);
 				rankWorth[rank] = highest(card);
 				mask |= card.mask;
 				byBits = byBits && card.mask != 0;
@@ -946,14 +1003,14 @@ namespace xge
 				if (worth < 0.0f || worth > 63.0f || worth != std::floor(worth)) { bits = 0; break; }
 				bits |= std::uint64_t{ 1 } << static_cast<int>(worth);
 			}
-			return Scored{ card.card.rank, card.card.suit, &card.card.worths, bits };
+			return Scored{ card.card.column, card.card.row, &card.card.worths, bits };
 		};
 		float base = 1.0f;
 		for (const Object& object : objects)
 		{
 			if (!object.isCard) { continue; }
 			// Ranks and suits are counted in room for 63 (bestPattern).
-			if (object.card.rank >= 64 || object.card.suit >= 64) { return; }
+			if (object.card.column >= 64 || object.card.row >= 64) { return; }
 			base = std::max(base, highest(scored(object)) + 1.0f);
 		}
 
@@ -1150,7 +1207,7 @@ namespace xge
 				const Object* top = cardAt(object.pile.cards.back());
 				const std::string& named = object.pile.takes.wildVariable;
 				const auto value = named.empty() ? top->variable.end() : top->variable.find(named);
-				object.called = value == top->variable.end() ? static_cast<float>(top->card.suit) : value->second;
+				object.called = value == top->variable.end() ? static_cast<float>(top->card.row) : value->second;
 				refreshCall(object);
 			}
 		}
@@ -1274,7 +1331,7 @@ namespace xge
 			{
 				const Object* card = cardAt(number);
 				if (!card) { return false; }
-				total += card->card.worths.empty() ? static_cast<float>(card->card.rank) : card->card.worths.front();
+				total += card->card.worths.empty() ? static_cast<float>(card->card.column) : card->card.worths.front();
 			}
 			return total == static_cast<float>(rule.sum);
 		}
@@ -1312,22 +1369,22 @@ namespace xge
 			{
 				const auto unbroken = [&](const Object& card)
 				{
-					return std::find(rule.breakSuits.begin(), rule.breakSuits.end(), card.card.suitName) != rule.breakSuits.end()
-						&& std::find(pile.pile.broken.begin(), pile.pile.broken.end(), card.card.suit) == pile.pile.broken.end();
+					return std::find(rule.breakSuits.begin(), rule.breakSuits.end(), followedName(rule, card)) != rule.breakSuits.end()
+						&& std::find(pile.pile.broken.begin(), pile.pile.broken.end(), followed(rule, card)) == pile.pile.broken.end();
 				};
 				// A suit not yet broken leads only when the hand holds nothing else.
 				if (unbroken(*first) && holds([&](const Object& card) { return !unbroken(card); })) { return false; }
 			}
-			else if (const Object* lead = cardAt(pile.pile.cards.front()); lead && first->card.suit != lead->card.suit)
+			else if (const Object* lead = cardAt(pile.pile.cards.front()); lead && followed(rule, *first) != followed(rule, *lead))
 			{
-				if (holds([&](const Object& card) { return card.card.suit == lead->card.suit; })) { return false; }
+				if (holds([&](const Object& card) { return followed(rule, card) == followed(rule, *lead); })) { return false; }
 			}
 		}
 		if (pile.pile.cards.empty())
 		{
 			if (!acceptsBy(rule.emptyRules, *first, nullptr)) { return false; }
-			if (!rule.emptyRanks.empty() && std::find(rule.emptyRanks.begin(), rule.emptyRanks.end(), first->card.rankName) == rule.emptyRanks.end()) { return false; }
-			if (!rule.emptySuits.empty() && std::find(rule.emptySuits.begin(), rule.emptySuits.end(), first->card.suitName) == rule.emptySuits.end()) { return false; }
+			if (!rule.emptyRanks.empty() && std::find(rule.emptyRanks.begin(), rule.emptyRanks.end(), first->card.columnName) == rule.emptyRanks.end()) { return false; }
+			if (!rule.emptySuits.empty() && std::find(rule.emptySuits.begin(), rule.emptySuits.end(), first->card.rowName) == rule.emptySuits.end()) { return false; }
 			return true;
 		}
 		// Waiting for a suit to be called: nothing goes on it.
@@ -1337,8 +1394,8 @@ namespace xge
 		if (!top || !top->faceUp) { return false; }
 		if (rule.matches)
 		{
-			const int suit = pile.called > 0.0f ? static_cast<int>(pile.called) : top->card.suit;
-			if (first->card.rank != top->card.rank && first->card.suit != suit) { return false; }
+			const int suit = pile.called > 0.0f ? static_cast<int>(pile.called) : top->card.row;
+			if (first->card.column != top->card.column && first->card.row != suit) { return false; }
 		}
 		// <any>: one of them, a value called standing for the top's own.
 		if (!rule.anyRules.empty())
@@ -1353,10 +1410,10 @@ namespace xge
 	// Whether `next` may lie on `below` by the rule (not counting <one />).
 	bool Game::follows(const PileRule& rule, const Object& below, const Object& next)
 	{
-		if (rule.sameSuit && (next.card.suit != below.card.suit || next.card.deck != below.card.deck)) { return false; }
+		if (rule.sameSuit && (next.card.row != below.card.row || next.card.deck != below.card.deck)) { return false; }
 		if (rule.otherColor && next.card.color == below.card.color) { return false; }
-		if (rule.up && next.card.rank != below.card.rank + 1) { return false; }
-		if (rule.down && next.card.rank != below.card.rank - 1) { return false; }
+		if (rule.up && next.card.column != below.card.column + 1) { return false; }
+		if (rule.down && next.card.column != below.card.column - 1) { return false; }
 		return acceptsBy(rule.rules, next, &below);
 	}
 
@@ -1946,7 +2003,7 @@ namespace xge
 		// The value named: the card's suit, or its <wild variable=>.
 		const std::string& named = pile->pile.takes.wildVariable;
 		const auto value = named.empty() ? card->variable.end() : card->variable.find(named);
-		pile->called = value == card->variable.end() ? static_cast<float>(card->card.suit) : value->second;
+		pile->called = value == card->variable.end() ? static_cast<float>(card->card.row) : value->second;
 		refreshCall(*pile);
 		return true;
 	}
@@ -1964,7 +2021,7 @@ namespace xge
 		}
 		const bool last = static_cast<int>(trick.pile.cards.size()) + 1 >= std::max(players, 2);
 		const Object* winning = trickWinning(trick);
-		const auto worth = [](const Object& card) { return card.card.worths.empty() ? static_cast<float>(card.card.rank) : card.card.worths.back(); };
+		const auto worth = [](const Object& card) { return card.card.worths.empty() ? static_cast<float>(card.card.column) : card.card.worths.back(); };
 
 		std::vector<std::pair<int, const Object*>> legal;
 		for (int i = 0; i < static_cast<int>(own.pile.cards.size()); ++i)
@@ -1975,7 +2032,7 @@ namespace xge
 		}
 		if (legal.empty()) { return -1; }
 		const Object* led = trick.pile.cards.empty() ? nullptr : cardAt(trick.pile.cards.front());
-		const bool following = led && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return each.second->card.suit == led->card.suit; });
+		const bool following = led && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return followed(trick.pile.takes, *each.second) == followed(trick.pile.takes, *led); });
 		const bool ducking = following && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return worth(*each.second) < worth(*winning); });
 		const PileRule& rule = trick.pile.takes;
 		float top = 0.0f;
@@ -2042,7 +2099,7 @@ namespace xge
 		std::map<int, int> inSuit;
 		for (const int number : own->pile.cards)
 		{
-			if (const Object* card = cardAt(number)) { ++inSuit[card->card.suit]; }
+			if (const Object* card = cardAt(number)) { ++inSuit[card->card.row]; }
 		}
 		std::vector<Object*> targets;
 		Object* stock = nullptr;
@@ -2117,9 +2174,9 @@ namespace xge
 			for (int i = 0; i < static_cast<int>(own->pile.cards.size()); ++i)
 			{
 				const Object* card = cardAt(own->pile.cards[static_cast<std::size_t>(i)]);
-				if (card && inSuit[card->card.suit] > most)
+				if (card && inSuit[card->card.row] > most)
 				{
-					most = inSuit[card->card.suit];
+					most = inSuit[card->card.row];
 					aim = own;
 					index = i;
 				}
@@ -2136,7 +2193,7 @@ namespace xge
 				for (Object* pile : targets)
 				{
 					if (!pileTakes(*pile, { number }, own)) { continue; }
-					const float worth = isWild(pile->pile.takes, *card) ? 1.0f : 100.0f + static_cast<float>(inSuit[card->card.suit] * 20 + card->card.rank);
+					const float worth = isWild(pile->pile.takes, *card) ? 1.0f : 100.0f + static_cast<float>(inSuit[card->card.row] * 20 + card->card.column);
 					if (worth > best)
 					{
 						best = worth;

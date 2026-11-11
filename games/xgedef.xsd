@@ -2412,11 +2412,19 @@
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
 
+  <xs:complexType name="namedCountType">
+    <xs:simpleContent>
+      <xs:extension base="xs:positiveInteger">
+        <xs:attribute name="name" type="xs:NMTOKEN" use="optional" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
   <!-- How a group lays out cells: before its sprites. -->
   <xs:group name="groupLayout">
     <xs:sequence>
-      <xs:element name="columns" type="xs:positiveInteger" minOccurs="0" />
-      <xs:element name="rows" type="xs:positiveInteger" minOccurs="0" />
+      <!-- name=: what a member's column or row is also called beside column and row (a pack's rank and suit) -->
+      <xs:element name="columns" type="namedCountType" minOccurs="0" />
+      <xs:element name="rows" type="namedCountType" minOccurs="0" />
       <xs:element name="padding" type="partialVector2Type" minOccurs="0" />
       <!-- each column this much lower than the one before it (higher when
            below 0): a sloped girder of pieces -->

@@ -1921,7 +1921,7 @@
         </xsl:if>
       </xsl:if>
       <xsl:if test="trick">
-        <xsl:value-of select="concat(' ', $to, '.pile.takes.given = true; ', $to, '.pile.takes.follow = true; ', $to, '.pile.takes.breakSuits = {')" />
+        <xsl:value-of select="concat(' ', $to, '.pile.takes.given = true; ', $to, '.pile.takes.follow = true; ', $to, '.pile.takes.trickBy = &quot;', trick/@variable, '&quot;; ', $to, '.pile.takes.breakSuits = {')" />
         <xsl:for-each select="trick/breaks">
           <xsl:if test="position() &gt; 1">,</xsl:if>
           <xsl:text> </xsl:text>
@@ -2357,6 +2357,17 @@
       <xsl:with-param name="to" select="'group.object'" />
       <xsl:with-param name="indent" select="$in" />
     </xsl:call-template>
+    <!-- what a member's column and row are also called, from the innermost group that names them -->
+    <xsl:for-each select="(ancestor-or-self::group/columns/@name)[last()]">
+      <xsl:value-of select="concat($in, 'group.object.cell.columnName = ')" />
+      <xsl:call-template name="string"><xsl:with-param name="text" select="." /></xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:for-each>
+    <xsl:for-each select="(ancestor-or-self::group/rows/@name)[last()]">
+      <xsl:value-of select="concat($in, 'group.object.cell.rowName = ')" />
+      <xsl:call-template name="string"><xsl:with-param name="text" select="." /></xsl:call-template>
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:for-each>
     <!-- the gaps a cell takes from the innermost group that gives them -->
     <xsl:if test="$cells and $leaf">
       <xsl:value-of select="concat($in, 'group.object.cell.gapBefore = ')" />
@@ -3698,7 +3709,6 @@
         <xsl:for-each select="*">
           <xsl:if test="position() &gt; 1">,</xsl:if>
           <xsl:choose>
-            <xsl:when test="local-name() = 'alike' and @variable = 'suit'"> { RawPatterns::Part::Suited, </xsl:when>
             <xsl:when test="local-name() = 'alike'"> { RawPatterns::Part::Same, </xsl:when>
             <xsl:when test="local-name() = 'run'"> { RawPatterns::Part::Run, </xsl:when>
             <xsl:otherwise> { RawPatterns::Part::Suited, </xsl:otherwise>
@@ -3707,6 +3717,13 @@
         </xsl:for-each>
         <xsl:text> }, </xsl:text>
         <xsl:call-template name="string"><xsl:with-param name="text" select="concat(run/@variable, substring('worth', 1, 5 * not(run/@variable)))" /></xsl:call-template>
+        <xsl:text>, {</xsl:text>
+        <xsl:for-each select="*">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:text> </xsl:text>
+          <xsl:call-template name="string"><xsl:with-param name="text" select="@variable" /></xsl:call-template>
+        </xsl:for-each>
+        <xsl:text> }</xsl:text>
         <xsl:text> }</xsl:text>
       </xsl:for-each>
       <xsl:text> } });&#10;</xsl:text>

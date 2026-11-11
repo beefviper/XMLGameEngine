@@ -79,7 +79,7 @@ namespace
 	{
 		for (Object& object : table.game.getCurrentObjects())
 		{
-			if (object.isCard && object.card.suit == numberIn(klondikeSuits, suit) && object.card.rank == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
+			if (object.isCard && object.card.row == numberIn(klondikeSuits, suit) && object.card.column == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
 		}
 		return 0;
 	}
@@ -124,7 +124,7 @@ namespace
 		const Object& object = table.pile(pile);
 		if (object.pile.cards.empty()) { return ""; }
 		const Object& card = table.card(object.pile.cards.back());
-		return klondikeRanks[static_cast<std::size_t>(card.card.rank - 1)] + " " + klondikeSuits[static_cast<std::size_t>(card.card.suit - 1)];
+		return klondikeRanks[static_cast<std::size_t>(card.card.column - 1)] + " " + klondikeSuits[static_cast<std::size_t>(card.card.row - 1)];
 	}
 }
 
@@ -405,14 +405,14 @@ namespace
 
 namespace
 {
-	// Klondike with one piece of its file changed, written to a scratch file.
+	// Klondike (or another game) with pieces of its file changed, written to a scratch file.
 	struct Changed
 	{
 		std::string path;
-		Changed(const std::vector<std::pair<std::string, std::string>>& changes)
-			: path(scratchName("descriptions/klondike_scratch.xml"))
+		Changed(const std::vector<std::pair<std::string, std::string>>& changes, const std::string& game = "klondike")
+			: path(scratchName("descriptions/" + game + "_scratch.xml"))
 		{
-			std::ifstream in("descriptions/klondike.xml");
+			std::ifstream in("descriptions/" + game + ".xml");
 			std::stringstream read;
 			read << in.rdbuf();
 			std::string text = read.str();
@@ -426,6 +426,45 @@ namespace
 		}
 		~Changed() { std::error_code ignored; std::filesystem::remove(path, ignored); }
 	};
+}
+
+TEST_CASE("a pack's rows and columns are row and column, and the names <rows name> and <columns name> give them", "[cards]")
+{
+	// Klondike names them suit and rank: each card has all four, the same numbers.
+	{
+		Played play("descriptions/klondike.xml");
+		int cards = 0;
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (!object.isCard) { continue; }
+			++cards;
+			CHECK(object.variable.at("row") == object.variable.at("suit"));
+			CHECK(object.variable.at("column") == object.variable.at("rank"));
+		}
+		CHECK(cards == 52);
+	}
+	// Unnamed, they are row and column only, and a rule may say either.
+	{
+		Changed plain({ { "<columns name=\"rank\">13</columns>", "<columns>13</columns>" },
+			{ "<condition variable=\"rank\"><equal>top.rank - 1</equal></condition>", "<condition variable=\"column\"><equal>top.column - 1</equal></condition>" },
+			{ "<condition variable=\"rank\"><equal>top.rank + 1</equal></condition>", "<condition variable=\"column\"><equal>top.column + 1</equal></condition>" },
+			{ "<empty><condition variable=\"rank\"><equal>1</equal></condition></empty>", "<empty><condition variable=\"column\"><equal>1</equal></condition></empty>" },
+			{ "<empty><condition variable=\"rank\"><equal>13</equal></condition></empty>", "<empty><condition variable=\"column\"><equal>13</equal></condition></empty>" } });
+		Played play(plain.path);
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (object.isCard) { CHECK_FALSE(object.variable.count("rank")); }
+		}
+	}
+	// A name a card has of its own stops the load.
+	Changed worth({ { "<columns name=\"rank\">13</columns>", "<columns name=\"worth\">13</columns>" } }, "klondike");
+	CHECK_THROWS_WITH(Played(worth.path), Catch::Matchers::ContainsSubstring("which a card has of its own"));
+
+	// A pattern or a trick by what is no row or column stops the load.
+	Changed pattern({ { "<alike variable=\"suit\">5</alike></pattern>", "<alike variable=\"colour\">5</alike></pattern>" } }, "holdem");
+	CHECK_THROWS_WITH(Played(pattern.path), Catch::Matchers::ContainsSubstring("goes by a held member's row or column"));
+	Changed trick({ { "<trick variable=\"suit\"><breaks>", "<trick variable=\"worth\"><breaks>" } }, "hearts");
+	CHECK_THROWS_WITH(Played(trick.path), Catch::Matchers::ContainsSubstring("goes by a held member's row or column"));
 }
 
 TEST_CASE("klondike.xml: placing rules are conditions on the arriving card against top; mistakes in them stop the load", "[cards][accepts]")
@@ -546,8 +585,8 @@ TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces fro
 	// Card 22 is the 9 of hearts in both: row 2, column 9.
 	Object& nine = table.card(cardOf(table, "hearts", "9"));
 	CHECK(nine.cardNumber == 22);
-	CHECK(nine.card.suit == 2);
-	CHECK(nine.card.rank == 9);
+	CHECK(nine.card.row == 2);
+	CHECK(nine.card.column == 9);
 	CHECK((nine.looks[0].bitmap->rgba == hearts.game.cardAt(22)->looks[0].bitmap->rgba));
 	CHECK((nine.looks[1].bitmap->rgba == hearts.game.cardAt(22)->looks[1].bitmap->rgba));
 	CHECK(nine.variable.at("color") == 2.0f);
@@ -607,7 +646,7 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.isCard && object.card.suit == numberIn(klondikeSuits, suit) && object.card.rank == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
+				if (object.isCard && object.card.row == numberIn(klondikeSuits, suit) && object.card.column == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
 			}
 			return 0;
 		}
@@ -634,7 +673,7 @@ namespace
 			game.layOutCards();
 		}
 
-		std::string name(int number) { return klondikeRanks[static_cast<std::size_t>(card(number).card.rank - 1)] + " " + klondikeSuits[static_cast<std::size_t>(card(number).card.suit - 1)]; }
+		std::string name(int number) { return klondikeRanks[static_cast<std::size_t>(card(number).card.column - 1)] + " " + klondikeSuits[static_cast<std::size_t>(card(number).card.row - 1)]; }
 		std::string top(const std::string& name) { return pile(name).pile.cards.empty() ? "" : this->name(pile(name).pile.cards.back()); }
 
 		// Points your hand at that card of yours.
@@ -669,7 +708,7 @@ TEST_CASE("crazyeights.xml: the deal: seven each, yours face up in order, one tu
 	for (std::size_t i = 0; i < mine.size(); ++i)
 	{
 		CHECK(table.card(mine[i]).faceUp);
-		if (i > 0) { CHECK(std::make_pair(table.card(mine[i - 1]).card.suit, table.card(mine[i - 1]).card.rank) < std::make_pair(table.card(mine[i]).card.suit, table.card(mine[i]).card.rank)); }
+		if (i > 0) { CHECK(std::make_pair(table.card(mine[i - 1]).card.row, table.card(mine[i - 1]).card.column) < std::make_pair(table.card(mine[i]).card.row, table.card(mine[i]).card.column)); }
 	}
 	REQUIRE(table.pile("theirs").pile.cards.size() == 7);
 	for (const int number : table.pile("theirs").pile.cards) { CHECK_FALSE(table.card(number).faceUp); }
@@ -868,7 +907,7 @@ namespace
 			const int column = static_cast<int>(std::find(ranks.begin(), ranks.end(), rank) - ranks.begin()) + 1;
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.isCard && object.card.suit == row && object.card.rank == column) { return object.cardNumber; }
+				if (object.isCard && object.card.row == row && object.card.column == column) { return object.cardNumber; }
 			}
 			return 0;
 		}
@@ -991,14 +1030,14 @@ namespace
 		const int row = numberOf(packSuits, name.substr(space + 1));
 		for (Object& object : game.getCurrentObjects())
 		{
-			if (object.isCard && object.card.rank == column && object.card.suit == row) { return object.cardNumber; }
+			if (object.isCard && object.card.column == column && object.card.row == row) { return object.cardNumber; }
 		}
 		return 0;
 	}
 
 	std::string nameOf(const Object& card)
 	{
-		return packRanks[static_cast<std::size_t>(card.card.rank - 1)] + " " + packSuits[static_cast<std::size_t>(card.card.suit - 1)];
+		return packRanks[static_cast<std::size_t>(card.card.column - 1)] + " " + packSuits[static_cast<std::size_t>(card.card.row - 1)];
 	}
 }
 
@@ -1387,7 +1426,7 @@ TEST_CASE("hearts.xml: the deal: thirteen each, yours face up in suit order, the
 	{
 		const Object& before = *play.game.cardAt(mine[i - 1]);
 		const Object& after = *play.game.cardAt(mine[i]);
-		CHECK(std::make_pair(before.card.suit, before.card.worths.back()) < std::make_pair(after.card.suit, after.card.worths.back()));
+		CHECK(std::make_pair(before.card.row, before.card.worths.back()) < std::make_pair(after.card.row, after.card.worths.back()));
 		CHECK(after.faceUp);
 	}
 	CHECK(play.turn() == 1.0f);
@@ -1419,7 +1458,7 @@ TEST_CASE("hearts.xml: the suit led is followed; hearts lead only once broken, o
 	CHECK(play.table("tricks") == 1.0f);
 	// A heart has been laid: hearts are broken.
 	const auto& broken = play.pile("trick").pile.broken;
-	CHECK(std::find(broken.begin(), broken.end(), play.game.cardAt(play.cardOf("A hearts"))->card.suit) != broken.end());
+	CHECK(std::find(broken.begin(), broken.end(), play.game.cardAt(play.cardOf("A hearts"))->card.row) != broken.end());
 	// West led again (its diamond), north shed another heart, east followed;
 	// you have no diamond, so anything goes.
 	CHECK(play.pile("trick").pile.cards.size() == 3);

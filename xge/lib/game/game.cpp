@@ -92,7 +92,7 @@ namespace xge
 				if (set.name != object.pile.score) { continue; }
 				for (const RawPatterns::Pattern& pattern : set.patterns)
 				{
-					if (pattern.runBy != "worth") { throw std::runtime_error("<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">: scores a hand of " + object.name + "; for now such a run is of worth (rank runs are for <melds />)"); }
+					if (pattern.runBy != "worth") { throw std::runtime_error("<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">: scores a hand of " + object.name + "; for now such a run is of worth (runs of a column are for <melds />)"); }
 				}
 			}
 			if (!object.pile.melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.pile.melds; }))
