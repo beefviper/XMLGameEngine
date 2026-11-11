@@ -555,6 +555,122 @@ namespace xge
 		return changed;
 	}
 
+	namespace
+	{
+		// `from.` at the start of a name in a value made `to.`; whether any was.
+		bool renameObjectInValue(RawValue& each, const std::string& from, const std::string& to)
+		{
+			bool changed = false;
+			for (std::string* text : { &each.text, &each.offset, &each.min, &each.max })
+			{
+				std::string renamed = renameStart(*text, from, to);
+				if (renamed != *text) { *text = std::move(renamed); changed = true; }
+			}
+			if (each.operations)
+			{
+				auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
+				for (RawOperation& operation : *operations)
+				{
+					for (RawOperand& operand : operation.operands) { changed = renameObjectInValue(operand.value, from, to) || changed; }
+				}
+				each.operations = std::move(operations);
+			}
+			return changed;
+		}
+
+		// The same in a test: the object it is about or measures to, its
+		// variable, its number, and what it holds.
+		bool renameObjectInCheck(RawCondition& condition, const std::string& from, const std::string& to)
+		{
+			bool changed = false;
+			for (std::string* each : { &condition.filterObject, &condition.distance })
+			{
+				if (*each == from) { *each = to; changed = true; }
+			}
+			std::string renamed = renameStart(condition.variableName, from, to);
+			if (renamed != condition.variableName) { condition.variableName = std::move(renamed); changed = true; }
+			changed = renameObjectInValue(condition.threshold, from, to) || changed;
+			for (std::vector<RawCondition>* list : { &condition.parts, &condition.inner })
+			{
+				for (RawCondition& part : *list) { changed = renameObjectInCheck(part, from, to) || changed; }
+			}
+			changed = renameObjectIn(condition.first, from, to) || changed;
+			changed = renameObjectIn(condition.commands, from, to) || changed;
+			return changed;
+		}
+	}
+
+	bool renameObjectIn(std::vector<RawCommand>& list, const std::string& from, const std::string& to)
+	{
+		bool changed = false;
+		for (RawCommand& command : list)
+		{
+			for (std::string* each : { &command.object, &command.partner, &command.retreat, &command.closeObject })
+			{
+				if (*each == from) { *each = to; changed = true; }
+			}
+			for (std::string* text : { &command.variable, &command.into })
+			{
+				std::string renamed = renameStart(*text, from, to);
+				if (renamed != *text) { *text = std::move(renamed); changed = true; }
+			}
+			for (RawValue* each : { &command.amount, &command.seconds, &command.arc, &command.distance, &command.ahead, &command.positionX, &command.positionY,
+				&command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.below })
+			{
+				changed = renameObjectInValue(*each, from, to) || changed;
+			}
+			if (command.test)
+			{
+				auto test = std::make_shared<RawCondition>(*command.test);
+				if (renameObjectInCheck(*test, from, to)) { command.test = std::move(test); changed = true; }
+			}
+		}
+		return changed;
+	}
+
+	void nameOther(std::vector<RawObject>& objects)
+	{
+		for (RawObject& object : objects)
+		{
+			std::vector<RawCollisionRule> rules;
+			for (RawCollisionRule& rule : object.rawCollisionData.others)
+			{
+				RawCollisionRule probe = rule;
+				const bool inCommands = renameObjectIn(probe.commands, "other", "other_");
+				const bool inCheck = renameObjectInCheck(probe.check, "other", "other_");
+				if (!inCommands && !inCheck)
+				{
+					rules.push_back(std::move(rule));
+					continue;
+				}
+
+				// Once for each object it can touch: of its class=, named by
+				// its object=, in the same state (or one of them in none).
+				bool any = false;
+				for (const RawObject& touched : objects)
+				{
+					if (&touched == &object) { continue; }
+					if (!rule.filterClass.empty() && touched.objClass != rule.filterClass) { continue; }
+					if (!rule.filterObject.empty() && !touched.named(rule.filterObject)) { continue; }
+					if (!touched.ownerState.empty() && !object.ownerState.empty() && touched.ownerState != object.ownerState) { continue; }
+					any = true;
+					RawCollisionRule each = rule;
+					each.filterObject = touched.name;
+					each.otherIs = touched.name;
+					renameObjectIn(each.commands, "other", touched.name);
+					renameObjectInCheck(each.check, "other", touched.name);
+					rules.push_back(std::move(each));
+				}
+				if (!any)
+				{
+					const std::string about = !rule.filterObject.empty() ? " named \"" + rule.filterObject + "\"" : !rule.filterClass.empty() ? " of class \"" + rule.filterClass + "\"" : std::string();
+					throw std::runtime_error("object '" + object.name + "' > <collision>: names other, the object it touched, but there is nothing" + about + " for it to touch");
+				}
+			}
+			object.rawCollisionData.others = std::move(rules);
+		}
+	}
+
 	void nameSelf(std::vector<RawObject>& objects)
 	{
 		for (RawObject& object : objects)

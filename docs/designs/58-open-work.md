@@ -22,9 +22,8 @@ The [plan](../plan.md) reviews this backlog, argues with parts of it, and orders
 - **Sound** ([sound](33-sound.md)): an envelope; notes that follow a variable (Space Invaders' march keeping time).
 - **Values** ([arithmetic](03-arithmetic.md)): tangent, square root, power, `pick`, when a game needs one.
 - **Conditions** ([states-and-conditions](07-states-and-conditions.md)): object-level conditions, a total inside a value, conditions on edge rules.
-- **A word for the object touched** (`other`), so Mario Bros.' rules about either brother are written once ([games-atari](56-games-atari.md#mario-bros)).
 - **Scenes** ([scenes](12-scenes.md)): Berserk's larger grid of rooms, which needs maps made while playing.
-- **Reserved names:** an object, group, member, map or state may not be called `self`, `others`, `window` or `color`, nor anything a number, because dotted names mix the game's own names with the engine's words (`self.x`, `window.width`, `color.red`). Variables and sounds are free (only ever after a dot, or named by `sound=`), and `top` is free (`top.rank` is read before any name). Look for a way to say those things that needs no reserved words, so any name is free (an object may already be called `object`).
+- **Reserved names:** an object, group, member, map or state may not be called `self`, `other`, `others`, `window` or `color`, nor anything a number, because dotted names mix the game's own names with the engine's words (`self.x`, `other.score`, `window.width`, `color.red`). Variables and sounds are free (only ever after a dot, or named by `sound=`), and `top` is free (`top.rank` is read before any name). Look for a way to say those things that needs no reserved words, so any name is free (an object may already be called `object`).
 
 ## The games
 

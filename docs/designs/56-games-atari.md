@@ -46,7 +46,7 @@ The author listed about thirty non-scrolling Atari 2600 games and asked for five
 - **Six phases** as scenes, each counting kicks up to its `upto`.
 - **One piece per kind from one `pest`** that holds what they share. A sidestepper goes `mad` on the first bump; a fighter fly hops, so a bump reaches it only between hops. Rejected: one group of all kinds (bump rules differ by kind, and rules are a group's).
 - **A flip** is a hop that keeps its sideways way. One that gets up by itself turns red by a palette swap; a second time, blue, by a rule on the floor. Rejected: `from=` on a style-only `<become>` (a second meaning for `from=`).
-- **Two players at once:** Mario and Luigi are one piece taken twice; Luigi wears green by `<become style="luigi">`. A pest's rules about a brother are written once per brother, since a rule cannot name "whoever touched me". A word for that (`other`) would be worth having if more two-player games need it.
+- **Two players at once:** Mario and Luigi are one piece taken twice; Luigi wears green by `<become style="luigi">`. A pest's rules about a brother are written once, for class `brother`, naming him `other`.
 - Drawn at 256 by 224 with `<scale>3</scale>`; `<poses>` with `<mirror>`, a `<grip>` of 0.15.
 
 ## Found on the way

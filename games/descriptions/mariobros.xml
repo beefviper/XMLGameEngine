@@ -280,12 +280,8 @@
             <condition variable="down"><atleast>1</atleast></condition>
             <set variable="self.velocity.x">0</set>
           </collision>
-          <collision object="mario">
-            <inc variable="mario.score">800</inc>
-            <trigger action="kicked" />
-          </collision>
-          <collision object="luigi">
-            <inc variable="luigi.score">800</inc>
+          <collision class="brother">
+            <inc variable="other.score">800</inc>
             <trigger action="kicked" />
           </collision>
         </collision>
@@ -299,13 +295,9 @@
           <collision class="enemy" side="horizontal">
             <bounce />
           </collision>
-          <collision object="mario">
-            <condition object="mario" variable="blink"><atmost>0</atmost></condition>
-            <trigger object="mario" action="lose" />
-          </collision>
-          <collision object="luigi">
-            <condition object="luigi" variable="blink"><atmost>0</atmost></condition>
-            <trigger object="luigi" action="lose" />
+          <collision class="brother">
+            <condition object="other" variable="blink"><atmost>0</atmost></condition>
+            <trigger object="other" action="lose" />
           </collision>
         </collision>
       </collisions>
@@ -418,13 +410,9 @@
           <collision class="enemy" side="horizontal">
             <bounce />
           </collision>
-          <collision object="mario">
-            <condition object="mario" variable="blink"><atmost>0</atmost></condition>
-            <trigger object="mario" action="lose" />
-          </collision>
-          <collision object="luigi">
-            <condition object="luigi" variable="blink"><atmost>0</atmost></condition>
-            <trigger object="luigi" action="lose" />
+          <collision class="brother">
+            <condition object="other" variable="blink"><atmost>0</atmost></condition>
+            <trigger object="other" action="lose" />
           </collision>
         </collision>
         <!-- bumped from below through a floor, the look it leads to first:
@@ -540,13 +528,8 @@
           </any>
           <despawn />
         </collision>
-        <collision object="mario">
-          <inc variable="mario.score">800</inc>
-          <play sound="coin" />
-          <despawn />
-        </collision>
-        <collision object="luigi">
-          <inc variable="luigi.score">800</inc>
+        <collision class="brother">
+          <inc variable="other.score">800</inc>
           <play sound="coin" />
           <despawn />
         </collision>
@@ -858,13 +841,8 @@
                 <frame sprite="b" />
               </animation>
               <collisions>
-                <collision object="mario">
-                  <inc variable="mario.score">800</inc>
-                  <play sound="coin" />
-                  <despawn />
-                </collision>
-                <collision object="luigi">
-                  <inc variable="luigi.score">800</inc>
+                <collision class="brother">
+                  <inc variable="other.score">800</inc>
                   <play sound="coin" />
                   <despawn />
                 </collision>

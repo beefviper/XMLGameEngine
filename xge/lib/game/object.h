@@ -76,6 +76,12 @@ namespace xge
 		RawCondition check;
 
 		std::vector<RawCommand> commands;
+
+		// A rule that names `other` (the object it touched) is made once for
+		// each object of the file it can touch: this is that one, named in
+		// full, as the rule's object= (see nameOther). Empty for a rule that
+		// does not name other.
+		std::string otherIs;
 	};
 
 	// How an object's shape is tested against others: as its bounding box
@@ -143,6 +149,14 @@ namespace xge
 		friend std::ostream& operator<<(std::ostream& o, RawCollisionData const& f);
 	};
 
+	// A rule naming `other`, made for a copy (shot.3) of the object it was
+	// made for (shot), the first time that copy is touched.
+	struct CopyRule
+	{
+		std::vector<Command> commands;
+		std::optional<Condition> check;
+	};
+
 	// A parsed, ready-to-run version of RawCollisionRule.
 	struct CollisionRule
 	{
@@ -155,6 +169,15 @@ namespace xge
 		std::vector<Edge> sides;           // empty: any side
 		std::optional<Condition> check;    // see RawCollisionRule::check
 		std::vector<Command> commands;
+
+		// See RawCollisionRule::otherIs. A copy of that object, spawned
+		// while the game runs, is other too: its commands are made again
+		// from `written` (as for otherIs) and its check moved onto it, once
+		// each, the first time it is touched.
+		std::string otherIs;
+		std::shared_ptr<const std::vector<RawCommand>> written;
+		std::string where;
+		std::map<std::string, CopyRule> copies;
 	};
 
 	struct CollisionData
@@ -1836,6 +1859,18 @@ namespace xge
 	// self., which nameSelf made its name) they now say of `to`. What a
 	// <spawn> makes a copy from.
 	void renameOwn(RawObject& object, const std::string& from, const std::string& to);
+
+	// What a rule about another object leaves to mean the object it touched:
+	// other, as the object a command names (object="other") or at the start
+	// of a name (other.score), in its commands and its tests. The rule is made
+	// once for each object of the file it can touch (not the object itself;
+	// one of its own state, or of none), with other made that one's name and
+	// object= it (RawCollisionRule::otherIs). After nameSelf.
+	void nameOther(std::vector<RawObject>& objects);
+
+	// The object `from` made `to` in a list of commands: as the object one
+	// names, and at the start of a variable or a value. Whether any was.
+	bool renameObjectIn(std::vector<RawCommand>& list, const std::string& from, const std::string& to);
 
 	// One of the numbers every object has while the game runs, read and set
 	// as owner.part (ball.x, ship.velocity.y): its top left, its velocity,

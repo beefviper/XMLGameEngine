@@ -80,7 +80,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | numbers | `inc`, `dec`, `set`, `copy`, `rank`, `formula`; `update="live"` on a variable, position or heading | [numbers](reference/commands.md#numbers), [arithmetic](reference/format.md#arithmetic-as-tags), [live numbers](reference/format.md#live-numbers-of-an-object) |
 | look and sound | `become`, `play`, `silence`, `music` | [look and sound](reference/commands.md#look-and-sound) |
 | flow | `push`, `pop`, `enter`, `turns`, `pass`, `out`, `demo`, `trigger` (in a key, `otherwise`) | [flow](reference/commands.md#flow) |
-| rules in rules | a condition holding conditions (`first`, `otherwise`), a collision holding collisions (`first`), `sprite=` tests, `self`/`others`, `lowest`, `highest`, `unequal` | [conditions in conditions](reference/states.md#conditions-in-conditions), [collisions](reference/collisions.md) |
+| rules in rules | a condition holding conditions (`first`, `otherwise`), a collision holding collisions (`first`), `sprite=` tests, `self`/`others`, `other` in a collision rule, `lowest`, `highest`, `unequal` | [conditions in conditions](reference/states.md#conditions-in-conditions), [collisions](reference/collisions.md) |
 | cells | `settle`, `slide` (`class=`), `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |
 | cell puzzles | `shove`, `merge`, `undo`, `here`, `around` (`straight`, `alike`) in `count` and `trigger`; a `condition` in an action | [pushing, merging and counting](reference/maps.md#pushing-merging-and-counting), [conditions in an action](reference/commands.md#conditions-in-an-action) |
 | boards | `pick`, `place`, `put`, `flank`, `moves` | [boards](reference/boards.md) |

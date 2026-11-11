@@ -43,6 +43,7 @@ namespace xge
 		applyStyles(data.objects, data.styles);
 		markSolid(data.objects);
 		nameSelf(data.objects);
+		nameOther(data.objects);
 		centerOnOwnSize(data.objects);
 		windowDesc = std::move(data.window);
 		validation = std::move(data.validation);
@@ -258,24 +259,7 @@ namespace xge
 
 		// Its rules' tests, made at load for the object it is copied from,
 		// about the copy instead.
-		const std::function<void(Condition&)> retarget = [&](Condition& check)
-		{
-			for (Condition& part : check.parts) { retarget(part); }
-			if (check.filterObject == original.name) { check.filterObject = name; }
-			if (check.distanceTo == original.name) { check.distanceTo = name; }
-			if (check.live)
-			{
-				RawValue renamed = *check.live;
-				renamed.text = renameStart(renamed.text, original.name, name);
-				check.live = std::make_shared<const RawValue>(std::move(renamed));
-			}
-			for (Condition::Read& read : check.reads)
-			{
-				if (read.owner != original.name) { continue; }
-				read.owner = name;
-				read.slot = &expr.objectVariables[name + "." + read.variable];
-			}
-		};
+		const auto retarget = [&](Condition& check) { retargetCheck(check, original.name, name); };
 		for (std::size_t i = 0; i < made.collisionData.others.size() && i < original.collisionData.others.size(); ++i)
 		{
 			if (!original.collisionData.others[i].check) { continue; }
@@ -1965,6 +1949,40 @@ namespace xge
 			});
 	}
 
+	void Game::retargetCheck(Condition& check, const std::string& from, const std::string& to)
+	{
+		for (Condition& part : check.parts) { retargetCheck(part, from, to); }
+		if (check.filterObject == from) { check.filterObject = to; }
+		if (check.distanceTo == from) { check.distanceTo = to; }
+		if (check.live)
+		{
+			RawValue renamed = *check.live;
+			renamed.text = renameStart(renamed.text, from, to);
+			check.live = std::make_shared<const RawValue>(std::move(renamed));
+		}
+		for (Condition::Read& read : check.reads)
+		{
+			if (read.owner != from) { continue; }
+			read.owner = to;
+			read.slot = &expr.objectVariables[to + "." + read.variable];
+		}
+	}
+
+	const CopyRule& Game::ruleForCopy(CollisionRule& rule, const std::string& copy)
+	{
+		if (const auto found = rule.copies.find(copy); found != rule.copies.end()) { return found->second; }
+		std::vector<RawCommand> written = *rule.written;
+		renameObjectIn(written, rule.otherIs, copy);
+		CopyRule made;
+		made.commands = expr.processCommands(written, rule.where);
+		if (rule.check)
+		{
+			made.check = *rule.check;
+			retargetCheck(*made.check, rule.otherIs, copy);
+		}
+		return rule.copies.emplace(copy, std::move(made)).first->second;
+	}
+
 	void Game::reactTo(Object& self, Object& other, const Touch& touch)
 	{
 		CommandExecutor executor(*this);
@@ -1980,17 +1998,22 @@ namespace xge
 
 		// A rule with unless= is passed over while `self` is also touching
 		// something of that class.
-		for (const auto& rule : self.collisionData.others)
+		for (auto& rule : self.collisionData.others)
 		{
 			if (!collisionRuleMatches(rule, other)) { continue; }
 			if (!rule.whileSprite.empty() && look != rule.whileSprite) { continue; }
 			if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
 			if (touch.through ? *touch.through != rule.throughClass : !rule.throughClass.empty()) { continue; }
 			if (!rule.sides.empty() && std::find(rule.sides.begin(), rule.sides.end(), touch.edge) == rule.sides.end()) { continue; }
-			if (rule.check && !holds(*rule.check)) { continue; }
+			// A rule naming other, touching a copy of the one it was made for:
+			// its commands and check about that copy.
+			const bool copy = !rule.otherIs.empty() && other.name != rule.otherIs;
+			const CopyRule* made = copy ? &ruleForCopy(rule, other.name) : nullptr;
+			const std::optional<Condition>& check = made ? made->check : rule.check;
+			if (check && !holds(*check)) { continue; }
 
 			// A verb refused ends the rule there, as it ends an action.
-			for (const auto& command : rule.commands)
+			for (const auto& command : made ? made->commands : rule.commands)
 			{
 				if (!executor.executeObjectCollision(command, self, other, touch)) { break; }
 			}

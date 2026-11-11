@@ -176,14 +176,14 @@ TEST_CASE("a map piece is taken by a map, which gives its rows and changes what 
 	}
 	SECTION("by from=, changing its place and its walls")
 	{
-		const Scratch file("<map name=\"other\" from=\"maze\"><position><y>200</y></position><row>.#</row>"
+		const Scratch file("<map name=\"another\" from=\"maze\"><position><y>200</y></position><row>.#</row>"
 			"<group name=\"walls\"><sprite><rectangle><width>10</width><height>10</height><color>color.red</color></rectangle></sprite></group></map>",
 			"<pop />", {}, maze);
 		Played play(file.path);
 
 		// its own y and its own walls' color, the piece's x, tile and class
 		CHECK(play.count("walls") == 1);
-		const Object& other = play.get("other.walls.1");
+		const Object& other = play.get("another.walls.1");
 		CHECK(other.position.x == Approx(110));
 		CHECK(other.position.y == Approx(200));
 		CHECK(other.objClass == "wall");

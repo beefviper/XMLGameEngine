@@ -199,13 +199,13 @@ TEST_CASE("a member takes what it leaves out from its group", "[group]")
 
 TEST_CASE("the group's name means every member", "[group]")
 {
-	Loaded loaded{ gameXml(kLane + "<object name=\"other\">" + kSprite + kPosition + kVelocity + kCollisions + "</object>") };
+	Loaded loaded{ gameXml(kLane + "<object name=\"another\">" + kSprite + kPosition + kVelocity + kCollisions + "</object>") };
 	Game& game = loaded.game;
 	game.setCurrentState("playing");
 
 	// A state that shows the group shows all three, and not the object beside it.
 	for (const char* name : { "lane.1", "lane.2", "odd" }) { CHECK(game.isShown(game.getObject(name))); }
-	CHECK_FALSE(game.isShown(game.getObject("other")));
+	CHECK_FALSE(game.isShown(game.getObject("another")));
 
 	// The name alone finds the first member.
 	CHECK(&game.getObject("lane") == &game.getObject("lane.1"));

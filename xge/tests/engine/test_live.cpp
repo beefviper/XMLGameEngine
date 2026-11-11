@@ -132,7 +132,7 @@ TEST_CASE("where things are is only known while the game runs, and <set> names s
 		Game game(file.path);
 	};
 
-	CHECK_THROWS_WITH(load(box("ball", 100, 50) + box("other", 0, 0) + "<object name=\"late\"><sprite><rectangle><width>ball.x</width><height>4</height></rectangle></sprite>"
+	CHECK_THROWS_WITH(load(box("ball", 100, 50) + box("another", 0, 0) + "<object name=\"late\"><sprite><rectangle><width>ball.x</width><height>4</height></rectangle></sprite>"
 		"<position><x>0</x><y>0</y></position></object>", "<pop />"),
 		ContainsSubstring("ball.x, which is only known while the game runs"));
 	CHECK_THROWS_WITH(load(box("ball", 100, 50), "<set variable=\"bat.x\">1</set>"), ContainsSubstring("there is no object named 'bat'"));

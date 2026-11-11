@@ -1449,6 +1449,12 @@ namespace xge
 			if (side == "left" || side == "horizontal") { rule.sides.push_back(Edge::Left); }
 			if (side == "right" || side == "horizontal") { rule.sides.push_back(Edge::Right); }
 			rule.commands = processCommands(rawRule.commands, where);
+			if (!rawRule.otherIs.empty())
+			{
+				rule.otherIs = rawRule.otherIs;
+				rule.written = std::make_shared<const std::vector<RawCommand>>(rawRule.commands);
+				rule.where = where;
+			}
 			object.collisionData.others.push_back(std::move(rule));
 		}
 

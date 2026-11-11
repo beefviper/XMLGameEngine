@@ -1389,7 +1389,7 @@ namespace xge
 		// A value and its name, such as <variable name="score">0</variable>.
 		// A name the engine's own words would hide. What starts a dotted
 		// name (an object, group, member, map or state) may not be one of the
-		// engine's words that start one (self.x, others,
+		// engine's words that start one (self.x, other.score, others,
 		// window.width, color.red); nothing may be a number. A variable is
 		// only ever after the dot, so its name may be a word (a card's
 		// color, a game's top). top.rank in a holder's rules is read
@@ -1397,7 +1397,7 @@ namespace xge
 		// a way to need no reserved names is open.
 		void refuseReserved(const std::string& name, const char* kind, const std::string& where, bool startsNames = true)
 		{
-			static const std::set<std::string> reserved{ "self", "others", "window", "color" };
+			static const std::set<std::string> reserved{ "self", "other", "others", "window", "color" };
 			const bool number = !name.empty() && std::any_of(name.begin(), name.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0; })
 				&& std::all_of(name.begin(), name.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0 || c == '.' || c == '-'; });
 			if ((startsNames && reserved.count(name)) || number)

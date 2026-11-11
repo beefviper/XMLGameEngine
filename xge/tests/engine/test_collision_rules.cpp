@@ -296,3 +296,76 @@ TEST_CASE("an object put somewhere has moved: it touches what it is put on, with
 
 	std::filesystem::remove(path);
 }
+
+TEST_CASE("a rule names the object it touched other, whichever of its class that was", "[collision_rules][other]")
+{
+	// Two players of one class; the coin's one rule pays whichever touched it,
+	// and only while that one has no shield up, which paying puts up.
+	const std::string player = "<collisions><enabled>true</enabled></collisions>"
+		"<variables><variable name=\"score\">0</variable><variable name=\"shield\">0</variable></variables>";
+	const played::Scratch file(
+		"<object name=\"p1\" class=\"player\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>100</x><y>100</y></position>" + player + "</object>"
+		"<object name=\"p2\" class=\"player\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>400</x><y>100</y></position>" + player + "</object>"
+		+ played::box("coin", 600, 400, "<collisions><enabled>true</enabled><collision class=\"player\">"
+			"<condition object=\"other\" variable=\"shield\"><atmost>0</atmost></condition>"
+			"<inc variable=\"other.score\">5</inc><set variable=\"other.shield\">1</set></collision></collisions>"),
+		"<pop />");
+	played::Played play(file.path);
+
+	// The rule is made once for each player.
+	REQUIRE(play.get("coin").collisionData.others.size() == 2);
+	CHECK(play.get("coin").collisionData.others[0].otherIs == "playing.p1");
+	CHECK(play.get("coin").collisionData.others[1].otherIs == "playing.p2");
+
+	// p2 walks onto the coin: p2 is paid, once (its shield goes up), and p1 is not.
+	play.get("p2").position = { 585, 402 };
+	play.get("p2").velocity = { 2, 0 };
+	play.frames(5);
+	CHECK(play.get("p2").variable.at("score") == 5.0f);
+	CHECK(play.get("p2").variable.at("shield") == 1.0f);
+	CHECK(play.get("p1").variable.at("score") == 0.0f);
+
+	// p1, shielded: the rule's test is about p1, so nothing.
+	play.get("p1").variable["shield"] = 1.0f;
+	play.get("p1").position = { 585, 402 };
+	play.get("p1").velocity = { 2, 0 };
+	play.frames(5);
+	CHECK(play.get("p1").variable.at("score") == 0.0f);
+}
+
+TEST_CASE("other is a spawned copy when a copy is what was touched", "[collision_rules][other][spawn]")
+{
+	const std::string shot = "<object name=\"shot\" class=\"bullet\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>-5</y></velocity><collisions><enabled>true</enabled></collisions>"
+		"<variables><variable name=\"hits\">0</variable></variables></object>";
+	const played::Scratch file(
+		played::box("wall", 300, 300, "<collisions><enabled>true</enabled><collision class=\"bullet\"><inc variable=\"other.hits\" /></collision></collisions>"),
+		"<spawn object=\"shot\"><position><x>302</x><y>340</y></position></spawn>", {}, shot);
+	played::Played play(file.path);
+
+	play.tap(xge::KeyCode::Space);
+	play.frames(12);
+	REQUIRE(play.has("shot.1"));
+	CHECK(play.get("shot.1").variable.at("hits") >= 1.0f);
+	CHECK(play.get("shot").variable.at("hits") == 0.0f);
+}
+
+TEST_CASE("other is only for a rule about another object", "[collision_rules][other]")
+{
+	const auto loads = [](const std::string& objects, const std::string& onSpace)
+	{
+		const played::Scratch file(objects, onSpace);
+		xge::Game game(file.path);
+	};
+	const std::string scored = played::box("p1", 100, 100, "<variables><variable name=\"score\">0</variable></variables>");
+	CHECK_THROWS_WITH(loads(scored, "<inc variable=\"other.score\" />"), Catch::Matchers::ContainsSubstring("only a rule about another object"));
+	CHECK_THROWS_WITH(loads(scored, "<reset object=\"other\" />"), Catch::Matchers::ContainsSubstring("only a rule about another object"));
+	// A rule about a class there is none of has no other to name.
+	CHECK_THROWS_WITH(loads(scored + played::box("coin", 0, 0, "<collisions><collision class=\"ghost\"><reset object=\"other\" /></collision></collisions>"), "<pop />"),
+		Catch::Matchers::ContainsSubstring("nothing of class \"ghost\" for it to touch"));
+	// What every object it can touch has is checked for each.
+	CHECK_THROWS_WITH(loads(scored + played::box("p2", 0, 0) + played::box("coin", 0, 0, "<collisions><collision><inc variable=\"other.score\" /></collision></collisions>"), "<pop />"),
+		Catch::Matchers::ContainsSubstring("p2"));
+}

@@ -69,7 +69,7 @@ namespace
 
 	// An object nothing but a plain rectangle, for the second state to show.
 	const std::string kOther =
-		"<object name=\"other\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
+		"<object name=\"another\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity>"
 		"<collisions><enabled>false</enabled></collisions></object>";
 
@@ -84,7 +84,7 @@ namespace
 			"<states><objects>" + objects + kOther + "</objects>"
 			""
 			"<state name=\"playing\"><shows>" + shows + "</shows><inputs><input button=\"space\"><pop /></input></inputs></state>"
-			"<state name=\"away\"><shows><show object=\"other\" /></shows><inputs><input button=\"space\"><pop /></input></inputs></state>"
+			"<state name=\"away\"><shows><show object=\"another\" /></shows><inputs><input button=\"space\"><pop /></input></inputs></state>"
 			"</states>"
 			"</game>";
 	}

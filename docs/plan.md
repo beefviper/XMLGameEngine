@@ -99,7 +99,7 @@ Each row is one concept done more than one way. Counts are games using each form
 | 12 | A speed test on a touch | `<slower>` (Lunar Lander), `<faster>` (no game): a second comparison vocabulary beside `<above>`/`<below>`/`<atleast>`/`<atmost>` | A rule's `<condition variable="speed"><below>` | done (R1) |
 | 13 | Shared shows | `<shows name>` sets (Air-Sea Battle, Galaxian). The matching `<keys>` and `<conditions>` sets were removed as "state `from=` covers them" | Remove if `from=` covers these two as well | R8, done |
 | 14 | Pause, title and game-over boilerplate | 57 `paused` states, 835 lines, 18 variants that differ by accident (which keys, whether the pad's Start is bound, the colour). Pad Start is bound in 24 games | One spelling, copied exactly; a test that holds it | R9, done |
-| 15 | Either player | Rules written once per player: Pong's left and right edge rules, `score1`/`score2`, `paddle1`/`paddle2` keys; Combat, Cannon Hill, Space Race, Freeway the same | A word for the object touched and for "the other member", already in the backlog as `other` | [R10](#r10-a-word-for-the-other-one) |
+| 15 | Either player | Rules written once per player: Pong's left and right edge rules, `score1`/`score2`, `paddle1`/`paddle2` keys; Combat, Cannon Hill, Space Race, Freeway the same | A word for the object touched and for "the other member", already in the backlog as `other` | R10, done (Pong's edge rules stay) |
 | 16 | A place that holds things | 11 card games give a holder a dummy `<rectangle>` of 4 by 4 in the background colour, because a holder needs a size | A holder with no sprite | [R11](#r11-card-words-that-are-still-card-words) |
 | 17 | Card words | The rule is "tags name mechanics, never one game". Still card-shaped: `<call pile=>`, `<with pile=>`, `<trick>`, `<trumps>`, `<breaks>`, `<melds />`, `<wild>`, and `suit`/`rank` as fixed variable names | See the task | [R11](#r11-card-words-that-are-still-card-words) |
 | 18 | Steering | `<chase>`, `<aim>`, `<hunt>`, `<wander>`, `<go>`, `<follow>`, `<track>`, `<seek>` (1 game), `<pull>` (0 games) | Review as one family; at least decide `<seek>` and `<pull>` | R1, done |
@@ -228,7 +228,7 @@ R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest a
   1. **Rename the arcade form (S).** A state's `<turns>` with `<player state=>` (Galaxian only: each player their own game, swapped by the machine) is a different idea. Give it its own word (suggest `<alternate>`, with `<player>` and `<out />` unchanged); the author picks. Then `<turns>` means one thing.
   2. **Tic-Tac-Toe on a players group (M).** It is the smallest. Two members, `<turns>`, `<pass />` after a put, the computer as a member's `<think>`. Its conditions on `cursor.turn` become `self`/`others` rules written once. Tests in `xge/tests/games/test_inarow.cpp` must pass with the same boards.
   3. **Four in a Row, Reversi, Dots and Boxes, Checkers (M each).** Same. Reversi has a forced pass when a player cannot move: `<pass />` in a condition on live `moves`. Dots and Boxes gives another turn after a box: do not `<pass />`.
-  4. **Cannon Hill and Hold'em (M).** Cannon Hill's "phase of the table" is two players and looks; Hold'em was left on its own turn numbers because it needs to name "the other player" and a member played by conditions rather than `<think>`: R10's word solves the first. Do these last or leave them with a line in open-work.
+  4. **Cannon Hill and Hold'em (M).** Cannon Hill's "phase of the table" is two players and looks; Hold'em was left on its own turn numbers because it needs to name "the other player" and a member played by conditions rather than `<think>`; R10 (done) only names the object touched, so "the other player" is still open. Do these last or leave them with a line in open-work.
 - **Files.** The games; `xge/lib/game/players.cpp` (the group-turns engine); `xge/lib/game/think.cpp` (the board search reads whose move it is: find how and feed it from the group); tests `test_checkers.cpp`, `test_reversi.cpp`, `test_inarow.cpp`, `test_dotsandboxes.cpp`; `docs/reference/states.md` "Players as a group" and "Taking turns", `boards.md`, `docs/designs/26-board-games.md`.
 - **Done.** No board game has a variable named `turn`; `docs/reference/boards.md` shows turns the same way `cards.md` does.
 
@@ -239,14 +239,6 @@ R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest a
 - **Do.** Propose and let the author pick: `<active>false</active>` becomes `<waiting />` (or goes, by R3); `<drawn>false</drawn>` becomes `<unseen />`; `<enabled>false</enabled>` on collisions and `<lockstep>true</lockstep>` become `<off />` and `<lockstep />`; `<fullscreen>true</fullscreen>` becomes `<fullscreen />`. A take that turns one back on needs the opposite word or the one change rule needs "an empty tag written again removes it": check how `from=` handles `<active>true</active>` today (Frostbite, Mario Bros.) before choosing.
 - **Files.** The schema (five elements), `load/xml.cpp`, `load/merge.cpp` and `merge.xsl` (the change rule for these), `data.xsl`, 20-odd games, `docs/reference/objects.md`, `collisions.md`, `format.md`.
 - **Done.** `grep -c "xs:boolean" games/xgedef.xsd` is 0.
-
-#### R10. A word for the other one
-
-- **Size** M. **Needs** nothing. In the backlog since Mario Bros. as `other`.
-- **Why.** Row 15. A rule cannot say "the one I touched" or "the member that is not me", so two-player games write each rule twice. Class conditions already have `self` and `others`.
-- **Do.** (1) In a `<collision>` rule, `other` names the object touched, wherever an object or a variable's owner is named: `<inc variable="other.score" />`, `<reset object="other" />`, `<become object="other" sprite="hit" />`. Resolve it in `CommandExecutor::run` from `Doer::other` (already there). `touch.` (R8) may then be dropped in its favour or kept for the touch's own numbers. (2) Rewrite Mario Bros.' per-brother rules and Combat's per-tank rules once each; count the lines saved. (3) Pong's two edge rules ("left edge: paddle2 scores") are not a touch between objects: leave them, or add nothing for them.
-- **Files.** `xge/lib/game/command.cpp` (`VariableName::of`), `xge/lib/play/executor.cpp`, `xge/lib/load/check.cpp` (`checkVariable` must accept `other.x` when every class the rule can touch has `x`), `data.xsl` only if a new field is added, tests in `test_collision_rules.cpp`, `docs/reference/collisions.md`.
-- **Done.** Mario Bros. is shorter by the duplicated rules and its tests pass unchanged.
 
 #### R11. Card words that are still card words
 
@@ -453,7 +445,6 @@ Small, safe steps; the tests are green after every line. A line is one branch of
 Blocks 1 and 2 are done.
 
 Block 3  (reduction, any order; R1 is done)
-  R10 other
   R3  one way into and out of play        (five substeps)
   R6  no booleans                         (after R3)
   R4  turns                               (four substeps)
@@ -493,4 +484,4 @@ What blocks what, in one place:
 | A4 | A2 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R10 (B2, B3, B5, R1, R5, R7, R8, R9 and T1 are done).
+If only a few more things are ever done from this file, start with R3 (B2, B3, B5, R1, R5, R7, R8, R9, R10 and T1 are done).

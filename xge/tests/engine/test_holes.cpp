@@ -49,7 +49,7 @@ TEST_CASE("a <hole> is cut round the middle of what hit, and the next shot goes 
 	const std::string shot = box("shot", 115, 300, "<velocity><x>0</x><y>-8</y></velocity><collisions><enabled>true</enabled>"
 		"<collision object=\"wall\"><reset /></collision></collisions>");
 	const Scratch file(wall("<collision object=\"shot\"><hole>8</hole></collision>") + shot
-		+ box("other", 600, 100), "<reset object=\"wall\" />");
+		+ box("another", 600, 100), "<reset object=\"wall\" />");
 	Played play(file.path);
 	const auto whole = play.get("wall").bitmap;
 	REQUIRE(solidPixels(play.get("wall")) == 1600);

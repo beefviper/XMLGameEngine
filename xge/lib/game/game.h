@@ -132,6 +132,11 @@ namespace xge
 		// `touch` says (its own edge, and the rest): the ones that hold run.
 		// Half of a touch; a knock passed through a floor is only this half.
 		void reactTo(Object& self, Object& other, const Touch& touch);
+		// A rule naming other, made for a copy (shot.3) of the object it was
+		// made for (shot): once, the first time that copy is touched.
+		const CopyRule& ruleForCopy(CollisionRule& rule, const std::string& copy);
+		// A test made about the object `from`, made about `to`, a copy of it.
+		void retargetCheck(Condition& check, const std::string& from, const std::string& to);
 
 		// A value worked out now, from where everything is and how it is
 		// going (see game_expr::liveNumbers), and every variable as it is.

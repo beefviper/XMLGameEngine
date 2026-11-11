@@ -202,11 +202,17 @@ namespace xge
 
 	}
 
+	// `other` left in a list that is not a rule about another object.
+	static std::string otherOutOfPlace(const std::string& name)
+	{
+		return name == "other" ? "; other is the object a <collision> rule touched, so only a rule about another object (class=, object= or neither) names it" : std::string();
+	}
+
 	void checkObject(const Checking& checking, const std::string& name, const std::string& what, const char* kind)
 	{
 		if (!findObject(checking.objects, name))
 		{
-			throw std::runtime_error(checking.where + ": " + what + " names '" + name + "', and there is no " + kind + " of that name" + didYouMean(name, objectNames(checking.objects)));
+			throw std::runtime_error(checking.where + ": " + what + " names '" + name + "', and there is no " + kind + " of that name" + didYouMean(name, objectNames(checking.objects)) + otherOutOfPlace(name));
 		}
 	}
 
@@ -291,7 +297,7 @@ namespace xge
 		const Object* owner = findObject(objects, ownerName);
 		if (!owner)
 		{
-			throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects))
+			throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects)) + otherOutOfPlace(ownerName)
 				+ ". A variable that changes belongs to an object (paddle1.score is paddle1's <variable name=\"score\">); the game's own <variables> are fixed numbers");
 		}
 		const std::string& variableName = target.variable;

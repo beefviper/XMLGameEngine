@@ -38,10 +38,7 @@ namespace xge
 		if (const auto* scene = std::get_if<CmdResetScene>(&command)) { checkScene(checking, "reset", scene->scene, scene->way); }
 		else if (const auto* object = std::get_if<CmdResetObject>(&command))
 		{
-			if (!findObject(checking.objects, object->target))
-			{
-				throw std::runtime_error(checking.where + ": <reset object=\"" + object->target + "\" /> names no object of the game" + didYouMean(object->target, objectNames(checking.objects)));
-			}
+			checkObject(checking, object->target, "<reset object>");
 		}
 	}
 

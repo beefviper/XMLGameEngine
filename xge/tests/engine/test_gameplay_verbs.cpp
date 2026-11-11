@@ -156,8 +156,8 @@ TEST_CASE("an object's timer counts only while it is shown, and a reset starts i
 {
 	Loaded loaded(gameXml(
 		box("clock", 0, 0, 1, 1, "<enabled>false</enabled>", {}, kCounter + "<timers><timer><every>1</every><inc variable=\"clock.n\" /></timer></timers>")
-		+ box("other", 0, 0, 1, 1),
-		state("menu", { "other" }) + state("playing", { "clock" })));
+		+ box("another", 0, 0, 1, 1),
+		state("menu", { "another" }) + state("playing", { "clock" })));
 
 	loaded.frames(200);
 	CHECK(loaded.variable("clock", "n") == 0);
