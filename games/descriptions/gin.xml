@@ -213,18 +213,8 @@
 
         <!-- the players, in turn: you, then the computer (north), who draws what melds and knocks when it can; each a frame around the card it points at (north's unseen) -->
         <group name="players" class="player">
-          <sprite name="draw">
-            <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-          </sprite>
-          <sprite name="discard">
-            <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-          </sprite>
+          <sprite name="draw"><drawing from="playersdraw" /></sprite>
+          <sprite name="discard"><drawing from="playersdiscard" /></sprite>
           <sprite name="waiting"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <actions>
             <action name="left"><hop direction="left" /></action>
@@ -450,5 +440,17 @@
   <!-- the card sheet: a row for each suit, a column for each rank, then a row of backs -->
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
+    <drawing name="playersdraw">
+      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+    </drawing>
+    <drawing name="playersdiscard">
+      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+    </drawing>
   </pictures>
 </game>

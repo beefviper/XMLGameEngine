@@ -304,6 +304,33 @@ TEST_CASE("a sprite takes a picture of the <pictures> by <bitmap from>, and what
 	CHECK_THROWS_WITH(Loaded{ with("<sprite><bitmap from=\"saucer\" /></sprite>") }, ContainsSubstring("names no <bitmap> of the <pictures>"));
 }
 
+TEST_CASE("a sprite takes a line drawing of the <pictures> by <drawing from>, as it is", "[lines][pictures][xml]")
+{
+	const std::string line = "<line><from><x>0</x><y>0</y></from><to><x>20</x><y>10</y></to><thickness>2</thickness></line>";
+	const auto with = [&](const std::string& sprite, const std::string& pictures)
+	{
+		std::string xml = gameXml(objectWith(sprite), "<show object=\"thing\" />");
+		return xml.insert(xml.rfind("</game>"), pictures);
+	};
+
+	// The same as the lines written in the sprite.
+	Loaded written{ with("<sprite>" + line + "</sprite>", "") };
+	Loaded taken{ with("<sprite><drawing from=\"rock\" /></sprite>", "<pictures><drawing name=\"rock\">" + line + "</drawing></pictures>") };
+	const Object& mine = written.game.getObject("thing");
+	const Object& rock = taken.game.getObject("thing");
+	REQUIRE(rock.bitmap);
+	CHECK(rock.bitmap->width == mine.bitmap->width);
+	CHECK(rock.bitmap->height == mine.bitmap->height);
+	CHECK(rock.bitmap->rgba == mine.bitmap->rgba);
+
+	// A name the pictures have not got, or two drawings of one name, stop the load.
+	CHECK_THROWS_WITH(Loaded{ with("<sprite><drawing from=\"saucer\" /></sprite>", "<pictures><drawing name=\"rock\">" + line + "</drawing></pictures>") },
+		ContainsSubstring("names no <drawing> of the <pictures>"));
+	CHECK_THROWS_WITH(Loaded{ with("<sprite><drawing from=\"rock\" /></sprite>",
+		"<pictures><drawing name=\"rock\">" + line + "</drawing><drawing name=\"rock\">" + line + "</drawing></pictures>") },
+		ContainsSubstring("two <drawing>s are called 'rock'"));
+}
+
 TEST_CASE("a bitmap's size can be used in an expression like any shape's", "[bitmap][xml]")
 {
 	const std::string flag =

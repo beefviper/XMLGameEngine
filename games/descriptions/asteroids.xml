@@ -86,17 +86,7 @@
     </group>
     <!-- what a big rock breaks into: two of these, spawned where it was, each going its own way -->
     <group name="mediumrocks" from="rock">
-      <sprite>
-        <line><from><x>27</x><y>28</y></from><to><x>20</x><y>35</y></to><thickness>2</thickness></line>
-        <line><from><x>20</x><y>35</y></from><to><x>10</x><y>34</y></to><thickness>2</thickness></line>
-        <line><from><x>10</x><y>34</y></from><to><x>3</x><y>26</y></to><thickness>2</thickness></line>
-        <line><from><x>3</x><y>26</y></from><to><x>4</x><y>16</y></to><thickness>2</thickness></line>
-        <line><from><x>4</x><y>16</y></from><to><x>18</x><y>2</y></to><thickness>2</thickness></line>
-        <line><from><x>18</x><y>2</y></from><to><x>28</x><y>4</y></to><thickness>2</thickness></line>
-        <line><from><x>28</x><y>4</y></from><to><x>29</x><y>15</y></to><thickness>2</thickness></line>
-        <line><from><x>29</x><y>15</y></from><to><x>35</x><y>23</y></to><thickness>2</thickness></line>
-        <line><from><x>35</x><y>23</y></from><to><x>27</x><y>28</y></to><thickness>2</thickness></line>
-      </sprite>
+      <sprite><drawing from="mediumrock" /></sprite>
       <velocity><x><random><min>-1.6</min><max>1.6</max></random></x></velocity>
       <collisions>
         <collision class="breaker">
@@ -115,42 +105,16 @@
         <velocity><y><random><min>0.6</min><max>1.6</max></random></y></velocity>
       </member>
       <member name="mediumB">
-        <sprite>
-            <line><from><x>32</x><y>19</y></from><to><x>33</x><y>30</y></to><thickness>2</thickness></line>
-            <line><from><x>33</x><y>30</y></from><to><x>14</x><y>34</y></to><thickness>2</thickness></line>
-            <line><from><x>14</x><y>34</y></from><to><x>5</x><y>29</y></to><thickness>2</thickness></line>
-            <line><from><x>5</x><y>29</y></from><to><x>8</x><y>19</y></to><thickness>2</thickness></line>
-            <line><from><x>8</x><y>19</y></from><to><x>7</x><y>9</y></to><thickness>2</thickness></line>
-            <line><from><x>7</x><y>9</y></from><to><x>16</x><y>7</y></to><thickness>2</thickness></line>
-            <line><from><x>16</x><y>7</y></from><to><x>34</x><y>9</y></to><thickness>2</thickness></line>
-            <line><from><x>34</x><y>9</y></from><to><x>32</x><y>19</y></to><thickness>2</thickness></line>
-        </sprite>
+        <sprite><drawing from="mediumB" /></sprite>
         <velocity><y><random><min>-1.6</min><max>-0.6</max></random></y></velocity>
       </member>
       <member name="mediumC">
-        <sprite>
-            <line><from><x>32</x><y>25</y></from><to><x>28</x><y>35</y></to><thickness>2</thickness></line>
-            <line><from><x>28</x><y>35</y></from><to><x>18</x><y>31</y></to><thickness>2</thickness></line>
-            <line><from><x>18</x><y>31</y></from><to><x>7</x><y>32</y></to><thickness>2</thickness></line>
-            <line><from><x>7</x><y>32</y></from><to><x>8</x><y>21</y></to><thickness>2</thickness></line>
-            <line><from><x>8</x><y>21</y></from><to><x>5</x><y>13</y></to><thickness>2</thickness></line>
-            <line><from><x>5</x><y>13</y></from><to><x>12</x><y>7</y></to><thickness>2</thickness></line>
-            <line><from><x>12</x><y>7</y></from><to><x>20</x><y>7</y></to><thickness>2</thickness></line>
-            <line><from><x>20</x><y>7</y></from><to><x>32</x><y>16</y></to><thickness>2</thickness></line>
-            <line><from><x>32</x><y>16</y></from><to><x>32</x><y>25</y></to><thickness>2</thickness></line>
-        </sprite>
+        <sprite><drawing from="mediumC" /></sprite>
         <velocity><y><random><min>0.6</min><max>1.6</max></random></y></velocity>
       </member>
     </group>
     <group name="smallrocks" from="rock">
-      <sprite>
-        <line><from><x>16</x><y>11</y></from><to><x>16</x><y>17</y></to><thickness>2</thickness></line>
-        <line><from><x>16</x><y>17</y></from><to><x>10</x><y>17</y></to><thickness>2</thickness></line>
-        <line><from><x>10</x><y>17</y></from><to><x>3</x><y>10</y></to><thickness>2</thickness></line>
-        <line><from><x>3</x><y>10</y></from><to><x>12</x><y>3</y></to><thickness>2</thickness></line>
-        <line><from><x>12</x><y>3</y></from><to><x>18</x><y>5</y></to><thickness>2</thickness></line>
-        <line><from><x>18</x><y>5</y></from><to><x>16</x><y>11</y></to><thickness>2</thickness></line>
-      </sprite>
+      <sprite><drawing from="smallrock" /></sprite>
       <velocity><x><random><min>-2.6</min><max>2.6</max></random></x></velocity>
       <collisions>
         <collision class="breaker">
@@ -167,24 +131,11 @@
         <velocity><y><random><min>1</min><max>2.6</max></random></y></velocity>
       </member>
       <member name="smallB">
-        <sprite>
-            <line><from><x>16</x><y>14</y></from><to><x>12</x><y>18</y></to><thickness>2</thickness></line>
-            <line><from><x>12</x><y>18</y></from><to><x>6</x><y>17</y></to><thickness>2</thickness></line>
-            <line><from><x>6</x><y>17</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
-            <line><from><x>5</x><y>12</y></from><to><x>10</x><y>5</y></to><thickness>2</thickness></line>
-            <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
-            <line><from><x>15</x><y>5</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
-        </sprite>
+        <sprite><drawing from="smallB" /></sprite>
         <velocity><y><random><min>-2.6</min><max>-1</max></random></y></velocity>
       </member>
       <member name="smallC">
-        <sprite>
-            <line><from><x>17</x><y>13</y></from><to><x>15</x><y>18</y></to><thickness>2</thickness></line>
-            <line><from><x>15</x><y>18</y></from><to><x>6</x><y>14</y></to><thickness>2</thickness></line>
-            <line><from><x>6</x><y>14</y></from><to><x>7</x><y>3</y></to><thickness>2</thickness></line>
-            <line><from><x>7</x><y>3</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
-            <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
-        </sprite>
+        <sprite><drawing from="smallC" /></sprite>
         <velocity><y><random><min>1</min><max>2.6</max></random></y></velocity>
       </member>
     </group>
@@ -228,34 +179,12 @@
       </timers>
       <!-- the big one; it shoots anywhere (its timers are where play takes it) -->
       <member name="saucer">
-        <sprite>
-          <line><from><x>10</x><y>1</y></from><to><x>18</x><y>1</y></to></line>
-          <line><from><x>10</x><y>1</y></from><to><x>8</x><y>5</y></to></line>
-          <line><from><x>18</x><y>1</y></from><to><x>20</x><y>5</y></to></line>
-          <line><from><x>1</x><y>9</y></from><to><x>8</x><y>5</y></to><thickness>2</thickness></line>
-          <line><from><x>8</x><y>5</y></from><to><x>20</x><y>5</y></to><thickness>2</thickness></line>
-          <line><from><x>20</x><y>5</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
-          <line><from><x>1</x><y>9</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
-          <line><from><x>1</x><y>9</y></from><to><x>8</x><y>13</y></to><thickness>2</thickness></line>
-          <line><from><x>8</x><y>13</y></from><to><x>20</x><y>13</y></to><thickness>2</thickness></line>
-          <line><from><x>20</x><y>13</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
-        </sprite>
+        <sprite><drawing from="saucer" /></sprite>
         <velocity><x>2</x></velocity>
       </member>
       <!-- the small one: half the size, quicker, and it aims -->
       <member name="smallsaucer">
-        <sprite>
-          <line><from><x>5</x><y>1</y></from><to><x>9</x><y>1</y></to></line>
-          <line><from><x>5</x><y>1</y></from><to><x>4</x><y>3</y></to></line>
-          <line><from><x>9</x><y>1</y></from><to><x>10</x><y>3</y></to></line>
-          <line><from><x>1</x><y>5</y></from><to><x>4</x><y>3</y></to></line>
-          <line><from><x>4</x><y>3</y></from><to><x>10</x><y>3</y></to></line>
-          <line><from><x>10</x><y>3</y></from><to><x>13</x><y>5</y></to></line>
-          <line><from><x>1</x><y>5</y></from><to><x>13</x><y>5</y></to></line>
-          <line><from><x>1</x><y>5</y></from><to><x>4</x><y>7</y></to></line>
-          <line><from><x>4</x><y>7</y></from><to><x>10</x><y>7</y></to></line>
-          <line><from><x>10</x><y>7</y></from><to><x>13</x><y>5</y></to></line>
-        </sprite>
+        <sprite><drawing from="smallsaucer" /></sprite>
         <velocity><x>2.5</x></velocity>
       </member>
     </group>
@@ -297,19 +226,9 @@
       <objects>
         <!-- The ship: an arrowhead of three lines, drawn again at its heading. -->
         <object name="ship" class="breaker">
-          <sprite name="coasting">
-            <line><from><x>12</x><y>0</y></from><to><x>23</x><y>28</y></to><thickness>2</thickness></line>
-            <line><from><x>12</x><y>0</y></from><to><x>1</x><y>28</y></to><thickness>2</thickness></line>
-            <line><from><x>4</x><y>22</y></from><to><x>20</x><y>22</y></to><thickness>2</thickness></line>
-          </sprite>
+          <sprite name="coasting"><drawing from="shipcoasting" /></sprite>
           <!-- the flame out of the back, inside the same box so the ship turns about the same middle -->
-          <sprite name="flame">
-            <line><from><x>12</x><y>0</y></from><to><x>23</x><y>28</y></to><thickness>2</thickness></line>
-            <line><from><x>12</x><y>0</y></from><to><x>1</x><y>28</y></to><thickness>2</thickness></line>
-            <line><from><x>4</x><y>22</y></from><to><x>20</x><y>22</y></to><thickness>2</thickness></line>
-            <line><from><x>8</x><y>23</y></from><to><x>12</x><y>28</y></to></line>
-            <line><from><x>16</x><y>23</y></from><to><x>12</x><y>28</y></to></line>
-          </sprite>
+          <sprite name="flame"><drawing from="shipflame" /></sprite>
           <animation name="burning">
             <interval>0.05</interval>
             <frame sprite="flame" />
@@ -358,19 +277,7 @@
         <!-- Four big rocks come in from the edges each wave; a broken one releases two of the next size. -->
         <group name="rocks" from="rock">
           <group name="bigrocks">
-            <sprite>
-              <line><from><x>60</x><y>33</y></from><to><x>44</x><y>40</y></to><thickness>2</thickness></line>
-              <line><from><x>44</x><y>40</y></from><to><x>38</x><y>47</y></to><thickness>2</thickness></line>
-              <line><from><x>38</x><y>47</y></from><to><x>28</x><y>52</y></to><thickness>2</thickness></line>
-              <line><from><x>28</x><y>52</y></from><to><x>14</x><y>53</y></to><thickness>2</thickness></line>
-              <line><from><x>14</x><y>53</y></from><to><x>8</x><y>40</y></to><thickness>2</thickness></line>
-              <line><from><x>8</x><y>40</y></from><to><x>12</x><y>28</y></to><thickness>2</thickness></line>
-              <line><from><x>12</x><y>28</y></from><to><x>13</x><y>18</y></to><thickness>2</thickness></line>
-              <line><from><x>13</x><y>18</y></from><to><x>21</x><y>11</y></to><thickness>2</thickness></line>
-              <line><from><x>21</x><y>11</y></from><to><x>44</x><y>10</y></to><thickness>2</thickness></line>
-              <line><from><x>44</x><y>10</y></from><to><x>50</x><y>21</y></to><thickness>2</thickness></line>
-              <line><from><x>50</x><y>21</y></from><to><x>60</x><y>33</y></to><thickness>2</thickness></line>
-            </sprite>
+            <sprite><drawing from="bigrockA" /></sprite>
             <collisions>
               <collision class="breaker">
                 <die />
@@ -389,33 +296,12 @@
               <velocity><x><random><min>0.6</min><max>1.2</max></random></x><y><random><min>-0.8</min><max>0.8</max></random></y></velocity>
             </member>
             <member>
-              <sprite>
-                <line><from><x>47</x><y>48</y></from><to><x>35</x><y>49</y></to><thickness>2</thickness></line>
-                <line><from><x>35</x><y>49</y></from><to><x>22</x><y>59</y></to><thickness>2</thickness></line>
-                <line><from><x>22</x><y>59</y></from><to><x>15</x><y>44</y></to><thickness>2</thickness></line>
-                <line><from><x>15</x><y>44</y></from><to><x>9</x><y>35</y></to><thickness>2</thickness></line>
-                <line><from><x>9</x><y>35</y></from><to><x>11</x><y>11</y></to><thickness>2</thickness></line>
-                <line><from><x>11</x><y>11</y></from><to><x>23</x><y>3</y></to><thickness>2</thickness></line>
-                <line><from><x>23</x><y>3</y></from><to><x>36</x><y>7</y></to><thickness>2</thickness></line>
-                <line><from><x>36</x><y>7</y></from><to><x>46</x><y>15</y></to><thickness>2</thickness></line>
-                <line><from><x>46</x><y>15</y></from><to><x>58</x><y>38</y></to><thickness>2</thickness></line>
-                <line><from><x>58</x><y>38</y></from><to><x>47</x><y>48</y></to><thickness>2</thickness></line>
-              </sprite>
+              <sprite><drawing from="bigrockB" /></sprite>
               <position><x>window.right - 60</x><y><random><min>0</min><max>window.bottom</max></random></y></position>
               <velocity><x><random><min>-0.8</min><max>0.8</max></random></x><y><random><min>0.6</min><max>1.2</max></random></y></velocity>
             </member>
             <member>
-              <sprite>
-                <line><from><x>53</x><y>35</y></from><to><x>50</x><y>48</y></to><thickness>2</thickness></line>
-                <line><from><x>50</x><y>48</y></from><to><x>35</x><y>47</y></to><thickness>2</thickness></line>
-                <line><from><x>35</x><y>47</y></from><to><x>24</x><y>56</y></to><thickness>2</thickness></line>
-                <line><from><x>24</x><y>56</y></from><to><x>10</x><y>36</y></to><thickness>2</thickness></line>
-                <line><from><x>10</x><y>36</y></from><to><x>10</x><y>11</y></to><thickness>2</thickness></line>
-                <line><from><x>10</x><y>11</y></from><to><x>21</x><y>3</y></to><thickness>2</thickness></line>
-                <line><from><x>21</x><y>3</y></from><to><x>36</x><y>4</y></to><thickness>2</thickness></line>
-                <line><from><x>36</x><y>4</y></from><to><x>58</x><y>21</y></to><thickness>2</thickness></line>
-                <line><from><x>58</x><y>21</y></from><to><x>53</x><y>35</y></to><thickness>2</thickness></line>
-              </sprite>
+              <sprite><drawing from="bigrockC" /></sprite>
               <position><x><random><min>0</min><max>window.right</max></random></x><y>window.bottom - 60</y></position>
               <velocity><x><random><min>-1.2</min><max>-0.6</max></random></x><y><random><min>-0.8</min><max>0.8</max></random></y></velocity>
             </member>
@@ -641,4 +527,133 @@
       <note pitch="C4" to="C3">0.7</note>
     </sound>
   </sounds>
+  <pictures>
+    <drawing name="mediumrock">
+      <line><from><x>27</x><y>28</y></from><to><x>20</x><y>35</y></to><thickness>2</thickness></line>
+      <line><from><x>20</x><y>35</y></from><to><x>10</x><y>34</y></to><thickness>2</thickness></line>
+      <line><from><x>10</x><y>34</y></from><to><x>3</x><y>26</y></to><thickness>2</thickness></line>
+      <line><from><x>3</x><y>26</y></from><to><x>4</x><y>16</y></to><thickness>2</thickness></line>
+      <line><from><x>4</x><y>16</y></from><to><x>18</x><y>2</y></to><thickness>2</thickness></line>
+      <line><from><x>18</x><y>2</y></from><to><x>28</x><y>4</y></to><thickness>2</thickness></line>
+      <line><from><x>28</x><y>4</y></from><to><x>29</x><y>15</y></to><thickness>2</thickness></line>
+      <line><from><x>29</x><y>15</y></from><to><x>35</x><y>23</y></to><thickness>2</thickness></line>
+      <line><from><x>35</x><y>23</y></from><to><x>27</x><y>28</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="mediumB">
+      <line><from><x>32</x><y>19</y></from><to><x>33</x><y>30</y></to><thickness>2</thickness></line>
+      <line><from><x>33</x><y>30</y></from><to><x>14</x><y>34</y></to><thickness>2</thickness></line>
+      <line><from><x>14</x><y>34</y></from><to><x>5</x><y>29</y></to><thickness>2</thickness></line>
+      <line><from><x>5</x><y>29</y></from><to><x>8</x><y>19</y></to><thickness>2</thickness></line>
+      <line><from><x>8</x><y>19</y></from><to><x>7</x><y>9</y></to><thickness>2</thickness></line>
+      <line><from><x>7</x><y>9</y></from><to><x>16</x><y>7</y></to><thickness>2</thickness></line>
+      <line><from><x>16</x><y>7</y></from><to><x>34</x><y>9</y></to><thickness>2</thickness></line>
+      <line><from><x>34</x><y>9</y></from><to><x>32</x><y>19</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="mediumC">
+      <line><from><x>32</x><y>25</y></from><to><x>28</x><y>35</y></to><thickness>2</thickness></line>
+      <line><from><x>28</x><y>35</y></from><to><x>18</x><y>31</y></to><thickness>2</thickness></line>
+      <line><from><x>18</x><y>31</y></from><to><x>7</x><y>32</y></to><thickness>2</thickness></line>
+      <line><from><x>7</x><y>32</y></from><to><x>8</x><y>21</y></to><thickness>2</thickness></line>
+      <line><from><x>8</x><y>21</y></from><to><x>5</x><y>13</y></to><thickness>2</thickness></line>
+      <line><from><x>5</x><y>13</y></from><to><x>12</x><y>7</y></to><thickness>2</thickness></line>
+      <line><from><x>12</x><y>7</y></from><to><x>20</x><y>7</y></to><thickness>2</thickness></line>
+      <line><from><x>20</x><y>7</y></from><to><x>32</x><y>16</y></to><thickness>2</thickness></line>
+      <line><from><x>32</x><y>16</y></from><to><x>32</x><y>25</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="smallrock">
+      <line><from><x>16</x><y>11</y></from><to><x>16</x><y>17</y></to><thickness>2</thickness></line>
+      <line><from><x>16</x><y>17</y></from><to><x>10</x><y>17</y></to><thickness>2</thickness></line>
+      <line><from><x>10</x><y>17</y></from><to><x>3</x><y>10</y></to><thickness>2</thickness></line>
+      <line><from><x>3</x><y>10</y></from><to><x>12</x><y>3</y></to><thickness>2</thickness></line>
+      <line><from><x>12</x><y>3</y></from><to><x>18</x><y>5</y></to><thickness>2</thickness></line>
+      <line><from><x>18</x><y>5</y></from><to><x>16</x><y>11</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="smallB">
+      <line><from><x>16</x><y>14</y></from><to><x>12</x><y>18</y></to><thickness>2</thickness></line>
+      <line><from><x>12</x><y>18</y></from><to><x>6</x><y>17</y></to><thickness>2</thickness></line>
+      <line><from><x>6</x><y>17</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
+      <line><from><x>5</x><y>12</y></from><to><x>10</x><y>5</y></to><thickness>2</thickness></line>
+      <line><from><x>10</x><y>5</y></from><to><x>15</x><y>5</y></to><thickness>2</thickness></line>
+      <line><from><x>15</x><y>5</y></from><to><x>16</x><y>14</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="smallC">
+      <line><from><x>17</x><y>13</y></from><to><x>15</x><y>18</y></to><thickness>2</thickness></line>
+      <line><from><x>15</x><y>18</y></from><to><x>6</x><y>14</y></to><thickness>2</thickness></line>
+      <line><from><x>6</x><y>14</y></from><to><x>7</x><y>3</y></to><thickness>2</thickness></line>
+      <line><from><x>7</x><y>3</y></from><to><x>18</x><y>7</y></to><thickness>2</thickness></line>
+      <line><from><x>18</x><y>7</y></from><to><x>17</x><y>13</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="saucer">
+      <line><from><x>10</x><y>1</y></from><to><x>18</x><y>1</y></to></line>
+      <line><from><x>10</x><y>1</y></from><to><x>8</x><y>5</y></to></line>
+      <line><from><x>18</x><y>1</y></from><to><x>20</x><y>5</y></to></line>
+      <line><from><x>1</x><y>9</y></from><to><x>8</x><y>5</y></to><thickness>2</thickness></line>
+      <line><from><x>8</x><y>5</y></from><to><x>20</x><y>5</y></to><thickness>2</thickness></line>
+      <line><from><x>20</x><y>5</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
+      <line><from><x>1</x><y>9</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
+      <line><from><x>1</x><y>9</y></from><to><x>8</x><y>13</y></to><thickness>2</thickness></line>
+      <line><from><x>8</x><y>13</y></from><to><x>20</x><y>13</y></to><thickness>2</thickness></line>
+      <line><from><x>20</x><y>13</y></from><to><x>27</x><y>9</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="smallsaucer">
+      <line><from><x>5</x><y>1</y></from><to><x>9</x><y>1</y></to></line>
+      <line><from><x>5</x><y>1</y></from><to><x>4</x><y>3</y></to></line>
+      <line><from><x>9</x><y>1</y></from><to><x>10</x><y>3</y></to></line>
+      <line><from><x>1</x><y>5</y></from><to><x>4</x><y>3</y></to></line>
+      <line><from><x>4</x><y>3</y></from><to><x>10</x><y>3</y></to></line>
+      <line><from><x>10</x><y>3</y></from><to><x>13</x><y>5</y></to></line>
+      <line><from><x>1</x><y>5</y></from><to><x>13</x><y>5</y></to></line>
+      <line><from><x>1</x><y>5</y></from><to><x>4</x><y>7</y></to></line>
+      <line><from><x>4</x><y>7</y></from><to><x>10</x><y>7</y></to></line>
+      <line><from><x>10</x><y>7</y></from><to><x>13</x><y>5</y></to></line>
+    </drawing>
+    <drawing name="shipcoasting">
+      <line><from><x>12</x><y>0</y></from><to><x>23</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>12</x><y>0</y></from><to><x>1</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>4</x><y>22</y></from><to><x>20</x><y>22</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="shipflame">
+      <line><from><x>12</x><y>0</y></from><to><x>23</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>12</x><y>0</y></from><to><x>1</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>4</x><y>22</y></from><to><x>20</x><y>22</y></to><thickness>2</thickness></line>
+      <line><from><x>8</x><y>23</y></from><to><x>12</x><y>28</y></to></line>
+      <line><from><x>16</x><y>23</y></from><to><x>12</x><y>28</y></to></line>
+    </drawing>
+    <drawing name="bigrockA">
+      <line><from><x>60</x><y>33</y></from><to><x>44</x><y>40</y></to><thickness>2</thickness></line>
+      <line><from><x>44</x><y>40</y></from><to><x>38</x><y>47</y></to><thickness>2</thickness></line>
+      <line><from><x>38</x><y>47</y></from><to><x>28</x><y>52</y></to><thickness>2</thickness></line>
+      <line><from><x>28</x><y>52</y></from><to><x>14</x><y>53</y></to><thickness>2</thickness></line>
+      <line><from><x>14</x><y>53</y></from><to><x>8</x><y>40</y></to><thickness>2</thickness></line>
+      <line><from><x>8</x><y>40</y></from><to><x>12</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>12</x><y>28</y></from><to><x>13</x><y>18</y></to><thickness>2</thickness></line>
+      <line><from><x>13</x><y>18</y></from><to><x>21</x><y>11</y></to><thickness>2</thickness></line>
+      <line><from><x>21</x><y>11</y></from><to><x>44</x><y>10</y></to><thickness>2</thickness></line>
+      <line><from><x>44</x><y>10</y></from><to><x>50</x><y>21</y></to><thickness>2</thickness></line>
+      <line><from><x>50</x><y>21</y></from><to><x>60</x><y>33</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="bigrockB">
+      <line><from><x>47</x><y>48</y></from><to><x>35</x><y>49</y></to><thickness>2</thickness></line>
+      <line><from><x>35</x><y>49</y></from><to><x>22</x><y>59</y></to><thickness>2</thickness></line>
+      <line><from><x>22</x><y>59</y></from><to><x>15</x><y>44</y></to><thickness>2</thickness></line>
+      <line><from><x>15</x><y>44</y></from><to><x>9</x><y>35</y></to><thickness>2</thickness></line>
+      <line><from><x>9</x><y>35</y></from><to><x>11</x><y>11</y></to><thickness>2</thickness></line>
+      <line><from><x>11</x><y>11</y></from><to><x>23</x><y>3</y></to><thickness>2</thickness></line>
+      <line><from><x>23</x><y>3</y></from><to><x>36</x><y>7</y></to><thickness>2</thickness></line>
+      <line><from><x>36</x><y>7</y></from><to><x>46</x><y>15</y></to><thickness>2</thickness></line>
+      <line><from><x>46</x><y>15</y></from><to><x>58</x><y>38</y></to><thickness>2</thickness></line>
+      <line><from><x>58</x><y>38</y></from><to><x>47</x><y>48</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="bigrockC">
+      <line><from><x>53</x><y>35</y></from><to><x>50</x><y>48</y></to><thickness>2</thickness></line>
+      <line><from><x>50</x><y>48</y></from><to><x>35</x><y>47</y></to><thickness>2</thickness></line>
+      <line><from><x>35</x><y>47</y></from><to><x>24</x><y>56</y></to><thickness>2</thickness></line>
+      <line><from><x>24</x><y>56</y></from><to><x>10</x><y>36</y></to><thickness>2</thickness></line>
+      <line><from><x>10</x><y>36</y></from><to><x>10</x><y>11</y></to><thickness>2</thickness></line>
+      <line><from><x>10</x><y>11</y></from><to><x>21</x><y>3</y></to><thickness>2</thickness></line>
+      <line><from><x>21</x><y>3</y></from><to><x>36</x><y>4</y></to><thickness>2</thickness></line>
+      <line><from><x>36</x><y>4</y></from><to><x>58</x><y>21</y></to><thickness>2</thickness></line>
+      <line><from><x>58</x><y>21</y></from><to><x>53</x><y>35</y></to><thickness>2</thickness></line>
+    </drawing>
+  </pictures>
 </game>

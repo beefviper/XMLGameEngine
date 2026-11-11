@@ -57,7 +57,7 @@
   <objects>
     <!-- what is left of a wrecked lander, flung out and falling -->
     <group name="debris">
-      <sprite><line><from><x>0</x><y>0</y></from><to><x>8</x><y>6</y></to><thickness>2</thickness></line></sprite>
+      <sprite><drawing from="debris" /></sprite>
       <acceleration><x>0</x><y>gravity * 4</y></acceleration>
       <member><velocity><x>-1.6</x><y>-2</y></velocity></member>
       <member><velocity><x>1.4</x><y>-2.4</y></velocity></member>
@@ -142,24 +142,7 @@
           <member><sprite><text style="hud"><content>3X</content></text></sprite><position><x>502</x><y>508</y></position></member>
         </group>
         <object name="lander">
-          <sprite>
-            <line><from><x>10</x><y>2</y></from><to><x>20</x><y>2</y></to><thickness>2</thickness></line>
-            <line><from><x>20</x><y>2</y></from><to><x>25</x><y>7</y></to><thickness>2</thickness></line>
-            <line><from><x>25</x><y>7</y></from><to><x>25</x><y>12</y></to><thickness>2</thickness></line>
-            <line><from><x>25</x><y>12</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
-            <line><from><x>5</x><y>12</y></from><to><x>5</x><y>7</y></to><thickness>2</thickness></line>
-            <line><from><x>5</x><y>7</y></from><to><x>10</x><y>2</y></to><thickness>2</thickness></line>
-            <line><from><x>7</x><y>14</y></from><to><x>23</x><y>14</y></to><thickness>2</thickness></line>
-            <line><from><x>23</x><y>14</y></from><to><x>23</x><y>19</y></to><thickness>2</thickness></line>
-            <line><from><x>23</x><y>19</y></from><to><x>7</x><y>19</y></to><thickness>2</thickness></line>
-            <line><from><x>7</x><y>19</y></from><to><x>7</x><y>14</y></to><thickness>2</thickness></line>
-            <line><from><x>13</x><y>19</y></from><to><x>11</x><y>23</y></to><thickness>2</thickness></line>
-            <line><from><x>17</x><y>19</y></from><to><x>19</x><y>23</y></to><thickness>2</thickness></line>
-            <line><from><x>7</x><y>18</y></from><to><x>2</x><y>28</y></to><thickness>2</thickness></line>
-            <line><from><x>23</x><y>18</y></from><to><x>28</x><y>28</y></to><thickness>2</thickness></line>
-            <line><from><x>0</x><y>28</y></from><to><x>5</x><y>28</y></to><thickness>2</thickness></line>
-            <line><from><x>25</x><y>28</y></from><to><x>30</x><y>28</y></to><thickness>2</thickness></line>
-          </sprite>
+          <sprite><drawing from="lander" /></sprite>
           <position><x><random><min>40</min><max>300</max></random></x><y>40</y></position>
           <velocity><x><random><min>0.5</min><max>1.2</max></random></x></velocity>
           <acceleration><x>0</x><y>gravity</y></acceleration>
@@ -357,4 +340,27 @@
       <note pitch="C6">0.14</note>
     </sound>
   </sounds>
+  <pictures>
+    <drawing name="debris">
+      <line><from><x>0</x><y>0</y></from><to><x>8</x><y>6</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="lander">
+      <line><from><x>10</x><y>2</y></from><to><x>20</x><y>2</y></to><thickness>2</thickness></line>
+      <line><from><x>20</x><y>2</y></from><to><x>25</x><y>7</y></to><thickness>2</thickness></line>
+      <line><from><x>25</x><y>7</y></from><to><x>25</x><y>12</y></to><thickness>2</thickness></line>
+      <line><from><x>25</x><y>12</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
+      <line><from><x>5</x><y>12</y></from><to><x>5</x><y>7</y></to><thickness>2</thickness></line>
+      <line><from><x>5</x><y>7</y></from><to><x>10</x><y>2</y></to><thickness>2</thickness></line>
+      <line><from><x>7</x><y>14</y></from><to><x>23</x><y>14</y></to><thickness>2</thickness></line>
+      <line><from><x>23</x><y>14</y></from><to><x>23</x><y>19</y></to><thickness>2</thickness></line>
+      <line><from><x>23</x><y>19</y></from><to><x>7</x><y>19</y></to><thickness>2</thickness></line>
+      <line><from><x>7</x><y>19</y></from><to><x>7</x><y>14</y></to><thickness>2</thickness></line>
+      <line><from><x>13</x><y>19</y></from><to><x>11</x><y>23</y></to><thickness>2</thickness></line>
+      <line><from><x>17</x><y>19</y></from><to><x>19</x><y>23</y></to><thickness>2</thickness></line>
+      <line><from><x>7</x><y>18</y></from><to><x>2</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>23</x><y>18</y></from><to><x>28</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>0</x><y>28</y></from><to><x>5</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>25</x><y>28</y></from><to><x>30</x><y>28</y></to><thickness>2</thickness></line>
+    </drawing>
+  </pictures>
 </game>

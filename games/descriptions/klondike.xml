@@ -153,18 +153,8 @@
         </group>
         <!-- the hand: a frame around the card it points at -->
         <object name="hand">
-          <sprite name="free">
-            <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-          </sprite>
-          <sprite name="held">
-            <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
-            <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
-            <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
-            <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
-          </sprite>
+          <sprite name="free"><drawing from="handfree" /></sprite>
+          <sprite name="held"><drawing from="handheld" /></sprite>
           <position><x>left - 3</x><y>top - 3</y></position>
           <actions>
             <action name="left"><hop direction="left" /></action>
@@ -279,5 +269,17 @@
   <!-- the card sheet: a row for each suit, a column for each rank, then a row of backs -->
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
+    <drawing name="handfree">
+      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+    </drawing>
+    <drawing name="handheld">
+      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+    </drawing>
   </pictures>
 </game>

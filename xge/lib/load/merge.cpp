@@ -331,11 +331,19 @@ namespace xge
 	ElementPtr withPictures(const ElementPtr& game)
 	{
 		std::map<std::string, ElementPtr> bitmaps;
+		std::map<std::string, ElementPtr> drawings;
 		for (const ElementPtr& child : game->children)
 		{
 			if (child->name != "pictures") { continue; }
 			for (const ElementPtr& picture : child->children)
 			{
+				if (picture->name == "drawing")
+				{
+					const std::string name = picture->attribute("name");
+					if (name.empty()) { fail("<pictures> > <drawing>", "needs a name=, which a sprite's <drawing from=\"...\" /> takes it by"); }
+					if (!drawings.emplace(name, picture).second) { fail("<pictures>", "two <drawing>s are called '" + name + "'"); }
+					continue;
+				}
 				if (picture->name != "bitmap") { continue; }
 				const std::string name = picture->attribute("name");
 				if (name.empty()) { fail("<pictures> > <bitmap>", "needs a name=, which a sprite's <bitmap from=\"...\" /> takes it by"); }
@@ -396,6 +404,16 @@ namespace xge
 			bool any = false;
 			for (const ElementPtr& child : element->children)
 			{
+				// <drawing from="rock" />: the drawing's lines (or polygons) in its place
+				if (child->name == "drawing" && element->name == "sprite")
+				{
+					const std::string name = child->attribute("from");
+					const auto found = drawings.find(name);
+					if (found == drawings.end()) { fail("<drawing from=\"" + name + "\">", "names no <drawing> of the <pictures>"); }
+					children.insert(children.end(), found->second->children.begin(), found->second->children.end());
+					any = true;
+					continue;
+				}
 				children.push_back(walk(child));
 				any = any || children.back() != child;
 			}

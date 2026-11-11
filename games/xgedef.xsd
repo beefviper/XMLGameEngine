@@ -495,12 +495,19 @@
   </xs:complexType>
 
   <!-- A sprite is named when an object has several, so an animation can pick them out. -->
+  <!-- <drawing from="rock" />: a drawing of the <pictures>, taken as it is. -->
+  <xs:complexType name="drawingFromType">
+    <xs:attribute name="from" type="xs:NMTOKEN" use="required" />
+  </xs:complexType>
+
   <xs:complexType name="spriteType">
     <xs:choice>
       <xs:group ref="shape" />
       <xs:element name="cell" type="sheetCellType" />
       <xs:element name="line" type="lineType" maxOccurs="unbounded" />
       <xs:element name="polygon" type="polygonType" maxOccurs="unbounded" />
+      <!-- the <pictures> drawing of that name: its lines, or its polygons -->
+      <xs:element name="drawing" type="drawingFromType" />
     </xs:choice>
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
@@ -588,6 +595,8 @@
       </xs:element>
       <xs:element name="line" type="lineType" maxOccurs="unbounded" />
       <xs:element name="polygon" type="polygonType" maxOccurs="unbounded" />
+      <!-- the <pictures> drawing of that name: its lines, or its polygons -->
+      <xs:element name="drawing" type="drawingFromType" />
     </xs:choice>
     <xs:attribute name="name" type="xs:string" use="optional" />
   </xs:complexType>
@@ -2880,6 +2889,16 @@
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
                   <xs:attribute name="style" type="xs:string" use="optional" />
+                </xs:complexType>
+              </xs:element>
+              <!-- a line drawing a sprite takes with <drawing from="name" />: lines, or polygons -->
+              <xs:element name="drawing">
+                <xs:complexType>
+                  <xs:choice>
+                    <xs:element name="line" type="lineType" maxOccurs="unbounded" />
+                    <xs:element name="polygon" type="polygonType" maxOccurs="unbounded" />
+                  </xs:choice>
+                  <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
                 </xs:complexType>
               </xs:element>
               <xs:element name="sheet">

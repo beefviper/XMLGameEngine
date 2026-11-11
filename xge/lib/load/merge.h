@@ -60,8 +60,10 @@ namespace xge
 	// the <pictures> bitmap of that name, changed by what it gives itself:
 	// its own <row>s replace all the picture's, a <scale> or <flip> the
 	// picture's, a <color> the picture's of the same char= (or none), and
-	// its attributes the picture's. So the rest of the file is read as if
-	// each picture had been written out where it is taken.
+	// its attributes the picture's. A sprite's <drawing from="..." /> is
+	// the <pictures> drawing of that name's lines (or polygons), as they are.
+	// So the rest of the file is read as if each picture had been written out
+	// where it is taken.
 	ElementPtr withPictures(const ElementPtr& game);
 
 	// The names an element can be called by: its own, and those of the

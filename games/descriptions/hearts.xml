@@ -238,12 +238,7 @@
 
         <!-- the players, in turn: you, then the computer's three, who keep out of tricks; each a frame around the card it points at (theirs unseen) -->
         <group name="players" class="player">
-          <sprite name="free">
-            <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-            <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-          </sprite>
+          <sprite name="free"><drawing from="playersfree" /></sprite>
           <sprite name="waiting"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
           <actions>
             <action name="left"><hop direction="left" /></action>
@@ -410,5 +405,11 @@
   <!-- the card sheet: a row for each suit, a column for each rank, then a row of backs -->
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
+    <drawing name="playersfree">
+      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+    </drawing>
   </pictures>
 </game>

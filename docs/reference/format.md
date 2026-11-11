@@ -21,7 +21,7 @@ One `<game>` root, its children in this order (the schema enforces it):
     <state> ... </state>
   </states>
   <sounds> ... </sounds>               <!-- optional: notes and music -->
-  <pictures> ... </pictures>           <!-- optional: bitmaps sprites take, sheets -->
+  <pictures> ... </pictures>           <!-- optional: bitmaps and drawings sprites take, sheets -->
   <demo> ... </demo>                   <!-- optional: a recorded game -->
 </game>
 ```

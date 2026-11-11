@@ -142,15 +142,7 @@
     </group>
     <!-- the ladder from the path down to the tunnel -->
     <object name="ladder" class="ladder">
-      <sprite>
-        <line><from><x>0</x><y>0</y></from><to><x>0</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>18</x><y>0</y></from><to><x>18</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>0</x><y>92</y></from><to><x>18</x><y>92</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>0</x><y>116</y></from><to><x>18</x><y>116</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-      </sprite>
+      <sprite><drawing from="ladder" /></sprite>
       <position><x>310</x><y>surface</y></position>
     </object>
 
@@ -837,5 +829,14 @@
       <color>color.cyan</color>
       <color char="y">color.yellow</color>
     </bitmap>
+    <drawing name="ladder">
+      <line><from><x>0</x><y>0</y></from><to><x>0</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>18</x><y>0</y></from><to><x>18</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>92</y></from><to><x>18</x><y>92</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>116</y></from><to><x>18</x><y>116</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+    </drawing>
   </pictures>
 </game>

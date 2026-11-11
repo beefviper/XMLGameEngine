@@ -624,6 +624,16 @@
   <xsl:template match="pictures" mode="pictures">
     <xsl:copy-of select="." />
   </xsl:template>
+  <!-- a sprite's <drawing from="..." />: that drawing's lines (or polygons), as they are -->
+  <xsl:template match="sprite/drawing[@from]" mode="pictures">
+    <xsl:variable name="base" select="/game/pictures/drawing[@name = current()/@from]" />
+    <xsl:if test="not($base)">
+      <xsl:message terminate="yes">
+        <xsl:value-of select="concat('windows-cpp: &lt;drawing from=&quot;', @from, '&quot;&gt; names no &lt;drawing&gt; of the &lt;pictures&gt;')" />
+      </xsl:message>
+    </xsl:if>
+    <xsl:copy-of select="$base/*" />
+  </xsl:template>
   <xsl:template match="bitmap[@from]" mode="pictures">
     <xsl:variable name="over" select="." />
     <xsl:variable name="base" select="/game/pictures/bitmap[@name = current()/@from]" />

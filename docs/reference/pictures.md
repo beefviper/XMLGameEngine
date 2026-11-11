@@ -13,6 +13,7 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 | `<text>` | pieces, then `<size>`, `<color>`, `<font>`; `style=` | [text](#text) |
 | `<image>` | `<path>`, `<flip>` | an image file, loaded by the window library |
 | `<line>`s | each `<from>`, `<to>`, `<color>`, `<thickness>` | [straight lines](#lines) |
+| `<drawing from="rock" />` | | lines or polygons of the `<pictures>` ([drawings](#drawings)) |
 | `<polygon>`s | each three or more `<point>`s, `<color>` | [filled shapes](#polygons) |
 | `<bitmap>` | `<row>`s, `<scale>`, `<color>`s, `<flip>`; `style=`; or `from=` a picture of the `<pictures>` | a [picture written as text](#bitmaps) |
 | `<svg>` | `<path>`, a part, `<scale>`, `<hide>`s, `<flip>` | part of an [SVG file](#svg-pictures) |
@@ -54,6 +55,24 @@ A `<radius>`, `<width>` or `<height>` below 0, or a text `<size>` of 0 or less, 
 
 - Corners in order, the last joined to the first. Several are drawn in order, a later over an earlier. A pixel is filled when its middle is inside.
 - Drawn once like lines, so `pixel` collisions test it and a [`<hole>`](commands.md#touching) cuts it (Cannon Hill's craters). Not mixed with lines or other shapes.
+
+### Drawings
+
+Lines or polygons that draw a thing (a ship, a rock) are written once, by name, in the game's `<pictures>` at the bottom, and a sprite takes them with `<drawing from>`:
+
+```xml
+<sprite><drawing from="lander" /></sprite>
+...
+<pictures>
+  <drawing name="lander">
+    <line><from><x>4</x><y>0</y></from><to><x>12</x><y>0</y></to></line>
+    ...
+  </drawing>
+</pictures>
+```
+
+- A drawing holds `<line>`s or `<polygon>`s, and is taken as it is: the sprite holds only the `<drawing from>`. A member that draws another rock takes another drawing.
+- Lines that are where things are (a table's walls, a course, the moon's ground) stay in their objects, as a map's rows do.
 
 ### Bitmaps
 
