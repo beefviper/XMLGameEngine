@@ -309,14 +309,6 @@
           <xsl:if test="$node/only"> command.only = true;</xsl:if>
           <xsl:if test="$node/most"><xsl:value-of select="concat(' command.most = ', normalize-space($node/most), ';')" /></xsl:if>
         </xsl:when>
-        <!-- a put that closes what it walls in -->
-        <xsl:when test="$verb = 'put' and $node/close">
-          <xsl:text> command.closeClass = </xsl:text>
-          <xsl:call-template name="string"><xsl:with-param name="text" select="$node/close/@class" /></xsl:call-template>
-          <xsl:text>; command.closeObject = </xsl:text>
-          <xsl:call-template name="string"><xsl:with-param name="text" select="$node/close/@object" /></xsl:call-template>
-          <xsl:text>;</xsl:text>
-        </xsl:when>
         <!-- a computer thinking: how deep, and what its pieces are worth -->
         <xsl:when test="$verb = 'think'">
           <xsl:if test="$node/avoid"> command.avoid = true;</xsl:if>
@@ -1830,6 +1822,10 @@
           </xsl:call-template>
         </xsl:for-each>
         <xsl:text> }</xsl:text>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="string"><xsl:with-param name="text" select="close/@class" /></xsl:call-template>
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="string"><xsl:with-param name="text" select="close/@object" /></xsl:call-template>
         <xsl:text> }</xsl:text>
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>

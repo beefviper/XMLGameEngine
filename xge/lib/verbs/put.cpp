@@ -14,19 +14,17 @@ namespace xge
 {
 	// <put>: A new piece on the cell it is over: of class=, or with none,
 	// of the pieces the player on its turn owns (Game::turnClass).
-	static void readPut(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readPut(const XmlNode& node, const std::string& where, RawCommand&)
 	{
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
-			if (child->getName() != "close" || !command.closeClass.empty()) { fail(where + " > <put>", "unknown <" + child->getName() + ">; expected one <close> if wanted"); }
-			command.closeClass = requireAttribute(*child, "class", where + " > <put> > <close>");
-			command.closeObject = requireAttribute(*child, "object", where + " > <put> > <close>");
+			fail(where + " > <put>", "unknown <" + child->getName() + ">; a put holds nothing (what a piece put closes is in its <moves>)");
 		}
 	}
 
 	static Command makePut(const RawCommand& raw, const ValueEvaluator&)
 	{
-		return CmdPut{ raw.objClass, raw.closeClass, raw.closeObject };
+		return CmdPut{ raw.objClass };
 	}
 
 	static bool runPut(const Command& command, const Doer& doer, CommandExecutor& executor)

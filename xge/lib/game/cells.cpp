@@ -1150,6 +1150,9 @@ namespace xge
 		// Turned: each trapped piece goes, and one of the new kind comes in
 		// its cell; what it is put on goes too. (Names and cells first: a
 		// spawn may move the pieces spawned this frame.)
+		const Object::MoveSet* kindSet = moveSetOf(*kind);
+		const std::string closeClass = kindSet ? kindSet->closeClass : std::string();
+		const std::string closeObject = kindSet ? kindSet->closeObject : std::string();
 		const std::string name = kind->name;
 		const std::string map = kind->mapName;
 		const int columns = kind->mapColumns;
@@ -1166,11 +1169,11 @@ namespace xge
 			if (Object* made = spawn(name)) { putInCell(*made, c, r); }
 		}
 
-		// <close>: each piece of that class beside it now walled in, no place
+		// <close> in its moves: each piece of that class beside it now walled in, no place
 		// left beside it that a piece could be put <on> (lines of either
 		// side: the slots are gone), is taken by a copy of the object named.
 		bool closed = false;
-		if (!put.closeClass.empty())
+		if (!closeClass.empty())
 		{
 			std::vector<std::string> places;
 			for (const Object* each : putTemplates(put.objClass))
@@ -1192,10 +1195,10 @@ namespace xge
 				const int c = column + side[0];
 				const int r = row + side[1];
 				Object* box = onMap(c, r) ? cellHolder(map, c, r, {}) : nullptr;
-				if (!box || box->objClass != put.closeClass) { continue; }
+				if (!box || box->objClass != closeClass) { continue; }
 				if (!put_(c + 1, r) || !put_(c - 1, r) || !put_(c, r + 1) || !put_(c, r - 1)) { continue; }
 				despawn(*box);
-				if (Object* made = spawn(put.closeObject)) { putInCell(*made, c, r); }
+				if (Object* made = spawn(closeObject)) { putInCell(*made, c, r); }
 				closed = true;
 			}
 		}

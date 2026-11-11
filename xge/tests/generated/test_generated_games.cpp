@@ -133,7 +133,6 @@ namespace
 			for (const std::string& player : c.players) { out << at << ".player " << player << "\n"; }
 			for (const auto& [look, worth] : c.worths) { out << at << ".worth " << look << " " << worth << "\n"; }
 			flag(at + ".only", c.only);
-			text(at + ".close", c.closeClass + " " + c.closeObject);
 			text(at + ".place", c.place + (c.straight ? " straight " : " ") + c.alike);
 			if (c.test) { conditions(at + ".test", { *c.test }); }
 		}
@@ -290,6 +289,7 @@ namespace
 				for (const RawObject::RawMoveSet::RawFlank& flank : set.flanks) { text(here + ".flank", flank.objClass + (flank.straight ? " straight" : "")); }
 				flag(here + ".fall", set.fall);
 				for (const std::string& on : set.on) { text(here + ".on", on); }
+				text(here + ".close", set.closeClass + " " + set.closeObject);
 			}
 			for (std::size_t i = 0; i < o.markSets.size(); ++i)
 			{

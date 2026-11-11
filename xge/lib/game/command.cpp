@@ -166,7 +166,7 @@ namespace xge
 			[&](const CmdPlace& p) { o << "place" << (p.into.empty() ? "" : "(" + p.into + ")"); },
 			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
 			[&](const CmdOrder& r) { o << "order(" << r.group << ", random)"; },
-			[&](const CmdPut& p) { o << "put(" << p.objClass << (p.closeClass.empty() ? "" : ", close " + p.closeClass + " " + p.closeObject) << ")"; },
+			[&](const CmdPut& p) { o << "put(" << p.objClass << ")"; },
 			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << placeText(c.place) << ")"; },
 			[&](const CmdSlide& m)
 			{

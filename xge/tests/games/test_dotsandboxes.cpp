@@ -5,11 +5,13 @@
 //
 // Catch2 tests for dotsandboxes.xml and what it brought: <on class> in a
 // piece's <moves> (a put in place of a piece), <put> taking whichever
-// piece of its class fits, <close> claiming a box and keeping the turn,
+// piece of the player on its turn fits, <close> in the lines' <moves>
+// claiming a box and keeping the turn,
 // the computer taking boxes and going again (thinking after the player's
 // line is shown), and a cursor that stands only on places still free.
 
 #include "played.h"
+#include "turns.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -40,7 +42,7 @@ namespace
 		}
 
 		Object& cursor() { return get("cursor"); }
-		float turn() { return cursor().variable.at("turn"); }
+		float turn() { return turns::number(game); }
 		float score(const std::string& name) { return get("score").variable.at(name); }
 
 		int column() { return cell(cursor().cellColumn); }
@@ -177,8 +179,7 @@ TEST_CASE("dotsandboxes.xml: against the computer, the keys do nothing on its tu
 	CHECK(board.at(2, 1) == "redline");
 	REQUIRE(board.turn() == 2.0f);
 	board.frames(1);
-	CHECK(board.cursor().lookName() == "cpu");
-	CHECK(board.get("whoseturn").lookName() == "thinking");
+	CHECK(board.get("blues").lookName() == "thinking");
 	const int column = board.column();
 	const int row = board.row();
 	board.tap(KeyCode::D);
@@ -187,7 +188,7 @@ TEST_CASE("dotsandboxes.xml: against the computer, the keys do nothing on its tu
 	CHECK(board.column() == column);
 	CHECK(board.row() == row);
 	board.untilRed();
-	CHECK(board.get("whoseturn").lookName() == "red");
+	CHECK(board.get("reds").lookName() == "moving");
 }
 
 TEST_CASE("dotsandboxes.xml: closing a box claims it and keeps the turn", "[dotsandboxes]")
@@ -202,7 +203,7 @@ TEST_CASE("dotsandboxes.xml: closing a box claims it and keeps the turn", "[dots
 	CHECK(board.score("blue") == 1.0f);
 	CHECK(board.score("open") == 24.0f);
 	CHECK(board.turn() == 2.0f);
-	CHECK(board.get("whoseturn").lookName() == "blue");
+	CHECK(board.get("blues").lookName() == "moving");
 	board.draw(6, 1);
 	CHECK(board.turn() == 1.0f);
 }

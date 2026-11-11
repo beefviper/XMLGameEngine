@@ -605,7 +605,7 @@ namespace xge
 		bool changed = false;
 		for (RawCommand& command : list)
 		{
-			for (std::string* each : { &command.object, &command.partner, &command.retreat, &command.closeObject })
+			for (std::string* each : { &command.object, &command.partner, &command.retreat })
 			{
 				if (*each == from) { *each = to; changed = true; }
 			}

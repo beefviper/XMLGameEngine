@@ -10,6 +10,7 @@
 // <think>; the marks, options, put back and mouse play.
 
 #include "played.h"
+#include "turns.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -38,10 +39,11 @@ namespace
 		// Frames until it is red's turn again, at most `most`.
 		void untilRed(int most = 600)
 		{
-			for (int i = 0; i < most && cursor().variable.at("turn") != 1.0f && state() == "playing"; ++i) { frames(1); }
+			for (int i = 0; i < most && turn() != 1.0f && state() == "playing"; ++i) { frames(1); }
 		}
 
 		Object& cursor() { return get("cursor"); }
+		float turn() { return turns::number(game); }
 
 		// The cursor walked to that square with the keys.
 		void to(int column, int row)
@@ -123,8 +125,8 @@ TEST_CASE("checkers.xml: the board is set, red to move, the cursor over red's me
 	REQUIRE(board.state() == "playing");
 	CHECK(board.count("red") == 12);
 	CHECK(board.count("white") == 12);
-	CHECK(board.cursor().lookName() == "redfree");
-	CHECK(board.get("whoseturn").lookName() == "red");
+	CHECK(board.cursor().lookName() == "free");
+	CHECK(board.get("reds").lookName() == "moving");
 	CHECK(board.at("red", 1, 8));
 	CHECK(board.at("white", 8, 1));
 	CHECK_FALSE(board.at("red", 2, 8));
@@ -140,14 +142,14 @@ TEST_CASE("checkers.xml: a man steps forward on a slant, and the turn passes", "
 {
 	Board board;
 	board.space(3, 6);
-	CHECK(board.cursor().lookName() == "redheld");
+	CHECK(board.cursor().lookName() == "held");
 	CHECK(board.cursor().picked == board.at("red", 3, 6)->name);
 	board.space(4, 5);
 	CHECK(board.at("red", 4, 5));
 	CHECK_FALSE(board.at("red", 3, 6));
-	CHECK(board.cursor().lookName() == "whitefree");
-	CHECK(board.cursor().variable.at("turn") == 2.0f);
-	CHECK(board.get("whoseturn").lookName() == "white");
+	CHECK(board.cursor().lookName() == "free");
+	CHECK(board.turn() == 2.0f);
+	CHECK(board.get("whites").lookName() == "moving");
 	CHECK(board.cursor().picked.empty());
 }
 
@@ -156,25 +158,25 @@ TEST_CASE("checkers.xml: what is no move is refused, and so is the other side's 
 	Board board;
 	// A white piece on red's turn, and a red man that cannot move.
 	board.space(2, 3);
-	CHECK(board.cursor().lookName() == "redfree");
+	CHECK(board.cursor().lookName() == "free");
 	board.space(2, 7);
-	CHECK(board.cursor().lookName() == "redfree");
+	CHECK(board.cursor().lookName() == "free");
 
 	// Straight ahead, backwards, two squares: none is a move.
 	board.space(3, 6);
-	REQUIRE(board.cursor().lookName() == "redheld");
+	REQUIRE(board.cursor().lookName() == "held");
 	board.space(3, 5);
 	board.space(4, 7);
 	board.space(5, 4);
 	CHECK(board.at("red", 3, 6));
-	CHECK(board.cursor().lookName() == "redheld");
+	CHECK(board.cursor().lookName() == "held");
 
 	// Space on another of red's own: that one is held instead.
 	board.space(5, 6);
 	CHECK(board.cursor().picked == board.at("red", 5, 6)->name);
 	board.space(6, 5);
 	CHECK(board.at("red", 6, 5));
-	CHECK(board.cursor().lookName() == "whitefree");
+	CHECK(board.cursor().lookName() == "free");
 }
 
 TEST_CASE("checkers.xml: a jump must be made, and takes the piece jumped", "[checkers]")
@@ -184,22 +186,22 @@ TEST_CASE("checkers.xml: a jump must be made, and takes the piece jumped", "[che
 	board.space(4, 5);
 	board.space(6, 3);
 	board.space(5, 4);
-	REQUIRE(board.cursor().lookName() == "redfree");
+	REQUIRE(board.cursor().lookName() == "free");
 
 	// Red can take: no other piece may move, and the man that can jump
 	// may only jump.
 	board.space(7, 6);
-	CHECK(board.cursor().lookName() == "redfree");
+	CHECK(board.cursor().lookName() == "free");
 	CHECK(board.sum("red") > 0.0f);
 	board.space(4, 5);
-	REQUIRE(board.cursor().lookName() == "redheld");
+	REQUIRE(board.cursor().lookName() == "held");
 	board.space(3, 4);
 	CHECK(board.at("red", 4, 5));
 	board.space(6, 3);
 	CHECK(board.at("red", 6, 3));
 	CHECK_FALSE(board.at("white", 5, 4));
 	CHECK(board.count("white") == 11);
-	CHECK(board.cursor().lookName() == "whitefree");
+	CHECK(board.cursor().lookName() == "free");
 }
 
 TEST_CASE("checkers.xml: a piece that can jump again must, before the turn passes", "[checkers]")
@@ -207,14 +209,14 @@ TEST_CASE("checkers.xml: a piece that can jump again must, before the turn passe
 	Board board;
 	board.only({ { "red", 2, 7 }, { "red", 1, 8 }, { "white", 3, 6 }, { "white", 5, 4 }, { "white", 8, 1 } });
 	board.space(2, 7);
-	REQUIRE(board.cursor().lookName() == "redheld");
+	REQUIRE(board.cursor().lookName() == "held");
 	board.space(4, 5);
 	CHECK(board.at("red", 4, 5));
 	CHECK_FALSE(board.at("white", 3, 6));
 	// Still red's, the same man held.
-	CHECK(board.cursor().lookName() == "redheld");
+	CHECK(board.cursor().lookName() == "held");
 	CHECK(board.cursor().pickChain);
-	CHECK(board.cursor().variable.at("turn") == 1.0f);
+	CHECK(board.turn() == 1.0f);
 
 	// Not another piece, not a step.
 	board.space(1, 8);
@@ -225,7 +227,7 @@ TEST_CASE("checkers.xml: a piece that can jump again must, before the turn passe
 	board.space(6, 3);
 	CHECK(board.at("red", 6, 3));
 	CHECK(board.count("white") == 1);
-	CHECK(board.cursor().lookName() == "whitefree");
+	CHECK(board.cursor().lookName() == "free");
 	CHECK_FALSE(board.cursor().pickChain);
 }
 
@@ -243,7 +245,7 @@ TEST_CASE("checkers.xml: a man on the far row is crowned, and a king goes backwa
 	// White's turn, then the king steps back down.
 	board.space(1, 6);
 	board.space(2, 7);
-	REQUIRE(board.cursor().lookName() == "redfree");
+	REQUIRE(board.cursor().lookName() == "free");
 	board.space(4, 1);
 	board.space(5, 2);
 	CHECK(board.at("red", 5, 2));
@@ -260,7 +262,7 @@ TEST_CASE("checkers.xml: a crowning jump ends the move", "[checkers]")
 	REQUIRE(board.at("red", 4, 1));
 	CHECK(board.at("red", 4, 1)->lookName() == "king");
 	CHECK(board.at("white", 3, 2));
-	CHECK(board.cursor().lookName() == "whitefree");
+	CHECK(board.cursor().lookName() == "free");
 	CHECK_FALSE(board.cursor().pickChain);
 }
 
@@ -278,7 +280,7 @@ TEST_CASE("checkers.xml: taking the last piece wins", "[checkers]")
 	board.frames(2);
 	CHECK(board.count("red") == 12);
 	CHECK(board.count("white") == 12);
-	CHECK(board.cursor().lookName() == "redfree");
+	CHECK(board.cursor().lookName() == "free");
 }
 
 TEST_CASE("checkers.xml: a side with no move on its turn has lost", "[checkers]")
@@ -300,15 +302,15 @@ TEST_CASE("checkers.xml: against the computer, white answers red's move", "[chec
 	REQUIRE(board.get("match").variable.at("players") == 1.0f);
 	board.space(3, 6);
 	board.space(4, 5);
-	REQUIRE(board.cursor().variable.at("turn") == 2.0f);
+	REQUIRE(board.turn() == 2.0f);
 	board.frames(1);
-	CHECK(board.cursor().lookName() == "cpufree");
-	// Your keys do nothing on its turn.
-	board.space(2, 3);
-	CHECK(board.cursor().lookName() == "cpufree");
+	// Your keys do not reach the cursor on its turn.
+	const int was = cell(board.cursor().cellColumn);
+	board.tap(KeyCode::A);
+	CHECK(cell(board.cursor().cellColumn) == was);
 	board.untilRed();
-	CHECK(board.cursor().variable.at("turn") == 1.0f);
-	CHECK(board.cursor().lookName() == "redfree");
+	CHECK(board.turn() == 1.0f);
+	CHECK(board.cursor().lookName() == "free");
 	CHECK(board.count("white") == 12);
 	CHECK(board.count("red") == 12);
 	// One white man has stepped down off the third row.
@@ -326,7 +328,7 @@ TEST_CASE("checkers.xml: the computer does not step where it would be taken", "[
 	board.space(7, 8);
 	board.space(6, 7);
 	board.untilRed();
-	REQUIRE(board.cursor().variable.at("turn") == 1.0f);
+	REQUIRE(board.turn() == 1.0f);
 	CHECK(board.at("white", 1, 4));
 	CHECK_FALSE(board.at("white", 3, 4));
 }
@@ -353,8 +355,8 @@ TEST_CASE("checkers.xml: with two players the computer leaves white alone", "[ch
 	board.space(3, 6);
 	board.space(4, 5);
 	board.frames(300);
-	CHECK(board.cursor().variable.at("turn") == 2.0f);
-	CHECK(board.cursor().lookName() == "whitefree");
+	CHECK(board.turn() == 2.0f);
+	CHECK(board.cursor().lookName() == "free");
 }
 
 namespace
@@ -406,9 +408,9 @@ TEST_CASE("checkers.xml: X puts the piece held back, but not in a run of jumps",
 {
 	Board board;
 	board.space(3, 6);
-	REQUIRE(board.cursor().lookName() == "redheld");
+	REQUIRE(board.cursor().lookName() == "held");
 	board.tap(KeyCode::X);
-	CHECK(board.cursor().lookName() == "redfree");
+	CHECK(board.cursor().lookName() == "free");
 	CHECK(board.cursor().picked.empty());
 	CHECK(board.at("red", 3, 6));
 
@@ -418,7 +420,7 @@ TEST_CASE("checkers.xml: X puts the piece held back, but not in a run of jumps",
 	chain.space(4, 5);
 	REQUIRE(chain.cursor().pickChain);
 	chain.tap(KeyCode::Backspace);
-	CHECK(chain.cursor().lookName() == "redheld");
+	CHECK(chain.cursor().lookName() == "held");
 	CHECK_FALSE(chain.cursor().picked.empty());
 }
 
@@ -429,7 +431,7 @@ TEST_CASE("checkers.xml: with the option on, the only piece that can move is pic
 	// Red has two men but only one can move: it jumps.
 	board.only({ { "red", 4, 5 }, { "red", 1, 8 }, { "red", 2, 7 }, { "white", 5, 4 }, { "white", 8, 1 } });
 	board.frames(2);
-	CHECK(board.cursor().lookName() == "redheld");
+	CHECK(board.cursor().lookName() == "held");
 	CHECK(board.cursor().picked == board.at("red", 4, 5)->name);
 	board.space(6, 3);
 	CHECK(board.at("red", 6, 3));
@@ -458,10 +460,10 @@ TEST_CASE("checkers.xml: the cursor follows the mouse, and a click picks up and 
 	CHECK(cell(board.cursor().cellColumn) == 3);
 	CHECK(cell(board.cursor().cellRow) == 6);
 	mouse(160.0f + 60.0f * 2.5f, 80.0f + 60.0f * 5.5f, true);
-	CHECK(board.cursor().lookName() == "redheld");
+	CHECK(board.cursor().lookName() == "held");
 	mouse(160.0f + 60.0f * 3.5f, 80.0f + 60.0f * 4.5f, true);
 	CHECK(board.at("red", 4, 5));
-	CHECK(board.cursor().lookName() == "whitefree");
+	CHECK(board.cursor().lookName() == "free");
 	// Off the board, the cursor stays where it was.
 	mouse(20.0f, 20.0f, false);
 	CHECK(cell(board.cursor().cellColumn) == 4);
@@ -477,9 +479,9 @@ TEST_CASE("checkers.xml: the computer thinks on its own thread, as it does in a 
 	board.game.thinkInBackground(true);
 	board.space(3, 6);
 	board.space(4, 5);
-	REQUIRE(board.cursor().variable.at("turn") == 2.0f);
+	REQUIRE(board.turn() == 2.0f);
 	board.untilRed(3000);
-	CHECK(board.cursor().variable.at("turn") == 1.0f);
+	CHECK(board.turn() == 1.0f);
 	CHECK(board.count("white") == 12);
 	int moved = 0;
 	for (int column = 1; column <= 8; ++column) { moved += board.at("white", column, 4) ? 1 : 0; }

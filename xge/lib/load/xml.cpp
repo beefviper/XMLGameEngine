@@ -1267,6 +1267,13 @@ namespace xge
 						set.on.push_back(requireAttribute(*move, "class", here + " > <on>"));
 						continue;
 					}
+					if (tag == "close")
+					{
+						if (!set.closeClass.empty()) { fail(here, "a second <close>; a piece closes one class"); }
+						set.closeClass = requireAttribute(*move, "class", here + " > <close>");
+						set.closeObject = requireAttribute(*move, "object", here + " > <close>");
+						continue;
+					}
 					if (tag == "flank")
 					{
 						const std::string at = here + " > <flank>";
@@ -1280,7 +1287,7 @@ namespace xge
 						set.flanks.push_back(std::move(flank));
 						continue;
 					}
-					if (tag != "step" && tag != "jump") { fail(here, "unknown <" + tag + ">; expected <forced />, <step>s and <jump>s, <flank>s, <on>s, <fall />, then <promote>"); }
+					if (tag != "step" && tag != "jump") { fail(here, "unknown <" + tag + ">; expected <forced />, <step>s and <jump>s, <flank>s, <on>s, <fall />, <close>, then <promote>"); }
 					RawObject::RawPieceMove each;
 					each.jump = tag == "jump";
 					const std::string at = here + " > <" + tag + ">";

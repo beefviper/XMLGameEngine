@@ -835,23 +835,16 @@ namespace xge
 				if (const Object::MoveSet* set = Board::setOf(*kind, kind->look))
 				{
 					board.places.insert(board.places.end(), set->on.begin(), set->on.end());
-				}
-			}
-		}
-		// What a side's put closes, from the picker's own actions.
-		for (const auto& [actionName, commands] : picker.action)
-		{
-			for (const Command& command : commands)
-			{
-				const auto* put = std::get_if<CmdPut>(&shapeOf(command));
-				if (!put || put->closeClass.empty()) { continue; }
-				const int side = put->objClass == think.objClass ? 0 : put->objClass == other ? 1 : -1;
-				if (side < 0) { continue; }
-				board.closeClass[side] = put->closeClass;
-				const std::string owned = fullName(put->closeObject);
-				for (const Object& object : objects)
-				{
-					if (object.named(owned)) { board.ownClass[side] = object.objClass; break; }
+					// What a side's put closes, and the class of what claims it.
+					if (!set->closeClass.empty() && board.closeClass[side].empty())
+					{
+						board.closeClass[side] = set->closeClass;
+						const std::string owned = fullName(set->closeObject);
+						for (const Object& object : objects)
+						{
+							if (object.named(owned)) { board.ownClass[side] = object.objClass; break; }
+						}
+					}
 				}
 			}
 		}

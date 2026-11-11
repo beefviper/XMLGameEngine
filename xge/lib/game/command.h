@@ -754,15 +754,12 @@ namespace xge
 	// when the cell is taken, and, when the pieces' moves have <flank>s,
 	// where it traps no line; the pieces it traps turn into its kind. See
 	// Game::putPiece.
-	// <close class="box" object="redbox" />: after the put, each piece of
-	// that class beside it walled in on all four sides by pieces of the
-	// class put is replaced by a copy of the object; then the put counts
-	// as refused, so the turn does not pass.
+	// A piece put whose <moves> have a <close> may wall in a piece beside
+	// it and claim it; then the put counts as refused, so the turn does
+	// not pass.
 	struct CmdPut
 	{
 		std::string objClass;
-		std::string closeClass;
-		std::string closeObject;
 	};
 
 	// <count class="black" into="score.black" />: how many objects of that
@@ -1053,8 +1050,6 @@ namespace xge
 		std::vector<std::pair<std::string, float>> worths; // think: each <worth sprite="...">
 		bool only{ false };    // pick: <only />
 		bool avoid{ false };   // think: <avoid />, a card player that keeps out of tricks
-		std::string closeClass;  // put: <close class=...>
-		std::string closeObject; // put: <close object=...>
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
 		std::string pile;      // call: pile=, the pile whose wild card the suit is called for
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
