@@ -32,7 +32,7 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
 </group>
 ```
 
-- **The pack** is a group in `<columns>` and `<rows>` whose class a `<holds>` names. Each cell is a card: its row is its `suit`, its column its `rank` (variables, from 1), its first look the face and its second the back. A sheet `<cell>` that leaves out its column or row takes the cell's own, so the faces are one sprite. `worth` is the rank (its column) unless a column, row or cell gives one (`<column><number>11</number><number>12</number><number>13</number><variables><variable name="worth">10</variable></variables></column>`); a **`high`** variable is a second value it may count instead where a holder counts within a limit (Blackjack's ace: `high` 11).
+- **The pack** is a group in `<columns>` and `<rows>` whose class a `<holds>` names. Each cell is a card: variables `row` and `column` (from 1) say which, its first look is the face and its second the back. **`<columns name="rank">13</columns>`** and **`<rows name="suit">4</rows>`** give the column and row a second name the game reads better by: every card then also has `rank` and `suit`, the same numbers, and anything that names a variable may use either. The engine knows only rows and columns; suit and rank are the game's words (`worth`, `high` and `color`, a card's own, cannot be such names). A sheet `<cell>` that leaves out its column or row takes the cell's own, so the faces are one sprite. `worth` is the rank (its column) unless a column, row or cell gives one (`<column><number>11</number><number>12</number><number>13</number><variables><variable name="worth">10</variable></variables></column>`); a **`high`** variable is a second value it may count instead where a holder counts within a limit (Blackjack's ace: `high` 11).
 - **`<holds class sprite>`** on an object or group makes it a holder: what it holds, in order, the last on top, each showing the look `sprite=` while laid there (none: each keeps its own).
 - **`<spread>`**: each one on from the one under it (`<x>`, `<y>`, `<width>` the most it spreads across); a second with `sprite=` for those showing that look.
 - **`<accepts>`**: what may be placed on top, as `<condition>`s on the arriving one, all of which must hold. Each compares its `variable=` with `<equal>`, `<unequal>`, `<above>`, `<below>`, `<atleast>` or `<atmost>` a number, or with a variable of the top one, plus or minus a number if wanted: `<equal>top.suit</equal>`, `<unequal>top.color</unequal>`, `<equal>top.rank + 1</equal>`, `<below>top.worth</below>`. `total="sum"` adds that variable up over what is laid at once (`<equal>13</equal>`: Pyramid's pairs); `<condition total="count"><equal>1</equal></condition>` lays one at a time. `<any>` holds conditions of which one must hold; `<empty>` holds conditions on the first, where there is no top. `<accepts />` takes anything; no `<accepts>`: nothing.
@@ -77,7 +77,7 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
 
 ## Patterns
 
-What a set of cards can make is written once in the game, beside `<styles>`, lowest first. Each `<pattern>` is parts that must all hold, each naming the variable it compares: `<alike variable="rank">N</alike>` (N of one rank; two of them: two ranks), `<alike variable="suit">N</alike>` (N of one suit), `<run variable="worth">N</run>` (N worths in a row, a card's `high` counting too). `<run variable="rank">` runs by column, the ace low whatever it is worth (Gin's runs, its court cards worth 10); for now only `<melds />` take it.
+What a set of cards can make is written once in the game, beside `<styles>`, lowest first. Each `<pattern>` is parts that must all hold, each naming the variable it compares, a card's column or row by either name: `<alike variable="rank">N</alike>` (N of one column, here called rank; two of them: two ranks), `<alike variable="suit">N</alike>` (N of one row), `<run variable="worth">N</run>` (N worths in a row, a card's `high` counting too). `<run variable="rank">` runs by column, the ace low whatever it is worth (Gin's runs, its court cards worth 10); for now only `<melds />` take it.
 
 ```xml
 <patterns name="poker">
@@ -126,7 +126,7 @@ A holder (Hold'em's: the ace's `high` 14) scores by them with `<score patterns="
 </object>
 ```
 
-- **`<trick variable="suit">`** in a `<holds>`: the first card leads any suit; after it, a player holding the suit led must follow. The highest `worth` of the suit led wins (an ace-high pack gives column 1 `worth` 14). For now the variable is always `suit`, the row.
+- **`<trick variable="suit">`** in a `<holds>`: the first card leads any suit; after it, a player holding the suit led must follow. The highest `worth` of the suit led wins (an ace-high pack gives column 1 `worth` 14). `variable=` is the row or the column, by either name, so a pack laid out the other way round follows its columns.
 - **`<breaks>2</breaks>`**: a suit (its row) that may not lead until one has been laid since the deal, unless the leader holds nothing else.
 - **`<trumps>1</trumps>`**: a card of that suit beats every other suit (Spades).
 - Points are card variables (`points` on the hearts row and the queen of spades' cell), added up by the trick's **`<counts variable="points" />`** into `trick.points`; `<think><avoid />` sheds the cards it counts.

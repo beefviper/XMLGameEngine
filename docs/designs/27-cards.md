@@ -10,7 +10,7 @@
 
 ## Chosen
 
-- **No card nouns** (the author): other games need collections of pieces too. A pack is a `<group>` in rows (suits) and columns (ranks); a pile anything that `<holds>` a class; the hand a picker (`<pick>`, `<place>`, `<drop>`). The first form had `<deck>`, `<pile>`, `<hand>` and card verbs (`<take>`, `<lay>`, `<deal>`, `<collect>`, `<shuffle>`, `<redeal />`, `<reveal pile>`); all eight games moved, then the old words left the schema, reader and generator.
+- **No card nouns** (the author): other games need collections of pieces too. A pack is a `<group>` in rows and columns; `<rows name="suit">` and `<columns name="rank">` let a game call them suit and rank (the author's idea: it stays row and column for everything, and the author picks the words that read better); a pile anything that `<holds>` a class; the hand a picker (`<pick>`, `<place>`, `<drop>`). The first form had `<deck>`, `<pile>`, `<hand>` and card verbs (`<take>`, `<lay>`, `<deal>`, `<collect>`, `<shuffle>`, `<redeal />`, `<reveal pile>`); all eight games moved, then the old words left the schema, reader and generator.
 - **Verbs say what they do:** `<send>`, `<distribute>` (the author's word over deal), `<order>` with `<random />` (over shuffle: it says what becomes random), `<become>` on a holder turning what it holds. They work in any action, timer or condition; `<starts>` in a state is the deal.
 - **`<carry />`**, once `<run />`: a picked card takes those on it, the word Adventure carries with, so "run" means only cards in a row.
 - **Placing rules are conditions** on the arriving one, which compare its variables, so no word knows suits or colours. The card under it is `top` (`<equal>top.rank - 1</equal>`, `<unequal>top.color</unequal>`); `total="sum"` is over what is laid at once (Pyramid's pairs), `total="count"` how many. They were once words of their own (`<same>`, `<differs>`, `<step>`, `<total>`, `<one />`) that read as "a random list of tags" (the author); now anyone who reads conditions reads them. Made at load into the same few comparisons (`PileRule::VarRule`), so the computer's search stays fast. Any comparison takes the top's own variable or another (`<below>top.worth</below>`), plus or minus a number.
@@ -24,7 +24,8 @@
 - **Players in turn** ([players as a group](07-states-and-conditions.md#players-as-a-group)): a member's `<owns>` is its hand; `<distribute into="players">` deals a card a round by seat; `<pass member="trick.winner">`; `<team>` for partners. Gin's turn is two looks, changed by a condition on holding eleven since a pick on a `<picked>` holder is refused.
 - **Wild cards and a call:** `<wild variable>` in `<accepts>` makes the holder wait for `<call object>` naming a value of that variable from a card the caller points at; no suit picker screen. A wait in the turn says the rule in one place (rejected: a `laid` variable and two conditions).
 - **Patterns, not poker:** a `<patterns>` set from `<alike variable>` (the grid games' word for sharing a value; once `<same>`) and `<run variable>`, the same parts rummy and dice use. The engine finds the best and orders two by one general tie rule; a holder `<score>`s `<with>` a shared pile, the `<best>` so many. `<run variable="rank">` runs by column (Gin's court cards are worth 10). **Melds** split the whole holder for least deadwood and lay it out that way.
-- **A trick is a holder with a rule:** `<trick variable="suit">`, `<breaks>`, `<trumps>`; it knows who laid each card and gives `lead` and `winner`.
+- **A trick is a holder with a rule:** `<trick variable="suit">`, `<breaks>`, `<trumps>`; it knows who laid each card and gives `lead` and `winner`. It follows the row or the column, by either name.
+- **Card words kept on purpose:** `<trick>`, `<breaks>`, `<trumps>` and `<melds />` name mechanics every rule book calls by those names, so another word would only need explaining. `<call>` (naming what a wild one stands for) stays for the same reason. Holders say `object=` like every other tag (`<call object>`, `<with object>`; once `pile=`).
 - **Covering is drawn, not written:** a card is free when no card of a later holder overlaps it. Listing 28 covering pairs was the alternative; overlap serves TriPeaks too.
 - **The computer plays by rules of thumb,** not a search, since hidden cards would be guessed: shedding, melds, tricks (`<avoid />`), bids by the book's `tricks` count; Hold'em by `odds` (five hundred seeded deals, only for piles something reads them of: the odds were 88% of a Hold'em game's time). Rejected: bluffing, reading opponents, counting played cards (for now).
 
@@ -36,7 +37,7 @@
 
 ## Open
 
-- `<picked>` and `<starts>` take only the forms the deal needs; a trick follows only `suit`, and suits are numbers (named rows would read better); `<call object>` is still a card word; a held `<send>` gets no holder check at load; points and tricks on held members.
+- `<picked>` and `<starts>` take only the forms the deal needs; a trick follows a row or column, not any variable; a row's values are numbers (named values would read better); a held `<send>` gets no holder check at load; points and tricks on held members.
 - A deck of single cards; a pass when nothing goes and nothing is left to draw.
 - Hold'em with more players, no-limit, side pots, blinds; Blackjack doubling, splits, insurance, a shoe.
 - Hearts' passing and first-trick rules; nil bids; laying off in Gin Rummy; melds on the table.
