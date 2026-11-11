@@ -44,9 +44,7 @@ The [plan](../plan.md) reviews this backlog, argues with parts of it, and orders
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
-- Tetris: W, Up, E or X turns clockwise, Q counterclockwise (C no longer turns).
-- Columns: W, Up, E, X or Space cycles the jewels down, Q cycles them up.
-- Pong against the computer: Up and Down do nothing; with 2 for two players they move the right paddle.
+Nothing waiting.
 
 ## Known untested
 
