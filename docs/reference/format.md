@@ -55,10 +55,10 @@ Every number in a game (a position, a speed, a size, a threshold) is a **value**
 |---|---|
 | arithmetic as text | `window.width.center - title.width / 2` |
 | `<random>` | `<random><min>-7</min><max>7</max></random>` |
-| `<formula>` | the same arithmetic as tags ([below](#arithmetic-as-tags)) |
+| an operation | the same arithmetic as tags: `<subtract><value>window.right</value><value>4</value></subtract>` ([below](#arithmetic-as-tags)) |
 
-- **Text** is numbers, names, `+ - * /`, a sign in front and brackets, worked out by the engine's own `load/calc`. Nothing more: a function call (`max(6, x)`) stops the load and says to write a `<formula>`.
-- **`<random>`** draws from min to max (either order; each end text or a `<formula>`).
+- **Text** is numbers, names, `+ - * /`, a sign in front and brackets, worked out by the engine's own `load/calc`. Nothing more: a function call (`max(6, x)`) stops the load and says to write an operation.
+- **`<random>`** draws from min to max (either order; each end text or an operation).
 
 ### When a value is worked out
 
@@ -107,36 +107,31 @@ Every other value is fixed at load, and one that is not a command's (a position,
 ```xml
 <position><x update="live">player.x + 18</x><y>0</y></position>      <!-- Demon Attack's shot, steered by the cannon -->
 <heading update="live">self.level - self.side * self.elevation</heading>  <!-- Cannon Hill's barrel follows its elevation -->
-<variable name="tipx" update="live"><formula>...<sine><value>self.heading</value></sine>...</formula></variable>
+<variable name="tipx" update="live"><add>...<sine><value>self.heading</value></sine>...</add></variable>
 ```
 
-- It may read anything a command can: live numbers, other variables, `self`, a `<formula>`. A group's live half is worked out for each member, its place in the group added.
+- It may read anything a command can: live numbers, other variables, `self`, an operation. A group's live half is worked out for each member, its place in the group added.
 - No command can change it: a `<set>`, `<inc>`, `<dec>` or `<copy into>` naming it stops the load. Change what it reads instead. A live half is put back each frame whatever moved it; the other half moves as ever.
 - Its heading and position are worked out before its variables, so a variable can read them. One reading another live number gets it as it was worked out this frame if that came first, else as it was last frame.
 - Use it for what follows something (a steered shot, a part riding a turret, a number made from others). A snapshot (what the bet was, the power just fired) or a start that then changes (fuel that burns) stays once.
 
 ### Arithmetic as tags
 
-A `<formula>` is one operation whose operands are elements, each a name, a number, a `<random>` or another operation. Precedence is the nesting, so nothing is parsed. Plain sums stay text; what text cannot say is a formula.
+An operation is written straight in a value. Its operands are `<value>`s, each a name, a number, a `<random>` or another operation. Precedence is the nesting, so nothing is parsed, and a game turned into another language keeps its order.
 
 ```xml
 <x>
-  <formula>
-    <subtract>
-      <minuend>window.width.center</minuend>
-      <subtrahend><divide><dividend>title.width</dividend><divisor>2</divisor></divide></subtrahend>
-    </subtract>
-  </formula>
+  <subtract>
+    <value>window.width.center</value>
+    <value><divide><value>title.width</value><value>2</value></divide></value>
+  </subtract>
 </x>
 ```
 
 | Operation | Operands | Gives |
 |---|---|---|
-| `<add>` | `<augend>`, `<addend>`s | sum |
-| `<subtract>` | `<minuend>`, `<subtrahend>`s | difference |
-| `<multiply>` | `<multiplicand>`, `<multiplier>`s | product |
-| `<divide>` | `<dividend>`, `<divisor>`s | quotient |
-| `<remainder>` | `<dividend>`, one `<divisor>` | what is left, from 0 up to the divisor (-1 of 4 is 3) |
+| `<add>`, `<subtract>`, `<multiply>`, `<divide>` | two or more `<value>`s | sum, difference, product, quotient |
+| `<remainder>` | two `<value>`s | what is left of the first, from 0 up to the second (-1 of 4 is 3) |
 | `<smallest>`, `<largest>` | two or more `<value>`s | the smallest, the largest |
 | `<absolute>`, `<negate>`, `<sign>` | one `<value>` | without its sign; turned over; -1, 0 or 1 |
 | `<floor>`, `<ceiling>`, `<round>` | one `<value>` | down, up, nearest (a half away from 0) |
@@ -145,7 +140,7 @@ A `<formula>` is one operation whose operands are elements, each a name, a numbe
 | `<compare>` | `<value>`, then one of `<above>`, `<below>`, `<atleast>`, `<atmost>`, `<equal>` | 1 if it passes, else 0 |
 
 - An operand is a **name or a number**, never an expression.
-- Several second operands chain left to right: `a - b - c` is one `<subtract>` with two `<subtrahend>`s.
+- The first value is combined with each of the others in turn: `a - b - c` is one `<subtract>` of three `<value>`s.
 - `<compare>` uses a [condition's test words](states.md#conditions). Pac-Man chases for ever from wave four: `20 + 100000 ×` a `<compare><value>mode.waves</value><atleast>4</atleast></compare>`.
 - **Dividing by 0**, in a `<divide>` or in text (`1 / 0`). A divisor certainly 0 at load stops the load, naming the `<divide>` or quoting the text. One that is 0 only because it is not known yet (another object's variable, an unmeasured text) gives 0, and a position or interval made from it is worked out again later. While running, it gives 0 and one warning per place.
 - **Too big a number.** A value that comes out as infinity or not a number at load (`1e30 * 1e30`) stops the load.

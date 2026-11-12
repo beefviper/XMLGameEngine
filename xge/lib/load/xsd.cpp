@@ -397,7 +397,7 @@ namespace xge
 
 		// A type may contain itself, through an element (or elements of other
 		// types) that name it: it is recorded before it is built, so that the
-		// reference inside it finds the type being made. (A <formula>'s
+		// reference inside it finds the type being made. (An operation's
 		// operands hold operations whose operands are operations.) The cycle
 		// is broken again when the model goes (~Model).
 		auto type = std::make_shared<ComplexType>();

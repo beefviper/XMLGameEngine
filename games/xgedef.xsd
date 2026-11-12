@@ -71,11 +71,11 @@
   <xs:group name="valueTag">
     <xs:choice>
       <xs:element name="random" type="randomType" />
-      <xs:element name="formula" type="formulaType" />
+      <xs:group ref="operation" />
     </xs:choice>
   </xs:group>
 
-  <!-- random: a number from <min> up to <max>, each an expression or a <formula>, drawn each time it is worked out. -->
+  <!-- random: a number from <min> up to <max>, each an expression or an operation, drawn each time it is worked out. -->
   <xs:complexType name="randomType">
     <xs:sequence>
       <xs:element name="min" type="randomEndType" />
@@ -83,36 +83,36 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- An end of a <random>: text (an expression) or a <formula>, not both. -->
+  <!-- An end of a <random>: text (an expression) or an operation, not both. -->
   <xs:complexType name="randomEndType" mixed="true">
     <xs:choice minOccurs="0">
-      <xs:element name="formula" type="formulaType" />
+      <xs:group ref="operation" />
     </xs:choice>
   </xs:complexType>
 
-  <!-- Arithmetic without a string to parse: <formula> is one operation whose
-       operands are elements: a name, a number, <random> or another operation.
-       The first operand is combined with each of the others in turn, so
-       a - b - c is a subtract with two subtrahends:
-         <formula>
+  <!-- Arithmetic without a string to parse: an operation, written straight in
+       a value, whose operands are <value>s: a name, a number, <random> or
+       another operation. Nesting is the order it is worked out in. The first
+       value is combined with each of the others in turn, so a - b - c is one
+       subtract of three values:
+         <x>
            <subtract>
-             <minuend>window.width.center</minuend>
-             <subtrahend><divide><dividend>title.width</dividend><divisor>2</divisor></divide></subtrahend>
+             <value>window.width.center</value>
+             <value><divide><value>title.width</value><value>2</value></divide></value>
            </subtract>
-         </formula>
+         </x>
        A value tag, so it goes anywhere an expression or <random> does.
-       Operations, one per arithmetic word: add, subtract, multiply, divide;
-       remainder (a <dividend> and a <divisor>: what is left, from 0 up to
-       the divisor); smallest and largest of two or more <value>; absolute,
-       negate, sign (-1, 0 or 1), floor, ceiling, round, sine and cosine (of
-       degrees) of one <value>; clamp, a <value> kept from <atleast> up to
-       <atmost>; and compare, a <value> and its test (<above>, <below>,
-       <atleast>, <atmost> or <equal>, the condition words): 1 when it
-       holds and 0 when not. -->
+       Operations: add, subtract, multiply, divide of two or more <value>;
+       remainder of two (what is left of the first, from 0 up to the second);
+       smallest and largest of two or more; absolute, negate, sign (-1, 0 or
+       1), floor, ceiling, round, sine and cosine (of degrees) of one <value>;
+       clamp, a <value> kept from <atleast> up to <atmost>; and compare, a
+       <value> and its test (<above>, <below>, <atleast>, <atmost> or <equal>,
+       the condition words): 1 when it holds and 0 when not. -->
 
   <!-- (The operations are listed twice, here and in operandType: the weak
        validator, load/xsd, does not follow a group that contains itself.) -->
-  <xs:complexType name="formulaType">
+  <xs:group name="operation">
     <xs:choice>
       <xs:element name="add" type="addType" />
       <xs:element name="subtract" type="subtractType" />
@@ -132,9 +132,9 @@
       <xs:element name="clamp" type="clampType" />
       <xs:element name="compare" type="compareOperationType" />
     </xs:choice>
-  </xs:complexType>
+  </xs:group>
 
-  <!-- An operand of a formula: text (a name or a number), <random> or an operation, which contains operands in turn. -->
+  <!-- An operand of an operation: text (a name or a number), <random> or an operation, which contains operands in turn. -->
   <xs:complexType name="operandType" mixed="true">
     <xs:choice minOccurs="0">
       <xs:element name="random" type="randomType" />
@@ -187,8 +187,7 @@
 
   <xs:complexType name="remainderType">
     <xs:sequence>
-      <xs:element name="dividend" type="operandType" />
-      <xs:element name="divisor" type="operandType" />
+      <xs:element name="value" type="operandType" minOccurs="2" maxOccurs="2" />
     </xs:sequence>
   </xs:complexType>
 
@@ -202,29 +201,25 @@
 
   <xs:complexType name="addType">
     <xs:sequence>
-      <xs:element name="augend" type="operandType" />
-      <xs:element name="addend" type="operandType" maxOccurs="unbounded" />
+      <xs:element name="value" type="operandType" minOccurs="2" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="subtractType">
     <xs:sequence>
-      <xs:element name="minuend" type="operandType" />
-      <xs:element name="subtrahend" type="operandType" maxOccurs="unbounded" />
+      <xs:element name="value" type="operandType" minOccurs="2" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="multiplyType">
     <xs:sequence>
-      <xs:element name="multiplicand" type="operandType" />
-      <xs:element name="multiplier" type="operandType" maxOccurs="unbounded" />
+      <xs:element name="value" type="operandType" minOccurs="2" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="divideType">
     <xs:sequence>
-      <xs:element name="dividend" type="operandType" />
-      <xs:element name="divisor" type="operandType" maxOccurs="unbounded" />
+      <xs:element name="value" type="operandType" minOccurs="2" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
 
@@ -2147,11 +2142,12 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- <centered>: where the middle goes as text, or one <offset> from the window's middle. -->
+  <!-- <centered>: where the middle goes (a name, a number or an operation), or one <offset> from the window's middle. -->
   <xs:complexType name="centeredType" mixed="true">
-    <xs:sequence>
-      <xs:element name="offset" type="xs:string" minOccurs="0" />
-    </xs:sequence>
+    <xs:choice minOccurs="0">
+      <xs:element name="offset" type="xs:string" />
+      <xs:group ref="operation" />
+    </xs:choice>
   </xs:complexType>
 
   <!-- Where a <spawn> puts its copy: worked out as it spawns. -->

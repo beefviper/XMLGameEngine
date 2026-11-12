@@ -235,12 +235,10 @@
             <timer>
               <every>0.1</every>
               <set variable="player.light">
-                <formula>
-                  <largest>
-                    <value>near</value>
-                    <value><subtract><minuend>player.light</minuend><subtrahend>5</subtrahend></subtract></value>
-                  </largest>
-                </formula>
+                <largest>
+                  <value>near</value>
+                  <value><subtract><value>player.light</value><value>5</value></subtract></value>
+                </largest>
               </set>
             </timer>
           </timers>

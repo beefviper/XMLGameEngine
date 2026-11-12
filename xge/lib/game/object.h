@@ -1924,10 +1924,15 @@ namespace xge
 	// followed by a dot) starting with `to` instead.
 	std::string renameStart(const std::string& text, const std::string& from, const std::string& to);
 
-	// Makes each <centered> of an object's <position> the expression it
-	// means: where its middle goes, less half its own width (or height),
+	// Makes each <centered> and side (<left>, <right>, <top>, <bottom>) of an
+	// object's <position> the operation it means: where its middle goes,
+	// less half its own width (or height), or its side on the window's,
 	// named by the object's final name (so after layOutScenes).
 	void centerOnOwnSize(std::vector<RawObject>& objects);
+
+	// Where a <centered> puts the middle: the name, number or operation it
+	// holds, its <offset> from `windowMiddle`, or `windowMiddle` itself.
+	RawValue centeredMiddle(const RawValue& value, const std::string& windowMiddle);
 
 	// What an object with no <sprite> is drawn as, which is never: an empty
 	// rectangle (it only holds numbers; see RawObject::isDrawn).

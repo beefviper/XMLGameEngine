@@ -30,7 +30,7 @@ namespace xge
 	// Works out what load/xml read: every RawValue to a number, every RawSprite
 	// to the Picture the window backends draw, every RawCommand to a
 	// typed Command. The arithmetic in a value's text is load/calc's job; the
-	// tags (<random>, <formula>) are handled here and in game/command.cpp.
+	// tags (<random>, the operations) are handled here and in game/command.cpp.
 	class game_expr
 	{
 	public:
@@ -155,7 +155,7 @@ namespace xge
 			bool late{ false };
 		};
 
-		// One <add>, <subtract>, <multiply> or <divide> of a <formula>: its
+		// One <add>, <subtract>, <multiply> or <divide>: its
 		// first operand combined with each of the others in turn.
 		//
 		// A divisor of 0 is a load error (std::runtime_error saying which

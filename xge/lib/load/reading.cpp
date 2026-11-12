@@ -78,7 +78,7 @@ namespace xge
 
 
 	// <random><min>..</min><max>..</max></random>: each end an expression
-	// or a <formula>. With a formula end, the two ends are kept as one
+	// or an operation. With an operation end, the two ends are kept as one
 	// operation "random" (see RawValue::operations).
 	RawValue readRandom(const XmlNode& tag, const std::string& here)
 	{
@@ -103,15 +103,15 @@ namespace xge
 			if (inside)
 			{
 				const std::string at = there + " > <" + end + ">";
-				if (inside->getName() != "formula") { fail(at, "holds <" + inside->getName() + ">; an end is a number, an expression or a <formula>"); }
-				if (!text.empty()) { fail(at, "holds both the text \"" + text + "\" and a <formula>; use one or the other"); }
+				if (!isOperation(inside->getName())) { fail(at, "holds <" + inside->getName() + ">; an end is a number, a name or an operation (" + operationTags() + ")"); }
+				if (!text.empty()) { fail(at, "holds both the text \"" + text + "\" and an <" + inside->getName() + ">; use one or the other"); }
 				if (inside->getNextSibling()) { fail(at, "holds more than one tag"); }
-				operand.value = readFormula(*inside, at);
+				operand.value = readOperation(*inside, at);
 				worked = true;
 			}
 			else
 			{
-				if (text.empty()) { fail(there, "a <min> or <max> with nothing in it; each is a number, an expression or a <formula>"); }
+				if (text.empty()) { fail(there, "a <min> or <max> with nothing in it; each is a number, a name or an operation"); }
 				operand.value = RawValue::expression(text);
 			}
 			ends.operands.push_back(std::move(operand));
@@ -153,7 +153,7 @@ namespace xge
 		});
 	}
 
-	// An operand of a formula is a name or a number and
+	// An operand of an operation is a name or a number and
 	// nothing else: anything more is an operation of its own.
 	std::string requireTerm(const std::string& text, const std::string& here)
 	{
@@ -165,8 +165,8 @@ namespace xge
 	}
 
 
-	// An operand of a <formula> operation: <minuend>window.width.center
-	// </minuend>, or an operation in place of the name, or a <random>.
+	// An operand of an operation: <value>window.width.center</value>, or an
+	// operation in place of the name, or a <random>.
 	RawValue readFormulaOperand(const XmlNode& node, const std::string& where)
 	{
 		const std::string text = readText(node);
@@ -193,9 +193,8 @@ namespace xge
 		return value;
 	}
 
-	// <subtract><minuend>..</minuend><subtrahend>..</subtrahend>
-	// <subtrahend>..</subtrahend></subtract>: the first operand, then one or
-	// more of the second, taken one after another.
+	// <subtract><value>a</value><value>b</value><value>c</value></subtract>:
+	// the first operand, then the others taken from it one after another.
 	RawOperation readFormulaOperation(const XmlNode& node, const OperationShape& shape, const std::string& where)
 	{
 		const std::string here = where + " > <" + shape.tag + ">";
@@ -204,8 +203,8 @@ namespace xge
 		RawOperation operation;
 		operation.op = shape.tag;
 
-		// What it holds, in words, for a mistake: "a <minuend>, then one
-		// or more <subtrahend>", "one <value>", "two <value>", "a <value>, an <atleast> and an <atmost>".
+		// What it holds, in words, for a mistake: "two or more <value>", "one
+		// <value>", "two <value>", "a <value>, an <atleast> and an <atmost>".
 		std::string wanted;
 		if (shape.compares) { wanted = std::string("a <") + shape.first + ">, then one of <above>, <below>, <atleast>, <atmost> or <equal>"; }
 		else if (shape.most == 1) { wanted = std::string("one <") + shape.first + ">"; }
@@ -244,20 +243,19 @@ namespace xge
 		return operation;
 	}
 
-	RawValue readFormula(const XmlNode& node, const std::string& where)
+	bool isOperation(const std::string& tag)
 	{
-		const std::string here = where + " > <formula>";
-		std::unique_ptr<XmlNode> tag = node.getFirstChild();
+		return tag != "random" && operationShape(tag) != nullptr;
+	}
 
-		if (!tag) { fail(here, "has no operation"); }
-		if (tag->getNextSibling()) { fail(here, "holds more than one operation; a formula is one, with the others inside it"); }
-
-		const OperationShape* shape = tag->getName() == "random" ? nullptr : operationShape(tag->getName());
-		if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected " + operationTags()); }
+	RawValue readOperation(const XmlNode& tag, const std::string& where)
+	{
+		const OperationShape* shape = isOperation(tag.getName()) ? operationShape(tag.getName()) : nullptr;
+		if (!shape) { fail(where, "has <" + tag.getName() + ">, which is not an operation; expected " + operationTags()); }
 
 		RawValue value;
 		value.kind = RawValue::Kind::Formula;
-		value.operations = std::make_shared<std::vector<RawOperation>>(1, readFormulaOperation(*tag, *shape, here));
+		value.operations = std::make_shared<std::vector<RawOperation>>(1, readFormulaOperation(tag, *shape, where));
 		return value;
 	}
 
@@ -290,25 +288,34 @@ namespace xge
 		const std::string tagName = tag->getName();
 
 		if (tagName == "random") { return readRandom(*tag, here); }
-		if (tagName == "formula") { return readFormula(*tag, here); }
+		if (isOperation(tagName)) { return readOperation(*tag, here); }
 		if (tagName == "centered")
 		{
 			RawValue value = RawValue::expression(readText(*tag));
 			value.kind = RawValue::Kind::Centered;
-			// <centered><offset>-60</offset></centered>: that far from the window's middle
-			if (std::unique_ptr<XmlNode> offset = tag->getFirstChild())
+			// <centered><offset>-60</offset></centered>: that far from the window's
+			// middle; <centered><divide>...</divide></centered>: the middle at what
+			// the operation gives (its steps kept in `operations`).
+			if (std::unique_ptr<XmlNode> inside = tag->getFirstChild())
 			{
 				const std::string centered = here + " > <centered>";
-				if (offset->getName() != "offset" || offset->getNextSibling() || offset->getFirstChild()) { fail(centered, "holds where the middle goes, as text, one <offset> from the window's middle, or nothing for the window's middle"); }
+				if (inside->getNextSibling()) { fail(centered, "holds where the middle goes (a name, a number or an operation), one <offset> from the window's middle, or nothing for the window's middle"); }
+				if (isOperation(inside->getName()))
+				{
+					if (!value.text.empty()) { fail(centered, "holds both the text \"" + value.text + "\" and an <" + inside->getName() + ">; use one or the other"); }
+					value.operations = readOperation(*inside, centered).operations;
+					return value;
+				}
+				if (inside->getName() != "offset" || inside->getFirstChild()) { fail(centered, "holds where the middle goes (a name, a number or an operation), one <offset> from the window's middle, or nothing for the window's middle"); }
 				if (!value.text.empty()) { fail(centered, "holds both the text \"" + value.text + "\" and an <offset>; use one or the other"); }
-				value.offset = readText(*offset);
+				value.offset = readText(*inside);
 				if (value.offset.empty()) { fail(centered + " > <offset>", "has no value"); }
 			}
 			return value;
 		}
 		if (tagName == "left" || tagName == "right" || tagName == "top" || tagName == "bottom")
 		{
-			// <right><offset>-12</offset></right>: the object's right side on
+			// <right><offset>12</offset></right>: the object's right side on
 			// the window's, then 12 in from it.
 			const std::string edgeHere = here + " > <" + tagName + ">";
 			const bool across = tagName == "left" || tagName == "right";
@@ -326,7 +333,7 @@ namespace xge
 			return value;
 		}
 
-		fail(here, "unknown value tag <" + tagName + ">");
+		fail(here, "unknown value tag <" + tagName + ">; a value is a number, a name, <random>, <centered>, a side (<left>, <right>, <top>, <bottom>) or an operation: " + operationTags());
 	}
 
 	RawValue readValueOf(const XmlNode& parent, const std::string& name, const std::string& where)
@@ -344,7 +351,7 @@ namespace xge
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			const std::string tag = child->getName();
-			if (tag == "random" || tag == "formula")
+			if (tag == "random" || isOperation(tag))
 			{
 				if (!valueTagName.empty()) { fail(here, "holds more than one value tag"); }
 				valueTagName = tag;
@@ -361,7 +368,7 @@ namespace xge
 		if (!valueTag && text.empty()) { fail(here, "has no value; its number goes between its tags"); }
 		if (!valueTag) { return RawValue::expression(text); }
 		if (valueTag->getName() == "random") { return readRandom(*valueTag, here); }
-		return readFormula(*valueTag, here);
+		return readOperation(*valueTag, here);
 	}
 
 	PartialVector2 readPartialVector2(const XmlNode& node, const std::string& where)

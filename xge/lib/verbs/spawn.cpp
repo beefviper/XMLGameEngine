@@ -87,7 +87,7 @@ namespace xge
 					throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <centered> is for its <position>, not its <velocity> or <acceleration>");
 				}
 				*centered = true;
-				into = evaluate(RawValue::expression(!value.offset.empty() ? std::string(middle) + " + (" + value.offset + ")" : value.text.empty() ? middle : value.text));
+				into = evaluate(centeredMiddle(value, middle));
 				return;
 			}
 			into = evaluate(value);

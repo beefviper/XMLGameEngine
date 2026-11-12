@@ -28,21 +28,17 @@ This is all of `pong_min.xml`, two paddles and a ball:
           <position><x><centered /></x><y><centered /></y></position>
           <velocity>
             <x>
-              <formula>
-                <multiply>
-                  <multiplicand><sign><value>ball.side</value></sign></multiplicand>
-                  <multiplier>ball.speed</multiplier>
-                  <multiplier><cosine><value>ball.angle</value></cosine></multiplier>
-                </multiply>
-              </formula>
+              <multiply>
+                <value><sign><value>ball.side</value></sign></value>
+                <value>ball.speed</value>
+                <value><cosine><value>ball.angle</value></cosine></value>
+              </multiply>
             </x>
             <y>
-              <formula>
-                <multiply>
-                  <multiplicand>ball.speed</multiplicand>
-                  <multiplier><sine><value>ball.angle</value></sine></multiplier>
-                </multiply>
-              </formula>
+              <multiply>
+                <value>ball.speed</value>
+                <value><sine><value>ball.angle</value></sine></value>
+              </multiply>
             </y>
           </velocity>
           <collisions>
@@ -80,13 +76,13 @@ This is all of `pong_min.xml`, two paddles and a ball:
 </game>
 ```
 
-A collision rule reads like a sentence: this ball, when it touches the top or bottom edge, bounces; when it leaves by a side, it starts again; when it touches anything else, it deflects by up to 45 degrees. The serve is worked out with `<formula>` tags, so no arithmetic beyond `+ - * /` hides in a string.
+A collision rule reads like a sentence: this ball, when it touches the top or bottom edge, bounces; when it leaves by a side, it starts again; when it touches anything else, it deflects by up to 45 degrees. The serve is worked out with operation tags (`<multiply>`, `<sine>`, `<cosine>`), so no arithmetic beyond `+ - * /` hides in a string.
 
 ## The language in brief
 
 - **Attributes name or pick; everything else is content.** `name`, `class`, `edge`, `button` are attributes; a size, a colour or a position is element content.
 - **Behaviour is a list of verbs, run in order,** in a collision rule, an action, a key, a condition, a timer or a path step. The schema says which verbs each place takes.
-- **A value is a number:** plain arithmetic as text (`window.right - margin`), a `<random>`, or a `<formula>` of tags.
+- **A value is a number:** plain arithmetic as text (`window.right - margin`), a `<random>`, or an operation of tags (`<subtract><value>window.right</value><value>margin</value></subtract>`).
 - **Names are dotted:** `ball.radius`, `aliens.3.2`, `playing.room2.robots`; `self.` and `touch.` inside a rule.
 - **Keys are bound in states, never in objects,** so changing a key is one edit.
 - **Say a thing once:** groups write what members share; the top-level `<objects>` holds pieces taken by name; states and scenes copy others with `from=` and say only what differs.

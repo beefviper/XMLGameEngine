@@ -156,30 +156,26 @@
             <every>
               <random>
                 <min>
-                  <formula>
-                    <largest>
-                      <value>0.8</value>
-                      <value>
-                        <subtract>
-                          <minuend>3</minuend>
-                          <subtrahend><multiply><multiplicand>player.depth</multiplicand><multiplier>0.25</multiplier></multiply></subtrahend>
-                        </subtract>
-                      </value>
-                    </largest>
-                  </formula>
+                  <largest>
+                    <value>0.8</value>
+                    <value>
+                      <subtract>
+                        <value>3</value>
+                        <value><multiply><value>player.depth</value><value>0.25</value></multiply></value>
+                      </subtract>
+                    </value>
+                  </largest>
                 </min>
                 <max>
-                  <formula>
-                    <largest>
-                      <value>2</value>
-                      <value>
-                        <subtract>
-                          <minuend>7</minuend>
-                          <subtrahend><multiply><multiplicand>player.depth</multiplicand><multiplier>0.5</multiplier></multiply></subtrahend>
-                        </subtract>
-                      </value>
-                    </largest>
-                  </formula>
+                  <largest>
+                    <value>2</value>
+                    <value>
+                      <subtract>
+                        <value>7</value>
+                        <value><multiply><value>player.depth</value><value>0.5</value></multiply></value>
+                      </subtract>
+                    </value>
+                  </largest>
                 </max>
               </random>
             </every>
@@ -468,12 +464,10 @@
           <timers>
             <timer>
               <every>
-                <formula>
-                  <largest>
-                    <value>6</value>
-                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
-                  </largest>
-                </formula>
+                <largest>
+                  <value>6</value>
+                  <value><subtract><value>14</value><value>player.depth</value></subtract></value>
+                </largest>
               </every>
               <reveal object="otto" />
               <play sound="otto" />
@@ -509,12 +503,10 @@
           <timers>
             <timer>
               <every>
-                <formula>
-                  <largest>
-                    <value>6</value>
-                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
-                  </largest>
-                </formula>
+                <largest>
+                  <value>6</value>
+                  <value><subtract><value>14</value><value>player.depth</value></subtract></value>
+                </largest>
               </every>
               <reveal object="otto" />
               <play sound="otto" />
@@ -551,12 +543,10 @@
           <timers>
             <timer>
               <every>
-                <formula>
-                  <largest>
-                    <value>6</value>
-                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
-                  </largest>
-                </formula>
+                <largest>
+                  <value>6</value>
+                  <value><subtract><value>14</value><value>player.depth</value></subtract></value>
+                </largest>
               </every>
               <reveal object="otto" />
               <play sound="otto" />
@@ -594,12 +584,10 @@
           <timers>
             <timer>
               <every>
-                <formula>
-                  <largest>
-                    <value>6</value>
-                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
-                  </largest>
-                </formula>
+                <largest>
+                  <value>6</value>
+                  <value><subtract><value>14</value><value>player.depth</value></subtract></value>
+                </largest>
               </every>
               <reveal object="otto" />
               <play sound="otto" />

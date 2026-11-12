@@ -170,27 +170,23 @@
             <action name="right"><turn direction="clockwise">2</turn></action>
             <action name="charge">
               <inc variable="arrow.power">charge</inc>
-              <set variable="arrow.power"><formula><smallest><value>arrow.power</value><value>most</value></smallest></formula></set>
+              <set variable="arrow.power"><smallest><value>arrow.power</value><value>most</value></smallest></set>
             </action>
             <action name="putt">
               <set variable="ball.velocity.x">
-                <formula>
-                  <multiply>
-                    <multiplicand>arrow.power</multiplicand>
-                    <multiplier>pace</multiplier>
-                    <multiplier><sine><value>arrow.heading</value></sine></multiplier>
-                  </multiply>
-                </formula>
+                <multiply>
+                  <value>arrow.power</value>
+                  <value>pace</value>
+                  <value><sine><value>arrow.heading</value></sine></value>
+                </multiply>
               </set>
               <set variable="ball.velocity.y">
-                <formula>
-                  <multiply>
-                    <multiplicand>arrow.power</multiplicand>
-                    <multiplier>pace</multiplier>
-                    <multiplier>-1</multiplier>
-                    <multiplier><cosine><value>arrow.heading</value></cosine></multiplier>
-                  </multiply>
-                </formula>
+                <multiply>
+                  <value>arrow.power</value>
+                  <value>pace</value>
+                  <value>-1</value>
+                  <value><cosine><value>arrow.heading</value></cosine></value>
+                </multiply>
               </set>
               <set variable="arrow.power">0</set>
               <set variable="arrow.rolling">1</set>

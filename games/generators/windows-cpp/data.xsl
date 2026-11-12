@@ -21,6 +21,9 @@
        Values
        =================================================================== -->
 
+  <!-- The operation tags, written straight in a value (readOperation). -->
+  <xsl:variable name="operations" select="' add subtract multiply divide remainder smallest largest absolute negate sign floor ceiling round sine cosine clamp compare '" />
+
   <!-- The value $node holds: its text as an expression, or the one value tag
        inside it (readValue); update="live" said with live(). -->
   <xsl:template name="value">
@@ -46,12 +49,20 @@
     <xsl:param name="node" />
     <!-- a value tag, or the text, beside the named parts of a verb whose
          number is its content (readLeadValue): <hop>rowgap<seconds>... -->
-    <xsl:variable name="tag" select="$node/*[self::random or self::formula or self::centered or self::left or self::right or self::top or self::bottom][1]" />
+    <xsl:variable name="tag" select="$node/*[self::random or self::centered or self::left or self::right or self::top or self::bottom or contains($operations, concat(' ', local-name(), ' '))][1]" />
     <xsl:choose>
       <xsl:when test="$tag[self::random]">
         <xsl:call-template name="random">
           <xsl:with-param name="node" select="$tag" />
         </xsl:call-template>
+      </xsl:when>
+      <!-- <centered> of an operation: centeredOn(formula(...)) -->
+      <xsl:when test="$tag[self::centered]/*[contains($operations, concat(' ', local-name(), ' '))]">
+        <xsl:text>centeredOn(formula(</xsl:text>
+        <xsl:for-each select="$tag/*[1]">
+          <xsl:call-template name="formula-operation" />
+        </xsl:for-each>
+        <xsl:text>))</xsl:text>
       </xsl:when>
       <xsl:when test="$tag[self::centered]">
         <xsl:text>centered(</xsl:text>
@@ -82,9 +93,9 @@
         </xsl:if>
         <xsl:text>)</xsl:text>
       </xsl:when>
-      <xsl:when test="$tag[self::formula]">
+      <xsl:when test="$tag[contains($operations, concat(' ', local-name(), ' '))]">
         <xsl:text>formula(</xsl:text>
-        <xsl:for-each select="$tag/*[1]">
+        <xsl:for-each select="$tag">
           <xsl:call-template name="formula-operation" />
         </xsl:for-each>
         <xsl:text>)</xsl:text>
@@ -130,12 +141,12 @@
     <xsl:text> }</xsl:text>
   </xsl:template>
 
-  <!-- A <random>: two texts, or, with an end that is a <formula>, its two
+  <!-- A <random>: two texts, or, with an end that is an operation, its two
        ends as one operation (readRandom). -->
   <xsl:template name="random">
     <xsl:param name="node" />
     <xsl:choose>
-      <xsl:when test="$node/*/formula">
+      <xsl:when test="$node/*/*">
         <xsl:text>random(operation("random", { </xsl:text>
         <xsl:for-each select="$node/min | $node/max">
           <xsl:if test="position() &gt; 1">, </xsl:if>
@@ -161,7 +172,7 @@
     </xsl:choose>
   </xsl:template>
 
-  <!-- An operation of a <formula>: its operands, each a name, a number, a
+  <!-- An operation: its operands, each a name, a number, a
        <random> or an operation of its own. -->
   <xsl:template name="formula-operation">
     <xsl:value-of select="concat('operation(&quot;', local-name(), '&quot;, { ')" />

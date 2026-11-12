@@ -875,7 +875,7 @@ namespace xge
 	//     title.width / 2`);
 	//   * one tag that makes the number, such as
 	//     <random><min>-7</min><max>7</max></random>;
-	//   * a <formula>: arithmetic as one operation whose operands are
+	//   * an operation (<subtract>, <clamp>, ...): arithmetic whose operands are
 	//     themselves numbers, operations included (Formula);
 	//   * in a <position> only, <centered>: the object's middle at the
 	//     expression it holds, or that <offset> from the window's middle
@@ -914,8 +914,8 @@ namespace xge
 		std::string max;
 
 		// Formula: the one operation it is. Shared, not copied, when a value
-		// is. Random with an end that is a <formula>: one operation "random"
-		// of two operands, `min` and `max` (each an expression or a formula),
+		// is. Random with an end that is an operation: one operation "random"
+		// of two operands, `min` and `max` (each an expression or an operation),
 		// and min and max above left empty.
 		std::shared_ptr<const std::vector<RawOperation>> operations;
 
@@ -933,28 +933,28 @@ namespace xge
 
 		// Every expression written inside this value, for the ones that only
 		// need to look at what the expressions name (see
-		// load/expr::sizeDependenciesOf). The operands of a formula are names
+		// load/expr::sizeDependenciesOf). The operands of an operation are names
 		// and numbers, and are listed the same way.
 		std::vector<const std::string*> expressions() const;
 
 		// Whether working it out draws a <random> (itself, or one inside a
-		// formula), so it comes out different each time.
+		// operation), so it comes out different each time.
 		bool drawsRandom() const;
 	};
 
 	// One operand of an operation: the number it is, and the role it plays
-	// (`dividend`, `subtrahend`, ...; see operationShape).
+	// (`value`, or a test word such as `atleast`; see operationShape).
 	struct RawOperand
 	{
 		std::string role;
 		RawValue value;
 	};
 
-	// One arithmetic operation of a <formula>: `op` is the tag (add,
+	// One arithmetic operation: `op` is the tag (add,
 	// subtract, multiply, divide, smallest, largest, absolute, clamp). The
 	// first operand of the four arithmetic ones is combined with each of the
 	// others in turn, left to right, so that `a - b - c` is one subtract with
-	// two subtrahends.
+	// three values.
 	struct RawOperation
 	{
 		std::string op;
@@ -992,7 +992,7 @@ namespace xge
 	// The shape of an arithmetic tag, or null when the tag is not one.
 	const OperationShape* operationShape(const std::string& tag);
 
-	// Every operation tag a <formula> takes, for a mistake: "<add>, ... or <clamp>".
+	// Every operation tag, for a mistake: "<add>, ... or <clamp>".
 	std::string operationTags();
 
 	// The tests of a <compare>, the same words as a condition's: above,

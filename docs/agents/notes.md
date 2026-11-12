@@ -14,9 +14,9 @@ Gotchas that are easy to get wrong. How the engine works is the [reference](../r
 - Most numbers are worked out **once at load**. Read again while running: a timer's interval, positions using a measured text size, a command's numbers that name something live (`CmdLive`, remade by `Game::makeNow`), a condition's number (`Condition::live`).
 - `<random>` is drawn again when its object comes back into play, not when a scene is entered.
 - Variables are `float`. Anything that changes one goes through `Game::setVariable`, so bound texts and expressions see it.
-- A value's text is only numbers, names, `+ - * /`, a sign and brackets (`load/calc`). A function call stops the load: write a `<formula>`. `window.width` is not a name (`window.right` is).
+- A value's text is only numbers, names, `+ - * /`, a sign and brackets (`load/calc`). A function call stops the load: write an operation (`<smallest>`, ...). `window.width` is not a name (`window.right` is).
 - Live numbers are rows of `liveParts` (`game/object.cpp`); a new one is one row.
-- A new formula operation is a row in `operationShape` (`game/command.cpp`), a case in `evaluateOperation` (`load/expr.cpp`) and the schema types. Each `Answer` has a `late` flag for values not final while loading; keep it.
+- A new operation is a row in `operationShape` (`game/command.cpp`), a case in `evaluateOperation` (`load/expr.cpp`) and the schema types. Each `Answer` has a `late` flag for values not final while loading; keep it.
 - A text is compiled once (`game_expr::compiled`); a name is bound into `calc` only when first read. There is no second expression system.
 
 ## Objects, states and scenes

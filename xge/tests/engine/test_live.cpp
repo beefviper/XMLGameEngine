@@ -442,7 +442,7 @@ TEST_CASE("a live variable follows what it reads; one worked out once keeps its 
 	const Scratch file(box("ball", 100, 50, "<velocity><x>100</x><y>0</y></velocity><variables><variable name=\"base\">2</variable>"
 		"<variable name=\"twice\" update=\"live\">self.base * 2</variable>"
 		"<variable name=\"start\">self.base * 2</variable>"
-		"<variable name=\"across\" update=\"live\"><formula><smallest><value>self.x</value><value>500</value></smallest></formula></variable></variables>"),
+		"<variable name=\"across\" update=\"live\"><smallest><value>self.x</value><value>500</value></smallest></variable></variables>"),
 		"<set variable=\"ball.base\">10</set>");
 	Played play(file.path);
 

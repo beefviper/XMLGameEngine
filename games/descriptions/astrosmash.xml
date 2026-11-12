@@ -71,12 +71,10 @@
         <collision edge="horizontal"><bounce /></collision>
         <collision object="ground">
           <set variable="ship.score">
-            <formula>
-              <largest>
-                <value>0</value>
-                <value><subtract><minuend>ship.score</minuend><subtrahend>10</subtrahend></subtract></value>
-              </largest>
-            </formula>
+            <largest>
+              <value>0</value>
+              <value><subtract><value>ship.score</value><value>10</value></subtract></value>
+            </largest>
           </set>
           <despawn />
           <play sound="thud" />
@@ -84,12 +82,10 @@
         <collision object="shot">
           <inc variable="ship.score">20</inc>
           <set variable="ship.peak">
-            <formula>
-              <largest>
-                <value>ship.peak</value>
-                <value>ship.score</value>
-              </largest>
-            </formula>
+            <largest>
+              <value>ship.peak</value>
+              <value>ship.score</value>
+            </largest>
           </set>
           <despawn />
           <play sound="pop" />
@@ -139,17 +135,15 @@
             <collision edge="horizontal"><bounce /></collision>
             <collision object="ground">
               <set variable="ship.score">
-                <formula>
-                  <largest>
-                    <value>0</value>
-                    <value>
-                      <subtract>
-                        <minuend>ship.score</minuend>
-                        <subtrahend><divide><dividend>self.worth</dividend><divisor>2</divisor></divide></subtrahend>
-                      </subtract>
-                    </value>
-                  </largest>
-                </formula>
+                <largest>
+                  <value>0</value>
+                  <value>
+                    <subtract>
+                      <value>ship.score</value>
+                      <value><divide><value>self.worth</value><value>2</value></divide></value>
+                    </subtract>
+                  </value>
+                </largest>
               </set>
               <reset />
               <play sound="thud" />
@@ -162,12 +156,10 @@
             <collision object="shot">
               <inc variable="ship.score">self.worth</inc>
               <set variable="ship.peak">
-                <formula>
-                  <largest>
-                    <value>ship.peak</value>
-                    <value>ship.score</value>
-                  </largest>
-                </formula>
+                <largest>
+                  <value>ship.peak</value>
+                  <value>ship.score</value>
+                </largest>
               </set>
               <reset />
               <play sound="pop" />
@@ -214,12 +206,10 @@
             <collision object="shot">
               <inc variable="ship.score">40</inc>
               <set variable="ship.peak">
-                <formula>
-                  <largest>
-                    <value>ship.peak</value>
-                    <value>ship.score</value>
-                  </largest>
-                </formula>
+                <largest>
+                  <value>ship.peak</value>
+                  <value>ship.score</value>
+                </largest>
               </set>
               <reset />
               <play sound="pop" />

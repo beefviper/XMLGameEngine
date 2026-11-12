@@ -15,7 +15,7 @@ namespace xge
 	// The arithmetic in a value's text (load/expr): numbers (2, 0.5, 1e3),
 	// names (window.right, ship.score; case does not matter), + - * /, a
 	// minus or plus in front, and brackets. Nothing more: anything else
-	// (smallest, sign, sine, ...) is a <formula> tag. Worked out left to
+	// (smallest, sign, sine, ...) is an operation tag. Worked out left to
 	// right, * and / before + and -, in float, exactly as written: nothing
 	// is regrouped.
 	//

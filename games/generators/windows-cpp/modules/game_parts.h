@@ -102,6 +102,14 @@ namespace xge::parts
 		return middle;
 	}
 
+	// centeredOn(formula(...)): a <centered> holding an operation, the middle
+	// at what it gives.
+	inline RawValue centeredOn(RawValue worked)
+	{
+		worked.kind = RawValue::Kind::Centered;
+		return worked;
+	}
+
 	// side("end", "12"): <right> or <bottom> (end), <left> or <top>
 	// (start), with an <offset>.
 	inline RawValue side(const std::string& which, std::string offset = {})
@@ -151,7 +159,7 @@ namespace xge::parts
 		return drawn;
 	}
 
-	// A <random> with an end that is a <formula>: its two ends, `min` and
+	// A <random> with an end that is an operation: its two ends, `min` and
 	// `max`, as one operation "random" (see RawValue::operations).
 	inline RawValue random(RawOperation ends)
 	{
@@ -161,13 +169,13 @@ namespace xge::parts
 		return drawn;
 	}
 
-	// One operation of a <formula>: <subtract>, and its operands.
+	// One operation: <subtract>, and its operands.
 	inline RawOperation operation(std::string op, std::vector<RawOperand> operands)
 	{
 		return RawOperation{ std::move(op), std::move(operands) };
 	}
 
-	// A <formula>'s one operation, or an operation standing in for an operand of one.
+	// An operation written in a value, or standing in for an operand of another.
 	inline RawValue formula(RawOperation operation)
 	{
 		RawValue worked;

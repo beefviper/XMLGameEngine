@@ -226,7 +226,7 @@
           <actions>
             <action name="pull">
               <inc variable="plunger.power">pull</inc>
-              <set variable="plunger.power"><formula><smallest><value>plunger.power</value><value>most</value></smallest></formula></set>
+              <set variable="plunger.power"><smallest><value>plunger.power</value><value>most</value></smallest></set>
               <set variable="plunger.y">plungerTop + plunger.power / 5</set>
             </action>
             <action name="shoot">

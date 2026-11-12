@@ -14,7 +14,7 @@
 #include <string>
 
 // What every reader of a game file's tags shares: finding a child, asking
-// for an attribute, reading a value (a number, a <random>, a <formula>), and
+// for an attribute, reading a value (a number, a <random>, an operation), and
 // stopping with where it was when something is missing or wrong. load/xml.cpp
 // reads the game with these, and each verb its own tag (verbs/, Verb::read).
 // They need only the XmlNode every XML library is read through.
@@ -44,7 +44,7 @@ namespace xge
 	bool readBool(const XmlNode& node, const std::string& where);
 
 	// <random><min>..</min><max>..</max></random>: each end an expression
-	// or a <formula>. With a formula end, the two ends are kept as one
+	// or an operation. With an operation end, the two ends are kept as one
 	// operation "random" (see RawValue::operations).
 	RawValue readRandom(const XmlNode& tag, const std::string& here);
 
@@ -57,20 +57,24 @@ namespace xge
 	// underscores and (when dots is true) dots, like `window.width.center`.
 	bool isName(const std::string& text, bool dots);
 
-	// An operand of a formula is a name or a number and
+	// An operand of an operation is a name or a number and
 	// nothing else: anything more is an operation of its own.
 	std::string requireTerm(const std::string& text, const std::string& here);
 
-	// An operand of a <formula> operation: <minuend>window.width.center
-	// </minuend>, or an operation in place of the name, or a <random>.
+	// An operand of an operation: <value>window.width.center</value>, or an
+	// operation in place of the name, or a <random>.
 	RawValue readFormulaOperand(const XmlNode& node, const std::string& where);
 
-	// <subtract><minuend>..</minuend><subtrahend>..</subtrahend>
-	// <subtrahend>..</subtrahend></subtract>: the first operand, then one or
-	// more of the second, taken one after another.
+	// <subtract><value>a</value><value>b</value><value>c</value></subtract>:
+	// the first operand, then the others taken from it one after another.
 	RawOperation readFormulaOperation(const XmlNode& node, const OperationShape& shape, const std::string& where);
 
-	RawValue readFormula(const XmlNode& node, const std::string& where);
+	// Whether a tag is an operation (<add>, <clamp>, ...; not <random>).
+	bool isOperation(const std::string& tag);
+
+	// An operation written straight in a value: <x><subtract><value>window.right
+	// </value><value>4</value></subtract></x>, a value of kind Formula.
+	RawValue readOperation(const XmlNode& tag, const std::string& where);
 
 	// A number, written either as an expression (the text of the element) or
 	// as one value tag inside it - see RawValue - and whether it is

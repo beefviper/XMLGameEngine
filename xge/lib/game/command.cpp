@@ -319,11 +319,11 @@ namespace xge
 	namespace
 	{
 		const OperationShape kOperationShapes[] = {
-			{ "add", "augend", "addend", '+' },
-			{ "subtract", "minuend", "subtrahend", '-' },
-			{ "multiply", "multiplicand", "multiplier", '*' },
-			{ "divide", "dividend", "divisor", '/' },
-			{ "remainder", "dividend", "divisor", 0, "remainder", 2, 2 },
+			{ "add", "value", "value", '+' },
+			{ "subtract", "value", "value", '-' },
+			{ "multiply", "value", "value", '*' },
+			{ "divide", "value", "value", '/' },
+			{ "remainder", "value", "value", 0, "remainder", 2, 2 },
 			{ "smallest", "value", "value", 0, "min" },
 			{ "largest", "value", "value", 0, "max" },
 			{ "absolute", "value", "value", 0, "abs", 1, 1 },
@@ -337,7 +337,7 @@ namespace xge
 			{ "clamp", "value", "atleast", 0, "clamp", 3, 3, "atmost" },
 			// A <value> and a test of it, the same words as a condition's: 1 or 0.
 			{ "compare", "value", "test", 0, "compare", 2, 2, nullptr, true },
-			// A <random> with a <formula> end (RawValue::operations).
+			// A <random> with an end that is an operation (RawValue::operations).
 			{ "random", "min", "max", 0, "random", 2, 2 },
 		};
 	}
@@ -403,6 +403,7 @@ namespace xge
 
 		case RawValue::Kind::Centered:
 			if (value.edge != RawValue::Edge::Middle) { return std::string(value.edge == RawValue::Edge::Start ? "start" : "end") + "(offset " + (value.offset.empty() ? std::string("0") : value.offset) + ")"; }
+			if (value.operations && !value.operations->empty()) { return "centered(" + operationText(value.operations->front()) + ")"; }
 			return value.offset.empty() ? "centered(" + value.text + ")" : "centered(offset " + value.offset + ")";
 
 		case RawValue::Kind::Formula:
@@ -419,7 +420,7 @@ namespace xge
 	{
 		if (kind == Kind::Random && !operations) { return { &min, &max }; }
 
-		if (kind == Kind::Formula || kind == Kind::Random)
+		if (kind == Kind::Formula || kind == Kind::Random || (kind == Kind::Centered && operations))
 		{
 			std::vector<const std::string*> all;
 			if (operations)

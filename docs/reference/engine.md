@@ -80,7 +80,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | reading | `load/xml.cpp` | tags into a `GameData` (`readGame()`) |
 | | `load/reading.cpp` | what every reader shares: a child, an attribute, a value, `fail` |
 | | `load/merge.cpp` | pieces and `from=` on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
-| | `load/expr.cpp` | values, `<formula>`, building `Object`s and `State`s, pictures (`buildPicture`) |
+| | `load/expr.cpp` | values, operations, building `Object`s and `State`s, pictures (`buildPicture`) |
 | | `load/calc.cpp` | arithmetic in text, compiled once into steps |
 | | `load/check.cpp` | load-time checks of names, and of where commands may go (each verb's places) |
 | | `load/xsd.cpp`, `load/spelling.cpp` | the weak validator; "did you mean" (`didYouMean`, `listOf`) |

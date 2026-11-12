@@ -339,11 +339,9 @@
         <timer sprite="flipped">
           <after>0</after>
           <set variable="self.way">
-            <formula>
-              <sign>
-                <value>self.velocity.x</value>
-              </sign>
-            </formula>
+            <sign>
+              <value>self.velocity.x</value>
+            </sign>
           </set>
           <set variable="self.down">1</set>
         </timer>
@@ -426,13 +424,11 @@
           <collision sprite="walking">
             <become sprite="mad" />
             <set variable="self.velocity.x">
-              <formula>
-                <multiply>
-                  <multiplicand><sign><value>self.velocity.x</value></sign></multiplicand>
-                  <multiplier>self.speed</multiplier>
-                  <multiplier>2</multiplier>
-                </multiply>
-              </formula>
+              <multiply>
+                <value><sign><value>self.velocity.x</value></sign></value>
+                <value>self.speed</value>
+                <value>2</value>
+              </multiply>
             </set>
             <set variable="self.velocity.y">0 - hop</set>
             <play sound="mad" />

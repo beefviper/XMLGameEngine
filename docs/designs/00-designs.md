@@ -10,7 +10,7 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 |---|---|---|
 | [vision](01-vision.md) | What we want; declarative with triggers; the VGDL landscape | Built |
 | [file-format](02-file-format.md) | Why XML; attributes name, content computes; commands in groups | Built |
-| [arithmetic](03-arithmetic.md) | Text arithmetic and `<formula>` | Built |
+| [arithmetic](03-arithmetic.md) | Text arithmetic and operation tags | Built |
 | [values-and-names](04-values-and-names.md) | `<random>`, values read when used, evaluation order, variables, names | Built; anchors Idea |
 | [objects](05-objects.md) | What an object is, storage, layered values, lockstep | Built |
 | [groups](06-groups.md) | Groups, columns and rows, groups inside a group, maps, cells for grid puzzles | Built |

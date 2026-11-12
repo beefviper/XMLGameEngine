@@ -1,6 +1,6 @@
 # Arithmetic in text and as tags
 
-**Status:** Built: text arithmetic of `+ - * /` (`load/calc`), and `<formula>` tags for everything more. Reference: [arithmetic as tags](../reference/format.md#arithmetic-as-tags).
+**Status:** Built: text arithmetic of `+ - * /` (`load/calc`), and operation tags (`<add>`, `<clamp>`, ...) for everything more; text arithmetic is going (plan R12). Reference: [arithmetic as tags](../reference/format.md#arithmetic-as-tags).
 
 ## What we looked for
 
@@ -11,13 +11,13 @@ Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from 
 | E1. Paste the string through | Fine for C++ targets, not assembly |
 | E2. XSLT parses it | Awkward precedence parsing |
 | E3. Parse in C++ to an AST as XML for XSLT | Adds a step |
-| **E4. Computation as elements** | Built as `<formula>`, beside plain text for sums |
+| **E4. Computation as elements** | Built: operations written straight in a value |
 
-## `<formula>`
+## Operations
 
-- **One value tag, nested:** one operation whose operands hold a name, a number, a `<random>` or another operation. Precedence is the nesting; a chain (`a - b - c`) is one operation with several second operands.
-- **Operands named for what they are:** `augend`/`addend`, `minuend`/`subtrahend`, `multiplicand`/`multiplier`, `dividend`/`divisor`. Operations with no classic names take `<value>`s. One table, `operationShape` in `game/command.cpp`, drives loader, evaluator and printer.
-- **An operand is a name or a number, never an expression,** or `<dividend>a + b</dividend>` brings the hidden string back.
+- **One value tag, nested:** an operation written straight in a value, its operands `<value>`s holding a name, a number, a `<random>` or another operation. Precedence is the nesting; a chain (`a - b - c`) is one operation of three values.
+- **Chosen by the author, after the survey below: no wrapper and no operand names** (`<x><subtract><value>window.right</value><value>4</value></subtract></x>`). It was a `<formula>` wrapper with operands named for what they are (`augend`/`addend`, `minuend`/`subtrahend`, `multiplicand`/`multiplier`, `dividend`/`divisor`): the order already says it, so they were words to learn. Kept: nesting is precedence, which the author wants for turning a game into another language later. Rejected: a start and steps read in order (`<value>cell</value><times>8</times><plus>16</plus>`), shorter but with no precedence. One table, `operationShape` in `game/command.cpp`, drives loader, evaluator and printer.
+- **An operand is a name or a number, never an expression,** or `<value>a + b</value>` brings the hidden string back.
 - **A divisor of 0** is the engine's to catch, since XSD cannot see what a name holds. Certainly 0 at load stops the load; 0 only because an input is not final yet (a size not yet measured) gives 0 and is worked out again; while running it gives 0 and one warning. A `late` flag tells these apart.
 - **One form, not two.** A flat `<equation>` of steps (three-address code) was built beside it, then dropped: two structured spellings of one thing are one too many, and its operands as attributes broke the format's rule.
 - **`<smallest>`, `<largest>`, `<absolute>`, `<clamp>`;** clamp reuses the condition words (`<atleast>`, `<atmost>`). Rejected: `<min>`/`<max>`, which already mean a `<random>`'s ends.
@@ -28,9 +28,9 @@ Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from 
 ## The text cut down
 
 - The text was once worked out by exprtk, so it had functions (`max(...)`, `cos(... * pi / 180)`) and comparisons: a second, hidden maths vocabulary beside the tags.
-- **Chosen: one small library of our own,** `load/calc`: numbers, names, `+ - * /`, a leading sign, brackets, nothing else. It compiles a text once into steps that read each name's number where it lives, and works left to right exactly as written. A function call stops the load and says to write a `<formula>`.
+- **Chosen: one small library of our own,** `load/calc`: numbers, names, `+ - * /`, a leading sign, brackets, nothing else. It compiles a text once into steps that read each name's number where it lives, and works left to right exactly as written. A function call stops the load and says to write an operation.
 - **A text divides by 0 as a `<divide>` does:** 0, stopping the load when the divisor is certainly 0, and a value that comes out as infinity at load stops it too. Before, text gave infinity and an object went nowhere.
-- **Open, the author's call: no arithmetic in text at all.** A text would hold one number or one name, every calculation tags, with `<formula>` made short for the common shapes. Plan task R12 surveys the shapes first.
+- **Open, the author's call: no arithmetic in text at all.** A text would hold one number or one name, every calculation tags, with the operations short enough for the common shapes. Plan task R12 surveys the shapes first.
 - Rejected: an expression backend behind a factory with exprtk as an option. Nothing a game writes would differ between them, and a game would fail on one the first time someone used a function.
 
 ## The survey for no arithmetic in text
@@ -39,7 +39,7 @@ Plan task R12 counted every game text that calculates: 900, of which 627 are an 
 
 ## Schema
 
-A formula's operands hold operations, so the schema's types contain themselves. Xerces handles that; `load/xsd` was taught to follow a named type that refers to itself. The operations are listed twice (formula and operand), since a group containing itself is still refused there.
+An operation's operands hold operations, so the schema's types contain themselves. Xerces handles that; `load/xsd` was taught to follow a named type that refers to itself. The operations are listed twice (formula and operand), since a group containing itself is still refused there.
 
 ## Open
 

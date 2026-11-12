@@ -241,12 +241,10 @@
           <atleast>1</atleast>
           <set variable="lander.crashed">0</set>
           <set variable="lander.fuel">
-            <formula>
-              <largest>
-                <value>0</value>
-                <value><subtract><minuend>lander.fuel</minuend><subtrahend>wreckcost</subtrahend></subtract></value>
-              </largest>
-            </formula>
+            <largest>
+              <value>0</value>
+              <value><subtract><value>lander.fuel</value><value>wreckcost</value></subtract></value>
+            </largest>
           </set>
           <silence sound="thrust" />
           <play sound="crash" />

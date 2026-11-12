@@ -184,7 +184,7 @@ namespace xge
 				skipSpace();
 				if (at < text.size() && text[at] == '(')
 				{
-					fail("'" + word + "(' is a function, and a value's text has none; write it as a <formula> (<smallest>, <largest>, <sign>, ...)");
+					fail("'" + word + "(' is a function, and a value's text has none; write it as an operation (<smallest>, <largest>, <sign>, ...)");
 				}
 
 				const auto found = known.find(word);

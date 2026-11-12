@@ -127,21 +127,17 @@
           <position><x><centered /></x><y><centered /></y></position>
           <velocity>
             <x>
-              <formula>
-                <multiply>
-                  <multiplicand><sign><value>ball.side</value></sign></multiplicand>
-                  <multiplier>ball.speed</multiplier>
-                  <multiplier><cosine><value>ball.angle</value></cosine></multiplier>
-                </multiply>
-              </formula>
+              <multiply>
+                <value><sign><value>ball.side</value></sign></value>
+                <value>ball.speed</value>
+                <value><cosine><value>ball.angle</value></cosine></value>
+              </multiply>
             </x>
             <y>
-              <formula>
-                <multiply>
-                  <multiplicand>ball.speed</multiplicand>
-                  <multiplier><sine><value>ball.angle</value></sine></multiplier>
-                </multiply>
-              </formula>
+              <multiply>
+                <value>ball.speed</value>
+                <value><sine><value>ball.angle</value></sine></value>
+              </multiply>
             </y>
           </velocity>
           <collisions>

@@ -777,6 +777,34 @@ namespace xge
 		for (auto& [name, list] : object.action) { commands(list); }
 	}
 
+	namespace
+	{
+		// An operation of the values given, in that order.
+		RawValue operationOf(const char* op, std::vector<RawValue> values)
+		{
+			RawOperation operation;
+			operation.op = op;
+			for (RawValue& value : values) { operation.operands.push_back(RawOperand{ "value", std::move(value) }); }
+			RawValue made;
+			made.kind = RawValue::Kind::Formula;
+			made.operations = std::make_shared<std::vector<RawOperation>>(1, std::move(operation));
+			return made;
+		}
+	}
+
+	RawValue centeredMiddle(const RawValue& value, const std::string& windowMiddle)
+	{
+		if (value.operations)
+		{
+			RawValue middle;
+			middle.kind = RawValue::Kind::Formula;
+			middle.operations = value.operations;
+			return middle;
+		}
+		if (!value.offset.empty()) { return operationOf("add", { RawValue::expression(windowMiddle), RawValue::expression(value.offset) }); }
+		return RawValue::expression(value.text.empty() ? windowMiddle : value.text);
+	}
+
 	void centerOnOwnSize(std::vector<RawObject>& objects)
 	{
 		for (RawObject& object : objects)
@@ -784,23 +812,26 @@ namespace xge
 			const auto center = [&](RawValue& value, const std::string& window, const char* size)
 			{
 				if (value.kind != RawValue::Kind::Centered) { return; }
-				if (value.edge != RawValue::Edge::Middle)
-				{
-					// A side on the window's: the left or top at 0, the right or
-					// bottom at the window's size less the object's own; an offset
-					// moves it in from that side.
-					const std::string in = value.offset.empty() ? std::string("0") : "(" + value.offset + ")";
-					const std::string where = value.edge == RawValue::Edge::Start ? in : window + " - " + object.name + "." + size + " - " + in;
-					const bool live = value.live;
-					value = RawValue::expression(where);
-					value.live = live;
-					return;
-				}
-				const std::string windowMiddle = window + ".center";
-				const std::string middle = !value.offset.empty() ? windowMiddle + " + (" + value.offset + ")"
-					: value.text.empty() ? windowMiddle : "(" + value.text + ")";
+				const RawValue own = RawValue::expression(object.name + "." + size);
 				const bool live = value.live;
-				value = RawValue::expression(middle + " - " + object.name + "." + size + " / 2");
+				if (value.edge == RawValue::Edge::Start)
+				{
+					// Its left or top on the window's, the offset in from it.
+					value = RawValue::expression(value.offset.empty() ? std::string("0") : value.offset);
+				}
+				else if (value.edge == RawValue::Edge::End)
+				{
+					// Its right or bottom on the window's: the window's size less
+					// its own, and the offset in from it.
+					std::vector<RawValue> parts{ RawValue::expression(window), own };
+					if (!value.offset.empty()) { parts.push_back(RawValue::expression(value.offset)); }
+					value = operationOf("subtract", std::move(parts));
+				}
+				else
+				{
+					// Its middle where the middle goes: that less half its size.
+					value = operationOf("subtract", { centeredMiddle(value, window + ".center"), operationOf("divide", { own, RawValue::expression("2") }) });
+				}
 				value.live = live;
 			};
 			center(object.rawPosition.x, "window.width", "width");

@@ -16,7 +16,7 @@ The vocabulary grew one game at a time (a word is added only when a real game ca
 | Prepositions | who, when, where | `edge=`, `class=`, `object=`, `side=`, `unless=`, `from=`, `into=` |
 | Pronouns | names that point | `ball.radius`, `window.right`, `aliens.3.2`, `self.`, `touch.`, `energy.level` |
 | Adverbs | how, how much, how long | `every`, `after`, `seconds`, `burn`, a verb's amount |
-| Values | numbers | text arithmetic (`+ - * /`), `<random>`, `<formula>` tags |
+| Values | numbers | text arithmetic (`+ - * /`), `<random>`, operation tags (`<add>`, `<clamp>`, ...) |
 
 A collision rule reads like a sentence: *this object*, *when it touches* *that class*, *on its top* (`side`), *unless* *it is on a log*, *do this*.
 
@@ -36,7 +36,7 @@ Adverbs are each verb's own: there is no shared "how" vocabulary. Its likely mem
 | Input: keys, axes, the three moments, computer players | small and clean |
 | Flow: the stack, scenes, conditions, turns, demos | enough for the shipped games |
 | Boards and cards: moves, picker, think, packs, holders, patterns | built for the shipped games |
-| Values: text arithmetic, `<random>`, `<formula>` | thinnest: no power, root, tangent or "if" |
+| Values: text arithmetic, `<random>`, operations | thinnest: no power, root, tangent or "if" |
 
 ## Kinds of word the language does not have
 

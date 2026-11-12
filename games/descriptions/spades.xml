@@ -207,13 +207,13 @@
               <order group="stock"><random /></order>
               <distribute from="stock" into="players">13</distribute>
               <set variable="you.won">0</set>
-              <set variable="you.bid"><formula><largest><value>mine.tricks</value><value>1</value></largest></formula></set>
+              <set variable="you.bid"><largest><value>mine.tricks</value><value>1</value></largest></set>
               <set variable="west.won">0</set>
-              <set variable="west.bid"><formula><largest><value>westcards.tricks</value><value>1</value></largest></formula></set>
+              <set variable="west.bid"><largest><value>westcards.tricks</value><value>1</value></largest></set>
               <set variable="north.won">0</set>
-              <set variable="north.bid"><formula><largest><value>northcards.tricks</value><value>1</value></largest></formula></set>
+              <set variable="north.bid"><largest><value>northcards.tricks</value><value>1</value></largest></set>
               <set variable="east.won">0</set>
-              <set variable="east.bid"><formula><largest><value>eastcards.tricks</value><value>1</value></largest></formula></set>
+              <set variable="east.bid"><largest><value>eastcards.tricks</value><value>1</value></largest></set>
               <set variable="table.tricks">0</set>
               <inc variable="table.first">1</inc>
               <become sprite="bid" />

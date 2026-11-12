@@ -24,7 +24,7 @@
 - **Settling, not hopping.** The ball once bounced wildly round the flippers. Two faults: a pixel touch's depth was the boxes' overlap (now measured by pixels), and slow knocks gave back their share (now, closing on an immovable surface slower than four frames of its own pull does not bounce). Scaled by the pull, so walkers and pool balls are untouched.
 - **`<friction>`** rubs speed off along a still surface and brings a true rest when the pull cannot slide the thing or it is wedged. Pinball's ball has 0.05 and rests only when wedged.
 - **The stroke is one eased curve:** `<swing direction="counterclockwise"><degrees>60</degrees><seconds>0.1</seconds></swing>`, the heading following half a cosine, hardest half way, as a flipper's coil works. Rejected: a top rate as bare content with a `<gain>` (a naked number, and no slowing at the end).
-- **How far, not where to:** the start is not written, so neither is the end. `<degrees>` and `<seconds>`, since `<value>` is the formula's word and hops already say `<seconds>`.
+- **How far, not where to:** the start is not written, so neither is the end. `<degrees>` and `<seconds>`, since `<value>` is an operation's operand and hops already say `<seconds>`.
 - **Clockwise and counterclockwise,** never left and right, for `<turn>` and `<swing>`.
 - **Thick lines are round-ended bars** of true width; square stamps left a ledge a ball balanced on.
 - Not added yet: ball spin, angular mass for free spinners, rolling apart from sliding, a `<launch>` word, a `<rest>` heading for a swing.

@@ -260,12 +260,10 @@
             <collision edge="right"><die /></collision>
             <collision object="bullet">
               <inc variable="player.score">
-                <formula>
-                  <multiply>
-                    <multiplicand>50</multiplicand>
-                    <multiplier><ceiling><value>self.worth</value></ceiling></multiplier>
-                  </multiply>
-                </formula>
+                <multiply>
+                  <value>50</value>
+                  <value><ceiling><value>self.worth</value></ceiling></value>
+                </multiply>
               </inc>
               <spawn object="blast" />
               <play sound="alienhit" />

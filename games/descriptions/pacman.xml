@@ -228,17 +228,15 @@
               <inc variable="mode.waves" />
               <!-- 20 seconds, and for ever from the fourth wave -->
               <set variable="mode.chasefor">
-                <formula>
-                  <add>
-                    <augend>20</augend>
-                    <addend>
-                      <multiply>
-                        <multiplicand>100000</multiplicand>
-                        <multiplier><compare><value>mode.waves</value><atleast>4</atleast></compare></multiplier>
-                      </multiply>
-                    </addend>
-                  </add>
-                </formula>
+                <add>
+                  <value>20</value>
+                  <value>
+                    <multiply>
+                      <value>100000</value>
+                      <value><compare><value>mode.waves</value><atleast>4</atleast></compare></value>
+                    </multiply>
+                  </value>
+                </add>
               </set>
               <become sprite="chase" />
               <trigger object="ghosts" action="turn" from="normal" />
@@ -248,17 +246,15 @@
               <after>mode.chasefor</after>
               <!-- 7 seconds, and 5 from the second wave -->
               <set variable="mode.scatterfor">
-                <formula>
-                  <subtract>
-                    <minuend>7</minuend>
-                    <subtrahend>
-                      <multiply>
-                        <multiplicand>2</multiplicand>
-                        <multiplier><compare><value>mode.waves</value><atleast>2</atleast></compare></multiplier>
-                      </multiply>
-                    </subtrahend>
-                  </subtract>
-                </formula>
+                <subtract>
+                  <value>7</value>
+                  <value>
+                    <multiply>
+                      <value>2</value>
+                      <value><compare><value>mode.waves</value><atleast>2</atleast></compare></value>
+                    </multiply>
+                  </value>
+                </subtract>
               </set>
               <become sprite="scatter" />
               <trigger object="ghosts" action="turn" from="normal" />
@@ -686,20 +682,16 @@
           <reset object="mode" />
           <set variable="status.fruits">0</set>
           <set variable="status.pace">
-            <formula>
-              <smallest>
-                <value>2.125</value>
-                <value><add><augend>status.pace</augend><addend>0.0625</addend></add></value>
-              </smallest>
-            </formula>
+            <smallest>
+              <value>2.125</value>
+              <value><add><value>status.pace</value><value>0.0625</value></add></value>
+            </smallest>
           </set>
           <set variable="status.fright">
-            <formula>
-              <largest>
-                <value>1</value>
-                <value><subtract><minuend>status.fright</minuend><subtrahend>1</subtrahend></subtract></value>
-              </largest>
-            </formula>
+            <largest>
+              <value>1</value>
+              <value><subtract><value>status.fright</value><value>1</value></subtract></value>
+            </largest>
           </set>
           <push state="caught" />
         </condition>

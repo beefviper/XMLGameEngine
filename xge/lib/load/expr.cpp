@@ -1631,10 +1631,10 @@ namespace xge
 
 		case RawValue::Kind::Formula:
 		{
-			const float answer = evaluateOperation(value.operations->front(), where + " > <formula>").value;
+			const float answer = evaluateOperation(value.operations->front(), where).value;
 			if (loading && !std::isfinite(answer))
 			{
-				throw std::runtime_error(where + " > <formula>: comes out as " + (std::isnan(answer) ? std::string("not a number") : std::string("infinity")));
+				throw std::runtime_error(where + ": comes out as " + (std::isnan(answer) ? std::string("not a number") : std::string("infinity")));
 			}
 			return answer;
 		}
@@ -1677,7 +1677,7 @@ namespace xge
 				return Answer{ evaluate(operand.value, here), isLate(operand.value.text) };
 			}
 
-			// An operation nested in a formula is part of the same formula.
+			// An operation nested in another is part of the same sum.
 			if (operand.value.kind == RawValue::Kind::Formula) { return evaluateOperation(operand.value.operations->front(), here); }
 
 			return Answer{ evaluate(operand.value, here), false };
