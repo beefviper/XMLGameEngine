@@ -35,27 +35,6 @@ namespace xge
 				[](const RawTextPiece& piece) { return piece.kind != RawTextPiece::Kind::Words; });
 		}
 
-		// `from.` at the start of a name in a value made `to.`; whether any was.
-		bool renameInValue(RawValue& each, const std::string& from, const std::string& to)
-		{
-			bool changed = false;
-			for (std::string* text : { &each.text, &each.min, &each.max })
-			{
-				std::string renamed = renameStart(*text, from, to);
-				if (renamed != *text) { *text = std::move(renamed); changed = true; }
-			}
-			if (each.operations)
-			{
-				auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
-				for (RawOperation& operation : *operations)
-				{
-					for (RawOperand& operand : operation.operands) { changed = renameInValue(operand.value, from, to) || changed; }
-				}
-				each.operations = std::move(operations);
-			}
-			return changed;
-		}
-
 		// A command's `from` (self, others) made the object `to`: as the
 		// object it names, at the start of the variables and values it names,
 		// and, as a look, its own name (sprite="self": the look named after

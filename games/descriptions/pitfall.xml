@@ -151,8 +151,8 @@
       <sprite>
         <bitmap from="logs" />
       </sprite>
-      <position><y>surface - 21</y></position>
-      <velocity><x>-roll</x></velocity>
+      <position><y><subtract><value>surface</value><value>21</value></subtract></y></position>
+      <velocity><x><negate><value>roll</value></negate></x></velocity>
       <collisions>
         <collision edge="horizontal">
           <wrap />
@@ -167,7 +167,7 @@
       <sprite>
         <bitmap from="tar" />
       </sprite>
-      <position><x>300</x><y>surface - 1</y></position>
+      <position><x>300</x><y><subtract><value>surface</value><value>1</value></subtract></y></position>
       <collisions />
     </object>
 
@@ -181,7 +181,7 @@
           <color>color.blue</color>
         </rectangle>
       </sprite>
-      <position><x>220</x><y>surface + 4</y></position>
+      <position><x>220</x><y><add><value>surface</value><value>4</value></add></y></position>
       <collisions />
     </object>
     <group name="crocs" class="croc">
@@ -191,7 +191,7 @@
       <sprite name="open">
         <bitmap from="crocs-open" />
       </sprite>
-      <position><y>surface - 2</y></position>
+      <position><y><subtract><value>surface</value><value>2</value></subtract></y></position>
       <collisions>
         <collision object="harry" sprite="open">
           <trigger object="harry" action="lose" />
@@ -226,7 +226,7 @@
         <frame sprite="high" />
         <frame sprite="low" />
       </animation>
-      <position><x>170</x><y>surface - fire.height</y></position>
+      <position><x>170</x><y><subtract><value>surface</value><value>fire.height</value></subtract></y></position>
       <collisions />
     </object>
 
@@ -235,7 +235,7 @@
       <sprite>
         <bitmap from="scorpion" />
       </sprite>
-      <position><x>200</x><y>tunnel - 12</y></position>
+      <position><x>200</x><y><subtract><value>tunnel</value><value>12</value></subtract></y></position>
       <velocity><x>crawl</x></velocity>
       <collisions>
         <collision edge="horizontal">
@@ -250,7 +250,7 @@
       <sprite>
         <bitmap from="treasure" />
       </sprite>
-      <position><x>580</x><y>surface - treasure.height</y></position>
+      <position><x>580</x><y><subtract><value>surface</value><value>treasure.height</value></subtract></y></position>
       <collisions>
         <collision object="harry">
           <inc variable="status.score">worth</inc>
@@ -268,7 +268,7 @@
           <color>color.black</color>
         </rectangle>
       </sprite>
-      <position><x>window.right - 4</x><y>0</y></position>
+      <position><x><subtract><value>window.right</value><value>4</value></subtract></x><y>0</y></position>
       <hidden />
       <collisions>
         <collision object="harry">
@@ -364,7 +364,7 @@
           <sprite>
             <rectangle>
               <width>14</width>
-              <height>surface - 140</height>
+              <height><subtract><value>surface</value><value>140</value></subtract></height>
               <color>color.brown</color>
             </rectangle>
           </sprite>
@@ -382,17 +382,17 @@
               <color>color.brown</color>
             </rectangle>
           </sprite>
-          <position><x>0</x><y>surface + thick</y></position>
+          <position><x>0</x><y><add><value>surface</value><value>thick</value></add></y></position>
         </object>
         <object name="bedrock">
           <sprite>
             <rectangle>
               <width>window.right</width>
-              <height>window.bottom - tunnel - thick</height>
+              <height><subtract><value>window.bottom</value><value>tunnel</value><value>thick</value></subtract></height>
               <color>color.brown</color>
             </rectangle>
           </sprite>
-          <position><x>0</x><y>tunnel + thick</y></position>
+          <position><x>0</x><y><add><value>tunnel</value><value>thick</value></add></y></position>
         </object>
         <object name="tunnelfloor" class="ground">
           <sprite>
@@ -411,15 +411,25 @@
           <sprite>
             <bitmap from="harry" />
           </sprite>
-          <position><x>24</x><y>surface - harry.height</y></position>
+          <position><x>24</x><y><subtract><value>surface</value><value>harry.height</value></subtract></y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <collisions>
             <!-- through a side of a screen: in at the other side of the next -->
             <collision class="eastside">
-              <move direction="left">window.right - 2 * harry.width</move>
+              <move direction="left">
+                <subtract>
+                  <value>window.right</value>
+                  <value><multiply><value>2</value><value>harry.width</value></multiply></value>
+                </subtract>
+              </move>
             </collision>
             <collision class="westside">
-              <move direction="right">window.right - 2 * harry.width</move>
+              <move direction="right">
+                <subtract>
+                  <value>window.right</value>
+                  <value><multiply><value>2</value><value>harry.width</value></multiply></value>
+                </subtract>
+              </move>
             </collision>
             <collision class="ground">
               <land />
@@ -561,7 +571,7 @@
               <sprite>
                 <bitmap from="treasure4" />
               </sprite>
-              <position><y>tunnel - treasure.height</y></position>
+              <position><y><subtract><value>tunnel</value><value>treasure.height</value></subtract></y></position>
             </object>
             <object name="scorpion">
               <position><x>400</x></position>
@@ -830,8 +840,8 @@
       <color char="y">color.yellow</color>
     </bitmap>
     <drawing name="ladder">
-      <line><from><x>0</x><y>0</y></from><to><x>0</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-      <line><from><x>18</x><y>0</y></from><to><x>18</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>0</y></from><to><x>0</x><y><subtract><value>tunnel</value><value>surface</value><value>2</value></subtract></y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>18</x><y>0</y></from><to><x>18</x><y><subtract><value>tunnel</value><value>surface</value><value>2</value></subtract></y></to><color>color.lightgrey</color><thickness>2</thickness></line>
       <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
       <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
       <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.lightgrey</color><thickness>2</thickness></line>

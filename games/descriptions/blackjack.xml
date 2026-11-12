@@ -99,7 +99,7 @@
         <!-- the stock, top right -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width - cardwidth - 40</x><y>dealerrow</y></position>
+          <position><x><subtract><value>window.width</value><value>cardwidth</value><value>40</value></subtract></x><y>dealerrow</y></position>
           <holds class="card" sprite="back" />
         </object>
 
@@ -123,11 +123,11 @@
 
         <object name="dealerpoints">
           <sprite><text style="note"><content>dealer </content><number>dealer.worth</number></text></sprite>
-          <position><x>left</x><y>dealerrow - 44</y></position>
+          <position><x>left</x><y><subtract><value>dealerrow</value><value>44</value></subtract></y></position>
         </object>
         <object name="yourpoints">
           <sprite><text style="note"><content>you </content><number>player.worth</number></text></sprite>
-          <position><x>left</x><y>yourrow - 44</y></position>
+          <position><x>left</x><y><subtract><value>yourrow</value><value>44</value></subtract></y></position>
         </object>
 
         <!-- the dealer's draw: while it shows draw, a card each 0.6 seconds -->
@@ -151,7 +151,7 @@
           <sprite name="dealer"><text style="note"><content>the dealer plays</content><color>color.lightgrey</color></text></sprite>
           <sprite name="settling"><text style="note"><content>the dealer plays</content><color>color.lightgrey</color></text></sprite>
           <sprite name="done"><text style="note"><content>spacebar for the next hand</content></text></sprite>
-          <position><x><centered /></x><y>yourrow + cardheight + 70</y></position>
+          <position><x><centered /></x><y><add><value>yourrow</value><value>cardheight</value><value>70</value></add></y></position>
           <actions>
             <action name="less"><dec variable="table.bet">10</dec><play sound="chip" /></action>
             <action name="more"><inc variable="table.bet">10</inc><play sound="chip" /></action>
@@ -192,12 +192,12 @@
           <sprite name="push"><text style="result"><content>push</content><color>color.white</color></text></sprite>
           <sprite name="lose"><text style="result"><content>dealer wins</content><color>color.lightgrey</color></text></sprite>
           <sprite name="bust"><text style="result"><content>bust</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y>dealerrow + cardheight + 70</y></position>
+          <position><x><centered /></x><y><add><value>dealerrow</value><value>cardheight</value><value>70</value></add></y></position>
         </object>
 
         <object name="money">
           <sprite><text style="note"><content>chips </content><number>table.bank</number><content>    bet </content><number>table.bet</number></text></sprite>
-          <position><x><centered /></x><y>window.height - 60</y></position>
+          <position><x><centered /></x><y><subtract><value>window.height</value><value>60</value></subtract></y></position>
         </object>
       </objects>
       <!-- the pack into the stock, shuffled -->
@@ -271,7 +271,7 @@
                 </condition>
               </condition>
               <otherwise>
-                <inc variable="table.bank">table.bet * 2.5</inc>
+                <inc variable="table.bank"><multiply><value>table.bet</value><value>2.5</value></multiply></inc>
                 <become object="result" sprite="blackjack" />
                 <play sound="blackjack" />
               </otherwise>
@@ -286,12 +286,12 @@
           </condition>
           <!-- the dealer bust or beaten pays two to one, a tie gives the bet back -->
           <condition object="dealer" variable="worth"><above>21</above>
-            <inc variable="table.bank">table.bet * 2</inc>
+            <inc variable="table.bank"><multiply><value>table.bet</value><value>2</value></multiply></inc>
             <become object="result" sprite="dealerbust" />
             <play sound="win" />
           </condition>
           <condition object="player" variable="worth"><above>dealer.worth</above>
-            <inc variable="table.bank">table.bet * 2</inc>
+            <inc variable="table.bank"><multiply><value>table.bet</value><value>2</value></multiply></inc>
             <become object="result" sprite="win" />
             <play sound="win" />
           </condition>

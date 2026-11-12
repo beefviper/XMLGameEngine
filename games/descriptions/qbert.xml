@@ -300,7 +300,7 @@
               <content>@!#?@!</content>
             </text>
           </sprite>
-          <position><x>window.width.center + 16</x><y>20</y></position>
+          <position><x><add><value>window.width.center</value><value>16</value></add></x><y>20</y></position>
           <timers>
             <timer sprite="said">
               <after>1.5</after>

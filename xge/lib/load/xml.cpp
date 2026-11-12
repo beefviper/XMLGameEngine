@@ -902,32 +902,32 @@ namespace xge
 				}
 				if (!total.empty()) { fail(at, "total=\"" + total + "\"; expected count or sum"); }
 
-				// top.<variable>, then + N or - N: the one it would go on.
-				const std::string text = readText(*test);
+				// top.<variable>, or <add> or <subtract> of it and a number: the one
+				// it would go on, as <equal><add><value>top.rank</value><value>1</value></add></equal>.
+				std::string text = readText(*test);
+				float shift = 0.0f;
+				if (std::unique_ptr<XmlNode> by = test->getFirstChild())
+				{
+					const std::string how = by->getName();
+					const std::string byAt = testAt + " > <" + how + ">";
+					std::unique_ptr<XmlNode> first = by->getFirstChild();
+					std::unique_ptr<XmlNode> second = first ? first->getNextSibling() : nullptr;
+					if ((how != "add" && how != "subtract") || by->getNextSibling() || !text.empty() || !second || second->getNextSibling() || first->getName() != "value" || second->getName() != "value")
+					{
+						fail(testAt, "expected top. and a variable of it, or an <add> or <subtract> of two <value>s, top.rank and a number");
+					}
+					text = readText(*first);
+					if (text.rfind("top.", 0) != 0) { fail(byAt, "adds to or takes from top. and a variable of it, as top.rank"); }
+					shift = (how == "subtract" ? -1.0f : 1.0f) * readPlainNumber(*second, byAt);
+				}
 				if (text.rfind("top.", 0) == 0)
 				{
 					if (level > 1) { fail(testAt, "names top, but in an <empty> or a <wild> nothing lies under it"); }
-					std::size_t end = 4;
-					while (end < text.size() && text[end] != ' ' && text[end] != '+' && text[end] != '-') { ++end; }
-					const std::string named = text.substr(4, end - 4);
-					if (named.empty()) { fail(testAt, "is \"" + text + "\"; expected top. and a variable of it, as top.rank"); }
+					const std::string named = text.substr(4);
+					if (!isName(named, false)) { fail(testAt, "is \"" + text + "\"; expected top. and a variable of it, as top.rank"); }
 					each.top = true;
 					if (named != each.variable) { each.topVariable = named; }
-					std::string rest = text.substr(end);
-					rest.erase(0, rest.find_first_not_of(' '));
-					if (!rest.empty())
-					{
-						if (rest[0] != '+' && rest[0] != '-') { fail(testAt, "is \"" + text + "\"; expected top." + named + ", plus or minus a number if wanted"); }
-						const float sign = rest[0] == '-' ? -1.0f : 1.0f;
-						std::string number = rest.substr(1);
-						number.erase(0, number.find_first_not_of(' '));
-						std::size_t used = 0;
-						float value = 0.0f;
-						try { value = std::stof(number, &used); }
-						catch (const std::exception&) { used = 0; }
-						if (number.empty() || used != number.size()) { fail(testAt, "is \"" + text + "\"; expected top." + named + " plus or minus a number"); }
-						each.amount = sign * value;
-					}
+					each.amount = shift;
 				}
 				else
 				{

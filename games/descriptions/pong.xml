@@ -68,7 +68,7 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>PONG</content></text></sprite>
-          <position><x><centered /></x><y>margin * 4</y></position>
+          <position><x><centered /></x><y><multiply><value>margin</value><value>4</value></multiply></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to play the computer, 2 for two players</content></text></sprite>
@@ -111,15 +111,21 @@
             <variable name="score">0</variable>
           </variables>
           <member name="paddle1"><position><x>margin</x><y><centered /></y></position></member>
-          <member name="paddle2"><position><x>window.right - margin - width</x><y><centered /></y></position></member>
+          <member name="paddle2"><position><x><subtract><value>window.right</value><value>margin</value><value>width</value></subtract></x><y><centered /></y></position></member>
         </group>
         <object name="score1">
           <sprite><text style="hud"><number>paddle1.score</number></text></sprite>
-          <position><x>window.width.center - 80 - score1.width</x><y>margin</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value>80</value>
+              <value>score1.width</value>
+            </subtract>
+          </x><y>margin</y></position>
         </object>
         <object name="score2">
           <sprite><text style="hud"><number>paddle2.score</number></text></sprite>
-          <position><x>window.width.center + 80</x><y>margin</y></position>
+          <position><x><add><value>window.width.center</value><value>80</value></add></x><y>margin</y></position>
         </object>
         <!-- served from the middle at ball.speed, within 30 degrees of straight left or right, to either side -->
         <object name="ball">
@@ -165,8 +171,8 @@
                 <condition variable="hits"><equal>4</equal></condition>
                 <condition variable="hits"><equal>12</equal></condition>
               </any>
-              <set variable="ball.velocity.x">ball.velocity.x * 1.3</set>
-              <set variable="ball.velocity.y">ball.velocity.y * 1.3</set>
+              <set variable="ball.velocity.x"><multiply><value>ball.velocity.x</value><value>1.3</value></multiply></set>
+              <set variable="ball.velocity.y"><multiply><value>ball.velocity.y</value><value>1.3</value></multiply></set>
             </collision>
           </collisions>
           <variables>
@@ -199,17 +205,69 @@
         <condition object="computer" variable="players"><equal>1</equal>
           <!-- easy: under the ball, always -->
           <condition object="computer" variable="level"><equal>1</equal>
-            <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below><hold button="f12" /></condition>
-            <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above><hold button="f11" /></condition>
+            <condition object="paddle2" variable="y"><below>
+              <subtract>
+                <value>
+                  <add>
+                    <value>ball.y</value>
+                    <value><divide><value>ball.size</value><value>2</value></divide></value>
+                  </add>
+                </value>
+                <value><divide><value>height</value><value>2</value></divide></value>
+                <value>8</value>
+              </subtract>
+            </below><hold button="f12" /></condition>
+            <condition object="paddle2" variable="y"><above>
+              <add>
+                <value>
+                  <subtract>
+                    <value>
+                      <add>
+                        <value>ball.y</value>
+                        <value><divide><value>ball.size</value><value>2</value></divide></value>
+                      </add>
+                    </value>
+                    <value><divide><value>height</value><value>2</value></divide></value>
+                  </subtract>
+                </value>
+                <value>8</value>
+              </add>
+            </above><hold button="f11" /></condition>
           </condition>
           <!-- smart: under the ball once it comes over the net, else in the middle -->
           <condition object="computer" variable="level"><equal>2</equal>
             <condition object="ball" variable="velocity.x"><above>0</above>
               <condition object="ball" variable="x"><above>window.width.center</above>
-                <condition object="paddle2" variable="y"><below>ball.y + ball.size / 2 - height / 2 - 8</below>
+                <condition object="paddle2" variable="y"><below>
+                  <subtract>
+                    <value>
+                      <add>
+                        <value>ball.y</value>
+                        <value><divide><value>ball.size</value><value>2</value></divide></value>
+                      </add>
+                    </value>
+                    <value><divide><value>height</value><value>2</value></divide></value>
+                    <value>8</value>
+                  </subtract>
+                </below>
                   <hold button="f12" />
                 </condition>
-                <condition object="paddle2" variable="y"><above>ball.y + ball.size / 2 - height / 2 + 8</above>
+                <condition object="paddle2" variable="y"><above>
+                  <add>
+                    <value>
+                      <subtract>
+                        <value>
+                          <add>
+                            <value>ball.y</value>
+                            <value><divide><value>ball.size</value><value>2</value></divide></value>
+                          </add>
+                        </value>
+                        <value><divide><value>height</value><value>2</value></divide></value>
+                      </subtract>
+                    </value>
+                    <value>8</value>
+                  </add>
+                </above>
                   <hold button="f11" />
                 </condition>
               </condition>
@@ -219,8 +277,24 @@
                 <condition object="ball" variable="velocity.x"><atmost>0</atmost></condition>
                 <condition object="ball" variable="x"><atmost>window.width.center</atmost></condition>
               </any>
-              <condition object="paddle2" variable="y"><below>window.height.center - height / 2 - 8</below><hold button="f12" /></condition>
-              <condition object="paddle2" variable="y"><above>window.height.center - height / 2 + 8</above><hold button="f11" /></condition>
+              <condition object="paddle2" variable="y"><below>
+                <subtract>
+                  <value>window.height.center</value>
+                  <value><divide><value>height</value><value>2</value></divide></value>
+                  <value>8</value>
+                </subtract>
+              </below><hold button="f12" /></condition>
+              <condition object="paddle2" variable="y"><above>
+                <add>
+                  <value>
+                    <subtract>
+                      <value>window.height.center</value>
+                      <value><divide><value>height</value><value>2</value></divide></value>
+                    </subtract>
+                  </value>
+                  <value>8</value>
+                </add>
+              </above><hold button="f11" /></condition>
             </condition>
           </condition>
         </condition>

@@ -107,7 +107,13 @@
         <!-- the stock: picked from, it sends one to the player's own cards; empty, the discard pile but its top comes back -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth - 24</x><y>middle</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value>cardwidth</value>
+              <value>24</value>
+            </subtract>
+          </x><y>middle</y></position>
           <holds class="card" sprite="back">
             <picked>
               <send>1</send>
@@ -120,7 +126,7 @@
         <!-- the discard pile: the same suit (or the suit called) or the same rank; an eight on anything, and its player names the suit -->
         <object name="discard" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center + 24</x><y>middle</y></position>
+          <position><x><add><value>window.width.center</value><value>24</value></add></x><y>middle</y></position>
           <holds class="card" sprite="face">
             <accepts>
               <any>
@@ -135,17 +141,27 @@
         <!-- the suit called after an eight, beside the pile -->
         <object name="called">
           <sprite><text style="note"><choose><by>discard.called</by><word /><word>spades</word><word>hearts</word><word>clubs</word><word>diamonds</word></choose></text></sprite>
-          <position><x>window.width.center + cardwidth + 48</x><y>middle + cardheight / 2 - 14</y></position>
+          <position><x><add><value>window.width.center</value><value>cardwidth</value><value>48</value></add></x><y>
+            <subtract>
+              <value>
+                <add>
+                  <value>middle</value>
+                  <value><divide><value>cardheight</value><value>2</value></divide></value>
+                </add>
+              </value>
+              <value>14</value>
+            </subtract>
+          </y></position>
         </object>
 
         <!-- whose turn, and an eight waiting for its suit -->
         <object name="whoseturn">
           <sprite><text style="note"><choose><by>you.turn</by><word>the computer is playing</word><word>your turn: play a card that matches, or draw</word></choose></text></sprite>
-          <position><x>left</x><y>middle + cardheight + 40</y></position>
+          <position><x>left</x><y><add><value>middle</value><value>cardheight</value><value>40</value></add></y></position>
         </object>
         <object name="calling">
           <sprite><text style="note"><choose><by>discard.calling</by><word /><word>an eight: its player names a suit, pointing at a card of it</word></choose><color>color.cyan</color></text></sprite>
-          <position><x>left</x><y>middle + cardheight + 76</y></position>
+          <position><x>left</x><y><add><value>middle</value><value>cardheight</value><value>76</value></add></y></position>
         </object>
 
         <!-- your cards, face up along the bottom, in suit and rank order -->
@@ -178,13 +194,13 @@
           </actions>
           <turns sprite="waiting" />
           <member name="you">
-            <position><x>left - 3</x><y>yours - 3</y></position>
+            <position><x><subtract><value>left</value><value>3</value></subtract></x><y><subtract><value>yours</value><value>3</value></subtract></y></position>
             <owns object="mine" />
           </member>
           <!-- the computer points at the card it plays (the suit it holds most of, eights last) or the stock, and presses Space -->
           <member name="computer">
             <sprite name="free"><drawing from="computerfree" /></sprite>
-            <position><x>left - 3</x><y>theirs - 3</y></position>
+            <position><x><subtract><value>left</value><value>3</value></subtract></x><y><subtract><value>theirs</value><value>3</value></subtract></y></position>
             <owns object="theirs" />
             <think button="space" />
           </member>
@@ -295,28 +311,28 @@
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
     <drawing name="playersfree">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="playerscalling">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="playerswaiting">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.darkgreen</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.darkgreen</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.darkgreen</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.darkgreen</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.darkgreen</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.darkgreen</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.darkgreen</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.darkgreen</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="computerfree">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.lightgrey</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.lightgrey</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.lightgrey</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.lightgrey</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.lightgrey</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.lightgrey</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.lightgrey</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.lightgrey</color><thickness>3</thickness></line>
     </drawing>
   </pictures>
 </game>

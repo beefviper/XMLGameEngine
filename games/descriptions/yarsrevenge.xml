@@ -286,7 +286,7 @@
           <sprite>
             <bitmap from="cannon" />
           </sprite>
-          <position><x>0</x><y update="live">yar.y + 4</y></position>
+          <position><x>0</x><y update="live"><add><value>yar.y</value><value>4</value></add></y></position>
           <facing>right</facing>
           <waiting />
           <actions>

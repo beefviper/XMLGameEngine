@@ -119,11 +119,17 @@
           <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
         <object name="northcards" class="place">
-          <position><x>window.width.center - cardwidth / 2 - 144</x><y>northrow</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>144</value>
+            </subtract>
+          </x><y>northrow</y></position>
           <holds class="card" sprite="back"><spread><x>24</x></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
         <object name="eastcards" class="place">
-          <position><x>window.width - cardwidth - 24</x><y>siderow</y></position>
+          <position><x><subtract><value>window.width</value><value>cardwidth</value><value>24</value></subtract></x><y>siderow</y></position>
           <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
 
@@ -135,8 +141,19 @@
 
         <!-- the trick: the suit led is followed if it can be; spades are trumps, and lead only once broken -->
         <object name="trick" class="place">
-          <sprite><rectangle><width>cardwidth + 3 * 64</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth / 2 - 96</x><y>trickrow</y></position>
+          <sprite><rectangle><width>
+            <add>
+              <value>cardwidth</value>
+              <value><multiply><value>3</value><value>64</value></multiply></value>
+            </add>
+          </width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>96</value>
+            </subtract>
+          </x><y>trickrow</y></position>
           <holds class="card" sprite="face">
             <spread><x>64</x></spread>
             <trick variable="suit"><breaks>1</breaks><trumps>1</trumps></trick>
@@ -146,33 +163,33 @@
         <!-- each player's bid and tricks taken, and whose turn it is; the sides' scores and bags, top right -->
         <object name="northscore">
           <sprite><text style="note"><content>north bid</content><number>north.bid</number><content>took</content><number>north.won</number><choose><by>north.turn</by><word /><word>to play</word></choose></text></sprite>
-          <position><x><centered /></x><y>northrow + cardheight + 6</y></position>
+          <position><x><centered /></x><y><add><value>northrow</value><value>cardheight</value><value>6</value></add></y></position>
         </object>
         <object name="westscore">
           <sprite><text style="note"><content>west bid</content><number>west.bid</number><content>took</content><number>west.won</number><choose><by>west.turn</by><word /><word>to play</word></choose></text></sprite>
-          <position><x>24</x><y>siderow - 34</y></position>
+          <position><x>24</x><y><subtract><value>siderow</value><value>34</value></subtract></y></position>
         </object>
         <object name="eastscore">
           <sprite><text style="note"><content>east bid</content><number>east.bid</number><content>took</content><number>east.won</number><choose><by>east.turn</by><word /><word>to play</word></choose></text></sprite>
-          <position><x>window.width - 250</x><y>siderow - 34</y></position>
+          <position><x><subtract><value>window.width</value><value>250</value></subtract></x><y><subtract><value>siderow</value><value>34</value></subtract></y></position>
         </object>
         <object name="yourscore">
           <sprite><text style="note"><content>you bid</content><number>you.bid</number><content>took</content><number>you.won</number><choose><by>you.turn</by><word /><word>your turn: play a card</word></choose></text></sprite>
-          <position><x><centered /></x><y>yours - 52</y></position>
+          <position><x><centered /></x><y><subtract><value>yours</value><value>52</value></subtract></y></position>
         </object>
         <object name="usscore">
           <sprite><text style="note"><content>us</content><number>table.us</number><content>bags</content><number>table.usbags</number><color>color.yellow</color></text></sprite>
-          <position><x>window.width - 200</x><y>northrow</y></position>
+          <position><x><subtract><value>window.width</value><value>200</value></subtract></x><y>northrow</y></position>
         </object>
         <object name="themscore">
           <sprite><text style="note"><content>them</content><number>table.them</number><content>bags</content><number>table.thembags</number></text></sprite>
-          <position><x>window.width - 200</x><y>northrow + 34</y></position>
+          <position><x><subtract><value>window.width</value><value>200</value></subtract></x><y><add><value>northrow</value><value>34</value></add></y></position>
         </object>
 
         <!-- who the trick goes to, as it stands -->
         <object name="taker">
           <sprite><text style="note"><choose><by>trick.winner</by><word /><word>the trick: yours</word><word>the trick: west's</word><word>the trick: north's</word><word>the trick: east's</word></choose></text></sprite>
-          <position><x><centered /></x><y>trickrow + cardheight + 24</y></position>
+          <position><x><centered /></x><y><add><value>trickrow</value><value>cardheight</value><value>24</value></add></y></position>
         </object>
 
         <!-- what is happening between tricks -->
@@ -184,7 +201,7 @@
           <sprite name="made01"><text style="note"><content>we were set, they made theirs: spacebar deals</content></text></sprite>
           <sprite name="made00"><text style="note"><content>both sides were set: spacebar deals</content></text></sprite>
           <sprite name="dealing"><text style="note"><content>shuffling</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y>trickrow + cardheight + 60</y></position>
+          <position><x><centered /></x><y><add><value>trickrow</value><value>cardheight</value><value>60</value></add></y></position>
         </object>
 
         <!-- the table: where the hand is (its look), who leads first, the bids, the tricks, the scores; your bid; a full trick shows a moment; between hands, Space deals -->
@@ -224,8 +241,8 @@
             <action name="more"><inc variable="you.bid">1</inc></action>
             <action name="less"><inc variable="you.bid">-1</inc></action>
             <action name="bid">
-              <set variable="table.usbid">you.bid + north.bid</set>
-              <set variable="table.thembid">west.bid + east.bid</set>
+              <set variable="table.usbid"><add><value>you.bid</value><value>north.bid</value></add></set>
+              <set variable="table.thembid"><add><value>west.bid</value><value>east.bid</value></add></set>
               <become sprite="playing" />
               <play sound="card" />
               <pass object="players" member="table.first" />
@@ -272,10 +289,16 @@
             <variable name="won">0</variable>
           </variables>
           <turns sprite="waiting" />
-          <member name="you"><position><x>53</x><y>yours - 3</y></position><owns object="mine" /><team>1</team></member>
-          <member name="west"><sprite name="free" /><position><x>21</x><y>siderow - 3</y></position><owns object="westcards" /><team>2</team><think button="space" /></member>
-          <member name="north"><sprite name="free" /><position><x>window.width.center - cardwidth / 2 - 147</x><y>northrow - 3</y></position><owns object="northcards" /><team>1</team><think button="space" /></member>
-          <member name="east"><sprite name="free" /><position><x>window.width - cardwidth - 27</x><y>siderow - 3</y></position><owns object="eastcards" /><team>2</team><think button="space" /></member>
+          <member name="you"><position><x>53</x><y><subtract><value>yours</value><value>3</value></subtract></y></position><owns object="mine" /><team>1</team></member>
+          <member name="west"><sprite name="free" /><position><x>21</x><y><subtract><value>siderow</value><value>3</value></subtract></y></position><owns object="westcards" /><team>2</team><think button="space" /></member>
+          <member name="north"><sprite name="free" /><position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>147</value>
+            </subtract>
+          </x><y><subtract><value>northrow</value><value>3</value></subtract></y></position><owns object="northcards" /><team>1</team><think button="space" /></member>
+          <member name="east"><sprite name="free" /><position><x><subtract><value>window.width</value><value>cardwidth</value><value>27</value></subtract></x><y><subtract><value>siderow</value><value>3</value></subtract></y></position><owns object="eastcards" /><team>2</team><think button="space" /></member>
         </group>
       </objects>
       <!-- the cards start in the stock (the table deals them) -->
@@ -348,30 +371,94 @@
               <become object="table" sprite="done" />
               <pass object="players" member="0" />
             </first>
-            <condition object="table" variable="usbid"><atmost>you.won + north.won</atmost>
-              <condition object="table" variable="thembid"><atmost>west.won + east.won</atmost>
-                <inc variable="table.us">table.usbid * 9 + you.won + north.won</inc>
-                <inc variable="table.usbags">you.won + north.won - table.usbid</inc>
-                <inc variable="table.them">table.thembid * 9 + west.won + east.won</inc>
-                <inc variable="table.thembags">west.won + east.won - table.thembid</inc>
+            <condition object="table" variable="usbid"><atmost><add><value>you.won</value><value>north.won</value></add></atmost>
+              <condition object="table" variable="thembid"><atmost><add><value>west.won</value><value>east.won</value></add></atmost>
+                <inc variable="table.us">
+                  <add>
+                    <value><multiply><value>table.usbid</value><value>9</value></multiply></value>
+                    <value>you.won</value>
+                    <value>north.won</value>
+                  </add>
+                </inc>
+                <inc variable="table.usbags">
+                  <subtract>
+                    <value><add><value>you.won</value><value>north.won</value></add></value>
+                    <value>table.usbid</value>
+                  </subtract>
+                </inc>
+                <inc variable="table.them">
+                  <add>
+                    <value><multiply><value>table.thembid</value><value>9</value></multiply></value>
+                    <value>west.won</value>
+                    <value>east.won</value>
+                  </add>
+                </inc>
+                <inc variable="table.thembags">
+                  <subtract>
+                    <value><add><value>west.won</value><value>east.won</value></add></value>
+                    <value>table.thembid</value>
+                  </subtract>
+                </inc>
                 <become object="message" sprite="made11" />
               </condition>
               <otherwise>
-                <inc variable="table.us">table.usbid * 9 + you.won + north.won</inc>
-                <inc variable="table.usbags">you.won + north.won - table.usbid</inc>
-                <inc variable="table.them">0 - table.thembid * 10</inc>
+                <inc variable="table.us">
+                  <add>
+                    <value><multiply><value>table.usbid</value><value>9</value></multiply></value>
+                    <value>you.won</value>
+                    <value>north.won</value>
+                  </add>
+                </inc>
+                <inc variable="table.usbags">
+                  <subtract>
+                    <value><add><value>you.won</value><value>north.won</value></add></value>
+                    <value>table.usbid</value>
+                  </subtract>
+                </inc>
+                <inc variable="table.them">
+                  <subtract>
+                    <value>0</value>
+                    <value><multiply><value>table.thembid</value><value>10</value></multiply></value>
+                  </subtract>
+                </inc>
                 <become object="message" sprite="made10" />
               </otherwise>
             </condition>
-            <condition object="table" variable="thembid"><atmost>west.won + east.won</atmost>
-              <inc variable="table.us">0 - table.usbid * 10</inc>
-              <inc variable="table.them">table.thembid * 9 + west.won + east.won</inc>
-              <inc variable="table.thembags">west.won + east.won - table.thembid</inc>
+            <condition object="table" variable="thembid"><atmost><add><value>west.won</value><value>east.won</value></add></atmost>
+              <inc variable="table.us">
+                <subtract>
+                  <value>0</value>
+                  <value><multiply><value>table.usbid</value><value>10</value></multiply></value>
+                </subtract>
+              </inc>
+              <inc variable="table.them">
+                <add>
+                  <value><multiply><value>table.thembid</value><value>9</value></multiply></value>
+                  <value>west.won</value>
+                  <value>east.won</value>
+                </add>
+              </inc>
+              <inc variable="table.thembags">
+                <subtract>
+                  <value><add><value>west.won</value><value>east.won</value></add></value>
+                  <value>table.thembid</value>
+                </subtract>
+              </inc>
               <become object="message" sprite="made01" />
             </condition>
             <otherwise>
-              <inc variable="table.us">0 - table.usbid * 10</inc>
-              <inc variable="table.them">0 - table.thembid * 10</inc>
+              <inc variable="table.us">
+                <subtract>
+                  <value>0</value>
+                  <value><multiply><value>table.usbid</value><value>10</value></multiply></value>
+                </subtract>
+              </inc>
+              <inc variable="table.them">
+                <subtract>
+                  <value>0</value>
+                  <value><multiply><value>table.thembid</value><value>10</value></multiply></value>
+                </subtract>
+              </inc>
               <become object="message" sprite="made00" />
             </otherwise>
           </condition>
@@ -458,10 +545,10 @@
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
     <drawing name="playersfree">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
     </drawing>
   </pictures>
 </game>

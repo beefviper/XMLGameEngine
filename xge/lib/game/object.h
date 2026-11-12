@@ -1924,6 +1924,10 @@ namespace xge
 	// followed by a dot) starting with `to` instead.
 	std::string renameStart(const std::string& text, const std::string& from, const std::string& to);
 
+	// renameStart on every text in a value, its operations' operands too;
+	// whether any changed.
+	bool renameInValue(RawValue& value, const std::string& from, const std::string& to);
+
 	// Makes each <centered> and side (<left>, <right>, <top>, <bottom>) of an
 	// object's <position> the operation it means: where its middle goes,
 	// less half its own width (or height), or its side on the window's,

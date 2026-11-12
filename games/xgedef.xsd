@@ -870,15 +870,22 @@
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
   <!-- A <condition> of an <accepts>: the arriving one's variable= against a number, or against a variable of the
-       top one, plus or minus a number if wanted (top.suit; top.rank + 1; top.worth). total="sum": that variable over what is laid at once; total="count": how many. -->
+       top one, or an <add> or <subtract> of it and a number (top.suit; <add><value>top.rank</value><value>1</value></add>; top.worth). total="sum": that variable over what is laid at once; total="count": how many. -->
+  <!-- What an accepting test compares with: a number, top. and a variable, or an <add> or <subtract> of top. and a number. -->
+  <xs:complexType name="acceptTestType" mixed="true">
+    <xs:choice minOccurs="0">
+      <xs:element name="add" type="addType" />
+      <xs:element name="subtract" type="subtractType" />
+    </xs:choice>
+  </xs:complexType>
   <xs:complexType name="acceptConditionType">
     <xs:choice>
-      <xs:element name="equal" type="xs:string" />
-      <xs:element name="unequal" type="xs:string" />
-      <xs:element name="above" type="xs:string" />
-      <xs:element name="below" type="xs:string" />
-      <xs:element name="atleast" type="xs:string" />
-      <xs:element name="atmost" type="xs:string" />
+      <xs:element name="equal" type="acceptTestType" />
+      <xs:element name="unequal" type="acceptTestType" />
+      <xs:element name="above" type="acceptTestType" />
+      <xs:element name="below" type="acceptTestType" />
+      <xs:element name="atleast" type="acceptTestType" />
+      <xs:element name="atmost" type="acceptTestType" />
     </xs:choice>
     <xs:attribute name="variable" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="total" use="optional">

@@ -77,13 +77,35 @@
         <bitmap from="barrel-idle" />
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <heading update="live">self.level - self.side * self.elevation</heading>
+      <heading update="live">
+        <subtract>
+          <value>self.level</value>
+          <value>
+            <multiply>
+              <value>self.side</value>
+              <value>self.elevation</value>
+            </multiply>
+          </value>
+        </subtract>
+      </heading>
       <actions>
         <action name="raise">
-          <set variable="self.elevation"><clamp><value><add><value>self.elevation</value><value>aimstep</value></add></value><atleast>0</atleast><atmost>90</atmost></clamp></set>
+          <set variable="self.elevation">
+            <clamp>
+              <value><add><value>self.elevation</value><value>aimstep</value></add></value>
+              <atleast>0</atleast>
+              <atmost>90</atmost>
+            </clamp>
+          </set>
         </action>
         <action name="lower">
-          <set variable="self.elevation"><clamp><value><subtract><value>self.elevation</value><value>aimstep</value></subtract></value><atleast>0</atleast><atmost>90</atmost></clamp></set>
+          <set variable="self.elevation">
+            <clamp>
+              <value><subtract><value>self.elevation</value><value>aimstep</value></subtract></value>
+              <atleast>0</atleast>
+              <atmost>90</atmost>
+            </clamp>
+          </set>
         </action>
         <action name="charge">
           <inc variable="self.power">charge</inc>
@@ -92,15 +114,40 @@
         <action name="fire">
           <spawn object="shell">
             <position>
-              <x><centered>self.x + self.width / 2 + self.tipx</centered></x>
-              <y><centered>self.y + self.height / 2 + self.tipy</centered></y>
+              <x><centered>
+                <add>
+                  <value>self.x</value>
+                  <value><divide><value>self.width</value><value>2</value></divide></value>
+                  <value>self.tipx</value>
+                </add>
+              </centered></x>
+              <y><centered>
+                <add>
+                  <value>self.y</value>
+                  <value><divide><value>self.height</value><value>2</value></divide></value>
+                  <value>self.tipy</value>
+                </add>
+              </centered></y>
             </position>
             <velocity>
-              <x><multiply><value>self.power</value><value>speed</value><value><sine><value>self.heading</value></sine></value></multiply></x>
-              <y><multiply><value>self.power</value><value>speed</value><value>-1</value><value><cosine><value>self.heading</value></cosine></value></multiply></y>
+              <x>
+                <multiply>
+                  <value>self.power</value>
+                  <value>speed</value>
+                  <value><sine><value>self.heading</value></sine></value>
+                </multiply>
+              </x>
+              <y>
+                <multiply>
+                  <value>self.power</value>
+                  <value>speed</value>
+                  <value>-1</value>
+                  <value><cosine><value>self.heading</value></cosine></value>
+                </multiply>
+              </y>
             </velocity>
             <acceleration>
-              <x>table.wind * windpush</x>
+              <x><multiply><value>table.wind</value><value>windpush</value></multiply></x>
               <y>gravity</y>
             </acceleration>
           </spawn>
@@ -118,8 +165,19 @@
         <variable name="power">0</variable>
         <variable name="last">0</variable>
         <!-- where the tip is, from the middle -->
-        <variable name="tipx" update="live"><multiply><value>tip</value><value><sine><value>self.heading</value></sine></value></multiply></variable>
-        <variable name="tipy" update="live"><multiply><value>tip</value><value>-1</value><value><cosine><value>self.heading</value></cosine></value></multiply></variable>
+        <variable name="tipx" update="live">
+          <multiply>
+            <value>tip</value>
+            <value><sine><value>self.heading</value></sine></value>
+          </multiply>
+        </variable>
+        <variable name="tipy" update="live">
+          <multiply>
+            <value>tip</value>
+            <value>-1</value>
+            <value><cosine><value>self.heading</value></cosine></value>
+          </multiply>
+        </variable>
       </variables>
     </object>
 
@@ -313,14 +371,46 @@
             <!-- just come in: the cannons on this field's ground, barrels at 45 -->
             <condition object="table" variable="placed">
               <equal>0</equal>
-              <set variable="cannon1.x">x1 - cannon1.width / 2</set>
-              <set variable="cannon1.y">y1 - cannon1.height</set>
-              <set variable="cannon2.x">x2 - cannon2.width / 2</set>
-              <set variable="cannon2.y">y2 - cannon2.height</set>
-              <set variable="barrel1.x">x1 - barrel1.width / 2</set>
-              <set variable="barrel1.y">y1 - cannon1.height - barrel1.height / 2</set>
-              <set variable="barrel2.x">x2 - barrel2.width / 2</set>
-              <set variable="barrel2.y">y2 - cannon2.height - barrel2.height / 2</set>
+              <set variable="cannon1.x">
+                <subtract>
+                  <value>x1</value>
+                  <value><divide><value>cannon1.width</value><value>2</value></divide></value>
+                </subtract>
+              </set>
+              <set variable="cannon1.y"><subtract><value>y1</value><value>cannon1.height</value></subtract></set>
+              <set variable="cannon2.x">
+                <subtract>
+                  <value>x2</value>
+                  <value><divide><value>cannon2.width</value><value>2</value></divide></value>
+                </subtract>
+              </set>
+              <set variable="cannon2.y"><subtract><value>y2</value><value>cannon2.height</value></subtract></set>
+              <set variable="barrel1.x">
+                <subtract>
+                  <value>x1</value>
+                  <value><divide><value>barrel1.width</value><value>2</value></divide></value>
+                </subtract>
+              </set>
+              <set variable="barrel1.y">
+                <subtract>
+                  <value>y1</value>
+                  <value>cannon1.height</value>
+                  <value><divide><value>barrel1.height</value><value>2</value></divide></value>
+                </subtract>
+              </set>
+              <set variable="barrel2.x">
+                <subtract>
+                  <value>x2</value>
+                  <value><divide><value>barrel2.width</value><value>2</value></divide></value>
+                </subtract>
+              </set>
+              <set variable="barrel2.y">
+                <subtract>
+                  <value>y2</value>
+                  <value>cannon2.height</value>
+                  <value><divide><value>barrel2.height</value><value>2</value></divide></value>
+                </subtract>
+              </set>
               <set variable="barrel1.elevation">45</set>
               <set variable="barrel2.elevation">45</set>
               <set variable="table.placed">1</set>

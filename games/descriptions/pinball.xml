@@ -227,10 +227,21 @@
             <action name="pull">
               <inc variable="plunger.power">pull</inc>
               <set variable="plunger.power"><smallest><value>plunger.power</value><value>most</value></smallest></set>
-              <set variable="plunger.y">plungerTop + plunger.power / 5</set>
+              <set variable="plunger.y">
+                <add>
+                  <value>plungerTop</value>
+                  <value><divide><value>plunger.power</value><value>5</value></divide></value>
+                </add>
+              </set>
             </action>
             <action name="shoot">
-              <set variable="ball.velocity.y">0 - 4 - plunger.power * shot</set>
+              <set variable="ball.velocity.y">
+                <subtract>
+                  <value>0</value>
+                  <value>4</value>
+                  <value><multiply><value>plunger.power</value><value>shot</value></multiply></value>
+                </subtract>
+              </set>
               <set variable="plunger.power">0</set>
               <set variable="plunger.y">plungerTop</set>
               <become sprite="empty" />
@@ -244,7 +255,12 @@
 
         <object name="ball" class="ball">
           <sprite><circle><radius>radius</radius><color>color.white</color></circle></sprite>
-          <position><x>laneX - radius</x><y>plungerTop - radius * 2</y></position>
+          <position><x><subtract><value>laneX</value><value>radius</value></subtract></x><y>
+            <subtract>
+              <value>plungerTop</value>
+              <value><multiply><value>radius</value><value>2</value></multiply></value>
+            </subtract>
+          </y></position>
           <acceleration><x>0</x><y>0.2</y></acceleration>
           <friction>0.05</friction>
           <mass>1</mass>
@@ -268,8 +284,13 @@
             <collision edge="bottom">
               <play sound="drain" />
               <dec variable="table.balls" />
-              <set variable="self.x">laneX - radius</set>
-              <set variable="self.y">plungerTop - radius * 2</set>
+              <set variable="self.x"><subtract><value>laneX</value><value>radius</value></subtract></set>
+              <set variable="self.y">
+                <subtract>
+                  <value>plungerTop</value>
+                  <value><multiply><value>radius</value><value>2</value></multiply></value>
+                </subtract>
+              </set>
               <set variable="self.velocity.x">0</set>
               <set variable="self.velocity.y">0</set>
             </collision>

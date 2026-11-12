@@ -83,12 +83,12 @@
           <collisions />
         </object>
         <object name="road">
-          <sprite><rectangle><width>window.right</width><height>10 * cell</height><color>color.darkgrey</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height><multiply><value>10</value><value>cell</value></multiply></height><color>color.darkgrey</color></rectangle></sprite>
           <position><x>0</x><y>cell</y></position>
         </object>
         <object name="pavement">
           <sprite><rectangle><width>window.right</width><height>cell</height><color>color.grey</color></rectangle></sprite>
-          <position><x>0</x><y>11 * cell</y></position>
+          <position><x>0</x><y><multiply><value>11</value><value>cell</value></multiply></y></position>
         </object>
         <!-- the markings between the lanes, and the double line down the middle -->
         <group name="dashes">
@@ -96,18 +96,38 @@
           <rows>9</rows>
           <padding><x>26</x><y>46</y></padding>
           <sprite><rectangle><width>24</width><height>4</height><color>color.lightgrey</color></rectangle></sprite>
-          <position><x>13</x><y>2 * cell - 2</y></position>
+          <position><x>13</x><y>
+            <subtract>
+              <value><multiply><value>2</value><value>cell</value></multiply></value>
+              <value>2</value>
+            </subtract>
+          </y></position>
         </group>
         <object name="median">
           <sprite><rectangle><width>window.right</width><height>6</height><color>color.yellow</color></rectangle></sprite>
-          <position><x>0</x><y>6 * cell - 3</y></position>
+          <position><x>0</x><y>
+            <subtract>
+              <value><multiply><value>6</value><value>cell</value></multiply></value>
+              <value>3</value>
+            </subtract>
+          </y></position>
         </object>
 
         <!-- all ten lanes: a car, round and round. Each lane its row, speed and colour. -->
         <group name="traffic" class="traffic">
           <columns>3</columns>
           <rows>1</rows>
-          <padding><x>800 / 3 + 16 - 48</x></padding>
+          <padding><x>
+            <subtract>
+              <value>
+                <add>
+                  <value><divide><value>800</value><value>3</value></divide></value>
+                  <value>16</value>
+                </add>
+              </value>
+              <value>48</value>
+            </subtract>
+          </x></padding>
           <sprite>
             <bitmap from="traffic" />
           </sprite>
@@ -116,59 +136,109 @@
           </collisions>
           <group name="lane1">
             <sprite><bitmap><color>color.yellow</color></bitmap></sprite>
-            <position><x>40</x><y>1 * cell + 11</y></position>
+            <position><x>40</x><y>
+              <add>
+                <value><multiply><value>1</value><value>cell</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position>
             <velocity><x>-1</x></velocity>
           </group>
           <!-- a lane of trucks: two to the loop -->
           <group name="lane2">
             <columns>2</columns>
-            <padding><x>400 + 44 - 88</x></padding>
+            <padding><x><subtract><value><add><value>400</value><value>44</value></add></value><value>88</value></subtract></x></padding>
             <sprite>
               <bitmap from="lane2" />
             </sprite>
-            <position><x>150</x><y>2 * cell + 11</y></position>
+            <position><x>150</x><y>
+              <add>
+                <value><multiply><value>2</value><value>cell</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position>
             <velocity><x>-1.5</x></velocity>
           </group>
           <group name="lane3">
             <sprite><bitmap><color>color.green</color></bitmap></sprite>
-            <position><x>220</x><y>3 * cell + 11</y></position>
+            <position><x>220</x><y>
+              <add>
+                <value><multiply><value>3</value><value>cell</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position>
             <velocity><x>-2</x></velocity>
           </group>
           <group name="lane4">
             <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
-            <position><x>10</x><y>4 * cell + 11</y></position>
+            <position><x>10</x><y>
+              <add>
+                <value><multiply><value>4</value><value>cell</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position>
             <velocity><x>-2.5</x></velocity>
           </group>
           <group name="lane5">
             <sprite><bitmap><color>color.cyan</color></bitmap></sprite>
-            <position><x>130</x><y>5 * cell + 11</y></position>
+            <position><x>130</x><y>
+              <add>
+                <value><multiply><value>5</value><value>cell</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position>
             <velocity><x>-3.5</x></velocity>
           </group>
           <group name="lane6">
             <sprite><bitmap><color>color.orange</color></bitmap></sprite>
-            <position><x>60</x><y>6 * cell + 11</y></position>
+            <position><x>60</x><y>
+              <add>
+                <value><multiply><value>6</value><value>cell</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position>
             <velocity><x>3.5</x></velocity>
           </group>
           <group name="lane7">
             <sprite><bitmap><color>color.red</color></bitmap></sprite>
-            <position><x>180</x><y>7 * cell + 11</y></position>
+            <position><x>180</x><y>
+              <add>
+                <value><multiply><value>7</value><value>cell</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position>
             <velocity><x>2.5</x></velocity>
           </group>
           <group name="lane8">
             <sprite><bitmap><color>color.blue</color></bitmap></sprite>
-            <position><x>0</x><y>8 * cell + 11</y></position>
+            <position><x>0</x><y>
+              <add>
+                <value><multiply><value>8</value><value>cell</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position>
             <velocity><x>2</x></velocity>
           </group>
           <group name="lane9">
             <columns>2</columns>
-            <padding><x>400 + 44 - 88</x></padding>
+            <padding><x><subtract><value><add><value>400</value><value>44</value></add></value><value>88</value></subtract></x></padding>
             <sprite><bitmap from="lane9" /></sprite>
-            <position><x>250</x><y>9 * cell + 11</y></position>
+            <position><x>250</x><y>
+              <add>
+                <value><multiply><value>9</value><value>cell</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position>
             <velocity><x>1.5</x></velocity>
           </group>
           <group name="lane10">
             <sprite><bitmap><color>color.lightgrey</color></bitmap></sprite>
-            <position><x>90</x><y>10 * cell + 11</y></position>
+            <position><x>90</x><y>
+              <add>
+                <value><multiply><value>10</value><value>cell</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position>
             <velocity><x>1</x></velocity>
           </group>
         </group>
@@ -178,7 +248,12 @@
           <sprite>
             <bitmap from="chickens" />
           </sprite>
-          <position><y>11 * cell + inset</y></position>
+          <position><y>
+            <add>
+              <value><multiply><value>11</value><value>cell</value></multiply></value>
+              <value>inset</value>
+            </add>
+          </y></position>
           <collisions>
             <collision class="traffic">
               <move direction="down">cell</move>
@@ -203,8 +278,8 @@
           <variables>
             <variable name="score">0</variable>
           </variables>
-          <member name="chicken1"><position><x>200 - 16</x></position></member>
-          <member name="chicken2"><position><x>600 - 16</x></position></member>
+          <member name="chicken1"><position><x><subtract><value>200</value><value>16</value></subtract></x></position></member>
+          <member name="chicken2"><position><x><subtract><value>600</value><value>16</value></subtract></x></position></member>
         </group>
 
         <object name="clock">

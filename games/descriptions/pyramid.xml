@@ -95,57 +95,134 @@
         <group name="row1" class="peak">
           <columns>1</columns>
           <rows>1</rows>
-          <padding><x>step - cardwidth</x></padding>
+          <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth / 2 - 0 * step / 2</x><y>top + 0 * rowstep</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>
+                <divide>
+                  <value><multiply><value>0</value><value>step</value></multiply></value>
+                  <value>2</value>
+                </divide>
+              </value>
+            </subtract>
+          </x><y><add><value>top</value><value><multiply><value>0</value><value>rowstep</value></multiply></value></add></y></position>
           <holds class="card" sprite="face" />
         </group>
         <group name="row2" class="peak">
           <columns>2</columns>
           <rows>1</rows>
-          <padding><x>step - cardwidth</x></padding>
+          <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth / 2 - 1 * step / 2</x><y>top + 1 * rowstep</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>
+                <divide>
+                  <value><multiply><value>1</value><value>step</value></multiply></value>
+                  <value>2</value>
+                </divide>
+              </value>
+            </subtract>
+          </x><y><add><value>top</value><value><multiply><value>1</value><value>rowstep</value></multiply></value></add></y></position>
           <holds class="card" sprite="face" />
         </group>
         <group name="row3" class="peak">
           <columns>3</columns>
           <rows>1</rows>
-          <padding><x>step - cardwidth</x></padding>
+          <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth / 2 - 2 * step / 2</x><y>top + 2 * rowstep</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>
+                <divide>
+                  <value><multiply><value>2</value><value>step</value></multiply></value>
+                  <value>2</value>
+                </divide>
+              </value>
+            </subtract>
+          </x><y><add><value>top</value><value><multiply><value>2</value><value>rowstep</value></multiply></value></add></y></position>
           <holds class="card" sprite="face" />
         </group>
         <group name="row4" class="peak">
           <columns>4</columns>
           <rows>1</rows>
-          <padding><x>step - cardwidth</x></padding>
+          <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth / 2 - 3 * step / 2</x><y>top + 3 * rowstep</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>
+                <divide>
+                  <value><multiply><value>3</value><value>step</value></multiply></value>
+                  <value>2</value>
+                </divide>
+              </value>
+            </subtract>
+          </x><y><add><value>top</value><value><multiply><value>3</value><value>rowstep</value></multiply></value></add></y></position>
           <holds class="card" sprite="face" />
         </group>
         <group name="row5" class="peak">
           <columns>5</columns>
           <rows>1</rows>
-          <padding><x>step - cardwidth</x></padding>
+          <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth / 2 - 4 * step / 2</x><y>top + 4 * rowstep</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>
+                <divide>
+                  <value><multiply><value>4</value><value>step</value></multiply></value>
+                  <value>2</value>
+                </divide>
+              </value>
+            </subtract>
+          </x><y><add><value>top</value><value><multiply><value>4</value><value>rowstep</value></multiply></value></add></y></position>
           <holds class="card" sprite="face" />
         </group>
         <group name="row6" class="peak">
           <columns>6</columns>
           <rows>1</rows>
-          <padding><x>step - cardwidth</x></padding>
+          <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth / 2 - 5 * step / 2</x><y>top + 5 * rowstep</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>
+                <divide>
+                  <value><multiply><value>5</value><value>step</value></multiply></value>
+                  <value>2</value>
+                </divide>
+              </value>
+            </subtract>
+          </x><y><add><value>top</value><value><multiply><value>5</value><value>rowstep</value></multiply></value></add></y></position>
           <holds class="card" sprite="face" />
         </group>
         <group name="row7" class="peak">
           <columns>7</columns>
           <rows>1</rows>
-          <padding><x>step - cardwidth</x></padding>
+          <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth / 2 - 6 * step / 2</x><y>top + 6 * rowstep</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>
+                <divide>
+                  <value><multiply><value>6</value><value>step</value></multiply></value>
+                  <value>2</value>
+                </divide>
+              </value>
+            </subtract>
+          </x><y><add><value>top</value><value><multiply><value>6</value><value>rowstep</value></multiply></value></add></y></position>
           <holds class="card" sprite="face" />
         </group>
 
@@ -157,27 +234,33 @@
         </object>
         <object name="waste" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>56 + step + 16</x><y>low</y></position>
+          <position><x><add><value>56</value><value>step</value><value>16</value></add></x><y>low</y></position>
           <holds class="card" sprite="face" />
         </object>
 
         <!-- the pairs taken away: what adds up to 13 -->
         <object name="pairs" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width - 56 - cardwidth</x><y>low</y></position>
+          <position><x><subtract><value>window.width</value><value>56</value><value>cardwidth</value></subtract></x><y>low</y></position>
           <holds class="card" sprite="face"><accepts><condition variable="worth" total="sum"><equal>13</equal></condition></accepts></holds>
         </object>
 
         <object name="message">
           <sprite><text style="note"><content>pairs that make 13, kings alone</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y>low + 50</y></position>
+          <position><x><centered /></x><y><add><value>low</value><value>50</value></add></y></position>
         </object>
 
         <!-- the picker: a frame around the card it points at; it may hold a card from two holders -->
         <object name="hand">
           <sprite name="free"><drawing from="handfree" /></sprite>
           <sprite name="held"><drawing from="handheld" /></sprite>
-          <position><x>window.width.center - cardwidth / 2 - 3</x><y>top - 3</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>3</value>
+            </subtract>
+          </x><y><subtract><value>top</value><value>3</value></subtract></y></position>
           <actions>
             <action name="left"><hop direction="left" /></action>
             <action name="right"><hop direction="right" /></action>
@@ -308,16 +391,16 @@
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
     <drawing name="handfree">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="handheld">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
     </drawing>
   </pictures>
 </game>

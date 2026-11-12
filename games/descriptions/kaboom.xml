@@ -81,7 +81,7 @@
       <sprite>
         <bitmap from="bomber" />
       </sprite>
-      <position><x><centered /></x><y>roof - bomber.height</y></position>
+      <position><x><centered /></x><y><subtract><value>roof</value><value>bomber.height</value></subtract></y></position>
       <velocity><x>pace</x></velocity>
       <facing>down</facing>
       <collisions>

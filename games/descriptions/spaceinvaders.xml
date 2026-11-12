@@ -104,7 +104,12 @@
         <sprite>
           <bitmap from="player" />
         </sprite>
-        <position><x><centered /></x><y>window.bottom - player.height * 2</y></position>
+        <position><x><centered /></x><y>
+          <subtract>
+            <value>window.bottom</value>
+            <value><multiply><value>player.height</value><value>2</value></multiply></value>
+          </subtract>
+        </y></position>
         <collisions>
           <collision edge="horizontal"><stick /></collision>
           <collision class="bomb">
@@ -136,7 +141,7 @@
       </object>
       <object name="continue">
         <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
-        <position><x><centered /></x><y>window.height.center + 60</y></position>
+        <position><x><centered /></x><y><add><value>window.height.center</value><value>60</value></add></y></position>
       </object>
     </objects>
     <state name="title">
@@ -147,7 +152,7 @@
         </object>
         <object name="table">
           <sprite><text style="hud"><content>squid 30   crab 20   octopus 10   mystery ?</content><size>28</size></text></sprite>
-          <position><x><centered /></x><y>window.height.center + 20</y></position>
+          <position><x><centered /></x><y><add><value>window.height.center</value><value>20</value></add></y></position>
         </object>
       </objects>
       <shows>
@@ -176,14 +181,14 @@
         </group>
         <object name="ground" class="ground">
           <sprite><rectangle><width>window.right</width><height>3</height><color>color.green</color></rectangle></sprite>
-          <position><x>0</x><y>window.bottom - 30</y></position>
+          <position><x>0</x><y><subtract><value>window.bottom</value><value>30</value></subtract></y></position>
         </object>
         <!-- the mystery ship: across the top now and then, 50 to 200 points -->
         <object name="ufo" class="ufo">
           <sprite>
             <bitmap from="ufo" />
           </sprite>
-          <position><x>0 - ufo.width</x><y>60</y></position>
+          <position><x><subtract><value>0</value><value>ufo.width</value></subtract></x><y>60</y></position>
           <velocity><x>2.5</x></velocity>
           <waiting />
           <collisions>
@@ -269,7 +274,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><number>player.lives</number><size>24</size><color>color.green</color></text></sprite>
-          <position><x>20</x><y>window.bottom - 27</y></position>
+          <position><x>20</x><y><subtract><value>window.bottom</value><value>27</value></subtract></y></position>
         </object>
       </objects>
       <shows>
@@ -297,7 +302,7 @@
         </condition>
         <!-- the block down on the shields: the invasion has landed -->
         <condition class="aliens" variable="y" total="highest">
-          <atleast>shieldtop - 40</atleast>
+          <atleast><subtract><value>shieldtop</value><value>40</value></subtract></atleast>
           <become object="over.message" sprite="lost" />
           <push state="over" />
         </condition>
@@ -308,8 +313,8 @@
         </condition>
         <condition class="aliens" total="count">
           <atmost>pace.next</atmost>
-          <set variable="aliens.velocity.x">aliens.1.1.velocity.x * 1.3</set>
-          <set variable="pace.next">pace.next / 2</set>
+          <set variable="aliens.velocity.x"><multiply><value>aliens.1.1.velocity.x</value><value>1.3</value></multiply></set>
+          <set variable="pace.next"><divide><value>pace.next</value><value>2</value></divide></set>
         </condition>
         <condition object="player" variable="score">
           <above>best.score</above>
@@ -359,7 +364,7 @@
         <object name="message">
           <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
           <sprite name="won"><text style="banner"><content>YOU WIN</content></text></sprite>
-          <position><x><centered /></x><y>window.height.center - 150</y></position>
+          <position><x><centered /></x><y><subtract><value>window.height.center</value><value>150</value></subtract></y></position>
         </object>
       </objects>
       <shows>
@@ -409,7 +414,7 @@
       <row>...*.....*...</row>
       <row>..*..*.*..*..</row>
       <row>.*..*...*..*.</row>
-      <scale>pixel - 1</scale>
+      <scale><subtract><value>pixel</value><value>1</value></subtract></scale>
     </bitmap>
     <bitmap name="player">
       <row>.....*.....</row>
@@ -450,7 +455,7 @@
       <row>****************</row>
       <row>..***..**..***..</row>
       <row>...*........*...</row>
-      <scale>pixel - 1</scale>
+      <scale><subtract><value>pixel</value><value>1</value></subtract></scale>
       <color>color.red</color>
     </bitmap>
     <bitmap name="aliens-a">

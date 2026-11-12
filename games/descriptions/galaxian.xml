@@ -62,11 +62,16 @@
   </window>
   <variables>
     <variable name="pixel">3</variable>
-    <variable name="alienheight">8 * pixel</variable>
+    <variable name="alienheight"><multiply><value>8</value><value>pixel</value></multiply></variable>
     <variable name="left">83</variable>
     <variable name="gap">40</variable>
     <!-- the space between two aliens side by side -->
-    <variable name="apart">gap - 11 * pixel</variable>
+    <variable name="apart">
+      <subtract>
+        <value>gap</value>
+        <value><multiply><value>11</value><value>pixel</value></multiply></value>
+      </subtract>
+    </variable>
     <variable name="enterspeed">4</variable>
     <variable name="divespeed">3</variable>
     <variable name="spacing">0.15</variable>
@@ -74,7 +79,7 @@
     <variable name="margin">12</variable>
     <variable name="tabletop">250</variable>
     <variable name="tablerow">36</variable>
-    <variable name="letters">window.width.center - 80</variable>
+    <variable name="letters"><subtract><value>window.width.center</value><value>80</value></subtract></variable>
     <variable name="letterstep">60</variable>
     <variable name="startlives">3</variable>
   </variables>
@@ -82,7 +87,7 @@
     <!-- the flagships: straight down the middle, a loop to the left, and up into place -->
     <path name="fromtop">
       <speed>enterspeed</speed>
-      <start><x>window.width.center - 16</x><y>-30</y></start>
+      <start><x><subtract><value>window.width.center</value><value>16</value></subtract></x><y>-30</y></start>
       <step><x>0</x><y>260</y></step>
       <step><x>-80</x><y>60</y></step>
       <step><x>-60</x><y>-60</y></step>
@@ -101,7 +106,7 @@
     <!-- the purples: the same from the top right -->
     <path name="fromtopright">
       <speed>enterspeed</speed>
-      <start><x>window.right - 133</x><y>-30</y></start>
+      <start><x><subtract><value>window.right</value><value>133</value></subtract></x><y>-30</y></start>
       <step><x>-60</x><y>200</y></step>
       <step><x>-120</x><y>40</y></step>
       <step><x>-40</x><y>-80</y></step>
@@ -119,7 +124,7 @@
     <!-- and from the right -->
     <path name="fromright">
       <speed>enterspeed</speed>
-      <start><x>window.right + 7</x><y>330</y></start>
+      <start><x><add><value>window.right</value><value>7</value></add></x><y>330</y></start>
       <step><x>-200</x><y>-20</y></step>
       <step><x>-100</x><y>-100</y></step>
       <step><x>40</x><y>-80</y></step>
@@ -138,9 +143,19 @@
       <!-- whoever dives, alone or taken along by a flagship, is worth more until it wraps -->
       <step><x>-24</x><y>-24</y><play sound="dive" /><set variable="self.pays">self.diving</set></step>
       <step><x>-24</x><y>40</y></step>
-      <step><x>(ship.x - self.x) / 2</x><y>160</y><fire object="bomb" /></step>
-      <step><x>ship.x - self.x</x><y>160</y><fire object="bomb" /></step>
-      <step><x>0</x><y>window.bottom + alienheight - 336</y></step>
+      <step><x>
+        <divide>
+          <value><subtract><value>ship.x</value><value>self.x</value></subtract></value>
+          <value>2</value>
+        </divide>
+      </x><y>160</y><fire object="bomb" /></step>
+      <step><x><subtract><value>ship.x</value><value>self.x</value></subtract></x><y>160</y><fire object="bomb" /></step>
+      <step><x>0</x><y>
+        <subtract>
+          <value><add><value>window.bottom</value><value>alienheight</value></add></value>
+          <value>336</value>
+        </subtract>
+      </y></step>
       <home />
     </path>
   </paths>
@@ -237,7 +252,7 @@
             <color>color.cyan</color>
           </text>
         </sprite>
-        <position><x>window.width.center - 60</x></position>
+        <position><x><subtract><value>window.width.center</value><value>60</value></subtract></x></position>
         <variables>
           <variable name="first">0</variable>
           <variable name="second">0</variable>
@@ -245,10 +260,25 @@
           <variable name="score">0</variable>
         </variables>
         <member><position><y>tabletop</y></position></member>
-        <member><position><y>tabletop + tablerow</y></position></member>
-        <member><position><y>tabletop + tablerow * 2</y></position></member>
-        <member><position><y>tabletop + tablerow * 3</y></position></member>
-        <member><position><y>tabletop + tablerow * 4</y></position></member>
+        <member><position><y><add><value>tabletop</value><value>tablerow</value></add></y></position></member>
+        <member><position><y>
+          <add>
+            <value>tabletop</value>
+            <value><multiply><value>tablerow</value><value>2</value></multiply></value>
+          </add>
+        </y></position></member>
+        <member><position><y>
+          <add>
+            <value>tabletop</value>
+            <value><multiply><value>tablerow</value><value>3</value></multiply></value>
+          </add>
+        </y></position></member>
+        <member><position><y>
+          <add>
+            <value>tabletop</value>
+            <value><multiply><value>tablerow</value><value>4</value></multiply></value>
+          </add>
+        </y></position></member>
       </group>
       <!-- a score for the table, and the initials it is given -->
       <object name="entry">
@@ -271,11 +301,16 @@
       </object>
       <object name="letter2">
         <sprite><text style="letter"><letter>entry.second</letter></text></sprite>
-        <position><x>letters + letterstep</x><y>300</y></position>
+        <position><x><add><value>letters</value><value>letterstep</value></add></x><y>300</y></position>
       </object>
       <object name="letter3">
         <sprite><text style="letter"><letter>entry.third</letter></text></sprite>
-        <position><x>letters + letterstep * 2</x><y>300</y></position>
+        <position><x>
+          <add>
+            <value>letters</value>
+            <value><multiply><value>letterstep</value><value>2</value></multiply></value>
+          </add>
+        </x><y>300</y></position>
       </object>
       <object name="howto">
         <sprite><text><content>w and s, or up and down, change the letter; space for the next</content><size>18</size><color>color.lightgrey</color></text></sprite>
@@ -331,7 +366,13 @@
           <sprite>
             <bitmap from="ship" />
           </sprite>
-          <position><x><centered /></x><y>window.bottom - ship.height - margin * 3</y></position>
+          <position><x><centered /></x><y>
+            <subtract>
+              <value>window.bottom</value>
+              <value>ship.height</value>
+              <value><multiply><value>margin</value><value>3</value></multiply></value>
+            </subtract>
+          </y></position>
           <collisions>
             <collision edge="horizontal"><stick /></collision>
             <collision class="alien"><trigger action="lose" /></collision>
@@ -397,11 +438,21 @@
               <group name="flagships">
                 <columns>2</columns>
                 <rows>1</rows>
-                <padding><x>gap * 3 - 11 * pixel</x><y>0</y></padding>
+                <padding><x>
+                  <subtract>
+                    <value><multiply><value>gap</value><value>3</value></multiply></value>
+                    <value><multiply><value>11</value><value>pixel</value></multiply></value>
+                  </subtract>
+                </x><y>0</y></padding>
                 <sprite>
                   <bitmap from="flagships" />
                 </sprite>
-                <position><x>left + gap * 3</x><y>70</y></position>
+                <position><x>
+                  <add>
+                    <value>left</value>
+                    <value><multiply><value>gap</value><value>3</value></multiply></value>
+                  </add>
+                </x><y>70</y></position>
                 <!-- a flagship dives with the two escorts nearest it -->
                 <actions>
                   <action name="dive">
@@ -418,7 +469,12 @@
                 <sprite>
                   <bitmap from="escorts" />
                 </sprite>
-                <position><x>left + gap * 2</x><y>100</y></position>
+                <position><x>
+                  <add>
+                    <value>left</value>
+                    <value><multiply><value>gap</value><value>2</value></multiply></value>
+                  </add>
+                </x><y>100</y></position>
                 <variables><variable name="worth">50</variable><variable name="diving">100</variable><variable name="pays">50</variable></variables>
               </group>
               <group name="purples">
@@ -428,7 +484,7 @@
                 <sprite>
                   <bitmap from="purples" />
                 </sprite>
-                <position><x>left + gap</x><y>130</y></position>
+                <position><x><add><value>left</value><value>gap</value></add></x><y>130</y></position>
                 <variables><variable name="worth">40</variable><variable name="diving">80</variable><variable name="pays">40</variable></variables>
               </group>
               <!-- three rows of blues, ten each -->
@@ -454,7 +510,7 @@
               <variables><variable name="way">1</variable></variables>
               <timers>
                 <timer><every>0.05</every><shift object="aliens"><x>sway.way</x></shift></timer>
-                <timer><every>2</every><set variable="sway.way">0 - sway.way</set></timer>
+                <timer><every>2</every><set variable="sway.way"><subtract><value>0</value><value>sway.way</value></subtract></set></timer>
               </timers>
             </object>
           </objects>
@@ -610,7 +666,7 @@
     </state>
     <state name="initial2" from="initial1">
       <objects>
-        <object name="cursor"><position><x>letters + letterstep</x></position></object>
+        <object name="cursor"><position><x><add><value>letters</value><value>letterstep</value></add></x></position></object>
       </objects>
       <inputs>
         <input><button>w</button><button>up</button><inc variable="entry.second" /></input>
@@ -620,7 +676,12 @@
     </state>
     <state name="initial3" from="initial1">
       <objects>
-        <object name="cursor"><position><x>letters + letterstep * 2</x></position></object>
+        <object name="cursor"><position><x>
+          <add>
+            <value>letters</value>
+            <value><multiply><value>letterstep</value><value>2</value></multiply></value>
+          </add>
+        </x></position></object>
       </objects>
       <inputs>
         <input><button>w</button><button>up</button><inc variable="entry.third" /></input>

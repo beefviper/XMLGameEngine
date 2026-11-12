@@ -62,7 +62,7 @@
     <!-- one shot at a time, kept over the cannon as it flies -->
     <object name="laser" class="laser">
       <sprite><rectangle><width>3</width><height>18</height><color>color.yellow</color></rectangle></sprite>
-      <position><x update="live">player.x + 18</x><y>0</y></position>
+      <position><x update="live"><add><value>player.x</value><value>18</value></add></x><y>0</y></position>
       <velocity><y>-9</y></velocity>
       <most>1</most>
       <collisions>
@@ -87,7 +87,7 @@
       <sprite>
         <bitmap from="half" />
       </sprite>
-      <velocity><x><random><min>-sway</min><max>sway</max></random></x><y>dive</y></velocity>
+      <velocity><x><random><min><negate><value>sway</value></negate></min><max>sway</max></random></x><y>dive</y></velocity>
       <most>8</most>
       <collisions>
         <collision edge="horizontal"><bounce /></collision>
@@ -138,11 +138,11 @@
         <!-- the ice planet's surface, in two bands -->
         <object name="ground">
           <sprite><rectangle><width>window.right</width><height>ground</height><color>color.blue</color></rectangle></sprite>
-          <position><x>0</x><y>window.bottom - ground</y></position>
+          <position><x>0</x><y><subtract><value>window.bottom</value><value>ground</value></subtract></y></position>
         </object>
         <object name="horizon">
           <sprite><rectangle><width>window.right</width><height>4</height><color>color.cyan</color></rectangle></sprite>
-          <position><x>0</x><y>window.bottom - ground</y></position>
+          <position><x>0</x><y><subtract><value>window.bottom</value><value>ground</value></subtract></y></position>
         </object>
 
         <!-- the laser cannon -->
@@ -213,14 +213,24 @@
               </collisions>
               <timers>
                 <timer><every><random><min>1</min><max>3</max></random></every><reverse /></timer>
-                <timer><every><random><min>drop - 1</min><max>drop + 2</max></random></every><fire object="bomb" /></timer>
+                <timer><every><random><min><subtract><value>drop</value><value>1</value></subtract></min><max><add><value>drop</value><value>2</value></add></max></random></every><fire object="bomb" /></timer>
               </timers>
               <member><position><x>70</x><y>70</y></position></member>
-              <member><position><x>260</x><y>70</y></position><velocity><x>-speed * 1.25</x></velocity></member>
-              <member><position><x>450</x><y>70</y></position><velocity><x>speed * 0.75</x></velocity></member>
-              <member><position><x>165</x><y>130</y></position><velocity><x>-speed</x></velocity></member>
-              <member><position><x>355</x><y>130</y></position><velocity><x>speed * 1.25</x></velocity></member>
-              <member><position><x>545</x><y>130</y></position><velocity><x>-speed * 0.75</x></velocity></member>
+              <member><position><x>260</x><y>70</y></position><velocity><x>
+                <multiply>
+                  <value><negate><value>speed</value></negate></value>
+                  <value>1.25</value>
+                </multiply>
+              </x></velocity></member>
+              <member><position><x>450</x><y>70</y></position><velocity><x><multiply><value>speed</value><value>0.75</value></multiply></x></velocity></member>
+              <member><position><x>165</x><y>130</y></position><velocity><x><negate><value>speed</value></negate></x></velocity></member>
+              <member><position><x>355</x><y>130</y></position><velocity><x><multiply><value>speed</value><value>1.25</value></multiply></x></velocity></member>
+              <member><position><x>545</x><y>130</y></position><velocity><x>
+                <multiply>
+                  <value><negate><value>speed</value></negate></value>
+                  <value>0.75</value>
+                </multiply>
+              </x></velocity></member>
             </group>
           </objects>
           <conditions>
@@ -271,12 +281,17 @@
               </collisions>
               <timers>
                 <timer><every><random><min>1</min><max>3</max></random></every><reverse /></timer>
-                <timer><every><random><min>drop - 1</min><max>drop + 2</max></random></every><fire object="bomb" /></timer>
+                <timer><every><random><min><subtract><value>drop</value><value>1</value></subtract></min><max><add><value>drop</value><value>2</value></add></max></random></every><fire object="bomb" /></timer>
               </timers>
               <member><position><x>100</x><y>70</y></position></member>
-              <member><position><x>380</x><y>70</y></position><velocity><x>-speed</x></velocity></member>
-              <member><position><x>240</x><y>140</y></position><velocity><x>-speed * 0.8</x></velocity></member>
-              <member><position><x>520</x><y>140</y></position><velocity><x>speed * 0.8</x></velocity></member>
+              <member><position><x>380</x><y>70</y></position><velocity><x><negate><value>speed</value></negate></x></velocity></member>
+              <member><position><x>240</x><y>140</y></position><velocity><x>
+                <multiply>
+                  <value><negate><value>speed</value></negate></value>
+                  <value>0.8</value>
+                </multiply>
+              </x></velocity></member>
+              <member><position><x>520</x><y>140</y></position><velocity><x><multiply><value>speed</value><value>0.8</value></multiply></x></velocity></member>
             </group>
 
           </objects>
@@ -331,11 +346,11 @@
               </collisions>
               <timers>
                 <timer><every><random><min>1</min><max>2.5</max></random></every><reverse /></timer>
-                <timer><every><random><min>drop - 2</min><max>drop</max></random></every><fire object="bomb" /></timer>
+                <timer><every><random><min><subtract><value>drop</value><value>2</value></subtract></min><max>drop</max></random></every><fire object="bomb" /></timer>
               </timers>
               <member><position><x>120</x><y>70</y></position></member>
-              <member><position><x>300</x><y>130</y></position><velocity><x>-speed</x></velocity></member>
-              <member><position><x>480</x><y>190</y></position><velocity><x>speed * 0.8</x></velocity></member>
+              <member><position><x>300</x><y>130</y></position><velocity><x><negate><value>speed</value></negate></x></velocity></member>
+              <member><position><x>480</x><y>190</y></position><velocity><x><multiply><value>speed</value><value>0.8</value></multiply></x></velocity></member>
             </group>
           </objects>
           <conditions>

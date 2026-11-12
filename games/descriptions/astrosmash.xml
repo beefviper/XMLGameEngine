@@ -121,7 +121,7 @@
       <objects>
         <object name="ground" class="ground">
           <sprite><rectangle><width>window.right</width><height>ground</height><color>color.darkgrey</color></rectangle></sprite>
-          <position><x>0</x><y>window.bottom - ground</y></position>
+          <position><x>0</x><y><subtract><value>window.bottom</value><value>ground</value></subtract></y></position>
           <collisions />
         </object>
         <!-- the falling rocks: four big and four small, falling at a slant from
@@ -130,7 +130,7 @@
           <columns>4</columns>
           <rows>1</rows>
           <position><y><random><min>-600</min><max>-40</max></random></y></position>
-          <velocity><x><random><min>-slant</min><max>slant</max></random></x><y><random><min>1</min><max>2.5</max></random></y></velocity>
+          <velocity><x><random><min><negate><value>slant</value></negate></min><max>slant</max></random></x><y><random><min>1</min><max>2.5</max></random></y></velocity>
           <collisions>
             <collision edge="horizontal"><bounce /></collision>
             <collision object="ground">
@@ -253,7 +253,7 @@
         </object>
         <object name="peak">
           <sprite><text style="hud"><content>PEAK </content><number>ship.peak</number><size>28</size><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y>margin + 6</y></position>
+          <position><x><centered /></x><y><add><value>margin</value><value>6</value></add></y></position>
         </object>
         <object name="lives">
           <sprite><text style="hud"><number>ship.lives</number><color>color.cyan</color></text></sprite>

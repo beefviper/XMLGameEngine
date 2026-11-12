@@ -104,16 +104,26 @@
           </member>
         </group>
         <object name="frame">
-          <sprite><rectangle><width>square * 7 + 16</width><height>square * 6 + 16</height><color>color.blue</color></rectangle></sprite>
-          <position><x>left - 8</x><y>top - 8</y></position>
+          <sprite><rectangle><width>
+            <add>
+              <value><multiply><value>square</value><value>7</value></multiply></value>
+              <value>16</value>
+            </add>
+          </width><height>
+            <add>
+              <value><multiply><value>square</value><value>6</value></multiply></value>
+              <value>16</value>
+            </add>
+          </height><color>color.blue</color></rectangle></sprite>
+          <position><x><subtract><value>left</value><value>8</value></subtract></x><y><subtract><value>top</value><value>8</value></subtract></y></position>
         </object>
         <!-- the holes, each a place a disc can be -->
         <group name="holes">
           <columns>7</columns>
           <rows>6</rows>
-          <padding><x>square - 52</x><y>square - 52</y></padding>
+          <padding><x><subtract><value>square</value><value>52</value></subtract></x><y><subtract><value>square</value><value>52</value></subtract></y></padding>
           <sprite><circle><radius>26</radius><color>color.black</color></circle></sprite>
-          <position><x>left + 6</x><y>top + 6</y></position>
+          <position><x><add><value>left</value><value>6</value></add></x><y><add><value>top</value><value>6</value></add></y></position>
         </group>
 
         <map name="board">
@@ -151,7 +161,7 @@
         <!-- the disc to drop, on a row of its own above the board -->
         <map name="pointer">
           <tile><width>square</width><height>square</height></tile>
-          <position><x>left</x><y>top - square - 8</y></position>
+          <position><x>left</x><y><subtract><value>top</value><value>square</value><value>8</value></subtract></y></position>
           <cells />
           <row>...c...</row>
           <object name="cursor" char="c">

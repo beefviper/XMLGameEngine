@@ -97,7 +97,7 @@
         </object>
         <object name="scorelabel">
           <sprite><text style="hud"><content>score </content><number>status.score</number></text></sprite>
-          <position><x>left</x><y>top - 60</y></position>
+          <position><x>left</x><y><subtract><value>top</value><value>60</value></subtract></y></position>
         </object>
 
         <!-- the squares, under the numbers -->
@@ -110,7 +110,7 @@
           <row>....</row>
           <row>....</row>
           <group name="square" char=".">
-            <sprite><rectangle><width>cell - 8</width><height>cell - 8</height><color>color.darkgrey</color></rectangle></sprite>
+            <sprite><rectangle><width><subtract><value>cell</value><value>8</value></subtract></width><height><subtract><value>cell</value><value>8</value></subtract></height><color>color.darkgrey</color></rectangle></sprite>
           </group>
         </map>
         <!-- the numbers -->

@@ -124,11 +124,17 @@
           <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
         <object name="northcards" class="place">
-          <position><x>window.width.center - cardwidth / 2 - 144</x><y>northrow</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>144</value>
+            </subtract>
+          </x><y>northrow</y></position>
           <holds class="card" sprite="back"><spread><x>24</x></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
         <object name="eastcards" class="place">
-          <position><x>window.width - cardwidth - 24</x><y>siderow</y></position>
+          <position><x><subtract><value>window.width</value><value>cardwidth</value><value>24</value></subtract></x><y>siderow</y></position>
           <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
 
@@ -140,8 +146,19 @@
 
         <!-- the trick: the suit led is followed if it can be; hearts lead only once broken; its points counted -->
         <object name="trick" class="place">
-          <sprite><rectangle><width>cardwidth + 3 * 64</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth / 2 - 96</x><y>trickrow</y></position>
+          <sprite><rectangle><width>
+            <add>
+              <value>cardwidth</value>
+              <value><multiply><value>3</value><value>64</value></multiply></value>
+            </add>
+          </width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>96</value>
+            </subtract>
+          </x><y>trickrow</y></position>
           <holds class="card" sprite="face">
             <spread><x>64</x></spread>
             <trick variable="suit"><breaks>2</breaks></trick>
@@ -152,25 +169,25 @@
         <!-- the scores: the game's, plus this hand's points so far, and whose turn it is -->
         <object name="northscore">
           <sprite><text style="note"><content>north</content><number>north.score</number><content>+</content><number>north.got</number><choose><by>north.turn</by><word /><word>to play</word></choose></text></sprite>
-          <position><x><centered /></x><y>northrow + cardheight + 6</y></position>
+          <position><x><centered /></x><y><add><value>northrow</value><value>cardheight</value><value>6</value></add></y></position>
         </object>
         <object name="westscore">
           <sprite><text style="note"><content>west</content><number>west.score</number><content>+</content><number>west.got</number><choose><by>west.turn</by><word /><word>to play</word></choose></text></sprite>
-          <position><x>24</x><y>siderow - 34</y></position>
+          <position><x>24</x><y><subtract><value>siderow</value><value>34</value></subtract></y></position>
         </object>
         <object name="eastscore">
           <sprite><text style="note"><content>east</content><number>east.score</number><content>+</content><number>east.got</number><choose><by>east.turn</by><word /><word>to play</word></choose></text></sprite>
-          <position><x>window.width - 200</x><y>siderow - 34</y></position>
+          <position><x><subtract><value>window.width</value><value>200</value></subtract></x><y><subtract><value>siderow</value><value>34</value></subtract></y></position>
         </object>
         <object name="yourscore">
           <sprite><text style="note"><content>you</content><number>you.score</number><content>+</content><number>you.got</number><choose><by>you.turn</by><word /><word>your turn: play a card</word></choose></text></sprite>
-          <position><x><centered /></x><y>yours - 52</y></position>
+          <position><x><centered /></x><y><subtract><value>yours</value><value>52</value></subtract></y></position>
         </object>
 
         <!-- who the trick goes to, as it stands -->
         <object name="taker">
           <sprite><text style="note"><choose><by>trick.winner</by><word /><word>the trick: yours</word><word>the trick: west's</word><word>the trick: north's</word><word>the trick: east's</word></choose></text></sprite>
-          <position><x><centered /></x><y>trickrow + cardheight + 24</y></position>
+          <position><x><centered /></x><y><add><value>trickrow</value><value>cardheight</value><value>24</value></add></y></position>
         </object>
 
         <!-- what is happening between hands -->
@@ -179,7 +196,7 @@
           <sprite name="moon"><text style="note"><content>the moon is shot: 26 to everyone else. spacebar deals</content><color>color.cyan</color></text></sprite>
           <sprite name="done"><text style="note"><content>the hand is over: spacebar deals the next</content></text></sprite>
           <sprite name="dealing"><text style="note"><content>shuffling</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y>trickrow + cardheight + 60</y></position>
+          <position><x><centered /></x><y><add><value>trickrow</value><value>cardheight</value><value>60</value></add></y></position>
         </object>
 
         <!-- the table: where the hand is (its look), who leads first, the tricks taken; a full trick shows a moment; between hands, Space deals -->
@@ -246,10 +263,16 @@
             <variable name="got">0</variable>
           </variables>
           <turns sprite="waiting" />
-          <member name="you"><position><x>53</x><y>yours - 3</y></position><owns object="mine" /></member>
-          <member name="west"><sprite name="free" /><position><x>21</x><y>siderow - 3</y></position><owns object="westcards" /><think button="space"><avoid /></think></member>
-          <member name="north"><sprite name="free" /><position><x>window.width.center - cardwidth / 2 - 147</x><y>northrow - 3</y></position><owns object="northcards" /><think button="space"><avoid /></think></member>
-          <member name="east"><sprite name="free" /><position><x>window.width - cardwidth - 27</x><y>siderow - 3</y></position><owns object="eastcards" /><think button="space"><avoid /></think></member>
+          <member name="you"><position><x>53</x><y><subtract><value>yours</value><value>3</value></subtract></y></position><owns object="mine" /></member>
+          <member name="west"><sprite name="free" /><position><x>21</x><y><subtract><value>siderow</value><value>3</value></subtract></y></position><owns object="westcards" /><think button="space"><avoid /></think></member>
+          <member name="north"><sprite name="free" /><position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>cardwidth</value><value>2</value></divide></value>
+              <value>147</value>
+            </subtract>
+          </x><y><subtract><value>northrow</value><value>3</value></subtract></y></position><owns object="northcards" /><think button="space"><avoid /></think></member>
+          <member name="east"><sprite name="free" /><position><x><subtract><value>window.width</value><value>cardwidth</value><value>27</value></subtract></x><y><subtract><value>siderow</value><value>3</value></subtract></y></position><owns object="eastcards" /><think button="space"><avoid /></think></member>
         </group>
       </objects>
       <!-- the cards start in the stock, shuffled and dealt thirteen to each player -->
@@ -398,10 +421,10 @@
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
     <drawing name="playersfree">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
     </drawing>
   </pictures>
 </game>

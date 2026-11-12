@@ -66,7 +66,7 @@
     <!-- four shots in the air at most, wrapping, each gone after a second -->
     <object name="shot" class="breaker">
       <sprite><rectangle><width>3</width><height>3</height></rectangle></sprite>
-      <velocity><y>-shotspeed</y></velocity>
+      <velocity><y><negate><value>shotspeed</value></negate></y></velocity>
       <most>4</most>
       <collisions>
         <collision edge="all"><wrap /></collision>
@@ -161,7 +161,7 @@
     </object>
     <!-- the two saucers: they cross now and then, wandering up and down and shooting; a rock that meets one breaks it -->
     <group name="ufos" class="hazard">
-      <position><x>-30</x><y><random><min>80</min><max>window.bottom - 80</max></random></y></position>
+      <position><x>-30</x><y><random><min>80</min><max><subtract><value>window.bottom</value><value>80</value></subtract></max></random></y></position>
       <waiting />
       <collisions>
         <type>pixel</type>
@@ -264,8 +264,8 @@
               <play sound="shoot" />
             </action>
             <action name="hyperspace">
-              <set variable="ship.x"><random><min>margin</min><max>window.right - 60</max></random></set>
-              <set variable="ship.y"><random><min>margin</min><max>window.bottom - 60</max></random></set>
+              <set variable="ship.x"><random><min>margin</min><max><subtract><value>window.right</value><value>60</value></subtract></max></random></set>
+              <set variable="ship.y"><random><min>margin</min><max><subtract><value>window.bottom</value><value>60</value></subtract></max></random></set>
             </action>
           </actions>
           <variables>
@@ -297,12 +297,12 @@
             </member>
             <member>
               <sprite><drawing from="bigrockB" /></sprite>
-              <position><x>window.right - 60</x><y><random><min>0</min><max>window.bottom</max></random></y></position>
+              <position><x><subtract><value>window.right</value><value>60</value></subtract></x><y><random><min>0</min><max>window.bottom</max></random></y></position>
               <velocity><x><random><min>-0.8</min><max>0.8</max></random></x><y><random><min>0.6</min><max>1.2</max></random></y></velocity>
             </member>
             <member>
               <sprite><drawing from="bigrockC" /></sprite>
-              <position><x><random><min>0</min><max>window.right</max></random></x><y>window.bottom - 60</y></position>
+              <position><x><random><min>0</min><max>window.right</max></random></x><y><subtract><value>window.bottom</value><value>60</value></subtract></y></position>
               <velocity><x><random><min>-1.2</min><max>-0.6</max></random></x><y><random><min>-0.8</min><max>0.8</max></random></y></velocity>
             </member>
             <member>
@@ -410,7 +410,7 @@
               <first>
                 <set variable="saucers.due">0</set>
               </first>
-              <condition object="saucers" variable="luck"><below>ship.score / 40000</below>
+              <condition object="saucers" variable="luck"><below><divide><value>ship.score</value><value>40000</value></divide></below>
                 <reveal object="smallsaucer" />
               </condition>
               <otherwise>

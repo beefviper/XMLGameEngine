@@ -76,34 +76,44 @@
       <objects>
         <!-- scenery: the river, the bank, the road and the pavement -->
         <object name="water" class="water">
-          <sprite><rectangle><width>window.right</width><height>5 * cell</height><color>color.darkblue</color></rectangle></sprite>
-          <position><x>0</x><y>2 * cell</y></position>
+          <sprite><rectangle><width>window.right</width><height><multiply><value>5</value><value>cell</value></multiply></height><color>color.darkblue</color></rectangle></sprite>
+          <position><x>0</x><y><multiply><value>2</value><value>cell</value></multiply></y></position>
           <collisions />
         </object>
         <object name="bank">
           <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
-          <position><x>0</x><y>7 * cell</y></position>
+          <position><x>0</x><y><multiply><value>7</value><value>cell</value></multiply></y></position>
         </object>
         <object name="pavement">
           <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
-          <position><x>0</x><y>13 * cell</y></position>
+          <position><x>0</x><y><multiply><value>13</value><value>cell</value></multiply></y></position>
         </object>
 
         <!-- home: five bays in a hedge -->
         <object name="hedge" class="hazard">
           <sprite><rectangle><width>window.right</width><height>cell</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>0</x><y>1 * cell</y></position>
+          <position><x>0</x><y><multiply><value>1</value><value>cell</value></multiply></y></position>
           <collisions />
         </object>
         <group name="pads" class="pads">
           <columns>5</columns>
           <rows>1</rows>
-          <padding><x>2 * cell - 40</x></padding>
+          <padding><x>
+            <subtract>
+              <value><multiply><value>2</value><value>cell</value></multiply></value>
+              <value>40</value>
+            </subtract>
+          </x></padding>
           <sprite name="empty"><rectangle><width>40</width><height>40</height><color>color.darkblue</color></rectangle></sprite>
           <sprite name="home">
             <bitmap from="pads-home" />
           </sprite>
-          <position><x>2 * cell + 4</x><y>1 * cell + 4</y></position>
+          <position><x>
+            <add>
+              <value><multiply><value>2</value><value>cell</value></multiply></value>
+              <value>4</value>
+            </add>
+          </x><y><add><value><multiply><value>1</value><value>cell</value></multiply></value><value>4</value></add></y></position>
           <collisions>
             <collision object="frog">
               <collision sprite="home"><trigger object="frog" action="lose" /></collision>
@@ -130,35 +140,95 @@
               </sprite>
               <group name="logrow2">
                 <columns>3</columns>
-                <padding><x>(window.right + 180) / 3 - 180</x></padding>
-                <position><x>20</x><y>2 * cell + 6</y></position>
+                <padding><x>
+                  <subtract>
+                    <value>
+                      <divide>
+                        <value><add><value>window.right</value><value>180</value></add></value>
+                        <value>3</value>
+                      </divide>
+                    </value>
+                    <value>180</value>
+                  </subtract>
+                </x></padding>
+                <position><x>20</x><y>
+                  <add>
+                    <value><multiply><value>2</value><value>cell</value></multiply></value>
+                    <value>6</value>
+                  </add>
+                </y></position>
                 <velocity><x>1.4</x></velocity>
               </group>
               <group name="logrow4">
                 <columns>2</columns>
-                <padding><x>(window.right + 228) / 2 - 228</x></padding>
+                <padding><x>
+                  <subtract>
+                    <value>
+                      <divide>
+                        <value><add><value>window.right</value><value>228</value></add></value>
+                        <value>2</value>
+                      </divide>
+                    </value>
+                    <value>228</value>
+                  </subtract>
+                </x></padding>
                 <sprite><bitmap from="logrow4" /></sprite>
-                <position><x>100</x><y>4 * cell + 6</y></position>
+                <position><x>100</x><y>
+                  <add>
+                    <value><multiply><value>4</value><value>cell</value></multiply></value>
+                    <value>6</value>
+                  </add>
+                </y></position>
                 <velocity><x>2</x></velocity>
               </group>
               <group name="logrow5">
                 <columns>3</columns>
-                <padding><x>(window.right + 132) / 3 - 132</x></padding>
+                <padding><x>
+                  <subtract>
+                    <value>
+                      <divide>
+                        <value><add><value>window.right</value><value>132</value></add></value>
+                        <value>3</value>
+                      </divide>
+                    </value>
+                    <value>132</value>
+                  </subtract>
+                </x></padding>
                 <sprite><bitmap from="logrow5" /></sprite>
-                <position><x>0</x><y>5 * cell + 6</y></position>
+                <position><x>0</x><y>
+                  <add>
+                    <value><multiply><value>5</value><value>cell</value></multiply></value>
+                    <value>6</value>
+                  </add>
+                </y></position>
                 <velocity><x>1</x></velocity>
               </group>
             </group>
             <group name="turtlerow3">
               <columns>4</columns>
-              <padding><x>(window.right + 80) / 4 - 80</x></padding>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>80</value></add></value>
+                      <value>4</value>
+                    </divide>
+                  </value>
+                  <value>80</value>
+                </subtract>
+              </x></padding>
               <sprite name="up">
                 <bitmap from="turtlerow3-up" />
               </sprite>
               <sprite name="under">
                 <bitmap from="turtlerow3-under" />
               </sprite>
-              <position><x>60</x><y>3 * cell + 8</y></position>
+              <position><x>60</x><y>
+                <add>
+                  <value><multiply><value>3</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
               <velocity><x>-1.6</x></velocity>
               <collisions>
                 <collision object="frog" sprite="under"><trigger object="frog" action="drown" /></collision>
@@ -170,11 +240,26 @@
             </group>
             <group name="turtlerow6">
               <columns>3</columns>
-              <padding><x>(window.right + 120) / 3 - 120</x></padding>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>120</value></add></value>
+                      <value>3</value>
+                    </divide>
+                  </value>
+                  <value>120</value>
+                </subtract>
+              </x></padding>
               <sprite>
                 <bitmap from="turtlerow6" />
               </sprite>
-              <position><x>30</x><y>6 * cell + 8</y></position>
+              <position><x>30</x><y>
+                <add>
+                  <value><multiply><value>6</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
               <velocity><x>-1.2</x></velocity>
             </group>
           </group>
@@ -186,41 +271,116 @@
             </sprite>
             <group name="truckrow8">
               <columns>2</columns>
-              <padding><x>(window.right + 88) / 2 - 88</x></padding>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>88</value></add></value>
+                      <value>2</value>
+                    </divide>
+                  </value>
+                  <value>88</value>
+                </subtract>
+              </x></padding>
               <sprite>
                 <bitmap from="truckrow8" />
               </sprite>
-              <position><x>100</x><y>8 * cell + 8</y></position>
+              <position><x>100</x><y>
+                <add>
+                  <value><multiply><value>8</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
               <velocity><x>-1.3</x></velocity>
             </group>
             <!-- the white racing car, fast -->
             <group name="carrow9">
               <columns>2</columns>
-              <padding><x>(window.right + 40) / 2 - 40</x></padding>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>40</value></add></value>
+                      <value>2</value>
+                    </divide>
+                  </value>
+                  <value>40</value>
+                </subtract>
+              </x></padding>
               <sprite><bitmap><color>color.lightgrey</color></bitmap></sprite>
-              <position><x>60</x><y>9 * cell + 8</y></position>
+              <position><x>60</x><y>
+                <add>
+                  <value><multiply><value>9</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
               <velocity><x>3.2</x></velocity>
             </group>
             <group name="carrow10">
               <columns>4</columns>
-              <padding><x>(window.right + 40) / 4 - 40</x></padding>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>40</value></add></value>
+                      <value>4</value>
+                    </divide>
+                  </value>
+                  <value>40</value>
+                </subtract>
+              </x></padding>
               <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
-              <position><x>40</x><y>10 * cell + 8</y></position>
+              <position><x>40</x><y>
+                <add>
+                  <value><multiply><value>10</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
               <velocity><x>-1.6</x></velocity>
             </group>
             <!-- bulldozers -->
             <group name="carrow11">
               <columns>3</columns>
-              <padding><x>(window.right + 40) / 3 - 40</x></padding>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>40</value></add></value>
+                      <value>3</value>
+                    </divide>
+                  </value>
+                  <value>40</value>
+                </subtract>
+              </x></padding>
               <sprite><bitmap><color>color.green</color></bitmap></sprite>
-              <position><x>100</x><y>11 * cell + 8</y></position>
+              <position><x>100</x><y>
+                <add>
+                  <value><multiply><value>11</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
               <velocity><x>1.2</x></velocity>
             </group>
             <group name="carrow12">
               <columns>3</columns>
-              <padding><x>(window.right + 40) / 3 - 40</x></padding>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>40</value></add></value>
+                      <value>3</value>
+                    </divide>
+                  </value>
+                  <value>40</value>
+                </subtract>
+              </x></padding>
               <sprite><bitmap><color>color.yellow</color></bitmap></sprite>
-              <position><x>30</x><y>12 * cell + 8</y></position>
+              <position><x>30</x><y>
+                <add>
+                  <value><multiply><value>12</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
               <velocity><x>-1</x></velocity>
             </group>
           </group>
@@ -231,7 +391,12 @@
           <sprite>
             <bitmap from="frog" />
           </sprite>
-          <position><x>6 * cell + 4</x><y>13 * cell + 8</y></position>
+          <position><x>
+            <add>
+              <value><multiply><value>6</value><value>cell</value></multiply></value>
+              <value>4</value>
+            </add>
+          </x><y><add><value><multiply><value>13</value><value>cell</value></multiply></value><value>8</value></add></y></position>
           <collisions>
             <collision class="hazard" unless="pads"><trigger action="lose" /></collision>
             <collision class="water" unless="logs"><trigger action="drown" /></collision>
@@ -253,7 +418,12 @@
             </action>
             <action name="home">
               <inc variable="frog.homes" />
-              <inc variable="frog.score">50 + 10 * clock.time</inc>
+              <inc variable="frog.score">
+                <add>
+                  <value>50</value>
+                  <value><multiply><value>10</value><value>clock.time</value></multiply></value>
+                </add>
+              </inc>
               <reset />
               <reset object="clock" />
               <play sound="home" />
@@ -285,18 +455,18 @@
         <!-- the time each frog has, counted down by the state's timer -->
         <object name="clock">
           <sprite><text style="hud"><content>TIME</content><number>clock.time</number><color>color.yellow</color></text></sprite>
-          <position><x><centered /></x><y><centered>cell / 2</centered></y></position>
+          <position><x><centered /></x><y><centered><divide><value>cell</value><value>2</value></divide></centered></y></position>
           <variables>
             <variable name="time">time</variable>
           </variables>
         </object>
         <object name="score">
           <sprite><text style="hud"><content>SCORE</content><number>frog.score</number></text></sprite>
-          <position><x>12</x><y><centered>cell / 2</centered></y></position>
+          <position><x>12</x><y><centered><divide><value>cell</value><value>2</value></divide></centered></y></position>
         </object>
         <object name="lives">
           <sprite><text style="hud"><content>LIVES</content><number>frog.lives</number><color>color.green</color></text></sprite>
-          <position><x><right><offset>12</offset></right></x><y><centered>cell / 2</centered></y></position>
+          <position><x><right><offset>12</offset></right></x><y><centered><divide><value>cell</value><value>2</value></divide></centered></y></position>
         </object>
       </objects>
       <inputs>

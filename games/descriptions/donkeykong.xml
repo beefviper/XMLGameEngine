@@ -126,7 +126,7 @@
         </collision>
         <!-- into the oil drum: it flares up, and lets out a fireball -->
         <collision object="oil">
-          <spawn object="fireball"><position><x>oil.x + 4</x><y>oil.y - 24</y></position></spawn>
+          <spawn object="fireball"><position><x><add><value>oil.x</value><value>4</value></add></x><y><subtract><value>oil.y</value><value>24</value></subtract></y></position></spawn>
         </collision>
         <collision object="oil">
           <despawn />
@@ -141,7 +141,7 @@
       </collisions>
       <actions>
         <action name="descend">
-          <set variable="self.way">0 - self.velocity.x</set>
+          <set variable="self.way"><subtract><value>0</value><value>self.velocity.x</value></subtract></set>
           <become sprite="down" />
           <climb direction="down" class="ladder">1.5</climb>
         </action>
@@ -356,14 +356,14 @@
           <sprite>
             <bitmap from="oil" />
           </sprite>
-          <position><x>4</x><y>660 - oil.height</y></position>
+          <position><x>4</x><y><subtract><value>660</value><value>oil.height</value></subtract></y></position>
           <collisions />
         </object>
         <object name="kong">
           <sprite>
             <bitmap from="kong" />
           </sprite>
-          <position><x>20</x><y>160 - kong.height</y></position>
+          <position><x>20</x><y><subtract><value>160</value><value>kong.height</value></subtract></y></position>
           <facing>right</facing>
           <collisions />
           <variables>
@@ -380,7 +380,7 @@
           <sprite>
             <bitmap from="pauline" />
           </sprite>
-          <position><x>300</x><y>85 - pauline.height</y></position>
+          <position><x>300</x><y><subtract><value>85</value><value>pauline.height</value></subtract></y></position>
           <collisions />
         </object>
         <!-- the hammer, on the third girder -->
@@ -388,7 +388,7 @@
           <sprite>
             <bitmap from="hammer" />
           </sprite>
-          <position><x>100</x><y>353 - 40 - hammer.height</y></position>
+          <position><x>100</x><y><subtract><value>353</value><value>40</value><value>hammer.height</value></subtract></y></position>
           <collisions>
             <collision object="man">
               <die />
@@ -402,7 +402,7 @@
           <sprite name="hammer">
             <bitmap from="man-hammer" />
           </sprite>
-          <position><x>100</x><y>656 - man.height</y></position>
+          <position><x>100</x><y><subtract><value>656</value><value>man.height</value></subtract></y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <collisions>
             <!-- his body, without the arms -->
@@ -503,7 +503,7 @@
         </object>
         <object name="bonus">
           <sprite><text style="hud"><content>BONUS</content><number>man.bonus</number><color>color.cyan</color></text></sprite>
-          <position><x><right><offset>margin</offset></right></x><y>margin + 36</y></position>
+          <position><x><right><offset>margin</offset></right></x><y><add><value>margin</value><value>36</value></add></y></position>
         </object>
         <object name="lives">
           <sprite><text style="hud"><content>LIVES</content><number>man.lives</number><color>color.red</color></text></sprite>

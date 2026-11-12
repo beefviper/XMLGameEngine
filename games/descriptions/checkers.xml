@@ -139,9 +139,9 @@
       <inputs>
         <input><button>space</button><button>pad1.start</button><set variable="match.players">1</set><push state="playing" /></input>
         <input><button>num2</button><button>numpad2</button><set variable="match.players">2</set><push state="playing" /></input>
-        <input button="m"><set variable="options.moves">1 - options.moves</set></input>
-        <input button="v"><set variable="options.movable">1 - options.movable</set></input>
-        <input button="j"><set variable="options.jumper">1 - options.jumper</set></input>
+        <input button="m"><set variable="options.moves"><subtract><value>1</value><value>options.moves</value></subtract></set></input>
+        <input button="v"><set variable="options.movable"><subtract><value>1</value><value>options.movable</value></subtract></set></input>
+        <input button="j"><set variable="options.jumper"><subtract><value>1</value><value>options.jumper</value></subtract></set></input>
       </inputs>
     </state>
     <state name="playing">
@@ -162,8 +162,18 @@
           </member>
         </group>
         <object name="frame">
-          <sprite><rectangle><width>square * 8 + 16</width><height>square * 8 + 16</height><color>color.brown</color></rectangle></sprite>
-          <position><x>left - 8</x><y>top - 8</y></position>
+          <sprite><rectangle><width>
+            <add>
+              <value><multiply><value>square</value><value>8</value></multiply></value>
+              <value>16</value>
+            </add>
+          </width><height>
+            <add>
+              <value><multiply><value>square</value><value>8</value></multiply></value>
+              <value>16</value>
+            </add>
+          </height><color>color.brown</color></rectangle></sprite>
+          <position><x><subtract><value>left</value><value>8</value></subtract></x><y><subtract><value>top</value><value>8</value></subtract></y></position>
         </object>
         <object name="squares">
           <sprite>

@@ -446,8 +446,8 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 	// Unnamed, they are row and column only, and a rule may say either.
 	{
 		Changed plain({ { "<columns name=\"rank\">13</columns>", "<columns>13</columns>" },
-			{ "<condition variable=\"rank\"><equal>top.rank - 1</equal></condition>", "<condition variable=\"column\"><equal>top.column - 1</equal></condition>" },
-			{ "<condition variable=\"rank\"><equal>top.rank + 1</equal></condition>", "<condition variable=\"column\"><equal>top.column + 1</equal></condition>" },
+			{ "<condition variable=\"rank\"><equal><subtract><value>top.rank</value><value>1</value></subtract></equal></condition>", "<condition variable=\"column\"><equal><subtract><value>top.column</value><value>1</value></subtract></equal></condition>" },
+			{ "<condition variable=\"rank\"><equal><add><value>top.rank</value><value>1</value></add></equal></condition>", "<condition variable=\"column\"><equal><add><value>top.column</value><value>1</value></add></equal></condition>" },
 			{ "<empty><condition variable=\"rank\"><equal>1</equal></condition></empty>", "<empty><condition variable=\"column\"><equal>1</equal></condition></empty>" },
 			{ "<empty><condition variable=\"rank\"><equal>13</equal></condition></empty>", "<empty><condition variable=\"column\"><equal>13</equal></condition></empty>" } });
 		Played play(plain.path);
@@ -469,23 +469,23 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 
 TEST_CASE("klondike.xml: placing rules are conditions on the arriving card against top; mistakes in them stop the load", "[cards][accepts]")
 {
-	const std::string column = "<condition variable=\"rank\"><equal>top.rank - 1</equal></condition>";
+	const std::string column = "<condition variable=\"rank\"><equal><subtract><value>top.rank</value><value>1</value></subtract></equal></condition>";
 	const std::string king = "<empty><condition variable=\"rank\"><equal>13</equal></condition></empty>";
 	const auto fails = [&](const std::string& to, const std::string& message, const std::string& from = {})
 	{
 		Changed changed({ { from.empty() ? column : from, to } });
 		CHECK_THROWS_WITH(Played(changed.path), Catch::Matchers::ContainsSubstring(message));
 	};
-	fails("<condition variable=\"rank\"><equal>top.rank * 2</equal></condition>", "plus or minus a number if wanted");
+	fails("<condition variable=\"rank\"><equal><multiply><value>top.rank</value><value>2</value></multiply></equal></condition>", "multiply");
 	fails("<condition variable=\"rank\"><equal>top.</equal></condition>", "expected top. and a variable of it");
-	fails("<condition variable=\"rank\"><equal>top.rank - x</equal></condition>", "plus or minus a number");
+	fails("<condition variable=\"rank\"><equal><subtract><value>top.rank</value><value>x</value></subtract></equal></condition>", "<subtract>");
 	fails("<condition><equal>1</equal></condition>", "needs variable=");
 	fails("<condition total=\"count\"><equal>2</equal></condition>", "<equal>1</equal> for now");
 	fails("<empty><condition variable=\"rank\"><equal>top.rank</equal></condition></empty>", "nothing lies under it", king);
 
 	// A plain number, <unequal> one, and another variable of the top: a column that takes anything but a queen,
 	// a worth below the top's suit (any test of numbers), never a king on an empty one.
-	Changed plain({ { column, "<condition variable=\"rank\"><unequal>12</unequal></condition><condition variable=\"worth\"><below>top.suit + 3</below></condition>" },
+	Changed plain({ { column, "<condition variable=\"rank\"><unequal>12</unequal></condition><condition variable=\"worth\"><below><add><value>top.suit</value><value>3</value></add></below></condition>" },
 		{ king, "<empty><condition variable=\"rank\"><atmost>12</atmost></condition></empty>" } });
 	Played played(plain.path);
 	using Kind = PileRule::VarRule::Kind;

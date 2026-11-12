@@ -112,20 +112,50 @@
 
         <!-- the bottle: glass, its neck, and the dark inside -->
         <object name="glass">
-          <sprite><rectangle><width>8 * cell + 16</width><height>16 * cell + 16</height><color>color.lightgrey</color></rectangle></sprite>
-          <position><x>left - 8</x><y>top - 8</y></position>
+          <sprite><rectangle><width>
+            <add>
+              <value><multiply><value>8</value><value>cell</value></multiply></value>
+              <value>16</value>
+            </add>
+          </width><height>
+            <add>
+              <value><multiply><value>16</value><value>cell</value></multiply></value>
+              <value>16</value>
+            </add>
+          </height><color>color.lightgrey</color></rectangle></sprite>
+          <position><x><subtract><value>left</value><value>8</value></subtract></x><y><subtract><value>top</value><value>8</value></subtract></y></position>
         </object>
         <object name="neck">
-          <sprite><rectangle><width>2 * cell + 16</width><height>40</height><color>color.lightgrey</color></rectangle></sprite>
-          <position><x>left + 3 * cell - 8</x><y>top - 40</y></position>
+          <sprite><rectangle><width>
+            <add>
+              <value><multiply><value>2</value><value>cell</value></multiply></value>
+              <value>16</value>
+            </add>
+          </width><height>40</height><color>color.lightgrey</color></rectangle></sprite>
+          <position><x>
+            <subtract>
+              <value>
+                <add>
+                  <value>left</value>
+                  <value><multiply><value>3</value><value>cell</value></multiply></value>
+                </add>
+              </value>
+              <value>8</value>
+            </subtract>
+          </x><y><subtract><value>top</value><value>40</value></subtract></y></position>
         </object>
         <object name="inside">
-          <sprite><rectangle><width>8 * cell</width><height>16 * cell</height><color>color.black</color></rectangle></sprite>
+          <sprite><rectangle><width><multiply><value>8</value><value>cell</value></multiply></width><height><multiply><value>16</value><value>cell</value></multiply></height><color>color.black</color></rectangle></sprite>
           <position><x>left</x><y>top</y></position>
         </object>
         <object name="mouth">
-          <sprite><rectangle><width>2 * cell</width><height>40</height><color>color.black</color></rectangle></sprite>
-          <position><x>left + 3 * cell</x><y>top - 40</y></position>
+          <sprite><rectangle><width><multiply><value>2</value><value>cell</value></multiply></width><height>40</height><color>color.black</color></rectangle></sprite>
+          <position><x>
+            <add>
+              <value>left</value>
+              <value><multiply><value>3</value><value>cell</value></multiply></value>
+            </add>
+          </x><y><subtract><value>top</value><value>40</value></subtract></y></position>
         </object>
 
         <object name="scorelabel">
@@ -161,7 +191,7 @@
           <sprite name="throw">
             <bitmap from="doctor-throw" />
           </sprite>
-          <position><x>panel + 40</x><y>150</y></position>
+          <position><x><add><value>panel</value><value>40</value></add></x><y>150</y></position>
           <timers>
             <timer sprite="throw"><after>0.3</after><become sprite="hold" /></timer>
           </timers>
@@ -170,7 +200,7 @@
         <!-- the next capsule, over Doc's hand -->
         <map name="next">
           <tile><width>cell</width><height>cell</height></tile>
-          <position><x>panel + 88</x><y>110</y></position>
+          <position><x><add><value>panel</value><value>88</value></add></x><y>110</y></position>
           <columns>2</columns>
           <rows>1</rows>
           <cells />
@@ -336,7 +366,7 @@
         <condition class="germ" total="count">
           <below>status.germs</below>
           <dec variable="status.germs" />
-          <inc variable="status.score">100 * status.level</inc>
+          <inc variable="status.score"><multiply><value>100</value><value>status.level</value></multiply></inc>
           <play sound="germ" />
         </condition>
         <!-- every germ gone: an empty bottle, and the next level, faster, with more -->
@@ -348,8 +378,13 @@
             <spawn object="capsules"><random /><column>4</column><row>1</row></spawn>
             <spawn object="capsules" into="next"><random /></spawn>
             <inc variable="status.level" />
-            <set variable="status.place">4 * status.level + 4</set>
-            <set variable="status.gravity">status.gravity * 0.9</set>
+            <set variable="status.place">
+              <add>
+                <value><multiply><value>4</value><value>status.level</value></multiply></value>
+                <value>4</value>
+              </add>
+            </set>
+            <set variable="status.gravity"><multiply><value>status.gravity</value><value>0.9</value></multiply></set>
           </condition>
         </condition>
       </conditions>

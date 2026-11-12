@@ -140,7 +140,12 @@
       <timers>
         <timer>
           <every><random><min>1</min><max>2.5</max></random></every>
-          <chase object="player">0.25 + player.depth * 0.05</chase>
+          <chase object="player">
+            <add>
+              <value>0.25</value>
+              <value><multiply><value>player.depth</value><value>0.05</value></multiply></value>
+            </add>
+          </chase>
         </timer>
       </timers>
       <!-- room one's: they do not fire -->
@@ -226,19 +231,34 @@
     </object>
     <!-- a room: what each character of its <row>s is; each room gives its rows -->
     <map name="maze">
-      <tile><width>wide / 2</width><height>tall / 2</height></tile>
-      <position><x>margin / 2 - wide / 4</x><y>top + margin / 2 - tall / 4</y></position>
+      <tile><width><divide><value>wide</value><value>2</value></divide></width><height><divide><value>tall</value><value>2</value></divide></height></tile>
+      <position><x>
+        <subtract>
+          <value><divide><value>margin</value><value>2</value></divide></value>
+          <value><divide><value>wide</value><value>4</value></divide></value>
+        </subtract>
+      </x><y>
+        <subtract>
+          <value>
+            <add>
+              <value>top</value>
+              <value><divide><value>margin</value><value>2</value></divide></value>
+            </add>
+          </value>
+          <value><divide><value>tall</value><value>4</value></divide></value>
+        </subtract>
+      </y></position>
       <group name="walls" class="wall">
         <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
         <collisions />
         <group name="post" char="+" />
-        <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
-        <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
+        <group name="across" char="-"><sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width></rectangle></sprite></group>
+        <group name="down" char="|"><sprite><rectangle><height><subtract><value>tall</value><value>margin</value></subtract></height></rectangle></sprite></group>
       </group>
       <!-- the gaps, a class for each side, so the man knows which side to
            come in at in the next room -->
       <group name="exits">
-        <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
+        <sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width><height>margin</height><color>color.black</color></rectangle></sprite>
         <hidden />
         <group name="north" char="n" class="northexit">
           <collisions><collision object="player"><reset way="north" /><enter way="north" /></collision></collisions>
@@ -247,7 +267,7 @@
           <collisions><collision object="player"><reset way="south" /><enter way="south" /></collision></collisions>
         </group>
         <group name="sides">
-          <sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite>
+          <sprite><rectangle><width>margin</width><height><subtract><value>tall</value><value>margin</value></subtract></height></rectangle></sprite>
           <group name="west" char="w" class="westexit">
             <collisions><collision object="player"><reset way="west" /><enter way="west" /></collision></collisions>
           </group>
@@ -379,17 +399,17 @@
              the walls, out of play until he goes through an exit; just
              inside the gap, so he touches it before the way out -->
         <group name="doors" class="wall">
-          <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
+          <sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width><height>margin</height><color>color.blue</color></rectangle></sprite>
           <waiting />
           <collisions />
           <member name="northdoor"><position><x>232</x><y>56</y></position></member>
           <member name="southdoor"><position><x>232</x><y>424</y></position></member>
           <member name="westdoor">
-            <sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite>
+            <sprite><rectangle><width>margin</width><height><subtract><value>tall</value><value>margin</value></subtract></height></rectangle></sprite>
             <position><x>8</x><y>184</y></position>
           </member>
           <member name="eastdoor">
-            <sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite>
+            <sprite><rectangle><width>margin</width><height><subtract><value>tall</value><value>margin</value></subtract></height></rectangle></sprite>
             <position><x>552</x><y>184</y></position>
           </member>
         </group>
@@ -431,7 +451,14 @@
           <sprite>
             <bitmap from="player-down" />
           </sprite>
-          <position><x>window.right - lives.width - margin * 2 - 14</x><y>margin</y></position>
+          <position><x>
+            <subtract>
+              <value>window.right</value>
+              <value>lives.width</value>
+              <value><multiply><value>margin</value><value>2</value></multiply></value>
+              <value>14</value>
+            </subtract>
+          </x><y>margin</y></position>
         </object>
       </objects>
 
@@ -619,8 +646,8 @@
         <!-- no robot left in the room: ten more for each destroyed -->
         <condition class="robot"><remaining>0</remaining>
           <condition object="player" variable="kills"><atleast>1</atleast>
-            <inc variable="player.score">10 * player.kills</inc>
-            <inc variable="player.lifepoints">10 * player.kills</inc>
+            <inc variable="player.score"><multiply><value>10</value><value>player.kills</value></multiply></inc>
+            <inc variable="player.lifepoints"><multiply><value>10</value><value>player.kills</value></multiply></inc>
             <set variable="player.kills">0</set>
             <play sound="bonus" />
           </condition>

@@ -61,8 +61,8 @@
     <group name="missiles" class="missile">
       <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.red</color><thickness>2</thickness></line></sprite>
       <position>
-        <x><random><min>margin</min><max>window.right - margin</max></random></x>
-        <y><random><min>-sky</min><max>-10</max></random></y>
+        <x><random><min>margin</min><max><subtract><value>window.right</value><value>margin</value></subtract></max></random></x>
+        <y><random><min><negate><value>sky</value></negate></min><max>-10</max></random></y>
       </position>
       <velocity><y>speed</y></velocity>
       <heading>180</heading>
@@ -86,7 +86,7 @@
     <!-- the counter-missiles, three in the air at once; each bursts where it meets the sight -->
     <object name="abm" class="abm">
       <sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>
-      <velocity><y>-abmspeed</y></velocity>
+      <velocity><y><negate><value>abmspeed</value></negate></y></velocity>
       <most>3</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -157,7 +157,7 @@
           </variables>
         </object>
         <object name="ground">
-          <sprite><rectangle><width>window.right</width><height>window.bottom - ground</height><color>color.yellow</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>ground</value></subtract></height><color>color.yellow</color></rectangle></sprite>
           <position><x>0</x><y>ground</y></position>
         </object>
         <!-- six cities, three either side of the base -->
@@ -165,7 +165,7 @@
           <sprite>
             <bitmap from="cities" />
           </sprite>
-          <position><y>ground - 14</y></position>
+          <position><y><subtract><value>ground</value><value>14</value></subtract></y></position>
           <collisions>
             <collision class="missile"><play sound="city" /><die /></collision>
           </collisions>
@@ -181,7 +181,7 @@
           <sprite>
             <bitmap from="base" />
           </sprite>
-          <position><x><centered /></x><y>ground - base.height</y></position>
+          <position><x><centered /></x><y><subtract><value>ground</value><value>base.height</value></subtract></y></position>
           <actions>
             <action name="launch">
               <fire object="abm" />

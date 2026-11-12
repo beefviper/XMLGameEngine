@@ -69,13 +69,13 @@
   </window>
   <variables>
     <variable name="tile">16</variable>
-    <variable name="top">3 * tile</variable>
+    <variable name="top"><multiply><value>3</value><value>tile</value></multiply></variable>
     <variable name="pacspeed">2</variable>
     <variable name="frightspeed">1</variable>
     <variable name="eyesspeed">4</variable>
     <variable name="pathspeed">1</variable>
     <!-- where the ghost house's way out ends, above the door -->
-    <variable name="out">3 * tile</variable>
+    <variable name="out"><multiply><value>3</value><value>tile</value></multiply></variable>
   </variables>
   <paths>
     <!-- out of the ghost house, each ghost from its own place: back to it,
@@ -87,19 +87,19 @@
     <path name="pinkyout">
       <speed>pathspeed</speed>
       <home />
-      <step><x>0</x><y>-out</y></step>
+      <step><x>0</x><y><negate><value>out</value></negate></y></step>
     </path>
     <path name="inkyout">
       <speed>pathspeed</speed>
       <home />
-      <step><x>2 * tile</x><y>0</y></step>
-      <step><x>0</x><y>-out</y></step>
+      <step><x><multiply><value>2</value><value>tile</value></multiply></x><y>0</y></step>
+      <step><x>0</x><y><negate><value>out</value></negate></y></step>
     </path>
     <path name="clydeout">
       <speed>pathspeed</speed>
       <home />
-      <step><x>-2 * tile</x><y>0</y></step>
-      <step><x>0</x><y>-out</y></step>
+      <step><x><multiply><value>-2</value><value>tile</value></multiply></x><y>0</y></step>
+      <step><x>0</x><y><negate><value>out</value></negate></y></step>
     </path>
   </paths>
   <styles>
@@ -268,7 +268,7 @@
           <timers>
             <timer>
               <every>4</every>
-              <set variable="status.eaten">status.eaten + 30</set>
+              <set variable="status.eaten"><add><value>status.eaten</value><value>30</value></add></set>
             </timer>
           </timers>
         </object>
@@ -276,10 +276,10 @@
         <group name="corners">
           <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
           <hidden />
-          <member name="topright"><position><x>25 * tile</x><y>0</y></position></member>
-          <member name="topleft"><position><x>2 * tile</x><y>0</y></position></member>
-          <member name="bottomright"><position><x>27 * tile</x><y>window.bottom - 1</y></position></member>
-          <member name="bottomleft"><position><x>0</x><y>window.bottom - 1</y></position></member>
+          <member name="topright"><position><x><multiply><value>25</value><value>tile</value></multiply></x><y>0</y></position></member>
+          <member name="topleft"><position><x><multiply><value>2</value><value>tile</value></multiply></x><y>0</y></position></member>
+          <member name="bottomright"><position><x><multiply><value>27</value><value>tile</value></multiply></x><y><subtract><value>window.bottom</value><value>1</value></subtract></y></position></member>
+          <member name="bottomleft"><position><x>0</x><y><subtract><value>window.bottom</value><value>1</value></subtract></y></position></member>
         </group>
         <map name="maze">
           <tile>
@@ -527,7 +527,7 @@
                 </collision>
                 <collision sprite="blue">
                   <inc variable="status.score">status.worth</inc>
-                  <set variable="status.worth">status.worth * 2</set>
+                  <set variable="status.worth"><multiply><value>status.worth</value><value>2</value></multiply></set>
                   <play sound="eatghost" />
                   <become sprite="eyes" />
                 </collision>
@@ -616,7 +616,7 @@
               <content>1UP</content>
             </text>
           </sprite>
-          <position><x>3 * tile</x><y>2</y></position>
+          <position><x><multiply><value>3</value><value>tile</value></multiply></x><y>2</y></position>
         </object>
         <object name="scorevalue">
           <sprite>
@@ -624,7 +624,7 @@
               <number>status.score</number>
             </text>
           </sprite>
-          <position><x>3 * tile</x><y>22</y></position>
+          <position><x><multiply><value>3</value><value>tile</value></multiply></x><y>22</y></position>
         </object>
         <object name="livesvalue">
           <sprite>
@@ -634,7 +634,7 @@
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x>2 * tile</x><y>window.bottom - 24</y></position>
+          <position><x><multiply><value>2</value><value>tile</value></multiply></x><y><subtract><value>window.bottom</value><value>24</value></subtract></y></position>
         </object>
       </objects>
       <shows>
@@ -747,7 +747,12 @@
               <color>color.yellow</color>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>top + 17.5 * tile</centered></y></position>
+          <position><x><centered /></x><y><centered>
+            <add>
+              <value>top</value>
+              <value><multiply><value>17.5</value><value>tile</value></multiply></value>
+            </add>
+          </centered></y></position>
         </object>
       </objects>
       <shows>
@@ -806,7 +811,12 @@
               <color>color.red</color>
             </text>
           </sprite>
-          <position><x><centered /></x><y><centered>top + 17.5 * tile</centered></y></position>
+          <position><x><centered /></x><y><centered>
+            <add>
+              <value>top</value>
+              <value><multiply><value>17.5</value><value>tile</value></multiply></value>
+            </add>
+          </centered></y></position>
         </object>
         <object name="again">
           <sprite>

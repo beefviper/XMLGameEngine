@@ -87,20 +87,20 @@
           <sprite><rectangle><width>window.right</width><height>rail</height><color>color.brown</color></rectangle></sprite>
           <collisions />
           <member><position><x>0</x><y>0</y></position></member>
-          <member><position><x>0</x><y>window.bottom - rail</y></position></member>
+          <member><position><x>0</x><y><subtract><value>window.bottom</value><value>rail</value></subtract></y></position></member>
           <member><sprite><rectangle><width>rail</width><height>window.bottom</height></rectangle></sprite><position><x>0</x><y>0</y></position></member>
-          <member><sprite><rectangle><width>rail</width><height>window.bottom</height></rectangle></sprite><position><x>window.right - rail</x><y>0</y></position></member>
+          <member><sprite><rectangle><width>rail</width><height>window.bottom</height></rectangle></sprite><position><x><subtract><value>window.right</value><value>rail</value></subtract></x><y>0</y></position></member>
         </group>
         <!-- the six pockets: the corners and the middle of the long sides -->
         <group name="pockets" class="pocket">
           <sprite><circle><radius>pocket</radius><color>color.black</color></circle></sprite>
           <collisions />
-          <member><position><x>rail - pocket</x><y>rail - pocket</y></position></member>
-          <member><position><x><centered /></x><y>rail - pocket</y></position></member>
-          <member><position><x>window.right - rail - pocket</x><y>rail - pocket</y></position></member>
-          <member><position><x>rail - pocket</x><y>window.bottom - rail - pocket</y></position></member>
-          <member><position><x><centered /></x><y>window.bottom - rail - pocket</y></position></member>
-          <member><position><x>window.right - rail - pocket</x><y>window.bottom - rail - pocket</y></position></member>
+          <member><position><x><subtract><value>rail</value><value>pocket</value></subtract></x><y><subtract><value>rail</value><value>pocket</value></subtract></y></position></member>
+          <member><position><x><centered /></x><y><subtract><value>rail</value><value>pocket</value></subtract></y></position></member>
+          <member><position><x><subtract><value>window.right</value><value>rail</value><value>pocket</value></subtract></x><y><subtract><value>rail</value><value>pocket</value></subtract></y></position></member>
+          <member><position><x><subtract><value>rail</value><value>pocket</value></subtract></x><y><subtract><value>window.bottom</value><value>rail</value><value>pocket</value></subtract></y></position></member>
+          <member><position><x><centered /></x><y><subtract><value>window.bottom</value><value>rail</value><value>pocket</value></subtract></y></position></member>
+          <member><position><x><subtract><value>window.right</value><value>rail</value><value>pocket</value></subtract></x><y><subtract><value>window.bottom</value><value>rail</value><value>pocket</value></subtract></y></position></member>
         </group>
         <object name="player">
           <variables>
@@ -110,11 +110,11 @@
         </object>
         <object name="score">
           <sprite><text style="hud"><number>player.score</number></text></sprite>
-          <position><x>margin</x><y>rail + 4</y></position>
+          <position><x>margin</x><y><add><value>rail</value><value>4</value></add></y></position>
         </object>
         <object name="clock">
           <sprite><text style="hud"><number>player.time</number></text></sprite>
-          <position><x><right><offset>margin</offset></right></x><y>rail + 4</y></position>
+          <position><x><right><offset>margin</offset></right></x><y><add><value>rail</value><value>4</value></add></y></position>
         </object>
         <group name="balls" class="ball">
           <sprite><circle><radius>ball</radius><color>color.white</color></circle></sprite>

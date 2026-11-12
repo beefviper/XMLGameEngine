@@ -94,7 +94,7 @@
         </object>
         <object name="flaglabel">
           <sprite><text style="hud"><content>flags </content><number>status.flags</number><content> of 10</content></text></sprite>
-          <position><x>left</x><y>top - 50</y></position>
+          <position><x>left</x><y><subtract><value>top</value><value>50</value></subtract></y></position>
         </object>
 
         <!-- the mines, hidden under the squares -->
@@ -125,9 +125,9 @@
           <row>#########</row>
           <row>#########</row>
           <group name="squares" class="square" char="#">
-            <sprite name="closed"><rectangle><width>cell - 4</width><height>cell - 4</height><color>color.grey</color></rectangle></sprite>
+            <sprite name="closed"><rectangle><width><subtract><value>cell</value><value>4</value></subtract></width><height><subtract><value>cell</value><value>4</value></subtract></height><color>color.grey</color></rectangle></sprite>
             <sprite name="flag"><text style="flag"><content>F</content></text></sprite>
-            <sprite name="n0"><rectangle><width>cell - 4</width><height>cell - 4</height><color>color.darkgrey</color></rectangle></sprite>
+            <sprite name="n0"><rectangle><width><subtract><value>cell</value><value>4</value></subtract></width><height><subtract><value>cell</value><value>4</value></subtract></height><color>color.darkgrey</color></rectangle></sprite>
             <sprite name="n1"><text style="one"><content>1</content></text></sprite>
             <sprite name="n2"><text style="two"><content>2</content></text></sprite>
             <sprite name="n3"><text style="three"><content>3</content></text></sprite>
@@ -136,8 +136,8 @@
             <sprite name="n6"><text style="more"><content>6</content></text></sprite>
             <sprite name="n7"><text style="more"><content>7</content></text></sprite>
             <sprite name="n8"><text style="more"><content>8</content></text></sprite>
-            <sprite name="boom"><circle><radius>cell / 3</radius><color>color.red</color></circle></sprite>
-            <sprite name="mine"><circle><radius>cell / 4</radius><color>color.white</color></circle></sprite>
+            <sprite name="boom"><circle><radius><divide><value>cell</value><value>3</value></divide></radius><color>color.red</color></circle></sprite>
+            <sprite name="mine"><circle><radius><divide><value>cell</value><value>4</value></divide></radius><color>color.white</color></circle></sprite>
             <actions>
               <!-- opened (by the cursor, or by a clear neighbour): only one still closed -->
               <action name="open">
@@ -168,7 +168,7 @@
               </action>
               <!-- a flag on, or off again: open is 0 closed, 1 open, 2 flagged -->
               <action name="flag">
-                <condition variable="open"><unequal>1</unequal><set variable="self.open">2 - self.open</set></condition>
+                <condition variable="open"><unequal>1</unequal><set variable="self.open"><subtract><value>2</value><value>self.open</value></subtract></set></condition>
                 <condition variable="open"><equal>2</equal><become sprite="flag" /><inc variable="status.flags" /></condition>
                 <condition variable="open"><equal>0</equal><become from="flag" sprite="closed" /><dec variable="status.flags" /></condition>
               </action>
@@ -264,7 +264,7 @@
         <object name="message">
           <sprite name="won"><text style="banner"><content>CLEARED</content><color>color.green</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>BOOM</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.bottom - 30</centered></y></position>
+          <position><x><centered /></x><y><centered><subtract><value>window.bottom</value><value>30</value></subtract></centered></y></position>
         </object>
       </objects>
       <shows>

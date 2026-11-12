@@ -143,7 +143,7 @@
               <play sound="cup" />
               <set variable="self.velocity.x">0</set>
               <set variable="self.velocity.y">0</set>
-              <set variable="card.total">card.total + card.strokes</set>
+              <set variable="card.total"><add><value>card.total</value><value>card.strokes</value></add></set>
               <set variable="card.strokes">0</set>
               <inc variable="card.sunk" />
               <set variable="card.placed">0</set>
@@ -240,8 +240,8 @@
             <!-- just come in: the ball on this hole's tee -->
             <condition object="card" variable="placed">
               <equal>0</equal>
-              <set variable="ball.x">teex - radius</set>
-              <set variable="ball.y">teey - radius</set>
+              <set variable="ball.x"><subtract><value>teex</value><value>radius</value></subtract></set>
+              <set variable="ball.y"><subtract><value>teey</value><value>radius</value></subtract></set>
               <set variable="ball.velocity.x">0</set>
               <set variable="ball.velocity.y">0</set>
               <set variable="card.hole">number</set>
@@ -396,14 +396,24 @@
         <!-- all but stopped: stopped dead, and the arrow on it, ready -->
         <condition object="arrow" variable="rolling"><equal>1</equal>
           <condition object="ball" variable="velocity.x"><atmost>still</atmost>
-            <condition object="ball" variable="velocity.x"><atleast>0 - still</atleast>
+            <condition object="ball" variable="velocity.x"><atleast><subtract><value>0</value><value>still</value></subtract></atleast>
               <condition object="ball" variable="velocity.y"><atmost>still</atmost>
-                <condition object="ball" variable="velocity.y"><atleast>0 - still</atleast>
+                <condition object="ball" variable="velocity.y"><atleast><subtract><value>0</value><value>still</value></subtract></atleast>
                   <set variable="ball.velocity.x">0</set>
                   <set variable="ball.velocity.y">0</set>
                   <become object="arrow" sprite="ready" />
-                  <set variable="arrow.x">ball.x + radius - arrow.width / 2</set>
-                  <set variable="arrow.y">ball.y + radius - arrow.height / 2</set>
+                  <set variable="arrow.x">
+                    <subtract>
+                      <value><add><value>ball.x</value><value>radius</value></add></value>
+                      <value><divide><value>arrow.width</value><value>2</value></divide></value>
+                    </subtract>
+                  </set>
+                  <set variable="arrow.y">
+                    <subtract>
+                      <value><add><value>ball.y</value><value>radius</value></add></value>
+                      <value><divide><value>arrow.height</value><value>2</value></divide></value>
+                    </subtract>
+                  </set>
                   <set variable="arrow.rolling">0</set>
                 </condition>
               </condition>

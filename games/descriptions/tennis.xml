@@ -60,7 +60,7 @@
     <objects>
       <object name="continue">
         <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
-        <position><x><centered /></x><y>window.height.center + 60</y></position>
+        <position><x><centered /></x><y><add><value>window.height.center</value><value>60</value></add></y></position>
       </object>
     </objects>
     <state name="title">
@@ -151,15 +151,37 @@
             <!-- hit back when it is low enough to reach: up, and away, angled by where on the racket -->
             <collision object="player">
               <condition variable="altitude"><below>reach</below></condition>
-              <set variable="ball.velocity.y">0 - hit</set>
-              <set variable="ball.velocity.x">(ball.x - player.x - 9) * spin</set>
+              <set variable="ball.velocity.y"><subtract><value>0</value><value>hit</value></subtract></set>
+              <set variable="ball.velocity.x">
+                <multiply>
+                  <value>
+                    <subtract>
+                      <value>ball.x</value>
+                      <value>player.x</value>
+                      <value>9</value>
+                    </subtract>
+                  </value>
+                  <value>spin</value>
+                </multiply>
+              </set>
               <set variable="ball.rise">loft</set>
               <play sound="hit" />
             </collision>
             <collision object="cpu">
               <condition variable="altitude"><below>reach</below></condition>
               <set variable="ball.velocity.y">hit</set>
-              <set variable="ball.velocity.x">(ball.x - cpu.x - 9) * spin</set>
+              <set variable="ball.velocity.x">
+                <multiply>
+                  <value>
+                    <subtract>
+                      <value>ball.x</value>
+                      <value>cpu.x</value>
+                      <value>9</value>
+                    </subtract>
+                  </value>
+                  <value>spin</value>
+                </multiply>
+              </set>
               <set variable="ball.rise">loft</set>
               <play sound="hit" />
             </collision>
@@ -184,7 +206,7 @@
               <choose><by>player.points</by><word>LOVE</word><word>15</word><word>30</word><word>40</word><word>AD</word></choose>
             </text>
           </sprite>
-          <position><x>10</x><y>window.bottom - 50</y></position>
+          <position><x>10</x><y><subtract><value>window.bottom</value><value>50</value></subtract></y></position>
         </object>
       </objects>
       <inputs>
@@ -267,7 +289,7 @@
         <object name="message">
           <sprite name="lost"><text style="banner"><content>SET, CPU</content><color>color.red</color></text></sprite>
           <sprite name="won"><text style="banner"><content>SET, YOU</content><color>color.yellow</color></text></sprite>
-          <position><x><centered /></x><y>window.height.center - 150</y></position>
+          <position><x><centered /></x><y><subtract><value>window.height.center</value><value>150</value></subtract></y></position>
         </object>
       </objects>
       <shows>

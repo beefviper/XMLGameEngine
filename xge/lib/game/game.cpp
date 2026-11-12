@@ -1957,7 +1957,7 @@ namespace xge
 		if (check.live)
 		{
 			RawValue renamed = *check.live;
-			renamed.text = renameStart(renamed.text, from, to);
+			renameInValue(renamed, from, to);
 			check.live = std::make_shared<const RawValue>(std::move(renamed));
 		}
 		for (Condition::Read& read : check.reads)
@@ -2082,7 +2082,7 @@ namespace xge
 	float Game::stepHalf(const RawValue& value, const Object& follower)
 	{
 		RawValue own = value;
-		own.text = renameStart(own.text, "self", follower.name);
+		renameInValue(own, "self", follower.name);
 		return evaluateNow(own, "object '" + follower.name + "' > <follow> > <step>");
 	}
 

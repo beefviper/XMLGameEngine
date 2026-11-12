@@ -508,23 +508,28 @@ namespace xge
 
 		bool nameSelfInValue(RawValue& each, const std::string& name)
 		{
-			bool changed = false;
-			for (std::string* text : { &each.text, &each.min, &each.max })
-			{
-				std::string renamed = renameStart(*text, "self", name);
-				if (renamed != *text) { *text = std::move(renamed); changed = true; }
-			}
-			if (each.operations)
-			{
-				auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
-				for (RawOperation& operation : *operations)
-				{
-					for (RawOperand& operand : operation.operands) { changed = nameSelfInValue(operand.value, name) || changed; }
-				}
-				each.operations = std::move(operations);
-			}
-			return changed;
+			return renameInValue(each, "self", name);
 		}
+	}
+
+	bool renameInValue(RawValue& each, const std::string& from, const std::string& to)
+	{
+		bool changed = false;
+		for (std::string* text : { &each.text, &each.min, &each.max, &each.offset })
+		{
+			std::string renamed = renameStart(*text, from, to);
+			if (renamed != *text) { *text = std::move(renamed); changed = true; }
+		}
+		if (each.operations)
+		{
+			auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
+			for (RawOperation& operation : *operations)
+			{
+				for (RawOperand& operand : operation.operands) { changed = renameInValue(operand.value, from, to) || changed; }
+			}
+			each.operations = std::move(operations);
+		}
+		return changed;
 	}
 
 	bool nameSelfIn(std::vector<RawCommand>& list, const std::string& name)
@@ -708,21 +713,7 @@ namespace xge
 
 	void renameOwn(RawObject& object, const std::string& from, const std::string& to)
 	{
-		const std::function<void(RawValue&)> value = [&](RawValue& each)
-		{
-			each.text = renameStart(each.text, from, to);
-			each.min = renameStart(each.min, from, to);
-			each.max = renameStart(each.max, from, to);
-			if (each.operations)
-			{
-				auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
-				for (RawOperation& operation : *operations)
-				{
-					for (RawOperand& operand : operation.operands) { value(operand.value); }
-				}
-				each.operations = std::move(operations);
-			}
-		};
+		const auto value = [&](RawValue& each) { renameInValue(each, from, to); };
 		const std::function<void(RawCondition&)> check = [&](RawCondition& condition)
 		{
 			for (RawCondition& part : condition.parts) { check(part); }

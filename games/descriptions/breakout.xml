@@ -98,8 +98,19 @@
           <columns>14</columns>
           <rows>2</rows>
           <padding><x>gap</x><y>gap</y></padding>
-          <sprite><rectangle><width>brick</width><height>line - gap</height></rectangle></sprite>
-          <position><x>(window.right - 14 * brick - 13 * gap) / 2</x></position>
+          <sprite><rectangle><width>brick</width><height><subtract><value>line</value><value>gap</value></subtract></height></rectangle></sprite>
+          <position><x>
+            <divide>
+              <value>
+                <subtract>
+                  <value>window.right</value>
+                  <value><multiply><value>14</value><value>brick</value></multiply></value>
+                  <value><multiply><value>13</value><value>gap</value></multiply></value>
+                </subtract>
+              </value>
+              <value>2</value>
+            </divide>
+          </x></position>
           <collisions>
             <collision object="ball">
               <inc variable="status.score">self.worth</inc>
@@ -114,27 +125,27 @@
           </group>
           <group name="orange">
             <sprite><rectangle><color>color.orange</color></rectangle></sprite>
-            <position><y>top + 2 * line</y></position>
+            <position><y><add><value>top</value><value><multiply><value>2</value><value>line</value></multiply></value></add></y></position>
             <collisions><collision object="ball"><play sound="orange" /></collision></collisions>
             <variables><variable name="worth">5</variable></variables>
           </group>
           <group name="green">
             <sprite><rectangle><color>color.green</color></rectangle></sprite>
-            <position><y>top + 4 * line</y></position>
+            <position><y><add><value>top</value><value><multiply><value>4</value><value>line</value></multiply></value></add></y></position>
             <collisions><collision object="ball"><play sound="green" /></collision></collisions>
             <variables><variable name="worth">3</variable></variables>
           </group>
           <group name="yellow">
             <sprite><rectangle><color>color.yellow</color></rectangle></sprite>
-            <position><y>top + 6 * line</y></position>
+            <position><y><add><value>top</value><value><multiply><value>6</value><value>line</value></multiply></value></add></y></position>
             <collisions><collision object="ball"><play sound="yellow" /></collision></collisions>
             <variables><variable name="worth">1</variable></variables>
           </group>
         </group>
         <object name="player">
           <sprite name="full"><rectangle><width>paddle</width><height>12</height><color>color.cyan</color></rectangle></sprite>
-          <sprite name="half"><rectangle><width>paddle / 2</width><height>12</height><color>color.cyan</color></rectangle></sprite>
-          <position><x><centered /></x><y>window.bottom - 60</y></position>
+          <sprite name="half"><rectangle><width><divide><value>paddle</value><value>2</value></divide></width><height>12</height><color>color.cyan</color></rectangle></sprite>
+          <position><x><centered /></x><y><subtract><value>window.bottom</value><value>60</value></subtract></y></position>
           <collisions>
             <collision edge="horizontal"><stick /></collision>
           </collisions>
@@ -178,7 +189,12 @@
             </collision>
             <collision class="brick"><bounce /></collision>
             <collision class="brick">
-              <condition variable="y"><below>top + 4 * line</below></condition>
+              <condition variable="y"><below>
+                <add>
+                  <value>top</value>
+                  <value><multiply><value>4</value><value>line</value></multiply></value>
+                </add>
+              </below></condition>
               <condition variable="deep"><equal>0</equal></condition>
               <inc variable="ball.deep" />
               <trigger action="faster" />
@@ -186,8 +202,8 @@
           </collisions>
           <actions>
             <action name="faster">
-              <set variable="ball.velocity.x">ball.velocity.x * 1.25</set>
-              <set variable="ball.velocity.y">ball.velocity.y * 1.25</set>
+              <set variable="ball.velocity.x"><multiply><value>ball.velocity.x</value><value>1.25</value></multiply></set>
+              <set variable="ball.velocity.y"><multiply><value>ball.velocity.y</value><value>1.25</value></multiply></set>
             </action>
           </actions>
           <variables>

@@ -2657,15 +2657,15 @@
 
   <!-- A <condition> of an <accepts> (the current node) on the arriving one's
        variables: list.push_back({ PileRule::VarRule::Kind::Equal, "rank", -1, true, "" }).
-       Against top.<variable>, plus or minus N: top true, that variable when another. -->
+       Against top.<variable>, or an <add> or <subtract> of it and N: top
+       true, that variable when another. -->
   <xsl:template name="accept-rule">
     <xsl:param name="list" />
     <xsl:param name="indent" />
-    <xsl:variable name="text" select="normalize-space(*[1])" />
+    <xsl:variable name="by" select="*[1]/*[self::add or self::subtract]" />
+    <xsl:variable name="text" select="normalize-space(*[1]/text()[normalize-space()] | $by/value[1])" />
     <xsl:variable name="against" select="starts-with($text, 'top.')" />
-    <xsl:variable name="after" select="substring-after($text, 'top.')" />
-    <xsl:variable name="named" select="substring-before(concat(translate($after, '+-', '  '), ' '), ' ')" />
-    <xsl:variable name="rest" select="normalize-space(substring-after($after, $named))" />
+    <xsl:variable name="named" select="substring-after($text, 'top.')" />
     <xsl:variable name="kind">
       <xsl:choose>
         <xsl:when test="@total = 'sum'">Total</xsl:when>
@@ -2679,8 +2679,8 @@
     </xsl:variable>
     <xsl:variable name="amount">
       <xsl:choose>
-        <xsl:when test="$against and starts-with($rest, '-')"><xsl:value-of select="concat('-', normalize-space(substring($rest, 2)))" /></xsl:when>
-        <xsl:when test="$against and $rest != ''"><xsl:value-of select="normalize-space(substring($rest, 2))" /></xsl:when>
+        <xsl:when test="$by[self::subtract]"><xsl:value-of select="concat('-', normalize-space($by/value[2]))" /></xsl:when>
+        <xsl:when test="$by"><xsl:value-of select="normalize-space($by/value[2])" /></xsl:when>
         <xsl:when test="$against">0</xsl:when>
         <xsl:otherwise><xsl:value-of select="$text" /></xsl:otherwise>
       </xsl:choose>

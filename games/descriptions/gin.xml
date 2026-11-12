@@ -120,18 +120,24 @@
         <!-- the stock and the discard pile: picked, each sends its top card to the player's own -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth - 24</x><y>middle</y></position>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value>cardwidth</value>
+              <value>24</value>
+            </subtract>
+          </x><y>middle</y></position>
           <holds class="card" sprite="back"><picked><send>1</send></picked></holds>
         </object>
         <object name="discard" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center + 24</x><y>middle</y></position>
+          <position><x><add><value>window.width.center</value><value>24</value></add></x><y>middle</y></position>
           <holds class="card" sprite="face"><accepts /><picked><send>1</send></picked></holds>
         </object>
 
         <!-- north's cards, face down, and yours: laid out in melds, the deadwood counted -->
         <object name="northcards" class="place">
-          <position><x>window.width.center - 168</x><y>theirs</y></position>
+          <position><x><subtract><value>window.width.center</value><value>168</value></subtract></x><y>theirs</y></position>
           <holds class="card" sprite="back"><spread><x>24</x></spread><score patterns="rummy"><melds /><best>10</best></score></holds>
         </object>
         <object name="mine" class="place">
@@ -142,15 +148,15 @@
         <!-- the scores, whose turn it is, and your deadwood -->
         <object name="northscore">
           <sprite><text style="note"><content>north</content><number>north.score</number><choose><by>north.turn</by><word /><word>to play</word></choose></text></sprite>
-          <position><x><centered /></x><y>theirs + cardheight + 8</y></position>
+          <position><x><centered /></x><y><add><value>theirs</value><value>cardheight</value><value>8</value></add></y></position>
         </object>
         <object name="yourscore">
           <sprite><text style="note"><content>you</content><number>you.score</number><choose><by>you.turn</by><word /><word>your turn: draw, then discard; k knocks</word></choose><color>color.yellow</color></text></sprite>
-          <position><x>56</x><y>yours - 52</y></position>
+          <position><x>56</x><y><subtract><value>yours</value><value>52</value></subtract></y></position>
         </object>
         <object name="deadwood">
           <sprite><text style="note"><content>deadwood</content><number>mine.deadwood</number></text></sprite>
-          <position><x>window.width - 210</x><y>yours - 52</y></position>
+          <position><x><subtract><value>window.width</value><value>210</value></subtract></x><y><subtract><value>yours</value><value>52</value></subtract></y></position>
         </object>
 
         <!-- how a hand ended -->
@@ -164,7 +170,7 @@
           <sprite name="northcut"><text style="note"><content>you undercut north's knock: spacebar deals</content><color>color.yellow</color></text></sprite>
           <sprite name="void"><text style="note"><content>the stock is out: no score. spacebar deals</content></text></sprite>
           <sprite name="dealing"><text style="note"><content>shuffling</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y>middle + cardheight + 30</y></position>
+          <position><x><centered /></x><y><add><value>middle</value><value>cardheight</value><value>30</value></add></y></position>
         </object>
 
         <!-- the table: where the hand is (its look), who goes first, who knocks; between hands, Space deals -->
@@ -186,7 +192,7 @@
               <send from="stock" into="discard">1</send>
               <become sprite="drawing" />
               <pass object="players" member="table.first" />
-              <set variable="table.first">3 - table.first</set>
+              <set variable="table.first"><subtract><value>3</value><value>table.first</value></subtract></set>
               <play sound="deal" />
             </action>
           </actions>
@@ -250,7 +256,7 @@
             <variable name="discarded">0</variable>
           </variables>
           <turns sprite="waiting" />
-          <member name="you"><position><x>53</x><y>yours - 3</y></position><owns object="mine" /></member>
+          <member name="you"><position><x>53</x><y><subtract><value>yours</value><value>3</value></subtract></y></position><owns object="mine" /></member>
           <member name="north">
             <sprite name="draw" />
             <sprite name="discard" />
@@ -295,17 +301,22 @@
           <condition object="mine" variable="deadwood"><atmost>10</atmost>
             <first><set variable="table.knocking">3</set></first>
             <condition object="mine" variable="deadwood"><equal>0</equal>
-              <inc variable="you.score">25 + northcards.deadwood</inc>
+              <inc variable="you.score"><add><value>25</value><value>northcards.deadwood</value></add></inc>
               <become object="message" sprite="yougin" />
               <play sound="win" />
             </condition>
             <condition object="northcards" variable="deadwood"><atmost>mine.deadwood</atmost>
-              <inc variable="north.score">25 + mine.deadwood - northcards.deadwood</inc>
+              <inc variable="north.score">
+                <subtract>
+                  <value><add><value>25</value><value>mine.deadwood</value></add></value>
+                  <value>northcards.deadwood</value>
+                </subtract>
+              </inc>
               <become object="message" sprite="youcut" />
               <play sound="lose" />
             </condition>
             <otherwise>
-              <inc variable="you.score">northcards.deadwood - mine.deadwood</inc>
+              <inc variable="you.score"><subtract><value>northcards.deadwood</value><value>mine.deadwood</value></subtract></inc>
               <become object="message" sprite="youknock" />
               <play sound="win" />
             </otherwise>
@@ -319,7 +330,7 @@
         <condition object="north" variable="discarded"><equal>1</equal>
           <first><set variable="north.discarded">0</set></first>
           <condition object="northcards" variable="deadwood"><equal>0</equal>
-            <inc variable="north.score">25 + mine.deadwood</inc>
+            <inc variable="north.score"><add><value>25</value><value>mine.deadwood</value></add></inc>
             <become object="message" sprite="northgin" />
             <play sound="lose" />
             <set variable="table.knocking">3</set>
@@ -327,12 +338,17 @@
           <condition object="northcards" variable="deadwood"><atmost>10</atmost>
             <first><set variable="table.knocking">3</set></first>
             <condition object="mine" variable="deadwood"><atmost>northcards.deadwood</atmost>
-              <inc variable="you.score">25 + northcards.deadwood - mine.deadwood</inc>
+              <inc variable="you.score">
+                <subtract>
+                  <value><add><value>25</value><value>northcards.deadwood</value></add></value>
+                  <value>mine.deadwood</value>
+                </subtract>
+              </inc>
               <become object="message" sprite="northcut" />
               <play sound="win" />
             </condition>
             <otherwise>
-              <inc variable="north.score">mine.deadwood - northcards.deadwood</inc>
+              <inc variable="north.score"><subtract><value>mine.deadwood</value><value>northcards.deadwood</value></subtract></inc>
               <become object="message" sprite="northknock" />
               <play sound="lose" />
             </otherwise>
@@ -435,16 +451,16 @@
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
     <drawing name="playersdraw">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="playersdiscard">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
     </drawing>
   </pictures>
 </game>

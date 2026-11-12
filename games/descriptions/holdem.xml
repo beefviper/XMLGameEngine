@@ -127,28 +127,51 @@
         <!-- the computer's two cards, yours, and the five shared: each player's scored with the shared -->
         <object name="theirs" class="place">
           <sprite name="spot" />
-          <position><x>window.width.center - cardwidth - 4</x><y>theirrow</y></position>
-          <holds class="card" sprite="face"><spread><x>cardwidth + 8</x></spread><score patterns="poker"><with object="board"><full>5</full></with><best>5</best></score></holds>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value>cardwidth</value>
+              <value>4</value>
+            </subtract>
+          </x><y>theirrow</y></position>
+          <holds class="card" sprite="face"><spread><x><add><value>cardwidth</value><value>8</value></add></x></spread><score patterns="poker"><with object="board"><full>5</full></with><best>5</best></score></holds>
         </object>
         <object name="board" class="place">
-          <sprite><rectangle><width>cardwidth * 5 + 64</width><height>cardheight + 16</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center - cardwidth * 2.5 - 32</x><y>boardrow - 8</y></position>
-          <holds class="card" sprite="face"><spread><x>cardwidth + 16</x></spread></holds>
+          <sprite><rectangle><width>
+            <add>
+              <value><multiply><value>cardwidth</value><value>5</value></multiply></value>
+              <value>64</value>
+            </add>
+          </width><height><add><value>cardheight</value><value>16</value></add></height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><multiply><value>cardwidth</value><value>2.5</value></multiply></value>
+              <value>32</value>
+            </subtract>
+          </x><y><subtract><value>boardrow</value><value>8</value></subtract></y></position>
+          <holds class="card" sprite="face"><spread><x><add><value>cardwidth</value><value>16</value></add></x></spread></holds>
         </object>
         <object name="yours" class="place">
           <sprite name="spot" />
-          <position><x>window.width.center - cardwidth - 4</x><y>yourrow</y></position>
-          <holds class="card" sprite="face"><spread><x>cardwidth + 8</x></spread><score patterns="poker"><with object="board"><full>5</full></with><best>5</best></score></holds>
+          <position><x>
+            <subtract>
+              <value>window.width.center</value>
+              <value>cardwidth</value>
+              <value>4</value>
+            </subtract>
+          </x><y>yourrow</y></position>
+          <holds class="card" sprite="face"><spread><x><add><value>cardwidth</value><value>8</value></add></x></spread><score patterns="poker"><with object="board"><full>5</full></with><best>5</best></score></holds>
         </object>
 
         <!-- the table: the pot, what the player to act owes, the raises and actions this round, the round (0 before
              the flop, 1 the flop, 2 the turn, 3 the river, 4 the showdown, 5 between hands, 6 shuffling), the bet, and who acts first this hand -->
         <object name="table">
           <sprite><text style="note"><content>pot </content><number>table.pot</number></text></sprite>
-          <position><x><centered /></x><y>boardrow - 50</y></position>
+          <position><x><centered /></x><y><subtract><value>boardrow</value><value>50</value></subtract></y></position>
           <actions>
             <action name="deal">
-              <set variable="table.first">3 - table.first</set>
+              <set variable="table.first"><subtract><value>3</value><value>table.first</value></subtract></set>
               <pass object="players" member="table.first" />
               <dec variable="you.chips">5</dec>
               <dec variable="cpu.chips">5</dec>
@@ -208,7 +231,7 @@
 
         <object name="tocall">
           <sprite><text style="help"><content>to call </content><number>table.owed</number><content>    bet </content><number>table.bet</number></text></sprite>
-          <position><x><centered /></x><y>boardrow + cardheight + 24</y></position>
+          <position><x><centered /></x><y><add><value>boardrow</value><value>cardheight</value><value>24</value></add></y></position>
         </object>
 
         <!-- where the hand is (dealing, betting, showdown, done), and the street the betting is on; Space when it is done deals the next -->
@@ -263,8 +286,8 @@
             </action>
             <action name="raise">
               <condition object="cpu" variable="turn"><equal>1</equal><become object="cpusays" sprite="raise" /></condition>
-              <dec variable="self.chips">table.owed + table.bet</dec>
-              <inc variable="table.pot">table.owed + table.bet</inc>
+              <dec variable="self.chips"><add><value>table.owed</value><value>table.bet</value></add></dec>
+              <inc variable="table.pot"><add><value>table.owed</value><value>table.bet</value></add></inc>
               <set variable="table.owed">table.bet</set>
               <inc variable="table.raises">1</inc>
               <inc variable="table.acted">1</inc>
@@ -275,9 +298,9 @@
             </action>
             <!-- short: all it has; what it cannot match goes back to the other -->
             <action name="allin">
-              <condition object="you" variable="turn"><equal>1</equal><inc variable="cpu.chips">table.owed - you.chips</inc></condition>
-              <condition object="cpu" variable="turn"><equal>1</equal><inc variable="you.chips">table.owed - cpu.chips</inc><become object="cpusays" sprite="call" /></condition>
-              <dec variable="table.pot">table.owed - self.chips</dec>
+              <condition object="you" variable="turn"><equal>1</equal><inc variable="cpu.chips"><subtract><value>table.owed</value><value>you.chips</value></subtract></inc></condition>
+              <condition object="cpu" variable="turn"><equal>1</equal><inc variable="you.chips"><subtract><value>table.owed</value><value>cpu.chips</value></subtract></inc><become object="cpusays" sprite="call" /></condition>
+              <dec variable="table.pot"><subtract><value>table.owed</value><value>self.chips</value></subtract></dec>
               <inc variable="table.pot">self.chips</inc>
               <set variable="self.chips">0</set>
               <set variable="table.owed">0</set>
@@ -309,7 +332,7 @@
             <sprite name="act"><text style="note"><content>w bet or raise, spacebar check or call, x fold</content></text></sprite>
             <sprite name="callonly"><text style="note"><content>spacebar check or call, x fold</content></text></sprite>
             <sprite name="allin"><text style="note"><content>spacebar calls with all your chips, x folds</content></text></sprite>
-            <position><x><centered /></x><y>yourrow + cardheight + 70</y></position>
+            <position><x><centered /></x><y><add><value>yourrow</value><value>cardheight</value><value>70</value></add></y></position>
           </member>
           <member name="cpu">
             <sprite name="playing" />
@@ -331,12 +354,12 @@
           <sprite name="call"><text style="help"><content>the computer checks or calls</content></text></sprite>
           <sprite name="raise"><text style="help"><content>the computer bets</content><color>color.yellow</color></text></sprite>
           <sprite name="fold"><text style="help"><content>the computer folds</content></text></sprite>
-          <position><x><centered /></x><y>theirrow + cardheight + 24</y></position>
+          <position><x><centered /></x><y><add><value>theirrow</value><value>cardheight</value><value>24</value></add></y></position>
         </object>
 
         <object name="cpuchips">
           <sprite><text style="note"><content>computer: </content><number>cpu.chips</number><content> chips</content></text></sprite>
-          <position><x><centered /></x><y>theirrow - 44</y></position>
+          <position><x><centered /></x><y><subtract><value>theirrow</value><value>44</value></subtract></y></position>
         </object>
         <object name="yourchips">
           <sprite>
@@ -349,7 +372,7 @@
               </choose>
             </text>
           </sprite>
-          <position><x><centered /></x><y>yourrow - 44</y></position>
+          <position><x><centered /></x><y><subtract><value>yourrow</value><value>44</value></subtract></y></position>
         </object>
 
         <object name="result">
@@ -359,7 +382,7 @@
           <sprite name="split"><text style="result"><content>a split pot</content><color>color.white</color></text></sprite>
           <sprite name="youfold"><text style="result"><content>you fold</content><color>color.lightgrey</color></text></sprite>
           <sprite name="cpufolds"><text style="result"><content>the computer folds</content></text></sprite>
-          <position><x><centered /></x><y>yourrow + cardheight + 30</y></position>
+          <position><x><centered /></x><y><add><value>yourrow</value><value>cardheight</value><value>30</value></add></y></position>
         </object>
       </objects>
       <!-- the cards start in the stock, shuffled -->
@@ -415,8 +438,8 @@
             <play sound="lose" />
           </condition>
           <otherwise>
-            <inc variable="you.chips">table.pot / 2</inc>
-            <inc variable="cpu.chips">table.pot / 2</inc>
+            <inc variable="you.chips"><divide><value>table.pot</value><value>2</value></divide></inc>
+            <inc variable="cpu.chips"><divide><value>table.pot</value><value>2</value></divide></inc>
             <set variable="table.pot">0</set>
             <become object="result" sprite="split" />
             <play sound="chip" />
@@ -443,7 +466,7 @@
           <!-- your turn: what you can do -->
           <condition object="you" variable="turn"><equal>1</equal>
           <condition object="table" variable="raises"><below>3</below>
-            <condition object="you" variable="chips"><atleast>table.owed + table.bet</atleast>
+            <condition object="you" variable="chips"><atleast><add><value>table.owed</value><value>table.bet</value></add></atleast>
               <become object="you" sprite="act" />
             </condition>
           </condition>
@@ -461,27 +484,42 @@
             <condition object="cpu" variable="ready"><equal>1</equal>
               <condition object="theirs" variable="odds"><atleast>65</atleast>
                 <condition object="table" variable="raises"><below>3</below>
-                  <condition object="cpu" variable="chips"><atleast>table.owed + table.bet</atleast>
+                  <condition object="cpu" variable="chips"><atleast><add><value>table.owed</value><value>table.bet</value></add></atleast>
                     <hold button="f12" />
                   </condition>
                 </condition>
               </condition>
               <condition object="cpu" variable="chips"><atleast>table.owed</atleast>
                 <condition>
-                  <any><condition object="theirs" variable="odds"><below>65</below></condition><condition object="table" variable="raises"><atleast>3</atleast></condition><condition object="cpu" variable="chips"><below>table.owed + table.bet</below></condition></any>
+                  <any><condition object="theirs" variable="odds"><below>65</below></condition><condition object="table" variable="raises"><atleast>3</atleast></condition><condition object="cpu" variable="chips"><below><add><value>table.owed</value><value>table.bet</value></add></below></condition></any>
                   <condition>
-                    <any><condition object="table" variable="owed"><equal>0</equal></condition><condition object="theirs" variable="odds"><atleast>table.owed * 100 / (table.pot + table.owed)</atleast></condition></any>
+                    <any><condition object="table" variable="owed"><equal>0</equal></condition><condition object="theirs" variable="odds"><atleast>
+                      <divide>
+                        <value><multiply><value>table.owed</value><value>100</value></multiply></value>
+                        <value><add><value>table.pot</value><value>table.owed</value></add></value>
+                      </divide>
+                    </atleast></condition></any>
                     <hold button="f11" />
                   </condition>
                 </condition>
               </condition>
               <condition object="cpu" variable="chips"><below>table.owed</below>
-                <condition object="theirs" variable="odds"><atleast>table.owed * 100 / (table.pot + table.owed)</atleast>
+                <condition object="theirs" variable="odds"><atleast>
+                  <divide>
+                    <value><multiply><value>table.owed</value><value>100</value></multiply></value>
+                    <value><add><value>table.pot</value><value>table.owed</value></add></value>
+                  </divide>
+                </atleast>
                   <hold button="f9" />
                 </condition>
               </condition>
               <condition object="table" variable="owed"><above>0</above>
-                <condition object="theirs" variable="odds"><below>table.owed * 100 / (table.pot + table.owed)</below>
+                <condition object="theirs" variable="odds"><below>
+                  <divide>
+                    <value><multiply><value>table.owed</value><value>100</value></multiply></value>
+                    <value><add><value>table.pot</value><value>table.owed</value></add></value>
+                  </divide>
+                </below>
                   <hold button="f10" />
                 </condition>
               </condition>

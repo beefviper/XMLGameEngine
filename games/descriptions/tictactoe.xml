@@ -117,15 +117,15 @@
         </group>
         <!-- the grid: lines between the squares, the board showing through -->
         <object name="lines">
-          <sprite><rectangle><width>square * 3</width><height>square * 3</height><color>color.darkgrey</color></rectangle></sprite>
+          <sprite><rectangle><width><multiply><value>square</value><value>3</value></multiply></width><height><multiply><value>square</value><value>3</value></multiply></height><color>color.darkgrey</color></rectangle></sprite>
           <position><x>left</x><y>top</y></position>
         </object>
         <group name="squares">
           <columns>3</columns>
           <rows>3</rows>
           <padding><x>6</x><y>6</y></padding>
-          <sprite><rectangle><width>square - 6</width><height>square - 6</height><color>color.black</color></rectangle></sprite>
-          <position><x>left + 3</x><y>top + 3</y></position>
+          <sprite><rectangle><width><subtract><value>square</value><value>6</value></subtract></width><height><subtract><value>square</value><value>6</value></subtract></height><color>color.black</color></rectangle></sprite>
+          <position><x><add><value>left</value><value>3</value></add></x><y><add><value>top</value><value>3</value></add></y></position>
         </group>
 
         <map name="grid">

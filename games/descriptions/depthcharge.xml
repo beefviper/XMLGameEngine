@@ -118,7 +118,7 @@
     <state name="playing">
       <objects>
         <object name="sea">
-          <sprite><rectangle><width>window.right</width><height>window.bottom - surface</height><color>color.darkblue</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>surface</value></subtract></height><color>color.darkblue</color></rectangle></sprite>
           <position><x>0</x><y>surface</y></position>
         </object>
         <!-- the top of the water, where a mine that has come up goes off -->
@@ -190,7 +190,7 @@
           <sprite>
             <bitmap from="ship" />
           </sprite>
-          <position><x><centered /></x><y>surface - 20</y></position>
+          <position><x><centered /></x><y><subtract><value>surface</value><value>20</value></subtract></y></position>
           <collisions>
             <type>pixel</type>
             <collision edge="horizontal"><stick /></collision>
@@ -203,8 +203,13 @@
             <action name="left"><move direction="left">step</move></action>
             <action name="right"><move direction="right">step</move></action>
             <action name="drop">
-              <spawn object="charge"><position><x><centered>ship.x + 6</centered></x><y>ship.y + 12</y></position></spawn>
-              <spawn object="charge"><position><x><centered>ship.x + ship.width - 6</centered></x><y>ship.y + 12</y></position></spawn>
+              <spawn object="charge"><position><x><centered><add><value>ship.x</value><value>6</value></add></centered></x><y><add><value>ship.y</value><value>12</value></add></y></position></spawn>
+              <spawn object="charge"><position><x><centered>
+                <subtract>
+                  <value><add><value>ship.x</value><value>ship.width</value></add></value>
+                  <value>6</value>
+                </subtract>
+              </centered></x><y><add><value>ship.y</value><value>12</value></add></y></position></spawn>
               <play sound="drop" />
             </action>
           </actions>
@@ -219,7 +224,7 @@
         </object>
         <object name="ships">
           <sprite><text style="hud"><content>SHIPS </content><number>status.ships</number></text></sprite>
-          <position><x>window.right - 140</x><y>margin</y></position>
+          <position><x><subtract><value>window.right</value><value>140</value></subtract></x><y>margin</y></position>
         </object>
       </objects>
       <music sound="sonar" />

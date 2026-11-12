@@ -113,21 +113,26 @@
         </object>
         <object name="waste" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>left + step</x><y>top</y></position>
+          <position><x><add><value>left</value><value>step</value></add></x><y>top</y></position>
           <holds class="card" sprite="face" />
         </object>
         <!-- the foundations: each suit up from its ace, one card at a time -->
         <group name="foundations" class="place">
           <columns>4</columns>
           <rows>1</rows>
-          <padding><x>step - cardwidth</x></padding>
+          <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>left + step * 3</x><y>top</y></position>
+          <position><x>
+            <add>
+              <value>left</value>
+              <value><multiply><value>step</value><value>3</value></multiply></value>
+            </add>
+          </x><y>top</y></position>
           <holds class="card" sprite="face">
             <accepts>
               <condition total="count"><equal>1</equal></condition>
               <condition variable="suit"><equal>top.suit</equal></condition>
-              <condition variable="rank"><equal>top.rank + 1</equal></condition>
+              <condition variable="rank"><equal><add><value>top.rank</value><value>1</value></add></equal></condition>
               <empty><condition variable="rank"><equal>1</equal></condition></empty>
             </accepts>
           </holds>
@@ -136,7 +141,7 @@
         <group name="columns" class="place">
           <columns>7</columns>
           <rows>1</rows>
-          <padding><x>step - cardwidth</x></padding>
+          <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
           <position><x>left</x><y>low</y></position>
           <holds class="card">
@@ -144,7 +149,7 @@
             <spread sprite="back"><y>9</y></spread>
             <accepts>
               <condition variable="color"><unequal>top.color</unequal></condition>
-              <condition variable="rank"><equal>top.rank - 1</equal></condition>
+              <condition variable="rank"><equal><subtract><value>top.rank</value><value>1</value></subtract></equal></condition>
               <empty><condition variable="rank"><equal>13</equal></condition></empty>
             </accepts>
             <carry />
@@ -155,7 +160,7 @@
         <object name="hand">
           <sprite name="free"><drawing from="handfree" /></sprite>
           <sprite name="held"><drawing from="handheld" /></sprite>
-          <position><x>left - 3</x><y>top - 3</y></position>
+          <position><x><subtract><value>left</value><value>3</value></subtract></x><y><subtract><value>top</value><value>3</value></subtract></y></position>
           <actions>
             <action name="left"><hop direction="left" /></action>
             <action name="right"><hop direction="right" /></action>
@@ -270,16 +275,16 @@
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
     <drawing name="handfree">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="handheld">
-      <line><from><x>1</x><y>1</y></from><to><x>cardwidth + 5</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>1</y></from><to><x>cardwidth + 5</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>cardwidth + 5</x><y>cardheight + 5</y></from><to><x>1</x><y>cardheight + 5</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y>cardheight + 5</y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
     </drawing>
   </pictures>
 </game>

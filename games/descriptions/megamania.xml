@@ -59,7 +59,12 @@
     <!-- the energy bar: seconds of energy, and how wide it is drawn -->
     <variable name="full">45</variable>
     <variable name="barwidth">360</variable>
-    <variable name="barleft">window.width.center - barwidth / 2</variable>
+    <variable name="barleft">
+      <subtract>
+        <value>window.width.center</value>
+        <value><divide><value>barwidth</value><value>2</value></divide></value>
+      </subtract>
+    </variable>
   </variables>
   <styles>
     <style name="banner"><size>100</size><color>color.orange</color></style>
@@ -71,7 +76,7 @@
     <!-- one shot at a time, steered with the blaster -->
     <object name="laser" class="laser">
       <sprite><rectangle><width>3</width><height>14</height><color>color.cyan</color></rectangle></sprite>
-      <position><x update="live">player.x + 16.5</x><y>0</y></position>
+      <position><x update="live"><add><value>player.x</value><value>16.5</value></add></x><y>0</y></position>
       <velocity><y>-9</y></velocity>
       <most>1</most>
       <collisions>
@@ -95,7 +100,7 @@
         </collision>
       </collisions>
       <timers>
-        <timer><every><random><min>drop - 1</min><max>drop + 2</max></random></every><fire object="bomb" /></timer>
+        <timer><every><random><min><subtract><value>drop</value><value>1</value></subtract></min><max><add><value>drop</value><value>2</value></add></max></random></every><fire object="bomb" /></timer>
       </timers>
       <member><position><x>40</x><y>row1</y></position></member>
       <member><position><x>200</x><y>row1</y></position></member>
@@ -196,11 +201,11 @@
         </object>
         <object name="bar">
           <sprite><rectangle><width>barwidth</width><height>12</height><color>color.green</color></rectangle></sprite>
-          <position><x>barleft</x><y>window.bottom - 24</y></position>
+          <position><x>barleft</x><y><subtract><value>window.bottom</value><value>24</value></subtract></y></position>
         </object>
         <object name="cover">
           <sprite><rectangle><width>barwidth</width><height>12</height><color>color.black</color></rectangle></sprite>
-          <position><x>barleft + barwidth</x><y>window.bottom - 24</y></position>
+          <position><x><add><value>barleft</value><value>barwidth</value></add></x><y><subtract><value>window.bottom</value><value>24</value></subtract></y></position>
         </object>
 
         <object name="score">
@@ -228,7 +233,7 @@
           <conditions>
             <condition name="cleared" class="enemy">
               <remaining>0</remaining>
-              <inc variable="player.score">energy.level * 10</inc>
+              <inc variable="player.score"><multiply><value>energy.level</value><value>10</value></multiply></inc>
               <play sound="wave" />
               <reset object="energy" />
               <despawn object="bomb" />
@@ -360,7 +365,7 @@
           <conditions>
             <condition name="cleared" class="enemy">
               <remaining>0</remaining>
-              <inc variable="player.score">energy.level * 10</inc>
+              <inc variable="player.score"><multiply><value>energy.level</value><value>10</value></multiply></inc>
               <play sound="wave" />
               <become object="over.message" sprite="won" />
               <push state="over" />
@@ -383,7 +388,17 @@
         </condition>
       </conditions>
       <timers>
-        <timer><every>0.1</every><set variable="cover.x">barleft + barwidth * energy.level / full</set></timer>
+        <timer><every>0.1</every><set variable="cover.x">
+          <add>
+            <value>barleft</value>
+            <value>
+              <divide>
+                <value><multiply><value>barwidth</value><value>energy.level</value></multiply></value>
+                <value>full</value>
+              </divide>
+            </value>
+          </add>
+        </set></timer>
       </timers>
     </state>
 

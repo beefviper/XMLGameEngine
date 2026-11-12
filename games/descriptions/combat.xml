@@ -59,7 +59,7 @@
          scores for the tank that fired it -->
     <object name="shell" class="shell">
       <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
-      <velocity><y>-shellspeed</y></velocity>
+      <velocity><y><negate><value>shellspeed</value></negate></y></velocity>
       <mass>1</mass>
       <most>1</most>
       <collisions>
@@ -157,7 +157,7 @@
           </group>
           <group name="blue">
             <sprite><bitmap><color>color.cyan</color></bitmap></sprite>
-            <position><x><centered>window.right - 60</centered></x><y><centered /></y></position>
+            <position><x><centered><subtract><value>window.right</value><value>60</value></subtract></centered></x><y><centered /></y></position>
             <heading>270</heading>
             <actions><action name="fire"><fire object="shell2" /><play sound="fire" /></action></actions>
             <member name="tank2" />
@@ -165,11 +165,16 @@
         </group>
         <object name="score1">
           <sprite><text style="hud"><number>tank1.hits</number></text></sprite>
-          <position><x>window.width.center - 80</x><y>margin</y></position>
+          <position><x><subtract><value>window.width.center</value><value>80</value></subtract></x><y>margin</y></position>
         </object>
         <object name="score2">
           <sprite><text style="hud"><number>tank2.hits</number><color>color.cyan</color></text></sprite>
-          <position><x>window.width.center + 80 - score2.width</x><y>margin</y></position>
+          <position><x>
+            <subtract>
+              <value><add><value>window.width.center</value><value>80</value></add></value>
+              <value>score2.width</value>
+            </subtract>
+          </x><y>margin</y></position>
         </object>
       </objects>
       <inputs>

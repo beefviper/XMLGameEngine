@@ -58,7 +58,7 @@
     <!-- what is left of a wrecked lander, flung out and falling -->
     <group name="debris">
       <sprite><drawing from="debris" /></sprite>
-      <acceleration><x>0</x><y>gravity * 4</y></acceleration>
+      <acceleration><x>0</x><y><multiply><value>gravity</value><value>4</value></multiply></y></acceleration>
       <member><velocity><x>-1.6</x><y>-2</y></velocity></member>
       <member><velocity><x>1.4</x><y>-2.4</y></velocity></member>
       <member><velocity><x>-0.6</x><y>-3</y></velocity></member>
@@ -158,7 +158,7 @@
               <condition variable="speed"><below>safespeed</below></condition>
               <any>
                 <condition variable="heading"><atmost>upright</atmost></condition>
-                <condition variable="heading"><atleast>360 - upright</atleast></condition>
+                <condition variable="heading"><atleast><subtract><value>360</value><value>upright</value></subtract></atleast></condition>
               </any>
               <set variable="lander.landed">1</set>
               <stop />
@@ -188,7 +188,7 @@
         </object>
         <object name="wrecked">
           <sprite><text style="line"><content>YOU JUST DESTROYED A 100 MEGABUCK LANDER</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y>window.height.center - 140</y></position>
+          <position><x><centered /></x><y><subtract><value>window.height.center</value><value>140</value></subtract></y></position>
           <waiting />
           <timers>
             <timer><every>2.5</every><inc variable="lander.ready" /><die /></timer>
@@ -207,7 +207,7 @@
         </object>
         <object name="fuel">
           <sprite><text style="hud"><content>FUEL </content><number>lander.fuel</number></text></sprite>
-          <position><x>window.right - margin - 160</x><y>margin</y></position>
+          <position><x><subtract><value>window.right</value><value>margin</value><value>160</value></subtract></x><y>margin</y></position>
         </object>
       </objects>
       <inputs>

@@ -109,10 +109,15 @@
             <sprite><rectangle><width>cell</width><height>cell</height><color>color.darkgrey</color></rectangle></sprite>
           </group>
           <group name="body" class="body" char="o">
-            <sprite><rectangle><width>cell - 2</width><height>cell - 2</height><color>color.forestgreen</color></rectangle></sprite>
+            <sprite><rectangle><width><subtract><value>cell</value><value>2</value></subtract></width><height><subtract><value>cell</value><value>2</value></subtract></height><color>color.forestgreen</color></rectangle></sprite>
           </group>
           <group name="food" class="food" char="f">
-            <sprite><circle><radius>cell / 2 - 2</radius><color>color.red</color></circle></sprite>
+            <sprite><circle><radius>
+              <subtract>
+                <value><divide><value>cell</value><value>2</value></divide></value>
+                <value>2</value>
+              </subtract>
+            </radius><color>color.red</color></circle></sprite>
             <collisions>
               <!-- eaten: gone, so the head's step goes on, and the next comes -->
               <collision class="snake">
@@ -122,7 +127,7 @@
             </collisions>
           </group>
           <object name="head" class="snake" char="@">
-            <sprite><rectangle><width>cell - 2</width><height>cell - 2</height><color>color.green</color></rectangle></sprite>
+            <sprite><rectangle><width><subtract><value>cell</value><value>2</value></subtract></width><height><subtract><value>cell</value><value>2</value></subtract></height><color>color.green</color></rectangle></sprite>
             <facing>right</facing>
             <chain object="body" />
             <collisions>

@@ -113,7 +113,7 @@
     </object>
     <!-- a locked door: opens to the eyes while the key is by them -->
     <object name="door" class="door">
-      <sprite><rectangle><width>tile / 4</width><height>tile</height><color>color.cyan</color></rectangle></sprite>
+      <sprite><rectangle><width><divide><value>tile</value><value>4</value></divide></width><height>tile</height><color>color.cyan</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unseen</dark>
       <collisions>
@@ -165,7 +165,7 @@
     <objects>
       <object name="continue">
         <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
-        <position><x><centered /></x><y>window.height.center + 60</y></position>
+        <position><x><centered /></x><y><add><value>window.height.center</value><value>60</value></add></y></position>
       </object>
     </objects>
     <state name="title">
@@ -190,7 +190,12 @@
           <sprite>
             <bitmap from="player" />
           </sprite>
-          <position><x>tile + 11</x><y>tile * 12 + 15</y></position>
+          <position><x><add><value>tile</value><value>11</value></add></x><y>
+            <add>
+              <value><multiply><value>tile</value><value>12</value></multiply></value>
+              <value>15</value>
+            </add>
+          </y></position>
           <light>near</light>
           <collisions>
             <collision class="wall"><stop /></collision>
@@ -289,7 +294,7 @@
               </group>
               <!-- the door to the outside, where the urn must come -->
               <object name="entrance" char="E">
-                <sprite><rectangle><width>tile</width><height>tile / 4</height><color>color.brown</color></rectangle></sprite>
+                <sprite><rectangle><width>tile</width><height><divide><value>tile</value><value>4</value></divide></height><color>color.brown</color></rectangle></sprite>
               </object>
               <!-- the master key: opens a locked door by touching it -->
               <object name="key" char="k" class="key">
@@ -300,7 +305,17 @@
                 <collisions />
               </object>
             </map>
-            <object name="spider"><position><x>tile * 15 + 8</x><y>tile * 11 + 12</y></position></object>
+            <object name="spider"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>15</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>11</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
           </objects>
         </scene>
 
@@ -338,10 +353,45 @@
                 <collisions />
               </group>
             </map>
-            <object name="door"><position><x>tile * 12 + 15</x><y>tile * 6</y></position></object>
-            <object name="piece1"><position><x>tile * 9 + 11</x><y>tile * 5 + 12</y></position></object>
-            <object name="spider"><position><x>tile * 17 + 8</x><y>tile * 12 + 12</y></position></object>
-            <object name="bat"><position><x>tile * 9 + 8</x><y>tile * 8 + 14</y></position></object>
+            <object name="door"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>12</value></multiply></value>
+                <value>15</value>
+              </add>
+            </x><y><multiply><value>tile</value><value>6</value></multiply></y></position></object>
+            <object name="piece1"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>9</value></multiply></value>
+                <value>11</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>5</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
+            <object name="spider"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>17</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>12</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
+            <object name="bat"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>9</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>8</value></multiply></value>
+                <value>14</value>
+              </add>
+            </y></position></object>
           </objects>
         </scene>
 
@@ -379,11 +429,46 @@
                 <collisions />
               </group>
             </map>
-            <object name="door"><position><x>tile * 8 + 15</x><y>tile * 6</y></position></object>
+            <object name="door"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>8</value></multiply></value>
+                <value>15</value>
+              </add>
+            </x><y><multiply><value>tile</value><value>6</value></multiply></y></position></object>
             <object name="wind" />
-            <object name="piece2"><position><x>tile * 5 + 11</x><y>tile * 5 + 12</y></position></object>
-            <object name="bat"><position><x>tile * 13 + 8</x><y>tile * 8 + 14</y></position></object>
-            <object name="ghost"><position><x>tile * 17 + 8</x><y>tile * 12 + 11</y></position></object>
+            <object name="piece2"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>5</value></multiply></value>
+                <value>11</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>5</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
+            <object name="bat"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>13</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>8</value></multiply></value>
+                <value>14</value>
+              </add>
+            </y></position></object>
+            <object name="ghost"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>17</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>12</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position></object>
           </objects>
         </scene>
 
@@ -416,14 +501,59 @@
               </group>
             </map>
             <object name="door">
-              <sprite><rectangle><width>tile</width><height>tile / 4</height><color>color.cyan</color></rectangle></sprite>
-              <position><x>tile * 9</x><y>tile * 7 + 15</y></position>
+              <sprite><rectangle><width>tile</width><height><divide><value>tile</value><value>4</value></divide></height><color>color.cyan</color></rectangle></sprite>
+              <position><x><multiply><value>tile</value><value>9</value></multiply></x><y>
+                <add>
+                  <value><multiply><value>tile</value><value>7</value></multiply></value>
+                  <value>15</value>
+                </add>
+              </y></position>
             </object>
             <object name="wind" />
-            <object name="piece3"><position><x>tile * 10 + 11</x><y>tile * 5 + 12</y></position></object>
-            <object name="spider"><position><x>tile * 2 + 8</x><y>tile * 12 + 12</y></position></object>
-            <object name="bat"><position><x>tile * 9 + 8</x><y>tile * 10 + 14</y></position></object>
-            <object name="ghost"><position><x>tile * 1 + 8</x><y>tile * 2 + 11</y></position></object>
+            <object name="piece3"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>10</value></multiply></value>
+                <value>11</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>5</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
+            <object name="spider"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>2</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>12</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
+            <object name="bat"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>9</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>10</value></multiply></value>
+                <value>14</value>
+              </add>
+            </y></position></object>
+            <object name="ghost"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>1</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>2</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position></object>
           </objects>
         </scene>
       </scenes>
@@ -438,7 +568,7 @@
       <conditions>
         <!-- the whole urn, carried out of the door it came in by -->
         <condition object="player" variable="urns"><atleast>3</atleast>
-          <condition object="player" distance="entrance"><below>tile * 1.5</below>
+          <condition object="player" distance="entrance"><below><multiply><value>tile</value><value>1.5</value></multiply></below>
             <become object="over.message" sprite="won" />
             <push state="over" />
           </condition>
@@ -470,7 +600,7 @@
         <object name="message">
           <sprite name="lost"><text style="banner"><content>THE HOUSE WINS</content><color>color.red</color></text></sprite>
           <sprite name="won"><text style="banner"><content>THE URN IS WHOLE</content><color>color.yellow</color></text></sprite>
-          <position><x><centered /></x><y>window.height.center - 150</y></position>
+          <position><x><centered /></x><y><subtract><value>window.height.center</value><value>150</value></subtract></y></position>
         </object>
       </objects>
       <shows>

@@ -141,10 +141,10 @@
 
           <!-- a mushroom takes four shots, a look worn away each -->
           <group name="mushrooms" class="mushroom" char="m">
-            <sprite name="whole"><rectangle><width>cell</width><height>cell - 2</height><color>color.orange</color></rectangle></sprite>
-            <sprite name="worn"><rectangle><width>cell</width><height>cell - 6</height><color>color.orange</color></rectangle></sprite>
-            <sprite name="half"><rectangle><width>cell</width><height>cell - 9</height><color>color.orange</color></rectangle></sprite>
-            <sprite name="stub"><rectangle><width>cell</width><height>cell - 12</height><color>color.orange</color></rectangle></sprite>
+            <sprite name="whole"><rectangle><width>cell</width><height><subtract><value>cell</value><value>2</value></subtract></height><color>color.orange</color></rectangle></sprite>
+            <sprite name="worn"><rectangle><width>cell</width><height><subtract><value>cell</value><value>6</value></subtract></height><color>color.orange</color></rectangle></sprite>
+            <sprite name="half"><rectangle><width>cell</width><height><subtract><value>cell</value><value>9</value></subtract></height><color>color.orange</color></rectangle></sprite>
+            <sprite name="stub"><rectangle><width>cell</width><height><subtract><value>cell</value><value>12</value></subtract></height><color>color.orange</color></rectangle></sprite>
             <collisions>
               <collision class="shot">
                 <collision sprite="stub"><despawn /><inc variable="status.score">1</inc></collision>
@@ -210,14 +210,44 @@
             </actions>
             <!-- a head shows which way it winds, falling or rising -->
             <group name="heads" char="@">
-              <sprite name="falling"><circle><radius>cell / 2 - 1</radius><color>color.red</color></circle></sprite>
-              <sprite name="rising"><circle><radius>cell / 2 - 1</radius><color>color.magenta</color></circle></sprite>
-              <sprite name="body"><circle><radius>cell / 2 - 1</radius><color>color.green</color></circle></sprite>
+              <sprite name="falling"><circle><radius>
+                <subtract>
+                  <value><divide><value>cell</value><value>2</value></divide></value>
+                  <value>1</value>
+                </subtract>
+              </radius><color>color.red</color></circle></sprite>
+              <sprite name="rising"><circle><radius>
+                <subtract>
+                  <value><divide><value>cell</value><value>2</value></divide></value>
+                  <value>1</value>
+                </subtract>
+              </radius><color>color.magenta</color></circle></sprite>
+              <sprite name="body"><circle><radius>
+                <subtract>
+                  <value><divide><value>cell</value><value>2</value></divide></value>
+                  <value>1</value>
+                </subtract>
+              </radius><color>color.green</color></circle></sprite>
             </group>
             <group name="bodies" char="o">
-              <sprite name="body"><circle><radius>cell / 2 - 1</radius><color>color.green</color></circle></sprite>
-              <sprite name="falling"><circle><radius>cell / 2 - 1</radius><color>color.red</color></circle></sprite>
-              <sprite name="rising"><circle><radius>cell / 2 - 1</radius><color>color.magenta</color></circle></sprite>
+              <sprite name="body"><circle><radius>
+                <subtract>
+                  <value><divide><value>cell</value><value>2</value></divide></value>
+                  <value>1</value>
+                </subtract>
+              </radius><color>color.green</color></circle></sprite>
+              <sprite name="falling"><circle><radius>
+                <subtract>
+                  <value><divide><value>cell</value><value>2</value></divide></value>
+                  <value>1</value>
+                </subtract>
+              </radius><color>color.red</color></circle></sprite>
+              <sprite name="rising"><circle><radius>
+                <subtract>
+                  <value><divide><value>cell</value><value>2</value></divide></value>
+                  <value>1</value>
+                </subtract>
+              </radius><color>color.magenta</color></circle></sprite>
             </group>
           </group>
         </map>
@@ -225,7 +255,18 @@
         <!-- the wand, about the player's zone -->
         <object name="wand" class="player">
           <sprite><rectangle><width>12</width><height>12</height><color>color.cyan</color></rectangle></sprite>
-          <position><x>14 * cell + 2</x><y>top + 31 * cell + 2</y></position>
+          <position><x>
+            <add>
+              <value><multiply><value>14</value><value>cell</value></multiply></value>
+              <value>2</value>
+            </add>
+          </x><y>
+            <add>
+              <value>top</value>
+              <value><multiply><value>31</value><value>cell</value></multiply></value>
+              <value>2</value>
+            </add>
+          </y></position>
           <collisions>
             <collision edge="all"><stick /></collision>
             <collision class="line"><stick /></collision>

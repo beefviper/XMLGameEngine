@@ -87,7 +87,7 @@
         <member /><member /><member />
       </group>
       <group name="lane2">
-        <position><y>top + lane</y></position>
+        <position><y><add><value>top</value><value>lane</value></add></y></position>
         <collisions>
           <collision edge="right">
             <die />
@@ -97,7 +97,7 @@
         <member /><member /><member />
       </group>
       <group name="lane3">
-        <position><y>top + lane * 2</y></position>
+        <position><y><add><value>top</value><value><multiply><value>lane</value><value>2</value></multiply></value></add></y></position>
         <collisions>
           <collision edge="right">
             <die />
@@ -108,14 +108,14 @@
       </group>
       <!-- the lowest lane: round and round, firing at the city -->
       <group name="lane4">
-        <position><y>top + lane * 3</y></position>
+        <position><y><add><value>top</value><value><multiply><value>lane</value><value>3</value></multiply></value></add></y></position>
         <facing>down</facing>
         <collisions>
           <collision edge="right"><wrap /></collision>
         </collisions>
         <timers>
           <timer>
-            <every><random><min>raygap - 1</min><max>raygap + 1</max></random></every>
+            <every><random><min><subtract><value>raygap</value><value>1</value></subtract></min><max><add><value>raygap</value><value>1</value></add></max></random></every>
             <fire object="ray" />
             <play sound="ray" />
           </timer>
@@ -131,7 +131,7 @@
     <!-- each post's shell, made when it fires: two each in the air at most -->
     <group name="shells" class="shell">
       <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
-      <velocity><y>-shellspeed</y></velocity>
+      <velocity><y><negate><value>shellspeed</value></negate></y></velocity>
       <most>2</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -194,12 +194,12 @@
         </object>
 
         <object name="sea" class="ground">
-          <sprite><rectangle><width>window.right</width><height>window.bottom - ground</height><color>color.darkblue</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>ground</value></subtract></height><color>color.darkblue</color></rectangle></sprite>
           <position><x>0</x><y>ground</y></position>
         </object>
         <object name="surf">
           <sprite><rectangle><width>window.right</width><height>3</height><color>color.blue</color></rectangle></sprite>
-          <position><x>0</x><y>ground + 8</y></position>
+          <position><x>0</x><y><add><value>ground</value><value>8</value></add></y></position>
         </object>
 
         <!-- the city: domes and towers between the posts -->
@@ -214,7 +214,7 @@
             <sprite>
               <bitmap from="domes" />
             </sprite>
-            <position><y>ground - 18</y></position>
+            <position><y><subtract><value>ground</value><value>18</value></subtract></y></position>
             <member><position><x>80</x></position></member>
             <member><position><x>250</x></position></member>
             <member><position><x>460</x></position></member>
@@ -223,7 +223,7 @@
             <sprite>
               <bitmap from="towers" />
             </sprite>
-            <position><y>ground - 24</y></position>
+            <position><y><subtract><value>ground</value><value>24</value></subtract></y></position>
             <member><position><x>150</x></position></member>
             <member><position><x>380</x></position></member>
             <member><position><x>540</x></position></member>
@@ -236,7 +236,7 @@
           <sprite>
             <bitmap from="post" />
           </sprite>
-          <position><x>10</x><y>ground - leftpost.height</y></position>
+          <position><x>10</x><y><subtract><value>ground</value><value>leftpost.height</value></subtract></y></position>
           <heading>45</heading>
           <actions>
             <action name="fire"><fire object="leftshell" /><play sound="fire" /></action>
@@ -246,7 +246,7 @@
           <sprite>
             <bitmap from="post" />
           </sprite>
-          <position><x><centered /></x><y>ground - middlepost.height</y></position>
+          <position><x><centered /></x><y><subtract><value>ground</value><value>middlepost.height</value></subtract></y></position>
           <heading>0</heading>
           <actions>
             <action name="fire"><fire object="middleshell" /><play sound="fire" /></action>
@@ -256,7 +256,7 @@
           <sprite>
             <bitmap from="post" />
           </sprite>
-          <position><x><right><offset>10</offset></right></x><y>ground - rightpost.height</y></position>
+          <position><x><right><offset>10</offset></right></x><y><subtract><value>ground</value><value>rightpost.height</value></subtract></y></position>
           <heading>315</heading>
           <actions>
             <action name="fire"><fire object="rightshell" /><play sound="fire" /></action>

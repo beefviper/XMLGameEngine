@@ -64,7 +64,7 @@
             <action name="down"><move direction="down">step</move></action>
           </actions>
           <member name="paddle1"><position><x>margin</x><y><centered /></y></position></member>
-          <member name="paddle2"><position><x>window.right - margin - width</x><y><centered /></y></position></member>
+          <member name="paddle2"><position><x><subtract><value>window.right</value><value>margin</value><value>width</value></subtract></x><y><centered /></y></position></member>
         </group>
       </objects>
       <inputs>

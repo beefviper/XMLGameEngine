@@ -120,11 +120,23 @@
         </group>
         <object name="redscore">
           <sprite><text style="hud"><content>red </content><number>score.red</number><color>color.red</color></text></sprite>
-          <position><x>left + square * 11 + 30</x><y>top + 20</y></position>
+          <position><x>
+            <add>
+              <value>left</value>
+              <value><multiply><value>square</value><value>11</value></multiply></value>
+              <value>30</value>
+            </add>
+          </x><y><add><value>top</value><value>20</value></add></y></position>
         </object>
         <object name="bluescore">
           <sprite><text style="hud"><content>blue </content><number>score.blue</number><color>color.cyan</color></text></sprite>
-          <position><x>left + square * 11 + 30</x><y>top + 60</y></position>
+          <position><x>
+            <add>
+              <value>left</value>
+              <value><multiply><value>square</value><value>11</value></multiply></value>
+              <value>30</value>
+            </add>
+          </x><y><add><value>top</value><value>60</value></add></y></position>
         </object>
 
         <map name="grid">
@@ -148,10 +160,20 @@
           </group>
           <!-- where a line can go, faint -->
           <group name="hslots" char="h" class="hslot">
-            <sprite><rectangle><width>square * 2 - 20</width><height>2</height><color>color.darkgrey</color></rectangle></sprite>
+            <sprite><rectangle><width>
+              <subtract>
+                <value><multiply><value>square</value><value>2</value></multiply></value>
+                <value>20</value>
+              </subtract>
+            </width><height>2</height><color>color.darkgrey</color></rectangle></sprite>
           </group>
           <group name="vslots" char="v" class="vslot">
-            <sprite><rectangle><width>2</width><height>square * 2 - 20</height><color>color.darkgrey</color></rectangle></sprite>
+            <sprite><rectangle><width>2</width><height>
+              <subtract>
+                <value><multiply><value>square</value><value>2</value></multiply></value>
+                <value>20</value>
+              </subtract>
+            </height><color>color.darkgrey</color></rectangle></sprite>
           </group>
           <group name="boxes" char="b" class="box">
             <sprite><rectangle><width>4</width><height>4</height><color>color.black</color></rectangle></sprite>
@@ -159,27 +181,47 @@
           <!-- a line drawn on its place, in the colour of who drew it; one that
                walls in a box claims it in that colour -->
           <object name="redacross" class="redline">
-            <sprite><rectangle><width>square * 2</width><height>6</height><color>color.red</color></rectangle></sprite>
+            <sprite><rectangle><width><multiply><value>square</value><value>2</value></multiply></width><height>6</height><color>color.red</color></rectangle></sprite>
             <moves><on class="hslot" /><close class="box" object="redbox" /></moves>
           </object>
           <object name="reddown" class="redline">
-            <sprite><rectangle><width>6</width><height>square * 2</height><color>color.red</color></rectangle></sprite>
+            <sprite><rectangle><width>6</width><height><multiply><value>square</value><value>2</value></multiply></height><color>color.red</color></rectangle></sprite>
             <moves><on class="vslot" /><close class="box" object="redbox" /></moves>
           </object>
           <object name="blueacross" class="blueline">
-            <sprite><rectangle><width>square * 2</width><height>6</height><color>color.cyan</color></rectangle></sprite>
+            <sprite><rectangle><width><multiply><value>square</value><value>2</value></multiply></width><height>6</height><color>color.cyan</color></rectangle></sprite>
             <moves><on class="hslot" /><close class="box" object="bluebox" /></moves>
           </object>
           <object name="bluedown" class="blueline">
-            <sprite><rectangle><width>6</width><height>square * 2</height><color>color.cyan</color></rectangle></sprite>
+            <sprite><rectangle><width>6</width><height><multiply><value>square</value><value>2</value></multiply></height><color>color.cyan</color></rectangle></sprite>
             <moves><on class="vslot" /><close class="box" object="bluebox" /></moves>
           </object>
           <!-- a box claimed -->
           <object name="redbox" class="redbox">
-            <sprite><rectangle><width>square * 2 - 14</width><height>square * 2 - 14</height><color>color.red</color></rectangle></sprite>
+            <sprite><rectangle><width>
+              <subtract>
+                <value><multiply><value>square</value><value>2</value></multiply></value>
+                <value>14</value>
+              </subtract>
+            </width><height>
+              <subtract>
+                <value><multiply><value>square</value><value>2</value></multiply></value>
+                <value>14</value>
+              </subtract>
+            </height><color>color.red</color></rectangle></sprite>
           </object>
           <object name="bluebox" class="bluebox">
-            <sprite><rectangle><width>square * 2 - 14</width><height>square * 2 - 14</height><color>color.cyan</color></rectangle></sprite>
+            <sprite><rectangle><width>
+              <subtract>
+                <value><multiply><value>square</value><value>2</value></multiply></value>
+                <value>14</value>
+              </subtract>
+            </width><height>
+              <subtract>
+                <value><multiply><value>square</value><value>2</value></multiply></value>
+                <value>14</value>
+              </subtract>
+            </height><color>color.cyan</color></rectangle></sprite>
           </object>
         </map>
 

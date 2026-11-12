@@ -222,7 +222,7 @@
           </collisions>
           <actions>
             <action name="go"><thrust>push</thrust></action>
-            <action name="brake"><thrust>0 - brake</thrust></action>
+            <action name="brake"><thrust><subtract><value>0</value><value>brake</value></subtract></thrust></action>
             <action name="left"><turn direction="counterclockwise">steer</turn></action>
             <action name="right"><turn direction="clockwise">steer</turn></action>
           </actions>
@@ -242,7 +242,7 @@
           </collisions>
           <actions>
             <action name="go"><thrust>push</thrust></action>
-            <action name="brake"><thrust>0 - brake</thrust></action>
+            <action name="brake"><thrust><subtract><value>0</value><value>brake</value></subtract></thrust></action>
             <action name="left"><turn direction="counterclockwise">steer</turn></action>
             <action name="right"><turn direction="clockwise">steer</turn></action>
           </actions>
