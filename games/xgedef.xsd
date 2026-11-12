@@ -75,7 +75,7 @@
     </xs:choice>
   </xs:group>
 
-  <!-- random: a number from <min> up to <max>, each an expression or an operation, drawn each time it is worked out. -->
+  <!-- random: a number from <min> up to <max>, each a number, a name or an operation, drawn each time it is worked out. -->
   <xs:complexType name="randomType">
     <xs:sequence>
       <xs:element name="min" type="randomEndType" />
@@ -83,7 +83,7 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- An end of a <random>: text (an expression) or an operation, not both. -->
+  <!-- An end of a <random>: text (a number or a name) or an operation, not both. -->
   <xs:complexType name="randomEndType" mixed="true">
     <xs:choice minOccurs="0">
       <xs:group ref="operation" />

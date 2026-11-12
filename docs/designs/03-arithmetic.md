@@ -40,7 +40,7 @@ Plan task R12 counted every game text that calculates: 900, of which 627 are an 
 
 ## Schema
 
-An operation's operands hold operations, so the schema's types contain themselves. Xerces handles that; `load/xsd` was taught to follow a named type that refers to itself. The operations are listed twice (formula and operand), since a group containing itself is still refused there.
+An operation's operands hold operations, so the schema's types contain themselves. Xerces handles that; `load/xsd` was taught to follow a named type that refers to itself. The operations are listed twice (in a value and in an operand), since a group containing itself is still refused there.
 
 ## Open
 

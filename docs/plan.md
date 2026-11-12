@@ -41,7 +41,7 @@ Direct answers, as asked. Each is argued once here and turned into tasks below.
 
 **6. "No CI" is costing more than it saves.** More than a dozen features are still waiting for a first look on Windows. MSVC-only warnings (C4702, C4459, C4458) and Windows header macros (`near`, `far`) have each broken the build more than once. A build-only job on a Windows runner (no tests, no gate) would catch those without changing how the author tests play. If the answer is still no, do T4 (done) instead ([D3](#decisions-for-the-author)).
 
-**7. Stop writing arithmetic two ways.** Text arithmetic and `<formula>` both do `+ - * /`. Pong's title is centred with a twelve-line formula where every other game writes `<centered />`. **The author's call:** no arithmetic in strings. A text value holds one number or one name; every calculation is tags, with `<formula>` made short enough for the everyday cases (R12, done). The review's first advice (text for `+ - * /`, `<formula>` for the rest) is withdrawn: hiding a calculation in a string is the thing the format otherwise avoids, and it is a second parser to keep.
+**7. Stop writing arithmetic two ways.** Text arithmetic and `<formula>` both do `+ - * /`. Pong's title is centred with a twelve-line formula where every other game writes `<centered />`. **The author's call:** no arithmetic in strings. A text value holds one number or one name; every calculation is tags (R12, done: operations go straight in a value with `<value>` operands, nesting as precedence; `<left>`, `<right>`, `<top>` and `<bottom>` with an `<offset>` in from the side place an object at the window's edges; the `<formula>` wrapper is gone). The review's first advice (text for `+ - * /`, `<formula>` for the rest) is withdrawn: hiding a calculation in a string is the thing the format otherwise avoids, and it is a second parser to keep.
 
 ## What was run
 
@@ -111,7 +111,7 @@ Each row is one concept done more than one way. Counts are games using each form
 
 | First form | Grew into | Replaced by | What is left of the old form |
 |---|---|---|---|
-| Function-call strings | `<equation>`, exprtk | Tags, `<formula>`, `load/calc` | None: a text is one number or one name (row 9, R12, done) |
+| Function-call strings | `<equation>`, exprtk | Operation tags; `load/calc` reads one number or one name | None: a text is one number or one name (row 9, R12, done) |
 | `<grid>` | | Folded into `<group>`; later cells folded into `<map>` | Two grids remain: a group's columns and rows, a map's rows of characters |
 | `hidden`, pools of spare objects | `<reveal>`, `<release>`, `<fire>` | `<spawn>`, `<despawn>`, copies | Row 1 |
 | `<exists>`, scene kits | `<kit>` | The top-level `<objects>` | The C++ class is still `Kit`; `<active>` |
