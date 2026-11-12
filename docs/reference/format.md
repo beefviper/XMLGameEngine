@@ -53,12 +53,13 @@ Every number in a game (a position, a speed, a size, a threshold) is a **value**
 
 | Form | Example |
 |---|---|
-| arithmetic as text | `window.width.center - title.width / 2` |
+| a number or a name | `-7`, `window.right`, `paddle.width` |
 | `<random>` | `<random><min>-7</min><max>7</max></random>` |
-| an operation | the same arithmetic as tags: `<subtract><value>window.right</value><value>4</value></subtract>` ([below](#arithmetic-as-tags)) |
+| an operation | arithmetic as tags: `<subtract><value>window.right</value><value>4</value></subtract>` ([below](#arithmetic-as-tags)) |
 
-- **Text** is numbers, names, `+ - * /`, a sign in front and brackets, worked out by the engine's own `load/calc`. Nothing more: a function call (`max(6, x)`) stops the load and says to write an operation.
-- **`<random>`** draws from min to max (either order; each end text or an operation).
+- **Text** is one number (a sign in front allowed) or one name, nothing more. Arithmetic in text (`window.right - 4`) stops the load and shows the operation to write instead (`<subtract><value>window.right</value><value>4</value></subtract>`); so does a function call (`max(6, x)`).
+- **Sides:** in an `<x>`, `<left>` and `<right>` put that side of the object on the window's side, `<top>` and `<bottom>` likewise in a `<y>`, with an optional `<offset>` measured in from the side: `<right><offset>12</offset></right>`.
+- **`<random>`** draws from min to max (either order; each end a number, a name or an operation).
 
 ### When a value is worked out
 
@@ -142,7 +143,7 @@ An operation is written straight in a value. Its operands are `<value>`s, each a
 - An operand is a **name or a number**, never an expression.
 - The first value is combined with each of the others in turn: `a - b - c` is one `<subtract>` of three `<value>`s.
 - `<compare>` uses a [condition's test words](states.md#conditions). Pac-Man chases for ever from wave four: `20 + 100000 ×` a `<compare><value>mode.waves</value><atleast>4</atleast></compare>`.
-- **Dividing by 0**, in a `<divide>` or in text (`1 / 0`). A divisor certainly 0 at load stops the load, naming the `<divide>` or quoting the text. One that is 0 only because it is not known yet (another object's variable, an unmeasured text) gives 0, and a position or interval made from it is worked out again later. While running, it gives 0 and one warning per place.
+- **Dividing by 0** in a `<divide>`. A divisor certainly 0 at load stops the load, naming the `<divide>`. One that is 0 only because it is not known yet (another object's variable, an unmeasured text) gives 0, and a position or interval made from it is worked out again later. While running, it gives 0 and one warning per place.
 - **Too big a number.** A value that comes out as infinity or not a number at load (`1e30 * 1e30`) stops the load.
 
 ## Names

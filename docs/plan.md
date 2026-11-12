@@ -41,7 +41,7 @@ Direct answers, as asked. Each is argued once here and turned into tasks below.
 
 **6. "No CI" is costing more than it saves.** More than a dozen features are still waiting for a first look on Windows. MSVC-only warnings (C4702, C4459, C4458) and Windows header macros (`near`, `far`) have each broken the build more than once. A build-only job on a Windows runner (no tests, no gate) would catch those without changing how the author tests play. If the answer is still no, do T4 (done) instead ([D3](#decisions-for-the-author)).
 
-**7. Stop writing arithmetic two ways.** Text arithmetic and `<formula>` both do `+ - * /`. Pong's title is centred with a twelve-line formula where every other game writes `<centered />`. **The author's call:** no arithmetic in strings. A text value holds one number or one name; every calculation is tags, with `<formula>` made short enough for the everyday cases ([R12](#r12-no-arithmetic-in-text)). The review's first advice (text for `+ - * /`, `<formula>` for the rest) is withdrawn: hiding a calculation in a string is the thing the format otherwise avoids, and it is a second parser to keep.
+**7. Stop writing arithmetic two ways.** Text arithmetic and `<formula>` both do `+ - * /`. Pong's title is centred with a twelve-line formula where every other game writes `<centered />`. **The author's call:** no arithmetic in strings. A text value holds one number or one name; every calculation is tags, with `<formula>` made short enough for the everyday cases (R12, done). The review's first advice (text for `+ - * /`, `<formula>` for the rest) is withdrawn: hiding a calculation in a string is the thing the format otherwise avoids, and it is a second parser to keep.
 
 ## What was run
 
@@ -93,7 +93,7 @@ Each row is one concept done more than one way. Counts are games using each form
 | 6 | Yes or no | `xs:boolean` content: `<active>`, `<drawn>`, `<enabled>`, `<lockstep>`, `<fullscreen>`. Empty tags elsewhere (`<loop />`, `<forced />`, `<cells />`). A pick elsewhere (`update="live"`) | Empty tags: `<hidden />`-style words chosen by the author | R6, done |
 | 7 | The middle of the window | `<centered />` (433 uses), `<centered>window.height.center + 70</centered>` (289 of the 297 with content name the window's own middle), `window.width.center - title.width / 2` by hand (4 games), a `<formula>` (Pong) | `<centered />` and `<centered>` holding only the offset | R7, done |
 | 8 | Names of the window | `window.right`, `window.bottom`, `window.width.center`, `window.height.center`; `window.width` is not a name | `window.width`, `window.height`, `window.middle.x`/`.y` or the author's choice; one scheme | R7, done |
-| 9 | Arithmetic | Text and `<formula>` both do `+ - * /` (about 1,170 texts in all 58 games calculate) | Tags only: a text is one number or one name (the author's call) | [R12](#r12-no-arithmetic-in-text) |
+| 9 | Arithmetic | Text and `<formula>` both do `+ - * /` (about 1,170 texts in all 58 games calculate) | Tags only: a text is one number or one name (the author's call) | R12, done |
 | 10 | Where bitmaps live | `<pictures>` with `<bitmap from>` (36 games); inline `<bitmap>` rows in a sprite (14 games, 65 bitmaps) | `<pictures>` whenever a bitmap is used twice or is more than a few rows | R8, done |
 | 11 | All of several tests | Nested conditions (everywhere); `<all>` inside `<any>` (Tennis only, 3 uses) | Decide whether Tennis can nest; if so remove `<all>` | R8, done |
 | 12 | A speed test on a touch | `<slower>` (Lunar Lander), `<faster>` (no game): a second comparison vocabulary beside `<above>`/`<below>`/`<atleast>`/`<atmost>` | A rule's `<condition variable="speed"><below>` | done (R1) |
@@ -111,7 +111,7 @@ Each row is one concept done more than one way. Counts are games using each form
 
 | First form | Grew into | Replaced by | What is left of the old form |
 |---|---|---|---|
-| Function-call strings | `<equation>`, exprtk | Tags, `<formula>`, `load/calc` | Arithmetic still in text (row 9, R12) |
+| Function-call strings | `<equation>`, exprtk | Tags, `<formula>`, `load/calc` | None: a text is one number or one name (row 9, R12, done) |
 | `<grid>` | | Folded into `<group>`; later cells folded into `<map>` | Two grids remain: a group's columns and rows, a map's rows of characters |
 | `hidden`, pools of spare objects | `<reveal>`, `<release>`, `<fire>` | `<spawn>`, `<despawn>`, copies | Row 1 |
 | `<exists>`, scene kits | `<kit>` | The top-level `<objects>` | The C++ class is still `Kit`; `<active>` |
@@ -169,7 +169,7 @@ Each has a default the plan assumes, so work is not blocked. Changing one change
 | D5 | Whether pools go entirely (R3) | **Settled by the author:** yes, pools were a stand-in from before spawning; `<die />` and `<reveal>` stay for fixed members | R3, done |
 | D6 | Whether the standard pause and title screens become a built-in default | **No.** A hidden default breaks "one file is the whole game". Standardise the spelling instead | R9 |
 | D7 | Pause on new games and genres until phases 1 to 3 are done | Yes | Order of work |
-| D8 | The short tag forms that replace arithmetic in text | **Settled in part by the author:** no arithmetic in strings. The forms are proposed after R12's survey and the author picks | R12 (R7, done) |
+| D8 | The short tag forms that replace arithmetic in text | **Settled by the author:** no arithmetic in strings; operations straight in a value with `<value>` operands, nesting as precedence, and `<left>`, `<right>`, `<top>`, `<bottom>` with an `<offset>` for the window's sides | R12, done |
 
 ## Rules for every task
 
@@ -203,19 +203,7 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 
 ### Phase 3: the reduction pass
 
-R1 is done (its verdicts are in `docs/designs/11-vocabulary-map.md`). The rest are independent of each other unless noted, and each is one branch.
-
-#### R12. No arithmetic in text
-
-- **Size** L, in substeps. **Needs** D8; R7 is done (the 266 `window.height.center + N` in `<centered>` are `<offset>`s; the 63 uses of `window.*.center` left are card layouts and offsets of a top-left corner, which are this task's).
-- **Why.** Finding 7, the author's call: a calculation hidden in a string is data encoded in a string, which the format otherwise never allows, and `load/calc` is a second language inside the first. About 1,170 texts in all 58 games calculate (Mario Bros. 70, the card games 40 to 53 each). Tags are what the schema, the generator and any later tool can see.
-- **Do.**
-  1. **Survey (S).** Done: 900 texts, the counts by shape in `docs/designs/03-arithmetic.md`.
-  2. **Decide the short forms (D8).** `<formula>` as it is takes several lines for `paddle.y + 10`. Propose to the author, with the survey's top shapes written each way, what makes the common ones short without strings: for example operand tags that read in one line (`<add><value>paddle.y</value><value>10</value></add>`), an `<offset>` child where a position is "that name, moved by" (`<x>ball.x<offset>4</offset></x>` breaks the one rule, so it is a child of a value tag, not mixed content), or named halves as names (`title.width.half`) the way `window.width.center` is today. The author picks; nothing is built before.
-  3. **The reader (M).** A text value is one number (with its sign) or one name. Anything else stops the load, naming the text and showing the tag form. `load/calc` keeps only what `<formula>` needs (it may go entirely: `<formula>` is evaluated by `load/expr`); `data.xsl` and the describer follow.
-  4. **The games (L).** One game first as the proof (Pong), then groups of about ten. Values must not change: for each game dump every object's start position, size and variables before and after, and compare; then the group's tests.
-  5. **Docs.** `docs/reference/format.md` (values), `docs/designs/03-arithmetic.md`, `docs/readme.md`'s tour and the root `readme.md` if their examples calculate in text.
-- **Done.** No game text holds an operator; `load/calc`'s text parser is gone or used by nothing a game writes; the text half of B4's check (a `/` in text by 0) goes with it, the `<divide>` half stays.
+Done: R1 (its verdicts are in `docs/designs/11-vocabulary-map.md`) through R12.
 
 ### Phase 4: architecture
 
@@ -401,10 +389,7 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
 Small, safe steps; the tests are green after every line. A line is one branch off `working`, merged when its checks pass. Lines in the same block can be done in any order or by different sessions at once.
 
 ```
-Blocks 1 and 2 are done.
-
-Block 3  (reduction; R1, R4 and R11 are done)
-  R12 no arithmetic in text            (survey, then D8, then the sweep)
+Blocks 1, 2 and 3 are done.
 
 Block 4  (architecture)
   A1  a verb is one file: what is left (printing)
@@ -431,10 +416,9 @@ What blocks what, in one place:
 
 | Task | Needs first |
 |---|---|
-| R12 | D8 |
 | A3 (`readCommand`, `makeCommand`) | A1 |
 | A1 substep 3 | A5 far enough along to retire `data.xsl` |
 | A4 | A2 |
 | F8 | D7 lifted |
 
-If only a few more things are ever done from this file, start with R12 (B2, B3, B5, R1, R3, R4, R5, R6, R7, R8, R9, R10, R11 and T1 are done).
+If only a few more things are ever done from this file, start with block 4 (B2, B3, B5, R1, R3 to R12 and T1 are done).

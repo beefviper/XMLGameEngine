@@ -867,7 +867,7 @@ TEST_CASE("a <text> is its pieces: labels, numbers and letters, each following i
 	const std::string owner = box("p", 0, 0, 10, 10, "<off />", {}, "<variables><variable name=\"score\">120</variable>"
 		"<variable name=\"a\">7</variable><variable name=\"b\">-1</variable><variable name=\"c\">27</variable></variables>");
 	const std::string label = "<object name=\"label\"><sprite><text><content>SCORE</content><number>p.score</number>"
-		"<letter>p.a</letter><letter>p.b</letter><letter>p.c</letter><number>p.score * 2</number><size>20</size></text></sprite>"
+		"<letter>p.a</letter><letter>p.b</letter><letter>p.c</letter><number><multiply><value>p.score</value><value>2</value></multiply></number><size>20</size></text></sprite>"
 		"<position><x>0</x><y>0</y></position></object>";
 
 	for (XmlBackend backend : { XmlBackend::Xerces, XmlBackend::PugiXml })

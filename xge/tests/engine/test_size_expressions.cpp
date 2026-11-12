@@ -154,7 +154,7 @@ namespace
     <objects>
       <object name="logo">
         <sprite><circle><radius>logo.radius</radius></circle></sprite>
-        <position><x>window.width.center - logo.radius</x><y>window.height.center - logo.radius</y></position>
+        <position><x><subtract><value>window.width.center</value><value>logo.radius</value></subtract></x><y><subtract><value>window.height.center</value><value>logo.radius</value></subtract></y></position>
       </object>
     </objects>
     <state name="title">
@@ -196,8 +196,8 @@ namespace
 
 	// The logo is a 100-radius circle (200 x 200); the title is a text. Its
 	// position is the only place these two expressions are written in kSizes.
-	const std::string kLogoX = "window.width.center - logo.radius";
-	const std::string kLogoY = "window.height.center - logo.radius";
+	const std::string kLogoX = "<subtract><value>window.width.center</value><value>logo.radius</value></subtract>";
+	const std::string kLogoY = "<subtract><value>window.height.center</value><value>logo.radius</value></subtract>";
 
 	std::vector<std::pair<std::string, std::string>> logoAt(const std::string& x, const std::string& y)
 	{
@@ -207,7 +207,7 @@ namespace
 
 TEST_CASE("a shape's position that uses its own size is exact as soon as the game loads", "[size_expressions]")
 {
-	const ScratchFile scratch = writeGame(logoAt("logo.width", "logo.height * 2"));
+	const ScratchFile scratch = writeGame(logoAt("logo.width", "<multiply><value>logo.height</value><value>2</value></multiply>"));
 
 	Game game{ scratch.path.string() };
 	const Object& logo = game.getObject("logo");
@@ -220,7 +220,7 @@ TEST_CASE("a shape's position that uses its own size is exact as soon as the gam
 
 TEST_CASE("an object can be placed by another object's size", "[size_expressions]")
 {
-	const ScratchFile scratch = writeGame(logoAt("title.width + 10", "title.height"));
+	const ScratchFile scratch = writeGame(logoAt("<add><value>title.width</value><value>10</value></add>", "title.height"));
 
 	Game game{ scratch.path.string() };
 	Object& logo = game.getObject("logo");

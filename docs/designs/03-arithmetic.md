@@ -1,6 +1,6 @@
-# Arithmetic in text and as tags
+# Arithmetic as tags
 
-**Status:** Built: text arithmetic of `+ - * /` (`load/calc`), and operation tags (`<add>`, `<clamp>`, ...) for everything more; text arithmetic is going (plan R12). Reference: [arithmetic as tags](../reference/format.md#arithmetic-as-tags).
+**Status:** Built: every calculation is operation tags (`<add>`, `<clamp>`, ...); a value's text is one number or one name (`load/calc`), and sides (`<left>`, `<right>`, `<top>`, `<bottom>`) cover the window edges. Reference: [arithmetic as tags](../reference/format.md#arithmetic-as-tags).
 
 ## What we looked for
 
@@ -28,14 +28,15 @@ Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from 
 ## The text cut down
 
 - The text was once worked out by exprtk, so it had functions (`max(...)`, `cos(... * pi / 180)`) and comparisons: a second, hidden maths vocabulary beside the tags.
-- **Chosen: one small library of our own,** `load/calc`: numbers, names, `+ - * /`, a leading sign, brackets, nothing else. It compiles a text once into steps that read each name's number where it lives, and works left to right exactly as written. A function call stops the load and says to write an operation.
-- **A text divides by 0 as a `<divide>` does:** 0, stopping the load when the divisor is certainly 0, and a value that comes out as infinity at load stops it too. Before, text gave infinity and an object went nowhere.
-- **Open, the author's call: no arithmetic in text at all.** A text would hold one number or one name, every calculation tags, with the operations short enough for the common shapes. Plan task R12 surveys the shapes first.
+- **Then one small library of our own,** `load/calc`, of `+ - * /` and brackets. A function call stopped the load and said to write an operation.
+- **Chosen by the author (plan D8): no arithmetic in text at all.** `load/calc` now reads one number (a sign allowed) or one name, bound once to where the number lives. Arithmetic in text stops the load and shows the operation to write (for two terms, the exact tags). A value that comes out as infinity at load stops it too.
+- **Sides for the window edges:** `<left>`, `<right>` (in an `<x>`), `<top>`, `<bottom>` (in a `<y>`) put the object's own side on the window's, an optional `<offset>` measured in from the side, so `window.right - paddle.width - 12` is `<right><offset>12</offset></right>`. `<centered>` may hold an operation, a middle placed by a calculation.
+- **Long operations are laid out a `<value>` per line** in the games; short ones stay on one line.
 - Rejected: an expression backend behind a factory with exprtk as an option. Nothing a game writes would differ between them, and a game would fail on one the first time someone used a function.
 
 ## The survey for no arithmetic in text
 
-Plan task R12 counted every game text that calculates: 900, of which 627 are an `<x>` or `<y>`, 109 a size and 93 a number for `<set>`, `<inc>` or `<dec>`. By shape: a name plus or minus a number 382; names added or taken away 157; a name times a number (and a number) 143; a name and a name times a number 44; a number less a name 38; with a division 94; longer 42. 199 start from a `window.` name, and 100 are card layouts on `cardwidth` or `cardheight`. So three in four are one name changed once or twice. The short forms are the author's pick (plan D8).
+Plan task R12 counted every game text that calculates: 900, of which 627 are an `<x>` or `<y>`, 109 a size and 93 a number for `<set>`, `<inc>` or `<dec>`. By shape: a name plus or minus a number 382; names added or taken away 157; a name times a number (and a number) 143; a name and a name times a number 44; a number less a name 38; with a division 94; longer 42. 199 start from a `window.` name, and 100 are card layouts on `cardwidth` or `cardheight`. So three in four are one name changed once or twice. All 900 were converted to operations and sides, with every start number unchanged.
 
 ## Schema
 

@@ -424,7 +424,7 @@ TEST_CASE("the size of a sprite of lines can be used in an expression like any s
 {
 	const std::string second =
 		"<object name=\"flag\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
-		"<position><x>window.right - hut.width</x><y>hut.height</y></position>"
+		"<position><x><subtract><value>window.right</value><value>hut.width</value></subtract></x><y>hut.height</y></position>"
 		"<velocity><x>0</x><y>0</y></velocity>"
 		"<collisions><off /></collisions></object>";
 	Loaded loaded{ gameXml(kHut + second, "<show object=\"hut\" /><show object=\"flag\" />") };

@@ -311,7 +311,7 @@ TEST_CASE("<shift> moves objects and the places they go home to; one on a path o
 TEST_CASE("a path step that names something live is worked out as it starts, with self the one following", "[paths]")
 {
 	const std::string paths = "<paths><path name=\"aim\"><speed>2</speed>"
-		"<step><x>b.x - self.x</x><y>0</y></step><home /></path></paths>";
+		"<step><x><subtract><value>b.x</value><value>self.x</value></subtract></x><y>0</y></step><home /></path></paths>";
 	Loaded loaded(paths, box("a", 50, 50) + box("b", 10, 0));
 	Object& a = loaded.game.getObject("a");
 	Object& b = loaded.game.getObject("b");

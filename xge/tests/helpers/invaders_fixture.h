@@ -78,7 +78,7 @@ namespace invaders_fixture
         </sprite>
         <position>
           <x>window.width.center</x>
-          <y>window.bottom - height * 2</y>
+          <y><subtract><value>window.bottom</value><value><multiply><value>height</value><value>2</value></multiply></value></subtract></y>
         </position>
         <velocity>
           <x>0</x>
@@ -117,7 +117,7 @@ namespace invaders_fixture
         </sprite>
         <position>
           <x>margin</x>
-          <y>margin/2</y>
+          <y><divide><value>margin</value><value>2</value></divide></y>
         </position>
         <velocity>
           <x>2</x>
@@ -144,8 +144,8 @@ namespace invaders_fixture
           </text>
         </sprite>
         <position>
-          <x>window.width.center - title.width / 2</x>
-          <y>window.height.center - title.height / 2 - 100</y>
+          <x><subtract><value>window.width.center</value><value><divide><value>title.width</value><value>2</value></divide></value></subtract></x>
+          <y><subtract><value>window.height.center</value><value><divide><value>title.height</value><value>2</value></divide></value><value>100</value></subtract></y>
         </position>
         <velocity>
           <x>0</x>
@@ -164,8 +164,8 @@ namespace invaders_fixture
           </text>
         </sprite>
         <position>
-          <x>window.width.center - youwin.width / 2</x>
-          <y>window.height.center - 150</y>
+          <x><subtract><value>window.width.center</value><value><divide><value>youwin.width</value><value>2</value></divide></value></subtract></x>
+          <y><subtract><value>window.height.center</value><value>150</value></subtract></y>
         </position>
         <velocity>
           <x>0</x>
@@ -184,8 +184,8 @@ namespace invaders_fixture
           </text>
         </sprite>
         <position>
-          <x>window.width.center - continue.width / 2</x>
-          <y>window.height.center + 60</y>
+          <x><subtract><value>window.width.center</value><value><divide><value>continue.width</value><value>2</value></divide></value></subtract></x>
+          <y><add><value>window.height.center</value><value>60</value></add></y>
         </position>
         <velocity>
           <x>0</x>
@@ -204,8 +204,8 @@ namespace invaders_fixture
           </text>
         </sprite>
         <position>
-          <x>window.width.center - settings.width / 2</x>
-          <y>window.height.center - settings.height / 2</y>
+          <x><subtract><value>window.width.center</value><value><divide><value>settings.width</value><value>2</value></divide></value></subtract></x>
+          <y><subtract><value>window.height.center</value><value><divide><value>settings.height</value><value>2</value></divide></value></subtract></y>
         </position>
         <velocity>
           <x>0</x>
@@ -224,8 +224,8 @@ namespace invaders_fixture
           </text>
         </sprite>
         <position>
-          <x>window.width.center - paused.width / 2</x>
-          <y>window.height.center - paused.height / 2</y>
+          <x><subtract><value>window.width.center</value><value><divide><value>paused.width</value><value>2</value></divide></value></subtract></x>
+          <y><subtract><value>window.height.center</value><value><divide><value>paused.height</value><value>2</value></divide></value></subtract></y>
         </position>
         <velocity>
           <x>0</x>

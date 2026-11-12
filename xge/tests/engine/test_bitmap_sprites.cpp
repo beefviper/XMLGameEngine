@@ -336,7 +336,7 @@ TEST_CASE("a bitmap's size can be used in an expression like any shape's", "[bit
 {
 	const std::string flag =
 		"<object name=\"flag\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
-		"<position><x>window.right - thing.width</x><y>thing.height</y></position>"
+		"<position><x><subtract><value>window.right</value><value>thing.width</value></subtract></x><y>thing.height</y></position>"
 		"<velocity><x>0</x><y>0</y></velocity><collisions><off /></collisions></object>";
 	Loaded loaded{ gameXml(objectWith("<sprite><bitmap><row>*.*.*</row><row>*.*.*</row><scale>2</scale></bitmap></sprite>") + flag,
 		"<show object=\"thing\" /><show object=\"flag\" />") };

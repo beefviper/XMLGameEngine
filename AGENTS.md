@@ -25,7 +25,7 @@ The root [readme.md](readme.md) is the short public overview.
 
 The programs make `games/` their working directory (`engine/folder.h`), so asset paths in a game file (`assets/paddle.jpg`) and the tests' paths (`descriptions/pong.xml`) are relative to it.
 
-Flow: `load/xml` (parse, validate; `load/merge` works out the pieces (the top-level `<objects>`) and every `from=` on the XML first) → `game/scenes` (`layOutScenes`: states' and scenes' objects named by path) → `load/expr` (evaluate; `load/calc` works out the arithmetic in text) → `Object`/`State` → `Game` with `play/frame` (one frame) + `Engine` (loop, windows, sound). Each command tag is a file in `verbs/` (its places, `read`, `make`, `check`, `run`), listed in `verbs/all.cpp`. Backends sit behind `XmlDocument`, `Window` and `Audio` factories.
+Flow: `load/xml` (parse, validate; `load/merge` works out the pieces (the top-level `<objects>`) and every `from=` on the XML first) → `game/scenes` (`layOutScenes`: states' and scenes' objects named by path) → `load/expr` (evaluate; `load/calc` reads a text's one number or name) → `Object`/`State` → `Game` with `play/frame` (one frame) + `Engine` (loop, windows, sound). Each command tag is a file in `verbs/` (its places, `read`, `make`, `check`, `run`), listed in `verbs/all.cpp`. Backends sit behind `XmlDocument`, `Window` and `Audio` factories.
 
 ## Build and test
 

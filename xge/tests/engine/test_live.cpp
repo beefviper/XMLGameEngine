@@ -97,7 +97,7 @@ namespace
 TEST_CASE("a command's value is read when it runs: a variable as it is now, where things are and how they go", "[live]")
 {
 	const Scratch file(box("ball", 100, 50, "<velocity><x>2</x><y>0</y></velocity><variables><variable name=\"step\">5</variable><variable name=\"count\">0</variable></variables>"),
-		"<inc variable=\"ball.count\">ball.step</inc><set variable=\"ball.velocity.y\">ball.velocity.x * 3</set><set variable=\"ball.step\">ball.x</set>");
+		"<inc variable=\"ball.count\">ball.step</inc><set variable=\"ball.velocity.y\"><multiply><value>ball.velocity.x</value><value>3</value></multiply></set><set variable=\"ball.step\">ball.x</set>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -115,7 +115,7 @@ TEST_CASE("<set> puts a value into where an object is, or into every member of a
 	const Scratch file(box("ball", 100, 50)
 		+ "<group name=\"row\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
 		"<member><position><x>0</x><y>300</y></position></member><member><position><x>20</x><y>300</y></position></member></group>",
-		"<set variable=\"ball.x\">400</set><set variable=\"row.y\">ball.x / 2</set><set variable=\"row.velocity.x\">-1</set>");
+		"<set variable=\"ball.x\">400</set><set variable=\"row.y\"><divide><value>ball.x</value><value>2</value></divide></set><set variable=\"row.velocity.x\">-1</set>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -139,13 +139,13 @@ TEST_CASE("where things are is only known while the game runs, and <set> names s
 	CHECK_THROWS_WITH(load(box("ball", 100, 50), "<set variable=\"bat.x\">1</set>"), ContainsSubstring("there is no object named 'bat'"));
 	CHECK_THROWS_WITH(load(box("ball", 100, 50), "<set variable=\"ball.heading\">90</set>"), ContainsSubstring("has no <heading> to set"));
 	CHECK_THROWS_WITH(load(box("ball", 100, 50), "<spawn object=\"shots\" />"), ContainsSubstring("shots"));
-	CHECK_NOTHROW(load(box("ball", 100, 50), "<set variable=\"ball.velocity.x\">ball.x + 1</set>"));
+	CHECK_NOTHROW(load(box("ball", 100, 50), "<set variable=\"ball.velocity.x\"><add><value>ball.x</value><value>1</value></add></set>"));
 }
 
 TEST_CASE("<spawn> makes a new object where and going as it says, read as it runs", "[live]")
 {
 	const Scratch file(box("ship", 300, 400, "<velocity><x>3</x><y>0</y></velocity>"),
-		"<spawn object=\"shot\"><position><x><centered>ship.x + 5</centered></x><y>ship.y - 8</y></position>"
+		"<spawn object=\"shot\"><position><x><centered><add><value>ship.x</value><value>5</value></add></centered></x><y><subtract><value>ship.y</value><value>8</value></subtract></y></position>"
 		"<velocity><x>ship.velocity.x</x></velocity></spawn>",
 		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
 		"<velocity><x>0</x><y>-5</y></velocity></object>");
@@ -369,7 +369,7 @@ TEST_CASE("a named timer's time left is a number of its object: whole seconds, r
 		"<timer name=\"tick\"><every>0.5</every></timer></timers>")
 		+ "<object name=\"clock\"><sprite><text><content>LEFT</content><number>bomb.fuse</number><size>16</size><color>color.white</color></text></sprite>"
 		"<position><x>0</x><y>0</y></position></object>",
-		"<set variable=\"bomb.read\">bomb.fuse * 10</set>");
+		"<set variable=\"bomb.read\"><multiply><value>bomb.fuse</value><value>10</value></multiply></set>");
 	Played play(file.path);
 	Object& bomb = play.get("bomb");
 
@@ -422,7 +422,7 @@ TEST_CASE("update=\"live\" on a half of a position: worked out again every frame
 {
 	const Scratch file(box("ship", 300, 400, "<velocity><x>3</x><y>0</y></velocity>")
 		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<position><x update=\"live\">ship.x + 5</x><y>100</y></position><velocity><x>0</x><y>-2</y></velocity></object>",
+		"<position><x update=\"live\"><add><value>ship.x</value><value>5</value></add></x><y>100</y></position><velocity><x>0</x><y>-2</y></velocity></object>",
 		"<pop />");
 	Played play(file.path);
 
@@ -440,8 +440,8 @@ TEST_CASE("update=\"live\" on a half of a position: worked out again every frame
 TEST_CASE("a live variable follows what it reads; one worked out once keeps its start", "[live][follow]")
 {
 	const Scratch file(box("ball", 100, 50, "<velocity><x>100</x><y>0</y></velocity><variables><variable name=\"base\">2</variable>"
-		"<variable name=\"twice\" update=\"live\">self.base * 2</variable>"
-		"<variable name=\"start\">self.base * 2</variable>"
+		"<variable name=\"twice\" update=\"live\"><multiply><value>self.base</value><value>2</value></multiply></variable>"
+		"<variable name=\"start\"><multiply><value>self.base</value><value>2</value></multiply></variable>"
 		"<variable name=\"across\" update=\"live\"><smallest><value>self.x</value><value>500</value></smallest></variable></variables>"),
 		"<set variable=\"ball.base\">10</set>");
 	Played play(file.path);
@@ -458,10 +458,10 @@ TEST_CASE("a live variable follows what it reads; one worked out once keeps its 
 
 TEST_CASE("a live heading turns its object, and a spawned copy follows for itself", "[live][follow]")
 {
-	const Scratch file(box("gun", 300, 400, "<heading update=\"live\">self.aim * 10</heading><variables><variable name=\"aim\">3</variable></variables>"),
+	const Scratch file(box("gun", 300, 400, "<heading update=\"live\"><multiply><value>self.aim</value><value>10</value></multiply></heading><variables><variable name=\"aim\">3</variable></variables>"),
 		"<inc variable=\"gun.aim\" /><spawn object=\"tag\" />",
 		"<object name=\"tag\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
-		"<position><x update=\"live\">gun.x + self.gap</x><y>0</y></position><variables><variable name=\"gap\">7</variable></variables></object>");
+		"<position><x update=\"live\"><add><value>gun.x</value><value>self.gap</value></add></x><y>0</y></position><variables><variable name=\"gap\">7</variable></variables></object>");
 	Played play(file.path);
 
 	CHECK(play.get("gun").heading == Approx(30));
@@ -481,7 +481,7 @@ TEST_CASE("no command can change what is live", "[live][follow]")
 	const std::string follower = box("ship", 300, 400)
 		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
 		"<position><x update=\"live\">ship.x</x><y>0</y></position>"
-		"<variables><variable name=\"far\" update=\"live\">ship.x * 2</variable><variable name=\"near\">0</variable></variables></object>";
+		"<variables><variable name=\"far\" update=\"live\"><multiply><value>ship.x</value><value>2</value></multiply></variable><variable name=\"near\">0</variable></variables></object>";
 
 	CHECK_THROWS_WITH(load(follower, "<set variable=\"shot.x\">1</set>"), ContainsSubstring("shot.x' is update=\"live\""));
 	CHECK_THROWS_WITH(load(follower, "<inc variable=\"shot.far\" />"), ContainsSubstring("shot.far' is update=\"live\""));

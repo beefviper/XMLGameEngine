@@ -253,7 +253,7 @@ TEST_CASE("a scene's variables are read inside it by their plain names, and a pi
 		"<scene name=\"wave2\" from=\"wave1\"><variables><variable name=\"pace\">3</variable></variables></scene>"
 		"<scene name=\"wave3\" from=\"wave1\"><objects><object name=\"bomb\"><variables><variable name=\"drop\">7</variable></variables></object></objects></scene>"
 		"</scenes>" + kSpace + "</state>";
-	Loaded loaded(gameXml(states, {}, {}, box("bomb", 100, 0, "<y>pace</y>", "<variables><variable name=\"drop\">pace * 2</variable></variables>")));
+	Loaded loaded(gameXml(states, {}, {}, box("bomb", 100, 0, "<y>pace</y>", "<variables><variable name=\"drop\"><multiply><value>pace</value><value>2</value></multiply></variable></variables>")));
 
 	CHECK(loaded.game.getVariable("playing.wave2.pace") == Approx(3));
 	CHECK(loaded.game.getObject("playing.wave1.bomb").velocity.y == Approx(1));

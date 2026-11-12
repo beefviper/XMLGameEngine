@@ -221,7 +221,7 @@ TEST_CASE("<centered> puts an object's middle at the window's middle, or at the 
 		"<object name=\"box\"><sprite><rectangle><width>100</width><height>40</height></rectangle></sprite>"
 		"<position><x><centered /></x><y><centered /></y></position></object>"
 		"<object name=\"left\"><sprite><rectangle><width>20</width><height>40</height></rectangle></sprite>"
-		"<position><x><centered>window.width.center / 2</centered></x><y>10</y></position></object>"
+		"<position><x><centered><divide><value>window.width.center</value><value>2</value></divide></centered></x><y>10</y></position></object>"
 		"<group name=\"row\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<position><y><centered>window.height.center</centered></y></position>"
 		"<member><position><x>0</x></position></member>"
@@ -244,7 +244,7 @@ TEST_CASE("<centered><offset> puts an object's middle that far from the window's
 		"<object name=\"up\"><sprite><rectangle><width>100</width><height>40</height></rectangle></sprite>"
 		"<position><x><centered><offset>50</offset></centered></x><y><centered><offset>-60</offset></centered></y></position></object>"
 		"<object name=\"edge\"><sprite><rectangle><width>20</width><height>10</height></rectangle></sprite>"
-		"<position><x>window.width - 20</x><y>window.height - 10</y></position></object>",
+		"<position><x><subtract><value>window.width</value><value>20</value></subtract></x><y><subtract><value>window.height</value><value>10</value></subtract></y></position></object>",
 		"", backend);
 
 	CHECK(game.getObject("up").position.x == Approx(400 + 50 - 50));

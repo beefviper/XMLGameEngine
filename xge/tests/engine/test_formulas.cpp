@@ -108,8 +108,8 @@ namespace
 		return Loaded(gameXml(x, "0", variables)).x();
 	}
 
-	// The same arithmetic in both spellings, for the tests that want to see
-	// them agree. Window width is 800, w is 100 and xoffset is 7.
+	// The same arithmetic as text (refused) and as an operation, for the tests
+	// that compare them. Window width is 800, w is 100 and xoffset is 7.
 	const std::string kVariables = "<variable name=\"w\">100</variable><variable name=\"xoffset\">7</variable>";
 
 	const std::string kText = "window.width.center - w / 2 - xoffset";
@@ -123,10 +123,14 @@ namespace
 }
 
 // --------------------------------------------------------------- the forms
-TEST_CASE("text and an operation give the same number", "[formulas]")
+TEST_CASE("a value's text is one number or one name: arithmetic in it is refused, naming the operation to write", "[formulas][errors]")
 {
-	CHECK(xOf(kText, kVariables) == 343.0f);
 	CHECK(xOf(kFormula, kVariables) == 343.0f);
+	CHECK(xOf("-7") == -7.0f);
+	CHECK(xOf("xoffset", kVariables) == 7.0f);
+	CHECK_THROWS_WITH(Loaded(gameXml("w / 2", "0", kVariables)), ContainsSubstring("\"w / 2\": a value's text is one number or one name, with no arithmetic hidden in it; write it as <divide><value>w</value><value>2</value></divide>"));
+	CHECK_THROWS_WITH(Loaded(gameXml(kText, "0", kVariables)), ContainsSubstring("write the arithmetic as operations (<add>, <subtract>"));
+	CHECK_THROWS_WITH(Loaded(gameXml(" ", "0")), ContainsSubstring("has no value"));
 }
 
 TEST_CASE("each operation works", "[formulas]")
@@ -275,9 +279,10 @@ TEST_CASE("a <compare> is 1 when its test holds and 0 when not", "[formulas]")
 
 TEST_CASE("a value's text has no functions: they are operation tags", "[formulas][errors]")
 {
-	CHECK_THROWS_WITH(Loaded(gameXml("max(1, 2)")), ContainsSubstring("'max(' is a function, and a value's text has none; write it as an operation"));
-	CHECK_THROWS_WITH(Loaded(gameXml("2 * pi")), ContainsSubstring("'pi' names nothing"));
-	CHECK_THROWS_WITH(Loaded(gameXml("w >= 2", "0", kVariables)), ContainsSubstring("'>' where an operator or the end was expected"));
+	CHECK_THROWS_WITH(Loaded(gameXml("max(1, 2)")), ContainsSubstring("a value's text has no functions; write it as an operation (<smallest>, <largest>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("2 * pi")), ContainsSubstring("write it as <multiply><value>2</value><value>pi</value></multiply>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("pi")), ContainsSubstring("'pi' names nothing"));
+	CHECK_THROWS_WITH(Loaded(gameXml("w >= 2", "0", kVariables)), ContainsSubstring("write the arithmetic as operations"));
 }
 
 TEST_CASE("a <random>'s ends can be operations", "[formulas]")
@@ -290,7 +295,7 @@ TEST_CASE("a <random>'s ends can be operations", "[formulas]")
 TEST_CASE("variables can hold an operation, and an expression can use them", "[formulas]")
 {
 	Loaded loaded(gameXml(
-		"r * 2 + 1", "s",
+		"<add><value><multiply><value>r</value><value>2</value></multiply></value><value>1</value></add>", "s",
 		kVariables +
 		"<variable name=\"r\">" + kFormula + "</variable>"
 		"<variable name=\"s\">r</variable>"));
@@ -623,43 +628,10 @@ TEST_CASE("only a divisor matters: 0 as a dividend, or in other operations, is f
 	CHECK(xOf("<subtract><value>4</value><value>0</value></subtract>") == 4.0f);
 }
 
-TEST_CASE("a text that divides by 0 stops the load as a <divide> does, quoting the text", "[formulas][errors][zero]")
-{
-	REQUIRE_THROWS_WITH(Loaded(gameXml("1 / 0", "0")), ContainsSubstring("object 'o'") && ContainsSubstring("\"1 / 0\" divides by 0"));
-	REQUIRE_THROWS_WITH(Loaded(gameXml("1 / zero", "0", "<variable name=\"zero\">0</variable>")), ContainsSubstring("\"1 / zero\" divides by 0"));
-	REQUIRE_THROWS_WITH(Loaded(gameXml("10 / (2 - 2)", "0")), ContainsSubstring("divides by 0"));
-	// 0 divided is fine.
-	CHECK(xOf("0 / 5") == 0.0f);
-}
-
 TEST_CASE("a number too big to be one stops the load", "[formulas][errors][zero]")
 {
-	REQUIRE_THROWS_WITH(Loaded(gameXml("1e30 * 1e30", "0")), ContainsSubstring("\"1e30 * 1e30\" comes out as infinity"));
 	REQUIRE_THROWS_WITH(Loaded(gameXml("<multiply><value>1e30</value><value>1e30</value></multiply>", "0")),
 		ContainsSubstring(": comes out as infinity"));
-}
-
-TEST_CASE("a text position finished once a text is measured as 0 wide gives 0, with one warning", "[formulas][zero]")
-{
-	const std::string xml = gameWithObject("t", "<text><content>hi</content><size>20</size></text>", "100 / t.width");
-
-	Loaded loaded(xml);
-	Object& text = loaded.game.getObject("t");
-	loaded.game.setCurrentState(0);
-	CHECK(text.positionUsesSize);
-
-	CaptureStderr captured;
-	measure(text, 0.0f, 10.0f);
-	REQUIRE_NOTHROW(loaded.game.resolveSizeDependentPositions());
-	CHECK(text.position.x == 0.0f);
-	measure(text, 0.0f, 12.0f);
-	REQUIRE_NOTHROW(loaded.game.resolveSizeDependentPositions());
-	CHECK(text.position.x == 0.0f);
-	CHECK(countOf(captured.text.str(), "\"100 / t.width\" divides by 0; using 0 for the answer") == 1);
-
-	measure(text, 50.0f, 12.0f);
-	loaded.game.resolveSizeDependentPositions();
-	CHECK(text.position.x == 2.0f);
 }
 
 TEST_CASE("a position finished once a text is measured warns, once, instead of ending the game", "[formulas][zero]")

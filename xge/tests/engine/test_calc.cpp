@@ -3,9 +3,9 @@
 // author: beefviper
 // date: Oct 29, 2026
 //
-// Catch2 tests for load/calc, the arithmetic in a value's text: numbers,
-// names, + - * /, a sign in front and brackets, worked out as written; what
-// it says about a text it cannot read; and the names a text reads.
+// Catch2 tests for load/calc, what a value's text holds: one number or one
+// name, read as it is now; what it says about a text that is more (arithmetic
+// hidden in it, a function), and the name a text reads.
 
 #include "load/calc.h"
 
@@ -27,16 +27,14 @@ namespace
 	}
 }
 
-TEST_CASE("calc: * and / before + and -, left to right, brackets first", "[calc]")
+TEST_CASE("calc: a text is one number, with its sign", "[calc]")
 {
 	const Calc calc;
-	CHECK(workOut(calc, "2 + 3 * 4") == 14.0f);
-	CHECK(workOut(calc, "(2 + 3) * 4") == 20.0f);
-	CHECK(workOut(calc, "100 - 10 - 20") == 70.0f);
-	CHECK(workOut(calc, "100 / 10 / 5") == 2.0f);
-	CHECK(workOut(calc, "-3 * -2") == 6.0f);
-	CHECK(workOut(calc, "+4 - -1") == 5.0f);
-	CHECK(workOut(calc, "0.5 + .25 + 1e2") == 100.75f);
+	CHECK(workOut(calc, "14") == 14.0f);
+	CHECK(workOut(calc, "-130") == -130.0f);
+	CHECK(workOut(calc, "+4") == 4.0f);
+	CHECK(workOut(calc, ".25") == 0.25f);
+	CHECK(workOut(calc, "1e2") == 100.0f);
 	CHECK(workOut(calc, "  7  ") == 7.0f);
 }
 
@@ -47,49 +45,35 @@ TEST_CASE("calc: a constant reads its number, a variable the number as it is now
 	calc.constant("window.right", 800.0f);
 	calc.variable("ball.speed", speed);
 
-	const Calc::Program program = calc.compile("Window.Right - BALL.speed * 10");
-	CHECK(Calc::run(program) == 780.0f);
+	const Calc::Program program = calc.compile("BALL.speed");
+	CHECK(Calc::run(program) == 2.0f);
 	speed = 5.0f;
-	CHECK(Calc::run(program) == 750.0f);
+	CHECK(Calc::run(program) == 5.0f);
 
 	// The first given under a name keeps it.
 	calc.constant("window.right", 1.0f);
-	CHECK(workOut(calc, "window.right") == 800.0f);
+	CHECK(workOut(calc, "Window.Right") == 800.0f);
 	CHECK(calc.has("WINDOW.RIGHT"));
 	CHECK_FALSE(calc.has("window.left"));
 }
 
-TEST_CASE("calc: a text it cannot read says what is wrong", "[calc]")
+TEST_CASE("calc: a text that is more than a number or a name says what to write", "[calc]")
 {
-	const Calc calc;
-	CHECK_THROWS_WITH(calc.compile(""), ContainsSubstring("nothing to work out"));
+	Calc calc;
+	calc.constant("window.right", 800.0f);
+	CHECK_THROWS_WITH(calc.compile(""), ContainsSubstring("no number or name"));
 	CHECK_THROWS_WITH(calc.compile("speed"), ContainsSubstring("'speed' names nothing"));
-	CHECK_THROWS_WITH(calc.compile("max(1, 2)"), ContainsSubstring("'max(' is a function"));
-	CHECK_THROWS_WITH(calc.compile("2x"), ContainsSubstring("write the * (2 * x, not 2x)"));
-	CHECK_THROWS_WITH(calc.compile("(1 + 2"), ContainsSubstring("never closed"));
-	CHECK_THROWS_WITH(calc.compile("1 +"), ContainsSubstring("ends where a number or a name was expected"));
-	CHECK_THROWS_WITH(calc.compile("1 2"), ContainsSubstring("'2' where an operator or the end was expected"));
-	CHECK_THROWS_WITH(calc.compile("a >= 2"), ContainsSubstring("'a' names nothing"));
-
-	// 1 + (1 + (1 + ...)): each 1 waits for the bracket after it.
-	std::string deep = "1";
-	for (int i = 0; i < 100; ++i) { deep = "1 + (" + deep + ")"; }
-	CHECK_THROWS_WITH(calc.compile(deep), ContainsSubstring("nested too deeply"));
+	CHECK_THROWS_WITH(calc.compile("max(1, 2)"), ContainsSubstring("has no functions"));
+	CHECK_THROWS_WITH(calc.compile("window.right - 4"), ContainsSubstring("<subtract><value>window.right</value><value>4</value></subtract>"));
+	CHECK_THROWS_WITH(calc.compile("cell * 8"), ContainsSubstring("<multiply><value>cell</value><value>8</value></multiply>"));
+	CHECK_THROWS_WITH(calc.compile("(1 + 2) * 3"), ContainsSubstring("as operations (<add>, <subtract>"));
+	CHECK_THROWS_WITH(calc.compile("-speed"), ContainsSubstring("one number or one name"));
+	CHECK_THROWS_WITH(calc.compile("2x"), ContainsSubstring("one number or one name"));
 }
 
-TEST_CASE("calc: the names a text reads, each once, lowercased", "[calc]")
+TEST_CASE("calc: the name a text reads, lowercased", "[calc]")
 {
-	CHECK(Calc::namesIn("Paddle1.score + 2e-3 * paddle1.SCORE - window.width.center / 2") == std::vector<std::string>{ "paddle1.score", "window.width.center" });
-	CHECK(Calc::namesIn("12 * (3 - 1)").empty());
-}
-
-TEST_CASE("calc: dividing by 0 gives 0 and says so", "[calc]")
-{
-	const Calc calc;
-	bool dividedByZero = false;
-	CHECK(Calc::run(calc.compile("1 + 6 / 0"), &dividedByZero) == 1.0f);
-	CHECK(dividedByZero);
-	dividedByZero = false;
-	CHECK(Calc::run(calc.compile("6 / 2"), &dividedByZero) == 3.0f);
-	CHECK_FALSE(dividedByZero);
+	CHECK(Calc::namesIn("Paddle1.score") == std::vector<std::string>{ "paddle1.score" });
+	CHECK(Calc::namesIn(" window.width.center ") == std::vector<std::string>{ "window.width.center" });
+	CHECK(Calc::namesIn("12").empty());
 }

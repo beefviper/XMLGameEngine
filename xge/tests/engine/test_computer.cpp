@@ -118,7 +118,7 @@ TEST_CASE("a condition can test where an object is and how it goes, against a nu
 {
 	const Written file(gameWith(box("ball", 100, 100, "<velocity><x>3</x><y>0</y></velocity>"),
 		"<conditions><condition object=\"ball\" variable=\"x\"><above>bat.x</above><set variable=\"bat.y\">0</set></condition>"
-		"<condition object=\"ball\" variable=\"velocity.x\"><atleast>3</atleast><set variable=\"ball.y\">ball.y + 1</set></condition></conditions>"));
+		"<condition object=\"ball\" variable=\"velocity.x\"><atleast>3</atleast><set variable=\"ball.y\"><add><value>ball.y</value><value>1</value></add></set></condition></conditions>"));
 	Played play(file.path);
 
 	// The first that holds runs: the ball going at 3 moves down a pixel a

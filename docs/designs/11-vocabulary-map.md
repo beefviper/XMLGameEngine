@@ -16,7 +16,7 @@ The vocabulary grew one game at a time (a word is added only when a real game ca
 | Prepositions | who, when, where | `edge=`, `class=`, `object=`, `side=`, `unless=`, `from=`, `into=` |
 | Pronouns | names that point | `ball.radius`, `window.right`, `aliens.3.2`, `self.`, `touch.`, `energy.level` |
 | Adverbs | how, how much, how long | `every`, `after`, `seconds`, `burn`, a verb's amount |
-| Values | numbers | text arithmetic (`+ - * /`), `<random>`, operation tags (`<add>`, `<clamp>`, ...) |
+| Values | numbers | a number or a name, sides (`<left>`, `<right>`, ...), `<random>`, operation tags (`<add>`, `<clamp>`, ...) |
 
 A collision rule reads like a sentence: *this object*, *when it touches* *that class*, *on its top* (`side`), *unless* *it is on a log*, *do this*.
 
@@ -36,7 +36,7 @@ Adverbs are each verb's own: there is no shared "how" vocabulary. Its likely mem
 | Input: keys, axes, the three moments, computer players | small and clean |
 | Flow: the stack, scenes, conditions, turns, demos | enough for the shipped games |
 | Boards and cards: moves, picker, think, packs, holders, patterns | built for the shipped games |
-| Values: text arithmetic, `<random>`, operations | thinnest: no power, root, tangent or "if" |
+| Values: numbers, names, `<random>`, operations | thinnest: no power, root, tangent or "if" |
 
 ## Kinds of word the language does not have
 
@@ -52,7 +52,7 @@ Time, sound, conditions over many objects, maze walking, spawning, `negate`, `fl
 
 ## The shape this suggests
 
-Two grammars, one inside the other. The outer is **noun, property, verb, filter**: regular, checked by the schema, visible to XSLT. The inner is the **value**, with a small vocabulary of its own beside plain `+ - * /` text. Each further value word is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
+Two grammars, one inside the other. The outer is **noun, property, verb, filter**: regular, checked by the schema, visible to XSLT. The inner is the **value**, with a small vocabulary of its own beside plain numbers and names. Each further value word is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
 
 A verb that means "behave like one particular game" shows that its parameters were not found.
 

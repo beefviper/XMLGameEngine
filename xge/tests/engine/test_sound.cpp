@@ -276,7 +276,7 @@ TEST_CASE("a game file's sounds: volume, wave, notes, rests and slides", "[sound
 		"<sounds>"
 		"<sound name=\"blip\"><note pitch=\"A4\">0.05</note></sound>"
 		"<sound name=\"tune\" wave=\"triangle\"><volume>0.6</volume>"
-		"<note pitch=\"C5\">beat</note><rest>beat / 2</rest><note pitch=\"C4\" to=\"C6\" wave=\"noise\">0.1</note></sound>"
+		"<note pitch=\"C5\">beat</note><rest><divide><value>beat</value><value>2</value></divide></rest><note pitch=\"C4\" to=\"C6\" wave=\"noise\">0.1</note></sound>"
 		"</sounds>",
 		"<play sound=\"blip\" />"));
 

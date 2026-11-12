@@ -135,11 +135,11 @@ namespace
 	}
 }
 
-TEST_CASE("a value is an expression written as text", "[xml_format]")
+TEST_CASE("a value is an operation of operations, numbers and names", "[xml_format]")
 {
 	ObjectXml o;
-	o.x = "2 * 3 + window.width.center";
-	o.velocityX = "-(1 + 1)";
+	o.x = "<add><value><multiply><value>2</value><value>3</value></multiply></value><value>window.width.center</value></add>";
+	o.velocityX = "<negate><value><add><value>1</value><value>1</value></add></value></negate>";
 	Loaded loaded(gameXml("<variable name=\"step\">2</variable>", objectXml(o)));
 
 	const Object& object = loaded.game.getObject("o");
@@ -155,7 +155,7 @@ TEST_CASE("<random> gives a number between its two ends, and a different one eac
 		ObjectXml o;
 		o.name = "r" + std::to_string(i);
 		o.velocityX = "<random><min>-7</min><max>7</max></random>";
-		o.velocityY = "<random><min>window.width.center</min><max>window.width.center - 10</max></random>"; // expressions, either order
+		o.velocityY = "<random><min>window.width.center</min><max><subtract><value>window.width.center</value><value>10</value></subtract></max></random>"; // expressions, either order
 		objects += objectXml(o);
 	}
 	objects += objectXml({}); // o, which the state shows
@@ -232,7 +232,7 @@ TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' 
 
 TEST_CASE("a variable can use the ones declared before it", "[xml_format]")
 {
-	Loaded loaded(gameXml("<variable name=\"a\">10</variable><variable name=\"b\">a * 2</variable>", objectXml({})));
+	Loaded loaded(gameXml("<variable name=\"a\">10</variable><variable name=\"b\"><multiply><value>a</value><value>2</value></multiply></variable>", objectXml({})));
 
 	CHECK(loaded.game.getVariable("b") == 20.0f);
 }
@@ -344,7 +344,7 @@ TEST_CASE("move and hop take a direction and a value", "[xml_format][commands]")
 {
 	ObjectXml o;
 	o.extra = "<actions>"
-		"<action name=\"go\"><move direction=\"left\">step * 2</move><hop direction=\"up\"><random><min>7</min><max>7</max></random></hop></action>"
+		"<action name=\"go\"><move direction=\"left\"><multiply><value>step</value><value>2</value></multiply></move><hop direction=\"up\"><random><min>7</min><max>7</max></random></hop></action>"
 		"</actions>";
 	Loaded loaded(gameXml("<variable name=\"step\">3</variable>", objectXml(o)));
 
@@ -587,7 +587,7 @@ TEST_CASE("a text's <number> stays live only when it is a lone owner.variable", 
 	bound.sprite = "<text><number>paddle.score</number><size>20</size></text>";
 
 	ObjectXml sum; sum.name = "sum";
-	sum.sprite = "<text><number>paddle.score + 1</number><size>20</size></text>";
+	sum.sprite = "<text><number><add><value>paddle.score</value><value>1</value></add></number><size>20</size></text>";
 
 	ObjectXml label; label.name = "label";
 	label.sprite = "<text><content>paddle.score</content><size>20</size></text>";
@@ -626,7 +626,7 @@ TEST_CASE("a condition is a test tag, then the commands it runs", "[xml_format][
 		"<conditions>"
 		"<condition class=\"paddle\" variable=\"score\"><atleast>15</atleast><push state=\"gameover\" /></condition>"
 		"<condition object=\"frog\" variable=\"lives\"><atmost>0</atmost><push state=\"a\" /><push state=\"b\" /></condition>"
-		"<condition class=\"aliens\"><remaining>window.width.center / 400</remaining><pop /></condition>"
+		"<condition class=\"aliens\"><remaining><divide><value>window.width.center</value><value>400</value></divide></remaining><pop /></condition>"
 		"</conditions>";
 	// What the conditions look at.
 	ObjectXml paddle, frog, alien;
@@ -696,8 +696,8 @@ TEST_CASE("a condition compares with a number or with another variable, in five 
 	// The tested object's own other variable, and arithmetic on one.
 	CHECK(finish("<above>o.best</above>", 5, 0, 4));
 	CHECK_FALSE(finish("<above>o.best</above>", 4, 0, 4));
-	CHECK(finish("<atleast>p.score + 2</atleast>", 5, 3, 0));
-	CHECK_FALSE(finish("<atleast>p.score + 2</atleast>", 4, 3, 0));
+	CHECK(finish("<atleast><add><value>p.score</value><value>2</value></add></atleast>", 5, 3, 0));
+	CHECK_FALSE(finish("<atleast><add><value>p.score</value><value>2</value></add></atleast>", 4, 3, 0));
 
 	// And the new tests with a plain number.
 	CHECK(finish("<above>2</above>", 3, 0, 0));

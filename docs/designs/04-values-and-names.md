@@ -4,7 +4,7 @@
 
 ## Values
 
-- A **value** is any number in a game: text arithmetic (`+ - * /`, brackets, names, numbers; `load/calc`) or **one value tag**: an operation such as `<subtract>` ([arithmetic](03-arithmetic.md)) or `<random>`. A value holds text or a tag, not both.
+- A **value** is any number in a game: one number or one name as text (`load/calc`), or **one value tag**: an operation such as `<subtract>` ([arithmetic](03-arithmetic.md)) or `<random>`. A value holds text or a tag, not both.
 - **`<random>`** is drawn at load and again whenever its object comes back into play (a reset, `<reveal>`, a new copy; `Game::drawStartAgain`), so every Pong serve is new. A random size with a random sign is `<sign>` of a random.
 - **What is worked out when:** once at load, except a timer's interval (each round), positions that depend on a measured text size, a condition's number, a command's values that name something that changes, and an object's numbers written `update="live"` (every frame, [below](#numbers-that-follow)). An object's variables are worked out before its position and velocity, so those can use them.
 - Ideas, each one tag and one case: `<pick>` from a list, an integer `<random>`, a `<count>` of a class.

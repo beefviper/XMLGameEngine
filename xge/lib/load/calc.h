@@ -12,16 +12,13 @@
 
 namespace xge
 {
-	// The arithmetic in a value's text (load/expr): numbers (2, 0.5, 1e3),
-	// names (window.right, ship.score; case does not matter), + - * /, a
-	// minus or plus in front, and brackets. Nothing more: anything else
-	// (smallest, sign, sine, ...) is an operation tag. Worked out left to
-	// right, * and / before + and -, in float, exactly as written: nothing
-	// is regrouped.
+	// What a value's text holds (load/expr): one number (2, -130, 0.5, 1e3)
+	// or one name (window.right, ship.score; case does not matter). Nothing
+	// more: arithmetic is operation tags (<add>, <subtract>, ...), never
+	// hidden in a string.
 	//
-	// A text is compiled once into steps that read each name's number where
-	// it lives, so working it out again only reads the numbers as they are
-	// now.
+	// A text is compiled once into where its number lives, so working it out
+	// again only reads the number as it is now.
 	class Calc
 	{
 	public:
@@ -36,34 +33,24 @@ namespace xge
 		// Whether the name reads anything (a constant or a variable).
 		bool has(const std::string& name) const;
 
-		// Every name a text reads, lowercased, each once, in the order
-		// written, whether it names anything or not.
+		// The name a text is, lowercased, whether it names anything or not;
+		// none for a number.
 		static std::vector<std::string> namesIn(const std::string& text);
 
-		// One step of a compiled text.
-		struct Step
+		// What a text compiles to: its number, or where the number it names lives.
+		struct Program
 		{
-			enum class Kind { Number, Read, Negate, Add, Subtract, Multiply, Divide };
-			Kind kind{ Kind::Number };
 			float number{};
 			const float* read{ nullptr };
 		};
 
-		// What a text compiles to: its steps, in the order they run.
-		struct Program
-		{
-			std::vector<Step> steps;
-		};
-
 		// The text compiled. Throws std::invalid_argument, saying what is
-		// wrong with it, for a text that is not arithmetic or names a name
-		// that reads nothing.
+		// wrong with it, for a text that is more than one number or one name
+		// (and how to write it as an operation), or names nothing.
 		Program compile(const std::string& text) const;
 
-		// The program's answer, from its names' numbers as they are now.
-		// A division by 0 gives 0 (as a <divide> does), and sets
-		// `dividedByZero` when it is given, so the caller can say so.
-		static float run(const Program& program, bool* dividedByZero = nullptr);
+		// The program's number, read as it is now.
+		static float run(const Program& program);
 
 	private:
 		std::unordered_map<std::string, const float*> names;
