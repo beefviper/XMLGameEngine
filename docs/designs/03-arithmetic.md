@@ -33,6 +33,10 @@ Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from 
 - **Open, the author's call: no arithmetic in text at all.** A text would hold one number or one name, every calculation tags, with `<formula>` made short for the common shapes. Plan task R12 surveys the shapes first.
 - Rejected: an expression backend behind a factory with exprtk as an option. Nothing a game writes would differ between them, and a game would fail on one the first time someone used a function.
 
+## The survey for no arithmetic in text
+
+Plan task R12 counted every game text that calculates: 900, of which 627 are an `<x>` or `<y>`, 109 a size and 93 a number for `<set>`, `<inc>` or `<dec>`. By shape: a name plus or minus a number 382; names added or taken away 157; a name times a number (and a number) 143; a name and a name times a number 44; a number less a name 38; with a division 94; longer 42. 199 start from a `window.` name, and 100 are card layouts on `cardwidth` or `cardheight`. So three in four are one name changed once or twice. The short forms are the author's pick (plan D8).
+
 ## Schema
 
 A formula's operands hold operations, so the schema's types contain themselves. Xerces handles that; `load/xsd` was taught to follow a named type that refers to itself. The operations are listed twice (formula and operand), since a group containing itself is still refused there.
