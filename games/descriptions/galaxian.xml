@@ -362,7 +362,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><number>ship.lives</number><color>color.cyan</color></text></sprite>
-          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
       <scenes>

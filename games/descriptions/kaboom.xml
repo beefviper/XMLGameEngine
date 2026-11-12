@@ -130,7 +130,7 @@
     </object>
     <object name="wavelabel">
       <sprite><text style="hud"><content>WAVE</content><number>wave</number></text></sprite>
-      <position><x>window.right - wavelabel.width - margin</x><y>12</y></position>
+      <position><x><right><offset>margin</offset></right></x><y>12</y></position>
     </object>
   </objects>
   <states>

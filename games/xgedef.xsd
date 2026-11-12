@@ -2131,8 +2131,20 @@
     <xs:choice minOccurs="0">
       <xs:group ref="valueTag" />
       <xs:element name="centered" type="centeredType" />
+      <!-- that side of the object on the window's, its <offset> in from it: <x><right><offset>12</offset></right></x>; left and right in an <x>, top and bottom in a <y> -->
+      <xs:element name="left" type="sideType" />
+      <xs:element name="right" type="sideType" />
+      <xs:element name="top" type="sideType" />
+      <xs:element name="bottom" type="sideType" />
     </xs:choice>
     <xs:attribute name="update" type="updateType" use="optional" />
+  </xs:complexType>
+
+  <!-- <left>, <right>, <top>, <bottom>: an <offset> in from that side of the window, or none. -->
+  <xs:complexType name="sideType">
+    <xs:sequence>
+      <xs:element name="offset" type="xs:string" minOccurs="0" />
+    </xs:sequence>
   </xs:complexType>
 
   <!-- <centered>: where the middle goes as text, or one <offset> from the window's middle. -->

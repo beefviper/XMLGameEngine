@@ -218,7 +218,7 @@
         </object>
         <object name="label">
           <sprite><text style="hud"><content>WAVE</content><number>status.wave</number></text></sprite>
-          <position><x>window.right - label.width - margin</x><y>margin</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
       <scenes>

@@ -113,11 +113,11 @@
         </group>
         <object name="score1">
           <sprite><text style="hud"><number>rocket1.score</number></text></sprite>
-          <position><x>window.right / 4 - 60 - score1.width</x><y>window.bottom - score1.height - margin</y></position>
+          <position><x>window.right / 4 - 60 - score1.width</x><y><bottom><offset>margin</offset></bottom></y></position>
         </object>
         <object name="score2">
           <sprite><text style="hud"><number>rocket2.score</number></text></sprite>
-          <position><x>window.right * 3 / 4 + 60</x><y>window.bottom - score2.height - margin</y></position>
+          <position><x>window.right * 3 / 4 + 60</x><y><bottom><offset>margin</offset></bottom></y></position>
         </object>
       </objects>
       <inputs>

@@ -81,6 +81,7 @@ namespace xge
 			if (!isWritten(value)) { return; }
 			if (value.kind == RawValue::Kind::Centered)
 			{
+				if (value.edge != RawValue::Edge::Middle) { throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <left>, <right>, <top> and <bottom> are for an object's <position>"); }
 				if (!centered)
 				{
 					throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <centered> is for its <position>, not its <velocity> or <acceleration>");

@@ -429,7 +429,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><number>player.lives</number><color>color.green</color></text></sprite>
-          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
         <object name="liveicon">
           <sprite>

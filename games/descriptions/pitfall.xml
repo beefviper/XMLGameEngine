@@ -306,7 +306,7 @@
       <!-- the best score, kept from game to game -->
       <object name="best">
         <sprite><text style="hud"><content>BEST</content><number>best.score</number><color>color.lightgrey</color></text></sprite>
-        <position><x><centered /></x><y>window.bottom - best.height - 4</y></position>
+        <position><x><centered /></x><y><bottom><offset>4</offset></bottom></y></position>
         <variables>
           <variable name="score">0</variable>
         </variables>
@@ -473,7 +473,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><number>status.lives</number><color>color.red</color></text></sprite>
-          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
       <scenes>

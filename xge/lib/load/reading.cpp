@@ -306,6 +306,25 @@ namespace xge
 			}
 			return value;
 		}
+		if (tagName == "left" || tagName == "right" || tagName == "top" || tagName == "bottom")
+		{
+			// <right><offset>-12</offset></right>: the object's right side on
+			// the window's, then 12 in from it.
+			const std::string edgeHere = here + " > <" + tagName + ">";
+			const bool across = tagName == "left" || tagName == "right";
+			if (node.getName() != (across ? "x" : "y")) { fail(edgeHere, std::string("is a side of the window ") + (across ? "across, so it goes in an <x>" : "up and down, so it goes in a <y>")); }
+			if (!readText(*tag).empty()) { fail(edgeHere, "holds only an <offset>, how far in from the window's side the object goes"); }
+			RawValue value;
+			value.kind = RawValue::Kind::Centered;
+			value.edge = (tagName == "left" || tagName == "top") ? RawValue::Edge::Start : RawValue::Edge::End;
+			if (std::unique_ptr<XmlNode> offset = tag->getFirstChild())
+			{
+				if (offset->getName() != "offset" || offset->getNextSibling() || offset->getFirstChild()) { fail(edgeHere, "holds only an <offset>, how far in from the window's side the object goes"); }
+				value.offset = readText(*offset);
+				if (value.offset.empty()) { fail(edgeHere + " > <offset>", "has no value"); }
+			}
+			return value;
+		}
 
 		fail(here, "unknown value tag <" + tagName + ">");
 	}

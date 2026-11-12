@@ -77,6 +77,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | steering | `aim`, `chase`, `hunt`, `wander`, `follow`, `go` | [steering](reference/commands.md#steering), [paths](reference/timers.md#paths), [mazes](reference/maps.md#walking-a-map) |
 | touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `hole` | [touching](reference/commands.md#touching), [knocks](reference/collisions.md#knocks) |
 | in and out of play | `die`, `reveal`, `fire`, `drop`, `spawn`, `despawn`, `reset`; `waiting` (`ready`), `hidden` on an object | [in and out of play](reference/commands.md#in-and-out-of-play), [spawn](reference/objects.md#spawn-and-despawn) |
+| places | `centered` (`offset`), `left`, `right`, `top`, `bottom` (`offset` in from the side) in a position | [objects](reference/objects.md#parts-of-an-object) |
 | numbers | `inc`, `dec`, `set`, `copy`, `rank`, `formula`; `update="live"` on a variable, position or heading | [numbers](reference/commands.md#numbers), [arithmetic](reference/format.md#arithmetic-as-tags), [live numbers](reference/format.md#live-numbers-of-an-object) |
 | look and sound | `become`, `play`, `silence`, `music`; an empty `sprite name` (a look that draws nothing) | [look and sound](reference/commands.md#look-and-sound), [numbers only](reference/objects.md#numbers-only) |
 | flow | `push`, `pop`, `enter`, `alternate`, `pass`, `out`, `demo`, `trigger` (in a key, `otherwise`) | [flow](reference/commands.md#flow) |

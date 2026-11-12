@@ -126,7 +126,7 @@
     <!-- which wave it is, at the top right -->
     <object name="label">
       <sprite><text style="hud"><content>WAVE 1</content><color>color.green</color></text></sprite>
-      <position><x>window.right - label.width - margin</x><y>margin</y></position>
+      <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
     </object>
     <!-- each post's shell, made when it fires: two each in the air at most -->
     <group name="shells" class="shell">
@@ -256,7 +256,7 @@
           <sprite>
             <bitmap from="post" />
           </sprite>
-          <position><x>window.right - rightpost.width - 10</x><y>ground - rightpost.height</y></position>
+          <position><x><right><offset>10</offset></right></x><y>ground - rightpost.height</y></position>
           <heading>315</heading>
           <actions>
             <action name="fire"><fire object="rightshell" /><play sound="fire" /></action>

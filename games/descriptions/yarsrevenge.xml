@@ -174,7 +174,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><content>YARS </content><number>player.lives</number></text></sprite>
-          <position><x>window.right - lives.width - 40</x><y>12</y></position>
+          <position><x><right><offset>40</offset></right></x><y>12</y></position>
         </object>
         <!-- the shield, in the shape it is, and the Qotile in its cup -->
         <map name="shield">

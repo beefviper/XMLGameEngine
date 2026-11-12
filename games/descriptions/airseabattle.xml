@@ -216,7 +216,7 @@
         </object>
         <object name="score2">
           <sprite><text style="hud"><number>gun2.score</number><color>color.white</color></text></sprite>
-          <position><x>window.right - score2.width - margin</x><y>margin</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
       <music sound="drone" />

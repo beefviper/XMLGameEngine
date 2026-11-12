@@ -296,7 +296,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><content>LIVES</content><number>frog.lives</number><color>color.green</color></text></sprite>
-          <position><x>window.right - 12 - lives.width</x><y><centered>cell / 2</centered></y></position>
+          <position><x><right><offset>12</offset></right></x><y><centered>cell / 2</centered></y></position>
         </object>
       </objects>
       <inputs>

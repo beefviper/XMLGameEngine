@@ -128,7 +128,7 @@
         </object>
         <object name="lives">
           <sprite><text style="text"><content>lives</content><number>player.lives</number></text></sprite>
-          <position><x>window.right - lives.width - 8</x><y>4</y></position>
+          <position><x><right><offset>8</offset></right></x><y>4</y></position>
         </object>
         <object name="player">
           <variables>

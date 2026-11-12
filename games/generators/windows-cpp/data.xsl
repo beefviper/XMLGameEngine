@@ -46,7 +46,7 @@
     <xsl:param name="node" />
     <!-- a value tag, or the text, beside the named parts of a verb whose
          number is its content (readLeadValue): <hop>rowgap<seconds>... -->
-    <xsl:variable name="tag" select="$node/*[self::random or self::formula or self::centered][1]" />
+    <xsl:variable name="tag" select="$node/*[self::random or self::formula or self::centered or self::left or self::right or self::top or self::bottom][1]" />
     <xsl:choose>
       <xsl:when test="$tag[self::random]">
         <xsl:call-template name="random">
@@ -58,6 +58,22 @@
         <xsl:call-template name="text">
           <xsl:with-param name="node" select="$tag/text()[normalize-space()][1]" />
         </xsl:call-template>
+        <xsl:if test="$tag/offset">
+          <xsl:text>, </xsl:text>
+          <xsl:call-template name="text">
+            <xsl:with-param name="node" select="$tag/offset" />
+          </xsl:call-template>
+        </xsl:if>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
+      <!-- a side on the window's: side("end", "12") -->
+      <xsl:when test="$tag[self::left or self::right or self::top or self::bottom]">
+        <xsl:text>side("</xsl:text>
+        <xsl:choose>
+          <xsl:when test="$tag[self::left or self::top]">start</xsl:when>
+          <xsl:otherwise>end</xsl:otherwise>
+        </xsl:choose>
+        <xsl:text>"</xsl:text>
         <xsl:if test="$tag/offset">
           <xsl:text>, </xsl:text>
           <xsl:call-template name="text">

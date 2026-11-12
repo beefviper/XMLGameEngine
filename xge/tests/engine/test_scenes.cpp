@@ -568,6 +568,25 @@ TEST_CASE("an empty <sprite name> is a look that draws nothing, and an object of
 		"draws nothing in any of its looks");
 }
 
+TEST_CASE("<left>, <right>, <top> and <bottom> put that side of the object on the window's, its <offset> in from it", "[scenes]")
+{
+	const std::string at = "<object name=\"corner\"><sprite><rectangle><width>10</width><height>20</height></rectangle></sprite>"
+		"<position><x><right><offset>12</offset></right></x><y><bottom /></y></position></object>"
+		"<object name=\"start\"><sprite><rectangle><width>10</width><height>20</height></rectangle></sprite>"
+		"<position><x><left><offset>5</offset></left></x><y><top /></y></position></object>";
+	Loaded loaded(gameXml("<state name=\"playing\"><objects>" + at + "</objects>" + kSpace + "</state>"));
+	const Object& corner = loaded.game.getObject("playing.corner");
+	CHECK(corner.position.x == Approx(800 - 10 - 12));
+	CHECK(corner.position.y == Approx(600 - 20));
+	const Object& start = loaded.game.getObject("playing.start");
+	CHECK(start.position.x == Approx(5));
+	CHECK(start.position.y == Approx(0));
+
+	fails(gameXml("<state name=\"playing\"><objects><object name=\"side\"><sprite><rectangle><width>10</width><height>20</height></rectangle></sprite>"
+		"<position><x>0</x><y><left /></y></position></object></objects>" + kSpace + "</state>"),
+		"so it goes in an <x>");
+}
+
 TEST_CASE("a game variable written with a dot stays that variable beside a state's object of its first part", "[scenes]")
 {
 	// ball.radius is the game's; the playing state's ball is another thing.

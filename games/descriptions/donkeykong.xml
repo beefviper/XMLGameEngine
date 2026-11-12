@@ -503,11 +503,11 @@
         </object>
         <object name="bonus">
           <sprite><text style="hud"><content>BONUS</content><number>man.bonus</number><color>color.cyan</color></text></sprite>
-          <position><x>window.right - bonus.width - margin</x><y>margin + 36</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>margin + 36</y></position>
         </object>
         <object name="lives">
           <sprite><text style="hud"><content>LIVES</content><number>man.lives</number><color>color.red</color></text></sprite>
-          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
       <shows>

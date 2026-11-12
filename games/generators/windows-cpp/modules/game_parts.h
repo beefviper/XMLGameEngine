@@ -102,6 +102,17 @@ namespace xge::parts
 		return middle;
 	}
 
+	// side("end", "12"): <right> or <bottom> (end), <left> or <top>
+	// (start), with an <offset>.
+	inline RawValue side(const std::string& which, std::string offset = {})
+	{
+		RawValue placed;
+		placed.kind = RawValue::Kind::Centered;
+		placed.edge = which == "start" ? RawValue::Edge::Start : RawValue::Edge::End;
+		placed.offset = std::move(offset);
+		return placed;
+	}
+
 	// A <style> of the game's <styles>: a size (value("") for none) and a color.
 	inline RawStyle style(std::string name, RawValue size, std::string color)
 	{

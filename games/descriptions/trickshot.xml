@@ -114,7 +114,7 @@
         </object>
         <object name="clock">
           <sprite><text style="hud"><number>player.time</number></text></sprite>
-          <position><x>window.right - clock.width - margin</x><y>rail + 4</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>rail + 4</y></position>
         </object>
         <group name="balls" class="ball">
           <sprite><circle><radius>ball</radius><color>color.white</color></circle></sprite>

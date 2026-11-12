@@ -880,6 +880,8 @@ namespace xge
 	//   * in a <position> only, <centered>: the object's middle at the
 	//     expression it holds, or that <offset> from the window's middle
 	//     (the window's middle when empty), on that axis (Centered).
+	//     <left>, <right>, <top> and <bottom> are Centered too: that side of
+	//     the object on the window's, an <offset> in from it (Edge).
 	//     centerOnOwnSize makes it an Expression once the object's name is
 	//     final, so nothing evaluates it as it is.
 	// load/expr evaluates it (see load/expr::evaluate), so a new kind of value
@@ -899,6 +901,13 @@ namespace xge
 		// object's middle goes (right or down; negative, left or up), an
 		// expression. `text` is then empty. Otherwise empty.
 		std::string offset;
+
+		// Centered: which of the object's own sides goes to the window's: its
+		// middle to the middle (<centered>), its left or top to the window's
+		// (<left>, <top>: Start), its right or bottom to the window's (<right>,
+		// <bottom>: End), then `offset` in from that side. An edge holds no text.
+		enum class Edge { Middle, Start, End };
+		Edge edge{ Edge::Middle };
 
 		// Random: the two ends, each itself an expression.
 		std::string min;

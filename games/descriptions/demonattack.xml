@@ -150,7 +150,7 @@
           <sprite>
             <bitmap from="player" />
           </sprite>
-          <position><x><centered /></x><y>window.bottom - ground - player.height</y></position>
+          <position><x><centered /></x><y><bottom><offset>ground</offset></bottom></y></position>
           <collisions>
             <collision edge="horizontal"><stick /></collision>
             <collision class="bomb"><trigger action="lose" /></collision>
@@ -179,7 +179,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><number>player.lives</number><color>color.magenta</color></text></sprite>
-          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
       <scenes>

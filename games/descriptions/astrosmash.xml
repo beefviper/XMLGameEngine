@@ -231,7 +231,7 @@
           <sprite>
             <bitmap from="ship" />
           </sprite>
-          <position><x><centered /></x><y>window.bottom - ground - ship.height</y></position>
+          <position><x><centered /></x><y><bottom><offset>ground</offset></bottom></y></position>
           <collisions>
             <collision edge="horizontal"><stick /></collision>
             <collision class="rocks"><trigger action="lose" /></collision>
@@ -267,7 +267,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><number>ship.lives</number><color>color.cyan</color></text></sprite>
-          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
       <inputs>

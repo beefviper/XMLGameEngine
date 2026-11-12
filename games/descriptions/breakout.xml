@@ -91,7 +91,7 @@
         </object>
         <object name="balls">
           <sprite><text style="hud"><number>status.balls</number></text></sprite>
-          <position><x>window.right - 40 - balls.width</x><y>16</y></position>
+          <position><x><right><offset>40</offset></right></x><y>16</y></position>
         </object>
         <!-- the wall: fourteen bricks across, two rows of each colour -->
         <group name="wall" class="brick">

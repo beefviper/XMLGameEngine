@@ -402,6 +402,7 @@ namespace xge
 			return "random(" + value.min + ", " + value.max + ")";
 
 		case RawValue::Kind::Centered:
+			if (value.edge != RawValue::Edge::Middle) { return std::string(value.edge == RawValue::Edge::Start ? "start" : "end") + "(offset " + (value.offset.empty() ? std::string("0") : value.offset) + ")"; }
 			return value.offset.empty() ? "centered(" + value.text + ")" : "centered(offset " + value.offset + ")";
 
 		case RawValue::Kind::Formula:

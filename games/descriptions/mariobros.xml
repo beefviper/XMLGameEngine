@@ -730,12 +730,12 @@
         </object>
         <object name="score2">
           <sprite><text style="text"><content>II</content><number>luigi.score</number></text></sprite>
-          <position><x>window.right - score2.width - 8</x><y>4</y></position>
+          <position><x><right><offset>8</offset></right></x><y>4</y></position>
           <waiting />
         </object>
         <object name="lives2">
           <sprite><text style="text"><content>L x</content><number>luigi.lives</number><color>color.green</color></text></sprite>
-          <position><x>window.right - lives2.width - 8</x><y>14</y></position>
+          <position><x><right><offset>8</offset></right></x><y>14</y></position>
           <waiting />
         </object>
       </objects>

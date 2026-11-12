@@ -781,17 +781,30 @@ namespace xge
 	{
 		for (RawObject& object : objects)
 		{
-			const auto center = [&](RawValue& value, const char* windowMiddle, const char* size)
+			const auto center = [&](RawValue& value, const std::string& window, const char* size)
 			{
 				if (value.kind != RawValue::Kind::Centered) { return; }
-				const std::string middle = !value.offset.empty() ? std::string(windowMiddle) + " + (" + value.offset + ")"
+				if (value.edge != RawValue::Edge::Middle)
+				{
+					// A side on the window's: the left or top at 0, the right or
+					// bottom at the window's size less the object's own; an offset
+					// moves it in from that side.
+					const std::string in = value.offset.empty() ? std::string("0") : "(" + value.offset + ")";
+					const std::string where = value.edge == RawValue::Edge::Start ? in : window + " - " + object.name + "." + size + " - " + in;
+					const bool live = value.live;
+					value = RawValue::expression(where);
+					value.live = live;
+					return;
+				}
+				const std::string windowMiddle = window + ".center";
+				const std::string middle = !value.offset.empty() ? windowMiddle + " + (" + value.offset + ")"
 					: value.text.empty() ? windowMiddle : "(" + value.text + ")";
 				const bool live = value.live;
 				value = RawValue::expression(middle + " - " + object.name + "." + size + " / 2");
 				value.live = live;
 			};
-			center(object.rawPosition.x, "window.width.center", "width");
-			center(object.rawPosition.y, "window.height.center", "height");
+			center(object.rawPosition.x, "window.width", "width");
+			center(object.rawPosition.y, "window.height", "height");
 		}
 	}
 
