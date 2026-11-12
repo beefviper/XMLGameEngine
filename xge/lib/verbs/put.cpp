@@ -16,7 +16,7 @@ namespace xge
 	// of the pieces the player on its turn owns (Game::turnClass).
 	static void readPut(const XmlNode& node, const std::string& where, RawCommand&)
 	{
-		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+		if (const std::unique_ptr<XmlNode> child = node.getFirstChild())
 		{
 			fail(where + " > <put>", "unknown <" + child->getName() + ">; a put holds nothing (what a piece put closes is in its <moves>)");
 		}
