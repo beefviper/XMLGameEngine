@@ -51,6 +51,33 @@ namespace xge
 		return true;
 	}
 
+	static void printReset(std::ostream& o, const Command& command)
+	{
+		if (std::holds_alternative<CmdReset>(command))
+		{
+			o << "reset";
+			return;
+		}
+		if (const auto* pr = std::get_if<CmdResetObject>(&command))
+		{
+			const CmdResetObject& r = *pr;
+			o << "reset(" << r.target << ")";
+			return;
+		}
+		if (const auto* pr = std::get_if<CmdResetScene>(&command))
+		{
+			const CmdResetScene& r = *pr;
+			o << "reset(" << (r.way.empty() ? "scene " + r.scene : "way " + r.way) << ")";
+			return;
+		}
+	}
+
+	static void printResetRaw(std::ostream& o, const RawCommand& command)
+	{
+		if (!command.scene.empty()) { o << "(scene " << command.scene << ")"; }
+		else if (!command.object.empty()) { o << "(" << command.object << ")"; }
+	}
+
 	extern const Verb resetVerb;
 	const Verb resetVerb{
 		.name = "reset",
@@ -61,5 +88,7 @@ namespace xge
 		.make = makeReset,
 		.check = checkReset,
 		.run = runReset,
+		.print = printReset,
+		.printRaw = printResetRaw,
 	};
 }

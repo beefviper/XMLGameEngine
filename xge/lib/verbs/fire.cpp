@@ -45,6 +45,17 @@ namespace xge
 		return !doer.self || executor.spawnProjectile(*doer.self, std::get<CmdFire>(command).projectileName);
 	}
 
+	static void printFire(std::ostream& o, const Command& command)
+	{
+		const CmdFire& f = std::get<CmdFire>(command);
+		o << "fire(" << f.projectileName << ")";
+	}
+
+	static void printFireRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.object << ")";
+	}
+
 	extern const Verb fireVerb;
 	const Verb fireVerb{
 		.name = "fire",
@@ -55,5 +66,7 @@ namespace xge
 		.make = makeFire,
 		.check = checkFire,
 		.run = runFire,
+		.print = printFire,
+		.printRaw = printFireRaw,
 	};
 }

@@ -121,6 +121,38 @@ namespace xge
 		return executor.spawn(std::get<CmdSpawn>(command), doer.self);
 	}
 
+	static void printSpawn(std::ostream& o, const Command& command)
+	{
+		const CmdSpawn& s = std::get<CmdSpawn>(command);
+		const auto half = [&](const std::optional<float>& value, bool centered)
+		{
+			if (!value) { o << "-"; return; }
+			o << (centered ? "centered " : "") << *value;
+		};
+		o << "spawn(" << s.target << (s.count != 1 ? " x" + std::to_string(s.count) : "") << ", ";
+		half(s.x, s.centerX);
+		o << " ";
+		half(s.y, s.centerY);
+		o << ", ";
+		half(s.velocityX, false);
+		o << " ";
+		half(s.velocityY, false);
+		if (s.accelerationX || s.accelerationY)
+		{
+			o << ", ";
+			half(s.accelerationX, false);
+			o << " ";
+			half(s.accelerationY, false);
+		}
+		o << ")";
+	}
+
+	static void printSpawnRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.object << ", " << command.amount << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY << ", " << command.accelerationX << " " << command.accelerationY
+			<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << " " << command.below << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
+	}
+
 	extern const Verb spawnVerb;
 	const Verb spawnVerb{
 		.name = "spawn",
@@ -131,5 +163,7 @@ namespace xge
 		.make = makeSpawn,
 		.check = checkSpawn,
 		.run = runSpawn,
+		.print = printSpawn,
+		.printRaw = printSpawnRaw,
 	};
 }

@@ -20,6 +20,11 @@ namespace xge
 		return true;
 	}
 
+	static void printDie(std::ostream& o, const Command&)
+	{
+		o << "die";
+	}
+
 	extern const Verb dieVerb;
 	const Verb dieVerb{
 		.name = "die",
@@ -30,5 +35,6 @@ namespace xge
 		.make = makeDie,
 		.check = nullptr,
 		.run = runDie,
+		.print = printDie,
 	};
 }

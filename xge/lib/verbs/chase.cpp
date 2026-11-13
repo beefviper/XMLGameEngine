@@ -44,6 +44,17 @@ namespace xge
 		return true;
 	}
 
+	static void printChase(std::ostream& o, const Command& command)
+	{
+		const CmdChase& c = std::get<CmdChase>(command);
+		o << "chase(" << c.target << ", " << c.speed << (c.stopWithin > 0.0f ? ", near " + formatDisplayNumber(c.stopWithin) : std::string{}) << ")";
+	}
+
+	static void printChaseRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.object << ", " << command.amount << ", " << command.distance << ")";
+	}
+
 	extern const Verb chaseVerb;
 	const Verb chaseVerb{
 		.name = "chase",
@@ -54,5 +65,7 @@ namespace xge
 		.make = makeChase,
 		.check = checkChase,
 		.run = runChase,
+		.print = printChase,
+		.printRaw = printChaseRaw,
 	};
 }

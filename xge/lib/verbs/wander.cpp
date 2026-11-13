@@ -26,6 +26,17 @@ namespace xge
 		return true;
 	}
 
+	static void printWander(std::ostream& o, const Command& command)
+	{
+		const CmdWander& w = std::get<CmdWander>(command);
+		o << "wander(" << w.speed << ")";
+	}
+
+	static void printWanderRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.amount << ")";
+	}
+
 	extern const Verb wanderVerb;
 	const Verb wanderVerb{
 		.name = "wander",
@@ -36,5 +47,7 @@ namespace xge
 		.make = makeWander,
 		.check = nullptr,
 		.run = runWander,
+		.print = printWander,
+		.printRaw = printWanderRaw,
 	};
 }

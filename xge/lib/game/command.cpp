@@ -146,9 +146,6 @@ namespace xge
 		}
 
 		std::visit(overload{
-			[&](const CmdReset&) { o << "reset"; },
-			[&](const CmdDie&) { o << "die"; },
-			[&](const CmdDespawn& d) { o << "despawn" << (d.target.empty() ? "" : "(" + d.target + ")"); },
 			[&](const CmdSettle&) { o << "settle"; },
 			[&](const CmdClear&) { o << "clear"; },
 			[&](const CmdCollapse&) { o << "collapse"; },
@@ -177,7 +174,6 @@ namespace xge
 				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");
 				if (!m.objClass.empty()) { o << "(" << m.objClass << ")"; }
 			},
-			[&](const CmdDrop&) { o << "drop"; },
 			[&](const CmdHold& h) { o << "hold(" << keyCodeToString(h.button) << ")"; },
 			[&](const CmdThink& t)
 			{
@@ -185,23 +181,6 @@ namespace xge
 				for (const auto& [look, worth] : t.worths) { o << ", " << look << "=" << worth; }
 				o << ")";
 			},
-			[&](const CmdHuntHop& h)
-			{
-				o << "hunt(" << h.target << ", by " << (h.diagonal ? "diagonal " : "") << "hops of " << h.across << ", " << h.down
-					<< (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
-					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{}) << ")";
-			},
-			[&](const CmdChase& c) { o << "chase(" << c.target << ", " << c.speed << (c.stopWithin > 0.0f ? ", near " + formatDisplayNumber(c.stopWithin) : std::string{}) << ")"; },
-			[&](const CmdHunt& h)
-			{
-				o << "hunt(" << h.target << ", " << h.speed;
-				if (h.ahead != 0.0f) { o << ", ahead " << h.ahead; }
-				if (!h.partner.empty()) { o << ", with " << h.partner; }
-				if (!h.retreatTo.empty()) { o << ", retreat " << h.retreatTo << " within " << h.retreatWithin; }
-				o << ")";
-			},
-			[&](const CmdWander& w) { o << "wander(" << w.speed << ")"; },
-			[&](const CmdAim& a) { o << "aim(" << a.target << (a.lined ? ", lined " + std::to_string(a.within) : std::string()) << ")"; },
 			[&](const CmdIncrement& c) { o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdDecrement& c) { o << "dec(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdCopy& c) { o << "copy(" << c.from.written() << ", " << c.into.written() << ")"; },
@@ -217,40 +196,12 @@ namespace xge
 			[&](const CmdDemo&) { o << "demo()"; },
 			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
 			[&](const CmdPopState& s) { o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; } },
-			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },
 			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << (a.objClass.empty() ? std::string{} : ", " + a.objClass) << placeText(a.place) << ")"; },
-			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
 			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
 			[&](const CmdSilence& s) { o << "silence(" << s.sound << ")"; },
 			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << (b.from.empty() ? "" : ", from " + b.from) << (b.style.empty() ? "" : ", style " + b.style) << ")"; },
-			[&](const CmdReveal& r) { o << "reveal(" << r.target << ", " << r.count << ")"; },
 			[&](const CmdEnterScene& e) { o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")"; },
-			[&](const CmdResetScene& r) { o << "reset(" << (r.way.empty() ? "scene " + r.scene : "way " + r.way) << ")"; },
 			[&](const CmdSet& s) { o << "set(" << s.target.written() << ", " << s.value << ")"; },
-			[&](const CmdSpawn& s)
-			{
-				const auto half = [&](const std::optional<float>& value, bool centered)
-				{
-					if (!value) { o << "-"; return; }
-					o << (centered ? "centered " : "") << *value;
-				};
-				o << "spawn(" << s.target << (s.count != 1 ? " x" + std::to_string(s.count) : "") << ", ";
-				half(s.x, s.centerX);
-				o << " ";
-				half(s.y, s.centerY);
-				o << ", ";
-				half(s.velocityX, false);
-				o << " ";
-				half(s.velocityY, false);
-				if (s.accelerationX || s.accelerationY)
-				{
-					o << ", ";
-					half(s.accelerationX, false);
-					o << " ";
-					half(s.accelerationY, false);
-				}
-				o << ")";
-			},
 			[&](const CmdSend& s)
 			{
 				o << "send(" << s.target << ", " << s.from << " into " << s.into;

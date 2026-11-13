@@ -92,6 +92,42 @@ namespace xge
 		return true;
 	}
 
+	static void printHunt(std::ostream& o, const Command& command)
+	{
+		if (const auto* ph = std::get_if<CmdHunt>(&command))
+		{
+			const CmdHunt& h = *ph;
+			o << "hunt(" << h.target << ", " << h.speed;
+			if (h.ahead != 0.0f) { o << ", ahead " << h.ahead; }
+			if (!h.partner.empty()) { o << ", with " << h.partner; }
+			if (!h.retreatTo.empty()) { o << ", retreat " << h.retreatTo << " within " << h.retreatWithin; }
+			o << ")";
+			return;
+		}
+		if (const auto* ph = std::get_if<CmdHuntHop>(&command))
+		{
+			const CmdHuntHop& h = *ph;
+			o << "hunt(" << h.target << ", by " << (h.diagonal ? "diagonal " : "") << "hops of " << h.across << ", " << h.down
+				<< (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
+				<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{}) << ")";
+			return;
+		}
+	}
+
+	static void printHuntRaw(std::ostream& o, const RawCommand& command)
+	{
+		if (command.byHops)
+		{
+			o << (command.byHops ? "(" + command.object + ", by hops of " : "." + command.direction + "(") << command.amount << ", " << command.positionX << " " << command.positionY
+				<< ", " << command.seconds << ")";
+		}
+		else
+		{
+			o << "(" << command.object << ", " << command.amount << ", ahead " << command.ahead << ", with " << command.partner
+				<< ", retreat " << command.retreat << " " << command.distance << ")";
+		}
+	}
+
 	extern const Verb huntVerb;
 	const Verb huntVerb{
 		.name = "hunt",
@@ -102,5 +138,7 @@ namespace xge
 		.make = makeHunt,
 		.check = checkHunt,
 		.run = runHunt,
+		.print = printHunt,
+		.printRaw = printHuntRaw,
 	};
 }

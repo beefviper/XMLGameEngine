@@ -41,6 +41,12 @@ namespace xge
 		return true;
 	}
 
+	static void printReveal(std::ostream& o, const Command& command)
+	{
+		const CmdReveal& r = std::get<CmdReveal>(command);
+		o << "reveal(" << r.target << ", " << r.count << ")";
+	}
+
 	extern const Verb revealVerb;
 	const Verb revealVerb{
 		.name = "reveal",
@@ -51,5 +57,6 @@ namespace xge
 		.make = makeReveal,
 		.check = checkReveal,
 		.run = runReveal,
+		.print = printReveal,
 	};
 }

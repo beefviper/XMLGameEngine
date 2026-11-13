@@ -37,6 +37,17 @@ namespace xge
 		return std::get<CmdDespawn>(command).target.empty() ? 0 : 1;
 	}
 
+	static void printDespawn(std::ostream& o, const Command& command)
+	{
+		const CmdDespawn& d = std::get<CmdDespawn>(command);
+		o << "despawn" << (d.target.empty() ? "" : "(" + d.target + ")");
+	}
+
+	static void printDespawnRaw(std::ostream& o, const RawCommand& command)
+	{
+		if (!command.object.empty()) { o << "(" << command.object << ")"; }
+	}
+
 	extern const Verb despawnVerb;
 	const Verb despawnVerb{
 		.name = "despawn",
@@ -47,5 +58,7 @@ namespace xge
 		.make = makeDespawn,
 		.check = checkDespawn,
 		.run = runDespawn,
+		.print = printDespawn,
+		.printRaw = printDespawnRaw,
 	};
 }

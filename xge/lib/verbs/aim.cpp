@@ -40,6 +40,17 @@ namespace xge
 		return !doer.self || executor.aim(*doer.self, std::get<CmdAim>(command));
 	}
 
+	static void printAim(std::ostream& o, const Command& command)
+	{
+		const CmdAim& a = std::get<CmdAim>(command);
+		o << "aim(" << a.target << (a.lined ? ", lined " + std::to_string(a.within) : std::string()) << ")";
+	}
+
+	static void printAimRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.object << ")";
+	}
+
 	extern const Verb aimVerb;
 	const Verb aimVerb{
 		.name = "aim",
@@ -50,5 +61,7 @@ namespace xge
 		.make = makeAim,
 		.check = checkAim,
 		.run = runAim,
+		.print = printAim,
+		.printRaw = printAimRaw,
 	};
 }

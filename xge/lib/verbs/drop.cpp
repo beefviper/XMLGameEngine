@@ -27,6 +27,11 @@ namespace xge
 		return true;
 	}
 
+	static void printDrop(std::ostream& o, const Command&)
+	{
+		o << "drop";
+	}
+
 	extern const Verb dropVerb;
 	const Verb dropVerb{
 		.name = "drop",
@@ -37,5 +42,6 @@ namespace xge
 		.make = makeDrop,
 		.check = nullptr,
 		.run = runDrop,
+		.print = printDrop,
 	};
 }
