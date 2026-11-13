@@ -97,7 +97,12 @@ namespace xge
 	int lineAt(const std::vector<std::size_t>& starts, std::size_t offset) noexcept;
 
 	// " (line 12)", as a message about a place in a file ends; "" for line 0.
-	std::string lineNote(int line);
+	// Inline: a generated program has the reader's messages but not this
+	// file's parsers.
+	inline std::string lineNote(int line)
+	{
+		return line > 0 ? " (line " + std::to_string(line) + ")" : std::string{};
+	}
 
 	enum class XmlBackend
 	{
