@@ -22,6 +22,11 @@ namespace xge
 		return true;
 	}
 
+	static void printWrap(std::ostream& o, const Command&)
+	{
+		o << "wrap";
+	}
+
 	extern const Verb wrapVerb;
 	const Verb wrapVerb{
 		.name = "wrap",
@@ -32,5 +37,6 @@ namespace xge
 		.make = makeWrap,
 		.check = nullptr,
 		.run = runWrap,
+		.print = printWrap,
 	};
 }

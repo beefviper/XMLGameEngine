@@ -27,6 +27,12 @@ namespace xge
 		return doer.self && doer.touch && doer.other && executor.game.mergeCells(*doer.self, *doer.other, merge.variable);
 	}
 
+	static void printMerge(std::ostream& o, const Command& command)
+	{
+		const CmdMerge& m = std::get<CmdMerge>(command);
+		o << "merge(" << m.variable << ")";
+	}
+
 	extern const Verb mergeVerb;
 	const Verb mergeVerb{
 		.name = "merge",
@@ -37,5 +43,6 @@ namespace xge
 		.make = makeMerge,
 		.check = nullptr,
 		.run = runMerge,
+		.print = printMerge,
 	};
 }

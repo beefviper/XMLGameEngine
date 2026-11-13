@@ -20,6 +20,11 @@ namespace xge
 		return true;
 	}
 
+	static void printRide(std::ostream& o, const Command&)
+	{
+		o << "ride";
+	}
+
 	extern const Verb rideVerb;
 	const Verb rideVerb{
 		.name = "ride",
@@ -30,5 +35,6 @@ namespace xge
 		.make = makeRide,
 		.check = nullptr,
 		.run = runRide,
+		.print = printRide,
 	};
 }

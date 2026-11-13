@@ -21,6 +21,11 @@ namespace xge
 		return true;
 	}
 
+	static void printCarry(std::ostream& o, const Command&)
+	{
+		o << "carry";
+	}
+
 	extern const Verb carryVerb;
 	const Verb carryVerb{
 		.name = "carry",
@@ -31,5 +36,6 @@ namespace xge
 		.make = makeCarry,
 		.check = nullptr,
 		.run = runCarry,
+		.print = printCarry,
 	};
 }

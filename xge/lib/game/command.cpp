@@ -146,8 +146,6 @@ namespace xge
 		}
 
 		std::visit(overload{
-			[&](const CmdBounce& b) { o << "bounce(" << b.share << ")"; },
-			[&](const CmdStick&) { o << "stick"; },
 			[&](const CmdReset&) { o << "reset"; },
 			[&](const CmdDie&) { o << "die"; },
 			[&](const CmdDespawn& d) { o << "despawn" << (d.target.empty() ? "" : "(" + d.target + ")"); },
@@ -159,9 +157,6 @@ namespace xge
 			[&](const CmdCycle& c) { o << (c.backward ? "cycle backward" : "cycle"); },
 			[&](const CmdGrow&) { o << "grow"; },
 			[&](const CmdSplit&) { o << "split"; },
-			[&](const CmdThrough&) { o << "through"; },
-			[&](const CmdShove&) { o << "shove"; },
-			[&](const CmdMerge& m) { o << "merge(" << m.variable << ")"; },
 			[&](const CmdUndo&) { o << "undo"; },
 			[&](const CmdWhen& when)
 			{
@@ -183,17 +178,12 @@ namespace xge
 				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");
 				if (!m.objClass.empty()) { o << "(" << m.objClass << ")"; }
 			},
-			[&](const CmdWrap&) { o << "wrap"; },
-			[&](const CmdRide&) { o << "ride"; },
-			[&](const CmdCarry&) { o << "carry"; },
 			[&](const CmdDrop&) { o << "drop"; },
 			[&](const CmdTrack& t)
 			{
 				o << "track" << (t.path.empty() ? "" : "(" + t.path + ")");
 				for (const std::string& onto : t.onto) { o << " onto " << onto; }
 			},
-			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
-			[&](const CmdKnock& k) { o << "knock(" << k.bounce << ")"; },
 			[&](const CmdHold& h) { o << "hold(" << keyCodeToString(h.button) << ")"; },
 			[&](const CmdThink& t)
 			{
@@ -201,7 +191,6 @@ namespace xge
 				for (const auto& [look, worth] : t.worths) { o << ", " << look << "=" << worth; }
 				o << ")";
 			},
-			[&](const CmdHole& h) { o << "hole(" << h.radius << ", " << h.rough << ")"; },
 			[&](const CmdReverse&) { o << "reverse"; },
 			[&](const CmdMove& m)
 			{
@@ -230,7 +219,6 @@ namespace xge
 					<< (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
 					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{}) << ")";
 			},
-			[&](const CmdLand&) { o << "land()"; },
 			[&](const CmdJump& j) { o << "jump(" << j.height << ")"; },
 			[&](const CmdClimb& c) { o << "climb." << (c.direction == Direction::Up ? "up" : "down") << "(" << c.step << ", " << c.ladderClass << ")"; },
 			[&](const CmdChase& c) { o << "chase(" << c.target << ", " << c.speed << (c.stopWithin > 0.0f ? ", near " + formatDisplayNumber(c.stopWithin) : std::string{}) << ")"; },
@@ -321,6 +309,8 @@ namespace xge
 				o << ")";
 			},
 			[&](const CmdLive& l) { o << "live " << l.loaded->command; },
+			// A verb's own, printed above.
+			[](const auto&) {},
 		}, command);
 
 		return o;

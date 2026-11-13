@@ -21,6 +21,11 @@ namespace xge
 		return true;
 	}
 
+	static void printThrough(std::ostream& o, const Command&)
+	{
+		o << "through";
+	}
+
 	extern const Verb throughVerb;
 	const Verb throughVerb{
 		.name = "through",
@@ -31,5 +36,6 @@ namespace xge
 		.make = makeThrough,
 		.check = nullptr,
 		.run = runThrough,
+		.print = printThrough,
 	};
 }

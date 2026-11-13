@@ -21,6 +21,11 @@ namespace xge
 		return true;
 	}
 
+	static void printLand(std::ostream& o, const Command&)
+	{
+		o << "land()";
+	}
+
 	extern const Verb landVerb;
 	const Verb landVerb{
 		.name = "land",
@@ -31,5 +36,6 @@ namespace xge
 		.make = makeLand,
 		.check = nullptr,
 		.run = runLand,
+		.print = printLand,
 	};
 }

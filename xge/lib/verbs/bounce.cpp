@@ -38,6 +38,20 @@ namespace xge
 		return true;
 	}
 
+	static void printBounce(std::ostream& o, const Command& command)
+	{
+		const CmdBounce& b = std::get<CmdBounce>(command);
+		o << "bounce(" << b.share << ")";
+	}
+
+	static void printBounceRaw(std::ostream& o, const RawCommand& command)
+	{
+		if (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())
+		{
+			o << "(" << command.amount << ")";
+		}
+	}
+
 	extern const Verb bounceVerb;
 	const Verb bounceVerb{
 		.name = "bounce",
@@ -48,5 +62,7 @@ namespace xge
 		.make = makeBounce,
 		.check = nullptr,
 		.run = runBounce,
+		.print = printBounce,
+		.printRaw = printBounceRaw,
 	};
 }

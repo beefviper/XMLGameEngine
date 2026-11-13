@@ -20,6 +20,11 @@ namespace xge
 		return doer.self && doer.touch && doer.other && executor.game.shoveCells(*doer.other, doer.touch->edge);
 	}
 
+	static void printShove(std::ostream& o, const Command&)
+	{
+		o << "shove";
+	}
+
 	extern const Verb shoveVerb;
 	const Verb shoveVerb{
 		.name = "shove",
@@ -30,5 +35,6 @@ namespace xge
 		.make = makeShove,
 		.check = nullptr,
 		.run = runShove,
+		.print = printShove,
 	};
 }

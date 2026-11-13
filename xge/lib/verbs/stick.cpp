@@ -23,6 +23,11 @@ namespace xge
 		return true;
 	}
 
+	static void printStick(std::ostream& o, const Command&)
+	{
+		o << "stick";
+	}
+
 	extern const Verb stickVerb;
 	const Verb stickVerb{
 		.name = "stick",
@@ -33,5 +38,6 @@ namespace xge
 		.make = makeStick,
 		.check = nullptr,
 		.run = runStick,
+		.print = printStick,
 	};
 }

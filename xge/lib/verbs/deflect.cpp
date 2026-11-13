@@ -34,6 +34,17 @@ namespace xge
 		return true;
 	}
 
+	static void printDeflect(std::ostream& o, const Command& command)
+	{
+		const CmdDeflect& d = std::get<CmdDeflect>(command);
+		o << "deflect(" << d.maxAngle << ")";
+	}
+
+	static void printDeflectRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
+	}
+
 	extern const Verb deflectVerb;
 	const Verb deflectVerb{
 		.name = "deflect",
@@ -44,5 +55,7 @@ namespace xge
 		.make = makeDeflect,
 		.check = nullptr,
 		.run = runDeflect,
+		.print = printDeflect,
+		.printRaw = printDeflectRaw,
 	};
 }

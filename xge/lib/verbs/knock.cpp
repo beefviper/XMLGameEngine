@@ -35,6 +35,20 @@ namespace xge
 		return true;
 	}
 
+	static void printKnock(std::ostream& o, const Command& command)
+	{
+		const CmdKnock& k = std::get<CmdKnock>(command);
+		o << "knock(" << k.bounce << ")";
+	}
+
+	static void printKnockRaw(std::ostream& o, const RawCommand& command)
+	{
+		if (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())
+		{
+			o << "(" << command.amount << ")";
+		}
+	}
+
 	extern const Verb knockVerb;
 	const Verb knockVerb{
 		.name = "knock",
@@ -45,5 +59,7 @@ namespace xge
 		.make = makeKnock,
 		.check = nullptr,
 		.run = runKnock,
+		.print = printKnock,
+		.printRaw = printKnockRaw,
 	};
 }

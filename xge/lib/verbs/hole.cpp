@@ -37,6 +37,17 @@ namespace xge
 		return true;
 	}
 
+	static void printHole(std::ostream& o, const Command& command)
+	{
+		const CmdHole& h = std::get<CmdHole>(command);
+		o << "hole(" << h.radius << ", " << h.rough << ")";
+	}
+
+	static void printHoleRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.amount << ", " << command.distance << ")";
+	}
+
 	extern const Verb holeVerb;
 	const Verb holeVerb{
 		.name = "hole",
@@ -47,5 +58,7 @@ namespace xge
 		.make = makeHole,
 		.check = nullptr,
 		.run = runHole,
+		.print = printHole,
+		.printRaw = printHoleRaw,
 	};
 }
