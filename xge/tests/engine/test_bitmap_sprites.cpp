@@ -782,6 +782,28 @@ TEST_CASE("an animation's then names the look it goes to and the commands it run
 	}
 }
 
+TEST_CASE("becoming a look that plays once starts it from its first frame, even when it shows already", "[animation]")
+{
+	const std::string animations =
+		"<animation name=\"idle\"><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"a\" /></animation>"
+		"<animation name=\"flash\"><seconds>0.1</seconds><once /><frame sprite=\"b\" /><frame sprite=\"a\" /></animation>";
+	// Every 3 frames it becomes the flash, whose first frame lasts 6.
+	std::string object = objectWith(kA + kB, animations);
+	object.insert(object.find("</object>"), "<timers><timer><every>0.05</every><become sprite=\"flash\" /></timer></timers>");
+	Loaded loaded{ gameXml(object, "<show object=\"thing\" />") };
+	Game& game = loaded.game;
+	game.setCurrentState("playing");
+	Object& thing = game.getObject("thing");
+
+	frames(game, 3);
+	CHECK(thing.lookName() == "flash");
+	CHECK(showing(thing) == 'b');
+	frames(game, 30);
+	CHECK(thing.lookName() == "flash");
+	CHECK(showing(thing) == 'b');
+	CHECK(thing.animationIndex == 0);
+}
+
 TEST_CASE("the interval is in seconds, so it follows the window's framerate", "[animation]")
 {
 	const std::string objects = objectWith(kA + kB, "<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>");

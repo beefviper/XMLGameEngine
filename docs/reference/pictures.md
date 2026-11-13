@@ -184,7 +184,7 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
 
 - `<seconds>` is how long each picture shows (above 0); each `<frame>` picks a sprite. At least two frames, all pictures of one size; an unnamed animation shows every sprite.
 - **A frame's own time:** `<frame sprite="closed"><seconds>0.5</seconds></frame>` shows that picture that long; the others keep the animation's `<seconds>`. Cells cut from a sheet take the animation's.
-- **Once:** `<once />` after `<seconds>` plays the frames through one time instead of round and round. A look that moves then goes back to the look shown before it; an object's one animation stays on its last picture. A reset starts it again.
+- **Once:** `<once />` after `<seconds>` plays the frames through one time instead of round and round. A look that moves then goes back to the look shown before it; an object's one animation stays on its last picture. A reset starts it again, and so does `<become>` with its look, from a key, a timer or a touch, even while it is showing.
 - **Then:** a `<then>` after the frames says what comes when a once animation ends. `<then sprite="dead" />` goes to that look instead of the one before; commands in it run as an object's timer's do, the same frame:
 
   ```xml

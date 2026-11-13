@@ -868,7 +868,9 @@ namespace xge
 		{
 			if (object.looks[i].name == name)
 			{
-				if (object.look != i) { object.showLook(i); }
+				// A look that plays once starts again from its first frame,
+				// even when it is showing already: a second blast is a whole one.
+				if (object.look != i || object.looks[i].once) { object.showLook(i); }
 				// A timer that follows this look starts over, even when the
 				// object showed it already: blue again is six seconds again.
 				for (auto& timer : object.timers)
