@@ -11,6 +11,7 @@
 // Catch2 on its command line, which reads them as an option or a list.
 
 #include "file_text.h"
+#include "random_keys.h"
 #include "scratch.h"
 #include "cli.h"
 #include "engine/engine.h"
@@ -542,23 +543,36 @@ TEST_CASE("dump writes what frames played into a file its schema passes", "[cli]
 	std::filesystem::remove(file);
 }
 
-TEST_CASE("every game loads with every XML library", "[cli][check]")
+namespace
 {
-	// Xerces checks against the schema itself; the others with the engine's
-	// own checker (load/xsd.h), which reads less of XSD.
-	// Not the scratch files other cases are writing at the same moment.
-	std::vector<std::string> all = gameFilesIn("descriptions");
-	all.erase(std::remove_if(all.begin(), all.end(), [](const std::string& file) { return file.find("_scratch") != std::string::npos; }), all.end());
-	REQUIRE(all.size() > 50);
-	for (const XmlBackend xml : XmlDocumentFactory::availableBackends())
+	// A third of the games load with `xml`, so that ctest runs the parts
+	// side by side. Xerces checks against the schema itself; the others
+	// with the engine's own checker (load/xsd.h), which reads less of XSD.
+	void loadsWith(XmlBackend xml, std::size_t part)
 	{
-		INFO(XmlDocumentFactory::name(xml));
+		if (!XmlDocumentFactory::available(xml)) { SKIP(XmlDocumentFactory::name(xml) << " is not built in"); }
+		// Not the scratch files other cases are writing at the same moment.
+		const std::vector<std::string> all = played::shippedGames(gameFilesIn("descriptions"));
+		REQUIRE(all.size() > 50);
 		std::ostringstream out;
-		const int failed = checkGames(all, xml, out);
+		const int failed = checkGames(played::share(all, part, 3), xml, out);
 		INFO(out.str());
 		CHECK(failed == 0);
 	}
 }
+
+TEST_CASE("every game loads with Xerces, part 1 of 3", "[cli][check]") { loadsWith(XmlBackend::Xerces, 1); }
+TEST_CASE("every game loads with Xerces, part 2 of 3", "[cli][check]") { loadsWith(XmlBackend::Xerces, 2); }
+TEST_CASE("every game loads with Xerces, part 3 of 3", "[cli][check]") { loadsWith(XmlBackend::Xerces, 3); }
+TEST_CASE("every game loads with TinyXML2, part 1 of 3", "[cli][check]") { loadsWith(XmlBackend::TinyXml2, 1); }
+TEST_CASE("every game loads with TinyXML2, part 2 of 3", "[cli][check]") { loadsWith(XmlBackend::TinyXml2, 2); }
+TEST_CASE("every game loads with TinyXML2, part 3 of 3", "[cli][check]") { loadsWith(XmlBackend::TinyXml2, 3); }
+TEST_CASE("every game loads with PugiXML, part 1 of 3", "[cli][check]") { loadsWith(XmlBackend::PugiXml, 1); }
+TEST_CASE("every game loads with PugiXML, part 2 of 3", "[cli][check]") { loadsWith(XmlBackend::PugiXml, 2); }
+TEST_CASE("every game loads with PugiXML, part 3 of 3", "[cli][check]") { loadsWith(XmlBackend::PugiXml, 3); }
+TEST_CASE("every game loads with RapidXML, part 1 of 3", "[cli][check]") { loadsWith(XmlBackend::RapidXml, 1); }
+TEST_CASE("every game loads with RapidXML, part 2 of 3", "[cli][check]") { loadsWith(XmlBackend::RapidXml, 2); }
+TEST_CASE("every game loads with RapidXML, part 3 of 3", "[cli][check]") { loadsWith(XmlBackend::RapidXml, 3); }
 
 TEST_CASE("the help options ask for the usage", "[cli]")
 {

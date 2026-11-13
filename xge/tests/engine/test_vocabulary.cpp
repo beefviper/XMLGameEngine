@@ -152,10 +152,23 @@ TEST_CASE("every word of the schema is in the reference docs", "[vocabulary]")
 	}
 }
 
-TEST_CASE("every game lives through 1,000 frames of random keys", "[vocabulary][keys]")
+namespace
 {
-	for (const std::string& file : played::shippedGames(gameFilesIn("descriptions")))
+	// An eighth of the games, so that ctest plays them side by side.
+	void randomKeys(std::size_t part)
 	{
-		played::playRandomKeys(file, 1u, 1000);
+		for (const std::string& file : played::share(played::shippedGames(gameFilesIn("descriptions")), part, 8))
+		{
+			played::playRandomKeys(file, 1u, 1000);
+		}
 	}
 }
+
+TEST_CASE("every game lives through 1,000 frames of random keys, part 1 of 8", "[vocabulary][keys]") { randomKeys(1); }
+TEST_CASE("every game lives through 1,000 frames of random keys, part 2 of 8", "[vocabulary][keys]") { randomKeys(2); }
+TEST_CASE("every game lives through 1,000 frames of random keys, part 3 of 8", "[vocabulary][keys]") { randomKeys(3); }
+TEST_CASE("every game lives through 1,000 frames of random keys, part 4 of 8", "[vocabulary][keys]") { randomKeys(4); }
+TEST_CASE("every game lives through 1,000 frames of random keys, part 5 of 8", "[vocabulary][keys]") { randomKeys(5); }
+TEST_CASE("every game lives through 1,000 frames of random keys, part 6 of 8", "[vocabulary][keys]") { randomKeys(6); }
+TEST_CASE("every game lives through 1,000 frames of random keys, part 7 of 8", "[vocabulary][keys]") { randomKeys(7); }
+TEST_CASE("every game lives through 1,000 frames of random keys, part 8 of 8", "[vocabulary][keys]") { randomKeys(8); }

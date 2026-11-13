@@ -94,4 +94,14 @@ namespace played
 		}
 		return games;
 	}
+
+	// Every `parts`-th of `files`, starting at the `part`-th (1 to parts):
+	// a long test over every game split into cases of a like size, which
+	// ctest runs side by side.
+	inline std::vector<std::string> share(const std::vector<std::string>& files, std::size_t part, std::size_t parts)
+	{
+		std::vector<std::string> mine;
+		for (std::size_t i = part - 1; i < files.size(); i += parts) { mine.push_back(files[i]); }
+		return mine;
+	}
 }
