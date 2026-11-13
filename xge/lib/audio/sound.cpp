@@ -219,6 +219,11 @@ namespace xge
 		return samples;
 	}
 
+	std::vector<std::int16_t> samplesOf(const SoundDesc& sound)
+	{
+		return synthesize(sound);
+	}
+
 	std::ostream& operator<<(std::ostream& o, const SoundDesc& sound)
 	{
 		o << "sound: name=" << sound.name << (sound.loop ? ", loop" : "") << ", volume=" << sound.volume << ", notes=";

@@ -16,7 +16,7 @@ namespace xge
 
 		for (const SoundDesc& sound : sounds)
 		{
-			const std::vector<std::int16_t> samples = synthesize(sound);
+			const std::vector<std::int16_t> samples = samplesOf(sound);
 			if (samples.empty())
 			{
 				continue;

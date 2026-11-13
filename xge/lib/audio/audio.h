@@ -23,7 +23,7 @@ namespace xge
 	// any of them goes with any window, the OpenGL one (which has no sound of
 	// its own) included.
 	//
-	// Every sound is made into samples by the engine (synthesize(), audio/sound.h),
+	// Every sound is made into samples by the engine (samplesOf(), audio/sound.h),
 	// the same for every backend; a backend only hands those samples to its
 	// library. Each sound has one voice, like a channel of an old sound chip:
 	// playing a sound that is still playing starts it again from the

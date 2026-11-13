@@ -65,7 +65,7 @@ namespace xge
 		for (const SoundDesc& sound : sounds)
 		{
 			Voice voice;
-			voice.samples = synthesize(sound);
+			voice.samples = samplesOf(sound);
 			voice.position = voice.samples.size();
 			made[sound.name] = std::move(voice);
 		}

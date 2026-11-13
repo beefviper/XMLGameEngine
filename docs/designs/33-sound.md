@@ -9,7 +9,7 @@ The 8-bit machines played bleeps, bloops and little tunes from a sound chip, not
 ## Decisions
 
 - **Notes, not sound files.** Files need a loader per library and are opaque in the XML. A file tag can come later beside notes.
-- **The engine makes the samples; a backend only plays them.** `synthesize()` makes 16-bit mono at 44100 Hz, the same for every library; SFML and SDL2 have no synthesis of their own anyway. The synthesizer is tested with no device.
+- **The engine makes the samples; a backend only plays them.** `samplesOf()` is the one place a sound becomes samples (today by `synthesize()`): 16-bit mono at 44100 Hz, the same for every library; SFML and SDL2 have no synthesis of their own anyway. The synthesizer is tested with no device.
 - **A chip's waves:** square, triangle, sawtooth; noise pitched like a chip (a new random level every half cycle, seeded per note, so it sounds the same everywhere); sine as a soft option.
 - **Slides by semitones**, so a bend sounds even.
 - **Looping is the sound's, holding is the key's.** `<loop />` sits on the `<sound>`; a key's `<play>` of a loop is held like a `<move>`, on with the press and off with the release.

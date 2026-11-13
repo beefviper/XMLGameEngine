@@ -58,7 +58,7 @@ namespace xge
 	// the order they play, each in its part (the parts play together, as a
 	// sound chip's channels do). Nothing about any audio library is in it; an Audio
 	// backend (audio/audio.h) is given these and turns each into samples with
-	// synthesize() below.
+	// samplesOf() below.
 	struct SoundDesc
 	{
 		std::string name;
@@ -83,6 +83,11 @@ namespace xge
 	// starts and stops without a click; a noise note is the same hiss every
 	// time it plays (its random numbers are seeded per note).
 	std::vector<std::int16_t> synthesize(const SoundDesc& sound, unsigned sampleRate = kSoundSampleRate);
+
+	// The samples a backend plays for a sound, made the same way for every
+	// backend: the one place a sound becomes samples. Today that is always
+	// synthesize() above.
+	std::vector<std::int16_t> samplesOf(const SoundDesc& sound);
 
 	std::ostream& operator<<(std::ostream& o, const SoundDesc& sound);
 }
