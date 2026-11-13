@@ -1,28 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  xgedef.xsd
-
-  What a game file is made of. The rule of thumb:
-
-    * An attribute NAMES or PICKS something: name, class, object, variable,
-      state, action, button, edge, direction, unless, burn, sprite, sound, wave,
-      pitch, to, keys. These are labels, and they cannot be computed.
-    * Everything else is the content of an element. Wherever the content is a
-      number (valueType below) it is either a math expression written out as
-      text - window.width - score.width - or a single value tag that
-      makes the number, such as <random><min>-7</min><max>7</max></random>. To add a new kind
-      of value, add it to the valueTag group and teach load/xml and load/expr
-      about it; every place that takes a value takes it.
-    * What an object DOES is a list of command tags (the command group below):
-      <bounce />, <inc variable="paddle1.score" />, <push state="playing" />.
-      They run in the order written.
-
-  Shapes, commands and random numbers are tags, never function calls; only
-  plain arithmetic is left to be written out as text.
--->
+<!-- xgedef.xsd: what a game file is made of (documented below, for an editor to show). -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified">
 
+  <xs:annotation>
+    <xs:documentation><![CDATA[
+      What a game file is made of. The rule of thumb:
+
+        * An attribute NAMES or PICKS something: name, class, object, variable,
+          state, action, button, edge, direction, unless, burn, sprite, sound,
+          wave, pitch, to, keys. These are labels, and they cannot be computed.
+        * Everything else is the content of an element. Where the content is a
+          number (valueType below) it is one number or one name, or a value tag
+          that makes the number: <random><min>-7</min><max>7</max></random>, or
+          an operation such as <subtract><value>window.right</value><value>4</value></subtract>.
+          Arithmetic written as text stops the load.
+        * What an object DOES is a list of command tags (the command groups
+          below): <bounce />, <inc variable="paddle1.score" />, <push state="playing" />.
+          They run in the order written.
+
+      Shapes, commands, random numbers and operations are tags, never
+      function calls, and nothing is hidden in a string.
+    ]]></xs:documentation>
+  </xs:annotation>
+
   <!-- The words an attribute may hold. -->
+
   <xs:simpleType name="edgeType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="left" />
@@ -44,16 +46,20 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- The two ways an object with a heading can turn: clockwise adds to the heading, counterclockwise takes from it. -->
   <xs:simpleType name="turnDirectionType">
+    <xs:annotation>
+      <xs:documentation>The two ways an object with a heading can turn: clockwise adds to the heading, counterclockwise takes from it.</xs:documentation>
+    </xs:annotation>
     <xs:restriction base="xs:string">
       <xs:enumeration value="clockwise" />
       <xs:enumeration value="counterclockwise" />
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- The two ways a cycle goes: forward each cell to the next place, backward each to the one before. -->
   <xs:simpleType name="cycleDirectionType">
+    <xs:annotation>
+      <xs:documentation>The two ways a cycle goes: forward each cell to the next place, backward each to the one before.</xs:documentation>
+    </xs:annotation>
     <xs:restriction base="xs:string">
       <xs:enumeration value="forward" />
       <xs:enumeration value="backward" />
@@ -67,52 +73,61 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- Value tags: the ways, besides writing an expression, to give a number. -->
   <xs:group name="valueTag">
+    <xs:annotation>
+      <xs:documentation>Value tags: the ways, besides one number or one name, to give a number.</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="random" type="randomType" />
       <xs:group ref="operation" />
     </xs:choice>
   </xs:group>
 
-  <!-- random: a number from <min> up to <max>, each a number, a name or an operation, drawn each time it is worked out. -->
   <xs:complexType name="randomType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[random: a number from <min> up to <max>, each a number, a name or an operation, drawn each time it is worked out.]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element name="min" type="randomEndType" />
       <xs:element name="max" type="randomEndType" />
     </xs:sequence>
   </xs:complexType>
 
-  <!-- An end of a <random>: text (a number or a name) or an operation, not both. -->
   <xs:complexType name="randomEndType" mixed="true">
+    <xs:annotation>
+      <xs:documentation><![CDATA[An end of a <random>: text (a number or a name) or an operation, not both.]]></xs:documentation>
+    </xs:annotation>
     <xs:choice minOccurs="0">
       <xs:group ref="operation" />
     </xs:choice>
   </xs:complexType>
 
-  <!-- Arithmetic without a string to parse: an operation, written straight in
-       a value, whose operands are <value>s: a name, a number, <random> or
-       another operation. Nesting is the order it is worked out in. The first
-       value is combined with each of the others in turn, so a - b - c is one
-       subtract of three values:
-         <x>
-           <subtract>
-             <value>window.width.center</value>
-             <value><divide><value>title.width</value><value>2</value></divide></value>
-           </subtract>
-         </x>
-       A value tag, so it goes anywhere an expression or <random> does.
-       Operations: add, subtract, multiply, divide of two or more <value>;
-       remainder of two (what is left of the first, from 0 up to the second);
-       smallest and largest of two or more; absolute, negate, sign (-1, 0 or
-       1), floor, ceiling, round, sine and cosine (of degrees) of one <value>;
-       clamp, a <value> kept from <atleast> up to <atmost>; and compare, a
-       <value> and its test (<above>, <below>, <atleast>, <atmost> or <equal>,
-       the condition words): 1 when it holds and 0 when not. -->
-
   <!-- (The operations are listed twice, here and in operandType: the weak
        validator, load/xsd, does not follow a group that contains itself.) -->
   <xs:group name="operation">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        Arithmetic without a string to parse: an operation, written straight in
+        a value, whose operands are <value>s: a name, a number, <random> or
+        another operation. Nesting is the order it is worked out in. The first
+        value is combined with each of the others in turn, so a - b - c is one
+        subtract of three values:
+          <x>
+            <subtract>
+              <value>window.width.center</value>
+              <value><divide><value>title.width</value><value>2</value></divide></value>
+            </subtract>
+          </x>
+        A value tag, so it goes anywhere a number or <random> does.
+        Operations: add, subtract, multiply, divide of two or more <value>;
+        remainder of two (what is left of the first, from 0 up to the second);
+        smallest and largest of two or more; absolute, negate, sign (-1, 0 or
+        1), floor, ceiling, round, sine and cosine (of degrees) of one <value>;
+        clamp, a <value> kept from <atleast> up to <atmost>; and compare, a
+        <value> and its test (<above>, <below>, <atleast>, <atmost> or <equal>,
+        the condition words): 1 when it holds and 0 when not.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="add" type="addType" />
       <xs:element name="subtract" type="subtractType" />
@@ -134,8 +149,10 @@
     </xs:choice>
   </xs:group>
 
-  <!-- An operand of an operation: text (a name or a number), <random> or an operation, which contains operands in turn. -->
   <xs:complexType name="operandType" mixed="true">
+    <xs:annotation>
+      <xs:documentation><![CDATA[An operand of an operation: text (a name or a number), <random> or an operation, which contains operands in turn.]]></xs:documentation>
+    </xs:annotation>
     <xs:choice minOccurs="0">
       <xs:element name="random" type="randomType" />
       <xs:element name="add" type="addType" />
@@ -170,9 +187,13 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- <compare><value>mode.waves</value><atleast>4</atleast></compare>: the <value>
-       and its test, the same words as a condition's. -->
   <xs:complexType name="compareOperationType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        <compare><value>mode.waves</value><atleast>4</atleast></compare>: the <value>
+        and its test, the same words as a condition's.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element name="value" type="operandType" />
       <xs:choice>
@@ -223,54 +244,66 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- A number: text (an expression) or one value tag, not both. -->
   <xs:complexType name="valueType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>A number: text (one number or one name) or one value tag, not both.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
-  <!--
-    What a condition's variable is compared with: a number, as content
-    (<atleast>15</atleast>), which may name another variable, read as the game
-    runs: <above>gun2.score</above>.
-  -->
   <xs:complexType name="compareType" mixed="true">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        What a condition's variable is compared with: a number, as content
+        (<atleast>15</atleast>), which may name another variable, read as the game
+        runs: <above>gun2.score</above>.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
-  <!--
-    When a number of an object's is worked out: once, as the game loads (the
-    default), or live, again every frame from what it reads, after the move:
-    <x update="live">player.x + 18</x>. A command cannot change a live one.
-  -->
   <xs:simpleType name="updateType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        When a number of an object's is worked out: once, as the game loads (the
+        default), or live, again every frame from what it reads, after the move:
+        <x update="live">player.x + 18</x>. A command cannot change a live one.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:restriction base="xs:string">
       <xs:enumeration value="once" />
       <xs:enumeration value="live" />
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- A number that may be live: an object's <heading>. -->
   <xs:complexType name="liveValueType" mixed="true">
+    <xs:annotation>
+      <xs:documentation><![CDATA[A number that may be live: an object's <heading>.]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="update" type="updateType" use="optional" />
   </xs:complexType>
 
-  <!-- A number with a name, for <variable name="score">0</variable>. -->
   <xs:complexType name="variableType" mixed="true">
+    <xs:annotation>
+      <xs:documentation><![CDATA[A number with a name, for <variable name="score">0</variable>.]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- Two numbers: <position>, <velocity> and a grid's <padding>. -->
   <xs:complexType name="vector2Type">
+    <xs:annotation>
+      <xs:documentation><![CDATA[Two numbers: <position>, <velocity> and a grid's <padding>.]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element name="x" type="valueType" />
       <xs:element name="y" type="valueType" />
@@ -279,8 +312,10 @@
 
   <xs:complexType name="emptyType" />
 
-  <!-- Sounds: the voices of an old 8-bit sound chip, and a soft sine. -->
   <xs:simpleType name="waveType">
+    <xs:annotation>
+      <xs:documentation>Sounds: the voices of an old 8-bit sound chip, and a soft sine.</xs:documentation>
+    </xs:annotation>
     <xs:restriction base="xs:string">
       <xs:enumeration value="square" />
       <xs:enumeration value="triangle" />
@@ -290,13 +325,15 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!--
-    A note: its pitch (a note name with an octave such as C4, F#3 or Bb5 -
-    C4 is middle C - or a number of hertz), optionally a pitch to slide to
-    while it plays, and optionally a wave of its own instead of the sound's.
-    Its content is how long it lasts, in seconds.
-  -->
   <xs:complexType name="noteType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>
+        A note: its pitch (a note name with an octave such as C4, F#3 or Bb5 -
+        C4 is middle C - or a number of hertz), optionally a pitch to slide to
+        while it plays, and optionally a wave of its own instead of the sound's.
+        Its content is how long it lasts, in seconds.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
@@ -305,17 +342,19 @@
     <xs:attribute name="wave" type="waveType" use="optional" />
   </xs:complexType>
 
-  <!--
-    A sound that <play sound="..." /> starts: whether it loops (<loop />: over
-    and over until a <silence>, or, played from a key, until the key is let
-    go), how loud (0 to 1, 0.3 when left
-    out), then notes and rests (a rest's content is how many seconds of
-    silence), played one after the other, or parts (voices) that play at
-    the same time, each its own notes and rests: a tune and its bass. wave is
-    every note's that does not give its own (square when left out); a part's
-    wave is its notes'.
-  -->
   <xs:complexType name="partType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        A sound that <play sound="..." /> starts: whether it loops (<loop />: over
+        and over until a <silence>, or, played from a key, until the key is let
+        go), how loud (0 to 1, 0.3 when left
+        out), then notes and rests (a rest's content is how many seconds of
+        silence), played one after the other, or parts (voices) that play at
+        the same time, each its own notes and rests: a tune and its bass. wave is
+        every note's that does not give its own (square when left out); a part's
+        wave is its notes'.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:choice maxOccurs="unbounded">
       <xs:element name="note" type="noteType" />
       <xs:element name="rest" type="valueType" />
@@ -489,12 +528,12 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- A sprite is named when an object has several, so an animation can pick them out. -->
   <!-- <drawing from="rock" />: a drawing of the <pictures>, taken as it is. -->
   <xs:complexType name="drawingFromType">
     <xs:attribute name="from" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
+  <!-- A sprite is named when an object has several, so an animation can pick them out. -->
   <xs:complexType name="spriteType">
     <xs:choice minOccurs="0">
       <xs:group ref="shape" />
@@ -675,7 +714,6 @@
       <xs:enumeration value="right" />
     </xs:restriction>
   </xs:simpleType>
-  <!-- How its looks and steps follow its moves: poses, a mirror going one way across, and how quickly it gets to the speed its moves ask for (0 up to 1, 1 at once). -->
   <!-- surface: the drag and grip a thing that grips has while its middle is over it; one left out is its own -->
   <xs:complexType name="surfaceType">
     <xs:sequence>
@@ -684,6 +722,7 @@
     </xs:sequence>
   </xs:complexType>
 
+  <!-- How its looks and steps follow its moves: poses, a mirror going one way across, and how quickly it gets to the speed its moves ask for (0 up to 1, 1 at once). -->
   <xs:group name="moveParts">
     <xs:sequence>
       <xs:element name="poses" type="posesType" minOccurs="0" />
@@ -869,8 +908,6 @@
     <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
-  <!-- A <condition> of an <accepts>: the arriving one's variable= against a number, or against a variable of the
-       top one, or an <add> or <subtract> of it and a number (top.suit; <add><value>top.rank</value><value>1</value></add>; top.worth). total="sum": that variable over what is laid at once; total="count": how many. -->
   <!-- What an accepting test compares with: a number, top. and a variable, or an <add> or <subtract> of top. and a number. -->
   <xs:complexType name="acceptTestType" mixed="true">
     <xs:choice minOccurs="0">
@@ -878,6 +915,8 @@
       <xs:element name="subtract" type="subtractType" />
     </xs:choice>
   </xs:complexType>
+  <!-- A <condition> of an <accepts>: the arriving one's variable= against a number, or against a variable of the
+       top one, or an <add> or <subtract> of it and a number (top.suit; <add><value>top.rank</value><value>1</value></add>; top.worth). total="sum": that variable over what is laid at once; total="count": how many. -->
   <xs:complexType name="acceptConditionType">
     <xs:choice>
       <xs:element name="equal" type="acceptTestType" />
@@ -998,6 +1037,7 @@
   </xs:complexType>
 
   <!-- Commands: what a collision rule, an object action, a key or a condition does. -->
+
   <!-- inc and dec: which variable, and by how much (1 when there is nothing between the tags). -->
   <xs:complexType name="variableReferenceType" mixed="true">
     <xs:sequence>
@@ -1061,8 +1101,7 @@
       <xs:enumeration value="down-right" />
     </xs:restriction>
   </xs:simpleType>
-  <!-- hop: how far, as its value, or an <x> and a <y>, then how long it takes, and how high it goes on the way (an <arc>, which needs <seconds>). -->
-  <!-- hop: its step and how long; or, on cells, <onto>s: to the nearest cell that way holding one of those classes (left and right along the row; up and down to the nearest row that has one, keeping the column as a text cursor does) -->
+  <!-- hop: how far, as its value, or an <x> and a <y>, then how long it takes, and how high it goes on the way (an <arc>, which needs <seconds>); or, on cells, <onto>s: to the nearest cell that way holding one of those classes (left and right along the row; up and down to the nearest row that has one, keeping the column as a text cursor does) -->
   <xs:complexType name="hopType" mixed="true">
     <xs:choice minOccurs="0">
       <xs:group ref="hopParts" />
@@ -1129,8 +1168,7 @@
     <xs:attribute name="into" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
-  <!-- send: on maps with <cells />, the object's piece on map from= goes to map into=, in the <column> and <row> given (left out: the same cell). -->
-  <!-- send: with object=, its piece from one map of cells to another, at a <column> and <row> if given; with no
+  <!-- send: with object=, its piece from one map of cells to another, at a <column> and <row> if given (left out: the same cell); with no
        object=, members of a held class from holder from= (a group's name: every member, wherever it is) into holder
        into=: how many, as content, or <all />; sprite= the look they show there -->
   <xs:complexType name="sendType" mixed="true">
@@ -1207,8 +1245,7 @@
     <xs:attribute name="direction" type="directionType" use="required" />
   </xs:complexType>
 
-  <!-- slide: on a map with <cells />, a cell at a time that way until the next is refused. -->
-  <!-- slide with class=: every piece of that class on cells, the one nearest that way first; refused when none moved -->
+  <!-- slide: on a map with <cells />, a cell at a time that way until the next is refused; with class=, every piece of that class on cells, the one nearest that way first, refused when none moved. -->
   <xs:complexType name="slideType">
     <xs:attribute name="direction" type="directionType" use="required" />
     <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
@@ -1263,7 +1300,6 @@
     <xs:attribute name="direction" type="turnDirectionType" use="required" />
   </xs:complexType>
 
-  <!-- thrust: how much to add to the velocity each frame along the heading, and optionally the variable it burns. -->
   <xs:complexType name="deflectType" mixed="true">
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
@@ -1409,6 +1445,7 @@
     Commands, in groups by what they need to mean something; each place
     that runs commands names the groups it takes (below).
   -->
+
   <!-- changes: what can be done from anywhere: a variable, a look, a sound, a scene, an object put back, made or taken away, or another object's action run -->
   <xs:group name="changesCommands">
     <xs:choice>
@@ -2269,21 +2306,6 @@
   </xs:complexType>
 
   <!--
-    Anything that can be drawn, moved or collided with. One with no sprite only
-    holds numbers (a score, the lives): it is never drawn, and its position,
-    0, 0 if left out, is only where it is.
-
-    from= starts it as a copy of a piece of the top-level <objects> (or of a named
-    member of a group piece), changed by what it gives; one named after a
-    piece takes it the same way without from=. In a state or scene from=
-    another, one named after an object the other has changes that object.
-    What is given goes over what it starts from: sprites and animations by
-    name, either half of a position or velocity, variables, actions and
-    timers by name, collision rules after the piece's, anything else in its
-    place. So everything here may be left out, and the engine checks that
-    the object made is complete.
-  -->
-  <!--
     What every object-like thing may have after its sprites, animations and
     position: an object, a group (for all its members), a piece,
     an object or group on a <map>. Written once so they cannot drift apart.
@@ -2341,6 +2363,21 @@
     </xs:sequence>
   </xs:complexType>
 
+  <!--
+    Anything that can be drawn, moved or collided with. One with no sprite only
+    holds numbers (a score, the lives): it is never drawn, and its position,
+    0, 0 if left out, is only where it is.
+
+    from= starts it as a copy of a piece of the top-level <objects> (or of a named
+    member of a group piece), changed by what it gives; one named after a
+    piece takes it the same way without from=. In a state or scene from=
+    another, one named after an object the other has changes that object.
+    What is given goes over what it starts from: sprites and animations by
+    name, either half of a position or velocity, variables, actions and
+    timers by name, collision rules after the piece's, anything else in its
+    place. So everything here may be left out, and the engine checks that
+    the object made is complete.
+  -->
   <xs:complexType name="objectType">
     <xs:sequence>
       <xs:element name="sprite" type="spriteType" minOccurs="0" maxOccurs="unbounded" />
@@ -2631,13 +2668,6 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!--
-    One place of a state: its own numbers (read inside it by their plain
-    names), its objects, and the conditions and timers that run while it is
-    its state's current scene. from= starts it as a copy of an earlier
-    scene: its objects, variables, ways, conditions and timers, changed by
-    its own of the same names, and with its own added.
-  -->
   <!-- Where a scene's ways lead: <way name="east" scene="screen2" />, a
        scene of the same state, gone to by <enter way="east" />. -->
   <xs:complexType name="waysType">
@@ -2651,6 +2681,13 @@
     </xs:sequence>
   </xs:complexType>
 
+  <!--
+    One place of a state: its own numbers (read inside it by their plain
+    names), its objects, and the conditions and timers that run while it is
+    its state's current scene. from= starts it as a copy of an earlier
+    scene: its objects, variables, ways, conditions and timers, changed by
+    its own of the same names, and with its own added.
+  -->
   <xs:complexType name="sceneType">
     <xs:sequence>
       <xs:element name="ways" type="waysType" minOccurs="0" />
