@@ -312,9 +312,13 @@ TEST_CASE("pacman: Blinky scatters to his corner, then hunts Pac-Man through the
 		}
 	}
 
-	// After seven seconds he chases, and catches him: a life lost, and READY!
-	// over everyone back where they started.
+	// After seven seconds he chases, and catches him: everything stops while
+	// Pac-Man shrivels, out of play; then a life is lost, and READY! over
+	// everyone back where they started.
 	CHECK(chased);
+	CHECK(maze.state() == "dying");
+	CHECK_FALSE(maze.game.getObject("pacman").isVisible);
+	maze.frames(110);
 	CHECK(maze.status("lives") == 2.0f);
 	CHECK(maze.state() == "caught");
 	CHECK(middleOf(blinky).x == Approx(tile(14, 11).x));
@@ -581,7 +585,7 @@ TEST_CASE("pacman: caught three times is game over; a cleared maze is the next r
 		{
 			REQUIRE(maze.state() == "playing");
 			maze.touch(maze.ghost("blinky"));
-			maze.frames(130);
+			maze.frames(240);
 		}
 		CHECK(maze.status("lives") == 0.0f);
 		CHECK(maze.state() == "over");

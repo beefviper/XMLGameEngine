@@ -35,6 +35,9 @@
     run the frog's own actions: home, or lose.
   * The time is a variable of the clock that a state <timer> counts down;
     every new frog puts the clock back (<reset object="clock" />).
+  * A lost frog <spawn>s what is left of it, flat or a splash, and <die>s;
+    that plays <once />, a skull last, and <then> counts the loss and
+    <reveal>s the next frog.
   * Paused and over draw the board still underneath
     (<show state>).
 -->
@@ -53,6 +56,48 @@
     <style name="prompt"><size>32</size></style>
     <style name="hud"><size>30</size></style>
   </styles>
+  <objects>
+    <!-- a frog run over: flat, then a skull; then the next frog -->
+    <object name="splat">
+      <sprite name="flat"><bitmap from="squashed" /></sprite>
+      <sprite name="skull"><bitmap from="skull" /></sprite>
+      <animation>
+        <seconds>0.4</seconds>
+        <once />
+        <frame sprite="flat" />
+        <frame sprite="skull"><seconds>1</seconds></frame>
+        <then>
+          <dec variable="frog.lives" />
+          <reveal object="frog" />
+          <reset object="clock" />
+          <despawn />
+        </then>
+      </animation>
+      <most>1</most>
+    </object>
+    <!-- a frog in the water: rings spreading, then a skull; then the next frog -->
+    <object name="splash">
+      <sprite name="a"><bitmap from="splash-a" /></sprite>
+      <sprite name="b"><bitmap from="splash-b" /></sprite>
+      <sprite name="c"><bitmap from="splash-c" /></sprite>
+      <sprite name="skull"><bitmap from="skull" /></sprite>
+      <animation>
+        <seconds>0.2</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="skull"><seconds>1</seconds></frame>
+        <then>
+          <dec variable="frog.lives" />
+          <reveal object="frog" />
+          <reset object="clock" />
+          <despawn />
+        </then>
+      </animation>
+      <most>1</most>
+    </object>
+  </objects>
   <states>
     <state name="title">
       <objects>
@@ -404,17 +449,16 @@
             <collision edge="horizontal"><trigger action="lose" /></collision>
           </collisions>
           <actions>
+            <!-- out of play while what is left of it shows; then the next frog -->
             <action name="lose">
-              <dec variable="frog.lives" />
-              <reset />
-              <reset object="clock" />
+              <spawn object="splat" />
               <play sound="squash" />
+              <die />
             </action>
             <action name="drown">
-              <dec variable="frog.lives" />
-              <reset />
-              <reset object="clock" />
+              <spawn object="splash" />
               <play sound="splash" />
+              <die />
             </action>
             <action name="home">
               <inc variable="frog.homes" />
@@ -691,6 +735,72 @@
       <color>color.green</color>
       <color char="y">color.yellow</color>
       <color char="k">color.black</color>
+    </bitmap>
+    <!-- a frog lost: squashed flat, or a splash in rings, and then a skull -->
+    <bitmap name="squashed">
+      <row>..........</row>
+      <row>..........</row>
+      <row>y........y</row>
+      <row>yy.****.yy</row>
+      <row>.********.</row>
+      <row>yy******yy</row>
+      <row>y.y.**.y.y</row>
+      <row>..........</row>
+      <scale>4</scale>
+      <color>color.green</color>
+      <color char="y">color.yellow</color>
+    </bitmap>
+    <bitmap name="skull">
+      <row>...****...</row>
+      <row>..******..</row>
+      <row>..*k**k*..</row>
+      <row>..******..</row>
+      <row>...*kk*...</row>
+      <row>.*.****.*.</row>
+      <row>..*....*..</row>
+      <row>.*......*.</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="splash-a">
+      <row>..........</row>
+      <row>..........</row>
+      <row>....bb....</row>
+      <row>...b..b...</row>
+      <row>...b..b...</row>
+      <row>....bb....</row>
+      <row>..........</row>
+      <row>..........</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="b">color.cyan</color>
+    </bitmap>
+    <bitmap name="splash-b">
+      <row>..........</row>
+      <row>..bbbbbb..</row>
+      <row>.b......b.</row>
+      <row>b...bb...b</row>
+      <row>b...bb...b</row>
+      <row>.b......b.</row>
+      <row>..bbbbbb..</row>
+      <row>..........</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="b">color.cyan</color>
+    </bitmap>
+    <bitmap name="splash-c">
+      <row>b..b..b..b</row>
+      <row>..........</row>
+      <row>b........b</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>b........b</row>
+      <row>..........</row>
+      <row>b..b..b..b</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="b">color.cyan</color>
     </bitmap>
   </pictures>
 </game>

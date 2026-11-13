@@ -225,6 +225,8 @@ TEST_CASE("a car takes a life and sends the frog back to the start", "[frogger][
 	// The frog is put in the car's lane, right where the car is.
 	table.frog().position = { car.position.x, car.position.y };
 	table.frames(1);
+	CHECK(table.lives() == 3.0f); // the frog goes flat first
+	table.frames(100); // the frog goes flat or splashes first
 
 	CHECK(table.lives() == 2.0f);
 	CHECK(table.atStart());
@@ -251,6 +253,7 @@ TEST_CASE("hopping into the river with no log there costs a life", "[frogger][ri
 	table.frog().position = { 180.0f, cellPosition(0, 6).y };
 	table.hop("up");
 	table.frames(1);
+	table.frames(100); // the frog goes flat or splashes first
 
 	CHECK(table.lives() == 2.0f);
 	CHECK(table.atStart());
@@ -288,7 +291,9 @@ TEST_CASE("riding a log off the side of the screen costs a life", "[frogger][riv
 	REQUIRE(table.frog().position.x > log.position.x);
 
 	// Ridden right until the frog's side crosses the edge of the screen.
-	for (int i = 0; i < 40 && table.lives() == 3.0f; ++i) { table.frames(1); }
+	for (int i = 0; i < 40 && table.frog().isVisible; ++i) { table.frames(1); }
+	CHECK_FALSE(table.frog().isVisible);
+	table.frames(100); // the frog goes flat or splashes first
 	CHECK(table.lives() == 2.0f);
 	CHECK(table.atStart());
 }
@@ -300,6 +305,7 @@ TEST_CASE("a hedge costs a life", "[frogger][collision]")
 	table.place(3, 2); // under the hedge between the first two bays
 	table.hop("up");
 	table.frames(1);
+	table.frames(100); // the frog goes flat or splashes first
 
 	CHECK(table.lives() == 2.0f);
 	CHECK(table.atStart());
@@ -324,6 +330,7 @@ TEST_CASE("reaching a bay scores, fills it and sends the frog back; a filled bay
 	table.place(2, 2);
 	table.hop("up");
 	table.frames(1);
+	table.frames(100); // the frog goes flat or splashes first
 	CHECK(table.homes() == 1.0f);
 	CHECK(table.lives() == 2.0f);
 	CHECK(table.atStart());
@@ -347,6 +354,7 @@ TEST_CASE("a turtle that has dived drowns the frog on it", "[frogger][river]")
 	// Up for three and a half seconds, then under: the frog goes with it.
 	table.frames(210);
 	CHECK(turtle.lookName() == "under");
+	table.frames(100); // the frog goes flat or splashes first
 	CHECK(table.lives() == 2.0f);
 	// Back at the start (the turtle's rule ran first; the frog's own rule to ride
 	// it still lends it that frame's drift, so x is within a frame's ride).
@@ -357,7 +365,7 @@ TEST_CASE("a turtle that has dived drowns the frog on it", "[frogger][river]")
 TEST_CASE("the time runs out a frog", "[frogger][timers]")
 {
 	Table table;
-	table.frames(60 * 40 + 2);
+	table.frames(60 * 40 + 2 + 100);
 	CHECK(table.lives() == 2.0f);
 	CHECK(table.game.getObject("clock").variable["time"] >= 39.0f);
 }
@@ -388,7 +396,7 @@ TEST_CASE("running out of lives is game over, and space starts again", "[frogger
 		CHECK(table.game.getCurrentState().name == "playing");
 		table.place(3, 2);
 		table.hop("up"); // into a hedge
-		table.frames(1);
+		table.frames(100);
 	}
 
 	CHECK(table.lives() == 0.0f);
@@ -543,7 +551,7 @@ TEST_CASE("game over and the win draw the board still, with their own words over
 	{
 		table.place(3, 2);
 		table.hop("up"); // into a hedge
-		table.frames(1);
+		table.frames(100);
 	}
 	REQUIRE(table.game.getCurrentState().name == "over");
 	CHECK(table.game.getObject("over.message").lookName() == "lost");

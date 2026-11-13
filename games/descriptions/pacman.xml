@@ -55,6 +55,9 @@
   * The cherry is an object with two looks, none and cherry; a condition on
     how many dots are left gives it the cherry look, which plays <once />
     and <then> goes back to none.
+  * Caught, Pac-Man goes out of play and the state dying stands the maze
+    still while a picture of him, kept where he was by a live <position>,
+    plays its shrivelling <once />; then a life is gone.
   * A round starts with READY! over the maze standing still: the state ready
     (with the start tune) when a game begins, and caught, a copy of it,
     after a life is lost.
@@ -195,6 +198,7 @@
             <variable name="score">0</variable>
             <variable name="lives">3</variable>
             <variable name="caught">0</variable>
+            <variable name="dying">0</variable>
             <variable name="bonus">0</variable>
             <variable name="worth">200</variable>
             <variable name="fruits">0</variable>
@@ -485,6 +489,10 @@
               <action name="down">
                 <go direction="down">pacspeed</go>
               </action>
+              <!-- out of play while he shrivels (the state dying) -->
+              <action name="caught">
+                <die />
+              </action>
             </actions>
           </object>
           <!-- the ghosts: what they share, then each one's color, corner, chase
@@ -515,15 +523,9 @@
               </collision>
               <collision object="pacman">
                 <collision sprite="normal">
-                  <dec variable="status.lives" />
-                  <inc variable="status.caught" />
+                  <trigger object="pacman" action="caught" />
+                  <inc variable="status.dying" />
                   <play sound="caught" />
-                  <reset object="pacman" />
-                  <reset object="ghosts" />
-                  <become object="fruit" sprite="none" />
-                  <set variable="status.eaten">0</set>
-                  <set variable="status.released">1</set>
-                  <reset object="mode" />
                 </collision>
                 <collision sprite="blue">
                   <inc variable="status.score">status.worth</inc>
@@ -664,6 +666,12 @@
           <atmost>0</atmost>
           <push state="over" />
         </condition>
+        <!-- caught: everything stops while Pac-Man shrivels -->
+        <condition object="status" variable="dying">
+          <atleast>1</atleast>
+          <dec variable="status.dying" />
+          <push state="dying" />
+        </condition>
         <!-- caught: READY! again, everyone back in place -->
         <condition object="status" variable="caught">
           <atleast>1</atleast>
@@ -734,6 +742,57 @@
           <copy variable="status.score" into="best.score" />
         </condition>
       </conditions>
+    </state>
+
+    <!-- caught: the maze stands still while Pac-Man shrivels where he was;
+         then a life is gone and everyone goes back in place -->
+    <state name="dying">
+      <objects>
+        <object name="shrivel">
+          <sprite name="a"><bitmap from="pacman-open" /></sprite>
+          <sprite name="b"><bitmap from="dying-1" /></sprite>
+          <sprite name="c"><bitmap from="dying-2" /></sprite>
+          <sprite name="d"><bitmap from="dying-3" /></sprite>
+          <sprite name="e"><bitmap from="dying-4" /></sprite>
+          <sprite name="f"><bitmap from="dying-5" /></sprite>
+          <sprite name="g"><bitmap from="dying-pop" /></sprite>
+          <animation>
+            <seconds>0.18</seconds>
+            <once />
+            <frame sprite="a"><seconds>0.5</seconds></frame>
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d" />
+            <frame sprite="e" />
+            <frame sprite="f" />
+            <frame sprite="g"><seconds>0.3</seconds></frame>
+          </animation>
+          <position><x update="live">pacman.x</x><y update="live">pacman.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button>
+          <push state="paused" />
+        </input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.8</after>
+          <dec variable="status.lives" />
+          <inc variable="status.caught" />
+          <reset object="pacman" />
+          <reset object="ghosts" />
+          <become object="fruit" sprite="none" />
+          <set variable="status.eaten">0</set>
+          <set variable="status.released">1</set>
+          <reset object="mode" />
+          <reset object="shrivel" />
+          <pop />
+        </timer>
+      </timers>
     </state>
 
     <!-- READY! over the maze standing still, after a life is lost or a
@@ -953,6 +1012,109 @@
     </sound>
   </sounds>
   <pictures>
+    <!-- Pac-Man caught: his mouth opens until there is nothing left, then a pop -->
+    <bitmap name="dying-1">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>**.........**</row>
+      <row>****.....****</row>
+      <row>******.******</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>...*******...</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dying-2">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>...*******...</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dying-3">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>......*......</row>
+      <row>....*****....</row>
+      <row>..*********..</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>...*******...</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dying-4">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <row>.....***.....</row>
+      <row>....*****....</row>
+      <row>....*****....</row>
+      <row>...*******...</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dying-5">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dying-pop">
+      <row>.............</row>
+      <row>......*......</row>
+      <row>..*...*...*..</row>
+      <row>...*.....*...</row>
+      <row>.............</row>
+      <row>.**.......**.</row>
+      <row>.............</row>
+      <row>...*.....*...</row>
+      <row>..*...*...*..</row>
+      <row>......*......</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
     <bitmap name="walls">
       <row>........</row>
       <row>........</row>
