@@ -54,9 +54,11 @@
     "destroyed", which a shot runs too).
   * The man has four looks, one for each way he faces, and <become> in his
     actions picks it; <facing> makes <fire> leave the way he looks.
-  * Every rule that costs the man a life is his own, because the <reset />
-    in a rule puts only that object back at the start, where a
-    <reset object="player" /> would put his variables back too.
+  * Every rule that costs the man a life is his own: he goes out of play
+    and the state zapped stands the room still while a stand-in flashes
+    (a <once /> animation). Its timer takes the life and <reveal>s him at
+    the start, which keeps his variables, where a <reset object="player" />
+    would put them back too.
   * player.kills counts the robots destroyed in this room; once none is left
     the state's condition pays 10 for each and clears the count, and
     another brings Otto at once. player.lifepoints is the score since the
@@ -358,12 +360,11 @@
             <collision edge="all"><stick /></collision>
           </collisions>
           <actions>
+            <!-- out of play while he is zapped (the state zapped) -->
             <action name="lose">
-              <dec variable="player.lives">1</dec>
+              <die />
               <play sound="zap" />
-              <reset />
-              <despawn object="bullet" />
-              <despawn object="robotshot" />
+              <set variable="player.zapped">1</set>
             </action>
             <!-- one room deeper, and the room tidied: the man back at the
                  start, the doorways open, until a rule shuts the one he came by -->
@@ -389,6 +390,8 @@
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">3</variable>
+            <!-- touched: the state zapped comes next -->
+            <variable name="zapped">0</variable>
             <variable name="lifepoints">0</variable>
             <variable name="depth">0</variable>
             <variable name="kills">0</variable>
@@ -631,6 +634,10 @@
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
+        <condition object="player" variable="zapped"><atleast>1</atleast>
+          <set variable="player.zapped">0</set>
+          <push state="zapped" />
+        </condition>
         <!-- out of lives -->
         <condition object="player" variable="lives">
           <atmost>0</atmost>
@@ -662,6 +669,51 @@
     </state>
 
     <!-- the room still underneath -->
+    <!-- electrocuted: he flashes, everything standing still -->
+    <state name="zapped">
+      <objects>
+        <object name="shock">
+          <sprite name="red"><bitmap from="zap-red" /></sprite>
+          <sprite name="white"><bitmap from="zap-white" /></sprite>
+          <sprite name="yellow"><bitmap from="zap-yellow" /></sprite>
+          <sprite name="cyan"><bitmap from="zap-cyan" /></sprite>
+          <animation>
+            <seconds>0.1</seconds>
+            <once />
+            <frame sprite="red" />
+            <frame sprite="white" />
+            <frame sprite="yellow" />
+            <frame sprite="cyan" />
+            <frame sprite="red" />
+            <frame sprite="white" />
+            <frame sprite="yellow" />
+            <frame sprite="cyan" />
+            <frame sprite="red" />
+            <frame sprite="white" />
+            <frame sprite="yellow" />
+            <frame sprite="cyan" />
+          </animation>
+          <position><x update="live">player.x</x><y update="live">player.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.4</after>
+          <dec variable="player.lives">1</dec>
+          <reveal object="player" />
+          <despawn object="bullet" />
+          <despawn object="robotshot" />
+          <reset object="shock" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
     <state name="paused">
       <objects>
         <object name="paused">
@@ -738,6 +790,66 @@
     </sound>
   </sounds>
   <pictures>
+    <bitmap name="zap-red">
+      <row>..***..</row>
+      <row>.*.*.*.</row>
+      <row>..***..</row>
+      <row>...*...</row>
+      <row>.*****.</row>
+      <row>*..*..*</row>
+      <row>*..*..*</row>
+      <row>..*.*..</row>
+      <row>..*.*..</row>
+      <row>..*.*..</row>
+      <row>.**.**.</row>
+      <scale>2</scale>
+      <color>color.red</color>
+    </bitmap>
+    <bitmap name="zap-white">
+      <row>*.***.*</row>
+      <row>.*.*.*.</row>
+      <row>..***..</row>
+      <row>*..*..*</row>
+      <row>.*****.</row>
+      <row>...*...</row>
+      <row>...*...</row>
+      <row>..*.*..</row>
+      <row>.*...*.</row>
+      <row>*.....*</row>
+      <row>*.....*</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="zap-yellow">
+      <row>..***..</row>
+      <row>.*.*.*.</row>
+      <row>..***..</row>
+      <row>...*...</row>
+      <row>.*****.</row>
+      <row>*..*..*</row>
+      <row>*..*..*</row>
+      <row>..*.*..</row>
+      <row>..*.*..</row>
+      <row>..*.*..</row>
+      <row>.**.**.</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="zap-cyan">
+      <row>*.***.*</row>
+      <row>.*.*.*.</row>
+      <row>..***..</row>
+      <row>*..*..*</row>
+      <row>.*****.</row>
+      <row>...*...</row>
+      <row>...*...</row>
+      <row>..*.*..</row>
+      <row>.*...*.</row>
+      <row>*.....*</row>
+      <row>*.....*</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+    </bitmap>
     <bitmap name="robots-a">
       <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>*******</row><row>*.***.*</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
       <scale>2</scale>

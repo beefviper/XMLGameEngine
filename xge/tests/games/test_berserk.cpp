@@ -368,6 +368,8 @@ TEST_CASE("a robot touching the man costs a life and sends him back to the start
 	play.placeRobot(robot, 1, 1);
 	man.position.x = play.object(robot).position.x - 20.0f;
 	play.walk(KeyCode::D, 4);
+	CHECK(play.state() == "zapped");
+	play.frames(90); // zapped first, the room standing still
 
 	CHECK(play.lives() == 2.0f);
 	CHECK(man.position.x == Approx(start.x).margin(10.0));
@@ -385,6 +387,7 @@ TEST_CASE("the walls are electrified", "[berserk]")
 
 	// The top wall of the second cell (the exit is the third's).
 	play.touchTheWall();
+	play.frames(90); // zapped first, the room standing still
 	CHECK(play.lives() == 2.0f);
 	CHECK(man.position.x == Approx(start.x).margin(4.0));
 	CHECK(man.position.y == Approx(start.y).margin(4.0));
@@ -518,9 +521,12 @@ TEST_CASE("the first room's robots never fire; the next room's fire at the man, 
 	// And one that meets the man ends a life (a wall in the way would do as much).
 	play.man().variable["lives"] = 3.0f;
 	play.man().position = { shot->position.x - 4.0f, shot->position.y - 8.0f };
+	const std::string shotName = shot->name;
 	play.frames(3);
+	CHECK(play.state() == "zapped");
+	play.frames(90); // zapped first, the room standing still
 	CHECK(play.lives() < 3.0f);
-	CHECK_FALSE(shot->isVisible);
+	CHECK_FALSE(play.game.tryGetObject(shotName));
 }
 
 TEST_CASE("robots fire more often, and Otto comes sooner, the deeper the man has gone", "[berserk]")
@@ -611,6 +617,7 @@ TEST_CASE("walking through a gap leaves the room: the next room, the man in at t
 	// The shut doorway is electrified like the walls.
 	play.man().position.y = mazeTop + 20.0f;
 	play.walk(KeyCode::W, 4);
+	play.frames(90); // zapped first, the room standing still
 	CHECK(play.lives() == 2.0f);
 	CHECK(play.room() == 1);
 }
@@ -740,6 +747,7 @@ TEST_CASE("Evil Otto turns up after a while, and one touch costs the man a life"
 	otto.position = { play.man().position.x + 20.0f, play.man().position.y - 2.0f };
 	otto.velocity = { 0.0f, 0.0f };
 	play.walk(KeyCode::D, 4);
+	play.frames(90); // zapped first, the room standing still
 	CHECK(play.lives() == 2.0f);
 }
 
@@ -823,7 +831,7 @@ TEST_CASE("no men left is game over, over the room standing still, and Space pla
 
 	play.man().variable["lives"] = 1.0f;
 	play.touchTheWall();
-	play.frames(2);
+	play.frames(92);
 	CHECK(play.state() == "over");
 	CHECK(play.game.isStill(play.object(Play::inRoom(2, "maze.post.1"))));
 	CHECK(play.game.isShown(play.object("gameover")));
