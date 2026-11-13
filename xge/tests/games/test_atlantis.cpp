@@ -210,6 +210,11 @@ TEST_CASE("the lowest lane goes round and round and fires death rays that take t
 	city.frames(2);
 	CHECK_FALSE(dome.isVisible);
 	CHECK(city.buildings() == 5);
+
+	// It leaves a burst, gone once its frames are played.
+	CHECK(city.game.tryGetObject("ruin.1"));
+	city.frames(kFramerate);
+	CHECK_FALSE(city.game.tryGetObject("ruin.1"));
 }
 
 TEST_CASE("each post fires along its own heading, and a hit ship scores and counts", "[atlantis]")
@@ -241,6 +246,11 @@ TEST_CASE("each post fires along its own heading, and a hit ship scores and coun
 	CHECK(city.game.tryGetObject(shell) == nullptr); // despawned
 	CHECK(city.score() == 100);
 	CHECK(city.downed() == 1);
+
+	// It leaves a burst, gone once its frames are played.
+	CHECK(city.game.tryGetObject("boom.1"));
+	city.frames(kFramerate / 2);
+	CHECK_FALSE(city.game.tryGetObject("boom.1"));
 }
 
 TEST_CASE("the quota moves the game on from wave to wave, with the tally and the rays put back, and the third quota wins", "[atlantis][scenes]")

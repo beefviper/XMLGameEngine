@@ -26,6 +26,8 @@
     round instead, and only there does it have a timer that <fire>s rays
     (<facing>down</facing>).
   * Each post has a <heading>, so its shell flies off at that angle.
+  * A ship or a building hit <spawn>s a burst where it was (boom, ruin):
+    an animation played <once /> whose <then> despawns it.
   * The waves are the <scenes> of the playing state. The first has the
     timer "launch" and a condition named "quota": enough ships down this
     wave <enter>s its way "next". The second is the first (from=), faster,
@@ -59,6 +61,42 @@
     <style name="hud"><size>28</size></style>
   </styles>
   <objects>
+    <!-- what a hit Gorgon ship leaves: a burst that grows and scatters, then is gone -->
+    <object name="boom">
+      <sprite name="a"><bitmap from="burst-a" /></sprite>
+      <sprite name="b"><bitmap from="burst-b" /></sprite>
+      <sprite name="c"><bitmap from="burst-c" /></sprite>
+      <sprite name="d"><bitmap from="burst-d" /></sprite>
+      <animation>
+        <seconds>0.07</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d" />
+        <then><despawn /></then>
+      </animation>
+      <most>6</most>
+    </object>
+    <!-- what a building hit leaves: a bigger burst, slower, then the gap -->
+    <object name="ruin">
+      <sprite name="a"><bitmap from="rubble-a" /></sprite>
+      <sprite name="b"><bitmap from="rubble-b" /></sprite>
+      <sprite name="c"><bitmap from="rubble-c" /></sprite>
+      <sprite name="d"><bitmap from="rubble-d" /></sprite>
+      <animation>
+        <seconds>0.12</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d"><seconds>0.3</seconds></frame>
+        <then><despawn /></then>
+      </animation>
+      <most>4</most>
+    </object>
     <!-- the Gorgon ships: four lanes of hidden ships, a lane lower
          each pass; speed and points are the wave's -->
     <group name="gorgons" class="gorgon">
@@ -74,6 +112,7 @@
           <inc variable="tally.downed" />
           <play sound="hit" />
           <die />
+          <spawn object="boom" />
         </collision>
       </collisions>
       <group name="lane1">
@@ -208,6 +247,7 @@
             <collision class="ray">
               <play sound="lost" />
               <die />
+              <spawn object="ruin" />
             </collision>
           </collisions>
           <group name="domes">
@@ -418,6 +458,120 @@
     </sound>
   </sounds>
   <pictures>
+    <!-- a burst, four pictures: a flash, a ball, its pieces flying, the last sparks -->
+    <bitmap name="burst-a">
+      <row>.........</row>
+      <row>.........</row>
+      <row>....*....</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>....*....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="burst-b">
+      <row>.........</row>
+      <row>..*...*..</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>.*oo.oo*.</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>..*...*..</row>
+      <row>.........</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="burst-c">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...o.o...</row>
+      <row>..o...o..</row>
+      <row>*.......*</row>
+      <row>..o...o..</row>
+      <row>...o.o...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="burst-d">
+      <row>o.......o</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>....o....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>o.......o</row>
+      <scale>3</scale>
+      <color>color.red</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <!-- a burst, four pictures: a flash, a ball, its pieces flying, the last sparks -->
+    <bitmap name="rubble-a">
+      <row>.........</row>
+      <row>.........</row>
+      <row>....*....</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>....*....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="o">color.white</color>
+    </bitmap>
+    <bitmap name="rubble-b">
+      <row>.........</row>
+      <row>..*...*..</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>.*oo.oo*.</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>..*...*..</row>
+      <row>.........</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="o">color.white</color>
+    </bitmap>
+    <bitmap name="rubble-c">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...o.o...</row>
+      <row>..o...o..</row>
+      <row>*.......*</row>
+      <row>..o...o..</row>
+      <row>...o.o...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="o">color.white</color>
+    </bitmap>
+    <bitmap name="rubble-d">
+      <row>o.......o</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>....o....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>o.......o</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="o">color.white</color>
+    </bitmap>
     <bitmap name="gorgons">
       <row>....****....</row>
       <row>..********..</row>
