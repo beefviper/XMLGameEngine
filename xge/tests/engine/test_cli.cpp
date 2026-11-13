@@ -463,6 +463,34 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 	std::filesystem::remove(alone);
 }
 
+TEST_CASE("describe writes the state and every object in play as XML", "[cli][dump]")
+{
+	Game game{ readGame("descriptions/pong.xml", XmlBackend::TinyXml2) };
+	Engine engine(game, WindowBackend::None, AudioBackend::None);
+	engine.handleKeyPressed(KeyCode::Space);
+	engine.handleKeyReleased(KeyCode::Space);
+	for (int frame = 0; frame < 60; ++frame) { engine.step(); }
+
+	std::ostringstream out;
+	game.describe(out, 60);
+	const std::string said = out.str();
+	INFO(said);
+	CHECK(said.rfind("<moment>\n  <frame>60</frame>\n  <state name=\"playing\" />\n", 0) == 0);
+	for (const std::string name : { "playing.ball", "playing.paddle1", "playing.paddle2" })
+	{
+		const Object& object = game.getObject(name);
+		std::ostringstream position;
+		position << "<position><x>" << object.position.x << "</x><y>" << object.position.y << "</y></position>";
+		const auto at = said.find("<object name=\"" + name + "\"");
+		REQUIRE(at != std::string::npos);
+		CHECK(said.find(position.str(), at) == said.find("<position>", at));
+	}
+	CHECK(said.find("class=\"paddle\" group=\"playing.paddles\"") != std::string::npos);
+	CHECK(said.find("<variable name=\"score\">0</variable>") != std::string::npos);
+	CHECK(said.find("playing.title") == std::string::npos); // not in play
+	CHECK(said.substr(said.size() - 10) == "</moment>\n");
+}
+
 TEST_CASE("the help options ask for the usage", "[cli]")
 {
 	CHECK(parseCommandLine({ "-h" }).showHelp);

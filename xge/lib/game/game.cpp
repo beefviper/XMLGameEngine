@@ -1009,6 +1009,71 @@ namespace xge
 		out << "</kept>\n";
 	}
 
+	namespace
+	{
+		// Text as it may stand in an XML attribute.
+		std::string xmlEscaped(const std::string& text)
+		{
+			std::string escaped;
+			for (const char c : text)
+			{
+				switch (c)
+				{
+				case '&': escaped += "&amp;"; break;
+				case '<': escaped += "&lt;"; break;
+				case '>': escaped += "&gt;"; break;
+				case '"': escaped += "&quot;"; break;
+				default: escaped += c; break;
+				}
+			}
+			return escaped;
+		}
+	}
+
+	void Game::describe(std::ostream& out, unsigned long frame, const std::string& indent)
+	{
+		const auto pair = [&](const char* tag, Vector2f value, const std::string& in)
+		{
+			out << in << '<' << tag << "><x>" << value.x << "</x><y>" << value.y << "</y></" << tag << ">\n";
+		};
+		const auto numbers = [&](const std::map<std::string, float>& values, const std::string& in)
+		{
+			if (values.empty()) { return; }
+			out << in << "<variables>\n";
+			for (const auto& [name, value] : values)
+			{
+				out << in << "  <variable name=\"" << xmlEscaped(name) << "\">" << value << "</variable>\n";
+			}
+			out << in << "</variables>\n";
+		};
+
+		out << indent << "<moment>\n"
+			<< indent << "  <frame>" << frame << "</frame>\n";
+		if (!currentState.empty())
+		{
+			const std::string& state = currentState.top().name;
+			const std::string scene = currentScene(state);
+			out << indent << "  <state name=\"" << xmlEscaped(state) << '"';
+			if (!scene.empty()) { out << " scene=\"" << xmlEscaped(scene) << '"'; }
+			out << " />\n";
+		}
+		numbers(variables, indent + "  ");
+		for (const Object& object : objects)
+		{
+			if (!isShown(object)) { continue; }
+			out << indent << "  <object name=\"" << xmlEscaped(object.name) << '"';
+			if (!object.objClass.empty()) { out << " class=\"" << xmlEscaped(object.objClass) << '"'; }
+			if (!object.groupName.empty()) { out << " group=\"" << xmlEscaped(object.groupName) << '"'; }
+			if (!object.lookName().empty()) { out << " sprite=\"" << xmlEscaped(object.lookName()) << '"'; }
+			out << ">\n";
+			pair("position", object.position, indent + "    ");
+			pair("velocity", object.velocity, indent + "    ");
+			numbers(object.variable, indent + "    ");
+			out << indent << "  </object>\n";
+		}
+		out << indent << "</moment>\n";
+	}
+
 	void Game::loadKept(std::istream& in)
 	{
 		// The file is the engine's own, written by saveKept, one tag a line,

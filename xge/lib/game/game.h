@@ -284,6 +284,14 @@ namespace xge
 		void saveKept(std::ostream& out) const;
 		void loadKept(std::istream& in);
 
+		// The game as it is now, as XML, for a person or a program to read
+		// (xgecli --dump): a <moment> holding the frame number given, the
+		// current state and its scene, the game's variables, and each object
+		// in play with its name, class, group, look, position, velocity and
+		// variables. Each line starts with `indent`. games/xgedump.xsd is its
+		// schema.
+		void describe(std::ostream& out, unsigned long frame, const std::string& indent = "");
+
 		// The game's recorded <demo> (RawDemo::recorded false for none).
 		const RawDemo& getDemo(void) const noexcept { return demo; }
 
