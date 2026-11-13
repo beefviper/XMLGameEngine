@@ -117,9 +117,6 @@ namespace xge
 		// it is in the air, or the hop would land outside the window.
 		bool hop(Object& object, const CmdHop& hop);
 
-		// A hunt by hops: see CmdHuntHop.
-		bool huntByHop(Object& object, const CmdHuntHop& hunt);
-
 		// Through the air by `whole` over `seconds`, touching nothing until it
 		// lands: a <hop> that takes time. Not when it is in the
 		// air already, nor when it would land outside the window. With an

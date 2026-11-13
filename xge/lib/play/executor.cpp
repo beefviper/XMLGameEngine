@@ -393,42 +393,6 @@ namespace xge
 		return true;
 	}
 
-	bool CommandExecutor::huntByHop(Object& object, const CmdHuntHop& hunt)
-	{
-		if (object.isAirborne() || !game.isShown(object)) { return false; }
-
-		const Object* quarry = game.nearestInPlay(object, hunt.target);
-		if (!quarry) { return false; }
-
-		// The four hops it could make, in the order a tie goes: up before
-		// down, then left before right.
-		const std::array<std::pair<Direction, Vector2f>, 4> hops = hunt.diagonal
-			? std::array<std::pair<Direction, Vector2f>, 4>{ { { Direction::Up, { -hunt.across, -hunt.down } }, { Direction::Up, { hunt.across, -hunt.down } },
-				{ Direction::Down, { -hunt.across, hunt.down } }, { Direction::Down, { hunt.across, hunt.down } } } }
-			: std::array<std::pair<Direction, Vector2f>, 4>{ { { Direction::Up, { 0.0f, -hunt.down } }, { Direction::Left, { -hunt.across, 0.0f } },
-				{ Direction::Down, { 0.0f, hunt.down } }, { Direction::Right, { hunt.across, 0.0f } } } };
-
-		const WindowDesc& window = game.getWindowDesc();
-		const Vector2f there = quarry->position + sizeOf(*quarry) * 0.5f;
-		const Vector2f middle = object.position + sizeOf(object) * 0.5f;
-		std::optional<std::pair<Direction, Vector2f>> best;
-		float bestDistance = 0.0f;
-		for (const auto& [way, step] : hops)
-		{
-			if (!insideWindow({ object.position + step, sizeOf(object) }, { window.width, window.height })) { continue; }
-			const Vector2f off = middle + step - there;
-			const float distance = off.x * off.x + off.y * off.y;
-			if (!best || distance < bestDistance)
-			{
-				best = std::make_pair(way, step);
-				bestDistance = distance;
-			}
-		}
-		if (!best) { return false; }
-
-		return hop(object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds, hunt.arc, {} });
-	}
-
 	void CommandExecutor::queueHop(Object& object, Vector2f step)
 	{
 		object.hopPending = step;
