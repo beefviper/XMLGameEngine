@@ -121,4 +121,17 @@ if (XGE_WITH_SFML3)
 	target_link_libraries(pong_min PRIVATE xgelib)
 	xge_warnings(pong_min)
 	xge_place_program(pong_min)
+
+	# And pong.xml by hand: states, texts, sounds, a kept choice and a
+	# computer player (games/prototypes/pong).
+	add_executable(pong
+		"games/prototypes/pong/source/main.cpp"
+		"games/prototypes/pong/source/pong.cpp"
+		"games/prototypes/pong/source/pong.h"
+	)
+	target_compile_features(pong PRIVATE cxx_std_20)
+	target_include_directories(pong PRIVATE games/prototypes/pong/source)
+	target_link_libraries(pong PRIVATE xgelib)
+	xge_warnings(pong)
+	xge_place_program(pong)
 endif()
