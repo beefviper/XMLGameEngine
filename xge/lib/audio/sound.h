@@ -65,6 +65,7 @@ namespace xge
 		bool loop{ false };
 		float volume{ 0.3f };
 		std::vector<SoundNote> notes;
+		std::string path; // a recording (audio/wave.h) played in place of notes
 	};
 
 	// The rate every sound is made at and played back at: CD quality, which
@@ -85,7 +86,8 @@ namespace xge
 	std::vector<std::int16_t> synthesize(const SoundDesc& sound, unsigned sampleRate = kSoundSampleRate);
 
 	// The samples a backend plays for a sound, made the same way for every
-	// backend: the one place a sound becomes samples. Today that is always
+	// backend: the one place a sound becomes samples. A sound with a path is
+	// its recording (readWave, audio/wave.h) at its volume; any other is
 	// synthesize() above.
 	std::vector<std::int16_t> samplesOf(const SoundDesc& sound);
 

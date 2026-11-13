@@ -31,7 +31,7 @@ A small whole game is in the [root readme](../readme.md#a-whole-game). Run a gam
 | [The game file](reference/format.md) | layout, the one rule, values and arithmetic, names, window, variables, styles, colours |
 | [Objects](reference/objects.md) | parts of an object, groups, columns and rows, lines of text, pieces and `from=`, spawn and despawn |
 | [Pictures](reference/pictures.md) | shapes, lines, polygons, bitmaps, SVG, sheets, text, animation, looks, poses, turning, light, height |
-| [Sounds](reference/sounds.md) | notes, waves, music, playing |
+| [Sounds](reference/sounds.md) | notes, waves, music, recordings, playing |
 | [Collisions](reference/collisions.md) | rules, filters, how a touch is found, knocks |
 | [Commands](reference/commands.md) | every verb, where each may go, refused presses |
 | [Input](reference/input.md) | keys, mouse and pads, press/hold/release, held keys |

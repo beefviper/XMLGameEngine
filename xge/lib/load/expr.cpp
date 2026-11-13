@@ -13,6 +13,7 @@
 #include "engine/keys.h"
 #include "load/spelling.h"
 #include "picture/svg.h"
+#include "audio/wave.h"
 
 #include <algorithm>
 #include <functional>
@@ -1522,8 +1523,11 @@ namespace xge
 		SoundDesc sound;
 		sound.name = raw.name;
 		sound.loop = raw.loop;
+		sound.path = raw.path;
 
 		const bool noVolume = raw.volume.kind == RawValue::Kind::Expression && raw.volume.text.empty();
+		// A recording plays as loud as it was made unless told otherwise.
+		if (!sound.path.empty()) { sound.volume = 1.0f; }
 		if (!noVolume)
 		{
 			sound.volume = evaluate(raw.volume, where + " > <volume>");
@@ -1553,6 +1557,21 @@ namespace xge
 			}
 			return *hz;
 		};
+
+		// A recording is read once now, so a missing or unreadable file stops
+		// the load before a window opens.
+		if (!sound.path.empty())
+		{
+			try
+			{
+				(void)readWave(sound.path);
+			}
+			catch (const std::runtime_error& error)
+			{
+				throw std::runtime_error(where + ": " + error.what());
+			}
+			return sound;
+		}
 
 		const Waveform soundWave = waveOf(raw.wave, where);
 

@@ -2713,7 +2713,8 @@ namespace xge
 
 		// <sound name="..." wave="square">: an optional <loop />, an optional
 		// <volume>, then <note>s and <rest>s in the order they play, or the
-		// <part>s that play together, each its own <note>s and <rest>s. The
+		// <part>s that play together, each its own <note>s and <rest>s, or the
+		// <path> of a recording. The
 		// words (wave, pitch) are checked by load/expr, which also works out
 		// the lengths.
 		// The tag read; readSound without the line.
@@ -2749,14 +2750,24 @@ namespace xge
 					if (!raw.notes.empty() || parts > 0) { fail(where, "<volume> has to come before the <note>s and <rest>s"); }
 					raw.volume = readValue(*child, where);
 				}
+				else if (tag == "path")
+				{
+					if (!raw.notes.empty()) { fail(where, "has <note>s or <part>s, so it cannot have a <path> as well"); }
+					if (!raw.path.empty()) { fail(where, "has two <path>s"); }
+					if (!raw.wave.empty()) { fail(where, "plays a recording (<path>), so it has no wave="); }
+					raw.path = readText(*child);
+					if (raw.path.empty()) { fail(where, "has an empty <path>"); }
+				}
 				else if (tag == "note" || tag == "rest")
 				{
+					if (!raw.path.empty()) { fail(where, "plays a recording (<path>), so it cannot have <" + tag + ">s as well"); }
 					if (parts > 0) { fail(where, "has <part>s, so its <" + tag + ">s go inside them"); }
 					loose = true;
 					raw.notes.push_back(readNote(*child, where, 0, ""));
 				}
 				else if (tag == "part")
 				{
+					if (!raw.path.empty()) { fail(where, "plays a recording (<path>), so it cannot have <part>s as well"); }
 					if (loose) { fail(where, "has <note>s and <rest>s of its own, so it cannot have <part>s as well"); }
 					const std::string partWhere = where + " > <part> " + std::to_string(parts + 1);
 					const std::string wave = child->getAttribute("wave");
@@ -2773,11 +2784,11 @@ namespace xge
 				}
 				else
 				{
-					fail(where, "unknown <" + tag + ">; expected a <loop />, a <volume>, then <note>s and <rest>s, or <part>s");
+					fail(where, "unknown <" + tag + ">; expected a <loop />, a <volume>, then <note>s and <rest>s, <part>s, or a <path>");
 				}
 			}
 
-			if (raw.notes.empty()) { fail(where, "has no <note>"); }
+			if (raw.notes.empty() && raw.path.empty()) { fail(where, "has no <note>"); }
 
 			return raw;
 		}

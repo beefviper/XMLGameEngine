@@ -8,7 +8,12 @@ The 8-bit machines played bleeps, bloops and little tunes from a sound chip, not
 
 ## Decisions
 
-- **Notes, not sound files.** Files need a loader per library and are opaque in the XML. A file tag can come later beside notes.
+- **Notes first, recordings beside them.** Notes are part of the description and readable; a file is opaque. A recording is a `<path>` in a `<sound>`, written as a sprite names an image, in place of notes or parts.
+  - The engine decodes it (`audio/wave.cpp`) into the same samples a synthesized sound is, so no library has a loader of its own and nothing after `samplesOf()` knows the difference.
+  - Uncompressed WAV only: it needs no library. MP3 or Ogg would each need a decoder, which is the author's call.
+  - Stereo is averaged into mono, as every sound is mono; another rate is resampled along straight lines. At most 60 seconds, so a wrong file is a load error and not memory filled.
+  - A recording plays as made (volume 1) when no `<volume>` is given, where notes default to 0.3: a recording was already mixed, a full-scale square wave is harsh.
+  - The file is read once at load to check it, so a bad one stops the load before a window opens.
 - **The engine makes the samples; a backend only plays them.** `samplesOf()` is the one place a sound becomes samples (today by `synthesize()`): 16-bit mono at 44100 Hz, the same for every library; SFML and SDL2 have no synthesis of their own anyway. The synthesizer is tested with no device.
 - **A chip's waves:** square, triangle, sawtooth; noise pitched like a chip (a new random level every half cycle, seeded per note, so it sounds the same everywhere); sine as a soft option.
 - **Slides by semitones**, so a bend sounds even.
@@ -29,11 +34,11 @@ The 8-bit machines played bleeps, bloops and little tunes from a sound chip, not
 
 ## Rejected
 
-Sound files as the only form; a tracker or MML string (`"t120 o4 c8 e8 g8"`, a little language in a string); each library's own synthesis; a voice pool; sound tied to the window library.
+Sound files as the only form; a loader per library; a tracker or MML string (`"t120 o4 c8 e8 g8"`, a little language in a string); each library's own synthesis; a voice pool; sound tied to the window library.
 
 ## Open
 
-- A volume envelope (decay for plucked and bell sounds), stereo, a sound-file tag.
+- A volume envelope (decay for plucked and bell sounds); stereo (a mono sound would play the same on both sides); compressed recordings.
 - Notes that follow a variable: a sound is made once when the window opens, so Invaders' march cannot keep time with the fleet. A timer stepping through sounds would.
 - Silencing a state's music while it is current.
 - A faint pulse where a loop's end meets its start at the fades.

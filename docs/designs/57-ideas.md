@@ -17,6 +17,7 @@
 - One game description, several **targets** with their own limits: resolution, color count and palette rules, sprites per frame and scanline, sprite size and colors, audio channels, input devices, memory.
   - The toolchain does its best and **reports what it gave up**: too many objects (some dropped or flickered), a sprite using too many colors (reduced), "a file named here could be recreated by hand".
   - The list of assets to redo is the useful part.
+  - A recording (a `<sound>` with a `<path>`) cannot go to a target with only a sound chip: it would be reported, or stood in for by a note.
   - The declarative version is stronger than a 8-bit toolkit that swaps target code, because the description has no machine code.
 - Old hardware tricks the language might say or know about: reusing the sprite budget mid-frame, a sprite-vs-background hit as a timing signal to split the screen (fixed status bar, scrolling playfield), scanline interrupts. These are implementation techniques; the declarative layer would say there are two regions and a limit and the target decides how.
 - Null and software backends: a null implementation of each subsystem removes "does it exist" checks (null audio makes play-a-sound always safe; a scripted null input drives tests and AI players); a software renderer is the last fallback.

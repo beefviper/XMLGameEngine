@@ -1028,6 +1028,7 @@ namespace xge
 		bool loop{ false }; // <loop />
 		RawValue volume;
 		std::vector<RawNote> notes;
+		std::string path;   // a recording (<path>), in place of notes
 	};
 
 	// One command tag from the XML - <bounce/>, <inc variable="a.b"/>,

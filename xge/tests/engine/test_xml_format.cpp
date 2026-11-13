@@ -801,6 +801,18 @@ TEST_CASE("both schema checkers accept a good game", "[xml_format][schema]")
 	CHECK(verdict.strongAccepts);
 }
 
+TEST_CASE("both schema checkers take a sound that is a recording, and refuse one that is also notes", "[xml_format][schema][wave]")
+{
+	const char* const note = "<sound name=\"paddle\"><note pitch=\"459\">0.1</note></sound>";
+	const Verdict recording = judge(pongWith(note, "<sound name=\"paddle\"><volume>0.5</volume><path>assets/paddle.wav</path></sound>"));
+	CHECK(recording.weakAccepts);
+	CHECK(recording.strongAccepts);
+
+	const Verdict both = judge(pongWith(note, "<sound name=\"paddle\"><note pitch=\"459\">0.1</note><path>assets/paddle.wav</path></sound>"));
+	CHECK_FALSE(both.weakAccepts);
+	CHECK_FALSE(both.strongAccepts);
+}
+
 TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][schema]")
 {
 	struct Mistake

@@ -938,3 +938,56 @@ TEST_CASE("a WAV file that cannot be read is refused, naming the file and why", 
 		CHECK_THAT(refusal(wave), ContainsSubstring("longer than 60 seconds"));
 	}
 }
+
+TEST_CASE("a sound with a <path> plays its recording, as loud as made unless given a volume", "[sound][wave]")
+{
+	const ScratchFile recording{ scratchName("descriptions/roar.wav") };
+	WaveFile wave;
+	wave.samples = { 0, 10000, -10000, 20000 };
+	wave.write(recording.path);
+	const std::string path = recording.path.generic_string();
+
+	const std::vector<SoundDesc> sounds = loadSounds(gameWithSounds(
+		"<sounds><sound name=\"roar\"><path>" + path + "</path></sound>"
+		"<sound name=\"hum\"><loop /><volume>0.5</volume><path>" + path + "</path></sound></sounds>",
+		"<play sound=\"roar\" />"));
+	REQUIRE(sounds.size() == 2);
+
+	CHECK(sounds[0].path == path);
+	CHECK(sounds[0].notes.empty());
+	CHECK(sounds[0].volume == 1.0f);
+	CHECK(samplesOf(sounds[0]) == std::vector<std::int16_t>{ 0, 10000, -10000, 20000 });
+
+	CHECK(sounds[1].loop);
+	CHECK(sounds[1].volume == 0.5f);
+	CHECK(samplesOf(sounds[1]) == std::vector<std::int16_t>{ 0, 5000, -5000, 10000 });
+}
+
+TEST_CASE("a recording that is missing or unreadable, or a <path> with notes, stops the load", "[sound][wave]")
+{
+	const auto refused = [](const std::string& sound)
+	{
+		try
+		{
+			(void)loadSounds(gameWithSounds("<sounds>" + sound + "</sounds>"));
+		}
+		catch (const std::exception& error)
+		{
+			return std::string(error.what());
+		}
+		return std::string();
+	};
+
+	const std::string missing = scratchName("descriptions/gone.wav");
+	CHECK_THAT(refused("<sound name=\"roar\"><path>" + missing + "</path></sound>"),
+		ContainsSubstring("sound 'roar'") && ContainsSubstring("gone_scratch") && ContainsSubstring("cannot be opened"));
+
+	const ScratchFile text{ scratchName("descriptions/text.wav") };
+	std::ofstream(text.path) << "not a sound";
+	CHECK_THAT(refused("<sound name=\"roar\"><path>" + text.path.generic_string() + "</path></sound>"),
+		ContainsSubstring("sound 'roar'") && ContainsSubstring("is not a WAV file"));
+
+	CHECK_THAT(refused("<sound name=\"roar\"><note pitch=\"C4\">0.1</note><path>a.wav</path></sound>"), ContainsSubstring("cannot have a <path> as well"));
+	CHECK_THAT(refused("<sound name=\"roar\"><path>a.wav</path><note pitch=\"C4\">0.1</note></sound>"), ContainsSubstring("cannot have <note>s as well"));
+	CHECK_THAT(refused("<sound name=\"roar\" wave=\"sine\"><path>a.wav</path></sound>"), ContainsSubstring("has no wave="));
+}

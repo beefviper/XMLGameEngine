@@ -5,6 +5,8 @@
 
 #include "audio/sound.h"
 
+#include "audio/wave.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -221,12 +223,22 @@ namespace xge
 
 	std::vector<std::int16_t> samplesOf(const SoundDesc& sound)
 	{
-		return synthesize(sound);
+		if (sound.path.empty()) { return synthesize(sound); }
+
+		std::vector<std::int16_t> samples = readWave(sound.path);
+		const double volume = std::clamp(static_cast<double>(sound.volume), 0.0, 1.0);
+		for (std::int16_t& sample : samples)
+		{
+			sample = static_cast<std::int16_t>(std::lround(sample * volume));
+		}
+		return samples;
 	}
 
 	std::ostream& operator<<(std::ostream& o, const SoundDesc& sound)
 	{
-		o << "sound: name=" << sound.name << (sound.loop ? ", loop" : "") << ", volume=" << sound.volume << ", notes=";
+		o << "sound: name=" << sound.name << (sound.loop ? ", loop" : "") << ", volume=" << sound.volume;
+		if (!sound.path.empty()) { return o << ", path=" << sound.path; }
+		o << ", notes=";
 
 		for (std::size_t i = 0; i < sound.notes.size(); ++i)
 		{
