@@ -202,6 +202,8 @@ TEST_CASE("the tar pit costs a life, unless Harry jumps over it", "[pitfall]")
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(30);
 	play.engine.handleKeyReleased(KeyCode::D);
+	CHECK(play.game.getCurrentState().name == "caught");
+	play.frames(100); // he flickers first, the jungle standing still
 	CHECK(play.status("lives") == 2);
 	CHECK(play.harry().position.x < 100.0f);
 
@@ -233,6 +235,7 @@ TEST_CASE("a crocodile can be stood on until its jaws open; the water drowns", "
 
 	// The jaws open every three seconds.
 	play.frames(130);
+	play.frames(100); // he flickers first, the jungle standing still
 	CHECK(play.status("lives") == 2);
 	CHECK(play.harry().position.x < 100.0f);
 
@@ -241,6 +244,7 @@ TEST_CASE("a crocodile can be stood on until its jaws open; the water drowns", "
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(40);
 	play.engine.handleKeyReleased(KeyCode::D);
+	play.frames(100); // he flickers first, the jungle standing still
 	CHECK(play.status("lives") == 1);
 }
 

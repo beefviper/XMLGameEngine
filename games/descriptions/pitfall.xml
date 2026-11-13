@@ -45,6 +45,9 @@
     he started with <reset object="harry" /> without losing them. A treasure
     taken counts itself in status.found and four win: a condition counting
     the treasures left would see only the screen Harry is on.
+  * Caught, Harry goes out of play and the state caught stands the jungle
+    still while a stand-in flickers (a <once /> animation); its timer takes
+    the life and puts Harry back.
   * The crocodiles are platforms with two looks, shut and open, each with a
     timer that turns it to the other: three seconds shut, one open, and
     open they bite whoever stands on them.
@@ -345,6 +348,8 @@
           <variables>
             <variable name="score">2000</variable>
             <variable name="lives">3</variable>
+            <!-- caught: the state caught comes next -->
+            <variable name="caught">0</variable>
             <variable name="time">180</variable>
             <variable name="found">0</variable>
           </variables>
@@ -448,10 +453,11 @@
             <collision class="water"><trigger action="lose" /></collision>
           </collisions>
           <actions>
+            <!-- out of play while he flickers (the state caught) -->
             <action name="lose">
-              <dec variable="status.lives" />
+              <die />
               <play sound="die" />
-              <reset />
+              <set variable="status.caught">1</set>
             </action>
             <action name="left">
               <move direction="left">run</move>
@@ -594,6 +600,10 @@
       </inputs>
       <!-- how a game ends: out of lives or time, or every treasure found -->
       <conditions>
+        <condition object="status" variable="caught"><atleast>1</atleast>
+          <set variable="status.caught">0</set>
+          <push state="caught" />
+        </condition>
         <condition object="status" variable="lives">
           <atmost>0</atmost>
           <become object="over.message" sprite="lost" />
@@ -622,6 +632,47 @@
       </timers>
     </state>
 
+    <!-- caught: Harry flickers, the jungle standing still -->
+    <state name="caught">
+      <objects>
+        <object name="flicker">
+          <sprite name="seen"><bitmap from="harry" /></sprite>
+          <sprite name="blank"><bitmap from="harry-gone" /></sprite>
+          <animation>
+            <seconds>0.12</seconds>
+            <once />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+          </animation>
+          <position><x update="live">harry.x</x><y update="live">harry.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.5</after>
+          <dec variable="status.lives" />
+          <reset object="harry" />
+          <reset object="flicker" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
     <state name="paused">
       <objects>
         <object name="paused">
@@ -783,6 +834,26 @@
       <scale>4</scale>
       <color char="g">color.forestgreen</color>
       <color char="G">color.green</color>
+    </bitmap>
+    <bitmap name="harry-gone">
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <scale>2</scale>
+      <color>color.black</color>
     </bitmap>
     <bitmap name="harry">
       <row>...hhh..</row>
