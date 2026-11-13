@@ -1172,33 +1172,51 @@
 
   <!-- Commands: what a collision rule, an object action, a key or a condition does. -->
 
-  <!-- inc and dec: which variable, and by how much (1 when there is nothing between the tags). -->
   <xs:complexType name="variableReferenceType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>inc and dec: which variable, and by how much (1 when there is nothing between the tags).</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="variable" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- pull and seek: which object or group, and how much. -->
   <xs:complexType name="targetValueType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>pull and seek: which object or group, and how much.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- An object's light, darkness, height off the ground and shadow. -->
   <xs:group name="sightParts">
+    <xs:annotation>
+      <xs:documentation>An object's light, darkness, height off the ground and shadow.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <!-- how far round its middle it lights what is dark -->
-      <xs:element name="light" type="valueType" minOccurs="0" />
-      <!-- unlit: drawn only while lit; unseen: drawn once it has been lit -->
-      <xs:element name="dark" type="darkType" minOccurs="0" />
-      <!-- how high off the ground it starts, how fast it rises, how much less each frame, how much it bounces back up -->
-      <xs:element name="altitude" type="altitudeType" minOccurs="0" />
-      <!-- kept under that object, on the ground -->
-      <xs:element name="shadow" type="objectRefType" minOccurs="0" />
+      <xs:element name="light" type="valueType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>how far round its middle it lights what is dark</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="dark" type="darkType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>unlit: drawn only while lit; unseen: drawn once it has been lit</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="altitude" type="altitudeType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>how high off the ground it starts, how fast it rises, how much less each frame, how much it bounces back up</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="shadow" type="objectRefType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>kept under that object, on the ground</xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
   </xs:group>
 
@@ -1222,8 +1240,10 @@
     <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- hop: one of the four ways, or a diagonal, and how far: a distance, or for a diagonal an <x> across and a <y> up or down. -->
   <xs:simpleType name="hopDirectionType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[hop: one of the four ways, or a diagonal, and how far: a distance, or for a diagonal an <x> across and a <y> up or down.]]></xs:documentation>
+    </xs:annotation>
     <xs:restriction base="xs:string">
       <xs:enumeration value="up" />
       <xs:enumeration value="down" />
@@ -1235,16 +1255,20 @@
       <xs:enumeration value="down-right" />
     </xs:restriction>
   </xs:simpleType>
-  <!-- hop: how far, as its value, or an <x> and a <y>, then how long it takes, and how high it goes on the way (an <arc>, which needs <seconds>); or, on cells, <onto>s: to the nearest cell that way holding one of those classes (left and right along the row; up and down to the nearest row that has one, keeping the column as a text cursor does) -->
   <xs:complexType name="hopType" mixed="true">
+    <xs:annotation>
+      <xs:documentation><![CDATA[hop: how far, as its value, or an <x> and a <y>, then how long it takes, and how high it goes on the way (an <arc>, which needs <seconds>); or, on cells, <onto>s: to the nearest cell that way holding one of those classes (left and right along the row; up and down to the nearest row that has one, keeping the column as a text cursor does)]]></xs:documentation>
+    </xs:annotation>
     <xs:choice minOccurs="0">
       <xs:group ref="hopParts" />
       <xs:element name="onto" type="ontoType" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="direction" type="hopDirectionType" use="required" />
   </xs:complexType>
-  <!-- onto: a class of piece a hop or a track on cells may go to the cell of -->
   <xs:complexType name="ontoType">
+    <xs:annotation>
+      <xs:documentation>onto: a class of piece a hop or a track on cells may go to the cell of</xs:documentation>
+    </xs:annotation>
     <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
   <xs:group name="hopParts">
@@ -1260,24 +1284,33 @@
       <xs:element name="arc" type="valueType" minOccurs="0" />
     </xs:sequence>
   </xs:group>
-  <!-- the hop of a hunt by hops: the hunt chooses the way. -->
   <xs:complexType name="huntHopType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>the hop of a hunt by hops: the hunt chooses the way.</xs:documentation>
+    </xs:annotation>
     <xs:group ref="hopParts" minOccurs="0" />
   </xs:complexType>
 
-  <!-- set: the value, worked out as it runs. -->
   <xs:complexType name="setType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>set: the value, worked out as it runs.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="variable" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- spawn: which object or group (<random />: one of its members at random, not in turn), into= the map of cells it goes on (left out: its own), where (a half may be <centered>; on a map with <cells />, the <column> and <row> of its top left cell), and how fast. -->
   <xs:complexType name="spawnType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[spawn: which object or group (<random />: one of its members at random, not in turn), into= the map of cells it goes on (left out: its own), where (a half may be <centered>; on a map with <cells />, the <column> and <row> of its top left cell), and how fast.]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <!-- count: how many copies (one if left out) -->
-      <xs:element name="count" type="valueType" minOccurs="0" />
+      <xs:element name="count" type="valueType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>count: how many copies (one if left out)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="random" type="emptyType" minOccurs="0" />
       <xs:choice minOccurs="0">
         <xs:element name="position" type="spawnPositionType" />
@@ -1285,8 +1318,10 @@
           <xs:element name="column" type="valueType" />
           <xs:element name="row" type="valueType" />
         </xs:sequence>
-        <!-- free: a free cell of the map, at random; with <below>, one under that row -->
         <xs:element name="free">
+          <xs:annotation>
+            <xs:documentation><![CDATA[free: a free cell of the map, at random; with <below>, one under that row]]></xs:documentation>
+          </xs:annotation>
           <xs:complexType>
             <xs:sequence>
               <xs:element name="below" type="valueType" minOccurs="0" />
@@ -1295,17 +1330,24 @@
         </xs:element>
       </xs:choice>
       <xs:element name="velocity" type="partialVector2Type" minOccurs="0" />
-      <!-- acceleration: its pull for as long as it lasts (wind on a shell), read as the spawn runs -->
-      <xs:element name="acceleration" type="partialVector2Type" minOccurs="0" />
+      <xs:element name="acceleration" type="partialVector2Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>acceleration: its pull for as long as it lasts (wind on a shell), read as the spawn runs</xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
     <xs:attribute name="object" type="xs:string" use="required" />
     <xs:attribute name="into" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
-  <!-- send: with object=, its piece from one map of cells to another, at a <column> and <row> if given (left out: the same cell); with no
-       object=, members of a held class from holder from= (a group's name: every member, wherever it is) into holder
-       into=: how many, as content, or <all />; sprite= the look they show there -->
   <xs:complexType name="sendType" mixed="true">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        send: with object=, its piece from one map of cells to another, at a <column> and <row> if given (left out: the same cell); with no
+        object=, members of a held class from holder from= (a group's name: every member, wherever it is) into holder
+        into=: how many, as content, or <all />; sprite= the look they show there
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:choice minOccurs="0">
       <xs:sequence>
         <xs:element name="column" type="valueType" />
@@ -1318,16 +1360,20 @@
     <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
-  <!-- order: what holder group= holds, at <random /> -->
   <xs:complexType name="orderType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[order: what holder group= holds, at <random />]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element name="random" type="emptyType" />
     </xs:sequence>
     <xs:attribute name="group" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
-  <!-- a window's width or height in pixels: 1 or more -->
   <xs:simpleType name="windowSizeType">
+    <xs:annotation>
+      <xs:documentation>a window's width or height in pixels: 1 or more</xs:documentation>
+    </xs:annotation>
     <xs:restriction base="xs:unsignedShort">
       <xs:minInclusive value="1" />
     </xs:restriction>
@@ -1335,10 +1381,15 @@
 
   <xs:complexType name="scoreType">
     <xs:sequence>
-      <!-- melds: scored instead by laying the things held out in groups, each making one of the named
-           <patterns> with all its members (<alike variable>: N alike, <run variable>: N in a row), the groups
-           leaving the fewest points over; live number deadwood, the points left over by the best <best> of them -->
-      <xs:element name="melds" type="emptyType" minOccurs="0" />
+      <xs:element name="melds" type="emptyType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            melds: scored instead by laying the things held out in groups, each making one of the named
+            <patterns> with all its members (<alike variable>: N alike, <run variable>: N in a row), the groups
+            leaving the fewest points over; live number deadwood, the points left over by the best <best> of them
+          ]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="with" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -1352,8 +1403,10 @@
     <xs:attribute name="patterns" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
-  <!-- A part of a <pattern>: how many, and variable= the one compared. -->
   <xs:complexType name="patternPartType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[A part of a <pattern>: how many, and variable= the one compared.]]></xs:documentation>
+    </xs:annotation>
     <xs:simpleContent>
       <xs:extension base="xs:positiveInteger">
         <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
@@ -1370,8 +1423,10 @@
     </xs:simpleContent>
   </xs:complexType>
 
-  <!-- move: a direction, and how far a frame; on a map with <cells />, how many cells a second while held, after one at once and a <wait> of so many seconds. -->
   <xs:complexType name="stepType" mixed="true">
+    <xs:annotation>
+      <xs:documentation><![CDATA[move: a direction, and how far a frame; on a map with <cells />, how many cells a second while held, after one at once and a <wait> of so many seconds.]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
       <xs:element name="wait" type="valueType" minOccurs="0" />
@@ -1379,17 +1434,23 @@
     <xs:attribute name="direction" type="directionType" use="required" />
   </xs:complexType>
 
-  <!-- slide: on a map with <cells />, a cell at a time that way until the next is refused; with class=, every piece of that class on cells, the one nearest that way first, refused when none moved. -->
   <xs:complexType name="slideType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[slide: on a map with <cells />, a cell at a time that way until the next is refused; with class=, every piece of that class on cells, the one nearest that way first, refused when none moved.]]></xs:documentation>
+    </xs:annotation>
     <xs:attribute name="direction" type="directionType" use="required" />
     <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
-  <!-- Cells about the object running a <count> or a <trigger>, on any map
-       of cells laid in the same place: here, its own; around, the eight round
-       it (<straight />: the four beside it), with <alike variable> only the
-       pieces whose number is the object's own. -->
   <xs:complexType name="aroundType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        Cells about the object running a <count> or a <trigger>, on any map
+        of cells laid in the same place: here, its own; around, the eight round
+        it (<straight />: the four beside it), with <alike variable> only the
+        pieces whose number is the object's own.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element name="straight" type="emptyType" minOccurs="0" />
       <xs:element name="alike" minOccurs="0">
@@ -1406,8 +1467,10 @@
     </xs:choice>
   </xs:group>
 
-  <!-- thrust: how much to add to the velocity each frame while held, the way it faces (its heading), or with direction= one way across the screen; and optionally the variable it burns. -->
   <xs:complexType name="thrustType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>thrust: how much to add to the velocity each frame while held, the way it faces (its heading), or with direction= one way across the screen; and optionally the variable it burns.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
@@ -1415,21 +1478,31 @@
     <xs:attribute name="burn" type="xs:string" use="optional" />
   </xs:complexType>
 
-  <!-- turn: left or right, and how many degrees a frame while the key is held; a shape on a map with <cells />, a quarter turn with nothing written. -->
   <xs:complexType name="turnType" mixed="true">
+    <xs:annotation>
+      <xs:documentation><![CDATA[turn: clockwise or counterclockwise (direction=), and how many degrees a frame while the key is held; a shape on a map with <cells />, a quarter turn with nothing written.]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="direction" type="turnDirectionType" use="required" />
   </xs:complexType>
 
-  <!-- swing: which way it turns (direction=, as <turn>), how far, and how long the stroke takes. -->
   <xs:complexType name="swingType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[swing: which way it turns (direction=, as <turn>), how far, and how long the stroke takes.]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <!-- how many degrees it turns from where it started -->
-      <xs:element name="degrees" type="valueType" />
-      <!-- how long the stroke takes: from still, fastest half way, to still -->
-      <xs:element name="seconds" type="valueType" />
+      <xs:element name="degrees" type="valueType">
+        <xs:annotation>
+          <xs:documentation>how many degrees it turns from where it started</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="seconds" type="valueType">
+        <xs:annotation>
+          <xs:documentation>how long the stroke takes: from still, fastest half way, to still</xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
     <xs:attribute name="direction" type="turnDirectionType" use="required" />
   </xs:complexType>
@@ -1440,24 +1513,32 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!-- knock: how bouncy the meeting is, 0 up to 1; left out, 1. -->
   <xs:complexType name="knockType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>knock: how bouncy the meeting is, 0 up to 1; left out, 1.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
-  <!-- hole: cut in the object's own picture where what it touched struck it,
-       its radius as its value; rough, 0 up to 1, gives it a ragged edge. -->
   <xs:complexType name="holeType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>
+        hole: cut in the object's own picture where what it touched struck it,
+        its radius as its value; rough, 0 up to 1, gives it a ragged edge.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
       <xs:element name="rough" type="valueType" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
-  <!-- climb: up or down, the class of what is climbed (a ladder), and the step a frame. -->
   <xs:complexType name="climbType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>climb: up or down, the class of what is climbed (a ladder), and the step a frame.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
@@ -1472,15 +1553,19 @@
     <xs:attribute name="class" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- One character of a <map>'s rows. -->
   <xs:simpleType name="mapCharType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[One character of a <map>'s rows.]]></xs:documentation>
+    </xs:annotation>
     <xs:restriction base="xs:string">
       <xs:length value="1" />
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- A key of a recorded <demo>: which, and the frame it happened at. -->
   <xs:complexType name="demoKeyType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[A key of a recorded <demo>: which, and the frame it happened at.]]></xs:documentation>
+    </xs:annotation>
     <xs:simpleContent>
       <xs:extension base="xs:unsignedInt">
         <xs:attribute name="button" type="xs:string" use="required" />
@@ -1488,8 +1573,10 @@
     </xs:simpleContent>
   </xs:complexType>
 
-  <!-- A bitmap's <color>: with no char=, the color of its '*'s; with char="w", of its 'w's. -->
   <xs:complexType name="bitmapColorType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[A bitmap's <color>: with no char=, the color of its '*'s; with char="w", of its 'w's.]]></xs:documentation>
+    </xs:annotation>
     <xs:simpleContent>
       <xs:extension base="xs:string">
         <xs:attribute name="char" type="mapCharType" use="optional" />
@@ -1497,8 +1584,10 @@
     </xs:simpleContent>
   </xs:complexType>
 
-  <!-- maze: the <map> an object walks, and each class that is a wall to it (only while it shows sprite=, if given). -->
   <xs:complexType name="mazeType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[maze: the <map> an object walks, and each class that is a wall to it (only while it shows sprite=, if given).]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element name="wall" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
@@ -1506,8 +1595,10 @@
           <xs:attribute name="sprite" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- slow: on a tile holding something of this class, the walker goes at this share of its speed -->
       <xs:element name="slow" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>slow: on a tile holding something of this class, the walker goes at this share of its speed</xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:decimal">
@@ -1520,22 +1611,26 @@
     <xs:attribute name="map" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- go: the way to turn at the first gap, and the speed (pixels a frame). -->
   <xs:complexType name="goType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>go: the way to turn at the first gap, and the speed (pixels a frame).</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="direction" type="directionType" use="required" />
   </xs:complexType>
 
-  <!--
-    hunt: what to hunt, how fast as its value, and how the target is found from it: tiles
-    in front of it (ahead), as far again past that as a partner is short of
-    it (with), and, within that many tiles of it, another object instead
-    (retreat). Or, for an object that walks no maze, a hunt by hops: one
-    <hop>, toward it.
-  -->
   <xs:complexType name="huntType" mixed="true">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        hunt: what to hunt, how fast as its value, and how the target is found from it: tiles
+        in front of it (ahead), as far again past that as a partner is short of
+        it (with), and, within that many tiles of it, another object instead
+        (retreat). Or, for an object that walks no maze, a hunt by hops: one
+        <hop>, toward it.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="hop" type="huntHopType" />
       <xs:sequence>
@@ -1559,15 +1654,19 @@
     <xs:attribute name="object" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- wander: how fast, as its value. -->
   <xs:complexType name="wanderType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>wander: how fast, as its value.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
-  <!-- chase: the object to head for, how fast as its value, and (if given) how near is near enough to stop. -->
   <xs:complexType name="chaseType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>chase: the object to head for, how fast as its value, and (if given) how near is near enough to stop.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
       <xs:element name="near" type="valueType" minOccurs="0" />
