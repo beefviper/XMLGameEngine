@@ -135,6 +135,16 @@ namespace xge
 
 	std::ostream& operator<<(std::ostream& o, const Command& command)
 	{
+		// A verb that prints its own commands does; the rest are below.
+		if (!std::holds_alternative<CmdLive>(command))
+		{
+			if (const Verb* verb = verbOf(command); verb && verb->print)
+			{
+				verb->print(o, command);
+				return o;
+			}
+		}
+
 		std::visit(overload{
 			[&](const CmdBounce& b) { o << "bounce(" << b.share << ")"; },
 			[&](const CmdStick&) { o << "stick"; },
@@ -462,6 +472,12 @@ namespace xge
 	std::ostream& operator<<(std::ostream& o, const RawCommand& command)
 	{
 		o << command.verb;
+
+		if (const Verb* verb = findVerb(command.verb); verb && verb->printRaw)
+		{
+			verb->printRaw(o, command);
+			return o;
+		}
 
 		if (command.verb == "swing")
 		{

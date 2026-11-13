@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -129,6 +130,12 @@ namespace xge
 		// Does it, as `doer` says. False when it is refused, which ends the
 		// list it is in.
 		bool (*run)(const Command& command, const Doer& doer, CommandExecutor& executor);
+		// How a command of it is printed (operator<< in game/command.cpp,
+		// which the tests of generated games compare): the whole command
+		// made, and what a command as written says after its tag. None: the
+		// tag alone.
+		void (*print)(std::ostream& out, const Command& command) = nullptr;
+		void (*printRaw)(std::ostream& out, const RawCommand& command) = nullptr;
 	};
 
 	// Every verb, in the order of docs/reference/commands.md.
