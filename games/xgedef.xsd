@@ -1679,25 +1679,36 @@
     that runs commands names the groups it takes (below).
   -->
 
-  <!-- changes: what can be done from anywhere: a variable, a look, a sound, a scene, an object put back, made or taken away, or another object's action run -->
   <xs:group name="changesCommands">
+    <xs:annotation>
+      <xs:documentation>changes: what can be done from anywhere: a variable, a look, a sound, a scene, an object put back, made or taken away, or another object's action run</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="inc" type="variableReferenceType" />
       <xs:element name="dec" type="variableReferenceType" />
-      <!-- set: the variable (owner.variable), or owner.x, owner.y,
-           owner.velocity.x, owner.velocity.y or owner.heading, takes the
-           value, worked out as it runs -->
-      <xs:element name="set" type="setType" />
-      <!-- copy: the variable into= takes the number variable= holds now (both owner.variable) -->
+      <xs:element name="set" type="setType">
+        <xs:annotation>
+          <xs:documentation>
+            set: the variable (owner.variable), or owner.x, owner.y,
+            owner.velocity.x, owner.velocity.y or owner.heading, takes the
+            value, worked out as it runs
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="copy">
+        <xs:annotation>
+          <xs:documentation>copy: the variable into= takes the number variable= holds now (both owner.variable)</xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="variable" type="xs:string" use="required" />
           <xs:attribute name="into" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
       <!-- count: the variable into= (owner.variable) takes how many objects of that class are in play now -->
-      <!-- count: how many of that class are in play; with <here /> or <around />, only in those cells about the object running it -->
       <xs:element name="count">
+        <xs:annotation>
+          <xs:documentation><![CDATA[count: how many of that class are in play; with <here /> or <around />, only in those cells about the object running it]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:sequence>
             <xs:group ref="cellPlace" minOccurs="0" />
@@ -1706,8 +1717,10 @@
           <xs:attribute name="into" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- rank: the entry variable= is of goes into the group into= (the best first), in place by that variable -->
       <xs:element name="rank">
+        <xs:annotation>
+          <xs:documentation>rank: the entry variable= is of goes into the group into= (the best first), in place by that variable</xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="variable" type="xs:string" use="required" />
           <xs:attribute name="into" type="xs:string" use="required" />
@@ -1725,16 +1738,24 @@
       </xs:element>
       <xs:element name="become">
         <xs:complexType>
-          <!-- a look, a palette (a style its bitmaps take instead), or both -->
-          <xs:attribute name="sprite" type="xs:string" use="optional" />
+          <xs:attribute name="sprite" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>a look, a palette (a style its bitmaps take instead), or both</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
           <xs:attribute name="style" type="xs:string" use="optional" />
           <xs:attribute name="object" type="xs:string" use="optional" />
-          <!-- only those showing this look change -->
-          <xs:attribute name="from" type="xs:string" use="optional" />
+          <xs:attribute name="from" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>only those showing this look change</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
         </xs:complexType>
       </xs:element>
-      <!-- reveal: the objects (a group) out of play to bring in, and how many (one if left out) -->
       <xs:element name="reveal">
+        <xs:annotation>
+          <xs:documentation>reveal: the objects (a group) out of play to bring in, and how many (one if left out)</xs:documentation>
+        </xs:annotation>
         <xs:complexType mixed="true">
           <xs:sequence>
             <xs:group ref="valueTag" minOccurs="0" />
@@ -1743,9 +1764,13 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="follow" type="followType" />
-      <!-- <shift object="aliens"><x>2</x></shift>: those objects, and the
-           places they go home to, moved by x across and y down -->
       <xs:element name="shift">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            <shift object="aliens"><x>2</x></shift>: those objects, and the
+            places they go home to, moved by x across and y down
+          ]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:sequence>
             <xs:element name="x" type="valueType" minOccurs="0" />
@@ -1754,39 +1779,66 @@
           <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- <enter scene="room2" />: that scene becomes its state's current one;
-           <enter way="east" />: the scene the current scene's way leads to. -->
       <xs:element name="enter">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            <enter scene="room2" />: that scene becomes its state's current one;
+            <enter way="east" />: the scene the current scene's way leads to.
+          ]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="scene" type="xs:string" use="optional" />
           <xs:attribute name="way" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- <reset /> puts back the object running it; object= that object
-           or group; scene= every object of that scene, as it started; way=
-           the scene that way of the current scene leads to. -->
       <xs:element name="reset">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            <reset /> puts back the object running it; object= that object
+            or group; scene= every object of that scene, as it started; way=
+            the scene that way of the current scene leads to.
+          ]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="object" type="xs:string" use="optional" />
           <xs:attribute name="scene" type="xs:string" use="optional" />
           <xs:attribute name="way" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- spawn: a new copy of the object (of a group, its members in
-           turn) comes into the game, where the <position> says and going as
-           the <velocity> says (a half left out is as the object starts),
-           worked out as it runs -->
-      <xs:element name="spawn" type="spawnType" />
-      <!-- send: a piece from one map of cells to another (a next-piece box
-           to the playfield), refused if it has no room there -->
-      <xs:element name="send" type="sendType" />
+      <xs:element name="spawn" type="spawnType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            spawn: a new copy of the object (of a group, its members in
+            turn) comes into the game, where the <position> says and going as
+            the <velocity> says (a half left out is as the object starts),
+            worked out as it runs
+          ]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="send" type="sendType">
+        <xs:annotation>
+          <xs:documentation>
+            send: a piece from one map of cells to another (a next-piece box
+            to the playfield), refused if it has no room there
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="order" type="orderType" />
-      <!-- distribute: N each from the holder from= into the holder into=, or
-           into a group's, each member's own (<owns>) a card a round in turn -->
-      <xs:element name="distribute" type="distributeType" />
-      <!-- despawn: the object running it, or object= every one of that
-           name or group, is taken out of the game -->
+      <xs:element name="distribute" type="distributeType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            distribute: N each from the holder from= into the holder into=, or
+            into a group's, each member's own (<owns>) a card a round in turn
+          ]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="despawn">
+        <xs:annotation>
+          <xs:documentation>
+            despawn: the object running it, or object= every one of that
+            name or group, is taken out of the game
+          </xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="object" type="xs:string" use="optional" />
         </xs:complexType>
@@ -1799,35 +1851,51 @@
             <xs:element name="otherwise" type="stateCommandsType" />
             <xs:group ref="cellPlace" />
           </xs:choice>
-          <!-- left out in an object's own collision, action or timer: that object -->
-          <xs:attribute name="object" type="xs:string" use="optional" />
+          <xs:attribute name="object" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>left out in an object's own collision, action or timer: that object</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
           <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
           <xs:attribute name="action" type="xs:string" use="required" />
-          <!-- only those of them showing this look -->
-          <xs:attribute name="from" type="xs:string" use="optional" />
+          <xs:attribute name="from" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>only those of them showing this look</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
         </xs:complexType>
       </xs:element>
     </xs:choice>
   </xs:group>
 
-  <!-- flow: the running order of the game: its states, its players' turns, its demo -->
   <xs:group name="flowCommands">
+    <xs:annotation>
+      <xs:documentation>flow: the running order of the game: its states, its players' turns, its demo</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="push">
         <xs:complexType>
           <xs:attribute name="state" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- <pop /> goes back to the state underneath; <pop state="..." /> puts
-           that state in place of this one. -->
       <xs:element name="pop">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            <pop /> goes back to the state underneath; <pop state="..." /> puts
+            that state in place of this one.
+          ]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="state" type="xs:string" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- alternate: a <player> for each player taking turns, each with a game of their own (the arcade way),
-           and the state that says whose turn it is -->
       <xs:element name="alternate">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            alternate: a <player> for each player taking turns, each with a game of their own (the arcade way),
+            and the state that says whose turn it is
+          ]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:sequence>
             <xs:element name="player" maxOccurs="unbounded">
@@ -1838,23 +1906,37 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <!-- pass: the next player's turn; out: this player is out, and the next player's turn -->
-      <xs:element name="pass" type="passType" />
+      <xs:element name="pass" type="passType">
+        <xs:annotation>
+          <xs:documentation>pass: the next player's turn; out: this player is out, and the next player's turn</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="out" type="emptyType" />
-      <!-- demo: the game's recorded <demo> plays, until a key is pressed -->
-      <xs:element name="demo" type="emptyType" />
-      <!-- undo: the pieces on cells and every object's numbers back as before the last press that moved a piece; refused when there is none -->
-      <xs:element name="undo" type="emptyType" />
+      <xs:element name="demo" type="emptyType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[demo: the game's recorded <demo> plays, until a key is pressed]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="undo" type="emptyType">
+        <xs:annotation>
+          <xs:documentation>undo: the pieces on cells and every object's numbers back as before the last press that moved a piece; refused when there is none</xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:choice>
   </xs:group>
 
-  <!-- self: what an object does to itself -->
   <xs:group name="selfCommands">
+    <xs:annotation>
+      <xs:documentation>self: what an object does to itself</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="die" type="emptyType" />
       <xs:element name="drop" type="emptyType" />
-      <!-- hop: a step at once; on a map with <cells />, whole cells (one with nothing written), refused and touching what is in the way -->
-      <xs:element name="hop" type="hopType" />
+      <xs:element name="hop" type="hopType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[hop: a step at once; on a map with <cells />, whole cells (one with nothing written), refused and touching what is in the way]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="move" type="stepType" />
       <xs:element name="reverse" type="emptyType" />
       <xs:element name="stop" type="emptyType" />
@@ -1863,49 +1945,75 @@
           <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- settle: on a map with <cells />, a shape's cells stay as loose pieces and the shape is gone; then the map's checks -->
-      <xs:element name="settle" type="emptyType" />
+      <xs:element name="settle" type="emptyType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[settle: on a map with <cells />, a shape's cells stay as loose pieces and the shape is gone; then the map's checks]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="slide" type="slideType" />
-      <!-- cycle: on a map with <cells />, a shape's cells each move on to the next cell of its outline, in reading order, the last to the first (Columns' jewels); direction="backward" the other way -->
       <xs:element name="cycle">
+        <xs:annotation>
+          <xs:documentation><![CDATA[cycle: on a map with <cells />, a shape's cells each move on to the next cell of its outline, in reading order, the last to the first (Columns' jewels); direction="backward" the other way]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="direction" type="cycleDirectionType" />
         </xs:complexType>
       </xs:element>
-      <!-- grow: an object with a <chain> gets one link longer, at its tail, on its next step -->
-      <xs:element name="grow" type="emptyType" />
-      <!-- split: a piece of a chain cuts it there: it leaves the chain, and the links behind it are a chain of their own, led by the first of them -->
-      <xs:element name="split" type="emptyType" />
+      <xs:element name="grow" type="emptyType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[grow: an object with a <chain> gets one link longer, at its tail, on its next step]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="split" type="emptyType">
+        <xs:annotation>
+          <xs:documentation>split: a piece of a chain cuts it there: it leaves the chain, and the links behind it are a chain of their own, led by the first of them</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <!-- pick: a picker on a map of cells over a board takes up the piece of that class (left out: of the pieces the player on its turn <owns>) in its cell, one with a move to make; refused when there is none, or while the piece held must jump on -->
-      <!-- pick with <only />: the one piece of that class that has a move, wherever the picker is, when only one has -->
       <xs:element name="pick">
+        <xs:annotation>
+          <xs:documentation><![CDATA[pick with <only />: the one piece of that class that has a move, wherever the picker is, when only one has]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:sequence>
             <xs:element name="only" type="emptyType" minOccurs="0" />
-            <!-- most: by a picker of a class a <holds> holds, from how many holders it may hold one at once (Pyramid's two) -->
-            <xs:element name="most" type="xs:positiveInteger" minOccurs="0" />
+            <xs:element name="most" type="xs:positiveInteger" minOccurs="0">
+              <xs:annotation>
+                <xs:documentation><![CDATA[most: by a picker of a class a <holds> holds, from how many holders it may hold one at once (Pyramid's two)]]></xs:documentation>
+              </xs:annotation>
+            </xs:element>
           </xs:sequence>
           <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- place: the piece held makes its move that ends in the picker's cell; refused when none does, and while it can jump on.
-           By a picker of a class a <holds> holds: lays what it holds where it points (into=: on the first of those holders that accepts it) -->
       <xs:element name="place">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            place: the piece held makes its move that ends in the picker's cell; refused when none does, and while it can jump on.
+            By a picker of a class a <holds> holds: lays what it holds where it points (into=: on the first of those holders that accepts it)
+          ]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="into" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
-      <!-- call, on a hand with a pile of its own: the suit of the card it points at there is called for the holder object=, waiting
-           with a <wild> card on top; refused when it is not waiting -->
       <xs:element name="call">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            call, on a hand with a pile of its own: the suit of the card it points at there is called for the holder object=, waiting
+            with a <wild> card on top; refused when it is not waiting
+          ]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
       <!-- put: a new piece of class= (left out: of the pieces the player on its turn <owns>) in the picker's cell of the pieces' map; refused when the cell is taken,
            or, when the pieces have <flank>s, where it traps nothing; the pieces it traps turn into its kind -->
-      <!-- a piece put whose <moves> have a <close> may claim what it walls in; then the put counts as refused (the turn goes on) -->
       <xs:element name="put">
+        <xs:annotation>
+          <xs:documentation><![CDATA[a piece put whose <moves> have a <close> may claim what it walls in; then the put counts as refused (the turn goes on)]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
@@ -1913,28 +2021,40 @@
     </xs:choice>
   </xs:group>
 
-  <!-- steering: an object steering itself toward or around another -->
   <xs:group name="steeringCommands">
+    <xs:annotation>
+      <xs:documentation>steering: an object steering itself toward or around another</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="aim">
         <xs:complexType>
           <xs:sequence>
-            <!-- only when lined up with it, across, up or down or on a true
-                 diagonal, within this many pixels; otherwise refused -->
-            <xs:element name="lined" type="valueType" minOccurs="0" />
+            <xs:element name="lined" type="valueType" minOccurs="0">
+              <xs:annotation>
+                <xs:documentation>
+                  only when lined up with it, across, up or down or on a true
+                  diagonal, within this many pixels; otherwise refused
+                </xs:documentation>
+              </xs:annotation>
+            </xs:element>
           </xs:sequence>
           <xs:attribute name="object" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- chase: head for an object; aim: face it, so the next <fire> goes straight at it -->
-      <xs:element name="chase" type="chaseType" />
+      <xs:element name="chase" type="chaseType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[chase: head for an object; aim: face it, so the next <fire> goes straight at it]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="hunt" type="huntType" />
       <xs:element name="wander" type="wanderType" />
     </xs:choice>
   </xs:group>
 
-  <!-- touch: what needs another object, touched -->
   <xs:group name="touchCommands">
+    <xs:annotation>
+      <xs:documentation>touch: what needs another object, touched</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="carry" type="emptyType" />
       <xs:element name="deflect" type="deflectType">
@@ -1944,15 +2064,26 @@
       </xs:element>
       <xs:element name="hole" type="holeType" />
       <xs:element name="knock" type="knockType" />
-      <!-- land: stand on top of the object touched; jump: up off the ground that high, under the object's own pull -->
-      <xs:element name="land" type="emptyType" />
+      <xs:element name="land" type="emptyType">
+        <xs:annotation>
+          <xs:documentation>land: stand on top of the object touched; jump: up off the ground that high, under the object's own pull</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="ride" type="emptyType" />
-      <!-- through: on a map with <cells />, the refused step is made after all, into the cell with what is there -->
-      <xs:element name="through" type="emptyType" />
-      <!-- shove: on cells, what is in the way goes one cell on, the way it was met, and the step goes on; refused when it cannot -->
-      <xs:element name="shove" type="emptyType" />
-      <!-- merge: on cells, a piece in the way with the same number in variable= is taken away, its number added to this one's, and the step goes on; refused when they differ or either merged in this slide -->
+      <xs:element name="through" type="emptyType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[through: on a map with <cells />, the refused step is made after all, into the cell with what is there]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="shove" type="emptyType">
+        <xs:annotation>
+          <xs:documentation>shove: on cells, what is in the way goes one cell on, the way it was met, and the step goes on; refused when it cannot</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="merge">
+        <xs:annotation>
+          <xs:documentation>merge: on cells, a piece in the way with the same number in variable= is taken away, its number added to this one's, and the step goes on; refused when they differ or either merged in this slide</xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
@@ -1960,35 +2091,51 @@
     </xs:choice>
   </xs:group>
 
-  <!-- edge: what needs a screen edge (stick also takes a touch: only the velocity into what it met stops) -->
   <xs:group name="edgeCommands">
+    <xs:annotation>
+      <xs:documentation>edge: what needs a screen edge (stick also takes a touch: only the velocity into what it met stops)</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="stick" type="emptyType" />
       <xs:element name="wrap" type="emptyType" />
     </xs:choice>
   </xs:group>
 
-  <!-- bounce: off a screen edge or another object -->
   <xs:group name="bounceCommands">
+    <xs:annotation>
+      <xs:documentation>bounce: off a screen edge or another object</xs:documentation>
+    </xs:annotation>
     <xs:choice>
-      <!-- bounce: off what it touched, mirrored about the way its surface faces;
-           its value is the share of the speed kept (left out, 1; above 1, a bumper) -->
-      <xs:element name="bounce" type="knockType" />
+      <xs:element name="bounce" type="knockType">
+        <xs:annotation>
+          <xs:documentation>
+            bounce: off what it touched, mirrored about the way its surface faces;
+            its value is the share of the speed kept (left out, 1; above 1, a bumper)
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:choice>
   </xs:group>
 
-  <!-- controls: how an object moves when its action is asked for -->
   <xs:group name="controlsCommands">
+    <xs:annotation>
+      <xs:documentation>controls: how an object moves when its action is asked for</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="climb" type="climbType" />
       <xs:element name="go" type="goType" />
       <xs:element name="jump" type="valueType" />
-      <!-- swing: held, the heading turns <degrees> that way in one eased stroke <seconds> long; let go, back to the heading it started with -->
-      <xs:element name="swing" type="swingType" />
+      <xs:element name="swing" type="swingType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[swing: held, the heading turns <degrees> that way in one eased stroke <seconds> long; let go, back to the heading it started with]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="thrust" type="thrustType" />
       <xs:element name="turn" type="turnType" />
-      <!-- track: where a control points; path= along that path instead of across the window; on cells, <onto>s: the cell nearest the pointer holding one of those classes -->
       <xs:element name="track">
+        <xs:annotation>
+          <xs:documentation><![CDATA[track: where a control points; path= along that path instead of across the window; on cells, <onto>s: the cell nearest the pointer holding one of those classes]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:sequence>
             <xs:element name="onto" type="ontoType" minOccurs="0" maxOccurs="unbounded" />
@@ -1999,24 +2146,35 @@
     </xs:choice>
   </xs:group>
 
-  <!-- press: a button held down, as a computer player does -->
   <xs:group name="pressCommands">
+    <xs:annotation>
+      <xs:documentation>press: a button held down, as a computer player does</xs:documentation>
+    </xs:annotation>
     <xs:choice>
-      <!-- hold: only in a <computer>'s condition: the button held down while it holds -->
       <xs:element name="hold">
+        <xs:annotation>
+          <xs:documentation><![CDATA[hold: only in a <computer>'s condition: the button held down while it holds]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="button" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <!-- think: only in a <computer>'s condition: while it holds, the computer plays the board game pieces of class= (left out: those the player on its turn <owns>),
-           looking <depth> moves ahead (4 when left out), each piece worth 1 or its look's <worth>; it walks the picker
-           object= to the piece and each cell of its move, pressing button= on each -->
       <xs:element name="think">
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            think: only in a <computer>'s condition: while it holds, the computer plays the board game pieces of class= (left out: those the player on its turn <owns>),
+            looking <depth> moves ahead (4 when left out), each piece worth 1 or its look's <worth>; it walks the picker
+            object= to the piece and each cell of its move, pressing button= on each
+          ]]></xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:sequence>
             <xs:element name="depth" type="xs:positiveInteger" minOccurs="0" />
-            <!-- avoid: a card player that keeps out of tricks (Hearts); none: one that takes them -->
-            <xs:element name="avoid" type="emptyType" minOccurs="0" />
+            <xs:element name="avoid" type="emptyType" minOccurs="0">
+              <xs:annotation>
+                <xs:documentation>avoid: a card player that keeps out of tricks (Hearts); none: one that takes them</xs:documentation>
+              </xs:annotation>
+            </xs:element>
             <xs:element name="worth" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
@@ -2035,14 +2193,21 @@
     </xs:choice>
   </xs:group>
 
-  <!-- cells: what a check of a map with <cells /> does with what it found -->
   <xs:group name="cellsCommands">
+    <xs:annotation>
+      <xs:documentation><![CDATA[cells: what a check of a map with <cells /> does with what it found]]></xs:documentation>
+    </xs:annotation>
     <xs:choice>
-      <!-- clear: what it found leaves the game; collapse: what is above a full row comes down a row -->
-      <xs:element name="clear" type="emptyType" />
+      <xs:element name="clear" type="emptyType">
+        <xs:annotation>
+          <xs:documentation>clear: what it found leaves the game; collapse: what is above a full row comes down a row</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="collapse" type="emptyType" />
-      <!-- fall: every loose piece of the map (with class=, only those of that class) drops down its column onto what is under it -->
       <xs:element name="fall">
+        <xs:annotation>
+          <xs:documentation>fall: every loose piece of the map (with class=, only those of that class) drops down its column onto what is under it</xs:documentation>
+        </xs:annotation>
         <xs:complexType>
           <xs:attribute name="class" type="xs:NMTOKEN" />
         </xs:complexType>
@@ -2050,16 +2215,20 @@
     </xs:choice>
   </xs:group>
 
-  <!-- a check of a map with <cells /> -->
   <xs:group name="checkCommands">
+    <xs:annotation>
+      <xs:documentation><![CDATA[a check of a map with <cells />]]></xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:group ref="changesCommands" />
       <xs:group ref="cellsCommands" />
     </xs:choice>
   </xs:group>
 
-  <!-- a collision rule: about another object (touch, steering) or about a screen edge (edge); the loader holds each kind to its own -->
   <xs:group name="ruleCommands">
+    <xs:annotation>
+      <xs:documentation>a collision rule: about another object (touch, steering) or about a screen edge (edge); the loader holds each kind to its own</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:group ref="changesCommands" />
       <xs:group ref="selfCommands" />
@@ -2070,20 +2239,27 @@
     </xs:choice>
   </xs:group>
 
-  <!-- an object's action -->
   <xs:group name="actionCommands">
+    <xs:annotation>
+      <xs:documentation>an object's action</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:group ref="changesCommands" />
       <xs:group ref="selfCommands" />
       <xs:group ref="steeringCommands" />
       <xs:group ref="controlsCommands" />
-      <!-- pass, by a member of a group that takes <turns>: the next member's turn; refused while a holder waits for a wild card's call -->
-      <xs:element name="pass" type="passType" />
+      <xs:element name="pass" type="passType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[pass, by a member of a group that takes <turns>: the next member's turn; refused while a holder waits for a wild card's call]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:choice>
   </xs:group>
 
-  <!-- an object's timer, and a step of a path an object follows -->
   <xs:group name="objectTimeCommands">
+    <xs:annotation>
+      <xs:documentation>an object's timer, and a step of a path an object follows</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:group ref="changesCommands" />
       <xs:group ref="selfCommands" />
@@ -2091,21 +2267,25 @@
     </xs:choice>
   </xs:group>
 
-  <!-- a state's keys, conditions and timers, and a scene's -->
   <xs:group name="stateCommands">
+    <xs:annotation>
+      <xs:documentation>a state's keys, conditions and timers, and a scene's</xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:group ref="changesCommands" />
       <xs:group ref="flowCommands" />
     </xs:choice>
   </xs:group>
 
-  <!--
-    follow: the object sets off along one of the game's <paths>. With object=
-    every object of that name or group does, each <stagger> seconds after the
-    one before (0 if left out); with <nearest>N</nearest>, only the N of them
-    nearest the object running it.
-  -->
   <xs:complexType name="followType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        follow: the object sets off along one of the game's <paths>. With object=
+        every object of that name or group does, each <stagger> seconds after the
+        one before (0 if left out); with <nearest>N</nearest>, only the N of them
+        nearest the object running it.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element name="stagger" type="valueType" minOccurs="0" />
       <xs:element name="nearest" type="valueType" minOccurs="0" />
@@ -2114,13 +2294,15 @@
     <xs:attribute name="object" type="xs:string" use="optional" />
   </xs:complexType>
 
-  <!--
-    A path: how fast it is flown (pixels a frame), where it begins (left out:
-    wherever the object is), then its legs in order. A step moves the object
-    by x and y from where the step began, and runs its commands as it sets
-    off; home takes it back to where it started the game.
-  -->
   <xs:complexType name="pathStepType">
+    <xs:annotation>
+      <xs:documentation>
+        A path: how fast it is flown (pixels a frame), where it begins (left out:
+        wherever the object is), then its legs in order. A step moves the object
+        by x and y from where the step began, and runs its commands as it sets
+        off; home takes it back to where it started the game.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element name="x" type="valueType" />
       <xs:element name="y" type="valueType" />
@@ -2140,18 +2322,20 @@
     <xs:attribute name="name" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!--
-    A collision rule. With edge it is about a screen edge, and takes no class
-    or object; without, it is about another object, narrowed by class and/or
-    object (neither: anything). Either is passed over while the object is
-    touching something of the unless class. Its
-    conditions about itself read its speed (the live number speed) as the
-    touch happened. With sprite, it runs only while the object shows its
-    sprite of that name (see become). A rule may hold rules, which say what it
-    says too (a holder's attribute is not said again below it), its <first>
-    running as a rule of its own before them.
-  -->
   <xs:complexType name="ruleCommandsType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        A collision rule. With edge it is about a screen edge, and takes no class
+        or object; without, it is about another object, narrowed by class and/or
+        object (neither: anything). Either is passed over while the object is
+        touching something of the unless class. Its
+        conditions about itself read its speed (the live number speed) as the
+        touch happened. With sprite, it runs only while the object shows its
+        sprite of that name (see become). A rule may hold rules, which say what it
+        says too (a holder's attribute is not said again below it), its <first>
+        running as a rule of its own before them.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:group ref="ruleCommands" minOccurs="0" maxOccurs="unbounded" />
   </xs:complexType>
   <xs:complexType name="collisionType">
@@ -2172,44 +2356,66 @@
       </xs:choice>
     </xs:sequence>
     <xs:attribute name="edge" type="edgeType" use="optional" />
-    <!-- the side of this object the other touched: top, bottom, left, right, horizontal or vertical -->
-    <xs:attribute name="side" type="edgeType" use="optional" />
+    <xs:attribute name="side" type="edgeType" use="optional">
+      <xs:annotation>
+        <xs:documentation>the side of this object the other touched: top, bottom, left, right, horizontal or vertical</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="unless" type="xs:string" use="optional" />
-    <!-- only a touch felt through something of this class (a knock through
-         a floor); a rule without it, only a touch itself -->
-    <xs:attribute name="through" type="xs:string" use="optional" />
+    <xs:attribute name="through" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          only a touch felt through something of this class (a knock through
+          a floor); a rule without it, only a touch itself
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
     <xs:attribute name="sprite" type="xs:string" use="optional" />
   </xs:complexType>
 
-  <!-- A named thing an object can do, run by a <trigger>. -->
   <xs:complexType name="actionType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[A named thing an object can do, run by a <trigger>.]]></xs:documentation>
+    </xs:annotation>
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:group ref="actionCommands" />
-      <!-- a test about the object itself (unless it names another), and the commands it runs while it holds -->
-      <xs:element name="condition" type="actionConditionType" />
+      <xs:element name="condition" type="actionConditionType">
+        <xs:annotation>
+          <xs:documentation>a test about the object itself (unless it names another), and the commands it runs while it holds</xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:choice>
     <xs:attribute name="name" type="xs:string" use="required" />
   </xs:complexType>
 
-  <!-- What pressing a key does in a state: button= is one key, and several
-       are a <button> each, before the commands (<button>a</button>
-       <button>left</button>); or, with axis= (mouse.x, mouse.y, pad1.x, ...)
-       instead, the <trigger> run as that control moves. One of the two,
-       which the engine checks. -->
   <xs:complexType name="inputType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        What pressing a key does in a state: button= is one key, and several
+        are a <button> each, before the commands (<button>a</button>
+        <button>left</button>); or, with axis= (mouse.x, mouse.y, pad1.x, ...)
+        instead, the <trigger> run as that control moves. One of the two,
+        which the engine checks.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element name="button" type="xs:NMTOKEN" minOccurs="0" maxOccurs="unbounded" />
       <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="button" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="axis" type="xs:string" use="optional" />
-    <!-- on: the moment of the key it answers. press (left out: the same) runs
-         its commands as the key goes down, a held verb staying on while it is
-         down; hold runs them every frame while it is down; release once when
-         it is let go. hold and release answer only a press made in this state. -->
-    <xs:attribute name="on" type="keyMomentType" use="optional" />
+    <xs:attribute name="on" type="keyMomentType" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          on: the moment of the key it answers. press (left out: the same) runs
+          its commands as the key goes down, a held verb staying on while it is
+          down; hold runs them every frame while it is down; release once when
+          it is let go. hold and release answer only a press made in this state.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:simpleType name="keyMomentType">
@@ -2220,14 +2426,16 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!--
-    One test of a condition: atleast / atmost / above / below /
-    equal / unequal compare what is tested (the variable named by variable= of every
-    object that matches class and/or object; a total= over them; or each
-    one's distance= to the nearest of another) with a number or another
-    variable; remaining counts the matching objects still in play.
-  -->
   <xs:group name="conditionTest">
+    <xs:annotation>
+      <xs:documentation>
+        One test of a condition: atleast / atmost / above / below /
+        equal / unequal compare what is tested (the variable named by variable= of every
+        object that matches class and/or object; a total= over them; or each
+        one's distance= to the nearest of another) with a number or another
+        variable; remaining counts the matching objects still in play.
+      </xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="atleast" type="compareType" />
       <xs:element name="atmost" type="compareType" />
@@ -2236,8 +2444,11 @@
       <xs:element name="equal" type="compareType" />
       <xs:element name="unequal" type="compareType" />
       <xs:element name="remaining" type="valueType" />
-      <!-- the one whose variable is lowest (highest) of all those matched; a tie, the first -->
-      <xs:element name="lowest" type="emptyType" />
+      <xs:element name="lowest" type="emptyType">
+        <xs:annotation>
+          <xs:documentation>the one whose variable is lowest (highest) of all those matched; a tie, the first</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="highest" type="emptyType" />
     </xs:choice>
   </xs:group>
@@ -2251,37 +2462,54 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <!-- A <condition> inside an <all>, an <any> or a <collision>: one test with what it tests, and no commands.
-       With sprite=, the test may be left out: showing that look is the test. -->
   <xs:complexType name="testType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        A <condition> inside an <all>, an <any> or a <collision>: one test with what it tests, and no commands.
+        With sprite=, the test may be left out: showing that look is the test.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:group ref="conditionTest" minOccurs="0" />
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="variable" type="xs:string" use="optional" />
-    <!-- count: how many are in play; sum, highest, lowest: of variable= over them -->
-    <xs:attribute name="total" type="totalType" use="optional" />
-    <!-- how far each is from the nearest in play of this object or group -->
-    <xs:attribute name="distance" type="xs:string" use="optional" />
-    <!-- only those showing this look -->
-    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="total" type="totalType" use="optional">
+      <xs:annotation>
+        <xs:documentation>count: how many are in play; sum, highest, lowest: of variable= over them</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="distance" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>how far each is from the nearest in play of this object or group</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional">
+      <xs:annotation>
+        <xs:documentation>only those showing this look</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
-  <!-- any: one of its conditions holds (or of the <any>s in it). Each a test of its own. -->
   <xs:complexType name="joinType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[any: one of its conditions holds (or of the <any>s in it). Each a test of its own.]]></xs:documentation>
+    </xs:annotation>
     <xs:choice maxOccurs="unbounded">
       <xs:element name="condition" type="testType" />
       <xs:element name="any" type="joinType" />
     </xs:choice>
   </xs:complexType>
 
-  <!--
-    Checked every frame. One test (or an <any> of conditions; with sprite=,
-    none: showing that look is the test), then the commands to run when it holds; or, holding conditions
-    (checked in order only while it holds, the first that holds runs), a
-    <first> run before them and an <otherwise> run when none of them does.
-    Tests that must all hold are a condition in a condition.
-  -->
   <xs:group name="conditionHead">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        Checked every frame. One test (or an <any> of conditions; with sprite=,
+        none: showing that look is the test), then the commands to run when it holds; or, holding conditions
+        (checked in order only while it holds, the first that holds runs), a
+        <first> run before them and an <otherwise> run when none of them does.
+        Tests that must all hold are a condition in a condition.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:group ref="conditionTest" />
       <xs:element name="any" type="joinType" />
@@ -2291,18 +2519,34 @@
     <xs:attribute name="class" type="xs:string" use="optional" />
     <xs:attribute name="object" type="xs:string" use="optional" />
     <xs:attribute name="variable" type="xs:string" use="optional" />
-    <!-- count: how many are in play; sum, highest, lowest: of variable= over them -->
-    <xs:attribute name="total" type="totalType" use="optional" />
-    <!-- how far each is from the nearest in play of this object or group -->
-    <xs:attribute name="distance" type="xs:string" use="optional" />
-    <!-- only those showing this look; with no test, showing it is the test -->
-    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
-    <!-- a scene from= this one's can put a condition of the same name in its place -->
-    <xs:attribute name="name" type="xs:string" use="optional" />
+    <xs:attribute name="total" type="totalType" use="optional">
+      <xs:annotation>
+        <xs:documentation>count: how many are in play; sum, highest, lowest: of variable= over them</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="distance" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>how far each is from the nearest in play of this object or group</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional">
+      <xs:annotation>
+        <xs:documentation>only those showing this look; with no test, showing it is the test</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="name" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>a scene from= this one's can put a condition of the same name in its place</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:attributeGroup>
-  <!-- The commands of a condition that holds conditions: <first> runs as soon as it holds, before they are
-       checked; <otherwise> when none of them does. -->
   <xs:complexType name="stateCommandsType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        The commands of a condition that holds conditions: <first> runs as soon as it holds, before they are
+        checked; <otherwise> when none of them does.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
   </xs:complexType>
   <xs:complexType name="pressCommandsType">
@@ -2322,17 +2566,23 @@
     </xs:sequence>
     <xs:attributeGroup ref="conditionAttributes" />
   </xs:complexType>
-  <!-- A condition in an action: a test, then the action's commands it runs while it holds. -->
   <xs:complexType name="actionConditionType">
+    <xs:annotation>
+      <xs:documentation>A condition in an action: a test, then the action's commands it runs while it holds.</xs:documentation>
+    </xs:annotation>
     <xs:sequence minOccurs="0">
       <xs:group ref="conditionHead" minOccurs="0" />
       <xs:group ref="actionCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attributeGroup ref="conditionAttributes" />
   </xs:complexType>
-  <!-- A computer player's condition: a state's test, then the buttons it holds down while it holds. Every one that
-       holds counts, so one holding conditions has a <first> but no <otherwise>. -->
   <xs:complexType name="computerConditionType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        A computer player's condition: a state's test, then the buttons it holds down while it holds. Every one that
+        holds counts, so one holding conditions has a <first> but no <otherwise>.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:sequence minOccurs="0">
       <xs:group ref="conditionHead" minOccurs="0" />
       <xs:choice>
@@ -2351,23 +2601,31 @@
     </xs:sequence>
   </xs:complexType>
 
-  <!--
-    Timers: each goes off after a number of seconds - <every> again and again
-    (worked out again each time, so a <random> waits a new time), <after>
-    once - and runs its commands. An object's count while it is shown and in
-    play; a state's while it is the current state. A reset starts them over.
-  -->
   <xs:group name="timerHead">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        Timers: each goes off after a number of seconds - <every> again and again
+        (worked out again each time, so a <random> waits a new time), <after>
+        once - and runs its commands. An object's count while it is shown and in
+        play; a state's while it is the current state. A reset starts them over.
+      ]]></xs:documentation>
+    </xs:annotation>
     <xs:choice>
       <xs:element name="every" type="valueType" />
       <xs:element name="after" type="valueType" />
     </xs:choice>
   </xs:group>
   <xs:attributeGroup name="timerAttributes">
-    <!-- a scene from= this one's can put a timer of the same name in its place -->
-    <xs:attribute name="name" type="xs:string" use="optional" />
-    <!-- an object's timer that counts only while it shows this look -->
-    <xs:attribute name="sprite" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>a scene from= this one's can put a timer of the same name in its place</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="sprite" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>an object's timer that counts only while it shows this look</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:attributeGroup>
   <xs:complexType name="objectTimerType">
     <xs:sequence>
@@ -2384,8 +2642,10 @@
     <xs:attributeGroup ref="timerAttributes" />
   </xs:complexType>
 
-  <!-- An object's timers, and a state's or a scene's: the same timer, each running the commands of its place. -->
   <xs:complexType name="objectTimersType">
+    <xs:annotation>
+      <xs:documentation>An object's timers, and a state's or a scene's: the same timer, each running the commands of its place.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element name="timer" type="objectTimerType" maxOccurs="unbounded" />
     </xs:sequence>

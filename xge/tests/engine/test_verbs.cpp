@@ -43,7 +43,8 @@ namespace
 		{
 			const std::string name = group->getAttribute("name");
 			if (group->getName() != "xs:group" || name.size() < 8 || name.substr(name.size() - 8) != "Commands") { continue; }
-			const auto choice = group->getFirstChild();
+			auto choice = group->getFirstChild();
+			if (choice && choice->getName() == "xs:annotation") { choice = choice->getNextSibling(); }
 			REQUIRE(choice);
 			REQUIRE(choice->getName() == "xs:choice");
 			for (auto each = choice->getFirstChild(); each != nullptr; each = each->getNextSibling())
