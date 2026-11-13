@@ -33,6 +33,9 @@
     rule for them, and a wave's condition that none of the class is left
     (which counts only the wave being played) <enter>s the next.
   * Paused and the two endings draw the game still underneath (<show state>).
+  * A hit cannon <spawn>s a wreck and <die>s: the wreck's burst plays
+    <once /> and <then> counts the loss and <reveal>s it again. What is
+    shot leaves a smaller burst, a "boom", that despawns itself.
   Not in it: the demons that materialize one by one, the later waves'
   colors, and the demons that swoop down at you.
 -->
@@ -95,10 +98,52 @@
         <collision object="laser">
           <inc variable="player.score">25</inc>
           <play sound="hit" />
+          <spawn object="boom" />
           <despawn />
         </collision>
         <collision object="player"><despawn /></collision>
       </collisions>
+    </object>
+    <!-- what a hit demon leaves: a burst that grows and scatters -->
+    <object name="boom">
+      <sprite name="a"><bitmap from="burst-a" /></sprite>
+      <sprite name="b"><bitmap from="burst-b" /></sprite>
+      <sprite name="c"><bitmap from="burst-c" /></sprite>
+      <sprite name="d"><bitmap from="burst-d" /></sprite>
+      <animation>
+        <seconds>0.07</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d" />
+        <then><despawn /></then>
+      </animation>
+      <most>8</most>
+    </object>
+    <!-- the cannon hit: it bursts, and only then is it lost -->
+    <object name="wreck">
+      <sprite name="a"><bitmap from="burst-a" /></sprite>
+      <sprite name="b"><bitmap from="burst-b" /></sprite>
+      <sprite name="c"><bitmap from="burst-c" /></sprite>
+      <sprite name="d"><bitmap from="burst-d" /></sprite>
+      <animation>
+        <seconds>0.15</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d"><seconds>0.4</seconds></frame>
+        <then>
+          <dec variable="player.lives" />
+          <despawn object="bomb" />
+          <reveal object="player" />
+          <despawn />
+        </then>
+      </animation>
+      <most>1</most>
     </object>
   </objects>
   <states>
@@ -157,11 +202,11 @@
             <collision class="demon"><trigger action="lose" /></collision>
           </collisions>
           <actions>
+            <!-- out of play while its wreck bursts -->
             <action name="lose">
-              <dec variable="player.lives" />
+              <spawn object="wreck" />
               <play sound="lost" />
-              <despawn object="bomb" />
-              <reset />
+              <die />
             </action>
             <action name="left"><move direction="left">slide</move></action>
             <action name="right"><move direction="right">slide</move></action>
@@ -209,6 +254,7 @@
                   <inc variable="player.score">30</inc>
                   <play sound="hit" />
                   <die />
+                  <spawn object="boom" />
                 </collision>
               </collisions>
               <timers>
@@ -277,6 +323,7 @@
                   <play sound="split" />
                   <spawn object="half"><count>2</count></spawn>
                   <die />
+                  <spawn object="boom" />
                 </collision>
               </collisions>
               <timers>
@@ -429,6 +476,63 @@
     </sound>
   </sounds>
   <pictures>
+    <!-- a burst, four pictures: a flash, a ball, its pieces flying, the last sparks -->
+    <bitmap name="burst-a">
+      <row>.........</row>
+      <row>.........</row>
+      <row>....*....</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>....*....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="burst-b">
+      <row>.........</row>
+      <row>..*...*..</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>.*oo.oo*.</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>..*...*..</row>
+      <row>.........</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="burst-c">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...o.o...</row>
+      <row>..o...o..</row>
+      <row>*.......*</row>
+      <row>..o...o..</row>
+      <row>...o.o...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="burst-d">
+      <row>o.......o</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>....o....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>o.......o</row>
+      <scale>3</scale>
+      <color>color.magenta</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
     <bitmap name="half">
       <row>.*...*.</row>
       <row>*******</row>

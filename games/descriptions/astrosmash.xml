@@ -28,6 +28,10 @@
   * The spare bases: the ship's `spare` is the next 1,000, and a condition
     comparing the score with it adds a base and moves it on.
   * Paused and game over draw the sky still underneath (<show state>).
+  * A hit base <spawn>s a wreck and <die>s: the wreck's burst plays
+    <once /> and <then> counts the loss, clears the sky and <reveal>s it
+    again. What is shot leaves a smaller burst, a "boom", that despawns
+    itself.
   Not in it: the levels (faster rocks, a higher multiplier and a new sky
   colour at 5,000, 20,000 ...), the guided missiles and the UFO, and
   holding Space for rapid fire.
@@ -87,10 +91,54 @@
               <value>ship.score</value>
             </largest>
           </set>
+          <spawn object="boom" />
           <despawn />
           <play sound="pop" />
         </collision>
       </collisions>
+    </object>
+    <!-- what a hit rock or spinner leaves: a burst that grows and scatters -->
+    <object name="boom">
+      <sprite name="a"><bitmap from="burst-a" /></sprite>
+      <sprite name="b"><bitmap from="burst-b" /></sprite>
+      <sprite name="c"><bitmap from="burst-c" /></sprite>
+      <sprite name="d"><bitmap from="burst-d" /></sprite>
+      <animation>
+        <seconds>0.07</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d" />
+        <then><despawn /></then>
+      </animation>
+      <most>8</most>
+    </object>
+    <!-- the base hit: it bursts, and only then is it lost and the sky cleared -->
+    <object name="wreck">
+      <sprite name="a"><bitmap from="burst-a" /></sprite>
+      <sprite name="b"><bitmap from="burst-b" /></sprite>
+      <sprite name="c"><bitmap from="burst-c" /></sprite>
+      <sprite name="d"><bitmap from="burst-d" /></sprite>
+      <animation>
+        <seconds>0.15</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d"><seconds>0.4</seconds></frame>
+        <then>
+          <dec variable="ship.lives" />
+          <reset object="rocks" />
+          <despawn object="chip" />
+          <reset object="spinners" />
+          <reveal object="ship" />
+          <despawn />
+        </then>
+      </animation>
+      <most>1</most>
     </object>
   </objects>
   <states>
@@ -161,6 +209,7 @@
                   <value>ship.score</value>
                 </largest>
               </set>
+              <spawn object="boom" />
               <reset />
               <play sound="pop" />
             </collision>
@@ -211,6 +260,7 @@
                   <value>ship.score</value>
                 </largest>
               </set>
+              <spawn object="boom" />
               <reset />
               <play sound="pop" />
             </collision>
@@ -231,13 +281,12 @@
             <action name="left"><move direction="left">step</move></action>
             <action name="right"><move direction="right">step</move></action>
             <action name="gun"><fire object="shot" /><play sound="shoot" /></action>
-            <!-- the base blown up: the sky clears and the next comes on -->
+            <!-- the base blown up: out of play while its wreck bursts, then
+                 the sky clears and the next comes on -->
             <action name="lose">
-              <dec variable="ship.lives" />
-              <reset object="rocks" />
-              <despawn object="chip" />
-              <reset object="spinners" />
+              <spawn object="wreck" />
               <play sound="boom" />
+              <die />
             </action>
           </actions>
           <variables>
@@ -340,6 +389,63 @@
     </sound>
   </sounds>
   <pictures>
+    <!-- a burst, four pictures: a flash, a ball, its pieces flying, the last sparks -->
+    <bitmap name="burst-a">
+      <row>.........</row>
+      <row>.........</row>
+      <row>....*....</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>....*....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+      <color char="o">color.orange</color>
+    </bitmap>
+    <bitmap name="burst-b">
+      <row>.........</row>
+      <row>..*...*..</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>.*oo.oo*.</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>..*...*..</row>
+      <row>.........</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+      <color char="o">color.orange</color>
+    </bitmap>
+    <bitmap name="burst-c">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...o.o...</row>
+      <row>..o...o..</row>
+      <row>*.......*</row>
+      <row>..o...o..</row>
+      <row>...o.o...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+      <color char="o">color.orange</color>
+    </bitmap>
+    <bitmap name="burst-d">
+      <row>o.......o</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>....o....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>o.......o</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+      <color char="o">color.orange</color>
+    </bitmap>
     <bitmap name="chip">
       <row>.**.</row>
       <row>****</row>

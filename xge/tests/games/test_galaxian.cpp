@@ -20,6 +20,7 @@
 #include "engine/engine.h"
 #include "game/game.h"
 #include "load/xml.h"
+#include "play/executor.h"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -560,6 +561,33 @@ TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in
 	// the ship and its score are the state's, not the fleet's: kept
 	CHECK(ship.variable["score"] == 30.0f);
 	CHECK(ship.variable["lives"] == 3.0f);
+}
+
+TEST_CASE("a hit ship bursts, out of play, and only then is it lost", "[galaxian]")
+{
+	Play play("descriptions/galaxian.xml");
+	play.tap(KeyCode::Space);
+	play.frames(130);
+	REQUIRE(play.state() == "playing");
+	Object& ship = play.object("ship");
+	ship.position.x = 100.0f;
+
+	CommandExecutor(play.game).triggerObjectAction(ship.name, "lose", true, true);
+	play.game.settleSpawns();
+	CHECK_FALSE(ship.isVisible);
+	CHECK(ship.variable["lives"] == 3.0f);
+	bool burst = false;
+	for (const Object& object : play.game.getCurrentObjects())
+	{
+		if (object.copyOf == "playing.wreck" && object.isVisible) { burst = true; }
+	}
+	CHECK(burst);
+
+	// Its burst over, a ship is lost and a fresh one is back in the middle.
+	play.frames(80);
+	CHECK(ship.isVisible);
+	CHECK(ship.variable["lives"] == 2.0f);
+	CHECK(ship.position.x != Approx(100.0f));
 }
 
 TEST_CASE("the fleet is the playing state's scene, and the ship and its shot are the state's own", "[galaxian]")

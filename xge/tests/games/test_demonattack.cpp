@@ -242,6 +242,11 @@ TEST_CASE("a demon on the cannon costs a life, and three is game over", "[demona
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(8);
 	play.engine.handleKeyReleased(KeyCode::D);
+	// The cannon bursts, out of play, and only then is the life gone.
+	CHECK_FALSE(player.isVisible);
+	CHECK(player.variable["lives"] == 3.0f);
+	play.frames(70);
+	CHECK(player.isVisible);
 	CHECK(player.variable["lives"] == 2.0f);
 
 	player.variable["lives"] = 0.0f;
@@ -275,7 +280,7 @@ TEST_CASE("the demons drop bombs on the cannon, and a hit costs a life", "[demon
 
 	const float lives = player.variable["lives"];
 	player.position.x = bomb->position.x - 15.0f;
-	play.frames(150);
+	play.frames(250);
 	CHECK(player.variable["lives"] < lives);
 }
 

@@ -139,6 +139,10 @@ TEST_CASE("the wave drops bombs, and a bomb costs a ship", "[megamania]")
 	bomb.velocity = { 0.0f, 4.0f };
 	play.game.settleSpawns();
 	play.frames(15);
+	// The blaster bursts, out of play, and only then is it lost.
+	CHECK_FALSE(play.player().isVisible);
+	play.frames(70);
+	CHECK(play.player().isVisible);
 	CHECK(play.player().variable.at("lives") == lives - 1);
 	CHECK(play.bombsInPlay() == 0);
 }
@@ -177,7 +181,7 @@ TEST_CASE("the energy runs down a second at a time, and running out costs a ship
 	play.game.getObject("energy").timers.at(0).framesLeft = 60;
 	play.frames(1);
 	CHECK(play.energy() == Approx(1));
-	play.frames(60);
+	play.frames(130);
 	CHECK(play.player().variable.at("lives") == 2);
 	CHECK(play.energy() == Approx(full));
 }

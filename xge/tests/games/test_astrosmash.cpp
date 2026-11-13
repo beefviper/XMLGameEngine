@@ -326,6 +326,11 @@ TEST_CASE("a rock on the base costs it, and the sky clears", "[astrosmash]")
 	Object& other = table.game.getObject("boulders.2.1");
 	other.position.y = 300.0f;
 	table.frames(1);
+	// The base bursts, out of play, and only then is it lost.
+	CHECK_FALSE(table.ship().isVisible);
+	CHECK(table.lives() == 4.0f);
+	table.frames(70);
+	CHECK(table.ship().isVisible);
 
 	CHECK(table.lives() == 3.0f);
 	CHECK(table.score() == 0.0f);
@@ -342,7 +347,7 @@ TEST_CASE("a spinner that lands blows up the base, and one shot scores 40", "[as
 	Object& spinner = table.game.getObject("spinners.2.1");
 	spinner.velocity = { 0.0f, 2.0f };
 	spinner.position.y = kWindowHeight - 40.0f - spinner.size.y - 1.0f;
-	table.frames(3);
+	table.frames(73);
 	CHECK(table.lives() == 3.0f);
 	CHECK(spinner.position.y < 0.0f);
 
@@ -383,7 +388,7 @@ TEST_CASE("the last base ends the game", "[astrosmash]")
 	Object& rock = table.game.getObject("pebbles.1.1");
 	rock.velocity = { 0.0f, 3.0f };
 	rock.position = { table.ship().position.x + 10.0f, table.ship().position.y - rock.size.y + 1.0f };
-	table.frames(2);
+	table.frames(72);
 
 	CHECK(table.lives() == 0.0f);
 	CHECK(table.game.getCurrentState().name == "over");

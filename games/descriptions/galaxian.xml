@@ -51,6 +51,9 @@
   * Two players take turns (<alternate>, <pass />, <out />); each turn begins
     with a screen saying whose it is, player 2's a copy of player 1's.
   * Left on the title for ten seconds, it plays its <demo>.
+  * A hit ship <spawn>s a wreck and <die>s: the wreck's burst plays
+    <once /> and <then> counts the loss and <reveal>s it again. What is
+    shot leaves a smaller burst, a "boom", that despawns itself.
   * The swarm hums under play (the playing state's <music>); a short tune
     plays as a game starts.
 -->
@@ -185,6 +188,47 @@
         <collision edge="all"><despawn /></collision>
         <collision object="ship"><despawn /></collision>
       </collisions>
+    </object>
+    <!-- what a hit alien leaves: a burst that grows and scatters, then is gone -->
+    <object name="boom">
+      <sprite name="a"><bitmap from="burst-a" /></sprite>
+      <sprite name="b"><bitmap from="burst-b" /></sprite>
+      <sprite name="c"><bitmap from="burst-c" /></sprite>
+      <sprite name="d"><bitmap from="burst-d" /></sprite>
+      <animation>
+        <seconds>0.07</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d" />
+        <then><despawn /></then>
+      </animation>
+      <most>6</most>
+    </object>
+    <!-- the ship hit: it bursts, slower, and only then is the ship lost -->
+    <object name="wreck">
+      <sprite name="a"><bitmap from="burst-a" /></sprite>
+      <sprite name="b"><bitmap from="burst-b" /></sprite>
+      <sprite name="c"><bitmap from="burst-c" /></sprite>
+      <sprite name="d"><bitmap from="burst-d" /></sprite>
+      <animation>
+        <seconds>0.15</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d"><seconds>0.4</seconds></frame>
+        <then>
+          <reveal object="ship" />
+          <dec variable="ship.lives" />
+          <inc variable="ship.lost" />
+          <despawn />
+        </then>
+      </animation>
+      <most>1</most>
     </object>
   </objects>
   <!-- a new game starts the score again, but not the best or the table -->
@@ -379,10 +423,11 @@
             <collision class="bomb"><trigger action="lose" /></collision>
           </collisions>
           <actions>
+            <!-- out of play while its wreck bursts, which then counts it lost -->
             <action name="lose">
-              <dec variable="ship.lives" />
-              <inc variable="ship.lost" />
+              <spawn object="wreck" />
               <play sound="boom" />
+              <die />
             </action>
             <action name="left"><move direction="left">step</move></action>
             <action name="right"><move direction="right">step</move></action>
@@ -421,8 +466,12 @@
                   <die />
                   <inc variable="ship.score">self.pays</inc>
                   <play sound="hit" />
+                  <spawn object="boom" />
                 </collision>
-                <collision object="ship"><die /></collision>
+                <collision object="ship">
+                  <die />
+                  <spawn object="boom" />
+                </collision>
               </collisions>
               <actions>
                 <action name="dive">
@@ -728,6 +777,63 @@
     </sound>
   </sounds>
   <pictures>
+    <!-- a burst, four pictures: a flash, a ball, its pieces flying, the last sparks -->
+    <bitmap name="burst-a">
+      <row>.........</row>
+      <row>.........</row>
+      <row>....*....</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>....*....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>pixel</scale>
+      <color>color.yellow</color>
+      <color char="o">color.white</color>
+    </bitmap>
+    <bitmap name="burst-b">
+      <row>.........</row>
+      <row>..*...*..</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>.*oo.oo*.</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>..*...*..</row>
+      <row>.........</row>
+      <scale>pixel</scale>
+      <color>color.yellow</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="burst-c">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...o.o...</row>
+      <row>..o...o..</row>
+      <row>*.......*</row>
+      <row>..o...o..</row>
+      <row>...o.o...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>pixel</scale>
+      <color>color.yellow</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="burst-d">
+      <row>o.......o</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>....o....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>o.......o</row>
+      <scale>pixel</scale>
+      <color>color.red</color>
+      <color char="o">color.red</color>
+    </bitmap>
     <bitmap name="stars-on"><row>*</row><scale>2</scale></bitmap>
     <bitmap name="stars-off"><row>.</row><scale>2</scale></bitmap>
     <bitmap name="ship">
