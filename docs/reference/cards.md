@@ -23,7 +23,7 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
     <spread sprite="back"><y>9</y></spread>
     <accepts>
       <condition variable="color"><unequal>top.color</unequal></condition>
-      <condition variable="rank"><equal>top.rank - 1</equal></condition>
+      <condition variable="rank"><equal><subtract><value>top.rank</value><value>1</value></subtract></equal></condition>
       <empty><condition variable="rank"><equal>13</equal></condition></empty>
     </accepts>
     <carry />
@@ -32,10 +32,19 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
 </group>
 ```
 
-- **The pack** is a group in `<columns>` and `<rows>` whose class a `<holds>` names. Each cell is a card: variables `row` and `column` (from 1) say which, its first look is the face and its second the back. **`<columns name="rank">13</columns>`** and **`<rows name="suit">4</rows>`** give the column and row a second name the game reads better by: every card then also has `rank` and `suit`, the same numbers, and anything that names a variable may use either. The engine knows only rows and columns; suit and rank are the game's words (`worth`, `high` and `color`, a card's own, cannot be such names). A sheet `<cell>` that leaves out its column or row takes the cell's own, so the faces are one sprite. `worth` is the rank (its column) unless a column, row or cell gives one (`<column><number>11</number><number>12</number><number>13</number><variables><variable name="worth">10</variable></variables></column>`); a **`high`** variable is a second value it may count instead where a holder counts within a limit (Blackjack's ace: `high` 11).
+- **The pack** is a group in `<columns>` and `<rows>` whose class a `<holds>` names.
+  - Each cell is a card: variables `row` and `column` (from 1) say which, its first look is the face and its second the back.
+  - **`<columns name="rank">13</columns>`** and **`<rows name="suit">4</rows>`** give the column and row a second name the game reads better by: every card then also has `rank` and `suit`, the same numbers, and anything that names a variable may use either.
+  - The engine knows only rows and columns; suit and rank are the game's words (`worth`, `high` and `color`, a card's own, cannot be such names).
+  - A sheet `<cell>` that leaves out its column or row takes the cell's own, so the faces are one sprite.
+  - `worth` is the rank (its column) unless a column, row or cell gives one (`<column><number>11</number><number>12</number><number>13</number><variables><variable name="worth">10</variable></variables></column>`); a **`high`** variable is a second value it may count instead where a holder counts within a limit (Blackjack's ace: `high` 11).
 - **`<holds class sprite>`** on an object or group makes it a holder: what it holds, in order, the last on top, each showing the look `sprite=` while laid there (none: each keeps its own).
 - **`<spread>`**: each one on from the one under it (`<x>`, `<y>`, `<width>` the most it spreads across); a second with `sprite=` for those showing that look.
-- **`<accepts>`**: what may be placed on top, as `<condition>`s on the arriving one, all of which must hold. Each compares its `variable=` with `<equal>`, `<unequal>`, `<above>`, `<below>`, `<atleast>` or `<atmost>` a number, or with a variable of the top one, plus or minus a number if wanted: `<equal>top.suit</equal>`, `<unequal>top.color</unequal>`, `<equal>top.rank + 1</equal>`, `<below>top.worth</below>`. `total="sum"` adds that variable up over what is laid at once (`<equal>13</equal>`: Pyramid's pairs); `<condition total="count"><equal>1</equal></condition>` lays one at a time. `<any>` holds conditions of which one must hold; `<empty>` holds conditions on the first, where there is no top. `<accepts />` takes anything; no `<accepts>`: nothing.
+- **`<accepts>`**: what may be placed on top, as `<condition>`s on the arriving one, all of which must hold.
+  - Each compares its `variable=` with `<equal>`, `<unequal>`, `<above>`, `<below>`, `<atleast>` or `<atmost>` a number, or with a variable of the top one, or with an operation on one: `<equal>top.suit</equal>`, `<unequal>top.color</unequal>`, `<equal><add><value>top.rank</value><value>1</value></add></equal>`, `<below>top.worth</below>`.
+  - `total="sum"` adds that variable up over what is laid at once (`<equal>13</equal>`: Pyramid's pairs); `<condition total="count"><equal>1</equal></condition>` lays one at a time.
+  - `<any>` holds conditions of which one must hold; `<empty>` holds conditions on the first, where there is no top.
+  - `<accepts />` takes anything; no `<accepts>`: nothing.
 - **`<wild variable="suit">`** in `<accepts>`, with `<condition>`s: what keeps them goes on anything. The holder then waits (live `calling` 1) until the one who laid it names a value with `<call object>`: the `suit` of the one it points at among its own. Live `called` is that value, and the top counts as it until the next one is laid. A wild one dealt on top counts as its own.
 
   ```xml
@@ -49,7 +58,11 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
   ```
 - **`<carry />`**: one may be picked with all those on it, while each follows the rules. **`<top sprite="face" />`**: the top one turns face up. **`<lift>16</lift>`**: the one a picker points at is drawn lifted by that much. **`<order><by variable="suit" /><by variable="rank" /></order>`**: kept in that order, the first first.
 - **`<picked>`**: what picking from it does instead, picking nothing up: `<send into="waste">1</send>` (no `into=`: to the picker's own holder), and `<empty>` with `<send from="waste"><all /></send>` (a `<leave>` in it) and `<order><random /></order>`; `<play sound>` sounds as it sends.
-- **The picker.** An object whose actions `<pick class>` a held class is a hand: `<pick class="card" />` takes what it points at, `<place />` lays it where it points, `<place into="foundations" />` on the first of those that accepts it, `<drop />` puts it back. **`<owns object="mine" />`** gives it a holder of its own: it picks any of those, face up or down, and stays pointing there. [`<hop>`](commands.md#moving) moves it left and right to the nearest holder at the same height, and up and down through a spread holder's face-up cards, then to the next row of holders. [`<track />`](input.md#pointing-controls) points at the top card under the pointer; held cards follow it, so press, drag and release (`on="release"`) move cards as Space twice does. Moved by the mouse, it picks and places only over a holder or card.
+- **The picker.** An object whose actions `<pick class>` a held class is a hand: `<pick class="card" />` takes what it points at, `<place />` lays it where it points, `<place into="foundations" />` on the first of those that accepts it, `<drop />` puts it back.
+  - **`<owns object="mine" />`** gives it a holder of its own: it picks any of those, face up or down, and stays pointing there.
+  - [`<hop>`](commands.md#moving) moves it left and right to the nearest holder at the same height, and up and down through a spread holder's face-up cards, then to the next row of holders.
+  - [`<track />`](input.md#pointing-controls) points at the top card under the pointer; held cards follow it, so press, drag and release (`on="release"`) move cards as Space twice does.
+  - Moved by the mouse, it picks and places only over a holder or card.
 - **`<starts>`** in a state is the deal, done as it begins and on a full reset:
 
   ```xml
@@ -62,7 +75,12 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
 
   For now it sends all of a pack into one holder, orders it at random, then `<distribute>`s N to each holder of a group (one at a time round; `<more>`: each after the first that many more) or `<send>`s N to one.
 - **`<counts variable="worth"><atmost>21</atmost></counts>`** in a `<holds>`: the holder's own variable of that name (`player.worth`) is what its face-up members' variables of that name add up to. For `worth`, a member's `high` counts instead while the total stays within `<atmost>`.
-- **The verbs, in any action, timer or condition:** `<send from="stock" into="player">1</send>` sends the top one (or `<all />`) from holder to holder; from the pack's name, `<all />` is every card wherever it is. `sprite="back"` lays them showing that look. `<order group="stock"><random /></order>` puts what a holder holds at random. `<distribute from="stock" into="mine">13</distribute>` sends that many to a holder, or, into a group, that many to each member's own holder, a card a round. **`<become object="dealer" sprite="face" />`** on a holder, with a look of what it holds rather than its own, turns everything it holds to that look. Each is refused when there is nothing to send or no such holder or look.
+- **The verbs, in any action, timer or condition:** `<send from="stock" into="player">1</send>` sends the top one (or `<all />`) from holder to holder; from the pack's name, `<all />` is every card wherever it is.
+  - `sprite="back"` lays them showing that look.
+  - `<order group="stock"><random /></order>` puts what a holder holds at random.
+  - `<distribute from="stock" into="mine">13</distribute>` sends that many to a holder, or, into a group, that many to each member's own holder, a card a round.
+  - **`<become object="dealer" sprite="face" />`** on a holder, with a look of what it holds rather than its own, turns everything it holds to that look.
+  - Each is refused when there is nothing to send or no such holder or look.
 
   ```xml
   <action name="next">
@@ -73,11 +91,16 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
 - Live **`held`** is how many a holder holds (`cards` as well), and more below: `points`, `calling`, `called`, `pattern`, `strength`, `odds`, `lead`, `winner`, `tricks`, `deadwood`. `<condition object="foundations" variable="cards" total="sum"><atleast>52</atleast></condition>` is Klondike's win.
 - **Covering.** A holder's top card can be picked only while no card of a later holder overlaps it. Holders that only touch are never covered.
 - **Drawing order.** Cards are drawn above everything, in their holders' order, held cards above them and the picker above all.
-- **`games/assets/cards.png`** is the shared [sheet](pictures.md#sheets): 2496 by 1400, cells of 192 by 280 (twice a 96 by 140 card), the four suits in the order spades, hearts, clubs, diamonds, ranks A to K, and a row of eight backs (blue, red, green, black and gold, purple, then blue, red and green lattices; column 2 of row 5 is the red). All eight card games use it. **To change the cards' look**, replace the file with another of the same layout at any size.
+- **`games/assets/cards.png`** is the shared [sheet](pictures.md#sheets): 2496 by 1400, cells of 192 by 280 (twice a 96 by 140 card), the four suits in the order spades, hearts, clubs, diamonds, ranks A to K, and a row of eight backs (blue, red, green, black and gold, purple, then blue, red and green lattices; column 2 of row 5 is the red).
+  - All eight card games use it.
+  - **To change the cards' look**, replace the file with another of the same layout at any size.
 
 ## Patterns
 
-What a set of cards can make is written once in the game, beside `<styles>`, lowest first. Each `<pattern>` is parts that must all hold, each naming the variable it compares, a card's column or row by either name: `<alike variable="rank">N</alike>` (N of one column, here called rank; two of them: two ranks), `<alike variable="suit">N</alike>` (N of one row), `<run variable="worth">N</run>` (N worths in a row, a card's `high` counting too). `<run variable="rank">` runs by column, the ace low whatever it is worth (Gin's runs, its court cards worth 10); for now only `<melds />` take it.
+What a set of cards can make is written once in the game, beside `<styles>`, lowest first.
+
+- Each `<pattern>` is parts that must all hold, each naming the variable it compares, a card's column or row by either name: `<alike variable="rank">N</alike>` (N of one column, here called rank; two of them: two ranks), `<alike variable="suit">N</alike>` (N of one row), `<run variable="worth">N</run>` (N worths in a row, a card's `high` counting too).
+- `<run variable="rank">` runs by column, the ace low whatever it is worth (Gin's runs, its court cards worth 10); for now only `<melds />` take it.
 
 ```xml
 <patterns name="poker">
@@ -137,7 +160,10 @@ A holder (Hold'em's: the ace's `high` 14) scores by them with `<score patterns="
 
 ## Covering and pairs
 
-Pyramid: a picker's **`<pick class="card"><most>2</most></pick>`** may take the top card of another holder while holding, from that many holders in all; `<drop />` puts each back. A holder's **`<accepts><condition variable="worth" total="sum"><equal>13</equal></condition></accepts>`** takes what is laid at once when their worths add up to that (a king alone). So a pair is `<pick class="card"><most>2</most></pick>` then `<place into="pairs" />`, else `<drop />`.
+Pyramid: a picker's **`<pick class="card"><most>2</most></pick>`** may take the top card of another holder while holding, from that many holders in all; `<drop />` puts each back.
+
+- A holder's **`<accepts><condition variable="worth" total="sum"><equal>13</equal></condition></accepts>`** takes what is laid at once when their worths add up to that (a king alone).
+- So a pair is `<pick class="card"><most>2</most></pick>` then `<place into="pairs" />`, else `<drop />`.
 
 ## The computer
 

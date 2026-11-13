@@ -110,14 +110,21 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 
 - **Size** L. **Needs** A2 (the holder part is then clean). Lowest priority in this phase.
 - **Why.** About 200 fields. The October review left it "because it touches nearly every test line that says `object.position`".
-- **Do.** Leave `Moment` (position, velocity and the rest that tests name) exactly as it is. Group the rest by feature into members that most objects never use and tests rarely name: `object.maze` (walker state), `object.cell` (cells and chains), `object.holder`, `object.moves` and `object.marks` (boards), `object.swing`, `object.path`, `object.jump`. One group per commit; a group that is unused could later become `std::optional` or a pointer, which also shrinks every object (58 games load thousands).
+- **Do.** Leave `Moment` (position, velocity and the rest that tests name) exactly as it is.
+  - Group the rest by feature into members that most objects never use and tests rarely name: `object.maze` (walker state), `object.cell` (cells and chains), `object.holder`, `object.moves` and `object.marks` (boards), `object.swing`, `object.path`, `object.jump`.
+  - One group per commit; a group that is unused could later become `std::optional` or a pointer, which also shrinks every object (58 games load thousands).
 - **Done.** `struct Object` itself declares under 60 fields; `xgetest-long "[speed]"` no slower.
 
 #### A5. A game written out as if by hand
 
 - **Size** L, open-ended; the first three substeps are a few days. **Needs** A1 as it stands (done).
-- **Why.** The author's aim for the generator: a stand-alone version of a game that looks hand-coded over a weekend, as the route to any platform. `windows-cpp` writes the engine with the game's data built in (complete and exact, and unreadable as a game). The first generator wrote readable programs and drifted from the engine; a hand-written Pong on the shared frame later matched the engine frame for frame over ten seeds of 3,600 frames, and was set aside (`git show 7163ea2^:games/prototypes/pong_min/source/pong_min.cpp`; `docs/designs/40-generator.md`, "A readable game on the shared frame").
-- **The rule that keeps it honest.** A generated game never re-implements behaviour. It is written out plainly (its numbers as constants, its objects as variables, its rules as functions and `switch`es) and *calls* the same small work functions the engine calls: `bounce`, `deflect`, `stick`, the sweep, the frame order. Those travel with it as a small runtime folder (`play/`, `picture/`, `audio/sound`, one window file): no `Game`, no reader, no XML. A person writing Pong over a weekend would also have a `bounce()` helper; what they would not have is an interpreter, and neither does this.
+- **Why.** The author's aim for the generator: a stand-alone version of a game that looks hand-coded over a weekend, as the route to any platform.
+  - `windows-cpp` writes the engine with the game's data built in (complete and exact, and unreadable as a game).
+  - The first generator wrote readable programs and drifted from the engine; a hand-written Pong on the shared frame later matched the engine frame for frame over ten seeds of 3,600 frames, and was set aside (`git show 7163ea2^:games/prototypes/pong_min/source/pong_min.cpp`; `docs/designs/40-generator.md`, "A readable game on the shared frame").
+- **The rule that keeps it honest.** A generated game never re-implements behaviour.
+  - It is written out plainly (its numbers as constants, its objects as variables, its rules as functions and `switch`es) and *calls* the same small work functions the engine calls: `bounce`, `deflect`, `stick`, the sweep, the frame order.
+  - Those travel with it as a small runtime folder (`play/`, `picture/`, `audio/sound`, one window file): no `Game`, no reader, no XML.
+  - A person writing Pong over a weekend would also have a `bounce()` helper; what they would not have is an interpreter, and neither does this.
 - **What a generated Pong should look like** (the target to write towards; about 150 lines):
 
   ```cpp
@@ -150,7 +157,9 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
   1. **Bring the prototype back and make it current (M).** Restore `pong_min.cpp` from the commit above into `games/prototypes/pong_min/`, port it to today's `Object`/`Moment`, `FrameRules` and `load/calc` (the note in it about the old expression library regrouping constants no longer applies), and restore its test: ten seeds, 3,600 frames, every object equal to the engine's each frame. This is the specification by example.
   2. **A new target folder (M).** `games/generators/standalone-cpp/`: `generate.xsl`, `program.xsl` (main, CMake), `runtime.xml` (the engine files it copies: no `game/game.cpp`, no `load/`), and `verbs/` with one template per verb it can write (`bounce.xsl`: `<xsl:template match="bounce" mode="statement">`). `xgecli pong_min --generate standalone-cpp` must reproduce the hand-written file closely enough that a diff is a few lines.
   3. **Say what it cannot write (S).** Before running, the generator walks the game and lists every verb or part with no template in this target; if any, it stops and prints them with "use `windows-cpp` for this game". Nothing is silently approximated. A test holds the list of games each target covers.
-  4. **Grow by game, simplest first (M each).** `pong.xml` (states, conditions, text, sounds, a computer player), Breakout (groups in columns and rows, looks), Space Race, Kaboom, Freeway, Frogger (`ride`, lanes), Space Invaders (lockstep, timers, spawn). Each new game adds a few templates and a line in the covered list. Stop and review with the author after Pong and after Breakout: the look of the output is the point, and only the author can judge it.
+  4. **Grow by game, simplest first (M each).** `pong.xml` (states, conditions, text, sounds, a computer player), Breakout (groups in columns and rows, looks), Space Race, Kaboom, Freeway, Frogger (`ride`, lanes), Space Invaders (lockstep, timers, spawn).
+     - Each new game adds a few templates and a line in the covered list.
+     - Stop and review with the author after Pong and after Breakout: the look of the output is the point, and only the author can judge it.
   5. **The side-by-side test (M).** `xgetest-generated` gains, per covered game, the same proof `windows-cpp` has: generated and engine play with the same seed and keys, every object compared each frame. The generated program needs a `step(keys)` and a way to list its objects for this; write them into `program.xsl` behind a macro so they vanish from a normal build.
   6. **Later, another platform (L, not planned in detail).** A second code-writing target is a folder of templates plus that platform's runtime (the work functions ported). The templates are the cheap half; the runtime is a port. `docs/designs/57-ideas.md` "Targets and capability profiles" is the design to pick up then.
 - **Not doing.** Cards, the board-game search and cell puzzles in this target: they are large engines in themselves (`game/cards.cpp`, `think.cpp`, `cells.cpp`), and a "weekend" version would be those files copied. They stay on `windows-cpp` until the author asks otherwise.
@@ -163,20 +172,30 @@ Sizes: **S** under two hours, **M** half a day, **L** more than a day, to be spl
 - **Why.** The XSD is the definition of the language, but an editor shows nothing on hover and the word index is kept by hand. It is also the project's own point: use XML's tools. The XSD has good comments, but as `<!-- -->`, which no tool reads.
 - **Substeps.**
   1. **Comments become `xs:annotation`/`xs:documentation` (M).** For every element and type. An XML editor then shows the sentence on hover and in completion. Check the weak validator (`xge/lib/load/xsd.cpp`) skips annotations, and that Xerces still validates all games.
-  2. **`docs/reference/words.md` made from the schema by XSLT (M).** `games/generators/docs/words.xsl`: every element, its documentation, what it may hold, grouped by the schema's own groups. Run by `xgecli --generate docs` (the generator already runs stylesheets with libxslt) or by `xsltproc`. A test regenerates it and compares with the file in the repository, so the page cannot go stale. The hand-kept word index in `docs/readme.md` then links to it and can shrink.
+  2. **`docs/reference/words.md` made from the schema by XSLT (M).** `games/generators/docs/words.xsl`: every element, its documentation, what it may hold, grouped by the schema's own groups.
+     - Run by `xgecli --generate docs` (the generator already runs stylesheets with libxslt) or by `xsltproc`.
+     - A test regenerates it and compares with the file in the repository, so the page cannot go stale.
+     - The hand-kept word index in `docs/readme.md` then links to it and can shrink.
   3. **Tighter attribute types (S).** Of the 165 `xs:string` attributes, those that hold one name become `xs:NMTOKEN` (63 already are), and those that pick from a list (`on=`, `side=`, `total=`) an enumeration. Dotted names (`variable="ball.hits"`) stay strings or get a pattern.
 - **Done.** Hovering `<deflect>` in VS Code with the XML extension shows its sentence; `words.md` is generated and tested.
 
 #### A7. The next backend is cheap
 
 - **Size** M, then a backend at a time. **Needs** nothing.
-- **Why.** The author wants more backends, lower-level ones included (Direct3D 9, 11, 12, Vulkan), in the spirit of programs that support every library. Today each window backend is 500 to 650 lines, and most of it is the two jobs the engine does not do itself: drawing text with the library's own font code, and loading image files with the library's own decoder. That is also why text widths differ between backends and from the built-in font (a listed limit).
+- **Why.** The author wants more backends, lower-level ones included (Direct3D 9, 11, 12, Vulkan), in the spirit of programs that support every library.
+  - Today each window backend is 500 to 650 lines, and most of it is the two jobs the engine does not do itself: drawing text with the library's own font code, and loading image files with the library's own decoder.
+  - That is also why text widths differ between backends and from the built-in font (a listed limit).
 - **Substeps.**
   1. **Write the contract down (S).** In `docs/reference/engine.md` "Backends" and at the top of `window/window.h`: exactly what a `Window` must do, as a numbered list, and what it may assume (pictures arrive as bitmaps).
-  2. **Text drawn by the engine (M).** Glyphs into a bitmap with one font library for every backend (FreeType through plutovg, which is already linked for SVG, or `stb_truetype`, a single header), in `picture/font.cpp` beside the 8x8 fallback. A text object then reaches the window as a bitmap like any other picture, and its size is known before a window exists (so sizes no longer wait for `Engine`, and tests measure real widths). Each backend loses its font code. Check every game's text positions before and after, since widths will change slightly: compare with the SFML widths and tune the one font path until titles still fit.
+  2. **Text drawn by the engine (M).** Glyphs into a bitmap with one font library for every backend (FreeType through plutovg, which is already linked for SVG, or `stb_truetype`, a single header), in `picture/font.cpp` beside the 8x8 fallback.
+     - A text object then reaches the window as a bitmap like any other picture, and its size is known before a window exists (so sizes no longer wait for `Engine`, and tests measure real widths).
+     - Each backend loses its font code.
+     - Check every game's text positions before and after, since widths will change slightly: compare with the SFML widths and tune the one font path until titles still fit.
   3. **Image files decoded by the engine (S).** `picture/image.cpp` already cuts sheets with plutovg; use it for `<image>` too and delete each backend's loader (and the SDL2_image dependency).
   4. **One conformance test for every window backend (M).** `xge/tests/engine/test_backends.cpp`: for each backend built, open a small window (under Xvfb on Linux), show three known bitmaps, read the pixels back where the library allows, feed a key, close. A new backend passes this and is done.
-  5. **Then the backends, in this order:** Direct3D 11 (the simplest modern one: a window from Win32, a textured quad per object), Direct3D 9 (older machines), Vulkan (the most code for the same quad), Direct3D 12 last. Each is `xge/lib/window/<name>.cpp` behind `XGE_WITH_<NAME>`, a row in `scripts/cmake/dependencies.cmake` and the factory. **The Direct3D ones cannot be built or run in a Linux container:** they are written blind there and compiled, fixed and tested by the author on Windows, so keep each to one small file and expect a round or two.
+  5. **Then the backends, in this order:** Direct3D 11 (the simplest modern one: a window from Win32, a textured quad per object), Direct3D 9 (older machines), Vulkan (the most code for the same quad), Direct3D 12 last.
+     - Each is `xge/lib/window/<name>.cpp` behind `XGE_WITH_<NAME>`, a row in `scripts/cmake/dependencies.cmake` and the factory.
+     - **The Direct3D ones cannot be built or run in a Linux container:** they are written blind there and compiled, fixed and tested by the author on Windows, so keep each to one small file and expect a round or two.
 - **Also gains.** [F1](#f1-a-game-you-can-step-and-read-from-the-command-line)'s picture of a frame becomes trivial once text is a bitmap, and `xgegui`'s Qt renderer shrinks the same way.
 - **Done.** A window backend's file holds no font or image-file code; the conformance test runs over each; the first new low-level backend is under 300 lines.
 
@@ -213,7 +232,9 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
 
 - **Size** M. **Needs** nothing.
 - **Why.** Missing feature 3. "A maze walker steers by the next tile nearest a target, with no search, so a target behind a wall can leave it circling."
-- **Do.** A part of `<hunt>` (suggest `<search />`): the walker takes the first step of the shortest way through the maze's tiles (breadth-first over `mazeGrid`, which is already cached; the grid is at most a few thousand tiles, and the result can be cached per target tile until the target changes tile). Pac-Man's ghosts keep the arcade rule (no `<search />`): that circling is authentic. Use it in Haunted House (the ghost) or Berserk, and write the Lode Runner kind of chase into open-work as now possible.
+- **Do.** A part of `<hunt>` (suggest `<search />`): the walker takes the first step of the shortest way through the maze's tiles (breadth-first over `mazeGrid`, which is already cached; the grid is at most a few thousand tiles, and the result can be cached per target tile until the target changes tile).
+  - Pac-Man's ghosts keep the arcade rule (no `<search />`): that circling is authentic.
+  - Use it in Haunted House (the ghost) or Berserk, and write the Lode Runner kind of chase into open-work as now possible.
 - **Files.** `xge/lib/play/maze.cpp`, `game/command.h` (`CmdHunt`), `load/xml.cpp`, schema `huntType`, `data.xsl`, `xge/tests/engine/test_steering.cpp`, `docs/reference/maps.md` "Walking a map", `docs/designs/24-chase-and-paths.md`.
 - **Done.** A test maze with the target behind a wall: without the word the walker circles for 600 frames, with it it arrives.
 
@@ -221,7 +242,10 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
 
 - **Size** L. **Needs** a design agreed with the author first (write `docs/designs/14-lists.md`: what was looked for, options, choice).
 - **Why.** Missing feature 4. Four separate wants are one thing: a sequence the game adds to and reads by place. Simon (add a random colour each round, compare presses in order), Mastermind (a hidden list compared with a guess), Tetris' bag of seven (a list shuffled and drawn from), Pac-Man's schedule (a list of lengths, one per wave, in the backlog as "a schedule").
-- **Sketch to start the design from.** A holder already *is* an ordered collection with `<send>`, `<order><random />`, `<top>` and counts. Before inventing `<list>`, test whether a holder of small unseen pieces carrying one variable says all four: the bag of seven is a holder shuffled and sent from; a schedule is a holder read from the top. If two of the four read naturally that way, the list is a holder and the addition is only "compare place by place". This is the fraction rule applied before building.
+- **Sketch to start the design from.** A holder already *is* an ordered collection with `<send>`, `<order><random />`, `<top>` and counts.
+  - Before inventing `<list>`, test whether a holder of small unseen pieces carrying one variable says all four: the bag of seven is a holder shuffled and sent from; a schedule is a holder read from the top.
+  - If two of the four read naturally that way, the list is a holder and the addition is only "compare place by place".
+  - This is the fraction rule applied before building.
 - **Done.** The design file exists with a verdict; if built, a Simon-kind game ships and Tetris draws from a bag.
 
 #### F5. Line of sight
@@ -235,7 +259,10 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
 
 - **Size** M. **Needs** nothing.
 - **Why.** Two listed limits: "a pair where nothing moves is not looked at" and "an edge rule cannot have a `<condition>`".
-- **Do.** (1) A `<collision>` may hold `<always />` (the backlog calls it a watch flag): its pairs are looked at every frame while they overlap. `FrameRules::partners` already knows pairs per rule; add the flag to the pair. Find the games that fake motion to wake a rule and remove the fakes. (2) Edge rules take the same `<condition>` children object rules take (`EdgeGuard` in the notes already carries `sprite=` and `unless=`; add the condition list). Centipede's "falling and rising are looks since edge rules take no condition" can then be simplified.
+- **Do.** (1) A `<collision>` may hold `<always />` (the backlog calls it a watch flag): its pairs are looked at every frame while they overlap.
+  - `FrameRules::partners` already knows pairs per rule; add the flag to the pair.
+  - Find the games that fake motion to wake a rule and remove the fakes. (2) Edge rules take the same `<condition>` children object rules take (`EdgeGuard` in the notes already carries `sprite=` and `unless=`; add the condition list).
+  - Centipede's "falling and rising are looks since edge rules take no condition" can then be simplified.
 - **Files.** `xge/lib/play/frame.cpp` (`moveObjects`, the `isMoving` test in `sweep`), `game/game.cpp` (`partners`), `load/xml.cpp` (`readCollisions`), schema `collisionType`, `data.xsl`, `xge/tests/engine/test_collision_rules.cpp`; `docs/reference/collisions.md`, `docs/designs/21-collisions-open.md`.
 
 #### F7. Sound: an envelope, and notes that follow a number
@@ -246,7 +273,10 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
 #### F8. Dice
 
 - **Size** M. **Needs** the hold on new games lifted ([open decisions](#open-decisions)).
-- **Do.** A die is an object with six looks and a `<random>` variable drawn again by a command: check whether `<become>` to a look picked by a number plus `<set variable>` with a `<random>` already says it (it may: "values read when used"). If so the addition is nothing but a game. Write the dice-and-patterns game first (five dice, keep some, roll three times, score by `<patterns>` with `<alike>` and `<run>`), which tests whether patterns work off a holder of dice the way they do off cards. Backgammon only after, and only if the author still wants it once its word list is written down.
+- **Do.** A die is an object with six looks and a `<random>` variable drawn again by a command: check whether `<become>` to a look picked by a number plus `<set variable>` with a `<random>` already says it (it may: "values read when used").
+  - If so the addition is nothing but a game.
+  - Write the dice-and-patterns game first (five dice, keep some, roll three times, score by `<patterns>` with `<alike>` and `<run>`), which tests whether patterns work off a holder of dice the way they do off cards.
+  - Backgammon only after, and only if the author still wants it once its word list is written down.
 
 ## Backlog
 
@@ -278,7 +308,9 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 - **Values** ([arithmetic](designs/03-arithmetic.md)): tangent, square root, power, `pick`, when a game needs one.
 - **Conditions** ([states-and-conditions](designs/07-states-and-conditions.md)): object-level conditions, a total inside a value, conditions on edge rules.
 - **Scenes** ([scenes](designs/12-scenes.md)): Berserk's larger grid of rooms, which needs maps made while playing.
-- **Reserved names:** an object, group, member, map or state may not be called `self`, `other`, `others`, `window` or `color`, nor anything a number, because dotted names mix the game's own names with the engine's words (`self.x`, `other.score`, `window.width`, `color.red`). Variables and sounds are free (only ever after a dot, or named by `sound=`), and `top` is free (`top.rank` is read before any name). Look for a way to say those things that needs no reserved words, so any name is free (an object may already be called `object`).
+- **Reserved names:** an object, group, member, map or state may not be called `self`, `other`, `others`, `window` or `color`, nor anything a number, because dotted names mix the game's own names with the engine's words (`self.x`, `other.score`, `window.width`, `color.red`).
+  - Variables and sounds are free (only ever after a dot, or named by `sound=`), and `top` is free (`top.rank` is read before any name).
+  - Look for a way to say those things that needs no reserved words, so any name is free (an object may already be called `object`).
 
 ### The games
 
@@ -302,7 +334,10 @@ Nothing waiting.
 
 ## Known untested
 
-- Sanitizers: the whole of `xgetest` is clean under `-DXGE_SANITIZE=address` (address and undefined behaviour), as are `xgetest-long`'s random keys and damaged files; the board-game search on its own thread is clean under `-DXGE_SANITIZE=thread`. The damaged files found one fault: a line out at 1e9 or a text of a huge size asked for hundreds of gigabytes. Pictures and texts are now at most 4096 pixels a side (`refusePictureSize`). Generated programs and `xgegui` have not been run under one.
+- Sanitizers: the whole of `xgetest` is clean under `-DXGE_SANITIZE=address` (address and undefined behaviour), as are `xgetest-long`'s random keys and damaged files; the board-game search on its own thread is clean under `-DXGE_SANITIZE=thread`.
+  - The damaged files found one fault: a line out at 1e9 or a text of a huge size asked for hundreds of gigabytes.
+  - Pictures and texts are now at most 4096 pixels a side (`refusePictureSize`).
+  - Generated programs and `xgegui` have not been run under one.
 - MSVC is checked by hand, not automatically; older versions are untested.
 - A default build (no options) and one with only `-DXGE_WITH_OPENGL=ON` have no automatic check ([build-and-layout](designs/51-build-and-layout.md)).
 - Agents build in a Linux sandbox and cannot watch or listen, so how a game feels and sounds is unchecked.

@@ -95,7 +95,7 @@ A command whose numbers name something that changes is worked out each time it r
 
 ```xml
 <inc variable="player.score">self.worth</inc>                     <!-- the worth of the fish just landed -->
-<set variable="shark.velocity.x">shark.velocity.x * 1.1</set>     <!-- speed the shark up -->
+<set variable="shark.velocity.x"><multiply><value>shark.velocity.x</value><value>1.1</value></multiply></set>     <!-- speed the shark up -->
 <above>gun2.score</above>                                         <!-- a test following gun 2's score -->
 ```
 
@@ -106,8 +106,8 @@ Every other value is fixed at load, and one that is not a command's (a position,
 `update="live"` on an object's `<variable>`, a half of its `<position>` or its `<heading>` works it out again every frame from what it reads, after the move and before the conditions, and as the game starts. Left out (or `update="once"`), it is worked out once, as ever.
 
 ```xml
-<position><x update="live">player.x + 18</x><y>0</y></position>      <!-- Demon Attack's shot, steered by the cannon -->
-<heading update="live">self.level - self.side * self.elevation</heading>  <!-- Cannon Hill's barrel follows its elevation -->
+<position><x update="live"><add><value>player.x</value><value>18</value></add></x><y>0</y></position>      <!-- Demon Attack's shot, steered by the cannon -->
+<heading update="live"><subtract><value>self.level</value><value><multiply><value>self.side</value><value>self.elevation</value></multiply></value></subtract></heading>  <!-- Cannon Hill's barrel follows its elevation -->
 <variable name="tipx" update="live"><add>...<sine><value>self.heading</value></sine>...</add></variable>
 ```
 
@@ -182,7 +182,7 @@ Names are dotted, and every dot means "inside":
 ```xml
 <variables>
   <variable name="margin">30</variable>
-  <variable name="paddle">margin * 4</variable>
+  <variable name="paddle"><multiply><value>margin</value><value>4</value></multiply></variable>
   <variable name="start"><random><min>1</min><max>3</max></random></variable>
 </variables>
 ```

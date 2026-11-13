@@ -12,8 +12,13 @@ The 8-bit machines played bleeps, bloops and little tunes from a sound chip, not
 - **The engine makes the samples; a backend only plays them.** `synthesize()` makes 16-bit mono at 44100 Hz, the same for every library; SFML and SDL2 have no synthesis of their own anyway. The synthesizer is tested with no device.
 - **A chip's waves:** square, triangle, sawtooth; noise pitched like a chip (a new random level every half cycle, seeded per note, so it sounds the same everywhere); sine as a soft option.
 - **Slides by semitones**, so a bend sounds even.
-- **Looping is the sound's, holding is the key's.** `<loop />` sits on the `<sound>`; a key's `<play>` of a loop is held like a `<move>`, on with the press and off with the release. Elsewhere `<play>` turns it on and `<silence>` off. A loop is state, not an event: `Engine` compares the set that is on with what it told the `Audio` each frame, so silencing and asking again in one frame does not restart it. `<silence>` was chosen over `<stop>` (an object's verb).
-- **Music is parts and a state's own sound.** A `<sound>` of `<part>`s plays them at once, as a chip's channels did; a sum past full scale is cut off, with no automatic scaling, so `<volume>` stays the author's. `<music sound>` on a state loops while it is current, so a pause silences it with nothing written on the pause key; one that does not loop plays as the state begins. Rejected: a `<music>` element of its own (a tune is a sound), beats as lengths (a length is already a value), a tracker pattern table (a little language), music resuming where it paused (each library would need a pause).
+- **Looping is the sound's, holding is the key's.** `<loop />` sits on the `<sound>`; a key's `<play>` of a loop is held like a `<move>`, on with the press and off with the release.
+  - Elsewhere `<play>` turns it on and `<silence>` off.
+  - A loop is state, not an event: `Engine` compares the set that is on with what it told the `Audio` each frame, so silencing and asking again in one frame does not restart it.
+  - `<silence>` was chosen over `<stop>` (an object's verb).
+- **Music is parts and a state's own sound.** A `<sound>` of `<part>`s plays them at once, as a chip's channels did; a sum past full scale is cut off, with no automatic scaling, so `<volume>` stays the author's.
+  - `<music sound>` on a state loops while it is current, so a pause silences it with nothing written on the pause key; one that does not loop plays as the state begins.
+  - Rejected: a `<music>` element of its own (a tune is a sound), beats as lengths (a length is already a value), a tracker pattern table (a little language), music resuming where it paused (each library would need a pause).
 - **A short fade (about 2 ms), no envelope.**
 - **One voice per sound,** like a chip channel: replaying restarts it; different sounds overlap.
 - **The game asks, the engine plays.** `<play>` queues a name; `Engine` plays the queue at the end of `step()`. `Game` never touches audio, so tests read the requests.

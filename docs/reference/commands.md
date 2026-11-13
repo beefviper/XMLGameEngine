@@ -98,7 +98,7 @@ An object out of play does nothing when its action is pressed or triggered; lett
 | `<enter scene="room2" />`, `<enter way="east" />` | makes that scene current; the one left stays as it was |
 | `<reveal object="blocks">count</reveal>` | brings back the first `count` (default 1) out of play, where they started |
 | `<fire object="shot" />` | launches a copy of a piece (a top-level `<objects>` entry; anything else stops the load): along an aim; else from its facing side; else from its nose along a heading; else from its top with the shot's own velocity |
-| `<spawn object="ball">`, `<spawn object="debris"><count>4</count></spawn>` | a new copy (or `<count>` of them), placed and moving as its `<position>`, `<velocity>`, `<acceleration>` say, read as it runs: `<x><centered>self.x + 5</centered></x>`. A half of the position left out is the middle of the object running it (with none, where the piece says); its velocity left out is the piece's own. Refused only when not one may be made |
+| `<spawn object="ball">`, `<spawn object="debris"><count>4</count></spawn>` | a new copy (or `<count>` of them), placed and moving as its `<position>`, `<velocity>`, `<acceleration>` say, read as it runs: `<x><centered><add><value>self.x</value><value>5</value></add></centered></x>`. A half of the position left out is the middle of the object running it (with none, where the piece says); its velocity left out is the piece's own. Refused only when not one may be made |
 | `<despawn />`, `<despawn object="bomb" />` | takes it, or every copy of that name, out of the game ([spawn and despawn](objects.md#spawn-and-despawn)) |
 
 ## Numbers

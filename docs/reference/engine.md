@@ -29,7 +29,11 @@ Then the sounds asked for play, loops start or stop, and the frame is drawn: wha
 
 An object is **in play** when it is not out of play (`<waiting />`, dead, despawned) and belongs to the current state, its current scene, or the game, or is shown by the state. Movement is pixels per frame and timers count frames; there is no time step.
 
-**Pace.** `Engine::loop` keeps the game at its `<framerate>` by the clock: each time round it plays as many whole frames as the time passed owes, then draws once. Every library waits for the screen's refresh (vsync) but sets no speed of its own, so a game plays at the same speed with any library and on any screen. After a stall of more than four frames (the window dragged, a breakpoint) the game goes on from now instead of racing to catch up. `xgegui` runs `step()` and `render()` from its own timer.
+**Pace.** `Engine::loop` keeps the game at its `<framerate>` by the clock: each time round it plays as many whole frames as the time passed owes, then draws once.
+
+- Every library waits for the screen's refresh (vsync) but sets no speed of its own, so a game plays at the same speed with any library and on any screen.
+- After a stall of more than four frames (the window dragged, a breakpoint) the game goes on from now instead of racing to catch up.
+- `xgegui` runs `step()` and `render()` from its own timer.
 
 ## Backends
 
@@ -69,7 +73,9 @@ cmake --build build --target xgetest-long && output/Debug/xgetest-long   # minut
 - **Output.** Everything to run lands in `output/<Config>/`: the programs, a copy of `games/` with the schema, and the libraries in `libraries/` (found through a manifest on Windows, a relative run path elsewhere). The folder can be copied anywhere.
 - **Dependencies** are found through vcpkg or the system, or fetched and built (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are only found, never fetched. CMake modules are in `scripts/cmake/`.
 - **Warnings** stay at zero under a strict set on GCC, Clang and MSVC (`xge_warnings()`, `platform.cmake`).
-- **Sanitizers** (GCC and Clang, off unless asked for): `-DXGE_SANITIZE=address` checks memory and undefined behaviour, `-DXGE_SANITIZE=thread` data races. Only the project's own targets are instrumented, unoptimized (`-O0`) and without the strict warnings: with a sanitizer, either makes GCC take minutes to hours a file. Use a build type of its own (`RelWithDebInfo`) so `output/Release` is left alone, and run with `ASAN_OPTIONS=detect_container_overflow=0`, since the fetched libraries are not instrumented.
+- **Sanitizers** (GCC and Clang, off unless asked for): `-DXGE_SANITIZE=address` checks memory and undefined behaviour, `-DXGE_SANITIZE=thread` data races.
+  - Only the project's own targets are instrumented, unoptimized (`-O0`) and without the strict warnings: with a sanitizer, either makes GCC take minutes to hours a file.
+  - Use a build type of its own (`RelWithDebInfo`) so `output/Release` is left alone, and run with `ASAN_OPTIONS=detect_container_overflow=0`, since the fetched libraries are not instrumented.
 
 Design: [build-and-layout](../designs/51-build-and-layout.md).
 

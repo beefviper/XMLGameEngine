@@ -8,7 +8,10 @@
 - Looked at: VGDL (compact, unfamiliar, no schema tooling), YAML (weaker validation), JSON (no comments).
 - **One file, not rules plus level:** blocks are a group in columns and rows or an ASCII `<map>`; pictures are bitmaps. No level files, XInclude or shared files across games.
 - **One list of object parts** (`objectParts`), used by objects, groups and map pieces, so they cannot drift apart. Before, four copies had drifted.
-- **Three settings, three jobs:** `<waiting />` is out of play until revealed; `<hidden />` is in play but unseen; `<off />` in collisions is seen but touches nothing. They were `<active>false</active>`, `<drawn>false</drawn>` and `<enabled>false</enabled>`, true/false content in a language whose other choices are empty tags or picks; the author chose the empty tags. A setting an outer piece makes and a take undoes has its pair (`<ready />` for `<waiting />`), and in the one change rule either written replaces the other. `<lockstep />` and the window's `<fullscreen />` went the same way.
+- **Three settings, three jobs:** `<waiting />` is out of play until revealed; `<hidden />` is in play but unseen; `<off />` in collisions is seen but touches nothing.
+  - They were `<active>false</active>`, `<drawn>false</drawn>` and `<enabled>false</enabled>`, true/false content in a language whose other choices are empty tags or picks; the author chose the empty tags.
+  - A setting an outer piece makes and a take undoes has its pair (`<ready />` for `<waiting />`), and in the one change rule either written replaces the other.
+  - `<lockstep />` and the window's `<fullscreen />` went the same way.
 - **A verb's one number is its content:** `<chase object="hero">2</chase>`; extras follow as named tags (`<hop direction="up">40<seconds>0.3</seconds></hop>`). One rule beats remembering which verbs wrap their number.
 - **Defaults for boilerplate:** background black, not fullscreen, 60 frames a second, and a written `<collisions>` is on. No `<collisions>` still touches nothing.
 - The schema fixes child order; the engine looks elements up by name. A game with no schema location skips validation.

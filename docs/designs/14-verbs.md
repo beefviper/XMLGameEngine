@@ -4,7 +4,10 @@
 
 ## What we looked for
 
-One place for everything the engine knows about a verb. A verb used to be spread over about ten: the schema, a list of tag names and a branch of `readCommand` in `load/xml.cpp`, a branch of `makeCommand`, a `Cmd*` struct, a lambda in `CommandExecutor::run`, a case of the load-time check, a table of places, a second table of tag names for messages, and the generator. Adding one widened every list, and removing one cost as much, so none were removed.
+One place for everything the engine knows about a verb.
+
+- A verb used to be spread over about ten: the schema, a list of tag names and a branch of `readCommand` in `load/xml.cpp`, a branch of `makeCommand`, a `Cmd*` struct, a lambda in `CommandExecutor::run`, a case of the load-time check, a table of places, a second table of tag names for messages, and the generator.
+- Adding one widened every list, and removing one cost as much, so none were removed.
 
 ## The shape
 
@@ -16,7 +19,10 @@ One place for everything the engine knows about a verb. A verb used to be spread
 
 ## Choices
 
-- **A written list, not files that add themselves.** A file-level object that registers itself is the usual way, and reads well. But the engine is a static library, and a linker takes from a library only the files something names: a self-registering verb would be left out, silently, unless every program linking the engine passed a whole-archive flag, spelt differently by each compiler. `all.cpp` names each verb once. A test holds the list against the schema's groups of commands, and against the generator's list of files, so a forgotten line fails.
+- **A written list, not files that add themselves.** A file-level object that registers itself is the usual way, and reads well.
+  - But the engine is a static library, and a linker takes from a library only the files something names: a self-registering verb would be left out, silently, unless every program linking the engine passed a whole-archive flag, spelt differently by each compiler.
+  - `all.cpp` names each verb once.
+  - A test holds the list against the schema's groups of commands, and against the generator's list of files, so a forgotten line fails.
 - **Places as the engine has them, narrower than the schema's.** The schema sorts commands into groups and each place takes some groups; the engine also knows that a `<wrap />` does nothing against another object. Each form names its places from the same groups (`places::changes`, `places::self`...), and the test checks that no verb goes where the schema would refuse it.
 - **A condition in an action is not a verb.** It is the list's own flow, run and checked by the code that walks the list.
 - **Compiled as one.** Seventy-five small files each including the game's headers would more than double the time a generated program takes to build, so CMake compiles the folder as one unit (`UNITY_GROUP`). Hence a verb's functions are named for it (`makeBounce`, `runBounce`), not hidden in an unnamed namespace where two files' would collide.

@@ -95,7 +95,10 @@ The author asked another AI to write three games (Berserk, Demon Attack, Frostbi
 - a variable with no owner (`<inc variable="score">`);
 - a spare projectile that started in play and flew off.
 
-**Lesson:** the vocabulary was enough (no tag was added), but the schema could not tell an author a command was in the wrong place. **Chosen:** the loader refuses, as errors not warnings, unknown keys and colours, a command where it does nothing, and a change to a variable no object has, each naming what to write instead, with a "did you mean". Where a command works is `ruleFor` in `load/check.cpp`; later the schema's command groups said the same ([file format](02-file-format.md#commands-in-groups)).
+**Lesson:** the vocabulary was enough (no tag was added), but the schema could not tell an author a command was in the wrong place.
+
+- **Chosen:** the loader refuses, as errors not warnings, unknown keys and colours, a command where it does nothing, and a change to a variable no object has, each naming what to write instead, with a "did you mean".
+- Where a command works is `ruleFor` in `load/check.cpp`; later the schema's command groups said the same ([file format](02-file-format.md#commands-in-groups)).
 
 ### The rewrites
 

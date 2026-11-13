@@ -16,7 +16,11 @@ Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from 
 ## Operations
 
 - **One value tag, nested:** an operation written straight in a value, its operands `<value>`s holding a name, a number, a `<random>` or another operation. Precedence is the nesting; a chain (`a - b - c`) is one operation of three values.
-- **Chosen by the author, after the survey below: no wrapper and no operand names** (`<x><subtract><value>window.right</value><value>4</value></subtract></x>`). It was a `<formula>` wrapper with operands named for what they are (`augend`/`addend`, `minuend`/`subtrahend`, `multiplicand`/`multiplier`, `dividend`/`divisor`): the order already says it, so they were words to learn. Kept: nesting is precedence, which the author wants for turning a game into another language later. Rejected: a start and steps read in order (`<value>cell</value><times>8</times><plus>16</plus>`), shorter but with no precedence. One table, `operationShape` in `game/command.cpp`, drives loader, evaluator and printer.
+- **Chosen by the author, after the survey below: no wrapper and no operand names** (`<x><subtract><value>window.right</value><value>4</value></subtract></x>`).
+  - It was a `<formula>` wrapper with operands named for what they are (`augend`/`addend`, `minuend`/`subtrahend`, `multiplicand`/`multiplier`, `dividend`/`divisor`): the order already says it, so they were words to learn.
+  - Kept: nesting is precedence, which the author wants for turning a game into another language later.
+  - Rejected: a start and steps read in order (`<value>cell</value><times>8</times><plus>16</plus>`), shorter but with no precedence.
+  - One table, `operationShape` in `game/command.cpp`, drives loader, evaluator and printer.
 - **An operand is a name or a number, never an expression,** or `<value>a + b</value>` brings the hidden string back.
 - **A divisor of 0** is the engine's to catch, since XSD cannot see what a name holds. Certainly 0 at load stops the load; 0 only because an input is not final yet (a size not yet measured) gives 0 and is worked out again; while running it gives 0 and one warning. A `late` flag tells these apart.
 - **One form, not two.** A flat `<equation>` of steps (three-address code) was built beside it, then dropped: two structured spellings of one thing are one too many, and its operands as attributes broke the format's rule.
@@ -36,7 +40,11 @@ Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from 
 
 ## The survey for no arithmetic in text
 
-Plan task R12 counted every game text that calculates: 900, of which 627 are an `<x>` or `<y>`, 109 a size and 93 a number for `<set>`, `<inc>` or `<dec>`. By shape: a name plus or minus a number 382; names added or taken away 157; a name times a number (and a number) 143; a name and a name times a number 44; a number less a name 38; with a division 94; longer 42. 199 start from a `window.` name, and 100 are card layouts on `cardwidth` or `cardheight`. So three in four are one name changed once or twice. All 900 were converted to operations and sides, with every start number unchanged.
+Plan task R12 counted every game text that calculates: 900, of which 627 are an `<x>` or `<y>`, 109 a size and 93 a number for `<set>`, `<inc>` or `<dec>`.
+
+- By shape: a name plus or minus a number 382; names added or taken away 157; a name times a number (and a number) 143; a name and a name times a number 44; a number less a name 38; with a division 94; longer 42. 199 start from a `window.` name, and 100 are card layouts on `cardwidth` or `cardheight`.
+- So three in four are one name changed once or twice.
+- All 900 were converted to operations and sides, with every start number unchanged.
 
 ## Schema
 

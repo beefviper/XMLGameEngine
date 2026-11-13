@@ -16,7 +16,9 @@ Turn games on cells. Maps of cells already knew which piece is where; missing we
 
 ## The picker
 
-- **A picker, not a selected piece.** `<pick />` and `<place />` are self verbs of a cursor using its cell. A refused verb ends its list, so `<place /><pass object="players" />` passes the turn only when a move is made. Whose turn it is is a [players group](07-states-and-conditions.md#players-as-a-group): each member `<owns class>` its pieces, and the cursor plays the class of the member on its turn (it was a `turn` variable and a cursor look per player).
+- **A picker, not a selected piece.** `<pick />` and `<place />` are self verbs of a cursor using its cell.
+  - A refused verb ends its list, so `<place /><pass object="players" />` passes the turn only when a move is made.
+  - Whose turn it is is a [players group](07-states-and-conditions.md#players-as-a-group): each member `<owns class>` its pieces, and the cursor plays the class of the member on its turn (it was a `turn` variable and a cursor look per player).
 - The cursor sits on **a map of its own** over the board, so it walks over pieces without touching them.
 - Rejected: an `<alternate>`-style word (that swaps whole games), crowning by a condition (conditions have no `self`), marking the held piece by its look (every piece would need held looks).
 

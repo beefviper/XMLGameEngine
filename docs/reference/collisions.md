@@ -28,7 +28,10 @@ In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<t
   </collision>
   ```
 - What a rule can do is what its place takes ([where commands go](commands.md#where-a-command-can-go)).
-- **`other` is what it touched.** In a rule about another object, `other` names the object touched wherever a command or a condition names an object or a variable's owner: `<inc variable="other.score">800</inc>`, `<reset object="other" />`, `<condition object="other" variable="blink">`. So a coin's one `<collision class="brother">` pays whichever brother took it. The rule is made at load once for each object of the file it can touch (of its class, in its state), each checked as if written with that name, so `other.score` stops the load if one of them has no `score`; a spawned copy that is touched gets its own the first time. Nothing it can touch stops the load, and `other` outside such a rule (an edge, an action, a state) names nothing.
+- **`other` is what it touched.** In a rule about another object, `other` names the object touched wherever a command or a condition names an object or a variable's owner: `<inc variable="other.score">800</inc>`, `<reset object="other" />`, `<condition object="other" variable="blink">`.
+  - So a coin's one `<collision class="brother">` pays whichever brother took it.
+  - The rule is made at load once for each object of the file it can touch (of its class, in its state), each checked as if written with that name, so `other.score` stops the load if one of them has no `score`; a spawned copy that is touched gets its own the first time.
+  - Nothing it can touch stops the load, and `other` outside such a rule (an edge, an action, a state) names nothing.
 
 ## Rule filters
 

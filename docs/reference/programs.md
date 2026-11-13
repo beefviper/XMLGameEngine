@@ -29,7 +29,10 @@ xgecli pong frogger --check -x tinyxml2
 
 **Options.** A short option takes its value attached or spaced (`-gpong`, `-g pong`); a long one needs the space (`--game pong`, never `--game=pong`). Names are not case sensitive, and each option may be given once. Only libraries this build has can be named ([backends](engine.md#backends)). `--record`, `--check` and `--generate` are long only and do not go together.
 
-**Finding the game.** In order: as given; its file name in the working directory; `descriptions/` of the **games folder**. The games folder is the first folder holding both `descriptions/` and `assets/`, looked for in the working directory, the program's folder and the folder above, each itself and then its `games/`. The program then makes the games folder its working directory, so it runs from anywhere and asset paths (`assets/paddle.jpg`) are relative to it (`engine/folder.h`).
+**Finding the game.** In order: as given; its file name in the working directory; `descriptions/` of the **games folder**.
+
+- The games folder is the first folder holding both `descriptions/` and `assets/`, looked for in the working directory, the program's folder and the folder above, each itself and then its `games/`.
+- The program then makes the games folder its working directory, so it runs from anywhere and asset paths (`assets/paddle.jpg`) are relative to it (`engine/folder.h`).
 
 **Output.** It prints the file, window, XML and sound library it chose, one a line. A game that will not load (schema, an expression, a name it does not have) prints a message saying where, and exits.
 

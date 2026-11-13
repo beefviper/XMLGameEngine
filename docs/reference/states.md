@@ -1,6 +1,10 @@
 # States and scenes
 
-A **state** is a mode of the game. Every game names its four the same: `title`, `playing`, `paused` and `over`, the one end screen, whose message has a look per outcome picked by the condition that ends the game (`<become object="over.message" sprite="won" />` then `<push state="over" />`). Other states are moments inside play (`ready`, `point`). A state played in several places holds them as **scenes**. **Conditions** are tests checked every frame.
+A **state** is a mode of the game. Every game names its four the same: `title`, `playing`, `paused` and `over`, the one end screen, whose message has a look per outcome picked by the condition that ends the game (`<become object="over.message" sprite="won" />` then `<push state="over" />`).
+
+- Other states are moments inside play (`ready`, `point`).
+- A state played in several places holds them as **scenes**.
+- **Conditions** are tests checked every frame.
 
 ## States
 
@@ -42,7 +46,7 @@ A **state** is a mode of the game. Every game names its four the same: `title`, 
 ```xml
 <state name="initial2" from="initial1">     <!-- Galaxian: the second letter of a high score -->
   <objects>
-    <object name="cursor"><position><x>letters + letterstep</x></position></object>
+    <object name="cursor"><position><x><add><value>letters</value><value>letterstep</value></add></x></position></object>
   </objects>
   <inputs>
     <input><button>space</button><pop state="initial3" /></input>
@@ -141,7 +145,11 @@ A condition is checked every frame while its state (or scene) is current. It hol
 - **`sprite="settling"`** looks only at the matched objects showing that look. With no test tag, showing it is the test: `<condition object="table" sprite="settling">` holds while the table shows `settling`. A look none of them has stops the load. Where a game is in its turn (betting, playing, settling) is a look of one object, changed with `<become>`, not a number.
 
 - **`<lowest />` and `<highest />`** are tests too: they hold for the one matched whose variable is lowest (or highest) of all those matched, the first of a tie.
-- **`self` and `others`.** In a condition matching a class (or a group), `self` is each one it holds for and `others` the rest of those it matches: `<inc variable="self.score">self.got</inc>`, `<inc variable="others.score">26</inc>`, and `sprite="self"` in a `<become>` is the look named after it. What names `self` or `others` runs for each one it holds for, in order; the rest of its commands once, after. With class= and no test at all, it holds for each one there. A total (`total=`, `<remaining>`) holds for no one object, so its commands cannot name them. In a condition in a condition, they are what the innermost test matches.
+- **`self` and `others`.** In a condition matching a class (or a group), `self` is each one it holds for and `others` the rest of those it matches: `<inc variable="self.score">self.got</inc>`, `<inc variable="others.score">26</inc>`, and `sprite="self"` in a `<become>` is the look named after it.
+  - What names `self` or `others` runs for each one it holds for, in order; the rest of its commands once, after.
+  - With class= and no test at all, it holds for each one there.
+  - A total (`total=`, `<remaining>`) holds for no one object, so its commands cannot name them.
+  - In a condition in a condition, they are what the innermost test matches.
 
 ```xml
 <!-- the hand over and someone at 100: the lowest score wins -->
@@ -157,13 +165,18 @@ A condition is checked every frame while its state (or scene) is current. It hol
 
 ### Conditions in conditions
 
-A condition holds conditions after its test. They are checked only while it holds, in order, the first that holds running. So the test they share is written once. Its commands then go in two blocks, either or both left out: **`<first>`** runs as soon as it holds, before the conditions it holds are checked (what every case does), and **`<otherwise>`** runs when none of them holds. Commands loose beside the conditions it holds stop the load, so which run when is always written.
+A condition holds conditions after its test.
+
+- They are checked only while it holds, in order, the first that holds running.
+- So the test they share is written once.
+- Its commands then go in two blocks, either or both left out: **`<first>`** runs as soon as it holds, before the conditions it holds are checked (what every case does), and **`<otherwise>`** runs when none of them holds.
+- Commands loose beside the conditions it holds stop the load, so which run when is always written.
 
 ```xml
 <condition object="table" sprite="settling">
   <first><become object="table" sprite="done" /></first>
   <condition object="dealer" variable="worth"><above>21</above>
-    <inc variable="table.bank">table.bet * 2</inc>
+    <inc variable="table.bank"><multiply><value>table.bet</value><value>2</value></multiply></inc>
     <become object="result" sprite="dealerbust" />
   </condition>
   <condition object="player" variable="worth"><equal>dealer.worth</equal>

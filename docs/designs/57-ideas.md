@@ -8,11 +8,16 @@
 - Where scrolling could live: **on the camera** (world fixed, a camera object follows a target; most natural, and the camera can use the motion vocabulary), **on the world** (whole world offsets; simple for auto-scroll, awkward when objects need world and screen coordinates), **on regions** (screen divided into bands each with its own scroll; how old hardware did it: a fixed HUD, parallax cheaply, no special cases).
 - Camera behaviors to name: rigid follow, dead zone, lead in the facing direction; lock to the room (screen by screen) or to a track (auto-scroll); forward-only or free.
 - Coordinates: dotted references would need a world/screen qualifier.
-- Level data options: a grid map where characters or numbers stand for object names, expanded at load (close to a group in columns and rows); lists of named placements; tile layers for static scenery with objects for everything that acts; a legend plus rows in XML like academic VGDL. Open: one layer or several, and a tile that fires a rule on entry (a trigger next to object collisions; suggested element names hitbox, map, tile). Routes and branches are level data (named exits leading to regions), not a verb.
+- Level data options: a grid map where characters or numbers stand for object names, expanded at load (close to a group in columns and rows); lists of named placements; tile layers for static scenery with objects for everything that acts; a legend plus rows in XML like academic VGDL.
+  - Open: one layer or several, and a tile that fires a rule on entry (a trigger next to object collisions; suggested element names hitbox, map, tile).
+  - Routes and branches are level data (named exits leading to regions), not a verb.
 
 ## Targets and capability profiles (long term)
 
-- One game description, several **targets** with their own limits: resolution, color count and palette rules, sprites per frame and scanline, sprite size and colors, audio channels, input devices, memory. The toolchain does its best and **reports what it gave up**: too many objects (some dropped or flickered), a sprite using too many colors (reduced), "a file named here could be recreated by hand". The list of assets to redo is the useful part. The declarative version is stronger than a 8-bit toolkit that swaps target code, because the description has no machine code.
+- One game description, several **targets** with their own limits: resolution, color count and palette rules, sprites per frame and scanline, sprite size and colors, audio channels, input devices, memory.
+  - The toolchain does its best and **reports what it gave up**: too many objects (some dropped or flickered), a sprite using too many colors (reduced), "a file named here could be recreated by hand".
+  - The list of assets to redo is the useful part.
+  - The declarative version is stronger than a 8-bit toolkit that swaps target code, because the description has no machine code.
 - Old hardware tricks the language might say or know about: reusing the sprite budget mid-frame, a sprite-vs-background hit as a timing signal to split the screen (fixed status bar, scrolling playfield), scanline interrupts. These are implementation techniques; the declarative layer would say there are two regions and a limit and the target decides how.
 - Null and software backends: a null implementation of each subsystem removes "does it exist" checks (null audio makes play-a-sound always safe; a scripted null input drives tests and AI players); a software renderer is the last fallback.
 - Tables as data: keep a machine's capability or instruction table in a file, translate it once at start-up into handlers, then never look up strings in the hot path. The same shape fits target profiles and verb names resolved at load.
@@ -20,7 +25,9 @@
 
 ## Machine-readable view of a running game
 
-- Export a compact state (positions, velocities, score, brick grid) each frame or step so an AI agent or test reads structured text instead of pixels. Pieces: frame-step the game, or split a fast reflex controller from a slow decision loop; render to a texture and dump a PNG per step for vision; for existing commercial games, emulators with frame stepping, save states, RAM search and scripting (BizHawk, RetroArch). The author's larger goal: an AI that reverse-engineers a game the way a person does (find the lives counter by losing a life) and describes the scene in plain English.
+- Export a compact state (positions, velocities, score, brick grid) each frame or step so an AI agent or test reads structured text instead of pixels.
+  - Pieces: frame-step the game, or split a fast reflex controller from a slow decision loop; render to a texture and dump a PNG per step for vision; for existing commercial games, emulators with frame stepping, save states, RAM search and scripting (BizHawk, RetroArch).
+  - The author's larger goal: an AI that reverse-engineers a game the way a person does (find the lives counter by losing a life) and describes the scene in plain English.
 - Relevance: an engine whose whole state is declared in XML is easy to export from. A null input driven by a scripted or learned player through the same command queue as a human ([states-and-conditions](07-states-and-conditions.md)).
 
 ## Game and mechanic ideas

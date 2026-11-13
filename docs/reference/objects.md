@@ -51,7 +51,10 @@ A group's member, a map's piece and a piece of the top-level `<objects>` have th
 
 An object with no `<sprite>` only holds numbers or cards: never drawn, at 0, 0 unless it gives a `<position>` (where a hand it `<holds>` spreads from), and it must have `<variables>`, `<timers>` or `<holds>`. Keep score, lives and clock on one that no state draws (Pitfall's `status`), so resetting the player does not touch them.
 
-An empty `<sprite name="dealing" />` is a look that draws nothing. An object whose looks are all empty keeps only where something is up to (Hearts' `table`: playing, full, taking, done, dealing), which rules test and `<become>` changes, and like a holder needs no `<position>`; `<hidden />` on it is an error. A look with a picture beside empty ones draws nothing while it wears an empty one (a message's `none`), and a member's `<sprite name="free" />` leaves it unseen in a look its group draws (the computer's players in Hearts).
+An empty `<sprite name="dealing" />` is a look that draws nothing.
+
+- An object whose looks are all empty keeps only where something is up to (Hearts' `table`: playing, full, taking, done, dealing), which rules test and `<become>` changes, and like a holder needs no `<position>`; `<hidden />` on it is an error.
+- A look with a picture beside empty ones draws nothing while it wears an empty one (a message's `none`), and a member's `<sprite name="free" />` leaves it unseen in a look its group draws (the computer's players in Hearts).
 
 ```xml
 <object name="status">
@@ -70,8 +73,8 @@ A `<group>` is several objects written once. It gives what its members share, th
 
 ```xml
 <group name="logrow3" class="logs">
-  <sprite><rectangle><width>3 * cell</width><height>body</height><color>color.brown</color></rectangle></sprite>
-  <position><y>3 * cell</y></position>                 <!-- the row, once -->
+  <sprite><rectangle><width><multiply><value>cell</value><value>3</value></multiply></width><height>body</height><color>color.brown</color></rectangle></sprite>
+  <position><y><multiply><value>cell</value><value>3</value></multiply></y></position>                 <!-- the row, once -->
   <velocity><x>-1</x></velocity>
   <collisions><collision edge="horizontal"><wrap /></collision></collisions>
   <member><position><x>20</x></position></member>      <!-- where each starts -->
@@ -99,7 +102,7 @@ A group can hold groups instead of members; **an inner group takes from the one 
     <group name="logrow2">
       <columns>3</columns>
       <padding><x>(window.right + 180) / 3 - 180</x></padding>
-      <position><x>20</x><y>2 * cell + 6</y></position>
+      <position><x>20</x><y><add><value><multiply><value>cell</value><value>2</value></multiply></value><value>6</value></add></y></position>
       <velocity><x>1.4</x></velocity>
     </group>
     <group name="logrow4"> ... </group>

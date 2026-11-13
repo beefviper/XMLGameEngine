@@ -57,6 +57,6 @@ A `<path>` is a route written once in the game's `<paths>`, flown by any object 
 - A `<step>` moves it by `<x>` across and `<y>` down from where the step began, in a straight line, running its commands as it sets off. In them `self` is whichever object flies it.
 - `<home />` flies it back to its `<position>` (moved by any `<shift>` since): a formation is just the objects' places. At the end of the path it comes to rest.
 - A path sets the velocity each frame, so the follower moves, wraps and collides as anything does. A `<wrap />` on the way leaves the rest of the step alone: Galaxian's dive adds up to the window's height plus the alien's, so a diver that misses comes back from the top to its place.
-- A step's `<x>` or `<y>` naming something live, or `self`, is worked out as the step starts: `<x>ship.x - self.x</x>` dives toward the ship. Every other number on a path is fixed at load.
+- A step's `<x>` or `<y>` naming something live, or `self`, is worked out as the step starts: `<x><subtract><value>ship.x</value><value>self.x</value></subtract></x>` dives toward the ship. Every other number on a path is fixed at load.
 - An object on a path finishes it first; a reset, `<die />`, `<stop />` or `<reveal>` ends it. A timer `<every>0.1</every>` with `<follow path="lap" />` sends it round again whenever it finishes.
 - One with a `<heading>` faces the way it flies.

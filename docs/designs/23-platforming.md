@@ -15,7 +15,11 @@ Donkey Kong: Jumpman and barrels stand on girders, a barrel rolls off an open en
 ## Chosen
 
 - **`<land />`** acts only on the faller's bottom against the other's top, only when not going up, and marks it on the ground until the next frame. The pull keeps acting, so it walks off an open end by itself. One-way platforms: jumped up through.
-- **`<jump>height</jump>`:** the speed up is `sqrt(2 * pull * height)`, so the author gives the height. Only from the ground; no air control. The loader refuses a jump with no pull or no `<land />` rule. First called `<leap>`, while `<jump>` was a straight timed move used only by Frostbite; that move was a timed `<hop>` under another name, so Frostbite took `<hop>` and the platform jump took the word every 2D platformer uses. A hop goes to a place (Frogger, Q*bert, Frostbite); a jump goes up and falls.
+- **`<jump>height</jump>`:** the speed up is `sqrt(2 * pull * height)`, so the author gives the height.
+  - Only from the ground; no air control.
+  - The loader refuses a jump with no pull or no `<land />` rule.
+  - First called `<leap>`, while `<jump>` was a straight timed move used only by Frostbite; that move was a timed `<hop>` under another name, so Frostbite took `<hop>` and the platform jump took the word every 2D platformer uses.
+  - A hop goes to a place (Frogger, Q*bert, Frostbite); a jump goes up and falls.
 - **`<climb direction class>step</climb>`:** finds a ladder under the climber's middle, lines it up, moves it with no pull. **The step is a velocity**, so the sweep sees two climbers on one ladder. Rejected: a special pass for climbers.
 - A move key changes only its own axis, so walking does not stop a fall.
 - **Sloped girders are a layout:** `<slope>` drops each column so much, a staircase of pieces half a pixel apart, as the arcade drew them. Rejected: landing on a line at an angle.
