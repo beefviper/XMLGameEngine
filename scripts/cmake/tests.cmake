@@ -188,6 +188,8 @@ catch_discover_tests(xgetest
 add_executable(xgetest-generated EXCLUDE_FROM_ALL
 	"xge/tests/helpers/test_main.cpp"
 	"xge/tests/generated/test_generated_games.cpp"
+	"xge/tests/generated/test_written_games.cpp"
+	"xge/tests/generated/written.h"
 )
 # Visual Studio's Build Solution leaves it out too.
 set_target_properties(xgetest-generated PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD ON)
@@ -250,7 +252,43 @@ file(WRITE "${XGE_GENERATED_DIR}/generated_games.h.in"
 	"struct GeneratedGame\n{\n\tconst char* file;\n\txge::GameData (*describe)();\n};\n\n"
 	"inline const GeneratedGame generatedGames[] = {\n${generated_entries}};\n")
 configure_file("${XGE_GENERATED_DIR}/generated_games.h.in" "${XGE_GENERATED_DIR}/generated_games.h" COPYONLY)
-target_include_directories(xgetest-generated PRIVATE "${XGE_GENERATED_DIR}" xge/tests/helpers)
+target_include_directories(xgetest-generated PRIVATE "${XGE_GENERATED_DIR}" xge/tests/helpers xge/tests/generated)
+
+# The games windows-cpp writes (plan A5), each with the class it is written
+# as, a line for each it learns: generated into build/generated/windows-cpp/
+# and compiled in, so test_written_games.cpp plays each beside its file.
+# test_generate.cpp holds the same list.
+set(windows_cpp_games
+	"pong_min=pong_min::Pong")
+set(written_includes "")
+set(written_entries "")
+foreach(entry IN LISTS windows_cpp_games)
+	string(REPLACE "=" ";" parts "${entry}")
+	list(GET parts 0 game)
+	list(GET parts 1 class)
+	set(folder "${XGE_GENERATED_DIR}/windows-cpp/${game}")
+	add_custom_command(
+		OUTPUT "${folder}/source/${game}.cpp" "${folder}/source/${game}.h"
+		COMMAND xgecli "${game}" --generate windows-cpp -o "${folder}"
+		WORKING_DIRECTORY "${XGE_OUTPUT_DIR}"
+		DEPENDS xgecli xgedata "${CMAKE_CURRENT_SOURCE_DIR}/games/descriptions/${game}.xml" ${generator_files}
+		COMMENT "Generating ${game}.xml as windows-cpp for the tests")
+	target_sources(xgetest-generated PRIVATE "${folder}/source/${game}.cpp")
+	string(APPEND written_includes "#include \"windows-cpp/${game}/source/${game}.h\"\n")
+	string(APPEND written_entries "\t{ \"descriptions/${game}.xml\", [] { return written<${class}>(); } },\n")
+endforeach()
+file(WRITE "${XGE_GENERATED_DIR}/written_games.h.in"
+	"// written_games.h\n"
+	"// XML Game Engine\n"
+	"// author: beefviper\n"
+	"// date: Nov 13, 2026\n"
+	"//\n"
+	"// Written by scripts/cmake/tests.cmake: the games windows-cpp writes.\n\n"
+	"#pragma once\n\n"
+	"#include \"written.h\"\n\n"
+	"${written_includes}\n"
+	"inline const WrittenGame writtenGames[] = {\n${written_entries}};\n")
+configure_file("${XGE_GENERATED_DIR}/written_games.h.in" "${XGE_GENERATED_DIR}/written_games.h" COPYONLY)
 
 # The long tests are a third test program, xgetest-long, built and run only
 # when asked for (cmake --build build --target xgetest-long, then

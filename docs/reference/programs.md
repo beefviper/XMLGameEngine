@@ -115,4 +115,6 @@ windows-cpp cannot write these parts of pong.xml yet; use engine-cpp for this ga
   ...
 ```
 
+`xgetest-generated` also generates each game `windows-cpp` covers and plays it beside the engine for ten seeds, every object compared every frame.
+
 `xgetest-generated` (`cmake --build build --target xgetest-generated`, never in an ordinary build) generates every game, compares its compiled data with what `readGame` reads from the file field by field, and plays the two side by side frame by frame. Without libxslt, `xgecli` is built without `--generate` and says so. Design: [generator](../designs/40-generator.md).
