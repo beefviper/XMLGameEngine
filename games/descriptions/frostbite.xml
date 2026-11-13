@@ -35,8 +35,12 @@
     bottom course first, so <reveal> builds it from the ground up.
   * The cold is a state <timer> taking a degree a second off the
     thermometer; another brings the fish back from time to time.
-  * Paused, home and frozen draw the shore and the ice still underneath
-    (<show state="playing" />).
+  * In the water or out of warmth, Bailey goes out of play and the state
+    sinking or frozen stands everything still while a stand-in sinks or
+    shivers blue (a <once /> animation); its timer takes the life and
+    <reveal>s him on the shore, which keeps his variables.
+  * Paused, over, sinking and frozen draw the shore and the ice still
+    underneath (<show state="playing" />).
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -266,11 +270,11 @@
             <collision edge="horizontal"><stick /></collision>
             <collision class="floe"><ride /></collision>
             <collision class="goose"><ride /></collision>
+            <!-- out of play while he sinks (the state sinking) -->
             <collision class="water" unless="floe">
-              <dec variable="bailey.lives" />
-              <reset object="thermometer" />
+              <die />
               <play sound="splash" />
-              <reset />
+              <set variable="bailey.sank">1</set>
             </collision>
             <collision class="fish">
               <inc variable="bailey.score">200</inc>
@@ -300,11 +304,13 @@
               <hop direction="down">rowgap<seconds>hoptime</seconds></hop>
               <play sound="jump" />
             </action>
-            <action name="home"><reset /></action>
+            <action name="freeze"><die /></action>
           </actions>
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">4</variable>
+            <!-- in the water: the state sinking comes next -->
+            <variable name="sank">0</variable>
             <variable name="blocks">0</variable>
             <variable name="blue">0</variable>
             <variable name="nights">0</variable>
@@ -379,12 +385,16 @@
           <become object="over.message" sprite="won" />
           <push state="over" />
         </condition>
+        <!-- out of warmth: out of play while he freezes (the state frozen) -->
         <condition object="thermometer" variable="degrees">
           <atmost>0</atmost>
-          <dec variable="bailey.lives" />
-          <reset object="thermometer" />
-          <trigger object="bailey" action="home" />
+          <trigger object="bailey" action="freeze" />
           <play sound="freeze" />
+          <push state="frozen" />
+        </condition>
+        <condition object="bailey" variable="sank"><atleast>1</atleast>
+          <set variable="bailey.sank">0</set>
+          <push state="sinking" />
         </condition>
         <condition object="bailey" variable="blue">
           <atleast>4</atleast>
@@ -404,6 +414,87 @@
         <timer>
           <every>12</every>
           <reveal object="fish" />
+        </timer>
+      </timers>
+    </state>
+    <!-- in the water: Bailey sinks, everything standing still -->
+    <state name="sinking">
+      <objects>
+        <object name="sinker">
+          <sprite name="a"><bitmap from="bailey" /></sprite>
+          <sprite name="b"><bitmap from="sink-1" /></sprite>
+          <sprite name="c"><bitmap from="sink-2" /></sprite>
+          <sprite name="d"><bitmap from="sink-3" /></sprite>
+          <sprite name="e"><bitmap from="sink-4" /></sprite>
+          <animation>
+            <seconds>0.15</seconds>
+            <once />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d" />
+            <frame sprite="e"><seconds>0.6</seconds></frame>
+          </animation>
+          <position><x update="live">bailey.x</x><y update="live">bailey.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.3</after>
+          <dec variable="bailey.lives" />
+          <reset object="thermometer" />
+          <reveal object="bailey" />
+          <reset object="sinker" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
+    <!-- out of warmth: Bailey freezes blue and shivers, everything standing still -->
+    <state name="frozen">
+      <objects>
+        <object name="shiver">
+          <sprite name="a"><bitmap from="frozen-a" /></sprite>
+          <sprite name="b"><bitmap from="frozen-b" /></sprite>
+          <animation>
+            <seconds>0.08</seconds>
+            <once />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a"><seconds>0.4</seconds></frame>
+          </animation>
+          <position><x update="live">bailey.x</x><y update="live">bailey.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.5</after>
+          <dec variable="bailey.lives" />
+          <reset object="thermometer" />
+          <reveal object="bailey" />
+          <reset object="shiver" />
+          <pop />
         </timer>
       </timers>
     </state>
@@ -482,6 +573,102 @@
     </sound>
   </sounds>
   <pictures>
+    <bitmap name="sink-1">
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>..bb..</row>
+      <row>.bbbb.</row>
+      <row>.ffff.</row>
+      <row>..ff..</row>
+      <row>.****.</row>
+      <row>******</row>
+      <row>f.**.f</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+      <color char="f">color.yellow</color>
+    </bitmap>
+    <bitmap name="sink-2">
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>..bb..</row>
+      <row>.bbbb.</row>
+      <row>.ffff.</row>
+      <row>..ff..</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+      <color char="f">color.yellow</color>
+    </bitmap>
+    <bitmap name="sink-3">
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>..bb..</row>
+      <row>.bbbb.</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+      <color char="f">color.yellow</color>
+    </bitmap>
+    <bitmap name="sink-4">
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+      <color char="f">color.yellow</color>
+    </bitmap>
+    <bitmap name="frozen-a">
+      <row>..bb...</row>
+      <row>.bbbb..</row>
+      <row>.ffff..</row>
+      <row>..ff...</row>
+      <row>.****..</row>
+      <row>******.</row>
+      <row>f.**.f.</row>
+      <row>.****..</row>
+      <row>.b..b..</row>
+      <row>bb..bb.</row>
+      <scale>4</scale>
+      <color>color.cyan</color>
+      <color char="b">color.blue</color>
+      <color char="f">color.white</color>
+    </bitmap>
+    <bitmap name="frozen-b">
+      <row>...bb..</row>
+      <row>..bbbb.</row>
+      <row>..ffff.</row>
+      <row>...ff..</row>
+      <row>..****.</row>
+      <row>.******</row>
+      <row>.f.**.f</row>
+      <row>..****.</row>
+      <row>..b..b.</row>
+      <row>.bb..bb</row>
+      <scale>4</scale>
+      <color>color.cyan</color>
+      <color char="b">color.blue</color>
+      <color char="f">color.white</color>
+    </bitmap>
     <bitmap name="ice-white">
       <row>.******..******..*****.</row>
       <row>*******.*******.*******</row>

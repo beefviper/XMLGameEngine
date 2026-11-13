@@ -178,6 +178,10 @@ TEST_CASE("a jump into the water costs a life, the warmth comes back, and Bailey
 	REQUIRE(play.degrees() < 45);
 
 	play.jump(KeyCode::S);
+	CHECK(play.state() == "sinking");
+	CHECK(play.variable("lives") == 4);
+	play.frames(85); // he sinks first, everything standing still
+	CHECK(play.state() == "playing");
 	CHECK(play.variable("lives") == 3);
 	CHECK(play.degrees() == 45);
 	CHECK(play.bailey().position.x == Approx(home.x));
@@ -276,6 +280,9 @@ TEST_CASE("the cold takes a degree a second; at zero Bailey freezes, loses a lif
 	play.bailey().position.x = 300;
 	play.game.getObject("thermometer").variable["degrees"] = 1;
 	play.frames(kFramerate + 1);
+	CHECK(play.state() == "frozen");
+	CHECK(play.variable("lives") == 4);
+	play.frames(95); // he freezes blue and shivers first
 
 	CHECK(play.variable("lives") == 3);
 	CHECK(play.degrees() >= 44);
