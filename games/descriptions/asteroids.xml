@@ -28,7 +28,8 @@
   * Shots wrap round the edges like everything else and run out after a
     second (a timer of their own that <despawn>s them).
   * The ship and its shots are both class "breaker", so each size has one
-    rule for being broken, by either. A ship that is hit goes out of play
+    rule for being broken, by either. A ship that is hit leaves a wreck,
+    whose pieces fly apart <once /> and <then> despawn, goes out of play
     and brings in "centre", a pictureless mark at the middle; two seconds
     on, it is ready, and the ship comes back there once no hazard is within
     150 of it (distance= with total="lowest": the nearest one).
@@ -188,6 +189,23 @@
         <velocity><x>2.5</x></velocity>
       </member>
     </group>
+    <!-- a ship that is hit: its pieces fly apart, then are gone -->
+    <object name="wreck">
+      <sprite name="a"><bitmap from="wreck-a" /></sprite>
+      <sprite name="b"><bitmap from="wreck-b" /></sprite>
+      <sprite name="c"><bitmap from="wreck-c" /></sprite>
+      <sprite name="d"><bitmap from="wreck-d" /></sprite>
+      <animation>
+        <seconds>0.3</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d" />
+        <then><despawn /></then>
+      </animation>
+      <most>1</most>
+    </object>
   </objects>
   <keeps>
     <keep object="best" />
@@ -245,6 +263,7 @@
             <type>pixel</type>
             <collision edge="all"><wrap /></collision>
             <collision class="hazard">
+              <spawn object="wreck" />
               <reveal object="centre" />
               <dec variable="ship.lives" />
               <play sound="boom" />
@@ -528,6 +547,119 @@
     </sound>
   </sounds>
   <pictures>
+    <!-- a ship that is hit: its pieces fly apart and break up -->
+    <bitmap name="wreck-a">
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>...........*............</row>
+      <row>...........*............</row>
+      <row>...........**...........</row>
+      <row>..........*.***.........</row>
+      <row>..........*.*.**........</row>
+      <row>..........*..*..........</row>
+      <row>.......*.....*..**......</row>
+      <row>........*......*........</row>
+      <row>.........***.**.........</row>
+      <row>............**..........</row>
+      <row>..........**............</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="wreck-b">
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>............*...........</row>
+      <row>............*...........</row>
+      <row>..........*.*...........</row>
+      <row>..........*.***.........</row>
+      <row>.........*..*..**.......</row>
+      <row>........*...*....*......</row>
+      <row>............*...........</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>.....*..................</row>
+      <row>......*............**...</row>
+      <row>......**........***.....</row>
+      <row>........*.....**........</row>
+      <row>.........*..............</row>
+      <row>..........*****.........</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="wreck-c">
+      <row>..............*.........</row>
+      <row>.............*..........</row>
+      <row>............*...*.......</row>
+      <row>.........*..*...*.......</row>
+      <row>........*...*...*.......</row>
+      <row>......**...*.....*......</row>
+      <row>..........*.......*.....</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>...*....................</row>
+      <row>...*....................</row>
+      <row>....*............****...</row>
+      <row>.....*...............***</row>
+      <row>.....*..................</row>
+      <row>.....*..................</row>
+      <row>..........**............</row>
+      <row>............*...........</row>
+      <row>.............**.........</row>
+      <row>........................</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="wreck-d">
+      <row>.............*..........</row>
+      <row>............*...........</row>
+      <row>......**...*......*.....</row>
+      <row>..................*.....</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>...*.................*..</row>
+      <row>..*...................*.</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>........................</row>
+      <row>............*...........</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
     <drawing name="mediumrock">
       <line><from><x>27</x><y>28</y></from><to><x>20</x><y>35</y></to><thickness>2</thickness></line>
       <line><from><x>20</x><y>35</y></from><to><x>10</x><y>34</y></to><thickness>2</thickness></line>

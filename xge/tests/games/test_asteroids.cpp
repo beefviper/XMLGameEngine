@@ -348,10 +348,10 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 			}
 		}
 
-		CHECK(descriptions == 3 + 3 + 3); // three shapes of each smaller rock, and the three shots
+		CHECK(descriptions == 3 + 3 + 3 + 1); // three shapes of each smaller rock, the three shots, and the ship's wreck
 		CHECK(turns == 2);
 		CHECK(thrusts == 1);
-		CHECK(breaks == (4 + 3) * 2); // every big rock and medium shape hands out smaller ones, hit by a shot or a saucer
+		CHECK(breaks == (4 + 3) * 2 + 1); // every big rock and medium shape hands out smaller ones, hit by a shot or a saucer; a hit ship its wreck
 	}
 }
 

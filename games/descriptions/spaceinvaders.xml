@@ -26,8 +26,10 @@
     a condition sets the block's speed half as fast again and halves next.
   * The shields are pictures with a pixel collision, so a shot or bomb that
     hits one cuts a ragged <hole> in it.
-  * A bomb on the cannon blasts it too, and pushes "blasted", which holds
-    the invasion still for a second, as the arcade game does.
+  * A bomb on the cannon takes it out of play and pushes "blasted", which
+    holds the invasion still for a second, as the arcade game does, while
+    the cannon's wreck flickers where it was (a live <position> on it);
+    then the cannon is revealed again.
   * The march is the playing state's <music>: four notes round and round.
   * Paused, blasted and both endings draw the game still underneath.
 -->
@@ -113,8 +115,8 @@
           <collision class="bomb">
             <dec variable="player.lives" />
             <inc variable="player.struck" />
-            <spawn object="blast" />
             <play sound="playerhit" />
+            <die />
           </collision>
         </collisions>
         <actions>
@@ -343,6 +345,19 @@
     </state>
     <!-- the cannon hit: everything holds still for a second, then the bombs are gone -->
     <state name="blasted">
+      <objects>
+        <!-- the cannon in pieces where it was hit, flickering between two pictures -->
+        <object name="wreck">
+          <sprite name="a"><bitmap from="wreck-a" /></sprite>
+          <sprite name="b"><bitmap from="wreck-b" /></sprite>
+          <animation>
+            <seconds>0.1</seconds>
+            <frame sprite="a" />
+            <frame sprite="b" />
+          </animation>
+          <position><x update="live">player.x</x><y update="live">player.y</y></position>
+        </object>
+      </objects>
       <shows>
         <show state="playing" />
       </shows>
@@ -353,6 +368,7 @@
         <timer>
           <after>1</after>
           <despawn object="bomb" />
+          <reveal object="player" />
           <pop />
         </timer>
       </timers>
@@ -422,6 +438,28 @@
       <row>***********</row>
       <row>***********</row>
       <row>***********</row>
+      <scale>pixel</scale>
+      <color>color.green</color>
+    </bitmap>
+    <bitmap name="wreck-a">
+      <row>...*...*...</row>
+      <row>.*.......*.</row>
+      <row>....*.*....</row>
+      <row>..*.***..*.</row>
+      <row>.*.*****...</row>
+      <row>*.*******.*</row>
+      <row>*****.*****</row>
+      <scale>pixel</scale>
+      <color>color.green</color>
+    </bitmap>
+    <bitmap name="wreck-b">
+      <row>*....*....*</row>
+      <row>..*.....*..</row>
+      <row>*...*.*..*.</row>
+      <row>....*.*....</row>
+      <row>.*.**.**.*.</row>
+      <row>..*******..</row>
+      <row>***.***.***</row>
       <scale>pixel</scale>
       <color>color.green</color>
     </bitmap>
