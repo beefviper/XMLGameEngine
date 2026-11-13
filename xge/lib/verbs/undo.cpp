@@ -20,6 +20,11 @@ namespace xge
 		return executor.game.undo();
 	}
 
+	static void printUndo(std::ostream& o, const Command&)
+	{
+		o << "undo";
+	}
+
 	extern const Verb undoVerb;
 	const Verb undoVerb{
 		.name = "undo",
@@ -30,5 +35,6 @@ namespace xge
 		.make = makeUndo,
 		.check = nullptr,
 		.run = runUndo,
+		.print = printUndo,
 	};
 }

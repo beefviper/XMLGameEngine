@@ -42,6 +42,11 @@ namespace xge
 		return true;
 	}
 
+	static void printPass(std::ostream& o, const Command&)
+	{
+		o << "pass()";
+	}
+
 	extern const Verb passVerb;
 	const Verb passVerb{
 		.name = "pass",
@@ -52,5 +57,6 @@ namespace xge
 		.make = makePass,
 		.check = nullptr,
 		.run = runPass,
+		.print = printPass,
 	};
 }

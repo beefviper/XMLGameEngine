@@ -21,6 +21,11 @@ namespace xge
 		return true;
 	}
 
+	static void printSettle(std::ostream& o, const Command&)
+	{
+		o << "settle";
+	}
+
 	extern const Verb settleVerb;
 	const Verb settleVerb{
 		.name = "settle",
@@ -31,5 +36,6 @@ namespace xge
 		.make = makeSettle,
 		.check = nullptr,
 		.run = runSettle,
+		.print = printSettle,
 	};
 }

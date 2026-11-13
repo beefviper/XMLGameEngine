@@ -21,6 +21,11 @@ namespace xge
 		return true;
 	}
 
+	static void printSplit(std::ostream& o, const Command&)
+	{
+		o << "split";
+	}
+
 	extern const Verb splitVerb;
 	const Verb splitVerb{
 		.name = "split",
@@ -31,5 +36,6 @@ namespace xge
 		.make = makeSplit,
 		.check = nullptr,
 		.run = runSplit,
+		.print = printSplit,
 	};
 }

@@ -21,6 +21,11 @@ namespace xge
 		return true;
 	}
 
+	static void printCollapse(std::ostream& o, const Command&)
+	{
+		o << "collapse";
+	}
+
 	extern const Verb collapseVerb;
 	const Verb collapseVerb{
 		.name = "collapse",
@@ -31,5 +36,6 @@ namespace xge
 		.make = makeCollapse,
 		.check = nullptr,
 		.run = runCollapse,
+		.print = printCollapse,
 	};
 }

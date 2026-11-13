@@ -19,6 +19,11 @@ namespace xge
 		return true;
 	}
 
+	static void printGrow(std::ostream& o, const Command&)
+	{
+		o << "grow";
+	}
+
 	extern const Verb growVerb;
 	const Verb growVerb{
 		.name = "grow",
@@ -29,5 +34,6 @@ namespace xge
 		.make = makeGrow,
 		.check = nullptr,
 		.run = runGrow,
+		.print = printGrow,
 	};
 }

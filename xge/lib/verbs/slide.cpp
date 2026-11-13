@@ -29,6 +29,18 @@ namespace xge
 		return true;
 	}
 
+	static void printSlide(std::ostream& o, const Command& command)
+	{
+		const CmdSlide& m = std::get<CmdSlide>(command);
+		o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");
+		if (!m.objClass.empty()) { o << "(" << m.objClass << ")"; }
+	}
+
+	static void printSlideRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "." << command.direction << (command.objClass.empty() ? "" : "(" + command.objClass + ")");
+	}
+
 	extern const Verb slideVerb;
 	const Verb slideVerb{
 		.name = "slide",
@@ -39,5 +51,7 @@ namespace xge
 		.make = makeSlide,
 		.check = nullptr,
 		.run = runSlide,
+		.print = printSlide,
+		.printRaw = printSlideRaw,
 	};
 }

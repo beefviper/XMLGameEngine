@@ -21,6 +21,12 @@ namespace xge
 		return true;
 	}
 
+	static void printFall(std::ostream& o, const Command& command)
+	{
+		const CmdFall& fall = std::get<CmdFall>(command);
+		o << "fall"; if (!fall.objClass.empty()) { o << "(" << fall.objClass << ")"; }
+	}
+
 	extern const Verb fallVerb;
 	const Verb fallVerb{
 		.name = "fall",
@@ -31,5 +37,6 @@ namespace xge
 		.make = makeFall,
 		.check = nullptr,
 		.run = runFall,
+		.print = printFall,
 	};
 }

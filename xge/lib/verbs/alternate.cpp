@@ -50,6 +50,14 @@ namespace xge
 		return true;
 	}
 
+	static void printAlternate(std::ostream& o, const Command& command)
+	{
+		const CmdAlternate& c = std::get<CmdAlternate>(command);
+		o << "alternate(";
+		for (std::size_t i = 0; i < c.players.size(); ++i) { o << (i ? ", " : "") << (c.players[i].empty() ? "-" : c.players[i]); }
+		o << ")";
+	}
+
 	extern const Verb alternateVerb;
 	const Verb alternateVerb{
 		.name = "alternate",
@@ -60,5 +68,6 @@ namespace xge
 		.make = makeAlternate,
 		.check = checkAlternate,
 		.run = runAlternate,
+		.print = printAlternate,
 	};
 }

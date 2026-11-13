@@ -30,6 +30,12 @@ namespace xge
 		return true;
 	}
 
+	static void printPop(std::ostream& o, const Command& command)
+	{
+		const CmdPopState& s = std::get<CmdPopState>(command);
+		o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; }
+	}
+
 	extern const Verb popVerb;
 	const Verb popVerb{
 		.name = "pop",
@@ -40,5 +46,6 @@ namespace xge
 		.make = makePop,
 		.check = checkPop,
 		.run = runPop,
+		.print = printPop,
 	};
 }

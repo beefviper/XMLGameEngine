@@ -134,14 +134,6 @@ namespace xge
 		}
 
 		std::visit(overload{
-			[&](const CmdSettle&) { o << "settle"; },
-			[&](const CmdClear&) { o << "clear"; },
-			[&](const CmdCollapse&) { o << "collapse"; },
-			[&](const CmdFall& fall) { o << "fall"; if (!fall.objClass.empty()) { o << "(" << fall.objClass << ")"; } },
-			[&](const CmdCycle& c) { o << (c.backward ? "cycle backward" : "cycle"); },
-			[&](const CmdGrow&) { o << "grow"; },
-			[&](const CmdSplit&) { o << "split"; },
-			[&](const CmdUndo&) { o << "undo"; },
 			[&](const CmdWhen& when)
 			{
 				o << "when(";
@@ -156,11 +148,6 @@ namespace xge
 			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
 			[&](const CmdOrder& r) { o << "order(" << r.group << ", random)"; },
 			[&](const CmdPut& p) { o << "put(" << p.objClass << ")"; },
-			[&](const CmdSlide& m)
-			{
-				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");
-				if (!m.objClass.empty()) { o << "(" << m.objClass << ")"; }
-			},
 			[&](const CmdHold& h) { o << "hold(" << keyCodeToString(h.button) << ")"; },
 			[&](const CmdThink& t)
 			{
@@ -168,19 +155,6 @@ namespace xge
 				for (const auto& [look, worth] : t.worths) { o << ", " << look << "=" << worth; }
 				o << ")";
 			},
-			[&](const CmdAlternate& c)
-			{
-				o << "alternate(";
-				for (std::size_t i = 0; i < c.players.size(); ++i) { o << (i ? ", " : "") << (c.players[i].empty() ? "-" : c.players[i]); }
-				o << ")";
-			},
-			[&](const CmdPass&) { o << "pass()"; },
-			[&](const CmdOut&) { o << "out()"; },
-			[&](const CmdDemo&) { o << "demo()"; },
-			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
-			[&](const CmdPopState& s) { o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; } },
-			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << (a.objClass.empty() ? std::string{} : ", " + a.objClass) << cellPlaceText(a.place) << ")"; },
-			[&](const CmdEnterScene& e) { o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")"; },
 			[&](const CmdSend& s)
 			{
 				o << "send(" << s.target << ", " << s.from << " into " << s.into;

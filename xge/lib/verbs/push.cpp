@@ -36,6 +36,17 @@ namespace xge
 		return true;
 	}
 
+	static void printPush(std::ostream& o, const Command& command)
+	{
+		const CmdPushState& s = std::get<CmdPushState>(command);
+		o << "state(" << s.name << ")";
+	}
+
+	static void printPushRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.state << ")";
+	}
+
 	extern const Verb pushVerb;
 	const Verb pushVerb{
 		.name = "push",
@@ -46,5 +57,7 @@ namespace xge
 		.make = makePush,
 		.check = checkPush,
 		.run = runPush,
+		.print = printPush,
+		.printRaw = printPushRaw,
 	};
 }

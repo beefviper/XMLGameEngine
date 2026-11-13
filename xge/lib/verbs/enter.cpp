@@ -37,6 +37,17 @@ namespace xge
 		return true;
 	}
 
+	static void printEnter(std::ostream& o, const Command& command)
+	{
+		const CmdEnterScene& e = std::get<CmdEnterScene>(command);
+		o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")";
+	}
+
+	static void printEnterRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(scene " << command.scene << ")";
+	}
+
 	extern const Verb enterVerb;
 	const Verb enterVerb{
 		.name = "enter",
@@ -47,5 +58,7 @@ namespace xge
 		.make = makeEnter,
 		.check = checkEnter,
 		.run = runEnter,
+		.print = printEnter,
+		.printRaw = printEnterRaw,
 	};
 }

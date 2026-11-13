@@ -21,6 +21,11 @@ namespace xge
 		return true;
 	}
 
+	static void printClear(std::ostream& o, const Command&)
+	{
+		o << "clear";
+	}
+
 	extern const Verb clearVerb;
 	const Verb clearVerb{
 		.name = "clear",
@@ -31,5 +36,6 @@ namespace xge
 		.make = makeClear,
 		.check = nullptr,
 		.run = runClear,
+		.print = printClear,
 	};
 }

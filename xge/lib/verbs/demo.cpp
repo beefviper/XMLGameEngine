@@ -21,6 +21,11 @@ namespace xge
 		return true;
 	}
 
+	static void printDemo(std::ostream& o, const Command&)
+	{
+		o << "demo()";
+	}
+
 	extern const Verb demoVerb;
 	const Verb demoVerb{
 		.name = "demo",
@@ -31,5 +36,6 @@ namespace xge
 		.make = makeDemo,
 		.check = nullptr,
 		.run = runDemo,
+		.print = printDemo,
 	};
 }

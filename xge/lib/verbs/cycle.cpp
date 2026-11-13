@@ -28,6 +28,12 @@ namespace xge
 		return true;
 	}
 
+	static void printCycle(std::ostream& o, const Command& command)
+	{
+		const CmdCycle& c = std::get<CmdCycle>(command);
+		o << (c.backward ? "cycle backward" : "cycle");
+	}
+
 	extern const Verb cycleVerb;
 	const Verb cycleVerb{
 		.name = "cycle",
@@ -38,5 +44,6 @@ namespace xge
 		.make = makeCycle,
 		.check = nullptr,
 		.run = runCycle,
+		.print = printCycle,
 	};
 }

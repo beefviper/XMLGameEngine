@@ -94,6 +94,17 @@ namespace xge
 		return true;
 	}
 
+	static void printTrigger(std::ostream& o, const Command& command)
+	{
+		const CmdTriggerAction& a = std::get<CmdTriggerAction>(command);
+		o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << (a.objClass.empty() ? std::string{} : ", " + a.objClass) << cellPlaceText(a.place) << ")";
+	}
+
+	static void printTriggerRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.object << "," << command.action << (command.place.empty() ? "" : ", " + command.objClass + " " + command.place) << ")";
+	}
+
 	extern const Verb triggerVerb;
 	const Verb triggerVerb{
 		.name = "trigger",
@@ -104,5 +115,7 @@ namespace xge
 		.make = makeTrigger,
 		.check = checkTrigger,
 		.run = runTrigger,
+		.print = printTrigger,
+		.printRaw = printTriggerRaw,
 	};
 }
