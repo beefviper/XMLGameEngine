@@ -1026,3 +1026,73 @@ TEST_CASE("the engine's own schema checker reads past documentation wherever XSD
 	CHECK_FALSE(judged("<walls><wall side=\"left\"><width>3</width></wall></walls>"));
 	CHECK_FALSE(judged("<walls><wall side=\"left\"><height>3</height><documentation /></wall></walls>"));
 }
+
+TEST_CASE("the engine's own schema checker reads a type built on another, and an xs:all", "[xml_format][schema]")
+{
+	const ScratchFile schema{ scratchName("descriptions/extended.xsd") };
+	std::ofstream(schema.path) << "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n"
+		"  <xs:complexType name=\"pairType\">\n"
+		"    <xs:sequence><xs:element name=\"x\" type=\"xs:integer\" /><xs:element name=\"y\" type=\"xs:integer\" /></xs:sequence>\n"
+		"    <xs:attribute name=\"name\" type=\"xs:NMTOKEN\" use=\"required\" />\n"
+		"  </xs:complexType>\n"
+		"  <xs:complexType name=\"jumpType\">\n"
+		"    <xs:complexContent>\n"
+		"      <xs:extension base=\"pairType\">\n"
+		"        <xs:sequence><xs:element name=\"seconds\" type=\"xs:integer\" minOccurs=\"0\" /></xs:sequence>\n"
+		"        <xs:attribute name=\"class\" type=\"xs:NMTOKEN\" use=\"required\" />\n"
+		"      </xs:extension>\n"
+		"    </xs:complexContent>\n"
+		"  </xs:complexType>\n"
+		"  <xs:element name=\"moves\">\n"
+		"    <xs:complexType>\n"
+		"      <xs:sequence>\n"
+		"        <xs:element name=\"jump\" type=\"jumpType\" maxOccurs=\"unbounded\" />\n"
+		"        <xs:element name=\"rules\" minOccurs=\"0\">\n"
+		"          <xs:complexType>\n"
+		"            <xs:all>\n"
+		"              <xs:element name=\"forced\" />\n"
+		"              <xs:element name=\"promote\" minOccurs=\"0\" />\n"
+		"            </xs:all>\n"
+		"          </xs:complexType>\n"
+		"        </xs:element>\n"
+		"      </xs:sequence>\n"
+		"    </xs:complexType>\n"
+		"  </xs:element>\n"
+		"</xs:schema>\n";
+
+	XsdLiteValidator validator;
+	REQUIRE(validator.loadSchema(schema.path.string(), XmlBackend::TinyXml2));
+	const auto judged = [&](const std::string& xml)
+	{
+		const ScratchFile file{ scratchName("descriptions/extended.xml") };
+		std::ofstream(file.path) << xml;
+		auto document = XmlDocumentFactory::create(XmlBackend::TinyXml2);
+		REQUIRE(document->load(file.path.string()));
+		return validator.validate(*document->getRootElement());
+	};
+	const std::string jump = "<jump name=\"j\" class=\"man\"><x>1</x><y>2</y><seconds>3</seconds></jump>";
+	// The base's content and attributes, then the extension's own.
+	CHECK(judged("<moves>" + jump + "</moves>"));
+	CHECK(judged("<moves><jump name=\"j\" class=\"man\"><x>1</x><y>2</y></jump></moves>"));
+	CHECK_FALSE(judged("<moves><jump name=\"j\" class=\"man\"><seconds>3</seconds><x>1</x><y>2</y></jump></moves>"));
+	CHECK_FALSE(judged("<moves><jump name=\"j\" class=\"man\"><x>1</x></jump></moves>"));
+	CHECK_FALSE(judged("<moves><jump class=\"man\"><x>1</x><y>2</y></jump></moves>"));
+	CHECK_FALSE(judged("<moves><jump name=\"j\"><x>1</x><y>2</y></jump></moves>"));
+	// An xs:all: in any order, each once at most, the required ones there.
+	CHECK(judged("<moves>" + jump + "<rules><forced /><promote /></rules></moves>"));
+	CHECK(judged("<moves>" + jump + "<rules><promote /><forced /></rules></moves>"));
+	CHECK(judged("<moves>" + jump + "<rules><forced /></rules></moves>"));
+	CHECK_FALSE(judged("<moves>" + jump + "<rules><promote /></rules></moves>"));
+	CHECK_FALSE(judged("<moves>" + jump + "<rules><forced /><forced /></rules></moves>"));
+}
+
+TEST_CASE("the engine's own schema checker refuses a schema it cannot read, naming what", "[xml_format][schema]")
+{
+	const ScratchFile schema{ scratchName("descriptions/unread.xsd") };
+	std::ofstream(schema.path) << "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n"
+		"  <xs:element name=\"walls\"><xs:complexType><xs:sequence><xs:any /></xs:sequence></xs:complexType></xs:element>\n"
+		"</xs:schema>\n";
+	XsdLiteValidator validator;
+	CHECK_FALSE(validator.loadSchema(schema.path.string(), XmlBackend::TinyXml2));
+	CHECK(validator.getErrorMessage().find("xs:any") != std::string::npos);
+}

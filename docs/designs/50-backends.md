@@ -21,7 +21,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 | Unfiltered traversal, callers filter by name | positional | element order is not guaranteed |
 | Read-only, UTF-8 `std::string` | mutable; `wstring` | RapidXML cannot mutate; library-agnostic |
 
-- **Validation follows the library:** only Xerces validates fully ("strong"). The others use `load/xsd`, which reads the same `.xsd` and checks the subset the schema uses ("weak"), deliberately permissive. `test_xml_format.cpp` pins what both must reject.
+- **Validation follows the library:** only Xerces validates fully ("strong"). The others use `load/xsd`, which reads the same `.xsd` and checks the subset the schema uses ("weak"), deliberately permissive about values. It is kept at the constructs the schemas actually use (the author's wish): one it does not read stops the schema loading, naming it, so a new construct is taught to it rather than avoided in the schema. `test_xml_format.cpp` pins what both must reject.
 
 ## Window and sound
 

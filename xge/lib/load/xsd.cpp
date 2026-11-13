@@ -93,7 +93,7 @@ namespace xge
 		// other particles, and how many times it may repeat.
 		struct Particle
 		{
-			enum class Kind { Element, Sequence, Choice };
+			enum class Kind { Element, Sequence, Choice, All };
 
 			Kind kind = Kind::Element;
 			int minOccurs = 1;
@@ -104,7 +104,7 @@ namespace xge
 			std::shared_ptr<ComplexType> complexType; // null: a simple element (text only) ...
 			std::string simpleType;                   // ... of this type ("" : any text)
 
-			// Sequence / Choice:
+			// Sequence / Choice / All:
 			std::vector<Particle> children;
 		};
 
@@ -145,6 +145,7 @@ namespace xge
 		bool buildSimpleType(const XmlNode& node, std::string& error);
 		bool buildElement(const XmlNode& node, Particle& out, std::string& error);
 		bool buildComplexType(const XmlNode& node, ComplexType& out, std::string& error);
+		bool extendComplexType(const XmlNode& extension, ComplexType& out, std::string& error);
 		bool buildContent(const XmlNode& node, Particle& out, std::string& error);
 		bool resolveComplexType(const std::string& name, std::shared_ptr<ComplexType>& out, std::string& error);
 		bool resolveGroup(const std::string& name, Particle& out, std::string& error);
@@ -245,13 +246,13 @@ namespace xge
 			return true;
 		}
 
-		if (kind != "sequence" && kind != "choice")
+		if (kind != "sequence" && kind != "choice" && kind != "all")
 		{
 			error = "unsupported schema construct xs:" + kind;
 			return false;
 		}
 
-		out.kind = kind == "sequence" ? Particle::Kind::Sequence : Particle::Kind::Choice;
+		out.kind = kind == "sequence" ? Particle::Kind::Sequence : kind == "choice" ? Particle::Kind::Choice : Particle::Kind::All;
 		out.minOccurs = occurs(node, "minOccurs");
 		out.maxOccurs = occurs(node, "maxOccurs");
 
@@ -268,9 +269,19 @@ namespace xge
 			{
 				if (!buildContent(*child, particle, error)) { return false; }
 			}
+			else if (childKind == "annotation")
+			{
+				continue;
+			}
 			else
 			{
-				continue; // xs:annotation and the like
+				error = "unsupported schema construct xs:" + childKind + " in xs:" + kind;
+				return false;
+			}
+			if (out.kind == Particle::Kind::All && (particle.kind != Particle::Kind::Element || particle.maxOccurs != 1))
+			{
+				error = "an xs:all holds elements that each appear at most once";
+				return false;
 			}
 
 			out.children.push_back(std::move(particle));
@@ -287,11 +298,32 @@ namespace xge
 		{
 			const std::string kind = localName(child->getName());
 
-			if (kind == "sequence" || kind == "choice" || kind == "group")
+			if (kind == "sequence" || kind == "choice" || kind == "all" || kind == "group")
 			{
 				auto content = std::make_unique<Particle>();
 				if (!buildContent(*child, *content, error)) { return false; }
 				out.content = std::move(content);
+			}
+			else if (kind == "complexContent")
+			{
+				// A type built on another: the base's attributes and content,
+				// then the extension's own attributes and content after it.
+				if (child->getAttribute("mixed") == "true") { out.mixed = true; }
+				for (std::unique_ptr<XmlNode> extension = child->getFirstChild(); extension; extension = extension->getNextSibling())
+				{
+					const std::string extensionKind = localName(extension->getName());
+					if (extensionKind == "annotation") { continue; }
+					if (extensionKind != "extension")
+					{
+						error = "unsupported schema construct xs:" + extensionKind + " in xs:complexContent";
+						return false;
+					}
+					if (!extendComplexType(*extension, out, error)) { return false; }
+				}
+			}
+			else if (kind == "annotation" || kind == "anyAttribute")
+			{
+				continue;
 			}
 			else if (kind == "simpleContent")
 			{
@@ -335,8 +367,53 @@ namespace xge
 				if (!buildComplexType(*group->second, out, error)) { return false; }
 				out.mixed = mixed;
 			}
+			else
+			{
+				error = "unsupported schema construct xs:" + kind + " in xs:complexType";
+				return false;
+			}
 		}
 
+		return true;
+	}
+
+	bool XsdLiteValidator::Model::extendComplexType(const XmlNode& extension, ComplexType& out, std::string& error)
+	{
+		const std::string base = localName(extension.getAttribute("base"));
+		const auto baseNode = complexTypeNodes.find(base);
+		if (baseNode == complexTypeNodes.end())
+		{
+			error = "xs:extension base='" + base + "' names no complex type of the schema";
+			return false;
+		}
+		if (!inProgress.insert("extension:" + base).second)
+		{
+			error = "the complex type '" + base + "' extends itself";
+			return false;
+		}
+		ComplexType from;
+		const bool built = buildComplexType(*baseNode->second, from, error);
+		inProgress.erase("extension:" + base);
+		if (!built) { return false; }
+
+		ComplexType own;
+		if (!buildComplexType(extension, own, error)) { return false; }
+
+		out.mixed = out.mixed || from.mixed;
+		out.attributes = std::move(from.attributes);
+		out.attributes.insert(out.attributes.end(), own.attributes.begin(), own.attributes.end());
+		if (from.content && own.content)
+		{
+			auto both = std::make_unique<Particle>();
+			both->kind = Particle::Kind::Sequence;
+			both->children.push_back(std::move(*from.content));
+			both->children.push_back(std::move(*own.content));
+			out.content = std::move(both);
+		}
+		else
+		{
+			out.content = from.content ? std::move(from.content) : std::move(own.content);
+		}
 		return true;
 	}
 
@@ -723,6 +800,34 @@ namespace xge
 				if (!matchParticle(part, children, state, path)) { return false; }
 			}
 
+			return true;
+		}
+
+		if (particle.kind == Particle::Kind::All)
+		{
+			// Each of its elements once at most, in any order.
+			std::vector<bool> used(particle.children.size(), false);
+			while (state.position < children.size())
+			{
+				const std::string name = localName(children[state.position]->getName());
+				std::size_t found = particle.children.size();
+				for (std::size_t i = 0; i < particle.children.size(); ++i)
+				{
+					if (!used[i] && particle.children[i].name == name) { found = i; break; }
+				}
+				if (found == particle.children.size()) { break; }
+				if (!matchOnce(particle.children[found], children, state, path, 0)) { return false; }
+				used[found] = true;
+			}
+			for (std::size_t i = 0; i < particle.children.size(); ++i)
+			{
+				if (!used[i] && particle.children[i].minOccurs > 0)
+				{
+					state.expected = "<" + particle.children[i].name + ">";
+					state.noteFailure(state.position, state.expected);
+					return false;
+				}
+			}
 			return true;
 		}
 
