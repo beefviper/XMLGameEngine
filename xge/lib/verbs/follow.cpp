@@ -63,6 +63,17 @@ namespace xge
 		return true;
 	}
 
+	static void printFollow(std::ostream& o, const Command& command)
+	{
+		const CmdFollow& f = std::get<CmdFollow>(command);
+		o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")";
+	}
+
+	static void printFollowRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.path << (command.object.empty() ? "" : ", " + command.object) << ")";
+	}
+
 	extern const Verb followVerb;
 	const Verb followVerb{
 		.name = "follow",
@@ -73,5 +84,7 @@ namespace xge
 		.make = makeFollow,
 		.check = checkFollow,
 		.run = runFollow,
+		.print = printFollow,
+		.printRaw = printFollowRaw,
 	};
 }

@@ -39,6 +39,17 @@ namespace xge
 		return true;
 	}
 
+	static void printClimb(std::ostream& o, const Command& command)
+	{
+		const CmdClimb& c = std::get<CmdClimb>(command);
+		o << "climb." << (c.direction == Direction::Up ? "up" : "down") << "(" << c.step << ", " << c.ladderClass << ")";
+	}
+
+	static void printClimbRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "." << command.direction << "(" << command.amount << ", " << command.objClass << ")";
+	}
+
 	extern const Verb climbVerb;
 	const Verb climbVerb{
 		.name = "climb",
@@ -49,5 +60,7 @@ namespace xge
 		.make = makeClimb,
 		.check = nullptr,
 		.run = runClimb,
+		.print = printClimb,
+		.printRaw = printClimbRaw,
 	};
 }

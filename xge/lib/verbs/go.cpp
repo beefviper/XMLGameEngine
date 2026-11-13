@@ -31,6 +31,21 @@ namespace xge
 		return true;
 	}
 
+	static void printGo(std::ostream& o, const Command& command)
+	{
+		const CmdGo& g = std::get<CmdGo>(command);
+		const char* direction = (g.direction == Direction::Up) ? "up"
+			: (g.direction == Direction::Down) ? "down"
+			: (g.direction == Direction::Left) ? "left"
+			: "right";
+		o << "go." << direction << "(" << g.speed << ")";
+	}
+
+	static void printGoRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
+	}
+
 	extern const Verb goVerb;
 	const Verb goVerb{
 		.name = "go",
@@ -41,5 +56,7 @@ namespace xge
 		.make = makeGo,
 		.check = nullptr,
 		.run = runGo,
+		.print = printGo,
+		.printRaw = printGoRaw,
 	};
 }

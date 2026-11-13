@@ -43,6 +43,18 @@ namespace xge
 		}
 	}
 
+	static void printTrack(std::ostream& o, const Command& command)
+	{
+		const CmdTrack& t = std::get<CmdTrack>(command);
+		o << "track" << (t.path.empty() ? "" : "(" + t.path + ")");
+		for (const std::string& onto : t.onto) { o << " onto " << onto; }
+	}
+
+	static void printTrackRaw(std::ostream& o, const RawCommand& command)
+	{
+		if (!command.path.empty()) { o << "(" << command.path << ")"; }
+	}
+
 	extern const Verb trackVerb;
 	const Verb trackVerb{
 		.name = "track",
@@ -53,5 +65,7 @@ namespace xge
 		.make = makeTrack,
 		.check = checkTrack,
 		.run = nullptr,
+		.print = printTrack,
+		.printRaw = printTrackRaw,
 	};
 }

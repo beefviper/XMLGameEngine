@@ -45,6 +45,22 @@ namespace xge
 		return true;
 	}
 
+	static void printMove(std::ostream& o, const Command& command)
+	{
+		const CmdMove& m = std::get<CmdMove>(command);
+		const char* direction = (m.direction == Direction::Up) ? "up"
+			: (m.direction == Direction::Down) ? "down"
+			: (m.direction == Direction::Left) ? "left"
+			: "right";
+		o << "move." << direction << "(" << m.step << (m.wait > 0.0f ? ", wait " + formatDisplayNumber(m.wait) : std::string{}) << ")";
+	}
+
+	static void printMoveRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
+		if (!(command.seconds.kind == RawValue::Kind::Expression && command.seconds.text.empty())) { o << "(wait " << command.seconds << ")"; }
+	}
+
 	extern const Verb moveVerb;
 	const Verb moveVerb{
 		.name = "move",
@@ -55,5 +71,7 @@ namespace xge
 		.make = makeMove,
 		.check = nullptr,
 		.run = runMove,
+		.print = printMove,
+		.printRaw = printMoveRaw,
 	};
 }

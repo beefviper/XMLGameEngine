@@ -47,6 +47,17 @@ namespace xge
 		return true;
 	}
 
+	static void printSwing(std::ostream& o, const Command& command)
+	{
+		const CmdSwing& s = std::get<CmdSwing>(command);
+		o << "swing(" << s.by << " degrees, " << s.seconds << "s)";
+	}
+
+	static void printSwingRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.direction << " " << command.distance << " degrees, " << command.seconds << "s)";
+	}
+
 	extern const Verb swingVerb;
 	const Verb swingVerb{
 		.name = "swing",
@@ -57,5 +68,7 @@ namespace xge
 		.make = makeSwing,
 		.check = nullptr,
 		.run = runSwing,
+		.print = printSwing,
+		.printRaw = printSwingRaw,
 	};
 }

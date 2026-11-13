@@ -32,6 +32,17 @@ namespace xge
 		return !(doer.self && doer.action) || executor.jump(*doer.self, std::get<CmdJump>(command).height);
 	}
 
+	static void printJump(std::ostream& o, const Command& command)
+	{
+		const CmdJump& j = std::get<CmdJump>(command);
+		o << "jump(" << j.height << ")";
+	}
+
+	static void printJumpRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.amount << ")";
+	}
+
 	extern const Verb jumpVerb;
 	const Verb jumpVerb{
 		.name = "jump",
@@ -42,5 +53,7 @@ namespace xge
 		.make = makeJump,
 		.check = nullptr,
 		.run = runJump,
+		.print = printJump,
+		.printRaw = printJumpRaw,
 	};
 }

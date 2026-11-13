@@ -34,6 +34,17 @@ namespace xge
 		return true;
 	}
 
+	static void printTurn(std::ostream& o, const Command& command)
+	{
+		const CmdTurn& t = std::get<CmdTurn>(command);
+		o << "turn." << (t.direction == Direction::Left ? "counterclockwise" : "clockwise") << "(" << t.rate << ")";
+	}
+
+	static void printTurnRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
+	}
+
 	extern const Verb turnVerb;
 	const Verb turnVerb{
 		.name = "turn",
@@ -44,5 +55,7 @@ namespace xge
 		.make = makeTurn,
 		.check = nullptr,
 		.run = runTurn,
+		.print = printTurn,
+		.printRaw = printTurnRaw,
 	};
 }

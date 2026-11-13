@@ -29,6 +29,11 @@ namespace xge
 		return true;
 	}
 
+	static void printReverse(std::ostream& o, const Command&)
+	{
+		o << "reverse";
+	}
+
 	extern const Verb reverseVerb;
 	const Verb reverseVerb{
 		.name = "reverse",
@@ -39,5 +44,6 @@ namespace xge
 		.make = makeReverse,
 		.check = nullptr,
 		.run = runReverse,
+		.print = printReverse,
 	};
 }

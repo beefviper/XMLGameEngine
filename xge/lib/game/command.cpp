@@ -149,7 +149,6 @@ namespace xge
 			[&](const CmdReset&) { o << "reset"; },
 			[&](const CmdDie&) { o << "die"; },
 			[&](const CmdDespawn& d) { o << "despawn" << (d.target.empty() ? "" : "(" + d.target + ")"); },
-			[&](const CmdStop&) { o << "stop"; },
 			[&](const CmdSettle&) { o << "settle"; },
 			[&](const CmdClear&) { o << "clear"; },
 			[&](const CmdCollapse&) { o << "collapse"; },
@@ -179,38 +178,11 @@ namespace xge
 				if (!m.objClass.empty()) { o << "(" << m.objClass << ")"; }
 			},
 			[&](const CmdDrop&) { o << "drop"; },
-			[&](const CmdTrack& t)
-			{
-				o << "track" << (t.path.empty() ? "" : "(" + t.path + ")");
-				for (const std::string& onto : t.onto) { o << " onto " << onto; }
-			},
 			[&](const CmdHold& h) { o << "hold(" << keyCodeToString(h.button) << ")"; },
 			[&](const CmdThink& t)
 			{
 				o << "think(" << t.objClass << ", " << t.picker << ", " << keyCodeToString(t.button) << ", " << t.depth;
 				for (const auto& [look, worth] : t.worths) { o << ", " << look << "=" << worth; }
-				o << ")";
-			},
-			[&](const CmdReverse&) { o << "reverse"; },
-			[&](const CmdMove& m)
-			{
-				const char* direction = (m.direction == Direction::Up) ? "up"
-					: (m.direction == Direction::Down) ? "down"
-					: (m.direction == Direction::Left) ? "left"
-					: "right";
-				o << "move." << direction << "(" << m.step << (m.wait > 0.0f ? ", wait " + formatDisplayNumber(m.wait) : std::string{}) << ")";
-			},
-			[&](const CmdHop& h)
-			{
-				const char* direction = (h.direction == Direction::Up) ? "up"
-					: (h.direction == Direction::Down) ? "down"
-					: (h.direction == Direction::Left) ? "left"
-					: "right";
-				if (h.step.x != 0.0f && h.step.y != 0.0f) { o << "hop(" << h.step.x << ", " << h.step.y; }
-				else { o << "hop." << direction << "(" << h.distance; }
-				o << (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
-					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{});
-				for (const std::string& onto : h.onto) { o << ", onto " << onto; }
 				o << ")";
 			},
 			[&](const CmdHuntHop& h)
@@ -219,17 +191,7 @@ namespace xge
 					<< (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
 					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{}) << ")";
 			},
-			[&](const CmdJump& j) { o << "jump(" << j.height << ")"; },
-			[&](const CmdClimb& c) { o << "climb." << (c.direction == Direction::Up ? "up" : "down") << "(" << c.step << ", " << c.ladderClass << ")"; },
 			[&](const CmdChase& c) { o << "chase(" << c.target << ", " << c.speed << (c.stopWithin > 0.0f ? ", near " + formatDisplayNumber(c.stopWithin) : std::string{}) << ")"; },
-			[&](const CmdGo& g)
-			{
-				const char* direction = (g.direction == Direction::Up) ? "up"
-					: (g.direction == Direction::Down) ? "down"
-					: (g.direction == Direction::Left) ? "left"
-					: "right";
-				o << "go." << direction << "(" << g.speed << ")";
-			},
 			[&](const CmdHunt& h)
 			{
 				o << "hunt(" << h.target << ", " << h.speed;
@@ -240,17 +202,6 @@ namespace xge
 			},
 			[&](const CmdWander& w) { o << "wander(" << w.speed << ")"; },
 			[&](const CmdAim& a) { o << "aim(" << a.target << (a.lined ? ", lined " + std::to_string(a.within) : std::string()) << ")"; },
-			[&](const CmdThrustAcross& a)
-			{
-				const char* direction = (a.direction == Direction::Up) ? "up"
-					: (a.direction == Direction::Down) ? "down"
-					: (a.direction == Direction::Left) ? "left"
-					: "right";
-				o << "thrust." << direction << "(" << a.amount << (a.burn.empty() ? "" : ", burn " + a.burn) << ")";
-			},
-			[&](const CmdTurn& t) { o << "turn." << (t.direction == Direction::Left ? "counterclockwise" : "clockwise") << "(" << t.rate << ")"; },
-			[&](const CmdSwing& s) { o << "swing(" << s.by << " degrees, " << s.seconds << "s)"; },
-			[&](const CmdThrust& t) { o << "thrust(" << t.amount << (t.burn.empty() ? "" : ", burn " + t.burn) << ")"; },
 			[&](const CmdIncrement& c) { o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdDecrement& c) { o << "dec(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
 			[&](const CmdCopy& c) { o << "copy(" << c.from.written() << ", " << c.into.written() << ")"; },
@@ -273,8 +224,6 @@ namespace xge
 			[&](const CmdSilence& s) { o << "silence(" << s.sound << ")"; },
 			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << (b.from.empty() ? "" : ", from " + b.from) << (b.style.empty() ? "" : ", style " + b.style) << ")"; },
 			[&](const CmdReveal& r) { o << "reveal(" << r.target << ", " << r.count << ")"; },
-			[&](const CmdShift& s) { o << "shift(" << s.target << ", " << s.by.x << ", " << s.by.y << ")"; },
-			[&](const CmdFollow& f) { o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")"; },
 			[&](const CmdEnterScene& e) { o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")"; },
 			[&](const CmdResetScene& r) { o << "reset(" << (r.way.empty() ? "scene " + r.scene : "way " + r.way) << ")"; },
 			[&](const CmdSet& s) { o << "set(" << s.target.written() << ", " << s.value << ")"; },

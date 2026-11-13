@@ -38,6 +38,12 @@ namespace xge
 		return true;
 	}
 
+	static void printShift(std::ostream& o, const Command& command)
+	{
+		const CmdShift& s = std::get<CmdShift>(command);
+		o << "shift(" << s.target << ", " << s.by.x << ", " << s.by.y << ")";
+	}
+
 	extern const Verb shiftVerb;
 	const Verb shiftVerb{
 		.name = "shift",
@@ -48,5 +54,6 @@ namespace xge
 		.make = makeShift,
 		.check = checkShift,
 		.run = runShift,
+		.print = printShift,
 	};
 }

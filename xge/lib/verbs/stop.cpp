@@ -20,6 +20,11 @@ namespace xge
 		return true;
 	}
 
+	static void printStop(std::ostream& o, const Command&)
+	{
+		o << "stop";
+	}
+
 	extern const Verb stopVerb;
 	const Verb stopVerb{
 		.name = "stop",
@@ -30,5 +35,6 @@ namespace xge
 		.make = makeStop,
 		.check = nullptr,
 		.run = runStop,
+		.print = printStop,
 	};
 }

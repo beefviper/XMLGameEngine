@@ -64,6 +64,27 @@ namespace xge
 		return !doer.self || executor.hop(*doer.self, std::get<CmdHop>(command));
 	}
 
+	static void printHop(std::ostream& o, const Command& command)
+	{
+		const CmdHop& h = std::get<CmdHop>(command);
+		const char* direction = (h.direction == Direction::Up) ? "up"
+			: (h.direction == Direction::Down) ? "down"
+			: (h.direction == Direction::Left) ? "left"
+			: "right";
+		if (h.step.x != 0.0f && h.step.y != 0.0f) { o << "hop(" << h.step.x << ", " << h.step.y; }
+		else { o << "hop." << direction << "(" << h.distance; }
+		o << (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
+			<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{});
+		for (const std::string& onto : h.onto) { o << ", onto " << onto; }
+		o << ")";
+	}
+
+	static void printHopRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << (command.byHops ? "(" + command.object + ", by hops of " : "." + command.direction + "(") << command.amount << ", " << command.positionX << " " << command.positionY
+			<< ", " << command.seconds << ")";
+	}
+
 	extern const Verb hopVerb;
 	const Verb hopVerb{
 		.name = "hop",
@@ -74,5 +95,7 @@ namespace xge
 		.make = makeHop,
 		.check = nullptr,
 		.run = runHop,
+		.print = printHop,
+		.printRaw = printHopRaw,
 	};
 }

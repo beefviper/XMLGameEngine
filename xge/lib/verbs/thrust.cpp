@@ -36,6 +36,31 @@ namespace xge
 		return true;
 	}
 
+	static void printThrust(std::ostream& o, const Command& command)
+	{
+		if (const auto* pt = std::get_if<CmdThrust>(&command))
+		{
+			const CmdThrust& t = *pt;
+			o << "thrust(" << t.amount << (t.burn.empty() ? "" : ", burn " + t.burn) << ")";
+			return;
+		}
+		if (const auto* pa = std::get_if<CmdThrustAcross>(&command))
+		{
+			const CmdThrustAcross& a = *pa;
+			const char* direction = (a.direction == Direction::Up) ? "up"
+				: (a.direction == Direction::Down) ? "down"
+				: (a.direction == Direction::Left) ? "left"
+				: "right";
+			o << "thrust." << direction << "(" << a.amount << (a.burn.empty() ? "" : ", burn " + a.burn) << ")";
+			return;
+		}
+	}
+
+	static void printThrustRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
+	}
+
 	extern const Verb thrustVerb;
 	const Verb thrustVerb{
 		.name = "thrust",
@@ -46,5 +71,7 @@ namespace xge
 		.make = makeThrust,
 		.check = nullptr,
 		.run = runThrust,
+		.print = printThrust,
+		.printRaw = printThrustRaw,
 	};
 }
