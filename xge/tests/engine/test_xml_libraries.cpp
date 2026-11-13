@@ -124,7 +124,7 @@ TEST_CASE("an element knows the line its tag starts on", "[xml_format][backends]
 	const std::string file = scratchName("descriptions/lines.xml");
 	std::ofstream(file) << "<a>\n  <b />\n  <c>\n    <d>text</d>\n  </c>\n</a>\n";
 
-	for (const XmlBackend backend : { XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
+	for (const XmlBackend backend : XmlDocumentFactory::availableBackends())
 	{
 		INFO(XmlDocumentFactory::name(backend));
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);

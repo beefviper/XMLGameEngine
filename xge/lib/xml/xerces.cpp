@@ -9,6 +9,8 @@
 
 #include <xercesc/dom/DOMException.hpp>
 #include <xercesc/framework/LocalFileInputSource.hpp>
+#include <xercesc/internal/XMLScanner.hpp>
+#include <xercesc/sax/Locator.hpp>
 #include <xercesc/sax/SAXException.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/XMLException.hpp>
@@ -64,9 +66,30 @@ namespace xge
 		};
 	}
 
-	XercesXmlNode::XercesXmlNode(const xc::DOMElement* domElement) noexcept :
-		element(domElement)
+	XercesXmlNode::XercesXmlNode(const xc::DOMElement* domElement, const XercesLines* parsedLines) noexcept :
+		element(domElement),
+		lines(parsedLines)
 	{
+	}
+
+	int XercesXmlNode::line() const
+	{
+		if (!element || !lines) { return 0; }
+		const auto found = lines->find(element);
+		return found == lines->end() ? 0 : found->second;
+	}
+
+	void XercesLineParser::startElement(const xc::XMLElementDecl& elemDecl, const unsigned int urlId, const XMLCh* const elemPrefix,
+		const xc::RefVectorOf<xc::XMLAttr>& attrList, const XMLSize_t attrCount, const bool isEmpty, const bool isRoot)
+	{
+		xc::XercesDOMParser::startElement(elemDecl, urlId, elemPrefix, attrList, attrCount, isEmpty, isRoot);
+
+		// The element just made is the current node, an empty one too.
+		const xc::Locator* locator = getScanner() ? getScanner()->getLocator() : nullptr;
+		if (locator && getCurrentNode())
+		{
+			lines[getCurrentNode()] = static_cast<int>(locator->getLineNumber());
+		}
 	}
 
 	std::string XercesXmlNode::getName() const
@@ -115,14 +138,14 @@ namespace xge
 	{
 		if (!element) { return nullptr; }
 		const auto* child = element->getFirstElementChild();
-		return child ? std::make_unique<XercesXmlNode>(child) : nullptr;
+		return child ? std::make_unique<XercesXmlNode>(child, lines) : nullptr;
 	}
 
 	std::unique_ptr<XmlNode> XercesXmlNode::getNextSibling() const
 	{
 		if (!element) { return nullptr; }
 		const auto* sibling = element->getNextElementSibling();
-		return sibling ? std::make_unique<XercesXmlNode>(sibling) : nullptr;
+		return sibling ? std::make_unique<XercesXmlNode>(sibling, lines) : nullptr;
 	}
 
 	void XercesXmlDocument::ParserErrorHandler::reportParseException(const xc::SAXParseException& ex, bool isError)
@@ -167,7 +190,7 @@ namespace xge
 		try
 		{
 			xc::XMLPlatformUtils::Initialize("en_US");
-			domParser = std::make_unique<xc::XercesDOMParser>();
+			domParser = std::make_unique<XercesLineParser>();
 		}
 		catch (...)
 		{
@@ -198,6 +221,7 @@ namespace xge
 		}
 
 		parserErrorHandler.resetErrors();
+		domParser->lines.clear();
 		domParser->setErrorHandler(&parserErrorHandler);
 		domParser->setValidationScheme(xc::XercesDOMParser::Val_Auto);
 		domParser->setDoNamespaces(true);
@@ -276,6 +300,6 @@ namespace xge
 		if (!domParser || !domParser->getDocument()) { return nullptr; }
 
 		const auto* documentElement = domParser->getDocument()->getDocumentElement();
-		return documentElement ? std::make_unique<XercesXmlNode>(documentElement) : nullptr;
+		return documentElement ? std::make_unique<XercesXmlNode>(documentElement, &domParser->lines) : nullptr;
 	}
 }
