@@ -129,7 +129,6 @@ namespace xge
 		void knock(Object& object, Object& other, const Touch& touch, float bounce);
 		bool jump(Object& object, float height);
 		void chase(Object& object, const CmdChase& chase);
-		bool aim(Object& object, const CmdAim& command);
 		void reverse(Object& object);
 
 		// <become>: the object running it (self, which a state's commands do
@@ -162,6 +161,7 @@ namespace xge
 		// its class in those cells about `self`, each piece once however the
 		// actions it runs trigger more (aboutReached, aboutDepth).
 		void triggerAbout(Object& self, const CmdTriggerAction& trigger, bool byRule);
+
 		bool spawnOne(const CmdSpawn& command, const Object* self);
 
 	private:

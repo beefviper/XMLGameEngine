@@ -569,34 +569,6 @@ namespace xge
 		}
 	}
 
-	// Turns to the nearest of `target` in play: the next shots go straight at
-	// where its middle is now, and the object faces that way (to the nearest
-	// of the four, or exactly, if it has a heading). Lined, only along one of
-	// the eight ways, and refused (false) when none is near enough.
-	bool CommandExecutor::aim(Object& object, const CmdAim& command)
-	{
-		const Object* other = game.nearestInPlay(object, command.target);
-		if (!other) { return !command.lined; }
-
-		auto way = wayTo(middleOf(object), middleOf(*other));
-		if (!way) { return !command.lined; }
-		if (command.lined)
-		{
-			way = linedUp(middleOf(*other) - middleOf(object), command.within);
-			if (!way) { return false; }
-		}
-
-		object.aim = *way;
-		object.hasAim = true;
-		object.facing = directionOf(object.aim);
-		if (object.hasHeading)
-		{
-			object.heading = headingOf(object.aim);
-			object.showHeading();
-		}
-		return true;
-	}
-
 	// Up off the ground at the speed that, under the object's own pull, rises
 	// `height` pixels: v * v = 2 * pull * height. Only from the ground and not
 	// on a ladder; nothing without a pull down (the loader refuses that).
