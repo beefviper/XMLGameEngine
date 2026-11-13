@@ -542,6 +542,24 @@ TEST_CASE("dump writes what frames played into a file its schema passes", "[cli]
 	std::filesystem::remove(file);
 }
 
+TEST_CASE("every game loads with every XML library", "[cli][check]")
+{
+	// Xerces checks against the schema itself; the others with the engine's
+	// own checker (load/xsd.h), which reads less of XSD.
+	// Not the scratch files other cases are writing at the same moment.
+	std::vector<std::string> all = gameFilesIn("descriptions");
+	all.erase(std::remove_if(all.begin(), all.end(), [](const std::string& file) { return file.find("_scratch") != std::string::npos; }), all.end());
+	REQUIRE(all.size() > 50);
+	for (const XmlBackend xml : XmlDocumentFactory::availableBackends())
+	{
+		INFO(XmlDocumentFactory::name(xml));
+		std::ostringstream out;
+		const int failed = checkGames(all, xml, out);
+		INFO(out.str());
+		CHECK(failed == 0);
+	}
+}
+
 TEST_CASE("the help options ask for the usage", "[cli]")
 {
 	CHECK(parseCommandLine({ "-h" }).showHelp);

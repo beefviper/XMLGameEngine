@@ -938,13 +938,14 @@
       <xs:element name="forced" type="emptyType" minOccurs="0" />
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="step" type="cellOffsetType" />
+        <!-- A cell offset as <step>'s, written out: the engine's own checker reads no xs:extension. -->
         <xs:element name="jump">
           <xs:complexType>
-            <xs:complexContent>
-              <xs:extension base="cellOffsetType">
-                <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
-              </xs:extension>
-            </xs:complexContent>
+            <xs:sequence>
+              <xs:element name="x" type="xs:integer" />
+              <xs:element name="y" type="xs:integer" />
+            </xs:sequence>
+            <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
           </xs:complexType>
         </xs:element>
       </xs:choice>
