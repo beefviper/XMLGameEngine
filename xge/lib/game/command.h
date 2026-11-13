@@ -320,7 +320,7 @@ namespace xge
 	// its top, the object stands on it. It is put on the top, its fall stops,
 	// and for the next frame it is on the ground, which a <jump> needs. Touching
 	// any other side, or going up, does nothing, so a platform is solid from
-	// above only. See CommandExecutor::land.
+	// above only. See landOnto in verbs/land.cpp.
 	struct CmdLand {};
 
 	// <jump>height</jump> - only ever in an object's own <action>: a jump up
@@ -404,7 +404,7 @@ namespace xge
 	// it aims again, is reset, or a key moves it. With <lined>8</lined>, only
 	// along one of the eight ways (across, up or down, or a true diagonal),
 	// when that one is within 8 pixels of one; otherwise it is refused, and
-	// what follows it in the timer does not run. See CommandExecutor::aim.
+	// what follows it in the timer does not run. See aimAtNearest in verbs/aim.cpp.
 	struct CmdAim
 	{
 		std::string target;

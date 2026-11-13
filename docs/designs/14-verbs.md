@@ -15,6 +15,8 @@ One place for everything the engine knows about a verb.
 - **The command processor is a lookup.** `readCommand` finds the verb by its tag, reads the names any command may have (its attributes) and calls `read` for the rest; `makeCommand` calls `make`; the load-time check calls `check`; `CommandExecutor::run` finds the verb of a command (`verbOf`, a table by the command's kind) and calls `run` with a `Doer`: who is running it and what it touched. The place check reads the forms.
 - **Forms** are for the few verbs written more than one way: `<reset />`, `<reset object>` and `<reset scene>` make three kinds of command; `<despawn />` is about the object running it and goes where that means something, `<despawn object>` anywhere a change does.
 - **The work stays where it was**: the arithmetic in `play/verbs.cpp` and `play/geometry.cpp`, what needs the game in `CommandExecutor` and `Game`. A verb's file says when each is called.
+  - A helper only one verb calls is in that verb's file instead, taking the executor: the hunt by hops, the fired shot, aiming, the chase, landing, the knock through a still thing.
+  - One that several call stays in `CommandExecutor`: `hop` (the hop verb, and the hunt by hops) and the flight it starts.
 - **Printing is the verb's too.** `operator<<` for a `Command` asks its verb's `print`, and for a `RawCommand` prints the tag and then asks `printRaw` for the rest. Only the two kinds that are no verb's, a condition in a list (`CmdWhen`) and a command worked out as it runs (`CmdLive`), are printed in `game/command.cpp`. The tests of generated games compare these printouts, so the text is part of what a verb is.
 - **The `Cmd*` structs and the `Command` variant stay in `game/command.h`**: tests and the generator make them, and `run` reads its own with `std::get`.
 
@@ -33,4 +35,3 @@ One place for everything the engine knows about a verb.
 ## Open
 
 - **Its own data.** `RawCommand` is one struct of about fifty fields shared by all, each meaning something different per verb. A verb owning its fields would end that; it changes the generator's `data.xsl` heavily.
-- The helpers of a single verb still in `CommandExecutor` (`hop`, `huntByHop`, `spawnProjectile`) could move beside it.

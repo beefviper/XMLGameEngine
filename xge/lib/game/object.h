@@ -1088,7 +1088,7 @@ namespace xge
 		// a man in a maze shoots the way he last walked, an invader facing
 		// down drops its bombs below it. An object with no <facing> fires from
 		// its top, at the projectile's own velocity, as before. See
-		// CommandExecutor::spawnProjectile.
+		// fireProjectile in verbs/fire.cpp.
 		bool hasFacing{ false };
 
 		// Its place on a <map> (see RawCell): the map's name ("" for an object

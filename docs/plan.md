@@ -13,21 +13,20 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 
 | # | Task | Why here |
 |---|---|---|
-| 1 | [A1](#a1-a-verb-is-one-file) steps 1 to 3: printing and helpers into each verb | Finishes work already most of the way done, before more verbs are added |
-| 2 | [B7](#b7-line-numbers-in-load-errors): line numbers in load errors | Small, and every game writer gains |
-| 3 | [A6](#a6-the-schema-documents-itself): the schema documents itself | Small, mechanical, and visible in an editor straight away |
-| 4 | [F9](#f9-sound-files) steps 1 to 4: sound files | Small and self-contained; the first new thing a game can do |
-| 5 | [A5](#a5-a-game-written-out-as-if-by-hand) steps 1 to 6: the stand-alone generator as far as Breakout | The author's main aim; early enough to learn whether the idea holds |
-| 6 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
-| 7 | [F6](#f6-rules-that-are-looked-at-when-nothing-moves): rules when nothing moves | Removes two limits and some fakes in the games |
-| 8 | [F3](#f3-a-maze-search), then [F5](#f5-line-of-sight): maze search, line of sight | Two small steering additions that share games (Berserk, Haunted House) |
-| 9 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
-| 10 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
-| 11 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
-| 12 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
-| 13 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
-| 14 | [F8](#f8-dice): dice | Waits on the hold on new games |
-| 15 | [A7](#a7-the-next-backend-is-cheap) step 6 onward, [A5](#a5-a-game-written-out-as-if-by-hand) step 7 onward | The two that never finish: a backend at a time, a game at a time |
+| 1 | [B7](#b7-line-numbers-in-load-errors): line numbers in load errors | Small, and every game writer gains |
+| 2 | [A6](#a6-the-schema-documents-itself): the schema documents itself | Small, mechanical, and visible in an editor straight away |
+| 3 | [F9](#f9-sound-files) steps 1 to 4: sound files | Small and self-contained; the first new thing a game can do |
+| 4 | [A5](#a5-a-game-written-out-as-if-by-hand) steps 1 to 6: the stand-alone generator as far as Breakout | The author's main aim; early enough to learn whether the idea holds |
+| 5 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
+| 6 | [F6](#f6-rules-that-are-looked-at-when-nothing-moves): rules when nothing moves | Removes two limits and some fakes in the games |
+| 7 | [F3](#f3-a-maze-search), then [F5](#f5-line-of-sight): maze search, line of sight | Two small steering additions that share games (Berserk, Haunted House) |
+| 8 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
+| 9 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
+| 10 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
+| 11 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
+| 12 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
+| 13 | [F8](#f8-dice): dice | Waits on the hold on new games |
+| 14 | [A7](#a7-the-next-backend-is-cheap) step 6 onward, [A5](#a5-a-game-written-out-as-if-by-hand) step 7 onward | The two that never finish: a backend at a time, a game at a time |
 
 What must come before what:
 
@@ -89,7 +88,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 - **Steps.**
   - [x] **1. A place for printing (S).** `Verb` (`verbs/verb.h`) gains an optional `print` for a `Command` and one for a `RawCommand`. `operator<<` for each (`game/command.cpp`) asks the verb first and falls back to its own cases. Nothing moves yet. **Check:** `xgetest-generated` (it compares these dumps, so the text must not change by a character).
   - [x] **2. Move the printing, ten verbs a commit (M in all).** Each verb's two cases move into its file. Repeat until the cases in `command.cpp` are gone, then remove the fallback. **Check after each commit:** `xgetest-generated`.
-  - [ ] **3. A verb's own helpers move beside it (S).** `hop`, `startFlight`, `huntByHop`, `spawnProjectile`, `aim`, `chase`, `land`, `knock` in `play/executor.cpp`: for each, `grep` for its callers; one used by a single verb moves into that verb's file, one used by several stays. One helper a commit. **Check:** `xgetest-long "[speed]"` before and after (load and frame times must not rise).
+  - [x] **3. A verb's own helpers move beside it (S).** `hop`, `startFlight`, `huntByHop`, `spawnProjectile`, `aim`, `chase`, `land`, `knock` in `play/executor.cpp`: for each, `grep` for its callers; one used by a single verb moves into that verb's file, one used by several stays. One helper a commit. **Check:** `xgetest-long "[speed]"` before and after (load and frame times must not rise).
   - [ ] **4. The author: whether each verb owns its data (L if yes).** `Command` would become `{ const Verb* verb; data }` and `RawCommand`'s shared fields the verb's own, which is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer heavily, so it waits until A5 has retired `data.xsl`, or is dropped. Ask before starting.
 - **Files.** `xge/lib/verbs/*`, `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/play.md` "Loading".
 - **Done when** adding a verb is one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element and the docs.
