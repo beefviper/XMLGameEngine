@@ -34,8 +34,8 @@ A language change is made everywhere in one commit:
 |---|---|
 | the schema | `games/xgedef.xsd` |
 | the reader | `xge/lib/load/xml.cpp`, and the verb's file in `xge/lib/verbs/` |
-| pieces and `from=`, if touched | `xge/lib/load/merge.cpp` and `games/generators/windows-cpp/merge.xsl`, step for step |
-| the generator | `games/generators/windows-cpp/data.xsl`, `modules/game_parts.h`, and the describer in `xge/tests/generated/test_generated_games.cpp` |
+| pieces and `from=`, if touched | `xge/lib/load/merge.cpp` and `games/generators/engine-cpp/merge.xsl`, step for step |
+| the generator | `games/generators/engine-cpp/data.xsl`, `modules/game_parts.h`, and the describer in `xge/tests/generated/test_generated_games.cpp` |
 | the games | every game that uses the old form |
 | the tests | the area's `test_<topic>.cpp` |
 | the docs | the `docs/reference/` page, the word index in `docs/readme.md`, the matching `docs/designs/` file |

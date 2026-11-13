@@ -5,7 +5,7 @@
 //
 // Catch2 tests that a generated program plays its game as xgecli does: each
 // game in games/ is generated as the build runs (tests.cmake), by the
-// stylesheets in games/generators/windows-cpp, and its data compiled in here. The
+// stylesheets in games/generators/engine-cpp, and its data compiled in here. The
 // data must be what the engine reads from the file, every field of it; and
 // played beside the game read from its file, the same keys pressed at the
 // same frames and the same random numbers drawn, every object is compared

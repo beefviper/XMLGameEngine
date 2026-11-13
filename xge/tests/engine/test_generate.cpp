@@ -4,7 +4,7 @@
 // date: Oct 5, 2026
 //
 // Catch2 tests for xgecli --generate (xge/cli/source/generate.cpp, running the
-// stylesheets in games/generators/windows-cpp): the program it writes is the game
+// stylesheets in games/generators/engine-cpp): the program it writes is the game
 // as the engine's own data, a main() that plays it with the engine's Game and
 // Engine on SFML, and the engine's files copied in unchanged, nothing of XML
 // or of the other libraries among them. That the data is the same game as
@@ -63,7 +63,7 @@ namespace
 	// The tests run in the games folder beside the test program, with the
 	// games, their assets and the generators in it; the engine's lib/ is in
 	// xge/ in the repository (XGE_ENGINE_FOLDER, targets.cmake).
-	GenerateRequest requestFor(const fs::path& game, const fs::path& output, const std::string& target = "windows-cpp")
+	GenerateRequest requestFor(const fs::path& game, const fs::path& output, const std::string& target = "engine-cpp")
 	{
 		GenerateRequest request;
 		request.gameFile = game;
@@ -122,7 +122,7 @@ TEST_CASE("generating pong_min writes the game as data, a main that runs the eng
 	CHECK(data.find("std::vector<RawSound> sounds()") == std::string::npos);
 
 	// game_parts.h is the target's own, copied unchanged
-	CHECK(readFile(out / "source/game_parts.h") == readFile(fs::current_path() / "generators/windows-cpp/modules/game_parts.h"));
+	CHECK(readFile(out / "source/game_parts.h") == readFile(fs::current_path() / "generators/engine-cpp/modules/game_parts.h"));
 
 	// the build compiles the engine's files beside them, with the engine's warnings
 	const std::string cmake = readFile(out / "CMakeLists.txt");

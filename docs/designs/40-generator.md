@@ -1,6 +1,6 @@
 # Generating a program
 
-**Status:** Built: `xgecli --generate windows-cpp` covers every game. XSLT writes the game file out as the engine's own data, and the program plays it with the engine's own code on SFML. A test compares each game's data with what the engine reads, field by field, and plays the two side by side. Reference: [programs](../reference/programs.md#generating-a-program).
+**Status:** Built: `xgecli --generate engine-cpp` covers every game. XSLT writes the game file out as the engine's own data, and the program plays it with the engine's own code on SFML. A test compares each game's data with what the engine reads, field by field, and plays the two side by side. Reference: [programs](../reference/programs.md#generating-a-program).
 
 ## What we looked for
 
@@ -40,9 +40,9 @@ The first target wrote each game as a program a person might write (Pong about 4
 ## Where it goes next (chosen by the author)
 
 - **The point of a description is to free a game from its platform,** so a target should write the game itself, standing alone, in that platform's own terms: a program that reads as if someone wrote it by hand over a weekend.
-- `windows-cpp` stays as the exact target that covers every game, and gets no new design work.
-- A second target grows beside it verb by verb, tested frame by frame against the engine ([plan](../plan.md#a5-a-game-written-out-as-if-by-hand)). This is G1 again; it can work now because the frame order and the verbs' work are shared functions and arithmetic is the engine's own.
-- Rejected: making `windows-cpp` cheaper still by having XSLT write the XML tree for the engine's own reader. It plays the same, but it is further from a game anyone could read.
+- `engine-cpp` (once called `windows-cpp`) stays as the exact target that covers every game, and gets no new design work: it is the engine copied over with the game's data in it.
+- `windows-cpp` is the name for the new one: a generic, single-purpose looking Windows program on SFML, as the author put it. It grows beside `engine-cpp` verb by verb, tested frame by frame against the engine ([plan](../plan.md#a5-a-game-written-out-as-if-by-hand)). This is G1 again; it can work now because the frame order and the verbs' work are shared functions and arithmetic is the engine's own.
+- Rejected: making `engine-cpp` cheaper still by having XSLT write the XML tree for the engine's own reader. It plays the same, but it is further from a game anyone could read.
 
 ## Open
 

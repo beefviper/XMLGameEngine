@@ -10,7 +10,7 @@ xgecli breakout              # a bare name gets ".xml" added
 xgecli path/to/pong.xml      # a name with an extension is used as given
 xgecli pong -w sdl2 -x tinyxml2 -a none
 xgecli galaxian --record     # play, then write what was played into the file as its <demo>
-xgecli pong --generate windows-cpp -o out/pong
+xgecli pong --generate engine-cpp -o out/pong
 xgecli --check               # load every game, a line each: ok or what is wrong
 xgecli pong frogger --check -x tinyxml2
 xgecli pacman --frames 600 --seed 1  # play 600 frames with no window, then stop
@@ -81,11 +81,11 @@ In C++ the libraries are chosen with `Game(file, XmlBackend)` and `Engine(game, 
 ## Generating a program
 
 ```
-xgecli pong --generate windows-cpp                 # writes pong-windows-cpp/
-xgecli pong --generate windows-cpp -o out/pong     # or into the folder named
+xgecli pong --generate engine-cpp                 # writes pong-engine-cpp/
+xgecli pong --generate engine-cpp -o out/pong     # or into the folder named
 ```
 
-This writes a C++ program on SFML 3 that is **the engine with the game built in**, so it plays exactly as `xgecli` does. The engine first loads the game as for play (a game that will not load is not generated), then the XSLT stylesheets in `games/generators/windows-cpp/` (run by libxslt) write:
+This writes a C++ program on SFML 3 that is **the engine with the game built in**, so it plays exactly as `xgecli` does. The engine first loads the game as for play (a game that will not load is not generated), then the XSLT stylesheets in `games/generators/engine-cpp/` (run by libxslt) write:
 
 | Written | By | What |
 |---|---|---|

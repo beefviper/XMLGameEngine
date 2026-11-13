@@ -60,7 +60,7 @@ output/Debug/xgecli frogger
 
 | Program | What |
 |---|---|
-| `xgecli` | plays a game from the command line; `--generate windows-cpp` writes one out as a C++ program of its own |
+| `xgecli` | plays a game from the command line; `--generate engine-cpp` writes one out as a C++ program of its own |
 | `xgegui` | a Qt 6 app that shows a game beside a tree of its data (built only when Qt 6 is found) |
 | `xgetest` | the tests: `cmake -B build -DBUILD_TESTING=ON`, then `output/Debug/xgetest` |
 

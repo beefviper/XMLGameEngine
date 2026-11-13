@@ -41,7 +41,7 @@ namespace xge
 		AudioBackend audio = AudioFactory::defaultBackend();
 
 		// --generate: the target to write the game out for instead of playing
-		// it ("windows-cpp"), or empty to play it; and -o/--output, the folder
+		// it ("engine-cpp"), or empty to play it; and -o/--output, the folder
 		// to write it to (empty: <game>-<target> in the working directory).
 		std::string generate;
 		std::string output;
@@ -90,7 +90,7 @@ namespace xge
 	//   --audio sfml3          none (silent)
 	//   Only the libraries this program was built with can be named; another is an
 	//   error that says which there are (a default build has SFML 3 and Xerces).
-	//   --generate windows-cpp write the game out as a program for that target
+	//   --generate engine-cpp write the game out as a program for that target
 	//                          instead of playing it (no short form: -g is the game)
 	//   -o out -oout           the folder --generate writes to
 	//   --output out
@@ -135,7 +135,7 @@ namespace xge
 	std::string xmlBackendName(XmlBackend backend);
 	std::string audioBackendName(AudioBackend backend);
 
-	// The targets --generate can write a game out for ("windows-cpp").
+	// The targets --generate can write a game out for ("engine-cpp").
 	std::vector<std::string> generateTargets();
 
 	// The usage text, for --help and after an error.

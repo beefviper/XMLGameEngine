@@ -639,7 +639,7 @@
     <xsl:variable name="base" select="/game/pictures/drawing[@name = current()/@from]" />
     <xsl:if test="not($base)">
       <xsl:message terminate="yes">
-        <xsl:value-of select="concat('windows-cpp: &lt;drawing from=&quot;', @from, '&quot;&gt; names no &lt;drawing&gt; of the &lt;pictures&gt;')" />
+        <xsl:value-of select="concat('engine-cpp: &lt;drawing from=&quot;', @from, '&quot;&gt; names no &lt;drawing&gt; of the &lt;pictures&gt;')" />
       </xsl:message>
     </xsl:if>
     <xsl:copy-of select="$base/*" />
@@ -649,7 +649,7 @@
     <xsl:variable name="base" select="/game/pictures/bitmap[@name = current()/@from]" />
     <xsl:if test="not($base)">
       <xsl:message terminate="yes">
-        <xsl:value-of select="concat('windows-cpp: &lt;bitmap from=&quot;', @from, '&quot;&gt; names no &lt;bitmap&gt; of the &lt;pictures&gt;')" />
+        <xsl:value-of select="concat('engine-cpp: &lt;bitmap from=&quot;', @from, '&quot;&gt; names no &lt;bitmap&gt; of the &lt;pictures&gt;')" />
       </xsl:message>
     </xsl:if>
     <bitmap>

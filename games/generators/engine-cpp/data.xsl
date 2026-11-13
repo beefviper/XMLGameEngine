@@ -3578,7 +3578,7 @@
     <xsl:value-of select="$title" />
     <xsl:text>, as written in </xsl:text>
     <xsl:value-of select="$source" />
-    <xsl:text>, written out by xgecli --generate&#10;// windows-cpp (games/generators/windows-cpp/data.xsl) as the engine's own data&#10;// (game/data.h): </xsl:text>
+    <xsl:text>, written out by xgecli --generate&#10;// engine-cpp (games/generators/engine-cpp/data.xsl) as the engine's own data&#10;// (game/data.h): </xsl:text>
     <xsl:value-of select="$function" />
     <xsl:text>() is the game file, with no XML left to read, each&#10;// tag the line that makes what the engine makes of it (game_parts.h). Change&#10;// the game file and generate it again rather than this.&#10;&#10;</xsl:text>
     <xsl:text>#include "game/data.h"&#10;#include "game_parts.h"&#10;&#10;#include &lt;vector&gt;&#10;&#10;namespace&#10;{&#10;&#9;using namespace xge;&#10;&#9;using namespace xge::parts;&#10;&#10;</xsl:text>

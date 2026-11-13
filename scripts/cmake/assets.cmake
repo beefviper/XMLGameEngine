@@ -88,13 +88,13 @@ set(data_assets
 # The stylesheets xgecli --generate runs, a folder per target (generate.cpp),
 # and the target's modules, copied into a program unchanged.
 set(data_generators
-	"games/generators/windows-cpp/generate.xsl"
-	"games/generators/windows-cpp/text.xsl"
-	"games/generators/windows-cpp/merge.xsl"
-	"games/generators/windows-cpp/data.xsl"
-	"games/generators/windows-cpp/program.xsl"
-	"games/generators/windows-cpp/engine.xml"
-	"games/generators/windows-cpp/modules/game_parts.h")
+	"games/generators/engine-cpp/generate.xsl"
+	"games/generators/engine-cpp/text.xsl"
+	"games/generators/engine-cpp/merge.xsl"
+	"games/generators/engine-cpp/data.xsl"
+	"games/generators/engine-cpp/program.xsl"
+	"games/generators/engine-cpp/engine.xml"
+	"games/generators/engine-cpp/modules/game_parts.h")
 
 set(data_outputs "")
 foreach(item IN LISTS data_xsd data_xml data_assets data_generators)

@@ -25,7 +25,7 @@ namespace xge
 	struct GenerateRequest
 	{
 		std::filesystem::path gameFile;      // the game (games/descriptions/pong.xml)
-		std::string target;                  // the generator ("windows-cpp")
+		std::string target;                  // the generator ("engine-cpp")
 		std::filesystem::path generators;    // the folder holding a folder of stylesheets per target (games/generators/)
 		std::filesystem::path dataFolder;    // where the game's assets/ are looked for (games/)
 		std::filesystem::path engineFolder;  // where the engine's lib/ is looked for (xge/ in the repository)

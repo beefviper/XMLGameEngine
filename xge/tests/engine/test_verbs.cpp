@@ -181,7 +181,7 @@ TEST_CASE("verbs: the keys that act when let go", "[verbs]")
 TEST_CASE("verbs: a generated program is given every verb's file", "[verbs]")
 {
 	const auto document = XmlDocumentFactory::create();
-	REQUIRE(document->load("generators/windows-cpp/engine.xml"));
+	REQUIRE(document->load("generators/engine-cpp/engine.xml"));
 	std::set<std::string> files;
 	const auto root = document->getRootElement();
 	for (auto file = root->getFirstChild(); file != nullptr; file = file->getNextSibling()) { files.insert(file->getText()); }

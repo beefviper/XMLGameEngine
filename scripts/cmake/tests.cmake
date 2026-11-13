@@ -176,7 +176,7 @@ catch_discover_tests(xgetest
 # The generated games' tests are a second test program, xgetest-generated,
 # built only when asked for (cmake --build build --target xgetest-generated,
 # or scripts/shell/windows/games-test-all.bat), never by an ordinary build:
-# building it generates every game (xgecli --generate windows-cpp) into
+# building it generates every game (xgecli --generate engine-cpp) into
 # build/generated/ and compiles each one's data (source/<game>.cpp) in, and
 # test_generated_games.cpp plays each against its file, frame by frame.
 # generated_games.h names them; the function for a game is its file's name in
@@ -222,7 +222,7 @@ foreach(game_file IN LISTS data_xml)
 	set(data "${XGE_GENERATED_DIR}/${game}/source/${game}.cpp")
 	add_custom_command(
 		OUTPUT "${data}"
-		COMMAND xgecli "${game}" --generate windows-cpp -o "${XGE_GENERATED_DIR}/${game}"
+		COMMAND xgecli "${game}" --generate engine-cpp -o "${XGE_GENERATED_DIR}/${game}"
 		WORKING_DIRECTORY "${XGE_OUTPUT_DIR}"
 		DEPENDS xgecli xgedata "${CMAKE_CURRENT_SOURCE_DIR}/${game_file}" ${generator_files}
 		COMMENT "Generating ${game_file} for the tests")

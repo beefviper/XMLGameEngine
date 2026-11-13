@@ -15,7 +15,7 @@
     </xsl:call-template>
     <xsl:text>//
 // </xsl:text>
-    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate windows-cpp. The')" />
+    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate engine-cpp. The')" />
     <xsl:text>
 // game is in source/</xsl:text>
     <xsl:value-of select="$name" />
@@ -80,7 +80,7 @@ int main()
   <xsl:template name="cmake-file">
     <xsl:text># CMakeLists.txt
 # </xsl:text>
-    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate windows-cpp.')" />
+    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate engine-cpp.')" />
     <xsl:text>
 
 cmake_minimum_required(VERSION 3.28)
@@ -194,9 +194,9 @@ endif()
   </xsl:template>
 
   <xsl:template name="readme-file">
-    <xsl:value-of select="concat('# ', $title, '&#10;&#10;Generated from `', $source, '` by `xgecli --generate windows-cpp`. It is the game xgecli and&#10;')" />
+    <xsl:value-of select="concat('# ', $title, '&#10;&#10;Generated from `', $source, '` by `xgecli --generate engine-cpp`. It is the game xgecli and&#10;')" />
     <xsl:text>xgegui play, built as a program of its own on SFML 3: the stylesheets in the engine's
-`games/generators/windows-cpp/` write the game file out as C++ data in `source/</xsl:text>
+`games/generators/engine-cpp/` write the game file out as C++ data in `source/</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text>.cpp`,
 and everything that plays it (the frame, the physics and collisions, the keys, the

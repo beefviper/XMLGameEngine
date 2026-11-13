@@ -10,7 +10,7 @@ xgecli [game] [options]
   -w, --window <name>  sfml3 (default), raylib, sdl2, opengl, none
   -x, --xml <name>     xerces (default), tinyxml2, pugixml, rapidxml
   -a, --audio <name>   sfml3 (default), raylib, sdl2, none
-  --generate <target>  write the game out as a program (windows-cpp) instead of playing it
+  --generate <target>  write the game out as a program (engine-cpp) instead of playing it
   -o, --output <dir>   where --generate writes (default <game>-<target>)
   --record             play, and write what was played into the game file as its <demo>
   --check              load the games (none: all) and say ok or what is wrong
@@ -32,7 +32,7 @@ xgecli [game] [options]
   - The **data folder** is the games folder: the first folder with both `descriptions/` and `assets/` in it, looking at the working directory, the program's folder and the folder above it, each itself and then its `games/`; then the working directory is changed to it (the engine reads `assets/` relative to it), so the program starts from anywhere.
   - Shared with xgegui through `xge/lib/engine/folder.h` so they cannot drift.
 - `parseCommandLine` and `findGameFile` throw `CliError`; `main()` prints the message and usage to stderr. `cli.cpp` is compiled into `xgetest` too (the library does not contain it). Library code throws and never calls `exit()` because xgegui loads game after game.
-- **Generating** ([generator](40-generator.md)): `--generate` takes a platform-language target (`windows-cpp`), long form only because `-g` is the game; `-o` is an error without it.
+- **Generating** ([generator](40-generator.md)): `--generate` takes a platform-language target (`engine-cpp`), long form only because `-g` is the game; `-o` is an error without it.
   - It is resolved before the working directory changes, so the default folder and a relative `-o` are where the user started; the stylesheets are found in `generators/` of the data folder, and the engine's files it copies from `lib/` of the repository's `xge/` it was built from (`GenerateRequest::engineFolder`, set from `XGE_ENGINE_FOLDER`).
   - It prints the files written and the assets copied, and does not start a window.
   - `generate.cpp` is compiled into `xgetest` too.

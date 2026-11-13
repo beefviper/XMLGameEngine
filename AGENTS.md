@@ -47,7 +47,7 @@ The programs make `games/` their working directory, so paths in a game file (`as
 | a game | `games/descriptions/`, `data_xml` in `scripts/cmake/assets.cmake`, a test in `xge/tests/games/`, a row in `docs/reference/games.md` |
 | a test file | `scripts/cmake/tests.cmake` |
 | an engine source | `ENGINE_SOURCES` in the top `CMakeLists.txt` |
-| a verb | a file in `xge/lib/verbs/`, a line in its `all.cpp` and in `games/generators/windows-cpp/engine.xml` |
+| a verb | a file in `xge/lib/verbs/`, a line in its `all.cpp` and in `games/generators/engine-cpp/engine.xml` |
 
 Every C++ source or header starts with this block (real filename and date), ends with exactly one newline, and is stored LF:
 

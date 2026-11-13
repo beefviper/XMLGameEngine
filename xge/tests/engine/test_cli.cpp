@@ -212,15 +212,15 @@ TEST_CASE("backend names read back the way the options take them", "[cli]")
 
 TEST_CASE("generate takes a target and output a folder", "[cli]")
 {
-	const CliOptions options = parseCommandLine({ "pong", "--generate", "windows-cpp" });
+	const CliOptions options = parseCommandLine({ "pong", "--generate", "engine-cpp" });
 	CHECK(options.game == "pong");
-	CHECK(options.generate == "windows-cpp");
+	CHECK(options.generate == "engine-cpp");
 	CHECK(options.output.empty());
 
-	CHECK(parseCommandLine({ "--generate", "Windows-CPP" }).generate == "windows-cpp");
-	CHECK(parseCommandLine({ "--generate", "windows-cpp", "-o", "out" }).output == "out");
-	CHECK(parseCommandLine({ "--generate", "windows-cpp", "-oout" }).output == "out");
-	CHECK(parseCommandLine({ "--output", "out", "--generate", "windows-cpp" }).output == "out");
+	CHECK(parseCommandLine({ "--generate", "Engine-CPP" }).generate == "engine-cpp");
+	CHECK(parseCommandLine({ "--generate", "engine-cpp", "-o", "out" }).output == "out");
+	CHECK(parseCommandLine({ "--generate", "engine-cpp", "-oout" }).output == "out");
+	CHECK(parseCommandLine({ "--output", "out", "--generate", "engine-cpp" }).output == "out");
 
 	// -g is still the game, not generate.
 	CHECK(parseCommandLine({ "-g", "pong" }).generate.empty());
@@ -232,10 +232,10 @@ TEST_CASE("generate needs a known target and output needs generate", "[cli]")
 {
 	CHECK_THROWS_AS(parseCommandLine({ "--generate" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--generate", "amiga-asm" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--generate", "windows-cpp", "--generate", "windows-cpp" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--generate", "engine-cpp", "--generate", "engine-cpp" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "-o", "out" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--generate", "windows-cpp", "-o", "a", "-o", "b" }), CliError);
-	CHECK(generateTargets() == std::vector<std::string>{ "windows-cpp" });
+	CHECK_THROWS_AS(parseCommandLine({ "--generate", "engine-cpp", "-o", "a", "-o", "b" }), CliError);
+	CHECK(generateTargets() == std::vector<std::string>{ "engine-cpp" });
 }
 
 TEST_CASE("record writes the game played into the game file, once and not when generating", "[cli][demo]")
@@ -246,7 +246,7 @@ TEST_CASE("record writes the game played into the game file, once and not when g
 	CHECK_THROWS_AS(parseCommandLine({ "-r" }), CliError); // long form only, as --generate
 	CHECK(parseCommandLine({ "--record", "galaxian" }).game == "galaxian");
 	CHECK_THROWS_AS(parseCommandLine({ "--record", "--record" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--record", "--generate", "windows-cpp" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--record", "--generate", "engine-cpp" }), CliError);
 	CHECK(usageText().find("--record") != std::string::npos);
 }
 
@@ -264,7 +264,7 @@ TEST_CASE("check takes any number of games, and nothing that plays", "[cli][chec
 	CHECK_THROWS_AS(parseCommandLine({ "-c" }), CliError); // long form only
 	CHECK_THROWS_AS(parseCommandLine({ "--check", "--check" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--check", "--record" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--check", "--generate", "windows-cpp" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--check", "--generate", "engine-cpp" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--check", "-w", "sdl2" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--check", "-a", "none" }), CliError);
 	CHECK(usageText().find("--check") != std::string::npos);
@@ -318,7 +318,7 @@ TEST_CASE("frames plays with no window and no sound and seed fixes the numbers",
 	CHECK_THROWS_AS(parseCommandLine({ "--seed", "1", "--seed", "2" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--frames", "10", "--record" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--frames", "10", "--check" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "--frames", "10", "--generate", "windows-cpp" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--frames", "10", "--generate", "engine-cpp" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--seed", "1", "--check" }), CliError);
 	CHECK(usageText().find("--frames") != std::string::npos);
 	CHECK(usageText().find("--seed") != std::string::npos);

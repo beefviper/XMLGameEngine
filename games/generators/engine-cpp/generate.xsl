@@ -4,7 +4,7 @@
 <!-- author: beefviper -->
 <!-- date: Oct 5, 2026 -->
 
-<!-- The windows-cpp target: a game file in, a program of its own out, that
+<!-- The engine-cpp target: a game file in, a program of its own out, that
      plays the game as xgecli and xgegui play it, on SFML 3. The game, its
      pieces and from= worked out as the engine works them out (merge.xsl), is
      written out as the engine's own data (data.xsl), and everything that
@@ -13,9 +13,9 @@
      Run by xgecli (xge/cli/source/generate.cpp) with libxslt, after
      the engine has read and checked the game, or by hand:
 
-       xsltproc -o pong_min-windows-cpp/manifest.xml
+       xsltproc -o pong_min-engine-cpp/manifest.xml
          - -stringparam name pong_min - -stringparam function pongMinGame
-         games/generators/windows-cpp/generate.xsl games/descriptions/pong_min.xml
+         games/generators/engine-cpp/generate.xsl games/descriptions/pong_min.xml
 
      (with "- -" written as two dashes). It writes the program's own files
      with EXSLT's exsl:document, relative to the output named: source/<game>.cpp
@@ -63,7 +63,7 @@
 
   <xsl:template match="/">
     <xsl:if test="not(game)">
-      <xsl:message terminate="yes">windows-cpp: this is not a game file (no &lt;game&gt;)</xsl:message>
+      <xsl:message terminate="yes">engine-cpp: this is not a game file (no &lt;game&gt;)</xsl:message>
     </xsl:if>
 
     <!-- the game with its pieces and from= worked out (merge.xsl), written out -->
@@ -99,7 +99,7 @@ output/
 </xsl:text>
     </exsl:document>
 
-    <generated target="windows-cpp" name="{$name}">
+    <generated target="engine-cpp" name="{$name}">
       <file path="source/{$name}.cpp" />
       <file path="source/main.cpp" />
       <file path="CMakeLists.txt" />

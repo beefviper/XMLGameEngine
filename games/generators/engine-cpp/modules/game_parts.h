@@ -4,7 +4,7 @@
 // date: Oct 11, 2026
 //
 // What a generated game's data (source/<game>.cpp, written by
-// games/generators/windows-cpp/data.xsl) is written with: one small function for
+// games/generators/engine-cpp/data.xsl) is written with: one small function for
 // each kind of tag, so each tag of the game file is one line of C++ that
 // makes the engine's own data (game/data.h) as load/xml.cpp reads it. Copied
 // into every generated program unchanged.
