@@ -13,19 +13,18 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 
 | # | Task | Why here |
 |---|---|---|
-| 1 | [A6](#a6-the-schema-documents-itself): the schema documents itself | Small, mechanical, and visible in an editor straight away |
-| 2 | [F9](#f9-sound-files) steps 1 to 4: sound files | Small and self-contained; the first new thing a game can do |
-| 3 | [A5](#a5-a-game-written-out-as-if-by-hand) steps 1 to 6: the stand-alone generator as far as Breakout | The author's main aim; early enough to learn whether the idea holds |
-| 4 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
-| 5 | [F6](#f6-rules-that-are-looked-at-when-nothing-moves): rules when nothing moves | Removes two limits and some fakes in the games |
-| 6 | [F3](#f3-a-maze-search), then [F5](#f5-line-of-sight): maze search, line of sight | Two small steering additions that share games (Berserk, Haunted House) |
-| 7 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
-| 8 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
-| 9 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
-| 10 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
-| 11 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
-| 12 | [F8](#f8-dice): dice | Waits on the hold on new games |
-| 13 | [A7](#a7-the-next-backend-is-cheap) step 6 onward, [A5](#a5-a-game-written-out-as-if-by-hand) step 7 onward | The two that never finish: a backend at a time, a game at a time |
+| 1 | [F9](#f9-sound-files) steps 1 to 4: sound files | Small and self-contained; the first new thing a game can do |
+| 2 | [A5](#a5-a-game-written-out-as-if-by-hand) steps 1 to 6: the stand-alone generator as far as Breakout | The author's main aim; early enough to learn whether the idea holds |
+| 3 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
+| 4 | [F6](#f6-rules-that-are-looked-at-when-nothing-moves): rules when nothing moves | Removes two limits and some fakes in the games |
+| 5 | [F3](#f3-a-maze-search), then [F5](#f5-line-of-sight): maze search, line of sight | Two small steering additions that share games (Berserk, Haunted House) |
+| 6 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
+| 7 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
+| 8 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
+| 9 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
+| 10 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
+| 11 | [F8](#f8-dice): dice | Waits on the hold on new games |
+| 12 | [A7](#a7-the-next-backend-is-cheap) step 6 onward, [A5](#a5-a-game-written-out-as-if-by-hand) step 7 onward | The two that never finish: a backend at a time, a game at a time |
 
 What must come before what:
 
@@ -165,17 +164,6 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 - **Not doing.** Cards, the board-game search and cell puzzles in this target: they are large engines in themselves, and a "weekend" version would be those files copied. They stay on `windows-cpp` until the author asks otherwise. Another platform is a later task: [targets](designs/57-ideas.md).
 - **Files.** `games/prototypes/pong_min/`, `games/generators/standalone-cpp/`, `xge/cli/source/generate.cpp` (targets are folders already; add the coverage check), `xge/tests/generated/test_generated_games.cpp`, `scripts/cmake/assets.cmake` (`data_generators`), `scripts/shell/windows/games-*.bat` (a target argument), `docs/reference/programs.md`, `docs/designs/40-generator.md`.
 - **Done, first milestone:** `xgecli pong --generate standalone-cpp` writes a program under 300 lines of its own code that builds with no warnings at `/W4` and GCC's strict set, and matches the engine frame for frame for ten seeds.
-
-#### A6. The schema documents itself
-
-- **Needs** nothing.
-- **Why.** The XSD is the definition of the language, but its comments are `<!-- -->`, which no tool reads, so an editor shows nothing on hover.
-- **Steps.**
-  - [x] **1. Make sure annotations are harmless (S).** Add one `xs:annotation`/`xs:documentation` to one element. **Check:** every game still validates with Xerces and with the weak validator (`xge/lib/load/xsd.cpp`); if the weak one trips, teach it to skip annotations, with a test.
-  - [x] **2. Move the comments, a section of the schema a commit (M in all).** Each comment that describes an element or type becomes that element's `xs:documentation`. **Check after each commit:** every game validates; at the end, hovering `<deflect>` in VS Code with the XML extension shows its sentence (the author looks).
-  - [ ] **3. Tighter attribute types (S).** Of the `xs:string` attributes, those that hold one name become `xs:NMTOKEN`, and those that pick from a list (`on=`, `side=`, `total=`) an enumeration. Dotted names (`variable="ball.hits"`) stay strings. **Check:** every game validates, and a test file with a bad pick is refused by the schema.
-- **Held by the author:** generating `docs/reference/words.md` from the schema. The word index in `docs/readme.md` stays hand made, with its groups, for now.
-- **Done when** all three boxes are ticked.
 
 #### A7. The next backend is cheap
 
@@ -373,6 +361,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 ### The project
 
+- **The reference's word list generated from the schema** (`docs/reference/words.md`), now that each element documents itself (A6, done). Held by the author: the word index in `docs/readme.md` stays hand made, with its groups, for now.
 - **A build that runs in a browser,** so a game can be played from a link without compiling anything. Not hard, but better done once the language has settled.
 
 ### Language and engine
@@ -408,7 +397,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
-Nothing waiting.
+- **The schema's documentation in an editor (A6):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.
 
 ## Known untested
 

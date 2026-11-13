@@ -297,7 +297,7 @@
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:complexType name="vector2Type">
@@ -374,7 +374,7 @@
         <xs:element name="part" type="partType" maxOccurs="unbounded" />
       </xs:choice>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
     <xs:attribute name="wave" type="waveType" use="optional" />
   </xs:complexType>
 
@@ -383,8 +383,8 @@
       <xs:element name="thickness" type="valueType" minOccurs="0" />
       <xs:element name="color" type="xs:string" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="from" type="xs:string" use="required" />
-    <xs:attribute name="to" type="xs:string" use="required" />
+    <xs:attribute name="from" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="to" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:complexType name="chooseWordType">
@@ -454,7 +454,7 @@
               </xs:annotation>
             </xs:element>
           </xs:sequence>
-          <xs:attribute name="style" type="xs:string" use="optional">
+          <xs:attribute name="style" type="xs:NMTOKEN" use="optional">
             <xs:annotation>
               <xs:documentation><![CDATA[a <style> of the game's <styles>, for the <size> and <color> left out]]></xs:documentation>
             </xs:annotation>
@@ -495,7 +495,7 @@
             <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="flip" type="flipType" minOccurs="0" />
           </xs:sequence>
-          <xs:attribute name="style" type="xs:string" use="optional">
+          <xs:attribute name="style" type="xs:NMTOKEN" use="optional">
             <xs:annotation>
               <xs:documentation><![CDATA[a <style> of the game's <styles>, for the <scale> and <color>s left out]]></xs:documentation>
             </xs:annotation>
@@ -593,7 +593,7 @@
         </xs:annotation>
       </xs:element>
     </xs:choice>
-    <xs:attribute name="name" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="spriteChangeType">
@@ -637,7 +637,7 @@
             <xs:element name="color" type="xs:string" minOccurs="0" />
             <xs:element name="font" type="xs:string" minOccurs="0" />
           </xs:sequence>
-          <xs:attribute name="style" type="xs:string" use="optional">
+          <xs:attribute name="style" type="xs:NMTOKEN" use="optional">
             <xs:annotation>
               <xs:documentation><![CDATA[a <style> of the game's <styles>, for the <size> and <color> left out]]></xs:documentation>
             </xs:annotation>
@@ -665,7 +665,7 @@
             <xs:element name="color" type="bitmapColorType" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="flip" type="flipType" minOccurs="0" />
           </xs:sequence>
-          <xs:attribute name="style" type="xs:string" use="optional">
+          <xs:attribute name="style" type="xs:NMTOKEN" use="optional">
             <xs:annotation>
               <xs:documentation><![CDATA[a <style> of the game's <styles>, for the <scale> and <color>s left out]]></xs:documentation>
             </xs:annotation>
@@ -699,7 +699,7 @@
         </xs:annotation>
       </xs:element>
     </xs:choice>
-    <xs:attribute name="name" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="sheetCellType">
@@ -759,14 +759,14 @@
       <xs:choice maxOccurs="unbounded">
         <xs:element name="frame">
           <xs:complexType>
-            <xs:attribute name="sprite" type="xs:string" use="required" />
+            <xs:attribute name="sprite" type="xs:NMTOKEN" use="required" />
           </xs:complexType>
         </xs:element>
         <xs:element name="cell" type="sheetCellType" />
         <xs:element name="cells" type="sheetRunType" />
       </xs:choice>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="optional">
+    <xs:attribute name="name" type="xs:NMTOKEN" use="optional">
       <xs:annotation>
         <xs:documentation><![CDATA[named: a look that moves, which <become> and <poses> pick like a sprite]]></xs:documentation>
       </xs:annotation>
@@ -777,7 +777,7 @@
     <xs:annotation>
       <xs:documentation>poses: the look for each way an object moves, picked each frame while it shows one of them.</xs:documentation>
     </xs:annotation>
-    <xs:attribute name="sprite" type="xs:string" use="required" />
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
   <xs:complexType name="posesType">
     <xs:sequence>
@@ -835,7 +835,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
-    <xs:attribute name="member" type="xs:string" use="optional" />
+    <xs:attribute name="member" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
   <xs:complexType name="ownsType">
     <xs:annotation>
@@ -861,7 +861,7 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
-    <xs:attribute name="button" type="xs:string" use="required" />
+    <xs:attribute name="button" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
   <xs:complexType name="holdsType">
     <xs:annotation>
@@ -1017,7 +1017,7 @@
             </xs:element>
             <xs:element name="play" minOccurs="0">
               <xs:complexType>
-                <xs:attribute name="sound" type="xs:string" use="required" />
+                <xs:attribute name="sound" type="xs:NMTOKEN" use="required" />
               </xs:complexType>
             </xs:element>
           </xs:sequence>
@@ -1082,9 +1082,9 @@
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
   <xs:complexType name="markType">
-    <xs:attribute name="object" type="xs:string" use="required" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
     <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
-    <xs:attribute name="variable" type="xs:string" use="optional" />
+    <xs:attribute name="variable" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
   <xs:complexType name="pieceMovesType">
     <xs:annotation>
@@ -1137,7 +1137,7 @@
       <xs:element name="close" minOccurs="0">
         <xs:complexType>
           <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
-          <xs:attribute name="object" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="promote" minOccurs="0">
@@ -1180,7 +1180,7 @@
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="variable" type="xs:string" use="required" />
+    <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:complexType name="targetValueType" mixed="true">
@@ -1190,7 +1190,7 @@
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="object" type="xs:string" use="required" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:group name="sightParts">
@@ -1238,7 +1238,7 @@
   </xs:complexType>
 
   <xs:complexType name="objectRefType">
-    <xs:attribute name="object" type="xs:string" use="required" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:simpleType name="hopDirectionType">
@@ -1299,7 +1299,7 @@
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="variable" type="xs:string" use="required" />
+    <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:complexType name="spawnType">
@@ -1337,7 +1337,7 @@
         </xs:annotation>
       </xs:element>
     </xs:sequence>
-    <xs:attribute name="object" type="xs:string" use="required" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
     <xs:attribute name="into" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
@@ -1356,7 +1356,7 @@
       </xs:sequence>
       <xs:element name="all" type="emptyType" />
     </xs:choice>
-    <xs:attribute name="object" type="xs:string" use="optional" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="from" type="xs:NMTOKEN" use="required" />
     <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
@@ -1476,7 +1476,7 @@
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="direction" type="directionType" use="optional" />
-    <xs:attribute name="burn" type="xs:string" use="optional" />
+    <xs:attribute name="burn" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="turnType" mixed="true">
@@ -1551,7 +1551,7 @@
         </xs:restriction>
       </xs:simpleType>
     </xs:attribute>
-    <xs:attribute name="class" type="xs:string" use="required" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:simpleType name="mapCharType">
@@ -1569,7 +1569,7 @@
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base="xs:unsignedInt">
-        <xs:attribute name="button" type="xs:string" use="required" />
+        <xs:attribute name="button" type="xs:NMTOKEN" use="required" />
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -1592,8 +1592,8 @@
     <xs:sequence>
       <xs:element name="wall" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
-          <xs:attribute name="class" type="xs:string" use="required" />
-          <xs:attribute name="sprite" type="xs:string" use="optional" />
+          <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="slow" minOccurs="0" maxOccurs="unbounded">
@@ -1603,13 +1603,13 @@
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:decimal">
-              <xs:attribute name="class" type="xs:string" use="required" />
+              <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
             </xs:extension>
           </xs:simpleContent>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
-    <xs:attribute name="map" type="xs:string" use="required" />
+    <xs:attribute name="map" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:complexType name="goType" mixed="true">
@@ -1639,7 +1639,7 @@
         <xs:element name="ahead" type="valueType" minOccurs="0" />
         <xs:element name="with" minOccurs="0">
           <xs:complexType>
-            <xs:attribute name="object" type="xs:string" use="required" />
+            <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
           </xs:complexType>
         </xs:element>
         <xs:element name="retreat" minOccurs="0">
@@ -1647,12 +1647,12 @@
             <xs:sequence>
               <xs:group ref="valueTag" minOccurs="0" />
             </xs:sequence>
-            <xs:attribute name="object" type="xs:string" use="required" />
+            <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
           </xs:complexType>
         </xs:element>
       </xs:sequence>
     </xs:choice>
-    <xs:attribute name="object" type="xs:string" use="required" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:complexType name="wanderType" mixed="true">
@@ -1672,7 +1672,7 @@
       <xs:group ref="valueTag" minOccurs="0" />
       <xs:element name="near" type="valueType" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="object" type="xs:string" use="required" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <!--
@@ -1701,8 +1701,8 @@
           <xs:documentation>copy: the variable into= takes the number variable= holds now (both owner.variable)</xs:documentation>
         </xs:annotation>
         <xs:complexType>
-          <xs:attribute name="variable" type="xs:string" use="required" />
-          <xs:attribute name="into" type="xs:string" use="required" />
+          <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="count">
@@ -1714,7 +1714,7 @@
             <xs:group ref="cellPlace" minOccurs="0" />
           </xs:sequence>
           <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
-          <xs:attribute name="into" type="xs:string" use="required" />
+          <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="rank">
@@ -1722,30 +1722,30 @@
           <xs:documentation>rank: the entry variable= is of goes into the group into= (the best first), in place by that variable</xs:documentation>
         </xs:annotation>
         <xs:complexType>
-          <xs:attribute name="variable" type="xs:string" use="required" />
-          <xs:attribute name="into" type="xs:string" use="required" />
+          <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="play">
         <xs:complexType>
-          <xs:attribute name="sound" type="xs:string" use="required" />
+          <xs:attribute name="sound" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="silence">
         <xs:complexType>
-          <xs:attribute name="sound" type="xs:string" use="required" />
+          <xs:attribute name="sound" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="become">
         <xs:complexType>
-          <xs:attribute name="sprite" type="xs:string" use="optional">
+          <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional">
             <xs:annotation>
               <xs:documentation>a look, a palette (a style its bitmaps take instead), or both</xs:documentation>
             </xs:annotation>
           </xs:attribute>
-          <xs:attribute name="style" type="xs:string" use="optional" />
-          <xs:attribute name="object" type="xs:string" use="optional" />
-          <xs:attribute name="from" type="xs:string" use="optional">
+          <xs:attribute name="style" type="xs:NMTOKEN" use="optional" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+          <xs:attribute name="from" type="xs:NMTOKEN" use="optional">
             <xs:annotation>
               <xs:documentation>only those showing this look change</xs:documentation>
             </xs:annotation>
@@ -1760,7 +1760,7 @@
           <xs:sequence>
             <xs:group ref="valueTag" minOccurs="0" />
           </xs:sequence>
-          <xs:attribute name="object" type="xs:string" use="optional" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="follow" type="followType" />
@@ -1776,7 +1776,7 @@
             <xs:element name="x" type="valueType" minOccurs="0" />
             <xs:element name="y" type="valueType" minOccurs="0" />
           </xs:sequence>
-          <xs:attribute name="object" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="enter">
@@ -1787,8 +1787,8 @@
           ]]></xs:documentation>
         </xs:annotation>
         <xs:complexType>
-          <xs:attribute name="scene" type="xs:string" use="optional" />
-          <xs:attribute name="way" type="xs:string" use="optional" />
+          <xs:attribute name="scene" type="xs:NMTOKEN" use="optional" />
+          <xs:attribute name="way" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="reset">
@@ -1800,9 +1800,9 @@
           ]]></xs:documentation>
         </xs:annotation>
         <xs:complexType>
-          <xs:attribute name="object" type="xs:string" use="optional" />
-          <xs:attribute name="scene" type="xs:string" use="optional" />
-          <xs:attribute name="way" type="xs:string" use="optional" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+          <xs:attribute name="scene" type="xs:NMTOKEN" use="optional" />
+          <xs:attribute name="way" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="spawn" type="spawnType">
@@ -1840,7 +1840,7 @@
           </xs:documentation>
         </xs:annotation>
         <xs:complexType>
-          <xs:attribute name="object" type="xs:string" use="optional" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="trigger">
@@ -1854,14 +1854,14 @@
             </xs:element>
             <xs:group ref="cellPlace" />
           </xs:choice>
-          <xs:attribute name="object" type="xs:string" use="optional">
+          <xs:attribute name="object" type="xs:NMTOKEN" use="optional">
             <xs:annotation>
               <xs:documentation>left out in an object's own collision, action or timer: that object</xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
-          <xs:attribute name="action" type="xs:string" use="required" />
-          <xs:attribute name="from" type="xs:string" use="optional">
+          <xs:attribute name="action" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="from" type="xs:NMTOKEN" use="optional">
             <xs:annotation>
               <xs:documentation>only those of them showing this look</xs:documentation>
             </xs:annotation>
@@ -1878,7 +1878,7 @@
     <xs:choice>
       <xs:element name="push">
         <xs:complexType>
-          <xs:attribute name="state" type="xs:string" use="required" />
+          <xs:attribute name="state" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="pop">
@@ -1889,7 +1889,7 @@
           ]]></xs:documentation>
         </xs:annotation>
         <xs:complexType>
-          <xs:attribute name="state" type="xs:string" use="optional" />
+          <xs:attribute name="state" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="alternate">
@@ -1903,7 +1903,7 @@
           <xs:sequence>
             <xs:element name="player" maxOccurs="unbounded">
               <xs:complexType>
-                <xs:attribute name="state" type="xs:string" use="optional" />
+                <xs:attribute name="state" type="xs:NMTOKEN" use="optional" />
               </xs:complexType>
             </xs:element>
           </xs:sequence>
@@ -1949,7 +1949,7 @@
       <xs:element name="stop" type="emptyType" />
       <xs:element name="fire">
         <xs:complexType>
-          <xs:attribute name="object" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="settle" type="emptyType">
@@ -2011,7 +2011,7 @@
           ]]></xs:documentation>
         </xs:annotation>
         <xs:complexType>
-          <xs:attribute name="object" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="put">
@@ -2045,7 +2045,7 @@
               </xs:annotation>
             </xs:element>
           </xs:sequence>
-          <xs:attribute name="object" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="chase" type="chaseType">
@@ -2151,7 +2151,7 @@
           <xs:sequence>
             <xs:element name="onto" type="ontoType" minOccurs="0" maxOccurs="unbounded" />
           </xs:sequence>
-          <xs:attribute name="path" type="xs:string" use="optional" />
+          <xs:attribute name="path" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
     </xs:choice>
@@ -2167,7 +2167,7 @@
           <xs:documentation><![CDATA[hold: only in a <computer>'s condition: the button held down while it holds]]></xs:documentation>
         </xs:annotation>
         <xs:complexType>
-          <xs:attribute name="button" type="xs:string" use="required" />
+          <xs:attribute name="button" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:element name="think">
@@ -2197,8 +2197,8 @@
             </xs:element>
           </xs:sequence>
           <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
-          <xs:attribute name="object" type="xs:string" use="required" />
-          <xs:attribute name="button" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="button" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
     </xs:choice>
@@ -2305,8 +2305,8 @@
       <xs:element name="stagger" type="valueType" minOccurs="0" />
       <xs:element name="nearest" type="valueType" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="path" type="xs:string" use="required" />
-    <xs:attribute name="object" type="xs:string" use="optional" />
+    <xs:attribute name="path" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="pathStepType">
@@ -2334,7 +2334,7 @@
         <xs:element name="home" type="emptyType" />
       </xs:choice>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:complexType name="ruleCommandsType">
@@ -2376,10 +2376,10 @@
         <xs:documentation>the side of this object the other touched: top, bottom, left, right, horizontal or vertical</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="class" type="xs:string" use="optional" />
-    <xs:attribute name="object" type="xs:string" use="optional" />
-    <xs:attribute name="unless" type="xs:string" use="optional" />
-    <xs:attribute name="through" type="xs:string" use="optional">
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="unless" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="through" type="xs:NMTOKEN" use="optional">
       <xs:annotation>
         <xs:documentation>
           only a touch felt through something of this class (a knock through
@@ -2387,7 +2387,7 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="sprite" type="xs:string" use="optional" />
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="actionType">
@@ -2402,7 +2402,7 @@
         </xs:annotation>
       </xs:element>
     </xs:choice>
-    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
   </xs:complexType>
 
   <xs:complexType name="inputType">
@@ -2420,7 +2420,7 @@
       <xs:group ref="stateCommands" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attribute name="button" type="xs:NMTOKEN" use="optional" />
-    <xs:attribute name="axis" type="xs:string" use="optional" />
+    <xs:attribute name="axis" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="on" type="keyMomentType" use="optional">
       <xs:annotation>
         <xs:documentation>
@@ -2485,15 +2485,15 @@
       ]]></xs:documentation>
     </xs:annotation>
     <xs:group ref="conditionTest" minOccurs="0" />
-    <xs:attribute name="class" type="xs:string" use="optional" />
-    <xs:attribute name="object" type="xs:string" use="optional" />
-    <xs:attribute name="variable" type="xs:string" use="optional" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="variable" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="total" type="totalType" use="optional">
       <xs:annotation>
         <xs:documentation>count: how many are in play; sum, highest, lowest: of variable= over them</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="distance" type="xs:string" use="optional">
+    <xs:attribute name="distance" type="xs:NMTOKEN" use="optional">
       <xs:annotation>
         <xs:documentation>how far each is from the nearest in play of this object or group</xs:documentation>
       </xs:annotation>
@@ -2531,15 +2531,15 @@
     </xs:choice>
   </xs:group>
   <xs:attributeGroup name="conditionAttributes">
-    <xs:attribute name="class" type="xs:string" use="optional" />
-    <xs:attribute name="object" type="xs:string" use="optional" />
-    <xs:attribute name="variable" type="xs:string" use="optional" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="variable" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="total" type="totalType" use="optional">
       <xs:annotation>
         <xs:documentation>count: how many are in play; sum, highest, lowest: of variable= over them</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="distance" type="xs:string" use="optional">
+    <xs:attribute name="distance" type="xs:NMTOKEN" use="optional">
       <xs:annotation>
         <xs:documentation>how far each is from the nearest in play of this object or group</xs:documentation>
       </xs:annotation>
@@ -2549,7 +2549,7 @@
         <xs:documentation>only those showing this look; with no test, showing it is the test</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="name" type="xs:string" use="optional">
+    <xs:attribute name="name" type="xs:NMTOKEN" use="optional">
       <xs:annotation>
         <xs:documentation>a scene from= this one's can put a condition of the same name in its place</xs:documentation>
       </xs:annotation>
@@ -2631,12 +2631,12 @@
     </xs:choice>
   </xs:group>
   <xs:attributeGroup name="timerAttributes">
-    <xs:attribute name="name" type="xs:string" use="optional">
+    <xs:attribute name="name" type="xs:NMTOKEN" use="optional">
       <xs:annotation>
         <xs:documentation>a scene from= this one's can put a timer of the same name in its place</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="sprite" type="xs:string" use="optional">
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional">
       <xs:annotation>
         <xs:documentation>an object's timer that counts only while it shows this look</xs:documentation>
       </xs:annotation>
@@ -2837,7 +2837,7 @@
           <xs:sequence>
             <xs:group ref="valueTag" minOccurs="0" />
           </xs:sequence>
-          <xs:attribute name="name" type="xs:string" use="required" />
+          <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
           <xs:attribute name="update" type="updateType" use="optional" />
         </xs:complexType>
       </xs:element>
@@ -2901,7 +2901,7 @@
           <xs:documentation><![CDATA[on a map with <cells />: the pieces of that name or group behind it follow its trail, a cell each step; <grow /> adds one at the tail]]></xs:documentation>
         </xs:annotation>
         <xs:complexType>
-          <xs:attribute name="object" type="xs:string" use="required" />
+          <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
       <xs:choice minOccurs="0">
@@ -2967,9 +2967,9 @@
       </xs:element>
       <xs:group ref="objectParts" />
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
-    <xs:attribute name="class" type="xs:string" use="optional" />
-    <xs:attribute name="from" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="from" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="memberType">
@@ -3007,7 +3007,7 @@
       </xs:element>
       <xs:element name="think" type="memberThinkType" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="showType">
@@ -3018,8 +3018,8 @@
         are drawn still underneath. One of the three.
       ]]></xs:documentation>
     </xs:annotation>
-    <xs:attribute name="object" type="xs:string" use="optional" />
-    <xs:attribute name="state" type="xs:string" use="optional" />
+    <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="state" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="lineOfCellsType">
@@ -3059,7 +3059,7 @@
     </xs:sequence>
     <xs:attribute name="row" type="xs:positiveInteger" use="required" />
     <xs:attribute name="column" type="xs:positiveInteger" use="required" />
-    <xs:attribute name="name" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="namedCountType">
@@ -3146,9 +3146,9 @@
         <xs:element name="group" type="innerGroupType" maxOccurs="unbounded" />
       </xs:choice>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
-    <xs:attribute name="class" type="xs:string" use="optional" />
-    <xs:attribute name="from" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="from" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="innerGroupType">
@@ -3164,8 +3164,8 @@
         <xs:element name="group" type="innerGroupType" maxOccurs="unbounded" />
       </xs:choice>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
-    <xs:attribute name="class" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="mapObjectType">
@@ -3184,8 +3184,8 @@
       <xs:element name="animation" type="animationType" minOccurs="0" maxOccurs="unbounded" />
       <xs:group ref="objectParts" />
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
-    <xs:attribute name="class" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="char" type="mapCharType" use="optional">
       <xs:annotation>
         <xs:documentation><![CDATA[on a map with <cells />, left out (or on no tile): it waits to be spawned]]></xs:documentation>
@@ -3208,8 +3208,8 @@
       <xs:group ref="objectParts" />
       <xs:element name="group" type="mapGroupType" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
-    <xs:attribute name="class" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="char" type="mapCharType" use="optional" />
   </xs:complexType>
 
@@ -3257,8 +3257,8 @@
         </xs:annotation>
       </xs:element>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
-    <xs:attribute name="from" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="from" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="checksType">
@@ -3271,7 +3271,7 @@
           <xs:sequence>
             <xs:group ref="checkCommands" maxOccurs="unbounded" />
           </xs:sequence>
-          <xs:attribute name="class" type="xs:string" use="optional" />
+          <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
       <xs:element name="line">
@@ -3292,7 +3292,7 @@
             </xs:element>
             <xs:group ref="checkCommands" maxOccurs="unbounded" />
           </xs:sequence>
-          <xs:attribute name="class" type="xs:string" use="optional" />
+          <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
       </xs:element>
     </xs:choice>
@@ -3325,8 +3325,8 @@
     <xs:sequence>
       <xs:element name="way" maxOccurs="unbounded">
         <xs:complexType>
-          <xs:attribute name="name" type="xs:string" use="required" />
-          <xs:attribute name="scene" type="xs:string" use="required" />
+          <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="scene" type="xs:NMTOKEN" use="required" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -3349,8 +3349,8 @@
       <xs:element name="conditions" type="conditionsType" minOccurs="0" />
       <xs:element name="timers" type="stateTimersType" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required" />
-    <xs:attribute name="from" type="xs:string" use="optional" />
+    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="from" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="scenesType">
@@ -3451,7 +3451,7 @@
                       </xs:annotation>
                     </xs:element>
                   </xs:sequence>
-                  <xs:attribute name="name" type="xs:string" use="required" />
+                  <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
@@ -3495,7 +3495,7 @@
             <xs:sequence>
               <xs:element name="keep" maxOccurs="unbounded">
                 <xs:complexType>
-                  <xs:attribute name="object" type="xs:string" use="required" />
+                  <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
@@ -3576,7 +3576,7 @@
                         </xs:documentation>
                       </xs:annotation>
                       <xs:complexType>
-                        <xs:attribute name="sound" type="xs:string" use="required" />
+                        <xs:attribute name="sound" type="xs:NMTOKEN" use="required" />
                       </xs:complexType>
                     </xs:element>
                     <xs:element name="inputs" minOccurs="0">
@@ -3601,8 +3601,8 @@
                     </xs:element>
                     <xs:element name="timers" type="stateTimersType" minOccurs="0" />
                   </xs:sequence>
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                  <xs:attribute name="from" type="xs:string" use="optional">
+                  <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+                  <xs:attribute name="from" type="xs:NMTOKEN" use="optional">
                     <xs:annotation>
                       <xs:documentation><![CDATA[
                         A copy of an earlier state: its objects (an <object> or
@@ -3656,7 +3656,7 @@
                     <xs:element name="flip" type="flipType" minOccurs="0" />
                   </xs:sequence>
                   <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
-                  <xs:attribute name="style" type="xs:string" use="optional" />
+                  <xs:attribute name="style" type="xs:NMTOKEN" use="optional" />
                 </xs:complexType>
               </xs:element>
               <xs:element name="drawing">

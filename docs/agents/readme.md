@@ -43,6 +43,7 @@ A language change is made everywhere in one commit:
 ## Tests
 
 - A new schema word needs a game that uses it and a mention in `docs/reference/` (`xgetest "[vocabulary]"`); one no game uses goes in `kUnused` in `test_vocabulary.cpp` with why it stays.
+- A new tag or type in the schema says what it does in an `xs:annotation`/`xs:documentation` as its first child, not in a `<!-- -->` comment (comments are for notes to whoever edits the schema). Code that walks the schema steps over an `xs:annotation` first child (`test_verbs.cpp`).
 - The engine's own schema checker (`load/xsd.h`) reads every construct the schemas use; one it does not read stops it loading the schema, naming it. A new construct in a schema is taught to it, with a test in `test_xml_format.cpp`. `xgetest "[check]"` loads every game with every library.
 - A test that builds a `Game` without an `Engine` calls `setCurrentState(0)` and `measureShapeSize`, or nothing is shown and sizes are 0.
 - A command run between frames leaves its copies waiting: call `settleSpawns()` first. Never hold a reference to a copy across frames; look it up by name.

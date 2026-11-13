@@ -47,6 +47,8 @@ One `<game>` root, its children in this order (the schema enforces it):
 - Attributes are labels that cannot be computed: `name`, `class`, `object`, `variable`, `state`, `action`, `button`, `edge`, `direction`, `unless`, `sound`, `wave`, `pitch`, `to`.
 - What something *does* is a list of command tags, run in the order written. No `;`-separated strings.
 - An attribute holds one name. Several are an element each, written first: `<button>a</button><button>left</button>`, a row's `<number>`. A note's `pitch="F#4"` is one standard name, like a colour's.
+- The schema holds such a name as `xs:NMTOKEN`: letters, digits and `.` `-` `_`, no spaces, so `class="left paddle"` is refused. The window's `name` (its title) and a note's `pitch` and `to` are the exceptions.
+- Every tag is documented in the schema itself (`xs:documentation`), so an editor with an XML extension shows what a tag does on hover and in completion lists.
 
 ## Values
 

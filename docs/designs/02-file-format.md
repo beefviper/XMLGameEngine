@@ -46,3 +46,9 @@ Reached by removing a small scripting language that had grown inside attribute s
 - All four XML libraries give a tag's line (`XmlNode::line`): TinyXML2 keeps it, PugiXML and RapidXML give an offset counted into lines, and Xerces' parser records the line as it builds each element. Copies made for pieces and `from=` keep the line they were copied from.
 - **Chosen:** a reader that holds a tag runs inside `onLine` (`load/reading.h`), which adds the tag's line to an error that has none yet, so the innermost one wins. The raw objects, commands, conditions, rules and states keep their line for the checks made after reading.
 - Those checks work on what is made, and a made command keeps no line, so a misspelt name gives the line of what holds it. Open: each command's own line, cheap once a command is `{ verb, data }` ([plan](../plan.md) A1 step 4).
+
+## The schema documents itself
+
+- The schema is the language's definition, but its explanations were `<!-- -->` comments, which no editor shows. **Chosen:** each tag's and type's sentence is its `xs:documentation`, so hover and completion show it; comments stay only for notes to whoever edits the schema.
+- Attributes that name something are `xs:NMTOKEN` (dots allowed, so `paddle1.score` is one), and those that pick are enumerations, so a space or a wrong pick is refused before the loader sees it.
+- Open: generating the reference's word list from the documentation; the author keeps the hand-made index for now.
