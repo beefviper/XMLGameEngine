@@ -2,125 +2,53 @@
 
 XMLGameEngine is a video game description language written in XML, plus a C++ engine that runs it. A whole game (window, sounds, objects, screens, rules) is one `.xml` file, checked against a schema, [games/xgedef.xsd](games/xgedef.xsd).
 
-The file holds no code: no loops, no `if`, no function calls. What things do comes from a fixed vocabulary of verbs written as tags (`<bounce />`, `<die />`, `<hop direction="up">`), and the engine knows how to carry out each one. The aim is to describe the non-scrolling 2D games of the late 1970s and early 1980s, and the board and card games beside them, adding a word only when a real game cannot be written without it.
+The file holds no code: no loops, no `if`, no function calls. What things do comes from a fixed vocabulary of verbs written as tags (`<bounce />`, `<die />`, `<hop direction="up">`), and the engine knows how to carry out each one.
+
+The aim is to describe the non-scrolling 2D games of the late 1970s and early 1980s, and the board and card games beside them, adding a word only when a real game cannot be said without it.
 
 ## A whole game
 
-This is all of `pong_min.xml`, two paddles and a ball:
-
 ```xml
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
-  <window name="Pong">
-    <width>1280</width> <height>720</height>
-  </window>
+  <window name="Bounce"><width>640</width><height>480</height></window>
   <variables>
-    <variable name="margin">30</variable>
-    <variable name="size">16</variable>
-    <variable name="width">20</variable>
-    <variable name="height">120</variable>
-    <variable name="step">5</variable>
+    <variable name="size">8</variable>
   </variables>
   <states>
     <state name="playing">
       <objects>
         <object name="ball">
-          <sprite><rectangle><width>size</width><height>size</height></rectangle></sprite>
+          <sprite><circle><radius>size</radius></circle></sprite>
           <position><x><centered /></x><y><centered /></y></position>
-          <velocity>
-            <x>
-              <multiply>
-                <value><sign><value>ball.side</value></sign></value>
-                <value>ball.speed</value>
-                <value><cosine><value>ball.angle</value></cosine></value>
-              </multiply>
-            </x>
-            <y>
-              <multiply>
-                <value>ball.speed</value>
-                <value><sine><value>ball.angle</value></sine></value>
-              </multiply>
-            </y>
-          </velocity>
+          <velocity><x>3</x><y>2</y></velocity>
           <collisions>
             <collision edge="vertical"><bounce /></collision>
-            <collision edge="horizontal"><reset /></collision>
-            <collision><deflect>45</deflect></collision>
+            <collision edge="horizontal"><bounce /></collision>
           </collisions>
-          <variables>
-            <variable name="speed">6</variable>
-            <variable name="angle"><random><min>-30</min><max>30</max></random></variable>
-            <variable name="side"><random><min>-1</min><max>1</max></random></variable>
-          </variables>
         </object>
-        <group name="paddles">
-          <sprite><rectangle><width>width</width><height>height</height></rectangle></sprite>
-          <collisions>
-            <collision edge="vertical"><stick /></collision>
-          </collisions>
-          <actions>
-            <action name="up"><move direction="up">step</move></action>
-            <action name="down"><move direction="down">step</move></action>
-          </actions>
-          <member name="paddle1"><position><x>margin</x><y><centered /></y></position></member>
-          <member name="paddle2"><position><x>window.right - margin - width</x><y><centered /></y></position></member>
-        </group>
       </objects>
       <inputs>
-        <input button="w"><trigger object="paddle1" action="up" /></input>
-        <input button="s"><trigger object="paddle1" action="down" /></input>
-        <input button="up"><trigger object="paddle2" action="up" /></input>
-        <input button="down"><trigger object="paddle2" action="down" /></input>
+        <input button="space"><reset /></input>
       </inputs>
     </state>
   </states>
 </game>
 ```
 
-A collision rule reads like a sentence: this ball, when it touches the top or bottom edge, bounces; when it leaves by a side, it starts again; when it touches anything else, it deflects by up to 45 degrees. The serve is worked out with operation tags (`<multiply>`, `<sine>`, `<cosine>`), so no arithmetic hides in a string.
+A ball bounces round the window, and Space puts it back. A collision rule reads like a sentence: this ball, when it touches an edge, bounces.
 
-## The language in brief
+Pong is about 80 lines ([pong_min.xml](games/descriptions/pong_min.xml)). The [documentation](docs/readme.md) has a short tour of the language and a page for every part of it.
 
-- **Attributes name or pick; everything else is content.** `name`, `class`, `edge`, `button` are attributes; a size, a colour or a position is element content.
-- **Behaviour is a list of verbs, run in order,** in a collision rule, an action, a key, a condition, a timer or a path step. The schema says which verbs each place takes.
-- **A value is a number:** one number or name as text (`window.right`), a side (`<right><offset>12</offset></right>`), a `<random>`, or an operation of tags (`<subtract><value>window.right</value><value>margin</value></subtract>`).
-- **Names are dotted:** `ball.radius`, `aliens.3.2`, `playing.room2.robots`; `self.` and `touch.` inside a rule.
-- **Keys are bound in states, never in objects,** so changing a key is one edit.
-- **Say a thing once:** groups write what members share; the top-level `<objects>` holds pieces taken by name; states and scenes copy others with `from=` and say only what differs.
-- **Mistakes stop the load** with a message that says where, and "did you mean" for a misspelt name.
+## The games
 
-```
-<game>
-  <window>      size, background, frame rate, scale
-  <variables>   numbers the whole game uses
-  <sounds>      chip notes and music                  (optional)
-  <paths>       routes that objects fly               (optional)
-  <styles>      named text and bitmap looks           (optional)
-  <objects>     pieces written once, taken later      (optional)
-  <keeps>       objects kept between games            (optional)
-  <states>      title, playing, paused, game over ...
-    <objects>   what every state shares               (optional)
-  <demo>        a recorded game for attract mode      (optional)
-</game>
-```
+58 games come with it, in [games/descriptions/](games/descriptions/), each with a test that plays it frame by frame:
 
-The [documentation](docs/readme.md) has a tour, every word, and an index linking each to its page.
+- **Arcade:** Pong, Breakout, Space Invaders, Asteroids, Pac-Man, Frogger, Donkey Kong, Q\*bert, Centipede and more.
+- **Puzzles:** Tetris, Columns, Snake, and pushing, merging and mine-finding games.
+- **Tables and tracks:** mini golf, artillery, pinball, a racer.
+- **Boards and cards:** Checkers, Reversi, Klondike, Hearts, Texas Hold'em and others, with computer players.
 
-## Games
-
-58 games in [games/descriptions/](games/descriptions/), each with a test that plays it frame by frame:
-
-| Kind | Games |
-|---|---|
-| Paddle and ball | Pong, Breakout, Space Race, Tennis |
-| Shooters | Space Invaders (two versions), Galaxian, Asteroids, Missile Command, Megamania, Yars' Revenge, Berserk, Demon Attack, Atlantis, Astrosmash, Air-Sea Battle, Combat, Depth Charge |
-| Platforms and rooms | Donkey Kong, Mario Bros., Q\*bert, Pitfall!, Frostbite, Adventure, Haunted House, Lunar Lander |
-| Mazes, lanes, catching | Pac-Man, Frogger, Freeway, Kaboom!, Fishing Derby |
-| Grid puzzles | Tetris, Columns, Snake, Centipede, Capsules, Crates, Doubles, Minefield |
-| Tables and tracks | Putt Park, Cannon Hill, Pinball, Speedway, Trick Shot |
-| Board games | Checkers, Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes |
-| Card games | Klondike, Crazy Eights, Blackjack, Texas Hold'em, Hearts, Spades, Gin Rummy, Pyramid |
-
-The [full list](docs/reference/games.md) says what each game needed. They share one key convention: Space starts and restarts, the Pause key pauses; player one is W A S D plus the arrows.
+[The full list](docs/reference/games.md) has every game and its keys. Space starts a game, and player one is W A S D or the arrows.
 
 ## Build and run
 
@@ -130,33 +58,36 @@ cmake --build build --parallel
 output/Debug/xgecli frogger
 ```
 
-The build makes `xgelib` (the engine), `xgecli` (command line) and `xgegui` (a Qt 6 app showing the game beside a tree of its data, built only when Qt is found). Everything needed to run lands in `output/<Config>/`, so the folder can be copied anywhere. `-w`, `-x` and `-a` pick the window, XML and sound libraries (`xgecli pong -w raylib -a sdl2`).
+| Program | What |
+|---|---|
+| `xgecli` | plays a game from the command line; `--generate windows-cpp` writes one out as a C++ program of its own |
+| `xgegui` | a Qt 6 app that shows a game beside a tree of its data (built only when Qt 6 is found) |
+| `xgetest` | the tests: `cmake -B build -DBUILD_TESTING=ON`, then `output/Debug/xgetest` |
+
+Everything needed to run lands in `output/<Config>/`, so the folder can be copied anywhere. The options, the other libraries the engine can sit on, and the build in full are in [programs](docs/reference/programs.md) and [the engine](docs/reference/engine.md#building).
+
+## Status
+
+Version 1 is non-scrolling games; a camera for scrolling ones is planned for version 2. What it cannot do yet is in [known limitations](docs/reference/limits.md).
+
+## Credits and licence
+
+XMLGameEngine is by beefviper, under the MIT licence ([LICENSE](LICENSE)); a generated program carries a copy.
+
+It is built on these, each found through vcpkg or the system, or fetched and built:
 
 | Library | For |
 |---|---|
 | [Xerces-C](https://github.com/apache/xerces-c) | parsing and full XSD validation |
 | [SFML 3](https://github.com/SFML/SFML) | window, keys and sound |
-| [lunasvg](https://github.com/sammycage/lunasvg) | drawing SVG sprites; its plutovg reads picture sheets (PNG, JPEG, BMP) |
-| Qt 6 Widgets | `xgegui` (found, never fetched) |
-| libxslt | `xgecli --generate` (found, never fetched) |
-| Catch2 | the tests |
+| [lunasvg](https://github.com/sammycage/lunasvg) | drawing SVG sprites, and reading picture sheets |
+| Qt 6, libxslt, [Catch2](https://github.com/catchorg/Catch2) | `xgegui`, `--generate`, the tests |
 
-Each is found through vcpkg or the system, or fetched and built. A plain build has one library of each kind; `-DXGE_WITH_<NAME>=ON` adds raylib, SDL2, OpenGL, TinyXML2, PugiXML or RapidXML, and `-DXGE_ALL_BACKENDS=ON` all of them.
+raylib, SDL2, OpenGL, TinyXML2, PugiXML and RapidXML can be built in as well.
 
-- **Tests:** `cmake -B build -DBUILD_TESTING=ON`, then `output/Debug/xgetest`.
-- **A program of its own:** `xgecli pong --generate windows-cpp` writes the game as a standalone SFML program. XSLT turns the game file into C++ data and the engine's own code plays it, so it plays exactly as `xgecli` does.
-
-## Status
-
-Version 1 is non-scrolling games; a camera for scrolling ones is planned for version 2. Movement is pixels per frame and timers count frames; sound is chip music made from notes. The limits are listed in [known limitations](docs/reference/limits.md).
-
-## Licence
-
-MIT, in [LICENSE](LICENSE); a generated program carries a copy. The fonts in `games/assets/` keep their own: Tuffy is public domain, and Press Start 2P is under the SIL Open Font License (`pressstart2p-ofl.txt` beside it).
+The fonts in `games/assets/` keep their own licences: Tuffy is public domain, and Press Start 2P is under the SIL Open Font License (`pressstart2p-ofl.txt` beside it).
 
 ## Documentation
 
-- [docs/readme.md](docs/readme.md): the guide, a tour, and an index of every word.
-- [docs/reference/](docs/reference/): how the engine works today, a page per topic.
-- [docs/designs/00-designs.md](docs/designs/00-designs.md): why, options rejected, ideas not built.
-- [AGENTS.md](AGENTS.md) and [docs/agents/notes.md](docs/agents/notes.md): notes for contributors and AI coding agents.
+- [docs/readme.md](docs/readme.md): where everything is, a tour, and an index of every word.
+- [AGENTS.md](AGENTS.md): for contributors and AI coding agents.

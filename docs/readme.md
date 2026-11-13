@@ -8,8 +8,8 @@ A game is one XML file of tags, checked against `games/xgedef.xsd`. The engine r
 |---|---|---|
 | [reference/](reference/) | how the engine works **today**: every tag, what it does, the programs, the build | writing a game, or checking what a tag does. The code is the truth; these pages follow it |
 | [designs/](designs/00-designs.md) | one small file per topic: what was looked at, what was chosen and why, what is open | changing the language or the engine |
-| [agents/notes.md](agents/notes.md) | gotchas and working rules for anyone (or any AI) changing the code | before a change |
-| [plan.md](plan.md) | a review of the whole project and the tasks that follow from it, each written to be picked up cold | choosing what to do next |
+| [agents/](agents/readme.md) | tips that are hard to work out from the code, for anyone (or any AI) changing it | before a change |
+| [plan.md](plan.md) | what is next: ordered tasks, each written to be picked up cold, then the backlog | choosing what to do next |
 
 New to it: read the tour below, then [the game file](reference/format.md), [objects](reference/objects.md), [collisions](reference/collisions.md), [input](reference/input.md) and [states](reference/states.md), with a game from [the shipped games](reference/games.md) open beside them.
 
@@ -20,33 +20,9 @@ New to it: read the tour below, then [the game file](reference/format.md), [obje
 - **Action**: a named thing an object can do (`up`, `fire`). Keys never live on objects. [Input](reference/input.md)
 - **State**: a mode of the game (title, playing, paused) that binds keys to actions and holds the state's own objects. [States](reference/states.md)
 - **Condition**: a test checked every frame ("no aliens left", "lives at 0") that runs commands when it holds. [Conditions](reference/states.md#conditions)
-- **Value**: a number, a name, or arithmetic on names (`window.right - margin`), worked out at load. [Values](reference/format.md#values)
+- **Value**: a number, a name, or an operation written as tags (`<subtract>`), worked out at load. [Values](reference/format.md#values)
 
-```xml
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
-  <window name="Bounce"><width>640</width><height>480</height></window>
-  <states>
-    <state name="playing">
-      <objects>
-        <object name="ball">
-          <sprite><circle><radius>8</radius></circle></sprite>
-          <position><x><centered /></x><y><centered /></y></position>
-          <velocity><x>3</x><y>2</y></velocity>
-          <collisions>
-            <collision edge="vertical"><bounce /></collision>
-            <collision edge="horizontal"><bounce /></collision>
-          </collisions>
-        </object>
-      </objects>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
-    </state>
-  </states>
-</game>
-```
-
-A ball bounces round the window, and Space puts it back. Run a game with `output/Debug/xgecli <name>` ([programs](reference/programs.md)).
+A small whole game is in the [root readme](../readme.md#a-whole-game). Run a game with `output/Debug/xgecli <name>` ([programs](reference/programs.md)).
 
 ## The reference
 
@@ -88,11 +64,5 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | pictures | `pictures` (a `bitmap name` a sprite takes by `bitmap from`, a `drawing name` by `drawing from`, and each `sheet`), `cell`, `cells` (sprites, frames and cards cut from one picture) | [bitmaps](reference/pictures.md#bitmaps), [sheets](reference/pictures.md#sheets) |
 | holders | a pack's `columns name` and `rows name`, `holds`, `spread`, `accepts` (`condition` with `top`, `any`, `wild`, `empty`), `carry`, `top`, `order`, `counts`, `trick`, `score`, `picked`, `owns`, `starts`, `distribute`; in actions `send from into`, `order group`, `distribute`, `pick` (`most`), a holder's `become` | [holders](reference/cards.md#holders) |
 | players | `turns` on a group, `pass` (`member=`), a member's `think`, `owns` (`object=` or `class=`) and `team`, live `turn` | [players as a group](reference/states.md#players-as-a-group) |
-| cards | `<holds>` (`<spread>`, `<accepts>`, `<picked>`, `<counts>`, `<trick>`, `<score>`), `send`, `distribute`, `starts`, patterns (`alike`, `run`), tricks | [cards](reference/cards.md) |
+| patterns and tricks | `patterns` (`alike`, `run`), melds, tricks | [patterns](reference/cards.md#patterns), [tricks](reference/cards.md#tricks) |
 | computer | `computer`, `hold`, `think` | [computer players](reference/states.md#computer-players) |
-
-## Keeping the docs
-
-- **Docs move with code.** A change to a tag or to behaviour updates its reference page, and the matching design file, in the same commit.
-- **Reference pages say what is.** Short sections, a small example each, no history. Why it is so goes in the design file.
-- **Design files stay small** (about 6 KB): what was looked for, looked at, chosen and why, what is open. No diaries or test logs.

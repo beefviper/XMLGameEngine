@@ -37,6 +37,13 @@ The first target wrote each game as a program a person might write (Pong about 4
 - **Tried and removed:** Pong written by hand as its own `FrameRules` (about 150 lines), matching the engine for ten seeds of 3600 frames. In the history up to 7163ea2.
 - **It taught:** values are the hard part. The old expression library regrouped constants, so C++ differed in the last bit; the engine's own `load/calc` now works a text exactly as written. The order of random draws (alphabetical by variable) still has to match.
 
+## Where it goes next (chosen by the author)
+
+- **The point of a description is to free a game from its platform,** so a target should write the game itself, standing alone, in that platform's own terms: a program that reads as if someone wrote it by hand over a weekend.
+- `windows-cpp` stays as the exact target that covers every game, and gets no new design work.
+- A second target grows beside it verb by verb, tested frame by frame against the engine ([plan](../plan.md#a5-a-game-written-out-as-if-by-hand)). This is G1 again; it can work now because the frame order and the verbs' work are shared functions and arithmetic is the engine's own.
+- Rejected: making `windows-cpp` cheaper still by having XSLT write the XML tree for the engine's own reader. It plays the same, but it is further from a game anyone could read.
+
 ## Open
 
 - `data.xsl` reads the file a second time: a new field in `load/xml.cpp` needs the same in `data.xsl`, and the data test fails until it has it.

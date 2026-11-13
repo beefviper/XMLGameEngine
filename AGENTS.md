@@ -1,31 +1,18 @@
 # AGENTS.md
 
-XMLGameEngine is a video game description language in XML plus a C++ engine that runs it. A game is one `.xml` file (`games/descriptions/`), checked against `games/xgedef.xsd`; behavior comes from a closed vocabulary of verb tags, never from code in the file.
+XMLGameEngine is a video game description language in XML plus a C++ engine that runs it. A game is one `.xml` file in `games/descriptions/`, checked against `games/xgedef.xsd`. Behavior comes from a closed vocabulary of verb tags, never from code in the file.
 
-## Read in this order
+## Where to read
 
-1. [docs/readme.md](docs/readme.md): the guide to the docs, a short tour and an index of every word.
-2. [docs/reference/](docs/reference/): how the engine works **today**, a page per topic (format, objects, collisions, commands, states, the engine, limitations). The authority on behaviour.
-3. [docs/designs/00-designs.md](docs/designs/00-designs.md): index of one small file per topic: why, options rejected, ideas, backlog. Open only the one for your area.
-4. [docs/agents/notes.md](docs/agents/notes.md): gotchas.
-
-The root [readme.md](readme.md) is the short public overview.
-
-## Layout
-
-| Path | What |
+| For | Read |
 |---|---|
-| `xge/lib/` | `xgelib`, the engine, a folder per part (`game/`, `play/`, `verbs/`, `load/`, `xml/`, `window/`, `audio/`, `picture/`, `engine/`), each header beside its source, included as `"game/game.h"`. Throws, never `exit()`s |
-| `xge/cli/`, `xge/gui/` | `xgecli`; `xgegui` (Qt 6, built only when Qt is found) |
-| `xge/tests/` | Catch2 (`xgetest`): `engine/` a `test_<topic>.cpp` per area, `games/` one per game (played frame by frame), `generated/` the generated games (`xgetest-generated`), `long/` the runs that take minutes (`xgetest-long`), `helpers/` what they share |
-| `games/xgedef.xsd` | the schema, the definition of the language; games name it `../xgedef.xsd` |
-| `games/descriptions/`, `games/assets/` | the games; their media |
-| `games/generators/` | the XSLT stylesheets `xgecli --generate` runs, a folder per target |
-| `scripts/cmake/`, `scripts/shell/` | CMake modules; `shell/linux/` prerequisite installers, `shell/windows/games-run-all.bat [config]` runs `games-generate-all.bat` (every game into `output/<config>/generated/<game>/`), `games-build-all.bat` (each with MSVC at `/W4`) and `games-test-all.bat` (builds and runs `xgetest-generated`) |
+| tips that are hard to work out from the code | [docs/agents/](docs/agents/readme.md): its first page always, then the page for the part you touch |
+| what a tag or program does today | [docs/reference/](docs/reference/), a page per topic, listed in [docs/readme.md](docs/readme.md) |
+| where each part of the code lives, and how a game is loaded and played | [docs/reference/engine.md](docs/reference/engine.md) |
+| why it is this way | [docs/designs/00-designs.md](docs/designs/00-designs.md); open only the file for your area |
+| what is next | [docs/plan.md](docs/plan.md) |
 
-The programs make `games/` their working directory (`engine/folder.h`), so asset paths in a game file (`assets/paddle.jpg`) and the tests' paths (`descriptions/pong.xml`) are relative to it.
-
-Flow: `load/xml` (parse, validate; `load/merge` works out the pieces (the top-level `<objects>`) and every `from=` on the XML first) → `game/scenes` (`layOutScenes`: states' and scenes' objects named by path) → `load/expr` (evaluate; `load/calc` reads a text's one number or name) → `Object`/`State` → `Game` with `play/frame` (one frame) + `Engine` (loop, windows, sound). Each command tag is a file in `verbs/` (its places, `read`, `make`, `check`, `run`), listed in `verbs/all.cpp`. Backends sit behind `XmlDocument`, `Window` and `Audio` factories.
+The code is the truth, then the reference. The root [readme.md](readme.md) is the short public overview.
 
 ## Build and test
 
@@ -34,28 +21,45 @@ cmake -B build -DBUILD_TESTING=ON
 cmake --build build --parallel
 output/Debug/xgetest            # Catch2 filters work, e.g. "[kaboom]"
 cd build && ctest -j16          # each case its own run, side by side
-cmake --build build --target xgetest-generated && output/Debug/xgetest-generated   # generated games, separate
-cmake --build build --target xgetest-long && output/Debug/xgetest-long   # random keys, damaged files, speed: minutes
+cmake --build build --target xgetest-generated && output/Debug/xgetest-generated   # generated games
+cmake --build build --target xgetest-long && output/Debug/xgetest-long             # minutes
 output/Debug/xgecli frogger     # -w window, -x xml, -a audio libraries
 ```
 
-A plain build has one backend of each kind (SFML 3, Xerces); `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` all, and `BUILD_TESTING` implies all. Backend code is compiled behind `XGE_WITH_<NAME>`, so build with no options as well as with tests when you touch the factories, `cli.cpp` or `session_options.cpp`. `FORCE_LOCAL_<NAME>` forces a fetched dependency. Outputs land in `output/<Config>`.
+`BUILD_TESTING` turns every backend on. Backend code is compiled behind `XGE_WITH_<NAME>`, so build with no options as well when you touch the factories, `cli.cpp` or `session_options.cpp`. The rest is in [Building](docs/reference/engine.md#building).
 
-## Conventions
+The programs make `games/` their working directory, so paths in a game file (`assets/paddle.jpg`) and in a test (`descriptions/pong.xml`) are relative to it.
 
-- Every C++ source or header starts with this block (real filename and date):
+## Rules
 
-  ```
-  // main.cpp
-  // XML Game Engine
-  // author: beefviper
-  // date: Sept 18, 2020
-  ```
+- **Docs move with code.** A change to a tag or to behaviour updates its `docs/reference/` page and the matching `docs/designs/` file in the same change, and the word index in `docs/readme.md` when a word is added or removed.
+- **Warnings stay at zero** on GCC, Clang and MSVC. Fix, do not silence.
+- **The format's one rule:** an attribute names or picks something; everything else is element content. No data is hidden in a string.
+- **A new verb** is added only when a game cannot be said without it, and names a behavior, never a game.
+- **Games share one key convention** ([the shipped games](docs/reference/games.md#the-key-convention)), and colors are `color.` names only.
+- **This repository is public:** nothing personal goes in it ([privacy](docs/agents/readme.md#privacy)).
+- Be direct; the author prefers clear pushback to hedging.
 
-- Files end with exactly one trailing newline; stored LF (`.gitattributes` checks out CRLF on Windows).
-- **Docs move with code:** update the matching `docs/reference/` page (and the word index in `docs/readme.md` and the root `readme.md` when a game, verb or dependency changes) and the matching `docs/designs/` file in the same change. The code is the truth. Design files hold: what we looked for, looked at, chose and why, what is open; near 6 KB each, no dates, diaries or test logs.
-- A new game goes in `games/descriptions/` and in `data_xml` in `scripts/cmake/assets.cmake`; a test file in `scripts/cmake/tests.cmake`; an engine source in `ENGINE_SOURCES` in the top `CMakeLists.txt`; a verb is a file in `xge/lib/verbs/` and a line in its `all.cpp` (and in `games/generators/windows-cpp/engine.xml`).
-- **Warnings stay at zero** (`xge_warnings()` in `scripts/cmake/platform.cmake`; clean on GCC and Clang). Fix, do not silence. A constructor parameter named like its member counts (`-Wshadow`, C4458).
-- Games share one key convention: Space starts and restarts (never Enter) and jumps or fires in play; the Pause key (and `pad1.start`) pauses, nothing else; player one is W A S D plus the arrows. Colors are `color.` names only.
-- The format's one rule: an attribute names or picks something; everything else is element content. A new verb is added only when a game cannot be said without it, and names a behavior.
-- Be direct; the author prefers clear pushback to hedging. This repository is public: nothing personal from chat exports goes in it (privacy rule in the notes).
+## Adding a file
+
+| New | Also goes in |
+|---|---|
+| a game | `games/descriptions/`, `data_xml` in `scripts/cmake/assets.cmake`, a test in `xge/tests/games/`, a row in `docs/reference/games.md` |
+| a test file | `scripts/cmake/tests.cmake` |
+| an engine source | `ENGINE_SOURCES` in the top `CMakeLists.txt` |
+| a verb | a file in `xge/lib/verbs/`, a line in its `all.cpp` and in `games/generators/windows-cpp/engine.xml` |
+
+Every C++ source or header starts with this block (real filename and date), ends with exactly one newline, and is stored LF:
+
+```
+// main.cpp
+// XML Game Engine
+// author: beefviper
+// date: Sept 18, 2020
+```
+
+## Writing docs
+
+- Each fact has one home; other pages link to it.
+- Reference pages say what is: short sections, a small example each, no history. Design files say why: what was wanted, looked at, chosen, and what is open, near 6 KB each, with no dates, diaries or test logs.
+- No walls of text. A paragraph makes one point; a list or a table is written as one.

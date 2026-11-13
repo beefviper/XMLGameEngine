@@ -19,6 +19,7 @@
 - Fetching SFML and raylib both static fails on Linux with duplicate `stbi_*` symbols; `-DBUILD_SHARED_LIBS=ON` links.
 - vcpkg's raylib turns on every feature (JPEG for Pong's paddles); another raylib may not load them.
 - A target named `m` collides with plutovg's `-lm`.
+- **No automatic builds (the author's choice).** A build-only job on a Windows machine was proposed, to catch MSVC-only warnings and Windows header macros, and declined: agents build and test on Linux, the author on Windows, and what needs Windows eyes is listed in [the plan](../plan.md#waiting-for-a-look-on-windows).
 - Nothing builds the default configuration automatically, so a change to the `#ifdef`s needs a build with no options as well as with tests.
 
 ## Layout

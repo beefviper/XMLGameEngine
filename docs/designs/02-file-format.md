@@ -35,4 +35,4 @@ Reached by removing a small scripting language that had grown inside attribute s
 - The loader's places are each verb's own, named from the same groups (`places::` in `verbs/verb.h`), and a test holds them against the schema ([verbs](14-verbs.md)).
 - Sorting found gaps, filled rather than written in: an action can now stop, reverse, spawn and steer, and a collision rule can fire.
 - Open: the two kinds of `<collision>` differ by attribute, which XSD 1.0 cannot tell apart; two tags would let the schema check it.
-- The schema checks shape and placement, not names: an unknown key or an unowned variable is the loader's to refuse ([games written by another AI](55-games-written-by-ai.md)).
+- The schema checks shape and placement, not names: an unknown key or an unowned variable is the loader's to refuse ([games written by another AI](54-games.md)).

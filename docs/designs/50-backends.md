@@ -6,6 +6,8 @@
 
 The prototype was hard-wired to Xerces and SFML. Each library sits behind an interface so the core never names one, licensing or weight can be dodged per library, and one can be swapped without touching game logic. A compiling two-library example proved it before adoption.
 
+**Backends are a feature (chosen by the author).** Wide support for libraries is part of what the project is, as an emulator front end supports many. Dropping some to save upkeep was proposed and rejected. Lower-level ones are wanted next (OpenGL is there; Direct3D and Vulkan to come), and Xerces as the full validator with a lighter built-in one behind the other parsers is intended. What follows is making the next backend cheap: text and image files drawn by the engine, so a backend only opens a window, shows bitmaps and reads keys ([plan](../plan.md#a7-the-next-backend-is-cheap)).
+
 ## XML: `XmlDocument` and `XmlNode`
 
 | Decision | Alternative | Why |

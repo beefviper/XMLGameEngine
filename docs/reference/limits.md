@@ -1,6 +1,6 @@
 # Known limitations
 
-What the engine cannot do today. Why, and what might come, is in the [design files](../designs/00-designs.md); the backlog is [open-work](../designs/58-open-work.md).
+What the engine cannot do today. Why, and what might come, is in the [design files](../designs/00-designs.md); what is next is [the plan](../plan.md).
 
 ## Movement and collisions
 

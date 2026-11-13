@@ -56,7 +56,7 @@
   * The phases are the scenes of the playing state; each counts the pests
     kicked (tally.kicked) up to its own `upto`, then enters the next.
   * Everything wraps round the sides of the screen.
-  No fireballs or icicles: see docs/designs/56-games-atari.md.
+  No fireballs or icicles: see docs/designs/54-games.md.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">

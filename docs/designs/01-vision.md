@@ -34,6 +34,13 @@
 - Open research angle: how small can a vocabulary be and still describe a class of games.
 
 
+## Keeping the language small
+
+The same thing has happened many times: a first form was built, grew by additions, and was later replaced by something smaller (function-call strings by operation tags, pools by copies, `<kit>` by the top-level `<objects>`, phase numbers by looks, card nouns by holders). Two rules came out of it.
+
+- **When a simpler form lands, finish the job in the same change.** Move every game, remove the old word from the schema, reader, generator, checker and docs, and rename the C++ to match. Each time this was skipped, the old form stayed alive somewhere.
+- **A feature that needs its third addition is a warning sign.** Stop and ask which assumption made the additions necessary. The author's phrase: test the assumptions that only emerged, and reduce like a fraction.
+
 ## Open
 
 - Where the vocabulary boundary sits: scrolling as camera, world or verb (planned for version 2); gravity as a world setting or a per-object force (built per object, [motion](22-motion.md)).

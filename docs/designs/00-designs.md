@@ -2,7 +2,7 @@
 
 These files record **why**: what we looked for, what we looked at, what we chose, and what is still only an idea. How the engine works **today** is the [reference](../reference/); when the two disagree, the code and the reference win and the design file should be fixed.
 
-Status words: **Built** is in the code. **Decided** is chosen, not built. **Open** is undecided. **Idea** is floated, not adopted. Each file is one topic: scan the table and open only the one you need. The backlog is [open-work](58-open-work.md).
+Status words: **Built** is in the code. **Decided** is chosen, not built. **Open** is undecided. **Idea** is floated, not adopted. Each file is one topic: scan the table and open only the one you need. What is next is in [the plan](../plan.md).
 
 ## Language
 
@@ -54,14 +54,11 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 | [backends](50-backends.md) | Interfaces and factories, scale, the library | Built |
 | [build-and-layout](51-build-and-layout.md) | CMake, output, folders, pipeline | Built |
 | [cli](52-cli.md), [gui](53-gui.md) | `xgecli`; `xgegui` | Built |
-| [games-classic](54-games-classic.md) | What each early game forced | Built |
-| [games-written-by-ai](55-games-written-by-ai.md) | Three games from the schema alone | Built |
-| [games-atari](56-games-atari.md) | The 2600 list and after | Built |
+| [games](54-games.md) | Games as tests: what each game forced, three written from the schema alone, the 2600 list | Built |
 | [ideas](57-ideas.md) | Scrolling, target profiles, state export, game ideas | Idea |
-| [open-work](58-open-work.md) | Backlog and what is untested | Open |
 
 ## Keeping these files
 
 - Numbered by section (0x and 1x language, 2x behaviour, 3x pictures and sound, 4x generating, 5x engine, tools and games), with gaps between.
 - Add to the closest file before making a new one, and keep this table in step.
-- Each file holds what we looked for, what we looked at, what we chose and why, and what is open. Keep it near 6 KB. No progress diaries, dates or test logs.
+- How to write one is in [AGENTS.md](../../AGENTS.md#writing-docs).

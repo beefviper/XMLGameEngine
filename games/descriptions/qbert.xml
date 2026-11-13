@@ -46,7 +46,7 @@
     Q*bert by hops (<hunt> with a <hop>): each time, the diagonal that
     lands nearest him.
   No Slick and Sam, Ugg and Wrongway or green ball, and one round: see
-  docs/designs/56-games-atari.md.
+  docs/designs/54-games.md.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">

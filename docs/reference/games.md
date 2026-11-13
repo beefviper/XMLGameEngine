@@ -1,6 +1,6 @@
 # The shipped games
 
-58 games in `games/descriptions/`, each one file. Why each was written and what it left out: [games-classic](../designs/54-games-classic.md), [games-written-by-ai](../designs/55-games-written-by-ai.md), [games-atari](../designs/56-games-atari.md).
+58 games in `games/descriptions/`, each one file. Why each was written and what it left out: [games as tests](../designs/54-games.md).
 
 ## The key convention
 

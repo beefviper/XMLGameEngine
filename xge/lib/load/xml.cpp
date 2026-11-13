@@ -1417,7 +1417,7 @@ namespace xge
 		// window.width, color.red); nothing may be a number. A variable is
 		// only ever after the dot, so its name may be a word (a card's
 		// color, a game's top). top.rank in a holder's rules is read
-		// before any name, so top is free. See docs/designs/58-open-work.md:
+		// before any name, so top is free. See docs/plan.md (backlog):
 		// a way to need no reserved names is open.
 		void refuseReserved(const std::string& name, const char* kind, const std::string& where, bool startsNames = true)
 		{
