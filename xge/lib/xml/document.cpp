@@ -5,6 +5,7 @@
 
 #include "xml/document.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 // Each backend is compiled in only when it is built (XGE_WITH_<NAME>, set by
@@ -127,5 +128,20 @@ namespace xge
 		}
 
 		return o;
+	}
+
+	std::vector<std::size_t> lineStarts(const std::string& text)
+	{
+		std::vector<std::size_t> starts{ 0 };
+		for (std::size_t at = text.find('\n'); at != std::string::npos; at = text.find('\n', at + 1))
+		{
+			starts.push_back(at + 1);
+		}
+		return starts;
+	}
+
+	int lineAt(const std::vector<std::size_t>& starts, std::size_t offset) noexcept
+	{
+		return static_cast<int>(std::upper_bound(starts.begin(), starts.end(), offset) - starts.begin());
 	}
 }

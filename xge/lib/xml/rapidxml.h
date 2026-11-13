@@ -17,7 +17,9 @@ namespace xge
 	class RapidXmlNode : public XmlNode
 	{
 	public:
-		explicit RapidXmlNode(const rapidxml::xml_node<>* node) noexcept;
+		// `file`: the buffer it was parsed from, and where each of its lines
+		// starts (lineStarts); either may be null.
+		RapidXmlNode(const rapidxml::xml_node<>* node, const char* file, const std::vector<std::size_t>* lines) noexcept;
 
 		std::string getName() const override;
 		std::string getAttribute(const std::string& name) const override;
@@ -25,9 +27,12 @@ namespace xge
 		std::string getText() const override;
 		std::unique_ptr<XmlNode> getFirstChild() const override;
 		std::unique_ptr<XmlNode> getNextSibling() const override;
+		int line() const override;
 
 	private:
 		const rapidxml::xml_node<>* node;
+		const char* file;
+		const std::vector<std::size_t>* lines;
 	};
 
 	// The RapidXML XmlDocument backend - well-formedness parsing only, no
@@ -50,5 +55,6 @@ namespace xge
 		rapidxml::xml_document<> document;
 		std::string fileContent;
 		std::string errorMessage;
+		std::vector<std::size_t> lines;
 	};
 }

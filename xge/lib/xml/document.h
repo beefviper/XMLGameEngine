@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -88,6 +89,12 @@ namespace xge
 		virtual std::string getErrorMessage() const = 0;
 		virtual std::unique_ptr<XmlNode> getRootElement() const = 0;
 	};
+
+	// Where each line of a text starts, and the line (from 1) an offset into
+	// it is on: for a library that knows where in the file an element is
+	// but not its line.
+	std::vector<std::size_t> lineStarts(const std::string& text);
+	int lineAt(const std::vector<std::size_t>& starts, std::size_t offset) noexcept;
 
 	enum class XmlBackend
 	{

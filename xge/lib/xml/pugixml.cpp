@@ -5,13 +5,24 @@
 
 #include "xml/pugixml.h"
 
+#include <cstddef>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 
 namespace xge
 {
-	PugiXmlNode::PugiXmlNode(pugi::xml_node pugiNode) noexcept :
-		node(pugiNode)
+	PugiXmlNode::PugiXmlNode(pugi::xml_node pugiNode, const std::vector<std::size_t>* fileLines) noexcept :
+		node(pugiNode),
+		lines(fileLines)
 	{
+	}
+
+	int PugiXmlNode::line() const
+	{
+		// Where the tag is in the file as it was read; -1 when not known.
+		const std::ptrdiff_t offset = node.offset_debug();
+		return lines && offset >= 0 ? lineAt(*lines, static_cast<std::size_t>(offset)) : 0;
 	}
 
 	std::string PugiXmlNode::getName() const
@@ -56,14 +67,14 @@ namespace xge
 		// A plain first_child() would stop on the text of <x>100</x>.
 		pugi::xml_node child = node.first_child();
 		while (child && child.type() != pugi::node_element) { child = child.next_sibling(); }
-		return child ? std::make_unique<PugiXmlNode>(child) : nullptr;
+		return child ? std::make_unique<PugiXmlNode>(child, lines) : nullptr;
 	}
 
 	std::unique_ptr<XmlNode> PugiXmlNode::getNextSibling() const
 	{
 		pugi::xml_node sibling = node.next_sibling();
 		while (sibling && sibling.type() != pugi::node_element) { sibling = sibling.next_sibling(); }
-		return sibling ? std::make_unique<PugiXmlNode>(sibling) : nullptr;
+		return sibling ? std::make_unique<PugiXmlNode>(sibling, lines) : nullptr;
 	}
 
 	bool PugiXmlDocument::load(const std::string& filename)
@@ -78,6 +89,13 @@ namespace xge
 			return false;
 		}
 
+		// The lines, for each element's line(): PugiXML knows where in the
+		// file a tag is, not on which line.
+		std::ifstream file(filename, std::ios::binary);
+		std::stringstream text;
+		text << file.rdbuf();
+		lines = lineStarts(text.str());
+
 		std::cout << "[PugiXML] XML file was parsed successfully\n\n";
 		return true;
 	}
@@ -90,6 +108,6 @@ namespace xge
 	std::unique_ptr<XmlNode> PugiXmlDocument::getRootElement() const
 	{
 		pugi::xml_node root = document.document_element();
-		return root ? std::make_unique<PugiXmlNode>(root) : nullptr;
+		return root ? std::make_unique<PugiXmlNode>(root, &lines) : nullptr;
 	}
 }

@@ -20,7 +20,8 @@ namespace xge
 	class PugiXmlNode : public XmlNode
 	{
 	public:
-		explicit PugiXmlNode(pugi::xml_node node) noexcept;
+		// `lines`: where each line of the file starts (lineStarts), or null.
+		PugiXmlNode(pugi::xml_node node, const std::vector<std::size_t>* lines) noexcept;
 
 		std::string getName() const override;
 		std::string getAttribute(const std::string& name) const override;
@@ -28,9 +29,11 @@ namespace xge
 		std::string getText() const override;
 		std::unique_ptr<XmlNode> getFirstChild() const override;
 		std::unique_ptr<XmlNode> getNextSibling() const override;
+		int line() const override;
 
 	private:
 		pugi::xml_node node;
+		const std::vector<std::size_t>* lines;
 	};
 
 	// The PugiXML XmlDocument backend - well-formedness parsing only, no
@@ -46,5 +49,6 @@ namespace xge
 	private:
 		pugi::xml_document document;
 		std::string errorMessage;
+		std::vector<std::size_t> lines;
 	};
 }
