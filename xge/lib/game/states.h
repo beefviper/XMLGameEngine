@@ -55,6 +55,7 @@ namespace xge
 	{
 	public:
 		std::string name;
+		int line{ 0 }; // of its tag in the game file; 0 when not known (a generated program)
 		std::vector<std::string> show;
 		// <input button="...">: what a key runs when pressed (and, for the
 		// verbs that are held, for as long as it stays down); with
@@ -117,6 +118,7 @@ namespace xge
 	{
 	public:
 		std::string name;
+		int line{ 0 }; // RawState::line, for the messages of the checks made once all is loaded
 		std::vector<std::string> show;
 		std::map<KeyCode, std::vector<Command>> input;    // pressed (RawState::input)
 		std::map<KeyCode, std::vector<Command>> holding;  // on="hold": every frame while down

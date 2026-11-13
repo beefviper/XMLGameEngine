@@ -47,6 +47,7 @@ namespace xge
 		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal, Shows, Lowest, Highest, Unequal };
 		enum class Join { None, All, Any };
 
+		int line{ 0 }; // of its tag in the game file; 0 when not known (a generated program)
 		std::string filterClass;
 		std::string filterObject;
 		std::string variableName;
@@ -81,6 +82,7 @@ namespace xge
 
 	struct Condition
 	{
+		int line{ 0 }; // RawCondition::line
 		std::string filterClass;
 		std::string filterObject;
 		std::string variableName;

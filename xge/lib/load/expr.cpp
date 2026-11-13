@@ -7,6 +7,7 @@
 
 #include "load/calc.h"
 #include "load/check.h"
+#include "load/reading.h"
 
 #include "picture/color.h"
 #include "engine/keys.h"
@@ -275,7 +276,7 @@ namespace xge
 			first.animation = firstPassAnimation[rawObject.name];
 			first.animationTurned = firstPassAnimationTurned[rawObject.name];
 			const auto offset = cellOffsets.find(rawObject.name);
-			objects.push_back(makeObject(rawObject, first, windowDesc, offset == cellOffsets.end() ? Vector2f{} : offset->second, thisLockstep));
+			objects.push_back(onLine(rawObject.line, [&] { return makeObject(rawObject, first, windowDesc, offset == cellOffsets.end() ? Vector2f{} : offset->second, thisLockstep); }));
 
 
 			if (rawObject.rawCollisionData.lockstep && rawObject.groupName.empty()) {
@@ -293,9 +294,15 @@ namespace xge
 		// What a <condition> tests, made ready (with its <all> or
 		// <any>'s checks, each made the same way).
 		std::function<Condition(const RawCondition&, const std::string&, const std::string&)> makeTest;
+		std::function<Condition(const RawCondition&, const std::string&, const std::string&)> makeTestHere;
 		makeTest = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner)
 		{
+			return onLine(rawCondition.line, [&] { return makeTestHere(rawCondition, where, owner); });
+		};
+		makeTestHere = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner)
+		{
 			Condition condition;
+			condition.line = rawCondition.line;
 			condition.join = rawCondition.join;
 			for (std::size_t i = 0; i < rawCondition.parts.size(); ++i)
 			{
@@ -439,7 +446,7 @@ namespace xge
 		// self or others, its commands for each object it may match (the
 		// last test of an <all>'s, as a condition in a condition is), and
 		// they run for each one that holds.
-		const auto makeCondition = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName)
+		const auto makeConditionHere = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName)
 		{
 			Condition condition = makeTest(rawCondition, where, owner);
 			std::vector<RawCommand> probe = rawCondition.commands;
@@ -482,6 +489,10 @@ namespace xge
 			condition.commands = processCommands(once, where);
 			return condition;
 		};
+		const auto makeCondition = [&](const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName)
+		{
+			return onLine(rawCondition.line, [&] { return makeConditionHere(rawCondition, where, owner, stateName); });
+		};
 
 		// The checks of the objects' collision rules, now that every object
 		// they can name is made.
@@ -518,6 +529,7 @@ namespace xge
 			const std::string where = "state '" + rawState.name + "'";
 
 			state.name = rawState.name;
+			state.line = rawState.line;
 			state.show = rawState.show;
 			state.showStates = rawState.showStates;
 			state.music = rawState.music;
@@ -859,6 +871,7 @@ namespace xge
 		object.groupName = rawObject.groupName;
 		object.outerGroups = rawObject.outerGroups;
 		object.name = rawObject.name;
+		object.line = rawObject.line;
 		object.objClass = rawObject.objClass;
 		object.isDrawn = rawObject.isDrawn;
 		object.ownerState = rawObject.ownerState;
@@ -1416,6 +1429,7 @@ namespace xge
 		for (auto& rawRule : rawObject.rawCollisionData.others)
 		{
 			CollisionRule rule;
+			rule.line = rawRule.line;
 			rule.filterClass = rawRule.filterClass;
 			rule.filterObject = rawRule.filterObject;
 			rule.unlessClass = rawRule.unlessClass;
@@ -1889,7 +1903,7 @@ namespace xge
 					commands.push_back(CmdWhen{ std::move(body) });
 					continue;
 				}
-				Command made = makeCommand(each, [&](const RawValue& value) { return evaluate(value, where); });
+				Command made = onLine(each.line, [&] { return makeCommand(each, [&](const RawValue& value) { return evaluate(value, where); }); });
 
 				// One whose numbers can change is made again each time it runs
 				// (CmdLive); <set> and <spawn> always are, since what they
@@ -1908,6 +1922,11 @@ namespace xge
 					commands.push_back(std::move(made));
 				}
 			}
+		}
+		catch (const LoadError& error)
+		{
+			commandValues = false;
+			throw LoadError(where + ": " + error.what(), error.line);
 		}
 		catch (const std::runtime_error& error)
 		{

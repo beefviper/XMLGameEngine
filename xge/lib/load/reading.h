@@ -13,6 +13,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 // What every reader of a game file's tags shares: finding a child, asking
 // for an attribute, reading a value (a number, a <random>, an operation), and
@@ -44,28 +45,36 @@ namespace xge
 
 	[[noreturn]] void fail(const std::string& where, const std::string& message);
 
-	// Runs `read`, which reads `node`; an error it throws that has no line
-	// yet gets node's, so the message ends "(line 12)". The innermost reader
-	// that knows a line gives it, being nearest the mistake.
-	template <typename Read>
-	auto onLineOf(const XmlNode& node, Read&& read) -> decltype(read())
+	// Runs `work`, which is about what is written on `line` of the game file;
+	// an error it throws that says no line yet gets this one, so the message
+	// ends "(line 12)". The innermost that knows a line gives it, being
+	// nearest the mistake. Line 0 (not known) adds nothing.
+	template <typename Work>
+	auto onLine(int line, Work&& work) -> decltype(work())
 	{
 		try
 		{
-			return read();
+			return work();
 		}
 		catch (const LoadError& error)
 		{
-			if (error.line != 0 || node.line() == 0) { throw; }
-			throw LoadError(error.what() + lineNote(node.line()), node.line());
+			if (error.line != 0 || line == 0) { throw; }
+			throw LoadError(error.what() + lineNote(line), line);
 		}
 		catch (const std::runtime_error& error)
 		{
 			// One from further down that already says its line (a merge's).
 			const std::string message = error.what();
-			if (node.line() == 0 || message.find(" (line ") != std::string::npos) { throw; }
-			throw LoadError(message + lineNote(node.line()), node.line());
+			if (line == 0 || message.find(" (line ") != std::string::npos) { throw; }
+			throw LoadError(message + lineNote(line), line);
 		}
+	}
+
+	// onLine for reading `node`: the line its tag starts on.
+	template <typename Read>
+	auto onLineOf(const XmlNode& node, Read&& read) -> decltype(read())
+	{
+		return onLine(node.line(), std::forward<Read>(read));
 	}
 
 	std::unique_ptr<XmlNode> requireChild(const XmlNode& parent, const std::string& name, const std::string& where);

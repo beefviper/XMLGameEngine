@@ -126,6 +126,7 @@ namespace xge
 	{
 		RawCommand command;
 		command.verb = node.getName();
+		command.line = node.line();
 
 		const Verb* verb = findVerb(command.verb);
 		if (!verb && command.verb == "accelerate") { fail(where, "<accelerate direction=...> is now <thrust direction=...>"); }

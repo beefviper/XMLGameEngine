@@ -11,6 +11,8 @@
 #include "played.h"
 #include "scratch.h"
 #include "game/game.h"
+#include "load/xml.h"
+#include "xml/document.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
@@ -189,4 +191,88 @@ TEST_CASE("an object, group, map or state may not take a name the engine's words
 	CHECK_THAT(errorOf(played::box("o", 0, 0, "<variables><variable name=\"2\">0</variable></variables>")), ContainsSubstring("a variable may not be called '2'"));
 	// A variable is only read after a dot, so a word is free there.
 	CHECK(errorOf(played::box("card", 0, 0, "<variables><variable name=\"color\">1</variable><variable name=\"top\">0</variable></variables>")).empty());
+}
+
+TEST_CASE("a misspelt name says the line of what holds it, under every XML library", "[names][line_numbers]")
+{
+	// No schema is named, so only the checks after reading see these; each
+	// case misspells one name of a game that otherwise loads.
+	const std::string file = scratchName("descriptions/names_lines.xml");
+	const auto write = [&](const std::string& rule, const std::string& triggered, const std::string& condition, const std::string& shown)
+	{
+		std::ofstream(file) << "<game>\n"
+			"  <window name=\"lines\"><width>800</width><height>600</height><background>color.black</background><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>\n"
+			"  <states>\n"
+			"    <state name=\"playing\">\n"
+			"      <objects>\n"
+			"        <object name=\"frog\" class=\"frog\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite><position><x>100</x><y>100</y></position>\n"
+			"          <collisions>\n"
+			"            <collision class=\"" << rule << "\"><ride /></collision>\n"
+			"          </collisions>\n"
+			"          <actions><action name=\"go\">\n"
+			"            <trigger object=\"" << triggered << "\" action=\"sink\" />\n"
+			"          </action></actions>\n"
+			"        </object>\n"
+			"        <object name=\"log\" class=\"log\"><sprite><rectangle><width>40</width><height>10</height></rectangle></sprite><position><x>100</x><y>100</y></position>\n"
+			"          <actions><action name=\"sink\"><stop /></action></actions>\n"
+			"        </object>\n"
+			"      </objects>\n"
+			"      <inputs><input button=\"space\"><pop /></input></inputs>\n"
+			"      <conditions>\n"
+			"        <condition object=\"frog\" variable=\"" << condition << "\"><atmost>0</atmost><pop /></condition>\n"
+			"      </conditions>\n"
+			"      <shows><show object=\"" << shown << "\" /></shows>\n"
+			"    </state>\n"
+			"  </states>\n"
+			"</game>\n";
+	};
+	const auto errorOf = [&](XmlBackend backend)
+	{
+		try
+		{
+			Game game(readGame(file, backend));
+		}
+		catch (const std::exception& error)
+		{
+			return std::string(error.what());
+		}
+		return std::string();
+	};
+	const auto endsWith = [](const std::string& text, const std::string& end)
+	{
+		return text.size() >= end.size() && text.compare(text.size() - end.size(), end.size(), end) == 0;
+	};
+
+	struct Case
+	{
+		const char* what;
+		const char* rule;
+		const char* triggered;
+		const char* condition;
+		const char* shown;
+		const char* says;
+		const char* line;
+	};
+	const Case cases[] = {
+		{ "a rule's class", "lgo", "log", "x", "frog", "no object has the class 'lgo'", " (line 8)" },
+		{ "a command's object, in an action: the object's line", "log", "lgo", "x", "frog", "an action of 'lgo' is asked for", " (line 6)" },
+		{ "a condition's variable", "log", "log", "z", "frog", "variable=\"z\"", " (line 20)" },
+		{ "a state's show", "log", "log", "x", "forg", "<show object=\"forg\" />", " (line 4)" },
+	};
+	for (const XmlBackend backend : XmlDocumentFactory::availableBackends())
+	{
+		INFO(XmlDocumentFactory::name(backend));
+		write("log", "log", "x", "frog");
+		CHECK(errorOf(backend).empty());
+		for (const Case& each : cases)
+		{
+			INFO(each.what);
+			write(each.rule, each.triggered, each.condition, each.shown);
+			const std::string message = errorOf(backend);
+			INFO(message);
+			CHECK_THAT(message, ContainsSubstring(each.says));
+			CHECK(endsWith(message, each.line));
+		}
+	}
+	std::filesystem::remove(file);
 }

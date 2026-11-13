@@ -1037,6 +1037,7 @@ namespace xge
 	struct RawCommand
 	{
 		std::string verb;
+		int line{ 0 }; // of its tag in the game file; 0 when not known (a generated program)
 		std::string object;    // reset, fire, release, trigger, chase, aim
 		std::string variable;  // inc, dec, copy (the one read), set (the one written)
 		std::string into;      // copy (the one written)

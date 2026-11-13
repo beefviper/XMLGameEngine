@@ -1125,6 +1125,7 @@ namespace xge
 				if (otherwise->getName() != "otherwise" || otherwise->getNextSibling()) { fail(here, "holds <" + otherwise->getName() + ">; a trigger holds one <otherwise> if wanted, run when its action is refused"); }
 				RawCommand trigger;
 				trigger.verb = "trigger";
+				trigger.line = node->line();
 				trigger.object = node->getAttribute("object");
 				trigger.action = requireAttribute(*node, "action", here);
 				trigger.from = node->getAttribute("from");
@@ -1636,6 +1637,7 @@ namespace xge
 						return;
 					}
 					RawCollisionRule rule;
+					rule.line = collision.line();
 					rule.filterClass = said.filterClass;
 					rule.filterObject = said.filterObject;
 					rule.unlessClass = said.unlessClass;
@@ -1711,6 +1713,7 @@ namespace xge
 				}
 				RawCommand when;
 				when.verb = "condition";
+				when.line = node->line();
 				when.test = std::make_shared<RawCondition>(std::move(read.front()));
 				commands.push_back(std::move(when));
 			}
@@ -1901,6 +1904,7 @@ namespace xge
 		RawObject readObjectHere(const XmlNode& object, const MapLayout* map)
 		{
 			RawObject rawObject;
+			rawObject.line = object.line();
 			rawObject.name = requireAttribute(object, "name", "<object>");
 			refuseReserved(rawObject.name, "an object", "<object name=\"" + rawObject.name + "\">");
 			rawObject.objClass = getAttribute(&object, "class");
@@ -2367,6 +2371,7 @@ namespace xge
 			{
 				RawObject rawObject = shared;
 				rawObject.name = memberName;
+				rawObject.line = group.line();
 
 				std::vector<RawSprite> used = sprites;
 				std::vector<AnimationSpec> usedAnimations = animations;
@@ -2878,6 +2883,7 @@ namespace xge
 		// An <any>, into `raw`: its <condition>s and <any>s in order.
 		void readJoin(const XmlNode& join, const std::string& here, RawCondition& raw)
 		{
+			raw.line = join.line();
 			raw.join = RawCondition::Join::Any;
 			for (std::unique_ptr<XmlNode> part = join.getFirstChild(); part != nullptr; part = part->getNextSibling())
 			{
@@ -2910,6 +2916,7 @@ namespace xge
 		// <any> of <condition>s. Gives back what follows (a condition's commands).
 		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, RawCondition& raw)
 		{
+			raw.line = node.line();
 			raw.filterClass = node.getAttribute("class");
 			raw.filterObject = node.getAttribute("object");
 			raw.variableName = node.getAttribute("variable");
@@ -3224,6 +3231,7 @@ namespace xge
 		RawState readStateHere(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists, const Kit& kit, const std::set<std::string>& gameNames)
 		{
 			RawState rawState{};
+			rawState.line = state.line();
 			rawState.name = requireAttribute(state, "name", "<state>");
 			refuseReserved(rawState.name, "a state", "<state name=\"" + rawState.name + "\">");
 			rawState.from = state.getAttribute("from");

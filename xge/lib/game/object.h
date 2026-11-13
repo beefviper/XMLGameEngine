@@ -46,6 +46,7 @@ namespace xge
 	// edge="...">) has no "other object" to filter against.
 	struct RawCollisionRule
 	{
+		int line{ 0 }; // of its <collision> tag in the game file; 0 when not known (a generated program)
 		std::string filterClass;
 		std::string filterObject;
 
@@ -160,6 +161,7 @@ namespace xge
 	// A parsed, ready-to-run version of RawCollisionRule.
 	struct CollisionRule
 	{
+		int line{ 0 }; // RawCollisionRule::line
 		std::string filterClass;
 		std::string filterObject;
 		std::string unlessClass;
@@ -544,6 +546,7 @@ namespace xge
 	struct RawObject
 	{
 		std::string name;
+		int line{ 0 }; // of its tag (a member: its group's) in the game file; 0 when not known (a generated program)
 		std::string objClass;
 
 		// What the object looks like: its only <sprite>, or, when it has an
@@ -927,6 +930,9 @@ namespace xge
 
 	struct Object : Moment
 	{
+		// RawObject::line, for the messages of the checks made once all is loaded.
+		int line{ 0 };
+
 		// How it started and how the last frame left it (see Moment).
 		Moment start;
 		Moment before;
