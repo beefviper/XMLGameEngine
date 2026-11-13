@@ -48,6 +48,7 @@ A language change is made everywhere in one commit:
 - A command run between frames leaves its copies waiting: call `settleSpawns()` first. Never hold a reference to a copy across frames; look it up by name.
 - The working directory is `games/`, so a test names `descriptions/<game>.xml` and finds the schema with `findSchema("descriptions/pong.xml", "../xgedef.xsd")`. ctest runs from `output/<config>/games`, a plain run from the repository's `games/`: check a new schema test both ways.
 - A scratch file is named with `scratchName()`, so `ctest -j` never has two cases writing one file.
+- A test over every game is split into cases of a like size with `played::share` (`random_keys.h`), so ctest runs them side by side: one case over all of them took 100 s in a Windows Debug build.
 - Before touching `circleOverlapsBox`, add a test to `test_collision_geometry.cpp`.
 - `invaders_fixture.h` is a frozen copy of the first Space Invaders.
 
