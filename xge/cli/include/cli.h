@@ -67,6 +67,12 @@ namespace xge
 		// own seed, its keys pressed in the frames they were recorded in.
 		std::string keys;
 
+		// --dump file: with --frames, the game as it is (Game::describe)
+		// written into that file at the end; --dump-every K, every K frames
+		// as well. games/xgedump.xsd is the file's schema.
+		std::string dump;
+		int dumpEvery = 0;
+
 		bool showHelp = false;
 	};
 
@@ -94,6 +100,9 @@ namespace xge
 	//                          sound, then stop
 	//   --seed 1               the random numbers start from this seed
 	//   --keys play.xml        play back the <demo> in that file
+	//   --dump state.xml       with --frames, write the game's state there at
+	//                          the end
+	//   --dump-every 60        and every 60 frames on the way
 	//   -h  --help             show the usage and exit
 	//
 	// A short option takes its value attached or after a space; a long option
@@ -144,7 +153,7 @@ namespace xge
 
 	// --frames: loads the game file (with options.xml, from options.seed if
 	// there is one, playing back options.keys if given), plays options.frames frames with a null window and no
-	// sound, and writes one line to `out` saying how far it got. A game that
+	// sound, writes options.dump if asked, and writes one line to `out` saying how far it got. A game that
 	// will not load, or throws while it plays, is "Error: " and what it said.
 	// Gives back the program's exit code: EXIT_SUCCESS or EXIT_FAILURE.
 	int playFrames(const std::string& file, const CliOptions& options, std::ostream& out);

@@ -13,22 +13,21 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 
 | # | Task | Why here |
 |---|---|---|
-| 1 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 1 to 4: step a game and dump its state | Every later task is easier to check once an agent can run a game and read what happened |
-| 2 | [A1](#a1-a-verb-is-one-file) steps 1 to 3: printing and helpers into each verb | Finishes work already most of the way done, before more verbs are added |
-| 3 | [B7](#b7-line-numbers-in-load-errors): line numbers in load errors | Small, and every game writer gains |
-| 4 | [A6](#a6-the-schema-documents-itself): the schema documents itself | Small, mechanical, and visible in an editor straight away |
-| 5 | [F9](#f9-sound-files) steps 1 to 4: sound files | Small and self-contained; the first new thing a game can do |
-| 6 | [A5](#a5-a-game-written-out-as-if-by-hand) steps 1 to 6: the stand-alone generator as far as Breakout | The author's main aim; early enough to learn whether the idea holds |
-| 7 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
-| 8 | [F6](#f6-rules-that-are-looked-at-when-nothing-moves): rules when nothing moves | Removes two limits and some fakes in the games |
-| 9 | [F3](#f3-a-maze-search), then [F5](#f5-line-of-sight): maze search, line of sight | Two small steering additions that share games (Berserk, Haunted House) |
-| 10 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
-| 11 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
-| 12 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
-| 13 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
-| 14 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
-| 15 | [F8](#f8-dice): dice | Waits on the hold on new games |
-| 16 | [A7](#a7-the-next-backend-is-cheap) step 6 onward, [A5](#a5-a-game-written-out-as-if-by-hand) step 7 onward | The two that never finish: a backend at a time, a game at a time |
+| 1 | [A1](#a1-a-verb-is-one-file) steps 1 to 3: printing and helpers into each verb | Finishes work already most of the way done, before more verbs are added |
+| 2 | [B7](#b7-line-numbers-in-load-errors): line numbers in load errors | Small, and every game writer gains |
+| 3 | [A6](#a6-the-schema-documents-itself): the schema documents itself | Small, mechanical, and visible in an editor straight away |
+| 4 | [F9](#f9-sound-files) steps 1 to 4: sound files | Small and self-contained; the first new thing a game can do |
+| 5 | [A5](#a5-a-game-written-out-as-if-by-hand) steps 1 to 6: the stand-alone generator as far as Breakout | The author's main aim; early enough to learn whether the idea holds |
+| 6 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
+| 7 | [F6](#f6-rules-that-are-looked-at-when-nothing-moves): rules when nothing moves | Removes two limits and some fakes in the games |
+| 8 | [F3](#f3-a-maze-search), then [F5](#f5-line-of-sight): maze search, line of sight | Two small steering additions that share games (Berserk, Haunted House) |
+| 9 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
+| 10 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
+| 11 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
+| 12 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
+| 13 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
+| 14 | [F8](#f8-dice): dice | Waits on the hold on new games |
+| 15 | [A7](#a7-the-next-backend-is-cheap) step 6 onward, [A5](#a5-a-game-written-out-as-if-by-hand) step 7 onward | The two that never finish: a backend at a time, a game at a time |
 
 What must come before what:
 
@@ -226,7 +225,7 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
   - [x] **1. `--frames N` and `--seed S` (S).** `xgecli <game> -w none --frames 600 --seed 1` plays that many frames and exits; `--frames` alone implies no window and no sound. **Check:** a test runs it on Pong and gets exit code 0; a game that throws gives a message and a non-zero code.
   - [x] **2. `--keys file` (S).** The file is the `<demo>` format (`<press button="space">1005</press>`, `<release button="space">1009</release>`: a button and the frame), so a recording made with `--record` replays. **Check:** record ten seconds of Pong with `--record`, replay it with `--keys`, and the final score matches.
   - [x] **3. `Game::describe()` (M).** One function in `game/game.cpp` that writes the state as XML: the current state and scene, and for each object in play its full name, class, look, position, velocity and variables. XML because the project's tools are XML. **Check:** a test calls it on Pong after 60 frames and finds the ball and both paddles with their positions.
-  - [ ] **4. `--dump file` (S).** Writes `describe()` at the end, or every K frames with `--dump-every K`. A small XSD for the dump goes in `games/`. **Check:** the file validates against that XSD.
+  - [x] **4. `--dump file` (S).** Writes `describe()` at the end, or every K frames with `--dump-every K`. A small XSD for the dump goes in `games/`. **Check:** the file validates against that XSD.
   - [ ] **5. `--picture file.png` (L; split before starting).** A software `Window` (`xge/lib/window/picture.cpp`, behind no option since it needs no library) that composes the frame from the engine's own bitmaps into one image and writes a PNG with plutovg. Text uses the built-in 8x8 font first. **Check:** `xgecli pacman --frames 600 --seed 1 --picture p.png` writes a picture a person recognises as Pac-Man (the agent reads the image; then the author).
   - [ ] **6. Tell agents (S).** `docs/agents/readme.md` gains "how to look at a game". **Check:** docs only.
 - **Not wanted:** a test per game that compares a dump with a stored one. It would freeze every game.

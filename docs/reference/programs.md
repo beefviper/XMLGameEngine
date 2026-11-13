@@ -15,6 +15,7 @@ xgecli --check               # load every game, a line each: ok or what is wrong
 xgecli pong frogger --check -x tinyxml2
 xgecli pacman --frames 600 --seed 1  # play 600 frames with no window, then stop
 xgecli galaxian --frames 3600 --keys galaxian.xml  # play its recorded <demo> back
+xgecli pong --frames 600 --seed 1 --dump pong-state.xml --dump-every 60
 ```
 
 | Option | Means |
@@ -28,11 +29,13 @@ xgecli galaxian --frames 3600 --keys galaxian.xml  # play its recorded <demo> ba
 | `--frames <n>` | play n frames as fast as they go, with no window and no sound, then print `played 600 frames of pacman.xml; the state is playing` and exit (1, with the message, when the game throws). The window and sound are `none` without saying; naming another is an error. Not with `--record`, `--check` or `--generate` |
 | `--seed <n>` | the random numbers start from n, from the moment the game loads, so the same command plays the same game every time. With or without `--frames`; not with `--check` or `--generate` |
 | `--keys <file>` | play back the `<demo>` in the file, the file's root or a child of it (a game file `--record` wrote into): a new game from the demo's seed, each key pressed and let go in the frame it was recorded in. With `--frames` or in a window; not with `--seed`, `--record`, `--check` or `--generate`. A recording in which the game's own attract mode started and was stopped by a key does not play back the same, since that key was not recorded |
+| `--dump <file>` | with `--frames`: write the game as it is into the file as XML at the end ([below](#the-dump)) |
+| `--dump-every <n>` | with `--dump`: also every n frames on the way |
 | `--generate <target>` | write the game out as a program instead of playing it ([below](#generating-a-program)) |
 | `-o`, `--output <dir>` | where `--generate` writes (default `<game>-<target>`); an error without `--generate` |
 | `-h`, `--help` | usage, listing the libraries this build has |
 
-**Options.** A short option takes its value attached or spaced (`-gpong`, `-g pong`); a long one needs the space (`--game pong`, never `--game=pong`). Names are not case sensitive, and each option may be given once. Only libraries this build has can be named ([backends](engine.md#backends)). `--record`, `--check`, `--generate`, `--frames`, `--seed` and `--keys` are long only; `--record`, `--check`, `--generate` and `--frames` do not go together.
+**Options.** A short option takes its value attached or spaced (`-gpong`, `-g pong`); a long one needs the space (`--game pong`, never `--game=pong`). Names are not case sensitive, and each option may be given once. Only libraries this build has can be named ([backends](engine.md#backends)). `--record`, `--check`, `--generate`, `--frames`, `--seed`, `--keys` and `--dump` are long only; `--record`, `--check`, `--generate` and `--frames` do not go together.
 
 **Finding the game.** In order: as given; its file name in the working directory; `descriptions/` of the **games folder**.
 
@@ -40,6 +43,26 @@ xgecli galaxian --frames 3600 --keys galaxian.xml  # play its recorded <demo> ba
 - The program then makes the games folder its working directory, so it runs from anywhere and asset paths (`assets/paddle.jpg`) are relative to it (`engine/folder.h`).
 
 **Output.** It prints the file, window, XML and sound library it chose, one a line. A game that will not load (schema, an expression, a name it does not have) prints a message saying where, and exits.
+
+### The dump
+
+One `<moment>` each time it was written, inside a `<dump>` that names `games/xgedump.xsd` by its full path, so it validates wherever it lands. A moment holds the frames played so far, the state on top and its scene, the game's variables, and each object in play:
+
+```xml
+<moment>
+  <frame>600</frame>
+  <state name="playing" />
+  <object name="playing.paddle1" class="paddle" group="playing.paddles">
+    <position><x>30</x><y>242</y></position>
+    <velocity><x>0</x><y>0</y></velocity>
+    <variables>
+      <variable name="score">1</variable>
+    </variables>
+  </object>
+</moment>
+```
+
+An object has `sprite=` when it shows a named look. A run that throws still closes the file, with the moments written before it.
 
 ## xgegui
 

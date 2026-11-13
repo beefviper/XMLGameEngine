@@ -14,7 +14,8 @@ add_dependencies(xgelib xgedata)
 # changed. The engine's own files are not copied: --generate takes them from
 # xge/lib/ in the repository (xge_link_xslt, targets.cmake).
 set(data_xsd
-	"games/xgedef.xsd")
+	"games/xgedef.xsd"
+	"games/xgedump.xsd")
 
 set(data_xml
 	"games/descriptions/pong.xml"

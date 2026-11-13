@@ -16,6 +16,7 @@
 #include "engine/engine.h"
 #include "game/game.h"
 #include "load/xml.h"
+#include "load/xsd.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -24,6 +25,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -489,6 +491,55 @@ TEST_CASE("describe writes the state and every object in play as XML", "[cli][du
 	CHECK(said.find("<variable name=\"score\">0</variable>") != std::string::npos);
 	CHECK(said.find("playing.title") == std::string::npos); // not in play
 	CHECK(said.substr(said.size() - 10) == "</moment>\n");
+}
+
+TEST_CASE("dump writes what frames played into a file its schema passes", "[cli][dump]")
+{
+	CHECK(parseCommandLine({ "pong", "--frames", "10", "--dump", "d.xml" }).dump == "d.xml");
+	CHECK(parseCommandLine({ "pong", "--frames", "10", "--dump", "d.xml", "--dump-every", "5" }).dumpEvery == 5);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--dump", "d.xml" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--frames", "10", "--dump-every", "5" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--frames", "10", "--dump", "d.xml", "--dump-every", "0" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--frames", "10", "--dump", "a.xml", "--dump", "b.xml" }), CliError);
+	CHECK(usageText().find("--dump-every") != std::string::npos);
+
+	const std::filesystem::path file = std::filesystem::temp_directory_path() / scratchName("xge_dump.xml");
+	std::ostringstream out;
+	CHECK(playFrames("descriptions/pong.xml", parseCommandLine({ "pong", "--frames", "100", "--seed", "3", "--dump", file.string(), "--dump-every", "30" }), out) == EXIT_SUCCESS);
+	const std::string text = [&] { std::ifstream in(file); return fileText(in); }();
+	INFO(text);
+	CHECK(text.find("<frame>30</frame>") != std::string::npos);
+	CHECK(text.find("<frame>60</frame>") != std::string::npos);
+	CHECK(text.find("<frame>90</frame>") != std::string::npos);
+	CHECK(text.find("<frame>100</frame>") != std::string::npos);
+	CHECK(text.find("<frame>120</frame>") == std::string::npos);
+	CHECK(text.find("<object name=\"playing.ball\"") == std::string::npos); // still on the title
+	CHECK(text.find("<state name=\"title\" />") != std::string::npos);
+
+	// Every library reads it; Xerces checks it against games/xgedump.xsd
+	// as it loads, and the others' own checker does the same.
+	for (const XmlBackend xml : XmlDocumentFactory::availableBackends())
+	{
+		INFO(XmlDocumentFactory::name(xml));
+		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(xml);
+		REQUIRE(document->load(file.string()));
+		XsdLiteValidator validator;
+		REQUIRE(validator.loadSchema("xgedump.xsd", xml));
+		const bool valid = validator.validate(*document->getRootElement());
+		INFO(validator.getErrorMessage());
+		CHECK(valid);
+	}
+
+	// A dump the schema does not allow does not load with Xerces: the check
+	// above is a real one.
+	if (XmlDocumentFactory::available(XmlBackend::Xerces))
+	{
+		std::string wrong = text;
+		wrong.replace(wrong.find("<frame>30</frame>"), 17, "<frame>thirty</frame>");
+		std::ofstream(file, std::ios::trunc) << wrong;
+		CHECK_FALSE(XmlDocumentFactory::create(XmlBackend::Xerces)->load(file.string()));
+	}
+	std::filesystem::remove(file);
 }
 
 TEST_CASE("the help options ask for the usage", "[cli]")

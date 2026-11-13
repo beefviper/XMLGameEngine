@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  xgedump.xsd
+
+  What xgecli's dump option writes: a game as it was at one frame or
+  several, for a person or a program to read (Game::describe). A dump
+  names this file by its full path, so it validates wherever it is
+  written.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified">
+
+  <!-- A pair of numbers: a place, or a speed in pixels a frame. -->
+  <xs:complexType name="pairType">
+    <xs:sequence>
+      <xs:element name="x" type="xs:float" />
+      <xs:element name="y" type="xs:float" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- The numbers the game, or an object, holds, by name. -->
+  <xs:complexType name="variablesType">
+    <xs:sequence>
+      <xs:element name="variable" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:float">
+              <xs:attribute name="name" type="xs:string" use="required" />
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="dump">
+    <xs:complexType>
+      <xs:sequence>
+        <!-- The game as it was once a frame had been played. -->
+        <xs:element name="moment" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence>
+              <!-- How many frames had been played. -->
+              <xs:element name="frame" type="xs:nonNegativeInteger" />
+              <!-- The state on top of the stack, and its current scene when it has scenes. -->
+              <xs:element name="state" minOccurs="0">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                  <xs:attribute name="scene" type="xs:string" />
+                </xs:complexType>
+              </xs:element>
+              <!-- The game's own variables. -->
+              <xs:element name="variables" type="variablesType" minOccurs="0" />
+              <!-- Each object in play: its full name, class, group and look. -->
+              <xs:element name="object" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="position" type="pairType" />
+                    <xs:element name="velocity" type="pairType" />
+                    <xs:element name="variables" type="variablesType" minOccurs="0" />
+                  </xs:sequence>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                  <xs:attribute name="class" type="xs:string" />
+                  <xs:attribute name="group" type="xs:string" />
+                  <xs:attribute name="sprite" type="xs:string" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

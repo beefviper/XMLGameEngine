@@ -14,6 +14,8 @@
 #include <cctype>
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -155,6 +157,8 @@ namespace xge
 			if (arg == "--frames") return 'f';
 			if (arg == "--seed")   return 's';
 			if (arg == "--keys")   return 'k';
+			if (arg == "--dump")   return 'd';
+			if (arg == "--dump-every") return 'e';
 			if (arg == "--help")   return 'h';
 			return std::nullopt;
 		}
@@ -177,6 +181,8 @@ namespace xge
 			case 'f': return "number of frames";
 			case 's': return "seed";
 			case 'k': return "file";
+			case 'd': return "file";
+			case 'e': return "number of frames";
 			}
 			return "help";
 		}
@@ -282,6 +288,20 @@ namespace xge
 					throw CliError("--keys was given more than once");
 				}
 				options.keys = value;
+				break;
+			case 'd':
+				if (!options.dump.empty())
+				{
+					throw CliError("--dump was given more than once");
+				}
+				options.dump = value;
+				break;
+			case 'e':
+				if (options.dumpEvery > 0)
+				{
+					throw CliError("--dump-every was given more than once");
+				}
+				options.dumpEvery = static_cast<int>(wholeNumber(value, "--dump-every", 1));
 				break;
 			}
 		};
@@ -409,6 +429,14 @@ namespace xge
 				throw CliError("--keys plays from the recording's own seed; leave out --seed");
 			}
 		}
+		if (!options.dump.empty() && !haveFrames)
+		{
+			throw CliError("--dump writes what --frames played; give --frames too");
+		}
+		if (options.dumpEvery > 0 && options.dump.empty())
+		{
+			throw CliError("--dump-every says how often --dump writes; give --dump too");
+		}
 		if (haveFrames)
 		{
 			if (options.check || haveGenerate || options.record)
@@ -514,6 +542,9 @@ namespace xge
 			"                       same every time\n"
 			"  --keys <file>        play back the <demo> in the file (one --record wrote, or a\n"
 			"                       file that is only a <demo>) from its own seed\n"
+			"  --dump <file>        with --frames, write the game's state into the file as\n"
+			"                       XML at the end (games/xgedump.xsd is its schema)\n"
+			"  --dump-every <n>     and every n frames on the way\n"
 			"  -h, --help           show this text\n"
 			"\n"
 			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"
@@ -579,6 +610,28 @@ namespace xge
 			~SeedBack() { if (fixed) { fixRandomSeed(seed); } }
 		} seedBack{ seedBefore, options.seed.has_value() };
 
+		// The dump is opened first, so a file that cannot be written stops
+		// the run before it plays, and is closed whole however the run ends.
+		std::ofstream dump;
+		if (!options.dump.empty())
+		{
+			dump.open(options.dump, std::ios::binary | std::ios::trunc);
+			if (!dump)
+			{
+				out << "Error: cannot write the dump to " << options.dump << '\n';
+				return EXIT_FAILURE;
+			}
+			const std::filesystem::path schema = std::filesystem::absolute("xgedump.xsd").lexically_normal();
+			dump << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+				<< "<!-- " << std::filesystem::path(file).filename().string() << " as xgecli played it, at each moment it was written. -->\n"
+				<< "<dump xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"" << schema.generic_string() << "\">\n";
+		}
+		struct DumpEnd
+		{
+			std::ofstream& file;
+			~DumpEnd() { if (file.is_open()) { file << "</dump>\n"; } }
+		} dumpEnd{ dump };
+
 		int played = 0;
 		try
 		{
@@ -588,10 +641,17 @@ namespace xge
 			{
 				engine.replay(readDemo(options.keys, options.xml));
 			}
-			for (; played < options.frames; ++played)
+			const auto describe = [&]
+			{
+				if (dump.is_open()) { game.describe(dump, static_cast<unsigned long>(played), "  "); }
+			};
+			while (played < options.frames)
 			{
 				engine.step();
+				++played;
+				if (options.dumpEvery > 0 && played % options.dumpEvery == 0 && played < options.frames) { describe(); }
 			}
+			describe();
 			out << "played " << played << " frames of " << std::filesystem::path(file).filename().string()
 				<< "; the state is " << game.getCurrentState().name << '\n';
 		}

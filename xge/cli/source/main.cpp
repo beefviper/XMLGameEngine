@@ -82,6 +82,10 @@ int main(int argc, char* argv[])
 		{
 			options.keys = std::filesystem::absolute(options.keys).string();
 		}
+		if (!options.dump.empty())
+		{
+			options.dump = std::filesystem::absolute(options.dump).string();
+		}
 	}
 	catch (const xge::CliError& error)
 	{
