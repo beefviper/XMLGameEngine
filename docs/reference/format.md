@@ -30,6 +30,7 @@ One `<game>` root, its children in this order (the schema enforces it):
 
 - **Where an object is written says how long it lasts,** and the deeper it is written, the shorter: the top-level `<objects>` never (they are [pieces](objects.md#pieces-and-from), taken below or only spawned), `<states>`' own `<objects>` for the whole game, a [state](states.md#states)'s while it is current, a [scene](states.md#scenes)'s while that scene is current. An object is only a definition; where it stands says whether, and for how long, it is in play.
 - A game with no `xsi:noNamespaceSchemaLocation` is not validated. The schema checks shape and where each command may go; the loader checks names and meaning once everything is read.
+- **A load error says where:** the path to the tag, then the line of the file it is on: `object 'frog' > <sprite> > <polygon>: unknown <corner>; ... (line 8)`. A misspelt name found once everything is read gives the line of what holds it (the rule, condition, object or state; for a command in an action, its object). A member of a group gives its group's line; a generated program, which has no file, gives none.
 
 ## The format's one rule
 

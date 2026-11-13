@@ -81,7 +81,8 @@ namespace
 	}
 
 	// Every field of a game's data, a line each, so two can be compared and
-	// the first place they differ shown.
+	// the first place they differ shown. The line of the file each tag was
+	// on (`line`) is left out: a generated program has no file, so it is 0.
 	class Describe
 	{
 	public:

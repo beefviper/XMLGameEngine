@@ -39,3 +39,10 @@ Reached by removing a small scripting language that had grown inside attribute s
 - Sorting found gaps, filled rather than written in: an action can now stop, reverse, spawn and steer, and a collision rule can fire.
 - Open: the two kinds of `<collision>` differ by attribute, which XSD 1.0 cannot tell apart; two tags would let the schema check it.
 - The schema checks shape and placement, not names: an unknown key or an unowned variable is the loader's to refuse ([games written by another AI](54-games.md)).
+
+## Lines in load errors
+
+- In a long game a path such as `object 'playing.ground.1.1' > <position>` is slow to find, and a group member's name is not written anywhere. **Wanted:** every load error ends with the line of the file.
+- All four XML libraries give a tag's line (`XmlNode::line`): TinyXML2 keeps it, PugiXML and RapidXML give an offset counted into lines, and Xerces' parser records the line as it builds each element. Copies made for pieces and `from=` keep the line they were copied from.
+- **Chosen:** a reader that holds a tag runs inside `onLine` (`load/reading.h`), which adds the tag's line to an error that has none yet, so the innermost one wins. The raw objects, commands, conditions, rules and states keep their line for the checks made after reading.
+- Those checks work on what is made, and a made command keeps no line, so a misspelt name gives the line of what holds it. Open: each command's own line, cheap once a command is `{ verb, data }` ([plan](../plan.md) A1 step 4).
