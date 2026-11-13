@@ -114,7 +114,15 @@ namespace xge
 		return text;
 	}
 
+	// The tag read, readCommand without the line.
+	static RawCommand readCommandHere(const XmlNode& node, const std::string& where);
+
 	RawCommand readCommand(const XmlNode& node, const std::string& where)
+	{
+		return onLineOf(node, [&] { return readCommandHere(node, where); });
+	}
+
+	static RawCommand readCommandHere(const XmlNode& node, const std::string& where)
 	{
 		RawCommand command;
 		command.verb = node.getName();

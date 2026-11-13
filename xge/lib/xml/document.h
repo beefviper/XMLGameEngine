@@ -96,6 +96,9 @@ namespace xge
 	std::vector<std::size_t> lineStarts(const std::string& text);
 	int lineAt(const std::vector<std::size_t>& starts, std::size_t offset) noexcept;
 
+	// " (line 12)", as a message about a place in a file ends; "" for line 0.
+	std::string lineNote(int line);
+
 	enum class XmlBackend
 	{
 		Xerces,

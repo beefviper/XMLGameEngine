@@ -180,3 +180,69 @@ TEST_CASE("an element taken from a piece keeps the lines it was written on", "[x
 	}
 	std::filesystem::remove(file);
 }
+
+TEST_CASE("a reader's message ends with the line of the tag it is about", "[xml_format][backends][line_numbers]")
+{
+	// No schema is named at first, so the reader is the first to see the mistakes.
+	const std::string file = scratchName("descriptions/lines_error.xml");
+	const auto write = [&](const std::string& sprite, const std::string& onSpace, bool schema = false)
+	{
+		std::ofstream(file) << (schema ? "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">\n" : "<game>\n") <<
+			"  <window name=\"lines\"><width>800</width><height>600</height><background>color.black</background><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>\n"
+			"  <states>\n"
+			"    <state name=\"playing\">\n"
+			"      <objects>\n"
+			"        <object name=\"ball\">\n"
+			"          <sprite>\n"
+			"            " << sprite << "\n"
+			"          </sprite>\n"
+			"          <position><x>1</x><y>2</y></position>\n"
+			"        </object>\n"
+			"      </objects>\n"
+			"      <inputs><input button=\"space\">\n"
+			"        " << onSpace << "\n"
+			"      </input></inputs>\n"
+			"    </state>\n"
+			"  </states>\n"
+			"</game>\n";
+	};
+	const auto errorOf = [&](XmlBackend backend)
+	{
+		try
+		{
+			readGame(file, backend);
+		}
+		catch (const std::exception& error)
+		{
+			return std::string(error.what());
+		}
+		return std::string();
+	};
+	const auto endsWith = [](const std::string& text, const std::string& end)
+	{
+		return text.size() >= end.size() && text.compare(text.size() - end.size(), end.size(), end) == 0;
+	};
+
+	for (const XmlBackend backend : XmlDocumentFactory::availableBackends())
+	{
+		INFO(XmlDocumentFactory::name(backend));
+		// A polygon with a tag it does not take, on line 8.
+		write("<polygon><point><x>0</x><y>0</y></point><corner /></polygon>", "<pop />");
+		const std::string sprite = errorOf(backend);
+		INFO(sprite);
+		CHECK(sprite.find("unknown <corner>") != std::string::npos);
+		CHECK(endsWith(sprite, " (line 8)"));
+		// A verb the engine does not have, on line 14.
+		write("<circle><radius>5</radius></circle>", "<leap />");
+		const std::string verb = errorOf(backend);
+		INFO(verb);
+		CHECK(endsWith(verb, " (line 14)"));
+		// With the schema named, it is the first to see a tag it does not
+		// declare, and says the line too (Xerces in its own words).
+		write("<circle><radius>5</radius></circle><corner />", "<pop />", true);
+		const std::string schema = errorOf(backend);
+		INFO(schema);
+		CHECK(schema.find("line 8") != std::string::npos);
+	}
+	std::filesystem::remove(file);
+}

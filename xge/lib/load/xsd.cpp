@@ -589,7 +589,7 @@ namespace xge
 			{
 				if (attribute.required)
 				{
-					error = path + ": missing required attribute '" + attribute.name + "'";
+					error = path + ": missing required attribute '" + attribute.name + "'" + lineNote(actual.line());
 					return false;
 				}
 
@@ -598,7 +598,7 @@ namespace xge
 
 			if (!typeMatches(attribute.type, value))
 			{
-				error = path + ": attribute '" + attribute.name + "' = \"" + value + "\" is not a valid " + attribute.type;
+				error = path + ": attribute '" + attribute.name + "' = \"" + value + "\" is not a valid " + attribute.type + lineNote(actual.line());
 				return false;
 			}
 		}
@@ -623,13 +623,13 @@ namespace xge
 			// A simple element: text only, of the declared type.
 			if (!children.empty())
 			{
-				error = path + ": unexpected element <" + children.front()->getName() + "> inside a text-only element";
+				error = path + ": unexpected element <" + children.front()->getName() + "> inside a text-only element" + lineNote(children.front()->line());
 				return false;
 			}
 
 			if (!declaration.simpleType.empty() && !typeMatches(declaration.simpleType, text))
 			{
-				error = path + ": \"" + text + "\" is not a valid " + declaration.simpleType;
+				error = path + ": \"" + text + "\" is not a valid " + declaration.simpleType + lineNote(actual.line());
 				return false;
 			}
 
@@ -642,7 +642,7 @@ namespace xge
 
 		if (!type.mixed && !text.empty())
 		{
-			error = path + ": unexpected text \"" + text + "\"";
+			error = path + ": unexpected text \"" + text + "\"" + lineNote(actual.line());
 			return false;
 		}
 
@@ -650,7 +650,7 @@ namespace xge
 		{
 			if (!children.empty())
 			{
-				error = path + ": unexpected element <" + children.front()->getName() + ">";
+				error = path + ": unexpected element <" + children.front()->getName() + ">" + lineNote(children.front()->line());
 				return false;
 			}
 
@@ -678,10 +678,11 @@ namespace xge
 		{
 			error = path + ": unexpected element <" + children[at]->getName() + ">";
 			if (!expected.empty()) { error += ", expected " + expected; }
+			error += lineNote(children[at]->line());
 		}
 		else
 		{
-			error = path + ": " + (expected.empty() ? std::string("incomplete") : "expected " + expected + " but the element ends");
+			error = path + ": " + (expected.empty() ? std::string("incomplete") : "expected " + expected + " but the element ends") + lineNote(actual.line());
 		}
 
 		return false;

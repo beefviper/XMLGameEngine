@@ -45,7 +45,7 @@ namespace xge
 
 	[[noreturn]] void fail(const std::string& where, const std::string& message)
 	{
-		throw std::runtime_error(where + ": " + message);
+		throw LoadError(where + ": " + message);
 	}
 
 	std::unique_ptr<XmlNode> requireChild(const XmlNode& parent, const std::string& name, const std::string& where)
@@ -265,9 +265,12 @@ namespace xge
 	// update="live".
 	RawValue readValue(const XmlNode& node, const std::string& where)
 	{
-		RawValue value = readValueBody(node, where);
-		value.live = node.getAttribute("update") == "live";
-		return value;
+		return onLineOf(node, [&]
+		{
+			RawValue value = readValueBody(node, where);
+			value.live = node.getAttribute("update") == "live";
+			return value;
+		});
 	}
 
 	RawValue readValueBody(const XmlNode& node, const std::string& where)

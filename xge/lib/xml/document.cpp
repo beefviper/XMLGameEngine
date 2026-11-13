@@ -144,4 +144,9 @@ namespace xge
 	{
 		return static_cast<int>(std::upper_bound(starts.begin(), starts.end(), offset) - starts.begin());
 	}
+
+	std::string lineNote(int line)
+	{
+		return line > 0 ? " (line " + std::to_string(line) + ")" : std::string{};
+	}
 }

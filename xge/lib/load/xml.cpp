@@ -393,7 +393,15 @@ namespace xge
 			return rawPolygon;
 		}
 
+		// The tag read; readSprite without the line.
+		RawSprite readSpriteHere(const XmlNode& spriteNode, const std::string& where);
+
 		RawSprite readSprite(const XmlNode& spriteNode, const std::string& where)
+		{
+			return onLineOf(spriteNode, [&] { return readSpriteHere(spriteNode, where); });
+		}
+
+		RawSprite readSpriteHere(const XmlNode& spriteNode, const std::string& where)
 		{
 			const std::string here = where + " > <sprite>";
 			RawSprite sprite;
@@ -418,7 +426,7 @@ namespace xge
 				for (std::unique_ptr<XmlNode> node = std::move(first); node != nullptr; node = node->getNextSibling())
 				{
 					if (node->getName() != "line") { fail(here, "a sprite of lines holds only <line>s, not <" + node->getName() + ">"); }
-					sprite.lines.push_back(readLine(*node, here));
+					sprite.lines.push_back(onLineOf(*node, [&] { return readLine(*node, here); }));
 				}
 			}
 			else if (first->getName() == "polygon")
@@ -429,12 +437,12 @@ namespace xge
 				for (std::unique_ptr<XmlNode> node = std::move(first); node != nullptr; node = node->getNextSibling())
 				{
 					if (node->getName() != "polygon") { fail(here, "a sprite of polygons holds only <polygon>s, not <" + node->getName() + ">"); }
-					sprite.polygons.push_back(readPolygon(*node, here));
+					sprite.polygons.push_back(onLineOf(*node, [&] { return readPolygon(*node, here); }));
 				}
 			}
 			else if (isShapeTag(first->getName()))
 			{
-				readShape(*first, sprite, here);
+				onLineOf(*first, [&] { readShape(*first, sprite, here); });
 			}
 			else
 			{
@@ -1456,7 +1464,15 @@ namespace xge
 		// with the others of their group, then the rules.
 		// A <collisions>, added to what `base` already has: a group inside
 		// another keeps the outer group's rules and adds its own after them.
+		// The tag read; readCollisions without the line.
+		RawCollisionData readCollisionsHere(const XmlNode& collisions, const std::string& where, RawCollisionData base);
+
 		RawCollisionData readCollisions(const XmlNode& collisions, const std::string& where, RawCollisionData base = {})
+		{
+			return onLineOf(collisions, [&] { return readCollisionsHere(collisions, where, base); });
+		}
+
+		RawCollisionData readCollisionsHere(const XmlNode& collisions, const std::string& where, RawCollisionData base)
 		{
 			const std::string collisionsHere = where + " > <collisions>";
 			RawCollisionData collisionData = std::move(base);
@@ -1874,7 +1890,15 @@ namespace xge
 
 		// An <object>; on a <map> (`map`), one that starts on the one tile of
 		// the character it picks, with no <position> of its own.
+		// The tag read; readObject without the line.
+		RawObject readObjectHere(const XmlNode& object, const MapLayout* map);
+
 		RawObject readObject(const XmlNode& object, const MapLayout* map = nullptr)
+		{
+			return onLineOf(object, [&] { return readObjectHere(object, map); });
+		}
+
+		RawObject readObjectHere(const XmlNode& object, const MapLayout* map)
 		{
 			RawObject rawObject;
 			rawObject.name = requireAttribute(object, "name", "<object>");
@@ -2173,7 +2197,15 @@ namespace xge
 		// rules, actions, variables and timers add to the outer's (an action or
 		// variable of the same name replaces it). Its members are named after
 		// it, and the outer group's name means all of them.
+		// The tag read; readGroup without the line.
+		void readGroupHere(const XmlNode& group, std::vector<RawObject>& out, const GroupShared& outer);
+
 		void readGroup(const XmlNode& group, std::vector<RawObject>& out, const GroupShared& outer = {})
+		{
+			return onLineOf(group, [&] { return readGroupHere(group, out, outer); });
+		}
+
+		void readGroupHere(const XmlNode& group, std::vector<RawObject>& out, const GroupShared& outer)
 		{
 			const std::string name = requireAttribute(group, "name", "<group>");
 			const std::string where = "group '" + name + "'";
@@ -2578,7 +2610,15 @@ namespace xge
 		// where it starts. A character nothing picks is an empty tile. The
 		// map's name means everything on it. Rows are trimmed like any text, so
 		// an empty tile at either end of a row needs a character, not a space.
+		// The tag read; readMap without the line.
+		void readMapHere(const XmlNode& node, std::vector<RawObject>& out);
+
 		void readMap(const XmlNode& node, std::vector<RawObject>& out)
+		{
+			return onLineOf(node, [&] { return readMapHere(node, out); });
+		}
+
+		void readMapHere(const XmlNode& node, std::vector<RawObject>& out)
 		{
 			MapLayout map;
 			map.name = requireAttribute(node, "name", "<map>");
@@ -2671,7 +2711,15 @@ namespace xge
 		// <part>s that play together, each its own <note>s and <rest>s. The
 		// words (wave, pitch) are checked by load/expr, which also works out
 		// the lengths.
+		// The tag read; readSound without the line.
+		RawSound readSoundHere(const XmlNode& sound);
+
 		RawSound readSound(const XmlNode& sound)
+		{
+			return onLineOf(sound, [&] { return readSoundHere(sound); });
+		}
+
+		RawSound readSoundHere(const XmlNode& sound)
 		{
 			RawSound raw;
 			raw.name = requireAttribute(sound, "name", "<sounds>");
@@ -2953,7 +3001,15 @@ namespace xge
 		// One <condition> into `out`: a test, then the commands to run when it
 		// holds; or, holding conditions (each read the same way), a <first>
 		// before them and an <otherwise> after.
+		void readConditionHere(const XmlNode& condition, const std::string& where, std::vector<RawCondition>& out);
+
 		void readCondition(const XmlNode& condition, const std::string& where, std::vector<RawCondition>& out)
+		{
+			onLineOf(condition, [&] { readConditionHere(condition, where, out); });
+		}
+
+		// The tag read; readCondition without the line.
+		void readConditionHere(const XmlNode& condition, const std::string& where, std::vector<RawCondition>& out)
 		{
 			const std::string conditionHere = where + " > <condition>";
 			RawCondition raw;
@@ -3157,8 +3213,15 @@ namespace xge
 		// A <state>. Its objects are laid out by load/merge: those of the state
 		// it is from= (`lists`, each state so far laid out), changed by its own
 		// of the same names, then its own and the top-level <objects> pieces it takes.
-		RawState readState(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists,
-			const Kit& kit, const std::set<std::string>& gameNames)
+		// The tag read; readState without the line.
+		RawState readStateHere(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists, const Kit& kit, const std::set<std::string>& gameNames);
+
+		RawState readState(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists, const Kit& kit, const std::set<std::string>& gameNames)
+		{
+			return onLineOf(state, [&] { return readStateHere(state, lists, kit, gameNames); });
+		}
+
+		RawState readStateHere(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists, const Kit& kit, const std::set<std::string>& gameNames)
 		{
 			RawState rawState{};
 			rawState.name = requireAttribute(state, "name", "<state>");

@@ -11,6 +11,7 @@
 #include <initializer_list>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 
 // What every reader of a game file's tags shares: finding a child, asking
@@ -32,7 +33,40 @@ namespace xge
 	// calls that assume a particular position.
 	std::unique_ptr<XmlNode> findChild(const XmlNode* parent, const std::string& name);
 
+	// What fail() throws: what is wrong and where, and the line of the file
+	// it is on once a reader that knows the line has said so (0 until then).
+	class LoadError : public std::runtime_error
+	{
+	public:
+		explicit LoadError(const std::string& message, int atLine = 0) : std::runtime_error(message), line(atLine) {}
+		int line;
+	};
+
 	[[noreturn]] void fail(const std::string& where, const std::string& message);
+
+	// Runs `read`, which reads `node`; an error it throws that has no line
+	// yet gets node's, so the message ends "(line 12)". The innermost reader
+	// that knows a line gives it, being nearest the mistake.
+	template <typename Read>
+	auto onLineOf(const XmlNode& node, Read&& read) -> decltype(read())
+	{
+		try
+		{
+			return read();
+		}
+		catch (const LoadError& error)
+		{
+			if (error.line != 0 || node.line() == 0) { throw; }
+			throw LoadError(error.what() + lineNote(node.line()), node.line());
+		}
+		catch (const std::runtime_error& error)
+		{
+			// One from further down that already says its line (a merge's).
+			const std::string message = error.what();
+			if (node.line() == 0 || message.find(" (line ") != std::string::npos) { throw; }
+			throw LoadError(message + lineNote(node.line()), node.line());
+		}
+	}
 
 	std::unique_ptr<XmlNode> requireChild(const XmlNode& parent, const std::string& name, const std::string& where);
 
