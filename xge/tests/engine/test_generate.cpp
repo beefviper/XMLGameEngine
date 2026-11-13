@@ -312,6 +312,8 @@ TEST_CASE("windows-cpp lists every part of a game it has no words for yet, then 
 		CHECK(what.find("\n  <play> in <collision> (object 'ball')") != std::string::npos);
 		CHECK(what.find("\n  the name 'window.width.center' (object 'score1')") != std::string::npos);
 		CHECK(count(what, "\n  <styles> in <game>") == 1);
+		// a long list comes through whole (libxslt hands it over in one piece)
+		CHECK(what.find("\n  <sounds> in <game>") != std::string::npos);
 	}
 	CHECK_FALSE(fs::exists(folder.path / "out"));
 }

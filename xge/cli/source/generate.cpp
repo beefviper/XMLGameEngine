@@ -67,16 +67,23 @@ namespace xge
 		{
 			auto* messages = static_cast<std::string*>(context);
 
+			// Measured first, then written whole: a stylesheet's list of what
+			// it cannot write runs to many lines.
 			va_list arguments;
 			va_start(arguments, format);
-			char buffer[1024];
-			const int length = std::vsnprintf(buffer, sizeof buffer, format, arguments);
+			va_list again;
+			va_copy(again, arguments);
+			const int length = std::vsnprintf(nullptr, 0, format, arguments);
 			va_end(arguments);
 
 			if (length > 0)
 			{
-				messages->append(buffer, std::min(static_cast<std::size_t>(length), sizeof buffer - 1));
+				std::string text(static_cast<std::size_t>(length) + 1, '\0');
+				std::vsnprintf(text.data(), text.size(), format, again);
+				text.resize(static_cast<std::size_t>(length));
+				messages->append(text);
 			}
+			va_end(again);
 		}
 
 		// Sends the libraries' messages to `messages` for as long as it lives.
