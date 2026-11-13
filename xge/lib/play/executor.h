@@ -128,7 +128,6 @@ namespace xge
 		// everything with a mass resting against its far side.
 		void knock(Object& object, Object& other, const Touch& touch, float bounce);
 		bool jump(Object& object, float height);
-		void chase(Object& object, const CmdChase& chase);
 		void reverse(Object& object);
 
 		// <become>: the object running it (self, which a state's commands do

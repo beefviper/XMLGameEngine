@@ -549,26 +549,6 @@ namespace xge
 		}
 	}
 
-	// Heads for the nearest of `chase.target` in play: straight at its middle
-	// at `chase.speed`, or, within `chase.stopWithin` of it, stops. It faces the
-	// way it goes, and a heading turns to it. With none in play it carries on
-	// as it was.
-	void CommandExecutor::chase(Object& object, const CmdChase& command)
-	{
-		const Object* target = game.nearestInPlay(object, command.target);
-		if (!target) { return; }
-
-		if (const auto way = xge::chase(middleOf(object), middleOf(*target), command.speed, command.stopWithin, object.velocity))
-		{
-			object.facing = directionOf(*way);
-			if (object.hasHeading)
-			{
-				object.heading = headingOf(*way);
-				object.showHeading();
-			}
-		}
-	}
-
 	// Up off the ground at the speed that, under the object's own pull, rises
 	// `height` pixels: v * v = 2 * pull * height. Only from the ground and not
 	// on a ladder; nothing without a pull down (the loader refuses that).

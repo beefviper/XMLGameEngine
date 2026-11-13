@@ -8,6 +8,8 @@
 #include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
+#include "play/geometry.h"
+#include "play/verbs.h"
 
 #include <stdexcept>
 #include <string>
@@ -38,9 +40,29 @@ namespace xge
 		checkObject(checking, std::get<CmdChase>(command).target, "<chase>");
 	}
 
+	// Heads for the nearest of `chase.target` in play: straight at its middle
+	// at `chase.speed`, or, within `chase.stopWithin` of it, stops. It faces the
+	// way it goes, and a heading turns to it. With none in play it carries on
+	// as it was.
+	static void chaseNearest(CommandExecutor& executor, Object& object, const CmdChase& command)
+	{
+		const Object* target = executor.game.nearestInPlay(object, command.target);
+		if (!target) { return; }
+
+		if (const auto way = xge::chase(middleOf(object), middleOf(*target), command.speed, command.stopWithin, object.velocity))
+		{
+			object.facing = directionOf(*way);
+			if (object.hasHeading)
+			{
+				object.heading = headingOf(*way);
+				object.showHeading();
+			}
+		}
+	}
+
 	static bool runChase(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
-		if (doer.self) { executor.chase(*doer.self, std::get<CmdChase>(command)); }
+		if (doer.self) { chaseNearest(executor, *doer.self, std::get<CmdChase>(command)); }
 		return true;
 	}
 
