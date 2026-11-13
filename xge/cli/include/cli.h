@@ -135,7 +135,8 @@ namespace xge
 	std::string xmlBackendName(XmlBackend backend);
 	std::string audioBackendName(AudioBackend backend);
 
-	// The targets --generate can write a game out for ("engine-cpp").
+	// The targets --generate can write a game out for ("engine-cpp",
+	// "windows-cpp").
 	std::vector<std::string> generateTargets();
 
 	// The usage text, for --help and after an error.

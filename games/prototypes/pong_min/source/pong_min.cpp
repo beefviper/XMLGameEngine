@@ -3,8 +3,10 @@
 // author: beefviper
 // date: Oct 12, 2026
 //
-// Pong, from games/descriptions/pong_min.xml. Each part of the file is the code
-// below that it names, in the file's order; nothing here moves anything itself.
+// Pong, from pong_min.xml.
+//
+// Each part of the file is the code below that it names, in the file's order;
+// nothing here moves anything itself.
 
 #include "pong_min.h"
 
@@ -29,14 +31,15 @@ namespace pong_min
 		const float height = 120;
 		const float step = 5;
 
-		Object rectangle(const char* name, float across, float down)
+		// A <rectangle>, white unless it says, that touches what it meets.
+		Object rectangle(const char* name, float across, float down, const char* color = "color.white")
 		{
 			Object object;
 			object.name = name;
 			object.ownerState = "playing";
 			object.picture.kind = ShapeKind::Rectangle;
 			object.picture.size = { across, down };
-			object.picture.color = "color.white";
+			object.picture.color = color;
 			object.collisionsOn = true;
 			return object;
 		}
@@ -50,6 +53,7 @@ namespace pong_min
 		}
 
 		bool vertical(Edge edge) { return edge == Edge::Top || edge == Edge::Bottom; }
+		bool horizontal(Edge edge) { return edge == Edge::Left || edge == Edge::Right; }
 	}
 
 	Pong::Pong()
@@ -59,40 +63,40 @@ namespace pong_min
 
 		objects.push_back(rectangle("playing.ball", size, size));
 		ball().variable["speed"] = 6;
-		serve();
+		ballStart();
 		startAt(ball(), ball().start.position, ball().start.velocity);
 
 		// <group name="paddles">
 		objects.push_back(rectangle("playing.paddle1", width, height));
 		objects.push_back(rectangle("playing.paddle2", width, height));
 		paddle1().groupName = paddle2().groupName = "playing.paddles";
-		startAt(paddle1(), { margin, (windowHeight - height) / 2 }, { 0, 0 });
-		startAt(paddle2(), { windowWidth - margin - width, (windowHeight - height) / 2 }, { 0, 0 });
+		startAt(paddle1(), { margin, windowHeight / 2 - height / 2 }, { 0, 0 });
+		startAt(paddle2(), { windowWidth - margin - width, windowHeight / 2 - height / 2 }, { 0, 0 });
 	}
 
-	// At ball.speed, within 30 degrees of straight left or right, to either side.
-	void Pong::serve()
+	// Where the ball starts, and starts again after a reset: its
+	// <random>s drawn, then its place and its way from them.
+	void Pong::ballStart()
 	{
 		Object& self = ball();
-		const float angle = randomBetween(-30, 30);
-		const float side = randomBetween(-1, 1);
-		self.variable["angle"] = self.start.variable["angle"] = angle;
-		self.variable["side"] = self.start.variable["side"] = side;
-		self.start.variable["speed"] = self.variable["speed"];
+		self.variable["angle"] = self.start.variable["angle"] = randomBetween(-30, 30);
+		self.variable["side"] = self.start.variable["side"] = randomBetween(-1, 1);
 
 		const float speed = self.variable["speed"];
-		self.start.position = { (windowWidth - size) / 2, (windowHeight - size) / 2 };
+		const float angle = self.variable["angle"];
+		const float side = self.variable["side"];
+		self.start.position = { windowWidth / 2 - size / 2, windowHeight / 2 - size / 2 };
 		self.start.velocity = { sign(side) * speed * cosine(angle), speed * sine(angle) };
 	}
 
-	// <inputs>: W and S move paddle1, Up and Down paddle2, while held.
+	// <inputs>
 	void Pong::key(KeyCode key, bool pressed)
 	{
 		switch (key)
 		{
-		case KeyCode::W:    holdMove(paddle1(), Direction::Up, step, pressed); break;
-		case KeyCode::S:    holdMove(paddle1(), Direction::Down, step, pressed); break;
-		case KeyCode::Up:   holdMove(paddle2(), Direction::Up, step, pressed); break;
+		case KeyCode::W: holdMove(paddle1(), Direction::Up, step, pressed); break;
+		case KeyCode::S: holdMove(paddle1(), Direction::Down, step, pressed); break;
+		case KeyCode::Up: holdMove(paddle2(), Direction::Up, step, pressed); break;
 		case KeyCode::Down: holdMove(paddle2(), Direction::Down, step, pressed); break;
 		default: break;
 		}
@@ -109,30 +113,28 @@ namespace pong_min
 		return object.isVisible;
 	}
 
-	// The ball bounces off the top and bottom and is served again from
-	// either side; the paddles stop at the top and bottom.
+	// At the window's edges: each one's <collision edge>s.
 	void Pong::atEdge(Object& object, Edge edge)
 	{
-		if (!isBall(object))
+		if (isBall(object))
+		{
+			if (vertical(edge)) { bounceOffEdge(object, edge, 1); }
+			if (horizontal(edge)) { ballStart(); restart(object); }
+		}
+		if (inPaddles(object))
 		{
 			if (vertical(edge)) { stick(object, window, edge); }
-			return;
-		}
-
-		if (vertical(edge)) { bounceOffEdge(object, edge, 1); }
-		else
-		{
-			serve();
-			restart(object);
 		}
 	}
 
+	// What stops at an edge rather than going past it: a <stick />.
 	bool Pong::sticksAt(const Object& object, Edge edge)
 	{
-		return !isBall(object) && vertical(edge);
+		return inPaddles(object) && vertical(edge);
 	}
 
-	// The ball's <collision> names nothing: it answers to anything it meets.
+	// Which pairs answer to meeting: a <collision> naming nothing answers to
+	// anything its object meets.
 	bool Pong::canCollide(const Object& a, const Object& b)
 	{
 		return isBall(a) || isBall(b);
@@ -143,7 +145,7 @@ namespace pong_min
 		return isBall(object);
 	}
 
-	// <deflect>45</deflect>: off a paddle at up to 45 degrees, by where it hit.
+	// When they meet: each one's <collision>s, done to it.
 	void Pong::touched(Object& a, Object& b, const Contact& contact)
 	{
 		if (isBall(a)) { deflect(a, b, touchOfFirst(contact).edge, 45); }

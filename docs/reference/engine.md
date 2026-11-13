@@ -92,7 +92,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `load/xsd.cpp`, `load/spelling.cpp` | the weak validator; "did you mean" (`didYouMean`, `listOf`) |
 | the game | `game/game.cpp` | the interpreter: objects, the state stack, scenes, conditions, resets, paths, spawns, the answers to `FrameRules` |
 | | `game/scenes.cpp` | `layOutScenes`, states `from=` others |
-| | `game/command.cpp` | raw command tags into typed `Command`s (`makeCommand`, by the verb), printing them; `operationShape` |
+| | `game/command.cpp` | raw command tags into typed `Command`s (`makeCommand`, by the verb), printing them and objects; `operationShape` |
 | | `verbs/` | a file per verb: its name, the places it may go, `read`, `make`, `check` and `run`; `verb.h` says what a verb is, `all.cpp` lists them |
 | | `game/object.*`, `game/states.*`, `game/data.h`, `game/random.cpp` | the data model; the one random source |
 | | `game/cells.cpp`, `game/cards.cpp`, `game/think.cpp` | maps of cells and board games; cards; the board-game search |
@@ -107,5 +107,6 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
 | | `xge/gui/source/` | `main_window`, `game_session`, `game_stage`, `game_view`, `qt_window`, `key_queue`, `options_dialog`, `session_options`, `app_settings` (`xgegui.ini`), `inspector`, `theme` |
 | generator | `games/generators/engine-cpp/` | `generate.xsl`, `merge.xsl`, `data.xsl`, `program.xsl`, `text.xsl`, `engine.xml`, `modules/game_parts.h` |
-| | `games/prototypes/pong_min/` | `pong_min.xml` written by hand as plain code on the frame and the verbs, the `pong_min` program: what the `windows-cpp` generator is to write |
+| | `games/generators/windows-cpp/` | `generate.xsl`, `game.xsl`, `names.xsl`, `values.xsl`, `program.xsl`, `runtime.xml`, `verbs/` (a file per verb it can write) |
+| | `games/prototypes/pong_min/` | `pong_min.xml` as plain code on the frame and the verbs, the `pong_min` program: what the `windows-cpp` generator writes for it |
 | tests | `xge/tests/` | `engine/` one `test_<topic>.cpp` per area (`test_vocabulary.cpp`: every schema word used by a game or listed with why, in the docs, and every game through 1,000 frames of random keys; `test_names.cpp`: names that match nothing); `games/` one per game (played frame by frame); `generated/` the generated games (`xgetest-generated`); `long/` the long runs (`xgetest-long`: random keys, damaged files, load and frame times, `test_pace.cpp` frame pace in real time); `helpers/` what they share: `played.h`, `invaders_fixture.h` a frozen Space Invaders, `scratch.h` a scratch name per run, `test_main.cpp` |

@@ -9,7 +9,8 @@
 // Engine on SFML, and the engine's files copied in unchanged, nothing of XML
 // or of the other libraries among them. That the data is the same game as
 // the file, field by field and frame by frame, is in
-// test_generated_games.cpp, which compiles it.
+// test_generated_games.cpp, which compiles it. The windows-cpp target
+// (games/generators/windows-cpp) writes pong_min as games/prototypes has it.
 
 #include "scratch.h"
 #include "game/game.h"
@@ -252,4 +253,59 @@ TEST_CASE("the function a game is written as is named for its file", "[generate]
 	CHECK(gameFunctionName("descriptions/pong_min.xml") == "pongMinGame");
 	CHECK(gameFunctionName("descriptions/spaceinvaders2.xml") == "spaceinvaders2Game");
 	CHECK(gameFunctionName("3d-tennis.xml") == "n3dTennisGame");
+}
+
+namespace
+{
+	// A C++ file with its date line left out, which says when it was written.
+	std::string undated(const std::string& text)
+	{
+		const std::string mark = "\n// date: ";
+		const std::size_t at = text.find(mark);
+		if (at == std::string::npos) { return text; }
+		return text.substr(0, at) + text.substr(text.find('\n', at + 1));
+	}
+}
+
+TEST_CASE("windows-cpp writes pong_min as the hand-written one in games/prototypes is written", "[generate]")
+{
+	TempFolder folder("xge_test_generate_windows_cpp");
+	const fs::path out = folder.path / "out";
+	generateGame(requestFor(fs::current_path() / "descriptions/pong_min.xml", out, "windows-cpp"));
+	const fs::path written = fs::path(XGE_ENGINE_FOLDER).parent_path() / "games/prototypes/pong_min/source";
+
+	for (const char* file : { "pong_min.h", "pong_min.cpp", "main.cpp" })
+	{
+		INFO(file);
+		CHECK(undated(readFile(out / "source" / file)) == undated(readFile(written / file)));
+	}
+
+	// its build compiles the engine's small functions, and no Game, loader or XML
+	const std::string build = readFile(out / "CMakeLists.txt");
+	CHECK(build.find("engine/play/frame.cpp") != std::string::npos);
+	CHECK(build.find("SFML::Graphics") != std::string::npos);
+	CHECK(build.find("game.cpp") == std::string::npos);
+	CHECK(build.find("load/") == std::string::npos);
+	CHECK(build.find("xml/") == std::string::npos);
+	CHECK(fs::exists(out / "engine/play/verbs.cpp"));
+	CHECK_FALSE(fs::exists(out / "engine/game/game.cpp"));
+	CHECK(fs::exists(out / "LICENSE"));
+}
+
+TEST_CASE("windows-cpp stops at a part of a game it has no words for yet, naming it", "[generate]")
+{
+	TempFolder folder("xge_test_generate_windows_cpp_stops");
+	try
+	{
+		generateGame(requestFor(fs::current_path() / "descriptions/pong.xml", folder.path / "out", "windows-cpp"));
+		FAIL("pong.xml was written");
+	}
+	catch (const GenerateError& error)
+	{
+		const std::string what = error.what();
+		INFO(what);
+		CHECK(what.find("windows-cpp can") != std::string::npos);
+		CHECK(what.find("use engine-cpp for this game") != std::string::npos);
+	}
+	CHECK_FALSE(fs::exists(folder.path / "out"));
 }

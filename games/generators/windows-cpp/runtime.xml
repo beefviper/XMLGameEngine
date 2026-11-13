@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- runtime.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Nov 13, 2026 -->
+
+<!-- The engine's own files a windows-cpp program compiles, as they are in
+     xge/lib/ (copied to engine/ by xgecli): the frame and its order, the
+     verbs' work, touching, the numbers, random numbers, pictures and the SFML
+     window. No Game, no loader, no XML, no command list: the game decides
+     what happens in its own code and calls these to do it. -->
+<runtime>
+  <file>lib/game/types.h</file>
+  <file>lib/game/command.h</file>
+  <file>lib/game/condition.h</file>
+  <file>lib/game/object.h</file>
+  <file>lib/game/object.cpp</file>
+  <file>lib/game/random.h</file>
+  <file>lib/game/random.cpp</file>
+  <file>lib/engine/keys.h</file>
+  <file>lib/play/frame.h</file>
+  <file>lib/play/frame.cpp</file>
+  <file>lib/play/verbs.h</file>
+  <file>lib/play/verbs.cpp</file>
+  <file>lib/play/geometry.h</file>
+  <file>lib/play/geometry.cpp</file>
+  <file>lib/play/collision.h</file>
+  <file>lib/play/collision.cpp</file>
+  <file>lib/play/maze.h</file>
+  <file>lib/play/maze.cpp</file>
+  <file>lib/play/numbers.h</file>
+  <file>lib/picture/bitmap.h</file>
+  <file>lib/picture/bitmap.cpp</file>
+  <file>lib/picture/color.h</file>
+  <file>lib/picture/color.cpp</file>
+  <file>lib/picture/font.h</file>
+  <file>lib/picture/font.cpp</file>
+  <file>lib/window/window.h</file>
+  <file>lib/window/sfml.h</file>
+  <file>lib/window/sfml.cpp</file>
+</runtime>

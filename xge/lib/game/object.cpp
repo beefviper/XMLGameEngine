@@ -971,165 +971,38 @@ namespace xge
 		visualDirty = true;
 	}
 
-	std::ostream& operator<<(std::ostream& o, const WindowDesc& f)
+	const Command& shapeOf(const Command& command) noexcept
 	{
-		o << "window: ";
-		o << "title=" << f.name;
-		o << ", width=" << f.width;
-		o << ", height=" << f.height << '\n';
-
-		return o;
+		if (const auto* live = std::get_if<CmdLive>(&command))
+		{
+			return live->loaded->command;
+		}
+		return command;
 	}
 
-	namespace
+	Vector2f measureShapeSize(const Picture& picture) noexcept
 	{
-		// A rule's selectors and speeds, as both kinds of rule print them.
-		template <typename Rule>
-		void printRuleFilters(std::ostream& o, const Rule& rule)
+		switch (picture.kind)
 		{
-			if (!rule.filterClass.empty()) { o << " (class=" << rule.filterClass << ")"; }
-			if (!rule.filterObject.empty()) { o << " (object=" << rule.filterObject << ")"; }
-			if (!rule.unlessClass.empty()) { o << " (unless=" << rule.unlessClass << ")"; }
-			if (!rule.throughClass.empty()) { o << " (through=" << rule.throughClass << ")"; }
-		}
-
-		void printCommands(std::ostream& o, const std::vector<Command>& commands)
-		{
-			for (std::size_t i = 0; i < commands.size(); ++i) { o << (i ? ";" : "") << commands[i]; }
+		case ShapeKind::Circle:
+			return { picture.radius * 2.0f, picture.radius * 2.0f };
+		case ShapeKind::Rectangle:
+		case ShapeKind::Line:
+			return picture.size;
+		case ShapeKind::Text:
+		case ShapeKind::Image:
+		case ShapeKind::Unknown:
+		default:
+			return {};
 		}
 	}
 
-	std::ostream& operator<<(std::ostream& o, const RawCollisionData& f)
+	std::string formatDisplayNumber(float value)
 	{
-		if (f.type == CollisionType::Pixel) { o << ", type=pixel"; }
-		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+		if (value == std::floor(value))
 		{
-			const auto& rules = f.edges[edgeIndex(edge)].commands;
-			if (!rules.empty()) { o << ", " << edgeName(edge) << "=" << rules; }
+			return std::to_string(static_cast<long long>(value));
 		}
-		for (const auto& rule : f.others)
-		{
-			o << ", others=" << rule.commands;
-			printRuleFilters(o, rule);
-		}
-		return o;
-	}
-
-	std::ostream& operator<<(std::ostream& o, const CollisionData& f)
-	{
-		if (f.type == CollisionType::Pixel) { o << ", type=pixel"; }
-		if (f.lockstep > 0) { o << ", lockstep=" << f.lockstep; }
-		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
-		{
-			const auto& commands = f.edges[edgeIndex(edge)].commands;
-			if (!commands.empty()) { o << ", " << edgeName(edge) << "="; printCommands(o, commands); }
-		}
-		for (const auto& rule : f.others)
-		{
-			o << ", others=";
-			printCommands(o, rule.commands);
-			printRuleFilters(o, rule);
-		}
-		return o;
-	}
-
-	std::ostream& operator<<(std::ostream& o, const RawObject& f) {
-		o << "rawObject: " << "name=" << f.name << (f.groupName.empty() ? "" : ", group=" + f.groupName) << ", sprite=" << f.sprite.kind
-			<< (f.cell.column > 0 ? " (cell " + std::to_string(f.cell.column) + "." + std::to_string(f.cell.row) + ")" : "")
-			<< (f.hasAnimation ? " (animated, " + std::to_string(f.animation.frames.size()) + " frames)" : "") << '\n'
-			<< "\tpos.x=" << f.rawPosition.x << ", pos.y=" << f.rawPosition.y << '\n'
-			<< "\tvel.x=" << f.rawVelocity.x << ", vel.y=" << f.rawVelocity.y << '\n'
-			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false") << f.rawCollisionData;
-		o << '\n';
-
-		for (auto& action : f.action)
-		{
-			o << "\taction=" << action.first << ", value=" << action.second << '\n';
-		}
-
-		for (auto& variable : f.variable)
-		{
-			o << "\tvariable=" << variable.first << ", value=" << variable.second << '\n';
-		}
-
-		return o;
-	}
-
-	std::ostream& operator<<(std::ostream& o, const Object& f) {
-		o << "Object: " << "name=" << f.name << ", sprite=" << f.picture << '\n';
-
-		if (f.positionResolved)
-		{
-			o << "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n';
-		}
-		else
-		{
-			o << "\tpos= ( Unknown, depends on size; not yet initialized by Engine )\n";
-		}
-
-		o << "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n';
-
-		if (f.acceleration.x != 0 || f.acceleration.y != 0)
-		{
-			o << "\tacc.x=" << f.acceleration.x << ", acc.y=" << f.acceleration.y << '\n';
-		}
-
-		if (f.hasHeading)
-		{
-			o << "\theading=" << f.heading << '\n';
-		}
-
-		if (f.animationBitmaps.size() > 1)
-		{
-			o << "\tanimation=" << f.animationBitmaps.size() << " frames, " << f.animationFrames << " game frames each\n";
-		}
-
-		if (f.drag != 0)
-		{
-			o << "\tdrag=" << f.drag << '\n';
-		}
-
-		if (f.mass != 0)
-		{
-			o << "\tmass=" << f.mass << '\n';
-		}
-
-		for (const auto& [name, strength] : f.pulls)
-		{
-			o << "\tpull=" << name << " " << strength << '\n';
-		}
-
-		if (f.light > 0.0f) { o << "\tlight=" << f.light << '\n'; }
-		if (f.dark != Object::Darkness::None) { o << "\tdark=" << (f.dark == Object::Darkness::Unlit ? "unlit" : "unseen") << '\n'; }
-		if (f.hasAltitude) { o << "\taltitude=" << f.altitude << " rise " << f.rise << " fall " << f.fall << " bounce " << f.altitudeBounce << '\n'; }
-		if (!f.shadowOf.empty()) { o << "\tshadow of " << f.shadowOf << '\n'; }
-		if (!f.seekTarget.empty())
-		{
-			o << "\tseek=" << f.seekTarget << " " << f.seekRate << '\n';
-		}
-
-		if (f.sizeKnown)
-		{
-			o << "\tsize.x=" << f.size.x << ", size.y=" << f.size.y << '\n';
-		}
-		else
-		{
-			o << "\tsize= ( Unknown, not yet initialized by Engine )\n";
-		}
-
-		o << "\tcollision=" << (f.collisionsOn ? "true" : "false") << f.collisionData;
-		o << '\n';
-
-		for (auto& action : f.action)
-		{
-			o << "\taction=" << action.first << ", value=";
-			for (auto& command : action.second)
-			{
-				o << command << (&command != &action.second.back() ? ";" : "");
-			}
-			o << '\n';
-		}
-
-		return o;
+		return std::to_string(value);
 	}
 }

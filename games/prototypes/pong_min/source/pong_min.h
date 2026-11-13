@@ -3,12 +3,12 @@
 // author: beefviper
 // date: Oct 12, 2026
 //
-// Pong, from games/descriptions/pong_min.xml, written as a person would write
-// it: what the windows-cpp generator is to write (plan task A5), written by
-// hand as the example. It decides what happens; the engine's own small
-// functions do it: playOneFrame (play/frame.h) runs the frame in the
-// engine's order, the verbs (play/verbs.h) move things and play/numbers.h
-// works out the serve. No Game, no reader, no XML.
+// Pong, from pong_min.xml.
+//
+// Written by xgecli --generate windows-cpp as a person would write it. It
+// decides what happens; the engine's own small functions do it: playOneFrame
+// (play/frame.h) runs the frame in the engine's order and the verbs
+// (play/verbs.h) move things. No Game, no reader, no XML.
 
 #pragma once
 
@@ -29,8 +29,8 @@ namespace pong_min
 		// <window>
 		xge::WindowDesc window;
 
-		// The ball and the paddles, in the file's order, which is the order
-		// they are moved, met and drawn in.
+		// Its objects, in the file's order, which is the order they are
+		// moved, met and drawn in.
 		std::vector<xge::Object> objects;
 
 		// A key went down (pressed) or came up: the state's <inputs>.
@@ -52,8 +52,9 @@ namespace pong_min
 		xge::Object& paddle1() { return objects[1]; }
 		xge::Object& paddle2() { return objects[2]; }
 		bool isBall(const xge::Object& object) const { return &object == &objects[0]; }
+		bool inPaddles(const xge::Object& object) const { return &object == &objects[1] || &object == &objects[2]; }
 
-		// The ball's serve: its <random>s drawn, then the way it goes from them.
-		void serve();
+		// Where the ball starts: its <random>s drawn, then its place and way.
+		void ballStart();
 	};
 }

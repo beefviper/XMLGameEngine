@@ -94,7 +94,19 @@ set(data_generators
 	"games/generators/engine-cpp/data.xsl"
 	"games/generators/engine-cpp/program.xsl"
 	"games/generators/engine-cpp/engine.xml"
-	"games/generators/engine-cpp/modules/game_parts.h")
+	"games/generators/engine-cpp/modules/game_parts.h"
+	"games/generators/windows-cpp/generate.xsl"
+	"games/generators/windows-cpp/names.xsl"
+	"games/generators/windows-cpp/values.xsl"
+	"games/generators/windows-cpp/game.xsl"
+	"games/generators/windows-cpp/program.xsl"
+	"games/generators/windows-cpp/runtime.xml"
+	"games/generators/windows-cpp/verbs/bounce.xsl"
+	"games/generators/windows-cpp/verbs/deflect.xsl"
+	"games/generators/windows-cpp/verbs/move.xsl"
+	"games/generators/windows-cpp/verbs/reset.xsl"
+	"games/generators/windows-cpp/verbs/stick.xsl"
+	"games/generators/windows-cpp/verbs/trigger.xsl")
 
 set(data_outputs "")
 foreach(item IN LISTS data_xsd data_xml data_assets data_generators)
