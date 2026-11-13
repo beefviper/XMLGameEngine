@@ -46,8 +46,9 @@
   * A ladder is a column of rung pieces (<rows>), climbed as one; a broken
     ladder is two short ones with a gap.
   * The hammer is a look: touching the hammer gives Jumpman the look
-    "hammer" and sets man.hammer, which a barrel's rule <condition>s; a timer of
-    that look takes it away again, with the hammer's tune.
+    "hammer" and sets man.hammer, which a barrel's rule <condition>s; the look
+    plays <once /> for nine seconds and <then> takes it away again, with the
+    hammer's tune.
   * Paused and over draw the girders still underneath
     (<show state="playing" />), the barrels stopped where they were.
 -->
@@ -399,9 +400,19 @@
           <sprite name="plain">
             <bitmap from="man-plain" />
           </sprite>
-          <sprite name="hammer">
+          <sprite name="holding">
             <bitmap from="man-hammer" />
           </sprite>
+          <!-- the hammer, for nine seconds -->
+          <animation name="hammer">
+            <seconds>9</seconds>
+            <once />
+            <frame sprite="holding" />
+            <then sprite="plain">
+              <set variable="man.hammer">0</set>
+              <silence sound="hammertime" />
+            </then>
+          </animation>
           <position><x>100</x><y><subtract><value>656</value><value>man.height</value></subtract></y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <collisions>
@@ -488,14 +499,6 @@
             <variable name="jumped">0</variable>
             <variable name="over">0</variable>
           </variables>
-          <timers>
-            <timer sprite="hammer">
-              <after>9</after>
-              <become sprite="plain" />
-              <set variable="man.hammer">0</set>
-              <silence sound="hammertime" />
-            </timer>
-          </timers>
         </object>
         <object name="score">
           <sprite><text style="hud"><number>man.score</number></text></sprite>

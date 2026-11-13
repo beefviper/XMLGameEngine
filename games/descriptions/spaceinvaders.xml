@@ -86,13 +86,11 @@
     </object>
     <!-- what a hit leaves for a moment -->
     <object name="blast" class="blast">
-      <sprite>
+      <sprite name="blast">
         <bitmap from="blast" />
       </sprite>
+      <animation><seconds>0.25</seconds><once /><frame sprite="blast" /><then><despawn /></then></animation>
       <most>2</most>
-      <timers>
-        <timer><after>0.25</after><despawn /></timer>
-      </timers>
     </object>
   </objects>
   <keeps>

@@ -188,13 +188,11 @@
           <sprite name="hold">
             <bitmap from="doctor-hold" />
           </sprite>
-          <sprite name="throw">
+          <sprite name="toss">
             <bitmap from="doctor-throw" />
           </sprite>
+          <animation name="throw"><seconds>0.3</seconds><once /><frame sprite="toss" /></animation>
           <position><x><add><value>panel</value><value>40</value></add></x><y>150</y></position>
-          <timers>
-            <timer sprite="throw"><after>0.3</after><become sprite="hold" /></timer>
-          </timers>
         </object>
 
         <!-- the next capsule, over Doc's hand -->

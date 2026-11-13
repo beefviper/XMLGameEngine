@@ -53,8 +53,8 @@
   * A ghost's worth is status.worth, which a pellet sets to 200 and each
     ghost eaten doubles (<set>), read as the ghost is eaten.
   * The cherry is an object with two looks, none and cherry; a condition on
-    how many dots are left gives it the cherry look, and a timer of that
-    look takes it away.
+    how many dots are left gives it the cherry look, which plays <once />
+    and <then> goes back to none.
   * A round starts with READY! over the maze standing still: the state ready
     (with the start tune) when a game begins, and caught, a copy of it,
     after a life is lost.
@@ -421,9 +421,15 @@
           <!-- the cherry: none until enough dots are eaten, then for a while -->
           <object name="fruit" char="f">
             <sprite name="none" />
-            <sprite name="cherry">
+            <sprite name="fruit">
               <bitmap from="fruit-cherry" />
             </sprite>
+            <animation name="cherry">
+              <seconds>9.5</seconds>
+              <once />
+              <frame sprite="fruit" />
+              <then sprite="none" />
+            </animation>
             <collisions>
               <collision object="pacman" sprite="cherry">
                 <inc variable="status.score">100</inc>
@@ -431,12 +437,6 @@
                 <become sprite="none" />
               </collision>
             </collisions>
-            <timers>
-              <timer sprite="cherry">
-                <after>9.5</after>
-                <become sprite="none" />
-              </timer>
-            </timers>
           </object>
           <object name="pacman" char="@">
             <sprite name="closed">
