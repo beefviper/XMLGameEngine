@@ -49,6 +49,9 @@
     "hammer" and sets man.hammer, which a barrel's rule <condition>s; the look
     plays <once /> for nine seconds and <then> takes it away again, with the
     hammer's tune.
+  * Hit, Jumpman goes out of play and the state fallen stands the girders
+    still while a stand-in spins, lies flat and shows its halo (one <once />
+    animation); its timer takes the life and brings him back at the bottom.
   * Paused and over draw the girders still underneath
     (<show state="playing" />), the barrels stopped where they were.
 -->
@@ -477,16 +480,15 @@
               <set variable="man.jumped">1</set>
               <play sound="jump" />
             </action>
+            <!-- out of play while he tumbles (the state fallen) -->
             <action name="lose">
-              <dec variable="man.lives" />
+              <die />
               <play sound="hit" />
               <silence sound="hammertime" />
               <set variable="man.hammer">0</set>
               <set variable="man.bonus">5000</set>
               <set variable="man.over">0</set>
-              <reset />
-              <despawn object="barrel" />
-              <despawn object="fireball" />
+              <set variable="man.fallen">1</set>
             </action>
           </actions>
           <variables>
@@ -498,6 +500,8 @@
             <!-- in a jump, and a barrel passed under it -->
             <variable name="jumped">0</variable>
             <variable name="over">0</variable>
+            <!-- hit: the state fallen comes next -->
+            <variable name="fallen">0</variable>
           </variables>
         </object>
         <object name="score">
@@ -536,6 +540,10 @@
           <become object="over.message" sprite="lost" />
           <push state="over" />
         </condition>
+        <condition object="man" variable="fallen"><atleast>1</atleast>
+          <set variable="man.fallen">0</set>
+          <push state="fallen" />
+        </condition>
         <!-- the bonus run out -->
         <condition object="man" variable="bonus">
           <atmost>0</atmost>
@@ -557,6 +565,53 @@
         <timer>
           <every>2</every>
           <dec variable="man.bonus">100</dec>
+        </timer>
+      </timers>
+    </state>
+    <!-- Jumpman spins, lies flat and his halo shows; then the climb starts again -->
+    <state name="fallen">
+      <objects>
+        <object name="tumble">
+          <sprite name="a"><bitmap from="fall-a" /></sprite>
+          <sprite name="b"><bitmap from="fall-b" /></sprite>
+          <sprite name="c"><bitmap from="fall-c" /></sprite>
+          <sprite name="d"><bitmap from="fall-d" /></sprite>
+          <sprite name="flat"><bitmap from="fall-flat" /></sprite>
+          <sprite name="halo"><bitmap from="fall-halo" /></sprite>
+          <animation>
+            <seconds>0.1</seconds>
+            <once />
+            <frame sprite="a"><seconds>0.4</seconds></frame>
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d" />
+            <frame sprite="flat"><seconds>0.5</seconds></frame>
+            <frame sprite="halo"><seconds>0.8</seconds></frame>
+          </animation>
+          <position><x update="live">man.x</x><y update="live">man.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button>
+          <push state="paused" />
+        </input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>2.5</after>
+          <dec variable="man.lives" />
+          <reveal object="man" />
+          <despawn object="barrel" />
+          <despawn object="fireball" />
+          <reset object="tumble" />
+          <pop />
         </timer>
       </timers>
     </state>
@@ -887,5 +942,145 @@
       <color char="k">color.brown</color>
       <color char="o">color.orange</color>
     </bitmap>
+    <bitmap name="fall-a">
+      <row>.....*****......</row>
+      <row>....*********...</row>
+      <row>....kkkssks.....</row>
+      <row>...ksksssss.....</row>
+      <row>...ksskkkkk.....</row>
+      <row>.....sssss......</row>
+      <row>....bb*bb.......</row>
+      <row>...bbb*bb*b.....</row>
+      <row>..bbbb****bb....</row>
+      <row>..ssb*s**sbs....</row>
+      <row>..sss*****ss....</row>
+      <row>..ss.**.**.s....</row>
+      <row>....***.***.....</row>
+      <row>...***...***....</row>
+      <row>...kkk...kkk....</row>
+      <row>..kkkk...kkkk...</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="b">color.blue</color>
+      <color char="s">color.orange</color>
+      <color char="k">color.brown</color>
+    </bitmap>
+    <bitmap name="fall-b">
+      <row>................</row>
+      <row>................</row>
+      <row>k...sssb........</row>
+      <row>kk*.sssbb..kk...</row>
+      <row>kk**.sbbbb.ssk*.</row>
+      <row>kk*****bbbsskk**</row>
+      <row>...***s***sksk**</row>
+      <row>.....***bbskss**</row>
+      <row>...*****bbskss**</row>
+      <row>kk****s**.sksk**</row>
+      <row>kk**.sbbb..kss*.</row>
+      <row>kk*.sssb......*.</row>
+      <row>k.............*.</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="b">color.blue</color>
+      <color char="s">color.orange</color>
+      <color char="k">color.brown</color>
+    </bitmap>
+    <bitmap name="fall-c">
+      <row>...kkkk...kkkk..</row>
+      <row>....kkk...kkk...</row>
+      <row>....***...***...</row>
+      <row>.....***.***....</row>
+      <row>....s.**.**.ss..</row>
+      <row>....ss*****sss..</row>
+      <row>....sbs**s*bss..</row>
+      <row>....bb****bbbb..</row>
+      <row>.....b*bb*bbb...</row>
+      <row>.......bb*bb....</row>
+      <row>......sssss.....</row>
+      <row>.....kkkkkssk...</row>
+      <row>.....sssssksk...</row>
+      <row>.....sksskkk....</row>
+      <row>...*********....</row>
+      <row>......*****.....</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="b">color.blue</color>
+      <color char="s">color.orange</color>
+      <color char="k">color.brown</color>
+    </bitmap>
+    <bitmap name="fall-d">
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>.*.............k</row>
+      <row>.*......bsss.*kk</row>
+      <row>.*ssk..bbbs.**kk</row>
+      <row>**ksks.**s****kk</row>
+      <row>**ssksbb*****...</row>
+      <row>**ssksbb***.....</row>
+      <row>**ksks***s***...</row>
+      <row>**kkssbbb*****kk</row>
+      <row>.*kss.bbbbs.**kk</row>
+      <row>...kk..bbsss.*kk</row>
+      <row>........bsss...k</row>
+      <row>................</row>
+      <row>................</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="b">color.blue</color>
+      <color char="s">color.orange</color>
+      <color char="k">color.brown</color>
+    </bitmap>
+    <bitmap name="fall-flat">
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>.*.............k</row>
+      <row>.*......bsss.*kk</row>
+      <row>.*ssk..bbbs.**kk</row>
+      <row>**ksks.**s****kk</row>
+      <row>**ssksbb*****...</row>
+      <row>**ssksbb***.....</row>
+      <row>**ksks***s***...</row>
+      <row>**kkssbbb*****kk</row>
+      <row>.*kss.bbbbs.**kk</row>
+      <row>...kk..bbsss.*kk</row>
+      <row>........bsss...k</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="b">color.blue</color>
+      <color char="s">color.orange</color>
+      <color char="k">color.brown</color>
+    </bitmap>
+    <bitmap name="fall-halo">
+      <row>.yyyy...........</row>
+      <row>y....y..........</row>
+      <row>.yyyy...........</row>
+      <row>................</row>
+      <row>................</row>
+      <row>.*.............k</row>
+      <row>.*......bsss.*kk</row>
+      <row>.*ssk..bbbs.**kk</row>
+      <row>**ksks.**s****kk</row>
+      <row>**ssksbb*****...</row>
+      <row>**ssksbb***.....</row>
+      <row>**ksks***s***...</row>
+      <row>**kkssbbb*****kk</row>
+      <row>.*kss.bbbbs.**kk</row>
+      <row>...kk..bbsss.*kk</row>
+      <row>........bsss...k</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="b">color.blue</color>
+      <color char="s">color.orange</color>
+      <color char="k">color.brown</color>
+      <color char="y">color.gold</color>
+    </bitmap>
+
   </pictures>
 </game>

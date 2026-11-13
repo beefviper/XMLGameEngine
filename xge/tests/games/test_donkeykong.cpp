@@ -323,7 +323,11 @@ TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; ju
 	// The next one he stands still for.
 	barrel.position = { 450.0f, play.top("floor", 460.0f) - barrel.size.y };
 	barrel.velocity = { -2.5f, 0.0f };
-	play.frames(80);
+	while (play.game.getCurrentState().name == "playing") { play.frames(1); }
+	CHECK(play.game.getCurrentState().name == "fallen");
+	CHECK(play.variable("lives") == 3);
+	play.frames(155); // he tumbles first, the girders standing still
+	CHECK(play.game.getCurrentState().name == "playing");
 	CHECK(play.variable("lives") == 2);
 	CHECK(play.barrelsInPlay() == 0);
 	CHECK(play.man().position.x == Approx(play.man().start.position.x));
@@ -443,6 +447,7 @@ TEST_CASE("the bonus counts down, and running out costs a life", "[donkeykong]")
 
 	play.man().variable["bonus"] = 100.0f;
 	play.frames(2 * 60 + 5);
+	play.frames(155); // he tumbles first, the girders standing still
 	CHECK(play.variable("lives") == 2);
 	CHECK(play.variable("bonus") == Approx(5000.0f).margin(100.0f));
 }
@@ -563,6 +568,7 @@ TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and 
 	fire.position = { 276.0f, play.feet() - fire.size.y };
 	fire.velocity = { 1.0f, 0.0f };
 	play.frames(30);
+	play.frames(155); // he tumbles first, the girders standing still
 	CHECK(play.variable("lives") == 2);
 	CHECK_FALSE(play.game.tryGetObject("fireball.1"));
 
@@ -625,6 +631,7 @@ TEST_CASE("a barrel that meets Jumpman on a ladder costs a life, coming down it 
 		Object& barrel = play.barrelAt(520.0f - 12.0f, "first", 1.0f);
 		play.game.setVariable(barrel.name, "luck", 0.0f);
 		play.frames(60);
+		play.frames(155); // he tumbles first, the girders standing still
 		CHECK(play.variable("lives") == 2);
 	}
 	{
@@ -639,6 +646,7 @@ TEST_CASE("a barrel that meets Jumpman on a ladder costs a life, coming down it 
 		REQUIRE(play.man().climbing);
 		play.barrelAt(600.0f, "floor", -2.5f);
 		play.frames(60);
+		play.frames(155); // he tumbles first, the girders standing still
 		CHECK(play.variable("lives") == 2);
 	}
 }
