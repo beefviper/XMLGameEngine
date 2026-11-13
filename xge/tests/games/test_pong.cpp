@@ -257,6 +257,23 @@ TEST_CASE("the second player's Up and Down do nothing while the computer plays t
 	}
 }
 
+TEST_CASE("for two players, the right paddle stops when Up or Down is let go", "[pong]")
+{
+	// Its moves are in a <condition> in the action: letting go lets go of
+	// what the condition holds (it once went on to the wall).
+	Pong pong;
+	pong.tap(KeyCode::Num2);
+	REQUIRE(pong.state() == "playing");
+	const float y = pong.object("paddle2").position.y;
+
+	pong.engine.handleKeyPressed(KeyCode::Down);
+	pong.frames(5);
+	pong.engine.handleKeyReleased(KeyCode::Down);
+	pong.frames(5);
+	CHECK(pong.object("paddle2").velocity.y == 0.0f);
+	CHECK(pong.object("paddle2").position.y == Approx(y + 25.0f));
+}
+
 TEST_CASE("Pong's easy computer is beaten by a ball from the top corner to the bottom one, once it is fast", "[pong][computer]")
 {
 	Pong pong;

@@ -119,9 +119,11 @@ namespace xge
 	{
 		// A let-go key: only a held verb still acts (a move, a climb, a
 		// thrust, a turn, a sound that loops stops; an action it runs is let
-		// go too). Anything else belongs to the press alone.
+		// go too, and so is what a condition in it holds, while the condition
+		// does). Anything else belongs to the press alone.
 		const Verb* shape = verbOf(command);
-		if (!doer.pressed && !(shape && shape->onRelease)) { return true; }
+		const bool condition = std::holds_alternative<CmdWhen>(shapeOf(command));
+		if (!doer.pressed && !condition && !(shape && shape->onRelease)) { return true; }
 
 		// A command whose numbers change as the game runs is made again first.
 		Command made;

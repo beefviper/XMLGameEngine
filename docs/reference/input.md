@@ -71,6 +71,7 @@ So remapping a key is one edit in one state, a key can do different things in di
 ## Held keys and state changes
 
 - **A held `<move>`** records its direction's step while down. On every key change the velocity along that axis is worked out from both directions, so Down held and Up tapped cancel, and two axes make a diagonal. A key on one axis leaves the other alone: walking does not stop a fall.
+- **A held verb in a `<condition>` of an action** is let go as the key is, while the condition holds: Pong's second player's paddle stops when Up is let go.
 - **`<thrust>` and `<turn>`** are held the same way but add each frame, so what was gained stays when let go. `<drag>` gives thrust a top speed.
 - **One-shot verbs** (`<hop>`, `<jump>`, `<fire>`, a state change) run only on a real press. Two hops in one frame keep the later.
 - **Facing.** An object with a `<facing>` faces the last key's way; with keys of both axes held, the diagonal, and a `<fire>` follows it.
