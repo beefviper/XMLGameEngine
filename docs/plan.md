@@ -31,6 +31,7 @@ Block 5  (additions; each ends by moving existing games onto it)
   F4  lists                               (design first)
   F7  sound
   F8  dice
+  F9  sound files, substeps 1 to 4, then 5
 ```
 
 What blocks what, in one place:
@@ -279,6 +280,36 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
   - Write the dice-and-patterns game first (five dice, keep some, roll three times, score by `<patterns>` with `<alike>` and `<run>`), which tests whether patterns work off a holder of dice the way they do off cards.
   - Backgammon only after, and only if the author still wants it once its word list is written down.
 
+#### F9. Sound files
+
+- **Size** five steps, each S except the last (M). **Needs** nothing. Cannot be fully judged in a container: the author listens.
+- **Why.** Sounds are only notes today; a recorded sound cannot be played. The engine already turns every sound into samples itself (`synthesize()`, `xge/lib/audio/sound.h`: signed 16 bit, one channel, `kSoundSampleRate`) and a sound library is only handed those samples. So a sound file is decoded by the engine into the same samples, and nothing after that point knows the difference.
+- **The form.** Written as a sprite names an image file:
+
+  ```xml
+  <sound name="roar"><path>assets/roar.wav</path></sound>
+  <sound name="hum"><loop /><volume>0.2</volume><path>assets/hum.wav</path></sound>
+  ```
+
+  A sound holds notes, parts or a path: one of the three, never two. `<loop />`, `<volume>`, `<play>`, `<silence>` and `<music>` work unchanged.
+- **Substeps.** Do them in order; each leaves the tests green and is its own commit.
+  1. **One place makes a sound's samples (S).** Today each sound library calls `synthesize()` itself (`audio/sfml.cpp`, `audio/sdl2.cpp`, `audio/raylib.cpp`). Add `std::vector<std::int16_t> samplesOf(const SoundDesc&)` to `audio/sound.h` and `sound.cpp`, which for now only calls `synthesize()`, and make the three call it. No behaviour changes. **Done:** `synthesize(` is called only inside `sound.cpp` and the tests; `xgetest "[sound]"` passes.
+  2. **Read a WAV file (S).** A new `xge/lib/audio/wave.cpp` and `wave.h` (add to `ENGINE_SOURCES` and to `games/generators/windows-cpp/engine.xml`): `std::vector<std::int16_t> readWave(const std::filesystem::path&)`.
+     - Reads uncompressed PCM, 8 or 16 bit, one or two channels, any rate.
+     - Two channels are averaged into one. Another rate is resampled to `kSoundSampleRate` by straight-line interpolation.
+     - Throws, naming the file, when it is missing, not a WAV, or compressed. Refuses a file longer than a limit (suggest 60 seconds, a constant beside `kMaxNoteSeconds`), so a wrong file is a load error and not a hundred megabytes in memory.
+     - **Done:** a test in `xge/tests/engine/test_sound.cpp` writes a small WAV itself (a file named with `scratchName()`), reads it back and compares the samples; one test each for stereo, for another rate, and for each refusal.
+  3. **The word (S).** `<path>` in a `<sound>`.
+     - Schema: `soundType` in `games/xgedef.xsd`; its choice of notes or parts gains `<path>`.
+     - Reader: `RawSound` gains `path`; `readSound` (`load/xml.cpp`); `SoundDesc` gains `path`; `processSound` (`load/expr.cpp`) checks the file is there, so a missing file stops the load before a window opens.
+     - `samplesOf` calls `readWave` when the sound has a path, then applies the volume.
+     - **Done:** a test game with a path sound loads, its samples are the file's, and a missing file stops the load with a message naming the sound and the file.
+  4. **The generator (S).** The `sounds` template in `games/generators/windows-cpp/data.xsl` writes the path, the describer in `xge/tests/generated/test_generated_games.cpp` compares it, and `--generate` copies the file as it copies an image's (`xge/cli/source/generate.cpp`, where it reads each `path`). **Done:** `xgetest-generated` passes with the test game from step 3.
+  5. **Compressed files (M), after the author picks a decoder.** MP3 and Ogg each need a decoder in the engine. One small library, fetched like the others, behind one `readSoundFile` that picks by the file's ending and still returns the same samples. Which library, and its licence, is the author's call: ask before fetching one.
+- **A game.** `path` is already a word of the schema (an image's), so the vocabulary test forces no game. The author picks a recording and a game to use it in; the file's licence goes beside it in `games/assets/`, as the font's does.
+- **Docs.** `docs/reference/sounds.md` (its first line says nothing is loaded from a file), `docs/designs/33-sound.md`, `docs/reference/limits.md`. A sampled sound cannot go to a target with only a sound chip: note it under targets in `docs/designs/57-ideas.md`.
+- **Verify.** `ctest`, `xgetest-generated`, a plain build with no options. Add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows): the author listens on each sound library.
+
 ## Long term
 
 Goals the author has set, beyond the tasks above. None is scheduled; delta time comes before the camera.
@@ -304,6 +335,13 @@ Goals the author has set, beyond the tasks above. None is scheduled; delta time 
 - The reader is the first target: much of it writes out, tag by tag, what the schema already says.
 - A2 to A4 above only tidy what is there.
 
+### A version on the language, and a definition of 1.0
+
+- **Held by the author for now:** the language still changes and breaks files too often for a number to mean much. The two go together when the time comes.
+- A game file says which version of the language it was written for. Suggested: an attribute on `<game>`, since it picks something (`<game version="1">`), a whole number that goes up with each change that breaks older files.
+- Each such change comes with a stylesheet that upgrades older files, which is also how the shipped games would be moved. Add the number and the first upgrade stylesheet together; the number alone is only a label.
+- 1.0 says which genres, which vocabulary is frozen and which targets. The plan has no finish line without it.
+
 ## Backlog
 
 Not ordered and not decided. Each item points at the design file that holds the reasoning. An item becomes a task above when it is chosen.
@@ -325,11 +363,6 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 ### The project
 
 - **A build that runs in a browser,** so a game can be played from a link without compiling anything. Not hard, but better done once the language has settled.
-- **A version on the language, and a definition of 1.0.** The two go together.
-  - A game file says which version of the language it was written for. Suggested: an attribute on `<game>`, since it picks something (`<game version="1">`), a whole number that goes up with each change that breaks older files.
-  - Each such change comes with a stylesheet that upgrades older files, which is also how the shipped games would be moved.
-  - 1.0 says which genres, which vocabulary is frozen and which targets. The plan has no finish line without it.
-- **Sound files.** A sound may name a recorded file (WAV, MP3, whatever can be decoded), written much as a sprite names an image file. Only notes exist today ([sound](designs/33-sound.md)). Suggested: the engine decodes the file into the same samples the notes become, so every sound library plays it alike and `<loop />`, `<volume>`, `<play>` and `<music>` work unchanged.
 
 ### Language and engine
 
