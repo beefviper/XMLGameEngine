@@ -477,51 +477,6 @@ namespace xge
 		return false;
 	}
 
-	void CommandExecutor::knock(Object& object, Object& other, const Touch& touch, float bounce)
-	{
-		if (other.mass > 0.0f)
-		{
-			xge::knock(object, other, touch, bounce);
-			return;
-		}
-
-		// Through a thing that does not move: the far side of it is the side
-		// the object's own touched edge faces, and what rests there is
-		// knocked as though the object, as heavy as can be, had hit it.
-		const Edge farSide = touch.edge;
-		const Box base{ other.position, sizeOf(other) };
-		const Vector2f way = touch.normal * -1.0f;
-		for (Object& thing : game.getCurrentObjects())
-		{
-			if (&thing == &object || &thing == &other || !(thing.mass > 0.0f) || !thing.collisionsOn || thing.isAirborne() || !game.isShown(thing))
-			{
-				continue;
-			}
-
-			const Box at{ thing.position, sizeOf(thing) };
-			if (!restsAgainst(at, base, farSide))
-			{
-				continue;
-			}
-
-			const std::optional<Knocked> after = knockedApart(object.velocity, 0.0f, thing.velocity, thing.mass, way, bounce);
-			if (!after)
-			{
-				continue;
-			}
-			thing.velocity = after->second;
-
-			Touch felt;
-			felt.edge = opposite(farSide);
-			felt.normal = way;
-			felt.point = { std::clamp(touch.point.x, at.left(), at.right()), std::clamp(touch.point.y, at.top(), at.bottom()) };
-			felt.along = 0.5f;
-			felt.time = touch.time;
-			felt.through = &other.objClass;
-			game.reactTo(thing, object, felt);
-		}
-	}
-
 	// Up off the ground at the speed that, under the object's own pull, rises
 	// `height` pixels: v * v = 2 * pull * height. Only from the ground and not
 	// on a ladder; nothing without a pull down (the loader refuses that).

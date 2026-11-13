@@ -122,10 +122,6 @@ namespace xge
 		// air already, nor when it would land outside the window. With an
 		// arc it is drawn that high above its way halfway there.
 		bool startFlight(Object& object, Vector2f whole, float seconds, float arc);
-
-		// <knock>: see CmdKnock. Into a thing with no mass, through it, to
-		// everything with a mass resting against its far side.
-		void knock(Object& object, Object& other, const Touch& touch, float bounce);
 		bool jump(Object& object, float height);
 		void reverse(Object& object);
 
