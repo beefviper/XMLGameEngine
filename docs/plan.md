@@ -3,6 +3,7 @@
 What is next, and nothing else. The ordered tasks come first, each written to be picked up cold: what to do, why, which files, what "done" is, and how to check it. Under them is the backlog, which is not ordered and not decided.
 
 - **Finishing a task:** delete it from this file, and from [the order](#order-of-work). Anything it leaves open goes in [the backlog](#backlog).
+- **Goals with no date** are under [long term](#long-term).
 - **Why something was decided** is in [the design files](designs/00-designs.md), not here. This file started as a review of the whole project; its findings became these tasks, and its settled arguments moved to the design file each belongs to.
 - **When the plan and the code disagree, the code wins.** Check that a file or function still exists before changing it, and correct this file.
 
@@ -278,6 +279,24 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
   - Write the dice-and-patterns game first (five dice, keep some, roll three times, score by `<patterns>` with `<alike>` and `<run>`), which tests whether patterns work off a holder of dice the way they do off cards.
   - Backgammon only after, and only if the author still wants it once its word list is written down.
 
+## Long term
+
+Goals the author has set, beyond the tasks above. Neither is scheduled; delta time comes before the camera.
+
+### Delta time
+
+- **Decided by the author:** movement goes by time passed, not by frames. Being tied to the frame rate was never intended; it is how the first games happened to be written.
+- **Today:** a velocity is pixels per frame, while timers are already in seconds, so a game's speed follows its `<framerate>` ([limits](reference/limits.md#movement-and-collisions)).
+- **What the design must answer before it is built:**
+  - the units a game file writes (pixels per second), and moving every game onto them;
+  - how the frame-by-frame tests, the side-by-side proof of generated games, recorded demos and the board-game search stay repeatable when a step's length varies;
+  - how a long step is kept from carrying something through a wall.
+
+### A camera and scrolling
+
+- **Version 2, on hold by the author's choice** ([ideas](designs/57-ideas.md)).
+- Positions, screen edges and collisions all assume the window is the world, so the design is worth writing before much more code leans on that.
+
 ## Backlog
 
 Not ordered and not decided. Each item points at the design file that holds the reasoning. An item becomes a task above when it is chosen.
@@ -293,9 +312,16 @@ The review that started this plan argued with this list; its view is beside each
 | **Lookahead for action games' computers** ([board-games](designs/26-board-games.md#open)) | A research project; arcade enemies are better on their simple rules |
 | **A deck of single cards**, each its own picture and numbers ([cards](designs/27-cards.md)) | Wait until a game cannot be written without it |
 | **Typed text, a word as data** (Hangman, initials beyond `<letter>`) | Small genre, large addition |
-| **A camera and scrolling** ([ideas](designs/57-ideas.md)) | Version 2, on hold by the author's choice |
 
 Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-misses).
+
+### The project
+
+- **A review of the C++, as the language had.** The engine library is about 42,000 lines, and five files hold a third of it (`load/xml.cpp`, `load/expr.cpp`, `game/game.cpp`, `game/cards.cpp`, `game/object.h`). Name the few ideas the engine really has, then ask of each large file which idea it belongs to and why it needs more than that. The reader is the first target: much of it writes out, tag by tag, what the schema already says. A2 to A4 above only tidy what is there.
+- **A build that runs in a browser,** so a game can be played from a link without compiling anything.
+- **A version on the language.** A game file says which version it was written for, and each change to the language comes with a stylesheet that upgrades older files.
+- **A definition of 1.0:** which genres, which vocabulary is frozen, which targets. The plan has no finish line without it.
+- **Sampled sound.** Only notes made into samples exist today; a recorded sound file cannot be played ([sound](designs/33-sound.md)).
 
 ### Language and engine
 
