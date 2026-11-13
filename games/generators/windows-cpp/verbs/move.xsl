@@ -8,6 +8,12 @@
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
+  <!-- covered: in an action, a step (no <wait>) -->
+  <xsl:template match="action/move" mode="covers">
+    <xsl:apply-templates select="@* | * | text()" mode="covers" />
+  </xsl:template>
+  <xsl:template match="move/@direction" mode="covers" />
+
   <xsl:template match="move" mode="action">
     <xsl:param name="who" />
     <xsl:param name="self" />

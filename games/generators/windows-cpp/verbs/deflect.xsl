@@ -9,6 +9,11 @@
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
+  <!-- covered: in a rule on a touch -->
+  <xsl:template match="collision[not(@edge)]/deflect[not(@*)]" mode="covers">
+    <xsl:apply-templates select="* | text()" mode="covers" />
+  </xsl:template>
+
   <xsl:template match="deflect" mode="touch">
     <xsl:param name="owner" />
     <xsl:param name="self" />

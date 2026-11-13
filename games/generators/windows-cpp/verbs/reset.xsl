@@ -9,6 +9,9 @@
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
+  <!-- covered: bare, in a rule -->
+  <xsl:template match="collision/reset[not(@* or node())]" mode="covers" />
+
   <xsl:template match="reset" mode="edge">
     <xsl:param name="owner" />
     <xsl:call-template name="reset">

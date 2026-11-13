@@ -104,6 +104,15 @@ This writes a C++ program on SFML 3 that is **the engine with the game built in*
 | `engine/` | listed in `runtime.xml` | the engine's small functions, copied unchanged: the frame, the verbs' work, touching, numbers, pictures, the SFML window; no `Game`, loader or XML |
 | `LICENSE` | `xgecli` | the repository's licence |
 
-It writes `pong_min.xml` only for now, as `games/prototypes/pong_min/` has it; any other game stops at the first part it has no words for, with "use engine-cpp for this game".
+It writes `pong_min.xml` only for now, as `games/prototypes/pong_min/` has it. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
+
+```
+windows-cpp cannot write these parts of pong.xml yet; use engine-cpp for this game:
+  <styles> in <game>
+  more than one <state>
+  <text> in <sprite> (object 'score1')
+  <play> in <collision> (object 'ball')
+  ...
+```
 
 `xgetest-generated` (`cmake --build build --target xgetest-generated`, never in an ordinary build) generates every game, compares its compiled data with what `readGame` reads from the file field by field, and plays the two side by side frame by frame. Without libxslt, `xgecli` is built without `--generate` and says so. Design: [generator](../designs/40-generator.md).

@@ -292,7 +292,7 @@ TEST_CASE("windows-cpp writes pong_min as the hand-written one in games/prototyp
 	CHECK(fs::exists(out / "LICENSE"));
 }
 
-TEST_CASE("windows-cpp stops at a part of a game it has no words for yet, naming it", "[generate]")
+TEST_CASE("windows-cpp lists every part of a game it has no words for yet, then stops", "[generate]")
 {
 	TempFolder folder("xge_test_generate_windows_cpp_stops");
 	try
@@ -304,8 +304,39 @@ TEST_CASE("windows-cpp stops at a part of a game it has no words for yet, naming
 	{
 		const std::string what = error.what();
 		INFO(what);
-		CHECK(what.find("windows-cpp can") != std::string::npos);
-		CHECK(what.find("use engine-cpp for this game") != std::string::npos);
+		CHECK(what.find("windows-cpp cannot write these parts of pong.xml yet; use engine-cpp for this game:\n") != std::string::npos);
+		// the whole list, a line each and each once, with the object it is in
+		CHECK(what.find("\n  more than one <state>") != std::string::npos);
+		CHECK(what.find("\n  <styles> in <game>") != std::string::npos);
+		CHECK(what.find("\n  <text> in <sprite> (object 'score1')") != std::string::npos);
+		CHECK(what.find("\n  <play> in <collision> (object 'ball')") != std::string::npos);
+		CHECK(what.find("\n  the name 'window.width.center' (object 'score1')") != std::string::npos);
+		CHECK(count(what, "\n  <styles> in <game>") == 1);
 	}
 	CHECK_FALSE(fs::exists(folder.path / "out"));
+}
+
+TEST_CASE("the games windows-cpp covers: the rest stop with their list", "[generate]")
+{
+	// A line here for each game it learns to write (plan A5).
+	const std::set<std::string> covered{ "pong_min" };
+
+	TempFolder folder("xge_test_generate_windows_cpp_covers");
+	std::set<std::string> written;
+	for (const auto& entry : fs::directory_iterator(fs::current_path() / "descriptions"))
+	{
+		if (entry.path().extension() != ".xml") { continue; }
+		const std::string game = entry.path().stem().string();
+		try
+		{
+			generateGame(requestFor(entry.path(), folder.path / game, "windows-cpp"));
+			written.insert(game);
+		}
+		catch (const GenerateError& error)
+		{
+			INFO(game << ": " << error.what());
+			CHECK(std::string(error.what()).find("use engine-cpp for this game:\n  ") != std::string::npos);
+		}
+	}
+	CHECK(written == covered);
 }

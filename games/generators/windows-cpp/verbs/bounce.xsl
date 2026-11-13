@@ -9,6 +9,11 @@
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
+  <!-- covered: in a rule, bare or with a share -->
+  <xsl:template match="collision/bounce[not(@*)]" mode="covers">
+    <xsl:apply-templates select="* | text()" mode="covers" />
+  </xsl:template>
+
   <xsl:template match="bounce" mode="edge">
     <xsl:param name="owner" />
     <xsl:text>bounceOffEdge(object, edge, </xsl:text>

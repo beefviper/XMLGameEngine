@@ -21,51 +21,6 @@
   <xsl:variable name="ruled" select="$owners[collisions/collision]" />
   <xsl:variable name="numbers" select="$state//sign | $state//sine | $state//cosine" />
 
-  <!-- What windows-cpp has words for yet: one state, of objects and groups
-       of rectangles with rules at an edge and on a touch, and keys that
-       trigger actions. Anything else stops it, named, before it writes. -->
-  <xsl:template name="can-write">
-    <xsl:if test="count(states/state) != 1">
-      <xsl:message terminate="yes">windows-cpp can write a game of one state yet; use engine-cpp for this game</xsl:message>
-    </xsl:if>
-    <xsl:for-each select="*[not(self::window or self::variables or self::states)]
-        | window/*[not(self::width or self::height or self::scale or self::background or self::fullscreen or self::framerate)]
-        | $state/@*[local-name() != 'name'] | $state/*[not(self::objects or self::inputs)]
-        | $state/objects/*[not(self::object or self::group)]
-        | $owners/@*[local-name() != 'name']
-        | $owners/*[not(self::sprite or self::position or self::velocity or self::collisions or self::variables or self::actions or self::member)]
-        | $state/objects/object/member | $state/objects/group/member/@*[local-name() != 'name']
-        | $state/objects/group/member/*[not(self::position or self::velocity)]
-        | $state/objects/group/variables
-        | $owners/sprite/@* | $owners/sprite/*[not(self::rectangle)]
-        | $owners/collisions/collision/@*[local-name() != 'edge']
-        | $owners/collisions/collision/*[self::condition or self::any or self::first or self::collision]
-        | $owners/actions/action/@*[local-name() != 'name']
-        | $state/inputs/input/@*[local-name() != 'button'] | $state/inputs/input/*[not(self::button or self::trigger)]
-        | $state/inputs/input/trigger/@*[local-name() != 'object' and local-name() != 'action']">
-      <xsl:message terminate="yes">windows-cpp cannot write <xsl:call-template name="part-name" /> yet; use engine-cpp for this game</xsl:message>
-    </xsl:for-each>
-    <xsl:for-each select="$owners[count(sprite) != 1]">
-      <xsl:message terminate="yes">windows-cpp can write an object of one sprite yet ('<xsl:value-of select="@name" />'); use engine-cpp for this game</xsl:message>
-    </xsl:for-each>
-    <xsl:for-each select="variables/variable[.//random]">
-      <xsl:message terminate="yes">windows-cpp cannot write the game's variable '<xsl:value-of select="@name" />', which draws a &lt;random&gt;, yet; use engine-cpp for this game</xsl:message>
-    </xsl:for-each>
-  </xsl:template>
-
-  <!-- A part, as a message names it: <fullscreen> in <window>, or name= on
-       <state>. -->
-  <xsl:template name="part-name">
-    <xsl:choose>
-      <xsl:when test="count(. | ../@*) = count(../@*)">
-        <xsl:value-of select="concat(local-name(), '= on &lt;', local-name(..), '&gt;')" />
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="concat('&lt;', local-name(), '&gt; in &lt;', local-name(..), '&gt;')" />
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
-
   <!-- source/<game>.h -->
   <xsl:template name="header-file">
     <xsl:variable name="class"><xsl:call-template name="class-name" /></xsl:variable>

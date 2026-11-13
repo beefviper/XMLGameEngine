@@ -98,6 +98,7 @@ set(data_generators
 	"games/generators/windows-cpp/generate.xsl"
 	"games/generators/windows-cpp/names.xsl"
 	"games/generators/windows-cpp/values.xsl"
+	"games/generators/windows-cpp/covers.xsl"
 	"games/generators/windows-cpp/game.xsl"
 	"games/generators/windows-cpp/program.xsl"
 	"games/generators/windows-cpp/runtime.xml"

@@ -15,8 +15,9 @@
      has read and checked the game. It writes source/<game>.h and .cpp (the
      game, game.xsl), source/main.cpp, CMakeLists.txt, README.md and .gitignore
      (program.xsl) with EXSLT's exsl:document; its own output is the list of
-     those and of what xgecli copies in. A part of a game it has no words for
-     yet stops it, naming the part (see verbs/). -->
+     those and of what xgecli copies in. Before it writes, it walks the game
+     (covers.xsl, and each verb's file in verbs/): every part it has no
+     words for yet is listed, and it stops. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:exsl="http://exslt.org/common"
@@ -25,6 +26,7 @@
   <xsl:include href="../engine-cpp/text.xsl" />
   <xsl:include href="names.xsl" />
   <xsl:include href="values.xsl" />
+  <xsl:include href="covers.xsl" />
   <xsl:include href="game.xsl" />
   <xsl:include href="program.xsl" />
   <xsl:include href="verbs/bounce.xsl" />
@@ -49,9 +51,19 @@
     <xsl:if test="not(game)">
       <xsl:message terminate="yes">windows-cpp: this is not a game file (no &lt;game&gt;)</xsl:message>
     </xsl:if>
-    <xsl:for-each select="game">
-      <xsl:call-template name="can-write" />
-    </xsl:for-each>
+    <!-- every part it has no words for yet, once each: then it stops -->
+    <xsl:variable name="walked">
+      <xsl:apply-templates select="game" mode="covers" />
+    </xsl:variable>
+    <xsl:variable name="gaps" select="exsl:node-set($walked)/gap" />
+    <xsl:if test="$gaps">
+      <xsl:message terminate="yes">
+        <xsl:value-of select="concat('windows-cpp cannot write these parts of ', $source, ' yet; use engine-cpp for this game:')" />
+        <xsl:for-each select="$gaps[not(. = preceding-sibling::gap)]">
+          <xsl:value-of select="concat('&#10;  ', .)" />
+        </xsl:for-each>
+      </xsl:message>
+    </xsl:if>
 
     <exsl:document href="source/{$name}.h" method="text" encoding="UTF-8">
       <xsl:for-each select="game"><xsl:call-template name="header-file" /></xsl:for-each>

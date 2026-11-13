@@ -53,4 +53,4 @@ The first target wrote each game as a program a person might write (Pong about 4
 - `data.xsl` reads the file a second time: a new field in `load/xml.cpp` needs the same in `data.xsl`, and the data test fails until it has it.
 - Other targets (another language, an 8-bit machine) need the runtime in that language: a port, not a generator.
 - Built with GCC and Clang on Linux, and MSVC at `/W4` by `games-build-all.bat`.
-- `windows-cpp` writes one game so far (`pong_min.xml`); it stops at the first part of any other, naming it.
+- `windows-cpp` writes one game so far (`pong_min.xml`). For any other it lists every part it has no words for and writes nothing: what it covers is said as match patterns in `covers.xsl` and in each verb's file, so a new verb says where it may stand beside how it is written. The list doubles as the to-do for the next game.
