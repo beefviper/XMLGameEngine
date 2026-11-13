@@ -123,49 +123,27 @@ namespace xge
 
 	std::ostream& operator<<(std::ostream& o, const Command& command)
 	{
-		// A verb that prints its own commands does; the rest are below.
-		if (!std::holds_alternative<CmdLive>(command))
+		// Two kinds are no verb's: a condition in a list, and a command
+		// whose numbers are worked out as it runs.
+		if (const auto* when = std::get_if<CmdWhen>(&command))
 		{
-			if (const Verb* verb = verbOf(command); verb && verb->print)
+			o << "when(";
+			if (when->body)
 			{
-				verb->print(o, command);
-				return o;
+				for (std::size_t i = 0; i < when->body->commands.size(); ++i) { o << (i ? ", " : "") << when->body->commands[i]; }
 			}
+			return o << ")";
+		}
+		if (const auto* live = std::get_if<CmdLive>(&command))
+		{
+			return o << "live " << live->loaded->command;
 		}
 
-		std::visit(overload{
-			[&](const CmdWhen& when)
-			{
-				o << "when(";
-				if (when.body)
-				{
-					for (std::size_t i = 0; i < when.body->commands.size(); ++i) { o << (i ? ", " : "") << when.body->commands[i]; }
-				}
-				o << ")";
-			},
-			[&](const CmdPick& p) { o << "pick(" << p.objClass << (p.only ? ", only" : "") << ")"; },
-			[&](const CmdPlace& p) { o << "place" << (p.into.empty() ? "" : "(" + p.into + ")"); },
-			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
-			[&](const CmdOrder& r) { o << "order(" << r.group << ", random)"; },
-			[&](const CmdPut& p) { o << "put(" << p.objClass << ")"; },
-			[&](const CmdHold& h) { o << "hold(" << keyCodeToString(h.button) << ")"; },
-			[&](const CmdThink& t)
-			{
-				o << "think(" << t.objClass << ", " << t.picker << ", " << keyCodeToString(t.button) << ", " << t.depth;
-				for (const auto& [look, worth] : t.worths) { o << ", " << look << "=" << worth; }
-				o << ")";
-			},
-			[&](const CmdSend& s)
-			{
-				o << "send(" << s.target << ", " << s.from << " into " << s.into;
-				if (s.column && s.row) { o << ", " << *s.column << " " << *s.row; }
-				o << ")";
-			},
-			[&](const CmdLive& l) { o << "live " << l.loaded->command; },
-			// A verb's own, printed above.
-			[](const auto&) {},
-		}, command);
-
+		// Every other is a verb's, which prints it.
+		if (const Verb* verb = verbOf(command); verb && verb->print)
+		{
+			verb->print(o, command);
+		}
 		return o;
 	}
 
@@ -314,113 +292,12 @@ namespace xge
 
 	std::ostream& operator<<(std::ostream& o, const RawCommand& command)
 	{
+		// The tag, then what its verb says it holds.
 		o << command.verb;
-
 		if (const Verb* verb = findVerb(command.verb); verb && verb->printRaw)
 		{
 			verb->printRaw(o, command);
-			return o;
 		}
-
-		if (command.verb == "swing")
-		{
-			o << "(" << command.direction << " " << command.distance << " degrees, " << command.seconds << "s)";
-		}
-		else if (command.verb == "thrust" || command.verb == "deflect")
-		{
-			o << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
-		}
-		else if (command.verb == "hold")
-		{
-			o << "(" << command.button << ")";
-		}
-		else if (command.verb == "hole")
-		{
-			o << "(" << command.amount << ", " << command.distance << ")";
-		}
-		else if (command.verb == "jump" || ((command.verb == "knock" || command.verb == "bounce") && (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())))
-		{
-			o << "(" << command.amount << ")";
-		}
-		else if (command.verb == "climb")
-		{
-			o << "." << command.direction << "(" << command.amount << ", " << command.objClass << ")";
-		}
-		else if (command.verb == "hop" || (command.verb == "hunt" && command.byHops))
-		{
-			o << (command.byHops ? "(" + command.object + ", by hops of " : "." + command.direction + "(") << command.amount << ", " << command.positionX << " " << command.positionY
-				<< ", " << command.seconds << ")";
-		}
-		else if (command.verb == "move" || command.verb == "turn" || command.verb == "go")
-		{
-			o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
-			if (command.verb == "move" && !(command.seconds.kind == RawValue::Kind::Expression && command.seconds.text.empty())) { o << "(wait " << command.seconds << ")"; }
-		}
-		else if (command.verb == "slide")
-		{
-			o << "." << command.direction << (command.objClass.empty() ? "" : "(" + command.objClass + ")");
-		}
-		else if (command.verb == "inc" || command.verb == "dec")
-		{
-			o << "(" << command.variable;
-			if (!(command.amount.kind == RawValue::Kind::Expression && (command.amount.text == "1" || command.amount.text.empty()))) { o << ", " << command.amount; }
-			o << ")";
-		}
-		else if (command.verb == "push")
-		{
-			o << "(" << command.state << ")";
-		}
-		else if (command.verb == "enter" || (command.verb == "reset" && !command.scene.empty()))
-		{
-			o << "(scene " << command.scene << ")";
-		}
-		else if (command.verb == "chase")
-		{
-			o << "(" << command.object << ", " << command.amount << ", " << command.distance << ")";
-		}
-		else if (command.verb == "hunt")
-		{
-			o << "(" << command.object << ", " << command.amount << ", ahead " << command.ahead << ", with " << command.partner
-				<< ", retreat " << command.retreat << " " << command.distance << ")";
-		}
-		else if (command.verb == "wander")
-		{
-			o << "(" << command.amount << ")";
-		}
-		else if (command.verb == "fire" || command.verb == "aim" || (command.verb == "reset" && !command.object.empty()) || (command.verb == "despawn" && !command.object.empty()))
-		{
-			o << "(" << command.object << ")";
-		}
-		else if (command.verb == "play" || command.verb == "silence")
-		{
-			o << "(" << command.sound << ")";
-		}
-		else if (command.verb == "trigger")
-		{
-			o << "(" << command.object << "," << command.action << (command.place.empty() ? "" : ", " + command.objClass + " " + command.place) << ")";
-		}
-		else if (command.verb == "follow")
-		{
-			o << "(" << command.path << (command.object.empty() ? "" : ", " + command.object) << ")";
-		}
-		else if (command.verb == "track" && !command.path.empty())
-		{
-			o << "(" << command.path << ")";
-		}
-		else if (command.verb == "set")
-		{
-			o << "(" << command.variable << ", " << command.amount << ")";
-		}
-		else if (command.verb == "spawn")
-		{
-			o << "(" << command.object << ", " << command.amount << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY << ", " << command.accelerationX << " " << command.accelerationY
-				<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << " " << command.below << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
-		}
-		else if (command.verb == "send")
-		{
-			o << "(" << command.object << ", " << command.from << " into " << command.into << ", " << command.column << " " << command.row << ")";
-		}
-
 		return o;
 	}
 

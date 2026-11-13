@@ -23,6 +23,12 @@ namespace xge
 		return doer.self && executor.game.callSuit(*doer.self, std::get<CmdCall>(command).pile);
 	}
 
+	static void printCall(std::ostream& o, const Command& command)
+	{
+		const CmdCall& c = std::get<CmdCall>(command);
+		o << "call(" << c.pile << ")";
+	}
+
 	extern const Verb callVerb;
 	const Verb callVerb{
 		.name = "call",
@@ -33,5 +39,6 @@ namespace xge
 		.make = makeCall,
 		.check = nullptr,
 		.run = runCall,
+		.print = printCall,
 	};
 }

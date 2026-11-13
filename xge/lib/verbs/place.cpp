@@ -22,6 +22,12 @@ namespace xge
 		return self && (self->hand.is ? executor.game.layCards(*self, place.into) : executor.game.placePiece(*self));
 	}
 
+	static void printPlace(std::ostream& o, const Command& command)
+	{
+		const CmdPlace& p = std::get<CmdPlace>(command);
+		o << "place" << (p.into.empty() ? "" : "(" + p.into + ")");
+	}
+
 	extern const Verb placeVerb;
 	const Verb placeVerb{
 		.name = "place",
@@ -32,5 +38,6 @@ namespace xge
 		.make = makePlace,
 		.check = nullptr,
 		.run = runPlace,
+		.print = printPlace,
 	};
 }

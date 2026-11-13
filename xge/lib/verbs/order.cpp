@@ -35,6 +35,12 @@ namespace xge
 		return executor.game.orderHeld(std::get<CmdOrder>(command).group);
 	}
 
+	static void printOrder(std::ostream& o, const Command& command)
+	{
+		const CmdOrder& r = std::get<CmdOrder>(command);
+		o << "order(" << r.group << ", random)";
+	}
+
 	extern const Verb orderVerb;
 	const Verb orderVerb{
 		.name = "order",
@@ -45,5 +51,6 @@ namespace xge
 		.make = makeOrder,
 		.check = nullptr,
 		.run = runOrder,
+		.print = printOrder,
 	};
 }

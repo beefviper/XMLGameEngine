@@ -34,6 +34,12 @@ namespace xge
 		return doer.self && !put.objClass.empty() && executor.game.putPiece(*doer.self, put);
 	}
 
+	static void printPut(std::ostream& o, const Command& command)
+	{
+		const CmdPut& p = std::get<CmdPut>(command);
+		o << "put(" << p.objClass << ")";
+	}
+
 	extern const Verb putVerb;
 	const Verb putVerb{
 		.name = "put",
@@ -44,5 +50,6 @@ namespace xge
 		.make = makePut,
 		.check = nullptr,
 		.run = runPut,
+		.print = printPut,
 	};
 }

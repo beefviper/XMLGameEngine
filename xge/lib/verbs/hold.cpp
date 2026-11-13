@@ -28,6 +28,17 @@ namespace xge
 		return CmdHold{ button };
 	}
 
+	static void printHold(std::ostream& o, const Command& command)
+	{
+		const CmdHold& h = std::get<CmdHold>(command);
+		o << "hold(" << keyCodeToString(h.button) << ")";
+	}
+
+	static void printHoldRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.button << ")";
+	}
+
 	extern const Verb holdVerb;
 	const Verb holdVerb{
 		.name = "hold",
@@ -38,5 +49,7 @@ namespace xge
 		.make = makeHold,
 		.check = nullptr,
 		.run = nullptr,
+		.print = printHold,
+		.printRaw = printHoldRaw,
 	};
 }

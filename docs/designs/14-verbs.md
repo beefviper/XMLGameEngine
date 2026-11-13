@@ -1,6 +1,6 @@
 # Verbs
 
-**Status:** Built: each command tag is a file in `xge/lib/verbs/` holding its name, the places it may be written, how its tag is read, how its numbers are worked out, the names it checks and what it does; `verbs/all.cpp` lists them. Open: its printing, and its own data. Reference: [commands](../reference/commands.md), [the engine](../reference/engine.md#source-map).
+**Status:** Built: each command tag is a file in `xge/lib/verbs/` holding its name, the places it may be written, how its tag is read, how its numbers are worked out, the names it checks, what it does and how it is printed; `verbs/all.cpp` lists them. Open: its own data. Reference: [commands](../reference/commands.md), [the engine](../reference/engine.md#source-map).
 
 ## What we looked for
 
@@ -11,10 +11,11 @@ One place for everything the engine knows about a verb.
 
 ## The shape
 
-- **A `Verb` record a file** (`verbs/verb.h`): `name`, up to three `forms` (how a message names it, the places it may go, the kind of command it makes), `onRelease` (it acts when a key is let go), and the functions `read`, `make`, `check` and `run`. `bounce.cpp` holds `<bounce>` and nothing else.
+- **A `Verb` record a file** (`verbs/verb.h`): `name`, up to three `forms` (how a message names it, the places it may go, the kind of command it makes), `onRelease` (it acts when a key is let go), and the functions `read`, `make`, `check`, `run`, `print` and `printRaw`. `bounce.cpp` holds `<bounce>` and nothing else.
 - **The command processor is a lookup.** `readCommand` finds the verb by its tag, reads the names any command may have (its attributes) and calls `read` for the rest; `makeCommand` calls `make`; the load-time check calls `check`; `CommandExecutor::run` finds the verb of a command (`verbOf`, a table by the command's kind) and calls `run` with a `Doer`: who is running it and what it touched. The place check reads the forms.
 - **Forms** are for the few verbs written more than one way: `<reset />`, `<reset object>` and `<reset scene>` make three kinds of command; `<despawn />` is about the object running it and goes where that means something, `<despawn object>` anywhere a change does.
 - **The work stays where it was**: the arithmetic in `play/verbs.cpp` and `play/geometry.cpp`, what needs the game in `CommandExecutor` and `Game`. A verb's file says when each is called.
+- **Printing is the verb's too.** `operator<<` for a `Command` asks its verb's `print`, and for a `RawCommand` prints the tag and then asks `printRaw` for the rest. Only the two kinds that are no verb's, a condition in a list (`CmdWhen`) and a command worked out as it runs (`CmdLive`), are printed in `game/command.cpp`. The tests of generated games compare these printouts, so the text is part of what a verb is.
 - **The `Cmd*` structs and the `Command` variant stay in `game/command.h`**: tests and the generator make them, and `run` reads its own with `std::get`.
 
 ## Choices
@@ -31,6 +32,5 @@ One place for everything the engine knows about a verb.
 
 ## Open
 
-- **Printing** (`operator<<` for `Command` and `RawCommand` in `game/command.cpp`) is still one list each.
 - **Its own data.** `RawCommand` is one struct of about fifty fields shared by all, each meaning something different per verb. A verb owning its fields would end that; it changes the generator's `data.xsl` heavily.
 - The helpers of a single verb still in `CommandExecutor` (`hop`, `huntByHop`, `spawnProjectile`) could move beside it.

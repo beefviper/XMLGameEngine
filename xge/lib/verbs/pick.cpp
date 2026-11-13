@@ -35,6 +35,12 @@ namespace xge
 		return self && (self->hand.is ? executor.game.pickCards(*self) : executor.game.pickPiece(*self, pick.objClass.empty() ? executor.game.turnClass() : pick.objClass, pick.only));
 	}
 
+	static void printPick(std::ostream& o, const Command& command)
+	{
+		const CmdPick& p = std::get<CmdPick>(command);
+		o << "pick(" << p.objClass << (p.only ? ", only" : "") << ")";
+	}
+
 	extern const Verb pickVerb;
 	const Verb pickVerb{
 		.name = "pick",
@@ -45,5 +51,6 @@ namespace xge
 		.make = makePick,
 		.check = nullptr,
 		.run = runPick,
+		.print = printPick,
 	};
 }

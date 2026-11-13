@@ -52,6 +52,14 @@ namespace xge
 		return CmdThink{ raw.objClass, raw.object, button, static_cast<int>(depth), raw.worths, raw.avoid };
 	}
 
+	static void printThink(std::ostream& o, const Command& command)
+	{
+		const CmdThink& t = std::get<CmdThink>(command);
+		o << "think(" << t.objClass << ", " << t.picker << ", " << keyCodeToString(t.button) << ", " << t.depth;
+		for (const auto& [look, worth] : t.worths) { o << ", " << look << "=" << worth; }
+		o << ")";
+	}
+
 	extern const Verb thinkVerb;
 	const Verb thinkVerb{
 		.name = "think",
@@ -62,5 +70,6 @@ namespace xge
 		.make = makeThink,
 		.check = nullptr,
 		.run = nullptr,
+		.print = printThink,
 	};
 }

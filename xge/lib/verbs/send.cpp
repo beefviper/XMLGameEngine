@@ -72,6 +72,19 @@ namespace xge
 		return executor.game.sendCells(send.target, send.from, send.into, cell(send.column), cell(send.row));
 	}
 
+	static void printSend(std::ostream& o, const Command& command)
+	{
+		const CmdSend& s = std::get<CmdSend>(command);
+		o << "send(" << s.target << ", " << s.from << " into " << s.into;
+		if (s.column && s.row) { o << ", " << *s.column << " " << *s.row; }
+		o << ")";
+	}
+
+	static void printSendRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.object << ", " << command.from << " into " << command.into << ", " << command.column << " " << command.row << ")";
+	}
+
 	extern const Verb sendVerb;
 	const Verb sendVerb{
 		.name = "send",
@@ -82,5 +95,7 @@ namespace xge
 		.make = makeSend,
 		.check = checkSend,
 		.run = runSend,
+		.print = printSend,
+		.printRaw = printSendRaw,
 	};
 }
