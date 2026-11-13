@@ -250,6 +250,18 @@
         <frame sprite="fa" />
         <frame sprite="fb" />
       </animation>
+      <!-- kicked off: it pops up kicking its legs, then is gone -->
+      <animation name="kicked">
+        <seconds>0.08</seconds>
+        <once />
+        <frame sprite="fa" />
+        <frame sprite="fb" />
+        <frame sprite="fa" />
+        <frame sprite="fb" />
+        <frame sprite="fa" />
+        <frame sprite="fb" />
+        <then><die /></then>
+      </animation>
       <position><x>2</x><y><subtract><value>top</value><value>10</value></subtract></y></position>
       <velocity><x>crawl</x></velocity>
       <acceleration><x>0</x><y>pull</y></acceleration>
@@ -313,12 +325,15 @@
           <jump>10</jump>
           <become sprite="flipped" from="walking" />
         </action>
-        <!-- off for good, and a coin comes out of a top pipe -->
+        <!-- off for good (once its kicking is over), and a coin comes out
+             of a top pipe -->
         <action name="kicked">
           <inc variable="tally.kicked" />
           <play sound="kick" />
           <spawn object="coin"><position><x>6</x><y><subtract><value>top</value><value>9</value></subtract></y></position></spawn>
-          <die />
+          <become sprite="kicked" />
+          <set variable="self.velocity.x">0</set>
+          <set variable="self.velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
         </action>
       </actions>
       <variables>

@@ -589,6 +589,9 @@ TEST_CASE("mariobros.xml: only a bump through a floor turns a shellcreeper over;
 	again.frames(3);
 	again.tap(KeyCode::Space);
 	again.frames(30);
+	CHECK(again.creeper().lookName() == "kicked");
+	// Gone once its kicking has played out.
+	again.frames(30);
 	CHECK_FALSE(again.creeper().isVisible);
 	CHECK(again.get("tally").variable.at("kicked") == Approx(1.0f));
 }

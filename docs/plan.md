@@ -356,6 +356,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
+- **Animations that play once (F2 step 5):** Missile Command's and Depth Charge's bursts and Space Invaders 2's blast look as before and vanish when their frames end; in Mario Bros. a kicked pest pops up kicking its legs for half a second before it is gone.
 - **The schema's documentation in an editor (A6):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.
 
 ## Known untested
