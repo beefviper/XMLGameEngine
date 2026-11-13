@@ -7,8 +7,9 @@
 // (audio/sound.h), reading <sounds> and <play> from a game file, the checks made
 // when it loads, Pong asking for its sounds when the ball bounces and
 // scores, the eight games that were silent now having sounds, and Engine
-// handing what was asked for to its Audio (audio/audio.h). No
-// test opens a sound device: Engine is given a recording Audio instead.
+// handing what was asked for to its Audio (audio/audio.h), and a WAV file
+// read into the same samples (audio/wave.h). No test opens a sound device:
+// Engine is given a recording Audio instead.
 
 #include "scratch.h"
 #include "file_text.h"
@@ -16,6 +17,7 @@
 #include "game/game.h"
 #include "load/xml.h"
 #include "audio/sound.h"
+#include "audio/wave.h"
 #include "window/null.h"
 
 #include <catch2/catch_approx.hpp>
@@ -24,6 +26,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -761,4 +764,177 @@ TEST_CASE("Pac-Man's music: the opening tune plays over READY!, the siren loops 
 	CHECK(log.played == std::vector<std::string>{ "start", "lose" });
 	engine.step();
 	CHECK(log.played.size() == 2);
+}
+
+namespace
+{
+	// A WAV file's bytes, written by hand: a header, a format chunk, then the
+	// samples as given (already laid out frame by frame, channel by channel).
+	struct WaveFile
+	{
+		std::uint16_t format{ 1 };
+		std::uint16_t channels{ 1 };
+		std::uint32_t rate{ kSoundSampleRate };
+		std::uint16_t bits{ 16 };
+		std::vector<int> samples;
+		bool extra{ false }; // a "LIST" chunk of odd size before the data, to be passed over
+
+		void write(const std::filesystem::path& path) const
+		{
+			std::vector<unsigned char> data;
+			for (const int sample : samples)
+			{
+				if (bits == 8) { data.push_back(static_cast<unsigned char>(sample)); }
+				else
+				{
+					const auto value = static_cast<std::uint16_t>(static_cast<std::int16_t>(sample));
+					data.push_back(static_cast<unsigned char>(value & 0xFF));
+					data.push_back(static_cast<unsigned char>(value >> 8));
+				}
+			}
+
+			std::vector<unsigned char> out;
+			const auto tag = [&](const char* text) { out.insert(out.end(), text, text + 4); };
+			const auto number = [&](std::uint32_t value, int count)
+			{
+				for (int i = 0; i < count; ++i) { out.push_back(static_cast<unsigned char>((value >> (8 * i)) & 0xFF)); }
+			};
+			tag("RIFF");
+			number(0, 4); // the whole size, filled in below
+			tag("WAVE");
+			tag("fmt ");
+			number(16, 4);
+			number(format, 2);
+			number(channels, 2);
+			number(rate, 4);
+			number(rate * channels * bits / 8, 4);
+			number(static_cast<std::uint32_t>(channels * bits / 8), 2);
+			number(bits, 2);
+			if (extra)
+			{
+				tag("LIST");
+				number(3, 4);
+				out.insert(out.end(), { 'a', 'b', 'c', 0 }); // three bytes and a pad
+			}
+			tag("data");
+			number(static_cast<std::uint32_t>(data.size()), 4);
+			out.insert(out.end(), data.begin(), data.end());
+			const auto size = static_cast<std::uint32_t>(out.size() - 8);
+			for (int i = 0; i < 4; ++i) { out[4 + static_cast<std::size_t>(i)] = static_cast<unsigned char>((size >> (8 * i)) & 0xFF); }
+
+			std::ofstream file(path, std::ios::binary);
+			file.write(reinterpret_cast<const char*>(out.data()), static_cast<std::streamsize>(out.size()));
+		}
+	};
+
+	std::vector<std::int16_t> readBack(const WaveFile& wave)
+	{
+		const ScratchFile file{ scratchName("descriptions/wave.wav") };
+		wave.write(file.path);
+		return readWave(file.path);
+	}
+
+	std::string refusal(const WaveFile& wave)
+	{
+		const ScratchFile file{ scratchName("descriptions/wave.wav") };
+		wave.write(file.path);
+		try
+		{
+			(void)readWave(file.path);
+		}
+		catch (const std::runtime_error& error)
+		{
+			return error.what();
+		}
+		return "";
+	}
+}
+
+TEST_CASE("a 16-bit one-channel WAV at the engine's rate reads back as its own samples", "[sound][wave]")
+{
+	WaveFile wave;
+	wave.samples = { 0, 1000, -1000, 32767, -32768, 7 };
+	wave.extra = true;
+	CHECK(readBack(wave) == std::vector<std::int16_t>{ 0, 1000, -1000, 32767, -32768, 7 });
+}
+
+TEST_CASE("an 8-bit WAV's samples are unsigned, 128 the middle", "[sound][wave]")
+{
+	WaveFile wave;
+	wave.bits = 8;
+	wave.samples = { 128, 255, 0, 192 };
+	CHECK(readBack(wave) == std::vector<std::int16_t>{ 0, 127 * 256, -32768, 64 * 256 });
+}
+
+TEST_CASE("a two-channel WAV is averaged into one", "[sound][wave]")
+{
+	WaveFile wave;
+	wave.channels = 2;
+	wave.samples = { 1000, 3000, -500, 500, 32767, 32767 };
+	CHECK(readBack(wave) == std::vector<std::int16_t>{ 2000, 0, 32767 });
+}
+
+TEST_CASE("a WAV at another rate is resampled along straight lines to the engine's", "[sound][wave]")
+{
+	// Half the rate: twice as many samples, each new one half way between.
+	WaveFile wave;
+	wave.rate = kSoundSampleRate / 2;
+	wave.samples = { 0, 1000, 3000 };
+	const std::vector<std::int16_t> doubled = readBack(wave);
+	REQUIRE(doubled.size() == 6);
+	CHECK(doubled[0] == 0);
+	CHECK(doubled[1] == 500);
+	CHECK(doubled[2] == 1000);
+	CHECK(doubled[3] == 2000);
+	CHECK(doubled[4] == 3000);
+
+	// A common other rate keeps the sound's length.
+	WaveFile slow;
+	slow.rate = 22050;
+	slow.samples.assign(22050, 100);
+	const std::vector<std::int16_t> second = readBack(slow);
+	CHECK(second.size() == kSoundSampleRate);
+	CHECK(std::all_of(second.begin(), second.end(), [](std::int16_t sample) { return sample == 100; }));
+}
+
+TEST_CASE("a WAV file that cannot be read is refused, naming the file and why", "[sound][wave]")
+{
+	SECTION("missing")
+	{
+		const std::string missing = scratchName("descriptions/missing.wav");
+		CHECK_THROWS_WITH(readWave(missing), ContainsSubstring("missing_scratch") && ContainsSubstring("cannot be opened"));
+	}
+	SECTION("not a WAV")
+	{
+		const ScratchFile file{ scratchName("descriptions/notwave.wav") };
+		std::ofstream(file.path) << "<game />";
+		CHECK_THROWS_WITH(readWave(file.path), ContainsSubstring("notwave_scratch") && ContainsSubstring("is not a WAV file"));
+	}
+	SECTION("compressed")
+	{
+		WaveFile wave;
+		wave.format = 2; // ADPCM
+		wave.samples = { 0, 0 };
+		CHECK_THAT(refusal(wave), ContainsSubstring("wave_scratch") && ContainsSubstring("is compressed"));
+	}
+	SECTION("another size of sample")
+	{
+		WaveFile wave;
+		wave.bits = 24;
+		CHECK_THAT(refusal(wave), ContainsSubstring("24-bit samples"));
+	}
+	SECTION("more channels")
+	{
+		WaveFile wave;
+		wave.channels = 6;
+		CHECK_THAT(refusal(wave), ContainsSubstring("6 channels"));
+	}
+	SECTION("too long")
+	{
+		WaveFile wave;
+		wave.rate = 8000;
+		wave.bits = 8;
+		wave.samples.assign(static_cast<std::size_t>(8000 * (kMaxSoundFileSeconds + 1)), 128);
+		CHECK_THAT(refusal(wave), ContainsSubstring("longer than 60 seconds"));
+	}
 }

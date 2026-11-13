@@ -45,6 +45,8 @@
   <file>lib/game/states.cpp</file>
   <file>lib/audio/sound.h</file>
   <file>lib/audio/sound.cpp</file>
+  <file>lib/audio/wave.h</file>
+  <file>lib/audio/wave.cpp</file>
   <file>lib/game/data.h</file>
   <file>lib/game/scenes.h</file>
   <file>lib/game/scenes.cpp</file>

@@ -75,6 +75,7 @@ set(ENGINE_SOURCES
 	"xge/lib/window/window.cpp"
 	"xge/lib/window/null.cpp"
 	"xge/lib/audio/sound.cpp"
+	"xge/lib/audio/wave.cpp"
 	"xge/lib/audio/audio.cpp"
 )
 
@@ -113,6 +114,7 @@ set(ENGINE_HEADERS
 	"xge/lib/window/window.h"
 	"xge/lib/window/null.h"
 	"xge/lib/audio/sound.h"
+	"xge/lib/audio/wave.h"
 	"xge/lib/audio/audio.h"
 )
 
