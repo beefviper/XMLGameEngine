@@ -61,6 +61,7 @@ namespace xge
 		bitmap = facingPicture(looks[index].bitmap);
 		animationBitmaps = looks[index].frames;
 		animationFrames = looks[index].frameTicks;
+		animationTimes = looks[index].frameTimes;
 		animationTick = 0;
 		animationIndex = 0;
 		// Turned to the way it faces: its own pictures to turn from now on.
@@ -347,6 +348,7 @@ namespace xge
 			look.name = animation.name;
 			look.frames = std::move(frames);
 			look.interval = animation.interval;
+			look.times = animation.times;
 			looks.push_back(std::move(look));
 		}
 		for (const RawSprite& sprite : sprites)
@@ -937,7 +939,8 @@ namespace xge
 	{
 		if (animationBitmaps.size() < 2 || animationFrames < 1) { return; }
 
-		if (++animationTick < animationFrames) { return; }
+		const int due = animationTimes.empty() ? animationFrames : animationTimes[animationIndex];
+		if (++animationTick < due) { return; }
 
 		animationTick = 0;
 		animationIndex = (animationIndex + 1) % animationBitmaps.size();

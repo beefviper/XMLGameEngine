@@ -830,6 +830,7 @@ namespace xge
 					look.turnables.clear();
 					look.frames = buildAnimationBitmaps(rawLook.frames, here, rawObject.hasHeading ? &look.turnables : nullptr);
 					look.frameTicks = animationFramesOf(rawLook.interval, windowDesc, here);
+					look.frameTimes = animationTimesOf(rawLook.times, look.frameTicks, windowDesc, here);
 				}
 				if (look.picture.kind == ShapeKind::Text && showsNumbers(rawLook))
 				{
@@ -858,6 +859,7 @@ namespace xge
 			object.animationBitmaps = first.animation;
 			if (!first.animationTurned.empty()) { object.turnables = first.animationTurned; }
 			object.animationFrames = animationFrames;
+			object.animationTimes = animationTimesOf(rawObject.animation.times, animationFrames, windowDesc, where + " > <animation>");
 			object.bitmap = object.animationBitmaps.front();
 		}
 
@@ -1083,6 +1085,7 @@ namespace xge
 			// It starts as a look that moves.
 			object.animationBitmaps = looks.front().frames;
 			object.animationFrames = looks.front().frameTicks;
+			object.animationTimes = looks.front().frameTimes;
 		}
 
 		// The look for each way it moves; one left out is another's.
@@ -2337,6 +2340,18 @@ namespace xge
 		}
 
 		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(windowDesc.framerate))));
+	}
+
+	std::vector<int> game_expr::animationTimesOf(const std::vector<RawValue>& times, int fallback, const WindowDesc& windowDesc, const std::string& where)
+	{
+		std::vector<int> frames;
+		for (std::size_t i = 0; i < times.size(); ++i)
+		{
+			frames.push_back(frameTimeGiven(times[i])
+				? animationFramesOf(times[i], windowDesc, where + " > <frame> " + std::to_string(i + 1))
+				: fallback);
+		}
+		return frames;
 	}
 
 	std::map<std::string, Vector2f> game_expr::layOutCells(const std::vector<RawObject>& rawObjects,

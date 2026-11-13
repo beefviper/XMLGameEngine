@@ -601,6 +601,59 @@ TEST_CASE("an animation shows its sprites in turn, each for the interval, round 
 	CHECK(showing(thing) == 'a');
 }
 
+TEST_CASE("a frame with its own seconds shows that long; the others the animation's", "[animation]")
+{
+	const char* const animation = "<animation><seconds>0.1</seconds><frame sprite=\"a\" /><frame sprite=\"b\"><seconds>0.5</seconds></frame></animation>";
+
+	SECTION("an object's one animation")
+	{
+		Loaded loaded{ gameXml(objectWith(kA + kB, animation), "<show object=\"thing\" />") };
+		Game& game = loaded.game;
+		game.setCurrentState("playing");
+		Object& thing = game.getObject("thing");
+		CHECK(thing.animationTimes == std::vector<int>{ 6, 30 });
+
+		frames(game, 5);
+		CHECK(showing(thing) == 'a');
+		frames(game, 1);
+		CHECK(showing(thing) == 'b');
+		frames(game, 29);
+		CHECK(showing(thing) == 'b');
+		frames(game, 1);
+		CHECK(showing(thing) == 'a');
+		frames(game, 6);
+		CHECK(showing(thing) == 'b');
+	}
+
+	SECTION("a look that moves")
+	{
+		const std::string named = "<animation name=\"blink\"><seconds>0.1</seconds><frame sprite=\"a\" /><frame sprite=\"b\"><seconds>0.5</seconds></frame></animation>";
+		Loaded loaded{ gameXml(objectWith(kA + kB, named), "<show object=\"thing\" />") };
+		Game& game = loaded.game;
+		game.setCurrentState("playing");
+		Object& thing = game.getObject("thing");
+		CHECK(thing.animationTimes == std::vector<int>{ 6, 30 });
+		frames(game, 6);
+		CHECK(showing(thing) == 'b');
+		frames(game, 29);
+		CHECK(showing(thing) == 'b');
+		frames(game, 1);
+		CHECK(showing(thing) == 'a');
+	}
+
+	SECTION("none of its own: every frame the animation's")
+	{
+		Loaded loaded{ gameXml(objectWith(kA + kB, kTwoFrames), "<show object=\"thing\" />") };
+		CHECK(loaded.game.getObject("thing").animationTimes.empty());
+	}
+
+	SECTION("a frame's own time must be above 0")
+	{
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><seconds>1</seconds><frame sprite=\"a\"><seconds>0</seconds></frame><frame sprite=\"b\" /></animation>"),
+			"<show object=\"thing\" />")), ContainsSubstring("<frame> 1") && ContainsSubstring("above 0"));
+	}
+}
+
 TEST_CASE("the interval is in seconds, so it follows the window's framerate", "[animation]")
 {
 	const std::string objects = objectWith(kA + kB, "<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>");

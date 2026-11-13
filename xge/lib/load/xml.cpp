@@ -627,7 +627,16 @@ namespace xge
 			for (std::unique_ptr<XmlNode> node = animation.getFirstChild(); node != nullptr; node = node->getNextSibling())
 			{
 				const std::string tag = node->getName();
-				if (tag == "frame") { spec.frames.push_back(requireAttribute(*node, "sprite", here + " > <frame>")); }
+				if (tag == "frame")
+				{
+					const std::string at = here + " > <frame>";
+					spec.frames.push_back(requireAttribute(*node, "sprite", at));
+					if (auto seconds = findChild(node.get(), "seconds"))
+					{
+						spec.times.resize(spec.frames.size());
+						spec.times.back() = readValue(*seconds, at + " > <seconds>");
+					}
+				}
 				else if (tag == "cell")
 				{
 					RawSprite sprite;
@@ -648,6 +657,7 @@ namespace xge
 				}
 				else if (tag != "seconds") { fail(here, "unknown <" + tag + ">; expected <seconds> and then <frame>s, <cell>s and runs of <cells>"); }
 			}
+			if (!spec.times.empty()) { spec.times.resize(spec.frames.size()); }
 
 			return spec;
 		}
@@ -746,6 +756,7 @@ namespace xge
 
 			RawAnimation chosen;
 			chosen.interval = animation->interval;
+			chosen.times = animation->times;
 
 			std::vector<bool> used(sprites.size(), false);
 			for (const std::string& name : animation->frames)

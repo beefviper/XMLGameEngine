@@ -9,7 +9,8 @@
 - In a group, a member's sprites replace the group's, and the animation is looked up in what the member ends with: three alien kinds in one lockstep group.
 - **Frames cut from a sheet:** `<cell>` and runs of `<cells>` beside `<frame>`s, each a sprite of its own named `walk.1`, `walk.2` ([sheets](30-pictures.md#sheets)), so a sprite sheet needs no sprite per frame.
 - Rejected: a global animation clock (awkward with pause and reset).
-- Not done: an interval per frame, an animation that runs once or starts on a touch.
+- A frame may take its own `<seconds>` (a cycle that holds one picture longer); without, the animation's. Only a `<frame>`, not a sheet's cells, which have no place to say it.
+- Not done: an animation that runs once or starts on a touch.
 
 ## Looks
 

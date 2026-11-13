@@ -179,7 +179,7 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
 - **Needs** nothing.
 - **Why.** Three listed limits at once: an animation has one interval for all frames, cannot run once and stop, and cannot be started by a collision. A dozen games fake it with look timers.
 - **Steps.**
-  - [ ] **1. A time per frame (S).** A `<frame>` in an `<animation>` takes its own `<seconds>`; without, the animation's. **Check:** a test animation with frames of 0.1 and 0.5 seconds shows each for that long.
+  - [x] **1. A time per frame (S).** A `<frame>` in an `<animation>` takes its own `<seconds>`; without, the animation's. **Check:** a test animation with frames of 0.1 and 0.5 seconds shows each for that long.
   - [ ] **2. Once (M).** `<animation name="burst"><once />...` plays through and then the object shows the look it had before. **Check:** a test object goes back to its earlier look after the last frame, and a reset in the middle puts it back cleanly (the animation's state belongs in `Moment` if a reset must restore it: see [play notes](agents/play.md)).
   - [ ] **3. What comes after (S).** With `<then sprite="x" />` it shows that look instead; with `<then>` holding commands (`<then><despawn /></then>`) it runs them. **Check:** a test for each form.
   - [ ] **4. Started by a command (S).** `<become sprite="burst" />` already switches looks; switching to a `once` animation starts it from its first frame every time, from a collision rule too. **Check:** a test becomes it twice and sees frame one both times.

@@ -250,6 +250,11 @@ namespace xge
 		// 0, or for a window with no framerate to count seconds in.
 		int animationFramesOf(const RawValue& interval, const WindowDesc& windowDesc, const std::string& where);
 
+		// Each picture's own time in frames of the game: a frame's own
+		// <seconds> as animationFramesOf counts them, any other `fallback`.
+		// Empty when no frame has its own.
+		std::vector<int> animationTimesOf(const std::vector<RawValue>& times, int fallback, const WindowDesc& windowDesc, const std::string& where);
+
 		std::vector<Command> processCommands(const std::vector<RawCommand>& raw, const std::string& where);
 
 		// An object's or a state's <timers>: the commands made, the interval

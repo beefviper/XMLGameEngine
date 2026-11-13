@@ -762,6 +762,10 @@
       <xs:choice maxOccurs="unbounded">
         <xs:element name="frame">
           <xs:complexType>
+            <xs:sequence>
+              <!-- how long this picture shows, in place of the animation's <seconds> -->
+              <xs:element name="seconds" type="valueType" minOccurs="0" />
+            </xs:sequence>
             <xs:attribute name="sprite" type="xs:NMTOKEN" use="required" />
           </xs:complexType>
         </xs:element>

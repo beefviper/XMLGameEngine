@@ -26,7 +26,7 @@ What the engine cannot do today. Why, and what might come, is in the [design fil
 ## Pictures and sound
 
 - Engine-drawn pictures are fixed at load (an SVG at one scale); they can be turned, swapped for another look, recoloured, mirrored and holed.
-- An animation has one interval for all frames, cannot run once and stop, and cannot be started by a collision. An object with a `<heading>` cannot take a palette swap.
+- An animation cannot run once and stop, and cannot be started by a collision. A sheet's cells take the animation's time, not one each. An object with a `<heading>` cannot take a palette swap.
 - Turning keeps two pictures per object; a big drawing costs four bytes a pixel of its box. A picture (lines, polygons, a bitmap, a text, a cut from a sheet or an SVG) is at most 4096 pixels on a side; a larger one stops the load.
 - The built-in 8x8 font is only a fallback, and its widths differ from the real font's.
 - An object's own variable named `width` or `height` shadows its size.

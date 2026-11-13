@@ -183,6 +183,7 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
 ```
 
 - `<seconds>` is how long each picture shows (above 0); each `<frame>` picks a sprite. At least two frames, all pictures of one size; an unnamed animation shows every sprite.
+- **A frame's own time:** `<frame sprite="closed"><seconds>0.5</seconds></frame>` shows that picture that long; the others keep the animation's `<seconds>`. Cells cut from a sheet take the animation's.
 - **Frames from a [sheet](#sheets)** need no sprites: a `<cell sheet>` is one frame, and a run of `<cells sheet>` is `<count>` frames from its `<column>` and `<row>` along the row (or down the column with `<down />`). Frames, cells and runs mix in any order, so a long animation split over two rows is two runs:
 
   ```xml

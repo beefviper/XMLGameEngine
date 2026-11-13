@@ -318,10 +318,12 @@ namespace xge
 		std::string solid;
 
 		// A look that moves, a named <animation>: the sprites its <frame>s
-		// pick, in order, each shown `interval` seconds, round and round.
-		// The fields above are its first frame's. Empty for a still look.
+		// pick, in order, each shown `interval` seconds (or its own, in
+		// `times`), round and round. The fields above are its first frame's.
+		// Empty for a still look.
 		std::vector<RawSprite> frames;
 		RawValue interval;
+		std::vector<RawValue> times;
 	};
 
 	// An <animation> as written: its name (empty for an object's one
@@ -332,6 +334,10 @@ namespace xge
 		std::string name;
 		RawValue interval;
 		std::vector<std::string> frames;
+		// Each frame's own <seconds>, one a frame, or none at all when no
+		// frame has its own; an empty value is the animation's (see
+		// frameTimeGiven).
+		std::vector<RawValue> times;
 		// Frames cut from a sheet (<cell>s and runs of <cells>), named for
 		// the animation and numbered ("walk.1", "frame.1" for an unnamed
 		// one), each also among `frames`: sprites the object gains.
@@ -360,7 +366,15 @@ namespace xge
 	{
 		RawValue interval;
 		std::vector<RawSprite> frames;
+		std::vector<RawValue> times;   // as RawFrames::times
 	};
+
+	// Whether a frame's entry in `times` holds a time of its own, rather
+	// than standing for the animation's.
+	inline bool frameTimeGiven(const RawValue& time)
+	{
+		return time.kind != RawValue::Kind::Expression || !time.text.empty() || time.operations;
+	}
 
 	// One of a cell map's <checks> (see RawCell::cells): what it asks of the
 	// map after something settles, and what it does for each answer. "full"
@@ -1031,6 +1045,9 @@ namespace xge
 		// has none of this. See advanceAnimation.
 		std::vector<std::shared_ptr<const Bitmap>> animationBitmaps;
 		int animationFrames{};
+		// Each picture's own time in frames of the game, when a <frame> has
+		// its own <seconds>; empty, every one animationFrames.
+		std::vector<int> animationTimes;
 		int animationTick{};
 		std::size_t animationIndex{};
 
@@ -1446,6 +1463,7 @@ namespace xge
 			std::shared_ptr<const Bitmap> bitmap;
 			std::vector<std::shared_ptr<const Bitmap>> frames;
 			int frameTicks{};
+			std::vector<int> frameTimes;   // as animationTimes
 			// For an object with a <heading>: the look's pictures (one, or
 			// one a frame) kept to be turned to it (see `turnables`).
 			std::vector<std::shared_ptr<const Turnable>> turnables;

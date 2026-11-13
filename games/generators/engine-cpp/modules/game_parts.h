@@ -269,10 +269,12 @@ namespace xge::parts
 
 	// What an object with an <animation> looks like: the sprites its <frame>s
 	// name, in order, starting as the first.
-	inline void animate(RawObject& object, const std::vector<RawSprite>& sprites, RawValue interval, const std::vector<std::string>& frames)
+	inline void animate(RawObject& object, const std::vector<RawSprite>& sprites, RawValue interval, const std::vector<std::string>& frames,
+		std::vector<RawValue> times = {})
 	{
 		object.hasAnimation = true;
 		object.animation.interval = std::move(interval);
+		object.animation.times = std::move(times);
 		for (const std::string& frame : frames)
 		{
 			object.animation.frames.push_back(*std::find_if(sprites.begin(), sprites.end(), [&](const RawSprite& each) { return each.name == frame; }));
@@ -281,11 +283,12 @@ namespace xge::parts
 	}
 
 	// A named <animation>: a look that moves, its pictures the sprites named.
-	inline RawFrames frames(std::string name, RawValue interval, std::vector<std::string> names)
+	inline RawFrames frames(std::string name, RawValue interval, std::vector<std::string> names, std::vector<RawValue> times = {})
 	{
 		RawFrames animation;
 		animation.name = std::move(name);
 		animation.interval = std::move(interval);
+		animation.times = std::move(times);
 		animation.frames = std::move(names);
 		return animation;
 	}
@@ -307,6 +310,7 @@ namespace xge::parts
 		bool animated{ false };
 		RawValue interval;
 		std::vector<std::string> frames;
+		std::vector<RawValue> times;
 		std::vector<RawFrames> moving;
 	};
 
@@ -378,7 +382,7 @@ namespace xge::parts
 		}
 		else if (member.animated)
 		{
-			animate(object, member.sprites, member.interval, member.frames);
+			animate(object, member.sprites, member.interval, member.frames, member.times);
 		}
 		else
 		{

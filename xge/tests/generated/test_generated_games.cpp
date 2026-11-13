@@ -210,6 +210,7 @@ namespace
 			text(at + ".tetherTo", s.tetherTo);
 			value(at + ".thickness", s.thickness);
 			value(at + ".interval", s.interval);
+			for (std::size_t i = 0; i < s.times.size(); ++i) { value(at + ".time" + std::to_string(i), s.times[i]); }
 			for (std::size_t i = 0; i < s.frames.size(); ++i) { sprite(at + ".frame" + std::to_string(i), s.frames[i]); }
 		}
 
@@ -225,6 +226,7 @@ namespace
 			sprite(at + ".sprite", o.sprite);
 			flag(at + ".hasAnimation", o.hasAnimation);
 			value(at + ".animation.interval", o.animation.interval);
+			for (std::size_t i = 0; i < o.animation.times.size(); ++i) { value(at + ".animation.time" + std::to_string(i), o.animation.times[i]); }
 			for (std::size_t i = 0; i < o.animation.frames.size(); ++i) { sprite(at + ".frame" + std::to_string(i), o.animation.frames[i]); }
 			for (std::size_t i = 0; i < o.looks.size(); ++i) { sprite(at + ".look" + std::to_string(i), o.looks[i]); }
 			flag(at + ".isVisible", o.isVisible);

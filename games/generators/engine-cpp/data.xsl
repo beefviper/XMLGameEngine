@@ -1220,7 +1220,52 @@
     <xsl:call-template name="frames">
       <xsl:with-param name="animation" select="$animation" />
     </xsl:call-template>
+    <xsl:call-template name="frame-times">
+      <xsl:with-param name="animation" select="$animation" />
+    </xsl:call-template>
     <xsl:text>)</xsl:text>
+  </xsl:template>
+
+  <!-- Each frame's own <seconds>, when any has: , { RawValue{}, n("0.5") },
+       an empty value for a frame (or each picture a sheet's cells cut) that
+       takes the animation's. -->
+  <xsl:template name="frame-times">
+    <xsl:param name="animation" />
+    <xsl:if test="$animation/frame/seconds">
+      <xsl:text>, { </xsl:text>
+      <xsl:for-each select="$animation/frame | $animation/cell | $animation/cells">
+        <xsl:if test="position() &gt; 1">, </xsl:if>
+        <xsl:choose>
+          <xsl:when test="self::frame[seconds]">
+            <xsl:call-template name="value">
+              <xsl:with-param name="node" select="seconds" />
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="self::frame">RawValue{}</xsl:when>
+          <xsl:otherwise>
+            <xsl:call-template name="blank-times">
+              <xsl:with-param name="left">
+                <xsl:call-template name="cell-count">
+                  <xsl:with-param name="node" select="." />
+                </xsl:call-template>
+              </xsl:with-param>
+            </xsl:call-template>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:for-each>
+      <xsl:text> }</xsl:text>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="blank-times">
+    <xsl:param name="left" />
+    <xsl:text>RawValue{}</xsl:text>
+    <xsl:if test="$left &gt; 1">
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="blank-times">
+        <xsl:with-param name="left" select="$left - 1" />
+      </xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <!-- The names of an <animation>'s frames: { "a", "b" }. -->
@@ -1572,6 +1617,9 @@
         </xsl:call-template>
         <xsl:text>, </xsl:text>
         <xsl:call-template name="frames">
+          <xsl:with-param name="animation" select="animation" />
+        </xsl:call-template>
+        <xsl:call-template name="frame-times">
           <xsl:with-param name="animation" select="animation" />
         </xsl:call-template>
         <xsl:text>);&#10;</xsl:text>
@@ -2727,6 +2775,15 @@
         <xsl:with-param name="animation" select="$node" />
       </xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
+      <xsl:if test="$node/frame/seconds">
+        <xsl:value-of select="concat($indent, $to, '.times = {')" />
+        <xsl:variable name="times">
+          <xsl:call-template name="frame-times">
+            <xsl:with-param name="animation" select="$node" />
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:value-of select="concat(substring-after($times, '{'), ';&#10;')" />
+      </xsl:if>
     </xsl:if>
   </xsl:template>
 
