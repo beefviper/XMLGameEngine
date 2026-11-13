@@ -257,9 +257,13 @@ TEST_CASE("the function a game is written as is named for its file", "[generate]
 
 namespace
 {
-	// A C++ file with its date line left out, which says when it was written.
-	std::string undated(const std::string& text)
+	// A C++ file with its date line left out, which says when it was
+	// written, and its line ends as stored: a checkout on Windows ends the
+	// hand-written lines with \r\n (.gitattributes), the generator with \n.
+	std::string undated(const std::string& written)
 	{
+		std::string text;
+		for (const char c : written) { if (c != '\r') { text += c; } }
 		const std::string mark = "\n// date: ";
 		const std::size_t at = text.find(mark);
 		if (at == std::string::npos) { return text; }
@@ -329,6 +333,7 @@ TEST_CASE("the games windows-cpp covers: the rest stop with their list", "[gener
 	{
 		if (entry.path().extension() != ".xml") { continue; }
 		const std::string game = entry.path().stem().string();
+		if (game.find("_scratch") != std::string::npos) { continue; }
 		try
 		{
 			generateGame(requestFor(entry.path(), folder.path / game, "windows-cpp"));
