@@ -8,8 +8,8 @@
   hopping from cube to cube on the diagonals, on the arcade's own small
   screen (256 by 240) shown three times as big. Every cube he lands on
   turns from blue to yellow, for 25 points; turn them all to win. Hop off
-  the pyramid, or meet the red ball or Coily, and he curses and a life is
-  lost. A flying disc on each side carries him back to the top, once;
+  the pyramid and he drops away, or meet the red ball or Coily and he
+  curses; either way a life is lost. A flying disc on each side carries him back to the top, once;
   Coily, if he is chasing him by then, leaps after him and falls, for 500
   points. The high score is kept.
 
@@ -35,7 +35,8 @@
     and touches nothing else. A cube shows its look "lit" once Q*bert has
     landed on it (a rule only for the unlit look, so it scores once).
   * Around the pyramid is the void: unseen tiles where a hop off the
-    pyramid lands, which cost a life and put Q*bert back on top. Two of
+    pyramid lands: he drops away out of sight (the state fell, a <once />
+    animation that shrinks him) and a life is lost. Two of
     them are the discs, which spin (a look that moves, a named
     <animation>) until they have been used.
   * The red ball hops down on its own, a <trigger> from its own <timer>s
@@ -45,6 +46,9 @@
     then a snake that coils and rears (another look that moves) and whose timer hunts
     Q*bert by hops (<hunt> with a <hop>): each time, the diagonal that
     lands nearest him.
+  * Caught, everything stands still while he curses (the state cursed, with
+    the playing state shown under it); then a life is lost and he, the ball
+    and Coily start again.
   No Slick and Sam, Ugg and Wrongway or green ball, and one round: see
   docs/designs/54-games.md.
 -->
@@ -134,6 +138,9 @@
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">3</variable>
+            <!-- caught, or off the pyramid: the state cursed or fell comes next -->
+            <variable name="cursed">0</variable>
+            <variable name="fell">0</variable>
             <variable name="cubes">0</variable>
           </variables>
         </object>
@@ -217,8 +224,7 @@
             <collisions>
               <collision object="qbert">
                 <collision sprite="used">
-                  <play sound="fall" />
-                  <trigger object="qbert" action="lose" />
+                  <trigger object="qbert" action="fall" />
                 </collision>
                 <collision sprite="ready">
                   <!-- Coily, chasing him, leaps after him -->
@@ -254,12 +260,12 @@
               <position><x>4</x><y>12</y></position>
             </hitbox>
             <collision class="void">
-              <play sound="fall" />
-              <trigger action="lose" />
+              <trigger action="fall" />
             </collision>
+            <!-- the state cursed comes next -->
             <collision class="enemy">
               <play sound="curse" />
-              <trigger action="lose" />
+              <set variable="player.cursed">1</set>
             </collision>
           </collisions>
           <actions>
@@ -283,30 +289,13 @@
               <become sprite="back" />
               <play sound="hop" />
             </action>
-            <action name="lose">
-              <dec variable="player.lives" />
-              <become object="curse" sprite="said" />
-              <reset />
-              <reset object="ball" />
-              <reset object="coily" />
+            <!-- out of play while he drops away (the state fell) -->
+            <action name="fall">
+              <die />
+              <play sound="fall" />
+              <set variable="player.fell">1</set>
             </action>
           </actions>
-        </object>
-        <!-- what he says when caught, for a moment, over the top of the pyramid -->
-        <object name="curse">
-          <sprite name="quiet" />
-          <sprite name="said">
-            <text style="text">
-              <content>@!#?@!</content>
-            </text>
-          </sprite>
-          <position><x><add><value>window.width.center</value><value>16</value></add></x><y>20</y></position>
-          <timers>
-            <timer sprite="said">
-              <after>1.5</after>
-              <become sprite="quiet" />
-            </timer>
-          </timers>
         </object>
         <!-- the red ball: down the pyramid one way or the other, and off it -->
         <object name="ball" class="enemy">
@@ -433,6 +422,14 @@
           <become object="over.message" sprite="won" />
           <push state="over" />
         </condition>
+        <condition object="player" variable="cursed"><atleast>1</atleast>
+          <set variable="player.cursed">0</set>
+          <push state="cursed" />
+        </condition>
+        <condition object="player" variable="fell"><atleast>1</atleast>
+          <set variable="player.fell">0</set>
+          <push state="fell" />
+        </condition>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
           <become object="over.message" sprite="lost" />
@@ -443,6 +440,72 @@
           <copy variable="player.score" into="best.score" />
         </condition>
       </conditions>
+    </state>
+    <!-- caught: everything stands still while he curses -->
+    <state name="cursed">
+      <objects>
+        <object name="curse">
+          <sprite>
+            <text style="text">
+              <content>@!#?@!</content>
+            </text>
+          </sprite>
+          <position><x><add><value>window.width.center</value><value>16</value></add></x><y>20</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.5</after>
+          <dec variable="player.lives" />
+          <reset object="qbert" />
+          <reset object="ball" />
+          <reset object="coily" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
+    <!-- off the pyramid: he drops away out of sight -->
+    <state name="fell">
+      <objects>
+        <object name="drop">
+          <sprite name="a"><bitmap from="qbert-front" /></sprite>
+          <sprite name="b"><bitmap from="drop-1" /></sprite>
+          <sprite name="c"><bitmap from="drop-2" /></sprite>
+          <sprite name="d"><bitmap from="drop-3" /></sprite>
+          <animation>
+            <seconds>0.2</seconds>
+            <once />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d" />
+          </animation>
+          <position><x update="live">qbert.x</x><y update="live">qbert.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.2</after>
+          <dec variable="player.lives" />
+          <reset object="qbert" />
+          <reset object="ball" />
+          <reset object="coily" />
+          <reset object="drop" />
+          <pop />
+        </timer>
+      </timers>
     </state>
     <state name="paused">
       <objects>
@@ -676,6 +739,69 @@
       <row>.....o...o......</row>
       <row>....kkk..kkk....</row>
       <row>...kkkk..kkkk...</row>
+      <color char="o">color.orange</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="drop-1">
+      <row>................</row>
+      <row>................</row>
+      <row>......ooooo.....</row>
+      <row>.....ooooooo....</row>
+      <row>....owwoowwoo...</row>
+      <row>...oowooowwooo..</row>
+      <row>...ooooooooooo..</row>
+      <row>...ooooooooooo..</row>
+      <row>....oooooookko..</row>
+      <row>.....ooooooo.k..</row>
+      <row>.....ooooooooo..</row>
+      <row>......oo.oo.....</row>
+      <row>......o..o......</row>
+      <row>.....kkk.kk.....</row>
+      <row>................</row>
+      <row>................</row>
+      <color char="o">color.orange</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="drop-2">
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>.......ooo......</row>
+      <row>.....owoowo.....</row>
+      <row>.....owoowoo....</row>
+      <row>.....ooooooo....</row>
+      <row>.....oooooko....</row>
+      <row>......oooooo....</row>
+      <row>.......o.o......</row>
+      <row>......kk.k......</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <color char="o">color.orange</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="drop-3">
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>........o.......</row>
+      <row>.......woo......</row>
+      <row>.......ook......</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
+      <row>................</row>
       <color char="o">color.orange</color>
       <color char="w">color.white</color>
       <color char="k">color.black</color>

@@ -68,9 +68,11 @@ TEST_CASE("qbert.xml: a hop arcs up off its way and lands on the next cube, whic
 	CHECK(play.lives() == Approx(3.0f));
 
 	// Back up lights the top; down again onto a lit cube scores nothing.
-	play.hop(KeyCode::W);
+	play.hop(KeyCode::A);
+	CHECK(play.qbert().position == start);
 	play.hop(KeyCode::D);
 	CHECK(play.score() == Approx(50.0f));
+	CHECK(play.lives() == Approx(3.0f));
 	CHECK(play.qbert().lookName() == "front");
 }
 
@@ -142,10 +144,14 @@ TEST_CASE("qbert.xml: a hop down a diagonal lights the cube landed on, and one o
 	hop(KeyCode::A);
 	CHECK(play.get("player").variable.at("score") == Approx(75));
 
-	// Up and left off the top: into the void, and he curses.
+	// Up and left off the top: into the void, and he drops away out of sight.
 	hop(KeyCode::A);
+	CHECK(play.state() == "fell");
+	CHECK_FALSE(play.get("qbert").isVisible);
+	CHECK(play.get("player").variable.at("lives") == Approx(3));
+	play.frames(75);
+	CHECK(play.state() == "playing");
 	CHECK(play.get("player").variable.at("lives") == Approx(2));
-	CHECK(play.get("curse").lookName() == "said");
 	CHECK(play.get("qbert").position.x == Approx(120));
 	CHECK(play.get("qbert").position.y == Approx(38));
 }
@@ -179,8 +185,13 @@ TEST_CASE("qbert.xml: Coily hatches on the bottom row and hunts Q*bert a hop at 
 	CHECK(coily.mirrored); // his pictures face left, and he goes right
 	CHECK(play.get("player").variable.at("lives") == Approx(3));
 
-	// Until it lands on him: a life, and Coily back to an egg at the start.
-	play.frames(400);
+	// Until it lands on him: he curses, everything standing still, then a
+	// life, and Coily back to an egg at the start.
+	for (int i = 0; i < 400 && play.state() == "playing"; ++i) { play.frames(1); }
+	CHECK(play.state() == "cursed");
+	CHECK(play.get("player").variable.at("lives") == Approx(3));
+	play.frames(95);
+	CHECK(play.state() == "playing");
 	CHECK(play.get("player").variable.at("lives") < 3.0f);
 	CHECK(coily.lookName() == "egg");
 }
@@ -221,6 +232,6 @@ TEST_CASE("qbert.xml: a disc carries Q*bert back to the top once, and Coily chas
 	qbert.position = { 40, 158 };
 	play.frames(2);
 	play.tap(KeyCode::A);
-	play.frames(20);
+	play.frames(20 + 75);
 	CHECK(play.get("player").variable.at("lives") == Approx(2));
 }
