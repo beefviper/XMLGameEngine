@@ -33,6 +33,9 @@
     at that moment, in a straight line, and <despawn>s at an edge or hit.
   * The neutral zone is a column of bands, each an <animation> of two
     bitmaps of colors; the even bands run it the other way round.
+  * Hit, Yar goes out of play and the state hit stands everything still
+    while a burst plays where he was (a <once /> animation); its timer
+    takes the life and puts Yar, the missile and the Swirl back.
   Not in it: the ghost of Yar, the Qotile's ion zone colors, Yar bouncing
   off the shield, the cannon hitting Yar, the levels getting harder.
 -->
@@ -166,6 +169,8 @@
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">4</variable>
+            <!-- hit: the state hit comes next -->
+            <variable name="hit">0</variable>
           </variables>
         </object>
         <object name="score">
@@ -248,18 +253,12 @@
             <collision edge="horizontal"><stick /></collision>
             <collision edge="vertical"><wrap /></collision>
             <collision object="qotile"><reveal object="cannon" /></collision>
+            <!-- out of play while it bursts (the state hit) -->
             <collision object="missile" unless="zone">
-              <dec variable="player.lives" />
-              <play sound="hit" />
-              <reset />
-              <reset object="missile" />
+              <trigger action="lose" />
             </collision>
             <collision object="swirl">
-              <dec variable="player.lives" />
-              <play sound="hit" />
-              <reset />
-              <reset object="missile" />
-              <reset object="swirl" />
+              <trigger action="lose" />
             </collision>
           </collisions>
           <actions>
@@ -270,6 +269,11 @@
             <action name="fire">
               <fire object="energy" />
               <play sound="shoot" />
+            </action>
+            <action name="lose">
+              <die />
+              <play sound="hit" />
+              <set variable="player.hit">1</set>
             </action>
           </actions>
         </object>
@@ -311,6 +315,10 @@
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
+        <condition object="player" variable="hit"><atleast>1</atleast>
+          <set variable="player.hit">0</set>
+          <push state="hit" />
+        </condition>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
           <push state="over" />
@@ -334,6 +342,45 @@
       <inputs>
         <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
+    </state>
+    <!-- hit: the Yar bursts, everything standing still -->
+    <state name="hit">
+      <objects>
+        <object name="wreck">
+          <sprite name="a"><bitmap from="wreck-a" /></sprite>
+          <sprite name="b"><bitmap from="wreck-b" /></sprite>
+          <sprite name="c"><bitmap from="wreck-c" /></sprite>
+          <sprite name="d"><bitmap from="wreck-d" /></sprite>
+          <animation>
+            <seconds>0.12</seconds>
+            <once />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d"><seconds>0.4</seconds></frame>
+          </animation>
+          <position><x update="live">yar.x</x><y update="live">yar.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.4</after>
+          <dec variable="player.lives" />
+          <reset object="yar" />
+          <reset object="missile" />
+          <reset object="swirl" />
+          <reset object="wreck" />
+          <pop />
+        </timer>
+      </timers>
     </state>
     <!-- the Qotile hit: a moment to see it, then the shield is back whole -->
     <state name="destroyed">
@@ -412,6 +459,63 @@
     </sound>
   </sounds>
   <pictures>
+    <!-- a burst, four pictures: a flash, a ball, its pieces flying, the last sparks -->
+    <bitmap name="wreck-a">
+      <row>.........</row>
+      <row>.........</row>
+      <row>....*....</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>....*....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="wreck-b">
+      <row>.........</row>
+      <row>..*...*..</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>.*oo.oo*.</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>..*...*..</row>
+      <row>.........</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="wreck-c">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...o.o...</row>
+      <row>..o...o..</row>
+      <row>*.......*</row>
+      <row>..o...o..</row>
+      <row>...o.o...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="wreck-d">
+      <row>o.......o</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>....o....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>o.......o</row>
+      <scale>4</scale>
+      <color>color.magenta</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
     <bitmap name="swirl-one">
       <row>..**....</row>
       <row>...**...</row>

@@ -357,10 +357,14 @@ TEST_CASE("yarsrevenge.xml: the missile homes on Yar, and the neutral zone keeps
 	play.frames(2);
 	CHECK(play.get("player").variable.at("lives") == Approx(4));
 
-	// Out of it, it costs a Yar and goes back to the Qotile.
+	// Out of it, it bursts Yar, costs one and goes back to the Qotile.
 	play.get("yar").position = { 100, 300 };
 	play.get("missile").position = { 104, 304 };
 	play.frames(2);
+	CHECK(play.state() == "hit"); // he bursts first, everything standing still
+	CHECK(play.get("player").variable.at("lives") == Approx(4));
+	play.frames(90);
+	CHECK(play.state() == "playing");
 	CHECK(play.get("player").variable.at("lives") == Approx(3));
 	CHECK(play.get("yar").position.x == Approx(60));
 	CHECK(play.get("missile").position.x > 600.0f);
