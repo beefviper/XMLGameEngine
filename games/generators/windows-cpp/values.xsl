@@ -4,10 +4,10 @@
 <!-- author: beefviper -->
 <!-- date: Nov 13, 2026 -->
 
-<!-- A value of the game as a C++ expression, worked out in the order the
-     engine works it out (load/expr): an operation's values one after the
-     other from the first, so a * b * c is (a * b) * c in both. A name is the
-     constant or local it is written as; a number with a point is a float. -->
+<!-- A value of the game as a C++ expression: an operation's values one
+     after the other from the first, so a * b * c is (a * b) * c, as the file
+     nests it. A name is the constant or local it is written as; a number
+     with a point is a float. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -29,7 +29,7 @@
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="local-name($tag) = 'random'">
-        <xsl:text>randomBetween(</xsl:text>
+        <xsl:text>between(</xsl:text>
         <xsl:call-template name="value"><xsl:with-param name="node" select="$tag/min" /><xsl:with-param name="self" select="$self" /></xsl:call-template>
         <xsl:text>, </xsl:text>
         <xsl:call-template name="value"><xsl:with-param name="node" select="$tag/max" /><xsl:with-param name="self" select="$self" /></xsl:call-template>

@@ -101,7 +101,6 @@ set(data_generators
 	"games/generators/windows-cpp/covers.xsl"
 	"games/generators/windows-cpp/game.xsl"
 	"games/generators/windows-cpp/program.xsl"
-	"games/generators/windows-cpp/runtime.xml"
 	"games/generators/windows-cpp/verbs/bounce.xsl"
 	"games/generators/windows-cpp/verbs/deflect.xsl"
 	"games/generators/windows-cpp/verbs/move.xsl"

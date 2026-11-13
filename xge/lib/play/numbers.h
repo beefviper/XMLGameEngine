@@ -10,9 +10,8 @@
 namespace xge
 {
 	// The operations of one number a game's values are written with
-	// (<sign>, <sine>, <cosine>), worked out the one way: load/expr calls
-	// these for a game file, and a generated game calls them for its own
-	// numbers, so the two come out the same to the last bit.
+	// (<sign>, <sine>, <cosine>), as load/expr works them out for a game
+	// file.
 
 	// <sign>: 1 above 0, -1 below, 0 at 0.
 	inline float sign(float x) noexcept

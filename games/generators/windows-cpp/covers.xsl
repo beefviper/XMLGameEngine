@@ -54,6 +54,9 @@
   <xsl:template match="game/variables/variable[.//random]" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;random&gt; in the game variables'" /></xsl:call-template>
   </xsl:template>
+  <xsl:template match="group/collisions/collision[not(@edge)]" mode="covers" priority="2">
+    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; on a touch in a group'" /></xsl:call-template>
+  </xsl:template>
   <xsl:template match="group/variables | member/variables | member/sprite" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;', local-name(), '&gt; of a group or member')" /></xsl:call-template>
   </xsl:template>
@@ -64,14 +67,14 @@
   <!-- The parts covered: the game, its window and numbers, one state of
        objects and groups of rectangles, their rules, actions and keys. -->
   <xsl:template mode="covers" match="
-      game | game/window | window/width | window/height | window/scale | window/background
-      | window/fullscreen | window/framerate | game/variables | variables/variable
+      game | game/window | window/width | window/height | window/framerate
+      | game/variables | variables/variable
       | game/states | states/state | state/objects | state/inputs
       | objects/object | objects/group | group/member
       | object/sprite | object/position | object/velocity | object/collisions | object/variables | object/actions
       | group/sprite | group/collisions | group/actions
       | member/position | member/velocity
-      | sprite/rectangle | rectangle/width | rectangle/height | rectangle/color
+      | sprite/rectangle | rectangle/width | rectangle/height
       | position/x | position/y | velocity/x | velocity/y
       | collisions/collision | actions/action | inputs/input | input/button
       | add | subtract | multiply | divide | sign | sine | cosine | value
@@ -84,7 +87,8 @@
       | input/@button" />
 
   <!-- A name in a value must be one the program has: a number, the
-       window's sides, a variable of the game, or one of the object's own. -->
+       window's sides, a variable of the game, or, where it starts (its
+       position, velocity and variables), one of the object's own. -->
   <xsl:template mode="covers" match="text()[normalize-space(.) != ''][parent::width or parent::height or parent::x or parent::y
       or parent::value or parent::min or parent::max or parent::variable or parent::move or parent::bounce or parent::deflect]">
     <xsl:variable name="text" select="normalize-space(.)" />
@@ -94,7 +98,7 @@
         or $text = 'window.width' or $text = 'window.height' or $text = 'window.left' or $text = 'window.right'
         or $text = 'window.top' or $text = 'window.bottom'
         or /game/variables/variable[@name = $text]
-        or ($self and (starts-with($text, concat($self/@name, '.')) or starts-with($text, 'self.')) and $self/variables/variable[@name = $own]))">
+        or ($self and (ancestor::position or ancestor::velocity or ancestor::variable) and (starts-with($text, concat($self/@name, '.')) or starts-with($text, 'self.')) and $self/variables/variable[@name = $own]))">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('the name ', $quote, $text, $quote)" /></xsl:call-template>
     </xsl:if>
   </xsl:template>

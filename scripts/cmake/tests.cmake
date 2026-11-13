@@ -148,9 +148,9 @@ add_executable(xgetest
 # cli.cpp and generate.cpp are xgecli's own code, compiled in again here so
 # test_cli.cpp and test_generate.cpp can call it; the library does not contain
 # it (see executables.cmake). pong_min.cpp and pong.cpp are the hand-written
-# Pongs (games/prototypes/): test_prototype_pong.cpp plays pong_min beside the
-# engine, test_prototype_pong_full.cpp checks what the stand-alone pong does.
-target_include_directories(xgetest PRIVATE xge/cli/include xge/tests/helpers games/prototypes/pong_min/source games/prototypes/pong/source)
+# Pongs (games/prototypes/), stand-alone on SFML: test_prototype_pong.cpp and
+# test_prototype_pong_full.cpp check what they do.
+target_include_directories(xgetest PRIVATE xge/cli/include xge/tests xge/tests/helpers games/prototypes/pong_min/source games/prototypes/pong/source)
 
 target_compile_features(xgetest PRIVATE cxx_std_20)
 
@@ -191,7 +191,7 @@ add_executable(xgetest-generated EXCLUDE_FROM_ALL
 	"xge/tests/helpers/test_main.cpp"
 	"xge/tests/generated/test_generated_games.cpp"
 	"xge/tests/generated/test_written_games.cpp"
-	"xge/tests/generated/written.h"
+	"xge/tests/written/pong_min.h"
 )
 # Visual Studio's Build Solution leaves it out too.
 set_target_properties(xgetest-generated PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD ON)
@@ -254,12 +254,12 @@ file(WRITE "${XGE_GENERATED_DIR}/generated_games.h.in"
 	"struct GeneratedGame\n{\n\tconst char* file;\n\txge::GameData (*describe)();\n};\n\n"
 	"inline const GeneratedGame generatedGames[] = {\n${generated_entries}};\n")
 configure_file("${XGE_GENERATED_DIR}/generated_games.h.in" "${XGE_GENERATED_DIR}/generated_games.h" COPYONLY)
-target_include_directories(xgetest-generated PRIVATE "${XGE_GENERATED_DIR}" xge/tests/helpers xge/tests/generated)
+target_include_directories(xgetest-generated PRIVATE "${XGE_GENERATED_DIR}" xge/tests xge/tests/helpers xge/tests/generated)
 
 # The games windows-cpp writes (plan A5), each with the class it is written
 # as, a line for each it learns: generated into build/generated/windows-cpp/
-# and compiled in, so test_written_games.cpp plays each beside its file.
-# test_generate.cpp holds the same list.
+# and compiled in, so test_written_games.cpp plays each with its checks
+# (xge/tests/written/<game>.h). test_generate.cpp holds the same list.
 set(windows_cpp_games
 	"pong_min=pong_min::Pong")
 set(written_includes "")
@@ -276,8 +276,8 @@ foreach(entry IN LISTS windows_cpp_games)
 		DEPENDS xgecli xgedata "${CMAKE_CURRENT_SOURCE_DIR}/games/descriptions/${game}.xml" ${generator_files}
 		COMMENT "Generating ${game}.xml as windows-cpp for the tests")
 	target_sources(xgetest-generated PRIVATE "${folder}/source/${game}.cpp")
-	string(APPEND written_includes "#include \"windows-cpp/${game}/source/${game}.h\"\n")
-	string(APPEND written_entries "\t{ \"descriptions/${game}.xml\", [] { return written<${class}>(); } },\n")
+	string(APPEND written_includes "#include \"windows-cpp/${game}/source/${game}.h\"\n#include \"written/${game}.h\"\n")
+	string(APPEND written_entries "\t{ \"${game}\", [] { ${game}_plays<${class}>(); } },\n")
 endforeach()
 file(WRITE "${XGE_GENERATED_DIR}/written_games.h.in"
 	"// written_games.h\n"
@@ -287,8 +287,8 @@ file(WRITE "${XGE_GENERATED_DIR}/written_games.h.in"
 	"//\n"
 	"// Written by scripts/cmake/tests.cmake: the games windows-cpp writes.\n\n"
 	"#pragma once\n\n"
-	"#include \"written.h\"\n\n"
 	"${written_includes}\n"
+	"struct WrittenGame\n{\n\tconst char* game;\n\tvoid (*plays)();\n};\n\n"
 	"inline const WrittenGame writtenGames[] = {\n${written_entries}};\n")
 configure_file("${XGE_GENERATED_DIR}/written_games.h.in" "${XGE_GENERATED_DIR}/written_games.h" COPYONLY)
 

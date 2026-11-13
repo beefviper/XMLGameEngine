@@ -1,154 +1,125 @@
 // pong_min.cpp
-// XML Game Engine
+// Pong
 // author: beefviper
-// date: Oct 12, 2026
-//
-// Pong, from pong_min.xml.
-//
-// Each part of the file is the code below that it names, in the file's order;
-// nothing here moves anything itself.
+// date: Nov 13, 2026
 
 #include "pong_min.h"
 
-#include "game/random.h"
-#include "play/numbers.h"
-#include "play/verbs.h"
+#include <algorithm>
+#include <cmath>
 
 namespace pong_min
 {
-	using namespace xge;
-
 	namespace
 	{
-		// <window>
-		const float windowWidth = 1280;
-		const float windowHeight = 720;
+		constexpr float pi = 3.14159265358979f;
 
-		// <variables>
-		const float margin = 30;
-		const float size = 16;
-		const float width = 20;
-		const float height = 120;
-		const float step = 5;
+		float sine(float degrees) { return std::sin(degrees * pi / 180); }
+		float cosine(float degrees) { return std::cos(degrees * pi / 180); }
 
-		// A <rectangle>, white unless it says, that touches what it meets.
-		Object rectangle(const char* name, float across, float down, const char* color = "color.white")
+		float sign(float number) { return number > 0 ? 1.0f : number < 0 ? -1.0f : 0.0f; }
+
+		bool touching(const Thing& a, const Thing& b)
 		{
-			Object object;
-			object.name = name;
-			object.ownerState = "playing";
-			object.picture.kind = ShapeKind::Rectangle;
-			object.picture.size = { across, down };
-			object.picture.color = color;
-			object.collisionsOn = true;
-			return object;
+			return a.position.x < b.position.x + b.size.x && b.position.x < a.position.x + a.size.x
+				&& a.position.y < b.position.y + b.size.y && b.position.y < a.position.y + a.size.y;
 		}
 
-		// Where it starts, and where a reset puts it back.
-		void startAt(Object& object, Vector2f position, Vector2f velocity)
+		// Off the side of `other` it hit, at the same speed, up to `degrees` off
+		// straight out: steeper the further from that side's middle, towards
+		// the end it hit nearer to.
+		void deflect(Thing& thing, const Thing& other, float degrees)
 		{
-			object.position = position;
-			object.velocity = velocity;
-			object.start = object;
+			const sf::Vector2f middle = thing.position + thing.size / 2.0f;
+			const sf::Vector2f otherMiddle = other.position + other.size / 2.0f;
+			const sf::Vector2f apart = middle - otherMiddle;
+			const sf::Vector2f reach = (thing.size + other.size) / 2.0f;
+			const float speed = std::hypot(thing.velocity.x, thing.velocity.y);
+
+			if (reach.x - std::abs(apart.x) < reach.y - std::abs(apart.y))
+			{
+				// its left or right side
+				const float away = apart.x < 0 ? -1.0f : 1.0f;
+				const float angle = degrees * std::clamp(apart.y / (other.size.y / 2), -1.0f, 1.0f);
+				thing.velocity = { away * speed * cosine(angle), speed * sine(angle) };
+				thing.position.x = otherMiddle.x + away * reach.x - thing.size.x / 2;
+			}
+			else
+			{
+				// its top or bottom
+				const float away = apart.y < 0 ? -1.0f : 1.0f;
+				const float angle = degrees * std::clamp(apart.x / (other.size.x / 2), -1.0f, 1.0f);
+				thing.velocity = { speed * sine(angle), away * speed * cosine(angle) };
+				thing.position.y = otherMiddle.y + away * reach.y - thing.size.y / 2;
+			}
 		}
-
-		bool vertical(Edge edge) { return edge == Edge::Top || edge == Edge::Bottom; }
-		bool horizontal(Edge edge) { return edge == Edge::Left || edge == Edge::Right; }
 	}
 
-	Pong::Pong()
+	Pong::Pong(unsigned seed) : random(seed)
 	{
-		window = { "Pong", windowWidth, windowHeight, 1, "color.black", "false", 60 };
-		seedRandom();
-
-		objects.push_back(rectangle("playing.ball", size, size));
-		ball().variable["speed"] = 6;
-		ballStart();
-		startAt(ball(), ball().start.position, ball().start.velocity);
-
-		// <group name="paddles">
-		objects.push_back(rectangle("playing.paddle1", width, height));
-		objects.push_back(rectangle("playing.paddle2", width, height));
-		paddle1().groupName = paddle2().groupName = "playing.paddles";
-		startAt(paddle1(), { margin, windowHeight / 2 - height / 2 }, { 0, 0 });
-		startAt(paddle2(), { windowWidth - margin - width, windowHeight / 2 - height / 2 }, { 0, 0 });
+		startBall();
+		paddle1 = { { margin, windowHeight / 2 - height / 2 }, {}, { width, height } };
+		paddle2 = { { windowWidth - margin - width, windowHeight / 2 - height / 2 }, {}, { width, height } };
 	}
 
-	// Where the ball starts, and starts again after a reset: its
-	// <random>s drawn, then its place and its way from them.
-	void Pong::ballStart()
+	float Pong::between(float min, float max)
 	{
-		Object& self = ball();
-		self.variable["angle"] = self.start.variable["angle"] = randomBetween(-30, 30);
-		self.variable["side"] = self.start.variable["side"] = randomBetween(-1, 1);
-
-		const float speed = self.variable["speed"];
-		const float angle = self.variable["angle"];
-		const float side = self.variable["side"];
-		self.start.position = { windowWidth / 2 - size / 2, windowHeight / 2 - size / 2 };
-		self.start.velocity = { sign(side) * speed * cosine(angle), speed * sine(angle) };
+		return std::uniform_real_distribution<float>(min, max)(random);
 	}
 
-	// <inputs>
-	void Pong::key(KeyCode key, bool pressed)
+	// Where the ball starts, and starts again.
+	void Pong::startBall()
 	{
+		const float speed = 6;
+		const float angle = between(-30, 30);
+		const float side = between(-1, 1);
+		ball.size = { size, size };
+		ball.position = { windowWidth / 2 - size / 2, windowHeight / 2 - size / 2 };
+		ball.velocity = { sign(side) * speed * cosine(angle), speed * sine(angle) };
+	}
+
+	void Pong::key(sf::Keyboard::Key key, bool down)
+	{
+		using Key = sf::Keyboard::Key;
 		switch (key)
 		{
-		case KeyCode::W: holdMove(paddle1(), Direction::Up, step, pressed); break;
-		case KeyCode::S: holdMove(paddle1(), Direction::Down, step, pressed); break;
-		case KeyCode::Up: holdMove(paddle2(), Direction::Up, step, pressed); break;
-		case KeyCode::Down: holdMove(paddle2(), Direction::Down, step, pressed); break;
+		case Key::W: wHeld = down; break;
+		case Key::S: sHeld = down; break;
+		case Key::Up: upHeld = down; break;
+		case Key::Down: downHeld = down; break;
 		default: break;
 		}
 	}
 
 	void Pong::frame()
 	{
-		playOneFrame(objects, window, *this);
-	}
+		// the keys held
+		paddle1.velocity = {};
+		if (wHeld) { paddle1.velocity.y -= step; }
+		if (sHeld) { paddle1.velocity.y += step; }
+		paddle2.velocity = {};
+		if (upHeld) { paddle2.velocity.y -= step; }
+		if (downHeld) { paddle2.velocity.y += step; }
 
-	// The one state shows everything it owns.
-	bool Pong::inPlay(const Object& object)
-	{
-		return object.isVisible;
-	}
+		// everything moves
+		ball.position += ball.velocity;
+		paddle1.position += paddle1.velocity;
+		paddle2.position += paddle2.velocity;
 
-	// At the window's edges: each one's <collision edge>s.
-	void Pong::atEdge(Object& object, Edge edge)
-	{
-		if (isBall(object))
+		// at the window's edges
+		if (ball.position.y < 0) { ball.velocity.y = std::abs(ball.velocity.y); }
+		if (ball.position.y > windowHeight - ball.size.y) { ball.velocity.y = -std::abs(ball.velocity.y); }
+		if (ball.position.x < 0 || ball.position.x > windowWidth - ball.size.x) { startBall(); }
+		for (Thing* paddle : { &paddle1, &paddle2 })
 		{
-			if (vertical(edge)) { bounceOffEdge(object, edge, 1); }
-			if (horizontal(edge)) { ballStart(); restart(object); }
+			if (paddle->position.y < 0) { paddle->position.y = 0; }
+			if (paddle->position.y > windowHeight - paddle->size.y) { paddle->position.y = windowHeight - paddle->size.y; }
 		}
-		if (inPaddles(object))
+
+		// what meets what
+		for (const Thing* other : { &paddle1, &paddle2 })
 		{
-			if (vertical(edge)) { stick(object, window, edge); }
+			if (touching(ball, *other)) { deflect(ball, *other, 45); }
 		}
-	}
-
-	// What stops at an edge rather than going past it: a <stick />.
-	bool Pong::sticksAt(const Object& object, Edge edge)
-	{
-		return inPaddles(object) && vertical(edge);
-	}
-
-	// Which pairs answer to meeting: a <collision> naming nothing answers to
-	// anything its object meets.
-	bool Pong::canCollide(const Object& a, const Object& b)
-	{
-		return isBall(a) || isBall(b);
-	}
-
-	bool Pong::hasRules(const Object& object)
-	{
-		return isBall(object);
-	}
-
-	// When they meet: each one's <collision>s, done to it.
-	void Pong::touched(Object& a, Object& b, const Contact& contact)
-	{
-		if (isBall(a)) { deflect(a, b, touchOfFirst(contact).edge, 45); }
-		if (isBall(b)) { deflect(b, a, touchOfSecond(contact).edge, 45); }
 	}
 }

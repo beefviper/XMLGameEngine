@@ -20,46 +20,64 @@
 
   <xsl:template name="main-file">
     <xsl:call-template name="header"><xsl:with-param name="file" select="'main.cpp'" /></xsl:call-template>
-    <xsl:value-of select="concat('//&#10;// ', $title, ' on SFML: the keys, a frame at ')" />
+    <xsl:text>//
+// The window: keys in, </xsl:text>
     <xsl:call-template name="framerate" />
-    <xsl:value-of select="concat(' a second, the picture.&#10;&#10;#include &quot;', $name, '.h&quot;&#10;')" />
+    <xsl:value-of select="concat(' frames a second, the picture out.&#10;&#10;#include &quot;', $name, '.h&quot;&#10;')" />
     <xsl:text>
-#include "engine/keys.h"
-#include "window/sfml.h"
-#include "window/window.h"
+#include &lt;SFML/Graphics.hpp&gt;
 
-#include &lt;chrono&gt;
-#include &lt;thread&gt;
+#include &lt;optional&gt;
+
+namespace
+{
+	void draw(sf::RenderWindow&amp; window, const </xsl:text>
+    <xsl:call-template name="namespace-name" />
+    <xsl:text>::Thing&amp; thing)
+	{
+		sf::RectangleShape shape(thing.size);
+		shape.setPosition(thing.position);
+		shape.setFillColor(sf::Color::White);
+		window.draw(shape);
+	}
+}
 
 int main()
 {
-	</xsl:text>
+	using namespace </xsl:text>
     <xsl:call-template name="namespace-name" />
-    <xsl:text>::</xsl:text>
+    <xsl:text>;
+
+	sf::RenderWindow window(sf::VideoMode({ static_cast&lt;unsigned&gt;(windowWidth), static_cast&lt;unsigned&gt;(windowHeight) }), </xsl:text>
+    <xsl:call-template name="string"><xsl:with-param name="text" select="$title" /></xsl:call-template>
+    <xsl:text>);
+	window.setFramerateLimit(</xsl:text>
+    <xsl:call-template name="framerate" />
+    <xsl:text>);
+	window.setKeyRepeatEnabled(false);
+
+	</xsl:text>
     <xsl:call-template name="class-name" />
     <xsl:text> game;
-
-	xge::SFMLWindow window(game.window);
-	window.init(game.objects);
-
-	using Clock = std::chrono::steady_clock;
-	const auto period = std::chrono::duration_cast&lt;Clock::duration&gt;(std::chrono::duration&lt;double&gt;(1.0 / game.window.framerate));
-	auto next = Clock::now();
-
-	xge::HeldKeys keys;
 	while (window.isOpen())
 	{
-		for (const auto&amp; [key, pressed] : window.pollEvents())
+		while (const std::optional event = window.pollEvent())
 		{
-			if (!pressed) { keys.release(key); game.key(key, false); }
-			else if (keys.press(key)) { game.key(key, true); }
+			if (event-&gt;is&lt;sf::Event::Closed&gt;()) { window.close(); }
+			if (const auto* key = event-&gt;getIf&lt;sf::Event::KeyPressed&gt;()) { game.key(key-&gt;code, true); }
+			if (const auto* key = event-&gt;getIf&lt;sf::Event::KeyReleased&gt;()) { game.key(key-&gt;code, false); }
 		}
 
 		game.frame();
-		xge::drawFrame(window, game.objects, game.window.background, [&amp;](const xge::Object&amp; object) { return game.inPlay(object); });
 
-		next += period;
-		std::this_thread::sleep_until(next);
+		window.clear(sf::Color::Black);
+</xsl:text>
+    <xsl:for-each select="$objects">
+      <xsl:text>&#9;&#9;draw(window, game.</xsl:text>
+      <xsl:call-template name="object-name" />
+      <xsl:text>);&#10;</xsl:text>
+    </xsl:for-each>
+    <xsl:text>		window.display();
 	}
 }
 </xsl:text>
@@ -75,7 +93,7 @@ int main()
   <xsl:template name="cmake-file">
     <xsl:text># CMakeLists.txt
 # </xsl:text>
-    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate windows-cpp.')" />
+    <xsl:value-of select="concat($title, ', from ', $source, '.')" />
     <xsl:text>
 
 cmake_minimum_required(VERSION 3.28)
@@ -106,15 +124,9 @@ add_executable(</xsl:text>
 	source/main.cpp
 	source/</xsl:text>
     <xsl:value-of select="concat($name, '.h&#10;&#9;source/', $name, '.cpp&#10;')" />
-    <xsl:text>	# the engine's small functions it calls, as they are in xge/lib/
-</xsl:text>
-    <xsl:for-each select="$runtime">
-      <xsl:value-of select="concat('&#9;engine/', substring-after(., '/'), '&#10;')" />
-    </xsl:for-each>
-    <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics)&#10;')" />
+    <xsl:value-of select="concat(')&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics)&#10;')" />
     <xsl:text>
-# The warnings the engine is built with (xge_warnings in its
-# scripts/cmake/platform.cmake), for its code and the game's alike.
+# Every warning worth having, kept at zero.
 target_compile_options(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> PRIVATE
@@ -153,19 +165,15 @@ endif()
   </xsl:template>
 
   <xsl:template name="readme-file">
-    <xsl:value-of select="concat('# ', $title, '&#10;&#10;Generated from `', $source, '` by `xgecli --generate windows-cpp`: the game written&#10;')" />
-    <xsl:text>as a person would write it, a program of its own on SFML 3. Its numbers are
-constants, its objects variables and its rules functions; it calls the engine's
-own small functions (the frame's order, bounce, deflect, stick, the numbers),
-copied into `engine/`, so it plays as xgecli plays the file.
+    <xsl:value-of select="concat('# ', $title, '&#10;&#10;', $title, ' from `', $source, '`, written as a small program of its own on SFML 3.&#10;')" />
+    <xsl:text>
 
 | File | What |
 |---|---|
 | `source/</xsl:text>
-    <xsl:value-of select="concat($name, '.cpp` | the game: its numbers, its objects in order, what happens at an edge, on a touch and on a key |&#10;| `source/', $name, '.h` | its class |&#10;')" />
-    <xsl:text>| `source/main.cpp` | the loop: keys, a frame, the picture, on SFML |
-| `engine/` | the engine's small functions it calls, as they are in its `xge/lib/` |
-| `LICENSE` | the engine's licence (MIT), which goes with its code |
+    <xsl:value-of select="concat($name, '.h` | its numbers, its things and its class |&#10;| `source/', $name, '.cpp` | its rules: where things start, the keys, and a frame |&#10;')" />
+    <xsl:text>| `source/main.cpp` | the window: keys in, the picture out |
+| `LICENSE` | the licence (MIT) |
 | `CMakeLists.txt` | the build; it uses installed SFML 3, or downloads and builds it |
 | `.gitignore` | leaves out `build/` and `output/` |
 

@@ -284,15 +284,17 @@ TEST_CASE("windows-cpp writes pong_min as the hand-written one in games/prototyp
 		CHECK(undated(readFile(out / "source" / file)) == undated(readFile(written / file)));
 	}
 
-	// its build compiles the engine's small functions, and no Game, loader or XML
+	// it stands alone: SFML and nothing of the engine, nowhere named
 	const std::string build = readFile(out / "CMakeLists.txt");
-	CHECK(build.find("engine/play/frame.cpp") != std::string::npos);
 	CHECK(build.find("SFML::Graphics") != std::string::npos);
-	CHECK(build.find("game.cpp") == std::string::npos);
-	CHECK(build.find("load/") == std::string::npos);
-	CHECK(build.find("xml/") == std::string::npos);
-	CHECK(fs::exists(out / "engine/play/verbs.cpp"));
-	CHECK_FALSE(fs::exists(out / "engine/game/game.cpp"));
+	CHECK_FALSE(fs::exists(out / "engine"));
+	for (const char* file : { "source/pong_min.h", "source/pong_min.cpp", "source/main.cpp", "CMakeLists.txt", "README.md" })
+	{
+		INFO(file);
+		const std::string text = readFile(out / file);
+		CHECK(text.find("xge") == std::string::npos);
+		CHECK(text.find("XML Game Engine") == std::string::npos);
+	}
 	CHECK(fs::exists(out / "LICENSE"));
 }
 

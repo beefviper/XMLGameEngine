@@ -5,11 +5,11 @@
 <!-- date: Nov 13, 2026 -->
 
 <!-- The windows-cpp target: a game file in, a program of its own out, written
-     as a person would write that one game over a weekend, on SFML 3. Its
-     numbers are constants, its objects variables, its rules functions; it
-     calls the engine's own small functions for the work (the frame's order,
-     bounce, deflect, stick, the numbers), copied in beside it (runtime.xml),
-     so it plays as xgecli plays the file. No Game, no reader, no XML.
+     as a person would write that one game over a weekend, on SFML 3 and
+     nothing else. Its numbers are constants, its objects Things (where, how
+     fast, how big), its rules plain code in one frame() and a few small
+     functions. It does what the file says, in its own words: nothing of the
+     engine goes with it, and nothing in it names the engine.
 
      Run by xgecli (xge/cli/source/generate.cpp) with libxslt, after the engine
      has read and checked the game. It writes source/<game>.h and .cpp (the
@@ -44,8 +44,6 @@
   <xsl:param name="source" select="concat($name, '.xml')" />
   <xsl:param name="function" select="'game'" />
   <xsl:param name="date" select="''" />
-
-  <xsl:variable name="runtime" select="document('runtime.xml')/runtime/file" />
 
   <xsl:template match="/">
     <xsl:if test="not(game)">
@@ -94,16 +92,14 @@ output/
       <file path="CMakeLists.txt" />
       <file path="README.md" />
       <file path=".gitignore" />
-      <xsl:for-each select="$runtime">
-        <engine path="engine/{substring-after(., '/')}" from="{.}" />
-      </xsl:for-each>
       <license path="LICENSE" from="LICENSE" />
     </generated>
   </xsl:template>
 
-  <!-- The block every C++ file of the program starts with. -->
+  <!-- The block every C++ file of the program starts with: the game's own
+       name where the engine's files say the engine's. -->
   <xsl:template name="header">
     <xsl:param name="file" />
-    <xsl:value-of select="concat('// ', $file, '&#10;// XML Game Engine&#10;// author: beefviper&#10;// date: ', $date, '&#10;')" />
+    <xsl:value-of select="concat('// ', $file, '&#10;// ', $title, '&#10;// author: beefviper&#10;// date: ', $date, '&#10;')" />
   </xsl:template>
 </xsl:stylesheet>
