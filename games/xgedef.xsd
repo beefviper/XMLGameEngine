@@ -1264,7 +1264,6 @@
   </xs:complexType>
 
   <!-- thrust: how much to add to the velocity each frame along the heading, and optionally the variable it burns. -->
-  <!-- deflect: the widest angle, in degrees, a bounce off another object leaves at (at the ends of the side it hit). -->
   <xs:complexType name="deflectType" mixed="true">
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
@@ -1668,7 +1667,11 @@
   <xs:group name="touchCommands">
     <xs:choice>
       <xs:element name="carry" type="emptyType" />
-      <xs:element name="deflect" type="deflectType" />
+      <xs:element name="deflect" type="deflectType">
+        <xs:annotation>
+          <xs:documentation>Bounces off the object touched, leaving at up to this many degrees (the content) by where along the side it hit: straight back at the middle, the widest at the ends. The speed is kept (Pong).</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="hole" type="holeType" />
       <xs:element name="knock" type="knockType" />
       <!-- land: stand on top of the object touched; jump: up off the ground that high, under the object's own pull -->

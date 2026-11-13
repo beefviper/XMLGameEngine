@@ -976,3 +976,53 @@ TEST_CASE("the state a game starts in is never popped", "[xml_format][states]")
 
 	CHECK_THROWS_AS(loaded.game.pushState("nowhere"), std::out_of_range);
 }
+
+TEST_CASE("the engine's own schema checker reads past documentation wherever XSD allows it", "[xml_format][schema]")
+{
+	// xgedef.xsd documents its elements with xs:annotation; one in each
+	// place XSD allows it must change nothing the checker decides.
+	const ScratchFile schema{ scratchName("descriptions/annotated.xsd") };
+	std::ofstream(schema.path) << "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\n"
+		"  <xs:annotation><xs:documentation>The schema.</xs:documentation></xs:annotation>\n"
+		"  <xs:simpleType name=\"sideType\">\n"
+		"    <xs:annotation><xs:documentation>A side.</xs:documentation></xs:annotation>\n"
+		"    <xs:restriction base=\"xs:string\"><xs:enumeration value=\"left\" /><xs:enumeration value=\"right\" /></xs:restriction>\n"
+		"  </xs:simpleType>\n"
+		"  <xs:complexType name=\"wallType\">\n"
+		"    <xs:annotation><xs:documentation>A wall.</xs:documentation></xs:annotation>\n"
+		"    <xs:sequence>\n"
+		"      <xs:annotation><xs:documentation>Its parts.</xs:documentation></xs:annotation>\n"
+		"      <xs:element name=\"height\" type=\"xs:float\">\n"
+		"        <xs:annotation><xs:documentation>How high.</xs:documentation></xs:annotation>\n"
+		"      </xs:element>\n"
+		"    </xs:sequence>\n"
+		"    <xs:attribute name=\"side\" type=\"sideType\" use=\"required\">\n"
+		"      <xs:annotation><xs:documentation>Which side.</xs:documentation></xs:annotation>\n"
+		"    </xs:attribute>\n"
+		"  </xs:complexType>\n"
+		"  <xs:element name=\"walls\">\n"
+		"    <xs:annotation><xs:documentation>The walls.</xs:documentation></xs:annotation>\n"
+		"    <xs:complexType>\n"
+		"      <xs:choice maxOccurs=\"unbounded\">\n"
+		"        <xs:annotation><xs:documentation>Any number.</xs:documentation></xs:annotation>\n"
+		"        <xs:element name=\"wall\" type=\"wallType\" />\n"
+		"      </xs:choice>\n"
+		"    </xs:complexType>\n"
+		"  </xs:element>\n"
+		"</xs:schema>\n";
+
+	XsdLiteValidator validator;
+	REQUIRE(validator.loadSchema(schema.path.string(), XmlBackend::TinyXml2));
+	const auto judged = [&](const std::string& xml)
+	{
+		const ScratchFile file{ scratchName("descriptions/annotated.xml") };
+		std::ofstream(file.path) << xml;
+		auto document = XmlDocumentFactory::create(XmlBackend::TinyXml2);
+		REQUIRE(document->load(file.path.string()));
+		return validator.validate(*document->getRootElement());
+	};
+	CHECK(judged("<walls><wall side=\"left\"><height>3</height></wall><wall side=\"right\"><height>4</height></wall></walls>"));
+	CHECK_FALSE(judged("<walls><wall side=\"up\"><height>3</height></wall></walls>"));
+	CHECK_FALSE(judged("<walls><wall side=\"left\"><width>3</width></wall></walls>"));
+	CHECK_FALSE(judged("<walls><wall side=\"left\"><height>3</height><documentation /></wall></walls>"));
+}

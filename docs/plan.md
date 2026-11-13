@@ -171,7 +171,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 - **Needs** nothing.
 - **Why.** The XSD is the definition of the language, but its comments are `<!-- -->`, which no tool reads, so an editor shows nothing on hover.
 - **Steps.**
-  - [ ] **1. Make sure annotations are harmless (S).** Add one `xs:annotation`/`xs:documentation` to one element. **Check:** every game still validates with Xerces and with the weak validator (`xge/lib/load/xsd.cpp`); if the weak one trips, teach it to skip annotations, with a test.
+  - [x] **1. Make sure annotations are harmless (S).** Add one `xs:annotation`/`xs:documentation` to one element. **Check:** every game still validates with Xerces and with the weak validator (`xge/lib/load/xsd.cpp`); if the weak one trips, teach it to skip annotations, with a test.
   - [ ] **2. Move the comments, a section of the schema a commit (M in all).** Each comment that describes an element or type becomes that element's `xs:documentation`. **Check after each commit:** every game validates; at the end, hovering `<deflect>` in VS Code with the XML extension shows its sentence (the author looks).
   - [ ] **3. Tighter attribute types (S).** Of the `xs:string` attributes, those that hold one name become `xs:NMTOKEN`, and those that pick from a list (`on=`, `side=`, `total=`) an enumeration. Dotted names (`variable="ball.hits"`) stay strings. **Check:** every game validates, and a test file with a bad pick is refused by the schema.
 - **Held by the author:** generating `docs/reference/words.md` from the schema. The word index in `docs/readme.md` stays hand made, with its groups, for now.
