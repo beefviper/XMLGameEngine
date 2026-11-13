@@ -35,7 +35,8 @@
     and the bat <wander>s them (both walk the floor's map, <maze>); the ghost
     <chase>s through the walls. One that touches the eyes goes back to its
     start (<reset />), and the eyes' own rule for class creature takes the
-    life.
+    life and shows their look "scared": they flash red and blink, an
+    animation played <once />, then look as before.
   * The eyes have a <light>, how far round them things can be seen. A match
     puts it up (<set variable="player.light">), and a timer of the eyes
     burns it back down, a little every tenth of a second.
@@ -187,9 +188,27 @@
       <objects>
         <!-- the eyes: always seen, and they light a little round them -->
         <object name="player">
-          <sprite>
+          <sprite name="open">
             <bitmap from="player" />
           </sprite>
+          <sprite name="shut">
+            <bitmap from="player-shut" />
+          </sprite>
+          <sprite name="red">
+            <bitmap from="player-red" />
+          </sprite>
+          <!-- caught: the eyes flash red and blink, once -->
+          <animation name="scared">
+            <seconds>0.1</seconds>
+            <once />
+            <frame sprite="red" />
+            <frame sprite="shut" />
+            <frame sprite="red" />
+            <frame sprite="shut" />
+            <frame sprite="red" />
+            <frame sprite="shut" />
+            <frame sprite="red"><seconds>0.3</seconds></frame>
+          </animation>
           <position><x><add><value>tile</value><value>11</value></add></x><y>
             <add>
               <value><multiply><value>tile</value><value>12</value></multiply></value>
@@ -209,6 +228,7 @@
               <dec variable="player.lives" />
               <set variable="player.light">near</set>
               <play sound="caught" />
+              <become sprite="scared" />
             </collision>
             <collision class="up">
               <enter way="up" />
@@ -666,6 +686,15 @@
     <bitmap name="player">
       <row>**..**</row><row>*.**.*</row><row>**..**</row>
       <scale>3</scale>
+    </bitmap>
+    <bitmap name="player-shut">
+      <row>......</row><row>******</row><row>......</row>
+      <scale>3</scale>
+    </bitmap>
+    <bitmap name="player-red">
+      <row>**..**</row><row>*.**.*</row><row>**..**</row>
+      <scale>3</scale>
+      <color>color.red</color>
     </bitmap>
     <bitmap name="stairs"><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap>
     <bitmap name="key">

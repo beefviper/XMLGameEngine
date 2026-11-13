@@ -268,7 +268,7 @@ TEST_CASE("hauntedhouse.xml: the key goes with the eyes and opens a locked door,
 	CHECK_FALSE(piece.isVisible);
 }
 
-TEST_CASE("hauntedhouse.xml: a creature that reaches the eyes costs a life, blows out the match and goes back", "[dark][hauntedhouse]")
+TEST_CASE("hauntedhouse.xml: a creature that reaches the eyes costs a life, makes them flash, blows out the match and goes back", "[dark][hauntedhouse]")
 {
 	House play;
 	Object& spider = play.get("playing.floor1.spider");
@@ -285,6 +285,11 @@ TEST_CASE("hauntedhouse.xml: a creature that reaches the eyes costs a life, blow
 	CHECK(play.eyes().light == Approx(40));
 	CHECK(spider.position.x == Approx(start.x));
 	CHECK(spider.position.y == Approx(start.y));
+
+	// The eyes flash red and blink, then look as before.
+	CHECK(play.eyes().lookName() == "scared");
+	play.frames(60);
+	CHECK(play.eyes().lookName() == "open");
 }
 
 TEST_CASE("hauntedhouse.xml: the whole urn brought back to the door wins, and no lives left loses", "[dark][hauntedhouse]")
