@@ -24,8 +24,8 @@
     <fire>s goes straight at where the sight is. Each trail is a <tether>
     from the base to one counter-missile, in play while it is.
   * A counter-missile that meets the sight <spawn>s a burst there, whose
-    <animation> grows and shrinks, tested by its pixels, and which
-    <despawn />s on a timer of its own.
+    <animation> grows and shrinks <once />, tested by its pixels, and
+    <then> <despawn />s.
   * A missile is a streak of one line with a <heading>; it <chase>s the
     nearest city still standing, worked out again on a timer, and turns
     to point the way it goes. One that is done (shot down, or landed) is
@@ -110,19 +110,17 @@
       </sprite>
       <animation>
         <seconds>0.15</seconds>
+        <once />
         <frame sprite="small" />
         <frame sprite="middle" />
-        <frame sprite="full" />
-        <frame sprite="full" />
+        <frame sprite="full"><seconds>0.3</seconds></frame>
         <frame sprite="middle" />
+        <then><despawn /></then>
       </animation>
       <most>3</most>
       <collisions>
         <type>pixel</type>
       </collisions>
-      <timers>
-        <timer><every>0.75</every><despawn /></timer>
-      </timers>
     </object>
   </objects>
   <states>

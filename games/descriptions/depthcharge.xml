@@ -22,9 +22,9 @@
     charge for its lane's worth, self.worth), with a group inside it for
     each lane: its color, depth, speed, worth and boats. A sunk boat comes
     back where it started, on a timer of the playing state.
-  * A sunk boat <spawn>s a burst, an animated picture, where it
-    sank, which <despawn>s itself on its own timer. Mines are spawned the
-    same way.
+  * A sunk boat <spawn>s a burst, an animation played <once />, where
+    it sank, which <then> <despawn>s itself. Mines are spawned the same
+    way.
   * The sonar ping is the playing state's <music>.
   Not in it: the time given back for a high score, the charges' depth
   setting.
@@ -80,12 +80,15 @@
       </sprite>
       <animation>
         <seconds>0.1</seconds>
+        <once />
         <frame sprite="flash" />
         <frame sprite="spray" />
+        <frame sprite="flash" />
+        <frame sprite="spray" />
+        <frame sprite="flash" />
+        <frame sprite="spray" />
+        <then><despawn /></then>
       </animation>
-      <timers>
-        <timer><every>0.6</every><despawn /></timer>
-      </timers>
     </object>
   </objects>
   <states>

@@ -128,15 +128,14 @@
       </sprite>
       <animation>
         <seconds>0.08</seconds>
+        <once />
         <frame sprite="a" />
         <frame sprite="b" />
         <frame sprite="c" />
         <frame sprite="d" />
+        <then><despawn /></then>
       </animation>
       <most>2</most>
-      <timers>
-        <timer><after>0.32</after><despawn /></timer>
-      </timers>
     </object>
   </objects>
   <keeps>
