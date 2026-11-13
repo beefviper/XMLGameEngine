@@ -331,10 +331,14 @@ namespace xge
 
 	void lookWithAnimations(RawObject& object, const std::vector<RawSprite>& sprites, const std::vector<RawFrames>& animations, const std::string& where)
 	{
+		// The animations that go round first, then the sprites, then those
+		// played once: an object starts as the first, and never as a look
+		// that plays once.
 		std::vector<RawSprite> looks;
+		std::vector<RawSprite> played;
 		for (const RawFrames& animation : animations)
 		{
-			if (animation.frames.size() < 2) { throw std::runtime_error(where + ": <animation name=\"" + animation.name + "\"> needs at least two <frame>s"); }
+			if (animation.frames.size() < (animation.once ? 1u : 2u)) { throw std::runtime_error(where + ": <animation name=\"" + animation.name + "\"> needs at least two <frame>s (one, with <once />)"); }
 
 			RawSprite look;
 			for (const std::string& name : animation.frames)
@@ -356,13 +360,14 @@ namespace xge
 			look.once = animation.once;
 			look.thenSprite = animation.thenSprite;
 			look.thenCommands = animation.thenCommands;
-			looks.push_back(std::move(look));
+			(animation.once ? played : looks).push_back(std::move(look));
 		}
 		for (const RawSprite& sprite : sprites)
 		{
 			if (sprite.name.empty()) { throw std::runtime_error(where + ": has <animation name=\"...\">s, so its sprites are looks too, and every one needs a name"); }
 			looks.push_back(sprite);
 		}
+		for (RawSprite& look : played) { looks.push_back(std::move(look)); }
 		for (std::size_t i = 0; i < looks.size(); ++i)
 		{
 			for (std::size_t j = i + 1; j < looks.size(); ++j)
@@ -946,7 +951,8 @@ namespace xge
 
 	bool Object::advanceAnimation()
 	{
-		if (animationBitmaps.size() < 2 || animationFrames < 1 || animationDone) { return false; }
+		// One picture moves on only to end, when it plays once.
+		if (animationBitmaps.size() < (animationOnce ? 1u : 2u) || animationFrames < 1 || animationDone) { return false; }
 
 		const int due = animationTimes.empty() ? animationFrames : animationTimes[animationIndex];
 		if (++animationTick < due) { return false; }

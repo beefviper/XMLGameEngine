@@ -954,7 +954,7 @@ namespace xge
 			if (object.placed) { object.remember(); }
 
 			const std::size_t look = object.look;
-			if (object.animationBitmaps.size() > 1 && rules.inPlay(object) && object.advanceAnimation()) { ended.emplace_back(i, look); }
+			if (!object.animationBitmaps.empty() && rules.inPlay(object) && object.advanceAnimation()) { ended.emplace_back(i, look); }
 			if (object.blink > 0.0f && rules.inPlay(object)) { object.blink = std::max(0.0f, object.blink - second); }
 		}
 		for (const auto& [index, look] : ended) { rules.animationEnded(index, look); }

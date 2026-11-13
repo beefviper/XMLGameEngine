@@ -761,7 +761,7 @@ namespace xge
 				return;
 			}
 
-			if (animation->frames.size() < 2) { fail(where, "<animation> needs at least two <frame>s"); }
+			if (animation->frames.size() < (animation->once ? 1u : 2u)) { fail(where, "<animation> needs at least two <frame>s (one, with <once />)"); }
 
 			RawAnimation chosen;
 			chosen.interval = animation->interval;

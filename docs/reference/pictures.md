@@ -184,7 +184,7 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
 
 - `<seconds>` is how long each picture shows (above 0); each `<frame>` picks a sprite. At least two frames, all pictures of one size; an unnamed animation shows every sprite.
 - **A frame's own time:** `<frame sprite="closed"><seconds>0.5</seconds></frame>` shows that picture that long; the others keep the animation's `<seconds>`. Cells cut from a sheet take the animation's.
-- **Once:** `<once />` after `<seconds>` plays the frames through one time instead of round and round. A look that moves then goes back to the look shown before it; an object's one animation stays on its last picture. A reset starts it again, and so does `<become>` with its look, from a key, a timer or a touch, even while it is showing.
+- **Once:** `<once />` after `<seconds>` plays the frames through one time instead of round and round (one frame is enough: a look held for a while). A look that moves then goes back to the look shown before it; an object's one animation stays on its last picture. A reset starts it again, and so does `<become>` with its look, from a key, a timer or a touch, even while it is showing.
 - **Then:** a `<then>` after the frames says what comes when a once animation ends. `<then sprite="dead" />` goes to that look instead of the one before; commands in it run as an object's timer's do, the same frame:
 
   ```xml
@@ -225,7 +225,7 @@ An object with several named sprites and no unnamed animation has **looks**. It 
 - **A look tells the next state something**: an end state's `winner` gets `<become object="winner" sprite="player2" />` before it is pushed.
 - `<become object="ghosts" sprite="blue" from="normal" />` changes only those showing `normal`.
 - With a `<heading>` every look is kept to turn. A text with a `<number>` or `<letter>` cannot be a look.
-- **Looks that move.** A named `<animation name="walking">` is a look, picked by name like a sprite. The looks are the named animations in order, then the sprites they leave out. Animations are all named or none.
+- **Looks that move.** A named `<animation name="walking">` is a look, picked by name like a sprite. The looks are the named animations in order, then the sprites, then the animations played `<once />`, so an object never starts as one of those. Animations are all named or none.
 
 ## Poses, mirror, grip and blinking
 

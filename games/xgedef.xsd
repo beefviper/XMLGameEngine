@@ -752,7 +752,7 @@
         An animation: how many seconds each picture is shown, and the sprites it
         shows in turn, round and round, each picked out by the name of one of the
         object's own sprites. At least two frames; the same sprite may come up more
-        than once. The frames must all be pictures (bitmaps, svgs or drawings of
+        than once (one frame is enough with <once />). The frames must all be pictures (bitmaps, svgs or drawings of
         lines) of the same size. With <once />, it plays through one time: a look
         then goes back to the look shown before it, an object's one animation
         stays on its last frame.

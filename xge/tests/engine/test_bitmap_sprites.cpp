@@ -667,7 +667,7 @@ TEST_CASE("an animation with once plays through one time", "[animation]")
 		Object& thing = game.getObject("thing");
 		CHECK(thing.lookName() == "idle");
 
-		thing.showLook(1);
+		showLookNamed(thing, "flash");
 		CHECK(showing(thing) == 'b');
 		frames(game, 6);
 		CHECK(showing(thing) == 'a');
@@ -680,7 +680,7 @@ TEST_CASE("an animation with once plays through one time", "[animation]")
 		CHECK(showing(thing) == 'a');
 
 		// A reset half way puts it on its first look, playing as at the start.
-		thing.showLook(1);
+		showLookNamed(thing, "flash");
 		frames(game, 7);
 		game.resetAll();
 		CHECK(thing.lookName() == "idle");
@@ -729,7 +729,7 @@ TEST_CASE("an animation's then names the look it goes to and the commands it run
 		Game& game = loaded.game;
 		game.setCurrentState("playing");
 		Object& thing = game.getObject("thing");
-		thing.showLook(1);
+		showLookNamed(thing, "flash");
 		frames(game, 12);
 		CHECK(thing.lookName() == "b");
 		frames(game, 60);
@@ -744,7 +744,7 @@ TEST_CASE("an animation's then names the look it goes to and the commands it run
 		Game& game = loaded.game;
 		game.setCurrentState("playing");
 		Object& thing = game.getObject("thing");
-		thing.showLook(1);
+		showLookNamed(thing, "flash");
 		frames(game, 11);
 		CHECK(thing.variable.at("ended") == 0.0f);
 		frames(game, 1);
@@ -780,6 +780,33 @@ TEST_CASE("an animation's then names the look it goes to and the commands it run
 			"<animation><seconds>0.1</seconds><once /><frame sprite=\"a\" /><frame sprite=\"b\" /><then sprite=\"a\" /></animation>"),
 			"<show object=\"thing\" />")), ContainsSubstring("no looks to go to"));
 	}
+}
+
+TEST_CASE("an animation that plays once may be one frame: a look held for a time", "[animation]")
+{
+	const std::string animations =
+		"<animation name=\"idle\"><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"a\" /></animation>"
+		"<animation name=\"lit\"><seconds>0.1</seconds><once /><frame sprite=\"b\" /></animation>";
+	Loaded loaded{ gameXml(objectWith(kA + kB, animations), "<show object=\"thing\" />") };
+	Game& game = loaded.game;
+	game.setCurrentState("playing");
+	Object& thing = game.getObject("thing");
+	showLookNamed(thing, "lit");
+	CHECK(showing(thing) == 'b');
+	frames(game, 5);
+	CHECK(thing.lookName() == "lit");
+	frames(game, 1);
+	CHECK(thing.lookName() == "idle");
+
+	// With no animation that goes round, it starts as its first sprite,
+	// never as a look that plays once.
+	Loaded still{ gameXml(objectWith(kA + kB, "<animation name=\"lit\"><seconds>0.1</seconds><once /><frame sprite=\"b\" /></animation>"),
+		"<show object=\"thing\" />") };
+	CHECK(still.game.getObject("thing").lookName() == "a");
+
+	// Without <once />, one frame is still too few.
+	CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation name=\"lit\"><seconds>0.1</seconds><frame sprite=\"b\" /></animation>"),
+		"<show object=\"thing\" />")), ContainsSubstring("at least two"));
 }
 
 TEST_CASE("becoming a look that plays once starts it from its first frame, even when it shows already", "[animation]")
