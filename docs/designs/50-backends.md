@@ -21,7 +21,11 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 | Unfiltered traversal, callers filter by name | positional | element order is not guaranteed |
 | Read-only, UTF-8 `std::string` | mutable; `wstring` | RapidXML cannot mutate; library-agnostic |
 
-- **Validation follows the library:** only Xerces validates fully ("strong"). The others use `load/xsd`, which reads the same `.xsd` and checks the subset the schema uses ("weak"), deliberately permissive about values. It is kept at the constructs the schemas actually use (the author's wish): one it does not read stops the schema loading, naming it, so a new construct is taught to it rather than avoided in the schema. `test_xml_format.cpp` pins what both must reject.
+- **Validation follows the library:** Xerces validates through its own code ("strong"). The others use `load/xsd`, which reads the same `.xsd` ("weak").
+  - It covers only the constructs and built-in types the schemas actually use (the author's wish), but within them it is held to XSD and to Xerces: undeclared attributes, attributes on a text-only element, whitespace rules, integer bounds of any size, float and decimal forms, length in characters and bounds facets.
+  - A construct it does not read, an unknown type, stray text or an attribute it does not read inside the schema stops the schema loading, naming it, so a new construct is taught to it rather than avoided in the schema.
+  - `test_schema_checker.cpp` keeps the two in step: small schemas judged by both, and a sweep of every game changed seven ways (attribute added or changed, element taken out, doubled, renamed, moved, value changed) where the verdicts must match.
+  - Open: XSD's schema-wide rules (Unique Particle Attribution, Element Declarations Consistent) are checked by neither: Xerces does so only with full schema checking, which the engine leaves off. A schema that broke them would have to be found by hand.
 
 ## Window and sound
 

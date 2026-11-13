@@ -10,7 +10,9 @@
 #include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <map>
 #include <optional>
 #include <set>
@@ -20,25 +22,201 @@ namespace xge
 {
 	namespace
 	{
-		// Digits only (with an optional leading sign), in range - the same
-		// lexical check for every integer-derived XSD built-in this
-		// validator knows about (xs:integer/xs:unsignedByte/xs:unsignedShort
-		// below), just with a different [minValue, maxValue].
-		bool isIntegerInRange(const std::string& value, long long minValue, long long maxValue)
+		bool isXmlSpace(char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r'; }
+
+		// XSD's whiteSpace="collapse": tabs and line ends become spaces, runs
+		// of spaces become one, and none is left at either end. Every
+		// built-in type but xs:string (preserve) and xs:normalizedString
+		// (replace) does this to a value before reading it.
+		std::string collapsed(const std::string& value)
 		{
-			if (value.empty()) { return false; }
-
-			std::size_t index = (value[0] == '+' || value[0] == '-') ? 1 : 0;
-			if (index >= value.size()) { return false; }
-
-			for (std::size_t i = index; i < value.size(); ++i)
+			std::string out;
+			bool space = false;
+			for (const char c : value)
 			{
-				if (!std::isdigit(static_cast<unsigned char>(value[i]))) { return false; }
+				if (isXmlSpace(c)) { space = !out.empty(); continue; }
+				if (space) { out += ' '; space = false; }
+				out += c;
 			}
+			return out;
+		}
 
-			long long parsed = 0;
-			const auto result = std::from_chars(value.data(), value.data() + value.size(), parsed);
-			return result.ec == std::errc{} && parsed >= minValue && parsed <= maxValue;
+		// whiteSpace="replace": each tab and line end becomes a space.
+		std::string replaced(std::string value)
+		{
+			for (char& c : value) { if (isXmlSpace(c)) { c = ' '; } }
+			return value;
+		}
+
+		// How many characters (not bytes) a UTF-8 string holds, as the
+		// length facets count them.
+		std::size_t characters(const std::string& value)
+		{
+			return static_cast<std::size_t>(std::count_if(value.begin(), value.end(), [](char c) { return (static_cast<unsigned char>(c) & 0xC0) != 0x80; }));
+		}
+
+		bool allDigits(const std::string& text, std::size_t from, std::size_t to)
+		{
+			if (from >= to) { return false; }
+			for (std::size_t i = from; i < to; ++i)
+			{
+				if (!std::isdigit(static_cast<unsigned char>(text[i]))) { return false; }
+			}
+			return true;
+		}
+
+		// xs:integer's lexical form: an optional sign, then digits, of any length.
+		bool integerLexical(const std::string& value)
+		{
+			const std::size_t start = !value.empty() && (value[0] == '+' || value[0] == '-') ? 1 : 0;
+			return allDigits(value, start, value.size());
+		}
+
+		// Two xs:integer values compared exactly, whatever their size.
+		int compareIntegers(const std::string& a, const std::string& b)
+		{
+			const auto split = [](const std::string& v)
+			{
+				const bool negative = !v.empty() && v[0] == '-';
+				std::size_t at = !v.empty() && (v[0] == '+' || v[0] == '-') ? 1 : 0;
+				while (at + 1 < v.size() && v[at] == '0') { ++at; }
+				std::string digits = v.substr(at);
+				return std::pair<bool, std::string>{ negative && digits != "0", digits };
+			};
+			const auto [aNegative, aDigits] = split(a);
+			const auto [bNegative, bDigits] = split(b);
+			if (aNegative != bNegative) { return aNegative ? -1 : 1; }
+			int magnitude = aDigits.size() != bDigits.size() ? (aDigits.size() < bDigits.size() ? -1 : 1) : aDigits.compare(bDigits);
+			magnitude = magnitude < 0 ? -1 : magnitude > 0 ? 1 : 0;
+			return aNegative ? -magnitude : magnitude;
+		}
+
+		// xs:decimal: an optional sign, digits with at most one point among
+		// or around them, at least one digit; no exponent.
+		bool decimalLexical(const std::string& value)
+		{
+			std::size_t at = !value.empty() && (value[0] == '+' || value[0] == '-') ? 1 : 0;
+			const std::size_t point = value.find('.', at);
+			if (point == std::string::npos) { return allDigits(value, at, value.size()); }
+			const bool before = point > at && allDigits(value, at, point);
+			const bool after = point + 1 < value.size() && allDigits(value, point + 1, value.size());
+			return (before || after) && (point == at || before) && (point + 1 == value.size() || after);
+		}
+
+		// xs:float and xs:double: a decimal with an optional exponent, or INF, -INF, NaN.
+		bool floatLexical(const std::string& value)
+		{
+			if (value == "INF" || value == "-INF" || value == "NaN") { return true; }
+			const std::size_t e = value.find_first_of("eE");
+			if (e == std::string::npos) { return decimalLexical(value); }
+			return decimalLexical(value.substr(0, e)) && integerLexical(value.substr(e + 1));
+		}
+
+		// The integer types by their bounds ("" for none), as XSD sets them.
+		struct IntegerBounds
+		{
+			const char* name;
+			const char* low;
+			const char* high;
+		};
+		constexpr IntegerBounds integerTypes[] = {
+			{ "integer", "", "" },
+			{ "nonNegativeInteger", "0", "" },
+			{ "positiveInteger", "1", "" },
+			{ "nonPositiveInteger", "", "0" },
+			{ "negativeInteger", "", "-1" },
+			{ "long", "-9223372036854775808", "9223372036854775807" },
+			{ "int", "-2147483648", "2147483647" },
+			{ "short", "-32768", "32767" },
+			{ "byte", "-128", "127" },
+			{ "unsignedLong", "0", "18446744073709551615" },
+			{ "unsignedInt", "0", "4294967295" },
+			{ "unsignedShort", "0", "65535" },
+			{ "unsignedByte", "0", "255" },
+		};
+
+		const IntegerBounds* integerType(const std::string& name)
+		{
+			for (const IntegerBounds& type : integerTypes)
+			{
+				if (name == type.name) { return &type; }
+			}
+			return nullptr;
+		}
+
+		// The built-in types this validator reads; any other stops the schema loading.
+		bool isBuiltin(const std::string& name)
+		{
+			return name == "string" || name == "normalizedString" || name == "token" || name == "NMTOKEN" || name == "boolean"
+				|| name == "decimal" || name == "float" || name == "double" || integerType(name) != nullptr;
+		}
+
+		// A value of a built-in type, once its white space has been dealt with.
+		bool builtinMatches(const std::string& type, const std::string& value)
+		{
+			if (type == "string" || type == "normalizedString") { return true; }
+			// A token is collapsed already, so anything left is one.
+			if (type == "token") { return true; }
+			if (type == "boolean") { return value == "true" || value == "false" || value == "1" || value == "0"; }
+			if (type == "decimal") { return decimalLexical(value); }
+			if (type == "float" || type == "double") { return floatLexical(value); }
+			// One name, nothing between: letters, digits and . - _ : (a key, a
+			// set); any character past ASCII is taken as a letter.
+			if (type == "NMTOKEN")
+			{
+				return !value.empty() && std::all_of(value.begin(), value.end(), [](unsigned char c)
+					{ return std::isalnum(c) != 0 || c == '.' || c == '-' || c == '_' || c == ':' || c >= 0x80; });
+			}
+			if (const IntegerBounds* bounds = integerType(type))
+			{
+				if (!integerLexical(value)) { return false; }
+				if (*bounds->low && compareIntegers(value, bounds->low) < 0) { return false; }
+				if (*bounds->high && compareIntegers(value, bounds->high) > 0) { return false; }
+				return true;
+			}
+			return false;
+		}
+
+		// A number as a facet compares it (the value has passed its type already).
+		long double numberOf(const std::string& value)
+		{
+			if (value == "INF") { return HUGE_VALL; }
+			if (value == "-INF") { return -HUGE_VALL; }
+			return std::strtold(value.c_str(), nullptr);
+		}
+
+		// What each schema construct may carry, and so what this validator
+		// reads; anything else stops the schema loading (checkSchema).
+		const std::map<std::string, std::set<std::string>>& schemaAttributes()
+		{
+			static const std::map<std::string, std::set<std::string>> known = {
+				{ "schema", { "attributeFormDefault", "elementFormDefault" } },
+				{ "annotation", {} },
+				{ "documentation", { "source", "xml:lang" } },
+				{ "appinfo", { "source" } },
+				{ "element", { "name", "type", "minOccurs", "maxOccurs" } },
+				{ "attribute", { "name", "type", "use" } },
+				{ "complexType", { "name", "mixed" } },
+				{ "simpleType", { "name" } },
+				{ "simpleContent", {} },
+				{ "complexContent", { "mixed" } },
+				{ "extension", { "base" } },
+				{ "restriction", { "base" } },
+				{ "sequence", { "minOccurs", "maxOccurs" } },
+				{ "choice", { "minOccurs", "maxOccurs" } },
+				{ "all", { "minOccurs", "maxOccurs" } },
+				{ "group", { "name", "ref", "minOccurs", "maxOccurs" } },
+				{ "attributeGroup", { "name", "ref" } },
+				{ "enumeration", { "value" } },
+				{ "length", { "value" } },
+				{ "minLength", { "value" } },
+				{ "maxLength", { "value" } },
+				{ "minInclusive", { "value" } },
+				{ "maxInclusive", { "value" } },
+				{ "minExclusive", { "value" } },
+				{ "maxExclusive", { "value" } },
+			};
+			return known;
 		}
 
 		// Strips any "prefix:" off a qualified name (e.g. "xs:element" ->
@@ -66,7 +244,10 @@ namespace xge
 		{
 			const std::string value = node.getAttribute(attribute);
 			if (value.empty()) { return 1; }
-			return value == "unbounded" ? -1 : std::stoi(value);
+			if (value == "unbounded") { return -1; }
+			int number = 0;
+			std::from_chars(value.data(), value.data() + value.size(), number);
+			return number;
 		}
 	}
 
@@ -80,11 +261,14 @@ namespace xge
 			bool required = false;
 		};
 
+		// A restriction of a type: its base (a built-in or another of the
+		// schema's) and the facets that narrow it.
 		struct SimpleType
 		{
-			std::vector<std::string> enumeration; // empty: any value the built-in base allows
 			std::string base;
-			std::optional<long long> minInclusive; // a whole number's lowest (integer bases only)
+			std::vector<std::string> enumeration; // empty: any value the base allows
+			std::optional<std::string> minInclusive, maxInclusive, minExclusive, maxExclusive;
+			std::optional<std::size_t> length, minLength, maxLength;
 		};
 
 		struct ComplexType;
@@ -102,7 +286,8 @@ namespace xge
 			// Element:
 			std::string name;
 			std::shared_ptr<ComplexType> complexType; // null: a simple element (text only) ...
-			std::string simpleType;                   // ... of this type ("" : any text)
+			std::string simpleType;                   // ... of this type
+			bool anyType = false;                     // no type at all: anything goes (xs:anyType)
 
 			// Sequence / Choice / All:
 			std::vector<Particle> children;
@@ -111,6 +296,7 @@ namespace xge
 		struct ComplexType
 		{
 			bool mixed = false;
+			std::string textType; // xs:simpleContent: its text is of this type, and it holds no elements
 			std::vector<Attribute> attributes;
 			std::unique_ptr<Particle> content; // null: no child elements allowed
 		};
@@ -142,7 +328,13 @@ namespace xge
 
 		// -------------------------------------------------------- building
 		bool build(const XmlNode& schemaRoot, std::string& error);
-		bool buildSimpleType(const XmlNode& node, std::string& error);
+		bool checkSchema(const XmlNode& node, std::string& error) const;
+		bool buildSimpleType(const XmlNode& node, const std::string& name, std::string& error);
+		bool knownType(const std::string& name) const;
+		std::string inlineType(const XmlNode& holder, std::string& error);
+		int inlineTypes = 0;
+		std::string rootBuiltin(const std::string& type) const;
+		bool valueMatches(const std::string& type, const std::string& value) const;
 		bool buildElement(const XmlNode& node, Particle& out, std::string& error);
 		bool buildComplexType(const XmlNode& node, ComplexType& out, std::string& error);
 		bool extendComplexType(const XmlNode& extension, ComplexType& out, std::string& error);
@@ -192,34 +384,158 @@ namespace xge
 		bool matchOnce(const Particle& particle, const Children& children, MatchState& state, const std::string& path, int occurrence) const;
 	};
 
-	bool XsdLiteValidator::Model::buildSimpleType(const XmlNode& node, std::string& error)
+	// Every construct of the schema is one this validator reads, with only
+	// the attributes it reads, and holds no text but in its documentation:
+	// anything else would be passed over, and games then judged on a
+	// schema other than the one written.
+	bool XsdLiteValidator::Model::checkSchema(const XmlNode& node, std::string& error) const
 	{
-		const std::string name = node.getAttribute("name");
+		const std::string kind = localName(node.getName());
+		const auto known = schemaAttributes().find(kind);
+		if (known == schemaAttributes().end())
+		{
+			error = "unsupported schema construct xs:" + kind + lineNote(node.line());
+			return false;
+		}
+		if (kind == "documentation" || kind == "appinfo") { return true; }
+		for (const auto& [name, value] : node.getAttributes())
+		{
+			if (name == "xmlns" || name.rfind("xmlns:", 0) == 0) { continue; }
+			if (!known->second.count(name))
+			{
+				error = "xs:" + kind + " has " + name + "=, which this validator does not read" + lineNote(node.line());
+				return false;
+			}
+			if (name == "minOccurs" || name == "maxOccurs")
+			{
+				if (!(integerLexical(value) && value[0] != '-' && value[0] != '+') && !(name == "maxOccurs" && value == "unbounded"))
+				{
+					error = "xs:" + kind + " " + name + "=\"" + value + "\" is not a number of times" + lineNote(node.line());
+					return false;
+				}
+			}
+			if (name == "use" && value != "required" && value != "optional")
+			{
+				error = "xs:attribute use=\"" + value + "\" is not read; only required and optional" + lineNote(node.line());
+				return false;
+			}
+			if (name == "mixed" && value != "true" && value != "false")
+			{
+				error = "xs:" + kind + " mixed=\"" + value + "\" is not true or false" + lineNote(node.line());
+				return false;
+			}
+		}
+		if (!trim(node.getText()).empty())
+		{
+			error = "xs:" + kind + " holds the text \"" + trim(node.getText()) + "\"; only xs:documentation and xs:appinfo hold text" + lineNote(node.line());
+			return false;
+		}
+		const std::string minOccurs = node.getAttribute("minOccurs");
+		const std::string maxOccurs = node.getAttribute("maxOccurs");
+		if (!minOccurs.empty() && !maxOccurs.empty() && maxOccurs != "unbounded" && compareIntegers(minOccurs, maxOccurs) > 0)
+		{
+			error = "xs:" + kind + " minOccurs is above its maxOccurs" + lineNote(node.line());
+			return false;
+		}
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child; child = child->getNextSibling())
+		{
+			if (!checkSchema(*child, error)) { return false; }
+		}
+		return true;
+	}
+
+	bool XsdLiteValidator::Model::knownType(const std::string& name) const
+	{
+		return isBuiltin(name) || simpleTypes.count(name) != 0;
+	}
+
+	// The simple type an xs:attribute or xs:element writes inside itself,
+	// under a name of its own that no schema can write.
+	std::string XsdLiteValidator::Model::inlineType(const XmlNode& holder, std::string& error)
+	{
+		for (std::unique_ptr<XmlNode> child = holder.getFirstChild(); child; child = child->getNextSibling())
+		{
+			if (localName(child->getName()) != "simpleType") { continue; }
+			const std::string name = "#" + std::to_string(++inlineTypes);
+			if (!buildSimpleType(*child, name, error)) { return {}; }
+			return name;
+		}
+		return {};
+	}
+
+	bool XsdLiteValidator::Model::buildSimpleType(const XmlNode& node, const std::string& name, std::string& error)
+	{
 		if (name.empty())
 		{
 			error = "xs:simpleType with no 'name' attribute";
 			return false;
 		}
+		if (simpleTypes.count(name) || complexTypeNodes.count(name))
+		{
+			error = "the schema has two types named '" + name + "'";
+			return false;
+		}
 
 		SimpleType simpleType;
+		bool restricted = false;
 
 		for (std::unique_ptr<XmlNode> restriction = node.getFirstChild(); restriction; restriction = restriction->getNextSibling())
 		{
-			if (localName(restriction->getName()) != "restriction") { continue; }
+			const std::string kind = localName(restriction->getName());
+			if (kind == "annotation") { continue; }
+			if (kind != "restriction" || restricted)
+			{
+				error = "unsupported schema construct xs:" + kind + " in xs:simpleType '" + name + "'";
+				return false;
+			}
+			restricted = true;
 
 			simpleType.base = localName(restriction->getAttribute("base"));
+			if (simpleType.base.empty())
+			{
+				error = "xs:simpleType '" + name + "' restricts no base=";
+				return false;
+			}
 
 			for (std::unique_ptr<XmlNode> facet = restriction->getFirstChild(); facet; facet = facet->getNextSibling())
 			{
-				if (localName(facet->getName()) == "enumeration")
+				const std::string facetKind = localName(facet->getName());
+				const std::string value = facet->getAttribute("value");
+				const auto size = [&](std::optional<std::size_t>& into)
 				{
-					simpleType.enumeration.push_back(facet->getAttribute("value"));
+					if (!integerLexical(value) || value[0] == '-') { return false; }
+					std::size_t number = 0;
+					std::from_chars(value.data(), value.data() + value.size(), number);
+					into = number;
+					return true;
+				};
+				bool ok = true;
+				if (facetKind == "annotation") { continue; }
+				else if (facetKind == "enumeration") { simpleType.enumeration.push_back(value); }
+				else if (facetKind == "minInclusive") { simpleType.minInclusive = value; }
+				else if (facetKind == "maxInclusive") { simpleType.maxInclusive = value; }
+				else if (facetKind == "minExclusive") { simpleType.minExclusive = value; }
+				else if (facetKind == "maxExclusive") { simpleType.maxExclusive = value; }
+				else if (facetKind == "length") { ok = size(simpleType.length); }
+				else if (facetKind == "minLength") { ok = size(simpleType.minLength); }
+				else if (facetKind == "maxLength") { ok = size(simpleType.maxLength); }
+				else
+				{
+					error = "unsupported schema construct xs:" + facetKind + " in xs:simpleType '" + name + "'";
+					return false;
 				}
-				else if (localName(facet->getName()) == "minInclusive")
+				if (!ok)
 				{
-					simpleType.minInclusive = std::stoll(facet->getAttribute("value"));
+					error = "xs:" + facetKind + " of xs:simpleType '" + name + "' is \"" + value + "\"; expected a number of characters";
+					return false;
 				}
 			}
+		}
+
+		if (!restricted)
+		{
+			error = "xs:simpleType '" + name + "' has no xs:restriction";
+			return false;
 		}
 
 		simpleTypes[name] = std::move(simpleType);
@@ -321,33 +637,61 @@ namespace xge
 					if (!extendComplexType(*extension, out, error)) { return false; }
 				}
 			}
-			else if (kind == "annotation" || kind == "anyAttribute")
+			else if (kind == "annotation")
 			{
 				continue;
 			}
 			else if (kind == "simpleContent")
 			{
 				// Text with attributes (a bitmap's <color char="w">): the
-				// text is taken as it is, and the extension's attributes are
-				// the element's.
-				out.mixed = true;
+				// text is of the extension's base type, and the extension's
+				// attributes are the element's.
 				for (std::unique_ptr<XmlNode> extension = child->getFirstChild(); extension; extension = extension->getNextSibling())
 				{
-					if (localName(extension->getName()) != "extension") { continue; }
+					const std::string extensionKind = localName(extension->getName());
+					if (extensionKind == "annotation") { continue; }
+					if (extensionKind != "extension")
+					{
+						error = "unsupported schema construct xs:" + extensionKind + " in xs:simpleContent";
+						return false;
+					}
+					const std::string base = localName(extension->getAttribute("base"));
+					if (!knownType(base))
+					{
+						error = "xs:simpleContent extends '" + base + "', which is no simple type of the schema or one this validator reads";
+						return false;
+					}
 					if (!buildComplexType(*extension, out, error)) { return false; }
-					out.mixed = true;
+					out.textType = base;
 				}
 			}
 			else if (kind == "attribute")
 			{
 				Attribute attribute;
 				attribute.name = child->getAttribute("name");
-				attribute.type = child->getAttribute("type");
+				attribute.type = localName(child->getAttribute("type"));
 				attribute.required = (child->getAttribute("use") == "required");
 
 				if (attribute.name.empty())
 				{
 					error = "xs:attribute with no 'name' attribute";
+					return false;
+				}
+				if (attribute.type.empty())
+				{
+					attribute.type = inlineType(*child, error);
+					if (!error.empty()) { return false; }
+					// No type at all is xs:anySimpleType: any text.
+					if (attribute.type.empty()) { attribute.type = "string"; }
+				}
+				if (!knownType(attribute.type))
+				{
+					error = "xs:attribute '" + attribute.name + "' is of type '" + attribute.type + "', neither a type of the schema nor a built-in this validator reads";
+					return false;
+				}
+				if (std::any_of(out.attributes.begin(), out.attributes.end(), [&](const Attribute& other) { return other.name == attribute.name; }))
+				{
+					error = "a type declares the attribute '" + attribute.name + "' twice";
 					return false;
 				}
 
@@ -440,20 +784,42 @@ namespace xge
 				return resolveComplexType(type, out.complexType, error);
 			}
 
+			if (type == "anyType")
+			{
+				out.anyType = true;
+				return true;
+			}
+			if (!knownType(type))
+			{
+				error = "xs:element '" + out.name + "' is of type '" + type + "', neither a type of the schema nor a built-in this validator reads";
+				return false;
+			}
 			out.simpleType = type; // xs:string, xs:boolean, ... or one of simpleTypes
 			return true;
 		}
 
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child; child = child->getNextSibling())
 		{
-			if (localName(child->getName()) == "complexType")
+			const std::string kind = localName(child->getName());
+			if (kind == "complexType")
 			{
 				out.complexType = std::make_shared<ComplexType>();
 				return buildComplexType(*child, *out.complexType, error);
 			}
+			if (kind == "simpleType")
+			{
+				out.simpleType = inlineType(node, error);
+				return error.empty();
+			}
+			if (kind != "annotation")
+			{
+				error = "unsupported schema construct xs:" + kind + " in xs:element '" + out.name + "'";
+				return false;
+			}
 		}
 
-		// No type at all: whatever text is there is fine.
+		// No type at all: xs:anyType, which takes anything.
+		out.anyType = true;
 		return true;
 	}
 
@@ -541,6 +907,8 @@ namespace xge
 	{
 		std::unique_ptr<XmlNode> topElement;
 
+		if (!checkSchema(schemaRoot, error)) { return false; }
+
 		// Collect the named pieces first; they can then refer to each other in
 		// any order.
 		for (std::unique_ptr<XmlNode> top = schemaRoot.getFirstChild(); top; )
@@ -548,25 +916,43 @@ namespace xge
 			const std::string kind = localName(top->getName());
 			std::unique_ptr<XmlNode> next = top->getNextSibling();
 
+			const std::string name = top->getAttribute("name");
+			const auto twice = [&](const char* what)
+			{
+				error = "the schema has two " + std::string(what) + " named '" + name + "'" + lineNote(top->line());
+				return false;
+			};
 			if (kind == "simpleType")
 			{
-				if (!buildSimpleType(*top, error)) { return false; }
+				if (!buildSimpleType(*top, name, error)) { return false; }
 			}
 			else if (kind == "complexType")
 			{
-				complexTypeNodes[top->getAttribute("name")] = std::move(top);
+				if (name.empty()) { error = "a top-level xs:complexType with no name" + lineNote(top->line()); return false; }
+				if (complexTypeNodes.count(name) || simpleTypes.count(name)) { return twice("types"); }
+				complexTypeNodes[name] = std::move(top);
 			}
 			else if (kind == "group")
 			{
-				groupNodes[top->getAttribute("name")] = std::move(top);
+				if (groupNodes.count(name)) { return twice("groups"); }
+				groupNodes[name] = std::move(top);
 			}
 			else if (kind == "attributeGroup")
 			{
-				attributeGroupNodes[top->getAttribute("name")] = std::move(top);
+				if (attributeGroupNodes.count(name)) { return twice("attribute groups"); }
+				attributeGroupNodes[name] = std::move(top);
 			}
-			else if (kind == "element" && !topElement)
+			else if (kind == "element")
 			{
+				// A game file has one root; a second top-level element would be
+				// another document this validator never looks at.
+				if (topElement) { error = "the schema has more than one top-level xs:element" + lineNote(top->line()); return false; }
 				topElement = std::move(top);
+			}
+			else if (kind != "annotation")
+			{
+				error = "unsupported schema construct xs:" + kind + " at the top of the schema" + lineNote(top->line());
+				return false;
 			}
 
 			top = std::move(next);
@@ -576,6 +962,15 @@ namespace xge
 		{
 			error = "the schema has no top-level xs:element";
 			return false;
+		}
+
+		for (const auto& [name, simpleType] : simpleTypes)
+		{
+			if (!knownType(simpleType.base))
+			{
+				error = "xs:simpleType '" + name + "' restricts '" + simpleType.base + "', neither a type of the schema nor a built-in this validator reads";
+				return false;
+			}
 		}
 
 		if (!buildElement(*topElement, root, error)) { return false; }
@@ -609,60 +1004,74 @@ namespace xge
 		}
 	}
 
+	// The built-in a type comes down to, through the schema's restrictions.
+	std::string XsdLiteValidator::Model::rootBuiltin(const std::string& type) const
+	{
+		std::string at = localName(type);
+		for (int depth = 0; depth < 64; ++depth)
+		{
+			const auto simple = simpleTypes.find(at);
+			if (simple == simpleTypes.end()) { return at; }
+			at = simple->second.base;
+		}
+		return at;
+	}
+
 	bool XsdLiteValidator::Model::typeMatches(const std::string& type, const std::string& value) const
 	{
-		const std::string type_ = localName(type);
+		// White space first, by the built-in the type comes down to.
+		const std::string builtin = rootBuiltin(type);
+		const std::string normal = builtin == "string" ? value : builtin == "normalizedString" ? replaced(value) : collapsed(value);
+		return valueMatches(localName(type), normal);
+	}
 
-		if (const auto simple = simpleTypes.find(type_); simple != simpleTypes.end())
+	bool XsdLiteValidator::Model::valueMatches(const std::string& type, const std::string& value) const
+	{
+		const auto simple = simpleTypes.find(type);
+		if (simple == simpleTypes.end()) { return builtinMatches(type, value); }
+
+		const SimpleType& restriction = simple->second;
+		if (!valueMatches(restriction.base, value)) { return false; }
+
+		const auto& enumeration = restriction.enumeration;
+		if (!enumeration.empty() && std::find(enumeration.begin(), enumeration.end(), value) == enumeration.end()) { return false; }
+
+		const std::size_t size = characters(value);
+		if (restriction.length && size != *restriction.length) { return false; }
+		if (restriction.minLength && size < *restriction.minLength) { return false; }
+		if (restriction.maxLength && size > *restriction.maxLength) { return false; }
+
+		if (restriction.minInclusive || restriction.maxInclusive || restriction.minExclusive || restriction.maxExclusive)
 		{
-			const auto& enumeration = simple->second.enumeration;
-			if (!enumeration.empty() && std::find(enumeration.begin(), enumeration.end(), value) == enumeration.end())
-			{
-				return false;
-			}
-			if (simple->second.minInclusive && !isIntegerInRange(value, *simple->second.minInclusive, INT64_MAX))
-			{
-				return false;
-			}
-
-			return simple->second.base.empty() || typeMatches(simple->second.base, value);
+			const long double number = numberOf(value);
+			if (std::isnan(number)) { return false; }
+			if (restriction.minInclusive && number < numberOf(*restriction.minInclusive)) { return false; }
+			if (restriction.maxInclusive && number > numberOf(*restriction.maxInclusive)) { return false; }
+			if (restriction.minExclusive && number <= numberOf(*restriction.minExclusive)) { return false; }
+			if (restriction.maxExclusive && number >= numberOf(*restriction.maxExclusive)) { return false; }
 		}
-
-		// xs:boolean's lexical space is true/false/1/0 - every value in
-		// xgedef.xsd is written as true/false, but this
-		// checks the type's actual rules rather than just this schema's
-		// current usage of it.
-		if (type_ == "boolean") { return value == "true" || value == "false" || value == "1" || value == "0"; }
-		if (type_ == "integer") { return isIntegerInRange(value, INT64_MIN, INT64_MAX); }
-		if (type_ == "unsignedByte") { return isIntegerInRange(value, 0, 255); }
-		if (type_ == "unsignedShort") { return isIntegerInRange(value, 0, 65535); }
-		if (type_ == "positiveInteger") { return isIntegerInRange(value, 1, INT64_MAX); }
-		if (type_ == "nonNegativeInteger") { return isIntegerInRange(value, 0, INT64_MAX); }
-		// One name, nothing between: letters, digits and . - _ : (a key, a set).
-		if (type_ == "NMTOKEN")
-		{
-			return !value.empty() && std::all_of(value.begin(), value.end(), [](unsigned char c)
-				{ return std::isalnum(c) != 0 || c == '.' || c == '-' || c == '_' || c == ':' || c >= 0x80; });
-		}
-
-		// xs:string, and anything else this validator doesn't specifically
-		// know about - see the class comment in load/xsd.h for why that's
-		// permissive rather than a failure.
 		return true;
+	}
+
+	namespace
+	{
+		// The attributes any element may carry: namespace declarations and the
+		// schema instance's own (xsi:noNamespaceSchemaLocation).
+		bool alwaysAllowed(const std::string& name)
+		{
+			return name == "xmlns" || name.rfind("xmlns:", 0) == 0 || name.rfind("xsi:", 0) == 0;
+		}
 	}
 
 	bool XsdLiteValidator::Model::validateAttributes(const ComplexType& type, const XmlNode& actual, const std::string& path, std::string& error) const
 	{
+		const std::vector<std::pair<std::string, std::string>> present = actual.getAttributes();
+
 		for (const Attribute& attribute : type.attributes)
 		{
-			const std::string value = actual.getAttribute(attribute.name);
+			const auto found = std::find_if(present.begin(), present.end(), [&](const auto& each) { return each.first == attribute.name; });
 
-			// "" also means "missing" here (see XmlNode::getAttribute,
-			// xml/document.h) - every attribute this schema declares is a
-			// name, a keyword, a number, or true/false, none of which has a
-			// legitimate empty-string value, so this is an adequate required
-			// check.
-			if (value.empty())
+			if (found == present.end())
 			{
 				if (attribute.required)
 				{
@@ -673,9 +1082,19 @@ namespace xge
 				continue;
 			}
 
-			if (!typeMatches(attribute.type, value))
+			if (!typeMatches(attribute.type, found->second))
 			{
-				error = path + ": attribute '" + attribute.name + "' = \"" + value + "\" is not a valid " + attribute.type + lineNote(actual.line());
+				error = path + ": attribute '" + attribute.name + "' = \"" + found->second + "\" is not a valid " + (isBuiltin(attribute.type) ? "xs:" : "") + attribute.type + lineNote(actual.line());
+				return false;
+			}
+		}
+
+		for (const auto& [name, value] : present)
+		{
+			if (alwaysAllowed(name)) { continue; }
+			if (std::none_of(type.attributes.begin(), type.attributes.end(), [&](const Attribute& attribute) { return attribute.name == name; }))
+			{
+				error = path + ": attribute '" + name + "' is not declared for <" + localName(actual.getName()) + ">" + lineNote(actual.line());
 				return false;
 			}
 		}
@@ -693,29 +1112,46 @@ namespace xge
 			child = std::move(next);
 		}
 
-		const std::string text = trim(actual.getText());
+		if (declaration.anyType) { return true; }
 
-		if (!declaration.complexType)
+		const std::string rawText = actual.getText();
+		const std::string text = trim(rawText);
+
+		// Text only, of a simple type: of a simple element, or one of a
+		// complex type with simple content (and attributes).
+		const auto simpleText = [&](const std::string& simpleType)
 		{
-			// A simple element: text only, of the declared type.
 			if (!children.empty())
 			{
 				error = path + ": unexpected element <" + children.front()->getName() + "> inside a text-only element" + lineNote(children.front()->line());
 				return false;
 			}
 
-			if (!declaration.simpleType.empty() && !typeMatches(declaration.simpleType, text))
+			if (!typeMatches(simpleType, rawText))
 			{
-				error = path + ": \"" + text + "\" is not a valid " + declaration.simpleType + lineNote(actual.line());
+				error = path + ": \"" + text + "\" is not a valid " + (isBuiltin(simpleType) ? "xs:" : "") + simpleType + lineNote(actual.line());
 				return false;
 			}
 
 			return true;
+		};
+
+		if (!declaration.complexType)
+		{
+			for (const auto& [name, value] : actual.getAttributes())
+			{
+				if (alwaysAllowed(name)) { continue; }
+				error = path + ": attribute '" + name + "' is not declared for <" + localName(actual.getName()) + ">, which holds only text" + lineNote(actual.line());
+				return false;
+			}
+			return simpleText(declaration.simpleType);
 		}
 
 		const ComplexType& type = *declaration.complexType;
 
 		if (!validateAttributes(type, actual, path, error)) { return false; }
+
+		if (!type.textType.empty()) { return simpleText(type.textType); }
 
 		if (!type.mixed && !text.empty())
 		{

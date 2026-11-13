@@ -1212,13 +1212,12 @@ TEST_CASE("both schema checkers turn away the same mistakes in bitmaps and anima
 	}
 }
 
-TEST_CASE("an attribute the schema does not declare is turned away by Xerces, which the weak validator cannot see", "[animation][schema]")
+TEST_CASE("an attribute the schema does not declare is turned away by both validators", "[animation][schema]")
 {
-	// The weak validator cannot list a node's attributes (see load/xsd.h), so
-	// this is the one kind of mistake only the real validation catches.
 	const Verdict verdict = judge(gameWith("descriptions/spaceinvaders.xml", "<sprite name=\"a\">", "<sprite title=\"a\">"));
 
-	CHECK(verdict.weakAccepts);
+	CHECK_FALSE(verdict.weakAccepts);
+	CHECK_THAT(verdict.weakMessage, ContainsSubstring("is not declared for"));
 	CHECK_FALSE(verdict.strongAccepts);
 }
 

@@ -840,13 +840,12 @@ TEST_CASE("both schema checkers turn away the same mistakes in lines, types and 
 	}
 }
 
-TEST_CASE("an attribute the schema does not declare is turned away by Xerces, which the weak validator cannot see", "[lines][schema]")
+TEST_CASE("an attribute the schema does not declare is turned away by both validators", "[lines][schema]")
 {
-	// The weak validator cannot list a node's attributes (see load/xsd.h), so
-	// this is the one kind of mistake only the real validation catches.
 	const Verdict verdict = judge(gameWith("descriptions/lunarlander.xml", "<thrust burn=\"fuel\">", "<thrust fuel=\"fuel\">"));
 
-	CHECK(verdict.weakAccepts);
+	CHECK_FALSE(verdict.weakAccepts);
+	CHECK_THAT(verdict.weakMessage, ContainsSubstring("is not declared for"));
 	CHECK_FALSE(verdict.strongAccepts);
 }
 
