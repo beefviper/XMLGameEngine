@@ -73,6 +73,17 @@ namespace xge
 		return true;
 	}
 
+	static void printSet(std::ostream& o, const Command& command)
+	{
+		const CmdSet& s = std::get<CmdSet>(command);
+		o << "set(" << s.target.written() << ", " << s.value << ")";
+	}
+
+	static void printSetRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.variable << ", " << command.amount << ")";
+	}
+
 	extern const Verb setVerb;
 	const Verb setVerb{
 		.name = "set",
@@ -83,5 +94,7 @@ namespace xge
 		.make = makeSet,
 		.check = checkSet,
 		.run = runSet,
+		.print = printSet,
+		.printRaw = printSetRaw,
 	};
 }

@@ -44,6 +44,19 @@ namespace xge
 		return true;
 	}
 
+	static void printDec(std::ostream& o, const Command& command)
+	{
+		const CmdDecrement& c = std::get<CmdDecrement>(command);
+		o << "dec(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")";
+	}
+
+	static void printDecRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.variable;
+		if (!(command.amount.kind == RawValue::Kind::Expression && (command.amount.text == "1" || command.amount.text.empty()))) { o << ", " << command.amount; }
+		o << ")";
+	}
+
 	extern const Verb decVerb;
 	const Verb decVerb{
 		.name = "dec",
@@ -54,5 +67,7 @@ namespace xge
 		.make = makeDec,
 		.check = checkDec,
 		.run = runDec,
+		.print = printDec,
+		.printRaw = printDecRaw,
 	};
 }

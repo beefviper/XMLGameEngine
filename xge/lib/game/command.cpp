@@ -19,18 +19,6 @@
 
 namespace xge
 {
-	namespace
-	{
-		std::string placeText(const CellPlace& place)
-		{
-			if (!place.any()) { return {}; }
-			std::string text = place.where == CellPlace::Where::Here ? ", here" : ", around";
-			if (place.straight) { text += " straight"; }
-			if (!place.alike.empty()) { text += " alike " + place.alike; }
-			return text;
-		}
-	}
-
 	VariableName VariableName::of(const std::string& written)
 	{
 		const auto dot = written.rfind('.');
@@ -168,7 +156,6 @@ namespace xge
 			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
 			[&](const CmdOrder& r) { o << "order(" << r.group << ", random)"; },
 			[&](const CmdPut& p) { o << "put(" << p.objClass << ")"; },
-			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << placeText(c.place) << ")"; },
 			[&](const CmdSlide& m)
 			{
 				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");
@@ -181,10 +168,6 @@ namespace xge
 				for (const auto& [look, worth] : t.worths) { o << ", " << look << "=" << worth; }
 				o << ")";
 			},
-			[&](const CmdIncrement& c) { o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
-			[&](const CmdDecrement& c) { o << "dec(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
-			[&](const CmdCopy& c) { o << "copy(" << c.from.written() << ", " << c.into.written() << ")"; },
-			[&](const CmdRank& c) { o << "rank(" << c.entry.written() << ", " << c.table << ")"; },
 			[&](const CmdAlternate& c)
 			{
 				o << "alternate(";
@@ -196,12 +179,8 @@ namespace xge
 			[&](const CmdDemo&) { o << "demo()"; },
 			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
 			[&](const CmdPopState& s) { o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; } },
-			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << (a.objClass.empty() ? std::string{} : ", " + a.objClass) << placeText(a.place) << ")"; },
-			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
-			[&](const CmdSilence& s) { o << "silence(" << s.sound << ")"; },
-			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << (b.from.empty() ? "" : ", from " + b.from) << (b.style.empty() ? "" : ", style " + b.style) << ")"; },
+			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << (a.objClass.empty() ? std::string{} : ", " + a.objClass) << cellPlaceText(a.place) << ")"; },
 			[&](const CmdEnterScene& e) { o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")"; },
-			[&](const CmdSet& s) { o << "set(" << s.target.written() << ", " << s.value << ")"; },
 			[&](const CmdSend& s)
 			{
 				o << "send(" << s.target << ", " << s.from << " into " << s.into;

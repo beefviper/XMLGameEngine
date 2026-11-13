@@ -58,6 +58,12 @@ namespace xge
 		return true;
 	}
 
+	static void printRank(std::ostream& o, const Command& command)
+	{
+		const CmdRank& c = std::get<CmdRank>(command);
+		o << "rank(" << c.entry.written() << ", " << c.table << ")";
+	}
+
 	extern const Verb rankVerb;
 	const Verb rankVerb{
 		.name = "rank",
@@ -68,5 +74,6 @@ namespace xge
 		.make = makeRank,
 		.check = checkRank,
 		.run = runRank,
+		.print = printRank,
 	};
 }

@@ -43,6 +43,12 @@ namespace xge
 		return true;
 	}
 
+	static void printCopy(std::ostream& o, const Command& command)
+	{
+		const CmdCopy& c = std::get<CmdCopy>(command);
+		o << "copy(" << c.from.written() << ", " << c.into.written() << ")";
+	}
+
 	extern const Verb copyVerb;
 	const Verb copyVerb{
 		.name = "copy",
@@ -53,5 +59,6 @@ namespace xge
 		.make = makeCopy,
 		.check = checkCopy,
 		.run = runCopy,
+		.print = printCopy,
 	};
 }

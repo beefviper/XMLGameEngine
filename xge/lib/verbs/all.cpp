@@ -105,6 +105,15 @@ namespace xge
 		return owner.form;
 	}
 
+	std::string cellPlaceText(const CellPlace& place)
+	{
+		if (!place.any()) { return {}; }
+		std::string text = place.where == CellPlace::Where::Here ? ", here" : ", around";
+		if (place.straight) { text += " straight"; }
+		if (!place.alike.empty()) { text += " alike " + place.alike; }
+		return text;
+	}
+
 	RawCommand readCommand(const XmlNode& node, const std::string& where)
 	{
 		RawCommand command;

@@ -33,6 +33,17 @@ namespace xge
 		return true;
 	}
 
+	static void printSilence(std::ostream& o, const Command& command)
+	{
+		const CmdSilence& s = std::get<CmdSilence>(command);
+		o << "silence(" << s.sound << ")";
+	}
+
+	static void printSilenceRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.sound << ")";
+	}
+
 	extern const Verb silenceVerb;
 	const Verb silenceVerb{
 		.name = "silence",
@@ -43,5 +54,7 @@ namespace xge
 		.make = makeSilence,
 		.check = checkSilence,
 		.run = runSilence,
+		.print = printSilence,
+		.printRaw = printSilenceRaw,
 	};
 }

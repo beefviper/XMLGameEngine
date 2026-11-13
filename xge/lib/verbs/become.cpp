@@ -63,6 +63,12 @@ namespace xge
 		return true;
 	}
 
+	static void printBecome(std::ostream& o, const Command& command)
+	{
+		const CmdBecome& b = std::get<CmdBecome>(command);
+		o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << (b.from.empty() ? "" : ", from " + b.from) << (b.style.empty() ? "" : ", style " + b.style) << ")";
+	}
+
 	extern const Verb becomeVerb;
 	const Verb becomeVerb{
 		.name = "become",
@@ -73,5 +79,6 @@ namespace xge
 		.make = makeBecome,
 		.check = checkBecome,
 		.run = runBecome,
+		.print = printBecome,
 	};
 }

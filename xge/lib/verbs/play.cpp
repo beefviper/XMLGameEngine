@@ -33,6 +33,17 @@ namespace xge
 		return true;
 	}
 
+	static void printPlay(std::ostream& o, const Command& command)
+	{
+		const CmdPlay& p = std::get<CmdPlay>(command);
+		o << "play(" << p.sound << ")";
+	}
+
+	static void printPlayRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.sound << ")";
+	}
+
 	extern const Verb playVerb;
 	const Verb playVerb{
 		.name = "play",
@@ -43,5 +54,7 @@ namespace xge
 		.make = makePlay,
 		.check = checkPlay,
 		.run = runPlay,
+		.print = printPlay,
+		.printRaw = printPlayRaw,
 	};
 }

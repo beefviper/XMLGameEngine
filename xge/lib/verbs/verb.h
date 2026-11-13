@@ -195,4 +195,10 @@ namespace xge
 	// What one holder holds, sent to another: a <distribute>, or a <send>
 	// that names no object.
 	Command makeSendHeld(const RawCommand& raw, const ValueEvaluator& evaluate);
+
+	// --- What several verbs' print() share.
+
+	// A <count>'s or <trigger>'s cells as printed: ", here", ", around
+	// straight alike hue", or nothing for none.
+	std::string cellPlaceText(const CellPlace& place);
 }

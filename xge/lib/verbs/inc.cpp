@@ -44,6 +44,19 @@ namespace xge
 		return true;
 	}
 
+	static void printInc(std::ostream& o, const Command& command)
+	{
+		const CmdIncrement& c = std::get<CmdIncrement>(command);
+		o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")";
+	}
+
+	static void printIncRaw(std::ostream& o, const RawCommand& command)
+	{
+		o << "(" << command.variable;
+		if (!(command.amount.kind == RawValue::Kind::Expression && (command.amount.text == "1" || command.amount.text.empty()))) { o << ", " << command.amount; }
+		o << ")";
+	}
+
 	extern const Verb incVerb;
 	const Verb incVerb{
 		.name = "inc",
@@ -54,5 +67,7 @@ namespace xge
 		.make = makeInc,
 		.check = checkInc,
 		.run = runInc,
+		.print = printInc,
+		.printRaw = printIncRaw,
 	};
 }

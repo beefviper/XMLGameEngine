@@ -32,6 +32,12 @@ namespace xge
 		return true;
 	}
 
+	static void printCount(std::ostream& o, const Command& command)
+	{
+		const CmdCount& c = std::get<CmdCount>(command);
+		o << "count(" << c.objClass << ", " << c.target.written() << cellPlaceText(c.place) << ")";
+	}
+
 	extern const Verb countVerb;
 	const Verb countVerb{
 		.name = "count",
@@ -42,5 +48,6 @@ namespace xge
 		.make = makeCount,
 		.check = nullptr,
 		.run = runCount,
+		.print = printCount,
 	};
 }
