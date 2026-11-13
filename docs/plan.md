@@ -281,7 +281,7 @@ Order by how many existing games gain. Each ends with the docs, a game or two mo
 
 ## Long term
 
-Goals the author has set, beyond the tasks above. Neither is scheduled; delta time comes before the camera.
+Goals the author has set, beyond the tasks above. None is scheduled; delta time comes before the camera.
 
 ### Delta time
 
@@ -296,6 +296,13 @@ Goals the author has set, beyond the tasks above. Neither is scheduled; delta ti
 
 - **Version 2, on hold by the author's choice** ([ideas](designs/57-ideas.md)).
 - Positions, screen edges and collisions all assume the window is the world, so the design is worth writing before much more code leans on that.
+
+### A review of the C++
+
+- The same pass the language had: name the few ideas the engine really has, then ask of each large file which idea it belongs to and why it needs more than that. Something can be abstract and still simple.
+- The engine library is about 42,000 lines, and five files hold a third of it (`load/xml.cpp`, `load/expr.cpp`, `game/game.cpp`, `game/cards.cpp`, `game/object.h`).
+- The reader is the first target: much of it writes out, tag by tag, what the schema already says.
+- A2 to A4 above only tidy what is there.
 
 ## Backlog
 
@@ -317,11 +324,12 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 ### The project
 
-- **A review of the C++, as the language had.** The engine library is about 42,000 lines, and five files hold a third of it (`load/xml.cpp`, `load/expr.cpp`, `game/game.cpp`, `game/cards.cpp`, `game/object.h`). Name the few ideas the engine really has, then ask of each large file which idea it belongs to and why it needs more than that. The reader is the first target: much of it writes out, tag by tag, what the schema already says. A2 to A4 above only tidy what is there.
-- **A build that runs in a browser,** so a game can be played from a link without compiling anything.
-- **A version on the language.** A game file says which version it was written for, and each change to the language comes with a stylesheet that upgrades older files.
-- **A definition of 1.0:** which genres, which vocabulary is frozen, which targets. The plan has no finish line without it.
-- **Sampled sound.** Only notes made into samples exist today; a recorded sound file cannot be played ([sound](designs/33-sound.md)).
+- **A build that runs in a browser,** so a game can be played from a link without compiling anything. Not hard, but better done once the language has settled.
+- **A version on the language, and a definition of 1.0.** The two go together.
+  - A game file says which version of the language it was written for. Suggested: an attribute on `<game>`, since it picks something (`<game version="1">`), a whole number that goes up with each change that breaks older files.
+  - Each such change comes with a stylesheet that upgrades older files, which is also how the shipped games would be moved.
+  - 1.0 says which genres, which vocabulary is frozen and which targets. The plan has no finish line without it.
+- **Sound files.** A sound may name a recorded file (WAV, MP3, whatever can be decoded), written much as a sprite names an image file. Only notes exist today ([sound](designs/33-sound.md)). Suggested: the engine decodes the file into the same samples the notes become, so every sound library plays it alike and `<loop />`, `<volume>`, `<play>` and `<music>` work unchanged.
 
 ### Language and engine
 
