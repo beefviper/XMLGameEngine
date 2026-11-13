@@ -160,8 +160,8 @@ target_compile_options(</xsl:text>
 		-Wlogical-op -Wuseless-cast&gt;)
 
 </xsl:text>
-    <xsl:if test="$texts or $pictures">
-      <xsl:text># The game opens its font and pictures from assets/ beside where it runs:
+    <xsl:if test="$texts or $pictures or $recordings">
+      <xsl:text># The game opens its font, pictures and recordings from assets/ beside where it runs:
 # copied beside the program, and the folder Visual Studio starts it in.
 add_custom_command(TARGET </xsl:text>
       <xsl:value-of select="$name" />
@@ -211,7 +211,7 @@ Only reading XML and choosing among window and sound libraries are left out.
 | `source/game_parts.h` | the small functions the game is written with, a tag each |
 | `source/main.cpp` | makes the game, an SFML window and SFML sound, and runs the engine's loop |
 | `engine/` | the engine's own files, as they are in its `xge/lib/` |
-| `assets/` | the fonts and pictures it opens (a font with its licence), copied beside the program when it is built |
+| `assets/` | the fonts, pictures and recordings it opens (a font with its licence), copied beside the program when it is built |
 | `LICENSE` | the engine's licence (MIT), which goes with its code |
 | `CMakeLists.txt` | the build; it uses installed SFML 3 and lunasvg, or downloads and builds them |
 | `.gitignore` | leaves out `build/` and `output/` |

@@ -13,18 +13,17 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 
 | # | Task | Why here |
 |---|---|---|
-| 1 | [F9](#f9-sound-files) steps 1 to 4: sound files | Small and self-contained; the first new thing a game can do |
-| 2 | [A5](#a5-a-game-written-out-as-if-by-hand) steps 1 to 6: the stand-alone generator as far as Breakout | The author's main aim; early enough to learn whether the idea holds |
-| 3 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
-| 4 | [F6](#f6-rules-that-are-looked-at-when-nothing-moves): rules when nothing moves | Removes two limits and some fakes in the games |
-| 5 | [F3](#f3-a-maze-search), then [F5](#f5-line-of-sight): maze search, line of sight | Two small steering additions that share games (Berserk, Haunted House) |
-| 6 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
-| 7 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
-| 8 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
-| 9 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
-| 10 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
-| 11 | [F8](#f8-dice): dice | Waits on the hold on new games |
-| 12 | [A7](#a7-the-next-backend-is-cheap) step 6 onward, [A5](#a5-a-game-written-out-as-if-by-hand) step 7 onward | The two that never finish: a backend at a time, a game at a time |
+| 1 | [A5](#a5-a-game-written-out-as-if-by-hand) steps 1 to 6: the stand-alone generator as far as Breakout | The author's main aim; early enough to learn whether the idea holds |
+| 2 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
+| 3 | [F6](#f6-rules-that-are-looked-at-when-nothing-moves): rules when nothing moves | Removes two limits and some fakes in the games |
+| 4 | [F3](#f3-a-maze-search), then [F5](#f5-line-of-sight): maze search, line of sight | Two small steering additions that share games (Berserk, Haunted House) |
+| 5 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
+| 6 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
+| 7 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
+| 8 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
+| 9 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
+| 10 | [F8](#f8-dice): dice | Waits on the hold on new games |
+| 11 | [A7](#a7-the-next-backend-is-cheap) step 6 onward, [A5](#a5-a-game-written-out-as-if-by-hand) step 7 onward | The two that never finish: a backend at a time, a game at a time |
 
 What must come before what:
 
@@ -289,25 +288,10 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
 
 #### F9. Sound files
 
-- **Needs** nothing. Cannot be fully judged in a container: the author listens.
-- **Why.** Sounds are only notes today; a recorded sound cannot be played. The engine already turns every sound into samples itself (`synthesize()`, `xge/lib/audio/sound.h`: signed 16 bit, one channel, `kSoundSampleRate`) and a sound library is only handed those samples. So a sound file is decoded by the engine into the same samples, and nothing after that point knows the difference.
-- **The form.** Written as a sprite names an image file:
-
-  ```xml
-  <sound name="roar"><path>assets/roar.wav</path></sound>
-  <sound name="hum"><loop /><volume>0.2</volume><path>assets/hum.wav</path></sound>
-  ```
-
-  A sound holds notes, parts or a path: one of the three, never two. `<loop />`, `<volume>`, `<play>`, `<silence>` and `<music>` work unchanged.
+- **Built:** a `<sound>` can be a `<path>` to an uncompressed WAV, decoded by the engine (`audio/wave.cpp`) into the same samples as notes ([sounds](reference/sounds.md#recordings), [sound](designs/33-sound.md)). What is left is the author's.
 - **Steps.**
-  - [x] **1. One place makes a sound's samples (S).** Today each sound library calls `synthesize()` itself (`audio/sfml.cpp`, `audio/sdl2.cpp`, `audio/raylib.cpp`). Add `std::vector<std::int16_t> samplesOf(const SoundDesc&)` to `audio/sound.h` and `sound.cpp`, which for now only calls `synthesize()`, and make the three call it. No behaviour changes. **Check:** `synthesize(` is called only inside `sound.cpp` and the tests; `xgetest "[sound]"` passes.
-  - [x] **2. Read a WAV file (S).** A new `xge/lib/audio/wave.cpp` and `wave.h` (add to `ENGINE_SOURCES` and `engine.xml`): `std::vector<std::int16_t> readWave(const std::filesystem::path&)`. It reads uncompressed PCM, 8 or 16 bit, one or two channels, any rate; two channels are averaged into one; another rate is resampled to `kSoundSampleRate` by straight-line interpolation. It throws, naming the file, when the file is missing, not a WAV, compressed, or longer than a limit (suggest 60 seconds, a constant beside `kMaxNoteSeconds`). **Check:** a test in `xge/tests/engine/test_sound.cpp` writes a small WAV itself (named with `scratchName()`), reads it back and compares the samples; one test each for stereo, another rate, and each refusal.
-  - [x] **3. The word (S).** `<path>` in a `<sound>`. Schema `soundType`: its choice of notes or parts gains `<path>`. `RawSound` gains `path`; `readSound` (`load/xml.cpp`); `SoundDesc` gains `path`; `processSound` (`load/expr.cpp`) checks the file is there, so a missing file stops the load before a window opens. `samplesOf` calls `readWave` when the sound has a path, then applies the volume. **Check:** a test game with a path sound loads and its samples are the file's; a missing file stops the load with a message naming the sound and the file.
-  - [ ] **4. The generator (S).** The `sounds` template in `games/generators/windows-cpp/data.xsl` writes the path, the describer in `xge/tests/generated/test_generated_games.cpp` compares it, and `--generate` copies the file as it copies an image's (`xge/cli/source/generate.cpp`, where it reads each `path`). **Check:** `xgetest-generated` with the test game from step 3.
-  - [ ] **5. The author: a recording and a game.** `path` is already a word of the schema (an image's), so the vocabulary test forces no game. The author picks a recording and a game to use it in; the file's licence goes beside it in `games/assets/`, as the font's does. Add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows): the author listens on each sound library.
+  - [ ] **5. The author: a recording and a game.** `path` is already a word of the schema (an image's), so the vocabulary test forces no game. The author picks a recording and a game to use it in; the file's licence goes beside it in `games/assets/`, as the font's does. Then a line in [Waiting for a look on Windows](#waiting-for-a-look-on-windows): the author listens on each sound library.
   - [ ] **6. The author: compressed files (M once picked).** MP3 and Ogg each need a decoder in the engine: one small library, fetched like the others, behind one `readSoundFile` that picks by the file's ending and returns the same samples. Which library, and its licence, is the author's call: ask before fetching one.
-- **Docs.** `docs/reference/sounds.md` (its first line says nothing is loaded from a file), `docs/designs/33-sound.md`, `docs/reference/limits.md`. A sampled sound cannot go to a target with only a sound chip: note it under targets in `docs/designs/57-ideas.md`.
-- **Done when** steps 1 to 4 are ticked.
 
 ## Long term
 

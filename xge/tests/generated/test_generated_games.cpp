@@ -401,6 +401,7 @@ namespace
 				text(at + ".wave", s.wave);
 				flag(at + ".loop", s.loop);
 				value(at + ".volume", s.volume);
+				text(at + ".path", s.path);
 				for (std::size_t i = 0; i < s.notes.size(); ++i)
 				{
 					const RawNote& n = s.notes[i];

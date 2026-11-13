@@ -59,6 +59,7 @@
   <xsl:variable name="pictures" select="//sprite/image/path | //sprite/svg/path | //pictures/sheet/path" />
   <xsl:variable name="texts" select="//sprite/text" />
   <xsl:variable name="fonts" select="//text/font | //styles/style/font" />
+  <xsl:variable name="recordings" select="//sounds/sound/path" />
 
   <xsl:template match="/">
     <xsl:if test="not(game)">
@@ -122,7 +123,7 @@ output/
           </xsl:attribute>
         </asset>
       </xsl:for-each>
-      <xsl:for-each select="$pictures">
+      <xsl:for-each select="$pictures | $recordings">
         <asset>
           <xsl:attribute name="path">
             <xsl:call-template name="trim">

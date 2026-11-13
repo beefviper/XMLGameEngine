@@ -3434,48 +3434,62 @@
         <xsl:with-param name="to" select="'sound.volume'" />
         <xsl:with-param name="node" select="volume[last()]" />
       </xsl:call-template>
-      <xsl:value-of select="concat($inner, 'sound.notes = {&#10;')" />
-      <xsl:for-each select="note | rest | part/note | part/rest">
-        <xsl:variable name="wave" select="(@wave | parent::part/@wave)[last()]" />
-        <xsl:value-of select="concat($inner, $tab)" />
-        <xsl:if test="parent::part">
-          <xsl:value-of select="concat('inPart(', count(parent::part/preceding-sibling::part), ', ')" />
-        </xsl:if>
-        <xsl:choose>
-          <xsl:when test="self::rest">
-            <xsl:text>rest(</xsl:text>
-            <xsl:call-template name="value">
-              <xsl:with-param name="node" select="." />
+      <xsl:if test="path">
+        <xsl:value-of select="concat($inner, 'sound.path = ')" />
+        <xsl:call-template name="string">
+          <xsl:with-param name="text">
+            <xsl:call-template name="trim">
+              <xsl:with-param name="text" select="string(path)" />
             </xsl:call-template>
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:text>note(</xsl:text>
-            <xsl:call-template name="string">
-              <xsl:with-param name="text" select="@pitch" />
-            </xsl:call-template>
-            <xsl:text>, </xsl:text>
-            <xsl:call-template name="value">
-              <xsl:with-param name="node" select="." />
-            </xsl:call-template>
-            <xsl:if test="$wave != '' or @to != ''">
-              <xsl:text>, </xsl:text>
-              <xsl:call-template name="string">
-                <xsl:with-param name="text" select="$wave" />
+          </xsl:with-param>
+        </xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+      </xsl:if>
+      <xsl:if test="note | rest | part">
+        <xsl:value-of select="concat($inner, 'sound.notes = {&#10;')" />
+        <xsl:for-each select="note | rest | part/note | part/rest">
+          <xsl:variable name="wave" select="(@wave | parent::part/@wave)[last()]" />
+          <xsl:value-of select="concat($inner, $tab)" />
+          <xsl:if test="parent::part">
+            <xsl:value-of select="concat('inPart(', count(parent::part/preceding-sibling::part), ', ')" />
+          </xsl:if>
+          <xsl:choose>
+            <xsl:when test="self::rest">
+              <xsl:text>rest(</xsl:text>
+              <xsl:call-template name="value">
+                <xsl:with-param name="node" select="." />
               </xsl:call-template>
-              <xsl:if test="@to != ''">
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:text>note(</xsl:text>
+              <xsl:call-template name="string">
+                <xsl:with-param name="text" select="@pitch" />
+              </xsl:call-template>
+              <xsl:text>, </xsl:text>
+              <xsl:call-template name="value">
+                <xsl:with-param name="node" select="." />
+              </xsl:call-template>
+              <xsl:if test="$wave != '' or @to != ''">
                 <xsl:text>, </xsl:text>
                 <xsl:call-template name="string">
-                  <xsl:with-param name="text" select="@to" />
+                  <xsl:with-param name="text" select="$wave" />
                 </xsl:call-template>
+                <xsl:if test="@to != ''">
+                  <xsl:text>, </xsl:text>
+                  <xsl:call-template name="string">
+                    <xsl:with-param name="text" select="@to" />
+                  </xsl:call-template>
+                </xsl:if>
               </xsl:if>
-            </xsl:if>
-          </xsl:otherwise>
-        </xsl:choose>
-        <xsl:text>)</xsl:text>
-        <xsl:if test="parent::part">)</xsl:if>
-        <xsl:text>,&#10;</xsl:text>
-      </xsl:for-each>
-      <xsl:value-of select="concat($inner, '};&#10;', $in, '}));&#10;')" />
+            </xsl:otherwise>
+          </xsl:choose>
+          <xsl:text>)</xsl:text>
+          <xsl:if test="parent::part">)</xsl:if>
+          <xsl:text>,&#10;</xsl:text>
+        </xsl:for-each>
+        <xsl:value-of select="concat($inner, '};&#10;')" />
+      </xsl:if>
+      <xsl:value-of select="concat($in, '}));&#10;')" />
     </xsl:for-each>
     <xsl:value-of select="concat($in, 'return all;&#10;&#9;}&#10;&#10;')" />
   </xsl:template>
