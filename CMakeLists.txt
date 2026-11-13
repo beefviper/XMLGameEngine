@@ -105,6 +105,7 @@ set(ENGINE_HEADERS
 	"xge/lib/load/calc.h"
 	"xge/lib/game/command.h"
 	"xge/lib/play/geometry.h"
+	"xge/lib/play/numbers.h"
 	"xge/lib/play/verbs.h"
 	"xge/lib/play/frame.h"
 	"xge/lib/play/maze.h"

@@ -30,11 +30,13 @@ The format was chosen partly so a game could be transformed with XML's own tools
 
 The first target wrote each game as a program a person might write (Pong about 480 lines). Its verbs moved into the engine's `play/geometry.cpp` and the sweep was shared, but differences remained (thrust applied as the key was read, members never touching each other). **A copy of the engine's behaviour, however carefully kept, drifts.** So the stylesheets write only what the file says.
 
-## A readable game on the shared frame (set aside)
+## A readable game on the shared frame
 
 - The aim: a generated game that reads like a program written for it and plays exactly the same by calling the engine's code for the work.
 - **Built and kept:** the frame order moved out of `Game` into `play/frame.cpp` (`playOneFrame` asks a `FrameRules` what the game says), and the verbs into `play/verbs.cpp`. The engine and every generated game run on it.
-- **Tried and removed:** Pong written by hand as its own `FrameRules` (about 150 lines), matching the engine for ten seeds of 3600 frames. In the history up to 7163ea2.
+- **The example, by hand:** `games/prototypes/pong_min/` is `pong_min.xml` written as a person would write it, its own `FrameRules` in about 150 lines, built as the `pong_min` program. `test_prototype_pong.cpp` plays it beside the engine for ten seeds of 3600 frames and they match every frame. Set aside once, it is back as what `windows-cpp` is to write.
+- The one-number operations a value is written with (`sign`, `sine`, `cosine`) are `play/numbers.h`, which the loader and a written-out game both call, so a serve comes out the same to the last bit.
+- **How strict:** exact while it comes cheap. A difference that is only rounding is not chased: that game's check becomes what it does (serves, returns, paddles stop), not where every object is (the author's wish).
 - **It taught:** values are the hard part. The old expression library regrouped constants, so C++ differed in the last bit; the engine's own `load/calc` now works a text exactly as written. The order of random draws (alphabetical by variable) still has to match.
 
 ## Where it goes next (chosen by the author)

@@ -104,3 +104,21 @@ target_include_directories(xgecli PRIVATE xge/cli/include)
 
 # --generate needs libxslt (dependencies.cmake); without it generate.cpp says so.
 xge_link_xslt(xgecli)
+
+# The hand-written Pong (games/prototypes/pong_min): the example of what the
+# windows-cpp generator is to write, pong_min.xml as plain code on the
+# engine's own small functions (the frame, the verbs, the numbers) and its
+# SFML window. Linked against the library for now; the files a generated
+# game needs are listed when the generator copies them.
+if (XGE_WITH_SFML3)
+	add_executable(pong_min
+		"games/prototypes/pong_min/source/main.cpp"
+		"games/prototypes/pong_min/source/pong_min.cpp"
+		"games/prototypes/pong_min/source/pong_min.h"
+	)
+	target_compile_features(pong_min PRIVATE cxx_std_20)
+	target_include_directories(pong_min PRIVATE games/prototypes/pong_min/source)
+	target_link_libraries(pong_min PRIVATE xgelib)
+	xge_warnings(pong_min)
+	xge_place_program(pong_min)
+endif()

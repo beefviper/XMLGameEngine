@@ -13,6 +13,7 @@
 #include "engine/keys.h"
 #include "load/spelling.h"
 #include "picture/svg.h"
+#include "play/numbers.h"
 #include "audio/wave.h"
 
 #include <algorithm>
@@ -1701,7 +1702,7 @@ namespace xge
 		const float x = answer.value;
 		if (operation.op == "absolute") { answer.value = std::fabs(x); return answer; }
 		if (operation.op == "negate") { answer.value = -x; return answer; }
-		if (operation.op == "sign") { answer.value = x > 0.0f ? 1.0f : x < 0.0f ? -1.0f : 0.0f; return answer; }
+		if (operation.op == "sign") { answer.value = sign(x); return answer; }
 		if (operation.op == "floor") { answer.value = std::floor(x); return answer; }
 		if (operation.op == "ceiling") { answer.value = std::ceil(x); return answer; }
 		if (operation.op == "round") { answer.value = std::round(x); return answer; }
@@ -1709,9 +1710,7 @@ namespace xge
 		// Of an angle in degrees, like every angle in a game.
 		if (operation.op == "sine" || operation.op == "cosine")
 		{
-			constexpr float kRadiansPerDegree = 3.14159265358979323846f / 180.0f;
-			const float radians = x * kRadiansPerDegree;
-			answer.value = operation.op == "sine" ? std::sin(radians) : std::cos(radians);
+			answer.value = operation.op == "sine" ? sine(x) : cosine(x);
 			return answer;
 		}
 

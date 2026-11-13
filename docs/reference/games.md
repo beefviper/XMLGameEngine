@@ -18,7 +18,7 @@ The tables list only keys beyond that.
 | Game | Keys | Shows |
 |---|---|---|
 | `pong` | W/S; on the title Space plays the computer (A/D easy or smart), 2 two players on Up/Down | [`<deflect>`](commands.md#touching) off the paddles, a [computer](states.md#computer-players) of two levels on keys of its own (F11, F12), so Up and Down do nothing against it |
-| `pong_min` | W/S, Up/Down | two paddles and a ball, nothing else; the game [`--generate`](programs.md#generating-a-program) was grown on |
+| `pong_min` | W/S, Up/Down | two paddles and a ball, nothing else; the game [`--generate`](programs.md#generating-a-program) was grown on, written by hand in `games/prototypes/pong_min/` |
 | `breakout` | A/D, the mouse | eight rows of bricks as one group, a half paddle at the top, the mouse by [`<track />`](input.md#pointing-controls) |
 | `spacerace` | W/S, Up/Down | two rockets through drifting debris, the most crossings in a minute |
 

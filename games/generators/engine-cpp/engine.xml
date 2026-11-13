@@ -16,6 +16,7 @@
   <file>lib/game/types.h</file>
   <file>lib/play/geometry.h</file>
   <file>lib/play/geometry.cpp</file>
+  <file>lib/play/numbers.h</file>
   <file>lib/game/random.h</file>
   <file>lib/game/random.cpp</file>
   <file>lib/play/verbs.h</file>

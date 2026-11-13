@@ -100,10 +100,12 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `play/geometry.cpp`, `play/collision.cpp` | touching (box, circle, swept, pixel walk, `contactOf`) and the verbs' arithmetic |
 | | `play/verbs.cpp`, `play/executor.cpp` | the verbs' work on objects; running a command by its verb, and the work that needs the game |
 | | `play/maze.cpp` | walking a map's tiles |
+| | `play/numbers.h` | the one-number operations of a value (`sign`, `sine`, `cosine`), shared by the loader and a game written out as code |
 | pictures | `picture/bitmap.cpp`, `svg.cpp`, `image.cpp`, `font.cpp`, `color.cpp` | pixels, flips and turns; SVG with lunasvg; picture sheets cut and shrunk (`<pictures>`); fonts and the 8x8 fallback; colour names |
 | loop and libraries | `engine/engine.cpp`, `backends.cpp`, `keys.cpp`, `folder.cpp` | the loop (`loop()`, or `step()` and `render()`), choosing libraries, key names, the games folder and `findSchema` |
 | | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, a file per library; `audio/sound.cpp` is the synthesizer |
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
 | | `xge/gui/source/` | `main_window`, `game_session`, `game_stage`, `game_view`, `qt_window`, `key_queue`, `options_dialog`, `session_options`, `app_settings` (`xgegui.ini`), `inspector`, `theme` |
 | generator | `games/generators/engine-cpp/` | `generate.xsl`, `merge.xsl`, `data.xsl`, `program.xsl`, `text.xsl`, `engine.xml`, `modules/game_parts.h` |
+| | `games/prototypes/pong_min/` | `pong_min.xml` written by hand as plain code on the frame and the verbs, the `pong_min` program: what the `windows-cpp` generator is to write |
 | tests | `xge/tests/` | `engine/` one `test_<topic>.cpp` per area (`test_vocabulary.cpp`: every schema word used by a game or listed with why, in the docs, and every game through 1,000 frames of random keys; `test_names.cpp`: names that match nothing); `games/` one per game (played frame by frame); `generated/` the generated games (`xgetest-generated`); `long/` the long runs (`xgetest-long`: random keys, damaged files, load and frame times, `test_pace.cpp` frame pace in real time); `helpers/` what they share: `played.h`, `invaders_fixture.h` a frozen Space Invaders, `scratch.h` a scratch name per run, `test_main.cpp` |
