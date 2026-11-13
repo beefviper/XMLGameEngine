@@ -162,9 +162,6 @@ namespace xge
 		// its class in those cells about `self`, each piece once however the
 		// actions it runs trigger more (aboutReached, aboutDepth).
 		void triggerAbout(Object& self, const CmdTriggerAction& trigger, bool byRule);
-
-		// False when every one of the projectiles is in flight.
-		bool spawnProjectile(Object& shooter, const std::string& projectileName);
 		bool spawnOne(const CmdSpawn& command, const Object* self);
 
 	private:

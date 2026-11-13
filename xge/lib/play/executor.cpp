@@ -644,49 +644,6 @@ namespace xge
 		object.activeThrustAheadBy[action] = { amount, burn };
 	}
 
-	// Launches a copy of a piece (Game::spawn), refused when its <most> are
-	// in flight. From a shooter with a heading the shot leaves its nose the
-	// way it faces, at the projectile's own speed; from any other it leaves
-	// the top centre, at the projectile's own velocity.
-	bool CommandExecutor::spawnProjectile(Object& shooter, const std::string& projectileName)
-	{
-		Object* projectile = game.spawn(projectileName);
-		if (!projectile) { return false; }
-
-		const Box from{ shooter.position, sizeOf(shooter) };
-		const Vector2f shotSize = sizeOf(*projectile);
-		const float speed = std::hypot(projectile->start.velocity.x, projectile->start.velocity.y);
-		std::optional<Shot> shot;
-		if (shooter.hasAim)
-		{
-			// Straight along the aim, from the middle of the shooter, just clear
-			// of it, at the projectile's own speed.
-			shot = shotAlong(from, shotSize, shooter.aim, speed);
-		}
-		else if (shooter.hasHeading)
-		{
-			shot = shotAhead(from, shotSize, shooter.heading, speed);
-		}
-		else if (shooter.hasFacing)
-		{
-			// From the middle of the side it faces, just clear of it, moving that
-			// way at the projectile's own speed.
-			shot = shotFacing(from, shotSize, shooter.facing, speed);
-		}
-		else
-		{
-			// From the shooter's top-centre: the projectile's own middle over
-			// the shooter's, so a thin shot leaves the middle of the gun.
-			shot = Shot{ shotFromTop(from, shotSize), projectile->start.velocity };
-		}
-
-		projectile->position = shot->position;
-		projectile->velocity = shot->velocity;
-		projectile->isVisible = true;
-		projectile->collisionsOn = true;
-		return true;
-	}
-
 	// `command.count` new objects, copies of `spawn.target` (Game::spawn),
 	// each put and sent where the command says. False only when not one more
 	// of it may exist; past its <most> the rest are simply not made.
