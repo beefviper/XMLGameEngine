@@ -784,6 +784,23 @@ TEST_CASE("Centipede: a head rising meets the zone's line and winds back down a 
 	CHECK(highest == 27);
 }
 
+TEST_CASE("Centipede plays: a head that meets the wand bursts it, everything standing still, then a life is gone", "[cells][centipede]")
+{
+	Played play("descriptions/centipede.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	const auto lives = [&] { return play.get("status").variable.at("lives"); };
+	for (int f = 0; f < 60 * 120 && play.state() == "playing"; ++f) { play.frames(1); }
+	REQUIRE(play.state() == "caught");
+	CHECK(lives() == 3.0f);
+	CHECK_FALSE(play.get("playing.wand").isVisible);
+
+	play.frames(90);
+	CHECK(play.state() == "playing");
+	CHECK(lives() == 2.0f);
+	CHECK(play.get("playing.wand").isVisible);
+}
+
 TEST_CASE("Centipede plays: the shot goes up whichever way the wand last moved, and another follows", "[cells][centipede]")
 {
 	Played play("descriptions/centipede.xml");

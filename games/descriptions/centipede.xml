@@ -28,6 +28,9 @@
   * Shot, a piece runs <split />: the links behind it are a centipede of
     their own, led by the first of them, which takes the head's look and
     way. Then the piece goes and a mushroom is spawned in its cell.
+  * Caught, the wand goes out of play and the state caught stands the field
+    still while a burst plays over it (a <once /> animation); its timer
+    takes the life and starts the centipede again.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -271,7 +274,12 @@
             <collision edge="all"><stick /></collision>
             <collision class="line"><stick /></collision>
             <collision class="mushroom"><stick /></collision>
-            <collision class="centipede"><set variable="status.hit">1</set></collision>
+            <!-- out of play while it bursts (the state caught) -->
+            <collision class="centipede">
+              <set variable="status.hit">1</set>
+              <play sound="hit" />
+              <die />
+            </collision>
           </collisions>
           <actions>
             <action name="left"><move direction="left">4</move></action>
@@ -291,14 +299,11 @@
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
-        <!-- caught: a life gone, and the centipede starts again -->
+        <!-- caught: the wand bursts, then a life is gone and the centipede starts again -->
         <condition object="status" variable="hit">
           <equal>1</equal>
           <set variable="status.hit">0</set>
-          <dec variable="status.lives" />
-          <play sound="hit" />
-          <reset object="centipede" />
-          <trigger object="heads" action="start" />
+          <push state="caught" />
         </condition>
         <condition object="status" variable="lives">
           <atmost>0</atmost>
@@ -313,6 +318,45 @@
       </conditions>
       <timers>
         <timer><after>0</after><trigger object="heads" action="start" /></timer>
+      </timers>
+    </state>
+    <!-- caught: the wand bursts, everything standing still -->
+    <state name="caught">
+      <objects>
+        <object name="wreck">
+          <sprite name="a"><bitmap from="wreck-a" /></sprite>
+          <sprite name="b"><bitmap from="wreck-b" /></sprite>
+          <sprite name="c"><bitmap from="wreck-c" /></sprite>
+          <sprite name="d"><bitmap from="wreck-d" /></sprite>
+          <animation>
+            <seconds>0.12</seconds>
+            <once />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d"><seconds>0.4</seconds></frame>
+          </animation>
+          <position><x update="live">wand.x</x><y update="live">wand.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.4</after>
+          <dec variable="status.lives" />
+          <reveal object="wand" />
+          <reset object="centipede" />
+          <trigger object="heads" action="start" />
+          <reset object="wreck" />
+          <pop />
+        </timer>
       </timers>
     </state>
     <state name="paused">
@@ -350,4 +394,63 @@
     <sound name="pop" wave="noise"><note pitch="C4">0.05</note></sound>
     <sound name="hit" wave="triangle"><note pitch="G4" to="C2">0.6</note></sound>
   </sounds>
+  <pictures>
+    <!-- a burst, four pictures: a flash, a ball, its pieces flying, the last sparks -->
+    <bitmap name="wreck-a">
+      <row>.........</row>
+      <row>.........</row>
+      <row>....*....</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>....*....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>2</scale>
+      <color>color.white</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="wreck-b">
+      <row>.........</row>
+      <row>..*...*..</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>.*oo.oo*.</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>..*...*..</row>
+      <row>.........</row>
+      <scale>2</scale>
+      <color>color.white</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="wreck-c">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...o.o...</row>
+      <row>..o...o..</row>
+      <row>*.......*</row>
+      <row>..o...o..</row>
+      <row>...o.o...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>2</scale>
+      <color>color.white</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="wreck-d">
+      <row>o.......o</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>....o....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>o.......o</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="o">color.red</color>
+    </bitmap>
+  </pictures>
 </game>
