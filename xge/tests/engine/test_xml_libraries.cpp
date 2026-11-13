@@ -13,8 +13,13 @@
 #include "load/expr.h"
 #include "load/xml.h"
 #include "xml/document.h"
+#include "scratch.h"
 
 #include <catch2/catch_test_macros.hpp>
+
+#include <filesystem>
+#include <fstream>
+#include <memory>
 
 #include <optional>
 #include <sstream>
@@ -112,4 +117,26 @@ TEST_CASE("every XML library loads these games the same: hauntedhouse, frogger, 
 TEST_CASE("every XML library loads these games the same: trickshot, fishingderby, yarsrevenge, atlantis", "[xml_format][backends]")
 {
 	for (const char* game : { "trickshot", "fishingderby", "yarsrevenge", "atlantis" }) { loadsTheSame(game); }
+}
+
+TEST_CASE("an element knows the line its tag starts on", "[xml_format][backends][line_numbers]")
+{
+	const std::string file = scratchName("descriptions/lines.xml");
+	std::ofstream(file) << "<a>\n  <b />\n  <c>\n    <d>text</d>\n  </c>\n</a>\n";
+
+	for (const XmlBackend backend : { XmlBackend::TinyXml2 })
+	{
+		INFO(XmlDocumentFactory::name(backend));
+		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
+		REQUIRE(document->load(file));
+		const std::unique_ptr<XmlNode> a = document->getRootElement();
+		const std::unique_ptr<XmlNode> b = a->getFirstChild();
+		const std::unique_ptr<XmlNode> c = b->getNextSibling();
+		const std::unique_ptr<XmlNode> d = c->getFirstChild();
+		CHECK(a->line() == 1);
+		CHECK(b->line() == 2);
+		CHECK(c->line() == 3);
+		CHECK(d->line() == 4);
+	}
+	std::filesystem::remove(file);
 }

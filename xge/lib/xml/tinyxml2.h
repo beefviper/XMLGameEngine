@@ -25,6 +25,7 @@ namespace xge
 		std::string getText() const override;
 		std::unique_ptr<XmlNode> getFirstChild() const override;
 		std::unique_ptr<XmlNode> getNextSibling() const override;
+		int line() const override;
 
 	private:
 		const tinyxml2::XMLElement* element;

@@ -76,6 +76,11 @@ namespace xge
 		return sibling ? std::make_unique<TinyXml2Node>(sibling) : nullptr;
 	}
 
+	int TinyXml2Node::line() const
+	{
+		return element ? element->GetLineNum() : 0;
+	}
+
 	bool TinyXml2Document::load(const std::string& filename)
 	{
 		std::cout << "[TinyXML2] Loading file: " << filename << '\n';

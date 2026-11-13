@@ -66,6 +66,10 @@ namespace xge
 		// instructions between them are not, in any backend.
 		virtual std::unique_ptr<XmlNode> getFirstChild() const = 0;
 		virtual std::unique_ptr<XmlNode> getNextSibling() const = 0;
+
+		// The line of the file its tag starts on, counting from 1; 0 when
+		// that is not known. What a load error points at.
+		virtual int line() const { return 0; }
 	};
 
 	// What load/xml needs from a whole parsed document - load it, find out

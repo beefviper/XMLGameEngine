@@ -68,7 +68,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 - **Needs** nothing.
 - **Why.** In a 1,500-line game "object 'playing.ground.1.1' > `<position>` > `<y>`" is slow to find, and a member of a group is named by a path that does not appear in the file.
 - **Steps.**
-  - [ ] **1. The interface, and the easy library (S).** `XmlNode` in `xge/lib/xml/document.h` gains `int line() const`, 0 when unknown. Implement it for TinyXML2 (`GetLineNum()`); the other three return 0 for now. **Check:** a new test in `xge/tests/engine/test_xml_libraries.cpp` reads a three-line file with TinyXML2 and gets line 3 for the third element.
+  - [x] **1. The interface, and the easy library (S).** `XmlNode` in `xge/lib/xml/document.h` gains `int line() const`, 0 when unknown. Implement it for TinyXML2 (`GetLineNum()`); the other three return 0 for now. **Check:** a new test in `xge/tests/engine/test_xml_libraries.cpp` reads a three-line file with TinyXML2 and gets line 3 for the third element.
   - [ ] **2. PugiXML and RapidXML (S).** Both give an offset into the buffer: count the newlines up to it. **Check:** the same test passes for both.
   - [ ] **3. Xerces (M).** It already reports lines for schema errors; the DOM needs a user-data handler or a locator (see where `xerces.cpp` reports schema errors). **Check:** the same test passes for all four libraries.
   - [ ] **4. The merged tree keeps the lines (S).** `xge/lib/load/merge.cpp` copies elements when it works out pieces and `from=`; each copy carries the line of the element it was copied from. **Check:** a test loads a game whose member comes from a piece and reads the piece's line from the merged node.
