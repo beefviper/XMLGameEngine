@@ -29,6 +29,10 @@ namespace xge
 		std::vector<std::pair<std::string, std::string>> attributes;
 		std::string text;
 		std::vector<ElementPtr> children;
+		// The line of the file it was copied from, as XmlNode::line (0: not
+		// known, or made by the merge). An element changed by another keeps
+		// the line of the one it started from.
+		int line{ 0 };
 
 		// "" when it has none, as XmlNode::getAttribute.
 		std::string attribute(const std::string& key) const;

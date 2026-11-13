@@ -38,6 +38,7 @@ namespace xge
 			std::string getAttribute(const std::string& key) const override { return self->attribute(key); }
 			std::vector<std::pair<std::string, std::string>> getAttributes() const override { return self->attributes; }
 			std::string getText() const override { return self->text; }
+			int line() const override { return self->line; }
 
 			std::unique_ptr<XmlNode> getFirstChild() const override
 			{
@@ -324,6 +325,7 @@ namespace xge
 		made->name = node.getName();
 		made->attributes = node.getAttributes();
 		made->text = node.getText();
+		made->line = node.line();
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			made->children.push_back(copyElement(*child));

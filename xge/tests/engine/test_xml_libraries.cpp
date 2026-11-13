@@ -11,6 +11,7 @@
 
 #include "game/game.h"
 #include "load/expr.h"
+#include "load/merge.h"
 #include "load/xml.h"
 #include "xml/document.h"
 #include "scratch.h"
@@ -137,6 +138,45 @@ TEST_CASE("an element knows the line its tag starts on", "[xml_format][backends]
 		CHECK(b->line() == 2);
 		CHECK(c->line() == 3);
 		CHECK(d->line() == 4);
+	}
+	std::filesystem::remove(file);
+}
+
+TEST_CASE("an element taken from a piece keeps the lines it was written on", "[xml_format][line_numbers]")
+{
+	const std::string file = scratchName("descriptions/lines_piece.xml");
+	std::ofstream(file) << "<objects>\n"
+		"  <object name=\"ball\">\n"
+		"    <position><x>1</x><y>2</y></position>\n"
+		"  </object>\n"
+		"  <object name=\"second\" from=\"ball\">\n"
+		"    <velocity><x>3</x><y>4</y></velocity>\n"
+		"  </object>\n"
+		"</objects>\n";
+
+	for (const XmlBackend backend : XmlDocumentFactory::availableBackends())
+	{
+		INFO(XmlDocumentFactory::name(backend));
+		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
+		REQUIRE(document->load(file));
+		const std::unique_ptr<XmlNode> objects = document->getRootElement();
+		const std::unique_ptr<XmlNode> ball = objects->getFirstChild();
+		const std::unique_ptr<XmlNode> second = ball->getNextSibling();
+
+		Kit kit;
+		kit.add(copyElement(*ball), "<objects>");
+		const ElementPtr taken = kit.take("ball", copyElement(*second), "<objects>");
+		const std::unique_ptr<XmlNode> view = viewOf(taken);
+		CHECK(view->getAttribute("name") == "second");
+		CHECK(view->line() == 2); // the piece's
+		const std::unique_ptr<XmlNode> position = view->getFirstChild();
+		REQUIRE(position);
+		CHECK(position->getName() == "position");
+		CHECK(position->line() == 3);
+		const std::unique_ptr<XmlNode> velocity = position->getNextSibling();
+		REQUIRE(velocity);
+		CHECK(velocity->getName() == "velocity");
+		CHECK(velocity->line() == 6); // its own
 	}
 	std::filesystem::remove(file);
 }
