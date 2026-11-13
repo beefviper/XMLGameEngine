@@ -293,6 +293,13 @@ namespace xge::parts
 		return animation;
 	}
 
+	// A named <animation> with <once />: it plays through one time.
+	inline RawFrames once(RawFrames animation)
+	{
+		animation.once = true;
+		return animation;
+	}
+
 	// What an object with named <animation>s looks like: each a look that
 	// moves, then its sprites, starting as the first.
 	inline void moving(RawObject& object, const std::vector<RawSprite>& sprites, const std::vector<RawFrames>& animations)
@@ -311,6 +318,7 @@ namespace xge::parts
 		RawValue interval;
 		std::vector<std::string> frames;
 		std::vector<RawValue> times;
+		bool once{ false };
 		std::vector<RawFrames> moving;
 	};
 
@@ -383,6 +391,7 @@ namespace xge::parts
 		else if (member.animated)
 		{
 			animate(object, member.sprites, member.interval, member.frames, member.times);
+			object.animation.once = member.once;
 		}
 		else
 		{

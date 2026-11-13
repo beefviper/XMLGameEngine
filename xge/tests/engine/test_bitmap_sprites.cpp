@@ -654,6 +654,62 @@ TEST_CASE("a frame with its own seconds shows that long; the others the animatio
 	}
 }
 
+TEST_CASE("an animation with once plays through one time", "[animation]")
+{
+	SECTION("a look goes back to the look shown before it")
+	{
+		const std::string animations =
+			"<animation name=\"idle\"><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"a\" /></animation>"
+			"<animation name=\"flash\"><seconds>0.1</seconds><once /><frame sprite=\"b\" /><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>";
+		Loaded loaded{ gameXml(objectWith(kA + kB, animations), "<show object=\"thing\" />") };
+		Game& game = loaded.game;
+		game.setCurrentState("playing");
+		Object& thing = game.getObject("thing");
+		CHECK(thing.lookName() == "idle");
+
+		thing.showLook(1);
+		CHECK(showing(thing) == 'b');
+		frames(game, 6);
+		CHECK(showing(thing) == 'a');
+		frames(game, 6);
+		CHECK(showing(thing) == 'b');
+		frames(game, 5);
+		CHECK(thing.lookName() == "flash");
+		frames(game, 1);
+		CHECK(thing.lookName() == "idle");
+		CHECK(showing(thing) == 'a');
+
+		// A reset half way puts it on its first look, playing as at the start.
+		thing.showLook(1);
+		frames(game, 7);
+		game.resetAll();
+		CHECK(thing.lookName() == "idle");
+		CHECK(showing(thing) == 'a');
+		frames(game, 120);
+		CHECK(thing.lookName() == "idle");
+	}
+
+	SECTION("an object's one animation stays on its last picture until a reset")
+	{
+		const char* const animation = "<animation><seconds>0.1</seconds><once /><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>";
+		Loaded loaded{ gameXml(objectWith(kA + kB, animation), "<show object=\"thing\" />") };
+		Game& game = loaded.game;
+		game.setCurrentState("playing");
+		Object& thing = game.getObject("thing");
+
+		frames(game, 6);
+		CHECK(showing(thing) == 'b');
+		frames(game, 60);
+		CHECK(showing(thing) == 'b');
+		CHECK(thing.animationDone);
+
+		game.resetAll();
+		CHECK(showing(thing) == 'a');
+		frames(game, 6);
+		CHECK(showing(thing) == 'b');
+	}
+}
+
 TEST_CASE("the interval is in seconds, so it follows the window's framerate", "[animation]")
 {
 	const std::string objects = objectWith(kA + kB, "<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>");

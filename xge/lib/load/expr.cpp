@@ -831,6 +831,7 @@ namespace xge
 					look.frames = buildAnimationBitmaps(rawLook.frames, here, rawObject.hasHeading ? &look.turnables : nullptr);
 					look.frameTicks = animationFramesOf(rawLook.interval, windowDesc, here);
 					look.frameTimes = animationTimesOf(rawLook.times, look.frameTicks, windowDesc, here);
+					look.once = rawLook.once;
 				}
 				if (look.picture.kind == ShapeKind::Text && showsNumbers(rawLook))
 				{
@@ -860,6 +861,7 @@ namespace xge
 			if (!first.animationTurned.empty()) { object.turnables = first.animationTurned; }
 			object.animationFrames = animationFrames;
 			object.animationTimes = animationTimesOf(rawObject.animation.times, animationFrames, windowDesc, where + " > <animation>");
+			object.animationOnce = rawObject.animation.once;
 			object.bitmap = object.animationBitmaps.front();
 		}
 
@@ -1086,6 +1088,7 @@ namespace xge
 			object.animationBitmaps = looks.front().frames;
 			object.animationFrames = looks.front().frameTicks;
 			object.animationTimes = looks.front().frameTimes;
+			object.animationOnce = looks.front().once;
 		}
 
 		// The look for each way it moves; one left out is another's.

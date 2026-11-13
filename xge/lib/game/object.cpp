@@ -56,12 +56,16 @@ namespace xge
 			return;
 		}
 
+		// The look to go back to when a look that plays once ends.
+		if (index != look && look < looks.size() && !looks[look].once) { lookBefore = look; }
 		look = index;
 		picture = looks[index].picture;
 		bitmap = facingPicture(looks[index].bitmap);
 		animationBitmaps = looks[index].frames;
 		animationFrames = looks[index].frameTicks;
 		animationTimes = looks[index].frameTimes;
+		animationOnce = looks[index].once;
+		animationDone = false;
 		animationTick = 0;
 		animationIndex = 0;
 		// Turned to the way it faces: its own pictures to turn from now on.
@@ -349,6 +353,7 @@ namespace xge
 			look.frames = std::move(frames);
 			look.interval = animation.interval;
 			look.times = animation.times;
+			look.once = animation.once;
 			looks.push_back(std::move(look));
 		}
 		for (const RawSprite& sprite : sprites)
@@ -935,21 +940,31 @@ namespace xge
 		}
 	}
 
-	void Object::advanceAnimation()
+	bool Object::advanceAnimation()
 	{
-		if (animationBitmaps.size() < 2 || animationFrames < 1) { return; }
+		if (animationBitmaps.size() < 2 || animationFrames < 1 || animationDone) { return false; }
 
 		const int due = animationTimes.empty() ? animationFrames : animationTimes[animationIndex];
-		if (++animationTick < due) { return; }
+		if (++animationTick < due) { return false; }
 
 		animationTick = 0;
+		if (animationOnce && animationIndex + 1 == animationBitmaps.size())
+		{
+			// Played through: a look goes back to the one before, an
+			// object's one animation stays on its last picture.
+			if (!looks.empty() && lookBefore != look && lookBefore < looks.size()) { showLook(lookBefore); }
+			else { animationDone = true; }
+			return true;
+		}
 		animationIndex = (animationIndex + 1) % animationBitmaps.size();
 		showAnimationFrame();
+		return false;
 	}
 
 	void Object::restartAnimation()
 	{
 		animationTick = 0;
+		animationDone = false;
 
 		if (animationIndex == 0 || animationBitmaps.empty()) { return; }
 

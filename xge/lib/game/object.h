@@ -319,11 +319,12 @@ namespace xge
 
 		// A look that moves, a named <animation>: the sprites its <frame>s
 		// pick, in order, each shown `interval` seconds (or its own, in
-		// `times`), round and round. The fields above are its first frame's.
-		// Empty for a still look.
+		// `times`), round and round, or through one time (`once`). The fields
+		// above are its first frame's. Empty for a still look.
 		std::vector<RawSprite> frames;
 		RawValue interval;
 		std::vector<RawValue> times;
+		bool once{ false };
 	};
 
 	// An <animation> as written: its name (empty for an object's one
@@ -338,6 +339,8 @@ namespace xge
 		// frame has its own; an empty value is the animation's (see
 		// frameTimeGiven).
 		std::vector<RawValue> times;
+		// <once />: plays through one time, not round and round.
+		bool once{ false };
 		// Frames cut from a sheet (<cell>s and runs of <cells>), named for
 		// the animation and numbered ("walk.1", "frame.1" for an unnamed
 		// one), each also among `frames`: sprites the object gains.
@@ -367,6 +370,7 @@ namespace xge
 		RawValue interval;
 		std::vector<RawSprite> frames;
 		std::vector<RawValue> times;   // as RawFrames::times
+		bool once{ false };            // as RawFrames::once
 	};
 
 	// Whether a frame's entry in `times` holds a time of its own, rather
@@ -1050,11 +1054,19 @@ namespace xge
 		std::vector<int> animationTimes;
 		int animationTick{};
 		std::size_t animationIndex{};
+		// <once />: the animation plays through one time. At its end a look
+		// goes back to `lookBefore` (the last look shown that was not itself
+		// once); an object's one animation stays on its last picture and is
+		// `animationDone`.
+		bool animationOnce{ false };
+		bool animationDone{ false };
+		std::size_t lookBefore{};
 
 		// Counts one frame of the game towards the next picture of the
 		// animation, and shows it (marking the visual to be rebuilt) when its
-		// time has come. Does nothing for an object with no animation.
-		void advanceAnimation();
+		// time has come. Does nothing for an object with no animation. True
+		// when an animation that plays once has just ended.
+		bool advanceAnimation();
 
 		// Back to the first picture, from the start of its time.
 		void restartAnimation();
@@ -1464,6 +1476,7 @@ namespace xge
 			std::vector<std::shared_ptr<const Bitmap>> frames;
 			int frameTicks{};
 			std::vector<int> frameTimes;   // as animationTimes
+			bool once{ false };            // as animationOnce
 			// For an object with a <heading>: the look's pictures (one, or
 			// one a frame) kept to be turned to it (see `turnables`).
 			std::vector<std::shared_ptr<const Turnable>> turnables;

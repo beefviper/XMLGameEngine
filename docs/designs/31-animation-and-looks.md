@@ -10,7 +10,8 @@
 - **Frames cut from a sheet:** `<cell>` and runs of `<cells>` beside `<frame>`s, each a sprite of its own named `walk.1`, `walk.2` ([sheets](30-pictures.md#sheets)), so a sprite sheet needs no sprite per frame.
 - Rejected: a global animation clock (awkward with pause and reset).
 - A frame may take its own `<seconds>` (a cycle that holds one picture longer); without, the animation's. Only a `<frame>`, not a sheet's cells, which have no place to say it.
-- Not done: an animation that runs once or starts on a touch.
+- `<once />` plays it through one time, for a burst or a death. A look then goes back to the last look shown that was not itself once, so a flash over a walk returns to the walk without the game naming it; an object's one animation has nothing to go back to and holds its last picture. Going back is a look change like any other, kept as `lookBefore` on the object, and a reset starts over from the first look.
+- Not done: what comes after (a named look or commands) and starting one on a touch.
 
 ## Looks
 

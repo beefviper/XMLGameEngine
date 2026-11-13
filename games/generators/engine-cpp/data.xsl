@@ -1205,9 +1205,11 @@
     <xsl:value-of select="concat($indent, '}')" />
   </xsl:template>
 
-  <!-- A named <animation>, a look that moves: frames("walk", interval, { "a", "b" }). -->
+  <!-- A named <animation>, a look that moves: frames("walk", interval, { "a", "b" }),
+       inside once(...) when it plays through one time. -->
   <xsl:template name="named-frames">
     <xsl:param name="animation" />
+    <xsl:if test="$animation/once">once(</xsl:if>
     <xsl:text>frames(</xsl:text>
     <xsl:call-template name="string">
       <xsl:with-param name="text" select="$animation/@name" />
@@ -1224,6 +1226,7 @@
       <xsl:with-param name="animation" select="$animation" />
     </xsl:call-template>
     <xsl:text>)</xsl:text>
+    <xsl:if test="$animation/once">)</xsl:if>
   </xsl:template>
 
   <!-- Each frame's own <seconds>, when any has: , { RawValue{}, n("0.5") },
@@ -1623,6 +1626,9 @@
           <xsl:with-param name="animation" select="animation" />
         </xsl:call-template>
         <xsl:text>);&#10;</xsl:text>
+        <xsl:if test="animation/once">
+          <xsl:value-of select="concat($in, 'object.animation.once = true;&#10;')" />
+        </xsl:if>
       </xsl:when>
       <!-- no sprite: one that only holds numbers, never drawn -->
       <xsl:when test="not(sprite)">
@@ -2783,6 +2789,9 @@
           </xsl:call-template>
         </xsl:variable>
         <xsl:value-of select="concat(substring-after($times, '{'), ';&#10;')" />
+      </xsl:if>
+      <xsl:if test="$node/once">
+        <xsl:value-of select="concat($indent, $to, '.once = true;&#10;')" />
       </xsl:if>
     </xsl:if>
   </xsl:template>

@@ -655,7 +655,8 @@ namespace xge
 						addCell(std::move(sprite), *node, at);
 					}
 				}
-				else if (tag != "seconds") { fail(here, "unknown <" + tag + ">; expected <seconds> and then <frame>s, <cell>s and runs of <cells>"); }
+				else if (tag == "once") { spec.once = true; }
+				else if (tag != "seconds") { fail(here, "unknown <" + tag + ">; expected <seconds>, <once /> and then <frame>s, <cell>s and runs of <cells>"); }
 			}
 			if (!spec.times.empty()) { spec.times.resize(spec.frames.size()); }
 
@@ -757,6 +758,7 @@ namespace xge
 			RawAnimation chosen;
 			chosen.interval = animation->interval;
 			chosen.times = animation->times;
+			chosen.once = animation->once;
 
 			std::vector<bool> used(sprites.size(), false);
 			for (const std::string& name : animation->frames)

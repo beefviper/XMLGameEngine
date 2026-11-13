@@ -79,6 +79,7 @@ namespace
 		{ "margin", "a group's, round its cells" },
 		{ "near", "a chase that stops short" },
 		{ "odd", "the pair of <even> in rows and columns" },
+		{ "once", "an animation played one time; the games move onto it next (plan F2 step 5)" },
 		{ "off", "a <collisions> written but off until a rule turns it on; its pair is collisions on by default" },
 		{ "pull", "one object drawn to another" },
 		{ "remainder", "an operation" },
