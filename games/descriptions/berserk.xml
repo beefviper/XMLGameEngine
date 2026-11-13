@@ -111,7 +111,7 @@
         <bitmap from="robots-b" />
       </sprite>
       <animation>
-        <interval>0.25</interval>
+        <seconds>0.25</seconds>
         <frame sprite="a" />
         <frame sprite="b" />
       </animation>

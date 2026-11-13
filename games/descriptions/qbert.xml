@@ -209,7 +209,7 @@
               </rectangle>
             </sprite>
             <animation name="ready">
-              <interval>0.12</interval>
+              <seconds>0.12</seconds>
               <frame sprite="spina" />
               <frame sprite="spinb" />
               <frame sprite="spinc" />
@@ -361,12 +361,12 @@
           </sprite>
           <!-- first the egg, which it starts as, squashing as it lands -->
           <animation name="egg">
-            <interval>0.35</interval>
+            <seconds>0.35</seconds>
             <frame sprite="round" />
             <frame sprite="squashed" />
           </animation>
           <animation name="snake">
-            <interval>0.25</interval>
+            <seconds>0.25</seconds>
             <frame sprite="coiled" />
             <frame sprite="raised" />
           </animation>

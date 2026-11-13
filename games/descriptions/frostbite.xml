@@ -209,7 +209,7 @@
             <bitmap from="geese-down" />
           </sprite>
           <animation>
-            <interval>0.2</interval>
+            <seconds>0.2</seconds>
             <frame sprite="up" />
             <frame sprite="down" />
           </animation>

@@ -1214,7 +1214,7 @@
     </xsl:call-template>
     <xsl:text>, </xsl:text>
     <xsl:call-template name="value">
-      <xsl:with-param name="node" select="$animation/interval" />
+      <xsl:with-param name="node" select="$animation/seconds" />
     </xsl:call-template>
     <xsl:text>, </xsl:text>
     <xsl:call-template name="frames">
@@ -1568,7 +1568,7 @@
         </xsl:call-template>
         <xsl:text>, </xsl:text>
         <xsl:call-template name="value">
-          <xsl:with-param name="node" select="animation/interval" />
+          <xsl:with-param name="node" select="animation/seconds" />
         </xsl:call-template>
         <xsl:text>, </xsl:text>
         <xsl:call-template name="frames">
@@ -2720,7 +2720,7 @@
     <xsl:if test="$node">
       <xsl:value-of select="concat($indent, $to, '.animated = true;&#10;', $indent, $to, '.interval = ')" />
       <xsl:call-template name="value">
-        <xsl:with-param name="node" select="$node/interval" />
+        <xsl:with-param name="node" select="$node/seconds" />
       </xsl:call-template>
       <xsl:value-of select="concat(';&#10;', $indent, $to, '.frames = ')" />
       <xsl:call-template name="frames">

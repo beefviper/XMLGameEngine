@@ -92,7 +92,7 @@
         <bitmap from="swirl-two" />
       </sprite>
       <animation>
-        <interval>0.06</interval>
+        <seconds>0.06</seconds>
         <frame sprite="one" />
         <frame sprite="two" />
       </animation>
@@ -148,7 +148,7 @@
             <bitmap from="zone-b" />
           </sprite>
           <animation>
-            <interval>0.05</interval>
+            <seconds>0.05</seconds>
             <frame sprite="a" />
             <frame sprite="b" />
           </animation>
@@ -156,7 +156,7 @@
           <collisions />
           <row><even />
             <animation>
-              <interval>0.05</interval>
+              <seconds>0.05</seconds>
               <frame sprite="b" />
               <frame sprite="a" />
             </animation>
@@ -238,7 +238,7 @@
             <bitmap from="yar-down" />
           </sprite>
           <animation>
-            <interval>0.08</interval>
+            <seconds>0.08</seconds>
             <frame sprite="up" />
             <frame sprite="down" />
           </animation>

@@ -757,7 +757,7 @@
       ]]></xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="interval" type="valueType" />
+      <xs:element name="seconds" type="valueType" />
       <!-- each frame a sprite by name, a sheet's <cell>, or a run of its <cells> (with sheet=) -->
       <xs:choice maxOccurs="unbounded">
         <xs:element name="frame">

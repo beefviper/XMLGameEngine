@@ -163,7 +163,7 @@
         <bitmap from="brother-falling" />
       </sprite>
       <animation name="walking">
-        <interval>0.08</interval>
+        <seconds>0.08</seconds>
         <frame sprite="stepa" />
         <frame sprite="stepb" />
         <frame sprite="stepc" />
@@ -241,12 +241,12 @@
         <bitmap from="pest-fb" />
       </sprite>
       <animation name="walking">
-        <interval>0.2</interval>
+        <seconds>0.2</seconds>
         <frame sprite="a" />
         <frame sprite="b" />
       </animation>
       <animation name="flipped">
-        <interval>0.15</interval>
+        <seconds>0.15</seconds>
         <frame sprite="fa" />
         <frame sprite="fb" />
       </animation>
@@ -398,7 +398,7 @@
         <bitmap from="sidesteppers-fb" />
       </sprite>
       <animation name="mad">
-        <interval>0.1</interval>
+        <seconds>0.1</seconds>
         <frame sprite="ma" />
         <frame sprite="mb" />
       </animation>
@@ -503,7 +503,7 @@
         <bitmap from="coin-b" />
       </sprite>
       <animation name="spinning">
-        <interval>0.12</interval>
+        <seconds>0.12</seconds>
         <frame sprite="a" />
         <frame sprite="b" />
       </animation>
@@ -831,7 +831,7 @@
                 <bitmap from="coin-b" />
               </sprite>
               <animation name="spinning">
-                <interval>0.12</interval>
+                <seconds>0.12</seconds>
                 <frame sprite="a" />
                 <frame sprite="b" />
               </animation>

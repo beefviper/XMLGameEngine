@@ -217,7 +217,7 @@
         <group name="stars">
           <sprite name="on"><bitmap from="stars-on" /></sprite>
           <sprite name="off"><bitmap from="stars-off" /></sprite>
-          <animation><interval>0.4</interval><frame sprite="on" /><frame sprite="on" /><frame sprite="off" /></animation>
+          <animation><seconds>0.4</seconds><frame sprite="on" /><frame sprite="on" /><frame sprite="off" /></animation>
           <velocity><y>0.5</y></velocity>
           <collisions>
             <collision edge="bottom"><wrap /></collision>
@@ -225,11 +225,11 @@
           <group name="redstars" char="r"><sprite name="on"><bitmap><color>color.red</color></bitmap></sprite></group>
           <group name="bluestars" char="b">
             <sprite name="on"><bitmap><color>color.cyan</color></bitmap></sprite>
-            <animation><interval>0.3</interval><frame sprite="on" /><frame sprite="off" /></animation>
+            <animation><seconds>0.3</seconds><frame sprite="on" /><frame sprite="off" /></animation>
           </group>
           <group name="yellowstars" char="y">
             <sprite name="on"><bitmap><color>color.yellow</color></bitmap></sprite>
-            <animation><interval>0.5</interval><frame sprite="off" /><frame sprite="on" /><frame sprite="on" /></animation>
+            <animation><seconds>0.5</seconds><frame sprite="off" /><frame sprite="on" /><frame sprite="on" /></animation>
           </group>
           <group name="whitestars" char="w" />
         </group>

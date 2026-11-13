@@ -73,7 +73,7 @@
       <sprite name="b">
         <bitmap from="bomb-b" />
       </sprite>
-      <animation><interval>0.1</interval><frame sprite="a" /><frame sprite="b" /></animation>
+      <animation><seconds>0.1</seconds><frame sprite="a" /><frame sprite="b" /></animation>
       <velocity><y>5</y></velocity>
       <most>3</most>
       <collisions>
@@ -218,7 +218,7 @@
             <bitmap from="aliens-b" />
           </sprite>
           <animation>
-            <interval>animation.seconds</interval>
+            <seconds>animation.seconds</seconds>
             <frame sprite="a" />
             <frame sprite="b" />
           </animation>

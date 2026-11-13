@@ -273,7 +273,7 @@
               <bitmap from="germs-germb" />
             </sprite>
             <animation name="wriggle">
-              <interval>0.3</interval>
+              <seconds>0.3</seconds>
               <frame sprite="germa" />
               <frame sprite="germb" />
             </animation>

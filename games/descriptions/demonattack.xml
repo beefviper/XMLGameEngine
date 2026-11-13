@@ -197,7 +197,7 @@
                 <bitmap from="demons-down" />
               </sprite>
               <animation>
-                <interval>0.25</interval>
+                <seconds>0.25</seconds>
                 <frame sprite="up" />
                 <frame sprite="down" />
               </animation>
@@ -264,7 +264,7 @@
                 <bitmap from="demons-step" />
               </sprite>
               <animation>
-                <interval>0.25</interval>
+                <seconds>0.25</seconds>
                 <frame sprite="walk" />
                 <frame sprite="step" />
               </animation>

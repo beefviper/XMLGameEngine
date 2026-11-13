@@ -127,7 +127,7 @@
         </svg>
       </sprite>
       <animation>
-        <interval>0.08</interval>
+        <seconds>0.08</seconds>
         <frame sprite="a" />
         <frame sprite="b" />
         <frame sprite="c" />
@@ -257,7 +257,7 @@
               <hide>backdrop</hide>
             </svg>
           </sprite>
-          <animation><interval>0.15</interval><frame sprite="a" /><frame sprite="b" /><frame sprite="c" /></animation>
+          <animation><seconds>0.15</seconds><frame sprite="a" /><frame sprite="b" /><frame sprite="c" /></animation>
           <position><x><subtract><value>0</value><value>ufo.width</value></subtract></x><y>55</y></position>
           <velocity><x>2.5</x></velocity>
           <waiting />
@@ -306,7 +306,7 @@
             </svg>
           </sprite>
           <animation>
-            <interval>animation.seconds</interval>
+            <seconds>animation.seconds</seconds>
             <frame sprite="a" />
             <frame sprite="b" />
             <frame sprite="c" />

@@ -230,7 +230,7 @@
           <!-- the flame out of the back, inside the same box so the ship turns about the same middle -->
           <sprite name="flame"><drawing from="shipflame" /></sprite>
           <animation name="burning">
-            <interval>0.05</interval>
+            <seconds>0.05</seconds>
             <frame sprite="flame" />
             <frame sprite="coasting" />
           </animation>

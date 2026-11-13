@@ -79,7 +79,7 @@
         <bitmap from="burst-spray" />
       </sprite>
       <animation>
-        <interval>0.1</interval>
+        <seconds>0.1</seconds>
         <frame sprite="flash" />
         <frame sprite="spray" />
       </animation>

@@ -92,7 +92,7 @@
         <bitmap from="barrel-down" />
       </sprite>
       <animation name="rolling">
-        <interval>0.15</interval>
+        <seconds>0.15</seconds>
         <frame sprite="flat" />
         <frame sprite="end" />
       </animation>
@@ -161,12 +161,12 @@
         <bitmap from="fireball-b" />
       </sprite>
       <animation name="burning">
-        <interval>0.12</interval>
+        <seconds>0.12</seconds>
         <frame sprite="a" />
         <frame sprite="b" />
       </animation>
       <animation name="climbing">
-        <interval>0.12</interval>
+        <seconds>0.12</seconds>
         <frame sprite="b" />
         <frame sprite="a" />
       </animation>

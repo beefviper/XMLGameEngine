@@ -109,7 +109,7 @@
         <bitmap from="burst-full" />
       </sprite>
       <animation>
-        <interval>0.15</interval>
+        <seconds>0.15</seconds>
         <frame sprite="small" />
         <frame sprite="middle" />
         <frame sprite="full" />

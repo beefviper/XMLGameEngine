@@ -431,7 +431,7 @@
                 <bitmap from="chalice-dim" />
               </sprite>
               <animation>
-                <interval>0.15</interval>
+                <seconds>0.15</seconds>
                 <frame sprite="bright" />
                 <frame sprite="dim" />
               </animation>

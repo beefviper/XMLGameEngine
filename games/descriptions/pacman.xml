@@ -388,7 +388,7 @@
                 <bitmap from="pellets-dim" />
               </sprite>
               <animation>
-                <interval>0.17</interval>
+                <seconds>0.17</seconds>
                 <frame sprite="lit" />
                 <frame sprite="dim" />
               </animation>
@@ -449,7 +449,7 @@
               <bitmap from="pacman-open" />
             </sprite>
             <animation>
-              <interval>0.05</interval>
+              <seconds>0.05</seconds>
               <frame sprite="closed" />
               <frame sprite="half" />
               <frame sprite="open" />

@@ -175,19 +175,19 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
   <sprite name="open"> <bitmap> ... </bitmap> </sprite>
   <sprite name="closed"> <bitmap> ... </bitmap> </sprite>
   <animation>
-    <interval>1</interval>
+    <seconds>1</seconds>
     <frame sprite="open" />
     <frame sprite="closed" />
   </animation>
 </object>
 ```
 
-- `<interval>` is seconds per picture (above 0); each `<frame>` picks a sprite. At least two frames, all pictures of one size; an unnamed animation shows every sprite.
+- `<seconds>` is how long each picture shows (above 0); each `<frame>` picks a sprite. At least two frames, all pictures of one size; an unnamed animation shows every sprite.
 - **Frames from a [sheet](#sheets)** need no sprites: a `<cell sheet>` is one frame, and a run of `<cells sheet>` is `<count>` frames from its `<column>` and `<row>` along the row (or down the column with `<down />`). Frames, cells and runs mix in any order, so a long animation split over two rows is two runs:
 
   ```xml
   <animation name="walk">
-    <interval>0.08</interval>
+    <seconds>0.08</seconds>
     <cells sheet="hero"><row>3</row><count>8</count></cells>
     <cells sheet="hero"><row>4</row><count>7</count></cells>
   </animation>

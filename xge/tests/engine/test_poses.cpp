@@ -38,7 +38,7 @@ namespace
 		return "<object name=\"floor\" class=\"floor\"><sprite><rectangle><width>600</width><height>10</height></rectangle></sprite>"
 			"<position><x>0</x><y>300</y></position><collisions></collisions></object>"
 			"<object name=\"guy\">" + dot("stand", 0) + dot("stepa", 1) + dot("stepb", 2) + dot("skid", 3) + dot("up", 0) + dot("down", 1) + dot("hurt", 2)
-			+ "<animation name=\"walk\"><interval>0.1</interval><frame sprite=\"stepa\" /><frame sprite=\"stepb\" /></animation>"
+			+ "<animation name=\"walk\"><seconds>0.1</seconds><frame sprite=\"stepa\" /><frame sprite=\"stepb\" /></animation>"
 			"<position><x>300</x><y>290</y></position>"
 			"<acceleration><x>0</x><y>0.5</y></acceleration>"
 			"<poses><standing sprite=\"stand\" /><walking sprite=\"walk\" /><skidding sprite=\"skid\" /><rising sprite=\"up\" /><falling sprite=\"down\" /></poses>"
@@ -59,7 +59,7 @@ namespace
 TEST_CASE("a named <animation> is a look that moves, and an object starts as its first", "[poses][animation]")
 {
 	const Scratch file("<object name=\"lamp\">" + dot("off", 0) + dot("a", 1) + dot("b", 2)
-		+ "<animation name=\"blinking\"><interval>0.25</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
+		+ "<animation name=\"blinking\"><seconds>0.25</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
 		"<position><x>10</x><y>10</y></position>"
 		"<actions><action name=\"stop\"><become sprite=\"off\" /></action><action name=\"go\"><become sprite=\"blinking\" /></action></actions></object>",
 		"<trigger object=\"lamp\" action=\"stop\" />");
@@ -251,21 +251,21 @@ TEST_CASE("mistakes in poses, mirrors, grips and named animations stop the load"
 	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + at + "<grip>1.5</grip></object>"), ContainsSubstring("<grip> is 1.5"));
 	CHECK_THROWS_WITH(load("<object name=\"o\">" + dot("a", 0) + at + "<heading>0</heading><mirror>left</mirror></object>"),
 		ContainsSubstring("<mirror> flips a picture that does not turn"));
-	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + "<animation name=\"x\"><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
-		"<animation><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>" + at + "</object>"),
+	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + "<animation name=\"x\"><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
+		"<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>" + at + "</object>"),
 		ContainsSubstring("an <animation> with no name beside named ones"));
-	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + "<animation name=\"a\"><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>" + at + "</object>"),
+	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + "<animation name=\"a\"><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>" + at + "</object>"),
 		ContainsSubstring("two looks are called \"a\""));
-	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + "<animation name=\"x\"><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"c\" /></animation>" + at + "</object>"),
+	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + "<animation name=\"x\"><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"c\" /></animation>" + at + "</object>"),
 		ContainsSubstring("<frame sprite=\"c\">: no <sprite name=\"c\">"));
 }
 
 TEST_CASE("a group's members share its named animations, and a member can give its own of a name", "[poses][animation]")
 {
 	const Scratch file("<group name=\"birds\">" + dot("a", 0) + dot("b", 1) + dot("c", 2)
-		+ "<animation name=\"flap\"><interval>0.5</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
+		+ "<animation name=\"flap\"><seconds>0.5</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
 		"<member><position><x>0</x><y>0</y></position></member>"
-		"<member><animation name=\"flap\"><interval>0.5</interval><frame sprite=\"c\" /><frame sprite=\"a\" /></animation><position><x>20</x><y>0</y></position></member>"
+		"<member><animation name=\"flap\"><seconds>0.5</seconds><frame sprite=\"c\" /><frame sprite=\"a\" /></animation><position><x>20</x><y>0</y></position></member>"
 		"</group>", "<pop />");
 	Played play(file.path);
 

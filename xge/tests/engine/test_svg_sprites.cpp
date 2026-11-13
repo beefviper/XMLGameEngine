@@ -416,7 +416,7 @@ TEST_CASE("svg sprites animate like any other pictures, if they are the same siz
 	const ScratchFile drawing = writeScratch("xge_test_game_animation.svg", kDrawing);
 	const std::string left = "<sprite name=\"left\">" + svgTag(drawing, "<x>0</x><y>0</y><width>4</width><height>4</height><hide>backdrop</hide>") + "</sprite>";
 	const std::string right = "<sprite name=\"right\">" + svgTag(drawing, "<x>4</x><y>0</y><width>4</width><height>4</height><hide>backdrop</hide>") + "</sprite>";
-	const std::string animation = "<animation><interval>0.5</interval><frame sprite=\"left\" /><frame sprite=\"right\" /></animation>";
+	const std::string animation = "<animation><seconds>0.5</seconds><frame sprite=\"left\" /><frame sprite=\"right\" /></animation>";
 
 	Loaded loaded{ gameXml(objectWith(left + right, animation), "<show object=\"thing\" />") };
 	Game& game = loaded.game;
@@ -442,7 +442,7 @@ TEST_CASE("svg frames of different sizes are refused", "[svg][animation][xml]")
 	const ScratchFile drawing = writeScratch("xge_test_game_sizes.svg", kDrawing);
 	const std::string small = "<sprite name=\"small\">" + svgTag(drawing, "<x>0</x><y>0</y><width>4</width><height>4</height>") + "</sprite>";
 	const std::string large = "<sprite name=\"large\">" + svgTag(drawing, "<x>0</x><y>0</y><width>4</width><height>4</height><scale>2</scale>") + "</sprite>";
-	const std::string animation = "<animation><interval>0.5</interval><frame sprite=\"small\" /><frame sprite=\"large\" /></animation>";
+	const std::string animation = "<animation><seconds>0.5</seconds><frame sprite=\"small\" /><frame sprite=\"large\" /></animation>";
 
 	CHECK_THROWS_WITH(Loaded(gameXml(objectWith(small + large, animation), "<show object=\"thing\" />")),
 		ContainsSubstring("the frames of an animation must all be the same size"));

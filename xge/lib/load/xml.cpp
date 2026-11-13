@@ -606,7 +606,7 @@ namespace xge
 			spec.name = animation.getAttribute("name");
 			const std::string here = where + " > <animation" + (spec.name.empty() ? std::string{} : " name=\"" + spec.name + "\"") + ">";
 
-			spec.interval = readValueOf(animation, "interval", here);
+			spec.interval = readValueOf(animation, "seconds", here);
 
 			// A frame cut from a sheet: a sprite of its own, named for the
 			// animation and numbered.
@@ -646,7 +646,7 @@ namespace xge
 						addCell(std::move(sprite), *node, at);
 					}
 				}
-				else if (tag != "interval") { fail(here, "unknown <" + tag + ">; expected an <interval> and then <frame>s, <cell>s and runs of <cells>"); }
+				else if (tag != "seconds") { fail(here, "unknown <" + tag + ">; expected <seconds> and then <frame>s, <cell>s and runs of <cells>"); }
 			}
 
 			return spec;

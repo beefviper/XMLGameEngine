@@ -139,7 +139,7 @@ namespace
 	const std::string kB =
 		"<sprite name=\"b\"><bitmap><row>.*</row><row>*.</row><scale>2</scale><color>color.red</color></bitmap></sprite>";
 	const std::string kTwoFrames =
-		"<animation><interval>0.5</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>";
+		"<animation><seconds>0.5</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>";
 
 	// Which of kA and kB an object is showing.
 	char showing(const Object& object)
@@ -603,7 +603,7 @@ TEST_CASE("an animation shows its sprites in turn, each for the interval, round 
 
 TEST_CASE("the interval is in seconds, so it follows the window's framerate", "[animation]")
 {
-	const std::string objects = objectWith(kA + kB, "<animation><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>");
+	const std::string objects = objectWith(kA + kB, "<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>");
 
 	Loaded fast{ gameXml(objects, "<show object=\"thing\" />", 120) };
 	CHECK(fast.game.getObject("thing").animationFrames == 120);
@@ -612,7 +612,7 @@ TEST_CASE("the interval is in seconds, so it follows the window's framerate", "[
 	CHECK(slow.game.getObject("thing").animationFrames == 25);
 
 	// An interval so short it is under one frame still takes one.
-	Loaded quick{ gameXml(objectWith(kA + kB, "<animation><interval>0.001</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"),
+	Loaded quick{ gameXml(objectWith(kA + kB, "<animation><seconds>0.001</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"),
 		"<show object=\"thing\" />") };
 	CHECK(quick.game.getObject("thing").animationFrames == 1);
 }
@@ -636,7 +636,7 @@ TEST_CASE("a frame can come up more than once, so a sequence need not be only tw
 {
 	// a, b, a, then round again: three frames of 0.5 s each.
 	Loaded loaded{ gameXml(objectWith(kA + kB,
-		"<animation><interval>0.5</interval><frame sprite=\"a\" /><frame sprite=\"b\" /><frame sprite=\"a\" /></animation>"),
+		"<animation><seconds>0.5</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /><frame sprite=\"a\" /></animation>"),
 		"<show object=\"thing\" />") };
 	Game& game = loaded.game;
 	game.setCurrentState("playing");
@@ -723,14 +723,14 @@ TEST_CASE("the members of a group can each have sprites and an animation of thei
 		"<group name=\"pair\" class=\"pair\">"
 		"<sprite name=\"a\"><bitmap><row>*.</row><row>.*</row><scale>2</scale></bitmap></sprite>"
 		"<sprite name=\"b\"><bitmap><row>.*</row><row>*.</row><scale>2</scale></bitmap></sprite>"
-		"<animation><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
+		"<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
 		"<position><y>50</y></position><velocity><x>0</x><y>0</y></velocity>"
 		"<collisions><off /></collisions>"
 		// shares everything the group gives
 		"<member name=\"same\"><position><x>10</x></position></member>"
 		// its own interval, the group's sprites
 		"<member name=\"quick\"><position><x>40</x></position>"
-		"<animation><interval>0.5</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation></member>"
+		"<animation><seconds>0.5</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation></member>"
 		// sprites of its own, with the group's animation picking them out by name
 		"<member name=\"mine\"><position><x>70</x></position>"
 		"<sprite name=\"a\"><bitmap><row>**</row><row>**</row><scale>2</scale></bitmap></sprite>"
@@ -795,7 +795,7 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 
 	SECTION("a frame that names a sprite that is not there")
 	{
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"z\" /></animation>"), shows)),
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"z\" /></animation>"), shows)),
 			ContainsSubstring("object 'thing'") && ContainsSubstring("frame sprite=\"z\"") && ContainsSubstring("no <sprite name=\"z\">"));
 	}
 
@@ -807,7 +807,7 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 
 	SECTION("a sprite with no name when there are several")
 	{
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + "<sprite><bitmap><row>*</row></bitmap></sprite>", "<animation><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"a\" /></animation>"), shows)),
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + "<sprite><bitmap><row>*</row></bitmap></sprite>", "<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"a\" /></animation>"), shows)),
 			ContainsSubstring("object 'thing'") && ContainsSubstring("no name"));
 	}
 
@@ -819,27 +819,27 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 
 	SECTION("an animation of one frame")
 	{
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA, "<animation><interval>1</interval><frame sprite=\"a\" /></animation>"), shows)),
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA, "<animation><seconds>1</seconds><frame sprite=\"a\" /></animation>"), shows)),
 			ContainsSubstring("object 'thing'") && ContainsSubstring("at least two <frame>s"));
 	}
 
 	SECTION("an animation with no interval")
 	{
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"), shows)),
-			ContainsSubstring("<animation>") && ContainsSubstring("missing <interval>"));
+			ContainsSubstring("<animation>") && ContainsSubstring("missing <seconds>"));
 	}
 
 	SECTION("a frame with no sprite")
 	{
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><interval>1</interval><frame /><frame sprite=\"b\" /></animation>"), shows)),
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><seconds>1</seconds><frame /><frame sprite=\"b\" /></animation>"), shows)),
 			ContainsSubstring("<frame>") && ContainsSubstring("sprite=\"...\""));
 	}
 
 	SECTION("an interval that is not above 0")
 	{
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><interval>0</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"), shows)),
-			ContainsSubstring("object 'thing'") && ContainsSubstring("<interval>") && ContainsSubstring("above 0"));
-		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><interval>-2</interval><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"), shows)),
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><seconds>0</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"), shows)),
+			ContainsSubstring("object 'thing'") && ContainsSubstring("<seconds>") && ContainsSubstring("above 0"));
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><seconds>-2</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"), shows)),
 			ContainsSubstring("above 0"));
 	}
 
@@ -867,7 +867,7 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 	{
 		// 4 by 4: a line from 0, 0 to 3, 3.
 		Loaded loaded{ gameXml(objectWith(kA + aLine,
-			"<animation><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"c\" /></animation>"), shows) };
+			"<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"c\" /></animation>"), shows) };
 		CHECK(loaded.game.getObject("thing").animationBitmaps.size() == 2);
 	}
 
@@ -875,7 +875,7 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 	{
 		const std::string wide = "<sprite name=\"w\"><bitmap><row>****</row><row>****</row><scale>2</scale></bitmap></sprite>";
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + wide,
-			"<animation><interval>1</interval><frame sprite=\"a\" /><frame sprite=\"w\" /></animation>", "<heading>0</heading>"), shows)),
+			"<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"w\" /></animation>", "<heading>0</heading>"), shows)),
 			ContainsSubstring("frame 2") && ContainsSubstring("same size"));
 	}
 
@@ -1192,7 +1192,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in bitmaps and anima
 	};
 
 	const Mistake mistakes[] = {
-		{ "an animation with no interval", "<interval>animation.seconds</interval>", "", "interval" },
+		{ "an animation with no interval", "<seconds>animation.seconds</seconds>", "", "seconds" },
 		{ "an animation whose frames are not frames", "<frame sprite=\"a\" />", "<picture sprite=\"a\" />", "picture" },
 		{ "a bitmap with its scale before its rows", "<bitmap name=\"player\">\n      <row>.....*.....</row>", "<bitmap name=\"player\">\n      <scale>pixel</scale>\n      <row>.....*.....</row>", "scale" },
 		{ "a bitmap row with something inside it", "<row>.....*.....</row>", "<row><x>1</x></row>", "x" },

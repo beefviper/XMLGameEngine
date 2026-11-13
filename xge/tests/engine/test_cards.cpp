@@ -554,11 +554,11 @@ TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of c
 		"<object name=\"part\"><sprite><cell sheet=\"cards\"><x>0</x><y>280</y><width>192</width><height>280</height><scale>0.5</scale></cell></sprite>" + at + "</object>"
 		"<object name=\"sized\"><sprite><cell sheet=\"sized\"><row>2</row><scale>0.5</scale></cell></sprite>" + at + "</object>"
 		// an animation: three cells of the second row, then one of the third
-		"<object name=\"walker\"><animation><interval>0.1</interval>"
+		"<object name=\"walker\"><animation><seconds>0.1</seconds>"
 		"<cells sheet=\"cards\"><row>2</row><count>3</count><scale>0.5</scale></cells>"
 		"<cell sheet=\"cards\"><row>3</row><scale>0.5</scale></cell></animation>" + at + "</object>"
 		// a group whose only pictures are its animation's, a run down a column
-		"<group name=\"flock\"><animation><interval>0.1</interval><cells sheet=\"cards\"><count>2</count><down /><scale>0.5</scale></cells></animation>" + at +
+		"<group name=\"flock\"><animation><seconds>0.1</seconds><cells sheet=\"cards\"><count>2</count><down /><scale>0.5</scale></cells></animation>" + at +
 		"<member name=\"bird\" /></group>");
 	Played play(sheet.path);
 	Object& grid = play.get("grid");

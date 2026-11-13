@@ -107,7 +107,7 @@
         <bitmap from="bomb-spark" />
       </sprite>
       <animation>
-        <interval>0.1</interval>
+        <seconds>0.1</seconds>
         <frame sprite="fizz" />
         <frame sprite="spark" />
       </animation>

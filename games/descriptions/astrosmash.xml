@@ -195,7 +195,7 @@
             <bitmap from="spinners-b" />
           </sprite>
           <animation>
-            <interval>0.1</interval>
+            <seconds>0.1</seconds>
             <frame sprite="a" />
             <frame sprite="b" />
           </animation>

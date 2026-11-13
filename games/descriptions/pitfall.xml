@@ -222,7 +222,7 @@
         <bitmap from="fire-low" />
       </sprite>
       <animation>
-        <interval>0.12</interval>
+        <seconds>0.12</seconds>
         <frame sprite="high" />
         <frame sprite="low" />
       </animation>

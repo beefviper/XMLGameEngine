@@ -2325,15 +2325,15 @@ namespace xge
 
 	int game_expr::animationFramesOf(const RawValue& interval, const WindowDesc& windowDesc, const std::string& where)
 	{
-		const float seconds = evaluate(interval, where + " > <interval>");
+		const float seconds = evaluate(interval, where + " > <seconds>");
 
 		if (!(seconds > 0.0f))
 		{
-			throw std::runtime_error(where + " > <interval> is " + std::to_string(seconds) + "; expected a number of seconds above 0");
+			throw std::runtime_error(where + " > <seconds> is " + std::to_string(seconds) + "; expected a number of seconds above 0");
 		}
 		if (windowDesc.framerate < 1)
 		{
-			throw std::runtime_error(where + " > <interval> is in seconds, so the <window> needs a <framerate> above 0 to count them in");
+			throw std::runtime_error(where + " > <seconds> is a time, so the <window> needs a <framerate> above 0 to count them in");
 		}
 
 		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(windowDesc.framerate))));
