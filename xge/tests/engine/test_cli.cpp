@@ -13,6 +13,9 @@
 #include "file_text.h"
 #include "scratch.h"
 #include "cli.h"
+#include "engine/engine.h"
+#include "game/game.h"
+#include "load/xml.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -23,6 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace xge;
@@ -339,6 +343,124 @@ TEST_CASE("frames plays the game to the end and says how far it got", "[cli][fra
 	INFO(failed.str());
 	CHECK(failed.str().rfind("Error: ", 0) != std::string::npos);
 	CHECK(failed.str().find("width") != std::string::npos);
+}
+
+TEST_CASE("keys takes a file and goes with neither seed nor record", "[cli][frames]")
+{
+	CHECK(parseCommandLine({ "pong", "--keys", "play.xml" }).keys == "play.xml");
+	CHECK(parseCommandLine({ "pong", "--keys", "play.xml", "--frames", "10" }).frames == 10);
+	CHECK_THROWS_AS(parseCommandLine({ "--keys" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--keys", "a.xml", "--keys", "b.xml" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--keys", "a.xml", "--seed", "1" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--keys", "a.xml", "--record" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--keys", "a.xml", "--check" }), CliError);
+	CHECK(usageText().find("--keys") != std::string::npos);
+}
+
+namespace
+{
+	// Every object's name, place and numbers, a line each: what two games
+	// played alike have alike.
+	std::string everything(Game& game)
+	{
+		std::ostringstream out;
+		out << game.getCurrentState().name << '\n';
+		for (const Object& object : game.getCurrentObjects())
+		{
+			out << object.name << ' ' << object.position.x << ' ' << object.position.y;
+			for (const auto& [name, value] : object.variable) { out << ' ' << name << '=' << value; }
+			out << '\n';
+		}
+		return out.str();
+	}
+}
+
+TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frames][demo]")
+{
+	// Ten seconds of Pong played and recorded, keys pressed between frames
+	// as a window would report them.
+	RawDemo recording;
+	std::string atEnd;
+	{
+		Game game{ readGame("descriptions/pong.xml", XmlBackend::TinyXml2) };
+		Engine engine(game, WindowBackend::None, AudioBackend::None);
+		engine.record();
+		const std::vector<std::pair<int, std::pair<KeyCode, bool>>> keys = {
+			{ 10, { KeyCode::Space, true } }, { 14, { KeyCode::Space, false } },
+			{ 60, { KeyCode::W, true } }, { 200, { KeyCode::W, false } },
+			{ 250, { KeyCode::S, true } }, { 420, { KeyCode::S, false } },
+			{ 450, { KeyCode::W, true } }, { 590, { KeyCode::W, false } },
+		};
+		std::size_t next = 0;
+		for (int frame = 0; frame < 600; ++frame)
+		{
+			for (; next < keys.size() && keys[next].first == frame; ++next)
+			{
+				if (keys[next].second.second) { engine.handleKeyPressed(keys[next].second.first); }
+				else { engine.handleKeyReleased(keys[next].second.first); }
+			}
+			engine.step();
+		}
+		recording = engine.recorded();
+		atEnd = everything(game);
+	}
+	REQUIRE(recording.frames == 600);
+	REQUIRE(recording.keys.size() == 8);
+	CHECK(recording.keys[2].frame == 60);
+
+	// Written into a copy of the game, as --record writes it, and read back.
+	const std::filesystem::path recorded = scratchName("descriptions/keys_recorded.xml");
+	{
+		std::ifstream in("descriptions/pong.xml");
+		std::ofstream(recorded) << withDemo(fileText(in), recording);
+	}
+	for (const XmlBackend xml : XmlDocumentFactory::availableBackends())
+	{
+		INFO(XmlDocumentFactory::name(xml));
+		const RawDemo read = readDemo(recorded.string(), xml);
+		CHECK(read.seed == recording.seed);
+		CHECK(read.frames == 600);
+		CHECK(read.keys.size() == 8);
+	}
+
+	// Played back, it ends where the recording did.
+	{
+		Game game{ readGame("descriptions/pong.xml", XmlBackend::TinyXml2) };
+		Engine engine(game, WindowBackend::None, AudioBackend::None);
+		engine.replay(readDemo(recorded.string(), XmlBackend::TinyXml2));
+		for (int frame = 0; frame < 600; ++frame) { engine.step(); }
+		CHECK(everything(game) == atEnd);
+	}
+
+	// The keys made the difference: the same seed with none ends elsewhere.
+	{
+		Game game{ readGame("descriptions/pong.xml", XmlBackend::TinyXml2) };
+		Engine engine(game, WindowBackend::None, AudioBackend::None);
+		RawDemo noKeys = recording;
+		noKeys.keys.clear();
+		engine.replay(noKeys);
+		for (int frame = 0; frame < 600; ++frame) { engine.step(); }
+		CHECK(everything(game) != atEnd);
+	}
+
+	// And by the command line, from a file that is only the <demo>.
+	const std::filesystem::path alone = scratchName("descriptions/keys_alone.xml");
+	{
+		const std::string game = withDemo("<game>\n</game>\n", recording);
+		std::ofstream(alone) << game.substr(game.find("<demo>"), game.find("</demo>") + 7 - game.find("<demo>")) << '\n';
+	}
+	std::ostringstream out;
+	CHECK(playFrames("descriptions/pong.xml", parseCommandLine({ "pong", "--frames", "600", "--keys", alone.string() }), out) == EXIT_SUCCESS);
+	INFO(out.str());
+	CHECK(out.str().find("played 600 frames") != std::string::npos);
+
+	// A file with no <demo> says so.
+	std::ostringstream none;
+	CHECK(playFrames("descriptions/pong.xml", parseCommandLine({ "pong", "--frames", "10", "--keys", "descriptions/pong.xml" }), none) == EXIT_FAILURE);
+	CHECK(none.str().find("has no <demo>") != std::string::npos);
+
+	std::filesystem::remove(recorded);
+	std::filesystem::remove(alone);
 }
 
 TEST_CASE("the help options ask for the usage", "[cli]")

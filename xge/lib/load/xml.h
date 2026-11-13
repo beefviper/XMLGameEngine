@@ -64,6 +64,11 @@ namespace xge
 	// xgecli --record does when it closes.
 	std::string withDemo(const std::string& gameText, const RawDemo& demo);
 
+	// The <demo> in that file, read with that XML library: the file's root,
+	// or a child of the root (a game file --record wrote into). What
+	// xgecli --keys replays. Throws when there is none or it is wrong.
+	RawDemo readDemo(const std::string& filename, XmlBackend backend = XmlDocumentFactory::defaultBackend());
+
 	// The game in that file, read with that XML library and checked against
 	// the schema it names (load/xml::init), as Game is made from it.
 	GameData readGame(const std::string& filename, XmlBackend backend = XmlDocumentFactory::defaultBackend());

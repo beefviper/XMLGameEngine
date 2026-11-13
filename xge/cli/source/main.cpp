@@ -76,6 +76,12 @@ int main(int argc, char* argv[])
 		}
 
 		filename = std::filesystem::absolute(xge::findGameFile(options.game, gamesDirectory)).string();
+
+		// Relative to where the program was started, as the game is.
+		if (!options.keys.empty())
+		{
+			options.keys = std::filesystem::absolute(options.keys).string();
+		}
 	}
 	catch (const xge::CliError& error)
 	{
@@ -175,6 +181,10 @@ int main(int argc, char* argv[])
 		if (options.record)
 		{
 			engine.record();
+		}
+		if (!options.keys.empty())
+		{
+			engine.replay(xge::readDemo(options.keys, options.xml));
 		}
 
 		std::cout << "=== after Engine: sizes measured, positions finished ===\n\n";

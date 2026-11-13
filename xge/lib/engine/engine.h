@@ -60,6 +60,14 @@ namespace xge
 		void record(void);
 		RawDemo recorded(void) const;
 
+		// Plays a recording's keys back (xgecli --keys): a new game starts
+		// now from the recording's seed, as record() started the one it was
+		// made from, and every step() from here presses and lets go each of
+		// its keys in the frame it was recorded in, beside any the window
+		// reports. Frames the game's own demo plays in are not counted, as
+		// they were not while recording.
+		void replay(const RawDemo& demo);
+
 		// Whether the game's <demo> is playing (a <demo /> asked for it):
 		// a new game started from the demo's seed, played by its recorded
 		// keys, until a key is pressed or the recording ends. Then a new game
@@ -221,6 +229,13 @@ namespace xge
 		void playComputer(void);
 		std::size_t demoNext = 0;
 		std::string keptBeforeDemo;
+
+		// Playing a recording back (replay()): its keys, the frame of it
+		// reached, and the next key to press or let go.
+		bool replaying = false;
+		RawDemo replayed;
+		unsigned int replayFrame = 0;
+		std::size_t replayNext = 0;
 		void startDemo(void);
 		void stopDemo(void);
 		void releaseHeldKeys(void);

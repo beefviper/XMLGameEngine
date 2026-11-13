@@ -3258,6 +3258,45 @@ namespace xge
 		}
 	}
 
+	namespace
+	{
+		// A <demo> as --record writes it: its seed, its frames, and each key
+		// pressed and let go with the frame it happened in.
+		RawDemo readDemoElement(const XmlNode& demoNode)
+		{
+			RawDemo demo;
+			const std::string demoWhere = "<demo>";
+			const auto whole = [&](const XmlNode& node, const std::string& here)
+			{
+				const std::string text = readText(node);
+				if (text.empty() || text.find_first_not_of("0123456789") != std::string::npos)
+				{
+					fail(here, "\"" + text + "\" is not a whole number");
+				}
+				return static_cast<unsigned int>(std::stoul(text));
+			};
+			demo.recorded = true;
+			demo.seed = whole(*requireChild(demoNode, "seed", demoWhere), demoWhere + " > <seed>");
+			demo.frames = whole(*requireChild(demoNode, "frames", demoWhere), demoWhere + " > <frames>");
+			for (std::unique_ptr<XmlNode> child = demoNode.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (tag != "press" && tag != "release") { continue; }
+				const std::string here = demoWhere + " > <" + tag + ">";
+				DemoKey key;
+				key.button = requireAttribute(*child, "button", here);
+				key.pressed = tag == "press";
+				key.frame = whole(*child, here);
+				if (keyCodeFromString(key.button) == KeyCode::Unknown)
+				{
+					fail(here, "there is no key named '" + key.button + "'" + didYouMean(key.button, keyNames()));
+				}
+				demo.keys.push_back(std::move(key));
+			}
+			return demo;
+		}
+	}
+
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, std::vector<RawPath>& rawPaths,
@@ -3514,34 +3553,7 @@ namespace xge
 		// load the demo (optional: a recorded game for the attract mode)
 		if (std::unique_ptr<XmlNode> demoNode = findChild(root.get(), "demo"))
 		{
-			const std::string demoWhere = "<demo>";
-			const auto whole = [&](const XmlNode& node, const std::string& here)
-			{
-				const std::string text = readText(node);
-				if (text.empty() || text.find_first_not_of("0123456789") != std::string::npos)
-				{
-					fail(here, "\"" + text + "\" is not a whole number");
-				}
-				return static_cast<unsigned int>(std::stoul(text));
-			};
-			rawDemo.recorded = true;
-			rawDemo.seed = whole(*requireChild(*demoNode, "seed", demoWhere), demoWhere + " > <seed>");
-			rawDemo.frames = whole(*requireChild(*demoNode, "frames", demoWhere), demoWhere + " > <frames>");
-			for (std::unique_ptr<XmlNode> child = demoNode->getFirstChild(); child != nullptr; child = child->getNextSibling())
-			{
-				const std::string tag = child->getName();
-				if (tag != "press" && tag != "release") { continue; }
-				const std::string here = demoWhere + " > <" + tag + ">";
-				DemoKey key;
-				key.button = requireAttribute(*child, "button", here);
-				key.pressed = tag == "press";
-				key.frame = whole(*child, here);
-				if (keyCodeFromString(key.button) == KeyCode::Unknown)
-				{
-					fail(here, "there is no key named '" + key.button + "'" + didYouMean(key.button, keyNames()));
-				}
-				rawDemo.keys.push_back(std::move(key));
-			}
+			rawDemo = readDemoElement(*demoNode);
 		}
 
 		// load states
@@ -3578,6 +3590,25 @@ namespace xge
 	Game::Game(const std::string& file) :
 		Game(readGame(file))
 	{
+	}
+
+	RawDemo readDemo(const std::string& filename, XmlBackend backend)
+	{
+		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
+		if (!document->load(filename))
+		{
+			throw std::runtime_error("the keys file failed to load: " + document->getErrorMessage());
+		}
+		std::unique_ptr<XmlNode> root = document->getRootElement();
+		if (root && root->getName() == "demo")
+		{
+			return readDemoElement(*root);
+		}
+		if (std::unique_ptr<XmlNode> demoNode = root ? findChild(root.get(), "demo") : nullptr)
+		{
+			return readDemoElement(*demoNode);
+		}
+		throw std::runtime_error(filename + " has no <demo>: a keys file is a <demo> as --record writes one, or a game file holding one");
 	}
 
 	std::string withDemo(const std::string& gameText, const RawDemo& demo)

@@ -219,6 +219,13 @@ namespace xge
 		}
 		else
 		{
+			for (; replaying && replayNext < replayed.keys.size() && replayed.keys[replayNext].frame <= replayFrame; ++replayNext)
+			{
+				const KeyCode key = keyCodeFromString(replayed.keys[replayNext].button);
+				if (replayed.keys[replayNext].pressed) { handleKeyPressed(key); }
+				else { handleKeyReleased(key); }
+			}
+
 			for (const auto& [key, pressed] : events)
 			{
 				if (pressed) { handleKeyPressed(key); }
@@ -263,6 +270,10 @@ namespace xge
 		{
 			++recordedSoFar.frames;
 		}
+		if (replaying && !demoPlaying)
+		{
+			++replayFrame;
+		}
 		if (demoPlaying && ++demoFrame >= game.getDemo().frames)
 		{
 			stopDemo();
@@ -281,6 +292,16 @@ namespace xge
 		setRandomState(std::mt19937{ recordedSoFar.seed });
 		game.resetAll();
 		recording = true;
+	}
+
+	void Engine::replay(const RawDemo& demo)
+	{
+		replayed = demo;
+		replaying = true;
+		replayFrame = 0;
+		replayNext = 0;
+		setRandomState(std::mt19937{ demo.seed });
+		game.resetAll();
 	}
 
 	RawDemo Engine::recorded(void) const

@@ -154,6 +154,7 @@ namespace xge
 			if (arg == "--check")  return 'c';
 			if (arg == "--frames") return 'f';
 			if (arg == "--seed")   return 's';
+			if (arg == "--keys")   return 'k';
 			if (arg == "--help")   return 'h';
 			return std::nullopt;
 		}
@@ -175,6 +176,7 @@ namespace xge
 			case 'o': return "folder";
 			case 'f': return "number of frames";
 			case 's': return "seed";
+			case 'k': return "file";
 			}
 			return "help";
 		}
@@ -273,6 +275,13 @@ namespace xge
 					throw CliError("--seed was given more than once");
 				}
 				options.seed = static_cast<unsigned int>(wholeNumber(value, "--seed", 0));
+				break;
+			case 'k':
+				if (!options.keys.empty())
+				{
+					throw CliError("--keys was given more than once");
+				}
+				options.keys = value;
 				break;
 			}
 		};
@@ -389,6 +398,17 @@ namespace xge
 		{
 			throw CliError("--seed is for playing: --check and --generate draw no numbers");
 		}
+		if (!options.keys.empty())
+		{
+			if (options.check || haveGenerate || options.record)
+			{
+				throw CliError("--keys plays a recording back; it does not go with --check, --generate or --record");
+			}
+			if (options.seed)
+			{
+				throw CliError("--keys plays from the recording's own seed; leave out --seed");
+			}
+		}
 		if (haveFrames)
 		{
 			if (options.check || haveGenerate || options.record)
@@ -492,6 +512,8 @@ namespace xge
 			"                       sound, then stop\n"
 			"  --seed <n>           the random numbers start from n, so a game plays the\n"
 			"                       same every time\n"
+			"  --keys <file>        play back the <demo> in the file (one --record wrote, or a\n"
+			"                       file that is only a <demo>) from its own seed\n"
 			"  -h, --help           show this text\n"
 			"\n"
 			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"
@@ -562,6 +584,10 @@ namespace xge
 		{
 			Game game{ readGame(file, options.xml) };
 			Engine engine(game, WindowBackend::None, AudioBackend::None);
+			if (!options.keys.empty())
+			{
+				engine.replay(readDemo(options.keys, options.xml));
+			}
 			for (; played < options.frames; ++played)
 			{
 				engine.step();

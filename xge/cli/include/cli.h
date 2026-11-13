@@ -63,6 +63,10 @@ namespace xge
 		int frames = 0;
 		std::optional<unsigned int> seed;
 
+		// --keys file: play back the <demo> in that file (readDemo) from its
+		// own seed, its keys pressed in the frames they were recorded in.
+		std::string keys;
+
 		bool showHelp = false;
 	};
 
@@ -89,6 +93,7 @@ namespace xge
 	//   --frames 600           play that many frames with no window and no
 	//                          sound, then stop
 	//   --seed 1               the random numbers start from this seed
+	//   --keys play.xml        play back the <demo> in that file
 	//   -h  --help             show the usage and exit
 	//
 	// A short option takes its value attached or after a space; a long option
@@ -138,7 +143,7 @@ namespace xge
 	int checkGames(const std::vector<std::string>& files, XmlBackend xml, std::ostream& out);
 
 	// --frames: loads the game file (with options.xml, from options.seed if
-	// there is one), plays options.frames frames with a null window and no
+	// there is one, playing back options.keys if given), plays options.frames frames with a null window and no
 	// sound, and writes one line to `out` saying how far it got. A game that
 	// will not load, or throws while it plays, is "Error: " and what it said.
 	// Gives back the program's exit code: EXIT_SUCCESS or EXIT_FAILURE.
