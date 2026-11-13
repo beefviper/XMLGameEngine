@@ -374,6 +374,9 @@ TEST_CASE("mariobros.xml: a shellcreeper on its feet costs a life, and a bump re
 	play.frames(50);
 	play.engine.handleKeyReleased(KeyCode::D);
 	CHECK(play.creeper().isVisible);
+	CHECK(play.state() == "down"); // he flips over and drops, everything standing still
+	play.frames(115);
+	CHECK(play.state() == "playing");
 	CHECK(play.mario().variable.at("lives") == Approx(2.0f));
 
 	// Back at his start, blinking and safe for a moment: walked into again, nothing.
@@ -579,6 +582,7 @@ TEST_CASE("mariobros.xml: only a bump through a floor turns a shellcreeper over;
 		if (play.creeper().lookName() != last) { ++turns; last = play.creeper().lookName(); }
 	}
 	CHECK(turns == 0);
+	play.frames(115); // he flips over and drops first
 	CHECK(play.mario().variable.at("lives") == Approx(lives - 1.0f));
 
 	// On its back over the edge, the same jump kicks it off.

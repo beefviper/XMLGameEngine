@@ -11,8 +11,9 @@
   floors down to the bottom and go into the pipes there, to come out at the
   top again. Jump up and bump the floor under one to turn it on its back,
   then run into it to kick it off for 800 points; bump it again first and
-  it gets back up. One still on its feet costs a life (the brother comes
-  back blinking, safe for two seconds). Each pest kicked off sends a coin
+  it gets back up. One still on its feet costs a life: everything stands
+  still while the brother flips over and drops off the bottom, then he
+  comes back blinking, safe for two seconds. Each pest kicked off sends a coin
   out of a top pipe, 800 more for whoever catches it.
 
   Six phases: shellcreepers (two phases), a bonus phase, sidesteppers, then
@@ -56,6 +57,10 @@
   * The phases are the scenes of the playing state; each counts the pests
     kicked (tally.kicked) up to its own `upto`, then enters the next.
   * Everything wraps round the sides of the screen.
+  * A brother hit goes out of play and sets his `down`; the state down
+    stands everything still while a stand-in, put where he was, flips over
+    (a <once /> animation) and falls. Its conditions take the life and
+    <reveal> him; Luigi's stand-in is green.
   No fireballs or icicles: see docs/designs/54-games.md.
 -->
 
@@ -212,16 +217,21 @@
           <jump>jumpheight</jump>
           <play sound="jump" />
         </action>
+        <!-- out of play while he drops (the state down), a stand-in in his place -->
         <action name="lose">
-          <dec variable="self.lives" />
           <play sound="hit" />
-          <reset />
-          <set variable="self.blink">2</set>
+          <set variable="down.downed.x">self.x</set>
+          <set variable="down.downed.y">self.y</set>
+          <set variable="down.downed.velocity.y">-3</set>
+          <set variable="self.down">1</set>
+          <die />
         </action>
       </actions>
       <variables>
         <variable name="score">0</variable>
         <variable name="lives">3</variable>
+        <!-- hit: 1 until the state down comes, 2 or more while it is on -->
+        <variable name="down">0</variable>
       </variables>
     </object>
     <!-- What every pest shares; each kind is a group from it, adding its
@@ -1009,6 +1019,14 @@
             <despawn object="luigi" />
           </condition>
         </condition>
+        <condition object="mario" variable="down"><equal>1</equal>
+          <set variable="mario.down">2</set>
+          <push state="down" />
+        </condition>
+        <condition object="luigi" variable="down"><equal>1</equal>
+          <set variable="luigi.down">2</set>
+          <push state="down" />
+        </condition>
         <condition object="mario" variable="score">
           <above>best.score</above>
           <copy variable="mario.score" into="best.score" />
@@ -1018,6 +1036,78 @@
           <copy variable="luigi.score" into="best.score" />
         </condition>
       </conditions>
+    </state>
+    <!-- a brother hit: everything stands still while he flips over and drops
+         off the bottom; then he comes back blinking, if he has a life left -->
+    <state name="down">
+      <objects>
+        <object name="downed">
+          <sprite name="stand"><bitmap from="brother-stand" /></sprite>
+          <sprite name="upside"><bitmap from="brother-upside" /></sprite>
+          <animation>
+            <seconds>0.15</seconds>
+            <once />
+            <frame sprite="stand"><seconds>0.4</seconds></frame>
+            <frame sprite="upside" />
+            <frame sprite="stand" />
+            <frame sprite="upside" />
+          </animation>
+          <position><x>0</x><y>0</y></position>
+          <acceleration><x>0</x><y>float</y></acceleration>
+          <variables>
+            <!-- time to bring him back -->
+            <variable name="back">0</variable>
+          </variables>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <!-- Luigi's in green -->
+        <condition object="luigi" variable="down"><equal>2</equal>
+          <become object="downed" style="luigi" />
+          <set variable="luigi.down">3</set>
+        </condition>
+        <!-- time up: the life taken, and back blinking if he has one left -->
+        <condition object="mario" variable="down"><atleast>2</atleast>
+          <condition object="downed" variable="back"><atleast>1</atleast>
+            <first>
+              <set variable="mario.down">0</set>
+              <dec variable="mario.lives" />
+            </first>
+            <condition object="mario" variable="lives"><atleast>1</atleast>
+              <set variable="mario.blink">2</set>
+              <reveal object="mario" />
+            </condition>
+          </condition>
+        </condition>
+        <condition object="luigi" variable="down"><atleast>2</atleast>
+          <condition object="downed" variable="back"><atleast>1</atleast>
+            <first>
+              <set variable="luigi.down">0</set>
+              <dec variable="luigi.lives" />
+            </first>
+            <condition object="luigi" variable="lives"><atleast>1</atleast>
+              <set variable="luigi.blink">2</set>
+              <reveal object="luigi" />
+            </condition>
+          </condition>
+        </condition>
+        <condition object="downed" variable="back"><atleast>1</atleast>
+          <reset object="downed" />
+          <pop />
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <after>1.8</after>
+          <set variable="downed.back">1</set>
+        </timer>
+      </timers>
     </state>
     <state name="paused">
       <objects>
@@ -1124,6 +1214,24 @@
     </sound>
   </sounds>
   <pictures>
+    <bitmap name="brother-upside" style="mario">
+      <row>kkkk....kkkk</row>
+      <row>.kkk....kkk.</row>
+      <row>..bbb..bbb..</row>
+      <row>ssbbbbbbbbss</row>
+      <row>sssbbbbbbsss</row>
+      <row>ssrbybbybrss</row>
+      <row>rrrrbbbbrrrr</row>
+      <row>.rrrbrrbrrr.</row>
+      <row>..rrbrrr....</row>
+      <row>...ssssss...</row>
+      <row>.kksssskkkk.</row>
+      <row>.kskksssksss</row>
+      <row>.ksksssskss.</row>
+      <row>..kkksskk...</row>
+      <row>..rrrrrrrrr.</row>
+      <row>...rrrrr....</row>
+    </bitmap>
     <bitmap name="brother-stand" style="mario">
       <row>...rrrrr....</row>
       <row>..rrrrrrrrr.</row>
