@@ -148,8 +148,8 @@ add_executable(xgetest
 # cli.cpp and generate.cpp are xgecli's own code, compiled in again here so
 # test_cli.cpp and test_generate.cpp can call it; the library does not contain
 # it (see executables.cmake). pong_min.cpp and pong.cpp are the hand-written
-# Pongs (games/prototypes/), played beside the engine by
-# test_prototype_pong.cpp and test_prototype_pong_full.cpp.
+# Pongs (games/prototypes/): test_prototype_pong.cpp plays pong_min beside the
+# engine, test_prototype_pong_full.cpp checks what the stand-alone pong does.
 target_include_directories(xgetest PRIVATE xge/cli/include xge/tests/helpers games/prototypes/pong_min/source games/prototypes/pong/source)
 
 target_compile_features(xgetest PRIVATE cxx_std_20)

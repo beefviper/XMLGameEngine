@@ -122,16 +122,18 @@ if (XGE_WITH_SFML3)
 	xge_warnings(pong_min)
 	xge_place_program(pong_min)
 
-	# And pong.xml by hand: states, texts, sounds, a kept choice and a
-	# computer player (games/prototypes/pong).
+	# And pong.xml by hand as a stand-alone game (games/prototypes/pong):
+	# plain SFML, none of the engine, its font copied beside it.
 	add_executable(pong
 		"games/prototypes/pong/source/main.cpp"
 		"games/prototypes/pong/source/pong.cpp"
 		"games/prototypes/pong/source/pong.h"
 	)
 	target_compile_features(pong PRIVATE cxx_std_20)
-	target_include_directories(pong PRIVATE games/prototypes/pong/source)
-	target_link_libraries(pong PRIVATE xgelib)
+	target_link_libraries(pong PRIVATE SFML::Graphics SFML::Audio)
 	xge_warnings(pong)
 	xge_place_program(pong)
+	add_custom_command(TARGET pong POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/games/assets/tuffy.ttf" "$<TARGET_FILE_DIR:pong>/tuffy.ttf"
+		VERBATIM)
 endif()
