@@ -1206,9 +1206,12 @@
   </xsl:template>
 
   <!-- A named <animation>, a look that moves: frames("walk", interval, { "a", "b" }),
-       inside once(...) when it plays through one time. -->
+       inside once(...) when it plays through one time, and then(..., "look", { commands })
+       when it has a <then>. -->
   <xsl:template name="named-frames">
     <xsl:param name="animation" />
+    <xsl:param name="indent" />
+    <xsl:if test="$animation/then">then(</xsl:if>
     <xsl:if test="$animation/once">once(</xsl:if>
     <xsl:text>frames(</xsl:text>
     <xsl:call-template name="string">
@@ -1227,6 +1230,18 @@
     </xsl:call-template>
     <xsl:text>)</xsl:text>
     <xsl:if test="$animation/once">)</xsl:if>
+    <xsl:if test="$animation/then">
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="string">
+        <xsl:with-param name="text" select="$animation/then/@sprite" />
+      </xsl:call-template>
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="commands">
+        <xsl:with-param name="nodes" select="$animation/then/*" />
+        <xsl:with-param name="indent" select="$indent" />
+      </xsl:call-template>
+      <xsl:text>)</xsl:text>
+    </xsl:if>
   </xsl:template>
 
   <!-- Each frame's own <seconds>, when any has: , { RawValue{}, n("0.5") },
@@ -1603,6 +1618,7 @@
           <xsl:text> </xsl:text>
           <xsl:call-template name="named-frames">
             <xsl:with-param name="animation" select="." />
+            <xsl:with-param name="indent" select="$in" />
           </xsl:call-template>
         </xsl:for-each>
         <xsl:text> });&#10;</xsl:text>
@@ -1628,6 +1644,14 @@
         <xsl:text>);&#10;</xsl:text>
         <xsl:if test="animation/once">
           <xsl:value-of select="concat($in, 'object.animation.once = true;&#10;')" />
+        </xsl:if>
+        <xsl:if test="animation/then">
+          <xsl:value-of select="concat($in, 'object.animation.thenCommands = ')" />
+          <xsl:call-template name="commands">
+            <xsl:with-param name="nodes" select="animation/then/*" />
+            <xsl:with-param name="indent" select="$in" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
         </xsl:if>
       </xsl:when>
       <!-- no sprite: one that only holds numbers, never drawn -->
@@ -2768,6 +2792,7 @@
       <xsl:value-of select="concat($indent, 'moves(', $to, ', ')" />
       <xsl:call-template name="named-frames">
         <xsl:with-param name="animation" select="." />
+        <xsl:with-param name="indent" select="$indent" />
       </xsl:call-template>
       <xsl:text>);&#10;</xsl:text>
     </xsl:for-each>
@@ -2792,6 +2817,14 @@
       </xsl:if>
       <xsl:if test="$node/once">
         <xsl:value-of select="concat($indent, $to, '.once = true;&#10;')" />
+      </xsl:if>
+      <xsl:if test="$node/then">
+        <xsl:value-of select="concat($indent, $to, '.then = ')" />
+        <xsl:call-template name="commands">
+          <xsl:with-param name="nodes" select="$node/then/*" />
+          <xsl:with-param name="indent" select="$indent" />
+        </xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
       </xsl:if>
     </xsl:if>
   </xsl:template>

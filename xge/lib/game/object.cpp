@@ -354,6 +354,8 @@ namespace xge
 			look.interval = animation.interval;
 			look.times = animation.times;
 			look.once = animation.once;
+			look.thenSprite = animation.thenSprite;
+			look.thenCommands = animation.thenCommands;
 			looks.push_back(std::move(look));
 		}
 		for (const RawSprite& sprite : sprites)
@@ -952,7 +954,8 @@ namespace xge
 		{
 			// Played through: a look goes back to the one before, an
 			// object's one animation stays on its last picture.
-			if (!looks.empty() && lookBefore != look && lookBefore < looks.size()) { showLook(lookBefore); }
+			const std::size_t next = looks.empty() ? 0 : looks[look].thenLook.value_or(lookBefore);
+			if (!looks.empty() && next != look && next < looks.size()) { showLook(next); }
 			else { animationDone = true; }
 			return true;
 		}

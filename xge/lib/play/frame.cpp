@@ -15,6 +15,8 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <utility>
+#include <vector>
 
 namespace xge
 {
@@ -942,14 +944,20 @@ namespace xge
 		// whether or not the object is moving; only what is in play does, so a
 		// pause or a menu holds it where it was.
 		const float second = 1.0f / static_cast<float>(window.framerate > 0 ? window.framerate : 60);
-		for (auto& object : objects)
+		// Those whose once animation ended, by index and the look it was:
+		// their <then> may spawn, and the list of objects grow.
+		std::vector<std::pair<std::size_t, std::size_t>> ended;
+		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
+			Object& object = objects[i];
 			// Just loaded or reset: where it is now is its place, not a move.
 			if (object.placed) { object.remember(); }
 
-			if (object.animationBitmaps.size() > 1 && rules.inPlay(object)) { object.advanceAnimation(); }
+			const std::size_t look = object.look;
+			if (object.animationBitmaps.size() > 1 && rules.inPlay(object) && object.advanceAnimation()) { ended.emplace_back(i, look); }
 			if (object.blink > 0.0f && rules.inPlay(object)) { object.blink = std::max(0.0f, object.blink - second); }
 		}
+		for (const auto& [index, look] : ended) { rules.animationEnded(index, look); }
 
 		rules.timers();
 

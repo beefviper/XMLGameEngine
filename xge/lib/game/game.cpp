@@ -1231,6 +1231,20 @@ namespace xge
 		refreshBoundTexts(object.name, timer.name, left);
 	}
 
+	void Game::animationEnded(std::size_t index, std::size_t look)
+	{
+		if (index >= objects.size()) { return; }
+		Object& object = objects[index];
+		// A copy: a command may reset the object, or spawn and move it.
+		const std::vector<Command> commands = object.looks.empty() ? object.animationThen
+			: look < object.looks.size() ? object.looks[look].then : std::vector<Command>{};
+		CommandExecutor executor(*this);
+		for (const Command& command : commands)
+		{
+			if (!executor.executeTimer(command, &objects[index])) { break; }
+		}
+	}
+
 	void Game::updateTimers(void)
 	{
 		CommandExecutor executor(*this);

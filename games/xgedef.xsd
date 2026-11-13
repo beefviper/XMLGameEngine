@@ -775,12 +775,25 @@
         <xs:element name="cell" type="sheetCellType" />
         <xs:element name="cells" type="sheetRunType" />
       </xs:choice>
+      <xs:element name="then" type="animationThenType" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:NMTOKEN" use="optional">
       <xs:annotation>
         <xs:documentation><![CDATA[named: a look that moves, which <become> and <poses> pick like a sprite]]></xs:documentation>
       </xs:annotation>
     </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="animationThenType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        then: what comes when an animation with <once /> ends. sprite= is the look
+        it goes to in place of the look before (a named animation only); the
+        commands run as an object's timer's do.
+      ]]></xs:documentation>
+    </xs:annotation>
+    <xs:group ref="objectTimeCommands" minOccurs="0" maxOccurs="unbounded" />
+    <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
   </xs:complexType>
 
   <xs:complexType name="poseType">

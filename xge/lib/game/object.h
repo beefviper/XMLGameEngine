@@ -325,6 +325,10 @@ namespace xge
 		RawValue interval;
 		std::vector<RawValue> times;
 		bool once{ false };
+		// <then>: the look a once look goes to when it ends (empty, the look
+		// before it), and the commands it runs then.
+		std::string thenSprite;
+		std::vector<RawCommand> thenCommands;
 	};
 
 	// An <animation> as written: its name (empty for an object's one
@@ -341,6 +345,10 @@ namespace xge
 		std::vector<RawValue> times;
 		// <once />: plays through one time, not round and round.
 		bool once{ false };
+		// <then sprite="...">: the look it goes to when it ends, and the
+		// commands it runs then. Only with once.
+		std::string thenSprite;
+		std::vector<RawCommand> thenCommands;
 		// Frames cut from a sheet (<cell>s and runs of <cells>), named for
 		// the animation and numbered ("walk.1", "frame.1" for an unnamed
 		// one), each also among `frames`: sprites the object gains.
@@ -371,6 +379,7 @@ namespace xge
 		std::vector<RawSprite> frames;
 		std::vector<RawValue> times;   // as RawFrames::times
 		bool once{ false };            // as RawFrames::once
+		std::vector<RawCommand> thenCommands;   // as RawFrames::thenCommands
 	};
 
 	// Whether a frame's entry in `times` holds a time of its own, rather
@@ -1061,6 +1070,9 @@ namespace xge
 		bool animationOnce{ false };
 		bool animationDone{ false };
 		std::size_t lookBefore{};
+		// <then>'s commands of an object's one animation, run when it ends
+		// (a look's are the look's own).
+		std::vector<Command> animationThen;
 
 		// Counts one frame of the game towards the next picture of the
 		// animation, and shows it (marking the visual to be rebuilt) when its
@@ -1477,6 +1489,10 @@ namespace xge
 			int frameTicks{};
 			std::vector<int> frameTimes;   // as animationTimes
 			bool once{ false };            // as animationOnce
+			// <then>: the look to go to when it ends, in place of the look
+			// before, and the commands it runs then.
+			std::optional<std::size_t> thenLook;
+			std::vector<Command> then;
 			// For an object with a <heading>: the look's pictures (one, or
 			// one a frame) kept to be turned to it (see `turnables`).
 			std::vector<std::shared_ptr<const Turnable>> turnables;

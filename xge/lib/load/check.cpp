@@ -395,6 +395,8 @@ namespace xge
 		for (const Object& object : objects)
 		{
 			for (const Timer& timer : object.timers) { visit(timer.commands, &object); }
+			visit(object.animationThen, &object);
+			for (const Object::Look& look : object.looks) { visit(look.then, &object); }
 			for (const auto& [name, commands] : object.action) { visit(commands, &object); }
 			for (const auto& rule : object.collisionData.others) { visit(rule.commands, &object); }
 			for (const auto& edgeRules : object.collisionData.edges)
@@ -742,6 +744,8 @@ namespace xge
 					}
 				};
 				for (const auto& timer : object.timers) { checkWalks(timer.commands, where + " > <timer>"); }
+				checkWalks(object.animationThen, where + " > <animation> > <then>");
+				for (const auto& look : object.looks) { checkWalks(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>"); }
 				for (const auto& [name, commands] : object.action) { checkWalks(commands, where + " > <action name=\"" + name + "\">"); }
 				for (const auto& rule : object.collisionData.others) { onLine(rule.line, [&] { checkWalks(rule.commands, where + " > <collision>"); }); }
 
@@ -771,6 +775,14 @@ namespace xge
 					checkAll(timer.commands, where + " > <timer>"); checkOwnLooks(timer.commands, &object, where + " > <timer>");
 					checkPlace(timer.commands, Place::ObjectTimer, where + " > <timer>");
 				}
+				// An animation's <then> runs as an object's timer does.
+				const auto checkThen = [&](const std::vector<Command>& commands, const std::string& here)
+				{
+					checkAll(commands, here); checkOwnLooks(commands, &object, here);
+					checkPlace(commands, Place::ObjectTimer, here);
+				};
+				checkThen(object.animationThen, where + " > <animation> > <then>");
+				for (const auto& look : object.looks) { checkThen(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>"); }
 				for (const auto& [name, commands] : object.action) { checkOwnLooks(commands, &object, where); }
 				for (const auto& rule : object.collisionData.others) { onLine(rule.line, [&] { checkOwnLooks(rule.commands, &object, where); }); }
 				for (const auto& edgeRules : object.collisionData.edges)

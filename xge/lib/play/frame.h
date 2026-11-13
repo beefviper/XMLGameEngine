@@ -48,6 +48,11 @@ namespace xge
 		// dead. Nothing else is animated, moved, pulled or touched.
 		virtual bool inPlay(const Object& object) = 0;
 
+		// An animation that plays once has just ended on objects[index], which
+		// was showing looks[look] (0 for its one unnamed animation): its
+		// <then> commands run, before the timers.
+		virtual void animationEnded(std::size_t index, std::size_t look) { (void)index; (void)look; }
+
 		// The timers that go off this frame, before anything moves, so a bomb
 		// dropped this frame starts falling this frame.
 		virtual void timers() {}

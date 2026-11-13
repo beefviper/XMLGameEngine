@@ -11,7 +11,8 @@
 - Rejected: a global animation clock (awkward with pause and reset).
 - A frame may take its own `<seconds>` (a cycle that holds one picture longer); without, the animation's. Only a `<frame>`, not a sheet's cells, which have no place to say it.
 - `<once />` plays it through one time, for a burst or a death. A look then goes back to the last look shown that was not itself once, so a flash over a walk returns to the walk without the game naming it; an object's one animation has nothing to go back to and holds its last picture. Going back is a look change like any other, kept as `lookBefore` on the object, and a reset starts over from the first look.
-- Not done: what comes after (a named look or commands) and starting one on a touch.
+- `<then>` says what comes after: `sprite=` a look in place of the one before, and commands run as an object timer's (the same place, so the same verbs and checks). It is the end of the animation, not a timer, so a game no longer counts the frames out to match. An object's one animation has no looks, so its `<then>` takes commands only. The commands run after every animation has counted its frame, by the object's index, since a spawn may grow the list.
+- Not done: starting one on a touch.
 
 ## Looks
 

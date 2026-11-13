@@ -595,6 +595,8 @@ namespace xge
 			return sprites;
 		}
 
+		std::vector<RawCommand> readCommands(std::unique_ptr<XmlNode> first, const std::string& where);
+
 		// An <animation> as written (RawFrames). Which sprites its frames are
 		// is settled by chooseSprite, once the sprites it can pick from are
 		// known (a group's member can bring its own).
@@ -656,7 +658,13 @@ namespace xge
 					}
 				}
 				else if (tag == "once") { spec.once = true; }
-				else if (tag != "seconds") { fail(here, "unknown <" + tag + ">; expected <seconds>, <once /> and then <frame>s, <cell>s and runs of <cells>"); }
+				else if (tag == "then")
+				{
+					if (!spec.once) { fail(here + " > <then>", "comes when the animation ends, so it needs <once />"); }
+					spec.thenSprite = node->getAttribute("sprite");
+					spec.thenCommands = readCommands(node->getFirstChild(), here + " > <then>");
+				}
+				else if (tag != "seconds") { fail(here, "unknown <" + tag + ">; expected <seconds>, <once />, then <frame>s, <cell>s and runs of <cells>, and last <then>"); }
 			}
 			if (!spec.times.empty()) { spec.times.resize(spec.frames.size()); }
 
@@ -759,6 +767,11 @@ namespace xge
 			chosen.interval = animation->interval;
 			chosen.times = animation->times;
 			chosen.once = animation->once;
+			chosen.thenCommands = animation->thenCommands;
+			if (!animation->thenSprite.empty())
+			{
+				fail(where + " > <animation> > <then sprite=\"" + animation->thenSprite + "\">", "an object's one animation has no looks to go to; name the animation to make it a look");
+			}
 
 			std::vector<bool> used(sprites.size(), false);
 			for (const std::string& name : animation->frames)

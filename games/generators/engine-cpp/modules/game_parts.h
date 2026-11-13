@@ -300,6 +300,15 @@ namespace xge::parts
 		return animation;
 	}
 
+	// A named <animation>'s <then>: the look it goes to when it ends (empty,
+	// the look before), and the commands it runs then.
+	inline RawFrames then(RawFrames animation, std::string sprite, std::vector<RawCommand> commands)
+	{
+		animation.thenSprite = std::move(sprite);
+		animation.thenCommands = std::move(commands);
+		return animation;
+	}
+
 	// What an object with named <animation>s looks like: each a look that
 	// moves, then its sprites, starting as the first.
 	inline void moving(RawObject& object, const std::vector<RawSprite>& sprites, const std::vector<RawFrames>& animations)
@@ -319,6 +328,7 @@ namespace xge::parts
 		std::vector<std::string> frames;
 		std::vector<RawValue> times;
 		bool once{ false };
+		std::vector<RawCommand> then;
 		std::vector<RawFrames> moving;
 	};
 
@@ -392,6 +402,7 @@ namespace xge::parts
 		{
 			animate(object, member.sprites, member.interval, member.frames, member.times);
 			object.animation.once = member.once;
+			object.animation.thenCommands = member.then;
 		}
 		else
 		{

@@ -84,6 +84,7 @@ namespace
 		{ "pull", "one object drawn to another" },
 		{ "remainder", "an operation" },
 		{ "rise", "a live number, how fast the altitude changes" },
+		{ "then", "what comes after a once animation; the games move onto it next (plan F2 step 5)" },
 	};
 }
 

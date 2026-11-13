@@ -710,6 +710,78 @@ TEST_CASE("an animation with once plays through one time", "[animation]")
 	}
 }
 
+TEST_CASE("an animation's then names the look it goes to and the commands it runs", "[animation]")
+{
+	const std::string idle = "<animation name=\"idle\"><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"a\" /></animation>";
+	// The thing, counting in its own number `ended`.
+	const auto counting = [](const std::string& animations)
+	{
+		std::string object = objectWith(kA + kB, animations);
+		object.insert(object.find("</object>"), "<variables><variable name=\"ended\">0</variable></variables>");
+		return object;
+	};
+
+	SECTION("then sprite= goes to that look in place of the one before")
+	{
+		const std::string animations = idle +
+			"<animation name=\"flash\"><seconds>0.1</seconds><once /><frame sprite=\"b\" /><frame sprite=\"a\" /><then sprite=\"b\" /></animation>";
+		Loaded loaded{ gameXml(objectWith(kA + kB, animations), "<show object=\"thing\" />") };
+		Game& game = loaded.game;
+		game.setCurrentState("playing");
+		Object& thing = game.getObject("thing");
+		thing.showLook(1);
+		frames(game, 12);
+		CHECK(thing.lookName() == "b");
+		frames(game, 60);
+		CHECK(thing.lookName() == "b");
+	}
+
+	SECTION("then's commands run once, as the animation ends")
+	{
+		const std::string animations = idle +
+			"<animation name=\"flash\"><seconds>0.1</seconds><once /><frame sprite=\"b\" /><frame sprite=\"a\" /><then><inc variable=\"thing.ended\" /></then></animation>";
+		Loaded loaded{ gameXml(counting(animations), "<show object=\"thing\" />") };
+		Game& game = loaded.game;
+		game.setCurrentState("playing");
+		Object& thing = game.getObject("thing");
+		thing.showLook(1);
+		frames(game, 11);
+		CHECK(thing.variable.at("ended") == 0.0f);
+		frames(game, 1);
+		CHECK(thing.variable.at("ended") == 1.0f);
+		CHECK(thing.lookName() == "idle");
+		frames(game, 60);
+		CHECK(thing.variable.at("ended") == 1.0f);
+	}
+
+	SECTION("an object's one animation runs them too, and stays on its last picture")
+	{
+		const char* const animation = "<animation><seconds>0.1</seconds><once /><frame sprite=\"a\" /><frame sprite=\"b\" /><then><inc variable=\"thing.ended\" /></then></animation>";
+		Loaded loaded{ gameXml(counting(animation), "<show object=\"thing\" />") };
+		Game& game = loaded.game;
+		game.setCurrentState("playing");
+		const Object& thing = game.getObject("thing");
+		frames(game, 12);
+		CHECK(thing.variable.at("ended") == 1.0f);
+		CHECK(showing(thing) == 'b');
+		frames(game, 60);
+		CHECK(thing.variable.at("ended") == 1.0f);
+	}
+
+	SECTION("what cannot be")
+	{
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, idle +
+			"<animation name=\"flash\"><seconds>0.1</seconds><once /><frame sprite=\"b\" /><frame sprite=\"a\" /><then sprite=\"glow\" /></animation>"),
+			"<show object=\"thing\" />")), ContainsSubstring("<then sprite=\"glow\">") && ContainsSubstring("no look of that name"));
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, idle +
+			"<animation name=\"flash\"><seconds>0.1</seconds><frame sprite=\"b\" /><frame sprite=\"a\" /><then sprite=\"a\" /></animation>"),
+			"<show object=\"thing\" />")), ContainsSubstring("needs <once />"));
+		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB,
+			"<animation><seconds>0.1</seconds><once /><frame sprite=\"a\" /><frame sprite=\"b\" /><then sprite=\"a\" /></animation>"),
+			"<show object=\"thing\" />")), ContainsSubstring("no looks to go to"));
+	}
+}
+
 TEST_CASE("the interval is in seconds, so it follows the window's framerate", "[animation]")
 {
 	const std::string objects = objectWith(kA + kB, "<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>");

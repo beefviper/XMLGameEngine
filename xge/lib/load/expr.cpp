@@ -832,6 +832,7 @@ namespace xge
 					look.frameTicks = animationFramesOf(rawLook.interval, windowDesc, here);
 					look.frameTimes = animationTimesOf(rawLook.times, look.frameTicks, windowDesc, here);
 					look.once = rawLook.once;
+					look.then = processCommands(rawLook.thenCommands, here + " > <then>");
 				}
 				if (look.picture.kind == ShapeKind::Text && showsNumbers(rawLook))
 				{
@@ -846,6 +847,22 @@ namespace xge
 			looks.front().bitmap = first.bitmap;
 			if (!looks.front().frames.empty()) { looks.front().frames.front() = first.bitmap; }
 			if (first.turned && looks.front().frames.empty()) { looks.front().turnables = { first.turned }; }
+
+			// The look each once look goes to when it ends, by its name.
+			for (std::size_t i = 0; i < rawObject.looks.size(); ++i)
+			{
+				const std::string& then = rawObject.looks[i].thenSprite;
+				if (then.empty()) { continue; }
+				const auto found = std::find_if(looks.begin(), looks.end(), [&](const Object::Look& each) { return each.name == then; });
+				if (found == looks.end())
+				{
+					std::vector<std::string> names;
+					for (const Object::Look& each : looks) { names.push_back(each.name); }
+					throw std::runtime_error(where + " > <animation name=\"" + rawObject.looks[i].name + "\"> > <then sprite=\"" + then + "\">: the object has no look of that name"
+						+ didYouMean(then, names) + ". Its looks are: " + listOf(names));
+				}
+				looks[i].thenLook = static_cast<std::size_t>(found - looks.begin());
+			}
 		}
 
 
@@ -862,6 +879,7 @@ namespace xge
 			object.animationFrames = animationFrames;
 			object.animationTimes = animationTimesOf(rawObject.animation.times, animationFrames, windowDesc, where + " > <animation>");
 			object.animationOnce = rawObject.animation.once;
+			object.animationThen = processCommands(rawObject.animation.thenCommands, where + " > <animation> > <then>");
 			object.bitmap = object.animationBitmaps.front();
 		}
 

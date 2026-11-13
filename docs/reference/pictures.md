@@ -185,6 +185,16 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
 - `<seconds>` is how long each picture shows (above 0); each `<frame>` picks a sprite. At least two frames, all pictures of one size; an unnamed animation shows every sprite.
 - **A frame's own time:** `<frame sprite="closed"><seconds>0.5</seconds></frame>` shows that picture that long; the others keep the animation's `<seconds>`. Cells cut from a sheet take the animation's.
 - **Once:** `<once />` after `<seconds>` plays the frames through one time instead of round and round. A look that moves then goes back to the look shown before it; an object's one animation stays on its last picture. A reset starts it again.
+- **Then:** a `<then>` after the frames says what comes when a once animation ends. `<then sprite="dead" />` goes to that look instead of the one before; commands in it run as an object's timer's do, the same frame:
+
+  ```xml
+  <animation>
+    <seconds>0.1</seconds>
+    <once />
+    <cells sheet="blast"><row>0</row><count>4</count></cells>
+    <then><despawn /></then>
+  </animation>
+  ```
 - **Frames from a [sheet](#sheets)** need no sprites: a `<cell sheet>` is one frame, and a run of `<cells sheet>` is `<count>` frames from its `<column>` and `<row>` along the row (or down the column with `<down />`). Frames, cells and runs mix in any order, so a long animation split over two rows is two runs:
 
   ```xml
