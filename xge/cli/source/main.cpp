@@ -7,6 +7,7 @@
 #include "engine/folder.h"
 #include "generate.h"
 #include "game/game.h"
+#include "game/random.h"
 #include "load/xml.h"
 #include "engine/engine.h"
 
@@ -135,6 +136,17 @@ int main(int argc, char* argv[])
 		<< "window: " << xge::windowBackendName(options.window) << '\n'
 		<< "xml: " << xge::xmlBackendName(options.xml) << '\n'
 		<< "audio: " << xge::audioBackendName(options.audio) << "\n\n";
+
+	// --frames: played to the end with no window, nothing printed but how
+	// far it got.
+	if (options.frames > 0)
+	{
+		return xge::playFrames(filename, options, std::cout);
+	}
+	if (options.seed)
+	{
+		xge::fixRandomSeed(options.seed);
+	}
 
 	// A game file that is wrong - an unknown tag, a missing <radius>, a value
 	// that will not evaluate - is reported by the exception loading it throws,

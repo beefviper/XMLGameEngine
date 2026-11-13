@@ -10,6 +10,7 @@
 #include "xml/document.h"
 
 #include <filesystem>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -55,6 +56,13 @@ namespace xge
 		bool check = false;
 		std::vector<std::string> games;
 
+		// --frames N: play that many frames as fast as they go, with no window
+		// and no sound, then stop (playFrames); 0 plays in a window as usual.
+		// --seed S: the random numbers start from S, from the moment the game
+		// loads, so the same command plays the same game every time.
+		int frames = 0;
+		std::optional<unsigned int> seed;
+
 		bool showHelp = false;
 	};
 
@@ -78,6 +86,9 @@ namespace xge
 	//   --output out
 	//   --record               play and write what was played into the game
 	//                          file as its <demo>, for its attract mode
+	//   --frames 600           play that many frames with no window and no
+	//                          sound, then stop
+	//   --seed 1               the random numbers start from this seed
 	//   -h  --help             show the usage and exit
 	//
 	// A short option takes its value attached or after a space; a long option
@@ -125,4 +136,11 @@ namespace xge
 	// "pong.xml: " and what stopped it. What the libraries say while reading is
 	// not shown; warnings still go to std::cerr. Gives back how many failed.
 	int checkGames(const std::vector<std::string>& files, XmlBackend xml, std::ostream& out);
+
+	// --frames: loads the game file (with options.xml, from options.seed if
+	// there is one), plays options.frames frames with a null window and no
+	// sound, and writes one line to `out` saying how far it got. A game that
+	// will not load, or throws while it plays, is "Error: " and what it said.
+	// Gives back the program's exit code: EXIT_SUCCESS or EXIT_FAILURE.
+	int playFrames(const std::string& file, const CliOptions& options, std::ostream& out);
 }

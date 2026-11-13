@@ -7,10 +7,12 @@
 #include "engine/engine.h"
 #include "engine/folder.h"
 #include "game/game.h"
+#include "game/random.h"
 #include "load/xml.h"
 
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <memory>
@@ -68,6 +70,18 @@ namespace xge
 		constexpr std::string_view generateNames[] = {
 			"windows-cpp",
 		};
+
+		// A whole number from the command line: digits only, and at least
+		// `least`.
+		unsigned long wholeNumber(const std::string& value, const std::string& option, unsigned long least)
+		{
+			const bool digits = !value.empty() && value.size() <= 9 && value.find_first_not_of("0123456789") == std::string::npos;
+			if (!digits || std::stoul(value) < least)
+			{
+				throw CliError(option + " takes a whole number" + (least > 0 ? " of at least " + std::to_string(least) : std::string()) + ", not '" + value + "'");
+			}
+			return std::stoul(value);
+		}
 
 		std::string lowerCase(std::string text)
 		{
@@ -138,6 +152,8 @@ namespace xge
 			if (arg == "--output") return 'o';
 			if (arg == "--record") return 'r';
 			if (arg == "--check")  return 'c';
+			if (arg == "--frames") return 'f';
+			if (arg == "--seed")   return 's';
 			if (arg == "--help")   return 'h';
 			return std::nullopt;
 		}
@@ -157,6 +173,8 @@ namespace xge
 			case 'a': return "audio";
 			case 'G': return "target";
 			case 'o': return "folder";
+			case 'f': return "number of frames";
+			case 's': return "seed";
 			}
 			return "help";
 		}
@@ -172,6 +190,7 @@ namespace xge
 		bool haveAudio = false;
 		bool haveGenerate = false;
 		bool haveOutput = false;
+		bool haveFrames = false;
 
 		// Several only for --check, which may come after them: worked out at the end.
 		auto setGame = [&](const std::string& game)
@@ -239,6 +258,21 @@ namespace xge
 				}
 				options.output = value;
 				haveOutput = true;
+				break;
+			case 'f':
+				if (haveFrames)
+				{
+					throw CliError("--frames was given more than once");
+				}
+				options.frames = static_cast<int>(wholeNumber(value, "--frames", 1));
+				haveFrames = true;
+				break;
+			case 's':
+				if (options.seed)
+				{
+					throw CliError("--seed was given more than once");
+				}
+				options.seed = static_cast<unsigned int>(wholeNumber(value, "--seed", 0));
 				break;
 			}
 		};
@@ -351,6 +385,27 @@ namespace xge
 		{
 			throw CliError("--record plays the game, and --generate writes it out instead; give one of them");
 		}
+		if (options.seed && (options.check || haveGenerate))
+		{
+			throw CliError("--seed is for playing: --check and --generate draw no numbers");
+		}
+		if (haveFrames)
+		{
+			if (options.check || haveGenerate || options.record)
+			{
+				throw CliError("--frames plays the game; it does not go with --check, --generate or --record");
+			}
+			if (haveWindow && options.window != WindowBackend::None)
+			{
+				throw CliError("--frames plays with no window; leave out -w, or give -w none");
+			}
+			if (haveAudio && options.audio != AudioBackend::None)
+			{
+				throw CliError("--frames plays with no sound; leave out -a, or give -a none");
+			}
+			options.window = WindowBackend::None;
+			options.audio = AudioBackend::None;
+		}
 
 		return options;
 	}
@@ -433,6 +488,10 @@ namespace xge
 			"  --check              load the games given (several, or none for every game in\n"
 			"                       games/descriptions/) and print ok or what is wrong with\n"
 			"                       each; exits 1 if any is wrong\n"
+			"  --frames <n>         play n frames as fast as they go, with no window and no\n"
+			"                       sound, then stop\n"
+			"  --seed <n>           the random numbers start from n, so a game plays the\n"
+			"                       same every time\n"
 			"  -h, --help           show this text\n"
 			"\n"
 			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"
@@ -484,5 +543,37 @@ namespace xge
 			if (!problem.empty()) { ++failed; }
 		}
 		return failed;
+	}
+
+	int playFrames(const std::string& file, const CliOptions& options, std::ostream& out)
+	{
+		// The seed was fixed only for this game: what it was goes back after.
+		const std::optional<unsigned int> seedBefore = fixedRandomSeed();
+		if (options.seed) { fixRandomSeed(options.seed); }
+		struct SeedBack
+		{
+			std::optional<unsigned int> seed;
+			bool fixed;
+			~SeedBack() { if (fixed) { fixRandomSeed(seed); } }
+		} seedBack{ seedBefore, options.seed.has_value() };
+
+		int played = 0;
+		try
+		{
+			Game game{ readGame(file, options.xml) };
+			Engine engine(game, WindowBackend::None, AudioBackend::None);
+			for (; played < options.frames; ++played)
+			{
+				engine.step();
+			}
+			out << "played " << played << " frames of " << std::filesystem::path(file).filename().string()
+				<< "; the state is " << game.getCurrentState().name << '\n';
+		}
+		catch (const std::exception& error)
+		{
+			out << "Error: " << (played > 0 ? "in frame " + std::to_string(played + 1) + ": " : std::string()) << error.what() << '\n';
+			return EXIT_FAILURE;
+		}
+		return EXIT_SUCCESS;
 	}
 }

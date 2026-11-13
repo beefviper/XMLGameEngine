@@ -16,6 +16,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <cstdlib>
+
 #include <filesystem>
 #include <algorithm>
 #include <fstream>
@@ -286,6 +288,57 @@ TEST_CASE("check loads each game as for play and says ok or what is wrong", "[cl
 	const std::vector<std::string> all = gameFilesIn("descriptions");
 	CHECK(all.size() > 50);
 	CHECK(std::is_sorted(all.begin(), all.end()));
+}
+
+TEST_CASE("frames plays with no window and no sound and seed fixes the numbers", "[cli][frames]")
+{
+	const CliOptions played = parseCommandLine({ "pong", "--frames", "600", "--seed", "1" });
+	CHECK(played.frames == 600);
+	REQUIRE(played.seed);
+	CHECK(*played.seed == 1u);
+	CHECK(played.window == WindowBackend::None);
+	CHECK(played.audio == AudioBackend::None);
+	CHECK(parseCommandLine({ "pong", "--frames", "1", "-w", "none", "-a", "none" }).frames == 1);
+	CHECK(parseCommandLine({ "pong" }).frames == 0);
+	CHECK_FALSE(parseCommandLine({ "pong" }).seed);
+	CHECK(parseCommandLine({ "pong", "--seed", "0" }).seed == 0u); // a seed alone plays in a window
+
+	CHECK_THROWS_AS(parseCommandLine({ "--frames" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--frames", "0" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--frames", "ten" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--frames", "10", "--frames", "10" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--seed", "-1" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--seed", "1", "--seed", "2" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--frames", "10", "--record" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--frames", "10", "--check" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--frames", "10", "--generate", "windows-cpp" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "--seed", "1", "--check" }), CliError);
+	CHECK(usageText().find("--frames") != std::string::npos);
+	CHECK(usageText().find("--seed") != std::string::npos);
+}
+
+TEST_CASE("frames plays the game to the end and says how far it got", "[cli][frames]")
+{
+	const CliOptions options = parseCommandLine({ "pong", "--frames", "600", "--seed", "1", "-x", "tinyxml2" });
+	std::ostringstream out;
+	CHECK(playFrames("descriptions/pong.xml", options, out) == EXIT_SUCCESS);
+	INFO(out.str());
+	CHECK(out.str().find("played 600 frames of pong.xml") != std::string::npos);
+
+	// A game that will not load is a message and a failure.
+	const std::filesystem::path broken = scratchName("descriptions/frames_broken.xml");
+	{
+		std::ifstream in("descriptions/pong.xml");
+		std::string text = fileText(in);
+		text.replace(text.find("<width>1280</width>"), 19, "<width>0</width>");
+		std::ofstream(broken) << text;
+	}
+	std::ostringstream failed;
+	CHECK(playFrames(broken.string(), options, failed) == EXIT_FAILURE);
+	std::filesystem::remove(broken);
+	INFO(failed.str());
+	CHECK(failed.str().rfind("Error: ", 0) != std::string::npos);
+	CHECK(failed.str().find("width") != std::string::npos);
 }
 
 TEST_CASE("the help options ask for the usage", "[cli]")

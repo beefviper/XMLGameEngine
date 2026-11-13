@@ -36,6 +36,11 @@ namespace xge
 		fixedSeed() = value;
 	}
 
+	std::optional<unsigned int> fixedRandomSeed() noexcept
+	{
+		return fixedSeed();
+	}
+
 	float randomBetween(float min, float max)
 	{
 		if (min > max) { std::swap(min, max); }

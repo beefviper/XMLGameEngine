@@ -14,6 +14,8 @@ xgecli [game] [options]
   -o, --output <dir>   where --generate writes (default <game>-<target>)
   --record             play, and write what was played into the game file as its <demo>
   --check              load the games (none: all) and say ok or what is wrong
+  --frames <n>         play n frames with no window and no sound, then stop
+  --seed <n>           the random numbers start from n
   -h, --help
 ```
 
@@ -35,4 +37,5 @@ xgecli [game] [options]
 - **Recording** ([states-and-conditions](07-states-and-conditions.md), attract mode): `--record` plays as usual from a new seed and, when the window closes, writes the `<demo>` into the game file (`withDemo`), replacing the one there and keeping the file's line endings. Long form only, like `--generate`, with which it cannot go. It writes the repository's file on purpose: the demo is part of the game.
 - - A backend that this build leaves out is refused by name, with the list of those built in.
 - **Checking** (`--check`): "does this game load?" with no window, for authors, scripts and the long tests. It loads as play does (the reader, then the engine on the null window, so positions made from text sizes are worked out too), hides the libraries' loading chatter, and prints one line a game. Several games only here; none means all. `-w`/`-a` are refused with it, since it opens and plays nothing.
+- **Stepping** (`--frames`, `--seed`): so an agent, which cannot watch a window, can play a game and read what happened. `--frames` plays as fast as the frames go on the null window (`playFrames` in `cli.cpp`, a loop of `Engine::step`), so it is the play the window would have shown, frame for frame. A real window or sound named with it is refused rather than ignored. `--seed` fixes the numbers before the game loads, because loading already draws them (a `<random>` position).
 - Rejected: `-g` for generate (it is the game); `--game=pong`; last-one-wins; short backend aliases (`sfml`, `xerxes`).
