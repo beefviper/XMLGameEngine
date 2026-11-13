@@ -663,6 +663,26 @@ TEST_CASE("a shot from the ship of Space Invaders 2 can still kill an alien", "[
 	CHECK(copies::count(game, "bullet") == 0);
 }
 
+TEST_CASE("a bomb on the ship of Space Invaders 2 bursts it, the invasion standing still, then it comes back", "[spaceinvaders2]")
+{
+	Invasion invasion;
+	Game& game = invasion.game;
+	Object& ship = game.getObject("player");
+	const std::string bomb = game.spawn("bomb")->name;
+	game.settleSpawns();
+	game.getObject(bomb).position = ship.position;
+	frames(game, 2);
+	CHECK(game.getCurrentState().name == "blasted");
+	CHECK_FALSE(ship.isVisible);
+	CHECK(ship.variable.at("lives") == 2.0f);
+	CHECK(game.isShown(game.getObject("wreck")));
+
+	frames(game, 65);
+	CHECK(game.getCurrentState().name == "playing");
+	CHECK(ship.isVisible);
+	CHECK(copies::count(game, "bomb") == 0);
+}
+
 TEST_CASE("paused, Space Invaders 2 draws the invasion still under the word", "[spaceinvaders2][scenes][shows]")
 {
 	Invasion invasion;

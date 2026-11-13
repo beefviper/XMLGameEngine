@@ -25,7 +25,9 @@
   changes (a row of crabs only its <x>, <y> and <height>).
 
   The aliens step through three frames each; a hit leaves the four explosion
-  frames, spawned where it was; the saucer is the mystery ship and turns
+  frames, spawned where it was; a bomb on the ship takes it out of play
+  while the state blasted plays the same frames over it, the invasion
+  standing still, and then <reveal>s it; the saucer is the mystery ship and turns
   its lights as it goes. Not used yet: banking, the hit flash, the charged
   bolt and the enemy bomb.
 -->
@@ -163,8 +165,8 @@
           <collision class="bomb">
             <dec variable="player.lives" />
             <inc variable="player.struck" />
-            <spawn object="blast" />
             <play sound="playerhit" />
+            <die />
           </collision>
         </collisions>
         <actions>
@@ -424,6 +426,54 @@
       </inputs>
     </state>
     <state name="blasted">
+      <objects>
+        <!-- the cannon bursting where it was hit, out of play under it -->
+        <object name="wreck">
+          <sprite name="a">
+            <svg>
+              <path>assets/Space Invaders Color Sprites.svg</path>
+              <x>66</x><y>34</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="b">
+            <svg>
+              <path>assets/Space Invaders Color Sprites.svg</path>
+              <x>98</x><y>34</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="c">
+            <svg>
+              <path>assets/Space Invaders Color Sprites.svg</path>
+              <x>130</x><y>34</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="d">
+            <svg>
+              <path>assets/Space Invaders Color Sprites.svg</path>
+              <x>162</x><y>34</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <animation>
+            <seconds>0.1</seconds>
+            <once />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d"><seconds>0.4</seconds></frame>
+          </animation>
+          <position><x update="live">player.x</x><y update="live">player.y</y></position>
+        </object>
+      </objects>
       <shows>
         <show state="playing" />
       </shows>
@@ -434,6 +484,8 @@
         <timer>
           <after>1</after>
           <despawn object="bomb" />
+          <reveal object="player" />
+          <reset object="wreck" />
           <pop />
         </timer>
       </timers>
