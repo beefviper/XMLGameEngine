@@ -529,14 +529,14 @@ namespace xge
 		void trackCells(Object& object, bool horizontal, float at, const std::vector<std::string>& onto = {});
 		bool hopOnto(Object& mover, Direction direction, const std::vector<std::string>& onto);
 		// Cards (game/holders.cpp): a hand's verbs, each false when refused;
-		// moving it among the piles; the deal at the start of a game.
+		// moving it among the holders; the deal at the start of a game.
 		bool takeCards(Object& hand);
-		bool layCards(Object& hand, const std::string& pile);
+		bool layCards(Object& hand, const std::string& holder);
 		bool dropCards(Object& hand);
-		bool dealCards(Object& hand, const std::string& from = {}, const std::string& faces = {});
+		bool sendPicked(Object& hand, const std::string& from = {}, const std::string& faces = {});
 		// For tests: the next deal puts these cards on top of the deck's
-		// pile after shuffling, the first on top, before the piles are dealt.
-		std::vector<int> stackedDeal;
+		// holder after shuffling, the first on top, before the holders are dealt.
+		std::vector<int> stackedStart;
 		// Members of a held class, holder to holder: the top `count` of
 		// `from` (or all; a group's name: every member, wherever it is)
 		// into `into`, showing `sprite` if given; a holder's cards at
@@ -545,27 +545,27 @@ namespace xge
 		bool sendHeld(const std::string& from, const std::string& into, int count, bool all, const std::string& sprite);
 		bool orderHeld(const std::string& holder);
 		bool turnHeld(Object& holder, const std::string& sprite);
-		bool callSuit(Object& hand, const std::string& pile);
+		bool callValue(Object& hand, const std::string& holder);
 		bool hopHand(Object& hand, Direction direction);
 		void trackHand(Object& hand, bool horizontal, float at);
-		void dealDecks();
+		void sendStarts();
 		void layOutCards();
-		bool isCovered(const Object& card, const Object& own);   // overlapped by a later-drawn card of another shown pile
+		bool isCovered(const Object& card, const Object& own);   // overlapped by a later-drawn card of another shown holder
 		Object* cardAt(int number);
-		Object* pileNamed(const std::string& name);
+		Object* holderNamed(const std::string& name);
 		void turnCard(Object& card, bool up);
-		void putInHolder(Object& pile, int number);
-		int takeTop(Object& pile);
-		void showTop(Object& pile);
+		void putInHolder(Object& holder, int number);
+		int takeTop(Object& holder);
+		void showTop(Object& holder);
 		// Shows the held member that look of its two, face (the first) or back.
 		void showHeld(Object& card, const std::string& look);
-		Vector2f cardPlace(const Object& pile, std::size_t index);
-		bool pileTakes(Object& pile, const std::vector<int>& cards, const Object* holder = nullptr);
-		float cardPoints(const Object& pile, const Object& card);
+		Vector2f cardPlace(const Object& holder, std::size_t index);
+		bool holderTakes(Object& holder, const std::vector<int>& cards, const Object* from = nullptr);
+		float cardPoints(const Object& holder, const Object& card);
 		bool meldFits(const std::vector<const Object*>& group, const RawPatterns::Pattern& pattern);
-		float meldDeadwood(const Object& pile, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds);
-		void layOutMelds(Object& pile);
-		const Object* trickWinning(const Object& pile);
+		float meldDeadwood(const Object& holder, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds);
+		void layOutMelds(Object& holder);
+		const Object* trickWinning(const Object& holder);
 		const Object* trickHolder();
 		bool isTrump(const HolderRule& rule, const Object& card);
 		bool beatsInTrick(const HolderRule& rule, const Object& card, const Object& best);
@@ -577,12 +577,12 @@ namespace xge
 		static bool follows(const HolderRule& rule, const Object& below, const Object& next);
 		// `called`: a variable whose value on `below` counts as `value` (0: its own).
 		static bool acceptsBy(const std::vector<HolderRule::VarRule>& rules, const Object& next, const Object* below, const std::string& called = {}, float value = 0.0f);
-		void layHeld(Object& hand, Object& pile);
+		void layHeld(Object& hand, Object& holder);
 		static bool isWild(const HolderRule& rule, const Object& card);
-		void refreshCall(Object& pile);
-		void refreshHolder(Object& pile);
-		void scoreHolder(Object& pile);
-		// Marks each scored pile whose `odds` nothing reads: no condition,
+		void refreshCall(Object& holder);
+		void refreshHolder(Object& holder);
+		void scoreHolder(Object& holder);
+		// Marks each scored holder whose `odds` nothing reads: no condition,
 		// shown text or expression names them (Object::oddsRead).
 		void markOddsRead();
 		void scoreDueHolders();

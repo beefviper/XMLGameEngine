@@ -520,23 +520,23 @@ namespace xge
 
 	// What a <pile> <takes> on top (each <one />, <samesuit />, ...), and
 	// what may start it when it is empty (<empty>'s <rank>s and <suit>s;
-	// none named: any card). A pile with no <takes> takes nothing but the
+	// none named: any card). A holder with no <takes> takes nothing but the
 	// cards put back on it.
 	struct HolderRule
 	{
 		bool given{ false };
 		bool one{ false };
 		// <follow />: a trick. Any card leads (the first on the empty
-		// pile); after it, a card of the suit led, unless the hand laying
+		// holder); after it, a card of the suit led, unless the hand laying
 		// holds none. <breaks>: suits that may not lead until one has been
-		// laid on the pile since the cards were gathered, unless the hand
+		// laid on the holder since the cards were gathered, unless the hand
 		// holds nothing else. <trumps>: a card of these suits beats every
 		// card of the others, whatever was led.
 		// trickBy: the variable followed, as written.
 		bool follow{ false };
 		std::string trickBy;
-		std::vector<std::string> breakSuits;
-		std::vector<std::string> trumpSuits;
+		std::vector<std::string> breaks;
+		std::vector<std::string> trumps;
 		// <accepts> of a <holds>: rules on the arriving member's variable.
 		// `kind` compares it with `amount`, or, `top`, with the top one's
 		// `topVariable` (empty: the same variable) plus `amount`
@@ -565,15 +565,15 @@ namespace xge
 
 	// A card (see game/holders.h): which pack (its group), its row and column
 	// there (from 1; Hearts calls them suit and rank), as text too, its
-	// worths and the pile the deck starts in.
+	// worths and the holder the deck starts in.
 	struct CardOf
 	{
 		std::string startHolder;
 		std::vector<float> worths;
 	};
 
-	// <patterns name="poker">: what a pile's cards may make, the lowest
-	// first; a pile with <score patterns="poker"> is scored by them. Each
+	// <patterns name="poker">: what a holder's cards may make, the lowest
+	// first; a holder with <score patterns="poker"> is scored by them. Each
 	// <pattern> is one or more parts that must all hold among the cards
 	// scored: <alike variable>N (N cards with one value of the variable;
 	// two <alike>s of one variable, two values) and <run variable>N (N
@@ -728,22 +728,22 @@ namespace xge
 			RawValue spreadY;
 			RawValue lookSpreadX;       // <spread sprite>: each card showing that look instead
 			RawValue lookSpreadY;
-			RawValue dealt;             // cards dealt it at the start (empty text: none)
-			RawValue dealtMore;         // a group's: each pile after the first, this many more
-			std::string dealsInto;      // <deals into=>: taking from it deals that many there (none: into the hand's own pile)
-			RawValue deals;
-			bool hasDeals{ false };
-			std::string refillFrom;     // <refill from=>: taking from it empty turns that pile back over
-			bool refillShuffle{ false }; // <shuffle />: shuffled, not turned over
-			RawValue refillLeave;       // <leave>: that many of the top cards stay (empty text: none)
+			RawValue startCount;        // <starts>: what it is sent at the start (empty text: none)
+			RawValue startMore;         // a group's: each holder after the first, this many more
+			std::string pickedInto;     // <picked><send into>N: picking from it sends that many there (none: into the hand's own holder)
+			RawValue pickedSends;
+			bool hasPickedSend{ false };
+			std::string emptyFrom;      // <picked><empty><send from>: picking from it empty brings that holder's back
+			bool emptyRandom{ false };  // <empty><order><random /></order>: put back in random order, not turned over
+			RawValue emptyLeave;        // <empty><send><leave>: that many of the top cards stay (empty text: none)
 			RawValue spreadWidth;       // <spread><width>: the spread is never wider (empty text: no limit)
 			bool carry{ false };        // <carry />: a face-up card can be taken with all above it
 			RawValue lift;              // <lift>: the card a hand points at, lifted out of the fan by that much (empty text: none)
 			bool hasPoints{ false };    // <counts>: what its face-up cards add up to
 			RawValue pointsMost;        // <counts><atmost>: highs only while the total stays at most this (empty text: no limit)
 			std::string score;          // <score patterns=>: scored by those patterns (empty: not scored)
-			std::string scoreWith;      // <score><with object=>: with that pile's cards too
-			int scoreFull{};            // <with><full>: that pile holds this many when all are dealt (0: as it is)
+			std::string scoreWith;      // <score><with object=>: with that holder's cards too
+			int scoreFull{};            // <with><full>: that holder holds this many when all are dealt (0: as it is)
 			int scoreBest{};            // <score><best>: the best this many of the cards (0: all)
 			std::string melds;          // <score patterns=><melds />: its cards laid out in groups that make those patterns (empty: none)
 			int meldsBest{};            // <score><best> with <melds />: the best this many of the cards (0: all)
@@ -760,21 +760,21 @@ namespace xge
 			std::vector<std::string> orderBy; // <order><by variable>s: kept in order by these, the first first
 			std::string counts;         // <counts variable>: the holder's own variable of that name, its face-up members' added
 		};
-		RawHolder pile;
+		RawHolder holder;
 		// <owns object=>: the holder of its own (a player's cards), as
-		// written; the same as <hand pile=>.
+		// written.
 		// <turns sprite=> on a group: its members take turns, in order,
 		// the first first; one off its turn shows that look (none: as it
 		// is). <think> on a member: the computer plays it.
 		bool takesTurns{ false };
 		std::string turnsSprite;
 		std::vector<RawCommand> think;
-		bool hand{ false };             // <hand />: points at piles and carries cards (Object::Hand)
-		std::string handHolder;           // <hand pile=>: its own pile (cards held by a player)
+		bool hand{ false };             // <hand />: points at holders and carries cards (Object::Hand)
+		std::string handHolder;         // <owns object=>: its own holder (cards held by a player)
 		std::string ownsClass;          // <owns class=>: the pieces a player of a board game moves
 		int handSeat{};                 // <hand><seat>: which player, for a trick's `winner` (0 none)
 		int handTeam{};                 // <hand><team>: the side it plays for, partners alike (0 none)
-		int handHolds{ 1 };             // <hand><holds>: from how many piles it may hold a card at once
+		int handHolds{ 1 };             // <hand><holds>: from how many holders it may hold a card at once
 		CardOf card;                    // a card of a <deck> (deck empty for anything else)
 		bool held{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
@@ -1297,7 +1297,7 @@ namespace xge
 			std::vector<Mark> marks;
 		};
 		std::vector<MarkSet> markSets;
-		// Cards (game/holders.cpp). A pile: its rules and the cards it holds,
+		// Cards (game/holders.cpp). A holder: its rules and the cards it holds,
 		// bottom first (each a card's number, Game::cardAt). Laid out by
 		// Game::layOutCards, never moved by the frame.
 		struct Holder
@@ -1309,13 +1309,13 @@ namespace xge
 			Vector2f spread{};        // <spread>: each card on from the one below
 			Vector2f lookSpread{};    // <spread sprite>: each card showing that look
 			std::string spreadSprite;
-			int dealt{};
-			int dealtMore{};
-			std::string dealsInto;
-			int deals{};
-			std::string refillFrom;
-			bool refillShuffle{ false };
-			int refillLeave{};
+			int startCount{};
+			int startMore{};
+			std::string pickedInto;
+			int pickedSends{};
+			std::string emptyFrom;
+			bool emptyRandom{ false };
+			int emptyLeave{};
 			std::string pickedSound;
 			std::vector<std::string> orderBy;
 			float spreadWidth{};
@@ -1334,8 +1334,8 @@ namespace xge
 			HolderRule takes;
 			std::vector<int> cards;
 		};
-		Holder pile;
-		// The live number `cards`: how many the pile holds. A pile that
+		Holder holder;
+		// The live number `cards`: how many the holder holds. A holder that
 		// takes <wild> cards: `calling` is 1 while a wild card on top waits
 		// for a suit to be called, `called` the suit called (from 1; 0 none).
 		float cardCount{};
@@ -1344,28 +1344,28 @@ namespace xge
 		// The live number `points`: its face-up cards' worths added up, each
 		// as high as it may count while the total stays within <points>.
 		float points{};
-		// A <score>d pile: the best of its cards (and the shared ones)
+		// A <score>d holder: the best of its cards (and the shared ones)
 		// by its patterns: `pattern` the highest they make (from 1 as
 		// written; 0 none) and `strength` to compare (higher wins); `odds`,
 		// in percent, how often it beats as many unseen cards when the
-		// shared pile is made up to full (a tie counts half).
+		// shared holder is made up to full (a tie counts half).
 		float pattern{};
 		float strength{};
 		float odds{};
 		// Whether anything reads its `odds` (Game::markOddsRead): a thousand
-		// deals are tried to work them out, so piles nobody asks skip them.
+		// deals are tried to work them out, so holders nobody asks skip them.
 		bool oddsRead{ true };
-		// A <follow /> pile (a trick): `lead`, the suit of its first card
+		// A <follow /> holder (a trick): `lead`, the suit of its first card
 		// (from 1; 0 empty), and `winner`, the seat of the hand that laid
 		// the card winning it: the highest trump, else the highest of the
 		// suit led.
 		float lead{};
 		float winner{};
-		// A hand's own pile in a game with a trick: `tricks`, how many
+		// A hand's own holder in a game with a trick: `tricks`, how many
 		// tricks its cards should take (a reckoning by high cards, trumps
 		// and short suits, as a player counts them to bid).
 		float tricks{};
-		// A pile scored with <melds />: `deadwood`, the points of its cards in no
+		// A holder scored with <melds />: `deadwood`, the points of its cards in no
 		// group, the groups chosen to leave the fewest.
 		float deadwood{};
 		// A card: what it is, its number (from 1, every deck of the game
@@ -1375,26 +1375,26 @@ namespace xge
 		int cardNumber{};
 		int laidBy{};           // the seat of the hand that last laid it (0 none)
 		bool faceUp{ false };
-		// A hand: the pile it points at (its full name) and the card of it
-		// (index from the bottom; -1: the pile itself, empty), the cards it
-		// holds and the pile they came from, and whether the mouse moves it
+		// A hand: the holder it points at (its full name) and the card of it
+		// (index from the bottom; -1: the holder itself, empty), the cards it
+		// holds and the holder they came from, and whether the mouse moves it
 		// (the cards then follow the pointer, `grab` off it).
 		struct Hand
 		{
 			bool is{ false };
-			std::string own;        // pile=: its own pile, as written, or none
+			std::string own;        // holder=: its own holder, as written, or none
 			int seat{};             // <seat>: which player (0 none)
 			int team{};             // <team>: its side; a partner is another hand on it (0 none)
-			int holds{ 1 };         // <holds>: from how many piles it holds cards at once
-			// Holding cards from more than one pile: each card taken after
-			// the first, and the pile it came from.
+			int holds{ 1 };         // <holds>: from how many holders it holds cards at once
+			// Holding cards from more than one holder: each card taken after
+			// the first, and the holder it came from.
 			std::vector<std::pair<int, std::string>> also;
-			std::string pile;
+			std::string holder;
 			int at{ -1 };
 			std::vector<int> held;
 			std::string from;
 			bool mouse{ false };    // moved by the mouse last, not the keys
-			bool over{ false };     // the mouse is over the pile pointed at (or a card of it)
+			bool over{ false };     // the mouse is over the holder pointed at (or a card of it)
 			Vector2f grab{};
 		};
 		Hand hand;

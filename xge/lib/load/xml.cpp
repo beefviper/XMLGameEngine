@@ -988,40 +988,40 @@ namespace xge
 		}
 
 		// A <score patterns>: its <melds />, <with object> and <best>.
-		void readScore(const XmlNode& node, RawObject::RawHolder& pile, const std::string& at)
+		void readScore(const XmlNode& node, RawObject::RawHolder& holder, const std::string& at)
 		{
-			pile.score = requireAttribute(node, "patterns", at);
+			holder.score = requireAttribute(node, "patterns", at);
 			for (std::unique_ptr<XmlNode> part = node.getFirstChild(); part != nullptr; part = part->getNextSibling())
 			{
 				if (part->getName() == "with")
 				{
-					pile.scoreWith = requireAttribute(*part, "object", at + " > <with>");
-					if (auto full = findChild(part.get(), "full")) { pile.scoreFull = readCount(*full, at + " > <with> > <full>"); }
+					holder.scoreWith = requireAttribute(*part, "object", at + " > <with>");
+					if (auto full = findChild(part.get(), "full")) { holder.scoreFull = readCount(*full, at + " > <with> > <full>"); }
 				}
-				else if (part->getName() == "best") { pile.scoreBest = readCount(*part, at + " > <best>"); }
-				else if (part->getName() == "melds") { pile.melds = pile.score; }
+				else if (part->getName() == "best") { holder.scoreBest = readCount(*part, at + " > <best>"); }
+				else if (part->getName() == "melds") { holder.melds = holder.score; }
 				else { fail(at, "unknown <" + part->getName() + ">; expected <melds />, <with> and <best>"); }
 			}
 			// <melds />: scored by splitting the cards into groups, not by the best pattern among them.
-			if (!pile.melds.empty())
+			if (!holder.melds.empty())
 			{
-				if (!pile.scoreWith.empty()) { fail(at, "has <melds /> and <with>; melds are a pile's own cards"); }
-				pile.meldsBest = pile.scoreBest;
-				pile.score.clear();
-				pile.scoreBest = 0;
+				if (!holder.scoreWith.empty()) { fail(at, "has <melds /> and <with>; melds are a holder's own cards"); }
+				holder.meldsBest = holder.scoreBest;
+				holder.score.clear();
+				holder.scoreBest = 0;
 			}
 		}
 
 		// A <holds class sprite>: the class of what it holds and the look
 		// they show laid there, then its <spread>s, <accepts>, <run />,
-		// <top sprite>, <lift> and <picked>. Read into the pile it is
+		// <top sprite>, <lift> and <picked>. Read into the holder it is
 		// (Object::Holder) as written; the looks it names are checked once
 		// the members they belong to are known (settleHolders, game/holders.h).
-		void readHolds(const XmlNode& node, RawObject::RawHolder& pile, const std::string& here)
+		void readHolds(const XmlNode& node, RawObject::RawHolder& holder, const std::string& here)
 		{
-			pile.is = true;
-			pile.holdsClass = requireAttribute(node, "class", here);
-			pile.holdsSprite = node.getAttribute("sprite");
+			holder.is = true;
+			holder.holdsClass = requireAttribute(node, "class", here);
+			holder.holdsSprite = node.getAttribute("sprite");
 			const auto halves = [&](const XmlNode& vector, RawValue& x, RawValue& y, const std::string& at)
 			{
 				if (auto across = findChild(&vector, "x")) { x = readValue(*across, at); }
@@ -1036,42 +1036,42 @@ namespace xge
 					const std::string look = child->getAttribute("sprite");
 					if (look.empty())
 					{
-						halves(*child, pile.spreadX, pile.spreadY, at);
-						if (auto width = findChild(child.get(), "width")) { pile.spreadWidth = readValue(*width, at + " > <width>"); }
+						halves(*child, holder.spreadX, holder.spreadY, at);
+						if (auto width = findChild(child.get(), "width")) { holder.spreadWidth = readValue(*width, at + " > <width>"); }
 					}
 					else
 					{
-						if (!pile.spreadSprite.empty()) { fail(at, "is a second <spread sprite>; a holder has one plain <spread> and one for a look"); }
-						pile.spreadSprite = look;
-						halves(*child, pile.lookSpreadX, pile.lookSpreadY, at);
+						if (!holder.spreadSprite.empty()) { fail(at, "is a second <spread sprite>; a holder has one plain <spread> and one for a look"); }
+						holder.spreadSprite = look;
+						halves(*child, holder.lookSpreadX, holder.lookSpreadY, at);
 					}
 				}
 				else if (tag == "accepts")
 				{
-					pile.takes.given = true;
-					readAcceptRules(*child, pile.takes, pile.takes.rules, at, 0);
+					holder.takes.given = true;
+					readAcceptRules(*child, holder.takes, holder.takes.rules, at, 0);
 				}
-				else if (tag == "carry") { pile.carry = true; }
+				else if (tag == "carry") { holder.carry = true; }
 				else if (tag == "counts")
 				{
 					// What its members are worth added: a variable of each,
 					// <atmost> a limit a member's `high` stays within.
-					pile.counts = requireAttribute(*child, "variable", at);
-					pile.hasPoints = true;
+					holder.counts = requireAttribute(*child, "variable", at);
+					holder.hasPoints = true;
 					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
 					{
 						if (part->getName() != "atmost") { fail(at, "unknown <" + part->getName() + ">; expected an <atmost> if wanted"); }
-						pile.pointsMost = readValue(*part, at + " > <atmost>");
+						holder.pointsMost = readValue(*part, at + " > <atmost>");
 					}
 				}
-				else if (tag == "top") { pile.topSprite = requireAttribute(*child, "sprite", at); }
-				else if (tag == "lift") { pile.lift = readValue(*child, at); }
-				else if (tag == "score") { readScore(*child, pile, at); }
+				else if (tag == "top") { holder.topSprite = requireAttribute(*child, "sprite", at); }
+				else if (tag == "lift") { holder.lift = readValue(*child, at); }
+				else if (tag == "score") { readScore(*child, holder, at); }
 				else if (tag == "trick")
 				{
 					// A trick: any card leads, then the value led is followed;
 					// <breaks> one that leads only once played, <trumps> one over the rest.
-					HolderRule& rule = pile.takes;
+					HolderRule& rule = holder.takes;
 					// Its row or column: worked out once the groups are known (settleHolders).
 					rule.trickBy = requireAttribute(*child, "variable", at);
 					rule.given = true;
@@ -1080,7 +1080,7 @@ namespace xge
 					{
 						const std::string name = part->getName();
 						if (name != "breaks" && name != "trumps") { fail(at, "unknown <" + name + ">; expected <breaks> and <trumps>"); }
-						(name == "breaks" ? rule.breakSuits : rule.trumpSuits).push_back(readText(*part));
+						(name == "breaks" ? rule.breaks : rule.trumps).push_back(readText(*part));
 					}
 				}
 				else if (tag == "order")
@@ -1088,9 +1088,9 @@ namespace xge
 					for (std::unique_ptr<XmlNode> by = child->getFirstChild(); by != nullptr; by = by->getNextSibling())
 					{
 						if (by->getName() != "by") { fail(at, "unknown <" + by->getName() + ">; expected a <by variable> for each thing kept in order, the first first"); }
-						pile.orderBy.push_back(requireAttribute(*by, "variable", at + " > <by>"));
+						holder.orderBy.push_back(requireAttribute(*by, "variable", at + " > <by>"));
 					}
-					if (pile.orderBy.empty()) { fail(at, "keeps what it holds in order <by variable>"); }
+					if (holder.orderBy.empty()) { fail(at, "keeps what it holds in order <by variable>"); }
 				}
 				else if (tag == "picked")
 				{
@@ -1103,11 +1103,11 @@ namespace xge
 						if (name == "send")
 						{
 							if (!part->getAttribute("from").empty()) { fail(at + " > <send>", "sends from the holder itself; leave out from="); }
-							pile.dealsInto = part->getAttribute("into");
-							pile.deals = readLeadValue(*part, {}, "how many", at);
-							pile.hasDeals = true;
+							holder.pickedInto = part->getAttribute("into");
+							holder.pickedSends = readLeadValue(*part, {}, "how many", at);
+							holder.hasPickedSend = true;
 						}
-						else if (name == "play") { pile.pickedSound = requireAttribute(*part, "sound", at + " > <play>"); }
+						else if (name == "play") { holder.pickedSound = requireAttribute(*part, "sound", at + " > <play>"); }
 						else if (name == "empty")
 						{
 							for (std::unique_ptr<XmlNode> step = part->getFirstChild(); step != nullptr; step = step->getNextSibling())
@@ -1116,14 +1116,14 @@ namespace xge
 								const std::string where = at + " > <empty> > <" + verb + ">";
 								if (verb == "send")
 								{
-									pile.refillFrom = requireAttribute(*step, "from", where);
+									holder.emptyFrom = requireAttribute(*step, "from", where);
 									if (!findChild(step.get(), "all")) { fail(where, "brings back <all /> of what that holder holds (and <leave> on it if wanted)"); }
-									if (auto leave = findChild(step.get(), "leave")) { pile.refillLeave = readValue(*leave, where + " > <leave>"); }
+									if (auto leave = findChild(step.get(), "leave")) { holder.emptyLeave = readValue(*leave, where + " > <leave>"); }
 								}
 								else if (verb == "order")
 								{
 									if (!findChild(step.get(), "random")) { fail(where, "orders what came back at <random />"); }
-									pile.refillShuffle = true;
+									holder.emptyRandom = true;
 								}
 								else { fail(at + " > <empty>", "unknown <" + verb + ">; expected a <send from> and an <order>"); }
 							}
@@ -1397,7 +1397,7 @@ namespace xge
 		// says: its <poses>, <mirror> and <grip>.
 		void readMoves(const XmlNode& node, RawObject& object, const std::string& where)
 		{
-			if (auto holds = findChild(&node, "holds")) { readHolds(*holds, object.pile, where + " > <holds>"); }
+			if (auto holds = findChild(&node, "holds")) { readHolds(*holds, object.holder, where + " > <holds>"); }
 			if (auto owns = findChild(&node, "owns")) { readOwns(*owns, where + " > <owns>", object.handHolder, object.ownsClass); }
 			if (auto poses = findChild(&node, "poses"))
 			{
@@ -2398,7 +2398,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <pile> or <holds>, <hand />, <owns>, <turns>, <maze>, <chain>, <shape>, <waiting /> or <ready />, <hidden />, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <holds>, <hand />, <owns>, <turns>, <maze>, <chain>, <shape>, <waiting /> or <ready />, <hidden />, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -3669,7 +3669,7 @@ namespace xge
 			}
 		}
 
-		// load patterns (optional: what a pile's <score patterns="..."> is scored by)
+		// load patterns (optional: what a holder's <score patterns="..."> is scored by)
 		for (std::unique_ptr<XmlNode> node = root->getFirstChild(); node != nullptr; node = node->getNextSibling())
 		{
 			if (node->getName() != "patterns") { continue; }

@@ -57,7 +57,7 @@ namespace xge
 		// pictures from (see Sheet).
 		std::vector<Sheet> sheets;
 
-		// <patterns>: what piles with a <score> are scored by (see RawPatterns).
+		// <patterns>: what holders with a <score> are scored by (see RawPatterns).
 		std::vector<RawPatterns> patterns;
 
 		// <keeps>: the objects (or groups) a full <reset /> passes over, as

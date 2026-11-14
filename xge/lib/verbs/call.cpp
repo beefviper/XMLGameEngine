@@ -14,19 +14,19 @@ namespace xge
 	// <call>: Names what a wild card stands for.
 	static Command makeCall(const RawCommand& raw, const ValueEvaluator&)
 	{
-		if (raw.object.empty()) { throw std::runtime_error("<call>: needs object=, the holder whose wild card the suit is called for"); }
+		if (raw.object.empty()) { throw std::runtime_error("<call>: needs object=, the holder whose wild card a value is called for"); }
 		return CmdCall{ raw.object };
 	}
 
 	static bool runCall(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
-		return doer.self && executor.game.callSuit(*doer.self, std::get<CmdCall>(command).pile);
+		return doer.self && executor.game.callValue(*doer.self, std::get<CmdCall>(command).holder);
 	}
 
 	static void printCall(std::ostream& o, const Command& command)
 	{
 		const CmdCall& c = std::get<CmdCall>(command);
-		o << "call(" << c.pile << ")";
+		o << "call(" << c.holder << ")";
 	}
 
 	extern const Verb callVerb;

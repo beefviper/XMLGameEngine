@@ -146,7 +146,7 @@ namespace xge
 				rawObject.variable[timer.name] = RawValue::expression("0");
 			}
 			// A holder's <counts variable>: a variable of its own, kept to the total.
-			const std::string& counts = rawObject.pile.counts;
+			const std::string& counts = rawObject.holder.counts;
 			if (!counts.empty() && !rawObject.variable.count(counts)) { rawObject.variable[counts] = RawValue::expression("0"); }
 		}
 
@@ -1247,40 +1247,40 @@ namespace xge
 			object.markSets.push_back(std::move(set));
 		}
 
-		// Cards: a pile's rules, a hand, a card of a deck.
-		if (rawObject.pile.is)
+		// Cards: a holder's rules, a hand, a card of a deck.
+		if (rawObject.holder.is)
 		{
-			const RawObject::RawHolder& raw = rawObject.pile;
+			const RawObject::RawHolder& raw = rawObject.holder;
 			const auto number = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
-			Object::Holder& pile = object.pile;
-			pile.is = true;
-			pile.holdsClass = raw.holdsClass;
-			pile.holdsSprite = raw.holdsSprite;
-			pile.topSprite = raw.topSprite;
-			pile.spread = { number(raw.spreadX), number(raw.spreadY) };
-			pile.lookSpread = { number(raw.lookSpreadX), number(raw.lookSpreadY) };
-			pile.spreadSprite = raw.spreadSprite;
-			pile.dealt = static_cast<int>(std::lround(number(raw.dealt)));
-			pile.dealtMore = static_cast<int>(std::lround(number(raw.dealtMore)));
-			pile.dealsInto = raw.dealsInto;
-			pile.deals = !raw.hasDeals ? 0 : std::max(1, static_cast<int>(std::lround(number(raw.deals))));
-			pile.refillFrom = raw.refillFrom;
-			pile.refillShuffle = raw.refillShuffle;
-			pile.pickedSound = raw.pickedSound;
-			pile.refillLeave = std::max(0, static_cast<int>(std::lround(number(raw.refillLeave))));
-			pile.spreadWidth = number(raw.spreadWidth);
-			pile.carry = raw.carry;
-			pile.orderBy = raw.orderBy;
-			pile.counts = raw.counts;
-			pile.lift = number(raw.lift);
-			pile.pointsMost = raw.hasPoints ? number(raw.pointsMost) : 0.0f;
-			pile.score = raw.score;
-			pile.scoreWith = raw.scoreWith;
-			pile.scoreFull = raw.scoreFull;
-			pile.scoreBest = raw.scoreBest;
-			pile.melds = raw.melds;
-			pile.meldsBest = raw.meldsBest;
-			pile.takes = raw.takes;
+			Object::Holder& holder = object.holder;
+			holder.is = true;
+			holder.holdsClass = raw.holdsClass;
+			holder.holdsSprite = raw.holdsSprite;
+			holder.topSprite = raw.topSprite;
+			holder.spread = { number(raw.spreadX), number(raw.spreadY) };
+			holder.lookSpread = { number(raw.lookSpreadX), number(raw.lookSpreadY) };
+			holder.spreadSprite = raw.spreadSprite;
+			holder.startCount = static_cast<int>(std::lround(number(raw.startCount)));
+			holder.startMore = static_cast<int>(std::lround(number(raw.startMore)));
+			holder.pickedInto = raw.pickedInto;
+			holder.pickedSends = !raw.hasPickedSend ? 0 : std::max(1, static_cast<int>(std::lround(number(raw.pickedSends))));
+			holder.emptyFrom = raw.emptyFrom;
+			holder.emptyRandom = raw.emptyRandom;
+			holder.pickedSound = raw.pickedSound;
+			holder.emptyLeave = std::max(0, static_cast<int>(std::lround(number(raw.emptyLeave))));
+			holder.spreadWidth = number(raw.spreadWidth);
+			holder.carry = raw.carry;
+			holder.orderBy = raw.orderBy;
+			holder.counts = raw.counts;
+			holder.lift = number(raw.lift);
+			holder.pointsMost = raw.hasPoints ? number(raw.pointsMost) : 0.0f;
+			holder.score = raw.score;
+			holder.scoreWith = raw.scoreWith;
+			holder.scoreFull = raw.scoreFull;
+			holder.scoreBest = raw.scoreBest;
+			holder.melds = raw.melds;
+			holder.meldsBest = raw.meldsBest;
+			holder.takes = raw.takes;
 		}
 		object.hand.is = rawObject.hand;
 		object.hand.own = rawObject.handHolder;
@@ -2091,7 +2091,7 @@ namespace xge
 						pieces.push_back(std::move(piece));
 						continue;
 					}
-					// A pile's live numbers follow it too (shown 0 until dealt).
+					// A holder's live numbers follow it too (shown 0 until dealt).
 					if (reference->second == "cards" || reference->second == "held" || reference->second == "points" || reference->second == "called" || reference->second == "calling"
 						|| reference->second == "pattern" || reference->second == "strength" || reference->second == "odds"
 						|| reference->second == "lead" || reference->second == "winner" || reference->second == "tricks" || reference->second == "deadwood")

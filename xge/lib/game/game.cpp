@@ -98,16 +98,16 @@ namespace xge
 				}
 			}
 		}
-		// The cards shuffled and dealt, piles scored by patterns there are.
+		// The cards shuffled and dealt, holders scored by patterns there are.
 		for (const Object& object : objects)
 		{
-			if (!object.pile.score.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.pile.score; }))
+			if (!object.holder.score.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.holder.score; }))
 			{
-				throw std::runtime_error("<object name=\"" + object.name + "\"> > <pile> > <score patterns=\"" + object.pile.score + "\">: names no <patterns>");
+				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + object.holder.score + "\">: names no <patterns>");
 			}
 			for (const RawPatterns& set : patterns)
 			{
-				if (set.name != object.pile.score) { continue; }
+				if (set.name != object.holder.score) { continue; }
 				std::set<std::string> alike;
 				for (const RawPatterns::Pattern& pattern : set.patterns)
 				{
@@ -120,13 +120,13 @@ namespace xge
 					if (alike.size() > 4) { throw std::runtime_error(where + ": scores a hand of " + object.name + "; for now a set scoring a hand compares at most four variables"); }
 				}
 			}
-			if (!object.pile.melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.pile.melds; }))
+			if (!object.holder.melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.holder.melds; }))
 			{
-				throw std::runtime_error("<object name=\"" + object.name + "\"> > <pile> > <score patterns=\"" + object.pile.melds + "\"> with <melds />: names no <patterns>");
+				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + object.holder.melds + "\"> with <melds />: names no <patterns>");
 			}
 		}
 		markOddsRead();
-		dealDecks();
+		sendStarts();
 		scoreDueHolders();
 		// The players: the first one's turn; those the computer plays.
 		for (const RawObject& raw : rawObjects)
@@ -1549,7 +1549,7 @@ namespace xge
 				// A holder given a look of what it holds, not its own: what
 				// it holds turned to it (a dealer's hidden card shown).
 				const bool own = std::any_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == sprite; });
-				if (!sprite.empty() && object.pile.is && !own)
+				if (!sprite.empty() && object.holder.is && !own)
 				{
 					turnHeld(object, sprite);
 					continue;
@@ -1799,7 +1799,7 @@ namespace xge
 		setCurrentState(0);
 
 		// A new game: the cards shuffled and dealt again, the first player's turn.
-		dealDecks();
+		sendStarts();
 		startPlayers();
 	}
 

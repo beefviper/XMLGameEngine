@@ -88,9 +88,9 @@ namespace xge
 		if (!member.takesTurns || member.variable["turn"] == 0.0f) { return false; }
 		// Not while a holder waits for the call its wild card asks of the
 		// one who laid it.
-		for (Object* pile : shownHolders())
+		for (Object* holder : shownHolders())
 		{
-			if (pile->calling > 0.0f) { return false; }
+			if (holder->calling > 0.0f) { return false; }
 		}
 		// The next member of the group, round to the first.
 		std::vector<Object*> members;

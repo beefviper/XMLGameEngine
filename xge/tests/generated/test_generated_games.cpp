@@ -244,17 +244,17 @@ namespace
 			flag(at + ".isDrawn", o.isDrawn);
 			flag(at + ".exists", o.exists);
 			text(at + ".most", std::to_string(o.most));
-			text(at + ".pile.score", o.pile.score + " with " + o.pile.scoreWith + " full " + std::to_string(o.pile.scoreFull) + " best " + std::to_string(o.pile.scoreBest));
-			flag(at + ".pile.carry", o.pile.carry);
-			flag(at + ".pile.takes.one", o.pile.takes.one);
+			text(at + ".holder.score", o.holder.score + " with " + o.holder.scoreWith + " full " + std::to_string(o.holder.scoreFull) + " best " + std::to_string(o.holder.scoreBest));
+			flag(at + ".holder.carry", o.holder.carry);
+			flag(at + ".holder.takes.one", o.holder.takes.one);
 			const auto rules = [&](const std::string& here, const std::vector<HolderRule::VarRule>& list)
 			{
 				for (const HolderRule::VarRule& rule : list) { text(here, std::to_string(static_cast<int>(rule.kind)) + " " + rule.variable + " " + std::to_string(rule.amount) + (rule.top ? " top " + rule.topVariable : std::string())); }
 			};
-			rules(at + ".pile.takes.rules", o.pile.takes.rules);
-			rules(at + ".pile.takes.empty", o.pile.takes.emptyRules);
-			rules(at + ".pile.takes.any", o.pile.takes.anyRules);
-			rules(at + ".pile.takes.wild " + o.pile.takes.wildVariable, o.pile.takes.wildRules);
+			rules(at + ".holder.takes.rules", o.holder.takes.rules);
+			rules(at + ".holder.takes.empty", o.holder.takes.emptyRules);
+			rules(at + ".holder.takes.any", o.holder.takes.anyRules);
+			rules(at + ".holder.takes.wild " + o.holder.takes.wildVariable, o.holder.takes.wildRules);
 			vector2(at + ".position", o.rawPosition);
 			vector2(at + ".velocity", o.rawVelocity);
 			vector2(at + ".acceleration", o.rawAcceleration);

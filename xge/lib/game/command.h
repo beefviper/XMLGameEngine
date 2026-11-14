@@ -746,11 +746,11 @@ namespace xge
 	};
 
 	// <call object="discard" />: a hand names the suit of the card it points
-	// at in its own pile for that pile, waiting with a <wild> card on top.
-	// Refused when the pile is not waiting or no card of its own is pointed at.
+	// at in its own holder for that holder, waiting with a <wild> card on top.
+	// Refused when the holder is not waiting or no card of its own is pointed at.
 	struct CmdCall
 	{
-		std::string pile;
+		std::string holder;
 	};
 
 	// <put class="black" />: a picker puts a new piece of that class (a
