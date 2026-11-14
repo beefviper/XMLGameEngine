@@ -568,11 +568,6 @@ namespace xge
 	// worths and the pile the deck starts in.
 	struct CardOf
 	{
-		std::string deck;
-		int row{};
-		int column{};
-		std::string rowName;
-		std::string columnName;
 		std::string startHolder;
 		std::vector<float> worths;
 	};

@@ -67,12 +67,7 @@ namespace xge
 			if (object.groupName.empty() || object.cell.column < 1) { throw std::runtime_error(where + ": is a member of a <group> laid out in <columns> and <rows>, its row and column what sort of card it is"); }
 			if (object.looks.size() < 2) { throw std::runtime_error(where + ": has two looks, its face first and its back"); }
 			object.held = true;
-			object.card.deck = object.groupName;
-			object.card.row = object.cell.row;
-			object.card.column = object.cell.column;
-			object.card.rowName = std::to_string(object.cell.row);
-			object.card.columnName = std::to_string(object.cell.column);
-			float worth = static_cast<float>(object.card.column);
+			float worth = static_cast<float>(object.cell.column);
 			if (const auto given = object.variable.find("worth"); given != object.variable.end())
 			{
 				try { worth = std::stof(given->second.text); }
@@ -89,8 +84,8 @@ namespace xge
 				std::sort(object.card.worths.begin(), object.card.worths.end());
 			}
 			// Its row and column, and the same under the names its group gives them (suit, rank).
-			for (const auto& [variable, number] : { std::pair{ std::string("row"), object.card.row }, std::pair{ std::string("column"), object.card.column },
-				std::pair{ object.cell.rowName, object.card.row }, std::pair{ object.cell.columnName, object.card.column } })
+			for (const auto& [variable, number] : { std::pair{ std::string("row"), object.cell.row }, std::pair{ std::string("column"), object.cell.column },
+				std::pair{ object.cell.rowName, object.cell.row }, std::pair{ object.cell.columnName, object.cell.column } })
 			{
 				if (variable.empty()) { continue; }
 				if (variable == "worth" || variable == "high" || variable == "color") { throw std::runtime_error(where + ": its group names its rows or columns '" + variable + "', which a card has of its own"); }
@@ -285,7 +280,7 @@ namespace xge
 			const auto value = card.variable.find(pile.pile.counts);
 			return value == card.variable.end() ? 0.0f : value->second;
 		}
-		return card.card.worths.empty() ? static_cast<float>(card.card.column) : card.card.worths.front();
+		return card.card.worths.empty() ? 0.0f : card.card.worths.front();
 	}
 
 	// Whether these cards, every one of them, make the pattern: each part
@@ -447,7 +442,7 @@ namespace xge
 		{
 			const Object& x = *cardAt(cards[static_cast<std::size_t>(a)]);
 			const Object& y = *cardAt(cards[static_cast<std::size_t>(b)]);
-			return std::make_tuple(x.card.row, x.card.column) < std::make_tuple(y.card.row, y.card.column);
+			return x.cardNumber < y.cardNumber;
 		};
 		for (auto& meld : melds)
 		{
@@ -1182,9 +1177,7 @@ namespace xge
 			if (object.pile.is && object.calling > 0.0f)
 			{
 				const Object* top = cardAt(object.pile.cards.back());
-				const std::string& named = object.pile.takes.wildVariable;
-				const auto value = named.empty() ? top->variable.end() : top->variable.find(named);
-				object.called = value == top->variable.end() ? static_cast<float>(top->card.row) : value->second;
+				object.called = valueOf(*top, object.pile.takes.wildVariable);
 				refreshCall(object);
 			}
 		}
@@ -1707,7 +1700,7 @@ namespace xge
 			if (!all) { return false; }
 			for (Object& object : objects)
 			{
-				if (object.held && (object.inGroup(fromName) || object.card.deck == fromName || object.inGroup(fullName(fromName)))) { sent.push_back(object.cardNumber); }
+				if (object.held && (object.inGroup(fromName) || object.inGroup(fullName(fromName)))) { sent.push_back(object.cardNumber); }
 			}
 			if (sent.empty()) { return false; }
 			for (Object& object : objects)
@@ -1954,10 +1947,8 @@ namespace xge
 		const int at = hand.hand.at < 0 ? count - 1 : std::min(hand.hand.at, count - 1);
 		const Object* card = cardAt(own->pile.cards[static_cast<std::size_t>(at)]);
 		if (!card) { return false; }
-		// The value named: the card's suit, or its <wild variable=>.
-		const std::string& named = pile->pile.takes.wildVariable;
-		const auto value = named.empty() ? card->variable.end() : card->variable.find(named);
-		pile->called = value == card->variable.end() ? static_cast<float>(card->card.row) : value->second;
+		// The value named: the card's <wild variable=>.
+		pile->called = valueOf(*card, pile->pile.takes.wildVariable);
 		refreshCall(*pile);
 		return true;
 	}
@@ -1975,7 +1966,7 @@ namespace xge
 		}
 		const bool last = static_cast<int>(trick.pile.cards.size()) + 1 >= std::max(players, 2);
 		const Object* winning = trickWinning(trick);
-		const auto worth = [](const Object& card) { return card.card.worths.empty() ? static_cast<float>(card.card.column) : card.card.worths.back(); };
+		const auto worth = [](const Object& card) { return card.card.worths.empty() ? 0.0f : card.card.worths.back(); };
 
 		std::vector<std::pair<int, const Object*>> legal;
 		for (int i = 0; i < static_cast<int>(own.pile.cards.size()); ++i)
@@ -2050,10 +2041,18 @@ namespace xge
 		}
 		constexpr int pace = 30;
 
+		// How many of its own cards share each value of the variable a wild
+		// card calls (none called: all alike).
+		std::string calledBy;
+		for (const Object* each : shownHolders())
+		{
+			if (calledBy.empty()) { calledBy = each->pile.takes.wildVariable; }
+		}
+		const auto kindOf = [&](const Object& card) { return calledBy.empty() ? 0 : static_cast<int>(std::lround(valueOf(card, calledBy))); };
 		std::map<int, int> inSuit;
 		for (const int number : own->pile.cards)
 		{
-			if (const Object* card = cardAt(number)) { ++inSuit[card->card.row]; }
+			if (const Object* card = cardAt(number)) { ++inSuit[kindOf(*card)]; }
 		}
 		std::vector<Object*> targets;
 		Object* stock = nullptr;
@@ -2128,9 +2127,9 @@ namespace xge
 			for (int i = 0; i < static_cast<int>(own->pile.cards.size()); ++i)
 			{
 				const Object* card = cardAt(own->pile.cards[static_cast<std::size_t>(i)]);
-				if (card && inSuit[card->card.row] > most)
+				if (card && inSuit[kindOf(*card)] > most)
 				{
-					most = inSuit[card->card.row];
+					most = inSuit[kindOf(*card)];
 					aim = own;
 					index = i;
 				}
@@ -2147,7 +2146,7 @@ namespace xge
 				for (Object* pile : targets)
 				{
 					if (!pileTakes(*pile, { number }, own)) { continue; }
-					const float worth = isWild(pile->pile.takes, *card) ? 1.0f : 100.0f + static_cast<float>(inSuit[card->card.row] * 20 + card->card.column);
+					const float worth = isWild(pile->pile.takes, *card) ? 1.0f : 100.0f + static_cast<float>(inSuit[kindOf(*card)] * 20) + (card->card.worths.empty() ? 0.0f : card->card.worths.back());
 					if (worth > best)
 					{
 						best = worth;

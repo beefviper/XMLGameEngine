@@ -27,6 +27,13 @@ using played::Played;
 
 namespace
 {
+	// A held member's row or column in its pack, from 1.
+	int cardAxis(const xge::Object& card, const char* axis)
+	{
+		const auto value = card.variable.find(axis);
+		return value == card.variable.end() ? 0 : static_cast<int>(value->second);
+	}
+
 	struct Table : Played
 	{
 		Table() : Played("descriptions/klondike.xml")
@@ -79,7 +86,7 @@ namespace
 	{
 		for (Object& object : table.game.getCurrentObjects())
 		{
-			if (object.held && object.card.row == numberIn(klondikeSuits, suit) && object.card.column == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
+			if (object.held && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
 		}
 		return 0;
 	}
@@ -124,7 +131,7 @@ namespace
 		const Object& object = table.pile(pile);
 		if (object.pile.cards.empty()) { return ""; }
 		const Object& card = table.card(object.pile.cards.back());
-		return klondikeRanks[static_cast<std::size_t>(card.card.column - 1)] + " " + klondikeSuits[static_cast<std::size_t>(card.card.row - 1)];
+		return klondikeRanks[static_cast<std::size_t>(cardAxis(card, "column") - 1)] + " " + klondikeSuits[static_cast<std::size_t>(cardAxis(card, "row") - 1)];
 	}
 }
 
@@ -585,8 +592,8 @@ TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces fro
 	// Card 22 is the 9 of hearts in both: row 2, column 9.
 	Object& nine = table.card(cardOf(table, "hearts", "9"));
 	CHECK(nine.cardNumber == 22);
-	CHECK(nine.card.row == 2);
-	CHECK(nine.card.column == 9);
+	CHECK(cardAxis(nine, "row") == 2);
+	CHECK(cardAxis(nine, "column") == 9);
 	CHECK((nine.looks[0].bitmap->rgba == hearts.game.cardAt(22)->looks[0].bitmap->rgba));
 	CHECK((nine.looks[1].bitmap->rgba == hearts.game.cardAt(22)->looks[1].bitmap->rgba));
 	CHECK(nine.variable.at("color") == 2.0f);
@@ -646,7 +653,7 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.held && object.card.row == numberIn(klondikeSuits, suit) && object.card.column == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
+				if (object.held && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
 			}
 			return 0;
 		}
@@ -673,7 +680,7 @@ namespace
 			game.layOutCards();
 		}
 
-		std::string name(int number) { return klondikeRanks[static_cast<std::size_t>(card(number).card.column - 1)] + " " + klondikeSuits[static_cast<std::size_t>(card(number).card.row - 1)]; }
+		std::string name(int number) { return klondikeRanks[static_cast<std::size_t>(cardAxis(card(number), "column") - 1)] + " " + klondikeSuits[static_cast<std::size_t>(cardAxis(card(number), "row") - 1)]; }
 		std::string top(const std::string& name) { return pile(name).pile.cards.empty() ? "" : this->name(pile(name).pile.cards.back()); }
 
 		// Points your hand at that card of yours.
@@ -708,7 +715,7 @@ TEST_CASE("crazyeights.xml: the deal: seven each, yours face up in order, one tu
 	for (std::size_t i = 0; i < mine.size(); ++i)
 	{
 		CHECK(table.card(mine[i]).faceUp);
-		if (i > 0) { CHECK(std::make_pair(table.card(mine[i - 1]).card.row, table.card(mine[i - 1]).card.column) < std::make_pair(table.card(mine[i]).card.row, table.card(mine[i]).card.column)); }
+		if (i > 0) { CHECK(std::make_pair(cardAxis(table.card(mine[i - 1]), "row"), cardAxis(table.card(mine[i - 1]), "column")) < std::make_pair(cardAxis(table.card(mine[i]), "row"), cardAxis(table.card(mine[i]), "column"))); }
 	}
 	REQUIRE(table.pile("theirs").pile.cards.size() == 7);
 	for (const int number : table.pile("theirs").pile.cards) { CHECK_FALSE(table.card(number).faceUp); }
@@ -910,7 +917,7 @@ namespace
 			const int column = static_cast<int>(std::find(ranks.begin(), ranks.end(), rank) - ranks.begin()) + 1;
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.held && object.card.row == row && object.card.column == column) { return object.cardNumber; }
+				if (object.held && cardAxis(object, "row") == row && cardAxis(object, "column") == column) { return object.cardNumber; }
 			}
 			return 0;
 		}
@@ -1033,14 +1040,14 @@ namespace
 		const int row = numberOf(packSuits, name.substr(space + 1));
 		for (Object& object : game.getCurrentObjects())
 		{
-			if (object.held && object.card.column == column && object.card.row == row) { return object.cardNumber; }
+			if (object.held && cardAxis(object, "column") == column && cardAxis(object, "row") == row) { return object.cardNumber; }
 		}
 		return 0;
 	}
 
 	std::string nameOf(const Object& card)
 	{
-		return packRanks[static_cast<std::size_t>(card.card.column - 1)] + " " + packSuits[static_cast<std::size_t>(card.card.row - 1)];
+		return packRanks[static_cast<std::size_t>(cardAxis(card, "column") - 1)] + " " + packSuits[static_cast<std::size_t>(cardAxis(card, "row") - 1)];
 	}
 }
 
@@ -1429,7 +1436,7 @@ TEST_CASE("hearts.xml: the deal: thirteen each, yours face up in suit order, the
 	{
 		const Object& before = *play.game.cardAt(mine[i - 1]);
 		const Object& after = *play.game.cardAt(mine[i]);
-		CHECK(std::make_pair(before.card.row, before.card.worths.back()) < std::make_pair(after.card.row, after.card.worths.back()));
+		CHECK(std::make_pair(cardAxis(before, "row"), before.card.worths.back()) < std::make_pair(cardAxis(after, "row"), after.card.worths.back()));
 		CHECK(after.faceUp);
 	}
 	CHECK(play.turn() == 1.0f);
@@ -1461,7 +1468,7 @@ TEST_CASE("hearts.xml: the suit led is followed; hearts lead only once broken, o
 	CHECK(play.table("tricks") == 1.0f);
 	// A heart has been laid: hearts are broken.
 	const auto& broken = play.pile("trick").pile.broken;
-	CHECK(std::find(broken.begin(), broken.end(), play.game.cardAt(play.cardOf("A hearts"))->card.row) != broken.end());
+	CHECK(std::find(broken.begin(), broken.end(), cardAxis(*play.game.cardAt(play.cardOf("A hearts")), "row")) != broken.end());
 	// West led again (its diamond), north shed another heart, east followed;
 	// you have no diamond, so anything goes.
 	CHECK(play.pile("trick").pile.cards.size() == 3);
