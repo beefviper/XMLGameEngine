@@ -1404,6 +1404,9 @@
     </xsl:if>
     <xsl:for-each select="$node/hitbox">
       <xsl:value-of select="concat($indent, '{&#10;', $indent, '  RawHitbox hitbox;&#10;')" />
+      <xsl:if test="@name">
+        <xsl:value-of select="concat($indent, '  hitbox.name = &quot;', @name, '&quot;;&#10;')" />
+      </xsl:if>
       <xsl:choose>
         <xsl:when test="rectangle | circle">
           <xsl:value-of select="concat($indent, '  hitbox.kind = &quot;', local-name(rectangle | circle), '&quot;;&#10;')" />
@@ -1494,7 +1497,7 @@
         <xsl:otherwise>
           <xsl:variable name="inner" select="concat($indent, $tab)" />
           <xsl:value-of select="concat($indent, $data, '.others.push_back(make&lt;RawCollisionRule&gt;([](RawCollisionRule&amp; rule)&#10;', $indent, '{&#10;')" />
-          <xsl:for-each select="ancestor-or-self::collision/@class | ancestor-or-self::collision/@object | ancestor-or-self::collision/@unless | ancestor-or-self::collision/@through | ancestor-or-self::collision/@sprite | ancestor-or-self::collision/@side">
+          <xsl:for-each select="ancestor-or-self::collision/@class | ancestor-or-self::collision/@object | ancestor-or-self::collision/@unless | ancestor-or-self::collision/@through | ancestor-or-self::collision/@sprite | ancestor-or-self::collision/@side | ancestor-or-self::collision/@hitbox | ancestor-or-self::collision/@by">
             <xsl:if test=". != ''">
               <xsl:value-of select="$inner" />
               <xsl:choose>
@@ -1503,6 +1506,8 @@
                 <xsl:when test="local-name() = 'unless'">rule.unlessClass</xsl:when>
                 <xsl:when test="local-name() = 'through'">rule.throughClass</xsl:when>
                 <xsl:when test="local-name() = 'side'">rule.side</xsl:when>
+                <xsl:when test="local-name() = 'hitbox'">rule.hitbox</xsl:when>
+                <xsl:when test="local-name() = 'by'">rule.by</xsl:when>
                 <xsl:otherwise>rule.whileSprite</xsl:otherwise>
               </xsl:choose>
               <xsl:text> = </xsl:text>

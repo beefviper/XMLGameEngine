@@ -272,3 +272,51 @@ TEST_CASE("<hitbox>: what is stood on, stopped at or bounced off is met by the w
 		CHECK(play.hits() == 1);
 	}
 }
+
+TEST_CASE("<hitbox name>: a rule's hitbox= and by= run only for a touch made with those hitboxes", "[hitbox]")
+{
+	const std::string man = "<rectangle><width>20</width><height>20</height></rectangle>"; // 100 to 120 each way
+	const std::string hitboxes = "<hitbox name=\"body\"><all>8</all></hitbox>" // 108 to 112
+		"<hitbox name=\"foot\"><rectangle><width>10</width><height>4</height></rectangle><position><x>5</x><y>16</y></position></hitbox>";
+	const std::string counting = "<collision object=\"probe\" hitbox=\"foot\"><inc variable=\"target.feet\" /></collision>"
+		"<collision object=\"probe\"><collision hitbox=\"body\"><inc variable=\"target.bodies\" /></collision></collision>"
+		"<collision object=\"probe\" by=\"tip\"><inc variable=\"target.tips\" /></collision>";
+	const std::string variables = "<variables><variable name=\"feet\">0</variable><variable name=\"bodies\">0</variable><variable name=\"tips\">0</variable></variables>";
+	// The probe's tip: its top half; its tail the bottom half.
+	std::string tipped = probe({ 87, 99 });
+	const std::string none = "<collisions></collisions>";
+	tipped.replace(tipped.find(none), none.size(), "<collisions><hitbox name=\"tip\"><bottom>5</bottom></hitbox><hitbox name=\"tail\"><top>5</top></hitbox></collisions>");
+	const auto made = [&](const std::string& rules)
+	{
+		return tipped + "<object name=\"target\"><sprite>" + man + "</sprite><position><x>100</x><y>100</y></position>"
+			"<collisions>" + hitboxes + rules + "</collisions>" + variables + "</object>";
+	};
+	{
+		const Scratch file(made(counting));
+		Played play(file.path);
+		const auto count = [&](const char* name) { return play.game.getObject("target").variable.at(name); };
+
+		// Up by 87 the probe covers 113 to 123: his foot (116 to 120), with its tip too.
+		play.probe("1");
+		CHECK(count("feet") == 1);
+		CHECK(count("bodies") == 0);
+		CHECK(count("tips") == 1);
+	}
+	{
+		const Scratch file(made(counting));
+		Played play(file.path);
+		const auto count = [&](const char* name) { return play.game.getObject("target").variable.at(name); };
+		// Up by 99 it covers 101 to 111: the body (108 to 112), with its tail only.
+		play.probe("2");
+		CHECK(count("feet") == 0);
+		CHECK(count("bodies") == 1);
+		CHECK(count("tips") == 0);
+	}
+
+	CHECK_THROWS_WITH(load(made("<collision object=\"probe\" hitbox=\"fist\"><inc variable=\"target.feet\" /></collision>")),
+		ContainsSubstring("it has no <hitbox name=\"fist\">"));
+	CHECK_THROWS_WITH(load(made("<collision object=\"probe\" by=\"tipp\"><inc variable=\"target.feet\" /></collision>")),
+		ContainsSubstring("no object has a <hitbox name=\"tipp\">"));
+	CHECK_THROWS_WITH(load(made("<collision edge=\"top\" hitbox=\"foot\"><inc variable=\"target.feet\" /></collision>")),
+		ContainsSubstring("met by the whole picture"));
+}

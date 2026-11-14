@@ -38,6 +38,12 @@ namespace xge
 	// pair whose rules stand on, stop at or bounce off is (touchesByPicture).
 	std::optional<Edge> objectsOverlap(const Object& a, const Object& b, bool byPicture = false);
 
+	// Whether a's hitbox named hitboxA meets b's named hitboxB, as the two
+	// are now (just touching counts). An empty name is any part: its
+	// hitboxes, or its picture when it has none. A pair touching by
+	// pictures still asks this of their hitboxes.
+	bool touchesWith(const Object& a, const std::string& hitboxA, const Object& b, const std::string& hitboxB);
+
 	// Whether either object's collisions are of type pixel, so that a pair
 	// is only a hit where pixels actually meet.
 	bool usesPixels(const Object& a, const Object& b) noexcept;

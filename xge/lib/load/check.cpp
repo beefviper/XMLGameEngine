@@ -482,6 +482,21 @@ namespace xge
 			throw std::runtime_error("object '" + object.name + "' > <" + tag + " " + attribute + "=\"" + name + "\">: no object has the class '" + name + "'"
 				+ didYouMean(name, gameClasses) + (gameClasses.empty() ? std::string("; no object has a class") : ". The classes are: " + listOf(gameClasses)));
 		};
+		// A rule's hitbox= names a hitbox of its own object, and its by= one
+		// that something has; a misspelt one never matched.
+		std::set<std::string> hitboxSet;
+		for (const Object& object : objects)
+		{
+			for (const std::string& name : object.hitboxNames()) { hitboxSet.insert(name); }
+		}
+		const std::vector<std::string> gameHitboxes(hitboxSet.begin(), hitboxSet.end());
+		const auto checkHitbox = [&](const Object& object, const char* attribute, const std::string& name, const std::vector<std::string>& known)
+		{
+			if (name.empty() || std::find(known.begin(), known.end(), name) != known.end()) { return; }
+			throw std::runtime_error("object '" + object.name + "' > <collision " + attribute + "=\"" + name + "\">: "
+				+ (attribute == std::string("hitbox") ? "it has no <hitbox name=\"" + name + "\">" : "no object has a <hitbox name=\"" + name + "\">")
+				+ didYouMean(name, known) + (known.empty() ? std::string("; no hitbox there has a name") : ". The names are: " + listOf(known)));
+		};
 		for (const Object& object : objects)
 		{
 			onLine(object.line, [&]
@@ -490,6 +505,8 @@ namespace xge
 				{
 					onLine(rule.line, [&]
 					{
+						checkHitbox(object, "hitbox", rule.hitbox, object.hitboxNames());
+						checkHitbox(object, "by", rule.by, gameHitboxes);
 						checkClass(object, "collision", "class", rule.filterClass);
 						checkClass(object, "collision", "unless", rule.unlessClass);
 						checkClass(object, "collision", "through", rule.throughClass);

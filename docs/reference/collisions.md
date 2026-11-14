@@ -40,6 +40,8 @@ In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<t
 | `side="top"` (`bottom`, `left`, `right`, `horizontal`, `vertical`) | when touched on that side of its own object: a ball falling onto a block is touched on its bottom |
 | `sprite="cracked"` (edges too) | while its object shows that [look](pictures.md#looks), as the touch happened |
 | `unless="logs"` (edges too) | when not also touching something of that class right now. Frogger's river: `<collision class="water" unless="logs">` |
+| `hitbox="fist"` | for a touch made with its own [hitbox](#how-a-touch-is-found) of that name: a punch that lands |
+| `by="fist"` | for a touch made by the other's hitbox of that name: being punched. With `hitbox="body"` too, a fist on the body, not on the guard |
 | `through="floor"` | for a touch felt [through](#knocks) something of that class; without it, only a direct touch |
 | `<condition variable="speed"><below>N</below></condition>` | a condition about itself reads `speed` as the touch happened, so a rule that stops it does not change which rules after it run: a landing and a crash on one pad |
 | `<condition>`s, `<any>` (after those) | while every one holds, written as a [condition](states.md#conditions); several in a row all must hold, so there is no `<all>` here. One with no `class=` or `object=` is about the object itself. |
@@ -56,6 +58,7 @@ In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<t
   - **Pulled in from the sides**, named as the screen edges are: `<all>`, `<horizontal>` (left and right), `<vertical>` (top and bottom), `<top>`, `<bottom>`, `<left>`, `<right>`, one number each. A side takes its own word, then its pair's, then `<all>`; none is 0. It follows the picture's size, and left and right swap while the picture is [mirrored](pictures.md#poses-mirror-grip-and-blinking).
   - **Or a shape**: a `<rectangle>` or `<circle>`, then its `<position>` in the picture.
   - **Several** `<hitbox>`es are allowed, and touching any of them is a touch: a body pulled in, and a foot sticking out. A group's hitboxes are replaced, all of them, by a member that writes its own.
+  - **Named:** `<hitbox name="foot">` is what a rule's `hitbox=` and `by=` pick. Which hitboxes touched is looked at where the two meet (just touching counts), even in a pair that touches by pictures. A `hitbox=` its object has not, a `by=` that no object has, or either on an edge rule stops the load.
   - **The whole picture still meets** the window's edges, and anything a rule of either side stands on, stops at, bounces off or rides: a pair whose rules hold `<land />`, `<stick />`, `<stop />`, `<bounce>`, `<ride />`, `<knock>`, `<deflect />` or `<shove />` touches by pictures. So feet pulled in never sink into a floor. Carrying uses the picture too.
 
 ```xml

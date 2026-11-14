@@ -1504,6 +1504,7 @@ namespace xge
 		RawHitbox readHitbox(const XmlNode& hitbox, const std::string& here)
 		{
 			RawHitbox read;
+			read.name = hitbox.getAttribute("name");
 			std::unique_ptr<XmlNode> shape = hitbox.getFirstChild();
 			const auto isSide = [](const std::string& tag)
 			{
@@ -1620,7 +1621,7 @@ namespace xge
 			// runs as a rule of its own before theirs.
 			struct Said
 			{
-				std::string edge, filterClass, filterObject, unlessClass, throughClass, sprite, side;
+				std::string edge, filterClass, filterObject, unlessClass, throughClass, sprite, side, hitbox, by;
 				std::vector<RawCondition> checks;
 			};
 			std::function<void(const XmlNode&, const Said&, const std::string&)> readRule = [&](const XmlNode& collision, const Said& held, const std::string& ruleHere)
@@ -1640,6 +1641,8 @@ namespace xge
 				take(said.throughClass, "through");
 				take(said.sprite, "sprite");
 				take(said.side, "side");
+				take(said.hitbox, "hitbox");
+				take(said.by, "by");
 				const std::string& edge = said.edge;
 
 				std::unique_ptr<XmlNode> firstCommand = collision.getFirstChild();
@@ -1692,6 +1695,10 @@ namespace xge
 						// silently winning.
 						// class= and object= pick the other object of a touch; an
 						// edge is no object, so there is nothing for them to pick
+						if (!said.hitbox.empty() || !said.by.empty())
+						{
+							fail(ruleHere, "edge= with hitbox= or by=; the window's edges are met by the whole picture");
+						}
 						if (!said.filterClass.empty() || !said.filterObject.empty() || !said.throughClass.empty())
 						{
 							fail(ruleHere, "edge= with class=, object= or through=; a rule about a screen edge is about no other object"
@@ -1717,6 +1724,8 @@ namespace xge
 					rule.throughClass = said.throughClass;
 					rule.whileSprite = said.sprite;
 					rule.side = side;
+					rule.hitbox = said.hitbox;
+					rule.by = said.by;
 					if (!said.checks.empty())
 					{
 						rule.check.join = RawCondition::Join::All;

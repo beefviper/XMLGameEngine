@@ -48,6 +48,20 @@ namespace xge
 		return text;
 	}
 
+	std::vector<std::string> Object::hitboxNames() const
+	{
+		std::vector<std::string> names;
+		const auto add = [&](const std::vector<Hitbox>& hitboxes)
+		{
+			for (const Hitbox& hitbox : hitboxes)
+			{
+				if (!hitbox.name.empty() && std::find(names.begin(), names.end(), hitbox.name) == names.end()) { names.push_back(hitbox.name); }
+			}
+		};
+		add(collisionData.hitboxes);
+		return names;
+	}
+
 	const std::string& Object::lookName() const
 	{
 		static const std::string none;

@@ -103,6 +103,33 @@ namespace xge
 		return found;
 	}
 
+	bool touchesWith(const Object& a, const std::string& hitboxA, const Object& b, const std::string& hitboxB)
+	{
+		// The parts it may be: those of that name, or with none every part.
+		const auto parts = [](const Object& object, const std::string& name)
+		{
+			std::vector<std::size_t> found;
+			for (std::size_t i = 0; i < partsOf(object, false); ++i)
+			{
+				const std::size_t part = partOf(object, false, i);
+				if (name.empty() || (part != picture && object.collisionData.hitboxes[part].name == name)) { found.push_back(part); }
+			}
+			return found;
+		};
+		// Just met counts: each box grown by a hair, as a sweep leaves the
+		// two touching, not overlapping.
+		constexpr float hair = 0.01f;
+		const auto grown = [&](Box box) { box.position -= Vector2f{ hair, hair }; box.size += Vector2f{ hair * 2.0f, hair * 2.0f }; return box; };
+		for (const std::size_t partA : parts(a, hitboxA))
+		{
+			for (const std::size_t partB : parts(b, hitboxB))
+			{
+				if (shapesOverlap(grown(boxOf(a, partA)), isRound(a, partA), boxOf(b, partB), isRound(b, partB))) { return true; }
+			}
+		}
+		return false;
+	}
+
 	bool usesPixels(const Object& a, const Object& b) noexcept
 	{
 		return a.collisionData.type == CollisionType::Pixel || b.collisionData.type == CollisionType::Pixel;

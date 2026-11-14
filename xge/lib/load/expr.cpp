@@ -1468,6 +1468,8 @@ namespace xge
 			rule.unlessClass = rawRule.unlessClass;
 			rule.throughClass = rawRule.throughClass;
 			rule.whileSprite = rawRule.whileSprite;
+			rule.hitbox = rawRule.hitbox;
+			rule.by = rawRule.by;
 			if (!rule.whileSprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == rule.whileSprite; }))
 			{
 				throw std::runtime_error(where + ": a <collision sprite=\"" + rule.whileSprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
@@ -1644,6 +1646,7 @@ namespace xge
 		}
 		const auto valueOr0 = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
 		Hitbox hitbox;
+		hitbox.name = raw.name;
 		if (raw.kind == "inset")
 		{
 			hitbox.inset = true;

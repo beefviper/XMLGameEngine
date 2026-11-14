@@ -2143,6 +2143,8 @@ namespace xge
 			if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
 			if (touch.through ? *touch.through != rule.throughClass : !rule.throughClass.empty()) { continue; }
 			if (!rule.sides.empty() && std::find(rule.sides.begin(), rule.sides.end(), touch.edge) == rule.sides.end()) { continue; }
+			// hitbox= and by=: which of each touched.
+			if ((!rule.hitbox.empty() || !rule.by.empty()) && !touchesWith(self, rule.hitbox, other, rule.by)) { continue; }
 			// A rule naming other, touching a copy of the one it was made for:
 			// its commands and check about that copy.
 			const bool copy = !rule.otherIs.empty() && other.name != rule.otherIs;

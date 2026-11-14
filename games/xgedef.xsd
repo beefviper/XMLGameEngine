@@ -2427,6 +2427,16 @@
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
+    <xs:attribute name="hitbox" type="xs:NMTOKEN" use="optional">
+      <xs:annotation>
+        <xs:documentation>only a touch made with this object's hitbox of that name</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="by" type="xs:NMTOKEN" use="optional">
+      <xs:annotation>
+        <xs:documentation>only a touch made by the other's hitbox of that name</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="actionType">
@@ -2898,6 +2908,11 @@
         <xs:element name="position" type="partialVector2Type" minOccurs="0" />
       </xs:sequence>
     </xs:choice>
+    <xs:attribute name="name" type="xs:NMTOKEN" use="optional">
+      <xs:annotation>
+        <xs:documentation>what rules call it by, with hitbox= and by=</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="actionsType">

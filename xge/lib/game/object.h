@@ -70,6 +70,12 @@ namespace xge
 		// right, vertical for top or bottom). Empty means any side.
 		std::string side;
 
+		// hitbox="name", by="name": the rule only runs for a touch made with
+		// this object's hitbox of that name, or by the other's (each one
+		// worked out where the two meet; see touchesWith). Empty: any part.
+		std::string hitbox;
+		std::string by;
+
 		// <condition>s, <all>s and <any>s before the commands: the rule only
 		// runs while every one holds. Gathered as an <all> (join All); join
 		// None means there are none. A <condition> with no class= or object= is
@@ -130,6 +136,7 @@ namespace xge
 	// (<top>, then <vertical>, then <all>), empty text when none (0).
 	struct RawHitbox
 	{
+		std::string name;           // name=: what rules pick it by (empty: none)
 		std::string kind;
 		RawValue width;
 		RawValue height;
@@ -146,6 +153,7 @@ namespace xge
 	// offset from the picture's top left.
 	struct Hitbox
 	{
+		std::string name;
 		bool inset{ false };
 		float top{ 0.0f };
 		float bottom{ 0.0f };
@@ -199,6 +207,8 @@ namespace xge
 
 		std::string whileSprite;
 		std::vector<Edge> sides;           // empty: any side
+		std::string hitbox;                // see RawCollisionRule
+		std::string by;
 		std::optional<Condition> check;    // see RawCollisionRule::check
 		std::vector<Command> commands;
 
@@ -1544,6 +1554,9 @@ namespace xge
 
 		// The name of the look showing ("" for an object with none).
 		const std::string& lookName() const;
+
+		// The names its <hitbox>es have, each once.
+		std::vector<std::string> hitboxNames() const;
 
 		// The palettes a <become style="..."> can give it: its pictures
 		// drawn again with the colors that style gives, its bitmaps that
