@@ -47,10 +47,10 @@ namespace
 	// Direct3D is a Windows library: a test build there has both as well.
 #ifdef _WIN32
 	constexpr bool kWindows = true;
-	const std::string kWindowNames = "sfml3, raylib, sdl2, opengl, direct3d9, direct3d11";
+	const std::string kWindowNames = "sfml3, raylib, sdl2, opengl, vulkan, direct3d9, direct3d11";
 #else
 	constexpr bool kWindows = false;
-	const std::string kWindowNames = "sfml3, raylib, sdl2, opengl";
+	const std::string kWindowNames = "sfml3, raylib, sdl2, opengl, vulkan";
 #endif
 
 	template <typename Backend>
@@ -62,7 +62,7 @@ namespace
 
 TEST_CASE("a test build has every backend", "[backends]")
 {
-	std::vector<WindowBackend> windows{ WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL };
+	std::vector<WindowBackend> windows{ WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL, WindowBackend::Vulkan };
 	if constexpr (kWindows) { windows.insert(windows.end(), { WindowBackend::Direct3D9, WindowBackend::Direct3D11 }); }
 	windows.push_back(WindowBackend::None);
 	CHECK(WindowFactory::availableBackends() == windows);
@@ -74,7 +74,7 @@ TEST_CASE("a test build has every backend", "[backends]")
 
 TEST_CASE("available() agrees with the list", "[backends]")
 {
-	for (const WindowBackend backend : { WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL, WindowBackend::Direct3D9, WindowBackend::Direct3D11, WindowBackend::None })
+	for (const WindowBackend backend : { WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL, WindowBackend::Vulkan, WindowBackend::Direct3D9, WindowBackend::Direct3D11, WindowBackend::None })
 	{
 		CHECK(WindowFactory::available(backend) == contains(WindowFactory::availableBackends(), backend));
 	}
@@ -125,6 +125,7 @@ TEST_CASE("each backend has a plain lower case name", "[backends]")
 	CHECK(WindowFactory::name(WindowBackend::Raylib) == "raylib");
 	CHECK(WindowFactory::name(WindowBackend::SDL2) == "sdl2");
 	CHECK(WindowFactory::name(WindowBackend::OpenGL) == "opengl");
+	CHECK(WindowFactory::name(WindowBackend::Vulkan) == "vulkan");
 	CHECK(WindowFactory::name(WindowBackend::Direct3D9) == "direct3d9");
 	CHECK(WindowFactory::name(WindowBackend::Direct3D11) == "direct3d11");
 	CHECK(XmlDocumentFactory::name(XmlBackend::Xerces) == "xerces");

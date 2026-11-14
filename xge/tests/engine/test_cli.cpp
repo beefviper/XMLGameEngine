@@ -179,7 +179,7 @@ TEST_CASE("a missing or unknown backend is an error", "[cli]")
 	CHECK_THROWS_AS(parseCommandLine({ "-w" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--xml" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "-w", "-x", "xerces" }), CliError);
-	CHECK_THROWS_AS(parseCommandLine({ "-wvulkan" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "-wmetal" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--xml", "expat" }), CliError);
 }
 

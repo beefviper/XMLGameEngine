@@ -54,6 +54,17 @@ if (XGE_WITH_OPENGL)
 	target_link_libraries(xgelib PUBLIC glfw OpenGL::GL)
 endif()
 
+# The Vulkan window (window/vulkan.h): GLFW for the window, volk to reach the
+# driver's Vulkan, Khronos's headers. volk is built without looking for Vulkan
+# itself, and given the same headers as the engine here.
+if (XGE_WITH_VULKAN)
+	xge_backend(VULKAN)
+	if ("volk" IN_LIST FETCHED_LIBRARIES)
+		target_link_libraries(volk PUBLIC Vulkan::Headers)
+	endif()
+	target_link_libraries(xgelib PUBLIC glfw volk::volk Vulkan::Headers)
+endif()
+
 # The Direct3D 11 window (window/direct3d11.h), on Windows only: its libraries
 # come with the Windows SDK. d3dcompiler compiles its two small shaders when
 # the window opens; xinput reads the pads.

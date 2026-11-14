@@ -27,6 +27,7 @@ namespace xge
 		SDL2,
 		Raylib,
 		OpenGL,
+		Vulkan,
 		Direct3D9,
 		Direct3D11
 	};

@@ -40,7 +40,7 @@ An object is **in play** when it is not out of play (`<waiting />`, dead, despaw
 | Job | Interface | Libraries |
 |---|---|---|
 | Read XML | `XmlDocument` / `XmlNode` (`xml/document.h`) | Xerces (default), TinyXML2, PugiXML, RapidXML |
-| Window, drawing, keys, mouse, pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL (GLFW), Direct3D 9 and 11 (Windows only, one Win32 window in `window/win32.h`); `xgegui`'s Qt renderer |
+| Window, drawing, keys, mouse, pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL and Vulkan (GLFW windows, keys and pads in `window/glfw.h`), Direct3D 9 and 11 (Windows only, one Win32 window in `window/win32.h`); `xgegui`'s Qt renderer |
 | Sound | `Audio` (`audio/audio.h`) | SFML 3 (default), raylib, SDL2, none |
 
 - `Game` and `Engine` see only the interfaces. One factory per kind (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`) knows every library.
@@ -97,7 +97,7 @@ xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no x
 | `xgedata` | copies `games/` beside the programs |
 
 - **Output.** Everything to run lands in `output/<Config>/`: the programs, a copy of `games/` with the schema, and the libraries in `libraries/` (found through a manifest on Windows, a relative run path elsewhere). The folder can be copied anywhere.
-- **Dependencies** are found through vcpkg or the system, or fetched and built (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are only found, never fetched. CMake modules are in `scripts/cmake/`.
+- **Dependencies** are found through vcpkg or the system, or fetched and built (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are only found, never fetched. Vulkan needs no SDK: Khronos's headers and volk are fetched, and volk opens the driver's own Vulkan library when the window opens. CMake modules are in `scripts/cmake/`.
 - **Warnings** stay at zero under a strict set on GCC, Clang and MSVC (`xge_warnings()`, `platform.cmake`).
 - **Sanitizers** (GCC and Clang, off unless asked for): `-DXGE_SANITIZE=address` checks memory and undefined behaviour, `-DXGE_SANITIZE=thread` data races.
   - Only the project's own targets are instrumented, unoptimized (`-O0`) and without the strict warnings: with a sanitizer, either makes GCC take minutes to hours a file.

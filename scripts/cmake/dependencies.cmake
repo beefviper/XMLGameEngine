@@ -150,7 +150,13 @@ xge_dependency(OpenGL WHEN XGE_WITH_OPENGL
 	# (No semicolon in a MISSING text: it would split the argument.)
 	REQUIRED MISSING "the OpenGL backend needs the system's OpenGL (opengl32 comes with Windows, and on Linux install libgl-dev), or leave it out with -DXGE_WITH_OPENGL=OFF.")
 
-xge_dependency(GLFW WHEN XGE_WITH_OPENGL
+# Vulkan (window/vulkan.cpp) opens its window with GLFW as well.
+set(XGE_NEEDS_GLFW OFF)
+if (XGE_WITH_OPENGL OR XGE_WITH_VULKAN)
+	set(XGE_NEEDS_GLFW ON)
+endif()
+
+xge_dependency(GLFW WHEN XGE_NEEDS_GLFW
 	PACKAGE glfw3
 	REPO https://github.com/glfw/glfw.git TAG 3.4
 	BROUGHT_BY raylib
@@ -203,6 +209,27 @@ xge_dependency(lunasvg
 xge_dependency(Qt6
 	PACKAGE Qt6 COMPONENTS Widgets
 	MISSING "xgegui will not be built (install qtbase with the widgets feature).")
+
+# The Vulkan backend needs no Vulkan SDK: Khronos's headers to build with, and
+# volk, which finds the graphics driver's own Vulkan library (vulkan-1.dll,
+# libvulkan.so.1) when the window opens, so nothing links against Vulkan. Its
+# two small shaders are written into window/vulkan.cpp already compiled.
+#
+# It comes after Qt: Qt (and CMake's own FindVulkan) may already have made
+# a Vulkan::Headers target from the headers it found, and then that is used.
+set(XGE_NEEDS_VULKAN_HEADERS OFF)
+if (XGE_WITH_VULKAN AND NOT TARGET Vulkan::Headers)
+	set(XGE_NEEDS_VULKAN_HEADERS ON)
+endif()
+
+xge_dependency(VulkanHeaders WHEN XGE_NEEDS_VULKAN_HEADERS
+	PACKAGE VulkanHeaders
+	REPO https://github.com/KhronosGroup/Vulkan-Headers.git TAG vulkan-sdk-1.4.341.0)
+
+xge_dependency(volk WHEN XGE_WITH_VULKAN
+	PACKAGE volk
+	REPO https://github.com/zeux/volk.git TAG vulkan-sdk-1.4.341.0
+	SETTINGS VOLK_PULL_IN_VULKAN=OFF)
 
 # libxslt runs the stylesheets that turn a game into a program (xgecli
 # --generate, xge/cli/source/generate.cpp); it is built on libxml2, and EXSLT (part

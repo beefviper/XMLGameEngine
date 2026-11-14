@@ -9,7 +9,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 **Backends are a feature (chosen by the author).** Wide support for libraries is part of what the project is, as an emulator front end supports many.
 
 - Dropping some to save upkeep was proposed and rejected.
-- Lower-level ones are wanted next (OpenGL and Direct3D 9 and 11 are there; Vulkan and Direct3D 12 to come), and Xerces as the full validator with a lighter built-in one behind the other parsers is intended.
+- Lower-level ones are wanted next (OpenGL, Vulkan and Direct3D 9 and 11 are there; Direct3D 12 to come), and Xerces as the full validator with a lighter built-in one behind the other parsers is intended.
 - What follows is making the next backend cheap: with text and image files made by the engine, a backend only opens a window, shows bitmaps and reads keys ([plan](../plan.md#a7-the-next-backend-is-cheap)).
 
 ## XML: `XmlDocument` and `XmlNode`
@@ -39,7 +39,8 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
   - Drawing between two frames on a screen faster than the game is open.
 - **Direct3D 11** (the author wants the low-level libraries too): one file, a Win32 window of its own, every object one textured rectangle drawn by two small shaders compiled when the window opens (no shader files to ship), pads from XInput. It resizes like the SFML window. Built only on Windows, where its SDK comes with Visual Studio; `BUILD_TESTING` turns it on there and nowhere else.
 - **Direct3D 9** (older machines): the same rectangles drawn by the fixed pipeline, already in the window's pixels, so no shaders and no compiler. Managed textures outlive a reset, so a resize or a lost device needs only `Reset`. The device is made with `FPU_PRESERVE`: without it Direct3D 9 drops the whole program's sums to single precision.
-- **One Win32 window** (`window/win32.cpp`) serves both: its messages, keys, XInput pads, and where the game is fitted in it. A Direct3D backend adds only its drawing. Next: Vulkan, Direct3D 12, each the same shape.
+- **One Win32 window** (`window/win32.cpp`) serves both: its messages, keys, XInput pads, and where the game is fitted in it. A Direct3D backend adds only its drawing.
+- **Vulkan** opens its window with GLFW, not Win32, so it runs on Linux too and is built and tested there (Mesa's software driver under Xvfb, with the validation layer) before Windows sees it. No SDK: volk finds the driver's library at run time, Khronos's headers are fetched, and the two shaders are kept in the source as SPIR-V words, with their GLSL beside them. One frame in flight; a picture replaced while drawing is let go once that frame is done. Next: Direct3D 12, the same shape.
 - **One test for every window:** opening each library for real, drawing known pictures and reading the pixels back (`capture()`), with a key pressed as a person would. Hidden from ordinary runs, since it opens windows; under Xvfb on Linux. Rejected: a fake of each library (it tests the fake).
 - **Factories** are the only places that know every library; a new one is one branch and a pair of files. Choice is at run time; CMake decides only what is built.
 - "Backend" stayed over module, provider or adapter: it says "interchangeable lower layer".
@@ -52,7 +53,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
   - Positions, sizes and touches stay in the game's pixels; only the drawing has more pixels, stretched back over the object's size. Play never notices.
   - Bitmaps and image files keep their own pixels, shown hard edged. Games scale by any factor, so a pixel font at an odd scale has slightly uneven pixels but sharp edges.
   - Open: an SVG is a bitmap made at load, so it stretches; redrawing it would mean keeping how it was made, turned and recoloured.
-- **Resized freely:** `xgegui` and `xgecli`'s SFML window fit the game to the window by any factor with its proportions, centred on whole pixels. Whole-number scales only were tried first: a window a little too small for 2x showed 1x with wide bars. Not yet in the SDL2, raylib and OpenGL windows, which stretch.
+- **Resized freely:** `xgegui` and `xgecli`'s SFML window fit the game to the window by any factor with its proportions, centred on whole pixels. Whole-number scales only were tried first: a window a little too small for 2x showed 1x with wide bars. The Vulkan and Direct3D windows do the same. Not yet in the SDL2, raylib and OpenGL windows, which use a fixed `<scale>`.
 
 ## Library and programs
 

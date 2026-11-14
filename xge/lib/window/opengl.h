@@ -80,7 +80,6 @@ namespace xge
 		std::unordered_map<std::string, CachedVisual> visuals;
 
 		static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-		static KeyCode glfwKeyToKeyCode(int key) noexcept;
 
 		void setUpProjection() const;
 

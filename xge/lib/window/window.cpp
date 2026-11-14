@@ -23,6 +23,9 @@
 #ifdef XGE_WITH_OPENGL
 #include "window/opengl.h"
 #endif
+#ifdef XGE_WITH_VULKAN
+#include "window/vulkan.h"
+#endif
 #ifdef XGE_WITH_DIRECT3D9
 #include "window/direct3d9.h"
 #endif
@@ -62,6 +65,11 @@ namespace xge
 			{ WindowBackend::OpenGL, "opengl", true },
 #else
 			{ WindowBackend::OpenGL, "opengl", false },
+#endif
+#ifdef XGE_WITH_VULKAN
+			{ WindowBackend::Vulkan, "vulkan", true },
+#else
+			{ WindowBackend::Vulkan, "vulkan", false },
 #endif
 #ifdef XGE_WITH_DIRECT3D9
 			{ WindowBackend::Direct3D9, "direct3d9", true },
@@ -123,6 +131,9 @@ namespace xge
 #endif
 #ifdef XGE_WITH_OPENGL
 		if (backend == WindowBackend::OpenGL) { return std::make_unique<OpenGLWindow>(windowDesc); }
+#endif
+#ifdef XGE_WITH_VULKAN
+		if (backend == WindowBackend::Vulkan) { return std::make_unique<VulkanWindow>(windowDesc); }
 #endif
 #ifdef XGE_WITH_DIRECT3D9
 		if (backend == WindowBackend::Direct3D9) { return std::make_unique<Direct3D9Window>(windowDesc); }

@@ -23,6 +23,7 @@ Rules, build and test commands: [AGENTS.md](../../AGENTS.md). How the engine wor
 ## Building in a Linux sandbox
 
 - The recipe that works with every backend on: `cmake -S . -B build -G Ninja -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release -DFORCE_LOCAL_GLFW=ON -DBUILD_SHARED_LIBS=ON`, `cmake --build build --parallel`, `cd build && ctest -j4`.
+- Vulkan runs here on Mesa's software driver: `apt-get install mesa-vulkan-drivers` (and `vulkan-validationlayers`, then run with `VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation` to check every call). `glslang-tools` compiles a changed shader (the commands are beside the shaders in `window/vulkan.cpp`).
 - Never commit a build folder: build in `build/` (ignored) or outside the repository, and read `git status` before `git add`.
 - Build and test before and after a change. After any change to the reader, `RawObject`, `RawCommand` or the generator, also `cmake --build build --target xgetest-generated && output/Release/xgetest-generated`.
 
