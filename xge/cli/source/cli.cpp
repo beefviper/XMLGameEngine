@@ -53,6 +53,7 @@ namespace xge
 			{ "vulkan", WindowBackend::Vulkan },
 			{ "direct3d9", WindowBackend::Direct3D9 },
 			{ "direct3d11", WindowBackend::Direct3D11 },
+			{ "direct3d12", WindowBackend::Direct3D12 },
 			{ "none",   WindowBackend::None },
 		};
 

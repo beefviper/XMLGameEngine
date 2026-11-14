@@ -17,7 +17,7 @@ namespace xge
 		static const std::vector<VideoBackend> all = []
 		{
 			std::vector<VideoBackend> built{ VideoBackend::Qt };
-			for (const VideoBackend backend : { VideoBackend::SFML3, VideoBackend::SDL2, VideoBackend::Raylib, VideoBackend::OpenGL, VideoBackend::Vulkan, VideoBackend::Direct3D9, VideoBackend::Direct3D11 })
+			for (const VideoBackend backend : { VideoBackend::SFML3, VideoBackend::SDL2, VideoBackend::Raylib, VideoBackend::OpenGL, VideoBackend::Vulkan, VideoBackend::Direct3D9, VideoBackend::Direct3D11, VideoBackend::Direct3D12 })
 			{
 				if (WindowFactory::available(libraryBackend(backend))) { built.push_back(backend); }
 			}
@@ -49,6 +49,7 @@ namespace xge
 		case VideoBackend::Vulkan: return QCoreApplication::translate("xge", "Vulkan (GLFW)");
 		case VideoBackend::Direct3D9: return QCoreApplication::translate("xge", "Direct3D 9");
 		case VideoBackend::Direct3D11: return QCoreApplication::translate("xge", "Direct3D 11");
+		case VideoBackend::Direct3D12: return QCoreApplication::translate("xge", "Direct3D 12");
 		case VideoBackend::Qt:     return QCoreApplication::translate("xge", "Qt (built in)");
 		}
 
@@ -93,6 +94,7 @@ namespace xge
 		case VideoBackend::Vulkan: return QStringLiteral("vulkan");
 		case VideoBackend::Direct3D9: return QStringLiteral("direct3d9");
 		case VideoBackend::Direct3D11: return QStringLiteral("direct3d11");
+		case VideoBackend::Direct3D12: return QStringLiteral("direct3d12");
 		}
 
 		return QString();
@@ -174,6 +176,7 @@ namespace xge
 		case VideoBackend::Vulkan: return WindowBackend::Vulkan;
 		case VideoBackend::Direct3D9: return WindowBackend::Direct3D9;
 		case VideoBackend::Direct3D11: return WindowBackend::Direct3D11;
+		case VideoBackend::Direct3D12: return WindowBackend::Direct3D12;
 		case VideoBackend::Qt:     break;
 		}
 

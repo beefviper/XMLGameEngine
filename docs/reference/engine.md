@@ -40,7 +40,7 @@ An object is **in play** when it is not out of play (`<waiting />`, dead, despaw
 | Job | Interface | Libraries |
 |---|---|---|
 | Read XML | `XmlDocument` / `XmlNode` (`xml/document.h`) | Xerces (default), TinyXML2, PugiXML, RapidXML |
-| Window, drawing, keys, mouse, pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL and Vulkan (GLFW windows, keys and pads in `window/glfw.h`), Direct3D 9 and 11 (Windows only, one Win32 window in `window/win32.h`); `xgegui`'s Qt renderer |
+| Window, drawing, keys, mouse, pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL and Vulkan (GLFW windows, keys and pads in `window/glfw.h`), Direct3D 9, 11 and 12 (Windows only, one Win32 window in `window/win32.h`); `xgegui`'s Qt renderer |
 | Sound | `Audio` (`audio/audio.h`) | SFML 3 (default), raylib, SDL2, none |
 
 - `Game` and `Engine` see only the interfaces. One factory per kind (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`) knows every library.

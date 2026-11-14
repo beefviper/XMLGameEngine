@@ -80,6 +80,13 @@ if (XGE_WITH_DIRECT3D9)
 	target_link_libraries(xgelib PUBLIC d3d9 xinput)
 endif()
 
+# The Direct3D 12 window (window/direct3d12.h), on Windows only: like Direct3D
+# 11 it compiles its shaders when it opens.
+if (XGE_WITH_DIRECT3D12)
+	xge_backend(DIRECT3D12)
+	target_link_libraries(xgelib PUBLIC d3d12 dxgi d3dcompiler xinput)
+endif()
+
 # SDL2's window and sound - see window/sdl2.h and audio/sdl2.h.
 if (XGE_WITH_SDL2)
 	xge_backend(SDL2)

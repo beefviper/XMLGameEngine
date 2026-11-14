@@ -83,7 +83,7 @@ It is built on these, each found through vcpkg or the system, or fetched and bui
 | [lunasvg](https://github.com/sammycage/lunasvg) | drawing SVG sprites, and reading picture sheets |
 | Qt 6, libxslt, [Catch2](https://github.com/catchorg/Catch2) | `xgegui`, `--generate`, the tests |
 
-raylib, SDL2, OpenGL, Vulkan, Direct3D 9 and 11 (on Windows), TinyXML2, PugiXML and RapidXML can be built in as well.
+raylib, SDL2, OpenGL, Vulkan, Direct3D 9, 11 and 12 (on Windows), TinyXML2, PugiXML and RapidXML can be built in as well.
 
 The fonts in `games/assets/` keep their own licences: Tuffy is public domain, and Press Start 2P is under the SIL Open Font License (`pressstart2p-ofl.txt` beside it).
 

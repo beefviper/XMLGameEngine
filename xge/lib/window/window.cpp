@@ -32,6 +32,9 @@
 #ifdef XGE_WITH_DIRECT3D11
 #include "window/direct3d11.h"
 #endif
+#ifdef XGE_WITH_DIRECT3D12
+#include "window/direct3d12.h"
+#endif
 
 namespace xge
 {
@@ -80,6 +83,11 @@ namespace xge
 			{ WindowBackend::Direct3D11, "direct3d11", true },
 #else
 			{ WindowBackend::Direct3D11, "direct3d11", false },
+#endif
+#ifdef XGE_WITH_DIRECT3D12
+			{ WindowBackend::Direct3D12, "direct3d12", true },
+#else
+			{ WindowBackend::Direct3D12, "direct3d12", false },
 #endif
 			{ WindowBackend::None, "none", true },
 		};
@@ -140,6 +148,9 @@ namespace xge
 #endif
 #ifdef XGE_WITH_DIRECT3D11
 		if (backend == WindowBackend::Direct3D11) { return std::make_unique<Direct3D11Window>(windowDesc); }
+#endif
+#ifdef XGE_WITH_DIRECT3D12
+		if (backend == WindowBackend::Direct3D12) { return std::make_unique<Direct3D12Window>(windowDesc); }
 #endif
 		if (backend == WindowBackend::None) { return std::make_unique<NullWindow>(windowDesc); }
 

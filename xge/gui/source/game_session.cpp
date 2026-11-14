@@ -49,6 +49,7 @@ namespace xge
 			case VideoBackend::Vulkan: return QStringLiteral("Vulkan");
 			case VideoBackend::Direct3D9: return QStringLiteral("Direct3D 9");
 			case VideoBackend::Direct3D11: return QStringLiteral("Direct3D 11");
+			case VideoBackend::Direct3D12: return QStringLiteral("Direct3D 12");
 			}
 
 			return QString();
