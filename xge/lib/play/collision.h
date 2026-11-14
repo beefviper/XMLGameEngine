@@ -77,6 +77,12 @@ namespace xge
 	// (sweptBox): two whose boxes do not meet (boxesMeet) cannot touch.
 	Box reachOver(const Object& object, const Vector2f& move) noexcept;
 
+	// Whether the straight line from `from` to `to` crosses what `object`
+	// is drawn as: its picture's shape (a circle as a circle), or, of type
+	// pixel, its drawn pixels (walked half a pixel at a time). What it
+	// sees past, for <sees>.
+	bool lineCrosses(const Vector2f& from, const Vector2f& to, const Object& object);
+
 	// Everything about a touch just found, `time` through the frame, on
 	// that edge of b, as the two are now (play/geometry.h's contactOf):
 	// where they meet, the way apart, where along each side, how deep.

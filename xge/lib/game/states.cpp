@@ -86,6 +86,12 @@ namespace xge
 			return text.str();
 		}
 		if (!condition.sprite.empty()) { what += " showing " + condition.sprite; }
+		if (!condition.sees.empty())
+		{
+			text << (what.empty() ? "anything" : what) << " sees " << condition.sees << " past";
+			for (const std::string& past : condition.past) { text << " " << past; }
+			return text.str();
+		}
 		if (condition.remaining)
 		{
 			text << "remaining of " << (what.empty() ? "anything" : what) << " <= " << *condition.remaining;

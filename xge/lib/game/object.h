@@ -653,6 +653,8 @@ namespace xge
 		// <light>radius</light>, only when hasLight.
 		RawValue rawLight;
 		bool hasLight{ false };
+		// <light>'s <past class>es: what its light does not shine through.
+		std::vector<std::string> lightPast;
 		// <dark>unlit</dark> or <dark>unseen</dark>; "" for neither.
 		std::string dark;
 		// <altitude> with its <start>, <rise>, <fall> and <bounce>, each
@@ -869,6 +871,13 @@ namespace xge
 		int chosenRow{ -1 };
 		bool chose{ false };
 		Direction going{ Direction::Up };
+
+		// A <hunt> with <search />: the steps from each tile to the tile its
+		// target was on (mazeDistances), worked out again when the target
+		// moves to another tile.
+		int searchColumn{ -1 };
+		int searchRow{ -1 };
+		std::vector<int> searchSteps;
 	};
 
 	// A piece of a text as an object shows it (see RawTextPiece): what it
@@ -1831,6 +1840,9 @@ namespace xge
 		bool startDrawsRandom{ false };
 
 		CollisionData collisionData;
+
+		// <light>'s <past>es: the classes its light does not shine through.
+		std::vector<std::string> lightPast;
 
 		// What it shows now (one of its looks, or its one sprite).
 		Picture picture;

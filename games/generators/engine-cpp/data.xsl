@@ -244,7 +244,7 @@
     </xsl:call-template>
     <xsl:value-of select="concat($inner, 'tested.commands = ')" />
     <xsl:call-template name="commands">
-      <xsl:with-param name="nodes" select="$node/*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::any))]" />
+      <xsl:with-param name="nodes" select="$node/*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::any or self::sees))]" />
       <xsl:with-param name="indent" select="$inner" />
     </xsl:call-template>
     <xsl:value-of select="concat(';&#10;', $indent, '}))')" />
@@ -493,6 +493,9 @@
               <xsl:with-param name="name" select="'command.distance'" />
               <xsl:with-param name="node" select="$node/retreat" />
             </xsl:call-template>
+          </xsl:if>
+          <xsl:if test="$node/search">
+            <xsl:text> command.search = true;</xsl:text>
           </xsl:if>
         </xsl:when>
         <xsl:when test="$verb = 'alternate'">
@@ -1835,6 +1838,13 @@
         <xsl:with-param name="to" select="concat($to, '.rawLight')" />
         <xsl:with-param name="node" select="light" />
       </xsl:call-template>
+      <xsl:for-each select="light/past">
+        <xsl:value-of select="concat($indent, $to, '.lightPast.push_back(')" />
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="@class" />
+        </xsl:call-template>
+        <xsl:text>);&#10;</xsl:text>
+      </xsl:for-each>
     </xsl:if>
     <xsl:if test="dark">
       <xsl:value-of select="concat($indent, $to, '.dark = ')" />
@@ -3192,7 +3202,7 @@
       <xsl:otherwise>
         <xsl:value-of select="concat($inner, $var, '.commands = ')" />
         <xsl:call-template name="commands">
-          <xsl:with-param name="nodes" select="*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::any))]" />
+          <xsl:with-param name="nodes" select="*[not(position() = 1 and (self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::any or self::sees))]" />
           <xsl:with-param name="indent" select="$inner" />
         </xsl:call-template>
       </xsl:otherwise>
@@ -3229,8 +3239,23 @@
       </xsl:if>
     </xsl:for-each>
     <xsl:choose>
-      <xsl:when test="($node/@class or $node/@object) and ($node/@sprite or not($node/@variable or $node/@total or $node/@distance)) and not($test[self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::any])">
+      <xsl:when test="($node/@class or $node/@object) and ($node/@sprite or not($node/@variable or $node/@total or $node/@distance)) and not($test[self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal or self::remaining or self::lowest or self::highest or self::any or self::sees])">
         <xsl:value-of select="concat($inner, $var, '.test = RawCondition::Test::Shows;&#10;')" />
+      </xsl:when>
+      <xsl:when test="$test[self::sees]">
+        <!-- <sees object>: the line to it, past its <past> classes -->
+        <xsl:value-of select="concat($inner, $var, '.test = RawCondition::Test::Sees;&#10;', $inner, $var, '.sees = ')" />
+        <xsl:call-template name="string">
+          <xsl:with-param name="text" select="$test/@object" />
+        </xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+        <xsl:for-each select="$test/past">
+          <xsl:value-of select="concat($inner, $var, '.past.push_back(')" />
+          <xsl:call-template name="string">
+            <xsl:with-param name="text" select="@class" />
+          </xsl:call-template>
+          <xsl:text>);&#10;</xsl:text>
+        </xsl:for-each>
       </xsl:when>
       <xsl:when test="$test[self::any]">
         <xsl:call-template name="condition-join">

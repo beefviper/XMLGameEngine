@@ -338,6 +338,8 @@ namespace xge
 			condition.variableName = rawCondition.variableName;
 			condition.distanceTo = rawCondition.distance;
 			condition.sprite = rawCondition.sprite;
+			condition.sees = rawCondition.sees;
+			condition.past = rawCondition.past;
 			if (rawCondition.total == "count") { condition.total = Total::Count; }
 			else if (rawCondition.total == "sum") { condition.total = Total::Sum; }
 			else if (rawCondition.total == "highest") { condition.total = Total::Highest; }
@@ -346,7 +348,8 @@ namespace xge
 			// A number that names something that changes is worked out again
 			// each time the condition is tested (Game::testCondition); now, it
 			// may read where things are as 0, as a command's values may.
-			const bool shows = rawCondition.test == RawCondition::Test::Shows || rawCondition.test == RawCondition::Test::Lowest || rawCondition.test == RawCondition::Test::Highest;
+			const bool shows = rawCondition.test == RawCondition::Test::Shows || rawCondition.test == RawCondition::Test::Lowest || rawCondition.test == RawCondition::Test::Highest
+				|| rawCondition.test == RawCondition::Test::Sees;
 			const bool live = !shows && namesLive(rawCondition.threshold);
 			commandValues = live;
 			const float threshold = shows ? 0.0f : evaluate(rawCondition.threshold, where);
@@ -386,8 +389,24 @@ namespace xge
 			case RawCondition::Test::Shows:     condition.compare = Compare::Shows; break;
 			case RawCondition::Test::Lowest:    condition.compare = Compare::Lowest; break;
 			case RawCondition::Test::Highest:   condition.compare = Compare::Highest; break;
+			case RawCondition::Test::Sees:      condition.compare = Compare::Equal; break;
 			}
-			condition.value = threshold;
+			condition.value = rawCondition.test == RawCondition::Test::Sees ? 1.0f : threshold;
+
+			// <sees>: what is looked for is there, and so is each class in the way.
+			if (!condition.sees.empty() && !findObject(objects, condition.sees))
+			{
+				throw std::runtime_error(where + ": <sees object=\"" + condition.sees + "\"> names no object or group" + didYouMean(condition.sees, objectNames(objects)));
+			}
+			for (const std::string& past : condition.past)
+			{
+				if (std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return object.objClass == past; }))
+				{
+					std::set<std::string> classes;
+					for (const Object& object : objects) { if (!object.objClass.empty()) { classes.insert(object.objClass); } }
+					throw std::runtime_error(where + ": <past class=\"" + past + "\">: no object has that class" + didYouMean(past, std::vector<std::string>(classes.begin(), classes.end())));
+				}
+			}
 
 			// A look by name: something it looks at has a look of that name.
 			if (!condition.sprite.empty())
@@ -1053,6 +1072,7 @@ namespace xge
 			object.light = evaluate(rawObject.rawLight, where + " > <light>");
 			if (object.light < 0.0f) { throw std::runtime_error(where + ": <light> reaches " + formatDisplayNumber(object.light) + " pixels; expected 0 or more"); }
 			object.start.light = object.light;
+			object.lightPast = rawObject.lightPast;
 		}
 		if (rawObject.dark == "unlit") { object.dark = Object::Darkness::Unlit; }
 		else if (rawObject.dark == "unseen") { object.dark = Object::Darkness::Unseen; }

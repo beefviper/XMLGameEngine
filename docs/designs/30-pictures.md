@@ -74,4 +74,5 @@ Text and `<image>` files are the exception: only a backend can measure them, so 
 
 - Haunted House: walls seen only by a match. **`<light>`** is a radius; **`<dark>`** `unlit` draws only while lit, `unseen` from the first time lit. Only drawing changes, in one place (`drawObject`), so every library and generated game gets it.
 - Rejected: darkening the screen and cutting a circle (a backend effect four times), clipping pixels to the circle, a map of seen tiles.
-- Open: lights that fade at the edge, line of sight.
+- **Line of sight:** `<past class>` in a `<light>` names what it does not shine through. A dark thing is lit when the line to its nearest part (a pixel in, so a touching neighbour does not count) crosses none in play; the test is `lineCrosses` (play/collision), shared with `<sees>`. Rejected: casting shadows as shapes (a backend effect), a map of seen tiles.
+- Open: lights that fade at the edge.

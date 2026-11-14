@@ -50,10 +50,11 @@ A small whole game is in the [root readme](../readme.md#a-whole-game). Run a gam
 | Family | Words | Page |
 |---|---|---|
 | moving | `move`, `hop`, `jump`, `land`, `climb`, `thrust`, `turn`, `swing`, `reverse`, `stop`, `track` | [moving](reference/commands.md#moving) |
-| steering | `aim`, `chase`, `hunt`, `wander`, `follow`, `go` | [steering](reference/commands.md#steering), [paths](reference/timers.md#paths), [mazes](reference/maps.md#walking-a-map) |
+| steering | `aim`, `chase`, `hunt` (`search`), `wander`, `follow`, `go` | [steering](reference/commands.md#steering), [paths](reference/timers.md#paths), [mazes](reference/maps.md#walking-a-map) |
 | touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `hole` | [touching](reference/commands.md#touching), [knocks](reference/collisions.md#knocks) |
 | in and out of play | `die`, `reveal`, `fire`, `drop`, `spawn`, `despawn`, `reset`; `waiting` (`ready`), `hidden` on an object | [in and out of play](reference/commands.md#in-and-out-of-play), [spawn](reference/objects.md#spawn-and-despawn) |
 | places | `centered` (`offset`), `left`, `right`, `top`, `bottom` (`offset` in from the side) in a position | [objects](reference/objects.md#parts-of-an-object) |
+| sight | `sees` (`past`) in a condition, `past` in a `light` | [conditions](reference/states.md#conditions), [light and dark](reference/pictures.md#light-and-dark) |
 | hitboxes | `hitbox` with `all`, `horizontal`, `vertical`, `top`, `bottom`, `left`, `right` (in from the picture's sides), or a `rectangle` or `circle` and `position` | [how a touch is found](reference/collisions.md#how-a-touch-is-found) |
 | numbers | `inc`, `dec`, `set`, `copy`, `rank`, the operations (`add`, `subtract`, `multiply`, `divide`, `clamp`, ...); `update="live"` on a variable, position or heading | [numbers](reference/commands.md#numbers), [arithmetic](reference/format.md#arithmetic-as-tags), [live numbers](reference/format.md#live-numbers-of-an-object) |
 | look and sound | `become`, `play`, `silence`, `music`; an empty `sprite name` (a look that draws nothing) | [look and sound](reference/commands.md#look-and-sound), [numbers only](reference/objects.md#numbers-only) |

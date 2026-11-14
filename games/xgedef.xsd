@@ -1221,10 +1221,20 @@
       <xs:documentation>An object's light, darkness, height off the ground and shadow.</xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="light" type="valueType" minOccurs="0">
+      <xs:element name="light" minOccurs="0">
         <xs:annotation>
-          <xs:documentation>how far round its middle it lights what is dark</xs:documentation>
+          <xs:documentation>how far round its middle it lights what is dark, and a past element for each class it does not shine through (a wall)</xs:documentation>
         </xs:annotation>
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:group ref="valueTag" minOccurs="0" />
+            <xs:element name="past" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
       </xs:element>
       <xs:element name="dark" type="darkType" minOccurs="0">
         <xs:annotation>
@@ -1672,6 +1682,12 @@
             </xs:sequence>
             <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
           </xs:complexType>
+        </xs:element>
+        <xs:element name="search" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>The first step of the shortest way through the maze to the target's tile, not the next tile nearest it.</xs:documentation>
+          </xs:annotation>
+          <xs:complexType />
         </xs:element>
       </xs:sequence>
     </xs:choice>
@@ -2488,6 +2504,21 @@
         </xs:annotation>
       </xs:element>
       <xs:element name="highest" type="emptyType" />
+      <xs:element name="sees">
+        <xs:annotation>
+          <xs:documentation>Holds for each one whose straight line to the nearest of object= crosses nothing of the classes its past elements name (a wall).</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="past" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="object" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
     </xs:choice>
   </xs:group>
 

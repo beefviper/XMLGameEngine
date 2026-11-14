@@ -368,6 +368,7 @@ namespace xge
 				{
 					condition.filterObject = names_.object(condition.filterObject, context);
 					condition.distance = names_.object(condition.distance, context);
+					condition.sees = names_.object(condition.sees, context);
 					value(condition.threshold, context);
 					this->conditions(condition.parts, context);
 					this->conditions(condition.inner, context);

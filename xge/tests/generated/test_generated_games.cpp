@@ -121,6 +121,7 @@ namespace
 				<< "|" << c.burn << "|" << c.sound << "|" << c.sprite << "|" << c.path << "|" << c.objClass << "|" << c.scene << "|" << c.way << "|" << c.into
 				<< "|" << c.from << "|" << c.partner << "|" << c.retreat << "|" << c.button << "] otherwise " << c.otherwise << "\n";
 			flag(at + ".byHops", c.byHops);
+			flag(at + ".search", c.search);
 			value(at + ".amount", c.amount);
 			value(at + ".ahead", c.ahead);
 			value(at + ".seconds", c.seconds);
@@ -278,6 +279,7 @@ namespace
 			value(at + ".seek", o.rawSeek);
 			value(at + ".light", o.rawLight);
 			flag(at + ".hasLight", o.hasLight);
+			for (const std::string& past : o.lightPast) { text(at + ".lightPast", past); }
 			text(at + ".dark", o.dark);
 			flag(at + ".hasAltitude", o.hasAltitude);
 			value(at + ".altitude.start", o.rawAltitude);
@@ -372,7 +374,8 @@ namespace
 				const RawCondition& c = list[i];
 				const std::string here = at + ".condition" + std::to_string(i);
 				out << here << " [" << c.filterClass << "|" << c.filterObject << "|" << c.variableName << "|" << c.total << "|" << c.distance << "] "
-					<< static_cast<int>(c.test) << " join " << static_cast<int>(c.join) << " name " << c.name << " sprite " << c.sprite << "\n";
+					<< static_cast<int>(c.test) << " join " << static_cast<int>(c.join) << " name " << c.name << " sprite " << c.sprite << " sees " << c.sees << "\n";
+				for (const std::string& past : c.past) { out << here << ".past " << past << "\n"; }
 				value(here + ".threshold", c.threshold);
 				conditions(here + ".parts", c.parts);
 				conditions(here + ".inner", c.inner);

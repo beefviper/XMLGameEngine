@@ -51,8 +51,9 @@ namespace xge
 				command.retreat = requireAttribute(*child, "object", here + " > <retreat>");
 				command.distance = readValue(*child, here + " > <retreat>");
 			}
+			else if (tag == "search") { command.search = true; }
 		}
-		command.amount = readLeadValue(node, { "ahead", "with", "retreat" }, "its speed, then <ahead>, <with> and <retreat>, each if wanted", where);
+		command.amount = readLeadValue(node, { "ahead", "with", "retreat", "search" }, "its speed, then <ahead>, <with>, <retreat> and <search />, each if wanted", where);
 		if (auto ahead = findChild(&node, "ahead")) { command.ahead = readValue(*ahead, here); }
 	}
 
@@ -66,7 +67,7 @@ namespace xge
 			return CmdHuntHop{ raw.object, diagonal ? evaluate(raw.positionX) : distance, diagonal ? evaluate(raw.positionY) : distance, diagonal, seconds, arcOf(raw, "hop", seconds, evaluate) };
 		}
 
-		CmdHunt hunt{ raw.object, speedOf(raw, "hunt", evaluate), 0.0f, raw.partner, raw.retreat, 0.0f };
+		CmdHunt hunt{ raw.object, speedOf(raw, "hunt", evaluate), 0.0f, raw.partner, raw.retreat, 0.0f, raw.search };
 		if (isWritten(raw.ahead)) { hunt.ahead = evaluate(raw.ahead); }
 		if (!raw.retreat.empty())
 		{
@@ -143,6 +144,7 @@ namespace xge
 			if (h.ahead != 0.0f) { o << ", ahead " << h.ahead; }
 			if (!h.partner.empty()) { o << ", with " << h.partner; }
 			if (!h.retreatTo.empty()) { o << ", retreat " << h.retreatTo << " within " << h.retreatWithin; }
+			if (h.search) { o << ", search"; }
 			o << ")";
 			return;
 		}
@@ -166,7 +168,7 @@ namespace xge
 		else
 		{
 			o << "(" << command.object << ", " << command.amount << ", ahead " << command.ahead << ", with " << command.partner
-				<< ", retreat " << command.retreat << " " << command.distance << ")";
+				<< ", retreat " << command.retreat << " " << command.distance << (command.search ? ", search" : "") << ")";
 		}
 	}
 

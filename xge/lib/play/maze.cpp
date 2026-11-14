@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <deque>
 #include <optional>
 #include <string>
 
@@ -271,6 +272,11 @@ namespace xge
 					return choices.front();
 				}
 
+				if (walk.hunt.search)
+				{
+					if (const std::optional<Direction> way = searched(column, row, choices, *point)) { return way; }
+				}
+
 				std::optional<Direction> best;
 				float bestDistance = 0.0f;
 				for (const Direction way : choices)
@@ -281,6 +287,40 @@ namespace xge
 					{
 						best = way;
 						bestDistance = distance;
+					}
+				}
+				return best;
+			}
+
+			// <search />: of the choices, the one whose next tile is fewest
+			// steps from the target's tile (on the map, the nearest tile to
+			// it); none when no choice leads there.
+			std::optional<Direction> searched(int column, int row, const std::vector<Direction>& choices, const Vector2f& point) const
+			{
+				const int toColumn = std::clamp(static_cast<int>(std::floor((point.x - grid.origin.x) / grid.tile.x)), 0, grid.columns - 1);
+				const int toRow = std::clamp(static_cast<int>(std::floor((point.y - grid.origin.y) / grid.tile.y)), 0, grid.rows - 1);
+				Walk& walk = walker.walk;
+				const std::size_t tiles = static_cast<std::size_t>(grid.columns) * static_cast<std::size_t>(grid.rows);
+				if (walk.searchColumn != toColumn || walk.searchRow != toRow || walk.searchSteps.size() != tiles)
+				{
+					walk.searchSteps = mazeDistances(grid.columns, grid.rows, toColumn, toRow, [this](int c, int r) { return blocked(c, r); });
+					walk.searchColumn = toColumn;
+					walk.searchRow = toRow;
+				}
+
+				std::optional<Direction> best;
+				int fewest = 0;
+				for (const Direction way : choices)
+				{
+					const Vector2f step = unit(way);
+					const int nextColumn = column + static_cast<int>(step.x);
+					const int nextRow = row + static_cast<int>(step.y);
+					if (!grid.onMap(nextColumn, nextRow)) { continue; }
+					const int steps = walk.searchSteps[static_cast<std::size_t>(nextRow) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(nextColumn)];
+					if (steps >= 0 && (!best || steps < fewest))
+					{
+						best = way;
+						fewest = steps;
 					}
 				}
 				return best;
@@ -314,6 +354,33 @@ namespace xge
 		};
 	}
 
+	std::vector<int> mazeDistances(int columns, int rows, int toColumn, int toRow, const std::function<bool(int, int)>& blocked)
+	{
+		std::vector<int> steps(static_cast<std::size_t>(std::max(0, columns)) * static_cast<std::size_t>(std::max(0, rows)), -1);
+		const auto at = [columns](int column, int row) { return static_cast<std::size_t>(row) * static_cast<std::size_t>(columns) + static_cast<std::size_t>(column); };
+		if (toColumn < 0 || toRow < 0 || toColumn >= columns || toRow >= rows) { return steps; }
+
+		// Out from the target a step at a time: each tile first reached is
+		// as few steps away as it can be.
+		std::deque<std::pair<int, int>> next{ { toColumn, toRow } };
+		steps[at(toColumn, toRow)] = 0;
+		while (!next.empty())
+		{
+			const auto [column, row] = next.front();
+			next.pop_front();
+			for (const Direction way : ways)
+			{
+				const Vector2f step = unit(way);
+				const int c = column + static_cast<int>(step.x);
+				const int r = row + static_cast<int>(step.y);
+				if (c < 0 || r < 0 || c >= columns || r >= rows || steps[at(c, r)] >= 0 || blocked(c, r)) { continue; }
+				steps[at(c, r)] = steps[at(column, row)] + 1;
+				next.emplace_back(c, r);
+			}
+		}
+		return steps;
+	}
+
 	void startGo(Object& walker, const CmdGo& go)
 	{
 		walker.walk.mode = Walk::Mode::Go;
@@ -326,6 +393,7 @@ namespace xge
 		walker.walk.mode = Walk::Mode::Hunt;
 		walker.walk.speed = hunt.speed;
 		walker.walk.hunt = hunt;
+		walker.walk.searchColumn = -1;
 	}
 
 	void startWander(Object& walker, const CmdWander& wander)

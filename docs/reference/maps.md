@@ -42,7 +42,7 @@ An object with `<maze map="maze">` walks that map's tiles: it keeps to the middl
 
 - **Walls** are the `<wall>`s: every object of that class on the map in play, optionally only while the walker shows a [look](pictures.md#looks). So ghost eyes go in through a door that stops ghosts.
 - **Slow ground**: on a tile holding an object of that class (drawn or not), it goes at that share of its speed.
-- **How it chooses** is the last [steering verb](commands.md#steering) it was given: `<go>` (a player's stick), `<hunt>` (arcade targeting), `<wander>` (at random).
+- **How it chooses** is the last [steering verb](commands.md#steering) it was given: `<go>` (a player's stick), `<hunt>` (arcade targeting, or with `<search />` the shortest way round the walls), `<wander>` (at random).
 - Off the map (a tunnel) it goes straight on; an edge's `<wrap />` brings it round.
 - It faces the way it goes. `<reverse />` turns it round; `<stop />` or a reset stops it until told again.
 - A tile is found from the walker's middle, so any size works; keep it under half a tile a frame.

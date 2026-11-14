@@ -504,6 +504,7 @@ namespace xge
 				{
 					for (const EdgeGuard& guard : edge.guards) { checkClass(object, "collision", "unless", guard.unlessClass); }
 				}
+				for (const std::string& past : object.lightPast) { checkClass(object, "light > <past", "class", past); }
 			});
 		}
 

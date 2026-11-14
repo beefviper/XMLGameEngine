@@ -46,8 +46,9 @@
     inner group gives each room's robots their colour, and every group but
     the first room's an <aim> and <fire> timer, whose wait is drawn again
     after every shot, between ends that shrink as player.depth grows.
-  * A robot fires only when lined up with the man, across, up or down or
-    on a diagonal, within 8 pixels (<aim> with <lined>), as the arcade's do.
+  * A robot fires only when it can see the man past the walls (<sees>) and
+    is lined up with him, across, up or down or on a diagonal, within 8
+    pixels (<aim> with <lined>), as the arcade's do.
   * Now and then (every 1 to 2.5 seconds, so it stands a while first) a
     robot turns to <chase> the man, a little faster the deeper he has gone; a
     robot that touches a wall or another robot is destroyed (its action
@@ -158,6 +159,17 @@
       </group>
       <!-- the rest aim at the man and fire, sooner the deeper he is -->
       <group name="armed">
+        <actions>
+          <!-- only at a man it can see, past the walls -->
+          <action name="shoot">
+            <condition>
+              <sees object="player"><past class="wall" /></sees>
+              <aim object="player"><lined>8</lined></aim>
+              <fire object="robotshot" />
+              <play sound="robotshoot" />
+            </condition>
+          </action>
+        </actions>
         <timers>
           <timer>
             <every>
@@ -186,9 +198,7 @@
                 </max>
               </random>
             </every>
-            <aim object="player"><lined>8</lined></aim>
-            <fire object="robotshot" />
-            <play sound="robotshoot" />
+            <trigger action="shoot" />
           </timer>
         </timers>
         <group name="red">

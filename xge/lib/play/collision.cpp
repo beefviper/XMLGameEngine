@@ -300,6 +300,29 @@ namespace xge
 		return std::nullopt;
 	}
 
+	bool lineCrosses(const Vector2f& from, const Vector2f& to, const Object& object)
+	{
+		const Box box = boxOf(object);
+		const Vector2f along = to - from;
+		// A point swept along the line against the shape: a hit within it.
+		const std::optional<SweepHit> hit = sweepShapes(Box{ from, {} }, false, along, box, isRound(object), {});
+		if (!hit) { return false; }
+		if (object.collisionData.type != CollisionType::Pixel || !object.bitmap) { return true; }
+
+		// Its pixels: from where the line meets its box, half a pixel at a time.
+		const float length = std::hypot(along.x, along.y);
+		if (!(length > 0.0f)) { return solidAt(object, from - box.position); }
+		const int steps = static_cast<int>(std::ceil(length / 0.5f));
+		for (int i = static_cast<int>(std::floor(hit->time * static_cast<float>(steps))); i <= steps; ++i)
+		{
+			const Vector2f point = from + along * (static_cast<float>(i) / static_cast<float>(steps));
+			const Vector2f local = point - box.position;
+			if (local.x < 0.0f || local.y < 0.0f || local.x >= box.size.x || local.y >= box.size.y) { continue; }
+			if (solidAt(object, local)) { return true; }
+		}
+		return false;
+	}
+
 	Box reachOver(const Object& object, const Vector2f& move) noexcept
 	{
 		// One turning reaches anywhere round its pivot it can swing to.

@@ -14,14 +14,13 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 | # | Task | Why here |
 |---|---|---|
 | 1 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
-| 2 | [F3](#f3-a-maze-search), then [F5](#f5-line-of-sight): maze search, line of sight | Two small steering additions that share games (Berserk, Haunted House) |
-| 3 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
-| 4 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
-| 5 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
-| 6 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
-| 7 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
-| 8 | [F8](#f8-dice): dice | Waits on the hold on new games |
-| 9 | [A7](#a7-the-next-backend-is-cheap) step 6 onward | Never finishes: a backend at a time |
+| 2 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
+| 3 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
+| 4 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
+| 5 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
+| 6 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
+| 7 | [F8](#f8-dice): dice | Waits on the hold on new games |
+| 8 | [A7](#a7-the-next-backend-is-cheap) step 6 onward | Never finishes: a backend at a time |
 
 **On hold:** [A5](#a5-a-game-written-out-as-if-by-hand), the stand-alone generator (the author: nice-looking generated code is a hard problem that may need several things to change at once). It stands at `pong_min` written, and `pong.xml` written by hand as the next example.
 
@@ -187,18 +186,6 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
 - **Files.** `games/xgedef.xsd` (`animationType`), `load/xml.cpp`, `game/object.h`, `play/frame.cpp` (the step where animations and blinking count), `data.xsl`, `xge/tests/engine/test_bitmap_sprites.cpp`, `test_poses.cpp`; `docs/reference/pictures.md` "Animation", `docs/designs/31-animation-and-looks.md`.
 - **Done when** the three limits are gone from `limits.md` and at least eight games lost a timer each.
 
-#### F3. A maze search
-
-- **Needs** nothing.
-- **Why.** A maze walker steers by the next tile nearest its target, with no search, so a target behind a wall can leave it circling.
-- **Steps.**
-  - [ ] **1. The search by itself (S).** A function in `xge/lib/play/maze.cpp` that, given the maze's tiles (`mazeGrid`, already cached), a start tile and a target tile, returns the first step of the shortest way (breadth-first; the grid is at most a few thousand tiles). No game uses it yet. **Check:** a test in `xge/tests/engine/test_steering.cpp` on a small written maze, with the target behind a wall and with no way at all.
-  - [ ] **2. The word (S).** `<search />` inside `<hunt>`: the walker takes that first step. Schema `huntType`, the hunt verb's file in `xge/lib/verbs/`, `CmdHunt` in `game/command.h`, `data.xsl` and the describer. **Check:** a test maze with the target behind a wall: without the word the walker circles for 600 frames, with it it arrives.
-  - [ ] **3. Remember the answer (S).** Cache the result per target tile until the target changes tile. **Check:** `xgetest-long "[speed]"` is no slower for the game in step 4.
-  - [ ] **4. A game uses it (S).** Haunted House's ghost or Berserk's robots. Pac-Man's ghosts keep the arcade rule: that circling is authentic. **Check:** that game's test; add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows).
-- **Docs.** `docs/reference/maps.md` "Walking a map", `docs/designs/24-chase-and-paths.md`, the limit in `limits.md`, the word index. Note in the [backlog](#backlog) that a Lode Runner kind of chase is now possible.
-- **Done when** all four boxes are ticked.
-
 #### F4. A list of numbers
 
 - **Needs** a design agreed with the author before any code.
@@ -210,19 +197,6 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
   - [ ] **3. Write the design (S).** `docs/designs/15-lists.md`: what was wanted, the two trials, what Simon and Mastermind would still need ("compare place by place"), and a recommendation: a holder plus one word, or a new `<list>`. No code.
   - [ ] **4. The author decides.** Then the build steps are written here, in this shape, before anyone starts.
 - **Done, for now, when** the design file exists with a verdict.
-
-#### F5. Line of sight
-
-- **Needs** nothing.
-- **Why.** Light is not blocked by walls (a listed limit), and robots fire whether or not they can see.
-- **Steps.**
-  - [ ] **1. The test by itself (S).** A function in `xge/lib/play/geometry.cpp` that says whether the straight line between two points crosses any object of a given class, using the swept-line code already there. **Check:** tests in `xge/tests/engine/test_collision_geometry.cpp`: a wall between, a wall beside, no wall.
-  - [ ] **2. The word (M).** A condition test `<sees object="player"><past class="wall" /></sees>` (or `class=`), true when the line between the two middles crosses nothing of the class in `<past>`. Schema `conditionTest`, `readCondition` in `load/xml.cpp`, `Condition` in `game/states.h`, `data.xsl` and the describer. **Check:** tests in `test_conditions.cpp` for seen, hidden, and a misspelt class stopping the load.
-  - [ ] **3. A game uses it (S).** Berserk's robots fire only when they see the player. **Check:** Berserk's test; add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows).
-  - [ ] **4. Light stopped by walls (M).** `<light>` takes the same `<past>`, so walls shadow it. **Check:** a test in `test_dark.cpp` where a wall leaves the far side dark.
-  - [ ] **5. Haunted House uses it (S).** **Check:** its test; the limit is gone from `limits.md`; the author looks.
-- **Docs.** `docs/reference/states.md` "Conditions", `pictures.md` "Light", the word index.
-- **Done when** all five boxes are ticked.
 
 #### F7. Sound: an envelope, and notes that follow a number
 
@@ -327,6 +301,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 ### The games
 
 - Galaxian: escorts' points. Asteroids: the saucers' shots breaking rocks. Lunar Lander: hard landings.
+- A Lode Runner kind of chase is now possible: a `<hunt>` with `<search />` finds the way round.
 - Pac-Man: the later levels' schedules, the other fruit. Adventure: the bat, Rhindle, the rest of the kingdom.
 - Putt Park: a cup that takes only a slow ball wholly over it. Cannon Hill: cannons falling into craters.
 - Speeds in Galaxian, Berserk, Tennis, Haunted House and Pac-Man were chosen without watching play: tune them first.
@@ -344,6 +319,8 @@ What only eyes, ears or MSVC can check. Whoever lands a change that needs one ad
 
 - **Animations that play once (F2 step 5):** Missile Command's and Depth Charge's bursts and Space Invaders 2's blast look as before and vanish when their frames end; in Mario Bros. a kicked pest pops up kicking its legs for half a second before it is gone.
 - **New bursts and deaths (F2 step 5), new art drawn for each:** bursts for enemies hit in Galaxian, Demon Attack, Megamania, Astrosmash and Atlantis (buildings too), and a wreck for the player's ship in those and Asteroids. Deaths that stand the game still: Space Invaders and Space Invaders 2 (cannon bursts), Pac-Man (shrivels), Donkey Kong (spins, lies flat, halo), Q\*bert (curses; shrinks away off the pyramid), Berserk (flashes, zapped), Pitfall (flickers), Centipede (wand bursts), Frostbite (sinks; freezes blue), Yars' Revenge (bursts), Mario Bros. (flips and drops off the bottom, green for Luigi). Play goes on in Frogger (flat or splash rings, then a skull) and Haunted House (eyes flash red). Worth a look: timings (1 to 2.5 seconds each) and whether a stand-in sits where the player was.
+- **Line of sight (F5):** Berserk's robots fire only at a man they can see; Haunted House's eyes and matches no longer light rooms through walls.
+- **The tarantula's search (F3):** in Haunted House it now comes the shortest way along the halls to the eyes instead of circling behind walls.
 - **Smaller hitboxes:** Mario Bros.' brothers and pests, the frog, Pitfall Harry, Donkey Kong's barrels and fireballs, and the ships of Galaxian, Space Invaders, Demon Attack, Megamania and Astrosmash are touched by their bodies: a near miss on a wingtip, a toe or a hat should be a miss, while floors, walls and bounces feel as before.
 - **The schema's documentation in an editor (A6):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.
 

@@ -10,6 +10,7 @@
 #include "game/object.h"
 #include "game/types.h"
 
+#include <functional>
 #include <vector>
 
 namespace xge
@@ -30,7 +31,10 @@ namespace xge
 	// - <hunt object="pacman">: at each tile, of the ways open but back, the
 	//   one whose next tile is nearest its target (CmdHunt). There is no
 	//   search of the maze: this is the arcade's ghosts, and how they get
-	//   stuck is part of how they play. A dead end turns it round.
+	//   stuck is part of how they play. A dead end turns it round. With
+	//   <search />, of the same ways, the one on the shortest way to its
+	//   target's tile (mazeDistances); the nearest rule again when no open
+	//   way leads there.
 	// - <wander>: of the same ways, one at random.
 	//
 	// It faces the way it goes (and turns its heading, if it has one), and
@@ -40,6 +44,12 @@ namespace xge
 	// any way open. A <reverse /> turns it round where it is, and it then
 	// chooses again at the next tile. While it follows a <path> or is in the
 	// air, the path or the jump moves it instead.
+
+	// The fewest steps from each tile of a grid `columns` by `rows` to the
+	// tile at toColumn, toRow, going across or up and down and never onto
+	// a tile `blocked` says holds a wall; -1 where there is no way. Row by
+	// row: the tile at column, row is [row * columns + column].
+	std::vector<int> mazeDistances(int columns, int rows, int toColumn, int toRow, const std::function<bool(int, int)>& blocked);
 
 	// <go>, <hunt> and <wander>: what the walker does from now on.
 	void startGo(Object& walker, const CmdGo& go);

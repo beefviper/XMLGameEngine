@@ -504,7 +504,7 @@ namespace xge
 			if (condition.join != RawCondition::Join::None) { return; }
 
 			const std::string own = "self.";
-			for (std::string* each : { &condition.filterObject, &condition.distance })
+			for (std::string* each : { &condition.filterObject, &condition.distance, &condition.sees })
 			{
 				if (*each == "self") { *each = name; }
 			}
@@ -602,7 +602,7 @@ namespace xge
 		bool renameObjectInCheck(RawCondition& condition, const std::string& from, const std::string& to)
 		{
 			bool changed = false;
-			for (std::string* each : { &condition.filterObject, &condition.distance })
+			for (std::string* each : { &condition.filterObject, &condition.distance, &condition.sees })
 			{
 				if (*each == from) { *each = to; changed = true; }
 			}
@@ -737,6 +737,7 @@ namespace xge
 			for (RawCondition& part : condition.parts) { check(part); }
 			if (condition.filterObject == from) { condition.filterObject = to; }
 			if (condition.distance == from) { condition.distance = to; }
+			if (condition.sees == from) { condition.sees = to; }
 			value(condition.threshold);
 		};
 		std::function<void(std::vector<RawCommand>&)> commands = [&](std::vector<RawCommand>& list)

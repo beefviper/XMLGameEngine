@@ -388,6 +388,9 @@ namespace xge
 		std::string partner;
 		std::string retreatTo;
 		float retreatWithin{};
+		// <search />: the first step of the shortest way to the target's tile
+		// (play/maze.h's mazeDistances), not the next tile nearest it.
+		bool search{ false };
 	};
 
 	// <wander>1</wander> - for an object that walks a <maze>:
@@ -1066,6 +1069,7 @@ namespace xge
 		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), spawn (how many), jump (height), climb, go, hunt and wander (the speed)
 		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)
 		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
+		bool search{ false };  // hunt: <search />, the shortest way through the maze
 		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way), swing (its <degrees>)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)

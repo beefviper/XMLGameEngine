@@ -31,13 +31,15 @@
     The stairs of one floor are a few tiles from where the next floor's
     lead back, so the eyes do not arrive on them.
   * The creatures are pieces, each floor taking the ones it has and
-    saying where they start. The tarantula <hunt>s the eyes along the halls
-    and the bat <wander>s them (both walk the floor's map, <maze>); the ghost
-    <chase>s through the walls. One that touches the eyes goes back to its
-    start (<reset />), and the eyes' own rule for class creature takes the
-    life and shows their look "scared": they flash red and blink, an
-    animation played <once />, then look as before.
-  * The eyes have a <light>, how far round them things can be seen. A match
+    saying where they start. The tarantula <hunt>s the eyes the shortest
+    way along the halls (<search />) and the bat <wander>s them (both
+    walk the floor's map, <maze>); the ghost <chase>s through the walls.
+    One that touches the eyes goes back to its start (<reset />), and
+    the eyes' own rule for class creature takes the life and shows their
+    look "scared": they flash red and blink, an animation played
+    <once />, then look as before.
+  * The eyes have a <light>, how far round them things can be seen; it does
+    not shine through the walls (<past class="wall" />). A match
     puts it up (<set variable="player.light">), and a timer of the eyes
     burns it back down, a little every tenth of a second.
   * The walls, the stairs and the creatures are <dark>unlit</dark>: drawn
@@ -77,7 +79,7 @@
         <collision object="player"><reset /></collision>
       </collisions>
       <timers>
-        <timer><after>0</after><hunt object="player">0.9</hunt></timer>
+        <timer><after>0</after><hunt object="player">0.9<search /></hunt></timer>
       </timers>
     </object>
     <!-- the vampire bat: flits about the halls this way and that -->
@@ -215,7 +217,7 @@
               <value>15</value>
             </add>
           </y></position>
-          <light>near</light>
+          <light>near<past class="wall" /></light>
           <collisions>
             <collision class="wall"><stop /></collision>
             <collision class="door"><stop /></collision>

@@ -14,6 +14,7 @@
 #include "play/collision.h"
 #include "play/executor.h"
 #include "play/geometry.h"
+#include "play/maze.h"
 #include "window/null.h"
 
 #include <catch2/catch_approx.hpp>
@@ -480,4 +481,65 @@ TEST_CASE("yarsrevenge.xml: the Swirl leaves the Qotile and flies at where Yar i
 	play.frames(61);
 	REQUIRE(swirls().size() == 1); // one at a time
 	CHECK(swirls().front()->velocity.x < -3.0f);
+}
+
+TEST_CASE("mazeDistances: the fewest steps from every tile to one, round walls, and none where there is no way", "[steering][maze]")
+{
+	// # is a wall; T the tile counted to.
+	const std::vector<std::string> rows{
+		"#####",
+		"#T#.#",
+		"#.#.#",
+		"#...#",
+		"###.#" };
+	const auto blocked = [&](int column, int row) { return rows[static_cast<std::size_t>(row)][static_cast<std::size_t>(column)] == '#'; };
+	const std::vector<int> steps = mazeDistances(5, 5, 1, 1, blocked);
+	const auto at = [&](int column, int row) { return steps[static_cast<std::size_t>(row * 5 + column)]; };
+	CHECK(at(1, 1) == 0);
+	CHECK(at(1, 3) == 2);
+	CHECK(at(3, 1) == 6); // round the wall between, not through it
+	CHECK(at(3, 4) == 5);
+	CHECK(at(0, 0) == -1); // a wall
+	CHECK(at(2, 1) == -1);
+
+	// Shut in: no way from anywhere else.
+	const std::vector<int> shut = mazeDistances(5, 5, 1, 1, [&](int column, int row) { return blocked(column, row) || (column == 1 && row == 2); });
+	CHECK(shut[static_cast<std::size_t>(3 * 5 + 1)] == -1);
+}
+
+TEST_CASE("a <hunt> with <search /> takes the shortest way to a target behind a wall, where the nearest-tile rule circles", "[steering][maze]")
+{
+	// A ring whose one way out (top right) first leads away from the
+	// target: at that tile, on round the ring is always nearer.
+	const std::string map = "<map name=\"maze\"><tile><width>20</width><height>20</height></tile><position><x>0</x><y>0</y></position>"
+		"<row>###############</row>"
+		"<row>#H..........###</row>"
+		"<row>#.#########...#</row>"
+		"<row>#.#########.#.#</row>"
+		"<row>#...........#.#</row>"
+		"<row>#############.#</row>"
+		"<row>#T............#</row>"
+		"<row>###############</row>"
+		"<group name=\"walls\" char=\"#\" class=\"wall\"><sprite><rectangle><width>20</width><height>20</height></rectangle></sprite></group>"
+		"<object name=\"prey\" char=\"T\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite></object>"
+		"<object name=\"hunter\" char=\"H\"><sprite><rectangle><width>16</width><height>16</height></rectangle></sprite>"
+		"<maze map=\"maze\"><wall class=\"wall\" /></maze>"
+		"<actions><action name=\"go\"><hunt object=\"prey\">2";
+	const auto arrives = [&](const std::string& search)
+	{
+		const Scratch file(map + search + "</hunt></action></actions></object></map>", "<trigger object=\"hunter\" action=\"go\" />");
+		Played play(file.path);
+		play.tap(KeyCode::Space);
+		const Object& prey = play.game.getObject("playing.prey");
+		for (int frame = 0; frame < 600; ++frame)
+		{
+			play.frames(1);
+			const Object& hunter = play.game.getObject("playing.hunter");
+			const Vector2f apart = (hunter.position + hunter.size * 0.5f) - (prey.position + prey.size * 0.5f);
+			if (length(apart) < 10.0f) { return true; }
+		}
+		return false;
+	};
+	CHECK_FALSE(arrives(""));
+	CHECK(arrives("<search />"));
 }

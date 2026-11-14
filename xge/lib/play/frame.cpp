@@ -595,11 +595,14 @@ namespace xge
 		}
 
 		// What is <dark> is drawn only where a <light> of something in play
-		// reaches some part of it; an unseen one, from the first time it does.
+		// reaches some part of it, and, for a light with <past>es, where the
+		// line from the light to that part crosses nothing in play of those
+		// classes; an unseen one, from the first time it is lit.
 		void lightAndDark(std::vector<Object>& objects, FrameRules& rules)
 		{
 			struct Light
 			{
+				const Object* object;
 				Vector2f middle;
 				float reach;
 			};
@@ -610,10 +613,25 @@ namespace xge
 				anyDark = anyDark || object.dark != Object::Darkness::None;
 				if (object.light > 0.0f && rules.inPlay(object))
 				{
-					lights.push_back({ object.position + sizeOf(object) * 0.5f, object.light });
+					lights.push_back({ &object, object.position + sizeOf(object) * 0.5f, object.light });
 				}
 			}
 			if (!anyDark) { return; }
+
+			// Whether something of the light's <past> classes, other than the
+			// lit one, lies across the line from the light to `point`.
+			const auto blocked = [&](const Light& light, const Object& lit, const Vector2f& point)
+			{
+				const Box line = sweptBox({ light.middle, {} }, point - light.middle);
+				for (const Object& other : objects)
+				{
+					if (&other == &lit || &other == light.object || !rules.inPlay(other)) { continue; }
+					if (std::find(light.object->lightPast.begin(), light.object->lightPast.end(), other.objClass) == light.object->lightPast.end()) { continue; }
+					if (!boxesMeet(line, { other.position, sizeOf(other) })) { continue; }
+					if (lineCrosses(light.middle, point, other)) { return true; }
+				}
+				return false;
+			};
 
 			for (auto& object : objects)
 			{
@@ -623,7 +641,15 @@ namespace xge
 					{
 						const float x = std::clamp(light.middle.x, object.position.x, object.position.x + size.x);
 						const float y = std::clamp(light.middle.y, object.position.y, object.position.y + size.y);
-						return (x - light.middle.x) * (x - light.middle.x) + (y - light.middle.y) * (y - light.middle.y) <= light.reach * light.reach;
+						if ((x - light.middle.x) * (x - light.middle.x) + (y - light.middle.y) * (y - light.middle.y) > light.reach * light.reach) { return false; }
+						if (light.object->lightPast.empty()) { return true; }
+						// Its nearest part, a pixel in toward its middle, so a
+						// neighbour it only touches does not stand in the way.
+						const Vector2f middle = object.position + size * 0.5f;
+						const Vector2f in = middle - Vector2f{ x, y };
+						const float far = std::hypot(in.x, in.y);
+						const Vector2f point = far > 1.0f ? Vector2f{ x, y } + in * (1.0f / far) : middle;
+						return !blocked(light, object, point);
 					});
 				if (object.dark == Object::Darkness::Unseen)
 				{

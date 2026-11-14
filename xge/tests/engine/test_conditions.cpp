@@ -14,7 +14,11 @@
 // this test call it directly instead; that's a production-code change beyond
 // what this test conversion is doing.)
 
+#include "game/game.h"
+#include "played.h"
+
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include <map>
 #include <optional>
@@ -135,4 +139,33 @@ TEST_CASE("a variable name no candidate declares never fires, and never crashes"
 {
 	Condition missingVariable{ "paddle", "", "lives", 1.0f };
 	CHECK_FALSE(firstMatch(missingVariable, kPaddles).has_value());
+}
+
+TEST_CASE("<sees>: the line from each one to the nearest of another crosses nothing of a class", "[conditions][sees]")
+{
+	// A looker and a target on one line across, and a wall that is across
+	// the line or below it; something of another class across it does not block.
+	const auto seen = [](float wallY, const std::string& wallClass)
+	{
+		const played::Scratch file(
+			played::box("looker", 100, 300, "<variables><variable name=\"seen\">0</variable></variables>")
+			+ played::box("target", 500, 300)
+			+ "<object name=\"pane\" class=\"" + wallClass + "\"><sprite><rectangle><width>20</width><height>100</height></rectangle></sprite>"
+				"<position><x>300</x><y>" + std::to_string(wallY) + "</y></position></object>"
+			+ "<object name=\"brick\" class=\"wall\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
+				"<position><x>0</x><y>0</y></position></object>",
+			"<pop />",
+			"<conditions><condition object=\"looker\"><sees object=\"target\"><past class=\"wall\" /></sees>"
+			"<set variable=\"looker.seen\">1</set></condition></conditions>");
+		played::Played play(file.path);
+		play.frames(2);
+		return play.get("looker").variable.at("seen");
+	};
+	CHECK(seen(260, "wall") == 0.0f);  // across the line
+	CHECK(seen(400, "wall") == 1.0f);  // below it
+	CHECK(seen(260, "glass") == 1.0f); // across it, but not a wall
+
+	const played::Scratch bad(played::box("looker", 0, 0) + played::box("target", 50, 0), "<pop />",
+		"<conditions><condition object=\"looker\"><sees object=\"target\"><past class=\"wal\" /></sees><pop /></condition></conditions>");
+	CHECK_THROWS_WITH(xge::Game(bad.path), Catch::Matchers::ContainsSubstring("<past class=\"wal\">: no object has that class"));
 }

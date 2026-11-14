@@ -1,6 +1,6 @@
 # Chasing, aiming and paths
 
-**Status:** Built: `<chase>`, `<aim>`, maze walking, paths of straight steps, computer players. Ideas: curved paths, searching. Reference: [steering](../reference/commands.md#steering), [maps](../reference/maps.md#walking-a-map), [paths](../reference/timers.md#paths).
+**Status:** Built: `<chase>`, `<aim>`, maze walking, paths of straight steps, computer players. Built too: a maze search (`<search />`), line of sight (`<sees>`). Ideas: curved paths. Reference: [steering](../reference/commands.md#steering), [maps](../reference/maps.md#walking-a-map), [paths](../reference/timers.md#paths).
 
 ## Chasing and aiming
 
@@ -8,12 +8,13 @@
 - Looked at: a behaviour property running every frame (needs its own frame order); **verbs that act once, run by a timer or a rule**; an `at=` on `<fire>` (could not face without firing). **Chosen: verbs,** so the timer says how often the chaser looks again, which is also how sluggish it is.
 - `<chase object>speed<near>8</near></chase>` sets the velocity at the nearest one of a name; a heading turns to it.
 - `<aim object />` stores the way; the next `<fire>`s go along it. `<lined>` refuses unless the target is on one of eight lines.
+- **Seeing:** a condition test `<sees object><past class /></sees>`, true when the straight line between middles crosses nothing of those classes (`lineCrosses`: shapes by sweeping a point, pixel walls half a pixel at a time). Berserk's robots fire only at a man they see. A test rather than a verb, so it gates anything.
 - Open: chasing round walls, leading a moving target.
 
 ## Walking a maze
 
 - Pac-Man and four ghosts on a tile maze. **A `<maze map>` on the walker and three verbs for how it chooses at a tile:** `<go>` (a player's stick, taken at the first open tile), `<hunt>` (arcade targeting), `<wander>` (random). The walking itself is one engine pass, the same for all three (`play/maze.cpp`).
-- **Arcade targeting, not a search:** of the open ways other than back, the one whose next tile is nearest the target; ties up, left, down, right. The four ghosts are four targets on one verb (the quarry, `<ahead>`, doubled `<with>` a partner, `<retreat>` within a range). A* was rejected as the default: getting stuck and doubling back is how the game plays.
+- **Arcade targeting, not a search:** of the open ways other than back, the one whose next tile is nearest the target; ties up, left, down, right. The four ghosts are four targets on one verb (the quarry, `<ahead>`, doubled `<with>` a partner, `<retreat>` within a range). A* was rejected as the default: getting stuck and doubling back is how the game plays. **`<search />`** in a `<hunt>` is the opt-in: breadth-first steps out from the target's tile (`mazeDistances`; a few thousand tiles at most), kept until the target changes tile, then the open way with fewest steps; the nearest rule again when none leads there. Not A*: one count from the target serves every tile the hunter passes. Open: walls that change (a door) are not seen until the target moves tile.
 - **Walls are the walker's own list**, by class and look, so the ghost house door is a wall to a hunter and open to eyes going home.
 - **`<slow class>`** in the maze, as the ghosts crawl through the tunnel. Rejected: a rule that changes speed and must change it back.
 - Rejected: one `<ai targeting>` attribute with a mode per ghost (packs choices into attributes), a verb per ghost (names a ghost, not a behaviour).

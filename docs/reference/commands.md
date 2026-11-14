@@ -67,7 +67,7 @@ An object out of play does nothing when its action is pressed or triggered; lett
 | `<follow path="dive" />` | flies a [path](timers.md#paths); `object="aliens"` sends every one, `<stagger>0.15</stagger>` apart; `<nearest>2</nearest>` only the two nearest |
 | `<shift object="aliens"><x>sway.way</x></shift>` | moves those objects, and the places they fly home to; a reset puts them back |
 | `<go direction="left">speed</go>` | a [maze walker](maps.md#walking-a-map) turns that way at the first tile it can; on cells, keeps stepping |
-| `<hunt object="pacman">2<ahead>4</ahead><with object="blinky" /><retreat object="corner">8</retreat></hunt>` | a maze walker, at every tile, takes the open way whose next tile is nearest a target: the quarry, `<ahead>` tiles in front of it, doubled away from a `<with>` partner, or a corner while within `<retreat>` tiles. Ties go up, left, down, right |
+| `<hunt object="pacman">2<ahead>4</ahead><with object="blinky" /><retreat object="corner">8</retreat></hunt>` | a maze walker, at every tile, takes the open way whose next tile is nearest a target: the quarry, `<ahead>` tiles in front of it, doubled away from a `<with>` partner, or a corner while within `<retreat>` tiles. Ties go up, left, down, right. With `<search />` last, the open way on the shortest way to the target's tile instead (Haunted House's tarantula) |
 | `<hunt object="qbert"><hop><x>32</x><y>48</y><seconds>0.3</seconds></hop></hunt>` | hunts by hops: of four hops, the one landing nearest the target |
 | `<wander>1.25</wander>` | a maze walker takes a random open way at every tile, never back |
 

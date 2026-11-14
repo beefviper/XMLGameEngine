@@ -2070,6 +2070,7 @@ namespace xge
 		for (Condition& part : check.parts) { retargetCheck(part, from, to); }
 		if (check.filterObject == from) { check.filterObject = to; }
 		if (check.distanceTo == from) { check.distanceTo = to; }
+		if (check.sees == from) { check.sees = to; }
 		if (check.live)
 		{
 			RawValue renamed = *check.live;
@@ -2082,6 +2083,22 @@ namespace xge
 			read.owner = to;
 			read.slot = &expr.objectVariables[to + "." + read.variable];
 		}
+	}
+
+	bool Game::seesPast(const Object& from, const Object& to, const std::vector<std::string>& past)
+	{
+		const Vector2f start = from.position + from.size * 0.5f;
+		const Vector2f end = to.position + to.size * 0.5f;
+		for (const std::string& objClass : past)
+		{
+			for (const std::size_t index : matching(objClass, ""))
+			{
+				const Object& other = objects[index];
+				if (&other == &from || &other == &to || !other.isVisible || !isShown(other)) { continue; }
+				if (lineCrosses(start, end, other)) { return false; }
+			}
+		}
+		return true;
 	}
 
 	const CopyRule& Game::ruleForCopy(CollisionRule& rule, const std::string& copy)
@@ -2427,6 +2444,13 @@ namespace xge
 		// the other (both in play), or its variable.
 		const auto measure = [&](const Object& object) -> std::optional<float>
 		{
+			if (!condition.sees.empty())
+			{
+				if (!object.isVisible || !isShown(object)) { return std::nullopt; }
+				const Object* nearest = nearestInPlay(object, condition.sees);
+				if (!nearest) { return std::nullopt; }
+				return seesPast(object, *nearest, condition.past) ? 1.0f : 0.0f;
+			}
 			if (condition.distanceTo.empty()) { return numberOf(object, condition.variableName); }
 			if (!object.isVisible || !isShown(object)) { return std::nullopt; }
 			const Object* nearest = nearestInPlay(object, condition.distanceTo);

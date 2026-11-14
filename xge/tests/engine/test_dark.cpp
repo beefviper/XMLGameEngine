@@ -259,6 +259,9 @@ TEST_CASE("hauntedhouse.xml: the key goes with the eyes and opens a locked door,
 	CHECK(piece.inDark);
 	play.tap(KeyCode::Space);
 	play.frames(1);
+	CHECK(piece.inDark); // a match below the room: its wall is in the way
+	play.place(12, 5);   // in the doorway
+	play.frames(1);
 	CHECK_FALSE(piece.inDark);
 	play.frames(300);
 	CHECK_FALSE(piece.inDark);
@@ -312,4 +315,21 @@ TEST_CASE("hauntedhouse.xml: the whole urn brought back to the door wins, and no
 	again.frames(2);
 	CHECK(again.state() == "over");
 	CHECK(again.game.getObject("over.message").lookName() == "lost");
+}
+
+TEST_CASE("a <light> with a <past class> does not shine through that class: a wall leaves the far side dark", "[dark]")
+{
+	// A lamp, a wall to its right, and a thing past the wall and one above it, all in reach.
+	const Scratch file(box("lamp", 100, 300, "<light>200<past class=\"wall\" /></light>")
+		+ "<object name=\"wall\" class=\"wall\"><sprite><rectangle><width>10</width><height>60</height></rectangle></sprite>"
+			"<position><x>150</x><y>275</y></position><dark>unlit</dark></object>"
+		+ box("behind", 200, 300, "<dark>unlit</dark>") + box("above", 200, 200, "<dark>unlit</dark>"), "<pop />");
+	Played play(file.path);
+	play.frames(2);
+	CHECK(play.get("behind").inDark);
+	CHECK_FALSE(play.get("above").inDark);
+	CHECK_FALSE(play.get("wall").inDark); // the wall itself is lit, on the lamp's side
+
+	const Scratch bad(box("lamp", 0, 0, "<light>20<past class=\"wal\" /></light>"), "<pop />");
+	CHECK_THROWS_WITH(Played(bad.path), Catch::Matchers::ContainsSubstring("no object has the class 'wal'"));
 }

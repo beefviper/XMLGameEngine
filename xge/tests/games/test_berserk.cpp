@@ -445,7 +445,7 @@ TEST_CASE("robots stand a while, then come for the man, and one that walks into 
 	CHECK(again.robotsLeft(1) == 2);
 }
 
-TEST_CASE("a robot fires only when lined up with the man, across, up or down or on a diagonal", "[berserk]")
+TEST_CASE("a robot fires only when it sees the man and is lined up with him, across, up or down or on a diagonal", "[berserk]")
 {
 	Play play;
 	play.begin(false);
@@ -467,8 +467,12 @@ TEST_CASE("a robot fires only when lined up with the man, across, up or down or 
 	};
 	CHECK_FALSE(still({ 53.0f, 263.0f }, 600));
 
-	// Level with the first, in the top middle cell: it fires straight across.
-	REQUIRE(still({ 277.0f, 105.0f }, 600));
+	// Level with the first, but in the top middle cell, the wall between
+	// them: it cannot see him, so it does not fire.
+	CHECK_FALSE(still({ 277.0f, 105.0f }, 600));
+
+	// Level with it in its own cell: it fires straight across.
+	REQUIRE(still({ 200.0f, 105.0f }, 600));
 	for (auto& object : play.game.getCurrentObjects())
 	{
 		if (object.objClass == "robotshot" && object.isVisible)

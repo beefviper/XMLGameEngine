@@ -44,7 +44,7 @@ namespace xge
 	// plain list the engine checks.
 	struct RawCondition
 	{
-		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal, Shows, Lowest, Highest, Unequal };
+		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal, Shows, Lowest, Highest, Unequal, Sees };
 		enum class Join { None, All, Any };
 
 		int line{ 0 }; // of its tag in the game file; 0 when not known (a generated program)
@@ -54,6 +54,10 @@ namespace xge
 		std::string total;    // total="...": "" (each object), count, sum, highest, lowest
 		std::string distance; // distance="...": the object or group measured to, or ""
 		std::string sprite;   // sprite="...": only those showing this look
+		// <sees object="player"><past class="wall" /></sees>: what each one
+		// looks for, and the classes the line to it must not cross.
+		std::string sees;
+		std::vector<std::string> past;
 		Test test{ Test::AtLeast };
 		RawValue threshold;      // the test tag's number
 		Join join{ Join::None };
@@ -89,6 +93,11 @@ namespace xge
 		Total total{ Total::None };
 		std::string distanceTo; // measured to the nearest one in play of this name or group
 		std::string sprite;     // only those showing this look
+		// <sees>: each one holds while the straight line from its middle to
+		// the middle of the nearest of `sees` in play crosses nothing in play
+		// of a class in `past` (measured as 1, or 0 when it crosses).
+		std::string sees;
+		std::vector<std::string> past;
 		RawCondition::Join join{ RawCondition::Join::None };
 		std::vector<Condition> parts;
 		Compare compare{ Compare::AtLeast };

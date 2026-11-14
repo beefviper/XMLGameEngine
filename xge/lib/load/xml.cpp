@@ -823,7 +823,14 @@ namespace xge
 			if (auto light = findChild(&object, "light"))
 			{
 				rawObject.hasLight = true;
-				rawObject.rawLight = readValue(*light, where + " > <light>");
+				const std::string lightHere = where + " > <light>";
+				rawObject.lightPast.clear();
+				for (std::unique_ptr<XmlNode> past = light->getFirstChild(); past != nullptr; past = past->getNextSibling())
+				{
+					if (past->getName() == "past") { rawObject.lightPast.push_back(requireAttribute(*past, "class", lightHere + " > <past>")); }
+				}
+				rawObject.rawLight = rawObject.lightPast.empty() ? readValue(*light, lightHere)
+					: readLeadValue(*light, { "past" }, "how far it reaches, then a <past class=\"...\" /> for each class it does not shine through", lightHere);
 			}
 			if (auto dark = findChild(&object, "dark"))
 			{
@@ -3002,6 +3009,26 @@ namespace xge
 			raw.sprite = node.getAttribute("sprite");
 
 			std::unique_ptr<XmlNode> test = node.getFirstChild();
+
+			// <sees object>: the line from each one to the nearest of that
+			// crosses nothing of the classes its <past>s name.
+			if (test && test->getName() == "sees")
+			{
+				const std::string seesHere = here + " > <sees>";
+				if (!raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty())
+				{
+					fail(here, "<sees> looks along a line, so the condition has no variable=, total= or distance=");
+				}
+				raw.test = RawCondition::Test::Sees;
+				raw.sees = requireAttribute(*test, "object", seesHere);
+				for (std::unique_ptr<XmlNode> past = test->getFirstChild(); past != nullptr; past = past->getNextSibling())
+				{
+					if (past->getName() != "past") { fail(seesHere, "unknown <" + past->getName() + ">; a <sees> holds a <past class=\"...\" /> for each class that blocks the view"); }
+					raw.past.push_back(requireAttribute(*past, "class", seesHere + " > <past>"));
+				}
+				if (raw.past.empty()) { fail(seesHere, "needs a <past class=\"...\" /> naming what blocks the view (a wall)"); }
+				return test->getNextSibling();
+			}
 
 			// No test tag: with sprite=, showing that look is the test; with
 			// class= or object= alone, being there is (each of them, for

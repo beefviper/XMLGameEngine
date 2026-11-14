@@ -115,6 +115,10 @@ namespace xge
 		// dead) whose middle is nearest `from`'s, leaving `from` out; null if
 		// there is none. What <chase> and <aim> look for.
 		const Object* nearestInPlay(const Object& from, const std::string& name);
+
+		// Whether the straight line from the middle of `from` to the middle of
+		// `to` crosses nothing in play of the classes `past` names (<sees>).
+		bool seesPast(const Object& from, const Object& to, const std::vector<std::string>& past);
 		Object& getObject(const std::string& name);
 		Object* tryGetObject(const std::string& name) noexcept;
 		float getVariable(const std::string& name);

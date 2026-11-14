@@ -119,6 +119,7 @@ A condition is checked every frame while its state (or scene) is current. It hol
 - **The number is read as the game runs** when it names something that changes: `<above>gun2.score</above>`.
 - **`total=`**: one number over everything matched and in play: `count` (no variable), `sum`, `highest`, `lowest`.
 - **`distance="hero"`**: how far each matched object is from the nearest `hero`, middle to middle. With a total, over them all: `class="hazard" distance="centre" total="lowest"` with `<above>150</above>` is "nothing within 150 of the middle".
+- **`<sees object="player"><past class="wall" /></sees>`** in place of a number test: holds for each matched object whose straight line, middle to middle, to the nearest `player` crosses nothing in play of a `<past>` class. Of type `pixel`, a wall blocks only where it is drawn. Berserk's robots fire only at a man they can see.
 - **Tests that must all hold** are a [condition in a condition](#conditions-in-conditions): the first test on the outer, the next inside it.
 
 ```xml

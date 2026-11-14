@@ -294,6 +294,7 @@ What is `<dark>` is drawn only where there is light. Something in play with a `<
 - `<dark>unlit</dark>`: drawn only while lit; `<dark>unseen</dark>`: from the first time it is lit until a reset, so a map fills in as it is explored.
 - Darkness changes only drawing: a dark thing moves and touches as ever.
 - The light is a live number, so a `<set>` strikes a match and a timer burns it down.
+- **`<past class="wall" />`** after the reach: the light does not shine through that class. A dark thing is lit only if the line from the light to its nearest part crosses none in play; the wall itself is lit on the light's side (Haunted House: `<light>near<past class="wall" /></light>`).
 
 ## Height and shadows
 
