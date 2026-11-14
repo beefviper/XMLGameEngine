@@ -4005,15 +4005,12 @@
         <xsl:for-each select="*">
           <xsl:if test="position() &gt; 1">,</xsl:if>
           <xsl:choose>
-            <xsl:when test="local-name() = 'alike'"> { RawPatterns::Part::Same, </xsl:when>
             <xsl:when test="local-name() = 'run'"> { RawPatterns::Part::Run, </xsl:when>
-            <xsl:otherwise> { RawPatterns::Part::Suited, </xsl:otherwise>
+            <xsl:otherwise> { RawPatterns::Part::Alike, </xsl:otherwise>
           </xsl:choose>
           <xsl:value-of select="concat(normalize-space(.), ' }')" />
         </xsl:for-each>
-        <xsl:text> }, </xsl:text>
-        <xsl:call-template name="string"><xsl:with-param name="text" select="concat(run/@variable, substring('worth', 1, 5 * not(run/@variable)))" /></xsl:call-template>
-        <xsl:text>, {</xsl:text>
+        <xsl:text> }, {</xsl:text>
         <xsl:for-each select="*">
           <xsl:if test="position() &gt; 1">,</xsl:if>
           <xsl:text> </xsl:text>

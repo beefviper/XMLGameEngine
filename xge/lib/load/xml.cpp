@@ -3691,9 +3691,7 @@ namespace xge
 					if (tag != "alike" && tag != "run") { fail(at, "unknown <" + tag + ">; expected <alike variable> and <run variable>"); }
 					// The variable compared: <alike> one value of it, <run> values in a row.
 					const std::string variable = requireAttribute(*part, "variable", at + " > <" + tag + ">");
-					// Row or column: worked out once the groups are known (settleHolders).
-					const RawPatterns::Part kind = tag == "run" ? RawPatterns::Part::Run : RawPatterns::Part::Same;
-					if (tag == "run") { one.runBy = variable; }
+					const RawPatterns::Part kind = tag == "run" ? RawPatterns::Part::Run : RawPatterns::Part::Alike;
 					one.by.push_back(variable);
 					one.parts.emplace_back(kind, readCount(*part, at + " > <" + tag + ">"));
 				}

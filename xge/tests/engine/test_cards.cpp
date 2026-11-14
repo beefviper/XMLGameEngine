@@ -460,10 +460,9 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 	Changed worth({ { "<columns name=\"rank\">13</columns>", "<columns name=\"worth\">13</columns>" } }, "klondike");
 	CHECK_THROWS_WITH(Played(worth.path), Catch::Matchers::ContainsSubstring("which a card has of its own"));
 
-	// A pattern by what is no row or column stops the load; a trick by a
-	// variable no object has does too.
+	// A pattern or a trick by a variable nothing has stops the load.
 	Changed pattern({ { "<alike variable=\"suit\">5</alike></pattern>", "<alike variable=\"colour\">5</alike></pattern>" } }, "holdem");
-	CHECK_THROWS_WITH(Played(pattern.path), Catch::Matchers::ContainsSubstring("goes by a held member's row or column"));
+	CHECK_THROWS_WITH(Played(pattern.path), Catch::Matchers::ContainsSubstring("nothing held has a variable of that name"));
 	Changed trick({ { "<trick variable=\"suit\"><breaks>", "<trick variable=\"suite\"><breaks>" } }, "hearts");
 	CHECK_THROWS_WITH(Played(trick.path), Catch::Matchers::ContainsSubstring("no object has a variable or number of that name"));
 }

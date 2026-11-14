@@ -580,20 +580,17 @@ namespace xge
 	// <patterns name="poker">: what a pile's cards may make, the lowest
 	// first; a pile with <score patterns="poker"> is scored by them. Each
 	// <pattern> is one or more parts that must all hold among the cards
-	// scored: <alike variable>N (N cards of one column, Same, or of one row,
-	// Suited: by its column or row or the name given either; two <alike>s,
-	// two columns) and <run variable>N (N worths, or columns, in a row, a
-	// card counting any of its worths). Rows and columns are worked out
-	// once the groups are known (settleHolders).
+	// scored: <alike variable>N (N cards with one value of the variable;
+	// two <alike>s of one variable, two values) and <run variable>N (N
+	// values in a row; by worth, a card counting any of its worths).
 	struct RawPatterns
 	{
-		enum class Part { Same, Run, Suited };
+		enum class Part { Alike, Run };
 		struct Pattern
 		{
 			std::string name;
 			std::vector<std::pair<Part, int>> parts;
-			std::string runBy{ "worth" };   // <run variable>: worth (a card's high too) or column
-			std::vector<std::string> by;    // each part's variable= as written: a row or column, or what either is called
+			std::vector<std::string> by;    // each part's variable=, as written
 		};
 		std::string name;
 		std::vector<Pattern> patterns;

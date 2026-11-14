@@ -86,6 +86,18 @@ namespace xge
 			}
 		}
 		startScenes();
+		// What a pattern compares is a variable of what is held.
+		for (const RawPatterns& set : patterns)
+		{
+			for (const RawPatterns::Pattern& pattern : set.patterns)
+			{
+				for (const std::string& by : pattern.by)
+				{
+					if (by == "worth" || std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.held && object.variable.count(by); })) { continue; }
+					throw std::runtime_error("<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">: variable=\"" + by + "\"; nothing held has a variable of that name");
+				}
+			}
+		}
 		// The cards shuffled and dealt, piles scored by patterns there are.
 		for (const Object& object : objects)
 		{
@@ -96,9 +108,16 @@ namespace xge
 			for (const RawPatterns& set : patterns)
 			{
 				if (set.name != object.pile.score) { continue; }
+				std::set<std::string> alike;
 				for (const RawPatterns::Pattern& pattern : set.patterns)
 				{
-					if (pattern.runBy != "worth") { throw std::runtime_error("<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">: scores a hand of " + object.name + "; for now such a run is of worth (runs of a column are for <melds />)"); }
+					const std::string where = "<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">";
+					for (std::size_t i = 0; i < pattern.parts.size(); ++i)
+					{
+						if (pattern.parts[i].first == RawPatterns::Part::Alike) { alike.insert(pattern.by[i]); }
+						else if (pattern.by[i] != "worth") { throw std::runtime_error(where + ": scores a hand of " + object.name + "; for now such a run is of worth (runs of another variable are for <melds />)"); }
+					}
+					if (alike.size() > 4) { throw std::runtime_error(where + ": scores a hand of " + object.name + "; for now a set scoring a hand compares at most four variables"); }
 				}
 			}
 			if (!object.pile.melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.pile.melds; }))
