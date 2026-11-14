@@ -1015,8 +1015,8 @@ namespace xge
 		// A <holds class sprite>: the class of what it holds and the look
 		// they show laid there, then its <spread>s, <accepts>, <run />,
 		// <top sprite>, <lift> and <picked>. Read into the pile it is
-		// (Object::Holder); the looks it names are worked out once the
-		// members they belong to are known (settleHolders, game/holders.h).
+		// (Object::Holder) as written; the looks it names are checked once
+		// the members they belong to are known (settleHolders, game/holders.h).
 		void readHolds(const XmlNode& node, RawObject::RawHolder& pile, const std::string& here)
 		{
 			pile.is = true;

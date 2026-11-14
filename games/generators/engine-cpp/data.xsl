@@ -2087,7 +2087,7 @@
         <xsl:text>;&#10;</xsl:text>
       </xsl:if>
     </xsl:if>
-    <!-- a <holds>: a pile whose looks settleHolders (game/holders.h) works out -->
+    <!-- a <holds>: a holder, its words as written -->
     <xsl:for-each select="$node/holds">
       <xsl:value-of select="concat($indent, $to, '.pile.is = true; ', $to, '.pile.holdsClass = ')" />
       <xsl:call-template name="string"><xsl:with-param name="text" select="@class" /></xsl:call-template>

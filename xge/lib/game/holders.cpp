@@ -135,7 +135,7 @@ namespace xge
 			}
 		}
 
-		// Each holder: which way up its looks turn what is laid there.
+		// Each holder: the looks its words name are ones its members have.
 		for (RawObject& object : objects)
 		{
 			RawObject::RawHolder& pile = object.pile;

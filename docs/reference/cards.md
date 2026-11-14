@@ -56,7 +56,7 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
     <wild variable="suit"><condition variable="rank"><equal>8</equal></condition></wild>
   </accepts>
   ```
-- **`<carry />`**: one may be picked with all those on it, while each follows the rules. **`<top sprite="face" />`**: the top one turns face up. **`<lift>16</lift>`**: the one a picker points at is drawn lifted by that much. **`<order><by variable="suit" /><by variable="rank" /></order>`**: kept in that order, the first first.
+- **`<carry />`**: one may be picked with all those on it, while each follows the rules. **`<top sprite="face" />`**: the top one turns to that look. **`<lift>16</lift>`**: the one a picker points at is drawn lifted by that much. **`<order><by variable="suit" /><by variable="rank" /></order>`**: kept in that order, the first first.
 - **`<picked>`**: what picking from it does instead, picking nothing up: `<send into="waste">1</send>` (no `into=`: to the picker's own holder), and `<empty>` with `<send from="waste"><all /></send>` (a `<leave>` in it) and `<order><random /></order>`; `<play sound>` sounds as it sends.
 - **The picker.** An object whose actions `<pick class>` a held class is a hand: `<pick class="card" />` takes what it points at, `<place />` lays it where it points, `<place into="foundations" />` on the first of those that accepts it, `<drop />` puts it back.
   - **`<owns object="mine" />`** gives it a holder of its own: it picks any of those, face up or down, and stays pointing there.
@@ -149,7 +149,7 @@ A holder (Hold'em's: the ace's `high` 14) scores by them with `<score patterns="
 </object>
 ```
 
-- **`<trick variable="suit">`** in a `<holds>`: the first card leads any suit; after it, a player holding the suit led must follow. The highest `worth` of the suit led wins (an ace-high pack gives column 1 `worth` 14). `variable=` is the row or the column, by either name, so a pack laid out the other way round follows its columns.
+- **`<trick variable="suit">`** in a `<holds>`: the first card leads any suit; after it, a player holding the suit led must follow. The highest `worth` of the suit led wins (an ace-high pack gives column 1 `worth` 14). `variable=` is any variable of the cards: the row or the column, by either name, or one of their own.
 - **`<breaks>2</breaks>`**: a suit (its row) that may not lead until one has been laid since the deal, unless the leader holds nothing else.
 - **`<trumps>1</trumps>`**: a card of that suit beats every other suit (Spades).
 - Points are card variables (`points` on the hearts row and the queen of spades' cell), added up by the trick's **`<counts variable="points" />`** into `trick.points`; `<think><avoid />` sheds the cards it counts.
