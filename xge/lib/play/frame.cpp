@@ -605,6 +605,8 @@ namespace xge
 				const Object* object;
 				Vector2f middle;
 				float reach;
+				// What it does not shine through, in play and in reach, with boxes.
+				std::vector<std::pair<const Object*, Box>> blockers;
 			};
 			std::vector<Light> lights;
 			bool anyDark = false;
@@ -613,22 +615,36 @@ namespace xge
 				anyDark = anyDark || object.dark != Object::Darkness::None;
 				if (object.light > 0.0f && rules.inPlay(object))
 				{
-					lights.push_back({ &object, object.position + sizeOf(object) * 0.5f, object.light });
+					lights.push_back({ &object, object.position + sizeOf(object) * 0.5f, object.light, {} });
 				}
 			}
 			if (!anyDark) { return; }
 
-			// Whether something of the light's <past> classes, other than the
-			// lit one, lies across the line from the light to `point`.
-			const auto blocked = [&](const Light& light, const Object& lit, const Vector2f& point)
+			// Each light's blockers, gathered once a frame: those of its
+			// <past> classes in play within its reach.
+			for (Light& light : lights)
 			{
-				const Box line = sweptBox({ light.middle, {} }, point - light.middle);
+				if (light.object->lightPast.empty()) { continue; }
+				const Box reach{ light.middle - Vector2f{ light.reach, light.reach }, Vector2f{ light.reach, light.reach } * 2.0f };
 				for (const Object& other : objects)
 				{
-					if (&other == &lit || &other == light.object || !rules.inPlay(other)) { continue; }
+					if (&other == light.object) { continue; }
+					const Box box{ other.position, sizeOf(other) };
+					if (!boxesMeet(reach, box) || !rules.inPlay(other)) { continue; }
 					if (std::find(light.object->lightPast.begin(), light.object->lightPast.end(), other.objClass) == light.object->lightPast.end()) { continue; }
-					if (!boxesMeet(line, { other.position, sizeOf(other) })) { continue; }
-					if (lineCrosses(light.middle, point, other)) { return true; }
+					light.blockers.emplace_back(&other, box);
+				}
+			}
+
+			// Whether a blocker of the light, other than the lit one, lies
+			// across the line from the light to `point`.
+			const auto blocked = [](const Light& light, const Object& lit, const Vector2f& point)
+			{
+				const Box line = sweptBox({ light.middle, {} }, point - light.middle);
+				for (const auto& [other, box] : light.blockers)
+				{
+					if (other == &lit || !boxesMeet(line, box)) { continue; }
+					if (lineCrosses(light.middle, point, *other)) { return true; }
 				}
 				return false;
 			};
