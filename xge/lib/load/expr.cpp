@@ -1254,8 +1254,9 @@ namespace xge
 			pile.holdsClass = raw.holdsClass;
 			pile.holdsSprite = raw.holdsSprite;
 			pile.topSprite = raw.topSprite;
-			pile.fan = { number(raw.fanX), number(raw.fanY) };
-			pile.hidden = raw.hasHidden ? Vector2f{ number(raw.hiddenX), number(raw.hiddenY) } : pile.fan;
+			pile.spread = { number(raw.spreadX), number(raw.spreadY) };
+			pile.lookSpread = { number(raw.lookSpreadX), number(raw.lookSpreadY) };
+			pile.spreadSprite = raw.spreadSprite;
 			pile.dealt = static_cast<int>(std::lround(number(raw.dealt)));
 			pile.dealtMore = static_cast<int>(std::lround(number(raw.dealtMore)));
 			pile.dealsInto = raw.dealsInto;
@@ -1264,7 +1265,7 @@ namespace xge
 			pile.refillShuffle = raw.refillShuffle;
 			pile.pickedSound = raw.pickedSound;
 			pile.refillLeave = std::max(0, static_cast<int>(std::lround(number(raw.refillLeave))));
-			pile.fanWidth = number(raw.fanWidth);
+			pile.spreadWidth = number(raw.spreadWidth);
 			pile.carry = raw.carry;
 			pile.orderBy = raw.orderBy;
 			pile.counts = raw.counts;

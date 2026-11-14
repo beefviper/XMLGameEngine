@@ -157,17 +157,7 @@ namespace xge
 			if (!pile.topSprite.empty()) { known(pile.topSprite, "<top>"); }
 			// <counts variable>: a variable of its own, kept to the total.
 			if (!pile.counts.empty() && !object.variable.count(pile.counts)) { object.variable[pile.counts] = RawValue::expression("0"); }
-			if (!pile.spreadSprite.empty())
-			{
-				known(pile.spreadSprite, "<spread>");
-				// The engine's hidden fan is for the face-down ones: a spread
-				// for the face is the fan, the plain one then the hidden.
-				if (pile.spreadSprite == face)
-				{
-					std::swap(pile.fanX, pile.hiddenX);
-					std::swap(pile.fanY, pile.hiddenY);
-				}
-			}
+			if (!pile.spreadSprite.empty()) { known(pile.spreadSprite, "<spread>"); }
 		}
 
 		// A picker of a class held is a hand of cards.
@@ -1215,23 +1205,24 @@ namespace xge
 	}
 
 	// Where each card of a pile goes: its place, then each card on from the
-	// one below by the fan (face up) or the hidden fan (face down).
+	// one below by its <spread>, or by <spread sprite> when it shows that look.
 	Vector2f Game::cardPlace(const Object& pile, std::size_t index)
 	{
 		const std::size_t count = pile.pile.cards.size();
 		const auto step = [&](std::size_t i)
 		{
 			const Object* card = cardAt(pile.pile.cards[i]);
-			return card && card->faceUp ? pile.pile.fan : pile.pile.hidden;
+			const bool looked = card && !pile.pile.spreadSprite.empty() && card->lookName() == pile.pile.spreadSprite;
+			return looked ? pile.pile.lookSpread : pile.pile.spread;
 		};
 		// A fan never wider than its <width>: the steps across shrink.
 		float across = 1.0f;
-		if (pile.pile.fanWidth > 0.0f && count > 1)
+		if (pile.pile.spreadWidth > 0.0f && count > 1)
 		{
 			float wide = 0.0f;
 			for (std::size_t i = 0; i + 1 < count; ++i) { wide += std::fabs(step(i).x); }
 			const Object* first = cardAt(pile.pile.cards.front());
-			const float room = pile.pile.fanWidth - (first ? sizeOf(*first).x : 0.0f);
+			const float room = pile.pile.spreadWidth - (first ? sizeOf(*first).x : 0.0f);
 			if (wide > room && wide > 0.0f) { across = std::max(0.0f, room) / wide; }
 		}
 		Vector2f at = pile.position;
@@ -1289,7 +1280,7 @@ namespace xge
 			// What it holds: following the pointer, or laid as it would be
 			// on the pile pointed at, a little off it.
 			Vector2f at = pointed + Vector2f{ 6.0f, 6.0f };
-			if (pile && !pile->pile.cards.empty()) { at = cardPlace(*pile, pile->pile.cards.size() - 1) + pile->pile.fan + Vector2f{ 6.0f, 6.0f }; }
+			if (pile && !pile->pile.cards.empty()) { at = cardPlace(*pile, pile->pile.cards.size() - 1) + pile->pile.spread + Vector2f{ 6.0f, 6.0f }; }
 			if (hand.hand.mouse && hand.pointer.x >= 0.0f && hand.pointer.y >= 0.0f) { at = hand.pointer - hand.hand.grab; }
 			for (const int number : hand.hand.held)
 			{
@@ -1297,8 +1288,8 @@ namespace xge
 				if (!card) { continue; }
 				card->position = at;
 				card->drawOrder = 100000 + order++;
-				at += pile ? pile->pile.fan : Vector2f{ 0.0f, 20.0f };
-				if (pile && pile->pile.fan.x == 0.0f && pile->pile.fan.y == 0.0f) { at += Vector2f{ 0.0f, 20.0f }; }
+				at += pile ? pile->pile.spread : Vector2f{ 0.0f, 20.0f };
+				if (pile && pile->pile.spread.x == 0.0f && pile->pile.spread.y == 0.0f) { at += Vector2f{ 0.0f, 20.0f }; }
 			}
 			hand.drawOrder = 200000;
 		}
@@ -1838,11 +1829,11 @@ namespace xge
 		hand.facing = direction;
 		// A pile fanned across: left and right go through its cards first
 		// (any of a hand's own, else a run's face-up ones).
-		const bool fannedAcross = std::fabs(pile->pile.fan.x) > std::fabs(pile->pile.fan.y);
+		const bool fannedAcross = std::fabs(pile->pile.spread.x) > std::fabs(pile->pile.spread.y);
 		if (fannedAcross && (direction == Direction::Left || direction == Direction::Right) && (own || pile->pile.carry))
 		{
 			const int at = hand.hand.at < 0 ? count - 1 : hand.hand.at;
-			const int next = at + ((direction == Direction::Right) == (pile->pile.fan.x > 0.0f) ? 1 : -1);
+			const int next = at + ((direction == Direction::Right) == (pile->pile.spread.x > 0.0f) ? 1 : -1);
 			if (takeable(next) && takeable(at))
 			{
 				hand.hand.at = next;

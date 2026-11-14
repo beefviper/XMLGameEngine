@@ -1036,15 +1036,14 @@ namespace xge
 					const std::string look = child->getAttribute("sprite");
 					if (look.empty())
 					{
-						halves(*child, pile.fanX, pile.fanY, at);
-						if (auto width = findChild(child.get(), "width")) { pile.fanWidth = readValue(*width, at + " > <width>"); }
+						halves(*child, pile.spreadX, pile.spreadY, at);
+						if (auto width = findChild(child.get(), "width")) { pile.spreadWidth = readValue(*width, at + " > <width>"); }
 					}
 					else
 					{
 						if (!pile.spreadSprite.empty()) { fail(at, "is a second <spread sprite>; a holder has one plain <spread> and one for a look"); }
 						pile.spreadSprite = look;
-						pile.hasHidden = true;
-						halves(*child, pile.hiddenX, pile.hiddenY, at);
+						halves(*child, pile.lookSpreadX, pile.lookSpreadY, at);
 					}
 				}
 				else if (tag == "accepts")

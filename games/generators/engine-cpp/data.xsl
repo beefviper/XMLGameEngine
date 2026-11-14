@@ -2098,27 +2098,27 @@
         <xsl:text>;</xsl:text>
       </xsl:if>
       <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.fanX')" />
+        <xsl:with-param name="name" select="concat($to, '.pile.spreadX')" />
         <xsl:with-param name="node" select="spread[not(@sprite)]/x" />
       </xsl:call-template>
       <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.fanY')" />
+        <xsl:with-param name="name" select="concat($to, '.pile.spreadY')" />
         <xsl:with-param name="node" select="spread[not(@sprite)]/y" />
       </xsl:call-template>
       <xsl:call-template name="field">
-        <xsl:with-param name="name" select="concat($to, '.pile.fanWidth')" />
+        <xsl:with-param name="name" select="concat($to, '.pile.spreadWidth')" />
         <xsl:with-param name="node" select="spread[not(@sprite)]/width" />
       </xsl:call-template>
       <xsl:for-each select="spread[@sprite]">
-        <xsl:value-of select="concat(' ', $to, '.pile.hasHidden = true; ', $to, '.pile.spreadSprite = ')" />
+        <xsl:value-of select="concat(' ', $to, '.pile.spreadSprite = ')" />
         <xsl:call-template name="string"><xsl:with-param name="text" select="@sprite" /></xsl:call-template>
         <xsl:text>;</xsl:text>
         <xsl:call-template name="field">
-          <xsl:with-param name="name" select="concat($to, '.pile.hiddenX')" />
+          <xsl:with-param name="name" select="concat($to, '.pile.lookSpreadX')" />
           <xsl:with-param name="node" select="x" />
         </xsl:call-template>
         <xsl:call-template name="field">
-          <xsl:with-param name="name" select="concat($to, '.pile.hiddenY')" />
+          <xsl:with-param name="name" select="concat($to, '.pile.lookSpreadY')" />
           <xsl:with-param name="node" select="y" />
         </xsl:call-template>
       </xsl:for-each>

@@ -734,11 +734,10 @@ namespace xge
 		struct RawHolder
 		{
 			bool is{ false };
-			RawValue fanX;              // each face-up card on from the one below (empty text: 0)
-			RawValue fanY;
-			RawValue hiddenX;           // each face-down one (empty text: as face up)
-			RawValue hiddenY;
-			bool hasHidden{ false };
+			RawValue spreadX;           // <spread>: each card on from the one below (empty text: 0)
+			RawValue spreadY;
+			RawValue lookSpreadX;       // <spread sprite>: each card showing that look instead
+			RawValue lookSpreadY;
 			RawValue dealt;             // cards dealt it at the start (empty text: none)
 			RawValue dealtMore;         // a group's: each pile after the first, this many more
 			std::string dealsInto;      // <deals into=>: taking from it deals that many there (none: into the hand's own pile)
@@ -747,7 +746,7 @@ namespace xge
 			std::string refillFrom;     // <refill from=>: taking from it empty turns that pile back over
 			bool refillShuffle{ false }; // <shuffle />: shuffled, not turned over
 			RawValue refillLeave;       // <leave>: that many of the top cards stay (empty text: none)
-			RawValue fanWidth;          // <fan><width>: the fan is never wider (empty text: no limit)
+			RawValue spreadWidth;       // <spread><width>: the spread is never wider (empty text: no limit)
 			bool carry{ false };        // <carry />: a face-up card can be taken with all above it
 			RawValue lift;              // <lift>: the card a hand points at, lifted out of the fan by that much (empty text: none)
 			bool hasPoints{ false };    // <counts>: what its face-up cards add up to
@@ -761,8 +760,7 @@ namespace xge
 			HolderRule takes;
 			// <holds class sprite>: the class it holds, as written, and the
 			// looks its words name: the look laid members show (none: each
-			// keeps its own), the one a second <spread> is for (the hidden
-			// fan, worked out by settleHolders, game/holders.h), and
+			// keeps its own), the one a second <spread> is for, and
 			// <top sprite>'s, which a member left on top turns to.
 			std::string holdsClass;
 			std::string holdsSprite;
@@ -1318,8 +1316,9 @@ namespace xge
 			std::string holdsClass;   // <holds class sprite>, as written
 			std::string holdsSprite;
 			std::string topSprite;    // <top sprite>: what a member left on top shows
-			Vector2f fan{};
-			Vector2f hidden{};
+			Vector2f spread{};        // <spread>: each card on from the one below
+			Vector2f lookSpread{};    // <spread sprite>: each card showing that look
+			std::string spreadSprite;
 			int dealt{};
 			int dealtMore{};
 			std::string dealsInto;
@@ -1329,7 +1328,7 @@ namespace xge
 			int refillLeave{};
 			std::string pickedSound;
 			std::vector<std::string> orderBy;
-			float fanWidth{};
+			float spreadWidth{};
 			bool carry{ false };
 			float lift{};
 			float pointsMost{};     // 0: no limit
