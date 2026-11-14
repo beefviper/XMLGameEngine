@@ -393,3 +393,23 @@ TEST_CASE("an object whose picture changes has changed: it touches what the new 
 	play.frames(3);
 	CHECK(bites() == 1.0f);
 }
+
+TEST_CASE("a rule about a screen edge can hold conditions: it runs only while they hold", "[collision_rules][edge]")
+{
+	// A box going out past the left edge, its rule there armed by a press.
+	const played::Scratch file(
+		played::box("box", 0, 100, "<velocity><x>-1</x><y>0</y></velocity>"
+			"<collisions><collision edge=\"left\"><condition variable=\"armed\"><atleast>1</atleast></condition>"
+			"<inc variable=\"self.hits\" /></collision></collisions>"
+			"<variables><variable name=\"armed\">0</variable><variable name=\"hits\">0</variable></variables>"),
+		"<set variable=\"box.armed\">1</set>");
+	played::Played play(file.path);
+	const auto hits = [&] { return play.get("box").variable.at("hits"); };
+
+	play.frames(5);
+	CHECK(hits() == 0.0f);
+
+	play.tap(xge::KeyCode::Space);
+	play.frames(5);
+	CHECK(hits() >= 4.0f);
+}

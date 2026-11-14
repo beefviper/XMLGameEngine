@@ -219,7 +219,12 @@ namespace
 
 		void guards(const std::string& at, const std::vector<EdgeGuard>& list)
 		{
-			for (const EdgeGuard& g : list) { out << at << " " << g.first << " " << g.count << " [" << g.sprite << "] [" << g.unlessClass << "]\n"; }
+			for (const EdgeGuard& g : list)
+			{
+				out << at << " " << g.first << " " << g.count << " [" << g.sprite << "] [" << g.unlessClass << "]\n";
+				out << at << ".check join " << static_cast<int>(g.rawCheck.join) << "\n";
+				conditions(at + ".check", g.rawCheck.parts);
+			}
 		}
 
 		void object(const std::string& at, const RawObject& o)

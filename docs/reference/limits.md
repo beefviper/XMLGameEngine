@@ -7,7 +7,7 @@ What the engine cannot do today. Why, and what might come, is in the [design fil
 - Movement is pixels per frame and timers count frames, so a slow machine slows the game.
 - Only touches between objects are swept. Screen edges are checked by position, so something faster than a window's width a frame can miss one.
 - A `pixel` touch reads its slope from four pixels round the point, so stairs of one-pixel steps are a slope. It is exact to half a pixel; lines meant to touch should be at least 2 pixels thick. Text and images cannot be `pixel`.
-- `unless=` names a class, not an object. An edge rule cannot have a `<condition>` yet.
+- `unless=` names a class, not an object.
 - `<ride />` lends velocity a frame at a time; it does not attach.
 - `<wrap />` assumes a lane spaced with its objects' size in mind.
 

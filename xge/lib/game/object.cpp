@@ -139,7 +139,7 @@ namespace xge
 	}
 
 	bool addEdgeRule(RawCollisionData& collisions, const std::string& edges, const std::vector<RawCommand>& commands,
-		const std::string& sprite, const std::string& unlessClass)
+		const std::string& sprite, const std::string& unlessClass, const RawCondition& check)
 	{
 		const bool all = edges == "all";
 		const bool vertical = all || edges == "vertical";
@@ -153,7 +153,7 @@ namespace xge
 			EdgeRules<RawCommand>& rules = collisions.edges[edgeIndex(edge)];
 			if (!commands.empty())
 			{
-				rules.guards.push_back(EdgeGuard{ rules.commands.size(), commands.size(), sprite, unlessClass });
+				rules.guards.push_back(EdgeGuard{ rules.commands.size(), commands.size(), sprite, unlessClass, check, std::nullopt });
 			}
 			rules.commands.insert(rules.commands.end(), commands.begin(), commands.end());
 		}
@@ -699,7 +699,11 @@ namespace xge
 			const auto check = [&](RawCondition& condition) { nameSelfInCheck(condition, object.name); };
 
 			RawCollisionData& collisions = object.rawCollisionData;
-			for (auto& edge : collisions.edges) { commands(edge.commands); }
+			for (auto& edge : collisions.edges)
+			{
+				commands(edge.commands);
+				for (EdgeGuard& guard : edge.guards) { if (guard.rawCheck.join != RawCondition::Join::None) { check(guard.rawCheck); } }
+			}
 			for (RawCollisionRule& rule : collisions.others)
 			{
 				commands(rule.commands);
@@ -768,7 +772,11 @@ namespace xge
 		for (RawTextPiece& piece : object.sprite.text) { value(piece.value); }
 
 		RawCollisionData& collisions = object.rawCollisionData;
-		for (auto& edge : collisions.edges) { commands(edge.commands); }
+		for (auto& edge : collisions.edges)
+		{
+			commands(edge.commands);
+			for (EdgeGuard& guard : edge.guards) { if (guard.rawCheck.join != RawCondition::Join::None) { check(guard.rawCheck); } }
+		}
 		for (RawCollisionRule& rule : collisions.others)
 		{
 			commands(rule.commands);

@@ -1462,17 +1462,29 @@
             <xsl:with-param name="nodes" select="$commands" />
             <xsl:with-param name="indent" select="$indent" />
           </xsl:call-template>
-          <xsl:if test="$sprite != '' or $unless != ''">
+          <xsl:if test="$sprite != '' or $unless != '' or $checks">
             <xsl:text>, </xsl:text>
             <xsl:call-template name="string">
               <xsl:with-param name="text" select="$sprite" />
             </xsl:call-template>
-            <xsl:if test="$unless != ''">
+            <xsl:if test="$unless != '' or $checks">
               <xsl:text>, </xsl:text>
               <xsl:call-template name="string">
                 <xsl:with-param name="text" select="$unless" />
               </xsl:call-template>
             </xsl:if>
+          </xsl:if>
+          <!-- its checks and those of the rules holding it, gathered as an <all> (readCollisions) -->
+          <xsl:if test="$checks">
+            <xsl:value-of select="concat(', make&lt;RawCondition&gt;([](RawCondition&amp; check)&#10;', $indent, '{&#10;')" />
+            <xsl:call-template name="condition-join">
+              <xsl:with-param name="join" select="." />
+              <xsl:with-param name="parts" select="$checks" />
+              <xsl:with-param name="var" select="'check'" />
+              <xsl:with-param name="inner" select="concat($indent, $tab)" />
+              <xsl:with-param name="depth" select="0" />
+            </xsl:call-template>
+            <xsl:value-of select="concat($indent, '})')" />
           </xsl:if>
           <xsl:text>);&#10;</xsl:text>
         </xsl:when>

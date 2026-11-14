@@ -1661,10 +1661,6 @@ namespace xge
 					said.checks.push_back(std::move(part));
 					firstCommand = firstCommand->getNextSibling();
 				}
-				if (!said.checks.empty() && !edge.empty())
-				{
-					fail(ruleHere, "a <condition> on a rule about a screen edge is not built yet; one in the state's <conditions> can test the same variable");
-				}
 				const std::string& side = said.side;
 				if (!side.empty())
 				{
@@ -1694,7 +1690,13 @@ namespace xge
 							fail(ruleHere, "edge= with class=, object= or through=; a rule about a screen edge is about no other object"
 								" (unless=\"class\" passes it over while touching that class)");
 						}
-						if (!addEdgeRule(collisionData, edge, commands, said.sprite, said.unlessClass))
+						RawCondition check;
+						if (!said.checks.empty())
+						{
+							check.join = RawCondition::Join::All;
+							check.parts = said.checks;
+						}
+						if (!addEdgeRule(collisionData, edge, commands, said.sprite, said.unlessClass, check))
 						{
 							fail(ruleHere, "edge=\"" + edge + "\"; expected left, right, top, bottom, horizontal, vertical or all");
 						}

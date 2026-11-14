@@ -101,6 +101,10 @@ namespace xge
 		std::size_t count{ 0 };
 		std::string sprite;
 		std::string unlessClass;
+		// Its <condition>s and <any>s, gathered as an <all> (join None when
+		// it has none), and what they are made into: it runs only while it holds.
+		RawCondition rawCheck;
+		std::optional<Condition> check;
 	};
 
 	// One screen edge's rules: their commands in file order, and where each
@@ -1911,7 +1915,7 @@ namespace xge
 	// hold only to a look (sprite=) and be passed over while touching a class
 	// (unless=). False for an edge= that names none of those.
 	bool addEdgeRule(RawCollisionData& collisions, const std::string& edges, const std::vector<RawCommand>& commands,
-		const std::string& sprite = {}, const std::string& unlessClass = {});
+		const std::string& sprite = {}, const std::string& unlessClass = {}, const RawCondition& check = {});
 
 	// The tiles of a map that show this character, row by row and each row
 	// left to right: column, then row, counting from 0.

@@ -511,6 +511,17 @@ namespace xge
 					object->collisionData.others[i].check = makeTest(check, where, where);
 				}
 			}
+			for (std::size_t edge = 0; edge < rawObject.rawCollisionData.edges.size(); ++edge)
+			{
+				const std::vector<EdgeGuard>& guards = rawObject.rawCollisionData.edges[edge].guards;
+				for (std::size_t g = 0; g < guards.size(); ++g)
+				{
+					if (guards[g].rawCheck.join != RawCondition::Join::None)
+					{
+						object->collisionData.edges[edge].guards[g].check = makeTest(guards[g].rawCheck, where, where);
+					}
+				}
+			}
 			// Its actions' conditions, tests about itself.
 			std::function<void(std::vector<Command>&, const std::string&)> tests = [&](std::vector<Command>& list, const std::string& here)
 			{

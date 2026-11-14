@@ -394,7 +394,11 @@ namespace xge
 				timers(object.timers, context);
 
 				RawCollisionData& collisions = object.rawCollisionData;
-				for (auto& edge : collisions.edges) { commands(edge.commands, context); }
+				for (auto& edge : collisions.edges)
+				{
+					commands(edge.commands, context);
+					for (EdgeGuard& guard : edge.guards) { conditions(guard.rawCheck.parts, context); }
+				}
 				for (RawCollisionRule& rule : collisions.others)
 				{
 					rule.filterObject = names_.object(rule.filterObject, context);

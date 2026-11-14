@@ -46,7 +46,7 @@ A screen grid was rejected: it needs a cell size per game, and what is left afte
 
 - **Speed on a touch** is the live number `speed`, held at the speed as the touch happened while the rules run, so a landing rule and a crash rule never both run. `<slower>`/`<faster>` were a second comparison vocabulary beside the conditions, and went.
 - **`side=`** is the side of the rule's own object that was touched; same words as `edge=` but a separate attribute, since `edge=` means a screen edge.
-- **Checks** reuse the condition tests (`<condition>`, `<any>`; several in a row all hold, so no `<all>`); one with no `object=` means the object itself. Not yet on edge rules.
+- **Checks** reuse the condition tests (`<condition>`, `<any>`; several in a row all hold, so no `<all>`); one with no `object=` means the object itself. Edge rules take them too, kept beside the rule's `sprite=` and `unless=` (`EdgeGuard`).
 - **`<trigger>` in rules** runs one of the object's actions, so a death is one action that every killing rule names.
 - **Rules in rules** (the author asked, with conditions in conditions): a rule holds rules that say what it says, so Centipede's shot or a creeper's look is written once over the rules it governs.
   - Made at load into the plain rule list (attributes and checks passed down, `<first>` a rule before them), so detection is untouched.

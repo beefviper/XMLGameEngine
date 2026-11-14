@@ -42,7 +42,7 @@ In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<t
 | `unless="logs"` (edges too) | when not also touching something of that class right now. Frogger's river: `<collision class="water" unless="logs">` |
 | `through="floor"` | for a touch felt [through](#knocks) something of that class; without it, only a direct touch |
 | `<condition variable="speed"><below>N</below></condition>` | a condition about itself reads `speed` as the touch happened, so a rule that stops it does not change which rules after it run: a landing and a crash on one pad |
-| `<condition>`s, `<any>` (after those) | while every one holds, written as a [condition](states.md#conditions); several in a row all must hold, so there is no `<all>` here. One with no `class=` or `object=` is about the object itself. Not on edges yet |
+| `<condition>`s, `<any>` (after those) | while every one holds, written as a [condition](states.md#conditions); several in a row all must hold, so there is no `<all>` here. One with no `class=` or `object=` is about the object itself. |
 
 ## How a touch is found
 

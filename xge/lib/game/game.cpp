@@ -267,6 +267,18 @@ namespace xge
 			retarget(check);
 			made.collisionData.others[i].check = std::move(check);
 		}
+		for (std::size_t edge = 0; edge < made.collisionData.edges.size(); ++edge)
+		{
+			const std::vector<EdgeGuard>& was = original.collisionData.edges[edge].guards;
+			std::vector<EdgeGuard>& guards = made.collisionData.edges[edge].guards;
+			for (std::size_t g = 0; g < guards.size() && g < was.size(); ++g)
+			{
+				if (!was[g].check) { continue; }
+				Condition check = *was[g].check;
+				retarget(check);
+				guards[g].check = std::move(check);
+			}
+		}
 		// Its actions' conditions, the same way.
 		const std::function<void(const std::vector<Command>&, std::vector<Command>&)> whens = [&](const std::vector<Command>& written, std::vector<Command>& copied)
 		{
@@ -1962,7 +1974,8 @@ namespace xge
 	bool Game::isEdgeRulePassedOver(const Object& object, const std::string& look, const EdgeGuard& guard)
 	{
 		return (!guard.sprite.empty() && look != guard.sprite)
-			|| (!guard.unlessClass.empty() && isTouchingClass(object, object, guard.unlessClass));
+			|| (!guard.unlessClass.empty() && isTouchingClass(object, object, guard.unlessClass))
+			|| (guard.check && !holds(*guard.check));
 	}
 
 	// Whether the edge has a stick() rule that holds right now (one in a rule

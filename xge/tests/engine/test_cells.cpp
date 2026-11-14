@@ -1103,5 +1103,6 @@ TEST_CASE("Capsules plays: germs come in low in the bottle, a capsule falls, and
 	{
 		if (object.exists && object.objClass == "pill") { ++pills; }
 	}
-	CHECK(pills >= 6);
+	// Several capsules down (halves a match cleared are gone, so not all of them).
+	CHECK(pills >= 4);
 }
