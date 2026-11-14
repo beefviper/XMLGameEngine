@@ -89,7 +89,7 @@
       <xsl:when test="$parent = 'collisions'">
         <xsl:choose>
           <xsl:when test="$tag = 'collision'">added</xsl:when>
-          <xsl:when test="$tag = 'solid'">all</xsl:when>
+          <xsl:when test="$tag = 'solid' or $tag = 'hitbox'">all</xsl:when>
           <xsl:otherwise>tag</xsl:otherwise>
         </xsl:choose>
       </xsl:when>

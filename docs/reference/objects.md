@@ -201,7 +201,7 @@ A take, a state `from=` another and a scene `from=` another all change what they
 | an `<x>` or `<y>` of position, velocity, acceleration or padding | replaces that half |
 | a `<variable>`, `<action>`, `<timer>` | replaces the one of that name, or is added (an unnamed timer is added) |
 | `<collision>` rules | are added after |
-| `<solid>`s; `<member>`s, `<row>`s, `<column>`s, `<cell>`s | replace all of them |
+| `<solid>`s; `<hitbox>`es; `<member>`s, `<row>`s, `<column>`s, `<cell>`s | replace all of them |
 | an inner group or map piece of the same name | is changed the same way, or added |
 | anything else | replaces that tag |
 

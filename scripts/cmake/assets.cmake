@@ -24,6 +24,7 @@ set(data_xml
 	"games/descriptions/spaceinvaders2.xml"
 	"games/descriptions/frogger.xml"
 	"games/descriptions/spacerace.xml"
+	"games/descriptions/sparring.xml"
 	"games/descriptions/kaboom.xml"
 	"games/descriptions/freeway.xml"
 	"games/descriptions/depthcharge.xml"

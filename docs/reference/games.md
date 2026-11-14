@@ -1,6 +1,6 @@
 # The shipped games
 
-58 games in `games/descriptions/`, each one file. Why each was written and what it left out: [games as tests](../designs/54-games.md).
+59 games in `games/descriptions/`, each one file. Why each was written and what it left out: [games as tests](../designs/54-games.md).
 
 ## The key convention
 
@@ -51,6 +51,7 @@ The tables list only keys beyond that.
 | `airseabattle` | A S D point, W fires; Left Down Right, Up | two guns, four lanes of planes, 2:16 |
 | `fishingderby` | W A S D move the hook | tethers for lines, values [read when used](format.md#values-read-when-used), a computer fisherman |
 | `tennis` | W A S D walk | an [altitude](pictures.md#height-and-shadows) and a shadow, a computer at the far end, points said in words |
+| `sparring` | A/D step, W jabs, S guards; Left/Right, Up, Down | two boxers; a jab's middle [frame holds the fist](collisions.md#how-a-touch-is-found), scored by the one hit's `by="fist"` rules, a guard by his look |
 | `trickshot` | W A S D move the cue tip | pool: balls that [`<knock>`](collisions.md#knocks), slowed by `<drag>` |
 
 ## Platforms and rooms

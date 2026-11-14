@@ -19,6 +19,7 @@ Every game was written to try the language: what each one forced, in three parts
 | Pong, Breakout, Space Invaders | the core: bounce, stick, die, fire, lockstep | `<deflect>`, bitmaps, animation, SVG sprites, enemy fire | Breakout's two-hit row and marching block (kept in tests) |
 | Frogger | hazards, loops, riding, lives, one-step moves | `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless`, verbs in object rules, colours | crocodiles, lady frog, flies, speed-up |
 | Space Race, Freeway | a second game on the same words | nothing | lives in Freeway (kept apart from Frogger) |
+| Sparring | a reach that exists only on some frames | a `<hitbox>` on a `<frame>`, hitbox names, `hitbox=` and `by=`, mirrored shape hitboxes | key sequences, hit-stun, rounds, a computer boxer |
 | Kaboom | `<random>` in a group; states that differ only in what they show | timers, `<facing>` fire, `<reset object>` in a rule | speed-up within a wave |
 | Depth Charge | many charges against a clock | nothing | the charges' depth setting |
 | Astrosmash | Kaboom's pieces plus a gun | nothing | levels, guided missiles, the UFO |

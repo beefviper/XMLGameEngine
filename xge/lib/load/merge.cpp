@@ -101,7 +101,7 @@ namespace xge
 			if (parent == "collisions")
 			{
 				if (tag == "collision") { return Match::Added; }
-				return tag == "solid" ? Match::All : Match::Tag;
+				return tag == "solid" || tag == "hitbox" ? Match::All : Match::Tag;
 			}
 			if (parent == "position" || parent == "velocity" || parent == "acceleration" || parent == "pivot" || parent == "padding") { return Match::Tag; }
 			if (tag == "sprite" || tag == "animation") { return Match::Whole; }

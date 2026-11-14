@@ -13,12 +13,11 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 
 | # | Task | Why here |
 |---|---|---|
-| 1 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
-| 2 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
-| 3 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
-| 4 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
-| 5 | [F8](#f8-dice): dice | Waits on the hold on new games |
-| 6 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
+| 1 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
+| 2 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
+| 3 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
+| 4 | [F8](#f8-dice): dice | Waits on the hold on new games |
+| 5 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
 
 **On hold:** [A5](#a5-a-game-written-out-as-if-by-hand), the stand-alone generator (the author: nice-looking generated code is a hard problem that may need several things to change at once). It stands at `pong_min` written, and `pong.xml` written by hand as the next example.
 
@@ -156,20 +155,6 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 
 Ordered by how many existing games gain. Each ends with the docs, a game or two moved to the new word, and the limitation removed from `docs/reference/limits.md`.
 
-#### F2. Animations that run once
-
-- **Needs** nothing.
-- **Why.** Three listed limits at once: an animation has one interval for all frames, cannot run once and stop, and cannot be started by a collision. A dozen games fake it with look timers.
-- **Steps.**
-  - [x] **1. A time per frame (S).** A `<frame>` in an `<animation>` takes its own `<seconds>`; without, the animation's. **Check:** a test animation with frames of 0.1 and 0.5 seconds shows each for that long.
-  - [x] **2. Once (M).** `<animation name="burst"><once />...` plays through and then the object shows the look it had before. **Check:** a test object goes back to its earlier look after the last frame, and a reset in the middle puts it back cleanly (the animation's state belongs in `Moment` if a reset must restore it: see [play notes](agents/play.md)).
-  - [x] **3. What comes after (S).** With `<then sprite="x" />` it shows that look instead; with `<then>` holding commands (`<then><despawn /></then>`) it runs them. **Check:** a test for each form.
-  - [x] **4. Started by a command (S).** `<become sprite="burst" />` already switches looks; switching to a `once` animation starts it from its first frame every time, from a collision rule too. **Check:** a test becomes it twice and sees frame one both times.
-  - [x] **5. Move games, two or three a commit (M in all).** Explosions and deaths in Space Invaders, Galaxian, Asteroids, Missile Command, Demon Attack, Megamania, Astrosmash, Atlantis; Mario Bros.' flip; Q\*bert's fall. Also deaths that no longer reset at once in Pac-Man, Frogger, Donkey Kong, Berserk, Pitfall, Centipede, Frostbite, Haunted House, Yars' Revenge and Space Invaders 2.
-  - [ ] **6. The author: a hitbox per frame (M if yes).** Hitboxes pulled in from the sides and several to an object are built ([collisions](reference/collisions.md#how-a-touch-is-found)). A `<frame>` may hold a `<hitbox>`, so a reach exists only on some frames, proved with a small original two-player boxing game. Only if the author wants that game; key sequences, blocking and hit-stun are a later decision.
-- **Files.** `games/xgedef.xsd` (`animationType`), `load/xml.cpp`, `game/object.h`, `play/frame.cpp` (the step where animations and blinking count), `data.xsl`, `xge/tests/engine/test_bitmap_sprites.cpp`, `test_poses.cpp`; `docs/reference/pictures.md` "Animation", `docs/designs/31-animation-and-looks.md`.
-- **Done when** the three limits are gone from `limits.md` and at least eight games lost a timer each.
-
 #### F4. A list of numbers
 
 - **Needs** a design agreed with the author before any code.
@@ -254,7 +239,7 @@ The review that started this plan argued with this list; its view is beside each
 | Listed | The review's view |
 |---|---|
 | **Dice**, then backgammon, agreed as the next board or card step ([cards](designs/27-cards.md)) | A dice-and-patterns game reuses `<patterns>` and `<random>` and costs little ([F8](#f8-dice)). Backgammon is a large rule set that will want board-specific words: leave it |
-| **Moves as timelines** (fighting games: one-shot animations, a hitbox per frame, key sequences), the next class after tables and tracks ([tables-and-tracks](designs/25-tables-and-tracks.md)) | Build the part eight or more existing games already work around, an animation that runs once ([F2](#f2-animations-that-run-once)), and stop before combos |
+| **Moves as timelines** (fighting games: key sequences, blocking that a fist meets first, hit-stun, rounds), the next class after tables and tracks ([tables-and-tracks](designs/25-tables-and-tracks.md)) | Animations that run once and a hitbox per frame are built (F2, done; `sparring` proves them). Stop before combos |
 | **Lookahead for action games' computers** ([board-games](designs/26-board-games.md#open)) | A research project; arcade enemies are better on their simple rules |
 | **A deck of single cards**, each its own picture and numbers ([cards](designs/27-cards.md)) | Wait until a game cannot be written without it |
 | **Typed text, a word as data** (Hangman, initials beyond `<letter>`) | Small genre, large addition |
@@ -272,7 +257,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 - **Platforms** ([platforming](designs/23-platforming.md)): Donkey Kong's barrels choosing ladders by where Jumpman is, the other three screens, air control.
 - **Cells** ([groups](designs/06-groups.md#cells)): gliding between cells; Tetris hold, lock delay, ghost piece, a bag of seven, row scoring; Columns chain scoring; Centipede's flea, spider and scorpion.
 - **Cell puzzles** ([cell-puzzles](designs/28-cell-puzzles.md#open)): undo of despawned copies, a weighted spawn, a safe first square, conditions in a condition in an action.
-- **Pictures** ([pictures](designs/30-pictures.md), [animation-and-looks](designs/31-animation-and-looks.md)): decals, a hole the shape of a bitmap, light blocked by walls, an interval per frame, an animation that runs once.
+- **Pictures** ([pictures](designs/30-pictures.md), [animation-and-looks](designs/31-animation-and-looks.md)): decals, a hole the shape of a bitmap.
 - **Sound** ([sound](designs/33-sound.md)): an envelope; notes that follow a variable (Space Invaders' march keeping time).
 - **Stereo** (the author's wish): every sound is one channel today, and a stereo recording is averaged into it. Some later games, music above all, will want two. A mono sound then plays the same on both sides, so every game so far sounds as it does now.
 - **Values** ([arithmetic](designs/03-arithmetic.md)): tangent, square root, power, `pick`, when a game needs one.
@@ -301,6 +286,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
+- **Sparring (F2 step 6):** a new two-player boxing game. A jab lands only while the arm is out, scores on the body, is stopped by a guard (S or Down), and knocks the boxer back; the two never pass through each other. Worth a look: whether the reach, the knock back and the jab's timing feel right, and the pictures.
 - **Animations that play once (F2 step 5):** Missile Command's and Depth Charge's bursts and Space Invaders 2's blast look as before and vanish when their frames end; in Mario Bros. a kicked pest pops up kicking its legs for half a second before it is gone.
 - **New bursts and deaths (F2 step 5), new art drawn for each:** bursts for enemies hit in Galaxian, Demon Attack, Megamania, Astrosmash and Atlantis (buildings too), and a wreck for the player's ship in those and Asteroids. Deaths that stand the game still: Space Invaders and Space Invaders 2 (cannon bursts), Pac-Man (shrivels), Donkey Kong (spins, lies flat, halo), Q\*bert (curses; shrinks away off the pyramid), Berserk (flashes, zapped), Pitfall (flickers), Centipede (wand bursts), Frostbite (sinks; freezes blue), Yars' Revenge (bursts), Mario Bros. (flips and drops off the bottom, green for Luigi). Play goes on in Frogger (flat or splash rings, then a skull) and Haunted House (eyes flash red). Worth a look: timings (1 to 2.5 seconds each) and whether a stand-in sits where the player was.
 - **Text drawn by the engine (A7):** titles and scores in every window (SFML, SDL2, raylib, OpenGL, `xgegui`) look alike, smoothed, a pixel or two different in width from before; Press Start 2P games (Mario Bros., Q\*bert, Pac-Man, Donkey Kong) stay crisp. Pong's paddle images look as before in every window. On Windows, a configure from scratch no longer fetches SDL2_ttf or SDL2_image, and `-DXGE_WITH_OPENGL=ON` alone no longer brings SDL2.
