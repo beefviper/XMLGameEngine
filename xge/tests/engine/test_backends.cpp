@@ -44,6 +44,15 @@ using Catch::Matchers::ContainsSubstring;
 
 namespace
 {
+	// Direct3D 11 is a Windows library: a test build there has it as well.
+#ifdef _WIN32
+	constexpr bool kWindows = true;
+	const std::string kWindowNames = "sfml3, raylib, sdl2, opengl, direct3d11";
+#else
+	constexpr bool kWindows = false;
+	const std::string kWindowNames = "sfml3, raylib, sdl2, opengl";
+#endif
+
 	template <typename Backend>
 	bool contains(const std::vector<Backend>& list, Backend backend)
 	{
@@ -53,8 +62,10 @@ namespace
 
 TEST_CASE("a test build has every backend", "[backends]")
 {
-	CHECK(WindowFactory::availableBackends() == std::vector<WindowBackend>{
-		WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL, WindowBackend::None });
+	std::vector<WindowBackend> windows{ WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL };
+	if constexpr (kWindows) { windows.push_back(WindowBackend::Direct3D11); }
+	windows.push_back(WindowBackend::None);
+	CHECK(WindowFactory::availableBackends() == windows);
 	CHECK(XmlDocumentFactory::availableBackends() == std::vector<XmlBackend>{
 		XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml });
 	CHECK(AudioFactory::availableBackends() == std::vector<AudioBackend>{
@@ -63,7 +74,7 @@ TEST_CASE("a test build has every backend", "[backends]")
 
 TEST_CASE("available() agrees with the list", "[backends]")
 {
-	for (const WindowBackend backend : { WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL, WindowBackend::None })
+	for (const WindowBackend backend : { WindowBackend::SFML3, WindowBackend::Raylib, WindowBackend::SDL2, WindowBackend::OpenGL, WindowBackend::Direct3D11, WindowBackend::None })
 	{
 		CHECK(WindowFactory::available(backend) == contains(WindowFactory::availableBackends(), backend));
 	}
@@ -114,6 +125,7 @@ TEST_CASE("each backend has a plain lower case name", "[backends]")
 	CHECK(WindowFactory::name(WindowBackend::Raylib) == "raylib");
 	CHECK(WindowFactory::name(WindowBackend::SDL2) == "sdl2");
 	CHECK(WindowFactory::name(WindowBackend::OpenGL) == "opengl");
+	CHECK(WindowFactory::name(WindowBackend::Direct3D11) == "direct3d11");
 	CHECK(XmlDocumentFactory::name(XmlBackend::Xerces) == "xerces");
 	CHECK(XmlDocumentFactory::name(XmlBackend::TinyXml2) == "tinyxml2");
 	CHECK(XmlDocumentFactory::name(XmlBackend::PugiXml) == "pugixml");
@@ -151,14 +163,14 @@ TEST_CASE("a sound backend that is not built says which are built, and None play
 TEST_CASE("a window backend that is not built says which are built", "[backends]")
 {
 	REQUIRE_THROWS_WITH(WindowFactory::create(WindowDesc{}, static_cast<WindowBackend>(99)),
-		ContainsSubstring("is not built into this program") && ContainsSubstring("built with: sfml3, raylib, sdl2, opengl"));
+		ContainsSubstring("is not built into this program") && ContainsSubstring("built with: " + kWindowNames + ", none"));
 }
 
 TEST_CASE("the usage text lists the libraries that are built, and the defaults", "[backends]")
 {
 	const std::string usage = usageText();
 
-	CHECK_THAT(usage, ContainsSubstring("window library: sfml3, raylib, sdl2, opengl, none (default sfml3)"));
+	CHECK_THAT(usage, ContainsSubstring("window library: " + kWindowNames + ", none (default sfml3)"));
 	CHECK_THAT(usage, ContainsSubstring("XML library: xerces, tinyxml2, pugixml, rapidxml (default xerces)"));
 	CHECK_THAT(usage, ContainsSubstring("sound library: sfml3, raylib, sdl2, none (default sfml3)"));
 }
@@ -297,11 +309,12 @@ TEST_CASE("every window backend keeps the window contract", "[.][window]")
 		const std::string name = WindowFactory::name(backend);
 		DYNAMIC_SECTION(name)
 		{
-			// Rule 1: it opens at the game's size, here 64 by 48.
+			// Rule 1: it opens at the game's size, here 160 by 120 (wider than the
+			// narrowest window Windows allows with a title bar).
 			WindowDesc desc;
 			desc.name = "xge window test " + name;
-			desc.width = 64.0f;
-			desc.height = 48.0f;
+			desc.width = 160.0f;
+			desc.height = 120.0f;
 			desc.scale = 1;
 			desc.background = "color.black";
 			desc.fullscreen = "false";
@@ -338,14 +351,14 @@ TEST_CASE("every window backend keeps the window contract", "[.][window]")
 			}
 			else
 			{
-				CHECK(shot.width == 64);
-				CHECK(shot.height == 48);
-				REQUIRE(shot.rgba.size() == 64u * 48u * 4u);
+				CHECK(shot.width == 160);
+				CHECK(shot.height == 120);
+				REQUIRE(shot.rgba.size() == 160u * 120u * 4u);
 				CHECK(looksLike(pixelAt(shot, 7, 7), { 255, 0, 0 }));      // the bitmap
 				CHECK(looksLike(pixelAt(shot, 35, 6), { 0, 255, 0 }));     // the rectangle
 				CHECK(looksLike(pixelAt(shot, 26, 34), { 0, 0, 255 }));    // the circle's middle
 				CHECK(looksLike(pixelAt(shot, 2, 2), { 0, 0, 0 }));        // the background
-				CHECK(looksLike(pixelAt(shot, 60, 44), { 0, 0, 0 }));
+				CHECK(looksLike(pixelAt(shot, 150, 110), { 0, 0, 0 }));
 				CHECK(looksLike(pixelAt(shot, 20, 28), { 0, 0, 0 }));      // outside the circle's round
 			}
 

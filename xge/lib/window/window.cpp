@@ -23,6 +23,9 @@
 #ifdef XGE_WITH_OPENGL
 #include "window/opengl.h"
 #endif
+#ifdef XGE_WITH_DIRECT3D11
+#include "window/direct3d11.h"
+#endif
 
 namespace xge
 {
@@ -56,6 +59,11 @@ namespace xge
 			{ WindowBackend::OpenGL, "opengl", true },
 #else
 			{ WindowBackend::OpenGL, "opengl", false },
+#endif
+#ifdef XGE_WITH_DIRECT3D11
+			{ WindowBackend::Direct3D11, "direct3d11", true },
+#else
+			{ WindowBackend::Direct3D11, "direct3d11", false },
 #endif
 			{ WindowBackend::None, "none", true },
 		};
@@ -107,6 +115,9 @@ namespace xge
 #endif
 #ifdef XGE_WITH_OPENGL
 		if (backend == WindowBackend::OpenGL) { return std::make_unique<OpenGLWindow>(windowDesc); }
+#endif
+#ifdef XGE_WITH_DIRECT3D11
+		if (backend == WindowBackend::Direct3D11) { return std::make_unique<Direct3D11Window>(windowDesc); }
 #endif
 		if (backend == WindowBackend::None) { return std::make_unique<NullWindow>(windowDesc); }
 

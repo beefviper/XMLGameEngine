@@ -122,8 +122,8 @@ set(ENGINE_HEADERS
 )
 
 # The backends that are built (options.cmake), each a pair of files named after
-# it in the folder of its kind (window/sfml.cpp). SFML 3, raylib and SDL2 give a window and a sound backend; OpenGL a
-# window only.
+# it in the folder of its kind (window/sfml.cpp). SFML 3, raylib and SDL2 give a window and a sound backend; OpenGL and
+# Direct3D 11 a window only.
 foreach(backend IN ITEMS xerces tinyxml2 pugixml rapidxml)
 	string(TOUPPER ${backend} upper)
 	if (XGE_WITH_${upper})
@@ -132,7 +132,7 @@ foreach(backend IN ITEMS xerces tinyxml2 pugixml rapidxml)
 	endif()
 endforeach()
 
-foreach(backend IN ITEMS sfml raylib sdl2 opengl)
+foreach(backend IN ITEMS sfml raylib sdl2 opengl direct3d11)
 	string(TOUPPER ${backend} upper)
 	if (backend STREQUAL "sfml")
 		set(upper SFML3)
@@ -142,7 +142,7 @@ foreach(backend IN ITEMS sfml raylib sdl2 opengl)
 		list(APPEND ENGINE_SOURCES "xge/lib/window/${backend}.cpp")
 		list(APPEND ENGINE_HEADERS "xge/lib/window/${backend}.h")
 
-		if (NOT backend STREQUAL "opengl")
+		if (NOT backend STREQUAL "opengl" AND NOT backend STREQUAL "direct3d11")
 			list(APPEND ENGINE_SOURCES "xge/lib/audio/${backend}.cpp")
 			list(APPEND ENGINE_HEADERS "xge/lib/audio/${backend}.h")
 		endif()

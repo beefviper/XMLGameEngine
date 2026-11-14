@@ -213,6 +213,7 @@ namespace xge
 		Raylib,
 		SDL2,
 		OpenGL,
+		Direct3D11,   // Windows only
 		None   // a window never opened (window/null.h): always built, never the default
 	};
 
@@ -245,7 +246,7 @@ namespace xge
 		static WindowBackend defaultBackend();
 
 		// The backend's plain lower case name, as -w takes it: "sfml3", "raylib",
-		// "sdl2", "opengl", "none".
+		// "sdl2", "opengl", "direct3d11", "none".
 		static std::string name(WindowBackend backend);
 	};
 }

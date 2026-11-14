@@ -54,6 +54,14 @@ if (XGE_WITH_OPENGL)
 	target_link_libraries(xgelib PUBLIC glfw OpenGL::GL)
 endif()
 
+# The Direct3D 11 window (window/direct3d11.h), on Windows only: its libraries
+# come with the Windows SDK. d3dcompiler compiles its two small shaders when
+# the window opens; xinput reads the pads.
+if (XGE_WITH_DIRECT3D11)
+	xge_backend(DIRECT3D11)
+	target_link_libraries(xgelib PUBLIC d3d11 dxgi d3dcompiler xinput)
+endif()
+
 # SDL2's window and sound - see window/sdl2.h and audio/sdl2.h.
 if (XGE_WITH_SDL2)
 	xge_backend(SDL2)

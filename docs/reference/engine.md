@@ -40,11 +40,11 @@ An object is **in play** when it is not out of play (`<waiting />`, dead, despaw
 | Job | Interface | Libraries |
 |---|---|---|
 | Read XML | `XmlDocument` / `XmlNode` (`xml/document.h`) | Xerces (default), TinyXML2, PugiXML, RapidXML |
-| Window, drawing, keys, mouse, pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL (GLFW); `xgegui`'s Qt renderer |
+| Window, drawing, keys, mouse, pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL (GLFW), Direct3D 11 (Windows only); `xgegui`'s Qt renderer |
 | Sound | `Audio` (`audio/audio.h`) | SFML 3 (default), raylib, SDL2, none |
 
 - `Game` and `Engine` see only the interfaces. One factory per kind (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`) knows every library.
-- **A build has some, not all**: SFML 3 and Xerces by default; `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON` all. A library's code compiles only behind `XGE_WITH_<NAME>`. Each factory says what it has (`available()`, `availableBackends()`, `defaultBackend()`, `name()`); `create()` of one not built throws, naming those that are.
+- **A build has some, not all**: SFML 3 and Xerces by default; `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON` all (Direct3D 11 only on Windows). A library's code compiles only behind `XGE_WITH_<NAME>`. Each factory says what it has (`available()`, `availableBackends()`, `defaultBackend()`, `name()`); `create()` of one not built throws, naming those that are.
 - **Pictures** are drawn by the engine, so a window library mostly shows bitmaps; only circles and rectangles are its own.
 - **Sound** is made by the engine (`synthesize()`, `audio/sound.h`), so it is the same whichever library plays it. `Game` never makes a noise: `<play>` asks, and `Engine` hands the frame's sounds to its `Audio`. Window and sound libraries are chosen apart; any goes with any.
 - `Engine::replaceWindow()` swaps the window of a running game (the old destroyed first), `Engine::replaceAudio()` the sound, `Engine::silence()` stops what plays, `Engine::pump()` keeps a paused window responsive.
@@ -70,7 +70,7 @@ It may assume:
 
 It changes nothing on an object but `visualDirty`. It may also hand back what it drew (`capture()`), for the test below.
 
-**The window test** (`test_backends.cpp`, hidden: `xgetest "[window]"`) holds every backend built to this list: it opens a 64 by 48 window, draws a bitmap, a rectangle and a circle, reads the pixels back, presses A (xdotool on X, `SendInput` on Windows) and closes. A new backend passes it before it is done.
+**The window test** (`test_backends.cpp`, hidden: `xgetest "[window]"`) holds every backend built to this list: it opens a 160 by 120 window, draws a bitmap, a rectangle and a circle, reads the pixels back, presses A (xdotool on X, `SendInput` on Windows) and closes. A new backend passes it before it is done.
 
 **Sharp at any size.** Once a window's `fit()` has held still a quarter of a second after a change (`SettledFit`), the engine sets its `pictureScale()`, and text, circles and rectangles are drawn again with that many pixels to each of the game's. While a window is being dragged it stretches what it has. Positions, sizes and touches stay in the game's pixels. Bitmaps and image files keep their own pixels, shown hard edged. SVGs are bitmaps for now, so they stretch.
 

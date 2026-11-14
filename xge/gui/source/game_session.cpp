@@ -46,6 +46,7 @@ namespace xge
 			case VideoBackend::SDL2:   return QStringLiteral("SDL2");
 			case VideoBackend::Raylib: return QStringLiteral("raylib");
 			case VideoBackend::OpenGL: return QStringLiteral("OpenGL");
+			case VideoBackend::Direct3D11: return QStringLiteral("Direct3D 11");
 			}
 
 			return QString();

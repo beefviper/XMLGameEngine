@@ -37,6 +37,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
   - Now `Engine::loop` steps whole frames by the clock and every window waits for the refresh, so the picture never tears and the speed never depends on the screen.
   - A variable time step was not taken: every number in a game counts frames, and play, demos and tests must come out the same on every machine.
   - Drawing between two frames on a screen faster than the game is open.
+- **Direct3D 11** (the author wants the low-level libraries too): one file, a Win32 window of its own, every object one textured rectangle drawn by two small shaders compiled when the window opens (no shader files to ship), pads from XInput. It resizes like the SFML window. Built only on Windows, where its SDK comes with Visual Studio; `BUILD_TESTING` turns it on there and nowhere else. Next: Direct3D 9, Vulkan, Direct3D 12, each the same shape.
 - **One test for every window:** opening each library for real, drawing known pictures and reading the pixels back (`capture()`), with a key pressed as a person would. Hidden from ordinary runs, since it opens windows; under Xvfb on Linux. Rejected: a fake of each library (it tests the fake).
 - **Factories** are the only places that know every library; a new one is one branch and a pair of files. Choice is at run time; CMake decides only what is built.
 - "Backend" stayed over module, provider or adapter: it says "interchangeable lower layer".

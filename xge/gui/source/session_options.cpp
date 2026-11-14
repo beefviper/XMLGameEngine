@@ -17,7 +17,7 @@ namespace xge
 		static const std::vector<VideoBackend> all = []
 		{
 			std::vector<VideoBackend> built{ VideoBackend::Qt };
-			for (const VideoBackend backend : { VideoBackend::SFML3, VideoBackend::SDL2, VideoBackend::Raylib, VideoBackend::OpenGL })
+			for (const VideoBackend backend : { VideoBackend::SFML3, VideoBackend::SDL2, VideoBackend::Raylib, VideoBackend::OpenGL, VideoBackend::Direct3D11 })
 			{
 				if (WindowFactory::available(libraryBackend(backend))) { built.push_back(backend); }
 			}
@@ -46,6 +46,7 @@ namespace xge
 		case VideoBackend::SDL2:   return QCoreApplication::translate("xge", "SDL2");
 		case VideoBackend::Raylib: return QCoreApplication::translate("xge", "raylib");
 		case VideoBackend::OpenGL: return QCoreApplication::translate("xge", "OpenGL (GLFW)");
+		case VideoBackend::Direct3D11: return QCoreApplication::translate("xge", "Direct3D 11");
 		case VideoBackend::Qt:     return QCoreApplication::translate("xge", "Qt (built in)");
 		}
 
@@ -87,6 +88,7 @@ namespace xge
 		case VideoBackend::SDL2:   return QStringLiteral("sdl2");
 		case VideoBackend::Raylib: return QStringLiteral("raylib");
 		case VideoBackend::OpenGL: return QStringLiteral("opengl");
+		case VideoBackend::Direct3D11: return QStringLiteral("direct3d11");
 		}
 
 		return QString();
@@ -165,6 +167,7 @@ namespace xge
 		case VideoBackend::SDL2:   return WindowBackend::SDL2;
 		case VideoBackend::Raylib: return WindowBackend::Raylib;
 		case VideoBackend::OpenGL: return WindowBackend::OpenGL;
+		case VideoBackend::Direct3D11: return WindowBackend::Direct3D11;
 		case VideoBackend::Qt:     break;
 		}
 

@@ -82,7 +82,8 @@ namespace xge
 	//                          always was ("pong", "pong.xml", "a/b/pong.xml")
 	//   -g pong  -gpong        the game, same as the bare argument
 	//   --game pong
-	//   -w sfml3 -wsfml3       the window library: sfml3 (default), raylib, sdl2, opengl
+	//   -w sfml3 -wsfml3       the window library: sfml3 (default), raylib, sdl2, opengl,
+	//                          direct3d11 (Windows)
 	//   --window sfml3
 	//   -x xerces -xxerces     the XML library: xerces (default), tinyxml2,
 	//   --xml xerces           pugixml, rapidxml
