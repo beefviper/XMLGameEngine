@@ -231,6 +231,8 @@ namespace
 		INPUT input{};
 		input.type = INPUT_KEYBOARD;
 		input.ki.wVk = 'A';
+		// SDL2 reads a key by its scan code, not its virtual key: give both.
+		input.ki.wScan = static_cast<WORD>(MapVirtualKeyW('A', MAPVK_VK_TO_VSC));
 		input.ki.dwFlags = down ? 0 : KEYEVENTF_KEYUP;
 		return SendInput(1, &input, sizeof(INPUT)) == 1;
 #else
