@@ -121,7 +121,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `game/command.cpp` | raw command tags into typed `Command`s (`makeCommand`, by the verb), printing them and objects; `operationShape` |
 | | `verbs/` | a file per verb: its name, the places it may go, `read`, `make`, `check` and `run`; `verb.h` says what a verb is, `all.cpp` lists them |
 | | `game/object.*`, `game/states.*`, `game/data.h`, `game/random.cpp` | the data model; the one random source |
-| | `game/cells.cpp`, `game/cards.cpp`, `game/think.cpp` | maps of cells and board games; cards; the board-game search |
+| | `game/cells.cpp`, `game/holders.cpp`, `game/think.cpp` | maps of cells and board games; cards; the board-game search |
 | the frame | `play/frame.cpp` | `playOneFrame`: the order of a frame and the moving |
 | | `play/geometry.cpp`, `play/collision.cpp` | touching (box, circle, swept, pixel walk, `contactOf`) and the verbs' arithmetic |
 | | `play/verbs.cpp`, `play/executor.cpp` | the verbs' work on objects; running a command by its verb, and the work that needs the game |

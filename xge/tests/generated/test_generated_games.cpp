@@ -247,9 +247,9 @@ namespace
 			text(at + ".pile.score", o.pile.score + " with " + o.pile.scoreWith + " full " + std::to_string(o.pile.scoreFull) + " best " + std::to_string(o.pile.scoreBest));
 			flag(at + ".pile.carry", o.pile.carry);
 			flag(at + ".pile.takes.one", o.pile.takes.one);
-			const auto rules = [&](const std::string& here, const std::vector<PileRule::VarRule>& list)
+			const auto rules = [&](const std::string& here, const std::vector<HolderRule::VarRule>& list)
 			{
-				for (const PileRule::VarRule& rule : list) { text(here, std::to_string(static_cast<int>(rule.kind)) + " " + rule.variable + " " + std::to_string(rule.amount) + (rule.top ? " top " + rule.topVariable : std::string())); }
+				for (const HolderRule::VarRule& rule : list) { text(here, std::to_string(static_cast<int>(rule.kind)) + " " + rule.variable + " " + std::to_string(rule.amount) + (rule.top ? " top " + rule.topVariable : std::string())); }
 			};
 			rules(at + ".pile.takes.rules", o.pile.takes.rules);
 			rules(at + ".pile.takes.empty", o.pile.takes.emptyRules);

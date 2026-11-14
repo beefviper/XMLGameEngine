@@ -1,4 +1,4 @@
-// cards.cpp
+// holders.cpp
 // XML Game Engine
 // author: beefviper
 // date: Nov 1, 2026
@@ -8,7 +8,7 @@
 // start, a picker pointing at holders and picking and placing cards by
 // each holder's rules, and where every card is drawn.
 
-#include "game/cards.h"
+#include "game/holders.h"
 #include "game/data.h"
 #include "game/game.h"
 #include "game/random.h"
@@ -32,8 +32,8 @@ namespace xge
 	{
 		// What a trick follows on a card: its row (a suit), or its column; and
 		// the same as text, as <breaks> and <trumps> are written.
-		int followed(const PileRule& rule, const Object& card) { return rule.followColumn ? card.card.column : card.card.row; }
-		std::string followedName(const PileRule& rule, const Object& card) { return rule.followColumn ? card.card.columnName : card.card.rowName; }
+		int followed(const HolderRule& rule, const Object& card) { return rule.followColumn ? card.card.column : card.card.row; }
+		std::string followedName(const HolderRule& rule, const Object& card) { return rule.followColumn ? card.card.columnName : card.card.rowName; }
 	}
 
 	// ===================================================================
@@ -61,7 +61,7 @@ namespace xge
 			const std::string where = "object '" + object.name + "' (of class " + object.objClass + ", which a <holds> holds)";
 			if (object.groupName.empty() || object.cell.column < 1) { throw std::runtime_error(where + ": is a member of a <group> laid out in <columns> and <rows>, its row and column what sort of card it is"); }
 			if (object.looks.size() < 2) { throw std::runtime_error(where + ": has two looks, its face first and its back"); }
-			object.isCard = true;
+			object.held = true;
 			object.card.deck = object.groupName;
 			object.card.row = object.cell.row;
 			object.card.column = object.cell.column;
@@ -132,14 +132,14 @@ namespace xge
 		}
 		for (RawObject& object : objects)
 		{
-			PileRule& rule = object.pile.takes;
+			HolderRule& rule = object.pile.takes;
 			if (rule.follow && !rule.trickBy.empty()) { rule.followColumn = axis(rule.trickBy, "object '" + object.name + "' > <trick>"); }
 		}
 
 		// Each holder: which way up its looks turn what is laid there.
 		for (RawObject& object : objects)
 		{
-			RawObject::RawPile& pile = object.pile;
+			RawObject::RawHolder& pile = object.pile;
 			if (pile.holdsClass.empty()) { continue; }
 			const std::string where = "object '" + object.name + "' > <holds class=\"" + pile.holdsClass + "\">";
 			const auto member = sample.find(pile.holdsClass);
@@ -212,7 +212,7 @@ namespace xge
 					bool any = false;
 					for (RawObject& object : objects)
 					{
-						if (object.isCard && object.ownerState == state.name && (object.named(state.name + "." + step.from) || object.named(step.from))) { object.card.startPile = step.into; any = true; }
+						if (object.held && object.ownerState == state.name && (object.named(state.name + "." + step.from) || object.named(step.from))) { object.card.startHolder = step.into; any = true; }
 					}
 					if (!any) { throw std::runtime_error(where + ": from=\"" + step.from + "\" names no held members of this state"); }
 					if (pileFor(step.into, state.name).size() != 1) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no one holder of this state"); }
@@ -230,8 +230,8 @@ namespace xge
 				{
 					for (const RawObject& object : objects)
 					{
-						if (object.ownerState != state.name || object.handPile.empty() || (object.groupName != step.into && object.groupName != state.name + "." + step.into)) { continue; }
-						for (RawObject* own : pileFor(object.handPile, state.name)) { into.push_back(own); }
+						if (object.ownerState != state.name || object.handHolder.empty() || (object.groupName != step.into && object.groupName != state.name + "." + step.into)) { continue; }
+						for (RawObject* own : pileFor(object.handHolder, state.name)) { into.push_back(own); }
 					}
 				}
 				if (into.empty()) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no holder of this state"); }
@@ -244,7 +244,7 @@ namespace xge
 		}
 		for (const RawObject& object : objects)
 		{
-			if (object.isCard && object.card.startPile.empty())
+			if (object.held && object.card.startHolder.empty())
 			{
 				throw std::runtime_error("object '" + object.name + "': of a held class, but no state's <starts> sends it into a holder");
 			}
@@ -285,7 +285,7 @@ namespace xge
 		if (card.look != look && look < card.looks.size()) { card.showLook(look); }
 	}
 
-	void Game::putOnPile(Object& pile, int number)
+	void Game::putInHolder(Object& pile, int number)
 	{
 		Object* card = cardAt(number);
 		if (!card) { return; }
@@ -322,7 +322,7 @@ namespace xge
 		}
 		// A card laid answers any call.
 		pile.called = 0.0f;
-		refreshPile(pile);
+		refreshHolder(pile);
 	}
 
 	float Game::cardPoints(const Object& pile, const Object& card)
@@ -514,14 +514,14 @@ namespace xge
 		refreshBoundTexts(pile.name, "deadwood", pile.deadwood);
 	}
 
-	bool Game::isTrump(const PileRule& rule, const Object& card)
+	bool Game::isTrump(const HolderRule& rule, const Object& card)
 	{
 		return std::find(rule.trumpSuits.begin(), rule.trumpSuits.end(), followedName(rule, card)) != rule.trumpSuits.end();
 	}
 
 	// Whether `card` laid now takes the trick from `best`: a trump over
 	// any other card, else a higher card of the same suit.
-	bool Game::beatsInTrick(const PileRule& rule, const Object& card, const Object& best)
+	bool Game::beatsInTrick(const HolderRule& rule, const Object& card, const Object& best)
 	{
 		const bool trump = isTrump(rule, card);
 		if (trump != isTrump(rule, best)) { return trump; }
@@ -546,13 +546,13 @@ namespace xge
 	// as many trumps under it as there are above it, and each trump past
 	// three; with trumps to spare, a missing suit one and a single card a
 	// half. Rounded to the nearest.
-	float Game::reckonTricks(const Object& own, const PileRule& trick)
+	float Game::reckonTricks(const Object& own, const HolderRule& trick)
 	{
 		float top = 0.0f;
 		std::vector<int> suits;
 		for (const Object& object : objects)
 		{
-			if (!object.isCard || object.card.worths.empty()) { continue; }
+			if (!object.held || object.card.worths.empty()) { continue; }
 			top = std::max(top, object.card.worths.back());
 			if (std::find(suits.begin(), suits.end(), followed(trick, object)) == suits.end()) { suits.push_back(followed(trick, object)); }
 		}
@@ -608,18 +608,18 @@ namespace xge
 		return std::floor(total + 0.5f);
 	}
 
-	const Object* Game::trickPile()
+	const Object* Game::trickHolder()
 	{
 		const auto found = std::find_if(objects.begin(), objects.end(), [](const Object& object) { return object.pile.is && object.pile.takes.follow; });
 		return found == objects.end() ? nullptr : &*found;
 	}
 
-	bool Game::isWild(const PileRule& rule, const Object& card)
+	bool Game::isWild(const HolderRule& rule, const Object& card)
 	{
 		return !rule.wildRules.empty() && acceptsBy(rule.wildRules, card, nullptr);
 	}
 
-	void Game::refreshPile(Object& pile)
+	void Game::refreshHolder(Object& pile)
 	{
 		pile.cardCount = static_cast<float>(pile.pile.cards.size());
 		refreshCall(pile);
@@ -666,7 +666,7 @@ namespace xge
 		if (!pile.pile.melds.empty() && std::all_of(pile.pile.cards.begin(), pile.pile.cards.end(), [&](int number) { return cardAt(number) != nullptr; })) { layOutMelds(pile); }
 
 		// A hand's own pile in a game with a trick: the tricks it should take.
-		if (const Object* trick = trickPile(); trick && trick != &pile)
+		if (const Object* trick = trickHolder(); trick && trick != &pile)
 		{
 			const bool owned = std::any_of(objects.begin(), objects.end(), [&](const Object& hand) { return hand.hand.is && !hand.hand.own.empty() && pileNamed(hand.hand.own) == &pile; });
 			if (owned)
@@ -688,7 +688,7 @@ namespace xge
 		}
 
 		// Scored piles, this one and those that score its cards with theirs,
-		// are scored again before the conditions are asked (scoreDuePiles):
+		// are scored again before the conditions are asked (scoreDueHolders):
 		// once, however many cards came and went this frame.
 		if (!pile.pile.score.empty()) { pile.pile.scoreDue = scoresDue = true; }
 		for (Object& other : objects)
@@ -700,7 +700,7 @@ namespace xge
 		}
 	}
 
-	void Game::scoreDuePiles()
+	void Game::scoreDueHolders()
 	{
 		if (!scoresDue) { return; }
 		scoresDue = false;
@@ -709,7 +709,7 @@ namespace xge
 			if (object.pile.is && object.pile.scoreDue)
 			{
 				object.pile.scoreDue = false;
-				scorePile(object);
+				scoreHolder(object);
 			}
 		}
 	}
@@ -745,7 +745,7 @@ namespace xge
 		// cards do not make it.
 		int bestPattern(const RawPatterns& set, const std::vector<Scored>& cards, std::vector<float>& deciding, int only = -1)
 		{
-			// Counted in place (ranks and suits are under 64; scorePile
+			// Counted in place (ranks and suits are under 64; scoreHolder
 			// sees to that), as this runs thousands of times for the odds.
 			std::array<int, 64> ofRank{};
 			std::array<int, 64> ofSuit{};
@@ -977,7 +977,7 @@ namespace xge
 		}
 	}
 
-	void Game::scorePile(Object& pile)
+	void Game::scoreHolder(Object& pile)
 	{
 		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == pile.pile.score; });
 		if (set == patterns.end()) { return; }
@@ -994,7 +994,7 @@ namespace xge
 		float base = 1.0f;
 		for (const Object& object : objects)
 		{
-			if (!object.isCard) { continue; }
+			if (!object.held) { continue; }
 			// Ranks and suits are counted in room for 63 (bestPattern).
 			if (object.card.column >= 64 || object.card.row >= 64) { return; }
 			base = std::max(base, highest(scored(object)) + 1.0f);
@@ -1032,7 +1032,7 @@ namespace xge
 			std::vector<Scored> unseen;
 			for (const Object& object : objects)
 			{
-				if (object.isCard && std::find(seen.begin(), seen.end(), object.cardNumber) == seen.end()) { unseen.push_back(scored(object)); }
+				if (object.held && std::find(seen.begin(), seen.end(), object.cardNumber) == seen.end()) { unseen.push_back(scored(object)); }
 			}
 			const std::size_t board = own.size() - mine;
 			const std::size_t full = static_cast<std::size_t>(pile.pile.scoreFull);
@@ -1088,14 +1088,14 @@ namespace xge
 		if (pile.pile.cards.empty()) { return 0; }
 		const int number = pile.pile.cards.back();
 		pile.pile.cards.pop_back();
-		refreshPile(pile);
+		refreshHolder(pile);
 		return number;
 	}
 
 	void Game::showTop(Object& pile)
 	{
 		if (!pile.pile.showTop || pile.pile.cards.empty()) { return; }
-		if (Object* top = cardAt(pile.pile.cards.back()); top && !top->faceUp) { turnCard(*top, true); refreshPile(pile); }
+		if (Object* top = cardAt(pile.pile.cards.back()); top && !top->faceUp) { turnCard(*top, true); refreshHolder(pile); }
 	}
 
 	void Game::dealDecks()
@@ -1104,15 +1104,15 @@ namespace xge
 		int number = 0;
 		for (Object& object : objects)
 		{
-			if (object.isCard) { object.cardNumber = ++number; }
+			if (object.held) { object.cardNumber = ++number; }
 		}
 		cardIndex.clear();
 		if (number == 0) { return; }
 
 		for (Object& object : objects)
 		{
-			if (object.pile.is) { object.pile.cards.clear(); object.pile.broken.clear(); object.called = 0.0f; refreshPile(object); }
-			if (object.isCard) { object.laidBy = 0; }
+			if (object.pile.is) { object.pile.cards.clear(); object.pile.broken.clear(); object.called = 0.0f; refreshHolder(object); }
+			if (object.held) { object.laidBy = 0; }
 			if (object.hand.is)
 			{
 				object.hand.held.clear();
@@ -1127,9 +1127,9 @@ namespace xge
 		std::vector<std::string> order;
 		for (Object& object : objects)
 		{
-			if (!object.isCard) { continue; }
-			if (!starts.count(object.card.startPile)) { order.push_back(object.card.startPile); }
-			starts[object.card.startPile].push_back(object.cardNumber);
+			if (!object.held) { continue; }
+			if (!starts.count(object.card.startHolder)) { order.push_back(object.card.startHolder); }
+			starts[object.card.startHolder].push_back(object.cardNumber);
 		}
 		for (const std::string& name : order)
 		{
@@ -1152,7 +1152,7 @@ namespace xge
 			for (const int card : cards)
 			{
 				if (Object* each = cardAt(card)) { turnCard(*each, false); }
-				putOnPile(*pile, card);
+				putInHolder(*pile, card);
 			}
 
 			// Dealt in rounds, a card to each pile that wants one more.
@@ -1175,7 +1175,7 @@ namespace xge
 				for (auto& [each, count] : wanting)
 				{
 					if (count < round || pile->pile.cards.empty()) { continue; }
-					putOnPile(*each, takeTop(*pile));
+					putInHolder(*each, takeTop(*pile));
 					any = true;
 				}
 				if (!any) { break; }
@@ -1307,12 +1307,12 @@ namespace xge
 	// Whether `cards` (the lowest first) may go on the pile, by its <takes>.
 	bool Game::pileTakes(Object& pile, const std::vector<int>& cards, const Object* holder)
 	{
-		const PileRule& rule = pile.pile.takes;
+		const HolderRule& rule = pile.pile.takes;
 		if (!rule.given || cards.empty()) { return false; }
 		// <total variable>N: what is laid together, that variable added up, is N.
-		for (const PileRule::VarRule& each : rule.rules)
+		for (const HolderRule::VarRule& each : rule.rules)
 		{
-			if (each.kind != PileRule::VarRule::Kind::Total) { continue; }
+			if (each.kind != HolderRule::VarRule::Kind::Total) { continue; }
 			float total = 0.0f;
 			for (const int number : cards)
 			{
@@ -1367,29 +1367,29 @@ namespace xge
 		if (!rule.anyRules.empty())
 		{
 			const float called = rule.wildVariable.empty() ? 0.0f : pile.called;
-			const bool any = std::any_of(rule.anyRules.begin(), rule.anyRules.end(), [&](const PileRule::VarRule& each) { return acceptsBy({ each }, *first, top, rule.wildVariable, called); });
+			const bool any = std::any_of(rule.anyRules.begin(), rule.anyRules.end(), [&](const HolderRule::VarRule& each) { return acceptsBy({ each }, *first, top, rule.wildVariable, called); });
 			if (!any) { return false; }
 		}
 		return follows(rule, *top, *first);
 	}
 
 	// Whether `next` may lie on `below` by the rule (not counting <one />).
-	bool Game::follows(const PileRule& rule, const Object& below, const Object& next)
+	bool Game::follows(const HolderRule& rule, const Object& below, const Object& next)
 	{
 		return acceptsBy(rule.rules, next, &below);
 	}
 
 	// Whether `next` keeps an <accepts>'s rules on its variables, against
 	// the one under it (`below`; none for the first on an empty holder).
-	bool Game::acceptsBy(const std::vector<PileRule::VarRule>& rules, const Object& next, const Object* below, const std::string& called, float value)
+	bool Game::acceptsBy(const std::vector<HolderRule::VarRule>& rules, const Object& next, const Object* below, const std::string& called, float value)
 	{
-		using Kind = PileRule::VarRule::Kind;
+		using Kind = HolderRule::VarRule::Kind;
 		const auto valueOf = [](const Object& of, const std::string& name)
 		{
 			const auto found = of.variable.find(name);
 			return found == of.variable.end() ? 0.0f : found->second;
 		};
-		for (const PileRule::VarRule& each : rules)
+		for (const HolderRule::VarRule& each : rules)
 		{
 			if (each.kind == Kind::Total) { continue; }   // what is laid together, added up (pileTakes)
 			const float mine = valueOf(next, each.variable);
@@ -1452,7 +1452,7 @@ namespace xge
 			const Object* top = cardAt(number);
 			if (!top || !top->faceUp) { return false; }
 			pile->pile.cards.pop_back();
-			refreshPile(*pile);
+			refreshHolder(*pile);
 			hand.hand.held.push_back(number);
 			hand.hand.also.emplace_back(number, pile->name);
 			layOutCards();
@@ -1467,7 +1467,7 @@ namespace xge
 			if (pile != pileNamed(hand.hand.own)) { return false; }
 			hand.hand.held = { pile->pile.cards[static_cast<std::size_t>(at)] };
 			pile->pile.cards.erase(pile->pile.cards.begin() + at);
-			refreshPile(*pile);
+			refreshHolder(*pile);
 			hand.hand.from = pile->name;
 			hand.hand.at = std::min(at, static_cast<int>(pile->pile.cards.size()) - 1);
 			if (hand.hand.mouse && hand.pointer.x >= 0.0f && hand.pointer.y >= 0.0f)
@@ -1487,7 +1487,7 @@ namespace xge
 		}
 		hand.hand.held.assign(pile->pile.cards.begin() + at, pile->pile.cards.end());
 		pile->pile.cards.resize(static_cast<std::size_t>(at));
-		refreshPile(*pile);
+		refreshHolder(*pile);
 		hand.hand.from = pile->name;
 		hand.hand.at = at - 1;
 		// Held where the pointer took them.
@@ -1520,7 +1520,7 @@ namespace xge
 		for (const int number : hand.hand.held)
 		{
 			if (Object* card = cardAt(number)) { card->laidBy = hand.hand.seat; }
-			putOnPile(pile, number);
+			putInHolder(pile, number);
 		}
 		hand.hand.held.clear();
 		if (Object* from = pileNamed(hand.hand.from); from && from != &pile) { showTop(*from); }
@@ -1591,7 +1591,7 @@ namespace xge
 		for (const auto& [number, name] : hand.hand.also)
 		{
 			hand.hand.held.erase(std::find(hand.hand.held.begin(), hand.hand.held.end(), number));
-			if (Object* back = pileNamed(name)) { putOnPile(*back, number); }
+			if (Object* back = pileNamed(name)) { putInHolder(*back, number); }
 		}
 		hand.hand.also.clear();
 		layHeld(hand, *from);
@@ -1612,11 +1612,11 @@ namespace xge
 		return true;
 	}
 
-	bool Game::dealCards(Object& hand, const std::string& fromPile, const std::string& faces)
+	bool Game::dealCards(Object& hand, const std::string& fromHolder, const std::string& faces)
 	{
-		if (!hand.hand.is || !hand.hand.held.empty() || (fromPile.empty() && hand.hand.mouse && !hand.hand.over)) { return false; }
+		if (!hand.hand.is || !hand.hand.held.empty() || (fromHolder.empty() && hand.hand.mouse && !hand.hand.over)) { return false; }
 		// From the pile named, or else the one pointed at.
-		Object* pile = pileNamed(fromPile.empty() ? hand.hand.pile : fromPile);
+		Object* pile = pileNamed(fromHolder.empty() ? hand.hand.pile : fromHolder);
 		if (!pile || pile->pile.deals <= 0) { return false; }
 		// Into the pile it names, or else the hand's own.
 		const std::string& intoName = pile->pile.dealsInto.empty() ? hand.hand.own : pile->pile.dealsInto;
@@ -1627,11 +1627,11 @@ namespace xge
 			for (int i = 0; i < pile->pile.deals && !pile->pile.cards.empty(); ++i)
 			{
 				const int number = takeTop(*pile);
-				putOnPile(*into, number);
+				putInHolder(*into, number);
 				if (Object* card = cardAt(number); card && !faces.empty())
 				{
 					turnCard(*card, faces == "up");
-					refreshPile(*into);
+					refreshHolder(*into);
 				}
 			}
 		}
@@ -1645,7 +1645,7 @@ namespace xge
 			const auto end = from->pile.cards.end() - static_cast<std::ptrdiff_t>(leave);
 			std::vector<int> cards(from->pile.cards.begin(), end);
 			from->pile.cards.erase(from->pile.cards.begin(), end);
-			refreshPile(*from);
+			refreshHolder(*from);
 			if (pile->pile.refillShuffle)
 			{
 				for (std::size_t i = cards.size(); i > 1; --i)
@@ -1659,10 +1659,10 @@ namespace xge
 				// Turned over: the top first.
 				std::reverse(cards.begin(), cards.end());
 			}
-			for (const int card : cards) { putOnPile(*pile, card); }
+			for (const int card : cards) { putInHolder(*pile, card); }
 		}
 		// Pointing at the stock, still pointing at its top.
-		if (fromPile.empty()) { hand.hand.at = static_cast<int>(pile->pile.cards.size()) - 1; }
+		if (fromHolder.empty()) { hand.hand.at = static_cast<int>(pile->pile.cards.size()) - 1; }
 		layOutCards();
 		return true;
 	}
@@ -1715,7 +1715,7 @@ namespace xge
 			if (!all) { return false; }
 			for (Object& object : objects)
 			{
-				if (object.isCard && (object.inGroup(fromName) || object.card.deck == fromName || object.inGroup(fullName(fromName)))) { sent.push_back(object.cardNumber); }
+				if (object.held && (object.inGroup(fromName) || object.card.deck == fromName || object.inGroup(fullName(fromName)))) { sent.push_back(object.cardNumber); }
 			}
 			if (sent.empty()) { return false; }
 			for (Object& object : objects)
@@ -1729,7 +1729,7 @@ namespace xge
 						cards.erase(gone, cards.end());
 						object.pile.broken.clear();
 						object.called = 0.0f;
-						refreshPile(object);
+						refreshHolder(object);
 					}
 				}
 				if (object.hand.is)
@@ -1744,13 +1744,13 @@ namespace xge
 		{
 			Object* card = cardAt(number);
 			if (card) { card->laidBy = 0; }
-			putOnPile(*into, number);
+			putInHolder(*into, number);
 			if (card && !sprite.empty())
 			{
 				if (const auto up = faceFor(*card, sprite)) { turnCard(*card, *up); }
 			}
 		}
-		refreshPile(*into);
+		refreshHolder(*into);
 		// A hand pointing where cards were: at its own, or at that holder.
 		for (Object& object : objects)
 		{
@@ -1781,7 +1781,7 @@ namespace xge
 			cards.push_back(*each);
 		}
 		stackedDeal.clear();
-		refreshPile(*holder);
+		refreshHolder(*holder);
 		layOutCards();
 		return true;
 	}
@@ -1796,13 +1796,13 @@ namespace xge
 			if (!up) { return false; }
 			if (card->faceUp != *up) { turnCard(*card, *up); }
 		}
-		refreshPile(holder);
+		refreshHolder(holder);
 		layOutCards();
 		return true;
 	}
 
 	// Every pile in play, and its middle and size as drawn.
-	std::vector<Object*> Game::shownPiles()
+	std::vector<Object*> Game::shownHolders()
 	{
 		std::vector<Object*> piles;
 		for (Object& object : objects)
@@ -1815,7 +1815,7 @@ namespace xge
 	bool Game::hopHand(Object& hand, Direction direction)
 	{
 		Object* pile = pileNamed(hand.hand.pile);
-		const std::vector<Object*> piles = shownPiles();
+		const std::vector<Object*> piles = shownHolders();
 		if (piles.empty()) { return false; }
 		if (!pile) { pile = piles.front(); }
 		const int count = static_cast<int>(pile->pile.cards.size());
@@ -1918,7 +1918,7 @@ namespace xge
 		Object* found = nullptr;
 		int foundAt = -1;
 		int foundOrder = -1;
-		for (Object* pile : shownPiles())
+		for (Object* pile : shownHolders())
 		{
 			bool hit = false;
 			int index = -1;
@@ -1996,11 +1996,11 @@ namespace xge
 		const Object* led = trick.pile.cards.empty() ? nullptr : cardAt(trick.pile.cards.front());
 		const bool following = led && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return followed(trick.pile.takes, *each.second) == followed(trick.pile.takes, *led); });
 		const bool ducking = following && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return worth(*each.second) < worth(*winning); });
-		const PileRule& rule = trick.pile.takes;
+		const HolderRule& rule = trick.pile.takes;
 		float top = 0.0f;
 		for (const Object& object : objects)
 		{
-			if (object.isCard && !object.card.worths.empty()) { top = std::max(top, object.card.worths.back()); }
+			if (object.held && !object.card.worths.empty()) { top = std::max(top, object.card.worths.back()); }
 		}
 		// A partner (another hand on its <team>) winning safely: it is the
 		// last card, or the partner's is the highest or next of its suit.
@@ -2047,7 +2047,7 @@ namespace xge
 		return best;
 	}
 
-	std::optional<KeyCode> Game::thinkCards(const CmdThink& think, Object& hand)
+	std::optional<KeyCode> Game::thinkHeld(const CmdThink& think, Object& hand)
 	{
 		Object* own = hand.hand.own.empty() ? nullptr : pileNamed(hand.hand.own);
 		if (!own || !hand.hand.held.empty()) { return std::nullopt; }
@@ -2065,7 +2065,7 @@ namespace xge
 		}
 		std::vector<Object*> targets;
 		Object* stock = nullptr;
-		for (Object* pile : shownPiles())
+		for (Object* pile : shownHolders())
 		{
 			if (pile == own) { continue; }
 			if (pile->pile.takes.given) { targets.push_back(pile); }
@@ -2087,7 +2087,7 @@ namespace xge
 			{
 				Object* up = nullptr;
 				Object* down = nullptr;
-				for (Object* pile : shownPiles())
+				for (Object* pile : shownHolders())
 				{
 					if (pile == own || pile->pile.deals <= 0 || pile->pile.cards.empty()) { continue; }
 					const Object* top = cardAt(pile->pile.cards.back());

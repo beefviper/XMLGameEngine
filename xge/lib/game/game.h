@@ -528,7 +528,7 @@ namespace xge
 		// cell under `at` (a pixel across, or down), when it is on the map.
 		void trackCells(Object& object, bool horizontal, float at, const std::vector<std::string>& onto = {});
 		bool hopOnto(Object& mover, Direction direction, const std::vector<std::string>& onto);
-		// Cards (game/cards.cpp): a hand's verbs, each false when refused;
+		// Cards (game/holders.cpp): a hand's verbs, each false when refused;
 		// moving it among the piles; the deal at the start of a game.
 		bool takeCards(Object& hand);
 		bool layCards(Object& hand, const std::string& pile);
@@ -554,7 +554,7 @@ namespace xge
 		Object* cardAt(int number);
 		Object* pileNamed(const std::string& name);
 		void turnCard(Object& card, bool up);
-		void putOnPile(Object& pile, int number);
+		void putInHolder(Object& pile, int number);
 		int takeTop(Object& pile);
 		void showTop(Object& pile);
 		Vector2f cardPlace(const Object& pile, std::size_t index);
@@ -564,28 +564,28 @@ namespace xge
 		float meldDeadwood(const Object& pile, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds);
 		void layOutMelds(Object& pile);
 		const Object* trickWinning(const Object& pile);
-		const Object* trickPile();
-		bool isTrump(const PileRule& rule, const Object& card);
-		bool beatsInTrick(const PileRule& rule, const Object& card, const Object& best);
-		float reckonTricks(const Object& own, const PileRule& trick);
+		const Object* trickHolder();
+		bool isTrump(const HolderRule& rule, const Object& card);
+		bool beatsInTrick(const HolderRule& rule, const Object& card, const Object& best);
+		float reckonTricks(const Object& own, const HolderRule& trick);
 
 		// <pick /> by a hand of cards: takes what it points at, or from a
 		// holder with <picked> sends as that says (then false: nothing held).
 		bool pickCards(Object& hand);
-		static bool follows(const PileRule& rule, const Object& below, const Object& next);
+		static bool follows(const HolderRule& rule, const Object& below, const Object& next);
 		// `called`: a variable whose value on `below` counts as `value` (0: its own).
-		static bool acceptsBy(const std::vector<PileRule::VarRule>& rules, const Object& next, const Object* below, const std::string& called = {}, float value = 0.0f);
+		static bool acceptsBy(const std::vector<HolderRule::VarRule>& rules, const Object& next, const Object* below, const std::string& called = {}, float value = 0.0f);
 		void layHeld(Object& hand, Object& pile);
-		static bool isWild(const PileRule& rule, const Object& card);
+		static bool isWild(const HolderRule& rule, const Object& card);
 		void refreshCall(Object& pile);
-		void refreshPile(Object& pile);
-		void scorePile(Object& pile);
+		void refreshHolder(Object& pile);
+		void scoreHolder(Object& pile);
 		// Marks each scored pile whose `odds` nothing reads: no condition,
 		// shown text or expression names them (Object::oddsRead).
 		void markOddsRead();
-		void scoreDuePiles();
+		void scoreDueHolders();
 		bool scoresDue{ false };
-		std::optional<KeyCode> thinkCards(const CmdThink& think, Object& hand);
+		std::optional<KeyCode> thinkHeld(const CmdThink& think, Object& hand);
 		int playToTrick(Object& trick, const Object& hand, const Object& own, bool avoid);
 		int cardWait{};
 		// Players as a group: back to the first member's turn, the rest
@@ -596,7 +596,7 @@ namespace xge
 		std::map<std::string, CmdThink> memberThinks;
 		bool anyTurns{ false };
 		bool computerPresses{ false };
-		std::vector<Object*> shownPiles();
+		std::vector<Object*> shownHolders();
 		// Where each card's object is in `objects`, by its number less one
 		// (looked over again when a copy taken away moved them).
 		std::vector<std::size_t> cardIndex;
@@ -846,7 +846,7 @@ namespace xge
 		bool hasRules(const Object& object) override { return !object.collisionData.others.empty(); }
 		void touched(Object& a, Object& b, const Contact& contact) override;
 		void follow() override;
-		void conditions() override { scoreDuePiles(); countMoves(); showMarks(); checkConditions(); }
+		void conditions() override { scoreDueHolders(); countMoves(); showMarks(); checkConditions(); }
 
 		// Sets the velocity of every shown object that is on a path for this
 		// frame's part of it (see Path), starting its next leg when one is

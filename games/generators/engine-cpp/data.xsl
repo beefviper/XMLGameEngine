@@ -2074,7 +2074,7 @@
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
     <xsl:if test="$node/owns/@object">
-      <xsl:value-of select="concat($indent, $to, '.handPile = ')" />
+      <xsl:value-of select="concat($indent, $to, '.handHolder = ')" />
       <xsl:call-template name="string"><xsl:with-param name="text" select="$node/owns/@object" /></xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
@@ -2087,7 +2087,7 @@
         <xsl:text>;&#10;</xsl:text>
       </xsl:if>
     </xsl:if>
-    <!-- a <holds>: a pile whose looks settleHolders (game/cards.h) works out -->
+    <!-- a <holds>: a pile whose looks settleHolders (game/holders.h) works out -->
     <xsl:for-each select="$node/holds">
       <xsl:value-of select="concat($indent, $to, '.pile.is = true; ', $to, '.pile.holdsClass = ')" />
       <xsl:call-template name="string"><xsl:with-param name="text" select="@class" /></xsl:call-template>
@@ -2860,7 +2860,7 @@
   </xsl:template>
 
   <!-- A <condition> of an <accepts> (the current node) on the arriving one's
-       variables: list.push_back({ PileRule::VarRule::Kind::Equal, "rank", -1, true, "" }).
+       variables: list.push_back({ HolderRule::VarRule::Kind::Equal, "rank", -1, true, "" }).
        Against top.<variable>, or an <add> or <subtract> of it and N: top
        true, that variable when another. -->
   <xsl:template name="accept-rule">
@@ -2889,7 +2889,7 @@
         <xsl:otherwise><xsl:value-of select="$text" /></xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
-    <xsl:value-of select="concat($indent, $list, '.push_back({ PileRule::VarRule::Kind::', $kind, ', ')" />
+    <xsl:value-of select="concat($indent, $list, '.push_back({ HolderRule::VarRule::Kind::', $kind, ', ')" />
     <xsl:call-template name="string"><xsl:with-param name="text" select="@variable" /></xsl:call-template>
     <xsl:value-of select="concat(', ', $amount)" />
     <xsl:value-of select="concat(', ', substring('true', 1, 4 * $against), substring('false', 1, 5 * not($against)), ', ')" />
@@ -3029,7 +3029,7 @@
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
     <xsl:if test="owns/@object">
-      <xsl:value-of select="concat($indent, 'member.object.handPile = ')" />
+      <xsl:value-of select="concat($indent, 'member.object.handHolder = ')" />
       <xsl:call-template name="string"><xsl:with-param name="text" select="owns/@object" /></xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>

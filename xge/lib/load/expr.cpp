@@ -1247,9 +1247,9 @@ namespace xge
 		// Cards: a pile's rules, a hand, a card of a deck.
 		if (rawObject.pile.is)
 		{
-			const RawObject::RawPile& raw = rawObject.pile;
+			const RawObject::RawHolder& raw = rawObject.pile;
 			const auto number = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
-			Object::Pile& pile = object.pile;
+			Object::Holder& pile = object.pile;
 			pile.is = true;
 			pile.faces = raw.faces;
 			pile.fan = { number(raw.fanX), number(raw.fanY) };
@@ -1278,11 +1278,11 @@ namespace xge
 			pile.takes = raw.takes;
 		}
 		object.hand.is = rawObject.hand;
-		object.hand.own = rawObject.handPile;
+		object.hand.own = rawObject.handHolder;
 		object.hand.seat = rawObject.handSeat;
 		object.hand.team = rawObject.handTeam;
 		object.hand.holds = rawObject.handHolds;
-		object.isCard = rawObject.isCard;
+		object.held = rawObject.held;
 		object.card = rawObject.card;
 		object.takesTurns = rawObject.takesTurns;
 		object.turnsSprite = rawObject.turnsSprite;

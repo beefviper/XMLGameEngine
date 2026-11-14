@@ -4,7 +4,7 @@
 // date: Sept 18, 2020
 
 #include "game/game.h"
-#include "game/cards.h"
+#include "game/holders.h"
 #include "game/players.h"
 
 #include "play/executor.h"
@@ -108,7 +108,7 @@ namespace xge
 		}
 		markOddsRead();
 		dealDecks();
-		scoreDuePiles();
+		scoreDueHolders();
 		// The players: the first one's turn; those the computer plays.
 		for (const RawObject& raw : rawObjects)
 		{

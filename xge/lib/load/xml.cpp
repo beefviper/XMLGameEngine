@@ -6,7 +6,7 @@
 #include "load/xml.h"
 
 #include "engine/folder.h"
-#include "game/cards.h"
+#include "game/holders.h"
 #include "game/game.h"
 #include "engine/keys.h"
 #include "load/merge.h"
@@ -892,10 +892,10 @@ namespace xge
 		// <equal>top.rank - 1</equal>, <below>top.worth</below>. total="sum" adds up that variable over
 		// what is laid at once; total="count" with <equal>1</equal> lays one
 		// at a time.
-		void readAcceptRules(const XmlNode& node, PileRule& rule, std::vector<PileRule::VarRule>& into, const std::string& here, int level)
+		void readAcceptRules(const XmlNode& node, HolderRule& rule, std::vector<HolderRule::VarRule>& into, const std::string& here, int level)
 		{
 			// level 0: an <accepts>; 1: an <any> in it; 2: an <empty> or a <wild>, where nothing lies under it.
-			using Kind = PileRule::VarRule::Kind;
+			using Kind = HolderRule::VarRule::Kind;
 			const bool top = level == 0;
 			for (std::unique_ptr<XmlNode> part = node.getFirstChild(); part != nullptr; part = part->getNextSibling())
 			{
@@ -922,7 +922,7 @@ namespace xge
 				}
 				const std::unique_ptr<XmlNode> test = part->getFirstChild();
 				const std::string kind = test ? test->getName() : "";
-				PileRule::VarRule each;
+				HolderRule::VarRule each;
 				if (kind != "equal" && kind != "unequal" && kind != "above" && kind != "below" && kind != "atleast" && kind != "atmost")
 				{
 					fail(at, "compares the arriving one with an <equal>, <unequal>, <above>, <below>, <atleast> or <atmost>");
@@ -988,7 +988,7 @@ namespace xge
 		}
 
 		// A <score patterns>: its <melds />, <with object> and <best>.
-		void readScore(const XmlNode& node, RawObject::RawPile& pile, const std::string& at)
+		void readScore(const XmlNode& node, RawObject::RawHolder& pile, const std::string& at)
 		{
 			pile.score = requireAttribute(node, "patterns", at);
 			for (std::unique_ptr<XmlNode> part = node.getFirstChild(); part != nullptr; part = part->getNextSibling())
@@ -1015,9 +1015,9 @@ namespace xge
 		// A <holds class sprite>: the class of what it holds and the look
 		// they show laid there, then its <spread>s, <accepts>, <run />,
 		// <top sprite>, <lift> and <picked>. Read into the pile it is
-		// (Object::Pile); the looks it names are worked out once the
-		// members they belong to are known (settleHolders, game/cards.h).
-		void readHolds(const XmlNode& node, RawObject::RawPile& pile, const std::string& here)
+		// (Object::Holder); the looks it names are worked out once the
+		// members they belong to are known (settleHolders, game/holders.h).
+		void readHolds(const XmlNode& node, RawObject::RawHolder& pile, const std::string& here)
 		{
 			pile.is = true;
 			pile.holdsClass = requireAttribute(node, "class", here);
@@ -1072,7 +1072,7 @@ namespace xge
 				{
 					// A trick: any card leads, then the value led is followed;
 					// <breaks> one that leads only once played, <trumps> one over the rest.
-					PileRule& rule = pile.takes;
+					HolderRule& rule = pile.takes;
 					// Its row or column: worked out once the groups are known (settleHolders).
 					rule.trickBy = requireAttribute(*child, "variable", at);
 					rule.given = true;
@@ -1399,7 +1399,7 @@ namespace xge
 		void readMoves(const XmlNode& node, RawObject& object, const std::string& where)
 		{
 			if (auto holds = findChild(&node, "holds")) { readHolds(*holds, object.pile, where + " > <holds>"); }
-			if (auto owns = findChild(&node, "owns")) { readOwns(*owns, where + " > <owns>", object.handPile, object.ownsClass); }
+			if (auto owns = findChild(&node, "owns")) { readOwns(*owns, where + " > <owns>", object.handHolder, object.ownsClass); }
 			if (auto poses = findChild(&node, "poses"))
 			{
 				const std::string here = where + " > <poses>";
@@ -2475,7 +2475,7 @@ namespace xge
 					if (part->velocity.x) { velocityX = part->velocity.x; }
 					if (part->velocity.y) { velocityY = part->velocity.y; }
 					for (const auto& [variable, value] : part->variables) { rawObject.variable[variable] = value; }
-					if (!part->owns.empty()) { rawObject.handPile = part->owns; }
+					if (!part->owns.empty()) { rawObject.handHolder = part->owns; }
 					if (!part->ownsClass.empty()) { rawObject.ownsClass = part->ownsClass; }
 					if (!part->think.empty()) { rawObject.think = part->think; }
 					if (part->team != 0) { rawObject.handTeam = part->team; }

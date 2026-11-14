@@ -545,17 +545,17 @@ namespace xge
 			{
 				for (const std::string& by : object.pile.orderBy) { checkVariable(object, "by", by); }
 				// A holder that counts gets a variable of that name itself
-				// (game/cards.cpp), so what it adds up is another's: a member's.
+				// (game/holders.cpp), so what it adds up is another's: a member's.
 				const std::string& counts = object.pile.counts;
 				if (!counts.empty() && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.pile.counts != counts && numberOf(other, counts); }))
 				{
 					throw std::runtime_error("object '" + object.name + "' > <counts variable=\"" + counts + "\">: no object has a variable or number of that name" + didYouMean(counts, gameVariables));
 				}
-				const PileRule& takes = object.pile.takes;
+				const HolderRule& takes = object.pile.takes;
 				checkVariable(object, "wild", takes.wildVariable);
 				for (const auto* rules : { &takes.rules, &takes.emptyRules, &takes.anyRules, &takes.wildRules })
 				{
-					for (const PileRule::VarRule& rule : *rules)
+					for (const HolderRule::VarRule& rule : *rules)
 					{
 						checkVariable(object, "condition", rule.variable);
 						checkVariable(object, "condition", rule.topVariable);

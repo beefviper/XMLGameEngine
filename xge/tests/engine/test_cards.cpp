@@ -7,7 +7,7 @@
 // rules, the deal, and a picker that picks, places and puts back, game by
 // game.
 
-#include "game/cards.h"
+#include "game/holders.h"
 #include "played.h"
 #include "scratch.h"
 
@@ -79,7 +79,7 @@ namespace
 	{
 		for (Object& object : table.game.getCurrentObjects())
 		{
-			if (object.isCard && object.card.row == numberIn(klondikeSuits, suit) && object.card.column == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
+			if (object.held && object.card.row == numberIn(klondikeSuits, suit) && object.card.column == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
 		}
 		return 0;
 	}
@@ -436,7 +436,7 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 		int cards = 0;
 		for (const Object& object : play.game.getCurrentObjects())
 		{
-			if (!object.isCard) { continue; }
+			if (!object.held) { continue; }
 			++cards;
 			CHECK(object.variable.at("row") == object.variable.at("suit"));
 			CHECK(object.variable.at("column") == object.variable.at("rank"));
@@ -453,7 +453,7 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 		Played play(plain.path);
 		for (const Object& object : play.game.getCurrentObjects())
 		{
-			if (object.isCard) { CHECK_FALSE(object.variable.count("rank")); }
+			if (object.held) { CHECK_FALSE(object.variable.count("rank")); }
 		}
 	}
 	// A name a card has of its own stops the load.
@@ -488,8 +488,8 @@ TEST_CASE("klondike.xml: placing rules are conditions on the arriving card again
 	Changed plain({ { column, "<condition variable=\"rank\"><unequal>12</unequal></condition><condition variable=\"worth\"><below><add><value>top.suit</value><value>3</value></add></below></condition>" },
 		{ king, "<empty><condition variable=\"rank\"><atmost>12</atmost></condition></empty>" } });
 	Played played(plain.path);
-	using Kind = PileRule::VarRule::Kind;
-	const PileRule& takes = played.get("columns.1.1").pile.takes;
+	using Kind = HolderRule::VarRule::Kind;
+	const HolderRule& takes = played.get("columns.1.1").pile.takes;
 	REQUIRE(takes.rules.size() == 3);
 	CHECK(takes.rules[0].kind == Kind::Unequal);
 	CHECK(takes.rules[0].top);
@@ -511,19 +511,19 @@ TEST_CASE("klondike.xml: placing rules are conditions on the arriving card again
 	low.variable["worth"] = 3.0f;
 	Object high = low;
 	high.variable["worth"] = 6.0f;
-	const std::vector<PileRule::VarRule> below{ takes.rules[2] };
+	const std::vector<HolderRule::VarRule> below{ takes.rules[2] };
 	CHECK(Game::acceptsBy(below, low, &top));
 	CHECK_FALSE(Game::acceptsBy(below, high, &top));
 
 	// Klondike as written: the foundations one at a time, the same suit, one higher.
 	Played klondike("descriptions/klondike.xml");
-	const PileRule& home = klondike.get("foundations.1.1").pile.takes;
+	const HolderRule& home = klondike.get("foundations.1.1").pile.takes;
 	CHECK(home.one);
 	REQUIRE(home.rules.size() == 2);
-	CHECK(home.rules[0].kind == PileRule::VarRule::Kind::Equal);
+	CHECK(home.rules[0].kind == HolderRule::VarRule::Kind::Equal);
 	CHECK(home.rules[0].top);
 	CHECK(home.rules[0].amount == 0.0f);
-	CHECK(home.rules[1].kind == PileRule::VarRule::Kind::Equal);
+	CHECK(home.rules[1].kind == HolderRule::VarRule::Kind::Equal);
 	CHECK(home.rules[1].amount == 1.0f);
 }
 
@@ -646,7 +646,7 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.isCard && object.card.row == numberIn(klondikeSuits, suit) && object.card.column == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
+				if (object.held && object.card.row == numberIn(klondikeSuits, suit) && object.card.column == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
 			}
 			return 0;
 		}
@@ -664,7 +664,7 @@ namespace
 				for (const std::string& each : cards)
 				{
 					const auto space = each.find(' ');
-					game.putOnPile(pile(name), cardOf(each.substr(0, space), each.substr(space + 1)));
+					game.putInHolder(pile(name), cardOf(each.substr(0, space), each.substr(space + 1)));
 				}
 			}
 			hand().hand.pile = pile("mine").name;
@@ -910,7 +910,7 @@ namespace
 			const int column = static_cast<int>(std::find(ranks.begin(), ranks.end(), rank) - ranks.begin()) + 1;
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.isCard && object.card.row == row && object.card.column == column) { return object.cardNumber; }
+				if (object.held && object.card.row == row && object.card.column == column) { return object.cardNumber; }
 			}
 			return 0;
 		}
@@ -1033,7 +1033,7 @@ namespace
 		const int row = numberOf(packSuits, name.substr(space + 1));
 		for (Object& object : game.getCurrentObjects())
 		{
-			if (object.isCard && object.card.column == column && object.card.row == row) { return object.cardNumber; }
+			if (object.held && object.card.column == column && object.card.row == row) { return object.cardNumber; }
 		}
 		return 0;
 	}
@@ -1085,7 +1085,7 @@ namespace
 			yours.clear();
 			board.clear();
 			for (std::size_t i = 0; i < seven.size(); ++i) { (i < 2 ? yours : board).push_back(cardOf(seven[i])); }
-			game.scorePile(pile("yours"));
+			game.scoreHolder(pile("yours"));
 		}
 
 		void press(KeyCode key)
@@ -2092,7 +2092,7 @@ TEST_CASE("pyramid.xml: the pyramid cleared wins", "[cards][pyramid]")
 			Object& each = play.pile("row" + std::to_string(row) + "." + std::to_string(column) + ".1");
 			for (const int number : each.pile.cards) { play.pile("pairs").pile.cards.push_back(number); }
 			each.pile.cards.clear();
-			play.game.refreshPile(each);
+			play.game.refreshHolder(each);
 		}
 	}
 	play.frames(2);

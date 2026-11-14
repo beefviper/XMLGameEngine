@@ -18,11 +18,11 @@
 - **Placing rules are conditions** on the arriving one, which compare its variables, so no word knows suits or colours.
   - The card under it is `top` (`<equal>top.rank - 1</equal>`, `<unequal>top.color</unequal>`); `total="sum"` is over what is laid at once (Pyramid's pairs), `total="count"` how many.
   - They were once words of their own (`<same>`, `<differs>`, `<step>`, `<total>`, `<one />`) that read as "a random list of tags" (the author); now anyone who reads conditions reads them.
-  - Made at load into the same few comparisons (`PileRule::VarRule`), so the computer's search stays fast.
+  - Made at load into the same few comparisons (`HolderRule::VarRule`), so the computer's search stays fast.
   - Any comparison takes the top's own variable or another (`<below>top.worth</below>`), plus or minus a number.
 - **A card is worth its column** (the author): an ace at the front or back of the row; a column, row or cell lower down gives another value, and `high` is a second worth counted where it fits within a holder's `<counts><atmost>` (Blackjack).
 - **Points are card variables** (the hearts row, the queen's cell) a holder `<counts>` into its own variable; no points table.
-- **One engine underneath:** `settleHolders` (game/cards.cpp) reads the words into the card engine: a held class's cells become cards, a holder's looks face up or down, `<starts>` where the cards begin. Generated programs build the same raw data and call the same function.
+- **One engine underneath:** `settleHolders` (game/holders.cpp) reads the words into the card engine: a held class's cells become cards, a holder's looks face up or down, `<starts>` where the cards begin. Generated programs build the same raw data and call the same function.
 - **Faces from one sheet** (the author's call), `assets/cards.png`, a row per suit, a column per rank; a sheet cell leaving out its column or row takes the group cell's own. The drawn deck was about 960 lines per game; the sheet takes it to 10 (0.1 s, 45 MB to load).
 
 ## Players, patterns, tricks

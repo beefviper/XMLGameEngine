@@ -522,7 +522,7 @@ namespace xge
 	// what may start it when it is empty (<empty>'s <rank>s and <suit>s;
 	// none named: any card). A pile with no <takes> takes nothing but the
 	// cards put back on it.
-	struct PileRule
+	struct HolderRule
 	{
 		bool given{ false };
 		bool one{ false };
@@ -565,7 +565,7 @@ namespace xge
 		std::string wildVariable;
 	};
 
-	// A card (see game/cards.h): which pack (its group), its row and column
+	// A card (see game/holders.h): which pack (its group), its row and column
 	// there (from 1; Hearts calls them suit and rank), as text too, its
 	// worths and the pile the deck starts in.
 	struct CardOf
@@ -575,7 +575,7 @@ namespace xge
 		int column{};
 		std::string rowName;
 		std::string columnName;
-		std::string startPile;
+		std::string startHolder;
 		std::vector<float> worths;
 	};
 
@@ -730,8 +730,8 @@ namespace xge
 			std::vector<RawMark> marks;
 		};
 		std::vector<RawMarkSet> markSets;
-		// <pile>: a place that holds cards (Object::Pile), as written.
-		struct RawPile
+		// <pile>: a place that holds cards (Object::Holder), as written.
+		struct RawHolder
 		{
 			bool is{ false };
 			std::string faces;          // "up", "down", or "" (each keeps its own)
@@ -760,12 +760,12 @@ namespace xge
 			int scoreBest{};            // <score><best>: the best this many of the cards (0: all)
 			std::string melds;          // <score patterns=><melds />: its cards laid out in groups that make those patterns (empty: none)
 			int meldsBest{};            // <score><best> with <melds />: the best this many of the cards (0: all)
-			PileRule takes;
+			HolderRule takes;
 			// <holds class sprite>: the class it holds, as written, and the
 			// looks its words name (the look laid members show, the one a
 			// second <spread> is for, <top sprite>'s); worked out into
 			// faces, the hidden fan and showTop by settleHolders
-			// (game/cards.h). Empty for a <pile>.
+			// (game/holders.h). Empty for a <pile>.
 			std::string holdsClass;
 			std::string holdsSprite;
 			std::string spreadSprite;
@@ -774,7 +774,7 @@ namespace xge
 			std::vector<std::string> orderBy; // <order><by variable>s: kept in order by these, the first first
 			std::string counts;         // <counts variable>: the holder's own variable of that name, its face-up members' added
 		};
-		RawPile pile;
+		RawHolder pile;
 		// <owns object=>: the holder of its own (a player's cards), as
 		// written; the same as <hand pile=>.
 		// <turns sprite=> on a group: its members take turns, in order,
@@ -784,13 +784,13 @@ namespace xge
 		std::string turnsSprite;
 		std::vector<RawCommand> think;
 		bool hand{ false };             // <hand />: points at piles and carries cards (Object::Hand)
-		std::string handPile;           // <hand pile=>: its own pile (cards held by a player)
+		std::string handHolder;           // <hand pile=>: its own pile (cards held by a player)
 		std::string ownsClass;          // <owns class=>: the pieces a player of a board game moves
 		int handSeat{};                 // <hand><seat>: which player, for a trick's `winner` (0 none)
 		int handTeam{};                 // <hand><team>: the side it plays for, partners alike (0 none)
 		int handHolds{ 1 };             // <hand><holds>: from how many piles it may hold a card at once
 		CardOf card;                    // a card of a <deck> (deck empty for anything else)
-		bool isCard{ false };
+		bool held{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
 		// <shape>: on a cell map, the cells it fills, a <row> of characters
 		// each, top to bottom; and the object of the map each character
@@ -1311,10 +1311,10 @@ namespace xge
 			std::vector<Mark> marks;
 		};
 		std::vector<MarkSet> markSets;
-		// Cards (game/cards.cpp). A pile: its rules and the cards it holds,
+		// Cards (game/holders.cpp). A pile: its rules and the cards it holds,
 		// bottom first (each a card's number, Game::cardAt). Laid out by
 		// Game::layOutCards, never moved by the frame.
-		struct Pile
+		struct Holder
 		{
 			bool is{ false };
 			std::string faces;
@@ -1343,10 +1343,10 @@ namespace xge
 			std::string melds;      // as written
 			int meldsBest{};
 			bool scoreDue{ false };  // its cards changed since it was last scored
-			PileRule takes;
+			HolderRule takes;
 			std::vector<int> cards;
 		};
-		Pile pile;
+		Holder pile;
 		// The live number `cards`: how many the pile holds. A pile that
 		// takes <wild> cards: `calling` is 1 while a wild card on top waits
 		// for a suit to be called, `called` the suit called (from 1; 0 none).
@@ -1382,7 +1382,7 @@ namespace xge
 		float deadwood{};
 		// A card: what it is, its number (from 1, every deck of the game
 		// in turn) and whether its face is up.
-		bool isCard{ false };
+		bool held{ false };
 		CardOf card;
 		int cardNumber{};
 		int laidBy{};           // the seat of the hand that last laid it (0 none)

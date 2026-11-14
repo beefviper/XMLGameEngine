@@ -77,7 +77,7 @@ namespace xge
 		std::vector<RawCondition> computer;
 
 		// <starts>: what is done when it begins and on a full reset (the
-		// deal), worked out by settleHolders (game/cards.h).
+		// deal), worked out by settleHolders (game/holders.h).
 		std::vector<RawStart> starts;
 
 		// The states it draws still underneath its own (<show state="..." />).
