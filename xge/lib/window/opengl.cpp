@@ -18,6 +18,7 @@
 #include <memory>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 namespace xge
 {
@@ -345,6 +346,25 @@ namespace xge
 		case GLFW_KEY_PAUSE: return KeyCode::Pause;
 		default: return KeyCode::Unknown;
 		}
+	}
+
+	Bitmap OpenGLWindow::capture()
+	{
+		Bitmap bitmap;
+		glfwGetFramebufferSize(window, &bitmap.width, &bitmap.height);
+		if (bitmap.width <= 0 || bitmap.height <= 0) { return {}; }
+		const std::size_t row = static_cast<std::size_t>(bitmap.width) * 4;
+		std::vector<std::uint8_t> upsideDown(row * static_cast<std::size_t>(bitmap.height));
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadPixels(0, 0, bitmap.width, bitmap.height, GL_RGBA, GL_UNSIGNED_BYTE, upsideDown.data());
+		// OpenGL reads from the bottom row up.
+		bitmap.rgba.resize(upsideDown.size());
+		for (int y = 0; y < bitmap.height; ++y)
+		{
+			std::copy_n(upsideDown.begin() + static_cast<std::ptrdiff_t>(row * static_cast<std::size_t>(bitmap.height - 1 - y)), row,
+				bitmap.rgba.begin() + static_cast<std::ptrdiff_t>(row * static_cast<std::size_t>(y)));
+		}
+		return bitmap;
 	}
 
 	// The engine's picture of the object, at pictureScale().

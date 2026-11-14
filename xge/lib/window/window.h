@@ -98,6 +98,12 @@ namespace xge
 
 		virtual void display() = 0;
 
+		// What has been drawn since clear(), asked for before display(): the
+		// window's own pixels, straight RGBA from the top left (alpha not
+		// meaningful). Empty from a window that cannot read its pixels back.
+		// For tests that look at what a library really shows.
+		virtual Bitmap capture() { return {}; }
+
 		// How many of the window's pixels show one of the game's now: the
 		// game's <scale>, or what fits after a resize. 1 for a window that
 		// is not one of its own.

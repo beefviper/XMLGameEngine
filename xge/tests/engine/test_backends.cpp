@@ -11,6 +11,11 @@
 // them all on), so a backend that is not built is stood in for here by a value
 // the enums have no name for; a default build is looked at by hand, with
 // `xgecli -w raylib`.
+//
+// One test, hidden from ordinary runs because it opens real windows, checks
+// every window backend against the contract (docs/reference/engine.md "What a
+// window must do"): `xgetest "[window]"`, under Xvfb on Linux
+// (`xvfb-run -a output/Debug/xgetest "[window]"`).
 
 #include "audio/audio.h"
 #include "cli.h"
@@ -23,8 +28,16 @@
 #include <catch2/matchers/catch_matchers_string.hpp>
 
 #include <algorithm>
+#include <cstdlib>
+#include <memory>
 #include <string>
 #include <vector>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
 
 using namespace xge;
 using Catch::Matchers::ContainsSubstring;
@@ -190,4 +203,170 @@ TEST_CASE("a picture's size is the game's own, and the null window opens nothing
 	CHECK(window.pollEvents().empty());
 	window.close();
 	CHECK_FALSE(window.isOpen());
+}
+
+namespace
+{
+	// The key A pressed (or let go) in the window with this title, as a
+	// person would: XTest through xdotool on X, SendInput on Windows. False
+	// where neither is to hand, and the key is not tried.
+	bool sendKeyA(const std::string& title, bool down)
+	{
+#ifdef _WIN32
+		HWND found = FindWindowA(nullptr, title.c_str());
+		if (!found) { return false; }
+		SetForegroundWindow(found);
+		INPUT input{};
+		input.type = INPUT_KEYBOARD;
+		input.ki.wVk = 'A';
+		input.ki.dwFlags = down ? 0 : KEYEVENTF_KEYUP;
+		return SendInput(1, &input, sizeof(INPUT)) == 1;
+#else
+		if (std::system("command -v xdotool > /dev/null 2>&1") != 0) { return false; }
+		const std::string command = "xdotool search --sync --name '^" + title + "$' windowfocus --sync " + (down ? "keydown" : "keyup") + " a > /dev/null 2>&1";
+		return std::system(command.c_str()) == 0;
+#endif
+	}
+
+	bool haveScreen()
+	{
+#ifdef _WIN32
+		return true;
+#else
+		return std::getenv("DISPLAY") != nullptr || std::getenv("WAYLAND_DISPLAY") != nullptr;
+#endif
+	}
+
+	struct Rgb
+	{
+		int r;
+		int g;
+		int b;
+	};
+
+	Rgb pixelAt(const Bitmap& shot, int x, int y)
+	{
+		const std::size_t at = (static_cast<std::size_t>(y) * static_cast<std::size_t>(shot.width) + static_cast<std::size_t>(x)) * 4;
+		return { shot.rgba[at], shot.rgba[at + 1], shot.rgba[at + 2] };
+	}
+
+	bool looksLike(const Rgb& got, const Rgb& want)
+	{
+		UNSCOPED_INFO("the pixel is " << got.r << ", " << got.g << ", " << got.b);
+		return std::abs(got.r - want.r) <= 8 && std::abs(got.g - want.g) <= 8 && std::abs(got.b - want.b) <= 8;
+	}
+
+	// A window keeps each picture by its object's name.
+	Object pictureAt(const std::string& name, float x, float y, void (*setUp)(Object&))
+	{
+		Object object;
+		object.name = name;
+		object.position = { x, y };
+		object.isDrawn = true;
+		setUp(object);
+		object.size = object.pictureSize();
+		object.visualDirty = true;
+		return object;
+	}
+
+	// Draws one frame and looks at what came of it: polls, clears, draws
+	// every object, and keeps what it was given back from the window.
+	std::vector<std::pair<KeyCode, bool>> frame(Window& window, std::vector<Object>& objects, Bitmap* shot = nullptr)
+	{
+		std::vector<std::pair<KeyCode, bool>> keys = window.pollEvents();
+		window.clear("color.black");
+		for (Object& object : objects) { window.draw(object); }
+		if (shot) { *shot = window.capture(); }
+		window.display();
+		return keys;
+	}
+
+	bool sawKey(const std::vector<std::pair<KeyCode, bool>>& keys, bool down)
+	{
+		return std::find(keys.begin(), keys.end(), std::make_pair(KeyCode::A, down)) != keys.end();
+	}
+}
+
+TEST_CASE("every window backend keeps the window contract", "[.][window]")
+{
+	if (!haveScreen()) { SKIP("no screen to open a window on (run under xvfb-run)"); }
+
+	for (const WindowBackend backend : WindowFactory::availableBackends())
+	{
+		if (backend == WindowBackend::None) { continue; }
+		const std::string name = WindowFactory::name(backend);
+		DYNAMIC_SECTION(name)
+		{
+			// Rule 1: it opens at the game's size, here 64 by 48.
+			WindowDesc desc;
+			desc.name = "xge window test " + name;
+			desc.width = 64.0f;
+			desc.height = 48.0f;
+			desc.scale = 1;
+			desc.background = "color.black";
+			desc.fullscreen = "false";
+			desc.framerate = 60;
+			std::unique_ptr<Window> window = WindowFactory::create(desc, backend);
+			REQUIRE(window->isOpen());
+			CHECK(window->fit() == 1.0f);
+			CHECK(window->pictureScale() == 1.0f);
+
+			// Rules 3 to 5: three known pictures, a bitmap, a rectangle and a
+			// circle, each where its position says.
+			std::vector<Object> objects{
+				pictureAt("bitmap", 4.0f, 4.0f, [](Object& o)
+				{
+					o.picture.kind = ShapeKind::Line;
+					auto red = std::make_shared<Bitmap>();
+					red->width = 8;
+					red->height = 8;
+					for (int i = 0; i < 64; ++i) { red->rgba.insert(red->rgba.end(), { 255, 0, 0, 255 }); }
+					o.bitmap = red;
+					o.picture.size = { 8.0f, 8.0f };
+				}),
+				pictureAt("rectangle", 30.0f, 4.0f, [](Object& o) { o.picture.kind = ShapeKind::Rectangle; o.picture.size = { 10.0f, 6.0f }; o.picture.color = "color.green"; }),
+				pictureAt("circle", 20.0f, 28.0f, [](Object& o) { o.picture.kind = ShapeKind::Circle; o.picture.radius = 6.0f; o.picture.color = "color.blue"; }),
+			};
+			window->init(objects);
+			for (const Object& object : objects) { CHECK_FALSE(object.visualDirty); }
+
+			Bitmap shot;
+			for (int i = 0; i < 5; ++i) { frame(*window, objects, i == 4 ? &shot : nullptr); }
+			if (shot.rgba.empty())
+			{
+				WARN(name << " cannot read its pixels back; the pictures were drawn but not looked at");
+			}
+			else
+			{
+				CHECK(shot.width == 64);
+				CHECK(shot.height == 48);
+				REQUIRE(shot.rgba.size() == 64u * 48u * 4u);
+				CHECK(looksLike(pixelAt(shot, 7, 7), { 255, 0, 0 }));      // the bitmap
+				CHECK(looksLike(pixelAt(shot, 35, 6), { 0, 255, 0 }));     // the rectangle
+				CHECK(looksLike(pixelAt(shot, 26, 34), { 0, 0, 255 }));    // the circle's middle
+				CHECK(looksLike(pixelAt(shot, 2, 2), { 0, 0, 0 }));        // the background
+				CHECK(looksLike(pixelAt(shot, 60, 44), { 0, 0, 0 }));
+				CHECK(looksLike(pixelAt(shot, 20, 28), { 0, 0, 0 }));      // outside the circle's round
+			}
+
+			// Rule 6: a key pressed in the window is reported down, then up.
+			if (!sendKeyA(desc.name, true))
+			{
+				WARN("no way to press a key here (xdotool on X, SendInput on Windows); keys not tried");
+			}
+			else
+			{
+				bool pressed = false;
+				for (int i = 0; i < 120 && !pressed; ++i) { pressed = sawKey(frame(*window, objects), true); }
+				CHECK(pressed);
+				REQUIRE(sendKeyA(desc.name, false));
+				bool released = false;
+				for (int i = 0; i < 120 && !released; ++i) { released = sawKey(frame(*window, objects), false); }
+				CHECK(released);
+			}
+
+			window->close();
+			CHECK_FALSE(window->isOpen());
+		}
+	}
 }

@@ -68,7 +68,9 @@ It may assume:
 - a bitmap is red, green, blue, alpha, a byte each, not premultiplied, row by row from the top left;
 - every call comes from one thread.
 
-It changes nothing on an object but `visualDirty`.
+It changes nothing on an object but `visualDirty`. It may also hand back what it drew (`capture()`), for the test below.
+
+**The window test** (`test_backends.cpp`, hidden: `xgetest "[window]"`) holds every backend built to this list: it opens a 64 by 48 window, draws a bitmap, a rectangle and a circle, reads the pixels back, presses A (xdotool on X, `SendInput` on Windows) and closes. A new backend passes it before it is done.
 
 **Sharp at any size.** Once a window's `fit()` has held still a quarter of a second after a change (`SettledFit`), the engine sets its `pictureScale()`, and text, circles and rectangles are drawn again with that many pixels to each of the game's. While a window is being dragged it stretches what it has. Positions, sizes and touches stay in the game's pixels. Bitmaps and image files keep their own pixels, shown hard edged. SVGs are bitmaps for now, so they stretch.
 
@@ -84,6 +86,7 @@ cmake -B build -DBUILD_TESTING=ON   # every backend, and the tests
 output/Debug/xgetest                # Catch2 filters work: "[kaboom]"
 cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
 cmake --build build --target xgetest-long && output/Debug/xgetest-long   # minutes
+xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no xvfb-run on Windows)
 ```
 
 | Target | What |

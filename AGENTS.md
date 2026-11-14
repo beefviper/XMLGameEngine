@@ -23,6 +23,7 @@ output/Debug/xgetest            # Catch2 filters work, e.g. "[kaboom]"
 cd build && ctest -j16          # each case its own run, side by side
 cmake --build build --target xgetest-generated && output/Debug/xgetest-generated   # generated games
 cmake --build build --target xgetest-long && output/Debug/xgetest-long             # minutes
+xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend
 output/Debug/xgecli frogger     # -w window, -x xml, -a audio libraries
 ```
 

@@ -45,6 +45,7 @@ namespace xge
 		void draw(Object& object) override;
 		void display() override;
 		float fit() const override;
+		Bitmap capture() override;
 
 	private:
 		// <window><scale>: window pixels to one of the game's.

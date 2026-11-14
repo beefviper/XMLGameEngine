@@ -5,6 +5,8 @@
 
 #include "window/raylib.h"
 
+#include <rlgl.h>
+
 #include "picture/color.h"
 
 #include <algorithm>
@@ -288,6 +290,23 @@ namespace xge
 		}
 	}
 
+
+	Bitmap RaylibWindow::capture()
+	{
+		// raylib keeps what it is asked to draw until the frame ends; it is
+		// drawn now, so the screen holds it.
+		rlDrawRenderBatchActive();
+		Image shown = LoadImageFromScreen();
+		if (shown.data == nullptr) { return {}; }
+		ImageFormat(&shown, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+		Bitmap bitmap;
+		bitmap.width = shown.width;
+		bitmap.height = shown.height;
+		const auto* pixels = static_cast<const std::uint8_t*>(shown.data);
+		bitmap.rgba.assign(pixels, pixels + static_cast<std::size_t>(shown.width) * static_cast<std::size_t>(shown.height) * 4);
+		UnloadImage(shown);
+		return bitmap;
+	}
 
 	// The engine's picture of the object, at pictureScale().
 	void RaylibWindow::build(Object& object, CachedVisual& visual)

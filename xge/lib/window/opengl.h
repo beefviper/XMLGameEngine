@@ -51,6 +51,7 @@ namespace xge
 		void draw(Object& object) override;
 		void display() override;
 		float fit() const override;
+		Bitmap capture() override;
 
 	private:
 		// One object's picture, as an OpenGL texture.

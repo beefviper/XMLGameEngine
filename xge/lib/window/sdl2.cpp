@@ -335,6 +335,15 @@ namespace xge
 		return KeyCode::Unknown;
 	}
 
+	Bitmap SDL2Window::capture()
+	{
+		Bitmap bitmap;
+		if (SDL_GetRendererOutputSize(renderer, &bitmap.width, &bitmap.height) != 0 || bitmap.width <= 0 || bitmap.height <= 0) { return {}; }
+		bitmap.rgba.resize(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4);
+		if (SDL_RenderReadPixels(renderer, nullptr, SDL_PIXELFORMAT_RGBA32, bitmap.rgba.data(), bitmap.width * 4) != 0) { return {}; }
+		return bitmap;
+	}
+
 	// The engine's picture of the object, at pictureScale().
 	void SDL2Window::build(Object& object, CachedVisual& visual)
 	{

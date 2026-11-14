@@ -308,6 +308,20 @@ namespace xge
 		}
 	}
 
+	Bitmap SFMLWindow::capture()
+	{
+		sf::Texture shown;
+		if (!shown.resize(window.getSize())) { return {}; }
+		shown.update(window);
+		const sf::Image image = shown.copyToImage();
+		Bitmap bitmap;
+		bitmap.width = static_cast<int>(image.getSize().x);
+		bitmap.height = static_cast<int>(image.getSize().y);
+		const std::uint8_t* pixels = image.getPixelsPtr();
+		bitmap.rgba.assign(pixels, pixels + static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4);
+		return bitmap;
+	}
+
 	// The engine's picture of the object, as a texture stretched over the
 	// object's size in the game's pixels.
 	void SFMLWindow::build(Object& object, CachedVisual& visual)

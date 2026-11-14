@@ -40,6 +40,7 @@ namespace xge
 		void draw(Object& object) override;
 		void display() override;
 		float fit() const override;
+		Bitmap capture() override;
 
 	private:
 		// Each object's picture as a texture, by the object's name.
