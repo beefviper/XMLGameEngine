@@ -2003,6 +2003,30 @@ namespace xge
 		return answers(a, b) || answers(b, a);
 	}
 
+	// A hitbox is for what hurts or is taken; what is stood on, stopped at,
+	// bounced off or ridden is met by the whole picture, so feet pulled in
+	// never sink into a floor.
+	bool Game::touchesByPicture(const Object& a, const Object& b)
+	{
+		if (!a.collisionData.hasHitbox && !b.collisionData.hasHitbox) { return false; }
+
+		const auto solid = [](const Command& command)
+		{
+			const Command& shape = shapeOf(command);
+			return std::holds_alternative<CmdLand>(shape) || std::holds_alternative<CmdStick>(shape) || std::holds_alternative<CmdStop>(shape)
+				|| std::holds_alternative<CmdBounce>(shape) || std::holds_alternative<CmdRide>(shape) || std::holds_alternative<CmdKnock>(shape)
+				|| std::holds_alternative<CmdDeflect>(shape) || std::holds_alternative<CmdShove>(shape);
+		};
+		const auto standsOn = [&](const Object& self, const Object& other)
+		{
+			return std::any_of(self.collisionData.others.begin(), self.collisionData.others.end(), [&](const CollisionRule& rule)
+				{
+					return collisionRuleMatches(rule, other) && std::any_of(rule.commands.begin(), rule.commands.end(), solid);
+				});
+		};
+		return standsOn(a, b) || standsOn(b, a);
+	}
+
 	// A thruster burns one unit of the object's own `variable`, if it has any
 	// left.
 	bool Game::burn(Object& object, const std::string& variable)

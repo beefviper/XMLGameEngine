@@ -184,3 +184,69 @@ TEST_CASE("<hitbox>: an object touches with its own shape, placed from its pictu
 	CHECK_THROWS_WITH(load(target(man, "<type>pixel</type>" + feet)), ContainsSubstring("cannot go with <type>pixel</type>"));
 	CHECK_THROWS_WITH(load(target(man, "<hitbox><rectangle><width>0</width><height>4</height></rectangle></hitbox>")), ContainsSubstring("bigger than nothing"));
 }
+
+TEST_CASE("<hitbox> pulled in from the sides: the most particular word for a side wins, and left and right swap while mirrored", "[hitbox]")
+{
+	const std::string man = "<rectangle><width>20</width><height>20</height></rectangle>"; // 100 to 120 each way
+	const auto hitsWith = [&](const std::string& hitbox, int hop)
+	{
+		const Scratch file(probe({ hop }) + target(man, "<hitbox>" + hitbox + "</hitbox>"));
+		Played play(file.path);
+		play.probe("1");
+		return play.hits();
+	};
+
+	// Up by 87 the probe covers 113 to 123, his bottom 7 pixels.
+	CHECK(hitsWith("<all>2</all>", 87) == 1);
+	CHECK(hitsWith("<all>8</all>", 87) == 0);
+	CHECK(hitsWith("<vertical>8</vertical>", 87) == 0);
+	CHECK(hitsWith("<horizontal>8</horizontal>", 87) == 1);
+	CHECK(hitsWith("<all>8</all><bottom>1</bottom>", 87) == 1); // a side over all
+	CHECK(hitsWith("<vertical>1</vertical><bottom>8</bottom>", 87) == 0); // a side over vertical
+	CHECK(hitsWith("<all>1</all><vertical>8</vertical>", 87) == 0); // vertical over all
+	CHECK(hitsWith("<top>15</top>", 87) == 1);
+	// Up by 99 it covers 101 to 111, his top 11 pixels.
+	CHECK(hitsWith("<top>10</top>", 99) == 1);
+	CHECK(hitsWith("<top>12</top>", 99) == 0);
+
+	{
+		// The probe at 101 to 111 across; his box from 112 across, or, mirrored, to 108.
+		const Scratch file(probe({ 87 }) + target(man, "<hitbox><left>12</left></hitbox>"));
+		Played play(file.path);
+		play.game.getObject("probe").position.x = 101.0f;
+		play.probe("1");
+		CHECK(play.hits() == 0);
+
+		const Scratch again(probe({ 87 }) + target(man, "<hitbox><left>12</left></hitbox>"));
+		Played mirrored(again.path);
+		mirrored.game.getObject("probe").position.x = 101.0f;
+		mirrored.game.getObject("target").mirrored = true;
+		mirrored.probe("1");
+		CHECK(mirrored.hits() == 1);
+	}
+
+	CHECK_THROWS_WITH(load(target(man, "<hitbox><all>-2</all></hitbox>")), ContainsSubstring("never out"));
+	CHECK_THROWS_WITH(load(target(man, "<hitbox />")), ContainsSubstring("<hitbox>"));
+}
+
+TEST_CASE("<hitbox>: what is stood on, stopped at or bounced off is met by the whole picture", "[hitbox]")
+{
+	// Up by 87 the probe covers 113 to 123: the man's bottom 7 pixels, under his hitbox.
+	const std::string man = "<rectangle><width>20</width><height>20</height></rectangle>";
+	const std::string pulledIn = "<hitbox><bottom>8</bottom></hitbox>";
+	{
+		const Scratch file(probe({ 87 }) + target(man, pulledIn));
+		Played play(file.path);
+		play.probe("1");
+		CHECK(play.hits() == 0);
+	}
+	{
+		std::string stopping = probe({ 87 });
+		const std::string none = "<collisions></collisions>";
+		stopping.replace(stopping.find(none), none.size(), "<collisions><collision object=\"target\"><stop /></collision></collisions>");
+		const Scratch file(stopping + target(man, pulledIn));
+		Played play(file.path);
+		play.probe("1");
+		CHECK(play.hits() == 1);
+	}
+}

@@ -232,6 +232,18 @@ TEST_CASE("a car takes a life and sends the frog back to the start", "[frogger][
 	CHECK(table.atStart());
 }
 
+TEST_CASE("a car that only grazes the tips of the frog's legs misses it", "[frogger][collision][hitbox]")
+{
+	Table table;
+	Object& car = table.game.getObject("carrow12.1.1");
+
+	// Just over the car's lane, its legs 3 pixels into it: the car goes by underneath.
+	table.frog().position = { car.position.x, car.position.y - table.frog().size.y + 3.0f };
+	table.frames(10);
+	CHECK(table.game.getCurrentState().name == "playing");
+	CHECK(table.frog().isVisible);
+}
+
 TEST_CASE("the frog is safe on the pavement and the grass while the traffic goes by", "[frogger][collision]")
 {
 	Table table;

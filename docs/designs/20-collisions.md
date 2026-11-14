@@ -40,7 +40,7 @@ A screen grid was rejected: it needs a cell size per game, and what is left afte
 
 - `<type>pixel</type>` is opt-in. The box sweep runs first; only a touching pair is walked in half-pixel steps to the first shared solid pixel. Any alpha counts as solid. Refused on text and images (their pixels are a backend's).
 - Rejected: a list of boxes (a second picture that drifts), pixels for everything (costly), an alpha threshold.
-- **`<solid char>`** names which inks of a bitmap touch (Q*bert's cube tops); the mask goes with flips and turns. **`<hitbox>`** is a smaller box or circle used for every touch. Rejected: a separate collision picture, polygon hitboxes. Open: a hitbox per look.
+- **`<solid char>`** names which inks of a bitmap touch (Q*bert's cube tops); the mask goes with flips and turns. **`<hitbox>`** is a smaller box or circle, or the picture pulled in from its sides (the author's idea: the screen edges' words, one number each, the most particular winning, so `<all>5</all><bottom>10</bottom>` reads as said; no wrapper tag). Insets follow the picture's size and swap left and right when mirrored. A hitbox is for what hurts or is taken: a pair whose rules stand, stop, bounce or ride touches by the whole pictures (worked out once a pair, beside the partners), else a bottom inset sinks a walker into its floor. Rejected: a hitbox for every touch (sinking), a `class=` list of what the hitbox is for (every game would list it), a separate collision picture, polygon hitboxes. Open: several hitboxes, a hitbox per look or frame.
 
 ## Filters and checks in rules
 

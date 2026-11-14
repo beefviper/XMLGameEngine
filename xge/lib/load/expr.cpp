@@ -1421,22 +1421,44 @@ namespace xge
 			}
 			const auto valueOr0 = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where + " > <hitbox>"); };
 			object.collisionData.hasHitbox = true;
-			object.collisionData.hitboxRound = rawCollisions.hitboxKind == "circle";
-			if (object.collisionData.hitboxRound)
+			if (rawCollisions.hitboxKind == "inset")
 			{
-				const float radius = evaluate(rawCollisions.hitboxRadius, where + " > <hitbox>");
-				object.collisionData.hitboxSize = { radius * 2.0f, radius * 2.0f };
+				CollisionData& data = object.collisionData;
+				data.hitboxInset = true;
+				data.insetTop = valueOr0(rawCollisions.hitboxTop);
+				data.insetBottom = valueOr0(rawCollisions.hitboxBottom);
+				data.insetLeft = valueOr0(rawCollisions.hitboxLeft);
+				data.insetRight = valueOr0(rawCollisions.hitboxRight);
+				// Out from the picture, never; and something must be left.
+				if (std::min({ data.insetTop, data.insetBottom, data.insetLeft, data.insetRight }) < 0.0f)
+				{
+					throw std::runtime_error(where + ": a <hitbox> pulls in from the picture's sides, never out; one side is " + formatDisplayNumber(std::min({ data.insetTop, data.insetBottom, data.insetLeft, data.insetRight })));
+				}
+				if (object.size.x > 0.0f && object.size.y > 0.0f && (data.insetLeft + data.insetRight >= object.size.x || data.insetTop + data.insetBottom >= object.size.y))
+				{
+					throw std::runtime_error(where + ": a <hitbox> pulled in that far leaves nothing of a picture " + formatDisplayNumber(object.size.x) + " by " + formatDisplayNumber(object.size.y));
+				}
+				object.collisionData.hitboxRound = object.picture.kind == ShapeKind::Circle;
 			}
 			else
 			{
-				object.collisionData.hitboxSize = { evaluate(rawCollisions.hitboxWidth, where + " > <hitbox>"), evaluate(rawCollisions.hitboxHeight, where + " > <hitbox>") };
+				object.collisionData.hitboxRound = rawCollisions.hitboxKind == "circle";
+				if (object.collisionData.hitboxRound)
+				{
+					const float radius = evaluate(rawCollisions.hitboxRadius, where + " > <hitbox>");
+					object.collisionData.hitboxSize = { radius * 2.0f, radius * 2.0f };
+				}
+				else
+				{
+					object.collisionData.hitboxSize = { evaluate(rawCollisions.hitboxWidth, where + " > <hitbox>"), evaluate(rawCollisions.hitboxHeight, where + " > <hitbox>") };
+				}
+				if (!(object.collisionData.hitboxSize.x > 0.0f) || !(object.collisionData.hitboxSize.y > 0.0f))
+				{
+					throw std::runtime_error(where + ": a <hitbox> must be bigger than nothing; its size is " + formatDisplayNumber(object.collisionData.hitboxSize.x)
+						+ " by " + formatDisplayNumber(object.collisionData.hitboxSize.y));
+				}
+				object.collisionData.hitboxOffset = { valueOr0(rawCollisions.hitboxX), valueOr0(rawCollisions.hitboxY) };
 			}
-			if (!(object.collisionData.hitboxSize.x > 0.0f) || !(object.collisionData.hitboxSize.y > 0.0f))
-			{
-				throw std::runtime_error(where + ": a <hitbox> must be bigger than nothing; its size is " + formatDisplayNumber(object.collisionData.hitboxSize.x)
-					+ " by " + formatDisplayNumber(object.collisionData.hitboxSize.y));
-			}
-			object.collisionData.hitboxOffset = { valueOr0(rawCollisions.hitboxX), valueOr0(rawCollisions.hitboxY) };
 		}
 
 		for (std::size_t edge = 0; edge < object.collisionData.edges.size(); ++edge)

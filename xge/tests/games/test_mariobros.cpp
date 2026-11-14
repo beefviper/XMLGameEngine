@@ -210,6 +210,7 @@ TEST_CASE("mariobros.xml: a pest kicked off sends a coin out of a top pipe, wort
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(50);
 	play.engine.handleKeyReleased(KeyCode::D);
+	play.frames(30); // its kicking over
 	REQUIRE_FALSE(creeper.isVisible);
 	CHECK(play.kicked() == Approx(1.0f));
 	CHECK(play.mario().variable.at("score") == Approx(800.0f));
@@ -276,7 +277,27 @@ TEST_CASE("mariobros.xml: Luigi's kicks and coins are his own score", "[mariobro
 	play.engine.handleKeyPressed(KeyCode::Right);
 	play.frames(50);
 	play.engine.handleKeyReleased(KeyCode::Right);
+	play.frames(30); // its kicking over
 	REQUIRE_FALSE(creeper.isVisible);
 	CHECK(play.luigi().variable.at("score") == Approx(800.0f));
 	CHECK(play.mario().variable.at("score") == Approx(0.0f));
+}
+
+TEST_CASE("mariobros.xml: a pest that only grazes a brother's outline does not cost a life; one that meets his body does", "[mariobros][hitbox]")
+{
+	Mario play;
+	Object& creeper = play.pest("phase1.shellcreepers.3");
+	REQUIRE(creeper.lookName() == "walking");
+
+	// Coming down beside it, his outline over its side by one pixel: a miss.
+	play.mario().position = { creeper.position.x + creeper.size.x - 1.0f, kLow - play.mario().size.y - 2.0f };
+	play.mario().velocity = {};
+	play.frames(1);
+	CHECK(play.state() == "playing");
+
+	// Into its body: a hit.
+	play.mario().position = { creeper.position.x + creeper.size.x - 6.0f, kLow - play.mario().size.y - 2.0f };
+	play.mario().velocity = {};
+	play.frames(2);
+	CHECK(play.state() == "down");
 }

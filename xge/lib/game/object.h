@@ -132,13 +132,20 @@ namespace xge
 		// <hitbox>: the shape it touches other objects with instead of its
 		// picture, a "rectangle" (hitboxWidth by hitboxHeight) or a "circle"
 		// (hitboxRadius), its top left hitboxX, hitboxY from the picture's
-		// (each empty text when left out: 0). Empty kind: none.
+		// (each empty text when left out: 0); or "inset", the picture's box
+		// pulled in from each side by hitboxTop, ...: each the most particular
+		// of the side's words given (<top>, then <vertical>, then <all>),
+		// empty text when none (0). Empty kind: none.
 		std::string hitboxKind;
 		RawValue hitboxWidth;
 		RawValue hitboxHeight;
 		RawValue hitboxRadius;
 		RawValue hitboxX;
 		RawValue hitboxY;
+		RawValue hitboxTop;
+		RawValue hitboxBottom;
+		RawValue hitboxLeft;
+		RawValue hitboxRight;
 
 		// Each screen edge's <collision edge="..."> rules (addEdgeRule).
 		EdgesRules<RawCommand> edges;
@@ -195,6 +202,13 @@ namespace xge
 		Vector2f hitboxOffset{};
 		Vector2f hitboxSize{};
 		bool hitboxRound{ false };
+		// Or an inset one: the picture's box, whatever its size, pulled in by
+		// these from each side, left and right swapping while it is mirrored.
+		bool hitboxInset{ false };
+		float insetTop{ 0.0f };
+		float insetBottom{ 0.0f };
+		float insetLeft{ 0.0f };
+		float insetRight{ 0.0f };
 
 		// Each screen edge's rules (see RawCollisionData::edges).
 		EdgesRules<Command> edges;

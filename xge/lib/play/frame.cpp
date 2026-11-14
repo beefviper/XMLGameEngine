@@ -692,6 +692,7 @@ namespace xge
 				Object* second;
 				std::size_t i;
 				std::size_t j;
+				bool byPicture;
 			};
 
 			// Whether each is in play, asked once and again only after a
@@ -707,6 +708,7 @@ namespace xge
 			// Only the pairs a rule answers for (partners), and of those the
 			// ones that can touch now.
 			const std::vector<std::vector<std::size_t>>& partners = rules.partners(all);
+			const std::vector<std::vector<char>>& byPicture = rules.partnersByPicture();
 			std::vector<Pair> pairs;
 			for (std::size_t i = 0; i < all.size(); ++i)
 			{
@@ -715,11 +717,12 @@ namespace xge
 					continue;
 				}
 
-				for (const std::size_t j : partners[i])
+				for (std::size_t k = 0; k < partners[i].size(); ++k)
 				{
+					const std::size_t j = partners[i][k];
 					if (playing[j] && canTouch(all[i], all[j]))
 					{
-						pairs.push_back({ &all[i], &all[j], i, j });
+						pairs.push_back({ &all[i], &all[j], i, j, byPicture[i][k] != 0 });
 					}
 				}
 			}
@@ -812,7 +815,7 @@ namespace xge
 				{
 					return { sweepTurning(a, moveA, a.spin * left, b, moveB, b.spin * left), false };
 				}
-				return { sweepObjects(a, moveA, b, moveB), false };
+				return { sweepObjects(a, moveA, b, moveB, pair.byPicture), false };
 			};
 
 			// A reaction that moved, turned, showed or hid anything starts that
@@ -829,7 +832,7 @@ namespace xge
 			playFrame(pairs, all.size(), sweep, advanceTo, [&](const Pair& pair, Edge edgeOfSecond, float at, std::vector<std::size_t>& changed)
 				{
 					// What the touch was, found once, before anything answers it.
-					const Contact contact = contactBetween(*pair.first, *pair.second, edgeOfSecond, at);
+					const Contact contact = contactBetween(*pair.first, *pair.second, edgeOfSecond, at, pair.byPicture);
 
 					for (std::size_t i = 0; i < all.size(); ++i)
 					{
@@ -871,6 +874,7 @@ namespace xge
 		keptCount = objects.size();
 		partnersFound = false;
 		partnerLists.clear();
+		pictureLists.clear();
 		mazeGrids.clear();
 	}
 
@@ -891,11 +895,16 @@ namespace xge
 			}
 
 			partnerLists.assign(objects.size(), {});
+			pictureLists.assign(objects.size(), {});
 			for (std::size_t i = 0; i < objects.size(); ++i)
 			{
 				const auto ask = [&](std::size_t j)
 				{
-					if (canCollide(objects[i], objects[j])) { partnerLists[i].push_back(j); }
+					if (canCollide(objects[i], objects[j]))
+					{
+						partnerLists[i].push_back(j);
+						pictureLists[i].push_back(touchesByPicture(objects[i], objects[j]) ? 1 : 0);
+					}
 				};
 				if (asks[i])
 				{

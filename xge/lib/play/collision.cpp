@@ -13,39 +13,49 @@ namespace xge
 	namespace
 	{
 		// What the object touches other objects with: its <hitbox>, or else
-		// its picture's box.
-		Box boxOf(const Object& object) noexcept
+		// its picture's box. An inset hitbox is the picture's box pulled in,
+		// left and right swapped while the picture is drawn mirrored.
+		Box boxOf(const Object& object, bool byPicture = false) noexcept
 		{
-			if (object.collisionData.hasHitbox)
+			const CollisionData& data = object.collisionData;
+			if (byPicture) { return { object.position, object.size }; }
+			if (data.hitboxInset)
 			{
-				return { object.position + object.collisionData.hitboxOffset, object.collisionData.hitboxSize };
+				const float left = object.mirrored ? data.insetRight : data.insetLeft;
+				const float right = object.mirrored ? data.insetLeft : data.insetRight;
+				return { object.position + Vector2f{ left, data.insetTop },
+					{ std::max(0.0f, object.size.x - left - right), std::max(0.0f, object.size.y - data.insetTop - data.insetBottom) } };
+			}
+			if (data.hasHitbox)
+			{
+				return { object.position + data.hitboxOffset, data.hitboxSize };
 			}
 			return { object.position, object.size };
 		}
 
-		bool isRound(const Object& object)
+		bool isRound(const Object& object, bool byPicture = false)
 		{
-			if (object.collisionData.hasHitbox) { return object.collisionData.hitboxRound; }
+			if (object.collisionData.hasHitbox && !byPicture) { return object.collisionData.hitboxRound; }
 			return object.picture.kind == ShapeKind::Circle;
 		}
 
 		// Whether the point `local` (from the top left of boxOf) is touched
 		// with by `object`: its picture's pixels when its collisions are of
 		// type pixel (those its <solid char>s name), otherwise its shape.
-		bool solidAt(const Object& object, const Vector2f& local)
+		bool solidAt(const Object& object, const Vector2f& local, bool byPicture = false)
 		{
 			if (object.collisionData.type == CollisionType::Pixel && object.bitmap)
 			{
 				return object.bitmap->touchesAt(static_cast<int>(std::floor(local.x)), static_cast<int>(std::floor(local.y)));
 			}
 
-			return solidShapeAt(object.size, isRound(object), local);
+			return solidShapeAt(boxOf(object, byPicture).size, isRound(object, byPicture), local);
 		}
 
-		bool pixelsOverlapAt(const Object& a, const Object& b)
+		bool pixelsOverlapAt(const Object& a, const Object& b, bool byPicture = false)
 		{
-			return xge::pixelsOverlapAt(boxOf(a), [&](const Vector2f& local) { return solidAt(a, local); },
-				boxOf(b), [&](const Vector2f& local) { return solidAt(b, local); });
+			return xge::pixelsOverlapAt(boxOf(a, byPicture), [&](const Vector2f& local) { return solidAt(a, local, byPicture); },
+				boxOf(b, byPicture), [&](const Vector2f& local) { return solidAt(b, local, byPicture); });
 		}
 	}
 
@@ -55,12 +65,12 @@ namespace xge
 		return pastWindowEdge({ object.position, object.size }, { windowDesc.width, windowDesc.height }, edge);
 	}
 
-	std::optional<Edge> objectsOverlap(const Object& a, const Object& b)
+	std::optional<Edge> objectsOverlap(const Object& a, const Object& b, bool byPicture)
 	{
-		const std::optional<Edge> edge = shapesOverlap(boxOf(a), isRound(a), boxOf(b), isRound(b));
+		const std::optional<Edge> edge = shapesOverlap(boxOf(a, byPicture), isRound(a, byPicture), boxOf(b, byPicture), isRound(b, byPicture));
 
 		// Touching boxes are only a first look when pixels are what counts.
-		if (edge && usesPixels(a, b) && !pixelsOverlap(a, b))
+		if (edge && usesPixels(a, b) && !pixelsOverlapAt(a, b, byPicture))
 		{
 			return std::nullopt;
 		}
@@ -78,24 +88,24 @@ namespace xge
 		return pixelsOverlapAt(a, b);
 	}
 
-	Contact contactBetween(const Object& a, const Object& b, Edge edgeOfB, float time)
+	Contact contactBetween(const Object& a, const Object& b, Edge edgeOfB, float time, bool byPicture)
 	{
-		Contact contact = contactOf(boxOf(a), isRound(a), boxOf(b), isRound(b), edgeOfB, time);
+		Contact contact = contactOf(boxOf(a, byPicture), isRound(a, byPicture), boxOf(b, byPicture), isRound(b, byPicture), edgeOfB, time);
 
 		// Tested by pixels: where the pixels meet, and the way what is drawn
 		// faces there (a slope of a <line>, the round of a ball).
 		if (usesPixels(a, b))
 		{
-			const auto solidA = [&](const Vector2f& local) { return solidAt(a, local); };
-			const auto solidB = [&](const Vector2f& local) { return solidAt(b, local); };
-			pixelContactAt(boxOf(a), solidA, boxOf(b), solidB, contact.point, contact.normal);
+			const auto solidA = [&](const Vector2f& local) { return solidAt(a, local, byPicture); };
+			const auto solidB = [&](const Vector2f& local) { return solidAt(b, local, byPicture); };
+			pixelContactAt(boxOf(a, byPicture), solidA, boxOf(b, byPicture), solidB, contact.point, contact.normal);
 
 			// How deep is how far the first must go along the way apart for
 			// no drawn pixels to meet, not how far their boxes overlap (a
 			// flipper's square is far bigger than its bar).
 			contact.depth = 0.0f;
-			const Box first = boxOf(a);
-			const Box second = boxOf(b);
+			const Box first = boxOf(a, byPicture);
+			const Box second = boxOf(b, byPicture);
 			const auto clearAt = [&](float apart)
 			{
 				return !xge::pixelsOverlapAt(Box{ first.position + contact.normal * apart, first.size }, solidA, second, solidB);
@@ -120,10 +130,10 @@ namespace xge
 		return contact;
 	}
 
-	std::optional<SweepHit> sweepObjects(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB)
+	std::optional<SweepHit> sweepObjects(const Object& a, const Vector2f& moveA, const Object& b, const Vector2f& moveB, bool byPicture)
 	{
-		return sweepThings(boxOf(a), isRound(a), [&](const Vector2f& local) { return solidAt(a, local); }, moveA,
-			boxOf(b), isRound(b), [&](const Vector2f& local) { return solidAt(b, local); }, moveB, usesPixels(a, b));
+		return sweepThings(boxOf(a, byPicture), isRound(a, byPicture), [&](const Vector2f& local) { return solidAt(a, local, byPicture); }, moveA,
+			boxOf(b, byPicture), isRound(b, byPicture), [&](const Vector2f& local) { return solidAt(b, local, byPicture); }, moveB, usesPixels(a, b));
 	}
 
 	namespace
@@ -247,6 +257,11 @@ namespace xge
 			const Vector2f pivot = object.pivotOnScreen();
 			return sweptBox({ pivot - Vector2f{ radius, radius }, Vector2f{ radius * 2.0f, radius * 2.0f } }, move);
 		}
-		return sweptBox(boxOf(object), move);
+		// Its hitbox or its picture, whichever a pair touches by: both.
+		const Box hit = boxOf(object);
+		const Box picture = boxOf(object, true);
+		const Vector2f low{ std::min(hit.position.x, picture.position.x), std::min(hit.position.y, picture.position.y) };
+		const Vector2f high{ std::max(hit.position.x + hit.size.x, picture.position.x + picture.size.x), std::max(hit.position.y + hit.size.y, picture.position.y + picture.size.y) };
+		return sweptBox({ low, high - low }, move);
 	}
 }

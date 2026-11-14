@@ -187,6 +187,9 @@
       <mirror>left</mirror>
       <grip>0.15</grip>
       <collisions>
+        <!-- he touches with his body, a little in from his outline, and his feet
+             clear a pest by more: a near miss is a miss -->
+        <hitbox><horizontal>2</horizontal><top>3</top><bottom>3</bottom></hitbox>
         <collision edge="horizontal">
           <wrap />
         </collision>
@@ -279,6 +282,8 @@
       <mirror>left</mirror>
       <waiting />
       <collisions>
+        <!-- a pest touches with its body, not its outline -->
+        <hitbox><horizontal>2</horizontal><top>2</top></hitbox>
         <collision edge="horizontal">
           <wrap />
         </collision>

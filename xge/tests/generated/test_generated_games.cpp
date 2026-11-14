@@ -320,6 +320,10 @@ namespace
 			value(at + ".collisions.hitbox.radius", c.hitboxRadius);
 			value(at + ".collisions.hitbox.x", c.hitboxX);
 			value(at + ".collisions.hitbox.y", c.hitboxY);
+			value(at + ".collisions.hitbox.top", c.hitboxTop);
+			value(at + ".collisions.hitbox.bottom", c.hitboxBottom);
+			value(at + ".collisions.hitbox.left", c.hitboxLeft);
+			value(at + ".collisions.hitbox.right", c.hitboxRight);
 			for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 			{
 				commands(at + "." + edgeName(edge), c.edges[edgeIndex(edge)].commands);

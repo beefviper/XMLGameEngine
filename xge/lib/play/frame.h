@@ -92,6 +92,11 @@ namespace xge
 		// with none never answer each other, so canCollide is not asked.
 		virtual bool hasRules(const Object& object) { (void)object; return true; }
 
+		// Whether two that can collide touch by their whole pictures, a
+		// hitbox of either aside: a pair whose rules stand on, stop at or
+		// bounce off each other. Asked with canCollide, once a pair.
+		virtual bool touchesByPicture(const Object& a, const Object& b) { (void)a; (void)b; return false; }
+
 		// a and b have met during the move (contact.edgeOfSecond is the edge
 		// of b that was hit, so a's is the opposite one; the rest of the
 		// contact is where and how): both their rules for it.
@@ -109,6 +114,9 @@ namespace xge
 		// two objects every frame: most pairs (a wall and a wall) never can.
 		// Asked again when `objects` is a different list.
 		const std::vector<std::vector<std::size_t>>& partners(const std::vector<Object>& objects);
+		// Beside each of partners' lists, whether that pair touches by its
+		// pictures (touchesByPicture); good once partners has been asked.
+		const std::vector<std::vector<char>>& partnersByPicture() const noexcept { return pictureLists; }
 
 		// The tiles of the <map> named `map` (empty when there is none),
 		// found once for the whole game: a map's pieces never move from
@@ -128,6 +136,7 @@ namespace xge
 		std::size_t keptCount{ 0 };
 		bool partnersFound{ false };
 		std::vector<std::vector<std::size_t>> partnerLists;
+		std::vector<std::vector<char>> pictureLists;
 		std::map<std::string, MazeGrid> mazeGrids;
 	};
 

@@ -52,9 +52,14 @@ In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<t
 - **`<type>pixel</type>`.** Swept as boxes first, then walked half a pixel at a time until a drawn pixel of one meets a drawn pixel of the other. Text and images cannot be `pixel`. The way apart is how what is drawn lies at the point (`pixelContactAt`), so a ball meets a drawn slope at its angle.
 - **Turning.** A pair where one is [swinging](pictures.md#turning-about-a-pivot) is walked through the frame together, the turning one turned as it would be shown, until they touch. The frame itself is never run in smaller steps.
 - **`<solid char="*" />`** after `<type>pixel</type>`: only those characters of the bitmap touch (Q*bert's cubes by their tops).
-- **`<hitbox>`**: a `<rectangle>` or `<circle>` that touches other objects instead of the picture, then its `<position>` in the picture. The window's edges, `<land />`, `<stick />` and carrying still use the picture. Not with `pixel`.
+- **`<hitbox>`**: what touches other objects instead of the whole picture, so a near miss is a miss. Not with `pixel`.
+  - **Pulled in from the sides**, named as the screen edges are: `<all>`, `<horizontal>` (left and right), `<vertical>` (top and bottom), `<top>`, `<bottom>`, `<left>`, `<right>`, one number each. A side takes its own word, then its pair's, then `<all>`; none is 0. It follows the picture's size, and left and right swap while the picture is [mirrored](pictures.md#poses-mirror-grip-and-blinking).
+  - **Or a shape**: a `<rectangle>` or `<circle>`, then its `<position>` in the picture.
+  - **The whole picture still meets** the window's edges, and anything a rule of either side stands on, stops at, bounces off or rides: a pair whose rules hold `<land />`, `<stick />`, `<stop />`, `<bounce>`, `<ride />`, `<knock>`, `<deflect />` or `<shove />` touches by pictures. So feet pulled in never sink into a floor. Carrying uses the picture too.
 
 ```xml
+<hitbox><all>2</all><bottom>4</bottom></hitbox>      <!-- 2 in all round, 4 at the feet -->
+
 <hitbox>
   <rectangle><width>12</width><height>6</height></rectangle>
   <position><x>6</x><y>18</y></position>

@@ -350,6 +350,7 @@ TEST_CASE("mariobros.xml: a bump under the floor turns over what stands on it, a
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(50);
 	play.engine.handleKeyReleased(KeyCode::D);
+	play.frames(30); // its kicking over
 	CHECK_FALSE(play.creeper().isVisible);
 	CHECK(play.mario().variable.at("score") == Approx(800.0f));
 	CHECK(play.mario().variable.at("lives") == Approx(3.0f));

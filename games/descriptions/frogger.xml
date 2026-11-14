@@ -443,6 +443,8 @@
             </add>
           </x><y><add><value><multiply><value>13</value><value>cell</value></multiply></value><value>8</value></add></y></position>
           <collisions>
+            <!-- its body, not the tips of its legs: a car that only grazes them misses -->
+            <hitbox><horizontal>6</horizontal><vertical>4</vertical></hitbox>
             <collision class="hazard" unless="pads"><trigger action="lose" /></collision>
             <collision class="water" unless="logs"><trigger action="drown" /></collision>
             <collision class="logs"><ride /></collision>
