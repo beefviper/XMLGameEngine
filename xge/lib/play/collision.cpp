@@ -14,25 +14,41 @@ namespace xge
 	{
 		// What the object touches other objects with is one or more parts:
 		// each of its <hitbox>es, or else (and always when byPicture) its
-		// picture. A part is a hitbox's number, or `picture`.
+		// picture; and, but for byPicture, the hitboxes of the animation
+		// frame showing. A part is a hitbox's number (the object's own
+		// first, then the frame's), or `picture`.
 		constexpr std::size_t picture = static_cast<std::size_t>(-1);
 
-		std::size_t partsOf(const Object& object, bool byPicture) noexcept
+		std::size_t ownParts(const Object& object, bool byPicture) noexcept
 		{
 			return byPicture || object.collisionData.hitboxes.empty() ? 1 : object.collisionData.hitboxes.size();
 		}
 
+		std::size_t partsOf(const Object& object, bool byPicture) noexcept
+		{
+			return ownParts(object, byPicture) + (byPicture ? 0 : object.frameHitboxes().size());
+		}
+
 		std::size_t partOf(const Object& object, bool byPicture, std::size_t index) noexcept
 		{
+			const std::size_t own = ownParts(object, byPicture);
+			if (index >= own) { return object.collisionData.hitboxes.size() + (index - own); }
 			return byPicture || object.collisionData.hitboxes.empty() ? picture : index;
 		}
 
+		const Hitbox& hitboxAt(const Object& object, std::size_t part) noexcept
+		{
+			const std::size_t own = object.collisionData.hitboxes.size();
+			return part < own ? object.collisionData.hitboxes[part] : object.frameHitboxes()[part - own];
+		}
+
 		// A part's box. An inset hitbox is the picture's box pulled in, left
-		// and right swapped while the picture is drawn mirrored.
+		// and right swapped while the picture is drawn mirrored; a shape is
+		// placed from the picture's right instead while it is.
 		Box boxOf(const Object& object, std::size_t part = picture) noexcept
 		{
 			if (part == picture) { return { object.position, object.size }; }
-			const Hitbox& hitbox = object.collisionData.hitboxes[part];
+			const Hitbox& hitbox = hitboxAt(object, part);
 			if (hitbox.inset)
 			{
 				const float left = object.mirrored ? hitbox.right : hitbox.left;
@@ -40,12 +56,13 @@ namespace xge
 				return { object.position + Vector2f{ left, hitbox.top },
 					{ std::max(0.0f, object.size.x - left - right), std::max(0.0f, object.size.y - hitbox.top - hitbox.bottom) } };
 			}
-			return { object.position + hitbox.offset, hitbox.size };
+			const float x = object.mirrored ? object.size.x - hitbox.offset.x - hitbox.size.x : hitbox.offset.x;
+			return { object.position + Vector2f{ x, hitbox.offset.y }, hitbox.size };
 		}
 
 		bool isRound(const Object& object, std::size_t part = picture)
 		{
-			if (part != picture) { return object.collisionData.hitboxes[part].round; }
+			if (part != picture) { return hitboxAt(object, part).round; }
 			return object.picture.kind == ShapeKind::Circle;
 		}
 
@@ -112,7 +129,7 @@ namespace xge
 			for (std::size_t i = 0; i < partsOf(object, false); ++i)
 			{
 				const std::size_t part = partOf(object, false, i);
-				if (name.empty() || (part != picture && object.collisionData.hitboxes[part].name == name)) { found.push_back(part); }
+				if (name.empty() || (part != picture && hitboxAt(object, part).name == name)) { found.push_back(part); }
 			}
 			return found;
 		};
@@ -363,8 +380,10 @@ namespace xge
 		const Box all = boxOf(object);
 		Vector2f low = all.position;
 		Vector2f high = all.position + all.size;
-		for (std::size_t part = 0; part < object.collisionData.hitboxes.size(); ++part)
+		for (std::size_t i = 0; i < partsOf(object, false); ++i)
 		{
+			const std::size_t part = partOf(object, false, i);
+			if (part == picture) { continue; }
 			const Box hit = boxOf(object, part);
 			low = { std::min(low.x, hit.position.x), std::min(low.y, hit.position.y) };
 			high = { std::max(high.x, hit.position.x + hit.size.x), std::max(high.y, hit.position.y + hit.size.y) };

@@ -56,8 +56,9 @@ In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<t
 - **`<solid char="*" />`** after `<type>pixel</type>`: only those characters of the bitmap touch (Q*bert's cubes by their tops).
 - **`<hitbox>`**: what touches other objects instead of the whole picture, so a near miss is a miss. Not with `pixel`.
   - **Pulled in from the sides**, named as the screen edges are: `<all>`, `<horizontal>` (left and right), `<vertical>` (top and bottom), `<top>`, `<bottom>`, `<left>`, `<right>`, one number each. A side takes its own word, then its pair's, then `<all>`; none is 0. It follows the picture's size, and left and right swap while the picture is [mirrored](pictures.md#poses-mirror-grip-and-blinking).
-  - **Or a shape**: a `<rectangle>` or `<circle>`, then its `<position>` in the picture.
+  - **Or a shape**: a `<rectangle>` or `<circle>`, then its `<position>` in the picture, which may reach past it (a fist). While the picture is mirrored it is placed from the right instead.
   - **Several** `<hitbox>`es are allowed, and touching any of them is a touch: a body pulled in, and a foot sticking out. A group's hitboxes are replaced, all of them, by a member that writes its own.
+  - **On a frame:** a `<frame>` of an [animation](pictures.md#animation) may hold `<hitbox>`es after its `<seconds>`: they touch too, on top of the object's own (or its picture), only while that frame shows. A sword or a fist that is only out mid-swing.
   - **Named:** `<hitbox name="foot">` is what a rule's `hitbox=` and `by=` pick. Which hitboxes touched is looked at where the two meet (just touching counts), even in a pair that touches by pictures. A `hitbox=` its object has not, a `by=` that no object has, or either on an edge rule stops the load.
   - **The whole picture still meets** the window's edges, and anything a rule of either side stands on, stops at, bounces off or rides: a pair whose rules hold `<land />`, `<stick />`, `<stop />`, `<bounce>`, `<ride />`, `<knock>`, `<deflect />` or `<shove />` touches by pictures. So feet pulled in never sink into a floor. Carrying uses the picture too.
 

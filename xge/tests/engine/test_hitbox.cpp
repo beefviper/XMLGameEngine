@@ -320,3 +320,59 @@ TEST_CASE("<hitbox name>: a rule's hitbox= and by= run only for a touch made wit
 	CHECK_THROWS_WITH(load(made("<collision edge=\"top\" hitbox=\"foot\"><inc variable=\"target.feet\" /></collision>")),
 		ContainsSubstring("met by the whole picture"));
 }
+
+TEST_CASE("<frame> with <hitbox>es: a reach that touches only while that picture shows, turned with a mirrored picture", "[hitbox]")
+{
+	// A 20 by 20 boxer at 100, 100 whose jab's middle picture puts out a
+	// fist 6 by 4 past his right side (120 to 126 across), and a bag 10 by
+	// 20 at `bag` across that only a fist can reach.
+	const auto made = [](int bag)
+	{
+		const std::string square = "<bitmap><row>****</row><row>****</row><row>****</row><row>****</row><scale>5</scale><color>color.white</color></bitmap>";
+		return "<object name=\"boxer\"><sprite name=\"rest\">" + square + "</sprite><sprite name=\"reach\">" + square + "</sprite>"
+			"<animation name=\"jab\"><seconds>0.1</seconds><once />"
+			"<frame sprite=\"rest\" />"
+			"<frame sprite=\"reach\"><hitbox name=\"fist\"><rectangle><width>6</width><height>4</height></rectangle><position><x>20</x><y>8</y></position></hitbox></frame>"
+			"<frame sprite=\"rest\" /></animation>"
+			"<position><x>100</x><y>100</y></position>"
+			"<collisions><hitbox name=\"body\"><all>0</all></hitbox><collision object=\"bag\" hitbox=\"fist\"><inc variable=\"boxer.landed\" /></collision></collisions>"
+			"<actions><action name=\"jab\"><become sprite=\"jab\" /></action></actions>"
+			"<variables><variable name=\"landed\">0</variable></variables></object>"
+			"<object name=\"bag\"><sprite><rectangle><width>10</width><height>20</height></rectangle></sprite>"
+			"<position><x>" + std::to_string(bag) + "</x><y>100</y></position>"
+			"<collisions><collision object=\"boxer\" by=\"fist\"><inc variable=\"bag.hits\" /></collision>"
+			"<collision object=\"boxer\" by=\"body\"><inc variable=\"bag.bumps\" /></collision></collisions>"
+			"<variables><variable name=\"hits\">0</variable><variable name=\"bumps\">0</variable></variables></object>";
+	};
+	const auto jab = [](Played& play)
+	{
+		CommandExecutor executor(play.game);
+		executor.executeInput(CmdTriggerAction{ "boxer", "jab" }, true);
+		play.frames(30);
+	};
+	{
+		const Scratch file(made(123));
+		Played play(file.path);
+		play.frames(10);
+		CHECK(play.game.getObject("bag").variable.at("hits") == 0);
+		jab(play);
+		CHECK(play.game.getObject("bag").variable.at("hits") == 1);
+		CHECK(play.game.getObject("bag").variable.at("bumps") == 0);
+		CHECK(play.game.getObject("boxer").variable.at("landed") == 1);
+		CHECK(play.game.getObject("boxer").lookName() == "rest");
+	}
+	{
+		// Mirrored, the fist is out past his left side (94 to 100): the bag on the right is safe, one on the left is hit.
+		const Scratch right(made(123));
+		Played facingLeft(right.path);
+		facingLeft.game.getObject("boxer").mirrored = true;
+		jab(facingLeft);
+		CHECK(facingLeft.game.getObject("bag").variable.at("hits") == 0);
+
+		const Scratch left(made(88));
+		Played play(left.path);
+		play.game.getObject("boxer").mirrored = true;
+		jab(play);
+		CHECK(play.game.getObject("bag").variable.at("hits") == 1);
+	}
+}

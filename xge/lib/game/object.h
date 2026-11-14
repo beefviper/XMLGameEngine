@@ -360,6 +360,9 @@ namespace xge
 		std::vector<RawSprite> frames;
 		RawValue interval;
 		std::vector<RawValue> times;
+		// Each frame's own <hitbox>es, one list a frame, or none at all when
+		// no frame has any: touched with too while that frame shows.
+		std::vector<std::vector<RawHitbox>> frameHitboxes;
 		bool once{ false };
 		// <then>: the look a once look goes to when it ends (empty, the look
 		// before it), and the commands it runs then.
@@ -379,6 +382,9 @@ namespace xge
 		// frame has its own; an empty value is the animation's (see
 		// frameTimeGiven).
 		std::vector<RawValue> times;
+		// Each frame's own <hitbox>es, one list a frame, or none at all when
+		// no frame has any: touched with too while that frame shows.
+		std::vector<std::vector<RawHitbox>> frameHitboxes;
 		// <once />: plays through one time, not round and round.
 		bool once{ false };
 		// <then sprite="...">: the look it goes to when it ends, and the
@@ -414,6 +420,7 @@ namespace xge
 		RawValue interval;
 		std::vector<RawSprite> frames;
 		std::vector<RawValue> times;   // as RawFrames::times
+		std::vector<std::vector<RawHitbox>> frameHitboxes;   // as RawFrames::frameHitboxes
 		bool once{ false };            // as RawFrames::once
 		std::vector<RawCommand> thenCommands;   // as RawFrames::thenCommands
 	};
@@ -1111,6 +1118,15 @@ namespace xge
 		// Each picture's own time in frames of the game, when a <frame> has
 		// its own <seconds>; empty, every one animationFrames.
 		std::vector<int> animationTimes;
+		// Each picture's own <hitbox>es, touched with as well as the
+		// object's while it shows; empty when none has any.
+		std::vector<std::vector<Hitbox>> animationHitboxes;
+		// The hitboxes of the picture showing (often none).
+		const std::vector<Hitbox>& frameHitboxes() const noexcept
+		{
+			static const std::vector<Hitbox> none;
+			return animationIndex < animationHitboxes.size() ? animationHitboxes[animationIndex] : none;
+		}
 		int animationTick{};
 		std::size_t animationIndex{};
 		// <once />: the animation plays through one time. At its end a look
@@ -1537,6 +1553,7 @@ namespace xge
 			std::vector<std::shared_ptr<const Bitmap>> frames;
 			int frameTicks{};
 			std::vector<int> frameTimes;   // as animationTimes
+			std::vector<std::vector<Hitbox>> frameHitboxes;   // as animationHitboxes
 			bool once{ false };            // as animationOnce
 			// <then>: the look to go to when it ends, in place of the look
 			// before, and the commands it runs then.

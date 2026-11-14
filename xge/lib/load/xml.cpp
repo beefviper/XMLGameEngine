@@ -596,6 +596,7 @@ namespace xge
 		}
 
 		std::vector<RawCommand> readCommands(std::unique_ptr<XmlNode> first, const std::string& where);
+		RawHitbox readHitbox(const XmlNode& hitbox, const std::string& here);
 
 		// An <animation> as written (RawFrames). Which sprites its frames are
 		// is settled by chooseSprite, once the sprites it can pick from are
@@ -638,6 +639,12 @@ namespace xge
 						spec.times.resize(spec.frames.size());
 						spec.times.back() = readValue(*seconds, at + " > <seconds>");
 					}
+					for (std::unique_ptr<XmlNode> part = node->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						if (part->getName() != "hitbox") { continue; }
+						spec.frameHitboxes.resize(spec.frames.size());
+						spec.frameHitboxes.back().push_back(readHitbox(*part, at + " > <hitbox>"));
+					}
 				}
 				else if (tag == "cell")
 				{
@@ -667,6 +674,7 @@ namespace xge
 				else if (tag != "seconds") { fail(here, "unknown <" + tag + ">; expected <seconds>, <once />, then <frame>s, <cell>s and runs of <cells>, and last <then>"); }
 			}
 			if (!spec.times.empty()) { spec.times.resize(spec.frames.size()); }
+			if (!spec.frameHitboxes.empty()) { spec.frameHitboxes.resize(spec.frames.size()); }
 
 			return spec;
 		}
@@ -766,6 +774,7 @@ namespace xge
 			RawAnimation chosen;
 			chosen.interval = animation->interval;
 			chosen.times = animation->times;
+			chosen.frameHitboxes = animation->frameHitboxes;
 			chosen.once = animation->once;
 			chosen.thenCommands = animation->thenCommands;
 			if (!animation->thenSprite.empty())

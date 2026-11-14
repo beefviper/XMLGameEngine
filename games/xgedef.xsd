@@ -768,6 +768,8 @@
             <xs:sequence>
               <!-- how long this picture shows, in place of the animation's <seconds> -->
               <xs:element name="seconds" type="valueType" minOccurs="0" />
+              <!-- touched with too while this picture shows: a fist, a sword -->
+              <xs:element name="hitbox" type="hitboxType" minOccurs="0" maxOccurs="unbounded" />
             </xs:sequence>
             <xs:attribute name="sprite" type="xs:NMTOKEN" use="required" />
           </xs:complexType>

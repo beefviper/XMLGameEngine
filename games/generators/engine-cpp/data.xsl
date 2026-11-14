@@ -1215,6 +1215,7 @@
     <xsl:param name="animation" />
     <xsl:param name="indent" />
     <xsl:if test="$animation/then">then(</xsl:if>
+    <xsl:if test="$animation/frame/hitbox">hitboxes(</xsl:if>
     <xsl:if test="$animation/once">once(</xsl:if>
     <xsl:text>frames(</xsl:text>
     <xsl:call-template name="string">
@@ -1233,6 +1234,14 @@
     </xsl:call-template>
     <xsl:text>)</xsl:text>
     <xsl:if test="$animation/once">)</xsl:if>
+    <xsl:if test="$animation/frame/hitbox">
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="frame-hitbox-lists">
+        <xsl:with-param name="animation" select="$animation" />
+        <xsl:with-param name="indent" select="$indent" />
+      </xsl:call-template>
+      <xsl:text>)</xsl:text>
+    </xsl:if>
     <xsl:if test="$animation/then">
       <xsl:text>, </xsl:text>
       <xsl:call-template name="string">
@@ -1275,6 +1284,104 @@
         </xsl:choose>
       </xsl:for-each>
       <xsl:text> }</xsl:text>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- A <hitbox>'s fields, as RawHitbox hitbox; is filled (readHitbox). -->
+  <xsl:template name="hitbox-fields">
+    <xsl:param name="indent" />
+      <xsl:if test="@name">
+        <xsl:value-of select="concat($indent, 'hitbox.name = &quot;', @name, '&quot;;&#10;')" />
+      </xsl:if>
+      <xsl:choose>
+        <xsl:when test="rectangle | circle">
+          <xsl:value-of select="concat($indent, 'hitbox.kind = &quot;', local-name(rectangle | circle), '&quot;;&#10;')" />
+          <xsl:for-each select="rectangle/width | rectangle/height | circle/radius | position/x | position/y">
+            <xsl:value-of select="concat($indent, 'hitbox.', local-name(), ' = ')" />
+            <xsl:call-template name="value">
+              <xsl:with-param name="node" select="." />
+            </xsl:call-template>
+            <xsl:text>;&#10;</xsl:text>
+          </xsl:for-each>
+        </xsl:when>
+        <xsl:otherwise>
+          <!-- pulled in from the sides: each side the most particular word given -->
+          <xsl:value-of select="concat($indent, 'hitbox.kind = &quot;inset&quot;;&#10;')" />
+        <xsl:for-each select="(top | vertical | all)[1]">
+          <xsl:value-of select="concat($indent, 'hitbox.top = ')" />
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="(../top | ../vertical[not(../top)] | ../all[not(../top or ../vertical)])[1]" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:for-each>
+        <xsl:for-each select="(bottom | vertical | all)[1]">
+          <xsl:value-of select="concat($indent, 'hitbox.bottom = ')" />
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="(../bottom | ../vertical[not(../bottom)] | ../all[not(../bottom or ../vertical)])[1]" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:for-each>
+        <xsl:for-each select="(left | horizontal | all)[1]">
+          <xsl:value-of select="concat($indent, 'hitbox.left = ')" />
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="(../left | ../horizontal[not(../left)] | ../all[not(../left or ../horizontal)])[1]" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:for-each>
+        <xsl:for-each select="(right | horizontal | all)[1]">
+          <xsl:value-of select="concat($indent, 'hitbox.right = ')" />
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="(../right | ../horizontal[not(../right)] | ../all[not(../right or ../horizontal)])[1]" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:for-each>
+        </xsl:otherwise>
+      </xsl:choose>
+  </xsl:template>
+
+  <!-- Each frame's own <hitbox>es, when any has: , { {}, { make<RawHitbox>(...) } },
+       an empty list for a frame without (or each picture a sheet's cells cut). -->
+  <xsl:template name="frame-hitbox-lists">
+    <xsl:param name="animation" />
+    <xsl:param name="indent" />
+    <xsl:text>{ </xsl:text>
+    <xsl:for-each select="$animation/frame | $animation/cell | $animation/cells">
+      <xsl:if test="position() &gt; 1">, </xsl:if>
+      <xsl:choose>
+        <xsl:when test="self::frame">
+          <xsl:text>{</xsl:text>
+          <xsl:for-each select="hitbox">
+            <xsl:if test="position() &gt; 1">,</xsl:if>
+            <xsl:value-of select="concat(' make&lt;RawHitbox&gt;([](RawHitbox&amp; hitbox)&#10;', $indent, '{&#10;')" />
+            <xsl:call-template name="hitbox-fields">
+              <xsl:with-param name="indent" select="concat($indent, $tab)" />
+            </xsl:call-template>
+            <xsl:value-of select="concat($indent, '})')" />
+          </xsl:for-each>
+          <xsl:text> }</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:call-template name="blank-hitboxes">
+            <xsl:with-param name="left">
+              <xsl:call-template name="cell-count">
+                <xsl:with-param name="node" select="." />
+              </xsl:call-template>
+            </xsl:with-param>
+          </xsl:call-template>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    <xsl:text> }</xsl:text>
+  </xsl:template>
+
+  <xsl:template name="blank-hitboxes">
+    <xsl:param name="left" />
+    <xsl:text>{}</xsl:text>
+    <xsl:if test="$left &gt; 1">
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="blank-hitboxes">
+        <xsl:with-param name="left" select="$left - 1" />
+      </xsl:call-template>
     </xsl:if>
   </xsl:template>
 
@@ -1404,53 +1511,9 @@
     </xsl:if>
     <xsl:for-each select="$node/hitbox">
       <xsl:value-of select="concat($indent, '{&#10;', $indent, '  RawHitbox hitbox;&#10;')" />
-      <xsl:if test="@name">
-        <xsl:value-of select="concat($indent, '  hitbox.name = &quot;', @name, '&quot;;&#10;')" />
-      </xsl:if>
-      <xsl:choose>
-        <xsl:when test="rectangle | circle">
-          <xsl:value-of select="concat($indent, '  hitbox.kind = &quot;', local-name(rectangle | circle), '&quot;;&#10;')" />
-          <xsl:for-each select="rectangle/width | rectangle/height | circle/radius | position/x | position/y">
-            <xsl:value-of select="concat($indent, '  hitbox.', local-name(), ' = ')" />
-            <xsl:call-template name="value">
-              <xsl:with-param name="node" select="." />
-            </xsl:call-template>
-            <xsl:text>;&#10;</xsl:text>
-          </xsl:for-each>
-        </xsl:when>
-        <xsl:otherwise>
-          <!-- pulled in from the sides: each side the most particular word given -->
-          <xsl:value-of select="concat($indent, '  hitbox.kind = &quot;inset&quot;;&#10;')" />
-        <xsl:for-each select="(top | vertical | all)[1]">
-          <xsl:value-of select="concat($indent, '  hitbox.top = ')" />
-          <xsl:call-template name="value">
-            <xsl:with-param name="node" select="(../top | ../vertical[not(../top)] | ../all[not(../top or ../vertical)])[1]" />
-          </xsl:call-template>
-          <xsl:text>;&#10;</xsl:text>
-        </xsl:for-each>
-        <xsl:for-each select="(bottom | vertical | all)[1]">
-          <xsl:value-of select="concat($indent, '  hitbox.bottom = ')" />
-          <xsl:call-template name="value">
-            <xsl:with-param name="node" select="(../bottom | ../vertical[not(../bottom)] | ../all[not(../bottom or ../vertical)])[1]" />
-          </xsl:call-template>
-          <xsl:text>;&#10;</xsl:text>
-        </xsl:for-each>
-        <xsl:for-each select="(left | horizontal | all)[1]">
-          <xsl:value-of select="concat($indent, '  hitbox.left = ')" />
-          <xsl:call-template name="value">
-            <xsl:with-param name="node" select="(../left | ../horizontal[not(../left)] | ../all[not(../left or ../horizontal)])[1]" />
-          </xsl:call-template>
-          <xsl:text>;&#10;</xsl:text>
-        </xsl:for-each>
-        <xsl:for-each select="(right | horizontal | all)[1]">
-          <xsl:value-of select="concat($indent, '  hitbox.right = ')" />
-          <xsl:call-template name="value">
-            <xsl:with-param name="node" select="(../right | ../horizontal[not(../right)] | ../all[not(../right or ../horizontal)])[1]" />
-          </xsl:call-template>
-          <xsl:text>;&#10;</xsl:text>
-        </xsl:for-each>
-        </xsl:otherwise>
-      </xsl:choose>
+      <xsl:call-template name="hitbox-fields">
+        <xsl:with-param name="indent" select="concat($indent, '  ')" />
+      </xsl:call-template>
       <xsl:value-of select="concat($indent, '  ', $data, '.hitboxes.push_back(hitbox);&#10;', $indent, '}&#10;')" />
     </xsl:for-each>
     <!-- each rule: one holding none, or a holder's <first>; what the
@@ -1690,6 +1753,14 @@
           <xsl:with-param name="animation" select="animation" />
         </xsl:call-template>
         <xsl:text>);&#10;</xsl:text>
+        <xsl:if test="animation/frame/hitbox">
+          <xsl:value-of select="concat($in, 'object.animation.frameHitboxes = ')" />
+          <xsl:call-template name="frame-hitbox-lists">
+            <xsl:with-param name="animation" select="animation" />
+            <xsl:with-param name="indent" select="$in" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:if>
         <xsl:if test="animation/once">
           <xsl:value-of select="concat($in, 'object.animation.once = true;&#10;')" />
         </xsl:if>
@@ -2869,6 +2940,14 @@
           </xsl:call-template>
         </xsl:variable>
         <xsl:value-of select="concat(substring-after($times, '{'), ';&#10;')" />
+      </xsl:if>
+      <xsl:if test="$node/frame/hitbox">
+        <xsl:value-of select="concat($indent, $to, '.frameHitboxes = ')" />
+        <xsl:call-template name="frame-hitbox-lists">
+          <xsl:with-param name="animation" select="$node" />
+          <xsl:with-param name="indent" select="$indent" />
+        </xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
       </xsl:if>
       <xsl:if test="$node/once">
         <xsl:value-of select="concat($indent, $to, '.once = true;&#10;')" />

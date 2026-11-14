@@ -59,6 +59,11 @@ namespace xge
 			}
 		};
 		add(collisionData.hitboxes);
+		for (const std::vector<Hitbox>& frame : animationHitboxes) { add(frame); }
+		for (const Look& each : looks)
+		{
+			for (const std::vector<Hitbox>& frame : each.frameHitboxes) { add(frame); }
+		}
 		return names;
 	}
 
@@ -83,6 +88,7 @@ namespace xge
 		animationBitmaps = looks[index].frames;
 		animationFrames = looks[index].frameTicks;
 		animationTimes = looks[index].frameTimes;
+		animationHitboxes = looks[index].frameHitboxes;
 		animationOnce = looks[index].once;
 		animationDone = false;
 		animationTick = 0;
@@ -390,6 +396,7 @@ namespace xge
 			look.frames = std::move(frames);
 			look.interval = animation.interval;
 			look.times = animation.times;
+			look.frameHitboxes = animation.frameHitboxes;
 			look.once = animation.once;
 			look.thenSprite = animation.thenSprite;
 			look.thenCommands = animation.thenCommands;

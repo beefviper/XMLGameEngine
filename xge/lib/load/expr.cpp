@@ -1445,6 +1445,23 @@ namespace xge
 		{
 			object.collisionData.hitboxes.push_back(makeHitbox(raw, object, where + " > <hitbox>"));
 		}
+		// And each animation frame's own.
+		const auto frameHitboxes = [&](const std::vector<std::vector<RawHitbox>>& written, const std::string& here)
+		{
+			std::vector<std::vector<Hitbox>> made;
+			for (const std::vector<RawHitbox>& frame : written)
+			{
+				made.emplace_back();
+				for (const RawHitbox& raw : frame) { made.back().push_back(makeHitbox(raw, object, here + " > <frame> > <hitbox>")); }
+			}
+			return made;
+		};
+		object.animationHitboxes = frameHitboxes(rawObject.animation.frameHitboxes, where + " > <animation>");
+		for (std::size_t i = 0; i < object.looks.size() && i < rawObject.looks.size(); ++i)
+		{
+			object.looks[i].frameHitboxes = frameHitboxes(rawObject.looks[i].frameHitboxes, where + " > <animation name=\"" + rawObject.looks[i].name + "\">");
+		}
+		if (object.look < object.looks.size() && !object.looks[object.look].frames.empty()) { object.animationHitboxes = object.looks[object.look].frameHitboxes; }
 
 		for (std::size_t edge = 0; edge < object.collisionData.edges.size(); ++edge)
 		{
