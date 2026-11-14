@@ -62,6 +62,13 @@ if (XGE_WITH_DIRECT3D11)
 	target_link_libraries(xgelib PUBLIC d3d11 dxgi d3dcompiler xinput)
 endif()
 
+# The Direct3D 9 window (window/direct3d9.h), on Windows only: it draws with
+# the fixed pipeline, so it needs no shader compiler; xinput reads the pads.
+if (XGE_WITH_DIRECT3D9)
+	xge_backend(DIRECT3D9)
+	target_link_libraries(xgelib PUBLIC d3d9 xinput)
+endif()
+
 # SDL2's window and sound - see window/sdl2.h and audio/sdl2.h.
 if (XGE_WITH_SDL2)
 	xge_backend(SDL2)

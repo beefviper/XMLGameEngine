@@ -62,7 +62,7 @@ endif()
 # them: BUILD_TESTING turns XGE_ALL_BACKENDS on.
 #
 # Sound follows its library: SFML3, RAYLIB and SDL2 each bring their own, and
-# OPENGL and DIRECT3D11 are windows only. A program built without a backend still knows its
+# OPENGL, DIRECT3D9 and DIRECT3D11 are windows only. A program built without a backend still knows its
 # name; asking for it says it is not built in (see WindowFactory::available).
 option(XGE_ALL_BACKENDS "Build every window, sound and XML backend (BUILD_TESTING turns this on)" OFF)
 
@@ -82,23 +82,26 @@ backend_option(SFML3 "SFML 3 (window and sound)" ON)
 backend_option(RAYLIB "raylib (window and sound)" OFF)
 backend_option(SDL2 "SDL2 (window and sound)" OFF)
 backend_option(OPENGL "OpenGL, through GLFW (window)" OFF)
+backend_option(DIRECT3D9 "Direct3D 9, Windows only (window)" OFF)
 backend_option(DIRECT3D11 "Direct3D 11, Windows only (window)" OFF)
 backend_option(XERCES "Xerces (XML, with full schema validation)" ON)
 backend_option(TINYXML2 "TinyXML2 (XML)" OFF)
 backend_option(PUGIXML "PugiXML (XML)" OFF)
 backend_option(RAPIDXML "RapidXML (XML)" OFF)
 
-# Direct3D 11 comes with Windows (its SDK with Visual Studio's C++ tools), and
-# is on nowhere else: every backend on Linux is the other four.
-if (XGE_WITH_DIRECT3D11 AND NOT WIN32)
-	if (NOT XGE_ALL_BACKENDS)
-		message(WARNING "Direct3D 11 is a Windows library: XGE_WITH_DIRECT3D11 is turned off here.")
+# Direct3D comes with Windows (its SDK with Visual Studio's C++ tools), and is
+# on nowhere else: every backend on Linux is the other four.
+foreach(direct3d IN ITEMS DIRECT3D9 DIRECT3D11)
+	if (XGE_WITH_${direct3d} AND NOT WIN32)
+		if (NOT XGE_ALL_BACKENDS)
+			message(WARNING "Direct3D is a Windows library: XGE_WITH_${direct3d} is turned off here.")
+		endif()
+		set(XGE_WITH_${direct3d} OFF)
 	endif()
-	set(XGE_WITH_DIRECT3D11 OFF)
-endif()
+endforeach()
 
-if (NOT (XGE_WITH_SFML3 OR XGE_WITH_RAYLIB OR XGE_WITH_SDL2 OR XGE_WITH_OPENGL OR XGE_WITH_DIRECT3D11))
-	message(FATAL_ERROR "No window backend is built: turn on at least one of XGE_WITH_SFML3, XGE_WITH_RAYLIB, XGE_WITH_SDL2, XGE_WITH_OPENGL and XGE_WITH_DIRECT3D11 (or XGE_ALL_BACKENDS).")
+if (NOT (XGE_WITH_SFML3 OR XGE_WITH_RAYLIB OR XGE_WITH_SDL2 OR XGE_WITH_OPENGL OR XGE_WITH_DIRECT3D9 OR XGE_WITH_DIRECT3D11))
+	message(FATAL_ERROR "No window backend is built: turn on at least one of XGE_WITH_SFML3, XGE_WITH_RAYLIB, XGE_WITH_SDL2, XGE_WITH_OPENGL, XGE_WITH_DIRECT3D9 and XGE_WITH_DIRECT3D11 (or XGE_ALL_BACKENDS).")
 endif()
 
 if (NOT (XGE_WITH_XERCES OR XGE_WITH_TINYXML2 OR XGE_WITH_PUGIXML OR XGE_WITH_RAPIDXML))
@@ -106,7 +109,7 @@ if (NOT (XGE_WITH_XERCES OR XGE_WITH_TINYXML2 OR XGE_WITH_PUGIXML OR XGE_WITH_RA
 endif()
 
 set(XGE_BACKENDS_BUILT "")
-foreach(backend IN ITEMS SFML3 RAYLIB SDL2 OPENGL DIRECT3D11 XERCES TINYXML2 PUGIXML RAPIDXML)
+foreach(backend IN ITEMS SFML3 RAYLIB SDL2 OPENGL DIRECT3D9 DIRECT3D11 XERCES TINYXML2 PUGIXML RAPIDXML)
 	if (XGE_WITH_${backend})
 		list(APPEND XGE_BACKENDS_BUILT ${backend})
 	endif()

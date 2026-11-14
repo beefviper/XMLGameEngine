@@ -15,11 +15,11 @@
 
 namespace xge
 {
-	// The Direct3D 11 Window backend, on Windows only: a window of Win32's own,
-	// its keyboard and mouse read from Win32 and its pads from XInput, and every
-	// object drawn by Direct3D 11 as one textured rectangle. Nothing outside
-	// this file, window/direct3d11.cpp and WindowFactory::create names a Win32
-	// or Direct3D type: they are all kept behind `Parts` (window/window.h).
+	// The Direct3D 11 Window backend, on Windows only: the window is Win32's
+	// own (window/win32.h, shared with the other Direct3D backends), and every
+	// object is drawn by Direct3D 11 as one textured rectangle. Nothing
+	// outside this file, window/direct3d11.cpp and WindowFactory::create names
+	// a Direct3D type: they are all kept behind `Parts`.
 	//
 	// The window can be resized: the game is fitted to it with its
 	// proportions, centred, and its pictures are drawn sharp at that size once
@@ -49,10 +49,8 @@ namespace xge
 		float fit() const override;
 		Bitmap capture() override;
 
-		// Win32 hands the window's messages here (window/direct3d11.cpp).
-		struct Parts;
-
 	private:
+		struct Parts;
 		std::unique_ptr<Parts> parts;
 	};
 }

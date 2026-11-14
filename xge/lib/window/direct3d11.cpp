@@ -6,19 +6,12 @@
 #include "window/direct3d11.h"
 
 #include "picture/color.h"
+#include "window/win32.h"
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <dxgi.h>
 #include <wrl/client.h>
-#include <xinput.h>
 
 #include <algorithm>
 #include <array>
@@ -35,8 +28,6 @@ namespace xge
 {
 	namespace
 	{
-		constexpr wchar_t kClassName[] = L"xge-direct3d11";
-
 		// One rectangle's corner: where it is in the game's pixels, and where
 		// in the picture.
 		struct Corner
@@ -74,15 +65,6 @@ SamplerState how : register(s0);
 float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 )";
 
-		std::wstring wide(const std::string& text)
-		{
-			if (text.empty()) { return {}; }
-			const int length = MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
-			std::wstring result(static_cast<std::size_t>(length), L'\0');
-			MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), result.data(), length);
-			return result;
-		}
-
 		ComPtr<ID3DBlob> compile(const char* entry, const char* target)
 		{
 			ComPtr<ID3DBlob> code;
@@ -95,62 +77,6 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 			}
 			return code;
 		}
-
-		// A key as Win32 reports it. Shift, Control and Alt say which side
-		// from the scan code and the extended-key bit.
-		KeyCode keyFromWin32(WPARAM key, LPARAM detail) noexcept
-		{
-			const bool extended = (detail & (1 << 24)) != 0;
-			if (key >= 'A' && key <= 'Z') { return static_cast<KeyCode>(static_cast<int>(KeyCode::A) + static_cast<int>(key - 'A')); }
-			if (key >= '0' && key <= '9') { return static_cast<KeyCode>(static_cast<int>(KeyCode::Num0) + static_cast<int>(key - '0')); }
-			if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) { return static_cast<KeyCode>(static_cast<int>(KeyCode::Numpad0) + static_cast<int>(key - VK_NUMPAD0)); }
-			if (key >= VK_F1 && key <= VK_F15) { return static_cast<KeyCode>(static_cast<int>(KeyCode::F1) + static_cast<int>(key - VK_F1)); }
-			switch (key)
-			{
-			case VK_SHIFT:
-			{
-				const UINT scan = static_cast<UINT>((detail >> 16) & 0xFF);
-				return MapVirtualKeyW(scan, MAPVK_VSC_TO_VK_EX) == static_cast<UINT>(VK_RSHIFT) ? KeyCode::RShift : KeyCode::LShift;
-			}
-			case VK_CONTROL: return extended ? KeyCode::RControl : KeyCode::LControl;
-			case VK_MENU: return extended ? KeyCode::RAlt : KeyCode::LAlt;
-			case VK_LWIN: return KeyCode::LSystem;
-			case VK_RWIN: return KeyCode::RSystem;
-			case VK_APPS: return KeyCode::Menu;
-			case VK_ESCAPE: return KeyCode::Escape;
-			case VK_OEM_4: return KeyCode::LBracket;
-			case VK_OEM_6: return KeyCode::RBracket;
-			case VK_OEM_1: return KeyCode::Semicolon;
-			case VK_OEM_COMMA: return KeyCode::Comma;
-			case VK_OEM_PERIOD: return KeyCode::Period;
-			case VK_OEM_7: return KeyCode::Apostrophe;
-			case VK_OEM_2: return KeyCode::Slash;
-			case VK_OEM_5: return KeyCode::Backslash;
-			case VK_OEM_3: return KeyCode::Grave;
-			case VK_OEM_PLUS: return KeyCode::Equal;
-			case VK_OEM_MINUS: return KeyCode::Hyphen;
-			case VK_SPACE: return KeyCode::Space;
-			case VK_RETURN: return KeyCode::Enter;
-			case VK_BACK: return KeyCode::Backspace;
-			case VK_TAB: return KeyCode::Tab;
-			case VK_PRIOR: return KeyCode::PageUp;
-			case VK_NEXT: return KeyCode::PageDown;
-			case VK_END: return KeyCode::End;
-			case VK_HOME: return KeyCode::Home;
-			case VK_INSERT: return KeyCode::Insert;
-			case VK_DELETE: return KeyCode::Delete;
-			case VK_ADD: return KeyCode::Add;
-			case VK_SUBTRACT: return KeyCode::Subtract;
-			case VK_MULTIPLY: return KeyCode::Multiply;
-			case VK_DIVIDE: return KeyCode::Divide;
-			case VK_LEFT: return KeyCode::Left;
-			case VK_RIGHT: return KeyCode::Right;
-			case VK_UP: return KeyCode::Up;
-			case VK_DOWN: return KeyCode::Down;
-			case VK_PAUSE: return KeyCode::Pause;
-			default: return KeyCode::Unknown;
-			}
-		}
 	}
 
 	struct Direct3D11Window::Parts
@@ -162,17 +88,9 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 		};
 
-		HWND window{ nullptr };
-		float gameWidth{ 0.0f };
-		float gameHeight{ 0.0f };
-		bool closeRequested{ false };
-		bool resized{ false };
-		std::vector<std::pair<KeyCode, bool>> keys;
+		explicit Parts(const WindowDesc& windowDesc) : frame(windowDesc, "Direct3D 11") {}
 
-		// Where the game is drawn in the window: as large as fits with its
-		// proportions, centred on whole pixels (the rest is bars).
-		float fit{ 1.0f };
-		D3D11_VIEWPORT shown{};
+		Win32Window frame;
 
 		ComPtr<ID3D11Device> device;
 		ComPtr<ID3D11DeviceContext> context;
@@ -182,58 +100,13 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 		ComPtr<ID3D11PixelShader> pixelShader;
 		ComPtr<ID3D11InputLayout> layout;
 		ComPtr<ID3D11Buffer> corners;
-		ComPtr<ID3D11Buffer> frame;
+		ComPtr<ID3D11Buffer> gameSize;
 		ComPtr<ID3D11SamplerState> hardEdges;
 		ComPtr<ID3D11SamplerState> smooth;
 		ComPtr<ID3D11BlendState> blend;
 		ComPtr<ID3D11RasterizerState> rasterizer;
 
 		std::unordered_map<std::string, Visual> visuals;
-
-		static LRESULT CALLBACK receive(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
-		{
-			if (message == WM_NCCREATE)
-			{
-				const auto* made = reinterpret_cast<const CREATESTRUCTW*>(lParam);
-				SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(made->lpCreateParams));
-			}
-			auto* self = reinterpret_cast<Parts*>(GetWindowLongPtrW(window, GWLP_USERDATA));
-			if (self) { return self->handle(window, message, wParam, lParam); }
-			return DefWindowProcW(window, message, wParam, lParam);
-		}
-
-		LRESULT handle(HWND from, UINT message, WPARAM wParam, LPARAM lParam)
-		{
-			switch (message)
-			{
-			case WM_CLOSE:
-				// Not torn down here: the frame that reads this still draws.
-				closeRequested = true;
-				return 0;
-			case WM_SIZE:
-				resized = true;
-				return 0;
-			case WM_SYSCHAR:
-				return 0;   // Alt with a letter: no beep for a menu there is not
-			case WM_KEYDOWN:
-			case WM_SYSKEYDOWN:
-			case WM_KEYUP:
-			case WM_SYSKEYUP:
-			{
-				const bool down = message == WM_KEYDOWN || message == WM_SYSKEYDOWN;
-				const bool repeat = down && (lParam & (1 << 30)) != 0;
-				const KeyCode key = keyFromWin32(wParam, lParam);
-				if (!repeat && key != KeyCode::Unknown) { keys.emplace_back(key, down); }
-				// Alt and F10 would otherwise open the window's menu and pause
-				// the game; Alt+F4 still closes it.
-				if (message == WM_SYSKEYDOWN && wParam == VK_F4) { break; }
-				return 0;
-			}
-			default:
-				break;
-			}
-			return DefWindowProcW(from, message, wParam, lParam);
-		}
 
 		void makeTarget()
 		{
@@ -244,28 +117,9 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 			}
 		}
 
-		void fitGame()
-		{
-			RECT client{};
-			GetClientRect(window, &client);
-			const float wide = static_cast<float>(std::max<LONG>(client.right - client.left, 1));
-			const float high = static_cast<float>(std::max<LONG>(client.bottom - client.top, 1));
-			fit = std::min(wide / gameWidth, high / gameHeight);
-			shown.Width = std::floor(gameWidth * fit);
-			shown.Height = std::floor(gameHeight * fit);
-			shown.TopLeftX = std::floor((wide - shown.Width) / 2.0f);
-			shown.TopLeftY = std::floor((high - shown.Height) / 2.0f);
-			shown.MinDepth = 0.0f;
-			shown.MaxDepth = 1.0f;
-		}
-
 		// After a resize: the window's pictures made again at its new size.
 		void resize()
 		{
-			resized = false;
-			RECT client{};
-			GetClientRect(window, &client);
-			if (client.right <= client.left || client.bottom <= client.top) { return; }   // minimised
 			context->OMSetRenderTargets(0, nullptr, nullptr);
 			target.Reset();
 			if (FAILED(swapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0)))
@@ -273,7 +127,19 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 				throw std::runtime_error("Direct3D 11 could not resize its window");
 			}
 			makeTarget();
-			fitGame();
+		}
+
+		D3D11_VIEWPORT viewport() const
+		{
+			const Win32Window::Shown& shown = frame.shown();
+			D3D11_VIEWPORT port{};
+			port.TopLeftX = shown.left;
+			port.TopLeftY = shown.top;
+			port.Width = shown.width;
+			port.Height = shown.height;
+			port.MinDepth = 0.0f;
+			port.MaxDepth = 1.0f;
+			return port;
 		}
 
 		void build(Object& object, float scale)
@@ -306,41 +172,14 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 	};
 
 	Direct3D11Window::Direct3D11Window(const WindowDesc& windowDesc) :
-		parts(std::make_unique<Parts>())
+		parts(std::make_unique<Parts>(windowDesc))
 	{
 		Parts& p = *parts;
-		p.gameWidth = std::max(windowDesc.width, 1.0f);
-		p.gameHeight = std::max(windowDesc.height, 1.0f);
-		const int scale = std::max(1, windowDesc.scale);
-
-		const HINSTANCE instance = GetModuleHandleW(nullptr);
-		WNDCLASSEXW kind{};
-		kind.cbSize = sizeof(kind);
-		kind.style = CS_HREDRAW | CS_VREDRAW;
-		kind.lpfnWndProc = &Parts::receive;
-		kind.hInstance = instance;
-		kind.hCursor = LoadCursorW(nullptr, MAKEINTRESOURCEW(32512));   // the arrow (IDC_ARROW)
-		kind.lpszClassName = kClassName;
-		RegisterClassExW(&kind);   // already registered by an earlier window: fine
-
-		// The game's size times its scale inside the frame, or the whole
-		// screen.
-		const bool fullscreen = windowDesc.fullscreen == "true";
-		const DWORD style = fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
-		RECT frame{ 0, 0, static_cast<LONG>(p.gameWidth) * scale, static_cast<LONG>(p.gameHeight) * scale };
-		if (fullscreen) { frame = { 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) }; }
-		else { AdjustWindowRect(&frame, style, FALSE); }
-
-		p.window = CreateWindowExW(0, kClassName, wide(windowDesc.name).c_str(), style,
-			fullscreen ? 0 : CW_USEDEFAULT, fullscreen ? 0 : CW_USEDEFAULT, frame.right - frame.left, frame.bottom - frame.top,
-			nullptr, nullptr, instance, &p);
-		if (!p.window) { throw std::runtime_error("Direct3D 11 could not make a window"); }
-
 		DXGI_SWAP_CHAIN_DESC chain{};
 		chain.BufferCount = 1;
 		chain.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		chain.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		chain.OutputWindow = p.window;
+		chain.OutputWindow = p.frame.handle();
 		chain.SampleDesc.Count = 1;
 		chain.Windowed = TRUE;
 		chain.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
@@ -348,8 +187,6 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 		if (FAILED(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, levels, static_cast<UINT>(std::size(levels)),
 			D3D11_SDK_VERSION, &chain, &p.swapChain, &p.device, nullptr, &p.context)))
 		{
-			DestroyWindow(p.window);
-			p.window = nullptr;
 			throw std::runtime_error("Direct3D 11 could not start on this graphics card");
 		}
 		p.makeTarget();
@@ -371,14 +208,14 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 		corners.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		p.device->CreateBuffer(&corners, nullptr, &p.corners);
 
-		const Frame size{ p.gameWidth, p.gameHeight, { 0.0f, 0.0f } };
+		const Frame size{ p.frame.gameWidth(), p.frame.gameHeight(), { 0.0f, 0.0f } };
 		D3D11_BUFFER_DESC frameBuffer{};
 		frameBuffer.ByteWidth = sizeof(Frame);
 		frameBuffer.Usage = D3D11_USAGE_IMMUTABLE;
 		frameBuffer.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		D3D11_SUBRESOURCE_DATA sizeData{};
 		sizeData.pSysMem = &size;
-		p.device->CreateBuffer(&frameBuffer, &sizeData, &p.frame);
+		p.device->CreateBuffer(&frameBuffer, &sizeData, &p.gameSize);
 
 		D3D11_SAMPLER_DESC sampler{};
 		sampler.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
@@ -408,15 +245,13 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 		rasterizer.DepthClipEnable = TRUE;
 		p.device->CreateRasterizerState(&rasterizer, &p.rasterizer);
 
-		if (!p.vertexShader || !p.pixelShader || !p.layout || !p.corners || !p.frame || !p.hardEdges || !p.smooth || !p.blend || !p.rasterizer)
+		if (!p.vertexShader || !p.pixelShader || !p.layout || !p.corners || !p.gameSize || !p.hardEdges || !p.smooth || !p.blend || !p.rasterizer)
 		{
 			throw std::runtime_error("Direct3D 11 could not set up its drawing");
 		}
 
-		p.fitGame();
-		setPictureScale(p.fit);
-		ShowWindow(p.window, SW_SHOW);
-		UpdateWindow(p.window);
+		setPictureScale(p.frame.fit());
+		p.frame.show();
 	}
 
 	Direct3D11Window::~Direct3D11Window()
@@ -426,34 +261,31 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 
 	bool Direct3D11Window::isOpen() const
 	{
-		return parts->window != nullptr && !parts->closeRequested;
+		return parts->frame.isOpen();
 	}
 
 	void Direct3D11Window::close()
 	{
 		Parts& p = *parts;
-		if (!p.window) { return; }
+		if (!p.frame.handle()) { return; }
 		p.visuals.clear();
 		if (p.context) { p.context->ClearState(); }
-		DestroyWindow(p.window);
-		p.window = nullptr;
+		p.frame.destroy();
 	}
 
 	std::pair<int, int> Direct3D11Window::position() const
 	{
-		RECT where{};
-		if (!parts->window || !GetWindowRect(parts->window, &where)) { return { 0, 0 }; }
-		return { static_cast<int>(where.left), static_cast<int>(where.top) };
+		return parts->frame.position();
 	}
 
 	void Direct3D11Window::setPosition(int x, int y)
 	{
-		if (parts->window) { SetWindowPos(parts->window, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE); }
+		parts->frame.setPosition(x, y);
 	}
 
 	void Direct3D11Window::setTitle(const std::string& title)
 	{
-		if (parts->window) { SetWindowTextW(parts->window, wide(title).c_str()); }
+		parts->frame.setTitle(title);
 	}
 
 	void Direct3D11Window::init(std::vector<Object>& objects)
@@ -466,61 +298,18 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 
 	std::vector<std::pair<KeyCode, bool>> Direct3D11Window::pollEvents()
 	{
-		MSG message{};
-		while (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE))
-		{
-			TranslateMessage(&message);
-			DispatchMessageW(&message);
-		}
-		std::vector<std::pair<KeyCode, bool>> events;
-		events.swap(parts->keys);
-		return events;
+		return parts->frame.pollEvents();
 	}
 
 	Controls Direct3D11Window::controls()
 	{
-		Controls controls;
-		const Parts& p = *parts;
-		if (!p.window || GetForegroundWindow() != p.window) { return controls; }
-
-		POINT at{};
-		GetCursorPos(&at);
-		ScreenToClient(p.window, &at);
-		RECT client{};
-		GetClientRect(p.window, &client);
-		controls.pointerInside = at.x >= 0 && at.y >= 0 && at.x < client.right && at.y < client.bottom;
-		controls.pointerX = (static_cast<float>(at.x) - p.shown.TopLeftX) / p.fit;
-		controls.pointerY = (static_cast<float>(at.y) - p.shown.TopLeftY) / p.fit;
-		controls.mouse = { (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0, (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0,
-			(GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0 };
-
-		// XInput numbers its pads 0 to 3, each an Xbox layout.
-		constexpr WORD buttons[padButtonCount] = {
-			XINPUT_GAMEPAD_A, XINPUT_GAMEPAD_B, XINPUT_GAMEPAD_X, XINPUT_GAMEPAD_Y,
-			XINPUT_GAMEPAD_LEFT_SHOULDER, XINPUT_GAMEPAD_RIGHT_SHOULDER, XINPUT_GAMEPAD_BACK, XINPUT_GAMEPAD_START,
-			XINPUT_GAMEPAD_DPAD_UP, XINPUT_GAMEPAD_DPAD_DOWN, XINPUT_GAMEPAD_DPAD_LEFT, XINPUT_GAMEPAD_DPAD_RIGHT,
-		};
-		std::size_t pad = 0;
-		for (DWORD user = 0; user < XUSER_MAX_COUNT && pad < padCount; ++user)
-		{
-			XINPUT_STATE state{};
-			if (XInputGetState(user, &state) != ERROR_SUCCESS) { continue; }
-			Pad& now = controls.pads[pad++];
-			now.connected = true;
-			for (std::size_t button = 0; button < padButtonCount; ++button)
-			{
-				now.buttons[button] = (state.Gamepad.wButtons & buttons[button]) != 0;
-			}
-			now.x = std::clamp(static_cast<float>(state.Gamepad.sThumbLX) / 32767.0f, -1.0f, 1.0f);
-			now.y = std::clamp(-static_cast<float>(state.Gamepad.sThumbLY) / 32767.0f, -1.0f, 1.0f);
-		}
-		return controls;
+		return parts->frame.controls();
 	}
 
 	void Direct3D11Window::clear(const std::string& colorName)
 	{
 		Parts& p = *parts;
-		if (p.resized) { p.resize(); }
+		if (p.frame.takeResized()) { p.resize(); }
 
 		// The whole window in the background's colour, bars included.
 		const Color c = colorFromName(colorName);
@@ -529,7 +318,8 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 
 		ID3D11RenderTargetView* targets[] = { p.target.Get() };
 		p.context->OMSetRenderTargets(1, targets, nullptr);
-		p.context->RSSetViewports(1, &p.shown);
+		const D3D11_VIEWPORT port = p.viewport();
+		p.context->RSSetViewports(1, &port);
 		p.context->RSSetState(p.rasterizer.Get());
 		p.context->OMSetBlendState(p.blend.Get(), nullptr, 0xFFFFFFFF);
 		p.context->IASetInputLayout(p.layout.Get());
@@ -538,7 +328,7 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 		const UINT offset = 0;
 		ID3D11Buffer* vertices[] = { p.corners.Get() };
 		p.context->IASetVertexBuffers(0, 1, vertices, &stride, &offset);
-		ID3D11Buffer* constants[] = { p.frame.Get() };
+		ID3D11Buffer* constants[] = { p.gameSize.Get() };
 		p.context->VSSetConstantBuffers(0, 1, constants);
 		p.context->VSSetShader(p.vertexShader.Get(), nullptr, 0);
 		p.context->PSSetShader(p.pixelShader.Get(), nullptr, 0);
@@ -593,7 +383,7 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 
 	float Direct3D11Window::fit() const
 	{
-		return parts->fit;
+		return parts->frame.fit();
 	}
 
 	Bitmap Direct3D11Window::capture()

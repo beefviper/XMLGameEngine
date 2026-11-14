@@ -123,7 +123,7 @@ set(ENGINE_HEADERS
 
 # The backends that are built (options.cmake), each a pair of files named after
 # it in the folder of its kind (window/sfml.cpp). SFML 3, raylib and SDL2 give a window and a sound backend; OpenGL and
-# Direct3D 11 a window only.
+# Direct3D a window only. The Direct3D windows share one Win32 window (window/win32.cpp).
 foreach(backend IN ITEMS xerces tinyxml2 pugixml rapidxml)
 	string(TOUPPER ${backend} upper)
 	if (XGE_WITH_${upper})
@@ -132,7 +132,7 @@ foreach(backend IN ITEMS xerces tinyxml2 pugixml rapidxml)
 	endif()
 endforeach()
 
-foreach(backend IN ITEMS sfml raylib sdl2 opengl direct3d11)
+foreach(backend IN ITEMS sfml raylib sdl2 opengl direct3d9 direct3d11)
 	string(TOUPPER ${backend} upper)
 	if (backend STREQUAL "sfml")
 		set(upper SFML3)
@@ -142,12 +142,17 @@ foreach(backend IN ITEMS sfml raylib sdl2 opengl direct3d11)
 		list(APPEND ENGINE_SOURCES "xge/lib/window/${backend}.cpp")
 		list(APPEND ENGINE_HEADERS "xge/lib/window/${backend}.h")
 
-		if (NOT backend STREQUAL "opengl" AND NOT backend STREQUAL "direct3d11")
+		if (NOT backend MATCHES "^(opengl|direct3d)")
 			list(APPEND ENGINE_SOURCES "xge/lib/audio/${backend}.cpp")
 			list(APPEND ENGINE_HEADERS "xge/lib/audio/${backend}.h")
 		endif()
 	endif()
 endforeach()
+
+if (XGE_WITH_DIRECT3D9 OR XGE_WITH_DIRECT3D11)
+	list(APPEND ENGINE_SOURCES "xge/lib/window/win32.cpp")
+	list(APPEND ENGINE_HEADERS "xge/lib/window/win32.h")
+endif()
 
 # The verbs: a file each in xge/lib/verbs/, listed in its all.cpp. They are
 # small, so they are compiled as one.

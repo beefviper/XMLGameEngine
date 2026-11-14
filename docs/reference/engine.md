@@ -40,11 +40,11 @@ An object is **in play** when it is not out of play (`<waiting />`, dead, despaw
 | Job | Interface | Libraries |
 |---|---|---|
 | Read XML | `XmlDocument` / `XmlNode` (`xml/document.h`) | Xerces (default), TinyXML2, PugiXML, RapidXML |
-| Window, drawing, keys, mouse, pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL (GLFW), Direct3D 11 (Windows only); `xgegui`'s Qt renderer |
+| Window, drawing, keys, mouse, pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL (GLFW), Direct3D 9 and 11 (Windows only, one Win32 window in `window/win32.h`); `xgegui`'s Qt renderer |
 | Sound | `Audio` (`audio/audio.h`) | SFML 3 (default), raylib, SDL2, none |
 
 - `Game` and `Engine` see only the interfaces. One factory per kind (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`) knows every library.
-- **A build has some, not all**: SFML 3 and Xerces by default; `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON` all (Direct3D 11 only on Windows). A library's code compiles only behind `XGE_WITH_<NAME>`. Each factory says what it has (`available()`, `availableBackends()`, `defaultBackend()`, `name()`); `create()` of one not built throws, naming those that are.
+- **A build has some, not all**: SFML 3 and Xerces by default; `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON` all (Direct3D only on Windows). A library's code compiles only behind `XGE_WITH_<NAME>`. Each factory says what it has (`available()`, `availableBackends()`, `defaultBackend()`, `name()`); `create()` of one not built throws, naming those that are.
 - **Pictures** are drawn by the engine, so a window library mostly shows bitmaps; only circles and rectangles are its own.
 - **Sound** is made by the engine (`synthesize()`, `audio/sound.h`), so it is the same whichever library plays it. `Game` never makes a noise: `<play>` asks, and `Engine` hands the frame's sounds to its `Audio`. Window and sound libraries are chosen apart; any goes with any.
 - `Engine::replaceWindow()` swaps the window of a running game (the old destroyed first), `Engine::replaceAudio()` the sound, `Engine::silence()` stops what plays, `Engine::pump()` keeps a paused window responsive.

@@ -9,7 +9,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 **Backends are a feature (chosen by the author).** Wide support for libraries is part of what the project is, as an emulator front end supports many.
 
 - Dropping some to save upkeep was proposed and rejected.
-- Lower-level ones are wanted next (OpenGL is there; Direct3D and Vulkan to come), and Xerces as the full validator with a lighter built-in one behind the other parsers is intended.
+- Lower-level ones are wanted next (OpenGL and Direct3D 9 and 11 are there; Vulkan and Direct3D 12 to come), and Xerces as the full validator with a lighter built-in one behind the other parsers is intended.
 - What follows is making the next backend cheap: with text and image files made by the engine, a backend only opens a window, shows bitmaps and reads keys ([plan](../plan.md#a7-the-next-backend-is-cheap)).
 
 ## XML: `XmlDocument` and `XmlNode`
@@ -37,7 +37,9 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
   - Now `Engine::loop` steps whole frames by the clock and every window waits for the refresh, so the picture never tears and the speed never depends on the screen.
   - A variable time step was not taken: every number in a game counts frames, and play, demos and tests must come out the same on every machine.
   - Drawing between two frames on a screen faster than the game is open.
-- **Direct3D 11** (the author wants the low-level libraries too): one file, a Win32 window of its own, every object one textured rectangle drawn by two small shaders compiled when the window opens (no shader files to ship), pads from XInput. It resizes like the SFML window. Built only on Windows, where its SDK comes with Visual Studio; `BUILD_TESTING` turns it on there and nowhere else. Next: Direct3D 9, Vulkan, Direct3D 12, each the same shape.
+- **Direct3D 11** (the author wants the low-level libraries too): one file, a Win32 window of its own, every object one textured rectangle drawn by two small shaders compiled when the window opens (no shader files to ship), pads from XInput. It resizes like the SFML window. Built only on Windows, where its SDK comes with Visual Studio; `BUILD_TESTING` turns it on there and nowhere else.
+- **Direct3D 9** (older machines): the same rectangles drawn by the fixed pipeline, already in the window's pixels, so no shaders and no compiler. Managed textures outlive a reset, so a resize or a lost device needs only `Reset`. The device is made with `FPU_PRESERVE`: without it Direct3D 9 drops the whole program's sums to single precision.
+- **One Win32 window** (`window/win32.cpp`) serves both: its messages, keys, XInput pads, and where the game is fitted in it. A Direct3D backend adds only its drawing. Next: Vulkan, Direct3D 12, each the same shape.
 - **One test for every window:** opening each library for real, drawing known pictures and reading the pixels back (`capture()`), with a key pressed as a person would. Hidden from ordinary runs, since it opens windows; under Xvfb on Linux. Rejected: a fake of each library (it tests the fake).
 - **Factories** are the only places that know every library; a new one is one branch and a pair of files. Choice is at run time; CMake decides only what is built.
 - "Backend" stayed over module, provider or adapter: it says "interchangeable lower layer".

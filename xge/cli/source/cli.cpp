@@ -50,6 +50,7 @@ namespace xge
 			{ "raylib", WindowBackend::Raylib },
 			{ "sdl2",   WindowBackend::SDL2 },
 			{ "opengl", WindowBackend::OpenGL },
+			{ "direct3d9", WindowBackend::Direct3D9 },
 			{ "direct3d11", WindowBackend::Direct3D11 },
 			{ "none",   WindowBackend::None },
 		};
