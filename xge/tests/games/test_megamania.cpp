@@ -129,7 +129,8 @@ TEST_CASE("the wave drops bombs, and a bomb costs a ship", "[megamania]")
 
 	play.noBombs("wave1");
 	play.game.despawn("bomb");
-	play.frames(1);
+	play.frames(90); // a blaster hit by then has burst and come back
+
 	const float lives = play.player().variable.at("lives");
 	Object* made = play.game.spawn("bomb");
 	INFO("bombs in play " << play.bombsInPlay());
