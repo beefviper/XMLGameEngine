@@ -365,3 +365,31 @@ TEST_CASE("other is only for a rule about another object", "[collision_rules][ot
 	CHECK_THROWS_WITH(loads(scored + played::box("p2", 0, 0) + played::box("coin", 0, 0, "<collisions><collision><inc variable=\"other.score\" /></collision></collisions>"), "<pop />"),
 		Catch::Matchers::ContainsSubstring("p2"));
 }
+
+TEST_CASE("an object whose picture changes has changed: it touches what the new picture covers, though nothing moved", "[collision_rules][moved]")
+{
+	// A trap whose jaws open wider than it was, under a player standing still beside it.
+	const played::Scratch file(
+		"<object name=\"trap\"><sprite name=\"shut\"><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<sprite name=\"open\"><rectangle><width>40</width><height>10</height></rectangle></sprite>"
+		"<position><x>100</x><y>100</y></position>"
+		"<collisions><collision object=\"player\"><inc variable=\"self.bites\" /></collision></collisions>"
+		"<variables><variable name=\"bites\">0</variable></variables></object>"
+		+ played::box("player", 125, 100, "<collisions></collisions>"),
+		"<become object=\"trap\" sprite=\"open\" />");
+	played::Played play(file.path);
+	const auto bites = [&] { return play.get("trap").variable.at("bites"); };
+
+	play.frames(3);
+	CHECK(bites() == 0.0f);
+
+	// The jaws open: a touch, though neither has moved.
+	play.tap(xge::KeyCode::Space);
+	play.get("trap").size = { 40.0f, 10.0f };
+	play.frames(1);
+	CHECK(bites() == 1.0f);
+
+	// Left as they are, nothing has changed since: not touched again.
+	play.frames(3);
+	CHECK(bites() == 1.0f);
+}

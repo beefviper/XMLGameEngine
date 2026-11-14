@@ -22,15 +22,20 @@ namespace xge
 {
 	namespace
 	{
-		// Whether it has moved, so its touches are looked for: it is going
-		// somewhere this frame (a velocity, or riding something), or it is
-		// not where the last frame left it (anything that put it somewhere:
-		// a hop, a <set>, a teleport, a spawn). Two that have not moved
-		// cannot have come to touch, and are not looked at.
+		// Whether it has moved or changed, so its touches are looked for: it
+		// is going somewhere this frame (a velocity, or riding something), it
+		// is not where the last frame left it (anything that put it
+		// somewhere: a hop, a <set>, a teleport, a spawn), it shows another
+		// picture (a look, an animation's frame, a size, mirrored), or it
+		// came into play or had its collisions turned on. Two that have
+		// neither moved nor changed cannot have come to touch, and are not
+		// looked at.
 		bool isMoving(const Object& object) noexcept
 		{
 			const Vector2f motion = motionOf(object);
-			return motion.x != 0 || motion.y != 0 || object.spin != 0 || object.position != object.before.position;
+			return motion.x != 0 || motion.y != 0 || object.spin != 0 || object.position != object.before.position
+				|| !(object.shown() == object.shownBefore)
+				|| (object.collisionsOn && !object.before.collisionsOn) || (object.isVisible && !object.before.isVisible);
 		}
 
 		// Whether a and b can touch at all, whatever their rules: both have

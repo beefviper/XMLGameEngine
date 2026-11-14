@@ -6,7 +6,7 @@
 
 - A touch has a normal and a depth ([collisions](20-collisions.md#contacts-and-knocks)), and `bounce` mirrors about it ([bounce by the normal](20-collisions.md#bounce-by-the-normal)); a `<swing>` about a `<pivot>` is swept through the frame and lends its speed at the touch point to a `<knock>` (Pinball).
 - No spatial broad phase: pairs are pruned by the rules once per game and far ones sleep ([collisions](20-collisions.md#fewer-checks)). A game with thousands of moving objects would want a grid, or sorted swept boxes.
-- A pair where nothing moves is not looked at, so a rule against something standing still runs only when the object moves, rides something or hops. A `watch` flag on a rule that must be checked every frame is one way out.
+- A pair where nothing moved or changed is not looked at, so nothing happens every frame "while touching" (standing in fire). No game needs it yet; a condition `<touching class>` would be the likely form.
 - Only the first hit of a pair per frame is handled.
 - Objects out of play (`<waiting />`) do not move or collide. An invisible trigger zone is `<hidden />`: in play but unseen.
 - Other directions looked at: smaller time steps than the frame (the swept test avoids them), deferred handling (detect, then resolve, then update sprites), the world bounds as invisible collidable objects so a rule reads "touching the left bound", separate attributes for "what was hit" and "what to do".

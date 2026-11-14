@@ -14,7 +14,7 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 | # | Task | Why here |
 |---|---|---|
 | 1 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
-| 2 | [F6](#f6-rules-that-are-looked-at-when-nothing-moves): rules when nothing moves | Removes two limits and some fakes in the games |
+| 2 | [F6](#f6-rules-that-are-looked-at-when-something-changes): rules when something changes | Removes two limits |
 | 3 | [F3](#f3-a-maze-search), then [F5](#f5-line-of-sight): maze search, line of sight | Two small steering additions that share games (Berserk, Haunted House) |
 | 4 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
 | 5 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
@@ -225,18 +225,15 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
 - **Docs.** `docs/reference/states.md` "Conditions", `pictures.md` "Light", the word index.
 - **Done when** all five boxes are ticked.
 
-#### F6. Rules that are looked at when nothing moves
+#### F6. Rules that are looked at when something changes
 
 - **Needs** nothing.
-- **Why.** Two listed limits: a pair where nothing moves is not looked at, and an edge rule cannot have a `<condition>`. Several games add a dummy motion to wake a rule.
+- **Why.** Two listed limits: a pair where nothing moved was not looked at, even when one had changed (a crocodile's jaws opening under a still Harry), and an edge rule cannot have a `<condition>`. A search of the games found no faked motion: gravity hid the first.
 - **Steps.**
-  - [ ] **1. `<always />` in a `<collision>` (M).** Its pairs are looked at every frame while they overlap. `FrameRules::partners` already knows the pairs per rule; add the flag to the pair, and let it past the "is anything moving" test in the sweep (`xge/lib/play/frame.cpp`). Schema `collisionType`, `readCollisions` in `load/xml.cpp`, `data.xsl` and the describer. **Check:** a test in `xge/tests/engine/test_collision_rules.cpp`: two still, overlapping objects; the rule runs every frame with the word and never without.
-  - [ ] **2. List the fakes (S).** Read the games for motion added only to wake a rule, and write the list in this step before changing any. **Check:** the list is in the commit message.
-  - [ ] **3. Remove the fakes, a game a commit (S each).** **Check:** that game's test after each.
-  - [ ] **4. Conditions on edge rules (M).** An edge rule takes the same `<condition>` children an object rule takes. `EdgeGuard` already carries `sprite=` and `unless=`; add the condition list. **Check:** a test where an edge rule runs only while a variable is above a number.
-  - [ ] **5. Centipede uses it (S).** Its falling and rising are looks only because edge rules took no condition; simplify. **Check:** Centipede's test.
-- **Docs.** `docs/reference/collisions.md`, `docs/designs/21-collisions-open.md`, both limits out of `limits.md`, the word index.
-- **Done when** all five boxes are ticked.
+  - [x] **1. Changed counts as moved (S).** A pair is looked at when one shows another picture (look, animation frame, size, mirrored), came into play or had its collisions turned on. No `<always />` word (the author: two things that neither moved nor changed never need comparing). **Check:** `test_collision_rules.cpp` "an object whose picture changes has changed".
+  - [ ] **2. Conditions on edge rules (M).** An edge rule takes the same `<condition>` children an object rule takes. `EdgeGuard` already carries `sprite=` and `unless=`; add the condition list. **Check:** a test where an edge rule runs only while a variable is above a number.
+- **Docs.** `docs/reference/collisions.md`, `docs/designs/20-collisions.md`, `docs/designs/21-collisions-open.md`, the edge limit out of `limits.md`.
+- **Done when** both boxes are ticked.
 
 #### F7. Sound: an envelope, and notes that follow a number
 

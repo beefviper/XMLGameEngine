@@ -999,10 +999,28 @@ namespace xge
 			placed = true;
 		}
 
+		// What it showed when the last frame ended: a picture that changed
+		// can touch what the old one did not, though nothing moved (a
+		// crocodile's jaws opening under Harry).
+		struct Shown
+		{
+			std::size_t look{};
+			std::size_t animationIndex{};
+			Vector2f size{};
+			bool mirrored{ false };
+			bool operator==(const Shown& other) const noexcept
+			{
+				return look == other.look && animationIndex == other.animationIndex && size == other.size && mirrored == other.mirrored;
+			}
+		};
+		Shown shownBefore;
+		Shown shown() const noexcept { return { look, animationIndex, size, mirrored }; }
+
 		// The frame is over: how it is now is how it was before the next.
 		void remember()
 		{
 			before = *this;
+			shownBefore = shown();
 			placed = false;
 		}
 

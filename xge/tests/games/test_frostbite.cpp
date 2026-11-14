@@ -240,7 +240,7 @@ TEST_CASE("Bailey rides a floe, and a goose pushes him", "[frostbite]")
 	CHECK(play.bailey().position.x > before + 5 * 1.2f + 1.0f);
 }
 
-TEST_CASE("once all four rows are blue, they all turn white again", "[frostbite]")
+TEST_CASE("once all four rows are blue, they all turn white again, and the one he stands on is his again", "[frostbite]")
 {
 	Frostbite play;
 	play.startStill();
@@ -260,13 +260,18 @@ TEST_CASE("once all four rows are blue, they all turn white again", "[frostbite]
 
 	play.jump(KeyCode::S);
 	play.frames(1);
-	CHECK(play.variable("score") == 40);
-	CHECK(play.visible("igloo") == 4);
-	for (const char* row : { "row1", "row2", "row3", "row4" })
+	// All white again; the row he stands on changed under him, so he meets
+	// it white and it is his at once, as a crocodile's jaws opening under a
+	// still Harry bite.
+	play.frames(1);
+	CHECK(play.variable("score") == 50);
+	CHECK(play.visible("igloo") == 5);
+	for (const char* row : { "row1", "row2", "row3" })
 	{
 		CHECK(play.rowIs(row, "white"));
 	}
-	CHECK(play.variable("blue") == 0);
+	CHECK(play.rowIs("row4", "blue"));
+	CHECK(play.variable("blue") == 1);
 }
 
 TEST_CASE("the cold takes a degree a second; at zero Bailey freezes, loses a life and starts warm on the shore", "[frostbite]")
