@@ -153,7 +153,8 @@ namespace xge
 					throw std::runtime_error(where + ": " + part + " sprite=\"" + look + "\", a look the members of class " + pile.holdsClass + " have not (they have '" + face + "' and '" + looks[1].name + "')");
 				}
 			};
-			if (!pile.holdsSprite.empty()) { known(pile.holdsSprite, "its"); pile.faces = pile.holdsSprite == face ? "up" : "down"; }
+			if (!pile.holdsSprite.empty()) { known(pile.holdsSprite, "its"); }
+			if (!pile.topSprite.empty()) { known(pile.topSprite, "<top>"); }
 			// <counts variable>: a variable of its own, kept to the total.
 			if (!pile.counts.empty() && !object.variable.count(pile.counts)) { object.variable[pile.counts] = RawValue::expression("0"); }
 			if (!pile.spreadSprite.empty())
@@ -166,12 +167,6 @@ namespace xge
 					std::swap(pile.fanX, pile.hiddenX);
 					std::swap(pile.fanY, pile.hiddenY);
 				}
-			}
-			if (!pile.topSprite.empty())
-			{
-				known(pile.topSprite, "<top>");
-				if (pile.topSprite != face) { throw std::runtime_error(where + " > <top>: turns the top one to its face, '" + face + "'"); }
-				pile.showTop = true;
 			}
 		}
 
@@ -278,6 +273,12 @@ namespace xge
 		return nullptr;
 	}
 
+	void Game::showHeld(Object& card, const std::string& look)
+	{
+		const auto found = std::find_if(card.looks.begin(), card.looks.end(), [&](const Object::Look& each) { return each.name == look; });
+		if (found != card.looks.end()) { turnCard(card, found == card.looks.begin()); }
+	}
+
 	void Game::turnCard(Object& card, bool up)
 	{
 		card.faceUp = up;
@@ -289,8 +290,7 @@ namespace xge
 	{
 		Object* card = cardAt(number);
 		if (!card) { return; }
-		if (pile.pile.faces == "up") { turnCard(*card, true); }
-		else if (pile.pile.faces == "down") { turnCard(*card, false); }
+		if (!pile.pile.holdsSprite.empty()) { showHeld(*card, pile.pile.holdsSprite); }
 		auto at = pile.pile.cards.end();
 		if (!pile.pile.orderBy.empty())
 		{
@@ -1094,8 +1094,8 @@ namespace xge
 
 	void Game::showTop(Object& pile)
 	{
-		if (!pile.pile.showTop || pile.pile.cards.empty()) { return; }
-		if (Object* top = cardAt(pile.pile.cards.back()); top && !top->faceUp) { turnCard(*top, true); refreshHolder(pile); }
+		if (pile.pile.topSprite.empty() || pile.pile.cards.empty()) { return; }
+		if (Object* top = cardAt(pile.pile.cards.back()); top && top->lookName() != pile.pile.topSprite) { showHeld(*top, pile.pile.topSprite); refreshHolder(pile); }
 	}
 
 	void Game::dealDecks()

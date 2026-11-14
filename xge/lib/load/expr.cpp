@@ -1251,7 +1251,9 @@ namespace xge
 			const auto number = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
 			Object::Holder& pile = object.pile;
 			pile.is = true;
-			pile.faces = raw.faces;
+			pile.holdsClass = raw.holdsClass;
+			pile.holdsSprite = raw.holdsSprite;
+			pile.topSprite = raw.topSprite;
 			pile.fan = { number(raw.fanX), number(raw.fanY) };
 			pile.hidden = raw.hasHidden ? Vector2f{ number(raw.hiddenX), number(raw.hiddenY) } : pile.fan;
 			pile.dealt = static_cast<int>(std::lround(number(raw.dealt)));
@@ -1264,7 +1266,6 @@ namespace xge
 			pile.refillLeave = std::max(0, static_cast<int>(std::lround(number(raw.refillLeave))));
 			pile.fanWidth = number(raw.fanWidth);
 			pile.carry = raw.carry;
-			pile.showTop = raw.showTop;
 			pile.orderBy = raw.orderBy;
 			pile.counts = raw.counts;
 			pile.lift = number(raw.lift);

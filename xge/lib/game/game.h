@@ -557,6 +557,8 @@ namespace xge
 		void putInHolder(Object& pile, int number);
 		int takeTop(Object& pile);
 		void showTop(Object& pile);
+		// Shows the held member that look of its two, face (the first) or back.
+		void showHeld(Object& card, const std::string& look);
 		Vector2f cardPlace(const Object& pile, std::size_t index);
 		bool pileTakes(Object& pile, const std::vector<int>& cards, const Object* holder = nullptr);
 		float cardPoints(const Object& pile, const Object& card);

@@ -734,7 +734,6 @@ namespace xge
 		struct RawHolder
 		{
 			bool is{ false };
-			std::string faces;          // "up", "down", or "" (each keeps its own)
 			RawValue fanX;              // each face-up card on from the one below (empty text: 0)
 			RawValue fanY;
 			RawValue hiddenX;           // each face-down one (empty text: as face up)
@@ -750,7 +749,6 @@ namespace xge
 			RawValue refillLeave;       // <leave>: that many of the top cards stay (empty text: none)
 			RawValue fanWidth;          // <fan><width>: the fan is never wider (empty text: no limit)
 			bool carry{ false };        // <carry />: a face-up card can be taken with all above it
-			bool showTop{ false };      // <showtop />: a face-down card left on top turns up
 			RawValue lift;              // <lift>: the card a hand points at, lifted out of the fan by that much (empty text: none)
 			bool hasPoints{ false };    // <counts>: what its face-up cards add up to
 			RawValue pointsMost;        // <counts><atmost>: highs only while the total stays at most this (empty text: no limit)
@@ -762,10 +760,10 @@ namespace xge
 			int meldsBest{};            // <score><best> with <melds />: the best this many of the cards (0: all)
 			HolderRule takes;
 			// <holds class sprite>: the class it holds, as written, and the
-			// looks its words name (the look laid members show, the one a
-			// second <spread> is for, <top sprite>'s); worked out into
-			// faces, the hidden fan and showTop by settleHolders
-			// (game/holders.h). Empty for a <pile>.
+			// looks its words name: the look laid members show (none: each
+			// keeps its own), the one a second <spread> is for (the hidden
+			// fan, worked out by settleHolders, game/holders.h), and
+			// <top sprite>'s, which a member left on top turns to.
 			std::string holdsClass;
 			std::string holdsSprite;
 			std::string spreadSprite;
@@ -1317,7 +1315,9 @@ namespace xge
 		struct Holder
 		{
 			bool is{ false };
-			std::string faces;
+			std::string holdsClass;   // <holds class sprite>, as written
+			std::string holdsSprite;
+			std::string topSprite;    // <top sprite>: what a member left on top shows
 			Vector2f fan{};
 			Vector2f hidden{};
 			int dealt{};
@@ -1331,7 +1331,6 @@ namespace xge
 			std::vector<std::string> orderBy;
 			float fanWidth{};
 			bool carry{ false };
-			bool showTop{ false };
 			float lift{};
 			float pointsMost{};     // 0: no limit
 			std::string counts;     // <counts variable>: as written (empty: none)
