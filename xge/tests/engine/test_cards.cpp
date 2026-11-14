@@ -863,6 +863,9 @@ TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first
 			table.space();
 			played = table.turn() != 1.0f;
 		}
+		// Your last card out wins at once, the turn still yours: nothing to
+		// draw then (Space on the win screen would start again).
+		if (table.state() != "playing") { break; }
 		if (!played)
 		{
 			table.hand().hand.pile = table.pile("stock").name;
@@ -871,7 +874,7 @@ TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first
 			continue;
 		}
 		table.frames(1);
-		if (table.turn() == 3.0f)
+		if (table.state() == "playing" && table.turn() == 3.0f)
 		{
 			table.hand().hand.pile = table.pile("mine").name;
 			table.hand().hand.at = 0;
