@@ -18,6 +18,8 @@
 #include "game/game.h"
 #include "load/xml.h"
 #include "load/xsd.h"
+#include "picture/color.h"
+#include "picture/image.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -644,4 +646,38 @@ TEST_CASE("a game that is nowhere is an error naming the file", "[cli]")
 	{
 		CHECK(std::string(error.what()).find("missing.xml") != std::string::npos);
 	}
+}
+
+TEST_CASE("picture draws the last frame frames played into a PNG", "[cli][picture]")
+{
+	CHECK(parseCommandLine({ "pong", "--frames", "10", "--picture", "p.png" }).picture == "p.png");
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--picture", "p.png" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--frames", "10", "--picture", "a.png", "--picture", "b.png" }), CliError);
+	CHECK(usageText().find("--picture") != std::string::npos);
+
+	const std::filesystem::path file = std::filesystem::temp_directory_path() / scratchName("xge_picture.png");
+	std::ostringstream out;
+	REQUIRE(playFrames("descriptions/pong.xml", parseCommandLine({ "pong", "--frames", "30", "--seed", "1", "--picture", file.string() }), out) == EXIT_SUCCESS);
+
+	// Read back, it is Pong's window: its size times its scale, its
+	// background in the corner, and something drawn on it.
+	Game game{ readGame("descriptions/pong.xml", XmlBackend::Xerces) };
+	const WindowDesc& window = game.getWindowDesc();
+	const std::shared_ptr<const Bitmap> picture = loadPicture(file.string());
+	REQUIRE(picture);
+	const int scale = std::max(1, window.scale);
+	CHECK(picture->width == static_cast<int>(window.width) * scale);
+	CHECK(picture->height == static_cast<int>(window.height) * scale);
+	REQUIRE(picture->rgba.size() >= 4);
+	const Color background = colorFromName(window.background);
+	CHECK(picture->rgba[0] == background.r);
+	CHECK(picture->rgba[1] == background.g);
+	CHECK(picture->rgba[2] == background.b);
+	std::size_t drawn = 0;
+	for (std::size_t at = 0; at + 3 < picture->rgba.size(); at += 4)
+	{
+		if (picture->rgba[at] != background.r || picture->rgba[at + 1] != background.g || picture->rgba[at + 2] != background.b) { ++drawn; }
+	}
+	CHECK(drawn > 100);
+	std::filesystem::remove(file);
 }

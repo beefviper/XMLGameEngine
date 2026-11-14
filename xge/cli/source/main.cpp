@@ -86,6 +86,10 @@ int main(int argc, char* argv[])
 		{
 			options.dump = std::filesystem::absolute(options.dump).string();
 		}
+		if (!options.picture.empty())
+		{
+			options.picture = std::filesystem::absolute(options.picture).string();
+		}
 	}
 	catch (const xge::CliError& error)
 	{

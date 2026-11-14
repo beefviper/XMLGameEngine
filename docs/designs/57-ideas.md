@@ -29,7 +29,7 @@
 - Export a compact state (positions, velocities, score, brick grid) each frame or step so an AI agent or test reads structured text instead of pixels.
   - Pieces: frame-step the game, or split a fast reflex controller from a slow decision loop; render to a texture and dump a PNG per step for vision; for existing commercial games, emulators with frame stepping, save states, RAM search and scripting (BizHawk, RetroArch).
   - The author's larger goal: an AI that reverse-engineers a game the way a person does (find the lives counter by losing a life) and describes the scene in plain English.
-- Built so far: `xgecli --frames N --seed S` steps a game with no window, `--keys` plays a `<demo>` back, and `--dump` writes the state as XML ([the command line](52-cli.md)). The picture of a frame is still to come (plan F1).
+- Built so far: `xgecli --frames N --seed S` steps a game with no window, `--keys` plays a `<demo>` back, `--dump` writes the state as XML, and `--picture` draws the last frame into a PNG ([the command line](52-cli.md)).
 - Relevance: an engine whose whole state is declared in XML is easy to export from. A null input driven by a scripted or learned player through the same command queue as a human ([states-and-conditions](07-states-and-conditions.md)).
 
 ## Game and mechanic ideas

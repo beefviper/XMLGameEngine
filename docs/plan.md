@@ -14,12 +14,11 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 | # | Task | Why here |
 |---|---|---|
 | 1 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
-| 2 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
-| 3 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
-| 4 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
-| 5 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
-| 6 | [F8](#f8-dice): dice | Waits on the hold on new games |
-| 7 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
+| 2 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
+| 3 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
+| 4 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
+| 5 | [F8](#f8-dice): dice | Waits on the hold on new games |
+| 6 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
 
 **On hold:** [A5](#a5-a-game-written-out-as-if-by-hand), the stand-alone generator (the author: nice-looking generated code is a hard problem that may need several things to change at once). It stands at `pong_min` written, and `pong.xml` written by hand as the next example.
 
@@ -29,7 +28,6 @@ What must come before what:
 |---|---|
 | A4 | A2 |
 | A1 step 4 | A5 far enough along to retire `data.xsl`, and the author's yes |
-| F1 step 5 | easier after A7 step 4b, not blocked by it |
 | F8 | the hold on new games lifted ([open decisions](#open-decisions)) |
 
 Everything else is independent, so the author can move any line up or down.
@@ -151,27 +149,12 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **5. One conformance test for every window backend (M).** `xge/tests/engine/test_backends.cpp`: for each backend built, open a small window (under Xvfb on Linux), show three known bitmaps, read the pixels back where the library allows, feed a key, close. **Check:** it passes for every backend built.
   - [x] **6. Direct3D 11 (M).** The simplest modern one: a window from Win32, a textured quad per object. `xge/lib/window/direct3d11.cpp` behind `XGE_WITH_DIRECT3D11`, a row in `scripts/cmake/dependencies.cmake` and the factory. Built (`window/direct3d11.cpp`, `-w direct3d11`, a choice in `xgegui`); the author's build and window test passed.
   - [x] **7. Then, each its own step like 6:** Direct3D 9 (older machines), Vulkan (the most code for the same quad), Direct3D 12 last. Direct3D 9 is written (`window/direct3d9.cpp`, `-w direct3d9`, a choice in `xgegui`), on a Win32 window now shared with Direct3D 11 (`window/win32.cpp`); the author's build and window test passed. Vulkan is written (`window/vulkan.cpp` on GLFW, `-w vulkan`, a choice in `xgegui`; its GLFW keys and pads shared with OpenGL in `window/glfw.cpp`), and its window test passes on Linux under the validation layer, and the author's Windows build and test passed. **It cannot be built in a Linux container:** it is written blind there and compiled, fixed and tested by the author on Windows, so keep it to one small file and expect a round or two. **Check:** step 5's test, run by the author. Direct3D 12 is written blind (`window/direct3d12.cpp` on the shared Win32 window, `-w direct3d12`, a choice in `xgegui`; a Debug build turns on the debug layer when Windows has it); the author's build and window test passed.
-- **Also gains.** [F1](#f1-a-game-you-can-step-and-read-from-the-command-line)'s picture of a frame becomes trivial now that text is a bitmap. plutovg can also write PNGs (F1, step 5's test) and test whether a point is inside a shape, if a game ever wants exact shape touches.
+- **Also gains.** The picture of a frame (F1, done) came cheap once text was a bitmap. plutovg can also test whether a point is inside a shape, if a game ever wants exact shape touches.
 - **Done, first milestone:** no window backend's file holds font or image-file code, the conformance test runs over each, and the first new backend is under 300 lines.
 
 ### Additions
 
 Ordered by how many existing games gain. Each ends with the docs, a game or two moved to the new word, and the limitation removed from `docs/reference/limits.md`.
-
-#### F1. A game you can step and read from the command line
-
-- **Needs** nothing.
-- **Why.** Agents build this project and cannot see it. The engine already plays with no window (`-w none`), checks a game without playing it (`--check`), draws every picture itself into pixels, and can copy a whole board to search it. What is missing is the front door.
-- **Steps.**
-  - [x] **1. `--frames N` and `--seed S` (S).** `xgecli <game> -w none --frames 600 --seed 1` plays that many frames and exits; `--frames` alone implies no window and no sound. **Check:** a test runs it on Pong and gets exit code 0; a game that throws gives a message and a non-zero code.
-  - [x] **2. `--keys file` (S).** The file is the `<demo>` format (`<press button="space">1005</press>`, `<release button="space">1009</release>`: a button and the frame), so a recording made with `--record` replays. **Check:** record ten seconds of Pong with `--record`, replay it with `--keys`, and the final score matches.
-  - [x] **3. `Game::describe()` (M).** One function in `game/game.cpp` that writes the state as XML: the current state and scene, and for each object in play its full name, class, look, position, velocity and variables. XML because the project's tools are XML. **Check:** a test calls it on Pong after 60 frames and finds the ball and both paddles with their positions.
-  - [x] **4. `--dump file` (S).** Writes `describe()` at the end, or every K frames with `--dump-every K`. A small XSD for the dump goes in `games/`. **Check:** the file validates against that XSD.
-  - [ ] **5. `--picture file.png` (L; split before starting).** A software `Window` (`xge/lib/window/picture.cpp`, behind no option since it needs no library) that composes the frame from the engine's own bitmaps (text is `drawText`'s) into one image and writes a PNG with plutovg. **Check:** `xgecli pacman --frames 600 --seed 1 --picture p.png` writes a picture a person recognises as Pac-Man (the agent reads the image; then the author).
-  - [ ] **6. Tell agents (S).** `docs/agents/readme.md` gains "how to look at a game". **Check:** docs only.
-- **Not wanted:** a test per game that compares a dump with a stored one. It would freeze every game.
-- **Files.** `xge/cli/source/cli.cpp`, `main.cpp`; `xge/lib/window/picture.cpp` (new), the window factory; `xge/lib/game/game.cpp`; `docs/reference/programs.md`, `docs/designs/52-cli.md`, `57-ideas.md` (the "machine-readable view" idea becomes built).
-- **Done when** `xgecli pacman --frames 600 --seed 1 --picture p.png --dump p.xml` writes a recognisable picture and a state file that validates.
 
 #### F2. Animations that run once
 

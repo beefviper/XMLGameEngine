@@ -20,6 +20,14 @@ Rules, build and test commands: [AGENTS.md](../../AGENTS.md). How the engine wor
 - Windows headers define macros a Linux build never sees: `near`, `far`, `min`, `max`, `small`, `interface`, `ERROR`. Never name anything one of them (`-Dnear= -Dfar=` on a syntax-only compile catches it).
 - MSVC flags what GCC misses, in tests too: C4702 (unreachable code; also a loop whose body always throws, as `fail` does: test the first child with an `if`), C4459 (a local hiding a file-level name).
 
+## Looking at a game
+
+You cannot see a window, but you can see a frame. From `games/`:
+
+- `xgecli pacman --frames 600 --seed 1 --picture p.png --dump p.xml`, then read `p.png` (an image) and `p.xml` (every object in play, with its look and position).
+- Most games wait on a title: get past it with `--keys start.xml`, a file holding only a `<demo>` (`<seed>1</seed><frames>600</frames><press button="space">5</press><release button="space">8</release>`). Add presses to steer.
+- A real window under `xvfb-run -a` with `import -window root` also works, but the picture is the same drawing every window shows and needs neither.
+
 ## Building in a Linux sandbox
 
 - The recipe that works with every backend on: `cmake -S . -B build -G Ninja -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release -DFORCE_LOCAL_GLFW=ON -DBUILD_SHARED_LIBS=ON`, `cmake --build build --parallel`, `cd build && ctest -j4`.

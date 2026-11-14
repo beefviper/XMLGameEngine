@@ -18,6 +18,7 @@ xgecli [game] [options]
   --seed <n>           the random numbers start from n
   --keys <file>        play back the <demo> in the file
   --dump <file>        with --frames, write the state as XML (--dump-every <n> as well)
+  --picture <file>     with --frames, draw the last frame into a PNG
   -h, --help
 ```
 
@@ -42,4 +43,5 @@ xgecli [game] [options]
 - **Stepping** (`--frames`, `--seed`): so an agent, which cannot watch a window, can play a game and read what happened. `--frames` plays as fast as the frames go on the null window (`playFrames` in `cli.cpp`, a loop of `Engine::step`), so it is the play the window would have shown, frame for frame. A real window or sound named with it is refused rather than ignored. `--seed` fixes the numbers before the game loads, because loading already draws them (a `<random>` position).
 - **Playing keys back** (`--keys`): the file is a `<demo>`, the format `--record` already writes, so a person's recording is an agent's input and the other way round; no second key format. A game file is taken too (its `<demo>` is a child of the root), so `--record` then `--keys` on the same file needs nothing in between. `Engine::replay` starts a new game from the demo's seed, as `record()` started the one recorded, and presses each key at the start of its frame, where a window's key would have been handled. The demo's seed is the only one that replays it, so `--seed` with it is refused.
 - **Dumping** (`--dump`, `Game::describe`): XML because the project's tools are XML, so a dump is read with the same libraries and checked with a schema of its own (`games/xgedump.xsd`). Numbers are element content and names are attributes, as in a game file. It holds what is in play only, the things a player could see, not every field of `Object`: a test that compares whole dumps would freeze every game, so none is kept.
+- **The picture** (`--picture`): a `PictureWindow` the engine draws into, from the pictures every window shows, at the game's size times its `<scale>`, written as a PNG with plutovg (already there for text). It is not a `-w` choice: it has no keys and no screen, so it only goes with `--frames`, and it draws once, at the end, so a long run costs nothing extra. One picture rather than one per frame: an agent looks at a moment, and a dump says what changed between moments.
 - Rejected: `-g` for generate (it is the game); `--game=pong`; last-one-wins; short backend aliases (`sfml`, `xerxes`).

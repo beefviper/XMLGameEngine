@@ -129,7 +129,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `play/numbers.h` | the one-number operations of a value (`sign`, `sine`, `cosine`) |
 | pictures | `picture/bitmap.cpp`, `svg.cpp`, `image.cpp`, `font.cpp`, `color.cpp` | pixels, flips and turns; SVG with lunasvg; picture sheets cut and shrunk (`<pictures>`); fonts and the 8x8 fallback; colour names |
 | loop and libraries | `engine/engine.cpp`, `backends.cpp`, `keys.cpp`, `folder.cpp` | the loop (`loop()`, or `step()` and `render()`), choosing libraries, key names, the games folder and `findSchema` |
-| | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, a file per library; `audio/sound.cpp` is the synthesizer |
+| | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, a file per library; `window/picture.cpp` draws a frame into one image (`--picture`); `audio/sound.cpp` is the synthesizer |
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
 | | `xge/gui/source/` | `main_window`, `game_session`, `game_stage`, `game_view`, `qt_window`, `key_queue`, `options_dialog`, `session_options`, `app_settings` (`xgegui.ini`), `inspector`, `theme` |
 | generator | `games/generators/engine-cpp/` | `generate.xsl`, `merge.xsl`, `data.xsl`, `program.xsl`, `text.xsl`, `engine.xml`, `modules/game_parts.h` |

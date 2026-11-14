@@ -16,6 +16,7 @@ xgecli pong frogger --check -x tinyxml2
 xgecli pacman --frames 600 --seed 1  # play 600 frames with no window, then stop
 xgecli galaxian --frames 3600 --keys galaxian.xml  # play its recorded <demo> back
 xgecli pong --frames 600 --seed 1 --dump pong-state.xml --dump-every 60
+xgecli pacman --frames 600 --keys start.xml --picture pacman.png  # draw the last frame
 ```
 
 | Option | Means |
@@ -31,11 +32,12 @@ xgecli pong --frames 600 --seed 1 --dump pong-state.xml --dump-every 60
 | `--keys <file>` | play back the `<demo>` in the file, the file's root or a child of it (a game file `--record` wrote into): a new game from the demo's seed, each key pressed and let go in the frame it was recorded in. With `--frames` or in a window; not with `--seed`, `--record`, `--check` or `--generate`. A recording in which the game's own attract mode started and was stopped by a key does not play back the same, since that key was not recorded |
 | `--dump <file>` | with `--frames`: write the game as it is into the file as XML at the end ([below](#the-dump)) |
 | `--dump-every <n>` | with `--dump`: also every n frames on the way |
+| `--picture <file>` | with `--frames`: draw the last frame into the file as a PNG, the game's size times its `<scale>`, with no window (`window/picture.h` draws it from the engine's own pictures) |
 | `--generate <target>` | write the game out as a program instead of playing it ([below](#generating-a-program)) |
 | `-o`, `--output <dir>` | where `--generate` writes (default `<game>-<target>`); an error without `--generate` |
 | `-h`, `--help` | usage, listing the libraries this build has |
 
-**Options.** A short option takes its value attached or spaced (`-gpong`, `-g pong`); a long one needs the space (`--game pong`, never `--game=pong`). Names are not case sensitive, and each option may be given once. Only libraries this build has can be named ([backends](engine.md#backends)). `--record`, `--check`, `--generate`, `--frames`, `--seed`, `--keys` and `--dump` are long only; `--record`, `--check`, `--generate` and `--frames` do not go together.
+**Options.** A short option takes its value attached or spaced (`-gpong`, `-g pong`); a long one needs the space (`--game pong`, never `--game=pong`). Names are not case sensitive, and each option may be given once. Only libraries this build has can be named ([backends](engine.md#backends)). `--record`, `--check`, `--generate`, `--frames`, `--seed`, `--keys`, `--dump` and `--picture` are long only; `--record`, `--check`, `--generate` and `--frames` do not go together.
 
 **Finding the game.** In order: as given; its file name in the working directory; `descriptions/` of the **games folder**.
 

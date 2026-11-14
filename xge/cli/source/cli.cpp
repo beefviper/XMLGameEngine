@@ -9,6 +9,7 @@
 #include "game/game.h"
 #include "game/random.h"
 #include "load/xml.h"
+#include "window/picture.h"
 
 #include <algorithm>
 #include <cctype>
@@ -164,6 +165,7 @@ namespace xge
 			if (arg == "--keys")   return 'k';
 			if (arg == "--dump")   return 'd';
 			if (arg == "--dump-every") return 'e';
+			if (arg == "--picture") return 'p';
 			if (arg == "--help")   return 'h';
 			return std::nullopt;
 		}
@@ -188,6 +190,7 @@ namespace xge
 			case 'k': return "file";
 			case 'd': return "file";
 			case 'e': return "number of frames";
+			case 'p': return "file";
 			}
 			return "help";
 		}
@@ -307,6 +310,13 @@ namespace xge
 					throw CliError("--dump-every was given more than once");
 				}
 				options.dumpEvery = static_cast<int>(wholeNumber(value, "--dump-every", 1));
+				break;
+			case 'p':
+				if (!options.picture.empty())
+				{
+					throw CliError("--picture was given more than once");
+				}
+				options.picture = value;
 				break;
 			}
 		};
@@ -442,6 +452,10 @@ namespace xge
 		{
 			throw CliError("--dump-every says how often --dump writes; give --dump too");
 		}
+		if (!options.picture.empty() && !haveFrames)
+		{
+			throw CliError("--picture draws the last frame --frames played; give --frames too");
+		}
 		if (haveFrames)
 		{
 			if (options.check || haveGenerate || options.record)
@@ -552,6 +566,8 @@ namespace xge
 			"  --dump <file>        with --frames, write the game's state into the file as\n"
 			"                       XML at the end (games/xgedump.xsd is its schema)\n"
 			"  --dump-every <n>     and every n frames on the way\n"
+			"  --picture <file>     with --frames, draw the last frame into the file as a PNG\n"
+			"                       (the game's size times its <scale>)\n"
 			"  -h, --help           show this text\n"
 			"\n"
 			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"
@@ -643,7 +659,18 @@ namespace xge
 		try
 		{
 			Game game{ readGame(file, options.xml) };
-			Engine engine(game, WindowBackend::None, AudioBackend::None);
+			// With --picture the frame is drawn by the engine into one image,
+			// still with no window; it is drawn once, at the end.
+			std::unique_ptr<Window> window;
+			PictureWindow* picture = nullptr;
+			if (options.picture.empty()) { window = WindowFactory::create(game.getWindowDesc(), WindowBackend::None); }
+			else
+			{
+				auto drawn = std::make_unique<PictureWindow>(game.getWindowDesc());
+				picture = drawn.get();
+				window = std::move(drawn);
+			}
+			Engine engine(game, std::move(window), nullptr);
 			if (!options.keys.empty())
 			{
 				engine.replay(readDemo(options.keys, options.xml));
@@ -659,6 +686,15 @@ namespace xge
 				if (options.dumpEvery > 0 && played % options.dumpEvery == 0 && played < options.frames) { describe(); }
 			}
 			describe();
+			if (picture)
+			{
+				engine.render();
+				if (!writePng(picture->capture(), options.picture))
+				{
+					out << "Error: cannot write the picture to " << options.picture << '\n';
+					return EXIT_FAILURE;
+				}
+			}
 			out << "played " << played << " frames of " << std::filesystem::path(file).filename().string()
 				<< "; the state is " << game.getCurrentState().name << '\n';
 		}
