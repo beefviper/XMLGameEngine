@@ -30,10 +30,14 @@ namespace xge
 {
 	namespace
 	{
-		// What a trick follows on a card: its row (a suit), or its column; and
-		// the same as text, as <breaks> and <trumps> are written.
-		int followed(const HolderRule& rule, const Object& card) { return rule.followColumn ? card.card.column : card.card.row; }
-		std::string followedName(const HolderRule& rule, const Object& card) { return rule.followColumn ? card.card.columnName : card.card.rowName; }
+		// What a trick follows on a card: its <trick variable>, as a whole
+		// number; and the same as text, as <breaks> and <trumps> are written.
+		int followed(const HolderRule& rule, const Object& card)
+		{
+			const auto value = card.variable.find(rule.trickBy);
+			return value == card.variable.end() ? 0 : static_cast<int>(std::lround(value->second));
+		}
+		std::string followedName(const HolderRule& rule, const Object& card) { return std::to_string(followed(rule, card)); }
 	}
 
 	// ===================================================================
@@ -129,11 +133,6 @@ namespace xge
 					part = axis(pattern.by[i], where + " > <alike>") ? RawPatterns::Part::Same : RawPatterns::Part::Suited;
 				}
 			}
-		}
-		for (RawObject& object : objects)
-		{
-			HolderRule& rule = object.pile.takes;
-			if (rule.follow && !rule.trickBy.empty()) { rule.followColumn = axis(rule.trickBy, "object '" + object.name + "' > <trick>"); }
 		}
 
 		// Each holder: which way up its looks turn what is laid there.

@@ -553,6 +553,7 @@ namespace xge
 				}
 				const HolderRule& takes = object.pile.takes;
 				checkVariable(object, "wild", takes.wildVariable);
+				checkVariable(object, "trick", takes.trickBy);
 				for (const auto* rules : { &takes.rules, &takes.emptyRules, &takes.anyRules, &takes.wildRules })
 				{
 					for (const HolderRule::VarRule& rule : *rules)

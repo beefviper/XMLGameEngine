@@ -460,11 +460,12 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 	Changed worth({ { "<columns name=\"rank\">13</columns>", "<columns name=\"worth\">13</columns>" } }, "klondike");
 	CHECK_THROWS_WITH(Played(worth.path), Catch::Matchers::ContainsSubstring("which a card has of its own"));
 
-	// A pattern or a trick by what is no row or column stops the load.
+	// A pattern by what is no row or column stops the load; a trick by a
+	// variable no object has does too.
 	Changed pattern({ { "<alike variable=\"suit\">5</alike></pattern>", "<alike variable=\"colour\">5</alike></pattern>" } }, "holdem");
 	CHECK_THROWS_WITH(Played(pattern.path), Catch::Matchers::ContainsSubstring("goes by a held member's row or column"));
-	Changed trick({ { "<trick variable=\"suit\"><breaks>", "<trick variable=\"worth\"><breaks>" } }, "hearts");
-	CHECK_THROWS_WITH(Played(trick.path), Catch::Matchers::ContainsSubstring("goes by a held member's row or column"));
+	Changed trick({ { "<trick variable=\"suit\"><breaks>", "<trick variable=\"suite\"><breaks>" } }, "hearts");
+	CHECK_THROWS_WITH(Played(trick.path), Catch::Matchers::ContainsSubstring("no object has a variable or number of that name"));
 }
 
 TEST_CASE("klondike.xml: placing rules are conditions on the arriving card against top; mistakes in them stop the load", "[cards][accepts]")

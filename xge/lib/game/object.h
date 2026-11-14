@@ -532,11 +532,9 @@ namespace xge
 		// laid on the pile since the cards were gathered, unless the hand
 		// holds nothing else. <trumps>: a card of these suits beats every
 		// card of the others, whatever was led.
-		// trickBy: the variable followed as written (its row, column or the
-		// name either is given); followColumn: it is the column, not the row.
+		// trickBy: the variable followed, as written.
 		bool follow{ false };
 		std::string trickBy;
-		bool followColumn{ false };
 		std::vector<std::string> breakSuits;
 		std::vector<std::string> trumpSuits;
 		// <accepts> of a <holds>: rules on the arriving member's variable.
