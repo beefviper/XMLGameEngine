@@ -39,17 +39,14 @@ namespace xge
 		void prepare(Object& object) override;
 		void draw(Object& object) override;
 		void display() override;
+		float fit() const override;
 
 	private:
-		// Circle/rectangle are drawn straight into this texture (as an
-		// SDL_TEXTUREACCESS_TARGET); a bitmap or an image instead replaces it
-		// outright with a texture built from its pixels - either
-		// way, draw() only ever needs the finished texture (+ how to flip it
-		// for an image asked to mirror).
+		// Each object's picture as a texture, by the object's name.
 		struct CachedVisual
 		{
 			SDL_Texture* texture{ nullptr };
-			SDL_RendererFlip flip{ SDL_FLIP_NONE };
+			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 
 			CachedVisual() = default;
 			~CachedVisual() { if (texture) { SDL_DestroyTexture(texture); } }
@@ -78,14 +75,7 @@ namespace xge
 
 		static KeyCode sdlKeyToKeyCode(SDL_Keycode key) noexcept;
 
-		void reloadTargetTexture(CachedVisual& visual, int width, int height);
-
-		void buildShapeOnly(Object& object, CachedVisual& visual);
-		void buildCircle(Object& object, CachedVisual& visual);
-		void buildRectangle(Object& object, CachedVisual& visual);
-		void buildText(Object& object, CachedVisual& visual);
-		void buildImage(Object& object, CachedVisual& visual);
-		void buildLines(Object& object, CachedVisual& visual);
-		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
+		// Makes the object's picture again, at pictureScale().
+		void build(Object& object, CachedVisual& visual);
 	};
 }

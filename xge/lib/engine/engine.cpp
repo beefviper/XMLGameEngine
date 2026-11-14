@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <random>
 #include <sstream>
 #include <stdexcept>
@@ -46,13 +47,10 @@ namespace xge
 	{
 		this->audio->load(game.getSounds());
 
-		// Builds and measures every object's initial visual now that a
-		// window (and therefore a real backend to build against) exists -
-		// this used to happen inside Game's own constructor, via the
-		// standalone game_sfml class, before Engine or any Window existed
-		// at all; see Window::init() in window/window.h for why it has to happen
-		// here instead.
+		// The window makes every object's picture, at its own scale; the
+		// pictures are drawn again at its size once a resize settles (render).
 		this->window->init(game.getCurrentObjects());
+		settledFit = SettledFit(this->window->pictureScale());
 
 		game.setCurrentState(0);
 		syncedStateChanges = game.stateChangeCount();
@@ -68,6 +66,7 @@ namespace xge
 		window = create();
 
 		window->init(game.getCurrentObjects());
+		settledFit = SettledFit(window->pictureScale());
 	}
 
 	void Engine::replaceAudio(const std::function<std::unique_ptr<Audio>()>& create)
@@ -397,6 +396,11 @@ namespace xge
 	void Engine::render(void)
 	{
 		requireWindow();
+
+		// Text and shapes drawn again, sharp, at the window's size once it
+		// has held still after a resize.
+		const double now = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+		if (const std::optional<float> scale = settledFit.update(window->fit(), now)) { window->setPictureScale(*scale); }
 
 		drawFrame(*window, game.getCurrentObjects(), game.getWindowDesc().background,
 			[&](const Object& object) { return object.isDrawn && game.isStill(object); },

@@ -5,12 +5,12 @@
 
 #include "window/sdl2.h"
 
-#include "picture/font.h"
-#include "picture/image.h"
 #include "picture/color.h"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <memory>
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
@@ -101,6 +101,7 @@ namespace xge
 		}
 
 		scale = static_cast<float>(std::max(1, windowDesc.scale));
+		setPictureScale(scale);
 		window = SDL_CreateWindow(windowDesc.name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 			static_cast<int>(windowDesc.width * scale), static_cast<int>(windowDesc.height * scale), flags);
 
@@ -244,14 +245,9 @@ namespace xge
 
 	void SDL2Window::init(std::vector<Object>& objects)
 	{
-		// Object::position is already final by now - see the identical
-		// comment in SFMLWindow::init() (window/sfml.cpp).
 		for (auto& object : objects)
 		{
-			CachedVisual& visual = visuals[object.name];
-
-			buildShapeOnly(object, visual);
-			object.visualDirty = false;
+			build(object, visuals[object.name]);
 		}
 	}
 
@@ -286,8 +282,7 @@ namespace xge
 	void SDL2Window::clear(const std::string& colorName)
 	{
 		const Color c = colorFromName(colorName);
-		// The game's pixels, scale window pixels each (set again each frame:
-		// drawing into a texture uses a scale of its own).
+		// The game's pixels, scale window pixels each.
 		SDL_RenderSetScale(renderer, scale, scale);
 		SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
 		SDL_RenderClear(renderer);
@@ -297,12 +292,9 @@ namespace xge
 	{
 		CachedVisual& visual = visuals[object.name];
 
-		if (object.visualDirty || !visual.texture)
+		if (object.visualDirty || !visual.texture || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
-			// Only redraws; the position is final - see the matching comment in
-			// SFMLWindow::draw() (window/sfml.cpp).
-			buildShapeOnly(object, visual);
-			object.visualDirty = false;
+			build(object, visual);
 		}
 	}
 
@@ -316,11 +308,16 @@ namespace xge
 			return;
 		}
 
-		int w = 0, h = 0;
-		SDL_QueryTexture(visual.texture, nullptr, nullptr, &w, &h);
+		// Whole game pixels, so a texture is never sampled between two of
+		// its pixels; stretched over the object's size in the game's pixels.
+		const Vector2f size = object.pictureSize();
+		const SDL_FRect where{ std::floor(object.position.x), std::floor(object.position.y), size.x, size.y };
+		SDL_RenderCopyF(renderer, visual.texture, nullptr, &where);
+	}
 
-		const SDL_Rect dst{ static_cast<int>(object.position.x), static_cast<int>(object.position.y), w, h };
-		SDL_RenderCopyEx(renderer, visual.texture, nullptr, &dst, 0.0, nullptr, visual.flip);
+	float SDL2Window::fit() const
+	{
+		return scale;
 	}
 
 	void SDL2Window::display()
@@ -338,118 +335,27 @@ namespace xge
 		return KeyCode::Unknown;
 	}
 
-	void SDL2Window::reloadTargetTexture(CachedVisual& visual, int width, int height)
+	// The engine's picture of the object, at pictureScale().
+	void SDL2Window::build(Object& object, CachedVisual& visual)
 	{
-		if (visual.texture)
-		{
-			SDL_DestroyTexture(visual.texture);
-		}
-
-		visual.texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET,
-			width > 0 ? width : 1, height > 0 ? height : 1);
-		SDL_SetTextureBlendMode(visual.texture, SDL_BLENDMODE_BLEND);
-	}
-
-	void SDL2Window::buildShapeOnly(Object& object, CachedVisual& visual)
-	{
-		switch (object.picture.kind)
-		{
-		case ShapeKind::Circle:    buildCircle(object, visual); break;
-		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
-		case ShapeKind::Text:      buildText(object, visual); break;
-		case ShapeKind::Image:     buildImage(object, visual); break;
-		case ShapeKind::Line:      buildLines(object, visual); break;
-		case ShapeKind::Unknown:   break;
-		}
-	}
-
-	void SDL2Window::buildCircle(Object& object, CachedVisual& visual)
-	{
-		const float radiusF = object.picture.radius;
-		const int radius = static_cast<int>(radiusF);
-		const int diameter = static_cast<int>(std::ceil(radiusF * 2.0f));
-
-		reloadTargetTexture(visual, diameter, diameter);
-		visual.flip = SDL_FLIP_NONE;
-
-		SDL_SetRenderTarget(renderer, visual.texture);
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-		SDL_RenderClear(renderer);
-
-		const Color c = colorFromName(object.picture.color);
-		SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-
-		for (int y = -radius; y <= radius; ++y)
-		{
-			for (int x = -radius; x <= radius; ++x)
-			{
-				if (x * x + y * y <= radius * radius)
-				{
-					SDL_RenderDrawPoint(renderer, radius + x, radius + y);
-				}
-			}
-		}
-
-		SDL_SetRenderTarget(renderer, nullptr);
-	}
-
-	void SDL2Window::buildRectangle(Object& object, CachedVisual& visual)
-	{
-		const int width = static_cast<int>(std::ceil(object.picture.size.x));
-		const int height = static_cast<int>(std::ceil(object.picture.size.y));
-
-		reloadTargetTexture(visual, width, height);
-		visual.flip = SDL_FLIP_NONE;
-
-		SDL_SetRenderTarget(renderer, visual.texture);
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-		SDL_RenderClear(renderer);
-
-		const Color c = colorFromName(object.picture.color);
-		SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-		const SDL_Rect rect{ 0, 0, width, height };
-		SDL_RenderFillRect(renderer, &rect);
-
-		SDL_SetRenderTarget(renderer, nullptr);
-	}
-
-	void SDL2Window::buildText(Object& object, CachedVisual& visual)
-	{
-		buildBitmap(object, visual, drawText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color), textFontFile(object.picture.font)));
-	}
-
-	void SDL2Window::buildImage(Object& object, CachedVisual& visual)
-	{
-		buildBitmap(object, visual, loadPicture(object.picture.file, object.picture.flipHorizontal, object.picture.flipVertical));
-	}
-
-	// A sprite of lines was already drawn, pixel by pixel, when the game loaded
-	// (see Bitmap); all that is left is to show that picture.
-	void SDL2Window::buildLines(Object& object, CachedVisual& visual)
-	{
-		buildBitmap(object, visual, *object.bitmap);
-	}
-
-	// Shows a picture the engine drew itself: a sprite of lines, or a text.
-	void SDL2Window::buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap)
-	{
+		object.visualDirty = false;
+		visual.drawnAt = pictureScale();
 		if (visual.texture)
 		{
 			SDL_DestroyTexture(visual.texture);
 			visual.texture = nullptr;
 		}
-		visual.flip = SDL_FLIP_NONE;
 
-		if (bitmap.rgba.empty())
+		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());
+		if (picture->rgba.empty())
 		{
-			reloadTargetTexture(visual, 1, 1);
 			return;
 		}
 
 		// A surface that only looks at the bitmap's pixels (they are copied
 		// into the texture below, and the surface is freed before the bitmap).
-		SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom(const_cast<std::uint8_t*>(bitmap.rgba.data()),
-			bitmap.width, bitmap.height, 32, bitmap.width * 4, SDL_PIXELFORMAT_RGBA32);
+		SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom(const_cast<std::uint8_t*>(picture->rgba.data()),
+			picture->width, picture->height, 32, picture->width * 4, SDL_PIXELFORMAT_RGBA32);
 		if (!surface)
 		{
 			std::cout << "error: SDL2: failed to make a surface from the picture of '" << object.name << "': " << SDL_GetError() << std::endl;
@@ -462,6 +368,7 @@ namespace xge
 		if (visual.texture)
 		{
 			SDL_SetTextureBlendMode(visual.texture, SDL_BLENDMODE_BLEND);
+			SDL_SetTextureScaleMode(visual.texture, object.drawnAtScale() ? SDL_ScaleModeLinear : SDL_ScaleModeNearest);
 		}
 	}
 }

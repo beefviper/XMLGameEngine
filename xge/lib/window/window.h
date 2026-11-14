@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -29,21 +30,23 @@ namespace xge
 	// do". A window must:
 	//   1. open at the game's size times its scale, or throw runtime_error;
 	//   2. keep the game's proportions when resized (fit, centre, bars);
-	//   3. make each object's picture in init(), and again only when
+	//   3. make each object's picture in init(), and again when
 	//      visualDirty is set (prepare()), clearing visualDirty; sizes are
 	//      the game's own (Object::pictureSize), never the window's;
-	//   4. make a picture by its kind: a Line is object.bitmap as it is, a
-	//      text is drawText()'s bitmap (picture/font.h), an image file is
-	//      loadPicture()'s (picture/image.h), a circle or a rectangle is
-	//      filled;
-	//   5. draw each object at its position, its top left, between clear()
-	//      and display();
+	//   4. make a picture from Object::drawnPicture(pictureScale()), the
+	//      engine's own bitmap of it, and make it again when pictureScale()
+	//      has changed for an object that is drawnAtScale();
+	//   5. draw each object's picture over pictureSize() at its position,
+	//      its top left, between clear() and display(), smoothed if it is
+	//      drawnAtScale() and with hard edges if not;
 	//   6. report keys that changed (pollEvents()) and close when asked;
-	//   7. report the mouse, in the game's pixels, and the pads (controls()).
+	//   7. report the mouse, in the game's pixels, and the pads (controls());
+	//   8. say how many of its pixels go to one of the game's now (fit()),
+	//      and start pictureScale() at that when it opens.
 	// It may assume positions and sizes are the game's own pixels, a picture
-	// changes only with visualDirty, a bitmap is straight (not premultiplied)
-	// RGBA from the top left, and every call comes from one thread. It
-	// changes nothing on an object but visualDirty.
+	// changes only with visualDirty or pictureScale(), a bitmap is straight
+	// (not premultiplied) RGBA from the top left, and every call comes from
+	// one thread. It changes nothing on an object but visualDirty.
 	class Window
 	{
 	public:
@@ -94,6 +97,51 @@ namespace xge
 		virtual void draw(Object& object) = 0;
 
 		virtual void display() = 0;
+
+		// How many of the window's pixels show one of the game's now: the
+		// game's <scale>, or what fits after a resize. 1 for a window that
+		// is not one of its own.
+		virtual float fit() const { return 1.0f; }
+
+		// The scale the pictures are drawn at (Object::drawnPicture). The
+		// engine sets it to fit() once a resize has settled (SettledFit), so
+		// text and shapes are drawn again, sharp, at the window's size.
+		float pictureScale() const noexcept { return drawnScale; }
+		void setPictureScale(float scale) noexcept { drawnScale = scale > 0.0f ? scale : 1.0f; }
+
+	private:
+		float drawnScale{ 1.0f };
+	};
+
+	// When a window's pictures are drawn again at its size: once its fit()
+	// has held still a quarter of a second, so a window being dragged
+	// stretches what it has and redraws once, when it is let go.
+	class SettledFit
+	{
+	public:
+		static constexpr double kSettle = 0.25;   // seconds
+
+		explicit SettledFit(float start = 1.0f) noexcept : drawn(start), seen(start) {}
+
+		// The fit now, at `seconds` on any steady clock. Gives the scale to
+		// draw at, once, when it has settled at a new one; nothing otherwise.
+		std::optional<float> update(float fit, double seconds) noexcept
+		{
+			if (fit != seen)
+			{
+				seen = fit;
+				since = seconds;
+				return std::nullopt;
+			}
+			if (seen == drawn || seconds - since < kSettle) { return std::nullopt; }
+			drawn = seen;
+			return drawn;
+		}
+
+	private:
+		float drawn;
+		float seen;
+		double since{ 0.0 };
 	};
 
 	// Draws one object, unless it is <dark> and unlit or blinked out, raised

@@ -44,21 +44,21 @@ namespace xge
 		void prepare(Object& object) override;
 		void draw(Object& object) override;
 		void display() override;
+		float fit() const override;
 
 	private:
 		// <window><scale>: window pixels to one of the game's.
 		float scale{ 1.0f };
 
-		// What SFMLWindow keeps a RenderTexture+Sprite pair for, raylib only
-		// needs the RenderTexture2D itself for - draw() blits its .texture
-		// straight at object.position, no separate sprite object needed.
+		// Each object's picture as a texture, by the object's name.
 		struct CachedVisual
 		{
-			RenderTexture2D renderTexture{};
+			Texture2D texture{};
 			bool loaded{ false };
+			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 
 			CachedVisual() = default;
-			~CachedVisual() { if (loaded) { UnloadRenderTexture(renderTexture); } }
+			~CachedVisual() { if (loaded) { UnloadTexture(texture); } }
 			CachedVisual(const CachedVisual&) = delete;
 			CachedVisual& operator=(const CachedVisual&) = delete;
 			CachedVisual(CachedVisual&&) = delete;
@@ -79,14 +79,7 @@ namespace xge
 		bool manualFrameControl{ false };
 		std::unordered_map<std::string, CachedVisual> visuals;
 
-		static void reloadTexture(CachedVisual& visual, int width, int height);
-
-		void buildShapeOnly(Object& object, CachedVisual& visual);
-		void buildCircle(Object& object, CachedVisual& visual);
-		void buildRectangle(Object& object, CachedVisual& visual);
-		void buildText(Object& object, CachedVisual& visual);
-		void buildImage(Object& object, CachedVisual& visual);
-		void buildLines(Object& object, CachedVisual& visual);
-		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
+		// Makes the object's picture again, at pictureScale().
+		void build(Object& object, CachedVisual& visual);
 	};
 }

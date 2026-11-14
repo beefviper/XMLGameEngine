@@ -9,7 +9,7 @@
   - plutovg draws it: already linked for SVG, it reads fonts with stb_truetype and fills glyphs with a rasterizer taken from FreeType's, smoothed.
   - Rejected: stb_truetype alone (the same reader, but glyph filling to write), FreeType or HarfBuzz (hinting and shaping, not needed for score text, at the cost of large dependencies). The cost: no hinting, kerning or shaping ([limits](../reference/limits.md)).
   - The bitmap is the box the ink covers, spaces at the ends counted across, as the libraries measured it, so layouts made against them hold. Edges within a 64th of a pixel of a whole one count as on it, so Press Start 2P at multiples of 8 has no part-covered pixel.
-  - Open: redrawing text at the window's real size so it stays sharp when scaled ([plan](../plan.md#a7-the-next-backend-is-cheap), step 4c).
+  - In a window bigger than the game, text is drawn again at the window's size once a resize settles, so it stays sharp ([backends](50-backends.md#scale)).
 - **Fallback:** an 8x8 glyph per printable ASCII (32 to 126), 760 bytes in `picture/font.cpp` (public-domain `font8x8`, credit kept), drawn into a `Bitmap` by `rasterizeText`.
   - When a font load fails the engine prints one error line and draws that font's text from that bitmap.
   - Size: height scale `size / 16` (min 1), cell 8x that tall, half as wide but never under 8 (size 48 gives 12 by 24).

@@ -5,12 +5,12 @@
 
 #include "window/raylib.h"
 
-#include "picture/font.h"
-#include "picture/image.h"
 #include "picture/color.h"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <memory>
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
@@ -79,8 +79,6 @@ namespace xge
 			return ::Color{ c.r, c.g, c.b, c.a };
 		}
 
-		constexpr ::Color kTransparent{ 0, 0, 0, 0 };
-
 		// Not raylib's own WHITE macro: it expands to an unqualified
 		// `Color{...}` literal, which inside namespace xge resolves to
 		// xge::Color instead of the global raylib ::Color it actually means.
@@ -92,6 +90,7 @@ namespace xge
 		// raylib logs every texture it makes; only problems are worth printing.
 		SetTraceLogLevel(LOG_WARNING);
 		scale = static_cast<float>(std::max(1, windowDesc.scale));
+		setPictureScale(scale);
 		// The engine sets the game's speed (Engine::loop); the window only waits
 		// for the screen's refresh, so a picture is never torn.
 		SetConfigFlags(FLAG_VSYNC_HINT);
@@ -153,14 +152,9 @@ namespace xge
 
 	void RaylibWindow::init(std::vector<Object>& objects)
 	{
-		// Object::position is already final by now - see the identical
-		// comment in SFMLWindow::init() (window/sfml.cpp).
 		for (auto& object : objects)
 		{
-			CachedVisual& visual = visuals[object.name];
-
-			buildShapeOnly(object, visual);
-			object.visualDirty = false;
+			build(object, visuals[object.name]);
 		}
 	}
 
@@ -237,12 +231,9 @@ namespace xge
 	{
 		CachedVisual& visual = visuals[object.name];
 
-		if (object.visualDirty || !visual.loaded)
+		if (object.visualDirty || !visual.loaded || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
-			// Only redraws; the position is final - see the matching comment in
-			// SFMLWindow::draw() (window/sfml.cpp).
-			buildShapeOnly(object, visual);
-			object.visualDirty = false;
+			build(object, visual);
 		}
 	}
 
@@ -250,18 +241,22 @@ namespace xge
 	{
 		prepare(object);
 		CachedVisual& visual = visuals[object.name];
+		if (!visual.loaded)
+		{
+			return;
+		}
 
-		const Texture2D& texture = visual.renderTexture.texture;
+		// Stretched over the object's size in the game's pixels, scale window
+		// pixels to each of them (<window><scale>).
+		const Vector2f size = object.pictureSize();
+		const ::Rectangle source{ 0.0f, 0.0f, static_cast<float>(visual.texture.width), static_cast<float>(visual.texture.height) };
+		const ::Rectangle where{ std::floor(object.position.x) * scale, std::floor(object.position.y) * scale, size.x * scale, size.y * scale };
+		DrawTexturePro(visual.texture, source, where, ::Vector2{ 0.0f, 0.0f }, 0.0f, kWhite);
+	}
 
-		// Raylib render textures are stored upside-down relative to the
-		// screen; a negative source height flips it back on the way out -
-		// this is raylib's own documented convention, not a mistake.
-		const ::Rectangle source{ 0.0f, 0.0f, static_cast<float>(texture.width), -static_cast<float>(texture.height) };
-		// Drawn scale window pixels to each of the game's (<window><scale>).
-		const ::Rectangle where{ object.position.x * scale, object.position.y * scale,
-			static_cast<float>(texture.width) * scale, static_cast<float>(texture.height) * scale };
-
-		DrawTexturePro(texture, source, where, ::Vector2{ 0.0f, 0.0f }, 0.0f, kWhite);
+	float RaylibWindow::fit() const
+	{
+		return scale;
 	}
 
 	void RaylibWindow::display()
@@ -294,123 +289,45 @@ namespace xge
 	}
 
 
-	void RaylibWindow::reloadTexture(CachedVisual& visual, int width, int height)
+	// The engine's picture of the object, at pictureScale().
+	void RaylibWindow::build(Object& object, CachedVisual& visual)
 	{
-		const int wanted = width > 0 ? width : 1;
-		const int tall = height > 0 ? height : 1;
+		object.visualDirty = false;
+		visual.drawnAt = pictureScale();
+
+		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());
+		if (picture->rgba.empty())
+		{
+			if (visual.loaded) { UnloadTexture(visual.texture); }
+			visual.loaded = false;
+			return;
+		}
+
+		// A picture the same size as the one before (a score that changed
+		// digits) goes into the texture it already has.
+		if (visual.loaded && visual.texture.width == picture->width && visual.texture.height == picture->height)
+		{
+			UpdateTexture(visual.texture, picture->rgba.data());
+		}
+		else
+		{
+			if (visual.loaded) { UnloadTexture(visual.texture); }
+
+			// raylib only reads the pixels while making the texture, so the
+			// bitmap's own memory can be lent to it.
+			Image image{};
+			image.data = const_cast<std::uint8_t*>(picture->rgba.data());
+			image.width = picture->width;
+			image.height = picture->height;
+			image.mipmaps = 1;
+			image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+			visual.texture = LoadTextureFromImage(image);
+			visual.loaded = visual.texture.id != 0;
+		}
 
 		if (visual.loaded)
 		{
-			// A visual that is rebuilt again at the same size (a score or a
-			// fuel readout that changed digits) is drawn over in the texture it
-			// already has: making a new one is a texture, a depth buffer and a
-			// framebuffer, once per change. Every build clears it first.
-			if (visual.renderTexture.texture.width == wanted && visual.renderTexture.texture.height == tall)
-			{
-				return;
-			}
-
-			UnloadRenderTexture(visual.renderTexture);
-		}
-
-		visual.renderTexture = LoadRenderTexture(wanted, tall);
-		visual.loaded = true;
-	}
-
-	void RaylibWindow::buildShapeOnly(Object& object, CachedVisual& visual)
-	{
-		switch (object.picture.kind)
-		{
-		case ShapeKind::Circle:    buildCircle(object, visual); break;
-		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
-		case ShapeKind::Text:      buildText(object, visual); break;
-		case ShapeKind::Image:     buildImage(object, visual); break;
-		case ShapeKind::Line:      buildLines(object, visual); break;
-		case ShapeKind::Unknown:   break;
-		}
-	}
-
-	void RaylibWindow::buildCircle(Object& object, CachedVisual& visual)
-	{
-		const float radius = object.picture.radius;
-		const int diameter = static_cast<int>(std::ceil(radius * 2.0f));
-
-		reloadTexture(visual, diameter, diameter);
-
-		BeginTextureMode(visual.renderTexture);
-		ClearBackground(kTransparent);
-		DrawCircle(static_cast<int>(radius), static_cast<int>(radius), radius, toRaylibColor(colorFromName(object.picture.color)));
-		EndTextureMode();
-	}
-
-	void RaylibWindow::buildRectangle(Object& object, CachedVisual& visual)
-	{
-		const int width = static_cast<int>(std::ceil(object.picture.size.x));
-		const int height = static_cast<int>(std::ceil(object.picture.size.y));
-
-		reloadTexture(visual, width, height);
-
-		BeginTextureMode(visual.renderTexture);
-		ClearBackground(kTransparent);
-		DrawRectangle(0, 0, width, height, toRaylibColor(colorFromName(object.picture.color)));
-		EndTextureMode();
-	}
-
-	void RaylibWindow::buildText(Object& object, CachedVisual& visual)
-	{
-		buildBitmap(object, visual, drawText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color), textFontFile(object.picture.font)));
-	}
-
-	void RaylibWindow::buildImage(Object& object, CachedVisual& visual)
-	{
-		buildBitmap(object, visual, loadPicture(object.picture.file, object.picture.flipHorizontal, object.picture.flipVertical));
-	}
-
-	// A sprite of lines was already drawn, pixel by pixel, when the game loaded
-	// (see Bitmap); all that is left is to show that picture.
-	void RaylibWindow::buildLines(Object& object, CachedVisual& visual)
-	{
-		buildBitmap(object, visual, *object.bitmap);
-	}
-
-	// Shows a picture the engine drew itself: a sprite of lines, or a text.
-	void RaylibWindow::buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap)
-	{
-		(void)object;
-
-		reloadTexture(visual, bitmap.width, bitmap.height);
-
-		// raylib only reads the pixels while making the texture, so the
-		// bitmap's own memory can be lent to it.
-		Texture2D texture{};
-		if (!bitmap.rgba.empty())
-		{
-			Image image{};
-			image.data = const_cast<std::uint8_t*>(bitmap.rgba.data());
-			image.width = bitmap.width;
-			image.height = bitmap.height;
-			image.mipmaps = 1;
-			image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
-
-			texture = LoadTextureFromImage(image);
-		}
-
-		BeginTextureMode(visual.renderTexture);
-		ClearBackground(kTransparent);
-
-		if (texture.id != 0)
-		{
-			DrawTexture(texture, 0, 0, kWhite);
-		}
-
-		EndTextureMode();
-
-		// Only now: raylib batches what DrawTexture asks for and draws it
-		// when the texture mode ends, so the texture has to still exist until
-		// then (unloading it before EndTextureMode drew nothing).
-		if (texture.id != 0)
-		{
-			UnloadTexture(texture);
+			SetTextureFilter(visual.texture, object.drawnAtScale() ? TEXTURE_FILTER_BILINEAR : TEXTURE_FILTER_POINT);
 		}
 	}
 }

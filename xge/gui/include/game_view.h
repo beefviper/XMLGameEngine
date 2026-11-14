@@ -42,8 +42,8 @@ namespace xge
 		QSize minimumSizeHint() const override;
 
 		// The game's window as the file defines it: its size and <scale>.
-		int gameWidth() const noexcept { return backBuffer.width(); }
-		int gameHeight() const noexcept { return backBuffer.height(); }
+		int gameWidth() const noexcept { return shownWidth; }
+		int gameHeight() const noexcept { return shownHeight; }
 		int gameScale() const noexcept { return shownScale; }
 
 		// How large the picture is shown, in percent of the defined size
@@ -60,8 +60,15 @@ namespace xge
 		void setZoom(double percent);
 		double zoom() const noexcept { return zoomPercent; }
 
-		// The picture the engine draws into.
+		// The picture the engine draws into: the game's size times
+		// frameScale(), so text and shapes can be drawn sharp at the size
+		// they are shown (QtWindow).
 		QImage& frame() noexcept { return backBuffer; }
+		double frameScale() const noexcept { return bufferScale; }
+		void setFrameScale(double scale);
+
+		// Screen pixels to one of the game's, as the picture is shown now.
+		double shownFactor() const;
 
 		// A frame is finished: show it.
 		void present();
@@ -97,9 +104,9 @@ namespace xge
 		KeyQueue& keys;
 		QImage backBuffer;
 		int shownScale{ 1 };
+		int shownWidth{ 0 };    // the game's own size
+		int shownHeight{ 0 };
+		double bufferScale{ 1 };
 		double zoomPercent{ 0 };
-
-		// Screen pixels per game pixel, as shown.
-		double shownFactor() const;
 	};
 }

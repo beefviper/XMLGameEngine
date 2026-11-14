@@ -1733,6 +1733,19 @@ namespace xge
 		// draws it: its bitmap's, or its picture's (measureShapeSize).
 		Vector2f pictureSize() const;
 
+		// The picture every window shows for it, `scale` bitmap pixels to
+		// each of the game's (Window::pictureScale), which a window draws
+		// over pictureSize() at its position. A text, a circle and a
+		// rectangle are drawn at that scale, so they stay sharp in a window
+		// bigger than the game; a bitmap (lines, rows, an SVG, a turned
+		// picture) and an image file are their own pixels at any scale.
+		std::shared_ptr<const Bitmap> drawnPicture(float scale = 1.0f) const;
+
+		// Whether drawnPicture changes with the scale: a text, a circle or a
+		// rectangle. A window draws those again when its scale changes, and
+		// smooths them when it stretches them; the others keep hard edges.
+		bool drawnAtScale() const noexcept;
+
 		// Draws `bitmap` again at the current heading (and, for an animated
 		// object, the picture that is showing) when that is not what it
 		// already is, and marks the visual to be rebuilt. Does nothing for an

@@ -42,39 +42,27 @@ namespace xge
 		void prepare(Object& object) override;
 		void draw(Object& object) override;
 		void display() override;
+		float fit() const override;
 
 	private:
-		// What Object used to own directly (renderTexture + sprite) - now
-		// kept here instead, one per object name, so Object itself never
-		// has to know an sf::Sprite exists.
+		// Each object's picture as a texture, by the object's name.
 		struct CachedVisual
 		{
-			sf::RenderTexture renderTexture;
+			sf::Texture texture;
 			std::unique_ptr<sf::Sprite> sprite;
+			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 		};
 
 		sf::RenderWindow window;
 		sf::View view;  // the game's own pixels, placed in the window by fitView
 
 		void fitView();
+		float fitNow{ 1.0f };  // window pixels to a game pixel, as fitView left it
 		std::unordered_map<std::string, CachedVisual> visuals;
 
 		static KeyCode sfmlKeyToKeyCode(sf::Keyboard::Key key) noexcept;
 
-		// Resizes/draws visual.renderTexture from object.picture alone -
-		// no position math, no sprite (re)creation. Shared by init() and
-		// draw()'s on-demand rebuild path.
-		void buildShapeOnly(Object& object, CachedVisual& visual);
-		void buildCircle(Object& object, CachedVisual& visual);
-		void buildRectangle(Object& object, CachedVisual& visual);
-		void buildText(Object& object, CachedVisual& visual);
-		void buildImage(Object& object, CachedVisual& visual);
-		void buildLines(Object& object, CachedVisual& visual);
-		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
-
-		// Finishes a visual after buildShapeOnly(): finalizes the render
-		// texture, (re)builds the sprite at object.position, and clears
-		// object.visualDirty.
-		void finalizeVisual(Object& object, CachedVisual& visual);
+		// Makes the object's picture again, at pictureScale().
+		void build(Object& object, CachedVisual& visual);
 	};
 }

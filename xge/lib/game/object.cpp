@@ -8,6 +8,7 @@
 #include "picture/color.h"
 #include "picture/font.h"
 #include "picture/image.h"
+#include "picture/shapes.h"
 
 #include <algorithm>
 #include <cctype>
@@ -1023,6 +1024,38 @@ namespace xge
 		const Vector2f exact = measureShapeSize(picture);
 		if (picture.kind == ShapeKind::Circle || picture.kind == ShapeKind::Rectangle) { return { std::ceil(exact.x), std::ceil(exact.y) }; }
 		return exact;
+	}
+
+	std::shared_ptr<const Bitmap> Object::drawnPicture(float scale) const
+	{
+		const Color color = colorFromName(picture.color);
+		switch (picture.kind)
+		{
+		case ShapeKind::Circle:
+			return std::make_shared<const Bitmap>(drawCircle(picture.radius, color, scale));
+		case ShapeKind::Rectangle:
+			return std::make_shared<const Bitmap>(drawRectangle(picture.size.x, picture.size.y, color, scale));
+		case ShapeKind::Text:
+		{
+			const int pixels = std::max(1, static_cast<int>(std::lround(static_cast<float>(picture.textSize) * scale)));
+			return std::make_shared<const Bitmap>(drawText(picture.text, pixels, color, textFontFile(picture.font)));
+		}
+		case ShapeKind::Image:
+			if (!picture.flipHorizontal && !picture.flipVertical) { return loadPicture(picture.file); }
+			return std::make_shared<const Bitmap>(loadPicture(picture.file, picture.flipHorizontal, picture.flipVertical));
+		case ShapeKind::Line:
+			if (bitmap) { return bitmap; }
+			break;
+		case ShapeKind::Unknown:
+			break;
+		}
+		static const std::shared_ptr<const Bitmap> nothing = std::make_shared<const Bitmap>();
+		return nothing;
+	}
+
+	bool Object::drawnAtScale() const noexcept
+	{
+		return picture.kind == ShapeKind::Text || picture.kind == ShapeKind::Circle || picture.kind == ShapeKind::Rectangle;
 	}
 
 	Vector2f measureShapeSize(const Picture& picture)

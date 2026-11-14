@@ -5,9 +5,7 @@
 
 #include "window/opengl.h"
 
-#include "picture/font.h"
 #include "picture/color.h"
-#include "picture/image.h"
 
 // GLFW's own header brings in OpenGL 1.1: what the system's OpenGL library
 // exports as it is.
@@ -17,6 +15,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <iostream>
 #include <stdexcept>
 
@@ -31,20 +30,6 @@ namespace xge
 			bitmap.height = height > 0 ? height : 1;
 			bitmap.rgba.assign(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4, 0);
 			return bitmap;
-		}
-
-		void setPixel(Bitmap& bitmap, int x, int y, const Color& color) noexcept
-		{
-			if (x < 0 || y < 0 || x >= bitmap.width || y >= bitmap.height)
-			{
-				return;
-			}
-
-			std::uint8_t* pixel = bitmap.rgba.data() + (static_cast<std::size_t>(y) * static_cast<std::size_t>(bitmap.width) + static_cast<std::size_t>(x)) * 4;
-			pixel[0] = color.r;
-			pixel[1] = color.g;
-			pixel[2] = color.b;
-			pixel[3] = color.a;
 		}
 	}
 
@@ -84,6 +69,7 @@ namespace xge
 		// for the screen's refresh, so a picture is never torn.
 		glfwSwapInterval(1);
 
+		setPictureScale(static_cast<float>(scale));
 		glfwSetWindowUserPointer(window, this);
 		glfwSetKeyCallback(window, &OpenGLWindow::keyCallback);
 
@@ -143,14 +129,9 @@ namespace xge
 
 	void OpenGLWindow::init(std::vector<Object>& objects)
 	{
-		// Object::position is already final by now - see the identical
-		// comment in SFMLWindow::init() (window/sfml.cpp).
 		for (auto& object : objects)
 		{
-			CachedVisual& visual = visuals[object.name];
-
-			buildShapeOnly(object, visual);
-			object.visualDirty = false;
+			build(object, visuals[object.name]);
 		}
 	}
 
@@ -236,12 +217,9 @@ namespace xge
 	{
 		CachedVisual& visual = visuals[object.name];
 
-		if (object.visualDirty || !visual.texture)
+		if (object.visualDirty || !visual.texture || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
-			// Only redraws; the position is final - see the matching comment in
-			// SFMLWindow::draw() (window/sfml.cpp).
-			buildShapeOnly(object, visual);
-			object.visualDirty = false;
+			build(object, visual);
 		}
 	}
 
@@ -255,25 +233,27 @@ namespace xge
 			return;
 		}
 
-		// Whole pixels, as the SDL2 backend draws them: a texture sampled
-		// halfway between two pixels is smeared.
-		const float x0 = static_cast<float>(static_cast<int>(object.position.x));
-		const float y0 = static_cast<float>(static_cast<int>(object.position.y));
-		const float x1 = x0 + static_cast<float>(visual.width);
-		const float y1 = y0 + static_cast<float>(visual.height);
-
-		const float u0 = 0.0f;
-		const float u1 = 1.0f;
-		const float v0 = 0.0f;
-		const float v1 = 1.0f;
+		// Whole game pixels, as the SDL2 backend draws them: a texture
+		// sampled halfway between two pixels is smeared. Stretched over the
+		// object's size in the game's pixels.
+		const Vector2f size = object.pictureSize();
+		const float x0 = std::floor(object.position.x);
+		const float y0 = std::floor(object.position.y);
+		const float x1 = x0 + size.x;
+		const float y1 = y0 + size.y;
 
 		glBindTexture(GL_TEXTURE_2D, visual.texture);
 		glBegin(GL_QUADS);
-		glTexCoord2f(u0, v0); glVertex2f(x0, y0);
-		glTexCoord2f(u1, v0); glVertex2f(x1, y0);
-		glTexCoord2f(u1, v1); glVertex2f(x1, y1);
-		glTexCoord2f(u0, v1); glVertex2f(x0, y1);
+		glTexCoord2f(0.0f, 0.0f); glVertex2f(x0, y0);
+		glTexCoord2f(1.0f, 0.0f); glVertex2f(x1, y0);
+		glTexCoord2f(1.0f, 1.0f); glVertex2f(x1, y1);
+		glTexCoord2f(0.0f, 1.0f); glVertex2f(x0, y1);
 		glEnd();
+	}
+
+	float OpenGLWindow::fit() const
+	{
+		return static_cast<float>(scale);
 	}
 
 	void OpenGLWindow::display()
@@ -367,92 +347,28 @@ namespace xge
 		}
 	}
 
-	void OpenGLWindow::upload(CachedVisual& visual, const Bitmap& bitmap)
+	// The engine's picture of the object, at pictureScale().
+	void OpenGLWindow::build(Object& object, CachedVisual& visual)
 	{
-		const Bitmap blank = bitmap.rgba.empty() ? filledBitmap(1, 1) : Bitmap{};
-		const Bitmap& source = bitmap.rgba.empty() ? blank : bitmap;
+		object.visualDirty = false;
+		visual.drawnAt = pictureScale();
+
+		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());
+		const Bitmap blank = picture->rgba.empty() ? filledBitmap(1, 1) : Bitmap{};
+		const Bitmap& source = picture->rgba.empty() ? blank : *picture;
 
 		if (!visual.texture)
 		{
 			glGenTextures(1, &visual.texture);
 		}
 
+		const GLint filter = object.drawnAtScale() ? GL_LINEAR : GL_NEAREST;
 		glBindTexture(GL_TEXTURE_2D, visual.texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, source.width, source.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, source.rgba.data());
-
-		visual.width = source.width;
-		visual.height = source.height;
-	}
-
-	void OpenGLWindow::buildShapeOnly(Object& object, CachedVisual& visual)
-	{
-		switch (object.picture.kind)
-		{
-		case ShapeKind::Circle:    buildCircle(object, visual); break;
-		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
-		case ShapeKind::Text:      buildText(object, visual); break;
-		case ShapeKind::Image:     buildImage(object, visual); break;
-		// A sprite of lines was already drawn, pixel by pixel, when the game
-		// loaded (see Bitmap); all that is left is to show that picture.
-		case ShapeKind::Line:      upload(visual, *object.bitmap); break;
-		case ShapeKind::Unknown:   upload(visual, Bitmap{}); break;
-		}
-	}
-
-	void OpenGLWindow::buildCircle(Object& object, CachedVisual& visual)
-	{
-		const float radiusF = object.picture.radius;
-		const int radius = static_cast<int>(radiusF);
-		const int diameter = static_cast<int>(std::ceil(radiusF * 2.0f));
-
-		Bitmap bitmap = filledBitmap(diameter, diameter);
-		const Color c = colorFromName(object.picture.color);
-
-		for (int y = -radius; y <= radius; ++y)
-		{
-			for (int x = -radius; x <= radius; ++x)
-			{
-				if (x * x + y * y <= radius * radius)
-				{
-					setPixel(bitmap, radius + x, radius + y, c);
-				}
-			}
-		}
-
-		upload(visual, bitmap);
-	}
-
-	void OpenGLWindow::buildRectangle(Object& object, CachedVisual& visual)
-	{
-		const int w = static_cast<int>(std::ceil(object.picture.size.x));
-		const int h = static_cast<int>(std::ceil(object.picture.size.y));
-
-		Bitmap bitmap = filledBitmap(w, h);
-		const Color c = colorFromName(object.picture.color);
-
-		for (int y = 0; y < bitmap.height; ++y)
-		{
-			for (int x = 0; x < bitmap.width; ++x)
-			{
-				setPixel(bitmap, x, y, c);
-			}
-		}
-
-		upload(visual, bitmap);
-	}
-
-	void OpenGLWindow::buildText(Object& object, CachedVisual& visual)
-	{
-		upload(visual, drawText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color), textFontFile(object.picture.font)));
-	}
-
-	void OpenGLWindow::buildImage(Object& object, CachedVisual& visual)
-	{
-		upload(visual, loadPicture(object.picture.file, object.picture.flipHorizontal, object.picture.flipVertical));
 	}
 }

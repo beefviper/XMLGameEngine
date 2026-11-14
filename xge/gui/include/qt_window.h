@@ -38,6 +38,7 @@ namespace xge
 		void clear(const std::string& colorName) override;
 		void draw(Object& object) override;
 		void display() override;
+		float fit() const override;
 
 	private:
 		GameView& view;
@@ -47,15 +48,15 @@ namespace xge
 		std::unique_ptr<QPainter> framePainter;
 		bool open{ true };
 
-		// Each object's picture, built once and again whenever the object's
-		// visualDirty flag says it changed (same pattern as the other backends).
-		std::map<std::string, QImage> visuals;
+		// Each object's picture, made again when its visualDirty flag says it
+		// changed or the pictures' scale did (as in the other backends).
+		struct Visual
+		{
+			QImage image;
+			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
+		};
+		std::map<std::string, Visual> visuals;
 
-		void build(Object& object, QImage& visual);
-		QImage buildCircle(const Object& object);
-		QImage buildRectangle(const Object& object);
-		QImage buildText(const Object& object);
-		QImage buildImage(const Object& object);
-		static QImage fromBitmap(const Bitmap& bitmap);
+		void build(Object& object, Visual& visual);
 	};
 }

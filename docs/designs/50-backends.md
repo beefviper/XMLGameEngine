@@ -29,8 +29,8 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 
 ## Window and sound
 
-- **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. Text and image files are made by the engine (plutovg reads both), so a window shows only bitmaps, circles and rectangles. Every library opens a window of its own and throws if it cannot start. What a window must do is a numbered contract in [the engine](../reference/engine.md#what-a-window-must-do).
-- **Text is drawn by the engine**, so it looks and measures the same in every window and a window holds no font code ([text](32-text.md)).
+- **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. Every picture is made by the engine (`Object::drawnPicture`; plutovg reads fonts and image files and fills circles), so a window shows only bitmaps. Every library opens a window of its own and throws if it cannot start. What a window must do is a numbered contract in [the engine](../reference/engine.md#what-a-window-must-do).
+- **Text and shapes are drawn by the engine**, so they look and measure the same in every window and a window holds no font or drawing code ([text](32-text.md)). Circles had been filled four ways: SFML's polygon, Qt's smoothed ellipse, and a hard pixel test in SDL2 and OpenGL.
 - **A window measures nothing.** Every size is known when the game loads, so a window only turns finished bitmaps into textures and changes nothing on an object but `visualDirty`.
 - **`Audio`**: `load`, `play`, `loop`, `stop`, `stopAll`, `update` ([sound](33-sound.md)).
 - **Pace** is the engine's, not a library's: each library once kept time its own way (SFML's frame limit, raylib's target, a clock in the OpenGL window, only vsync in SDL2, which ran a game too fast on a fast screen).
@@ -44,6 +44,10 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 ## Scale
 
 - **Window `<scale>`:** a game at an arcade's 256 by 224 looked empty in a modern window. The game keeps its size and every library draws it N times bigger (an SFML view, `SDL_RenderSetScale`, raylib's `DrawTexturePro`, the OpenGL viewport); the mouse maps back. Rejected: scaling every number in the file, a free resizable window (a whole scale keeps square pixels). A pixel font at multiples of 8 has every edge on a whole pixel, so it stays sharp.
+- **Sharp at any size** (the author's idea): a window says how many of its pixels show one of the game's (`fit()`), and once that has held still a quarter of a second (`SettledFit`) the engine has it draw text, circles and rectangles again with that many pixels each (`pictureScale()`). While a window is dragged it stretches what it has, so a resize does not redraw every frame.
+  - Positions, sizes and touches stay in the game's pixels; only the drawing has more pixels, stretched back over the object's size. Play never notices.
+  - Bitmaps and image files keep their own pixels, shown hard edged. Games scale by any factor, so a pixel font at an odd scale has slightly uneven pixels but sharp edges.
+  - Open: an SVG is a bitmap made at load, so it stretches; redrawing it would mean keeping how it was made, turned and recoloured.
 - **Resized freely:** `xgegui` and `xgecli`'s SFML window fit the game to the window by any factor with its proportions, centred on whole pixels. Whole-number scales only were tried first: a window a little too small for 2x showed 1x with wide bars. Not yet in the SDL2, raylib and OpenGL windows, which stretch.
 
 ## Library and programs

@@ -5,16 +5,13 @@
 
 #include "qt_window.h"
 
-#include "picture/font.h"
-#include "picture/image.h"
 #include "picture/color.h"
 #include "game_view.h"
 
 #include <QColor>
 #include <QPainter>
 
-#include <cmath>
-#include <iostream>
+#include <memory>
 
 namespace xge
 {
@@ -37,6 +34,7 @@ namespace xge
 	QtWindow::QtWindow(GameView& gameView) :
 		view(gameView)
 	{
+		setPictureScale(static_cast<float>(view.shownFactor()));
 	}
 
 	bool QtWindow::isOpen() const
@@ -67,34 +65,47 @@ namespace xge
 		return view.controls();
 	}
 
+	float QtWindow::fit() const
+	{
+		return static_cast<float>(view.shownFactor());
+	}
+
 	void QtWindow::clear(const std::string& colorName)
 	{
 		// A painter still open from a frame that never reached display() has
 		// to end before the picture is touched.
 		framePainter.reset();
 
+		// The frame is drawn at the pictures' scale, in the game's pixels.
+		view.setFrameScale(pictureScale());
 		view.frame().fill(toQColor(colorName));
 		framePainter = std::make_unique<QPainter>(&view.frame());
+		framePainter->scale(view.frameScale(), view.frameScale());
 	}
 
 	void QtWindow::draw(Object& object)
 	{
-		QImage& visual = visuals[object.name];
+		Visual& visual = visuals[object.name];
 
-		if (object.visualDirty || visual.isNull())
+		if (object.visualDirty || visual.image.isNull() || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
 			build(object, visual);
 		}
 
+		// Stretched over the object's size in the game's pixels: smoothed
+		// for a text or a shape, hard edged for a bitmap.
+		const Vector2f size = object.pictureSize();
+		const QRectF where(object.position.x, object.position.y, size.x, size.y);
 		if (framePainter)
 		{
-			framePainter->drawImage(QPointF(object.position.x, object.position.y), visual);
+			framePainter->setRenderHint(QPainter::SmoothPixmapTransform, object.drawnAtScale());
+			framePainter->drawImage(where, visual.image);
+			return;
 		}
-		else
-		{
-			QPainter painter(&view.frame());
-			painter.drawImage(QPointF(object.position.x, object.position.y), visual);
-		}
+		QPainter painter(&view.frame());
+		painter.scale(view.frameScale(), view.frameScale());
+		painter.setRenderHint(QPainter::SmoothPixmapTransform, object.drawnAtScale());
+		painter.drawImage(where, visual.image);
 	}
 
 	void QtWindow::display()
@@ -103,66 +114,20 @@ namespace xge
 		view.present();
 	}
 
-	void QtWindow::build(Object& object, QImage& visual)
+	// The engine's picture of the object, at pictureScale().
+	void QtWindow::build(Object& object, Visual& visual)
 	{
-		switch (object.picture.kind)
+		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());
+		if (picture->width <= 0 || picture->height <= 0 || picture->rgba.empty())
 		{
-		case ShapeKind::Circle:    visual = buildCircle(object); break;
-		case ShapeKind::Rectangle: visual = buildRectangle(object); break;
-		case ShapeKind::Text:      visual = buildText(object); break;
-		case ShapeKind::Image:     visual = buildImage(object); break;
-		case ShapeKind::Line:      visual = object.bitmap ? fromBitmap(*object.bitmap) : emptyImage(1, 1); break;
-		case ShapeKind::Unknown:   visual = emptyImage(1, 1); break;
+			visual.image = emptyImage(1, 1);
 		}
-
+		else
+		{
+			const QImage wrapped(picture->rgba.data(), picture->width, picture->height, picture->width * 4, QImage::Format_RGBA8888);
+			visual.image = wrapped.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+		}
+		visual.drawnAt = pictureScale();
 		object.visualDirty = false;
-	}
-
-	QImage QtWindow::buildCircle(const Object& object)
-	{
-		const double radius = object.picture.radius;
-		const int side = static_cast<int>(std::ceil(radius * 2));
-
-		QImage image = emptyImage(side, side);
-		QPainter painter(&image);
-		painter.setRenderHint(QPainter::Antialiasing);
-		painter.setPen(Qt::NoPen);
-		painter.setBrush(toQColor(object.picture.color));
-		painter.drawEllipse(QRectF(0, 0, radius * 2, radius * 2));
-		return image;
-	}
-
-	QImage QtWindow::buildRectangle(const Object& object)
-	{
-		const double width = object.picture.size.x;
-		const double height = object.picture.size.y;
-
-		QImage image = emptyImage(static_cast<int>(std::ceil(width)), static_cast<int>(std::ceil(height)));
-		QPainter painter(&image);
-		painter.fillRect(QRectF(0, 0, width, height), toQColor(object.picture.color));
-		return image;
-	}
-
-	QImage QtWindow::buildText(const Object& object)
-	{
-		return fromBitmap(drawText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color), textFontFile(object.picture.font)));
-	}
-
-	QImage QtWindow::buildImage(const Object& object)
-	{
-		return fromBitmap(loadPicture(object.picture.file, object.picture.flipHorizontal, object.picture.flipVertical));
-	}
-
-	// A picture the engine drew itself (a sprite of lines, or a text): four
-	// bytes a pixel, red, green, blue, alpha.
-	QImage QtWindow::fromBitmap(const Bitmap& bitmap)
-	{
-		if (bitmap.width <= 0 || bitmap.height <= 0 || bitmap.rgba.empty())
-		{
-			return emptyImage(bitmap.width, bitmap.height);
-		}
-
-		const QImage wrapped(bitmap.rgba.data(), bitmap.width, bitmap.height, bitmap.width * 4, QImage::Format_RGBA8888);
-		return wrapped.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 	}
 }

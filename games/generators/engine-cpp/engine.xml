@@ -150,6 +150,8 @@
   <file>lib/audio/sfml.cpp</file>
   <file>lib/picture/font.h</file>
   <file>lib/picture/font.cpp</file>
+  <file>lib/picture/shapes.h</file>
+  <file>lib/picture/shapes.cpp</file>
   <file>lib/window/window.h</file>
   <file>lib/window/sfml.h</file>
   <file>lib/window/sfml.cpp</file>

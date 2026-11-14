@@ -150,6 +150,9 @@ namespace xge
 		std::unique_ptr<Window> window;
 		std::unique_ptr<Audio> audio;
 
+		// When the window's pictures are drawn again at its size (render).
+		SettledFit settledFit;
+
 		// Key changes pump() took from the window that step() has not handled yet.
 		std::vector<std::pair<KeyCode, bool>> pumpedKeys;
 

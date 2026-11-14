@@ -28,11 +28,9 @@ namespace xge
 	// system's OpenGL library exports as it is, so there is no OpenGL loader
 	// library to depend on.
 	//
-	// The same bake-once-then-rebuild-on-visualDirty architecture as the other
-	// backends. Each object's picture is made on the CPU - circles and
-	// rectangles are filled in, a sprite of lines is already a Bitmap - and
-	// uploaded as a texture; a text is drawText's bitmap (picture/font.h)
-	// and an image file loadPicture's (picture/image.h).
+	// Like the other backends, each object's picture is the engine's
+	// (Object::drawnPicture), uploaded as a texture and made again on
+	// visualDirty.
 	class OpenGLWindow : public Window
 	{
 	public:
@@ -52,14 +50,14 @@ namespace xge
 		void prepare(Object& object) override;
 		void draw(Object& object) override;
 		void display() override;
+		float fit() const override;
 
 	private:
 		// One object's picture, as an OpenGL texture.
 		struct CachedVisual
 		{
 			unsigned int texture{ 0 };
-			int width{ 0 };
-			int height{ 0 };
+			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 
 			CachedVisual() = default;
 			~CachedVisual();
@@ -85,11 +83,7 @@ namespace xge
 
 		void setUpProjection() const;
 
-		void upload(CachedVisual& visual, const Bitmap& bitmap);
-		void buildShapeOnly(Object& object, CachedVisual& visual);
-		void buildCircle(Object& object, CachedVisual& visual);
-		void buildRectangle(Object& object, CachedVisual& visual);
-		void buildText(Object& object, CachedVisual& visual);
-		void buildImage(Object& object, CachedVisual& visual);
+		// Makes the object's picture again, at pictureScale().
+		void build(Object& object, CachedVisual& visual);
 	};
 }

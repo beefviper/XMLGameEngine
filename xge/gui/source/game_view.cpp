@@ -32,12 +32,23 @@ namespace xge
 	void GameView::setGameSize(int width, int height, int scale)
 	{
 		shownScale = std::max(scale, 1);
+		shownWidth = width;
+		shownHeight = height;
 		zoomPercent = 0;
-		backBuffer = QImage(width, height, QImage::Format_ARGB32_Premultiplied);
-		backBuffer.fill(Qt::black);
+		bufferScale = 0;
+		setFrameScale(1);
 		updateGeometry();
 		update();
 		emit shownChanged();
+	}
+
+	void GameView::setFrameScale(double scale)
+	{
+		if (scale <= 0 || scale == bufferScale) { return; }
+		bufferScale = scale;
+		backBuffer = QImage(std::max(1, static_cast<int>(std::ceil(shownWidth * scale))), std::max(1, static_cast<int>(std::ceil(shownHeight * scale))),
+			QImage::Format_ARGB32_Premultiplied);
+		backBuffer.fill(Qt::black);
 	}
 
 	void GameView::setZoom(double percent)
@@ -51,7 +62,7 @@ namespace xge
 	{
 		if (backBuffer.isNull()) { return 1; }
 		const double ratio = devicePixelRatioF();
-		const double fit = std::min(width() * ratio / backBuffer.width(), height() * ratio / backBuffer.height());
+		const double fit = std::min(width() * ratio / shownWidth, height() * ratio / shownHeight);
 		return zoomPercent > 0 ? std::min(fit, zoomPercent / 100 * shownScale) : fit;
 	}
 
@@ -64,7 +75,7 @@ namespace xge
 	{
 		if (backBuffer.isNull()) { return QSize(640, 360); }
 		const double factor = percent / 100 * shownScale / devicePixelRatioF();
-		return QSize(static_cast<int>(std::ceil(backBuffer.width() * factor)), static_cast<int>(std::ceil(backBuffer.height() * factor)));
+		return QSize(static_cast<int>(std::ceil(shownWidth * factor)), static_cast<int>(std::ceil(shownHeight * factor)));
 	}
 
 	void GameView::resizeEvent(QResizeEvent* event)
@@ -86,8 +97,8 @@ namespace xge
 		const double wide = width() * ratio;
 		const double high = height() * ratio;
 		const double scale = shownFactor();
-		const double w = backBuffer.width() * scale;
-		const double h = backBuffer.height() * scale;
+		const double w = shownWidth * scale;
+		const double h = shownHeight * scale;
 		// On whole screen pixels, so no column of game pixels is drawn wider
 		// than the next.
 		const double left = std::floor((wide - w) / 2);
@@ -136,9 +147,9 @@ namespace xge
 		// The picture's place in the widget, as paintEvent draws it.
 		const QRectF shown = shownRect();
 		const QPointF at = mapFromGlobal(QCursor::pos());
-		const double x = (at.x() - shown.left()) * backBuffer.width() / shown.width();
-		const double y = (at.y() - shown.top()) * backBuffer.height() / shown.height();
-		controls.pointerInside = x >= 0 && y >= 0 && x < backBuffer.width() && y < backBuffer.height();
+		const double x = (at.x() - shown.left()) * shownWidth / shown.width();
+		const double y = (at.y() - shown.top()) * shownHeight / shown.height();
+		controls.pointerInside = x >= 0 && y >= 0 && x < shownWidth && y < shownHeight;
 		controls.pointerX = static_cast<float>(x);
 		controls.pointerY = static_cast<float>(y);
 

@@ -96,6 +96,7 @@ add_executable(xgetest
 	"xge/tests/games/test_demonattack.cpp"
 	"xge/tests/engine/test_builtin_font.cpp"
 	"xge/tests/engine/test_drawn_text.cpp"
+	"xge/tests/engine/test_picture_scale.cpp"
 	"xge/tests/engine/test_gameplay_verbs.cpp"
 	"xge/tests/engine/test_pieces.cpp"
 	"xge/tests/engine/test_scenes.cpp"
