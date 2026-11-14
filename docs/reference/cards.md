@@ -99,8 +99,9 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
 
 What a set of cards can make is written once in the game, beside `<styles>`, lowest first.
 
-- Each `<pattern>` is parts that must all hold, each naming the variable it compares, a card's column or row by either name: `<alike variable="rank">N</alike>` (N of one column, here called rank; two of them: two ranks), `<alike variable="suit">N</alike>` (N of one row), `<run variable="worth">N</run>` (N worths in a row, a card's `high` counting too).
-- `<run variable="rank">` runs by column, the ace low whatever it is worth (Gin's runs, its court cards worth 10); for now only `<melds />` take it.
+- Each `<pattern>` is parts that must all hold, each naming a variable of the cards it compares (a row or column under either name, or one of their own): `<alike variable="rank">N</alike>` (N with one value of it; two of them: two values), `<run variable="worth">N</run>` (N worths in a row, a card's `high` counting too).
+- Two hands making the same pattern are told apart by their cards in groups of the set's first `<alike>` variable, bigger groups first, each by worth (poker's kickers).
+- `<run variable="rank">` runs by that variable, the ace low whatever it is worth (Gin's runs, its court cards worth 10); for now only `<melds />` take a run of anything but worth.
 
 ```xml
 <patterns name="poker">

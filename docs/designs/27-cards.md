@@ -22,14 +22,14 @@
   - Any comparison takes the top's own variable or another (`<below>top.worth</below>`), plus or minus a number.
 - **A card is worth its column** (the author): an ace at the front or back of the row; a column, row or cell lower down gives another value, and `high` is a second worth counted where it fits within a holder's `<counts><atmost>` (Blackjack).
 - **Points are card variables** (the hearts row, the queen's cell) a holder `<counts>` into its own variable; no points table.
-- **One engine underneath:** a holder's words are kept as the game wrote them (the looks it names, its spreads, its order, what it counts, the variable a trick follows) and the engine reads those. `settleHolders` (game/holders.cpp) only sets the cards up: a held class's cells become cards, pickers of one become hands, patterns learn their row and column, `<starts>` says where the cards begin. Generated programs build the same raw data and call the same function.
+- **One engine underneath:** a holder's words are kept as the game wrote them (the looks it names, its spreads, its order, what it counts, the variable a trick follows) and the engine reads those. `settleHolders` (game/holders.cpp) only sets the cards up: a held class's cells become cards, pickers of one become hands, `<starts>` says where the cards begin. Generated programs build the same raw data and call the same function.
 - **Faces from one sheet** (the author's call), `assets/cards.png`, a row per suit, a column per rank; a sheet cell leaving out its column or row takes the group cell's own. The drawn deck was about 960 lines per game; the sheet takes it to 10 (0.1 s, 45 MB to load).
 
 ## Players, patterns, tricks
 
 - **Players in turn** ([players as a group](07-states-and-conditions.md#players-as-a-group)): a member's `<owns>` is its hand; `<distribute into="players">` deals a card a round by seat; `<pass member="trick.winner">`; `<team>` for partners. Gin's turn is two looks, changed by a condition on holding eleven since a pick on a `<picked>` holder is refused.
 - **Wild cards and a call:** `<wild variable>` in `<accepts>` makes the holder wait for `<call object>` naming a value of that variable from a card the caller points at; no suit picker screen. A wait in the turn says the rule in one place (rejected: a `laid` variable and two conditions).
-- **Patterns, not poker:** a `<patterns>` set from `<alike variable>` (the grid games' word for sharing a value; once `<same>`) and `<run variable>`, the same parts rummy and dice use.
+- **Patterns, not poker:** a `<patterns>` set from `<alike variable>` (the grid games' word for sharing a value; once `<same>`) and `<run variable>`, the same parts rummy and dice use. Each reads the variable it names off the cards, so a pack's suit and rank are only names; ties go by groups of the set's first `<alike>` variable, poker's kickers without a poker word.
   - The engine finds the best and orders two by one general tie rule; a holder `<score>`s `<with>` a shared pile, the `<best>` so many.
   - `<run variable="rank">` runs by column (Gin's court cards are worth 10).
   - **Melds** split the whole holder for least deadwood and lay it out that way.
