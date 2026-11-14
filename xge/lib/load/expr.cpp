@@ -145,6 +145,9 @@ namespace xge
 				}
 				rawObject.variable[timer.name] = RawValue::expression("0");
 			}
+			// A holder's <counts variable>: a variable of its own, kept to the total.
+			const std::string& counts = rawObject.pile.counts;
+			if (!counts.empty() && !rawObject.variable.count(counts)) { rawObject.variable[counts] = RawValue::expression("0"); }
 		}
 
 		// Pre-register every object's own <variable> entries, keyed

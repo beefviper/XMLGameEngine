@@ -155,8 +155,6 @@ namespace xge
 			};
 			if (!pile.holdsSprite.empty()) { known(pile.holdsSprite, "its"); }
 			if (!pile.topSprite.empty()) { known(pile.topSprite, "<top>"); }
-			// <counts variable>: a variable of its own, kept to the total.
-			if (!pile.counts.empty() && !object.variable.count(pile.counts)) { object.variable[pile.counts] = RawValue::expression("0"); }
 			if (!pile.spreadSprite.empty()) { known(pile.spreadSprite, "<spread>"); }
 		}
 
