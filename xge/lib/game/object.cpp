@@ -1004,6 +1004,7 @@ namespace xge
 		if (!turnables.empty()) { showHeading(); }
 		else { bitmap = facingPicture(animationBitmaps[animationIndex]); }
 		visualDirty = true;
+		size = pictureSize();
 	}
 
 	const Command& shapeOf(const Command& command) noexcept

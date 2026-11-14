@@ -160,7 +160,7 @@ namespace xge
 			CachedVisual& visual = visuals[object.name];
 
 			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			object.visualDirty = false;
 		}
 	}
 
@@ -242,7 +242,7 @@ namespace xge
 			// Only redraws; the position is final - see the matching comment in
 			// SFMLWindow::draw() (window/sfml.cpp).
 			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			object.visualDirty = false;
 		}
 	}
 
@@ -412,12 +412,5 @@ namespace xge
 		{
 			UnloadTexture(texture);
 		}
-	}
-
-	void RaylibWindow::finalizeVisual(Object& object, CachedVisual& visual)
-	{
-		object.size.x = static_cast<float>(visual.renderTexture.texture.width);
-		object.size.y = static_cast<float>(visual.renderTexture.texture.height);
-		object.visualDirty = false;
 	}
 }

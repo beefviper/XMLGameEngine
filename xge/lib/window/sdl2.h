@@ -87,7 +87,5 @@ namespace xge
 		void buildImage(Object& object, CachedVisual& visual);
 		void buildLines(Object& object, CachedVisual& visual);
 		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
-
-		void finalizeVisual(Object& object, CachedVisual& visual);
 	};
 }

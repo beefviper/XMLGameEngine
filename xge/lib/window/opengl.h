@@ -91,6 +91,5 @@ namespace xge
 		void buildRectangle(Object& object, CachedVisual& visual);
 		void buildText(Object& object, CachedVisual& visual);
 		void buildImage(Object& object, CachedVisual& visual);
-		void finalizeVisual(Object& object, CachedVisual& visual);
 	};
 }

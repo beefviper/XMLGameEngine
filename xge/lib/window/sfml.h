@@ -72,9 +72,9 @@ namespace xge
 		void buildLines(Object& object, CachedVisual& visual);
 		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
 
-		// Finishes a visual after buildShapeOnly(): measures object.size, finalizes the
-		// render texture, (re)builds the sprite at object.position, and
-		// clears object.visualDirty.
+		// Finishes a visual after buildShapeOnly(): finalizes the render
+		// texture, (re)builds the sprite at object.position, and clears
+		// object.visualDirty.
 		void finalizeVisual(Object& object, CachedVisual& visual);
 	};
 }

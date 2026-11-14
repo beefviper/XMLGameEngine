@@ -115,8 +115,6 @@ namespace xge
 		case ShapeKind::Unknown:   visual = emptyImage(1, 1); break;
 		}
 
-		object.size.x = static_cast<float>(visual.width());
-		object.size.y = static_cast<float>(visual.height());
 		object.visualDirty = false;
 	}
 

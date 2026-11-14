@@ -55,7 +55,7 @@ A `Window` (`window/window.h`) is everything a window library adds. It must:
 
 1. **Open** a window the game's size times its `<scale>`, titled with its name, or throw `std::runtime_error`.
 2. **Keep the game's proportions** when the window is resized: the game's pixels as large as fit, centred, the rest bars.
-3. **Make each object's picture once** in `init()`, and again only when `visualDirty` is set (`prepare()`), then set `size` to what it made and clear `visualDirty`.
+3. **Make each object's picture once** in `init()`, and again only when `visualDirty` is set (`prepare()`), then clear `visualDirty`. Sizes are the game's own (`Object::pictureSize`), never the window's.
 4. **Make a picture by its kind:**
    - `ShapeKind::Line`, a picture the engine drew (`<line>`s, a `<bitmap>`, an `<svg>`): `object.bitmap`, shown as it is;
    - a text: the bitmap `drawText()` (`picture/font.h`) gives, so text looks and measures the same in every window;
@@ -71,7 +71,7 @@ It may assume:
 - a bitmap is red, green, blue, alpha, a byte each, not premultiplied, row by row from the top left;
 - every call comes from one thread.
 
-It changes nothing on an object but `size` and `visualDirty`.
+It changes nothing on an object but `visualDirty`.
 
 Design: [backends](../designs/50-backends.md), [gui](../designs/53-gui.md).
 

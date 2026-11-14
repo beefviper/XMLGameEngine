@@ -30,8 +30,8 @@ namespace xge
 	//   1. open at the game's size times its scale, or throw runtime_error;
 	//   2. keep the game's proportions when resized (fit, centre, bars);
 	//   3. make each object's picture in init(), and again only when
-	//      visualDirty is set (prepare()), setting size and clearing
-	//      visualDirty;
+	//      visualDirty is set (prepare()), clearing visualDirty; sizes are
+	//      the game's own (Object::pictureSize), never the window's;
 	//   4. make a picture by its kind: a Line is object.bitmap as it is, a
 	//      text is drawText()'s bitmap (picture/font.h), an image file is
 	//      loadPicture()'s (picture/image.h), a circle or a rectangle is
@@ -43,7 +43,7 @@ namespace xge
 	// It may assume positions and sizes are the game's own pixels, a picture
 	// changes only with visualDirty, a bitmap is straight (not premultiplied)
 	// RGBA from the top left, and every call comes from one thread. It
-	// changes nothing on an object but size and visualDirty.
+	// changes nothing on an object but visualDirty.
 	class Window
 	{
 	public:
@@ -65,14 +65,9 @@ namespace xge
 		virtual void setTitle(const std::string& title) { (void)title; }
 
 		// Called once, right after the window is created (see Engine's
-		// constructor): builds and measures every object's initial visual
-		// from its picture. Object::position (including a group's
-		// cells) is already final by this point - Game finalizes all of
-		// that itself, with no Window needed (see load/expr.cpp and
-		// measureShapeSize in game/command.cpp) - so this only ever populates
-		// Object::size with each object's real rendered footprint (exact,
-		// unlike measureShapeSize's picture-only approximation) and
-		// clears Object::visualDirty, for every object it touches.
+		// constructor): makes every object's picture (rule 3 above) and clears
+		// Object::visualDirty. Positions and sizes are already final: the
+		// game works them out when it loads.
 		virtual void init(std::vector<Object>& objects) = 0;
 
 		// Pumps the backend's event queue once. Returns every key that
@@ -91,15 +86,9 @@ namespace xge
 		// see WindowDesc::background and xge::colorFromName (picture/color.h).
 		virtual void clear(const std::string& colorName) = 0;
 
-		// Draws one object. Non-const: an object whose visualDirty flag is
-		// set (e.g. a bound text display's number just changed - see
-		// Game::setVariable/resetObject/resetAll) gets its cached visual
-		// rebuilt here, on demand, and its size/visualDirty brought back up
-		// to date - the same one-time-build-then-cache pattern as init()
-		// above, just for a single object instead of all of them at once.
-		// Builds an object's visual now if it is out of date, so that its size
-		// is true before anything is drawn: a text whose number just changed
-		// can then be placed by the size it has, not the one it had.
+		// Makes an object's picture again if its visualDirty flag is set (a
+		// text's number changed, a new look) and clears the flag. draw()
+		// calls it first.
 		virtual void prepare(Object& object) { (void)object; }
 
 		virtual void draw(Object& object) = 0;

@@ -251,7 +251,7 @@ namespace xge
 			CachedVisual& visual = visuals[object.name];
 
 			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			object.visualDirty = false;
 		}
 	}
 
@@ -302,7 +302,7 @@ namespace xge
 			// Only redraws; the position is final - see the matching comment in
 			// SFMLWindow::draw() (window/sfml.cpp).
 			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			object.visualDirty = false;
 		}
 	}
 
@@ -463,18 +463,5 @@ namespace xge
 		{
 			SDL_SetTextureBlendMode(visual.texture, SDL_BLENDMODE_BLEND);
 		}
-	}
-
-	void SDL2Window::finalizeVisual(Object& object, CachedVisual& visual)
-	{
-		int w = 0, h = 0;
-		if (visual.texture)
-		{
-			SDL_QueryTexture(visual.texture, nullptr, nullptr, &w, &h);
-		}
-
-		object.size.x = static_cast<float>(w);
-		object.size.y = static_cast<float>(h);
-		object.visualDirty = false;
 	}
 }

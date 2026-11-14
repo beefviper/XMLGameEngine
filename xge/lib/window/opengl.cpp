@@ -150,7 +150,7 @@ namespace xge
 			CachedVisual& visual = visuals[object.name];
 
 			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			object.visualDirty = false;
 		}
 	}
 
@@ -241,7 +241,7 @@ namespace xge
 			// Only redraws; the position is final - see the matching comment in
 			// SFMLWindow::draw() (window/sfml.cpp).
 			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			object.visualDirty = false;
 		}
 	}
 
@@ -454,12 +454,5 @@ namespace xge
 	void OpenGLWindow::buildImage(Object& object, CachedVisual& visual)
 	{
 		upload(visual, loadPicture(object.picture.file, object.picture.flipHorizontal, object.picture.flipVertical));
-	}
-
-	void OpenGLWindow::finalizeVisual(Object& object, CachedVisual& visual)
-	{
-		object.size.x = static_cast<float>(visual.width);
-		object.size.y = static_cast<float>(visual.height);
-		object.visualDirty = false;
 	}
 }

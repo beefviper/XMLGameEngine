@@ -7,7 +7,6 @@
 
 #include "window/window.h"
 
-#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -16,11 +15,9 @@ namespace xge
 {
 	// A window that is never opened (-w none), as NullAudio is sound that is
 	// never heard: the game runs as it would in a real one, the window's size
-	// the game's own, but nothing is drawn and no key is ever pressed. It still
-	// measures every object as a window would, so sizes and the positions made
-	// from them come out right: shapes by their picture, text as the engine
-	// draws it for every window (drawText, picture/font.h) and an image file
-	// by its pixels.
+	// the game's own, but nothing is drawn and no key is ever pressed. Every
+	// size is the game's own already (Object::pictureSize), so it only marks
+	// each picture made.
 	class NullWindow : public Window
 	{
 	public:
@@ -32,16 +29,11 @@ namespace xge
 		void init(std::vector<Object>& objects) override;
 		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
 		void clear(const std::string& colorName) override { (void)colorName; }
-		void prepare(Object& object) override;
+		void prepare(Object& object) override { object.visualDirty = false; }
 		void draw(Object& object) override { prepare(object); }
 		void display() override {}
 
-		// The size a window would give the object's picture.
-		Vector2f measure(const Object& object);
-
 	private:
 		bool open{ true };
-		// Each image file's size, read once.
-		std::map<std::string, Vector2f> imageSizes;
 	};
 }

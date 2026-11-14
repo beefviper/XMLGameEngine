@@ -31,6 +31,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 
 - **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. Text and image files are made by the engine (plutovg reads both), so a window shows only bitmaps, circles and rectangles. Every library opens a window of its own and throws if it cannot start. What a window must do is a numbered contract in [the engine](../reference/engine.md#what-a-window-must-do).
 - **Text is drawn by the engine**, so it looks and measures the same in every window and a window holds no font code ([text](32-text.md)).
+- **A window measures nothing.** Every size is known when the game loads, so a window only turns finished bitmaps into textures and changes nothing on an object but `visualDirty`.
 - **`Audio`**: `load`, `play`, `loop`, `stop`, `stopAll`, `update` ([sound](33-sound.md)).
 - **Pace** is the engine's, not a library's: each library once kept time its own way (SFML's frame limit, raylib's target, a clock in the OpenGL window, only vsync in SDL2, which ran a game too fast on a fast screen).
   - Now `Engine::loop` steps whole frames by the clock and every window waits for the refresh, so the picture never tears and the speed never depends on the screen.
@@ -51,7 +52,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 - **Static by default,** `-DXGE_BUILD_SHARED=ON` for shared. Static `xgecli` is one file that runs beside its games; with two small programs always built together, sharing gains nothing.
 - Rejected: one executable with a `--gui` switch; third-party libraries `PRIVATE` (the engine's headers include them; hiding them is a separate change).
 - **Null backends** (the author's idea, as in the classic media players): `-a none` (`NullAudio`) and `-w none` (`NullWindow`, `window/null.h`).
-  - The null window takes the game's own size, measures every object as a window would (text as the engine draws it for every window, image files by their pixels) and draws nothing, so a game runs headless with the same sizes and positions.
+  - The null window takes the game's own size, opens nothing and draws nothing; sizes and positions are the game's own, so a game runs headless exactly as in a window.
   - It is what the tests play through (24 hand-written fake windows went), and what `--record`, the long tests and stepping from the command line run on.
   - Always built, never the default.
 - Ideas: a null XML library is not wanted (a game needs reading); forward declarations to keep library types out of headers.

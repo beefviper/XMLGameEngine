@@ -528,7 +528,7 @@ namespace xge
 
 		// A part of the picture that is a number, and one that is text
 		// (`part` gives it); either way the object's picture is built again
-		// (visualDirty).
+		// (visualDirty) and its size is the new picture's.
 		auto addParamNumber = [&](const QString& name, auto part, bool whole)
 		{
 			using Number = std::remove_reference_t<decltype(part(std::declval<Picture&>()))>;
@@ -537,6 +537,7 @@ namespace xge
 			{
 				part(object().picture) = static_cast<Number>(v);
 				object().visualDirty = true;
+				object().size = object().pictureSize();
 			};
 
 			if (whole)
@@ -557,6 +558,7 @@ namespace xge
 				{
 					object().picture.*part = value.toStdString();
 					object().visualDirty = true;
+					object().size = object().pictureSize();
 				});
 		};
 

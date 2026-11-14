@@ -433,9 +433,6 @@ namespace xge
 
 	void SFMLWindow::finalizeVisual(Object& object, CachedVisual& visual)
 	{
-		object.size.x = static_cast<float>(visual.renderTexture.getSize().x);
-		object.size.y = static_cast<float>(visual.renderTexture.getSize().y);
-
 		visual.renderTexture.display();
 		visual.sprite = std::make_unique<sf::Sprite>(visual.renderTexture.getTexture());
 		visual.sprite->setPosition({ object.position.x, object.position.y });

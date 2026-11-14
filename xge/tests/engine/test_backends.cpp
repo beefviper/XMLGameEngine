@@ -150,7 +150,7 @@ TEST_CASE("the usage text lists the libraries that are built, and the defaults",
 	CHECK_THAT(usage, ContainsSubstring("sound library: sfml3, raylib, sdl2, none (default sfml3)"));
 }
 
-TEST_CASE("the null window opens nothing but measures every object as a window would", "[backends]")
+TEST_CASE("a picture's size is the game's own, and the null window opens nothing", "[backends]")
 {
 	const auto measured = [](auto setUp)
 	{
@@ -161,9 +161,10 @@ TEST_CASE("the null window opens nothing but measures every object as a window w
 		NullWindow window;
 		window.init(objects);
 		CHECK_FALSE(objects.front().visualDirty);
-		return objects.front().size;
+		return objects.front().pictureSize();
 	};
 
+	// Shapes on whole pixels, rounded up.
 	const Vector2f circle = measured([](Picture& picture) { picture.kind = ShapeKind::Circle; picture.radius = 4.5f; });
 	CHECK(circle.x == 9.0f);
 	CHECK(circle.y == 9.0f);
@@ -172,7 +173,7 @@ TEST_CASE("the null window opens nothing but measures every object as a window w
 	CHECK(box.x == 10.0f);
 	CHECK(box.y == 3.0f);
 
-	// As the engine draws it for every window, in the standard font.
+	// A text as the engine draws it for every window, in the standard font.
 	const Vector2f text = measured([](Picture& picture) { picture.kind = ShapeKind::Text; picture.text = "SCORE\n12"; picture.textSize = 32; });
 	const Bitmap drawn = drawText("SCORE\n12", 32, Color{}, textFontFile(""));
 	CHECK(text.x == static_cast<float>(drawn.width));
