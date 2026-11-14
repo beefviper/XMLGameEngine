@@ -41,7 +41,7 @@
 ## Maps
 
 - **Problem:** Pac-Man's maze is hundreds of pieces; as groups the file would not show the maze.
-- **Chosen: `<map>`, rows of characters.** Pieces pick their character with `char=`; a group gets a member on every tile of it, an object takes the one tile it is on. Any character can be any piece.
+- **Chosen: `<map>`, rows of characters.** Pieces pick their character with `char=`; a group gets a member on every tile of it, an object takes the one tile it is on, or starts between two side by side (Pac-Man starts between two tiles in the arcade; a second character for "half a tile right" was the other way, and the doubled character reads as what it is). Any character can be any piece.
 - A map's members are named under the map (`maze.dots.17`), so two maps can each have `walls`; the group's own name still means all of them.
 - The layout is shared code (`RawMap`, `tilesOf`, `placeOnMap`), so a generated game lays a map out the same.
 - Rejected: one element per piece kind, a separate legend. Open: a map taking pieces one by one from the pieces.

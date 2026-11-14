@@ -55,6 +55,9 @@ namespace
 		return { (static_cast<float>(column) + 0.5f) * kTile, kTop + (static_cast<float>(row) + 0.5f) * kTile };
 	}
 
+	// Where Pac-Man starts: between the middles of columns 13 and 14.
+	Vector2f start() { return { (tile(13, 23).x + tile(14, 23).x) * 0.5f, tile(13, 23).y }; }
+
 	Vector2f middleOf(const Object& object) { return object.position + object.size * 0.5f; }
 
 	struct Maze
@@ -175,8 +178,9 @@ TEST_CASE("pacman: the map puts every piece on its tile", "[pacman][map]")
 {
 	Maze maze;
 
-	// Pac-Man's '@' is on column 14 of row 23, and he sits in the middle of it.
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(14, 23).x));
+	// Pac-Man's '@' is on columns 13 and 14 of row 23, and he starts between
+	// them, as in the arcade.
+	CHECK(middleOf(maze.pacman()).x == Approx(start().x));
 	CHECK(middleOf(maze.pacman()).y == Approx(tile(14, 23).y));
 	CHECK(maze.pacman().inGroup("playing.maze"));
 
@@ -209,12 +213,13 @@ TEST_CASE("pacman: Pac-Man goes the way pressed, turns at a gap and stops at a w
 	Maze maze;
 	maze.onlyGhost("");
 
-	// Nothing until a key: then left along row 23 at his speed, in the lane.
+	// Nothing until a key (READY! sets him off, and this starts after it):
+	// then left along row 23 at his speed, in the lane.
 	maze.frames(5);
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(14, 23).x));
+	CHECK(middleOf(maze.pacman()).x == Approx(start().x));
 	maze.press("left");
 	maze.frames(10);
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(14, 23).x - 20.0f));
+	CHECK(middleOf(maze.pacman()).x == Approx(start().x - 20.0f));
 	CHECK(middleOf(maze.pacman()).y == Approx(tile(14, 23).y));
 	CHECK(maze.pacman().facing == Direction::Left);
 	CHECK(maze.pacman().heading == Approx(270.0f));
@@ -245,12 +250,12 @@ TEST_CASE("pacman: a press for a way that is not open waits for the first gap", 
 	maze.onlyGhost("");
 
 	// Going right along row 23 with down wished: the first gap below is
-	// column 18 (columns 15 to 17 have walls under them), 64 pixels on.
+	// column 18 (columns 15 to 17 have walls under them), 72 pixels on.
 	maze.press("right");
 	maze.frames(2);
 	maze.press("down");
 	maze.frames(24);
-	CHECK(middleOf(maze.pacman()).x == Approx(tile(14, 23).x + 52.0f));
+	CHECK(middleOf(maze.pacman()).x == Approx(start().x + 52.0f));
 	CHECK(middleOf(maze.pacman()).y == Approx(tile(14, 23).y));
 	maze.frames(20);
 	CHECK(middleOf(maze.pacman()).x == Approx(tile(18, 23).x));
@@ -602,7 +607,7 @@ TEST_CASE("pacman: caught three times is game over; a cleared maze is the next r
 		maze.frames(1);
 		CHECK(maze.state() == "caught");
 		CHECK(maze.count("playing.food") == 244);
-		CHECK(middleOf(maze.pacman()).x == Approx(tile(14, 23).x));
+		CHECK(middleOf(maze.pacman()).x == Approx(start().x));
 		CHECK(maze.status("pace") == Approx(1.9375f));
 		CHECK(maze.status("fright") == 5.0f);
 		CHECK(maze.status("lives") == 3.0f);
@@ -635,7 +640,8 @@ TEST_CASE("map: what a <map> turns away", "[map]")
 	CHECK_THAT(loadError(mapGame(map("<row>###</row><row>#.</row>", walls))), ContainsSubstring("every row is as wide as the map"));
 	CHECK_THAT(loadError(mapGame(map("<row>###</row>", walls + "<group name=\"more\" char=\"#\">" + kWallSprite + "</group>"))), ContainsSubstring("is picked by"));
 	CHECK_THAT(loadError(mapGame(map("<row>#x#</row>", walls + "<group name=\"none\" char=\"y\">" + kDotSprite + "</group>"))), ContainsSubstring("on no tile"));
-	CHECK_THAT(loadError(mapGame(map("<row>#xx</row>", walls + "<object name=\"p\" char=\"x\">" + kDotSprite + "</object>"))), ContainsSubstring("which is on 2 tiles"));
+	CHECK_THAT(loadError(mapGame(map("<row>x#x</row>", walls + "<object name=\"p\" char=\"x\">" + kDotSprite + "</object>"))), ContainsSubstring("which is on 2 tiles"));
+	CHECK(loadError(mapGame(map("<row>#xx</row>", walls + "<object name=\"p\" char=\"x\">" + kDotSprite + "</object>"))).empty());
 	CHECK_THAT(loadError(mapGame(map("<row>#x#</row>", walls + "<object name=\"p\" char=\"x\">" + kDotSprite + "<position><x>0</x><y>0</y></position></object>"))),
 		ContainsSubstring("has no <position>"));
 	CHECK_THAT(loadError(mapGame(map("<row>###</row>", ""))), ContainsSubstring("has nothing on it"));

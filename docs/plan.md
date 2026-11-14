@@ -308,6 +308,7 @@ What only eyes, ears or MSVC can check. Whoever lands a change that needs one ad
 - **Line of sight (F5):** Berserk's robots fire only at a man they can see; Haunted House's eyes and matches no longer light rooms through walls.
 - **The tarantula's search (F3):** in Haunted House it now comes the shortest way along the halls to the eyes instead of circling behind walls.
 - **Smaller hitboxes:** Mario Bros.' brothers and pests, the frog, Pitfall Harry, Donkey Kong's barrels and fireballs, and the ships of Galaxian, Space Invaders, Demon Attack, Megamania and Astrosmash are touched by their bodies: a near miss on a wingtip, a toe or a hat should be a miss, while floors, walls and bounces feel as before.
+- **Pac-Man's start:** he stands between the two middle tiles and sets off left as READY! ends, after a lost life and a cleared maze too; Right (or D) held through READY! sends him right instead.
 - **The schema's documentation in an editor (A6):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.
 
 ## Known untested

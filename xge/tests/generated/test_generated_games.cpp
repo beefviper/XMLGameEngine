@@ -353,7 +353,7 @@ namespace
 			for (const std::string& group : o.outerGroups) { text(at + ".outer", group); }
 			text(at + ".maze", o.maze.map);
 			for (const MazeWall& wall : o.maze.walls) { out << at << ".wall [" << wall.objClass << "|" << wall.sprite << "]\n"; }
-			out << at << ".map [" << o.cell.map << "] " << o.cell.mapColumn << " " << o.cell.mapRow << " " << o.cell.mapColumns << " " << o.cell.mapRows << "\n";
+			out << at << ".map [" << o.cell.map << "] " << o.cell.mapColumn << " " << o.cell.mapRow << (o.cell.between ? " between " : " ") << o.cell.mapColumns << " " << o.cell.mapRows << "\n";
 			value(at + ".tileWidth", o.cell.tileWidth);
 			value(at + ".tileHeight", o.cell.tileHeight);
 			out << at << ".cell " << o.cell.column << " " << o.cell.row << "\n";

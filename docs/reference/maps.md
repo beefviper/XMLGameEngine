@@ -23,7 +23,7 @@ A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one chara
 
 - `<tile>` is a tile's size, `<position>` the map's top left. Rows must be equally wide.
 - **A group** with `char="x"` has a member in the middle of every tile of that character, named under the map in reading order (`maze.dots.1`). It has no position or members of its own, but everything else a group has, inner groups too.
-- **An object** picks a character found on exactly one tile, where it starts.
+- **An object** picks a character found on exactly one tile, where it starts, or on two side by side, and starts between them (Pac-Man's `@@`, half a tile off the grid as in the arcade). Not on a cell map, where a piece is always on a cell.
 - A character nothing picks is an empty tile; two pieces may not pick one character. Rows are trimmed, so an empty tile at an end is a character nobody picks (Pac-Man's `,`), not a space.
 - The map's name means everything on it (`<reset object="maze" />`).
 - **A map piece.** Maps that share their tile, place and pieces (Berserk's rooms) take one map piece and give only what differs, usually the rows: `<map name="maze"><row>+-+x+-+</row> ... </map>`.
@@ -45,6 +45,7 @@ An object with `<maze map="maze">` walks that map's tiles: it keeps to the middl
 - **How it chooses** is the last [steering verb](commands.md#steering) it was given: `<go>` (a player's stick), `<hunt>` (arcade targeting, or with `<search />` the shortest way round the walls), `<wander>` (at random).
 - Off the map (a tunnel) it goes straight on; an edge's `<wrap />` brings it round.
 - It faces the way it goes. `<reverse />` turns it round; `<stop />` or a reset stops it until told again.
+- Standing still, it sets off from the middle of its tile; one between two tiles along the way it sets off (Pac-Man at the start) sets off from where it is.
 - A tile is found from the walker's middle, so any size works; keep it under half a tile a frame.
 
 ## Cells

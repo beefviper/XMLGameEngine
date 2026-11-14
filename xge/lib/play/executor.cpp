@@ -269,6 +269,12 @@ namespace xge
 			{
 				if (game.soundLoops(play->sound)) { game.requestSound(play->sound); }
 			}
+			// The way a maze walker is asked to go, while the key asking is
+			// still down: Pac-Man held right through READY! sets off right.
+			else if (const auto* go = std::get_if<CmdGo>(&actionCommand); go && object.walksMaze() && !object.onCells)
+			{
+				startGo(object, *go);
+			}
 		}
 
 		return true;

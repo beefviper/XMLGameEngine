@@ -1941,19 +1941,15 @@ namespace xge
 				return;
 			}
 			const char character = readMapCharacter(node, map, where, where);
-			const auto tiles = tilesOf(map, character);
-			const std::size_t found = tiles.size();
-			if (found == 1) { placeOnMap(object, map, tiles.front().first, tiles.front().second, character); }
+			if (startOnMap(object, map, character)) { return; }
+			const std::size_t found = tilesOf(map, character).size();
 			if (found == 0 && map.cells)
 			{
 				waitOnMap(object, map, character);
 				return;
 			}
-			if (found != 1)
-			{
-				fail(where, "picks '" + std::string(1, character) + "', which is on " + std::to_string(found) + " tiles of map '" + map.name
-					+ "'; an object starts on one, and a group is what has a member on each");
-			}
+			fail(where, "picks '" + std::string(1, character) + "', which is on " + std::to_string(found) + " tiles of map '" + map.name
+				+ "'; an object starts on one, or between two side by side, and a group is what has a member on each");
 		}
 
 

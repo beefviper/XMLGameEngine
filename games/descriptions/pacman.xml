@@ -20,7 +20,8 @@
   * The maze is a <map>: each <row> is a row of tiles, a character a tile, so
     the file shows the maze as it looks. Every group and object on the map
     picks a character with char=: a group has a member on each tile of it
-    (the dots, a wall piece), an object starts on its one tile. The walls are
+    (the dots, a wall piece), an object starts on its one tile, or between
+    two side by side (Pac-Man's @@, as in the arcade). The walls are
     drawn as the arcade draws them, a line round each block through the
     middle of its edge tiles: one group, class wall, whose pieces each give
     only their rows, across (-), down (|), the round corners (r 7 L J), the
@@ -60,7 +61,8 @@
     plays its shrivelling <once />; then a life is gone.
   * A round starts with READY! over the maze standing still: the state ready
     (with the start tune) when a game begins, and caught, a copy of it,
-    after a life is lost.
+    after a life is lost. As it ends Pac-Man sets off left, or the way a key
+    held through it asks.
   * The tunnel at the sides runs off the map: a walker goes straight on, and
     <wrap />s at the window's edge.
 -->
@@ -314,7 +316,7 @@
           <row>|............||............|</row>
           <row>|.r--7.r---7.||.r---7.r--7.|</row>
           <row>|.L-7|.L---J.LJ.L---J.|r-J.|</row>
-          <row>|o..||....... @.......||..o|</row>
+          <row>|o..||.......@@.......||..o|</row>
           <row>E-7.||.r7.r------7.r7.||.r-3</row>
           <row>E-J.LJ.||.L--7r--J.||.LJ.L-3</row>
           <row>|......||....||....||......|</row>
@@ -826,6 +828,7 @@
       <timers>
         <timer name="wait">
           <after>2</after>
+          <trigger object="pacman" action="left" />
           <pop />
         </timer>
       </timers>
@@ -835,6 +838,7 @@
       <timers>
         <timer name="wait">
           <after>4.3</after>
+          <trigger object="pacman" action="left" />
           <pop />
         </timer>
       </timers>

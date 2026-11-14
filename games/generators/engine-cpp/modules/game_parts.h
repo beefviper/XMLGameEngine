@@ -484,7 +484,7 @@ namespace xge::parts
 			waitOnMap(object, map, picked);
 			return object;
 		}
-		placeOnMap(object, map, tiles.front().first, tiles.front().second, picked);
+		startOnMap(object, map, picked);
 		return object;
 	}
 

@@ -269,3 +269,28 @@ TEST_CASE("every shipped game follows the shared key conventions", "[engine_inpu
 	}
 	CHECK(checked >= 10);
 }
+
+TEST_CASE("Pac-Man sets off left as READY! ends, or the way a key held through it asks", "[engine_input][pacman]")
+{
+	const auto setOff = [](bool holdRight)
+	{
+		Game game{ "descriptions/pacman.xml" };
+		Engine engine(game, std::make_unique<NullWindow>());
+		tap(engine, KeyCode::Space); // title -> playing, under READY!
+		if (holdRight) { engine.handleKeyPressed(KeyCode::D); }
+		engine.step();
+		CHECK(game.getCurrentState().name == "ready");
+		const float start = game.getObject("playing.pacman").position.x;
+		for (int frame = 0; frame < 300 && game.getCurrentState().name != "playing"; ++frame) { engine.step(); }
+		CHECK(game.getCurrentState().name == "playing");
+		for (int frame = 0; frame < 10; ++frame) { engine.step(); }
+		return game.getObject("playing.pacman").position.x - start;
+	};
+
+	// About ten frames at his speed of 2, from where he stood (a held key
+	// takes over a frame after READY! ends).
+	CHECK(setOff(false) < -16.0f);
+	CHECK(setOff(false) > -24.0f);
+	CHECK(setOff(true) > 16.0f);
+	CHECK(setOff(true) < 24.0f);
+}

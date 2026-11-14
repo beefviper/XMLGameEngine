@@ -67,15 +67,25 @@ namespace xge
 				speed = onMap ? walk.speed * shareAt(column, row) : walk.speed;
 
 				// Standing still: on a tile, it starts from the middle of it,
-				// any way open (a <go>: only the way wished).
+				// any way open (a <go>: only the way wished). One off the
+				// middle only along that way (Pac-Man, between two tiles)
+				// starts from where it is, and chooses at the next middle.
 				if (walker.velocity.x == 0.0f && walker.velocity.y == 0.0f)
 				{
 					if (!onMap) { return; }
-					walker.position = grid.middle(column, row) - size * 0.5f;
-					if (const auto way = choose(column, row, walk.going, false))
+					const Vector2f tileMiddle = grid.middle(column, row);
+					const auto way = choose(column, row, walk.going, false);
+					const bool across = way && (*way == Direction::Left || *way == Direction::Right);
+					const bool offAlong = way && (across ? middle.y == tileMiddle.y && middle.x != tileMiddle.x
+						: middle.x == tileMiddle.x && middle.y != tileMiddle.y);
+					if (offAlong)
 					{
-						setOff(*way, column, row);
+						walk.chose = false;
+						head(*way);
+						return;
 					}
+					walker.position = tileMiddle - size * 0.5f;
+					if (way) { setOff(*way, column, row); }
 					return;
 				}
 

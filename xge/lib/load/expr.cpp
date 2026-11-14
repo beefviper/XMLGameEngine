@@ -2465,7 +2465,8 @@ namespace xge
 			const Vector2f tile{ evaluate(rawObject.cell.tileWidth, where + " > <tile> > <width>"), evaluate(rawObject.cell.tileHeight, where + " > <tile> > <height>") };
 			if (!(tile.x > 0.0f) || !(tile.y > 0.0f)) { throw std::runtime_error(where + ": a <tile> is " + formatDisplayNumber(tile.x) + " by " + formatDisplayNumber(tile.y) + "; both have to be above 0"); }
 			const Vector2f own = layoutSize(pictures.at(rawObject.name));
-			offsets[rawObject.name] = { static_cast<float>(rawObject.cell.mapColumn - 1) * tile.x + (tile.x - own.x) / 2.0f,
+			const float across = static_cast<float>(rawObject.cell.mapColumn - 1) + (rawObject.cell.between ? 0.5f : 0.0f);
+			offsets[rawObject.name] = { across * tile.x + (tile.x - own.x) / 2.0f,
 				static_cast<float>(rawObject.cell.mapRow - 1) * tile.y + (tile.y - own.y) / 2.0f };
 		}
 

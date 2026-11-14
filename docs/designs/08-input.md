@@ -21,7 +21,7 @@
 | Option | Behaviour |
 |---|---|
 | Latched to the press | Hold Left through pause and the paddle moves on the pause screen. Built first, replaced |
-| **Live held keys** | The current state decides what a held key means. On a change the old bindings are let go and the new state's held verbs resume for keys still down. One-shots and state changes need a real press |
+| **Live held keys** | The current state decides what a held key means. On a change the old bindings are let go and the new state's held verbs resume for keys still down, and a maze walker's `<go>` (the way asked for, as a joystick is). One-shots and state changes need a real press |
 | Cancel on change | Press again after every pause. Simple but annoying |
 
 Built by a state change count compared in `Engine::syncHeldKeysToState()` after each key event and frame.

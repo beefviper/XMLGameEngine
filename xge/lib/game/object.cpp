@@ -193,6 +193,24 @@ namespace xge
 		}
 	}
 
+	bool startOnMap(RawObject& object, const RawMap& map, char character)
+	{
+		const auto tiles = tilesOf(map, character);
+		if (tiles.size() == 1)
+		{
+			placeOnMap(object, map, tiles.front().first, tiles.front().second, character);
+			return true;
+		}
+		const bool sideBySide = tiles.size() == 2 && tiles[0].second == tiles[1].second && tiles[1].first == tiles[0].first + 1;
+		if (sideBySide && !map.cells)
+		{
+			placeOnMap(object, map, tiles[0].first, tiles[0].second, character);
+			object.cell.between = true;
+			return true;
+		}
+		return false;
+	}
+
 	void waitOnMap(RawObject& object, const RawMap& map, char character)
 	{
 		placeOnMap(object, map, 0, 0, character);

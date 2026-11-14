@@ -456,6 +456,9 @@ namespace xge
 		std::string map;
 		int mapColumn{ 0 };
 		int mapRow{ 0 };
+		// Its character is on two tiles side by side, and it starts between
+		// them (half a tile right of mapColumn), as the arcade's Pac-Man does.
+		bool between{ false };
 		int mapColumns{ 0 };
 		int mapRows{ 0 };
 		RawValue tileWidth;
@@ -1940,6 +1943,11 @@ namespace xge
 	// the middle of the tile. The map's name means it too, outermost of
 	// its names.
 	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row, char character = '\0');
+
+	// Puts an object where its character starts it on the map: its one tile,
+	// or between two side by side on a map that is not a cell map. False
+	// when the character is on no tile or on other tiles than those.
+	bool startOnMap(RawObject& object, const RawMap& map, char character);
 
 	// A piece of a cell map on none of its tiles: put on the map, not in
 	// the game, waiting to be spawned, as a piece does.
