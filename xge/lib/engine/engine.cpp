@@ -54,9 +54,6 @@ namespace xge
 		// here instead.
 		this->window->init(game.getCurrentObjects());
 
-		// Sizes are real now: finish any position that depends on one.
-		game.resolveSizeDependentPositions();
-
 		game.setCurrentState(0);
 		syncedStateChanges = game.stateChangeCount();
 
@@ -71,9 +68,6 @@ namespace xge
 		window = create();
 
 		window->init(game.getCurrentObjects());
-
-		// Sizes may differ a little between libraries (text above all).
-		game.resolveSizeDependentPositions();
 	}
 
 	void Engine::replaceAudio(const std::function<std::unique_ptr<Audio>()>& create)
@@ -243,17 +237,6 @@ namespace xge
 
 		// A <condition> can change the state during updateObjects.
 		syncHeldKeysToState();
-
-		// A text that grew or shrank (a score) needs its position worked out
-		// again for the new size, measured now rather than at the next draw.
-		for (auto& object : game.getCurrentObjects())
-		{
-			if (object.visualDirty && game_expr::sizeNeedsBackend(object.picture.kind))
-			{
-				window->prepare(object);
-			}
-		}
-		game.resolveSizeDependentPositions();
 
 		// Keys, collisions and conditions have all had their say.
 		playRequestedSounds();

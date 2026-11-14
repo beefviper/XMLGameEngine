@@ -475,7 +475,6 @@ namespace xge
 
 		object.size.x = static_cast<float>(w);
 		object.size.y = static_cast<float>(h);
-		object.sizeKnown = true;
 		object.visualDirty = false;
 	}
 }

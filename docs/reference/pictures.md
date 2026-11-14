@@ -21,7 +21,7 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 
 A `<radius>`, `<width>` or `<height>` below 0, or a text `<size>` of 0 or less, stops the load; a rectangle 0 by 0 is fine, and so is an empty `<sprite name="x" />`, a look that draws nothing (see [numbers only](objects.md#numbers-only)).
 
-**The engine draws its own pictures.** Lines, polygons, bitmaps and SVGs are drawn once at load into the engine's own `Bitmap` (`buildPicture`, `load/expr.cpp`). So every window library shows the same pixels, an object's size is known with no window, and a `pixel` [collision](collisions.md#how-a-touch-is-found) tests exactly what is drawn. Text and image files are drawn by the engine too (`drawText`, `loadPicture`), the same in every window, but only when a window makes the object's picture: until then their size reads 0, and they cannot be `pixel`.
+**The engine draws its own pictures.** Lines, polygons, bitmaps and SVGs are drawn once at load into the engine's own `Bitmap` (`buildPicture`, `load/expr.cpp`). So every window library shows the same pixels, an object's size is known with no window, and a `pixel` [collision](collisions.md#how-a-touch-is-found) tests exactly what is drawn. Text and image files are made by the engine too (`drawText`, `loadPicture`), so their sizes are known when the game loads as well; they cannot be `pixel`.
 
 **Turning.** An object with a `<heading>` shows its picture turned, to the nearest whole degree, redrawn only when that changes. Lines are redrawn turned, so they stay sharp; a bitmap's pixels are turned one for one, so chunky pixels stay chunky. Every heading gives the same square, which is the object's size.
 

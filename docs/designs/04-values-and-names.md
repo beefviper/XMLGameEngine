@@ -51,7 +51,7 @@
 ## An object's own size
 
 - Centring a text needs a width only a backend can measure; games used hand-tuned offsets that broke on any wording change.
-- **Built:** `name.width` and `.height` in positions. A text's position is unknown until the window measures it, then worked out again whenever a size it names changes.
+- **Built:** `name.width` and `.height` in positions. Every size is known at load (the engine draws text itself); a position naming a text's size is worked out again whenever that text's words change its size.
 - **Wart:** an object's own variable `width` shadows its size (the variable wins, keeping old games working).
 - **Built: `<centered>`** puts an object's middle at a place (empty: the window's middle), so a game never writes `name.width / 2`. Nine in ten of them said `window.height.center - 60`, so `<centered><offset>-60</offset></centered>` is that far from the window's middle, right or down, a negative number the other way: a child, never a sign in text (no arithmetic in strings). Rejected: an `offset=` attribute (a number is content, not a pick).
 - **Built: the window's sides** (the author asked): `<left />`, `<right />` in an `<x>`, `<top />`, `<bottom />` in a `<y>`, put that side of the object on the window's, and an `<offset>` moves it in from that side, so `window.right - lives.width - margin` is `<right><offset>margin</offset></right>` (34 values). In from the side, not right or down, so an offset is never a name with a sign in front. Open: the sides of another object.

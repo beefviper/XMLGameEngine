@@ -1223,15 +1223,12 @@ namespace xge
 	Command makeCommand(const RawCommand& raw, const ValueEvaluator& evaluate);
 	std::vector<Command> makeCommands(const std::vector<RawCommand>& raw, const ValueEvaluator& evaluate);
 
-	// The picture's own footprint - no Window backend required: exact for
-	// a rectangle and a Line, a circle's bounding box for a circle. Text
-	// and image footprints depend on a real font or image load, so those
-	// (and ShapeKind::Unknown) come back {0,0}. Used by
-	// load/expr::init() to lay out a group's cells entirely within Game's
-	// own construction, before any Window exists (see window/window.h's Window::
-	// init(), which now only measures the *real* rendered Object::size for
-	// drawing/collision, not position).
-	Vector2f measureShapeSize(const Picture& picture) noexcept;
+	// The picture's size, with no window needed: a circle's box and a
+	// rectangle exactly as written (Object::pictureSize rounds them up to
+	// the pixels drawn), a Line's bitmap, a text as drawText draws it, an
+	// image file's pixels (loadPicture). ShapeKind::Unknown is {0,0}.
+	// Throws as loadPicture does for an image file that cannot be read.
+	Vector2f measureShapeSize(const Picture& picture);
 
 	// If `expression` is nothing but an "owner.variable" reference (for
 	// example paddle1.score, or playing.room1.tally.kills, whose owner is a

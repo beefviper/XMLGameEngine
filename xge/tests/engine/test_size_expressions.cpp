@@ -6,27 +6,21 @@
 // Catch2 tests for an object's size in <position> expressions - name.width and
 // name.height, its own or another object's - e.g. centring a text with
 // window.width.center - title.width / 2 - against real xge::Games built from
-// games/descriptions/pong.xml and games/descriptions/spaceinvaders.xml, and a
-// small game of its own.
+// games/descriptions/pong.xml, and a small game of its own.
 //
-// A shape's size follows from its sprite, so a position using only shapes is
-// exact when the game loads. A text's size only exists once a Window backend
-// has measured it: until then a position that uses it is unknown (printGame
-// says so), and Game::resolveSizeDependentPositions() works it out once the
-// size is real and again whenever it changes. The tests stand in for a
-// backend by setting Object::size and sizeKnown themselves, or by using a
-// fake Window whose init() measures every text.
+// Every size is known when the game loads, with no window: a shape's from its
+// sprite, a text's as the engine draws it (drawText), an image file's by its
+// pixels. A position using a text's size is worked out again when the text's
+// words change its size (Game::resolveSizeDependentPositions).
 
 #include "scratch.h"
-#include "engine/engine.h"
 #include "game/game.h"
+#include "picture/font.h"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <filesystem>
 #include <fstream>
-#include <memory>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -35,38 +29,6 @@ using namespace xge;
 
 namespace
 {
-	std::string printed(const Object& object)
-	{
-		std::ostringstream text;
-		text << object;
-		return text.str();
-	}
-
-	void measure(Object& object, float width, float height)
-	{
-		object.size = { width, height };
-		object.sizeKnown = true;
-	}
-
-	// A Window that "measures" every text as 100 x 40 and draws nothing.
-	class MeasuringWindow : public Window
-	{
-	public:
-		bool isOpen() const override { return true; }
-		void close() override {}
-		void init(std::vector<Object>& objects) override
-		{
-			for (auto& object : objects)
-			{
-				if (object.picture.kind == ShapeKind::Text) { measure(object, 100.0f, 40.0f); }
-			}
-		}
-		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
-		void clear(const std::string&) override {}
-		void draw(Object&) override {}
-		void display() override {}
-	};
-
 	// Removes a scratch game file when it goes out of scope, pass or fail.
 	struct ScratchFile
 	{
@@ -87,40 +49,34 @@ namespace
 	};
 }
 
-TEST_CASE("a text's position that uses its size is unknown until the text is measured", "[size_expressions]")
+TEST_CASE("a text's size and the position made from it are known when the game loads", "[size_expressions]")
 {
 	Game game{ "descriptions/pong.xml" };
-	Object& title = game.getObject("title"); // x = window.width.center - title.width / 2
+	const Object& title = game.getObject("title"); // x = the middle - title.width / 2
 
 	CHECK(title.positionUsesSize);
-	CHECK_FALSE(title.positionResolved);
-	CHECK(printed(title).find("pos= ( Unknown") != std::string::npos);
-
-	game.resolveSizeDependentPositions(); // no size yet: nothing to work from
-	CHECK_FALSE(title.positionResolved);
-
-	measure(title, 600.0f, 200.0f);
-	game.resolveSizeDependentPositions();
-
-	CHECK(title.positionResolved);
-	CHECK(title.position.x == 640.0f - 300.0f); // 1280 wide window
-	CHECK(title.position.y == 120.0f);          // y is "margin * 4"
+	REQUIRE(title.size.x > 0.0f);
+	const Bitmap drawn = drawText("PONG", title.picture.textSize, Color{}, textFontFile(title.picture.font));
+	CHECK(title.size.x == static_cast<float>(drawn.width));
+	CHECK(title.size.y == static_cast<float>(drawn.height));
+	CHECK(title.position.x == 640.0f - title.size.x / 2.0f); // 1280 wide window
+	CHECK(title.position.y == 120.0f);                       // y is "margin * 4"
 	CHECK(title.start.position == title.position);
-	CHECK(printed(title).find("pos.x=340") != std::string::npos);
 }
 
-TEST_CASE("a position is worked out again when the text's size changes", "[size_expressions]")
+TEST_CASE("a position is worked out again when the text's words change its size", "[size_expressions]")
 {
 	Game game{ "descriptions/pong.xml" };
-	Object& score1 = game.getObject("score1"); // x = window.width.center - 80 - score1.width
+	game.setCurrentState(0);
+	Object& score1 = game.getObject("score1"); // x = the middle - 80 - score1.width
+	const float one = score1.size.x;            // "0"
+	CHECK(score1.position.x == 640.0f - 80.0f - one);
 
-	measure(score1, 60.0f, 90.0f); // "0"
-	game.resolveSizeDependentPositions();
-	CHECK(score1.position.x == 640.0f - 80.0f - 60.0f);
-
-	measure(score1, 120.0f, 90.0f); // "10": right edge stays put, left edge moves
-	game.resolveSizeDependentPositions();
-	CHECK(score1.position.x == 640.0f - 80.0f - 120.0f);
+	// "10": the game measures it again and moves it, its right edge kept.
+	REQUIRE(game.setVariable("paddle1", "score", 10.0f));
+	CHECK(score1.size.x > one);
+	game.updateObjects();
+	CHECK(score1.position.x == 640.0f - 80.0f - score1.size.x);
 
 	// Unchanged size: an object moved since is left where it is.
 	score1.position.y = 5.0f;
@@ -128,23 +84,10 @@ TEST_CASE("a position is worked out again when the text's size changes", "[size_
 	CHECK(score1.position.y == 5.0f);
 }
 
-TEST_CASE("Engine finishes size-dependent positions once its window has measured", "[size_expressions]")
-{
-	Game game{ "descriptions/spaceinvaders.xml" };
-	Object& title = game.getObject("title");
-	REQUIRE_FALSE(title.positionResolved);
-
-	Engine engine(game, std::make_unique<MeasuringWindow>());
-
-	CHECK(title.positionResolved);
-	CHECK(title.position.x == 512.0f - 50.0f);          // 1024 wide, text 100 wide
-	CHECK(title.position.y == 384.0f - 20.0f - 100.0f); // 768 high, text 40 high
-}
-
 namespace
 {
 	// A small game of a logo (a circle), a title (a text) and a paddle (an
-	// image, so its size needs a backend), with some text replaced (the first
+	// image), with some text replaced (the first
 	// occurrence of each), written beside the real games so its relative
 	// schema path still resolves.
 	const char* const kSizes = R"(<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -213,7 +156,6 @@ TEST_CASE("a shape's position that uses its own size is exact as soon as the gam
 	const Object& logo = game.getObject("logo");
 
 	CHECK_FALSE(logo.positionUsesSize);
-	CHECK(logo.positionResolved);
 	CHECK(logo.position.x == 200.0f);
 	CHECK(logo.position.y == 400.0f);
 }
@@ -226,19 +168,14 @@ TEST_CASE("an object can be placed by another object's size", "[size_expressions
 	Object& logo = game.getObject("logo");
 	Object& title = game.getObject("title");
 
-	// The title is a text, so the logo has to wait for it to be measured.
+	// The title is a text: placed by its size at once, and again if it changes.
 	CHECK(logo.positionUsesSize);
-	CHECK_FALSE(logo.positionResolved);
 	CHECK(logo.sizeDependencies == std::vector<std::string>{ "title.title" }); // the title is the main menu's
+	REQUIRE(title.size.x > 0.0f);
+	CHECK(logo.position.x == title.size.x + 10.0f);
+	CHECK(logo.position.y == title.size.y);
 
-	measure(title, 600.0f, 200.0f);
-	game.resolveSizeDependentPositions();
-	CHECK(logo.positionResolved);
-	CHECK(logo.position.x == 610.0f);
-	CHECK(logo.position.y == 200.0f);
-
-	// ...and follows it when it changes.
-	measure(title, 700.0f, 150.0f);
+	title.size = { 700.0f, 150.0f };
 	game.resolveSizeDependentPositions();
 	CHECK(logo.position.x == 710.0f);
 	CHECK(logo.position.y == 150.0f);
@@ -246,24 +183,20 @@ TEST_CASE("an object can be placed by another object's size", "[size_expressions
 
 TEST_CASE("an object's own <variable> named width is not replaced by its size", "[size_expressions]")
 {
-	// paddle1 (an image, so its real size needs a backend) is given a width
-	// variable of its own. paddle1.width must read that variable, while
-	// paddle1.height, which it does not declare, is still the measured height.
+	// paddle1, an image 30 by 150, is given a width variable of its own.
+	// paddle1.width must read that variable, while paddle1.height, which it
+	// does not declare, is the image's height, known when the game loads.
 	auto replacements = logoAt("paddle1.width", "paddle1.height");
 	replacements.push_back({ "<variable name=\"score\">0</variable>", "<variable name=\"score\">0</variable><variable name=\"width\">7</variable>" });
 	const ScratchFile scratch = writeGame(replacements);
 
 	Game game{ scratch.path.string() };
-	Object& logo = game.getObject("logo");
-	Object& paddle1 = game.getObject("paddle1");
+	const Object& logo = game.getObject("logo");
+	const Object& paddle1 = game.getObject("paddle1");
 
-	CHECK(logo.sizeDependencies == std::vector<std::string>{ "playing.paddle1" }); // for the height only
-	CHECK_FALSE(logo.positionResolved); // still waiting on the height
-
-	measure(paddle1, 30.0f, 150.0f);
-	game.resolveSizeDependentPositions();
-
-	CHECK(logo.positionResolved);
+	CHECK(paddle1.size.x == 30.0f);
+	CHECK(paddle1.size.y == 150.0f);
+	CHECK_FALSE(logo.positionUsesSize); // an image's size never changes
 	CHECK(logo.position.x == 7.0f);
 	CHECK(logo.position.y == 150.0f);
 }

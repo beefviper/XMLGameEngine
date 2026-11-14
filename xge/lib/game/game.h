@@ -61,10 +61,10 @@ namespace xge
 		void thinkInBackground(bool aside) noexcept;
 
 		// Works out the <position> of every object that uses the size of a text
-		// or image (name.width / name.height, its own or another's) from the
-		// now-measured sizes, and again whenever one of them has changed since.
-		// Engine calls it once its Window has measured sizes, and each frame
-		// after that. See Object::positionUsesSize.
+		// (name.width / name.height, its own or another's) again, when one of
+		// those sizes has changed since. The game calls it when it loads and
+		// after a frame in which a text's words changed its size. See
+		// Object::positionUsesSize.
 		void resolveSizeDependentPositions(void);
 		void printGame(void);
 
@@ -697,6 +697,9 @@ namespace xge
 		std::vector<std::vector<Kept>> undoSteps;
 		std::vector<Kept> pressKept;
 		bool keepsUndo = false;
+		// A text's words changed its size since the positions made from text
+		// sizes were last worked out (resolveSizeDependentPositions).
+		bool textsResized = false;
 		bool undoneThisPress = false;
 		std::vector<Kept> keepAll() const;
 		// What a piece is, for a <line> of alike: its group, or for a copy

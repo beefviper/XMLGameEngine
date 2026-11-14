@@ -514,7 +514,6 @@ namespace
 	void measure(Object& object, float width, float height)
 	{
 		object.size = { width, height };
-		object.sizeKnown = true;
 	}
 }
 
@@ -523,15 +522,10 @@ TEST_CASE("Pong's title is placed by an operation on its own size", "[formulas][
 	Game game{ "descriptions/pong.xml" };
 	Object& title = game.getObject("title");
 
-	// Unknown until the text is measured, like the same position written as text.
+	// Known when the game loads, from the text as drawn.
 	CHECK(title.positionUsesSize);
-	CHECK_FALSE(title.positionResolved);
-
-	measure(title, 600.0f, 200.0f);
-	game.resolveSizeDependentPositions();
-
-	CHECK(title.positionResolved);
-	CHECK(title.position.x == 640.0f - 300.0f); // 1280 wide window, window.width.center - title.width / 2
+	REQUIRE(title.size.x > 0.0f);
+	CHECK(title.position.x == 640.0f - title.size.x / 2.0f); // 1280 wide window, window.width.center - title.width / 2
 	CHECK(title.position.y == 120.0f);
 
 	// A different size gives a different place, as it does for text.
@@ -546,12 +540,10 @@ TEST_CASE("Breakout's title is placed by operations on its own size", "[formulas
 	Object& title = game.getObject("title");
 
 	CHECK(title.positionUsesSize);
-	CHECK_FALSE(title.positionResolved);
 
 	measure(title, 600.0f, 200.0f);
 	game.resolveSizeDependentPositions();
 
-	CHECK(title.positionResolved);
 	CHECK(title.position.x == 320.0f - 300.0f);          // 640 wide: window.width.center - title.width / 2
 	CHECK(title.position.y == 360.0f - 100.0f - 110.0f); // window.height.center - title.height / 2 + (-110)
 }
@@ -634,10 +626,10 @@ TEST_CASE("a number too big to be one stops the load", "[formulas][errors][zero]
 		ContainsSubstring(": comes out as infinity"));
 }
 
-TEST_CASE("a position finished once a text is measured warns, once, instead of ending the game", "[formulas][zero]")
+TEST_CASE("a position worked out again for a text's new size warns, once, instead of ending the game", "[formulas][zero]")
 {
-	// The text's width is unknown until a window measures it, so nothing is
-	// divided at load; a text measured as 0 wide is the divisor of 0.
+	// The text has a width when the game loads; one that comes to be 0 wide
+	// is the divisor of 0.
 	const std::string xml = gameWithObject("t", "<text><content>hi</content><size>20</size></text>",
 		"<divide><value>100</value><value>t.width</value></divide>");
 
@@ -650,7 +642,6 @@ TEST_CASE("a position finished once a text is measured warns, once, instead of e
 
 	measure(text, 0.0f, 10.0f);
 	REQUIRE_NOTHROW(loaded.game.resolveSizeDependentPositions());
-	CHECK(text.positionResolved);
 	CHECK(text.position.x == 0.0f);
 
 	// The size changes, so it is worked out again: still 0 wide, so the same place, no second warning.

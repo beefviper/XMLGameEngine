@@ -5,6 +5,10 @@
 
 #include "game/object.h"
 
+#include "picture/color.h"
+#include "picture/font.h"
+#include "picture/image.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -78,11 +82,7 @@ namespace xge
 		visualDirty = true;
 		// The new look is the size it is now, not at the next draw: what the
 		// edges, touches and card layout of this frame look at.
-		if (sizeKnown)
-		{
-			if (bitmap) { size = Vector2f{ static_cast<float>(std::max(bitmap->width, 1)), static_cast<float>(std::max(bitmap->height, 1)) }; }
-			else if (const Vector2f measured = measureShapeSize(picture); measured.x > 0.0f && measured.y > 0.0f) { size = measured; }
-		}
+		size = pictureSize();
 	}
 
 	void Object::wearPalette(std::size_t index)
@@ -952,10 +952,7 @@ namespace xge
 		visualDirty = true;
 		// The turned picture is the size it is now, not at the next draw: what
 		// the edges and the touches of this frame look at.
-		if (sizeKnown)
-		{
-			size = Vector2f{ static_cast<float>(std::max(bitmap->width, 1)), static_cast<float>(std::max(bitmap->height, 1)) };
-		}
+		size = pictureSize();
 	}
 
 	bool Object::advanceAnimation()
@@ -1018,7 +1015,16 @@ namespace xge
 		return command;
 	}
 
-	Vector2f measureShapeSize(const Picture& picture) noexcept
+	Vector2f Object::pictureSize() const
+	{
+		if (bitmap) { return { static_cast<float>(std::max(bitmap->width, 1)), static_cast<float>(std::max(bitmap->height, 1)) }; }
+		// A circle or a rectangle is drawn on whole pixels, rounded up.
+		const Vector2f exact = measureShapeSize(picture);
+		if (picture.kind == ShapeKind::Circle || picture.kind == ShapeKind::Rectangle) { return { std::ceil(exact.x), std::ceil(exact.y) }; }
+		return exact;
+	}
+
+	Vector2f measureShapeSize(const Picture& picture)
 	{
 		switch (picture.kind)
 		{
@@ -1028,7 +1034,15 @@ namespace xge
 		case ShapeKind::Line:
 			return picture.size;
 		case ShapeKind::Text:
+		{
+			const Bitmap drawn = drawText(picture.text, picture.textSize, colorFromName(picture.color), textFontFile(picture.font));
+			return { static_cast<float>(drawn.width), static_cast<float>(drawn.height) };
+		}
 		case ShapeKind::Image:
+		{
+			const std::shared_ptr<const Bitmap> file = loadPicture(picture.file);
+			return { static_cast<float>(file->width), static_cast<float>(file->height) };
+		}
 		case ShapeKind::Unknown:
 		default:
 			return {};

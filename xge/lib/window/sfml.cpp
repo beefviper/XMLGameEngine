@@ -435,7 +435,6 @@ namespace xge
 	{
 		object.size.x = static_cast<float>(visual.renderTexture.getSize().x);
 		object.size.y = static_cast<float>(visual.renderTexture.getSize().y);
-		object.sizeKnown = true;
 
 		visual.renderTexture.display();
 		visual.sprite = std::make_unique<sf::Sprite>(visual.renderTexture.getTexture());

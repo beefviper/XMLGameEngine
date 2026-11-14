@@ -163,21 +163,10 @@ int main(int argc, char* argv[])
 	// with where in the file it was found.
 	try
 	{
-		// Game is fully evaluated the moment its constructor returns - every
-		// object's position (a group's cells included), velocity, action, and
-		// variable is real - none of it needs a Window/backend to exist first
-		// (see load/expr.cpp, game/command.cpp's measureShapeSize). The exceptions are
-		// Object::size of a text or image (the real rendered footprint, used for
-		// drawing/collision), which stays {0,0} until Engine's constructor builds
-		// a real Window backend to measure it (see Window::init(), window/window.h), and
-		// any <position> that uses the width or height of such an object (for
-		// example title.width), which can only be worked out after that. printGame() knows the
-		// difference and prints both as "unknown" instead of a misleading {0,0}
-		// if called before Engine exists, so it is called twice: once here to
-		// show what is known without a window, and once after Engine.
+		// Game is fully evaluated the moment its constructor returns: every
+		// object's position, size, velocity, action and variable is real, with
+		// no window (the engine draws text and reads image files itself).
 		xge::Game game{ xge::readGame(filename, options.xml) };
-
-		std::cout << "=== before Engine: sizes and size-dependent positions not yet known ===\n\n";
 		game.printGame();
 
 		xge::Engine engine(game, options.window, options.audio);
@@ -190,9 +179,6 @@ int main(int argc, char* argv[])
 		{
 			engine.replay(xge::readDemo(options.keys, options.xml));
 		}
-
-		std::cout << "=== after Engine: sizes measured, positions finished ===\n\n";
-		game.printGame();
 
 		engine.loop();
 

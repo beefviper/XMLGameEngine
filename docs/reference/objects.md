@@ -162,7 +162,7 @@ Instead of members, a group can lay out a block: `<columns>` and `<rows>` make a
 </group>
 ```
 
-- A text is only measured by a window, so rows of text are their `<padding>` apart, top to top; a row's own padding is the step before it (a paragraph).
+- Rows of text are their `<padding>` apart, top to top, whatever their size; a row's own padding is the step before it (a paragraph).
 - Each line is centred on its own width.
 - Only a group's text may leave out its words; a cell that ends up with none stops the load.
 

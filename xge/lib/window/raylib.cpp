@@ -418,7 +418,6 @@ namespace xge
 	{
 		object.size.x = static_cast<float>(visual.renderTexture.texture.width);
 		object.size.y = static_cast<float>(visual.renderTexture.texture.height);
-		object.sizeKnown = true;
 		object.visualDirty = false;
 	}
 }

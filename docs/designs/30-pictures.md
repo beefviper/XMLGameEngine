@@ -11,7 +11,7 @@
 - a `pixel` collision tests exactly the pixels drawn;
 - cells drawing the same picture share it.
 
-Text and `<image>` files are made by the engine as well (plutovg reads both), but when a window makes the object's picture, so they cannot be `pixel` and a size reads 0 until then; making them at load too is [plan](../plan.md#a7-the-next-backend-is-cheap) step 4b. Keep new kinds on this path.
+Text and `<image>` files are made by the engine as well (plutovg reads both), so every size is known at load; they cannot be `pixel` yet. Keep new kinds on this path.
 
 ## Lines and polygons
 

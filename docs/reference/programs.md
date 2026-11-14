@@ -21,7 +21,7 @@ xgecli pong --frames 600 --seed 1 --dump pong-state.xml --dump-every 60
 | Option | Means |
 |---|---|
 | *game*, `-g`, `--game` | the game, bare or with `-g` (not both). Default `pong` |
-| `-w`, `--window` | `sfml3` (default), `raylib`, `sdl2`, `opengl`, `none` (no window: the game runs at its own size, nothing drawn, no keys; text measured in the built-in font) |
+| `-w`, `--window` | `sfml3` (default), `raylib`, `sdl2`, `opengl`, `none` (no window: the game runs at its own size, nothing drawn, no keys) |
 | `-x`, `--xml` | `xerces` (default), `tinyxml2`, `pugixml`, `rapidxml` |
 | `-a`, `--audio` | `sfml3` (default), `raylib`, `sdl2`, `none` |
 | `--record` | play from a new seed; when the window closes, write the play into the game file as its [`<demo>`](states.md#attract-mode) |

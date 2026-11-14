@@ -1729,6 +1729,10 @@ namespace xge
 		// other is. "" for nothing.
 		std::string shadowOf;
 
+		// The size of what it shows now, in whole pixels, as every window
+		// draws it: its bitmap's, or its picture's (measureShapeSize).
+		Vector2f pictureSize() const;
+
 		// Draws `bitmap` again at the current heading (and, for an animated
 		// object, the picture that is showing) when that is not what it
 		// already is, and marks the visual to be rebuilt. Does nothing for an
@@ -1776,39 +1780,24 @@ namespace xge
 		Vector2f carryOffset{};
 		std::string dropped;
 
-		// The object's own measured bounding box (width/height) - {0,0} until
-		// whichever Window backend is running has actually built this
-		// object's visual and measured it (see Window::init() in window/window.h).
-		// Circle/rectangle sizes are implied by the picture alone; text/
-		// image need the backend's own font/image loading to know their real
-		// pixel size, so every backend writes this back the same way
-		// regardless - collision/physics code (play/collision,
-		// CommandExecutor) only ever reads this field, never a backend type.
+		// The object's own bounding box (width/height) in whole pixels, as
+		// every window draws it (pictureSize): set for every object when the
+		// game loads, with no window, and again whenever what it shows changes
+		// size (a look, a heading, a text's words). Collision and physics
+		// code only ever reads this field.
 		Vector2f size{};
-
-		// True once a Window backend has measured `size` at least once (see
-		// finalizeVisual() in window/sfml.cpp/window_raylib.cpp/
-		// window/sdl2.cpp) - stays true from then on, even across a later
-		// visualDirty rebuild, since `size` always holds the last real
-		// measurement rather than reverting to unknown. Lets operator<<
-		// print "unknown" instead of a misleading {0,0} for a game printed
-		// before Engine exists.
-		bool sizeKnown{ false };
 
 		// <position> may use any object's size by name - name.width and
 		// name.height, including this object's own - e.g. to centre a text:
 		// window.width.center - title.width / 2. A circle's or rectangle's
 		// size follows from its sprite alone, so a position using only those
-		// is exact the moment the game is loaded. A text's or image's size
-		// only exists once a Window backend has measured it, so a position
-		// that uses one sets positionUsesSize, lists those objects in
-		// sizeDependencies, and stays positionResolved == false (printGame
-		// shows it as unknown) until Game::resolveSizeDependentPositions()
-		// works it out from the real sizes - and again whenever any of them
-		// changes (a score gaining a digit). positionSizesUsed holds the sizes,
-		// in sizeDependencies order, it was last worked out from.
+		// is exact the moment the game is loaded. A text's size can change as
+		// its words do (a score gaining a digit), so a position that uses one
+		// sets positionUsesSize and lists those texts in sizeDependencies, and
+		// Game::resolveSizeDependentPositions() works it out again whenever
+		// one of them changes. positionSizesUsed holds the sizes, in
+		// sizeDependencies order, it was last worked out from.
 		bool positionUsesSize{ false };
-		bool positionResolved{ true };
 		std::vector<std::string> sizeDependencies;
 		std::vector<Vector2f> positionSizesUsed;
 

@@ -160,7 +160,6 @@ TEST_CASE("the null window opens nothing but measures every object as a window w
 		std::vector<Object> objects{ object };
 		NullWindow window;
 		window.init(objects);
-		CHECK(objects.front().sizeKnown);
 		CHECK_FALSE(objects.front().visualDirty);
 		return objects.front().size;
 	};

@@ -8,8 +8,8 @@ How a game is loaded and played, the libraries behind it, how to build it, and w
 2. **Work out the pieces and every `from=`** on the XML (`load/merge`).
 3. **Read** the tags into a `GameData` (`game/data.h`), a group as one raw object per member. A generated program starts here, with its `GameData` compiled in.
 4. **Lay out states and scenes** (`layOutScenes`, `game/scenes.cpp`): owned objects named by path, every name written out in full.
-5. **Evaluate** (`load/expr`, `load/calc`): every value worked out (`<random>` drawn), objects, states and sounds built, every name checked. Nothing needs a window yet.
-6. **Open the window and sound** (`Engine`): sounds made into samples, sizes measured, size-dependent positions finished, the first state pushed. If sound will not start the game plays silently, with a warning.
+5. **Evaluate** (`load/expr`, `load/calc`): every value worked out (`<random>` drawn), objects, states and sounds built, every name checked, every object's size known (text and image files included) and the positions made from sizes finished. Nothing needs a window.
+6. **Open the window and sound** (`Engine`): sounds made into samples, each object's picture handed to the window, the first state pushed. If sound will not start the game plays silently, with a warning.
 
 ## Each frame
 
@@ -55,7 +55,7 @@ A `Window` (`window/window.h`) is everything a window library adds. It must:
 
 1. **Open** a window the game's size times its `<scale>`, titled with its name, or throw `std::runtime_error`.
 2. **Keep the game's proportions** when the window is resized: the game's pixels as large as fit, centred, the rest bars.
-3. **Make each object's picture once** in `init()`, and again only when `visualDirty` is set (`prepare()`), then set `size` to what it made, set `sizeKnown` and clear `visualDirty`.
+3. **Make each object's picture once** in `init()`, and again only when `visualDirty` is set (`prepare()`), then set `size` to what it made and clear `visualDirty`.
 4. **Make a picture by its kind:**
    - `ShapeKind::Line`, a picture the engine drew (`<line>`s, a `<bitmap>`, an `<svg>`): `object.bitmap`, shown as it is;
    - a text: the bitmap `drawText()` (`picture/font.h`) gives, so text looks and measures the same in every window;
@@ -71,7 +71,7 @@ It may assume:
 - a bitmap is red, green, blue, alpha, a byte each, not premultiplied, row by row from the top left;
 - every call comes from one thread.
 
-It changes nothing on an object but `size`, `sizeKnown` and `visualDirty`.
+It changes nothing on an object but `size` and `visualDirty`.
 
 Design: [backends](../designs/50-backends.md), [gui](../designs/53-gui.md).
 

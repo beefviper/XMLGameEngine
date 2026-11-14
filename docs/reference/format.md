@@ -69,7 +69,7 @@ Every number in a game (a position, a speed, a size, a threshold) is a **value**
 Once, at load, except:
 
 - a timer's `<every>` and `<after>`, worked out again each time it starts over;
-- a position naming a text's or image's size, finished once the window measures it and again whenever that size changes;
+- a position naming a text's size, worked out again whenever that text's words change its size;
 - a command's values and a condition's test, read as they run ([below](#values-read-when-used));
 - an object's number written `update="live"` ([below](#live-numbers-of-an-object)).
 
@@ -146,7 +146,7 @@ An operation is written straight in a value. Its operands are `<value>`s, each a
 - An operand is a **name or a number**, never an expression.
 - The first value is combined with each of the others in turn: `a - b - c` is one `<subtract>` of three `<value>`s.
 - `<compare>` uses a [condition's test words](states.md#conditions). Pac-Man chases for ever from wave four: `20 + 100000 ×` a `<compare><value>mode.waves</value><atleast>4</atleast></compare>`.
-- **Dividing by 0** in a `<divide>`. A divisor certainly 0 at load stops the load, naming the `<divide>`. One that is 0 only because it is not known yet (another object's variable, an unmeasured text) gives 0, and a position or interval made from it is worked out again later. While running, it gives 0 and one warning per place.
+- **Dividing by 0** in a `<divide>`. A divisor certainly 0 at load stops the load, naming the `<divide>`. One that is 0 only because it is not known yet (another object's variable) gives 0, and a position or interval made from it is worked out again later. While running, it gives 0 and one warning per place.
 - **Too big a number.** A value that comes out as infinity or not a number at load (`1e30 * 1e30`) stops the load.
 
 ## Names

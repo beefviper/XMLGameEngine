@@ -25,9 +25,8 @@ namespace xge
 
 	void NullWindow::prepare(Object& object)
 	{
-		if (object.sizeKnown && !object.visualDirty) { return; }
+		if (!object.visualDirty) { return; }
 		object.size = measure(object);
-		object.sizeKnown = true;
 		object.visualDirty = false;
 	}
 

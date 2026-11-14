@@ -102,12 +102,6 @@ namespace xge
 		// (by "name.width" / "name.height"): the ones only a backend can measure.
 		std::vector<std::string> sizeDependenciesOf(const RawObject& rawObject) const;
 
-		// Whether an object of this kind has a size only a backend can measure.
-		static bool sizeNeedsBackend(ShapeKind kind) noexcept
-		{
-			return kind == ShapeKind::Text || kind == ShapeKind::Image;
-		}
-
 		bool loading{ true };
 
 		// While a command's values are worked out at load: they may name

@@ -38,7 +38,7 @@
 - A centered text that changes width (a score gaining a digit) is centered again, as any position naming a size is (`resolveSizeDependentPositions`).
 
 - **Lines of text** (the author: help lines were each an object repeating their style and centring): a group in `<rows>` alone, the group's `<text style>` with no words, each row its words; cells named by row (`help.2`).
-  - Text rows are their padding apart top to top, since only a window measures text; a row's padding is a paragraph step.
+  - Text rows are their padding apart top to top (chosen when only a window could measure text, and kept: lines of words read best spaced evenly); a row's padding is a paragraph step.
   - Looked at: a `<line>` piece inside one `<text>` (every window backend, the 8 by 8 font and the GUI would have to centre each line themselves), and members stacking by the group's padding (a second meaning for padding).
   - The games' title help lines moved onto it; lines of different styles (a banner, the start prompt) stay objects.
 

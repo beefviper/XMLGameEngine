@@ -65,6 +65,12 @@ namespace xge
 		expr.finishLoading();
 		keep(keeps);
 		refreshAllBoundTexts();
+		// Every picture's size is known now, with no window: the engine draws
+		// text and reads image files itself.
+		for (Object& object : objects)
+		{
+			object.size = object.pictureSize();
+		}
 		checkDemo();
 
 		for (const auto& state : states)
@@ -119,21 +125,17 @@ namespace xge
 		partners(objects);
 		// What follows something, from where everything starts.
 		follow();
-		// Every object's own visual is built later, by Engine, once a real
-		// Window (and therefore a real backend to build against) exists -
-		// see Window::init() in window/window.h.
+		// Positions made from a text's size, from the text it shows now.
+		resolveSizeDependentPositions();
 	}
 
 	void Game::resolveSizeDependentPositions(void)
 	{
-		// What every backend-measured object now measures, in the expressions'
-		// own name.width / name.height variables.
+		// What every text measures now, in the expressions' own name.width /
+		// name.height variables.
 		for (const auto& object : objects)
 		{
-			if (object.sizeKnown && game_expr::sizeNeedsBackend(object.picture.kind))
-			{
-				expr.setObjectSize(object.name, object.size);
-			}
+			if (object.picture.kind == ShapeKind::Text) { expr.setObjectSize(object.name, object.size); }
 		}
 
 		for (auto& object : objects)
@@ -143,22 +145,21 @@ namespace xge
 				continue;
 			}
 
-			// Every object this position uses needs a measured size before it
-			// can be worked out, and only needs doing again if one has changed.
+			// Worked out again only when a size it uses has changed.
 			std::vector<Vector2f> sizes;
-			bool allMeasured = true;
+			bool allThere = true;
 			for (const auto& dependency : object.sizeDependencies)
 			{
 				const Object* measured = tryGetObject(dependency);
-				if (!measured || measured->name != dependency || !measured->sizeKnown)
+				if (!measured || measured->name != dependency)
 				{
-					allMeasured = false;
+					allThere = false;
 					break;
 				}
 				sizes.push_back(measured->size);
 			}
 
-			if (!allMeasured || (object.positionResolved && sizes == object.positionSizesUsed))
+			if (!allThere || sizes == object.positionSizesUsed)
 			{
 				continue;
 			}
@@ -176,7 +177,6 @@ namespace xge
 			object.start.position = object.start.position + object.cellOffset;
 			object.position = object.start.position;
 			object.positionSizesUsed = sizes;
-			object.positionResolved = true;
 		}
 	}
 
@@ -190,6 +190,12 @@ namespace xge
 		settleSpawns();
 		stageChanged();
 		showJoins();
+		// A text that grew or shrank (a score): the positions made from it.
+		if (textsResized)
+		{
+			textsResized = false;
+			resolveSizeDependentPositions();
+		}
 	}
 
 	bool Game::isDescription(const std::string& name)
@@ -308,10 +314,8 @@ namespace xge
 		made.start.exists = true;
 		made.isVisible = true;
 		made.start.isVisible = true;
-		// Its picture is the one it is copied from, and so its size, until
-		// a window measures it again.
+		// Its picture is the one it is copied from, and so its size.
 		made.size = original.size;
-		made.sizeKnown = original.sizeKnown;
 		copyRaws[name] = std::move(copy);
 		spawned.push_back(std::move(made));
 		if (!spawned.back().textPieces.empty()) { relabel(spawned.back()); }
@@ -774,12 +778,8 @@ namespace xge
 		// The position, then the velocity, the order they are drawn in when the
 		// game loads (load/expr::init), so a start drawn again takes the same
 		// numbers as the first did, and a generated program, which draws them
-		// in that order, draws the same ones. A position waiting on a size not
-		// measured yet is worked out when it is.
-		if (object.positionResolved)
-		{
-			object.start.position = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.cellOffset;
-		}
+		// in that order, draws the same ones.
+		object.start.position = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.cellOffset;
 
 		object.start.velocity = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
 	}
@@ -1831,6 +1831,11 @@ namespace xge
 		{
 			object.picture.text = text;
 			object.visualDirty = true;
+			// The size of its new words, now: what this frame's edges, touches
+			// and the positions made from it look at.
+			const Vector2f before = object.size;
+			object.size = object.pictureSize();
+			textsResized = textsResized || object.size != before;
 		}
 	}
 

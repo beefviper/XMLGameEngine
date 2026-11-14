@@ -363,14 +363,7 @@ namespace xge
 	std::ostream& operator<<(std::ostream& o, const Object& f) {
 		o << "Object: " << "name=" << f.name << ", sprite=" << f.picture << '\n';
 
-		if (f.positionResolved)
-		{
-			o << "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n';
-		}
-		else
-		{
-			o << "\tpos= ( Unknown, depends on size; not yet initialized by Engine )\n";
-		}
+		o << "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n';
 
 		o << "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n';
 
@@ -413,14 +406,7 @@ namespace xge
 			o << "\tseek=" << f.seekTarget << " " << f.seekRate << '\n';
 		}
 
-		if (f.sizeKnown)
-		{
-			o << "\tsize.x=" << f.size.x << ", size.y=" << f.size.y << '\n';
-		}
-		else
-		{
-			o << "\tsize= ( Unknown, not yet initialized by Engine )\n";
-		}
+		o << "\tsize.x=" << f.size.x << ", size.y=" << f.size.y << '\n';
 
 		o << "\tcollision=" << (f.collisionsOn ? "true" : "false") << f.collisionData;
 		o << '\n';

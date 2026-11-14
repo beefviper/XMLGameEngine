@@ -828,10 +828,9 @@ namespace xge
 			? buildPicture(rawObject.sprite, where, nullptr, nullptr, &rawObject)
 			: first.picture;
 
-		// A position that uses the size of a text or image (its own, or
-		// another object's) can only be finished once a backend has measured
-		// it - see Object::positionUsesSize. Sizes of shapes are exact
-		// already (objectSizes above).
+		// A position that uses the size of a text (its own, or another
+		// object's) is worked out again when that text's words change - see
+		// Object::positionUsesSize.
 		const std::vector<std::string> positionSizeDependencies = sizeDependenciesOf(rawObject);
 
 		// How long each picture of an animation lasts.
@@ -975,7 +974,6 @@ namespace xge
 
 		object.sizeDependencies = positionSizeDependencies;
 		object.positionUsesSize = !positionSizeDependencies.empty();
-		object.positionResolved = !object.positionUsesSize;
 
 		// What it follows, worked out again every frame (Game::follow).
 		using Follow = Object::Follow;
@@ -2433,6 +2431,18 @@ namespace xge
 		return frames;
 	}
 
+	namespace
+	{
+		// A picture's size where cells are laid out: a text counts as no size,
+		// so rows of text are spaced by their <padding> alone, top to top (lines
+		// of words), and each sits at its place's top left; a shape is as
+		// written, not rounded.
+		Vector2f layoutSize(const Picture& picture)
+		{
+			return picture.kind == ShapeKind::Text ? Vector2f{} : measureShapeSize(picture);
+		}
+	}
+
 	std::map<std::string, Vector2f> game_expr::layOutCells(const std::vector<RawObject>& rawObjects,
 		const std::map<std::string, Picture>& pictures)
 	{
@@ -2454,7 +2464,7 @@ namespace xge
 			const std::string where = "object '" + rawObject.name + "' (on map '" + rawObject.cell.map + "')";
 			const Vector2f tile{ evaluate(rawObject.cell.tileWidth, where + " > <tile> > <width>"), evaluate(rawObject.cell.tileHeight, where + " > <tile> > <height>") };
 			if (!(tile.x > 0.0f) || !(tile.y > 0.0f)) { throw std::runtime_error(where + ": a <tile> is " + formatDisplayNumber(tile.x) + " by " + formatDisplayNumber(tile.y) + "; both have to be above 0"); }
-			const Vector2f own = measureShapeSize(pictures.at(rawObject.name));
+			const Vector2f own = layoutSize(pictures.at(rawObject.name));
 			offsets[rawObject.name] = { static_cast<float>(rawObject.cell.mapColumn - 1) * tile.x + (tile.x - own.x) / 2.0f,
 				static_cast<float>(rawObject.cell.mapRow - 1) * tile.y + (tile.y - own.y) / 2.0f };
 		}
@@ -2472,16 +2482,7 @@ namespace xge
 				// own of another size sits in the middle of the place its row
 				// gives it.
 				const Picture slotPicture = buildPicture(first.cell.slot, where);
-				const ShapeKind slotKind = slotPicture.kind;
-				const Vector2f slot = measureShapeSize(slotPicture);
-				// Rows of text are spaced by their <padding> alone, top to top
-				// (lines of words); an image's size too is only known to a
-				// window backend (see measureShapeSize).
-				if (slotKind == ShapeKind::Image)
-				{
-					std::cout << "warning: group '" << group << "': row " << row
-						<< " is an image, whose size is only known to a window backend (see measureShapeSize), so its cells are spaced by the <padding> alone\n";
-				}
+				const Vector2f slot = layoutSize(slotPicture);
 
 				if (row > rows.begin()->first) { top += above + evaluate(first.cell.gapAbove, where); }
 				above = slot.y;
@@ -2492,7 +2493,7 @@ namespace xge
 					const std::string here = "object '" + cell->name + "'";
 					if (cell->cell.column > 1) { left += slot.x + evaluate(cell->cell.gapBefore, here); }
 
-					const Vector2f own = measureShapeSize(pictures.at(cell->name));
+					const Vector2f own = layoutSize(pictures.at(cell->name));
 					// A <slope>: each column that much lower than the one before.
 					const float drop = cell->cell.drop.text.empty() && cell->cell.drop.kind == RawValue::Kind::Expression ? 0.0f
 						: evaluate(cell->cell.drop, here + " > <slope>") * static_cast<float>(cell->cell.column - 1);
@@ -2551,7 +2552,7 @@ namespace xge
 
 					const std::string name = token.substr(0, token.size() - suffix.size());
 					const auto kind = objectShapeKinds.find(name);
-					if (kind != objectShapeKinds.end() && sizeNeedsBackend(kind->second)
+					if (kind != objectShapeKinds.end() && kind->second == ShapeKind::Text
 						&& !objectVariables.count(token)
 						&& std::find(dependencies.begin(), dependencies.end(), name) == dependencies.end())
 					{

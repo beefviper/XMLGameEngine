@@ -117,7 +117,6 @@ namespace xge
 
 		object.size.x = static_cast<float>(visual.width());
 		object.size.y = static_cast<float>(visual.height());
-		object.sizeKnown = true;
 		object.visualDirty = false;
 	}
 
