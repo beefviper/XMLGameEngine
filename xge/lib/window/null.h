@@ -18,9 +18,9 @@ namespace xge
 	// never heard: the game runs as it would in a real one, the window's size
 	// the game's own, but nothing is drawn and no key is ever pressed. It still
 	// measures every object as a window would, so sizes and the positions made
-	// from them come out right: shapes by their picture, text in the built-in
-	// 8 by 8 font (picture/font.h; it cannot know a font file's letters) and
-	// an image file by its pixels.
+	// from them come out right: shapes by their picture, text as the engine
+	// draws it for every window (drawText, picture/font.h) and an image file
+	// by its pixels.
 	class NullWindow : public Window
 	{
 	public:

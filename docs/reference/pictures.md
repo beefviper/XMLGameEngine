@@ -166,7 +166,7 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
 - Several lines on a screen are a [group in rows](objects.md#lines-of-text), one text style for all.
 - In a group, a piece naming the group's own variable (`table.score` in the group `table`) shows each member's own.
 - A text whose look or width changes is measured again, so a centred one stays centred.
-- Drawn with the style's font, else `assets/tuffy.ttf`, unsmoothed. If a font file is missing, each window library says so once and uses the built-in 8 by 8 font.
+- Drawn by the engine with the style's font, else `assets/tuffy.ttf`, the same in every window: `<size>` is pixels to the em, edges are smoothed, and a text's size is the box its ink covers (spaces at the ends counted). A pixel font such as Press Start 2P at multiples of 8 stays sharp. If a font file is missing, the engine says so once and uses the built-in 8 by 8 font.
 
 ## Animation
 

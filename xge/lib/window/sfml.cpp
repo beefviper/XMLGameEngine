@@ -322,25 +322,6 @@ namespace xge
 		}
 	}
 
-	const sf::Font* SFMLWindow::getFont(const std::string& file)
-	{
-		const auto found = fonts.find(file);
-		if (found != fonts.end()) { return found->second.get(); }
-
-		auto font = std::make_unique<sf::Font>();
-		if (font->openFromFile(file))
-		{
-			// A pixel font stays pixels when the game is drawn bigger.
-			font->setSmooth(false);
-		}
-		else
-		{
-			std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
-			font.reset();
-		}
-		return (fonts[file] = std::move(font)).get();
-	}
-
 	void SFMLWindow::buildShapeOnly(Object& object, CachedVisual& visual)
 	{
 		switch (object.picture.kind)
@@ -404,32 +385,7 @@ namespace xge
 
 	void SFMLWindow::buildText(Object& object, CachedVisual& visual)
 	{
-		const sf::Font* f = getFont(textFontFile(object.picture.font));
-
-		if (!f)
-		{
-			buildBitmap(object, visual, rasterizeText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color)));
-			return;
-		}
-
-		sf::Text text(*f);
-		text.setString(object.picture.text);
-		text.setCharacterSize(static_cast<unsigned int>(object.picture.textSize));
-
-		const Color c = colorFromName(object.picture.color);
-		text.setFillColor(sf::Color(c.r, c.g, c.b, c.a));
-		text.setPosition({ -text.getLocalBounds().position.x, -text.getLocalBounds().position.y });
-
-		const int width = static_cast<int>(std::ceil(text.getLocalBounds().size.x));
-		const int height = static_cast<int>(std::ceil(text.getLocalBounds().size.y));
-
-		if (!visual.renderTexture.resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
-		{
-			std::cout << "error: failed to resize render texture" << std::endl;
-		}
-
-		visual.renderTexture.clear(sf::Color::Transparent);
-		visual.renderTexture.draw(text);
+		buildBitmap(object, visual, drawText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color), textFontFile(object.picture.font)));
 	}
 
 	void SFMLWindow::buildImage(Object& object, CachedVisual& visual)
@@ -473,8 +429,7 @@ namespace xge
 		buildBitmap(object, visual, *object.bitmap);
 	}
 
-	// Shows a picture the engine drew itself: a sprite of lines, or text in
-	// the built-in font.
+	// Shows a picture the engine drew itself: a sprite of lines, or a text.
 	void SFMLWindow::buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap)
 	{
 		const auto width = static_cast<unsigned int>(bitmap.width > 0 ? bitmap.width : 1);

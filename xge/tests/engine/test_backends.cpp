@@ -173,10 +173,12 @@ TEST_CASE("the null window opens nothing but measures every object as a window w
 	CHECK(box.x == 10.0f);
 	CHECK(box.y == 3.0f);
 
-	// In the built-in font: a cell a character, two lines.
+	// As the engine draws it for every window, in the standard font.
 	const Vector2f text = measured([](Picture& picture) { picture.kind = ShapeKind::Text; picture.text = "SCORE\n12"; picture.textSize = 32; });
-	CHECK(text.x == 5.0f * static_cast<float>(builtinCellWidth(32)));
-	CHECK(text.y == 2.0f * static_cast<float>(builtinCellHeight(32)));
+	const Bitmap drawn = drawText("SCORE\n12", 32, Color{}, textFontFile(""));
+	CHECK(text.x == static_cast<float>(drawn.width));
+	CHECK(text.y == static_cast<float>(drawn.height));
+	CHECK(drawn.width > 0);
 
 	// An image file by its pixels (the tests run in games/).
 	const Vector2f image = measured([](Picture& picture) { picture.kind = ShapeKind::Image; picture.file = "assets/paddle.jpg"; });

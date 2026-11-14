@@ -5,10 +5,18 @@
 
 #include "picture/font.h"
 
+#include <plutovg.h>
+
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
+#include <limits>
+#include <map>
+#include <memory>
+#include <mutex>
 #include <vector>
 
 namespace xge
@@ -237,6 +245,131 @@ namespace xge
 			}
 		}
 
+		return bitmap;
+	}
+
+	namespace
+	{
+		struct FaceCloser
+		{
+			void operator()(plutovg_font_face_t* face) const noexcept { plutovg_font_face_destroy(face); }
+		};
+
+		// Every font file opened, by its name, kept for the life of the
+		// program; null for one that could not be opened (said once). The
+		// lock covers the faces too: plutovg fills a face's glyph cache as it
+		// reads.
+		std::mutex facesLock;
+		std::map<std::string, std::unique_ptr<plutovg_font_face_t, FaceCloser>> faces;
+
+		plutovg_font_face_t* faceFor(const std::string& file)
+		{
+			const auto found = faces.find(file);
+			if (found != faces.end()) { return found->second.get(); }
+			plutovg_font_face_t* face = plutovg_font_face_load_from_file(file.c_str(), 0);
+			if (face == nullptr)
+			{
+				std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
+			}
+			return faces.emplace(file, face).first->second.get();
+		}
+
+		// The text's lines, each its characters as Unicode code points: '\n'
+		// starts a line, '\r' is dropped and a tab is a space.
+		std::vector<std::vector<plutovg_codepoint_t>> codepointLines(const std::string& text)
+		{
+			std::vector<std::vector<plutovg_codepoint_t>> lines(1);
+			plutovg_text_iterator_t it;
+			plutovg_text_iterator_init(&it, text.data(), static_cast<int>(text.size()), PLUTOVG_TEXT_ENCODING_UTF8);
+			while (plutovg_text_iterator_has_next(&it))
+			{
+				const plutovg_codepoint_t codepoint = plutovg_text_iterator_next(&it);
+				if (codepoint == '\n') { lines.emplace_back(); }
+				else if (codepoint == '\t') { lines.back().push_back(' '); }
+				else if (codepoint != '\r') { lines.back().push_back(codepoint); }
+			}
+			return lines;
+		}
+	}
+
+	Bitmap drawText(const std::string& text, int size, const Color& color, const std::string& fontFile)
+	{
+		std::lock_guard<std::mutex> hold(facesLock);
+		plutovg_font_face_t* face = faceFor(fontFile);
+		if (face == nullptr) { return rasterizeText(text, size, color); }
+
+		const float em = static_cast<float>(size);
+		float ascent = 0.0f;
+		float descent = 0.0f;
+		float gap = 0.0f;
+		plutovg_font_face_get_metrics(face, em, &ascent, &descent, &gap, nullptr);
+		const float lineHeight = ascent - descent + gap;
+
+		// The box the ink covers, with each line's baseline at y = line *
+		// lineHeight; a space or other glyph with no ink still counts across.
+		const auto lines = codepointLines(text);
+		float left = std::numeric_limits<float>::max();
+		float top = left;
+		float right = std::numeric_limits<float>::lowest();
+		float bottom = right;
+		for (std::size_t line = 0; line < lines.size(); ++line)
+		{
+			const float baseline = static_cast<float>(line) * lineHeight;
+			float pen = 0.0f;
+			for (const plutovg_codepoint_t codepoint : lines[line])
+			{
+				float advance = 0.0f;
+				plutovg_rect_t ink{};
+				plutovg_font_face_get_glyph_metrics(face, em, codepoint, &advance, nullptr, &ink);
+				if (ink.w > 0.0f && ink.h > 0.0f)
+				{
+					left = std::min(left, pen + ink.x);
+					right = std::max(right, pen + ink.x + ink.w);
+					top = std::min(top, baseline + ink.y);
+					bottom = std::max(bottom, baseline + ink.y + ink.h);
+				}
+				else
+				{
+					left = std::min(left, pen);
+					right = std::max(right, pen + advance);
+				}
+				pen += advance;
+			}
+		}
+
+		Bitmap bitmap;
+		if (right <= left) { return bitmap; }
+		if (bottom <= top) { top = 0.0f; bottom = 1.0f; }   // spaces alone: one clear row
+		// An edge within a 64th of a pixel of a whole one is on it: a font's
+		// units seldom divide into pixels exactly.
+		constexpr float slack = 1.0f / 64.0f;
+		const float x0 = std::floor(left + slack);
+		const float y0 = std::floor(top + slack);
+		const double wide = std::max(1.0f, std::ceil(right - slack) - x0);
+		const double high = std::max(1.0f, std::ceil(bottom - slack) - y0);
+		refusePictureSize(wide, high, "a text");
+		bitmap.width = static_cast<int>(wide);
+		bitmap.height = static_cast<int>(high);
+
+		plutovg_surface_t* surface = plutovg_surface_create(bitmap.width, bitmap.height);
+		plutovg_canvas_t* canvas = plutovg_canvas_create(surface);
+		plutovg_canvas_set_font(canvas, face, em);
+		plutovg_canvas_set_rgba(canvas, color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		for (std::size_t line = 0; line < lines.size(); ++line)
+		{
+			float pen = -x0;
+			const float baseline = static_cast<float>(line) * lineHeight - y0;
+			for (const plutovg_codepoint_t codepoint : lines[line])
+			{
+				pen += plutovg_canvas_add_glyph(canvas, codepoint, pen, baseline);
+			}
+		}
+		plutovg_canvas_fill(canvas);
+		plutovg_canvas_destroy(canvas);
+
+		bitmap.rgba.resize(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4);
+		plutovg_convert_argb_to_rgba(bitmap.rgba.data(), plutovg_surface_get_data(surface), bitmap.width, bitmap.height, plutovg_surface_get_stride(surface));
+		plutovg_surface_destroy(surface);
 		return bitmap;
 	}
 }

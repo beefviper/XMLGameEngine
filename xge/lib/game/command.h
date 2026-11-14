@@ -38,8 +38,9 @@ namespace xge
 	// worked out once at load (load/expr's buildPicture). Every picture
 	// the engine draws itself (<line>s, a <bitmap>, an <svg>, a tether) is
 	// a Line: its pixels are the object's bitmap, and `size` is the
-	// bitmap's. A window library draws the rest: a circle, a rectangle, a
-	// text in a font, an image file.
+	// bitmap's. A text is drawn by the engine too, when a window makes its
+	// picture (drawText, picture/font.h). A window library draws the rest:
+	// a circle, a rectangle, an image file.
 	struct Picture
 	{
 		ShapeKind kind{ ShapeKind::Unknown };

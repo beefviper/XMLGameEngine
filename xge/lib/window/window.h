@@ -24,6 +24,25 @@ namespace xge
 	// implement this today - SFML3, Raylib, SDL2 and OpenGL (see
 	// window/sfml.h, window/raylib.h, window/sdl2.h, window/opengl.h, and
 	// WindowFactory below).
+	//
+	// The contract, in full in docs/reference/engine.md "What a window must
+	// do". A window must:
+	//   1. open at the game's size times its scale, or throw runtime_error;
+	//   2. keep the game's proportions when resized (fit, centre, bars);
+	//   3. make each object's picture in init(), and again only when
+	//      visualDirty is set (prepare()), setting size and sizeKnown and
+	//      clearing visualDirty;
+	//   4. make a picture by its kind: a Line is object.bitmap as it is, a
+	//      text is drawText()'s bitmap (picture/font.h), a circle or a
+	//      rectangle is filled, an image file is loaded;
+	//   5. draw each object at its position, its top left, between clear()
+	//      and display();
+	//   6. report keys that changed (pollEvents()) and close when asked;
+	//   7. report the mouse, in the game's pixels, and the pads (controls()).
+	// It may assume positions and sizes are the game's own pixels, a picture
+	// changes only with visualDirty, a bitmap is straight (not premultiplied)
+	// RGBA from the top left, and every call comes from one thread. It
+	// changes nothing on an object but size, sizeKnown and visualDirty.
 	class Window
 	{
 	public:

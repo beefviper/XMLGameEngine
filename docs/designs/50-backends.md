@@ -29,7 +29,11 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 
 ## Window and sound
 
-- **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. The one thing only a backend can measure is a text's or image's size. Every library opens a window of its own and throws if it cannot start.
+- **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. The one thing only a backend can measure is an image file's size. Every library opens a window of its own and throws if it cannot start. What a window must do is a numbered contract in [the engine](../reference/engine.md#what-a-window-must-do).
+- **Text is drawn by the engine** (`drawText`, `picture/font.cpp`), so it looks and measures the same in every window and needs none to be measured. Each library's own font code drew it before, and widths differed.
+  - plutovg draws it: already linked for SVG, it reads fonts with stb_truetype and fills glyphs with a rasterizer taken from FreeType's, smoothed.
+  - Rejected: stb_truetype alone (the same reader, but glyph filling to write), FreeType or HarfBuzz (hinting and shaping, not needed for score text, at the cost of large dependencies).
+  - A text's bitmap is the box its ink covers, with spaces at the ends counted across, as the libraries measured it, so layouts made against them hold.
 - **`Audio`**: `load`, `play`, `loop`, `stop`, `stopAll`, `update` ([sound](33-sound.md)).
 - **Pace** is the engine's, not a library's: each library once kept time its own way (SFML's frame limit, raylib's target, a clock in the OpenGL window, only vsync in SDL2, which ran a game too fast on a fast screen).
   - Now `Engine::loop` steps whole frames by the clock and every window waits for the refresh, so the picture never tears and the speed never depends on the screen.
@@ -41,7 +45,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 
 ## Scale
 
-- **Window `<scale>`:** a game at an arcade's 256 by 224 looked empty in a modern window. The game keeps its size and every library draws it N times bigger (an SFML view, `SDL_RenderSetScale`, raylib's `DrawTexturePro`, the OpenGL viewport); the mouse maps back. Rejected: scaling every number in the file, a free resizable window (a whole scale keeps square pixels). Text is drawn unsmoothed, so a pixel font at multiples of 8 stays sharp.
+- **Window `<scale>`:** a game at an arcade's 256 by 224 looked empty in a modern window. The game keeps its size and every library draws it N times bigger (an SFML view, `SDL_RenderSetScale`, raylib's `DrawTexturePro`, the OpenGL viewport); the mouse maps back. Rejected: scaling every number in the file, a free resizable window (a whole scale keeps square pixels). A pixel font at multiples of 8 has every edge on a whole pixel, so it stays sharp.
 - **Resized freely:** `xgegui` and `xgecli`'s SFML window fit the game to the window by any factor with its proportions, centred on whole pixels. Whole-number scales only were tried first: a window a little too small for 2x showed 1x with wide bars. Not yet in the SDL2, raylib and OpenGL windows, which stretch.
 
 ## Library and programs
@@ -50,7 +54,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 - **Static by default,** `-DXGE_BUILD_SHARED=ON` for shared. Static `xgecli` is one file that runs beside its games; with two small programs always built together, sharing gains nothing.
 - Rejected: one executable with a `--gui` switch; third-party libraries `PRIVATE` (the engine's headers include them; hiding them is a separate change).
 - **Null backends** (the author's idea, as in the classic media players): `-a none` (`NullAudio`) and `-w none` (`NullWindow`, `window/null.h`).
-  - The null window takes the game's own size, measures every object as a window would (text in the built-in 8x8 font, since it has no font file's letters; image files by their pixels) and draws nothing, so a game runs headless with the same sizes and positions.
+  - The null window takes the game's own size, measures every object as a window would (text as the engine draws it for every window, image files by their pixels) and draws nothing, so a game runs headless with the same sizes and positions.
   - It is what the tests play through (24 hand-written fake windows went), and what `--record`, the long tests and stepping from the command line run on.
   - Always built, never the default.
 - Ideas: a null XML library is not wanted (a game needs reading); forward declarations to keep library types out of headers.

@@ -28,6 +28,7 @@ What the engine cannot do today. Why, and what might come, is in the [design fil
 - A sheet's cells take the animation's time, not one each. An object with a `<heading>` cannot take a palette swap.
 - Turning keeps two pictures per object; a big drawing costs four bytes a pixel of its box. A picture (lines, polygons, a bitmap, a text, a cut from a sheet or an SVG) is at most 4096 pixels on a side; a larger one stops the load.
 - The built-in 8x8 font is only a fallback, and its widths differ from the real font's.
+- Text is one glyph after another: no hinting, kerning or shaping (no ligatures, nothing right to left). A font with CFF outlines may not load.
 - An object's own variable named `width` or `height` shadows its size.
 - Music is a chip's: one wave a part, no envelope, no stereo. A recording is an uncompressed WAV only (no MP3 or Ogg), played in mono, at most 60 seconds. A state's looping music restarts after a pause and cannot be silenced while current. A sound is made when the window opens, so notes cannot follow a variable.
 

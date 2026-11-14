@@ -14,7 +14,7 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 | # | Task | Why here |
 |---|---|---|
 | 1 | [F2](#f2-animations-that-run-once): animations that run once | The addition the most existing games gain from |
-| 2 | [A7](#a7-the-next-backend-is-cheap) steps 1 to 5: text and images drawn by the engine | The groundwork for new backends, and it makes F1's picture easy |
+| 2 | [A7](#a7-the-next-backend-is-cheap) steps 3 to 5: text and images drawn by the engine, every size known at load, pictures sharp at any window size | The groundwork for new backends, and it makes F1's picture easy |
 | 3 | [F1](#f1-a-game-you-can-step-and-read-from-the-command-line) steps 5 and 6: a picture of a frame | Cheap now that text is a bitmap |
 | 4 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
 | 5 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
@@ -30,7 +30,7 @@ What must come before what:
 |---|---|
 | A4 | A2 |
 | A1 step 4 | A5 far enough along to retire `data.xsl`, and the author's yes |
-| F1 step 5 | easier after A7 step 2, not blocked by it |
+| F1 step 5 | easier after A7 step 4b, not blocked by it |
 | F8 | the hold on new games lifted ([open decisions](#open-decisions)) |
 
 Everything else is independent, so the author can move any line up or down.
@@ -143,14 +143,16 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - Today each window backend is 500 to 650 lines, and most of it is the two jobs the engine does not do itself: drawing text with the library's own font code, and loading image files with the library's own decoder.
   - That is also why text widths differ between backends and from the built-in font (a listed limit).
 - **Steps.**
-  - [ ] **1. Write the contract down (S).** In `docs/reference/engine.md` "Backends" and at the top of `window/window.h`: exactly what a `Window` must do, as a numbered list, and what it may assume (pictures arrive as bitmaps). **Check:** docs only.
-  - [ ] **2. Text drawn by the engine (M).** Glyphs into a bitmap with one font library for every backend (FreeType through plutovg, which is already linked for SVG, or `stb_truetype`, a single header), in `picture/font.cpp` beside the 8x8 fallback. A text then reaches the window as a bitmap like any other picture, and its size is known before a window exists. **Check:** a test measures a text's width with no window; every game's tests pass.
-  - [ ] **3. Each backend loses its font code, one a commit (S each).** SFML, SDL2, raylib, OpenGL, then `xgegui`'s Qt window. **Check:** the file holds no font code. **Then the author** looks at a few titles on Windows, since widths change slightly; add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows).
+  - [x] **1. Write the contract down (S).** In `docs/reference/engine.md` "What a window must do" and at the top of `window/window.h`.
+  - [x] **2. Text drawn by the engine (M).** `drawText` in `picture/font.cpp`, with plutovg (stb_truetype reads the font, a rasterizer from FreeType's fills it); the null window and SFML use it. **Check:** `test_drawn_text.cpp` measures texts with no window.
+  - [ ] **3. Each backend loses its font code, one a commit (S each).** SDL2, raylib, OpenGL (and with the last two, the SDL2_ttf dependency), then `xgegui`'s Qt window. **Check:** the file holds no font code. **Then the author** looks at a few titles on Windows, since widths change slightly; add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows).
   - [ ] **4. Image files decoded by the engine (S).** `picture/image.cpp` already cuts sheets with plutovg; use it for `<image>` too and delete each backend's loader, and the SDL2_image dependency. **Check:** Pong's paddles (`assets/paddle.jpg`) load under every backend built.
+  - [ ] **4b. Every size known at load (M; split before starting).** With text and image files made by the engine, `measureShapeSize` knows every picture, so the engine makes each object's picture when the game loads, not when a window opens. What goes: `sizeKnown`, `sizeNeedsBackend`, the "unknown" sizes in `printGame`, positions waiting on a window (`positionUsesSize`, `resolveSizeDependentPositions`), the per-frame `prepare` in `Engine::step`, and each backend's own measuring. A window then only turns finished bitmaps into textures. **Check:** a test loads Pong with no window and finds its title's true width and the position made from it.
+  - [ ] **4c. Pictures redrawn sharp at the window's size (M).** The author's idea: a window reports its real pixel size; while it is being dragged the pictures stretch, and once it has held still about a quarter second the engine redraws every picture made from a description (text, SVG, circles and rectangles) at that size and swaps them in. Positions, sizes and hitboxes stay in game pixels, so play never notices. Bitmap rows and image files keep their hard-edged scaling. Games scale freely, so a pixel font at an odd scale has slightly uneven pixels but sharp edges. **Check:** a test asks for the drawing at twice the size and gets twice the pixels with the same game size; **then the author** drags a window on Windows.
   - [ ] **5. One conformance test for every window backend (M).** `xge/tests/engine/test_backends.cpp`: for each backend built, open a small window (under Xvfb on Linux), show three known bitmaps, read the pixels back where the library allows, feed a key, close. **Check:** it passes for every backend built.
   - [ ] **6. Direct3D 11 (M).** The simplest modern one: a window from Win32, a textured quad per object. `xge/lib/window/direct3d11.cpp` behind `XGE_WITH_DIRECT3D11`, a row in `scripts/cmake/dependencies.cmake` and the factory. **It cannot be built in a Linux container:** it is written blind there and compiled, fixed and tested by the author on Windows, so keep it to one small file and expect a round or two. **Check:** step 5's test, run by the author.
   - [ ] **7. Then, each its own step like 6:** Direct3D 9 (older machines), Vulkan (the most code for the same quad), Direct3D 12 last.
-- **Also gains.** [F1](#f1-a-game-you-can-step-and-read-from-the-command-line)'s picture of a frame becomes trivial once text is a bitmap.
+- **Also gains.** [F1](#f1-a-game-you-can-step-and-read-from-the-command-line)'s picture of a frame becomes trivial now that text is a bitmap. plutovg can also write PNGs (F1, step 5's test) and test whether a point is inside a shape, if a game ever wants exact shape touches.
 - **Done, first milestone:** no window backend's file holds font or image-file code, the conformance test runs over each, and the first new backend is under 300 lines.
 
 ### Additions
@@ -166,7 +168,7 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
   - [x] **2. `--keys file` (S).** The file is the `<demo>` format (`<press button="space">1005</press>`, `<release button="space">1009</release>`: a button and the frame), so a recording made with `--record` replays. **Check:** record ten seconds of Pong with `--record`, replay it with `--keys`, and the final score matches.
   - [x] **3. `Game::describe()` (M).** One function in `game/game.cpp` that writes the state as XML: the current state and scene, and for each object in play its full name, class, look, position, velocity and variables. XML because the project's tools are XML. **Check:** a test calls it on Pong after 60 frames and finds the ball and both paddles with their positions.
   - [x] **4. `--dump file` (S).** Writes `describe()` at the end, or every K frames with `--dump-every K`. A small XSD for the dump goes in `games/`. **Check:** the file validates against that XSD.
-  - [ ] **5. `--picture file.png` (L; split before starting).** A software `Window` (`xge/lib/window/picture.cpp`, behind no option since it needs no library) that composes the frame from the engine's own bitmaps into one image and writes a PNG with plutovg. Text uses the built-in 8x8 font first. **Check:** `xgecli pacman --frames 600 --seed 1 --picture p.png` writes a picture a person recognises as Pac-Man (the agent reads the image; then the author).
+  - [ ] **5. `--picture file.png` (L; split before starting).** A software `Window` (`xge/lib/window/picture.cpp`, behind no option since it needs no library) that composes the frame from the engine's own bitmaps (text is `drawText`'s) into one image and writes a PNG with plutovg. **Check:** `xgecli pacman --frames 600 --seed 1 --picture p.png` writes a picture a person recognises as Pac-Man (the agent reads the image; then the author).
   - [ ] **6. Tell agents (S).** `docs/agents/readme.md` gains "how to look at a game". **Check:** docs only.
 - **Not wanted:** a test per game that compares a dump with a stored one. It would freeze every game.
 - **Files.** `xge/cli/source/cli.cpp`, `main.cpp`; `xge/lib/window/picture.cpp` (new), the window factory; `xge/lib/game/game.cpp`; `docs/reference/programs.md`, `docs/designs/52-cli.md`, `57-ideas.md` (the "machine-readable view" idea becomes built).

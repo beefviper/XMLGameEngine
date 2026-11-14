@@ -47,7 +47,7 @@ namespace xge
 			return picture.size;
 		case ShapeKind::Text:
 		{
-			const Bitmap drawn = rasterizeText(picture.text, picture.textSize, colorFromName(picture.color));
+			const Bitmap drawn = drawText(picture.text, picture.textSize, colorFromName(picture.color), textFontFile(picture.font));
 			return { static_cast<float>(drawn.width), static_cast<float>(drawn.height) };
 		}
 		case ShapeKind::Image:

@@ -18,6 +18,19 @@ namespace xge
 	// the games folder, the working directory.
 	const std::string& textFontFile(const std::string& font);
 
+	// Draws `text` in the font file at `size` pixels to the em, in `color`,
+	// onto a transparent Bitmap: what every window shows for a text, so a
+	// text looks and measures the same whichever library draws the window,
+	// and its size is known with no window at all. The bitmap is the box the
+	// ink covers, top to bottom, and left to right with any spaces at either
+	// end; a '\n' starts a new line one line height down (the font's ascent,
+	// descent and line gap). Edges are smoothed (antialiased). A font file
+	// that cannot be opened is said once on std::cout, and its texts are
+	// drawn in the built-in font (rasterizeText). Returns an empty Bitmap for
+	// empty text; throws std::invalid_argument for a size too large
+	// (refusePictureSize). Fonts are read with plutovg, opened once and kept.
+	Bitmap drawText(const std::string& text, int size, const Color& color, const std::string& fontFile);
+
 	// The font the engine carries inside itself, for when a game's own font
 	// file cannot be found (see the window backends): an 8 by 8 pixel glyph
 	// for each printable ASCII character, stored in picture/font.cpp, so text
