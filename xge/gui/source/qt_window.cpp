@@ -6,6 +6,7 @@
 #include "qt_window.h"
 
 #include "picture/font.h"
+#include "picture/image.h"
 #include "picture/color.h"
 #include "game_view.h"
 
@@ -152,41 +153,7 @@ namespace xge
 
 	QImage QtWindow::buildImage(const Object& object)
 	{
-		const std::string& imageFile = object.picture.file;
-
-		QImage image(QString::fromStdString(imageFile));
-		if (image.isNull())
-		{
-			std::cout << "error: Qt Image: failed to load " << imageFile << '\n';
-			return emptyImage(1, 1);
-		}
-
-		image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-
-		// QImage::mirrored() was renamed flipped() in Qt 6.9 and now warns.
-		const bool horizontal = object.picture.flipHorizontal;
-		const bool vertical = object.picture.flipVertical;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
-		if (horizontal)
-		{
-			image = image.flipped(Qt::Horizontal);
-		}
-		else if (vertical)
-		{
-			image = image.flipped(Qt::Vertical);
-		}
-#else
-		if (horizontal)
-		{
-			image = image.mirrored(true, false);
-		}
-		else if (vertical)
-		{
-			image = image.mirrored(false, true);
-		}
-#endif
-
-		return image;
+		return fromBitmap(loadPicture(object.picture.file, object.picture.flipHorizontal, object.picture.flipVertical));
 	}
 
 	// A picture the engine drew itself (a sprite of lines, or a text): four

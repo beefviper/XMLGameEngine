@@ -6,6 +6,7 @@
 #include "window/sfml.h"
 
 #include "picture/font.h"
+#include "picture/image.h"
 #include "picture/color.h"
 
 #include <algorithm>
@@ -390,36 +391,7 @@ namespace xge
 
 	void SFMLWindow::buildImage(Object& object, CachedVisual& visual)
 	{
-		sf::Texture texture;
-
-		auto& imageFile = object.picture.file;
-
-		if (!texture.loadFromFile(imageFile))
-		{
-			throw std::runtime_error("SFML could not load the image " + imageFile);
-		}
-
-		sf::Sprite sprite(texture);
-
-		const int width = static_cast<int>(std::ceil(sprite.getLocalBounds().size.x));
-		const int height = static_cast<int>(std::ceil(sprite.getLocalBounds().size.y));
-
-		if (object.picture.flipHorizontal)
-		{
-			sprite.setTextureRect(sf::IntRect({ width, 0 }, { -width, height }));
-		}
-		else if (object.picture.flipVertical)
-		{
-			sprite.setTextureRect(sf::IntRect({ 0, height }, { width, -height }));
-		}
-
-		if (!visual.renderTexture.resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
-		{
-			std::cout << "error: failed to resize render texture" << std::endl;
-		}
-
-		visual.renderTexture.clear(sf::Color::Transparent);
-		visual.renderTexture.draw(sprite);
+		buildBitmap(object, visual, loadPicture(object.picture.file, object.picture.flipHorizontal, object.picture.flipVertical));
 	}
 
 	// A sprite of lines was already drawn, pixel by pixel, when the game loaded

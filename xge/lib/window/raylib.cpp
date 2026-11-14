@@ -6,6 +6,7 @@
 #include "window/raylib.h"
 
 #include "picture/font.h"
+#include "picture/image.h"
 #include "picture/color.h"
 
 #include <algorithm>
@@ -362,37 +363,7 @@ namespace xge
 
 	void RaylibWindow::buildImage(Object& object, CachedVisual& visual)
 	{
-		const std::string& imageFile = object.picture.file;
-
-		Image image = LoadImage(imageFile.c_str());
-		if (image.data == nullptr)
-		{
-			throw std::runtime_error("raylib could not load the image " + imageFile);
-		}
-
-		if (object.picture.flipHorizontal)
-		{
-			ImageFlipHorizontal(&image);
-		}
-		else if (object.picture.flipVertical)
-		{
-			ImageFlipVertical(&image);
-		}
-
-		const int width = image.width;
-		const int height = image.height;
-
-		reloadTexture(visual, width, height);
-
-		const Texture2D texture = LoadTextureFromImage(image);
-		UnloadImage(image);
-
-		BeginTextureMode(visual.renderTexture);
-		ClearBackground(kTransparent);
-		DrawTexture(texture, 0, 0, kWhite);
-		EndTextureMode();
-
-		UnloadTexture(texture);
+		buildBitmap(object, visual, loadPicture(object.picture.file, object.picture.flipHorizontal, object.picture.flipVertical));
 	}
 
 	// A sprite of lines was already drawn, pixel by pixel, when the game loaded

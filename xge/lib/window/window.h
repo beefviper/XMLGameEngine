@@ -33,8 +33,9 @@ namespace xge
 	//      visualDirty is set (prepare()), setting size and sizeKnown and
 	//      clearing visualDirty;
 	//   4. make a picture by its kind: a Line is object.bitmap as it is, a
-	//      text is drawText()'s bitmap (picture/font.h), a circle or a
-	//      rectangle is filled, an image file is loaded;
+	//      text is drawText()'s bitmap (picture/font.h), an image file is
+	//      loadPicture()'s (picture/image.h), a circle or a rectangle is
+	//      filled;
 	//   5. draw each object at its position, its top left, between clear()
 	//      and display();
 	//   6. report keys that changed (pollEvents()) and close when asked;

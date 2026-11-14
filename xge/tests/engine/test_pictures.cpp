@@ -12,6 +12,7 @@
 
 #include "scratch.h"
 #include "picture/bitmap.h"
+#include "picture/image.h"
 #include "game/game.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -177,4 +178,22 @@ TEST_CASE("Space Invaders 2's alien bolts are the sheet's bolt turned upside dow
 
 	const Object& bolt = game.getObject("bomb");
 	CHECK(samePixels(*bolt.bitmap, flipBitmap(*sheet.object(1).bitmap, false, true)));
+}
+
+TEST_CASE("an image file is read by the engine once, and flipped for a <flip>", "[pictures]")
+{
+	// Pong's paddle (the tests run in games/).
+	const std::shared_ptr<const Bitmap> paddle = loadPicture("assets/paddle.jpg");
+	CHECK(paddle->width == 30);
+	CHECK(paddle->height == 150);
+	CHECK(paddle->rgba.size() == 30u * 150u * 4u);
+	CHECK(paddle->solidAt(15, 75));
+
+	// Read once: the same copy again.
+	CHECK(loadPicture("assets/paddle.jpg") == paddle);
+
+	const Bitmap mirrored = loadPicture("assets/paddle.jpg", true, false);
+	CHECK(samePixels(mirrored, flipBitmap(*paddle, true, false)));
+
+	CHECK_THROWS_WITH(loadPicture("assets/no-such-picture.png"), ContainsSubstring("assets/no-such-picture.png"));
 }

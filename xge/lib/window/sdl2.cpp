@@ -6,6 +6,7 @@
 #include "window/sdl2.h"
 
 #include "picture/font.h"
+#include "picture/image.h"
 #include "picture/color.h"
 
 #include <algorithm>
@@ -152,7 +153,6 @@ namespace xge
 		if (renderer) { SDL_DestroyRenderer(renderer); renderer = nullptr; }
 		if (window) { SDL_DestroyWindow(window); window = nullptr; }
 
-		if (imgInitialized) { IMG_Quit(); imgInitialized = false; }
 
 		for (SDL_GameController*& pad : pads)
 		{
@@ -338,31 +338,6 @@ namespace xge
 		return KeyCode::Unknown;
 	}
 
-	bool SDL2Window::ensureImages()
-	{
-		if (imgTried)
-		{
-			return imgInitialized;
-		}
-		imgTried = true;
-
-		// PNG is needed; JPEG is a bonus (a vcpkg SDL2_image built without
-		// libjpeg-turbo has none), so a missing JPEG is reported but does not
-		// stop the images that can be read.
-		const int imgLoaded = IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
-		imgInitialized = (imgLoaded & IMG_INIT_PNG) != 0;
-		if (!imgInitialized)
-		{
-			std::cout << "error: failed to initialize SDL2_image: " << IMG_GetError() << std::endl;
-		}
-		else if ((imgLoaded & IMG_INIT_JPG) == 0)
-		{
-			std::cout << "warning: this SDL2_image has no JPEG support, so JPEG images will not load" << std::endl;
-		}
-
-		return imgInitialized;
-	}
-
 	void SDL2Window::reloadTargetTexture(CachedVisual& visual, int width, int height)
 	{
 		if (visual.texture)
@@ -445,32 +420,7 @@ namespace xge
 
 	void SDL2Window::buildImage(Object& object, CachedVisual& visual)
 	{
-		if (visual.texture)
-		{
-			SDL_DestroyTexture(visual.texture);
-			visual.texture = nullptr;
-		}
-
-		const std::string& imageFile = object.picture.file;
-		ensureImages();
-		SDL_Surface* surface = IMG_Load(imageFile.c_str());
-		if (!surface)
-		{
-			throw std::runtime_error("SDL2_image could not load the image " + imageFile + ": " + IMG_GetError());
-		}
-
-		visual.texture = SDL_CreateTextureFromSurface(renderer, surface);
-		SDL_FreeSurface(surface);
-
-		visual.flip = SDL_FLIP_NONE;
-		if (object.picture.flipHorizontal)
-		{
-			visual.flip = SDL_FLIP_HORIZONTAL;
-		}
-		else if (object.picture.flipVertical)
-		{
-			visual.flip = SDL_FLIP_VERTICAL;
-		}
+		buildBitmap(object, visual, loadPicture(object.picture.file, object.picture.flipHorizontal, object.picture.flipVertical));
 	}
 
 	// A sprite of lines was already drawn, pixel by pixel, when the game loaded

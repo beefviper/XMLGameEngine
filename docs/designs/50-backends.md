@@ -10,7 +10,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 
 - Dropping some to save upkeep was proposed and rejected.
 - Lower-level ones are wanted next (OpenGL is there; Direct3D and Vulkan to come), and Xerces as the full validator with a lighter built-in one behind the other parsers is intended.
-- What follows is making the next backend cheap: text and image files drawn by the engine, so a backend only opens a window, shows bitmaps and reads keys ([plan](../plan.md#a7-the-next-backend-is-cheap)).
+- What follows is making the next backend cheap: with text and image files made by the engine, a backend only opens a window, shows bitmaps and reads keys ([plan](../plan.md#a7-the-next-backend-is-cheap)).
 
 ## XML: `XmlDocument` and `XmlNode`
 
@@ -29,7 +29,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 
 ## Window and sound
 
-- **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. The one thing only a backend can measure is an image file's size. Every library opens a window of its own and throws if it cannot start. What a window must do is a numbered contract in [the engine](../reference/engine.md#what-a-window-must-do).
+- **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. Text and image files are made by the engine (plutovg reads both), so a window shows only bitmaps, circles and rectangles. Every library opens a window of its own and throws if it cannot start. What a window must do is a numbered contract in [the engine](../reference/engine.md#what-a-window-must-do).
 - **Text is drawn by the engine**, so it looks and measures the same in every window and a window holds no font code ([text](32-text.md)).
 - **`Audio`**: `load`, `play`, `loop`, `stop`, `stopAll`, `update` ([sound](33-sound.md)).
 - **Pace** is the engine's, not a library's: each library once kept time its own way (SFML's frame limit, raylib's target, a clock in the OpenGL window, only vsync in SDL2, which ran a game too fast on a fast screen).

@@ -54,24 +54,19 @@ if (XGE_WITH_OPENGL)
 	target_link_libraries(xgelib PUBLIC glfw OpenGL::GL)
 endif()
 
-# SDL2's window and sound - see window/sdl2.h and audio/sdl2.h. Its libraries are
-# also the OpenGL backend's, for its pictures and text (options.cmake).
+# SDL2's window and sound - see window/sdl2.h and audio/sdl2.h.
 if (XGE_WITH_SDL2)
 	xge_backend(SDL2)
-endif()
-
-if (XGE_NEEDS_SDL2)
 	target_link_libraries(xgelib PUBLIC SDL2::SDL2)
 	if (TARGET SDL2::SDL2main)
 		target_link_libraries(xgelib PUBLIC SDL2::SDL2main)
 	endif()
-
-	target_link_libraries(xgelib PUBLIC SDL2_image::SDL2_image)
 endif()
 
 # lunasvg is PRIVATE: only picture/svg.cpp uses it, and picture/svg.h speaks in the engine's
 # own Bitmap, so nothing that includes the engine's headers needs it. The drawing library
-# inside it, plutovg, also reads picture files (picture/image.cpp, a deck's <sheet>).
+# inside it, plutovg, also reads picture files (picture/image.cpp) and draws text
+# (picture/font.cpp) for every window.
 target_link_libraries(xgelib PRIVATE lunasvg::lunasvg plutovg::plutovg)
 
 # TinyXML2, PugiXML and RapidXML XML backends - see xml/tinyxml2.h/

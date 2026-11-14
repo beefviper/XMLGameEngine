@@ -11,7 +11,7 @@
 - a `pixel` collision tests exactly the pixels drawn;
 - cells drawing the same picture share it.
 
-Text and `<image>` files are the exception: only a backend can measure them, so they cannot be `pixel`, and a size reads 0 until measured. Keep new kinds on this path.
+Text and `<image>` files are made by the engine as well (plutovg reads both), but when a window makes the object's picture, so they cannot be `pixel` and a size reads 0 until then; making them at load too is [plan](../plan.md#a7-the-next-backend-is-cheap) step 4b. Keep new kinds on this path.
 
 ## Lines and polygons
 
@@ -35,7 +35,7 @@ Text and `<image>` files are the exception: only a backend can measure them, so 
 
 ## SVG parts
 
-- A vector sprite sheet. `<image>` hands a file to the backend, and only some read SVG, so pictures would differ per library.
+- A vector sprite sheet. `<image>` reads only picture files (PNG, JPEG and the like), not SVG.
 - **`<svg>`**: a path, an optional part (all four of x, y, width, height, or none), `<scale>`, `<hide>` by id (a missing id is not an error).
 - **lunasvg is not a backend:** no factory or choice, since a choice would only make a sprite differ. Only `picture/svg.cpp` includes it. It supports `<use>`; nanosvg does not.
 - Cut the sheet close round what is drawn, since non-pixel touches use the whole box.

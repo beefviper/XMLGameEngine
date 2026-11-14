@@ -31,9 +31,8 @@ namespace xge
 	// The same bake-once-then-rebuild-on-visualDirty architecture as the other
 	// backends. Each object's picture is made on the CPU - circles and
 	// rectangles are filled in, a sprite of lines is already a Bitmap - and
-	// uploaded as a texture; a text is drawText's bitmap (picture/font.h).
-	// Images are decoded by SDL2_image, which the library already links for
-	// the SDL2 backend.
+	// uploaded as a texture; a text is drawText's bitmap (picture/font.h)
+	// and an image file loadPicture's (picture/image.h).
 	class OpenGLWindow : public Window
 	{
 	public:
@@ -61,8 +60,6 @@ namespace xge
 			unsigned int texture{ 0 };
 			int width{ 0 };
 			int height{ 0 };
-			bool flipHorizontal{ false };
-			bool flipVertical{ false };
 
 			CachedVisual() = default;
 			~CachedVisual();
@@ -73,8 +70,6 @@ namespace xge
 		};
 
 		GLFWwindow* window{ nullptr };
-		bool imgInitialized{ false };
-		bool imgTried{ false };
 		int width{ 0 };
 		int height{ 0 };
 		// <window><scale>: window pixels to one of the game's.
@@ -89,9 +84,6 @@ namespace xge
 		static KeyCode glfwKeyToKeyCode(int key) noexcept;
 
 		void setUpProjection() const;
-
-		// Starts SDL2_image on first use; false if it cannot read PNG.
-		bool ensureImages();
 
 		void upload(CachedVisual& visual, const Bitmap& bitmap);
 		void buildShapeOnly(Object& object, CachedVisual& visual);

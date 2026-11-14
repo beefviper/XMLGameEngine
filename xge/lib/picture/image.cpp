@@ -14,6 +14,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <map>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 
@@ -178,5 +180,40 @@ namespace xge
 		if (!(scale > 0.0f)) { throw std::invalid_argument("a sheet picture's <scale> must be above 0"); }
 		if (picture->surface == nullptr) { return rasterizeSvg(sheet.path, { part.x, part.y, part.width, part.height }, scale, sheet.hide); }
 		return cut(part, std::max(1, static_cast<int>(std::lround(part.width * scale))), std::max(1, static_cast<int>(std::lround(part.height * scale))));
+	}
+
+	std::shared_ptr<const Bitmap> loadPicture(const std::string& path)
+	{
+		static std::mutex lock;
+		static std::map<std::string, std::shared_ptr<const Bitmap>> kept;
+		std::lock_guard<std::mutex> hold(lock);
+		const auto found = kept.find(path);
+		if (found != kept.end()) { return found->second; }
+
+		plutovg_surface_t* surface = plutovg_surface_load_from_image_file(path.c_str());
+		if (surface == nullptr) { throw std::runtime_error("could not read the picture " + path + " (missing, or not a picture file)"); }
+		const int width = plutovg_surface_get_width(surface);
+		const int height = plutovg_surface_get_height(surface);
+		try { refusePictureSize(width, height, "the picture " + path); }
+		catch (...) { plutovg_surface_destroy(surface); throw; }
+
+		auto bitmap = std::make_shared<Bitmap>();
+		bitmap->width = width;
+		bitmap->height = height;
+		bitmap->rgba.resize(static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4);
+		const int stride = plutovg_surface_get_stride(surface);
+		for (int row = 0; row < height; ++row)
+		{
+			plutovg_convert_argb_to_rgba(bitmap->rgba.data() + static_cast<std::size_t>(row) * static_cast<std::size_t>(width) * 4,
+				plutovg_surface_get_data(surface) + static_cast<std::size_t>(row) * static_cast<std::size_t>(stride), width, 1, width * 4);
+		}
+		plutovg_surface_destroy(surface);
+		return kept.emplace(path, std::move(bitmap)).first->second;
+	}
+
+	Bitmap loadPicture(const std::string& path, bool horizontal, bool vertical)
+	{
+		const std::shared_ptr<const Bitmap> picture = loadPicture(path);
+		return (horizontal || vertical) ? flipBitmap(*picture, horizontal, vertical) : *picture;
 	}
 }

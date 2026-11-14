@@ -57,6 +57,18 @@ namespace xge
 		float height{ 0.0f };
 	};
 
+	// The picture file at `path` (PNG, JPEG, BMP, GIF's first frame, TGA),
+	// read by the engine with plutovg: what an <image> sprite shows in every
+	// window. Read once and kept for the life of the program, so objects
+	// showing the same file share one copy. Throws std::runtime_error, saying
+	// which file, if it cannot be read, and std::invalid_argument for one
+	// larger than refusePictureSize allows.
+	std::shared_ptr<const Bitmap> loadPicture(const std::string& path);
+
+	// The same, mirrored left for right or top for bottom (an <image>'s
+	// <flip>): what a window shows for an image sprite.
+	Bitmap loadPicture(const std::string& path, bool horizontal, bool vertical);
+
 	// A sheet's picture, opened to be cut, held only as long as this is. A
 	// PNG, JPEG or BMP is read by the engine itself with the image loader of
 	// the SVG library's drawing library (plutovg), an SVG drawn by lunasvg,

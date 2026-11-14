@@ -156,17 +156,9 @@ xge_dependency(GLFW WHEN XGE_WITH_OPENGL
 	BROUGHT_BY raylib
 	SETTINGS GLFW_BUILD_EXAMPLES=OFF GLFW_BUILD_TESTS=OFF GLFW_BUILD_DOCS=OFF GLFW_INSTALL=OFF)
 
-# SDL2_image is built against whichever SDL2 target ends up available (found
-# or fetched); its own CMakeLists picks it up the same way this project's
-# other fetched libraries do. The OpenGL backend uses it too.
-xge_dependency(SDL2 WHEN XGE_NEEDS_SDL2
+xge_dependency(SDL2 WHEN XGE_WITH_SDL2
 	PACKAGE SDL2
 	REPO https://github.com/libsdl-org/SDL.git TAG release-2.30.9)
-
-xge_dependency(SDL2_image WHEN XGE_NEEDS_SDL2
-	PACKAGE SDL2_image
-	REPO https://github.com/libsdl-org/SDL_image.git TAG release-2.8.2
-	SETTINGS SDL2IMAGE_INSTALL=OFF SDL2IMAGE_VENDORED=ON)
 
 # Any 10 or 11 works: the wrapper uses a handful of calls that did not change, and
 # the suite passes against both (11 only changed internal containers). No version
@@ -289,11 +281,11 @@ if (XGE_WITH_RAPIDXML AND NOT TARGET rapidxml::rapidxml)
 endif()
 
 # raylib's own CMake exports a plain `raylib` target (not namespaced) either
-# way (found or fetched) - nothing to alias. SDL2/SDL2_image modern
+# way (found or fetched) - nothing to alias. SDL2 modern
 # enough to be pinned above all define their own SDL2::SDL2-style ALIAS
 # targets from either path too; the defensive alias below only covers an
 # older/nonstandard find_package result that doesn't.
-if (XGE_NEEDS_SDL2 AND SDL2_FOUND AND NOT TARGET SDL2::SDL2 AND TARGET SDL2)
+if (XGE_WITH_SDL2 AND SDL2_FOUND AND NOT TARGET SDL2::SDL2 AND TARGET SDL2)
 	add_library(SDL2::SDL2 ALIAS SDL2)
 endif()
 

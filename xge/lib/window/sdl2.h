@@ -8,15 +8,13 @@
 #include "window/window.h"
 
 #include <SDL.h>
-#include <SDL_image.h>
 
 #include <array>
 #include <unordered_map>
 
 namespace xge
 {
-	// The SDL2 Window backend (+ SDL2_image for image loading, which plain
-	// SDL2 lacks). Nothing outside this file,
+	// The SDL2 Window backend. Nothing outside this file,
 	// window/sdl2.cpp, and WindowFactory::create (the one place that
 	// constructs one) ever names an SDL type - see window/window.h. Same
 	// bake-once-then-rebuild-on-visualDirty architecture as SFMLWindow and
@@ -75,15 +73,11 @@ namespace xge
 		// nothing is torn down until close() (the destructor), because the
 		// frame that read the event is still going to clear and draw.
 		bool closeRequested{ false };
-		bool imgInitialized{ false };
-		bool imgTried{ false };
 
 		std::unordered_map<std::string, CachedVisual> visuals;
 
 		static KeyCode sdlKeyToKeyCode(SDL_Keycode key) noexcept;
 
-		// Starts SDL2_image on first use; false if it cannot read PNG.
-		bool ensureImages();
 		void reloadTargetTexture(CachedVisual& visual, int width, int height);
 
 		void buildShapeOnly(Object& object, CachedVisual& visual);

@@ -7,14 +7,12 @@
 
 #include "picture/font.h"
 #include "picture/color.h"
+#include "picture/image.h"
 
 // GLFW's own header brings in OpenGL 1.1: what the system's OpenGL library
-// exports as it is. It has to come before SDL's, which only want their own.
+// exports as it is.
 #include <algorithm>
 #include <GLFW/glfw3.h>
-
-#include <SDL.h>
-#include <SDL_image.h>
 
 #include <cmath>
 #include <cstdint>
@@ -26,39 +24,6 @@ namespace xge
 {
 	namespace
 	{
-		bool imageSizeMatches(const SDL_Surface& surface) noexcept
-		{
-			return surface.w > 0 && surface.h > 0 && surface.pixels != nullptr;
-		}
-
-		// Copies an SDL surface into a Bitmap, whatever format the surface is in.
-		Bitmap bitmapFromSurface(SDL_Surface* surface)
-		{
-			Bitmap bitmap;
-
-			SDL_Surface* rgba = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA32, 0);
-			if (!rgba || !imageSizeMatches(*rgba))
-			{
-				if (rgba) { SDL_FreeSurface(rgba); }
-				return bitmap;
-			}
-
-			bitmap.width = rgba->w;
-			bitmap.height = rgba->h;
-			bitmap.rgba.resize(static_cast<std::size_t>(rgba->w) * static_cast<std::size_t>(rgba->h) * 4);
-
-			const auto* source = static_cast<const std::uint8_t*>(rgba->pixels);
-			for (int row = 0; row < rgba->h; ++row)
-			{
-				std::memcpy(bitmap.rgba.data() + static_cast<std::size_t>(row) * static_cast<std::size_t>(rgba->w) * 4,
-					source + static_cast<std::size_t>(row) * static_cast<std::size_t>(rgba->pitch),
-					static_cast<std::size_t>(rgba->w) * 4);
-			}
-
-			SDL_FreeSurface(rgba);
-			return bitmap;
-		}
-
 		Bitmap filledBitmap(int width, int height)
 		{
 			Bitmap bitmap;
@@ -137,7 +102,6 @@ namespace xge
 		glfwMakeContextCurrent(window);
 		visuals.clear();
 
-		if (imgInitialized) { IMG_Quit(); }
 
 		glfwDestroyWindow(window);
 		window = nullptr;
@@ -298,10 +262,10 @@ namespace xge
 		const float x1 = x0 + static_cast<float>(visual.width);
 		const float y1 = y0 + static_cast<float>(visual.height);
 
-		const float u0 = visual.flipHorizontal ? 1.0f : 0.0f;
-		const float u1 = visual.flipHorizontal ? 0.0f : 1.0f;
-		const float v0 = visual.flipVertical ? 1.0f : 0.0f;
-		const float v1 = visual.flipVertical ? 0.0f : 1.0f;
+		const float u0 = 0.0f;
+		const float u1 = 1.0f;
+		const float v0 = 0.0f;
+		const float v1 = 1.0f;
 
 		glBindTexture(GL_TEXTURE_2D, visual.texture);
 		glBegin(GL_QUADS);
@@ -403,31 +367,6 @@ namespace xge
 		}
 	}
 
-	bool OpenGLWindow::ensureImages()
-	{
-		if (imgTried)
-		{
-			return imgInitialized;
-		}
-		imgTried = true;
-
-		// PNG is needed; JPEG is a bonus (a vcpkg SDL2_image built without
-		// libjpeg-turbo has none), so a missing JPEG is reported but does not
-		// stop the images that can be read.
-		const int imgLoaded = IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
-		imgInitialized = (imgLoaded & IMG_INIT_PNG) != 0;
-		if (!imgInitialized)
-		{
-			std::cout << "error: failed to initialize SDL2_image: " << IMG_GetError() << std::endl;
-		}
-		else if ((imgLoaded & IMG_INIT_JPG) == 0)
-		{
-			std::cout << "warning: this SDL2_image has no JPEG support, so JPEG images will not load" << std::endl;
-		}
-
-		return imgInitialized;
-	}
-
 	void OpenGLWindow::upload(CachedVisual& visual, const Bitmap& bitmap)
 	{
 		const Bitmap blank = bitmap.rgba.empty() ? filledBitmap(1, 1) : Bitmap{};
@@ -452,9 +391,6 @@ namespace xge
 
 	void OpenGLWindow::buildShapeOnly(Object& object, CachedVisual& visual)
 	{
-		visual.flipHorizontal = false;
-		visual.flipVertical = false;
-
 		switch (object.picture.kind)
 		{
 		case ShapeKind::Circle:    buildCircle(object, visual); break;
@@ -517,25 +453,7 @@ namespace xge
 
 	void OpenGLWindow::buildImage(Object& object, CachedVisual& visual)
 	{
-		const std::string& imageFile = object.picture.file;
-		ensureImages();
-		SDL_Surface* surface = IMG_Load(imageFile.c_str());
-		if (!surface)
-		{
-			throw std::runtime_error("failed to load " + imageFile + ": " + IMG_GetError());
-		}
-
-		upload(visual, bitmapFromSurface(surface));
-		SDL_FreeSurface(surface);
-
-		if (object.picture.flipHorizontal)
-		{
-			visual.flipHorizontal = true;
-		}
-		else if (object.picture.flipVertical)
-		{
-			visual.flipVertical = true;
-		}
+		upload(visual, loadPicture(object.picture.file, object.picture.flipHorizontal, object.picture.flipVertical));
 	}
 
 	void OpenGLWindow::finalizeVisual(Object& object, CachedVisual& visual)

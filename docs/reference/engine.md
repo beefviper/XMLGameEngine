@@ -45,7 +45,7 @@ An object is **in play** when it is not out of play (`<waiting />`, dead, despaw
 
 - `Game` and `Engine` see only the interfaces. One factory per kind (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`) knows every library.
 - **A build has some, not all**: SFML 3 and Xerces by default; `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON` all. A library's code compiles only behind `XGE_WITH_<NAME>`. Each factory says what it has (`available()`, `availableBackends()`, `defaultBackend()`, `name()`); `create()` of one not built throws, naming those that are.
-- **Pictures** are drawn by the engine, so a window library mostly shows bitmaps; only circles, rectangles and image files are its own.
+- **Pictures** are drawn by the engine, so a window library mostly shows bitmaps; only circles and rectangles are its own.
 - **Sound** is made by the engine (`synthesize()`, `audio/sound.h`), so it is the same whichever library plays it. `Game` never makes a noise: `<play>` asks, and `Engine` hands the frame's sounds to its `Audio`. Window and sound libraries are chosen apart; any goes with any.
 - `Engine::replaceWindow()` swaps the window of a running game (the old destroyed first), `Engine::replaceAudio()` the sound, `Engine::silence()` stops what plays, `Engine::pump()` keeps a paused window responsive.
 
@@ -60,7 +60,7 @@ A `Window` (`window/window.h`) is everything a window library adds. It must:
    - `ShapeKind::Line`, a picture the engine drew (`<line>`s, a `<bitmap>`, an `<svg>`): `object.bitmap`, shown as it is;
    - a text: the bitmap `drawText()` (`picture/font.h`) gives, so text looks and measures the same in every window;
    - a circle or a rectangle: filled in its colour;
-   - an image file: loaded from `picture.file`.
+   - an image file: the bitmap `loadPicture()` (`picture/image.h`) gives, mirrored as `<flip>` says.
 5. **Draw** each object at its `position`, its top left, each frame (`draw()`), after `clear()` with the background colour and before `display()`.
 6. **Report keys** that went down or up since the last call (`pollEvents()`), as `KeyCode`s, and close itself when asked to.
 7. **Report the mouse and pads** (`controls()`), the mouse in the game's own pixels; a library without them reports nothing.

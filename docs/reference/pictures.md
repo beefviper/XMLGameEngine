@@ -11,7 +11,7 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 | `<circle>` | `<radius>`, `<color>` | a filled circle |
 | `<rectangle>` | `<width>`, `<height>`, `<color>` | a filled rectangle |
 | `<text>` | pieces, then `<size>`, `<color>`, `<font>`; `style=` | [text](#text) |
-| `<image>` | `<path>`, `<flip>` | an image file, loaded by the window library |
+| `<image>` | `<path>`, `<flip>` | an image file: PNG, JPEG, BMP, GIF (first frame) or TGA |
 | `<line>`s | each `<from>`, `<to>`, `<color>`, `<thickness>` | [straight lines](#lines) |
 | `<drawing from="rock" />` | | lines or polygons of the `<pictures>` ([drawings](#drawings)) |
 | `<polygon>`s | each three or more `<point>`s, `<color>` | [filled shapes](#polygons) |
@@ -21,7 +21,7 @@ A `<sprite>` holds one shape. A `name` is needed only when an object has several
 
 A `<radius>`, `<width>` or `<height>` below 0, or a text `<size>` of 0 or less, stops the load; a rectangle 0 by 0 is fine, and so is an empty `<sprite name="x" />`, a look that draws nothing (see [numbers only](objects.md#numbers-only)).
 
-**The engine draws its own pictures.** Lines, polygons, bitmaps and SVGs are drawn once at load into the engine's own `Bitmap` (`buildPicture`, `load/expr.cpp`). So every window library shows the same pixels, an object's size is known with no window, and a `pixel` [collision](collisions.md#how-a-touch-is-found) tests exactly what is drawn. Text and image files are the exception: only a window library can measure them.
+**The engine draws its own pictures.** Lines, polygons, bitmaps and SVGs are drawn once at load into the engine's own `Bitmap` (`buildPicture`, `load/expr.cpp`). So every window library shows the same pixels, an object's size is known with no window, and a `pixel` [collision](collisions.md#how-a-touch-is-found) tests exactly what is drawn. Text and image files are drawn by the engine too (`drawText`, `loadPicture`), the same in every window, but only when a window makes the object's picture: until then their size reads 0, and they cannot be `pixel`.
 
 **Turning.** An object with a `<heading>` shows its picture turned, to the nearest whole degree, redrawn only when that changes. Lines are redrawn turned, so they stay sharp; a bitmap's pixels are turned one for one, so chunky pixels stay chunky. Every heading gives the same square, which is the object's size.
 
