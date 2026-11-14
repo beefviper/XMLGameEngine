@@ -4,15 +4,20 @@
 
 ## Text and the built-in font
 
-- Text is drawn by each backend from a font file, `assets/tuffy.ttf` unless a `<font>` says otherwise (below), relative to the working directory. Running from the wrong folder used to draw nothing, silently.
+- Text is drawn by the engine from a font file (`drawText`, `picture/font.cpp`), `assets/tuffy.ttf` unless a `<font>` says otherwise (below), relative to the working directory. Running from the wrong folder used to draw nothing, silently.
+- **Drawn by the engine, not the window library:** each library's own font code (SFML, SDL2_ttf, raylib, Qt) drew text before, and widths differed between windows and from the built-in font. Now every window shows the same bitmap, and a text's size needs no window.
+  - plutovg draws it: already linked for SVG, it reads fonts with stb_truetype and fills glyphs with a rasterizer taken from FreeType's, smoothed.
+  - Rejected: stb_truetype alone (the same reader, but glyph filling to write), FreeType or HarfBuzz (hinting and shaping, not needed for score text, at the cost of large dependencies). The cost: no hinting, kerning or shaping ([limits](../reference/limits.md)).
+  - The bitmap is the box the ink covers, spaces at the ends counted across, as the libraries measured it, so layouts made against them hold. Edges within a 64th of a pixel of a whole one count as on it, so Press Start 2P at multiples of 8 has no part-covered pixel.
+  - Open: redrawing text at the window's real size so it stays sharp when scaled ([plan](../plan.md#a7-the-next-backend-is-cheap), step 4c).
 - **Fallback:** an 8x8 glyph per printable ASCII (32 to 126), 760 bytes in `picture/font.cpp` (public-domain `font8x8`, credit kept), drawn into a `Bitmap` by `rasterizeText`.
-  - When a font load fails each backend prints one error line and draws all text from that bitmap.
+  - When a font load fails the engine prints one error line and draws that font's text from that bitmap.
   - Size: height scale `size / 16` (min 1), cell 8x that tall, half as wide but never under 8 (size 48 gives 12 by 24).
   - Non-ASCII is `?`; newline starts a line; tab is a space.
   - Text is chunky and monospaced, so width differs from the real font; centering with `title.width` still works.
   - The first version used one scale for both axes and ran off the screen.
 - Rejected: embedding `tuffy.ttf` (about 600 KB of source, a generation step since C++20 has no `#embed`), an embedded PNG atlas (needs a decoder in a fallback), each library's default font (only raylib has one).
-- **Font files:** a game picks a font file with `<font>` in a text or, usually, its style; the file is the text's `Picture::font` (empty for the standard `assets/tuffy.ttf`), and every window backend keeps its fonts by file (SDL2 and OpenGL by file and size), unsmoothed.
+- **Font files:** a game picks a font file with `<font>` in a text or, usually, its style; the file is the text's `Picture::font` (empty for the standard `assets/tuffy.ttf`), opened once and kept by file.
   - Shipped: Press Start 2P (`assets/pressstart2p.ttf`, SIL OFL, its licence beside it as `pressstart2p-ofl.txt`, which `--generate` copies with any font it copies), letters 8 by 8 at size 8, used by Mario Bros. and Q*bert (at their own 256 by 224, size 8 and 16), Pac-Man and Donkey Kong.
   - Looked at: switching the built-in font on by name (its letters are stretched half as wide again, it was drawn as a fallback), a bitmap font as rows in the game file (each game standalone would carry the alphabet).
 - The fix for the cause rather than the symptom: the data-folder search that puts `assets/` in the working directory ([cli](52-cli.md)).

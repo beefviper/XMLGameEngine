@@ -7,11 +7,9 @@
 
 #include "window/window.h"
 
-#include <SDL_ttf.h>
 
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -33,9 +31,9 @@ namespace xge
 	// The same bake-once-then-rebuild-on-visualDirty architecture as the other
 	// backends. Each object's picture is made on the CPU - circles and
 	// rectangles are filled in, a sprite of lines is already a Bitmap - and
-	// uploaded as a texture. Text and images are decoded by SDL2_ttf and
-	// SDL2_image, which the library already links for the SDL2 backend; with
-	// no font file, text falls back to the engine's built-in font.
+	// uploaded as a texture; a text is drawText's bitmap (picture/font.h).
+	// Images are decoded by SDL2_image, which the library already links for
+	// the SDL2 backend.
 	class OpenGLWindow : public Window
 	{
 	public:
@@ -75,7 +73,6 @@ namespace xge
 		};
 
 		GLFWwindow* window{ nullptr };
-		bool ttfInitialized{ false };
 		bool imgInitialized{ false };
 		bool imgTried{ false };
 		int width{ 0 };
@@ -86,16 +83,12 @@ namespace xge
 		// Keys the GLFW callback has seen since pollEvents() last looked.
 		std::vector<std::pair<KeyCode, bool>> pendingKeys;
 
-		std::unordered_map<std::string, TTF_Font*> fontsBySize;   // by file@size
-		// The font files that could not be loaded, said once each.
-		std::unordered_set<std::string> fontsMissing;
 		std::unordered_map<std::string, CachedVisual> visuals;
 
 		static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 		static KeyCode glfwKeyToKeyCode(int key) noexcept;
 
 		void setUpProjection() const;
-		TTF_Font* getFont(const std::string& file, int pointSize);
 
 		// Starts SDL2_image on first use; false if it cannot read PNG.
 		bool ensureImages();

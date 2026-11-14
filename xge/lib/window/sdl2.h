@@ -9,16 +9,14 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
-#include <SDL_ttf.h>
 
 #include <array>
 #include <unordered_map>
-#include <unordered_set>
 
 namespace xge
 {
-	// The SDL2 Window backend (+ SDL2_ttf for text, SDL2_image for image
-	// loading - plain SDL2 has neither). Nothing outside this file,
+	// The SDL2 Window backend (+ SDL2_image for image loading, which plain
+	// SDL2 lacks). Nothing outside this file,
 	// window/sdl2.cpp, and WindowFactory::create (the one place that
 	// constructs one) ever names an SDL type - see window/window.h. Same
 	// bake-once-then-rebuild-on-visualDirty architecture as SFMLWindow and
@@ -46,8 +44,8 @@ namespace xge
 
 	private:
 		// Circle/rectangle are drawn straight into this texture (as an
-		// SDL_TEXTUREACCESS_TARGET); text/image instead replace it outright
-		// with a texture built from an SDL_ttf/SDL2_image surface - either
+		// SDL_TEXTUREACCESS_TARGET); a bitmap or an image instead replaces it
+		// outright with a texture built from its pixels - either
 		// way, draw() only ever needs the finished texture (+ how to flip it
 		// for an image asked to mirror).
 		struct CachedVisual
@@ -77,22 +75,12 @@ namespace xge
 		// nothing is torn down until close() (the destructor), because the
 		// frame that read the event is still going to clear and draw.
 		bool closeRequested{ false };
-		bool ttfInitialized{ false };
 		bool imgInitialized{ false };
 		bool imgTried{ false };
-
-		// TTF_Font is opened at a fixed point size (unlike SFML's sf::Font or
-		// raylib's Font, either of which can be measured/drawn at any size
-		// from one loaded font) - cached per size actually used, opened once
-		// on first use rather than reopened on every buildText() call.
-		std::unordered_map<std::string, TTF_Font*> fontsBySize;   // by file@size
-		// The font files that could not be loaded, said once each.
-		std::unordered_set<std::string> fontsMissing;
 
 		std::unordered_map<std::string, CachedVisual> visuals;
 
 		static KeyCode sdlKeyToKeyCode(SDL_Keycode key) noexcept;
-		TTF_Font* getFont(const std::string& file, int pointSize);
 
 		// Starts SDL2_image on first use; false if it cannot read PNG.
 		bool ensureImages();

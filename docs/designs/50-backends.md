@@ -30,10 +30,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 ## Window and sound
 
 - **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. The one thing only a backend can measure is an image file's size. Every library opens a window of its own and throws if it cannot start. What a window must do is a numbered contract in [the engine](../reference/engine.md#what-a-window-must-do).
-- **Text is drawn by the engine** (`drawText`, `picture/font.cpp`), so it looks and measures the same in every window and needs none to be measured. Each library's own font code drew it before, and widths differed.
-  - plutovg draws it: already linked for SVG, it reads fonts with stb_truetype and fills glyphs with a rasterizer taken from FreeType's, smoothed.
-  - Rejected: stb_truetype alone (the same reader, but glyph filling to write), FreeType or HarfBuzz (hinting and shaping, not needed for score text, at the cost of large dependencies).
-  - A text's bitmap is the box its ink covers, with spaces at the ends counted across, as the libraries measured it, so layouts made against them hold.
+- **Text is drawn by the engine**, so it looks and measures the same in every window and a window holds no font code ([text](32-text.md)).
 - **`Audio`**: `load`, `play`, `loop`, `stop`, `stopAll`, `update` ([sound](33-sound.md)).
 - **Pace** is the engine's, not a library's: each library once kept time its own way (SFML's frame limit, raylib's target, a clock in the OpenGL window, only vsync in SDL2, which ran a game too fast on a fast screen).
   - Now `Engine::loop` steps whole frames by the clock and every window waits for the refresh, so the picture never tears and the speed never depends on the screen.

@@ -93,12 +93,6 @@ namespace xge
 			throw std::runtime_error(std::string("SDL2 could not start: ") + SDL_GetError());
 		}
 
-		ttfInitialized = (TTF_Init() == 0);
-		if (!ttfInitialized)
-		{
-			std::cout << "error: failed to initialize SDL2_ttf: " << TTF_GetError() << std::endl;
-		}
-
 		Uint32 flags = SDL_WINDOW_SHOWN;
 		if (windowDesc.fullscreen == "true")
 		{
@@ -112,7 +106,6 @@ namespace xge
 		if (!window)
 		{
 			const std::string why = SDL_GetError();
-			if (ttfInitialized) { TTF_Quit(); }
 			quitVideo();
 			throw std::runtime_error("SDL2 could not make a window: " + why);
 		}
@@ -126,7 +119,6 @@ namespace xge
 			const std::string why = SDL_GetError();
 			SDL_DestroyWindow(window);
 			window = nullptr;
-			if (ttfInitialized) { TTF_Quit(); }
 			quitVideo();
 			throw std::runtime_error("SDL2 could not make a renderer: " + why);
 		}
@@ -157,17 +149,10 @@ namespace xge
 
 		visuals.clear();
 
-		for (auto& [key, loadedFont] : fontsBySize)
-		{
-			if (loadedFont) { TTF_CloseFont(loadedFont); }
-		}
-		fontsBySize.clear();
-
 		if (renderer) { SDL_DestroyRenderer(renderer); renderer = nullptr; }
 		if (window) { SDL_DestroyWindow(window); window = nullptr; }
 
 		if (imgInitialized) { IMG_Quit(); imgInitialized = false; }
-		if (ttfInitialized) { TTF_Quit(); ttfInitialized = false; }
 
 		for (SDL_GameController*& pad : pads)
 		{
@@ -281,7 +266,7 @@ namespace xge
 			{
 				// Not close(): the engine finishes the frame this was read in
 				// (clear, draw, display) before it looks at isOpen() again, and
-				// that needs the renderer, the textures and SDL_ttf. They are
+				// that needs the renderer and the textures. They are
 				// torn down by close() when the window is destroyed.
 				closeRequested = true;
 			}
@@ -378,29 +363,6 @@ namespace xge
 		return imgInitialized;
 	}
 
-	TTF_Font* SDL2Window::getFont(const std::string& file, int pointSize)
-	{
-		const std::string key = file + "@" + std::to_string(pointSize);
-		auto it = fontsBySize.find(key);
-		if (it != fontsBySize.end())
-		{
-			return it->second;
-		}
-
-		TTF_Font* loaded = TTF_OpenFont(file.c_str(), pointSize);
-		if (!loaded)
-		{
-			// Said once, not once for every size asked for.
-			if (fontsMissing.insert(file).second)
-			{
-				std::cout << "error: failed to load font: " << file << ": " << TTF_GetError() << " - drawing text with the built-in 8x8 font instead" << std::endl;
-			}
-		}
-
-		fontsBySize.emplace(key, loaded);
-		return loaded;
-	}
-
 	void SDL2Window::reloadTargetTexture(CachedVisual& visual, int width, int height)
 	{
 		if (visual.texture)
@@ -478,33 +440,7 @@ namespace xge
 
 	void SDL2Window::buildText(Object& object, CachedVisual& visual)
 	{
-		if (visual.texture)
-		{
-			SDL_DestroyTexture(visual.texture);
-			visual.texture = nullptr;
-		}
-		visual.flip = SDL_FLIP_NONE;
-
-		const int requestedSize = object.picture.textSize;
-		TTF_Font* font = getFont(textFontFile(object.picture.font), requestedSize);
-		if (!font)
-		{
-			buildBitmap(object, visual, rasterizeText(object.picture.text, requestedSize, colorFromName(object.picture.color)));
-			return;
-		}
-
-		const Color c = colorFromName(object.picture.color);
-		const SDL_Color sdlColor{ c.r, c.g, c.b, c.a };
-
-		SDL_Surface* surface = TTF_RenderUTF8_Blended(font, object.picture.text.c_str(), sdlColor);
-		if (!surface)
-		{
-			std::cout << "error: SDL2_ttf: failed to render text: " << TTF_GetError() << std::endl;
-			return;
-		}
-
-		visual.texture = SDL_CreateTextureFromSurface(renderer, surface);
-		SDL_FreeSurface(surface);
+		buildBitmap(object, visual, drawText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color), textFontFile(object.picture.font)));
 	}
 
 	void SDL2Window::buildImage(Object& object, CachedVisual& visual)
@@ -544,8 +480,7 @@ namespace xge
 		buildBitmap(object, visual, *object.bitmap);
 	}
 
-	// Shows a picture the engine drew itself: a sprite of lines, or text in
-	// the built-in font.
+	// Shows a picture the engine drew itself: a sprite of lines, or a text.
 	void SDL2Window::buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap)
 	{
 		if (visual.texture)

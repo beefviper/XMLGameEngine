@@ -130,12 +130,6 @@ namespace xge
 		{
 			visuals.clear();
 
-			for (auto& [file, font] : fonts)
-			{
-				if (font) { UnloadFont(*font); }
-			}
-			fonts.clear();
-
 			CloseWindow();
 			isOpenFlag = false;
 		}
@@ -299,26 +293,6 @@ namespace xge
 	}
 
 
-	const Font* RaylibWindow::getFont(const std::string& file)
-	{
-		const auto found = fonts.find(file);
-		if (found != fonts.end()) { return found->second ? &*found->second : nullptr; }
-
-		std::optional<Font>& font = fonts[file];
-		const Font loaded = LoadFontEx(file.c_str(), 96, nullptr, 0);
-		if (loaded.texture.id != 0)
-		{
-			// A pixel font stays pixels when it is drawn smaller or bigger.
-			SetTextureFilter(loaded.texture, TEXTURE_FILTER_POINT);
-			font = loaded;
-		}
-		else
-		{
-			std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
-		}
-		return font ? &*font : nullptr;
-	}
-
 	void RaylibWindow::reloadTexture(CachedVisual& visual, int width, int height)
 	{
 		const int wanted = width > 0 ? width : 1;
@@ -383,27 +357,7 @@ namespace xge
 
 	void RaylibWindow::buildText(Object& object, CachedVisual& visual)
 	{
-		const Font* font = getFont(textFontFile(object.picture.font));
-		const std::string& text = object.picture.text;
-		const float fontSize = static_cast<float>(object.picture.textSize);
-
-		if (!font)
-		{
-			buildBitmap(object, visual, rasterizeText(text, static_cast<int>(std::lround(fontSize)), colorFromName(object.picture.color)));
-			return;
-		}
-
-		const Font& f = *font;
-		const ::Vector2 measured = MeasureTextEx(f, text.c_str(), fontSize, 1.0f);
-		const int width = static_cast<int>(std::ceil(measured.x));
-		const int height = static_cast<int>(std::ceil(measured.y));
-
-		reloadTexture(visual, width, height);
-
-		BeginTextureMode(visual.renderTexture);
-		ClearBackground(kTransparent);
-		DrawTextEx(f, text.c_str(), ::Vector2{ 0.0f, 0.0f }, fontSize, 1.0f, toRaylibColor(colorFromName(object.picture.color)));
-		EndTextureMode();
+		buildBitmap(object, visual, drawText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color), textFontFile(object.picture.font)));
 	}
 
 	void RaylibWindow::buildImage(Object& object, CachedVisual& visual)
@@ -448,8 +402,7 @@ namespace xge
 		buildBitmap(object, visual, *object.bitmap);
 	}
 
-	// Shows a picture the engine drew itself: a sprite of lines, or text in
-	// the built-in font.
+	// Shows a picture the engine drew itself: a sprite of lines, or a text.
 	void RaylibWindow::buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap)
 	{
 		(void)object;

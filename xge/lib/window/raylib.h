@@ -11,7 +11,6 @@
 
 #include <array>
 #include <cstddef>
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -23,9 +22,9 @@ namespace xge
 	// and WindowFactory::create (the one place that constructs one) ever
 	// names a raylib type - see window/window.h. Same bake-once-to-a-render-texture,
 	// rebuild-on-visualDirty architecture as SFMLWindow (see window/sfml.h),
-	// re-implemented against raylib's own render-texture/font/image API -
-	// raylib bundles its own image and TrueType font loading, so unlike the
-	// SDL2 backend this needs no extra dependencies for text/image objects.
+	// re-implemented against raylib's own render-texture/image API -
+	// raylib bundles its own image loading, so unlike the SDL2 backend this
+	// needs no extra dependency for image objects.
 	class RaylibWindow : public Window
 	{
 	public:
@@ -78,13 +77,8 @@ namespace xge
 		// EndDrawing() do neither. Worked out once, after the first frame.
 		bool frameControlChecked{ false };
 		bool manualFrameControl{ false };
-		// Each font file opened, by its name; null for one that could not be
-		// loaded, whose text is then drawn from the engine's built-in font
-		// (see picture/font.h).
-		std::unordered_map<std::string, std::optional<Font>> fonts;
 		std::unordered_map<std::string, CachedVisual> visuals;
 
-		const Font* getFont(const std::string& file);
 		static void reloadTexture(CachedVisual& visual, int width, int height);
 
 		void buildShapeOnly(Object& object, CachedVisual& visual);

@@ -10,9 +10,6 @@
 #include "game_view.h"
 
 #include <QColor>
-#include <QFont>
-#include <QFontDatabase>
-#include <QFontMetricsF>
 #include <QPainter>
 
 #include <cmath>
@@ -148,56 +145,9 @@ namespace xge
 		return image;
 	}
 
-	const QString& QtWindow::loadFont(const std::string& file)
-	{
-		const auto found = fontFamilies.find(file);
-		if (found != fontFamilies.end())
-		{
-			return found->second;
-		}
-
-		QString& family = fontFamilies[file];
-		const int id = QFontDatabase::addApplicationFont(QString::fromStdString(file));
-		if (id >= 0 && !QFontDatabase::applicationFontFamilies(id).isEmpty())
-		{
-			family = QFontDatabase::applicationFontFamilies(id).first();
-		}
-		else
-		{
-			std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
-		}
-		return family;
-	}
-
 	QImage QtWindow::buildText(const Object& object)
 	{
-		const QString& fontFamily = loadFont(textFontFile(object.picture.font));
-
-		const std::string& content = object.picture.text;
-		const int size = object.picture.textSize;
-
-		if (fontFamily.isEmpty())
-		{
-			return fromBitmap(rasterizeText(content, size, colorFromName(object.picture.color)));
-		}
-
-		QFont font(fontFamily);
-		font.setPixelSize(size);
-
-		const QString text = QString::fromStdString(content);
-		const QFontMetricsF metrics(font);
-		const QRectF bounds = metrics.tightBoundingRect(text);
-
-		QImage image = emptyImage(static_cast<int>(std::ceil(bounds.width())), static_cast<int>(std::ceil(bounds.height())));
-		QPainter painter(&image);
-		painter.setRenderHint(QPainter::TextAntialiasing);
-		painter.setFont(font);
-		painter.setPen(toQColor(object.picture.color));
-
-		// The text is drawn from its baseline; shift it so its tight bounds
-		// start at the top left of the picture.
-		painter.drawText(QPointF(-bounds.left(), -bounds.top()), text);
-		return image;
+		return fromBitmap(drawText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color), textFontFile(object.picture.font)));
 	}
 
 	QImage QtWindow::buildImage(const Object& object)
@@ -239,8 +189,8 @@ namespace xge
 		return image;
 	}
 
-	// A picture the engine drew itself (a sprite of lines, or text in the
-	// built-in font): four bytes a pixel, red, green, blue, alpha.
+	// A picture the engine drew itself (a sprite of lines, or a text): four
+	// bytes a pixel, red, green, blue, alpha.
 	QImage QtWindow::fromBitmap(const Bitmap& bitmap)
 	{
 		if (bitmap.width <= 0 || bitmap.height <= 0 || bitmap.rgba.empty())

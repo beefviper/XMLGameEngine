@@ -66,7 +66,7 @@ if (XGE_NEEDS_SDL2)
 		target_link_libraries(xgelib PUBLIC SDL2::SDL2main)
 	endif()
 
-	target_link_libraries(xgelib PUBLIC SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
+	target_link_libraries(xgelib PUBLIC SDL2_image::SDL2_image)
 endif()
 
 # lunasvg is PRIVATE: only picture/svg.cpp uses it, and picture/svg.h speaks in the engine's

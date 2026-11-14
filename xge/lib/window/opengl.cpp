@@ -15,7 +15,6 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
-#include <SDL_ttf.h>
 
 #include <cmath>
 #include <cstdint>
@@ -123,12 +122,6 @@ namespace xge
 		glfwSetWindowUserPointer(window, this);
 		glfwSetKeyCallback(window, &OpenGLWindow::keyCallback);
 
-		ttfInitialized = (TTF_Init() == 0);
-		if (!ttfInitialized)
-		{
-			std::cout << "error: failed to initialize SDL2_ttf: " << TTF_GetError() << std::endl;
-		}
-
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
@@ -144,14 +137,7 @@ namespace xge
 		glfwMakeContextCurrent(window);
 		visuals.clear();
 
-		for (auto& [key, loadedFont] : fontsBySize)
-		{
-			if (loadedFont) { TTF_CloseFont(loadedFont); }
-		}
-		fontsBySize.clear();
-
 		if (imgInitialized) { IMG_Quit(); }
-		if (ttfInitialized) { TTF_Quit(); }
 
 		glfwDestroyWindow(window);
 		window = nullptr;
@@ -442,29 +428,6 @@ namespace xge
 		return imgInitialized;
 	}
 
-	TTF_Font* OpenGLWindow::getFont(const std::string& file, int pointSize)
-	{
-		const std::string key = file + "@" + std::to_string(pointSize);
-		auto it = fontsBySize.find(key);
-		if (it != fontsBySize.end())
-		{
-			return it->second;
-		}
-
-		TTF_Font* loaded = ttfInitialized ? TTF_OpenFont(file.c_str(), pointSize) : nullptr;
-		if (!loaded)
-		{
-			// Said once, not once for every size asked for.
-			if (fontsMissing.insert(file).second)
-			{
-				std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
-			}
-		}
-
-		fontsBySize.emplace(key, loaded);
-		return loaded;
-	}
-
 	void OpenGLWindow::upload(CachedVisual& visual, const Bitmap& bitmap)
 	{
 		const Bitmap blank = bitmap.rgba.empty() ? filledBitmap(1, 1) : Bitmap{};
@@ -549,33 +512,7 @@ namespace xge
 
 	void OpenGLWindow::buildText(Object& object, CachedVisual& visual)
 	{
-		const std::string& text = object.picture.text;
-		const int requestedSize = object.picture.textSize;
-		const Color c = colorFromName(object.picture.color);
-
-		TTF_Font* font = getFont(textFontFile(object.picture.font), requestedSize);
-		if (!font)
-		{
-			upload(visual, rasterizeText(text, requestedSize, c));
-			return;
-		}
-
-		const SDL_Color sdlColor{ c.r, c.g, c.b, c.a };
-		SDL_Surface* surface = TTF_RenderUTF8_Blended(font, text.c_str(), sdlColor);
-		if (!surface)
-		{
-			// Nothing to draw for an empty text.
-			if (!text.empty())
-			{
-				std::cout << "error: SDL2_ttf: failed to render text: " << TTF_GetError() << std::endl;
-			}
-
-			upload(visual, Bitmap{});
-			return;
-		}
-
-		upload(visual, bitmapFromSurface(surface));
-		SDL_FreeSurface(surface);
+		upload(visual, drawText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color), textFontFile(object.picture.font)));
 	}
 
 	void OpenGLWindow::buildImage(Object& object, CachedVisual& visual)

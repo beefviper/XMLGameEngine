@@ -51,16 +51,11 @@ namespace xge
 		// visualDirty flag says it changed (same pattern as the other backends).
 		std::map<std::string, QImage> visuals;
 
-		// The family of each font file loaded, by its name, empty for one
-		// that failed (its text is then drawn with the built-in 8x8 font).
-		std::map<std::string, QString> fontFamilies;
-
 		void build(Object& object, QImage& visual);
 		QImage buildCircle(const Object& object);
 		QImage buildRectangle(const Object& object);
 		QImage buildText(const Object& object);
 		QImage buildImage(const Object& object);
 		static QImage fromBitmap(const Bitmap& bitmap);
-		const QString& loadFont(const std::string& file);
 	};
 }
