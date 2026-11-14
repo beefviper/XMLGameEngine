@@ -2008,7 +2008,7 @@ namespace xge
 	// never sink into a floor.
 	bool Game::touchesByPicture(const Object& a, const Object& b)
 	{
-		if (!a.collisionData.hasHitbox && !b.collisionData.hasHitbox) { return false; }
+		if (a.collisionData.hitboxes.empty() && b.collisionData.hitboxes.empty()) { return false; }
 
 		const auto solid = [](const Command& command)
 		{

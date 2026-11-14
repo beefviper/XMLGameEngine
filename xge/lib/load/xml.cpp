@@ -1492,6 +1492,74 @@ namespace xge
 		// A <collisions>, added to what `base` already has: a group inside
 		// another keeps the outer group's rules and adds its own after them.
 		// The tag read; readCollisions without the line.
+		// A <hitbox>: pulled in from the picture's sides, each side taking
+		// the most particular word given for it, or a shape and its place.
+		RawHitbox readHitbox(const XmlNode& hitbox, const std::string& here)
+		{
+			RawHitbox read;
+			std::unique_ptr<XmlNode> shape = hitbox.getFirstChild();
+			const auto isSide = [](const std::string& tag)
+			{
+				return tag == "all" || tag == "horizontal" || tag == "vertical" || tag == "top" || tag == "bottom" || tag == "left" || tag == "right";
+			};
+			if (shape && isSide(shape->getName()))
+			{
+				std::map<std::string, RawValue> given;
+				for (std::unique_ptr<XmlNode> part = hitbox.getFirstChild(); part != nullptr; part = part->getNextSibling())
+				{
+					const std::string tag = part->getName();
+					if (!isSide(tag)) { fail(here, "unknown <" + tag + ">; a hitbox pulled in from the sides has <all>, <horizontal>, <vertical>, <top>, <bottom>, <left> and <right>"); }
+					given[tag] = readValue(*part, here + " > <" + tag + ">");
+				}
+				const auto side = [&](const char* own, const char* pair) -> RawValue
+				{
+					for (const char* tag : { own, pair, "all" })
+					{
+						if (const auto found = given.find(tag); found != given.end()) { return found->second; }
+					}
+					return {};
+				};
+				read.kind = "inset";
+				read.top = side("top", "vertical");
+				read.bottom = side("bottom", "vertical");
+				read.left = side("left", "horizontal");
+				read.right = side("right", "horizontal");
+				return read;
+			}
+
+			if (!shape || (shape->getName() != "rectangle" && shape->getName() != "circle"))
+			{
+				fail(here, "expected <all>, <horizontal>, <vertical>, <top>, <bottom>, <left> or <right>, or a <rectangle> or a <circle> then a <position> if wanted");
+			}
+			read.kind = shape->getName();
+			const std::string shapeHere = here + " > <" + shape->getName() + ">";
+			for (std::unique_ptr<XmlNode> part = shape->getFirstChild(); part != nullptr; part = part->getNextSibling())
+			{
+				const std::string tag = part->getName();
+				if (shape->getName() == "rectangle" ? (tag != "width" && tag != "height") : tag != "radius")
+				{
+					fail(shapeHere, "unknown <" + tag + ">; a hitbox's " + (shape->getName() == "rectangle" ? "rectangle has a <width> and a <height>" : "circle has a <radius>"));
+				}
+			}
+			if (shape->getName() == "rectangle")
+			{
+				read.width = readValueOf(*shape, "width", shapeHere);
+				read.height = readValueOf(*shape, "height", shapeHere);
+			}
+			else
+			{
+				read.radius = readValueOf(*shape, "radius", shapeHere);
+			}
+			for (std::unique_ptr<XmlNode> next = shape->getNextSibling(); next != nullptr; next = next->getNextSibling())
+			{
+				if (next->getName() != "position") { fail(here, "unknown <" + next->getName() + ">; after its shape a hitbox has a <position>"); }
+				const PartialVector2 at = readPartialVector2(*next, here);
+				if (at.x) { read.x = *at.x; }
+				if (at.y) { read.y = *at.y; }
+			}
+			return read;
+		}
+
 		RawCollisionData readCollisionsHere(const XmlNode& collisions, const std::string& where, RawCollisionData base);
 
 		RawCollisionData readCollisions(const XmlNode& collisions, const std::string& where, RawCollisionData base = {})
@@ -1531,86 +1599,14 @@ namespace xge
 			}
 			if (!solid.empty()) { collisionData.solid = solid; }
 
-			// The shape it touches with, if not its picture.
-			if (auto hitbox = findChild(&collisions, "hitbox"))
+			// What it touches with, if not its picture: its <hitbox>es, which
+			// replace an outer group's.
+			std::vector<RawHitbox> hitboxes;
+			for (std::unique_ptr<XmlNode> child = collisions.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
-				const std::string here = collisionsHere + " > <hitbox>";
-				// A hitbox replaces the one before (a group's, for an inner group) whole.
-				collisionData.hitboxWidth = {};
-				collisionData.hitboxHeight = {};
-				collisionData.hitboxRadius = {};
-				collisionData.hitboxTop = {};
-				collisionData.hitboxBottom = {};
-				collisionData.hitboxLeft = {};
-				collisionData.hitboxRight = {};
-				std::unique_ptr<XmlNode> shape = hitbox->getFirstChild();
-				const auto isSide = [](const std::string& tag)
-				{
-					return tag == "all" || tag == "horizontal" || tag == "vertical" || tag == "top" || tag == "bottom" || tag == "left" || tag == "right";
-				};
-				if (shape && isSide(shape->getName()))
-				{
-					// Pulled in from the sides: each side takes the most
-					// particular word given for it.
-					std::map<std::string, RawValue> given;
-					for (std::unique_ptr<XmlNode> part = hitbox->getFirstChild(); part != nullptr; part = part->getNextSibling())
-					{
-						const std::string tag = part->getName();
-						if (!isSide(tag)) { fail(here, "unknown <" + tag + ">; a hitbox pulled in from the sides has <all>, <horizontal>, <vertical>, <top>, <bottom>, <left> and <right>"); }
-						given[tag] = readValue(*part, here + " > <" + tag + ">");
-					}
-					const auto side = [&](const char* own, const char* pair) -> RawValue
-					{
-						for (const char* tag : { own, pair, "all" })
-						{
-							if (const auto found = given.find(tag); found != given.end()) { return found->second; }
-						}
-						return {};
-					};
-					collisionData.hitboxKind = "inset";
-					collisionData.hitboxTop = side("top", "vertical");
-					collisionData.hitboxBottom = side("bottom", "vertical");
-					collisionData.hitboxLeft = side("left", "horizontal");
-					collisionData.hitboxRight = side("right", "horizontal");
-					collisionData.hitboxX = {};
-					collisionData.hitboxY = {};
-				}
-				else
-				{
-					if (!shape || (shape->getName() != "rectangle" && shape->getName() != "circle"))
-					{
-						fail(here, "expected <all>, <horizontal>, <vertical>, <top>, <bottom>, <left> or <right>, or a <rectangle> or a <circle> then a <position> if wanted");
-					}
-					collisionData.hitboxKind = shape->getName();
-					const std::string shapeHere = here + " > <" + shape->getName() + ">";
-					for (std::unique_ptr<XmlNode> part = shape->getFirstChild(); part != nullptr; part = part->getNextSibling())
-					{
-						const std::string tag = part->getName();
-						if (shape->getName() == "rectangle" ? (tag != "width" && tag != "height") : tag != "radius")
-						{
-							fail(shapeHere, "unknown <" + tag + ">; a hitbox's " + (shape->getName() == "rectangle" ? "rectangle has a <width> and a <height>" : "circle has a <radius>"));
-						}
-					}
-					if (shape->getName() == "rectangle")
-					{
-						collisionData.hitboxWidth = readValueOf(*shape, "width", shapeHere);
-						collisionData.hitboxHeight = readValueOf(*shape, "height", shapeHere);
-					}
-					else
-					{
-						collisionData.hitboxRadius = readValueOf(*shape, "radius", shapeHere);
-					}
-					collisionData.hitboxX = {};
-					collisionData.hitboxY = {};
-					for (std::unique_ptr<XmlNode> next = shape->getNextSibling(); next != nullptr; next = next->getNextSibling())
-					{
-						if (next->getName() != "position") { fail(here, "unknown <" + next->getName() + ">; after its shape a hitbox has a <position>"); }
-						const PartialVector2 at = readPartialVector2(*next, here);
-						if (at.x) { collisionData.hitboxX = *at.x; }
-						if (at.y) { collisionData.hitboxY = *at.y; }
-					}
-				}
+				if (child->getName() == "hitbox") { hitboxes.push_back(readHitbox(*child, collisionsHere + " > <hitbox>")); }
 			}
+			if (!hitboxes.empty()) { collisionData.hitboxes = std::move(hitboxes); }
 
 			// A rule may hold rules: what it says (its attributes and
 			// checks) the rules it holds say too, and its <first>

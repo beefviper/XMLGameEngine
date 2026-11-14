@@ -419,6 +419,8 @@
           <position><x>24</x><y><subtract><value>surface</value><value>harry.height</value></subtract></y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <collisions>
+            <!-- touched by its body, not his arms and hair; his feet still meet the tar -->
+            <hitbox><horizontal>2</horizontal><top>2</top></hitbox>
             <!-- through a side of a screen: in at the other side of the next -->
             <collision class="eastside">
               <move direction="left">

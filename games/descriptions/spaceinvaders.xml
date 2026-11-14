@@ -111,6 +111,8 @@
           </subtract>
         </y></position>
         <collisions>
+          <!-- touched by its body, not the corners and the thin barrel -->
+          <hitbox><horizontal>5</horizontal><top>10</top></hitbox>
           <collision edge="horizontal"><stick /></collision>
           <collision class="bomb">
             <dec variable="player.lives" />

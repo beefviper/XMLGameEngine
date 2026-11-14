@@ -209,6 +209,8 @@
           </sprite>
           <position><x><centered /></x><y><bottom><offset>40</offset></bottom></y></position>
           <collisions>
+            <!-- touched by its body, not the wingtips and the thin nose -->
+            <hitbox><horizontal>3</horizontal><top>6</top></hitbox>
             <collision edge="horizontal"><stick /></collision>
             <collision class="bomb"><trigger action="lose" /></collision>
             <collision class="enemy"><trigger action="lose" /></collision>

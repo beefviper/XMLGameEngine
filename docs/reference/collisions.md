@@ -12,7 +12,7 @@
 </collisions>
 ```
 
-In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<type>`, `<solid>`s, a `<hitbox>`, then the rules. Only objects in play with collisions on take part.
+In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<type>`, `<solid>`s, `<hitbox>`es, then the rules. Only objects in play with collisions on take part.
 
 ## Rules
 
@@ -55,12 +55,14 @@ In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<t
 - **`<hitbox>`**: what touches other objects instead of the whole picture, so a near miss is a miss. Not with `pixel`.
   - **Pulled in from the sides**, named as the screen edges are: `<all>`, `<horizontal>` (left and right), `<vertical>` (top and bottom), `<top>`, `<bottom>`, `<left>`, `<right>`, one number each. A side takes its own word, then its pair's, then `<all>`; none is 0. It follows the picture's size, and left and right swap while the picture is [mirrored](pictures.md#poses-mirror-grip-and-blinking).
   - **Or a shape**: a `<rectangle>` or `<circle>`, then its `<position>` in the picture.
+  - **Several** `<hitbox>`es are allowed, and touching any of them is a touch: a body pulled in, and a foot sticking out. A group's hitboxes are replaced, all of them, by a member that writes its own.
   - **The whole picture still meets** the window's edges, and anything a rule of either side stands on, stops at, bounces off or rides: a pair whose rules hold `<land />`, `<stick />`, `<stop />`, `<bounce>`, `<ride />`, `<knock>`, `<deflect />` or `<shove />` touches by pictures. So feet pulled in never sink into a floor. Carrying uses the picture too.
 
 ```xml
 <hitbox><all>2</all><bottom>4</bottom></hitbox>      <!-- 2 in all round, 4 at the feet -->
 
-<hitbox>
+<hitbox><all>6</all></hitbox>                        <!-- the body -->
+<hitbox>                                             <!-- and a foot -->
   <rectangle><width>12</width><height>6</height></rectangle>
   <position><x>6</x><y>18</y></position>
 </hitbox>

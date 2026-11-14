@@ -314,16 +314,19 @@ namespace
 			flag(at + ".collisions.lockstep", c.lockstep);
 			out << at << ".collisions.type " << static_cast<int>(c.type) << "\n";
 			text(at + ".collisions.solid", c.solid);
-			text(at + ".collisions.hitbox", c.hitboxKind);
-			value(at + ".collisions.hitbox.width", c.hitboxWidth);
-			value(at + ".collisions.hitbox.height", c.hitboxHeight);
-			value(at + ".collisions.hitbox.radius", c.hitboxRadius);
-			value(at + ".collisions.hitbox.x", c.hitboxX);
-			value(at + ".collisions.hitbox.y", c.hitboxY);
-			value(at + ".collisions.hitbox.top", c.hitboxTop);
-			value(at + ".collisions.hitbox.bottom", c.hitboxBottom);
-			value(at + ".collisions.hitbox.left", c.hitboxLeft);
-			value(at + ".collisions.hitbox.right", c.hitboxRight);
+			for (const RawHitbox& hitbox : c.hitboxes)
+			{
+				text(at + ".collisions.hitbox", hitbox.kind);
+				value(at + ".collisions.hitbox.width", hitbox.width);
+				value(at + ".collisions.hitbox.height", hitbox.height);
+				value(at + ".collisions.hitbox.radius", hitbox.radius);
+				value(at + ".collisions.hitbox.x", hitbox.x);
+				value(at + ".collisions.hitbox.y", hitbox.y);
+				value(at + ".collisions.hitbox.top", hitbox.top);
+				value(at + ".collisions.hitbox.bottom", hitbox.bottom);
+				value(at + ".collisions.hitbox.left", hitbox.left);
+				value(at + ".collisions.hitbox.right", hitbox.right);
+			}
 			for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 			{
 				commands(at + "." + edgeName(edge), c.edges[edgeIndex(edge)].commands);

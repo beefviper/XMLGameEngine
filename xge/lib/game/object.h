@@ -119,6 +119,39 @@ namespace xge
 
 	constexpr std::size_t edgeIndex(Edge edge) noexcept { return static_cast<std::size_t>(edge); }
 
+	// A <hitbox> as written: a "rectangle" (width by height) or a "circle"
+	// (radius), its top left x, y from the picture's (each empty text when
+	// left out: 0); or "inset", the picture's box pulled in from each side
+	// by top, ...: each the most particular of the side's words given
+	// (<top>, then <vertical>, then <all>), empty text when none (0).
+	struct RawHitbox
+	{
+		std::string kind;
+		RawValue width;
+		RawValue height;
+		RawValue radius;
+		RawValue x;
+		RawValue y;
+		RawValue top;
+		RawValue bottom;
+		RawValue left;
+		RawValue right;
+	};
+
+	// One, worked out: an inset one, or a box (round: a circle filling it)
+	// offset from the picture's top left.
+	struct Hitbox
+	{
+		bool inset{ false };
+		float top{ 0.0f };
+		float bottom{ 0.0f };
+		float left{ 0.0f };
+		float right{ 0.0f };
+		Vector2f offset{};
+		Vector2f size{};
+		bool round{ false };
+	};
+
 	struct RawCollisionData
 	{
 		bool enabled{ false };
@@ -129,23 +162,9 @@ namespace xge
 		// whose pixels touch (a cube's top, not its sides); empty, all of them.
 		std::string solid;
 
-		// <hitbox>: the shape it touches other objects with instead of its
-		// picture, a "rectangle" (hitboxWidth by hitboxHeight) or a "circle"
-		// (hitboxRadius), its top left hitboxX, hitboxY from the picture's
-		// (each empty text when left out: 0); or "inset", the picture's box
-		// pulled in from each side by hitboxTop, ...: each the most particular
-		// of the side's words given (<top>, then <vertical>, then <all>),
-		// empty text when none (0). Empty kind: none.
-		std::string hitboxKind;
-		RawValue hitboxWidth;
-		RawValue hitboxHeight;
-		RawValue hitboxRadius;
-		RawValue hitboxX;
-		RawValue hitboxY;
-		RawValue hitboxTop;
-		RawValue hitboxBottom;
-		RawValue hitboxLeft;
-		RawValue hitboxRight;
+		// Its <hitbox>es: what it touches other objects with instead of its
+		// picture, any of them a touch. None: the picture.
+		std::vector<RawHitbox> hitboxes;
 
 		// Each screen edge's <collision edge="..."> rules (addEdgeRule).
 		EdgesRules<RawCommand> edges;
@@ -195,20 +214,9 @@ namespace xge
 		int lockstep{ 0 };
 		CollisionType type{ CollisionType::Box };
 
-		// A <hitbox> (see RawCollisionData): what it touches other objects
-		// with, offset from its top left, that big, and whether it is round
-		// (a circle filling that box). Without one, its picture's box.
-		bool hasHitbox{ false };
-		Vector2f hitboxOffset{};
-		Vector2f hitboxSize{};
-		bool hitboxRound{ false };
-		// Or an inset one: the picture's box, whatever its size, pulled in by
-		// these from each side, left and right swapping while it is mirrored.
-		bool hitboxInset{ false };
-		float insetTop{ 0.0f };
-		float insetBottom{ 0.0f };
-		float insetLeft{ 0.0f };
-		float insetRight{ 0.0f };
+		// Its <hitbox>es (see RawCollisionData), any of them a touch; none,
+		// its picture's box.
+		std::vector<Hitbox> hitboxes;
 
 		// Each screen edge's rules (see RawCollisionData::edges).
 		EdgesRules<Command> edges;

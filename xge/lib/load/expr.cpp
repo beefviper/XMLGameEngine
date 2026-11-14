@@ -1412,53 +1412,10 @@ namespace xge
 		}
 
 		// What it touches with, if not its picture.
-		const RawCollisionData& rawCollisions = rawObject.rawCollisionData;
-		if (!rawCollisions.hitboxKind.empty())
+		object.collisionData.hitboxes.clear();
+		for (const RawHitbox& raw : rawObject.rawCollisionData.hitboxes)
 		{
-			if (object.collisionData.type == CollisionType::Pixel)
-			{
-				throw std::runtime_error(where + ": a <hitbox> is touched as its own shape, not by the pixels of the picture; it cannot go with <type>pixel</type>");
-			}
-			const auto valueOr0 = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where + " > <hitbox>"); };
-			object.collisionData.hasHitbox = true;
-			if (rawCollisions.hitboxKind == "inset")
-			{
-				CollisionData& data = object.collisionData;
-				data.hitboxInset = true;
-				data.insetTop = valueOr0(rawCollisions.hitboxTop);
-				data.insetBottom = valueOr0(rawCollisions.hitboxBottom);
-				data.insetLeft = valueOr0(rawCollisions.hitboxLeft);
-				data.insetRight = valueOr0(rawCollisions.hitboxRight);
-				// Out from the picture, never; and something must be left.
-				if (std::min({ data.insetTop, data.insetBottom, data.insetLeft, data.insetRight }) < 0.0f)
-				{
-					throw std::runtime_error(where + ": a <hitbox> pulls in from the picture's sides, never out; one side is " + formatDisplayNumber(std::min({ data.insetTop, data.insetBottom, data.insetLeft, data.insetRight })));
-				}
-				if (object.size.x > 0.0f && object.size.y > 0.0f && (data.insetLeft + data.insetRight >= object.size.x || data.insetTop + data.insetBottom >= object.size.y))
-				{
-					throw std::runtime_error(where + ": a <hitbox> pulled in that far leaves nothing of a picture " + formatDisplayNumber(object.size.x) + " by " + formatDisplayNumber(object.size.y));
-				}
-				object.collisionData.hitboxRound = object.picture.kind == ShapeKind::Circle;
-			}
-			else
-			{
-				object.collisionData.hitboxRound = rawCollisions.hitboxKind == "circle";
-				if (object.collisionData.hitboxRound)
-				{
-					const float radius = evaluate(rawCollisions.hitboxRadius, where + " > <hitbox>");
-					object.collisionData.hitboxSize = { radius * 2.0f, radius * 2.0f };
-				}
-				else
-				{
-					object.collisionData.hitboxSize = { evaluate(rawCollisions.hitboxWidth, where + " > <hitbox>"), evaluate(rawCollisions.hitboxHeight, where + " > <hitbox>") };
-				}
-				if (!(object.collisionData.hitboxSize.x > 0.0f) || !(object.collisionData.hitboxSize.y > 0.0f))
-				{
-					throw std::runtime_error(where + ": a <hitbox> must be bigger than nothing; its size is " + formatDisplayNumber(object.collisionData.hitboxSize.x)
-						+ " by " + formatDisplayNumber(object.collisionData.hitboxSize.y));
-				}
-				object.collisionData.hitboxOffset = { valueOr0(rawCollisions.hitboxX), valueOr0(rawCollisions.hitboxY) };
-			}
+			object.collisionData.hitboxes.push_back(makeHitbox(raw, object, where + " > <hitbox>"));
 		}
 
 		for (std::size_t edge = 0; edge < object.collisionData.edges.size(); ++edge)
@@ -1648,6 +1605,54 @@ namespace xge
 		}
 
 		return sound;
+	}
+
+	// A <hitbox> worked out for `object` (its picture already made).
+	Hitbox game_expr::makeHitbox(const RawHitbox& raw, const Object& object, const std::string& where)
+	{
+		if (object.collisionData.type == CollisionType::Pixel)
+		{
+			throw std::runtime_error(where + ": a <hitbox> is touched as its own shape, not by the pixels of the picture; it cannot go with <type>pixel</type>");
+		}
+		const auto valueOr0 = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
+		Hitbox hitbox;
+		if (raw.kind == "inset")
+		{
+			hitbox.inset = true;
+			hitbox.top = valueOr0(raw.top);
+			hitbox.bottom = valueOr0(raw.bottom);
+			hitbox.left = valueOr0(raw.left);
+			hitbox.right = valueOr0(raw.right);
+			// Out from the picture, never; and something must be left.
+			if (std::min({ hitbox.top, hitbox.bottom, hitbox.left, hitbox.right }) < 0.0f)
+			{
+				throw std::runtime_error(where + ": a <hitbox> pulls in from the picture's sides, never out; one side is " + formatDisplayNumber(std::min({ hitbox.top, hitbox.bottom, hitbox.left, hitbox.right })));
+			}
+			if (object.size.x > 0.0f && object.size.y > 0.0f && (hitbox.left + hitbox.right >= object.size.x || hitbox.top + hitbox.bottom >= object.size.y))
+			{
+				throw std::runtime_error(where + ": a <hitbox> pulled in that far leaves nothing of a picture " + formatDisplayNumber(object.size.x) + " by " + formatDisplayNumber(object.size.y));
+			}
+			hitbox.round = object.picture.kind == ShapeKind::Circle;
+			return hitbox;
+		}
+
+		hitbox.round = raw.kind == "circle";
+		if (hitbox.round)
+		{
+			const float radius = evaluate(raw.radius, where);
+			hitbox.size = { radius * 2.0f, radius * 2.0f };
+		}
+		else
+		{
+			hitbox.size = { evaluate(raw.width, where), evaluate(raw.height, where) };
+		}
+		if (!(hitbox.size.x > 0.0f) || !(hitbox.size.y > 0.0f))
+		{
+			throw std::runtime_error(where + ": a <hitbox> must be bigger than nothing; its size is " + formatDisplayNumber(hitbox.size.x)
+				+ " by " + formatDisplayNumber(hitbox.size.y));
+		}
+		hitbox.offset = { valueOr0(raw.x), valueOr0(raw.y) };
+		return hitbox;
 	}
 
 	float game_expr::evaluateStart(const RawValue& value, const std::string& where)

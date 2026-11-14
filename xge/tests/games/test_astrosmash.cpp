@@ -322,7 +322,7 @@ TEST_CASE("a rock on the base costs it, and the sky clears", "[astrosmash]")
 
 	Object& rock = table.game.getObject("pebbles.1.1");
 	rock.velocity = { 0.0f, 3.0f };
-	rock.position = { table.ship().position.x + 10.0f, table.ship().position.y - rock.size.y + 1.0f };
+	rock.position = { table.ship().position.x + 10.0f, table.ship().position.y - rock.size.y + 6.0f }; // into its body, under the pulled-in top
 	Object& other = table.game.getObject("boulders.2.1");
 	other.position.y = 300.0f;
 	table.frames(1);

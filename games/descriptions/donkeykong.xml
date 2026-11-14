@@ -104,6 +104,8 @@
       <acceleration><x>0</x><y>pull</y></acceleration>
       <most>8</most>
       <collisions>
+        <!-- touched by its body, not its rim -->
+        <hitbox><all>2</all></hitbox>
         <collision edge="horizontal">
           <bounce />
           <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
@@ -178,6 +180,8 @@
       <acceleration><x>0</x><y>pull</y></acceleration>
       <most>3</most>
       <collisions>
+        <!-- touched by its body, not its flicker -->
+        <hitbox><all>3</all></hitbox>
         <collision edge="horizontal">
           <bounce />
         </collision>

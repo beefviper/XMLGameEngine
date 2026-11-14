@@ -229,6 +229,28 @@ TEST_CASE("<hitbox> pulled in from the sides: the most particular word for a sid
 	CHECK_THROWS_WITH(load(target(man, "<hitbox />")), ContainsSubstring("<hitbox>"));
 }
 
+TEST_CASE("<hitbox> written more than once: touching any of them is a touch", "[hitbox]")
+{
+	const std::string man = "<rectangle><width>20</width><height>20</height></rectangle>"; // 100 to 120 each way
+	const std::string body = "<hitbox><all>8</all></hitbox>"; // 108 to 112
+	const std::string foot = "<hitbox><rectangle><width>10</width><height>4</height></rectangle><position><x>5</x><y>16</y></position></hitbox>";
+	const auto hitsWith = [&](const std::string& hitboxes, int hop)
+	{
+		const Scratch file(probe({ hop }) + target(man, hitboxes));
+		Played play(file.path);
+		play.probe("1");
+		return play.hits();
+	};
+
+	// Up by 87 the probe covers 113 to 123: past the body, over the foot at 116 to 120.
+	CHECK(hitsWith(body, 87) == 0);
+	CHECK(hitsWith(body + foot, 87) == 1);
+	CHECK(hitsWith(foot + body, 87) == 1);
+	// Up by 99 it covers 101 to 111: the body, not the foot.
+	CHECK(hitsWith(foot, 99) == 0);
+	CHECK(hitsWith(body + foot, 99) == 1);
+}
+
 TEST_CASE("<hitbox>: what is stood on, stopped at or bounced off is met by the whole picture", "[hitbox]")
 {
 	// Up by 87 the probe covers 113 to 123: the man's bottom 7 pixels, under his hitbox.

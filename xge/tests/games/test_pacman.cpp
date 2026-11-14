@@ -86,9 +86,9 @@ namespace
 		{
 			const auto box = [](const Object& object, Vector2f& middle, float& half)
 			{
-				const bool own = object.collisionData.hasHitbox;
-				const Vector2f size = own ? object.collisionData.hitboxSize : object.size;
-				middle = object.position + (own ? object.collisionData.hitboxOffset : Vector2f{}) + size * 0.5f;
+				const bool own = !object.collisionData.hitboxes.empty();
+				const Vector2f size = own ? object.collisionData.hitboxes[0].size : object.size;
+				middle = object.position + (own ? object.collisionData.hitboxes[0].offset : Vector2f{}) + size * 0.5f;
 				half = size.x * 0.5f;
 			};
 			Object& p = pacman();

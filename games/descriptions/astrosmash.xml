@@ -273,6 +273,8 @@
           </sprite>
           <position><x><centered /></x><y><bottom><offset>ground</offset></bottom></y></position>
           <collisions>
+            <!-- touched by its body, not the wingtips and the thin nose -->
+            <hitbox><horizontal>5</horizontal><top>5</top></hitbox>
             <collision edge="horizontal"><stick /></collision>
             <collision class="rocks"><trigger action="lose" /></collision>
             <collision class="spinner"><trigger action="lose" /></collision>

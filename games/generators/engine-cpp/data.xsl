@@ -1394,71 +1394,58 @@
       </xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:if>
-    <xsl:for-each select="$node/hitbox[all | horizontal | vertical | top | bottom | left | right]">
-      <!-- pulled in from the sides: each side the most particular word given (readCollisions) -->
-      <xsl:value-of select="concat($indent, $data, '.hitboxKind = &quot;inset&quot;;&#10;')" />
-      <xsl:value-of select="concat($indent, $data, '.hitboxWidth = {};&#10;', $indent, $data, '.hitboxHeight = {};&#10;', $indent, $data, '.hitboxRadius = {};&#10;')" />
-      <xsl:value-of select="concat($indent, $data, '.hitboxX = {};&#10;', $indent, $data, '.hitboxY = {};&#10;')" />
-      <xsl:value-of select="concat($indent, $data, '.hitboxTop = {};&#10;', $indent, $data, '.hitboxBottom = {};&#10;', $indent, $data, '.hitboxLeft = {};&#10;', $indent, $data, '.hitboxRight = {};&#10;')" />
-      <xsl:for-each select="(top | vertical | all)[1]">
-        <xsl:variable name="chosen" select="(../top | ../vertical[not(../top)] | ../all[not(../top or ../vertical)])[1]" />
-        <xsl:value-of select="concat($indent, $data, '.hitboxTop = ')" />
-        <xsl:call-template name="value">
-          <xsl:with-param name="node" select="$chosen" />
-        </xsl:call-template>
-        <xsl:text>;&#10;</xsl:text>
-      </xsl:for-each>
-      <xsl:for-each select="(bottom | vertical | all)[1]">
-        <xsl:variable name="chosen" select="(../bottom | ../vertical[not(../bottom)] | ../all[not(../bottom or ../vertical)])[1]" />
-        <xsl:value-of select="concat($indent, $data, '.hitboxBottom = ')" />
-        <xsl:call-template name="value">
-          <xsl:with-param name="node" select="$chosen" />
-        </xsl:call-template>
-        <xsl:text>;&#10;</xsl:text>
-      </xsl:for-each>
-      <xsl:for-each select="(left | horizontal | all)[1]">
-        <xsl:variable name="chosen" select="(../left | ../horizontal[not(../left)] | ../all[not(../left or ../horizontal)])[1]" />
-        <xsl:value-of select="concat($indent, $data, '.hitboxLeft = ')" />
-        <xsl:call-template name="value">
-          <xsl:with-param name="node" select="$chosen" />
-        </xsl:call-template>
-        <xsl:text>;&#10;</xsl:text>
-      </xsl:for-each>
-      <xsl:for-each select="(right | horizontal | all)[1]">
-        <xsl:variable name="chosen" select="(../right | ../horizontal[not(../right)] | ../all[not(../right or ../horizontal)])[1]" />
-        <xsl:value-of select="concat($indent, $data, '.hitboxRight = ')" />
-        <xsl:call-template name="value">
-          <xsl:with-param name="node" select="$chosen" />
-        </xsl:call-template>
-        <xsl:text>;&#10;</xsl:text>
-      </xsl:for-each>
-    </xsl:for-each>
-    <xsl:for-each select="$node/hitbox[rectangle | circle]">
-      <xsl:value-of select="concat($indent, $data, '.hitboxKind = &quot;', local-name(rectangle | circle), '&quot;;&#10;')" />
-      <xsl:value-of select="concat($indent, $data, '.hitboxWidth = {};&#10;', $indent, $data, '.hitboxHeight = {};&#10;', $indent, $data, '.hitboxRadius = {};&#10;')" />
-      <xsl:value-of select="concat($indent, $data, '.hitboxTop = {};&#10;', $indent, $data, '.hitboxBottom = {};&#10;', $indent, $data, '.hitboxLeft = {};&#10;', $indent, $data, '.hitboxRight = {};&#10;')" />
-      <xsl:for-each select="rectangle/width | rectangle/height | circle/radius | position/x | position/y">
-        <xsl:value-of select="concat($indent, $data, '.hitbox')" />
-        <xsl:choose>
-          <xsl:when test="local-name() = 'width'">Width</xsl:when>
-          <xsl:when test="local-name() = 'height'">Height</xsl:when>
-          <xsl:when test="local-name() = 'radius'">Radius</xsl:when>
-          <xsl:when test="local-name() = 'x'">X</xsl:when>
-          <xsl:otherwise>Y</xsl:otherwise>
-        </xsl:choose>
-        <xsl:text> = </xsl:text>
-        <xsl:call-template name="value">
-          <xsl:with-param name="node" select="." />
-        </xsl:call-template>
-        <xsl:text>;&#10;</xsl:text>
-      </xsl:for-each>
-      <!-- an inner group's hitbox starts again at the picture's top left -->
-      <xsl:if test="$nested and not(position/x)">
-        <xsl:value-of select="concat($indent, $data, '.hitboxX = {};&#10;')" />
-      </xsl:if>
-      <xsl:if test="$nested and not(position/y)">
-        <xsl:value-of select="concat($indent, $data, '.hitboxY = {};&#10;')" />
-      </xsl:if>
+    <!-- the object's hitboxes, every one written (readCollisions): an
+         inner group's that has its own starts again from none -->
+    <xsl:if test="$node/hitbox">
+      <xsl:value-of select="concat($indent, $data, '.hitboxes.clear();&#10;')" />
+    </xsl:if>
+    <xsl:for-each select="$node/hitbox">
+      <xsl:value-of select="concat($indent, '{&#10;', $indent, '  RawHitbox hitbox;&#10;')" />
+      <xsl:choose>
+        <xsl:when test="rectangle | circle">
+          <xsl:value-of select="concat($indent, '  hitbox.kind = &quot;', local-name(rectangle | circle), '&quot;;&#10;')" />
+          <xsl:for-each select="rectangle/width | rectangle/height | circle/radius | position/x | position/y">
+            <xsl:value-of select="concat($indent, '  hitbox.', local-name(), ' = ')" />
+            <xsl:call-template name="value">
+              <xsl:with-param name="node" select="." />
+            </xsl:call-template>
+            <xsl:text>;&#10;</xsl:text>
+          </xsl:for-each>
+        </xsl:when>
+        <xsl:otherwise>
+          <!-- pulled in from the sides: each side the most particular word given -->
+          <xsl:value-of select="concat($indent, '  hitbox.kind = &quot;inset&quot;;&#10;')" />
+        <xsl:for-each select="(top | vertical | all)[1]">
+          <xsl:value-of select="concat($indent, '  hitbox.top = ')" />
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="(../top | ../vertical[not(../top)] | ../all[not(../top or ../vertical)])[1]" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:for-each>
+        <xsl:for-each select="(bottom | vertical | all)[1]">
+          <xsl:value-of select="concat($indent, '  hitbox.bottom = ')" />
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="(../bottom | ../vertical[not(../bottom)] | ../all[not(../bottom or ../vertical)])[1]" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:for-each>
+        <xsl:for-each select="(left | horizontal | all)[1]">
+          <xsl:value-of select="concat($indent, '  hitbox.left = ')" />
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="(../left | ../horizontal[not(../left)] | ../all[not(../left or ../horizontal)])[1]" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:for-each>
+        <xsl:for-each select="(right | horizontal | all)[1]">
+          <xsl:value-of select="concat($indent, '  hitbox.right = ')" />
+          <xsl:call-template name="value">
+            <xsl:with-param name="node" select="(../right | ../horizontal[not(../right)] | ../all[not(../right or ../horizontal)])[1]" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:for-each>
+        </xsl:otherwise>
+      </xsl:choose>
+      <xsl:value-of select="concat($indent, '  ', $data, '.hitboxes.push_back(hitbox);&#10;', $indent, '}&#10;')" />
     </xsl:for-each>
     <!-- each rule: one holding none, or a holder's <first>; what the
          rules holding it say (readCollisions), it says too -->

@@ -261,6 +261,9 @@ namespace xge
 		// checked and kept as written (see Timer).
 		std::vector<Timer> processTimers(const std::vector<RawTimer>& raw, const std::string& where);
 
+		// A <hitbox> worked out for an object whose picture is made.
+		Hitbox makeHitbox(const RawHitbox& raw, const Object& object, const std::string& where);
+
 		// A <sound> worked out: its words checked and its lengths evaluated.
 		SoundDesc processSound(const RawSound& raw);
 

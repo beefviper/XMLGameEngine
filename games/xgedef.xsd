@@ -2813,7 +2813,7 @@
           </xs:attribute>
         </xs:complexType>
       </xs:element>
-      <xs:element name="hitbox" type="hitboxType" minOccurs="0" />
+      <xs:element name="hitbox" type="hitboxType" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="collision" type="collisionType" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
