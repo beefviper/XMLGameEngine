@@ -1265,7 +1265,6 @@ namespace xge
 			pile.fanWidth = number(raw.fanWidth);
 			pile.carry = raw.carry;
 			pile.showTop = raw.showTop;
-			pile.sorted = raw.sorted;
 			pile.orderBy = raw.orderBy;
 			pile.counts = raw.counts;
 			pile.lift = number(raw.lift);

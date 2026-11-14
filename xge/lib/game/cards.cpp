@@ -67,7 +67,6 @@ namespace xge
 			object.card.column = object.cell.column;
 			object.card.rowName = std::to_string(object.cell.row);
 			object.card.columnName = std::to_string(object.cell.column);
-			if (const auto color = object.variable.find("color"); color != object.variable.end()) { object.card.color = color->second.text; }
 			float worth = static_cast<float>(object.card.column);
 			if (const auto given = object.variable.find("worth"); given != object.variable.end())
 			{
@@ -312,18 +311,6 @@ namespace xge
 					const Object* each = cardAt(other);
 					return each && mine < order(*each);
 				});
-		}
-		else if (pile.pile.sorted)
-		{
-			// Suit by suit, each by its highest worth (in rank order,
-			// unless a worth puts a card elsewhere: an ace worth 14 last).
-			const auto order = [](const Object& of) { return std::make_tuple(of.card.row, of.card.worths.empty() ? 0.0f : of.card.worths.back(), of.card.column); };
-			const auto before = [&](int other)
-			{
-				const Object* each = cardAt(other);
-				return each && order(*card) < order(*each);
-			};
-			at = std::find_if(pile.pile.cards.begin(), pile.pile.cards.end(), before);
 		}
 		pile.pile.cards.insert(at, number);
 		// A suit that <breaks>, broken.
@@ -629,8 +616,7 @@ namespace xge
 
 	bool Game::isWild(const PileRule& rule, const Object& card)
 	{
-		return std::find(rule.wildRanks.begin(), rule.wildRanks.end(), card.card.columnName) != rule.wildRanks.end()
-			|| (!rule.wildRules.empty() && acceptsBy(rule.wildRules, card, nullptr));
+		return !rule.wildRules.empty() && acceptsBy(rule.wildRules, card, nullptr);
 	}
 
 	void Game::refreshPile(Object& pile)
@@ -1092,7 +1078,7 @@ namespace xge
 	void Game::refreshCall(Object& pile)
 	{
 		const Object* top = pile.pile.cards.empty() ? nullptr : cardAt(pile.pile.cards.back());
-		pile.calling = (!pile.pile.takes.wildRanks.empty() || !pile.pile.takes.wildRules.empty()) && top && isWild(pile.pile.takes, *top) && pile.called == 0.0f ? 1.0f : 0.0f;
+		pile.calling = !pile.pile.takes.wildRules.empty() && top && isWild(pile.pile.takes, *top) && pile.called == 0.0f ? 1.0f : 0.0f;
 		refreshBoundTexts(pile.name, "calling", pile.calling);
 		refreshBoundTexts(pile.name, "called", pile.called);
 	}
@@ -1323,18 +1309,6 @@ namespace xge
 	{
 		const PileRule& rule = pile.pile.takes;
 		if (!rule.given || cards.empty()) { return false; }
-		// <sum>: the cards laid, added up by their worths.
-		if (rule.sum > 0)
-		{
-			float total = 0.0f;
-			for (const int number : cards)
-			{
-				const Object* card = cardAt(number);
-				if (!card) { return false; }
-				total += card->card.worths.empty() ? static_cast<float>(card->card.column) : card->card.worths.front();
-			}
-			return total == static_cast<float>(rule.sum);
-		}
 		// <total variable>N: what is laid together, that variable added up, is N.
 		for (const PileRule::VarRule& each : rule.rules)
 		{
@@ -1382,21 +1356,13 @@ namespace xge
 		}
 		if (pile.pile.cards.empty())
 		{
-			if (!acceptsBy(rule.emptyRules, *first, nullptr)) { return false; }
-			if (!rule.emptyRanks.empty() && std::find(rule.emptyRanks.begin(), rule.emptyRanks.end(), first->card.columnName) == rule.emptyRanks.end()) { return false; }
-			if (!rule.emptySuits.empty() && std::find(rule.emptySuits.begin(), rule.emptySuits.end(), first->card.rowName) == rule.emptySuits.end()) { return false; }
-			return true;
+			return acceptsBy(rule.emptyRules, *first, nullptr);
 		}
 		// Waiting for a suit to be called: nothing goes on it.
 		if (pile.calling > 0.0f) { return false; }
 		if (isWild(rule, *first)) { return true; }
 		const Object* top = cardAt(pile.pile.cards.back());
 		if (!top || !top->faceUp) { return false; }
-		if (rule.matches)
-		{
-			const int suit = pile.called > 0.0f ? static_cast<int>(pile.called) : top->card.row;
-			if (first->card.column != top->card.column && first->card.row != suit) { return false; }
-		}
 		// <any>: one of them, a value called standing for the top's own.
 		if (!rule.anyRules.empty())
 		{
@@ -1410,10 +1376,6 @@ namespace xge
 	// Whether `next` may lie on `below` by the rule (not counting <one />).
 	bool Game::follows(const PileRule& rule, const Object& below, const Object& next)
 	{
-		if (rule.sameSuit && (next.card.row != below.card.row || next.card.deck != below.card.deck)) { return false; }
-		if (rule.otherColor && next.card.color == below.card.color) { return false; }
-		if (rule.up && next.card.column != below.card.column + 1) { return false; }
-		if (rule.down && next.card.column != below.card.column - 1) { return false; }
 		return acceptsBy(rule.rules, next, &below);
 	}
 

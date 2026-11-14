@@ -509,17 +509,6 @@ namespace xge
 	{
 		bool given{ false };
 		bool one{ false };
-		bool sameSuit{ false };
-		bool otherColor{ false };
-		bool up{ false };
-		bool down{ false };
-		std::vector<std::string> emptyRanks;
-		std::vector<std::string> emptySuits;
-		// <matches />: the same suit (or the suit called) or the same rank
-		// as the top card; <wild>: ranks that go on anything, and make the
-		// pile wait for a suit to be called.
-		bool matches{ false };
-		std::vector<std::string> wildRanks;
 		// <follow />: a trick. Any card leads (the first on the empty
 		// pile); after it, a card of the suit led, unless the hand laying
 		// holds none. <breaks>: suits that may not lead until one has been
@@ -533,9 +522,6 @@ namespace xge
 		bool followColumn{ false };
 		std::vector<std::string> breakSuits;
 		std::vector<std::string> trumpSuits;
-		// <sum>N: the cards laid (all of them, held together) when their
-		// worths add up to N, whatever is on the pile (0: no such rule).
-		int sum{};
 		// <accepts> of a <holds>: rules on the arriving member's variable.
 		// `kind` compares it with `amount`, or, `top`, with the top one's
 		// `topVariable` (empty: the same variable) plus `amount`
@@ -563,8 +549,8 @@ namespace xge
 	};
 
 	// A card (see game/cards.h): which pack (its group), its row and column
-	// there (from 1; Hearts calls them suit and rank), as text too, its color
-	// (what <othercolor /> compares) and the pile the deck starts in.
+	// there (from 1; Hearts calls them suit and rank), as text too, its
+	// worths and the pile the deck starts in.
 	struct CardOf
 	{
 		std::string deck;
@@ -572,7 +558,6 @@ namespace xge
 		int column{};
 		std::string rowName;
 		std::string columnName;
-		std::string color;
 		std::string startPile;
 		std::vector<float> worths;
 	};
@@ -749,7 +734,6 @@ namespace xge
 			RawValue fanWidth;          // <fan><width>: the fan is never wider (empty text: no limit)
 			bool carry{ false };        // <carry />: a face-up card can be taken with all above it
 			bool showTop{ false };      // <showtop />: a face-down card left on top turns up
-			bool sorted{ false };       // <sorted />: kept in suit then rank order
 			RawValue lift;              // <lift>: the card a hand points at, lifted out of the fan by that much (empty text: none)
 			bool hasPoints{ false };    // <counts>: what its face-up cards add up to
 			RawValue pointsMost;        // <counts><atmost>: highs only while the total stays at most this (empty text: no limit)
@@ -1322,7 +1306,6 @@ namespace xge
 			float fanWidth{};
 			bool carry{ false };
 			bool showTop{ false };
-			bool sorted{ false };
 			float lift{};
 			float pointsMost{};     // 0: no limit
 			std::string counts;     // <counts variable>: as written (empty: none)
