@@ -7,6 +7,7 @@
 // rules, the deal, and a picker that picks, places and puts back, game by
 // game.
 
+#include "game/random.h"
 #include "played.h"
 #include "scratch.h"
 
@@ -16,6 +17,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -2189,9 +2191,18 @@ TEST_CASE("<spawn> with a <member> makes that member of a group, and is refused 
 TEST_CASE("an <order> in <starts> shuffles what starts in that holder", "[cards][holders]")
 {
 	// With 3 tokens, the pack's order comes up 1 in 6 times; over 20 games, never every time.
-	int inOrder = 0;
-	for (int game = 0; game < 20; ++game)
+	// Each load seeds the numbers again, so each game takes its own seed: with one seed for all
+	// twenty, every game shuffled alike and the test failed on 1 run's seed in 6.
+	const std::optional<unsigned int> runSeed = xge::fixedRandomSeed();
+	struct SeedBack
 	{
+		std::optional<unsigned int> seed;
+		~SeedBack() { xge::fixRandomSeed(seed); }
+	} seedBack{ runSeed };
+	int inOrder = 0;
+	for (unsigned int game = 0; game < 20; ++game)
+	{
+		xge::fixRandomSeed(runSeed.value_or(0u) + game);
 		const Tokens file("<order group=\"pile\"><random /></order>");
 		Played play(file.path);
 		play.frames(1);
