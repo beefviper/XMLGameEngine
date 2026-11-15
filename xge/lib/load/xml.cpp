@@ -1581,6 +1581,166 @@ namespace xge
 			return onLineOf(collisions, [&] { return readCollisionsHere(collisions, where, base); });
 		}
 
+		// A rule may hold rules: what it says (its attributes and
+		// checks) the rules it holds say too, and its <first>
+		// runs as a rule of its own before theirs.
+		struct Said
+		{
+			std::string edge, filterClass, filterObject, unlessClass, throughClass, sprite, side, hitbox, by;
+			std::vector<RawCondition> checks;
+		};
+
+		// What a <collision> says, added to what the rules holding it said: its
+		// attributes and the checks it starts with. firstCommand is left at what
+		// follows the checks.
+		Said readSaid(const XmlNode& collision, const Said& held, const std::string& ruleHere, std::unique_ptr<XmlNode>& firstCommand)
+		{
+			Said said = held;
+			const auto take = [&](std::string& into, const char* attribute)
+			{
+				const std::string own = collision.getAttribute(attribute);
+				if (own.empty()) { return; }
+				if (!into.empty()) { fail(ruleHere, std::string(attribute) + "=\"" + own + "\", but the <collision> holding it says " + attribute + "=\"" + into + "\" for every rule it holds"); }
+				into = own;
+			};
+			take(said.edge, "edge");
+			take(said.filterClass, "class");
+			take(said.filterObject, "object");
+			take(said.unlessClass, "unless");
+			take(said.throughClass, "through");
+			take(said.sprite, "sprite");
+			take(said.side, "side");
+			take(said.hitbox, "hitbox");
+			take(said.by, "by");
+			const std::string& edge = said.edge;
+
+			firstCommand = collision.getFirstChild();
+			if (firstCommand && (firstCommand->getName() == "slower" || firstCommand->getName() == "faster"))
+			{
+				fail(ruleHere, "<" + firstCommand->getName() + "> is gone; test the speed as the touch happened with <condition variable=\"speed\"><below>N</below></condition> (or <atleast>)");
+			}
+
+			// Then the checks that must all hold for it to run.
+			if (firstCommand && firstCommand->getName() == "all")
+			{
+				fail(ruleHere + " > <all>", "a rule's checks must all hold already; write them one after another, with no <all>");
+			}
+			while (firstCommand && (firstCommand->getName() == "condition" || firstCommand->getName() == "any"))
+			{
+				const std::string name = firstCommand->getName();
+				RawCondition part;
+				if (name == "condition")
+				{
+					if (readCheck(*firstCommand, ruleHere + " > <condition>", part)) { fail(ruleHere + " > <condition>", "has its one test and nothing after it; the commands go after the checks"); }
+				}
+				else
+				{
+					readJoin(*firstCommand, ruleHere + " > <" + name + ">", part);
+				}
+				said.checks.push_back(std::move(part));
+				firstCommand = firstCommand->getNextSibling();
+			}
+			const std::string& side = said.side;
+			if (!side.empty())
+			{
+				if (!edge.empty()) { fail(ruleHere, "side= is the side of the object another object touches; a rule about a screen edge says which with edge="); }
+				if (side != "top" && side != "bottom" && side != "left" && side != "right" && side != "horizontal" && side != "vertical")
+				{
+					fail(ruleHere, "side=\"" + side + "\"; expected top, bottom, left, right, horizontal or vertical");
+				}
+			}
+			return said;
+		}
+
+		// One rule's commands, as what has been said so far.
+		void addRule(RawCollisionData& collisionData, const XmlNode& collision, const Said& said, std::vector<RawCommand> commands, const std::string& ruleHere)
+		{
+			const std::string& edge = said.edge;
+			// With an edge the rule is about the screen edge. Without one it
+			// is about another object: class and/or object narrow which, and
+			// neither means anything at all.
+			if (!edge.empty())
+			{
+				// Appends rather than overwrites, so more than one <collision
+				// edge="..."> touching the same edge (e.g. an "all" rule plus a
+				// specific "left" rule) both run instead of the later one
+				// silently winning.
+				// class= and object= pick the other object of a touch; an
+				// edge is no object, so there is nothing for them to pick
+				if (!said.hitbox.empty() || !said.by.empty())
+				{
+					fail(ruleHere, "edge= with hitbox= or by=; the window's edges are met by the whole picture");
+				}
+				if (!said.filterClass.empty() || !said.filterObject.empty() || !said.throughClass.empty())
+				{
+					fail(ruleHere, "edge= with class=, object= or through=; a rule about a screen edge is about no other object"
+						" (unless=\"class\" passes it over while touching that class)");
+				}
+				RawCondition check;
+				if (!said.checks.empty())
+				{
+					check.join = RawCondition::Join::All;
+					check.parts = said.checks;
+				}
+				if (!addEdgeRule(collisionData, edge, commands, said.sprite, said.unlessClass, check))
+				{
+					fail(ruleHere, "edge=\"" + edge + "\"; expected left, right, top, bottom, horizontal, vertical or all");
+				}
+				return;
+			}
+			RawCollisionRule rule;
+			rule.line = collision.line();
+			rule.filterClass = said.filterClass;
+			rule.filterObject = said.filterObject;
+			rule.unlessClass = said.unlessClass;
+			rule.throughClass = said.throughClass;
+			rule.whileSprite = said.sprite;
+			rule.side = said.side;
+			rule.hitbox = said.hitbox;
+			rule.by = said.by;
+			if (!said.checks.empty())
+			{
+				rule.check.join = RawCondition::Join::All;
+				rule.check.parts = said.checks;
+			}
+			rule.commands = std::move(commands);
+			collisionData.others.push_back(std::move(rule));
+		}
+
+		void readRule(RawCollisionData& collisionData, const XmlNode& collision, const Said& held, const std::string& ruleHere)
+		{
+			std::unique_ptr<XmlNode> firstCommand;
+			const Said said = readSaid(collision, held, ruleHere, firstCommand);
+
+			// Holding rules: a <first>, then the rules, and nothing else.
+			bool holding = false;
+			for (std::unique_ptr<XmlNode> each = collision.getFirstChild(); each; each = each->getNextSibling())
+			{
+				if (each->getName() == "collision") { holding = true; }
+			}
+			if (!holding)
+			{
+				if (firstCommand && firstCommand->getName() == "first") { fail(ruleHere, "has a <first> but holds no rules; its commands go in it directly"); }
+				addRule(collisionData, collision, said, readCommands(std::move(firstCommand), ruleHere), ruleHere);
+				return;
+			}
+			std::unique_ptr<XmlNode> part = std::move(firstCommand);
+			if (part && part->getName() == "first")
+			{
+				std::vector<RawCommand> first = readCommands(part->getFirstChild(), ruleHere + " > <first>");
+				if (!first.empty()) { addRule(collisionData, collision, said, std::move(first), ruleHere); }
+				part = part->getNextSibling();
+			}
+			for (; part && part->getName() == "collision"; part = part->getNextSibling())
+			{
+				readRule(collisionData, *part, said, ruleHere + " > <collision>");
+			}
+			if (part)
+			{
+				fail(ruleHere, "holds rules, so <" + part->getName() + "> is out of place; a rule holding rules has a <first> before them, run whenever it holds, and every rule it holds runs too (there is no <otherwise>)");
+			}
+		}
+
 		RawCollisionData readCollisionsHere(const XmlNode& collisions, const std::string& where, RawCollisionData base)
 		{
 			const std::string collisionsHere = where + " > <collisions>";
@@ -1622,157 +1782,10 @@ namespace xge
 			}
 			if (!hitboxes.empty()) { collisionData.hitboxes = std::move(hitboxes); }
 
-			// A rule may hold rules: what it says (its attributes and
-			// checks) the rules it holds say too, and its <first>
-			// runs as a rule of its own before theirs.
-			struct Said
-			{
-				std::string edge, filterClass, filterObject, unlessClass, throughClass, sprite, side, hitbox, by;
-				std::vector<RawCondition> checks;
-			};
-			std::function<void(const XmlNode&, const Said&, const std::string&)> readRule = [&](const XmlNode& collision, const Said& held, const std::string& ruleHere)
-			{
-				Said said = held;
-				const auto take = [&](std::string& into, const char* attribute)
-				{
-					const std::string own = collision.getAttribute(attribute);
-					if (own.empty()) { return; }
-					if (!into.empty()) { fail(ruleHere, std::string(attribute) + "=\"" + own + "\", but the <collision> holding it says " + attribute + "=\"" + into + "\" for every rule it holds"); }
-					into = own;
-				};
-				take(said.edge, "edge");
-				take(said.filterClass, "class");
-				take(said.filterObject, "object");
-				take(said.unlessClass, "unless");
-				take(said.throughClass, "through");
-				take(said.sprite, "sprite");
-				take(said.side, "side");
-				take(said.hitbox, "hitbox");
-				take(said.by, "by");
-				const std::string& edge = said.edge;
-
-				std::unique_ptr<XmlNode> firstCommand = collision.getFirstChild();
-				if (firstCommand && (firstCommand->getName() == "slower" || firstCommand->getName() == "faster"))
-				{
-					fail(ruleHere, "<" + firstCommand->getName() + "> is gone; test the speed as the touch happened with <condition variable=\"speed\"><below>N</below></condition> (or <atleast>)");
-				}
-
-				// Then the checks that must all hold for it to run.
-				if (firstCommand && firstCommand->getName() == "all")
-				{
-					fail(ruleHere + " > <all>", "a rule's checks must all hold already; write them one after another, with no <all>");
-				}
-				while (firstCommand && (firstCommand->getName() == "condition" || firstCommand->getName() == "any"))
-				{
-					const std::string name = firstCommand->getName();
-					RawCondition part;
-					if (name == "condition")
-					{
-						if (readCheck(*firstCommand, ruleHere + " > <condition>", part)) { fail(ruleHere + " > <condition>", "has its one test and nothing after it; the commands go after the checks"); }
-					}
-					else
-					{
-						readJoin(*firstCommand, ruleHere + " > <" + name + ">", part);
-					}
-					said.checks.push_back(std::move(part));
-					firstCommand = firstCommand->getNextSibling();
-				}
-				const std::string& side = said.side;
-				if (!side.empty())
-				{
-					if (!edge.empty()) { fail(ruleHere, "side= is the side of the object another object touches; a rule about a screen edge says which with edge="); }
-					if (side != "top" && side != "bottom" && side != "left" && side != "right" && side != "horizontal" && side != "vertical")
-					{
-						fail(ruleHere, "side=\"" + side + "\"; expected top, bottom, left, right, horizontal or vertical");
-					}
-				}
-
-				// One rule's commands, as what has been said so far.
-				const auto add = [&](std::vector<RawCommand> commands)
-				{
-					// With an edge the rule is about the screen edge. Without one it
-					// is about another object: class and/or object narrow which, and
-					// neither means anything at all.
-					if (!edge.empty())
-					{
-						// Appends rather than overwrites, so more than one <collision
-						// edge="..."> touching the same edge (e.g. an "all" rule plus a
-						// specific "left" rule) both run instead of the later one
-						// silently winning.
-						// class= and object= pick the other object of a touch; an
-						// edge is no object, so there is nothing for them to pick
-						if (!said.hitbox.empty() || !said.by.empty())
-						{
-							fail(ruleHere, "edge= with hitbox= or by=; the window's edges are met by the whole picture");
-						}
-						if (!said.filterClass.empty() || !said.filterObject.empty() || !said.throughClass.empty())
-						{
-							fail(ruleHere, "edge= with class=, object= or through=; a rule about a screen edge is about no other object"
-								" (unless=\"class\" passes it over while touching that class)");
-						}
-						RawCondition check;
-						if (!said.checks.empty())
-						{
-							check.join = RawCondition::Join::All;
-							check.parts = said.checks;
-						}
-						if (!addEdgeRule(collisionData, edge, commands, said.sprite, said.unlessClass, check))
-						{
-							fail(ruleHere, "edge=\"" + edge + "\"; expected left, right, top, bottom, horizontal, vertical or all");
-						}
-						return;
-					}
-					RawCollisionRule rule;
-					rule.line = collision.line();
-					rule.filterClass = said.filterClass;
-					rule.filterObject = said.filterObject;
-					rule.unlessClass = said.unlessClass;
-					rule.throughClass = said.throughClass;
-					rule.whileSprite = said.sprite;
-					rule.side = side;
-					rule.hitbox = said.hitbox;
-					rule.by = said.by;
-					if (!said.checks.empty())
-					{
-						rule.check.join = RawCondition::Join::All;
-						rule.check.parts = said.checks;
-					}
-					rule.commands = std::move(commands);
-					collisionData.others.push_back(std::move(rule));
-				};
-
-				// Holding rules: a <first>, then the rules, and nothing else.
-				bool holding = false;
-				for (std::unique_ptr<XmlNode> each = collision.getFirstChild(); each; each = each->getNextSibling())
-				{
-					if (each->getName() == "collision") { holding = true; }
-				}
-				if (!holding)
-				{
-					if (firstCommand && firstCommand->getName() == "first") { fail(ruleHere, "has a <first> but holds no rules; its commands go in it directly"); }
-					add(readCommands(std::move(firstCommand), ruleHere));
-					return;
-				}
-				std::unique_ptr<XmlNode> part = std::move(firstCommand);
-				if (part && part->getName() == "first")
-				{
-					std::vector<RawCommand> first = readCommands(part->getFirstChild(), ruleHere + " > <first>");
-					if (!first.empty()) { add(std::move(first)); }
-					part = part->getNextSibling();
-				}
-				for (; part && part->getName() == "collision"; part = part->getNextSibling())
-				{
-					readRule(*part, said, ruleHere + " > <collision>");
-				}
-				if (part)
-				{
-					fail(ruleHere, "holds rules, so <" + part->getName() + "> is out of place; a rule holding rules has a <first> before them, run whenever it holds, and every rule it holds runs too (there is no <otherwise>)");
-				}
-			};
 			for (std::unique_ptr<XmlNode> collision = findChild(&collisions, "collision"); collision != nullptr; collision = collision->getNextSibling())
 			{
 				if (collision->getName() != "collision") { continue; }
-				readRule(*collision, Said{}, collisionsHere + " > <collision>");
+				readRule(collisionData, *collision, Said{}, collisionsHere + " > <collision>");
 			}
 
 			return collisionData;
@@ -3523,64 +3536,235 @@ namespace xge
 		}
 	}
 
+	namespace
+	{
+		// The game file loaded and checked against its schema, with the pictures
+		// put in where sprites take them (<bitmap from>), so the rest reads each
+		// as if written out there.
+		ElementPtr loadGameFile(const std::string& filename, XmlBackend backend, SchemaValidation& validation)
+		{
+			std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
+
+			if (!document->load(filename))
+			{
+				// Thrown, not exit(): a front end that loads games one after another
+				// (xgegui) tells the user and carries on.
+				throw std::runtime_error("XML file failed to load: " + document->getErrorMessage());
+			}
+
+			// find key points in document
+			std::unique_ptr<XmlNode> root = document->getRootElement();
+
+			// A game file names its schema the same way regardless of backend
+			// (xsi:noNamespaceSchemaLocation - see games/descriptions/*.xml), so this reads
+			// it directly off root rather than asking XmlDocument for it.
+			// Xerces already ran its own real validation as part of load()
+			// above whenever this is non-empty (see xml/xerces.cpp) - load()
+			// would have failed already otherwise, so reaching here means it
+			// passed. Every other backend can only check well-formedness on its
+			// own (see xml/document.h), so this falls back to XsdLiteValidator
+			// - this project's own interpreter for the subset of XSD this
+			// schema actually uses (see load/xsd.h) - against that same schema
+			// file, resolved relative to filename the same way Xerces resolves
+			// it relative to the document.
+			const std::string schemaLocation = getAttribute(root.get(), "xsi:noNamespaceSchemaLocation");
+
+			if (schemaLocation.empty())
+			{
+				validation = SchemaValidation::None;
+			}
+			else if (backend == XmlBackend::Xerces)
+			{
+				validation = SchemaValidation::Strong;
+			}
+			else
+			{
+				const std::string schemaPath = findSchema(filename, schemaLocation).string();
+
+				XsdLiteValidator validator;
+
+				if (!validator.loadSchema(schemaPath, backend) || !validator.validate(*root))
+				{
+					throw std::runtime_error("XML file failed to validate against the schema: " + validator.getErrorMessage());
+				}
+
+				validation = SchemaValidation::Weak;
+			}
+
+			return withPictures(copyElement(*root));
+		}
+
+		// <window name="..."> and its settings. These are plain numbers, not
+		// expressions - the expressions in the rest of the file are worked out
+		// against the window's size.
+		void readWindow(const XmlNode& window, WindowDesc& windowDesc)
+		{
+			const std::string windowHere = "<window>";
+			windowDesc.name = requireAttribute(window, "name", windowHere);
+			windowDesc.width = std::stof(readText(*requireChild(window, "width", windowHere)));
+			windowDesc.height = std::stof(readText(*requireChild(window, "height", windowHere)));
+			for (const auto& [side, size] : { std::pair{ "width", windowDesc.width }, std::pair{ "height", windowDesc.height } })
+			{
+				if (!(size >= 1.0f)) { fail(windowHere, std::string("<") + side + "> is " + formatDisplayNumber(size) + "; expected a number of pixels, 1 or more"); }
+			}
+			if (std::unique_ptr<XmlNode> scale = findChild(&window, "scale"))
+			{
+				windowDesc.scale = std::stoi(readText(*scale));
+				if (windowDesc.scale < 1) { fail(windowHere, "<scale> is a whole number, 1 or more"); }
+			}
+			// Left out: black, a window, 60 frames a second.
+			const auto background = findChild(&window, "background");
+			const auto fullscreen = findChild(&window, "fullscreen");
+			const auto framerate = findChild(&window, "framerate");
+			windowDesc.background = background ? readText(*background) : "color.black";
+			windowDesc.fullscreen = fullscreen ? "true" : "false";
+			windowDesc.framerate = framerate ? std::stoi(readText(*framerate)) : 60;
+			if (windowDesc.framerate < 1) { fail(windowHere, "<framerate> is " + std::to_string(windowDesc.framerate) + "; expected a number of frames a second, 1 or more"); }
+		}
+
+		// <styles> (optional): what a <text> or a <bitmap> can take by style="...".
+		void readStyles(const XmlNode& root, std::vector<RawStyle>& rawStyles)
+		{
+			if (std::unique_ptr<XmlNode> stylesNode = findChild(&root, "styles"))
+			{
+				for (std::unique_ptr<XmlNode> style = stylesNode->getFirstChild(); style != nullptr; style = style->getNextSibling())
+				{
+					RawStyle raw;
+					raw.name = requireAttribute(*style, "name", "<styles> > <style>");
+					const std::string here = "<styles> > <style name=\"" + raw.name + "\">";
+					if (std::any_of(rawStyles.begin(), rawStyles.end(), [&](const RawStyle& each) { return each.name == raw.name; }))
+					{
+						fail("<styles>", "two <style>s are called '" + raw.name + "'");
+					}
+					if (auto size = findChild(style.get(), "size")) { raw.size = readValue(*size, here); }
+					if (auto scale = findChild(style.get(), "scale"))
+					{
+						raw.hasScale = true;
+						raw.scale = readValue(*scale, here);
+					}
+					if (auto color = findPlainColor(*style)) { raw.color = readText(*color); }
+					readBitmapColors(*style, here, raw.bitmapColors);
+					if (auto font = findChild(style.get(), "font")) { raw.font = readText(*font); }
+					rawStyles.push_back(std::move(raw));
+				}
+			}
+		}
+
+		// The <sheet>s among the <pictures> (optional): the pictures sprites,
+		// animations and packs cut theirs from.
+		void readSheets(const XmlNode& root, std::vector<Sheet>& rawSheets)
+		{
+			if (std::unique_ptr<XmlNode> picturesNode = findChild(&root, "pictures"))
+			{
+				for (std::unique_ptr<XmlNode> node = picturesNode->getFirstChild(); node != nullptr; node = node->getNextSibling())
+				{
+					if (node->getName() != "sheet") { continue; }
+					Sheet sheet;
+					sheet.name = requireAttribute(*node, "name", "<pictures> > <sheet>");
+					const std::string here = "<pictures> > <sheet name=\"" + sheet.name + "\">";
+					if (std::any_of(rawSheets.begin(), rawSheets.end(), [&](const Sheet& each) { return each.name == sheet.name; }))
+					{
+						fail("<pictures>", "two <sheet>s are called '" + sheet.name + "'");
+					}
+					sheet.path = readText(*requireChild(*node, "path", here));
+					const auto plain = [&](const XmlNode& parent, const char* tag, const std::string& at)
+					{
+						const auto part = findChild(&parent, tag);
+						if (!part) { return 0.0f; }
+						const std::string text = readText(*part);
+						std::size_t used = 0;
+						float value = -1.0f;
+						try { value = std::stof(text, &used); }
+						catch (const std::exception&) { used = 0; }
+						if (text.empty() || used != text.size() || value < 0.0f) { fail(at + " > <" + tag + ">", "is \"" + text + "\"; expected a number from 0"); }
+						return value;
+					};
+					if (auto columns = findChild(node.get(), "columns")) { sheet.columns = readCount(*columns, here); }
+					if (auto rows = findChild(node.get(), "rows")) { sheet.rows = readCount(*rows, here); }
+					if ((sheet.columns > 0) != (sheet.rows > 0)) { fail(here, "has <columns> or <rows> without the other"); }
+					if (auto cell = findChild(node.get(), "cell"))
+					{
+						if (sheet.columns > 0) { fail(here, "has <columns> and <rows> and a <cell> size; give one"); }
+						sheet.cellWidth = plain(*cell, "width", here + " > <cell>");
+						sheet.cellHeight = plain(*cell, "height", here + " > <cell>");
+						if (!(sheet.cellWidth > 0.0f && sheet.cellHeight > 0.0f)) { fail(here + " > <cell>", "needs a <width> and a <height> above 0"); }
+					}
+					sheet.margin = plain(*node, "margin", here);
+					sheet.gap = plain(*node, "gap", here);
+					for (std::unique_ptr<XmlNode> hide = node->getFirstChild(); hide != nullptr; hide = hide->getNextSibling())
+					{
+						if (hide->getName() == "hide") { sheet.hide.push_back(readText(*hide)); }
+					}
+					rawSheets.push_back(std::move(sheet));
+				}
+			}
+		}
+
+		// <patterns> (optional): what a holder's <score patterns="..."> is scored by.
+		void readPatterns(const XmlNode& root, std::vector<RawPatterns>& rawPatterns)
+		{
+			for (std::unique_ptr<XmlNode> node = root.getFirstChild(); node != nullptr; node = node->getNextSibling())
+			{
+				if (node->getName() != "patterns") { continue; }
+				RawPatterns raw;
+				raw.name = requireAttribute(*node, "name", "<patterns>");
+				const std::string here = "<patterns name=\"" + raw.name + "\">";
+				if (std::any_of(rawPatterns.begin(), rawPatterns.end(), [&](const RawPatterns& each) { return each.name == raw.name; }))
+				{
+					fail("<patterns>", "two <patterns> are called '" + raw.name + "'");
+				}
+				for (std::unique_ptr<XmlNode> pattern = node->getFirstChild(); pattern != nullptr; pattern = pattern->getNextSibling())
+				{
+					RawPatterns::Pattern one;
+					one.name = requireAttribute(*pattern, "name", here + " > <pattern>");
+					const std::string at = here + " > <pattern name=\"" + one.name + "\">";
+					for (std::unique_ptr<XmlNode> part = pattern->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					{
+						const std::string tag = part->getName();
+						if (tag != "alike" && tag != "run") { fail(at, "unknown <" + tag + ">; expected <alike variable> and <run variable>"); }
+						// The variable compared: <alike> one value of it, <run> values in a row.
+						const std::string variable = requireAttribute(*part, "variable", at + " > <" + tag + ">");
+						const RawPatterns::Part kind = tag == "run" ? RawPatterns::Part::Run : RawPatterns::Part::Alike;
+						one.by.push_back(variable);
+						one.parts.emplace_back(kind, readCount(*part, at + " > <" + tag + ">"));
+					}
+					if (one.parts.empty()) { fail(at, "has no <alike> or <run>"); }
+					raw.patterns.push_back(std::move(one));
+				}
+				rawPatterns.push_back(std::move(raw));
+			}
+		}
+
+		// The states, each read with what it takes from the pieces.
+		void readStates(const XmlNode& states, std::vector<RawState>& rawStates, Kit& kit, const std::set<std::string>& gameNames)
+		{
+			for (std::unique_ptr<XmlNode> node = states.getFirstChild(); node != nullptr; node = node->getNextSibling())
+			{
+				if (node->getName() == "shows") { fail("<states> > <shows name>", "named <shows> sets are gone; write each <show> in the state that shows it (a state from= another takes its shows)"); }
+			}
+
+			std::map<std::string, std::vector<ElementPtr>> stateLists;
+			for (std::unique_ptr<XmlNode> state = states.getFirstChild(); state != nullptr; state = state->getNextSibling())
+			{
+				if (state->getName() != "state") { continue; }
+				const std::string name = state->getAttribute("name");
+				if (std::any_of(rawStates.begin(), rawStates.end(), [&](const RawState& each) { return each.name == name; }))
+				{
+					fail("<states>", "has two states called '" + name + "'");
+				}
+				rawStates.push_back(readState(*state, stateLists, kit, gameNames));
+			}
+		}
+	}
+
 	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
 		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, std::vector<RawPath>& rawPaths,
 		std::vector<RawStyle>& rawStyles, std::vector<Sheet>& rawSheets, std::vector<RawPatterns>& rawPatterns, std::vector<std::string>& rawKeeps, RawDemo& rawDemo,
 		SchemaValidation& validation)
 	{
-		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
-
-		if (!document->load(filename))
-		{
-			// Thrown, not exit(): a front end that loads games one after another
-			// (xgegui) tells the user and carries on.
-			throw std::runtime_error("XML file failed to load: " + document->getErrorMessage());
-		}
-
-		// find key points in document
-		std::unique_ptr<XmlNode> root = document->getRootElement();
-
-		// A game file names its schema the same way regardless of backend
-		// (xsi:noNamespaceSchemaLocation - see games/descriptions/*.xml), so this reads
-		// it directly off root rather than asking XmlDocument for it.
-		// Xerces already ran its own real validation as part of load()
-		// above whenever this is non-empty (see xml/xerces.cpp) - load()
-		// would have failed already otherwise, so reaching here means it
-		// passed. Every other backend can only check well-formedness on its
-		// own (see xml/document.h), so this falls back to XsdLiteValidator
-		// - this project's own interpreter for the subset of XSD this
-		// schema actually uses (see load/xsd.h) - against that same schema
-		// file, resolved relative to filename the same way Xerces resolves
-		// it relative to the document.
-		const std::string schemaLocation = getAttribute(root.get(), "xsi:noNamespaceSchemaLocation");
-
-		if (schemaLocation.empty())
-		{
-			validation = SchemaValidation::None;
-		}
-		else if (backend == XmlBackend::Xerces)
-		{
-			validation = SchemaValidation::Strong;
-		}
-		else
-		{
-			const std::string schemaPath = findSchema(filename, schemaLocation).string();
-
-			XsdLiteValidator validator;
-
-			if (!validator.loadSchema(schemaPath, backend) || !validator.validate(*root))
-			{
-				throw std::runtime_error("XML file failed to validate against the schema: " + validator.getErrorMessage());
-			}
-
-			validation = SchemaValidation::Weak;
-		}
-
-		// The pictures put in where sprites take them (<bitmap from>), so
-		// the rest reads each as if written out there.
-		const ElementPtr pictured = withPictures(copyElement(*root));
-		root = viewOf(pictured);
+		const ElementPtr pictured = loadGameFile(filename, backend, validation);
+		const std::unique_ptr<XmlNode> root = viewOf(pictured);
 
 		const std::string where = "game";
 		std::unique_ptr<XmlNode> window = requireChild(*root, "window", where);
@@ -3589,30 +3773,7 @@ namespace xge
 		std::unique_ptr<XmlNode> states = requireChild(*root, "states", where);
 		std::unique_ptr<XmlNode> objectsNode = findChild(states.get(), "objects"); // none: every object is a state's own
 
-		// load window description: <window name="..."> and its settings. These
-		// are plain numbers, not expressions - the expressions in the rest of
-		// the file are worked out against the window's size.
-		const std::string windowHere = "<window>";
-		windowDesc.name = requireAttribute(*window, "name", windowHere);
-		windowDesc.width = std::stof(readText(*requireChild(*window, "width", windowHere)));
-		windowDesc.height = std::stof(readText(*requireChild(*window, "height", windowHere)));
-		for (const auto& [side, size] : { std::pair{ "width", windowDesc.width }, std::pair{ "height", windowDesc.height } })
-		{
-			if (!(size >= 1.0f)) { fail(windowHere, std::string("<") + side + "> is " + formatDisplayNumber(size) + "; expected a number of pixels, 1 or more"); }
-		}
-		if (std::unique_ptr<XmlNode> scale = findChild(window.get(), "scale"))
-		{
-			windowDesc.scale = std::stoi(readText(*scale));
-			if (windowDesc.scale < 1) { fail(windowHere, "<scale> is a whole number, 1 or more"); }
-		}
-		// Left out: black, a window, 60 frames a second.
-		const auto background = findChild(window.get(), "background");
-		const auto fullscreen = findChild(window.get(), "fullscreen");
-		const auto framerate = findChild(window.get(), "framerate");
-		windowDesc.background = background ? readText(*background) : "color.black";
-		windowDesc.fullscreen = fullscreen ? "true" : "false";
-		windowDesc.framerate = framerate ? std::stoi(readText(*framerate)) : 60;
-		if (windowDesc.framerate < 1) { fail(windowHere, "<framerate> is " + std::to_string(windowDesc.framerate) + "; expected a number of frames a second, 1 or more"); }
+		readWindow(*window, windowDesc);
 
 		// load variables
 		readVariables(variablesNode.get(), "<variables>", rawVariables);
@@ -3635,109 +3796,9 @@ namespace xge
 			}
 		}
 
-		// load styles (optional: what a <text> or a <bitmap> can take by style="...")
-		if (std::unique_ptr<XmlNode> stylesNode = findChild(root.get(), "styles"))
-		{
-			for (std::unique_ptr<XmlNode> style = stylesNode->getFirstChild(); style != nullptr; style = style->getNextSibling())
-			{
-				RawStyle raw;
-				raw.name = requireAttribute(*style, "name", "<styles> > <style>");
-				const std::string here = "<styles> > <style name=\"" + raw.name + "\">";
-				if (std::any_of(rawStyles.begin(), rawStyles.end(), [&](const RawStyle& each) { return each.name == raw.name; }))
-				{
-					fail("<styles>", "two <style>s are called '" + raw.name + "'");
-				}
-				if (auto size = findChild(style.get(), "size")) { raw.size = readValue(*size, here); }
-				if (auto scale = findChild(style.get(), "scale"))
-				{
-					raw.hasScale = true;
-					raw.scale = readValue(*scale, here);
-				}
-				if (auto color = findPlainColor(*style)) { raw.color = readText(*color); }
-				readBitmapColors(*style, here, raw.bitmapColors);
-				if (auto font = findChild(style.get(), "font")) { raw.font = readText(*font); }
-				rawStyles.push_back(std::move(raw));
-			}
-		}
-
-		// load sheets (optional: the pictures sprites, animations and packs
-		// cut theirs from), among the <pictures>
-		if (std::unique_ptr<XmlNode> picturesNode = findChild(root.get(), "pictures"))
-		{
-			for (std::unique_ptr<XmlNode> node = picturesNode->getFirstChild(); node != nullptr; node = node->getNextSibling())
-			{
-				if (node->getName() != "sheet") { continue; }
-				Sheet sheet;
-				sheet.name = requireAttribute(*node, "name", "<pictures> > <sheet>");
-				const std::string here = "<pictures> > <sheet name=\"" + sheet.name + "\">";
-				if (std::any_of(rawSheets.begin(), rawSheets.end(), [&](const Sheet& each) { return each.name == sheet.name; }))
-				{
-					fail("<pictures>", "two <sheet>s are called '" + sheet.name + "'");
-				}
-				sheet.path = readText(*requireChild(*node, "path", here));
-				const auto plain = [&](const XmlNode& parent, const char* tag, const std::string& at)
-				{
-					const auto part = findChild(&parent, tag);
-					if (!part) { return 0.0f; }
-					const std::string text = readText(*part);
-					std::size_t used = 0;
-					float value = -1.0f;
-					try { value = std::stof(text, &used); }
-					catch (const std::exception&) { used = 0; }
-					if (text.empty() || used != text.size() || value < 0.0f) { fail(at + " > <" + tag + ">", "is \"" + text + "\"; expected a number from 0"); }
-					return value;
-				};
-				if (auto columns = findChild(node.get(), "columns")) { sheet.columns = readCount(*columns, here); }
-				if (auto rows = findChild(node.get(), "rows")) { sheet.rows = readCount(*rows, here); }
-				if ((sheet.columns > 0) != (sheet.rows > 0)) { fail(here, "has <columns> or <rows> without the other"); }
-				if (auto cell = findChild(node.get(), "cell"))
-				{
-					if (sheet.columns > 0) { fail(here, "has <columns> and <rows> and a <cell> size; give one"); }
-					sheet.cellWidth = plain(*cell, "width", here + " > <cell>");
-					sheet.cellHeight = plain(*cell, "height", here + " > <cell>");
-					if (!(sheet.cellWidth > 0.0f && sheet.cellHeight > 0.0f)) { fail(here + " > <cell>", "needs a <width> and a <height> above 0"); }
-				}
-				sheet.margin = plain(*node, "margin", here);
-				sheet.gap = plain(*node, "gap", here);
-				for (std::unique_ptr<XmlNode> hide = node->getFirstChild(); hide != nullptr; hide = hide->getNextSibling())
-				{
-					if (hide->getName() == "hide") { sheet.hide.push_back(readText(*hide)); }
-				}
-				rawSheets.push_back(std::move(sheet));
-			}
-		}
-
-		// load patterns (optional: what a holder's <score patterns="..."> is scored by)
-		for (std::unique_ptr<XmlNode> node = root->getFirstChild(); node != nullptr; node = node->getNextSibling())
-		{
-			if (node->getName() != "patterns") { continue; }
-			RawPatterns raw;
-			raw.name = requireAttribute(*node, "name", "<patterns>");
-			const std::string here = "<patterns name=\"" + raw.name + "\">";
-			if (std::any_of(rawPatterns.begin(), rawPatterns.end(), [&](const RawPatterns& each) { return each.name == raw.name; }))
-			{
-				fail("<patterns>", "two <patterns> are called '" + raw.name + "'");
-			}
-			for (std::unique_ptr<XmlNode> pattern = node->getFirstChild(); pattern != nullptr; pattern = pattern->getNextSibling())
-			{
-				RawPatterns::Pattern one;
-				one.name = requireAttribute(*pattern, "name", here + " > <pattern>");
-				const std::string at = here + " > <pattern name=\"" + one.name + "\">";
-				for (std::unique_ptr<XmlNode> part = pattern->getFirstChild(); part != nullptr; part = part->getNextSibling())
-				{
-					const std::string tag = part->getName();
-					if (tag != "alike" && tag != "run") { fail(at, "unknown <" + tag + ">; expected <alike variable> and <run variable>"); }
-					// The variable compared: <alike> one value of it, <run> values in a row.
-					const std::string variable = requireAttribute(*part, "variable", at + " > <" + tag + ">");
-					const RawPatterns::Part kind = tag == "run" ? RawPatterns::Part::Run : RawPatterns::Part::Alike;
-					one.by.push_back(variable);
-					one.parts.emplace_back(kind, readCount(*part, at + " > <" + tag + ">"));
-				}
-				if (one.parts.empty()) { fail(at, "has no <alike> or <run>"); }
-				raw.patterns.push_back(std::move(one));
-			}
-			rawPatterns.push_back(std::move(raw));
-		}
+		readStyles(*root, rawStyles);
+		readSheets(*root, rawSheets);
+		readPatterns(*root, rawPatterns);
 
 		// load the pieces, the top-level <objects>: written once, in play
 		// only where something takes them (load/merge)
@@ -3780,23 +3841,7 @@ namespace xge
 			rawDemo = readDemoElement(*demoNode);
 		}
 
-		// load states
-		for (std::unique_ptr<XmlNode> node = states->getFirstChild(); node != nullptr; node = node->getNextSibling())
-		{
-			if (node->getName() == "shows") { fail("<states> > <shows name>", "named <shows> sets are gone; write each <show> in the state that shows it (a state from= another takes its shows)"); }
-		}
-
-		std::map<std::string, std::vector<ElementPtr>> stateLists;
-		for (std::unique_ptr<XmlNode> state = states->getFirstChild(); state != nullptr; state = state->getNextSibling())
-		{
-			if (state->getName() != "state") { continue; }
-			const std::string name = state->getAttribute("name");
-			if (std::any_of(rawStates.begin(), rawStates.end(), [&](const RawState& each) { return each.name == name; }))
-			{
-				fail("<states>", "has two states called '" + name + "'");
-			}
-			rawStates.push_back(readState(*state, stateLists, kit, gameNames));
-		}
+		readStates(*states, rawStates, kit, gameNames);
 	}
 
 	GameData readGame(const std::string& filename, XmlBackend backend)
