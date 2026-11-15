@@ -1255,7 +1255,7 @@ namespace xge
 		// fall: a piece put goes to the lowest free cell of the picker's
 		// column. close: a piece put that walls in a piece of closeClass beside
 		// it (no place left round it) puts a copy of closeObject there.
-		// column. A set with no steps or jumps is one of pieces put.
+		// A set with no steps or jumps is one of pieces put.
 		struct Flank
 		{
 			std::string objClass;
@@ -1282,30 +1282,38 @@ namespace xge
 			std::string closeObject;
 			bool puts() const noexcept { return moves.empty(); }
 		};
-		std::vector<MoveSet> moveSets;
-		// How many moves it can make now: the live number `moves`, counted
-		// before the conditions each frame (a side with none left is stuck).
-		// A piece whose set has <flank>s counts the cells a new piece of its
-		// kind could be put in as well.
-		float moveCount{};
-		// A picker (it runs <pick>): the piece it holds ("" for none), and
-		// whether that piece is in the middle of a run of jumps, which it
-		// must finish.
-		std::string picked;
-		bool pickChain{ false };
-		// The cells the last move it placed went from and to (0 for none).
-		int moveFromColumn{};
-		int moveFromRow{};
-		int moveToColumn{};
-		int moveToRow{};
-		// A hop up or down <onto> pieces keeps to the column the first of
-		// them started from (keptColumn), while it is still in the cell the
-		// last one left it in (keptAt): a text cursor's way.
-		int keptColumn{};
-		std::pair<int, int> keptAt{};
-		// A <track> <onto> pieces: where the control points, in pixels, each
-		// half as it last came (below 0: not yet).
-		Vector2f pointer{ -1.0f, -1.0f };
+		struct Moves
+		{
+			std::vector<MoveSet> sets;
+			// How many moves it can make now: the live number `moves`, counted
+			// before the conditions each frame (a side with none left is stuck).
+			// A piece whose set has <flank>s counts the cells a new piece of its
+			// kind could be put in as well.
+			float count{};
+		};
+		Moves moves;
+		// A picker (it runs <pick>) and a cursor that moves <onto> pieces.
+		struct Picker
+		{
+			// The piece it holds ("" for none), and whether that piece is in
+			// the middle of a run of jumps, which it must finish.
+			std::string picked;
+			bool inChain{ false };
+			// The cells the last move it placed went from and to (0 for none).
+			int fromColumn{};
+			int fromRow{};
+			int toColumn{};
+			int toRow{};
+			// A hop up or down <onto> pieces keeps to the column the first of
+			// them started from (keptColumn), while it is still in the cell the
+			// last one left it in (keptAt): a text cursor's way.
+			int keptColumn{};
+			std::pair<int, int> keptAt{};
+			// A <track> <onto> pieces: where the control points, in pixels, each
+			// half as it last came (below 0: not yet).
+			Vector2f pointer{ -1.0f, -1.0f };
+		};
+		Picker picker;
 
 		// <marks>: copies of the mark pieces put in the cells marked (see
 		// Game::showMarks), made again only when what is marked changes.
@@ -1322,7 +1330,6 @@ namespace xge
 			std::optional<std::size_t> look;
 			std::vector<Mark> marks;
 		};
-		std::vector<MarkSet> markSets;
 		// Items (game/holders.cpp). A holder: its rules and the items it holds,
 		// bottom first (each an item's number, Game::itemAt), and its live
 		// numbers. Laid out by Game::layOutItems, never moved by the frame.
@@ -1441,8 +1448,15 @@ namespace xge
 			int row{};
 			bool operator==(const Marked&) const = default;
 		};
-		std::vector<Marked> marked;
-		std::vector<std::string> markCopies;
+		// A picker's <marks>: its sets, the cells marked now, and the copies
+		// of the mark pieces put in them.
+		struct Marks
+		{
+			std::vector<MarkSet> sets;
+			std::vector<Marked> marked;
+			std::vector<std::string> copies;
+		};
+		Marks marks;
 		// One of the map's <checks>, made ready.
 		struct CellCheck
 		{

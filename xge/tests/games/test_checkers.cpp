@@ -112,7 +112,7 @@ namespace
 			float total = 0.0f;
 			for (const Object& object : game.getCurrentObjects())
 			{
-				if (object.exists && object.isVisible && object.objClass == side) { total += object.moveCount; }
+				if (object.exists && object.isVisible && object.objClass == side) { total += object.moves.count; }
 			}
 			return total;
 		}
@@ -133,9 +133,9 @@ TEST_CASE("checkers.xml: the board is set, red to move, the cursor over red's me
 	// Only the front row can move: one way from the edge, two from the others.
 	CHECK(board.sum("red") == 7.0f);
 	CHECK(board.sum("white") == 7.0f);
-	CHECK(board.at("red", 1, 6)->moveCount == 1.0f);
-	CHECK(board.at("red", 3, 6)->moveCount == 2.0f);
-	CHECK(board.at("red", 2, 7)->moveCount == 0.0f);
+	CHECK(board.at("red", 1, 6)->moves.count == 1.0f);
+	CHECK(board.at("red", 3, 6)->moves.count == 2.0f);
+	CHECK(board.at("red", 2, 7)->moves.count == 0.0f);
 }
 
 TEST_CASE("checkers.xml: a man steps forward on a slant, and the turn passes", "[checkers]")
@@ -143,14 +143,14 @@ TEST_CASE("checkers.xml: a man steps forward on a slant, and the turn passes", "
 	Board board;
 	board.space(3, 6);
 	CHECK(board.cursor().lookName() == "held");
-	CHECK(board.cursor().picked == board.at("red", 3, 6)->name);
+	CHECK(board.cursor().picker.picked == board.at("red", 3, 6)->name);
 	board.space(4, 5);
 	CHECK(board.at("red", 4, 5));
 	CHECK_FALSE(board.at("red", 3, 6));
 	CHECK(board.cursor().lookName() == "free");
 	CHECK(board.turn() == 2.0f);
 	CHECK(board.get("whites").lookName() == "moving");
-	CHECK(board.cursor().picked.empty());
+	CHECK(board.cursor().picker.picked.empty());
 }
 
 TEST_CASE("checkers.xml: what is no move is refused, and so is the other side's piece", "[checkers]")
@@ -173,7 +173,7 @@ TEST_CASE("checkers.xml: what is no move is refused, and so is the other side's 
 
 	// Space on another of red's own: that one is held instead.
 	board.space(5, 6);
-	CHECK(board.cursor().picked == board.at("red", 5, 6)->name);
+	CHECK(board.cursor().picker.picked == board.at("red", 5, 6)->name);
 	board.space(6, 5);
 	CHECK(board.at("red", 6, 5));
 	CHECK(board.cursor().lookName() == "free");
@@ -215,12 +215,12 @@ TEST_CASE("checkers.xml: a piece that can jump again must, before the turn passe
 	CHECK_FALSE(board.at("white", 3, 6));
 	// Still red's, the same man held.
 	CHECK(board.cursor().lookName() == "held");
-	CHECK(board.cursor().pickChain);
+	CHECK(board.cursor().picker.inChain);
 	CHECK(board.turn() == 1.0f);
 
 	// Not another piece, not a step.
 	board.space(1, 8);
-	CHECK(board.cursor().picked == board.at("red", 4, 5)->name);
+	CHECK(board.cursor().picker.picked == board.at("red", 4, 5)->name);
 	board.space(3, 4);
 	CHECK(board.at("red", 4, 5));
 
@@ -228,7 +228,7 @@ TEST_CASE("checkers.xml: a piece that can jump again must, before the turn passe
 	CHECK(board.at("red", 6, 3));
 	CHECK(board.count("white") == 1);
 	CHECK(board.cursor().lookName() == "free");
-	CHECK_FALSE(board.cursor().pickChain);
+	CHECK_FALSE(board.cursor().picker.inChain);
 }
 
 TEST_CASE("checkers.xml: a man on the far row is crowned, and a king goes backwards too", "[checkers]")
@@ -240,7 +240,7 @@ TEST_CASE("checkers.xml: a man on the far row is crowned, and a king goes backwa
 	Object* king = board.at("red", 4, 1);
 	REQUIRE(king);
 	CHECK(king->lookName() == "king");
-	CHECK(king->moveCount == 2.0f);
+	CHECK(king->moves.count == 2.0f);
 
 	// White's turn, then the king steps back down.
 	board.space(1, 6);
@@ -263,7 +263,7 @@ TEST_CASE("checkers.xml: a crowning jump ends the move", "[checkers]")
 	CHECK(board.at("red", 4, 1)->lookName() == "king");
 	CHECK(board.at("white", 3, 2));
 	CHECK(board.cursor().lookName() == "free");
-	CHECK_FALSE(board.cursor().pickChain);
+	CHECK_FALSE(board.cursor().picker.inChain);
 }
 
 TEST_CASE("checkers.xml: taking the last piece wins", "[checkers]")
@@ -411,17 +411,17 @@ TEST_CASE("checkers.xml: X puts the piece held back, but not in a run of jumps",
 	REQUIRE(board.cursor().lookName() == "held");
 	board.tap(KeyCode::X);
 	CHECK(board.cursor().lookName() == "free");
-	CHECK(board.cursor().picked.empty());
+	CHECK(board.cursor().picker.picked.empty());
 	CHECK(board.at("red", 3, 6));
 
 	Board chain;
 	chain.only({ { "red", 2, 7 }, { "white", 3, 6 }, { "white", 5, 4 }, { "white", 8, 1 } });
 	chain.space(2, 7);
 	chain.space(4, 5);
-	REQUIRE(chain.cursor().pickChain);
+	REQUIRE(chain.cursor().picker.inChain);
 	chain.tap(KeyCode::Backspace);
 	CHECK(chain.cursor().lookName() == "held");
-	CHECK_FALSE(chain.cursor().picked.empty());
+	CHECK_FALSE(chain.cursor().picker.picked.empty());
 }
 
 TEST_CASE("checkers.xml: with the option on, the only piece that can move is picked up for you", "[checkers]")
@@ -432,7 +432,7 @@ TEST_CASE("checkers.xml: with the option on, the only piece that can move is pic
 	board.only({ { "red", 4, 5 }, { "red", 1, 8 }, { "red", 2, 7 }, { "white", 5, 4 }, { "white", 8, 1 } });
 	board.frames(2);
 	CHECK(board.cursor().lookName() == "held");
-	CHECK(board.cursor().picked == board.at("red", 4, 5)->name);
+	CHECK(board.cursor().picker.picked == board.at("red", 4, 5)->name);
 	board.space(6, 3);
 	CHECK(board.at("red", 6, 3));
 	CHECK(board.count("white") == 1);

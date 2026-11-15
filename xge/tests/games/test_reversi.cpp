@@ -74,7 +74,7 @@ namespace
 			float total = 0.0f;
 			for (const Object& object : game.getCurrentObjects())
 			{
-				if (object.exists && object.isVisible && object.objClass == side) { total += object.moveCount; }
+				if (object.exists && object.isVisible && object.objClass == side) { total += object.moves.count; }
 			}
 			return total;
 		}

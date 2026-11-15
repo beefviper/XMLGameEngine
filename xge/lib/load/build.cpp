@@ -476,7 +476,7 @@ namespace xge
 			set.on = rawSet.on;
 			set.closeClass = rawSet.closeClass;
 			set.closeObject = rawSet.closeObject;
-			object.moveSets.push_back(std::move(set));
+			object.moves.sets.push_back(std::move(set));
 		}
 		for (const RawObject::RawMarkSet& rawSet : rawObject.markSets)
 		{
@@ -503,7 +503,7 @@ namespace xge
 				mark.variable = raw.variable;
 				set.marks.push_back(std::move(mark));
 			}
-			object.markSets.push_back(std::move(set));
+			object.marks.sets.push_back(std::move(set));
 		}
 	}
 

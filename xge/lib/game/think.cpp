@@ -131,7 +131,7 @@ namespace xge
 				if (const auto found = typeOf.find(object); found != typeOf.end()) { return found->second; }
 				Kind kind;
 				kind.objClass = object->objClass;
-				kind.moveSets = object->moveSets;
+				kind.moveSets = object->moves.sets;
 				kind.look = object->look;
 				for (const auto& look : object->looks) { kind.lookNames.push_back(look.name); }
 				types.push_back(std::move(kind));
@@ -791,11 +791,11 @@ namespace xge
 		const Object* first = nullptr;
 		for (const Object& object : objects)
 		{
-			if (object.objClass == think.objClass && !object.moveSets.empty() && object.onCells && isShown(object)) { first = &object; break; }
+			if (object.objClass == think.objClass && !object.moves.sets.empty() && object.onCells && isShown(object)) { first = &object; break; }
 		}
 		// None on the board yet (pieces put): the one a put copies.
 		if (!first) { first = putTemplate(think.objClass); }
-		if (!first || first->moveSets.empty())
+		if (!first || first->moves.sets.empty())
 		{
 			job->done = true;
 			return job;
@@ -806,7 +806,7 @@ namespace xge
 		board.grid.assign(static_cast<std::size_t>(board.columns * board.rows), 0);
 		// The other side: what its pieces' jumps take.
 		std::string other;
-		for (const Object::MoveSet& set : first->moveSets)
+		for (const Object::MoveSet& set : first->moves.sets)
 		{
 			for (const Object::PieceMove& move : set.moves)
 			{
@@ -821,7 +821,7 @@ namespace xge
 		for (std::size_t i = 0; i < objects.size() && other.empty(); ++i)
 		{
 			const Object& object = objects[i];
-			if (object.onCells && object.mapName == first->mapName && !object.moveSets.empty() && object.objClass != think.objClass) { other = object.objClass; }
+			if (object.onCells && object.mapName == first->mapName && !object.moves.sets.empty() && object.objClass != think.objClass) { other = object.objClass; }
 		}
 		board.kinds[0] = board.kindOf(putTemplate(think.objClass));
 		board.kinds[1] = other.empty() ? nullptr : board.kindOf(putTemplate(other));
@@ -879,7 +879,7 @@ namespace xge
 			piece.column = column;
 			piece.row = row;
 			piece.look = object.look;
-			if (!object.moveSets.empty())
+			if (!object.moves.sets.empty())
 			{
 				if (object.objClass == think.objClass) { piece.side = 0; }
 				else if (other.empty() || object.objClass == other) { piece.side = 1; }

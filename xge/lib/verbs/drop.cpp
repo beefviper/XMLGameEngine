@@ -22,7 +22,7 @@ namespace xge
 		// A picker puts back the piece it holds; refused in the middle of a run
 		// of jumps.
 		if (self && self->hand.is) { return executor.game.dropItems(*self); }
-		if (self && !self->picked.empty()) { return executor.game.dropPiece(*self); }
+		if (self && !self->picker.picked.empty()) { return executor.game.dropPiece(*self); }
 		if (self) { xge::drop(*self); }
 		return true;
 	}
