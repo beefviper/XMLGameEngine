@@ -497,8 +497,11 @@ namespace xge
 
 	int game_expr::animationFramesOf(const RawValue& interval, const WindowDesc& windowDesc, const std::string& where)
 	{
-		const float seconds = evaluate(interval, where + " > <seconds>");
+		// A live one may read its own object's numbers, not made yet: it is
+		// timed as the game starts, before anything is drawn (Game::follow).
+		if (interval.live && windowDesc.framerate >= 1) { return 1; }
 
+		const float seconds = evaluate(interval, where + " > <seconds>");
 		if (!(seconds > 0.0f))
 		{
 			throw std::runtime_error(where + " > <seconds> is " + std::to_string(seconds) + "; expected a number of seconds above 0");

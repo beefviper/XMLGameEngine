@@ -387,6 +387,25 @@ namespace xge
 	void game_expr::buildLookParts(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
 		object.looks.all = looks;
+
+		// Animations timed live (<seconds update="live">), followed after the
+		// object's other live numbers: the animation's own seconds, and each
+		// picture's, its own or, with none, the animation's.
+		const auto followSeconds = [&](const RawValue& interval, const std::vector<RawValue>& times, std::size_t look)
+		{
+			using Follow = Object::Follow;
+			if (interval.live) { object.follows.push_back({ Follow::Part::Seconds, "", interval, look, std::string::npos }); }
+			for (std::size_t i = 0; i < times.size(); ++i)
+			{
+				const RawValue& time = frameTimeGiven(times[i]) ? times[i] : interval;
+				if (time.live) { object.follows.push_back({ Follow::Part::Seconds, "", time, look, i }); }
+			}
+		};
+		if (rawObject.hasAnimation) { followSeconds(rawObject.animation.interval, rawObject.animation.times, std::string::npos); }
+		for (std::size_t i = 0; i < rawObject.looks.size() && i < looks.size(); ++i)
+		{
+			if (!rawObject.looks[i].frames.empty()) { followSeconds(rawObject.looks[i].interval, rawObject.looks[i].times, i); }
+		}
 		if (!looks.empty() && !looks.front().frames.empty())
 		{
 			// It starts as a look that moves.

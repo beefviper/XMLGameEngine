@@ -507,6 +507,7 @@ namespace xge
 			case Follow::Part::Y: return part == "y";
 			case Follow::Part::Heading: return part == "heading";
 			case Follow::Part::Variable: return part == each.variable;
+			case Follow::Part::Seconds: return false;
 			}
 			return false;
 		});
@@ -1016,6 +1017,23 @@ namespace xge
 		animation.index = (animation.index + 1) % animation.bitmaps.size();
 		showAnimationFrame();
 		return false;
+	}
+
+	void Object::timeAnimation(std::size_t look, std::size_t frame, int frames)
+	{
+		const auto time = [&](int& every, std::vector<int>& times)
+		{
+			if (frame == std::string::npos) { every = frames; }
+			else if (frame < times.size()) { times[frame] = frames; }
+		};
+		if (look == std::string::npos)
+		{
+			time(animation.frames, animation.times);
+			return;
+		}
+		if (look >= looks.all.size()) { return; }
+		time(looks.all[look].frameTicks, looks.all[look].frameTimes);
+		if (looks.shown == look) { time(animation.frames, animation.times); }
 	}
 
 	void Object::restartAnimation()

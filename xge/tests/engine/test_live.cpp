@@ -471,6 +471,67 @@ TEST_CASE("a live heading turns its object, and a spawned copy follows for itsel
 	CHECK(play.get("tag.1").position.x == Approx(307));
 }
 
+namespace
+{
+	// An object of two pictures, a and b, with this animation and these variables.
+	std::string blinker(const std::string& animation, const std::string& variables)
+	{
+		return "<object name=\"blinker\">"
+			"<sprite name=\"a\"><bitmap><row>**</row><row>**</row></bitmap></sprite>"
+			"<sprite name=\"b\"><bitmap><row>*.</row><row>.*</row></bitmap></sprite>"
+			+ animation + "<position><x>10</x><y>10</y></position><variables>" + variables + "</variables></object>";
+	}
+
+	// How many times the picture showing changes over `count` frames.
+	int changes(Played& play, int count)
+	{
+		int changed = 0;
+		std::size_t showing = play.get("blinker").animation.index;
+		for (int i = 0; i < count; ++i)
+		{
+			play.frames(1);
+			if (play.get("blinker").animation.index != showing) { ++changed; showing = play.get("blinker").animation.index; }
+		}
+		return changed;
+	}
+}
+
+TEST_CASE("an animation's live <seconds> follows what it reads: half the time, twice the changes", "[live][follow][animation]")
+{
+	const Scratch file(blinker("<animation><seconds update=\"live\">blinker.pace</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>",
+		"<variable name=\"pace\">0.1</variable>"), "<set variable=\"blinker.pace\">0.05</set>");
+	Played play(file.path);
+
+	CHECK(changes(play, 60) == 10); // 6 frames a picture at 60 a second
+	play.tap(KeyCode::Space);
+	play.frames(6);
+	CHECK(changes(play, 60) == 20);
+}
+
+TEST_CASE("a live <seconds> times a named animation, and a frame's own live seconds that picture only", "[live][follow][animation]")
+{
+	const Scratch file(blinker("<animation name=\"blink\"><seconds update=\"live\">blinker.pace</seconds><frame sprite=\"a\"><seconds update=\"live\">blinker.long</seconds></frame><frame sprite=\"b\" /></animation>",
+		"<variable name=\"pace\">0.1</variable><variable name=\"long\">0.2</variable>"), "<set variable=\"blinker.pace\">0.05</set><set variable=\"blinker.long\">0.1</set>");
+	Played play(file.path);
+
+	REQUIRE(play.get("blinker").lookName() == "blink");
+	CHECK(changes(play, 180) == 20); // 12 frames on a, 6 on b: 18 for two changes
+	play.tap(KeyCode::Space);
+	play.frames(12);
+	CHECK(changes(play, 180) == 40); // 6 on a, 3 on b
+}
+
+TEST_CASE("a live <seconds> reading 0 waits a frame, never stops the load", "[live][follow][animation]")
+{
+	const Scratch file(blinker("<animation><seconds update=\"live\">blinker.pace</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>",
+		"<variable name=\"pace\">0</variable>"), "<set variable=\"blinker.pace\">0.5</set>");
+	Played play(file.path);
+	CHECK(changes(play, 10) == 10); // a picture a frame while it reads 0
+	play.tap(KeyCode::Space);
+	play.frames(30);
+	CHECK(changes(play, 60) == 2);
+}
+
 TEST_CASE("no command can change what is live", "[live][follow]")
 {
 	const auto load = [](const std::string& objects, const std::string& onSpace)

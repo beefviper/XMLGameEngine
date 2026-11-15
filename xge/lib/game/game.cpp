@@ -2233,6 +2233,9 @@ namespace xge
 					}
 					break;
 				}
+				case Object::Follow::Part::Seconds:
+					object.timeAnimation(each.look, each.frame, std::max(1, static_cast<int>(std::lround(value * static_cast<float>(windowDesc.framerate)))));
+					break;
 				}
 			}
 		}

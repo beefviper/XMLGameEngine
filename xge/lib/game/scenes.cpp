@@ -382,7 +382,13 @@ namespace xge
 				const Context context{ object.ownerState, object.ownerScene, "object '" + object.name + "'" };
 
 				sprite(object.sprite, context);
-				for (RawSprite& look : object.looks) { sprite(look, context); commands(look.thenCommands, context); }
+				for (RawSprite& look : object.looks)
+				{
+					sprite(look, context);
+					commands(look.thenCommands, context);
+					value(look.interval, context);
+					for (RawValue& time : look.times) { value(time, context); }
+				}
 				value(object.animation.interval, context);
 				commands(object.animation.thenCommands, context);
 				for (RawValue& time : object.animation.times) { value(time, context); }

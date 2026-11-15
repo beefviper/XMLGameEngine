@@ -1179,6 +1179,13 @@ namespace xge
 		// Back to the first picture, from the start of its time.
 		void restartAnimation();
 
+		// A live <seconds> (Follow::Part::Seconds): `frames` frames of the
+		// game for every picture of that animation that has no time of its own
+		// (frame npos) or for that one picture, of the look `look` (npos: the
+		// object's one animation), and for the animation playing when it is
+		// that one. A picture already showing keeps the frames it has counted.
+		void timeAnimation(std::size_t look, std::size_t frame, int frames);
+
 		// Coming back into play (fired, released, revealed, spawned) is a
 		// new start: its animation and its timers start over, as at a reset.
 		void startOver();
@@ -1947,17 +1954,23 @@ namespace xge
 		Layout layout;
 
 		// What it says update="live" of: a <variable>, a half of its
-		// <position> (a group's, with this one's place in it added) or its
-		// <heading>, worked out again every frame from what it reads
-		// (Game::follow), after the move and before the conditions. No
-		// command may write one (load/check). In the file's order: the
-		// position and heading first, then the variables.
+		// <position> (a group's, with this one's place in it added), its
+		// <heading> or an animation's <seconds>, worked out again every frame
+		// from what it reads (Game::follow), after the move and before the
+		// conditions. No command may write one (load/check). In the file's
+		// order: the position and heading first, then the variables, then the
+		// animations' seconds.
 		struct Follow
 		{
-			enum class Part { X, Y, Heading, Variable };
+			enum class Part { X, Y, Heading, Variable, Seconds };
 			Part part{ Part::Variable };
 			std::string variable;
 			RawValue value;
+			// Seconds: whose they are, the look (index into looks.all) or the
+			// object's one animation (npos), and which picture's (index into
+			// its times) or every picture's that has none of its own (npos).
+			std::size_t look{ std::string::npos };
+			std::size_t frame{ std::string::npos };
 		};
 		std::vector<Follow> follows;
 

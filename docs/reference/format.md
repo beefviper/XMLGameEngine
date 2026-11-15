@@ -106,7 +106,7 @@ Every other value is fixed at load, and one that is not a command's (a position,
 
 ### Live numbers of an object
 
-`update="live"` on an object's `<variable>`, a half of its `<position>` or its `<heading>` works it out again every frame from what it reads, after the move and before the conditions, and as the game starts. Left out (or `update="once"`), it is worked out once, as ever.
+`update="live"` on an object's `<variable>`, a half of its `<position>`, its `<heading>` or an animation's `<seconds>` ([animation](pictures.md#animation)) works it out again every frame from what it reads, after the move and before the conditions, and as the game starts. Left out (or `update="once"`), it is worked out once, as ever.
 
 ```xml
 <position><x update="live"><add><value>player.x</value><value>18</value></add></x><y>0</y></position>      <!-- Demon Attack's shot, steered by the cannon -->

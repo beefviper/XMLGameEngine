@@ -282,7 +282,7 @@
 
   <xs:complexType name="liveValueType" mixed="true">
     <xs:annotation>
-      <xs:documentation><![CDATA[A number that may be live: an object's <heading>.]]></xs:documentation>
+      <xs:documentation><![CDATA[A number that may be live: an object's <heading>, an animation's <seconds>.]]></xs:documentation>
     </xs:annotation>
     <xs:sequence>
       <xs:group ref="valueTag" minOccurs="0" />
@@ -765,7 +765,8 @@
       ]]></xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="seconds" type="valueType" />
+      <!-- update="live": timed again every frame from what it reads -->
+      <xs:element name="seconds" type="liveValueType" />
       <xs:element name="once" type="emptyType" minOccurs="0" />
       <!-- each frame a sprite by name, a sheet's <cell>, or a run of its <cells> (with sheet=) -->
       <xs:choice maxOccurs="unbounded">
@@ -773,7 +774,7 @@
           <xs:complexType>
             <xs:sequence>
               <!-- how long this picture shows, in place of the animation's <seconds> -->
-              <xs:element name="seconds" type="valueType" minOccurs="0" />
+              <xs:element name="seconds" type="liveValueType" minOccurs="0" />
               <!-- touched with too while this picture shows: a fist, a sword -->
               <xs:element name="hitbox" type="hitboxType" minOccurs="0" maxOccurs="unbounded" />
             </xs:sequence>
