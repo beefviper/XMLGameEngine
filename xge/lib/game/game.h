@@ -945,6 +945,12 @@ namespace xge
 		// Whether it holds; with `who`, every object its test holds for
 		// (the last test of an <all>'s), for commands that name self.
 		bool holds(const Condition& condition, std::vector<const Object*>* who = nullptr);
+		// The parts of holds.
+		bool considers(const Condition& condition, const Object& object) const;
+		float comparedWith(const Condition& condition);
+		std::optional<float> measure(const Condition& condition, const Object& object);
+		bool holdsTotal(const Condition& condition, const std::vector<std::size_t>& candidates, float against);
+		bool holdsExtreme(const Condition& condition, const std::vector<std::size_t>& candidates, std::vector<const Object*>* who);
 
 		// Counts a frame on every object timer of what is shown and every
 		// timer of the current state, and runs the commands of the ones that

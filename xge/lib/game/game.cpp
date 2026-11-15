@@ -2398,40 +2398,21 @@ namespace xge
 		return found->second;
 	}
 
-	bool Game::holds(const Condition& condition, std::vector<const Object*>* who)
+	// A class, or a name every scene has (robots, for playing.robots),
+	// is what is in this state and scene (and the game's own); a name
+	// by its path (room2.robots, playing.room2.robots.3) is that
+	// thing, wherever it is.
+	bool Game::considers(const Condition& condition, const Object& object) const
 	{
-		if (condition.join == RawCondition::Join::All)
-		{
-			for (std::size_t i = 0; i < condition.parts.size(); ++i)
-			{
-				if (!holds(condition.parts[i], i + 1 == condition.parts.size() ? who : nullptr)) { return false; }
-			}
-			return true;
-		}
-		if (condition.join == RawCondition::Join::Any)
-		{
-			return std::any_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part)
-				{
-					if (who) { who->clear(); }
-					return holds(part, who);
-				});
-		}
+		return (inScope(object) || namedByPath(object, condition.filterObject))
+			&& (condition.sprite.empty() || object.lookName() == condition.sprite);
+	}
 
-		// A class, or a name every scene has (robots, for playing.robots),
-		// is what is in this state and scene (and the game's own); a name
-		// by its path (room2.robots, playing.room2.robots.3) is that
-		// thing, wherever it is.
-		// Only the objects the filter matches are looked at (matching).
-		const std::vector<std::size_t>& candidates = matching(condition.filterClass, condition.filterObject);
-		const auto considers = [&](const Object& object)
-		{
-			return (inScope(object) || namedByPath(object, condition.filterObject))
-				&& (condition.sprite.empty() || object.lookName() == condition.sprite);
-		};
-
-		// The number compared with: as it was at load, or, when it names
-		// something that changes, as it is now. One that cannot be worked out
-		// now stays as it was at load, with one warning.
+	// The number compared with: as it was at load, or, when it names
+	// something that changes, as it is now. One that cannot be worked out
+	// now stays as it was at load, with one warning.
+	float Game::comparedWith(const Condition& condition)
+	{
 		float against = condition.value;
 		if (condition.live)
 		{
@@ -2454,6 +2435,105 @@ namespace xge
 				}
 			}
 		}
+		return against;
+	}
+
+	// What is tested of one object: how far it is from the nearest of
+	// the other (both in play), or its variable.
+	std::optional<float> Game::measure(const Condition& condition, const Object& object)
+	{
+		if (!condition.sees.empty())
+		{
+			if (!object.isVisible || !isShown(object)) { return std::nullopt; }
+			const Object* nearest = nearestInPlay(object, condition.sees);
+			if (!nearest) { return std::nullopt; }
+			return seesPast(object, *nearest, condition.past) ? 1.0f : 0.0f;
+		}
+		if (condition.distanceTo.empty()) { return numberOf(object, condition.variableName); }
+		if (!object.isVisible || !isShown(object)) { return std::nullopt; }
+		const Object* nearest = nearestInPlay(object, condition.distanceTo);
+		if (!nearest) { return std::nullopt; }
+		const Vector2f apart = (nearest->position + nearest->size * 0.5f) - (object.position + object.size * 0.5f);
+		return std::hypot(apart.x, apart.y);
+	}
+
+	// A total over everything that matches and is in play.
+	bool Game::holdsTotal(const Condition& condition, const std::vector<std::size_t>& candidates, float against)
+	{
+		float total = 0.0f;
+		std::size_t counted = 0;
+		for (const std::size_t index : candidates)
+		{
+			const Object& object = objects[index];
+			if (!object.isVisible || !considers(condition, object)) { continue; }
+			if (condition.total == Total::Count)
+			{
+				++counted;
+				continue;
+			}
+			const std::optional<float> number = measure(condition, object);
+			if (!number) { continue; }
+			const float value = *number;
+			if (condition.total == Total::Sum) { total += value; }
+			else if (counted == 0) { total = value; }
+			else if (condition.total == Total::Highest) { total = std::max(total, value); }
+			else { total = std::min(total, value); }
+			++counted;
+		}
+		if (condition.total == Total::Count)
+		{
+			total = static_cast<float>(counted);
+		}
+		else if (counted == 0 && condition.total != Total::Sum)
+		{
+			return false; // no highest or lowest of nothing
+		}
+		return passes(condition.compare, total, against);
+	}
+
+	// The lowest or highest of them: the first that has it.
+	bool Game::holdsExtreme(const Condition& condition, const std::vector<std::size_t>& candidates, std::vector<const Object*>* who)
+	{
+		const Object* best = nullptr;
+		float extreme = 0.0f;
+		for (const std::size_t index : candidates)
+		{
+			const Object& object = objects[index];
+			if (!considers(condition, object)) { continue; }
+			const std::optional<float> number = measure(condition, object);
+			if (!number) { continue; }
+			if (!best || (condition.compare == Compare::Lowest ? *number < extreme : *number > extreme))
+			{
+				best = &object;
+				extreme = *number;
+			}
+		}
+		if (best && who) { who->push_back(best); }
+		return best != nullptr;
+	}
+
+	bool Game::holds(const Condition& condition, std::vector<const Object*>* who)
+	{
+		if (condition.join == RawCondition::Join::All)
+		{
+			for (std::size_t i = 0; i < condition.parts.size(); ++i)
+			{
+				if (!holds(condition.parts[i], i + 1 == condition.parts.size() ? who : nullptr)) { return false; }
+			}
+			return true;
+		}
+		if (condition.join == RawCondition::Join::Any)
+		{
+			return std::any_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part)
+				{
+					if (who) { who->clear(); }
+					return holds(part, who);
+				});
+		}
+
+		// Only the objects the filter matches are looked at (matching).
+		const std::vector<std::size_t>& candidates = matching(condition.filterClass, condition.filterObject);
+		const float against = comparedWith(condition);
 
 		// "No more than N of them left": everything that matches, still
 		// in play.
@@ -2461,95 +2541,24 @@ namespace xge
 		{
 			const auto stillIn = std::count_if(candidates.begin(), candidates.end(), [&](std::size_t index)
 				{
-					return objects[index].isVisible && considers(objects[index]);
+					return objects[index].isVisible && considers(condition, objects[index]);
 				});
 			return static_cast<float>(stillIn) <= (condition.live ? against : *condition.remaining);
 		}
 
-		// What is tested of one object: how far it is from the nearest of
-		// the other (both in play), or its variable.
-		const auto measure = [&](const Object& object) -> std::optional<float>
-		{
-			if (!condition.sees.empty())
-			{
-				if (!object.isVisible || !isShown(object)) { return std::nullopt; }
-				const Object* nearest = nearestInPlay(object, condition.sees);
-				if (!nearest) { return std::nullopt; }
-				return seesPast(object, *nearest, condition.past) ? 1.0f : 0.0f;
-			}
-			if (condition.distanceTo.empty()) { return numberOf(object, condition.variableName); }
-			if (!object.isVisible || !isShown(object)) { return std::nullopt; }
-			const Object* nearest = nearestInPlay(object, condition.distanceTo);
-			if (!nearest) { return std::nullopt; }
-			const Vector2f apart = (nearest->position + nearest->size * 0.5f) - (object.position + object.size * 0.5f);
-			return std::hypot(apart.x, apart.y);
-		};
-
-		// A total over everything that matches and is in play.
-		if (condition.total != Total::None)
-		{
-			float total = 0.0f;
-			std::size_t counted = 0;
-			for (const std::size_t index : candidates)
-			{
-				const Object& object = objects[index];
-				if (!object.isVisible || !considers(object)) { continue; }
-				if (condition.total == Total::Count)
-				{
-					++counted;
-					continue;
-				}
-				const std::optional<float> number = measure(object);
-				if (!number) { continue; }
-				const float value = *number;
-				if (condition.total == Total::Sum) { total += value; }
-				else if (counted == 0) { total = value; }
-				else if (condition.total == Total::Highest) { total = std::max(total, value); }
-				else { total = std::min(total, value); }
-				++counted;
-			}
-			if (condition.total == Total::Count)
-			{
-				total = static_cast<float>(counted);
-			}
-			else if (counted == 0 && condition.total != Total::Sum)
-			{
-				return false; // no highest or lowest of nothing
-			}
-			return passes(condition.compare, total, against);
-		}
-
-		// The lowest or highest of them: the first that has it.
-		if (condition.compare == Compare::Lowest || condition.compare == Compare::Highest)
-		{
-			const Object* best = nullptr;
-			float extreme = 0.0f;
-			for (const std::size_t index : candidates)
-			{
-				const Object& object = objects[index];
-				if (!considers(object)) { continue; }
-				const std::optional<float> number = measure(object);
-				if (!number) { continue; }
-				if (!best || (condition.compare == Compare::Lowest ? *number < extreme : *number > extreme))
-				{
-					best = &object;
-					extreme = *number;
-				}
-			}
-			if (best && who) { who->push_back(best); }
-			return best != nullptr;
-		}
+		if (condition.total != Total::None) { return holdsTotal(condition, candidates, against); }
+		if (condition.compare == Compare::Lowest || condition.compare == Compare::Highest) { return holdsExtreme(condition, candidates, who); }
 
 		bool held = false;
 		for (const std::size_t index : candidates)
 		{
 			const Object& object = objects[index];
-			if (!considers(object))
+			if (!considers(condition, object))
 			{
 				continue;
 			}
 
-			const std::optional<float> tested = condition.compare == Compare::Shows ? std::optional<float>{ 0.0f } : measure(object);
+			const std::optional<float> tested = condition.compare == Compare::Shows ? std::optional<float>{ 0.0f } : measure(condition, object);
 			if (tested && passes(condition.compare, *tested, against))
 			{
 				if (!who) { return true; }
