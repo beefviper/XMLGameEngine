@@ -1727,16 +1727,20 @@ namespace xge
 		// a frame, so a thruster can no longer push it faster than a top speed.
 		float drag{};
 
-		// <surface>: this is ground. A thing with a <grip> whose middle is
-		// over it has these in place of its own drag and grip (a surface
+		// <surface>: `is`, this is ground. A thing with a <grip> whose middle
+		// is over it has `drag` and `grip` in place of its own (a surface
 		// that gives neither leaves them as they are); the last surface in
 		// the file's order wins. groundDrag and groundGrip are what this
 		// object has this frame, worked out by applyGrip (play/frame.cpp).
-		bool isSurface{ false };
-		std::optional<float> surfaceDrag;
-		std::optional<float> surfaceGrip;
-		float groundDrag{};
-		float groundGrip{ 1.0f };
+		struct Surface
+		{
+			bool is{ false };
+			std::optional<float> drag;
+			std::optional<float> grip;
+			float groundDrag{};
+			float groundGrip{ 1.0f };
+		};
+		Surface surface;
 
 		// <friction>: at a touch with something that does not move, the speed
 		// along its surface is cut by up to this share of the speed the touch

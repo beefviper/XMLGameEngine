@@ -169,15 +169,15 @@ namespace xge
 			std::vector<const Object*> surfaces;
 			for (auto& object : objects)
 			{
-				object.groundDrag = object.drag;
-				object.groundGrip = object.grip;
-				if (object.isSurface && rules.inPlay(object)) { surfaces.push_back(&object); }
+				object.surface.groundDrag = object.drag;
+				object.surface.groundGrip = object.grip;
+				if (object.surface.is && rules.inPlay(object)) { surfaces.push_back(&object); }
 			}
 			if (surfaces.empty()) { return; }
 
 			for (auto& object : objects)
 			{
-				if (object.grip >= 1.0f || object.isSurface || !rules.inPlay(object)) { continue; }
+				if (object.grip >= 1.0f || object.surface.is || !rules.inPlay(object)) { continue; }
 				const Vector2f middle = middleOf(object);
 				for (auto ground = surfaces.rbegin(); ground != surfaces.rend(); ++ground)
 				{
@@ -188,8 +188,8 @@ namespace xge
 					{
 						continue;
 					}
-					if (surface.surfaceDrag) { object.groundDrag = *surface.surfaceDrag; }
-					if (surface.surfaceGrip) { object.groundGrip = *surface.surfaceGrip; }
+					if (surface.surface.drag) { object.surface.groundDrag = *surface.surface.drag; }
+					if (surface.surface.grip) { object.surface.groundGrip = *surface.surface.grip; }
 					break;
 				}
 			}
@@ -212,13 +212,13 @@ namespace xge
 					const Vector2f way = ahead(object.heading);
 					const float along = object.velocity.x * way.x + object.velocity.y * way.y;
 					const Vector2f across = object.velocity - way * along;
-					object.velocity -= across * object.groundGrip;
+					object.velocity -= across * object.surface.groundGrip;
 					continue;
 				}
 
 				const auto ease = [&](float& velocity, float wanted)
 				{
-					velocity += (wanted - velocity) * object.groundGrip;
+					velocity += (wanted - velocity) * object.surface.groundGrip;
 					if (std::abs(wanted - velocity) < 0.05f) { velocity = wanted; }
 				};
 				const auto& step = object.activeMoveStep;
@@ -307,7 +307,7 @@ namespace xge
 				// asking whether it is in play.
 				const bool thrusting = object.activeThrust[0] != 0.0f || object.activeThrust[1] != 0.0f
 					|| object.activeThrust[2] != 0.0f || object.activeThrust[3] != 0.0f;
-				if (!thrusting && !object.hasHeading && object.groundDrag == 0.0f && object.acceleration.x == 0.0f && object.acceleration.y == 0.0f)
+				if (!thrusting && !object.hasHeading && object.surface.groundDrag == 0.0f && object.acceleration.x == 0.0f && object.acceleration.y == 0.0f)
 				{
 					continue;
 				}
@@ -410,9 +410,9 @@ namespace xge
 				object.velocity += change;
 
 				// Drag: what is left of the speed after this frame.
-				if (object.groundDrag != 0.0f)
+				if (object.surface.groundDrag != 0.0f)
 				{
-					object.velocity *= 1.0f - object.groundDrag;
+					object.velocity *= 1.0f - object.surface.groundDrag;
 				}
 			}
 		}

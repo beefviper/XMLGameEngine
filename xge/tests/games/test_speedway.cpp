@@ -102,7 +102,7 @@ TEST_CASE("speedway.xml: grip turns the car's way with it, the grass slows it, a
 		race.frames(30);
 		race.engine.handleKeyReleased(KeyCode::W);
 		CHECK(race.speed(car) < 2.0f);
-		CHECK(car.groundDrag == Approx(0.08f));
+		CHECK(car.surface.groundDrag == Approx(0.08f));
 	}
 }
 
