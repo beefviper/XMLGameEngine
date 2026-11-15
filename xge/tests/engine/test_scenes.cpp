@@ -559,7 +559,7 @@ TEST_CASE("an empty <sprite name> is a look that draws nothing, and an object of
 	CHECK(phase.position.y == Approx(0));
 	CHECK(phase.size.x == Approx(0));
 	CHECK(phase.size.y == Approx(0));
-	CHECK(phase.looks.size() == 2);
+	CHECK(phase.looks.all.size() == 2);
 	const Object& note = loaded.game.getObject("playing.note");
 	CHECK(note.size.x == Approx(0));
 	CHECK(note.position.x == Approx(40));

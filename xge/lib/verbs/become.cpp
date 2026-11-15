@@ -42,14 +42,14 @@ namespace xge
 			if (!object.named(become.target)) { continue; }
 			any = true;
 			if (!become.style.empty()) { wantPalette(checking, object, become.style); }
-			const auto hasLook = [&](const Object& of) { return std::any_of(of.looks.begin(), of.looks.end(), [&](const Object::Look& look) { return look.name == become.sprite; }); };
+			const auto hasLook = [&](const Object& of) { return std::any_of(of.looks.all.begin(), of.looks.all.end(), [&](const Object::Look& look) { return look.name == become.sprite; }); };
 			// A holder may take a look of what it holds: they turn to it.
 			const bool heldLook = object.holder.is && std::any_of(objects.begin(), objects.end(), [&](const Object& item) { return item.item.is && hasLook(item); });
 			if (!become.sprite.empty() && !hasLook(object) && !heldLook)
 			{
 				throw std::runtime_error(checking.where + ": <become sprite=\"" + become.sprite + "\" object=\"" + become.target + "\" />: '" + object.name + "' has no look of that name");
 			}
-			if (!become.from.empty() && std::none_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == become.from; }))
+			if (!become.from.empty() && std::none_of(object.looks.all.begin(), object.looks.all.end(), [&](const Object::Look& look) { return look.name == become.from; }))
 			{
 				throw std::runtime_error(checking.where + ": <become from=\"" + become.from + "\" object=\"" + become.target + "\" />: '" + object.name + "' has no look of that name");
 			}

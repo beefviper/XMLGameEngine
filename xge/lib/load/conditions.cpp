@@ -225,7 +225,7 @@ namespace xge
 			for (const Object& object : objects)
 			{
 				if (!matchesFilter(rawCondition, object)) { continue; }
-				for (const auto& look : object.looks) { looks.push_back(look.name); }
+				for (const auto& look : object.looks.all) { looks.push_back(look.name); }
 			}
 			if (std::find(looks.begin(), looks.end(), condition.sprite) == looks.end())
 			{

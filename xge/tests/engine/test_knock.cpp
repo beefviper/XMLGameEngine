@@ -558,8 +558,8 @@ TEST_CASE("mariobros.xml: left on its back, a shellcreeper gets up where it lies
 	play.frames(8 * 60 - 40);                // eight seconds after it went over
 	CHECK(play.creeper().lookName() == "walking");
 	CHECK(play.creeper().velocity.x == Approx(-0.75f));
-	REQUIRE_FALSE(play.creeper().palettes.empty());
-	CHECK(play.creeper().palettes.at(play.creeper().palette).name == "angry");   // and red
+	REQUIRE_FALSE(play.creeper().looks.palettes.empty());
+	CHECK(play.creeper().looks.palettes.at(play.creeper().looks.worn).name == "angry");   // and red
 	CHECK(play.creeper().position.x < lying);
 	CHECK(play.creeper().position.x > lying - 30.0f);
 }

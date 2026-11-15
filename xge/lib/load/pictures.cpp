@@ -75,14 +75,14 @@ namespace xge
 			{
 				throw std::runtime_error(where + ": <become style=\"" + asked->second.front() + "\" />: it has no <bitmap style=\"...\"> whose colors another style could change");
 			}
-			if (object.looks.size() != raw->looks.size()) { continue; }
+			if (object.looks.all.size() != raw->looks.size()) { continue; }
 
 			// As loaded: the colors it starts in, and a reset puts back.
 			Object::Palette loaded;
-			loaded.looks = object.looks;
-			loaded.bitmap = object.looks.empty() ? object.facingPicture(object.bitmap) : object.looks.front().bitmap;
-			if (object.looks.empty()) { loaded.animation = object.animation.bitmaps; }
-			object.palettes.push_back(std::move(loaded));
+			loaded.looks = object.looks.all;
+			loaded.bitmap = object.looks.all.empty() ? object.facingPicture(object.bitmap) : object.looks.all.front().bitmap;
+			if (object.looks.all.empty()) { loaded.animation = object.animation.bitmaps; }
+			object.looks.palettes.push_back(std::move(loaded));
 
 			for (const std::string& name : asked->second)
 			{
@@ -92,9 +92,9 @@ namespace xge
 
 				Object::Palette palette;
 				palette.name = name;
-				if (!object.looks.empty())
+				if (!object.looks.all.empty())
 				{
-					palette.looks = object.looks;
+					palette.looks = object.looks.all;
 					for (std::size_t i = 0; i < palette.looks.size(); ++i)
 					{
 						const RawSprite look = restyled(raw->looks[i]);
@@ -113,7 +113,7 @@ namespace xge
 						palette.animation = buildAnimationBitmaps(frames, here);
 					}
 				}
-				object.palettes.push_back(std::move(palette));
+				object.looks.palettes.push_back(std::move(palette));
 			}
 			if (object.mirror.on) { object.mirror.flips = flipsOf(object); }
 		}
@@ -485,8 +485,8 @@ namespace xge
 		};
 		add(object.bitmap);
 		for (const auto& picture : object.animation.bitmaps) { add(picture); }
-		addLooks(object.looks);
-		for (const Object::Palette& palette : object.palettes)
+		addLooks(object.looks.all);
+		for (const Object::Palette& palette : object.looks.palettes)
 		{
 			add(palette.bitmap);
 			for (const auto& picture : palette.animation) { add(picture); }

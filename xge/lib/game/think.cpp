@@ -132,8 +132,8 @@ namespace xge
 				Kind kind;
 				kind.objClass = object->objClass;
 				kind.moveSets = object->moves.sets;
-				kind.look = object->look;
-				for (const auto& look : object->looks) { kind.lookNames.push_back(look.name); }
+				kind.look = object->looks.shown;
+				for (const auto& look : object->looks.all) { kind.lookNames.push_back(look.name); }
 				types.push_back(std::move(kind));
 				typeOf[object] = &types.back();
 				return &types.back();
@@ -878,7 +878,7 @@ namespace xge
 			piece.object = board.kindOf(&object);
 			piece.column = column;
 			piece.row = row;
-			piece.look = object.look;
+			piece.look = object.looks.shown;
 			if (!object.moves.sets.empty())
 			{
 				if (object.objClass == think.objClass) { piece.side = 0; }

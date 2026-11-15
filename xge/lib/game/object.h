@@ -1045,7 +1045,7 @@ namespace xge
 			}
 		};
 		Shown shownBefore;
-		Shown shown() const noexcept { return { look, animation.index, size, mirror.flipped }; }
+		Shown shown() const noexcept { return { looks.shown, animation.index, size, mirror.flipped }; }
 
 		// The frame is over: how it is now is how it was before the next.
 		void remember()
@@ -1621,7 +1621,7 @@ namespace xge
 		// The looks <become> switches between: each named sprite as the window
 		// backends draw it (its Picture, and the bitmap for a bitmap or a
 		// drawing of lines), shared by every object made from the definition.
-		// `look` is the one showing; a reset shows the first again. An object
+		// looks.shown is the one showing; a reset shows the first again. An object
 		// with one sprite, or one unnamed animation, has none. A look that
 		// moves (a named <animation>) has its pictures in `frames`, each
 		// shown `frameTicks` frames of the game, and `bitmap` the first.
@@ -1632,9 +1632,9 @@ namespace xge
 			std::shared_ptr<const Bitmap> bitmap;
 			std::vector<std::shared_ptr<const Bitmap>> frames;
 			int frameTicks{};
-			std::vector<int> frameTimes;   // as animationTimes
-			std::vector<std::vector<Hitbox>> frameHitboxes;   // as animationHitboxes
-			bool once{ false };            // as animationOnce
+			std::vector<int> frameTimes;   // as Animation::times
+			std::vector<std::vector<Hitbox>> frameHitboxes;   // as Animation::hitboxes
+			bool once{ false };            // as Animation::once
 			// <then>: the look to go to when it ends, in place of the look
 			// before, and the commands it runs then.
 			std::optional<std::size_t> thenLook;
@@ -1643,11 +1643,6 @@ namespace xge
 			// one a frame) kept to be turned to it (see `turnables`).
 			std::vector<std::shared_ptr<const Turnable>> turnables;
 		};
-		std::vector<Look> looks;
-		std::size_t look{ 0 };
-		// The look it starts as, and a reset brings back: the first, or
-		// for one with <poses> its standing look.
-		std::size_t firstLook{ 0 };
 
 		// The name of the look showing ("" for an object with none).
 		const std::string& lookName() const;
@@ -1659,7 +1654,7 @@ namespace xge
 		// drawn again with the colors that style gives, its bitmaps that
 		// take a style taking that one instead. The first is as loaded (its
 		// name empty); the others, one for each style= that can reach it,
-		// are drawn as the game loads and shared by its copies. `palette`
+		// are drawn as the game loads and shared by its copies. looks.worn
 		// is the one worn; a reset puts the first back on. Empty when
 		// nothing changes its colors.
 		struct Palette
@@ -1669,8 +1664,6 @@ namespace xge
 			std::vector<std::shared_ptr<const Bitmap>> animation;
 			std::vector<Look> looks;
 		};
-		std::vector<Palette> palettes;
-		std::size_t palette{ 0 };
 
 		// Puts on palettes[index], keeping the look and where its animation
 		// is, and marks the visual to be built again.
@@ -1685,16 +1678,30 @@ namespace xge
 		// hasPoses. The pose is picked each frame from how it moves, while it
 		// shows one of these looks (playOneFrame).
 		enum class Pose { Standing, Walking, Skidding, Rising, Falling, Thrusting };
-		std::array<std::size_t, 6> poseLooks{};
-		bool hasPoses{ false };
 
 		// <joins>: the look (an index into looks) for where the piece it is
 		// joined to lies, by Join, when hasJoins: the other cells of its
 		// shape while it falls, the pieces in joinedWith once settled. Put
 		// on at the end of each frame (Game::showJoins), while it shows one.
 		enum class Join { Alone, Left, Right, Up, Down };
-		std::array<std::size_t, 5> joinLooks{};
-		bool hasJoins{ false };
+
+		// Its looks (`all`; `shown` is the one showing), the palettes it can
+		// wear (`worn` the one on), and the looks of its poses and joins.
+		struct Looks
+		{
+			std::vector<Look> all;
+			std::size_t shown{ 0 };
+			// The look it starts as, and a reset brings back: the first, or
+			// for one with <poses> its standing look.
+			std::size_t first{ 0 };
+			std::vector<Palette> palettes;
+			std::size_t worn{ 0 };
+			std::array<std::size_t, 6> poses{};
+			bool hasPoses{ false };
+			std::array<std::size_t, 5> joins{};
+			bool hasJoins{ false };
+		};
+		Looks looks;
 
 		// <mirror>: going `way` (left or right) its pictures are drawn flipped
 		// left to right, when `on`; `flipped` is whether they are now.

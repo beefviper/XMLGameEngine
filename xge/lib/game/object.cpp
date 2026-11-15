@@ -60,7 +60,7 @@ namespace xge
 		};
 		add(collisionData.hitboxes);
 		for (const std::vector<Hitbox>& frame : animation.hitboxes) { add(frame); }
-		for (const Look& each : looks)
+		for (const Look& each : looks.all)
 		{
 			for (const std::vector<Hitbox>& frame : each.frameHitboxes) { add(frame); }
 		}
@@ -70,33 +70,33 @@ namespace xge
 	const std::string& Object::lookName() const
 	{
 		static const std::string none;
-		return looks.empty() ? none : looks[look].name;
+		return looks.all.empty() ? none : looks.all[looks.shown].name;
 	}
 
 	void Object::showLook(std::size_t index)
 	{
-		if (index >= looks.size())
+		if (index >= looks.all.size())
 		{
 			return;
 		}
 
-		// The look to go back to when a look that plays once ends.
-		if (index != look && look < looks.size() && !looks[look].once) { animation.lookBefore = look; }
-		look = index;
-		picture = looks[index].picture;
-		bitmap = facingPicture(looks[index].bitmap);
-		animation.bitmaps = looks[index].frames;
-		animation.frames = looks[index].frameTicks;
-		animation.times = looks[index].frameTimes;
-		animation.hitboxes = looks[index].frameHitboxes;
-		animation.once = looks[index].once;
+		// The looks.shown to go back to when a looks.shown that plays once ends.
+		if (index != looks.shown && looks.shown < looks.all.size() && !looks.all[looks.shown].once) { animation.lookBefore = looks.shown; }
+		looks.shown = index;
+		picture = looks.all[index].picture;
+		bitmap = facingPicture(looks.all[index].bitmap);
+		animation.bitmaps = looks.all[index].frames;
+		animation.frames = looks.all[index].frameTicks;
+		animation.times = looks.all[index].frameTimes;
+		animation.hitboxes = looks.all[index].frameHitboxes;
+		animation.once = looks.all[index].once;
 		animation.done = false;
 		animation.tick = 0;
 		animation.index = 0;
 		// Turned to the way it faces: its own pictures to turn from now on.
-		if (!looks[index].turnables.empty())
+		if (!looks.all[index].turnables.empty())
 		{
-			turnables = looks[index].turnables;
+			turnables = looks.all[index].turnables;
 			turnedDegrees = -1;
 			showHeading();
 		}
@@ -108,24 +108,24 @@ namespace xge
 
 	void Object::wearPalette(std::size_t index)
 	{
-		if (index >= palettes.size() || index == palette)
+		if (index >= looks.palettes.size() || index == looks.worn)
 		{
 			return;
 		}
 
-		palette = index;
-		const Palette& worn = palettes[index];
+		looks.worn = index;
+		const Palette& worn = looks.palettes[index];
 		const int tick = animation.tick;
 		const std::size_t at = animation.index;
-		if (looks.empty())
+		if (looks.all.empty())
 		{
 			animation.bitmaps = worn.animation;
 			bitmap = facingPicture(worn.bitmap);
 		}
 		else
 		{
-			looks = worn.looks;
-			showLook(look);
+			looks.all = worn.looks;
+			showLook(looks.shown);
 		}
 		if (!animation.bitmaps.empty())
 		{
@@ -905,9 +905,9 @@ namespace xge
 
 	bool wearPaletteNamed(Object& object, const std::string& name)
 	{
-		for (std::size_t i = 0; i < object.palettes.size(); ++i)
+		for (std::size_t i = 0; i < object.looks.palettes.size(); ++i)
 		{
-			if (object.palettes[i].name == name)
+			if (object.looks.palettes[i].name == name)
 			{
 				object.wearPalette(i);
 				return true;
@@ -918,13 +918,13 @@ namespace xge
 
 	bool showLookNamed(Object& object, const std::string& name)
 	{
-		for (std::size_t i = 0; i < object.looks.size(); ++i)
+		for (std::size_t i = 0; i < object.looks.all.size(); ++i)
 		{
-			if (object.looks[i].name == name)
+			if (object.looks.all[i].name == name)
 			{
 				// A look that plays once starts again from its first frame,
 				// even when it is showing already: a second blast is a whole one.
-				if (object.look != i || object.looks[i].once) { object.showLook(i); }
+				if (object.looks.shown != i || object.looks.all[i].once) { object.showLook(i); }
 				// A timer that follows this look starts over, even when the
 				// object showed it already: blue again is six seconds again.
 				for (auto& timer : object.timers)
@@ -1008,8 +1008,8 @@ namespace xge
 		{
 			// Played through: a look goes back to the one before, an
 			// object's one animation stays on its last picture.
-			const std::size_t next = looks.empty() ? 0 : looks[look].thenLook.value_or(animation.lookBefore);
-			if (!looks.empty() && next != look && next < looks.size()) { showLook(next); }
+			const std::size_t next = looks.all.empty() ? 0 : looks.all[looks.shown].thenLook.value_or(animation.lookBefore);
+			if (!looks.all.empty() && next != looks.shown && next < looks.all.size()) { showLook(next); }
 			else { animation.done = true; }
 			return true;
 		}

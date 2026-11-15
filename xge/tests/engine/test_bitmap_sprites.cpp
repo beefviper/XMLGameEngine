@@ -1018,9 +1018,9 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 		// Named, they load: the object shows the first and can become the other.
 		Loaded loaded(gameXml(objectWith(kA + kB), shows));
 		const Object& thing = loaded.game.getObject("thing");
-		REQUIRE(thing.looks.size() == 2);
+		REQUIRE(thing.looks.all.size() == 2);
 		CHECK(thing.lookName() == "a");
-		CHECK(thing.looks[1].name == "b");
+		CHECK(thing.looks.all[1].name == "b");
 	}
 
 	SECTION("a frame that names a sprite that is not there")

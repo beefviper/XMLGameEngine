@@ -88,7 +88,13 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **14.** `object.dark` (kind, seen, hidden) and `object.aloft` (has an altitude, fall, bounce, shadow; the altitude itself is the Moment's).
   - [x] **15.** `object.tether` (from, to, thickness, color) and `object.carry` (what, offset, dropped).
   - [x] **16.** `object.drive` (what held keys drive: move steps, thrust, turn, thrust along the heading).
-- **After step 16** about 90 fields are left. Under 60 also needs the looks and palettes, the drawn picture, and the motion numbers (speed, drag, friction, mass, grip) grouped: count again then, and the author decides.
+  - [x] **17.** `object.looks` (all, shown, first, palettes, worn, poses, joins).
+  - [ ] **18.** `object.drawn` (the picture, bitmap, unholed bitmap, visual dirty, text pieces, turned pictures).
+  - [ ] **19.** `object.motion` (speed, drag, friction, mass, grip).
+  - [ ] **20.** `object.turning` (has a heading, pivot, spin).
+  - [ ] **21.** `object.sizeUse` (positions worked out from sizes, and a cell's offset).
+  - [ ] **22.** `object.pull` (pulls and seek).
+  - [ ] **23.** `object.turns` (takes turns, its look off turn, the class it owns).
 - **Later, not planned:** a group no object uses could become `std::optional` or a pointer, which also shrinks every object.
 - **Done when** `struct Object` itself declares under 60 fields.
 

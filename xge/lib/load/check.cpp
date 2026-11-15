@@ -396,7 +396,7 @@ namespace xge
 		{
 			for (const Timer& timer : object.timers) { visit(timer.commands, &object); }
 			visit(object.animation.then, &object);
-			for (const Object::Look& look : object.looks) { visit(look.then, &object); }
+			for (const Object::Look& look : object.looks.all) { visit(look.then, &object); }
 			for (const auto& [name, commands] : object.action) { visit(commands, &object); }
 			for (const auto& rule : object.collisionData.others) { visit(rule.commands, &object); }
 			for (const auto& edgeRules : object.collisionData.edges)
@@ -557,7 +557,7 @@ namespace xge
 						const auto member = std::find_if(objects.begin(), objects.end(), [&](const Object& other) { return other.item.is && other.objClass == holds.holdsClass; });
 						if (member == objects.end()) { throw std::runtime_error(where + ": nothing is of class " + holds.holdsClass); }
 						std::vector<std::string> looks;
-						for (const Object::Look& look : member->looks) { looks.push_back(look.name); }
+						for (const Object::Look& look : member->looks.all) { looks.push_back(look.name); }
 						for (const auto& [look, part] : { std::pair{ &holds.holdsSprite, "its" }, std::pair{ &holds.topSprite, "<top>" }, std::pair{ &holds.spreadSprite, "<spread>" } })
 						{
 							if (look->empty() || std::find(looks.begin(), looks.end(), *look) != looks.end()) { continue; }
@@ -664,7 +664,7 @@ namespace xge
 						throw std::runtime_error(where + ": <become> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
 					}
 					if (!become->style.empty()) { wantPalette({ states, objects, sounds, paths, styles, wanted, where }, *self, become->style); }
-					if (!become->sprite.empty() && std::none_of(self->looks.begin(), self->looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
+					if (!become->sprite.empty() && std::none_of(self->looks.all.begin(), self->looks.all.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
 					{
 						throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" />: it has no look of that name (a look is one of several named <sprite>s)");
 					}
@@ -808,7 +808,7 @@ namespace xge
 			};
 			for (const auto& timer : object.timers) { checkWalks(timer.commands, where + " > <timer>"); }
 			checkWalks(object.animation.then, where + " > <animation> > <then>");
-			for (const auto& look : object.looks) { checkWalks(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>"); }
+			for (const auto& look : object.looks.all) { checkWalks(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>"); }
 			for (const auto& [name, commands] : object.action) { checkWalks(commands, where + " > <action name=\"" + name + "\">"); }
 			for (const auto& rule : object.collisionData.others) { onLine(rule.line, [&] { checkWalks(rule.commands, where + " > <collision>"); }); }
 
@@ -821,7 +821,7 @@ namespace xge
 					for (const Command& command : rule.commands)
 					{
 						if (!std::holds_alternative<CmdHole>(shapeOf(command))) { continue; }
-						if (!object.bitmap || object.hasHeading || !object.animation.bitmaps.empty() || !object.looks.empty() || object.mirror.on)
+						if (!object.bitmap || object.hasHeading || !object.animation.bitmaps.empty() || !object.looks.all.empty() || object.mirror.on)
 						{
 							throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or <polygon>s, or a <bitmap>, with no <heading>, <animation>, <mirror> or second <sprite>");
 						}
@@ -898,7 +898,7 @@ namespace xge
 						checkPlace(commands, Place::ObjectTimer, here);
 					};
 					checkThen(object.animation.then, where + " > <animation> > <then>");
-					for (const auto& look : object.looks) { checkThen(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>"); }
+					for (const auto& look : object.looks.all) { checkThen(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>"); }
 					for (const auto& [name, commands] : object.action) { checks.ownLooks(commands, &object, where); }
 					for (const auto& rule : object.collisionData.others) { onLine(rule.line, [&] { checks.ownLooks(rule.commands, &object, where); }); }
 					for (const auto& edgeRules : object.collisionData.edges)

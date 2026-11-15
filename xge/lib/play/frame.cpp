@@ -272,7 +272,7 @@ namespace xge
 		{
 			for (auto& object : objects)
 			{
-				if (!object.mirror.on && !object.hasPoses) { continue; }
+				if (!object.mirror.on && !object.looks.hasPoses) { continue; }
 				if (!rules.inPlay(object)) { continue; }
 
 				if (object.mirror.on)
@@ -285,12 +285,12 @@ namespace xge
 					object.faceMirror();
 				}
 
-				if (!object.hasPoses) { continue; }
-				const auto& poses = object.poseLooks;
-				if (std::find(poses.begin(), poses.end(), object.look) == poses.end()) { continue; }
+				if (!object.looks.hasPoses) { continue; }
+				const auto& poses = object.looks.poses;
+				if (std::find(poses.begin(), poses.end(), object.looks.shown) == poses.end()) { continue; }
 
 				const std::size_t look = poses[static_cast<std::size_t>(poseOf(object))];
-				if (look != object.look) { object.showLook(look); }
+				if (look != object.looks.shown) { object.showLook(look); }
 			}
 		}
 
@@ -1036,7 +1036,7 @@ namespace xge
 			// Just loaded or reset: where it is now is its place, not a move.
 			if (object.placed) { object.remember(); }
 
-			const std::size_t look = object.look;
+			const std::size_t look = object.looks.shown;
 			if (!object.animation.bitmaps.empty() && rules.inPlay(object) && object.advanceAnimation()) { ended.emplace_back(i, look); }
 			if (object.blink > 0.0f && rules.inPlay(object)) { object.blink = std::max(0.0f, object.blink - second); }
 		}

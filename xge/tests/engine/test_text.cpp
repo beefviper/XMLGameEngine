@@ -180,7 +180,7 @@ TEST_CASE("<become style> puts another style's colors on an object's bitmaps, an
 		const std::size_t at = static_cast<std::size_t>(x) * 4;
 		return std::vector<int>{ rgba[at], rgba[at + 1], rgba[at + 2] };
 	};
-	REQUIRE(thing.palettes.size() == 2);
+	REQUIRE(thing.looks.palettes.size() == 2);
 	CHECK(rgb(thing, 0) == std::vector<int>{ 0, 255, 0 });
 	CHECK(rgb(lamp, 0) == std::vector<int>{ 0, 255, 0 });
 

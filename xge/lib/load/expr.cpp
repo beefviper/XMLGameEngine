@@ -624,8 +624,8 @@ namespace xge
 
 		// Its pictures are the ones `from` was made with, not drawn again.
 		FirstPass first;
-		first.picture = from.looks.empty() ? from.picture : from.looks.front().picture;
-		first.bitmap = from.looks.empty() ? from.bitmap : from.looks.front().bitmap;
+		first.picture = from.looks.all.empty() ? from.picture : from.looks.all.front().picture;
+		first.bitmap = from.looks.all.empty() ? from.bitmap : from.looks.all.front().bitmap;
 		if (from.animation.bitmaps.empty())
 		{
 			if (!from.turnables.empty()) { first.turned = from.turnables.front(); }
@@ -635,12 +635,12 @@ namespace xge
 			first.animation = from.animation.bitmaps;
 			first.animationTurned = from.turnables;
 		}
-		if (!from.looks.empty()) { first.looks = &from.looks; }
+		if (!from.looks.all.empty()) { first.looks = &from.looks.all; }
 
 		// Its palettes too, wearing the one `from` is (its looks are those).
 		Object made = makeObject(raw, first, windowDesc, from.cellOffset, from.collisionData.lockstep);
-		made.palettes = from.palettes;
-		made.palette = from.palette;
+		made.looks.palettes = from.looks.palettes;
+		made.looks.worn = from.looks.worn;
 		if (made.mirror.on) { made.mirror.flips = from.mirror.flips; }
 		return made;
 	}

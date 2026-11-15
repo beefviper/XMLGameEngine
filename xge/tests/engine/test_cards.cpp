@@ -539,16 +539,16 @@ TEST_CASE("a pack cut from a sheet: a face for each suit and rank, one back for 
 	hearts.tap(KeyCode::Space);
 	hearts.frames(2);
 	Object& ace = *hearts.game.itemAt(1);
-	REQUIRE(ace.looks.size() == 2);
-	const Bitmap& face = *ace.looks[0].bitmap;
+	REQUIRE(ace.looks.all.size() == 2);
+	const Bitmap& face = *ace.looks.all[0].bitmap;
 	REQUIRE(face.width == 96);
 	REQUIRE(face.height == 140);
 	CHECK_FALSE(face.solidAt(0, 0));          // a rounded corner
 	CHECK(face.solidAt(48, 70));               // the big spade
 	CHECK(face.rgba[(70 * 96 + 48) * 4] < 40);
-	CHECK(ace.looks[1].name == "back");
-	CHECK(ace.looks[1].bitmap == hearts.game.itemAt(52)->looks[1].bitmap);   // one back, shared
-	CHECK(ace.looks[0].bitmap != hearts.game.itemAt(14)->looks[0].bitmap);
+	CHECK(ace.looks.all[1].name == "back");
+	CHECK(ace.looks.all[1].bitmap == hearts.game.itemAt(52)->looks.all[1].bitmap);   // one back, shared
+	CHECK(ace.looks.all[0].bitmap != hearts.game.itemAt(14)->looks.all[0].bitmap);
 }
 
 TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of cells as frames and faces", "[cards][sheets]")
@@ -593,8 +593,8 @@ TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces fro
 	CHECK(nine.item.number == 22);
 	CHECK(cardAxis(nine, "row") == 2);
 	CHECK(cardAxis(nine, "column") == 9);
-	CHECK((nine.looks[0].bitmap->rgba == hearts.game.itemAt(22)->looks[0].bitmap->rgba));
-	CHECK((nine.looks[1].bitmap->rgba == hearts.game.itemAt(22)->looks[1].bitmap->rgba));
+	CHECK((nine.looks.all[0].bitmap->rgba == hearts.game.itemAt(22)->looks.all[0].bitmap->rgba));
+	CHECK((nine.looks.all[1].bitmap->rgba == hearts.game.itemAt(22)->looks.all[1].bitmap->rgba));
 	CHECK(nine.variable.at("color") == 2.0f);
 	CHECK(table.item(cardOf(table, "clubs", "9")).variable.at("color") == 1.0f);
 }

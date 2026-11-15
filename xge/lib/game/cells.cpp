@@ -606,7 +606,7 @@ namespace xge
 			for (Object* cell : cells)
 			{
 				cell->cell.shapeOwner.clear();
-				if (!cell->hasJoins) { continue; }
+				if (!cell->looks.hasJoins) { continue; }
 				cell->joinedWith.clear();
 				for (const Object* other : cells)
 				{
@@ -819,9 +819,9 @@ namespace xge
 	{
 		const auto join = [&](Object& piece)
 		{
-			if (!piece.hasJoins || !piece.exists || !piece.map.cells) { return; }
-			const auto& looks = piece.joinLooks;
-			if (std::find(looks.begin(), looks.end(), piece.look) == looks.end()) { return; }
+			if (!piece.looks.hasJoins || !piece.exists || !piece.map.cells) { return; }
+			const auto& looks = piece.looks.joins;
+			if (std::find(looks.begin(), looks.end(), piece.looks.shown) == looks.end()) { return; }
 
 			// Falling, the other cells of its shape; settled, those it came with.
 			std::vector<std::string> partners = piece.joinedWith;
@@ -842,7 +842,7 @@ namespace xge
 				break;
 			}
 			const std::size_t look = looks[static_cast<std::size_t>(way)];
-			if (look != piece.look) { piece.showLook(look); }
+			if (look != piece.looks.shown) { piece.showLook(look); }
 		};
 		for (Object& object : objects) { join(object); }
 	}
@@ -936,7 +936,7 @@ namespace xge
 		const Object::MoveSet* any = nullptr;
 		for (const Object::MoveSet& set : piece.moves.sets)
 		{
-			if (set.look && *set.look == piece.look) { return &set; }
+			if (set.look && *set.look == piece.looks.shown) { return &set; }
 			if (!set.look && !any) { any = &set; }
 		}
 		return any;
@@ -1290,7 +1290,7 @@ namespace xge
 
 		// Promoted on reaching its row: that ends its move.
 		bool promoted = false;
-		if (set && set->promoteLook && row == set->promoteRow && piece->look != *set->promoteLook)
+		if (set && set->promoteLook && row == set->promoteRow && piece->looks.shown != *set->promoteLook)
 		{
 			piece->showLook(*set->promoteLook);
 			promoted = true;
@@ -1431,7 +1431,7 @@ namespace xge
 				Object* held = picker.picker.picked.empty() ? nullptr : findAnywhere(picker.picker.picked);
 				for (const Object::MarkSet& set : picker.marks.sets)
 				{
-					if (set.look && *set.look != picker.look) { continue; }
+					if (set.look && *set.look != picker.looks.shown) { continue; }
 					for (const Object::Mark& mark : set.marks)
 					{
 						if (!on(mark.variable)) { continue; }
@@ -1622,7 +1622,7 @@ namespace xge
 		kept.reserve(objects.size());
 		for (const Object& object : objects)
 		{
-			kept.push_back({ object.name, static_cast<const Moment&>(object), object.look });
+			kept.push_back({ object.name, static_cast<const Moment&>(object), object.looks.shown });
 		}
 		return kept;
 	}
@@ -1679,7 +1679,7 @@ namespace xge
 			}
 			static_cast<Moment&>(object) = was->moment;
 			object.placed = true;
-			if (object.look != was->look && was->look < object.looks.size()) { object.showLook(was->look); }
+			if (object.looks.shown != was->look && was->look < object.looks.all.size()) { object.showLook(was->look); }
 			for (const auto& [variable, value] : was->moment.variable) { setVariable(object.name, variable, value); }
 			holdVariablesForExpressions(object);
 		}
