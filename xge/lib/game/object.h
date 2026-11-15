@@ -1913,24 +1913,27 @@ namespace xge
 		// code only ever reads this field.
 		Vector2f size{};
 
+		// How its position is worked out again after the game loads.
 		// <position> may use any object's size by name - name.width and
 		// name.height, including this object's own - e.g. to centre a text:
 		// window.width.center - title.width / 2. A circle's or rectangle's
 		// size follows from its sprite alone, so a position using only those
 		// is exact the moment the game is loaded. A text's size can change as
 		// its words do (a score gaining a digit), so a position that uses one
-		// sets positionUsesSize and lists those texts in sizeDependencies, and
+		// sets usesSize and lists those texts in sizesOf, and
 		// Game::resolveSizeDependentPositions() works it out again whenever
-		// one of them changes. positionSizesUsed holds the sizes, in
-		// sizeDependencies order, it was last worked out from.
-		bool positionUsesSize{ false };
-		std::vector<std::string> sizeDependencies;
-		std::vector<Vector2f> positionSizesUsed;
-
-		// A cell's offset from its group's evaluated <position> (see RawCell),
-		// so that position can be worked out again later and the offset added
-		// back.
-		Vector2f cellOffset{};
+		// one of them changes. sizesUsed holds the sizes, in sizesOf order,
+		// it was last worked out from. cellOffset is a cell's offset from its
+		// group's evaluated <position> (see RawCell), so that position can be
+		// worked out again later and the offset added back.
+		struct Layout
+		{
+			bool usesSize{ false };
+			std::vector<std::string> sizesOf;
+			std::vector<Vector2f> sizesUsed;
+			Vector2f cellOffset{};
+		};
+		Layout layout;
 
 		// What it says update="live" of: a <variable>, a half of its
 		// <position> (a group's, with this one's place in it added) or its

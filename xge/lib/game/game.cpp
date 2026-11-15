@@ -157,7 +157,7 @@ namespace xge
 
 		for (auto& object : objects)
 		{
-			if (!object.positionUsesSize)
+			if (!object.layout.usesSize)
 			{
 				continue;
 			}
@@ -165,7 +165,7 @@ namespace xge
 			// Worked out again only when a size it uses has changed.
 			std::vector<Vector2f> sizes;
 			bool allThere = true;
-			for (const auto& dependency : object.sizeDependencies)
+			for (const auto& dependency : object.layout.sizesOf)
 			{
 				const Object* measured = tryGetObject(dependency);
 				if (!measured || measured->name != dependency)
@@ -176,7 +176,7 @@ namespace xge
 				sizes.push_back(measured->size);
 			}
 
-			if (!allThere || sizes == object.positionSizesUsed)
+			if (!allThere || sizes == object.layout.sizesUsed)
 			{
 				continue;
 			}
@@ -191,9 +191,9 @@ namespace xge
 			const std::string where = "object '" + rawObject->name + "'";
 			object.start.position.x = expr.evaluate(rawObject->rawPosition.x, where);
 			object.start.position.y = expr.evaluate(rawObject->rawPosition.y, where);
-			object.start.position = object.start.position + object.cellOffset;
+			object.start.position = object.start.position + object.layout.cellOffset;
 			object.position = object.start.position;
-			object.positionSizesUsed = sizes;
+			object.layout.sizesUsed = sizes;
 		}
 	}
 
@@ -796,7 +796,7 @@ namespace xge
 		// game loads (load/expr::init), so a start drawn again takes the same
 		// numbers as the first did, and a generated program, which draws them
 		// in that order, draws the same ones.
-		object.start.position = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.cellOffset;
+		object.start.position = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.layout.cellOffset;
 
 		object.start.velocity = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
 	}
@@ -2214,8 +2214,8 @@ namespace xge
 				const float value = evaluateNow(each.value, where);
 				switch (each.part)
 				{
-				case Object::Follow::Part::X: object.position.x = value + object.cellOffset.x; break;
-				case Object::Follow::Part::Y: object.position.y = value + object.cellOffset.y; break;
+				case Object::Follow::Part::X: object.position.x = value + object.layout.cellOffset.x; break;
+				case Object::Follow::Part::Y: object.position.y = value + object.layout.cellOffset.y; break;
 				case Object::Follow::Part::Heading:
 				{
 					float degrees = std::fmod(value, 360.0f);

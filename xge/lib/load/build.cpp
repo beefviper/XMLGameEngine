@@ -30,7 +30,7 @@ namespace xge
 
 		// A position that uses the size of a text (its own, or another
 		// object's) is worked out again when that text's words change - see
-		// Object::positionUsesSize.
+		// Object::Layout.
 		const std::vector<std::string> positionSizeDependencies = sizeDependenciesOf(rawObject);
 
 		// How long each picture of an animation lasts.
@@ -210,12 +210,12 @@ namespace xge
 		// A cell is its group's position and its place in the
 		// group; start.position keeps both, so a reset puts each
 		// cell (each brick) back in its own place.
-		object.cellOffset = cellOffset;
-		object.position = object.start.position + object.cellOffset;
+		object.layout.cellOffset = cellOffset;
+		object.position = object.start.position + object.layout.cellOffset;
 		object.start.position = object.position;
 
-		object.sizeDependencies = positionSizeDependencies;
-		object.positionUsesSize = !positionSizeDependencies.empty();
+		object.layout.sizesOf = positionSizeDependencies;
+		object.layout.usesSize = !positionSizeDependencies.empty();
 
 		// What it follows, worked out again every frame (Game::follow).
 		using Follow = Object::Follow;
@@ -602,7 +602,7 @@ namespace xge
 			object.map.columns = rawObject.cell.mapColumns;
 			object.map.rows = rawObject.cell.mapRows;
 			object.map.tile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
-			object.map.origin = object.start.position - object.cellOffset;
+			object.map.origin = object.start.position - object.layout.cellOffset;
 
 			// On a cell map: the cell it is in, its map's checks, and a
 			// shape's cells, each the object its character picks.

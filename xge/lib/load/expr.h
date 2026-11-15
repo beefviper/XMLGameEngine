@@ -157,7 +157,7 @@ namespace xge
 		// "name.width" / "name.height" (unless the object declares a <variable>
 		// of that name, which wins). A circle's or rectangle's is exact from
 		// init(); a text's or image's stays {0,0} until setObjectSize() is
-		// given what a backend measured. See Object::positionUsesSize. A
+		// given what a backend measured. See Object::Layout. A
 		// std::map's references stay valid across insertions, which is what
 		// makes binding into it safe.
 		std::map<std::string, Vector2f> objectSizes;

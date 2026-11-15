@@ -638,7 +638,7 @@ namespace xge
 		if (!from.looks.all.empty()) { first.looks = &from.looks.all; }
 
 		// Its palettes too, wearing the one `from` is (its looks are those).
-		Object made = makeObject(raw, first, windowDesc, from.cellOffset, from.collisionData.lockstep);
+		Object made = makeObject(raw, first, windowDesc, from.layout.cellOffset, from.collisionData.lockstep);
 		made.looks.palettes = from.looks.palettes;
 		made.looks.worn = from.looks.worn;
 		if (made.mirror.on) { made.mirror.flips = from.mirror.flips; }

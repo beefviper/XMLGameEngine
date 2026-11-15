@@ -64,7 +64,7 @@ namespace xge
 		// (name.width / name.height, its own or another's) again, when one of
 		// those sizes has changed since. The game calls it when it loads and
 		// after a frame in which a text's words changed its size. See
-		// Object::positionUsesSize.
+		// Object::Layout.
 		void resolveSizeDependentPositions(void);
 		void printGame(void);
 
