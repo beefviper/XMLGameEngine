@@ -271,7 +271,7 @@ namespace xge
 
 	void checkCellMap(const Checking& checking, const std::string& map, const std::string& tag)
 	{
-		const bool found = std::any_of(checking.objects.begin(), checking.objects.end(), [&](const Object& object) { return object.onCells && object.mapName == map; });
+		const bool found = std::any_of(checking.objects.begin(), checking.objects.end(), [&](const Object& object) { return object.map.cells && object.map.name == map; });
 		if (!found) { throw std::runtime_error(checking.where + ": " + tag + " names no map with <cells />"); }
 	}
 
@@ -784,12 +784,12 @@ namespace xge
 		// wanders. A hole is cut in a picture that stays as it is.
 		void checkWalksAndHoles(const Object& object, const std::vector<Object>& objects, const std::string& where)
 		{
-			if (object.walksMaze() && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.mapName == object.maze.map; }))
+			if (object.walksMaze() && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.map.name == object.maze.map; }))
 			{
 				std::vector<std::string> maps;
 				for (const Object& other : objects)
 				{
-					if (!other.mapName.empty() && std::find(maps.begin(), maps.end(), other.mapName) == maps.end()) { maps.push_back(other.mapName); }
+					if (!other.map.name.empty() && std::find(maps.begin(), maps.end(), other.map.name) == maps.end()) { maps.push_back(other.map.name); }
 				}
 				throw std::runtime_error(where + " > <maze map=\"" + object.maze.map + "\">: the game has no <map> of that name" + didYouMean(object.maze.map, maps)
 					+ (maps.empty() ? std::string(" (it has no <map>s)") : ". Its maps are: " + listOf(maps)));
@@ -799,7 +799,7 @@ namespace xge
 				for (const Command& command : commands)
 				{
 					// On a map of cells a <go> goes a cell at a time, with no maze.
-					if (std::holds_alternative<CmdGo>(shapeOf(command)) && object.onCells) { continue; }
+					if (std::holds_alternative<CmdGo>(shapeOf(command)) && object.map.cells) { continue; }
 					if ((std::holds_alternative<CmdGo>(shapeOf(command)) || std::holds_alternative<CmdHunt>(shapeOf(command)) || std::holds_alternative<CmdWander>(shapeOf(command))) && !object.walksMaze())
 					{
 						throw std::runtime_error(here + ": " + tagOf(command) + " steers an object through a maze, and this one walks none: give it a <maze map=\"...\">");

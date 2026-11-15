@@ -55,7 +55,7 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.exists && object.isVisible && object.onCells && object.isCopy() && object.mapName == boardMap
+				if (object.exists && object.isVisible && object.map.cells && object.isCopy() && object.map.name == boardMap
 					&& cell(object.cellColumn) == column && cell(object.cellRow) == row)
 				{
 					return object.objClass;
@@ -79,7 +79,7 @@ namespace
 		{
 			for (const Object& object : game.getCurrentObjects())
 			{
-				if (object.objClass == "red" && object.onCells) { boardMap = object.mapName; break; }
+				if (object.objClass == "red" && object.map.cells) { boardMap = object.map.name; break; }
 			}
 		}
 		// A disc dropped down that column.
@@ -92,7 +92,7 @@ namespace
 		{
 			for (const Object& object : game.getCurrentObjects())
 			{
-				if (object.objClass == "x" && object.onCells) { boardMap = object.mapName; break; }
+				if (object.objClass == "x" && object.map.cells) { boardMap = object.map.name; break; }
 			}
 		}
 	};

@@ -19,7 +19,7 @@ namespace xge
 	{
 		Object* const self = doer.self;
 		// On a map of cells, a <go> turns round.
-		if (self && self->onCells && self->cellGoing)
+		if (self && self->map.cells && self->cellGoing)
 		{
 			const Direction way = self->cellGoWay;
 			self->cellGoWay = way == Direction::Up ? Direction::Down : way == Direction::Down ? Direction::Up : way == Direction::Left ? Direction::Right : Direction::Left;

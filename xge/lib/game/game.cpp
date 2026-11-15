@@ -2027,7 +2027,7 @@ namespace xge
 	{
 		// Pieces of cell maps meet each other by their moves, and a shape
 		// touches nothing but by them.
-		if ((a.onCells && b.onCells) || a.isShape() || b.isShape()) { return false; }
+		if ((a.map.cells && b.map.cells) || a.isShape() || b.isShape()) { return false; }
 
 		const auto answers = [](const Object& self, const Object& other)
 		{

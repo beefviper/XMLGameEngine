@@ -85,7 +85,7 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.exists && object.isVisible && object.onCells && object.mapName == "playing.grid"
+				if (object.exists && object.isVisible && object.map.cells && object.map.name == "playing.grid"
 					&& cell(object.cellColumn) == column && cell(object.cellRow) == row)
 				{
 					return object.objClass;

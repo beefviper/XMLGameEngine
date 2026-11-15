@@ -53,7 +53,7 @@ namespace
 		std::set<std::pair<int, int>> cells;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.exists && object.onCells && object.isCopy() && !object.isShape() && object.cell.shapeOwner.empty())
+			if (object.exists && object.map.cells && object.isCopy() && !object.isShape() && object.cell.shapeOwner.empty())
 			{
 				cells.insert({ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) });
 			}
@@ -105,9 +105,9 @@ TEST_CASE("A map with columns and rows and <cells /> loads its pieces waiting to
 
 	const Object& block = play.get("block");
 	CHECK_FALSE(block.exists);
-	CHECK(block.onCells);
-	CHECK(block.mapColumns == 4);
-	CHECK(block.mapRows == 6);
+	CHECK(block.map.cells);
+	CHECK(block.map.columns == 4);
+	CHECK(block.map.rows == 6);
 
 	const Object& shape = play.get("well.bar");
 	CHECK(shape.isShape());
@@ -342,7 +342,7 @@ TEST_CASE("Tetris shows the next shape in its box, still, and sends it in when o
 	};
 	Object* next = waiting();
 	REQUIRE(next);
-	CHECK(next->mapName == "playing.next");
+	CHECK(next->map.name == "playing.next");
 	CHECK(next->cell.shapeParts.size() == 4);
 	const std::string nextName = next->name;
 	const auto shown = cellsOf(play.game, *next);
@@ -363,7 +363,7 @@ TEST_CASE("Tetris shows the next shape in its box, still, and sends it in when o
 	play.frames(2);
 	REQUIRE(falling(play.game));
 	CHECK(falling(play.game)->name == nextName);
-	CHECK(falling(play.game)->mapName == "playing.board");
+	CHECK(falling(play.game)->map.name == "playing.board");
 	CHECK(static_cast<int>(falling(play.game)->cellColumn) == 4);
 	REQUIRE(waiting());
 	CHECK(waiting()->name != nextName);
@@ -429,7 +429,7 @@ namespace
 		std::map<std::pair<int, int>, std::string> found;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.exists && object.onCells && !object.isShape() && object.cell.shapeOwner.empty())
+			if (object.exists && object.map.cells && !object.isShape() && object.cell.shapeOwner.empty())
 			{
 				const std::string group = object.groupName.substr(object.groupName.rfind('.') + 1);
 				found[{ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) }] = group;
@@ -973,7 +973,7 @@ namespace
 		std::map<std::pair<int, int>, std::string> found;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.exists && object.onCells && object.objClass == "pill") { found[{ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) }] = object.lookName(); }
+			if (object.exists && object.map.cells && object.objClass == "pill") { found[{ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) }] = object.lookName(); }
 		}
 		return found;
 	}
@@ -984,7 +984,7 @@ namespace
 		int count = 0;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.exists && object.onCells && object.objClass == "germ") { ++count; }
+			if (object.exists && object.map.cells && object.objClass == "germ") { ++count; }
 		}
 		return count;
 	}
@@ -1040,7 +1040,7 @@ TEST_CASE("After a line goes only the halves fall: germs stay put, and hold up w
 	bool hanging = false;
 	for (const Object& object : play.game.getCurrentObjects())
 	{
-		if (object.exists && object.onCells && object.objClass == "germ" && object.cellColumn == 2.0f) { hanging = object.cellRow == 4.0f; }
+		if (object.exists && object.map.cells && object.objClass == "germ" && object.cellColumn == 2.0f) { hanging = object.cellRow == 4.0f; }
 	}
 	CHECK(hanging);
 }
@@ -1070,14 +1070,14 @@ TEST_CASE("Capsules plays: germs come in low in the bottle, a capsule falls, and
 	CHECK(germsIn(play.game) == 8);
 	for (const Object& object : play.game.getCurrentObjects())
 	{
-		if (object.exists && object.onCells && object.objClass == "germ") { CHECK(object.cellRow > 6.0f); }
+		if (object.exists && object.map.cells && object.objClass == "germ") { CHECK(object.cellRow > 6.0f); }
 	}
 	int falling = 0;
 	int next = 0;
 	for (const Object& object : play.game.getCurrentObjects())
 	{
 		if (!object.exists || object.objClass != "pill") { continue; }
-		if (object.mapName == "playing.next") { ++next; }
+		if (object.map.name == "playing.next") { ++next; }
 		else if (!object.cell.shapeOwner.empty()) { ++falling; }
 	}
 	CHECK(falling == 2);
@@ -1086,7 +1086,7 @@ TEST_CASE("Capsules plays: germs come in low in the bottle, a capsule falls, and
 	// Every germ gone: the germs score, and the next level brings more.
 	for (Object& object : play.game.getCurrentObjects())
 	{
-		if (object.exists && object.onCells && object.objClass == "germ") { play.game.despawn(object); }
+		if (object.exists && object.map.cells && object.objClass == "germ") { play.game.despawn(object); }
 	}
 	play.frames(30);
 	CHECK(status.variable.at("score") == 800.0f);

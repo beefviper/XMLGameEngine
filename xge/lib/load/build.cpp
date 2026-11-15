@@ -593,20 +593,20 @@ namespace xge
 		// On a map: which tile, and the map itself, for what walks it.
 		if (rawObject.cell.mapColumn > 0)
 		{
-			object.mapName = rawObject.cell.map;
-			object.homeMap = rawObject.cell.map;
+			object.map.name = rawObject.cell.map;
+			object.map.home = rawObject.cell.map;
 			object.cell.chain = rawObject.chain;
-			object.mapColumn = rawObject.cell.mapColumn - 1;
-			object.mapRow = rawObject.cell.mapRow - 1;
-			object.mapColumns = rawObject.cell.mapColumns;
-			object.mapRows = rawObject.cell.mapRows;
-			object.mapTile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
-			object.mapOrigin = object.start.position - object.cellOffset;
+			object.map.column = rawObject.cell.mapColumn - 1;
+			object.map.row = rawObject.cell.mapRow - 1;
+			object.map.columns = rawObject.cell.mapColumns;
+			object.map.rows = rawObject.cell.mapRows;
+			object.map.tile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
+			object.map.origin = object.start.position - object.cellOffset;
 
 			// On a cell map: the cell it is in, its map's checks, and a
 			// shape's cells, each the object its character picks.
-			object.onCells = rawObject.cell.cells;
-			if (object.onCells)
+			object.map.cells = rawObject.cell.cells;
+			if (object.map.cells)
 			{
 				object.cellColumn = object.start.cellColumn = static_cast<float>(rawObject.cell.mapColumn);
 				object.cellRow = object.start.cellRow = static_cast<float>(rawObject.cell.mapRow);

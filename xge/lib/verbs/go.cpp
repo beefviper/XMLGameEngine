@@ -26,7 +26,7 @@ namespace xge
 	static bool runGo(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
 		const CmdGo& go = std::get<CmdGo>(command);
-		if (doer.self && doer.self->onCells) { return executor.game.goCells(*doer.self, go.direction, go.speed); }
+		if (doer.self && doer.self->map.cells) { return executor.game.goCells(*doer.self, go.direction, go.speed); }
 		if (doer.self && doer.action) { startGo(*doer.self, go); }
 		return true;
 	}

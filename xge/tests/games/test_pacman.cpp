@@ -310,7 +310,7 @@ TEST_CASE("pacman: Blinky scatters to his corner, then hunts Pac-Man through the
 		const int row = static_cast<int>((middle.y - kTop) / kTile);
 		for (auto& wall : maze.game.getCurrentObjects())
 		{
-			if (wall.objClass == "wall" && wall.mapColumn == column && wall.mapRow == row)
+			if (wall.objClass == "wall" && wall.map.column == column && wall.map.row == row)
 			{
 				FAIL("Blinky is on a wall at column " << column << ", row " << row);
 			}

@@ -791,7 +791,7 @@ namespace xge
 		const Object* first = nullptr;
 		for (const Object& object : objects)
 		{
-			if (object.objClass == think.objClass && !object.moves.sets.empty() && object.onCells && isShown(object)) { first = &object; break; }
+			if (object.objClass == think.objClass && !object.moves.sets.empty() && object.map.cells && isShown(object)) { first = &object; break; }
 		}
 		// None on the board yet (pieces put): the one a put copies.
 		if (!first) { first = putTemplate(think.objClass); }
@@ -801,8 +801,8 @@ namespace xge
 			return job;
 		}
 
-		board.columns = first->mapColumns;
-		board.rows = first->mapRows;
+		board.columns = first->map.columns;
+		board.rows = first->map.rows;
 		board.grid.assign(static_cast<std::size_t>(board.columns * board.rows), 0);
 		// The other side: what its pieces' jumps take.
 		std::string other;
@@ -821,7 +821,7 @@ namespace xge
 		for (std::size_t i = 0; i < objects.size() && other.empty(); ++i)
 		{
 			const Object& object = objects[i];
-			if (object.onCells && object.mapName == first->mapName && !object.moves.sets.empty() && object.objClass != think.objClass) { other = object.objClass; }
+			if (object.map.cells && object.map.name == first->map.name && !object.moves.sets.empty() && object.objClass != think.objClass) { other = object.objClass; }
 		}
 		board.kinds[0] = board.kindOf(putTemplate(think.objClass));
 		board.kinds[1] = other.empty() ? nullptr : board.kindOf(putTemplate(other));
@@ -870,7 +870,7 @@ namespace xge
 		for (const Object* each : there)
 		{
 			const Object& object = *each;
-			if (!object.onCells || object.mapName != first->mapName || &object == &picker) { continue; }
+			if (!object.map.cells || object.map.name != first->map.name || &object == &picker) { continue; }
 			const int column = whole(object.cellColumn);
 			const int row = whole(object.cellRow);
 			if (!board.onBoard(column, row)) { continue; }
@@ -984,7 +984,7 @@ namespace xge
 			if (object.exists && object.named(name)) { picker = &object; break; }
 		}
 		if (picker && picker->hand.is) { return thinkHeld(think, *picker); }
-		if (!picker || !picker->onCells || think.objClass.empty()) { return std::nullopt; }
+		if (!picker || !picker->map.cells || think.objClass.empty()) { return std::nullopt; }
 
 		// Its move is thought about first (the frame its turn came is drawn
 		// before, the sounds of the move before it heard); then made.

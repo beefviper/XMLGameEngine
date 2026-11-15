@@ -1004,18 +1004,18 @@ namespace xge
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
 			const Object& object = objects[i];
-			if (object.mapName != map) { continue; }
+			if (object.map.name != map) { continue; }
 			if (grid.at.empty())
 			{
-				grid.origin = object.mapOrigin;
-				grid.tile = object.mapTile;
-				grid.columns = object.mapColumns;
-				grid.rows = object.mapRows;
+				grid.origin = object.map.origin;
+				grid.tile = object.map.tile;
+				grid.columns = object.map.columns;
+				grid.rows = object.map.rows;
 				grid.at.resize(static_cast<std::size_t>(grid.columns) * static_cast<std::size_t>(grid.rows));
 			}
-			if (grid.onMap(object.mapColumn, object.mapRow))
+			if (grid.onMap(object.map.column, object.map.row))
 			{
-				grid.at[static_cast<std::size_t>(object.mapRow) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(object.mapColumn)].push_back(i);
+				grid.at[static_cast<std::size_t>(object.map.row) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(object.map.column)].push_back(i);
 			}
 		}
 		return mazeGrids.emplace(map, std::move(grid)).first->second;
@@ -1067,7 +1067,7 @@ namespace xge
 		for (auto& object : objects)
 		{
 			// A piece of a cell map meets its map's edges by its moves.
-			if (object.collisionsOn && !object.onCells && isMoving(object) && rules.inPlay(object))
+			if (object.collisionsOn && !object.map.cells && isMoving(object) && rules.inPlay(object))
 			{
 				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 				{
