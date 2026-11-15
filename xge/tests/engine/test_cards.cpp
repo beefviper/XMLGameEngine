@@ -574,12 +574,12 @@ TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of c
 	CHECK((drawn(grid).rgba == drawn(play.get("sized")).rgba));
 
 	Object& walker = play.get("walker");
-	REQUIRE(walker.animationBitmaps.size() == 4);
-	CHECK((walker.animationBitmaps[0]->rgba == drawn(grid).rgba));
-	CHECK((walker.animationBitmaps[1]->rgba != drawn(grid).rgba));
+	REQUIRE(walker.animation.bitmaps.size() == 4);
+	CHECK((walker.animation.bitmaps[0]->rgba == drawn(grid).rgba));
+	CHECK((walker.animation.bitmaps[1]->rgba != drawn(grid).rgba));
 	Object& bird = play.get("bird");
-	REQUIRE(bird.animationBitmaps.size() == 2);
-	CHECK((bird.animationBitmaps[1]->rgba == drawn(grid).rgba));   // column 1 down to row 2: the ace of hearts
+	REQUIRE(bird.animation.bitmaps.size() == 2);
+	CHECK((bird.animation.bitmaps[1]->rgba == drawn(grid).rgba));   // column 1 down to row 2: the ace of hearts
 }
 
 TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces from the sheet", "[cards][sheets]")

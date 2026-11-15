@@ -1265,7 +1265,7 @@ namespace xge
 		if (index >= objects.size()) { return; }
 		Object& object = objects[index];
 		// A copy: a command may reset the object, or spawn and move it.
-		const std::vector<Command> commands = object.looks.empty() ? object.animationThen
+		const std::vector<Command> commands = object.looks.empty() ? object.animation.then
 			: look < object.looks.size() ? object.looks[look].then : std::vector<Command>{};
 		CommandExecutor executor(*this);
 		for (const Command& command : commands)
@@ -2043,7 +2043,7 @@ namespace xge
 	// never sink into a floor.
 	bool Game::touchesByPicture(const Object& a, const Object& b)
 	{
-		const auto has = [](const Object& object) { return !object.collisionData.hitboxes.empty() || !object.animationHitboxes.empty()
+		const auto has = [](const Object& object) { return !object.collisionData.hitboxes.empty() || !object.animation.hitboxes.empty()
 			|| std::any_of(object.looks.begin(), object.looks.end(), [](const Object::Look& look) { return !look.frameHitboxes.empty(); }); };
 		if (!has(a) && !has(b)) { return false; }
 

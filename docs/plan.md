@@ -79,6 +79,16 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **5.** `object.swing` (frames, by, done, held; `spin` and the pivot stay, as anything with a heading turns).
   - [x] **6.** `object.path` (a `<follow>` under way: name, leg, left, legStarted, wait).
   - [x] **7.** `object.flight` (a timed `<hop>`) and `object.footing` (grounded, jumping, climbing).
+  - [x] **8.** `object.animation` (pictures, times, frame hitboxes, tick, index, once, done, the look before, then).
+  - [ ] **9.** `object.map` (its place on a map: name, column, row, origin, tile, columns, rows, on cells, home map).
+  - [ ] **10.** `object.item` (held, number, laid by, face up, with what `ItemOf` has now).
+  - [ ] **11.** `object.mirror` (mirrors, way, mirrored, going left, flips).
+  - [ ] **12.** `object.surface` (a surface's drag and grip, and the ground's under it).
+  - [ ] **13.** `object.rest` (resting, resting on, rested at, settled on, normal, age).
+  - [ ] **14.** `object.dark` and `object.altitude` (seen, in the dark; altitude, fall, bounce, shadow).
+  - [ ] **15.** `object.tether` and `object.carry`.
+  - [ ] **16.** `object.keys` (held turn, thrust, thrust along the heading, move steps).
+- **After step 16** about 90 fields are left. Under 60 also needs the looks and palettes, the drawn picture, and the motion numbers (speed, drag, friction, mass, grip) grouped: count again then, and the author decides.
 - **Later, not planned:** a group no object uses could become `std::optional` or a pointer, which also shrinks every object.
 - **Done when** `struct Object` itself declares under 60 fields.
 

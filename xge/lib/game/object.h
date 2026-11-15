@@ -1045,7 +1045,7 @@ namespace xge
 			}
 		};
 		Shown shownBefore;
-		Shown shown() const noexcept { return { look, animationIndex, size, mirrored }; }
+		Shown shown() const noexcept { return { look, animation.index, size, mirrored }; }
 
 		// The frame is over: how it is now is how it was before the next.
 		void remember()
@@ -1124,35 +1124,39 @@ namespace xge
 		// `bitmap` is whichever is showing), how many frames of the game each
 		// one stays for (the seconds written, times the window's <framerate>),
 		// how many it has been showing, and which one it is (an index into
-		// animationBitmaps). Only an object that is shown and in play moves
-		// on; a reset starts it again at the first. A sprite of one picture
-		// has none of this. See advanceAnimation.
-		std::vector<std::shared_ptr<const Bitmap>> animationBitmaps;
-		int animationFrames{};
-		// Each picture's own time in frames of the game, when a <frame> has
-		// its own <seconds>; empty, every one animationFrames.
-		std::vector<int> animationTimes;
-		// Each picture's own <hitbox>es, touched with as well as the
-		// object's while it shows; empty when none has any.
-		std::vector<std::vector<Hitbox>> animationHitboxes;
+		// bitmaps). Only an object that is shown and in play moves on; a
+		// reset starts it again at the first. A sprite of one picture has
+		// none of this. See advanceAnimation.
+		struct Animation
+		{
+			std::vector<std::shared_ptr<const Bitmap>> bitmaps;
+			int frames{};
+			// Each picture's own time in frames of the game, when a <frame> has
+			// its own <seconds>; empty, every one `frames`.
+			std::vector<int> times;
+			// Each picture's own <hitbox>es, touched with as well as the
+			// object's while it shows; empty when none has any.
+			std::vector<std::vector<Hitbox>> hitboxes;
+			int tick{};
+			std::size_t index{};
+			// <once />: the animation plays through one time. At its end a look
+			// goes back to `lookBefore` (the last look shown that was not itself
+			// once); an object's one animation stays on its last picture and is
+			// `done`.
+			bool once{ false };
+			bool done{ false };
+			std::size_t lookBefore{};
+			// <then>'s commands of an object's one animation, run when it ends
+			// (a look's are the look's own).
+			std::vector<Command> then;
+		};
+		Animation animation;
 		// The hitboxes of the picture showing (often none).
 		const std::vector<Hitbox>& frameHitboxes() const noexcept
 		{
 			static const std::vector<Hitbox> none;
-			return animationIndex < animationHitboxes.size() ? animationHitboxes[animationIndex] : none;
+			return animation.index < animation.hitboxes.size() ? animation.hitboxes[animation.index] : none;
 		}
-		int animationTick{};
-		std::size_t animationIndex{};
-		// <once />: the animation plays through one time. At its end a look
-		// goes back to `lookBefore` (the last look shown that was not itself
-		// once); an object's one animation stays on its last picture and is
-		// `animationDone`.
-		bool animationOnce{ false };
-		bool animationDone{ false };
-		std::size_t lookBefore{};
-		// <then>'s commands of an object's one animation, run when it ends
-		// (a look's are the look's own).
-		std::vector<Command> animationThen;
 
 		// Counts one frame of the game towards the next picture of the
 		// animation, and shows it (marking the visual to be rebuilt) when its
@@ -1167,7 +1171,7 @@ namespace xge
 		// new start: its animation and its timers start over, as at a reset.
 		void startOver();
 
-		// Points `bitmap` at the picture animationIndex names (turned to the
+		// Points `bitmap` at the picture animation.index names (turned to the
 		// heading, if it turns) and marks the visual to be rebuilt.
 		void showAnimationFrame();
 

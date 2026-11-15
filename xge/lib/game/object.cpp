@@ -59,7 +59,7 @@ namespace xge
 			}
 		};
 		add(collisionData.hitboxes);
-		for (const std::vector<Hitbox>& frame : animationHitboxes) { add(frame); }
+		for (const std::vector<Hitbox>& frame : animation.hitboxes) { add(frame); }
 		for (const Look& each : looks)
 		{
 			for (const std::vector<Hitbox>& frame : each.frameHitboxes) { add(frame); }
@@ -81,18 +81,18 @@ namespace xge
 		}
 
 		// The look to go back to when a look that plays once ends.
-		if (index != look && look < looks.size() && !looks[look].once) { lookBefore = look; }
+		if (index != look && look < looks.size() && !looks[look].once) { animation.lookBefore = look; }
 		look = index;
 		picture = looks[index].picture;
 		bitmap = facingPicture(looks[index].bitmap);
-		animationBitmaps = looks[index].frames;
-		animationFrames = looks[index].frameTicks;
-		animationTimes = looks[index].frameTimes;
-		animationHitboxes = looks[index].frameHitboxes;
-		animationOnce = looks[index].once;
-		animationDone = false;
-		animationTick = 0;
-		animationIndex = 0;
+		animation.bitmaps = looks[index].frames;
+		animation.frames = looks[index].frameTicks;
+		animation.times = looks[index].frameTimes;
+		animation.hitboxes = looks[index].frameHitboxes;
+		animation.once = looks[index].once;
+		animation.done = false;
+		animation.tick = 0;
+		animation.index = 0;
 		// Turned to the way it faces: its own pictures to turn from now on.
 		if (!looks[index].turnables.empty())
 		{
@@ -115,11 +115,11 @@ namespace xge
 
 		palette = index;
 		const Palette& worn = palettes[index];
-		const int tick = animationTick;
-		const std::size_t at = animationIndex;
+		const int tick = animation.tick;
+		const std::size_t at = animation.index;
 		if (looks.empty())
 		{
-			animationBitmaps = worn.animation;
+			animation.bitmaps = worn.animation;
 			bitmap = facingPicture(worn.bitmap);
 		}
 		else
@@ -127,10 +127,10 @@ namespace xge
 			looks = worn.looks;
 			showLook(look);
 		}
-		if (!animationBitmaps.empty())
+		if (!animation.bitmaps.empty())
 		{
-			animationTick = tick;
-			animationIndex = at % animationBitmaps.size();
+			animation.tick = tick;
+			animation.index = at % animation.bitmaps.size();
 			showAnimationFrame();
 		}
 		visualDirty = true;
@@ -972,7 +972,7 @@ namespace xge
 
 		// An animated object that turns has a turnable for each of its
 		// pictures; the one that is showing is the one to turn.
-		const std::size_t frame = turnables.size() > 1 && animationIndex < turnables.size() ? animationIndex : 0;
+		const std::size_t frame = turnables.size() > 1 && animation.index < turnables.size() ? animation.index : 0;
 
 		const int degrees = wholeDegrees(heading);
 
@@ -998,34 +998,34 @@ namespace xge
 	bool Object::advanceAnimation()
 	{
 		// One picture moves on only to end, when it plays once.
-		if (animationBitmaps.size() < (animationOnce ? 1u : 2u) || animationFrames < 1 || animationDone) { return false; }
+		if (animation.bitmaps.size() < (animation.once ? 1u : 2u) || animation.frames < 1 || animation.done) { return false; }
 
-		const int due = animationTimes.empty() ? animationFrames : animationTimes[animationIndex];
-		if (++animationTick < due) { return false; }
+		const int due = animation.times.empty() ? animation.frames : animation.times[animation.index];
+		if (++animation.tick < due) { return false; }
 
-		animationTick = 0;
-		if (animationOnce && animationIndex + 1 == animationBitmaps.size())
+		animation.tick = 0;
+		if (animation.once && animation.index + 1 == animation.bitmaps.size())
 		{
 			// Played through: a look goes back to the one before, an
 			// object's one animation stays on its last picture.
-			const std::size_t next = looks.empty() ? 0 : looks[look].thenLook.value_or(lookBefore);
+			const std::size_t next = looks.empty() ? 0 : looks[look].thenLook.value_or(animation.lookBefore);
 			if (!looks.empty() && next != look && next < looks.size()) { showLook(next); }
-			else { animationDone = true; }
+			else { animation.done = true; }
 			return true;
 		}
-		animationIndex = (animationIndex + 1) % animationBitmaps.size();
+		animation.index = (animation.index + 1) % animation.bitmaps.size();
 		showAnimationFrame();
 		return false;
 	}
 
 	void Object::restartAnimation()
 	{
-		animationTick = 0;
-		animationDone = false;
+		animation.tick = 0;
+		animation.done = false;
 
-		if (animationIndex == 0 || animationBitmaps.empty()) { return; }
+		if (animation.index == 0 || animation.bitmaps.empty()) { return; }
 
-		animationIndex = 0;
+		animation.index = 0;
 		showAnimationFrame();
 	}
 
@@ -1042,7 +1042,7 @@ namespace xge
 	void Object::showAnimationFrame()
 	{
 		if (!turnables.empty()) { showHeading(); }
-		else { bitmap = facingPicture(animationBitmaps[animationIndex]); }
+		else { bitmap = facingPicture(animation.bitmaps[animation.index]); }
 		visualDirty = true;
 		size = pictureSize();
 	}

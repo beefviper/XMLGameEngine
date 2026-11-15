@@ -135,13 +135,13 @@ namespace xge
 
 		if (rawObject.hasAnimation)
 		{
-			object.animationBitmaps = first.animation;
+			object.animation.bitmaps = first.animation;
 			if (!first.animationTurned.empty()) { object.turnables = first.animationTurned; }
-			object.animationFrames = animationFrames;
-			object.animationTimes = animationTimesOf(rawObject.animation.times, animationFrames, windowDesc, where + " > <animation>");
-			object.animationOnce = rawObject.animation.once;
-			object.animationThen = processCommands(rawObject.animation.thenCommands, where + " > <animation> > <then>");
-			object.bitmap = object.animationBitmaps.front();
+			object.animation.frames = animationFrames;
+			object.animation.times = animationTimesOf(rawObject.animation.times, animationFrames, windowDesc, where + " > <animation>");
+			object.animation.once = rawObject.animation.once;
+			object.animation.then = processCommands(rawObject.animation.thenCommands, where + " > <animation> > <then>");
+			object.bitmap = object.animation.bitmaps.front();
 		}
 
 		if (object.picture.kind == ShapeKind::Text && showsNumbers(rawObject.sprite))
@@ -390,10 +390,10 @@ namespace xge
 		if (!looks.empty() && !looks.front().frames.empty())
 		{
 			// It starts as a look that moves.
-			object.animationBitmaps = looks.front().frames;
-			object.animationFrames = looks.front().frameTicks;
-			object.animationTimes = looks.front().frameTimes;
-			object.animationOnce = looks.front().once;
+			object.animation.bitmaps = looks.front().frames;
+			object.animation.frames = looks.front().frameTicks;
+			object.animation.times = looks.front().frameTimes;
+			object.animation.once = looks.front().once;
 		}
 
 		// The look for each way it moves; one left out is another's.
@@ -734,12 +734,12 @@ namespace xge
 			}
 			return made;
 		};
-		object.animationHitboxes = frameHitboxes(rawObject.animation.frameHitboxes, where + " > <animation>");
+		object.animation.hitboxes = frameHitboxes(rawObject.animation.frameHitboxes, where + " > <animation>");
 		for (std::size_t i = 0; i < object.looks.size() && i < rawObject.looks.size(); ++i)
 		{
 			object.looks[i].frameHitboxes = frameHitboxes(rawObject.looks[i].frameHitboxes, where + " > <animation name=\"" + rawObject.looks[i].name + "\">");
 		}
-		if (object.look < object.looks.size() && !object.looks[object.look].frames.empty()) { object.animationHitboxes = object.looks[object.look].frameHitboxes; }
+		if (object.look < object.looks.size() && !object.looks[object.look].frames.empty()) { object.animation.hitboxes = object.looks[object.look].frameHitboxes; }
 
 		for (std::size_t edge = 0; edge < object.collisionData.edges.size(); ++edge)
 		{

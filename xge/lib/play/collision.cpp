@@ -283,7 +283,7 @@ namespace xge
 
 			// Drawn and placed as showHeading would at that moment: the
 			// picture at the nearest whole degree, turned about its pivot.
-			const std::size_t frame = object.turnables.size() > 1 && object.animationIndex < object.turnables.size() ? object.animationIndex : 0;
+			const std::size_t frame = object.turnables.size() > 1 && object.animation.index < object.turnables.size() ? object.animation.index : 0;
 			const int degrees = wholeDegrees(object.heading + turn * time);
 			at.drawing = &object.turnables[frame]->turnedTo(degrees);
 			const Vector2f arm = object.hasPivot ? object.pivotFromMiddle : Vector2f{};

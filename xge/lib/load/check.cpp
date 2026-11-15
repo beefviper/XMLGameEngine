@@ -395,7 +395,7 @@ namespace xge
 		for (const Object& object : objects)
 		{
 			for (const Timer& timer : object.timers) { visit(timer.commands, &object); }
-			visit(object.animationThen, &object);
+			visit(object.animation.then, &object);
 			for (const Object::Look& look : object.looks) { visit(look.then, &object); }
 			for (const auto& [name, commands] : object.action) { visit(commands, &object); }
 			for (const auto& rule : object.collisionData.others) { visit(rule.commands, &object); }
@@ -807,7 +807,7 @@ namespace xge
 				}
 			};
 			for (const auto& timer : object.timers) { checkWalks(timer.commands, where + " > <timer>"); }
-			checkWalks(object.animationThen, where + " > <animation> > <then>");
+			checkWalks(object.animation.then, where + " > <animation> > <then>");
 			for (const auto& look : object.looks) { checkWalks(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>"); }
 			for (const auto& [name, commands] : object.action) { checkWalks(commands, where + " > <action name=\"" + name + "\">"); }
 			for (const auto& rule : object.collisionData.others) { onLine(rule.line, [&] { checkWalks(rule.commands, where + " > <collision>"); }); }
@@ -821,7 +821,7 @@ namespace xge
 					for (const Command& command : rule.commands)
 					{
 						if (!std::holds_alternative<CmdHole>(shapeOf(command))) { continue; }
-						if (!object.bitmap || object.hasHeading || !object.animationBitmaps.empty() || !object.looks.empty() || object.mirrors)
+						if (!object.bitmap || object.hasHeading || !object.animation.bitmaps.empty() || !object.looks.empty() || object.mirrors)
 						{
 							throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or <polygon>s, or a <bitmap>, with no <heading>, <animation>, <mirror> or second <sprite>");
 						}
@@ -897,7 +897,7 @@ namespace xge
 						checks.all(commands, here); checks.ownLooks(commands, &object, here);
 						checkPlace(commands, Place::ObjectTimer, here);
 					};
-					checkThen(object.animationThen, where + " > <animation> > <then>");
+					checkThen(object.animation.then, where + " > <animation> > <then>");
 					for (const auto& look : object.looks) { checkThen(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>"); }
 					for (const auto& [name, commands] : object.action) { checks.ownLooks(commands, &object, where); }
 					for (const auto& rule : object.collisionData.others) { onLine(rule.line, [&] { checks.ownLooks(rule.commands, &object, where); }); }

@@ -337,9 +337,9 @@ TEST_CASE("a burst swells and shrinks, and goes after three quarters of a second
 	int frame = 0;
 	for (; frame < 120 && !play.game.tryGetObject("burst.1"); ++frame) { play.frames(1); }
 	REQUIRE(play.game.tryGetObject("burst.1"));
-	CHECK(play.game.getObject("burst.1").animationIndex == 0);
+	CHECK(play.game.getObject("burst.1").animation.index == 0);
 	play.frames(18);
-	CHECK(play.game.getObject("burst.1").animationIndex == 2); // full
+	CHECK(play.game.getObject("burst.1").animation.index == 2); // full
 	play.frames(30);
 	CHECK(play.game.tryGetObject("burst.1") == nullptr);
 }

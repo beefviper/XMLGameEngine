@@ -377,9 +377,9 @@ namespace xge
 			o << "\theading=" << f.heading << '\n';
 		}
 
-		if (f.animationBitmaps.size() > 1)
+		if (f.animation.bitmaps.size() > 1)
 		{
-			o << "\tanimation=" << f.animationBitmaps.size() << " frames, " << f.animationFrames << " game frames each\n";
+			o << "\tanimation=" << f.animation.bitmaps.size() << " frames, " << f.animation.frames << " game frames each\n";
 		}
 
 		if (f.drag != 0)

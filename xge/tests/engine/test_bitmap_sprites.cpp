@@ -581,8 +581,8 @@ TEST_CASE("an animation shows its sprites in turn, each for the interval, round 
 	game.setCurrentState("playing");
 	Object& thing = game.getObject("thing");
 
-	CHECK(thing.animationFrames == 30);
-	REQUIRE(thing.animationBitmaps.size() == 2);
+	CHECK(thing.animation.frames == 30);
+	REQUIRE(thing.animation.bitmaps.size() == 2);
 	CHECK(showing(thing) == 'a');
 
 	frames(game, 29);
@@ -611,7 +611,7 @@ TEST_CASE("a frame with its own seconds shows that long; the others the animatio
 		Game& game = loaded.game;
 		game.setCurrentState("playing");
 		Object& thing = game.getObject("thing");
-		CHECK(thing.animationTimes == std::vector<int>{ 6, 30 });
+		CHECK(thing.animation.times == std::vector<int>{ 6, 30 });
 
 		frames(game, 5);
 		CHECK(showing(thing) == 'a');
@@ -632,7 +632,7 @@ TEST_CASE("a frame with its own seconds shows that long; the others the animatio
 		Game& game = loaded.game;
 		game.setCurrentState("playing");
 		Object& thing = game.getObject("thing");
-		CHECK(thing.animationTimes == std::vector<int>{ 6, 30 });
+		CHECK(thing.animation.times == std::vector<int>{ 6, 30 });
 		frames(game, 6);
 		CHECK(showing(thing) == 'b');
 		frames(game, 29);
@@ -644,7 +644,7 @@ TEST_CASE("a frame with its own seconds shows that long; the others the animatio
 	SECTION("none of its own: every frame the animation's")
 	{
 		Loaded loaded{ gameXml(objectWith(kA + kB, kTwoFrames), "<show object=\"thing\" />") };
-		CHECK(loaded.game.getObject("thing").animationTimes.empty());
+		CHECK(loaded.game.getObject("thing").animation.times.empty());
 	}
 
 	SECTION("a frame's own time must be above 0")
@@ -701,7 +701,7 @@ TEST_CASE("an animation with once plays through one time", "[animation]")
 		CHECK(showing(thing) == 'b');
 		frames(game, 60);
 		CHECK(showing(thing) == 'b');
-		CHECK(thing.animationDone);
+		CHECK(thing.animation.done);
 
 		game.resetAll();
 		CHECK(showing(thing) == 'a');
@@ -828,7 +828,7 @@ TEST_CASE("becoming a look that plays once starts it from its first frame, even 
 	frames(game, 30);
 	CHECK(thing.lookName() == "flash");
 	CHECK(showing(thing) == 'b');
-	CHECK(thing.animationIndex == 0);
+	CHECK(thing.animation.index == 0);
 }
 
 TEST_CASE("the interval is in seconds, so it follows the window's framerate", "[animation]")
@@ -836,15 +836,15 @@ TEST_CASE("the interval is in seconds, so it follows the window's framerate", "[
 	const std::string objects = objectWith(kA + kB, "<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>");
 
 	Loaded fast{ gameXml(objects, "<show object=\"thing\" />", 120) };
-	CHECK(fast.game.getObject("thing").animationFrames == 120);
+	CHECK(fast.game.getObject("thing").animation.frames == 120);
 
 	Loaded slow{ gameXml(objects, "<show object=\"thing\" />", 25) };
-	CHECK(slow.game.getObject("thing").animationFrames == 25);
+	CHECK(slow.game.getObject("thing").animation.frames == 25);
 
 	// An interval so short it is under one frame still takes one.
 	Loaded quick{ gameXml(objectWith(kA + kB, "<animation><seconds>0.001</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"),
 		"<show object=\"thing\" />") };
-	CHECK(quick.game.getObject("thing").animationFrames == 1);
+	CHECK(quick.game.getObject("thing").animation.frames == 1);
 }
 
 TEST_CASE("the picture is marked to be drawn again when it changes, and not before", "[animation]")
@@ -917,7 +917,7 @@ TEST_CASE("only what is shown and in play animates, and a reset starts it over",
 		game.resetAll();
 		game.setCurrentState("playing");
 		CHECK(showing(thing) == 'a');
-		CHECK(thing.animationTick == 0);
+		CHECK(thing.animation.tick == 0);
 
 		frames(game, 29);
 		CHECK(showing(thing) == 'a');
@@ -971,9 +971,9 @@ TEST_CASE("the members of a group can each have sprites and an animation of thei
 	Game& game = loaded.game;
 	game.setCurrentState("playing");
 
-	CHECK(game.getObject("same").animationFrames == 60);
-	CHECK(game.getObject("quick").animationFrames == 30);
-	CHECK(game.getObject("mine").animationFrames == 60);
+	CHECK(game.getObject("same").animation.frames == 60);
+	CHECK(game.getObject("quick").animation.frames == 30);
+	CHECK(game.getObject("mine").animation.frames == 60);
 
 	// The third member shows its own sprites, which are not kA and kB: its
 	// first is solid all over, its second clear all over.
@@ -998,8 +998,8 @@ TEST_CASE("an object with one sprite is not animated, named or not", "[animation
 	Loaded loaded{ gameXml(objectWith(kA), "<show object=\"thing\" />") };
 	const Object& thing = loaded.game.getObject("thing");
 
-	CHECK(thing.animationBitmaps.empty());
-	CHECK(thing.animationFrames == 0);
+	CHECK(thing.animation.bitmaps.empty());
+	CHECK(thing.animation.frames == 0);
 	CHECK(showing(thing) == 'a');
 }
 
@@ -1098,7 +1098,7 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 		// 4 by 4: a line from 0, 0 to 3, 3.
 		Loaded loaded{ gameXml(objectWith(kA + aLine,
 			"<animation><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"c\" /></animation>"), shows) };
-		CHECK(loaded.game.getObject("thing").animationBitmaps.size() == 2);
+		CHECK(loaded.game.getObject("thing").animation.bitmaps.size() == 2);
 	}
 
 	SECTION("frames of different shapes that would be turned into different squares")
@@ -1212,8 +1212,8 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 		REQUIRE(alien->bitmap);
 		CHECK(alien->bitmap->width == 55);
 		CHECK(alien->bitmap->height == 40);
-		CHECK(alien->animationBitmaps.size() == 2);
-		CHECK(alien->animationFrames == 60);
+		CHECK(alien->animation.bitmaps.size() == 2);
+		CHECK(alien->animation.frames == 60);
 	}
 
 	// The three kinds are laid out one under the other, a row of gap between.
@@ -1236,7 +1236,7 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 	REQUIRE(player.bitmap);
 	CHECK(player.bitmap->width == 55);
 	CHECK(player.bitmap->height == 35);
-	CHECK(player.animationBitmaps.empty());
+	CHECK(player.animation.bitmaps.empty());
 	CHECK(player.position.x == (1024.0f - 55.0f) / 2.0f);
 
 	// The bullet is a thin tall rectangle.
@@ -1256,7 +1256,7 @@ TEST_CASE("the aliens change picture every second, all together, and march on me
 	{
 		for (const Object* alien : aliensOf(game))
 		{
-			if (alien->bitmap != alien->animationBitmaps[index]) { return false; }
+			if (alien->bitmap != alien->animation.bitmaps[index]) { return false; }
 		}
 		return true;
 	};
@@ -1282,10 +1282,10 @@ TEST_CASE("the aliens' two pictures differ, so there is something to see", "[spa
 	Invasion invasion;
 	const Object& alien = invasion.game.getObject("aliens.4.2");
 
-	REQUIRE(alien.animationBitmaps.size() == 2);
-	CHECK(alien.animationBitmaps[0]->rgba != alien.animationBitmaps[1]->rgba);
-	CHECK(alien.animationBitmaps[0]->width == alien.animationBitmaps[1]->width);
-	CHECK(alien.animationBitmaps[0]->height == alien.animationBitmaps[1]->height);
+	REQUIRE(alien.animation.bitmaps.size() == 2);
+	CHECK(alien.animation.bitmaps[0]->rgba != alien.animation.bitmaps[1]->rgba);
+	CHECK(alien.animation.bitmaps[0]->width == alien.animation.bitmaps[1]->width);
+	CHECK(alien.animation.bitmaps[0]->height == alien.animation.bitmaps[1]->height);
 }
 
 TEST_CASE("a shot from the ship in the middle kills exactly one alien and is taken away", "[spaceinvaders]")

@@ -626,13 +626,13 @@ namespace xge
 		FirstPass first;
 		first.picture = from.looks.empty() ? from.picture : from.looks.front().picture;
 		first.bitmap = from.looks.empty() ? from.bitmap : from.looks.front().bitmap;
-		if (from.animationBitmaps.empty())
+		if (from.animation.bitmaps.empty())
 		{
 			if (!from.turnables.empty()) { first.turned = from.turnables.front(); }
 		}
 		else
 		{
-			first.animation = from.animationBitmaps;
+			first.animation = from.animation.bitmaps;
 			first.animationTurned = from.turnables;
 		}
 		if (!from.looks.empty()) { first.looks = &from.looks; }
