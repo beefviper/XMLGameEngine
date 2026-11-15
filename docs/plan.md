@@ -134,6 +134,7 @@ Goals the author has set, beyond the tasks above. None is scheduled; delta time 
 
 ### Delta time
 
+- **Design:** [time](designs/29-time.md), awaiting the author's answers.
 - **Decided by the author:** movement goes by time passed, not by frames. Being tied to the frame rate was never intended; it is how the first games happened to be written.
 - **Today:** a velocity is pixels per frame, while timers are already in seconds, so a game's speed follows its `<framerate>` ([limits](reference/limits.md#movement-and-collisions)).
 - **What the design must answer before it is built:**
@@ -187,10 +188,10 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 - **Steering** ([chase-and-paths](designs/24-chase-and-paths.md)): leading a target, chasing round walls, a real maze search as another verb, curved path legs.
 - **Platforms** ([platforming](designs/23-platforming.md)): Donkey Kong's barrels choosing ladders by where Jumpman is, the other three screens, air control.
-- **Cells** ([groups](designs/06-groups.md#cells)): gliding between cells; Tetris hold, lock delay, ghost piece, a bag of seven, row scoring; Columns chain scoring; Centipede's flea, spider and scorpion.
+- **Cells** ([groups](designs/06-groups.md#cells)): gliding between cells; Tetris hold, lock delay, ghost piece, row scoring; Columns chain scoring; Centipede's flea, spider and scorpion.
 - **Cell puzzles** ([cell-puzzles](designs/28-cell-puzzles.md#open)): undo of despawned copies, a weighted spawn, a safe first square, conditions in a condition in an action.
 - **Pictures** ([pictures](designs/30-pictures.md), [animation-and-looks](designs/31-animation-and-looks.md)): decals, a hole the shape of a bitmap.
-- **Sound** ([sound](designs/33-sound.md)): an envelope; notes that follow a variable (Space Invaders' march keeping time).
+- **Sound** ([sound](designs/33-sound.md)): the rest of an envelope (attack, sustain, release) beside `<decay>`.
 - **Stereo** (the author's wish): every sound is one channel today, and a stereo recording is averaged into it. Some later games, music above all, will want two. A mono sound then plays the same on both sides, so every game so far sounds as it does now.
 - **Values** ([arithmetic](designs/03-arithmetic.md)): tangent, square root, power, `pick`, when a game needs one.
 - **Conditions** ([states-and-conditions](designs/07-states-and-conditions.md)): object-level conditions, a total inside a value, conditions on edge rules.

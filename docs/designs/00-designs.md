@@ -37,6 +37,7 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 | [board-games](26-board-games.md) | Moves, the picker, puts, `<think>` | Built; action lookahead Open |
 | [cards](27-cards.md) | Decks, piles, hands, patterns, tricks, melds | Built; single cards Open |
 | [cell-puzzles](28-cell-puzzles.md) | Pushing, merging, counting around, undo, conditions in actions | Built |
+| [time](29-time.md) | Movement by time passed: a fixed step with per-second units | Open |
 
 ## Pictures and sound
 
