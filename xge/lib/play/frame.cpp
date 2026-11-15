@@ -272,16 +272,16 @@ namespace xge
 		{
 			for (auto& object : objects)
 			{
-				if (!object.mirrors && !object.hasPoses) { continue; }
+				if (!object.mirror.on && !object.hasPoses) { continue; }
 				if (!rules.inPlay(object)) { continue; }
 
-				if (object.mirrors)
+				if (object.mirror.on)
 				{
 					const auto& step = object.activeMoveStep;
 					const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
-					if (wanted != 0.0f) { object.goingLeft = wanted < 0.0f; }
-					else if (object.isAirborne() && object.flight.step.x != 0.0f) { object.goingLeft = object.flight.step.x < 0.0f; }
-					else if (object.velocity.x != 0.0f) { object.goingLeft = object.velocity.x < 0.0f; }
+					if (wanted != 0.0f) { object.mirror.goingLeft = wanted < 0.0f; }
+					else if (object.isAirborne() && object.flight.step.x != 0.0f) { object.mirror.goingLeft = object.flight.step.x < 0.0f; }
+					else if (object.velocity.x != 0.0f) { object.mirror.goingLeft = object.velocity.x < 0.0f; }
 					object.faceMirror();
 				}
 

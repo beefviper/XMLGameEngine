@@ -167,7 +167,7 @@ TEST_CASE("a <mirror> draws its pictures flipped going that way, and a stop leav
 	executor.executeInput(CmdTriggerAction{ "guy", "left" }, false);
 	play.frames(40);
 	CHECK(guy.lookName() == "stand");
-	CHECK(guy.mirrored);
+	CHECK(guy.mirror.flipped);
 	CHECK(litAt(guy, 3)); // the standing picture, flipped
 	CHECK_FALSE(litAt(guy, 0));
 
@@ -179,7 +179,7 @@ TEST_CASE("a <mirror> draws its pictures flipped going that way, and a stop leav
 	play.frames(1);
 	CHECK(guy.velocity.x < 0.0f);
 	CHECK(guy.lookName() == "skid");
-	CHECK_FALSE(guy.mirrored);
+	CHECK_FALSE(guy.mirror.flipped);
 	CHECK(litAt(guy, 3)); // the skid picture as drawn
 	executor.executeInput(CmdTriggerAction{ "guy", "right" }, false);
 
@@ -187,9 +187,9 @@ TEST_CASE("a <mirror> draws its pictures flipped going that way, and a stop leav
 	executor.executeInput(CmdTriggerAction{ "guy", "left" }, true);
 	play.frames(5);
 	executor.executeInput(CmdTriggerAction{ "guy", "left" }, false);
-	CHECK(guy.mirrored);
+	CHECK(guy.mirror.flipped);
 	play.tap(KeyCode::Space);
-	CHECK_FALSE(guy.mirrored);
+	CHECK_FALSE(guy.mirror.flipped);
 	CHECK(guy.lookName() == "stand");
 	CHECK(litAt(guy, 0));
 }
@@ -204,7 +204,7 @@ TEST_CASE("a diagonal hop going left mirrors it too", "[poses][mirror]")
 
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK(hopper.mirrored);
+	CHECK(hopper.mirror.flipped);
 	CHECK(litAt(hopper, 3));
 }
 

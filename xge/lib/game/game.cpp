@@ -1474,7 +1474,7 @@ namespace xge
 			object.path.name.clear();
 			object.maze.walk = {};
 			object.blink = 0.0f;
-			object.goingLeft = object.start.facing == Direction::Left;
+			object.mirror.goingLeft = object.start.facing == Direction::Left;
 			object.faceMirror();
 			object.wearPalette(0);
 			if (!object.looks.empty()) { object.showLook(object.firstLook); }

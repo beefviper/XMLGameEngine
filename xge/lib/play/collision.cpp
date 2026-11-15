@@ -51,12 +51,12 @@ namespace xge
 			const Hitbox& hitbox = hitboxAt(object, part);
 			if (hitbox.inset)
 			{
-				const float left = object.mirrored ? hitbox.right : hitbox.left;
-				const float right = object.mirrored ? hitbox.left : hitbox.right;
+				const float left = object.mirror.flipped ? hitbox.right : hitbox.left;
+				const float right = object.mirror.flipped ? hitbox.left : hitbox.right;
 				return { object.position + Vector2f{ left, hitbox.top },
 					{ std::max(0.0f, object.size.x - left - right), std::max(0.0f, object.size.y - hitbox.top - hitbox.bottom) } };
 			}
-			const float x = object.mirrored ? object.size.x - hitbox.offset.x - hitbox.size.x : hitbox.offset.x;
+			const float x = object.mirror.flipped ? object.size.x - hitbox.offset.x - hitbox.size.x : hitbox.offset.x;
 			return { object.position + Vector2f{ x, hitbox.offset.y }, hitbox.size };
 		}
 

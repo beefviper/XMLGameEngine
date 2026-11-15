@@ -396,7 +396,7 @@ namespace xge
 			queueHop(object, command.step);
 		}
 		object.facing = command.direction;
-		if (command.step.x != 0.0f) { object.goingLeft = command.step.x < 0.0f; }
+		if (command.step.x != 0.0f) { object.mirror.goingLeft = command.step.x < 0.0f; }
 		object.hasAim = false;
 		return true;
 	}

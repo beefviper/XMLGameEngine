@@ -565,10 +565,10 @@ namespace xge
 		if (!rawObject.mirror.empty())
 		{
 			if (rawObject.hasHeading) { throw std::runtime_error(where + ": <mirror> flips a picture that does not turn; it has a <heading>"); }
-			object.mirrors = true;
-			object.mirrorWay = rawObject.mirror == "right" ? Direction::Right : Direction::Left;
-			object.goingLeft = object.facing == Direction::Left;
-			object.flips = flipsOf(object);
+			object.mirror.on = true;
+			object.mirror.way = rawObject.mirror == "right" ? Direction::Right : Direction::Left;
+			object.mirror.goingLeft = object.facing == Direction::Left;
+			object.mirror.flips = flipsOf(object);
 			object.faceMirror();
 		}
 

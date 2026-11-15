@@ -79,15 +79,15 @@ TEST_CASE("qbert.xml: a hop arcs up off its way and lands on the next cube, whic
 TEST_CASE("qbert.xml: going left he is drawn the other way round", "[qbert][mirror]")
 {
 	Qbert play;
-	CHECK_FALSE(play.qbert().mirrored);
+	CHECK_FALSE(play.qbert().mirror.flipped);
 	play.hop(KeyCode::S);
-	CHECK(play.qbert().mirrored);
+	CHECK(play.qbert().mirror.flipped);
 	CHECK(play.qbert().lookName() == "front");
 	play.hop(KeyCode::W);
-	CHECK_FALSE(play.qbert().mirrored);
+	CHECK_FALSE(play.qbert().mirror.flipped);
 	CHECK(play.qbert().lookName() == "back");
 	play.hop(KeyCode::A);
-	CHECK(play.qbert().mirrored);
+	CHECK(play.qbert().mirror.flipped);
 	CHECK(play.qbert().lookName() == "back");
 }
 
@@ -137,7 +137,7 @@ TEST_CASE("qbert.xml: a hop down a diagonal lights the cube landed on, and one o
 	hop(KeyCode::W);
 	hop(KeyCode::A);
 	CHECK(play.get("qbert").lookName() == "back");
-	CHECK(play.get("qbert").mirrored);
+	CHECK(play.get("qbert").mirror.flipped);
 	CHECK(play.get("upper.1").lookName() == "lit");
 	CHECK(play.get("player").variable.at("score") == Approx(75));
 	hop(KeyCode::D);
@@ -182,7 +182,7 @@ TEST_CASE("qbert.xml: Coily hatches on the bottom row and hunts Q*bert a hop at 
 	play.frames(70);
 	CHECK(coily.position.y < 174.0f);
 	CHECK(coily.position.x > 24.0f);
-	CHECK(coily.mirrored); // his pictures face left, and he goes right
+	CHECK(coily.mirror.flipped); // his pictures face left, and he goes right
 	CHECK(play.get("player").variable.at("lives") == Approx(3));
 
 	// Until it lands on him: he curses, everything standing still, then a

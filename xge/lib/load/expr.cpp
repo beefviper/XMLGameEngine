@@ -641,7 +641,7 @@ namespace xge
 		Object made = makeObject(raw, first, windowDesc, from.cellOffset, from.collisionData.lockstep);
 		made.palettes = from.palettes;
 		made.palette = from.palette;
-		if (made.mirrors) { made.flips = from.flips; }
+		if (made.mirror.on) { made.mirror.flips = from.mirror.flips; }
 		return made;
 	}
 

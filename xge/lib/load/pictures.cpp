@@ -115,7 +115,7 @@ namespace xge
 				}
 				object.palettes.push_back(std::move(palette));
 			}
-			if (object.mirrors) { object.flips = flipsOf(object); }
+			if (object.mirror.on) { object.mirror.flips = flipsOf(object); }
 		}
 	}
 

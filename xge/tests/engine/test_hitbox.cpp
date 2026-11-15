@@ -220,7 +220,7 @@ TEST_CASE("<hitbox> pulled in from the sides: the most particular word for a sid
 		const Scratch again(probe({ 87 }) + target(man, "<hitbox><left>12</left></hitbox>"));
 		Played mirrored(again.path);
 		mirrored.game.getObject("probe").position.x = 101.0f;
-		mirrored.game.getObject("target").mirrored = true;
+		mirrored.game.getObject("target").mirror.flipped = true;
 		mirrored.probe("1");
 		CHECK(mirrored.hits() == 1);
 	}
@@ -365,13 +365,13 @@ TEST_CASE("<frame> with <hitbox>es: a reach that touches only while that picture
 		// Mirrored, the fist is out past his left side (94 to 100): the bag on the right is safe, one on the left is hit.
 		const Scratch right(made(123));
 		Played facingLeft(right.path);
-		facingLeft.game.getObject("boxer").mirrored = true;
+		facingLeft.game.getObject("boxer").mirror.flipped = true;
 		jab(facingLeft);
 		CHECK(facingLeft.game.getObject("bag").variable.at("hits") == 0);
 
 		const Scratch left(made(88));
 		Played play(left.path);
-		play.game.getObject("boxer").mirrored = true;
+		play.game.getObject("boxer").mirror.flipped = true;
 		jab(play);
 		CHECK(play.game.getObject("bag").variable.at("hits") == 1);
 	}

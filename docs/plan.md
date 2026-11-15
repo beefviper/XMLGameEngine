@@ -82,7 +82,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **8.** `object.animation` (pictures, times, frame hitboxes, tick, index, once, done, the look before, then).
   - [x] **9.** `object.map` (its place on a map: name, column, row, origin, tile, columns, rows, on cells, home map).
   - [x] **10.** `object.item` (held, number, laid by, face up, with what `ItemOf` has now).
-  - [ ] **11.** `object.mirror` (mirrors, way, mirrored, going left, flips).
+  - [x] **11.** `object.mirror` (mirrors, way, mirrored, going left, flips).
   - [ ] **12.** `object.surface` (a surface's drag and grip, and the ground's under it).
   - [ ] **13.** `object.rest` (resting, resting on, rested at, settled on, normal, age).
   - [ ] **14.** `object.dark` and `object.altitude` (seen, in the dark; altitude, fall, bounce, shadow).

@@ -1045,7 +1045,7 @@ namespace xge
 			}
 		};
 		Shown shownBefore;
-		Shown shown() const noexcept { return { look, animation.index, size, mirrored }; }
+		Shown shown() const noexcept { return { look, animation.index, size, mirror.flipped }; }
 
 		// The frame is over: how it is now is how it was before the next.
 		void remember()
@@ -1677,18 +1677,22 @@ namespace xge
 		std::array<std::size_t, 5> joinLooks{};
 		bool hasJoins{ false };
 
-		// <mirror>: going `mirrorWay` (left or right) its pictures are drawn
-		// flipped left to right, when `mirrors`; `mirrored` is whether they
-		// are now. `goingLeft` is the way across it last went: what keys it
-		// holds say, else the hop or jump it is making, else its velocity
-		// (a stop leaves it as it was). `flips` has each of its pictures and
-		// that picture flipped, both ways round, made as the game loads and
-		// shared by its copies.
-		bool mirrors{ false };
-		Direction mirrorWay{ Direction::Left };
-		bool mirrored{ false };
-		bool goingLeft{ false };
-		std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flips;
+		// <mirror>: going `way` (left or right) its pictures are drawn flipped
+		// left to right, when `on`; `flipped` is whether they are now.
+		// `goingLeft` is the way across it last went: what keys it holds say,
+		// else the hop or jump it is making, else its velocity (a stop leaves
+		// it as it was). `flips` has each of its pictures and that picture
+		// flipped, both ways round, made as the game loads and shared by its
+		// copies.
+		struct Mirror
+		{
+			bool on{ false };
+			Direction way{ Direction::Left };
+			bool flipped{ false };
+			bool goingLeft{ false };
+			std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flips;
+		};
+		Mirror mirror;
 
 		// The picture to show for `picture`: flipped while mirrored.
 		std::shared_ptr<const Bitmap> facingPicture(const std::shared_ptr<const Bitmap>& shown) const;
