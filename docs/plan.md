@@ -13,10 +13,9 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 
 | # | Task | Why here |
 |---|---|---|
-| 1 | [A4](#a4-object-in-parts): `Object` in parts | Tidying (A3, done). If the [review of the C++](#a-review-of-the-c) starts first, it replaces it |
-| 2 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
-| 3 | [F8](#f8-dice): dice | Waits on the hold on new games |
-| 4 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
+| 1 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
+| 2 | [F8](#f8-dice): dice | Waits on the hold on new games |
+| 3 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
 
 **On hold:** [A5](#a5-a-game-written-out-as-if-by-hand), the stand-alone generator (the author: nice-looking generated code is a hard problem that may need several things to change at once). It stands at `pong_min` written, and `pong.xml` written by hand as the next example.
 
@@ -65,38 +64,6 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [ ] **4. The author: whether each verb owns its data (L if yes).** `Command` would become `{ const Verb* verb; data }` and `RawCommand`'s shared fields the verb's own, which is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer heavily, so it waits until A5 has retired `data.xsl`, or is dropped. Ask before starting. With it, each command carries its own line, and the load's name checks can say the command's line rather than its holder's (B7, done; the author wants that).
 - **Files.** `xge/lib/verbs/*`, `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/play.md` "Loading".
 - **Done when** adding a verb is one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element and the docs.
-
-#### A4. `Object` in parts
-
-- **Needs** nothing (A2, done). Lowest priority here.
-- **Why.** About 200 fields in one struct. Leave `Moment` (position, velocity and the rest that tests name) exactly as it is.
-- **Check for every step:** `xgetest-long "[speed]"` is no slower.
-- **Steps, one group a commit.** Each moves the fields of one feature into a member that most objects never use and tests rarely name.
-  - [x] **1.** `object.maze` (a walker's state: map, walls, slows, walk).
-  - [x] **2.** `object.cell` (cells and chains: chain, checks, shape, held move; `onCells` and `homeMap` stay with the map place).
-  - [x] **3.** `object.holder` (its live numbers: items, calling, called, points, pattern, strength, odds, lead, winner, tricks, deadwood).
-  - [x] **4.** `object.moves` and `object.marks` (boards), and `object.picker` (what a picker holds, its last move, a cursor's kept column and pointer).
-  - [x] **5.** `object.swing` (frames, by, done, held; `spin` and the pivot stay, as anything with a heading turns).
-  - [x] **6.** `object.path` (a `<follow>` under way: name, leg, left, legStarted, wait).
-  - [x] **7.** `object.flight` (a timed `<hop>`) and `object.footing` (grounded, jumping, climbing).
-  - [x] **8.** `object.animation` (pictures, times, frame hitboxes, tick, index, once, done, the look before, then).
-  - [x] **9.** `object.map` (its place on a map: name, column, row, origin, tile, columns, rows, on cells, home map).
-  - [x] **10.** `object.item` (held, number, laid by, face up, with what `ItemOf` has now).
-  - [x] **11.** `object.mirror` (mirrors, way, mirrored, going left, flips).
-  - [x] **12.** `object.surface` (a surface's drag and grip, and the ground's under it).
-  - [x] **13.** `object.rest` (resting, resting on, rested at, settled on, normal, age).
-  - [x] **14.** `object.dark` (kind, seen, hidden) and `object.aloft` (has an altitude, fall, bounce, shadow; the altitude itself is the Moment's).
-  - [x] **15.** `object.tether` (from, to, thickness, color) and `object.carry` (what, offset, dropped).
-  - [x] **16.** `object.drive` (what held keys drive: move steps, thrust, turn, thrust along the heading).
-  - [x] **17.** `object.looks` (all, shown, first, palettes, worn, poses, joins).
-  - [x] **18.** `object.drawn`: picture, bitmap, unholed, visualDirty, textPieces, turnables, turnedDegrees, turnedFrame.
-  - [x] **19.** `object.motion`: speed, speedHeld, grip, drag, friction, mass.
-  - [x] **20.** `object.turning`: hasHeading, hasPivot, pivotFromMiddle, spin.
-  - [x] **21.** `object.layout`: usesSize, sizesOf, sizesUsed, cellOffset (how its position is worked out again).
-  - [x] **22.** `object.pull`: toward (the pulls), seek, seekRate.
-  - [x] **23.** `object.turns`: takes, sprite (its look off turn), ownsClass.
-- **Later, not planned:** a group no object uses could become `std::optional` or a pointer, which also shrinks every object.
-- **Done when** `struct Object` itself declares under 60 fields.
 
 #### A5. A game written out as if by hand
 
@@ -208,7 +175,7 @@ Goals the author has set, beyond the tasks above. None is scheduled; delta time 
 - The same pass the language had: name the few ideas the engine really has, then ask of each large file which idea it belongs to and why it needs more than that. Something can be abstract and still simple.
 - The engine library is about 42,000 lines, and five files hold a third of it (`load/xml.cpp`, `load/expr.cpp`, `game/game.cpp`, `game/holders.cpp`, `game/object.h`).
 - The reader is the first target: much of it writes out, tag by tag, what the schema already says.
-- A4 above only tidies what is there (A2 and A3, done).
+- `Object` is already in parts (A4, done: 58 fields, one feature's fields to a part). Later: a part no object uses could become `std::optional` or a pointer, which also shrinks every object.
 
 ### A version on the language, and a definition of 1.0
 
