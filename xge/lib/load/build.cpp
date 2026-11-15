@@ -550,8 +550,9 @@ namespace xge
 		object.hand.seat = rawObject.handSeat;
 		object.hand.team = rawObject.handTeam;
 		object.hand.holds = rawObject.handHolds;
-		object.held = rawObject.held;
-		object.item = rawObject.item;
+		object.item.is = rawObject.held;
+		object.item.startHolder = rawObject.item.startHolder;
+		object.item.worths = rawObject.item.worths;
 		object.takesTurns = rawObject.takesTurns;
 		object.turnsSprite = rawObject.turnsSprite;
 		object.ownsClass = rawObject.ownsClass;

@@ -1412,13 +1412,19 @@ namespace xge
 			float deadwood{};
 		};
 		Holder holder;
-		// An item: what it is, its number (from 1, every held member of the game
-		// in turn) and whether its face is up.
-		bool held{ false };
-		ItemOf item;
-		int itemNumber{};
-		int laidBy{};           // the seat of the hand that last laid it (0 none)
-		bool faceUp{ false };
+		// An item (a held member): what it is (its start holder and worths, as
+		// ItemOf), its number (from 1, every held member of the game in turn),
+		// the hand that last laid it and whether its face is up.
+		struct Item
+		{
+			bool is{ false };
+			std::string startHolder;
+			std::vector<float> worths;
+			int number{};
+			int laidBy{};           // the seat of the hand that last laid it (0 none)
+			bool faceUp{ false };
+		};
+		Item item;
 		// A hand: the holder it points at (its full name) and the item of it
 		// (index from the bottom; -1: the holder itself, empty), the items it
 		// holds and the holder they came from, and whether the mouse moves it

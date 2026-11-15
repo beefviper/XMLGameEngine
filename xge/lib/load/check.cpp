@@ -554,7 +554,7 @@ namespace xge
 					if (!holds.holdsClass.empty())
 					{
 						const std::string where = "object '" + object.name + "' > <holds class=\"" + holds.holdsClass + "\">";
-						const auto member = std::find_if(objects.begin(), objects.end(), [&](const Object& other) { return other.held && other.objClass == holds.holdsClass; });
+						const auto member = std::find_if(objects.begin(), objects.end(), [&](const Object& other) { return other.item.is && other.objClass == holds.holdsClass; });
 						if (member == objects.end()) { throw std::runtime_error(where + ": nothing is of class " + holds.holdsClass); }
 						std::vector<std::string> looks;
 						for (const Object::Look& look : member->looks) { looks.push_back(look.name); }

@@ -49,13 +49,13 @@ namespace xge
 	{
 		if (number <= 0) { return nullptr; }
 		const std::size_t at = static_cast<std::size_t>(number - 1);
-		if (at < itemIndex.size() && itemIndex[at] < objects.size() && objects[itemIndex[at]].itemNumber == number) { return &objects[itemIndex[at]]; }
+		if (at < itemIndex.size() && itemIndex[at] < objects.size() && objects[itemIndex[at]].item.number == number) { return &objects[itemIndex[at]]; }
 		// Objects moved (a copy taken away): found again.
 		itemIndex.clear();
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
-			if (objects[i].itemNumber <= 0) { continue; }
-			const std::size_t slot = static_cast<std::size_t>(objects[i].itemNumber - 1);
+			if (objects[i].item.number <= 0) { continue; }
+			const std::size_t slot = static_cast<std::size_t>(objects[i].item.number - 1);
 			if (itemIndex.size() <= slot) { itemIndex.resize(slot + 1, objects.size()); }
 			itemIndex[slot] = i;
 		}
@@ -80,7 +80,7 @@ namespace xge
 
 	void Game::turnItem(Object& item, bool up)
 	{
-		item.faceUp = up;
+		item.item.faceUp = up;
 		const std::size_t look = up ? 0 : 1;
 		if (item.look != look && look < item.looks.size()) { item.showLook(look); }
 	}
@@ -293,7 +293,7 @@ namespace xge
 		{
 			const Object& x = *itemAt(items[static_cast<std::size_t>(a)]);
 			const Object& y = *itemAt(items[static_cast<std::size_t>(b)]);
-			return x.itemNumber < y.itemNumber;
+			return x.item.number < y.item.number;
 		};
 		for (auto& meld : melds)
 		{
@@ -353,7 +353,7 @@ namespace xge
 		std::vector<int> kinds;
 		for (const Object& object : objects)
 		{
-			if (!object.held || object.item.worths.empty()) { continue; }
+			if (!object.item.is || object.item.worths.empty()) { continue; }
 			top = std::max(top, object.item.worths.back());
 			if (std::find(kinds.begin(), kinds.end(), followed(trick, object)) == kinds.end()) { kinds.push_back(followed(trick, object)); }
 		}
@@ -435,7 +435,7 @@ namespace xge
 		for (const int number : holder.holder.items)
 		{
 			const Object* item = itemAt(number);
-			if (!item || !item->faceUp || item->item.worths.empty()) { continue; }
+			if (!item || !item->item.faceUp || item->item.worths.empty()) { continue; }
 			if (byVariable)
 			{
 				const auto value = item->variable.find(counted);
@@ -483,7 +483,7 @@ namespace xge
 			const Object* lead = holder.holder.items.empty() ? nullptr : itemAt(holder.holder.items.front());
 			const Object* best = trickWinning(holder);
 			holder.holder.lead = lead ? static_cast<float>(followed(holder.holder.takes, *lead)) : 0.0f;
-			holder.holder.winner = best ? static_cast<float>(best->laidBy) : 0.0f;
+			holder.holder.winner = best ? static_cast<float>(best->item.laidBy) : 0.0f;
 			refreshBoundTexts(holder.name, "lead", holder.holder.lead);
 			refreshBoundTexts(holder.name, "winner", holder.holder.winner);
 		}
@@ -830,7 +830,7 @@ namespace xge
 		float base = 1.0f;
 		for (const Object& object : objects)
 		{
-			if (!object.held) { continue; }
+			if (!object.item.is) { continue; }
 			// The values compared are counted in room for 0 to 63 (bestPattern).
 			const Scored one = scored(object);
 			if (std::any_of(one.values.begin(), one.values.begin() + static_cast<std::ptrdiff_t>(slots.by.size()), [](int value) { return value < 0 || value >= 64; })) { return; }
@@ -869,7 +869,7 @@ namespace xge
 			std::vector<Scored> unseen;
 			for (const Object& object : objects)
 			{
-				if (object.held && std::find(seen.begin(), seen.end(), object.itemNumber) == seen.end()) { unseen.push_back(scored(object)); }
+				if (object.item.is && std::find(seen.begin(), seen.end(), object.item.number) == seen.end()) { unseen.push_back(scored(object)); }
 			}
 			const std::size_t board = own.size() - mine;
 			const std::size_t full = static_cast<std::size_t>(holder.holder.scoreFull);
@@ -941,7 +941,7 @@ namespace xge
 		int number = 0;
 		for (Object& object : objects)
 		{
-			if (object.held) { object.itemNumber = ++number; }
+			if (object.item.is) { object.item.number = ++number; }
 		}
 		itemIndex.clear();
 		if (number == 0) { return; }
@@ -949,7 +949,7 @@ namespace xge
 		for (Object& object : objects)
 		{
 			if (object.holder.is) { object.holder.items.clear(); object.holder.broken.clear(); object.holder.called = 0.0f; refreshHolder(object); }
-			if (object.held) { object.laidBy = 0; }
+			if (object.item.is) { object.item.laidBy = 0; }
 			if (object.hand.is)
 			{
 				object.hand.held.clear();
@@ -964,9 +964,9 @@ namespace xge
 		std::vector<std::string> order;
 		for (Object& object : objects)
 		{
-			if (!object.held) { continue; }
+			if (!object.item.is) { continue; }
 			if (!starts.count(object.item.startHolder)) { order.push_back(object.item.startHolder); }
-			starts[object.item.startHolder].push_back(object.itemNumber);
+			starts[object.item.startHolder].push_back(object.item.number);
 		}
 		for (const std::string& name : order)
 		{
@@ -1111,7 +1111,7 @@ namespace xge
 					size = sizeOf(*item);
 					// A holder with a <lift>: a face-up item pointed at is lifted
 					// out of the fan, so all of it shows.
-					if (item->faceUp && holder->holder.lift != 0.0f)
+					if (item->item.faceUp && holder->holder.lift != 0.0f)
 					{
 						pointed.y -= holder->holder.lift;
 						item->position = pointed;
@@ -1171,7 +1171,7 @@ namespace xge
 				for (const int number : from->holder.items)
 				{
 					const Object* item = itemAt(number);
-					if (item && number != first->itemNumber && test(*item)) { return true; }
+					if (item && number != first->item.number && test(*item)) { return true; }
 				}
 				return false;
 			};
@@ -1198,7 +1198,7 @@ namespace xge
 		if (holder.holder.calling > 0.0f) { return false; }
 		if (isWild(rule, *first)) { return true; }
 		const Object* top = itemAt(holder.holder.items.back());
-		if (!top || !top->faceUp) { return false; }
+		if (!top || !top->item.faceUp) { return false; }
 		// <any>: one of them, a value called standing for the top's own.
 		if (!rule.anyRules.empty())
 		{
@@ -1286,7 +1286,7 @@ namespace xge
 			if (static_cast<int>(hand.hand.also.size()) + 1 >= hand.hand.holds || taken(holder->name)) { return false; }
 			const int number = holder->holder.items.back();
 			const Object* top = itemAt(number);
-			if (!top || !top->faceUp) { return false; }
+			if (!top || !top->item.faceUp) { return false; }
 			holder->holder.items.pop_back();
 			refreshHolder(*holder);
 			hand.hand.held.push_back(number);
@@ -1318,7 +1318,7 @@ namespace xge
 		for (int i = at; i < count; ++i)
 		{
 			const Object* item = itemAt(holder->holder.items[static_cast<std::size_t>(i)]);
-			if (!item || !item->faceUp) { return false; }
+			if (!item || !item->item.faceUp) { return false; }
 			if (i > at && !follows(holder->holder.takes, *itemAt(holder->holder.items[static_cast<std::size_t>(i - 1)]), *item)) { return false; }
 		}
 		hand.hand.held.assign(holder->holder.items.begin() + at, holder->holder.items.end());
@@ -1355,7 +1355,7 @@ namespace xge
 	{
 		for (const int number : hand.hand.held)
 		{
-			if (Object* item = itemAt(number)) { item->laidBy = hand.hand.seat; }
+			if (Object* item = itemAt(number)) { item->item.laidBy = hand.hand.seat; }
 			putInHolder(holder, number);
 		}
 		hand.hand.held.clear();
@@ -1551,7 +1551,7 @@ namespace xge
 			if (!all) { return false; }
 			for (Object& object : objects)
 			{
-				if (object.held && (object.inGroup(fromName) || object.inGroup(fullName(fromName)))) { sent.push_back(object.itemNumber); }
+				if (object.item.is && (object.inGroup(fromName) || object.inGroup(fullName(fromName)))) { sent.push_back(object.item.number); }
 			}
 			if (sent.empty()) { return false; }
 			for (Object& object : objects)
@@ -1579,7 +1579,7 @@ namespace xge
 		for (const int number : sent)
 		{
 			Object* item = itemAt(number);
-			if (item) { item->laidBy = 0; }
+			if (item) { item->item.laidBy = 0; }
 			putInHolder(*into, number);
 			if (item && !sprite.empty())
 			{
@@ -1630,7 +1630,7 @@ namespace xge
 			if (!item) { continue; }
 			const auto up = faceFor(*item, sprite);
 			if (!up) { return false; }
-			if (item->faceUp != *up) { turnItem(*item, *up); }
+			if (item->item.faceUp != *up) { turnItem(*item, *up); }
 		}
 		refreshHolder(holder);
 		layOutItems();
@@ -1660,7 +1660,7 @@ namespace xge
 		{
 			if (index < 0 || index >= count) { return false; }
 			const Object* item = itemAt(holder->holder.items[static_cast<std::size_t>(index)]);
-			return item && (item->faceUp || own);
+			return item && (item->item.faceUp || own);
 		};
 		const auto pointAt = [&](Object& to)
 		{
@@ -1834,16 +1834,16 @@ namespace xge
 		float top = 0.0f;
 		for (const Object& object : objects)
 		{
-			if (object.held && !object.item.worths.empty()) { top = std::max(top, object.item.worths.back()); }
+			if (object.item.is && !object.item.worths.empty()) { top = std::max(top, object.item.worths.back()); }
 		}
 		// A partner (another hand on its <team>) winning safely: it is the
 		// last item, or the partner's is the highest or next of its suit.
 		bool partnerWins = false;
-		if (winning && hand.hand.team > 0 && winning->laidBy != hand.hand.seat)
+		if (winning && hand.hand.team > 0 && winning->item.laidBy != hand.hand.seat)
 		{
 			for (const Object& other : objects)
 			{
-				if (other.hand.is && other.hand.seat == winning->laidBy && other.hand.team == hand.hand.team) { partnerWins = last || worth(*winning) >= top - 1.0f || isTrump(rule, *winning); }
+				if (other.hand.is && other.hand.seat == winning->item.laidBy && other.hand.team == hand.hand.team) { partnerWins = last || worth(*winning) >= top - 1.0f || isTrump(rule, *winning); }
 			}
 		}
 
@@ -1933,7 +1933,7 @@ namespace xge
 				{
 					if (holder == own || holder->holder.pickedSends <= 0 || holder->holder.items.empty()) { continue; }
 					const Object* top = itemAt(holder->holder.items.back());
-					if (top && top->faceUp) { up = up ? up : holder; }
+					if (top && top->item.faceUp) { up = up ? up : holder; }
 					else { down = down ? down : holder; }
 				}
 				aim = down ? down : up;
