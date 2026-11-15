@@ -383,7 +383,7 @@ namespace xge
 		// one starts): until then it is not in play. The caller puts it where
 		// it goes. Null, and nothing made, when the object has a <most> and
 		// that many copies of it exist, or when no object has that name.
-		Object* spawn(const std::string& target, bool random = false);
+		Object* spawn(const std::string& target, bool random = false, std::optional<int> member = std::nullopt);
 
 		// <despawn />: the object is no longer in the game. A copy that was
 		// spawned is gone for good when the frame is over; one the file wrote

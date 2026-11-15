@@ -231,7 +231,7 @@ namespace xge
 		return descriptions[name] = any && all;
 	}
 
-	Object* Game::spawn(const std::string& target, bool random)
+	Object* Game::spawn(const std::string& target, bool random, std::optional<int> member)
 	{
 		// What it is a copy of: the object of that name, or the group's
 		// members in turn; never a copy (only the file's objects are
@@ -244,11 +244,12 @@ namespace xge
 		if (from.empty())
 		{
 			const std::string full = fullName(target);
-			if (full != target) { return spawn(full, random); }
+			if (full != target) { return spawn(full, random, member); }
 			return nullptr;
 		}
-		// One of them at random, or each in turn.
-		const std::size_t pick = random ? std::min(from.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(from.size()))))
+		// The one of that number, one of them at random, or each in turn.
+		if (member && (*member < 1 || static_cast<std::size_t>(*member) > from.size())) { return nullptr; }
+		const std::size_t pick = member ? static_cast<std::size_t>(*member - 1) : random ? std::min(from.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(from.size()))))
 			: spawnTurns[target]++ % from.size();
 		const Object& original = objects[from[pick]];
 

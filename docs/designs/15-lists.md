@@ -1,6 +1,6 @@
 # Lists
 
-**Status:** Open. Two trials made with today's words; the author picks the way.
+**Status:** Built: a holder plus four general changes (the author agreed). Simon and Mastermind are open.
 
 ## What we looked for
 
@@ -88,21 +88,24 @@ Neither can be said today, even badly.
 - **Comparing two holders place by place.** Mastermind counts places that match, then colours that match anywhere. This is a count over two sequences, which no word does.
 - **Adding without a fixed pack.** Simon's sequence grows each round. A spawn into a holder (a new token laid on top) would do it. Today a pack is fixed at load.
 
-## Recommendation
+## What we chose
 
-**A holder plus a few general words, not a `<list>`.** Both trials worked, and every awkward part is a small gap that would serve cards and boards as well. In order of how much they cut:
+**A holder plus a few general words, not a `<list>`.** Both trials worked, and every awkward part was a small gap that serves cards and boards as well:
 
-1. **Live `top.<variable>` on a holder** (`bag.top.shape`, `schedule.top.seconds`), the same name `<accepts>` already uses. It removes the `drawn` holder, the trigger and the copy in both trials.
-2. **`<spawn>` by member number:** `<spawn object="pieces" into="next"><member>bag.top.shape</member></spawn>`, in the way `<random />` picks one. It removes the seven conditions.
-3. **`<top sprite>` kept after every `<send>` and `<order>`.** A fix, not a word.
-4. **`<starts>` deals in pack order,** shuffling only where an `<order><random /></order>` says so. The card games already write one, so none changes.
+1. **Live `top.<variable>` on a holder** (`bag.top.shape`, `schedule.top.seconds`), the name `<accepts>` already uses. A holder has one for each variable of its held class, 0 while it is empty. It removed the `drawn` holder, the trigger and the copy from both trials. A name like `bag.top.shape` resolves to its owner by the longest start that names an object.
+2. **`<spawn>` by member number:** `<member>bag.top.shape</member>` beside `<random />`, counting from 1, refused past the last (so an empty bag's 0 makes nothing). It removed the seven conditions.
+3. **`<top sprite>` kept after the deal and every `<send>` and `<order>`,** as it already was after a picker laid. A fix.
+4. **`<starts>` deals in pack order, the first member on top,** shuffling only where an `<order><random /></order>` says. Gin and Spades, which relied on the old shuffle, now say it. The schedule is written first to last.
 
-With 1 and 2 the bag is about fifteen lines: the tokens, `bag`, `used`, and a land action of `<spawn>`, `<send>` and the refill condition. The schedule loses its `drawn` holder and its `read` action.
+Also: a held member may have one look or none (a token no one sees); two were required before.
 
-Simon and Mastermind are a second step, decided when one of them is built: place-by-place reading (a `place=` on a condition about a holder) and a spawn into a holder. Rejected for now: a separate `<list>` of bare numbers. It would repeat `<send>`, `<order>` and `held` under new names, and two ways to hold an order is the kind of emerged assumption to reduce.
+The bag is now about twenty lines: the tokens, `bag`, `used`, and in the land action a `<spawn>`, a `<send>` and the refill. Pac-Man's mode lost its variables and the arithmetic, its timers reading `schedule.top.seconds`, each ending by sending the top wave off.
+
+Rejected: a separate `<list>` of bare numbers. It would repeat `<send>`, `<order>` and `held` under new names, and two ways to hold an order is the kind of emerged assumption to reduce.
+
+Simon and Mastermind are a second step, decided when one of them is built: place-by-place reading (a `place=` on a condition about a holder) and a spawn into a holder.
 
 ## Open
 
-- The author's choice: these four, a `<list>`, or leave the two trials as they read today.
 - The frame-end spawn in trial 1 is general: a `<send>` cannot follow a `<spawn>` in one list. Not part of this choice.
-- The trial files are kept outside the repository for reference.
+- The trial files (before the four changes) are kept outside the repository for reference.

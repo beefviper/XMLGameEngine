@@ -549,6 +549,7 @@ namespace xge
 			holder.spreadSprite = raw.spreadSprite;
 			holder.startCount = static_cast<int>(std::lround(number(raw.startCount)));
 			holder.startMore = static_cast<int>(std::lround(number(raw.startMore)));
+			holder.startShuffled = raw.startShuffled;
 			holder.pickedInto = raw.pickedInto;
 			holder.pickedSends = !raw.hasPickedSend ? 0 : std::max(1, static_cast<int>(std::lround(number(raw.pickedSends))));
 			holder.emptyFrom = raw.emptyFrom;

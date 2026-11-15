@@ -602,7 +602,7 @@ namespace xge
 				if (renamed != *text) { *text = std::move(renamed); changed = true; }
 			}
 			for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
-				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row })
+				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.member })
 			{
 				changed = nameSelfInValue(*each, name) || changed;
 			}
@@ -678,7 +678,7 @@ namespace xge
 				if (renamed != *text) { *text = std::move(renamed); changed = true; }
 			}
 			for (RawValue* each : { &command.amount, &command.seconds, &command.arc, &command.distance, &command.ahead, &command.positionX, &command.positionY,
-				&command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.below })
+				&command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.below, &command.member })
 			{
 				changed = renameObjectInValue(*each, from, to) || changed;
 			}
@@ -809,7 +809,7 @@ namespace xge
 				command.variable = renameStart(command.variable, from, to);
 				command.into = renameStart(command.into, from, to);
 				for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
-					&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row })
+					&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.member })
 				{
 					value(*each);
 				}

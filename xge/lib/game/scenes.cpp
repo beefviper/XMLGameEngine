@@ -208,6 +208,14 @@ namespace xge
 				const std::string scenePath = scene(owner, context);
 				const auto variables = sceneVariables.find(scenePath);
 				if (variables != sceneVariables.end() && variables->second.count(name.substr(dot + 1))) { return scenePath + part; }
+
+				// A variable with a dot of its own (a holder's top.shape): the
+				// owner is a shorter start (bag of bag.top.shape).
+				for (auto at = name.rfind('.', dot - 1); at != std::string::npos && at > 0; at = name.rfind('.', at - 1))
+				{
+					const std::string shorter = object(name.substr(0, at), context, true);
+					if (all.count(shorter)) { return shorter + name.substr(at); }
+				}
 				return name;
 			}
 
@@ -310,6 +318,7 @@ namespace xge
 					value(command.accelerationY, context);
 					value(command.column, context);
 					value(command.row, context);
+					value(command.member, context);
 					// A condition in an action: its test and its commands.
 					if (command.test)
 					{

@@ -310,6 +310,31 @@ TEST_CASE("Tetris plays: a shape comes in, falls, lands and the next comes", "[c
 	CHECK(play.get("playing.status").variable.at("over") == 0.0f);
 }
 
+TEST_CASE("Tetris deals from a bag of seven: every seven shapes are the seven, and an empty bag is shuffled again", "[cells][tetris][holders]")
+{
+	Played play("descriptions/tetris.xml");
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	const Object& bag = play.get("playing.bag");
+	// One falling and one waiting are out of the bag.
+	CHECK(bag.holder.items.size() == 5);
+	CHECK(bag.variable.at("top.shape") >= 1.0f);
+
+	std::set<std::string> first;
+	for (int i = 0; i < 7; ++i)
+	{
+		Object* shape = falling(play.game);
+		REQUIRE(shape);
+		first.insert(shape->copyOf);
+		play.tap(KeyCode::Space);
+		play.frames(2);
+	}
+	CHECK(first.size() == 7);
+	// Nine out: the seven, then two of the next bag (falling and waiting).
+	CHECK(bag.holder.items.size() == 5);
+	CHECK(play.get("playing.used").holder.items.size() == 2);
+}
+
 TEST_CASE("Tetris turns clockwise on W, Up, E or X and counterclockwise on Q", "[cells][tetris]")
 {
 	Played play("descriptions/tetris.xml");

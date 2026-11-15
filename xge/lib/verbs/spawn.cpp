@@ -27,13 +27,14 @@ namespace xge
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			const std::string tag = child->getName();
-			if (tag != "count" && tag != "position" && tag != "velocity" && tag != "acceleration" && tag != "random" && tag != "column" && tag != "row" && tag != "free")
+			if (tag != "count" && tag != "position" && tag != "velocity" && tag != "acceleration" && tag != "random" && tag != "member" && tag != "column" && tag != "row" && tag != "free")
 			{
-				fail(here, "unknown <" + tag + ">; expected a <count>, <random />, a <position> (or a <column> and a <row>, or <free />), a <velocity> and an <acceleration>, each if wanted");
+				fail(here, "unknown <" + tag + ">; expected a <count>, <random /> or a <member>, a <position> (or a <column> and a <row>, or <free />), a <velocity> and an <acceleration>, each if wanted");
 			}
 		}
 		if (auto count = findChild(&node, "count")) { command.amount = readValue(*count, here + " > <count>"); }
 		command.random = findChild(&node, "random") != nullptr;
+		if (auto member = findChild(&node, "member")) { command.member = readValue(*member, here + " > <member>"); }
 		if (auto free = findChild(&node, "free"))
 		{
 			command.free = true;
@@ -100,6 +101,7 @@ namespace xge
 		half(raw.accelerationY, spawn.accelerationY, nullptr, "");
 		half(raw.column, spawn.column, nullptr, "");
 		half(raw.row, spawn.row, nullptr, "");
+		half(raw.member, spawn.member, nullptr, "");
 		spawn.random = raw.random;
 		spawn.into = raw.into;
 		spawn.free = raw.free;
@@ -129,7 +131,7 @@ namespace xge
 			if (!value) { o << "-"; return; }
 			o << (centered ? "centered " : "") << *value;
 		};
-		o << "spawn(" << s.target << (s.count != 1 ? " x" + std::to_string(s.count) : "") << ", ";
+		o << "spawn(" << s.target << (s.count != 1 ? " x" + std::to_string(s.count) : "") << (s.member ? " member " + std::to_string(std::lround(*s.member)) : "") << ", ";
 		half(s.x, s.centerX);
 		o << " ";
 		half(s.y, s.centerY);
@@ -150,7 +152,9 @@ namespace xge
 	static void printSpawnRaw(std::ostream& o, const RawCommand& command)
 	{
 		o << "(" << command.object << ", " << command.amount << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY << ", " << command.accelerationX << " " << command.accelerationY
-			<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << " " << command.below << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
+			<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << " " << command.below << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into);
+		if (isWritten(command.member)) { o << ", member " << command.member; }
+		o << ")";
 	}
 
 	extern const Verb spawnVerb;

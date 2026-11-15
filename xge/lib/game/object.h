@@ -738,6 +738,7 @@ namespace xge
 			RawValue lookSpreadY;
 			RawValue startCount;        // <starts>: what it is sent at the start (empty text: none)
 			RawValue startMore;         // a group's: each holder after the first, this many more
+			bool startShuffled{ false }; // <starts> > <order group><random />: what starts in it is shuffled
 			std::string pickedInto;     // <picked><send into>N: picking from it sends that many there (none: into the hand's own holder)
 			RawValue pickedSends;
 			bool hasPickedSend{ false };
@@ -1411,6 +1412,7 @@ namespace xge
 			std::string spreadSprite;
 			int startCount{};
 			int startMore{};
+			bool startShuffled{ false };
 			std::string pickedInto;
 			int pickedSends{};
 			std::string emptyFrom;

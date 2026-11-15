@@ -527,6 +527,10 @@
           <xsl:if test="$node/random">
             <xsl:text> command.random = true;</xsl:text>
           </xsl:if>
+          <xsl:call-template name="field">
+            <xsl:with-param name="name" select="'command.member'" />
+            <xsl:with-param name="node" select="$node/member" />
+          </xsl:call-template>
           <xsl:if test="$node/free">
             <xsl:text> command.free = true;</xsl:text>
             <xsl:call-template name="field">

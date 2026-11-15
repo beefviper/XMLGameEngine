@@ -1350,7 +1350,7 @@
 
   <xs:complexType name="spawnType">
     <xs:annotation>
-      <xs:documentation><![CDATA[spawn: which object or group (<random />: one of its members at random, not in turn), into= the map of cells it goes on (left out: its own), where (a half may be <centered>; on a map with <cells />, the <column> and <row> of its top left cell), and how fast.]]></xs:documentation>
+      <xs:documentation><![CDATA[spawn: which object or group (<random />: one of its members at random, not in turn; <member>: the one of that number), into= the map of cells it goes on (left out: its own), where (a half may be <centered>; on a map with <cells />, the <column> and <row> of its top left cell), and how fast.]]></xs:documentation>
     </xs:annotation>
     <xs:sequence>
       <xs:element name="count" type="valueType" minOccurs="0">
@@ -1358,7 +1358,14 @@
           <xs:documentation>count: how many copies (one if left out)</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="random" type="emptyType" minOccurs="0" />
+      <xs:choice minOccurs="0">
+        <xs:element name="random" type="emptyType" />
+        <xs:element name="member" type="valueType">
+          <xs:annotation>
+            <xs:documentation>member: which of a group's members, counting from 1 (bag.top.shape); refused past the last</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:choice>
       <xs:choice minOccurs="0">
         <xs:element name="position" type="spawnPositionType" />
         <xs:sequence>

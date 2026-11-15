@@ -269,6 +269,7 @@
       <!-- the cards start in the stock (the table deals them) -->
       <starts>
         <send from="cards" into="stock"><all /></send>
+        <order group="stock"><random /></order>
       </starts>
       <inputs>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="players" action="left" /></input>

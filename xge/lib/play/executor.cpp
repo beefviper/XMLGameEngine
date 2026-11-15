@@ -547,7 +547,7 @@ namespace xge
 	// spawner's cell. Velocity and acceleration left out are its own.
 	bool CommandExecutor::spawnOne(const CmdSpawn& command, const Object* self)
 	{
-		Object* made = game.spawn(command.target, command.random);
+		Object* made = game.spawn(command.target, command.random, command.member ? std::optional<int>(static_cast<int>(std::lround(*command.member))) : std::nullopt);
 		if (!made) { return false; }
 
 		// On a cell map: in a cell, a shape's top left one (counting from 1).

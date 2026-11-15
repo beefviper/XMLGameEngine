@@ -29,6 +29,10 @@
   * The next shape waits in a second map of cells, the box beside the
     well. Away from the map it was written on it is only shown: it does
     not fall or answer the keys. <send> brings it to the well.
+  * Shapes come from a bag of seven, as in the modern rules: a token for
+    each shape in a holder, shuffled; the top one's number (bag.top.shape)
+    picks the shape <spawn> makes, then it goes to "used", and an empty bag
+    takes them all back and shuffles again.
   * If the next shape cannot come in, the send is refused and the rest of
     the action is not done, so status.over is left at 1: game over.
 -->
@@ -168,6 +172,25 @@
           <position><x><subtract><value>panel</value><value>4</value></subtract></x><y><add><value>top</value><value>366</value></add></y></position>
         </object>
 
+        <!-- the bag of seven: a token for each shape, in the order of the
+             pieces below, drawn from the top; used ones wait to go back -->
+        <group name="tokens" class="token">
+          <columns name="shape">7</columns>
+          <rows>1</rows>
+          <sprite />
+          <position><x>0</x><y>0</y></position>
+        </group>
+        <object name="bag">
+          <sprite />
+          <position><x>0</x><y>0</y></position>
+          <holds class="token" />
+        </object>
+        <object name="used">
+          <sprite />
+          <position><x>0</x><y>0</y></position>
+          <holds class="token" />
+        </object>
+
         <!-- the next shape waits here, only shown, until it is sent to the well -->
         <map name="next">
           <tile><width>cell</width><height>cell</height></tile>
@@ -216,7 +239,14 @@
                 <play sound="land" />
                 <set variable="status.over">1</set>
                 <send object="pieces" from="next" into="board"><column>4</column><row>1</row></send>
-                <spawn object="pieces" into="next"><random /></spawn>
+                <spawn object="pieces" into="next"><member>bag.top.shape</member></spawn>
+                <send from="bag" into="used">1</send>
+                <!-- the bag empty: all seven back in, shuffled -->
+                <condition object="bag" variable="held">
+                  <equal>0</equal>
+                  <send from="used" into="bag"><all /></send>
+                  <order group="bag"><random /></order>
+                </condition>
                 <set variable="status.over">0</set>
               </action>
             </actions>
@@ -286,6 +316,11 @@
           </checks>
         </map>
       </objects>
+      <!-- the bag, shuffled -->
+      <starts>
+        <send from="tokens" into="bag"><all /></send>
+        <order group="bag"><random /></order>
+      </starts>
       <inputs>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="pieces" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="pieces" action="right" /></input>
@@ -312,8 +347,10 @@
       <timers>
         <timer>
           <after>0</after>
-          <spawn object="pieces"><random /><column>4</column><row>1</row></spawn>
-          <spawn object="pieces" into="next"><random /></spawn>
+          <spawn object="pieces"><member>bag.top.shape</member><column>4</column><row>1</row></spawn>
+          <send from="bag" into="used">1</send>
+          <spawn object="pieces" into="next"><member>bag.top.shape</member></spawn>
+          <send from="bag" into="used">1</send>
         </timer>
       </timers>
     </state>

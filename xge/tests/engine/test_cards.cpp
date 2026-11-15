@@ -2104,3 +2104,98 @@ TEST_CASE("pyramid.xml: the pyramid cleared wins", "[cards][pyramid]")
 	play.frames(2);
 	CHECK(play.state() == "over");
 }
+
+namespace
+{
+	// A pile of three tokens (n 1 to 3) dealt in order by <starts>, face
+	// down but the top, and three kinds of piece. Space sends the top one
+	// out and spawns the kind its number picks.
+	struct Tokens
+	{
+		std::string path = scratchName("descriptions/tokens_scratch.xml");
+		explicit Tokens(const std::string& order = "")
+		{
+			std::ofstream(path) << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+				"<window name=\"tokens\"><width>800</width><height>600</height><background>color.black</background></window>"
+				"<variables><variable name=\"unused\">0</variable></variables>"
+				"<states><state name=\"playing\"><objects>"
+				"<group name=\"tokens\" class=\"token\"><columns name=\"n\">3</columns><rows>1</rows>"
+				"<sprite name=\"face\"><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+				"<sprite name=\"back\"><rectangle><width>10</width><height>10</height><color>color.red</color></rectangle></sprite>"
+				"<position><x>0</x><y>0</y></position></group>"
+				"<object name=\"pile\"><sprite /><position><x>100</x><y>100</y></position><holds class=\"token\" sprite=\"back\"><top sprite=\"face\" /></holds></object>"
+				"<object name=\"out\"><sprite /><position><x>300</x><y>100</y></position><holds class=\"token\" sprite=\"back\" /></object>"
+				"<group name=\"kinds\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite><position><x>0</x><y>300</y></position>"
+				"<member name=\"one\" /><member name=\"two\" /><member name=\"three\" /></group>"
+				"</objects><starts><send from=\"tokens\" into=\"pile\"><all /></send>" << order << "</starts>"
+				"<inputs><input button=\"space\"><spawn object=\"kinds\"><member>pile.top.n</member></spawn><send from=\"pile\" into=\"out\">1</send></input></inputs>"
+				"</state></states></game>";
+		}
+		~Tokens() { std::error_code ignored; std::filesystem::remove(path, ignored); }
+	};
+
+	int copiesOf(Played& play, const std::string& name)
+	{
+		int count = 0;
+		for (const Object& object : play.game.getCurrentObjects()) { if (object.exists && object.copyOf == name) { ++count; } }
+		return count;
+	}
+}
+
+TEST_CASE("<starts> deals a pack in its order, the first on top; a holder's top.<variable> and <top sprite> follow each send", "[cards][holders]")
+{
+	const Tokens file;
+	Played play(file.path);
+	play.frames(1);
+	Object& pile = play.get("playing.pile");
+	REQUIRE(pile.holder.items.size() == 3);
+	CHECK(pile.variable.at("top.n") == 1.0f);
+	CHECK(play.game.itemAt(pile.holder.items.back())->lookName() == "face");
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(pile.variable.at("top.n") == 2.0f);
+	// The one left on top turns face up, as <top> says, after a <send> too.
+	CHECK(play.game.itemAt(pile.holder.items.back())->lookName() == "face");
+	CHECK(play.game.itemAt(pile.holder.items.front())->lookName() == "back");
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(pile.holder.items.empty());
+	CHECK(pile.variable.at("top.n") == 0.0f); // nothing on top
+}
+
+TEST_CASE("<spawn> with a <member> makes that member of a group, and is refused past the last", "[holders][spawn]")
+{
+	const Tokens file;
+	Played play(file.path);
+	play.frames(1);
+	for (int i = 0; i < 3; ++i)
+	{
+		play.tap(KeyCode::Space);
+		play.frames(1);
+	}
+	CHECK(copiesOf(play, "playing.one") == 1);
+	CHECK(copiesOf(play, "playing.two") == 1);
+	CHECK(copiesOf(play, "playing.three") == 1);
+	// The pile empty, top.n is 0: no member 0, so nothing more is made.
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(copiesOf(play, "playing.one") + copiesOf(play, "playing.two") + copiesOf(play, "playing.three") == 3);
+}
+
+TEST_CASE("an <order> in <starts> shuffles what starts in that holder", "[cards][holders]")
+{
+	// With 3 tokens, the pack's order comes up 1 in 6 times; over 20 games, never every time.
+	int inOrder = 0;
+	for (int game = 0; game < 20; ++game)
+	{
+		const Tokens file("<order group=\"pile\"><random /></order>");
+		Played play(file.path);
+		play.frames(1);
+		if (play.get("playing.pile").variable.at("top.n") == 1.0f && play.game.itemAt(play.get("playing.pile").holder.items.front())->variable.at("n") == 3.0f) { ++inOrder; }
+	}
+	CHECK(inOrder < 20);
+}

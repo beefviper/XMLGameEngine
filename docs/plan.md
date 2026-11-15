@@ -13,9 +13,8 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 
 | # | Task | Why here |
 |---|---|---|
-| 1 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
-| 2 | [F8](#f8-dice): dice | Waits on the hold on new games |
-| 3 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
+| 1 | [F8](#f8-dice): dice | Waits on the hold on new games |
+| 2 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
 
 **On hold:** [A5](#a5-a-game-written-out-as-if-by-hand), the stand-alone generator (the author: nice-looking generated code is a hard problem that may need several things to change at once). It stands at `pong_min` written, and `pong.xml` written by hand as the next example.
 
@@ -110,33 +109,6 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 ### Additions
 
 Ordered by how many existing games gain. Each ends with the docs, a game or two moved to the new word, and the limitation removed from `docs/reference/limits.md`.
-
-#### F4. A list of numbers
-
-- **Needs** a design agreed with the author before any code.
-- **Why.** Four separate wants are one thing, a sequence the game adds to and reads by place: Simon (add a random colour each round, compare presses in order), Mastermind (a hidden list compared with a guess), Tetris' bag of seven (a list shuffled and drawn from), Pac-Man's schedule (a list of lengths, one per wave).
-- **Where to start.** A holder already *is* an ordered collection with `<send>`, `<order><random />`, `<top>` and counts. Before inventing `<list>`, test whether a holder of small unseen pieces carrying one variable says all four. This is the fraction rule applied before building.
-- **Steps.**
-  - [x] **1. Try the bag of seven as a holder (S).** Works: each shape once per seven, about 45 lines. In a scratch copy of Tetris, no engine change: a holder of seven unseen pieces, shuffled, sent from, refilled when empty. **Check:** it loads and deals each shape once per seven. Write down what read badly.
-  - [x] **2. Try a schedule as a holder (S).** Works, and the empty schedule gives "chase for good" free. The same for Pac-Man's wave lengths, read from the top. **Check:** as step 1.
-  - [x] **3. Write the design (S).** [lists](designs/15-lists.md) recommends a holder plus four general fixes and words. `docs/designs/15-lists.md`: what was wanted, the two trials, what Simon and Mastermind would still need ("compare place by place"), and a recommendation: a holder plus one word, or a new `<list>`. No code.
-  - [ ] **4. The author decides.** Then the build steps are written here, in this shape, before anyone starts.
-- **Done, for now, when** the design file exists with a verdict.
-
-#### F7. Sound: an envelope, and notes that follow a number
-
-- **Needs** nothing. Cannot be judged in a container: the author listens.
-- **Why.** Plucked and bell sounds need a note that dies away; Space Invaders' march should speed up with the fleet.
-- **Steps.**
-  - [x] **1. `<decay>` (S).** Built on a `<sound>` or `<part>` (every note's), not a single note, so a note stays one number. Planned: a `<note>` or `<part>` takes `<decay>seconds</decay>`: its volume falls to nothing over that time, in `synthesize()` (`xge/lib/audio/sound.cpp`). Schema `noteType` and `partType`, `readSound`, `data.xsl`. **Check:** a test in `xge/tests/engine/test_sound.cpp` compares the loudness of the samples at two times.
-  - [x] **2. A game uses it (S).** Pinball's bumpers ring and die away. One sound in one game. **Check:** its test; add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows) for the author to listen.
-  - [x] **3. Design notes that follow a number (S).** Written in `33-sound.md` with a third option, the author's: an animation's live `<seconds>` and a `<frame>` that plays a sound; recommended. In `docs/designs/33-sound.md`, two options written out with what a game would say for each: a `<play>` that gives a pitch, or a sound made at several pitches at load and picked by a number when played. No code.
-  - [x] **4. The author picks.** C: an animation's live `<seconds>` and a `<frame>` that runs commands.
-  - [x] **5. A live animation speed (S).** `<seconds update="live">` in an `<animation>` (and in a `<frame>`'s own `<seconds>`) is worked out every frame, as a live variable is; a picture already showing keeps its count, the next one takes the new length. Schema, `readAnimation`, `data.xsl`, `Game::follow` or `advanceAnimation`. **Check:** a test where a variable halves and the pictures change twice as often.
-  - [x] **6. A frame that runs commands (S).** A `<frame>` may hold commands after its `<seconds>` and `<hitbox>`es (`<play>` first, any command an action takes), run once each time that picture comes up, as `<then>` runs at the end. Schema, reader, `data.xsl`, check. **Check:** a test counting `<play>` requests over two loops of an animation.
-  - [x] **7. Space Invaders marches in step (S).** Its seconds read `pace.beat`, which the speed-up condition shortens. The aliens' animation becomes four frames (`a`, `b`, `a`, `b`), each playing one march note; its `<seconds>` reads a variable the hit rule lowers; the `<music>` goes. **Check:** its test hears the notes come faster as aliens fall; a Windows line to listen.
-  - [x] **8. The fleet steps (S).** The author said yes: `<stepped />` in an animation moves its object only as the picture changes, the whole way at once. Space Invaders' block steps 15 pixels a note (half a pixel a frame for 30 frames). **Check:** tests in `test_live.cpp` and the march test in `test_bitmap_sprites.cpp`.
-- **Done when** steps 5 to 8 are ticked.
 
 #### F8. Dice
 
@@ -247,6 +219,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
+- **Holders as lists (F4):** Tetris now deals from a bag of seven: every seven pieces are the seven shapes. Pac-Man's scatter and chase lengths are a schedule read from the top; play should be as before. Card games deal as before. Worth a look: Tetris' run of pieces, and a Klondike, Gin and Spades deal.
 - **The fleet steps (F7 step 8):** Space Invaders' aliens now move in steps of 15 pixels, one with each picture and note, instead of gliding. The march starts slower than before (30 pixels a second, was 120) and speeds up as before. Worth a look: whether the step size and the starting pace feel right.
 - **The march in step (F7 step 7):** Space Invaders' four march notes now come one per step of the aliens (their pictures change every half second, not every second), and quicken each time the fleet speeds up. Worth a listen: whether it sounds like the arcade's and keeps time with the pictures.
 - **A decay (F7 step 2):** Pinball's bumpers now ring like a bell for 0.4 s, dying away. Worth a listen: whether it sounds like a bell, and whether a run of bumper hits gets too busy.

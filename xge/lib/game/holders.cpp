@@ -425,6 +425,19 @@ namespace xge
 		holder.holder.itemCount = static_cast<float>(holder.holder.items.size());
 		refreshCall(holder);
 
+		// top.<variable>: the top one's, 0 while it holds nothing.
+		const Object* top = holder.holder.items.empty() ? nullptr : itemAt(holder.holder.items.back());
+		for (auto& [name, value] : holder.variable)
+		{
+			if (name.rfind("top.", 0) != 0) { continue; }
+			float now = 0.0f;
+			if (top)
+			{
+				if (const auto own = top->variable.find(name.substr(4)); own != top->variable.end()) { now = own->second; }
+			}
+			if (now != value) { value = now; refreshBoundTexts(holder.name, name, now); }
+		}
+
 		// Points: each face-up item at its lowest worth, then each that may
 		// count higher raised as far as the total stays within the limit.
 		float total = 0.0f;
@@ -973,7 +986,9 @@ namespace xge
 			Object* holder = holderNamed(name);
 			if (!holder) { throw std::runtime_error("<starts> > <send into=\"" + name + "\">: there is no holder called '" + name + "'"); }
 			std::vector<int>& items = starts[name];
-			for (std::size_t i = items.size(); i > 1; --i)
+			// In the pack's order, the first on top, unless an <order> shuffles it.
+			if (!holder->holder.startShuffled) { std::reverse(items.begin(), items.end()); }
+			for (std::size_t i = holder->holder.startShuffled ? items.size() : 0; i > 1; --i)
 			{
 				const std::size_t j = std::min(i - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(i))));
 				std::swap(items[i - 1], items[j]);
@@ -1018,6 +1033,7 @@ namespace xge
 				if (!any) { break; }
 			}
 			for (auto& [each, count] : wanting) { showTop(*each); }
+			showTop(*holder);
 		}
 
 		stackedStart.clear();
@@ -1538,7 +1554,8 @@ namespace xge
 			return any;
 		}
 		std::vector<int> sent;
-		if (Object* from = holderNamed(fromName))
+		Object* from = holderNamed(fromName);
+		if (from)
 		{
 			if (from == into || from->holder.items.empty()) { return false; }
 			const std::size_t many = all ? from->holder.items.size() : std::min(from->holder.items.size(), static_cast<std::size_t>(count));
@@ -1587,6 +1604,8 @@ namespace xge
 			}
 		}
 		refreshHolder(*into);
+		// What is left on top of where they came from turns as its <top> says.
+		if (from) { showTop(*from); }
 		// A hand pointing where items were: at its own, or at that holder.
 		for (Object& object : objects)
 		{
@@ -1618,6 +1637,7 @@ namespace xge
 		}
 		stackedStart.clear();
 		refreshHolder(*holder);
+		showTop(*holder);
 		layOutItems();
 		return true;
 	}

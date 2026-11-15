@@ -40,7 +40,9 @@
     Clyde for Pac-Man until he is within eight tiles, then his corner.
   * Which of the two is the mode object's look: scatter 7, chase 20,
     scatter 7, chase 20, scatter 5, chase 20, scatter 5, then chase for
-    good, as the arcade's first level. Each switch turns the normal ghosts
+    good, as the arcade's first level. The lengths are a schedule: a
+    holder of waves in order, each timer lasting schedule.top.seconds and
+    taking the top off as it ends; once none is left chase stays. Each switch turns the normal ghosts
     round and sends them the new mode (<trigger from="normal">); a ghost
     normal again asks the mode which it is (<trigger from="scatter">).
   * Blinky starts out; Pinky comes out at once, Inky after 30 dots and
@@ -223,50 +225,45 @@
             <action name="scatter"><trigger object="ghosts" action="scatter" from="normal" /></action>
             <action name="chase"><trigger object="ghosts" action="chase" from="normal" /></action>
           </actions>
-          <variables>
-            <variable name="waves">0</variable>
-            <variable name="scatterfor">7</variable>
-            <variable name="chasefor">20</variable>
-          </variables>
           <timers>
+            <!-- each lasts as long as the wave on top of the schedule says,
+                 and ends by taking it off -->
             <timer sprite="scatter">
-              <after>mode.scatterfor</after>
-              <inc variable="mode.waves" />
-              <!-- 20 seconds, and for ever from the fourth wave -->
-              <set variable="mode.chasefor">
-                <add>
-                  <value>20</value>
-                  <value>
-                    <multiply>
-                      <value>100000</value>
-                      <value><compare><value>mode.waves</value><atleast>4</atleast></compare></value>
-                    </multiply>
-                  </value>
-                </add>
-              </set>
+              <after>schedule.top.seconds</after>
+              <send from="schedule" into="done">1</send>
               <become sprite="chase" />
               <trigger object="ghosts" action="turn" from="normal" />
               <trigger action="chase" />
             </timer>
+            <!-- with no wave left the send is refused: chase for good -->
             <timer sprite="chase">
-              <after>mode.chasefor</after>
-              <!-- 7 seconds, and 5 from the second wave -->
-              <set variable="mode.scatterfor">
-                <subtract>
-                  <value>7</value>
-                  <value>
-                    <multiply>
-                      <value>2</value>
-                      <value><compare><value>mode.waves</value><atleast>2</atleast></compare></value>
-                    </multiply>
-                  </value>
-                </subtract>
-              </set>
+              <after>schedule.top.seconds</after>
+              <send from="schedule" into="done">1</send>
               <become sprite="scatter" />
               <trigger object="ghosts" action="turn" from="normal" />
               <trigger action="scatter" />
             </timer>
           </timers>
+        </object>
+        <!-- the waves in order, the first on top: scatter, chase, scatter, ... -->
+        <group name="waves" class="wave">
+          <columns>7</columns>
+          <rows>1</rows>
+          <sprite />
+          <position><x>0</x><y>0</y></position>
+          <variables><variable name="seconds">20</variable></variables>
+          <column><number>1</number><number>3</number><variables><variable name="seconds">7</variable></variables></column>
+          <column><number>5</number><number>7</number><variables><variable name="seconds">5</variable></variables></column>
+        </group>
+        <object name="schedule">
+          <sprite />
+          <position><x>0</x><y>0</y></position>
+          <holds class="wave" />
+        </object>
+        <object name="done">
+          <sprite />
+          <position><x>0</x><y>0</y></position>
+          <holds class="wave" />
         </object>
         <!-- four seconds with no dot eaten counts as thirty, so a ghost
              still comes out (each dot puts it back to the start) -->
@@ -641,6 +638,8 @@
           <position><x><multiply><value>2</value><value>tile</value></multiply></x><y><subtract><value>window.bottom</value><value>24</value></subtract></y></position>
         </object>
       </objects>
+      <!-- the schedule, in order -->
+      <starts><send from="waves" into="schedule"><all /></send></starts>
       <shows>
         <show object="best" />
         <show object="highlabel" />

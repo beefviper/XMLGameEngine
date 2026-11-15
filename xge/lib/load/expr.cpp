@@ -61,7 +61,8 @@ namespace xge
 				if (!isHeld(object.objClass)) { continue; }
 				const std::string where = "object '" + object.name + "' (of class " + object.objClass + ", which a <holds> holds)";
 				if (object.groupName.empty() || object.cell.column < 1) { throw std::runtime_error(where + ": is a member of a <group> laid out in <columns> and <rows>, its row and column what sort of card it is"); }
-				if (object.looks.size() < 2) { throw std::runtime_error(where + ": has two looks, its face first and its back"); }
+				// Its first look is its face and its second its back; with one look
+				// (a token no one sees) it shows the same either way.
 				object.held = true;
 				const auto given = object.variable.find("worth");
 				const float worth = given == object.variable.end() ? static_cast<float>(object.cell.column) : number(given->second, where, "worth");
@@ -73,7 +74,7 @@ namespace xge
 					std::sort(object.item.worths.begin(), object.item.worths.end());
 				}
 				object.variable["worth"] = RawValue::expression(formatDisplayNumber(worth));
-				object.sprite = object.looks.front();
+				if (!object.looks.empty()) { object.sprite = object.looks.front(); }
 			}
 			for (RawObject& object : objects)
 			{
@@ -125,7 +126,12 @@ namespace xge
 					{
 						throw std::runtime_error(where + ": for now a start sends <all /> of a group into one holder first, then orders and sends from that holder");
 					}
-					if (step.verb == "order") { continue; }   // what starts in a holder is always in random order
+					if (step.verb == "order")
+					{
+						// What starts in it is shuffled; with no <order>, it lies in the pack's order.
+						for (RawObject* each : holdersFor(step.from, state.name)) { each->holder.startShuffled = true; }
+						continue;
+					}
 					std::vector<RawObject*> into = holdersFor(step.into, state.name);
 					if (into.empty())
 					{
@@ -222,6 +228,17 @@ namespace xge
 			// A holder's <counts variable>: a variable of its own, kept to the total.
 			const std::string& counts = rawObject.holder.counts;
 			if (!counts.empty() && !rawObject.variable.count(counts)) { rawObject.variable[counts] = RawValue::expression("0"); }
+		}
+		// A holder's top.<variable>: each variable its held class has, the top
+		// one's while the game runs (Game::refreshHolder), so bag.top.shape reads.
+		for (auto& holder : rawObjects)
+		{
+			if (!holder.holder.is || holder.holder.holdsClass.empty()) { continue; }
+			for (const auto& member : rawObjects)
+			{
+				if (&member == &holder || member.objClass != holder.holder.holdsClass) { continue; }
+				for (const auto& [name, value] : member.variable) { holder.variable.try_emplace("top." + name, RawValue::expression("0")); }
+			}
 		}
 
 		// Pre-register every object's own <variable> entries, keyed

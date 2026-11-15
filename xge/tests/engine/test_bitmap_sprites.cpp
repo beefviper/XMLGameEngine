@@ -1284,6 +1284,7 @@ TEST_CASE("the march keeps step with the aliens: a note a step, quicker as they 
 {
 	Invasion invasion;
 	Game& game = invasion.game;
+	game.getObject("player").collisionsOn = false; // no bomb holds the march still
 	(void)game.takeSoundRequests();
 
 	// The frames between march notes over the next `count` frames.

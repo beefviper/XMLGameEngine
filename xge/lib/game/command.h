@@ -666,6 +666,8 @@ namespace xge
 		std::optional<float> accelerationY;
 		// <random />: one of a group's members at random, not in turn.
 		bool random{ false };
+		// <member>N</member>: the group's member of that number, from 1.
+		std::optional<float> member;
 		// On a cell map: the column and row its top left cell goes in,
 		// counting from 1 (left out: 1).
 		std::optional<float> column;
@@ -1094,8 +1096,10 @@ namespace xge
 		int most{ 0 };         // pick: <most>, from how many holders a picker may hold one at once
 		RawValue column;
 		RawValue row;
-		// spawn: the <below> of its <free>, empty text when left out.
+		// spawn: the <below> of its <free>, empty text when left out, and
+		// its <member>.
 		RawValue below;
+		RawValue member;
 		// count, trigger on cells: <here /> or <around /> (place: "here",
 		// "around"), <straight /> in <around>, its <alike variable>.
 		std::string place;

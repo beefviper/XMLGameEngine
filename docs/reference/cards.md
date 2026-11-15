@@ -33,11 +33,12 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
 ```
 
 - **The pack** is a group in `<columns>` and `<rows>` whose class a `<holds>` names.
-  - Each cell is a card: its [`row` and `column` variables](objects.md#columns-and-rows) say which, its first look is the face and its second the back.
+  - Each cell is a card: its [`row` and `column` variables](objects.md#columns-and-rows) say which, its first look is the face and its second the back (a token with one look, or none, shows the same either way).
   - **`<columns name="rank">13</columns>`** and **`<rows name="suit">4</rows>`** give the column and row a second name the game reads better by: every card then also has `rank` and `suit`, the same numbers, and anything that names a variable may use either.
   - The engine knows only variables; suit and rank are the game's words.
   - A sheet `<cell>` that leaves out its column or row takes the cell's own, so the faces are one sprite.
   - `worth` is the rank (its column) unless a column, row or cell gives one (`<column><number>11</number><number>12</number><number>13</number><variables><variable name="worth">10</variable></variables></column>`); a **`high`** variable is a second value it may count instead where a holder counts within a limit (Blackjack's ace: `high` 11).
+- **A list.** A pack no one sees, in a holder, is a sequence read from the top: Tetris' bag of seven (tokens numbered by `<columns name="shape">`, shuffled, `<member>bag.top.shape</member>` picking the shape a `<spawn>` makes) and Pac-Man's schedule (waves in order, each timer lasting `schedule.top.seconds`).
 - **`<holds class sprite>`** on an object or group makes it a holder: what it holds, in order, the last on top, each showing the look `sprite=` while laid there (none: each keeps its own).
 - **`<spread>`**: each one on from the one under it (`<x>`, `<y>`, `<width>` the most it spreads across); a second with `sprite=` for those showing that look.
 - **`<accepts>`**: what may be placed on top, as `<condition>`s on the arriving one, all of which must hold.
@@ -56,7 +57,7 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
     <wild variable="suit"><condition variable="rank"><equal>8</equal></condition></wild>
   </accepts>
   ```
-- **`<carry />`**: one may be picked with all those on it, while each follows the rules. **`<top sprite="face" />`**: the top one turns to that look. **`<lift>16</lift>`**: the one a picker points at is drawn lifted by that much. **`<order><by variable="suit" /><by variable="rank" /></order>`**: kept in that order, the first first.
+- **`<carry />`**: one may be picked with all those on it, while each follows the rules. **`<top sprite="face" />`**: the top one turns to that look, after the deal and after every `<send>`, `<order>` or laying. **`<lift>16</lift>`**: the one a picker points at is drawn lifted by that much. **`<order><by variable="suit" /><by variable="rank" /></order>`**: kept in that order, the first first.
 - **`<picked>`**: what picking from it does instead, picking nothing up: `<send into="waste">1</send>` (no `into=`: to the picker's own holder), and `<empty>` with `<send from="waste"><all /></send>` (a `<leave>` in it) and `<order><random /></order>`; `<play sound>` sounds as it sends.
 - **The picker.** An object whose actions `<pick class>` a held class is a hand: `<pick class="card" />` takes what it points at, `<place />` lays it where it points, `<place into="foundations" />` on the first of those that accepts it, `<drop />` puts it back.
   - **`<owns object="mine" />`** gives it a holder of its own: it picks any of those, face up or down, and stays pointing there.
@@ -73,7 +74,7 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
   </starts>
   ```
 
-  For now it sends all of a pack into one holder, orders it at random, then `<distribute>`s N to each holder of a group (one at a time round; `<more>`: each after the first that many more) or `<send>`s N to one.
+  It sends all of a pack into one holder in the pack's order, its first member on top, and `<order group><random /></order>` shuffles it. Then it `<distribute>`s N to each holder of a group (one at a time round; `<more>`: each after the first that many more) or `<send>`s N to one.
 - **`<counts variable="worth"><atmost>21</atmost></counts>`** in a `<holds>`: the holder's own variable of that name (`player.worth`) is what its face-up members' variables of that name add up to. For `worth`, a member's `high` counts instead while the total stays within `<atmost>`.
 - **The verbs, in any action, timer or condition:** `<send from="stock" into="player">1</send>` sends the top one (or `<all />`) from holder to holder; from the pack's name, `<all />` is every card wherever it is.
   - `sprite="back"` lays them showing that look.
@@ -88,6 +89,7 @@ There are no card words as such. A pack is a `<group>`, a pile is anything that 
     <order group="stock"><random /></order>
   </action>
   ```
+- Live **`top.<variable>`** is that variable of the one on top, 0 while the holder is empty: `bag.top.shape`, `schedule.top.seconds`. Any variable of the held class can be read so.
 - Live **`held`** is how many a holder holds (`cards` as well), and more below: `points`, `calling`, `called`, `pattern`, `strength`, `odds`, `lead`, `winner`, `tricks`, `deadwood`. `<condition object="foundations" variable="cards" total="sum"><atleast>52</atleast></condition>` is Klondike's win.
 - **Covering.** A holder's top card can be picked only while no card of a later holder overlaps it. Holders that only touch are never covered.
 - **Drawing order.** Cards are drawn above everything, in their holders' order, held cards above them and the picker above all.

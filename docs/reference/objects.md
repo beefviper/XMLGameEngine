@@ -234,7 +234,7 @@ Objects can be made and taken away while the game runs, and **a copy is the same
 - `<spawn>` and `<fire>` each make a copy named with the first free number (`shot.1`, `shot.2`, then `shot.1` again once that one is gone).
 - A copy moves, touches, counts its own timers, holds its own variables and draws its own `<random>`s. In its rules, `self` is the copy.
 - **The piece's name means every copy:** `<collision object="shot">`, a condition counting `object="shot"`, `<despawn object="shot" />`. A copy's own name works too (`<tether from="base" to="abm.1">`).
-- **A group piece** spawns its members in turn, or one at random with `<random />`.
+- **A group piece** spawns its members in turn, one at random with `<random />`, or the one of a number with `<member>` (counting from 1, refused past the last): `<spawn object="pieces" into="next"><member>bag.top.shape</member></spawn>`.
 - **`<most>`** caps copies out at once; at the cap the spawn is [refused](commands.md#a-press-that-cannot-be-done).
 - **`<despawn />`** takes a copy away at the frame's end (its name free again); one the file wrote stays out until a reset.
 - A copy made during a frame joins when the frame ends, and first moves the frame after.

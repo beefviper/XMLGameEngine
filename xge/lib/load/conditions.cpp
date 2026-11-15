@@ -58,7 +58,7 @@ namespace xge
 				if (renamed != *text) { *text = std::move(renamed); changed = true; }
 			}
 			for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
-				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row })
+				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.member })
 			{
 				changed = renameInValue(*each, from, to) || changed;
 			}
