@@ -255,10 +255,10 @@ namespace xge
 	{
 		if (rawObject.hasDrag)
 		{
-			object.drag = evaluate(rawObject.rawDrag, where);
-			if (object.drag < 0.0f || object.drag >= 1.0f)
+			object.motion.drag = evaluate(rawObject.rawDrag, where);
+			if (object.motion.drag < 0.0f || object.motion.drag >= 1.0f)
 			{
-				throw std::runtime_error(where + ": <drag> is " + std::to_string(object.drag) + "; expected 0 up to (not including) 1");
+				throw std::runtime_error(where + ": <drag> is " + std::to_string(object.motion.drag) + "; expected 0 up to (not including) 1");
 			}
 		}
 
@@ -285,19 +285,19 @@ namespace xge
 
 		if (rawObject.hasFriction)
 		{
-			object.friction = evaluate(rawObject.rawFriction, where);
-			if (object.friction < 0.0f)
+			object.motion.friction = evaluate(rawObject.rawFriction, where);
+			if (object.motion.friction < 0.0f)
 			{
-				throw std::runtime_error(where + ": <friction> is " + std::to_string(object.friction) + "; expected 0 or more");
+				throw std::runtime_error(where + ": <friction> is " + std::to_string(object.motion.friction) + "; expected 0 or more");
 			}
 		}
 
 		if (rawObject.hasMass)
 		{
-			object.mass = evaluate(rawObject.rawMass, where);
-			if (!(object.mass > 0.0f))
+			object.motion.mass = evaluate(rawObject.rawMass, where);
+			if (!(object.motion.mass > 0.0f))
 			{
-				throw std::runtime_error(where + ": <mass> is " + formatDisplayNumber(object.mass) + "; expected more than 0");
+				throw std::runtime_error(where + ": <mass> is " + formatDisplayNumber(object.motion.mass) + "; expected more than 0");
 			}
 		}
 
@@ -574,10 +574,10 @@ namespace xge
 
 		if (rawObject.hasGrip)
 		{
-			object.grip = evaluate(rawObject.rawGrip, where + " > <grip>");
-			if (!(object.grip > 0.0f && object.grip <= 1.0f))
+			object.motion.grip = evaluate(rawObject.rawGrip, where + " > <grip>");
+			if (!(object.motion.grip > 0.0f && object.motion.grip <= 1.0f))
 			{
-				throw std::runtime_error(where + " > <grip> is " + formatDisplayNumber(object.grip) + "; expected above 0, up to 1 (1: it goes at once at the speed its moves ask for)");
+				throw std::runtime_error(where + " > <grip> is " + formatDisplayNumber(object.motion.grip) + "; expected above 0, up to 1 (1: it goes at once at the speed its moves ask for)");
 			}
 		}
 		for (const Timer& timer : object.timers)

@@ -36,7 +36,7 @@ namespace xge
 	// everything with a mass resting against its far side.
 	static void knockOrThrough(CommandExecutor& executor, Object& object, Object& other, const Touch& touch, float bounce)
 	{
-		if (other.mass > 0.0f)
+		if (other.motion.mass > 0.0f)
 		{
 			xge::knock(object, other, touch, bounce);
 			return;
@@ -50,7 +50,7 @@ namespace xge
 		const Vector2f way = touch.normal * -1.0f;
 		for (Object& thing : executor.game.getCurrentObjects())
 		{
-			if (&thing == &object || &thing == &other || !(thing.mass > 0.0f) || !thing.collisionsOn || thing.isAirborne() || !executor.game.isShown(thing))
+			if (&thing == &object || &thing == &other || !(thing.motion.mass > 0.0f) || !thing.collisionsOn || thing.isAirborne() || !executor.game.isShown(thing))
 			{
 				continue;
 			}
@@ -61,7 +61,7 @@ namespace xge
 				continue;
 			}
 
-			const std::optional<Knocked> after = knockedApart(object.velocity, 0.0f, thing.velocity, thing.mass, way, bounce);
+			const std::optional<Knocked> after = knockedApart(object.velocity, 0.0f, thing.velocity, thing.motion.mass, way, bounce);
 			if (!after)
 			{
 				continue;

@@ -1719,34 +1719,51 @@ namespace xge
 		// is drawn for (see goingLeft).
 		void faceMirror();
 
-		// <grip>: how much of the way to the velocity its held moves ask for
-		// it goes each frame (1: all of it, at once). Below 1 it slides
-		// into a walk and out of one.
-		float grip{ 1.0f };
+		// How it moves under what pushes it: its speed, what it loses each
+		// frame, how it takes a knock.
+		struct Motion
+		{
+			// How fast it goes (live number speed): worked out when read, except
+			// while its touch rules run, when it is the speed as the touch happened
+			// (speedHeld), so a rule that stops it does not change which rules after
+			// it run: a landing and a crash on one pad.
+			float speed{};
+			bool speedHeld{ false };
+
+			// <grip>: how much of the way to the velocity its held moves ask for
+			// it goes each frame (1: all of it, at once). Below 1 it slides
+			// into a walk and out of one.
+			float grip{ 1.0f };
+
+			// How much of its velocity an object keeps every frame is 1 minus this:
+			// 0 (the default) is no drag at all, 0.02 loses a fiftieth of the speed
+			// a frame, so a thruster can no longer push it faster than a top speed.
+			float drag{};
+
+			// <friction>: at a touch with something that does not move, the speed
+			// along its surface is cut by up to this share of the speed the touch
+			// took off straight into it (a slide on a rough surface); and while it
+			// lies on a surface (or wedged between two) that its own pull cannot
+			// slide it along, it comes to rest (see Rest). 0: none.
+			float friction{};
+
+			// <mass>: how hard it is to knock (see CmdKnock). 0, when it has
+			// none, is not knocked at all: a wall, a floor.
+			float mass{};
+		};
+		Motion motion;
 
 		// Seconds of blinking left (owner.blink): while above 0 it is drawn
 		// only every other fifteenth of a second. It is in play all the while.
 		float blink{};
-
-		// How fast it goes (live number speed): worked out when read, except
-		// while its touch rules run, when it is the speed as the touch happened
-		// (speedHeld), so a rule that stops it does not change which rules after
-		// it run: a landing and a crash on one pad.
-		float speed{};
-		bool speedHeld{ false };
 		bool blinkedOut() const noexcept { return blink > 0.0f && static_cast<int>(blink * 15.0f) % 2 == 1; }
 
 		// The object's <timers>, which count while it is shown and in play
 		// (see Timer, Game::updateTimers).
 		std::vector<Timer> timers;
 
-		// How much of its velocity an object keeps every frame is 1 minus this:
-		// 0 (the default) is no drag at all, 0.02 loses a fiftieth of the speed
-		// a frame, so a thruster can no longer push it faster than a top speed.
-		float drag{};
-
 		// <surface>: `is`, this is ground. A thing with a <grip> whose middle
-		// is over it has `drag` and `grip` in place of its own (a surface
+		// is over it has `motion.drag` and `motion.grip` in place of its own (a surface
 		// that gives neither leaves them as they are); the last surface in
 		// the file's order wins. groundDrag and groundGrip are what this
 		// object has this frame, worked out by applyGrip (play/frame.cpp).
@@ -1759,13 +1776,6 @@ namespace xge
 			float groundGrip{ 1.0f };
 		};
 		Surface surface;
-
-		// <friction>: at a touch with something that does not move, the speed
-		// along its surface is cut by up to this share of the speed the touch
-		// took off straight into it (a slide on a rough surface); and while it
-		// lies on a surface (or wedged between two) that its own pull cannot
-		// slide it along, it comes to rest (see Rest). 0: none.
-		float friction{};
 
 		// What something lies on, as it was: its name, where it was and the
 		// way it faced.
@@ -1794,10 +1804,6 @@ namespace xge
 			int settledAge{ 1000 };
 		};
 		Rest rest;
-
-		// <mass>: how hard it is to knock (see CmdKnock). 0, when it has
-		// none, is not knocked at all: a wall, a floor.
-		float mass{};
 
 		// <pull>: each frame it is pulled toward the middle of the nearest of
 		// each name or group in play, by that much speed a frame (gravity

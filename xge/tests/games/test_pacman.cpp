@@ -685,8 +685,8 @@ TEST_CASE("map: a group on a map has every part an object has, heading to seek",
 	{
 		const Object& mine = game.getObject(name);
 		CHECK(mine.heading == Approx(90));
-		CHECK(mine.drag == Approx(0.5));
-		CHECK(mine.mass == Approx(2));
+		CHECK(mine.motion.drag == Approx(0.5));
+		CHECK(mine.motion.mass == Approx(2));
 		CHECK(mine.seekTarget == "playing.p");
 		CHECK(mine.seekRate == Approx(3));
 	}

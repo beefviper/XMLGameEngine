@@ -169,15 +169,15 @@ namespace xge
 			std::vector<const Object*> surfaces;
 			for (auto& object : objects)
 			{
-				object.surface.groundDrag = object.drag;
-				object.surface.groundGrip = object.grip;
+				object.surface.groundDrag = object.motion.drag;
+				object.surface.groundGrip = object.motion.grip;
 				if (object.surface.is && rules.inPlay(object)) { surfaces.push_back(&object); }
 			}
 			if (surfaces.empty()) { return; }
 
 			for (auto& object : objects)
 			{
-				if (object.grip >= 1.0f || object.surface.is || !rules.inPlay(object)) { continue; }
+				if (object.motion.grip >= 1.0f || object.surface.is || !rules.inPlay(object)) { continue; }
 				const Vector2f middle = middleOf(object);
 				for (auto ground = surfaces.rbegin(); ground != surfaces.rend(); ++ground)
 				{
@@ -205,7 +205,7 @@ namespace xge
 		{
 			for (auto& object : objects)
 			{
-				if (object.grip >= 1.0f || object.footing.climbing || !rules.inPlay(object)) { continue; }
+				if (object.motion.grip >= 1.0f || object.footing.climbing || !rules.inPlay(object)) { continue; }
 
 				if (object.hasHeading)
 				{
@@ -260,7 +260,7 @@ namespace xge
 			const auto& step = object.drive.moveStep;
 			const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
 			const auto sign = [](float value) { return (value > 0.0f) - (value < 0.0f); };
-			if (object.grip < 1.0f && object.velocity.x != 0.0f && sign(wanted) != sign(object.velocity.x)) { return Object::Pose::Skidding; }
+			if (object.motion.grip < 1.0f && object.velocity.x != 0.0f && sign(wanted) != sign(object.velocity.x)) { return Object::Pose::Skidding; }
 			return Object::Pose::Walking;
 		}
 
@@ -318,7 +318,7 @@ namespace xge
 				// At rest (Object::resting): nothing pulls it while it lies
 				// where it came to rest, still, on something still there as
 				// it was. Anything else wakes it.
-				if (object.friction > 0.0f)
+				if (object.motion.friction > 0.0f)
 				{
 					if (object.rest.settledAge < 1000) { ++object.rest.settledAge; }
 					if (object.rest.resting)

@@ -434,7 +434,7 @@ namespace xge
 			{ "rise", [](Object& o) -> float& { return o.rise; }, false },
 			{ "light", [](Object& o) -> float& { return o.light; }, true },
 			{ "blink", [](Object& o) -> float& { return o.blink; }, true },
-			{ "speed", [](Object& o) -> float& { if (!o.speedHeld) { o.speed = std::hypot(o.velocity.x, o.velocity.y); } return o.speed; }, false },
+			{ "speed", [](Object& o) -> float& { if (!o.motion.speedHeld) { o.motion.speed = std::hypot(o.velocity.x, o.velocity.y); } return o.motion.speed; }, false },
 			{ "column", [](Object& o) -> float& { return o.cellColumn; }, false },
 			{ "row", [](Object& o) -> float& { return o.cellRow; }, false },
 			{ "moves", [](Object& o) -> float& { return o.moves.count; }, true },

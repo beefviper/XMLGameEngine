@@ -96,7 +96,7 @@ namespace xge
 		//   moves it or what it rests on moves (applyAcceleration).
 		void rub(Object& mover, const Object& surface, const Vector2f& out, const Vector2f& surfaceAt, const Vector2f& before, float settle)
 		{
-			if (!(mover.friction > 0.0f)) { return; }
+			if (!(mover.motion.friction > 0.0f)) { return; }
 
 			const Vector2f cameIn = before - surfaceAt;
 			Vector2f now = mover.velocity - surfaceAt;
@@ -105,7 +105,7 @@ namespace xge
 			const float sliding = lengthOf(along);
 			if (sliding > 0.0f && pushed > 0.0f)
 			{
-				now = now - along * (std::min(sliding, mover.friction * pushed) / sliding);
+				now = now - along * (std::min(sliding, mover.motion.friction * pushed) / sliding);
 			}
 			mover.velocity = surfaceAt + now;
 
@@ -126,7 +126,7 @@ namespace xge
 			const float into = -dotOf(pull, out);
 			if (!(into > 0.0f)) { return; }
 			mover.rest.on.clear();
-			if (lengthOf(pull + out * into) > mover.friction * into)
+			if (lengthOf(pull + out * into) > mover.motion.friction * into)
 			{
 				if (!another) { return; }
 				const Vector2f up = pull * -1.0f;
@@ -152,16 +152,16 @@ namespace xge
 		const Vector2f objectAt = object.velocityAt(touch.point);
 		const Vector2f otherAt = other.velocityAt(touch.point);
 		// Against one that does not move, the one that does settles on it.
-		const float settle = other.mass <= 0.0f ? settleSpeed(object.acceleration, way)
-			: object.mass <= 0.0f ? settleSpeed(other.acceleration, way * -1.0f) : 0.0f;
-		const std::optional<Knocked> after = knockedApart(objectAt, object.mass, otherAt, other.mass, way, bounce, settle);
+		const float settle = other.motion.mass <= 0.0f ? settleSpeed(object.acceleration, way)
+			: object.motion.mass <= 0.0f ? settleSpeed(other.acceleration, way * -1.0f) : 0.0f;
+		const std::optional<Knocked> after = knockedApart(objectAt, object.motion.mass, otherAt, other.motion.mass, way, bounce, settle);
 
 		// Gone into each other: apart again, each by its share, whether or not
 		// they are still closing (a ball the frame's sweep left inside a
 		// flipper turning away from it is not left there).
-		if (touch.depth > 0.0f && (object.mass > 0.0f || other.mass > 0.0f))
+		if (touch.depth > 0.0f && (object.motion.mass > 0.0f || other.motion.mass > 0.0f))
 		{
-			const float objectShare = object.mass <= 0.0f ? 0.0f : other.mass <= 0.0f ? 1.0f : other.mass / (object.mass + other.mass);
+			const float objectShare = object.motion.mass <= 0.0f ? 0.0f : other.motion.mass <= 0.0f ? 1.0f : other.motion.mass / (object.motion.mass + other.motion.mass);
 			object.position -= way * (touch.depth * objectShare);
 			other.position += way * (touch.depth * (1.0f - objectShare));
 		}
@@ -177,8 +177,8 @@ namespace xge
 		other.velocity += after->second - otherAt;
 
 		// One against something that does not move: its friction.
-		if (other.mass <= 0.0f && object.mass > 0.0f) { rub(object, other, touch.normal, otherAt, objectWas, settle); }
-		else if (object.mass <= 0.0f && other.mass > 0.0f) { rub(other, object, way, objectAt, otherWas, settle); }
+		if (other.motion.mass <= 0.0f && object.motion.mass > 0.0f) { rub(object, other, touch.normal, otherAt, objectWas, settle); }
+		else if (object.motion.mass <= 0.0f && other.motion.mass > 0.0f) { rub(other, object, way, objectAt, otherWas, settle); }
 
 		return true;
 	}
@@ -355,7 +355,7 @@ namespace xge
 
 		// With a <grip> below 1 the velocity goes there a frame at a time
 		// (playOneFrame), on the ground; a pull still has the up and down.
-		const bool slides = object.grip < 1.0f;
+		const bool slides = object.motion.grip < 1.0f;
 		if (direction == Direction::Left || direction == Direction::Right)
 		{
 			if (!object.footing.jumping && !slides)

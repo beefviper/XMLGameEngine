@@ -2148,8 +2148,8 @@ namespace xge
 		// the rules run); taken once, so that a rule that stops it does not
 		// change which of the rules after it run.
 		const Vector2f motion = motionOf(self);
-		self.speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
-		self.speedHeld = true;
+		self.motion.speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
+		self.motion.speedHeld = true;
 		// Its look as the touch happens, for sprite=, likewise.
 		const std::string look = self.lookName();
 
@@ -2177,7 +2177,7 @@ namespace xge
 				if (!executor.executeObjectCollision(command, self, other, touch)) { break; }
 			}
 		}
-		self.speedHeld = false;
+		self.motion.speedHeld = false;
 	}
 
 	void Game::refreshLive(void)

@@ -382,14 +382,14 @@ namespace xge
 			o << "\tanimation=" << f.animation.bitmaps.size() << " frames, " << f.animation.frames << " game frames each\n";
 		}
 
-		if (f.drag != 0)
+		if (f.motion.drag != 0)
 		{
-			o << "\tdrag=" << f.drag << '\n';
+			o << "\tdrag=" << f.motion.drag << '\n';
 		}
 
-		if (f.mass != 0)
+		if (f.motion.mass != 0)
 		{
-			o << "\tmass=" << f.mass << '\n';
+			o << "\tmass=" << f.motion.mass << '\n';
 		}
 
 		for (const auto& [name, strength] : f.pulls)
