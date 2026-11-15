@@ -62,6 +62,8 @@ set(ENGINE_SOURCES
 	"xge/lib/xml/document.cpp"
 	"xge/lib/load/xsd.cpp"
 	"xge/lib/load/build.cpp"
+	"xge/lib/load/conditions.cpp"
+	"xge/lib/load/pictures.cpp"
 	"xge/lib/load/expr.cpp"
 	"xge/lib/load/check.cpp"
 	"xge/lib/load/calc.cpp"

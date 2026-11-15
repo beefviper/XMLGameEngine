@@ -53,6 +53,8 @@
   <file>lib/game/scenes.cpp</file>
   <file>lib/load/expr.h</file>
   <file>lib/load/build.cpp</file>
+  <file>lib/load/conditions.cpp</file>
+  <file>lib/load/pictures.cpp</file>
   <file>lib/load/expr.cpp</file>
   <file>lib/load/check.h</file>
   <file>lib/load/check.cpp</file>

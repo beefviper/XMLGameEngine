@@ -137,6 +137,9 @@ namespace xge
 		Condition makeCondition(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects);
 		Condition makeConditionHere(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects);
 
+		// buildPicture's steps 1 to 3 for a line, polygon, cell, svg or bitmap:
+		// read, drawn into a Bitmap and flipped; a line's segments kept to turn.
+		std::shared_ptr<const Bitmap> drawPicture(const RawSprite& sprite, const std::string& where, const std::string& color, const std::shared_ptr<Turnable>& kept);
 		// A copy of `from` spawned while the game runs, from `raw` (what
 		// the file says of `from`, under the copy's name): its names
 		// made known to the expressions (its variables, where it is, its
