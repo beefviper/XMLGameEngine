@@ -637,7 +637,7 @@ TEST_CASE("a held thrust is forgotten by a reset and the pull is given back by i
 
 	CHECK(flight.ship().velocity.y == 0.0f);
 	CHECK(flight.ship().acceleration.y == 0.5f);
-	CHECK(flight.ship().activeThrust[static_cast<std::size_t>(Direction::Up)] == 0.0f);
+	CHECK(flight.ship().drive.thrust[static_cast<std::size_t>(Direction::Up)] == 0.0f);
 	CHECK(flight.ship().variable["fuel"] == 3.0f);
 }
 

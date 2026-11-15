@@ -508,15 +508,15 @@ namespace xge
 	void CommandExecutor::applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn)
 	{
 		const auto index = static_cast<std::size_t>(direction);
-		object.activeThrust[index] = amount;
-		object.activeThrustBurn[index] = amount == 0.0f ? std::string{} : burn;
+		object.drive.thrust[index] = amount;
+		object.drive.thrustBurn[index] = amount == 0.0f ? std::string{} : burn;
 	}
 
 	// Records that a turn is now held (rate 0 = just released);
 	// playOneFrame turns the object once a frame while it is.
 	void CommandExecutor::applyActionTurn(Object& object, Direction direction, float rate)
 	{
-		object.activeTurn[static_cast<std::size_t>(direction)] = rate;
+		object.drive.turn[static_cast<std::size_t>(direction)] = rate;
 	}
 
 	// Records that thrust along the heading is now held (amount 0 = just
@@ -526,10 +526,10 @@ namespace xge
 	{
 		if (amount == 0.0f)
 		{
-			object.activeThrustAheadBy.erase(action);
+			object.drive.thrustAhead.erase(action);
 			return;
 		}
-		object.activeThrustAheadBy[action] = { amount, burn };
+		object.drive.thrustAhead[action] = { amount, burn };
 	}
 
 	// `command.count` new objects, copies of `spawn.target` (Game::spawn),

@@ -38,8 +38,8 @@ namespace xge
 			// One with a <grip> below 1 slides on from the speed it landed at.
 			if (object.grip >= 1.0f)
 			{
-				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
-					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
+				object.velocity.x = object.drive.moveStep[static_cast<std::size_t>(Direction::Right)]
+					- object.drive.moveStep[static_cast<std::size_t>(Direction::Left)];
 			}
 		}
 	}

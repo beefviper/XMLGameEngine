@@ -1415,16 +1415,16 @@ namespace xge
 			// so a stale held direction (a key never released across this
 			// reset) shouldn't be able to resurrect part of the old velocity
 			// the next time some other direction's key event recomputes it.
-			object.activeMoveStep = {};
+			object.drive.moveStep = {};
 
 			// The same goes for thrust still recorded as held, and a <stop />
 			// that took the acceleration away is given back above.
-			object.activeThrust = {};
-			object.activeThrustBurn = {};
+			object.drive.thrust = {};
+			object.drive.thrustBurn = {};
 
 			// No turn or thrust along its heading still held.
-			object.activeTurn = {};
-			object.activeThrustAheadBy.clear();
+			object.drive.turn = {};
+			object.drive.thrustAhead.clear();
 			object.swing.held = false;
 			object.swing.done = 0.0f;
 			object.picker.picked.clear();

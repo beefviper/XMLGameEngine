@@ -155,8 +155,8 @@ namespace xge
 
 				if (!object.footing.climbing)
 				{
-					object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
-						- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
+					object.velocity.x = object.drive.moveStep[static_cast<std::size_t>(Direction::Right)]
+						- object.drive.moveStep[static_cast<std::size_t>(Direction::Left)];
 				}
 			}
 		}
@@ -221,7 +221,7 @@ namespace xge
 					velocity += (wanted - velocity) * object.surface.groundGrip;
 					if (std::abs(wanted - velocity) < 0.05f) { velocity = wanted; }
 				};
-				const auto& step = object.activeMoveStep;
+				const auto& step = object.drive.moveStep;
 				if (!object.footing.jumping)
 				{
 					ease(object.velocity.x, step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)]);
@@ -241,8 +241,8 @@ namespace xge
 		// <thrust direction> is on.
 		Object::Pose poseOf(const Object& object)
 		{
-			if (!object.activeThrustAheadBy.empty()
-				|| std::any_of(object.activeThrust.begin(), object.activeThrust.end(), [](float amount) { return amount != 0.0f; }))
+			if (!object.drive.thrustAhead.empty()
+				|| std::any_of(object.drive.thrust.begin(), object.drive.thrust.end(), [](float amount) { return amount != 0.0f; }))
 			{
 				return Object::Pose::Thrusting;
 			}
@@ -257,7 +257,7 @@ namespace xge
 			}
 			if (object.velocity.x == 0.0f && (pulled || object.velocity.y == 0.0f)) { return Object::Pose::Standing; }
 
-			const auto& step = object.activeMoveStep;
+			const auto& step = object.drive.moveStep;
 			const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
 			const auto sign = [](float value) { return (value > 0.0f) - (value < 0.0f); };
 			if (object.grip < 1.0f && object.velocity.x != 0.0f && sign(wanted) != sign(object.velocity.x)) { return Object::Pose::Skidding; }
@@ -277,7 +277,7 @@ namespace xge
 
 				if (object.mirror.on)
 				{
-					const auto& step = object.activeMoveStep;
+					const auto& step = object.drive.moveStep;
 					const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
 					if (wanted != 0.0f) { object.mirror.goingLeft = wanted < 0.0f; }
 					else if (object.isAirborne() && object.flight.step.x != 0.0f) { object.mirror.goingLeft = object.flight.step.x < 0.0f; }
@@ -305,8 +305,8 @@ namespace xge
 			{
 				// Nothing to do for most things (a wall): looked at before
 				// asking whether it is in play.
-				const bool thrusting = object.activeThrust[0] != 0.0f || object.activeThrust[1] != 0.0f
-					|| object.activeThrust[2] != 0.0f || object.activeThrust[3] != 0.0f;
+				const bool thrusting = object.drive.thrust[0] != 0.0f || object.drive.thrust[1] != 0.0f
+					|| object.drive.thrust[2] != 0.0f || object.drive.thrust[3] != 0.0f;
 				if (!thrusting && !object.hasHeading && object.surface.groundDrag == 0.0f && object.acceleration.x == 0.0f && object.acceleration.y == 0.0f)
 				{
 					continue;
@@ -342,12 +342,12 @@ namespace xge
 					return burn.empty() || rules.burn(object, burn);
 				};
 
-				for (std::size_t i = 0; i < object.activeThrust.size(); ++i)
+				for (std::size_t i = 0; i < object.drive.thrust.size(); ++i)
 				{
-					const float amount = object.activeThrust[i];
+					const float amount = object.drive.thrust[i];
 					if (amount == 0.0f) { continue; }
 
-					if (!burnFuel(object.activeThrustBurn[i])) { continue; }
+					if (!burnFuel(object.drive.thrustBurn[i])) { continue; }
 
 					switch (static_cast<Direction>(i))
 					{
@@ -362,8 +362,8 @@ namespace xge
 				// heading is degrees clockwise from straight up.
 				if (object.hasHeading)
 				{
-					const float turn = object.activeTurn[static_cast<std::size_t>(Direction::Right)]
-						- object.activeTurn[static_cast<std::size_t>(Direction::Left)];
+					const float turn = object.drive.turn[static_cast<std::size_t>(Direction::Right)]
+						- object.drive.turn[static_cast<std::size_t>(Direction::Left)];
 					if (turn != 0.0f)
 					{
 						object.heading = std::fmod(object.heading + turn, 360.0f);
@@ -398,7 +398,7 @@ namespace xge
 						}
 					}
 
-					for (const auto& [action, thrust] : object.activeThrustAheadBy)
+					for (const auto& [action, thrust] : object.drive.thrustAhead)
 					{
 						if (burnFuel(thrust.second))
 						{

@@ -18,7 +18,7 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 - The pieces (top-level `<objects>`) and every `from=` are worked out on the XML first (`load/merge.cpp`), and the same in `merge.xsl`. Change one, change the other step for step: `xgetest-generated` compares the order of objects.
 - `layOutScenes` flattens owned objects into `data.objects` named by path and writes every name out in full.
 - `isShown` is visible and running in the top state; `isStill` is drawn under a `<show state>`; `isAway` is in a scene not current.
-- `Game::tryGetObject` falls back to the end of one path, so tests may say `getObject("ball")`; `carrying` and owners hold full names.
+- `Game::tryGetObject` falls back to the end of one path, so tests may say `getObject("ball")`; `carry.what` and owners hold full names.
 - **`<reset object="x" />` resets every variable of x;** a rule's bare `<reset />` only its own object. Never put `<reset object="player" />` in someone else's rule; keep score and lives on an object no state shows.
 - A bare `<reset />` in an object's timer only moves it back; it does not restart timers or variables.
 - `collisionData.others` is the object-against-object rule list.
@@ -32,7 +32,7 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 - `sprite=` on a rule is the look as the touch happened, taken once.
 - **Swings:** a swing's turn is `Object::spin`; `moveObjects` (its `FrameSweep`) turns it through the frame in `advanceTo`, and `sweepTurning` tests the pictures at each whole degree. The heading follows half a cosine over `swing.frames`. `knock` uses `velocityAt(touch.point)`.
 - **Resting:** pixel contact depth is measured by pixels; `knockedApart`'s settle (four frames of pull) stops a resting ball hopping; `<friction>` (`rub`) may set `Object::resting`, which `applyAcceleration` wakes when the thing or a support moves.
-- Drag and grip in a frame are `groundDrag`/`groundGrip` from `findGround`; use those, not `drag`/`grip`.
+- Drag and grip in a frame are `surface.groundDrag`/`surface.groundGrip` from `findGround`; use those, not `drag`/`grip`.
 - Edge rules: `sprite=`/`unless=` are an `EdgeGuard`; `class=` or `object=` on one is a load error.
 - `Game` never touches audio: `<play>` queues a name.
 

@@ -319,14 +319,14 @@ namespace xge
 	{
 		object.velocity = {};
 		object.acceleration = {};
-		object.activeMoveStep = {};
+		object.drive.moveStep = {};
 		object.footing.activeClimb = {};
 		object.footing.climbing = false;
 		object.footing.jumping = false;
-		object.activeThrust = {};
-		object.activeThrustBurn = {};
-		object.activeTurn = {};
-		object.activeThrustAheadBy.clear();
+		object.drive.thrust = {};
+		object.drive.thrustBurn = {};
+		object.drive.turn = {};
+		object.drive.thrustAhead.clear();
 		object.path.name.clear();
 		object.maze.walk = {};
 	}
@@ -338,7 +338,7 @@ namespace xge
 		object.footing.jumping = false;
 		object.footing.grounded = false;
 		object.hasAim = false;
-		const bool keyHeld = std::any_of(object.activeMoveStep.begin(), object.activeMoveStep.end(), [](float step) { return step != 0.0f; });
+		const bool keyHeld = std::any_of(object.drive.moveStep.begin(), object.drive.moveStep.end(), [](float step) { return step != 0.0f; });
 		if (!keyHeld)
 		{
 			object.velocity = object.start.velocity;
@@ -351,7 +351,7 @@ namespace xge
 	// and tapping Up stops, and letting go of Up moves down again.
 	void holdStep(Object& object, Direction direction, float step)
 	{
-		object.activeMoveStep[static_cast<std::size_t>(direction)] = step;
+		object.drive.moveStep[static_cast<std::size_t>(direction)] = step;
 
 		// With a <grip> below 1 the velocity goes there a frame at a time
 		// (playOneFrame), on the ground; a pull still has the up and down.
@@ -360,21 +360,21 @@ namespace xge
 		{
 			if (!object.footing.jumping && !slides)
 			{
-				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
-					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
+				object.velocity.x = object.drive.moveStep[static_cast<std::size_t>(Direction::Right)]
+					- object.drive.moveStep[static_cast<std::size_t>(Direction::Left)];
 			}
 		}
 		else if (!slides || object.acceleration.y != 0.0f)
 		{
-			object.velocity.y = object.activeMoveStep[static_cast<std::size_t>(Direction::Down)]
-				- object.activeMoveStep[static_cast<std::size_t>(Direction::Up)];
+			object.velocity.y = object.drive.moveStep[static_cast<std::size_t>(Direction::Down)]
+				- object.drive.moveStep[static_cast<std::size_t>(Direction::Up)];
 		}
 	}
 
 	void holdMove(Object& object, Direction direction, float step, bool pressed)
 	{
 		holdStep(object, direction, pressed ? step : 0.0f);
-		const auto held = [&](Direction way) { return object.activeMoveStep[static_cast<std::size_t>(way)] != 0.0f; };
+		const auto held = [&](Direction way) { return object.drive.moveStep[static_cast<std::size_t>(way)] != 0.0f; };
 		const float across = (held(Direction::Right) ? 1.0f : 0.0f) - (held(Direction::Left) ? 1.0f : 0.0f);
 		const float upDown = (held(Direction::Down) ? 1.0f : 0.0f) - (held(Direction::Up) ? 1.0f : 0.0f);
 		if (pressed && step != 0.0f)

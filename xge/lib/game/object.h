@@ -1175,13 +1175,32 @@ namespace xge
 		// heading, if it turns) and marks the visual to be rebuilt.
 		void showAnimationFrame();
 
-		// Held turning, by Direction (only Left and Right are used): degrees a
-		// frame, as activeThrust holds a thruster; and thrust held along the
-		// heading, for each action that thrusts (a key held for it), with the
-		// variable it burns, so that forward and back held together add up.
-		// See playOneFrame.
-		std::array<float, 4> activeTurn{};
-		std::map<std::string, std::pair<float, std::string>> activeThrustAheadBy;
+		// What held keys drive, each by Direction (static_cast<size_t>; its
+		// four real values, Up/Down/Left/Right). Set by an action's verb while
+		// its key is held, cleared when it is let go (see playOneFrame).
+		struct Drive
+		{
+			// A <move>'s step held each way: 0 for a way not held, else the
+			// magnitude of the action's own step.
+			// CommandExecutor::applyActionVelocity recombines all four into
+			// velocity.x/velocity.y on every key transition, so holding Down
+			// and tapping Up cancels out to a standstill, and releasing Up
+			// afterward resumes moving Down, rather than leaving it stopped.
+			// Also what lets two axes combine into an 8-way diagonal from a
+			// 4-way D-pad.
+			std::array<float, 4> moveStep{};
+			// A <thrust direction> held each way, and the variable (if any)
+			// each one burns.
+			std::array<float, 4> thrust{};
+			std::array<std::string, 4> thrustBurn{};
+			// Turning held (only Left and Right are used): degrees a frame.
+			std::array<float, 4> turn{};
+			// Thrust held along the heading, for each action that thrusts,
+			// with the variable it burns, so that forward and back held
+			// together add up.
+			std::map<std::string, std::pair<float, std::string>> thrustAhead;
+		};
+		Drive drive;
 
 		// <pivot>: it turns about that point of its picture, not its middle;
 		// pivotFromMiddle is the way from the middle of the picture as drawn
@@ -1849,25 +1868,6 @@ namespace xge
 		// object that does not turn.
 		void showHeading();
 
-		// Per-direction thrust currently being held for this object, the way
-		// activeMoveStep holds a <move>'s step, and the variable (if any) each
-		// one burns; set by a <thrust direction> in an action, cleared when the key
-		// is let go.
-		std::array<float, 4> activeThrust{};
-		std::array<std::string, 4> activeThrustBurn{};
-
-		// Per-direction move step currently being held for this object, keyed
-		// by static_cast<size_t>(Direction) - sized for Direction's 4 real
-		// values (Up/Down/Left/Right; it has no Count sentinel). 0 means that
-		// direction isn't currently held; a nonzero entry is the magnitude of
-		// the <action>'s own step. CommandExecutor::applyActionVelocity
-		// recombines all four into velocity.x/velocity.y on every key
-		// transition, so e.g. holding Down and tapping Up cancels out to a
-		// standstill instead of Up's single key event just overwriting the
-		// whole axis to 0 - and releasing Up afterward correctly resumes
-		// moving Down, rather than leaving the paddle stopped. Also what lets
-		// two axes combine into an 8-way diagonal from a 4-way D-pad.
-		std::array<float, 4> activeMoveStep{};
 
 		// Motion this object is given for one frame besides its own velocity.
 		// `riding` is the velocity of whatever it is riding (a collision rule
