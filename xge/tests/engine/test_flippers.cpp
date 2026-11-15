@@ -250,7 +250,7 @@ TEST_CASE("friction brings a ball to rest on a slope its pull cannot slide it do
 	Played play(file.path);
 	Object& ball = play.get("ball");
 	play.frames(90);
-	REQUIRE(ball.resting);
+	REQUIRE(ball.rest.resting);
 	const Vector2f still = ball.position;
 	play.frames(60);
 	CHECK(ball.position == still);
@@ -264,7 +264,7 @@ TEST_CASE("friction too small for the slope lets a ball roll down it", "[frictio
 	Played play(file.path);
 	Object& ball = play.get("ball");
 	play.frames(60);
-	CHECK_FALSE(ball.resting);
+	CHECK_FALSE(ball.rest.resting);
 	CHECK(ball.velocity.x > 0.5f);
 }
 
@@ -274,7 +274,7 @@ TEST_CASE("without friction a ball never comes to rest on a slope", "[friction]"
 	Played play(file.path);
 	Object& ball = play.get("ball");
 	play.frames(90);
-	CHECK_FALSE(ball.resting);
+	CHECK_FALSE(ball.rest.resting);
 	CHECK(ball.velocity.x > 0.1f);
 }
 
@@ -294,11 +294,11 @@ TEST_CASE("a ball at rest on a flipper wakes when the flipper moves", "[friction
 	Played play(file.path);
 	Object& ball = play.get("ball");
 	play.frames(30);
-	REQUIRE(ball.resting);
+	REQUIRE(ball.rest.resting);
 
 	// Swung down to the right, away under it: the ball falls and rolls.
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(10);
-	CHECK_FALSE(ball.resting);
+	CHECK_FALSE(ball.rest.resting);
 	CHECK(ball.velocity.y > 0.2f);
 }

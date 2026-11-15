@@ -1746,7 +1746,7 @@ namespace xge
 		// along its surface is cut by up to this share of the speed the touch
 		// took off straight into it (a slide on a rough surface); and while it
 		// lies on a surface (or wedged between two) that its own pull cannot
-		// slide it along, it comes to rest (see `resting`). 0: none.
+		// slide it along, it comes to rest (see Rest). 0: none.
 		float friction{};
 
 		// What something lies on, as it was: its name, where it was and the
@@ -1758,20 +1758,24 @@ namespace xge
 			float heading{};
 		};
 
-		// At rest (at `restedAt`) on one thing, or wedged between two, that
-		// do not move (`restingOn`, as they were then): it neither moves nor
+		// At rest (`resting`, at `at`) on one thing, or wedged between two,
+		// that do not move (`on`, as they were then): it neither moves nor
 		// is pulled, until one of them moves or turns, or something moves it
 		// or gives it a speed. Worked out by a touch with friction
 		// (play/verbs.cpp's rub), which also keeps the last surface it
 		// settled on, the way out of it and how many frames ago
 		// (`settledOn`, `settledNormal`, `settledAge`), for one wedged
 		// between two.
-		bool resting{ false };
-		std::vector<Support> restingOn;
-		Vector2f restedAt;
-		Support settledOn;
-		Vector2f settledNormal;
-		int settledAge{ 1000 };
+		struct Rest
+		{
+			bool resting{ false };
+			std::vector<Support> on;
+			Vector2f at;
+			Support settledOn;
+			Vector2f settledNormal;
+			int settledAge{ 1000 };
+		};
+		Rest rest;
 
 		// <mass>: how hard it is to knock (see CmdKnock). 0, when it has
 		// none, is not knocked at all: a wall, a floor.

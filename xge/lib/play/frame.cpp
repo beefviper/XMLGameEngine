@@ -320,18 +320,18 @@ namespace xge
 				// it was. Anything else wakes it.
 				if (object.friction > 0.0f)
 				{
-					if (object.settledAge < 1000) { ++object.settledAge; }
-					if (object.resting)
+					if (object.rest.settledAge < 1000) { ++object.rest.settledAge; }
+					if (object.rest.resting)
 					{
-						object.resting = object.velocity.x == 0.0f && object.velocity.y == 0.0f && object.position == object.restedAt
-							&& std::all_of(object.restingOn.begin(), object.restingOn.end(), [&](const Object::Support& support)
+						object.rest.resting = object.velocity.x == 0.0f && object.velocity.y == 0.0f && object.position == object.rest.at
+							&& std::all_of(object.rest.on.begin(), object.rest.on.end(), [&](const Object::Support& support)
 								{
 									const auto under = std::find_if(objects.begin(), objects.end(), [&](const Object& other) { return other.name == support.name; });
 									return under != objects.end() && rules.inPlay(*under) && under->position == support.at
 										&& under->heading == support.heading && under->spin == 0.0f;
 								});
 					}
-					if (object.resting) { continue; }
+					if (object.rest.resting) { continue; }
 				}
 
 				Vector2f change = object.acceleration;

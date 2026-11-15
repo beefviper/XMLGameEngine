@@ -111,13 +111,13 @@ namespace xge
 
 			if (!(-dotOf(cameIn, out) < settle)) { return; }
 
-			const bool another = mover.settledAge <= 2 && dotOf(mover.settledNormal, out) < 0.95f;
-			const Vector2f other = mover.settledNormal;
-			const Object::Support otherSupport = mover.settledOn;
+			const bool another = mover.rest.settledAge <= 2 && dotOf(mover.rest.settledNormal, out) < 0.95f;
+			const Vector2f other = mover.rest.settledNormal;
+			const Object::Support otherSupport = mover.rest.settledOn;
 			const Object::Support support{ surface.name, surface.position, surface.heading };
-			mover.settledOn = support;
-			mover.settledNormal = out;
-			mover.settledAge = 0;
+			mover.rest.settledOn = support;
+			mover.rest.settledNormal = out;
+			mover.rest.settledAge = 0;
 
 			const bool still = surface.spin == 0.0f && surfaceAt.x == 0.0f && surfaceAt.y == 0.0f;
 			if (!still || !(lengthOf(now) < settle)) { return; }
@@ -125,7 +125,7 @@ namespace xge
 			const Vector2f pull = mover.acceleration;
 			const float into = -dotOf(pull, out);
 			if (!(into > 0.0f)) { return; }
-			mover.restingOn.clear();
+			mover.rest.on.clear();
 			if (lengthOf(pull + out * into) > mover.friction * into)
 			{
 				if (!another) { return; }
@@ -133,13 +133,13 @@ namespace xge
 				const float first = crossOf(other, up);
 				const float second = crossOf(up, out);
 				if (!(dotOf(pull, other) < 0.0f && first != 0.0f && second != 0.0f && (first > 0.0f) == (second > 0.0f))) { return; }
-				mover.restingOn.push_back(otherSupport);
+				mover.rest.on.push_back(otherSupport);
 			}
-			mover.restingOn.push_back(support);
+			mover.rest.on.push_back(support);
 
 			mover.velocity = {};
-			mover.resting = true;
-			mover.restedAt = mover.position;
+			mover.rest.resting = true;
+			mover.rest.at = mover.position;
 		}
 	}
 

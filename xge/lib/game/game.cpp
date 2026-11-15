@@ -1435,8 +1435,8 @@ namespace xge
 			object.picker.toRow = 0;
 			object.marks.marked.clear();
 			object.marks.copies.clear();
-			object.resting = false;
-			object.settledAge = 1000;
+			object.rest.resting = false;
+			object.rest.settledAge = 1000;
 			object.spin = 0.0f;
 			object.showHeading();
 

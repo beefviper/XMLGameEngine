@@ -84,7 +84,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **10.** `object.item` (held, number, laid by, face up, with what `ItemOf` has now).
   - [x] **11.** `object.mirror` (mirrors, way, mirrored, going left, flips).
   - [x] **12.** `object.surface` (a surface's drag and grip, and the ground's under it).
-  - [ ] **13.** `object.rest` (resting, resting on, rested at, settled on, normal, age).
+  - [x] **13.** `object.rest` (resting, resting on, rested at, settled on, normal, age).
   - [ ] **14.** `object.dark` and `object.altitude` (seen, in the dark; altitude, fall, bounce, shadow).
   - [ ] **15.** `object.tether` and `object.carry`.
   - [ ] **16.** `object.keys` (held turn, thrust, thrust along the heading, move steps).
