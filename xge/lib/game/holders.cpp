@@ -189,7 +189,7 @@ namespace xge
 	// The fewest points left in no group, these cards (or the best `best`
 	// of them) laid out in groups each making one of the holder's <melds>
 	// patterns; `melds`, when asked, gets the groups (indexes into
-	// `numbers`). Each card counts its points by the holder's <points>.
+	// `numbers`). Each card counts its points by the holder's <counts>.
 	float Game::meldDeadwood(const Object& holder, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds)
 	{
 		std::vector<const Object*> cards;
@@ -937,7 +937,7 @@ namespace xge
 
 	void Game::sendStarts()
 	{
-		// Numbered, every deck in turn.
+		// Numbered, every held member in turn.
 		int number = 0;
 		for (Object& object : objects)
 		{
@@ -959,7 +959,7 @@ namespace xge
 			}
 		}
 
-		// Each deck shuffled into its holder.
+		// Each group's held members, in random order, into the holder it starts in.
 		std::map<std::string, std::vector<int>> starts;
 		std::vector<std::string> order;
 		for (Object& object : objects)
@@ -1140,7 +1140,7 @@ namespace xge
 		}
 	}
 
-	// Whether `cards` (the lowest first) may go on the holder, by its <takes>.
+	// Whether `cards` (the lowest first) may go on the holder, by its <accepts>.
 	bool Game::holderTakes(Object& holder, const std::vector<int>& cards, const Object* from)
 	{
 		const HolderRule& rule = holder.holder.takes;

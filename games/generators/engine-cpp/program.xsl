@@ -96,7 +96,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/output")
 include(FetchContent)
 
 # What the engine is built with: SFML 3 for the window and sound, lunasvg for
-# any &lt;svg&gt; picture (and plutovg, inside it, for a deck's card sheet). Each
+# any &lt;svg&gt; picture (and plutovg, inside it, for a pack's card sheet). Each
 # as installed (vcpkg install sfml lunasvg), or else fetched and built here.
 find_package(SFML 3 COMPONENTS Graphics Audio QUIET)
 if (NOT SFML_FOUND)

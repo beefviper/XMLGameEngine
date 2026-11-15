@@ -1364,7 +1364,7 @@ namespace xge
 			object.markSets.push_back(std::move(set));
 		}
 
-		// Cards: a holder's rules, a hand, a card of a deck.
+		// Holders: a holder's rules, a hand, a held member.
 		if (rawObject.holder.is)
 		{
 			const RawObject::RawHolder& raw = rawObject.holder;
@@ -2342,7 +2342,7 @@ namespace xge
 					key += "|" + sprite.flip;
 
 					// 2. Cut, once for every sprite of the same cell and size (a
-					// deck's packs, a group's members), from the sheet's picture,
+					// a pack's cards, a group's members), from the sheet's picture,
 					// opened once while the game loads.
 					drawn = drawOnce(key, [&]
 					{

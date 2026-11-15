@@ -2396,7 +2396,7 @@ namespace xge
 				else if (tag == "group") { inner = true; }
 				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
 				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <holds>, <hand />, <owns>, <turns>, <maze>, <chain>, <shape>, <waiting /> or <ready />, <hidden />, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
+					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <holds>, <owns>, <turns>, <maze>, <chain>, <shape>, <waiting /> or <ready />, <hidden />, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
 				}
 			}
 
@@ -3624,7 +3624,7 @@ namespace xge
 			}
 		}
 
-		// load sheets (optional: the pictures sprites, animations and decks
+		// load sheets (optional: the pictures sprites, animations and packs
 		// cut theirs from), among the <pictures>
 		if (std::unique_ptr<XmlNode> picturesNode = findChild(root.get(), "pictures"))
 		{

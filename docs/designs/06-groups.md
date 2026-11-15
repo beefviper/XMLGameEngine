@@ -25,6 +25,7 @@
 - **A sprite that changes one thing gives only that** (`<rectangle><color>color.orange</color></rectangle>`); another shape must be complete. This partial-sprite merge is what later made nesting possible.
 - **The gap is `<padding>`**, not `<x><inc>3</inc></x>`: a verb inside a value would break the format's one rule.
 - **A row and a column changing the same thing in one cell is an error**, not "the later wins". A `<cell>` beats both.
+- **A cell knows its place:** its `column` and `row` are variables of its own, and `<columns name>`/`<rows name>` add a second name. This began as the card engine's suit and rank; made general, a pack is just a grid group and a card game names the axes it reads.
 - A slot is its row's sprite size; a bigger cell sits centred and its neighbours do not move. A picture shared by many cells is drawn once (`drawOnce`).
 - Open: a named row or column, picking a range, a cell changing its collisions.
 

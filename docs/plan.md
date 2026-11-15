@@ -13,11 +13,10 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 
 | # | Task | Why here |
 |---|---|---|
-| 1 | [A2](#a2-holders-in-the-engine-not-piles): holders in the engine | Tidying; nothing a player sees depends on it |
-| 2 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
-| 3 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
-| 4 | [F8](#f8-dice): dice | Waits on the hold on new games |
-| 5 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
+| 1 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
+| 2 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
+| 3 | [F8](#f8-dice): dice | Waits on the hold on new games |
+| 4 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
 
 **On hold:** [A5](#a5-a-game-written-out-as-if-by-hand), the stand-alone generator (the author: nice-looking generated code is a hard problem that may need several things to change at once). It stands at `pong_min` written, and `pong.xml` written by hand as the next example.
 
@@ -25,7 +24,6 @@ What must come before what:
 
 | Task | Needs first |
 |---|---|
-| A4 | A2 |
 | A1 step 4 | A5 far enough along to retire `data.xsl`, and the author's yes |
 | F8 | the hold on new games lifted ([open decisions](#open-decisions)) |
 
@@ -68,19 +66,6 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 - **Files.** `xge/lib/verbs/*`, `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/play.md` "Loading".
 - **Done when** adding a verb is one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element and the docs.
 
-#### A2. Holders in the engine, not piles
-
-- **Needs** nothing.
-- **Why.** The engine underneath the holder words is still the old card engine (`suit`, `rank`, deal and refill fields; `game/holders.cpp` is over 2,000 lines), so the language says "no card nouns" and the code says the opposite. `settleHolders` translates `<holds>` into the old pile fields.
-- **Check for every step:** `ctest "[cards]"` and the eight card games' tests pass unchanged.
-- **Steps.**
-  - [x] **1. Dead fields out (S).** In `RawObject::RawPile` and `Object::Pile` (`xge/lib/game/object.h`), take each field in turn (`dealt`, `dealtMore`, `dealsInto`, `deals`, `refillFrom`, `refillShuffle`, `refillLeave`, `faces`, `sorted`, ...) and `grep` for a writer in `load/xml.cpp` and `game/cards.cpp`. If only `settleHolders` writes it from a holder word, keep it for step 3. If nothing writes it, delete it and the code that reads it. **Check:** the list of fields deleted is in the commit message.
-  - [x] **2. Rename (M).** `Pile` to `Holder`, `RawPile` to `RawHolder`, `isCard` to `held`, `game/cards.cpp` and `cards.h` to `game/holders.cpp` and `holders.h`, `thinkCards` to `thinkHeld`. Mechanical, one commit. Also `engine.xml`, `ENGINE_SOURCES` in the top `CMakeLists.txt`, the field names in `data.xsl` and the describer, and the three comments that name `game/cards.h` (in `load/xml.cpp`, `game/states.h`, `game/object.h`). **Check:** `grep -rn "Pile\|isCard\|cards\.h" xge/lib` finds nothing.
-  - [x] **3. Remove the translation, one holder word a commit (L in all).** In turn: what it holds, `spread`, `order`, `counts`, `accepts`. For each, the holder's field becomes the word itself as the game wrote it, the engine reads that, and the matching lines of `settleHolders` go. Done; `settleHolders` stays for setting the cards up (members, hands, pattern axes, `<starts>`), which step 4 shrinks.
-  - [x] **4. `suit` and `rank` (M).** Wherever the engine reads a held member's `suit` or `rank`, it reads the member's row and column in its group, under the names a pack gives them (`<columns name="rank">`, `<rows name="suit">`). **Check:** `grep -rniE "pile|isCard|suit|rank|deal|shuffle" xge/lib` finds nothing but comments explaining a card game example. Done: patterns, the wild call and the computer read the variables a game names; what the grep still finds is the `<rank>` high-score verb, compile, Direct3D's DISCARD and example text.
-  - [ ] **5. `settleHolders` gone (M).** Its last jobs move where their kind already lives: a grid member's row and column variables (and a held one's `worth` and `high`) made with the object in `load/expr.cpp`, for every grid game; a picker of a held class made a hand there too; the look names checked in `load/check.cpp`; `<starts>` read into the state and carried out when it starts. **Check:** `grep -rn settleHolders xge games` finds nothing.
-- **Done when** all five boxes are ticked.
-
 #### A3. Split the long functions
 
 - **Needs** nothing. Moves only, no behaviour change.
@@ -96,7 +81,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 
 #### A4. `Object` in parts
 
-- **Needs** A2. Lowest priority here.
+- **Needs** nothing (A2, done). Lowest priority here.
 - **Why.** About 200 fields in one struct. Leave `Moment` (position, velocity and the rest that tests name) exactly as it is.
 - **Check for every step:** `xgetest-long "[speed]"` is no slower.
 - **Steps, one group a commit.** Each moves the fields of one feature into a member that most objects never use and tests rarely name.
@@ -220,7 +205,7 @@ Goals the author has set, beyond the tasks above. None is scheduled; delta time 
 - The same pass the language had: name the few ideas the engine really has, then ask of each large file which idea it belongs to and why it needs more than that. Something can be abstract and still simple.
 - The engine library is about 42,000 lines, and five files hold a third of it (`load/xml.cpp`, `load/expr.cpp`, `game/game.cpp`, `game/holders.cpp`, `game/object.h`).
 - The reader is the first target: much of it writes out, tag by tag, what the schema already says.
-- A2 to A4 above only tidy what is there.
+- A3 and A4 above only tidy what is there (A2, done).
 
 ### A version on the language, and a definition of 1.0
 

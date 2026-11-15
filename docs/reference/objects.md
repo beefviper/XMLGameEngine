@@ -134,6 +134,7 @@ Instead of members, a group can lay out a block: `<columns>` and `<rows>` make a
 ```
 
 - Each cell is an object named by group, column and row (`bricks.5.3`), made top row first, left to right.
+- Each cell has its place as variables `column` and `row` (from 1). **`<columns name="rank">`** and **`<rows name="suit">`** give them a second name too, the same numbers (a pack's cards); a cell that has a variable of that name already stops the load.
 - `<slope>N</slope>` after the padding puts each column N pixels lower than the last (Donkey Kong's girders).
 - Three tags change the cells they pick, from general to particular:
 

@@ -534,7 +534,7 @@ namespace xge
 		bool layCards(Object& hand, const std::string& holder);
 		bool dropCards(Object& hand);
 		bool sendPicked(Object& hand, const std::string& from = {}, const std::string& faces = {});
-		// For tests: the next deal puts these cards on top of the deck's
+		// For tests: the next <starts> puts these cards on top of the starting
 		// holder after shuffling, the first on top, before the holders are dealt.
 		std::vector<int> stackedStart;
 		// Members of a held class, holder to holder: the top `count` of

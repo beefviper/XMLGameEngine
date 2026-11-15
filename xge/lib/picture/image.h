@@ -14,7 +14,7 @@
 namespace xge
 {
 	// A game's <sheet name="...">: one picture file holding many pictures (an
-	// animation's frames, a deck's faces), and how its cells lie: a grid of
+	// animation's frames, a pack's faces), and how its cells lie: a grid of
 	// `columns` by `rows` sharing the picture out, or of cells `cellWidth` by
 	// `cellHeight`, with `margin` round the edge and `gap` between cells (in
 	// the picture's pixels, or an SVG drawing's units). A picture taken by

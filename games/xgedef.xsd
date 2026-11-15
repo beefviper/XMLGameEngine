@@ -962,7 +962,7 @@
             trick: any member leads, then the value of variable= led is followed
             while the player holds one; a value <breaks> leads only once played (or
             when the player holds nothing else), a value <trumps> beats the rest;
-            else the highest worth of the value led wins. For now variable="suit"
+            else the highest worth of the value led wins.
           ]]></xs:documentation>
         </xs:annotation>
         <xs:complexType>
@@ -975,7 +975,7 @@
       </xs:element>
       <xs:element name="score" type="scoreType" minOccurs="0">
         <xs:annotation>
-          <xs:documentation>score patterns=: as a pile's</xs:documentation>
+          <xs:documentation>score patterns=: as a holder's</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="counts" minOccurs="0">
@@ -2047,7 +2047,7 @@
       <xs:element name="call">
         <xs:annotation>
           <xs:documentation><![CDATA[
-            call, on a hand with a pile of its own: the suit of the card it points at there is called for the holder object=, waiting
+            call, on a picker with a holder of its own: the <wild variable> of the member it points at there is called for the holder object=, waiting
             with a <wild> card on top; refused when it is not waiting
           ]]></xs:documentation>
         </xs:annotation>
@@ -3556,12 +3556,13 @@
         <xs:element name="patterns" minOccurs="0" maxOccurs="unbounded">
           <xs:annotation>
             <xs:documentation><![CDATA[
-              What a pile's cards may make, the lowest first, for a pile's
+              What a holder's members may make, the lowest first, for a holder's
               <score patterns="name">: each <pattern> one or more parts that all
-              hold: <alike variable="rank">N (N cards of one rank; each <alike> a
-              rank of its own), <alike variable="suit">N (N cards of one suit),
+              hold, each comparing the variable= it names: <alike variable="rank">N
+              (N with one value of it; each <alike> a value of its own),
               <run variable="worth">N (N worths in a row, a card counting its high
-              too; variable="rank": its column, for <melds /> only).
+              too; a run of another variable: for <melds /> only). Ties go by
+              groups of the set's first <alike> variable.
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
@@ -3617,8 +3618,8 @@
                     <xs:element name="starts" minOccurs="0">
                       <xs:annotation>
                         <xs:documentation><![CDATA[
-                          starts: done as the state begins and on a full reset, the
-                          deal: a <send from into> of <all /> of a group's held
+                          starts: done as the state begins and on a full reset, where
+                          held members start: a <send from into> of <all /> of a group's held
                           members into one holder, then <order group> at <random />
                           and <distribute from into>N (each, one at a time round;
                           <more>: each after the first that many more) and <send

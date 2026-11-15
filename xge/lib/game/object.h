@@ -325,7 +325,7 @@ namespace xge
 		// cell: a picture cut from the game's <sheet> called `sheet`, the
 		// cell at `column` and `row` (from 1), or with hasSvgRegion the part
 		// at svgX, svgY, svgWidth by svgHeight; drawn `scale` pixels to the
-		// sheet's, or (a deck's faces) made `width` by `height` when given.
+		// sheet's, or (a pack's faces) made `width` by `height` when given.
 		std::string sheet;
 		RawValue column;
 		RawValue row;
@@ -518,10 +518,10 @@ namespace xge
 		std::vector<MazeSlow> slows{};
 	};
 
-	// What a <pile> <takes> on top (each <one />, <samesuit />, ...), and
-	// what may start it when it is empty (<empty>'s <rank>s and <suit>s;
-	// none named: any card). A holder with no <takes> takes nothing but the
-	// cards put back on it.
+	// What a holder <accepts> on top (<condition>s on the arriving member,
+	// total="count" <equal>1 for one at a time), and what may start it
+	// when it is empty (<empty>'s <condition>s; none: anything). A holder
+	// with no <accepts> takes nothing but what is put back on it.
 	struct HolderRule
 	{
 		bool given{ false };
@@ -719,7 +719,7 @@ namespace xge
 			std::vector<RawMark> marks;
 		};
 		std::vector<RawMarkSet> markSets;
-		// <pile>: a place that holds cards (Object::Holder), as written.
+		// <holds>: a place that holds members of a class (Object::Holder), as written.
 		struct RawHolder
 		{
 			bool is{ false };
@@ -768,12 +768,12 @@ namespace xge
 		bool takesTurns{ false };
 		std::string turnsSprite;
 		std::vector<RawCommand> think;
-		bool hand{ false };             // <hand />: points at holders and carries cards (Object::Hand)
+		bool hand{ false };             // a picker of a held class: points at holders and carries what it picks (Object::Hand)
 		std::string handHolder;         // <owns object=>: its own holder (cards held by a player)
 		std::string ownsClass;          // <owns class=>: the pieces a player of a board game moves
-		int handSeat{};                 // <hand><seat>: which player, for a trick's `winner` (0 none)
-		int handTeam{};                 // <hand><team>: the side it plays for, partners alike (0 none)
-		int handHolds{ 1 };             // <hand><holds>: from how many holders it may hold a card at once
+		int handSeat{};                 // its seat, a players group member's number: which player, for a trick's `winner` (0 none)
+		int handTeam{};                 // <team>: the side it plays for, partners alike (0 none)
+		int handHolds{ 1 };             // <pick><most>: from how many holders it may hold one at once
 		CardOf card;                    // a held member's worths and start (empty for anything else)
 		bool held{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
@@ -1357,7 +1357,7 @@ namespace xge
 		float calling{};
 		float called{};
 		// The live number `points`: its face-up cards' worths added up, each
-		// as high as it may count while the total stays within <points>.
+		// as high as it may count while the total stays within <counts><atmost>.
 		float points{};
 		// A <score>d holder: the best of its cards (and the shared ones)
 		// by its patterns: `pattern` the highest they make (from 1 as
@@ -1383,7 +1383,7 @@ namespace xge
 		// A holder scored with <melds />: `deadwood`, the points of its cards in no
 		// group, the groups chosen to leave the fewest.
 		float deadwood{};
-		// A card: what it is, its number (from 1, every deck of the game
+		// A card: what it is, its number (from 1, every held member of the game
 		// in turn) and whether its face is up.
 		bool held{ false };
 		CardOf card;

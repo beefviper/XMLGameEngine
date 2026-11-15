@@ -53,7 +53,7 @@ namespace xge
 		// <styles>: what a <text> or a <bitmap> can take by style="..." (see applyStyles).
 		std::vector<RawStyle> styles;
 
-		// <sheets>: the picture files sprites, animations and decks cut their
+		// <sheets>: the picture files sprites, animations and packs cut their
 		// pictures from (see Sheet).
 		std::vector<Sheet> sheets;
 
