@@ -1444,8 +1444,8 @@ namespace xge
 			// picture with holes in it is whole again.
 			object.restartAnimation();
 			// Nothing of it seen yet.
-			object.seen = false;
-			object.inDark = object.dark != Object::Darkness::None;
+			object.dark.seen = false;
+			object.dark.hidden = object.dark.kind != Object::Darkness::None;
 
 			if (object.unholed)
 			{

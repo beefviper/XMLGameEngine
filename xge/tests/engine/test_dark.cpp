@@ -93,7 +93,7 @@ TEST_CASE("a <dark> object still moves and touches while it is not drawn", "[dar
 		"<collision object=\"wall\"><stop /></collision></collisions>") + box("wall", 150, 100, "<collisions></collisions>"), "<pop />");
 	Played play(file.path);
 	play.frames(20);
-	CHECK(play.get("ghost").inDark);
+	CHECK(play.get("ghost").dark.hidden);
 	CHECK(play.get("ghost").velocity.x == Approx(0));
 	CHECK(play.get("ghost").position.x < 150);
 }
@@ -146,7 +146,7 @@ namespace
 			int count = 0;
 			for (const Object& object : game.getCurrentObjects())
 			{
-				if (object.objClass == objClass && game.isShown(object) && !object.inDark) { ++count; }
+				if (object.objClass == objClass && game.isShown(object) && !object.dark.hidden) { ++count; }
 			}
 			return count;
 		}
@@ -256,15 +256,15 @@ TEST_CASE("hauntedhouse.xml: the key goes with the eyes and opens a locked door,
 	REQUIRE(piece.isVisible);
 	play.place(12, 7);
 	play.frames(1);
-	CHECK(piece.inDark);
+	CHECK(piece.dark.hidden);
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK(piece.inDark); // a match below the room: its wall is in the way
+	CHECK(piece.dark.hidden); // a match below the room: its wall is in the way
 	play.place(12, 5);   // in the doorway
 	play.frames(1);
-	CHECK_FALSE(piece.inDark);
+	CHECK_FALSE(piece.dark.hidden);
 	play.frames(300);
-	CHECK_FALSE(piece.inDark);
+	CHECK_FALSE(piece.dark.hidden);
 	play.eyes().position = { piece.position.x + 25.0f, piece.position.y };
 	play.walk(KeyCode::A, 15);
 	CHECK(play.variable("urns") == Approx(1));
@@ -326,9 +326,9 @@ TEST_CASE("a <light> with a <past class> does not shine through that class: a wa
 		+ box("behind", 200, 300, "<dark>unlit</dark>") + box("above", 200, 200, "<dark>unlit</dark>"), "<pop />");
 	Played play(file.path);
 	play.frames(2);
-	CHECK(play.get("behind").inDark);
-	CHECK_FALSE(play.get("above").inDark);
-	CHECK_FALSE(play.get("wall").inDark); // the wall itself is lit, on the lamp's side
+	CHECK(play.get("behind").dark.hidden);
+	CHECK_FALSE(play.get("above").dark.hidden);
+	CHECK_FALSE(play.get("wall").dark.hidden); // the wall itself is lit, on the lamp's side
 
 	const Scratch bad(box("lamp", 0, 0, "<light>20<past class=\"wal\" /></light>"), "<pop />");
 	CHECK_THROWS_WITH(Played(bad.path), Catch::Matchers::ContainsSubstring("no object has the class 'wal'"));

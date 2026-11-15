@@ -319,26 +319,26 @@ namespace xge
 			object.start.light = object.light;
 			object.lightPast = rawObject.lightPast;
 		}
-		if (rawObject.dark == "unlit") { object.dark = Object::Darkness::Unlit; }
-		else if (rawObject.dark == "unseen") { object.dark = Object::Darkness::Unseen; }
-		object.inDark = object.dark != Object::Darkness::None;
+		if (rawObject.dark == "unlit") { object.dark.kind = Object::Darkness::Unlit; }
+		else if (rawObject.dark == "unseen") { object.dark.kind = Object::Darkness::Unseen; }
+		object.dark.hidden = object.dark.kind != Object::Darkness::None;
 
 		if (rawObject.hasAltitude)
 		{
 			const std::string here = where + " > <altitude>";
 			const auto given = [&](const RawValue& value) { return !(value.kind == RawValue::Kind::Expression && value.text.empty()); };
-			object.hasAltitude = true;
+			object.aloft.has = true;
 			object.altitude = given(rawObject.rawAltitude) ? evaluate(rawObject.rawAltitude, here) : 0.0f;
 			object.rise = given(rawObject.rawRise) ? evaluate(rawObject.rawRise, here) : 0.0f;
-			object.fall = given(rawObject.rawFall) ? evaluate(rawObject.rawFall, here) : 0.0f;
-			object.altitudeBounce = given(rawObject.rawAltitudeBounce) ? evaluate(rawObject.rawAltitudeBounce, here) : 0.0f;
+			object.aloft.fall = given(rawObject.rawFall) ? evaluate(rawObject.rawFall, here) : 0.0f;
+			object.aloft.bounce = given(rawObject.rawAltitudeBounce) ? evaluate(rawObject.rawAltitudeBounce, here) : 0.0f;
 			if (object.altitude < 0.0f) { throw std::runtime_error(here + ": <start> is " + formatDisplayNumber(object.altitude) + "; it cannot start below the ground"); }
-			if (object.fall < 0.0f) { throw std::runtime_error(here + ": <fall> is " + formatDisplayNumber(object.fall) + "; expected 0 or more"); }
-			if (!(object.altitudeBounce >= 0.0f && object.altitudeBounce <= 1.0f)) { throw std::runtime_error(here + ": <bounce> is " + formatDisplayNumber(object.altitudeBounce) + "; expected 0 up to 1"); }
+			if (object.aloft.fall < 0.0f) { throw std::runtime_error(here + ": <fall> is " + formatDisplayNumber(object.aloft.fall) + "; expected 0 or more"); }
+			if (!(object.aloft.bounce >= 0.0f && object.aloft.bounce <= 1.0f)) { throw std::runtime_error(here + ": <bounce> is " + formatDisplayNumber(object.aloft.bounce) + "; expected 0 up to 1"); }
 			object.start.altitude = object.altitude;
 			object.start.rise = object.rise;
 		}
-		object.shadowOf = rawObject.shadowOf;
+		object.aloft.shadowOf = rawObject.shadowOf;
 
 		if (rawObject.sprite.kind == "tether")
 		{

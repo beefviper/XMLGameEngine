@@ -60,7 +60,7 @@ namespace xge
 		{
 			throw std::runtime_error(checking.where + ": " + tag + ": '" + owner + "' has no <heading> to set");
 		}
-		if ((part == "altitude" || part == "rise") && !found->hasAltitude)
+		if ((part == "altitude" || part == "rise") && !found->aloft.has)
 		{
 			throw std::runtime_error(checking.where + ": " + tag + ": '" + owner + "' has no <altitude> to set");
 		}

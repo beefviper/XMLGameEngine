@@ -955,7 +955,7 @@ namespace xge
 
 		// <light>: how far round its middle it lights, while it is in play;
 		// 0 for no light. <altitude>: how high it is off the ground, and how
-		// fast that is going up (see Object::hasAltitude).
+		// fast that is going up (see Object::Aloft).
 		float light{};
 		float altitude{};
 		float rise{};
@@ -1795,12 +1795,16 @@ namespace xge
 
 		// <dark>: an object drawn only where there is light. Unlit, only while
 		// some part of it is within a light; unseen, once that has happened,
-		// from then until it is reset (fog of war). `inDark` is whether it is
+		// from then until it is reset (fog of war). `hidden` is whether it is
 		// hidden this frame; `seen` whether an unseen one has been lit.
 		enum class Darkness { None, Unlit, Unseen };
-		Darkness dark{ Darkness::None };
-		bool seen{ false };
-		bool inDark{ false };
+		struct Dark
+		{
+			Darkness kind{ Darkness::None };
+			bool seen{ false };
+			bool hidden{ false };
+		};
+		Dark dark;
 
 		// <altitude>: how high it is off the ground, which it is drawn
 		// raised by while its position stays where it is on the ground (so
@@ -1808,15 +1812,19 @@ namespace xge
 		// (rise, less each frame by fall); and how much of the rise is kept,
 		// turned upward, when it comes down (bounce). It cannot go below
 		// the ground. Altitude and rise are the Moment's; a reset puts back
-		// those it started with.
-		bool hasAltitude{ false };
-		float fall{};
-		float altitudeBounce{};
-
+		// those it started with. `has` is whether it has an <altitude>.
+		//
 		// <shadow object="ball" />: kept under that object each frame, its
 		// middle at the other's middle on the ground, and shown while the
-		// other is. "" for nothing.
-		std::string shadowOf;
+		// other is (shadowOf; "" for nothing).
+		struct Aloft
+		{
+			bool has{ false };
+			float fall{};
+			float bounce{};
+			std::string shadowOf;
+		};
+		Aloft aloft;
 
 		// The size of what it shows now, in whole pixels, as every window
 		// draws it: its bitmap's, or its picture's (measureShapeSize).

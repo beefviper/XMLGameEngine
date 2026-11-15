@@ -154,7 +154,7 @@ namespace xge
 	// off the ground by its <altitude> (its own position stays on the ground).
 	inline void drawObject(Window& window, Object& object)
 	{
-		if (object.inDark || object.blinkedOut()) { return; }
+		if (object.dark.hidden || object.blinkedOut()) { return; }
 		if (object.altitude == 0.0f)
 		{
 			window.draw(object);

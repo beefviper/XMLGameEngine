@@ -567,15 +567,15 @@ namespace xge
 		{
 			for (auto& object : objects)
 			{
-				if (!object.hasAltitude || !rules.inPlay(object)) { continue; }
-				object.rise -= object.fall;
+				if (!object.aloft.has || !rules.inPlay(object)) { continue; }
+				object.rise -= object.aloft.fall;
 				object.altitude += object.rise;
 				if (object.altitude > 0.0f) { continue; }
 				object.altitude = 0.0f;
 				if (object.rise < 0.0f)
 				{
-					const float up = -object.rise * object.altitudeBounce;
-					object.rise = up > object.fall ? up : 0.0f;
+					const float up = -object.rise * object.aloft.bounce;
+					object.rise = up > object.aloft.fall ? up : 0.0f;
 				}
 			}
 		}
@@ -586,8 +586,8 @@ namespace xge
 		{
 			for (auto& shadow : objects)
 			{
-				if (shadow.shadowOf.empty()) { continue; }
-				const Object* caster = named(objects, shadow.shadowOf);
+				if (shadow.aloft.shadowOf.empty()) { continue; }
+				const Object* caster = named(objects, shadow.aloft.shadowOf);
 				if (!caster) { continue; }
 				shadow.position = caster->position + sizeOf(*caster) * 0.5f - sizeOf(shadow) * 0.5f;
 				shadow.isVisible = caster->isVisible;
@@ -612,7 +612,7 @@ namespace xge
 			bool anyDark = false;
 			for (const auto& object : objects)
 			{
-				anyDark = anyDark || object.dark != Object::Darkness::None;
+				anyDark = anyDark || object.dark.kind != Object::Darkness::None;
 				if (object.light > 0.0f && rules.inPlay(object))
 				{
 					lights.push_back({ &object, object.position + sizeOf(object) * 0.5f, object.light, {} });
@@ -651,7 +651,7 @@ namespace xge
 
 			for (auto& object : objects)
 			{
-				if (object.dark == Object::Darkness::None) { continue; }
+				if (object.dark.kind == Object::Darkness::None) { continue; }
 				const Vector2f size = sizeOf(object);
 				const bool lit = std::any_of(lights.begin(), lights.end(), [&](const Light& light)
 					{
@@ -667,14 +667,14 @@ namespace xge
 						const Vector2f point = far > 1.0f ? Vector2f{ x, y } + in * (1.0f / far) : middle;
 						return !blocked(light, object, point);
 					});
-				if (object.dark == Object::Darkness::Unseen)
+				if (object.dark.kind == Object::Darkness::Unseen)
 				{
-					object.seen = object.seen || lit;
-					object.inDark = !object.seen;
+					object.dark.seen = object.dark.seen || lit;
+					object.dark.hidden = !object.dark.seen;
 				}
 				else
 				{
-					object.inDark = !lit;
+					object.dark.hidden = !lit;
 				}
 			}
 		}

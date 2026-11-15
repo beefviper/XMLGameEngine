@@ -398,9 +398,9 @@ namespace xge
 		}
 
 		if (f.light > 0.0f) { o << "\tlight=" << f.light << '\n'; }
-		if (f.dark != Object::Darkness::None) { o << "\tdark=" << (f.dark == Object::Darkness::Unlit ? "unlit" : "unseen") << '\n'; }
-		if (f.hasAltitude) { o << "\taltitude=" << f.altitude << " rise " << f.rise << " fall " << f.fall << " bounce " << f.altitudeBounce << '\n'; }
-		if (!f.shadowOf.empty()) { o << "\tshadow of " << f.shadowOf << '\n'; }
+		if (f.dark.kind != Object::Darkness::None) { o << "\tdark=" << (f.dark.kind == Object::Darkness::Unlit ? "unlit" : "unseen") << '\n'; }
+		if (f.aloft.has) { o << "\taltitude=" << f.altitude << " rise " << f.rise << " fall " << f.aloft.fall << " bounce " << f.aloft.bounce << '\n'; }
+		if (!f.aloft.shadowOf.empty()) { o << "\tshadow of " << f.aloft.shadowOf << '\n'; }
 		if (!f.seekTarget.empty())
 		{
 			o << "\tseek=" << f.seekTarget << " " << f.seekRate << '\n';
