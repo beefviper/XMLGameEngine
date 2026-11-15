@@ -361,7 +361,7 @@ namespace xge
 	}
 
 	std::ostream& operator<<(std::ostream& o, const Object& f) {
-		o << "Object: " << "name=" << f.name << ", sprite=" << f.picture << '\n';
+		o << "Object: " << "name=" << f.name << ", sprite=" << f.drawn.picture << '\n';
 
 		o << "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n';
 

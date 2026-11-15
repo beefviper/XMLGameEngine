@@ -129,27 +129,27 @@ namespace xge
 	// text's live pieces.
 	void game_expr::buildSprite(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, const Picture& picture, int animationFrames, Object& object, const std::string& where)
 	{
-		object.picture = picture;
-		object.bitmap = first.bitmap;
-		if (first.turned) { object.turnables = { first.turned }; }
+		object.drawn.picture = picture;
+		object.drawn.bitmap = first.bitmap;
+		if (first.turned) { object.drawn.turnables = { first.turned }; }
 
 		if (rawObject.hasAnimation)
 		{
 			object.animation.bitmaps = first.animation;
-			if (!first.animationTurned.empty()) { object.turnables = first.animationTurned; }
+			if (!first.animationTurned.empty()) { object.drawn.turnables = first.animationTurned; }
 			object.animation.frames = animationFrames;
 			object.animation.times = animationTimesOf(rawObject.animation.times, animationFrames, windowDesc, where + " > <animation>");
 			object.animation.once = rawObject.animation.once;
 			object.animation.then = processCommands(rawObject.animation.thenCommands, where + " > <animation> > <then>");
-			object.bitmap = object.animation.bitmaps.front();
+			object.drawn.bitmap = object.animation.bitmaps.front();
 		}
 
-		if (object.picture.kind == ShapeKind::Text && showsNumbers(rawObject.sprite))
+		if (object.drawn.picture.kind == ShapeKind::Text && showsNumbers(rawObject.sprite))
 		{
 			std::vector<TextPiece> pieces = textPieces(rawObject.sprite, where, &rawObject);
 			if (std::any_of(pieces.begin(), pieces.end(), [](const TextPiece& piece) { return !piece.owner.empty(); }))
 			{
-				object.textPieces = std::move(pieces);
+				object.drawn.textPieces = std::move(pieces);
 			}
 		}
 	}
@@ -651,11 +651,11 @@ namespace xge
 		// square of the turned picture goes where puts it there.
 		if (rawObject.hasPivot)
 		{
-			if (object.turnables.empty() || !object.bitmap)
+			if (object.drawn.turnables.empty() || !object.drawn.bitmap)
 			{
 				throw std::runtime_error(where + ": <pivot> is the point a <heading> turns a picture of <line>s or a <bitmap> about; it has no such picture that turns");
 			}
-			const Turnable& drawn = *object.turnables.front();
+			const Turnable& drawn = *object.drawn.turnables.front();
 			Vector2f middle;
 			if (!drawn.lines.empty())
 			{
@@ -675,7 +675,7 @@ namespace xge
 			object.hasPivot = true;
 			object.pivotFromMiddle = pivot - middle;
 			object.pivotDegrees = wholeDegrees(object.heading);
-			const Vector2f square{ static_cast<float>(object.bitmap->width), static_cast<float>(object.bitmap->height) };
+			const Vector2f square{ static_cast<float>(object.drawn.bitmap->width), static_cast<float>(object.drawn.bitmap->height) };
 			object.position = object.position - square * 0.5f - turnedBy(object.pivotFromMiddle, static_cast<float>(object.pivotDegrees));
 			object.start.position = object.position;
 			object.start.pivotDegrees = object.pivotDegrees;
@@ -697,7 +697,7 @@ namespace xge
 		// is solid all over, but what a text or an image looks like
 		// is only known once a window backend has drawn it.
 		if (object.collisionData.type == CollisionType::Pixel
-			&& (object.picture.kind == ShapeKind::Text || object.picture.kind == ShapeKind::Image))
+			&& (object.drawn.picture.kind == ShapeKind::Text || object.drawn.picture.kind == ShapeKind::Image))
 		{
 			throw std::runtime_error(where + ": <type>pixel</type> needs a sprite of lines, a circle or a rectangle; the pixels of text and images are only known to a window backend");
 		}

@@ -821,7 +821,7 @@ namespace xge
 					for (const Command& command : rule.commands)
 					{
 						if (!std::holds_alternative<CmdHole>(shapeOf(command))) { continue; }
-						if (!object.bitmap || object.hasHeading || !object.animation.bitmaps.empty() || !object.looks.all.empty() || object.mirror.on)
+						if (!object.drawn.bitmap || object.hasHeading || !object.animation.bitmaps.empty() || !object.looks.all.empty() || object.mirror.on)
 						{
 							throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or <polygon>s, or a <bitmap>, with no <heading>, <animation>, <mirror> or second <sprite>");
 						}

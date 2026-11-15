@@ -55,8 +55,8 @@ A `Window` (`window/window.h`) is everything a window library adds. It must:
 
 1. **Open** a window the game's size times its `<scale>`, titled with its name, or throw `std::runtime_error`.
 2. **Keep the game's proportions** when the window is resized: the game's pixels as large as fit, centred, the rest bars.
-3. **Make each object's picture once** in `init()`, and again when `visualDirty` is set (`prepare()`), then clear `visualDirty`. Sizes are the game's own (`Object::pictureSize`), never the window's.
-4. **Take the picture from the engine:** `Object::drawnPicture(pictureScale())` gives every kind as a bitmap (a text, a circle, a rectangle, an image file, or the object's own `bitmap` for lines, rows and SVGs), so pictures look and measure the same in every window. When `pictureScale()` changes, make again the pictures of objects that are `drawnAtScale()`.
+3. **Make each object's picture once** in `init()`, and again when `drawn.visualDirty` is set (`prepare()`), then clear it. Sizes are the game's own (`Object::pictureSize`), never the window's.
+4. **Take the picture from the engine:** `Object::drawnPicture(pictureScale())` gives every kind as a bitmap (a text, a circle, a rectangle, an image file, or the object's own `drawn.bitmap` for lines, rows and SVGs), so pictures look and measure the same in every window. When `pictureScale()` changes, make again the pictures of objects that are `drawnAtScale()`.
 5. **Draw** each object's picture stretched over `pictureSize()` at its `position`, its top left, each frame (`draw()`), after `clear()` with the background colour and before `display()`: smoothed if it is `drawnAtScale()`, hard edged if not.
 6. **Report keys** that went down or up since the last call (`pollEvents()`), as `KeyCode`s, and close itself when asked to.
 7. **Report the mouse and pads** (`controls()`), the mouse in the game's own pixels; a library without them reports nothing.
@@ -64,11 +64,11 @@ A `Window` (`window/window.h`) is everything a window library adds. It must:
 
 It may assume:
 
-- positions and sizes are the game's own pixels, and an object's picture changes only with `visualDirty` or `pictureScale()`;
+- positions and sizes are the game's own pixels, and an object's picture changes only with `drawn.visualDirty` or `pictureScale()`;
 - a bitmap is red, green, blue, alpha, a byte each, not premultiplied, row by row from the top left;
 - every call comes from one thread.
 
-It changes nothing on an object but `visualDirty`. It may also hand back what it drew (`capture()`), for the test below.
+It changes nothing on an object but `drawn.visualDirty`. It may also hand back what it drew (`capture()`), for the test below.
 
 **The window test** (`test_backends.cpp`, hidden: `xgetest "[window]"`) holds every backend built to this list: it opens a 160 by 120 window, draws a bitmap, a rectangle and a circle, reads the pixels back, presses A (xdotool on X, `SendInput` on Windows) and closes. A new backend passes it before it is done.
 

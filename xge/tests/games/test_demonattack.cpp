@@ -41,7 +41,7 @@ namespace
 		{
 			for (auto& object : game.getCurrentObjects())
 			{
-				object.size = measureShapeSize(object.picture);
+				object.size = measureShapeSize(object.drawn.picture);
 			}
 		}
 

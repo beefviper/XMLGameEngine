@@ -71,7 +71,7 @@ namespace
 		{
 			for (auto& object : game.getCurrentObjects())
 			{
-				object.size = measureShapeSize(object.picture);
+				object.size = measureShapeSize(object.drawn.picture);
 			}
 		}
 
@@ -127,7 +127,7 @@ namespace
 			game.setCurrentState(0);
 			for (auto& object : game.getCurrentObjects())
 			{
-				object.size = measureShapeSize(object.picture);
+				object.size = measureShapeSize(object.drawn.picture);
 			}
 		}
 
@@ -640,7 +640,7 @@ TEST_CASE("the best score follows the score up, and a new game keeps it", "[gala
 	ship.variable["score"] = 240.0f;
 	play.frames(1);
 	CHECK(best.variable.at("score") == 240.0f);
-	CHECK(best.picture.text == "240");
+	CHECK(best.drawn.picture.text == "240");
 
 	// Game over, then Space: the score starts again, the best does not.
 	ship.variable["lives"] = 0.0f;
@@ -651,7 +651,7 @@ TEST_CASE("the best score follows the score up, and a new game keeps it", "[gala
 	REQUIRE(play.state() == "title");
 	CHECK(ship.variable.at("score") == 0.0f);
 	CHECK(best.variable.at("score") == 240.0f);
-	CHECK(best.picture.text == "240");
+	CHECK(best.drawn.picture.text == "240");
 
 	// A lower score leaves it alone; a higher one moves it on.
 	play.tap(KeyCode::Space);
@@ -669,7 +669,7 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 	Object& first = play.object("table.1");
 	CHECK(first.kept);
 	CHECK(play.game.isShown(first)); // on the title
-	CHECK(first.picture.text == "AAA 0");
+	CHECK(first.drawn.picture.text == "AAA 0");
 
 	const auto playTo = [&](float score)
 	{
@@ -683,16 +683,16 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 	playTo(240.0f);
 	REQUIRE(play.state() == "initial1");
 	CHECK(play.object("entry").variable.at("score") == 240.0f);
-	CHECK(play.object("entryscore").picture.text == "240");
+	CHECK(play.object("entryscore").drawn.picture.text == "240");
 
 	// Up and down go round the letters; Space goes on to the next.
 	play.tap(KeyCode::Up);
 	play.tap(KeyCode::Up);
-	CHECK(play.object("letter1").picture.text == "C");
+	CHECK(play.object("letter1").drawn.picture.text == "C");
 	play.tap(KeyCode::S);
 	play.tap(KeyCode::S);
 	play.tap(KeyCode::S);
-	CHECK(play.object("letter1").picture.text == "Z");
+	CHECK(play.object("letter1").drawn.picture.text == "Z");
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "initial2");
 	play.tap(KeyCode::W);
@@ -702,9 +702,9 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 
 	// Ranked, and a new game: the title shows it at the top.
 	REQUIRE(play.state() == "title");
-	CHECK(first.picture.text == "ZBA 240");
-	CHECK(play.object("table.2").picture.text == "AAA 0");
-	CHECK(play.object("letter1").picture.text == "A"); // the entry starts again
+	CHECK(first.drawn.picture.text == "ZBA 240");
+	CHECK(play.object("table.2").drawn.picture.text == "AAA 0");
+	CHECK(play.object("letter1").drawn.picture.text == "A"); // the entry starts again
 
 	// A lower one goes below it; a higher one above both, the rest moving down.
 	playTo(100.0f);
@@ -717,9 +717,9 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 	play.tap(KeyCode::Space);
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "title");
-	CHECK(first.picture.text == "ZAA 300");
-	CHECK(play.object("table.2").picture.text == "ZBA 240");
-	CHECK(play.object("table.3").picture.text == "AAA 100");
+	CHECK(first.drawn.picture.text == "ZAA 300");
+	CHECK(play.object("table.2").drawn.picture.text == "ZBA 240");
+	CHECK(play.object("table.3").drawn.picture.text == "AAA 100");
 
 	// Not above the fifth: no initials.
 	for (int i = 4; i <= 5; ++i)
@@ -750,8 +750,8 @@ TEST_CASE("what Galaxian keeps lasts in a file from one run to the next", "[gala
 		CHECK(play.object("table.1").variable.at("score") == 0.0f);
 		play.engine.keepIn(file.string());
 		CHECK(play.object("table.1").variable.at("score") == 500.0f);
-		CHECK(play.object("table.1").picture.text == "GAA 500");
-		CHECK(play.object("best").picture.text == "500");
+		CHECK(play.object("table.1").drawn.picture.text == "GAA 500");
+		CHECK(play.object("best").drawn.picture.text == "500");
 		CHECK(play.object("table.2").variable.at("score") == 0.0f);
 	}
 	std::filesystem::remove(file);
@@ -783,7 +783,7 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	CHECK(play.game.currentPlayer() == 2);
 	CHECK(ship.variable.at("score") == 0.0f);
 	CHECK(ship.variable.at("lives") == 3.0f);
-	CHECK(play.object("score").picture.text == "0");
+	CHECK(play.object("score").drawn.picture.text == "0");
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "playing");
 	ship.variable["score"] = 30.0f;
@@ -797,7 +797,7 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	CHECK(ship.variable.at("lives") == 2.0f);
 	CHECK(ship.variable.at("lost") == 0.0f);
 	CHECK(ship.position.x == Approx(40.0f));
-	CHECK(play.object("score").picture.text == "120");
+	CHECK(play.object("score").drawn.picture.text == "120");
 
 	// Player 1 runs out (not above the table's fifth, so no initials): Space
 	// goes on to player 2, who plays on alone.
@@ -878,7 +878,7 @@ TEST_CASE("left on the title, Galaxian plays its demo until a key is pressed", "
 	CHECK(play.state() == "title");
 	CHECK(play.game.playerCount() == 0); // the 2 did not start a game
 	CHECK(play.object("best").variable.at("score") == 70.0f);
-	CHECK(play.object("best").picture.text == "70");
+	CHECK(play.object("best").drawn.picture.text == "70");
 
 	// Ten more seconds on the title, and it plays again.
 	play.frames(601);

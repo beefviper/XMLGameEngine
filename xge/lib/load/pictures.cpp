@@ -66,7 +66,7 @@ namespace xge
 			if (raw == rawObjects.end()) { continue; }
 
 			const std::string where = "object '" + object.name + "'";
-			if (!object.turnables.empty())
+			if (!object.drawn.turnables.empty())
 			{
 				throw std::runtime_error(where + ": <become style=\"" + asked->second.front() + "\" />: a palette is for a picture that does not turn; it has a <heading>");
 			}
@@ -80,7 +80,7 @@ namespace xge
 			// As loaded: the colors it starts in, and a reset puts back.
 			Object::Palette loaded;
 			loaded.looks = object.looks.all;
-			loaded.bitmap = object.looks.all.empty() ? object.facingPicture(object.bitmap) : object.looks.all.front().bitmap;
+			loaded.bitmap = object.looks.all.empty() ? object.facingPicture(object.drawn.bitmap) : object.looks.all.front().bitmap;
 			if (object.looks.all.empty()) { loaded.animation = object.animation.bitmaps; }
 			object.looks.palettes.push_back(std::move(loaded));
 
@@ -483,7 +483,7 @@ namespace xge
 				for (const auto& picture : look.frames) { add(picture); }
 			}
 		};
-		add(object.bitmap);
+		add(object.drawn.bitmap);
 		for (const auto& picture : object.animation.bitmaps) { add(picture); }
 		addLooks(object.looks.all);
 		for (const Object::Palette& palette : object.looks.palettes)

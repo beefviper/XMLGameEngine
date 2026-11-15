@@ -152,7 +152,7 @@ namespace xge
 		// name.height variables.
 		for (const auto& object : objects)
 		{
-			if (object.picture.kind == ShapeKind::Text) { expr.setObjectSize(object.name, object.size); }
+			if (object.drawn.picture.kind == ShapeKind::Text) { expr.setObjectSize(object.name, object.size); }
 		}
 
 		for (auto& object : objects)
@@ -335,7 +335,7 @@ namespace xge
 		made.size = original.size;
 		copyRaws[name] = std::move(copy);
 		spawned.push_back(std::move(made));
-		if (!spawned.back().textPieces.empty()) { relabel(spawned.back()); }
+		if (!spawned.back().drawn.textPieces.empty()) { relabel(spawned.back()); }
 		return &spawned.back();
 	}
 
@@ -977,12 +977,12 @@ namespace xge
 		{
 			if (objects[i].kept) { continue; }
 			objects[i] = from.objects[i];
-			objects[i].visualDirty = true;
+			objects[i].drawn.visualDirty = true;
 		}
 		for (std::size_t i = loadedCount; i < from.objects.size(); ++i)
 		{
 			objects.push_back(from.objects[i]);
-			objects.back().visualDirty = true;
+			objects.back().drawn.visualDirty = true;
 		}
 		rosterChanged();
 		stateTimers = from.stateTimers;
@@ -1447,11 +1447,11 @@ namespace xge
 			object.dark.seen = false;
 			object.dark.hidden = object.dark.kind != Object::Darkness::None;
 
-			if (object.unholed)
+			if (object.drawn.unholed)
 			{
-				object.bitmap = std::move(object.unholed);
-				object.unholed.reset();
-				object.visualDirty = true;
+				object.drawn.bitmap = std::move(object.drawn.unholed);
+				object.drawn.unholed.reset();
+				object.drawn.visualDirty = true;
 			}
 
 			// Nor should a reset object go on riding, or jump; it
@@ -1527,7 +1527,7 @@ namespace xge
 		const std::string owner = object->name;
 		for (auto& other : objects)
 		{
-			if (std::any_of(other.textPieces.begin(), other.textPieces.end(), [&](const TextPiece& piece) { return piece.owner == owner; }))
+			if (std::any_of(other.drawn.textPieces.begin(), other.drawn.textPieces.end(), [&](const TextPiece& piece) { return piece.owner == owner; }))
 			{
 				relabel(other);
 			}
@@ -1805,7 +1805,7 @@ namespace xge
 	{
 		for (auto& object : objects)
 		{
-			if (!object.textPieces.empty())
+			if (!object.drawn.textPieces.empty())
 			{
 				relabel(object);
 			}
@@ -1814,12 +1814,12 @@ namespace xge
 
 	void Game::relabel(Object& object)
 	{
-		if (object.picture.kind != ShapeKind::Text)
+		if (object.drawn.picture.kind != ShapeKind::Text)
 		{
 			return;
 		}
 
-		for (TextPiece& piece : object.textPieces)
+		for (TextPiece& piece : object.drawn.textPieces)
 		{
 			if (piece.owner.empty())
 			{
@@ -1843,11 +1843,11 @@ namespace xge
 			}
 		}
 
-		const std::string text = joinText(object.textPieces);
-		if (object.picture.text != text)
+		const std::string text = joinText(object.drawn.textPieces);
+		if (object.drawn.picture.text != text)
 		{
-			object.picture.text = text;
-			object.visualDirty = true;
+			object.drawn.picture.text = text;
+			object.drawn.visualDirty = true;
 			// The size of its new words, now: what this frame's edges, touches
 			// and the positions made from it look at.
 			const Vector2f before = object.size;

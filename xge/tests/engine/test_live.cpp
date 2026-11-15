@@ -45,7 +45,7 @@ namespace
 		{
 			for (auto& object : game.getCurrentObjects())
 			{
-				object.size = measureShapeSize(object.picture);
+				object.size = measureShapeSize(object.drawn.picture);
 			}
 		}
 
@@ -179,12 +179,12 @@ TEST_CASE("a <tether> is drawn from one object's middle to another's, wherever t
 
 	play.frames(1);
 	const Object& line = play.get("line");
-	REQUIRE(line.bitmap);
+	REQUIRE(line.drawn.bitmap);
 	CHECK(line.position.x == Approx(104));
 	CHECK(line.position.y == Approx(104));
 	CHECK(line.size.x == Approx(202).margin(1));
 	CHECK(line.size.y == Approx(102 + 2).margin(1));
-	CHECK(line.bitmap->solidAt(1, 1));
+	CHECK(line.drawn.bitmap->solidAt(1, 1));
 
 	play.frames(10);
 	CHECK(play.get("line").size.y == Approx(124).margin(1));
@@ -379,12 +379,12 @@ TEST_CASE("a named timer's time left is a number of its object: whole seconds, r
 
 	play.frames(1);
 	CHECK(bomb.variable.at("fuse") == Approx(3));
-	CHECK(play.get("clock").picture.text == "LEFT 3");
+	CHECK(play.get("clock").drawn.picture.text == "LEFT 3");
 
 	// 179 frames counted of 180: under a second left still shows 1.
 	play.frames(178);
 	CHECK(bomb.variable.at("fuse") == Approx(1));
-	CHECK(play.get("clock").picture.text == "LEFT 1");
+	CHECK(play.get("clock").drawn.picture.text == "LEFT 1");
 	play.tap(KeyCode::Space);
 	CHECK(bomb.variable.at("read") == Approx(10));
 	CHECK(bomb.variable.at("bangs") == Approx(0));
@@ -395,7 +395,7 @@ TEST_CASE("a named timer's time left is a number of its object: whole seconds, r
 	CHECK(bomb.variable.at("fuse") == Approx(0));
 	play.frames(30);
 	CHECK(bomb.variable.at("fuse") == Approx(0));
-	CHECK(play.get("clock").picture.text == "LEFT 0");
+	CHECK(play.get("clock").drawn.picture.text == "LEFT 0");
 
 	// A reset gives it its whole time again.
 	play.game.resetObject("bomb");

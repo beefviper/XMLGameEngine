@@ -39,7 +39,7 @@ namespace
 		{
 			for (auto& object : game.getCurrentObjects())
 			{
-				object.size = measureShapeSize(object.picture);
+				object.size = measureShapeSize(object.drawn.picture);
 			}
 		}
 
@@ -173,8 +173,8 @@ TEST_CASE("the ball is drawn as big as its own variable says", "[pong]")
 	// once worked out before the variable had its value, and drawn as 0.
 	Pong pong;
 	const Object& ball = pong.object("ball");
-	CHECK(measureShapeSize(ball.picture).x == 16.0f);
-	CHECK(measureShapeSize(ball.picture).y == 16.0f);
+	CHECK(measureShapeSize(ball.drawn.picture).x == 16.0f);
+	CHECK(measureShapeSize(ball.drawn.picture).y == 16.0f);
 }
 
 TEST_CASE("the fourth and the twelfth hit make Pong's ball faster, and a point serves it at its first speed", "[pong]")

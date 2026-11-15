@@ -30,7 +30,7 @@ namespace xge
 		void init(std::vector<Object>& objects) override;
 		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
 		void clear(const std::string& colorName) override;
-		void prepare(Object& object) override { object.visualDirty = false; }
+		void prepare(Object& object) override { object.drawn.visualDirty = false; }
 		void draw(Object& object) override;
 		void display() override {}
 		float fit() const override { return scale; }

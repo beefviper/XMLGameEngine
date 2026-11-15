@@ -83,8 +83,8 @@ namespace xge
 		// The looks.shown to go back to when a looks.shown that plays once ends.
 		if (index != looks.shown && looks.shown < looks.all.size() && !looks.all[looks.shown].once) { animation.lookBefore = looks.shown; }
 		looks.shown = index;
-		picture = looks.all[index].picture;
-		bitmap = facingPicture(looks.all[index].bitmap);
+		drawn.picture = looks.all[index].picture;
+		drawn.bitmap = facingPicture(looks.all[index].bitmap);
 		animation.bitmaps = looks.all[index].frames;
 		animation.frames = looks.all[index].frameTicks;
 		animation.times = looks.all[index].frameTimes;
@@ -96,11 +96,11 @@ namespace xge
 		// Turned to the way it faces: its own pictures to turn from now on.
 		if (!looks.all[index].turnables.empty())
 		{
-			turnables = looks.all[index].turnables;
-			turnedDegrees = -1;
+			drawn.turnables = looks.all[index].turnables;
+			drawn.turnedDegrees = -1;
 			showHeading();
 		}
-		visualDirty = true;
+		drawn.visualDirty = true;
 		// The new look is the size it is now, not at the next draw: what the
 		// edges, touches and card layout of this frame look at.
 		size = pictureSize();
@@ -120,7 +120,7 @@ namespace xge
 		if (looks.all.empty())
 		{
 			animation.bitmaps = worn.animation;
-			bitmap = facingPicture(worn.bitmap);
+			drawn.bitmap = facingPicture(worn.bitmap);
 		}
 		else
 		{
@@ -133,7 +133,7 @@ namespace xge
 			animation.index = at % animation.bitmaps.size();
 			showAnimationFrame();
 		}
-		visualDirty = true;
+		drawn.visualDirty = true;
 	}
 
 	std::shared_ptr<const Bitmap> Object::facingPicture(const std::shared_ptr<const Bitmap>& shown) const
@@ -151,12 +151,12 @@ namespace xge
 
 		// Flipping twice is no flip, so what shows now flips back the same way.
 		mirror.flipped = want;
-		if (bitmap && mirror.flips)
+		if (drawn.bitmap && mirror.flips)
 		{
-			const auto found = mirror.flips->find(bitmap.get());
-			if (found != mirror.flips->end()) { bitmap = found->second; }
+			const auto found = mirror.flips->find(drawn.bitmap.get());
+			if (found != mirror.flips->end()) { drawn.bitmap = found->second; }
 		}
-		visualDirty = true;
+		drawn.visualDirty = true;
 	}
 
 	bool addEdgeRule(RawCollisionData& collisions, const std::string& edges, const std::vector<RawCommand>& commands,
@@ -953,7 +953,7 @@ namespace xge
 	{
 		// The picture as it shows now, turned: the square every heading
 		// comes out as.
-		const Vector2f shown = bitmap ? Vector2f{ static_cast<float>(bitmap->width), static_cast<float>(bitmap->height) } : size;
+		const Vector2f shown = drawn.bitmap ? Vector2f{ static_cast<float>(drawn.bitmap->width), static_cast<float>(drawn.bitmap->height) } : size;
 		const Vector2f middle = position + shown * 0.5f;
 		return hasPivot ? middle + turnedBy(pivotFromMiddle, static_cast<float>(pivotDegrees)) : middle;
 	}
@@ -968,11 +968,11 @@ namespace xge
 
 	void Object::showHeading()
 	{
-		if (turnables.empty()) { return; }
+		if (drawn.turnables.empty()) { return; }
 
 		// An animated object that turns has a turnable for each of its
 		// pictures; the one that is showing is the one to turn.
-		const std::size_t frame = turnables.size() > 1 && animation.index < turnables.size() ? animation.index : 0;
+		const std::size_t frame = drawn.turnables.size() > 1 && animation.index < drawn.turnables.size() ? animation.index : 0;
 
 		const int degrees = wholeDegrees(heading);
 
@@ -984,12 +984,12 @@ namespace xge
 			pivotDegrees = degrees;
 		}
 
-		if (bitmap && turnedDegrees == degrees && turnedFrame == frame) { return; }
+		if (drawn.bitmap && drawn.turnedDegrees == degrees && drawn.turnedFrame == frame) { return; }
 
-		bitmap = std::make_shared<const Bitmap>(turnables[frame]->at(static_cast<float>(degrees)));
-		turnedDegrees = degrees;
-		turnedFrame = frame;
-		visualDirty = true;
+		drawn.bitmap = std::make_shared<const Bitmap>(drawn.turnables[frame]->at(static_cast<float>(degrees)));
+		drawn.turnedDegrees = degrees;
+		drawn.turnedFrame = frame;
+		drawn.visualDirty = true;
 		// The turned picture is the size it is now, not at the next draw: what
 		// the edges and the touches of this frame look at.
 		size = pictureSize();
@@ -1041,9 +1041,9 @@ namespace xge
 
 	void Object::showAnimationFrame()
 	{
-		if (!turnables.empty()) { showHeading(); }
-		else { bitmap = facingPicture(animation.bitmaps[animation.index]); }
-		visualDirty = true;
+		if (!drawn.turnables.empty()) { showHeading(); }
+		else { drawn.bitmap = facingPicture(animation.bitmaps[animation.index]); }
+		drawn.visualDirty = true;
 		size = pictureSize();
 	}
 
@@ -1058,32 +1058,32 @@ namespace xge
 
 	Vector2f Object::pictureSize() const
 	{
-		if (bitmap) { return { static_cast<float>(std::max(bitmap->width, 1)), static_cast<float>(std::max(bitmap->height, 1)) }; }
+		if (drawn.bitmap) { return { static_cast<float>(std::max(drawn.bitmap->width, 1)), static_cast<float>(std::max(drawn.bitmap->height, 1)) }; }
 		// A circle or a rectangle is drawn on whole pixels, rounded up.
-		const Vector2f exact = measureShapeSize(picture);
-		if (picture.kind == ShapeKind::Circle || picture.kind == ShapeKind::Rectangle) { return { std::ceil(exact.x), std::ceil(exact.y) }; }
+		const Vector2f exact = measureShapeSize(drawn.picture);
+		if (drawn.picture.kind == ShapeKind::Circle || drawn.picture.kind == ShapeKind::Rectangle) { return { std::ceil(exact.x), std::ceil(exact.y) }; }
 		return exact;
 	}
 
 	std::shared_ptr<const Bitmap> Object::drawnPicture(float scale) const
 	{
-		const Color color = colorFromName(picture.color);
-		switch (picture.kind)
+		const Color color = colorFromName(drawn.picture.color);
+		switch (drawn.picture.kind)
 		{
 		case ShapeKind::Circle:
-			return std::make_shared<const Bitmap>(drawCircle(picture.radius, color, scale));
+			return std::make_shared<const Bitmap>(drawCircle(drawn.picture.radius, color, scale));
 		case ShapeKind::Rectangle:
-			return std::make_shared<const Bitmap>(drawRectangle(picture.size.x, picture.size.y, color, scale));
+			return std::make_shared<const Bitmap>(drawRectangle(drawn.picture.size.x, drawn.picture.size.y, color, scale));
 		case ShapeKind::Text:
 		{
-			const int pixels = std::max(1, static_cast<int>(std::lround(static_cast<float>(picture.textSize) * scale)));
-			return std::make_shared<const Bitmap>(drawText(picture.text, pixels, color, textFontFile(picture.font)));
+			const int pixels = std::max(1, static_cast<int>(std::lround(static_cast<float>(drawn.picture.textSize) * scale)));
+			return std::make_shared<const Bitmap>(drawText(drawn.picture.text, pixels, color, textFontFile(drawn.picture.font)));
 		}
 		case ShapeKind::Image:
-			if (!picture.flipHorizontal && !picture.flipVertical) { return loadPicture(picture.file); }
-			return std::make_shared<const Bitmap>(loadPicture(picture.file, picture.flipHorizontal, picture.flipVertical));
+			if (!drawn.picture.flipHorizontal && !drawn.picture.flipVertical) { return loadPicture(drawn.picture.file); }
+			return std::make_shared<const Bitmap>(loadPicture(drawn.picture.file, drawn.picture.flipHorizontal, drawn.picture.flipVertical));
 		case ShapeKind::Line:
-			if (bitmap) { return bitmap; }
+			if (drawn.bitmap) { return drawn.bitmap; }
 			break;
 		case ShapeKind::Unknown:
 			break;
@@ -1094,7 +1094,7 @@ namespace xge
 
 	bool Object::drawnAtScale() const noexcept
 	{
-		return picture.kind == ShapeKind::Text || picture.kind == ShapeKind::Circle || picture.kind == ShapeKind::Rectangle;
+		return drawn.picture.kind == ShapeKind::Text || drawn.picture.kind == ShapeKind::Circle || drawn.picture.kind == ShapeKind::Rectangle;
 	}
 
 	Vector2f measureShapeSize(const Picture& picture)

@@ -183,12 +183,12 @@ TEST_CASE("a picture's size is the game's own, and the null window opens nothing
 	const auto measured = [](auto setUp)
 	{
 		Object object;
-		setUp(object.picture);
-		object.visualDirty = true;
+		setUp(object.drawn.picture);
+		object.drawn.visualDirty = true;
 		std::vector<Object> objects{ object };
 		NullWindow window;
 		window.init(objects);
-		CHECK_FALSE(objects.front().visualDirty);
+		CHECK_FALSE(objects.front().drawn.visualDirty);
 		return objects.front().pictureSize();
 	};
 
@@ -282,7 +282,7 @@ namespace
 		object.isDrawn = true;
 		setUp(object);
 		object.size = object.pictureSize();
-		object.visualDirty = true;
+		object.drawn.visualDirty = true;
 		return object;
 	}
 
@@ -334,19 +334,19 @@ TEST_CASE("every window backend keeps the window contract", "[.][window]")
 			std::vector<Object> objects{
 				pictureAt("bitmap", 4.0f, 4.0f, [](Object& o)
 				{
-					o.picture.kind = ShapeKind::Line;
+					o.drawn.picture.kind = ShapeKind::Line;
 					auto red = std::make_shared<Bitmap>();
 					red->width = 8;
 					red->height = 8;
 					for (int i = 0; i < 64; ++i) { red->rgba.insert(red->rgba.end(), { 255, 0, 0, 255 }); }
-					o.bitmap = red;
-					o.picture.size = { 8.0f, 8.0f };
+					o.drawn.bitmap = red;
+					o.drawn.picture.size = { 8.0f, 8.0f };
 				}),
-				pictureAt("rectangle", 30.0f, 4.0f, [](Object& o) { o.picture.kind = ShapeKind::Rectangle; o.picture.size = { 10.0f, 6.0f }; o.picture.color = "color.green"; }),
-				pictureAt("circle", 20.0f, 28.0f, [](Object& o) { o.picture.kind = ShapeKind::Circle; o.picture.radius = 6.0f; o.picture.color = "color.blue"; }),
+				pictureAt("rectangle", 30.0f, 4.0f, [](Object& o) { o.drawn.picture.kind = ShapeKind::Rectangle; o.drawn.picture.size = { 10.0f, 6.0f }; o.drawn.picture.color = "color.green"; }),
+				pictureAt("circle", 20.0f, 28.0f, [](Object& o) { o.drawn.picture.kind = ShapeKind::Circle; o.drawn.picture.radius = 6.0f; o.drawn.picture.color = "color.blue"; }),
 			};
 			window->init(objects);
-			for (const Object& object : objects) { CHECK_FALSE(object.visualDirty); }
+			for (const Object& object : objects) { CHECK_FALSE(object.drawn.visualDirty); }
 
 			Bitmap shot;
 			for (int i = 0; i < 5; ++i) { frame(*window, objects, i == 4 ? &shot : nullptr); }

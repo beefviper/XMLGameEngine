@@ -24,10 +24,10 @@ namespace
 	Object text(const std::string& words, int size)
 	{
 		Object object;
-		object.picture.kind = ShapeKind::Text;
-		object.picture.text = words;
-		object.picture.textSize = size;
-		object.picture.color = "color.white";
+		object.drawn.picture.kind = ShapeKind::Text;
+		object.drawn.picture.text = words;
+		object.drawn.picture.textSize = size;
+		object.drawn.picture.color = "color.white";
 		return object;
 	}
 }
@@ -49,16 +49,16 @@ TEST_CASE("a text drawn at twice the scale has twice the pixels and the same gam
 
 	// A pixel font at its own multiple doubles exactly.
 	Object score = text("SCORE", 16);
-	score.picture.font = "assets/pressstart2p.ttf";
+	score.drawn.picture.font = "assets/pressstart2p.ttf";
 	CHECK(score.drawnPicture(2.0f)->width == 2 * score.drawnPicture(1.0f)->width);
 }
 
 TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[picture_scale]")
 {
 	Object ball;
-	ball.picture.kind = ShapeKind::Circle;
-	ball.picture.radius = 5.0f;
-	ball.picture.color = "color.red";
+	ball.drawn.picture.kind = ShapeKind::Circle;
+	ball.drawn.picture.radius = 5.0f;
+	ball.drawn.picture.color = "color.red";
 
 	const std::shared_ptr<const Bitmap> small = ball.drawnPicture(1.0f);
 	CHECK(small->width == 10);
@@ -69,9 +69,9 @@ TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[pi
 	CHECK(ball.drawnPicture(2.5f)->width == 25);
 
 	Object paddle;
-	paddle.picture.kind = ShapeKind::Rectangle;
-	paddle.picture.size = { 10.0f, 50.0f };
-	paddle.picture.color = "color.white";
+	paddle.drawn.picture.kind = ShapeKind::Rectangle;
+	paddle.drawn.picture.size = { 10.0f, 50.0f };
+	paddle.drawn.picture.color = "color.white";
 	const std::shared_ptr<const Bitmap> tall = paddle.drawnPicture(2.0f);
 	CHECK(tall->width == 20);
 	CHECK(tall->height == 100);
@@ -83,15 +83,15 @@ TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[pi
 TEST_CASE("a bitmap keeps its own pixels at any scale", "[picture_scale]")
 {
 	Object ship;
-	ship.picture.kind = ShapeKind::Line;
+	ship.drawn.picture.kind = ShapeKind::Line;
 	auto drawn = std::make_shared<Bitmap>();
 	drawn->width = 4;
 	drawn->height = 2;
 	drawn->rgba.assign(4 * 2 * 4, 255);
-	ship.bitmap = drawn;
+	ship.drawn.bitmap = drawn;
 
 	CHECK_FALSE(ship.drawnAtScale());
-	CHECK(ship.drawnPicture(3.0f) == ship.bitmap);   // the very same, not a copy
+	CHECK(ship.drawnPicture(3.0f) == ship.drawn.bitmap);   // the very same, not a copy
 }
 
 TEST_CASE("pictures are drawn again once a resize has held still a quarter second", "[picture_scale]")

@@ -233,7 +233,7 @@ namespace xge
 	{
 		CachedVisual& visual = visuals[object.name];
 
-		if (object.visualDirty || !visual.loaded || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
+		if (object.drawn.visualDirty || !visual.loaded || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
 			build(object, visual);
 		}
@@ -311,7 +311,7 @@ namespace xge
 	// The engine's picture of the object, at pictureScale().
 	void RaylibWindow::build(Object& object, CachedVisual& visual)
 	{
-		object.visualDirty = false;
+		object.drawn.visualDirty = false;
 		visual.drawnAt = pictureScale();
 
 		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());

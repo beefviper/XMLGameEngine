@@ -49,7 +49,7 @@ namespace
 		{
 			for (auto& object : game.getCurrentObjects())
 			{
-				object.size = measureShapeSize(object.picture);
+				object.size = measureShapeSize(object.drawn.picture);
 			}
 		}
 
@@ -261,8 +261,8 @@ TEST_CASE("each wave's missiles fall at its own speed and in its own color, and 
 		INFO(wave.scene);
 		const Object& one = play.missile(wave.scene, 1);
 		CHECK(one.velocity.y == Approx(wave.speed));
-		REQUIRE(one.bitmap);
-		const Bitmap& picture = *one.bitmap;
+		REQUIRE(one.drawn.bitmap);
+		const Bitmap& picture = *one.drawn.bitmap;
 		const Color expected = colorFromName(wave.color);
 		bool found = false;
 		for (int y = 0; y < picture.height && !found; ++y)

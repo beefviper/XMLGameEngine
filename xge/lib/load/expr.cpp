@@ -624,16 +624,16 @@ namespace xge
 
 		// Its pictures are the ones `from` was made with, not drawn again.
 		FirstPass first;
-		first.picture = from.looks.all.empty() ? from.picture : from.looks.all.front().picture;
-		first.bitmap = from.looks.all.empty() ? from.bitmap : from.looks.all.front().bitmap;
+		first.picture = from.looks.all.empty() ? from.drawn.picture : from.looks.all.front().picture;
+		first.bitmap = from.looks.all.empty() ? from.drawn.bitmap : from.looks.all.front().bitmap;
 		if (from.animation.bitmaps.empty())
 		{
-			if (!from.turnables.empty()) { first.turned = from.turnables.front(); }
+			if (!from.drawn.turnables.empty()) { first.turned = from.drawn.turnables.front(); }
 		}
 		else
 		{
 			first.animation = from.animation.bitmaps;
-			first.animationTurned = from.turnables;
+			first.animationTurned = from.drawn.turnables;
 		}
 		if (!from.looks.all.empty()) { first.looks = &from.looks.all; }
 
@@ -758,7 +758,7 @@ namespace xge
 			{
 				throw std::runtime_error(where + ": a <hitbox> pulled in that far leaves nothing of a picture " + formatDisplayNumber(object.size.x) + " by " + formatDisplayNumber(object.size.y));
 			}
-			hitbox.round = object.picture.kind == ShapeKind::Circle;
+			hitbox.round = object.drawn.picture.kind == ShapeKind::Circle;
 			return hitbox;
 		}
 

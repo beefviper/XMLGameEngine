@@ -117,15 +117,15 @@ TEST_CASE("a <bitmap> and an <svg> are drawn, then flipped", "[pictures][flip][x
 		"<svg>" + kSvg + "<flip>vertical</flip></svg>",
 	});
 
-	const Bitmap& plain = *pictures.object(1).bitmap;
-	CHECK(samePixels(*pictures.object(2).bitmap, flipBitmap(plain, true, false)));
+	const Bitmap& plain = *pictures.object(1).drawn.bitmap;
+	CHECK(samePixels(*pictures.object(2).drawn.bitmap, flipBitmap(plain, true, false)));
 
 	const Bitmap red = rasterizeRows({ "*..", "*..", "***" }, 2, colorFromName("color.red"));
-	CHECK(samePixels(*pictures.object(3).bitmap, flipBitmap(red, false, true)));
+	CHECK(samePixels(*pictures.object(3).drawn.bitmap, flipBitmap(red, false, true)));
 
-	const Bitmap& sheet = *pictures.object(4).bitmap;
+	const Bitmap& sheet = *pictures.object(4).drawn.bitmap;
 	REQUIRE(sheet.width > 0);
-	CHECK(samePixels(*pictures.object(5).bitmap, flipBitmap(sheet, false, true)));
+	CHECK(samePixels(*pictures.object(5).drawn.bitmap, flipBitmap(sheet, false, true)));
 	CHECK(pictures.object(5).size.x == pictures.object(4).size.x);
 }
 
@@ -143,24 +143,24 @@ TEST_CASE("with a heading, every kind of picture is drawn once, flipped, and tur
 	for (int number : { 1, 2 })
 	{
 		const Object& object = pictures.object(number);
-		REQUIRE(object.turnables.size() == 1);
-		const Turnable& kept = *object.turnables.front();
+		REQUIRE(object.drawn.turnables.size() == 1);
+		const Turnable& kept = *object.drawn.turnables.front();
 		REQUIRE(kept.picture);
 		CHECK(kept.lines.empty());
 
 		// What is shown is the kept (already flipped) picture turned to the heading.
-		CHECK(samePixels(*object.bitmap, turnBitmap(*kept.picture, 90.0f)));
+		CHECK(samePixels(*object.drawn.bitmap, turnBitmap(*kept.picture, 90.0f)));
 	}
 
 	// The kept bitmap is the flipped one.
 	const Bitmap rows = rasterizeRows({ "*..", "*..", "***" }, 3, colorFromName("color.white"));
-	CHECK(samePixels(*pictures.object(1).turnables.front()->picture, flipBitmap(rows, true, false)));
+	CHECK(samePixels(*pictures.object(1).drawn.turnables.front()->picture, flipBitmap(rows, true, false)));
 
 	// Lines are kept as lines, and drawn again at the heading.
 	const Object& drawing = pictures.object(3);
-	REQUIRE(drawing.turnables.size() == 1);
-	CHECK(drawing.turnables.front()->lines.size() == 2);
-	CHECK(samePixels(*drawing.bitmap, rasterizeTurned(drawing.turnables.front()->lines, 90.0f)));
+	REQUIRE(drawing.drawn.turnables.size() == 1);
+	CHECK(drawing.drawn.turnables.front()->lines.size() == 2);
+	CHECK(samePixels(*drawing.drawn.bitmap, rasterizeTurned(drawing.drawn.turnables.front()->lines, 90.0f)));
 }
 
 TEST_CASE("a flip that is not horizontal or vertical is turned away, saying where", "[pictures][flip][errors]")
@@ -177,7 +177,7 @@ TEST_CASE("Space Invaders 2's alien bolts are the sheet's bolt turned upside dow
 	Pictures sheet({ "<svg>" + kSvg + "<scale>1.5</scale></svg>" });
 
 	const Object& bolt = game.getObject("bomb");
-	CHECK(samePixels(*bolt.bitmap, flipBitmap(*sheet.object(1).bitmap, false, true)));
+	CHECK(samePixels(*bolt.drawn.bitmap, flipBitmap(*sheet.object(1).drawn.bitmap, false, true)));
 }
 
 TEST_CASE("an image file is read by the engine once, and flipped for a <flip>", "[pictures]")

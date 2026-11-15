@@ -75,12 +75,12 @@ TEST_CASE("a text takes the size and color it leaves out from its style", "[text
 		"<object name=\"note\"><sprite><text style=\"plain\"><content>hi</content></text></sprite><position><x>0</x><y>0</y></position></object>",
 		kStyles, backend);
 
-	const Picture& heading = game.getObject("heading").picture;
+	const Picture& heading = game.getObject("heading").drawn.picture;
 	CHECK(heading.textSize == 90);   // the style's size, a game variable
 	CHECK(heading.color == "color.red");
-	CHECK(game.getObject("smaller").picture.textSize == 30); // its own size wins
-	CHECK(game.getObject("smaller").picture.color == "color.red");
-	CHECK(game.getObject("note").picture.color == "color.white");           // a style with no color: white
+	CHECK(game.getObject("smaller").drawn.picture.textSize == 30); // its own size wins
+	CHECK(game.getObject("smaller").drawn.picture.color == "color.red");
+	CHECK(game.getObject("note").drawn.picture.color == "color.white");           // a style with no color: white
 }
 
 TEST_CASE("a style that is not there, or a text with no size at all, stops the load", "[text]")
@@ -117,17 +117,17 @@ TEST_CASE("a bitmap takes the scale and colors it leaves out from its style", "[
 	// The pixel at (x, 0) of an object's picture: red, green, blue.
 	const auto rgb = [&](const std::string& name, int x)
 	{
-		const auto& rgba = game.getObject(name).bitmap->rgba;
+		const auto& rgba = game.getObject(name).drawn.bitmap->rgba;
 		const std::size_t at = static_cast<std::size_t>(x) * 4;
 		return std::vector<int>{ rgba[at], rgba[at + 1], rgba[at + 2] };
 	};
 
-	CHECK(game.getObject("plain").bitmap->width == 6);   // the style's scale
+	CHECK(game.getObject("plain").drawn.bitmap->width == 6);   // the style's scale
 	CHECK(rgb("plain", 0) == std::vector<int>{ 255, 0, 0 });
 	CHECK(rgb("plain", 2) == std::vector<int>{ 0, 0, 255 });
 	CHECK(rgb("plain", 4) == std::vector<int>{ 0, 255, 0 });
 
-	CHECK(game.getObject("own").bitmap->width == 3);     // its own scale wins
+	CHECK(game.getObject("own").drawn.bitmap->width == 3);     // its own scale wins
 	CHECK(rgb("own", 0) == std::vector<int>{ 255, 255, 255 });
 	CHECK(rgb("own", 1) == std::vector<int>{ 0, 0, 0 }); // its own b
 	CHECK(rgb("own", 2) == std::vector<int>{ 0, 255, 0 }); // the style's g
@@ -150,10 +150,10 @@ TEST_CASE("a text's font file is its own <font>, its style's, or the standard on
 		"<object name=\"standard\"><sprite><text style=\"plain\"><content>HI</content></text></sprite><position><x>0</x><y>0</y></position></object>",
 		styles, backend);
 
-	CHECK(textFontFile(game.getObject("styled").picture.font) == "assets/pressstart2p.ttf");
-	CHECK(textFontFile(game.getObject("own").picture.font) == "assets/other.ttf");
-	CHECK(game.getObject("standard").picture.font.empty());
-	CHECK(textFontFile(game.getObject("standard").picture.font) == "assets/tuffy.ttf");
+	CHECK(textFontFile(game.getObject("styled").drawn.picture.font) == "assets/pressstart2p.ttf");
+	CHECK(textFontFile(game.getObject("own").drawn.picture.font) == "assets/other.ttf");
+	CHECK(game.getObject("standard").drawn.picture.font.empty());
+	CHECK(textFontFile(game.getObject("standard").drawn.picture.font) == "assets/tuffy.ttf");
 }
 
 TEST_CASE("<become style> puts another style's colors on an object's bitmaps, and a reset the first", "[text]")
@@ -176,7 +176,7 @@ TEST_CASE("<become style> puts another style's colors on an object's bitmaps, an
 	// The pixel at (x, 0) of what an object shows: red, green, blue.
 	const auto rgb = [](const Object& object, int x)
 	{
-		const auto& rgba = object.bitmap->rgba;
+		const auto& rgba = object.drawn.bitmap->rgba;
 		const std::size_t at = static_cast<std::size_t>(x) * 4;
 		return std::vector<int>{ rgba[at], rgba[at + 1], rgba[at + 2] };
 	};

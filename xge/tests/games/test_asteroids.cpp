@@ -49,7 +49,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.picture);
+			object.size = measureShapeSize(object.drawn.picture);
 		}
 	}
 
@@ -282,14 +282,14 @@ TEST_CASE("asteroids.xml loads with a ship that has a heading, shots, rocks and 
 	Field field;
 	const Object& ship = field.ship();
 
-	CHECK(ship.picture.kind == ShapeKind::Line);
+	CHECK(ship.drawn.picture.kind == ShapeKind::Line);
 	CHECK(ship.collisionData.type == CollisionType::Pixel);
 	CHECK(ship.hasHeading);
 	CHECK(ship.heading == 0.0f);
-	REQUIRE(ship.turnables.size() == 1);
-	CHECK(ship.bitmap->rgba == ship.turnables[0]->at(0.0f).rgba);
+	REQUIRE(ship.drawn.turnables.size() == 1);
+	CHECK(ship.drawn.bitmap->rgba == ship.drawn.turnables[0]->at(0.0f).rgba);
 	CHECK_THAT(ship.drag, WithinAbs(0.02f, 1e-6f));
-	CHECK(ship.size.x == static_cast<float>(ship.bitmap->width));
+	CHECK(ship.size.x == static_cast<float>(ship.drawn.bitmap->width));
 	CHECK(ship.size.x == ship.size.y);
 
 	// It starts in the middle of the screen.
@@ -322,7 +322,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 		const Object& ship = game.getObject("ship");
 		CHECK(ship.hasHeading);
 		CHECK_THAT(ship.drag, WithinAbs(0.02f, 1e-6f));
-		CHECK(ship.turnables.size() == 1);
+		CHECK(ship.drawn.turnables.size() == 1);
 
 		int descriptions = 0;
 		int turns = 0;
@@ -383,27 +383,27 @@ TEST_CASE("the picture shown and tested is the one for the heading", "[asteroids
 {
 	Field field;
 	Object& ship = field.ship();
-	const auto upright = ship.bitmap;
+	const auto upright = ship.drawn.bitmap;
 
 	// 22 frames at 4 degrees is 88: very nearly a quarter turn, and a different
 	// picture; the visual is marked to be rebuilt.
-	ship.visualDirty = false;
+	ship.drawn.visualDirty = false;
 	field.key("right", true);
 	field.frames(22);
 	field.key("right", false);
 
-	CHECK(ship.bitmap != upright);
-	CHECK(ship.visualDirty);
-	CHECK(ship.bitmap->width == upright->width);
-	CHECK(ship.bitmap->height == upright->height);
+	CHECK(ship.drawn.bitmap != upright);
+	CHECK(ship.drawn.visualDirty);
+	CHECK(ship.drawn.bitmap->width == upright->width);
+	CHECK(ship.drawn.bitmap->height == upright->height);
 
 	// It is drawn at the heading to the nearest whole degree, 88, which is all
 	// but a quarter turn: the nose is the right-most pixel, near the middle.
-	CHECK(ship.turnedDegrees == 88);
-	CHECK(ship.bitmap->rgba == ship.turnables[0]->at(88.0f).rgba);
-	const Extent nose = extentOf(*ship.bitmap);
-	const int middle = ship.bitmap->height / 2;
-	CHECK((ship.bitmap->solidAt(nose.right, middle - 1) || ship.bitmap->solidAt(nose.right, middle) || ship.bitmap->solidAt(nose.right, middle + 1)));
+	CHECK(ship.drawn.turnedDegrees == 88);
+	CHECK(ship.drawn.bitmap->rgba == ship.drawn.turnables[0]->at(88.0f).rgba);
+	const Extent nose = extentOf(*ship.drawn.bitmap);
+	const int middle = ship.drawn.bitmap->height / 2;
+	CHECK((ship.drawn.bitmap->solidAt(nose.right, middle - 1) || ship.drawn.bitmap->solidAt(nose.right, middle) || ship.drawn.bitmap->solidAt(nose.right, middle + 1)));
 	CHECK(nose.right - nose.left > nose.bottom - nose.top);
 
 	// A full turn comes back to the first picture.
@@ -411,7 +411,7 @@ TEST_CASE("the picture shown and tested is the one for the heading", "[asteroids
 	field.frames(68); // 88 + 272 = 360
 	field.key("right", false);
 	CHECK_THAT(ship.heading, WithinAbs(0.0f, 1e-2f));
-	CHECK(ship.bitmap->rgba == upright->rgba);
+	CHECK(ship.drawn.bitmap->rgba == upright->rgba);
 }
 
 TEST_CASE("turning does not move the ship or change its size", "[asteroids][heading]")
@@ -435,33 +435,33 @@ TEST_CASE("held thrust shows the flickering flame, turned with the ship; letting
 	Object& ship = field.ship();
 	const Vector2f size = ship.size;
 	CHECK(ship.lookName() == "coasting");
-	const auto coasting = ship.bitmap;
+	const auto coasting = ship.drawn.bitmap;
 
 	// Turned a quarter, then thrust: the flame shows at that heading, and
 	// flickers with the plain ship every three frames.
 	field.key("right", true);
 	field.frames(22);
 	field.key("right", false);
-	const auto turned = ship.bitmap;
+	const auto turned = ship.drawn.bitmap;
 	field.key("thrust", true);
 	field.frames(1);
 	CHECK(ship.lookName() == "burning");
-	CHECK(ship.bitmap != turned);
-	CHECK(ship.bitmap->rgba == ship.turnables[0]->at(88.0f).rgba);
+	CHECK(ship.drawn.bitmap != turned);
+	CHECK(ship.drawn.bitmap->rgba == ship.drawn.turnables[0]->at(88.0f).rgba);
 	CHECK(ship.size == size);
 	bool flickered = false;
 	for (int i = 0; i < 6; ++i)
 	{
 		field.frames(1);
-		if (ship.bitmap->rgba == turned->rgba) { flickered = true; }
+		if (ship.drawn.bitmap->rgba == turned->rgba) { flickered = true; }
 	}
 	CHECK(flickered);
 
 	field.key("thrust", false);
 	field.frames(1);
 	CHECK(ship.lookName() == "coasting");
-	CHECK(ship.bitmap->rgba == turned->rgba);
-	CHECK(ship.bitmap->rgba != coasting->rgba);
+	CHECK(ship.drawn.bitmap->rgba == turned->rgba);
+	CHECK(ship.drawn.bitmap->rgba != coasting->rgba);
 }
 
 // ------------------------------------------------------------ thrust and drag
@@ -918,7 +918,7 @@ TEST_CASE("a rock hitting the ship costs a ship and breaks, and the ship comes b
 	CHECK(field.ship().position == field.ship().start.position);
 	CHECK(field.ship().velocity == Vector2f{});
 	CHECK(field.ship().heading == 0.0f);
-	CHECK(field.ship().turnedDegrees == 0);
+	CHECK(field.ship().drawn.turnedDegrees == 0);
 	CHECK_FALSE(rock.isVisible); // the ship breaks it, as a shot would
 	CHECK(field.inPlay("mediumrocks") == 2);
 	CHECK(field.score() == 20.0f);
@@ -1075,7 +1075,7 @@ TEST_CASE("playing again puts everything back: rocks, shots, score and ships", "
 	CHECK(field.score() == 0.0f);
 	CHECK(field.lives() == 3.0f);
 	CHECK(field.ship().heading == 0.0f);
-	CHECK(field.ship().turnedDegrees == 0);
+	CHECK(field.ship().drawn.turnedDegrees == 0);
 	CHECK(field.state() == "title");
 }
 
@@ -1304,7 +1304,7 @@ TEST_CASE("a heading, a drag and an active are read from the file", "[asteroids]
 	CHECK(ship.hasHeading);
 	CHECK(ship.start.heading == 0.0f);
 	CHECK(ship.drag == 0.02f);
-	CHECK(ship.turnables.size() == 1);
+	CHECK(ship.drawn.turnables.size() == 1);
 
 	for (const Object& object : game.getCurrentObjects())
 	{

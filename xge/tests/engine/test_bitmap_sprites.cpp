@@ -106,7 +106,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.picture);
+			object.size = measureShapeSize(object.drawn.picture);
 		}
 	}
 
@@ -144,9 +144,9 @@ namespace
 	// Which of kA and kB an object is showing.
 	char showing(const Object& object)
 	{
-		REQUIRE(object.bitmap);
-		if (object.bitmap->solidAt(0, 0) && !object.bitmap->solidAt(2, 0)) { return 'a'; }
-		if (object.bitmap->solidAt(2, 0) && !object.bitmap->solidAt(0, 0)) { return 'b'; }
+		REQUIRE(object.drawn.bitmap);
+		if (object.drawn.bitmap->solidAt(0, 0) && !object.drawn.bitmap->solidAt(2, 0)) { return 'a'; }
+		if (object.drawn.bitmap->solidAt(2, 0) && !object.drawn.bitmap->solidAt(0, 0)) { return 'b'; }
 		return '?';
 	}
 
@@ -237,23 +237,23 @@ TEST_CASE("a bitmap sprite is drawn when the game loads and has the size of its 
 		"<show object=\"thing\" />") };
 	const Object& thing = loaded.game.getObject("thing");
 
-	REQUIRE(thing.picture.kind == ShapeKind::Line);
-	REQUIRE(thing.bitmap);
+	REQUIRE(thing.drawn.picture.kind == ShapeKind::Line);
+	REQUIRE(thing.drawn.bitmap);
 
 	// 3 characters by 2 rows, each 3 pixels (the variable `pixel`).
-	CHECK(thing.bitmap->width == 9);
-	CHECK(thing.bitmap->height == 6);
-	CHECK(thing.picture.size == Vector2f{ 9.0f, 6.0f });
+	CHECK(thing.drawn.bitmap->width == 9);
+	CHECK(thing.drawn.bitmap->height == 6);
+	CHECK(thing.drawn.picture.size == Vector2f{ 9.0f, 6.0f });
 
-	const Vector2f size = measureShapeSize(thing.picture);
+	const Vector2f size = measureShapeSize(thing.drawn.picture);
 	CHECK(size.x == 9.0f);
 	CHECK(size.y == 6.0f);
 
-	CHECK(thing.bitmap->solidAt(4, 0));
-	CHECK_FALSE(thing.bitmap->solidAt(0, 0));
-	CHECK(thing.bitmap->solidAt(0, 5));
-	CHECK(thing.bitmap->rgba[(0 * 9 + 4) * 4 + 0] == 255);
-	CHECK(thing.bitmap->rgba[(0 * 9 + 4) * 4 + 1] == 0);
+	CHECK(thing.drawn.bitmap->solidAt(4, 0));
+	CHECK_FALSE(thing.drawn.bitmap->solidAt(0, 0));
+	CHECK(thing.drawn.bitmap->solidAt(0, 5));
+	CHECK(thing.drawn.bitmap->rgba[(0 * 9 + 4) * 4 + 0] == 255);
+	CHECK(thing.drawn.bitmap->rgba[(0 * 9 + 4) * 4 + 1] == 0);
 }
 
 TEST_CASE("the scale and the color can be left out: one pixel to a character, white", "[bitmap][xml]")
@@ -261,11 +261,11 @@ TEST_CASE("the scale and the color can be left out: one pixel to a character, wh
 	Loaded loaded{ gameXml(objectWith("<sprite><bitmap><row>**</row></bitmap></sprite>"), "<show object=\"thing\" />") };
 	const Object& thing = loaded.game.getObject("thing");
 
-	CHECK(thing.bitmap->width == 2);
-	CHECK(thing.bitmap->height == 1);
-	CHECK(thing.bitmap->rgba[0] == 255);
-	CHECK(thing.bitmap->rgba[1] == 255);
-	CHECK(thing.bitmap->rgba[2] == 255);
+	CHECK(thing.drawn.bitmap->width == 2);
+	CHECK(thing.drawn.bitmap->height == 1);
+	CHECK(thing.drawn.bitmap->rgba[0] == 255);
+	CHECK(thing.drawn.bitmap->rgba[1] == 255);
+	CHECK(thing.drawn.bitmap->rgba[2] == 255);
 }
 
 TEST_CASE("a sprite takes a picture of the <pictures> by <bitmap from>, and what it gives changes the picture's", "[bitmap][pictures][xml]")
@@ -280,26 +280,26 @@ TEST_CASE("a sprite takes a picture of the <pictures> by <bitmap from>, and what
 	// As it is: its rows, scale and red.
 	Loaded taken{ with("<sprite><bitmap from=\"ship\" /></sprite>") };
 	const Object& ship = taken.game.getObject("thing");
-	REQUIRE(ship.bitmap);
-	CHECK(ship.bitmap->width == 9);
-	CHECK(ship.bitmap->height == 6);
-	CHECK(ship.bitmap->solidAt(4, 0));
-	CHECK(ship.bitmap->rgba[(0 * 9 + 4) * 4 + 0] == 255);
-	CHECK(ship.bitmap->rgba[(0 * 9 + 4) * 4 + 1] == 0);
+	REQUIRE(ship.drawn.bitmap);
+	CHECK(ship.drawn.bitmap->width == 9);
+	CHECK(ship.drawn.bitmap->height == 6);
+	CHECK(ship.drawn.bitmap->solidAt(4, 0));
+	CHECK(ship.drawn.bitmap->rgba[(0 * 9 + 4) * 4 + 0] == 255);
+	CHECK(ship.drawn.bitmap->rgba[(0 * 9 + 4) * 4 + 1] == 0);
 
 	// Its own scale and colour over the picture's; the rows stay.
 	Loaded changed{ with("<sprite><bitmap from=\"ship\"><scale>1</scale><color>color.green</color></bitmap></sprite>") };
 	const Object& small = changed.game.getObject("thing");
-	REQUIRE(small.bitmap);
-	CHECK(small.bitmap->width == 3);
-	CHECK(small.bitmap->height == 2);
-	CHECK(small.bitmap->rgba[(0 * 3 + 1) * 4 + 0] == 0);
-	CHECK(small.bitmap->rgba[(0 * 3 + 1) * 4 + 1] == 255);
+	REQUIRE(small.drawn.bitmap);
+	CHECK(small.drawn.bitmap->width == 3);
+	CHECK(small.drawn.bitmap->height == 2);
+	CHECK(small.drawn.bitmap->rgba[(0 * 3 + 1) * 4 + 0] == 0);
+	CHECK(small.drawn.bitmap->rgba[(0 * 3 + 1) * 4 + 1] == 255);
 
 	// Its own rows replace all the picture's.
 	Loaded drawn{ with("<sprite><bitmap from=\"ship\"><row>**</row></bitmap></sprite>") };
-	CHECK(drawn.game.getObject("thing").bitmap->width == 6);
-	CHECK(drawn.game.getObject("thing").bitmap->height == 3);
+	CHECK(drawn.game.getObject("thing").drawn.bitmap->width == 6);
+	CHECK(drawn.game.getObject("thing").drawn.bitmap->height == 3);
 
 	// A name the pictures have not got stops the load.
 	CHECK_THROWS_WITH(Loaded{ with("<sprite><bitmap from=\"saucer\" /></sprite>") }, ContainsSubstring("names no <bitmap> of the <pictures>"));
@@ -319,10 +319,10 @@ TEST_CASE("a sprite takes a line drawing of the <pictures> by <drawing from>, as
 	Loaded taken{ with("<sprite><drawing from=\"rock\" /></sprite>", "<pictures><drawing name=\"rock\">" + line + "</drawing></pictures>") };
 	const Object& mine = written.game.getObject("thing");
 	const Object& rock = taken.game.getObject("thing");
-	REQUIRE(rock.bitmap);
-	CHECK(rock.bitmap->width == mine.bitmap->width);
-	CHECK(rock.bitmap->height == mine.bitmap->height);
-	CHECK(rock.bitmap->rgba == mine.bitmap->rgba);
+	REQUIRE(rock.drawn.bitmap);
+	CHECK(rock.drawn.bitmap->width == mine.drawn.bitmap->width);
+	CHECK(rock.drawn.bitmap->height == mine.drawn.bitmap->height);
+	CHECK(rock.drawn.bitmap->rgba == mine.drawn.bitmap->rgba);
 
 	// A name the pictures have not got, or two drawings of one name, stop the load.
 	CHECK_THROWS_WITH(Loaded{ with("<sprite><drawing from=\"saucer\" /></sprite>", "<pictures><drawing name=\"rock\">" + line + "</drawing></pictures>") },
@@ -358,8 +358,8 @@ TEST_CASE("the cells of a group of a bitmap are one object each, all sharing one
 		if (object.groupName != "thing") { continue; }
 
 		++cells;
-		REQUIRE(object.bitmap);
-		pictures.insert(object.bitmap.get());
+		REQUIRE(object.drawn.bitmap);
+		pictures.insert(object.drawn.bitmap.get());
 	}
 	CHECK(cells == 6);
 	CHECK(pictures.size() == 1);
@@ -377,9 +377,9 @@ TEST_CASE("a bitmap object can be tested by its pixels", "[bitmap][xml]")
 	const Object& thing = loaded.game.getObject("thing");
 
 	// The clear corner is clear, and what is drawn is what is tested.
-	CHECK_FALSE(thing.bitmap->solidAt(5, 1));
-	CHECK(thing.bitmap->solidAt(1, 1));
-	CHECK(thing.bitmap->solidAt(5, 5));
+	CHECK_FALSE(thing.drawn.bitmap->solidAt(5, 1));
+	CHECK(thing.drawn.bitmap->solidAt(1, 1));
+	CHECK(thing.drawn.bitmap->solidAt(5, 5));
 }
 
 TEST_CASE("mistakes in a bitmap are reported where they are", "[bitmap][xml]")
@@ -509,33 +509,33 @@ TEST_CASE("an object keeps the one original, and draws a turned copy only when t
 	Loaded loaded{ gameXml(objectWith(kCorner, "", "<heading>0</heading>"), "<show object=\"thing\" />") };
 	Object& thing = loaded.game.getObject("thing");
 
-	REQUIRE(thing.turnables.size() == 1);
-	CHECK(thing.turnables[0]->picture);
-	CHECK(thing.turnables[0]->picture->width == 3);
+	REQUIRE(thing.drawn.turnables.size() == 1);
+	CHECK(thing.drawn.turnables[0]->picture);
+	CHECK(thing.drawn.turnables[0]->picture->width == 3);
 
 	thing.heading = 30.0f;
 	thing.showHeading();
-	const auto drawn = thing.bitmap;
-	CHECK(thing.turnedDegrees == 30);
+	const auto drawn = thing.drawn.bitmap;
+	CHECK(thing.drawn.turnedDegrees == 30);
 
 	// Less than half a degree away: the same picture, nothing marked.
-	thing.visualDirty = false;
+	thing.drawn.visualDirty = false;
 	thing.heading = 30.4f;
 	thing.showHeading();
-	CHECK(thing.bitmap == drawn);
-	CHECK_FALSE(thing.visualDirty);
+	CHECK(thing.drawn.bitmap == drawn);
+	CHECK_FALSE(thing.drawn.visualDirty);
 
 	// A degree on: a new one.
 	thing.heading = 31.0f;
 	thing.showHeading();
-	CHECK(thing.bitmap != drawn);
-	CHECK(thing.turnedDegrees == 31);
-	CHECK(thing.visualDirty);
+	CHECK(thing.drawn.bitmap != drawn);
+	CHECK(thing.drawn.turnedDegrees == 31);
+	CHECK(thing.drawn.visualDirty);
 
 	// Round the top of the circle and back to 0.
 	thing.heading = 359.6f;
 	thing.showHeading();
-	CHECK(thing.turnedDegrees == 0);
+	CHECK(thing.drawn.turnedDegrees == 0);
 }
 
 TEST_CASE("an object with a <heading> can be a bitmap: drawn once, then turned to every heading", "[bitmap][heading][xml]")
@@ -545,21 +545,21 @@ TEST_CASE("an object with a <heading> can be a bitmap: drawn once, then turned t
 	game.setCurrentState("playing");
 	Object& thing = game.getObject("thing");
 
-	REQUIRE(thing.turnables.size() == 1);
-	CHECK(thing.bitmap->width == 5);
-	CHECK(thing.bitmap->solidAt(1, 1));
+	REQUIRE(thing.drawn.turnables.size() == 1);
+	CHECK(thing.drawn.bitmap->width == 5);
+	CHECK(thing.drawn.bitmap->solidAt(1, 1));
 
 	// Its size is the square every heading shares.
 	measure(game);
 	CHECK(thing.size.x == 5.0f);
 	CHECK(thing.size.y == 5.0f);
 
-	thing.visualDirty = false;
+	thing.drawn.visualDirty = false;
 	thing.heading = 90.0f;
 	thing.showHeading();
-	CHECK(thing.turnedDegrees == 90);
-	CHECK(thing.bitmap->solidAt(3, 1));
-	CHECK(thing.visualDirty);
+	CHECK(thing.drawn.turnedDegrees == 90);
+	CHECK(thing.drawn.bitmap->solidAt(3, 1));
+	CHECK(thing.drawn.visualDirty);
 }
 
 TEST_CASE("a bitmap that turns can be tested by its pixels at the heading it faces", "[bitmap][heading][xml]")
@@ -567,8 +567,8 @@ TEST_CASE("a bitmap that turns can be tested by its pixels at the heading it fac
 	Loaded loaded{ gameXml(objectWith(kCorner, "", "<heading>180</heading>"), "<show object=\"thing\" />") };
 	Object& thing = loaded.game.getObject("thing");
 
-	CHECK(thing.bitmap->solidAt(3, 3));
-	CHECK_FALSE(thing.bitmap->solidAt(1, 1));
+	CHECK(thing.drawn.bitmap->solidAt(3, 3));
+	CHECK_FALSE(thing.drawn.bitmap->solidAt(1, 1));
 }
 
 // -------------------------------------------------------------- animation
@@ -854,12 +854,12 @@ TEST_CASE("the picture is marked to be drawn again when it changes, and not befo
 	game.setCurrentState("playing");
 	Object& thing = game.getObject("thing");
 
-	thing.visualDirty = false;
+	thing.drawn.visualDirty = false;
 	frames(game, 29);
-	CHECK_FALSE(thing.visualDirty);
+	CHECK_FALSE(thing.drawn.visualDirty);
 
 	frames(game, 1);
-	CHECK(thing.visualDirty);
+	CHECK(thing.drawn.visualDirty);
 }
 
 TEST_CASE("a frame can come up more than once, so a sequence need not be only two pictures", "[animation]")
@@ -978,8 +978,8 @@ TEST_CASE("the members of a group can each have sprites and an animation of thei
 	// The third member shows its own sprites, which are not kA and kB: its
 	// first is solid all over, its second clear all over.
 	const Object& mine = game.getObject("mine");
-	CHECK(mine.bitmap->solidAt(0, 0));
-	CHECK(mine.bitmap->solidAt(3, 3));
+	CHECK(mine.drawn.bitmap->solidAt(0, 0));
+	CHECK(mine.drawn.bitmap->solidAt(3, 3));
 
 	frames(game, 30);
 	CHECK(showing(game.getObject("same")) == 'a');
@@ -989,8 +989,8 @@ TEST_CASE("the members of a group can each have sprites and an animation of thei
 	CHECK(showing(game.getObject("same")) == 'b');
 	CHECK(showing(game.getObject("quick")) == 'a');
 
-	CHECK_FALSE(mine.bitmap->solidAt(0, 0));
-	CHECK_FALSE(mine.bitmap->solidAt(3, 3));
+	CHECK_FALSE(mine.drawn.bitmap->solidAt(0, 0));
+	CHECK_FALSE(mine.drawn.bitmap->solidAt(3, 3));
 }
 
 TEST_CASE("an object with one sprite is not animated, named or not", "[animation]")
@@ -1130,31 +1130,31 @@ TEST_CASE("an animated object that turns keeps its picture and its heading toget
 	Object& thing = game.getObject("thing");
 
 	// What each picture turns from, one for each, all turning in one size.
-	REQUIRE(thing.turnables.size() == 2);
-	CHECK(thing.turnables[0]->at(0.0f).width == thing.turnables[1]->at(0.0f).width);
-	CHECK(thing.turnables[0]->at(0.0f).rgba != thing.turnables[1]->at(0.0f).rgba);
-	CHECK(thing.bitmap->rgba == thing.turnables[0]->at(0.0f).rgba);
+	REQUIRE(thing.drawn.turnables.size() == 2);
+	CHECK(thing.drawn.turnables[0]->at(0.0f).width == thing.drawn.turnables[1]->at(0.0f).width);
+	CHECK(thing.drawn.turnables[0]->at(0.0f).rgba != thing.drawn.turnables[1]->at(0.0f).rgba);
+	CHECK(thing.drawn.bitmap->rgba == thing.drawn.turnables[0]->at(0.0f).rgba);
 
 	// Turning keeps the picture that is showing.
 	thing.heading = 90.0f;
 	thing.showHeading();
-	CHECK(thing.bitmap->rgba == thing.turnables[0]->at(90.0f).rgba);
+	CHECK(thing.drawn.bitmap->rgba == thing.drawn.turnables[0]->at(90.0f).rgba);
 
 	// The next picture comes up at the heading it is facing.
 	frames(game, 30);
-	CHECK(thing.bitmap->rgba == thing.turnables[1]->at(90.0f).rgba);
+	CHECK(thing.drawn.bitmap->rgba == thing.drawn.turnables[1]->at(90.0f).rgba);
 
 	thing.heading = 181.0f;
 	thing.showHeading();
-	CHECK(thing.bitmap->rgba == thing.turnables[1]->at(181.0f).rgba);
+	CHECK(thing.drawn.bitmap->rgba == thing.drawn.turnables[1]->at(181.0f).rgba);
 
 	frames(game, 30);
-	CHECK(thing.bitmap->rgba == thing.turnables[0]->at(181.0f).rgba);
+	CHECK(thing.drawn.bitmap->rgba == thing.drawn.turnables[0]->at(181.0f).rgba);
 
 	// A reset faces it as it started, and starts the animation again.
 	game.resetAll();
 	CHECK(thing.heading == 0.0f);
-	CHECK(thing.bitmap->rgba == thing.turnables[0]->at(0.0f).rgba);
+	CHECK(thing.drawn.bitmap->rgba == thing.drawn.turnables[0]->at(0.0f).rgba);
 }
 
 // ---------------------------------------------------------- Space Invaders
@@ -1209,9 +1209,9 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 	// pictures that take turns.
 	for (const Object* alien : aliensOf(game))
 	{
-		REQUIRE(alien->bitmap);
-		CHECK(alien->bitmap->width == 55);
-		CHECK(alien->bitmap->height == 40);
+		REQUIRE(alien->drawn.bitmap);
+		CHECK(alien->drawn.bitmap->width == 55);
+		CHECK(alien->drawn.bitmap->height == 40);
 		CHECK(alien->animation.bitmaps.size() == 2);
 		CHECK(alien->animation.frames == 60);
 	}
@@ -1233,16 +1233,16 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 
 	// The ship is a picture, in the middle of the screen.
 	const Object& player = game.getObject("player");
-	REQUIRE(player.bitmap);
-	CHECK(player.bitmap->width == 55);
-	CHECK(player.bitmap->height == 35);
+	REQUIRE(player.drawn.bitmap);
+	CHECK(player.drawn.bitmap->width == 55);
+	CHECK(player.drawn.bitmap->height == 35);
 	CHECK(player.animation.bitmaps.empty());
 	CHECK(player.position.x == (1024.0f - 55.0f) / 2.0f);
 
 	// The bullet is a thin tall rectangle.
 	const Object& bullet = game.getObject("bullet");
-	CHECK(bullet.picture.kind == ShapeKind::Rectangle);
-	const Vector2f size = measureShapeSize(bullet.picture);
+	CHECK(bullet.drawn.picture.kind == ShapeKind::Rectangle);
+	const Vector2f size = measureShapeSize(bullet.drawn.picture);
 	CHECK(size.x == 4.0f);
 	CHECK(size.y == 24.0f);
 }
@@ -1256,7 +1256,7 @@ TEST_CASE("the aliens change picture every second, all together, and march on me
 	{
 		for (const Object* alien : aliensOf(game))
 		{
-			if (alien->bitmap != alien->animation.bitmaps[index]) { return false; }
+			if (alien->drawn.bitmap != alien->animation.bitmaps[index]) { return false; }
 		}
 		return true;
 	};
@@ -1302,7 +1302,7 @@ TEST_CASE("a shot from the ship in the middle kills exactly one alien and is tak
 	// A thin bullet leaves the middle of the cannon.
 	const Object& cannon = game.getObject("player");
 	Object& shot = game.getObject("bullet.1");
-	shot.size = measureShapeSize(shot.picture);
+	shot.size = measureShapeSize(shot.drawn.picture);
 	CHECK(shot.position.x + 2.0f == Catch::Approx(cannon.position.x + 27.5f));
 
 	frames(game, 80);
@@ -1456,7 +1456,7 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	Game game{ "descriptions/spaceinvaders.xml" };
 	for (auto& object : game.getCurrentObjects())
 	{
-		object.size = measureShapeSize(object.picture);
+		object.size = measureShapeSize(object.drawn.picture);
 	}
 	game.setCurrentState(0);
 	game.pushState("playing");
@@ -1529,7 +1529,7 @@ TEST_CASE("each kind of alien scores its own, and the block marches faster as it
 	}
 	const Object& crab = game.getObject("aliens.6.3");
 	Object& bullet = copies::spawned(game, "bullet");
-	bullet.size = measureShapeSize(bullet.picture);
+	bullet.size = measureShapeSize(bullet.drawn.picture);
 	bullet.position = { crab.position.x + crab.size.x / 2.0f, crab.position.y + crab.size.y + 2.0f };
 	bullet.velocity = { 0.0f, -12.0f };
 	frames(game, 1);
@@ -1568,7 +1568,7 @@ TEST_CASE("the mystery ship crosses the top now and then and scores 50 to 200", 
 
 	Object& player = game.getObject("player");
 	Object& bullet = copies::spawned(game, "bullet");
-	bullet.size = measureShapeSize(bullet.picture);
+	bullet.size = measureShapeSize(bullet.drawn.picture);
 	bullet.position = { ufo.position.x + ufo.size.x / 2.0f, ufo.position.y + ufo.size.y + 2.0f };
 	bullet.velocity = { 0.0f, -12.0f };
 	const float score = player.variable.at("score");

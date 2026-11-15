@@ -198,7 +198,7 @@ TEST_CASE("a map piece is taken by a map, which gives its rows and changes what 
 		CHECK(first.position.x == Approx(100));
 		CHECK(first.position.y == Approx(50));
 		CHECK(first.objClass == "wall");
-		CHECK(first.picture.color == "color.blue");
+		CHECK(first.drawn.picture.color == "color.blue");
 	}
 	SECTION("by from=, changing its place and its walls")
 	{
@@ -213,7 +213,7 @@ TEST_CASE("a map piece is taken by a map, which gives its rows and changes what 
 		CHECK(other.position.x == Approx(110));
 		CHECK(other.position.y == Approx(200));
 		CHECK(other.objClass == "wall");
-		CHECK(other.picture.color == "color.red");
+		CHECK(other.drawn.picture.color == "color.red");
 	}
 	SECTION("by two maps in one list, each one's pieces named under it")
 	{

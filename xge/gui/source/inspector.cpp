@@ -449,7 +449,7 @@ namespace xge
 		auto object = [this, i]() -> Object& { return game().getCurrentObjects()[i]; };
 		const Object& first = object();
 
-		QString summary = text(shapeName(first.picture.kind));
+		QString summary = text(shapeName(first.drawn.picture.kind));
 		if (!first.objClass.empty())
 		{
 			summary += "  [" + text(first.objClass) + "]";
@@ -511,7 +511,7 @@ namespace xge
 			}
 		}
 
-		for (const TextPiece& piece : first.textPieces)
+		for (const TextPiece& piece : first.drawn.textPieces)
 		{
 			if (!piece.owner.empty())
 			{
@@ -524,7 +524,7 @@ namespace xge
 	{
 		auto object = [this, i]() -> Object& { return game().getCurrentObjects()[i]; };
 		const Object& first = object();
-		auto* sprite = addNode(parent, tr("sprite"), text(shapeName(first.picture.kind)));
+		auto* sprite = addNode(parent, tr("sprite"), text(shapeName(first.drawn.picture.kind)));
 
 		// A part of the picture that is a number, and one that is text
 		// (`part` gives it); either way the object's picture is built again
@@ -532,11 +532,11 @@ namespace xge
 		auto addParamNumber = [&](const QString& name, auto part, bool whole)
 		{
 			using Number = std::remove_reference_t<decltype(part(std::declval<Picture&>()))>;
-			auto get = [object, part]() { return static_cast<double>(part(object().picture)); };
+			auto get = [object, part]() { return static_cast<double>(part(object().drawn.picture)); };
 			auto set = [object, part](double v)
 			{
-				part(object().picture) = static_cast<Number>(v);
-				object().visualDirty = true;
+				part(object().drawn.picture) = static_cast<Number>(v);
+				object().drawn.visualDirty = true;
 				object().size = object().pictureSize();
 			};
 
@@ -553,16 +553,16 @@ namespace xge
 		auto addParamText = [&](const QString& name, std::string Picture::* part)
 		{
 			addText(sprite, name,
-				[object, part]() { return text(object().picture.*part); },
+				[object, part]() { return text(object().drawn.picture.*part); },
 				[object, part](const QString& value)
 				{
-					object().picture.*part = value.toStdString();
-					object().visualDirty = true;
+					object().drawn.picture.*part = value.toStdString();
+					object().drawn.visualDirty = true;
 					object().size = object().pictureSize();
 				});
 		};
 
-		switch (first.picture.kind)
+		switch (first.drawn.picture.kind)
 		{
 		case ShapeKind::Circle:
 			addParamNumber(tr("radius"), [](Picture& picture) -> float& { return picture.radius; }, false);
@@ -579,9 +579,9 @@ namespace xge
 			addParamText(tr("color"), &Picture::color);
 			break;
 		case ShapeKind::Image:
-			addInfo(sprite, tr("file"), text(first.picture.file));
-			if (first.picture.flipHorizontal) { addInfo(sprite, tr("flip"), tr("horizontal")); }
-			if (first.picture.flipVertical) { addInfo(sprite, tr("flip"), tr("vertical")); }
+			addInfo(sprite, tr("file"), text(first.drawn.picture.file));
+			if (first.drawn.picture.flipHorizontal) { addInfo(sprite, tr("flip"), tr("horizontal")); }
+			if (first.drawn.picture.flipVertical) { addInfo(sprite, tr("flip"), tr("vertical")); }
 			break;
 		case ShapeKind::Line:
 			addInfo(sprite, tr("drawn from"), tr("pixels"));

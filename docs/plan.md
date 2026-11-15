@@ -89,7 +89,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **15.** `object.tether` (from, to, thickness, color) and `object.carry` (what, offset, dropped).
   - [x] **16.** `object.drive` (what held keys drive: move steps, thrust, turn, thrust along the heading).
   - [x] **17.** `object.looks` (all, shown, first, palettes, worn, poses, joins).
-  - [ ] **18.** `object.drawn` (the picture, bitmap, unholed bitmap, visual dirty, text pieces, turned pictures).
+  - [x] **18.** `object.drawn`: picture, bitmap, unholed, visualDirty, textPieces, turnables, turnedDegrees, turnedFrame.
   - [ ] **19.** `object.motion` (speed, drag, friction, mass, grip).
   - [ ] **20.** `object.turning` (has a heading, pivot, spin).
   - [ ] **21.** `object.sizeUse` (positions worked out from sizes, and a cell's offset).

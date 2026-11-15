@@ -63,7 +63,7 @@ namespace xge
 		bool isRound(const Object& object, std::size_t part = picture)
 		{
 			if (part != picture) { return hitboxAt(object, part).round; }
-			return object.picture.kind == ShapeKind::Circle;
+			return object.drawn.picture.kind == ShapeKind::Circle;
 		}
 
 		// Whether the point `local` (from the top left of the part's box) is
@@ -71,9 +71,9 @@ namespace xge
 		// are of type pixel (those its <solid char>s name), otherwise its shape.
 		bool solidAt(const Object& object, const Vector2f& local, std::size_t part = picture)
 		{
-			if (object.collisionData.type == CollisionType::Pixel && object.bitmap)
+			if (object.collisionData.type == CollisionType::Pixel && object.drawn.bitmap)
 			{
-				return object.bitmap->touchesAt(static_cast<int>(std::floor(local.x)), static_cast<int>(std::floor(local.y)));
+				return object.drawn.bitmap->touchesAt(static_cast<int>(std::floor(local.x)), static_cast<int>(std::floor(local.y)));
 			}
 
 			return solidShapeAt(boxOf(object, part).size, isRound(object, part), local);
@@ -274,7 +274,7 @@ namespace xge
 			at.object = &object;
 			at.part = partOf(object, false, 0);
 			at.round = isRound(object, at.part);
-			if (turn == 0.0f || object.turnables.empty())
+			if (turn == 0.0f || object.drawn.turnables.empty())
 			{
 				at.box = boxOf(object, at.part);
 				at.box.position = at.box.position + move * time;
@@ -283,9 +283,9 @@ namespace xge
 
 			// Drawn and placed as showHeading would at that moment: the
 			// picture at the nearest whole degree, turned about its pivot.
-			const std::size_t frame = object.turnables.size() > 1 && object.animation.index < object.turnables.size() ? object.animation.index : 0;
+			const std::size_t frame = object.drawn.turnables.size() > 1 && object.animation.index < object.drawn.turnables.size() ? object.animation.index : 0;
 			const int degrees = wholeDegrees(object.heading + turn * time);
-			at.drawing = &object.turnables[frame]->turnedTo(degrees);
+			at.drawing = &object.drawn.turnables[frame]->turnedTo(degrees);
 			const Vector2f arm = object.hasPivot ? object.pivotFromMiddle : Vector2f{};
 			at.box = { object.position + move * time + turnedBy(arm, static_cast<float>(object.pivotDegrees)) - turnedBy(arm, static_cast<float>(degrees)), object.size };
 			return at;
@@ -351,7 +351,7 @@ namespace xge
 		// A point swept along the line against the shape: a hit within it.
 		const std::optional<SweepHit> hit = sweepShapes(Box{ from, {} }, false, along, box, isRound(object), {});
 		if (!hit) { return false; }
-		if (object.collisionData.type != CollisionType::Pixel || !object.bitmap) { return true; }
+		if (object.collisionData.type != CollisionType::Pixel || !object.drawn.bitmap) { return true; }
 
 		// Its pixels: from where the line meets its box, half a pixel at a time.
 		const float length = std::hypot(along.x, along.y);
@@ -370,7 +370,7 @@ namespace xge
 	Box reachOver(const Object& object, const Vector2f& move) noexcept
 	{
 		// One turning reaches anywhere round its pivot it can swing to.
-		if (object.spin != 0.0f && !object.turnables.empty())
+		if (object.spin != 0.0f && !object.drawn.turnables.empty())
 		{
 			const float radius = turningReach(object);
 			const Vector2f pivot = object.pivotOnScreen();

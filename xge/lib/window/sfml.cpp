@@ -178,7 +178,7 @@ namespace xge
 	{
 		CachedVisual& visual = visuals[object.name];
 
-		if (object.visualDirty || !visual.sprite || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
+		if (object.drawn.visualDirty || !visual.sprite || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
 			build(object, visual);
 		}
@@ -349,6 +349,6 @@ namespace xge
 		visual.sprite->setPosition({ object.position.x, object.position.y });
 		visual.drawnAt = pictureScale();
 
-		object.visualDirty = false;
+		object.drawn.visualDirty = false;
 	}
 }

@@ -18,14 +18,14 @@ namespace xge
 	Vector2f sizeOf(const Object& object)
 	{
 		if (object.size.x != 0.0f || object.size.y != 0.0f) { return object.size; }
-		return measureShapeSize(object.picture);
+		return measureShapeSize(object.drawn.picture);
 	}
 
 	void cutHole(Object& object, const Object& other, float radius, float rough)
 	{
-		if (!object.bitmap) { return; }
+		if (!object.drawn.bitmap) { return; }
 
-		auto cut = std::make_shared<Bitmap>(*object.bitmap);
+		auto cut = std::make_shared<Bitmap>(*object.drawn.bitmap);
 
 		// Where it struck: the solid pixel nearest the other's middle, near
 		// enough the other to be touched by it.
@@ -71,9 +71,9 @@ namespace xge
 		}
 		if (!changed) { return; }
 
-		if (!object.unholed) { object.unholed = object.bitmap; }
-		object.bitmap = std::move(cut);
-		object.visualDirty = true;
+		if (!object.drawn.unholed) { object.drawn.unholed = object.drawn.bitmap; }
+		object.drawn.bitmap = std::move(cut);
+		object.drawn.visualDirty = true;
 	}
 
 	namespace

@@ -42,7 +42,7 @@ namespace
 		return count;
 	}
 
-	int solidPixels(const Object& object) { return solidPixels(*object.bitmap); }
+	int solidPixels(const Object& object) { return solidPixels(*object.drawn.bitmap); }
 }
 
 TEST_CASE("a <hole> is cut round the middle of what hit, and the next shot goes through it", "[hole]")
@@ -52,17 +52,17 @@ TEST_CASE("a <hole> is cut round the middle of what hit, and the next shot goes 
 	const Scratch file(wall("<collision object=\"shot\"><hole>8</hole></collision>") + shot
 		+ box("another", 600, 100), "<reset object=\"wall\" />");
 	Played play(file.path);
-	const auto whole = play.get("wall").bitmap;
+	const auto whole = play.get("wall").drawn.bitmap;
 	REQUIRE(solidPixels(play.get("wall")) == 1600);
 
 	// It hits the bottom of the wall, a hole is cut there, and it is put back.
 	play.frames(30);
 	const Object& hit = play.get("wall");
-	CHECK(hit.bitmap != whole);
-	CHECK(hit.unholed == whole);
-	CHECK_FALSE(hit.bitmap->solidAt(20, 39));
-	CHECK(hit.bitmap->solidAt(20, 20));
-	CHECK(hit.bitmap->solidAt(2, 39));
+	CHECK(hit.drawn.bitmap != whole);
+	CHECK(hit.drawn.unholed == whole);
+	CHECK_FALSE(hit.drawn.bitmap->solidAt(20, 39));
+	CHECK(hit.drawn.bitmap->solidAt(20, 20));
+	CHECK(hit.drawn.bitmap->solidAt(2, 39));
 	const int afterOne = solidPixels(hit);
 	CHECK(afterOne < 1600);
 	CHECK(afterOne > 1600 - 260);
@@ -81,8 +81,8 @@ TEST_CASE("a <hole> is cut round the middle of what hit, and the next shot goes 
 	// The picture the wall started with was never touched, and a reset puts it back.
 	CHECK(solidPixels(*whole) == 1600);
 	play.tap(KeyCode::Space);
-	CHECK(play.get("wall").bitmap == whole);
-	CHECK_FALSE(play.get("wall").unholed);
+	CHECK(play.get("wall").drawn.bitmap == whole);
+	CHECK_FALSE(play.get("wall").drawn.unholed);
 	CHECK(solidPixels(play.get("wall")) == 1600);
 }
 
@@ -129,7 +129,7 @@ TEST_CASE("spaceinvaders.xml: shots wear holes in a shield until they pass throu
 	// Four shields, none of them hit yet; the second stands over x 349 to 437.
 	Object& shield = play.get("shields.2.1");
 	REQUIRE(play.get("shields.4.1").isVisible);
-	const auto whole = shield.bitmap;
+	const auto whole = shield.drawn.bitmap;
 	CHECK(shield.position.x == Approx(349));
 
 	// Move the ship under the shield's middle and fire up into it.
@@ -143,12 +143,12 @@ TEST_CASE("spaceinvaders.xml: shots wear holes in a shield until they pass throu
 		for (int i = 0; i < 70 && copies::count(play.game, "bullet") == 1; ++i)
 		{
 			const Object& bullet = play.get("bullet.1");
-			through = through || bullet.position.y + measureShapeSize(bullet.picture).y < shield.position.y;
+			through = through || bullet.position.y + measureShapeSize(bullet.drawn.picture).y < shield.position.y;
 			play.frames(1);
 		}
 		ship.position.x = shield.position.x + shield.size.x / 2 - ship.size.x / 2;
 	}
-	CHECK(play.get("shields.2.1").bitmap != whole);
+	CHECK(play.get("shields.2.1").drawn.bitmap != whole);
 	CHECK(through);
 }
 
@@ -164,18 +164,18 @@ TEST_CASE("a sprite of <polygon>s is filled, tested by its pixels, and holed whe
 	const Scratch file(hill + shell.substr(0, shell.find('>')) + " class=\"shell\"" + shell.substr(shell.find('>')), "<reset object=\"hill\" />");
 	Played play(file.path);
 	const Object& ground = play.get("hill");
-	REQUIRE(ground.bitmap);
-	CHECK(ground.bitmap->width == 100);
-	CHECK(ground.bitmap->height == 100);
-	CHECK(ground.bitmap->solidAt(50, 45));
-	CHECK_FALSE(ground.bitmap->solidAt(20, 45));
+	REQUIRE(ground.drawn.bitmap);
+	CHECK(ground.drawn.bitmap->width == 100);
+	CHECK(ground.drawn.bitmap->height == 100);
+	CHECK(ground.drawn.bitmap->solidAt(50, 45));
+	CHECK_FALSE(ground.drawn.bitmap->solidAt(20, 45));
 
 	// Falling onto the peak: it stops on the slope, a hole cut round it.
 	play.frames(30);
 	CHECK(play.get("shell").position.y < 145.0f);
 	CHECK(play.get("shell").position.y > 125.0f);
-	CHECK_FALSE(play.get("hill").bitmap->solidAt(50, 45));
-	CHECK(play.get("hill").bitmap->solidAt(50, 90));
+	CHECK_FALSE(play.get("hill").drawn.bitmap->solidAt(50, 45));
+	CHECK(play.get("hill").drawn.bitmap->solidAt(50, 90));
 	play.tap(KeyCode::Space);
-	CHECK(play.get("hill").bitmap->solidAt(50, 45));
+	CHECK(play.get("hill").drawn.bitmap->solidAt(50, 45));
 }

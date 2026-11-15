@@ -137,7 +137,7 @@ TEST_CASE("cannonhill.xml: a shell that lands wide blows a crater and passes the
 	for (int i = 0; i < 300 && duel.look() == "flying"; ++i) { duel.frames(1); }
 	REQUIRE(duel.look() != "flying");
 	const Object& ground = duel.get("ground");
-	REQUIRE(ground.bitmap);
+	REQUIRE(ground.drawn.bitmap);
 	duel.untilAiming();
 	CHECK(turns::number(duel.game, "barrels") == 2.0f);
 	CHECK(duel.get("barrel2").lookName() == "ready");
@@ -164,9 +164,9 @@ TEST_CASE("cannonhill.xml: the crater is cut where the shell landed", "[cannonhi
 	const int x = static_cast<int>(landed.x - ground.position.x);
 	const int y = static_cast<int>(landed.y - ground.position.y);
 	// Ground a little under where it struck is gone.
-	CHECK_FALSE(ground.bitmap->solidAt(x, y + 6));
+	CHECK_FALSE(ground.drawn.bitmap->solidAt(x, y + 6));
 	// Far below the crater, still ground.
-	CHECK(ground.bitmap->solidAt(x, y + 60));
+	CHECK(ground.drawn.bitmap->solidAt(x, y + 60));
 }
 
 TEST_CASE("cannonhill.xml: a shell landing by the other cannon wins the point and the next field, whole", "[cannonhill]")

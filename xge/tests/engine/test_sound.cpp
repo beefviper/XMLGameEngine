@@ -153,7 +153,7 @@ namespace
 			game.setCurrentState("playing");
 			for (Object& object : game.getCurrentObjects())
 			{
-				object.size = measureShapeSize(object.picture);
+				object.size = measureShapeSize(object.drawn.picture);
 			}
 
 			ball.velocity = { 0, 0 };

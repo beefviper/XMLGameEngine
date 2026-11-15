@@ -568,7 +568,7 @@ TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of c
 		"<member name=\"bird\" /></group>");
 	Played play(sheet.path);
 	Object& grid = play.get("grid");
-	const auto drawn = [](const Object& object) -> const Bitmap& { return *object.bitmap; };
+	const auto drawn = [](const Object& object) -> const Bitmap& { return *object.drawn.bitmap; };
 	REQUIRE(drawn(grid).width == 96);
 	CHECK((drawn(grid).rgba == drawn(play.get("part")).rgba));
 	CHECK((drawn(grid).rgba == drawn(play.get("sized")).rgba));
@@ -725,7 +725,7 @@ TEST_CASE("crazyeights.xml: the deal: seven each, yours face up in order, one tu
 	CHECK(table.turn() == 1.0f);
 	CHECK(table.hand().lookName() == "free");
 	CHECK(table.computer().lookName() == "waiting");
-	CHECK(table.get("whoseturn").textPieces.front().shown == "your turn: play a card that matches, or draw");
+	CHECK(table.get("whoseturn").drawn.textPieces.front().shown == "your turn: play a card that matches, or draw");
 }
 
 TEST_CASE("crazyeights.xml: keys reach only the player on its turn, and never the one the computer plays", "[cards][eights][players]")
@@ -745,7 +745,7 @@ TEST_CASE("crazyeights.xml: keys reach only the player on its turn, and never th
 	CHECK(table.holder("mine").holder.items.size() == 2);
 	CHECK(table.hand().hand.at == 1);
 	CHECK(table.computer().hand.at == 0);
-	CHECK(table.get("whoseturn").textPieces.front().shown == "the computer is playing");
+	CHECK(table.get("whoseturn").drawn.textPieces.front().shown == "the computer is playing");
 }
 
 TEST_CASE("crazyeights.xml: a card goes on the holder by suit or rank; one that does not goes back in your hand", "[cards][eights]")
@@ -788,7 +788,7 @@ TEST_CASE("crazyeights.xml: an eight goes on anything, you name a suit, and the 
 	CHECK(table.turn() == 2.0f);
 	CHECK(table.holder("mine").holder.items.size() == 2);
 	table.frames(1);
-	CHECK(table.get("called").textPieces.front().shown == "spades");
+	CHECK(table.get("called").drawn.textPieces.front().shown == "spades");
 
 	// It plays its spade, not its eight.
 	table.untilYourTurn();
@@ -958,13 +958,13 @@ TEST_CASE("blackjack.xml: points count face-up cards, an ace 11 while within 21,
 	CHECK(play.holder("player").holder.points == 17.0f);
 	CHECK(play.holder("dealer").holder.points == 9.0f);
 	CHECK(play.holder("dealer").holder.itemCount == 2.0f);
-	CHECK(play.get("dealerpoints").picture.text == "dealer 9");
+	CHECK(play.get("dealerpoints").drawn.picture.text == "dealer 9");
 
 	// A 9: the ace counts 1 now.
 	play.stack({ "9 hearts" });
 	play.press(KeyCode::W);
 	CHECK(play.holder("player").holder.points == 16.0f);
-	CHECK(play.get("yourpoints").picture.text == "you 16");
+	CHECK(play.get("yourpoints").drawn.picture.text == "you 16");
 }
 
 TEST_CASE("blackjack.xml: the dealer draws to 17, and the nearer to 21 wins", "[cards][blackjack]")
@@ -1139,7 +1139,7 @@ TEST_CASE("holdem.xml: the best five of seven: the kinds in order, a wheel the l
 	CHECK(kindOf({ "A hearts", "A clubs", "J diamonds", "4 diamonds", "5 clubs", "J hearts", "J spades" }) == 6.0f);
 	CHECK(kindOf({ "J clubs", "A clubs", "J diamonds", "4 diamonds", "5 clubs", "J hearts", "J spades" }) == 7.0f);
 	CHECK(kindOf({ "10 hearts", "K hearts", "Q hearts", "J hearts", "A hearts", "2 clubs", "3 spades" }) == 8.0f);
-	CHECK(play.get("yourchips").picture.text == "you: 500 chips, a straight flush");
+	CHECK(play.get("yourchips").drawn.picture.text == "you: 500 chips, a straight flush");
 
 	// A wheel (ace to five) is under a six-high straight; a flush beats both.
 	const float wheel = (play.lay({ "A hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "K hearts", "K spades" }), play.holder("yours").holder.strength);

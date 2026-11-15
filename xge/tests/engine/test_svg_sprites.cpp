@@ -162,7 +162,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.picture);
+			object.size = measureShapeSize(object.drawn.picture);
 		}
 	}
 
@@ -343,20 +343,20 @@ TEST_CASE("an svg sprite is drawn when the game loads and has the size of its pi
 		"<show object=\"thing\" />") };
 	const Object& thing = loaded.game.getObject("thing");
 
-	REQUIRE(thing.picture.kind == ShapeKind::Line);
-	REQUIRE(thing.bitmap);
+	REQUIRE(thing.drawn.picture.kind == ShapeKind::Line);
+	REQUIRE(thing.drawn.bitmap);
 
 	// 4 units at 3 pixels each (the variable `pixel`).
-	CHECK(thing.bitmap->width == 12);
-	CHECK(thing.bitmap->height == 12);
-	CHECK(thing.picture.size == Vector2f{ 12.0f, 12.0f });
+	CHECK(thing.drawn.bitmap->width == 12);
+	CHECK(thing.drawn.bitmap->height == 12);
+	CHECK(thing.drawn.picture.size == Vector2f{ 12.0f, 12.0f });
 
-	const Vector2f size = measureShapeSize(thing.picture);
+	const Vector2f size = measureShapeSize(thing.drawn.picture);
 	CHECK(size.x == 12.0f);
 	CHECK(size.y == 12.0f);
 
-	CHECK(isColor(pixelAt(*thing.bitmap, 6, 6), 0, 255, 0));
-	CHECK_FALSE(thing.bitmap->solidAt(0, 0));
+	CHECK(isColor(pixelAt(*thing.drawn.bitmap, 6, 6), 0, 255, 0));
+	CHECK_FALSE(thing.drawn.bitmap->solidAt(0, 0));
 }
 
 TEST_CASE("an svg sprite with no part and no scale is the whole drawing at its own size", "[svg][xml]")
@@ -365,10 +365,10 @@ TEST_CASE("an svg sprite with no part and no scale is the whole drawing at its o
 	Loaded loaded{ gameXml(objectWith("<sprite>" + svgTag(drawing, "") + "</sprite>"), "<show object=\"thing\" />") };
 	const Object& thing = loaded.game.getObject("thing");
 
-	REQUIRE(thing.bitmap);
-	CHECK(thing.bitmap->width == 8);
-	CHECK(thing.bitmap->height == 4);
-	CHECK(isColor(pixelAt(*thing.bitmap, 7, 0), 0, 0, 255));
+	REQUIRE(thing.drawn.bitmap);
+	CHECK(thing.drawn.bitmap->width == 8);
+	CHECK(thing.drawn.bitmap->height == 4);
+	CHECK(isColor(pixelAt(*thing.drawn.bitmap, 7, 0), 0, 0, 255));
 }
 
 TEST_CASE("an svg object's picture has solid pixels only where something was drawn, for a pixel collision to test", "[svg][xml]")
@@ -379,10 +379,10 @@ TEST_CASE("an svg object's picture has solid pixels only where something was dra
 		"<show object=\"thing\" />") };
 	const Object& thing = loaded.game.getObject("thing");
 
-	REQUIRE(thing.bitmap);
-	CHECK(thing.bitmap->solidAt(1, 1));
-	CHECK_FALSE(thing.bitmap->solidAt(7, 0));
-	CHECK_FALSE(thing.bitmap->solidAt(-1, 0));
+	REQUIRE(thing.drawn.bitmap);
+	CHECK(thing.drawn.bitmap->solidAt(1, 1));
+	CHECK_FALSE(thing.drawn.bitmap->solidAt(7, 0));
+	CHECK_FALSE(thing.drawn.bitmap->solidAt(-1, 0));
 }
 
 TEST_CASE("the cells of a group of an svg are one object each, all sharing one picture", "[svg][xml]")
@@ -402,9 +402,9 @@ TEST_CASE("the cells of a group of an svg are one object each, all sharing one p
 	REQUIRE(last != nullptr);
 	CHECK(game.tryGetObject("thing.4.1") == nullptr);
 
-	REQUIRE(first->bitmap);
-	CHECK(first->bitmap->width == 8);
-	CHECK(first->bitmap == last->bitmap);
+	REQUIRE(first->drawn.bitmap);
+	CHECK(first->drawn.bitmap->width == 8);
+	CHECK(first->drawn.bitmap == last->drawn.bitmap);
 
 	// 8 pixel cells, 2 apart.
 	CHECK(game.getObject("thing.2.1").position.x == 10.0f + 10.0f);
@@ -425,16 +425,16 @@ TEST_CASE("svg sprites animate like any other pictures, if they are the same siz
 
 	REQUIRE(thing.animation.bitmaps.size() == 2);
 	CHECK(thing.animation.frames == 30);
-	CHECK(thing.bitmap == thing.animation.bitmaps[0]);
-	CHECK(isColor(pixelAt(*thing.bitmap, 0, 0), 255, 0, 0));
+	CHECK(thing.drawn.bitmap == thing.animation.bitmaps[0]);
+	CHECK(isColor(pixelAt(*thing.drawn.bitmap, 0, 0), 255, 0, 0));
 
 	frames(game, 30);
-	CHECK(thing.bitmap == thing.animation.bitmaps[1]);
-	CHECK_FALSE(thing.bitmap->solidAt(0, 0));
-	CHECK(isColor(pixelAt(*thing.bitmap, 1, 1), 0, 255, 0));
+	CHECK(thing.drawn.bitmap == thing.animation.bitmaps[1]);
+	CHECK_FALSE(thing.drawn.bitmap->solidAt(0, 0));
+	CHECK(isColor(pixelAt(*thing.drawn.bitmap, 1, 1), 0, 255, 0));
 
 	frames(game, 30);
-	CHECK(thing.bitmap == thing.animation.bitmaps[0]);
+	CHECK(thing.drawn.bitmap == thing.animation.bitmaps[0]);
 }
 
 TEST_CASE("svg frames of different sizes are refused", "[svg][animation][xml]")
@@ -531,7 +531,7 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 	{
 		INFO(kind.name);
 		const Object& alien = game.getObject(kind.name);
-		REQUIRE(alien.bitmap);
+		REQUIRE(alien.drawn.bitmap);
 		REQUIRE(alien.animation.bitmaps.size() == 3);
 		CHECK(alien.animation.frames == 30);
 
@@ -556,7 +556,7 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 	// A kind keeps its own colour: pink squids, orange crabs, green octopuses.
 	const auto dominant = [&](const char* name)
 	{
-		const Bitmap& picture = *game.getObject(name).bitmap;
+		const Bitmap& picture = *game.getObject(name).drawn.bitmap;
 		long red = 0;
 		long green = 0;
 		long blue = 0;
@@ -601,15 +601,15 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 	// The ship is one drawn picture, in the middle of the screen; the bolt is
 	// thin and tall.
 	const Object& player = game.getObject("player");
-	REQUIRE(player.bitmap);
-	CHECK(player.bitmap->width == 48);
-	CHECK(player.bitmap->height == 52);
+	REQUIRE(player.drawn.bitmap);
+	CHECK(player.drawn.bitmap->width == 48);
+	CHECK(player.drawn.bitmap->height == 52);
 	CHECK(player.animation.bitmaps.empty());
 	CHECK(player.position.x == (1024.0f - 48.0f) / 2.0f);
 
 	const Object& bullet = game.getObject("bullet");
-	REQUIRE(bullet.bitmap);
-	CHECK(bullet.bitmap->width < bullet.bitmap->height / 3);
+	REQUIRE(bullet.drawn.bitmap);
+	CHECK(bullet.drawn.bitmap->width < bullet.drawn.bitmap->height / 3);
 }
 
 TEST_CASE("the aliens of Space Invaders 2 step through three pictures, all together, and march on meanwhile", "[spaceinvaders2][animation]")
@@ -621,7 +621,7 @@ TEST_CASE("the aliens of Space Invaders 2 step through three pictures, all toget
 	{
 		for (const Object* alien : aliensOf(game))
 		{
-			if (alien->bitmap != alien->animation.bitmaps[index]) { return false; }
+			if (alien->drawn.bitmap != alien->animation.bitmaps[index]) { return false; }
 		}
 		return true;
 	};
@@ -656,7 +656,7 @@ TEST_CASE("a shot from the ship of Space Invaders 2 can still kill an alien", "[
 	invasion.executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
 	game.settleSpawns();
 	REQUIRE(copies::count(game, "bullet") == 1);
-	game.getObject("bullet.1").size = measureShapeSize(game.getObject("bullet.1").picture);
+	game.getObject("bullet.1").size = measureShapeSize(game.getObject("bullet.1").drawn.picture);
 	frames(game, 80);
 
 	CHECK(alive() == 54);

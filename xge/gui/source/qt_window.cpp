@@ -87,7 +87,7 @@ namespace xge
 	{
 		Visual& visual = visuals[object.name];
 
-		if (object.visualDirty || visual.image.isNull() || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
+		if (object.drawn.visualDirty || visual.image.isNull() || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
 			build(object, visual);
 		}
@@ -128,6 +128,6 @@ namespace xge
 			visual.image = wrapped.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 		}
 		visual.drawnAt = pictureScale();
-		object.visualDirty = false;
+		object.drawn.visualDirty = false;
 	}
 }

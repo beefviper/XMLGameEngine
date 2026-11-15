@@ -53,7 +53,7 @@ namespace
 			"</actions></object>";
 	}
 
-	bool litAt(const Object& object, int column) { return object.bitmap && object.bitmap->solidAt(column, 0); }
+	bool litAt(const Object& object, int column) { return object.drawn.bitmap && object.drawn.bitmap->solidAt(column, 0); }
 }
 
 TEST_CASE("a named <animation> is a look that moves, and an object starts as its first", "[poses][animation]")

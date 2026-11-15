@@ -36,7 +36,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.picture);
+			object.size = measureShapeSize(object.drawn.picture);
 		}
 	}
 
@@ -261,7 +261,7 @@ TEST_CASE("a big rock shot scores 10, starts over and breaks into two chips", "[
 	table.frames(1);
 
 	CHECK(table.score() == 10.0f);
-	CHECK(table.game.getObject("peak").picture.text.find("10") != std::string::npos);
+	CHECK(table.game.getObject("peak").drawn.picture.text.find("10") != std::string::npos);
 	CHECK(!table.inFlight());
 	CHECK(table.atStart("boulders.2.1"));
 	CHECK(table.game.getObject("chip.1").isVisible);
@@ -409,8 +409,8 @@ TEST_CASE("space starts a new game from game over with everything back", "[astro
 	CHECK(table.game.getCurrentState().name == "title");
 	CHECK(table.score() == 0.0f);
 	CHECK(table.lives() == 4.0f);
-	CHECK(table.game.getObject("score").picture.text == "0");
-	CHECK(table.game.getObject("lives").picture.text == "4");
+	CHECK(table.game.getObject("score").drawn.picture.text == "0");
+	CHECK(table.game.getObject("lives").drawn.picture.text == "4");
 	CHECK(!table.inFlight());
 	CHECK(table.game.tryGetObject("chip.1") == nullptr);
 	CHECK(table.game.getObject("boulders.1.1").position.y < 0.0f);

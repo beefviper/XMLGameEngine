@@ -132,7 +132,7 @@ namespace
 			}
 			game.emplace(readGame(path.string(), backend));
 			game->setCurrentState(0);
-			for (auto& object : game->getCurrentObjects()) { object.size = measureShapeSize(object.picture); }
+			for (auto& object : game->getCurrentObjects()) { object.size = measureShapeSize(object.drawn.picture); }
 		}
 		Falling(const Falling&) = delete;
 		Falling& operator=(const Falling&) = delete;

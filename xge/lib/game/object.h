@@ -1106,20 +1106,12 @@ namespace xge
 		// Whether it has a <heading> (Moment::heading): only then does it turn
 		// (a <turn> in its actions), get pushed along it (a <thrust>) or fire
 		// along it (a <fire>). A sprite of <line>s or a <bitmap> that has a heading is kept
-		// once as it was written (Object::turnables, shared by every object
-		// made from the one definition) and `bitmap` is that turned to the
+		// once as it was written (Drawn::turnables, shared by every object
+		// made from the one definition) and `drawn.bitmap` is that turned to the
 		// heading, to the nearest whole degree, so what is shown and what a
 		// pixel collision tests turn with it - see showHeading. That makes two
 		// pictures an object has to hold, the original and the one it shows.
 		bool hasHeading{ false };
-		std::vector<std::shared_ptr<const Turnable>> turnables;
-
-		// What `bitmap` was last drawn at: the whole degrees of the heading and
-		// which of the turnables, so that a heading that has not moved by a
-		// whole degree costs nothing. -1 for nothing drawn yet.
-		int turnedDegrees{ -1 };
-		std::size_t turnedFrame{};
-
 		// An <animation>: the pictures it shows in turn (all one size, and
 		// `bitmap` is whichever is showing), how many frames of the game each
 		// one stays for (the seconds written, times the window's <framerate>),
@@ -1954,27 +1946,54 @@ namespace xge
 		// <light>'s <past>es: the classes its light does not shine through.
 		std::vector<std::string> lightPast;
 
-		// What it shows now (one of its looks, or its one sprite).
-		Picture picture;
+		// How it is drawn: what it shows now and what the backends and a
+		// pixel collision read of it.
+		struct Drawn
+		{
+			// What it shows now (one of its looks, or its one sprite).
+			Picture picture;
 
-		// What a sprite of <line>s was drawn as, worked out when the game
-		// loads (load/expr). The window backends draw it as a picture and a
-		// collision of type pixel tests it; null for every other shape. Shared,
-		// not copied, with every copy of the object.
-		std::shared_ptr<const Bitmap> bitmap;
+			// What a sprite of <line>s was drawn as, worked out when the game
+			// loads (load/expr). The window backends draw it as a picture and a
+			// collision of type pixel tests it; null for every other shape. Shared,
+			// not copied, with every copy of the object.
+			std::shared_ptr<const Bitmap> bitmap;
 
-		// The picture as it was before a <hole> was first cut in it, which a
-		// reset puts back; null while it has none. See xge::cutHole.
-		std::shared_ptr<const Bitmap> unholed;
+			// The picture as it was before a <hole> was first cut in it, which a
+			// reset puts back; null while it has none. See xge::cutHole.
+			std::shared_ptr<const Bitmap> unholed;
 
-		// True until the active Window backend has built (or rebuilt) this
-		// object's own visual - set again whenever something changes what
-		// should be on screen for it (e.g. a bound text display's number
-		// changing - see Game::setVariable/resetObject/resetAll) so the
-		// backend knows to rebuild from its picture before its next draw()
-		// instead of showing a stale image. Game/Engine never draw anything
-		// themselves; they only ever flip this flag.
-		bool visualDirty{ true };
+			// True until the active Window backend has built (or rebuilt) this
+			// object's own visual - set again whenever something changes what
+			// should be on screen for it (e.g. a bound text display's number
+			// changing - see Game::setVariable/resetObject/resetAll) so the
+			// backend knows to rebuild from its picture before its next draw()
+			// instead of showing a stale image. Game/Engine never draw anything
+			// themselves; they only ever flip this flag.
+			bool visualDirty{ true };
+
+			// A sprite of <line>s or a <bitmap> with a heading: as it was
+			// written, shared by every object made from the one definition;
+			// `bitmap` is that turned to the heading (see Object::hasHeading).
+			std::vector<std::shared_ptr<const Turnable>> turnables;
+
+			// What `bitmap` was last drawn at: the whole degrees of the heading and
+			// which of the turnables, so that a heading that has not moved by a
+			// whole degree costs nothing. -1 for nothing drawn yet.
+			int turnedDegrees{ -1 };
+			std::size_t turnedFrame{};
+
+			// Set when this is a text object that shows a variable (e.g. a <text>
+			// sprite whose <number> is paddle1.score): every piece of the text,
+			// those that follow a variable with its owner and name, the rest as
+			// they were worked out, so it can be put together again whenever one
+			// of its variables changes (Game::relabel). Empty means the text shows
+			// no variable and only ever changes by an <inc /> naming the text
+			// object itself (the older pattern for a text that counts its own
+			// number).
+			std::vector<TextPiece> textPieces;
+		};
+		Drawn drawn;
 
 		// A <tether>: a line from the middle of the object `from` names to
 		// the middle of `to`'s, drawn again every frame wherever the two are
@@ -1991,20 +2010,10 @@ namespace xge
 
 		std::map<std::string, std::vector<Command>> action;
 
-		// Set when this is a text object that shows a variable (e.g. a <text>
-		// sprite whose <number> is paddle1.score): every piece of the text,
-		// those that follow a variable with its owner and name, the rest as
-		// they were worked out, so it can be put together again whenever one
-		// of its variables changes (Game::relabel). Empty means the text shows
-		// no variable and only ever changes by an <inc /> naming the text
-		// object itself (the older pattern for a text that counts its own
-		// number).
-		std::vector<TextPiece> textPieces;
-
 		// Whether one of the pieces shows that variable of that object.
 		bool showsVariable(const std::string& ownerName, const std::string& variableName) const noexcept
 		{
-			return std::any_of(textPieces.begin(), textPieces.end(),
+			return std::any_of(drawn.textPieces.begin(), drawn.textPieces.end(),
 				[&](const TextPiece& piece) { return piece.owner == ownerName && piece.variable == variableName; });
 		}
 

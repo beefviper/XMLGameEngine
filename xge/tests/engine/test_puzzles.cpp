@@ -351,7 +351,7 @@ TEST_CASE("Doubles: every number shows its value, and slides only add equal ones
 		{
 			if (!object.exists || !object.isCopy() || object.objClass != "tile") { continue; }
 			INFO(object.name);
-			CHECK(object.picture.text == std::to_string(static_cast<int>(object.variable.at("value"))));
+			CHECK(object.drawn.picture.text == std::to_string(static_cast<int>(object.variable.at("value"))));
 		}
 	}
 }

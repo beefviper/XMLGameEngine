@@ -31,7 +31,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 
 - **`Window`** speaks only in engine terms (`Object`, `KeyCode`, `Color`): `init`, `pollEvents`, `controls`, `clear`, `prepare`, `draw`, `display`, `setTitle`. Every picture is made by the engine (`Object::drawnPicture`; plutovg reads fonts and image files and fills circles), so a window shows only bitmaps. Every library opens a window of its own and throws if it cannot start. What a window must do is a numbered contract in [the engine](../reference/engine.md#what-a-window-must-do).
 - **Text and shapes are drawn by the engine**, so they look and measure the same in every window and a window holds no font or drawing code ([text](32-text.md)). Circles had been filled four ways: SFML's polygon, Qt's smoothed ellipse, and a hard pixel test in SDL2 and OpenGL.
-- **A window measures nothing.** Every size is known when the game loads, so a window only turns finished bitmaps into textures and changes nothing on an object but `visualDirty`.
+- **A window measures nothing.** Every size is known when the game loads, so a window only turns finished bitmaps into textures and changes nothing on an object but `drawn.visualDirty`.
 - **`Audio`**: `load`, `play`, `loop`, `stop`, `stopAll`, `update` ([sound](33-sound.md)).
 - **Pace** is the engine's, not a library's: each library once kept time its own way (SFML's frame limit, raylib's target, a clock in the OpenGL window, only vsync in SDL2, which ran a game too fast on a fast screen).
   - Now `Engine::loop` steps whole frames by the clock and every window waits for the refresh, so the picture never tears and the speed never depends on the screen.

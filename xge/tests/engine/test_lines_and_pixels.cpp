@@ -62,9 +62,9 @@ namespace
 	{
 		Object object;
 		object.name = name;
-		object.picture.kind = ShapeKind::Line;
-		object.bitmap = std::make_shared<const Bitmap>(rasterizeLines(lines));
-		object.size = { static_cast<float>(object.bitmap->width), static_cast<float>(object.bitmap->height) };
+		object.drawn.picture.kind = ShapeKind::Line;
+		object.drawn.bitmap = std::make_shared<const Bitmap>(rasterizeLines(lines));
+		object.size = { static_cast<float>(object.drawn.bitmap->width), static_cast<float>(object.drawn.bitmap->height) };
 		object.position = { x, y };
 		object.collisionsOn = true;
 		object.collisionData.type = type;
@@ -75,7 +75,7 @@ namespace
 	{
 		Object object;
 		object.name = name;
-		object.picture.kind = ShapeKind::Rectangle;
+		object.drawn.picture.kind = ShapeKind::Rectangle;
 		object.size = { width, height };
 		object.position = { x, y };
 		object.collisionsOn = true;
@@ -86,7 +86,7 @@ namespace
 	{
 		Object object;
 		object.name = name;
-		object.picture.kind = ShapeKind::Circle;
+		object.drawn.picture.kind = ShapeKind::Circle;
 		object.size = { radius * 2, radius * 2 };
 		object.position = { x, y };
 		object.collisionsOn = true;
@@ -146,7 +146,7 @@ namespace
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			object.size = measureShapeSize(object.picture);
+			object.size = measureShapeSize(object.drawn.picture);
 		}
 	}
 
@@ -400,24 +400,24 @@ TEST_CASE("a sprite of lines is drawn when the game loads and has the size of it
 	Loaded loaded{ gameXml(kHut, "<show object=\"hut\" />") };
 	const Object& hut = loaded.game.getObject("hut");
 
-	REQUIRE(hut.picture.kind == ShapeKind::Line);
-	REQUIRE(hut.bitmap);
+	REQUIRE(hut.drawn.picture.kind == ShapeKind::Line);
+	REQUIRE(hut.drawn.bitmap);
 
 	// From x 0 to 20 and y 0 to 10, the second pair two pixels thick: 22 by 12.
-	CHECK(hut.bitmap->width == 22);
-	CHECK(hut.bitmap->height == 12);
-	CHECK(hut.picture.size == Vector2f{ 22.0f, 12.0f });
+	CHECK(hut.drawn.bitmap->width == 22);
+	CHECK(hut.drawn.bitmap->height == 12);
+	CHECK(hut.drawn.picture.size == Vector2f{ 22.0f, 12.0f });
 	CHECK(hut.collisionData.type == CollisionType::Pixel);
 
 	// Known without a window, like a circle's or a rectangle's.
-	const Vector2f size = measureShapeSize(hut.picture);
+	const Vector2f size = measureShapeSize(hut.drawn.picture);
 	CHECK(size.x == 22.0f);
 	CHECK(size.y == 12.0f);
 
 	// The first line is red, the second the default white.
-	CHECK(hut.bitmap->rgba[(10 * 22 + 0) * 4 + 0] == 255);
-	CHECK(hut.bitmap->rgba[(10 * 22 + 0) * 4 + 1] == 0);
-	CHECK(hut.bitmap->rgba[(0 * 22 + 10) * 4 + 1] == 255);
+	CHECK(hut.drawn.bitmap->rgba[(10 * 22 + 0) * 4 + 0] == 255);
+	CHECK(hut.drawn.bitmap->rgba[(10 * 22 + 0) * 4 + 1] == 0);
+	CHECK(hut.drawn.bitmap->rgba[(0 * 22 + 10) * 4 + 1] == 255);
 }
 
 TEST_CASE("the size of a sprite of lines can be used in an expression like any shape's", "[lines][xml]")
@@ -443,12 +443,12 @@ TEST_CASE("a random coordinate is drawn once, so the picture and its size agree"
 	{
 		Loaded loaded{ gameXml(objectWith(sprite), "<show object=\"thing\" />") };
 		const Object& thing = loaded.game.getObject("thing");
-		const Vector2f size = measureShapeSize(thing.picture);
+		const Vector2f size = measureShapeSize(thing.drawn.picture);
 
-		CHECK(size.x == static_cast<float>(thing.bitmap->width));
+		CHECK(size.x == static_cast<float>(thing.drawn.bitmap->width));
 		CHECK(size.x >= 11.0f);
 		CHECK(size.x <= 61.0f);
-		CHECK(thing.bitmap->solidAt(thing.bitmap->width - 1, 4));
+		CHECK(thing.drawn.bitmap->solidAt(thing.drawn.bitmap->width - 1, 4));
 	}
 }
 
@@ -501,7 +501,7 @@ TEST_CASE("type is box when it is left out, and a circle or rectangle can be pix
 
 	Loaded plain{ gameXml(objectWith(circle), "<show object=\"thing\" />") };
 	CHECK(plain.game.getObject("thing").collisionData.type == CollisionType::Box);
-	CHECK_FALSE(plain.game.getObject("thing").bitmap);
+	CHECK_FALSE(plain.game.getObject("thing").drawn.bitmap);
 
 	Loaded pixel{ gameXml(objectWith(circle, "<type>pixel</type>"), "<show object=\"thing\" />") };
 	CHECK(pixel.game.getObject("thing").collisionData.type == CollisionType::Pixel);
