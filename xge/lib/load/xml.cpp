@@ -2293,21 +2293,13 @@ namespace xge
 			return onLineOf(group, [&] { return readGroupHere(group, out, outer); });
 		}
 
-		void readGroupHere(const XmlNode& group, std::vector<RawObject>& out, const GroupShared& outer)
+		// The tags of a <group> other than its members and the groups inside:
+		// what it gives them, added to what the groups around it give. True when
+		// it holds groups.
+		bool readGroupGives(const XmlNode& group, GroupShared& own, const std::string& where)
 		{
-			const std::string name = requireAttribute(group, "name", "<group>");
-			const std::string where = "group '" + name + "'";
-			refuseReserved(name, "a group", where);
-
-			GroupShared own = outer;
 			RawObject& shared = own.object;
 			bool inner = false;
-
-			if (!group.getAttribute("char").empty() && !own.map)
-			{
-				fail(where, "char=\"" + group.getAttribute("char") + "\" picks a character of a <map>'s rows; this group is on no <map>");
-			}
-
 			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
@@ -2409,180 +2401,165 @@ namespace xge
 			readSight(group, shared, where);
 			readMoves(group, shared, where);
 			if (const std::string objClass = getAttribute(&group, "class"); !objClass.empty()) { shared.objClass = objClass; }
+			return inner;
+		}
 
-			if (inner)
+		// A group of groups: each inner group read from this one.
+		void readInnerGroups(const XmlNode& group, std::vector<RawObject>& out, GroupShared& own, const std::string& name, const std::string& where)
+		{
+			if (!group.getAttribute("char").empty())
 			{
-				if (!group.getAttribute("char").empty())
-				{
-					// On a map of cells, one character for all of them: a shape's
-					// cell of it is any one, at random.
-					if (!own.map || !own.map->cells || own.character != '\0') { fail(where, "has groups inside it, so it picks no character itself; give the char= to the groups inside"); }
-					own.character = readMapCharacter(group, *own.map, where, where);
-					if (!tilesOf(*own.map, own.character).empty()) { fail(where, "has groups inside it and picks '" + std::string(1, own.character) + "', which is on tiles of map '" + own.map->name + "'; a group of groups picks a character only for shapes, waiting"); }
-				}
-				own.object.outerGroups.push_back(name);
-				for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
-				{
-					const std::string tag = child->getName();
-					if (tag == "member" || tag == "row" || tag == "column" || tag == "cell")
-					{
-						fail(where, "has <group>s inside it, so it has no <" + tag + ">s of its own; give them to the groups inside");
-					}
-					if (tag == "group") { readGroup(*child, out, own); }
-				}
-				return;
+				// On a map of cells, one character for all of them: a shape's
+				// cell of it is any one, at random.
+				if (!own.map || !own.map->cells || own.character != '\0') { fail(where, "has groups inside it, so it picks no character itself; give the char= to the groups inside"); }
+				own.character = readMapCharacter(group, *own.map, where, where);
+				if (!tilesOf(*own.map, own.character).empty()) { fail(where, "has groups inside it and picks '" + std::string(1, own.character) + "', which is on tiles of map '" + own.map->name + "'; a group of groups picks a character only for shapes, waiting"); }
 			}
+			own.object.outerGroups.push_back(name);
+			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			{
+				const std::string tag = child->getName();
+				if (tag == "member" || tag == "row" || tag == "column" || tag == "cell")
+				{
+					fail(where, "has <group>s inside it, so it has no <" + tag + ">s of its own; give them to the groups inside");
+				}
+				if (tag == "group") { readGroup(*child, out, own); }
+			}
+		}
 
+		// One member or cell from the group and its own parts, the most
+		// particular last.
+		RawObject makeMember(const XmlNode& group, const GroupShared& own, const std::string& memberName, const std::string& here, const std::vector<const GroupPart*>& parts)
+		{
 			const std::vector<RawSprite>& sprites = own.sprites;
 			const std::vector<AnimationSpec>& animations = own.animations;
 			const PartialVector2& position = own.position;
 			const PartialVector2& velocity = own.velocity;
-			const PartialVector2& padding = own.padding;
-			// <rows> alone is one column (lines of text), <columns> alone one row.
-			const int columns = own.columns > 0 || own.rows == 0 ? own.columns : 1;
-			const int rows = own.rows > 0 || own.columns == 0 ? own.rows : 1;
+			RawObject rawObject = own.object;
+			rawObject.name = memberName;
+			rawObject.line = group.line();
 
-			shared.groupName = name;
-			if (own.map)
+			std::vector<RawSprite> used = sprites;
+			std::vector<AnimationSpec> usedAnimations = animations;
+			std::optional<RawValue> positionX = position.x;
+			std::optional<RawValue> positionY = position.y;
+			std::optional<RawValue> velocityX = velocity.x;
+			std::optional<RawValue> velocityY = velocity.y;
+			for (const GroupPart* part : parts)
 			{
-				own.position.x = own.map->position.x;
-				own.position.y = own.map->position.y;
+				used = changeSprites(used, *part->node, part->where);
+				mergeAnimations(usedAnimations, part->animations);
+				if (part->position.x) { positionX = part->position.x; }
+				if (part->position.y) { positionY = part->position.y; }
+				if (part->velocity.x) { velocityX = part->velocity.x; }
+				if (part->velocity.y) { velocityY = part->velocity.y; }
+				for (const auto& [variable, value] : part->variables) { rawObject.variable[variable] = value; }
+				if (!part->owns.empty()) { rawObject.handHolder = part->owns; }
+				if (!part->ownsClass.empty()) { rawObject.ownsClass = part->ownsClass; }
+				if (!part->think.empty()) { rawObject.think = part->think; }
+				if (part->team != 0) { rawObject.handTeam = part->team; }
 			}
 
-			// One member or cell from the group and its own parts, the most
-			// particular last.
-			const auto make = [&](const std::string& memberName, const std::string& here, const std::vector<const GroupPart*>& parts) -> RawObject
+			if (!rawObject.shapeRows.empty())
 			{
-				RawObject rawObject = shared;
-				rawObject.name = memberName;
-				rawObject.line = group.line();
+				if (!used.empty() || !usedAnimations.empty()) { fail(here, "has a <shape>, which is drawn by its cells, so it and its group have no <sprite> or <animation>"); }
+				rawObject.sprite = nothingSprite();
+				rawObject.isDrawn = false;
+			}
+			else
+			{
+				const bool cut = std::any_of(usedAnimations.begin(), usedAnimations.end(), [](const AnimationSpec& each) { return !each.cells.empty(); });
+				if (used.empty() && !cut) { fail(here, "has no <sprite>, and neither does its group"); }
+				chooseSprite(used, usedAnimations, here, rawObject);
+			}
 
-				std::vector<RawSprite> used = sprites;
-				std::vector<AnimationSpec> usedAnimations = animations;
-				std::optional<RawValue> positionX = position.x;
-				std::optional<RawValue> positionY = position.y;
-				std::optional<RawValue> velocityX = velocity.x;
-				std::optional<RawValue> velocityY = velocity.y;
-				for (const GroupPart* part : parts)
-				{
-					used = changeSprites(used, *part->node, part->where);
-					mergeAnimations(usedAnimations, part->animations);
-					if (part->position.x) { positionX = part->position.x; }
-					if (part->position.y) { positionY = part->position.y; }
-					if (part->velocity.x) { velocityX = part->velocity.x; }
-					if (part->velocity.y) { velocityY = part->velocity.y; }
-					for (const auto& [variable, value] : part->variables) { rawObject.variable[variable] = value; }
-					if (!part->owns.empty()) { rawObject.handHolder = part->owns; }
-					if (!part->ownsClass.empty()) { rawObject.ownsClass = part->ownsClass; }
-					if (!part->think.empty()) { rawObject.think = part->think; }
-					if (part->team != 0) { rawObject.handTeam = part->team; }
-				}
+			// One that does not exist at the start is placed by the <spawn>
+			// that makes it, so its <position> may be left out (0, 0).
+			if (!rawObject.exists)
+			{
+				if (!positionX) { positionX = zeroValue(); }
+				if (!positionY) { positionY = zeroValue(); }
+			}
+			rawObject.rawPosition.x = pickValue(positionX, std::nullopt, here, "<position><x>");
+			rawObject.rawPosition.y = pickValue(positionY, std::nullopt, here, "<position><y>");
+			rawObject.rawVelocity.x = velocityX.value_or(zeroValue());
+			rawObject.rawVelocity.y = velocityY.value_or(zeroValue());
+			return rawObject;
+		}
 
-				if (!rawObject.shapeRows.empty())
-				{
-					if (!used.empty() || !usedAnimations.empty()) { fail(here, "has a <shape>, which is drawn by its cells, so it and its group have no <sprite> or <animation>"); }
-					rawObject.sprite = nothingSprite();
-					rawObject.isDrawn = false;
-				}
-				else
-				{
-					const bool cut = std::any_of(usedAnimations.begin(), usedAnimations.end(), [](const AnimationSpec& each) { return !each.cells.empty(); });
-					if (used.empty() && !cut) { fail(here, "has no <sprite>, and neither does its group"); }
-					chooseSprite(used, usedAnimations, here, rawObject);
-				}
-
-				// One that does not exist at the start is placed by the <spawn>
-				// that makes it, so its <position> may be left out (0, 0).
-				if (!rawObject.exists)
-				{
-					if (!positionX) { positionX = zeroValue(); }
-					if (!positionY) { positionY = zeroValue(); }
-				}
-				rawObject.rawPosition.x = pickValue(positionX, std::nullopt, here, "<position><x>");
-				rawObject.rawPosition.y = pickValue(positionY, std::nullopt, here, "<position><y>");
-				rawObject.rawVelocity.x = velocityX.value_or(zeroValue());
-				rawObject.rawVelocity.y = velocityY.value_or(zeroValue());
-				return rawObject;
+		// On a map: a member for each tile of its character, named under
+		// the map by its number in the order the rows are read
+		// (maze.dots.17), so two maps in one list each have their own.
+		void readMapMembers(const XmlNode& group, std::vector<RawObject>& out, const GroupShared& own, const std::string& name, const std::string& where)
+		{
+			const MapLayout& map = *own.map;
+			// On a cell map, a group picking no character, or one on no
+			// tile, is one piece waiting to be spawned (map.group).
+			const auto waiting = [&](char character)
+			{
+				const std::string memberName = map.name + "." + name;
+				RawObject member = makeMember(group, own, memberName, "object '" + memberName + "' (" + where + ")", {});
+				waitOnMap(member, map, character);
+				out.push_back(std::move(member));
 			};
-
-			// On a map: a member for each tile of its character, named under
-			// the map by its number in the order the rows are read
-			// (maze.dots.17), so two maps in one list each have their own.
-			if (own.map)
+			if (map.cells && group.getAttribute("char").empty())
 			{
-				const MapLayout& map = *own.map;
-				// On a cell map, a group picking no character, or one on no
-				// tile, is one piece waiting to be spawned (map.group).
-				const auto waiting = [&](char character)
-				{
-					const std::string memberName = map.name + "." + name;
-					RawObject member = make(memberName, "object '" + memberName + "' (" + where + ")", {});
-					waitOnMap(member, map, character);
-					out.push_back(std::move(member));
-				};
-				if (map.cells && group.getAttribute("char").empty())
-				{
-					waiting(own.character);
-					return;
-				}
-				if (own.character != '\0') { fail(where, "picks a character, and so does a group around it; give it to one of them"); }
-				const char character = readMapCharacter(group, map, where, where);
-				if (map.cells && tilesOf(map, character).empty())
-				{
-					waiting(character);
-					return;
-				}
-				int count = 0;
-				for (const auto& [column, row] : tilesOf(map, character))
-				{
-					++count;
-					const std::string memberName = map.name + "." + name + "." + std::to_string(count);
-					const std::string here = "object '" + memberName + "' (a member of " + where + ")";
-					RawObject member = make(memberName, here, {});
-					placeOnMap(member, map, column, row, character);
-					out.push_back(std::move(member));
-				}
-				if (count == 0) { fail(where, "picks '" + std::string(1, character) + "', which is on no tile of map '" + map.name + "'"); }
+				waiting(own.character);
 				return;
 			}
-
-			std::vector<std::unique_ptr<XmlNode>> children;
-			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr;)
+			if (own.character != '\0') { fail(where, "picks a character, and so does a group around it; give it to one of them"); }
+			const char character = readMapCharacter(group, map, where, where);
+			if (map.cells && tilesOf(map, character).empty())
 			{
-				std::unique_ptr<XmlNode> next = child->getNextSibling();
-				children.push_back(std::move(child));
-				child = std::move(next);
-			}
-
-			if (columns == 0)
-			{
-				int count = 0;
-				for (std::unique_ptr<XmlNode>& child : children)
-				{
-					const std::string tag = child->getName();
-					if (tag == "row" || tag == "column" || tag == "cell")
-					{
-						fail(where, "has a <" + tag + ">, but no <columns> and <rows> for it to pick from");
-					}
-					if (tag != "member") { continue; }
-
-					++count;
-					const std::string ownName = child->getAttribute("name");
-					if (!ownName.empty()) { refuseReserved(ownName, "a member", where); }
-					const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
-					const std::string here = "object '" + memberName + "' (a member of " + where + ")";
-
-					const GroupPart member = readGroupPart(std::move(child), here, { "sprite", "animation", "position", "velocity", "variables", "owns", "team", "think" },
-						"a member can give <sprite>s, an <animation>, a <position>, a <velocity>, <variables>, an <owns>, a <team> and a <think>");
-					out.push_back(make(memberName, here, { &member }));
-				}
-
-				if (count == 0) { fail(where, "has no <member>s, and no <columns> and <rows> to lay out cells in"); }
+				waiting(character);
 				return;
 			}
+			int count = 0;
+			for (const auto& [column, row] : tilesOf(map, character))
+			{
+				++count;
+				const std::string memberName = map.name + "." + name + "." + std::to_string(count);
+				const std::string here = "object '" + memberName + "' (a member of " + where + ")";
+				RawObject member = makeMember(group, own, memberName, here, {});
+				placeOnMap(member, map, column, row, character);
+				out.push_back(std::move(member));
+			}
+			if (count == 0) { fail(where, "picks '" + std::string(1, character) + "', which is on no tile of map '" + map.name + "'"); }
+			return;
+		}
 
-			std::vector<GroupPart> lines;   // the <row>s and <column>s, in the order written
-			std::vector<GroupPart> cells;
+		// Members listed, each a <member>.
+		void readMembers(std::vector<std::unique_ptr<XmlNode>>& children, std::vector<RawObject>& out, const XmlNode& group, const GroupShared& own, const std::string& name, const std::string& where)
+		{
+			int count = 0;
+			for (std::unique_ptr<XmlNode>& child : children)
+			{
+				const std::string tag = child->getName();
+				if (tag == "row" || tag == "column" || tag == "cell")
+				{
+					fail(where, "has a <" + tag + ">, but no <columns> and <rows> for it to pick from");
+				}
+				if (tag != "member") { continue; }
+
+				++count;
+				const std::string ownName = child->getAttribute("name");
+				if (!ownName.empty()) { refuseReserved(ownName, "a member", where); }
+				const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
+				const std::string here = "object '" + memberName + "' (a member of " + where + ")";
+
+				const GroupPart member = readGroupPart(std::move(child), here, { "sprite", "animation", "position", "velocity", "variables", "owns", "team", "think" },
+					"a member can give <sprite>s, an <animation>, a <position>, a <velocity>, <variables>, an <owns>, a <team> and a <think>");
+				out.push_back(makeMember(group, own, memberName, here, { &member }));
+			}
+
+			if (count == 0) { fail(where, "has no <member>s, and no <columns> and <rows> to lay out cells in"); }
+			return;
+		}
+
+		// The <row>s and <column>s, in the order written, and the <cell>s of a
+		// group laid out in columns and rows.
+		void readLinesAndCells(std::vector<std::unique_ptr<XmlNode>>& children, int columns, int rows, const std::string& where, std::vector<GroupPart>& lines, std::vector<GroupPart>& cells)
+		{
 			for (std::unique_ptr<XmlNode>& child : children)
 			{
 				const std::string tag = child->getName();
@@ -2633,7 +2610,14 @@ namespace xge
 					cells.push_back(std::move(cell));
 				}
 			}
+		}
 
+		// A member for each place in the columns and rows, with what the rows,
+		// columns and <cell> that pick it change.
+		void placeCells(const XmlNode& group, std::vector<RawObject>& out, const GroupShared& own, const std::vector<GroupPart>& lines, const std::vector<GroupPart>& cells,
+			int columns, int rows, const std::string& name, const std::string& where)
+		{
+			const PartialVector2& padding = own.padding;
 			const auto picks = [](const GroupPart& line, int row, int column)
 			{
 				return line.rows.empty() ? line.columns[static_cast<std::size_t>(column)] : line.rows[static_cast<std::size_t>(row)];
@@ -2674,9 +2658,9 @@ namespace xge
 					}
 					if (cell) { parts.push_back(cell); }
 
-					RawObject rawObject = make(cellName, here, parts);
+					RawObject rawObject = makeMember(group, own, cellName, here, parts);
 
-					rawObject.cell.slot = make(cellName, here, rowParts).sprite;
+					rawObject.cell.slot = makeMember(group, own, cellName, here, rowParts).sprite;
 					rawObject.cell.column = column;
 					rawObject.cell.row = row;
 					rawObject.takeOwnCell();
@@ -2693,6 +2677,58 @@ namespace xge
 					out.push_back(std::move(rawObject));
 				}
 			}
+		}
+
+		void readGroupHere(const XmlNode& group, std::vector<RawObject>& out, const GroupShared& outer)
+		{
+			const std::string name = requireAttribute(group, "name", "<group>");
+			const std::string where = "group '" + name + "'";
+			refuseReserved(name, "a group", where);
+
+			GroupShared own = outer;
+
+			if (!group.getAttribute("char").empty() && !own.map)
+			{
+				fail(where, "char=\"" + group.getAttribute("char") + "\" picks a character of a <map>'s rows; this group is on no <map>");
+			}
+
+			if (readGroupGives(group, own, where))
+			{
+				readInnerGroups(group, out, own, name, where);
+				return;
+			}
+
+			// <rows> alone is one column (lines of text), <columns> alone one row.
+			const int columns = own.columns > 0 || own.rows == 0 ? own.columns : 1;
+			const int rows = own.rows > 0 || own.columns == 0 ? own.rows : 1;
+
+			own.object.groupName = name;
+			if (own.map)
+			{
+				own.position.x = own.map->position.x;
+				own.position.y = own.map->position.y;
+				readMapMembers(group, out, own, name, where);
+				return;
+			}
+
+			std::vector<std::unique_ptr<XmlNode>> children;
+			for (std::unique_ptr<XmlNode> child = group.getFirstChild(); child != nullptr;)
+			{
+				std::unique_ptr<XmlNode> next = child->getNextSibling();
+				children.push_back(std::move(child));
+				child = std::move(next);
+			}
+
+			if (columns == 0)
+			{
+				readMembers(children, out, group, own, name, where);
+				return;
+			}
+
+			std::vector<GroupPart> lines;
+			std::vector<GroupPart> cells;
+			readLinesAndCells(children, columns, rows, where, lines, cells);
+			placeCells(group, out, own, lines, cells, columns, rows, name, where);
 		}
 
 		// A <map name="maze">: the size of a <tile>, where its top left is (its
