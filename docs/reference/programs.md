@@ -22,7 +22,7 @@ xgecli pacman --frames 600 --keys start.xml --picture pacman.png  # draw the las
 | Option | Means |
 |---|---|
 | *game*, `-g`, `--game` | the game, bare or with `-g` (not both). Default `pong` |
-| `-w`, `--window` | `sfml3` (default), `raylib`, `sdl2`, `opengl`, `vulkan`, `direct3d9`, `direct3d11`, `direct3d12` (Windows only), `none` (no window: the game runs at its own size, nothing drawn, no keys) |
+| `-w`, `--window` | `sfml3` (default), `raylib`, `sdl2`, `opengl`, `vulkan`, `direct3d9`, `direct3d10`, `direct3d11`, `direct3d12` (Windows only), `none` (no window: the game runs at its own size, nothing drawn, no keys) |
 | `-x`, `--xml` | `xerces` (default), `tinyxml2`, `pugixml`, `rapidxml` |
 | `-a`, `--audio` | `sfml3` (default), `raylib`, `sdl2`, `none` |
 | `--record` | play from a new seed; when the window closes, write the play into the game file as its [`<demo>`](states.md#attract-mode) |

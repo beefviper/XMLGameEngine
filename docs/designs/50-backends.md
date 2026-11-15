@@ -9,7 +9,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 **Backends are a feature (chosen by the author).** Wide support for libraries is part of what the project is, as an emulator front end supports many.
 
 - Dropping some to save upkeep was proposed and rejected.
-- Lower-level ones are wanted next (OpenGL, Vulkan and Direct3D 9, 11 and 12 are there), and Xerces as the full validator with a lighter built-in one behind the other parsers is intended.
+- Lower-level ones are wanted next (OpenGL, Vulkan and Direct3D 9, 10, 11 and 12 are there), and Xerces as the full validator with a lighter built-in one behind the other parsers is intended.
 - What follows is making the next backend cheap: with text and image files made by the engine, a backend only opens a window, shows bitmaps and reads keys ([plan](../plan.md#a7-the-next-backend-is-cheap)).
 
 ## XML: `XmlDocument` and `XmlNode`
@@ -42,6 +42,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 - **One Win32 window** (`window/win32.cpp`) serves every Direct3D backend: its messages, keys, XInput pads, and where the game is fitted in it. A Direct3D backend adds only its drawing.
 - **Vulkan** opens its window with GLFW, not Win32, so it runs on Linux too and is built and tested there (Mesa's software driver under Xvfb, with the validation layer) before Windows sees it. No SDK: volk finds the driver's library at run time, Khronos's headers are fetched, and the two shaders are kept in the source as SPIR-V words, with their GLSL beside them. One frame in flight; a picture replaced while drawing is let go once that frame is done. 
 - **Direct3D 12** has Vulkan's shape on the shared Win32 window: one frame in flight behind a fence, pictures copied up through an upload buffer, each a slot in one shader-visible heap, the same rectangle drawn from four corners with no vertex buffer, and both samplers fixed in the root signature (a constant picks one). Its shaders are compiled when the window opens, as Direct3D 11's. A Debug build turns on the debug layer when Windows has it ("Graphics Tools"). It cannot be built off Windows, so it is written blind and tested by the author.
+- **Direct3D 10** (Windows Vista and 7 machines without 11): Direct3D 11's window line for line, since 11 grew out of 10. The device does the drawing itself (no device context), and the shaders compile for shader model 4. Written blind, like Direct3D 12.
 - **One test for every window:** opening each library for real, drawing known pictures and reading the pixels back (`capture()`), with a key pressed as a person would. Hidden from ordinary runs, since it opens windows; under Xvfb on Linux. Rejected: a fake of each library (it tests the fake).
 - **Factories** are the only places that know every library; a new one is one branch and a pair of files. Choice is at run time; CMake decides only what is built.
 - "Backend" stayed over module, provider or adapter: it says "interchangeable lower layer".

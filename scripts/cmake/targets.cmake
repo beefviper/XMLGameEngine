@@ -80,6 +80,13 @@ if (XGE_WITH_DIRECT3D9)
 	target_link_libraries(xgelib PUBLIC d3d9 xinput)
 endif()
 
+# The Direct3D 10 window (window/direct3d10.h), on Windows only: Direct3D 11's
+# shape on the older library, with the same two shaders compiled as it opens.
+if (XGE_WITH_DIRECT3D10)
+	xge_backend(DIRECT3D10)
+	target_link_libraries(xgelib PUBLIC d3d10 dxgi d3dcompiler xinput)
+endif()
+
 # The Direct3D 12 window (window/direct3d12.h), on Windows only: like Direct3D
 # 11 it compiles its shaders when it opens.
 if (XGE_WITH_DIRECT3D12)

@@ -29,6 +29,7 @@ namespace xge
 		OpenGL,
 		Vulkan,
 		Direct3D9,
+		Direct3D10,
 		Direct3D11,
 		Direct3D12
 	};
