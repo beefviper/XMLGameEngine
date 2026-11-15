@@ -372,7 +372,7 @@ namespace xge
 			o << "\tacc.x=" << f.acceleration.x << ", acc.y=" << f.acceleration.y << '\n';
 		}
 
-		if (f.hasHeading)
+		if (f.turning.hasHeading)
 		{
 			o << "\theading=" << f.heading << '\n';
 		}

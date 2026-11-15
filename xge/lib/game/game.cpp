@@ -1437,7 +1437,7 @@ namespace xge
 			object.marks.copies.clear();
 			object.rest.resting = false;
 			object.rest.settledAge = 1000;
-			object.spin = 0.0f;
+			object.turning.spin = 0.0f;
 			object.showHeading();
 
 			// An animation starts again from its first picture, and a
@@ -1727,7 +1727,7 @@ namespace xge
 				object.velocity = *step;
 				if (!leg.home) { object.path.left -= *step; }
 				// One that faces somewhere faces the way it flies.
-				if (object.hasHeading)
+				if (object.turning.hasHeading)
 				{
 					object.heading = headingOf(*step);
 					object.showHeading();
@@ -2287,7 +2287,7 @@ namespace xge
 			if (!object.named(owner)) { continue; }
 			found = true;
 			const bool heading = std::string(part->name) == "heading";
-			if (heading && !object.hasHeading) { continue; }
+			if (heading && !object.turning.hasHeading) { continue; }
 			part->of(object) = part->notBelowZero ? std::max(0.0f, value) : value;
 			if (heading) { object.showHeading(); }
 		}

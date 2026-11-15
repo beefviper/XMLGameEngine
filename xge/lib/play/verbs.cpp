@@ -119,7 +119,7 @@ namespace xge
 			mover.rest.settledNormal = out;
 			mover.rest.settledAge = 0;
 
-			const bool still = surface.spin == 0.0f && surfaceAt.x == 0.0f && surfaceAt.y == 0.0f;
+			const bool still = surface.turning.spin == 0.0f && surfaceAt.x == 0.0f && surfaceAt.y == 0.0f;
 			if (!still || !(lengthOf(now) < settle)) { return; }
 
 			const Vector2f pull = mover.acceleration;

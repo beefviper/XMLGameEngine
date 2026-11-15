@@ -284,7 +284,7 @@ TEST_CASE("asteroids.xml loads with a ship that has a heading, shots, rocks and 
 
 	CHECK(ship.drawn.picture.kind == ShapeKind::Line);
 	CHECK(ship.collisionData.type == CollisionType::Pixel);
-	CHECK(ship.hasHeading);
+	CHECK(ship.turning.hasHeading);
 	CHECK(ship.heading == 0.0f);
 	REQUIRE(ship.drawn.turnables.size() == 1);
 	CHECK(ship.drawn.bitmap->rgba == ship.drawn.turnables[0]->at(0.0f).rgba);
@@ -320,7 +320,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 		Game game{ readGame("descriptions/asteroids.xml", backend) };
 
 		const Object& ship = game.getObject("ship");
-		CHECK(ship.hasHeading);
+		CHECK(ship.turning.hasHeading);
 		CHECK_THAT(ship.motion.drag, WithinAbs(0.02f, 1e-6f));
 		CHECK(ship.drawn.turnables.size() == 1);
 
@@ -1301,7 +1301,7 @@ TEST_CASE("a heading, a drag and an active are read from the file", "[asteroids]
 	Game game{ "descriptions/asteroids.xml" };
 
 	const Object& ship = game.getObject("ship");
-	CHECK(ship.hasHeading);
+	CHECK(ship.turning.hasHeading);
 	CHECK(ship.start.heading == 0.0f);
 	CHECK(ship.motion.drag == 0.02f);
 	CHECK(ship.drawn.turnables.size() == 1);

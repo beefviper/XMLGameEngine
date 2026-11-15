@@ -355,7 +355,7 @@ namespace xge
 			void face(Direction way)
 			{
 				walker.facing = way;
-				if (walker.hasHeading)
+				if (walker.turning.hasHeading)
 				{
 					walker.heading = headingOf(unit(way));
 					walker.showHeading();

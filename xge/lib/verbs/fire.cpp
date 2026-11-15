@@ -63,7 +63,7 @@ namespace xge
 			// of it, at the projectile's own speed.
 			shot = shotAlong(from, shotSize, shooter.aim, speed);
 		}
-		else if (shooter.hasHeading)
+		else if (shooter.turning.hasHeading)
 		{
 			shot = shotAhead(from, shotSize, shooter.heading, speed);
 		}

@@ -33,7 +33,7 @@ namespace xge
 		bool isMoving(const Object& object) noexcept
 		{
 			const Vector2f motion = motionOf(object);
-			return motion.x != 0 || motion.y != 0 || object.spin != 0 || object.position != object.before.position
+			return motion.x != 0 || motion.y != 0 || object.turning.spin != 0 || object.position != object.before.position
 				|| !(object.shown() == object.shownBefore)
 				|| (object.collisionsOn && !object.before.collisionsOn) || (object.isVisible && !object.before.isVisible);
 		}
@@ -207,7 +207,7 @@ namespace xge
 			{
 				if (object.motion.grip >= 1.0f || object.footing.climbing || !rules.inPlay(object)) { continue; }
 
-				if (object.hasHeading)
+				if (object.turning.hasHeading)
 				{
 					const Vector2f way = ahead(object.heading);
 					const float along = object.velocity.x * way.x + object.velocity.y * way.y;
@@ -307,7 +307,7 @@ namespace xge
 				// asking whether it is in play.
 				const bool thrusting = object.drive.thrust[0] != 0.0f || object.drive.thrust[1] != 0.0f
 					|| object.drive.thrust[2] != 0.0f || object.drive.thrust[3] != 0.0f;
-				if (!thrusting && !object.hasHeading && object.surface.groundDrag == 0.0f && object.acceleration.x == 0.0f && object.acceleration.y == 0.0f)
+				if (!thrusting && !object.turning.hasHeading && object.surface.groundDrag == 0.0f && object.acceleration.x == 0.0f && object.acceleration.y == 0.0f)
 				{
 					continue;
 				}
@@ -328,7 +328,7 @@ namespace xge
 								{
 									const auto under = std::find_if(objects.begin(), objects.end(), [&](const Object& other) { return other.name == support.name; });
 									return under != objects.end() && rules.inPlay(*under) && under->position == support.at
-										&& under->heading == support.heading && under->spin == 0.0f;
+										&& under->heading == support.heading && under->turning.spin == 0.0f;
 								});
 					}
 					if (object.rest.resting) { continue; }
@@ -360,7 +360,7 @@ namespace xge
 
 				// Turning, and thrust along the way the object then faces. A
 				// heading is degrees clockwise from straight up.
-				if (object.hasHeading)
+				if (object.turning.hasHeading)
 				{
 					const float turn = object.drive.turn[static_cast<std::size_t>(Direction::Right)]
 						- object.drive.turn[static_cast<std::size_t>(Direction::Left)];
@@ -380,7 +380,7 @@ namespace xge
 					// move sweeps it from where it was to where it is now
 					// (moveObjects), and what it strikes on the way takes its
 					// speed there (velocityAt).
-					object.spin = 0.0f;
+					object.turning.spin = 0.0f;
 					if (object.swing.frames > 0)
 					{
 						const float step = 1.0f / static_cast<float>(object.swing.frames);
@@ -392,7 +392,7 @@ namespace xge
 							const float eased = (1.0f - std::cos(pi * done)) / 2.0f;
 							float now = std::fmod(object.start.heading + object.swing.by * eased, 360.0f);
 							if (now < 0.0f) { now += 360.0f; }
-							object.spin = turnBetween(object.heading, now);
+							object.turning.spin = turnBetween(object.heading, now);
 							object.heading = now;
 							object.showHeading();
 						}
@@ -551,7 +551,7 @@ namespace xge
 				if (!target) { continue; }
 				const Vector2f before = object.velocity;
 				object.velocity = turnedToward(object.velocity, middleOf(*target) - middle, object.seekRate);
-				if (object.hasHeading && (object.velocity.x != before.x || object.velocity.y != before.y))
+				if (object.turning.hasHeading && (object.velocity.x != before.x || object.velocity.y != before.y))
 				{
 					object.heading = headingOf(object.velocity);
 					object.showHeading();
@@ -757,7 +757,7 @@ namespace xge
 				{
 					if (spinning(i))
 					{
-						turnFrom[i] = std::fmod(all[i].heading - all[i].spin + 720.0f, 360.0f);
+						turnFrom[i] = std::fmod(all[i].heading - all[i].turning.spin + 720.0f, 360.0f);
 						all[i].heading = turnFrom[i];
 						all[i].showHeading();
 					}
@@ -831,7 +831,7 @@ namespace xge
 				}
 				if (spinning(pair.i) || spinning(pair.j))
 				{
-					return { sweepTurning(a, moveA, a.spin * left, b, moveB, b.spin * left), false };
+					return { sweepTurning(a, moveA, a.turning.spin * left, b, moveB, b.turning.spin * left), false };
 				}
 				return { sweepObjects(a, moveA, b, moveB, pair.byPicture), false };
 			}
@@ -854,7 +854,7 @@ namespace xge
 				{
 					// Turned some other way by a reaction: it stops turning there.
 					const bool turned = spinning(i) && all[i].heading != before[i].heading;
-					if (turned) { all[i].spin = 0.0f; }
+					if (turned) { all[i].turning.spin = 0.0f; }
 
 					const char nowPlaying = rules.inPlay(all[i]) ? 1 : 0;
 					if (turned || all[i].position != before[i].position || motionOf(all[i]) != before[i].motion || nowPlaying != playing[i])
@@ -883,11 +883,11 @@ namespace xge
 				float heading;
 			};
 
-			bool spinning(std::size_t i) const { return all[i].spin != 0.0f && all[i].hasHeading; }
+			bool spinning(std::size_t i) const { return all[i].turning.spin != 0.0f && all[i].turning.hasHeading; }
 
 			float facingAt(std::size_t i, float total) const
 			{
-				return std::fmod(turnFrom[i] + all[i].spin * total + 720.0f, 360.0f);
+				return std::fmod(turnFrom[i] + all[i].turning.spin * total + 720.0f, 360.0f);
 			}
 
 			// The box each covers over the rest of the frame, found once: until

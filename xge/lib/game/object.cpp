@@ -493,7 +493,7 @@ namespace xge
 	{
 		if (const auto own = object.variable.find(name); own != object.variable.end()) { return own->second; }
 		const LivePart* part = livePartNamed(name);
-		if (!part || (name == "heading" && !object.hasHeading)) { return std::nullopt; }
+		if (!part || (name == "heading" && !object.turning.hasHeading)) { return std::nullopt; }
 		return part->of(const_cast<Object&>(object)); // only read
 	}
 
@@ -955,14 +955,14 @@ namespace xge
 		// comes out as.
 		const Vector2f shown = drawn.bitmap ? Vector2f{ static_cast<float>(drawn.bitmap->width), static_cast<float>(drawn.bitmap->height) } : size;
 		const Vector2f middle = position + shown * 0.5f;
-		return hasPivot ? middle + turnedBy(pivotFromMiddle, static_cast<float>(pivotDegrees)) : middle;
+		return turning.hasPivot ? middle + turnedBy(turning.pivotFromMiddle, static_cast<float>(pivotDegrees)) : middle;
 	}
 
 	Vector2f Object::velocityAt(const Vector2f& at) const
 	{
-		if (spin == 0.0f) { return velocity; }
+		if (turning.spin == 0.0f) { return velocity; }
 		const Vector2f arm = at - pivotOnScreen();
-		const float radians = spin * 3.14159265358979323846f / 180.0f;
+		const float radians = turning.spin * 3.14159265358979323846f / 180.0f;
 		return velocity + Vector2f{ -arm.y * radians, arm.x * radians };
 	}
 
@@ -978,9 +978,9 @@ namespace xge
 
 		// Turning about a pivot: the picture is turned about its middle, so the
 		// middle goes round the pivot, which stays where it is.
-		if (hasPivot && degrees != pivotDegrees)
+		if (turning.hasPivot && degrees != pivotDegrees)
 		{
-			position += turnedBy(pivotFromMiddle, static_cast<float>(pivotDegrees)) - turnedBy(pivotFromMiddle, static_cast<float>(degrees));
+			position += turnedBy(turning.pivotFromMiddle, static_cast<float>(pivotDegrees)) - turnedBy(turning.pivotFromMiddle, static_cast<float>(degrees));
 			pivotDegrees = degrees;
 		}
 

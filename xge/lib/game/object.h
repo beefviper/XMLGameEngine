@@ -1103,15 +1103,35 @@ namespace xge
 		// <home />) since it was last put back.
 		Vector2f shifted;
 
-		// Whether it has a <heading> (Moment::heading): only then does it turn
-		// (a <turn> in its actions), get pushed along it (a <thrust>) or fire
-		// along it (a <fire>). A sprite of <line>s or a <bitmap> that has a heading is kept
-		// once as it was written (Drawn::turnables, shared by every object
-		// made from the one definition) and `drawn.bitmap` is that turned to the
-		// heading, to the nearest whole degree, so what is shown and what a
-		// pixel collision tests turn with it - see showHeading. That makes two
-		// pictures an object has to hold, the original and the one it shows.
-		bool hasHeading{ false };
+		// How it turns: whether it has a heading at all, the point it turns
+		// about and how far it turned this frame.
+		struct Turning
+		{
+			// Whether it has a <heading> (Moment::heading): only then does it turn
+			// (a <turn> in its actions), get pushed along it (a <thrust>) or fire
+			// along it (a <fire>). A sprite of <line>s or a <bitmap> that has a heading is kept
+			// once as it was written (Drawn::turnables, shared by every object
+			// made from the one definition) and `drawn.bitmap` is that turned to the
+			// heading, to the nearest whole degree, so what is shown and what a
+			// pixel collision tests turn with it - see showHeading. That makes two
+			// pictures an object has to hold, the original and the one it shows.
+			bool hasHeading{ false };
+
+			// <pivot>: it turns about that point of its picture, not its middle;
+			// pivotFromMiddle is the way from the middle of the picture as drawn
+			// (unturned) to it. See showHeading and pivotOnScreen.
+			bool hasPivot{ false };
+			Vector2f pivotFromMiddle;
+
+			// How many degrees it turned this frame (clockwise is more), from the
+			// heading the last frame left it at: the move sweeps the turn through
+			// the frame as it sweeps a velocity, and what it touches meets a
+			// surface going that fast where they touch (velocityAt). 0 for one
+			// put somewhere (a reset) and for anything that does not turn.
+			float spin{};
+		};
+		Turning turning;
+
 		// An <animation>: the pictures it shows in turn (all one size, and
 		// `bitmap` is whichever is showing), how many frames of the game each
 		// one stays for (the seconds written, times the window's <framerate>),
@@ -1194,12 +1214,6 @@ namespace xge
 		};
 		Drive drive;
 
-		// <pivot>: it turns about that point of its picture, not its middle;
-		// pivotFromMiddle is the way from the middle of the picture as drawn
-		// (unturned) to it. See showHeading and pivotOnScreen.
-		bool hasPivot{ false };
-		Vector2f pivotFromMiddle;
-
 		// Where its turning point is on the screen: the pivot, or the middle.
 		Vector2f pivotOnScreen() const;
 
@@ -1216,13 +1230,6 @@ namespace xge
 			bool held{ false };
 		};
 		Swing swing;
-
-		// How many degrees it turned this frame (clockwise is more), from the
-		// heading the last frame left it at: the move sweeps the turn through
-		// the frame as it sweeps a velocity, and what it touches meets a
-		// surface going that fast where they touch (velocityAt). 0 for one
-		// put somewhere (a reset) and for anything that does not turn.
-		float spin{};
 
 		// How fast the point `at` of it is going: its velocity, and its spin
 		// about its turning point.

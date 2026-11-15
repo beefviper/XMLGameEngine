@@ -113,28 +113,28 @@ TEST_CASE("a swing is one eased stroke: from still, fastest half way, to still, 
 	for (const float turn : { 4.02f, 10.98f, 15.0f, 15.0f, 10.98f, 4.02f })
 	{
 		play.frames(1);
-		CHECK(flip.spin == Approx(-turn).margin(0.05f));
+		CHECK(flip.turning.spin == Approx(-turn).margin(0.05f));
 		CHECK(turnBetween(was, flip.heading) == Approx(-turn).margin(0.05f));
 		was = flip.heading;
 	}
 	CHECK(flip.heading == Approx(330.0f));
 	play.frames(3);
 	CHECK(flip.heading == Approx(330.0f));
-	CHECK(flip.spin == 0.0f);
+	CHECK(flip.turning.spin == 0.0f);
 
 	// Let go, back down the same way; pressed again on the way, it turns
 	// round where it is.
 	play.engine.handleKeyReleased(KeyCode::D);
 	play.frames(1);
-	CHECK(flip.spin == Approx(4.02f).margin(0.05f));
+	CHECK(flip.turning.spin == Approx(4.02f).margin(0.05f));
 	play.frames(2);
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(1);
-	CHECK(flip.spin == Approx(-15.0f).margin(0.05f));
+	CHECK(flip.turning.spin == Approx(-15.0f).margin(0.05f));
 	play.engine.handleKeyReleased(KeyCode::D);
 	play.frames(10);
 	CHECK(flip.heading == Approx(30.0f));
-	CHECK(flip.spin == 0.0f);
+	CHECK(flip.turning.spin == 0.0f);
 }
 
 TEST_CASE("a swing turns the way it says, by as many degrees as it says, past half a turn too", "[flippers][swing]")
@@ -151,7 +151,7 @@ TEST_CASE("a swing turns the way it says, by as many degrees as it says, past ha
 	play.engine.handleKeyPressed(KeyCode::D);
 	play.frames(3);
 	CHECK(flip.heading == Approx(165.0f).margin(0.05f));
-	CHECK(flip.spin > 0.0f);
+	CHECK(flip.turning.spin > 0.0f);
 	play.frames(3);
 	CHECK(flip.heading == Approx(300.0f).margin(0.05f));
 	play.engine.handleKeyReleased(KeyCode::D);

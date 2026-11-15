@@ -254,7 +254,7 @@ TEST_CASE("a group gives its members a <heading>, each turned on its own", "[liv
 		"<member><position><x>100</x></position></member><member><position><x>900</x></position></member></group>", "<pop />");
 	Played play(file.path);
 
-	CHECK(play.get("missiles.1").hasHeading);
+	CHECK(play.get("missiles.1").turning.hasHeading);
 	CHECK(play.get("missiles.2").heading == Approx(180));
 	play.frames(10);
 	CHECK(play.get("missiles.1").heading == Approx(90).margin(1));

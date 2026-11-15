@@ -104,7 +104,7 @@ TEST_CASE("lunarlander.xml loads with a lander, terrain and three pads, all draw
 	CHECK(moon.game.getObject("pad5").size.x < moon.game.getObject("pad3").size.x);
 	CHECK(moon.game.getObject("pad3").size.x < moon.game.getObject("pad2").size.x);
 
-	CHECK(moon.lander().hasHeading);
+	CHECK(moon.lander().turning.hasHeading);
 	CHECK(moon.lander().heading == 0.0f);
 	CHECK(moon.lander().acceleration.y > 0.0f);
 	CHECK(moon.fuel() == 1000.0f);
@@ -119,7 +119,7 @@ TEST_CASE("lunarlander.xml loads under every XML backend, checked against the sc
 		const Object& lander = game.getObject("lander");
 
 		CHECK(lander.collisionData.type == CollisionType::Pixel);
-		CHECK(lander.hasHeading);
+		CHECK(lander.turning.hasHeading);
 
 		// One rule is the landing, kept for slow touches: a condition on its speed.
 		const std::function<bool(const Condition&)> onSpeed = [&](const Condition& condition)

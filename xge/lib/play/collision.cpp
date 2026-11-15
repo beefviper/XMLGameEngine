@@ -236,7 +236,7 @@ namespace xge
 		// way from the middle, and half the square's diagonal past that.
 		float turningReach(const Object& object) noexcept
 		{
-			const Vector2f arm = object.hasPivot ? object.pivotFromMiddle : Vector2f{};
+			const Vector2f arm = object.turning.hasPivot ? object.turning.pivotFromMiddle : Vector2f{};
 			return std::hypot(arm.x, arm.y) + std::hypot(object.size.x, object.size.y) / 2.0f;
 		}
 
@@ -286,7 +286,7 @@ namespace xge
 			const std::size_t frame = object.drawn.turnables.size() > 1 && object.animation.index < object.drawn.turnables.size() ? object.animation.index : 0;
 			const int degrees = wholeDegrees(object.heading + turn * time);
 			at.drawing = &object.drawn.turnables[frame]->turnedTo(degrees);
-			const Vector2f arm = object.hasPivot ? object.pivotFromMiddle : Vector2f{};
+			const Vector2f arm = object.turning.hasPivot ? object.turning.pivotFromMiddle : Vector2f{};
 			at.box = { object.position + move * time + turnedBy(arm, static_cast<float>(object.pivotDegrees)) - turnedBy(arm, static_cast<float>(degrees)), object.size };
 			return at;
 		};
@@ -370,7 +370,7 @@ namespace xge
 	Box reachOver(const Object& object, const Vector2f& move) noexcept
 	{
 		// One turning reaches anywhere round its pivot it can swing to.
-		if (object.spin != 0.0f && !object.drawn.turnables.empty())
+		if (object.turning.spin != 0.0f && !object.drawn.turnables.empty())
 		{
 			const float radius = turningReach(object);
 			const Vector2f pivot = object.pivotOnScreen();

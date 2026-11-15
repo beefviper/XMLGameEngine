@@ -56,7 +56,7 @@ namespace xge
 		{
 			throw std::runtime_error(checking.where + ": " + tag + ": there is no object named '" + owner + "'" + didYouMean(owner, objectNames(objects)));
 		}
-		if (part == "heading" && !found->hasHeading)
+		if (part == "heading" && !found->turning.hasHeading)
 		{
 			throw std::runtime_error(checking.where + ": " + tag + ": '" + owner + "' has no <heading> to set");
 		}

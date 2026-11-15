@@ -241,7 +241,7 @@ namespace xge
 
 		if (rawObject.hasHeading)
 		{
-			object.hasHeading = true;
+			object.turning.hasHeading = true;
 			float degrees = std::fmod(evaluateStart(rawObject.rawHeading, where), 360.0f);
 			if (degrees < 0.0f) { degrees += 360.0f; }
 			object.heading = degrees;
@@ -672,11 +672,11 @@ namespace xge
 				middle = { static_cast<float>(drawn.picture->width) / 2.0f, static_cast<float>(drawn.picture->height) / 2.0f };
 			}
 			const Vector2f pivot{ evaluate(rawObject.rawPivot.x, where + " > <pivot>"), evaluate(rawObject.rawPivot.y, where + " > <pivot>") };
-			object.hasPivot = true;
-			object.pivotFromMiddle = pivot - middle;
+			object.turning.hasPivot = true;
+			object.turning.pivotFromMiddle = pivot - middle;
 			object.pivotDegrees = wholeDegrees(object.heading);
 			const Vector2f square{ static_cast<float>(object.drawn.bitmap->width), static_cast<float>(object.drawn.bitmap->height) };
-			object.position = object.position - square * 0.5f - turnedBy(object.pivotFromMiddle, static_cast<float>(object.pivotDegrees));
+			object.position = object.position - square * 0.5f - turnedBy(object.turning.pivotFromMiddle, static_cast<float>(object.pivotDegrees));
 			object.start.position = object.position;
 			object.start.pivotDegrees = object.pivotDegrees;
 		}

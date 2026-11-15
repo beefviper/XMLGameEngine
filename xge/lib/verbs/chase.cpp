@@ -52,7 +52,7 @@ namespace xge
 		if (const auto way = xge::chase(middleOf(object), middleOf(*target), command.speed, command.stopWithin, object.velocity))
 		{
 			object.facing = directionOf(*way);
-			if (object.hasHeading)
+			if (object.turning.hasHeading)
 			{
 				object.heading = headingOf(*way);
 				object.showHeading();

@@ -57,7 +57,7 @@ namespace xge
 		object.aim = *way;
 		object.hasAim = true;
 		object.facing = directionOf(object.aim);
-		if (object.hasHeading)
+		if (object.turning.hasHeading)
 		{
 			object.heading = headingOf(object.aim);
 			object.showHeading();
