@@ -59,12 +59,12 @@ namespace xge
 				object.held = true;
 				const auto given = object.variable.find("worth");
 				const float worth = given == object.variable.end() ? static_cast<float>(object.cell.column) : number(given->second, where, "worth");
-				object.card.worths = { worth };
+				object.item.worths = { worth };
 				if (const auto high = object.variable.find("high"); high != object.variable.end())
 				{
 					const float more = number(high->second, where, "high");
-					if (more != worth) { object.card.worths.push_back(more); }
-					std::sort(object.card.worths.begin(), object.card.worths.end());
+					if (more != worth) { object.item.worths.push_back(more); }
+					std::sort(object.item.worths.begin(), object.item.worths.end());
 				}
 				object.variable["worth"] = RawValue::expression(formatDisplayNumber(worth));
 				object.sprite = object.looks.front();
@@ -108,7 +108,7 @@ namespace xge
 						bool any = false;
 						for (RawObject& object : objects)
 						{
-							if (object.held && object.ownerState == state.name && (object.named(state.name + "." + step.from) || object.named(step.from))) { object.card.startHolder = step.into; any = true; }
+							if (object.held && object.ownerState == state.name && (object.named(state.name + "." + step.from) || object.named(step.from))) { object.item.startHolder = step.into; any = true; }
 						}
 						if (!any) { throw std::runtime_error(where + ": from=\"" + step.from + "\" names no held members of this state"); }
 						if (holdersFor(step.into, state.name).size() != 1) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no one holder of this state"); }
@@ -139,7 +139,7 @@ namespace xge
 			}
 			for (const RawObject& object : objects)
 			{
-				if (object.held && object.card.startHolder.empty())
+				if (object.held && object.item.startHolder.empty())
 				{
 					throw std::runtime_error("object '" + object.name + "': of a held class, but no state's <starts> sends it into a holder");
 				}
@@ -1405,7 +1405,7 @@ namespace xge
 		object.hand.team = rawObject.handTeam;
 		object.hand.holds = rawObject.handHolds;
 		object.held = rawObject.held;
-		object.card = rawObject.card;
+		object.item = rawObject.item;
 		object.takesTurns = rawObject.takesTurns;
 		object.turnsSprite = rawObject.turnsSprite;
 		object.ownsClass = rawObject.ownsClass;
@@ -2342,7 +2342,7 @@ namespace xge
 					key += "|" + sprite.flip;
 
 					// 2. Cut, once for every sprite of the same cell and size (a
-					// a pack's cards, a group's members), from the sheet's picture,
+					// a pack's items, a group's members), from the sheet's picture,
 					// opened once while the game loads.
 					drawn = drawOnce(key, [&]
 					{

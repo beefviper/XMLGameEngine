@@ -27,10 +27,10 @@ using played::Played;
 namespace
 {
 	// A held member's row or column in its pack, from 1.
-	int cardAxis(const xge::Object& card, const char* axis)
+	int cardAxis(const xge::Object& item, const char* axis)
 	{
-		const auto value = card.variable.find(axis);
-		return value == card.variable.end() ? 0 : static_cast<int>(value->second);
+		const auto value = item.variable.find(axis);
+		return value == item.variable.end() ? 0 : static_cast<int>(value->second);
 	}
 
 	struct Table : Played
@@ -43,8 +43,8 @@ namespace
 
 		Object& holder(const std::string& name) { return get(name); }
 		Object& hand() { return get("hand"); }
-		Object& card(int number) { return *game.cardAt(number); }
-		Object& top(const std::string& name) { return card(holder(name).holder.cards.back()); }
+		Object& item(int number) { return *game.itemAt(number); }
+		Object& top(const std::string& name) { return item(holder(name).holder.items.back()); }
 	};
 }
 
@@ -55,17 +55,17 @@ TEST_CASE("klondike.xml: the deal: a staircase of columns, their tops face up, t
 	for (int column = 1; column <= 7; ++column)
 	{
 		Object& holder = table.holder("columns." + std::to_string(column) + ".1");
-		REQUIRE(holder.holder.cards.size() == static_cast<std::size_t>(column));
+		REQUIRE(holder.holder.items.size() == static_cast<std::size_t>(column));
 		total += column;
-		for (std::size_t i = 0; i < holder.holder.cards.size(); ++i)
+		for (std::size_t i = 0; i < holder.holder.items.size(); ++i)
 		{
-			CHECK(table.card(holder.holder.cards[i]).faceUp == (i + 1 == holder.holder.cards.size()));
+			CHECK(table.item(holder.holder.items[i]).faceUp == (i + 1 == holder.holder.items.size()));
 		}
 		CHECK(table.top("columns." + std::to_string(column) + ".1").lookName() == "face");
 	}
 	CHECK(total == 28);
-	CHECK(table.holder("stock").holder.cards.size() == 24);
-	CHECK(table.holder("stock").cardCount == 24.0f);
+	CHECK(table.holder("stock").holder.items.size() == 24);
+	CHECK(table.holder("stock").itemCount == 24.0f);
 }
 
 namespace
@@ -85,7 +85,7 @@ namespace
 	{
 		for (Object& object : table.game.getCurrentObjects())
 		{
-			if (object.held && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
+			if (object.held && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return object.itemNumber; }
 		}
 		return 0;
 	}
@@ -95,27 +95,27 @@ namespace
 	{
 		for (Object& object : table.game.getCurrentObjects())
 		{
-			if (object.holder.is) { object.holder.cards.clear(); object.cardCount = 0.0f; }
+			if (object.holder.is) { object.holder.items.clear(); object.itemCount = 0.0f; }
 		}
-		for (const auto& [name, cards] : holders)
+		for (const auto& [name, items] : holders)
 		{
 			Object& holder = table.holder(name);
-			for (const auto& [suit, rank] : cards)
+			for (const auto& [suit, rank] : items)
 			{
 				const int number = cardOf(table, suit, rank);
-				table.game.turnCard(table.card(number), true);
-				holder.holder.cards.push_back(number);
+				table.game.turnItem(table.item(number), true);
+				holder.holder.items.push_back(number);
 			}
-			holder.cardCount = static_cast<float>(holder.holder.cards.size());
+			holder.itemCount = static_cast<float>(holder.holder.items.size());
 		}
-		table.game.layOutCards();
+		table.game.layOutItems();
 	}
 
 	void pointAt(Table& table, const std::string& holder, int at = -1)
 	{
 		Object& hand = table.hand();
 		hand.hand.holder = table.holder(holder).name;
-		hand.hand.at = at < 0 ? static_cast<int>(table.holder(holder).holder.cards.size()) - 1 : at;
+		hand.hand.at = at < 0 ? static_cast<int>(table.holder(holder).holder.items.size()) - 1 : at;
 		hand.hand.mouse = false;
 	}
 
@@ -128,31 +128,31 @@ namespace
 	std::string topOf(Table& table, const std::string& holder)
 	{
 		const Object& object = table.holder(holder);
-		if (object.holder.cards.empty()) { return ""; }
-		const Object& card = table.card(object.holder.cards.back());
-		return klondikeRanks[static_cast<std::size_t>(cardAxis(card, "column") - 1)] + " " + klondikeSuits[static_cast<std::size_t>(cardAxis(card, "row") - 1)];
+		if (object.holder.items.empty()) { return ""; }
+		const Object& item = table.item(object.holder.items.back());
+		return klondikeRanks[static_cast<std::size_t>(cardAxis(item, "column") - 1)] + " " + klondikeSuits[static_cast<std::size_t>(cardAxis(item, "row") - 1)];
 	}
 }
 
 TEST_CASE("klondike.xml: the stock deals to the waste face up, and empty, takes the waste back face down", "[cards]")
 {
 	Table table;
-	const int first = table.holder("stock").holder.cards.back();
+	const int first = table.holder("stock").holder.items.back();
 	pointAt(table, "stock");
 	space(table);
-	CHECK(table.holder("stock").holder.cards.size() == 23);
-	REQUIRE(table.holder("waste").holder.cards.size() == 1);
-	CHECK(table.holder("waste").holder.cards.back() == first);
-	CHECK(table.card(first).faceUp);
+	CHECK(table.holder("stock").holder.items.size() == 23);
+	REQUIRE(table.holder("waste").holder.items.size() == 1);
+	CHECK(table.holder("waste").holder.items.back() == first);
+	CHECK(table.item(first).faceUp);
 	CHECK(table.hand().lookName() == "free");
 	for (int i = 0; i < 23; ++i) { space(table); }
-	CHECK(table.holder("stock").holder.cards.empty());
-	CHECK(table.holder("waste").holder.cards.size() == 24);
+	CHECK(table.holder("stock").holder.items.empty());
+	CHECK(table.holder("waste").holder.items.size() == 24);
 	space(table);
-	CHECK(table.holder("waste").holder.cards.empty());
-	REQUIRE(table.holder("stock").holder.cards.size() == 24);
-	CHECK(table.holder("stock").holder.cards.back() == first);
-	CHECK_FALSE(table.card(first).faceUp);
+	CHECK(table.holder("waste").holder.items.empty());
+	REQUIRE(table.holder("stock").holder.items.size() == 24);
+	CHECK(table.holder("stock").holder.items.back() == first);
+	CHECK_FALSE(table.item(first).faceUp);
 }
 
 TEST_CASE("klondike.xml: a column takes a card one lower of the other colour, an empty one only a king", "[cards]")
@@ -162,12 +162,12 @@ TEST_CASE("klondike.xml: a column takes a card one lower of the other colour, an
 	pointAt(table, "waste");
 	space(table);
 	REQUIRE(table.hand().lookName() == "held");
-	CHECK(table.holder("waste").holder.cards.empty());
+	CHECK(table.holder("waste").holder.items.empty());
 	// Onto an empty column: refused, still held.
 	pointAt(table, "columns.3.1");
 	space(table);
 	CHECK(table.hand().lookName() == "held");
-	CHECK(table.holder("columns.3.1").holder.cards.empty());
+	CHECK(table.holder("columns.3.1").holder.items.empty());
 	pointAt(table, "columns.1.1");
 	space(table);
 	CHECK(table.hand().lookName() == "free");
@@ -211,7 +211,7 @@ TEST_CASE("klondike.xml: a foundation takes an ace, then the same suit up, one c
 	pointAt(table, "columns.1.1", 0);
 	table.tap(KeyCode::F);
 	table.frames(1);
-	CHECK(table.holder("columns.1.1").holder.cards.size() == 2);
+	CHECK(table.holder("columns.1.1").holder.items.size() == 2);
 	CHECK(table.hand().hand.held.empty());
 	CHECK(table.hand().lookName() == "free");
 	// Nor a run of two onto a foundation.
@@ -220,33 +220,33 @@ TEST_CASE("klondike.xml: a foundation takes an ace, then the same suit up, one c
 	table.tap(KeyCode::F);
 	table.frames(1);
 	CHECK(table.hand().hand.held.empty());
-	CHECK(table.holder("columns.1.1").holder.cards.size() == 2);
-	CHECK(table.holder("foundations.2.1").holder.cards.size() == 1);
+	CHECK(table.holder("columns.1.1").holder.items.size() == 2);
+	CHECK(table.holder("foundations.2.1").holder.items.size() == 1);
 }
 
 TEST_CASE("klondike.xml: a run moves together, and the face-down card under it turns up", "[cards]")
 {
 	Table table;
 	setUp(table, { { "columns.1.1", { { "clubs", "4" }, { "spades", "10" }, { "hearts", "9" }, { "clubs", "8" } } }, { "columns.2.1", { { "diamonds", "J" } } } });
-	table.game.turnCard(table.card(table.holder("columns.1.1").holder.cards[0]), false);
+	table.game.turnItem(table.item(table.holder("columns.1.1").holder.items[0]), false);
 	// The 10 and what is on it, onto the red jack.
 	pointAt(table, "columns.1.1", 1);
 	space(table);
 	REQUIRE(table.hand().hand.held.size() == 3);
 	pointAt(table, "columns.2.1");
 	space(table);
-	CHECK(table.holder("columns.2.1").holder.cards.size() == 4);
+	CHECK(table.holder("columns.2.1").holder.items.size() == 4);
 	CHECK(topOf(table, "columns.2.1") == "8 clubs");
-	CHECK(table.holder("columns.1.1").holder.cards.size() == 1);
+	CHECK(table.holder("columns.1.1").holder.items.size() == 1);
 	CHECK(table.top("columns.1.1").faceUp);
 	// A run that is not in order cannot be taken: a face-down card neither.
 	setUp(table, { { "columns.1.1", { { "clubs", "4" }, { "spades", "10" } } } });
-	table.game.turnCard(table.card(table.holder("columns.1.1").holder.cards[0]), false);
+	table.game.turnItem(table.item(table.holder("columns.1.1").holder.items[0]), false);
 	pointAt(table, "columns.1.1", 0);
 	table.tap(KeyCode::F);
 	table.frames(1);
 	CHECK(table.hand().hand.held.empty());
-	CHECK(table.holder("columns.1.1").holder.cards.size() == 2);
+	CHECK(table.holder("columns.1.1").holder.items.size() == 2);
 }
 
 TEST_CASE("klondike.xml: the hand goes along the rows and up and down a column's run", "[cards]")
@@ -293,8 +293,8 @@ TEST_CASE("klondike.xml: the mouse takes a card, drags it and lays it", "[cards]
 	REQUIRE(table.hand().hand.held.size() == 1);
 	// The card follows the pointer, held where it was taken.
 	mouse(300.0f, 400.0f);
-	CHECK(table.card(table.hand().hand.held.front()).position.x == 280.0f);
-	CHECK(table.card(table.hand().hand.held.front()).position.y == 370.0f);
+	CHECK(table.item(table.hand().hand.held.front()).position.x == 280.0f);
+	CHECK(table.item(table.hand().hand.held.front()).position.y == 370.0f);
 	const Vector2f column = table.top("columns.1.1").position;
 	mouse(column.x + 20.0f, column.y + 30.0f);
 	table.engine.handleKeyReleased(KeyCode::MouseLeft);
@@ -381,9 +381,9 @@ TEST_CASE("klondike.xml: all 52 home wins, and a new game deals again", "[cards]
 	table.tap(KeyCode::Space);
 	table.frames(2);
 	CHECK(table.state() == "title");
-	CHECK(table.holder("stock").holder.cards.size() == 24);
-	CHECK(table.holder("columns.7.1").holder.cards.size() == 7);
-	CHECK(table.holder("foundations.1.1").holder.cards.empty());
+	CHECK(table.holder("stock").holder.items.size() == 24);
+	CHECK(table.holder("columns.7.1").holder.items.size() == 7);
+	CHECK(table.holder("foundations.1.1").holder.items.empty());
 }
 
 namespace
@@ -439,15 +439,15 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 	// Klondike names them suit and rank: each card has all four, the same numbers.
 	{
 		Played play("descriptions/klondike.xml");
-		int cards = 0;
+		int items = 0;
 		for (const Object& object : play.game.getCurrentObjects())
 		{
 			if (!object.held) { continue; }
-			++cards;
+			++items;
 			CHECK(object.variable.at("row") == object.variable.at("suit"));
 			CHECK(object.variable.at("column") == object.variable.at("rank"));
 		}
-		CHECK(cards == 52);
+		CHECK(items == 52);
 	}
 	// Unnamed, they are row and column only, and a rule may say either.
 	{
@@ -538,7 +538,7 @@ TEST_CASE("a pack cut from a sheet: a face for each suit and rank, one back for 
 	Played hearts("descriptions/hearts.xml");
 	hearts.tap(KeyCode::Space);
 	hearts.frames(2);
-	Object& ace = *hearts.game.cardAt(1);
+	Object& ace = *hearts.game.itemAt(1);
 	REQUIRE(ace.looks.size() == 2);
 	const Bitmap& face = *ace.looks[0].bitmap;
 	REQUIRE(face.width == 96);
@@ -547,8 +547,8 @@ TEST_CASE("a pack cut from a sheet: a face for each suit and rank, one back for 
 	CHECK(face.solidAt(48, 70));               // the big spade
 	CHECK(face.rgba[(70 * 96 + 48) * 4] < 40);
 	CHECK(ace.looks[1].name == "back");
-	CHECK(ace.looks[1].bitmap == hearts.game.cardAt(52)->looks[1].bitmap);   // one back, shared
-	CHECK(ace.looks[0].bitmap != hearts.game.cardAt(14)->looks[0].bitmap);
+	CHECK(ace.looks[1].bitmap == hearts.game.itemAt(52)->looks[1].bitmap);   // one back, shared
+	CHECK(ace.looks[0].bitmap != hearts.game.itemAt(14)->looks[0].bitmap);
 }
 
 TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of cells as frames and faces", "[cards][sheets]")
@@ -589,14 +589,14 @@ TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces fro
 	hearts.tap(KeyCode::Space);
 	hearts.frames(2);
 	// Card 22 is the 9 of hearts in both: row 2, column 9.
-	Object& nine = table.card(cardOf(table, "hearts", "9"));
-	CHECK(nine.cardNumber == 22);
+	Object& nine = table.item(cardOf(table, "hearts", "9"));
+	CHECK(nine.itemNumber == 22);
 	CHECK(cardAxis(nine, "row") == 2);
 	CHECK(cardAxis(nine, "column") == 9);
-	CHECK((nine.looks[0].bitmap->rgba == hearts.game.cardAt(22)->looks[0].bitmap->rgba));
-	CHECK((nine.looks[1].bitmap->rgba == hearts.game.cardAt(22)->looks[1].bitmap->rgba));
+	CHECK((nine.looks[0].bitmap->rgba == hearts.game.itemAt(22)->looks[0].bitmap->rgba));
+	CHECK((nine.looks[1].bitmap->rgba == hearts.game.itemAt(22)->looks[1].bitmap->rgba));
 	CHECK(nine.variable.at("color") == 2.0f);
-	CHECK(table.card(cardOf(table, "clubs", "9")).variable.at("color") == 1.0f);
+	CHECK(table.item(cardOf(table, "clubs", "9")).variable.at("color") == 1.0f);
 }
 
 TEST_CASE("sheets: a cell off the grid and a sheet not there stop the load", "[cards][sheets]")
@@ -631,7 +631,7 @@ namespace
 		Object& holder(const std::string& name) { return get(name); }
 		Object& hand() { return get("you"); }
 		Object& computer() { return get("computer"); }
-		Object& card(int number) { return *game.cardAt(number); }
+		Object& item(int number) { return *game.itemAt(number); }
 		// 1 your turn, 2 the computer's, 3 yours to name a suit, 4 its.
 		float turn()
 		{
@@ -652,7 +652,7 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.held && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return object.cardNumber; }
+				if (object.held && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return object.itemNumber; }
 			}
 			return 0;
 		}
@@ -663,11 +663,11 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.holder.is) { object.holder.cards.clear(); object.cardCount = 0.0f; object.called = 0.0f; object.calling = 0.0f; }
+				if (object.holder.is) { object.holder.items.clear(); object.itemCount = 0.0f; object.called = 0.0f; object.calling = 0.0f; }
 			}
-			for (const auto& [name, cards] : holders)
+			for (const auto& [name, items] : holders)
 			{
-				for (const std::string& each : cards)
+				for (const std::string& each : items)
 				{
 					const auto space = each.find(' ');
 					game.putInHolder(holder(name), cardOf(each.substr(0, space), each.substr(space + 1)));
@@ -676,19 +676,19 @@ namespace
 			hand().hand.holder = holder("mine").name;
 			hand().hand.at = 0;
 			hand().hand.mouse = false;
-			game.layOutCards();
+			game.layOutItems();
 		}
 
-		std::string name(int number) { return klondikeRanks[static_cast<std::size_t>(cardAxis(card(number), "column") - 1)] + " " + klondikeSuits[static_cast<std::size_t>(cardAxis(card(number), "row") - 1)]; }
-		std::string top(const std::string& name) { return holder(name).holder.cards.empty() ? "" : this->name(holder(name).holder.cards.back()); }
+		std::string name(int number) { return klondikeRanks[static_cast<std::size_t>(cardAxis(item(number), "column") - 1)] + " " + klondikeSuits[static_cast<std::size_t>(cardAxis(item(number), "row") - 1)]; }
+		std::string top(const std::string& name) { return holder(name).holder.items.empty() ? "" : this->name(holder(name).holder.items.back()); }
 
 		// Points your hand at that card of yours.
 		void pointAt(const std::string& which)
 		{
-			const auto& cards = holder("mine").holder.cards;
-			for (std::size_t i = 0; i < cards.size(); ++i)
+			const auto& items = holder("mine").holder.items;
+			for (std::size_t i = 0; i < items.size(); ++i)
 			{
-				if (name(cards[i]) == which) { hand().hand.holder = holder("mine").name; hand().hand.at = static_cast<int>(i); }
+				if (name(items[i]) == which) { hand().hand.holder = holder("mine").name; hand().hand.at = static_cast<int>(i); }
 			}
 		}
 
@@ -709,18 +709,18 @@ namespace
 TEST_CASE("crazyeights.xml: the deal: seven each, yours face up in order, one turned up, the rest the stock", "[cards][eights]")
 {
 	Eights table;
-	const auto& mine = table.holder("mine").holder.cards;
+	const auto& mine = table.holder("mine").holder.items;
 	REQUIRE(mine.size() == 7);
 	for (std::size_t i = 0; i < mine.size(); ++i)
 	{
-		CHECK(table.card(mine[i]).faceUp);
-		if (i > 0) { CHECK(std::make_pair(cardAxis(table.card(mine[i - 1]), "row"), cardAxis(table.card(mine[i - 1]), "column")) < std::make_pair(cardAxis(table.card(mine[i]), "row"), cardAxis(table.card(mine[i]), "column"))); }
+		CHECK(table.item(mine[i]).faceUp);
+		if (i > 0) { CHECK(std::make_pair(cardAxis(table.item(mine[i - 1]), "row"), cardAxis(table.item(mine[i - 1]), "column")) < std::make_pair(cardAxis(table.item(mine[i]), "row"), cardAxis(table.item(mine[i]), "column"))); }
 	}
-	REQUIRE(table.holder("theirs").holder.cards.size() == 7);
-	for (const int number : table.holder("theirs").holder.cards) { CHECK_FALSE(table.card(number).faceUp); }
-	REQUIRE(table.holder("discard").holder.cards.size() == 1);
-	CHECK(table.card(table.holder("discard").holder.cards.back()).faceUp);
-	CHECK(table.holder("stock").holder.cards.size() == 37);
+	REQUIRE(table.holder("theirs").holder.items.size() == 7);
+	for (const int number : table.holder("theirs").holder.items) { CHECK_FALSE(table.item(number).faceUp); }
+	REQUIRE(table.holder("discard").holder.items.size() == 1);
+	CHECK(table.item(table.holder("discard").holder.items.back()).faceUp);
+	CHECK(table.holder("stock").holder.items.size() == 37);
 	CHECK(table.hand().hand.holder == table.holder("mine").name);
 	CHECK(table.turn() == 1.0f);
 	CHECK(table.hand().lookName() == "free");
@@ -741,8 +741,8 @@ TEST_CASE("crazyeights.xml: keys reach only the player on its turn, and never th
 	table.engine.handleKeyReleased(KeyCode::Space);
 	table.engine.handleKeyPressed(KeyCode::D);
 	table.engine.handleKeyReleased(KeyCode::D);
-	CHECK(table.holder("theirs").holder.cards.size() == 2);
-	CHECK(table.holder("mine").holder.cards.size() == 2);
+	CHECK(table.holder("theirs").holder.items.size() == 2);
+	CHECK(table.holder("mine").holder.items.size() == 2);
 	CHECK(table.hand().hand.at == 1);
 	CHECK(table.computer().hand.at == 0);
 	CHECK(table.get("whoseturn").textPieces.front().shown == "the computer is playing");
@@ -755,14 +755,14 @@ TEST_CASE("crazyeights.xml: a card goes on the holder by suit or rank; one that 
 	table.pointAt("K clubs");
 	table.space();
 	CHECK(table.top("discard") == "5 hearts");
-	CHECK(table.holder("mine").holder.cards.size() == 4);
+	CHECK(table.holder("mine").holder.items.size() == 4);
 	CHECK(table.hand().hand.held.empty());
 	CHECK(table.turn() == 1.0f);
 
 	table.pointAt("5 spades");
 	table.space();
 	CHECK(table.top("discard") == "5 spades");
-	CHECK(table.holder("mine").holder.cards.size() == 3);
+	CHECK(table.holder("mine").holder.items.size() == 3);
 	CHECK(table.turn() == 2.0f);
 	// Your hand still points into your own cards.
 	CHECK(table.hand().hand.holder == table.holder("mine").name);
@@ -786,14 +786,14 @@ TEST_CASE("crazyeights.xml: an eight goes on anything, you name a suit, and the 
 	CHECK(table.holder("discard").called == 1.0f);
 	CHECK(table.holder("discard").calling == 0.0f);
 	CHECK(table.turn() == 2.0f);
-	CHECK(table.holder("mine").holder.cards.size() == 2);
+	CHECK(table.holder("mine").holder.items.size() == 2);
 	table.frames(1);
 	CHECK(table.get("called").textPieces.front().shown == "spades");
 
 	// It plays its spade, not its eight.
 	table.untilYourTurn();
 	CHECK(table.top("discard") == "3 spades");
-	CHECK(table.holder("theirs").holder.cards.size() == 3);
+	CHECK(table.holder("theirs").holder.items.size() == 3);
 	CHECK(table.holder("discard").called == 0.0f);
 	CHECK(table.hand().lookName() == "free");
 }
@@ -807,8 +807,8 @@ TEST_CASE("crazyeights.xml: the computer draws until it can play, and names the 
 	table.untilYourTurn();
 	// Drawn: the 9 and 4 of diamonds, then the 8 of clubs, which it plays and names diamonds.
 	CHECK(table.top("discard") == "8 clubs");
-	CHECK(table.holder("theirs").holder.cards.size() == 3);
-	CHECK(table.holder("stock").holder.cards.empty());
+	CHECK(table.holder("theirs").holder.items.size() == 3);
+	CHECK(table.holder("stock").holder.items.empty());
 	CHECK(table.holder("discard").called == 4.0f);
 	CHECK(table.turn() == 1.0f);
 }
@@ -821,13 +821,13 @@ TEST_CASE("crazyeights.xml: drawn from empty, the stock takes the discard holder
 	table.hand().hand.at = -1;
 	table.space();
 	CHECK(table.top("discard") == "7 hearts");
-	CHECK(table.holder("discard").holder.cards.size() == 1);
-	REQUIRE(table.holder("stock").holder.cards.size() == 2);
-	for (const int number : table.holder("stock").holder.cards) { CHECK_FALSE(table.card(number).faceUp); }
+	CHECK(table.holder("discard").holder.items.size() == 1);
+	REQUIRE(table.holder("stock").holder.items.size() == 2);
+	for (const int number : table.holder("stock").holder.items) { CHECK_FALSE(table.item(number).faceUp); }
 	// Then a draw into your hand, which stays your turn.
 	table.space();
-	CHECK(table.holder("mine").holder.cards.size() == 2);
-	CHECK(table.holder("stock").holder.cards.size() == 1);
+	CHECK(table.holder("mine").holder.items.size() == 2);
+	CHECK(table.holder("stock").holder.items.size() == 1);
 	CHECK(table.turn() == 1.0f);
 }
 
@@ -838,7 +838,7 @@ TEST_CASE("crazyeights.xml: a long hand squeezes into its width; your last card 
 	for (const char* rank : { "A", "2", "3", "4", "5", "6", "7", "9", "10", "J", "Q", "K" }) { many.push_back(std::string(rank) + " spades"); }
 	for (const char* rank : { "A", "2", "3", "4", "5", "6", "7", "9" }) { many.push_back(std::string(rank) + " clubs"); }
 	table.setUp({ { "discard", { "5 hearts" } }, { "mine", many }, { "theirs", { "K hearts" } } });
-	const Object& last = table.card(table.holder("mine").holder.cards.back());
+	const Object& last = table.item(table.holder("mine").holder.items.back());
 	CHECK(last.position.x + 96.0f <= 56.0f + 768.0f + 0.5f);
 	CHECK(last.position.x + 96.0f >= 56.0f + 768.0f - 0.5f);
 
@@ -862,7 +862,7 @@ TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first
 		REQUIRE(table.turn() == 1.0f);
 		// The first card of yours that goes, else a draw; after an eight, your first card's suit.
 		bool played = false;
-		for (std::size_t i = 0; i < table.holder("mine").holder.cards.size() && !played; ++i)
+		for (std::size_t i = 0; i < table.holder("mine").holder.items.size() && !played; ++i)
 		{
 			table.hand().hand.holder = table.holder("mine").name;
 			table.hand().hand.at = static_cast<int>(i);
@@ -890,7 +890,7 @@ TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first
 	}
 	CHECK(table.state() == "over");
 	CHECK(turns < most);
-	CHECK(table.holder("mine").holder.cards.size() + table.holder("theirs").holder.cards.size() + table.holder("stock").holder.cards.size() + table.holder("discard").holder.cards.size() == 52);
+	CHECK(table.holder("mine").holder.items.size() + table.holder("theirs").holder.items.size() + table.holder("stock").holder.items.size() + table.holder("discard").holder.items.size() == 52);
 }
 
 namespace
@@ -916,7 +916,7 @@ namespace
 			const int column = static_cast<int>(std::find(ranks.begin(), ranks.end(), rank) - ranks.begin()) + 1;
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.held && cardAxis(object, "row") == row && cardAxis(object, "column") == column) { return object.cardNumber; }
+				if (object.held && cardAxis(object, "row") == row && cardAxis(object, "column") == column) { return object.itemNumber; }
 			}
 			return 0;
 		}
@@ -924,13 +924,13 @@ namespace
 		// The stock stacked so these come off it in this order (as "A hearts").
 		void stack(const std::vector<std::string>& next)
 		{
-			auto& cards = holder("stock").holder.cards;
+			auto& items = holder("stock").holder.items;
 			for (auto each = next.rbegin(); each != next.rend(); ++each)
 			{
 				const auto space = each->find(' ');
 				const int number = cardOf(each->substr(0, space), each->substr(space + 1));
-				cards.erase(std::find(cards.begin(), cards.end(), number));
-				cards.push_back(number);
+				items.erase(std::find(items.begin(), items.end(), number));
+				items.push_back(number);
 			}
 		}
 
@@ -957,7 +957,7 @@ TEST_CASE("blackjack.xml: points count face-up cards, an ace 11 while within 21,
 	CHECK(play.table("bank") == 190.0f);
 	CHECK(play.holder("player").points == 17.0f);
 	CHECK(play.holder("dealer").points == 9.0f);
-	CHECK(play.holder("dealer").cardCount == 2.0f);
+	CHECK(play.holder("dealer").itemCount == 2.0f);
 	CHECK(play.get("dealerpoints").picture.text == "dealer 9");
 
 	// A 9: the ace counts 1 now.
@@ -975,15 +975,15 @@ TEST_CASE("blackjack.xml: the dealer draws to 17, and the nearer to 21 wins", "[
 	play.press(KeyCode::Space);
 	play.press(KeyCode::S);
 	play.untilDone();
-	CHECK(play.holder("dealer").holder.cards.size() == 4);
+	CHECK(play.holder("dealer").holder.items.size() == 4);
 	CHECK(play.holder("dealer").points == 18.0f);
 	CHECK(play.get("result").lookName() == "win");
 	CHECK(play.table("bank") == 210.0f);
 
 	// The next hand clears the table.
 	play.press(KeyCode::Space);
-	CHECK(play.holder("player").holder.cards.empty());
-	CHECK(play.holder("stock").holder.cards.size() == 52);
+	CHECK(play.holder("player").holder.items.empty());
+	CHECK(play.holder("stock").holder.items.size() == 52);
 	CHECK(play.get("table").lookName() == "betting");
 }
 
@@ -998,7 +998,7 @@ TEST_CASE("blackjack.xml: over 21 is bust; blackjack pays three to two", "[cards
 	CHECK(play.get("result").lookName() == "bust");
 	CHECK(play.table("bank") == 190.0f);
 	// The dealer's hidden card shows.
-	for (const int number : play.holder("dealer").holder.cards) { CHECK(play.game.cardAt(number)->faceUp); }
+	for (const int number : play.holder("dealer").holder.items) { CHECK(play.game.itemAt(number)->faceUp); }
 
 	play.press(KeyCode::Space);
 	play.stack({ "A hearts", "6 spades", "K clubs", "5 diamonds" });
@@ -1039,14 +1039,14 @@ namespace
 		const int row = numberOf(packSuits, name.substr(space + 1));
 		for (Object& object : game.getCurrentObjects())
 		{
-			if (object.held && cardAxis(object, "column") == column && cardAxis(object, "row") == row) { return object.cardNumber; }
+			if (object.held && cardAxis(object, "column") == column && cardAxis(object, "row") == row) { return object.itemNumber; }
 		}
 		return 0;
 	}
 
-	std::string nameOf(const Object& card)
+	std::string nameOf(const Object& item)
 	{
-		return packRanks[static_cast<std::size_t>(cardAxis(card, "column") - 1)] + " " + packSuits[static_cast<std::size_t>(cardAxis(card, "row") - 1)];
+		return packRanks[static_cast<std::size_t>(cardAxis(item, "column") - 1)] + " " + packSuits[static_cast<std::size_t>(cardAxis(item, "row") - 1)];
 	}
 }
 
@@ -1074,20 +1074,20 @@ namespace
 		// the computer's, yours, the computer's, then the board.
 		void stack(const std::vector<std::string>& next)
 		{
-			auto& cards = holder("stock").holder.cards;
+			auto& items = holder("stock").holder.items;
 			for (auto each = next.rbegin(); each != next.rend(); ++each)
 			{
 				const int number = cardOf(*each);
-				cards.erase(std::find(cards.begin(), cards.end(), number));
-				cards.push_back(number);
+				items.erase(std::find(items.begin(), items.end(), number));
+				items.push_back(number);
 			}
 		}
 
 		// Seven cards (as "A hearts"): two in yours, the rest on the board, scored.
 		void lay(const std::vector<std::string>& seven)
 		{
-			auto& yours = holder("yours").holder.cards;
-			auto& board = holder("board").holder.cards;
+			auto& yours = holder("yours").holder.items;
+			auto& board = holder("board").holder.items;
 			yours.clear();
 			board.clear();
 			for (std::size_t i = 0; i < seven.size(); ++i) { (i < 2 ? yours : board).push_back(cardOf(seven[i])); }
@@ -1185,9 +1185,9 @@ TEST_CASE("holdem.xml: the deal antes five each; checked through, the better han
 	play.deal({ "A hearts", "2 clubs", "K hearts", "7 diamonds", "Q hearts", "J hearts", "10 hearts", "3 spades", "4 clubs" });
 	CHECK(play.table("pot") == 10.0f);
 	CHECK(play.chips("you") == 495.0f);
-	CHECK(play.holder("yours").holder.cards.size() == 2);
-	CHECK(play.holder("theirs").holder.cards.size() == 2);
-	for (const int number : play.holder("theirs").holder.cards) { CHECK_FALSE(play.game.cardAt(number)->faceUp); }
+	CHECK(play.holder("yours").holder.items.size() == 2);
+	CHECK(play.holder("theirs").holder.items.size() == 2);
+	for (const int number : play.holder("theirs").holder.items) { CHECK_FALSE(play.game.itemAt(number)->faceUp); }
 	CHECK(play.get("you").lookName() == "act");
 
 	// You check each round; the computer, with little, checks too.
@@ -1196,12 +1196,12 @@ TEST_CASE("holdem.xml: the deal antes five each; checked through, the better han
 		play.press(KeyCode::Space);
 		play.untilYou();
 	}
-	CHECK(play.holder("board").holder.cards.size() == 5);
+	CHECK(play.holder("board").holder.items.size() == 5);
 	CHECK(play.holder("yours").pattern == 8.0f);
 	CHECK(play.get("result").lookName() == "youwin");
 	CHECK(play.chips("you") == 505.0f);
 	CHECK(play.chips("cpu") == 495.0f);
-	for (const int number : play.holder("theirs").holder.cards) { CHECK(play.game.cardAt(number)->faceUp); }
+	for (const int number : play.holder("theirs").holder.items) { CHECK(play.game.itemAt(number)->faceUp); }
 	CHECK(play.get("you").lookName() == "done");
 }
 
@@ -1299,11 +1299,11 @@ namespace
 		for (std::size_t round = 0;; ++round)
 		{
 			bool any = false;
-			for (const auto& cards : holders)
+			for (const auto& items : holders)
 			{
-				if (round < cards.size())
+				if (round < items.size())
 				{
-					order.push_back(table.cardOf(cards[round]));
+					order.push_back(table.cardOf(items[round]));
 					any = true;
 				}
 			}
@@ -1361,7 +1361,7 @@ namespace
 		// Your hand pointed at that card (as "Q spades"), and Space.
 		bool play(const std::string& name)
 		{
-			const auto& mine = holder("mine").holder.cards;
+			const auto& mine = holder("mine").holder.items;
 			const auto at = std::find(mine.begin(), mine.end(), cardOf(name));
 			if (at == mine.end()) { return false; }
 			Object& hand = get("you");
@@ -1369,7 +1369,7 @@ namespace
 			hand.hand.at = static_cast<int>(at - mine.begin());
 			tap(KeyCode::Space);
 			frames(1);
-			return std::find(holder("trick").holder.cards.begin(), holder("trick").holder.cards.end(), cardOf(name)) != holder("trick").holder.cards.end();
+			return std::find(holder("trick").holder.items.begin(), holder("trick").holder.items.end(), cardOf(name)) != holder("trick").holder.items.end();
 		}
 
 		// Frames until it is your turn to play, or the hand is over.
@@ -1413,9 +1413,9 @@ namespace
 
 	std::vector<std::string> suitOf(const std::string& suit, std::initializer_list<const char*> ranks)
 	{
-		std::vector<std::string> cards;
-		for (const char* rank : ranks) { cards.push_back(std::string(rank) + " " + suit); }
-		return cards;
+		std::vector<std::string> items;
+		for (const char* rank : ranks) { items.push_back(std::string(rank) + " " + suit); }
+		return items;
 	}
 
 	std::vector<std::string> joined(std::vector<std::string> a, const std::vector<std::string>& b)
@@ -1428,14 +1428,14 @@ namespace
 TEST_CASE("hearts.xml: the deal: thirteen each, yours face up in suit order, the ace last", "[cards][hearts]")
 {
 	Hearts play;
-	for (const char* name : { "mine", "westcards", "northcards", "eastcards" }) { CHECK(play.holder(name).holder.cards.size() == 13); }
-	CHECK(play.holder("stock").holder.cards.empty());
-	const auto& mine = play.holder("mine").holder.cards;
+	for (const char* name : { "mine", "westcards", "northcards", "eastcards" }) { CHECK(play.holder(name).holder.items.size() == 13); }
+	CHECK(play.holder("stock").holder.items.empty());
+	const auto& mine = play.holder("mine").holder.items;
 	for (std::size_t i = 1; i < mine.size(); ++i)
 	{
-		const Object& before = *play.game.cardAt(mine[i - 1]);
-		const Object& after = *play.game.cardAt(mine[i]);
-		CHECK(std::make_pair(cardAxis(before, "row"), before.card.worths.back()) < std::make_pair(cardAxis(after, "row"), after.card.worths.back()));
+		const Object& before = *play.game.itemAt(mine[i - 1]);
+		const Object& after = *play.game.itemAt(mine[i]);
+		CHECK(std::make_pair(cardAxis(before, "row"), before.item.worths.back()) < std::make_pair(cardAxis(after, "row"), after.item.worths.back()));
 		CHECK(after.faceUp);
 	}
 	CHECK(play.turn() == 1.0f);
@@ -1456,7 +1456,7 @@ TEST_CASE("hearts.xml: the suit led is followed; hearts lead only once broken, o
 	REQUIRE(play.turn() == 1.0f);
 	// Hearts are not broken: no heart leads.
 	CHECK_FALSE(play.play("A hearts"));
-	CHECK(play.holder("mine").holder.cards.size() == 13);
+	CHECK(play.holder("mine").holder.items.size() == 13);
 	CHECK(play.play("2 clubs"));
 	CHECK(play.holder("trick").lead == 3.0f);
 
@@ -1467,10 +1467,10 @@ TEST_CASE("hearts.xml: the suit led is followed; hearts lead only once broken, o
 	CHECK(play.table("tricks") == 1.0f);
 	// A heart has been laid: hearts are broken.
 	const auto& broken = play.holder("trick").holder.broken;
-	CHECK(std::find(broken.begin(), broken.end(), cardAxis(*play.game.cardAt(play.cardOf("A hearts")), "row")) != broken.end());
+	CHECK(std::find(broken.begin(), broken.end(), cardAxis(*play.game.itemAt(play.cardOf("A hearts")), "row")) != broken.end());
 	// West led again (its diamond), north shed another heart, east followed;
 	// you have no diamond, so anything goes.
-	CHECK(play.holder("trick").holder.cards.size() == 3);
+	CHECK(play.holder("trick").holder.items.size() == 3);
 	CHECK(play.play("A hearts"));
 }
 
@@ -1485,7 +1485,7 @@ TEST_CASE("hearts.xml: a card not of the suit led is refused while you hold one"
 		suitOf("spades", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
 	}, 2);
 	play.untilYou();
-	REQUIRE(play.holder("trick").holder.cards.size() == 3);
+	REQUIRE(play.holder("trick").holder.items.size() == 3);
 	CHECK(play.holder("trick").lead == 3.0f);
 	CHECK_FALSE(play.play("5 diamonds"));
 	CHECK(play.get("you").lookName() == "free");
@@ -1493,7 +1493,7 @@ TEST_CASE("hearts.xml: a card not of the suit led is refused while you hold one"
 	// Yours is the highest club: you take it, with north's heart and east's queen of spades.
 	play.untilYou();
 	CHECK(play.of("you", "got") == 14.0f);
-	CHECK(play.holder("stock").holder.cards.size() == 4);
+	CHECK(play.holder("stock").holder.items.size() == 4);
 	CHECK(play.turn() == 1.0f);
 }
 
@@ -1560,11 +1560,11 @@ TEST_CASE("hearts.xml: a whole hand, you playing the first card that goes: 26 po
 		play.untilYou();
 		if (play.look() == "done") { break; }
 		bool played = false;
-		const std::vector<int> mine = play.holder("mine").holder.cards;
+		const std::vector<int> mine = play.holder("mine").holder.items;
 		for (const int number : mine)
 		{
-			const Object& card = *play.game.cardAt(number);
-			if (play.play(nameOf(card)))
+			const Object& item = *play.game.itemAt(number);
+			if (play.play(nameOf(item)))
 			{
 				played = true;
 				break;
@@ -1577,14 +1577,14 @@ TEST_CASE("hearts.xml: a whole hand, you playing the first card that goes: 26 po
 	REQUIRE(play.look() == "done");
 	const float total = play.of("you", "score") + play.of("west", "score") + play.of("north", "score") + play.of("east", "score");
 	CHECK((total == 26.0f || total == 78.0f));
-	CHECK(play.holder("stock").holder.cards.size() == 52);
+	CHECK(play.holder("stock").holder.items.size() == 52);
 
 	// Space deals again; the next to lead is west.
 	play.frames(2);
 	play.tap(KeyCode::Space);
 	for (int i = 0; i < 100 && play.look() != "playing"; ++i) { play.frames(1); }
 	play.frames(1);
-	CHECK(play.holder("mine").holder.cards.size() == 13);
+	CHECK(play.holder("mine").holder.items.size() == 13);
 	CHECK(play.turn() == 2.0f);
 }
 
@@ -1639,10 +1639,10 @@ TEST_CASE("spades.xml: spades lead only once broken; a spade takes a trick of an
 	}, 2);
 	// West leads its ace of clubs; north sheds a heart, east lets its partner's ace stand.
 	play.untilYou();
-	REQUIRE(play.holder("trick").holder.cards.size() == 3);
+	REQUIRE(play.holder("trick").holder.items.size() == 3);
 	CHECK(play.holder("trick").winner == 2.0f);
-	CHECK(play.holder("eastcards").holder.cards.size() == 12);
-	CHECK(std::find(play.holder("eastcards").holder.cards.begin(), play.holder("eastcards").holder.cards.end(), play.cardOf("A diamonds")) == play.holder("eastcards").holder.cards.end());
+	CHECK(play.holder("eastcards").holder.items.size() == 12);
+	CHECK(std::find(play.holder("eastcards").holder.items.begin(), play.holder("eastcards").holder.items.end(), play.cardOf("A diamonds")) == play.holder("eastcards").holder.items.end());
 	// No club: your two of spades trumps the ace.
 	CHECK(play.play("2 spades"));
 	CHECK(play.holder("trick").winner == 1.0f);
@@ -1676,7 +1676,7 @@ TEST_CASE("spades.xml: a partner's winning ace stands: north plays low under it"
 	CHECK(play.play("A hearts"));
 	play.untilYou();
 	CHECK(play.of("you", "won") == 1.0f);
-	const auto& north = play.holder("northcards").holder.cards;
+	const auto& north = play.holder("northcards").holder.items;
 	CHECK(std::find(north.begin(), north.end(), play.cardOf("K hearts")) != north.end());
 	CHECK(std::find(north.begin(), north.end(), play.cardOf("2 hearts")) == north.end());
 }
@@ -1728,11 +1728,11 @@ TEST_CASE("spades.xml: a whole hand, you playing the first card that goes: 13 tr
 		play.untilYou();
 		if (play.look() == "done") { break; }
 		bool played = false;
-		const std::vector<int> mine = play.holder("mine").holder.cards;
+		const std::vector<int> mine = play.holder("mine").holder.items;
 		for (const int number : mine)
 		{
-			const Object& card = *play.game.cardAt(number);
-			if (play.play(nameOf(card)))
+			const Object& item = *play.game.itemAt(number);
+			if (play.play(nameOf(item)))
 			{
 				played = true;
 				break;
@@ -1746,7 +1746,7 @@ TEST_CASE("spades.xml: a whole hand, you playing the first card that goes: 13 tr
 	CHECK(play.of("you", "won") + play.of("north", "won") + play.of("west", "won") + play.of("east", "won") == 13.0f);
 	CHECK(play.table("us") != 0.0f);
 	CHECK(play.table("them") != 0.0f);
-	CHECK(play.holder("stock").holder.cards.size() == 52);
+	CHECK(play.holder("stock").holder.items.size() == 52);
 }
 
 namespace
@@ -1762,9 +1762,9 @@ namespace
 			// Dealt a card a round to you and north, then one turned up.
 			const auto part = [&](std::size_t from, std::size_t count)
 			{
-				std::vector<std::string> cards;
-				for (std::size_t i = from; i < std::min(from + count, top.size()); ++i) { cards.push_back(top[i]); }
-				return cards;
+				std::vector<std::string> items;
+				for (std::size_t i = from; i < std::min(from + count, top.size()); ++i) { items.push_back(top[i]); }
+				return items;
 			};
 			game.stackedStart = roundRobin(*this, { part(0, 10), part(10, 10) });
 			const std::vector<int> turned = roundRobin(*this, { part(20, 1) });
@@ -1782,10 +1782,10 @@ namespace
 
 		int cardOf(const std::string& name) { return cardNamed(game, name); }
 
-		bool holds(const std::string& pileName, const std::string& card)
+		bool holds(const std::string& pileName, const std::string& item)
 		{
-			const auto& cards = holder(pileName).holder.cards;
-			return std::find(cards.begin(), cards.end(), cardOf(card)) != cards.end();
+			const auto& items = holder(pileName).holder.items;
+			return std::find(items.begin(), items.end(), cardOf(item)) != items.end();
 		}
 
 		// The hand at the top of the discard holder, and Space.
@@ -1793,7 +1793,7 @@ namespace
 		{
 			Object& hand = get("you");
 			hand.hand.holder = "playing.discard";
-			hand.hand.at = static_cast<int>(holder("discard").holder.cards.size()) - 1;
+			hand.hand.at = static_cast<int>(holder("discard").holder.items.size()) - 1;
 			tap(KeyCode::Space);
 			frames(2);
 		}
@@ -1801,7 +1801,7 @@ namespace
 		// The hand at that card of yours, and the key.
 		void discard(const std::string& name, KeyCode key)
 		{
-			const auto& mine = holder("mine").holder.cards;
+			const auto& mine = holder("mine").holder.items;
 			Object& hand = get("you");
 			hand.hand.holder = "playing.mine";
 			hand.hand.at = static_cast<int>(std::find(mine.begin(), mine.end(), cardOf(name)) - mine.begin());
@@ -1828,10 +1828,10 @@ TEST_CASE("gin.xml: cards laid out in the melds that leave the least deadwood, t
 	CHECK(play.holder("mine").deadwood == 14.0f);
 	CHECK(play.holder("northcards").deadwood == 58.0f);
 	// Melds first, then the deadwood.
-	const auto& mine = play.holder("mine").holder.cards;
+	const auto& mine = play.holder("mine").holder.items;
 	REQUIRE(mine.size() == 10);
 	std::vector<std::string> last;
-	for (std::size_t i = 6; i < 10; ++i) { last.push_back(nameOf(*play.game.cardAt(mine[i]))); }
+	for (std::size_t i = 6; i < 10; ++i) { last.push_back(nameOf(*play.game.itemAt(mine[i]))); }
 	CHECK(std::find(last.begin(), last.end(), "5 hearts") != last.end());
 	CHECK(std::find(last.begin(), last.end(), "A diamonds") != last.end());
 	CHECK(std::find(last.begin(), last.end(), "7 hearts") == last.end());
@@ -1842,7 +1842,7 @@ TEST_CASE("gin.xml: a draw from the discard holder, then a discard; the deadwood
 	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "2 spades" } }));
 	CHECK(play.holder("mine").deadwood == 10.0f);
 	play.drawDiscard();
-	CHECK(play.holder("mine").holder.cards.size() == 11);
+	CHECK(play.holder("mine").holder.items.size() == 11);
 	CHECK(play.look() == "discarding");
 	CHECK(play.holder("mine").deadwood == 2.0f);
 	CHECK(play.get("you").lookName() == "discard");
@@ -1855,13 +1855,13 @@ TEST_CASE("gin.xml: before the draw, Space on a card of your own does nothing", 
 {
 	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "2 spades" } }));
 	play.discard("K diamonds", KeyCode::Space);
-	CHECK(play.holder("mine").holder.cards.size() == 10);
+	CHECK(play.holder("mine").holder.items.size() == 10);
 	CHECK(play.holds("mine", "K diamonds"));
 	CHECK(play.get("you").hand.held.empty());
 	CHECK(play.look() == "drawing");
 	CHECK(play.get("you").lookName() == "draw");
 	play.drawDiscard();
-	CHECK(play.holder("mine").holder.cards.size() == 11);
+	CHECK(play.holder("mine").holder.items.size() == 11);
 	CHECK(play.get("you").lookName() == "discard");
 }
 
@@ -1874,7 +1874,7 @@ TEST_CASE("gin.xml: a knock with ten or less scores the difference, north's card
 	CHECK(play.look() == "done");
 	CHECK(play.of("you", "score") == 56.0f);
 	CHECK(play.get("message").lookName() == "youknock");
-	for (const int number : play.holder("northcards").holder.cards) { CHECK(play.game.cardAt(number)->faceUp); }
+	for (const int number : play.holder("northcards").holder.items) { CHECK(play.game.itemAt(number)->faceUp); }
 }
 
 TEST_CASE("gin.xml: gin scores 25 more", "[cards][gin]")
@@ -1920,7 +1920,7 @@ TEST_CASE("gin.xml: north draws a discard that melds, and lets go of what melds 
 	for (int i = 0; i < 600 && play.of("you", "turn") != 1.0f; ++i) { play.frames(1); }
 	REQUIRE(play.of("you", "turn") == 1.0f);
 	CHECK(play.holds("northcards", "6 diamonds"));
-	CHECK(play.holder("northcards").holder.cards.size() == 10);
+	CHECK(play.holder("northcards").holder.items.size() == 10);
 	CHECK(play.holder("northcards").deadwood == 37.0f);
 }
 
@@ -1931,7 +1931,7 @@ TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[c
 		suitOf("spades", { "A", "2", "3" }), suitOf("diamonds", { "4", "5", "6" }), { "9 clubs", "9 hearts", "9 spades", "K spades" }, { "Q diamonds" } }));
 	REQUIRE(play.holder("northcards").deadwood == 10.0f);
 	// North's draw from the stock melds nowhere, so it cannot go gin.
-	auto& stock = play.holder("stock").holder.cards;
+	auto& stock = play.holder("stock").holder.items;
 	const int king = play.cardOf("K hearts");
 	stock.erase(std::find(stock.begin(), stock.end(), king));
 	stock.push_back(king);
@@ -1943,7 +1943,7 @@ TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[c
 	CHECK(play.of("north", "score") == play.holder("mine").deadwood - play.holder("northcards").deadwood);
 	CHECK(play.of("you", "turn") == 0.0f);
 	CHECK(play.of("north", "turn") == 0.0f);
-	for (const int number : play.holder("northcards").holder.cards) { CHECK(play.game.cardAt(number)->faceUp); }
+	for (const int number : play.holder("northcards").holder.items) { CHECK(play.game.itemAt(number)->faceUp); }
 }
 
 TEST_CASE("gin.xml: at 100 after a hand the higher score wins", "[cards][gin]")
@@ -1975,39 +1975,39 @@ namespace
 		void put(const std::string& name, const std::string& onto)
 		{
 			const int number = cardOf(name);
-			auto& target = holder(onto).holder.cards;
+			auto& target = holder(onto).holder.items;
 			for (Object& object : game.getCurrentObjects())
 			{
 				if (!object.holder.is) { continue; }
-				const auto at = std::find(object.holder.cards.begin(), object.holder.cards.end(), number);
-				if (at == object.holder.cards.end()) { continue; }
-				if (&object.holder.cards == &target)
+				const auto at = std::find(object.holder.items.begin(), object.holder.items.end(), number);
+				if (at == object.holder.items.end()) { continue; }
+				if (&object.holder.items == &target)
 				{
 					std::iter_swap(at, target.end() - 1);
 					break;
 				}
-				Object& moved = *game.cardAt(number);
-				Object& other = *game.cardAt(target.back());
+				Object& moved = *game.itemAt(number);
+				Object& other = *game.itemAt(target.back());
 				const bool up = other.faceUp;
-				game.turnCard(other, moved.faceUp);
-				game.turnCard(moved, up);
+				game.turnItem(other, moved.faceUp);
+				game.turnItem(moved, up);
 				*at = target.back();
 				target.back() = number;
 			}
-			game.layOutCards();
+			game.layOutItems();
 		}
 
 		bool holds(const std::string& pileName, const std::string& name)
 		{
-			const auto& cards = holder(pileName).holder.cards;
-			return std::find(cards.begin(), cards.end(), cardOf(name)) != cards.end();
+			const auto& items = holder(pileName).holder.items;
+			return std::find(items.begin(), items.end(), cardOf(name)) != items.end();
 		}
 
 		void space(const std::string& at)
 		{
 			Object& hand = get("hand");
 			hand.hand.holder = holder(at).name;
-			hand.hand.at = static_cast<int>(holder(at).holder.cards.size()) - 1;
+			hand.hand.at = static_cast<int>(holder(at).holder.items.size()) - 1;
 			hand.hand.mouse = false;
 			tap(KeyCode::Space);
 			frames(1);
@@ -2023,13 +2023,13 @@ TEST_CASE("pyramid.xml: 28 cards in seven rows, 24 in the stock", "[cards][pyram
 	{
 		for (int column = 1; column <= row; ++column)
 		{
-			const auto& cards = play.holder("row" + std::to_string(row) + "." + std::to_string(column) + ".1").holder.cards;
-			CHECK(cards.size() == 1);
-			dealt += static_cast<int>(cards.size());
+			const auto& items = play.holder("row" + std::to_string(row) + "." + std::to_string(column) + ".1").holder.items;
+			CHECK(items.size() == 1);
+			dealt += static_cast<int>(items.size());
 		}
 	}
 	CHECK(dealt == 28);
-	CHECK(play.holder("stock").holder.cards.size() == 24);
+	CHECK(play.holder("stock").holder.items.size() == 24);
 }
 
 TEST_CASE("pyramid.xml: a covered card cannot be taken; a king goes alone", "[cards][pyramid]")
@@ -2042,7 +2042,7 @@ TEST_CASE("pyramid.xml: a covered card cannot be taken; a king goes alone", "[ca
 	play.put("K hearts", "row7.4.1");
 	play.space("row7.4.1");
 	CHECK(play.holds("pairs", "K hearts"));
-	CHECK(play.holder("row7.4.1").holder.cards.empty());
+	CHECK(play.holder("row7.4.1").holder.items.empty());
 	CHECK(play.get("hand").lookName() == "free");
 }
 
@@ -2096,8 +2096,8 @@ TEST_CASE("pyramid.xml: the pyramid cleared wins", "[cards][pyramid]")
 		for (int column = 1; column <= row; ++column)
 		{
 			Object& each = play.holder("row" + std::to_string(row) + "." + std::to_string(column) + ".1");
-			for (const int number : each.holder.cards) { play.holder("pairs").holder.cards.push_back(number); }
-			each.holder.cards.clear();
+			for (const int number : each.holder.items) { play.holder("pairs").holder.items.push_back(number); }
+			each.holder.items.clear();
 			play.game.refreshHolder(each);
 		}
 	}

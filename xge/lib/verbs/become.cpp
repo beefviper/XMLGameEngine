@@ -44,7 +44,7 @@ namespace xge
 			if (!become.style.empty()) { wantPalette(checking, object, become.style); }
 			const auto hasLook = [&](const Object& of) { return std::any_of(of.looks.begin(), of.looks.end(), [&](const Object::Look& look) { return look.name == become.sprite; }); };
 			// A holder may take a look of what it holds: they turn to it.
-			const bool heldLook = object.holder.is && std::any_of(objects.begin(), objects.end(), [&](const Object& card) { return card.held && hasLook(card); });
+			const bool heldLook = object.holder.is && std::any_of(objects.begin(), objects.end(), [&](const Object& item) { return item.held && hasLook(item); });
 			if (!become.sprite.empty() && !hasLook(object) && !heldLook)
 			{
 				throw std::runtime_error(checking.where + ": <become sprite=\"" + become.sprite + "\" object=\"" + become.target + "\" />: '" + object.name + "' has no look of that name");

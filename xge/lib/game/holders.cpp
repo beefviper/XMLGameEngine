@@ -28,38 +28,38 @@ namespace xge
 {
 	namespace
 	{
-		// A card's variable of that name (0: it has none).
-		float valueOf(const Object& card, const std::string& variable)
+		// An item's variable of that name (0: it has none).
+		float valueOf(const Object& item, const std::string& variable)
 		{
-			const auto value = card.variable.find(variable);
-			return value == card.variable.end() ? 0.0f : value->second;
+			const auto value = item.variable.find(variable);
+			return value == item.variable.end() ? 0.0f : value->second;
 		}
 
-		// What a trick follows on a card: its <trick variable>, as a whole
+		// What a trick follows on an item: its <trick variable>, as a whole
 		// number; and the same as text, as <breaks> and <trumps> are written.
-		int followed(const HolderRule& rule, const Object& card) { return static_cast<int>(std::lround(valueOf(card, rule.trickBy))); }
-		std::string followedName(const HolderRule& rule, const Object& card) { return std::to_string(followed(rule, card)); }
+		int followed(const HolderRule& rule, const Object& item) { return static_cast<int>(std::lround(valueOf(item, rule.trickBy))); }
+		std::string followedName(const HolderRule& rule, const Object& item) { return std::to_string(followed(rule, item)); }
 	}
 
 	// ===================================================================
 	// The game's holders and hands
 	// ===================================================================
 
-	Object* Game::cardAt(int number)
+	Object* Game::itemAt(int number)
 	{
 		if (number <= 0) { return nullptr; }
 		const std::size_t at = static_cast<std::size_t>(number - 1);
-		if (at < cardIndex.size() && cardIndex[at] < objects.size() && objects[cardIndex[at]].cardNumber == number) { return &objects[cardIndex[at]]; }
+		if (at < itemIndex.size() && itemIndex[at] < objects.size() && objects[itemIndex[at]].itemNumber == number) { return &objects[itemIndex[at]]; }
 		// Objects moved (a copy taken away): found again.
-		cardIndex.clear();
+		itemIndex.clear();
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
-			if (objects[i].cardNumber <= 0) { continue; }
-			const std::size_t slot = static_cast<std::size_t>(objects[i].cardNumber - 1);
-			if (cardIndex.size() <= slot) { cardIndex.resize(slot + 1, objects.size()); }
-			cardIndex[slot] = i;
+			if (objects[i].itemNumber <= 0) { continue; }
+			const std::size_t slot = static_cast<std::size_t>(objects[i].itemNumber - 1);
+			if (itemIndex.size() <= slot) { itemIndex.resize(slot + 1, objects.size()); }
+			itemIndex[slot] = i;
 		}
-		return at < cardIndex.size() && cardIndex[at] < objects.size() ? &objects[cardIndex[at]] : nullptr;
+		return at < itemIndex.size() && itemIndex[at] < objects.size() ? &objects[itemIndex[at]] : nullptr;
 	}
 
 	Object* Game::holderNamed(const std::string& name)
@@ -72,25 +72,25 @@ namespace xge
 		return nullptr;
 	}
 
-	void Game::showHeld(Object& card, const std::string& look)
+	void Game::showHeld(Object& item, const std::string& look)
 	{
-		const auto found = std::find_if(card.looks.begin(), card.looks.end(), [&](const Object::Look& each) { return each.name == look; });
-		if (found != card.looks.end()) { turnCard(card, found == card.looks.begin()); }
+		const auto found = std::find_if(item.looks.begin(), item.looks.end(), [&](const Object::Look& each) { return each.name == look; });
+		if (found != item.looks.end()) { turnItem(item, found == item.looks.begin()); }
 	}
 
-	void Game::turnCard(Object& card, bool up)
+	void Game::turnItem(Object& item, bool up)
 	{
-		card.faceUp = up;
+		item.faceUp = up;
 		const std::size_t look = up ? 0 : 1;
-		if (card.look != look && look < card.looks.size()) { card.showLook(look); }
+		if (item.look != look && look < item.looks.size()) { item.showLook(look); }
 	}
 
 	void Game::putInHolder(Object& holder, int number)
 	{
-		Object* card = cardAt(number);
-		if (!card) { return; }
-		if (!holder.holder.holdsSprite.empty()) { showHeld(*card, holder.holder.holdsSprite); }
-		auto at = holder.holder.cards.end();
+		Object* item = itemAt(number);
+		if (!item) { return; }
+		if (!holder.holder.holdsSprite.empty()) { showHeld(*item, holder.holder.holdsSprite); }
+		auto at = holder.holder.items.end();
 		if (!holder.holder.orderBy.empty())
 		{
 			// <order>: by each variable named, the first first.
@@ -104,39 +104,39 @@ namespace xge
 				}
 				return values;
 			};
-			const std::vector<float> mine = order(*card);
-			at = std::find_if(holder.holder.cards.begin(), holder.holder.cards.end(), [&](int other)
+			const std::vector<float> mine = order(*item);
+			at = std::find_if(holder.holder.items.begin(), holder.holder.items.end(), [&](int other)
 				{
-					const Object* each = cardAt(other);
+					const Object* each = itemAt(other);
 					return each && mine < order(*each);
 				});
 		}
-		holder.holder.cards.insert(at, number);
+		holder.holder.items.insert(at, number);
 		// A suit that <breaks>, broken.
 		const std::vector<std::string>& breaks = holder.holder.takes.breaks;
-		if (std::find(breaks.begin(), breaks.end(), followedName(holder.holder.takes, *card)) != breaks.end()
-			&& std::find(holder.holder.broken.begin(), holder.holder.broken.end(), followed(holder.holder.takes, *card)) == holder.holder.broken.end())
+		if (std::find(breaks.begin(), breaks.end(), followedName(holder.holder.takes, *item)) != breaks.end()
+			&& std::find(holder.holder.broken.begin(), holder.holder.broken.end(), followed(holder.holder.takes, *item)) == holder.holder.broken.end())
 		{
-			holder.holder.broken.push_back(followed(holder.holder.takes, *card));
+			holder.holder.broken.push_back(followed(holder.holder.takes, *item));
 		}
-		// A card laid answers any call.
+		// An item laid answers any call.
 		holder.called = 0.0f;
 		refreshHolder(holder);
 	}
 
-	float Game::cardPoints(const Object& holder, const Object& card)
+	float Game::itemPoints(const Object& holder, const Object& item)
 	{
 		if (!holder.holder.counts.empty() && holder.holder.counts != "worth")
 		{
-			const auto value = card.variable.find(holder.holder.counts);
-			return value == card.variable.end() ? 0.0f : value->second;
+			const auto value = item.variable.find(holder.holder.counts);
+			return value == item.variable.end() ? 0.0f : value->second;
 		}
-		return card.card.worths.empty() ? 0.0f : card.card.worths.front();
+		return item.item.worths.empty() ? 0.0f : item.item.worths.front();
 	}
 
-	// Whether these cards, every one of them, make the pattern: each part
+	// Whether these items, every one of them, make the pattern: each part
 	// holds for all of them (<alike>: one value of its variable, <run>:
-	// values in a row, by worth a card counting any of its worths), and
+	// values in a row, by worth an item counting any of its worths), and
 	// there are at least as many as its number.
 	bool Game::meldFits(const std::vector<const Object*>& group, const RawPatterns::Pattern& pattern)
 	{
@@ -148,18 +148,18 @@ namespace xge
 			if (n < static_cast<std::size_t>(count)) { return false; }
 			if (part == RawPatterns::Part::Alike)
 			{
-				for (const Object* card : group)
+				for (const Object* item : group)
 				{
-					if (valueOf(*card, by) != valueOf(*group.front(), by)) { return false; }
+					if (valueOf(*item, by) != valueOf(*group.front(), by)) { return false; }
 				}
 				continue;
 			}
-			// A run: some start from which each value in turn is a different card's.
+			// A run: some start from which each value in turn is a different item's.
 			bool found = false;
 			for (const Object* starter : group)
 			{
-				// By worth, a card counting any of its worths; else the variable's value.
-				const auto valuesOf = [&](const Object& card) { return by == "worth" ? card.card.worths : std::vector<float>{ valueOf(card, by) }; };
+				// By worth, an item counting any of its worths; else the variable's value.
+				const auto valuesOf = [&](const Object& item) { return by == "worth" ? item.item.worths : std::vector<float>{ valueOf(item, by) }; };
 				for (const float start : valuesOf(*starter))
 				{
 					std::vector<bool> used(n, false);
@@ -186,20 +186,20 @@ namespace xge
 		return true;
 	}
 
-	// The fewest points left in no group, these cards (or the best `best`
+	// The fewest points left in no group, these items (or the best `best`
 	// of them) laid out in groups each making one of the holder's <melds>
 	// patterns; `melds`, when asked, gets the groups (indexes into
-	// `numbers`). Each card counts its points by the holder's <counts>.
+	// `numbers`). Each item counts its points by the holder's <counts>.
 	float Game::meldDeadwood(const Object& holder, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds)
 	{
-		std::vector<const Object*> cards;
+		std::vector<const Object*> items;
 		for (const int number : numbers)
 		{
-			if (const Object* card = cardAt(number)) { cards.push_back(card); }
+			if (const Object* item = itemAt(number)) { items.push_back(item); }
 		}
-		const std::size_t n = cards.size();
+		const std::size_t n = items.size();
 		std::vector<float> value(n);
-		for (std::size_t i = 0; i < n; ++i) { value[i] = cardPoints(holder, *cards[i]); }
+		for (std::size_t i = 0; i < n; ++i) { value[i] = itemPoints(holder, *items[i]); }
 		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == holder.holder.melds; });
 		if (set == patterns.end() || n > 16 || n != numbers.size())
 		{
@@ -208,7 +208,7 @@ namespace xge
 			return total;
 		}
 
-		// Every group of the cards that makes a pattern, by its lowest card.
+		// Every group of the items that makes a pattern, by its lowest item.
 		const std::uint32_t all = (std::uint32_t{ 1 } << n) - 1;
 		std::vector<std::vector<std::uint32_t>> groups(n);
 		std::vector<const Object*> group;
@@ -218,14 +218,14 @@ namespace xge
 			group.clear();
 			for (std::size_t i = 0; i < n; ++i)
 			{
-				if (mask & (std::uint32_t{ 1 } << i)) { group.push_back(cards[i]); }
+				if (mask & (std::uint32_t{ 1 } << i)) { group.push_back(items[i]); }
 			}
 			if (std::any_of(set->patterns.begin(), set->patterns.end(), [&](const RawPatterns::Pattern& pattern) { return meldFits(group, pattern); }))
 			{
 				groups[static_cast<std::size_t>(std::countr_zero(mask))].push_back(mask);
 			}
 		}
-		// The least left over by each set of the cards: its lowest card left
+		// The least left over by each set of the items: its lowest item left
 		// over, or in one of its groups.
 		std::vector<float> left(std::size_t{ all } + 1, 0.0f);
 		std::vector<std::uint32_t> chosen(std::size_t{ all } + 1, 0);
@@ -279,73 +279,73 @@ namespace xge
 		return left[target];
 	}
 
-	// A holder with <melds>: its groups first, each lowest card first, the
+	// A holder with <melds>: its groups first, each lowest item first, the
 	// rest after them in suit and rank order; `deadwood` from its best.
 	void Game::layOutMelds(Object& holder)
 	{
 		std::vector<std::vector<int>> melds;
-		const std::vector<int> cards = holder.holder.cards;
-		holder.deadwood = meldDeadwood(holder, cards, holder.holder.meldsBest, nullptr);
-		meldDeadwood(holder, cards, 0, &melds);
+		const std::vector<int> items = holder.holder.items;
+		holder.deadwood = meldDeadwood(holder, items, holder.holder.meldsBest, nullptr);
+		meldDeadwood(holder, items, 0, &melds);
 		std::vector<int> order;
-		std::vector<bool> placed(cards.size(), false);
+		std::vector<bool> placed(items.size(), false);
 		const auto byWorth = [&](int a, int b)
 		{
-			const Object& x = *cardAt(cards[static_cast<std::size_t>(a)]);
-			const Object& y = *cardAt(cards[static_cast<std::size_t>(b)]);
-			return x.cardNumber < y.cardNumber;
+			const Object& x = *itemAt(items[static_cast<std::size_t>(a)]);
+			const Object& y = *itemAt(items[static_cast<std::size_t>(b)]);
+			return x.itemNumber < y.itemNumber;
 		};
 		for (auto& meld : melds)
 		{
 			std::sort(meld.begin(), meld.end(), byWorth);
 			for (const int i : meld)
 			{
-				order.push_back(cards[static_cast<std::size_t>(i)]);
+				order.push_back(items[static_cast<std::size_t>(i)]);
 				placed[static_cast<std::size_t>(i)] = true;
 			}
 		}
 		std::vector<int> rest;
-		for (std::size_t i = 0; i < cards.size(); ++i)
+		for (std::size_t i = 0; i < items.size(); ++i)
 		{
 			if (!placed[i]) { rest.push_back(static_cast<int>(i)); }
 		}
 		std::sort(rest.begin(), rest.end(), byWorth);
-		for (const int i : rest) { order.push_back(cards[static_cast<std::size_t>(i)]); }
-		holder.holder.cards = order;
+		for (const int i : rest) { order.push_back(items[static_cast<std::size_t>(i)]); }
+		holder.holder.items = order;
 		refreshBoundTexts(holder.name, "deadwood", holder.deadwood);
 	}
 
-	bool Game::isTrump(const HolderRule& rule, const Object& card)
+	bool Game::isTrump(const HolderRule& rule, const Object& item)
 	{
-		return std::find(rule.trumps.begin(), rule.trumps.end(), followedName(rule, card)) != rule.trumps.end();
+		return std::find(rule.trumps.begin(), rule.trumps.end(), followedName(rule, item)) != rule.trumps.end();
 	}
 
-	// Whether `card` laid now takes the trick from `best`: a trump over
-	// any other card, else a higher card of the same suit.
-	bool Game::beatsInTrick(const HolderRule& rule, const Object& card, const Object& best)
+	// Whether `item` laid now takes the trick from `best`: a trump over
+	// any other item, else a higher item of the same suit.
+	bool Game::beatsInTrick(const HolderRule& rule, const Object& item, const Object& best)
 	{
-		const bool trump = isTrump(rule, card);
+		const bool trump = isTrump(rule, item);
 		if (trump != isTrump(rule, best)) { return trump; }
-		return followed(rule, card) == followed(rule, best) && card.card.worths.back() > best.card.worths.back();
+		return followed(rule, item) == followed(rule, best) && item.item.worths.back() > best.item.worths.back();
 	}
 
 	const Object* Game::trickWinning(const Object& holder)
 	{
-		if (holder.holder.cards.empty()) { return nullptr; }
-		const Object* best = cardAt(holder.holder.cards.front());
-		for (const int number : holder.holder.cards)
+		if (holder.holder.items.empty()) { return nullptr; }
+		const Object* best = itemAt(holder.holder.items.front());
+		for (const int number : holder.holder.items)
 		{
-			const Object* card = cardAt(number);
-			if (card && best && beatsInTrick(holder.holder.takes, *card, *best)) { best = card; }
+			const Object* item = itemAt(number);
+			if (item && best && beatsInTrick(holder.holder.takes, *item, *best)) { best = item; }
 		}
 		return best;
 	}
 
-	// How many tricks a hand's cards should take, as a player reckons it
-	// to bid: each side suit's ace, a king with another card of its suit,
-	// half a queen with two more and a higher card; each trump honour with
+	// How many tricks a hand's items should take, as a player reckons it
+	// to bid: each side suit's ace, a king with another item of its suit,
+	// half a queen with two more and a higher item; each trump honour with
 	// as many trumps under it as there are above it, and each trump past
-	// three; with trumps to spare, a missing suit one and a single card a
+	// three; with trumps to spare, a missing suit one and a single item a
 	// half. Rounded to the nearest.
 	float Game::reckonTricks(const Object& own, const HolderRule& trick)
 	{
@@ -353,21 +353,21 @@ namespace xge
 		std::vector<int> kinds;
 		for (const Object& object : objects)
 		{
-			if (!object.held || object.card.worths.empty()) { continue; }
-			top = std::max(top, object.card.worths.back());
+			if (!object.held || object.item.worths.empty()) { continue; }
+			top = std::max(top, object.item.worths.back());
 			if (std::find(kinds.begin(), kinds.end(), followed(trick, object)) == kinds.end()) { kinds.push_back(followed(trick, object)); }
 		}
 		std::map<int, std::vector<float>> held;
 		std::map<int, bool> trumped;
 		int trumps = 0;
-		for (const int number : own.holder.cards)
+		for (const int number : own.holder.items)
 		{
-			const Object* card = cardAt(number);
-			if (!card || card->card.worths.empty()) { continue; }
-			held[followed(trick, *card)].push_back(card->card.worths.back());
-			if (isTrump(trick, *card))
+			const Object* item = itemAt(number);
+			if (!item || item->item.worths.empty()) { continue; }
+			held[followed(trick, *item)].push_back(item->item.worths.back());
+			if (isTrump(trick, *item))
 			{
-				trumped[followed(trick, *card)] = true;
+				trumped[followed(trick, *item)] = true;
 				++trumps;
 			}
 		}
@@ -415,41 +415,41 @@ namespace xge
 		return found == objects.end() ? nullptr : &*found;
 	}
 
-	bool Game::isWild(const HolderRule& rule, const Object& card)
+	bool Game::isWild(const HolderRule& rule, const Object& item)
 	{
-		return !rule.wildRules.empty() && acceptsBy(rule.wildRules, card, nullptr);
+		return !rule.wildRules.empty() && acceptsBy(rule.wildRules, item, nullptr);
 	}
 
 	void Game::refreshHolder(Object& holder)
 	{
-		holder.cardCount = static_cast<float>(holder.holder.cards.size());
+		holder.itemCount = static_cast<float>(holder.holder.items.size());
 		refreshCall(holder);
 
-		// Points: each face-up card at its lowest worth, then each that may
+		// Points: each face-up item at its lowest worth, then each that may
 		// count higher raised as far as the total stays within the limit.
 		float total = 0.0f;
 		std::vector<const Object*> shown;
 		// <counts variable>: a variable of each other than its worth, as it is.
 		const std::string& counted = holder.holder.counts;
 		const bool byVariable = !counted.empty() && counted != "worth";
-		for (const int number : holder.holder.cards)
+		for (const int number : holder.holder.items)
 		{
-			const Object* card = cardAt(number);
-			if (!card || !card->faceUp || card->card.worths.empty()) { continue; }
+			const Object* item = itemAt(number);
+			if (!item || !item->faceUp || item->item.worths.empty()) { continue; }
 			if (byVariable)
 			{
-				const auto value = card->variable.find(counted);
-				total += value == card->variable.end() ? 0.0f : value->second;
+				const auto value = item->variable.find(counted);
+				total += value == item->variable.end() ? 0.0f : value->second;
 				continue;
 			}
-			total += card->card.worths.front();
-			shown.push_back(card);
+			total += item->item.worths.front();
+			shown.push_back(item);
 		}
-		for (const Object* card : shown)
+		for (const Object* item : shown)
 		{
-			for (auto higher = card->card.worths.rbegin(); higher != card->card.worths.rend(); ++higher)
+			for (auto higher = item->item.worths.rbegin(); higher != item->item.worths.rend(); ++higher)
 			{
-				const float more = *higher - card->card.worths.front();
+				const float more = *higher - item->item.worths.front();
 				if (more > 0.0f && (holder.holder.pointsMost <= 0.0f || total + more <= holder.holder.pointsMost))
 				{
 					total += more;
@@ -459,12 +459,12 @@ namespace xge
 		}
 		holder.points = total;
 		if (!counted.empty()) { setVariable(holder.name, counted, total); }
-		refreshBoundTexts(holder.name, "cards", holder.cardCount);
-		refreshBoundTexts(holder.name, "held", holder.cardCount);
+		refreshBoundTexts(holder.name, "cards", holder.itemCount);
+		refreshBoundTexts(holder.name, "held", holder.itemCount);
 		refreshBoundTexts(holder.name, "points", holder.points);
 
 		// A holder with <melds>: laid out in its groups, and its deadwood.
-		if (!holder.holder.melds.empty() && std::all_of(holder.holder.cards.begin(), holder.holder.cards.end(), [&](int number) { return cardAt(number) != nullptr; })) { layOutMelds(holder); }
+		if (!holder.holder.melds.empty() && std::all_of(holder.holder.items.begin(), holder.holder.items.end(), [&](int number) { return itemAt(number) != nullptr; })) { layOutMelds(holder); }
 
 		// A hand's own holder in a game with a trick: the tricks it should take.
 		if (const Object* trick = trickHolder(); trick && trick != &holder)
@@ -477,10 +477,10 @@ namespace xge
 			}
 		}
 
-		// A trick: the suit led, and who laid the card winning it.
+		// A trick: the suit led, and who laid the item winning it.
 		if (holder.holder.takes.follow)
 		{
-			const Object* lead = holder.holder.cards.empty() ? nullptr : cardAt(holder.holder.cards.front());
+			const Object* lead = holder.holder.items.empty() ? nullptr : itemAt(holder.holder.items.front());
 			const Object* best = trickWinning(holder);
 			holder.lead = lead ? static_cast<float>(followed(holder.holder.takes, *lead)) : 0.0f;
 			holder.winner = best ? static_cast<float>(best->laidBy) : 0.0f;
@@ -488,9 +488,9 @@ namespace xge
 			refreshBoundTexts(holder.name, "winner", holder.winner);
 		}
 
-		// Scored holders, this one and those that score its cards with theirs,
+		// Scored holders, this one and those that score its items with theirs,
 		// are scored again before the conditions are asked (scoreDueHolders):
-		// once, however many cards came and went this frame.
+		// once, however many items came and went this frame.
 		if (!holder.holder.score.empty()) { holder.holder.scoreDue = scoresDue = true; }
 		for (Object& other : objects)
 		{
@@ -543,7 +543,7 @@ namespace xge
 			return slots;
 		}
 
-		// A card as patterns see it: the value of each variable its set's
+		// An item as patterns see it: the value of each variable its set's
 		// <alike>s compare (0 to 63), and the worths it may count for,
 		// lowest first.
 		struct Scored
@@ -555,7 +555,7 @@ namespace xge
 			std::uint64_t mask;
 		};
 
-		float highest(const Scored& card) { return card.worths->back(); }
+		float highest(const Scored& item) { return item.worths->back(); }
 
 		// Room reused by bestPattern, call after call.
 		std::vector<float>& scratchWorths()
@@ -564,13 +564,13 @@ namespace xge
 			return worths;
 		}
 
-		// The highest pattern the cards make (from 1; 0 none), with what
+		// The highest pattern the items make (from 1; 0 none), with what
 		// ranks it among others making the same, deciding first: a run's
-		// worths from its top down, else the cards in groups of the set's
+		// worths from its top down, else the items in groups of the set's
 		// first <alike> variable, bigger groups first, each group by worth;
 		// then the rest by worth. With `only` (from 1), that pattern alone
-		// is tried: -1 when the cards do not make it.
-		int bestPattern(const RawPatterns& set, const Slots& slots, const std::vector<Scored>& cards, std::vector<float>& deciding, int only = -1)
+		// is tried: -1 when the items do not make it.
+		int bestPattern(const RawPatterns& set, const Slots& slots, const std::vector<Scored>& items, std::vector<float>& deciding, int only = -1)
 		{
 			// Counted in place (values are under 64; scoreHolder sees to
 			// that), as this runs thousands of times for the odds.
@@ -580,23 +580,23 @@ namespace xge
 			std::size_t groupCount = 0;
 			std::uint64_t mask = 0;
 			bool byBits = true;
-			for (const Scored& card : cards)
+			for (const Scored& item : items)
 			{
-				for (std::size_t s = 0; s < slots.by.size(); ++s) { ++of[s][static_cast<std::size_t>(card.values[s])]; }
+				for (std::size_t s = 0; s < slots.by.size(); ++s) { ++of[s][static_cast<std::size_t>(item.values[s])]; }
 				if (!slots.by.empty())
 				{
-					const auto group = static_cast<std::size_t>(card.values[0]);
-					if (of[0][group] == 1) { groups[groupCount++] = card.values[0]; }
-					groupWorth[group] = std::max(groupWorth[group], highest(card));
+					const auto group = static_cast<std::size_t>(item.values[0]);
+					if (of[0][group] == 1) { groups[groupCount++] = item.values[0]; }
+					groupWorth[group] = std::max(groupWorth[group], highest(item));
 				}
-				mask |= card.mask;
-				byBits = byBits && card.mask != 0;
+				mask |= item.mask;
+				byBits = byBits && item.mask != 0;
 			}
 			std::vector<float>& worths = scratchWorths();
 			if (!byBits)
 			{
 				worths.clear();
-				for (const Scored& card : cards) { worths.insert(worths.end(), card.worths->begin(), card.worths->end()); }
+				for (const Scored& item : items) { worths.insert(worths.end(), item.worths->begin(), item.worths->end()); }
 				std::sort(worths.begin(), worths.end());
 				worths.erase(std::unique(worths.begin(), worths.end()), worths.end());
 			}
@@ -613,7 +613,7 @@ namespace xge
 				deciding.clear();
 				if (slots.by.empty())
 				{
-					for (const Scored& card : cards) { deciding.push_back(highest(card)); }
+					for (const Scored& item : items) { deciding.push_back(highest(item)); }
 					std::sort(deciding.rbegin(), deciding.rend());
 					return;
 				}
@@ -656,7 +656,7 @@ namespace xge
 				// Each <alike> a value of its own, the biggest first, each
 				// taking the smallest group of that value that is enough.
 				std::array<std::uint64_t, 4> used{};
-				for (int wanted = static_cast<int>(cards.size()); wanted > 0 && holds; --wanted)
+				for (int wanted = static_cast<int>(items.size()); wanted > 0 && holds; --wanted)
 				{
 					for (std::size_t p = 0; p < pattern.parts.size(); ++p)
 					{
@@ -675,7 +675,7 @@ namespace xge
 				}
 				for (const auto& [part, many] : pattern.parts)
 				{
-					if (part == RawPatterns::Part::Alike && many > static_cast<int>(cards.size())) { holds = false; }
+					if (part == RawPatterns::Part::Alike && many > static_cast<int>(items.size())) { holds = false; }
 					else if (part == RawPatterns::Part::Run) { longestRun = std::max(longestRun, many); }
 				}
 				if (!holds) { continue; }
@@ -685,18 +685,18 @@ namespace xge
 				if (top)
 				{
 					deciding.clear();
-					std::vector<Scored> rest = cards;
+					std::vector<Scored> rest = items;
 					for (int step = 0; step < longestRun; ++step)
 					{
 						const float worth = *top - static_cast<float>(step);
 						deciding.push_back(worth);
-						rest.erase(std::find_if(rest.begin(), rest.end(), [&](const Scored& card)
+						rest.erase(std::find_if(rest.begin(), rest.end(), [&](const Scored& item)
 						{
-							return std::find(card.worths->begin(), card.worths->end(), worth) != card.worths->end();
+							return std::find(item.worths->begin(), item.worths->end(), worth) != item.worths->end();
 						}));
 					}
 					std::vector<float> others;
-					for (const Scored& card : rest) { others.push_back(highest(card)); }
+					for (const Scored& item : rest) { others.push_back(highest(item)); }
 					std::sort(others.rbegin(), others.rend());
 					deciding.insert(deciding.end(), others.begin(), others.end());
 				}
@@ -708,22 +708,22 @@ namespace xge
 			return 0;
 		}
 
-		// The best `best` of the cards (0: all of them): the pattern they
+		// The best `best` of the items (0: all of them): the pattern they
 		// make, and a number ordering any two the same size by the pattern,
 		// then by what decides between two of it, in base `base` (one more
 		// than any worth).
-		float bestOf(const RawPatterns& set, const Slots& slots, const std::vector<Scored>& cards, std::size_t best, float base, int& made)
+		float bestOf(const RawPatterns& set, const Slots& slots, const std::vector<Scored>& items, std::size_t best, float base, int& made)
 		{
-			const std::size_t size = best == 0 ? cards.size() : std::min(best, cards.size());
+			const std::size_t size = best == 0 ? items.size() : std::min(best, items.size());
 			// Room reused call after call: the odds call this thousands of times.
 			thread_local std::vector<float> deciding;
 			thread_local std::vector<Scored> some;
 			thread_local std::vector<char> chosen;
-			// What all the cards make is the most any `size` of them can
+			// What all the items make is the most any `size` of them can
 			// (every part asks for at least so many), so that is tried
 			// first, and only when none of them makes it, every pattern.
-			made = bestPattern(set, slots, cards, deciding);
-			if (size == cards.size())
+			made = bestPattern(set, slots, items, deciding);
+			if (size == items.size())
 			{
 				float strength = static_cast<float>(made);
 				for (const float worth : deciding) { strength = strength * base + worth; }
@@ -732,15 +732,15 @@ namespace xge
 			float strongest = -1.0f;
 			for (const bool onlyTheMost : { true, false })
 			{
-				chosen.assign(cards.size(), 0);
+				chosen.assign(items.size(), 0);
 				std::fill(chosen.begin(), chosen.begin() + static_cast<std::ptrdiff_t>(size), char{ 1 });
 				int bestMade = 0;
 				do
 				{
 					some.clear();
-					for (std::size_t i = 0; i < cards.size(); ++i)
+					for (std::size_t i = 0; i < items.size(); ++i)
 					{
-						if (chosen[i]) { some.push_back(cards[i]); }
+						if (chosen[i]) { some.push_back(items[i]); }
 					}
 					const int pattern = bestPattern(set, slots, some, deciding, onlyTheMost ? made : -1);
 					if (pattern < 0) { continue; }
@@ -815,16 +815,16 @@ namespace xge
 		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == holder.holder.score; });
 		if (set == patterns.end()) { return; }
 		const Slots slots = slotsOf(*set);
-		const auto scored = [&](const Object& card)
+		const auto scored = [&](const Object& item)
 		{
 			std::uint64_t bits = 0;
-			for (const float worth : card.card.worths)
+			for (const float worth : item.item.worths)
 			{
 				if (worth < 0.0f || worth > 63.0f || worth != std::floor(worth)) { bits = 0; break; }
 				bits |= std::uint64_t{ 1 } << static_cast<int>(worth);
 			}
-			Scored one{ {}, &card.card.worths, bits };
-			for (std::size_t s = 0; s < slots.by.size(); ++s) { one.values[s] = static_cast<int>(std::lround(valueOf(card, slots.by[s]))); }
+			Scored one{ {}, &item.item.worths, bits };
+			for (std::size_t s = 0; s < slots.by.size(); ++s) { one.values[s] = static_cast<int>(std::lround(valueOf(item, slots.by[s]))); }
 			return one;
 		};
 		float base = 1.0f;
@@ -841,11 +841,11 @@ namespace xge
 		std::vector<int> seen;
 		const auto add = [&](const Object& from)
 		{
-			for (const int number : from.holder.cards)
+			for (const int number : from.holder.items)
 			{
-				if (const Object* card = cardAt(number))
+				if (const Object* item = itemAt(number))
 				{
-					own.push_back(scored(*card));
+					own.push_back(scored(*item));
 					seen.push_back(number);
 				}
 			}
@@ -860,16 +860,16 @@ namespace xge
 		holder.strength = own.empty() ? 0.0f : bestOf(*set, slots, own, best, base, made);
 		holder.pattern = static_cast<float>(made);
 
-		// The odds: as many unseen cards as this holder holds, against it,
+		// The odds: as many unseen items as this holder holds, against it,
 		// the shared holder made up to full from the unseen too; the same
-		// each time for the same cards (its own generator, seeded by them).
+		// each time for the same items (its own generator, seeded by them).
 		holder.odds = 0.0f;
 		if (mine > 0 && holder.oddsRead)
 		{
 			std::vector<Scored> unseen;
 			for (const Object& object : objects)
 			{
-				if (object.held && std::find(seen.begin(), seen.end(), object.cardNumber) == seen.end()) { unseen.push_back(scored(object)); }
+				if (object.held && std::find(seen.begin(), seen.end(), object.itemNumber) == seen.end()) { unseen.push_back(scored(object)); }
 			}
 			const std::size_t board = own.size() - mine;
 			const std::size_t full = static_cast<std::size_t>(holder.holder.scoreFull);
@@ -914,7 +914,7 @@ namespace xge
 
 	void Game::refreshCall(Object& holder)
 	{
-		const Object* top = holder.holder.cards.empty() ? nullptr : cardAt(holder.holder.cards.back());
+		const Object* top = holder.holder.items.empty() ? nullptr : itemAt(holder.holder.items.back());
 		holder.calling = !holder.holder.takes.wildRules.empty() && top && isWild(holder.holder.takes, *top) && holder.called == 0.0f ? 1.0f : 0.0f;
 		refreshBoundTexts(holder.name, "calling", holder.calling);
 		refreshBoundTexts(holder.name, "called", holder.called);
@@ -922,17 +922,17 @@ namespace xge
 
 	int Game::takeTop(Object& holder)
 	{
-		if (holder.holder.cards.empty()) { return 0; }
-		const int number = holder.holder.cards.back();
-		holder.holder.cards.pop_back();
+		if (holder.holder.items.empty()) { return 0; }
+		const int number = holder.holder.items.back();
+		holder.holder.items.pop_back();
 		refreshHolder(holder);
 		return number;
 	}
 
 	void Game::showTop(Object& holder)
 	{
-		if (holder.holder.topSprite.empty() || holder.holder.cards.empty()) { return; }
-		if (Object* top = cardAt(holder.holder.cards.back()); top && top->lookName() != holder.holder.topSprite) { showHeld(*top, holder.holder.topSprite); refreshHolder(holder); }
+		if (holder.holder.topSprite.empty() || holder.holder.items.empty()) { return; }
+		if (Object* top = itemAt(holder.holder.items.back()); top && top->lookName() != holder.holder.topSprite) { showHeld(*top, holder.holder.topSprite); refreshHolder(holder); }
 	}
 
 	void Game::sendStarts()
@@ -941,14 +941,14 @@ namespace xge
 		int number = 0;
 		for (Object& object : objects)
 		{
-			if (object.held) { object.cardNumber = ++number; }
+			if (object.held) { object.itemNumber = ++number; }
 		}
-		cardIndex.clear();
+		itemIndex.clear();
 		if (number == 0) { return; }
 
 		for (Object& object : objects)
 		{
-			if (object.holder.is) { object.holder.cards.clear(); object.holder.broken.clear(); object.called = 0.0f; refreshHolder(object); }
+			if (object.holder.is) { object.holder.items.clear(); object.holder.broken.clear(); object.called = 0.0f; refreshHolder(object); }
 			if (object.held) { object.laidBy = 0; }
 			if (object.hand.is)
 			{
@@ -965,34 +965,34 @@ namespace xge
 		for (Object& object : objects)
 		{
 			if (!object.held) { continue; }
-			if (!starts.count(object.card.startHolder)) { order.push_back(object.card.startHolder); }
-			starts[object.card.startHolder].push_back(object.cardNumber);
+			if (!starts.count(object.item.startHolder)) { order.push_back(object.item.startHolder); }
+			starts[object.item.startHolder].push_back(object.itemNumber);
 		}
 		for (const std::string& name : order)
 		{
 			Object* holder = holderNamed(name);
 			if (!holder) { throw std::runtime_error("<starts> > <send into=\"" + name + "\">: there is no holder called '" + name + "'"); }
-			std::vector<int>& cards = starts[name];
-			for (std::size_t i = cards.size(); i > 1; --i)
+			std::vector<int>& items = starts[name];
+			for (std::size_t i = items.size(); i > 1; --i)
 			{
 				const std::size_t j = std::min(i - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(i))));
-				std::swap(cards[i - 1], cards[j]);
+				std::swap(items[i - 1], items[j]);
 			}
-			// Stacked (tests): those cards last, so on top, the first last of all.
+			// Stacked (tests): those items last, so on top, the first last of all.
 			for (auto each = stackedStart.rbegin(); each != stackedStart.rend(); ++each)
 			{
-				const auto at = std::find(cards.begin(), cards.end(), *each);
-				if (at == cards.end()) { continue; }
-				cards.erase(at);
-				cards.push_back(*each);
+				const auto at = std::find(items.begin(), items.end(), *each);
+				if (at == items.end()) { continue; }
+				items.erase(at);
+				items.push_back(*each);
 			}
-			for (const int card : cards)
+			for (const int item : items)
 			{
-				if (Object* each = cardAt(card)) { turnCard(*each, false); }
-				putInHolder(*holder, card);
+				if (Object* each = itemAt(item)) { turnItem(*each, false); }
+				putInHolder(*holder, item);
 			}
 
-			// Dealt in rounds, a card to each holder that wants one more.
+			// Dealt in rounds, an item to each holder that wants one more.
 			std::vector<std::pair<Object*, int>> wanting;
 			std::map<std::string, int> inGroup;
 			for (Object& object : objects)
@@ -1006,12 +1006,12 @@ namespace xge
 				}
 				if (count > 0) { wanting.emplace_back(&object, count); }
 			}
-			for (int round = 1; !wanting.empty() && !holder->holder.cards.empty(); ++round)
+			for (int round = 1; !wanting.empty() && !holder->holder.items.empty(); ++round)
 			{
 				bool any = false;
 				for (auto& [each, count] : wanting)
 				{
-					if (count < round || holder->holder.cards.empty()) { continue; }
+					if (count < round || holder->holder.items.empty()) { continue; }
 					putInHolder(*each, takeTop(*holder));
 					any = true;
 				}
@@ -1027,7 +1027,7 @@ namespace xge
 		{
 			if (object.holder.is && object.calling > 0.0f)
 			{
-				const Object* top = cardAt(object.holder.cards.back());
+				const Object* top = itemAt(object.holder.items.back());
 				object.called = valueOf(*top, object.holder.takes.wildVariable);
 				refreshCall(object);
 			}
@@ -1042,22 +1042,22 @@ namespace xge
 			{
 				if (!holder.holder.is || (own && &holder != own)) { continue; }
 				object.hand.holder = holder.name;
-				object.hand.at = static_cast<int>(holder.holder.cards.size()) - 1;
+				object.hand.at = static_cast<int>(holder.holder.items.size()) - 1;
 				break;
 			}
 		}
-		layOutCards();
+		layOutItems();
 	}
 
-	// Where each card of a holder goes: its place, then each card on from the
+	// Where each item of a holder goes: its place, then each item on from the
 	// one below by its <spread>, or by <spread sprite> when it shows that look.
-	Vector2f Game::cardPlace(const Object& holder, std::size_t index)
+	Vector2f Game::itemPlace(const Object& holder, std::size_t index)
 	{
-		const std::size_t count = holder.holder.cards.size();
+		const std::size_t count = holder.holder.items.size();
 		const auto step = [&](std::size_t i)
 		{
-			const Object* card = cardAt(holder.holder.cards[i]);
-			const bool looked = card && !holder.holder.spreadSprite.empty() && card->lookName() == holder.holder.spreadSprite;
+			const Object* item = itemAt(holder.holder.items[i]);
+			const bool looked = item && !holder.holder.spreadSprite.empty() && item->lookName() == holder.holder.spreadSprite;
 			return looked ? holder.holder.lookSpread : holder.holder.spread;
 		};
 		// A fan never wider than its <width>: the steps across shrink.
@@ -1066,7 +1066,7 @@ namespace xge
 		{
 			float wide = 0.0f;
 			for (std::size_t i = 0; i + 1 < count; ++i) { wide += std::fabs(step(i).x); }
-			const Object* first = cardAt(holder.holder.cards.front());
+			const Object* first = itemAt(holder.holder.items.front());
 			const float room = holder.holder.spreadWidth - (first ? sizeOf(*first).x : 0.0f);
 			if (wide > room && wide > 0.0f) { across = std::max(0.0f, room) / wide; }
 		}
@@ -1079,18 +1079,18 @@ namespace xge
 		return at;
 	}
 
-	void Game::layOutCards()
+	void Game::layOutItems()
 	{
 		int order = 1;
 		for (Object& holder : objects)
 		{
 			if (!holder.holder.is) { continue; }
-			for (std::size_t i = 0; i < holder.holder.cards.size(); ++i)
+			for (std::size_t i = 0; i < holder.holder.items.size(); ++i)
 			{
-				Object* card = cardAt(holder.holder.cards[i]);
-				if (!card) { continue; }
-				card->position = cardPlace(holder, i);
-				card->drawOrder = order++;
+				Object* item = itemAt(holder.holder.items[i]);
+				if (!item) { continue; }
+				item->position = itemPlace(holder, i);
+				item->drawOrder = order++;
 			}
 		}
 
@@ -1099,22 +1099,22 @@ namespace xge
 			if (!hand.hand.is) { continue; }
 			Object* holder = hand.hand.holder.empty() ? nullptr : holderNamed(hand.hand.holder);
 			// A hand pointing into its own holder, emptied then dealt to again:
-			// at its first card.
-			if (holder && hand.hand.at < 0 && !holder->holder.cards.empty() && !hand.hand.own.empty() && holderNamed(hand.hand.own) == holder) { hand.hand.at = 0; }
+			// at its first item.
+			if (holder && hand.hand.at < 0 && !holder->holder.items.empty() && !hand.hand.own.empty() && holderNamed(hand.hand.own) == holder) { hand.hand.at = 0; }
 			Vector2f pointed = holder ? holder->position : hand.position;
 			Vector2f size = holder ? sizeOf(*holder) : Vector2f{};
-			if (holder && hand.hand.at >= 0 && static_cast<std::size_t>(hand.hand.at) < holder->holder.cards.size())
+			if (holder && hand.hand.at >= 0 && static_cast<std::size_t>(hand.hand.at) < holder->holder.items.size())
 			{
-				pointed = cardPlace(*holder, static_cast<std::size_t>(hand.hand.at));
-				if (Object* card = cardAt(holder->holder.cards[static_cast<std::size_t>(hand.hand.at)]))
+				pointed = itemPlace(*holder, static_cast<std::size_t>(hand.hand.at));
+				if (Object* item = itemAt(holder->holder.items[static_cast<std::size_t>(hand.hand.at)]))
 				{
-					size = sizeOf(*card);
-					// A holder with a <lift>: a face-up card pointed at is lifted
+					size = sizeOf(*item);
+					// A holder with a <lift>: a face-up item pointed at is lifted
 					// out of the fan, so all of it shows.
-					if (card->faceUp && holder->holder.lift != 0.0f)
+					if (item->faceUp && holder->holder.lift != 0.0f)
 					{
 						pointed.y -= holder->holder.lift;
-						card->position = pointed;
+						item->position = pointed;
 					}
 				}
 			}
@@ -1125,14 +1125,14 @@ namespace xge
 			// What it holds: following the pointer, or laid as it would be
 			// on the holder pointed at, a little off it.
 			Vector2f at = pointed + Vector2f{ 6.0f, 6.0f };
-			if (holder && !holder->holder.cards.empty()) { at = cardPlace(*holder, holder->holder.cards.size() - 1) + holder->holder.spread + Vector2f{ 6.0f, 6.0f }; }
+			if (holder && !holder->holder.items.empty()) { at = itemPlace(*holder, holder->holder.items.size() - 1) + holder->holder.spread + Vector2f{ 6.0f, 6.0f }; }
 			if (hand.hand.mouse && hand.pointer.x >= 0.0f && hand.pointer.y >= 0.0f) { at = hand.pointer - hand.hand.grab; }
 			for (const int number : hand.hand.held)
 			{
-				Object* card = cardAt(number);
-				if (!card) { continue; }
-				card->position = at;
-				card->drawOrder = 100000 + order++;
+				Object* item = itemAt(number);
+				if (!item) { continue; }
+				item->position = at;
+				item->drawOrder = 100000 + order++;
 				at += holder ? holder->holder.spread : Vector2f{ 0.0f, 20.0f };
 				if (holder && holder->holder.spread.x == 0.0f && holder->holder.spread.y == 0.0f) { at += Vector2f{ 0.0f, 20.0f }; }
 			}
@@ -1140,27 +1140,27 @@ namespace xge
 		}
 	}
 
-	// Whether `cards` (the lowest first) may go on the holder, by its <accepts>.
-	bool Game::holderTakes(Object& holder, const std::vector<int>& cards, const Object* from)
+	// Whether `items` (the lowest first) may go on the holder, by its <accepts>.
+	bool Game::holderTakes(Object& holder, const std::vector<int>& items, const Object* from)
 	{
 		const HolderRule& rule = holder.holder.takes;
-		if (!rule.given || cards.empty()) { return false; }
+		if (!rule.given || items.empty()) { return false; }
 		// <total variable>N: what is laid together, that variable added up, is N.
 		for (const HolderRule::VarRule& each : rule.rules)
 		{
 			if (each.kind != HolderRule::VarRule::Kind::Total) { continue; }
 			float total = 0.0f;
-			for (const int number : cards)
+			for (const int number : items)
 			{
-				const Object* card = cardAt(number);
-				if (!card) { return false; }
-				const auto value = card->variable.find(each.variable);
-				total += value == card->variable.end() ? 0.0f : value->second;
+				const Object* item = itemAt(number);
+				if (!item) { return false; }
+				const auto value = item->variable.find(each.variable);
+				total += value == item->variable.end() ? 0.0f : value->second;
 			}
 			if (total != each.amount) { return false; }
 		}
-		if (rule.one && cards.size() > 1) { return false; }
-		const Object* first = cardAt(cards.front());
+		if (rule.one && items.size() > 1) { return false; }
+		const Object* first = itemAt(items.front());
 		if (!first) { return false; }
 		// A trick: what the hand laying holds (its own holder) decides.
 		if (rule.follow)
@@ -1168,36 +1168,36 @@ namespace xge
 			const auto holds = [&](const auto& test)
 			{
 				if (!from) { return false; }
-				for (const int number : from->holder.cards)
+				for (const int number : from->holder.items)
 				{
-					const Object* card = cardAt(number);
-					if (card && number != first->cardNumber && test(*card)) { return true; }
+					const Object* item = itemAt(number);
+					if (item && number != first->itemNumber && test(*item)) { return true; }
 				}
 				return false;
 			};
-			if (holder.holder.cards.empty())
+			if (holder.holder.items.empty())
 			{
-				const auto unbroken = [&](const Object& card)
+				const auto unbroken = [&](const Object& item)
 				{
-					return std::find(rule.breaks.begin(), rule.breaks.end(), followedName(rule, card)) != rule.breaks.end()
-						&& std::find(holder.holder.broken.begin(), holder.holder.broken.end(), followed(rule, card)) == holder.holder.broken.end();
+					return std::find(rule.breaks.begin(), rule.breaks.end(), followedName(rule, item)) != rule.breaks.end()
+						&& std::find(holder.holder.broken.begin(), holder.holder.broken.end(), followed(rule, item)) == holder.holder.broken.end();
 				};
 				// A suit not yet broken leads only when the hand holds nothing else.
-				if (unbroken(*first) && holds([&](const Object& card) { return !unbroken(card); })) { return false; }
+				if (unbroken(*first) && holds([&](const Object& item) { return !unbroken(item); })) { return false; }
 			}
-			else if (const Object* lead = cardAt(holder.holder.cards.front()); lead && followed(rule, *first) != followed(rule, *lead))
+			else if (const Object* lead = itemAt(holder.holder.items.front()); lead && followed(rule, *first) != followed(rule, *lead))
 			{
-				if (holds([&](const Object& card) { return followed(rule, card) == followed(rule, *lead); })) { return false; }
+				if (holds([&](const Object& item) { return followed(rule, item) == followed(rule, *lead); })) { return false; }
 			}
 		}
-		if (holder.holder.cards.empty())
+		if (holder.holder.items.empty())
 		{
 			return acceptsBy(rule.emptyRules, *first, nullptr);
 		}
 		// Waiting for a suit to be called: nothing goes on it.
 		if (holder.calling > 0.0f) { return false; }
 		if (isWild(rule, *first)) { return true; }
-		const Object* top = cardAt(holder.holder.cards.back());
+		const Object* top = itemAt(holder.holder.items.back());
 		if (!top || !top->faceUp) { return false; }
 		// <any>: one of them, a value called standing for the top's own.
 		if (!rule.anyRules.empty())
@@ -1248,20 +1248,20 @@ namespace xge
 		return true;
 	}
 
-	// Whether a card of a holder lies under another holder's card drawn over it.
-	bool Game::isCovered(const Object& card, const Object& own)
+	// Whether an item of a holder lies under another holder's item drawn over it.
+	bool Game::isCovered(const Object& item, const Object& own)
 	{
-		const Vector2f size = sizeOf(card);
+		const Vector2f size = sizeOf(item);
 		for (const Object& holder : objects)
 		{
 			if (!holder.holder.is || &holder == &own || !isShown(holder)) { continue; }
-			for (const int number : holder.holder.cards)
+			for (const int number : holder.holder.items)
 			{
-				const Object* other = cardAt(number);
-				if (!other || other == &card || other->drawOrder <= card.drawOrder) { continue; }
+				const Object* other = itemAt(number);
+				if (!other || other == &item || other->drawOrder <= item.drawOrder) { continue; }
 				const Vector2f otherSize = sizeOf(*other);
-				if (other->position.x < card.position.x + size.x && card.position.x < other->position.x + otherSize.x
-					&& other->position.y < card.position.y + size.y && card.position.y < other->position.y + otherSize.y)
+				if (other->position.x < item.position.x + size.x && item.position.x < other->position.x + otherSize.x
+					&& other->position.y < item.position.y + size.y && item.position.y < other->position.y + otherSize.y)
 				{
 					return true;
 				}
@@ -1270,72 +1270,72 @@ namespace xge
 		return false;
 	}
 
-	bool Game::takeCards(Object& hand)
+	bool Game::takeItems(Object& hand)
 	{
 		if (!hand.hand.is || (hand.hand.mouse && !hand.hand.over)) { return false; }
 		Object* holder = holderNamed(hand.hand.holder);
-		if (!holder || holder->holder.pickedSends > 0 || holder->holder.cards.empty()) { return false; }
-		// Covering: a top card that a card of another holder, drawn over it,
+		if (!holder || holder->holder.pickedSends > 0 || holder->holder.items.empty()) { return false; }
+		// Covering: a top item that an item of another holder, drawn over it,
 		// overlaps stays where it is.
-		if (const Object* top = cardAt(holder->holder.cards.back()); top && isCovered(*top, *holder)) { return false; }
-		// Holding already: the top card of another holder too, while the hand
-		// <holds> cards from that many holders.
+		if (const Object* top = itemAt(holder->holder.items.back()); top && isCovered(*top, *holder)) { return false; }
+		// Holding already: the top item of another holder too, while the hand
+		// <holds> items from that many holders.
 		if (!hand.hand.held.empty())
 		{
 			const auto taken = [&](const std::string& name) { return name == hand.hand.from || std::any_of(hand.hand.also.begin(), hand.hand.also.end(), [&](const auto& each) { return each.second == name; }); };
 			if (static_cast<int>(hand.hand.also.size()) + 1 >= hand.hand.holds || taken(holder->name)) { return false; }
-			const int number = holder->holder.cards.back();
-			const Object* top = cardAt(number);
+			const int number = holder->holder.items.back();
+			const Object* top = itemAt(number);
 			if (!top || !top->faceUp) { return false; }
-			holder->holder.cards.pop_back();
+			holder->holder.items.pop_back();
 			refreshHolder(*holder);
 			hand.hand.held.push_back(number);
 			hand.hand.also.emplace_back(number, holder->name);
-			layOutCards();
+			layOutItems();
 			return true;
 		}
-		const int count = static_cast<int>(holder->holder.cards.size());
+		const int count = static_cast<int>(holder->holder.items.size());
 		const int at = hand.hand.at < 0 ? count - 1 : std::min(hand.hand.at, count - 1);
-		// A hand with a holder of its own takes from it alone, any one card,
-		// face up or down (it knows its own cards).
+		// A hand with a holder of its own takes from it alone, any one item,
+		// face up or down (it knows its own items).
 		if (!hand.hand.own.empty())
 		{
 			if (holder != holderNamed(hand.hand.own)) { return false; }
-			hand.hand.held = { holder->holder.cards[static_cast<std::size_t>(at)] };
-			holder->holder.cards.erase(holder->holder.cards.begin() + at);
+			hand.hand.held = { holder->holder.items[static_cast<std::size_t>(at)] };
+			holder->holder.items.erase(holder->holder.items.begin() + at);
 			refreshHolder(*holder);
 			hand.hand.from = holder->name;
-			hand.hand.at = std::min(at, static_cast<int>(holder->holder.cards.size()) - 1);
+			hand.hand.at = std::min(at, static_cast<int>(holder->holder.items.size()) - 1);
 			if (hand.hand.mouse && hand.pointer.x >= 0.0f && hand.pointer.y >= 0.0f)
 			{
-				hand.hand.grab = hand.pointer - cardPlace(*holder, static_cast<std::size_t>(std::max(0, hand.hand.at)));
+				hand.hand.grab = hand.pointer - itemPlace(*holder, static_cast<std::size_t>(std::max(0, hand.hand.at)));
 			}
-			layOutCards();
+			layOutItems();
 			return true;
 		}
 		if (at < count - 1 && !holder->holder.carry) { return false; }
 		// Face up, and each on the one below it by the holder's own rule.
 		for (int i = at; i < count; ++i)
 		{
-			const Object* card = cardAt(holder->holder.cards[static_cast<std::size_t>(i)]);
-			if (!card || !card->faceUp) { return false; }
-			if (i > at && !follows(holder->holder.takes, *cardAt(holder->holder.cards[static_cast<std::size_t>(i - 1)]), *card)) { return false; }
+			const Object* item = itemAt(holder->holder.items[static_cast<std::size_t>(i)]);
+			if (!item || !item->faceUp) { return false; }
+			if (i > at && !follows(holder->holder.takes, *itemAt(holder->holder.items[static_cast<std::size_t>(i - 1)]), *item)) { return false; }
 		}
-		hand.hand.held.assign(holder->holder.cards.begin() + at, holder->holder.cards.end());
-		holder->holder.cards.resize(static_cast<std::size_t>(at));
+		hand.hand.held.assign(holder->holder.items.begin() + at, holder->holder.items.end());
+		holder->holder.items.resize(static_cast<std::size_t>(at));
 		refreshHolder(*holder);
 		hand.hand.from = holder->name;
 		hand.hand.at = at - 1;
 		// Held where the pointer took them.
 		if (hand.hand.mouse && hand.pointer.x >= 0.0f && hand.pointer.y >= 0.0f)
 		{
-			hand.hand.grab = hand.pointer - cardPlace(*holder, static_cast<std::size_t>(at));
+			hand.hand.grab = hand.pointer - itemPlace(*holder, static_cast<std::size_t>(at));
 		}
-		layOutCards();
+		layOutItems();
 		return true;
 	}
 
-	bool Game::pickCards(Object& hand)
+	bool Game::pickItems(Object& hand)
 	{
 		// From a holder with <picked>: it sends instead, and nothing is
 		// picked up, so the picker's verbs after <pick /> do not run.
@@ -1346,16 +1346,16 @@ namespace xge
 			if (sendPicked(hand, "", "") && !sound.empty()) { requestSound(sound); }
 			return false;
 		}
-		return takeCards(hand);
+		return takeItems(hand);
 	}
 
-	// The cards held go on the holder, the top one pointed at, and the holder
+	// The items held go on the holder, the top one pointed at, and the holder
 	// they came from shows its top.
 	void Game::layHeld(Object& hand, Object& holder)
 	{
 		for (const int number : hand.hand.held)
 		{
-			if (Object* card = cardAt(number)) { card->laidBy = hand.hand.seat; }
+			if (Object* item = itemAt(number)) { item->laidBy = hand.hand.seat; }
 			putInHolder(holder, number);
 		}
 		hand.hand.held.clear();
@@ -1370,17 +1370,17 @@ namespace xge
 		if (Object* own = hand.hand.own.empty() ? nullptr : holderNamed(hand.hand.own))
 		{
 			hand.hand.holder = own->name;
-			hand.hand.at = std::min(std::max(hand.hand.at, 0), static_cast<int>(own->holder.cards.size()) - 1);
+			hand.hand.at = std::min(std::max(hand.hand.at, 0), static_cast<int>(own->holder.items.size()) - 1);
 		}
 		else
 		{
 			hand.hand.holder = holder.name;
-			hand.hand.at = static_cast<int>(holder.holder.cards.size()) - 1;
+			hand.hand.at = static_cast<int>(holder.holder.items.size()) - 1;
 		}
-		layOutCards();
+		layOutItems();
 	}
 
-	bool Game::layCards(Object& hand, const std::string& onto)
+	bool Game::layItems(Object& hand, const std::string& onto)
 	{
 		if (!hand.hand.is || hand.hand.held.empty()) { return false; }
 		std::vector<Object*> choices;
@@ -1415,15 +1415,15 @@ namespace xge
 		return false;
 	}
 
-	bool Game::dropCards(Object& hand)
+	bool Game::dropItems(Object& hand)
 	{
 		if (!hand.hand.is || hand.hand.held.empty()) { return false; }
 		Object* from = holderNamed(hand.hand.from);
 		if (!from) { return false; }
 		const std::string pointed = hand.hand.holder;
 		const int at = hand.hand.at;
-		const int card = hand.hand.held.front();
-		// Cards taken from other holders go back to theirs first.
+		const int item = hand.hand.held.front();
+		// Items taken from other holders go back to theirs first.
 		for (const auto& [number, name] : hand.hand.also)
 		{
 			hand.hand.held.erase(std::find(hand.hand.held.begin(), hand.hand.held.end(), number));
@@ -1434,17 +1434,17 @@ namespace xge
 		// Back in a hand's own holder: pointing at it again.
 		if (!hand.hand.own.empty() && from == holderNamed(hand.hand.own))
 		{
-			const auto found = std::find(from->holder.cards.begin(), from->holder.cards.end(), card);
+			const auto found = std::find(from->holder.items.begin(), from->holder.items.end(), item);
 			hand.hand.holder = from->name;
-			hand.hand.at = static_cast<int>(found - from->holder.cards.begin());
-			layOutCards();
+			hand.hand.at = static_cast<int>(found - from->holder.items.begin());
+			layOutItems();
 			return true;
 		}
 		// Put back, the hand stays where it was.
 		hand.hand.holder = pointed;
 		hand.hand.at = at;
-		if (Object* holder = holderNamed(pointed)) { hand.hand.at = std::min(at < 0 ? static_cast<int>(holder->holder.cards.size()) - 1 : at, static_cast<int>(holder->holder.cards.size()) - 1); }
-		layOutCards();
+		if (Object* holder = holderNamed(pointed)) { hand.hand.at = std::min(at < 0 ? static_cast<int>(holder->holder.items.size()) - 1 : at, static_cast<int>(holder->holder.items.size()) - 1); }
+		layOutItems();
 		return true;
 	}
 
@@ -1458,15 +1458,15 @@ namespace xge
 		const std::string& intoName = holder->holder.pickedInto.empty() ? hand.hand.own : holder->holder.pickedInto;
 		Object* into = intoName.empty() ? nullptr : holderNamed(intoName);
 		if (!into) { return false; }
-		if (!holder->holder.cards.empty())
+		if (!holder->holder.items.empty())
 		{
-			for (int i = 0; i < holder->holder.pickedSends && !holder->holder.cards.empty(); ++i)
+			for (int i = 0; i < holder->holder.pickedSends && !holder->holder.items.empty(); ++i)
 			{
 				const int number = takeTop(*holder);
 				putInHolder(*into, number);
-				if (Object* card = cardAt(number); card && !faces.empty())
+				if (Object* item = itemAt(number); item && !faces.empty())
 				{
-					turnCard(*card, faces == "up");
+					turnItem(*item, faces == "up");
 					refreshHolder(*into);
 				}
 			}
@@ -1474,44 +1474,44 @@ namespace xge
 		else
 		{
 			// Empty: the other holder turned back over onto it (or shuffled),
-			// but for the top cards it leaves.
+			// but for the top items it leaves.
 			Object* from = holder->holder.emptyFrom.empty() ? nullptr : holderNamed(holder->holder.emptyFrom);
 			const std::size_t leave = static_cast<std::size_t>(holder->holder.emptyLeave);
-			if (!from || from->holder.cards.size() <= leave) { return false; }
-			const auto end = from->holder.cards.end() - static_cast<std::ptrdiff_t>(leave);
-			std::vector<int> cards(from->holder.cards.begin(), end);
-			from->holder.cards.erase(from->holder.cards.begin(), end);
+			if (!from || from->holder.items.size() <= leave) { return false; }
+			const auto end = from->holder.items.end() - static_cast<std::ptrdiff_t>(leave);
+			std::vector<int> items(from->holder.items.begin(), end);
+			from->holder.items.erase(from->holder.items.begin(), end);
 			refreshHolder(*from);
 			if (holder->holder.emptyRandom)
 			{
-				for (std::size_t i = cards.size(); i > 1; --i)
+				for (std::size_t i = items.size(); i > 1; --i)
 				{
 					const std::size_t j = std::min(i - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(i))));
-					std::swap(cards[i - 1], cards[j]);
+					std::swap(items[i - 1], items[j]);
 				}
 			}
 			else
 			{
 				// Turned over: the top first.
-				std::reverse(cards.begin(), cards.end());
+				std::reverse(items.begin(), items.end());
 			}
-			for (const int card : cards) { putInHolder(*holder, card); }
+			for (const int item : items) { putInHolder(*holder, item); }
 		}
 		// Pointing at the stock, still pointing at its top.
-		if (fromHolder.empty()) { hand.hand.at = static_cast<int>(holder->holder.cards.size()) - 1; }
-		layOutCards();
+		if (fromHolder.empty()) { hand.hand.at = static_cast<int>(holder->holder.items.size()) - 1; }
+		layOutItems();
 		return true;
 	}
 
 	namespace
 	{
-		// Which way up a card showing that look is: its face (its first
+		// Which way up an item showing that look is: its face (its first
 		// look) up; another of its looks down; none of its looks, nothing.
-		std::optional<bool> faceFor(const Object& card, const std::string& sprite)
+		std::optional<bool> faceFor(const Object& item, const std::string& sprite)
 		{
-			for (std::size_t i = 0; i < card.looks.size(); ++i)
+			for (std::size_t i = 0; i < item.looks.size(); ++i)
 			{
-				if (card.looks[i].name == sprite) { return i == 0; }
+				if (item.looks[i].name == sprite) { return i == 0; }
 			}
 			return std::nullopt;
 		}
@@ -1522,7 +1522,7 @@ namespace xge
 		Object* into = holderNamed(intoName);
 		if (!into)
 		{
-			// A group's: each member's own holder in turn, a card a round.
+			// A group's: each member's own holder in turn, an item a round.
 			std::vector<std::pair<int, std::string>> owners;
 			for (const Object& object : objects)
 			{
@@ -1540,8 +1540,8 @@ namespace xge
 		std::vector<int> sent;
 		if (Object* from = holderNamed(fromName))
 		{
-			if (from == into || from->holder.cards.empty()) { return false; }
-			const std::size_t many = all ? from->holder.cards.size() : std::min(from->holder.cards.size(), static_cast<std::size_t>(count));
+			if (from == into || from->holder.items.empty()) { return false; }
+			const std::size_t many = all ? from->holder.items.size() : std::min(from->holder.items.size(), static_cast<std::size_t>(count));
 			// The top ones, the topmost first.
 			for (std::size_t i = 0; i < many; ++i) { sent.push_back(takeTop(*from)); }
 		}
@@ -1551,18 +1551,18 @@ namespace xge
 			if (!all) { return false; }
 			for (Object& object : objects)
 			{
-				if (object.held && (object.inGroup(fromName) || object.inGroup(fullName(fromName)))) { sent.push_back(object.cardNumber); }
+				if (object.held && (object.inGroup(fromName) || object.inGroup(fullName(fromName)))) { sent.push_back(object.itemNumber); }
 			}
 			if (sent.empty()) { return false; }
 			for (Object& object : objects)
 			{
 				if (object.holder.is)
 				{
-					auto& cards = object.holder.cards;
-					const auto gone = std::remove_if(cards.begin(), cards.end(), [&](int number) { return std::find(sent.begin(), sent.end(), number) != sent.end(); });
-					if (gone != cards.end())
+					auto& items = object.holder.items;
+					const auto gone = std::remove_if(items.begin(), items.end(), [&](int number) { return std::find(sent.begin(), sent.end(), number) != sent.end(); });
+					if (gone != items.end())
 					{
-						cards.erase(gone, cards.end());
+						items.erase(gone, items.end());
 						object.holder.broken.clear();
 						object.called = 0.0f;
 						refreshHolder(object);
@@ -1578,23 +1578,23 @@ namespace xge
 		}
 		for (const int number : sent)
 		{
-			Object* card = cardAt(number);
-			if (card) { card->laidBy = 0; }
+			Object* item = itemAt(number);
+			if (item) { item->laidBy = 0; }
 			putInHolder(*into, number);
-			if (card && !sprite.empty())
+			if (item && !sprite.empty())
 			{
-				if (const auto up = faceFor(*card, sprite)) { turnCard(*card, *up); }
+				if (const auto up = faceFor(*item, sprite)) { turnItem(*item, *up); }
 			}
 		}
 		refreshHolder(*into);
-		// A hand pointing where cards were: at its own, or at that holder.
+		// A hand pointing where items were: at its own, or at that holder.
 		for (Object& object : objects)
 		{
 			if (!object.hand.is) { continue; }
 			Object* pointed = holderNamed(object.hand.holder);
-			if (pointed && object.hand.at >= static_cast<int>(pointed->holder.cards.size())) { object.hand.at = static_cast<int>(pointed->holder.cards.size()) - 1; }
+			if (pointed && object.hand.at >= static_cast<int>(pointed->holder.items.size())) { object.hand.at = static_cast<int>(pointed->holder.items.size()) - 1; }
 		}
-		layOutCards();
+		layOutItems();
 		return true;
 	}
 
@@ -1602,38 +1602,38 @@ namespace xge
 	{
 		Object* holder = holderNamed(name);
 		if (!holder) { return false; }
-		std::vector<int>& cards = holder->holder.cards;
-		for (std::size_t i = cards.size(); i > 1; --i)
+		std::vector<int>& items = holder->holder.items;
+		for (std::size_t i = items.size(); i > 1; --i)
 		{
 			const std::size_t j = std::min(i - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(i))));
-			std::swap(cards[i - 1], cards[j]);
+			std::swap(items[i - 1], items[j]);
 		}
-		// Stacked (tests): those cards last, so on top, the first last of all.
+		// Stacked (tests): those items last, so on top, the first last of all.
 		for (auto each = stackedStart.rbegin(); each != stackedStart.rend(); ++each)
 		{
-			const auto at = std::find(cards.begin(), cards.end(), *each);
-			if (at == cards.end()) { continue; }
-			cards.erase(at);
-			cards.push_back(*each);
+			const auto at = std::find(items.begin(), items.end(), *each);
+			if (at == items.end()) { continue; }
+			items.erase(at);
+			items.push_back(*each);
 		}
 		stackedStart.clear();
 		refreshHolder(*holder);
-		layOutCards();
+		layOutItems();
 		return true;
 	}
 
 	bool Game::turnHeld(Object& holder, const std::string& sprite)
 	{
-		for (const int number : holder.holder.cards)
+		for (const int number : holder.holder.items)
 		{
-			Object* card = cardAt(number);
-			if (!card) { continue; }
-			const auto up = faceFor(*card, sprite);
+			Object* item = itemAt(number);
+			if (!item) { continue; }
+			const auto up = faceFor(*item, sprite);
 			if (!up) { return false; }
-			if (card->faceUp != *up) { turnCard(*card, *up); }
+			if (item->faceUp != *up) { turnItem(*item, *up); }
 		}
 		refreshHolder(holder);
-		layOutCards();
+		layOutItems();
 		return true;
 	}
 
@@ -1654,25 +1654,25 @@ namespace xge
 		const std::vector<Object*> holders = shownHolders();
 		if (holders.empty()) { return false; }
 		if (!holder) { holder = holders.front(); }
-		const int count = static_cast<int>(holder->holder.cards.size());
+		const int count = static_cast<int>(holder->holder.items.size());
 		const bool own = !hand.hand.own.empty() && holder == holderNamed(hand.hand.own);
 		const auto takeable = [&](int index)
 		{
 			if (index < 0 || index >= count) { return false; }
-			const Object* card = cardAt(holder->holder.cards[static_cast<std::size_t>(index)]);
-			return card && (card->faceUp || own);
+			const Object* item = itemAt(holder->holder.items[static_cast<std::size_t>(index)]);
+			return item && (item->faceUp || own);
 		};
 		const auto pointAt = [&](Object& to)
 		{
 			hand.hand.holder = to.name;
-			hand.hand.at = static_cast<int>(to.holder.cards.size()) - 1;
+			hand.hand.at = static_cast<int>(to.holder.items.size()) - 1;
 			hand.hand.mouse = false;
-			layOutCards();
+			layOutItems();
 			return true;
 		};
 
 		hand.facing = direction;
-		// A holder fanned across: left and right go through its cards first
+		// A holder fanned across: left and right go through its items first
 		// (any of a hand's own, else a run's face-up ones).
 		const bool fannedAcross = std::fabs(holder->holder.spread.x) > std::fabs(holder->holder.spread.y);
 		if (fannedAcross && (direction == Direction::Left || direction == Direction::Right) && (own || holder->holder.carry))
@@ -1683,7 +1683,7 @@ namespace xge
 			{
 				hand.hand.at = next;
 				hand.hand.mouse = false;
-				layOutCards();
+				layOutItems();
 				return true;
 			}
 		}
@@ -1702,7 +1702,7 @@ namespace xge
 			return best && pointAt(*best);
 		}
 
-		// Up and down: through a run's face-up cards, then to the row of
+		// Up and down: through a run's face-up items, then to the row of
 		// holders above or below, the holder nearest across.
 		const bool up = direction == Direction::Up;
 		const int at = hand.hand.at < 0 ? count - 1 : hand.hand.at;
@@ -1710,14 +1710,14 @@ namespace xge
 		{
 			hand.hand.at = at - 1;
 			hand.hand.mouse = false;
-			layOutCards();
+			layOutItems();
 			return true;
 		}
 		if (!fannedAcross && holder->holder.carry && !up && at < count - 1)
 		{
 			hand.hand.at = at + 1;
 			hand.hand.mouse = false;
-			layOutCards();
+			layOutItems();
 			return true;
 		}
 		Object* best = nullptr;
@@ -1749,7 +1749,7 @@ namespace xge
 		{
 			return point.x >= where.x && point.y >= where.y && point.x < where.x + size.x && point.y < where.y + size.y;
 		};
-		// The top card under the pointer (of holders overlapping, the one
+		// The top item under the pointer (of holders overlapping, the one
 		// drawn over), else the holder's place.
 		Object* found = nullptr;
 		int foundAt = -1;
@@ -1758,10 +1758,10 @@ namespace xge
 		{
 			bool hit = false;
 			int index = -1;
-			for (int i = static_cast<int>(holder->holder.cards.size()) - 1; i >= 0 && !hit; --i)
+			for (int i = static_cast<int>(holder->holder.items.size()) - 1; i >= 0 && !hit; --i)
 			{
-				const Object* card = cardAt(holder->holder.cards[static_cast<std::size_t>(i)]);
-				if (card && inside(cardPlace(*holder, static_cast<std::size_t>(i)), sizeOf(*card)))
+				const Object* item = itemAt(holder->holder.items[static_cast<std::size_t>(i)]);
+				if (item && inside(itemPlace(*holder, static_cast<std::size_t>(i)), sizeOf(*item)))
 				{
 					hit = true;
 					index = i;
@@ -1769,8 +1769,8 @@ namespace xge
 			}
 			if (!hit && inside(holder->position, sizeOf(*holder))) { hit = true; }
 			if (!hit) { continue; }
-			const Object* card = index >= 0 ? cardAt(holder->holder.cards[static_cast<std::size_t>(index)]) : nullptr;
-			const int order = card ? card->drawOrder : 0;
+			const Object* item = index >= 0 ? itemAt(holder->holder.items[static_cast<std::size_t>(index)]) : nullptr;
+			const int order = item ? item->drawOrder : 0;
 			if (found && order <= foundOrder) { continue; }
 			found = holder;
 			foundAt = index;
@@ -1778,13 +1778,13 @@ namespace xge
 		}
 		if (found)
 		{
-			// Holding: the holder, its top card.
-			if (!hand.hand.held.empty() && hand.hand.holds <= 1) { foundAt = static_cast<int>(found->holder.cards.size()) - 1; }
+			// Holding: the holder, its top item.
+			if (!hand.hand.held.empty() && hand.hand.holds <= 1) { foundAt = static_cast<int>(found->holder.items.size()) - 1; }
 			hand.hand.holder = found->name;
 			hand.hand.at = foundAt;
 			hand.hand.over = true;
 		}
-		layOutCards();
+		layOutItems();
 	}
 
 	bool Game::callValue(Object& hand, const std::string& name)
@@ -1793,20 +1793,20 @@ namespace xge
 		Object* holder = holderNamed(name);
 		Object* own = holderNamed(hand.hand.own);
 		if (!holder || !own || holder->calling <= 0.0f || holderNamed(hand.hand.holder) != own) { return false; }
-		const int count = static_cast<int>(own->holder.cards.size());
+		const int count = static_cast<int>(own->holder.items.size());
 		if (count == 0) { return false; }
 		const int at = hand.hand.at < 0 ? count - 1 : std::min(hand.hand.at, count - 1);
-		const Object* card = cardAt(own->holder.cards[static_cast<std::size_t>(at)]);
-		if (!card) { return false; }
-		// The value named: the card's <wild variable=>.
-		holder->called = valueOf(*card, holder->holder.takes.wildVariable);
+		const Object* item = itemAt(own->holder.items[static_cast<std::size_t>(at)]);
+		if (!item) { return false; }
+		// The value named: the item's <wild variable=>.
+		holder->called = valueOf(*item, holder->holder.takes.wildVariable);
 		refreshCall(*holder);
 		return true;
 	}
 
 	// A computer playing a card game, a step each time it is due: point the
 	// hand at what it will do, then press. Calling, the suit it holds most
-	// of; else the card that goes somewhere, a wild one last, from the suit
+	// of; else the item that goes somewhere, a wild one last, from the suit
 	// it holds most of and the highest; else a draw from the stock.
 	int Game::playToTrick(Object& trick, const Object& hand, const Object& own, bool avoid)
 	{
@@ -1815,29 +1815,29 @@ namespace xge
 		{
 			if (object.hand.is && object.hand.seat > 0 && isShown(object)) { ++players; }
 		}
-		const bool last = static_cast<int>(trick.holder.cards.size()) + 1 >= std::max(players, 2);
+		const bool last = static_cast<int>(trick.holder.items.size()) + 1 >= std::max(players, 2);
 		const Object* winning = trickWinning(trick);
-		const auto worth = [](const Object& card) { return card.card.worths.empty() ? 0.0f : card.card.worths.back(); };
+		const auto worth = [](const Object& item) { return item.item.worths.empty() ? 0.0f : item.item.worths.back(); };
 
 		std::vector<std::pair<int, const Object*>> legal;
-		for (int i = 0; i < static_cast<int>(own.holder.cards.size()); ++i)
+		for (int i = 0; i < static_cast<int>(own.holder.items.size()); ++i)
 		{
-			const int number = own.holder.cards[static_cast<std::size_t>(i)];
-			const Object* card = cardAt(number);
-			if (card && holderTakes(trick, { number }, &own)) { legal.emplace_back(i, card); }
+			const int number = own.holder.items[static_cast<std::size_t>(i)];
+			const Object* item = itemAt(number);
+			if (item && holderTakes(trick, { number }, &own)) { legal.emplace_back(i, item); }
 		}
 		if (legal.empty()) { return -1; }
-		const Object* led = trick.holder.cards.empty() ? nullptr : cardAt(trick.holder.cards.front());
+		const Object* led = trick.holder.items.empty() ? nullptr : itemAt(trick.holder.items.front());
 		const bool following = led && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return followed(trick.holder.takes, *each.second) == followed(trick.holder.takes, *led); });
 		const bool ducking = following && std::any_of(legal.begin(), legal.end(), [&](const auto& each) { return worth(*each.second) < worth(*winning); });
 		const HolderRule& rule = trick.holder.takes;
 		float top = 0.0f;
 		for (const Object& object : objects)
 		{
-			if (object.held && !object.card.worths.empty()) { top = std::max(top, object.card.worths.back()); }
+			if (object.held && !object.item.worths.empty()) { top = std::max(top, object.item.worths.back()); }
 		}
 		// A partner (another hand on its <team>) winning safely: it is the
-		// last card, or the partner's is the highest or next of its suit.
+		// last item, or the partner's is the highest or next of its suit.
 		bool partnerWins = false;
 		if (winning && hand.hand.team > 0 && winning->laidBy != hand.hand.seat)
 		{
@@ -1847,15 +1847,15 @@ namespace xge
 			}
 		}
 
-		// How much each card is wanted: the highest is played.
-		const auto wanted = [&](const Object& card)
+		// How much each item is wanted: the highest is played.
+		const auto wanted = [&](const Object& item)
 		{
-			const float value = worth(card);
-			const float points = cardPoints(trick, card);
+			const float value = worth(item);
+			const float points = itemPoints(trick, item);
 			if (!winning)                                                                  // leading
 			{
 				if (avoid) { return -(points * 100.0f + value); }
-				return value >= top ? 100.0f + value : -value - (isTrump(rule, card) ? 50.0f : 0.0f);  // an ace, else the lowest side card
+				return value >= top ? 100.0f + value : -value - (isTrump(rule, item) ? 50.0f : 0.0f);  // an ace, else the lowest side item
 			}
 			if (!following && avoid) { return points * 100.0f + value; }                  // none of the suit led: shed
 			if (avoid)
@@ -1863,15 +1863,15 @@ namespace xge
 				if (ducking) { return value < worth(*winning) ? value : -1000.0f - value; }  // the highest that still loses
 				return last ? value : -value;                                               // taking it anyway
 			}
-			const float spare = isTrump(rule, card) ? 50.0f : 0.0f;                           // a trump kept back
+			const float spare = isTrump(rule, item) ? 50.0f : 0.0f;                           // a trump kept back
 			if (partnerWins) { return -value - spare; }                                       // the lowest: the partner has it
-			return beatsInTrick(rule, card, *winning) ? 1000.0f - value : -value - spare;     // the lowest that wins, else the lowest
+			return beatsInTrick(rule, item, *winning) ? 1000.0f - value : -value - spare;     // the lowest that wins, else the lowest
 		};
 		int best = legal.front().first;
 		float most = wanted(*legal.front().second);
-		for (const auto& [i, card] : legal)
+		for (const auto& [i, item] : legal)
 		{
-			const float each = wanted(*card);
+			const float each = wanted(*item);
 			if (each > most)
 			{
 				most = each;
@@ -1885,25 +1885,25 @@ namespace xge
 	{
 		Object* own = hand.hand.own.empty() ? nullptr : holderNamed(hand.hand.own);
 		if (!own || !hand.hand.held.empty()) { return std::nullopt; }
-		if (cardWait > 0)
+		if (itemWait > 0)
 		{
-			--cardWait;
+			--itemWait;
 			return std::nullopt;
 		}
 		constexpr int pace = 30;
 
-		// How many of its own cards share each value of the variable a wild
-		// card calls (none called: all alike).
+		// How many of its own items share each value of the variable a wild
+		// item calls (none called: all alike).
 		std::string calledBy;
 		for (const Object* each : shownHolders())
 		{
 			if (calledBy.empty()) { calledBy = each->holder.takes.wildVariable; }
 		}
-		const auto kindOf = [&](const Object& card) { return calledBy.empty() ? 0 : static_cast<int>(std::lround(valueOf(card, calledBy))); };
+		const auto kindOf = [&](const Object& item) { return calledBy.empty() ? 0 : static_cast<int>(std::lround(valueOf(item, calledBy))); };
 		std::map<int, int> ofKind;
-		for (const int number : own->holder.cards)
+		for (const int number : own->holder.items)
 		{
-			if (const Object* card = cardAt(number)) { ++ofKind[kindOf(*card)]; }
+			if (const Object* item = itemAt(number)) { ++ofKind[kindOf(*item)]; }
 		}
 		std::vector<Object*> targets;
 		Object* stock = nullptr;
@@ -1922,39 +1922,39 @@ namespace xge
 		{
 			// Melds: holding no more than its best, it draws, the face-up top
 			// of a holder when that leaves less deadwood, else the face-down
-			// one; holding more, it lets go of the card leaving the least
+			// one; holding more, it lets go of the item leaving the least
 			// (the one worth most, of two alike).
-			const int best = own->holder.meldsBest > 0 ? own->holder.meldsBest : static_cast<int>(own->holder.cards.size());
-			if (static_cast<int>(own->holder.cards.size()) <= best)
+			const int best = own->holder.meldsBest > 0 ? own->holder.meldsBest : static_cast<int>(own->holder.items.size());
+			if (static_cast<int>(own->holder.items.size()) <= best)
 			{
 				Object* up = nullptr;
 				Object* down = nullptr;
 				for (Object* holder : shownHolders())
 				{
-					if (holder == own || holder->holder.pickedSends <= 0 || holder->holder.cards.empty()) { continue; }
-					const Object* top = cardAt(holder->holder.cards.back());
+					if (holder == own || holder->holder.pickedSends <= 0 || holder->holder.items.empty()) { continue; }
+					const Object* top = itemAt(holder->holder.items.back());
 					if (top && top->faceUp) { up = up ? up : holder; }
 					else { down = down ? down : holder; }
 				}
 				aim = down ? down : up;
 				if (up && down)
 				{
-					std::vector<int> with = own->holder.cards;
-					with.push_back(up->holder.cards.back());
-					if (meldDeadwood(*own, with, best, nullptr) < meldDeadwood(*own, own->holder.cards, best, nullptr)) { aim = up; }
+					std::vector<int> with = own->holder.items;
+					with.push_back(up->holder.items.back());
+					if (meldDeadwood(*own, with, best, nullptr) < meldDeadwood(*own, own->holder.items, best, nullptr)) { aim = up; }
 				}
-				if (aim) { index = static_cast<int>(aim->holder.cards.size()) - 1; }
+				if (aim) { index = static_cast<int>(aim->holder.items.size()) - 1; }
 			}
 			else
 			{
 				float least = 0.0f;
 				float worth = 0.0f;
-				for (int i = 0; i < static_cast<int>(own->holder.cards.size()); ++i)
+				for (int i = 0; i < static_cast<int>(own->holder.items.size()); ++i)
 				{
-					std::vector<int> rest = own->holder.cards;
+					std::vector<int> rest = own->holder.items;
 					rest.erase(rest.begin() + i);
 					const float left = meldDeadwood(*own, rest, 0, nullptr);
-					const float points = cardAt(own->holder.cards[static_cast<std::size_t>(i)]) ? cardPoints(*own, *cardAt(own->holder.cards[static_cast<std::size_t>(i)])) : 0.0f;
+					const float points = itemAt(own->holder.items[static_cast<std::size_t>(i)]) ? itemPoints(*own, *itemAt(own->holder.items[static_cast<std::size_t>(i)])) : 0.0f;
 					if (index < 0 || left < least || (left == least && points > worth))
 					{
 						least = left;
@@ -1967,7 +1967,7 @@ namespace xge
 		}
 		else if (trick != targets.end() && !calling)
 		{
-			// A trick: of the cards it takes, the one that best keeps out
+			// A trick: of the items it takes, the one that best keeps out
 			// of it (<avoid />) or takes it.
 			index = playToTrick(**trick, hand, *own, think.avoid);
 			if (index >= 0) { aim = own; }
@@ -1975,12 +1975,12 @@ namespace xge
 		else if (calling)
 		{
 			int most = 0;
-			for (int i = 0; i < static_cast<int>(own->holder.cards.size()); ++i)
+			for (int i = 0; i < static_cast<int>(own->holder.items.size()); ++i)
 			{
-				const Object* card = cardAt(own->holder.cards[static_cast<std::size_t>(i)]);
-				if (card && ofKind[kindOf(*card)] > most)
+				const Object* item = itemAt(own->holder.items[static_cast<std::size_t>(i)]);
+				if (item && ofKind[kindOf(*item)] > most)
 				{
-					most = ofKind[kindOf(*card)];
+					most = ofKind[kindOf(*item)];
 					aim = own;
 					index = i;
 				}
@@ -1989,15 +1989,15 @@ namespace xge
 		else
 		{
 			float best = 0.0f;
-			for (int i = 0; i < static_cast<int>(own->holder.cards.size()); ++i)
+			for (int i = 0; i < static_cast<int>(own->holder.items.size()); ++i)
 			{
-				const int number = own->holder.cards[static_cast<std::size_t>(i)];
-				const Object* card = cardAt(number);
-				if (!card) { continue; }
+				const int number = own->holder.items[static_cast<std::size_t>(i)];
+				const Object* item = itemAt(number);
+				if (!item) { continue; }
 				for (Object* holder : targets)
 				{
 					if (!holderTakes(*holder, { number }, own)) { continue; }
-					const float worth = isWild(holder->holder.takes, *card) ? 1.0f : 100.0f + static_cast<float>(ofKind[kindOf(*card)] * 20) + (card->card.worths.empty() ? 0.0f : card->card.worths.back());
+					const float worth = isWild(holder->holder.takes, *item) ? 1.0f : 100.0f + static_cast<float>(ofKind[kindOf(*item)] * 20) + (item->item.worths.empty() ? 0.0f : item->item.worths.back());
 					if (worth > best)
 					{
 						best = worth;
@@ -2009,18 +2009,18 @@ namespace xge
 			if (!aim && stock)
 			{
 				aim = stock;
-				index = static_cast<int>(stock->holder.cards.size()) - 1;
+				index = static_cast<int>(stock->holder.items.size()) - 1;
 			}
 		}
 		if (!aim) { return std::nullopt; }
 
-		cardWait = pace;
+		itemWait = pace;
 		if (hand.hand.holder != aim->name || hand.hand.at != index)
 		{
 			hand.hand.holder = aim->name;
 			hand.hand.at = index;
 			hand.hand.mouse = false;
-			layOutCards();
+			layOutItems();
 			return std::nullopt;
 		}
 		return think.button;

@@ -1558,7 +1558,7 @@ namespace xge
 			}
 		}
 		// A hand sits centred on what it points at, by the size of its look.
-		if (handChanged) { layOutCards(); }
+		if (handChanged) { layOutItems(); }
 	}
 
 	void Game::reveal(const std::string& target, int count)
@@ -2352,7 +2352,7 @@ namespace xge
 		if (!thought)
 		{
 			stopThinking();
-			cardWait = 30;
+			itemWait = 30;
 		}
 		return held;
 	}

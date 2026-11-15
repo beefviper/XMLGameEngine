@@ -12,7 +12,7 @@
 
 namespace xge
 {
-	// <pick>: Takes up the piece, or the cards, under it.
+	// <pick>: Takes up the piece, or the items, under it.
 	static void readPick(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
@@ -32,7 +32,7 @@ namespace xge
 	{
 		const CmdPick& pick = std::get<CmdPick>(command);
 		Object* const self = doer.self;
-		return self && (self->hand.is ? executor.game.pickCards(*self) : executor.game.pickPiece(*self, pick.objClass.empty() ? executor.game.turnClass() : pick.objClass, pick.only));
+		return self && (self->hand.is ? executor.game.pickItems(*self) : executor.game.pickPiece(*self, pick.objClass.empty() ? executor.game.turnClass() : pick.objClass, pick.only));
 	}
 
 	static void printPick(std::ostream& o, const Command& command)

@@ -135,8 +135,8 @@ namespace xge
 		}
 		// A moment before the computer plays the one whose turn came, and the
 		// game's conditions see the turn change first.
-		cardWait = 30;
-		layOutCards();
+		itemWait = 30;
+		layOutItems();
 	}
 
 	std::string Game::turnClass()

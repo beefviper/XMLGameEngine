@@ -528,19 +528,19 @@ namespace xge
 		// cell under `at` (a pixel across, or down), when it is on the map.
 		void trackCells(Object& object, bool horizontal, float at, const std::vector<std::string>& onto = {});
 		bool hopOnto(Object& mover, Direction direction, const std::vector<std::string>& onto);
-		// Cards (game/holders.cpp): a hand's verbs, each false when refused;
+		// Items (game/holders.cpp): a hand's verbs, each false when refused;
 		// moving it among the holders; the deal at the start of a game.
-		bool takeCards(Object& hand);
-		bool layCards(Object& hand, const std::string& holder);
-		bool dropCards(Object& hand);
+		bool takeItems(Object& hand);
+		bool layItems(Object& hand, const std::string& holder);
+		bool dropItems(Object& hand);
 		bool sendPicked(Object& hand, const std::string& from = {}, const std::string& faces = {});
-		// For tests: the next <starts> puts these cards on top of the starting
+		// For tests: the next <starts> puts these items on top of the starting
 		// holder after shuffling, the first on top, before the holders are dealt.
 		std::vector<int> stackedStart;
 		// Members of a held class, holder to holder: the top `count` of
 		// `from` (or all; a group's name: every member, wherever it is)
-		// into `into`, showing `sprite` if given; a holder's cards at
-		// random; a holder's cards turned to a look of theirs. False when
+		// into `into`, showing `sprite` if given; a holder's items at
+		// random; a holder's items turned to a look of theirs. False when
 		// refused (nothing to send, no such holder or look).
 		bool sendHeld(const std::string& from, const std::string& into, int count, bool all, const std::string& sprite);
 		bool orderHeld(const std::string& holder);
@@ -549,36 +549,36 @@ namespace xge
 		bool hopHand(Object& hand, Direction direction);
 		void trackHand(Object& hand, bool horizontal, float at);
 		void sendStarts();
-		void layOutCards();
-		bool isCovered(const Object& card, const Object& own);   // overlapped by a later-drawn card of another shown holder
-		Object* cardAt(int number);
+		void layOutItems();
+		bool isCovered(const Object& item, const Object& own);   // overlapped by a later-drawn item of another shown holder
+		Object* itemAt(int number);
 		Object* holderNamed(const std::string& name);
-		void turnCard(Object& card, bool up);
+		void turnItem(Object& item, bool up);
 		void putInHolder(Object& holder, int number);
 		int takeTop(Object& holder);
 		void showTop(Object& holder);
 		// Shows the held member that look of its two, face (the first) or back.
-		void showHeld(Object& card, const std::string& look);
-		Vector2f cardPlace(const Object& holder, std::size_t index);
-		bool holderTakes(Object& holder, const std::vector<int>& cards, const Object* from = nullptr);
-		float cardPoints(const Object& holder, const Object& card);
+		void showHeld(Object& item, const std::string& look);
+		Vector2f itemPlace(const Object& holder, std::size_t index);
+		bool holderTakes(Object& holder, const std::vector<int>& items, const Object* from = nullptr);
+		float itemPoints(const Object& holder, const Object& item);
 		bool meldFits(const std::vector<const Object*>& group, const RawPatterns::Pattern& pattern);
 		float meldDeadwood(const Object& holder, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds);
 		void layOutMelds(Object& holder);
 		const Object* trickWinning(const Object& holder);
 		const Object* trickHolder();
-		bool isTrump(const HolderRule& rule, const Object& card);
-		bool beatsInTrick(const HolderRule& rule, const Object& card, const Object& best);
+		bool isTrump(const HolderRule& rule, const Object& item);
+		bool beatsInTrick(const HolderRule& rule, const Object& item, const Object& best);
 		float reckonTricks(const Object& own, const HolderRule& trick);
 
-		// <pick /> by a hand of cards: takes what it points at, or from a
+		// <pick /> by a hand of items: takes what it points at, or from a
 		// holder with <picked> sends as that says (then false: nothing held).
-		bool pickCards(Object& hand);
+		bool pickItems(Object& hand);
 		static bool follows(const HolderRule& rule, const Object& below, const Object& next);
 		// `called`: a variable whose value on `below` counts as `value` (0: its own).
 		static bool acceptsBy(const std::vector<HolderRule::VarRule>& rules, const Object& next, const Object* below, const std::string& called = {}, float value = 0.0f);
 		void layHeld(Object& hand, Object& holder);
-		static bool isWild(const HolderRule& rule, const Object& card);
+		static bool isWild(const HolderRule& rule, const Object& item);
 		void refreshCall(Object& holder);
 		void refreshHolder(Object& holder);
 		void scoreHolder(Object& holder);
@@ -589,7 +589,7 @@ namespace xge
 		bool scoresDue{ false };
 		std::optional<KeyCode> thinkHeld(const CmdThink& think, Object& hand);
 		int playToTrick(Object& trick, const Object& hand, const Object& own, bool avoid);
-		int cardWait{};
+		int itemWait{};
 		// Players as a group: back to the first member's turn, the rest
 		// showing their <turns sprite=>; each member the computer plays,
 		// with its <think>; whether the computer is pressing now.
@@ -599,9 +599,9 @@ namespace xge
 		bool anyTurns{ false };
 		bool computerPresses{ false };
 		std::vector<Object*> shownHolders();
-		// Where each card's object is in `objects`, by its number less one
+		// Where each item's object is in `objects`, by its number less one
 		// (looked over again when a copy taken away moved them).
-		std::vector<std::size_t> cardIndex;
+		std::vector<std::size_t> itemIndex;
 		std::vector<std::pair<int, int>> ontoCells(const std::vector<std::string>& onto);
 		// <marks>: each picker's marks put in their cells (game/cells.cpp).
 		void showMarks();
