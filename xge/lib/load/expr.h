@@ -31,6 +31,9 @@ namespace xge
 	// to the Picture the window backends draw, every RawCommand to a
 	// typed Command. The arithmetic in a value's text is load/calc's job; the
 	// tags (<random>, the operations) are handled here and in game/command.cpp.
+	// Whether a text sprite has a <number> or a <letter> among its pieces.
+	bool showsNumbers(const RawSprite& sprite);
+
 	class game_expr
 	{
 	public:
@@ -74,6 +77,38 @@ namespace xge
 		// first pass, or for a copy spawned while the game runs).
 		Object makeObject(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, Vector2f cellOffset, int lockstep);
 
+		// makeObject's looks: each named <sprite> or <animation> made, the first the
+		// very picture it starts with, and where each once look goes when it ends.
+		std::vector<Object::Look> buildLooks(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, const Picture& picture, const std::string& where);
+		// makeObject's picture: the sprite it starts as, its animation, and a
+		// text's live pieces.
+		void buildSprite(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, const Picture& picture, int animationFrames, Object& object, const std::string& where);
+		// makeObject's names: its group, class and owners, and whether it is
+		// drawn, seen and there.
+		void buildNames(RawObject& rawObject, Object& object);
+		// makeObject's numbers: its variables, then where it starts, what it
+		// follows, its velocity, acceleration and heading.
+		void buildNumbers(RawObject& rawObject, Object& object, Vector2f cellOffset, const std::vector<std::string>& positionSizeDependencies, const std::string& where);
+		// makeObject's ways of moving: drag, surface, friction, mass, pulls,
+		// seeking, light and dark, altitude, a tether and which way it faces.
+		void buildMotion(RawObject& rawObject, Object& object, const std::string& where);
+		// makeObject's timers, a named one's time left a number of its own.
+		void buildTimers(RawObject& rawObject, Object& object, const std::string& where);
+		// makeObject's looks given it, the first one's animation, the look for
+		// each way it moves (<poses>) and for where what it is joined to lies.
+		void buildLookParts(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
+		// makeObject's board-game moves and marks, each set's look found.
+		void buildMoves(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
+		// makeObject's holder (<holds>), hand, held item and turns.
+		void buildHolder(RawObject& rawObject, Object& object, const std::string& where);
+		// makeObject's mirror, grip, timers' looks, its tile on a map, a
+		// maze's walls and its pivot.
+		void buildPlace(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
+		// makeObject's collisions: on or off, the kind, solid pixels, hitboxes
+		// (its own and each frame's), its edge rules and its rules with others.
+		void buildCollisions(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where);
+		// makeObject's actions.
+		void buildActions(RawObject& rawObject, Object& object, const std::string& where);
 		// A copy of `from` spawned while the game runs, from `raw` (what
 		// the file says of `from`, under the copy's name): its names
 		// made known to the expressions (its variables, where it is, its
