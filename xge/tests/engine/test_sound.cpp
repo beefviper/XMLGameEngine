@@ -709,6 +709,92 @@ TEST_CASE("parts the game cannot use are turned away when it loads, saying where
 	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note></part><volume>1</volume></sound></sounds>", "<volume> has to come before");
 }
 
+TEST_CASE("a note with a decay dies away evenly from its start, and is silent once it has", "[sound][decay]")
+{
+	// The loudest sample in a stretch of 1/50 of a second around a time.
+	const auto loudestNear = [](const std::vector<std::int16_t>& samples, double seconds)
+	{
+		const std::size_t from = static_cast<std::size_t>(seconds * kSoundSampleRate);
+		const std::size_t to = std::min(samples.size(), from + kSoundSampleRate / 50);
+		int loudest = 0;
+		for (std::size_t i = from; i < to; ++i) { loudest = std::max(loudest, std::abs(static_cast<int>(samples[i]))); }
+		return loudest;
+	};
+
+	SoundDesc pluck = oneNote(Waveform::Square, 440.0f, 440.0f, 1.0f);
+	const std::vector<std::int16_t> steady = synthesize(pluck);
+	pluck.notes[0].decay = 0.8f;
+	const std::vector<std::int16_t> dying = synthesize(pluck);
+
+	REQUIRE(dying.size() == steady.size()); // the note lasts as long; only its volume falls
+	CHECK(loudestNear(steady, 0.6) == Approx(0.5 * 32767).margin(2));
+	CHECK(loudestNear(dying, 0.1) == Approx(0.5 * 32767 * (1.0 - 0.1 / 0.8)).margin(200));
+	CHECK(loudestNear(dying, 0.4) == Approx(0.5 * 32767 * 0.5).margin(200));
+	CHECK(loudestNear(dying, 0.1) > loudestNear(dying, 0.4));
+	CHECK(loudestNear(dying, 0.85) == 0); // past the decay: silence for the rest of the note
+}
+
+TEST_CASE("a sound's <decay> is every note's, and a part's own is its notes'", "[sound][xml][decay]")
+{
+	const std::vector<SoundDesc> sounds = loadSounds(gameWithSounds(
+		"<sounds>"
+		"<sound name=\"bell\"><volume>0.5</volume><decay>0.6</decay><note pitch=\"C5\">1</note><rest>0.1</rest><note pitch=\"E5\">1</note></sound>"
+		"<sound name=\"tune\"><decay>0.3</decay>"
+		"<part><note pitch=\"C5\">0.5</note></part>"
+		"<part><decay>0.9</decay><note pitch=\"C3\">1</note></part>"
+		"<part wave=\"noise\"><note pitch=\"A4\">0.2</note></part>"
+		"</sound>"
+		"<sound name=\"blip\"><note pitch=\"A4\">0.1</note></sound>"
+		"</sounds>"));
+
+	REQUIRE(sounds.size() == 3);
+	REQUIRE(sounds[0].notes.size() == 3);
+	CHECK(sounds[0].notes[0].decay == Approx(0.6f));
+	CHECK(sounds[0].notes[1].decay == 0.0f); // a rest has nothing to die away
+	CHECK(sounds[0].notes[2].decay == Approx(0.6f));
+	REQUIRE(sounds[1].notes.size() == 3);
+	CHECK(sounds[1].notes[0].decay == Approx(0.3f));
+	CHECK(sounds[1].notes[1].decay == Approx(0.9f));
+	CHECK(sounds[1].notes[2].decay == Approx(0.3f));
+	CHECK(sounds[2].notes[0].decay == 0.0f);
+}
+
+TEST_CASE("a decay the game cannot use is turned away when it loads, saying where", "[sound][xml][decay][errors]")
+{
+	const auto fails = [](const std::string& sounds, const std::string& expected)
+	{
+		INFO(sounds);
+		CHECK_THROWS_WITH(loadSounds(gameWithSounds(sounds)), ContainsSubstring(expected));
+	};
+	fails("<sounds><sound name=\"s\"><decay>0</decay><note pitch=\"A4\">0.1</note></sound></sounds>", "<decay> is 0 seconds; expected more than 0");
+	fails("<sounds><sound name=\"s\"><decay>11</decay><note pitch=\"A4\">0.1</note></sound></sounds>", "<decay> is 11 seconds");
+	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0.1</note><decay>0.5</decay></sound></sounds>", "<decay> has to come before");
+	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note><decay>0.5</decay></part></sound></sounds>", "<part> 1: <decay> has to come before");
+	fails("<sounds><sound name=\"s\"><decay>0.5</decay><path>assets/none.wav</path></sound></sounds>", "has no <decay>");
+}
+
+TEST_CASE("Pinball: a bumper rings like a bell, loud when struck and dying away", "[sound][decay][pinball]")
+{
+	Game game{ "descriptions/pinball.xml" };
+	const std::vector<SoundDesc>& sounds = game.getSounds();
+	const auto bumper = std::find_if(sounds.begin(), sounds.end(), [](const SoundDesc& sound) { return sound.name == "bumper"; });
+	REQUIRE(bumper != sounds.end());
+	REQUIRE(bumper->notes.size() == 1);
+	CHECK(bumper->notes[0].decay == Approx(bumper->notes[0].seconds));
+
+	const std::vector<std::int16_t> samples = synthesize(*bumper);
+	const auto loudestIn = [&](double from, double to)
+	{
+		int loudest = 0;
+		for (std::size_t i = static_cast<std::size_t>(from * kSoundSampleRate); i < static_cast<std::size_t>(to * kSoundSampleRate) && i < samples.size(); ++i)
+		{
+			loudest = std::max(loudest, std::abs(static_cast<int>(samples[i])));
+		}
+		return loudest;
+	};
+	CHECK(loudestIn(0.3, 0.35) < loudestIn(0.0, 0.05) / 3);
+}
+
 TEST_CASE("a state's music names a sound of the game", "[sound][xml][music][errors]")
 {
 	const std::string blip = "<sounds><sound name=\"blip\"><note pitch=\"A4\">0.05</note></sound></sounds>";

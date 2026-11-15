@@ -38,7 +38,9 @@ namespace xge
 
 	// One step of a sound: a tone of one wave that slides from startHz to
 	// endHz (the same for a steady note) over `seconds`, or, for a rest,
-	// silence that long.
+	// silence that long. A `decay` above 0 is the seconds its volume takes
+	// to fall evenly from full to nothing, from the note's start (a pluck,
+	// a bell); 0 keeps it at full for the whole note.
 	struct SoundNote
 	{
 		bool rest{ false };
@@ -50,6 +52,9 @@ namespace xge
 		// Which part (voice) of the sound it is in, from 0. A sound's parts
 		// play at the same time, each its notes one after another.
 		unsigned part{ 0 };
+
+		// Seconds to die away over (see above); 0 for none.
+		float decay{ 0.0f };
 	};
 
 	// A sound from the game file's <sounds>, worked out: its name (what

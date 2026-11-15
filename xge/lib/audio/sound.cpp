@@ -206,6 +206,7 @@ namespace xge
 				double envelope = 1.0;
 				if (fade > 0 && i < fade) { envelope = static_cast<double>(i) / static_cast<double>(fade); }
 				else if (fade > 0 && i >= count - fade) { envelope = static_cast<double>(count - 1 - i) / static_cast<double>(fade); }
+				if (note.decay > 0.0f) { envelope *= std::max(0.0, 1.0 - static_cast<double>(i) / (static_cast<double>(note.decay) * sampleRate)); }
 
 				mix[at + i] += value * envelope * volume;
 			}
@@ -254,7 +255,9 @@ namespace xge
 
 			o << waveformName(note.wave) << "(" << note.startHz;
 			if (note.endHz != note.startHz) { o << "->" << note.endHz; }
-			o << "Hz, " << note.seconds << ")";
+			o << "Hz, " << note.seconds;
+			if (note.decay > 0.0f) { o << ", decay " << note.decay; }
+			o << ")";
 		}
 
 		return o;

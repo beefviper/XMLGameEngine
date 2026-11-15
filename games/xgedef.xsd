@@ -348,7 +348,9 @@
         A sound that <play sound="..." /> starts: whether it loops (<loop />: over
         and over until a <silence>, or, played from a key, until the key is let
         go), how loud (0 to 1, 0.3 when left
-        out for notes), then notes and rests (a rest's content is how many seconds of
+        out for notes), how many seconds each note takes to die away from full
+        to nothing (<decay>: a pluck or a bell; a part's own <decay> is its
+        notes'), then notes and rests (a rest's content is how many seconds of
         silence), played one after the other, or parts (voices) that play at
         the same time, each its own notes and rests: a tune and its bass. wave is
         every note's that does not give its own (square when left out); a part's
@@ -357,10 +359,13 @@
         no <volume> is given.
       ]]></xs:documentation>
     </xs:annotation>
-    <xs:choice maxOccurs="unbounded">
-      <xs:element name="note" type="noteType" />
-      <xs:element name="rest" type="valueType" />
-    </xs:choice>
+    <xs:sequence>
+      <xs:element name="decay" type="valueType" minOccurs="0" />
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="note" type="noteType" />
+        <xs:element name="rest" type="valueType" />
+      </xs:choice>
+    </xs:sequence>
     <xs:attribute name="wave" type="waveType" use="optional" />
   </xs:complexType>
 
@@ -368,6 +373,7 @@
     <xs:sequence>
       <xs:element name="loop" type="emptyType" minOccurs="0" />
       <xs:element name="volume" type="valueType" minOccurs="0" />
+      <xs:element name="decay" type="valueType" minOccurs="0" />
       <xs:choice>
         <xs:choice maxOccurs="unbounded">
           <xs:element name="note" type="noteType" />

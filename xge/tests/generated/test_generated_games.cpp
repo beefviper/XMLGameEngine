@@ -430,6 +430,7 @@ namespace
 					const std::string here = at + ".note" + std::to_string(i);
 					out << here << " " << n.rest << " [" << n.wave << "|" << n.pitch << "|" << n.to << "] part " << n.part << "\n";
 					value(here + ".length", n.length);
+					value(here + ".decay", n.decay);
 				}
 			}
 			for (const std::string& keep : g.keeps) { text("keep", keep); }

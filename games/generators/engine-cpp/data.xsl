@@ -3697,9 +3697,17 @@
         <xsl:value-of select="concat($inner, 'sound.notes = {&#10;')" />
         <xsl:for-each select="note | rest | part/note | part/rest">
           <xsl:variable name="wave" select="(@wave | parent::part/@wave)[last()]" />
+          <xsl:variable name="decay" select="(ancestor::sound/decay | parent::part/decay)[last()]" />
           <xsl:value-of select="concat($inner, $tab)" />
           <xsl:if test="parent::part">
             <xsl:value-of select="concat('inPart(', count(parent::part/preceding-sibling::part), ', ')" />
+          </xsl:if>
+          <xsl:if test="self::note and $decay">
+            <xsl:text>decaying(</xsl:text>
+            <xsl:call-template name="value">
+              <xsl:with-param name="node" select="$decay" />
+            </xsl:call-template>
+            <xsl:text>, </xsl:text>
           </xsl:if>
           <xsl:choose>
             <xsl:when test="self::rest">
@@ -3732,6 +3740,7 @@
             </xsl:otherwise>
           </xsl:choose>
           <xsl:text>)</xsl:text>
+          <xsl:if test="self::note and $decay">)</xsl:if>
           <xsl:if test="parent::part">)</xsl:if>
           <xsl:text>,&#10;</xsl:text>
         </xsl:for-each>

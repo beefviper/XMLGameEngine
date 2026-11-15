@@ -128,8 +128,8 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
 - **Needs** nothing. Cannot be judged in a container: the author listens.
 - **Why.** Plucked and bell sounds need a note that dies away; Space Invaders' march should speed up with the fleet.
 - **Steps.**
-  - [ ] **1. `<decay>` (S).** A `<note>` or `<part>` takes `<decay>seconds</decay>`: its volume falls to nothing over that time, in `synthesize()` (`xge/lib/audio/sound.cpp`). Schema `noteType` and `partType`, `readSound`, `data.xsl`. **Check:** a test in `xge/tests/engine/test_sound.cpp` compares the loudness of the samples at two times.
-  - [ ] **2. A game uses it (S).** One sound in one game. **Check:** its test; add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows) for the author to listen.
+  - [x] **1. `<decay>` (S).** Built on a `<sound>` or `<part>` (every note's), not a single note, so a note stays one number. Planned: a `<note>` or `<part>` takes `<decay>seconds</decay>`: its volume falls to nothing over that time, in `synthesize()` (`xge/lib/audio/sound.cpp`). Schema `noteType` and `partType`, `readSound`, `data.xsl`. **Check:** a test in `xge/tests/engine/test_sound.cpp` compares the loudness of the samples at two times.
+  - [x] **2. A game uses it (S).** Pinball's bumpers ring and die away. One sound in one game. **Check:** its test; add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows) for the author to listen.
   - [ ] **3. Design notes that follow a number (S).** In `docs/designs/33-sound.md`, two options written out with what a game would say for each: a `<play>` that gives a pitch, or a sound made at several pitches at load and picked by a number when played. No code.
   - [ ] **4. The author picks.** Then the build steps are written here before anyone starts.
 - **Done, for now, when** steps 1 to 3 are ticked.
@@ -243,6 +243,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
+- **A decay (F7 step 2):** Pinball's bumpers now ring like a bell for 0.4 s, dying away. Worth a listen: whether it sounds like a bell, and whether a run of bumper hits gets too busy.
 - **Sparring (F2 step 6):** a new two-player boxing game. A jab lands only while the arm is out, scores on the body, is stopped by a guard (S or Down), and knocks the boxer back; the two never pass through each other. Worth a look: whether the reach, the knock back and the jab's timing feel right, and the pictures.
 - **Animations that play once (F2 step 5):** Missile Command's and Depth Charge's bursts and Space Invaders 2's blast look as before and vanish when their frames end; in Mario Bros. a kicked pest pops up kicking its legs for half a second before it is gone.
 - **New bursts and deaths (F2 step 5), new art drawn for each:** bursts for enemies hit in Galaxian, Demon Attack, Megamania, Astrosmash and Atlantis (buildings too), and a wreck for the player's ship in those and Asteroids. Deaths that stand the game still: Space Invaders and Space Invaders 2 (cannon bursts), Pac-Man (shrivels), Donkey Kong (spins, lies flat, halo), Q\*bert (curses; shrinks away off the pyramid), Berserk (flashes, zapped), Pitfall (flickers), Centipede (wand bursts), Frostbite (sinks; freezes blue), Yars' Revenge (bursts), Mario Bros. (flips and drops off the bottom, green for Luigi). Play goes on in Frogger (flat or splash rings, then a skull) and Haunted House (eyes flash red). Worth a look: timings (1 to 2.5 seconds each) and whether a stand-in sits where the player was.

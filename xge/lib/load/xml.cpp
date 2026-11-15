@@ -2829,7 +2829,7 @@ namespace xge
 
 		// A <note> or <rest> of a sound, in the part given; a note with no
 		// wave of its own takes the part's (`wave`, "" for the sound's).
-		RawNote readNote(const XmlNode& node, const std::string& where, unsigned part, const std::string& wave)
+		RawNote readNote(const XmlNode& node, const std::string& where, unsigned part, const std::string& wave, const RawValue& decay)
 		{
 			RawNote note;
 			note.part = part;
@@ -2843,13 +2843,14 @@ namespace xge
 				if (note.wave.empty()) { note.wave = wave; }
 				note.pitch = requireAttribute(node, "pitch", where);
 				note.to = node.getAttribute("to");
+				note.decay = decay;
 			}
 			note.length = readValue(node, where);
 			return note;
 		}
 
 		// <sound name="..." wave="square">: an optional <loop />, an optional
-		// <volume>, then <note>s and <rest>s in the order they play, or the
+		// <volume>, an optional <decay> (every note's), then <note>s and <rest>s in the order they play, or the
 		// <part>s that play together, each its own <note>s and <rest>s, or the
 		// <path> of a recording. The
 		// words (wave, pitch) are checked by load/expr, which also works out
@@ -2873,6 +2874,7 @@ namespace xge
 
 			unsigned parts = 0;
 			bool loose = false; // a <note> or <rest> not in a part
+			RawValue decay;     // the sound's <decay>, every note's that its part does not change
 			for (std::unique_ptr<XmlNode> child = sound.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
@@ -2887,9 +2889,16 @@ namespace xge
 					if (!raw.notes.empty() || parts > 0) { fail(where, "<volume> has to come before the <note>s and <rest>s"); }
 					raw.volume = readValue(*child, where);
 				}
+				else if (tag == "decay")
+				{
+					if (!raw.notes.empty() || parts > 0) { fail(where, "<decay> has to come before the <note>s and <rest>s"); }
+					if (!raw.path.empty()) { fail(where, "plays a recording (<path>), so it has no <decay>"); }
+					decay = readValue(*child, where);
+				}
 				else if (tag == "path")
 				{
 					if (!raw.notes.empty()) { fail(where, "has <note>s or <part>s, so it cannot have a <path> as well"); }
+					if (!decay.text.empty() || decay.kind != RawValue::Kind::Expression) { fail(where, "plays a recording (<path>), so it has no <decay>"); }
 					if (!raw.path.empty()) { fail(where, "has two <path>s"); }
 					if (!raw.wave.empty()) { fail(where, "plays a recording (<path>), so it has no wave="); }
 					raw.path = readText(*child);
@@ -2900,7 +2909,7 @@ namespace xge
 					if (!raw.path.empty()) { fail(where, "plays a recording (<path>), so it cannot have <" + tag + ">s as well"); }
 					if (parts > 0) { fail(where, "has <part>s, so its <" + tag + ">s go inside them"); }
 					loose = true;
-					raw.notes.push_back(readNote(*child, where, 0, ""));
+					raw.notes.push_back(readNote(*child, where, 0, "", decay));
 				}
 				else if (tag == "part")
 				{
@@ -2908,12 +2917,19 @@ namespace xge
 					if (loose) { fail(where, "has <note>s and <rest>s of its own, so it cannot have <part>s as well"); }
 					const std::string partWhere = where + " > <part> " + std::to_string(parts + 1);
 					const std::string wave = child->getAttribute("wave");
+					RawValue partDecay = decay;
 					bool any = false;
 					for (std::unique_ptr<XmlNode> step = child->getFirstChild(); step != nullptr; step = step->getNextSibling())
 					{
 						const std::string stepTag = step->getName();
-						if (stepTag != "note" && stepTag != "rest") { fail(partWhere, "unknown <" + stepTag + ">; expected <note>s and <rest>s"); }
-						raw.notes.push_back(readNote(*step, partWhere, parts, wave));
+						if (stepTag == "decay")
+						{
+							if (any) { fail(partWhere, "<decay> has to come before the <note>s and <rest>s"); }
+							partDecay = readValue(*step, partWhere);
+							continue;
+						}
+						if (stepTag != "note" && stepTag != "rest") { fail(partWhere, "unknown <" + stepTag + ">; expected a <decay>, then <note>s and <rest>s"); }
+						raw.notes.push_back(readNote(*step, partWhere, parts, wave, partDecay));
 						any = true;
 					}
 					if (!any) { fail(partWhere, "has no <note>"); }
@@ -2921,7 +2937,7 @@ namespace xge
 				}
 				else
 				{
-					fail(where, "unknown <" + tag + ">; expected a <loop />, a <volume>, then <note>s and <rest>s, <part>s, or a <path>");
+					fail(where, "unknown <" + tag + ">; expected a <loop />, a <volume>, a <decay>, then <note>s and <rest>s, <part>s, or a <path>");
 				}
 			}
 

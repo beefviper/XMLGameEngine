@@ -24,7 +24,7 @@ The 8-bit machines played bleeps, bloops and little tunes from a sound chip, not
 - **Music is parts and a state's own sound.** A `<sound>` of `<part>`s plays them at once, as a chip's channels did; a sum past full scale is cut off, with no automatic scaling, so `<volume>` stays the author's.
   - `<music sound>` on a state loops while it is current, so a pause silences it with nothing written on the pause key; one that does not loop plays as the state begins.
   - Rejected: a `<music>` element of its own (a tune is a sound), beats as lengths (a length is already a value), a tracker pattern table (a little language), music resuming where it paused (each library would need a pause).
-- **A short fade (about 2 ms), no envelope.**
+- **A short fade (about 2 ms), and one part of an envelope: decay.** `<decay>` on a sound or a part is the seconds each note takes to fall evenly to nothing from its start, for plucks and bells (Pinball's bumpers ring). It belongs to the voice, not the note, so a note stays one number of seconds (no mixed text and tags). Attack, sustain and release, the other three of the usual four, wait for a game that needs them.
 - **One voice per sound,** like a chip channel: replaying restarts it; different sounds overlap.
 - **The game asks, the engine plays.** `<play>` queues a name; `Engine` plays the queue at the end of `step()`. `Game` never touches audio, so tests read the requests.
 - **Checked at load** with messages that say where. A note is at most 10 seconds.
@@ -38,7 +38,7 @@ Sound files as the only form; a loader per library; a tracker or MML string (`"t
 
 ## Open
 
-- A volume envelope (decay for plucked and bell sounds); stereo (a mono sound would play the same on both sides); compressed recordings.
+- The rest of an envelope (attack, sustain, release); a curved rather than straight decay; stereo (a mono sound would play the same on both sides); compressed recordings.
 - Notes that follow a variable: a sound is made once when the window opens, so Invaders' march cannot keep time with the fleet. A timer stepping through sounds would.
 - Silencing a state's music while it is current.
 - A faint pulse where a loop's end meets its start at the fades.

@@ -540,6 +540,13 @@ namespace xge::parts
 		return quiet;
 	}
 
+	// A note that dies away over its sound's or part's <decay>.
+	inline RawNote decaying(RawValue decay, RawNote note)
+	{
+		note.decay = std::move(decay);
+		return note;
+	}
+
 	// A note or rest of a sound's <part> (counted from 0).
 	inline RawNote inPart(unsigned part, RawNote note)
 	{

@@ -1021,6 +1021,7 @@ namespace xge
 		std::string to;     // "" means no slide
 		RawValue length;
 		unsigned part{ 0 }; // which <part> it is in, from 0 (0 for a sound of one part)
+		RawValue decay;     // its sound's or part's <decay>; empty text for none
 	};
 
 	// One <sound name="..." wave="square"> as written; volume is empty text

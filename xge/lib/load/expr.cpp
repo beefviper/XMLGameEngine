@@ -724,6 +724,15 @@ namespace xge
 				note.wave = rawNote.wave.empty() ? soundWave : waveOf(rawNote.wave, here);
 				note.startHz = pitchOf(rawNote.pitch, "pitch", here);
 				note.endHz = rawNote.to.empty() ? note.startHz : pitchOf(rawNote.to, "to", here);
+				if (rawNote.decay.kind != RawValue::Kind::Expression || !rawNote.decay.text.empty())
+				{
+					note.decay = evaluate(rawNote.decay, here + " > <decay>");
+					if (!(note.decay > 0.0f && note.decay <= kMaxNoteSeconds))
+					{
+						throw std::runtime_error(here + ": <decay> is " + formatDisplayNumber(note.decay) + " seconds; expected more than 0 and at most "
+							+ std::to_string(static_cast<int>(kMaxNoteSeconds)));
+					}
+				}
 			}
 
 			sound.notes.push_back(note);
