@@ -32,6 +32,20 @@ The 8-bit machines played bleeps, bloops and little tunes from a sound chip, not
 - **SDL is shared** by window and sound: each starts and stops only its own subsystem.
 - **A shot's sound sits after its `<fire>`,** so a gun that is not ready stays silent ([input](08-input.md#a-press-that-cannot-be-done)).
 
+## Notes that follow a number (to decide)
+
+The arcade Invaders thump once per step of the fleet, so the march quickens as the fleet does. Here the march is a fixed `<music>` loop and the fleet's steps are a velocity, so they drift apart. Every sound is made once, when the window opens.
+
+- **A. `<play>` gives a pitch.** `<play sound="thump"><pitch>march.note</pitch></play>`: the engine makes that sound again at the asked pitch (kept once made). Covers a siren rising with speed. Cost: sounds made during play, and the tempo still needs something to play it on time.
+- **B. One sound at several pitches, picked by a number.** `<sound name="thump"><pitches><pitch>F2</pitch><pitch>E2</pitch>...</pitches>` made at load; `<play sound="thump"><by>march.step</by></play>` picks one, as `<choose><by>` picks a word. Nothing is made during play. Same tempo problem as A.
+- **C. The author's: sound in step with the picture.** Two small, general words:
+  - an animation's `<seconds update="live">`, worked out every frame like any [live number](../reference/format.md#live-numbers-of-an-object);
+  - a `<frame>` that holds a `<play>`, run as that picture comes up.
+
+  Invaders' aliens become four frames (`a`, `b`, `a`, `b`), each playing its note, with `<seconds update="live">` reading a variable the hit rule lowers (`aliens.left`; counts exist only in conditions today). The march then quickens with the fleet, as the arcade's does, with no tempo word and no sound made in play. It also gives footsteps on a walk and a flap on each wingbeat.
+
+**Recommendation: C**, and A later only if a game needs a pitch that slides with a number. Open in C: whether the fleet's own steps (a hop per frame of the animation instead of a velocity) should be the third piece, so picture, sound and step all keep one time.
+
 ## Rejected
 
 Sound files as the only form; a loader per library; a tracker or MML string (`"t120 o4 c8 e8 g8"`, a little language in a string); each library's own synthesis; a voice pool; sound tied to the window library.
@@ -39,6 +53,6 @@ Sound files as the only form; a loader per library; a tracker or MML string (`"t
 ## Open
 
 - The rest of an envelope (attack, sustain, release); a curved rather than straight decay; stereo (a mono sound would play the same on both sides); compressed recordings.
-- Notes that follow a variable: a sound is made once when the window opens, so Invaders' march cannot keep time with the fleet. A timer stepping through sounds would.
+- Notes that follow a number: [above](#notes-that-follow-a-number-to-decide).
 - Silencing a state's music while it is current.
 - A faint pulse where a loop's end meets its start at the fades.

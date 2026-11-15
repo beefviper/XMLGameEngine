@@ -130,7 +130,7 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
 - **Steps.**
   - [x] **1. `<decay>` (S).** Built on a `<sound>` or `<part>` (every note's), not a single note, so a note stays one number. Planned: a `<note>` or `<part>` takes `<decay>seconds</decay>`: its volume falls to nothing over that time, in `synthesize()` (`xge/lib/audio/sound.cpp`). Schema `noteType` and `partType`, `readSound`, `data.xsl`. **Check:** a test in `xge/tests/engine/test_sound.cpp` compares the loudness of the samples at two times.
   - [x] **2. A game uses it (S).** Pinball's bumpers ring and die away. One sound in one game. **Check:** its test; add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows) for the author to listen.
-  - [ ] **3. Design notes that follow a number (S).** In `docs/designs/33-sound.md`, two options written out with what a game would say for each: a `<play>` that gives a pitch, or a sound made at several pitches at load and picked by a number when played. No code.
+  - [x] **3. Design notes that follow a number (S).** Written in `33-sound.md` with a third option, the author's: an animation's live `<seconds>` and a `<frame>` that plays a sound; recommended. In `docs/designs/33-sound.md`, two options written out with what a game would say for each: a `<play>` that gives a pitch, or a sound made at several pitches at load and picked by a number when played. No code.
   - [ ] **4. The author picks.** Then the build steps are written here before anyone starts.
 - **Done, for now, when** steps 1 to 3 are ticked.
 
