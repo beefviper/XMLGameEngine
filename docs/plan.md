@@ -76,7 +76,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **2.** `object.cell` (cells and chains: chain, checks, shape, held move; `onCells` and `homeMap` stay with the map place).
   - [x] **3.** `object.holder` (its live numbers: items, calling, called, points, pattern, strength, odds, lead, winner, tricks, deadwood).
   - [x] **4.** `object.moves` and `object.marks` (boards), and `object.picker` (what a picker holds, its last move, a cursor's kept column and pointer).
-  - [ ] **5.** `object.swing`.
+  - [x] **5.** `object.swing` (frames, by, done, held; `spin` and the pivot stay, as anything with a heading turns).
   - [ ] **6.** `object.path`.
   - [ ] **7.** `object.jump`.
 - **Later, not planned:** a group no object uses could become `std::optional` or a pointer, which also shrinks every object.

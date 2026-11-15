@@ -381,16 +381,16 @@ namespace xge
 					// (moveObjects), and what it strikes on the way takes its
 					// speed there (velocityAt).
 					object.spin = 0.0f;
-					if (object.swingFrames > 0)
+					if (object.swing.frames > 0)
 					{
-						const float step = 1.0f / static_cast<float>(object.swingFrames);
-						const float done = std::clamp(object.swingDone + (object.swingHeld ? step : -step), 0.0f, 1.0f);
-						if (done != object.swingDone)
+						const float step = 1.0f / static_cast<float>(object.swing.frames);
+						const float done = std::clamp(object.swing.done + (object.swing.held ? step : -step), 0.0f, 1.0f);
+						if (done != object.swing.done)
 						{
-							object.swingDone = done;
+							object.swing.done = done;
 							const float pi = 3.14159265358979323846f;
 							const float eased = (1.0f - std::cos(pi * done)) / 2.0f;
-							float now = std::fmod(object.start.heading + object.swingBy * eased, 360.0f);
+							float now = std::fmod(object.start.heading + object.swing.by * eased, 360.0f);
 							if (now < 0.0f) { now += 360.0f; }
 							object.spin = turnBetween(object.heading, now);
 							object.heading = now;

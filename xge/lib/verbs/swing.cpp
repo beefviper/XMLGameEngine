@@ -41,9 +41,9 @@ namespace xge
 		const CmdSwing& swing = std::get<CmdSwing>(command);
 		Object* const self = doer.self;
 		if (!self || !doer.action) { return true; }
-		self->swingFrames = std::max(1, executor.game.framesFor(swing.seconds));
-		self->swingBy = swing.by;
-		self->swingHeld = doer.pressed;
+		self->swing.frames = std::max(1, executor.game.framesFor(swing.seconds));
+		self->swing.by = swing.by;
+		self->swing.held = doer.pressed;
 		return true;
 	}
 

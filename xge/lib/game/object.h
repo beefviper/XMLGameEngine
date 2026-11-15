@@ -1188,15 +1188,19 @@ namespace xge
 		// Where its turning point is on the screen: the pivot, or the middle.
 		Vector2f pivotOnScreen() const;
 
-		// <swing>: a stroke of swingFrames frames from the heading it started
-		// with, turning swingBy degrees (less than 0: left), eased (still at both ends, fastest half way).
-		// swingDone is how far through it is, 0 to 1: held, it goes on;
-		// let go, it comes back. swingFrames 0: it has never swung. See
-		// playOneFrame.
-		int swingFrames{};
-		float swingBy{};
-		float swingDone{};
-		bool swingHeld{ false };
+		// <swing>: a stroke of `frames` frames from the heading it started
+		// with, turning `by` degrees (less than 0: counterclockwise), eased
+		// (still at both ends, fastest half way). `done` is how far through
+		// it is, 0 to 1: held, it goes on; let go, it comes back. frames 0:
+		// it has never swung. See playOneFrame.
+		struct Swing
+		{
+			int frames{};
+			float by{};
+			float done{};
+			bool held{ false };
+		};
+		Swing swing;
 
 		// How many degrees it turned this frame (clockwise is more), from the
 		// heading the last frame left it at: the move sweeps the turn through

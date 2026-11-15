@@ -1425,8 +1425,8 @@ namespace xge
 			// No turn or thrust along its heading still held.
 			object.activeTurn = {};
 			object.activeThrustAheadBy.clear();
-			object.swingHeld = false;
-			object.swingDone = 0.0f;
+			object.swing.held = false;
+			object.swing.done = 0.0f;
 			object.picker.picked.clear();
 			object.picker.inChain = false;
 			object.picker.fromColumn = 0;

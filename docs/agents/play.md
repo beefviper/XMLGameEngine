@@ -30,7 +30,7 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 - An object mid-jump (`isAirborne()`) is in no pair. A resting object stays touching its platform only because its pull moves it each frame, so `<stop />` ends that.
 - **Touches at one moment run in file order, and a still pair is skipped:** a `<land />` that runs first can hide a hazard met at the same moment (Pitfall's jaws are written before the crocodiles).
 - `sprite=` on a rule is the look as the touch happened, taken once.
-- **Swings:** a swing's turn is `Object::spin`; `moveObjects` (its `FrameSweep`) turns it through the frame in `advanceTo`, and `sweepTurning` tests the pictures at each whole degree. The heading follows half a cosine over `swingFrames`. `knock` uses `velocityAt(touch.point)`.
+- **Swings:** a swing's turn is `Object::spin`; `moveObjects` (its `FrameSweep`) turns it through the frame in `advanceTo`, and `sweepTurning` tests the pictures at each whole degree. The heading follows half a cosine over `swing.frames`. `knock` uses `velocityAt(touch.point)`.
 - **Resting:** pixel contact depth is measured by pixels; `knockedApart`'s settle (four frames of pull) stops a resting ball hopping; `<friction>` (`rub`) may set `Object::resting`, which `applyAcceleration` wakes when the thing or a support moves.
 - Drag and grip in a frame are `groundDrag`/`groundGrip` from `findGround`; use those, not `drag`/`grip`.
 - Edge rules: `sprite=`/`unless=` are an `EdgeGuard`; `class=` or `object=` on one is a load error.
