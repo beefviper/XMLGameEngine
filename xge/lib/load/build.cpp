@@ -303,13 +303,13 @@ namespace xge
 
 		for (const auto& [name, strength] : rawObject.rawPulls)
 		{
-			object.pulls.emplace_back(name, evaluate(strength, where + " > <pull object=\"" + name + "\">"));
+			object.pull.toward.emplace_back(name, evaluate(strength, where + " > <pull object=\"" + name + "\">"));
 		}
 		if (!rawObject.seekTarget.empty())
 		{
-			object.seekTarget = rawObject.seekTarget;
-			object.seekRate = evaluate(rawObject.rawSeek, where + " > <seek>");
-			if (object.seekRate < 0.0f) { throw std::runtime_error(where + ": <seek> turns " + formatDisplayNumber(object.seekRate) + " degrees a frame; expected 0 or more"); }
+			object.pull.seek = rawObject.seekTarget;
+			object.pull.seekRate = evaluate(rawObject.rawSeek, where + " > <seek>");
+			if (object.pull.seekRate < 0.0f) { throw std::runtime_error(where + ": <seek> turns " + formatDisplayNumber(object.pull.seekRate) + " degrees a frame; expected 0 or more"); }
 		}
 
 		if (rawObject.hasLight)

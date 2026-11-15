@@ -93,7 +93,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **19.** `object.motion`: speed, speedHeld, grip, drag, friction, mass.
   - [x] **20.** `object.turning`: hasHeading, hasPivot, pivotFromMiddle, spin.
   - [x] **21.** `object.layout`: usesSize, sizesOf, sizesUsed, cellOffset (how its position is worked out again).
-  - [ ] **22.** `object.pull` (pulls and seek).
+  - [x] **22.** `object.pull`: toward (the pulls), seek, seekRate.
   - [ ] **23.** `object.turns` (takes turns, its look off turn, the class it owns).
 - **Later, not planned:** a group no object uses could become `std::optional` or a pointer, which also shrinks every object.
 - **Done when** `struct Object` itself declares under 60 fields.

@@ -392,7 +392,7 @@ namespace xge
 			o << "\tmass=" << f.motion.mass << '\n';
 		}
 
-		for (const auto& [name, strength] : f.pulls)
+		for (const auto& [name, strength] : f.pull.toward)
 		{
 			o << "\tpull=" << name << " " << strength << '\n';
 		}
@@ -401,9 +401,9 @@ namespace xge
 		if (f.dark.kind != Object::Darkness::None) { o << "\tdark=" << (f.dark.kind == Object::Darkness::Unlit ? "unlit" : "unseen") << '\n'; }
 		if (f.aloft.has) { o << "\taltitude=" << f.altitude << " rise " << f.rise << " fall " << f.aloft.fall << " bounce " << f.aloft.bounce << '\n'; }
 		if (!f.aloft.shadowOf.empty()) { o << "\tshadow of " << f.aloft.shadowOf << '\n'; }
-		if (!f.seekTarget.empty())
+		if (!f.pull.seek.empty())
 		{
-			o << "\tseek=" << f.seekTarget << " " << f.seekRate << '\n';
+			o << "\tseek=" << f.pull.seek << " " << f.pull.seekRate << '\n';
 		}
 
 		o << "\tsize.x=" << f.size.x << ", size.y=" << f.size.y << '\n';

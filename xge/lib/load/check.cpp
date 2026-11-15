@@ -440,7 +440,7 @@ namespace xge
 			{
 				onLine(object.line, [&]
 				{
-					for (const auto& [name, strength] : object.pulls)
+					for (const auto& [name, strength] : object.pull.toward)
 					{
 						if (!findObject(objects, name))
 						{
@@ -451,9 +451,9 @@ namespace xge
 					{
 						throw std::runtime_error("object '" + object.name + "' > <shadow>: there is no object named '" + object.aloft.shadowOf + "'" + didYouMean(object.aloft.shadowOf, objectNames(objects)));
 					}
-					if (!object.seekTarget.empty() && !findObject(objects, object.seekTarget))
+					if (!object.pull.seek.empty() && !findObject(objects, object.pull.seek))
 					{
-						throw std::runtime_error("object '" + object.name + "' > <seek>: there is no object named '" + object.seekTarget + "'" + didYouMean(object.seekTarget, objectNames(objects)));
+						throw std::runtime_error("object '" + object.name + "' > <seek>: there is no object named '" + object.pull.seek + "'" + didYouMean(object.pull.seek, objectNames(objects)));
 					}
 					for (const std::string* end : { &object.tether.from, &object.tether.to })
 					{

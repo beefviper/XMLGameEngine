@@ -1812,17 +1812,22 @@ namespace xge
 		};
 		Rest rest;
 
-		// <pull>: each frame it is pulled toward the middle of the nearest of
-		// each name or group in play, by that much speed a frame (gravity
-		// toward a sun, a tractor beam, a magnet). See playOneFrame.
-		std::vector<std::pair<std::string, float>> pulls;
+		// What draws it toward other things each frame (see playOneFrame).
+		struct Pull
+		{
+			// <pull>: it is pulled toward the middle of the nearest of each
+			// name or group in play, by that much speed a frame (gravity
+			// toward a sun, a tractor beam, a magnet).
+			std::vector<std::pair<std::string, float>> toward;
 
-		// <seek>: each frame it turns the way it is going toward the middle of
-		// the nearest of seekTarget in play, by at most seekRate degrees, at
-		// the same speed, and its heading with it if it has one: a homing
-		// missile. Empty for none.
-		std::string seekTarget;
-		float seekRate{};
+			// <seek>: it turns the way it is going toward the middle of the
+			// nearest of `seek` in play, by at most seekRate degrees, at the
+			// same speed, and its heading with it if it has one: a homing
+			// missile. Empty for none.
+			std::string seek;
+			float seekRate{};
+		};
+		Pull pull;
 
 		// <dark>: an object drawn only where there is light. Unlit, only while
 		// some part of it is within a light; unseen, once that has happened,

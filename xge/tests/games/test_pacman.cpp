@@ -687,8 +687,8 @@ TEST_CASE("map: a group on a map has every part an object has, heading to seek",
 		CHECK(mine.heading == Approx(90));
 		CHECK(mine.motion.drag == Approx(0.5));
 		CHECK(mine.motion.mass == Approx(2));
-		CHECK(mine.seekTarget == "playing.p");
-		CHECK(mine.seekRate == Approx(3));
+		CHECK(mine.pull.seek == "playing.p");
+		CHECK(mine.pull.seekRate == Approx(3));
 	}
 }
 

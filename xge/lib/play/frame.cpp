@@ -533,10 +533,10 @@ namespace xge
 			const auto inPlay = [&](const Object& other) { return rules.inPlay(other); };
 			for (auto& object : objects)
 			{
-				if ((object.pulls.empty() && object.seekTarget.empty()) || !rules.inPlay(object)) { continue; }
+				if ((object.pull.toward.empty() && object.pull.seek.empty()) || !rules.inPlay(object)) { continue; }
 
 				const Vector2f middle = middleOf(object);
-				for (const auto& [name, strength] : object.pulls)
+				for (const auto& [name, strength] : object.pull.toward)
 				{
 					const Object* toward = nearestInPlay(objects, object, name, inPlay);
 					if (!toward) { continue; }
@@ -546,11 +546,11 @@ namespace xge
 					}
 				}
 
-				if (object.seekTarget.empty()) { continue; }
-				const Object* target = nearestInPlay(objects, object, object.seekTarget, inPlay);
+				if (object.pull.seek.empty()) { continue; }
+				const Object* target = nearestInPlay(objects, object, object.pull.seek, inPlay);
 				if (!target) { continue; }
 				const Vector2f before = object.velocity;
-				object.velocity = turnedToward(object.velocity, middleOf(*target) - middle, object.seekRate);
+				object.velocity = turnedToward(object.velocity, middleOf(*target) - middle, object.pull.seekRate);
 				if (object.turning.hasHeading && (object.velocity.x != before.x || object.velocity.y != before.y))
 				{
 					object.heading = headingOf(object.velocity);
