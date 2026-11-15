@@ -58,8 +58,8 @@
         <frame sprite="reach">
           <seconds>0.15</seconds>
           <hitbox name="fist">
-            <rectangle><width>20</width><height>15</height></rectangle>
-            <position><x>45</x><y>15</y></position>
+            <rectangle><width>12</width><height>12</height></rectangle>
+            <position><x>52</x><y>12</y></position>
           </hitbox>
         </frame>
         <frame sprite="guard"><seconds>0.12</seconds></frame>
@@ -76,7 +76,7 @@
       </animation>
       <position><y><subtract><value>floor</value><value>80</value></subtract></y></position>
       <collisions>
-        <hitbox name="body"><left>5</left><right>20</right></hitbox>
+        <hitbox name="body"><left>4</left><right>22</right></hitbox>
         <collision edge="horizontal"><stick /></collision>
         <collision class="boxer" by="fist">
           <collision sprite="guarding"><play sound="thud" /></collision>
@@ -160,15 +160,15 @@
             <frame sprite="reach">
               <seconds>0.15</seconds>
               <hitbox name="fist">
-                <rectangle><width>20</width><height>15</height></rectangle>
-                <position><x>-5</x><y>15</y></position>
+                <rectangle><width>12</width><height>12</height></rectangle>
+                <position><x>0</x><y>12</y></position>
               </hitbox>
             </frame>
             <frame sprite="guard"><seconds>0.12</seconds></frame>
           </animation>
           <position><x>400</x></position>
           <collisions>
-            <hitbox name="body"><left>20</left><right>5</right></hitbox>
+            <hitbox name="body"><left>22</left><right>4</right></hitbox>
             <collision class="boxer" by="fist"><move direction="right">knock</move></collision>
             <collision class="boxer" hitbox="body" by="body"><move direction="right">step</move></collision>
           </collisions>
@@ -263,91 +263,109 @@
     </sound>
   </sounds>
   <pictures>
-    <!-- s skin, g gloves, t trunks; 12 by 16, five pixels each -->
+    <!-- s skin, g gloves, t trunks; 16 by 20, four pixels each. Facing
+         right: both gloves up by the chin on guard; the jab puts the lead
+         arm straight out, the glove at the far right -->
     <bitmap name="guard">
-      <row>....sss.....</row>
-      <row>...sssss....</row>
-      <row>...sssss.gg.</row>
-      <row>....sss.gggg</row>
-      <row>..sssssssgg.</row>
-      <row>.ssssssss...</row>
-      <row>.gg.ssss....</row>
-      <row>gggg.sss....</row>
-      <row>.gg.ssss....</row>
-      <row>...tttttt...</row>
-      <row>...tttttt...</row>
-      <row>...tt..tt...</row>
-      <row>...ss..ss...</row>
-      <row>...ss..ss...</row>
-      <row>...ss..ss...</row>
-      <row>..sss..sss..</row>
-      <scale>5</scale>
+      <row>..ssss..........</row>
+      <row>.ssssss...ggg...</row>
+      <row>.ssssss...ggg...</row>
+      <row>..ssss.gg.ggg...</row>
+      <row>...ss..gg..s....</row>
+      <row>.ssssssssss.....</row>
+      <row>.sssssssss......</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.tttttt.........</row>
+      <row>.tttttt.........</row>
+      <row>.tt..tt.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>sss..sss........</row>
+      <scale>4</scale>
       <color char="s">color.peach</color>
       <color char="g">color.red</color>
       <color char="t">color.blue</color>
     </bitmap>
     <bitmap name="reach">
-      <row>....sss.....</row>
-      <row>...sssss....</row>
-      <row>...sssss....</row>
-      <row>....sss...gg</row>
-      <row>..sssssssggg</row>
-      <row>.ssssssss.gg</row>
-      <row>.gg.ssss....</row>
-      <row>gggg.sss....</row>
-      <row>.gg.ssss....</row>
-      <row>...tttttt...</row>
-      <row>...tttttt...</row>
-      <row>...tt..tt...</row>
-      <row>...ss..ss...</row>
-      <row>...ss..ss...</row>
-      <row>...ss..ss...</row>
-      <row>..sss..sss..</row>
-      <scale>5</scale>
+      <row>..ssss..........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>..ssss.gg....ggg</row>
+      <row>...ss..ggssssggg</row>
+      <row>.sssssssssssssgg</row>
+      <row>.sssssssss......</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.tttttt.........</row>
+      <row>.tttttt.........</row>
+      <row>.tt..tt.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>sss..sss........</row>
+      <scale>4</scale>
       <color char="s">color.peach</color>
       <color char="g">color.red</color>
       <color char="t">color.blue</color>
     </bitmap>
     <bitmap name="block">
-      <row>....sss.gg..</row>
-      <row>...sssssggg.</row>
-      <row>...sssssggg.</row>
-      <row>....sss.gg..</row>
-      <row>..ssssssgg..</row>
-      <row>.sssssssggg.</row>
-      <row>....ssssggg.</row>
-      <row>.....sss.g..</row>
-      <row>....ssss....</row>
-      <row>...tttttt...</row>
-      <row>...tttttt...</row>
-      <row>...tt..tt...</row>
-      <row>...ss..ss...</row>
-      <row>...ss..ss...</row>
-      <row>...ss..ss...</row>
-      <row>..sss..sss..</row>
-      <scale>5</scale>
+      <row>..ssss.ggg......</row>
+      <row>.sssssgggg......</row>
+      <row>.sssssgggg......</row>
+      <row>..ssssggg.......</row>
+      <row>...ss.ss........</row>
+      <row>.sssssss........</row>
+      <row>.sssssss........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.tttttt.........</row>
+      <row>.tttttt.........</row>
+      <row>.tt..tt.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>sss..sss........</row>
+      <scale>4</scale>
       <color char="s">color.peach</color>
       <color char="g">color.red</color>
       <color char="t">color.blue</color>
     </bitmap>
     <bitmap name="hurt">
-      <row>..sss.......</row>
-      <row>.sssss......</row>
-      <row>.sssss......</row>
-      <row>..sss.......</row>
-      <row>..sssss.....</row>
-      <row>.gsssssss...</row>
-      <row>gggssss.....</row>
-      <row>.g..sss.....</row>
-      <row>....ssss....</row>
-      <row>...tttttt...</row>
-      <row>...tttttt...</row>
-      <row>...tt..tt...</row>
-      <row>...ss..ss...</row>
-      <row>...ss..ss...</row>
-      <row>...ss..ss...</row>
-      <row>..sss..sss..</row>
-      <scale>5</scale>
+      <row>ssss............</row>
+      <row>sssss...........</row>
+      <row>sssss...........</row>
+      <row>.sss............</row>
+      <row>..ss............</row>
+      <row>.ssssss.........</row>
+      <row>.sssssss........</row>
+      <row>.ssssss.s.......</row>
+      <row>.ssssss.gg......</row>
+      <row>.ssssssggg......</row>
+      <row>.ssssss.........</row>
+      <row>.ssssss.........</row>
+      <row>.tttttt.........</row>
+      <row>.tttttt.........</row>
+      <row>.tt..tt.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>.ss..ss.........</row>
+      <row>sss..sss........</row>
+      <scale>4</scale>
       <color char="s">color.peach</color>
       <color char="g">color.red</color>
       <color char="t">color.blue</color>
