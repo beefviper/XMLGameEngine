@@ -120,7 +120,7 @@ namespace xge
 			holder.holder.broken.push_back(followed(holder.holder.takes, *item));
 		}
 		// An item laid answers any call.
-		holder.called = 0.0f;
+		holder.holder.called = 0.0f;
 		refreshHolder(holder);
 	}
 
@@ -285,7 +285,7 @@ namespace xge
 	{
 		std::vector<std::vector<int>> melds;
 		const std::vector<int> items = holder.holder.items;
-		holder.deadwood = meldDeadwood(holder, items, holder.holder.meldsBest, nullptr);
+		holder.holder.deadwood = meldDeadwood(holder, items, holder.holder.meldsBest, nullptr);
 		meldDeadwood(holder, items, 0, &melds);
 		std::vector<int> order;
 		std::vector<bool> placed(items.size(), false);
@@ -312,7 +312,7 @@ namespace xge
 		std::sort(rest.begin(), rest.end(), byWorth);
 		for (const int i : rest) { order.push_back(items[static_cast<std::size_t>(i)]); }
 		holder.holder.items = order;
-		refreshBoundTexts(holder.name, "deadwood", holder.deadwood);
+		refreshBoundTexts(holder.name, "deadwood", holder.holder.deadwood);
 	}
 
 	bool Game::isTrump(const HolderRule& rule, const Object& item)
@@ -422,7 +422,7 @@ namespace xge
 
 	void Game::refreshHolder(Object& holder)
 	{
-		holder.itemCount = static_cast<float>(holder.holder.items.size());
+		holder.holder.itemCount = static_cast<float>(holder.holder.items.size());
 		refreshCall(holder);
 
 		// Points: each face-up item at its lowest worth, then each that may
@@ -457,11 +457,11 @@ namespace xge
 				}
 			}
 		}
-		holder.points = total;
+		holder.holder.points = total;
 		if (!counted.empty()) { setVariable(holder.name, counted, total); }
-		refreshBoundTexts(holder.name, "cards", holder.itemCount);
-		refreshBoundTexts(holder.name, "held", holder.itemCount);
-		refreshBoundTexts(holder.name, "points", holder.points);
+		refreshBoundTexts(holder.name, "cards", holder.holder.itemCount);
+		refreshBoundTexts(holder.name, "held", holder.holder.itemCount);
+		refreshBoundTexts(holder.name, "points", holder.holder.points);
 
 		// A holder with <melds>: laid out in its groups, and its deadwood.
 		if (!holder.holder.melds.empty() && std::all_of(holder.holder.items.begin(), holder.holder.items.end(), [&](int number) { return itemAt(number) != nullptr; })) { layOutMelds(holder); }
@@ -472,8 +472,8 @@ namespace xge
 			const bool owned = std::any_of(objects.begin(), objects.end(), [&](const Object& hand) { return hand.hand.is && !hand.hand.own.empty() && holderNamed(hand.hand.own) == &holder; });
 			if (owned)
 			{
-				holder.tricks = reckonTricks(holder, trick->holder.takes);
-				refreshBoundTexts(holder.name, "tricks", holder.tricks);
+				holder.holder.tricks = reckonTricks(holder, trick->holder.takes);
+				refreshBoundTexts(holder.name, "tricks", holder.holder.tricks);
 			}
 		}
 
@@ -482,10 +482,10 @@ namespace xge
 		{
 			const Object* lead = holder.holder.items.empty() ? nullptr : itemAt(holder.holder.items.front());
 			const Object* best = trickWinning(holder);
-			holder.lead = lead ? static_cast<float>(followed(holder.holder.takes, *lead)) : 0.0f;
-			holder.winner = best ? static_cast<float>(best->laidBy) : 0.0f;
-			refreshBoundTexts(holder.name, "lead", holder.lead);
-			refreshBoundTexts(holder.name, "winner", holder.winner);
+			holder.holder.lead = lead ? static_cast<float>(followed(holder.holder.takes, *lead)) : 0.0f;
+			holder.holder.winner = best ? static_cast<float>(best->laidBy) : 0.0f;
+			refreshBoundTexts(holder.name, "lead", holder.holder.lead);
+			refreshBoundTexts(holder.name, "winner", holder.holder.winner);
 		}
 
 		// Scored holders, this one and those that score its items with theirs,
@@ -806,7 +806,7 @@ namespace xge
 				read = read || readIn(holder, state.conditions, readIn) || readIn(holder, state.computer, readIn);
 				for (const Scene& scene : state.scenes) { read = read || readIn(holder, scene.conditions, readIn); }
 			}
-			holder.oddsRead = read;
+			holder.holder.oddsRead = read;
 		}
 	}
 
@@ -857,14 +857,14 @@ namespace xge
 		const std::size_t best = static_cast<std::size_t>(holder.holder.scoreBest);
 
 		int made = 0;
-		holder.strength = own.empty() ? 0.0f : bestOf(*set, slots, own, best, base, made);
-		holder.pattern = static_cast<float>(made);
+		holder.holder.strength = own.empty() ? 0.0f : bestOf(*set, slots, own, best, base, made);
+		holder.holder.pattern = static_cast<float>(made);
 
 		// The odds: as many unseen items as this holder holds, against it,
 		// the shared holder made up to full from the unseen too; the same
 		// each time for the same items (its own generator, seeded by them).
-		holder.odds = 0.0f;
-		if (mine > 0 && holder.oddsRead)
+		holder.holder.odds = 0.0f;
+		if (mine > 0 && holder.holder.oddsRead)
 		{
 			std::vector<Scored> unseen;
 			for (const Object& object : objects)
@@ -904,20 +904,20 @@ namespace xge
 					const float them = bestOf(*set, slots, theirs, best, base, ignored);
 					won += us > them ? 1.0f : us == them ? 0.5f : 0.0f;
 				}
-				holder.odds = std::round(won * 100.0f / static_cast<float>(trials));
+				holder.holder.odds = std::round(won * 100.0f / static_cast<float>(trials));
 			}
 		}
-		refreshBoundTexts(holder.name, "pattern", holder.pattern);
-		refreshBoundTexts(holder.name, "strength", holder.strength);
-		refreshBoundTexts(holder.name, "odds", holder.odds);
+		refreshBoundTexts(holder.name, "pattern", holder.holder.pattern);
+		refreshBoundTexts(holder.name, "strength", holder.holder.strength);
+		refreshBoundTexts(holder.name, "odds", holder.holder.odds);
 	}
 
 	void Game::refreshCall(Object& holder)
 	{
 		const Object* top = holder.holder.items.empty() ? nullptr : itemAt(holder.holder.items.back());
-		holder.calling = !holder.holder.takes.wildRules.empty() && top && isWild(holder.holder.takes, *top) && holder.called == 0.0f ? 1.0f : 0.0f;
-		refreshBoundTexts(holder.name, "calling", holder.calling);
-		refreshBoundTexts(holder.name, "called", holder.called);
+		holder.holder.calling = !holder.holder.takes.wildRules.empty() && top && isWild(holder.holder.takes, *top) && holder.holder.called == 0.0f ? 1.0f : 0.0f;
+		refreshBoundTexts(holder.name, "calling", holder.holder.calling);
+		refreshBoundTexts(holder.name, "called", holder.holder.called);
 	}
 
 	int Game::takeTop(Object& holder)
@@ -948,7 +948,7 @@ namespace xge
 
 		for (Object& object : objects)
 		{
-			if (object.holder.is) { object.holder.items.clear(); object.holder.broken.clear(); object.called = 0.0f; refreshHolder(object); }
+			if (object.holder.is) { object.holder.items.clear(); object.holder.broken.clear(); object.holder.called = 0.0f; refreshHolder(object); }
 			if (object.held) { object.laidBy = 0; }
 			if (object.hand.is)
 			{
@@ -1025,10 +1025,10 @@ namespace xge
 		// A wild card turned up to start: its own suit is the one called.
 		for (Object& object : objects)
 		{
-			if (object.holder.is && object.calling > 0.0f)
+			if (object.holder.is && object.holder.calling > 0.0f)
 			{
 				const Object* top = itemAt(object.holder.items.back());
-				object.called = valueOf(*top, object.holder.takes.wildVariable);
+				object.holder.called = valueOf(*top, object.holder.takes.wildVariable);
 				refreshCall(object);
 			}
 		}
@@ -1195,14 +1195,14 @@ namespace xge
 			return acceptsBy(rule.emptyRules, *first, nullptr);
 		}
 		// Waiting for a suit to be called: nothing goes on it.
-		if (holder.calling > 0.0f) { return false; }
+		if (holder.holder.calling > 0.0f) { return false; }
 		if (isWild(rule, *first)) { return true; }
 		const Object* top = itemAt(holder.holder.items.back());
 		if (!top || !top->faceUp) { return false; }
 		// <any>: one of them, a value called standing for the top's own.
 		if (!rule.anyRules.empty())
 		{
-			const float called = rule.wildVariable.empty() ? 0.0f : holder.called;
+			const float called = rule.wildVariable.empty() ? 0.0f : holder.holder.called;
 			const bool any = std::any_of(rule.anyRules.begin(), rule.anyRules.end(), [&](const HolderRule::VarRule& each) { return acceptsBy({ each }, *first, top, rule.wildVariable, called); });
 			if (!any) { return false; }
 		}
@@ -1564,7 +1564,7 @@ namespace xge
 					{
 						items.erase(gone, items.end());
 						object.holder.broken.clear();
-						object.called = 0.0f;
+						object.holder.called = 0.0f;
 						refreshHolder(object);
 					}
 				}
@@ -1792,14 +1792,14 @@ namespace xge
 		if (!hand.hand.is || !hand.hand.held.empty() || hand.hand.own.empty() || (hand.hand.mouse && !hand.hand.over)) { return false; }
 		Object* holder = holderNamed(name);
 		Object* own = holderNamed(hand.hand.own);
-		if (!holder || !own || holder->calling <= 0.0f || holderNamed(hand.hand.holder) != own) { return false; }
+		if (!holder || !own || holder->holder.calling <= 0.0f || holderNamed(hand.hand.holder) != own) { return false; }
 		const int count = static_cast<int>(own->holder.items.size());
 		if (count == 0) { return false; }
 		const int at = hand.hand.at < 0 ? count - 1 : std::min(hand.hand.at, count - 1);
 		const Object* item = itemAt(own->holder.items[static_cast<std::size_t>(at)]);
 		if (!item) { return false; }
 		// The value named: the item's <wild variable=>.
-		holder->called = valueOf(*item, holder->holder.takes.wildVariable);
+		holder->holder.called = valueOf(*item, holder->holder.takes.wildVariable);
 		refreshCall(*holder);
 		return true;
 	}
@@ -1916,7 +1916,7 @@ namespace xge
 
 		Object* aim = nullptr;
 		int index = -1;
-		const bool calling = std::any_of(targets.begin(), targets.end(), [](const Object* holder) { return holder->calling > 0.0f; });
+		const bool calling = std::any_of(targets.begin(), targets.end(), [](const Object* holder) { return holder->holder.calling > 0.0f; });
 		const auto trick = std::find_if(targets.begin(), targets.end(), [](const Object* holder) { return holder->holder.takes.follow; });
 		if (!own->holder.melds.empty())
 		{

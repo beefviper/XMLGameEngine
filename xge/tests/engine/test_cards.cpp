@@ -65,7 +65,7 @@ TEST_CASE("klondike.xml: the deal: a staircase of columns, their tops face up, t
 	}
 	CHECK(total == 28);
 	CHECK(table.holder("stock").holder.items.size() == 24);
-	CHECK(table.holder("stock").itemCount == 24.0f);
+	CHECK(table.holder("stock").holder.itemCount == 24.0f);
 }
 
 namespace
@@ -95,7 +95,7 @@ namespace
 	{
 		for (Object& object : table.game.getCurrentObjects())
 		{
-			if (object.holder.is) { object.holder.items.clear(); object.itemCount = 0.0f; }
+			if (object.holder.is) { object.holder.items.clear(); object.holder.itemCount = 0.0f; }
 		}
 		for (const auto& [name, items] : holders)
 		{
@@ -106,7 +106,7 @@ namespace
 				table.game.turnItem(table.item(number), true);
 				holder.holder.items.push_back(number);
 			}
-			holder.itemCount = static_cast<float>(holder.holder.items.size());
+			holder.holder.itemCount = static_cast<float>(holder.holder.items.size());
 		}
 		table.game.layOutItems();
 	}
@@ -663,7 +663,7 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.holder.is) { object.holder.items.clear(); object.itemCount = 0.0f; object.called = 0.0f; object.calling = 0.0f; }
+				if (object.holder.is) { object.holder.items.clear(); object.holder.itemCount = 0.0f; object.holder.called = 0.0f; object.holder.calling = 0.0f; }
 			}
 			for (const auto& [name, items] : holders)
 			{
@@ -776,15 +776,15 @@ TEST_CASE("crazyeights.xml: an eight goes on anything, you name a suit, and the 
 	table.space();
 	table.frames(1);
 	CHECK(table.top("discard") == "8 diamonds");
-	CHECK(table.holder("discard").calling == 1.0f);
+	CHECK(table.holder("discard").holder.calling == 1.0f);
 	CHECK(table.turn() == 3.0f);
 	CHECK(table.hand().lookName() == "calling");
 
 	// Spades: the suit of the card pointed at.
 	table.pointAt("2 spades");
 	table.space();
-	CHECK(table.holder("discard").called == 1.0f);
-	CHECK(table.holder("discard").calling == 0.0f);
+	CHECK(table.holder("discard").holder.called == 1.0f);
+	CHECK(table.holder("discard").holder.calling == 0.0f);
 	CHECK(table.turn() == 2.0f);
 	CHECK(table.holder("mine").holder.items.size() == 2);
 	table.frames(1);
@@ -794,7 +794,7 @@ TEST_CASE("crazyeights.xml: an eight goes on anything, you name a suit, and the 
 	table.untilYourTurn();
 	CHECK(table.top("discard") == "3 spades");
 	CHECK(table.holder("theirs").holder.items.size() == 3);
-	CHECK(table.holder("discard").called == 0.0f);
+	CHECK(table.holder("discard").holder.called == 0.0f);
 	CHECK(table.hand().lookName() == "free");
 }
 
@@ -809,7 +809,7 @@ TEST_CASE("crazyeights.xml: the computer draws until it can play, and names the 
 	CHECK(table.top("discard") == "8 clubs");
 	CHECK(table.holder("theirs").holder.items.size() == 3);
 	CHECK(table.holder("stock").holder.items.empty());
-	CHECK(table.holder("discard").called == 4.0f);
+	CHECK(table.holder("discard").holder.called == 4.0f);
 	CHECK(table.turn() == 1.0f);
 }
 
@@ -955,15 +955,15 @@ TEST_CASE("blackjack.xml: points count face-up cards, an ace 11 while within 21,
 	play.stack({ "A hearts", "9 spades", "6 clubs", "K diamonds" });
 	play.press(KeyCode::Space);
 	CHECK(play.table("bank") == 190.0f);
-	CHECK(play.holder("player").points == 17.0f);
-	CHECK(play.holder("dealer").points == 9.0f);
-	CHECK(play.holder("dealer").itemCount == 2.0f);
+	CHECK(play.holder("player").holder.points == 17.0f);
+	CHECK(play.holder("dealer").holder.points == 9.0f);
+	CHECK(play.holder("dealer").holder.itemCount == 2.0f);
 	CHECK(play.get("dealerpoints").picture.text == "dealer 9");
 
 	// A 9: the ace counts 1 now.
 	play.stack({ "9 hearts" });
 	play.press(KeyCode::W);
-	CHECK(play.holder("player").points == 16.0f);
+	CHECK(play.holder("player").holder.points == 16.0f);
 	CHECK(play.get("yourpoints").picture.text == "you 16");
 }
 
@@ -976,7 +976,7 @@ TEST_CASE("blackjack.xml: the dealer draws to 17, and the nearer to 21 wins", "[
 	play.press(KeyCode::S);
 	play.untilDone();
 	CHECK(play.holder("dealer").holder.items.size() == 4);
-	CHECK(play.holder("dealer").points == 18.0f);
+	CHECK(play.holder("dealer").holder.points == 18.0f);
 	CHECK(play.get("result").lookName() == "win");
 	CHECK(play.table("bank") == 210.0f);
 
@@ -994,7 +994,7 @@ TEST_CASE("blackjack.xml: over 21 is bust; blackjack pays three to two", "[cards
 	play.press(KeyCode::Space);
 	play.press(KeyCode::W);
 	play.frames(2);
-	CHECK(play.holder("player").points == 29.0f);
+	CHECK(play.holder("player").holder.points == 29.0f);
 	CHECK(play.get("result").lookName() == "bust");
 	CHECK(play.table("bank") == 190.0f);
 	// The dealer's hidden card shows.
@@ -1128,7 +1128,7 @@ TEST_CASE("holdem.xml: the best five of seven: the kinds in order, a wheel the l
 	const auto kindOf = [&](const std::vector<std::string>& seven)
 	{
 		play.lay(seven);
-		return play.holder("yours").pattern;
+		return play.holder("yours").holder.pattern;
 	};
 	CHECK(kindOf({ "A hearts", "K clubs", "2 spades", "7 diamonds", "9 clubs", "J hearts", "4 spades" }) == 0.0f);
 	CHECK(kindOf({ "A hearts", "A clubs", "2 spades", "7 diamonds", "9 clubs", "J hearts", "4 spades" }) == 1.0f);
@@ -1142,16 +1142,16 @@ TEST_CASE("holdem.xml: the best five of seven: the kinds in order, a wheel the l
 	CHECK(play.get("yourchips").picture.text == "you: 500 chips, a straight flush");
 
 	// A wheel (ace to five) is under a six-high straight; a flush beats both.
-	const float wheel = (play.lay({ "A hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "K hearts", "K spades" }), play.holder("yours").strength);
-	const float sixHigh = (play.lay({ "6 hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "K hearts", "K spades" }), play.holder("yours").strength);
-	const float flush = (play.lay({ "2 hearts", "7 hearts", "3 hearts", "4 diamonds", "5 clubs", "K hearts", "9 hearts" }), play.holder("yours").strength);
+	const float wheel = (play.lay({ "A hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "K hearts", "K spades" }), play.holder("yours").holder.strength);
+	const float sixHigh = (play.lay({ "6 hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "K hearts", "K spades" }), play.holder("yours").holder.strength);
+	const float flush = (play.lay({ "2 hearts", "7 hearts", "3 hearts", "4 diamonds", "5 clubs", "K hearts", "9 hearts" }), play.holder("yours").holder.strength);
 	CHECK(wheel < sixHigh);
 	CHECK(sixHigh < flush);
 
 	// Two pair: the higher pair decides, then the lower, then the fifth card.
-	const float kingsSevens = (play.lay({ "K hearts", "K clubs", "7 spades", "7 diamonds", "2 clubs", "3 hearts", "4 spades" }), play.holder("yours").strength);
-	const float kingsSixesAce = (play.lay({ "K hearts", "K clubs", "6 spades", "6 diamonds", "A clubs", "3 hearts", "4 spades" }), play.holder("yours").strength);
-	const float kingsSevensAce = (play.lay({ "K hearts", "K clubs", "7 spades", "7 diamonds", "A clubs", "3 hearts", "4 spades" }), play.holder("yours").strength);
+	const float kingsSevens = (play.lay({ "K hearts", "K clubs", "7 spades", "7 diamonds", "2 clubs", "3 hearts", "4 spades" }), play.holder("yours").holder.strength);
+	const float kingsSixesAce = (play.lay({ "K hearts", "K clubs", "6 spades", "6 diamonds", "A clubs", "3 hearts", "4 spades" }), play.holder("yours").holder.strength);
+	const float kingsSevensAce = (play.lay({ "K hearts", "K clubs", "7 spades", "7 diamonds", "A clubs", "3 hearts", "4 spades" }), play.holder("yours").holder.strength);
 	CHECK(kingsSixesAce < kingsSevens);
 	CHECK(kingsSevens < kingsSevensAce);
 }
@@ -1161,22 +1161,22 @@ TEST_CASE("holdem.xml: the odds against one unseen hand: a pair of aces about 85
 	Holdem play;
 	// Only the computer's odds are read by the game; yours are worked out
 	// only when something asks.
-	CHECK(play.holder("theirs").oddsRead);
-	CHECK_FALSE(play.holder("yours").oddsRead);
-	play.holder("yours").oddsRead = true;
+	CHECK(play.holder("theirs").holder.oddsRead);
+	CHECK_FALSE(play.holder("yours").holder.oddsRead);
+	play.holder("yours").holder.oddsRead = true;
 	play.lay({ "A hearts", "A clubs" });
-	CHECK(play.holder("yours").odds >= 80.0f);
-	CHECK(play.holder("yours").odds <= 90.0f);
+	CHECK(play.holder("yours").holder.odds >= 80.0f);
+	CHECK(play.holder("yours").holder.odds <= 90.0f);
 	play.lay({ "7 hearts", "2 clubs" });
-	CHECK(play.holder("yours").odds >= 28.0f);
-	CHECK(play.holder("yours").odds <= 40.0f);
+	CHECK(play.holder("yours").holder.odds >= 28.0f);
+	CHECK(play.holder("yours").holder.odds <= 40.0f);
 	// The same cards, the same odds.
-	const float once = play.holder("yours").odds;
+	const float once = play.holder("yours").holder.odds;
 	play.lay({ "7 hearts", "2 clubs" });
-	CHECK(play.holder("yours").odds == once);
+	CHECK(play.holder("yours").holder.odds == once);
 	// A made hand on the river: nothing left to come, a straight flush cannot lose.
 	play.lay({ "10 hearts", "K hearts", "Q hearts", "J hearts", "A hearts", "2 clubs", "3 spades" });
-	CHECK(play.holder("yours").odds == 100.0f);
+	CHECK(play.holder("yours").holder.odds == 100.0f);
 }
 
 TEST_CASE("holdem.xml: the deal antes five each; checked through, the better hand takes the pot at the showdown", "[cards][holdem]")
@@ -1197,7 +1197,7 @@ TEST_CASE("holdem.xml: the deal antes five each; checked through, the better han
 		play.untilYou();
 	}
 	CHECK(play.holder("board").holder.items.size() == 5);
-	CHECK(play.holder("yours").pattern == 8.0f);
+	CHECK(play.holder("yours").holder.pattern == 8.0f);
 	CHECK(play.get("result").lookName() == "youwin");
 	CHECK(play.chips("you") == 505.0f);
 	CHECK(play.chips("cpu") == 495.0f);
@@ -1458,7 +1458,7 @@ TEST_CASE("hearts.xml: the suit led is followed; hearts lead only once broken, o
 	CHECK_FALSE(play.play("A hearts"));
 	CHECK(play.holder("mine").holder.items.size() == 13);
 	CHECK(play.play("2 clubs"));
-	CHECK(play.holder("trick").lead == 3.0f);
+	CHECK(play.holder("trick").holder.lead == 3.0f);
 
 	// West follows low; north and east, with no clubs, shed their worst:
 	// north its king of hearts, east the queen of spades.
@@ -1486,7 +1486,7 @@ TEST_CASE("hearts.xml: a card not of the suit led is refused while you hold one"
 	}, 2);
 	play.untilYou();
 	REQUIRE(play.holder("trick").holder.items.size() == 3);
-	CHECK(play.holder("trick").lead == 3.0f);
+	CHECK(play.holder("trick").holder.lead == 3.0f);
 	CHECK_FALSE(play.play("5 diamonds"));
 	CHECK(play.get("you").lookName() == "free");
 	CHECK(play.play("K clubs"));
@@ -1596,7 +1596,7 @@ TEST_CASE("spades.xml: everyone bids what their cards should take; you change yo
 	CHECK(play.turn() == 0.0f);
 	for (const auto& [hand, holder] : { std::make_pair("west", "westcards"), std::make_pair("north", "northcards"), std::make_pair("east", "eastcards"), std::make_pair("you", "mine") })
 	{
-		CHECK(play.of(hand, "bid") == std::max(play.holder(holder).tricks, 1.0f));
+		CHECK(play.of(hand, "bid") == std::max(play.holder(holder).holder.tricks, 1.0f));
 	}
 	const float first = play.of("you", "bid");
 	play.tap(KeyCode::W);
@@ -1622,10 +1622,10 @@ TEST_CASE("spades.xml: a hand's live number tricks reckons high cards, trumps an
 		joined(suitOf("hearts", { "9", "10", "J", "Q" }), suitOf("diamonds", { "3", "4", "5", "6", "7", "8", "9", "10", "J" })),
 		joined(suitOf("diamonds", { "Q", "K" }), suitOf("clubs", { "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" })),
 	}, 1);
-	CHECK(play.holder("mine").tricks == 11.0f);
+	CHECK(play.holder("mine").holder.tricks == 11.0f);
 	CHECK(play.of("you", "bid") == 11.0f);
 	// Six small trumps, no clubs or diamonds: three past three, and ruffs for the two missing suits.
-	CHECK(play.holder("westcards").tricks == 5.0f);
+	CHECK(play.holder("westcards").holder.tricks == 5.0f);
 }
 
 TEST_CASE("spades.xml: spades lead only once broken; a spade takes a trick of another suit", "[cards][spades]")
@@ -1640,12 +1640,12 @@ TEST_CASE("spades.xml: spades lead only once broken; a spade takes a trick of an
 	// West leads its ace of clubs; north sheds a heart, east lets its partner's ace stand.
 	play.untilYou();
 	REQUIRE(play.holder("trick").holder.items.size() == 3);
-	CHECK(play.holder("trick").winner == 2.0f);
+	CHECK(play.holder("trick").holder.winner == 2.0f);
 	CHECK(play.holder("eastcards").holder.items.size() == 12);
 	CHECK(std::find(play.holder("eastcards").holder.items.begin(), play.holder("eastcards").holder.items.end(), play.cardOf("A diamonds")) == play.holder("eastcards").holder.items.end());
 	// No club: your two of spades trumps the ace.
 	CHECK(play.play("2 spades"));
-	CHECK(play.holder("trick").winner == 1.0f);
+	CHECK(play.holder("trick").holder.winner == 1.0f);
 	play.untilYou();
 	CHECK(play.of("you", "won") == 1.0f);
 	CHECK(play.of("north", "won") == 0.0f);
@@ -1825,8 +1825,8 @@ TEST_CASE("gin.xml: cards laid out in the melds that leave the least deadwood, t
 	// The seven of hearts in a run or in the set of sevens: the set leaves less.
 	Gin play(cardsOf({ suitOf("hearts", { "5", "6", "7" }), { "7 spades", "7 diamonds" }, suitOf("spades", { "J", "Q", "K" }), { "A diamonds", "2 spades" }, ginJunk, { "10 hearts" } }));
 	REQUIRE(play.look() == "drawing");
-	CHECK(play.holder("mine").deadwood == 14.0f);
-	CHECK(play.holder("northcards").deadwood == 58.0f);
+	CHECK(play.holder("mine").holder.deadwood == 14.0f);
+	CHECK(play.holder("northcards").holder.deadwood == 58.0f);
 	// Melds first, then the deadwood.
 	const auto& mine = play.holder("mine").holder.items;
 	REQUIRE(mine.size() == 10);
@@ -1840,11 +1840,11 @@ TEST_CASE("gin.xml: cards laid out in the melds that leave the least deadwood, t
 TEST_CASE("gin.xml: a draw from the discard holder, then a discard; the deadwood counts the best ten", "[cards][gin]")
 {
 	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "2 spades" } }));
-	CHECK(play.holder("mine").deadwood == 10.0f);
+	CHECK(play.holder("mine").holder.deadwood == 10.0f);
 	play.drawDiscard();
 	CHECK(play.holder("mine").holder.items.size() == 11);
 	CHECK(play.look() == "discarding");
-	CHECK(play.holder("mine").deadwood == 2.0f);
+	CHECK(play.holder("mine").holder.deadwood == 2.0f);
 	CHECK(play.get("you").lookName() == "discard");
 	play.discard("K diamonds", KeyCode::Space);
 	CHECK(play.holds("discard", "K diamonds"));
@@ -1891,7 +1891,7 @@ TEST_CASE("gin.xml: a knock against no more deadwood is undercut: 25 and the dif
 {
 	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "9 diamonds" },
 		suitOf("spades", { "A", "2", "3" }), suitOf("diamonds", { "4", "5", "6" }), { "8 clubs", "8 hearts", "8 spades", "2 clubs" }, { "K diamonds" } }));
-	CHECK(play.holder("northcards").deadwood == 2.0f);
+	CHECK(play.holder("northcards").holder.deadwood == 2.0f);
 	play.drawDiscard();
 	play.discard("K diamonds", KeyCode::K);
 	play.frames(2);
@@ -1921,7 +1921,7 @@ TEST_CASE("gin.xml: north draws a discard that melds, and lets go of what melds 
 	REQUIRE(play.of("you", "turn") == 1.0f);
 	CHECK(play.holds("northcards", "6 diamonds"));
 	CHECK(play.holder("northcards").holder.items.size() == 10);
-	CHECK(play.holder("northcards").deadwood == 37.0f);
+	CHECK(play.holder("northcards").holder.deadwood == 37.0f);
 }
 
 TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[cards][gin]")
@@ -1929,7 +1929,7 @@ TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[c
 	// Yours: hearts, clubs and diamonds that meld nowhere. North's: three melds and the king of spades.
 	Gin play(cardsOf({ { "2 hearts", "4 hearts", "6 hearts", "8 hearts", "10 hearts", "Q hearts", "2 clubs", "4 clubs", "6 clubs", "8 clubs" },
 		suitOf("spades", { "A", "2", "3" }), suitOf("diamonds", { "4", "5", "6" }), { "9 clubs", "9 hearts", "9 spades", "K spades" }, { "Q diamonds" } }));
-	REQUIRE(play.holder("northcards").deadwood == 10.0f);
+	REQUIRE(play.holder("northcards").holder.deadwood == 10.0f);
 	// North's draw from the stock melds nowhere, so it cannot go gin.
 	auto& stock = play.holder("stock").holder.items;
 	const int king = play.cardOf("K hearts");
@@ -1940,7 +1940,7 @@ TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[c
 	for (int i = 0; i < 600 && play.look() != "done"; ++i) { play.frames(1); }
 	REQUIRE(play.look() == "done");
 	CHECK(play.get("message").lookName() == "northknock");
-	CHECK(play.of("north", "score") == play.holder("mine").deadwood - play.holder("northcards").deadwood);
+	CHECK(play.of("north", "score") == play.holder("mine").holder.deadwood - play.holder("northcards").holder.deadwood);
 	CHECK(play.of("you", "turn") == 0.0f);
 	CHECK(play.of("north", "turn") == 0.0f);
 	for (const int number : play.holder("northcards").holder.items) { CHECK(play.game.itemAt(number)->faceUp); }

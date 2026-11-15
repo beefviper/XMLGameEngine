@@ -583,7 +583,7 @@ namespace xge
 		void refreshHolder(Object& holder);
 		void scoreHolder(Object& holder);
 		// Marks each scored holder whose `odds` nothing reads: no condition,
-		// shown text or expression names them (Object::oddsRead).
+		// shown text or expression names them (Object::Holder::oddsRead).
 		void markOddsRead();
 		void scoreDueHolders();
 		bool scoresDue{ false };

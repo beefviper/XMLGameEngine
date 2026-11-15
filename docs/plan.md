@@ -74,7 +74,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 - **Steps, one group a commit.** Each moves the fields of one feature into a member that most objects never use and tests rarely name.
   - [x] **1.** `object.maze` (a walker's state: map, walls, slows, walk).
   - [x] **2.** `object.cell` (cells and chains: chain, checks, shape, held move; `onCells` and `homeMap` stay with the map place).
-  - [ ] **3.** `object.holder`.
+  - [x] **3.** `object.holder` (its live numbers: items, calling, called, points, pattern, strength, odds, lead, winner, tricks, deadwood).
   - [ ] **4.** `object.moves` and `object.marks` (boards).
   - [ ] **5.** `object.swing`.
   - [ ] **6.** `object.path`.

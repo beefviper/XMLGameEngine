@@ -1324,8 +1324,8 @@ namespace xge
 		};
 		std::vector<MarkSet> markSets;
 		// Items (game/holders.cpp). A holder: its rules and the items it holds,
-		// bottom first (each an item's number, Game::cardAt). Laid out by
-		// Game::layOutCards, never moved by the frame.
+		// bottom first (each an item's number, Game::itemAt), and its live
+		// numbers. Laid out by Game::layOutItems, never moved by the frame.
 		struct Holder
 		{
 			bool is{ false };
@@ -1359,41 +1359,41 @@ namespace xge
 			bool scoreDue{ false };  // its items changed since it was last scored
 			HolderRule takes;
 			std::vector<int> items;
+			// The live number `items`: how many the holder holds. A holder that
+			// takes <wild> items: `calling` is 1 while a wild card on top waits
+			// for a suit to be called, `called` the suit called (from 1; 0 none).
+			float itemCount{};
+			float calling{};
+			float called{};
+			// The live number `points`: its face-up items' worths added up, each
+			// as high as it may count while the total stays within <counts><atmost>.
+			float points{};
+			// A <score>d holder: the best of its items (and the shared ones)
+			// by its patterns: `pattern` the highest they make (from 1 as
+			// written; 0 none) and `strength` to compare (higher wins); `odds`,
+			// in percent, how often it beats as many unseen items when the
+			// shared holder is made up to full (a tie counts half).
+			float pattern{};
+			float strength{};
+			float odds{};
+			// Whether anything reads its `odds` (Game::markOddsRead): a thousand
+			// deals are tried to work them out, so holders nobody asks skip them.
+			bool oddsRead{ true };
+			// A <follow /> holder (a trick): `lead`, the suit of its first item
+			// (from 1; 0 empty), and `winner`, the seat of the hand that laid
+			// the item winning it: the highest trump, else the highest of the
+			// suit led.
+			float lead{};
+			float winner{};
+			// A hand's own holder in a game with a trick: `tricks`, how many
+			// tricks its items should take (a reckoning by high items, trumps
+			// and short suits, as a player counts them to bid).
+			float tricks{};
+			// A holder scored with <melds />: `deadwood`, the points of its items in no
+			// group, the groups chosen to leave the fewest.
+			float deadwood{};
 		};
 		Holder holder;
-		// The live number `items`: how many the holder holds. A holder that
-		// takes <wild> items: `calling` is 1 while a wild card on top waits
-		// for a suit to be called, `called` the suit called (from 1; 0 none).
-		float itemCount{};
-		float calling{};
-		float called{};
-		// The live number `points`: its face-up items' worths added up, each
-		// as high as it may count while the total stays within <counts><atmost>.
-		float points{};
-		// A <score>d holder: the best of its items (and the shared ones)
-		// by its patterns: `pattern` the highest they make (from 1 as
-		// written; 0 none) and `strength` to compare (higher wins); `odds`,
-		// in percent, how often it beats as many unseen items when the
-		// shared holder is made up to full (a tie counts half).
-		float pattern{};
-		float strength{};
-		float odds{};
-		// Whether anything reads its `odds` (Game::markOddsRead): a thousand
-		// deals are tried to work them out, so holders nobody asks skip them.
-		bool oddsRead{ true };
-		// A <follow /> holder (a trick): `lead`, the suit of its first item
-		// (from 1; 0 empty), and `winner`, the seat of the hand that laid
-		// the item winning it: the highest trump, else the highest of the
-		// suit led.
-		float lead{};
-		float winner{};
-		// A hand's own holder in a game with a trick: `tricks`, how many
-		// tricks its items should take (a reckoning by high items, trumps
-		// and short suits, as a player counts them to bid).
-		float tricks{};
-		// A holder scored with <melds />: `deadwood`, the points of its items in no
-		// group, the groups chosen to leave the fewest.
-		float deadwood{};
 		// An item: what it is, its number (from 1, every held member of the game
 		// in turn) and whether its face is up.
 		bool held{ false };
