@@ -293,7 +293,7 @@ TEST_CASE("fishingderby.xml: a fish that bites is claimed by that hook, landed f
 	Object& hook = play.get("hook1");
 	hook.position = { fish.position.x + 10, fish.position.y - 6 };
 	play.frames(2);
-	CHECK(play.get("hook1").carrying == fish.name);
+	CHECK(play.get("hook1").carry.what == fish.name);
 	CHECK(play.get("hook1").variable.at("line") == Approx(2));
 	CHECK(fish.variable.at("by") == Approx(1));
 	CHECK(fish.velocity.x == Approx(0));
@@ -305,7 +305,7 @@ TEST_CASE("fishingderby.xml: a fish that bites is claimed by that hook, landed f
 
 	CHECK(play.get("left").variable.at("score") == Approx(6));
 	CHECK(play.get("right").variable.at("score") == Approx(0));
-	CHECK(play.get("hook1").carrying.empty());
+	CHECK(play.get("hook1").carry.what.empty());
 	CHECK(play.get("hook1").variable.at("line") == Approx(0));
 	const Object& again = play.get("cod.1");
 	CHECK(again.isVisible);
@@ -324,7 +324,7 @@ TEST_CASE("fishingderby.xml: a hook on its way up takes no second fish, and the 
 	Object& hook = play.get("hook1");
 	hook.position = { cod.position.x + 10, cod.position.y - 6 };
 	play.frames(2);
-	REQUIRE(hook.carrying == cod.name);
+	REQUIRE(hook.carry.what == cod.name);
 
 	// Reel up through a perch: the hook keeps the cod.
 	Object& perch = play.get("perch.2");
@@ -333,7 +333,7 @@ TEST_CASE("fishingderby.xml: a hook on its way up takes no second fish, and the 
 	play.engine.handleKeyPressed(KeyCode::W);
 	play.frames(20);
 	play.engine.handleKeyReleased(KeyCode::W);
-	CHECK(play.get("hook1").carrying == cod.name);
+	CHECK(play.get("hook1").carry.what == cod.name);
 	CHECK(play.get("perch.2").variable.at("by") == Approx(0));
 
 	// The shark swims into the cod: gone, back in its row, the hook put back.
@@ -341,7 +341,7 @@ TEST_CASE("fishingderby.xml: a hook on its way up takes no second fish, and the 
 	shark.position = { play.get("cod.1").position.x - 100, play.get("cod.1").position.y - 4 };
 	shark.velocity = { 4, 0 };
 	play.frames(30);
-	CHECK(play.get("hook1").carrying.empty());
+	CHECK(play.get("hook1").carry.what.empty());
 	CHECK(play.get("hook1").variable.at("line") == Approx(0));
 	CHECK(play.get("cod.1").variable.at("by") == Approx(0));
 	CHECK(play.get("cod.1").position.y == Approx(470).margin(2));

@@ -345,10 +345,10 @@ namespace xge
 		object.isVisible = false;
 		object.collisionsOn = false;
 		object.path.name.clear();
-		object.carrying.clear();
+		object.carry.what.clear();
 		for (auto& carrier : objects)
 		{
-			if (carrier.carrying == object.name) { carrier.carrying.clear(); }
+			if (carrier.carry.what == object.name) { carrier.carry.what.clear(); }
 		}
 		stageChanged();
 	}
@@ -605,8 +605,8 @@ namespace xge
 		// own, or the game's) belongs to the scene it is carried into.
 		for (const Object& carrier : objects)
 		{
-			if (carrier.carrying.empty() || !carrier.ownerScene.empty()) { continue; }
-			Object* carried = tryGetObject(carrier.carrying);
+			if (carrier.carry.what.empty() || !carrier.ownerScene.empty()) { continue; }
+			Object* carried = tryGetObject(carrier.carry.what);
 			if (carried && carried->ownerState == state && !carried->ownerScene.empty()) { carried->ownerScene = scene; }
 		}
 		stageChanged();
@@ -1457,8 +1457,8 @@ namespace xge
 			// Nor should a reset object go on riding, or jump; it
 			// faces the way it started, and its timers start over.
 			object.riding = {};
-			object.carrying.clear();
-			object.dropped.clear();
+			object.carry.what.clear();
+			object.carry.dropped.clear();
 			object.hopPending = {};
 			object.flight.step = {};
 			object.flight.framesLeft = 0;
@@ -1514,10 +1514,10 @@ namespace xge
 		// Back where it started, it is no longer carried.
 		for (auto& carrier : objects)
 		{
-			const Object* carried = carrier.carrying.empty() ? nullptr : tryGetObject(carrier.carrying);
+			const Object* carried = carrier.carry.what.empty() ? nullptr : tryGetObject(carrier.carry.what);
 			if (carried && (carried->named(name)))
 			{
-				carrier.carrying.clear();
+				carrier.carry.what.clear();
 			}
 		}
 
@@ -1910,7 +1910,7 @@ namespace xge
 			// Back where it started, it is no longer carried.
 			for (auto& carrier : objects)
 			{
-				if (carrier.carrying == object.name) { carrier.carrying.clear(); }
+				if (carrier.carry.what == object.name) { carrier.carry.what.clear(); }
 			}
 		}
 

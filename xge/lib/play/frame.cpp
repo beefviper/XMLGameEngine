@@ -486,12 +486,12 @@ namespace xge
 		{
 			for (auto& carrier : objects)
 			{
-				if (carrier.carrying.empty()) { continue; }
+				if (carrier.carry.what.empty()) { continue; }
 
-				Object* item = named(objects, carrier.carrying);
+				Object* item = named(objects, carrier.carry.what);
 				if (!item || !rules.inPlay(carrier) || !rules.inPlay(*item))
 				{
-					carrier.carrying.clear();
+					carrier.carry.what.clear();
 					continue;
 				}
 
@@ -506,20 +506,20 @@ namespace xge
 		{
 			for (auto& carrier : objects)
 			{
-				if (!carrier.carrying.empty())
+				if (!carrier.carry.what.empty())
 				{
-					if (Object* item = named(objects, carrier.carrying))
+					if (Object* item = named(objects, carrier.carry.what))
 					{
-						item->position = carrier.position + carrier.carryOffset;
+						item->position = carrier.position + carrier.carry.offset;
 					}
 				}
 
-				if (!carrier.dropped.empty())
+				if (!carrier.carry.dropped.empty())
 				{
-					const Object* item = named(objects, carrier.dropped);
+					const Object* item = named(objects, carrier.carry.dropped);
 					if (!item || !boxesOverlap({ carrier.position, sizeOf(carrier) }, { item->position, sizeOf(*item) }))
 					{
-						carrier.dropped.clear();
+						carrier.carry.dropped.clear();
 					}
 				}
 			}
@@ -687,16 +687,16 @@ namespace xge
 		{
 			for (auto& tether : objects)
 			{
-				if (tether.tetherFrom.empty()) { continue; }
+				if (tether.tether.from.empty()) { continue; }
 
-				const Object* from = named(objects, tether.tetherFrom);
-				const Object* to = named(objects, tether.tetherTo);
+				const Object* from = named(objects, tether.tether.from);
+				const Object* to = named(objects, tether.tether.to);
 				tether.isVisible = from && to && from->isVisible && to->isVisible;
 				if (!tether.isVisible) { continue; }
 
 				const Vector2f a = from->position + sizeOf(*from) * 0.5f;
 				const Vector2f b = to->position + sizeOf(*to) * 0.5f;
-				const float half = static_cast<float>(tether.tetherThickness) * 0.5f;
+				const float half = static_cast<float>(tether.tether.thickness) * 0.5f;
 				const Vector2f corner{ std::floor(std::min(a.x, b.x) - half), std::floor(std::min(a.y, b.y) - half) };
 
 				LineSegment line;
@@ -704,8 +704,8 @@ namespace xge
 				line.y1 = a.y - corner.y - half;
 				line.x2 = b.x - corner.x - half;
 				line.y2 = b.y - corner.y - half;
-				line.color = tether.tetherColor;
-				line.thickness = tether.tetherThickness;
+				line.color = tether.tether.color;
+				line.thickness = tether.tether.thickness;
 
 				auto drawn = std::make_shared<const Bitmap>(rasterizeLines({ line }));
 				tether.position = corner;

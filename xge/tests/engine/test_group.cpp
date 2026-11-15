@@ -519,11 +519,11 @@ TEST_CASE("a member's tether names its two ends again and keeps the rest; a memb
 	Game& game = loaded.game;
 
 	const Object& two = game.getObject("two");
-	CHECK(two.tetherFrom == "b");
-	CHECK(two.tetherTo == "a");
-	CHECK(two.tetherThickness == 3);
-	CHECK(two.tetherColor.r == 255);
-	CHECK(two.tetherColor.g == 0);
+	CHECK(two.tether.from == "b");
+	CHECK(two.tether.to == "a");
+	CHECK(two.tether.thickness == 3);
+	CHECK(two.tether.color.r == 255);
+	CHECK(two.tether.color.g == 0);
 	CHECK(game.getObject("sign").picture.kind == ShapeKind::Text);
 	CHECK(game.getObject("sign").picture.text == "right");
 	CHECK(game.getObject("sign").picture.textSize == 10);

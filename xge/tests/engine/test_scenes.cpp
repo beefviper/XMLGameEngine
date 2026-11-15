@@ -423,7 +423,7 @@ TEST_CASE("what a state's own object carries goes along into the next scene, and
 	loaded.frames(2);
 	Object& hero_ = loaded.game.getObject("playing.hero");
 	Object& sword = loaded.game.getObject("playing.room1.sword");
-	REQUIRE(hero_.carrying == "playing.room1.sword");
+	REQUIRE(hero_.carry.what == "playing.room1.sword");
 
 	const float held = sword.position.x - hero_.position.x;
 

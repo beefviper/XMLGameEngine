@@ -245,24 +245,24 @@ namespace xge
 
 	void carry(Object& object, const Object& item)
 	{
-		if (item.name == object.carrying || item.name == object.dropped || &item == &object)
+		if (item.name == object.carry.what || item.name == object.carry.dropped || &item == &object)
 		{
 			return;
 		}
 
-		object.carrying = item.name;
-		object.carryOffset = item.position - object.position;
+		object.carry.what = item.name;
+		object.carry.offset = item.position - object.position;
 	}
 
 	void drop(Object& object)
 	{
-		if (object.carrying.empty())
+		if (object.carry.what.empty())
 		{
 			return;
 		}
 
-		object.dropped = object.carrying;
-		object.carrying.clear();
+		object.carry.dropped = object.carry.what;
+		object.carry.what.clear();
 	}
 
 	void track(Object& object, bool horizontal, float fraction, float span)

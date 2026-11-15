@@ -1879,16 +1879,20 @@ namespace xge
 		Vector2f riding{};
 		Vector2f hopPending{};
 
-		// What it carries (<carry />): the name of one other object, which
-		// goes where it goes, held where it was when it was picked up
-		// (`carryOffset` from this object's top left), until a <drop />, until
+		// What it carries (<carry />): the name of one other object (`what`),
+		// which goes where it goes, held where it was when it was picked up
+		// (`offset` from this object's top left), until a <drop />, until
 		// something else is picked up, or until either is out of play
 		// (playOneFrame). `dropped` is what it last let go of: not picked up
 		// again until the two have stopped touching, so it can be walked away
 		// from.
-		std::string carrying;
-		Vector2f carryOffset{};
-		std::string dropped;
+		struct Carry
+		{
+			std::string what;
+			Vector2f offset{};
+			std::string dropped;
+		};
+		Carry carry;
 
 		// The object's own bounding box (width/height) in whole pixels, as
 		// every window draws it (pictureSize): set for every object when the
@@ -1965,14 +1969,18 @@ namespace xge
 		// themselves; they only ever flip this flag.
 		bool visualDirty{ true };
 
-		// A <tether>: a line from the middle of the object tetherFrom names to
-		// the middle of tetherTo's, drawn again every frame wherever the two
-		// are (drawTethers in play/frame), this object's position and size
+		// A <tether>: a line from the middle of the object `from` names to
+		// the middle of `to`'s, drawn again every frame wherever the two are
+		// (drawTethers in play/frame), this object's position and size
 		// following it. Empty for every other sprite.
-		std::string tetherFrom;
-		std::string tetherTo;
-		int tetherThickness{ 1 };
-		Color tetherColor{};
+		struct Tether
+		{
+			std::string from;
+			std::string to;
+			int thickness{ 1 };
+			Color color{};
+		};
+		Tether tether;
 
 		std::map<std::string, std::vector<Command>> action;
 

@@ -346,14 +346,14 @@ namespace xge
 			{
 				throw std::runtime_error(where + ": a <tether> is drawn where its ends are; it has no <heading>, other looks or <animation>");
 			}
-			object.tetherFrom = rawObject.sprite.tetherFrom;
-			object.tetherTo = rawObject.sprite.tetherTo;
+			object.tether.from = rawObject.sprite.tetherFrom;
+			object.tether.to = rawObject.sprite.tetherTo;
 			if (!rawObject.sprite.thickness.text.empty() || rawObject.sprite.thickness.kind != RawValue::Kind::Expression)
 			{
-				object.tetherThickness = static_cast<int>(std::lround(evaluate(rawObject.sprite.thickness, where)));
-				if (object.tetherThickness < 1) { throw std::runtime_error(where + ": a <tether> has a <thickness> under 1"); }
+				object.tether.thickness = static_cast<int>(std::lround(evaluate(rawObject.sprite.thickness, where)));
+				if (object.tether.thickness < 1) { throw std::runtime_error(where + ": a <tether> has a <thickness> under 1"); }
 			}
-			object.tetherColor = colorFromName(rawObject.sprite.color.empty() ? "color.white" : rawObject.sprite.color);
+			object.tether.color = colorFromName(rawObject.sprite.color.empty() ? "color.white" : rawObject.sprite.color);
 		}
 
 		if (!rawObject.facing.empty())

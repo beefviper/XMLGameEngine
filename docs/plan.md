@@ -86,7 +86,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **12.** `object.surface` (a surface's drag and grip, and the ground's under it).
   - [x] **13.** `object.rest` (resting, resting on, rested at, settled on, normal, age).
   - [x] **14.** `object.dark` (kind, seen, hidden) and `object.aloft` (has an altitude, fall, bounce, shadow; the altitude itself is the Moment's).
-  - [ ] **15.** `object.tether` and `object.carry`.
+  - [x] **15.** `object.tether` (from, to, thickness, color) and `object.carry` (what, offset, dropped).
   - [ ] **16.** `object.keys` (held turn, thrust, thrust along the heading, move steps).
 - **After step 16** about 90 fields are left. Under 60 also needs the looks and palettes, the drawn picture, and the motion numbers (speed, drag, friction, mass, grip) grouped: count again then, and the author decides.
 - **Later, not planned:** a group no object uses could become `std::optional` or a pointer, which also shrinks every object.

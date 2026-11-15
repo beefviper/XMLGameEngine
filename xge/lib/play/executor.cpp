@@ -183,16 +183,16 @@ namespace xge
 	// Taken from whatever had it: one thing is carried by one object at a time.
 	void CommandExecutor::carry(Object& object, const Object& item)
 	{
-		if (item.name == object.carrying || item.name == object.dropped)
+		if (item.name == object.carry.what || item.name == object.carry.dropped)
 		{
 			return;
 		}
 
 		for (auto& other : game.getCurrentObjects())
 		{
-			if (&other != &object && other.carrying == item.name)
+			if (&other != &object && other.carry.what == item.name)
 			{
-				other.carrying.clear();
+				other.carry.what.clear();
 			}
 		}
 

@@ -455,7 +455,7 @@ namespace xge
 					{
 						throw std::runtime_error("object '" + object.name + "' > <seek>: there is no object named '" + object.seekTarget + "'" + didYouMean(object.seekTarget, objectNames(objects)));
 					}
-					for (const std::string* end : { &object.tetherFrom, &object.tetherTo })
+					for (const std::string* end : { &object.tether.from, &object.tether.to })
 					{
 						if (!end->empty() && !findObject(objects, *end))
 						{
