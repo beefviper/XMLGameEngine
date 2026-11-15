@@ -117,9 +117,9 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
 - **Why.** Four separate wants are one thing, a sequence the game adds to and reads by place: Simon (add a random colour each round, compare presses in order), Mastermind (a hidden list compared with a guess), Tetris' bag of seven (a list shuffled and drawn from), Pac-Man's schedule (a list of lengths, one per wave).
 - **Where to start.** A holder already *is* an ordered collection with `<send>`, `<order><random />`, `<top>` and counts. Before inventing `<list>`, test whether a holder of small unseen pieces carrying one variable says all four. This is the fraction rule applied before building.
 - **Steps.**
-  - [ ] **1. Try the bag of seven as a holder (S).** In a scratch copy of Tetris, no engine change: a holder of seven unseen pieces, shuffled, sent from, refilled when empty. **Check:** it loads and deals each shape once per seven. Write down what read badly.
-  - [ ] **2. Try a schedule as a holder (S).** The same for Pac-Man's wave lengths, read from the top. **Check:** as step 1.
-  - [ ] **3. Write the design (S).** `docs/designs/15-lists.md`: what was wanted, the two trials, what Simon and Mastermind would still need ("compare place by place"), and a recommendation: a holder plus one word, or a new `<list>`. No code.
+  - [x] **1. Try the bag of seven as a holder (S).** Works: each shape once per seven, about 45 lines. In a scratch copy of Tetris, no engine change: a holder of seven unseen pieces, shuffled, sent from, refilled when empty. **Check:** it loads and deals each shape once per seven. Write down what read badly.
+  - [x] **2. Try a schedule as a holder (S).** Works, and the empty schedule gives "chase for good" free. The same for Pac-Man's wave lengths, read from the top. **Check:** as step 1.
+  - [x] **3. Write the design (S).** [lists](designs/15-lists.md) recommends a holder plus four general fixes and words. `docs/designs/15-lists.md`: what was wanted, the two trials, what Simon and Mastermind would still need ("compare place by place"), and a recommendation: a holder plus one word, or a new `<list>`. No code.
   - [ ] **4. The author decides.** Then the build steps are written here, in this shape, before anyone starts.
 - **Done, for now, when** the design file exists with a verdict.
 

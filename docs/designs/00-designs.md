@@ -22,6 +22,7 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 | [scenes](12-scenes.md) | Scenes inside a state, ways, what conditions count | Built |
 | [pieces](13-pieces.md) | Pieces (the top-level `<objects>`), `from=` and the one change rule | Built |
 | [verbs](14-verbs.md) | A file per verb, the list, and why it is written out | Built; reading open |
+| [lists](15-lists.md) | Sequences read by place: holders tried for the bag of seven and Pac-Man's schedule | Open |
 
 ## Behaviour
 
