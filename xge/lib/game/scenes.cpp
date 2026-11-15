@@ -490,24 +490,13 @@ namespace xge
 		}
 	}
 
-	void layOutScenes(GameData& data)
+	namespace
 	{
-		const bool owns = std::any_of(data.states.begin(), data.states.end(), [](const RawState& state)
-			{
-				return !state.objects.empty() || !state.scenes.empty();
-			});
-		if (!owns) { return; }
-
-		Names names;
-		for (const auto& variable : data.variables) { names.gameVariables.insert(variable.first); }
-		const std::set<std::string> gameNames = namesOf(data.objects);
-
-		// The game's own objects first, then each state's, with the scene
-		// variables (and the scene each is read in) as they are made.
-		std::vector<RawObject> all = std::move(data.objects);
-		std::vector<std::pair<std::size_t, Context>> sceneVariables;
-
-		for (RawState& state : data.states)
+		// A state's objects and its scenes' added to all, each under its full
+		// name, with the scene variables (and the scene each is read in) as they
+		// are made.
+		void layOutState(RawState& state, Names& names, std::vector<RawObject>& all, std::vector<std::pair<std::size_t, Context>>& sceneVariables,
+			std::vector<std::pair<std::string, RawValue>>& variables)
 		{
 			const std::string where = "state '" + state.name + "'";
 			const bool stateOwns = !state.objects.empty() || !state.scenes.empty();
@@ -561,8 +550,8 @@ namespace xge
 				for (const auto& [name, value] : local)
 				{
 					names.sceneVariables[path].insert(name);
-					sceneVariables.emplace_back(data.variables.size(), Context{ state.name, path, sceneWhere + " > <variable name=\"" + name + "\">" });
-					data.variables.emplace_back(path + "." + name, value);
+					sceneVariables.emplace_back(variables.size(), Context{ state.name, path, sceneWhere + " > <variable name=\"" + name + "\">" });
+					variables.emplace_back(path + "." + name, value);
 				}
 
 				for (RawObject object : scene.objects)
@@ -598,89 +587,117 @@ namespace xge
 		}
 
 		// Every name, and no name twice where both can be seen.
-		std::map<std::string, std::string> objectOwners;
-		for (const RawObject& object : all)
+		void checkOwnNames(const std::vector<RawObject>& all, Names& names, const std::set<std::string>& gameNames)
 		{
-			names.objects.insert(object.name);
-			names.all.insert(object.name);
-			if (!object.groupName.empty()) { names.all.insert(object.groupName); }
-			names.all.insert(object.outerGroups.begin(), object.outerGroups.end());
-			if (!objectOwners.emplace(object.name, object.ownerScene.empty() ? object.ownerState : object.ownerScene).second && !object.ownerState.empty())
+			std::map<std::string, std::string> objectOwners;
+			for (const RawObject& object : all)
 			{
-				throw std::runtime_error("object '" + object.name + "': there are two objects of that name");
+				names.objects.insert(object.name);
+				names.all.insert(object.name);
+				if (!object.groupName.empty()) { names.all.insert(object.groupName); }
+				names.all.insert(object.outerGroups.begin(), object.outerGroups.end());
+				if (!objectOwners.emplace(object.name, object.ownerScene.empty() ? object.ownerState : object.ownerScene).second && !object.ownerState.empty())
+				{
+					throw std::runtime_error("object '" + object.name + "': there are two objects of that name");
+				}
 			}
-		}
-		for (const RawObject& object : all)
-		{
-			if (object.ownerState.empty()) { continue; }
+			for (const RawObject& object : all)
+			{
+				if (object.ownerState.empty()) { continue; }
 
-			const std::string owner = object.ownerScene.empty() ? object.ownerState : object.ownerScene;
-			std::vector<std::string> own{ object.name };
-			if (!object.groupName.empty()) { own.push_back(object.groupName); }
-			for (const std::string& group : object.outerGroups)
-			{
-				if (group.compare(0, owner.size() + 1, owner + ".") == 0) { own.push_back(group); }
-			}
-			for (const std::string& name : own)
-			{
-				const std::string local = name.substr(owner.size() + 1);
-				const bool inScene = !object.ownerScene.empty();
-				if (inScene && std::any_of(all.begin(), all.end(), [&](const RawObject& other)
+				const std::string owner = object.ownerScene.empty() ? object.ownerState : object.ownerScene;
+				std::vector<std::string> own{ object.name };
+				if (!object.groupName.empty()) { own.push_back(object.groupName); }
+				for (const std::string& group : object.outerGroups)
+				{
+					if (group.compare(0, owner.size() + 1, owner + ".") == 0) { own.push_back(group); }
+				}
+				for (const std::string& name : own)
+				{
+					const std::string local = name.substr(owner.size() + 1);
+					const bool inScene = !object.ownerScene.empty();
+					if (inScene && std::any_of(all.begin(), all.end(), [&](const RawObject& other)
+						{
+							return other.ownerScene.empty() && other.ownerState == object.ownerState
+								&& other.named(object.ownerState + "." + local);
+						}))
 					{
-						return other.ownerScene.empty() && other.ownerState == object.ownerState
-							&& other.named(object.ownerState + "." + local);
-					}))
-				{
-					throw std::runtime_error("scene '" + owner + "': its '" + local + "' and state '" + object.ownerState + "''s '" + local + "' would both be '" + local + "' inside it; give one another name");
-				}
-				if (gameNames.count(local))
-				{
-					throw std::runtime_error(std::string(inScene ? "scene '" : "state '") + owner + "': its '" + local + "' and the game's '" + local + "' would both be '" + local + "' inside it; give one another name");
+						throw std::runtime_error("scene '" + owner + "': its '" + local + "' and state '" + object.ownerState + "''s '" + local + "' would both be '" + local + "' inside it; give one another name");
+					}
+					if (gameNames.count(local))
+					{
+						throw std::runtime_error(std::string(inScene ? "scene '" : "state '") + owner + "': its '" + local + "' and the game's '" + local + "' would both be '" + local + "' inside it; give one another name");
+					}
 				}
 			}
-		}
-		for (const std::string& scene : names.scenes)
-		{
-			if (names.all.count(scene)) { throw std::runtime_error("scene '" + scene + "': an object of the state has the same name; give one another name"); }
+			for (const std::string& scene : names.scenes)
+			{
+				if (names.all.count(scene)) { throw std::runtime_error("scene '" + scene + "': an object of the state has the same name; give one another name"); }
+			}
 		}
 
 		// Every name used, written out in full where it is used.
-		const Resolver resolve(names);
-		for (RawObject& object : all) { resolve.object(object); }
-		for (const auto& [index, context] : sceneVariables) { resolve.value(data.variables[index].second, context); }
-
-		for (RawState& state : data.states)
+		void resolveNames(GameData& data, const Names& names, std::vector<RawObject>& all, const std::vector<std::pair<std::size_t, Context>>& sceneVariables)
 		{
-			const Context context{ state.name, {}, "state '" + state.name + "'" };
-			for (std::string& shown : state.show) { shown = names.object(shown, context); }
-			for (auto* keys : state.keyMaps())
+			const Resolver resolve(names);
+			for (RawObject& object : all) { resolve.object(object); }
+			for (const auto& [index, context] : sceneVariables) { resolve.value(data.variables[index].second, context); }
+
+			for (RawState& state : data.states)
 			{
-				for (auto& [button, list] : *keys) { resolve.commands(list, context); }
+				const Context context{ state.name, {}, "state '" + state.name + "'" };
+				for (std::string& shown : state.show) { shown = names.object(shown, context); }
+				for (auto* keys : state.keyMaps())
+				{
+					for (auto& [button, list] : *keys) { resolve.commands(list, context); }
+				}
+				for (auto& [axis, list] : state.axes) { resolve.commands(list, context); }
+				resolve.conditions(state.conditions, context);
+				resolve.conditions(state.computer, context);
+				resolve.timers(state.timers, context);
+				for (RawScene& scene : state.scenes)
+				{
+					const std::string path = state.name + "." + scene.name;
+					const Context inScene{ state.name, path, "state '" + state.name + "' > scene '" + scene.name + "'" };
+					resolve.conditions(scene.conditions, inScene);
+					resolve.timers(scene.timers, inScene);
+				}
 			}
-			for (auto& [axis, list] : state.axes) { resolve.commands(list, context); }
-			resolve.conditions(state.conditions, context);
-			resolve.conditions(state.computer, context);
-			resolve.timers(state.timers, context);
-			for (RawScene& scene : state.scenes)
+
+			const Context game{ {}, {}, "the game's <paths>" };
+			for (RawPath& path : data.paths)
 			{
-				const std::string path = state.name + "." + scene.name;
-				const Context inScene{ state.name, path, "state '" + state.name + "' > scene '" + scene.name + "'" };
-				resolve.conditions(scene.conditions, inScene);
-				resolve.timers(scene.timers, inScene);
+				for (RawPathStep& step : path.steps)
+				{
+					resolve.value(step.x, game);
+					resolve.value(step.y, game);
+					resolve.commands(step.commands, game);
+				}
 			}
 		}
+	}
 
-		const Context game{ {}, {}, "the game's <paths>" };
-		for (RawPath& path : data.paths)
-		{
-			for (RawPathStep& step : path.steps)
+	void layOutScenes(GameData& data)
+	{
+		const bool owns = std::any_of(data.states.begin(), data.states.end(), [](const RawState& state)
 			{
-				resolve.value(step.x, game);
-				resolve.value(step.y, game);
-				resolve.commands(step.commands, game);
-			}
-		}
+				return !state.objects.empty() || !state.scenes.empty();
+			});
+		if (!owns) { return; }
 
+		Names names;
+		for (const auto& variable : data.variables) { names.gameVariables.insert(variable.first); }
+		const std::set<std::string> gameNames = namesOf(data.objects);
+
+		// The game's own objects first, then each state's, with the scene
+		// variables (and the scene each is read in) as they are made.
+		std::vector<RawObject> all = std::move(data.objects);
+		std::vector<std::pair<std::size_t, Context>> sceneVariables;
+
+		for (RawState& state : data.states) { layOutState(state, names, all, sceneVariables, data.variables); }
+
+		checkOwnNames(all, names, gameNames);
+		resolveNames(data, names, all, sceneVariables);
 		data.objects = std::move(all);
 	}
 }
