@@ -49,11 +49,13 @@ namespace xge
 		return nearest;
 	}
 
-	// How far an object moves in one frame: its own velocity, plus the
-	// velocity of whatever it is riding (see Object::riding).
+	// How far an object moves in one frame: its own velocity (for a stepped
+	// animation, only on the frame its picture changes, that many frames' worth:
+	// Object::Animation::stepped), plus the velocity of whatever it is riding
+	// (see Object::riding).
 	inline Vector2f motionOf(const Object& object) noexcept
 	{
-		return object.velocity + object.riding;
+		return (object.animation.stepped ? object.velocity * object.animation.share : object.velocity) + object.riding;
 	}
 
 	// <bounce />: off what it touched, as off a surface standing still:

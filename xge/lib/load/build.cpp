@@ -90,6 +90,7 @@ namespace xge
 					look.frameTicks = animationFramesOf(rawLook.interval, windowDesc, here);
 					look.frameTimes = animationTimesOf(rawLook.times, look.frameTicks, windowDesc, here);
 					look.once = rawLook.once;
+					look.stepped = rawLook.stepped;
 					look.then = processCommands(rawLook.thenCommands, here + " > <then>");
 					look.frameCommands = frameCommandsOf(rawLook.frameCommands, here);
 				}
@@ -141,6 +142,7 @@ namespace xge
 			object.animation.frames = animationFrames;
 			object.animation.times = animationTimesOf(rawObject.animation.times, animationFrames, windowDesc, where + " > <animation>");
 			object.animation.once = rawObject.animation.once;
+			object.animation.stepped = rawObject.animation.stepped;
 			object.animation.then = processCommands(rawObject.animation.thenCommands, where + " > <animation> > <then>");
 			object.animation.commands = frameCommandsOf(rawObject.animation.frameCommands, where + " > <animation>");
 			object.drawn.bitmap = object.animation.bitmaps.front();
@@ -415,6 +417,7 @@ namespace xge
 			object.animation.frames = looks.front().frameTicks;
 			object.animation.times = looks.front().frameTimes;
 			object.animation.once = looks.front().once;
+			object.animation.stepped = looks.front().stepped;
 		}
 
 		// The look for each way it moves; one left out is another's.

@@ -1270,8 +1270,9 @@ TEST_CASE("the aliens change picture every half second, all together, and march 
 	CHECK(onPicture(1));
 	CHECK_FALSE(onPicture(0));
 
-	// Two pixels a frame to the right in the meantime, as before.
-	CHECK(game.getObject("aliens.1.1").position.x == 80.0f + 2.0f * 30.0f);
+	// Held still for 29 frames, then one step of all 30 frames' worth at half
+	// a pixel a frame (<stepped />).
+	CHECK(game.getObject("aliens.1.1").position.x == 80.0f + 0.5f * 30.0f);
 
 	// Four steps, a note each: a, b, a, b.
 	frames(game, 30);

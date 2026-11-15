@@ -1943,12 +1943,14 @@ namespace xge
 		// members stored before the touching one by three steps and the rest
 		// by one (and repeated that on every right-hand bounce), which pushed
 		// the last column of a block further from the others each time.
+		// Each is taken back by its last move (a stepped one's whole step), so
+		// the rest of the column that met the edge with it are inside again.
 		for (auto& obj : objects)
 		{
 			if (obj.collisionData.lockstep == lockstepNum)
 			{
 				obj.velocity.x *= -1;
-				obj.position.x += obj.velocity.x;
+				obj.position.x += obj.velocity.x * (obj.animation.stepped ? obj.animation.shareBefore : 1.0f);
 			}
 		}
 	}

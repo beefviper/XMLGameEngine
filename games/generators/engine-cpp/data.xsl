@@ -1217,6 +1217,7 @@
     <xsl:if test="$animation/then">then(</xsl:if>
     <xsl:if test="$animation/frame/*[not(self::seconds or self::hitbox)]">frameCommands(</xsl:if>
     <xsl:if test="$animation/frame/hitbox">hitboxes(</xsl:if>
+    <xsl:if test="$animation/stepped">stepped(</xsl:if>
     <xsl:if test="$animation/once">once(</xsl:if>
     <xsl:text>frames(</xsl:text>
     <xsl:call-template name="string">
@@ -1235,6 +1236,7 @@
     </xsl:call-template>
     <xsl:text>)</xsl:text>
     <xsl:if test="$animation/once">)</xsl:if>
+    <xsl:if test="$animation/stepped">)</xsl:if>
     <xsl:if test="$animation/frame/hitbox">
       <xsl:text>, </xsl:text>
       <xsl:call-template name="frame-hitbox-lists">
@@ -1808,6 +1810,9 @@
         </xsl:if>
         <xsl:if test="animation/once">
           <xsl:value-of select="concat($in, 'object.animation.once = true;&#10;')" />
+        </xsl:if>
+        <xsl:if test="animation/stepped">
+          <xsl:value-of select="concat($in, 'object.animation.stepped = true;&#10;')" />
         </xsl:if>
         <xsl:if test="animation/then">
           <xsl:value-of select="concat($in, 'object.animation.thenCommands = ')" />
@@ -3004,6 +3009,9 @@
       </xsl:if>
       <xsl:if test="$node/once">
         <xsl:value-of select="concat($indent, $to, '.once = true;&#10;')" />
+      </xsl:if>
+      <xsl:if test="$node/stepped">
+        <xsl:value-of select="concat($indent, $to, '.stepped = true;&#10;')" />
       </xsl:if>
       <xsl:if test="$node/then">
         <xsl:value-of select="concat($indent, $to, '.then = ')" />

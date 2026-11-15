@@ -365,6 +365,7 @@ namespace xge
 		std::vector<std::vector<RawHitbox>> frameHitboxes;
 		std::vector<std::vector<RawCommand>> frameCommands;   // as RawFrames::frameCommands
 		bool once{ false };
+		bool stepped{ false };   // as RawFrames::stepped
 		// <then>: the look a once look goes to when it ends (empty, the look
 		// before it), and the commands it runs then.
 		std::string thenSprite;
@@ -391,6 +392,8 @@ namespace xge
 		std::vector<std::vector<RawCommand>> frameCommands;
 		// <once />: plays through one time, not round and round.
 		bool once{ false };
+		// <stepped />: the object moves only as the picture changes.
+		bool stepped{ false };
 		// <then sprite="...">: the look it goes to when it ends, and the
 		// commands it runs then. Only with once.
 		std::string thenSprite;
@@ -427,6 +430,7 @@ namespace xge
 		std::vector<std::vector<RawHitbox>> frameHitboxes;   // as RawFrames::frameHitboxes
 		std::vector<std::vector<RawCommand>> frameCommands;   // as RawFrames::frameCommands
 		bool once{ false };            // as RawFrames::once
+		bool stepped{ false };         // as RawFrames::stepped
 		std::vector<RawCommand> thenCommands;   // as RawFrames::thenCommands
 	};
 
@@ -1167,6 +1171,16 @@ namespace xge
 			bool once{ false };
 			bool done{ false };
 			std::size_t lookBefore{};
+			// <stepped />: it moves only on the frame its picture changes, the
+			// whole way its velocity took it over the frames since the last
+			// change (`since`); `share` is how many frames' worth this frame
+			// moves (0 between changes). See motionOf. `shareBefore` is the
+			// frame before's, so this frame's edge checks, made before the move,
+			// see where that step left it, and a bounce can take it back.
+			bool stepped{ false };
+			int since{};
+			float share{};
+			float shareBefore{};
 			// <then>'s commands of an object's one animation, run when it ends
 			// (a look's are the look's own).
 			std::vector<Command> then;
@@ -1665,6 +1679,7 @@ namespace xge
 			std::vector<std::vector<Hitbox>> frameHitboxes;   // as Animation::hitboxes
 			std::vector<std::vector<Command>> frameCommands;   // as Animation::commands
 			bool once{ false };            // as Animation::once
+			bool stepped{ false };         // as Animation::stepped
 			// <then>: the look to go to when it ends, in place of the look
 			// before, and the commands it runs then.
 			std::optional<std::size_t> thenLook;

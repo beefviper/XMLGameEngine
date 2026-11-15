@@ -213,6 +213,7 @@ namespace
 			value(at + ".interval", s.interval);
 			for (std::size_t i = 0; i < s.times.size(); ++i) { value(at + ".time" + std::to_string(i), s.times[i]); }
 			flag(at + ".once", s.once);
+			flag(at + ".stepped", s.stepped);
 			text(at + ".thenSprite", s.thenSprite);
 			commands(at + ".then", s.thenCommands);
 			for (std::size_t i = 0; i < s.frameCommands.size(); ++i) { commands(at + ".frameCommands" + std::to_string(i), s.frameCommands[i]); }
@@ -238,6 +239,7 @@ namespace
 			value(at + ".animation.interval", o.animation.interval);
 			for (std::size_t i = 0; i < o.animation.times.size(); ++i) { value(at + ".animation.time" + std::to_string(i), o.animation.times[i]); }
 			flag(at + ".animation.once", o.animation.once);
+			flag(at + ".animation.stepped", o.animation.stepped);
 			commands(at + ".animation.then", o.animation.thenCommands);
 			for (std::size_t i = 0; i < o.animation.frameCommands.size(); ++i) { commands(at + ".animation.frameCommands" + std::to_string(i), o.animation.frameCommands[i]); }
 			for (std::size_t i = 0; i < o.animation.frames.size(); ++i) { sprite(at + ".frame" + std::to_string(i), o.animation.frames[i]); }

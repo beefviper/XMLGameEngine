@@ -34,6 +34,9 @@
   * The march keeps step with the aliens: their animation is four pictures,
     each playing one of four falling notes as it comes up, and its seconds
     are live, reading pace.beat, so the notes quicken with the fleet.
+  * The block moves in steps, as the arcade fleet does: <stepped /> holds
+    it still between pictures, then moves it the whole way at once, so
+    each note is a step of 15 pixels (half a pixel a frame for 30 frames).
   * Paused, blasted and both endings draw the game still underneath.
 -->
 
@@ -223,13 +226,14 @@
           </sprite>
           <animation>
             <seconds update="live">pace.beat</seconds>
+            <stepped />
             <frame sprite="a"><play sound="march1" /></frame>
             <frame sprite="b"><play sound="march2" /></frame>
             <frame sprite="a"><play sound="march3" /></frame>
             <frame sprite="b"><play sound="march4" /></frame>
           </animation>
           <position><x>margin</x><y>top</y></position>
-          <velocity><x>2</x></velocity>
+          <velocity><x>0.5</x></velocity>
           <facing>down</facing>
           <collisions>
             <lockstep />

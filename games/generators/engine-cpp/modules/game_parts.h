@@ -292,6 +292,13 @@ namespace xge::parts
 		return animation;
 	}
 
+	// A named <animation> with <stepped />: its object moves as it changes picture.
+	inline RawFrames stepped(RawFrames animation)
+	{
+		animation.stepped = true;
+		return animation;
+	}
+
 	// A named <animation> with <once />: it plays through one time.
 	inline RawFrames once(RawFrames animation)
 	{
@@ -343,6 +350,7 @@ namespace xge::parts
 		std::vector<std::vector<RawHitbox>> frameHitboxes;
 		std::vector<std::vector<RawCommand>> frameCommands;
 		bool once{ false };
+		bool stepped{ false };
 		std::vector<RawCommand> then;
 		std::vector<RawFrames> moving;
 	};
@@ -419,6 +427,7 @@ namespace xge::parts
 			object.animation.frameHitboxes = member.frameHitboxes;
 			object.animation.frameCommands = member.frameCommands;
 			object.animation.once = member.once;
+			object.animation.stepped = member.stepped;
 			object.animation.thenCommands = member.then;
 		}
 		else

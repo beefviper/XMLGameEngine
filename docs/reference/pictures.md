@@ -204,6 +204,16 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
   <frame sprite="a"><play sound="march1" /></frame>
   <frame sprite="b"><play sound="march2" /></frame>
   ```
+- **Stepped:** `<stepped />` after `<seconds>` moves the object only as its picture changes, by all its velocity would have taken it since the last change, so it goes in steps, as an arcade fleet or a snake does. Its edges and touches are met where each step leaves it, the frame after; a `<bounce>` off an edge takes a [lockstep](collisions.md#lockstep) block back by the whole step.
+
+  ```xml
+  <animation>
+    <seconds>0.5</seconds>
+    <stepped />
+    <frame sprite="a" />
+    <frame sprite="b" />
+  </animation>
+  ```
 - **Once:** `<once />` after `<seconds>` plays the frames through one time instead of round and round (one frame is enough: a look held for a while). A look that moves then goes back to the look shown before it; an object's one animation stays on its last picture. A reset starts it again, and so does `<become>` with its look, from a key, a timer or a touch, even while it is showing.
 - **Then:** a `<then>` after the frames says what comes when a once animation ends. `<then sprite="dead" />` goes to that look instead of the one before; commands in it run as an object's timer's do, the same frame:
 

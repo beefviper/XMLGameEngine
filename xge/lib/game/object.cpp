@@ -90,6 +90,7 @@ namespace xge
 		animation.times = looks.all[index].frameTimes;
 		animation.hitboxes = looks.all[index].frameHitboxes;
 		animation.once = looks.all[index].once;
+		animation.stepped = looks.all[index].stepped;
 		animation.done = false;
 		animation.tick = 0;
 		animation.index = 0;
@@ -399,6 +400,7 @@ namespace xge
 			look.frameHitboxes = animation.frameHitboxes;
 			look.frameCommands = animation.frameCommands;
 			look.once = animation.once;
+			look.stepped = animation.stepped;
 			look.thenSprite = animation.thenSprite;
 			look.thenCommands = animation.thenCommands;
 			(animation.once ? played : looks).push_back(std::move(look));
@@ -1060,6 +1062,9 @@ namespace xge
 	void Object::restartAnimation()
 	{
 		animation.tick = 0;
+		animation.since = 0;
+		animation.share = 0.0f;
+		animation.shareBefore = 0.0f;
 		animation.done = false;
 
 		if (animation.index == 0 || animation.bitmaps.empty()) { return; }

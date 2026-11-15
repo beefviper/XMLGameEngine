@@ -474,12 +474,12 @@ TEST_CASE("a live heading turns its object, and a spawned copy follows for itsel
 namespace
 {
 	// An object of two pictures, a and b, with this animation and these variables.
-	std::string blinker(const std::string& animation, const std::string& variables)
+	std::string blinker(const std::string& animation, const std::string& variables, const std::string& motion = "")
 	{
 		return "<object name=\"blinker\">"
 			"<sprite name=\"a\"><bitmap><row>**</row><row>**</row></bitmap></sprite>"
 			"<sprite name=\"b\"><bitmap><row>*.</row><row>.*</row></bitmap></sprite>"
-			+ animation + "<position><x>10</x><y>10</y></position><variables>" + variables + "</variables></object>";
+			+ animation + "<position><x>10</x><y>10</y></position>" + motion + "<variables>" + variables + "</variables></object>";
 	}
 
 	// How many times the picture showing changes over `count` frames.
@@ -530,6 +530,44 @@ TEST_CASE("a live <seconds> reading 0 waits a frame, never stops the load", "[li
 	play.tap(KeyCode::Space);
 	play.frames(30);
 	CHECK(changes(play, 60) == 2);
+}
+
+TEST_CASE("a <stepped /> animation moves its object only as the picture changes, the whole way at once", "[animation][stepped]")
+{
+	const Scratch file(blinker("<animation><seconds>0.1</seconds><stepped /><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>",
+		"<variable name=\"pace\">0</variable>", "<velocity><x>2</x><y>0</y></velocity>"), "<set variable=\"blinker.velocity.x\">-1</set>");
+	Played play(file.path);
+	Object& blinker = play.get("blinker");
+
+	play.frames(5);
+	CHECK(blinker.position.x == Approx(10));
+	play.frames(1);
+	CHECK(blinker.position.x == Approx(22)); // six frames' worth at 2 a frame
+	play.frames(6);
+	CHECK(blinker.position.x == Approx(34));
+
+	// A new velocity is the next step's.
+	play.tap(KeyCode::Space);
+	play.frames(6);
+	CHECK(blinker.position.x == Approx(28));
+}
+
+TEST_CASE("a stepped object still meets the window's edge and bounces off it", "[animation][stepped]")
+{
+	const Scratch file("<object name=\"blinker\">"
+		"<sprite name=\"a\"><bitmap><row>**</row><row>**</row></bitmap></sprite>"
+		"<sprite name=\"b\"><bitmap><row>*.</row><row>.*</row></bitmap></sprite>"
+		"<animation><seconds>0.1</seconds><stepped /><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
+		"<position><x>790</x><y>10</y></position><velocity><x>2</x><y>0</y></velocity>"
+		"<collisions><collision edge=\"right\"><bounce /></collision></collisions></object>", "<pop />");
+	Played play(file.path);
+	Object& blinker = play.get("blinker");
+
+	play.frames(7);
+	CHECK(blinker.velocity.x < 0); // the step on frame 6 went past the edge; the next frame meets it
+	const float there = blinker.position.x;
+	play.frames(6);
+	CHECK(blinker.position.x < there);
 }
 
 TEST_CASE("no command can change what is live", "[live][follow]")

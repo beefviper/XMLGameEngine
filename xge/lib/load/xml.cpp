@@ -671,13 +671,14 @@ namespace xge
 					}
 				}
 				else if (tag == "once") { spec.once = true; }
+				else if (tag == "stepped") { spec.stepped = true; }
 				else if (tag == "then")
 				{
 					if (!spec.once) { fail(here + " > <then>", "comes when the animation ends, so it needs <once />"); }
 					spec.thenSprite = node->getAttribute("sprite");
 					spec.thenCommands = readCommands(node->getFirstChild(), here + " > <then>");
 				}
-				else if (tag != "seconds") { fail(here, "unknown <" + tag + ">; expected <seconds>, <once />, then <frame>s, <cell>s and runs of <cells>, and last <then>"); }
+				else if (tag != "seconds") { fail(here, "unknown <" + tag + ">; expected <seconds>, <stepped />, <once />, then <frame>s, <cell>s and runs of <cells>, and last <then>"); }
 			}
 			if (!spec.times.empty()) { spec.times.resize(spec.frames.size()); }
 			if (!spec.frameHitboxes.empty()) { spec.frameHitboxes.resize(spec.frames.size()); }
@@ -784,6 +785,7 @@ namespace xge
 			chosen.frameHitboxes = animation->frameHitboxes;
 			chosen.frameCommands = animation->frameCommands;
 			chosen.once = animation->once;
+			chosen.stepped = animation->stepped;
 			chosen.thenCommands = animation->thenCommands;
 			if (!animation->thenSprite.empty())
 			{

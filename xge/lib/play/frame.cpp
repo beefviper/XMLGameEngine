@@ -35,6 +35,7 @@ namespace xge
 		{
 			const Vector2f motion = motionOf(object);
 			return motion.x != 0 || motion.y != 0 || object.turning.spin != 0 || object.position != object.before.position
+				|| object.animation.shareBefore > 0.0f
 				|| !(object.shown() == object.shownBefore)
 				|| (object.collisionsOn && !object.before.collisionsOn) || (object.isVisible && !object.before.isVisible);
 		}
@@ -1043,7 +1044,20 @@ namespace xge
 			const std::size_t look = object.looks.shown;
 			const std::size_t picture = object.animation.index;
 			if (!object.animation.bitmaps.empty() && rules.inPlay(object) && object.advanceAnimation()) { ended.emplace_back(i, look); }
-			else if (object.looks.shown == look && object.animation.index != picture && object.hasFrameCommands(look, object.animation.index))
+			// A stepped one moves this frame only if its picture changed: by
+			// every frame's worth since it last did.
+			if (object.animation.stepped && rules.inPlay(object))
+			{
+				++object.animation.since;
+				object.animation.shareBefore = object.animation.share;
+				object.animation.share = 0.0f;
+				if (object.looks.shown != look || object.animation.index != picture)
+				{
+					object.animation.share = static_cast<float>(object.animation.since);
+					object.animation.since = 0;
+				}
+			}
+			if (object.looks.shown == look && object.animation.index != picture && object.hasFrameCommands(look, object.animation.index))
 			{
 				cameUp.push_back({ i, look, object.animation.index });
 			}
