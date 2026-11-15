@@ -563,9 +563,8 @@ namespace xge
 		std::string wildVariable;
 	};
 
-	// A card (see game/holders.h): which pack (its group), its row and column
-	// there (from 1; Hearts calls them suit and rank), as text too, its
-	// worths and the holder the deck starts in.
+	// A held member (a card; see load/expr.cpp): the worths it may count
+	// for, lowest first, and the holder it starts in.
 	struct CardOf
 	{
 		std::string startHolder;
@@ -775,7 +774,7 @@ namespace xge
 		int handSeat{};                 // <hand><seat>: which player, for a trick's `winner` (0 none)
 		int handTeam{};                 // <hand><team>: the side it plays for, partners alike (0 none)
 		int handHolds{ 1 };             // <hand><holds>: from how many holders it may hold a card at once
-		CardOf card;                    // a card of a <deck> (deck empty for anything else)
+		CardOf card;                    // a held member's worths and start (empty for anything else)
 		bool held{ false };
 		RawMaze maze;                // <maze>: the map it walks, if any
 		// <shape>: on a cell map, the cells it fills, a <row> of characters
@@ -828,6 +827,22 @@ namespace xge
 			own(sprite);
 			for (RawSprite& look : looks) { own(look); }
 			for (RawSprite& frame : animation.frames) { own(frame); }
+		}
+
+		// A cell's row and column are variables of its own, `row` and
+		// `column`, and the same under the names its group gives them
+		// (<rows name="suit">). Returns a name its group gives that it has
+		// a variable of already (none: empty), which it keeps.
+		std::string numberCell()
+		{
+			std::string clash;
+			for (const auto& [called, number] : { std::pair{ std::string("row"), cell.row }, std::pair{ std::string("column"), cell.column },
+				std::pair{ cell.rowName, cell.row }, std::pair{ cell.columnName, cell.column } })
+			{
+				if (called.empty() || variable.count(called)) { if (!called.empty() && called != "row" && called != "column" && clash.empty()) { clash = called; } continue; }
+				variable[called] = RawValue::expression(std::to_string(number));
+			}
+			return clash;
 		}
 
 		// Who owns it: empty for one of the game's own <objects>; the state's

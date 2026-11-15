@@ -7,7 +7,6 @@
 // rules, the deal, and a picker that picks, places and puts back, game by
 // game.
 
-#include "game/holders.h"
 #include "played.h"
 #include "scratch.h"
 
@@ -463,9 +462,9 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 			if (object.held) { CHECK_FALSE(object.variable.count("rank")); }
 		}
 	}
-	// A name a card has of its own stops the load.
-	Changed worth({ { "<columns name=\"rank\">13</columns>", "<columns name=\"worth\">13</columns>" } }, "klondike");
-	CHECK_THROWS_WITH(Played(worth.path), Catch::Matchers::ContainsSubstring("which a card has of its own"));
+	// A name its group gives that a member has a variable of already stops the load.
+	Changed worth({ { "<columns name=\"rank\">13</columns>", "<columns name=\"worth\">13</columns>" } }, "gin");
+	CHECK_THROWS_WITH(Played(worth.path), Catch::Matchers::ContainsSubstring("it has a variable of that name already"));
 
 	// A pattern or a trick by a variable nothing has stops the load.
 	Changed pattern({ { "<alike variable=\"suit\">5</alike></pattern>", "<alike variable=\"colour\">5</alike></pattern>" } }, "holdem");

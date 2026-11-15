@@ -3,12 +3,10 @@
 // author: beefviper
 // date: Nov 1, 2026
 //
-// Cards: the members of a held class and the holders that hold them
-// (settleHolders), and the game's holders and hands (Game): the deal at the
-// start, a picker pointing at holders and picking and placing cards by
-// each holder's rules, and where every card is drawn.
+// The game's holders and hands (Game): what each state's <starts> sends
+// where, a picker pointing at holders and picking and placing what they
+// hold by each holder's rules, and where every held member is drawn.
 
-#include "game/holders.h"
 #include "game/data.h"
 #include "game/game.h"
 #include "game/random.h"
@@ -46,153 +44,6 @@ namespace xge
 	// ===================================================================
 	// The game's holders and hands
 	// ===================================================================
-
-	void settleHolders(GameData& data)
-	{
-		std::vector<RawObject>& objects = data.objects;
-
-		// The classes held, and their members: cards.
-		std::vector<std::string> held;
-		for (const RawObject& object : objects)
-		{
-			if (!object.holder.holdsClass.empty() && std::find(held.begin(), held.end(), object.holder.holdsClass) == held.end()) { held.push_back(object.holder.holdsClass); }
-		}
-		if (held.empty()) { return; }
-
-		std::map<std::string, const RawObject*> sample;  // a member of each class held
-		for (RawObject& object : objects)
-		{
-			if (object.objClass.empty() || std::find(held.begin(), held.end(), object.objClass) == held.end()) { continue; }
-			const std::string where = "object '" + object.name + "' (of class " + object.objClass + ", which a <holds> holds)";
-			if (object.groupName.empty() || object.cell.column < 1) { throw std::runtime_error(where + ": is a member of a <group> laid out in <columns> and <rows>, its row and column what sort of card it is"); }
-			if (object.looks.size() < 2) { throw std::runtime_error(where + ": has two looks, its face first and its back"); }
-			object.held = true;
-			float worth = static_cast<float>(object.cell.column);
-			if (const auto given = object.variable.find("worth"); given != object.variable.end())
-			{
-				try { worth = std::stof(given->second.text); }
-				catch (const std::exception&) { throw std::runtime_error(where + ": its worth is \"" + given->second.text + "\"; expected a number"); }
-			}
-			object.card.worths = { worth };
-			// `high`: what it may count instead, where a holder counts within a limit (an ace's 11).
-			if (const auto high = object.variable.find("high"); high != object.variable.end())
-			{
-				float more = 0.0f;
-				try { more = std::stof(high->second.text); }
-				catch (const std::exception&) { throw std::runtime_error(where + ": its high is \"" + high->second.text + "\"; expected a number"); }
-				if (more != worth) { object.card.worths.push_back(more); }
-				std::sort(object.card.worths.begin(), object.card.worths.end());
-			}
-			// Its row and column, and the same under the names its group gives them (suit, rank).
-			for (const auto& [variable, number] : { std::pair{ std::string("row"), object.cell.row }, std::pair{ std::string("column"), object.cell.column },
-				std::pair{ object.cell.rowName, object.cell.row }, std::pair{ object.cell.columnName, object.cell.column } })
-			{
-				if (variable.empty()) { continue; }
-				if (variable == "worth" || variable == "high" || variable == "color") { throw std::runtime_error(where + ": its group names its rows or columns '" + variable + "', which a card has of its own"); }
-				object.variable[variable] = RawValue::expression(std::to_string(number));
-			}
-			object.variable["worth"] = RawValue::expression(formatDisplayNumber(worth));
-			object.sprite = object.looks.front();
-			sample.emplace(object.objClass, &object);
-		}
-
-		// Each holder: the looks its words name are ones its members have.
-		for (RawObject& object : objects)
-		{
-			RawObject::RawHolder& holder = object.holder;
-			if (holder.holdsClass.empty()) { continue; }
-			const std::string where = "object '" + object.name + "' > <holds class=\"" + holder.holdsClass + "\">";
-			const auto member = sample.find(holder.holdsClass);
-			if (member == sample.end()) { throw std::runtime_error(where + ": nothing is of class " + holder.holdsClass); }
-			const std::vector<RawSprite>& looks = member->second->looks;
-			const std::string face = looks[0].name;
-			const auto known = [&](const std::string& look, const std::string& part)
-			{
-				if (std::none_of(looks.begin(), looks.end(), [&](const RawSprite& each) { return each.name == look; }))
-				{
-					throw std::runtime_error(where + ": " + part + " sprite=\"" + look + "\", a look the members of class " + holder.holdsClass + " have not (they have '" + face + "' and '" + looks[1].name + "')");
-				}
-			};
-			if (!holder.holdsSprite.empty()) { known(holder.holdsSprite, "its"); }
-			if (!holder.topSprite.empty()) { known(holder.topSprite, "<top>"); }
-			if (!holder.spreadSprite.empty()) { known(holder.spreadSprite, "<spread>"); }
-		}
-
-		// A picker of a class held is a hand of cards.
-		for (RawObject& object : objects)
-		{
-			for (const auto& [action, commands] : object.action)
-			{
-				for (const RawCommand& command : commands)
-				{
-					if (command.verb == "pick" && std::find(held.begin(), held.end(), command.objClass) != held.end())
-					{
-						object.hand = true;
-						if (command.most > 0) { object.handHolds = command.most; }
-					}
-				}
-			}
-		}
-
-		// Each state's <starts>: the deal.
-		const auto holderFor = [&](const std::string& name, const std::string& state) -> std::vector<RawObject*>
-		{
-			std::vector<RawObject*> found;
-			for (RawObject& object : objects)
-			{
-				if (object.holder.is && object.ownerState == state && (object.named(state + "." + name) || object.named(name))) { found.push_back(&object); }
-			}
-			return found;
-		};
-		for (RawState& state : data.states)
-		{
-			std::string start;   // the holder every card starts in
-			for (const RawStart& step : state.starts)
-			{
-				const std::string where = "state '" + state.name + "' > <starts> > <" + step.verb + ">";
-				if (step.verb == "send" && step.all)
-				{
-					bool any = false;
-					for (RawObject& object : objects)
-					{
-						if (object.held && object.ownerState == state.name && (object.named(state.name + "." + step.from) || object.named(step.from))) { object.card.startHolder = step.into; any = true; }
-					}
-					if (!any) { throw std::runtime_error(where + ": from=\"" + step.from + "\" names no held members of this state"); }
-					if (holderFor(step.into, state.name).size() != 1) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no one holder of this state"); }
-					start = step.into;
-					continue;
-				}
-				if (start.empty() || step.from != start)
-				{
-					throw std::runtime_error(where + ": for now a start sends <all /> of a group into one holder first, then orders and sends from that holder");
-				}
-				if (step.verb == "order") { continue; }   // the cards are always shuffled where they start
-				std::vector<RawObject*> into = holderFor(step.into, state.name);
-				// A group's: each member's own holder.
-				if (into.empty())
-				{
-					for (const RawObject& object : objects)
-					{
-						if (object.ownerState != state.name || object.handHolder.empty() || (object.groupName != step.into && object.groupName != state.name + "." + step.into)) { continue; }
-						for (RawObject* own : holderFor(object.handHolder, state.name)) { into.push_back(own); }
-					}
-				}
-				if (into.empty()) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no holder of this state"); }
-				for (RawObject* each : into)
-				{
-					each->holder.startCount = RawValue::expression(std::to_string(step.count));
-					if (step.more != 0) { each->holder.startMore = RawValue::expression(std::to_string(step.more)); }
-				}
-			}
-		}
-		for (const RawObject& object : objects)
-		{
-			if (object.held && object.card.startHolder.empty())
-			{
-				throw std::runtime_error("object '" + object.name + "': of a held class, but no state's <starts> sends it into a holder");
-			}
-		}
-	}
 
 	Object* Game::cardAt(int number)
 	{

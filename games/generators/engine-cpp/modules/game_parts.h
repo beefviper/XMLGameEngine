@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include "game/holders.h"
 #include "game/data.h"
 
 #include <algorithm>
@@ -430,6 +429,7 @@ namespace xge::parts
 		object.cell.column = column;
 		object.cell.row = row;
 		object.takeOwnCell();
+		object.numberCell();
 		if (column == 1)
 		{
 			object.cell.gapBefore = value("0");

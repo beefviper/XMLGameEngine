@@ -6,7 +6,6 @@
 #include "load/xml.h"
 
 #include "engine/folder.h"
-#include "game/holders.h"
 #include "game/game.h"
 #include "engine/keys.h"
 #include "load/merge.h"
@@ -1016,7 +1015,7 @@ namespace xge
 		// they show laid there, then its <spread>s, <accepts>, <run />,
 		// <top sprite>, <lift> and <picked>. Read into the holder it is
 		// (Object::Holder) as written; the looks it names are checked once
-		// the members they belong to are known (settleHolders, game/holders.h).
+		// the members they belong to are known (load/check.cpp).
 		void readHolds(const XmlNode& node, RawObject::RawHolder& holder, const std::string& here)
 		{
 			holder.is = true;
@@ -1072,7 +1071,6 @@ namespace xge
 					// A trick: any card leads, then the value led is followed;
 					// <breaks> one that leads only once played, <trumps> one over the rest.
 					HolderRule& rule = holder.takes;
-					// Its row or column: worked out once the groups are known (settleHolders).
 					rule.trickBy = requireAttribute(*child, "variable", at);
 					rule.given = true;
 					rule.follow = true;
@@ -2682,6 +2680,10 @@ namespace xge
 					rawObject.cell.column = column;
 					rawObject.cell.row = row;
 					rawObject.takeOwnCell();
+					if (const std::string clash = rawObject.numberCell(); !clash.empty())
+					{
+						fail(here, "its group names its rows or columns '" + clash + "', and it has a variable of that name already");
+					}
 					rawObject.cell.gapBefore = column == 1 ? RawValue::expression("0")
 						: gapBefore ? *gapBefore->padding.x : padding.x ? *padding.x : RawValue::expression("0");
 					rawObject.cell.gapAbove = row == 1 ? RawValue::expression("0")

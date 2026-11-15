@@ -544,6 +544,21 @@ namespace xge
 			onLine(object.line, [&]
 			{
 				for (const std::string& by : object.holder.orderBy) { checkVariable(object, "by", by); }
+				// The looks a holder's words name are ones what it holds has.
+				const Object::Holder& holds = object.holder;
+				if (!holds.holdsClass.empty())
+				{
+					const std::string where = "object '" + object.name + "' > <holds class=\"" + holds.holdsClass + "\">";
+					const auto member = std::find_if(objects.begin(), objects.end(), [&](const Object& other) { return other.held && other.objClass == holds.holdsClass; });
+					if (member == objects.end()) { throw std::runtime_error(where + ": nothing is of class " + holds.holdsClass); }
+					std::vector<std::string> looks;
+					for (const Object::Look& look : member->looks) { looks.push_back(look.name); }
+					for (const auto& [look, part] : { std::pair{ &holds.holdsSprite, "its" }, std::pair{ &holds.topSprite, "<top>" }, std::pair{ &holds.spreadSprite, "<spread>" } })
+					{
+						if (look->empty() || std::find(looks.begin(), looks.end(), *look) != looks.end()) { continue; }
+						throw std::runtime_error(where + ": " + part + " sprite=\"" + *look + "\", a look the members of class " + holds.holdsClass + " have not" + didYouMean(*look, looks));
+					}
+				}
 				// A holder that counts gets a variable of that name itself
 				// (load/expr.cpp), so what it adds up is another's: a member's.
 				const std::string& counts = object.holder.counts;

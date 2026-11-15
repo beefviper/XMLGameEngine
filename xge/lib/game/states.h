@@ -76,8 +76,8 @@ namespace xge
 		// tested every frame; see State::computer.
 		std::vector<RawCondition> computer;
 
-		// <starts>: what is done when it begins and on a full reset (the
-		// deal), worked out by settleHolders (game/holders.h).
+		// <starts>: what is done when it begins and on a full reset, where
+		// each held member starts (placed by load/expr.cpp).
 		std::vector<RawStart> starts;
 
 		// The states it draws still underneath its own (<show state="..." />).

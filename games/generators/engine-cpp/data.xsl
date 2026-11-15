@@ -3628,7 +3628,7 @@
       <xsl:with-param name="inner" select="$inner" />
       <xsl:with-param name="list" select="'state.computer'" />
     </xsl:apply-templates>
-    <!-- <starts>: the deal, worked out by settleHolders -->
+    <!-- <starts>: where each held member starts, placed when the game is made -->
     <xsl:for-each select="starts/*">
       <xsl:value-of select="concat($in, 'state.starts.push_back({ ')" />
       <xsl:call-template name="string"><xsl:with-param name="text" select="local-name()" /></xsl:call-template>

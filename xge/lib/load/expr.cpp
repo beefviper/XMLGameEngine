@@ -31,6 +31,121 @@ namespace xge
 {
 	namespace
 	{
+		// What a <holds class> holds: each member of a class some holder
+		// holds is held (it moves from holder to holder and turns between
+		// its first look and its second), worth its column unless it says,
+		// and `high` a second worth it may count instead; a picker of one is
+		// a hand.
+		void makeHeld(std::vector<RawObject>& objects)
+		{
+			std::vector<std::string> held;
+			for (const RawObject& object : objects)
+			{
+				if (!object.holder.holdsClass.empty() && std::find(held.begin(), held.end(), object.holder.holdsClass) == held.end()) { held.push_back(object.holder.holdsClass); }
+			}
+			if (held.empty()) { return; }
+			const auto isHeld = [&](const std::string& objClass) { return !objClass.empty() && std::find(held.begin(), held.end(), objClass) != held.end(); };
+			const auto number = [](const RawValue& value, const std::string& where, const char* what)
+			{
+				try { return std::stof(value.text); }
+				catch (const std::exception&) { throw std::runtime_error(where + ": its " + what + " is \"" + value.text + "\"; expected a number"); }
+			};
+			for (RawObject& object : objects)
+			{
+				if (!isHeld(object.objClass)) { continue; }
+				const std::string where = "object '" + object.name + "' (of class " + object.objClass + ", which a <holds> holds)";
+				if (object.groupName.empty() || object.cell.column < 1) { throw std::runtime_error(where + ": is a member of a <group> laid out in <columns> and <rows>, its row and column what sort of card it is"); }
+				if (object.looks.size() < 2) { throw std::runtime_error(where + ": has two looks, its face first and its back"); }
+				object.held = true;
+				const auto given = object.variable.find("worth");
+				const float worth = given == object.variable.end() ? static_cast<float>(object.cell.column) : number(given->second, where, "worth");
+				object.card.worths = { worth };
+				if (const auto high = object.variable.find("high"); high != object.variable.end())
+				{
+					const float more = number(high->second, where, "high");
+					if (more != worth) { object.card.worths.push_back(more); }
+					std::sort(object.card.worths.begin(), object.card.worths.end());
+				}
+				object.variable["worth"] = RawValue::expression(formatDisplayNumber(worth));
+				object.sprite = object.looks.front();
+			}
+			for (RawObject& object : objects)
+			{
+				for (const auto& [action, commands] : object.action)
+				{
+					for (const RawCommand& command : commands)
+					{
+						if (command.verb != "pick" || !isHeld(command.objClass)) { continue; }
+						object.hand = true;
+						if (command.most > 0) { object.handHolds = command.most; }
+					}
+				}
+			}
+		}
+
+		// Each state's <starts>: every held member of a group sent into one
+		// holder, then from there so many into each holder named (a group's:
+		// each member's own), in random order.
+		void placeStarts(std::vector<RawState>& states, std::vector<RawObject>& objects)
+		{
+			const auto holdersFor = [&](const std::string& name, const std::string& state)
+			{
+				std::vector<RawObject*> found;
+				for (RawObject& object : objects)
+				{
+					if (object.holder.is && object.ownerState == state && (object.named(state + "." + name) || object.named(name))) { found.push_back(&object); }
+				}
+				return found;
+			};
+			for (RawState& state : states)
+			{
+				std::string start;   // the holder every member starts in
+				for (const RawStart& step : state.starts)
+				{
+					const std::string where = "state '" + state.name + "' > <starts> > <" + step.verb + ">";
+					if (step.verb == "send" && step.all)
+					{
+						bool any = false;
+						for (RawObject& object : objects)
+						{
+							if (object.held && object.ownerState == state.name && (object.named(state.name + "." + step.from) || object.named(step.from))) { object.card.startHolder = step.into; any = true; }
+						}
+						if (!any) { throw std::runtime_error(where + ": from=\"" + step.from + "\" names no held members of this state"); }
+						if (holdersFor(step.into, state.name).size() != 1) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no one holder of this state"); }
+						start = step.into;
+						continue;
+					}
+					if (start.empty() || step.from != start)
+					{
+						throw std::runtime_error(where + ": for now a start sends <all /> of a group into one holder first, then orders and sends from that holder");
+					}
+					if (step.verb == "order") { continue; }   // what starts in a holder is always in random order
+					std::vector<RawObject*> into = holdersFor(step.into, state.name);
+					if (into.empty())
+					{
+						for (const RawObject& object : objects)
+						{
+							if (object.ownerState != state.name || object.handHolder.empty() || (object.groupName != step.into && object.groupName != state.name + "." + step.into)) { continue; }
+							for (RawObject* own : holdersFor(object.handHolder, state.name)) { into.push_back(own); }
+						}
+					}
+					if (into.empty()) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no holder of this state"); }
+					for (RawObject* each : into)
+					{
+						each->holder.startCount = RawValue::expression(std::to_string(step.count));
+						if (step.more != 0) { each->holder.startMore = RawValue::expression(std::to_string(step.more)); }
+					}
+				}
+			}
+			for (const RawObject& object : objects)
+			{
+				if (object.held && object.card.startHolder.empty())
+				{
+					throw std::runtime_error("object '" + object.name + "': of a held class, but no state's <starts> sends it into a holder");
+				}
+			}
+		}
+
 		// Whether a text sprite has a <number> or a <letter> among its pieces.
 		bool showsNumbers(const RawSprite& sprite)
 		{
@@ -103,6 +218,8 @@ namespace xge
 		const std::vector<RawPath>& rawPaths, std::map<std::string, Path>& paths)
 	{
 		seedRandom();
+		makeHeld(rawObjects);
+		placeStarts(rawStates, rawObjects);
 
 		checkColor(windowDesc.background, "<window> > <background>");
 

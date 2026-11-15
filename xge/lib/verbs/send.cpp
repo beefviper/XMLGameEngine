@@ -53,9 +53,9 @@ namespace xge
 
 	static void checkSend(const Command& command, const Checking& checking)
 	{
-		// Holder to holder (from a group: its members): the holders are known
-		// only once settled (settleHolders), so a name that is none is a send
-		// refused.
+		// Holder to holder (from a group: its members): what is held is known
+		// only once the game is made (load/expr.cpp), so a name that is none
+		// is a send refused.
 		const CmdSend& send = std::get<CmdSend>(command);
 		if (send.held) { return; }
 		checkObject(checking, send.target, "<send>", "object or group");

@@ -4,7 +4,6 @@
 // date: Sept 18, 2020
 
 #include "game/game.h"
-#include "game/holders.h"
 #include "game/players.h"
 
 #include "play/executor.h"
@@ -36,7 +35,6 @@ namespace xge
 		// among the game's objects and named in full.
 		takeStates(data.states);
 		layOutScenes(data);
-		settleHolders(data);
 		settlePlayers(data);
 		// Then, with every object's name final, its styles, what it
 		// leaves to mean itself, and its centering.
