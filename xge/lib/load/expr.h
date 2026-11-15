@@ -109,6 +109,34 @@ namespace xge
 		void buildCollisions(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where);
 		// makeObject's actions.
 		void buildActions(RawObject& rawObject, Object& object, const std::string& where);
+		// init's names: the window's edges, the game's variables, every object's
+		// variables and timers, and the live numbers, as names a text reads.
+		void nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables, std::vector<RawObject>& rawObjects);
+		// init's objects: every sprite measured once (its size a name), the
+		// cells of groups laid out, then each object made, groups in lockstep.
+		void makeObjects(const WindowDesc& windowDesc, std::vector<RawObject>& rawObjects, std::vector<Object>& objects);
+		// init's tests on collision rules, edge guards and actions' conditions,
+		// once every object they can name is made.
+		void makeRuleTests(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects);
+		// init's states: each one's inputs, conditions, timers and scenes.
+		void makeStates(std::vector<RawState>& rawStates, std::vector<State>& states, const std::vector<Object>& objects);
+		// init's sounds, after everything else so that a length can use any variable.
+		void makeSounds(const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds);
+		// init's paths, worked out last too, and each step's commands about
+		// its follower made for each object that can fly it.
+		void makePaths(const std::vector<RawPath>& rawPaths, std::map<std::string, Path>& paths, const std::vector<State>& states, const std::vector<Object>& objects);
+		// What a <condition> tests, made ready (with its <all> or <any>'s
+		// checks, each made the same way), checked against the objects.
+		Condition makeTest(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects);
+		Condition makeTestHere(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects);
+		// makeTestHere's checks: what a test names (what it sees and what is in
+		// the way, a look, a distance, a variable) is something the game has.
+		void checkTestNames(const RawCondition& rawCondition, const Condition& condition, const std::string& where, const std::string& owner, const std::vector<Object>& objects);
+		// A state's condition: its test, and its commands; or, when they name
+		// self or others, its commands for each object it may match.
+		Condition makeCondition(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects);
+		Condition makeConditionHere(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects);
+
 		// A copy of `from` spawned while the game runs, from `raw` (what
 		// the file says of `from`, under the copy's name): its names
 		// made known to the expressions (its variables, where it is, its
