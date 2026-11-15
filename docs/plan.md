@@ -72,7 +72,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 - **Why.** About 200 fields in one struct. Leave `Moment` (position, velocity and the rest that tests name) exactly as it is.
 - **Check for every step:** `xgetest-long "[speed]"` is no slower.
 - **Steps, one group a commit.** Each moves the fields of one feature into a member that most objects never use and tests rarely name.
-  - [ ] **1.** `object.maze` (a walker's state).
+  - [x] **1.** `object.maze` (a walker's state: map, walls, slows, walk).
   - [ ] **2.** `object.cell` (cells and chains).
   - [ ] **3.** `object.holder`.
   - [ ] **4.** `object.moves` and `object.marks` (boards).

@@ -1472,7 +1472,7 @@ namespace xge
 			object.activeClimb = {};
 			object.hasAim = false;
 			object.followPath.clear();
-			object.walk = {};
+			object.maze.walk = {};
 			object.blink = 0.0f;
 			object.goingLeft = object.start.facing == Direction::Left;
 			object.faceMirror();

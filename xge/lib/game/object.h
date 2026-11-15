@@ -885,6 +885,19 @@ namespace xge
 		std::vector<int> searchSteps;
 	};
 
+	// A maze walker (<maze>): the map it walks ("" for an object that walks
+	// none), what stops it, what slows it, and where it is headed now: what
+	// its last <go>, <hunt> or <wander> said. It keeps to the middle of a
+	// lane, stops at a wall and turns only where there is a gap; a reset
+	// stops it. See play/maze.h.
+	struct Maze
+	{
+		std::string map;
+		std::vector<MazeWall> walls;
+		std::vector<MazeSlow> slows;
+		Walk walk;
+	};
+
 	// A piece of a text as an object shows it (see RawTextPiece): what it
 	// shows now, and, for a number or a letter that follows a variable, its
 	// owner and name.
@@ -1482,18 +1495,9 @@ namespace xge
 		int cellHeldWait{};
 		int cellHeldEvery{};
 
-		// A maze walker (<maze>): the map it walks (its name, and where it is
-		// among the game's mazes), what stops it, what slows it, and where it
-		// is headed now:
-		// what its last <go>, <hunt> or <wander> said (Walk). It keeps to the
-		// middle of a lane, stops at a wall and turns only where there is a
-		// gap; a reset stops it. See play/maze.h.
-		std::string mazeMap;
-		std::vector<MazeWall> mazeWalls;
-		std::vector<MazeSlow> mazeSlows;
-		std::size_t mazeIndex{};
-		Walk walk;
-		bool walksMaze() const noexcept { return !mazeMap.empty(); }
+		// A maze walker's map, walls, slows and way (Maze).
+		Maze maze;
+		bool walksMaze() const noexcept { return !maze.map.empty(); }
 
 		// A timed <hop> under way (a flight): how far the object travels each frame, and how
 		// many frames are left. While framesLeft is above 0 the object is in

@@ -328,7 +328,7 @@ namespace xge
 		object.activeTurn = {};
 		object.activeThrustAheadBy.clear();
 		object.followPath.clear();
-		object.walk = {};
+		object.maze.walk = {};
 	}
 
 	void restart(Object& object)

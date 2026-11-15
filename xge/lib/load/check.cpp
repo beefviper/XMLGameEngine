@@ -784,14 +784,14 @@ namespace xge
 		// wanders. A hole is cut in a picture that stays as it is.
 		void checkWalksAndHoles(const Object& object, const std::vector<Object>& objects, const std::string& where)
 		{
-			if (object.walksMaze() && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.mapName == object.mazeMap; }))
+			if (object.walksMaze() && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.mapName == object.maze.map; }))
 			{
 				std::vector<std::string> maps;
 				for (const Object& other : objects)
 				{
 					if (!other.mapName.empty() && std::find(maps.begin(), maps.end(), other.mapName) == maps.end()) { maps.push_back(other.mapName); }
 				}
-				throw std::runtime_error(where + " > <maze map=\"" + object.mazeMap + "\">: the game has no <map> of that name" + didYouMean(object.mazeMap, maps)
+				throw std::runtime_error(where + " > <maze map=\"" + object.maze.map + "\">: the game has no <map> of that name" + didYouMean(object.maze.map, maps)
 					+ (maps.empty() ? std::string(" (it has no <map>s)") : ". Its maps are: " + listOf(maps)));
 			}
 			const auto checkWalks = [&](const std::vector<Command>& commands, const std::string& here)
