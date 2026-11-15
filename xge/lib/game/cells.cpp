@@ -147,7 +147,7 @@ namespace xge
 	{
 		if (!mover.isShape()) { return { &mover }; }
 		std::vector<Object*> cells;
-		for (const std::string& part : mover.shapeParts)
+		for (const std::string& part : mover.cell.shapeParts)
 		{
 			if (Object* cell = findAnywhere(part)) { cells.push_back(cell); }
 		}
@@ -187,14 +187,14 @@ namespace xge
 		const Vector2f tile = like->mapTile;
 		const int columns = like->mapColumns;
 		const int rows = like->mapRows;
-		std::vector<Object::CellCheck> checks = like->cellChecks;
+		std::vector<Object::CellCheck> checks = like->cell.checks;
 		object.mapName = map;
 		object.mapOrigin = origin;
 		object.mapTile = tile;
 		object.mapColumns = columns;
 		object.mapRows = rows;
-		object.cellChecks = std::move(checks);
-		object.cellHeld = false;
+		object.cell.checks = std::move(checks);
+		object.cell.held = false;
 		return true;
 	}
 
@@ -221,19 +221,19 @@ namespace xge
 			return true;
 		}
 
-		for (const Object::ShapeCell& cell : made.shapeCells)
+		for (const Object::ShapeCell& cell : made.cell.shape)
 		{
 			if (!fits(column + cell.column, row + cell.row)) { return takeBack(); }
 		}
 		putInCell(made, column, row);
-		for (const Object::ShapeCell& cell : made.shapeCells)
+		for (const Object::ShapeCell& cell : made.cell.shape)
 		{
 			Object* part = spawn(cell.piece, true);
 			if (!part) { continue; }
 			moveToMap(*part, made.mapName);
-			part->shapeOwner = made.name;
+			part->cell.shapeOwner = made.name;
 			putInCell(*part, column + cell.column, row + cell.row);
-			made.shapeParts.push_back(part->name);
+			made.cell.shapeParts.push_back(part->name);
 		}
 		return true;
 	}
@@ -245,7 +245,7 @@ namespace xge
 		Object* piece = nullptr;
 		for (Object& object : objects)
 		{
-			if (object.exists && object.onCells && object.mapName == from && object.shapeOwner.empty()
+			if (object.exists && object.onCells && object.mapName == from && object.cell.shapeOwner.empty()
 				&& (object.name == target || object.inGroup(target)) && isShown(object))
 			{
 				piece = &object;
@@ -359,7 +359,7 @@ namespace xge
 		const int fromRow = whole(mover.cellRow);
 		for (Object* cell : cells) { putInCell(*cell, whole(cell->cellColumn) + across, whole(cell->cellRow) + down); }
 		if (mover.isShape()) { putInCell(mover, whole(mover.cellColumn) + across, whole(mover.cellRow) + down); }
-		if (!mover.chain.empty()) { followChain(mover, links, fromColumn, fromRow); }
+		if (!mover.cell.chain.empty()) { followChain(mover, links, fromColumn, fromRow); }
 		return true;
 	}
 
@@ -373,7 +373,7 @@ namespace xge
 
 	std::vector<Object*> Game::chainOf(Object& head)
 	{
-		if (head.chain.empty()) { return {}; }
+		if (head.cell.chain.empty()) { return {}; }
 
 		// As kept: a link no longer there is dropped.
 		std::vector<Object*> links;
@@ -404,7 +404,7 @@ namespace xge
 				for (Object& object : list)
 				{
 					if (next) { return; }
-					if (!object.exists || !object.onCells || object.mapName != head.mapName || &object == &head || !isLink(object, head.chain)) { continue; }
+					if (!object.exists || !object.onCells || object.mapName != head.mapName || &object == &head || !isLink(object, head.cell.chain)) { continue; }
 					if (std::find(links.begin(), links.end(), &object) != links.end()) { continue; }
 					if (std::abs(whole(object.cellColumn) - column) + std::abs(whole(object.cellRow) - row) == 1) { next = &object; }
 				}
@@ -436,7 +436,7 @@ namespace xge
 
 		// Growing: a new link where the tail was.
 		--head.chainGrow;
-		Object* grown = spawn(head.chain, true);
+		Object* grown = spawn(head.cell.chain, true);
 		if (!grown) { return; }
 		moveToMap(*grown, head.mapName);
 		putInCell(*grown, column, row);
@@ -445,7 +445,7 @@ namespace xge
 
 	void Game::splitChain(Object& piece)
 	{
-		if (piece.chain.empty()) { return; }
+		if (piece.cell.chain.empty()) { return; }
 
 		// The head it is, or the head it follows.
 		Object* head = nullptr;
@@ -454,7 +454,7 @@ namespace xge
 		{
 			for (Object& object : list)
 			{
-				if (head || !object.exists || object.chain.empty()) { continue; }
+				if (head || !object.exists || object.cell.chain.empty()) { continue; }
 				if (&object == &piece && (object.chainKnown || object.cellGoing)) { head = &object; return; }
 				const auto found = std::find(object.chainLinks.begin(), object.chainLinks.end(), piece.name);
 				if (found != object.chainLinks.end())
@@ -561,8 +561,8 @@ namespace xge
 	bool Game::turnCells(Object& shape, bool clockwise)
 	{
 		if (!shape.isShape()) { return false; }
-		const int size = shape.shapeSize;
-		std::vector<Object::ShapeCell> turned = shape.shapeCells;
+		const int size = shape.cell.shapeSize;
+		std::vector<Object::ShapeCell> turned = shape.cell.shape;
 		for (Object::ShapeCell& cell : turned)
 		{
 			const int column = cell.column;
@@ -574,7 +574,7 @@ namespace xge
 		if (cells.size() != turned.size()) { return false; }
 		const int column = whole(shape.cellColumn);
 		const int row = whole(shape.cellRow);
-		for (const auto& [kickAcross, kickUp] : kicksFor(size, static_cast<int>(shape.shapeCells.size()), shape.quarter, clockwise))
+		for (const auto& [kickAcross, kickUp] : kicksFor(size, static_cast<int>(shape.cell.shape.size()), shape.cell.quarter, clockwise))
 		{
 			const int left = column + kickAcross;
 			const int top = row - kickUp;
@@ -586,8 +586,8 @@ namespace xge
 				});
 			if (!fits) { continue; }
 
-			shape.shapeCells = turned;
-			shape.quarter = (shape.quarter + (clockwise ? 1 : 3)) % 4;
+			shape.cell.shape = turned;
+			shape.cell.quarter = (shape.cell.quarter + (clockwise ? 1 : 3)) % 4;
 			putInCell(shape, left, top);
 			for (std::size_t i = 0; i < cells.size(); ++i) { putInCell(*cells[i], left + turned[i].column, top + turned[i].row); }
 			return true;
@@ -605,7 +605,7 @@ namespace xge
 			const std::vector<Object*> cells = cellsOf(mover);
 			for (Object* cell : cells)
 			{
-				cell->shapeOwner.clear();
+				cell->cell.shapeOwner.clear();
 				if (!cell->hasJoins) { continue; }
 				cell->joinedWith.clear();
 				for (const Object* other : cells)
@@ -613,7 +613,7 @@ namespace xge
 					if (other != cell) { cell->joinedWith.push_back(other->name); }
 				}
 			}
-			mover.shapeParts.clear();
+			mover.cell.shapeParts.clear();
 			despawn(mover);
 		}
 		askChecks(map);
@@ -629,7 +629,7 @@ namespace xge
 		{
 			if (object.mapName == map && object.onCells)
 			{
-				checks = object.cellChecks;
+				checks = object.cell.checks;
 				columns = object.mapColumns;
 				rows = object.mapRows;
 				break;
@@ -652,7 +652,7 @@ namespace xge
 				for (int column = 1; column <= columns; ++column)
 				{
 					Object* holder = cellHolder(map, column, row, {});
-					if (!holder || !holder->shapeOwner.empty() || (!check.objClass.empty() && holder->objClass != check.objClass)) { break; }
+					if (!holder || !holder->cell.shapeOwner.empty() || (!check.objClass.empty() && holder->objClass != check.objClass)) { break; }
 					match.pieces.push_back(holder->name);
 				}
 				if (static_cast<int>(match.pieces.size()) != columns)
@@ -700,7 +700,7 @@ namespace xge
 			{
 				if (column < 1 || row < 1 || column > columns || row > rows) { return nullptr; }
 				Object* holder = cellHolder(map, column, row, {});
-				if (!holder || !holder->shapeOwner.empty() || (!check.objClass.empty() && holder->objClass != check.objClass)) { return nullptr; }
+				if (!holder || !holder->cell.shapeOwner.empty() || (!check.objClass.empty() && holder->objClass != check.objClass)) { return nullptr; }
 				return holder;
 			};
 			// By group, or by the value of a variable they share (a germ and a
@@ -783,12 +783,12 @@ namespace xge
 				for (int column = 1; column <= columns; ++column)
 				{
 					Object* holder = cellHolder(map, column, row, {});
-					if (!holder || !holder->shapeOwner.empty() || (!objClass.empty() && holder->objClass != objClass) || std::find(done.begin(), done.end(), holder) != done.end()) { continue; }
+					if (!holder || !holder->cell.shapeOwner.empty() || (!objClass.empty() && holder->objClass != objClass) || std::find(done.begin(), done.end(), holder) != done.end()) { continue; }
 					std::vector<Object*> together{ holder };
 					for (const std::string& name : holder->joinedWith)
 					{
 						Object* other = findAnywhere(name);
-						if (other && other->exists && other->onCells && other->mapName == map && other->shapeOwner.empty() && (objClass.empty() || other->objClass == objClass)
+						if (other && other->exists && other->onCells && other->mapName == map && other->cell.shapeOwner.empty() && (objClass.empty() || other->objClass == objClass)
 							&& std::find(together.begin(), together.end(), other) == together.end())
 						{
 							together.push_back(other);
@@ -825,10 +825,10 @@ namespace xge
 
 			// Falling, the other cells of its shape; settled, those it came with.
 			std::vector<std::string> partners = piece.joinedWith;
-			if (!piece.shapeOwner.empty())
+			if (!piece.cell.shapeOwner.empty())
 			{
-				const Object* shape = findAnywhere(piece.shapeOwner);
-				partners = shape ? shape->shapeParts : std::vector<std::string>{};
+				const Object* shape = findAnywhere(piece.cell.shapeOwner);
+				partners = shape ? shape->cell.shapeParts : std::vector<std::string>{};
 			}
 			Object::Join way = Object::Join::Alone;
 			for (const std::string& name : partners)
@@ -852,7 +852,7 @@ namespace xge
 		if (!shape.isShape()) { return; }
 		const std::vector<Object*> cells = cellsOf(shape);
 		const std::size_t count = cells.size();
-		if (count < 2 || count != shape.shapeCells.size()) { return; }
+		if (count < 2 || count != shape.cell.shape.size()) { return; }
 
 		// The cell at place i goes to place i + 1 (backward: i - 1); the places stay.
 		std::vector<std::string> parts(count);
@@ -860,16 +860,16 @@ namespace xge
 		for (std::size_t i = 0; i < count; ++i)
 		{
 			const std::size_t to = backward ? (i + count - 1) % count : (i + 1) % count;
-			parts[to] = shape.shapeParts[i];
-			pieces[to] = shape.shapeCells[i].piece;
+			parts[to] = shape.cell.shapeParts[i];
+			pieces[to] = shape.cell.shape[i].piece;
 		}
 		const int column = whole(shape.cellColumn);
 		const int row = whole(shape.cellRow);
 		for (std::size_t i = 0; i < count; ++i)
 		{
-			shape.shapeParts[i] = parts[i];
-			shape.shapeCells[i].piece = pieces[i];
-			if (Object* cell = findAnywhere(parts[i])) { putInCell(*cell, column + shape.shapeCells[i].column, row + shape.shapeCells[i].row); }
+			shape.cell.shapeParts[i] = parts[i];
+			shape.cell.shape[i].piece = pieces[i];
+			if (Object* cell = findAnywhere(parts[i])) { putInCell(*cell, column + shape.cell.shape[i].column, row + shape.cell.shape[i].row); }
 		}
 	}
 
@@ -885,7 +885,7 @@ namespace xge
 	{
 		const auto down = [&](Object& object)
 		{
-			if (object.exists && object.onCells && !object.isShape() && object.shapeOwner.empty() && object.mapName == match.map && whole(object.cellRow) < match.row)
+			if (object.exists && object.onCells && !object.isShape() && object.cell.shapeOwner.empty() && object.mapName == match.map && whole(object.cellRow) < match.row)
 			{
 				putInCell(object, whole(object.cellColumn), whole(object.cellRow) + 1);
 			}
@@ -898,15 +898,15 @@ namespace xge
 	{
 		if (!pressed)
 		{
-			if (object.cellHeld && object.cellHeldWay == move.direction) { object.cellHeld = false; }
+			if (object.cell.held && object.cell.heldWay == move.direction) { object.cell.held = false; }
 			return;
 		}
 
 		const float framerate = static_cast<float>(windowDesc.framerate > 0 ? windowDesc.framerate : 60);
-		object.cellHeld = move.step > 0.0f;
-		object.cellHeldWay = move.direction;
-		object.cellHeldEvery = move.step > 0.0f ? std::max(1, whole(framerate / move.step)) : 0;
-		object.cellHeldWait = move.wait > 0.0f ? std::max(1, whole(move.wait * framerate)) : object.cellHeldEvery;
+		object.cell.held = move.step > 0.0f;
+		object.cell.heldWay = move.direction;
+		object.cell.heldEvery = move.step > 0.0f ? std::max(1, whole(framerate / move.step)) : 0;
+		object.cell.heldWait = move.wait > 0.0f ? std::max(1, whole(move.wait * framerate)) : object.cell.heldEvery;
 
 		const Vector2f step = stepToward(move.direction, 1.0f);
 		stepCells(object, whole(step.x), whole(step.y));
@@ -924,9 +924,9 @@ namespace xge
 				const Vector2f step = stepToward(object.cellGoWay, 1.0f);
 				stepCells(objects[i], whole(step.x), whole(step.y));
 			}
-			if (!objects[i].cellHeld || --objects[i].cellHeldWait > 0) { continue; }
-			objects[i].cellHeldWait = objects[i].cellHeldEvery;
-			const Vector2f step = stepToward(objects[i].cellHeldWay, 1.0f);
+			if (!objects[i].cell.held || --objects[i].cell.heldWait > 0) { continue; }
+			objects[i].cell.heldWait = objects[i].cell.heldEvery;
+			const Vector2f step = stepToward(objects[i].cell.heldWay, 1.0f);
 			stepCells(objects[i], whole(step.x), whole(step.y));
 		}
 	}
@@ -1501,9 +1501,9 @@ namespace xge
 		if (!piece.onCells || !piece.exists) { return false; }
 		// A shape's cell is shoved with its shape.
 		Object* shoved = &piece;
-		if (!piece.shapeOwner.empty())
+		if (!piece.cell.shapeOwner.empty())
 		{
-			if (Object* owner = tryGetObject(piece.shapeOwner)) { shoved = owner; }
+			if (Object* owner = tryGetObject(piece.cell.shapeOwner)) { shoved = owner; }
 		}
 		const int across = way == Edge::Left ? -1 : way == Edge::Right ? 1 : 0;
 		const int down = way == Edge::Top ? -1 : way == Edge::Bottom ? 1 : 0;

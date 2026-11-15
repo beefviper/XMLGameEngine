@@ -1240,8 +1240,6 @@ namespace xge
 		// not run until it is back (see awayFromHome).
 		std::string homeMap;
 		bool awayFromHome() const noexcept { return onCells && mapName != homeMap; }
-		// <chain object>: what its links are (see RawObject::chain).
-		std::string chain;
 
 		// <moves>: what a piece of a board game may do when a picker
 		// <place>s it (game/cells.cpp). A step goes to the empty cell that
@@ -1445,7 +1443,7 @@ namespace xge
 		};
 		std::vector<Marked> marked;
 		std::vector<std::string> markCopies;
-		// The map's <checks>, made ready (each piece of the map has them).
+		// One of the map's <checks>, made ready.
 		struct CellCheck
 		{
 			std::string kind;
@@ -1455,7 +1453,6 @@ namespace xge
 			bool straight{ false };
 			std::string alike;
 		};
-		std::vector<CellCheck> cellChecks;
 		// What a check found: the map, the row (counting from 1) and the
 		// pieces, which its <clear /> and <collapse /> act on.
 		struct CellMatch
@@ -1468,7 +1465,7 @@ namespace xge
 		// A <shape>: the cells it fills, from its top left (column and row
 		// from 0) with the object each is a copy of, and how big the square
 		// it turns in is. While it is in play its cells are copies of those
-		// objects, named in shapeParts, which move and turn with it; the
+		// objects, named in cell.shapeParts, which move and turn with it; the
 		// shape itself is never drawn and touches nothing but by its moves.
 		// quarter counts its quarter turns clockwise (0 to 3), which the
 		// standard kicks of a turn go by.
@@ -1478,22 +1475,36 @@ namespace xge
 			int row{};
 			std::string piece;
 		};
-		std::vector<ShapeCell> shapeCells;
-		std::vector<ShapeCell> shapeStart;
-		int shapeSize{};
-		int quarter{};
-		std::vector<std::string> shapeParts;
-		bool isShape() const noexcept { return shapeSize > 0; }
-		// A cell of a shape in play: the shape's name (empty once it has
-		// settled, or for a piece that was never in a shape).
-		std::string shapeOwner;
 
-		// A held <move> on a cell map: the way, the frames until its next
-		// step, and the frames between steps (see CmdMove::wait).
-		bool cellHeld{ false };
-		Direction cellHeldWay{ Direction::Up };
-		int cellHeldWait{};
-		int cellHeldEvery{};
+		// What a piece on a map with <cells /> has beyond its place: its
+		// <chain>, the map's checks, its <shape> and a held <move>
+		// (game/cells.cpp).
+		struct Cells
+		{
+			// <chain object>: what its links are (see RawObject::chain).
+			std::string chain;
+			// The map's <checks>, made ready (each piece of the map has them).
+			std::vector<CellCheck> checks;
+			// A <shape> (ShapeCell above): its cells now and at the start,
+			// the size of the square it turns in, its quarter turns and the
+			// names of the copies in play.
+			std::vector<ShapeCell> shape;
+			std::vector<ShapeCell> shapeStart;
+			int shapeSize{};
+			int quarter{};
+			std::vector<std::string> shapeParts;
+			// A cell of a shape in play: the shape's name (empty once it has
+			// settled, or for a piece that was never in a shape).
+			std::string shapeOwner;
+			// A held <move>: the way, the frames until its next step, and the
+			// frames between steps (see CmdMove::wait).
+			bool held{ false };
+			Direction heldWay{ Direction::Up };
+			int heldWait{};
+			int heldEvery{};
+		};
+		Cells cell;
+		bool isShape() const noexcept { return cell.shapeSize > 0; }
 
 		// A maze walker's map, walls, slows and way (Maze).
 		Maze maze;

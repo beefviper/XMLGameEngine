@@ -595,7 +595,7 @@ namespace xge
 		{
 			object.mapName = rawObject.cell.map;
 			object.homeMap = rawObject.cell.map;
-			object.chain = rawObject.chain;
+			object.cell.chain = rawObject.chain;
 			object.mapColumn = rawObject.cell.mapColumn - 1;
 			object.mapRow = rawObject.cell.mapRow - 1;
 			object.mapColumns = rawObject.cell.mapColumns;
@@ -612,25 +612,25 @@ namespace xge
 				object.cellRow = object.start.cellRow = static_cast<float>(rawObject.cell.mapRow);
 				for (const RawCheck& check : rawObject.cell.checks)
 				{
-					object.cellChecks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count, check.straight, check.alike });
+					object.cell.checks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count, check.straight, check.alike });
 				}
 			}
 			for (std::size_t row = 0; row < rawObject.shapeRows.size(); ++row)
 			{
 				const std::string& cells = rawObject.shapeRows[row];
-				object.shapeSize = std::max({ object.shapeSize, static_cast<int>(cells.size()), static_cast<int>(rawObject.shapeRows.size()) });
+				object.cell.shapeSize = std::max({ object.cell.shapeSize, static_cast<int>(cells.size()), static_cast<int>(rawObject.shapeRows.size()) });
 				for (std::size_t column = 0; column < cells.size(); ++column)
 				{
 					const auto piece = rawObject.shapePieces.find(cells[column]);
 					if (piece == rawObject.shapePieces.end()) { continue; }
-					object.shapeCells.push_back({ static_cast<int>(column), static_cast<int>(row), piece->second });
+					object.cell.shape.push_back({ static_cast<int>(column), static_cast<int>(row), piece->second });
 				}
 			}
-			if (object.isShape() && object.shapeCells.empty())
+			if (object.isShape() && object.cell.shape.empty())
 			{
 				throw std::runtime_error(where + " > <shape>: none of its characters picks an object of map '" + rawObject.cell.map + "'");
 			}
-			object.shapeStart = object.shapeCells;
+			object.cell.shapeStart = object.cell.shape;
 		}
 		object.maze.map = rawObject.maze.map;
 		object.maze.walls = rawObject.maze.walls;

@@ -73,7 +73,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 - **Check for every step:** `xgetest-long "[speed]"` is no slower.
 - **Steps, one group a commit.** Each moves the fields of one feature into a member that most objects never use and tests rarely name.
   - [x] **1.** `object.maze` (a walker's state: map, walls, slows, walk).
-  - [ ] **2.** `object.cell` (cells and chains).
+  - [x] **2.** `object.cell` (cells and chains: chain, checks, shape, held move; `onCells` and `homeMap` stay with the map place).
   - [ ] **3.** `object.holder`.
   - [ ] **4.** `object.moves` and `object.marks` (boards).
   - [ ] **5.** `object.swing`.

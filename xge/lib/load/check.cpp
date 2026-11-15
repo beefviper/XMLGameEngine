@@ -582,7 +582,7 @@ namespace xge
 							checkVariable(object, "condition", rule.topVariable);
 						}
 					}
-					for (const auto& check : object.cellChecks) { checkVariable(object, "alike", check.alike); }
+					for (const auto& check : object.cell.checks) { checkVariable(object, "alike", check.alike); }
 				});
 			}
 		}
