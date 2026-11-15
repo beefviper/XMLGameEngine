@@ -317,7 +317,7 @@ namespace xge
 
 		// A text: its pieces, in order (see RawTextPiece); a <number> or a
 		// <letter> that is just an owner.variable stays live (see
-		// Object::textPieces).
+		// Object::Drawn::textPieces).
 		std::vector<RawTextPiece> text;
 
 		std::string path;            // image, svg
@@ -941,7 +941,7 @@ namespace xge
 		// Which way the object faces: degrees clockwise from straight up, so
 		// 0 is up, 90 is right, 180 is down; always from 0 up to (not
 		// including) 360. Only an object whose file gives it a <heading>
-		// turns (see Object::hasHeading).
+		// turns (see Object::Turning).
 		float heading{};
 
 		// An object with a <pivot>: the whole degrees of the heading its
@@ -1466,13 +1466,19 @@ namespace xge
 			Vector2f grab{};
 		};
 		Hand hand;
-		// A member of a group that takes <turns>: the look it shows off its
-		// turn (none: as it is). Its live `turn` is 1 on its turn, else 0.
-		bool takesTurns{ false };
-		std::string turnsSprite;
-		// <owns class=>: the pieces it moves; a picker's <put />, <pick /> and
-		// a <think> with no class= take those of the member on its turn.
-		std::string ownsClass;
+		// A member of a group that takes <turns> (`takes`): the look it shows
+		// off its turn (`sprite`; none: as it is). Its live `turn` is 1 on its
+		// turn, else 0. <owns class=>: the pieces it moves; a picker's
+		// <put />, <pick /> and a <think> with no class= take those of the
+		// member on its turn.
+		struct Turns
+		{
+			bool takes{ false };
+			std::string sprite;
+			std::string ownsClass;
+		};
+		Turns turns;
+
 		// Drawn after everything with a smaller one; 0 keeps the file's order
 		// (items and hands are drawn above the rest).
 		int drawOrder{};
@@ -1995,7 +2001,7 @@ namespace xge
 
 			// A sprite of <line>s or a <bitmap> with a heading: as it was
 			// written, shared by every object made from the one definition;
-			// `bitmap` is that turned to the heading (see Object::hasHeading).
+			// `bitmap` is that turned to the heading (see Object::Turning).
 			std::vector<std::shared_ptr<const Turnable>> turnables;
 
 			// What `bitmap` was last drawn at: the whole degrees of the heading and
@@ -2205,7 +2211,7 @@ namespace xge
 	// of that name.
 	bool showLookNamed(Object& object, const std::string& name);
 
-	// Puts on the object's palette of that name (Object::palettes); false
+	// Puts on the object's palette of that name (Object::Looks::palettes); false
 	// (and nothing changes) if it has none of that name.
 	bool wearPaletteNamed(Object& object, const std::string& name);
 }

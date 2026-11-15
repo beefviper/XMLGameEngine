@@ -235,7 +235,7 @@ namespace xge
 		// The Picture for a sprite, as the window backends draw it. For a
 		// drawing of lines, a <bitmap> (rows of text) or an <svg>, a Line the
 		// size of the drawing, and the drawing itself is handed back through
-		// `bitmap` when that is given (see Object::bitmap).
+		// `bitmap` when that is given (see Object::Drawn).
 		//
 		// `turnable`, when given, is for an object that has a <heading>: what a
 		// drawing of lines or a <bitmap> is to be turned from is handed back
@@ -286,13 +286,13 @@ namespace xge
 		std::vector<Sheet> sheets;
 		std::map<std::string, std::shared_ptr<SheetPicture>> openSheets;
 
-		// Each object's palettes (Object::palettes), for the styles `wanted`
+		// Each object's palettes (Object::Looks::palettes), for the styles `wanted`
 		// names for it by its name, drawn from what the file says of it.
 		// Throws std::runtime_error for one with a <heading>, or with no
 		// bitmap that takes a style.
 		void makePalettes(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted);
 
-		// The flips (Object::flips) of every picture `object` can show.
+		// The flips (Object::Mirror::flips) of every picture `object` can show.
 		std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flipsOf(const Object& object);
 
 		// The pictures of an object's <animation>, each drawn once, in the order

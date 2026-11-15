@@ -82,7 +82,7 @@ namespace xge
 
 	// <carry /> - in a collision rule about an object it is touching: the
 	// object picks that one up and takes it wherever it goes, until it
-	// <drop />s it (see Object::carrying). One thing at a time: picking up
+	// <drop />s it (see Object::Carry). One thing at a time: picking up
 	// another puts the first down, and taking one another object carries
 	// takes it from that one.
 	struct CmdCarry {};
@@ -204,7 +204,7 @@ namespace xge
 
 	// <inc variable="ownerName.variableName" /> - add 1 (or, for <inc variable="...">5</inc>,
 	// the amount) to that object's named <variable> and refresh every text object whose display is bound to it (see
-	// Game::addTo and Object::textPieces).
+	// Game::addTo and Object::Drawn::textPieces).
 	struct CmdIncrement
 	{
 		VariableName target;
@@ -425,7 +425,7 @@ namespace xge
 	// showing that look changes: the ghosts turn blue, but not the eyes of
 	// one already eaten. See Object::looks. With style="angry" (beside or
 	// instead of sprite=) its bitmaps that take a style take that one instead:
-	// the same pictures in other colors, a palette swap (Object::palettes).
+	// the same pictures in other colors, a palette swap (Object::Looks::palettes).
 	struct CmdBecome
 	{
 		std::string sprite; // empty: the look stays

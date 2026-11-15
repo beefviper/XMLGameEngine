@@ -14,7 +14,7 @@
 // Regression covered: holding one direction and then tapping the opposite
 // one used to just overwrite the whole axis with the new key's velocity
 // (0 on release), stopping the object instead of letting the still-held
-// key resume it. See Object::activeMoveStep for the fix.
+// key resume it. See Object::Drive::moveStep for the fix.
 
 #include "play/executor.h"
 #include "game/game.h"

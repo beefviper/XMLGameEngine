@@ -347,7 +347,7 @@ namespace xge
 		object.showHeading();
 	}
 
-	// Each direction's step is kept (Object::activeMoveStep), so holding Down
+	// Each direction's step is kept (Object::Drive::moveStep), so holding Down
 	// and tapping Up stops, and letting go of Up moves down again.
 	void holdStep(Object& object, Direction direction, float step)
 	{

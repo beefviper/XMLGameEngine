@@ -38,7 +38,7 @@ namespace xge
 			return !on || executor.game.passPlayers(*on);
 		}
 		if (!self) { executor.game.passTurn(false); }
-		else if (self->takesTurns) { return executor.game.passPlayers(*self); }
+		else if (self->turns.takes) { return executor.game.passPlayers(*self); }
 		return true;
 	}
 

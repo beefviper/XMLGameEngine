@@ -61,7 +61,7 @@ namespace xge
 	// came in at; one already going away keeps on. A box's side faces
 	// straight out, so off a box this is the plain flip.
 	// With <friction>, it rubs along the surface and may come to rest on it
-	// (see Object::resting).
+	// (see Object::Rest).
 	void bounce(Object& object, const Object& other, const Touch& touch, float share);
 
 	// <bounce /> off a screen edge, which faces straight in.
@@ -82,7 +82,7 @@ namespace xge
 	// `other`, within a pixel or two of it, or that middle when there is
 	// none - each at the edge kept at random by up to `rough` of the
 	// radius. So shot after shot up one line goes deeper and deeper. The
-	// first hole keeps the whole picture in Object::unholed for a reset; the
+	// first hole keeps the whole picture in Object::Drawn::unholed for a reset; the
 	// picture is copied, never changed where other objects share it.
 	void cutHole(Object& object, const Object& other, float radius, float rough);
 

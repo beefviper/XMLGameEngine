@@ -21,7 +21,7 @@ namespace turns
 		float counted = 0.0f;
 		for (const xge::Object& each : game.getCurrentObjects())
 		{
-			if (!on || !each.takesTurns || each.groupName != on->groupName) { continue; }
+			if (!on || !each.turns.takes || each.groupName != on->groupName) { continue; }
 			counted += 1.0f;
 			if (&each == on) { return counted; }
 		}

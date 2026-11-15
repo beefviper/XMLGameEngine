@@ -69,7 +69,7 @@ namespace xge
 
 		// Called once, right after the window is created (see Engine's
 		// constructor): makes every object's picture (rule 3 above) and clears
-		// Object::visualDirty. Positions and sizes are already final: the
+		// Object::Drawn::visualDirty. Positions and sizes are already final: the
 		// game works them out when it loads.
 		virtual void init(std::vector<Object>& objects) = 0;
 

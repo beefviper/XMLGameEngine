@@ -315,7 +315,7 @@ namespace xge
 				// On a ladder nothing pulls it (applyClimbing moves it).
 				if (!rules.inPlay(object) || object.footing.climbing) { continue; }
 
-				// At rest (Object::resting): nothing pulls it while it lies
+				// At rest (Object::Rest): nothing pulls it while it lies
 				// where it came to rest, still, on something still there as
 				// it was. Anything else wakes it.
 				if (object.motion.friction > 0.0f)
