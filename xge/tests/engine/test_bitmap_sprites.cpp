@@ -1206,14 +1206,14 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 	CHECK(game.tryGetObject("aliens.1.6") == nullptr);
 
 	// Every alien is a picture of 11 by 8 characters at 5 pixels each, two
-	// pictures that take turns.
+	// pictures that take turns, four steps of half a second (a, b, a, b).
 	for (const Object* alien : aliensOf(game))
 	{
 		REQUIRE(alien->drawn.bitmap);
 		CHECK(alien->drawn.bitmap->width == 55);
 		CHECK(alien->drawn.bitmap->height == 40);
-		CHECK(alien->animation.bitmaps.size() == 2);
-		CHECK(alien->animation.frames == 60);
+		CHECK(alien->animation.bitmaps.size() == 4);
+		CHECK(alien->animation.frames == 30);
 	}
 
 	// The three kinds are laid out one under the other, a row of gap between.
@@ -1247,7 +1247,7 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 	CHECK(size.y == 24.0f);
 }
 
-TEST_CASE("the aliens change picture every second, all together, and march on meanwhile", "[spaceinvaders][animation]")
+TEST_CASE("the aliens change picture every half second, all together, and march on meanwhile", "[spaceinvaders][animation]")
 {
 	Invasion invasion;
 	Game& game = invasion.game;
@@ -1263,7 +1263,7 @@ TEST_CASE("the aliens change picture every second, all together, and march on me
 
 	REQUIRE(onPicture(0));
 
-	frames(game, 59);
+	frames(game, 29);
 	CHECK(onPicture(0));
 
 	frames(game, 1);
@@ -1271,10 +1271,58 @@ TEST_CASE("the aliens change picture every second, all together, and march on me
 	CHECK_FALSE(onPicture(0));
 
 	// Two pixels a frame to the right in the meantime, as before.
-	CHECK(game.getObject("aliens.1.1").position.x == 80.0f + 2.0f * 60.0f);
+	CHECK(game.getObject("aliens.1.1").position.x == 80.0f + 2.0f * 30.0f);
 
-	frames(game, 60);
-	CHECK(onPicture(0));
+	// Four steps, a note each: a, b, a, b.
+	frames(game, 30);
+	CHECK(onPicture(2));
+	CHECK(game.getObject("aliens.1.1").drawn.bitmap == game.getObject("aliens.1.1").animation.bitmaps[0]);
+}
+
+TEST_CASE("the march keeps step with the aliens: a note a step, quicker as they fall", "[spaceinvaders][animation][sound]")
+{
+	Invasion invasion;
+	Game& game = invasion.game;
+	(void)game.takeSoundRequests();
+
+	// The frames between march notes over the next `count` frames.
+	const auto gaps = [&](int count)
+	{
+		std::vector<int> between;
+		int since = 0;
+		bool heard = false;
+		for (int i = 0; i < count; ++i)
+		{
+			frames(game, 1);
+			++since;
+			const std::vector<std::string> asked = game.takeSoundRequests();
+			if (std::any_of(asked.begin(), asked.end(), [](const std::string& sound) { return sound.rfind("march", 0) == 0; }))
+			{
+				if (heard) { between.push_back(since); }
+				heard = true;
+				since = 0;
+			}
+		}
+		return between;
+	};
+
+	const std::vector<int> start = gaps(150);
+	REQUIRE(start.size() >= 3);
+	CHECK(std::all_of(start.begin(), start.end(), [](int gap) { return gap == 30; }));
+
+	// Down to 28 aliens: the fleet goes 1.3 times as fast, and so does the march.
+	int gone = 0;
+	for (const Object* alien : aliensOf(game))
+	{
+		if (gone == 27) { break; }
+		const_cast<Object*>(alien)->isVisible = false;
+		++gone;
+	}
+	frames(game, 40);
+	(void)game.takeSoundRequests(); // the notes of those 40
+	const std::vector<int> quicker = gaps(150);
+	REQUIRE(quicker.size() >= 3);
+	CHECK(std::all_of(quicker.begin(), quicker.end(), [](int gap) { return gap == 23; }));
 }
 
 TEST_CASE("the aliens' two pictures differ, so there is something to see", "[spaceinvaders][animation]")
@@ -1282,7 +1330,7 @@ TEST_CASE("the aliens' two pictures differ, so there is something to see", "[spa
 	Invasion invasion;
 	const Object& alien = invasion.game.getObject("aliens.4.2");
 
-	REQUIRE(alien.animation.bitmaps.size() == 2);
+	REQUIRE(alien.animation.bitmaps.size() == 4);
 	CHECK(alien.animation.bitmaps[0]->rgba != alien.animation.bitmaps[1]->rgba);
 	CHECK(alien.animation.bitmaps[0]->width == alien.animation.bitmaps[1]->width);
 	CHECK(alien.animation.bitmaps[0]->height == alien.animation.bitmaps[1]->height);
@@ -1422,7 +1470,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in bitmaps and anima
 	};
 
 	const Mistake mistakes[] = {
-		{ "an animation with no interval", "<seconds>animation.seconds</seconds>", "", "seconds" },
+		{ "an animation with no interval", "<seconds update=\"live\">pace.beat</seconds>", "", "seconds" },
 		{ "an animation whose frames are not frames", "<frame sprite=\"a\" />", "<picture sprite=\"a\" />", "picture" },
 		{ "a bitmap with its scale before its rows", "<bitmap name=\"player\">\n      <row>.....*.....</row>", "<bitmap name=\"player\">\n      <scale>pixel</scale>\n      <row>.....*.....</row>", "scale" },
 		{ "a bitmap row with something inside it", "<row>.....*.....</row>", "<row><x>1</x></row>", "x" },

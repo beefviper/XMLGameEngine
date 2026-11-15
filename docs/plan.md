@@ -134,7 +134,7 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
   - [x] **4. The author picks.** C: an animation's live `<seconds>` and a `<frame>` that runs commands.
   - [x] **5. A live animation speed (S).** `<seconds update="live">` in an `<animation>` (and in a `<frame>`'s own `<seconds>`) is worked out every frame, as a live variable is; a picture already showing keeps its count, the next one takes the new length. Schema, `readAnimation`, `data.xsl`, `Game::follow` or `advanceAnimation`. **Check:** a test where a variable halves and the pictures change twice as often.
   - [x] **6. A frame that runs commands (S).** A `<frame>` may hold commands after its `<seconds>` and `<hitbox>`es (`<play>` first, any command an action takes), run once each time that picture comes up, as `<then>` runs at the end. Schema, reader, `data.xsl`, check. **Check:** a test counting `<play>` requests over two loops of an animation.
-  - [ ] **7. Space Invaders marches in step (S).** The aliens' animation becomes four frames (`a`, `b`, `a`, `b`), each playing one march note; its `<seconds>` reads a variable the hit rule lowers; the `<music>` goes. **Check:** its test hears the notes come faster as aliens fall; a Windows line to listen.
+  - [x] **7. Space Invaders marches in step (S).** Its seconds read `pace.beat`, which the speed-up condition shortens. The aliens' animation becomes four frames (`a`, `b`, `a`, `b`), each playing one march note; its `<seconds>` reads a variable the hit rule lowers; the `<music>` goes. **Check:** its test hears the notes come faster as aliens fall; a Windows line to listen.
   - [ ] **8. Ask the author:** should the fleet also step once per frame instead of gliding, so picture, sound and movement keep one time.
 - **Done when** steps 5 to 8 are ticked.
 
@@ -247,6 +247,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
+- **The march in step (F7 step 7):** Space Invaders' four march notes now come one per step of the aliens (their pictures change every half second, not every second), and quicken each time the fleet speeds up. Worth a listen: whether it sounds like the arcade's and keeps time with the pictures.
 - **A decay (F7 step 2):** Pinball's bumpers now ring like a bell for 0.4 s, dying away. Worth a listen: whether it sounds like a bell, and whether a run of bumper hits gets too busy.
 - **Sparring (F2 step 6):** a new two-player boxing game. A jab lands only while the arm is out, scores on the body, is stopped by a guard (S or Down), and knocks the boxer back; the two never pass through each other. Worth a look: whether the reach, the knock back and the jab's timing feel right, and the pictures.
 - **Animations that play once (F2 step 5):** Missile Command's and Depth Charge's bursts and Space Invaders 2's blast look as before and vanish when their frames end; in Mario Bros. a kicked pest pops up kicking its legs for half a second before it is gone.

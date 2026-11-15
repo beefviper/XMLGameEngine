@@ -23,14 +23,17 @@
   * A hit alien leaves a blast, spawned where it was, that
     goes after a quarter of a second.
   * The march speeds up: whenever no more aliens are left than pace.next,
-    a condition sets the block's speed half as fast again and halves next.
+    a condition sets the block's speed 1.3 times as fast, the beat as much
+    shorter, and halves next.
   * The shields are pictures with a pixel collision, so a shot or bomb that
     hits one cuts a ragged <hole> in it.
   * A bomb on the cannon takes it out of play and pushes "blasted", which
     holds the invasion still for a second, as the arcade game does, while
     the cannon's wreck flickers where it was (a live <position> on it);
     then the cannon is revealed again.
-  * The march is the playing state's <music>: four notes round and round.
+  * The march keeps step with the aliens: their animation is four pictures,
+    each playing one of four falling notes as it comes up, and its seconds
+    are live, reading pace.beat, so the notes quicken with the fleet.
   * Paused, blasted and both endings draw the game still underneath.
 -->
 
@@ -44,7 +47,6 @@
     <variable name="top">120</variable>
     <variable name="pixel">5</variable>
     <variable name="gap">15</variable>
-    <variable name="animation.seconds">1</variable>
     <variable name="step">2</variable>
     <variable name="shieldtop">540</variable>
   </variables>
@@ -220,9 +222,11 @@
             <bitmap from="aliens-b" />
           </sprite>
           <animation>
-            <seconds>animation.seconds</seconds>
-            <frame sprite="a" />
-            <frame sprite="b" />
+            <seconds update="live">pace.beat</seconds>
+            <frame sprite="a"><play sound="march1" /></frame>
+            <frame sprite="b"><play sound="march2" /></frame>
+            <frame sprite="a"><play sound="march3" /></frame>
+            <frame sprite="b"><play sound="march4" /></frame>
           </animation>
           <position><x>margin</x><y>top</y></position>
           <velocity><x>2</x></velocity>
@@ -266,9 +270,10 @@
             <variables><variable name="worth">10</variable></variables>
           </row>
         </group>
-        <!-- how many aliens may be left before the march speeds up again -->
+        <!-- how many aliens may be left before the march speeds up again,
+             and how long each step of it is -->
         <object name="pace">
-          <variables><variable name="next">28</variable></variables>
+          <variables><variable name="next">28</variable><variable name="beat">0.5</variable></variables>
         </object>
         <object name="score">
           <sprite><text style="hud"><content>SCORE</content><number>player.score</number></text></sprite>
@@ -284,7 +289,6 @@
         <show object="bullet" />
         <show object="best" />
       </shows>
-      <music sound="march" />
       <inputs>
         <input><button>a</button><button>left</button><trigger object="player" action="left" /></input>
         <input><button>d</button><button>right</button><trigger object="player" action="right" /></input>
@@ -316,6 +320,7 @@
         <condition class="aliens" total="count">
           <atmost>pace.next</atmost>
           <set variable="aliens.velocity.x"><multiply><value>aliens.1.1.velocity.x</value><value>1.3</value></multiply></set>
+          <set variable="pace.beat"><divide><value>pace.beat</value><value>1.3</value></divide></set>
           <set variable="pace.next"><divide><value>pace.next</value><value>2</value></divide></set>
         </condition>
         <condition object="player" variable="score">
@@ -404,19 +409,11 @@
       <note pitch="G5" to="G6">0.15</note>
       <note pitch="G6" to="G5">0.15</note>
     </sound>
-    <!-- the march: four falling notes, round and round -->
-    <sound name="march" wave="triangle">
-      <loop />
-      <volume>0.35</volume>
-      <note pitch="F2">0.1</note>
-      <rest>0.4</rest>
-      <note pitch="E2">0.1</note>
-      <rest>0.4</rest>
-      <note pitch="D#2">0.1</note>
-      <rest>0.4</rest>
-      <note pitch="D2">0.1</note>
-      <rest>0.4</rest>
-    </sound>
+    <!-- the march: four falling notes, one a step of the aliens -->
+    <sound name="march1" wave="triangle"><volume>0.35</volume><note pitch="F2">0.1</note></sound>
+    <sound name="march2" wave="triangle"><volume>0.35</volume><note pitch="E2">0.1</note></sound>
+    <sound name="march3" wave="triangle"><volume>0.35</volume><note pitch="D#2">0.1</note></sound>
+    <sound name="march4" wave="triangle"><volume>0.35</volume><note pitch="D2">0.1</note></sound>
   </sounds>
   <pictures>
     <bitmap name="bomb-a"><row>.*</row><row>*.</row><row>.*</row><row>*.</row><row>.*</row><scale>3</scale></bitmap>
