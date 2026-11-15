@@ -717,95 +717,82 @@ namespace xge
 			}
 		}
 
-		// Plays one frame of movement. Every object in play moves by its
-		// velocity (and by whatever it is riding), but not in one jump: each
-		// pair of objects that can touch is swept along its own path, the
-		// earliest touch anywhere is found, everything is moved up to that
-		// moment, that pair's rules run, and the rest of the frame carries on
-		// from there with whatever velocities the rules left behind
-		// (xge::playFrame) - so a ball that hits a brick a third of the way
-		// through its move spends the other two thirds heading back the way it
-		// came. Each object is swept by itself; a lockstep set has no bounding
-		// box of its own, so when most of the invaders are gone only the ones
-		// left are tested.
-		void moveObjects(std::vector<Object>& all, const WindowDesc& window, FrameRules& rules)
+		// A pair of objects in play that a rule answers for and that can touch.
+		struct Pair
 		{
-			applyHops(all, window, rules);
-			lendCarried(all, rules);
+			Object* first;
+			Object* second;
+			std::size_t i;
+			std::size_t j;
+			bool byPicture;
+		};
 
-			struct Pair
+		// What moveObjects keeps about each object over one frame's sweep.
+		class FrameSweep
+		{
+		public:
+			FrameSweep(std::vector<Object>& objects, FrameRules& frameRules)
+				: all(objects), rules(frameRules), playing(objects.size()), origin(objects.size()), since(objects.size(), 0.0f),
+				turnFrom(objects.size(), 0.0f), originDegrees(objects.size(), 0), reach(objects.size()), fresh(objects.size(), 0), before(objects.size())
 			{
-				Object* first;
-				Object* second;
-				std::size_t i;
-				std::size_t j;
-				bool byPicture;
-			};
+				// Whether each is in play, asked once and again only after a
+				// reaction (which may hide something, or change the state): asking
+				// for every pair, every time the frame is swept on, was most of a
+				// busy frame.
+				for (std::size_t i = 0; i < all.size(); ++i)
+				{
+					playing[i] = rules.inPlay(all[i]) ? 1 : 0;
+				}
 
-			// Whether each is in play, asked once and again only after a
-			// reaction (which may hide something, or change the state): asking
-			// for every pair, every time the frame is swept on, was most of a
-			// busy frame.
-			std::vector<char> playing(all.size());
-			for (std::size_t i = 0; i < all.size(); ++i)
-			{
-				playing[i] = rules.inPlay(all[i]) ? 1 : 0;
+				// Where each object is worked out from where it last was set (the start
+				// of the frame, or the moment a reaction changed it) and how much of the
+				// frame it has been going since, not by adding up the pieces: so an
+				// object no reaction touched ends the frame exactly one whole step on,
+				// however many reactions the others had.
+				// One that turns this frame (a swing: its spin) goes back to the
+				// way it faced at the start, and turns through the frame as it
+				// moves: at any moment of it, it faces turnFrom plus that share of
+				// its spin, about its pivot, which stays put (or goes with it).
+				for (std::size_t i = 0; i < all.size(); ++i)
+				{
+					if (spinning(i))
+					{
+						turnFrom[i] = std::fmod(all[i].heading - all[i].spin + 720.0f, 360.0f);
+						all[i].heading = turnFrom[i];
+						all[i].showHeading();
+					}
+					origin[i] = all[i].position;
+					originDegrees[i] = all[i].pivotDegrees;
+				}
 			}
 
 			// Only the pairs a rule answers for (partners), and of those the
 			// ones that can touch now.
-			const std::vector<std::vector<std::size_t>>& partners = rules.partners(all);
-			const std::vector<std::vector<char>>& byPicture = rules.partnersByPicture();
-			std::vector<Pair> pairs;
-			for (std::size_t i = 0; i < all.size(); ++i)
+			std::vector<Pair> pairs() const
 			{
-				if (!playing[i])
+				const std::vector<std::vector<std::size_t>>& partners = rules.partners(all);
+				const std::vector<std::vector<char>>& byPicture = rules.partnersByPicture();
+				std::vector<Pair> found;
+				for (std::size_t i = 0; i < all.size(); ++i)
 				{
-					continue;
-				}
-
-				for (std::size_t k = 0; k < partners[i].size(); ++k)
-				{
-					const std::size_t j = partners[i][k];
-					if (playing[j] && canTouch(all[i], all[j]))
+					if (!playing[i])
 					{
-						pairs.push_back({ &all[i], &all[j], i, j, byPicture[i][k] != 0 });
+						continue;
+					}
+
+					for (std::size_t k = 0; k < partners[i].size(); ++k)
+					{
+						const std::size_t j = partners[i][k];
+						if (playing[j] && canTouch(all[i], all[j]))
+						{
+							found.push_back({ &all[i], &all[j], i, j, byPicture[i][k] != 0 });
+						}
 					}
 				}
+				return found;
 			}
 
-			// Where each object is worked out from where it last was set (the start
-			// of the frame, or the moment a reaction changed it) and how much of the
-			// frame it has been going since, not by adding up the pieces: so an
-			// object no reaction touched ends the frame exactly one whole step on,
-			// however many reactions the others had.
-			// One that turns this frame (a swing: its spin) goes back to the
-			// way it faced at the start, and turns through the frame as it
-			// moves: at any moment of it, it faces turnFrom plus that share of
-			// its spin, about its pivot, which stays put (or goes with it).
-			std::vector<Vector2f> origin(all.size());
-			std::vector<float> since(all.size(), 0.0f);
-			std::vector<float> turnFrom(all.size(), 0.0f);
-			std::vector<int> originDegrees(all.size(), 0);
-			const auto spinning = [&](std::size_t i) { return all[i].spin != 0.0f && all[i].hasHeading; };
-			const auto facingAt = [&](std::size_t i, float total)
-			{
-				return std::fmod(turnFrom[i] + all[i].spin * total + 720.0f, 360.0f);
-			};
-			for (std::size_t i = 0; i < all.size(); ++i)
-			{
-				if (spinning(i))
-				{
-					turnFrom[i] = std::fmod(all[i].heading - all[i].spin + 720.0f, 360.0f);
-					all[i].heading = turnFrom[i];
-					all[i].showHeading();
-				}
-				origin[i] = all[i].position;
-				originDegrees[i] = all[i].pivotDegrees;
-			}
-			float played = 0.0f;
-
-			const auto advanceTo = [&](float total)
+			void advanceTo(float total)
 			{
 				played = total;
 				for (std::size_t i = 0; i < all.size(); ++i)
@@ -821,29 +808,13 @@ namespace xge
 						}
 					}
 				}
-			};
-
-			// The box each covers over the rest of the frame, found once: until
-			// a reaction changes it, what it covers over what is left of the
-			// frame later is inside it. A changed one's is found again when
-			// next asked (`fresh`).
-			std::vector<Box> reach(all.size());
-			std::vector<char> fresh(all.size(), 0);
-			const auto reachOf = [&](std::size_t i, const Vector2f& move) -> const Box&
-			{
-				if (!fresh[i])
-				{
-					reach[i] = reachOver(all[i], move);
-					fresh[i] = 1;
-				}
-				return reach[i];
-			};
+			}
 
 			// Anything taken out of play by an earlier reaction this frame (a
 			// bullet that just died), or that is not moving, sits out. Two too
 			// far apart to meet over the rest of the frame are far (playFrame
 			// leaves them be until a reaction changes one of them).
-			const auto sweep = [&](const Pair& pair, float left) -> PairSweep
+			PairSweep sweep(const Pair& pair, float left)
 			{
 				Object& a = *pair.first;
 				Object& b = *pair.second;
@@ -863,10 +834,47 @@ namespace xge
 					return { sweepTurning(a, moveA, a.spin * left, b, moveB, b.spin * left), false };
 				}
 				return { sweepObjects(a, moveA, b, moveB, pair.byPicture), false };
-			};
+			}
 
-			// A reaction that moved, turned, showed or hid anything starts that
-			// object again from where it is now.
+			// The pair's rules run. A reaction that moved, turned, showed or hid
+			// anything starts that object again from where it is now.
+			void react(const Pair& pair, Edge edgeOfSecond, float at, std::vector<std::size_t>& changed)
+			{
+				// What the touch was, found once, before anything answers it.
+				const Contact contact = contactBetween(*pair.first, *pair.second, edgeOfSecond, at, pair.byPicture);
+
+				for (std::size_t i = 0; i < all.size(); ++i)
+				{
+					before[i] = { all[i].position, motionOf(all[i]), all[i].size, all[i].heading };
+				}
+
+				rules.touched(*pair.first, *pair.second, contact);
+
+				for (std::size_t i = 0; i < all.size(); ++i)
+				{
+					// Turned some other way by a reaction: it stops turning there.
+					const bool turned = spinning(i) && all[i].heading != before[i].heading;
+					if (turned) { all[i].spin = 0.0f; }
+
+					const char nowPlaying = rules.inPlay(all[i]) ? 1 : 0;
+					if (turned || all[i].position != before[i].position || motionOf(all[i]) != before[i].motion || nowPlaying != playing[i])
+					{
+						origin[i] = all[i].position;
+						originDegrees[i] = all[i].pivotDegrees;
+						since[i] = played;
+						fresh[i] = 0;
+						changed.push_back(i);
+					}
+					else if (all[i].size != before[i].size)
+					{
+						fresh[i] = 0;
+						changed.push_back(i);
+					}
+					playing[i] = nowPlaying;
+				}
+			}
+
+		private:
 			struct Before
 			{
 				Vector2f position;
@@ -874,43 +882,62 @@ namespace xge
 				Vector2f size;
 				float heading;
 			};
-			std::vector<Before> before(all.size());
 
-			playFrame(pairs, all.size(), sweep, advanceTo, [&](const Pair& pair, Edge edgeOfSecond, float at, std::vector<std::size_t>& changed)
+			bool spinning(std::size_t i) const { return all[i].spin != 0.0f && all[i].hasHeading; }
+
+			float facingAt(std::size_t i, float total) const
+			{
+				return std::fmod(turnFrom[i] + all[i].spin * total + 720.0f, 360.0f);
+			}
+
+			// The box each covers over the rest of the frame, found once: until
+			// a reaction changes it, what it covers over what is left of the
+			// frame later is inside it. A changed one's is found again when
+			// next asked (`fresh`).
+			const Box& reachOf(std::size_t i, const Vector2f& move)
+			{
+				if (!fresh[i])
 				{
-					// What the touch was, found once, before anything answers it.
-					const Contact contact = contactBetween(*pair.first, *pair.second, edgeOfSecond, at, pair.byPicture);
+					reach[i] = reachOver(all[i], move);
+					fresh[i] = 1;
+				}
+				return reach[i];
+			}
 
-					for (std::size_t i = 0; i < all.size(); ++i)
-					{
-						before[i] = { all[i].position, motionOf(all[i]), all[i].size, all[i].heading };
-					}
+			std::vector<Object>& all;
+			FrameRules& rules;
+			std::vector<char> playing;
+			std::vector<Vector2f> origin;
+			std::vector<float> since;
+			std::vector<float> turnFrom;
+			std::vector<int> originDegrees;
+			std::vector<Box> reach;
+			std::vector<char> fresh;
+			std::vector<Before> before;
+			float played = 0.0f;
+		};
 
-					rules.touched(*pair.first, *pair.second, contact);
+		// Plays one frame of movement. Every object in play moves by its
+		// velocity (and by whatever it is riding), but not in one jump: each
+		// pair of objects that can touch is swept along its own path, the
+		// earliest touch anywhere is found, everything is moved up to that
+		// moment, that pair's rules run, and the rest of the frame carries on
+		// from there with whatever velocities the rules left behind
+		// (xge::playFrame) - so a ball that hits a brick a third of the way
+		// through its move spends the other two thirds heading back the way it
+		// came. Each object is swept by itself; a lockstep set has no bounding
+		// box of its own, so when most of the invaders are gone only the ones
+		// left are tested.
+		void moveObjects(std::vector<Object>& all, const WindowDesc& window, FrameRules& rules)
+		{
+			applyHops(all, window, rules);
+			lendCarried(all, rules);
 
-					for (std::size_t i = 0; i < all.size(); ++i)
-					{
-						// Turned some other way by a reaction: it stops turning there.
-						const bool turned = spinning(i) && all[i].heading != before[i].heading;
-						if (turned) { all[i].spin = 0.0f; }
-
-						const char nowPlaying = rules.inPlay(all[i]) ? 1 : 0;
-						if (turned || all[i].position != before[i].position || motionOf(all[i]) != before[i].motion || nowPlaying != playing[i])
-						{
-							origin[i] = all[i].position;
-							originDegrees[i] = all[i].pivotDegrees;
-							since[i] = played;
-							fresh[i] = 0;
-							changed.push_back(i);
-						}
-						else if (all[i].size != before[i].size)
-						{
-							fresh[i] = 0;
-							changed.push_back(i);
-						}
-						playing[i] = nowPlaying;
-					}
-				});
+			FrameSweep frame(all, rules);
+			playFrame(frame.pairs(), all.size(),
+				[&](const Pair& pair, float left) { return frame.sweep(pair, left); },
+				[&](float total) { frame.advanceTo(total); },
+				[&](const Pair& pair, Edge edgeOfSecond, float at, std::vector<std::size_t>& changed) { frame.react(pair, edgeOfSecond, at, changed); });
 		}
 	}
 
