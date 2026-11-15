@@ -52,6 +52,9 @@ namespace xge
 		// was showing looks[look] (0 for its one unnamed animation): its
 		// <then> commands run, before the timers.
 		virtual void animationEnded(std::size_t index, std::size_t look) { (void)index; (void)look; }
+		// An animation moved on to its picture `picture`, which has commands
+		// of its own: they run, as an object's timer's do.
+		virtual void frameCameUp(std::size_t index, std::size_t look, std::size_t picture) { (void)index; (void)look; (void)picture; }
 
 		// The timers that go off this frame, before anything moves, so a bomb
 		// dropped this frame starts falling this frame.

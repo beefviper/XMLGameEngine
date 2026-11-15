@@ -526,6 +526,16 @@ namespace xge
 		return frames;
 	}
 
+	std::vector<std::vector<Command>> game_expr::frameCommandsOf(const std::vector<std::vector<RawCommand>>& frames, const std::string& where)
+	{
+		std::vector<std::vector<Command>> made;
+		for (std::size_t i = 0; i < frames.size(); ++i)
+		{
+			made.push_back(processCommands(frames[i], where + " > <frame> " + std::to_string(i + 1)));
+		}
+		return made;
+	}
+
 	namespace
 	{
 		// A picture's size where cells are laid out: a text counts as no size,

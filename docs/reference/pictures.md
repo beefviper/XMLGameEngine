@@ -198,6 +198,12 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
     <frame sprite="guard" />
   </animation>
   ```
+- **A frame that does something:** commands after a frame's `<seconds>` and `<hitbox>`es run each time the animation moves on to that picture, as an object's timer's do (not when it first shows, at the start or a `<become>`): a march's note on each step, a footstep.
+
+  ```xml
+  <frame sprite="a"><play sound="march1" /></frame>
+  <frame sprite="b"><play sound="march2" /></frame>
+  ```
 - **Once:** `<once />` after `<seconds>` plays the frames through one time instead of round and round (one frame is enough: a look held for a while). A look that moves then goes back to the look shown before it; an object's one animation stays on its last picture. A reset starts it again, and so does `<become>` with its look, from a key, a timer or a touch, even while it is showing.
 - **Then:** a `<then>` after the frames says what comes when a once animation ends. `<then sprite="dead" />` goes to that look instead of the one before; commands in it run as an object's timer's do, the same frame:
 

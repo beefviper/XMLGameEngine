@@ -388,9 +388,11 @@ namespace xge
 					commands(look.thenCommands, context);
 					value(look.interval, context);
 					for (RawValue& time : look.times) { value(time, context); }
+					for (std::vector<RawCommand>& frame : look.frameCommands) { commands(frame, context); }
 				}
 				value(object.animation.interval, context);
 				commands(object.animation.thenCommands, context);
+				for (std::vector<RawCommand>& frame : object.animation.frameCommands) { commands(frame, context); }
 				for (RawValue& time : object.animation.times) { value(time, context); }
 				for (RawSprite& frame : object.animation.frames) { sprite(frame, context); }
 				for (RawValue* part : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y,

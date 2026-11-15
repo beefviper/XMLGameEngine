@@ -839,6 +839,7 @@ namespace xge
 		bool inPlay(const Object& object) override { return isShown(object); }
 		void timers() override { updateTimers(); }
 		void animationEnded(std::size_t index, std::size_t look) override;
+		void frameCameUp(std::size_t index, std::size_t look, std::size_t picture) override;
 		void followPaths() override { applyPaths(); }
 		bool burn(Object& object, const std::string& variable) override;
 		void atEdge(Object& object, Edge edge) override;

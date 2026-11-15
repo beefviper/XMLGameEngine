@@ -795,6 +795,56 @@ TEST_CASE("Pinball: a bumper rings like a bell, loud when struck and dying away"
 	CHECK(loudestIn(0.3, 0.35) < loudestIn(0.0, 0.05) / 3);
 }
 
+namespace
+{
+	// A game whose one object shows two pictures by this animation, with a
+	// tick and a tock to play.
+	std::string marcher(const std::string& animation)
+	{
+		return "<game>"
+			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+			"<framerate>60</framerate></window>"
+			"<variables><variable name=\"unused\">0</variable></variables>"
+			"<states><state name=\"playing\"><objects><object name=\"marcher\">"
+			"<sprite name=\"a\"><bitmap><row>**</row><row>**</row></bitmap></sprite>"
+			"<sprite name=\"b\"><bitmap><row>*.</row><row>.*</row></bitmap></sprite>"
+			+ animation + "<position><x>10</x><y>10</y></position><variables><variable name=\"steps\">0</variable></variables></object></objects>"
+			"<inputs><input button=\"space\"><pop /></input></inputs></state></states>"
+			"<sounds><sound name=\"tick\"><note pitch=\"F2\">0.1</note></sound><sound name=\"tock\"><note pitch=\"E2\">0.1</note></sound></sounds></game>";
+	}
+
+	// What it asks to play over `frames` frames.
+	std::vector<std::string> marched(const std::string& animation, int frames)
+	{
+		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_test_march.xml") };
+		{
+			std::ofstream out(scratch.path);
+			out << marcher(animation);
+		}
+		Game game{ scratch.path.string() };
+		AudioLog log;
+		Engine engine(game, std::make_unique<NullWindow>(), std::make_unique<RecordingAudio>(log));
+		for (int i = 0; i < frames; ++i) { engine.step(); }
+		CHECK(game.getObject("marcher").variable.at("steps") == Approx(static_cast<double>(log.played.size())));
+		return log.played;
+	}
+}
+
+TEST_CASE("a frame's commands run each time the animation moves on to it: a tick and a tock", "[sound][animation][frame]")
+{
+	const std::vector<std::string> expected{ "tock", "tick", "tock", "tick" };
+	// Six frames a picture: over 25 the pictures change four times (b, a, b, a).
+	CHECK(marched("<animation><seconds>0.1</seconds>"
+		"<frame sprite=\"a\"><play sound=\"tick\" /><inc variable=\"self.steps\" /></frame>"
+		"<frame sprite=\"b\"><play sound=\"tock\" /><inc variable=\"self.steps\" /></frame></animation>", 25) == expected);
+	CHECK(marched("<animation name=\"march\"><seconds>0.1</seconds>"
+		"<frame sprite=\"a\"><play sound=\"tick\" /><inc variable=\"self.steps\" /></frame>"
+		"<frame sprite=\"b\"><seconds>0.1</seconds><play sound=\"tock\" /><inc variable=\"self.steps\" /></frame></animation>", 25) == expected);
+	// A frame with none is quiet.
+	CHECK(marched("<animation><seconds>0.1</seconds><frame sprite=\"a\" />"
+		"<frame sprite=\"b\"><play sound=\"tock\" /><inc variable=\"self.steps\" /></frame></animation>", 25) == std::vector<std::string>{ "tock", "tock" });
+}
+
 TEST_CASE("a state's music names a sound of the game", "[sound][xml][music][errors]")
 {
 	const std::string blip = "<sounds><sound name=\"blip\"><note pitch=\"A4\">0.05</note></sound></sounds>";

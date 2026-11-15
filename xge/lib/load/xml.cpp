@@ -638,11 +638,18 @@ namespace xge
 						spec.times.resize(spec.frames.size());
 						spec.times.back() = readValue(*seconds, at + " > <seconds>");
 					}
-					for (std::unique_ptr<XmlNode> part = node->getFirstChild(); part != nullptr; part = part->getNextSibling())
+					std::unique_ptr<XmlNode> part = node->getFirstChild();
+					if (part != nullptr && part->getName() == "seconds") { part = part->getNextSibling(); }
+					for (; part != nullptr && part->getName() == "hitbox"; part = part->getNextSibling())
 					{
-						if (part->getName() != "hitbox") { continue; }
 						spec.frameHitboxes.resize(spec.frames.size());
 						spec.frameHitboxes.back().push_back(readHitbox(*part, at + " > <hitbox>"));
+					}
+					// Then what it does as it comes up: a march's note.
+					if (part != nullptr)
+					{
+						spec.frameCommands.resize(spec.frames.size());
+						spec.frameCommands.back() = readCommands(std::move(part), at);
 					}
 				}
 				else if (tag == "cell")
@@ -674,6 +681,7 @@ namespace xge
 			}
 			if (!spec.times.empty()) { spec.times.resize(spec.frames.size()); }
 			if (!spec.frameHitboxes.empty()) { spec.frameHitboxes.resize(spec.frames.size()); }
+			if (!spec.frameCommands.empty()) { spec.frameCommands.resize(spec.frames.size()); }
 
 			return spec;
 		}
@@ -774,6 +782,7 @@ namespace xge
 			chosen.interval = animation->interval;
 			chosen.times = animation->times;
 			chosen.frameHitboxes = animation->frameHitboxes;
+			chosen.frameCommands = animation->frameCommands;
 			chosen.once = animation->once;
 			chosen.thenCommands = animation->thenCommands;
 			if (!animation->thenSprite.empty())

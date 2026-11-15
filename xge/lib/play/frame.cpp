@@ -11,6 +11,7 @@
 #include "play/verbs.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <memory>
@@ -1030,6 +1031,9 @@ namespace xge
 		// Those whose once animation ended, by index and the look it was:
 		// their <then> may spawn, and the list of objects grow.
 		std::vector<std::pair<std::size_t, std::size_t>> ended;
+		// Those whose animation moved on to a picture with commands of its own:
+		// by index, the look and the picture.
+		std::vector<std::array<std::size_t, 3>> cameUp;
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
 			Object& object = objects[i];
@@ -1037,10 +1041,16 @@ namespace xge
 			if (object.placed) { object.remember(); }
 
 			const std::size_t look = object.looks.shown;
+			const std::size_t picture = object.animation.index;
 			if (!object.animation.bitmaps.empty() && rules.inPlay(object) && object.advanceAnimation()) { ended.emplace_back(i, look); }
+			else if (object.looks.shown == look && object.animation.index != picture && object.hasFrameCommands(look, object.animation.index))
+			{
+				cameUp.push_back({ i, look, object.animation.index });
+			}
 			if (object.blink > 0.0f && rules.inPlay(object)) { object.blink = std::max(0.0f, object.blink - second); }
 		}
 		for (const auto& [index, look] : ended) { rules.animationEnded(index, look); }
+		for (const auto& [index, look, picture] : cameUp) { rules.frameCameUp(index, look, picture); }
 
 		rules.timers();
 

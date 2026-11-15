@@ -396,7 +396,12 @@ namespace xge
 		{
 			for (const Timer& timer : object.timers) { visit(timer.commands, &object); }
 			visit(object.animation.then, &object);
-			for (const Object::Look& look : object.looks.all) { visit(look.then, &object); }
+			for (const auto& frame : object.animation.commands) { visit(frame, &object); }
+			for (const Object::Look& look : object.looks.all)
+			{
+				visit(look.then, &object);
+				for (const auto& frame : look.frameCommands) { visit(frame, &object); }
+			}
 			for (const auto& [name, commands] : object.action) { visit(commands, &object); }
 			for (const auto& rule : object.collisionData.others) { visit(rule.commands, &object); }
 			for (const auto& edgeRules : object.collisionData.edges)
@@ -808,7 +813,12 @@ namespace xge
 			};
 			for (const auto& timer : object.timers) { checkWalks(timer.commands, where + " > <timer>"); }
 			checkWalks(object.animation.then, where + " > <animation> > <then>");
-			for (const auto& look : object.looks.all) { checkWalks(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>"); }
+			for (const auto& frame : object.animation.commands) { checkWalks(frame, where + " > <animation> > <frame>"); }
+			for (const auto& look : object.looks.all)
+			{
+				checkWalks(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>");
+				for (const auto& frame : look.frameCommands) { checkWalks(frame, where + " > <animation name=\"" + look.name + "\"> > <frame>"); }
+			}
 			for (const auto& [name, commands] : object.action) { checkWalks(commands, where + " > <action name=\"" + name + "\">"); }
 			for (const auto& rule : object.collisionData.others) { onLine(rule.line, [&] { checkWalks(rule.commands, where + " > <collision>"); }); }
 
@@ -898,7 +908,12 @@ namespace xge
 						checkPlace(commands, Place::ObjectTimer, here);
 					};
 					checkThen(object.animation.then, where + " > <animation> > <then>");
-					for (const auto& look : object.looks.all) { checkThen(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>"); }
+					for (const auto& frame : object.animation.commands) { checkThen(frame, where + " > <animation> > <frame>"); }
+					for (const auto& look : object.looks.all)
+					{
+						checkThen(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>");
+						for (const auto& frame : look.frameCommands) { checkThen(frame, where + " > <animation name=\"" + look.name + "\"> > <frame>"); }
+					}
 					for (const auto& [name, commands] : object.action) { checks.ownLooks(commands, &object, where); }
 					for (const auto& rule : object.collisionData.others) { onLine(rule.line, [&] { checks.ownLooks(rule.commands, &object, where); }); }
 					for (const auto& edgeRules : object.collisionData.edges)

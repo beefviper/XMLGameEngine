@@ -363,6 +363,7 @@ namespace xge
 		// Each frame's own <hitbox>es, one list a frame, or none at all when
 		// no frame has any: touched with too while that frame shows.
 		std::vector<std::vector<RawHitbox>> frameHitboxes;
+		std::vector<std::vector<RawCommand>> frameCommands;   // as RawFrames::frameCommands
 		bool once{ false };
 		// <then>: the look a once look goes to when it ends (empty, the look
 		// before it), and the commands it runs then.
@@ -385,6 +386,9 @@ namespace xge
 		// Each frame's own <hitbox>es, one list a frame, or none at all when
 		// no frame has any: touched with too while that frame shows.
 		std::vector<std::vector<RawHitbox>> frameHitboxes;
+		// Each frame's own commands, one list a frame, or none at all when no
+		// frame has any: run as the animation moves on to that picture.
+		std::vector<std::vector<RawCommand>> frameCommands;
 		// <once />: plays through one time, not round and round.
 		bool once{ false };
 		// <then sprite="...">: the look it goes to when it ends, and the
@@ -421,6 +425,7 @@ namespace xge
 		std::vector<RawSprite> frames;
 		std::vector<RawValue> times;   // as RawFrames::times
 		std::vector<std::vector<RawHitbox>> frameHitboxes;   // as RawFrames::frameHitboxes
+		std::vector<std::vector<RawCommand>> frameCommands;   // as RawFrames::frameCommands
 		bool once{ false };            // as RawFrames::once
 		std::vector<RawCommand> thenCommands;   // as RawFrames::thenCommands
 	};
@@ -1149,6 +1154,10 @@ namespace xge
 			// Each picture's own <hitbox>es, touched with as well as the
 			// object's while it shows; empty when none has any.
 			std::vector<std::vector<Hitbox>> hitboxes;
+			// Each picture's own commands, run as it comes up (Game::frameCameUp),
+			// of an object's one animation (a look's are the look's own); empty
+			// when none has any.
+			std::vector<std::vector<Command>> commands;
 			int tick{};
 			std::size_t index{};
 			// <once />: the animation plays through one time. At its end a look
@@ -1178,6 +1187,14 @@ namespace xge
 
 		// Back to the first picture, from the start of its time.
 		void restartAnimation();
+
+		// Whether picture `picture` of the look `look` (of its one animation,
+		// for an object with no looks) has commands of its own to run.
+		bool hasFrameCommands(std::size_t look, std::size_t picture) const noexcept
+		{
+			const auto& frames = looks.all.empty() ? animation.commands : look < looks.all.size() ? looks.all[look].frameCommands : animation.commands;
+			return picture < frames.size() && !frames[picture].empty();
+		}
 
 		// A live <seconds> (Follow::Part::Seconds): `frames` frames of the
 		// game for every picture of that animation that has no time of its own
@@ -1646,6 +1663,7 @@ namespace xge
 			int frameTicks{};
 			std::vector<int> frameTimes;   // as Animation::times
 			std::vector<std::vector<Hitbox>> frameHitboxes;   // as Animation::hitboxes
+			std::vector<std::vector<Command>> frameCommands;   // as Animation::commands
 			bool once{ false };            // as Animation::once
 			// <then>: the look to go to when it ends, in place of the look
 			// before, and the commands it runs then.

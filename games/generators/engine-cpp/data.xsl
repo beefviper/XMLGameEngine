@@ -1215,6 +1215,7 @@
     <xsl:param name="animation" />
     <xsl:param name="indent" />
     <xsl:if test="$animation/then">then(</xsl:if>
+    <xsl:if test="$animation/frame/*[not(self::seconds or self::hitbox)]">frameCommands(</xsl:if>
     <xsl:if test="$animation/frame/hitbox">hitboxes(</xsl:if>
     <xsl:if test="$animation/once">once(</xsl:if>
     <xsl:text>frames(</xsl:text>
@@ -1237,6 +1238,14 @@
     <xsl:if test="$animation/frame/hitbox">
       <xsl:text>, </xsl:text>
       <xsl:call-template name="frame-hitbox-lists">
+        <xsl:with-param name="animation" select="$animation" />
+        <xsl:with-param name="indent" select="$indent" />
+      </xsl:call-template>
+      <xsl:text>)</xsl:text>
+    </xsl:if>
+    <xsl:if test="$animation/frame/*[not(self::seconds or self::hitbox)]">
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="frame-command-lists">
         <xsl:with-param name="animation" select="$animation" />
         <xsl:with-param name="indent" select="$indent" />
       </xsl:call-template>
@@ -1359,6 +1368,34 @@
             <xsl:value-of select="concat($indent, '})')" />
           </xsl:for-each>
           <xsl:text> }</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:call-template name="blank-hitboxes">
+            <xsl:with-param name="left">
+              <xsl:call-template name="cell-count">
+                <xsl:with-param name="node" select="." />
+              </xsl:call-template>
+            </xsl:with-param>
+          </xsl:call-template>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    <xsl:text> }</xsl:text>
+  </xsl:template>
+
+  <!-- Each frame's own commands, a list a frame: { { play }, {} } -->
+  <xsl:template name="frame-command-lists">
+    <xsl:param name="animation" />
+    <xsl:param name="indent" />
+    <xsl:text>{ </xsl:text>
+    <xsl:for-each select="$animation/frame | $animation/cell | $animation/cells">
+      <xsl:if test="position() &gt; 1">, </xsl:if>
+      <xsl:choose>
+        <xsl:when test="self::frame">
+          <xsl:call-template name="commands">
+            <xsl:with-param name="nodes" select="*[not(self::seconds or self::hitbox)]" />
+            <xsl:with-param name="indent" select="$indent" />
+          </xsl:call-template>
         </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name="blank-hitboxes">
@@ -1756,6 +1793,14 @@
         <xsl:if test="animation/frame/hitbox">
           <xsl:value-of select="concat($in, 'object.animation.frameHitboxes = ')" />
           <xsl:call-template name="frame-hitbox-lists">
+            <xsl:with-param name="animation" select="animation" />
+            <xsl:with-param name="indent" select="$in" />
+          </xsl:call-template>
+          <xsl:text>;&#10;</xsl:text>
+        </xsl:if>
+        <xsl:if test="animation/frame/*[not(self::seconds or self::hitbox)]">
+          <xsl:value-of select="concat($in, 'object.animation.frameCommands = ')" />
+          <xsl:call-template name="frame-command-lists">
             <xsl:with-param name="animation" select="animation" />
             <xsl:with-param name="indent" select="$in" />
           </xsl:call-template>
@@ -2944,6 +2989,14 @@
       <xsl:if test="$node/frame/hitbox">
         <xsl:value-of select="concat($indent, $to, '.frameHitboxes = ')" />
         <xsl:call-template name="frame-hitbox-lists">
+          <xsl:with-param name="animation" select="$node" />
+          <xsl:with-param name="indent" select="$indent" />
+        </xsl:call-template>
+        <xsl:text>;&#10;</xsl:text>
+      </xsl:if>
+      <xsl:if test="$node/frame/*[not(self::seconds or self::hitbox)]">
+        <xsl:value-of select="concat($indent, $to, '.frameCommands = ')" />
+        <xsl:call-template name="frame-command-lists">
           <xsl:with-param name="animation" select="$node" />
           <xsl:with-param name="indent" select="$indent" />
         </xsl:call-template>

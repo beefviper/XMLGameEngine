@@ -306,6 +306,13 @@ namespace xge::parts
 		return animation;
 	}
 
+	// An <animation>'s frames' own commands, a list a frame.
+	inline RawFrames frameCommands(RawFrames animation, std::vector<std::vector<RawCommand>> frames)
+	{
+		animation.frameCommands = std::move(frames);
+		return animation;
+	}
+
 	// A named <animation>'s <then>: the look it goes to when it ends (empty,
 	// the look before), and the commands it runs then.
 	inline RawFrames then(RawFrames animation, std::string sprite, std::vector<RawCommand> commands)
@@ -334,6 +341,7 @@ namespace xge::parts
 		std::vector<std::string> frames;
 		std::vector<RawValue> times;
 		std::vector<std::vector<RawHitbox>> frameHitboxes;
+		std::vector<std::vector<RawCommand>> frameCommands;
 		bool once{ false };
 		std::vector<RawCommand> then;
 		std::vector<RawFrames> moving;
@@ -409,6 +417,7 @@ namespace xge::parts
 		{
 			animate(object, member.sprites, member.interval, member.frames, member.times);
 			object.animation.frameHitboxes = member.frameHitboxes;
+			object.animation.frameCommands = member.frameCommands;
 			object.animation.once = member.once;
 			object.animation.thenCommands = member.then;
 		}

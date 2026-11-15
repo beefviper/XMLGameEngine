@@ -777,6 +777,8 @@
               <xs:element name="seconds" type="liveValueType" minOccurs="0" />
               <!-- touched with too while this picture shows: a fist, a sword -->
               <xs:element name="hitbox" type="hitboxType" minOccurs="0" maxOccurs="unbounded" />
+              <!-- run each time the animation moves on to this picture, as a timer's: a march's note -->
+              <xs:group ref="objectTimeCommands" minOccurs="0" maxOccurs="unbounded" />
             </xs:sequence>
             <xs:attribute name="sprite" type="xs:NMTOKEN" use="required" />
           </xs:complexType>

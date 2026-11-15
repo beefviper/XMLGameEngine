@@ -314,6 +314,8 @@ namespace xge
 		// <seconds> as animationFramesOf counts them, any other `fallback`.
 		// Empty when no frame has its own.
 		std::vector<int> animationTimesOf(const std::vector<RawValue>& times, int fallback, const WindowDesc& windowDesc, const std::string& where);
+		// Each frame's own commands, made (empty when no frame has any).
+		std::vector<std::vector<Command>> frameCommandsOf(const std::vector<std::vector<RawCommand>>& frames, const std::string& where);
 
 		std::vector<Command> processCommands(const std::vector<RawCommand>& raw, const std::string& where);
 

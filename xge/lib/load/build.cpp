@@ -91,6 +91,7 @@ namespace xge
 					look.frameTimes = animationTimesOf(rawLook.times, look.frameTicks, windowDesc, here);
 					look.once = rawLook.once;
 					look.then = processCommands(rawLook.thenCommands, here + " > <then>");
+					look.frameCommands = frameCommandsOf(rawLook.frameCommands, here);
 				}
 				if (look.picture.kind == ShapeKind::Text && showsNumbers(rawLook))
 				{
@@ -141,6 +142,7 @@ namespace xge
 			object.animation.times = animationTimesOf(rawObject.animation.times, animationFrames, windowDesc, where + " > <animation>");
 			object.animation.once = rawObject.animation.once;
 			object.animation.then = processCommands(rawObject.animation.thenCommands, where + " > <animation> > <then>");
+			object.animation.commands = frameCommandsOf(rawObject.animation.frameCommands, where + " > <animation>");
 			object.drawn.bitmap = object.animation.bitmaps.front();
 		}
 

@@ -397,6 +397,7 @@ namespace xge
 			look.interval = animation.interval;
 			look.times = animation.times;
 			look.frameHitboxes = animation.frameHitboxes;
+			look.frameCommands = animation.frameCommands;
 			look.once = animation.once;
 			look.thenSprite = animation.thenSprite;
 			look.thenCommands = animation.thenCommands;
@@ -752,6 +753,17 @@ namespace xge
 			}
 			for (RawTimer& timer : object.timers) { commands(timer.commands); }
 			for (auto& [name, list] : object.action) { commands(list); }
+			// Its animations: their live seconds, what a picture does as it
+			// comes up and what an animation that ends does then.
+			const auto animation = [&](RawValue& interval, std::vector<RawValue>& times, std::vector<std::vector<RawCommand>>& frames, std::vector<RawCommand>& then)
+			{
+				value(interval);
+				for (RawValue& time : times) { value(time); }
+				for (std::vector<RawCommand>& frame : frames) { commands(frame); }
+				commands(then);
+			};
+			animation(object.animation.interval, object.animation.times, object.animation.frameCommands, object.animation.thenCommands);
+			for (RawSprite& look : object.looks) { animation(look.interval, look.times, look.frameCommands, look.thenCommands); }
 
 			// Its own numbers, worked out once or live (update="live"):
 			// self in them is this object too.
@@ -830,6 +842,15 @@ namespace xge
 			commands(timer.commands);
 		}
 		for (auto& [name, list] : object.action) { commands(list); }
+		const auto animation = [&](RawValue& interval, std::vector<RawValue>& times, std::vector<std::vector<RawCommand>>& frames, std::vector<RawCommand>& then)
+		{
+			value(interval);
+			for (RawValue& time : times) { value(time); }
+			for (std::vector<RawCommand>& frame : frames) { commands(frame); }
+			commands(then);
+		};
+		animation(object.animation.interval, object.animation.times, object.animation.frameCommands, object.animation.thenCommands);
+		for (RawSprite& look : object.looks) { animation(look.interval, look.times, look.frameCommands, look.thenCommands); }
 	}
 
 	namespace

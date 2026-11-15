@@ -1274,6 +1274,20 @@ namespace xge
 		}
 	}
 
+	void Game::frameCameUp(std::size_t index, std::size_t look, std::size_t picture)
+	{
+		if (index >= objects.size()) { return; }
+		Object& object = objects[index];
+		if (!object.hasFrameCommands(look, picture)) { return; }
+		// A copy, as for <then>.
+		const std::vector<Command> commands = object.looks.all.empty() ? object.animation.commands[picture] : object.looks.all[look].frameCommands[picture];
+		CommandExecutor executor(*this);
+		for (const Command& command : commands)
+		{
+			if (!executor.executeTimer(command, &objects[index])) { break; }
+		}
+	}
+
 	void Game::updateTimers(void)
 	{
 		CommandExecutor executor(*this);
