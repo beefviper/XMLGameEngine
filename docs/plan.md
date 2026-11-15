@@ -131,8 +131,12 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
   - [x] **1. `<decay>` (S).** Built on a `<sound>` or `<part>` (every note's), not a single note, so a note stays one number. Planned: a `<note>` or `<part>` takes `<decay>seconds</decay>`: its volume falls to nothing over that time, in `synthesize()` (`xge/lib/audio/sound.cpp`). Schema `noteType` and `partType`, `readSound`, `data.xsl`. **Check:** a test in `xge/tests/engine/test_sound.cpp` compares the loudness of the samples at two times.
   - [x] **2. A game uses it (S).** Pinball's bumpers ring and die away. One sound in one game. **Check:** its test; add a line to [Waiting for a look on Windows](#waiting-for-a-look-on-windows) for the author to listen.
   - [x] **3. Design notes that follow a number (S).** Written in `33-sound.md` with a third option, the author's: an animation's live `<seconds>` and a `<frame>` that plays a sound; recommended. In `docs/designs/33-sound.md`, two options written out with what a game would say for each: a `<play>` that gives a pitch, or a sound made at several pitches at load and picked by a number when played. No code.
-  - [ ] **4. The author picks.** Then the build steps are written here before anyone starts.
-- **Done, for now, when** steps 1 to 3 are ticked.
+  - [x] **4. The author picks.** C: an animation's live `<seconds>` and a `<frame>` that runs commands.
+  - [ ] **5. A live animation speed (S).** `<seconds update="live">` in an `<animation>` (and in a `<frame>`'s own `<seconds>`) is worked out every frame, as a live variable is; a picture already showing keeps its count, the next one takes the new length. Schema, `readAnimation`, `data.xsl`, `Game::follow` or `advanceAnimation`. **Check:** a test where a variable halves and the pictures change twice as often.
+  - [ ] **6. A frame that runs commands (S).** A `<frame>` may hold commands after its `<seconds>` and `<hitbox>`es (`<play>` first, any command an action takes), run once each time that picture comes up, as `<then>` runs at the end. Schema, reader, `data.xsl`, check. **Check:** a test counting `<play>` requests over two loops of an animation.
+  - [ ] **7. Space Invaders marches in step (S).** The aliens' animation becomes four frames (`a`, `b`, `a`, `b`), each playing one march note; its `<seconds>` reads a variable the hit rule lowers; the `<music>` goes. **Check:** its test hears the notes come faster as aliens fall; a Windows line to listen.
+  - [ ] **8. Ask the author:** should the fleet also step once per frame instead of gliding, so picture, sound and movement keep one time.
+- **Done when** steps 5 to 8 are ticked.
 
 #### F8. Dice
 
