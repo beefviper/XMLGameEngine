@@ -13,7 +13,7 @@ One task at a time, top to bottom. A task's steps are done in their own order, a
 
 | # | Task | Why here |
 |---|---|---|
-| 1 | [A3](#a3-split-the-long-functions), then [A4](#a4-object-in-parts): long functions, `Object` in parts | Tidying. If the [review of the C++](#a-review-of-the-c) starts first, it replaces these |
+| 1 | [A4](#a4-object-in-parts): `Object` in parts | Tidying (A3, done). If the [review of the C++](#a-review-of-the-c) starts first, it replaces it |
 | 2 | [F7](#f7-sound-an-envelope-and-notes-that-follow-a-number) steps 1 to 3, [F4](#f4-a-list-of-numbers) steps 1 to 3 | Each ends at a design for the author to decide |
 | 3 | [F8](#f8-dice): dice | Waits on the hold on new games |
 | 4 | [A7](#a7-the-next-backend-is-cheap): more backends after step 7 | Never finishes: a backend at a time |
@@ -65,19 +65,6 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [ ] **4. The author: whether each verb owns its data (L if yes).** `Command` would become `{ const Verb* verb; data }` and `RawCommand`'s shared fields the verb's own, which is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer heavily, so it waits until A5 has retired `data.xsl`, or is dropped. Ask before starting. With it, each command carries its own line, and the load's name checks can say the command's line rather than its holder's (B7, done; the author wants that).
 - **Files.** `xge/lib/verbs/*`, `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/play.md` "Loading".
 - **Done when** adding a verb is one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element and the docs.
-
-#### A3. Split the long functions
-
-- **Needs** nothing. Moves only, no behaviour change.
-- **Why.** Each new feature adds a branch to the middle of one of these.
-- **Check for every step:** the function is under 150 lines, and `xgetest-long "[speed]"` is no slower.
-- **Steps, in any order.**
-  - [ ] **1. `game_expr::makeObject` (M)** (`xge/lib/load/expr.cpp`) into a new `load/build.cpp` as named steps: `buildNumbers`, `buildLooks`, `buildRules`, `buildActions`, `buildTimers`, `buildHolder`, `buildMoves`, each taking the `RawObject` and the `Object` being made. Add the file to `ENGINE_SOURCES` and `engine.xml`.
-  - [ ] **2. `game_expr::init` (M)** into steps named for what [Loading](reference/engine.md#loading) lists: names, variables, sounds, objects, states, checks.
-  - [ ] **3. `readGroup` (M)** (`load/xml.cpp`) into "what the group gives", "members", "columns and rows", "row, column and cell changes".
-  - [ ] **4. `checkCommand` (S)** (`load/check.cpp`): whatever is still one long function after the verbs took their own checks becomes one small function per kind.
-  - [ ] **5. `checkReferences` (M)** (`load/check.cpp`): one function per thing checked (states, objects, sounds, shows).
-- **Done when** no function in `xge/lib` is over 150 lines and `expr.cpp` is under 1,200 lines.
 
 #### A4. `Object` in parts
 
@@ -205,7 +192,7 @@ Goals the author has set, beyond the tasks above. None is scheduled; delta time 
 - The same pass the language had: name the few ideas the engine really has, then ask of each large file which idea it belongs to and why it needs more than that. Something can be abstract and still simple.
 - The engine library is about 42,000 lines, and five files hold a third of it (`load/xml.cpp`, `load/expr.cpp`, `game/game.cpp`, `game/holders.cpp`, `game/object.h`).
 - The reader is the first target: much of it writes out, tag by tag, what the schema already says.
-- A3 and A4 above only tidy what is there (A2, done).
+- A4 above only tidies what is there (A2 and A3, done).
 
 ### A version on the language, and a definition of 1.0
 

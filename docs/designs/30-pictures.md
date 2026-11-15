@@ -4,7 +4,7 @@
 
 ## The one decision behind all of it
 
-**The engine draws every picture it can, once, at load, into its own `Bitmap`; backends only show that bitmap.** One path, `buildPicture` (`load/expr.cpp`): read, draw, flip, keep a `Turnable` for objects with a heading. What an object shows is a typed `Picture`, never strings a backend parses. So:
+**The engine draws every picture it can, once, at load, into its own `Bitmap`; backends only show that bitmap.** One path, `buildPicture` (`load/pictures.cpp`): read, draw, flip, keep a `Turnable` for objects with a heading. What an object shows is a typed `Picture`, never strings a backend parses. So:
 
 - adding a picture kind changes no window backend, and every library shows the same pixels;
 - an object's size is known without a window (`name.width` works in tests);
