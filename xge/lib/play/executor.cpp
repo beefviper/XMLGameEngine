@@ -244,8 +244,8 @@ namespace xge
 			}
 			else if (const auto* climb = std::get_if<CmdClimb>(&actionCommand))
 			{
-				object.activeClimb[climb->direction == Direction::Up ? 0 : 1] = climb->step;
-				object.climbClass = climb->ladderClass;
+				object.footing.activeClimb[climb->direction == Direction::Up ? 0 : 1] = climb->step;
+				object.footing.climbClass = climb->ladderClass;
 			}
 			else if (const auto* thrust = std::get_if<CmdThrustAcross>(&actionCommand))
 			{
@@ -350,10 +350,10 @@ namespace xge
 		}
 
 		const int frames = game.framesFor(seconds);
-		object.flightStep = whole * (1.0f / static_cast<float>(frames));
-		object.flightFramesLeft = frames;
-		object.flightFrames = frames;
-		object.flightArc = arc;
+		object.flight.step = whole * (1.0f / static_cast<float>(frames));
+		object.flight.framesLeft = frames;
+		object.flight.frames = frames;
+		object.flight.arc = arc;
 		return true;
 	}
 
@@ -490,14 +490,14 @@ namespace xge
 	// on a ladder; nothing without a pull down (the loader refuses that).
 	bool CommandExecutor::jump(Object& object, float height)
 	{
-		if (!object.grounded || object.climbing || object.acceleration.y <= 0.0f)
+		if (!object.footing.grounded || object.footing.climbing || object.acceleration.y <= 0.0f)
 		{
 			return false;
 		}
 
 		object.velocity.y = -jumpSpeed(object.acceleration.y, height);
-		object.grounded = false;
-		object.jumping = true;
+		object.footing.grounded = false;
+		object.footing.jumping = true;
 		return true;
 	}
 

@@ -33,9 +33,9 @@ namespace xge
 		const CmdClimb& climb = std::get<CmdClimb>(command);
 		Object* const self = doer.self;
 		if (!self || !doer.action) { return true; }
-		self->activeClimb[climb.direction == Direction::Up ? 0 : 1] = doer.pressed ? climb.step : 0.0f;
-		self->climbClass = climb.ladderClass;
-		self->climbOnce = doer.pressed && doer.byRule;
+		self->footing.activeClimb[climb.direction == Direction::Up ? 0 : 1] = doer.pressed ? climb.step : 0.0f;
+		self->footing.climbClass = climb.ladderClass;
+		self->footing.climbOnce = doer.pressed && doer.byRule;
 		return true;
 	}
 

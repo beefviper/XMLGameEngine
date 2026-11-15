@@ -77,8 +77,8 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **3.** `object.holder` (its live numbers: items, calling, called, points, pattern, strength, odds, lead, winner, tricks, deadwood).
   - [x] **4.** `object.moves` and `object.marks` (boards), and `object.picker` (what a picker holds, its last move, a cursor's kept column and pointer).
   - [x] **5.** `object.swing` (frames, by, done, held; `spin` and the pivot stay, as anything with a heading turns).
-  - [ ] **6.** `object.path`.
-  - [ ] **7.** `object.jump`.
+  - [x] **6.** `object.path` (a `<follow>` under way: name, leg, left, legStarted, wait).
+  - [x] **7.** `object.flight` (a timed `<hop>`) and `object.footing` (grounded, jumping, climbing).
 - **Later, not planned:** a group no object uses could become `std::optional` or a pointer, which also shrinks every object.
 - **Done when** `struct Object` itself declares under 60 fields.
 

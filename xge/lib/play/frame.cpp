@@ -93,11 +93,11 @@ namespace xge
 		{
 			for (auto& object : objects)
 			{
-				if (object.climbClass.empty() || !rules.inPlay(object)) { continue; }
+				if (object.footing.climbClass.empty() || !rules.inPlay(object)) { continue; }
 
 				const auto isLadder = [&](const Object& other)
 					{
-						return &other != &object && other.objClass == object.climbClass && rules.inPlay(other);
+						return &other != &object && other.objClass == object.footing.climbClass && rules.inPlay(other);
 					};
 				const Box climber{ object.position, object.size };
 				const auto ladder = std::find_if(objects.begin(), objects.end(), [&](const Object& other)
@@ -107,7 +107,7 @@ namespace xge
 
 				if (ladder == objects.end())
 				{
-					object.climbing = false;
+					object.footing.climbing = false;
 					continue;
 				}
 
@@ -136,24 +136,24 @@ namespace xge
 				// A player's climb holds at an end with nothing there to
 				// stand on (the top of a broken ladder) rather than stepping
 				// off into the air; one a rule started lets go anyway.
-				const float step = object.activeClimb[1] - object.activeClimb[0];
-				const bool holding = object.climbing && !object.climbOnce && step != 0.0f;
+				const float step = object.footing.activeClimb[1] - object.footing.activeClimb[0];
+				const bool holding = object.footing.climbing && !object.footing.climbOnce && step != 0.0f;
 				const bool holdTop = holding && step < 0.0f && !floorAt(objects, object, whole.top(), rules);
 				const bool holdBottom = holding && step > 0.0f && !floorAt(objects, object, whole.bottom(), rules);
-				const bool wasClimbing = object.climbing;
-				if (!climbLadder(object.position, object.velocity, object.size, step, object.climbing, object.grounded, whole, holdTop, holdBottom))
+				const bool wasClimbing = object.footing.climbing;
+				if (!climbLadder(object.position, object.velocity, object.size, step, object.footing.climbing, object.footing.grounded, whole, holdTop, holdBottom))
 				{
 					continue;
 				}
 
-				if (!wasClimbing) { object.jumping = false; }
-				if (wasClimbing && !object.climbing && object.climbOnce)
+				if (!wasClimbing) { object.footing.jumping = false; }
+				if (wasClimbing && !object.footing.climbing && object.footing.climbOnce)
 				{
-					object.activeClimb = {};
-					object.climbOnce = false;
+					object.footing.activeClimb = {};
+					object.footing.climbOnce = false;
 				}
 
-				if (!object.climbing)
+				if (!object.footing.climbing)
 				{
 					object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
 						- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];
@@ -205,7 +205,7 @@ namespace xge
 		{
 			for (auto& object : objects)
 			{
-				if (object.grip >= 1.0f || object.climbing || !rules.inPlay(object)) { continue; }
+				if (object.grip >= 1.0f || object.footing.climbing || !rules.inPlay(object)) { continue; }
 
 				if (object.hasHeading)
 				{
@@ -222,7 +222,7 @@ namespace xge
 					if (std::abs(wanted - velocity) < 0.05f) { velocity = wanted; }
 				};
 				const auto& step = object.activeMoveStep;
-				if (!object.jumping)
+				if (!object.footing.jumping)
 				{
 					ease(object.velocity.x, step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)]);
 				}
@@ -248,10 +248,10 @@ namespace xge
 			}
 			if (object.isAirborne())
 			{
-				return object.flightFramesLeft * 2 > object.flightFrames ? Object::Pose::Rising : Object::Pose::Falling;
+				return object.flight.framesLeft * 2 > object.flight.frames ? Object::Pose::Rising : Object::Pose::Falling;
 			}
 			const bool pulled = object.acceleration.y != 0.0f;
-			if (pulled && !object.grounded)
+			if (pulled && !object.footing.grounded)
 			{
 				return object.velocity.y < 0.0f ? Object::Pose::Rising : Object::Pose::Falling;
 			}
@@ -280,7 +280,7 @@ namespace xge
 					const auto& step = object.activeMoveStep;
 					const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
 					if (wanted != 0.0f) { object.goingLeft = wanted < 0.0f; }
-					else if (object.isAirborne() && object.flightStep.x != 0.0f) { object.goingLeft = object.flightStep.x < 0.0f; }
+					else if (object.isAirborne() && object.flight.step.x != 0.0f) { object.goingLeft = object.flight.step.x < 0.0f; }
 					else if (object.velocity.x != 0.0f) { object.goingLeft = object.velocity.x < 0.0f; }
 					object.faceMirror();
 				}
@@ -313,7 +313,7 @@ namespace xge
 				}
 
 				// On a ladder nothing pulls it (applyClimbing moves it).
-				if (!rules.inPlay(object) || object.climbing) { continue; }
+				if (!rules.inPlay(object) || object.footing.climbing) { continue; }
 
 				// At rest (Object::resting): nothing pulls it while it lies
 				// where it came to rest, still, on something still there as
@@ -432,7 +432,7 @@ namespace xge
 				// Whatever last frame's collisions said, this frame's start
 				// over: what it rides, and whether it stands on something.
 				object.riding = {};
-				object.grounded = false;
+				object.footing.grounded = false;
 
 				// A jump under way goes on a step; the frame it lands, it
 				// counts as having moved, so it meets whatever it landed on.
@@ -440,17 +440,17 @@ namespace xge
 				{
 					if (rules.inPlay(object))
 					{
-						const Vector2f target = object.position + object.flightStep;
+						const Vector2f target = object.position + object.flight.step;
 						if (insideWindow({ target, object.size }, windowSize)) { object.position = target; }
 					}
-					--object.flightFramesLeft;
+					--object.flight.framesLeft;
 
 					// An arc: drawn up off its way and back down, highest
 					// halfway, on the ground again as it lands.
-					if (object.flightArc > 0.0f)
+					if (object.flight.arc > 0.0f)
 					{
-						const float t = 1.0f - static_cast<float>(object.flightFramesLeft) / static_cast<float>(object.flightFrames);
-						object.altitude = object.flightFramesLeft > 0 ? 4.0f * object.flightArc * t * (1.0f - t) : 0.0f;
+						const float t = 1.0f - static_cast<float>(object.flight.framesLeft) / static_cast<float>(object.flight.frames);
+						object.altitude = object.flight.framesLeft > 0 ? 4.0f * object.flight.arc * t * (1.0f - t) : 0.0f;
 					}
 				}
 

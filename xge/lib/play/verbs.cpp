@@ -309,7 +309,7 @@ namespace xge
 	{
 		object.collisionsOn = false;
 		object.isVisible = false;
-		object.followPath.clear();
+		object.path.name.clear();
 	}
 
 	// Neither its own pull nor a thruster still held is left (a reset gives
@@ -320,23 +320,23 @@ namespace xge
 		object.velocity = {};
 		object.acceleration = {};
 		object.activeMoveStep = {};
-		object.activeClimb = {};
-		object.climbing = false;
-		object.jumping = false;
+		object.footing.activeClimb = {};
+		object.footing.climbing = false;
+		object.footing.jumping = false;
 		object.activeThrust = {};
 		object.activeThrustBurn = {};
 		object.activeTurn = {};
 		object.activeThrustAheadBy.clear();
-		object.followPath.clear();
+		object.path.name.clear();
 		object.maze.walk = {};
 	}
 
 	void restart(Object& object)
 	{
 		object.position = object.start.position;
-		object.climbing = false;
-		object.jumping = false;
-		object.grounded = false;
+		object.footing.climbing = false;
+		object.footing.jumping = false;
+		object.footing.grounded = false;
 		object.hasAim = false;
 		const bool keyHeld = std::any_of(object.activeMoveStep.begin(), object.activeMoveStep.end(), [](float step) { return step != 0.0f; });
 		if (!keyHeld)
@@ -358,7 +358,7 @@ namespace xge
 		const bool slides = object.grip < 1.0f;
 		if (direction == Direction::Left || direction == Direction::Right)
 		{
-			if (!object.jumping && !slides)
+			if (!object.footing.jumping && !slides)
 			{
 				object.velocity.x = object.activeMoveStep[static_cast<std::size_t>(Direction::Right)]
 					- object.activeMoveStep[static_cast<std::size_t>(Direction::Left)];

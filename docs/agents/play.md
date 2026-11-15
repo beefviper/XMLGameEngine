@@ -26,7 +26,7 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 ## Frames and touches
 
 - Timers count frames. A push starts a state's timers over; a pop back does not.
-- `Game::applyPaths` runs after timers, before acceleration. Anything ending a path clears `followPath`.
+- `Game::applyPaths` runs after timers, before acceleration. Anything ending a path clears `path.name`.
 - An object mid-jump (`isAirborne()`) is in no pair. A resting object stays touching its platform only because its pull moves it each frame, so `<stop />` ends that.
 - **Touches at one moment run in file order, and a still pair is skipped:** a `<land />` that runs first can hide a hazard met at the same moment (Pitfall's jaws are written before the crocodiles).
 - `sprite=` on a rule is the look as the touch happened, taken once.

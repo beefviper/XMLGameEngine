@@ -344,7 +344,7 @@ namespace xge
 		object.exists = false;
 		object.isVisible = false;
 		object.collisionsOn = false;
-		object.followPath.clear();
+		object.path.name.clear();
 		object.carrying.clear();
 		for (auto& carrier : objects)
 		{
@@ -1460,18 +1460,18 @@ namespace xge
 			object.carrying.clear();
 			object.dropped.clear();
 			object.hopPending = {};
-			object.flightStep = {};
-			object.flightFramesLeft = 0;
-			object.flightFrames = 0;
-			object.flightArc = 0.0f;
-			object.grounded = false;
-			object.jumping = false;
-			object.climbing = false;
-			object.climbOnce = false;
+			object.flight.step = {};
+			object.flight.framesLeft = 0;
+			object.flight.frames = 0;
+			object.flight.arc = 0.0f;
+			object.footing.grounded = false;
+			object.footing.jumping = false;
+			object.footing.climbing = false;
+			object.footing.climbOnce = false;
 			object.shifted = {};
-			object.activeClimb = {};
+			object.footing.activeClimb = {};
 			object.hasAim = false;
-			object.followPath.clear();
+			object.path.name.clear();
 			object.maze.walk = {};
 			object.blink = 0.0f;
 			object.goingLeft = object.start.facing == Direction::Left;
@@ -1578,7 +1578,7 @@ namespace xge
 			object.velocity = object.start.velocity;
 			object.isVisible = true;
 			object.collisionsOn = object.start.collisionsOn;
-			object.followPath.clear();
+			object.path.name.clear();
 			--count;
 		}
 	}
@@ -1596,11 +1596,11 @@ namespace xge
 			return;
 		}
 
-		object.followPath = path;
-		object.followLeg = 0;
-		object.followLeft = {};
-		object.followLegStarted = false;
-		object.followWait = std::max(0, wait);
+		object.path.name = path;
+		object.path.leg = 0;
+		object.path.left = {};
+		object.path.legStarted = false;
+		object.path.wait = std::max(0, wait);
 		object.velocity = {};
 		if (chosen.hasStart)
 		{
@@ -1662,24 +1662,24 @@ namespace xge
 				continue;
 			}
 
-			if (object.followWait > 0)
+			if (object.path.wait > 0)
 			{
-				--object.followWait;
+				--object.path.wait;
 				object.velocity = {};
 				continue;
 			}
 
-			Path& path = paths.at(object.followPath);
+			Path& path = paths.at(object.path.name);
 			bool moving = false;
-			while (object.isFollowing() && object.followLeg < path.steps.size())
+			while (object.isFollowing() && object.path.leg < path.steps.size())
 			{
-				PathStep& leg = path.steps[object.followLeg];
-				if (!object.followLegStarted)
+				PathStep& leg = path.steps[object.path.leg];
+				if (!object.path.legStarted)
 				{
-					object.followLegStarted = true;
-					object.followLeft = leg.by;
-					if (leg.liveX) { object.followLeft.x = stepHalf(*leg.liveX, object); }
-					if (leg.liveY) { object.followLeft.y = stepHalf(*leg.liveY, object); }
+					object.path.legStarted = true;
+					object.path.left = leg.by;
+					if (leg.liveX) { object.path.left.x = stepHalf(*leg.liveX, object); }
+					if (leg.liveY) { object.path.left.y = stepHalf(*leg.liveY, object); }
 
 					// A copy: a command may reset the object, which ends the
 					// path. Its own commands too, made for it when the game
@@ -1704,7 +1704,7 @@ namespace xge
 
 				// What is left of this leg: the rest of a step, or the way home
 				// from wherever it has got to.
-				const Vector2f left = leg.home ? object.start.position + object.shifted - object.position : object.followLeft;
+				const Vector2f left = leg.home ? object.start.position + object.shifted - object.position : object.path.left;
 				const std::optional<Vector2f> step = pathStep(left, path.speed);
 
 				// Within a frame of home, it is put there: a place a <shift>
@@ -1713,19 +1713,19 @@ namespace xge
 				{
 					object.position += left;
 					object.velocity = {};
-					++object.followLeg;
-					object.followLegStarted = false;
+					++object.path.leg;
+					object.path.legStarted = false;
 					continue;
 				}
 				if (!step)
 				{
-					++object.followLeg;
-					object.followLegStarted = false;
+					++object.path.leg;
+					object.path.legStarted = false;
 					continue;
 				}
 
 				object.velocity = *step;
-				if (!leg.home) { object.followLeft -= *step; }
+				if (!leg.home) { object.path.left -= *step; }
 				// One that faces somewhere faces the way it flies.
 				if (object.hasHeading)
 				{
@@ -1740,7 +1740,7 @@ namespace xge
 			if (object.isFollowing() && !moving)
 			{
 				object.velocity = {};
-				object.followPath.clear();
+				object.path.name.clear();
 			}
 		}
 	}

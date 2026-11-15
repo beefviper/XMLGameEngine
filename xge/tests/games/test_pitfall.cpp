@@ -117,7 +117,7 @@ TEST_CASE("pitfall.xml loads, and Harry stands on the jungle path", "[pitfall]")
 
 	play.frames(60);
 	CHECK(play.feet() == Approx(kSurface));
-	CHECK(play.harry().grounded);
+	CHECK(play.harry().footing.grounded);
 	CHECK(play.status("lives") == 3);
 	CHECK(play.status("score") == 2000);
 }
@@ -271,7 +271,7 @@ TEST_CASE("the ladder takes Harry down to the tunnel and back up", "[pitfall]")
 	play.engine.handleKeyReleased(KeyCode::W);
 	play.frames(5);
 	CHECK(play.feet() == Approx(kSurface));
-	CHECK(play.harry().grounded);
+	CHECK(play.harry().footing.grounded);
 }
 
 TEST_CASE("a treasure is taken once, a screen left keeps it taken, and all four win", "[pitfall]")

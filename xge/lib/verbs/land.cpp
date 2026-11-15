@@ -25,16 +25,16 @@ namespace xge
 	// lands while it climbs.
 	static void landOnto(Object& object, const Object& other, Edge edge)
 	{
-		if (!landOn(object.position, object.velocity, sizeOf(object), { other.position, sizeOf(other) }, edge, object.climbing))
+		if (!landOn(object.position, object.velocity, sizeOf(object), { other.position, sizeOf(other) }, edge, object.footing.climbing))
 		{
 			return;
 		}
 
-		object.grounded = true;
+		object.footing.grounded = true;
 
-		if (object.jumping)
+		if (object.footing.jumping)
 		{
-			object.jumping = false;
+			object.footing.jumping = false;
 			// One with a <grip> below 1 slides on from the speed it landed at.
 			if (object.grip >= 1.0f)
 			{

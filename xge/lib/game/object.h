@@ -1528,17 +1528,21 @@ namespace xge
 		Maze maze;
 		bool walksMaze() const noexcept { return !maze.map.empty(); }
 
-		// A timed <hop> under way (a flight): how far the object travels each frame, and how
-		// many frames are left. While framesLeft is above 0 the object is in
-		// the air: it touches no other object (playOneFrame). A reset
-		// lands it where it starts. flightArc is how high it is drawn at the
-		// halfway point (its altitude, up then down), flightFrames the whole
+		// A timed <hop> under way (a flight): how far the object travels each
+		// frame, and how many frames are left. While framesLeft is above 0 the
+		// object is in the air: it touches no other object (playOneFrame). A
+		// reset lands it where it starts. `arc` is how high it is drawn at the
+		// halfway point (its altitude, up then down), `frames` the whole
 		// flight's frames.
-		Vector2f flightStep{};
-		int flightFramesLeft{ 0 };
-		int flightFrames{ 0 };
-		float flightArc{};
-		bool isAirborne() const noexcept { return flightFramesLeft > 0; }
+		struct Flight
+		{
+			Vector2f step{};
+			int framesLeft{ 0 };
+			int frames{ 0 };
+			float arc{};
+		};
+		Flight flight;
+		bool isAirborne() const noexcept { return flight.framesLeft > 0; }
 
 		// Standing, jumping and climbing. `grounded` is true for the frame
 		// after a <land /> stood the object on something (playOneFrame
@@ -1548,13 +1552,17 @@ namespace xge
 		// next landing. `climbing` is on a ladder (playOneFrame): no
 		// pull, no landing, no walking off. `activeClimb` is the step held up
 		// (0) and down (1), and `climbClass` what it climbs.
-		bool grounded{ false };
-		bool jumping{ false };
-		bool climbing{ false };
-		std::array<float, 2> activeClimb{};
-		std::string climbClass;
-		// A climb a rule or timer started, not a key: let go at the end.
-		bool climbOnce{ false };
+		struct Footing
+		{
+			bool grounded{ false };
+			bool jumping{ false };
+			bool climbing{ false };
+			std::array<float, 2> activeClimb{};
+			std::string climbClass;
+			// A climb a rule or timer started, not a key: let go at the end.
+			bool climbOnce{ false };
+		};
+		Footing footing;
 
 		// Where an <aim> pointed it: the way its next <fire>s go (a unit
 		// vector), while hasAim. A move, hop or jump by key, or a reset,
@@ -1567,12 +1575,16 @@ namespace xge
 		// that step to go, whether the leg has set off yet (its commands run
 		// once, as it does), and how many frames are left to wait before the
 		// first leg (a <stagger>). A reset, a <die /> or a <reveal> ends it.
-		std::string followPath;
-		std::size_t followLeg{};
-		Vector2f followLeft{};
-		bool followLegStarted{ false };
-		int followWait{};
-		bool isFollowing() const noexcept { return !followPath.empty(); }
+		struct OnPath
+		{
+			std::string name;
+			std::size_t leg{};
+			Vector2f left{};
+			bool legStarted{ false };
+			int wait{};
+		};
+		OnPath path;
+		bool isFollowing() const noexcept { return !path.name.empty(); }
 
 		// The looks <become> switches between: each named sprite as the window
 		// backends draw it (its Picture, and the bitmap for a bitmap or a

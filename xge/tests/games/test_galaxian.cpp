@@ -202,8 +202,8 @@ TEST_CASE("a path with a start puts the object there first, and a stagger sends 
 	Object& third = loaded.game.getObject("b.3");
 	CHECK(first.position.x == Approx(-20.0f));
 	CHECK(third.position.x == Approx(-20.0f));
-	CHECK(second.followWait == 5);
-	CHECK(third.followWait == 10);
+	CHECK(second.path.wait == 5);
+	CHECK(third.path.wait == 10);
 
 	loaded.frames(4);
 	CHECK(first.position.x == Approx(0.0f));
@@ -424,8 +424,8 @@ TEST_CASE("the fleet flies in on its paths, one behind another, and settles into
 	CHECK(play.object("blues2.10.1").position.x == Approx(567.0f));
 	CHECK(play.object("blues1.10.1").position.x == Approx(-40.0f));
 	CHECK(play.object("blues3.1.1").position.x == Approx(-40.0f));
-	CHECK(play.object("blues1.10.1").followWait > play.object("blues1.2.1").followWait);
-	CHECK(play.object("blues3.1.1").followWait > play.object("blues1.10.1").followWait);
+	CHECK(play.object("blues1.10.1").path.wait > play.object("blues1.2.1").path.wait);
+	CHECK(play.object("blues3.1.1").path.wait > play.object("blues1.10.1").path.wait);
 
 	play.frames(400);
 	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 0);
@@ -552,7 +552,7 @@ TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in
 
 	for (auto& object : play.game.getCurrentObjects())
 	{
-		if (object.objClass == "alien") { object.isVisible = false; object.followPath.clear(); }
+		if (object.objClass == "alien") { object.isVisible = false; object.path.name.clear(); }
 	}
 	play.frames(1);
 	CHECK(play.count([](const Object& object) { return object.isVisible; }) == 46);
@@ -1020,7 +1020,7 @@ TEST_CASE("no alien is drawn in its place before it has flown in, at the start o
 		// The fleet shot down: the condition puts the next one back.
 		for (auto& object : play.game.getCurrentObjects())
 		{
-			if (object.objClass == "alien") { object.isVisible = false; object.followPath.clear(); }
+			if (object.objClass == "alien") { object.isVisible = false; object.path.name.clear(); }
 		}
 	}
 }

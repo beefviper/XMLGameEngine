@@ -94,7 +94,7 @@ TEST_CASE("<poses> pick the look from how it moves: standing, walking, skidding,
 	CommandExecutor executor(play.game);
 
 	play.frames(10);
-	CHECK(guy.grounded);
+	CHECK(guy.footing.grounded);
 	CHECK(guy.lookName() == "stand");
 
 	// A grip of a quarter: a quarter of the way to the walking speed each frame.
