@@ -232,7 +232,7 @@ float4 ps(Shaded shaded) : SV_TARGET
 		// graphics card through an upload buffer.
 		void build(Object& object, float scale)
 		{
-			object.visualDirty = false;
+			object.drawn.visualDirty = false;
 			Visual& visual = visuals[object.name];
 			visual.drawnAt = scale;
 			visual.soft = object.drawnAtScale();
@@ -568,7 +568,7 @@ float4 ps(Shaded shaded) : SV_TARGET
 		Parts& p = *parts;
 		if (!p.frame.handle()) { return; }
 		const auto found = p.visuals.find(object.name);
-		if (object.visualDirty || found == p.visuals.end() || (object.drawnAtScale() && found->second.drawnAt != pictureScale()))
+		if (object.drawn.visualDirty || found == p.visuals.end() || (object.drawnAtScale() && found->second.drawnAt != pictureScale()))
 		{
 			p.build(object, pictureScale());
 		}
