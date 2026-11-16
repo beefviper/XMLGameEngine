@@ -144,9 +144,9 @@ Its own block of work, done before anything else in this file. **Design and reas
 - **Found in DT5.** `<thrust burn="fuel">` took 1 off the variable each step, so Lunar Lander's fuel lasted longer at 8 steps a second than at 240. It now takes 60 a second, as a held `<inc>` does (done with Lunar Lander).
 - **Found in DT6.** A strong grip (Speedway's tyres) is a share lost each second so near 1 that a float cannot write it. The author chose half-lives: `<drag>` and `<grip>`, a surface's too, are the seconds to lose half the speed (0: at once), and the six were redone ([units](designs/29-time.md#units)).
 - **Steps.**
-  - [ ] **1. The games with motion, ten a commit (M each).** In the order `ls games/descriptions` gives, skipping the six and those in step 2. Moved as DT5 says. **Check after each commit:** as DT5 step 1 for each game, without the `[steps]` case; and `playRandomKeys` (`xgetest-long`) for those games.
-  - [ ] **2. Cards, boards and cell puzzles in one commit (S).** Games whose only numbers are positions and seconds get the attribute and a read for any `<velocity>` or `<move>` (a dealt card's slide). **Check:** their tests.
-  - [ ] **3. Every game is moved (S).** `xgetest "[vocabulary]"` gains a check that every file in `games/descriptions/` has `time="seconds"`. **Check:** it passes; `xgetest-generated`.
+  - [x] **1. The games with motion, ten a commit (M each).** In the order `ls games/descriptions` gives, skipping the six and those in step 2. Moved as DT5 says. **Check after each commit:** as DT5 step 1 for each game, without the `[steps]` case; and `playRandomKeys` (`xgetest-long`) for those games.
+  - [x] **2. Cards, boards and cell puzzles in one commit (S).** Games whose only numbers are positions and seconds get the attribute and a read for any `<velocity>` or `<move>` (a dealt card's slide). **Check:** their tests.
+  - [x] **3. Every game is moved (S).** `xgetest "[vocabulary]"` gains a check that every file in `games/descriptions/` has `time="seconds"`, but `pong_min.xml`: a hand-written prototype matches it, so it moves with DT8 step 1. **Check:** it passes; `xgetest-generated`.
 
 ### DT7. The tests' own games
 
@@ -158,7 +158,7 @@ Its own block of work, done before anything else in this file. **Design and reas
 ### DT8. The stand-alone writers
 
 - **Steps.**
-  - [ ] **1. The prototypes (S).** `games/prototypes/pong_min/` and `games/prototypes/pong/`: `frame()` takes the seconds passed, speeds are per second, and each `main.cpp` measures the time between frames. **Check:** their behaviour checks in `xge/tests/written/`.
+  - [ ] **1. The prototypes (S).** `games/prototypes/pong_min/` and `games/prototypes/pong/`: `frame()` takes the seconds passed, speeds are per second, and each `main.cpp` measures the time between frames. `pong_min.xml` gets `time="seconds"` with them, and the `[vocabulary]` check stops leaving it out. **Check:** their behaviour checks in `xge/tests/written/`.
   - [ ] **2. `windows-cpp` writes that (S).** `games/generators/windows-cpp/*.xsl` until `xgecli pong_min --generate windows-cpp` writes the prototype again. **Check:** `test_generate.cpp`; `xgetest-generated`.
 
 ### DT9. Take out what is not needed
