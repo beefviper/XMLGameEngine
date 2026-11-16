@@ -4,7 +4,6 @@ What the engine cannot do today. Why, and what might come, is in the [design fil
 
 ## Movement and collisions
 
-- Movement is pixels per frame and timers count frames, so a slow machine slows the game.
 - A `pixel` touch reads its slope from four pixels round the point, so stairs of one-pixel steps are a slope. It is exact to half a pixel; lines meant to touch should be at least 2 pixels thick. Text and images cannot be `pixel`.
 - `unless=` names a class, not an object.
 - `<ride />` lends velocity a frame at a time; it does not attach.

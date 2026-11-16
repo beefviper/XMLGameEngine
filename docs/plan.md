@@ -136,11 +136,12 @@ Its own block of work, done before anything else in this file. **Design and reas
 - **Moving a game.** Add `time="seconds"` to its `<game>`. Multiply each number by its row of the table. Then read the whole file for speeds kept elsewhere: a `<variable>` that is later copied or added into a velocity, a `<set>` or `<inc>` on `x.velocity.y`, a condition that compares a speed, a spawn's or a `<fire>`'s velocity. Round to a number a person would write (`300`, not `299.99997`).
 - **Steps.**
   - [x] **1 to 6. One game a commit (S to M each),** Pong first. Its test file in `xge/tests/games/` is changed only where it names a speed. **Check:** the game's own tests; its case in `xgetest-long "[steps]"`, whose measure must also be within its range of what it was before the move; `xgecli <game> --frames 600 --seed 1 --dump` before and after lists the same objects, each within 20 pixels of where it was (a game with bounces: the same objects only). No per-frame number is left: read the diff once more for any speed under 20 or pull under 100, and say in the commit why each one left is right.
-  - [ ] **7. The reference says seconds (S).** `docs/reference/objects.md`, `commands.md`, `collisions.md`, `format.md`: every "a frame" for a moved word becomes "a second", with the `time="seconds"` attribute explained once in `format.md` as temporary.
+  - [x] **7. The reference says seconds (S).** `docs/reference/objects.md`, `commands.md`, `collisions.md`, `format.md`: every "a frame" for a moved word becomes "a second", with the `time="seconds"` attribute explained once in `format.md` as temporary.
   - [ ] **8. The author plays the six.** A line in Waiting for a look on Windows. Do not start DT6 until the author says they feel right; if a sum is changed after that, the six are checked again first.
 
 ### DT6. The rest of the games
 
+- **Found in DT5.** `<thrust burn="fuel">` still takes 1 off the variable each step, so Lunar Lander's fuel lasts longer at 8 steps a second than at 240. Make it a held count (60 a second, as an `<inc>` on a held key) in Lunar Lander's commit.
 - **Steps.**
   - [ ] **1. The games with motion, ten a commit (M each).** In the order `ls games/descriptions` gives, skipping the six and those in step 2. Moved as DT5 says. **Check after each commit:** as DT5 step 1 for each game, without the `[steps]` case; and `playRandomKeys` (`xgetest-long`) for those games.
   - [ ] **2. Cards, boards and cell puzzles in one commit (S).** Games whose only numbers are positions and seconds get the attribute and a read for any `<velocity>` or `<move>` (a dealt card's slide). **Check:** their tests.

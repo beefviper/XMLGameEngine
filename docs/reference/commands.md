@@ -44,15 +44,15 @@ An object out of play does nothing when its action is pressed or triggered; lett
 
 | Command | Does |
 |---|---|
-| `<move direction="up">step</move>` | in an action, held: `step` pixels a frame while the key is down ([held keys](input.md#held-keys-and-state-changes)). In a rule: shifts it once |
+| `<move direction="up">step</move>` | in an action, held: `step` pixels a second while the key is down ([held keys](input.md#held-keys-and-state-changes)). In a rule: shifts it once |
 | `<hop direction="up">distance</hop>` | once a press: a step made before collisions, judged where it lands; refused off the window. Diagonals `up-left` ... `down-right`, by `distance` or `<x>` and `<y>` |
 | `<seconds>`, `<arc>` in a `<hop>` | it takes that long through the air, touching nothing until it lands; `<arc>` lifts its [altitude](pictures.md#height-and-shadows) to that height half way |
 | `<jump>height</jump>` | a jump up under its own pull to about that height; only from the ground, fixed sideways until a `<land />`. Needs an acceleration down and a `<land />` rule |
 | `<land />` | in a rule: coming down onto the other's top, it stands there. Any other side, or going up, does nothing (one-way platforms) |
 | `<climb direction="up" class="ladder">step</climb>` | held: at an object of that class, gets on, lines up and climbs; at an end steps off onto what it lands on, or holds there if nothing is. Stacked pieces are one ladder. Run by a rule or timer, it takes one ladder and lets go |
-| `<thrust burn="fuel">amount</thrust>` | held: adds to the velocity every frame along its `<heading>`; `burn` takes 1 off its own variable each frame and stops at 0 |
+| `<thrust burn="fuel">amount</thrust>` | held: adds that many pixels a second, each second, to the velocity along its `<heading>`; `burn` takes 1 off its own variable each step and stops at 0 |
 | `<thrust direction="up">amount</thrust>` | held: the same one way across the screen, whatever its heading (it needs none) |
-| `<turn direction="clockwise">degrees</turn>` | held: turns the heading that much a frame |
+| `<turn direction="clockwise">degrees</turn>` | held: turns the heading that many degrees a second |
 | `<swing direction="counterclockwise"><degrees>60</degrees><seconds>0.1</seconds></swing>` | held: one eased, swept stroke, and back when let go ([turning about a pivot](pictures.md#turning-about-a-pivot)) |
 | `<reverse />` | the velocity turns round |
 | `<stop />` | still for good (velocity 0, no pull, no held keys) until a reset |

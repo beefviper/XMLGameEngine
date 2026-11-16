@@ -276,8 +276,8 @@ Three parts, after `<facing>`, give a walking, jumping thing its look and feel w
 
 - **`<poses>`**: the engine picks the look each frame. `standing` is needed; the rest fall back (walking to standing, skidding to walking, falling to standing, rising to falling, thrusting to standing). Thrusting while a `<thrust>` is held; rising then falling in the air; skidding when its grip slides it against its keys. Poses are picked only while a pose look shows, so a `<become>` to another look (Mario's `dead`) holds.
 - **`<mirror>left</mirror>`** (or `right`): the way its pictures do not face; going that way they are drawn flipped. The way is the move key held, else a jump's way, else its velocity. Not with a `<heading>` or a `<hole>`.
-- **`<grip>`** (above 0 up to 1, default 1): how quickly its speed follows its keys, that share of the way each frame, so `0.15` gets going slowly and slides. It also brakes an object with no keys held, so give it only to something a player steers.
-- **With a `<heading>`, `<grip>` is a wheel's**: each frame its sideways speed loses that share, so a car goes where it points and slides when the grip is low.
+- **`<grip>`** (above 0 up to 1, default 1): how quickly its speed follows its keys, the share of the gap closed each second, so `0.9` gets going slowly and slides. It also brakes an object with no keys held, so give it only to something a player steers.
+- **With a `<heading>`, `<grip>` is a wheel's**: each second its sideways speed loses that share, so a car goes where it points and slides when the grip is low.
 - **Blinking.** `<set variable="mario.blink">2</set>` blinks it for two seconds, counting down by itself. It is a live number, so a rule can leave a blinking player alone. A reset ends it.
 
 ### Surfaces
@@ -344,6 +344,6 @@ An object with an `<altitude>` is in the air over its position: it touches at th
 </object>
 ```
 
-- `<start>`, `<rise>` (speed up), `<fall>` (how much the rise drops a frame) and `<bounce>` (0 to 1) are each optional, 0 by default. It comes to rest once a bounce would be less than a frame's fall.
+- `<start>`, `<rise>` (speed up, pixels a second), `<fall>` (how much the rise drops each second) and `<bounce>` (0 to 1) are each optional, 0 by default. It comes to rest once a bounce would be less than a frame's fall.
 - `altitude` and `rise` are live numbers.
 - `<shadow object="ball" />` keeps an object under another, middle to middle, in play while it is.

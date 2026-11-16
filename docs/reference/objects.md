@@ -22,16 +22,16 @@ An object is anything drawn, moved or touched. `name` is required; `class` is op
 | `<sprite>` | what it looks like: one [shape](pictures.md#sprites). Several named sprites are [looks](pictures.md#looks) or [animation](pictures.md#animation) frames |
 | `<animation>` | which sprites show, in what order, for how long |
 | `<position>` | where it starts, `<x>` and `<y>` from the top left. `<centered>value</centered>` puts its middle there instead (empty: the window's middle); `<centered><offset>-60</offset></centered>` puts it that far from the window's middle, right or down (a negative number left or up). `<left />`, `<right />` (in an `<x>`), `<top />` and `<bottom />` (in a `<y>`) put that side of it on the window's, and `<right><offset>12</offset></right>` 12 in from it (a score at the top right). A half written `update="live"` [follows](format.md#live-numbers-of-an-object) what it reads every frame. Required unless it has no sprite |
-| `<velocity>` | pixels a frame, `<x>` and `<y>`; a half left out is 0 |
-| `<acceleration>` | added to the velocity every frame: gravity is a `<y>`. `<stop />` takes it away, a reset gives it back |
+| `<velocity>` | pixels a second, `<x>` and `<y>`; a half left out is 0 |
+| `<acceleration>` | pixels a second gained each second: gravity is a `<y>`. `<stop />` takes it away, a reset gives it back |
 | `<heading>` | degrees clockwise from straight up. Lets `<turn>`, `<thrust>`, `<swing>` work, and turns the picture. `update="live"`: [follows](format.md#live-numbers-of-an-object) what it reads |
 | `<pivot>` | the point the picture turns about ([turning about a pivot](pictures.md#turning-about-a-pivot)); the position is then where that point sits |
-| `<drag>` | 0 up to 1: the share of its speed lost each frame |
+| `<drag>` | 0 up to 1: the share of its speed lost each second |
 | `<friction>` | 0 or more: how much a still surface holds it back, and what brings it to [rest](collisions.md#knocks) |
 | `<mass>` | above 0: how hard it is to [knock](collisions.md#knocks). None: a knock does not move it |
 | `<surface>` | this is ground: a `<drag>` and `<grip>` that a gripping thing over it takes ([surfaces](pictures.md#surfaces)) |
-| `<pull object="sun">strength</pull>` | that much more speed toward the nearest of that name each frame; several add up |
-| `<seek object="ship">degrees</seek>` | a homing missile: its way turns toward the nearest of that name, at most that much a frame, keeping its speed |
+| `<pull object="sun">strength</pull>` | that much more speed, in pixels a second each second, toward the nearest of that name; several add up |
+| `<seek object="ship">degrees</seek>` | a homing missile: its way turns toward the nearest of that name, at most that many degrees a second, keeping its speed |
 | `<light>`, `<dark>` | how far it lights; drawn only when lit ([light and dark](pictures.md#light-and-dark)) |
 | `<altitude>`, `<shadow object>` | height off the ground; kept under another ([height and shadows](pictures.md#height-and-shadows)) |
 | `<facing>` | `up`, `down`, `left`, `right`, without turning the picture: follows its last move; a `<fire>` leaves that way |

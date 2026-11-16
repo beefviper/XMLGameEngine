@@ -53,7 +53,7 @@ A named object timer is also a number of its object: `energy.level` is the secon
 
 A `<path>` is a route written once in the game's `<paths>`, flown by any object that [`<follow>`](commands.md#steering)s it.
 
-- A `<speed>` (pixels a frame), an optional `<start>` (where it is put when it sets off), then its legs.
+- A `<speed>` (pixels a second), an optional `<start>` (where it is put when it sets off), then its legs.
 - A `<step>` moves it by `<x>` across and `<y>` down from where the step began, in a straight line, running its commands as it sets off. In them `self` is whichever object flies it.
 - `<home />` flies it back to its `<position>` (moved by any `<shift>` since): a formation is just the objects' places. At the end of the path it comes to rest.
 - A path sets the velocity each frame, so the follower moves, wraps and collides as anything does. A `<wrap />` on the way leaves the rest of the step alone: Galaxian's dive adds up to the window's height plus the alien's, so a diver that misses comes back from the top to its place.
