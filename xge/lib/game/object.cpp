@@ -16,6 +16,8 @@
 #include <functional>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <unordered_map>
 
 namespace xge
 {
@@ -1165,8 +1167,14 @@ namespace xge
 			return picture.size;
 		case ShapeKind::Text:
 		{
+			// Measured by drawing it, so kept: a window asks every frame. One
+			// cache a thread (a computer thinks on its own), emptied when full.
+			thread_local std::unordered_map<std::string, Vector2f> measured;
+			const std::string key = picture.text + '\n' + picture.font + '\n' + std::to_string(picture.textSize);
+			if (const auto found = measured.find(key); found != measured.end()) { return found->second; }
 			const Bitmap drawn = drawText(picture.text, picture.textSize, colorFromName(picture.color), textFontFile(picture.font));
-			return { static_cast<float>(drawn.width), static_cast<float>(drawn.height) };
+			if (measured.size() >= 512) { measured.clear(); }
+			return measured.emplace(key, Vector2f{ static_cast<float>(drawn.width), static_cast<float>(drawn.height) }).first->second;
 		}
 		case ShapeKind::Image:
 		{
