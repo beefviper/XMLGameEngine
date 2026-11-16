@@ -195,12 +195,12 @@ TEST_CASE("in a real frame, Pong's ball comes off the top of a paddle heading up
 
 	// Heading straight left at paddle1, its middle 60 above the paddle's middle.
 	pong.ball.position = { 134.0f, 375.0f - 60.0f - 10.0f };
-	pong.ball.velocity = { -6.0f, 0.0f };
+	pong.ball.velocity = { -360.0f, 0.0f };
 
 	pong.game.updateObjects(xge::kSixtieth);
 
 	CHECK(pong.ball.velocity.x > 0.0f);
 	CHECK(pong.ball.velocity.y < 0.0f);
 	CHECK_THAT(angleOf(pong.ball), WithinAbs(-36.0f, 0.5f));
-	CHECK_THAT(speedOf(pong.ball), WithinAbs(6.0f, 1e-4f));
+	CHECK_THAT(speedOf(pong.ball), WithinAbs(360.0f, 1e-2f));
 }

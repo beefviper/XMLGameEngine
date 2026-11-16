@@ -27,12 +27,12 @@
     while it plays. Easy follows the ball's height all the time; smart goes
     back to the middle once the ball has left it, and follows the ball only
     once it comes over the net. Its choice is kept.
-  * The speeds make either beatable: a paddle goes 5 a frame, the ball 9,
-    then 11.7 from the fourth hit and 15.2 from the twelfth. From the fourth
+  * The speeds, in pixels a second, make either beatable: a paddle goes
+    300, the ball 540, then 702 from the fourth hit and 913 from the twelfth. From the fourth
     hit on, a ball sent from the top corner to the bottom one crosses
     faster than a paddle at the top can get down to meet it.
 -->
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Pong">
     <width>1280</width>
     <height>720</height>
@@ -41,7 +41,7 @@
     <variable name="margin">30</variable>
     <variable name="width">20</variable>
     <variable name="height">120</variable>
-    <variable name="step">5</variable>
+    <variable name="step">300</variable>
   </variables>
   <styles>
     <style name="banner"><size>160</size></style>
@@ -177,7 +177,7 @@
           </collisions>
           <variables>
             <variable name="size">16</variable>
-            <variable name="speed">9</variable>
+            <variable name="speed">540</variable>
             <variable name="hits">0</variable>
             <variable name="angle"><random><min>-30</min><max>30</max></random></variable>
             <variable name="side"><random><min>-1</min><max>1</max></random></variable>

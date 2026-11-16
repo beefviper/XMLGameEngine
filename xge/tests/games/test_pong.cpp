@@ -189,21 +189,21 @@ TEST_CASE("the fourth and the twelfth hit make Pong's ball faster, and a point s
 	for (int hit = 1; hit <= 12; ++hit)
 	{
 		ball.position = { paddle1.position.x + paddle1.size.x + 4.0f, paddle1.position.y + paddle1.size.y / 2 - 8.0f };
-		ball.velocity = { speeds.empty() ? -9.0f : -speeds.back(), 0.0f };
+		ball.velocity = { speeds.empty() ? -540.0f : -speeds.back(), 0.0f };
 		pong.frames(2);
 		speeds.push_back(speed());
 	}
-	CHECK(speeds[2] == Approx(9.0f));
-	CHECK(speeds[3] == Approx(9.0f * 1.3f));
-	CHECK(speeds[10] == Approx(9.0f * 1.3f));
-	CHECK(speeds[11] == Approx(9.0f * 1.3f * 1.3f));
+	CHECK(speeds[2] == Approx(540.0f));
+	CHECK(speeds[3] == Approx(540.0f * 1.3f));
+	CHECK(speeds[10] == Approx(540.0f * 1.3f));
+	CHECK(speeds[11] == Approx(540.0f * 1.3f * 1.3f));
 	CHECK(ball.variable.at("hits") == 12);
 
 	ball.position = { 4.0f, 300.0f };
-	ball.velocity = { -6.0f, 0.0f };
+	ball.velocity = { -360.0f, 0.0f };
 	pong.frames(3);
 	CHECK(pong.object("paddle2").variable.at("score") == 1);
-	CHECK(speed() == Approx(9.0f));
+	CHECK(speed() == Approx(540.0f));
 	CHECK(ball.variable.at("hits") == 0);
 }
 
@@ -216,7 +216,7 @@ TEST_CASE("Space plays the computer, which keeps the right paddle under the ball
 		CHECK(pong.object("computer").variable.at("players") == 1);
 		Object& ball = pong.object("ball");
 		ball.position = { 600.0f, 600.0f };
-		ball.velocity = { 3.0f, 0.0f };
+		ball.velocity = { 180.0f, 0.0f };
 		pong.frames(80);
 		CHECK(std::abs(pong.middle("paddle2") - pong.middle("ball")) <= 9.0f);
 	}
@@ -228,7 +228,7 @@ TEST_CASE("Space plays the computer, which keeps the right paddle under the ball
 		const float y = pong.object("paddle2").position.y;
 		Object& ball = pong.object("ball");
 		ball.position = { 600.0f, 600.0f };
-		ball.velocity = { 3.0f, 0.0f };
+		ball.velocity = { 180.0f, 0.0f };
 		pong.frames(80);
 		CHECK(pong.object("paddle2").position.y == y);
 	}
@@ -245,7 +245,7 @@ TEST_CASE("the second player's Up and Down do nothing while the computer plays t
 		// computer has nothing to do.
 		Object& ball = pong.object("ball");
 		ball.position = { 600.0f, pong.middle("paddle2") - ball.size.y / 2 };
-		ball.velocity = { -1.0f, 0.0f };
+		ball.velocity = { -60.0f, 0.0f };
 		const float y = pong.object("paddle2").position.y;
 
 		pong.engine.handleKeyPressed(KeyCode::Up);
@@ -280,9 +280,9 @@ TEST_CASE("Pong's easy computer is beaten by a ball from the top corner to the b
 	pong.tap(KeyCode::Space);
 	// At the first speed it gets there; at the fourth hit's it does not.
 	pong.paddleAt(0.0f);
-	CHECK(pong.returns(fromTop, toBottomCorner, 9.0f));
+	CHECK(pong.returns(fromTop, toBottomCorner, 540.0f));
 	pong.paddleAt(0.0f);
-	CHECK_FALSE(pong.returns(fromTop, toBottomCorner, 9.0f * 1.3f));
+	CHECK_FALSE(pong.returns(fromTop, toBottomCorner, 540.0f * 1.3f));
 }
 
 TEST_CASE("Pong's smart computer goes back to the middle, and is beaten only by the fastest corner to corner", "[pong][computer]")
@@ -298,15 +298,15 @@ TEST_CASE("Pong's smart computer goes back to the middle, and is beaten only by 
 	pong.paddleAt(0.0f);
 	Object& ball = pong.object("ball");
 	ball.position = { 1000.0f, 100.0f };
-	ball.velocity = { -3.0f, 0.0f };
+	ball.velocity = { -180.0f, 0.0f };
 	pong.frames(80);
 	CHECK(std::abs(pong.middle("paddle2") - 360.0f) <= 9.0f);
 
 	// From the middle it meets the corner to corner shot at the fourth hit's
 	// speed, but not at the twelfth's.
-	CHECK(pong.returns(fromTop, toBottomCorner, 9.0f * 1.3f));
+	CHECK(pong.returns(fromTop, toBottomCorner, 540.0f * 1.3f));
 	pong.paddleAt(300.0f);
-	CHECK_FALSE(pong.returns(fromTop, toBottomCorner, 9.0f * 1.3f * 1.3f));
+	CHECK_FALSE(pong.returns(fromTop, toBottomCorner, 540.0f * 1.3f * 1.3f));
 }
 
 TEST_CASE("Pong's computer choice is kept from one game to the next", "[pong][computer]")

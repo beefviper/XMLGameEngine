@@ -155,14 +155,14 @@ TEST_CASE("the rest of the step is played after a bounce", "[swept_collision]")
 	paddle.position = { 100.0f, 300.0f };
 	paddle.velocity = { 0.0f, 0.0f };
 
-	// Heading left at 30 a frame, 10 px from the paddle's right side (x = 130):
+	// Heading left at 1,800 a second (30 a sixtieth), 10 px from the paddle's right side (x = 130):
 	// touches after a third of the step, then has the other 20 px to go back.
 	ball.position = { 140.0f, 365.0f };
-	ball.velocity = { -30.0f, 0.0f };
+	ball.velocity = { -1800.0f, 0.0f };
 
 	game.updateObjects(xge::kSixtieth);
 
-	CHECK(ball.velocity.x == 30.0f);
+	CHECK(ball.velocity.x == 1800.0f);
 	CHECK_THAT(ball.position.x, WithinAbs(130.0f + 20.0f, 1e-3f));
 }
 
@@ -179,7 +179,7 @@ TEST_CASE("a ball fast enough to pass the paddle in one step bounces off it inst
 	paddle.velocity = { 0.0f, 0.0f };
 
 	ball.position = { 400.0f, 365.0f };
-	ball.velocity = { -400.0f, 0.0f };
+	ball.velocity = { -24000.0f, 0.0f };
 
 	game.updateObjects(xge::kSixtieth);
 

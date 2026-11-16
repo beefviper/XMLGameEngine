@@ -355,7 +355,7 @@ TEST_CASE("Pong: the ball off the top wall asks for the wall sound, once", "[sou
 {
 	PongInPlay pong;
 	pong.ball.position = { 600, 4 };
-	pong.ball.velocity = { 0, -3 };
+	pong.ball.velocity = { 0, -180 };
 
 	CHECK(pong.run(10) == std::vector<std::string>{ "wall" });
 	CHECK(pong.ball.velocity.y > 0);
@@ -365,7 +365,7 @@ TEST_CASE("Pong: the ball off the bottom wall asks for the wall sound too", "[so
 {
 	PongInPlay pong;
 	pong.ball.position = { 600, 720 - 16 - 2 };
-	pong.ball.velocity = { 0, 3 };
+	pong.ball.velocity = { 0, 180 };
 
 	CHECK(pong.run(10) == std::vector<std::string>{ "wall" });
 	CHECK(pong.ball.velocity.y < 0);
@@ -375,7 +375,7 @@ TEST_CASE("Pong: the ball off a paddle asks for the paddle sound", "[sound][pong
 {
 	PongInPlay pong;
 	pong.ball.position = { pong.paddle1.position.x + 20 + 10, pong.paddle1.position.y + 50 };
-	pong.ball.velocity = { -4, 0 };
+	pong.ball.velocity = { -240, 0 };
 
 	CHECK(pong.run(10) == std::vector<std::string>{ "paddle" });
 	CHECK(pong.ball.velocity.x > 0);
@@ -385,7 +385,7 @@ TEST_CASE("Pong: a point scored asks for the score sound", "[sound][pong]")
 {
 	PongInPlay pong;
 	pong.ball.position = { 600, 300 };
-	pong.ball.velocity = { 7, 0 };
+	pong.ball.velocity = { 420, 0 };
 
 	// Clear of both paddles, out through the right: a point to player one.
 	pong.ball.position.y = 30;
