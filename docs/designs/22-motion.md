@@ -32,7 +32,7 @@
 
 ## Headings
 
-- **Heading** is degrees clockwise from up. `<turn>` and `<thrust>` are held and need a heading. `<drag>` is the share of speed lost each frame, so thrust has a top speed.
+- **Heading** is degrees clockwise from up. `<turn>` and `<thrust>` are held and need a heading. `<drag>` is the half-life of its speed, so thrust has a top speed ([time](29-time.md#units)).
 - **Pictures are turned by the engine**, not backends: four backends would change, and the pixel test needs the turned picture anyway ([pictures](30-pictures.md)).
 
 ## Steps and jumps

@@ -288,7 +288,7 @@ TEST_CASE("asteroids.xml loads with a ship that has a heading, shots, rocks and 
 	CHECK(ship.heading == 0.0f);
 	REQUIRE(ship.drawn.turnables.size() == 1);
 	CHECK(ship.drawn.bitmap->rgba == ship.drawn.turnables[0]->at(0.0f).rgba);
-	CHECK_THAT(ship.motion.drag, WithinAbs(0.7f, 1e-6f));
+	CHECK_THAT(ship.motion.drag, WithinAbs((std::log(2.0f) / 0.57f), 1e-5f));
 	CHECK(ship.size.x == static_cast<float>(ship.drawn.bitmap->width));
 	CHECK(ship.size.x == ship.size.y);
 
@@ -321,7 +321,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 
 		const Object& ship = game.getObject("ship");
 		CHECK(ship.turning.hasHeading);
-		CHECK_THAT(ship.motion.drag, WithinAbs(0.7f, 1e-6f));
+		CHECK_THAT(ship.motion.drag, WithinAbs((std::log(2.0f) / 0.57f), 1e-5f));
 		CHECK(ship.drawn.turnables.size() == 1);
 
 		int descriptions = 0;
@@ -468,8 +468,9 @@ TEST_CASE("held thrust shows the flickering flame, turned with the ship; letting
 
 TEST_CASE("thrust pushes the ship along the way it faces", "[asteroids][heading]")
 {
-	const float kept = std::pow(0.3f, 1.0f / 60.0f);
-	const float kOneFrame = 324.0f * (1.0f - kept) / -std::log(0.3f);
+	const float rate = (std::log(2.0f) / 0.57f);
+	const float kept = std::exp(-rate / 60.0f);
+	const float kOneFrame = 324.0f * (1.0f - kept) / rate;
 	Field field;
 	field.clearTheMiddle();
 
@@ -534,7 +535,7 @@ TEST_CASE("the heading it turned to is the way it is pushed", "[asteroids][headi
 	CHECK(std::abs(field.ship().velocity.y) < 3.0f);
 }
 
-TEST_CASE("with no thrust the ship drifts, losing seven tenths of its speed a second", "[asteroids][heading]")
+TEST_CASE("with no thrust the ship drifts, losing half its speed in 0.57 seconds", "[asteroids][heading]")
 {
 	Field field;
 	field.clearTheMiddle();
@@ -543,7 +544,7 @@ TEST_CASE("with no thrust the ship drifts, losing seven tenths of its speed a se
 	field.ship().velocity = { 180.0f, 0.0f };
 	field.frames(10);
 
-	CHECK_THAT(field.ship().velocity.x, WithinAbs(180.0f * std::pow(0.3f, 10.0f / 60.0f), 1e-2f));
+	CHECK_THAT(field.ship().velocity.x, WithinAbs(180.0f * std::exp(-(std::log(2.0f) / 0.57f) * 10.0f / 60.0f), 1e-2f));
 	CHECK(field.ship().position.x > 300.0f + 10.0f);
 }
 
@@ -561,7 +562,7 @@ TEST_CASE("held thrust has a top speed instead of speeding up for ever", "[aster
 	}
 
 	// Where the push and the drag even out: 324 / k, 0.3 = e to the -k.
-	const float top = 324.0f / -std::log(0.3f);
+	const float top = 324.0f / (std::log(2.0f) / 0.57f);
 	CHECK_THAT(field.ship().velocity.x, WithinAbs(top, 3.0f));
 }
 
@@ -1281,9 +1282,9 @@ TEST_CASE("a spawn of something that is not in the game is reported when it load
 	CHECK_THROWS_WITH(Game{ scratch.path.string() }, ContainsSubstring("nosuchrocks"));
 }
 
-TEST_CASE("a drag of 1 or more is reported when it loads", "[asteroids][errors]")
+TEST_CASE("a drag that is not a half-life of 0 or more is reported when it loads", "[asteroids][errors]")
 {
-	const Scratch scratch{ asteroidsWith("<drag>drag</drag>", "<drag>1</drag>") };
+	const Scratch scratch{ asteroidsWith("<drag>drag</drag>", "<drag>-1</drag>") };
 	CHECK_THROWS_WITH(Game{ scratch.path.string() }, ContainsSubstring("drag"));
 }
 
@@ -1308,7 +1309,7 @@ TEST_CASE("a heading, a drag and an active are read from the file", "[asteroids]
 	const Object& ship = game.getObject("ship");
 	CHECK(ship.turning.hasHeading);
 	CHECK(ship.start.heading == 0.0f);
-	CHECK(ship.motion.drag == 0.7f);
+	CHECK_THAT(ship.motion.drag, WithinAbs((std::log(2.0f) / 0.57f), 1e-5f));
 	CHECK(ship.drawn.turnables.size() == 1);
 
 	for (const Object& object : game.getCurrentObjects())

@@ -9,6 +9,8 @@
 #include "play/geometry.h"
 #include "play/verbs.h"
 
+#include <cmath>
+
 namespace xge
 {
 	// <land>: Comes to rest on what it fell onto.
@@ -35,8 +37,8 @@ namespace xge
 		if (object.footing.jumping)
 		{
 			object.footing.jumping = false;
-			// One with a <grip> below 1 slides on from the speed it landed at.
-			if (object.motion.grip >= 1.0f)
+			// One with a <grip> that is not at once slides on from the speed it landed at.
+			if (std::isinf(object.motion.grip))
 			{
 				object.velocity.x = object.drive.moveStep[static_cast<std::size_t>(Direction::Right)]
 					- object.drive.moveStep[static_cast<std::size_t>(Direction::Left)];

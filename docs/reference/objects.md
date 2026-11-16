@@ -26,7 +26,7 @@ An object is anything drawn, moved or touched. `name` is required; `class` is op
 | `<acceleration>` | pixels a second gained each second: gravity is a `<y>`. `<stop />` takes it away, a reset gives it back |
 | `<heading>` | degrees clockwise from straight up. Lets `<turn>`, `<thrust>`, `<swing>` work, and turns the picture. `update="live"`: [follows](format.md#live-numbers-of-an-object) what it reads |
 | `<pivot>` | the point the picture turns about ([turning about a pivot](pictures.md#turning-about-a-pivot)); the position is then where that point sits |
-| `<drag>` | 0 up to 1: the share of its speed lost each second |
+| `<drag>` | a half-life: the seconds it takes to lose half its speed (`0.57` in Asteroids); 0 or more, 0 is at once |
 | `<friction>` | 0 or more: how much a still surface holds it back, and what brings it to [rest](collisions.md#knocks) |
 | `<mass>` | above 0: how hard it is to [knock](collisions.md#knocks). None: a knock does not move it |
 | `<surface>` | this is ground: a `<drag>` and `<grip>` that a gripping thing over it takes ([surfaces](pictures.md#surfaces)) |

@@ -9,7 +9,7 @@ Tips for changing how things are drawn. Back to [the notes](readme.md).
 - A pose is picked only while the current look is a pose look.
 - `<become object="group">` changes members out of play too.
 - `<stop />` takes the pull away until a reset, so it is no landing for something that can be knocked up again.
-- `<grip>` below 1 brakes an object with no keys held: never give it to a thing that moves by velocity alone.
+- Any `<grip>` above 0 brakes an object with no keys held: never give it to a thing that moves by velocity alone.
 - A hop's `<arc>` is drawn through `altitude`; tests compare positions, not drawn spots.
 - A `RawObject` made in code (a deck's cards) must have `sprite` equal to `looks.front()`.
 - Cards draw by `drawOrder`: 0 first in file order, then the rest sorted.

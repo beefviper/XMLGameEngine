@@ -42,7 +42,7 @@
     <variable name="rail">20</variable>
     <variable name="tip">7</variable>
     <variable name="push">240</variable>
-    <variable name="cloth">0.52</variable>
+    <variable name="cloth">0.96</variable>
     <variable name="margin">60</variable>
   </variables>
   <styles>

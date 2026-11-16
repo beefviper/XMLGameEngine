@@ -142,6 +142,7 @@ Its own block of work, done before anything else in this file. **Design and reas
 ### DT6. The rest of the games
 
 - **Found in DT5.** `<thrust burn="fuel">` took 1 off the variable each step, so Lunar Lander's fuel lasted longer at 8 steps a second than at 240. It now takes 60 a second, as a held `<inc>` does (done with Lunar Lander).
+- **Found in DT6.** A strong grip (Speedway's tyres) is a share lost each second so near 1 that a float cannot write it. The author chose half-lives: `<drag>` and `<grip>`, a surface's too, are the seconds to lose half the speed (0: at once), and the six were redone ([units](designs/29-time.md#units)).
 - **Steps.**
   - [ ] **1. The games with motion, ten a commit (M each).** In the order `ls games/descriptions` gives, skipping the six and those in step 2. Moved as DT5 says. **Check after each commit:** as DT5 step 1 for each game, without the `[steps]` case; and `playRandomKeys` (`xgetest-long`) for those games.
   - [ ] **2. Cards, boards and cell puzzles in one commit (S).** Games whose only numbers are positions and seconds get the attribute and a read for any `<velocity>` or `<move>` (a dealt card's slide). **Check:** their tests.

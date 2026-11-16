@@ -21,21 +21,22 @@ A game plays the same whatever the frame rate: at 8 frames a second, at 60, at 1
 | speeds | `<velocity>`, `<move>` held, a path's speed, `<chase>`, `<aim>`, `<hunt>`/`<go>`/`<wander>` off cells, `<seek>`'s most | pixels a second | times 60 |
 | speed gained | `<acceleration>`, `<thrust>`, `<pull>`, `<jump>`'s pull, `<rise>`, `<fall>` | pixels a second, each second | times 3,600 |
 | turning | `<turn>` held, `<seek>`'s degrees, a spin | degrees a second | times 60 |
-| shares | `<drag>`, `<friction>`, `<grip>`, a `<surface>`'s | share lost each second, 0 up to 1 | `1 - (1 - share)` to the 60th power |
+| losses | `<drag>`, `<grip>`, a `<surface>`'s | half-life: seconds to lose half the speed (0: at once) | `ln 2 / (-60 ln(1 - share))` |
 | counts | an `<inc>` or `<dec>` on a held key | added each second | times 60 |
 | times | timers, animations, `<hop>`, `<swing>`, cell speeds | seconds, as today | unchanged |
 
 - Live numbers read and set the same units: `ball.velocity.x` is pixels a second.
-- A share is "lost each second" so that 0 is still none, more is still more, and the range check stays. `<drag>0.02</drag>` a frame is `0.70` a second.
+- A loss is a half-life, chosen by the author over a share lost each second: strong grips (Speedway's tyres, 0.03 seconds) are a share so near 1 that a float cannot write it, while a half-life is exact at any strength. `<drag>0.02</drag>` a frame is `0.57` seconds. Longer is weaker, the other way from a share.
+- `<friction>` is not a loss over time: it is how hard a still surface holds back at a touch, and stays as it is.
 
 ## The sums
 
 With steps of any length, the sums must give the same answer however a second is cut up.
 
 - **Constant pull:** the position moves by `velocity * t + acceleration * t * t / 2`, then the velocity gains `acceleration * t`. A jump is the same height at any rate.
-- **Shares:** what is kept over a step is `(1 - lost)` to the power `t`.
-- **Easing toward a wanted speed** (`<grip>`): the same power, on the gap.
-- **Drag with a pull** is the exact sum of `v' = a - k v` over the step (`k` the share's rate, `kept = e^(-k t)`): Asteroids' thrust then came out 6% short at 8 steps a second, and the same at every rate with it. The sweep goes the step's true mean speed.
+- **Losses:** a half-life `h` is read as a rate `k = ln 2 / h` (0 is an infinite rate); what is kept over a step is `e^(-k t)`.
+- **Easing toward a wanted speed** (`<grip>`): the same, on the gap.
+- **Drag with a pull** is the exact sum of `v' = a - k v` over the step (`k` the drag's rate): Asteroids' thrust then came out 6% short at 8 steps a second, and the same at every rate with it. The sweep goes the step's true mean speed.
 
 ## Things that count time
 

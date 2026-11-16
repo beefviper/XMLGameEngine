@@ -29,7 +29,7 @@
     car on a path faces the way it goes.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Speedway">
     <width>800</width>
     <height>600</height>
@@ -37,17 +37,17 @@
   </window>
   <variables>
     <variable name="laps">3</variable>
-    <!-- a car: its push, its brake, its steering, its drag (top speed is about push / drag) and grip on tarmac -->
-    <variable name="push">0.14</variable>
-    <variable name="brake">0.08</variable>
-    <variable name="steer">3.5</variable>
-    <variable name="tarmac">0.03</variable>
-    <variable name="hold">0.3</variable>
+    <!-- a car: its push, its brake, its steering, its drag and grip on tarmac as half-lives in seconds (top speed is about push x drag / 0.69) -->
+    <variable name="push">504</variable>
+    <variable name="brake">288</variable>
+    <variable name="steer">210</variable>
+    <variable name="tarmac">0.38</variable>
+    <variable name="hold">0.032</variable>
   </variables>
   <paths>
     <!-- the outer lane, from the front of the grid, round and back -->
     <path name="outer">
-      <speed>3.4</speed>
+      <speed>204</speed>
       <step><x>120</x><y>0</y></step>
       <step><x>60</x><y>60</y></step>
       <step><x>0</x><y>240</y></step>
@@ -60,7 +60,7 @@
     </path>
     <!-- the inner lane: shorter, a little slower -->
     <path name="inner">
-      <speed>3.1</speed>
+      <speed>186</speed>
       <step><x>60</x><y>0</y></step>
       <step><x>40</x><y>40</y></step>
       <step><x>0</x><y>120</y></step>
@@ -182,15 +182,15 @@
           </group>
           <group name="grass" char="g">
             <sprite><rectangle><width>40</width><height>40</height><color>color.forestgreen</color></rectangle></sprite>
-            <surface><drag>0.08</drag><grip>0.3</grip></surface>
+            <surface><drag>0.14</drag><grip>0.032</grip></surface>
           </group>
           <group name="sand" char="s">
             <sprite><rectangle><width>40</width><height>40</height><color>color.brown</color></rectangle></sprite>
-            <surface><drag>0.14</drag><grip>0.5</grip></surface>
+            <surface><drag>0.077</drag><grip>0.017</grip></surface>
           </group>
           <group name="oil" char="o">
             <sprite><rectangle><width>40</width><height>40</height><color>color.black</color></rectangle></sprite>
-            <surface><drag>0.005</drag><grip>0.02</grip></surface>
+            <surface><drag>2.3</drag><grip>0.57</grip></surface>
           </group>
         </map>
 

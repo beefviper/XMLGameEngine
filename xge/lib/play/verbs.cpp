@@ -354,9 +354,9 @@ namespace xge
 	{
 		object.drive.moveStep[static_cast<std::size_t>(direction)] = step;
 
-		// With a <grip> below 1 the velocity goes there a frame at a time
-		// (playOneFrame), on the ground; a pull still has the up and down.
-		const bool slides = object.motion.grip < 1.0f;
+		// With a <grip> that is not at once the velocity goes there over
+		// time (playOneFrame), on the ground; a pull still has the up and down.
+		const bool slides = !std::isinf(object.motion.grip);
 		if (direction == Direction::Left || direction == Direction::Right)
 		{
 			if (!object.footing.jumping && !slides)

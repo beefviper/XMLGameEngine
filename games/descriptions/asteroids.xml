@@ -53,7 +53,7 @@
   <variables>
     <variable name="turnrate">240</variable>
     <variable name="thrustpower">324</variable>
-    <variable name="drag">0.7</variable>
+    <variable name="drag">0.57</variable>
     <variable name="shotspeed">480</variable>
     <variable name="margin">20</variable>
     <variable name="shotlife">1</variable>

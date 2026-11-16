@@ -185,7 +185,7 @@
         <falling sprite="falling" />
       </poses>
       <mirror>left</mirror>
-      <grip>0.9999</grip>
+      <grip>0.07</grip>
       <collisions>
         <!-- he touches with his body, a little in from his outline, and his feet
              clear a pest by more: a near miss is a miss -->

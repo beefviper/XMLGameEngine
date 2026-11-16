@@ -23,39 +23,27 @@ namespace xge
 {
 	namespace
 	{
-		// What a share lost each unit of time (a <drag>, a <grip>) leaves
-		// over a step: (1 - share) to the power t. Worked out once for each
-		// share a step, not for each object.
+		// What a rate of loss (a <drag>, a <grip>) leaves of a speed over a
+		// step: e to the -rate t (infinite: nothing). Worked out once for
+		// each rate a step, not for each object.
 		class KeptOver
 		{
 		public:
 			explicit KeptOver(float stepT) : t(stepT) {}
-			float operator()(float share)
+			float operator()(float rate)
 			{
-				workOut(share);
+				if (rate != lastRate)
+				{
+					lastRate = rate;
+					lastKept = std::isinf(rate) ? 0.0f : std::exp(-rate * t);
+				}
 				return lastKept;
 			}
 
-			// How fast it is lost: kept over t is e to the -rate t.
-			float rate(float share)
-			{
-				workOut(share);
-				return lastRate;
-			}
-
 		private:
-			void workOut(float share)
-			{
-				if (share == lastShare) { return; }
-				lastShare = share;
-				lastKept = share >= 1.0f ? 0.0f : std::pow(1.0f - share, t);
-				lastRate = share >= 1.0f ? 0.0f : -std::log(1.0f - share);
-			}
-
 			float t;
-			float lastShare{ -1.0f };
+			float lastRate{ -1.0f };
 			float lastKept{ 1.0f };
-			float lastRate{ 0.0f };
 		};
 
 		// Whether it has moved or changed, so its touches are looked for: it
@@ -214,7 +202,7 @@ namespace xge
 
 			for (auto& object : objects)
 			{
-				if (object.motion.grip >= 1.0f || object.surface.is || !rules.inPlay(object)) { continue; }
+				if (std::isinf(object.motion.grip) || object.surface.is || !rules.inPlay(object)) { continue; }
 				const Vector2f middle = middleOf(object);
 				for (auto ground = surfaces.rbegin(); ground != surfaces.rend(); ++ground)
 				{
@@ -246,7 +234,7 @@ namespace xge
 			const float snap = 0.05f / time.sixtieth;
 			for (auto& object : objects)
 			{
-				if (object.motion.grip >= 1.0f || object.footing.climbing || !rules.inPlay(object)) { continue; }
+				if (std::isinf(object.motion.grip) || object.footing.climbing || !rules.inPlay(object)) { continue; }
 
 				if (object.turning.hasHeading)
 				{
@@ -302,7 +290,7 @@ namespace xge
 			const auto& step = object.drive.moveStep;
 			const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
 			const auto sign = [](float value) { return (value > 0.0f) - (value < 0.0f); };
-			if (object.motion.grip < 1.0f && object.velocity.x != 0.0f && sign(wanted) != sign(object.velocity.x)) { return Object::Pose::Skidding; }
+			if (!std::isinf(object.motion.grip) && object.velocity.x != 0.0f && sign(wanted) != sign(object.velocity.x)) { return Object::Pose::Skidding; }
 			return Object::Pose::Walking;
 		}
 
@@ -467,15 +455,15 @@ namespace xge
 					object.velocity += change * t;
 					object.motion.gained = object.velocity - was;
 				}
-				else if (drag >= 1.0f || !(t > 0.0f))
+				else if (std::isinf(drag) || !(t > 0.0f))
 				{
-					object.velocity = drag >= 1.0f ? Vector2f{} : was;
+					object.velocity = std::isinf(drag) ? Vector2f{} : was;
 					object.motion.gained = object.velocity * 2.0f;
 				}
 				else
 				{
 					const float left = kept(drag);
-					const float k = kept.rate(drag);
+					const float k = drag;
 					const float lost = (1.0f - left) / k;
 					object.velocity = was * left + change * lost;
 					const Vector2f mean = (was * lost + change * ((t - lost) / k)) * (1.0f / t);

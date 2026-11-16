@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 
@@ -253,17 +254,32 @@ namespace xge
 		object.start.heading = object.heading;
 	}
 
+	// A <drag> or <grip> as the rate its speed is lost at, each unit of
+	// motion time (kept over t is e to the -rate t; infinite: all of it at
+	// once). In a seconds game it is written as a half-life, the seconds to
+	// lose half (0: at once); in one without, as the share lost a frame.
+	float game_expr::lossRate(float written, bool grip, const std::string& what) const
+	{
+		constexpr float kAtOnce = std::numeric_limits<float>::infinity();
+		if (timeInSeconds)
+		{
+			if (!(written >= 0.0f)) { throw std::runtime_error(what + " is " + formatDisplayNumber(written) + "; expected a half-life in seconds, 0 or more (0: at once)"); }
+			return written == 0.0f ? kAtOnce : std::log(2.0f) / written;
+		}
+		if (grip ? !(written > 0.0f && written <= 1.0f) : (written < 0.0f || written >= 1.0f))
+		{
+			throw std::runtime_error(what + " is " + formatDisplayNumber(written) + (grip ? "; expected above 0, up to 1 (1: it goes at once at the speed its moves ask for)" : "; expected 0 up to (not including) 1"));
+		}
+		return written >= 1.0f ? kAtOnce : -std::log(1.0f - written);
+	}
+
 	// makeObject's ways of moving: drag, surface, friction, mass, pulls,
 	// seeking, light and dark, altitude, a tether and which way it faces.
 	void game_expr::buildMotion(RawObject& rawObject, Object& object, const std::string& where)
 	{
 		if (rawObject.hasDrag)
 		{
-			object.motion.drag = evaluate(rawObject.rawDrag, where);
-			if (object.motion.drag < 0.0f || object.motion.drag >= 1.0f)
-			{
-				throw std::runtime_error(where + ": <drag> is " + std::to_string(object.motion.drag) + "; expected 0 up to (not including) 1");
-			}
+			object.motion.drag = lossRate(evaluate(rawObject.rawDrag, where), false, where + " > <drag>");
 		}
 
 		if (rawObject.hasSurface)
@@ -271,19 +287,11 @@ namespace xge
 			object.surface.is = true;
 			if (rawObject.hasSurfaceDrag)
 			{
-				object.surface.drag = evaluate(rawObject.rawSurfaceDrag, where + " > <surface> > <drag>");
-				if (*object.surface.drag < 0.0f || *object.surface.drag >= 1.0f)
-				{
-					throw std::runtime_error(where + " > <surface> > <drag> is " + formatDisplayNumber(*object.surface.drag) + "; expected 0 up to (not including) 1");
-				}
+				object.surface.drag = lossRate(evaluate(rawObject.rawSurfaceDrag, where + " > <surface> > <drag>"), false, where + " > <surface> > <drag>");
 			}
 			if (rawObject.hasSurfaceGrip)
 			{
-				object.surface.grip = evaluate(rawObject.rawSurfaceGrip, where + " > <surface> > <grip>");
-				if (!(*object.surface.grip > 0.0f && *object.surface.grip <= 1.0f))
-				{
-					throw std::runtime_error(where + " > <surface> > <grip> is " + formatDisplayNumber(*object.surface.grip) + "; expected above 0, up to 1");
-				}
+				object.surface.grip = lossRate(evaluate(rawObject.rawSurfaceGrip, where + " > <surface> > <grip>"), true, where + " > <surface> > <grip>");
 			}
 		}
 
@@ -599,11 +607,7 @@ namespace xge
 
 		if (rawObject.hasGrip)
 		{
-			object.motion.grip = evaluate(rawObject.rawGrip, where + " > <grip>");
-			if (!(object.motion.grip > 0.0f && object.motion.grip <= 1.0f))
-			{
-				throw std::runtime_error(where + " > <grip> is " + formatDisplayNumber(object.motion.grip) + "; expected above 0, up to 1 (1: it goes at once at the speed its moves ask for)");
-			}
+			object.motion.grip = lossRate(evaluate(rawObject.rawGrip, where + " > <grip>"), true, where + " > <grip>");
 		}
 		for (const Timer& timer : object.timers)
 		{

@@ -37,7 +37,7 @@
   </window>
   <variables>
     <variable name="radius">5</variable>
-    <variable name="green">0.52</variable>
+    <variable name="green">0.96</variable>
     <variable name="charge">120</variable>
     <variable name="most">100</variable>
     <variable name="pace">6</variable>

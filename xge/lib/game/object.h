@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <limits>
 #include <optional>
 #include <string>
 #include <utility>
@@ -1795,14 +1796,15 @@ namespace xge
 			float speed{};
 			bool speedHeld{ false };
 
-			// <grip>: how much of the way to the velocity its held moves ask for
-			// it goes each frame (1: all of it, at once). Below 1 it slides
-			// into a walk and out of one.
-			float grip{ 1.0f };
+			// <grip>: how fast its speed closes on the velocity its held moves
+			// ask for, as a rate (kept over t is e to the -grip t; see
+			// game_expr::lossRate). Infinite, the default: at once. Finite, it
+			// slides into a walk and out of one.
+			float grip{ std::numeric_limits<float>::infinity() };
 
-			// How much of its velocity an object keeps every frame is 1 minus this:
-			// 0 (the default) is no drag at all, 0.02 loses a fiftieth of the speed
-			// a frame, so a thruster can no longer push it faster than a top speed.
+			// <drag>: how fast it loses its velocity, as a rate (kept over t is
+			// e to the -drag t). 0, the default, is no drag at all; with drag
+			// a thruster can no longer push it faster than a top speed.
 			float drag{};
 
 			// <friction>: at a touch with something that does not move, the speed
@@ -1844,7 +1846,7 @@ namespace xge
 			std::optional<float> drag;
 			std::optional<float> grip;
 			float groundDrag{};
-			float groundGrip{ 1.0f };
+			float groundGrip{ std::numeric_limits<float>::infinity() };
 		};
 		Surface surface;
 

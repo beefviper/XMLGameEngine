@@ -271,13 +271,13 @@ Three parts, after `<facing>`, give a walking, jumping thing its look and feel w
   <thrusting sprite="burning" />
 </poses>
 <mirror>left</mirror>
-<grip>0.15</grip>
+<grip>0.07</grip>
 ```
 
 - **`<poses>`**: the engine picks the look each frame. `standing` is needed; the rest fall back (walking to standing, skidding to walking, falling to standing, rising to falling, thrusting to standing). Thrusting while a `<thrust>` is held; rising then falling in the air; skidding when its grip slides it against its keys. Poses are picked only while a pose look shows, so a `<become>` to another look (Mario's `dead`) holds.
 - **`<mirror>left</mirror>`** (or `right`): the way its pictures do not face; going that way they are drawn flipped. The way is the move key held, else a jump's way, else its velocity. Not with a `<heading>` or a `<hole>`.
-- **`<grip>`** (above 0 up to 1, default 1): how quickly its speed follows its keys, the share of the gap closed each second, so `0.9` gets going slowly and slides. It also brakes an object with no keys held, so give it only to something a player steers.
-- **With a `<heading>`, `<grip>` is a wheel's**: each second its sideways speed loses that share, so a car goes where it points and slides when the grip is low.
+- **`<grip>`** (a half-life in seconds, 0 or more; none or 0 is at once): how quickly its speed follows its keys, the seconds to close half the gap, so `0.2` gets going slowly and slides. It also brakes an object with no keys held, so give it only to something a player steers.
+- **With a `<heading>`, `<grip>` is a wheel's**: its sideways speed halves in that many seconds, so a car goes where it points and slides when the grip is long.
 - **Blinking.** `<set variable="mario.blink">2</set>` blinks it for two seconds, counting down by itself. It is a live number, so a rule can leave a blinking player alone. A reset ends it.
 
 ### Surfaces
@@ -287,7 +287,7 @@ A piece with a `<surface>` is ground that changes how a gripping thing goes:
 ```xml
 <group name="grass" char="g">
   <sprite><rectangle><width>40</width><height>40</height><color>color.forestgreen</color></rectangle></sprite>
-  <surface><drag>0.08</drag><grip>0.3</grip></surface>
+  <surface><drag>0.14</drag><grip>0.032</grip></surface>
 </group>
 ```
 

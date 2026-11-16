@@ -32,7 +32,7 @@ Donkey Kong: Jumpman and barrels stand on girders, a barrel rolls off an open en
 ## Arc and grip
 
 - **`<arc>`** after a timed hop's `<seconds>`: the altitude follows `4 * arc * t * (1 - t)`, drawn up and over while what it touches moves straight. Q*bert's hops must land on a cube exactly, so a real pull was rejected.
-- **`<grip>`** eases the speed toward what the held keys ask, that share a frame: a slow start and a slide. Skidding is read from it. On ground pieces, `<surface>` changes it ([tables and tracks](25-tables-and-tracks.md)).
+- **`<grip>`** eases the speed toward what the held keys ask, halving the gap in that many seconds: a slow start and a slide. Skidding is read from it. On ground pieces, `<surface>` changes it ([tables and tracks](25-tables-and-tracks.md)).
 
 ## Jumps (idea)
 

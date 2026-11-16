@@ -38,7 +38,7 @@
   - One barrel piece serves both sides by `heading = level - side * elevation`.
   - Open: cannons falling into craters, a computer player, a picture-shaped hole (`<hole sprite>`).
 - **Pinball:** walls are one pixel picture of lines; bumpers bounce above 1. Flippers are a `<line>` piece with a `<pivot>`, a `<swing>` and `<knock>0.3</knock>`; the slopes end just above the hinge so the ball rolls on with no bump. The plunger is Space held and let go. Open: multiball, drop targets, tilt, ramps (a layer above the table).
-- **Speedway:** `<grip>` with a heading is a wheel's grip, the speed across the heading losing that share; reused rather than a new word.
+- **Speedway:** `<grip>` with a heading is a wheel's grip, the speed across the heading halving in that time; reused rather than a new word.
   - Rejected: turning the velocity to the heading (a skid would lose no speed).
   - `<surface>` is the ground under anything with a grip; rejected the car naming the ground it feels.
   - Laps by four gate rules, no `<gates>` word.

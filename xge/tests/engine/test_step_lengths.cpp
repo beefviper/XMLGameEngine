@@ -214,8 +214,8 @@ TEST_CASE("a turn held faces the same way, however the time is cut into steps", 
 
 TEST_CASE("a thing coasting under drag goes as far, however the time is cut into steps", "[steps][drag]")
 {
-	// 300 pixels a second, half of it lost each second.
-	const std::string game = secondsGame(box("puck", 10, 100, "<velocity><x>300</x><y>0</y></velocity><drag>0.5</drag>"));
+	// 300 pixels a second, losing half of it each second (a half-life of 1).
+	const std::string game = secondsGame(box("puck", 10, 100, "<velocity><x>300</x><y>0</y></velocity><drag>1</drag>"));
 	const auto x = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("puck").position.x); });
 	// 300 (1 - 0.25) / ln 2 on from 10.
 	agree(x, 2.0);

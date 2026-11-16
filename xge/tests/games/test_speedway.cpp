@@ -64,34 +64,35 @@ TEST_CASE("speedway.xml: a car goes where it points, up to a top speed, on the t
 	race.engine.handleKeyPressed(KeyCode::W);
 	race.frames(60);
 	race.engine.handleKeyReleased(KeyCode::W);
-	CHECK(car.velocity.x > 3.0f);
+	CHECK(car.velocity.x > 180.0f);
 	CHECK(car.velocity.y == Approx(0.0f).margin(0.01f));
-	CHECK(race.speed(car) < 0.14f / 0.03f);
+	// top speed: the push over the tarmac's loss rate, ln 2 / its half-life
+	CHECK(race.speed(car) < 504.0f / (std::log(2.0f) / 0.38f));
 	CHECK(race.middle(car).x > from.x + 100.0f);
 }
 
 TEST_CASE("speedway.xml: grip turns the car's way with it, the grass slows it, and on oil it slides on", "[speedway][surface]")
 {
-	// Going right at 4 down the top straight, turned to face down: grip on
+	// Going right at 240 down the top straight, turned to face down: grip on
 	// tarmac takes most of the sideways speed off in a few frames.
 	{
 		Race race;
 		Object& car = race.get("p1");
-		race.put(car, 300.0f, 180.0f, 90.0f, 4.0f);
+		race.put(car, 300.0f, 180.0f, 90.0f, 240.0f);
 		car.heading = 180.0f;
 		car.showHeading();
 		race.frames(5);
-		CHECK(std::abs(car.velocity.x) < 0.8f);
+		CHECK(std::abs(car.velocity.x) < 48.0f);
 	}
 	// The same on the oil: it keeps on sliding the way it was going.
 	{
 		Race race;
 		Object& car = race.get("p1");
-		race.put(car, 390.0f, 460.0f, 270.0f, 4.0f);
+		race.put(car, 390.0f, 460.0f, 270.0f, 240.0f);
 		car.heading = 0.0f;
 		car.showHeading();
 		race.frames(5);
-		CHECK(car.velocity.x < -3.5f);
+		CHECK(car.velocity.x < -210.0f);
 	}
 	// On the grass, flat out is far slower than on tarmac.
 	{
@@ -101,8 +102,8 @@ TEST_CASE("speedway.xml: grip turns the car's way with it, the grass slows it, a
 		race.engine.handleKeyPressed(KeyCode::W);
 		race.frames(30);
 		race.engine.handleKeyReleased(KeyCode::W);
-		CHECK(race.speed(car) < 2.0f);
-		CHECK(car.surface.groundDrag == Approx(0.08f));
+		CHECK(race.speed(car) < 120.0f);
+		CHECK(car.surface.groundDrag == Approx(std::log(2.0f) / 0.14f));
 	}
 }
 
@@ -112,7 +113,7 @@ TEST_CASE("speedway.xml: the computer's cars go round their lanes, facing the wa
 	Object& cpu = race.get("cpu1");
 	race.frames(30);
 	CHECK(cpu.heading == Approx(90.0f));
-	CHECK(cpu.velocity.x == Approx(3.4f));
+	CHECK(cpu.velocity.x == Approx(204.0f));
 	// Into the first corner, turning down it.
 	race.frames(20);
 	CHECK(cpu.heading == Approx(135.0f));
@@ -133,22 +134,22 @@ TEST_CASE("speedway.xml: a lap counts only by the gates crossed in order", "[spe
 	Race race;
 	Object& car = race.get("p1");
 	// Straight back over the finish line: nothing.
-	race.put(car, 400.0f, 160.0f, 270.0f, 3.0f);
+	race.put(car, 400.0f, 160.0f, 270.0f, 180.0f);
 	race.frames(10);
 	CHECK(car.variable.at("lap") == 1.0f);
 	CHECK(car.variable.at("next") == 2.0f);
 
 	// Round by each gate in turn, then the finish line: a lap.
-	race.put(car, 660.0f, 300.0f, 180.0f, 3.0f);
+	race.put(car, 660.0f, 300.0f, 180.0f, 180.0f);
 	race.frames(12);
 	CHECK(car.variable.at("next") == 3.0f);
-	race.put(car, 420.0f, 460.0f, 270.0f, 3.0f);
+	race.put(car, 420.0f, 460.0f, 270.0f, 180.0f);
 	race.frames(12);
 	CHECK(car.variable.at("next") == 4.0f);
-	race.put(car, 140.0f, 340.0f, 0.0f, 3.0f);
+	race.put(car, 140.0f, 340.0f, 0.0f, 180.0f);
 	race.frames(12);
 	CHECK(car.variable.at("next") == 1.0f);
-	race.put(car, 360.0f, 160.0f, 90.0f, 3.0f);
+	race.put(car, 360.0f, 160.0f, 90.0f, 180.0f);
 	race.frames(12);
 	CHECK(car.variable.at("lap") == 2.0f);
 	CHECK(car.variable.at("next") == 2.0f);
@@ -159,7 +160,7 @@ TEST_CASE("speedway.xml: the first car home after three laps wins", "[speedway]"
 	Race race;
 	race.game.setVariable("playing.p2", "lap", 3.0f);
 	race.game.setVariable("playing.p2", "next", 1.0f);
-	race.put(race.get("p2"), 360.0f, 200.0f, 90.0f, 3.0f);
+	race.put(race.get("p2"), 360.0f, 200.0f, 90.0f, 180.0f);
 	race.frames(12);
 	REQUIRE(race.state() == "over");
 	CHECK(race.get("winner").lookName() == "p2");
@@ -171,7 +172,7 @@ TEST_CASE("speedway.xml: a car meets the barriers and bounces off", "[speedway]"
 {
 	Race race;
 	Object& car = race.get("p1");
-	race.put(car, 440.0f, 100.0f, 0.0f, 4.0f);
+	race.put(car, 440.0f, 100.0f, 0.0f, 240.0f);
 	race.frames(10);
 	CHECK(car.velocity.y > 0.0f);
 	CHECK(race.middle(car).y > 85.0f);

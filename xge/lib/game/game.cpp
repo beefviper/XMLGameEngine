@@ -60,6 +60,7 @@ namespace xge
 		objects.reserve(rawObjects.size() * 2 + 256);
 		expr.styles = data.styles;
 		expr.sheets = data.sheets;
+		expr.timeInSeconds = timeInSeconds;
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 		keep(keeps);

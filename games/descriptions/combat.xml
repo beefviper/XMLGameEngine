@@ -121,7 +121,7 @@
           <sprite>
             <bitmap from="tanks" />
           </sprite>
-          <drag>0.99994</drag>
+          <drag>0.07</drag>
           <mass>1</mass>
           <collisions>
             <type>pixel</type>
