@@ -23,6 +23,7 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 | [pieces](13-pieces.md) | Pieces (the top-level `<objects>`), `from=` and the one change rule | Built |
 | [verbs](14-verbs.md) | A file per verb, the list, and why it is written out | Built; reading open |
 | [lists](15-lists.md) | Sequences as holders: the bag of seven, Pac-Man's schedule, `top.` variables, spawn by member | Built; Simon and Mastermind Open |
+| [engine-structure](16-engine-structure.md) | Resources held once, parts as components, input/update/render, names | Decided |
 
 ## Behaviour
 
