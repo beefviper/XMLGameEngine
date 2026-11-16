@@ -1079,7 +1079,7 @@ namespace xge
 
 		rules.followPaths(seconds);
 
-		rules.cellMoves();
+		rules.cellMoves(seconds);
 
 		// Who walks a maze chooses its way, now that a path may have let it go.
 		walkMazes(objects, rules);

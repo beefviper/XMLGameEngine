@@ -511,8 +511,7 @@ namespace xge
 			return false;
 		}
 
-		const float perSecond = static_cast<float>(framesASecond(windowDesc));
-		mover.cellGoEvery = speed > 0.0f ? std::max(1, whole(perSecond / speed)) : 0;
+		mover.cellGoEvery = speed > 0.0f ? 1.0f / speed : 0.0f;
 		if (!mover.cellGoing || mover.cellGoWait > mover.cellGoEvery) { mover.cellGoWait = mover.cellGoEvery; }
 		mover.cellGoing = speed > 0.0f;
 		mover.cellGoWay = way;
@@ -902,32 +901,41 @@ namespace xge
 			return;
 		}
 
-		const float perSecond = static_cast<float>(framesASecond(windowDesc));
 		object.cell.held = move.step > 0.0f;
 		object.cell.heldWay = move.direction;
-		object.cell.heldEvery = move.step > 0.0f ? std::max(1, whole(perSecond / move.step)) : 0;
-		object.cell.heldWait = move.wait > 0.0f ? std::max(1, whole(move.wait * perSecond)) : object.cell.heldEvery;
+		object.cell.heldEvery = move.step > 0.0f ? 1.0f / move.step : 0.0f;
+		object.cell.heldWait = move.wait > 0.0f ? move.wait : object.cell.heldEvery;
 
 		const Vector2f step = stepToward(move.direction, 1.0f);
 		stepCells(object, whole(step.x), whole(step.y));
 	}
 
-	void Game::cellMoves()
+	void Game::cellMoves(float seconds)
 	{
+		// Each tick the step owes is a move of its own, with its own touches,
+		// one after another. By index: a move can spawn, and the list grow.
+		const auto counts = [&](std::size_t i) { return objects[i].exists && isShown(objects[i]) && !objects[i].awayFromHome(); };
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
-			Object& object = objects[i];
-			if (!object.exists || !isShown(object) || object.awayFromHome()) { continue; }
-			if (object.cellGoing && --object.cellGoWait <= 0)
+			if (!counts(i)) { continue; }
+			if (objects[i].cellGoing)
 			{
-				object.cellGoWait = object.cellGoEvery;
-				const Vector2f step = stepToward(object.cellGoWay, 1.0f);
+				objects[i].cellGoWait -= seconds;
+				while (counts(i) && objects[i].cellGoing && objects[i].cellGoWait <= kTimeSlack)
+				{
+					objects[i].cellGoWait += objects[i].cellGoEvery;
+					const Vector2f step = stepToward(objects[i].cellGoWay, 1.0f);
+					stepCells(objects[i], whole(step.x), whole(step.y));
+				}
+			}
+			if (!counts(i) || !objects[i].cell.held) { continue; }
+			objects[i].cell.heldWait -= seconds;
+			while (counts(i) && objects[i].cell.held && objects[i].cell.heldWait <= kTimeSlack)
+			{
+				objects[i].cell.heldWait += objects[i].cell.heldEvery;
+				const Vector2f step = stepToward(objects[i].cell.heldWay, 1.0f);
 				stepCells(objects[i], whole(step.x), whole(step.y));
 			}
-			if (!objects[i].cell.held || --objects[i].cell.heldWait > 0) { continue; }
-			objects[i].cell.heldWait = objects[i].cell.heldEvery;
-			const Vector2f step = stepToward(objects[i].cell.heldWay, 1.0f);
-			stepCells(objects[i], whole(step.x), whole(step.y));
 		}
 	}
 

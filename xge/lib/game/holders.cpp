@@ -1901,16 +1901,15 @@ namespace xge
 		return best;
 	}
 
-	std::optional<KeyCode> Game::thinkHeld(const CmdThink& think, Object& hand)
+	std::optional<KeyCode> Game::thinkHeld(const CmdThink& think, Object& hand, float seconds)
 	{
 		Object* own = hand.hand.own.empty() ? nullptr : holderNamed(hand.hand.own);
 		if (!own || !hand.hand.held.empty()) { return std::nullopt; }
-		if (itemWait > 0)
+		if (itemWait > kTimeSlack)
 		{
-			--itemWait;
+			itemWait -= seconds;
 			return std::nullopt;
 		}
-		constexpr int pace = 30;
 
 		// How many of its own items share each value of the variable a wild
 		// item calls (none called: all alike).
@@ -2034,7 +2033,7 @@ namespace xge
 		}
 		if (!aim) { return std::nullopt; }
 
-		itemWait = pace;
+		itemWait = kItemPace;
 		if (hand.hand.holder != aim->name || hand.hand.at != index)
 		{
 			hand.hand.holder = aim->name;

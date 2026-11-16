@@ -111,3 +111,18 @@ TEST_CASE("a hop of half a second lands in the same place at the same time, howe
 	agree(where, 0.0);
 	CHECK(where.front().value == Approx(160.0));
 }
+
+TEST_CASE("a <go> of 8 cells a second has gone 16 cells after 2 seconds, however the time is cut into steps", "[steps][cells]")
+{
+	const std::string square = "<sprite><rectangle><width>8</width><height>8</height></rectangle></sprite>";
+	const std::string map = "<map name=\"field\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position><cells />"
+		"<row>@...................</row>"
+		"<object name=\"head\" char=\"@\">" + square +
+		"<actions><action name=\"right\"><go direction=\"right\">8</go></action></actions></object></map>";
+	const std::string game = secondsGame(map);
+	const auto go = [](Played& play) { xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "head", "right" }, true); };
+
+	const auto column = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("playing.head").cellColumn); }, go);
+	agree(column, 0.0);
+	CHECK(column.front().value == 17.0);
+}

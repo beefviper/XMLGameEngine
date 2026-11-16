@@ -39,9 +39,9 @@ namespace xge
 	{
 		int whole(float number) noexcept { return static_cast<int>(std::lround(number)); }
 
-		// Frames between the picker's steps and presses, so a person can
+		// Seconds between the picker's steps and presses, so a person can
 		// follow the computer's move.
-		constexpr int pace = 8;
+		constexpr float pace = 8.0f / 60.0f;
 
 		// A won or lost game, worth more than any count of pieces.
 		constexpr float decided = 1.0e6f;
@@ -975,7 +975,7 @@ namespace xge
 		thinkAside = aside;
 	}
 
-	std::optional<KeyCode> Game::think(const CmdThink& think)
+	std::optional<KeyCode> Game::think(const CmdThink& think, float seconds)
 	{
 		Object* picker = nullptr;
 		const std::string name = fullName(think.picker);
@@ -983,7 +983,7 @@ namespace xge
 		{
 			if (object.exists && object.named(name)) { picker = &object; break; }
 		}
-		if (picker && picker->hand.is) { return thinkHeld(think, *picker); }
+		if (picker && picker->hand.is) { return thinkHeld(think, *picker, seconds); }
 		if (!picker || !picker->map.cells || think.objClass.empty()) { return std::nullopt; }
 
 		// Its move is thought about first (the frame its turn came is drawn
@@ -1002,7 +1002,8 @@ namespace xge
 			}
 			thinking.wait = pace;
 		}
-		if (--thinking.wait > 0) { return std::nullopt; }
+		thinking.wait -= seconds;
+		if (thinking.wait > kTimeSlack) { return std::nullopt; }
 		thinking.wait = pace;
 
 		// Done, and still its turn (a press refused): think again.

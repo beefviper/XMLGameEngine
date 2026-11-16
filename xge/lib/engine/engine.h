@@ -229,7 +229,7 @@ namespace xge
 		// and lets go as a player would, and is not recorded doing.
 		std::set<KeyCode> computerHeld;
 		bool computerPressing = false;
-		void playComputer(void);
+		void playComputer(float seconds);
 		std::size_t demoNext = 0;
 		std::string keptBeforeDemo;
 

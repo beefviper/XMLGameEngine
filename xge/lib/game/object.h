@@ -984,11 +984,11 @@ namespace xge
 		float cellRow{};
 
 		// A <go> on a map with <cells />: going that way, a cell every
-		// cellGoEvery frames, the next in cellGoWait.
+		// cellGoEvery seconds, the next in cellGoWait.
 		bool cellGoing{ false };
 		Direction cellGoWay{ Direction::Up };
-		int cellGoEvery{};
-		int cellGoWait{};
+		float cellGoEvery{};
+		float cellGoWait{};
 
 		// A <chain>: its links in order from the one behind it (found from
 		// where they lie when empty), and how many it is to grow by.
@@ -1606,12 +1606,12 @@ namespace xge
 			// A cell of a shape in play: the shape's name (empty once it has
 			// settled, or for a piece that was never in a shape).
 			std::string shapeOwner;
-			// A held <move>: the way, the frames until its next step, and the
-			// frames between steps (see CmdMove::wait).
+			// A held <move>: the way, the seconds until its next step, and the
+			// seconds between steps (see CmdMove::wait).
 			bool held{ false };
 			Direction heldWay{ Direction::Up };
-			int heldWait{};
-			int heldEvery{};
+			float heldWait{};
+			float heldEvery{};
 		};
 		Cells cell;
 		bool isShape() const noexcept { return cell.shapeSize > 0; }

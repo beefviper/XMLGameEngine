@@ -228,7 +228,7 @@ namespace xge
 			handleControls(window->controls());
 		}
 
-		playComputer();
+		playComputer(seconds);
 
 		playHeldKeys();
 
@@ -407,10 +407,10 @@ namespace xge
 			[&](const Object& object) { return object.isDrawn && game.isShown(object); });
 	}
 
-	void Engine::playComputer(void)
+	void Engine::playComputer(float seconds)
 	{
 		std::set<KeyCode> taps;
-		const std::set<KeyCode> wanted = game.computerButtons(taps);
+		const std::set<KeyCode> wanted = game.computerButtons(taps, seconds);
 		computerPressing = true;
 		game.pressingForComputer(true);
 		for (const KeyCode key : computerHeld)

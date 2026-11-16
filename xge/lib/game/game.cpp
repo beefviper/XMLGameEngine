@@ -2346,7 +2346,7 @@ namespace xge
 		if (found != state.scenes.end()) { checkConditionList(found->conditions); }
 	}
 
-	std::set<KeyCode> Game::computerButtons(std::set<KeyCode>& taps)
+	std::set<KeyCode> Game::computerButtons(std::set<KeyCode>& taps, float seconds)
 	{
 		std::set<KeyCode> held;
 		bool thought = false;
@@ -2356,7 +2356,7 @@ namespace xge
 			thought = true;
 			CmdThink each = written;
 			if (each.objClass.empty()) { each.objClass = turnClass(); }
-			if (const auto key = think(each)) { taps.insert(*key); }
+			if (const auto key = think(each, seconds)) { taps.insert(*key); }
 		};
 		for (const Condition& condition : currentState.top().computer)
 		{
@@ -2378,7 +2378,7 @@ namespace xge
 		if (!thought)
 		{
 			stopThinking();
-			itemWait = 30;
+			itemWait = kItemPace;
 		}
 		return held;
 	}

@@ -167,7 +167,8 @@ namespace xge
 		// those its conditions that hold name in their <hold>s. Into `taps`,
 		// those a <think> presses once (down and up at once, so a person's
 		// press of the same key straight after is never taken for it held).
-		std::set<KeyCode> computerButtons(std::set<KeyCode>& taps);
+		// `seconds` is the step's, which the computer's pace counts.
+		std::set<KeyCode> computerButtons(std::set<KeyCode>& taps, float seconds);
 
 		// Players as a group (game/players.cpp). The member of the group
 		// `name` on its turn (none: the group takes no turns); whether a
@@ -594,9 +595,12 @@ namespace xge
 		void markOddsRead();
 		void scoreDueHolders();
 		bool scoresDue{ false };
-		std::optional<KeyCode> thinkHeld(const CmdThink& think, Object& hand);
+		std::optional<KeyCode> thinkHeld(const CmdThink& think, Object& hand, float seconds);
 		int playToTrick(Object& trick, const Object& hand, const Object& own, bool avoid);
-		int itemWait{};
+		// Seconds before the computer's hand next moves or plays, and how
+		// long it waits each time: half a second.
+		float itemWait{};
+		static constexpr float kItemPace = 0.5f;
 		// Players as a group: back to the first member's turn, the rest
 		// showing their <turns sprite=>; each member the computer plays,
 		// with its <think>; whether the computer is pressing now.
@@ -715,7 +719,7 @@ namespace xge
 		// the group of what it copies.
 		std::string kindOf(const Object& piece) noexcept;
 		void askLines(const Object::CellCheck& check, const std::string& map, int columns, int rows, CommandExecutor& executor);
-		void cellMoves() override;
+		void cellMoves(float seconds) override;
 		// A board game piece's moves that it can make now: where each ends,
 		// and the piece it jumps (null for a step). Only its jumps when
 		// `jumpsOnly`, or when its set is forced and a piece of its class
@@ -736,13 +740,13 @@ namespace xge
 			bool planned{ false };
 			std::vector<std::pair<int, int>> cells;
 			std::size_t next{};
-			int wait{};
+			float wait{};
 		};
 		Thinking thinking;
 		// Whether a search runs on a thread of its own (a game in a window)
 		// or at once, in the frame (the tests: the same each run).
 		bool thinkAside{ false };
-		std::optional<KeyCode> think(const CmdThink& think);
+		std::optional<KeyCode> think(const CmdThink& think, float seconds);
 		std::shared_ptr<ThinkJob> startThinking(const CmdThink& think, const Object& picker);
 		static void runThinking(ThinkJob& job);
 		void stopThinking();
