@@ -52,6 +52,8 @@ Its own block of work, done before anything else in this file. **Design and reas
 
 - **Never a fixed step, never a step cut into smaller ones.** If a sum is wrong over a long step, the sum is fixed. A loop over the ticks or timer firings a step owes is not cutting the physics up, and is right.
 - **No count of frames is left in the engine** for anything that means time. A field named `frames...` or `...Every` that holds time becomes seconds.
+- **How a step is checked.** Build as [AGENTS.md](../AGENTS.md#build-and-test) says, then `cd build && ctest -j4`, then `output/Release/xgetest-long "[steps]"` once DT2 step 1 has made it, and `xgetest-generated` when the reader, a `Raw...` struct or the generator was touched. A step is done when its **Check** and all of these pass with zero warnings, and its box is ticked in the same commit.
+- **"The same at every step length"** in a check means: the game is played for the stated seconds in steps of a tenth, a sixtieth and a 240th of a second and in an uneven seeded mix, and the number named agrees across all four within 2 pixels (or 2 degrees, or 2% for a speed), unless the check gives its own range. A count (timer firings, ticks, pictures passed) agrees exactly.
 - **About the same is enough.** When an existing test fails after a step here:
   - by a small amount in a position or speed (a few pixels, a few percent): change that expectation to a range, and say why in the commit;
   - by behaviour (nothing scores, something leaves the window, a state is never reached): it is a bug in the step, not in the test. Never loosen a behaviour check.
@@ -85,9 +87,9 @@ Its own block of work, done before anything else in this file. **Design and reas
 
 - **Why.** Timers and the rest are written in seconds but kept as whole frames, so they round, and a long step cannot pay what it owes.
 - **The rule for each.** It holds seconds left as a `float`. A step takes its length off. When it reaches zero it goes off, and if the step was longer than what was left, the rest counts toward the next round, so it can go off several times in one step, in order.
-- **The check for each** is a case in a new `xge/tests/engine/test_pacing.cpp` (add it to `scripts/cmake/tests.cmake`): a small game is played for 2 seconds in steps of a tenth, a sixtieth, a 240th, and an uneven seeded mix, and the thing counted comes out the same each way.
+- **The check for each** is a case tagged `[steps]` in a new `xge/tests/engine/test_step_lengths.cpp` (add it to `scripts/cmake/tests.cmake`; the name is not `test_pace.cpp`, which is the loop's own test in `xge/tests/long/`): a small game written in the test is played for 2 seconds at each step length, and the thing counted comes out the same each way.
 - **Steps.**
-  - [ ] **1. The pacing helper (S).** In `xge/tests/helpers/`: `playFor(game, seconds, step)` and `playUneven(game, seconds, seed)` (steps between a 240th and a tenth). **Check:** it plays a game with no objects.
+  - [ ] **1. The pacing helper (S).** In `xge/tests/helpers/`: `step_lengths.h` with `playFor(game, seconds, step)`, `playUneven(game, seconds, seed)` (steps between a 240th and a tenth, the last one cut so the total is exact) and `atEveryStepLength(file or text, seconds, measure)`, which loads the game afresh for each of the four, plays it, calls `measure(game)` and returns the four answers. **Check:** a case plays a game of one still object and gets four equal positions.
   - [ ] **2. Timers (M).** `Timer::framesLeft` (`game/command.h`) and `Game::updateTimers`; a state's timers and an object's; the time left a game reads (`energy.level`) still rounds up to whole seconds. **Check:** a timer of 0.05 seconds goes off 40 times in 2 seconds at every pacing.
   - [ ] **3. Animations (M).** `Object::Animation` (`game/object.h`), the counting in `playOneFrame`, `timeAnimation` (`game/game.cpp`), and the frames worked out in `load/pictures.cpp`. A step that passes several pictures runs each one's commands in order, and a once animation's `<then>` once. **Check:** an animation with a command on its third picture runs it the same number of times at every pacing.
   - [ ] **4. Hops, jumps and swings (M).** `Object::Flight` (`framesLeft`, `frames`), `Object::Swing` (`frames`), the stagger of `<follow>` (`game/game.cpp`). A hop that ends inside a step lands at its end point and spends the rest of the step on the ground. **Check:** a hop of half a second lands at the same place and time at every pacing; `test_flippers.cpp` passes.
@@ -99,7 +101,7 @@ Its own block of work, done before anything else in this file. **Design and reas
 ### DT3. Movement by the time passed
 
 - **Why.** This is the change itself. Every sum uses `t = motionTime(seconds)`, so an unmoved game's numbers still mean what they did.
-- **The sums** are in [time](designs/29-time.md#the-sums). Each step below adds a case to `test_pacing.cpp` that plays 2 seconds at each pacing and finds the object in the same place, within 2 pixels.
+- **The sums** are in [time](designs/29-time.md#the-sums). Each step below adds a case to `test_step_lengths.cpp` that plays 2 seconds at each pacing and finds the object in the same place, within 2 pixels.
 - **Steps.**
   - [ ] **1. Velocity (M).** The move a frame sweeps (`FrameSweep` and `moveObjects` in `play/frame.cpp`) is `velocity * t`; so is what `<ride />` lends and what a `<stepped />` object saves up. **Check:** a mover at a steady velocity.
   - [ ] **2. Speed gained (M).** `<acceleration>`, `<thrust>`, `<pull>` and `<jump>`'s pull: the position gains `acceleration * t * t / 2` as well, then the velocity gains `acceleration * t`. `<rise>` and `<fall>` the same. The rest test ("4 frames of its own pull") becomes that many sixtieths of a second. **Check:** a thing dropped from rest; a `<jump>` reaches the same height at every pacing.
@@ -107,16 +109,23 @@ Its own block of work, done before anything else in this file. **Design and reas
   - [ ] **4. Shares (M).** `<drag>`, a `<surface>`'s, `<friction>` and `<grip>` (the easing in `play/frame.cpp`): kept over a step is `(1 - lost)` to the power `t`. The snap at 0.05 becomes a speed in the game's units. **Check:** a thing coasting under drag; Speedway and Putt Park tests.
   - [ ] **5. Held keys (M).** `<move>` held (`Object::Drive`), `<climb>`, and an `<inc>` or `<dec>` on a held key add their number times `t`. **Check:** a paddle held for a second; Cannon Hill's power after a second held.
   - [ ] **6. Heading for a point (M).** A path's legs (`Game::applyPaths`), `<chase>`, `<aim>`, `<hunt>`, `<go>` and `<wander>` off cells (`play/maze.cpp`), `<track />`: the distance covered is speed times `t`; one that reaches its point inside a step stops there and spends the rest of the step on the next leg or tile. **Check:** a path of four corners is walked in the same time at every pacing and never cuts or overshoots a corner; Pac-Man tests.
-  - [ ] **7. Screen edges in the sweep (M).** An edge rule is found where the move crosses the edge, not by where the object is afterwards. **Check:** a ball at 2,000 pixels a second in steps of a tenth bounces off all four edges and never leaves the window; `limits.md` loses that line.
+  - [ ] **7. Screen edges in the sweep (M).** Today `touchesScreenEdge` (`play/frame.cpp`) is asked after the move. The window's four sides join `FrameSweep` as things a move can cross, so an edge rule runs at the moment of crossing and the rest of the step carries on from there, as a touch between objects does. **Check:** a ball at 2,000 pixels a second in steps of a tenth bounces off all four edges and never leaves the window; `limits.md` loses that line.
   - [ ] **8. Read what is left (S).** `grep -rn "velocity\|heading\|acceleration" xge/lib/play xge/lib/verbs xge/lib/game` and read every line: anything added, compared or scaled per frame that the steps above missed (`<knock>`'s settle, a `<fire>`'s lead, `<land>`) is fixed or noted here as right. **Check:** the list of what was read and decided is in the commit message.
 - **Files.** `xge/lib/play/frame.cpp`, `play/verbs.cpp`, `play/executor.cpp`, `play/maze.cpp`, `play/collision.cpp`, `xge/lib/verbs/*`, `game/game.cpp`; `docs/reference/objects.md`, `commands.md`, `collisions.md`.
 
 ### DT4. The loop plays real time
 
 - **Steps.**
-  - [ ] **1. One step a frame (M).** `Engine::loop`: measure the time since the last frame, cut it to `kLongestStep` (a quarter second), play one step of it, draw. `<framerate>` becomes the most frames a second (the wait between frames), default 60. `kMostFramesOwed` goes. **Check:** `test_engine_input.cpp` and the window tests under `xvfb-run`.
+  - [ ] **1. One step a frame (M).** `Engine::loop`: measure the time since the last frame, cut it to `kLongestStep` (a quarter second), play one step of it, draw. `<framerate>` becomes the most frames a second (the wait between frames), default 60. `kMostFramesOwed` goes. `xge/tests/long/test_pace.cpp` is rewritten for the new loop: with its `TimedWindow` taking 5, 20 and 100 milliseconds to show a picture, a mover at 100 pixels a second is within 5 pixels of 200 after 2 real seconds each time, and the pictures shown differ. **Check:** `xgetest-long "[pace]"`; `test_engine_input.cpp`; the window tests under `xvfb-run`.
   - [ ] **2. The command line (S).** `xgecli --framerate <n>` overrides the game's for a window; `--step <seconds>` sets the length of each of `--frames`' steps (default a sixtieth); each `<moment>` of a dump carries its time in seconds (`games/xgedump.xsd`). **Check:** `test_cli.cpp`; `docs/reference/programs.md`.
-  - [ ] **3. Whole games at every pacing (M).** `xgetest-long "[pacing]"`: Pong, Asteroids, Mario Bros., Space Invaders, Snake and Pinball, each played 20 seconds with seeded random keys at 8, 30, 60, 144 and 240 steps a second and unevenly. Each must not crash, lose an object out of the window that the 60 run keeps, or sit in a different state from the 60 run's at the end without a reason written beside the check. **Check:** it passes.
+  - [ ] **3. Whole games at every step length (M).** `xgetest-long "[steps]"` gains one case a game, each played from a fresh load with the keys named, at 8, 30, 60, 144 and 240 steps a second and unevenly. Every run: no exception, every position finite (`finite` in `random_keys.h`). And one measure a game, in game seconds, which must agree with the 60 run within the range given:
+    - Pong: the seconds from the serve to the first point with no key pressed, within 10%.
+    - Asteroids: how far the ship has gone 3 seconds after 1 second of thrust, within 5%.
+    - Mario Bros.: the top of one jump within 3 pixels, and its time in the air within 5%.
+    - Space Invaders: where the block is after 10 seconds, within one of its own steps.
+    - Snake: the cells the head has gone after 5 seconds, exactly.
+    - Pinball: how high the ball gets from a full plunger, within 5%.
+    **Check:** it passes; the measured numbers at each rate are in the commit message.
   - [ ] **4. The recorded demo comes out (S).** The author: drop the demos for now and record new ones later. Remove the recorded `<demo>` from the one game that has one (`grep -l "<demo" games/descriptions/*.xml`) and whatever in that game only shows it; `xgetest "[vocabulary]"` then needs `demo` and its words in `kUnused` with why they stay. Recording and playback stay in the engine, counting steps: `--keys` with `--frames` plays the given steps, so it is still exact, and the tests and "Looking at a game" keep using it. A demo played in a window follows the real steps and so only roughly repeats; that is left open ([backlog](#language-and-engine)). **Check:** that game's tests; `test_cli.cpp`.
   - [ ] **5. The author tries it.** A line in [Waiting for a look on Windows](#waiting-for-a-look-on-windows): `xgecli pong --framerate 8`, `30`, `144`, `240`, and the same for Mario Bros. and Pinball, should each play at the speed 60 does. Do not start DT5 until the author says so.
 - **Files.** `xge/lib/engine/engine.*`, `xge/cli/source/`, `games/xgedump.xsd`, `xge/tests/long/`; `docs/reference/engine.md`, `programs.md`.
@@ -126,14 +135,14 @@ Its own block of work, done before anything else in this file. **Design and reas
 - **Which.** `pong` (velocity, a held move, the computer), `asteroids` (thrust, turning, drag), `mariobros` (a pull, jumps, grip), `spaceinvaders` (a stepped block), `snake` (cell ticks: nothing to multiply, only the attribute), `pinball` (friction, swings, knocks). Between them they use every row of the [units table](designs/29-time.md#units).
 - **Moving a game.** Add `time="seconds"` to its `<game>`. Multiply each number by its row of the table. Then read the whole file for speeds kept elsewhere: a `<variable>` that is later copied or added into a velocity, a `<set>` or `<inc>` on `x.velocity.y`, a condition that compares a speed, a spawn's or a `<fire>`'s velocity. Round to a number a person would write (`300`, not `299.99997`).
 - **Steps.**
-  - [ ] **1 to 6. One game a commit (S to M each),** Pong first. Its test file in `xge/tests/games/` is changed only where it names a speed. **Check:** the game's own tests; its case in `xgetest-long "[pacing]"`; one dump at `--frames 600 --seed 1` before and after shows the same objects in about the same places.
+  - [ ] **1 to 6. One game a commit (S to M each),** Pong first. Its test file in `xge/tests/games/` is changed only where it names a speed. **Check:** the game's own tests; its case in `xgetest-long "[steps]"`, whose measure must also be within its range of what it was before the move; `xgecli <game> --frames 600 --seed 1 --dump` before and after lists the same objects, each within 20 pixels of where it was (a game with bounces: the same objects only). No per-frame number is left: read the diff once more for any speed under 20 or pull under 100, and say in the commit why each one left is right.
   - [ ] **7. The reference says seconds (S).** `docs/reference/objects.md`, `commands.md`, `collisions.md`, `format.md`: every "a frame" for a moved word becomes "a second", with the `time="seconds"` attribute explained once in `format.md` as temporary.
   - [ ] **8. The author plays the six.** A line in Waiting for a look on Windows. Do not start DT6 until the author says they feel right; if a sum is changed after that, the six are checked again first.
 
 ### DT6. The rest of the games
 
 - **Steps.**
-  - [ ] **1. The games with motion, ten a commit (M each).** In the order `ls games/descriptions` gives, skipping the six and those in step 2. Moved as DT5 says. **Check after each commit:** those games' tests, and a dump before and after for each.
+  - [ ] **1. The games with motion, ten a commit (M each).** In the order `ls games/descriptions` gives, skipping the six and those in step 2. Moved as DT5 says. **Check after each commit:** as DT5 step 1 for each game, without the `[steps]` case; and `playRandomKeys` (`xgetest-long`) for those games.
   - [ ] **2. Cards, boards and cell puzzles in one commit (S).** Games whose only numbers are positions and seconds get the attribute and a read for any `<velocity>` or `<move>` (a dealt card's slide). **Check:** their tests.
   - [ ] **3. Every game is moved (S).** `xgetest "[vocabulary]"` gains a check that every file in `games/descriptions/` has `time="seconds"`. **Check:** it passes; `xgetest-generated`.
 
@@ -164,7 +173,7 @@ Its own block of work, done **after [delta time](#delta-time)**: both touch ever
 
 - **The aim.** The engine does the same things with less: a resource is held once, an object carries only the parts it uses, a tag is written in few places, and the code reads from its names.
 - **What it must not do** is change what any game does. Unlike delta time, every step here leaves every game playing exactly as before.
-- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `rawDrag` and `hasDrag` in `RawObject`, `load/build.cpp`, `Object::Motion`, the frame, the printer, two hand-kept lists of an object's numbers, `data.xsl` twice and the describer. CR1, CR4, CR5 and CR6 each take homes away.
+- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `rawDrag` and `hasDrag` in `RawObject`, `load/build.cpp`, `Object::Motion`, the frame, the printer, two hand-kept lists of an object's numbers, `data.xsl` twice and the describer. CR1, CR5, CR6 and CR7 each take homes away.
 
 ### Rules for this block
 
@@ -172,6 +181,7 @@ Its own block of work, done **after [delta time](#delta-time)**: both touch ever
 - **Measure.** `xgetest-long "[speed]"` and `"[size]"` (CR1 step 1) before and after each task, back to back on one machine. Load time, frame time and bytes do not rise; where a task says they fall, the numbers go in the commit message.
 - **One move a commit.** A part, a resource kind or a verb's data moves in its own commit, so a break is found by `git bisect`.
 - **Names over comments,** in every line this block writes or moves: a comment that says what a good name would say is replaced by the name. One-line comments stay as landmarks over a section or a function, and wherever the code cannot say why.
+- **How a step is checked.** Build as [AGENTS.md](../AGENTS.md#build-and-test) says, then `cd build && ctest -j4`, `xgetest-generated`, and `xgetest-long` (random keys, damaged files, `[speed]`, `[size]`). A step is done when its **Check** and all of these pass with zero warnings, and its box is ticked in the same commit.
 - A step marked "the author" stops for the author.
 
 ### Order
@@ -179,23 +189,101 @@ Its own block of work, done **after [delta time](#delta-time)**: both touch ever
 | # | Task | Gains |
 |---|---|---|
 | 1 | [CR1](#cr1-a-measure-and-the-lists-that-disagree): a measure, and the lists that disagree | sizes on record; suspected bugs settled |
-| 2 | [CR2](#cr2-input-update-render): input, update, render | the run reads as it is |
-| 3 | [CR3](#cr3-a-resource-manager): a resource manager | one picture, sound and texture each, however many use it |
-| 4 | [CR4](#cr4-the-reader-in-one-pass): the reader in one pass | no search per tag; the schema trusted |
-| 5 | [CR5](#cr5-one-reader-not-two): one reader, not two | about 6,000 lines of second reader gone |
-| 6 | [CR6](#cr6-a-verb-owns-its-data): a verb owns its data | a command the size of what it says |
-| 7 | [CR7](#cr7-parts-as-components): parts as components | an object the size of what it uses |
+| 2 | [CR2](#cr2-a-resource-manager): a resource manager | one picture, sound and texture each, however many use it |
+| 3 | [CR3](#cr3-parts-as-components): parts as components | an object the size of what it uses |
+| 4 | [CR4](#cr4-input-update-render): input, update, render | the run reads as it is |
+| 5 | [CR5](#cr5-the-reader-in-one-pass): the reader in one pass | no search per tag; the schema trusted |
+| 6 | [CR6](#cr6-one-reader-not-two): one reader, not two | about 6,000 lines of second reader gone |
+| 7 | [CR7](#cr7-a-verb-owns-its-data): a verb owns its data | a command the size of what it says |
 | 8 | [CR8](#cr8-no-special-rules): no special rules | no mechanic bends the flow for itself |
 | 9 | [CR9](#cr9-names-and-comments): names and comments | the code reads from its names |
+
+The author's order: the resource manager and the components first, since the rest is easier once they are in.
 
 ### CR1. A measure, and the lists that disagree
 
 - **Steps.**
-  - [ ] **1. Sizes on record (S).** A hidden case `"[size]"` beside `"[speed]"` (`xge/tests/long/`): prints `sizeof` `Object`, `RawObject`, `RawCommand`, `Command`, and for Pong, Space Invaders, Pac-Man and Klondike the objects, the commands, the pictures (count and bytes of pixels) and the textures a null window is asked for. **Check:** it prints; the numbers go into [engine-structure](designs/16-engine-structure.md#what-was-measured).
+  - [ ] **1. Sizes on record (S).** A hidden case `"[size]"` beside `"[speed]"` (`xge/tests/long/`): prints `sizeof` `Object`, `RawObject`, `RawCommand`, `Command`, and for Pong, Space Invaders, Pac-Man and Klondike the objects, the commands, the pictures (count and bytes of pixels) and the textures a null window is asked for. Today's first four are 4,712, 14,600, 3,328 and 184 bytes. **Check:** it prints; the numbers go into [engine-structure](designs/16-engine-structure.md#what-was-measured).
   - [ ] **2. Do the lists hide bugs (S).** Six places list "every value in a command" by hand (`game/object.cpp` in `nameSelfIn` and the two renames, `load/conditions.cpp`, `game/scenes.cpp`, `load/expr.cpp` for `live`), and only one names `arc` and `below`; the scenes' list of an object's numbers lacks seek, light and altitude. Write tests first: `self` in a `<hop>`'s `<arc>`, a spawned copy's own name in a `<spawn>`'s `<below>`, a scene object's `<light>` and `<seek>` naming another object of its scene, a live number in an `<arc>`. **Check:** each test passes or fails; the failures are the bugs.
   - [ ] **3. One walk (S).** `forEachValue` and `forEachName` for `RawCommand` and for `RawObject` (beside each struct), used by all six. **Check:** step 2's tests pass; nothing else changes.
 
-### CR2. Input, update, render
+### CR2. A resource manager
+
+- **Why.** Each object draws its own bitmap (`drawPicture` in `load/pictures.cpp` makes a new one per sprite per object), each window makes a texture per object (`CachedVisual` in `window/sfml.h`, `opengl.h`, `raylib.h` and the rest), and what is shared is shared by `std::shared_ptr`s nobody owns and one static map (`loadPicture` in `picture/image.cpp`).
+- **The shape.** One class, `Resources` (`xge/lib/engine/resources.h`, `.cpp`), owned by the `Game`:
+
+  ```cpp
+  struct PictureId { std::uint32_t index{}; };          // 0 is "none"; SoundId, FontId, SheetId, SchemaId alike
+  class Resources
+  {
+  public:
+      PictureId picture(const PictureKey& description);  // the same description gives the same id
+      PictureId turned(PictureId from, int degrees);     // made on request, then kept
+      PictureId flipped(PictureId from, bool horizontal, bool vertical);
+      PictureId recoloured(PictureId from, const std::string& style);
+      PictureId own(Bitmap made);                        // one object's alone (a holed picture)
+      void release(PictureId owned);                     // only for what own() gave
+      const Bitmap& bitmap(PictureId id) const;
+      std::size_t pictureCount() const;                  // and pictureBytes(), for [size]
+  };
+  ```
+
+  - A `PictureKey` holds everything that decides the pixels and nothing else: the kind, its rows or lines or file and part, colours, scale, flip, style, font and size. Two sprites that would draw the same pixels have equal keys.
+  - Ids are never reused while a game is loaded, so an id held anywhere stays right. `own` and `release` are the one exception and are used only by `<hole>`.
+  - A window keeps its textures by `PictureId`. It is told which ids are on screen and makes a texture the first time it sees one.
+- **Steps.**
+  - [ ] **1. The manager, with image files (M).** `Resources` with `picture()` for pictures loaded from files; `Game` owns one; the static map and its mutex in `picture/image.cpp` go. New `xge/tests/engine/test_resources.cpp` (add to `tests.cmake`). **Check:** in it, the same file asked twice gives one id and `pictureCount()` of 1; two files give two; a missing file throws the message it does today.
+  - [ ] **2. Drawn pictures (L, one kind a commit).** In this order: bitmap rows, lines, polygons, circles and rectangles, texts, sheet cells, SVGs. For each, `drawPicture` builds the key and asks the manager. **Check for each kind,** a case in `test_resources.cpp`: a game written in the test with a group of 20 members sharing one sprite of that kind has `pictureCount()` of 1; changing one member's colour makes it 2. **Check at the end:** `[size]` shows Space Invaders' pictures fewer than its objects, and its load time in `[speed]` has fallen; both numbers in the commit.
+  - [ ] **3. Made pictures (M, one kind a commit).** Turned (`Turnable` in `picture/bitmap.h`, which keeps its own map today), flipped (`flipsOf`), palette swaps (`makePalettes`), redrawn at the window's size, and holed (`own`, released when its object is reset or despawned). **Check:** cases in `test_resources.cpp`: two objects with one picture turned to the same heading share one turned picture; a `<hole>` in one of two alike shields leaves the other's picture untouched, and `pictureCount()` returns to what it was after a reset. `test_holes.cpp`, `test_picture_scale.cpp`, `test_flippers.cpp` pass.
+  - [ ] **4. Objects hold ids (M).** `std::shared_ptr<const Bitmap>` leaves `Object` and its parts (`Looks`, `Animation`, `Drawn`, `Mirror`) for `PictureId`; `Object::drawnPicture` asks the manager. **Check:** `grep -rn "shared_ptr<const Bitmap>" xge/lib/game xge/lib/play` finds nothing; all tests.
+  - [ ] **5. Textures by picture (M, one backend a commit).** Null window first, with a count of textures asked for; then SFML, SDL2, raylib, OpenGL, Vulkan, Qt (`xge/gui`); the Direct3D windows are changed blind and wait for the author's build. The contract in `window/window.h` and `docs/reference/engine.md` "What a window must do" is rewritten first. **Check:** a case in `test_resources.cpp`: the null window is asked for 1 texture by the 20-member game; `test_backends.cpp` under `xvfb-run` for each backend built; a line in Waiting for a look on Windows for Direct3D.
+  - [ ] **6. Sounds, fonts, sheets, schemas (M, one a commit).** Sound samples (`samplesOf` in `audio/sound.cpp`), font files (`picture/font.cpp`), sheets (`SheetPicture`), and the parsed schema (`XsdLiteValidator` in `load/xsd.*`). The schema outlives one game, so it is held by the `Engine`'s manager, which each game's manager asks. **Check:** cases in `test_resources.cpp`: two objects playing one sound share one set of samples; loading two games one after another reads `xgedef.xsd` once (a counter on the manager).
+- **Files.** `xge/lib/engine/resources.*` (new, in `ENGINE_SOURCES` and `games/generators/engine-cpp/engine.xml`), `load/pictures.cpp`, `picture/*`, `game/object.h`, `window/*`, `audio/*`, `xge/gui/source/`; `docs/reference/engine.md`, `docs/agents/pictures.md`.
+- **Done when** no file but `resources.cpp` makes a `Bitmap` that outlives a function, and `[size]` shows pictures and textures counted by what is different, not by object.
+
+### CR3. Parts as components
+
+- **Why.** An `Object` is 4,712 bytes whatever it is. Its parts (A4) become components: each kind in its own collection, held only by the objects that use it. The author: an object needs only its name; everything else, its place and picture included, is a part it has or has not.
+- **The shape.**
+
+  ```cpp
+  struct ObjectId { std::uint32_t index{}; std::uint32_t generation{}; };
+
+  template <typename Part> class Store      // xge/lib/game/store.h
+  {
+  public:
+      bool has(ObjectId id) const;
+      Part& get(ObjectId id);               // throws for one that has none
+      Part* find(ObjectId id);              // nullptr for one that has none
+      Part& add(ObjectId id, Part part);
+      void remove(ObjectId id);
+      template <typename Work> void each(Work&& work);   // in object order: work(ObjectId, Part&)
+  };
+  ```
+
+  - Parts are packed in one vector, kept in object order, with an index per object slot (none: no part). `Game` holds one `Store` per kind of part.
+  - A slot freed by a despawn is used again with its generation raised by one, so an `ObjectId` kept from before no longer matches and `Game::find(ObjectId)` answers nullptr.
+  - A part that a reset returns to its start keeps its start value in the same store (`Store::start(id)`); which parts do is in step 1's table.
+  - Copying a `Game` copies its stores.
+- **Steps.**
+  - [ ] **1. The author: the table of parts.** Before any code, list every part and loose field of `Object` and of `Moment` (`game/object.h`) with: its kind (a verb's own, shared, or a family's, by the rule in [engine-structure](designs/16-engine-structure.md#how-the-parts-are-grouped)), the verb family or tag it belongs to, its size, how many objects across the shipped games use it (count with a scratch test over every game), whether a reset restores it, and a proposed name. Mark each to keep, merge, split or rename. It goes in that design file. Stop for the author's changes.
+  - [ ] **2. A handle with a generation (M).** `ObjectId`; `Game::find(ObjectId)`; each object knows its own id. Then, one use a commit: `foundObjects`, carriers and riders, a `<chase>`'s and `<hunt>`'s target, a holder's members, the picker's held piece, and any other `Object*` or name kept from one step to the next (find them: `grep -rn "Object\*" xge/lib/game/*.h`). **Check:** new `xge/tests/engine/test_store.cpp`: an id found after a spawn; nullptr after a despawn; a new spawn in that slot has the next generation and the old id still finds nothing. All tests. `docs/agents/play.md` loses "never hold a reference to a copy across frames".
+  - [ ] **3. The store (S).** `Store<Part>` as above. **Check:** in `test_store.cpp`: `add`, `has`, `get`, `find`, `remove`; `each` visits in object order after adds and removes in any order; a part of a despawned object is gone; a copied store changes alone; `start` is restored by a reset.
+  - [ ] **4. Parts move out, one a commit, largest first (L in all).** `Holder`, `Drive`, `Hand`, `Cells`, `Animation`, `MapPlace`, then the rest of step 1's table. For each part:
+    1. it leaves `Object` and gets its store in `Game`;
+    2. `load/build.cpp` adds it only for an object whose file has its tag, or that has a command of its verb family;
+    3. a verb that can give it to an object while playing adds it on first use;
+    4. every reader of `object.<part>` asks the store, with `find` where the object may have none;
+    5. spawn copies it, despawn removes it, reset restores it.
+    **Check after each commit:** all tests and `xgetest-generated`; a case in `test_store.cpp` that Pong's ball has no such part (for a part Pong does not use); `[size]` and `[speed]` numbers in the commit, neither worse.
+  - [ ] **5. The author: what every drawn thing has (M once agreed).** `Moment` (now, start and before: 648 bytes), the picture and the collision rules are used by almost every object and read in thousands of places, tests included (`get("ball").position.x`). Show the author step 1's count of objects without them, the number of call sites, and two forms: they stay in the object, or they move and call sites read `game.place(id).position.x`. Do what the author picks.
+  - [ ] **6. Passes over a store (M, one pass a commit).** Where a frame pass asks every object "do you have this" (animations, object timers, paths, flights, pulls, altitude), it walks that part's store with `each`. The order of passes in `playOneFrame` and `Game::updateObjects` does not change. **Check:** all tests; `[speed]` frame time for all games summed is lower than before the task; `xgetest-long` random keys.
+  - [ ] **7. Features leave `Game` (L, a feature a commit).** With holders, cells, marks and the search holding their own parts, the functions in `game/holders.cpp`, `cells.cpp` and `think.cpp` become functions that take the game, as verbs are, and leave the class. **Check:** all tests; `wc -l xge/lib/game/game.h` under 500.
+  - [ ] **8. The written side (M).** `RawObject` (14,600 bytes) holds its optional parts as `std::optional`, a part a commit. **Check:** `[size]`: `sizeof(RawObject)` under 2,000.
+- **Files.** `xge/lib/game/store.h` (new), `game/object.h`, `game/game.*`, `game/*.cpp`, `play/*`, `verbs/*`, `load/build.cpp`; `xge/tests/engine/test_store.cpp` (new); `docs/reference/engine.md`, `docs/agents/play.md`.
+- **Done when** `sizeof(Object)` is under 256 bytes if step 5 moved the place out, or under 1,200 if it stayed (held by a `static_assert` in the `[size]` test), and no object holds a part its file never asked for.
+
+### CR4. Input, update, render
 
 - **Why.** `Engine::step` polls the window, plays held keys, runs the computer, steps the game and asks for sounds, and `loop` then renders. The author wants the three stages spelled out so another (post-processing) can go between.
 - **Steps.**
@@ -203,20 +291,7 @@ Its own block of work, done **after [delta time](#delta-time)**: both touch ever
   - [ ] **2. The game's own step the same way (S).** `Game::updateObjects` reads as its stages in order (timers, the frame, conditions, spawns settled), each a named call, with no work between the calls. **Check:** all tests; `[speed]`.
 - **Files.** `xge/lib/engine/engine.*`, `xge/cli/source/`, `xge/gui/source/`, `xge/tests/helpers/played.h`; `docs/reference/engine.md`.
 
-### CR3. A resource manager
-
-- **Why.** Each object draws its own bitmap, each window makes a texture per object, and what is shared is shared by `std::shared_ptr`s nobody owns and one static map (`loadPicture` in `picture/image.cpp`).
-- **The shape.** `Resources` (`xge/lib/engine/resources.*`), owned by the `Game`. It holds each kind in a vector and hands out a small id (`PictureId`, `SoundId`, ...). A resource is found by what describes it, so the same description gives the same id. What is made while playing (a picture turned, flipped, recoloured or holed) is asked for the same way: source id plus the change. Objects hold ids. A window holds textures by `PictureId`.
-- **Steps.**
-  - [ ] **1. The manager, with image files (M).** `Resources` with pictures loaded from files; the static map and its mutex in `picture/image.cpp` go. **Check:** `[size]`; `test_pictures.cpp`.
-  - [ ] **2. Drawn pictures (L, one kind a commit).** Rows, lines, polygons, circles and rectangles, texts, sheet cells, SVGs: `drawPicture` (`load/pictures.cpp`) asks the manager, keyed by everything that decides the pixels (kind, rows, colours, scale, flip, style, size). **Check:** Space Invaders' 55 invaders are a handful of pictures in `[size]`; load time falls.
-  - [ ] **3. Made pictures (M).** Turned (`Turnable`), flipped (`flipsOf`), palette swaps (`makePalettes`), holed, and redrawn at the window's size: each is a resource made on request and kept. A holed picture belongs to one object and is let go when that object is reset or despawned. **Check:** `test_holes.cpp`, `test_picture_scale.cpp`; Asteroids' rocks share their turned pictures.
-  - [ ] **4. Objects hold ids (M).** `std::shared_ptr<const Bitmap>` leaves `Object` and its parts for `PictureId`. **Check:** `grep -rn "shared_ptr<const Bitmap>" xge/lib/game` finds nothing.
-  - [ ] **5. Textures by picture (M, one backend a commit).** Each window's per-object `CachedVisual` becomes a texture per `PictureId` in use; the contract in `window/window.h` and `docs/reference/engine.md` says so. The Direct3D windows are changed blind and wait for the author's build. **Check:** `test_backends.cpp`; a line in Waiting for a look on Windows.
-  - [ ] **6. Sounds, fonts, sheets, schemas (M).** Sound samples (`audio/`), font files (`picture/font.cpp`), sheets, and the parsed schema (`load/xsd.*`, read once however many games load). **Check:** `[size]`; `xgegui` loading two games reads the schema once.
-- **Files.** `xge/lib/engine/resources.*` (new, in `ENGINE_SOURCES`), `load/pictures.cpp`, `picture/*`, `game/object.h`, `window/*`, `audio/*`; `docs/reference/engine.md`, `docs/agents/pictures.md`.
-
-### CR4. The reader in one pass
+### CR5. The reader in one pass
 
 - **Why.** `findChild` (`load/reading.cpp`) starts from the first child every time and makes a node object per sibling passed; `readObjectHere` calls it about 40 times. The group reader repeats the object reader tag by tag. And the reader re-checks the file's shape because a file that names no schema loads unchecked.
 - **Steps.**
@@ -226,35 +301,22 @@ Its own block of work, done **after [delta time](#delta-time)**: both touch ever
   - [ ] **4. No search left (M).** The other readers (states, conditions, sprites, holders, maps) walk their children once. `findChild` stays only where one optional child is asked of a small element. Each `copyElement` in `load/xml.cpp` is shown to be needed or removed. **Check:** a count of `findChild(` before and after in the commit; `[speed]`.
 - **Files.** `xge/lib/load/xml.cpp`, `load/reading.*`, `game/object.h`; `docs/agents/play.md` "Loading".
 
-### CR5. One reader, not two
+### CR6. One reader, not two
 
-- [ ] **1. The author: yes or no.** `engine-cpp` would write the game's tree (after `from=` is worked out) as a C++ table, and the generated program would run `load/xml.cpp` over it through a small `XmlNode`. `data.xsl` (4,138 lines), `merge.xsl` (768), `modules/game_parts.h` (588) and the describer in `test_generated_games.cpp` (551) go; the generator leaves [changing the language](agents/readme.md#changing-the-language). It stays XSLT, with no XML library in the program. The cost: the program carries the reader and reads its table at start. If no, skip to CR6 and A1 step 4 stays parked.
+- [ ] **1. The author: yes or no.** `engine-cpp` would write the game's tree (after `from=` is worked out) as a C++ table, and the generated program would run `load/xml.cpp` over it through a small `XmlNode`. `data.xsl` (4,138 lines), `merge.xsl` (768), `modules/game_parts.h` (588) and the describer in `test_generated_games.cpp` (551) go; the generator leaves [changing the language](agents/readme.md#changing-the-language). It stays XSLT, with no XML library in the program. The cost: the program carries the reader and reads its table at start. If no, skip to CR7 and A1 step 4 stays parked.
 - [ ] **2. The tree and its node (M).** A static tree type and an `XmlNode` over it (`xge/lib/xml/`), with a test that reads Pong from one.
 - [ ] **3. The stylesheet (M).** `games/generators/engine-cpp/tree.xsl` writes it; `xgetest-generated` plays each generated game beside the engine's as it does now.
 - [ ] **4. The second reader goes (S).** Delete the four files and their mentions in `engine.xml`, `assets.cmake`, the agent notes and [generator](designs/40-generator.md).
 
-### CR6. A verb owns its data
+### CR7. A verb owns its data
 
 - **Why.** `RawCommand` is 3,328 bytes of 61 shared fields. This is A1 step 4, and it replaces that step.
-- **Needs** CR5, or the author's word to do it with `data.xsl` still there.
+- **Needs** CR6, or the author's word to do it with `data.xsl` still there.
 - **Steps.**
   - [ ] **1. The shape, on three verbs (M).** `RawCommand` becomes the verb, its line, and the verb's own data (a `std::variant` of small structs beside each verb's `Cmd...` struct, or one struct serving as both where nothing is worked out). `<bounce>`, `<hop>` and `<spawn>` first. **The author** reads those three files before the rest move.
   - [ ] **2. The rest, ten verbs a commit (L in all).** A field two verbs used for different things (`seconds`, `amount`, `distance`) becomes each verb's own, named for what it is there. **Check after each commit:** `xgetest "[verbs]"`, `xgetest-generated`.
   - [ ] **3. The bag goes (S).** `RawCommand` has no shared value fields; CR1's `forEachValue` asks the verb. Load errors name the command's own line. **Check:** `[size]`.
 - **Files.** `xge/lib/game/command.h`, `xge/lib/verbs/*`, `load/reading.*`; `docs/designs/14-verbs.md`.
-
-### CR7. Parts as components
-
-- **Why.** An `Object` is 4,712 bytes whatever it is. Its parts (A4) become components: each kind in its own collection, held only by the objects that use it. The author: an object needs only its name; everything else, its place and picture included, is a part it has or has not.
-- **Steps.**
-  - [ ] **1. The author: the table of parts.** Before any code, list every part and loose field of `Object` and of `Moment` (`game/object.h`) with: its kind (a verb's own, shared, or a family's), the verb family or tag it belongs to, its size, how many objects across the shipped games use it, and a proposed name. Mark each part to keep, merge, split or rename, by the rule in [engine-structure](designs/16-engine-structure.md#how-the-parts-are-grouped). It goes in that design file. Stop for the author's changes.
-  - [ ] **2. A handle with a generation (M).** `ObjectId { index, generation }`; `Game` finds an object by it and answers "gone" for a stale one. Uses of `Object*` and of names kept across steps (`foundObjects`, carriers, targets, holders' members) become ids. **Check:** all tests; `docs/agents/play.md` loses "never hold a reference to a copy across frames".
-  - [ ] **3. The store (S).** `Store<Part>` (`xge/lib/game/store.h`): parts packed in a vector, kept in object order, an index per object, `has`, `get`, `add`, `remove`, and a walk in object order. Copying a game copies its stores, as the board search needs. **Check:** its own test file.
-  - [ ] **4. Parts move out, one a commit, largest first (L in all).** `Holder`, `Drive`, `Hand`, `Cells`, `Animation`, `MapPlace`, then the rest of step 1's table. Last, what every drawn thing has (`Moment`, the picture, collisions), so that a number-holder is its name and its variables and nothing else. For each: the part leaves `Object`, is added at load only for objects that have its tag or verb, and every reader of it asks the store. A reset restores a part from its start as before. **Check after each commit:** all tests; `[size]` and `[speed]` in the commit.
-  - [ ] **5. Passes over a store (M).** Where a frame pass asks every object "do you have this" (`animate`, timers, paths, flights, pulls), it walks that part's store in object order. The order of passes does not change. **Check:** `[speed]` frame time falls; all tests.
-  - [ ] **6. Features leave `Game` (L, a feature a commit).** With holders, cells, marks and the search holding their own parts, their functions (`game/holders.cpp`, `cells.cpp`, `think.cpp`) take the game, as verbs do, and leave the class. **Check:** `game/game.h` under 500 lines.
-  - [ ] **7. The written side (M).** `RawObject` (14,600 bytes) holds its optional parts as `std::optional` or in the same stores. **Check:** `[size]`.
-- **Files.** `xge/lib/game/*`, `play/*`, `verbs/*`, `load/build.cpp`; `docs/reference/engine.md`, `docs/agents/play.md`.
 
 ### CR8. No special rules
 
@@ -268,7 +330,7 @@ Its own block of work, done **after [delta time](#delta-time)**: both touch ever
 ### CR9. Names and comments
 
 - **Steps.**
-  - [ ] **1. The author: the names table.** Propose the renames in one table in [engine-structure](designs/16-engine-structure.md#versions-of-one-value): `Raw...`/`raw...` (37 types, 32 fields) to `Written...`, and any type, part or function whose name no longer says what it is after CR3 to CR8. Stop for the author.
+  - [ ] **1. The author: the names table.** Propose the renames in one table in [engine-structure](designs/16-engine-structure.md#versions-of-one-value): `Raw...`/`raw...` (37 types, 32 fields) to `Written...`, and any type, part or function whose name no longer says what it is after CR2 to CR8. Stop for the author.
   - [ ] **2. The renames, a family a commit (M).** By tool, not by hand; the generator's files and the docs with them. **Check:** all tests; `xgetest-generated`.
   - [ ] **3. Comments, a folder a commit (M).** In `xge/lib`: a comment that repeats the code or stands in for a name goes, the name is fixed instead; one-line landmarks over sections and functions stay; a "why" that the code cannot say stays, short. Comments in `game/` are 19% of its lines today. **Check:** the share per folder before and after in the commit.
   - [ ] **4. The rule is written down (S).** [AGENTS.md](../AGENTS.md) "Rules" gains the names-over-comments line, and [engine](reference/engine.md) describes the engine as it now is: resources, components, input, update, render. This section is deleted from the plan.
@@ -293,7 +355,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **1. A place for printing (S).** `Verb` (`verbs/verb.h`) gains an optional `print` for a `Command` and one for a `RawCommand`. `operator<<` for each (`game/command.cpp`) asks the verb first and falls back to its own cases. Nothing moves yet. **Check:** `xgetest-generated` (it compares these dumps, so the text must not change by a character).
   - [x] **2. Move the printing, ten verbs a commit (M in all).** Each verb's two cases move into its file. Repeat until the cases in `command.cpp` are gone, then remove the fallback. **Check after each commit:** `xgetest-generated`.
   - [x] **3. A verb's own helpers move beside it (S).** `hop`, `startFlight`, `huntByHop`, `spawnProjectile`, `aim`, `chase`, `land`, `knock` in `play/executor.cpp`: for each, `grep` for its callers; one used by a single verb moves into that verb's file, one used by several stays. One helper a commit. **Check:** `xgetest-long "[speed]"` before and after (load and frame times must not rise).
-  - [ ] **4. Moved to [CR6](#cr6-a-verb-owns-its-data).** Was: the author: whether each verb owns its data (L if yes). `Command` would become `{ const Verb* verb; data }` and `RawCommand`'s shared fields the verb's own, which is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer heavily, so it waits until A5 has retired `data.xsl`, or is dropped. Ask before starting. With it, each command carries its own line, and the load's name checks can say the command's line rather than its holder's (B7, done; the author wants that).
+  - [ ] **4. Moved to [CR7](#cr7-a-verb-owns-its-data).** Was: the author: whether each verb owns its data (L if yes). `Command` would become `{ const Verb* verb; data }` and `RawCommand`'s shared fields the verb's own, which is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer heavily, so it waits until A5 has retired `data.xsl`, or is dropped. Ask before starting. With it, each command carries its own line, and the load's name checks can say the command's line rather than its holder's (B7, done; the author wants that).
 - **Files.** `xge/lib/verbs/*`, `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/play.md` "Loading".
 - **Done when** adding a verb is one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element and the docs.
 
