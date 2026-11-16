@@ -123,12 +123,12 @@ TEST_CASE("mariobros.xml: a sidestepper takes two bumps: the first makes it mad 
 	play.phase("phase4");
 	Object& crab = play.pest("phase4.sidesteppers.3");
 	REQUIRE(crab.lookName() == "walking");
-	crab.velocity.x = 0.5f;
+	crab.velocity.x = 30.0f;
 	play.frames(1);
 
 	play.bump(crab);
 	CHECK(crab.lookName() == "mad");
-	CHECK(crab.velocity.x == Approx(1.0f));
+	CHECK(crab.velocity.x == Approx(60.0f));
 	CHECK(play.mario().variable.at("lives") == Approx(3.0f));
 
 	// Back over Mario's head, and the second bump turns it over.
@@ -155,7 +155,7 @@ TEST_CASE("mariobros.xml: a fighter fly hops along, and only one standing on a f
 	for (int i = 0; i < 40; ++i)
 	{
 		fly.position.y = standing - 20.0f;
-		fly.velocity = { 0.0f, -1.0f };
+		fly.velocity = { 0.0f, -60.0f };
 		play.frames(1);
 	}
 	CHECK(fly.lookName() == "walking");

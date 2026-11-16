@@ -64,20 +64,20 @@
   No fireballs or icicles: see docs/designs/54-games.md.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Mario Bros.">
     <width>256</width>
     <height>224</height>
     <scale>3</scale>
   </window>
   <variables>
-    <variable name="pull">0.3</variable>
+    <variable name="pull">1080</variable>
     <!-- Mario's own pull: the arcade's slow, floaty jump, about a second
          up and down, as high as with the shellcreepers' pull -->
-    <variable name="float">0.13</variable>
-    <variable name="walk">1.25</variable>
-    <variable name="crawl">0.5</variable>
-    <variable name="hop">2.5</variable>
+    <variable name="float">468</variable>
+    <variable name="walk">75</variable>
+    <variable name="crawl">30</variable>
+    <variable name="hop">150</variable>
     <!-- a fighter fly's hop -->
     <variable name="flyhop">18</variable>
     <variable name="jumpheight">56</variable>
@@ -185,7 +185,7 @@
         <falling sprite="falling" />
       </poses>
       <mirror>left</mirror>
-      <grip>0.15</grip>
+      <grip>0.9999</grip>
       <collisions>
         <!-- he touches with his body, a little in from his outline, and his feet
              clear a pest by more: a near miss is a miss -->
@@ -225,7 +225,7 @@
           <play sound="hit" />
           <set variable="down.downed.x">self.x</set>
           <set variable="down.downed.y">self.y</set>
-          <set variable="down.downed.velocity.y">-3</set>
+          <set variable="down.downed.velocity.y">-180</set>
           <set variable="self.down">1</set>
           <die />
         </action>

@@ -469,7 +469,7 @@ TEST_CASE("mariobros.xml: the shellcreepers come out of the top pipes, fall floo
 TEST_CASE("mariobros.xml: a shellcreeper bumped over lies still on its own floor, and a second bump gets it up going its way", "[knock][mariobros]")
 {
 	Mario play;
-	play.creeper().velocity.x = 0.5f;
+	play.creeper().velocity.x = 30.0f;
 	play.frames(2);
 	const float standing = play.creeper().position.y;
 
@@ -500,7 +500,7 @@ TEST_CASE("mariobros.xml: a shellcreeper bumped over lies still on its own floor
 	play.tap(KeyCode::Space);
 	play.frames(40);
 	CHECK(play.creeper().lookName() == "walking");
-	CHECK(play.creeper().velocity.x == Approx(0.5f));
+	CHECK(play.creeper().velocity.x == Approx(30.0f));
 	CHECK(play.creeper().position.x > lying);
 	play.frames(40);
 	CHECK(play.creeper().position.y == Approx(standing));
@@ -519,7 +519,7 @@ TEST_CASE("mariobros.xml: the POW leaves a shellcreeper in the air alone, and tw
 	for (int i = 0; i < 80 && pow.lookName() == "three"; ++i)
 	{
 		play.creeper().position.y = standing - 30.0f;
-		play.creeper().velocity = { 0.0f, -1.0f };
+		play.creeper().velocity = { 0.0f, -60.0f };
 		play.frames(1);
 	}
 	CHECK(pow.lookName() == "two");
@@ -535,8 +535,8 @@ TEST_CASE("mariobros.xml: the POW leaves a shellcreeper in the air alone, and tw
 	meet.game.reveal(two.name, 1);
 	one.position = { 40.0f, 160.0f - one.size.y };
 	two.position = { 70.0f, 160.0f - two.size.y };
-	one.velocity.x = 0.5f;
-	two.velocity.x = -0.5f;
+	one.velocity.x = 30.0f;
+	two.velocity.x = -30.0f;
 	meet.frames(60);
 	CHECK(one.velocity.x < 0.0f);
 	CHECK(two.velocity.x > 0.0f);
@@ -546,7 +546,7 @@ TEST_CASE("mariobros.xml: the POW leaves a shellcreeper in the air alone, and tw
 TEST_CASE("mariobros.xml: left on its back, a shellcreeper gets up where it lies and goes on faster, red", "[knock][mariobros]")
 {
 	Mario play;
-	play.creeper().velocity.x = -0.5f;
+	play.creeper().velocity.x = -30.0f;
 	play.mario().position.x = play.creeper().position.x;
 	play.frames(2);
 	play.tap(KeyCode::Space);
@@ -557,7 +557,7 @@ TEST_CASE("mariobros.xml: left on its back, a shellcreeper gets up where it lies
 	play.mario().position.x = 200.0f;        // out from under it
 	play.frames(8 * 60 - 40);                // eight seconds after it went over
 	CHECK(play.creeper().lookName() == "walking");
-	CHECK(play.creeper().velocity.x == Approx(-0.75f));
+	CHECK(play.creeper().velocity.x == Approx(-45.0f));
 	REQUIRE_FALSE(play.creeper().looks.palettes.empty());
 	CHECK(play.creeper().looks.palettes.at(play.creeper().looks.worn).name == "angry");   // and red
 	CHECK(play.creeper().position.x < lying);

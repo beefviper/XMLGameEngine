@@ -178,8 +178,8 @@ TEST_CASE("Mario's jump goes as high and is in the air as long at every step len
 				const double pull = mario.acceleration.y;
 				const double rise = static_cast<double>(ground - was.y);
 				const double going = speed.y;
-				const double frames = pull > 0.0 ? (-going + std::sqrt(going * going + 2.0 * pull * rise)) / pull : rise / going;
-				landed = before - start + frames / 60.0;
+				const double rest = pull > 0.0 ? (-going + std::sqrt(going * going + 2.0 * pull * rise)) / pull : rise / going;
+				landed = before - start + rest;
 				return true;
 			}
 			before = pacer.now();
