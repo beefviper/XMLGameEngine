@@ -57,7 +57,7 @@ TEST_CASE("pinball.xml: the ball waits on the plunger, and Space held then let g
 	CHECK(table.middle(table.ball()).y == Approx(614.0f).margin(1.0f));
 	table.engine.handleKeyReleased(KeyCode::Space);
 	CHECK(table.get("plunger").lookName() == "empty");
-	CHECK(table.ball().velocity.y == Approx(-18.0f));
+	CHECK(table.ball().velocity.y == Approx(-1080.0f));
 
 	// Up the lane, and off the curve at the top into the table.
 	for (int i = 0; i < 80 && table.middle(table.ball()).x > 430.0f; ++i) { table.frames(1); }
@@ -70,7 +70,7 @@ TEST_CASE("pinball.xml: a flipper sends a ball coming down onto it back up the t
 {
 	Table table;
 	// Falling onto the middle of the left flipper.
-	table.put(185.0f, 520.0f, 0.0f, 3.0f);
+	table.put(185.0f, 520.0f, 0.0f, 180.0f);
 	table.engine.handleKeyPressed(KeyCode::A);
 	// One eased stroke of six frames: slow, fast through level, slow again
 	// up to 30 above it.
@@ -80,7 +80,7 @@ TEST_CASE("pinball.xml: a flipper sends a ball coming down onto it back up the t
 		table.frames(1);
 		CHECK(flipper.heading == Approx(heading).margin(0.05f));
 	}
-	CHECK(table.ball().velocity.y < -6.0f);
+	CHECK(table.ball().velocity.y < -360.0f);
 
 	table.frames(20);
 	CHECK(table.middle(table.ball()).y < 400.0f);
@@ -102,11 +102,11 @@ TEST_CASE("pinball.xml: a bumper scores, lights and kicks the ball away faster",
 {
 	Table table;
 	// Straight down onto the top of the lowest bumper.
-	table.put(225.0f, 220.0f, 0.0f, 4.0f);
+	table.put(225.0f, 220.0f, 0.0f, 240.0f);
 	for (int i = 0; i < 10 && table.ball().velocity.y > 0.0f; ++i) { table.frames(1); }
 	CHECK(table.table("score") == 100.0f);
 	CHECK(table.get("bumper3").lookName() == "lit");
-	CHECK(table.ball().velocity.y < -4.0f);
+	CHECK(table.ball().velocity.y < -240.0f);
 	table.frames(12);
 	CHECK(table.get("bumper3").lookName() == "dark");
 }
@@ -117,7 +117,7 @@ TEST_CASE("pinball.xml: the three lanes lit give a bonus, flash and go dark agai
 	for (const char* lane : { "lane1", "lane2", "lane3" })
 	{
 		const Object& it = table.get(lane);
-		table.put(it.position.x + 4.0f, it.position.y - 10.0f, 0.0f, 2.0f);
+		table.put(it.position.x + 4.0f, it.position.y - 10.0f, 0.0f, 120.0f);
 		table.frames(8);
 	}
 	CHECK(table.table("score") == 1150.0f);
@@ -133,7 +133,7 @@ TEST_CASE("pinball.xml: the third ball down the drain ends the game", "[pinball]
 	Table table;
 	for (int i = 0; i < 3; ++i)
 	{
-		table.put(225.0f, 610.0f, 0.0f, 6.0f);
+		table.put(225.0f, 610.0f, 0.0f, 360.0f);
 		table.frames(10);
 	}
 	CHECK(table.state() == "over");
@@ -151,7 +151,7 @@ TEST_CASE("pinball.xml: a ball dropped onto a flipper is never thrown further th
 		const float speed = std::hypot(table.ball().velocity.x, table.ball().velocity.y);
 		table.frames(1);
 		const Vector2f moved = table.ball().position - was;
-		CHECK(std::hypot(moved.x, moved.y) <= speed + 1.0f);
+		CHECK(std::hypot(moved.x, moved.y) <= speed / 60.0f + 1.0f);
 	}
 }
 
@@ -181,5 +181,5 @@ TEST_CASE("pinball.xml: a ball caught on a raised flipper rolls down to the hing
 	CHECK(table.middle(table.ball()).x > settled.x + 10.0f);
 	table.engine.handleKeyPressed(KeyCode::A);
 	table.frames(8);
-	CHECK(table.ball().velocity.y < -8.0f);
+	CHECK(table.ball().velocity.y < -480.0f);
 }

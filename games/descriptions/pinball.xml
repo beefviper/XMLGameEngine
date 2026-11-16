@@ -18,8 +18,8 @@
     turns it up its <degrees> (clockwise or counterclockwise) in a stroke <seconds> long while its key is
     held: from still, fastest half way, slowing to a stop at the top. Let
     go, it comes back down to where it started the same way.
-  * The frame's sweep follows the swing: the flipper's turn and the ball's
-    move are looked at together through the frame, so a ball is struck
+  * The step's sweep follows the swing: the flipper's turn and the ball's
+    move are looked at together through the step, so a ball is struck
     wherever the flipper meets it, however fast either goes.
   * The flipper's rule <knock>s the ball, which has a <mass>: the flipper
     lends the speed of the point it strikes with, its turn times how far
@@ -31,12 +31,13 @@
   * The ball has a little <friction>: wedged between a raised flipper and
     the slope above it, it comes to rest, perfectly still, until the
     flipper drops and it rolls down it.
-  * The plunger is a key's three moments: held (on="hold") pulls it back a
-    little more every frame, let go (on="release") shoots the ball from it,
-    both only while the ball sits on it (its loaded look).
+  * The plunger is a key's three moments: held (on="hold") pulls it back,
+    120 power a second up to 100, let go (on="release") shoots the ball
+    from it at 240 and 8.4 a power pixels a second, both only while the
+    ball sits on it (its loaded look).
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Pinball">
     <width>600</width>
     <height>640</height>
@@ -46,9 +47,9 @@
     <variable name="radius">6</variable>
     <variable name="laneX">445</variable>
     <variable name="plungerTop">600</variable>
-    <variable name="pull">2</variable>
+    <variable name="pull">120</variable>
     <variable name="most">100</variable>
-    <variable name="shot">0.14</variable>
+    <variable name="shot">8.4</variable>
     <variable name="balls">3</variable>
   </variables>
   <styles>
@@ -238,7 +239,7 @@
               <set variable="ball.velocity.y">
                 <subtract>
                   <value>0</value>
-                  <value>4</value>
+                  <value>240</value>
                   <value><multiply><value>plunger.power</value><value>shot</value></multiply></value>
                 </subtract>
               </set>
@@ -261,7 +262,7 @@
               <value><multiply><value>radius</value><value>2</value></multiply></value>
             </subtract>
           </y></position>
-          <acceleration><x>0</x><y>0.2</y></acceleration>
+          <acceleration><x>0</x><y>720</y></acceleration>
           <friction>0.05</friction>
           <mass>1</mass>
           <collisions>
