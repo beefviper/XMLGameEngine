@@ -84,6 +84,11 @@ namespace xge
 
 		Game& game;
 
+		// While a held key's commands run, the step's length in the game's
+		// units (Game::motionTime): an <inc> or <dec> adds its number times
+		// it, so a held count goes by the time held. 1 otherwise.
+		float heldShare = 1.0f;
+
 		// A command, done as `doer` says by its verb (Verb::run). False when
 		// the verb is refused, which ends the list it is in.
 		bool run(const Command& command, const Doer& doer);

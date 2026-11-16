@@ -40,7 +40,7 @@ namespace xge
 	static bool runDec(const Command& command, const Doer&, CommandExecutor& executor)
 	{
 		const CmdDecrement& dec = std::get<CmdDecrement>(command);
-		executor.game.addTo(dec.target, -dec.amount);
+		executor.game.addTo(dec.target, -dec.amount * executor.heldShare);
 		return true;
 	}
 

@@ -116,14 +116,15 @@ namespace played
 	}
 
 	// A game of one state, "playing", with these objects, in per-second
-	// numbers (<game time="seconds">), and whatever else the state is given.
-	inline std::string secondsGame(const std::string& objects, const std::string& more = "")
+	// numbers (<game time="seconds">), and whatever else the state is given:
+	// `inputs` go after its Space to stop, `more` after its inputs.
+	inline std::string secondsGame(const std::string& objects, const std::string& more = "", const std::string& inputs = "")
 	{
 		return "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"steps\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
 			"<states><state name=\"playing\"><objects>" + objects + "</objects>"
-			"<inputs><input button=\"space\"><pop /></input></inputs>" + more + "</state></states></game>";
+			"<inputs><input button=\"space\"><pop /></input>" + inputs + "</inputs>" + more + "</state></states></game>";
 	}
 }

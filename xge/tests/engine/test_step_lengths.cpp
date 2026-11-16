@@ -224,3 +224,51 @@ TEST_CASE("a thing coasting under drag goes as far, however the time is cut into
 	agree(speed, 0.5);
 	CHECK(speed.front().value == Approx(75.0).margin(0.5));
 }
+
+TEST_CASE("a paddle held for a second goes as far, however the time is cut into steps", "[steps][held]")
+{
+	// 200 pixels a second down while S is held.
+	const std::string paddle = box("paddle", 100, 100,
+		"<collisions><off /></collisions><actions><action name=\"down\"><move direction=\"down\">200</move></action></actions>");
+	const std::string game = secondsGame(paddle, "", "<input button=\"s\"><trigger object=\"paddle\" action=\"down\" /></input>");
+	const auto hold = [](Played& play) { play.engine.handleKeyPressed(xge::KeyCode::S); };
+	const auto y = atEveryStepLengthOf(game, 1.0, [](Played& play) { return static_cast<double>(play.get("paddle").position.y); }, hold);
+	agree(y, 2.0);
+	CHECK(y.front().value == Approx(300.0).margin(2.0));
+}
+
+TEST_CASE("a climb held goes as far up the ladder, however the time is cut into steps", "[steps][held][climb]")
+{
+	// 50 pixels a second up a ladder 200 high, from the floor at 400.
+	const std::string climber = box("climber", 100, 390,
+		"<acceleration><x>0</x><y>1000</y></acceleration>"
+		"<collisions><collision object=\"floor\"><land /></collision></collisions>"
+		"<actions><action name=\"up\"><climb direction=\"up\" class=\"ladder\">50</climb></action></actions>");
+	const std::string ladder = "<object name=\"ladder\" class=\"ladder\"><sprite><rectangle><width>20</width><height>200</height></rectangle></sprite>"
+		"<position><x>95</x><y>200</y></position><collisions><off /></collisions></object>";
+	const std::string floor = "<object name=\"floor\"><sprite><rectangle><width>400</width><height>20</height></rectangle></sprite>"
+		"<position><x>0</x><y>400</y></position><collisions></collisions></object>";
+	const std::string game = secondsGame(ladder + floor + climber);
+	const auto up = [](Played& play)
+	{
+		play.engine.step(0.05f);
+		xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "climber", "up" }, true);
+	};
+	const auto y = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("climber").position.y); }, up);
+	agree(y, 2.0);
+	CHECK(y.front().value == Approx(290.0).margin(2.0));
+}
+
+TEST_CASE("Cannon Hill's charge after a second of Space held is the same, however the time is cut into steps", "[steps][held][cannonhill]")
+{
+	// Three quarters a sixtieth of a second: 45 in a second.
+	const auto hold = [](Played& play)
+	{
+		play.tap(xge::KeyCode::Space);
+		play.frames(3);
+		play.engine.handleKeyPressed(xge::KeyCode::Space);
+	};
+	const auto power = atEveryStepLength("descriptions/cannonhill.xml", 1.0, [](Played& play) { return static_cast<double>(play.get("barrel1").variable.at("power")); }, hold);
+	agree(power, 0.9);
+	CHECK(power.front().value == Approx(45.0).margin(0.1));
+}

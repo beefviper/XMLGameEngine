@@ -114,7 +114,7 @@ namespace xge
 			return false;
 		}
 
-		void applyClimbing(std::vector<Object>& objects, FrameRules& rules)
+		void applyClimbing(std::vector<Object>& objects, FrameRules& rules, float t)
 		{
 			for (auto& object : objects)
 			{
@@ -166,7 +166,7 @@ namespace xge
 				const bool holdTop = holding && step < 0.0f && !floorAt(objects, object, whole.top(), rules);
 				const bool holdBottom = holding && step > 0.0f && !floorAt(objects, object, whole.bottom(), rules);
 				const bool wasClimbing = object.footing.climbing;
-				if (!climbLadder(object.position, object.velocity, object.size, step, object.footing.climbing, object.footing.grounded, whole, holdTop, holdBottom))
+				if (!climbLadder(object.position, object.velocity, object.size, step, t, object.footing.climbing, object.footing.grounded, whole, holdTop, holdBottom))
 				{
 					continue;
 				}
@@ -1130,7 +1130,7 @@ namespace xge
 		// Who walks a maze chooses its way, now that a path may have let it go.
 		walkMazes(objects, rules);
 
-		applyClimbing(objects, rules);
+		applyClimbing(objects, rules, step.t);
 
 		findGround(objects, rules);
 

@@ -760,7 +760,7 @@ namespace xge
 			&& feet >= ladder.top() - 0.5f && feet <= ladder.bottom() + 0.5f;
 	}
 
-	bool climbLadder(Vector2f& position, Vector2f& velocity, const Vector2f& size, float step, bool& climbing, bool grounded, const Box& ladder,
+	bool climbLadder(Vector2f& position, Vector2f& velocity, const Vector2f& size, float step, float t, bool& climbing, bool grounded, const Box& ladder,
 		bool holdTop, bool holdBottom) noexcept
 	{
 		const float top = ladder.top();
@@ -776,8 +776,10 @@ namespace xge
 			position.x = ladder.middle().x - size.x / 2.0f;
 		}
 
-		const float newFeet = std::clamp(feet + step, top, bottom);
-		velocity = { 0.0f, newFeet - feet };
+		// The climb goes its speed times the time passed, stopping at an
+		// end; the sweep then moves it velocity times t.
+		const float newFeet = std::clamp(feet + step * t, top, bottom);
+		velocity = { 0.0f, t > 0.0f ? (newFeet - feet) / t : 0.0f };
 
 		if (step != 0.0f && ((newFeet <= top && !holdTop) || (newFeet >= bottom && !holdBottom)))
 		{

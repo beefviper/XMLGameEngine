@@ -41,7 +41,7 @@ So remapping a key is one edit in one state, a key can do different things in di
 | `on=` | Runs its commands |
 |---|---|
 | `press` (or left out) | as the key goes down; held verbs (`<move>`, `<thrust>`, `<turn>`) stay on until it is let go |
-| `hold` | every frame while it is down, each time as one press |
+| `hold` | every step while it is down, each time as one press; an `<inc>` or `<dec>` it runs adds its number times the step's length, so a count goes by the time held |
 | `release` | once, as it is let go |
 
 ```xml

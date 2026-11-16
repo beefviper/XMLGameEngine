@@ -40,7 +40,7 @@ namespace xge
 	static bool runInc(const Command& command, const Doer&, CommandExecutor& executor)
 	{
 		const CmdIncrement& inc = std::get<CmdIncrement>(command);
-		executor.game.addTo(inc.target, inc.amount);
+		executor.game.addTo(inc.target, inc.amount * executor.heldShare);
 		return true;
 	}
 

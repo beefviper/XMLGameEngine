@@ -230,7 +230,7 @@ namespace xge
 
 		playComputer(seconds);
 
-		playHeldKeys();
+		playHeldKeys(seconds);
 
 		game.updateObjects(seconds);
 
@@ -556,7 +556,7 @@ namespace xge
 		}
 	}
 
-	void Engine::playHeldKeys(void)
+	void Engine::playHeldKeys(float seconds)
 	{
 		const auto& holding = game.getCurrentState().holding;
 		if (holding.empty()) { return; }
@@ -568,7 +568,10 @@ namespace xge
 		{
 			if (heldKeys.isDown(key) && pressedInState[static_cast<std::size_t>(key)] == now && game.stateChangeCount() == now)
 			{
+				// Held for this step: what it adds goes by the time passed.
+				commandExecutor.heldShare = game.motionTime(seconds);
 				runAsPress(commands);
+				commandExecutor.heldShare = 1.0f;
 			}
 		}
 		syncHeldKeysToState();

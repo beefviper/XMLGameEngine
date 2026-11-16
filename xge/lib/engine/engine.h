@@ -184,7 +184,7 @@ namespace xge
 		std::array<unsigned long, static_cast<std::size_t>(KeyCode::Count)> pressedInState{};
 
 		// Runs the current state's on="hold" bindings of the keys down.
-		void playHeldKeys(void);
+		void playHeldKeys(float seconds);
 
 		// Runs commands as one press each, as a key's press runs its own,
 		// stopping at a refused one or a turn's end.
