@@ -50,14 +50,14 @@
     the door they came in by (<condition distance=>).
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Haunted House">
     <width>800</width>
     <height>600</height>
   </window>
   <variables>
     <variable name="tile">40</variable>
-    <variable name="step">2</variable>
+    <variable name="step">120</variable>
     <variable name="near">40</variable>
     <variable name="match">260</variable>
   </variables>
@@ -79,7 +79,7 @@
         <collision object="player"><reset /></collision>
       </collisions>
       <timers>
-        <timer><after>0</after><hunt object="player">0.9<search /></hunt></timer>
+        <timer><after>0</after><hunt object="player">54<search /></hunt></timer>
       </timers>
     </object>
     <!-- the vampire bat: flits about the halls this way and that -->
@@ -94,7 +94,7 @@
         <collision object="player"><reset /></collision>
       </collisions>
       <timers>
-        <timer><after>0</after><wander>1.6</wander></timer>
+        <timer><after>0</after><wander>96</wander></timer>
       </timers>
     </object>
     <!-- the ghost of Zachary Graves: drifts through the walls toward the eyes -->
@@ -110,7 +110,7 @@
       <timers>
         <timer>
           <every>0.1</every>
-          <chase object="player">0.6</chase>
+          <chase object="player">36</chase>
         </timer>
       </timers>
     </object>

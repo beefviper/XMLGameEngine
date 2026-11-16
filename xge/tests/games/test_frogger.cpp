@@ -18,6 +18,7 @@
 #include "load/xml.h"
 #include "window/null.h"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <cmath>
@@ -285,7 +286,7 @@ TEST_CASE("hopping onto a log is safe, and the frog rides it", "[frogger][river]
 
 	table.frames(20);
 	CHECK(table.lives() == 3.0f);
-	CHECK(table.frog().position.x == landed + 20.0f * log.velocity.x);
+	CHECK(table.frog().position.x == Catch::Approx(landed + 20.0f * log.velocity.x / 60.0f).margin(0.01f));
 	CHECK(table.frog().position.y == cellPosition(0, 5).y);
 }
 

@@ -231,7 +231,7 @@ TEST_CASE("being hit knocks the chicken back a lane and costs nothing else", "[f
 	// (A pair in which nothing moves is not looked at, so the car keeps its lane's speed.)
 	Object& car = table.game.getObject("lane5.1.1");
 	car.position.x = table.chicken(2).position.x;
-	car.velocity.x = -3.0f;
+	car.velocity.x = -180.0f;
 	table.frames(1);
 
 	CHECK(table.chicken(2).position.y == rowY(6));

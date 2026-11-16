@@ -295,9 +295,9 @@ TEST_CASE("only the wave being played runs: the later waves wait where they star
 	CHECK(play.game.isAway(waiting));
 	CHECK(waiting.position.x == Approx(x));
 
-	CHECK(std::abs(play.object("playing.wave1.demons.1").velocity.x) == Approx(2));
-	CHECK(std::abs(waiting.velocity.x) == Approx(2.5));
-	CHECK(std::abs(play.object("playing.wave3.demons.1").velocity.x) == Approx(3));
+	CHECK(std::abs(play.object("playing.wave1.demons.1").velocity.x) == Approx(120));
+	CHECK(std::abs(waiting.velocity.x) == Approx(150));
+	CHECK(std::abs(play.object("playing.wave3.demons.1").velocity.x) == Approx(180));
 
 	// A new game starts at the first wave again, everything as it was.
 	clearWave(play, "wave1");

@@ -339,7 +339,7 @@ TEST_CASE("fishingderby.xml: a hook on its way up takes no second fish, and the 
 	// The shark swims into the cod: gone, back in its row, the hook put back.
 	Object& shark = play.get("shark");
 	shark.position = { play.get("cod.1").position.x - 100, play.get("cod.1").position.y - 4 };
-	shark.velocity = { 4, 0 };
+	shark.velocity = { 240, 0 };
 	play.frames(30);
 	CHECK(play.get("hook1").carry.what.empty());
 	CHECK(play.get("hook1").variable.at("line") == Approx(0));

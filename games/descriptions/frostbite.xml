@@ -43,7 +43,7 @@
     underneath (<show state="playing" />).
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Frostbite">
     <width>800</width>
     <height>600</height>
@@ -53,7 +53,7 @@
     <variable name="shore">125</variable>
     <variable name="row1">192</variable>
     <variable name="rowgap">90</variable>
-    <variable name="walk">2</variable>
+    <variable name="walk">120</variable>
     <variable name="hoptime">0.35</variable>
     <variable name="igloox">520</variable>
     <variable name="iglooground">112</variable>
@@ -111,14 +111,14 @@
       </actions>
       <group name="row1">
         <position><x>0</x><y>row1</y></position>
-        <velocity><x><multiply><value>1.2</value><value>drift</value></multiply></x></velocity>
+        <velocity><x><multiply><value>72</value><value>drift</value></multiply></x></velocity>
         <collisions>
           <collision object="bailey" sprite="white"><become object="row1" sprite="blue" /><trigger action="block" /></collision>
         </collisions>
       </group>
       <group name="row2">
         <position><x>60</x><y><add><value>row1</value><value>rowgap</value></add></y></position>
-        <velocity><x><multiply><value>-1.6</value><value>drift</value></multiply></x></velocity>
+        <velocity><x><multiply><value>-96</value><value>drift</value></multiply></x></velocity>
         <collisions>
           <collision object="bailey" sprite="white"><become object="row2" sprite="blue" /><trigger action="block" /></collision>
         </collisions>
@@ -130,7 +130,7 @@
             <value><multiply><value>2</value><value>rowgap</value></multiply></value>
           </add>
         </y></position>
-        <velocity><x><multiply><value>2</value><value>drift</value></multiply></x></velocity>
+        <velocity><x><multiply><value>120</value><value>drift</value></multiply></x></velocity>
         <collisions>
           <collision object="bailey" sprite="white"><become object="row3" sprite="blue" /><trigger action="block" /></collision>
         </collisions>
@@ -142,7 +142,7 @@
             <value><multiply><value>3</value><value>rowgap</value></multiply></value>
           </add>
         </y></position>
-        <velocity><x><multiply><value>-1.4</value><value>drift</value></multiply></x></velocity>
+        <velocity><x><multiply><value>-84</value><value>drift</value></multiply></x></velocity>
         <collisions>
           <collision object="bailey" sprite="white"><become object="row4" sprite="blue" /><trigger action="block" /></collision>
         </collisions>
@@ -225,7 +225,7 @@
               <value><add><value>row1</value><value>rowgap</value></add></value>
               <value>4</value>
             </subtract>
-          </y></position><velocity><x>2.4</x></velocity></member>
+          </y></position><velocity><x>144</x></velocity></member>
           <member><position><x>100</x><y>
             <subtract>
               <value>
@@ -236,7 +236,7 @@
               </value>
               <value>4</value>
             </subtract>
-          </y></position><velocity><x>2.2</x></velocity></member>
+          </y></position><velocity><x>132</x></velocity></member>
         </group>
         <!-- a fish along the third row: a bonus, back every so often -->
         <object name="fish" class="fish">
@@ -254,7 +254,7 @@
               <value>6</value>
             </subtract>
           </y></position>
-          <velocity><x>-1</x></velocity>
+          <velocity><x>-60</x></velocity>
           <collisions>
             <collision edge="horizontal"><wrap /></collision>
             <collision object="bailey"><die /></collision>

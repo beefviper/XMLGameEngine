@@ -317,7 +317,7 @@ TEST_CASE("a finished igloo opens its door; walking in is a bonus and the next n
 	CHECK(play.state() == "playing");
 
 	// The ice of the second night drifts faster.
-	CHECK(std::abs(play.game.getObject("night2.row1.1.1").velocity.x) == Approx(1.2f * 1.4f));
+	CHECK(std::abs(play.game.getObject("night2.row1.1.1").velocity.x) == Approx(72.0f * 1.4f));
 
 	// Two nights home, and in at the third night's door: a win.
 	play.bailey().variable["nights"] = 2;

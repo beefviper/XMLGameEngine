@@ -40,20 +40,20 @@
   colors, and the demons that swoop down at you.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Demon Attack">
     <width>640</width>
     <height>480</height>
   </window>
   <variables>
     <variable name="margin">10</variable>
-    <variable name="slide">5</variable>
+    <variable name="slide">300</variable>
     <variable name="ground">30</variable>
     <!-- a demon drops a bomb every drop - 1 to drop + 2 seconds; the big ones a second sooner -->
     <variable name="drop">3</variable>
     <!-- what the small demons do as they come down -->
-    <variable name="dive">2.5</variable>
-    <variable name="sway">2</variable>
+    <variable name="dive">150</variable>
+    <variable name="sway">120</variable>
   </variables>
   <styles>
     <style name="banner"><size>100</size><color>color.orange</color></style>
@@ -66,7 +66,7 @@
     <object name="laser" class="laser">
       <sprite><rectangle><width>3</width><height>18</height><color>color.yellow</color></rectangle></sprite>
       <position><x update="live"><add><value>player.x</value><value>18</value></add></x><y>0</y></position>
-      <velocity><y>-9</y></velocity>
+      <velocity><y>-540</y></velocity>
       <most>1</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -76,7 +76,7 @@
     <!-- a demon's bomb, there once one is dropped: eight at most -->
     <object name="bomb" class="bomb">
       <sprite><rectangle><width>4</width><height>12</height><color>color.red</color></rectangle></sprite>
-      <velocity><y>4</y></velocity>
+      <velocity><y>240</y></velocity>
       <most>8</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -232,7 +232,7 @@
       <scenes>
         <scene name="wave1">
           <variables>
-            <variable name="speed">2</variable>
+            <variable name="speed">120</variable>
           </variables>
           <objects>
             <!-- the first wave: six flapping demons, each at a speed of its own, three to a row -->
@@ -300,7 +300,7 @@
 
         <scene name="wave2">
           <variables>
-            <variable name="speed">2.5</variable>
+            <variable name="speed">150</variable>
           </variables>
           <objects>
             <!-- the second wave: four demons that split in two when they are shot -->
@@ -364,7 +364,7 @@
 
         <scene name="wave3">
           <variables>
-            <variable name="speed">3</variable>
+            <variable name="speed">180</variable>
           </variables>
           <objects>
             <!-- the third wave: three big demons that take two hits -->

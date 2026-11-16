@@ -79,7 +79,7 @@ TEST_CASE("Space drops a pair, one off each side of the destroyer, sinking slowl
 	CHECK(left.objClass == "charge");
 	CHECK(left.position.x + left.size.x / 2 == Approx(ship.position.x + 6));
 	CHECK(right.position.x + right.size.x / 2 == Approx(ship.position.x + ship.size.x - 6));
-	CHECK(left.velocity.y == Approx(2));
+	CHECK(left.velocity.y == Approx(120));
 
 	// Three pairs in the water at most.
 	hunt.tap(KeyCode::Space);
@@ -149,7 +149,7 @@ TEST_CASE("a mine laid by a submarine rises, and one under the destroyer costs a
 		return name;
 	};
 	const std::string open = lay(20);
-	CHECK(hunt.get(open).velocity.y == Approx(-1.2f));
+	CHECK(hunt.get(open).velocity.y == Approx(-72.0f));
 	hunt.frames(40);
 	CHECK_FALSE(hunt.has(open));
 	CHECK(hunt.status("ships") == 3.0f);

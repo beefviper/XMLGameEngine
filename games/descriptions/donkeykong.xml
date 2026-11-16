@@ -56,18 +56,18 @@
     (<show state="playing" />), the barrels stopped where they were.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Donkey Kong">
     <width>800</width>
     <height>700</height>
   </window>
   <variables>
     <variable name="piece">16</variable>
-    <variable name="pull">0.4</variable>
-    <variable name="walk">2.5</variable>
-    <variable name="climbstep">2</variable>
+    <variable name="pull">1440</variable>
+    <variable name="walk">150</variable>
+    <variable name="climbstep">120</variable>
     <variable name="jumpheight">44</variable>
-    <variable name="roll">2.5</variable>
+    <variable name="roll">150</variable>
     <variable name="margin">16</variable>
     <variable name="goal">3</variable>
   </variables>
@@ -149,7 +149,7 @@
         <action name="descend">
           <set variable="self.way"><subtract><value>0</value><value>self.velocity.x</value></subtract></set>
           <become sprite="down" />
-          <climb direction="down" class="ladder">1.5</climb>
+          <climb direction="down" class="ladder">90</climb>
         </action>
       </actions>
       <variables>
@@ -176,7 +176,7 @@
         <frame sprite="b" />
         <frame sprite="a" />
       </animation>
-      <velocity><x>1</x></velocity>
+      <velocity><x>60</x></velocity>
       <acceleration><x>0</x><y>pull</y></acceleration>
       <most>3</most>
       <collisions>
@@ -215,7 +215,7 @@
         <action name="rise">
           <set variable="self.way">self.velocity.x</set>
           <become sprite="climbing" />
-          <climb direction="up" class="ladder">1</climb>
+          <climb direction="up" class="ladder">60</climb>
         </action>
       </actions>
       <variables>

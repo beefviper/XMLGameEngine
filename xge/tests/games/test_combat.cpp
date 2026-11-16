@@ -130,7 +130,7 @@ TEST_CASE("a shell flies from the gun, one at a time, and a hit scores and knock
 	play.frames(1);
 	Object& shell = play.game.getObject("shell1.1");
 	REQUIRE(shell.isVisible);
-	CHECK(shell.velocity.x == Approx(6.0f));
+	CHECK(shell.velocity.x == Approx(360.0f));
 	CHECK(shell.velocity.y == Approx(0.0f).margin(0.01f));
 	CHECK(shell.position.x > play.tank1().position.x + play.tank1().size.x / 2);
 

@@ -38,7 +38,7 @@
     in while the shark is not near.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Fishing Derby">
     <width>800</width>
     <height>600</height>
@@ -46,7 +46,7 @@
   </window>
   <variables>
     <variable name="surface">170</variable>
-    <variable name="reel">2.5</variable>
+    <variable name="reel">150</variable>
     <variable name="goal">99</variable>
   </variables>
   <styles>
@@ -189,7 +189,7 @@
             <rectangle><width>80</width><height>28</height><color>color.darkgrey</color></rectangle>
           </sprite>
           <position><x><subtract><value>window.width.center</value><value>40</value></subtract></x><y><add><value>surface</value><value>25</value></add></y></position>
-          <velocity><x>2</x></velocity>
+          <velocity><x>120</x></velocity>
           <collisions>
             <collision edge="left"><bounce /><become sprite="right" /></collision>
             <collision edge="right"><bounce /><become sprite="left" /></collision>
@@ -272,22 +272,22 @@
             <variable name="worth">2</variable>
           </variables>
           <group name="sunfish">
-            <member><position><x>420</x><y><add><value>surface</value><value>100</value></add></y></position><velocity><x>1</x></velocity></member>
-            <member><position><x>120</x><y><add><value>surface</value><value>150</value></add></y></position><velocity><x>1.2</x></velocity></member>
+            <member><position><x>420</x><y><add><value>surface</value><value>100</value></add></y></position><velocity><x>60</x></velocity></member>
+            <member><position><x>120</x><y><add><value>surface</value><value>150</value></add></y></position><velocity><x>72</x></velocity></member>
           </group>
           <group name="perch">
             <sprite name="right"><bitmap><color>color.orange</color></bitmap></sprite>
             <sprite name="left"><bitmap><color>color.orange</color></bitmap></sprite>
             <variables><variable name="worth">4</variable></variables>
-            <member><position><x>600</x><y><add><value>surface</value><value>200</value></add></y></position><velocity><x>1.4</x></velocity></member>
-            <member><position><x>250</x><y><add><value>surface</value><value>250</value></add></y></position><velocity><x>1.6</x></velocity></member>
+            <member><position><x>600</x><y><add><value>surface</value><value>200</value></add></y></position><velocity><x>84</x></velocity></member>
+            <member><position><x>250</x><y><add><value>surface</value><value>250</value></add></y></position><velocity><x>96</x></velocity></member>
           </group>
           <group name="cod">
             <sprite name="right"><bitmap><color>color.magenta</color></bitmap></sprite>
             <sprite name="left"><bitmap><color>color.magenta</color></bitmap></sprite>
             <variables><variable name="worth">6</variable></variables>
-            <member><position><x>40</x><y><add><value>surface</value><value>300</value></add></y></position><velocity><x>1.8</x></velocity></member>
-            <member><position><x>500</x><y><add><value>surface</value><value>350</value></add></y></position><velocity><x>2</x></velocity></member>
+            <member><position><x>40</x><y><add><value>surface</value><value>300</value></add></y></position><velocity><x>108</x></velocity></member>
+            <member><position><x>500</x><y><add><value>surface</value><value>350</value></add></y></position><velocity><x>120</x></velocity></member>
           </group>
         </group>
       </objects>

@@ -30,14 +30,14 @@
   setting.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Depth Charge">
     <width>800</width>
     <height>600</height>
   </window>
   <variables>
     <variable name="surface">100</variable>
-    <variable name="step">4</variable>
+    <variable name="step">240</variable>
     <variable name="margin">20</variable>
   </variables>
   <styles>
@@ -51,7 +51,7 @@
       <sprite>
         <bitmap from="charge" />
       </sprite>
-      <velocity><y>2</y></velocity>
+      <velocity><y>120</y></velocity>
       <most>6</most>
       <collisions>
         <collision edge="bottom"><despawn /></collision>
@@ -63,7 +63,7 @@
       <sprite>
         <bitmap from="mine" />
       </sprite>
-      <velocity><y>-1.2</y></velocity>
+      <velocity><y>-72</y></velocity>
       <most>6</most>
       <collisions>
         <collision object="ship"><despawn /></collision>
@@ -157,7 +157,7 @@
           </timers>
           <group name="lane1">
             <position><y>170</y></position>
-            <velocity><x>1.5</x></velocity>
+            <velocity><x>90</x></velocity>
             <variables><variable name="worth">20</variable></variables>
             <member><position><x>-60</x></position></member>
             <member><position><x>240</x></position></member>
@@ -166,7 +166,7 @@
           <group name="lane2">
             <sprite><bitmap><color>color.green</color></bitmap></sprite>
             <position><y>260</y></position>
-            <velocity><x>-2</x></velocity>
+            <velocity><x>-120</x></velocity>
             <variables><variable name="worth">40</variable></variables>
             <member><position><x>80</x></position></member>
             <member><position><x>380</x></position></member>
@@ -175,7 +175,7 @@
           <group name="lane3">
             <sprite><bitmap><color>color.orange</color></bitmap></sprite>
             <position><y>350</y></position>
-            <velocity><x>2.5</x></velocity>
+            <velocity><x>150</x></velocity>
             <variables><variable name="worth">60</variable></variables>
             <member><position><x>-10</x></position></member>
             <member><position><x>390</x></position></member>
@@ -183,7 +183,7 @@
           <group name="lane4">
             <sprite><bitmap><color>color.red</color></bitmap></sprite>
             <position><y>440</y></position>
-            <velocity><x>-3</x></velocity>
+            <velocity><x>-180</x></velocity>
             <variables><variable name="worth">80</variable></variables>
             <member><position><x>200</x></position></member>
             <member><position><x>600</x></position></member>

@@ -310,7 +310,7 @@ TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; ju
 	play.standAt(300.0f, "floor");
 
 	// A barrel rolling left along the floor, towards him.
-	Object& barrel = play.barrelAt(450.0f, "floor", -2.5f);
+	Object& barrel = play.barrelAt(450.0f, "floor", -150.0f);
 
 	// Jump as it comes close: it passes under him, and that is 100 when he lands.
 	while (barrel.position.x > play.man().position.x + play.man().size.x + 20.0f) { play.frames(1); }
@@ -322,7 +322,7 @@ TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; ju
 
 	// The next one he stands still for.
 	barrel.position = { 450.0f, play.top("floor", 460.0f) - barrel.size.y };
-	barrel.velocity = { -2.5f, 0.0f };
+	barrel.velocity = { -150.0f, 0.0f };
 	while (play.game.getCurrentState().name == "playing") { play.frames(1); }
 	CHECK(play.game.getCurrentState().name == "fallen");
 	CHECK(play.variable("lives") == 3);
@@ -427,7 +427,7 @@ TEST_CASE("with the hammer a barrel is smashed for points, and the hammer wears 
 	CHECK_FALSE(hammer.isVisible);
 	CHECK(play.man().lookName() == "hammer");
 
-	Object& barrel = play.barrelAt(play.man().position.x + 60.0f, "third", -2.5f);
+	Object& barrel = play.barrelAt(play.man().position.x + 60.0f, "third", -150.0f);
 	play.frames(40);
 	CHECK_FALSE(barrel.isVisible);
 	CHECK(play.variable("score") == 300);
@@ -516,7 +516,7 @@ TEST_CASE("an unlucky barrel goes down a ladder and rolls on the other way; a lu
 	play.standAt(420.0f, "perch");
 
 	// On Kong's girder, rolling right towards the ladder at 568.
-	Object& unlucky = play.barrelAt(500.0f, "top", 2.5f);
+	Object& unlucky = play.barrelAt(500.0f, "top", 150.0f);
 	unlucky.variable["luck"] = 0.0f;
 	bool climbed = false;
 	for (int i = 0; i < 120 && !climbed; ++i)
@@ -530,12 +530,12 @@ TEST_CASE("an unlucky barrel goes down a ladder and rolls on the other way; a lu
 	for (int i = 0; i < 120 && unlucky.footing.climbing; ++i) { play.frames(1); }
 	play.frames(5);
 	CHECK(unlucky.lookName() == "rolling");
-	CHECK(unlucky.velocity.x == Approx(-2.5f));
+	CHECK(unlucky.velocity.x == Approx(-150.0f));
 	CHECK(unlucky.position.y + unlucky.size.y == Approx(play.top("fourth", unlucky.position.x + unlucky.size.x / 2.0f)).margin(1.0f));
 	CHECK(unlucky.footing.activeClimb[1] == 0.0f);
 
 	// One with luck stays on its girder past the same ladder.
-	Object& lucky = play.barrelAt(500.0f, "top", 2.5f);
+	Object& lucky = play.barrelAt(500.0f, "top", 150.0f);
 	lucky.variable["luck"] = 0.9f;
 	bool anyClimb = false;
 	for (int i = 0; i < 50; ++i)
@@ -553,7 +553,7 @@ TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and 
 	DonkeyKong play;
 	play.start();
 	play.standAt(420.0f, "perch");
-	Object& barrel = play.barrelAt(60.0f, "floor", -2.5f);
+	Object& barrel = play.barrelAt(60.0f, "floor", -150.0f);
 	barrel.variable["luck"] = 0.9f;
 	const std::string barrelName = barrel.name;
 	play.frames(30);
@@ -566,7 +566,7 @@ TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and 
 	play.standAt(300.0f, "floor");
 	fire.variable["luck"] = 0.9f;
 	fire.position = { 276.0f, play.feet() - fire.size.y };
-	fire.velocity = { 1.0f, 0.0f };
+	fire.velocity = { 60.0f, 0.0f };
 	play.frames(30);
 	play.frames(155); // he tumbles first, the girders standing still
 	CHECK(play.variable("lives") == 2);
@@ -579,7 +579,7 @@ TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and 
 	Object& climber = play.game.getObject(climberName);
 	climber.variable["luck"] = 0.0f;
 	climber.position = { 480.0f, play.top("floor", 490.0f) - climber.size.y };
-	climber.velocity = { 1.0f, 0.0f };
+	climber.velocity = { 60.0f, 0.0f };
 	bool climbed = false;
 	for (int i = 0; i < 300 && !(climbed && !climber.footing.climbing); ++i)
 	{
@@ -590,7 +590,7 @@ TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and 
 	play.frames(10);
 	CHECK(climber.position.y + climber.size.y == Approx(play.top("first", climber.position.x + climber.size.x / 2.0f)).margin(1.0f));
 	CHECK(climber.lookName() == "burning");
-	CHECK(climber.velocity.x == Approx(1.0f));
+	CHECK(climber.velocity.x == Approx(60.0f));
 }
 
 TEST_CASE("with the hammer a fireball is smashed for 500", "[donkeykong]")
@@ -604,7 +604,7 @@ TEST_CASE("with the hammer a fireball is smashed for 500", "[donkeykong]")
 	Object& fire = play.game.getObject(fireName);
 	fire.variable["luck"] = 0.9f;
 	fire.position = { 276.0f, play.feet() - fire.size.y };
-	fire.velocity = { 1.0f, 0.0f };
+	fire.velocity = { 60.0f, 0.0f };
 	play.frames(30);
 	CHECK_FALSE(fire.isVisible);
 	CHECK(play.variable("score") == 500);
@@ -628,7 +628,7 @@ TEST_CASE("a barrel that meets Jumpman on a ladder costs a life, coming down it 
 		REQUIRE(play.man().footing.climbing);
 
 		// A barrel at the top of it, unlucky, so it comes down.
-		Object& barrel = play.barrelAt(520.0f - 12.0f, "first", 1.0f);
+		Object& barrel = play.barrelAt(520.0f - 12.0f, "first", 60.0f);
 		play.game.setVariable(barrel.name, "luck", 0.0f);
 		play.frames(60);
 		play.frames(155); // he tumbles first, the girders standing still
@@ -644,7 +644,7 @@ TEST_CASE("a barrel that meets Jumpman on a ladder costs a life, coming down it 
 		play.frames(3);
 		play.engine.handleKeyReleased(KeyCode::W);
 		REQUIRE(play.man().footing.climbing);
-		play.barrelAt(600.0f, "floor", -2.5f);
+		play.barrelAt(600.0f, "floor", -150.0f);
 		play.frames(60);
 		play.frames(155); // he tumbles first, the girders standing still
 		CHECK(play.variable("lives") == 2);
@@ -657,7 +657,7 @@ TEST_CASE("a barrel going down a ladder passes the girders on the way and rolls 
 	play.start();
 	play.standAt(100.0f, "floor");
 
-	Object& barrel = play.barrelAt(520.0f - 12.0f, "first", 1.0f);
+	Object& barrel = play.barrelAt(520.0f - 12.0f, "first", 60.0f);
 	play.game.setVariable(barrel.name, "luck", 0.0f);
 	play.frames(20);
 	CHECK(barrel.footing.climbing);

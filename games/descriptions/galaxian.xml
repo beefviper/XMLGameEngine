@@ -57,7 +57,7 @@
     plays as a game starts.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Galaxian">
     <width>560</width>
     <height>640</height>
@@ -74,10 +74,10 @@
         <value><multiply><value>11</value><value>pixel</value></multiply></value>
       </subtract>
     </variable>
-    <variable name="enterspeed">4</variable>
-    <variable name="divespeed">3</variable>
+    <variable name="enterspeed">240</variable>
+    <variable name="divespeed">180</variable>
     <variable name="spacing">0.15</variable>
-    <variable name="step">4</variable>
+    <variable name="step">240</variable>
     <variable name="margin">12</variable>
     <variable name="tabletop">250</variable>
     <variable name="tablerow">36</variable>
@@ -171,7 +171,7 @@
     <!-- the ship's shot: one at a time, straight up -->
     <object name="shot" class="projectile">
       <sprite><rectangle><width>3</width><height>12</height><color>color.white</color></rectangle></sprite>
-      <velocity><y>-10</y></velocity>
+      <velocity><y>-600</y></velocity>
       <most>1</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -181,7 +181,7 @@
     <!-- an alien's bomb, dropped by divers: six at most -->
     <object name="bomb" class="bomb">
       <sprite><rectangle><width>3</width><height>9</height><color>color.yellow</color></rectangle></sprite>
-      <velocity><y>6</y></velocity>
+      <velocity><y>360</y></velocity>
       <most>6</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -261,7 +261,7 @@
           <sprite name="on"><bitmap from="stars-on" /></sprite>
           <sprite name="off"><bitmap from="stars-off" /></sprite>
           <animation><seconds>0.4</seconds><frame sprite="on" /><frame sprite="on" /><frame sprite="off" /></animation>
-          <velocity><y>0.5</y></velocity>
+          <velocity><y>30</y></velocity>
           <collisions>
             <collision edge="bottom"><wrap /></collision>
           </collisions>

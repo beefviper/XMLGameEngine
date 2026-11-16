@@ -42,7 +42,7 @@
     (<show state>).
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Frogger">
     <width>624</width>
     <height>672</height>
@@ -202,7 +202,7 @@
                     <value>6</value>
                   </add>
                 </y></position>
-                <velocity><x>1.4</x></velocity>
+                <velocity><x>84</x></velocity>
               </group>
               <group name="logrow4">
                 <columns>2</columns>
@@ -224,7 +224,7 @@
                     <value>6</value>
                   </add>
                 </y></position>
-                <velocity><x>2</x></velocity>
+                <velocity><x>120</x></velocity>
               </group>
               <group name="logrow5">
                 <columns>3</columns>
@@ -246,7 +246,7 @@
                     <value>6</value>
                   </add>
                 </y></position>
-                <velocity><x>1</x></velocity>
+                <velocity><x>60</x></velocity>
               </group>
             </group>
             <group name="turtlerow3">
@@ -274,7 +274,7 @@
                   <value>8</value>
                 </add>
               </y></position>
-              <velocity><x>-1.6</x></velocity>
+              <velocity><x>-96</x></velocity>
               <collisions>
                 <collision object="frog" sprite="under"><trigger object="frog" action="drown" /></collision>
               </collisions>
@@ -305,7 +305,7 @@
                   <value>8</value>
                 </add>
               </y></position>
-              <velocity><x>-1.2</x></velocity>
+              <velocity><x>-72</x></velocity>
             </group>
           </group>
 
@@ -336,7 +336,7 @@
                   <value>8</value>
                 </add>
               </y></position>
-              <velocity><x>-1.3</x></velocity>
+              <velocity><x>-78</x></velocity>
             </group>
             <!-- the white racing car, fast -->
             <group name="carrow9">
@@ -359,7 +359,7 @@
                   <value>8</value>
                 </add>
               </y></position>
-              <velocity><x>3.2</x></velocity>
+              <velocity><x>192</x></velocity>
             </group>
             <group name="carrow10">
               <columns>4</columns>
@@ -381,7 +381,7 @@
                   <value>8</value>
                 </add>
               </y></position>
-              <velocity><x>-1.6</x></velocity>
+              <velocity><x>-96</x></velocity>
             </group>
             <!-- bulldozers -->
             <group name="carrow11">
@@ -404,7 +404,7 @@
                   <value>8</value>
                 </add>
               </y></position>
-              <velocity><x>1.2</x></velocity>
+              <velocity><x>72</x></velocity>
             </group>
             <group name="carrow12">
               <columns>3</columns>
@@ -426,7 +426,7 @@
                   <value>8</value>
                 </add>
               </y></position>
-              <velocity><x>-1</x></velocity>
+              <velocity><x>-60</x></velocity>
             </group>
           </group>
         </group>
