@@ -281,7 +281,7 @@ Players take turns as the arcade machines did: each plays a game of their own, a
 
 ## Attract mode
 
-A game's `<demo>`, after `<states>`, is a recorded game: the random seed, how many frames, and each key pressed and released on its frame.
+A game's `<demo>`, after `<states>`, is a recorded game: the random seed, how many steps, and each key pressed and released on its step. No shipped game has one for now: they are recorded again once demos keep their steps' lengths.
 
 ```xml
 <demo>
@@ -293,7 +293,7 @@ A game's `<demo>`, after `<states>`, is a recorded game: the random seed, how ma
 </demo>
 ```
 
-`<demo />` plays it as a new game from the seed, so it plays out exactly as recorded. A key pressed, or the recording running out, ends it with a new game, kept things as they were (a demo never sets the best). `xgecli <game> --record` writes one into the file, keeping its line endings.
+`<demo />` plays it as a new game from the seed. Played on the steps it was recorded on (`xgecli --frames` with `--keys`), it plays out exactly as recorded; in a window, on that window's steps, only roughly. A key pressed, or the recording running out, ends it with a new game, kept things as they were (a demo never sets the best). `xgecli <game> --record` writes one into the file, keeping its line endings.
 
 ## Computer players
 

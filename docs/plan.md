@@ -126,7 +126,7 @@ Its own block of work, done before anything else in this file. **Design and reas
     - Snake: the cells the head has gone after 5 seconds, exactly.
     - Pinball: how high the ball gets from a full plunger, within 5%.
     **Check:** it passes; the measured numbers at each rate are in the commit message.
-  - [ ] **4. The recorded demo comes out (S).** The author: drop the demos for now and record new ones later. Remove the recorded `<demo>` from the one game that has one (`grep -l "<demo" games/descriptions/*.xml`) and whatever in that game only shows it; `xgetest "[vocabulary]"` then needs `demo` and its words in `kUnused` with why they stay. Recording and playback stay in the engine, counting steps: `--keys` with `--frames` plays the given steps, so it is still exact, and the tests and "Looking at a game" keep using it. A demo played in a window follows the real steps and so only roughly repeats; that is left open ([backlog](#language-and-engine)). **Check:** that game's tests; `test_cli.cpp`.
+  - [x] **4. The recorded demo comes out (S).** The author: drop the demos for now and record new ones later. Remove the recorded `<demo>` from the one game that has one (`grep -l "<demo" games/descriptions/*.xml`) and whatever in that game only shows it; `xgetest "[vocabulary]"` then needs `demo` and its words in `kUnused` with why they stay. Recording and playback stay in the engine, counting steps: `--keys` with `--frames` plays the given steps, so it is still exact, and the tests and "Looking at a game" keep using it. A demo played in a window follows the real steps and so only roughly repeats; that is left open ([backlog](#language-and-engine)). **Check:** that game's tests; `test_cli.cpp`.
   - [ ] **5. The author tries it.** A line in [Waiting for a look on Windows](#waiting-for-a-look-on-windows): `xgecli pong --framerate 8`, `30`, `144`, `240`, and the same for Mario Bros. and Pinball, should each play at the speed 60 does. Do not start DT5 until the author says so.
 - **Files.** `xge/lib/engine/engine.*`, `xge/cli/source/`, `games/xgedump.xsd`, `xge/tests/long/`; `docs/reference/engine.md`, `programs.md`.
 
@@ -499,6 +499,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
+- **Delta time, DT4 step 5:** `xgecli pong --framerate 8`, then `30`, `144` and `240`, and the same for `mariobros` and `pinball`: each should play at the speed it does at 60, only smoother or choppier. Also `xgegui` (its loop changed the same way) and a stall: drag the window and let go, and the game goes on from there. Galaxian no longer plays a demo from its title.
 - **The schema's documentation in an editor (A6), not urgent (the author works mostly from the command line):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.
 
 ## Known untested

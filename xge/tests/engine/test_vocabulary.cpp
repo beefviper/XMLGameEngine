@@ -72,7 +72,9 @@ namespace
 	const std::map<std::string, std::string> kUnused{
 		{ "absolute", "an operation, beside sign and negate" },
 		{ "compare", "an operation: a test as 1 or 0" },
+		{ "demo", "a recorded game, and the verb that plays it: no game ships one until new ones are recorded on the real steps" },
 		{ "floor", "an operation, beside ceiling and round" },
+		{ "frames", "a <demo>'s length in steps" },
 		{ "framerate", "a window's; 60 when left out" },
 		{ "fullscreen", "a window's whole screen; a window when left out" },
 		{ "gap", "a group's, between cells" },
@@ -81,9 +83,12 @@ namespace
 		{ "near", "a chase that stops short" },
 		{ "odd", "the pair of <even> in rows and columns" },
 		{ "off", "a <collisions> written but off until a rule turns it on; its pair is collisions on by default" },
+		{ "press", "a <demo>'s key going down" },
 		{ "pull", "one object drawn to another" },
+		{ "release", "a <demo>'s key coming up" },
 		{ "remainder", "an operation" },
 		{ "rise", "a live number, how fast the altitude changes" },
+		{ "seed", "a <demo>'s random numbers" },
 	};
 }
 

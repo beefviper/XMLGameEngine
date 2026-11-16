@@ -851,15 +851,26 @@ TEST_CASE("one player: <pass /> does nothing and <out /> lets what follows run",
 	CHECK(play.state() == "title");
 }
 
-TEST_CASE("left on the title, Galaxian plays its demo until a key is pressed", "[galaxian][demo]")
+TEST_CASE("a demo given to Galaxian plays to its end, or until a key is pressed, and the title comes back", "[galaxian][demo]")
 {
-	Play play("descriptions/galaxian.xml");
-	REQUIRE(play.game.getDemo().recorded);
-	play.object("best").variable["score"] = 70.0f;
+	// The game ships with none (the author: new ones are recorded later);
+	// one given to it, Space then Left held.
+	RawDemo demo;
+	demo.recorded = true;
+	demo.seed = 20261016;
+	demo.frames = 300;
+	demo.keys = { { "space", true, 30 }, { "space", false, 34 }, { "left", true, 200 }, { "left", false, 260 } };
+	const auto given = [&]
+	{
+		GameData data = readGame("descriptions/galaxian.xml");
+		data.demo = demo;
+		return data;
+	};
 
-	play.frames(599);
-	CHECK_FALSE(play.engine.isPlayingDemo());
-	play.frames(2); // ten seconds on the title
+	Play play(given());
+	play.object("best").variable["score"] = 70.0f;
+	play.game.requestDemo();
+	play.frames(1);
 	REQUIRE(play.engine.isPlayingDemo());
 	CHECK(play.state() == "title"); // a new game, from the start
 	CHECK(play.object("best").variable.at("score") == 70.0f); // kept
@@ -871,34 +882,29 @@ TEST_CASE("left on the title, Galaxian plays its demo until a key is pressed", "
 	play.frames(230);
 	CHECK(play.object("ship").position.x != Approx(startX)); // it moved the ship
 
-	// A key pressed: the demo ends, without the key doing anything, and
-	// the game is as it was before it.
-	play.object("best").variable["score"] = 900.0f; // as if the demo had scored
-	play.typed = { { KeyCode::Num2, true }, { KeyCode::Num2, false } };
-	play.frames(1);
-	CHECK_FALSE(play.engine.isPlayingDemo());
-	CHECK(play.state() == "title");
-	CHECK(play.game.playerCount() == 0); // the 2 did not start a game
-	CHECK(play.object("best").variable.at("score") == 70.0f);
-	CHECK(play.object("best").drawn.picture.text == "70");
-
-	// Ten more seconds on the title, and it plays again.
-	play.frames(601);
-	CHECK(play.engine.isPlayingDemo());
-}
-
-TEST_CASE("the demo plays to its end and the title comes back", "[galaxian][demo]")
-{
-	Play play("descriptions/galaxian.xml");
-	play.game.requestDemo();
-	play.frames(1);
-	REQUIRE(play.engine.isPlayingDemo());
-	play.frames(static_cast<int>(play.game.getDemo().frames) - 1);
+	// To its end, and the title comes back.
+	play.frames(static_cast<int>(demo.frames) - 271);
 	CHECK(play.engine.isPlayingDemo());
 	play.frames(1);
 	CHECK_FALSE(play.engine.isPlayingDemo());
 	CHECK(play.state() == "title");
 	CHECK(play.object("ship").variable.at("score") == 0.0f);
+
+	// A key pressed: the demo ends, without the key doing anything, and
+	// the game is as it was before it.
+	Play stopped(given());
+	stopped.object("best").variable["score"] = 70.0f;
+	stopped.game.requestDemo();
+	stopped.frames(100);
+	REQUIRE(stopped.engine.isPlayingDemo());
+	stopped.object("best").variable["score"] = 900.0f; // as if the demo had scored
+	stopped.typed = { { KeyCode::Num2, true }, { KeyCode::Num2, false } };
+	stopped.frames(1);
+	CHECK_FALSE(stopped.engine.isPlayingDemo());
+	CHECK(stopped.state() == "title");
+	CHECK(stopped.game.playerCount() == 0); // the 2 did not start a game
+	CHECK(stopped.object("best").variable.at("score") == 70.0f);
+	CHECK(stopped.object("best").drawn.picture.text == "70");
 }
 
 TEST_CASE("a game recorded plays back the same as it was played", "[galaxian][demo]")
