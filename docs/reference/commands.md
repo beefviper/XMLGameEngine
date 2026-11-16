@@ -62,7 +62,7 @@ An object out of play does nothing when its action is pressed or triggered; lett
 
 | Command | Does |
 |---|---|
-| `<chase object="hero">1.5<near>100</near></chase>` | heads straight for the nearest of that name at that speed, stopping within `<near>`. It acts once, so a timer repeats it |
+| `<chase object="hero">1.5<near>100</near></chase>` | heads straight for the nearest of that name at that speed, stopping within `<near>`, inside the step it is run in if it gets there. It acts once, so a timer repeats it |
 | `<aim object="man" />` | its next `<fire>`s go straight at where that one was. `<lined>8</lined>`: only along one of eight ways, within 8 pixels, else refused |
 | `<follow path="dive" />` | flies a [path](timers.md#paths); `object="aliens"` sends every one, `<stagger>0.15</stagger>` apart; `<nearest>2</nearest>` only the two nearest |
 | `<shift object="aliens"><x>sway.way</x></shift>` | moves those objects, and the places they fly home to; a reset puts them back |

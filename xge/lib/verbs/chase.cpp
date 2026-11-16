@@ -41,7 +41,8 @@ namespace xge
 	}
 
 	// Heads for the nearest of `chase.target` in play: straight at its middle
-	// at `chase.speed`, or, within `chase.stopWithin` of it, stops. It faces the
+	// at `chase.speed`, or, within `chase.stopWithin` of it, stops (inside
+	// this step, if it gets there). It faces the
 	// way it goes, and a heading turns to it. With none in play it carries on
 	// as it was.
 	static void chaseNearest(CommandExecutor& executor, Object& object, const CmdChase& command)
@@ -49,7 +50,7 @@ namespace xge
 		const Object* target = executor.game.nearestInPlay(object, command.target);
 		if (!target) { return; }
 
-		if (const auto way = xge::chase(middleOf(object), middleOf(*target), command.speed, command.stopWithin, object.velocity))
+		if (const auto way = xge::chase(middleOf(object), middleOf(*target), command.speed, command.stopWithin, executor.game.stepTime(), object.velocity))
 		{
 			object.facing = directionOf(*way);
 			if (object.turning.hasHeading)

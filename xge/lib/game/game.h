@@ -304,6 +304,11 @@ namespace xge
 		// the games are moved to per-second numbers.
 		float motionTime(float seconds) const noexcept { return timeInSeconds ? seconds : seconds * 60.0f; }
 
+		// The step being played, set as it begins: a verb that heads for a
+		// point (<chase>) stops there rather than going past inside it.
+		void beginStep(float seconds) noexcept { stepSeconds = seconds; }
+		float stepTime() const noexcept { return motionTime(stepSeconds); }
+
 		// The game's recorded <demo> (RawDemo::recorded false for none).
 		const RawDemo& getDemo(void) const noexcept { return demo; }
 
@@ -847,6 +852,7 @@ namespace xge
 		bool demoAsked = false;
 		// <game time="seconds"> (see motionTime).
 		bool timeInSeconds = false;
+		float stepSeconds = kSixtieth;
 
 		// FrameRules: what the game file says, asked by playOneFrame.
 		bool inPlay(const Object& object) override { return isShown(object); }

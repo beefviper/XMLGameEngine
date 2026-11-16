@@ -30,7 +30,7 @@ A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one chara
 
 ## Walking a map
 
-An object with `<maze map="maze">` walks that map's tiles: it keeps to the middle of its lane, chooses its way only in the middle of a tile, and never steps onto a tile that is a wall to it.
+An object with `<maze map="maze">` walks that map's tiles: it keeps to the middle of its lane, chooses its way only in the middle of a tile (at every middle a long step passes), and never steps onto a tile that is a wall to it.
 
 ```xml
 <maze map="maze">

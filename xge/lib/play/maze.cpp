@@ -51,8 +51,8 @@ namespace xge
 		class Walker
 		{
 		public:
-			Walker(Object& who, std::vector<Object>& everything, const Grid& map, FrameRules& frameRules)
-				: walker(who), objects(everything), grid(map), rules(frameRules)
+			Walker(Object& who, std::vector<Object>& everything, const Grid& map, FrameRules& frameRules, float stepTime)
+				: walker(who), objects(everything), grid(map), rules(frameRules), t(stepTime)
 			{
 			}
 
@@ -123,11 +123,12 @@ namespace xge
 					return;
 				}
 
-				// It chooses in the frame that would take it to (or past) the
+				// It chooses in the step that would take it to (or past) the
 				// middle of the tile.
 				constexpr float slack = 0.01f;
+				const float reach = speed * t;
 				const float ahead = (lane.x - middle.x) * unit(going).x + (lane.y - middle.y) * unit(going).y;
-				if (ahead < -slack || ahead >= speed - slack)
+				if (ahead < -slack || ahead >= reach - slack)
 				{
 					head(going);
 					return;
@@ -145,14 +146,43 @@ namespace xge
 					walker.velocity = {};
 					return;
 				}
-				if (*way != going)
+
+				// A long step passes the middles of the tiles beyond as well,
+				// choosing at each.
+				Vector2f at = lane;
+				Direction now = *way;
+				float left = reach - ahead;
+				int atColumn = column;
+				int atRow = row;
+				for (int passed = 0; passed < kMostTilesAStep; ++passed)
 				{
-					// Round the corner exactly at the middle: as far back along
-					// the new way as it was short of the middle, so this frame's
-					// move goes the whole speed.
-					walker.position = lane - size * 0.5f - unit(*way) * ahead;
+					const Vector2f along = unit(now);
+					const float tileLength = std::abs(along.x) * grid.tile.x + std::abs(along.y) * grid.tile.y;
+					if (!(tileLength < left - slack)) { break; }
+					const int nextColumn = atColumn + static_cast<int>(along.x);
+					const int nextRow = atRow + static_cast<int>(along.y);
+					if (!grid.onMap(nextColumn, nextRow)) { break; }
+					atColumn = nextColumn;
+					atRow = nextRow;
+					at = grid.middle(atColumn, atRow);
+					left -= tileLength;
+					walk.chosenColumn = atColumn;
+					walk.chosenRow = atRow;
+					const auto next = choose(atColumn, atRow, now, true);
+					if (!next)
+					{
+						walker.position = at - size * 0.5f;
+						walker.velocity = {};
+						return;
+					}
+					now = *next;
 				}
-				head(*way);
+
+				// Round the corner exactly at the middle: as far back along
+				// the new way as the step went before it, so this step's
+				// move goes the whole reach and ends `left` past the middle.
+				walker.position = at - size * 0.5f - unit(now) * (reach - left);
+				head(now);
 			}
 
 		private:
@@ -160,6 +190,10 @@ namespace xge
 			std::vector<Object>& objects;
 			const Grid& grid;
 			FrameRules& rules;
+			// The step's length in the game's units.
+			float t;
+			// The most tile middles one step passes.
+			static constexpr int kMostTilesAStep = 64;
 
 			// The nearest in play of that name or group, other than the walker.
 			const Object* nearest(const std::string& name) const
@@ -412,7 +446,7 @@ namespace xge
 		walker.maze.walk.speed = wander.speed;
 	}
 
-	void walkMazes(std::vector<Object>& objects, FrameRules& rules)
+	void walkMazes(std::vector<Object>& objects, FrameRules& rules, float t)
 	{
 		for (Object& object : objects)
 		{
@@ -424,7 +458,7 @@ namespace xge
 			const Grid& grid = rules.mazeGrid(objects, object.maze.map);
 			if (grid.at.empty() || !(grid.tile.x > 0.0f) || !(grid.tile.y > 0.0f)) { continue; }
 
-			Walker(object, objects, grid, rules).walk();
+			Walker(object, objects, grid, rules, t).walk();
 		}
 	}
 }

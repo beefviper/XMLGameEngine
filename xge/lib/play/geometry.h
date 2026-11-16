@@ -610,8 +610,9 @@ namespace xge
 	Vector2f turnedToward(const Vector2f& velocity, const Vector2f& way, float degrees) noexcept;
 
 	// <chase>: straight from `from` at `to` at `speed`, or, within stopWithin
-	// of it, still. The way it set off, one pixel long, if it did.
-	std::optional<Vector2f> chase(const Vector2f& from, const Vector2f& to, float speed, float stopWithin, Vector2f& velocity) noexcept;
+	// of it, still. A step of `t` that would take it nearer goes only as far
+	// as stopWithin. The way it set off, one pixel long, if it did.
+	std::optional<Vector2f> chase(const Vector2f& from, const Vector2f& to, float speed, float stopWithin, float t, Vector2f& velocity) noexcept;
 
 	// Whether a climber is at a ladder: its middle over it, and its feet
 	// between the ladder's top and bottom (half a pixel either way).

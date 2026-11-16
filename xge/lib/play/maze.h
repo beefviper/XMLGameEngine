@@ -56,8 +56,9 @@ namespace xge
 	void startHunt(Object& walker, const CmdHunt& hunt);
 	void startWander(Object& walker, const CmdWander& wander);
 
-	// This frame's choosing, for every walker in play: its velocity (and,
+	// This step's choosing, for every walker in play: its velocity (and,
 	// where it turns, its place, so that it turns exactly in the middle of a
-	// tile) for the move playOneFrame makes next.
-	void walkMazes(std::vector<Object>& objects, FrameRules& rules);
+	// tile) for the move playOneFrame makes next, `t` long in the game's
+	// units. A long step chooses at every middle it passes.
+	void walkMazes(std::vector<Object>& objects, FrameRules& rules, float t);
 }

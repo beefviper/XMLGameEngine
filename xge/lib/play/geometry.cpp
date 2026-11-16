@@ -737,7 +737,7 @@ namespace xge
 		return { speed * std::cos(after), speed * std::sin(after) };
 	}
 
-	std::optional<Vector2f> chase(const Vector2f& from, const Vector2f& to, float speed, float stopWithin, Vector2f& velocity) noexcept
+	std::optional<Vector2f> chase(const Vector2f& from, const Vector2f& to, float speed, float stopWithin, float t, Vector2f& velocity) noexcept
 	{
 		const Vector2f apart = to - from;
 		const float distance = std::hypot(apart.x, apart.y);
@@ -748,7 +748,8 @@ namespace xge
 		}
 
 		const Vector2f way = apart * (1.0f / distance);
-		velocity = way * speed;
+		const float most = t > 0.0f ? (distance - stopWithin) / t : speed;
+		velocity = way * std::min(speed, most);
 		return way;
 	}
 

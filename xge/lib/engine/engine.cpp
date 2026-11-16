@@ -184,6 +184,7 @@ namespace xge
 	void Engine::step(float seconds)
 	{
 		requireWindow();
+		game.beginStep(seconds);
 
 		auto events = std::move(pumpedKeys);
 		pumpedKeys.clear();
@@ -230,7 +231,7 @@ namespace xge
 
 		playComputer(seconds);
 
-		playHeldKeys(seconds);
+		playHeldKeys();
 
 		game.updateObjects(seconds);
 
@@ -556,7 +557,7 @@ namespace xge
 		}
 	}
 
-	void Engine::playHeldKeys(float seconds)
+	void Engine::playHeldKeys(void)
 	{
 		const auto& holding = game.getCurrentState().holding;
 		if (holding.empty()) { return; }
@@ -569,7 +570,7 @@ namespace xge
 			if (heldKeys.isDown(key) && pressedInState[static_cast<std::size_t>(key)] == now && game.stateChangeCount() == now)
 			{
 				// Held for this step: what it adds goes by the time passed.
-				commandExecutor.heldShare = game.motionTime(seconds);
+				commandExecutor.heldShare = game.stepTime();
 				runAsPress(commands);
 				commandExecutor.heldShare = 1.0f;
 			}

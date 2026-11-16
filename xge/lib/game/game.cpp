@@ -200,6 +200,7 @@ namespace xge
 
 	void Game::updateObjects(float seconds)
 	{
+		beginStep(seconds);
 		// Anything changed from outside since (a test moving an object to
 		// another scene) is seen, and so is anything this frame changes.
 		settleSpawns();

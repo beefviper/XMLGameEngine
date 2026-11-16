@@ -272,3 +272,92 @@ TEST_CASE("Cannon Hill's charge after a second of Space held is the same, howeve
 	agree(power, 0.9);
 	CHECK(power.front().value == Approx(45.0).margin(0.1));
 }
+
+TEST_CASE("a path of four corners is walked in the same time and never cuts a corner, however the time is cut into steps", "[steps][paths]")
+{
+	// 150 pixels a second round a square of 100 from (100, 100).
+	std::string game = secondsGame(box("walker", 100, 100,
+		"<collisions><off /></collisions><actions><action name=\"go\"><follow path=\"square\" /></action></actions>"));
+	game.replace(game.find("<states>"), 0, "<paths><path name=\"square\"><speed>150</speed>"
+		"<step><x>100</x><y>0</y></step><step><x>0</x><y>100</y></step><step><x>-100</x><y>0</y></step><step><x>0</x><y>-100</y></step></path></paths>");
+	const auto go = [](Played& play) { xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "walker", "go" }, true); };
+	const auto x = [](Played& play) { return static_cast<double>(play.get("walker").position.x); };
+	const auto y = [](Played& play) { return static_cast<double>(play.get("walker").position.y); };
+
+	// 105 along: round the first corner, 5 down the second side.
+	const auto x1 = atEveryStepLengthOf(game, 0.7, x, go);
+	const auto y1 = atEveryStepLengthOf(game, 0.7, y, go);
+	agree(x1, 0.5);
+	agree(y1, 0.5);
+	CHECK(x1.front().value == Approx(200.0).margin(0.5));
+	CHECK(y1.front().value == Approx(105.0).margin(0.5));
+
+	// 285 along: past the second corner, 85 along the third side.
+	const auto x3 = atEveryStepLengthOf(game, 1.9, x, go);
+	const auto y3 = atEveryStepLengthOf(game, 1.9, y, go);
+	agree(x3, 0.5);
+	agree(y3, 0.5);
+	CHECK(x3.front().value == Approx(115.0).margin(0.5));
+	CHECK(y3.front().value == Approx(200.0).margin(0.5));
+}
+
+TEST_CASE("a <chase> stops at its near distance inside a step, however the time is cut into steps", "[steps][chase]")
+{
+	// 400 pixels a second at a still target 300 off, stopping 20 short. It
+	// stops inside the step that the chase is run in; run less often, it
+	// goes on at its velocity between runs, as any mover does.
+	const std::string game = secondsGame(
+		box("chaser", 100, 100, "<collisions><off /></collisions>"
+			"<timers><timer><every>0.004</every><chase object=\"target\">400<near>20</near></chase></timer></timers>")
+		+ box("target", 400, 100, "<collisions><off /></collisions>"));
+	const auto x = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("chaser").position.x); });
+	agree(x, 2.0);
+	CHECK(x.front().value == Approx(380.0).margin(2.0));
+}
+
+TEST_CASE("a <hunt> through a maze keeps to its lanes and goes as far, however the time is cut into steps", "[steps][maze]")
+{
+	// 300 pixels a second, 20-pixel tiles: a step of a tenth passes the
+	// middles of one or two tiles.
+	const std::string map = "<map name=\"maze\"><tile><width>20</width><height>20</height></tile><position><x>0</x><y>0</y></position>"
+		"<row>###############</row>"
+		"<row>#H..........###</row>"
+		"<row>#.#########...#</row>"
+		"<row>#.#########.#.#</row>"
+		"<row>#...........#.#</row>"
+		"<row>#############.#</row>"
+		"<row>#T............#</row>"
+		"<row>###############</row>"
+		"<group name=\"walls\" char=\"#\" class=\"wall\"><sprite><rectangle><width>20</width><height>20</height></rectangle></sprite></group>"
+		"<object name=\"prey\" char=\"T\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite><collisions><off /></collisions></object>"
+		"<object name=\"hunter\" char=\"H\"><sprite><rectangle><width>16</width><height>16</height></rectangle></sprite>"
+		"<maze map=\"maze\"><wall class=\"wall\" /></maze><collisions><off /></collisions>"
+		"<actions><action name=\"go\"><hunt object=\"prey\">300<search /></hunt></action></actions></object></map>";
+	const std::string game = secondsGame(map);
+	const auto go = [](Played& play) { xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "playing.hunter", "go" }, true); };
+	const auto middleX = [](Played& play) { const auto& h = play.get("playing.hunter"); return static_cast<double>(h.position.x + h.size.x / 2.0f); };
+	const auto middleY = [](Played& play) { const auto& h = play.get("playing.hunter"); return static_cast<double>(h.position.y + h.size.y / 2.0f); };
+	// On a lane: its middle across the way it goes is a tile's middle.
+	const auto offLane = [&](Played& play)
+	{
+		const double mx = std::fmod(middleX(play), 20.0) - 10.0;
+		const double my = std::fmod(middleY(play), 20.0) - 10.0;
+		return std::min(std::abs(mx), std::abs(my));
+	};
+	for (const double seconds : { 0.5, 1.0, 1.5 })
+	{
+		INFO("after " << seconds << " seconds");
+		const auto x = atEveryStepLengthOf(game, seconds, middleX, go);
+		const auto y = atEveryStepLengthOf(game, seconds, middleY, go);
+		agree(x, 2.0);
+		agree(y, 2.0);
+		// Gone from its start at (30, 30).
+		CHECK(std::abs(x.front().value - 30.0) + std::abs(y.front().value - 30.0) > 100.0);
+		const auto lane = atEveryStepLengthOf(game, seconds, offLane, go);
+		for (const Paced& each : lane)
+		{
+			INFO("steps of " << each.pacing);
+			CHECK(each.value < 0.01);
+		}
+	}
+}
