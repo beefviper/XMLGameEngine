@@ -120,10 +120,10 @@ namespace
 
 	std::string gameXml(const std::string& objects, const std::string& shows)
 	{
-		return "<game>"
+		return "<game time=\"seconds\">"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
-			"<variables><variable name=\"g\">0.5</variable></variables>"
+			"<variables><variable name=\"g\">1800</variable></variables>"
 			"<states><objects>" + objects + "</objects>"
 			"<state name=\"playing\"><shows>" + shows + "</shows>"
 			"<inputs><input button=\"space\"><pop /></input></inputs></state></states>"
@@ -520,12 +520,12 @@ namespace
 		"<velocity><x>0</x><y>0</y></velocity>"
 		"<acceleration><x>0</x><y>g</y></acceleration>"
 		"<collisions>"
-		"<collision object=\"floor\"><condition variable=\"speed\"><below>3</below></condition><inc variable=\"ship.landed\" /><stop /></collision>"
-		"<collision object=\"floor\"><condition variable=\"speed\"><atleast>3</atleast></condition><inc variable=\"ship.crashed\" /><stop /></collision>"
+		"<collision object=\"floor\"><condition variable=\"speed\"><below>180</below></condition><inc variable=\"ship.landed\" /><stop /></collision>"
+		"<collision object=\"floor\"><condition variable=\"speed\"><atleast>180</atleast></condition><inc variable=\"ship.crashed\" /><stop /></collision>"
 		"</collisions>"
 		"<actions>"
-		"<action name=\"burn\"><thrust direction=\"up\" burn=\"fuel\">1.5</thrust></action>"
-		"<action name=\"free\"><thrust direction=\"right\">0.25</thrust></action>"
+		"<action name=\"burn\"><thrust direction=\"up\" burn=\"fuel\">5400</thrust></action>"
+		"<action name=\"free\"><thrust direction=\"right\">900</thrust></action>"
 		"</actions>"
 		"<variables><variable name=\"fuel\">3</variable><variable name=\"landed\">0</variable><variable name=\"crashed\">0</variable></variables>"
 		"</object>"
@@ -557,15 +557,15 @@ namespace
 TEST_CASE("an object's acceleration changes its velocity every frame, before it moves", "[acceleration]")
 {
 	Flight flight;
-	REQUIRE(flight.ship().acceleration.y == 0.5f);
+	REQUIRE(flight.ship().acceleration.y == 1800.0f);
 
 	flight.frames(1);
-	CHECK_THAT(flight.ship().velocity.y, WithinAbs(0.5f, 1e-5f));
-	CHECK_THAT(flight.ship().position.y, WithinAbs(0.25f, 1e-5f)); // a t t / 2, the mean of its velocity before and after
+	CHECK_THAT(flight.ship().velocity.y, WithinAbs(30.0f, 1e-3f));
+	CHECK_THAT(flight.ship().position.y, WithinAbs(0.25f, 1e-4f)); // a t t / 2, the mean of its velocity before and after
 
 	flight.frames(3);
-	CHECK_THAT(flight.ship().velocity.y, WithinAbs(2.0f, 1e-5f));
-	CHECK_THAT(flight.ship().position.y, WithinAbs(0.5f * 4.0f * 4.0f / 2.0f, 1e-4f));
+	CHECK_THAT(flight.ship().velocity.y, WithinAbs(120.0f, 1e-3f));
+	CHECK_THAT(flight.ship().position.y, WithinAbs(0.5f * 4.0f * 4.0f / 2.0f, 1e-3f));
 }
 
 TEST_CASE("only what is shown is pulled", "[acceleration]")
@@ -586,11 +586,11 @@ TEST_CASE("thrust one way adds to the velocity while the key is held and stops w
 
 	flight.key("free", true);
 	flight.frames(4);
-	CHECK_THAT(flight.ship().velocity.x, WithinAbs(1.0f, 1e-5f)); // not set to 0.25: it built up
+	CHECK_THAT(flight.ship().velocity.x, WithinAbs(60.0f, 1e-3f)); // not set to 15: it built up
 
 	flight.key("free", false);
 	flight.frames(4);
-	CHECK_THAT(flight.ship().velocity.x, WithinAbs(1.0f, 1e-5f)); // and is kept, with nothing to slow it
+	CHECK_THAT(flight.ship().velocity.x, WithinAbs(60.0f, 1e-3f)); // and is kept, with nothing to slow it
 }
 
 TEST_CASE("thrust against the pull, and opposite thrusts cancel", "[acceleration]")
@@ -599,14 +599,14 @@ TEST_CASE("thrust against the pull, and opposite thrusts cancel", "[acceleration
 
 	flight.key("burn", true);
 	flight.frames(1);
-	CHECK_THAT(flight.ship().velocity.y, WithinAbs(0.5f - 1.5f, 1e-5f)); // pull down 0.5, push up 1.5
+	CHECK_THAT(flight.ship().velocity.y, WithinAbs(30.0f - 90.0f, 1e-3f)); // pull down 30 a frame, push up 90
 
 	flight.key("burn", false);
 	flight.frames(1);
-	CHECK_THAT(flight.ship().velocity.y, WithinAbs(-1.0f + 0.5f, 1e-5f));
+	CHECK_THAT(flight.ship().velocity.y, WithinAbs(-60.0f + 30.0f, 1e-3f));
 }
 
-TEST_CASE("thrust burns one unit of its variable a frame, and does nothing once it is gone", "[acceleration]")
+TEST_CASE("thrust burns 60 of its variable a second, one a frame, and does nothing once it is gone", "[acceleration]")
 {
 	Flight flight;
 	REQUIRE(flight.ship().variable["fuel"] == 3.0f);
@@ -614,17 +614,17 @@ TEST_CASE("thrust burns one unit of its variable a frame, and does nothing once 
 	flight.key("burn", true);
 	flight.frames(2);
 	CHECK(flight.ship().variable["fuel"] == 1.0f);
-	CHECK_THAT(flight.ship().velocity.y, WithinAbs(2 * (0.5f - 1.5f), 1e-5f));
+	CHECK_THAT(flight.ship().velocity.y, WithinAbs(2 * (30.0f - 90.0f), 1e-3f));
 
 	flight.frames(1);
 	CHECK(flight.ship().variable["fuel"] == 0.0f);
 	const float withLastFuel = flight.ship().velocity.y;
-	CHECK_THAT(withLastFuel, WithinAbs(3 * (0.5f - 1.5f), 1e-5f));
+	CHECK_THAT(withLastFuel, WithinAbs(3 * (30.0f - 90.0f), 1e-3f));
 
 	// Still holding it, with nothing left: only the pull is left.
 	flight.frames(2);
 	CHECK(flight.ship().variable["fuel"] == 0.0f);
-	CHECK_THAT(flight.ship().velocity.y, WithinAbs(withLastFuel + 2 * 0.5f, 1e-5f));
+	CHECK_THAT(flight.ship().velocity.y, WithinAbs(withLastFuel + 2 * 30.0f, 1e-3f));
 }
 
 TEST_CASE("a held thrust is forgotten by a reset and the pull is given back by it", "[acceleration]")
@@ -636,7 +636,7 @@ TEST_CASE("a held thrust is forgotten by a reset and the pull is given back by i
 	flight.game.resetObject("ship");
 
 	CHECK(flight.ship().velocity.y == 0.0f);
-	CHECK(flight.ship().acceleration.y == 0.5f);
+	CHECK(flight.ship().acceleration.y == 1800.0f);
 	CHECK(flight.ship().drive.thrust[static_cast<std::size_t>(Direction::Up)] == 0.0f);
 	CHECK(flight.ship().variable["fuel"] == 3.0f);
 }
@@ -647,7 +647,7 @@ TEST_CASE("a condition on speed, as the touch happened, picks which rule about t
 	{
 		Flight flight;
 		flight.ship().position = { 100, 480 };
-		flight.ship().velocity = { 0, 1 };
+		flight.ship().velocity = { 0, 60 };
 		flight.ship().acceleration = {};
 
 		flight.frames(30);
@@ -660,7 +660,7 @@ TEST_CASE("a condition on speed, as the touch happened, picks which rule about t
 	{
 		Flight flight;
 		flight.ship().position = { 100, 480 };
-		flight.ship().velocity = { 0, 8 };
+		flight.ship().velocity = { 0, 480 };
 		flight.ship().acceleration = {};
 
 		flight.frames(30);
@@ -673,7 +673,7 @@ TEST_CASE("a condition on speed, as the touch happened, picks which rule about t
 	{
 		Flight flight;
 		flight.ship().position = { 100, 480 };
-		flight.ship().velocity = { 2.6f, 2.6f }; // each under 3, the two together over it
+		flight.ship().velocity = { 156.0f, 156.0f }; // each under 180, the two together over it
 		flight.ship().acceleration = {};
 
 		flight.frames(30);
@@ -685,7 +685,7 @@ TEST_CASE("a condition on speed, as the touch happened, picks which rule about t
 	{
 		Flight flight;
 		flight.ship().position = { 100, 480 };
-		flight.ship().velocity = { 0, 3 };
+		flight.ship().velocity = { 0, 180 };
 		flight.ship().acceleration = {};
 
 		flight.frames(30);
@@ -699,7 +699,7 @@ TEST_CASE("stop brings an object to rest for good, and a reset gives it its moti
 {
 	Flight flight;
 	flight.ship().position = { 100, 489.5f };
-	flight.ship().velocity = { 0, 1 };
+	flight.ship().velocity = { 0, 60 };
 	flight.ship().acceleration = {};
 	flight.key("free", true); // still held when it lands
 
@@ -717,7 +717,7 @@ TEST_CASE("stop brings an object to rest for good, and a reset gives it its moti
 	CHECK(flight.ship().variable["landed"] == 1.0f);
 
 	flight.game.resetObject("ship");
-	CHECK(flight.ship().acceleration.y == 0.5f);
+	CHECK(flight.ship().acceleration.y == 1800.0f);
 	CHECK(flight.ship().variable["landed"] == 0.0f);
 }
 
@@ -734,7 +734,7 @@ TEST_CASE("the new tags read back the way they were written", "[rules][xml]")
 	const auto* burn = std::get_if<CmdThrustAcross>(&ship.action.at("burn")[0]);
 	REQUIRE(burn);
 	CHECK(burn->direction == Direction::Up);
-	CHECK(burn->amount == 1.5f);
+	CHECK(burn->amount == 5400.0f);
 	CHECK(burn->burn == "fuel");
 
 	const auto* free = std::get_if<CmdThrustAcross>(&ship.action.at("free")[0]);

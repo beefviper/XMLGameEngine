@@ -71,7 +71,7 @@ namespace
 	// A game whose one state shows `shows` (a list of names), around the objects given.
 	std::string gameXml(const std::string& objects, const std::string& shows = "<show object=\"lane\" />")
 	{
-		return "<game>"
+		return "<game time=\"seconds\">"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"row\">100</variable></variables>"
@@ -99,7 +99,7 @@ namespace
 		"<group name=\"lane\" class=\"logs\">"
 		"<sprite><rectangle><width>40</width><height>20</height><color>color.brown</color></rectangle></sprite>"
 		"<position><y>row</y></position>"
-		"<velocity><x>-2</x><y>0</y></velocity>"
+		"<velocity><x>-120</x><y>0</y></velocity>"
 		"<collisions><collision edge=\"horizontal\"><wrap /></collision></collisions>"
 		"<variables><variable name=\"weight\">3</variable></variables>"
 		"<member><position><x>10</x></position></member>"
@@ -107,7 +107,7 @@ namespace
 		"<member name=\"odd\">"
 		"<sprite><rectangle><width>80</width><height>20</height></rectangle></sprite>"
 		"<position><x>300</x><y>150</y></position>"
-		"<velocity><x>1</x></velocity>"
+		"<velocity><x>60</x></velocity>"
 		"</member>"
 		"</group>";
 
@@ -149,9 +149,9 @@ TEST_CASE("what a game leaves out is nothing: still, and touching nothing", "[gr
 {
 	// No <velocity> and no <collisions>, in a group and in an object; a
 	// member gives one half of a velocity, an object the other.
-	Loaded loaded{ gameXml(groupWith(kSprite + kPosition, "<member /><member><velocity><x>2</x></velocity></member>") +
+	Loaded loaded{ gameXml(groupWith(kSprite + kPosition, "<member /><member><velocity><x>120</x></velocity></member>") +
 		"<object name=\"still\">" + kSprite + kPosition + "</object>"
-		"<object name=\"falling\">" + kSprite + kPosition + "<velocity><y>3</y></velocity></object>",
+		"<object name=\"falling\">" + kSprite + kPosition + "<velocity><y>180</y></velocity></object>",
 		"<show object=\"lane\" /><show object=\"still\" /><show object=\"falling\" />") };
 
 	for (const char* name : { "lane.1", "still" })
@@ -161,10 +161,10 @@ TEST_CASE("what a game leaves out is nothing: still, and touching nothing", "[gr
 		CHECK(object.velocity.y == 0.0f);
 		CHECK_FALSE(object.collisionsOn);
 	}
-	CHECK(loaded.game.getObject("lane.2").velocity.x == 2.0f);
+	CHECK(loaded.game.getObject("lane.2").velocity.x == 120.0f);
 	CHECK(loaded.game.getObject("lane.2").velocity.y == 0.0f);
 	CHECK(loaded.game.getObject("falling").velocity.x == 0.0f);
-	CHECK(loaded.game.getObject("falling").velocity.y == 3.0f);
+	CHECK(loaded.game.getObject("falling").velocity.y == 180.0f);
 	CHECK_FALSE(loaded.game.getObject("falling").collisionsOn);
 }
 
@@ -180,7 +180,7 @@ TEST_CASE("a member takes what it leaves out from its group", "[group]")
 	CHECK(first.position.y == 100.0f);
 	CHECK(second.position.x == 200.0f);
 	CHECK(second.position.y == 100.0f);
-	CHECK(first.velocity.x == -2.0f);
+	CHECK(first.velocity.x == -120.0f);
 	CHECK(first.velocity.y == 0.0f);
 	CHECK(first.drawn.picture == second.drawn.picture);
 
@@ -188,13 +188,13 @@ TEST_CASE("a member takes what it leaves out from its group", "[group]")
 	// (the group's 0 for y), and its own shape.
 	CHECK(odd.position.x == 300.0f);
 	CHECK(odd.position.y == 150.0f);
-	CHECK(odd.velocity.x == 1.0f);
+	CHECK(odd.velocity.x == 60.0f);
 	CHECK(odd.velocity.y == 0.0f);
 	CHECK(odd.drawn.picture != first.drawn.picture);
 
 	// And where they started is where a reset puts them back.
 	CHECK(odd.start.position.y == 150.0f);
-	CHECK(odd.start.velocity.x == 1.0f);
+	CHECK(odd.start.velocity.x == 60.0f);
 }
 
 TEST_CASE("the group's name means every member", "[group]")
@@ -220,7 +220,7 @@ TEST_CASE("the group's name means every member", "[group]")
 	CHECK(game.getObject("lane.1").position.x == 10.0f);
 	CHECK(game.getObject("lane.2").position.x == 200.0f);
 	CHECK(game.getObject("odd").position.x == 300.0f);
-	CHECK(game.getObject("odd").velocity.x == 1.0f);
+	CHECK(game.getObject("odd").velocity.x == 60.0f);
 
 	// One member can be reset, or shown, by its own name.
 	game.getObject("lane.2").position.x = 1.0f;
@@ -256,7 +256,7 @@ TEST_CASE("groups and plain objects keep the order they are written in", "[group
 TEST_CASE("a group can share actions with every member", "[group]")
 {
 	const std::string lane = groupWith(kSprite + kPosition + kVelocity + kCollisions
-		+ "<actions><action name=\"up\"><move direction=\"up\">3</move></action></actions>",
+		+ "<actions><action name=\"up\"><move direction=\"up\">180</move></action></actions>",
 		"<member name=\"a\" /><member name=\"b\" />");
 	Loaded loaded{ gameXml(lane) };
 
@@ -396,7 +396,7 @@ TEST_CASE("a row, a column or a cell changes only what it gives", "[group][cells
 	Loaded loaded{ gameXml(wallWith(
 		"<row number=\"2\"><sprite><rectangle><color>color.green</color></rectangle></sprite>"
 		"<variables><variable name=\"points\">5</variable></variables></row>"
-		"<column number=\"3\"><velocity><x>2</x></velocity></column>"
+		"<column number=\"3\"><velocity><x>120</x></velocity></column>"
 		"<cell row=\"1\" column=\"2\" name=\"boss\"><sprite><rectangle><width>30</width><height>16</height><color>color.blue</color></rectangle></sprite></cell>"),
 		kShowWall) };
 	Game& game = loaded.game;
@@ -409,8 +409,8 @@ TEST_CASE("a row, a column or a cell changes only what it gives", "[group][cells
 	CHECK(game.getObject("wall.1.1").variable.at("points") == 1.0f);
 
 	// The column moves; the rest do not.
-	CHECK(game.getObject("wall.3.1").velocity.x == 2.0f);
-	CHECK(game.getObject("wall.3.2").velocity.x == 2.0f);
+	CHECK(game.getObject("wall.3.1").velocity.x == 120.0f);
+	CHECK(game.getObject("wall.3.2").velocity.x == 120.0f);
 	CHECK(game.getObject("wall.1.1").velocity.x == 0.0f);
 
 	// The cell has a name of its own, and is bigger, in the middle of its place.
@@ -600,12 +600,12 @@ namespace
 		"<variables><variable name=\"weight\">3</variable></variables>"
 		"<group name=\"slow\">"
 		"<sprite><rectangle><color>color.red</color></rectangle></sprite>"
-		"<position><y>20</y></position><velocity><x>1</x></velocity>"
+		"<position><y>20</y></position><velocity><x>60</x></velocity>"
 		"<member><position><x>10</x></position></member>"
 		"<member><position><x>200</x></position></member>"
 		"</group>"
 		"<group name=\"fast\" class=\"hazard\">"
-		"<position><y>40</y></position><velocity><x>-3</x></velocity>"
+		"<position><y>40</y></position><velocity><x>-180</x></velocity>"
 		"<collisions><collision class=\"logs\"><die /></collision></collisions>"
 		"<variables><variable name=\"weight\">5</variable></variables>"
 		"<member><position><x>50</x></position></member>"
@@ -632,7 +632,7 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(slow.objClass == "logs");
 	CHECK(slow.position.x == 200.0f);
 	CHECK(slow.position.y == 20.0f);
-	CHECK(slow.velocity.x == 1.0f);
+	CHECK(slow.velocity.x == 60.0f);
 	CHECK(measureShapeSize(slow.drawn.picture).x == 30.0f);
 	CHECK(slow.drawn.picture.color == "color.red");
 	CHECK(slow.collisionsOn);
@@ -646,7 +646,7 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(fast.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
 	CHECK(fast.collisionData.others.size() == 1);
 	CHECK(fast.variable.at("weight") == 5.0f);
-	CHECK(fast.velocity.x == -3.0f);
+	CHECK(fast.velocity.x == -180.0f);
 
 	// The outer name means every member of every group inside it; each inner name, its own.
 	for (const Object& object : objects) { CHECK(game.isShown(object)); }
