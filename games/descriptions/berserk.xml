@@ -71,7 +71,7 @@
     (<show state>).
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Berserk">
     <width>568</width>
     <height>440</height>
@@ -82,7 +82,7 @@
     <variable name="wide">112</variable>
     <variable name="tall">128</variable>
     <variable name="top">48</variable>
-    <variable name="walk">2</variable>
+    <variable name="walk">120</variable>
   </variables>
 
 
@@ -97,7 +97,7 @@
     <!-- his shot: one at a time, like the arcade game -->
     <object name="bullet" class="bullet">
       <sprite><rectangle><width>5</width><height>5</height><color>color.green</color></rectangle></sprite>
-      <velocity><y>-8</y></velocity>
+      <velocity><y>-480</y></velocity>
       <most>1</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -145,8 +145,8 @@
           <every><random><min>1</min><max>2.5</max></random></every>
           <chase object="player">
             <add>
-              <value>0.25</value>
-              <value><multiply><value>player.depth</value><value>0.05</value></multiply></value>
+              <value>15</value>
+              <value><multiply><value>player.depth</value><value>3</value></multiply></value>
             </add>
           </chase>
         </timer>
@@ -233,7 +233,7 @@
     <!-- a robot's shot: spawned when one fires, four at most in the room -->
     <object name="robotshot" class="robotshot">
       <sprite><rectangle><width>5</width><height>5</height><color>color.orange</color></rectangle></sprite>
-      <velocity><y>3</y></velocity>
+      <velocity><y>180</y></velocity>
       <most>4</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -433,7 +433,7 @@
             <bitmap from="otto" />
           </sprite>
           <position><x>504</x><y>72</y></position>
-          <velocity><x>-1.2</x><y>0.9</y></velocity>
+          <velocity><x>-72</x><y>54</y></velocity>
           <waiting />
           <collisions>
             <collision edge="all"><bounce /></collision>
@@ -441,7 +441,7 @@
           </collisions>
           <!-- faster once the room has no robot left (a reset puts it back) -->
           <variables>
-            <variable name="speed">1.1</variable>
+            <variable name="speed">66</variable>
           </variables>
           <timers>
             <timer>
@@ -673,7 +673,7 @@
         <condition class="robot">
           <remaining>0</remaining>
           <reveal object="otto" />
-          <set variable="otto.speed">2</set>
+          <set variable="otto.speed">120</set>
         </condition>
       </conditions>
     </state>

@@ -37,16 +37,16 @@
   holding Space for rapid fire.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Astrosmash">
     <width>800</width>
     <height>600</height>
   </window>
   <variables>
-    <variable name="step">7</variable>
+    <variable name="step">420</variable>
     <variable name="margin">20</variable>
     <variable name="ground">40</variable>
-    <variable name="slant">1</variable>
+    <variable name="slant">60</variable>
   </variables>
   <styles>
     <style name="banner"><size>120</size><color>color.orange</color></style>
@@ -56,7 +56,7 @@
   <objects>
     <object name="shot" class="projectile">
       <sprite><rectangle><width>4</width><height>16</height><color>color.white</color></rectangle></sprite>
-      <velocity><y>-11</y></velocity>
+      <velocity><y>-660</y></velocity>
       <most>1</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -69,7 +69,7 @@
       <sprite>
         <bitmap from="chip" />
       </sprite>
-      <velocity><x><random><min>-2.5</min><max>2.5</max></random></x><y>2.5</y></velocity>
+      <velocity><x><random><min>-150</min><max>150</max></random></x><y>150</y></velocity>
       <most>8</most>
       <collisions>
         <collision edge="horizontal"><bounce /></collision>
@@ -178,7 +178,7 @@
           <columns>4</columns>
           <rows>1</rows>
           <position><y><random><min>-600</min><max>-40</max></random></y></position>
-          <velocity><x><random><min><negate><value>slant</value></negate></min><max>slant</max></random></x><y><random><min>1</min><max>2.5</max></random></y></velocity>
+          <velocity><x><random><min><negate><value>slant</value></negate></min><max>slant</max></random></x><y><random><min>60</min><max>150</max></random></y></velocity>
           <collisions>
             <collision edge="horizontal"><bounce /></collision>
             <collision object="ground">
@@ -228,7 +228,7 @@
               <bitmap from="pebbles" />
             </sprite>
             <position><x>140</x><y><random><min>-800</min><max>-40</max></random></y></position>
-            <velocity><y><random><min>2</min><max>3.5</max></random></y></velocity>
+            <velocity><y><random><min>120</min><max>210</max></random></y></velocity>
             <variables><variable name="worth">20</variable></variables>
           </group>
         </group>
@@ -249,7 +249,7 @@
             <frame sprite="b" />
           </animation>
           <position><x>200</x><y><random><min>-2400</min><max>-900</max></random></y></position>
-          <velocity><x>0</x><y><random><min>1.5</min><max>2.5</max></random></y></velocity>
+          <velocity><x>0</x><y><random><min>90</min><max>150</max></random></y></velocity>
           <collisions>
             <collision object="ground"><trigger object="ship" action="lose" /></collision>
             <collision object="shot">

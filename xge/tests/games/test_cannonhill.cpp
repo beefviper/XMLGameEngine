@@ -84,7 +84,7 @@ TEST_CASE("cannonhill.xml: the barrel turns from its elevation, kept from level 
 {
 	Duel duel;
 	Object& barrel = duel.get("barrel1");
-	// A degree a frame.
+	// 60 degrees a second: a degree a frame.
 	duel.engine.handleKeyPressed(KeyCode::W);
 	duel.frames(10);
 	duel.engine.handleKeyReleased(KeyCode::W);
@@ -108,7 +108,7 @@ TEST_CASE("cannonhill.xml: a shell leaves the tip along the barrel, at the charg
 {
 	Duel duel;
 	duel.game.setVariable("playing.table", "wind", 3.0f);
-	// Three quarters a frame: 80 frames held is 60.
+	// 45 a second: 80 frames held is 60.
 	duel.fire(80);
 	duel.frames(1);
 	Object* shell = duel.shell();
@@ -116,15 +116,15 @@ TEST_CASE("cannonhill.xml: a shell leaves the tip along the barrel, at the charg
 	CHECK(duel.get("barrel1").variable.at("last") == Approx(60.0f));
 	CHECK(duel.get("barrel1").lookName() == "idle");
 	CHECK(duel.look() == "flying");
-	const float speed = 60.0f * 0.15f;
-	CHECK(shell->acceleration.x == Approx(3.0f * 0.004f));
-	CHECK(shell->acceleration.y == Approx(0.12f));
-	CHECK(std::hypot(shell->velocity.x, shell->velocity.y) == Approx(speed).margin(0.2f));
+	const float speed = 60.0f * 9.0f;
+	CHECK(shell->acceleration.x == Approx(3.0f * 14.4f));
+	CHECK(shell->acceleration.y == Approx(432.0f));
+	CHECK(std::hypot(shell->velocity.x, shell->velocity.y) == Approx(speed).margin(12.0f));
 	CHECK(shell->velocity.x > 0.0f);
 	CHECK(shell->velocity.y < 0.0f);
 	// From the tip, 16 out from the barrel's middle at 45 degrees.
 	const Vector2f from = duel.middle(duel.get("barrel1"));
-	const Vector2f at = duel.middle(*shell) - shell->velocity;
+	const Vector2f at = duel.middle(*shell) - shell->velocity * (1.0f / 60.0f);
 	CHECK(std::hypot(at.x - from.x, at.y - from.y) == Approx(16.0f).margin(2.0f));
 }
 
@@ -179,7 +179,7 @@ TEST_CASE("cannonhill.xml: a shell landing by the other cannon wins the point an
 	REQUIRE(shell);
 	const Object& target = duel.get("cannon2");
 	shell->position = { duel.middle(target).x - 3.0f, target.position.y - 30.0f };
-	shell->velocity = { 0.0f, 3.0f };
+	shell->velocity = { 0.0f, 180.0f };
 	shell->acceleration = { 0.0f, 0.12f };
 	for (int i = 0; i < 60 && duel.state() == "playing"; ++i) { duel.frames(1); }
 	REQUIRE(duel.state() == "point");
@@ -206,7 +206,7 @@ TEST_CASE("cannonhill.xml: three points win the match", "[cannonhill]")
 	// Player 1's own shell back onto their own cannon: player 2's point.
 	const Object& own = duel.get("cannon1");
 	shell->position = { duel.middle(own).x - 3.0f, own.position.y - 30.0f };
-	shell->velocity = { 0.0f, 3.0f };
+	shell->velocity = { 0.0f, 180.0f };
 	for (int i = 0; i < 200 && duel.state() != "over"; ++i) { duel.frames(1); }
 	REQUIRE(duel.state() == "over");
 	CHECK(duel.get("winner").lookName() == "two");

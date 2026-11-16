@@ -121,9 +121,9 @@ TEST_CASE("atlantis.xml loads a city of six, three posts at their angles, and fo
 		}
 		CHECK(ships == 12);
 	}
-	CHECK(city.game.getObject(of("wave1", "lane1.1")).velocity.x == Approx(2));
-	CHECK(city.game.getObject(of("wave2", "lane1.1")).velocity.x == Approx(2.8));
-	CHECK(city.game.getObject(of("wave3", "lane1.1")).velocity.x == Approx(3.5));
+	CHECK(city.game.getObject(of("wave1", "lane1.1")).velocity.x == Approx(120));
+	CHECK(city.game.getObject(of("wave2", "lane1.1")).velocity.x == Approx(168));
+	CHECK(city.game.getObject(of("wave3", "lane1.1")).velocity.x == Approx(210));
 }
 
 TEST_CASE("the second wave copies the first's named launch and quota; the third puts its own in their places", "[atlantis][scenes]")
@@ -159,7 +159,7 @@ TEST_CASE("the launch timer sends a ship across the top lane, and a ship at the 
 	REQUIRE(launched.size() == 1);
 	Object& ship = *launched[0];
 	CHECK(ship.position.y == Approx(50));
-	CHECK(ship.velocity.x == Approx(2));
+	CHECK(ship.velocity.x == Approx(120));
 
 	ship.position.x = kWindowWidth - ship.size.x - 1.0f;
 	city.frames(2);
@@ -201,7 +201,7 @@ TEST_CASE("the lowest lane goes round and round and fires death rays that take t
 	while (city.inPlay("playing.ray").empty() && frames < 5 * kFramerate) { city.frames(1); ++frames; }
 	const auto rays = city.inPlay("playing.ray");
 	REQUIRE(rays.size() == 1);
-	CHECK(rays[0]->velocity.y == Approx(5));
+	CHECK(rays[0]->velocity.y == Approx(300));
 	CHECK(rays[0]->position.y >= ship.position.y + ship.size.y - 1.0f);
 
 	// One over a dome takes it.
@@ -229,12 +229,12 @@ TEST_CASE("each post fires along its own heading, and a hit ship scores and coun
 	REQUIRE(left.size() == 1);
 	REQUIRE(middle.size() == 1);
 	REQUIRE(right.size() == 1);
-	CHECK(left[0]->velocity.x > 4.0f);
-	CHECK(left[0]->velocity.y < -4.0f);
+	CHECK(left[0]->velocity.x > 240.0f);
+	CHECK(left[0]->velocity.y < -240.0f);
 	CHECK(middle[0]->velocity.x == Approx(0).margin(0.01));
-	CHECK(middle[0]->velocity.y == Approx(-7));
-	CHECK(right[0]->velocity.x < -4.0f);
-	CHECK(right[0]->velocity.y < -4.0f);
+	CHECK(middle[0]->velocity.y == Approx(-420));
+	CHECK(right[0]->velocity.x < -240.0f);
+	CHECK(right[0]->velocity.y < -240.0f);
 
 	// A ship over the middle shell.
 	city.reveal(of("wave1", "lane3"));

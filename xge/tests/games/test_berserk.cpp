@@ -335,8 +335,8 @@ TEST_CASE("the man shoots the way he faces, one shot at a time", "[berserk]")
 	const Vector2f flying = bullet.position;
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK(bullet.position.x == Approx(flying.x + bullet.velocity.x).margin(0.01));
-	CHECK(bullet.position.y == Approx(flying.y + bullet.velocity.y).margin(0.01));
+	CHECK(bullet.position.x == Approx(flying.x + bullet.velocity.x / 60.0f).margin(0.01));
+	CHECK(bullet.position.y == Approx(flying.y + bullet.velocity.y / 60.0f).margin(0.01));
 }
 
 TEST_CASE("a shot robot is gone and scores fifty, and the shot goes with it", "[berserk]")
@@ -437,7 +437,7 @@ TEST_CASE("robots stand a while, then come for the man, and one that walks into 
 	again.begin();
 	Object& walker = again.object(robot);
 	walker.position = { 2 * cellWidth - 18.0f, mazeTop + cellHeight + 59.0f };
-	walker.velocity = { 1.0f, 0.0f };
+	walker.velocity = { 60.0f, 0.0f };
 	again.frames(6);
 	CHECK_FALSE(walker.isVisible);
 	CHECK(again.score() == 50.0f);
@@ -785,12 +785,12 @@ TEST_CASE("Otto comes at once and faster when every robot is gone, goes when the
 	play.killRobots(1);
 	play.frames(2);
 	REQUIRE(play.object("otto").isVisible);
-	CHECK(play.object("otto").variable["speed"] == Approx(2.0f)); // and faster than when he lingers
+	CHECK(play.object("otto").variable["speed"] == Approx(120.0f)); // and faster than when he lingers
 
 	// He goes when the man leaves the room, and room two's robots keep him away.
 	play.leaveByTheLeft();
 	CHECK(play.room() == 2);
-	CHECK(play.object("otto").variable["speed"] == Approx(1.1f)); // and he is slow again
+	CHECK(play.object("otto").variable["speed"] == Approx(66.0f)); // and he is slow again
 	CHECK_FALSE(play.object("otto").isVisible);
 	play.frames(2);
 	CHECK_FALSE(play.object("otto").isVisible);

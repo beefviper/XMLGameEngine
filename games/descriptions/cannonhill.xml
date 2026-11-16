@@ -36,7 +36,7 @@
     it was, its hill whole, and goes there.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Cannon Hill">
     <width>800</width>
     <height>600</height>
@@ -45,14 +45,14 @@
   <variables>
     <!-- how far the barrel's tip is from its middle, and how fast a full charge goes -->
     <variable name="tip">16</variable>
-    <!-- how fast the barrel turns and the charge builds, a frame: slow enough to stop on a number -->
-    <variable name="aimstep">1</variable>
-    <variable name="charge">0.75</variable>
+    <!-- how fast the barrel turns (degrees) and the charge builds, a second: slow enough to stop on a number -->
+    <variable name="aimstep">60</variable>
+    <variable name="charge">45</variable>
     <variable name="most">100</variable>
-    <variable name="speed">0.15</variable>
+    <variable name="speed">9</variable>
     <!-- the fall, and how much one step of wind pushes a shell across -->
-    <variable name="gravity">0.12</variable>
-    <variable name="windpush">0.004</variable>
+    <variable name="gravity">432</variable>
+    <variable name="windpush">14.4</variable>
     <!-- how near a blast must be to a cannon's middle to hit it -->
     <variable name="reach">28</variable>
     <variable name="crater">18</variable>
@@ -90,18 +90,20 @@
       </heading>
       <actions>
         <action name="raise">
+          <inc variable="self.elevation">aimstep</inc>
           <set variable="self.elevation">
             <clamp>
-              <value><add><value>self.elevation</value><value>aimstep</value></add></value>
+              <value>self.elevation</value>
               <atleast>0</atleast>
               <atmost>90</atmost>
             </clamp>
           </set>
         </action>
         <action name="lower">
+          <dec variable="self.elevation">aimstep</dec>
           <set variable="self.elevation">
             <clamp>
-              <value><subtract><value>self.elevation</value><value>aimstep</value></subtract></value>
+              <value>self.elevation</value>
               <atleast>0</atleast>
               <atmost>90</atmost>
             </clamp>

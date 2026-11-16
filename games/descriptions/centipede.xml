@@ -33,7 +33,7 @@
     takes the life and starts the centipede again.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Centipede">
     <width>480</width>
     <height>552</height>
@@ -52,7 +52,7 @@
     <!-- the wand's shot: one at a time, straight up -->
     <object name="shot" class="shot">
       <sprite><rectangle><width>2</width><height>8</height><color>color.white</color></rectangle></sprite>
-      <velocity><y>-12</y></velocity>
+      <velocity><y>-720</y></velocity>
       <most>1</most>
       <collisions>
         <collision edge="top"><despawn /></collision>
@@ -282,10 +282,10 @@
             </collision>
           </collisions>
           <actions>
-            <action name="left"><move direction="left">4</move></action>
-            <action name="right"><move direction="right">4</move></action>
-            <action name="up"><move direction="up">4</move></action>
-            <action name="down"><move direction="down">4</move></action>
+            <action name="left"><move direction="left">240</move></action>
+            <action name="right"><move direction="right">240</move></action>
+            <action name="up"><move direction="up">240</move></action>
+            <action name="down"><move direction="down">240</move></action>
             <action name="fire"><fire object="shot" /><play sound="zap" /></action>
           </actions>
         </object>

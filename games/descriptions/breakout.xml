@@ -27,7 +27,7 @@
     with no sprite, status, which no reset of the ball touches.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Breakout">
     <width>640</width>
     <height>720</height>
@@ -38,7 +38,7 @@
     <variable name="line">18</variable>
     <variable name="top">110</variable>
     <variable name="paddle">64</variable>
-    <variable name="step">8</variable>
+    <variable name="step">480</variable>
   </variables>
   <styles>
     <style name="banner"><size>100</size><color>color.orange</color></style>
@@ -159,7 +159,7 @@
         <object name="ball">
           <sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>
           <position><x><centered /></x><y><centered /></y></position>
-          <velocity><x><random><min>-3</min><max>3</max></random></x><y>4</y></velocity>
+          <velocity><x><random><min>-180</min><max>180</max></random></x><y>240</y></velocity>
           <collisions>
             <collision edge="horizontal">
               <bounce />

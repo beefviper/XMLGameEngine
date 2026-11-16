@@ -107,9 +107,9 @@ namespace
 		bool atStart(const std::string& name)
 		{
 			const Object& rock = game.getObject(name);
-			return std::abs(rock.position.x - rock.start.position.x) <= std::abs(rock.velocity.x)
+			return std::abs(rock.position.x - rock.start.position.x) <= std::abs(rock.velocity.x) / 60.0f
 				&& rock.position.y >= rock.start.position.y
-				&& rock.position.y <= rock.start.position.y + rock.velocity.y;
+				&& rock.position.y <= rock.start.position.y + rock.velocity.y / 60.0f;
 		}
 
 		// Brings a rock down into the middle of the screen, fires, and puts the
@@ -167,9 +167,9 @@ TEST_CASE("every rock starts above the screen and falls at a slant drawn from it
 				INFO(group << "." << i);
 				CHECK(rock.position.y + rock.size.y <= 0.0f);
 				CHECK(rock.position.y >= (boulder ? -600.0f : -800.0f));
-				CHECK(std::abs(rock.velocity.x) <= 1.0f);
-				CHECK(rock.velocity.y >= (boulder ? 1.0f : 2.0f));
-				CHECK(rock.velocity.y <= (boulder ? 2.5f : 3.5f));
+				CHECK(std::abs(rock.velocity.x) <= 60.0f);
+				CHECK(rock.velocity.y >= (boulder ? 60.0f : 120.0f));
+				CHECK(rock.velocity.y <= (boulder ? 150.0f : 210.0f));
 			}
 		}
 	}
@@ -227,7 +227,7 @@ TEST_CASE("firing launches a shot up from the base, one at a time", "[astrosmash
 	// Leaves the middle of the base: the shot's own middle over the base's.
 	CHECK(table.shot().position.x + table.shot().size.x / 2.0f == table.ship().position.x + table.ship().size.x / 2.0f);
 	CHECK(table.shot().position.y == table.ship().position.y);
-	CHECK(table.shot().velocity.y == -11.0f);
+	CHECK(table.shot().velocity.y == -660.0f);
 
 	table.frames(5);
 	const float y = table.shot().position.y;
@@ -298,7 +298,7 @@ TEST_CASE("a rock that lands takes half its worth off the score and starts over"
 	table.game.setVariable("ship", "score", 100.0f);
 
 	Object& rock = table.game.getObject("pebbles.1.1");
-	rock.velocity = { 0.0f, 2.0f };
+	rock.velocity = { 0.0f, 120.0f };
 	rock.position.y = kWindowHeight - 40.0f - rock.size.y - 1.0f;
 	table.frames(3);
 
@@ -308,7 +308,7 @@ TEST_CASE("a rock that lands takes half its worth off the score and starts over"
 
 	// never below nought
 	table.game.setVariable("ship", "score", 2.0f);
-	rock.velocity = { 0.0f, 2.0f };
+	rock.velocity = { 0.0f, 120.0f };
 	rock.position.y = kWindowHeight - 40.0f - rock.size.y - 1.0f;
 	table.frames(3);
 	CHECK(table.score() == 0.0f);
@@ -321,7 +321,7 @@ TEST_CASE("a rock on the base costs it, and the sky clears", "[astrosmash]")
 	table.parkRocks();
 
 	Object& rock = table.game.getObject("pebbles.1.1");
-	rock.velocity = { 0.0f, 3.0f };
+	rock.velocity = { 0.0f, 180.0f };
 	rock.position = { table.ship().position.x + 10.0f, table.ship().position.y - rock.size.y + 6.0f }; // into its body, under the pulled-in top
 	Object& other = table.game.getObject("boulders.2.1");
 	other.position.y = 300.0f;
@@ -345,7 +345,7 @@ TEST_CASE("a spinner that lands blows up the base, and one shot scores 40", "[as
 	table.ship().position.x = 0.0f;
 
 	Object& spinner = table.game.getObject("spinners.2.1");
-	spinner.velocity = { 0.0f, 2.0f };
+	spinner.velocity = { 0.0f, 120.0f };
 	spinner.position.y = kWindowHeight - 40.0f - spinner.size.y - 1.0f;
 	table.frames(73);
 	CHECK(table.lives() == 3.0f);
@@ -371,7 +371,7 @@ TEST_CASE("every 1,000 points is a spare base, and the peak stays when the score
 
 	table.ship().position.x = 700.0f;
 	Object& rock = table.game.getObject("boulders.1.1");
-	rock.velocity = { 0.0f, 2.0f };
+	rock.velocity = { 0.0f, 120.0f };
 	rock.position.y = kWindowHeight - 40.0f - rock.size.y - 1.0f;
 	table.frames(3);
 	CHECK(table.score() == 1000.0f);
@@ -386,7 +386,7 @@ TEST_CASE("the last base ends the game", "[astrosmash]")
 	table.ship().variable["lives"] = 1.0f;
 
 	Object& rock = table.game.getObject("pebbles.1.1");
-	rock.velocity = { 0.0f, 3.0f };
+	rock.velocity = { 0.0f, 180.0f };
 	rock.position = { table.ship().position.x + 10.0f, table.ship().position.y - rock.size.y + 1.0f };
 	table.frames(72);
 

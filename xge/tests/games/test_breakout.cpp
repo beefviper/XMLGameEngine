@@ -40,7 +40,7 @@ namespace
 		const Object& target = game.getObject(brick);
 		Object& ball = game.getObject("ball");
 		ball.position = { target.position.x + 14.0f, target.position.y + 2.0f };
-		ball.velocity = { 0.0f, -4.0f };
+		ball.velocity = { 0.0f, -240.0f };
 		game.updateObjects(xge::kSixtieth);
 	}
 
@@ -119,12 +119,12 @@ TEST_CASE("the first brick in the back four rows makes the ball faster, once", "
 	play(game);
 
 	hit(game, "green.3.1");
-	CHECK(speed(game) == Approx(4.0f));
+	CHECK(speed(game) == Approx(240.0f));
 	hit(game, "orange.3.2");
-	CHECK(speed(game) == Approx(5.0f));
+	CHECK(speed(game) == Approx(300.0f));
 	CHECK(game.getObject("ball").variable.at("deep") == 1.0f);
 	hit(game, "red.3.1");
-	CHECK(speed(game) == Approx(4.0f)); // hit() serves it at 4 again: no second speed-up
+	CHECK(speed(game) == Approx(240.0f)); // hit() serves it at 240 again: no second speed-up
 }
 
 TEST_CASE("the fourth and the twelfth hit of the paddle make Breakout's ball faster", "[breakout]")
@@ -138,15 +138,15 @@ TEST_CASE("the fourth and the twelfth hit of the paddle make Breakout's ball fas
 	for (int bounce = 1; bounce <= 12; ++bounce)
 	{
 		ball.position = { player.position.x + player.size.x / 2 - 5.0f, player.position.y - 12.0f };
-		ball.velocity = { 0.0f, speeds.empty() ? 4.0f : speeds.back() };
+		ball.velocity = { 0.0f, speeds.empty() ? 240.0f : speeds.back() };
 		game.updateObjects(xge::kSixtieth);
 		speeds.push_back(speed(game));
 	}
 	CHECK(game.takeSoundRequests().front() == "paddle");
-	CHECK(speeds[2] == Approx(4.0f));
-	CHECK(speeds[3] == Approx(5.0f));
-	CHECK(speeds[10] == Approx(5.0f));
-	CHECK(speeds[11] == Approx(6.25f));
+	CHECK(speeds[2] == Approx(240.0f));
+	CHECK(speeds[3] == Approx(300.0f));
+	CHECK(speeds[10] == Approx(300.0f));
+	CHECK(speeds[11] == Approx(375.0f));
 	CHECK(ball.variable.at("hits") == 12.0f);
 }
 
@@ -158,7 +158,7 @@ TEST_CASE("once the ball reaches the top wall, the paddle is half as wide", "[br
 
 	Object& ball = game.getObject("ball");
 	ball.position = { 300.0f, 4.0f };
-	ball.velocity = { 0.0f, -3.0f };
+	ball.velocity = { 0.0f, -180.0f };
 	for (int frame = 0; frame < 3; ++frame) { game.updateObjects(xge::kSixtieth); }
 	CHECK(ball.velocity.y > 0.0f);
 	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "wall" });
@@ -178,7 +178,7 @@ TEST_CASE("three balls lost is the end of Breakout", "[breakout]")
 	{
 		INFO(lost);
 		ball.position = { 300.0f, 715.0f };
-		ball.velocity = { 0.0f, 4.0f };
+		ball.velocity = { 0.0f, 240.0f };
 		game.updateObjects(xge::kSixtieth);
 		CHECK(status(game, "balls") == 3.0f - static_cast<float>(lost));
 		CHECK(game.takeSoundRequests() == std::vector<std::string>{ "lost" });

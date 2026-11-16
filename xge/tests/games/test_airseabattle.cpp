@@ -103,7 +103,7 @@ TEST_CASE("a gun points left, up or right, and fires along the way it points", "
 	const Object& straight = play.game.getObject("shell1.1");
 	REQUIRE(straight.isVisible);
 	CHECK(straight.velocity.x == Approx(0.0f).margin(0.01f));
-	CHECK(straight.velocity.y == Approx(-6.0f));
+	CHECK(straight.velocity.y == Approx(-360.0f));
 
 	// To the right, at once: 45 degrees, however long the key is held.
 	play.hold(KeyCode::D, 15);
@@ -112,8 +112,8 @@ TEST_CASE("a gun points left, up or right, and fires along the way it points", "
 	play.frames(1);
 	const Object& slanted = play.game.getObject("shell1.2");
 	REQUIRE(slanted.isVisible);
-	CHECK(slanted.velocity.x == Approx(4.243f).margin(0.01f));
-	CHECK(slanted.velocity.y == Approx(-4.243f).margin(0.01f));
+	CHECK(slanted.velocity.x == Approx(254.56f).margin(0.05f));
+	CHECK(slanted.velocity.y == Approx(-254.56f).margin(0.05f));
 
 	// Two in the air is all there is.
 	play.tap(KeyCode::W);

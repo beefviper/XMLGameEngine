@@ -49,13 +49,13 @@
   the red dragon, the bat, the bridge, the magnet and the hidden dot.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Adventure">
     <width>640</width>
     <height>480</height>
   </window>
   <variables>
-    <variable name="step">3</variable>
+    <variable name="step">180</variable>
     <variable name="wall">12</variable>
     <variable name="gap">120</variable>
   </variables>
@@ -345,7 +345,7 @@
             <way name="east" scene="blackcastle" />
           </ways>
           <variables>
-            <variable name="dragonspeed">1.2</variable>
+            <variable name="dragonspeed">72</variable>
           </variables>
           <objects>
             <object name="top"><sprite><rectangle><width>window.right</width><height>wall</height><color>color.green</color></rectangle></sprite></object>
@@ -403,7 +403,7 @@
             <way name="out" scene="blackcastle" />
           </ways>
           <variables>
-            <variable name="dragonspeed">1.6</variable>
+            <variable name="dragonspeed">96</variable>
           </variables>
           <objects>
             <object name="top"><sprite><rectangle><width>window.right</width><height>wall</height><color>color.lightgrey</color></rectangle></sprite></object>
