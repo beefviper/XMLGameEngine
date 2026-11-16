@@ -33,7 +33,7 @@ namespace xge
 		// looked at.
 		bool isMoving(const Object& object) noexcept
 		{
-			const Vector2f motion = motionOf(object);
+			const Vector2f motion = motionOf(object, 1.0f);
 			return motion.x != 0 || motion.y != 0 || object.turning.spin != 0 || object.position != object.before.position
 				|| object.animation.shareBefore > 0.0f
 				|| !(object.shown() == object.shownBefore)
@@ -502,7 +502,7 @@ namespace xge
 					continue;
 				}
 
-				item->riding = motionOf(carrier) - item->velocity;
+				item->riding = motionOf(carrier, 1.0f) - item->velocity;
 			}
 		}
 
@@ -738,8 +738,8 @@ namespace xge
 		class FrameSweep
 		{
 		public:
-			FrameSweep(std::vector<Object>& objects, FrameRules& frameRules)
-				: all(objects), rules(frameRules), playing(objects.size()), origin(objects.size()), since(objects.size(), 0.0f),
+			FrameSweep(std::vector<Object>& objects, FrameRules& frameRules, float stepT)
+				: all(objects), rules(frameRules), t(stepT), playing(objects.size()), origin(objects.size()), since(objects.size(), 0.0f),
 				turnFrom(objects.size(), 0.0f), originDegrees(objects.size(), 0), reach(objects.size()), fresh(objects.size(), 0), before(objects.size())
 			{
 				// Whether each is in play, asked once and again only after a
@@ -806,7 +806,7 @@ namespace xge
 				{
 					if (playing[i])
 					{
-						all[i].position = origin[i] + motionOf(all[i]) * (total - since[i]);
+						all[i].position = origin[i] + motionOf(all[i], t) * (total - since[i]);
 						if (spinning(i))
 						{
 							all[i].pivotDegrees = originDegrees[i];
@@ -830,8 +830,8 @@ namespace xge
 					return {};
 				}
 
-				const Vector2f moveA = motionOf(a) * left;
-				const Vector2f moveB = motionOf(b) * left;
+				const Vector2f moveA = motionOf(a, t) * left;
+				const Vector2f moveB = motionOf(b, t) * left;
 				if (!boxesMeet(reachOf(pair.i, moveA), reachOf(pair.j, moveB)))
 				{
 					return { std::nullopt, true };
@@ -852,7 +852,7 @@ namespace xge
 
 				for (std::size_t i = 0; i < all.size(); ++i)
 				{
-					before[i] = { all[i].position, motionOf(all[i]), all[i].size, all[i].heading };
+					before[i] = { all[i].position, motionOf(all[i], t), all[i].size, all[i].heading };
 				}
 
 				rules.touched(*pair.first, *pair.second, contact);
@@ -864,7 +864,7 @@ namespace xge
 					if (turned) { all[i].turning.spin = 0.0f; }
 
 					const char nowPlaying = rules.inPlay(all[i]) ? 1 : 0;
-					if (turned || all[i].position != before[i].position || motionOf(all[i]) != before[i].motion || nowPlaying != playing[i])
+					if (turned || all[i].position != before[i].position || motionOf(all[i], t) != before[i].motion || nowPlaying != playing[i])
 					{
 						origin[i] = all[i].position;
 						originDegrees[i] = all[i].pivotDegrees;
@@ -913,6 +913,8 @@ namespace xge
 
 			std::vector<Object>& all;
 			FrameRules& rules;
+			// The step's length in the game's units of time.
+			float t;
 			std::vector<char> playing;
 			std::vector<Vector2f> origin;
 			std::vector<float> since;
@@ -935,12 +937,12 @@ namespace xge
 		// came. Each object is swept by itself; a lockstep set has no bounding
 		// box of its own, so when most of the invaders are gone only the ones
 		// left are tested.
-		void moveObjects(std::vector<Object>& all, const WindowDesc& window, FrameRules& rules, float seconds)
+		void moveObjects(std::vector<Object>& all, const WindowDesc& window, FrameRules& rules, const StepTime& step)
 		{
-			applyHops(all, window, rules, seconds);
+			applyHops(all, window, rules, step.seconds);
 			lendCarried(all, rules);
 
-			FrameSweep frame(all, rules);
+			FrameSweep frame(all, rules, step.t);
 			playFrame(frame.pairs(), all.size(),
 				[&](const Pair& pair, float left) { return frame.sweep(pair, left); },
 				[&](float total) { frame.advanceTo(total); },
@@ -1028,8 +1030,9 @@ namespace xge
 		return mazeGrids.emplace(map, std::move(grid)).first->second;
 	}
 
-	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds, float motion)
+	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, const StepTime& step)
 	{
+		const float seconds = step.seconds;
 		// A picture that changes with time (an <animation>) counts this step
 		// whether or not the object is moving; only what is in play does, so a
 		// pause or a menu holds it where it was.
@@ -1051,17 +1054,17 @@ namespace xge
 			for (float owed = seconds; owed > kTimeSlack && !object.animation.bitmaps.empty() && rules.inPlay(object);)
 			{
 				const std::size_t was = object.looks.shown;
-				const Object::AnimationStep step = object.advanceAnimation(owed);
-				if (step == Object::AnimationStep::Stayed) { break; }
+				const Object::AnimationStep moved = object.advanceAnimation(owed);
+				if (moved == Object::AnimationStep::Stayed) { break; }
 				passed = true;
-				if (step == Object::AnimationStep::Ended) { ended.emplace_back(i, was); break; }
+				if (moved == Object::AnimationStep::Ended) { ended.emplace_back(i, was); break; }
 				if (object.hasFrameCommands(was, object.animation.index)) { cameUp.push_back({ i, was, object.animation.index }); }
 			}
 			// A stepped one moves this step only if its picture changed: by
 			// what its velocity covered since it last did.
 			if (object.animation.stepped && rules.inPlay(object))
 			{
-				object.animation.since += motion;
+				object.animation.since += step.t;
 				object.animation.shareBefore = object.animation.share;
 				object.animation.share = 0.0f;
 				if (passed)
@@ -1114,7 +1117,7 @@ namespace xge
 
 		// Movement and object-against-object collisions are one job, so that
 		// a fast or small object cannot jump over a thin one between frames.
-		moveObjects(objects, window, rules, seconds);
+		moveObjects(objects, window, rules, step);
 
 		// The edge checks above run before the move, and only for an object
 		// that is moving, so on their own they let a stuck object end the

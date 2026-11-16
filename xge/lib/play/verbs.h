@@ -49,13 +49,14 @@ namespace xge
 		return nearest;
 	}
 
-	// How far an object moves in one frame: its own velocity (for a stepped
-	// animation, only on the frame its picture changes, that many frames' worth:
-	// Object::Animation::stepped), plus the velocity of whatever it is riding
-	// (see Object::riding).
-	inline Vector2f motionOf(const Object& object) noexcept
+	// How far an object moves in a step `t` long (in the game's units of
+	// time, Game::motionTime): its own velocity times t (for a stepped
+	// animation, only on the step its picture changes, by the time saved up
+	// since: Object::Animation::stepped), plus the velocity of whatever it is
+	// riding (see Object::riding) times t. With t of 1, how fast it goes.
+	inline Vector2f motionOf(const Object& object, float t) noexcept
 	{
-		return (object.animation.stepped ? object.velocity * object.animation.share : object.velocity) + object.riding;
+		return (object.animation.stepped ? object.velocity * object.animation.share : object.velocity * t) + object.riding * t;
 	}
 
 	// <bounce />: off what it touched, as off a surface standing still:

@@ -43,6 +43,18 @@ namespace xge
 	// as xgecli --frames and the tests play.
 	inline constexpr float kSixtieth = 1.0f / 60.0f;
 
+	// How long one step is: its seconds, and that time in the units the
+	// game's speeds are written in (Game::motionTime), `t`, with which every
+	// sum of movement is made; `sixtieth` is a sixtieth of a second in those
+	// units, for what is measured in sixtieths (a speed so small it is
+	// still).
+	struct StepTime
+	{
+		float seconds{};
+		float t{};
+		float sixtieth{};
+	};
+
 	class FrameRules
 	{
 	public:
@@ -152,8 +164,5 @@ namespace xge
 	// (before the move), the move (hops, then every pair that can touch swept
 	// through the frame and met in the order they meet), sticks, what is
 	// carried put where it is held, conditions.
-	//
-	// The step is `seconds` long; `motion` is the same time in the units the
-	// game's speeds are written in (Game::motionTime).
-	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds, float motion);
+	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, const StepTime& step);
 }

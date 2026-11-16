@@ -103,7 +103,7 @@ Its own block of work, done before anything else in this file. **Design and reas
 - **Why.** This is the change itself. Every sum uses `t = motionTime(seconds)`, so an unmoved game's numbers still mean what they did.
 - **The sums** are in [time](designs/29-time.md#the-sums). Each step below adds a case to `test_step_lengths.cpp` that plays 2 seconds at each pacing and finds the object in the same place, within 2 pixels.
 - **Steps.**
-  - [ ] **1. Velocity (M).** The move a frame sweeps (`FrameSweep` and `moveObjects` in `play/frame.cpp`) is `velocity * t`; so is what `<ride />` lends and what a `<stepped />` object saves up. **Check:** a mover at a steady velocity.
+  - [x] **1. Velocity (M).** The move a frame sweeps (`FrameSweep` and `moveObjects` in `play/frame.cpp`) is `velocity * t`; so is what `<ride />` lends and what a `<stepped />` object saves up. **Check:** a mover at a steady velocity.
   - [ ] **2. Speed gained (M).** `<acceleration>`, `<thrust>`, `<pull>` and `<jump>`'s pull: the position gains `acceleration * t * t / 2` as well, then the velocity gains `acceleration * t`. `<rise>` and `<fall>` the same. The rest test ("4 frames of its own pull") becomes that many sixtieths of a second. **Check:** a thing dropped from rest; a `<jump>` reaches the same height at every pacing.
   - [ ] **3. Turning (S).** `<turn>` held, `<seek>`'s degrees, a spin: degrees times `t`. **Check:** a turning thing faces the same way.
   - [ ] **4. Shares (M).** `<drag>`, a `<surface>`'s, `<friction>` and `<grip>` (the easing in `play/frame.cpp`): kept over a step is `(1 - lost)` to the power `t`. The snap at 0.05 becomes a speed in the game's units. **Check:** a thing coasting under drag; Speedway and Putt Park tests.

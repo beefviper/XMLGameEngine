@@ -135,14 +135,15 @@ namespace
 		{
 			const std::filesystem::path path = std::filesystem::temp_directory_path() / scratchName("xge_paths_scratch.xml");
 			std::ofstream out(path);
-			out << "<game><window name=\"paths\"><width>200</width><height>100</height><background>color.black</background>"
+			out << "<game time=\"seconds\"><window name=\"paths\"><width>200</width><height>100</height><background>color.black</background>"
 				"<framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 				<< paths << "<states><objects>" << objects << "</objects><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
 				"<inputs></inputs>" << stateExtra << "</state></states></game>";
 			return path;
 		}
 
-		// Frames of the window's ten a second: a timer of 0.1 goes off each one.
+		// Frames of the window's ten a second: a timer of 0.1 goes off each
+		// one, and a path's speed of 20 a second goes 2 pixels.
 		void frames(int count)
 		{
 			for (int i = 0; i < count; ++i) { game.updateObjects(0.1f); }
@@ -156,7 +157,7 @@ namespace
 			"<collisions><off /></collisions>" + extra + "</object>";
 	}
 
-	const std::string kSquare = "<paths><path name=\"square\"><speed>2</speed>"
+	const std::string kSquare = "<paths><path name=\"square\"><speed>20</speed>"
 		"<step><x>10</x><y>0</y></step><step><x>0</x><y>10</y></step><home /></path></paths>";
 }
 
@@ -189,7 +190,7 @@ TEST_CASE("a path is flown a step at a time at its speed, and home takes the obj
 
 TEST_CASE("a path with a start puts the object there first, and a stagger sends a group one behind another", "[paths]")
 {
-	const std::string paths = "<paths><path name=\"in\"><speed>5</speed><start><x>-20</x><y>10</y></start>"
+	const std::string paths = "<paths><path name=\"in\"><speed>50</speed><start><x>-20</x><y>10</y></start>"
 		"<step><x>20</x><y>0</y></step><home /></path></paths>";
 	const std::string group = "<group name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
 		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><off /></collisions>"
@@ -219,7 +220,7 @@ TEST_CASE("a path with a start puts the object there first, and a stagger sends 
 
 TEST_CASE("a step runs its commands as it sets off, and an object on a path finishes it before another", "[paths]")
 {
-	const std::string paths = "<paths><path name=\"count\"><speed>1</speed>"
+	const std::string paths = "<paths><path name=\"count\"><speed>10</speed>"
 		"<step><x>3</x><y>0</y><inc variable=\"a.n\" /></step><step><x>-3</x><y>0</y><inc variable=\"a.n\">10</inc></step></path></paths>";
 	Loaded loaded(paths, box("a", 50, 50, "<variables><variable name=\"n\">0</variable></variables>") + box("b", 0, 0));
 	Object& a = loaded.game.getObject("a");
@@ -312,7 +313,7 @@ TEST_CASE("<shift> moves objects and the places they go home to; one on a path o
 
 TEST_CASE("a path step that names something live is worked out as it starts, with self the one following", "[paths]")
 {
-	const std::string paths = "<paths><path name=\"aim\"><speed>2</speed>"
+	const std::string paths = "<paths><path name=\"aim\"><speed>20</speed>"
 		"<step><x><subtract><value>b.x</value><value>self.x</value></subtract></x><y>0</y></step><home /></path></paths>";
 	Loaded loaded(paths, box("a", 50, 50) + box("b", 10, 0));
 	Object& a = loaded.game.getObject("a");
@@ -331,7 +332,7 @@ TEST_CASE("a path step that names something live is worked out as it starts, wit
 
 TEST_CASE("a step's commands can name the one flying it as self, whoever sent it", "[paths]")
 {
-	const std::string paths = "<paths><path name=\"count\"><speed>1</speed>"
+	const std::string paths = "<paths><path name=\"count\"><speed>10</speed>"
 		"<step><x>3</x><y>0</y><inc variable=\"self.n\">self.x</inc></step></path></paths>";
 	const std::string group = "<group name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
 		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><off /></collisions>"
@@ -362,10 +363,10 @@ TEST_CASE("mistakes with paths are turned away when the game loads, saying where
 	fails(kSquare, both, "<timers><timer><after>1</after><follow path=\"square\" /></timer></timers>", "needs object=\"...\" here");
 	fails(kSquare, both, "<timers><timer><after>1</after><follow path=\"square\" object=\"c\" /></timer></timers>", "<follow> names 'c'");
 	fails("<paths><path name=\"p\"><speed>0</speed><home /></path></paths>", both, "", "the <speed> is not above 0");
-	fails("<paths><path name=\"p\"><speed>1</speed></path></paths>", both, "", "has no <step> or <home />");
-	fails("<paths><path name=\"p\"><speed>1</speed><home /></path><path name=\"p\"><speed>1</speed><home /></path></paths>", both, "",
+	fails("<paths><path name=\"p\"><speed>10</speed></path></paths>", both, "", "has no <step> or <home />");
+	fails("<paths><path name=\"p\"><speed>10</speed><home /></path><path name=\"p\"><speed>10</speed><home /></path></paths>", both, "",
 		"already a path of that name");
-	fails("<paths><path name=\"p\"><speed>1</speed><wait /></path></paths>", both, "", "unknown <wait>");
+	fails("<paths><path name=\"p\"><speed>10</speed><wait /></path></paths>", both, "", "unknown <wait>");
 	fails(kSquare, both, "<timers><timer><after>1</after><shift object=\"a\" /></timer></timers>", "<shift>");
 	fails(kSquare, both, "<timers><timer><after>1</after><shift object=\"c\"><x>1</x></shift></timer></timers>", "'c'");
 	fails(kSquare, box("a", 0, 0, "<timers><timer><after>1</after><follow path=\"square\"><nearest>1</nearest></follow></timer></timers>") + box("b", 0, 0), "",

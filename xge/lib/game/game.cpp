@@ -204,7 +204,7 @@ namespace xge
 		// another scene) is seen, and so is anything this frame changes.
 		settleSpawns();
 		stageChanged();
-		playOneFrame(getCurrentObjects(), windowDesc, *this, seconds, motionTime(seconds));
+		playOneFrame(getCurrentObjects(), windowDesc, *this, { seconds, motionTime(seconds), motionTime(kSixtieth) });
 		settleSpawns();
 		stageChanged();
 		showJoins();
@@ -1687,6 +1687,10 @@ namespace xge
 
 			Path& path = paths.at(object.path.name);
 			bool moving = false;
+			// How far it goes this step: a corner reached on the way is passed
+			// (the object put on it) and the rest goes on along the next leg.
+			const float t = motionTime(seconds);
+			float budget = path.speed * t;
 			while (object.isFollowing() && object.path.leg < path.steps.size())
 			{
 				PathStep& leg = path.steps[object.path.leg];
@@ -1721,18 +1725,9 @@ namespace xge
 				// What is left of this leg: the rest of a step, or the way home
 				// from wherever it has got to.
 				const Vector2f left = leg.home ? object.start.position + object.shifted - object.position : object.path.left;
-				const std::optional<Vector2f> step = pathStep(left, path.speed);
-
-				// Within a frame of home, it is put there: a place a <shift>
-				// keeps moving would otherwise stay a step ahead of it.
-				if (leg.home && step && left.x * left.x + left.y * left.y <= path.speed * path.speed)
-				{
-					object.position += left;
-					object.velocity = {};
-					++object.path.leg;
-					object.path.legStarted = false;
-					continue;
-				}
+				const std::optional<Vector2f> step = pathStep(left, budget);
+				const bool last = object.path.leg + 1 == path.steps.size();
+				const float distance = std::hypot(left.x, left.y);
 				if (!step)
 				{
 					++object.path.leg;
@@ -1740,7 +1735,22 @@ namespace xge
 					continue;
 				}
 
-				object.velocity = *step;
+				// Home within this step: it is put there (a place a <shift>
+				// keeps moving would otherwise stay a step ahead of it). A
+				// corner reached with more legs to come: put on it, the rest
+				// of the step for the next leg.
+				if (distance <= budget && (leg.home || !last))
+				{
+					object.position += left;
+					object.velocity = {};
+					if (!leg.home) { object.path.left = {}; }
+					budget -= distance;
+					++object.path.leg;
+					object.path.legStarted = false;
+					continue;
+				}
+
+				object.velocity = t > 0.0f ? *step * (1.0f / t) : Vector2f{};
 				if (!leg.home) { object.path.left -= *step; }
 				// One that faces somewhere faces the way it flies.
 				if (object.turning.hasHeading)
@@ -2165,7 +2175,7 @@ namespace xge
 		// How fast it is going at the moment of the touch (its live speed while
 		// the rules run); taken once, so that a rule that stops it does not
 		// change which of the rules after it run.
-		const Vector2f motion = motionOf(self);
+		const Vector2f motion = motionOf(self, 1.0f);
 		self.motion.speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
 		self.motion.speedHeld = true;
 		// Its look as the touch happens, for sprite=, likewise.

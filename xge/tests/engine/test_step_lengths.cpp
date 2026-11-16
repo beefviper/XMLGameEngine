@@ -142,3 +142,20 @@ TEST_CASE("Space Invaders' stepped block is in the same place after 5 seconds, h
 		[](Played& play) { return static_cast<double>(play.get("aliens.1.1").position.y); }, invade);
 	agree(down, 0.0);
 }
+
+TEST_CASE("a mover at a steady velocity is in the same place, however the time is cut into steps", "[steps][velocity]")
+{
+	// 100 pixels a second, for 2 seconds.
+	const std::string moved = secondsGame(box("mover", 100, 100, "<velocity><x>100</x><y>50</y></velocity>"));
+	const auto x = atEveryStepLengthOf(moved, 2.0, [](Played& play) { return static_cast<double>(play.get("mover").position.x); });
+	agree(x, 2.0);
+	CHECK(x.front().value == Approx(300.0).margin(2.0));
+
+	// A game still in pixels a frame: 2 a frame is 120 a second.
+	std::string old = moved;
+	old.replace(old.find(" time=\"seconds\""), std::string(" time=\"seconds\"").size(), "");
+	old.replace(old.find("<x>100</x><y>50</y></velocity>"), std::string("<x>100</x><y>50</y></velocity>").size(), "<x>2</x><y>1</y></velocity>");
+	const auto frames = atEveryStepLengthOf(old, 2.0, [](Played& play) { return static_cast<double>(play.get("mover").position.x); });
+	agree(frames, 2.0);
+	CHECK(frames.front().value == Approx(340.0).margin(2.0));
+}
