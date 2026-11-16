@@ -211,3 +211,16 @@ TEST_CASE("a turn held faces the same way, however the time is cut into steps", 
 	agree(facing, 2.0);
 	CHECK(facing.front().value == Approx(90.0).margin(2.0));
 }
+
+TEST_CASE("a thing coasting under drag goes as far, however the time is cut into steps", "[steps][drag]")
+{
+	// 300 pixels a second, half of it lost each second.
+	const std::string game = secondsGame(box("puck", 10, 100, "<velocity><x>300</x><y>0</y></velocity><drag>0.5</drag>"));
+	const auto x = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("puck").position.x); });
+	// 300 (1 - 0.25) / ln 2 on from 10.
+	agree(x, 2.0);
+	CHECK(x.front().value == Approx(334.6).margin(2.0));
+	const auto speed = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("puck").velocity.x); });
+	agree(speed, 0.5);
+	CHECK(speed.front().value == Approx(75.0).margin(0.5));
+}

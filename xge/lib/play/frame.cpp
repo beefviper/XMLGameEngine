@@ -23,6 +23,29 @@ namespace xge
 {
 	namespace
 	{
+		// What a share lost each unit of time (a <drag>, a <grip>) leaves
+		// over a step: (1 - share) to the power t. Worked out once for each
+		// share a step, not for each object.
+		class KeptOver
+		{
+		public:
+			explicit KeptOver(float stepT) : t(stepT) {}
+			float operator()(float share)
+			{
+				if (share != lastShare)
+				{
+					lastShare = share;
+					lastKept = share >= 1.0f ? 0.0f : std::pow(1.0f - share, t);
+				}
+				return lastKept;
+			}
+
+		private:
+			float t;
+			float lastShare{ -1.0f };
+			float lastKept{ 1.0f };
+		};
+
 		// Whether it has moved or changed, so its touches are looked for: it
 		// is going somewhere this frame (a velocity, or riding something), it
 		// is not where the last frame left it (anything that put it
@@ -203,8 +226,12 @@ namespace xge
 		// With a <heading> it is a wheel's grip instead: each frame its speed
 		// across the way it faces loses that share, so it goes where it
 		// points and slides when the grip is low (a car on oil).
-		void applyGrip(std::vector<Object>& objects, FrameRules& rules)
+		void applyGrip(std::vector<Object>& objects, FrameRules& rules, const StepTime& time)
 		{
+			KeptOver kept(time.t);
+			// Close enough to the speed asked for to be it: a twentieth of a
+			// pixel a sixtieth of a second.
+			const float snap = 0.05f / time.sixtieth;
 			for (auto& object : objects)
 			{
 				if (object.motion.grip >= 1.0f || object.footing.climbing || !rules.inPlay(object)) { continue; }
@@ -214,14 +241,15 @@ namespace xge
 					const Vector2f way = ahead(object.heading);
 					const float along = object.velocity.x * way.x + object.velocity.y * way.y;
 					const Vector2f across = object.velocity - way * along;
-					object.velocity -= across * object.surface.groundGrip;
+					object.velocity -= across * (1.0f - kept(object.surface.groundGrip));
 					continue;
 				}
 
+				const float keeps = kept(object.surface.groundGrip);
 				const auto ease = [&](float& velocity, float wanted)
 				{
-					velocity += (wanted - velocity) * object.surface.groundGrip;
-					if (std::abs(wanted - velocity) < 0.05f) { velocity = wanted; }
+					velocity = wanted + (velocity - wanted) * keeps;
+					if (std::abs(wanted - velocity) < snap) { velocity = wanted; }
 				};
 				const auto& step = object.drive.moveStep;
 				if (!object.footing.jumping)
@@ -305,6 +333,7 @@ namespace xge
 		{
 			const float t = step.t;
 			const float seconds = step.seconds;
+			KeptOver kept(t);
 			for (auto& object : objects)
 			{
 				object.motion.gained = {};
@@ -326,7 +355,7 @@ namespace xge
 				// it was. Anything else wakes it.
 				if (object.motion.friction > 0.0f)
 				{
-					if (object.rest.settledAge < 1000) { ++object.rest.settledAge; }
+					if (object.rest.settledAge < 1000.0f) { object.rest.settledAge += seconds; }
 					if (object.rest.resting)
 					{
 						object.rest.resting = object.velocity.x == 0.0f && object.velocity.y == 0.0f && object.position == object.rest.at
@@ -416,10 +445,10 @@ namespace xge
 
 				object.velocity += change * t;
 
-				// Drag: what is left of the speed after this frame.
+				// Drag: what is left of the speed after this step.
 				if (object.surface.groundDrag != 0.0f)
 				{
-					object.velocity *= 1.0f - object.surface.groundDrag;
+					object.velocity *= kept(object.surface.groundDrag);
 				}
 				object.motion.gained = object.velocity - was;
 			}
@@ -1105,7 +1134,7 @@ namespace xge
 
 		findGround(objects, rules);
 
-		applyGrip(objects, rules);
+		applyGrip(objects, rules, step);
 
 		applyAcceleration(objects, rules, step);
 

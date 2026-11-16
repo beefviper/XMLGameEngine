@@ -1455,7 +1455,7 @@ namespace xge
 			object.marks.marked.clear();
 			object.marks.copies.clear();
 			object.rest.resting = false;
-			object.rest.settledAge = 1000;
+			object.rest.settledAge = 1000.0f;
 			object.turning.spin = 0.0f;
 			object.showHeading();
 

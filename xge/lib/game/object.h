@@ -1859,7 +1859,7 @@ namespace xge
 		// is pulled, until one of them moves or turns, or something moves it
 		// or gives it a speed. Worked out by a touch with friction
 		// (play/verbs.cpp's rub), which also keeps the last surface it
-		// settled on, the way out of it and how many frames ago
+		// settled on, the way out of it and how many seconds ago
 		// (`settledOn`, `settledNormal`, `settledAge`), for one wedged
 		// between two.
 		struct Rest
@@ -1869,7 +1869,7 @@ namespace xge
 			Vector2f at;
 			Support settledOn;
 			Vector2f settledNormal;
-			int settledAge{ 1000 };
+			float settledAge{ 1000.0f };
 		};
 		Rest rest;
 

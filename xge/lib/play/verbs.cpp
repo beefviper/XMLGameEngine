@@ -111,13 +111,14 @@ namespace xge
 
 			if (!(-dotOf(cameIn, out) < settle)) { return; }
 
-			const bool another = mover.rest.settledAge <= 2 && dotOf(mover.rest.settledNormal, out) < 0.95f;
+			// Settled on another within the last two sixtieths of a second.
+			const bool another = mover.rest.settledAge <= 2.0f / 60.0f + kTimeSlack && dotOf(mover.rest.settledNormal, out) < 0.95f;
 			const Vector2f other = mover.rest.settledNormal;
 			const Object::Support otherSupport = mover.rest.settledOn;
 			const Object::Support support{ surface.name, surface.position, surface.heading };
 			mover.rest.settledOn = support;
 			mover.rest.settledNormal = out;
-			mover.rest.settledAge = 0;
+			mover.rest.settledAge = 0.0f;
 
 			const bool still = surface.turning.spin == 0.0f && surfaceAt.x == 0.0f && surfaceAt.y == 0.0f;
 			if (!still || !(lengthOf(now) < settle)) { return; }
