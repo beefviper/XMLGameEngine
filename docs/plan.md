@@ -152,8 +152,8 @@ Its own block of work, done before anything else in this file. **Design and reas
 
 - **Why.** About 170 lines of small games written inside 33 test files, and `invaders_fixture.h`, still hold per-frame numbers, and about 190 expectations compare a speed.
 - **Steps.**
-  - [ ] **1. Five test files a commit (M in all).** Each inline game gets `time="seconds"` and its numbers moved; each expectation of a speed is multiplied to match; an expectation of a position after some frames keeps its number, as a range where the new sums moved it slightly. **Check after each commit:** that file's cases.
-  - [ ] **2. None left (S).** **Check:** `grep -rL 'time="seconds"'` over the test files that hold a `<game` finds none.
+  - [x] **1. Five test files a commit (M in all).** Each inline game gets `time="seconds"` and its numbers moved; each expectation of a speed is multiplied to match; an expectation of a position after some frames keeps its number, as a range where the new sums moved it slightly. **Check after each commit:** that file's cases.
+  - [x] **2. None left (S).** **Check:** `grep -rL 'time="seconds"'` over the test files that hold a `<game` finds none. Left as they are: `<game />` stubs, a broken file, and the demo-splicing strings in `test_gameplay_verbs.cpp` and `test_cli.cpp`, which hold no numbers.
 
 ### DT8. The stand-alone writers
 

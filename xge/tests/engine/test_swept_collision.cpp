@@ -105,7 +105,7 @@ TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only 
 	// Just below the bottom row, in line with the fourth column, moving 90 px
 	// a frame - the bullet ends the frame 20 px above the alien, having crossed all of it.
 	bullet.position = { target.position.x + 21.0f, target.position.y + 70.0f };
-	bullet.velocity = { 0.0f, -90.0f };
+	bullet.velocity = { 0.0f, -5400.0f };
 	game.updateObjects(xge::kSixtieth);
 
 	// The hit took the bullet away.
@@ -133,7 +133,7 @@ TEST_CASE("the bullet also hits a cell in the middle of the block, not just the 
 	Object& bullet = ::bullet(game);
 
 	bullet.position = { front.position.x + 21.0f, front.position.y + 300.0f };
-	bullet.velocity = { 0.0f, -400.0f };
+	bullet.velocity = { 0.0f, -24000.0f };
 
 	game.updateObjects(xge::kSixtieth);
 
@@ -206,7 +206,7 @@ TEST_CASE("a bullet is a piece: fired, a copy leaves the ship at its own velocit
 	REQUIRE(copies::count(game, "bullet") == 1);
 	Object& bullet = game.getObject("bullet.1");
 	CHECK(bullet.collisionsOn);
-	CHECK(bullet.velocity.y == -12.0f);
+	CHECK(bullet.velocity.y == -720.0f);
 	CHECK(bullet.position.y == player.position.y);
 
 	// One at a time.

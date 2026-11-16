@@ -58,7 +58,7 @@ namespace
 	// states given, and anything given before the states.
 	std::string gameXml(const std::string& objects, const std::string& states, const std::string& keys = {}, const std::string& pieces = {})
 	{
-		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+		return "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
@@ -256,7 +256,7 @@ TEST_CASE("a timer on an enemy fires its shots the way it faces", "[timers][faci
 	Loaded loaded(gameXml(
 		box("enemy", 100, 100, 20, 10, "", "<facing>down</facing>", "<timers><timer><every>0.5</every><fire object=\"bomb\" /></timer></timers>"),
 		state("playing", { "enemy", "bomb" }), {},
-		shotPiece("bomb", 4, 6, "<x>0</x><y>-3</y>")));
+		shotPiece("bomb", 4, 6, "<x>0</x><y>-180</y>")));
 
 	loaded.frames(29);
 	CHECK(copies::count(loaded.game, "bomb") == 0);
@@ -268,21 +268,21 @@ TEST_CASE("a timer on an enemy fires its shots the way it faces", "[timers][faci
 	// Below the middle of the enemy, falling at the bomb's own speed; it
 	// joined as the frame ended, so it has not moved yet.
 	CHECK(bomb.velocity.x == Approx(0));
-	CHECK(bomb.velocity.y == Approx(3));
+	CHECK(bomb.velocity.y == Approx(180.0));
 	CHECK(bomb.position.x == Approx(108));
 	CHECK(bomb.position.y == Approx(110));
 }
 
 TEST_CASE("an object with a <facing> faces the way it last moved, and fires that way", "[facing]")
 {
-	const std::string actions = "<actions><action name=\"left\"><move direction=\"left\">2</move></action>"
+	const std::string actions = "<actions><action name=\"left\"><move direction=\"left\">120</move></action>"
 		"<action name=\"right\"><hop direction=\"right\">10</hop></action>"
 		"<action name=\"gun\"><fire object=\"shot\" /></action></actions>";
 
 	Loaded loaded(gameXml(
 		box("man", 100, 100, 20, 20, "", "<facing>up</facing>", actions),
 		state("playing", { "man", "shot" }), {},
-		shotPiece("shot", 4, 4, "<x>0</x><y>-6</y>")));
+		shotPiece("shot", 4, 4, "<x>0</x><y>-360</y>")));
 
 	CommandExecutor executor(loaded.game);
 	Object& man = loaded.game.getObject("man");
@@ -299,7 +299,7 @@ TEST_CASE("an object with a <facing> faces the way it last moved, and fires that
 	const Object& up = fire();
 	CHECK(up.position.x == Approx(108));
 	CHECK(up.position.y == Approx(96));
-	CHECK(up.velocity.y == Approx(-6));
+	CHECK(up.velocity.y == Approx(-360.0));
 
 	executor.executeInput(CmdTriggerAction{ "man", "left" }, true);
 	executor.executeInput(CmdTriggerAction{ "man", "left" }, false);
@@ -307,14 +307,14 @@ TEST_CASE("an object with a <facing> faces the way it last moved, and fires that
 	const Object& left = fire();
 	CHECK(left.position.x == Approx(96));
 	CHECK(left.position.y == Approx(108));
-	CHECK(left.velocity.x == Approx(-6));
+	CHECK(left.velocity.x == Approx(-360.0));
 	CHECK(left.velocity.y == Approx(0));
 
 	executor.executeInput(CmdTriggerAction{ "man", "right" }, true);
 	CHECK(man.facing == Direction::Right);
 	const Object& right = fire();
 	CHECK(right.position.x == Approx(120));
-	CHECK(right.velocity.x == Approx(6));
+	CHECK(right.velocity.x == Approx(360.0));
 
 	// A reset faces it the way it started.
 	loaded.game.resetObject("man");
@@ -376,32 +376,32 @@ TEST_CASE("<reverse /> turns an object round, and a collision can reset another 
 {
 	Loaded loaded(gameXml(
 		box("walker", 400, 100, 10, 10, "<collision edge=\"right\"><reset object=\"marker\" /><reverse /></collision>",
-			{}, "<timers><timer><every>0.5</every><reverse /></timer></timers>", "<x>3</x><y>1</y>")
-		+ box("marker", 50, 50, 10, 10, "<off />", {}, {}, "<x>1</x><y>0</y>"),
+			{}, "<timers><timer><every>0.5</every><reverse /></timer></timers>", "<x>180</x><y>60</y>")
+		+ box("marker", 50, 50, 10, 10, "<off />", {}, {}, "<x>60</x><y>0</y>"),
 		state("playing", { "walker", "marker" })));
 
 	Object& walker = loaded.game.getObject("walker");
 	loaded.frames(29);
-	CHECK(walker.velocity.x == Approx(3));
+	CHECK(walker.velocity.x == Approx(180));
 	loaded.frames(1);
-	CHECK(walker.velocity.x == Approx(-3));
-	CHECK(walker.velocity.y == Approx(-1));
+	CHECK(walker.velocity.x == Approx(-180));
+	CHECK(walker.velocity.y == Approx(-60));
 
 	// Off the right edge: the marker goes back to where it started.
 	walker.position = { 795, 100 };
-	walker.velocity = { 3, 0 };
+	walker.velocity = { 180, 0 };
 	Object& marker = loaded.game.getObject("marker");
 	CHECK(marker.position.x > 50);
 	loaded.frames(1);
 	CHECK(marker.position.x == Approx(51)); // back at 50, and moved on a pixel
-	CHECK(walker.velocity.x == Approx(-3));
+	CHECK(walker.velocity.x == Approx(-180));
 }
 
 TEST_CASE("one <input> can name several keys, and a state from= another takes its keys, its own binding winning", "[keys]")
 {
 	const std::string inputs = "<input><button>a</button><button>left</button><trigger object=\"man\" action=\"left\" /></input>"
 		"<input button=\"space\"><push state=\"paused\" /></input>";
-	const std::string actions = "<actions><action name=\"left\"><move direction=\"left\">2</move></action></actions>";
+	const std::string actions = "<actions><action name=\"left\"><move direction=\"left\">120</move></action></actions>";
 
 	Loaded loaded(gameXml(
 		box("man", 100, 100, 20, 20, "<off />", {}, actions),
@@ -446,7 +446,7 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 	const auto fails = [](const std::string& objects, const std::string& states, const std::string& expected)
 	{
 		INFO(objects << states);
-		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		const std::string xml = "<game time=\"seconds\"><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>" + objects + "</objects>" + states + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
@@ -490,7 +490,7 @@ TEST_CASE("an object with several named sprites can <become> each of them, and a
 		"<collisions>"
 		"<collision class=\"ball\" sprite=\"off\"><become sprite=\"on\" /><inc variable=\"lamp.lit\" /></collision>"
 		"</collisions><variables><variable name=\"lit\">0</variable></variables></object>";
-	const std::string ball = box("ball", 60, 100, 10, 10, "", {}, {}, "<x>2</x><y>0</y>", " class=\"ball\"");
+	const std::string ball = box("ball", 60, 100, 10, 10, "", {}, {}, "<x>120</x><y>0</y>", " class=\"ball\"");
 
 	Loaded loaded(gameXml(lamp + ball,
 		state("playing", { "lamp", "ball" }, "<input button=\"space\"><become object=\"lamp\" sprite=\"off\" /></input>")));
@@ -522,7 +522,7 @@ TEST_CASE("an edge rule with sprite= runs only while the object shows that look,
 	const std::string puck = "<object name=\"puck\">"
 		"<sprite name=\"whole\"><rectangle><width>10</width><height>10</height><color>color.grey</color></rectangle></sprite>"
 		"<sprite name=\"cracked\"><rectangle><width>10</width><height>10</height><color>color.darkgrey</color></rectangle></sprite>"
-		"<position><x>20</x><y>100</y></position><velocity><x>-4</x><y>0</y></velocity>"
+		"<position><x>20</x><y>100</y></position><velocity><x>-240</x><y>0</y></velocity>"
 		"<collisions>"
 		"<collision edge=\"left\" sprite=\"cracked\"><die /></collision>"
 		"<collision edge=\"left\" sprite=\"whole\"><become sprite=\"cracked\" /><bounce /></collision>"
@@ -539,7 +539,7 @@ TEST_CASE("an edge rule with sprite= runs only while the object shows that look,
 	CHECK(one.isVisible);
 	CHECK(loaded.variable("puck", "hits") == 1); // a rule with no sprite= runs whatever it shows
 
-	one.velocity.x = -4.0f;
+	one.velocity.x = -240.0f;
 	loaded.frames(10);
 	CHECK_FALSE(one.isVisible);
 	CHECK(loaded.variable("puck", "hits") == 2);
@@ -553,8 +553,8 @@ TEST_CASE("an edge rule with unless= is passed over while the object touches som
 		"<collision edge=\"bottom\" unless=\"pad\"><die /></collision>"
 		"<collision edge=\"bottom\"><bounce /></collision>";
 	Loaded loaded(gameXml(
-		box("safe", 100, 592, 10, 10, rules, {}, {}, "<x>0</x><y>1</y>")
-			+ box("lost", 400, 592, 10, 10, rules, {}, {}, "<x>0</x><y>1</y>")
+		box("safe", 100, 592, 10, 10, rules, {}, {}, "<x>0</x><y>60</y>")
+			+ box("lost", 400, 592, 10, 10, rules, {}, {}, "<x>0</x><y>60</y>")
 			+ box("pad", 90, 590, 40, 10, "", {}, {}, "<x>0</x><y>0</y>", " class=\"pad\""),
 		state("playing", { "safe", "lost", "pad" })));
 
@@ -644,7 +644,7 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 	const auto fails = [](const std::string& objects, const std::string& states, const std::string& expected)
 	{
 		INFO(objects << states);
-		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		const std::string xml = "<game time=\"seconds\"><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>" + objects + "</objects>" + states + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
@@ -678,15 +678,15 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 TEST_CASE("<chase> heads straight for the nearest one in play, and stops when near enough", "[chase]")
 {
 	const std::string chaser = box("hunter", 100, 100, 20, 20, "", "<facing>up</facing>",
-		"<timers><timer><every>0.1</every><chase object=\"prey\">2<near>50</near></chase></timer></timers>");
+		"<timers><timer><every>0.1</every><chase object=\"prey\">120<near>50</near></chase></timer></timers>");
 	Loaded loaded(gameXml(chaser + box("prey", 400, 500, 20, 20) + box("prey2", 0, 0, 20, 20, "<off />", "<waiting />"),
 		state("playing", { "hunter", "prey", "prey2" })));
 
 	Object& hunter = loaded.game.getObject("hunter");
 	loaded.frames(6);
 	// 300 across and 400 down: three fifths and four fifths of the speed.
-	CHECK(hunter.velocity.x == Approx(1.2f));
-	CHECK(hunter.velocity.y == Approx(1.6f));
+	CHECK(hunter.velocity.x == Approx(72.0f));
+	CHECK(hunter.velocity.y == Approx(96.0f));
 	CHECK(hunter.facing == Direction::Down);
 
 	// It closes in, and stops within 50 of the prey's middle.
@@ -702,16 +702,16 @@ TEST_CASE("<chase> heads straight for the nearest one in play, and stops when ne
 TEST_CASE("<aim> sends the next shots straight at the target, at any angle, until a key moves the shooter", "[aim]")
 {
 	const std::string gun = box("gun", 100, 100, 20, 20, "", {},
-		"<actions><action name=\"left\"><move direction=\"left\">1</move></action></actions>"
+		"<actions><action name=\"left\"><move direction=\"left\">60</move></action></actions>"
 		"<timers><timer><every>0.5</every><aim object=\"target\" /><fire object=\"shot\" /></timer></timers>");
 	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20),
-		state("playing", { "gun", "target", "shot" }), {}, shotPiece("shot", 4, 4, "<x>0</x><y>-5</y>")));
+		state("playing", { "gun", "target", "shot" }), {}, shotPiece("shot", 4, 4, "<x>0</x><y>-300</y>")));
 
 	loaded.frames(30);
 	REQUIRE(copies::count(loaded.game, "shot") == 1);
 	const Object& shot = loaded.game.getObject("shot.1");
-	CHECK(shot.velocity.x == Approx(3.0f));
-	CHECK(shot.velocity.y == Approx(4.0f));
+	CHECK(shot.velocity.x == Approx(180.0f));
+	CHECK(shot.velocity.y == Approx(240.0f));
 	CHECK(loaded.game.getObject("gun").facing == Direction::Down);
 
 	// It leaves from the middle of the gun, clear of it, along the aim.
@@ -729,7 +729,7 @@ TEST_CASE("<aim> with <lined> fires only along one of the eight ways, when the t
 	const std::string gun = box("gun", 100, 100, 20, 20, "", {}, 
 		"<timers><timer><every>0.5</every><aim object=\"target\"><lined>8</lined></aim><fire object=\"shot\" /></timer></timers>");
 	Loaded loaded(gameXml(gun + box("target", 400, 500, 20, 20),
-		state("playing", { "gun", "target", "shot" }), {}, shotPiece("shot", 4, 4, "<x>0</x><y>-5</y>")));
+		state("playing", { "gun", "target", "shot" }), {}, shotPiece("shot", 4, 4, "<x>0</x><y>-300</y>")));
 
 	// 300 across and 400 down lies along none of the eight: the aim is
 	// refused, and the <fire> after it with it.
@@ -741,8 +741,8 @@ TEST_CASE("<aim> with <lined> fires only along one of the eight ways, when the t
 	loaded.frames(40);
 	REQUIRE(copies::count(loaded.game, "shot") == 1);
 	const Object& shot = loaded.game.getObject("shot.1");
-	CHECK(shot.velocity.x == Approx(5.0f / std::sqrt(2.0f)));
-	CHECK(shot.velocity.y == Approx(5.0f / std::sqrt(2.0f)));
+	CHECK(shot.velocity.x == Approx(300.0f / std::sqrt(2.0f)));
+	CHECK(shot.velocity.y == Approx(300.0f / std::sqrt(2.0f)));
 
 	CHECK(linedUp({ -200.0f, 6.0f }, 8.0f) == std::optional<Vector2f>(Vector2f{ -1.0f, 0.0f }));
 	CHECK(linedUp({ 3.0f, -90.0f }, 8.0f) == std::optional<Vector2f>(Vector2f{ 0.0f, -1.0f }));
@@ -753,8 +753,8 @@ TEST_CASE("<aim> with <lined> fires only along one of the eight ways, when the t
 TEST_CASE("two move keys held across each other face the diagonal, and a <fire> goes along it", "[aim][facing]")
 {
 	const std::string gun = box("gun", 300, 300, 20, 20, "", "<facing>up</facing>",
-		"<actions><action name=\"up\"><move direction=\"up\">1</move></action>"
-		"<action name=\"right\"><move direction=\"right\">1</move></action>"
+		"<actions><action name=\"up\"><move direction=\"up\">60</move></action>"
+		"<action name=\"right\"><move direction=\"right\">60</move></action>"
 		"<action name=\"gun\"><fire object=\"shot\" /></action></actions>");
 	Loaded loaded(gameXml(gun,
 		state("playing", { "gun", "shot" }), {}, shotPiece("shot", 4, 4, "<x>0</x><y>-5</y>")));
@@ -794,7 +794,7 @@ TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes ob
 		  "<position><x>0</x><y>40</y></position></object>"
 		+ "<group name=\"lamps\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		  "<position><x>0</x><y>60</y></position><member><position><x>0</x></position></member><member><position><x>10</x></position></member></group>";
-	const std::string xml = "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+	const std::string xml = "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 		"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 		"<framerate>60</framerate></window>"
 		"<variables><variable name=\"unused\">0</variable></variables>"
@@ -842,7 +842,7 @@ TEST_CASE("a <copy> or <keep> that names nothing is turned away when the game lo
 	const auto fails = [](const std::string& keeps, const std::string& inputs, const std::string& expected)
 	{
 		INFO(keeps << inputs);
-		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		const std::string xml = "<game time=\"seconds\"><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			+ keeps + "<states><objects>" + box("o", 0, 0, 1, 1, "<off />", {}, "<variables><variable name=\"score\">0</variable></variables>")
 			+ "</objects>" + state("playing", { "o" }, inputs) + "</states></game>";

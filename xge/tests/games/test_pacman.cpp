@@ -156,7 +156,7 @@ namespace
 	// A small game around a <map>, with `objects` in place of OBJECTS.
 	std::string mapGame(const std::string& objects)
 	{
-		return R"(<game>
+		return R"(<game time="seconds">
   <window name="t"><width>200</width><height>200</height><background>color.black</background><framerate>60</framerate></window>
   <variables><variable name="tile">10</variable></variables>
   <states>
@@ -667,7 +667,7 @@ TEST_CASE("map: a group on a map has every part an object has, heading to seek",
 {
 	const std::string xml = mapGame("<map name=\"maze\"><tile><width>tile</width><height>tile</height></tile><position><x>0</x><y>0</y></position><row>#oo@</row>"
 		"<group name=\"walls\" char=\"#\" class=\"wall\">" + kWallSprite + "</group>"
-		"<group name=\"mines\" char=\"o\">" + kDotSprite + "<heading>90</heading><drag>0.5</drag><mass>2</mass><pull object=\"p\">0.25</pull><seek object=\"p\">3</seek></group>"
+		"<group name=\"mines\" char=\"o\">" + kDotSprite + "<heading>90</heading><drag>1</drag><mass>2</mass><pull object=\"p\">900</pull><seek object=\"p\">180</seek></group>"
 		"<object name=\"p\" char=\"@\">" + kDotSprite + "</object></map>");
 	const std::filesystem::path path = scratchName("descriptions/pacman_scratch.xml");
 	{
@@ -685,11 +685,11 @@ TEST_CASE("map: a group on a map has every part an object has, heading to seek",
 	{
 		const Object& mine = game.getObject(name);
 		CHECK(mine.heading == Approx(90));
-		// a share of 0.5 a frame, kept as a loss rate: -ln(1 - 0.5)
+		// a half-life of a second, kept as a loss rate: ln 2 / 1
 		CHECK(mine.motion.drag == Approx(std::log(2.0)));
 		CHECK(mine.motion.mass == Approx(2));
 		CHECK(mine.pull.seek == "playing.p");
-		CHECK(mine.pull.seekRate == Approx(3));
+		CHECK(mine.pull.seekRate == Approx(180));
 	}
 }
 

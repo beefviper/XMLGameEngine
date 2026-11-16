@@ -30,7 +30,7 @@ namespace invaders_fixture
 <!-- author: beefviper -->
 <!-- date: Sept 18, 2020 -->
 
-<game>
+<game time="seconds">
   <window name="Space Invaders">
     <width>1024</width>
     <height>768</height>
@@ -43,7 +43,7 @@ namespace invaders_fixture
     <variable name="bullet.radius">4</variable>
     <variable name="width">50</variable>
     <variable name="height">50</variable>
-    <variable name="step">2</variable>
+    <variable name="step">120</variable>
   </variables>
   <objects>
     <object name="bullet" class="projectile">
@@ -54,7 +54,7 @@ namespace invaders_fixture
       </sprite>
       <velocity>
         <x>0</x>
-        <y>-12</y>
+        <y>-720</y>
       </velocity>
       <most>1</most>
       <collisions>
@@ -120,7 +120,7 @@ namespace invaders_fixture
           <y><divide><value>margin</value><value>2</value></divide></y>
         </position>
         <velocity>
-          <x>2</x>
+          <x>120</x>
           <y>0</y>
         </velocity>
         <collisions>

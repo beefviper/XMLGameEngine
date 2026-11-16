@@ -94,7 +94,7 @@ namespace
 	// is checked.
 	std::string gameWithSounds(const std::string& sounds, const std::string& onSpace = "<pop />")
 	{
-		return "<game>"
+		return "<game time=\"seconds\">"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"beat\">0.25</variable></variables>"
@@ -801,7 +801,7 @@ namespace
 	// tick and a tock to play.
 	std::string marcher(const std::string& animation)
 	{
-		return "<game>"
+		return "<game time=\"seconds\">"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
