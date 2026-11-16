@@ -30,15 +30,30 @@ A4 put an object's fields into parts by feature, which made it readable. It did 
 
 ## How the parts are grouped
 
-The author's starting point is a part per verb. Looked at part by part, the rule that holds is **a part per feature, where a feature is one verb family or one object tag**:
+The author: **an object needs only its name.** Everything else is a part it has or does not have, and a few wasted bytes in a part are fine beside what is carried today. A number-holder (a score, a clock) has no place, speed or picture, so even those are parts.
 
-- Most parts do come from verbs: `<swing>` has `Swing`, the held `<move>`, `<climb>` and `<thrust>` have `Drive`.
-- Many come from an object's own tags, with no verb: `<holds>`, `<light>`, `<maze>`, `<moves>`, `<altitude>`.
-- Some state is shared by several verbs because it is one fact: `<hop>`, `<jump>` and `<land>` all act on one flight.
+What is left in the object itself: its name, its class and groups (how rules find it), its handle, and which parts it has.
 
-**Shared state is not copied into each verb's part.** Two copies of one fact have to be kept equal by hand, which is how the engine's lists of "every value in a command" came to disagree. Where two verbs need the same data it is one part that both use; where they only seemed to share a field by accident (`seconds` meaning a hop's time here and a wait there), each gets its own.
+Parts come in three kinds:
 
-Position, velocity and the rest of a `Moment` stay in the object: everything has them.
+| Kind | What it holds | Examples |
+|---|---|---|
+| **A verb's own** | what one verb or verb family needs to do its work | `<swing>`'s swing; the held `<move>`, `<climb>` and `<thrust>` share the key drive |
+| **Shared** | one fact that several verbs and the frame all act on | where it is and how fast (`Moment`); a flight, which `<hop>`, `<jump>` and `<land>` all act on; what it looks like |
+| **A family's** | what belongs to a kind of game or an object tag, with no one verb | cell maps, mazes, holders and hands (cards), board moves, light and dark |
+
+- **A shared fact is one part, never a copy in each verb's part.** Two copies have to be kept equal by hand, which is how the engine's lists of "every value in a command" came to disagree.
+- Where two verbs only seemed to share a field by accident (`seconds` meaning a hop's time here and a wait there), each gets its own.
+- Small fields with no better home are grouped with the nearest family, not left loose in the object.
+
+## How a step runs over them
+
+"The storage of an ECS, not free-running systems" means this. An ECS is two ideas:
+
+- **Storage:** parts live in a collection each, and an object is an id with an index into the ones it has. Taken whole.
+- **Systems:** the game's logic is rewritten as independent loops, one per kind of part ("everything with a velocity", "everything with an animation"), each run over its whole collection, in an order the framework is free to choose or to run side by side. Not taken as it stands.
+
+The reason is that here the order of a step is part of what a game means: timers, then paths, then the pull, then the move with its touches, then conditions, and within one pass the objects in the file's order. A rule that runs mid-move changes what the next touch finds. So the step keeps its written order of passes, and a pass may walk one collection (the animations, the flights) where that reads better, in object order. That gets the gain of systems, a pass touching only the objects that have the part, without their freedom to reorder.
 
 ## Versions of one value
 
@@ -55,7 +70,7 @@ The rename is the author's to approve as a table before anything is touched.
 
 ## What we looked at
 
-- **A full ECS with systems over packed arrays,** as large engines have: built for tens of thousands of alike things. A game here has tens to hundreds of objects, and the order things happen in a step is part of what a game means. Taken: the storage (collections, indices, generations). Not taken: rewriting the frame as free-running systems. A pass may walk one collection where that reads better, in object order.
+- **A full ECS with systems free to run in any order,** as large engines have: built for tens of thousands of alike things. Taken and not taken as [above](#how-a-step-runs-over-them).
 - **`std::optional` parts inside the object:** smaller change, but the object is still the sum of every part's size.
 - **Parts by verb strictly:** above.
 - **A resource manager as a global:** two games can be open at once in `xgegui`, and the search plays copies of a game beside it. It belongs to the game being played, with the window keeping its own textures by the manager's ids.
