@@ -71,9 +71,9 @@ TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules
 
 	// The engine spawns a bullet with its top-left corner at the ship's top
 	// edge, so it starts out overlapping the ship and only clears it a few
-	// frames later (6 px a frame, 8 px tall).
+	// frames later (360 px a second, 6 a step, 8 px tall).
 	bullet.position = { player.position.x + 25.0f, player.position.y };
-	bullet.velocity.y = -6.0f;
+	bullet.velocity.y = -360.0f;
 
 	for (int frame = 0; frame < 4; ++frame)
 	{

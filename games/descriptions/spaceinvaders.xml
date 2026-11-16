@@ -36,11 +36,11 @@
     are live, reading pace.beat, so the notes quicken with the fleet.
   * The block moves in steps, as the arcade fleet does: <stepped /> holds
     it still between pictures, then moves it the whole way at once, so
-    each note is a step of 15 pixels (half a pixel a frame for 30 frames).
+    each note is a step of 15 pixels (30 pixels a second for half a second).
   * Paused, blasted and both endings draw the game still underneath.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Space Invaders">
     <width>1024</width>
     <height>768</height>
@@ -50,7 +50,7 @@
     <variable name="top">120</variable>
     <variable name="pixel">5</variable>
     <variable name="gap">15</variable>
-    <variable name="step">2</variable>
+    <variable name="step">120</variable>
     <variable name="shieldtop">540</variable>
   </variables>
   <styles>
@@ -61,7 +61,7 @@
   <objects>
     <object name="bullet" class="projectile">
       <sprite><rectangle><width>4</width><height>24</height></rectangle></sprite>
-      <velocity><y>-12</y></velocity>
+      <velocity><y>-720</y></velocity>
       <most>1</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -81,7 +81,7 @@
         <bitmap from="bomb-b" />
       </sprite>
       <animation><seconds>0.1</seconds><frame sprite="a" /><frame sprite="b" /></animation>
-      <velocity><y>5</y></velocity>
+      <velocity><y>300</y></velocity>
       <most>3</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -196,7 +196,7 @@
             <bitmap from="ufo" />
           </sprite>
           <position><x><subtract><value>0</value><value>ufo.width</value></subtract></x><y>60</y></position>
-          <velocity><x>2.5</x></velocity>
+          <velocity><x>150</x></velocity>
           <waiting />
           <collisions>
             <collision edge="right"><die /></collision>
@@ -233,7 +233,7 @@
             <frame sprite="b"><play sound="march4" /></frame>
           </animation>
           <position><x>margin</x><y>top</y></position>
-          <velocity><x>0.5</x></velocity>
+          <velocity><x>30</x></velocity>
           <facing>down</facing>
           <collisions>
             <lockstep />

@@ -1270,9 +1270,9 @@ TEST_CASE("the aliens change picture every half second, all together, and march 
 	CHECK(onPicture(1));
 	CHECK_FALSE(onPicture(0));
 
-	// Held still for 29 frames, then one step of all 30 frames' worth at half
-	// a pixel a frame (<stepped />).
-	CHECK(game.getObject("aliens.1.1").position.x == 80.0f + 0.5f * 30.0f);
+	// Held still for 29 frames, then one step of half a second's worth at
+	// 30 pixels a second (<stepped />).
+	CHECK(game.getObject("aliens.1.1").position.x == Catch::Approx(80.0f + 30.0f * 0.5f));
 
 	// Four steps, a note each: a, b, a, b.
 	frames(game, 30);
@@ -1581,7 +1581,7 @@ TEST_CASE("each kind of alien scores its own, and the block marches faster as it
 	Object& bullet = copies::spawned(game, "bullet");
 	bullet.size = measureShapeSize(bullet.drawn.picture);
 	bullet.position = { crab.position.x + crab.size.x / 2.0f, crab.position.y + crab.size.y + 2.0f };
-	bullet.velocity = { 0.0f, -12.0f };
+	bullet.velocity = { 0.0f, -720.0f };
 	frames(game, 1);
 	CHECK_FALSE(crab.isVisible);
 	CHECK(game.getObject("player").variable.at("score") == 20.0f);
@@ -1620,7 +1620,7 @@ TEST_CASE("the mystery ship crosses the top now and then and scores 50 to 200", 
 	Object& bullet = copies::spawned(game, "bullet");
 	bullet.size = measureShapeSize(bullet.drawn.picture);
 	bullet.position = { ufo.position.x + ufo.size.x / 2.0f, ufo.position.y + ufo.size.y + 2.0f };
-	bullet.velocity = { 0.0f, -12.0f };
+	bullet.velocity = { 0.0f, -720.0f };
 	const float score = player.variable.at("score");
 	frames(game, 1);
 	CHECK_FALSE(ufo.isVisible);
