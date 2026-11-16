@@ -178,7 +178,7 @@ Names are dotted, and every dot means "inside":
 | `<scale>` | 1 | each game pixel drawn this many window pixels across. Mario Bros. is 256 by 224 at `<scale>3</scale>`. The mouse is read back in game pixels |
 | `<background>` | `color.black` | a [colour](#colours) |
 | `<fullscreen />` | a window | the whole screen |
-| `<framerate>` | 60 | frames a second, 1 or more. It is how often the whole engine runs, keys and timers too, so a slow game keeps 60 and steps on a timer |
+| `<framerate>` | 60 | the most frames a second, 1 or more. Each frame plays the time that passed, so the game's speed does not change with it; a slow game keeps 60 and steps on a timer |
 
 ## Variables
 

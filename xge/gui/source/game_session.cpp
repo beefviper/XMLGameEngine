@@ -8,10 +8,12 @@
 #include "engine/folder.h"
 #include "game_stage.h"
 #include "load/xml.h"
+#include "play/frame.h"
 #include "qt_window.h"
 
 #include <QPoint>
 
+#include <algorithm>
 #include <cmath>
 #include <exception>
 #include <functional>
@@ -110,8 +112,7 @@ namespace xge
 			// A computer thinks beside the game, which goes on being drawn.
 			game->thinkInBackground(true);
 
-			// The frame pace: the game moves a fixed amount a frame, so this is
-			// also its speed.
+			// The shortest time between frames: the most frames a second.
 			framePeriodNs = 1'000'000'000 / (desc.framerate > 0 ? desc.framerate : 60);
 
 			engine->render();
@@ -434,14 +435,9 @@ namespace xge
 		owedNs += now - lastNs;
 		lastNs = now;
 
-		// A late wake-up (the window was being dragged, say) is caught up a
-		// few frames at most; the rest is let go rather than raced through.
-		const qint64 limit = framePeriodNs * 4;
-		if (owedNs > limit)
-		{
-			owedNs = limit;
-		}
-
+		// One step a frame, of the time that passed since the last (no
+		// longer than kLongestStep: after the window was dragged, say, the
+		// game goes on from now). The <framerate> is the most frames a second.
 		if (owedNs < framePeriodNs)
 		{
 			return;
@@ -449,23 +445,18 @@ namespace xge
 
 		try
 		{
-			while (owedNs >= framePeriodNs)
+			if (playing)
 			{
-				if (playing)
-				{
-					engine->step(static_cast<float>(framePeriodNs) / 1e9f);
-					++frameCount;
-					++fpsFrames;
-				}
-				else
-				{
-					engine->pump();
-				}
-
-				owedNs -= framePeriodNs;
+				engine->step(std::min(static_cast<float>(owedNs) / 1e9f, xge::kLongestStep));
+				++frameCount;
+				++fpsFrames;
 			}
+			else
+			{
+				engine->pump();
+			}
+			owedNs = 0;
 
-			// Only the last of them is ever on the screen: drawn once.
 			engine->render();
 		}
 		catch (const std::exception& e)

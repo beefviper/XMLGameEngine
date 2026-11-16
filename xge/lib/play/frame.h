@@ -43,6 +43,11 @@ namespace xge
 	// as xgecli --frames and the tests play.
 	inline constexpr float kSixtieth = 1.0f / 60.0f;
 
+	// The longest step a window's loop plays: after a stall (the window
+	// dragged, a breakpoint) the game goes on from now with one step this
+	// long, rather than leaping through all the time it missed.
+	inline constexpr float kLongestStep = 0.25f;
+
 	// How long one step is: its seconds, and that time in the units the
 	// game's speeds are written in (Game::motionTime), `t`, with which every
 	// sum of movement is made; `sixtieth` is a sixtieth of a second in those

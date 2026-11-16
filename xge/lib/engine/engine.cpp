@@ -25,9 +25,6 @@ namespace xge
 {
 	namespace
 	{
-		// The most frames Engine::loop plays to catch up before drawing again.
-		constexpr int kMostFramesOwed = 4;
-
 		// Sleeping wakes late by a few milliseconds on some systems (Windows
 		// wakes on its own tick), so the last of the wait is spent yielding.
 		void waitFor(std::chrono::steady_clock::duration time)
@@ -148,35 +145,26 @@ namespace xge
 		// A computer thinks beside the game, which goes on being drawn.
 		game.thinkInBackground(true);
 
-		// A fixed step: the clock says how many frames the time passed owes,
-		// each is played whole, then the picture is drawn once (the window waits
-		// for the screen's refresh). Every number in a game counts frames, so
-		// the game plays the same on any machine and any screen.
-		const Clock::duration period = std::chrono::duration_cast<Clock::duration>(
+		// One step a frame, of the time that passed since the last, then the
+		// picture is drawn (the window may wait for the screen's refresh). The
+		// <framerate> is the most frames a second: a frame waits until that
+		// much time has passed.
+		const Clock::duration shortest = std::chrono::duration_cast<Clock::duration>(
 			std::chrono::duration<double>(1.0 / std::max(1, game.getWindowDesc().framerate)));
-		// After a stall (the window dragged, a breakpoint) the game goes on
-		// from now rather than racing through every frame it missed.
-		const Clock::duration mostOwed = period * kMostFramesOwed;
 
 		Clock::time_point last = Clock::now();
-		Clock::duration owed = period;
 		while (isWindowOpen())
 		{
 			const Clock::time_point now = Clock::now();
-			owed += now - last;
-			last = now;
-			if (owed > mostOwed) { owed = period; }
-
-			if (owed < period)
+			if (now - last < shortest)
 			{
-				waitFor(period - owed);
+				waitFor(shortest - (now - last));
 				continue;
 			}
 
-			for (; owed >= period && isWindowOpen(); owed -= period)
-			{
-				step(std::chrono::duration<float>(period).count());
-			}
+			const float seconds = std::min(std::chrono::duration<float>(now - last).count(), kLongestStep);
+			last = now;
+			step(seconds);
 			if (isWindowOpen()) { render(); }
 		}
 	}
