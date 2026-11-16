@@ -429,6 +429,7 @@ namespace xge
 							float now = std::fmod(object.start.heading + object.swing.by * eased, 360.0f);
 							if (now < 0.0f) { now += 360.0f; }
 							object.turning.spin = turnBetween(object.heading, now);
+							object.turning.spinOver = t;
 							object.heading = now;
 							object.showHeading();
 						}

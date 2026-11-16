@@ -1139,6 +1139,9 @@ namespace xge
 			// surface going that fast where they touch (velocityAt). 0 for one
 			// put somewhere (a reset) and for anything that does not turn.
 			float spin{};
+			// The step that spin was turned over, in the game's units of time:
+			// its speed of turning is spin / spinOver.
+			float spinOver{ 1.0f };
 		};
 		Turning turning;
 
