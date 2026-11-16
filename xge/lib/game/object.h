@@ -1271,14 +1271,14 @@ namespace xge
 		// Where its turning point is on the screen: the pivot, or the middle.
 		Vector2f pivotOnScreen() const;
 
-		// <swing>: a stroke of `frames` frames from the heading it started
-		// with, turning `by` degrees (less than 0: counterclockwise), eased
-		// (still at both ends, fastest half way). `done` is how far through
-		// it is, 0 to 1: held, it goes on; let go, it comes back. frames 0:
-		// it has never swung. See playOneFrame.
+		// <swing>: a stroke of `seconds` from the heading it started with,
+		// turning `by` degrees (less than 0: counterclockwise), eased (still
+		// at both ends, fastest half way). `done` is how far through it is, 0
+		// to 1: held, it goes on; let go, it comes back. seconds 0: it has
+		// never swung. See playOneFrame.
 		struct Swing
 		{
-			int frames{};
+			float seconds{};
 			float by{};
 			float done{};
 			bool held{ false };
@@ -1620,21 +1620,21 @@ namespace xge
 		Maze maze;
 		bool walksMaze() const noexcept { return !maze.map.empty(); }
 
-		// A timed <hop> under way (a flight): how far the object travels each
-		// frame, and how many frames are left. While framesLeft is above 0 the
-		// object is in the air: it touches no other object (playOneFrame). A
-		// reset lands it where it starts. `arc` is how high it is drawn at the
-		// halfway point (its altitude, up then down), `frames` the whole
-		// flight's frames.
+		// A timed <hop> under way (a flight): the whole way it goes, the
+		// seconds it takes, and the seconds flown so far (a double, so many
+		// short steps add up to the whole). Until `flown` reaches `seconds`
+		// the object is in the air: it touches no other object
+		// (playOneFrame). A reset lands it where it starts. `arc` is how high
+		// it is drawn at the halfway point (its altitude, up then down).
 		struct Flight
 		{
-			Vector2f step{};
-			int framesLeft{ 0 };
-			int frames{ 0 };
+			Vector2f whole{};
+			float seconds{};
+			double flown{};
 			float arc{};
 		};
 		Flight flight;
-		bool isAirborne() const noexcept { return flight.framesLeft > 0; }
+		bool isAirborne() const noexcept { return flight.flown < static_cast<double>(flight.seconds); }
 
 		// Standing, jumping and climbing. `grounded` is true for the frame
 		// after a <land /> stood the object on something (playOneFrame
@@ -1665,7 +1665,7 @@ namespace xge
 		// A <follow> under way (see Path, Game::applyPaths): the path's name
 		// (empty: on none), which of its legs is being flown, what is left of
 		// that step to go, whether the leg has set off yet (its commands run
-		// once, as it does), and how many frames are left to wait before the
+		// once, as it does), and how many seconds are left to wait before the
 		// first leg (a <stagger>). A reset, a <die /> or a <reveal> ends it.
 		struct OnPath
 		{
@@ -1673,7 +1673,7 @@ namespace xge
 			std::size_t leg{};
 			Vector2f left{};
 			bool legStarted{ false };
-			int wait{};
+			float wait{};
 		};
 		OnPath path;
 		bool isFollowing() const noexcept { return !path.name.empty(); }

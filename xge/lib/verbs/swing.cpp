@@ -36,12 +36,12 @@ namespace xge
 		return CmdSwing{ direction == Direction::Left ? -degrees : degrees, seconds };
 	}
 
-	static bool runSwing(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runSwing(const Command& command, const Doer& doer, CommandExecutor&)
 	{
 		const CmdSwing& swing = std::get<CmdSwing>(command);
 		Object* const self = doer.self;
 		if (!self || !doer.action) { return true; }
-		self->swing.frames = std::max(1, executor.game.framesFor(swing.seconds));
+		self->swing.seconds = swing.seconds;
 		self->swing.by = swing.by;
 		self->swing.held = doer.pressed;
 		return true;

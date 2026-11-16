@@ -261,7 +261,7 @@ namespace xge
 			}
 			else if (const auto* swing = std::get_if<CmdSwing>(&actionCommand))
 			{
-				object.swing.frames = std::max(1, game.framesFor(swing->seconds));
+				object.swing.seconds = swing->seconds;
 				object.swing.by = swing->by;
 				object.swing.held = true;
 			}
@@ -349,10 +349,10 @@ namespace xge
 			return false;
 		}
 
-		const int frames = game.framesFor(seconds);
-		object.flight.step = whole * (1.0f / static_cast<float>(frames));
-		object.flight.framesLeft = frames;
-		object.flight.frames = frames;
+		object.flight.whole = whole;
+		// None at all: it lands on the next step.
+		object.flight.seconds = std::max(seconds, kTimeSlack);
+		object.flight.flown = 0.0;
 		object.flight.arc = arc;
 		return true;
 	}

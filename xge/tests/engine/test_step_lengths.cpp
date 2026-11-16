@@ -9,12 +9,15 @@
 // agrees across all four.
 
 #include "step_lengths.h"
+#include "play/executor.h"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <string>
 
 using namespace played;
+using Catch::Approx;
 
 TEST_CASE("a still object is in the same place however the time is cut into steps", "[steps]")
 {
@@ -79,4 +82,32 @@ TEST_CASE("an animation passes the same pictures, and runs their commands as oft
 	const auto ended = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("flash").variable.at("ended")); });
 	agree(ended, 0.0);
 	CHECK(ended.front().value == 1.0);
+}
+
+TEST_CASE("a hop of half a second lands in the same place at the same time, however the time is cut into steps", "[steps][hop]")
+{
+	const std::string man = box("man", 100, 100,
+		"<collisions><off /></collisions>"
+		"<actions><action name=\"down\"><hop direction=\"down\">60<seconds>0.5</seconds></hop></action></actions>");
+	const std::string game = secondsGame(man);
+	const auto jump = [](Played& play) { xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "man", "down" }, true); };
+	const auto down = [](Played& play) { return static_cast<double>(play.get("man").position.y); };
+	const auto flying = [](Played& play) { return play.get("man").isAirborne() ? 1.0 : 0.0; };
+
+	// Half way at a quarter of a second, then just in the air, then down.
+	const auto half = atEveryStepLengthOf(game, 0.25, down, jump);
+	agree(half, 2.0);
+	CHECK(half.front().value == Approx(130.0).margin(2.0));
+
+	const auto before = atEveryStepLengthOf(game, 0.49, flying, jump);
+	agree(before, 0.0);
+	CHECK(before.front().value == 1.0);
+
+	const auto landed = atEveryStepLengthOf(game, 0.5, flying, jump);
+	agree(landed, 0.0);
+	CHECK(landed.front().value == 0.0);
+
+	const auto where = atEveryStepLengthOf(game, 1.0, down, jump);
+	agree(where, 0.0);
+	CHECK(where.front().value == Approx(160.0));
 }

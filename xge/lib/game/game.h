@@ -627,9 +627,9 @@ namespace xge
 
 		// <follow path="..." />: the object sets off along that path, unless it
 		// is on one already (it finishes that first), after waiting `wait`
-		// frames. Throws std::out_of_range for a path the game does not have
+		// seconds. Throws std::out_of_range for a path the game does not have
 		// (a game file is checked for that when it loads).
-		void follow(Object& object, const std::string& path, int wait = 0);
+		void follow(Object& object, const std::string& path, float wait = 0.0f);
 
 		// <follow path="..." object="name"><stagger>s</stagger></follow>: every
 		// object of that name or group that is in play sets off, each `stagger`
@@ -849,7 +849,7 @@ namespace xge
 		void timers(float seconds) override { updateTimers(seconds); }
 		void animationEnded(std::size_t index, std::size_t look) override;
 		void frameCameUp(std::size_t index, std::size_t look, std::size_t picture) override;
-		void followPaths() override { applyPaths(); }
+		void followPaths(float seconds) override { applyPaths(seconds); }
 		bool burn(Object& object, const std::string& variable) override;
 		void atEdge(Object& object, Edge edge) override;
 		bool sticksAt(const Object& object, Edge edge) override;
@@ -865,7 +865,7 @@ namespace xge
 		// done and running that leg's commands; at the end of the path it
 		// comes to rest. Before the edge checks and the move, so a follower
 		// moves, wraps and collides like anything else.
-		void applyPaths(void);
+		void applyPaths(float seconds);
 
 		// Whether `object` is right now touching any other object in play of
 		// this class - what a collision rule's unless= asks.

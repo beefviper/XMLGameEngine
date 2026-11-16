@@ -250,7 +250,7 @@ namespace xge
 			}
 			if (object.isAirborne())
 			{
-				return object.flight.framesLeft * 2 > object.flight.frames ? Object::Pose::Rising : Object::Pose::Falling;
+				return object.flight.flown * 2.0 < static_cast<double>(object.flight.seconds) ? Object::Pose::Rising : Object::Pose::Falling;
 			}
 			const bool pulled = object.acceleration.y != 0.0f;
 			if (pulled && !object.footing.grounded)
@@ -282,7 +282,7 @@ namespace xge
 					const auto& step = object.drive.moveStep;
 					const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
 					if (wanted != 0.0f) { object.mirror.goingLeft = wanted < 0.0f; }
-					else if (object.isAirborne() && object.flight.step.x != 0.0f) { object.mirror.goingLeft = object.flight.step.x < 0.0f; }
+					else if (object.isAirborne() && object.flight.whole.x != 0.0f) { object.mirror.goingLeft = object.flight.whole.x < 0.0f; }
 					else if (object.velocity.x != 0.0f) { object.mirror.goingLeft = object.velocity.x < 0.0f; }
 					object.faceMirror();
 				}
@@ -301,7 +301,7 @@ namespace xge
 		// once a frame, before it is moved. Thrust that burns a variable takes
 		// 1 off it every frame it is on, and does nothing while the variable
 		// is at 0 or below: a ship out of fuel still falls.
-		void applyAcceleration(std::vector<Object>& objects, FrameRules& rules)
+		void applyAcceleration(std::vector<Object>& objects, FrameRules& rules, float seconds)
 		{
 			for (auto& object : objects)
 			{
@@ -383,9 +383,9 @@ namespace xge
 					// (moveObjects), and what it strikes on the way takes its
 					// speed there (velocityAt).
 					object.turning.spin = 0.0f;
-					if (object.swing.frames > 0)
+					if (object.swing.seconds > 0.0f)
 					{
-						const float step = 1.0f / static_cast<float>(object.swing.frames);
+						const float step = seconds / object.swing.seconds;
 						const float done = std::clamp(object.swing.done + (object.swing.held ? step : -step), 0.0f, 1.0f);
 						if (done != object.swing.done)
 						{
@@ -425,7 +425,7 @@ namespace xge
 		// lands and not by what it would have brushed past on the way (being
 		// somewhere new, it counts as having moved). A hop that would take it
 		// out of the window is refused.
-		void applyHops(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules)
+		void applyHops(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds)
 		{
 			const Vector2f windowSize{ window.width, window.height };
 
@@ -436,23 +436,28 @@ namespace xge
 				object.riding = {};
 				object.footing.grounded = false;
 
-				// A jump under way goes on a step; the frame it lands, it
-				// counts as having moved, so it meets whatever it landed on.
+				// A jump under way goes on by this step's share of it, and a
+				// step it ends inside lands it at its end; the step it lands,
+				// it counts as having moved, so it meets whatever it landed on.
 				if (object.isAirborne())
 				{
+					const double whole = static_cast<double>(object.flight.seconds);
+					double flown = object.flight.flown + static_cast<double>(seconds);
+					if (flown >= whole - static_cast<double>(kTimeSlack)) { flown = whole; }
 					if (rules.inPlay(object))
 					{
-						const Vector2f target = object.position + object.flight.step;
+						const float share = static_cast<float>((flown - object.flight.flown) / whole);
+						const Vector2f target = object.position + object.flight.whole * share;
 						if (insideWindow({ target, object.size }, windowSize)) { object.position = target; }
 					}
-					--object.flight.framesLeft;
+					object.flight.flown = flown;
 
 					// An arc: drawn up off its way and back down, highest
 					// halfway, on the ground again as it lands.
 					if (object.flight.arc > 0.0f)
 					{
-						const float t = 1.0f - static_cast<float>(object.flight.framesLeft) / static_cast<float>(object.flight.frames);
-						object.altitude = object.flight.framesLeft > 0 ? 4.0f * object.flight.arc * t * (1.0f - t) : 0.0f;
+						const float t = static_cast<float>(flown / whole);
+						object.altitude = object.isAirborne() ? 4.0f * object.flight.arc * t * (1.0f - t) : 0.0f;
 					}
 				}
 
@@ -930,9 +935,9 @@ namespace xge
 		// came. Each object is swept by itself; a lockstep set has no bounding
 		// box of its own, so when most of the invaders are gone only the ones
 		// left are tested.
-		void moveObjects(std::vector<Object>& all, const WindowDesc& window, FrameRules& rules)
+		void moveObjects(std::vector<Object>& all, const WindowDesc& window, FrameRules& rules, float seconds)
 		{
-			applyHops(all, window, rules);
+			applyHops(all, window, rules, seconds);
 			lendCarried(all, rules);
 
 			FrameSweep frame(all, rules);
@@ -1072,7 +1077,7 @@ namespace xge
 
 		rules.timers(seconds);
 
-		rules.followPaths();
+		rules.followPaths(seconds);
 
 		rules.cellMoves();
 
@@ -1085,7 +1090,7 @@ namespace xge
 
 		applyGrip(objects, rules);
 
-		applyAcceleration(objects, rules);
+		applyAcceleration(objects, rules, seconds);
 
 		pullAndSeek(objects, rules);
 
@@ -1109,7 +1114,7 @@ namespace xge
 
 		// Movement and object-against-object collisions are one job, so that
 		// a fast or small object cannot jump over a thin one between frames.
-		moveObjects(objects, window, rules);
+		moveObjects(objects, window, rules, seconds);
 
 		// The edge checks above run before the move, and only for an object
 		// that is moving, so on their own they let a stuck object end the

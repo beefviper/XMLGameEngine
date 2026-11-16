@@ -196,15 +196,15 @@ TEST_CASE("a path with a start puts the object there first, and a stagger sends 
 		"<member><position><x>100</x></position></member><member><position><x>120</x></position></member><member><position><x>140</x></position></member></group>";
 	Loaded loaded(paths, box("a", 0, 0) + group);
 
-	// At a framerate of 10, half a second apart is 5 frames.
+	// Half a second apart is 5 frames of a tenth of a second.
 	loaded.game.follow("b", "in", 0.5f);
 	Object& first = loaded.game.getObject("b.1");
 	Object& second = loaded.game.getObject("b.2");
 	Object& third = loaded.game.getObject("b.3");
 	CHECK(first.position.x == Approx(-20.0f));
 	CHECK(third.position.x == Approx(-20.0f));
-	CHECK(second.path.wait == 5);
-	CHECK(third.path.wait == 10);
+	CHECK(second.path.wait == 0.5f);
+	CHECK(third.path.wait == 1.0f);
 
 	loaded.frames(4);
 	CHECK(first.position.x == Approx(0.0f));

@@ -1484,9 +1484,7 @@ namespace xge
 			object.carry.what.clear();
 			object.carry.dropped.clear();
 			object.hopPending = {};
-			object.flight.step = {};
-			object.flight.framesLeft = 0;
-			object.flight.frames = 0;
+			object.flight = {};
 			object.flight.arc = 0.0f;
 			object.footing.grounded = false;
 			object.footing.jumping = false;
@@ -1612,7 +1610,7 @@ namespace xge
 		return paths;
 	}
 
-	void Game::follow(Object& object, const std::string& path, int wait)
+	void Game::follow(Object& object, const std::string& path, float wait)
 	{
 		const Path& chosen = paths.at(path);
 		if (object.isFollowing())
@@ -1624,7 +1622,7 @@ namespace xge
 		object.path.leg = 0;
 		object.path.left = {};
 		object.path.legStarted = false;
-		object.path.wait = std::max(0, wait);
+		object.path.wait = std::max(0.0f, wait);
 		object.velocity = {};
 		if (chosen.hasStart)
 		{
@@ -1634,7 +1632,6 @@ namespace xge
 
 	void Game::follow(const std::string& target, const std::string& path, float stagger, int nearest, const Object* from)
 	{
-		const int perSecond = framesASecond(windowDesc);
 		std::vector<Object*> going;
 		for (auto& object : objects)
 		{
@@ -1659,7 +1656,7 @@ namespace xge
 		int setOff = 0;
 		for (Object* object : going)
 		{
-			follow(*object, path, static_cast<int>(std::lround(static_cast<float>(setOff) * stagger * static_cast<float>(perSecond))));
+			follow(*object, path, static_cast<float>(setOff) * stagger);
 			++setOff;
 		}
 	}
@@ -1675,7 +1672,7 @@ namespace xge
 		}
 	}
 
-	void Game::applyPaths(void)
+	void Game::applyPaths(float seconds)
 	{
 		CommandExecutor executor(*this);
 
@@ -1686,9 +1683,9 @@ namespace xge
 				continue;
 			}
 
-			if (object.path.wait > 0)
+			if (object.path.wait > kTimeSlack)
 			{
-				--object.path.wait;
+				object.path.wait -= seconds;
 				object.velocity = {};
 				continue;
 			}

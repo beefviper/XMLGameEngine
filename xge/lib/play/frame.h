@@ -64,8 +64,8 @@ namespace xge
 		// moves, so a bomb dropped this step starts falling this step.
 		virtual void timers(float seconds) { (void)seconds; }
 
-		// Every object on a path takes this frame's step of it.
-		virtual void followPaths() {}
+		// Every object on a path takes this step's share of it.
+		virtual void followPaths(float seconds) { (void)seconds; }
 
 		// Every held move on a map with <cells /> takes its next step, if
 		// one is due this frame.
