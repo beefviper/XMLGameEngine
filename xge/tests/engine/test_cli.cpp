@@ -326,6 +326,33 @@ TEST_CASE("frames plays with no window and no sound and seed fixes the numbers",
 	CHECK(usageText().find("--seed") != std::string::npos);
 }
 
+TEST_CASE("step sets the length of each step frames plays, and framerate a window's most frames a second", "[cli][frames]")
+{
+	CHECK_FALSE(parseCommandLine({ "pong", "--frames", "10" }).step);
+	CHECK(parseCommandLine({ "pong", "--frames", "10", "--step", "0.1" }).step == 0.1f);
+	CHECK(parseCommandLine({ "pong", "--framerate", "8" }).framerate == 8);
+	CHECK(parseCommandLine({ "pong" }).framerate == 0);
+
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--step", "0.1" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--frames", "10", "--step", "0" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--frames", "10", "--step", "1" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--frames", "10", "--step", "fast" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--frames", "10", "--step", "0.1", "--step", "0.1" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--framerate", "0" }), CliError);
+	CHECK_THROWS_AS(parseCommandLine({ "pong", "--frames", "10", "--framerate", "30" }), CliError);
+	CHECK(usageText().find("--step") != std::string::npos);
+	CHECK(usageText().find("--framerate") != std::string::npos);
+
+	// Ten steps of a tenth: a second, as sixty of a sixtieth are.
+	const std::filesystem::path file = std::filesystem::temp_directory_path() / scratchName("xge_step_dump.xml");
+	std::ostringstream out;
+	CHECK(playFrames("descriptions/pong.xml", parseCommandLine({ "pong", "--frames", "10", "--step", "0.1", "--dump", file.string() }), out) == EXIT_SUCCESS);
+	const std::string text = [&] { std::ifstream in(file); return fileText(in); }();
+	CHECK(text.find("<frame>10</frame>\n    <seconds>1</seconds>") != std::string::npos);
+	std::error_code ignored;
+	std::filesystem::remove(file, ignored);
+}
+
 TEST_CASE("frames plays the game to the end and says how far it got", "[cli][frames]")
 {
 	const CliOptions options = parseCommandLine({ "pong", "--frames", "600", "--seed", "1", "-x", "tinyxml2" });
@@ -477,10 +504,10 @@ TEST_CASE("describe writes the state and every object in play as XML", "[cli][du
 	for (int frame = 0; frame < 60; ++frame) { engine.step(xge::kSixtieth); }
 
 	std::ostringstream out;
-	game.describe(out, 60);
+	game.describe(out, 60, 1.0);
 	const std::string said = out.str();
 	INFO(said);
-	CHECK(said.rfind("<moment>\n  <frame>60</frame>\n  <state name=\"playing\" />\n", 0) == 0);
+	CHECK(said.rfind("<moment>\n  <frame>60</frame>\n  <seconds>1</seconds>\n  <state name=\"playing\" />\n", 0) == 0);
 	for (const std::string name : { "playing.ball", "playing.paddle1", "playing.paddle2" })
 	{
 		const Object& object = game.getObject(name);
@@ -516,6 +543,7 @@ TEST_CASE("dump writes what frames played into a file its schema passes", "[cli]
 	CHECK(text.find("<frame>90</frame>") != std::string::npos);
 	CHECK(text.find("<frame>100</frame>") != std::string::npos);
 	CHECK(text.find("<frame>120</frame>") == std::string::npos);
+	CHECK(text.find("<frame>60</frame>\n    <seconds>1</seconds>") != std::string::npos);
 	CHECK(text.find("<object name=\"playing.ball\"") == std::string::npos); // still on the title
 	CHECK(text.find("<state name=\"title\" />") != std::string::npos);
 

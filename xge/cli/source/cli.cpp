@@ -92,6 +92,21 @@ namespace xge
 			return std::stoul(value);
 		}
 
+		// A length of time in seconds from the command line: a number above
+		// 0, at most kLongestStep.
+		float stepLength(const std::string& value, const std::string& option)
+		{
+			std::size_t used = 0;
+			float seconds = 0.0f;
+			try { seconds = std::stof(value, &used); }
+			catch (const std::exception&) { used = 0; }
+			if (used == 0 || used != value.size() || !(seconds > 0.0f) || seconds > kLongestStep)
+			{
+				throw CliError(option + " takes a number of seconds above 0 and at most " + std::to_string(kLongestStep).substr(0, 4) + ", not '" + value + "'");
+			}
+			return seconds;
+		}
+
 		std::string lowerCase(std::string text)
 		{
 			std::transform(text.begin(), text.end(), text.begin(),
@@ -162,6 +177,8 @@ namespace xge
 			if (arg == "--record") return 'r';
 			if (arg == "--check")  return 'c';
 			if (arg == "--frames") return 'f';
+			if (arg == "--framerate") return 'F';
+			if (arg == "--step")   return 'S';
 			if (arg == "--seed")   return 's';
 			if (arg == "--keys")   return 'k';
 			if (arg == "--dump")   return 'd';
@@ -187,6 +204,8 @@ namespace xge
 			case 'G': return "target";
 			case 'o': return "folder";
 			case 'f': return "number of frames";
+			case 'F': return "frames a second";
+			case 'S': return "seconds";
 			case 's': return "seed";
 			case 'k': return "file";
 			case 'd': return "file";
@@ -283,6 +302,20 @@ namespace xge
 				}
 				options.frames = static_cast<int>(wholeNumber(value, "--frames", 1));
 				haveFrames = true;
+				break;
+			case 'F':
+				if (options.framerate > 0)
+				{
+					throw CliError("--framerate was given more than once");
+				}
+				options.framerate = static_cast<int>(wholeNumber(value, "--framerate", 1));
+				break;
+			case 'S':
+				if (options.step)
+				{
+					throw CliError("--step was given more than once");
+				}
+				options.step = stepLength(value, "--step");
 				break;
 			case 's':
 				if (options.seed)
@@ -453,6 +486,14 @@ namespace xge
 		{
 			throw CliError("--dump-every says how often --dump writes; give --dump too");
 		}
+		if (options.step && !haveFrames)
+		{
+			throw CliError("--step is the length of each step --frames plays; give --frames too");
+		}
+		if (options.framerate > 0 && haveFrames)
+		{
+			throw CliError("--framerate is for a window; --frames plays steps of --step instead");
+		}
 		if (!options.picture.empty() && !haveFrames)
 		{
 			throw CliError("--picture draws the last frame --frames played; give --frames too");
@@ -558,8 +599,11 @@ namespace xge
 			"  --check              load the games given (several, or none for every game in\n"
 			"                       games/descriptions/) and print ok or what is wrong with\n"
 			"                       each; exits 1 if any is wrong\n"
-			"  --frames <n>         play n frames as fast as they go, with no window and no\n"
+			"  --frames <n>         play n steps as fast as they go, with no window and no\n"
 			"                       sound, then stop\n"
+			"  --step <seconds>     with --frames, how long each step is (default 1/60)\n"
+			"  --framerate <n>      in a window, at most n frames a second, in place of the\n"
+			"                       game's <framerate>; each plays the time that passed\n"
 			"  --seed <n>           the random numbers start from n, so a game plays the\n"
 			"                       same every time\n"
 			"  --keys <file>        play back the <demo> in the file (one --record wrote, or a\n"
@@ -676,13 +720,14 @@ namespace xge
 			{
 				engine.replay(readDemo(options.keys, options.xml));
 			}
+			const float step = options.step.value_or(xge::kSixtieth);
 			const auto describe = [&]
 			{
-				if (dump.is_open()) { game.describe(dump, static_cast<unsigned long>(played), "  "); }
+				if (dump.is_open()) { game.describe(dump, static_cast<unsigned long>(played), static_cast<double>(played) * static_cast<double>(step), "  "); }
 			};
 			while (played < options.frames)
 			{
-				engine.step(xge::kSixtieth);
+				engine.step(step);
 				++played;
 				if (options.dumpEvery > 0 && played % options.dumpEvery == 0 && played < options.frames) { describe(); }
 			}

@@ -63,6 +63,12 @@ namespace xge
 		int frames = 0;
 		std::optional<unsigned int> seed;
 
+		// --step S: the length in seconds of each step --frames plays (a
+		// sixtieth when not given). --framerate N: in a window, at most N
+		// frames a second in place of the game's <framerate> (0: the game's).
+		std::optional<float> step;
+		int framerate = 0;
+
 		// --keys file: play back the <demo> in that file (readDemo) from its
 		// own seed, its keys pressed in the frames they were recorded in.
 		std::string keys;

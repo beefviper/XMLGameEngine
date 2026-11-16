@@ -47,10 +47,15 @@ namespace xge
 		Engine(const Engine&) = delete;
 		Engine& operator=(const Engine&) = delete;
 
-		// Plays the game until the window closes, at its <framerate>: the clock
-		// says how many frames are owed, each is played whole by step(), then
-		// render() draws once (the window waits for the screen's refresh).
+		// Plays the game until the window closes: each frame, one step() of
+		// the time that passed (at most kLongestStep), then render() (the
+		// window waits for the screen's refresh). At most <framerate>
+		// frames a second, or what setFramerate gave.
 		void loop(void);
+
+		// The most frames a second loop() plays, in place of the game's
+		// <framerate> (xgecli --framerate).
+		void setFramerate(int framesASecond) noexcept { mostFrames = framesASecond; }
 
 		// Records the game being played, for its attract mode: a new game
 		// starts now, with random numbers drawn from a seed picked here, and
@@ -223,6 +228,8 @@ namespace xge
 		// Playing the demo: the frame of it reached, the next key of it to
 		// press or let go, and what the game kept before it started.
 		bool demoPlaying = false;
+		// setFramerate's, or 0 for the game's own.
+		int mostFrames = 0;
 		unsigned int demoFrame = 0;
 
 		// The buttons the state's <computer> is holding down, which it presses

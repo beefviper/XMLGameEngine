@@ -1063,7 +1063,7 @@ namespace xge
 		}
 	}
 
-	void Game::describe(std::ostream& out, unsigned long frame, const std::string& indent)
+	void Game::describe(std::ostream& out, unsigned long frame, double seconds, const std::string& indent)
 	{
 		const auto pair = [&](const char* tag, Vector2f value, const std::string& in)
 		{
@@ -1081,7 +1081,8 @@ namespace xge
 		};
 
 		out << indent << "<moment>\n"
-			<< indent << "  <frame>" << frame << "</frame>\n";
+			<< indent << "  <frame>" << frame << "</frame>\n"
+			<< indent << "  <seconds>" << seconds << "</seconds>\n";
 		if (!currentState.empty())
 		{
 			const std::string& state = currentState.top().name;

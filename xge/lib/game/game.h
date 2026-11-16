@@ -296,7 +296,7 @@ namespace xge
 		// in play with its name, class, group, look, position, velocity and
 		// variables. Each line starts with `indent`. games/xgedump.xsd is its
 		// schema.
-		void describe(std::ostream& out, unsigned long frame, const std::string& indent = "");
+		void describe(std::ostream& out, unsigned long frame, double seconds, const std::string& indent = "");
 
 		// A step of `seconds` in the units the game's numbers are written in:
 		// seconds for a <game time="seconds">, sixtieths of a second for

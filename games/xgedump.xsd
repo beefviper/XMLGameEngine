@@ -39,8 +39,10 @@
         <xs:element name="moment" minOccurs="0" maxOccurs="unbounded">
           <xs:complexType>
             <xs:sequence>
-              <!-- How many frames had been played. -->
+              <!-- How many steps had been played. -->
               <xs:element name="frame" type="xs:nonNegativeInteger" />
+              <!-- How long they were, in seconds, all told. -->
+              <xs:element name="seconds" type="xs:double" />
               <!-- The state on top of the stack, and its current scene when it has scenes. -->
               <xs:element name="state" minOccurs="0">
                 <xs:complexType>

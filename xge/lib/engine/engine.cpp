@@ -150,7 +150,7 @@ namespace xge
 		// <framerate> is the most frames a second: a frame waits until that
 		// much time has passed.
 		const Clock::duration shortest = std::chrono::duration_cast<Clock::duration>(
-			std::chrono::duration<double>(1.0 / std::max(1, game.getWindowDesc().framerate)));
+			std::chrono::duration<double>(1.0 / std::max(1, mostFrames > 0 ? mostFrames : game.getWindowDesc().framerate)));
 
 		Clock::time_point last = Clock::now();
 		while (isWindowOpen())

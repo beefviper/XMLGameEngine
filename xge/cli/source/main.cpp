@@ -184,6 +184,7 @@ int main(int argc, char* argv[])
 			engine.replay(xge::readDemo(options.keys, options.xml));
 		}
 
+		if (options.framerate > 0) { engine.setFramerate(options.framerate); }
 		engine.loop();
 
 		if (options.record)
