@@ -126,3 +126,19 @@ TEST_CASE("a <go> of 8 cells a second has gone 16 cells after 2 seconds, however
 	agree(column, 0.0);
 	CHECK(column.front().value == 17.0);
 }
+
+TEST_CASE("Space Invaders' stepped block is in the same place after 5 seconds, however the time is cut into steps", "[steps][stepped][spaceinvaders]")
+{
+	const auto invade = [](Played& play)
+	{
+		play.game.pushState("playing");
+		play.get("player").collisionsOn = false;
+	};
+	const auto across = atEveryStepLength("descriptions/spaceinvaders.xml", 5.0,
+		[](Played& play) { return static_cast<double>(play.get("aliens.1.1").position.x); }, invade);
+	// Within one of its own steps: 15 pixels a note.
+	agree(across, 15.0);
+	const auto down = atEveryStepLength("descriptions/spaceinvaders.xml", 5.0,
+		[](Played& play) { return static_cast<double>(play.get("aliens.1.1").position.y); }, invade);
+	agree(down, 0.0);
+}

@@ -979,11 +979,5 @@ namespace xge
 		// A named object timer's time left, whole seconds rounded up (0 once
 		// it has gone off), into the object's number of that name.
 		void showTimeLeft(Object& object, const Timer& timer);
-
-	public:
-		// A number of seconds as frames of the game, at least one.
-		int framesFor(float seconds) const noexcept;
-
-	private:
 	};
 }

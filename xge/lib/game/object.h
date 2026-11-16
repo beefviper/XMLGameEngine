@@ -39,14 +39,6 @@ namespace xge
 		friend std::ostream& operator<<(std::ostream& o, WindowDesc const& f);
 	};
 
-	// How many frames a second the counts of time still kept in frames
-	// count in: the window's <framerate>, 60 without one. Temporary: the
-	// delta time work turns each of those counts into seconds.
-	inline int framesASecond(const WindowDesc& window) noexcept
-	{
-		return window.framerate > 0 ? window.framerate : 60;
-	}
-
 	// One <collision> rule about another object, still unparsed. class/object
 	// let a rule only respond to a specific kind (or specific instance) of the
 	// other object in the pair; empty means "matches anything". Only meaningful
@@ -1151,9 +1143,8 @@ namespace xge
 		Turning turning;
 
 		// An <animation>: the pictures it shows in turn (all one size, and
-		// `bitmap` is whichever is showing), how many frames of the game each
-		// one stays for (the seconds written, times the window's <framerate>),
-		// how many it has been showing, and which one it is (an index into
+		// `bitmap` is whichever is showing), how many seconds each one stays
+		// for, how long the one showing has been, and which one it is (an index into
 		// bitmaps). Only an object that is shown and in play moves on; a
 		// reset starts it again at the first. A sprite of one picture has
 		// none of this. See advanceAnimation.
@@ -1183,14 +1174,15 @@ namespace xge
 			bool once{ false };
 			bool done{ false };
 			std::size_t lookBefore{};
-			// <stepped />: it moves only on the frame its picture changes, the
-			// whole way its velocity took it over the frames since the last
-			// change (`since`); `share` is how many frames' worth this frame
-			// moves (0 between changes). See motionOf. `shareBefore` is the
-			// frame before's, so this frame's edge checks, made before the move,
-			// see where that step left it, and a bounce can take it back.
+			// <stepped />: it moves only on the step its picture changes, the
+			// whole way its velocity took it over the time since the last
+			// change (`since`, in the game's units of time: Game::motionTime);
+			// `share` is how much of that time this step moves (0 between
+			// changes). See motionOf. `shareBefore` is the step before's, so
+			// this step's edge checks, made before the move, see where that
+			// step left it, and a bounce can take it back.
 			bool stepped{ false };
-			int since{};
+			float since{};
 			float share{};
 			float shareBefore{};
 			// <then>'s commands of an object's one animation, run when it ends

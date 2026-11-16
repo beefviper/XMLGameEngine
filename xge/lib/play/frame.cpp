@@ -1028,7 +1028,7 @@ namespace xge
 		return mazeGrids.emplace(map, std::move(grid)).first->second;
 	}
 
-	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds)
+	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds, float motion)
 	{
 		// A picture that changes with time (an <animation>) counts this step
 		// whether or not the object is moving; only what is in play does, so a
@@ -1057,17 +1057,17 @@ namespace xge
 				if (step == Object::AnimationStep::Ended) { ended.emplace_back(i, was); break; }
 				if (object.hasFrameCommands(was, object.animation.index)) { cameUp.push_back({ i, was, object.animation.index }); }
 			}
-			// A stepped one moves this frame only if its picture changed: by
-			// every frame's worth since it last did.
+			// A stepped one moves this step only if its picture changed: by
+			// what its velocity covered since it last did.
 			if (object.animation.stepped && rules.inPlay(object))
 			{
-				++object.animation.since;
+				object.animation.since += motion;
 				object.animation.shareBefore = object.animation.share;
 				object.animation.share = 0.0f;
 				if (passed)
 				{
-					object.animation.share = static_cast<float>(object.animation.since);
-					object.animation.since = 0;
+					object.animation.share = object.animation.since;
+					object.animation.since = 0.0f;
 				}
 			}
 			if (object.blink > 0.0f && rules.inPlay(object)) { object.blink = std::max(0.0f, object.blink - seconds); }

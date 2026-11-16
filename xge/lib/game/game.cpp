@@ -204,7 +204,7 @@ namespace xge
 		// another scene) is seen, and so is anything this frame changes.
 		settleSpawns();
 		stageChanged();
-		playOneFrame(getCurrentObjects(), windowDesc, *this, seconds);
+		playOneFrame(getCurrentObjects(), windowDesc, *this, seconds, motionTime(seconds));
 		settleSpawns();
 		stageChanged();
 		showJoins();
@@ -1218,11 +1218,6 @@ namespace xge
 				throw std::runtime_error("<keeps> > <keep object=\"" + given + "\" />: names no object of the game" + didYouMean(given, known));
 			}
 		}
-	}
-
-	int Game::framesFor(float seconds) const noexcept
-	{
-		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(framesASecond(windowDesc)))));
 	}
 
 	bool Game::tickTimer(Timer& timer, const std::string& where, float& owed)

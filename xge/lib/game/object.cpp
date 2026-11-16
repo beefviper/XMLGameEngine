@@ -1074,7 +1074,7 @@ namespace xge
 	void Object::restartAnimation()
 	{
 		animation.elapsed = 0.0;
-		animation.since = 0;
+		animation.since = 0.0f;
 		animation.share = 0.0f;
 		animation.shareBefore = 0.0f;
 		animation.done = false;

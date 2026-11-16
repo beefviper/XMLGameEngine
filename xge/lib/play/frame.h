@@ -152,5 +152,8 @@ namespace xge
 	// (before the move), the move (hops, then every pair that can touch swept
 	// through the frame and met in the order they meet), sticks, what is
 	// carried put where it is held, conditions.
-	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds);
+	//
+	// The step is `seconds` long; `motion` is the same time in the units the
+	// game's speeds are written in (Game::motionTime).
+	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds, float motion);
 }
