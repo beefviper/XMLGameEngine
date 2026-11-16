@@ -18,6 +18,7 @@
 #include "game/game.h"
 #include "load/xml.h"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
@@ -143,14 +144,14 @@ TEST_CASE("left alone, the lander speeds up as it falls", "[lunarlander]")
 
 	moon.frames(60);
 
-	CHECK_THAT(moon.lander().velocity.y, WithinAbs(0.6f, 1e-3f)); // 0.01 a frame
+	CHECK_THAT(moon.lander().velocity.y, WithinAbs(36.0f, 0.06f)); // 36 a second each second
 	CHECK(moon.lander().position.y > startY + 15.0f);
 	CHECK(moon.lander().velocity.x == drift); // nothing pulls it sideways
-	CHECK(drift >= 0.5f);
-	CHECK(drift <= 1.2f);
+	CHECK(drift >= 30.0f);
+	CHECK(drift <= 72.0f);
 }
 
-TEST_CASE("the engine pushes the way the lander points and burns a unit of fuel a frame; turning is free", "[lunarlander]")
+TEST_CASE("the engine pushes the way the lander points and burns 60 units of fuel a second; turning is free", "[lunarlander]")
 {
 	Moon moon;
 	moon.lander().velocity = {};
@@ -159,21 +160,21 @@ TEST_CASE("the engine pushes the way the lander points and burns a unit of fuel 
 	moon.key("thrust", true);
 	moon.frames(10);
 	moon.key("thrust", false);
-	CHECK(moon.fuel() == 990.0f);
-	CHECK_THAT(moon.lander().velocity.y, WithinAbs(-0.3f, 1e-4f)); // upright: straight up
+	CHECK(moon.fuel() == Catch::Approx(990.0f));
+	CHECK_THAT(moon.lander().velocity.y, WithinAbs(-18.0f, 6e-3f)); // upright: straight up
 	CHECK_THAT(moon.lander().velocity.x, WithinAbs(0.0f, 1e-4f));
 
 	moon.key("right", true);
 	moon.frames(30);
 	moon.key("right", false);
-	CHECK(moon.lander().heading == 90.0f);
-	CHECK(moon.fuel() == 990.0f);
+	CHECK(moon.lander().heading == Catch::Approx(90.0f));
+	CHECK(moon.fuel() == Catch::Approx(990.0f));
 
 	moon.key("thrust", true);
 	moon.frames(10);
 	moon.key("thrust", false);
-	CHECK_THAT(moon.lander().velocity.x, WithinAbs(0.3f, 1e-4f)); // on its side: sideways
-	CHECK(moon.fuel() == 980.0f);
+	CHECK_THAT(moon.lander().velocity.x, WithinAbs(18.0f, 6e-3f)); // on its side: sideways
+	CHECK(moon.fuel() == Catch::Approx(980.0f));
 }
 
 TEST_CASE("with no fuel the engine does nothing and the moon keeps pulling", "[lunarlander]")
@@ -185,7 +186,7 @@ TEST_CASE("with no fuel the engine does nothing and the moon keeps pulling", "[l
 	moon.key("thrust", true);
 	moon.frames(20);
 
-	CHECK_THAT(moon.lander().velocity.y, WithinAbs(0.2f, 1e-4f));
+	CHECK_THAT(moon.lander().velocity.y, WithinAbs(12.0f, 6e-3f));
 	CHECK(moon.fuel() == 0.0f);
 }
 
@@ -205,17 +206,17 @@ TEST_CASE("it cannot leave the sides or top of the screen", "[lunarlander]")
 	Moon moon;
 
 	moon.lander().position = { 2, 100 };
-	moon.lander().velocity = { -5, 0 };
+	moon.lander().velocity = { -300, 0 };
 	moon.frames(3);
 	CHECK(moon.lander().position.x >= 0.0f);
 
 	moon.lander().position = { 800 - moon.lander().size.x - 2, 100 };
-	moon.lander().velocity = { 5, 0 };
+	moon.lander().velocity = { 300, 0 };
 	moon.frames(3);
 	CHECK(moon.lander().position.x + moon.lander().size.x <= 800.0f);
 
 	moon.lander().position = { 300, 2 };
-	moon.lander().velocity = { 0, -5 };
+	moon.lander().velocity = { 0, -300 };
 	moon.frames(3);
 	CHECK(moon.lander().position.y >= 0.0f);
 }
@@ -228,7 +229,7 @@ TEST_CASE("coming down slowly and upright onto a pad is a landing worth that pad
 		DYNAMIC_SECTION(pad.name)
 		{
 			Moon moon;
-			moon.over(pad.name, moon.game.getObject(pad.name).position.y - 80, 0.8f);
+			moon.over(pad.name, moon.game.getObject(pad.name).position.y - 80, 48.0f);
 
 			moon.untilDown(400);
 
@@ -251,7 +252,7 @@ TEST_CASE("coming down slowly and upright onto a pad is a landing worth that pad
 TEST_CASE("after a landing the next lander comes down from the top, with the fuel and score kept", "[lunarlander]")
 {
 	Moon moon;
-	moon.over("pad2", 470, 0.8f);
+	moon.over("pad2", 470, 48.0f);
 	moon.key("thrust", true);
 	moon.frames(5);
 	moon.key("thrust", false);
@@ -270,7 +271,7 @@ TEST_CASE("after a landing the next lander comes down from the top, with the fue
 	CHECK(fuel < 1000.0f);
 
 	// Down again, it scores again.
-	moon.over("pad3", 420, 0.8f);
+	moon.over("pad3", 420, 48.0f);
 	moon.untilDown(400);
 	CHECK(moon.state() == "landed");
 	CHECK(moon.score() == 250.0f);
@@ -279,7 +280,7 @@ TEST_CASE("after a landing the next lander comes down from the top, with the fue
 TEST_CASE("a lander leaning too far is wrecked on the pad, however slowly", "[lunarlander]")
 {
 	Moon moon;
-	moon.over("pad2", 470, 0.8f);
+	moon.over("pad2", 470, 48.0f);
 	moon.lander().heading = 30.0f;
 	moon.lander().showHeading();
 
@@ -293,7 +294,7 @@ TEST_CASE("a lander leaning too far is wrecked on the pad, however slowly", "[lu
 TEST_CASE("a little lean is still a landing", "[lunarlander]")
 {
 	Moon moon;
-	moon.over("pad2", 470, 0.8f);
+	moon.over("pad2", 470, 48.0f);
 	moon.lander().heading = 354.0f;
 	moon.lander().showHeading();
 
@@ -305,7 +306,7 @@ TEST_CASE("a little lean is still a landing", "[lunarlander]")
 TEST_CASE("falling onto the pad too fast is a wreck", "[lunarlander]")
 {
 	Moon moon;
-	moon.over("pad2", 470, 2.0f);
+	moon.over("pad2", 470, 120.0f);
 
 	moon.untilDown(400);
 
@@ -318,7 +319,7 @@ TEST_CASE("a wreck breaks the lander up, costs fuel, and the next one comes afte
 	Moon moon;
 	// Onto the peak to the left of the 5X pad.
 	moon.lander().position = { 85, 300 };
-	moon.lander().velocity = { 0, 0.3f };
+	moon.lander().velocity = { 0, 18 };
 	moon.lander().acceleration = {};
 
 	moon.untilDown(800);
@@ -351,7 +352,7 @@ TEST_CASE("the boxes overlap long before the pixels do, and nothing is hit until
 	// Low over the 2X pad's valley, inside the box of the whole terrain, but
 	// well above any line of it: flying along, not touching anything.
 	moon.lander().position = { 262, 450 };
-	moon.lander().velocity = { 1, 0 };
+	moon.lander().velocity = { 60, 0 };
 	moon.lander().acceleration = {};
 	REQUIRE(moon.lander().position.y + moon.lander().size.y > moon.game.getObject("terrain").position.y);
 
@@ -366,12 +367,12 @@ TEST_CASE("a pilot who brakes with the engine brings it down from a drop, and ha
 {
 	Moon moon;
 	moon.over("pad2", 100, 0);
-	moon.lander().acceleration.y = 0.01f;
+	moon.lander().acceleration.y = 36.0f;
 
 	bool thrusting = false;
 	for (int frame = 0; frame < 1500 && moon.state() == "playing" && !moon.wrecked(); ++frame)
 	{
-		const bool want = moon.lander().velocity.y > 0.8f;
+		const bool want = moon.lander().velocity.y > 48.0f;
 		if (want != thrusting)
 		{
 			moon.key("thrust", want);
@@ -390,7 +391,7 @@ TEST_CASE("the last lander down with no fuel ends the game, and Space starts it 
 	Moon moon;
 	moon.game.addTo({ "lander", "fuel" }, -850.0f);
 	moon.lander().position = { 85, 300 };
-	moon.lander().velocity = { 0, 0.3f };
+	moon.lander().velocity = { 0, 18 };
 
 	moon.untilDown(800);
 	REQUIRE(moon.wrecked());

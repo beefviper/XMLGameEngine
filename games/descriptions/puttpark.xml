@@ -18,7 +18,7 @@
     eight tenths of the pace; the posts' <bounce>1.3</bounce> gives more back
     than came in, and the cushions' 0.4 deadens it.
   * The putt is a key's three moments: Space pressed does nothing of its
-    own, held (on="hold") adds to the arrow's power every frame up to 100,
+    own, held (on="hold") adds to the arrow's power, 120 a second, up to 100,
     and let go (on="release") strikes, setting the ball's speed along the
     arrow's heading from that power. Both only while the arrow shows its
     ready look, so the ball cannot be struck while it rolls.
@@ -29,7 +29,7 @@
     enters the next, whose condition puts the ball on its tee.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Putt Park">
     <width>800</width>
     <height>600</height>
@@ -37,11 +37,11 @@
   </window>
   <variables>
     <variable name="radius">5</variable>
-    <variable name="green">0.012</variable>
-    <variable name="charge">2</variable>
+    <variable name="green">0.52</variable>
+    <variable name="charge">120</variable>
     <variable name="most">100</variable>
-    <variable name="pace">0.1</variable>
-    <variable name="still">0.08</variable>
+    <variable name="pace">6</variable>
+    <variable name="still">4.8</variable>
     <variable name="holes">6</variable>
   </variables>
   <styles>
@@ -166,8 +166,8 @@
           <position><x>0</x><y>0</y></position>
           <heading>90</heading>
           <actions>
-            <action name="left"><turn direction="counterclockwise">2</turn></action>
-            <action name="right"><turn direction="clockwise">2</turn></action>
+            <action name="left"><turn direction="counterclockwise">120</turn></action>
+            <action name="right"><turn direction="clockwise">120</turn></action>
             <action name="charge">
               <inc variable="arrow.power">charge</inc>
               <set variable="arrow.power"><smallest><value>arrow.power</value><value>most</value></smallest></set>

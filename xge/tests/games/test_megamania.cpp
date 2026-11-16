@@ -137,7 +137,7 @@ TEST_CASE("the wave drops bombs, and a bomb costs a ship", "[megamania]")
 	REQUIRE(made);
 	Object& bomb = *made;
 	bomb.position = { play.player().position.x + 10.0f, play.player().position.y - 30.0f };
-	bomb.velocity = { 0.0f, 4.0f };
+	bomb.velocity = { 0.0f, 240.0f };
 	play.game.settleSpawns();
 	play.frames(15);
 	// The blaster bursts, out of play, and only then is it lost.
@@ -243,13 +243,13 @@ TEST_CASE("each wave cleared is the next with the energy full, and the eighth wi
 TEST_CASE("each wave is the formation piece with its own speed, rows and score", "[megamania]")
 {
 	Megamania play;
-	CHECK(play.enemy("wave1", 1).velocity.x == Approx(2.0f));
+	CHECK(play.enemy("wave1", 1).velocity.x == Approx(120.0f));
 	CHECK(play.enemy("wave1", 1).velocity.y == Approx(0.0f));
 	CHECK(play.enemy("wave1", 5).position.y == Approx(150.0f));
-	CHECK(play.enemy("wave2", 1).velocity.x == Approx(2.0f));
-	CHECK(play.enemy("wave2", 1).velocity.y == Approx(1.0f));
+	CHECK(play.enemy("wave2", 1).velocity.x == Approx(120.0f));
+	CHECK(play.enemy("wave2", 1).velocity.y == Approx(60.0f));
 	CHECK(play.enemy("wave2", 1).position.y == Approx(60.0f));
-	CHECK(play.enemy("wave3", 1).velocity.x == Approx(-3.0f));
+	CHECK(play.enemy("wave3", 1).velocity.x == Approx(-180.0f));
 	CHECK(play.enemy("wave3", 8).position.y == Approx(170.0f));
 
 	// a bug scores 40

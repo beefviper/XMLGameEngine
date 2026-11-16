@@ -44,14 +44,14 @@
   * Paused and the two endings draw the game still underneath (<show state>).
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Kaboom!">
     <width>800</width>
     <height>600</height>
     <background>color.forestgreen</background>
   </window>
   <variables>
-    <variable name="step">9</variable>
+    <variable name="step">540</variable>
     <variable name="margin">20</variable>
     <variable name="roof">104</variable>
   </variables>
@@ -200,9 +200,9 @@
           <variables>
             <variable name="wave">1</variable>
             <variable name="upto">10</variable>
-            <variable name="pace">2.5</variable>
+            <variable name="pace">150</variable>
             <variable name="drop">0.7</variable>
-            <variable name="fall">2.5</variable>
+            <variable name="fall">150</variable>
             <variable name="points">1</variable>
           </variables>
           <objects>
@@ -226,9 +226,9 @@
           <variables>
             <variable name="wave">2</variable>
             <variable name="upto">50</variable>
-            <variable name="pace">3</variable>
+            <variable name="pace">180</variable>
             <variable name="drop">0.6</variable>
-            <variable name="fall">3</variable>
+            <variable name="fall">180</variable>
             <variable name="points">2</variable>
           </variables>
         </scene>
@@ -237,9 +237,9 @@
           <variables>
             <variable name="wave">3</variable>
             <variable name="upto">140</variable>
-            <variable name="pace">3.5</variable>
+            <variable name="pace">210</variable>
             <variable name="drop">0.5</variable>
-            <variable name="fall">3.5</variable>
+            <variable name="fall">210</variable>
             <variable name="points">3</variable>
           </variables>
         </scene>
@@ -248,9 +248,9 @@
           <variables>
             <variable name="wave">4</variable>
             <variable name="upto">300</variable>
-            <variable name="pace">4</variable>
+            <variable name="pace">240</variable>
             <variable name="drop">0.42</variable>
-            <variable name="fall">4</variable>
+            <variable name="fall">240</variable>
             <variable name="points">4</variable>
           </variables>
         </scene>
@@ -259,9 +259,9 @@
           <variables>
             <variable name="wave">5</variable>
             <variable name="upto">550</variable>
-            <variable name="pace">4.5</variable>
+            <variable name="pace">270</variable>
             <variable name="drop">0.36</variable>
-            <variable name="fall">4.5</variable>
+            <variable name="fall">270</variable>
             <variable name="points">5</variable>
           </variables>
         </scene>
@@ -270,9 +270,9 @@
           <variables>
             <variable name="wave">6</variable>
             <variable name="upto">1000</variable>
-            <variable name="pace">5</variable>
+            <variable name="pace">300</variable>
             <variable name="drop">0.31</variable>
-            <variable name="fall">5</variable>
+            <variable name="fall">300</variable>
             <variable name="points">6</variable>
           </variables>
         </scene>
@@ -281,9 +281,9 @@
           <variables>
             <variable name="wave">7</variable>
             <variable name="upto">1700</variable>
-            <variable name="pace">5.5</variable>
+            <variable name="pace">330</variable>
             <variable name="drop">0.27</variable>
-            <variable name="fall">5.5</variable>
+            <variable name="fall">330</variable>
             <variable name="points">7</variable>
           </variables>
         </scene>
@@ -291,9 +291,9 @@
           <variables>
             <variable name="wave">8</variable>
             <variable name="upto">2900</variable>
-            <variable name="pace">6</variable>
+            <variable name="pace">360</variable>
             <variable name="drop">0.24</variable>
-            <variable name="fall">6</variable>
+            <variable name="fall">360</variable>
             <variable name="points">8</variable>
           </variables>
           <conditions>

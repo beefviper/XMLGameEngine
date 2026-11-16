@@ -156,7 +156,7 @@ TEST_CASE("the bomber drops a bomb from under himself every so often, and it fal
 	REQUIRE(first.size() == 1);
 	const Object& bomb = *first[0];
 	CHECK(bomb.velocity.x == Approx(0));
-	CHECK(bomb.velocity.y == Approx(2.5));
+	CHECK(bomb.velocity.y == Approx(150));
 
 	// Under the middle of the bomber, below the rooftop.
 	CHECK(std::abs((bomb.position.x + bomb.size.x / 2) - (bomber.position.x + bomber.size.x / 2)) < 8.0f);
@@ -320,17 +320,17 @@ TEST_CASE("each wave's bomber is quicker and drops faster bombs more often", "[k
 	const float pace1 = std::abs(table.game.getObject(of("wave1", "bomber")).velocity.x);
 	const float pace2 = std::abs(table.game.getObject(of("wave2", "bomber")).velocity.x);
 	const float pace3 = std::abs(table.game.getObject(of("wave3", "bomber")).velocity.x);
-	CHECK(pace1 == Approx(2.5));
-	CHECK(pace2 == Approx(3));
-	CHECK(pace3 == Approx(3.5));
-	CHECK(std::abs(table.game.getObject(of("wave8", "bomber")).velocity.x) == Approx(6));
+	CHECK(pace1 == Approx(150));
+	CHECK(pace2 == Approx(180));
+	CHECK(pace3 == Approx(210));
+	CHECK(std::abs(table.game.getObject(of("wave8", "bomber")).velocity.x) == Approx(360));
 
 	const float fall1 = table.game.getObject(of("wave1", "bomb")).velocity.y;
 	const float fall2 = table.game.getObject(of("wave2", "bomb")).velocity.y;
 	const float fall3 = table.game.getObject(of("wave3", "bomb")).velocity.y;
-	CHECK(fall1 == Approx(2.5));
-	CHECK(fall2 == Approx(3));
-	CHECK(fall3 == Approx(3.5));
+	CHECK(fall1 == Approx(150));
+	CHECK(fall2 == Approx(180));
+	CHECK(fall3 == Approx(210));
 
 	CHECK(table.game.getVariable("playing.wave2.drop") == Approx(0.6));
 

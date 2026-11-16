@@ -75,7 +75,7 @@ TEST_CASE("puttpark.xml: Space held builds the power, let go strikes along the a
 	park.engine.handleKeyReleased(KeyCode::Space);
 
 	// Heading 90, to the right, at a tenth of the power.
-	CHECK(park.ball().velocity.x == Approx(10.0f));
+	CHECK(park.ball().velocity.x == Approx(600.0f));
 	CHECK(park.ball().velocity.y == Approx(0.0f).margin(0.001f));
 	CHECK(park.arrow().lookName() == "waiting");
 	CHECK(park.arrow().variable.at("power") == 0.0f);

@@ -27,13 +27,13 @@
   * Paused and the win screen draw the race still underneath (<show state>).
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Space Race">
     <width>800</width>
     <height>600</height>
   </window>
   <variables>
-    <variable name="step">2.5</variable>
+    <variable name="step">150</variable>
     <variable name="margin">10</variable>
     <variable name="seconds">60</variable>
   </variables>
@@ -71,7 +71,7 @@
           <velocity><y>
             <divide>
               <value>window.bottom</value>
-              <value><multiply><value>seconds</value><value>60</value></multiply></value>
+              <value>seconds</value>
             </divide>
           </y></velocity>
         </object>
@@ -94,10 +94,10 @@
           <collisions>
             <collision edge="horizontal"><wrap /></collision>
           </collisions>
-          <row><number>1</number><number>5</number><number>9</number><velocity><x>1.5</x></velocity></row>
-          <row><number>2</number><number>6</number><number>10</number><velocity><x>-2.5</x></velocity></row>
-          <row><number>3</number><number>7</number><number>11</number><velocity><x>2</x></velocity></row>
-          <row><number>4</number><number>8</number><number>12</number><velocity><x>-1</x></velocity></row>
+          <row><number>1</number><number>5</number><number>9</number><velocity><x>90</x></velocity></row>
+          <row><number>2</number><number>6</number><number>10</number><velocity><x>-150</x></velocity></row>
+          <row><number>3</number><number>7</number><number>11</number><velocity><x>120</x></velocity></row>
+          <row><number>4</number><number>8</number><number>12</number><velocity><x>-60</x></velocity></row>
         </group>
         <group name="rockets" class="rocket">
           <sprite>

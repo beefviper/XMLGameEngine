@@ -38,7 +38,7 @@
   splitting missiles, bombers and smart bombs.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Missile Command">
     <width>640</width>
     <height>480</height>
@@ -46,8 +46,8 @@
   <variables>
     <variable name="margin">10</variable>
     <variable name="ground">450</variable>
-    <variable name="sightstep">5</variable>
-    <variable name="abmspeed">7</variable>
+    <variable name="sightstep">300</variable>
+    <variable name="abmspeed">420</variable>
     <!-- how high above the sky a missile starts, at most -->
     <variable name="sky">600</variable>
   </variables>
@@ -225,7 +225,7 @@
         <scene name="wave1">
           <ways><way name="next" scene="wave2" /></ways>
           <variables>
-            <variable name="speed">0.8</variable>
+            <variable name="speed">48</variable>
             <variable name="total">12</variable>
           </variables>
           <objects>
@@ -248,7 +248,7 @@
         <scene name="wave2" from="wave1">
           <ways><way name="next" scene="wave3" /></ways>
           <variables>
-            <variable name="speed">1.1</variable>
+            <variable name="speed">66</variable>
             <variable name="total">18</variable>
           </variables>
           <objects>
@@ -262,7 +262,7 @@
         <!-- all eight at a time, twenty-four in all; clearing it wins -->
         <scene name="wave3" from="wave2">
           <variables>
-            <variable name="speed">1.4</variable>
+            <variable name="speed">84</variable>
             <variable name="total">24</variable>
           </variables>
           <objects>

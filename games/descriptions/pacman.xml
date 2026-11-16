@@ -69,7 +69,7 @@
     <wrap />s at the window's edge.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Pac-Man">
     <width>448</width>
     <height>576</height>
@@ -77,10 +77,10 @@
   <variables>
     <variable name="tile">16</variable>
     <variable name="top"><multiply><value>3</value><value>tile</value></multiply></variable>
-    <variable name="pacspeed">2</variable>
-    <variable name="frightspeed">1</variable>
-    <variable name="eyesspeed">4</variable>
-    <variable name="pathspeed">1</variable>
+    <variable name="pacspeed">120</variable>
+    <variable name="frightspeed">60</variable>
+    <variable name="eyesspeed">240</variable>
+    <variable name="pathspeed">60</variable>
     <!-- where the ghost house's way out ends, above the door -->
     <variable name="out"><multiply><value>3</value><value>tile</value></multiply></variable>
   </variables>
@@ -206,7 +206,7 @@
             <variable name="bonus">0</variable>
             <variable name="worth">200</variable>
             <variable name="fruits">0</variable>
-            <variable name="pace">1.875</variable>
+            <variable name="pace">112.5</variable>
             <variable name="fright">6</variable>
             <!-- dots eaten since the round began or a life was lost, and how
                  many of Pinky, Inky and Clyde they have let out -->
@@ -692,8 +692,8 @@
           <set variable="status.fruits">0</set>
           <set variable="status.pace">
             <smallest>
-              <value>2.125</value>
-              <value><add><value>status.pace</value><value>0.0625</value></add></value>
+              <value>127.5</value>
+              <value><add><value>status.pace</value><value>3.75</value></add></value>
             </smallest>
           </set>
           <set variable="status.fright">

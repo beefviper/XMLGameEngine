@@ -50,7 +50,7 @@ An object out of play does nothing when its action is pressed or triggered; lett
 | `<jump>height</jump>` | a jump up under its own pull to about that height; only from the ground, fixed sideways until a `<land />`. Needs an acceleration down and a `<land />` rule |
 | `<land />` | in a rule: coming down onto the other's top, it stands there. Any other side, or going up, does nothing (one-way platforms) |
 | `<climb direction="up" class="ladder">step</climb>` | held: at an object of that class, gets on, lines up and climbs; at an end steps off onto what it lands on, or holds there if nothing is. Stacked pieces are one ladder. Run by a rule or timer, it takes one ladder and lets go |
-| `<thrust burn="fuel">amount</thrust>` | held: adds that many pixels a second, each second, to the velocity along its `<heading>`; `burn` takes 1 off its own variable each step and stops at 0 |
+| `<thrust burn="fuel">amount</thrust>` | held: adds that many pixels a second, each second, to the velocity along its `<heading>`; `burn` takes 60 a second off its own variable and stops at 0 |
 | `<thrust direction="up">amount</thrust>` | held: the same one way across the screen, whatever its heading (it needs none) |
 | `<turn direction="clockwise">degrees</turn>` | held: turns the heading that many degrees a second |
 | `<swing direction="counterclockwise"><degrees>60</degrees><seconds>0.1</seconds></swing>` | held: one eased, swept stroke, and back when let go ([turning about a pivot](pictures.md#turning-about-a-pivot)) |

@@ -92,7 +92,7 @@ TEST_CASE("spacerace.xml loads two rockets, a field of debris and the clock", "[
 	CHECK(table.rocket(1).position.y == 600.0f - 21.0f - 10.0f);
 
 	// The clock sinks a window's height in a minute.
-	CHECK(table.game.getObject("clock").velocity.y * 60.0f * 60.0f == Catch::Approx(600.0f));
+	CHECK(table.game.getObject("clock").velocity.y * 60.0f == Catch::Approx(600.0f));
 }
 
 TEST_CASE("a held key flies a rocket up and stops at the bottom of the screen", "[spacerace]")

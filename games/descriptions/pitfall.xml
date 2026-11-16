@@ -60,7 +60,7 @@
   and a tunnel that goes three screens at a time.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Pitfall!">
     <width>640</width>
     <height>480</height>
@@ -71,12 +71,12 @@
     <variable name="surface">300</variable>
     <variable name="tunnel">440</variable>
     <variable name="thick">16</variable>
-    <variable name="pull">0.4</variable>
-    <variable name="run">2.5</variable>
-    <variable name="climbstep">2</variable>
+    <variable name="pull">1440</variable>
+    <variable name="run">150</variable>
+    <variable name="climbstep">120</variable>
     <variable name="jumpheight">48</variable>
-    <variable name="roll">1.5</variable>
-    <variable name="crawl">1</variable>
+    <variable name="roll">90</variable>
+    <variable name="crawl">60</variable>
     <!-- what a rolling log does to Harry each time it knocks into him: the
          points it takes away and how far back it throws him -->
     <variable name="bump">50</variable>

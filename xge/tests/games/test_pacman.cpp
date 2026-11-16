@@ -103,7 +103,7 @@ namespace
 			box(other, theirs, theirHalf);
 			p.maze.walk = {};
 			p.position += theirs - mine - Vector2f{ myHalf + theirHalf + 1.0f, 0.0f };
-			p.velocity = { 3.0f, 0.0f };
+			p.velocity = { 180.0f, 0.0f };
 			frames(1);
 			p.velocity = {};
 			p.position = { 2000.0f, 2000.0f };
@@ -475,7 +475,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	maze.frames(1);
 	CHECK(blinky.lookName() == "blue");
 	CHECK(blinky.maze.walk.mode == Walk::Mode::Wander);
-	CHECK(blinky.maze.walk.speed == Approx(1.0f));
+	CHECK(blinky.maze.walk.speed == Approx(60.0f));
 
 	// The eyes of one not blue stay eyes (<become from>), and a second pellet
 	// starts the blue over (the timer follows the look).
@@ -608,7 +608,7 @@ TEST_CASE("pacman: caught three times is game over; a cleared maze is the next r
 		CHECK(maze.state() == "caught");
 		CHECK(maze.count("playing.food") == 244);
 		CHECK(middleOf(maze.pacman()).x == Approx(start().x));
-		CHECK(maze.status("pace") == Approx(1.9375f));
+		CHECK(maze.status("pace") == Approx(116.25f));
 		CHECK(maze.status("fright") == 5.0f);
 		CHECK(maze.status("lives") == 3.0f);
 	}

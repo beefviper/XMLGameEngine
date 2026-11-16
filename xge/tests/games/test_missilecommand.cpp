@@ -128,7 +128,7 @@ TEST_CASE("missilecommand.xml loads, and the missiles make for the cities", "[mi
 		INFO(object.name);
 		CHECK(object.position.y < 30.0f * 0.8f);
 		CHECK(object.velocity.y > 0.0f);
-		CHECK(std::hypot(object.velocity.x, object.velocity.y) == Approx(0.8f));
+		CHECK(std::hypot(object.velocity.x, object.velocity.y) == Approx(48.0f));
 	}
 }
 
@@ -152,7 +152,7 @@ TEST_CASE("a counter-missile flies to the sight and bursts there", "[missilecomm
 	const Object& abm = play.game.getObject("abm.1");
 	CHECK(abm.velocity.x < 0.0f);
 	CHECK(abm.velocity.y < 0.0f);
-	CHECK(std::hypot(abm.velocity.x, abm.velocity.y) == Approx(7.0f));
+	CHECK(std::hypot(abm.velocity.x, abm.velocity.y) == Approx(420.0f));
 
 	play.frames(60);
 	CHECK(play.inPlay("playing.abm") == 0);
@@ -180,7 +180,7 @@ TEST_CASE("a missile that flies into a burst scores and starts again above the s
 
 	Object& missile = play.missile("wave1", 1);
 	missile.position = { middleOf(burst).x - 2.0f, burst.position.y - 30.0f };
-	missile.velocity = { 0.0f, 2.0f };
+	missile.velocity = { 0.0f, 120.0f };
 	play.frames(15);
 	CHECK(play.status("score") == 25);
 	CHECK(play.status("spent") == 1);
@@ -196,7 +196,7 @@ TEST_CASE("a missile that reaches a city destroys it, and losing them all is the
 	Object& city = play.game.getObject("cities.1");
 	Object& missile = play.missile("wave1", 1);
 	missile.position = { middleOf(city).x, city.position.y - 20.0f };
-	missile.velocity = { 0.0f, 2.0f };
+	missile.velocity = { 0.0f, 120.0f };
 	play.frames(15);
 	CHECK_FALSE(city.isVisible);
 	CHECK(play.inPlay("playing.cities") == 5);
@@ -252,9 +252,9 @@ TEST_CASE("each wave's missiles fall at its own speed and in its own color, and 
 {
 	MissileCommand play;
 	const struct { const char* scene; float speed; const char* color; } waves[] = {
-		{ "wave1", 0.8f, "color.red" },
-		{ "wave2", 1.1f, "color.magenta" },
-		{ "wave3", 1.4f, "color.green" },
+		{ "wave1", 48.0f, "color.red" },
+		{ "wave2", 66.0f, "color.magenta" },
+		{ "wave3", 84.0f, "color.green" },
 	};
 	for (const auto& wave : waves)
 	{
@@ -378,9 +378,9 @@ TEST_CASE("when its city is gone a missile turns for another", "[missilecommand]
 	const Object& first = play.game.getObject("cities.1");
 	missile.timers = chasing;
 	missile.position = { middleOf(first).x - 2.0f, 100.0f };
-	missile.velocity = { 0.0f, 0.8f };
+	missile.velocity = { 0.0f, 48.0f };
 	play.frames(20);
-	CHECK(missile.velocity.x == Approx(0.0f).margin(0.05f));
+	CHECK(missile.velocity.x == Approx(0.0f).margin(3.0f));
 
 	play.game.getObject("cities.1").isVisible = false;
 	play.frames(20);

@@ -2095,13 +2095,13 @@ namespace xge
 		return standsOn(a, b) || standsOn(b, a);
 	}
 
-	// A thruster burns one unit of the object's own `variable`, if it has any
-	// left.
+	// A thruster burns 60 units a second of the object's own `variable`,
+	// if it has any left (one a frame at 60, as it always did).
 	bool Game::burn(Object& object, const std::string& variable)
 	{
 		const auto fuel = object.variable.find(variable);
 		if (fuel == object.variable.end() || fuel->second <= 0.0f) { return false; }
-		setVariable(object.name, variable, fuel->second - 1.0f);
+		setVariable(object.name, variable, std::max(0.0f, fuel->second - stepSeconds * 60.0f));
 		return true;
 	}
 

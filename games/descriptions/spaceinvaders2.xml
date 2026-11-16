@@ -32,7 +32,7 @@
   bolt and the enemy bomb.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Space Invaders 2">
     <width>1024</width>
     <height>768</height>
@@ -44,7 +44,7 @@
     <variable name="boltzoom">1.5</variable>
     <variable name="gap">15</variable>
     <variable name="animation.seconds">0.5</variable>
-    <variable name="step">2</variable>
+    <variable name="step">120</variable>
     <variable name="shieldtop">540</variable>
   </variables>
   <styles>
@@ -62,7 +62,7 @@
           <hide>backdrop</hide>
         </svg>
       </sprite>
-      <velocity><y>-12</y></velocity>
+      <velocity><y>-720</y></velocity>
       <most>1</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -84,7 +84,7 @@
           <flip>vertical</flip>
         </svg>
       </sprite>
-      <velocity><y>5</y></velocity>
+      <velocity><y>300</y></velocity>
       <most>3</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
@@ -260,7 +260,7 @@
           </sprite>
           <animation><seconds>0.15</seconds><frame sprite="a" /><frame sprite="b" /><frame sprite="c" /></animation>
           <position><x><subtract><value>0</value><value>ufo.width</value></subtract></x><y>55</y></position>
-          <velocity><x>2.5</x></velocity>
+          <velocity><x>150</x></velocity>
           <waiting />
           <collisions>
             <collision edge="right"><die /></collision>
@@ -313,7 +313,7 @@
             <frame sprite="c" />
           </animation>
           <position><x>margin</x><y>top</y></position>
-          <velocity><x>2</x></velocity>
+          <velocity><x>120</x></velocity>
           <facing>down</facing>
           <collisions>
             <lockstep />

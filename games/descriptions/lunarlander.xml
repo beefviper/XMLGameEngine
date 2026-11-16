@@ -18,7 +18,7 @@
   * Everything is drawn from <line>s and tested by pixel, so the lander
     touches the moon only where a pixel of it lies on a pixel of the moon.
     The lander has a <heading>: <turn> leans it and <thrust> pushes it the
-    way it points, burning a unit of fuel a frame.
+    way it points, burning 60 units of fuel a second.
   * The terrain and the pads are both class "ground". A landing is one rule
     about the pads: slower than the safe speed and nearly upright (an <any>
     of two <condition>s of the heading); every other touch of the ground is a
@@ -34,18 +34,18 @@
   hard landings.
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Lunar Lander">
     <width>800</width>
     <height>600</height>
   </window>
   <variables>
-    <variable name="gravity">0.01</variable>
-    <variable name="thrustpower">0.03</variable>
-    <variable name="turnrate">3</variable>
+    <variable name="gravity">36</variable>
+    <variable name="thrustpower">108</variable>
+    <variable name="turnrate">180</variable>
     <variable name="fuelstart">1000</variable>
     <variable name="wreckcost">200</variable>
-    <variable name="safespeed">1.2</variable>
+    <variable name="safespeed">72</variable>
     <variable name="upright">10</variable>
     <variable name="margin">20</variable>
   </variables>
@@ -59,10 +59,10 @@
     <group name="debris">
       <sprite><drawing from="debris" /></sprite>
       <acceleration><x>0</x><y><multiply><value>gravity</value><value>4</value></multiply></y></acceleration>
-      <member><velocity><x>-1.6</x><y>-2</y></velocity></member>
-      <member><velocity><x>1.4</x><y>-2.4</y></velocity></member>
-      <member><velocity><x>-0.6</x><y>-3</y></velocity></member>
-      <member><velocity><x>0.8</x><y>-1.6</y></velocity></member>
+      <member><velocity><x>-96</x><y>-120</y></velocity></member>
+      <member><velocity><x>84</x><y>-144</y></velocity></member>
+      <member><velocity><x>-36</x><y>-180</y></velocity></member>
+      <member><velocity><x>48</x><y>-96</y></velocity></member>
     </group>
   </objects>
   <states>
@@ -144,7 +144,7 @@
         <object name="lander">
           <sprite><drawing from="lander" /></sprite>
           <position><x><random><min>40</min><max>300</max></random></x><y>40</y></position>
-          <velocity><x><random><min>0.5</min><max>1.2</max></random></x></velocity>
+          <velocity><x><random><min>30</min><max>72</max></random></x></velocity>
           <acceleration><x>0</x><y>gravity</y></acceleration>
           <heading>0</heading>
           <collisions>
