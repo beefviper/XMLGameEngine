@@ -288,7 +288,7 @@ TEST_CASE("asteroids.xml loads with a ship that has a heading, shots, rocks and 
 	CHECK(ship.heading == 0.0f);
 	REQUIRE(ship.drawn.turnables.size() == 1);
 	CHECK(ship.drawn.bitmap->rgba == ship.drawn.turnables[0]->at(0.0f).rgba);
-	CHECK_THAT(ship.motion.drag, WithinAbs(0.02f, 1e-6f));
+	CHECK_THAT(ship.motion.drag, WithinAbs(0.7f, 1e-6f));
 	CHECK(ship.size.x == static_cast<float>(ship.drawn.bitmap->width));
 	CHECK(ship.size.x == ship.size.y);
 
@@ -321,7 +321,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 
 		const Object& ship = game.getObject("ship");
 		CHECK(ship.turning.hasHeading);
-		CHECK_THAT(ship.motion.drag, WithinAbs(0.02f, 1e-6f));
+		CHECK_THAT(ship.motion.drag, WithinAbs(0.7f, 1e-6f));
 		CHECK(ship.drawn.turnables.size() == 1);
 
 		int descriptions = 0;
@@ -468,17 +468,18 @@ TEST_CASE("held thrust shows the flickering flame, turned with the ship; letting
 
 TEST_CASE("thrust pushes the ship along the way it faces", "[asteroids][heading]")
 {
-	const float kOneFrame = 0.09f * 0.02f / -std::log(0.98f);
+	const float kept = std::pow(0.3f, 1.0f / 60.0f);
+	const float kOneFrame = 324.0f * (1.0f - kept) / -std::log(0.3f);
 	Field field;
 	field.clearTheMiddle();
 
 	// Facing up: the velocity goes up the screen, which is negative y, and
-	// sideways not at all. A frame of thrust under drag from still: the
-	// push less what the drag takes as it builds, 0.09 (1 - 0.98) / k with
-	// 0.98 = e to the -k.
+	// sideways not at all. A sixtieth of thrust under drag from still: the
+	// push less what the drag takes as it builds, 324 (1 - kept) / k, with
+	// 0.3 of the speed kept a second = e to the -k.
 	field.key("thrust", true);
 	field.frames(1);
-	CHECK_THAT(field.ship().velocity.y, WithinAbs(-kOneFrame, 1e-4f));
+	CHECK_THAT(field.ship().velocity.y, WithinAbs(-kOneFrame, 1e-2f));
 	CHECK_THAT(field.ship().velocity.x, WithinAbs(0.0f, 1e-5f));
 	field.key("thrust", false);
 
@@ -487,7 +488,7 @@ TEST_CASE("thrust pushes the ship along the way it faces", "[asteroids][heading]
 	field.ship().heading = 90.0f;
 	field.key("thrust", true);
 	field.frames(1);
-	CHECK_THAT(field.ship().velocity.x, WithinAbs(kOneFrame, 1e-4f));
+	CHECK_THAT(field.ship().velocity.x, WithinAbs(kOneFrame, 1e-2f));
 	CHECK_THAT(field.ship().velocity.y, WithinAbs(0.0f, 1e-4f));
 	field.key("thrust", false);
 
@@ -529,20 +530,20 @@ TEST_CASE("the heading it turned to is the way it is pushed", "[asteroids][headi
 	field.frames(5);
 	field.key("thrust", false);
 
-	CHECK(field.ship().velocity.x > 0.3f);
-	CHECK(std::abs(field.ship().velocity.y) < 0.05f);
+	CHECK(field.ship().velocity.x > 18.0f);
+	CHECK(std::abs(field.ship().velocity.y) < 3.0f);
 }
 
-TEST_CASE("with no thrust the ship drifts, losing a fiftieth of its speed a frame", "[asteroids][heading]")
+TEST_CASE("with no thrust the ship drifts, losing seven tenths of its speed a second", "[asteroids][heading]")
 {
 	Field field;
 	field.clearTheMiddle();
 
 	field.ship().position = { 300, 250 };
-	field.ship().velocity = { 3.0f, 0.0f };
+	field.ship().velocity = { 180.0f, 0.0f };
 	field.frames(10);
 
-	CHECK_THAT(field.ship().velocity.x, WithinAbs(3.0f * std::pow(0.98f, 10.0f), 1e-3f));
+	CHECK_THAT(field.ship().velocity.x, WithinAbs(180.0f * std::pow(0.3f, 10.0f / 60.0f), 1e-2f));
 	CHECK(field.ship().position.x > 300.0f + 10.0f);
 }
 
@@ -559,9 +560,9 @@ TEST_CASE("held thrust has a top speed instead of speeding up for ever", "[aster
 		field.ship().position = { 380, 280 }; // keep it in the middle; only its speed matters
 	}
 
-	// Where the push and the drag even out: 0.09 / k, 0.98 = e to the -k.
-	const float top = 0.09f / -std::log(0.98f);
-	CHECK_THAT(field.ship().velocity.x, WithinAbs(top, 0.05f));
+	// Where the push and the drag even out: 324 / k, 0.3 = e to the -k.
+	const float top = 324.0f / -std::log(0.3f);
+	CHECK_THAT(field.ship().velocity.x, WithinAbs(top, 3.0f));
 }
 
 TEST_CASE("a thrust held across a pause is still held afterwards", "[asteroids][heading]")
@@ -588,7 +589,7 @@ TEST_CASE("the ship leaves one side of the screen and comes back in the other", 
 	field.clearTheMiddle();
 
 	field.ship().position = { 760, 250 };
-	field.ship().velocity = { 3.0f, 0.0f };
+	field.ship().velocity = { 180.0f, 0.0f };
 
 	float lowest = 800.0f;
 	bool wrapped = false;
@@ -611,7 +612,7 @@ TEST_CASE("it wraps top and bottom too", "[asteroids][wrap]")
 	field.clearTheMiddle();
 
 	field.ship().position = { 300, 4 };
-	field.ship().velocity = { 0.0f, -3.0f };
+	field.ship().velocity = { 0.0f, -180.0f };
 
 	bool wrapped = false;
 	for (int i = 0; i < 60 && !wrapped; ++i)
@@ -631,7 +632,7 @@ TEST_CASE("a rock wraps as well", "[asteroids][wrap]")
 	Object& rock = *field.group("bigrocks")[0];
 
 	rock.position = { 780, 300 };
-	rock.velocity = { 2.0f, 0.0f };
+	rock.velocity = { 120.0f, 0.0f };
 
 	bool wrapped = false;
 	for (int i = 0; i < 100 && !wrapped; ++i)
@@ -661,7 +662,7 @@ TEST_CASE("a shot leaves the nose along the heading, at the shot's own speed", "
 	CHECK(shot.isVisible);
 	CHECK(shot.collisionsOn);
 	CHECK_THAT(shot.velocity.x, WithinAbs(0.0f, 1e-4f));
-	CHECK_THAT(shot.velocity.y, WithinAbs(-8.0f, 1e-4f));
+	CHECK_THAT(shot.velocity.y, WithinAbs(-480.0f, 1e-2f));
 	CHECK(shot.position.y + shot.size.y / 2 < field.centre(field.ship()).y - 10.0f); // out in front
 	CHECK_THAT(shot.position.x + shot.size.x / 2, WithinAbs(field.centre(field.ship()).x, 0.5f));
 
@@ -672,8 +673,8 @@ TEST_CASE("a shot leaves the nose along the heading, at the shot's own speed", "
 
 	REQUIRE(field.inPlay("shot") == 2);
 	Object& second = *field.group("shot")[1];
-	CHECK_THAT(second.velocity.x, WithinAbs(8.0f, 1e-3f));
-	CHECK_THAT(second.velocity.y, WithinAbs(0.0f, 1e-3f));
+	CHECK_THAT(second.velocity.x, WithinAbs(480.0f, 1e-2f));
+	CHECK_THAT(second.velocity.y, WithinAbs(0.0f, 1e-2f));
 	CHECK(second.position.x + second.size.x / 2 > field.centre(field.ship()).x + 10.0f);
 }
 
@@ -731,7 +732,7 @@ TEST_CASE("a hit ship waits for the middle to be clear before it comes back", "[
 	Field field;
 	field.clearTheMiddle();
 	field.ship().position = { 100, 100 };
-	field.ship().velocity = { 1.0f, 0.5f };
+	field.ship().velocity = { 60.0f, 30.0f };
 	Object& rock = *field.group("bigrocks")[0];
 	rock.position = { 105, 105 };
 	rock.velocity = {};
@@ -813,7 +814,7 @@ TEST_CASE("the two medium rocks are spawned the moment of the hit, centred on th
 
 	Object& shot = field.spawn("shot");
 	shot.position = { from.x - 1.0f, from.y + rock.size.y / 2 + 6.0f }; // just below the rock's edge
-	shot.velocity = { 0.0f, -4.0f };
+	shot.velocity = { 0.0f, -240.0f };
 
 	field.frames(4);
 
@@ -908,7 +909,7 @@ TEST_CASE("a rock hitting the ship costs a ship and breaks, and the ship comes b
 	field.clearTheMiddle();
 
 	field.ship().position = { 100, 100 };
-	field.ship().velocity = { 1.0f, 0.5f };
+	field.ship().velocity = { 60.0f, 30.0f };
 	field.ship().heading = 135.0f;
 	field.ship().showHeading();
 
@@ -963,7 +964,7 @@ TEST_CASE("three ships and then it is game over; space plays again from the star
 		field.frames(121); // back after the last hit, the middle clear
 		Object& rock = *field.group("bigrocks")[static_cast<std::size_t>(hit)];
 		field.ship().position = { 100, 100 }; // it starts again in the middle after each hit
-		field.ship().velocity = { 1.0f, 0.5f }; // contact is found as things move into each other
+		field.ship().velocity = { 60.0f, 30.0f }; // contact is found as things move into each other
 		rock.position = { 105, 105 };
 		rock.velocity = { 0.0f, 0.0f };
 		field.frames(3);
@@ -1141,7 +1142,7 @@ TEST_CASE("a rock that meets a saucer breaks it, and breaks itself for no points
 		saucer.velocity = {};
 		Object& rock = *field.group("bigrocks").front();
 		rock.position = { saucer.position.x - 20, saucer.position.y - 20 };
-		rock.velocity = { 1, 1 };
+		rock.velocity = { 60, 60 };
 		const std::size_t medium = field.group("mediumrocks").size();
 		field.frames(30);
 
@@ -1307,7 +1308,7 @@ TEST_CASE("a heading, a drag and an active are read from the file", "[asteroids]
 	const Object& ship = game.getObject("ship");
 	CHECK(ship.turning.hasHeading);
 	CHECK(ship.start.heading == 0.0f);
-	CHECK(ship.motion.drag == 0.02f);
+	CHECK(ship.motion.drag == 0.7f);
 	CHECK(ship.drawn.turnables.size() == 1);
 
 	for (const Object& object : game.getCurrentObjects())
