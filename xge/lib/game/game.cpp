@@ -53,6 +53,7 @@ namespace xge
 		patterns = std::move(data.patterns);
 		const std::vector<std::string> keeps = std::move(data.keeps);
 		demo = std::move(data.demo);
+		timeInSeconds = data.timeInSeconds;
 
 		// Room for what is spawned, so that the file's objects stay where
 		// they are (and a reference to one good) as copies join.
@@ -197,13 +198,13 @@ namespace xge
 		}
 	}
 
-	void Game::updateObjects(void)
+	void Game::updateObjects(float seconds)
 	{
 		// Anything changed from outside since (a test moving an object to
 		// another scene) is seen, and so is anything this frame changes.
 		settleSpawns();
 		stageChanged();
-		playOneFrame(getCurrentObjects(), windowDesc, *this);
+		playOneFrame(getCurrentObjects(), windowDesc, *this, seconds);
 		settleSpawns();
 		stageChanged();
 		showJoins();
@@ -406,6 +407,7 @@ namespace xge
 		std::cout << "schema validation: " << validation << "\n\n";
 
 		std::cout << windowDesc << '\n';
+		std::cout << "time: " << (timeInSeconds ? "seconds" : "sixtieths of a second") << "\n\n";
 
 		for (auto& variable : variables)
 		{
@@ -1220,8 +1222,7 @@ namespace xge
 
 	int Game::framesFor(float seconds) const noexcept
 	{
-		const int framerate = windowDesc.framerate > 0 ? windowDesc.framerate : 60;
-		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(framerate))));
+		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(framesASecond(windowDesc)))));
 	}
 
 	bool Game::tickTimer(Timer& timer, const std::string& where)
@@ -1252,9 +1253,8 @@ namespace xge
 
 	void Game::showTimeLeft(Object& object, const Timer& timer)
 	{
-		const int framerate = windowDesc.framerate > 0 ? windowDesc.framerate : 60;
 		const float left = timer.done || timer.framesLeft < 0 ? 0.0f
-			: std::ceil(static_cast<float>(timer.framesLeft) / static_cast<float>(framerate));
+			: std::ceil(static_cast<float>(timer.framesLeft) / static_cast<float>(framesASecond(windowDesc)));
 		const auto found = object.variable.find(timer.name);
 		if (found == object.variable.end() || found->second == left) { return; }
 		found->second = left;
@@ -1289,8 +1289,9 @@ namespace xge
 		}
 	}
 
-	void Game::updateTimers(void)
+	void Game::updateTimers(float seconds)
 	{
+		(void)seconds;
 		CommandExecutor executor(*this);
 
 		// An object's timers, while it is shown and in play. By index: a timer
@@ -1625,7 +1626,7 @@ namespace xge
 
 	void Game::follow(const std::string& target, const std::string& path, float stagger, int nearest, const Object* from)
 	{
-		const int framerate = windowDesc.framerate > 0 ? windowDesc.framerate : 60;
+		const int perSecond = framesASecond(windowDesc);
 		std::vector<Object*> going;
 		for (auto& object : objects)
 		{
@@ -1650,7 +1651,7 @@ namespace xge
 		int setOff = 0;
 		for (Object* object : going)
 		{
-			follow(*object, path, static_cast<int>(std::lround(static_cast<float>(setOff) * stagger * static_cast<float>(framerate))));
+			follow(*object, path, static_cast<int>(std::lround(static_cast<float>(setOff) * stagger * static_cast<float>(perSecond))));
 			++setOff;
 		}
 	}
@@ -2251,7 +2252,7 @@ namespace xge
 					break;
 				}
 				case Object::Follow::Part::Seconds:
-					object.timeAnimation(each.look, each.frame, std::max(1, static_cast<int>(std::lround(value * static_cast<float>(windowDesc.framerate)))));
+					object.timeAnimation(each.look, each.frame, std::max(1, static_cast<int>(std::lround(value * static_cast<float>(framesASecond(windowDesc))))));
 					break;
 				}
 			}

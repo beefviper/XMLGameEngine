@@ -453,7 +453,7 @@ namespace xge
 			{
 				if (playing)
 				{
-					engine->step();
+					engine->step(static_cast<float>(framePeriodNs) / 1e9f);
 					++frameCount;
 					++fpsFrames;
 				}
@@ -507,7 +507,7 @@ namespace xge
 
 		try
 		{
-			engine->step();
+			engine->step(static_cast<float>(framePeriodNs) / 1e9f);
 			engine->render();
 			++frameCount;
 		}

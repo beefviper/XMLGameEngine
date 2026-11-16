@@ -75,7 +75,7 @@ TEST_CASE("a position is worked out again when the text's words change its size"
 	// "10": the game measures it again and moves it, its right edge kept.
 	REQUIRE(game.setVariable("paddle1", "score", 10.0f));
 	CHECK(score1.size.x > one);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(score1.position.x == 640.0f - 80.0f - score1.size.x);
 
 	// Unchanged size: an object moved since is left where it is.

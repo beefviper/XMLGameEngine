@@ -106,7 +106,7 @@ TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only 
 	// a frame - the bullet ends the frame 20 px above the alien, having crossed all of it.
 	bullet.position = { target.position.x + 21.0f, target.position.y + 70.0f };
 	bullet.velocity = { 0.0f, -90.0f };
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 
 	// The hit took the bullet away.
 	CHECK(copies::count(game, "bullet") == 0);
@@ -135,7 +135,7 @@ TEST_CASE("the bullet also hits a cell in the middle of the block, not just the 
 	bullet.position = { front.position.x + 21.0f, front.position.y + 300.0f };
 	bullet.velocity = { 0.0f, -400.0f };
 
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 
 	// The nearest one along the path is the one that dies, not one further up.
 	CHECK_FALSE(front.collisionsOn);
@@ -160,7 +160,7 @@ TEST_CASE("the rest of the step is played after a bounce", "[swept_collision]")
 	ball.position = { 140.0f, 365.0f };
 	ball.velocity = { -30.0f, 0.0f };
 
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 
 	CHECK(ball.velocity.x == 30.0f);
 	CHECK_THAT(ball.position.x, WithinAbs(130.0f + 20.0f, 1e-3f));
@@ -181,7 +181,7 @@ TEST_CASE("a ball fast enough to pass the paddle in one step bounces off it inst
 	ball.position = { 400.0f, 365.0f };
 	ball.velocity = { -400.0f, 0.0f };
 
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 
 	CHECK(ball.velocity.x > 0.0f);
 	CHECK(ball.position.x > 130.0f);
@@ -197,7 +197,7 @@ TEST_CASE("a bullet is a piece: fired, a copy leaves the ship at its own velocit
 	CommandExecutor executor(game);
 
 	// Not fired: no bullet in the game.
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(copies::count(game, "bullet") == 0);
 
 	// Fired: a copy at the ship, moving at the piece's own velocity.
@@ -217,7 +217,7 @@ TEST_CASE("a bullet is a piece: fired, a copy leaves the ship at its own velocit
 	// Off the top: gone, and the gun is ready again.
 	for (int frame = 0; frame < 200 && copies::count(game, "bullet") > 0; ++frame)
 	{
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 	}
 	CHECK(copies::count(game, "bullet") == 0);
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);

@@ -63,7 +63,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 
 		// Over the middle of a pad, upright, coming down at `fall`, with the
@@ -79,7 +79,7 @@ namespace
 		// Frames until it is down, one way or the other, or `count` have gone.
 		void untilDown(int count)
 		{
-			for (int i = 0; i < count && state() == "playing" && !wrecked(); ++i) { game.updateObjects(); }
+			for (int i = 0; i < count && state() == "playing" && !wrecked(); ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 	};
 }

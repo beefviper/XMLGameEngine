@@ -175,13 +175,13 @@ namespace xge
 
 			for (; owed >= period && isWindowOpen(); owed -= period)
 			{
-				step();
+				step(std::chrono::duration<float>(period).count());
 			}
 			if (isWindowOpen()) { render(); }
 		}
 	}
 
-	void Engine::step(void)
+	void Engine::step(float seconds)
 	{
 		requireWindow();
 
@@ -232,7 +232,7 @@ namespace xge
 
 		playHeldKeys();
 
-		game.updateObjects();
+		game.updateObjects(seconds);
 
 		// A <condition> can change the state during updateObjects.
 		syncHeldKeysToState();

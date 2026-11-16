@@ -52,7 +52,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 
 		// Lets the clock run out: the bar is put at the bottom, and the race ends.

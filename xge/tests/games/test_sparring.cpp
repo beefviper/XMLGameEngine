@@ -48,7 +48,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 	};
 }

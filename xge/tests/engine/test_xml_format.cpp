@@ -230,6 +230,19 @@ TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' 
 	CHECK_FALSE(loaded.game.getObject("plain").collisionsOn);
 }
 
+TEST_CASE("<game time=\"seconds\"> plays its numbers per second; without it, per sixtieth", "[xml_format][time]")
+{
+	const std::string plain = gameXml("", objectXml({}));
+	std::string seconds = plain;
+	seconds.replace(0, std::string("<game>").size(), "<game time=\"seconds\">");
+
+	Loaded old(plain, "xge_test_time_frames.xml");
+	CHECK(old.game.motionTime(0.5f) == 30.0f);
+
+	Loaded moved(seconds, "xge_test_time_seconds.xml");
+	CHECK(moved.game.motionTime(0.5f) == 0.5f);
+}
+
 TEST_CASE("a variable can use the ones declared before it", "[xml_format]")
 {
 	Loaded loaded(gameXml("<variable name=\"a\">10</variable><variable name=\"b\"><multiply><value>a</value><value>2</value></multiply></variable>", objectXml({})));
@@ -677,7 +690,7 @@ TEST_CASE("a condition compares with a number or with another variable, in five 
 		loaded.game.setVariable("o", "score", a);
 		loaded.game.setVariable("p", "score", b);
 		loaded.game.setVariable("o", "best", best);
-		loaded.game.updateObjects();
+		loaded.game.updateObjects(xge::kSixtieth);
 		return loaded.game.getCurrentState().name == "won";
 	};
 

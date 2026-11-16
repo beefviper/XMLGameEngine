@@ -79,7 +79,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 
 		// Pac-Man, out of the maze's hands, runs into `other` from its left:

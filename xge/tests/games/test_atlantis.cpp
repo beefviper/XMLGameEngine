@@ -65,7 +65,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 
 		// A post fires; the shell is in the game at once (not at the next frame).
@@ -289,7 +289,7 @@ TEST_CASE("the city gone is game over, and space plays again with everything bac
 	{
 		if (object.objClass == "building") { object.isVisible = false; }
 	}
-	engine.step();
+	engine.step(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "over");
 	CHECK(game.getObject("over.message").lookName() == "lost");
 	CHECK(game.isStill(game.getObject("leftpost")));

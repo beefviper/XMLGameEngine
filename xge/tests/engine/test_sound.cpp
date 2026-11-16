@@ -165,7 +165,7 @@ namespace
 			std::vector<std::string> asked;
 			for (int i = 0; i < frames; ++i)
 			{
-				game.updateObjects();
+				game.updateObjects(xge::kSixtieth);
 				for (auto& name : game.takeSoundRequests()) { asked.push_back(name); }
 			}
 			return asked;
@@ -417,12 +417,12 @@ TEST_CASE("Engine loads the game's sounds into its Audio and plays what each fra
 	// Space on the main menu starts the game; the ball off the top wall asks for its blip.
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	Object& ball = game.getObject("ball");
 	ball.position = { 600, -1 };
 	ball.velocity = { 0, -3 };
 	CHECK(log.played.empty()); // asked for, played on the frame
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.played == std::vector<std::string>{ "wall" });
 
 	engine.silence();
@@ -442,14 +442,14 @@ TEST_CASE("Engine without an Audio is silent, and replaceAudio hands the sounds 
 	CHECK(log.loaded.size() == 3);
 
 	game.requestSound("score");
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.played == std::vector<std::string>{ "score" });
 
 	// A library that will not start leaves the game silent, and says why.
 	CHECK_THROWS_WITH(engine.replaceAudio([]() -> std::unique_ptr<Audio> { throw std::runtime_error("no sound card"); }),
 		ContainsSubstring("no sound card"));
 	CHECK(dynamic_cast<NullAudio*>(engine.currentAudio()) != nullptr);
-	engine.step();
+	engine.step(xge::kSixtieth);
 }
 
 TEST_CASE("the silent backend needs no sound device", "[sound][engine]")
@@ -559,49 +559,49 @@ TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when le
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	// Held: started once, and left playing frame after frame.
 	engine.handleKeyPressed(KeyCode::Up);
-	engine.step();
-	engine.step();
-	engine.step();
+	engine.step(xge::kSixtieth);
+	engine.step(xge::kSixtieth);
+	engine.step(xge::kSixtieth);
 	CHECK(log.looped == std::vector<std::string>{ "thrust" });
 	CHECK(log.stopped.empty());
 
 	// Up and W both thrust: letting go of one while the other is down keeps it going.
 	engine.handleKeyPressed(KeyCode::W);
 	engine.handleKeyReleased(KeyCode::Up);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.stopped.empty());
 	engine.handleKeyReleased(KeyCode::W);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 
 	// Paused, a held key drives nothing, so it is quiet; back in play it hums again.
 	log.looped.clear();
 	log.stopped.clear();
 	engine.handleKeyPressed(KeyCode::Up);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.looped == std::vector<std::string>{ "thrust" });
 	log.looped.clear();
 	engine.handleKeyPressed(KeyCode::Pause);
 	engine.handleKeyReleased(KeyCode::Pause);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "paused");
 	CHECK(game.loopingSounds().empty());
 	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 	engine.handleKeyPressed(KeyCode::Pause);
 	engine.handleKeyReleased(KeyCode::Pause);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "playing");
 	CHECK(log.looped == std::vector<std::string>{ "thrust" });
 
 	// Out of fuel, nothing pushes, and nothing hums.
 	log.stopped.clear();
 	game.getObject("lander").variable["fuel"] = 0.0f;
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(game.loopingSounds().empty());
 	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 
@@ -609,10 +609,10 @@ TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when le
 	log.looped.clear();
 	game.getObject("lander").variable["fuel"] = 100.0f;
 	game.requestSound("thrust");
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.looped == std::vector<std::string>{ "thrust" });
 	engine.silence();
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.looped == std::vector<std::string>{ "thrust", "thrust" });
 }
 
@@ -624,16 +624,16 @@ TEST_CASE("Asteroids: the heartbeat plays in play, and the ship's engine hums wh
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "playing");
 	CHECK(log.looped == std::vector<std::string>{ "beat" });
 	log.looped.clear();
 
 	engine.handleKeyPressed(KeyCode::Up);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.looped == std::vector<std::string>{ "thrust" });
 	engine.handleKeyReleased(KeyCode::Up);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 }
 
@@ -824,7 +824,7 @@ namespace
 		Game game{ scratch.path.string() };
 		AudioLog log;
 		Engine engine(game, std::make_unique<NullWindow>(), std::make_unique<RecordingAudio>(log));
-		for (int i = 0; i < frames; ++i) { engine.step(); }
+		for (int i = 0; i < frames; ++i) { engine.step(xge::kSixtieth); }
 		CHECK(game.getObject("marcher").variable.at("steps") == Approx(static_cast<double>(log.played.size())));
 		return log.played;
 	}
@@ -861,44 +861,44 @@ TEST_CASE("Pac-Man's music: the opening tune plays over READY!, the siren loops 
 	AudioLog log;
 	Engine engine(game, std::make_unique<NullWindow>(), std::make_unique<RecordingAudio>(log));
 
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.looped.empty()); // the title is quiet
 
 	// Space: play, with READY! over it and the opening tune; no siren yet.
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "ready");
 	CHECK(log.played == std::vector<std::string>{ "start" });
 	CHECK(log.looped.empty());
 
 	// READY! goes, and the siren starts, once.
-	for (int i = 0; i < 300 && game.getCurrentState().name == "ready"; ++i) { engine.step(); }
+	for (int i = 0; i < 300 && game.getCurrentState().name == "ready"; ++i) { engine.step(xge::kSixtieth); }
 	REQUIRE(game.getCurrentState().name == "playing");
 	CHECK(log.looped == std::vector<std::string>{ "siren" });
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.looped.size() == 1);
 
 	// Paused: quiet; back: it starts again.
 	engine.handleKeyPressed(KeyCode::Pause);
 	engine.handleKeyReleased(KeyCode::Pause);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "paused");
 	CHECK(log.stopped == std::vector<std::string>{ "siren" });
 	engine.handleKeyPressed(KeyCode::Pause);
 	engine.handleKeyReleased(KeyCode::Pause);
-	engine.step();
+	engine.step(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "playing");
 	CHECK(log.looped == std::vector<std::string>{ "siren", "siren" });
 	CHECK(log.played.size() == 1); // coming back to play is not beginning it
 
 	// The last life lost: the siren stops and the loss plays, once.
 	game.getObject("status").variable["lives"] = 0.0f;
-	engine.step();
+	engine.step(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "over");
 	CHECK(log.stopped == std::vector<std::string>{ "siren", "siren" });
 	CHECK(log.played == std::vector<std::string>{ "start", "lose" });
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(log.played.size() == 2);
 }
 

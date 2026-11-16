@@ -67,6 +67,11 @@ namespace xge
 		// <demo>: a recorded game the attract mode plays (see RawDemo).
 		RawDemo demo;
 
+		// <game time="seconds">: the game's speeds and the rest are per
+		// second; without it, per sixtieth (see Game::motionTime). Temporary,
+		// while the games are moved.
+		bool timeInSeconds{ false };
+
 		// How it was checked against xgedef.xsd, as printGame() says it.
 		std::string validation;
 	};

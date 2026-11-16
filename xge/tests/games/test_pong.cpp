@@ -47,12 +47,12 @@ namespace
 		{
 			engine.handleKeyPressed(key);
 			engine.handleKeyReleased(key);
-			engine.step();
+			engine.step(xge::kSixtieth);
 		}
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { engine.step(); }
+			for (int i = 0; i < count; ++i) { engine.step(xge::kSixtieth); }
 		}
 
 		Object& object(const std::string& name) { return game.getObject(name); }

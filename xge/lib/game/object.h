@@ -39,6 +39,14 @@ namespace xge
 		friend std::ostream& operator<<(std::ostream& o, WindowDesc const& f);
 	};
 
+	// How many frames a second the counts of time still kept in frames
+	// count in: the window's <framerate>, 60 without one. Temporary: the
+	// delta time work turns each of those counts into seconds.
+	inline int framesASecond(const WindowDesc& window) noexcept
+	{
+		return window.framerate > 0 ? window.framerate : 60;
+	}
+
 	// One <collision> rule about another object, still unparsed. class/object
 	// let a rule only respond to a specific kind (or specific instance) of the
 	// other object in the pair; empty means "matches anything". Only meaningful

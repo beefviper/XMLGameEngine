@@ -1023,12 +1023,12 @@ namespace xge
 		return mazeGrids.emplace(map, std::move(grid)).first->second;
 	}
 
-	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules)
+	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds)
 	{
 		// A picture that changes with time (an <animation>) counts this frame
 		// whether or not the object is moving; only what is in play does, so a
 		// pause or a menu holds it where it was.
-		const float second = 1.0f / static_cast<float>(window.framerate > 0 ? window.framerate : 60);
+		const float second = 1.0f / static_cast<float>(framesASecond(window));
 		// Those whose once animation ended, by index and the look it was:
 		// their <then> may spawn, and the list of objects grow.
 		std::vector<std::pair<std::size_t, std::size_t>> ended;
@@ -1066,7 +1066,7 @@ namespace xge
 		for (const auto& [index, look] : ended) { rules.animationEnded(index, look); }
 		for (const auto& [index, look, picture] : cameUp) { rules.frameCameUp(index, look, picture); }
 
-		rules.timers();
+		rules.timers(seconds);
 
 		rules.followPaths();
 

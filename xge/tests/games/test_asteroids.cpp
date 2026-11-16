@@ -115,7 +115,7 @@ namespace
 		{
 			for (int i = 0; i < count; ++i)
 			{
-				game.updateObjects();
+				game.updateObjects(xge::kSixtieth);
 				if (saucersKeptOut) { hideSaucers(); }
 			}
 		}

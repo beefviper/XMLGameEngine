@@ -550,7 +550,7 @@ namespace
 
 		Object& ship() { return game.getObject("ship"); }
 		void key(const char* action, bool down) { executor.executeInput(Command{ CmdTriggerAction{ "ship", action } }, down); }
-		void frames(int count) { for (int i = 0; i < count; ++i) { game.updateObjects(); } }
+		void frames(int count) { for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); } }
 	};
 }
 

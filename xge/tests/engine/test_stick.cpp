@@ -50,14 +50,14 @@ TEST_CASE("a stick()ed object never ends a frame outside the screen", "[stick]")
 	press(executor, "down", true);
 	for (int frame = 0; frame < 30; ++frame)
 	{
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 		CHECK(player.position.y <= kBottomBound);
 	}
 	CHECK(player.position.y == kBottomBound);
 
 	// Releasing Down leaves the player stopped, but it must still be inside.
 	press(executor, "down", false);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(player.position.y == kBottomBound);
 }
 
@@ -68,7 +68,7 @@ TEST_CASE("pressing sideways against the bottom wall still slides", "[stick]")
 	Object& player = startNearBottom(game);
 
 	press(executor, "down", true);
-	for (int frame = 0; frame < 30; ++frame) { game.updateObjects(); }
+	for (int frame = 0; frame < 30; ++frame) { game.updateObjects(xge::kSixtieth); }
 	REQUIRE(player.position.y == kBottomBound);
 
 	// Left-down: the wall stops the downward part, the player keeps sliding left.
@@ -76,7 +76,7 @@ TEST_CASE("pressing sideways against the bottom wall still slides", "[stick]")
 	press(executor, "left", true);
 	for (int frame = 1; frame <= 5; ++frame)
 	{
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 		CHECK(player.position.y == kBottomBound);
 		CHECK(player.position.x == startX - kStep * static_cast<float>(frame));
 	}
@@ -87,7 +87,7 @@ TEST_CASE("pressing sideways against the bottom wall still slides", "[stick]")
 	press(executor, "right", true);
 	for (int frame = 1; frame <= 5; ++frame)
 	{
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 		CHECK(player.position.y == kBottomBound);
 		CHECK(player.position.x == turnX + kStep * static_cast<float>(frame));
 	}
@@ -102,15 +102,15 @@ TEST_CASE("sliding along the wall after letting go of the wall-ward key", "[stic
 	Object& player = startNearBottom(game);
 
 	press(executor, "down", true);
-	for (int frame = 0; frame < 30; ++frame) { game.updateObjects(); }
+	for (int frame = 0; frame < 30; ++frame) { game.updateObjects(xge::kSixtieth); }
 	press(executor, "down", false);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 
 	const float startX = player.position.x;
 	press(executor, "left", true);
 	for (int frame = 1; frame <= 5; ++frame)
 	{
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 		CHECK(player.position.x == startX - kStep * static_cast<float>(frame));
 		CHECK(player.position.y <= kBottomBound);
 	}
@@ -123,12 +123,12 @@ TEST_CASE("the wall only cancels velocity heading into it", "[stick]")
 	Object& player = startNearBottom(game);
 
 	press(executor, "down", true);
-	for (int frame = 0; frame < 30; ++frame) { game.updateObjects(); }
+	for (int frame = 0; frame < 30; ++frame) { game.updateObjects(xge::kSixtieth); }
 	REQUIRE(player.position.y == kBottomBound);
 
 	// Turning around must move it straight back off the wall.
 	press(executor, "down", false);
 	press(executor, "up", true);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(player.position.y == kBottomBound - kStep);
 }

@@ -11,7 +11,7 @@
 // Each game is written beside the shipped ones so that its schema path
 // resolves, and loaded with Xerces (full validation) or TinyXML2 (the built-in
 // validator), so every test also checks that the schema takes the new tags.
-// Frames are played with Game::updateObjects(); nothing needs a window.
+// Frames are played with Game::updateObjects(xge::kSixtieth); nothing needs a window.
 
 #include "scratch.h"
 #include "play/executor.h"
@@ -123,7 +123,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 
 		float variable(const std::string& object, const std::string& name)
@@ -237,7 +237,7 @@ TEST_CASE("an interval is worked out again every round, so it can follow a varia
 		float seen = 0;
 		for (int frame = 1; frame <= 1200; ++frame)
 		{
-			loaded.game.updateObjects();
+			loaded.game.updateObjects(xge::kSixtieth);
 			if (loaded.variable("clock", "n") != seen)
 			{
 				seen = loaded.variable("clock", "n");
@@ -612,7 +612,7 @@ TEST_CASE("a <reveal> back into play draws a <random> again (a copy, fired or sp
 		std::set<int> seen;
 		for (int frame = 0; frame < 600; ++frame)
 		{
-			loaded.game.updateObjects();
+			loaded.game.updateObjects(xge::kSixtieth);
 			const Object& shown = loaded.game.getObject("rock");
 			if (shown.isVisible) { seen.insert(static_cast<int>(std::lround(shown.velocity.x * 100.0f))); }
 		}

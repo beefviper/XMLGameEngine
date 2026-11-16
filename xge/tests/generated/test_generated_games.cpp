@@ -74,7 +74,7 @@ namespace
 			const KeyCode key = script[static_cast<std::size_t>(frame / 40) % std::size(script)];
 			if (frame % 40 == 0) { engine.handleKeyPressed(key); }
 			if (frame % 40 == 25) { engine.handleKeyReleased(key); }
-			engine.step();
+			engine.step(xge::kSixtieth);
 			shots.push_back(snapshot(game));
 		}
 		return shots;

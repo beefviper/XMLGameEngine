@@ -70,7 +70,7 @@ TEST_CASE("Every game's load and frame times", "[long][speed]")
 			if (frame % 45 == 0) { play.tap(xge::KeyCode::Space); }
 
 			const Clock::time_point one = Clock::now();
-			play.engine.step();
+			play.engine.step(xge::kSixtieth);
 			worst = std::max(worst, millisecondsSince(one));
 		}
 		const double perFrame = millisecondsSince(playStart) * 1000.0 / kFrames;

@@ -11,7 +11,7 @@
 // (Xerces's real validation and this project's own XsdLiteValidator) on it.
 //
 // Small games are written to a scratch file and loaded by a real xge::Game,
-// and frames are played with Game::updateObjects(); none of it needs a window.
+// and frames are played with Game::updateObjects(xge::kSixtieth); none of it needs a window.
 
 #include "scratch.h"
 #include "file_text.h"
@@ -112,7 +112,7 @@ namespace
 
 	void frames(Game& game, int count)
 	{
-		for (int i = 0; i < count; ++i) { game.updateObjects(); }
+		for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 	}
 
 	// What is wrapped around a sprite, or sprites, and an animation.
@@ -1523,7 +1523,7 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	int most = 0;
 	for (int frame = 0; frame < 600; ++frame)
 	{
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 		most = std::max(most, falling());
 	}
 	CHECK(most >= 1);
@@ -1545,7 +1545,7 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	bool blasted = false;
 	for (int frame = 0; frame < 20000 && game.getCurrentState().name != "over"; ++frame)
 	{
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 		if (game.getCurrentState().name == "blasted") { blasted = true; continue; }
 		for (auto& object : game.getCurrentObjects())
 		{

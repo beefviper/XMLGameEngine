@@ -404,7 +404,7 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 				if (keys[next].second.second) { engine.handleKeyPressed(keys[next].second.first); }
 				else { engine.handleKeyReleased(keys[next].second.first); }
 			}
-			engine.step();
+			engine.step(xge::kSixtieth);
 		}
 		recording = engine.recorded();
 		atEnd = everything(game);
@@ -433,7 +433,7 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 		Game game{ readGame("descriptions/pong.xml", XmlBackend::TinyXml2) };
 		Engine engine(game, WindowBackend::None, AudioBackend::None);
 		engine.replay(readDemo(recorded.string(), XmlBackend::TinyXml2));
-		for (int frame = 0; frame < 600; ++frame) { engine.step(); }
+		for (int frame = 0; frame < 600; ++frame) { engine.step(xge::kSixtieth); }
 		CHECK(everything(game) == atEnd);
 	}
 
@@ -444,7 +444,7 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 		RawDemo noKeys = recording;
 		noKeys.keys.clear();
 		engine.replay(noKeys);
-		for (int frame = 0; frame < 600; ++frame) { engine.step(); }
+		for (int frame = 0; frame < 600; ++frame) { engine.step(xge::kSixtieth); }
 		CHECK(everything(game) != atEnd);
 	}
 
@@ -474,7 +474,7 @@ TEST_CASE("describe writes the state and every object in play as XML", "[cli][du
 	Engine engine(game, WindowBackend::None, AudioBackend::None);
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
-	for (int frame = 0; frame < 60; ++frame) { engine.step(); }
+	for (int frame = 0; frame < 60; ++frame) { engine.step(xge::kSixtieth); }
 
 	std::ostringstream out;
 	game.describe(out, 60);

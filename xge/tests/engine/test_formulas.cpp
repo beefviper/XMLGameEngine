@@ -674,10 +674,10 @@ TEST_CASE("a timer whose interval reaches a divisor of 0 keeps going, with one w
 
 	CaptureStderr captured;
 
-	for (int i = 0; i < 59; ++i) { REQUIRE_NOTHROW(loaded.game.updateObjects()); }
+	for (int i = 0; i < 59; ++i) { REQUIRE_NOTHROW(loaded.game.updateObjects(xge::kSixtieth)); }
 	CHECK(loaded.game.getObject("c").variable.at("n") == 0.0f); // a second at 60 frames a second
 
-	for (int i = 0; i < 10; ++i) { REQUIRE_NOTHROW(loaded.game.updateObjects()); }
+	for (int i = 0; i < 10; ++i) { REQUIRE_NOTHROW(loaded.game.updateObjects(xge::kSixtieth)); }
 
 	CHECK(loaded.game.getObject("c").variable.at("rate") < 1.0f);
 	CHECK(loaded.game.getObject("c").variable.at("n") >= 2.0f);

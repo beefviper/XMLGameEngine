@@ -3962,6 +3962,10 @@
       <xsl:otherwise>60</xsl:otherwise>
     </xsl:choose>
     <xsl:text>;&#10;</xsl:text>
+    <!-- time="seconds": per-second numbers (temporary, while the games are moved) -->
+    <xsl:if test="$game/@time = 'seconds'">
+      <xsl:text>&#9;game.timeInSeconds = true;&#10;</xsl:text>
+    </xsl:if>
     <!-- a variable declared twice keeps the later value, in the earlier place -->
     <xsl:variable name="variables" select="$game/variables/variable[not(@name = preceding-sibling::variable/@name)]" />
     <xsl:if test="$variables">

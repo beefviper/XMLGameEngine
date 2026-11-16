@@ -80,7 +80,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 
 		// The bombs of a wave that are falling.
@@ -352,10 +352,10 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	game.getObject("bucket").variable["score"] = 10;
-	for (int i = 0; i < 90; ++i) { engine.step(); }
+	for (int i = 0; i < 90; ++i) { engine.step(xge::kSixtieth); }
 	REQUIRE(game.currentScene("playing") == "playing.wave2");
 	game.getObject("bucket").variable["buckets"] = 0;
-	engine.step();
+	engine.step(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "over");
 	CHECK(game.getObject("over.message").lookName() == "lost");
 
@@ -384,18 +384,18 @@ TEST_CASE("the keys carry on from wave to wave, and Pause pauses over the game d
 
 	const float startX = bucket.position.x;
 	engine.handleKeyPressed(KeyCode::D);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(bucket.position.x == Approx(startX + 9));
 
 	// The next wave is the same state: the held key carries on.
 	bucket.variable["score"] = 10;
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	REQUIRE(game.currentScene("playing") == "playing.wave2");
 	CHECK(bucket.position.x == Approx(startX + 18));
 	engine.handleKeyReleased(KeyCode::D);
 
 	engine.handleKeyPressed(KeyCode::Left);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(bucket.position.x == Approx(startX + 9));
 	engine.handleKeyReleased(KeyCode::Left);
 
@@ -410,7 +410,7 @@ TEST_CASE("the keys carry on from wave to wave, and Pause pauses over the game d
 	CHECK(game.isStill(game.getObject("score")));
 	CHECK_FALSE(game.isStill(game.getObject(of("wave1", "bomber"))));
 	const float x = bomber.position.x;
-	for (int i = 0; i < 30; ++i) { engine.step(); }
+	for (int i = 0; i < 30; ++i) { engine.step(xge::kSixtieth); }
 	CHECK(bomber.position.x == Approx(x));
 
 	engine.handleKeyPressed(KeyCode::Pause);

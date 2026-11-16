@@ -70,7 +70,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { engine.step(); }
+			for (int i = 0; i < count; ++i) { engine.step(xge::kSixtieth); }
 		}
 
 		// Holds a key down for some frames.

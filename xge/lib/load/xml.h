@@ -56,6 +56,7 @@ namespace xge
 			std::vector<RawPatterns>& rawPatterns,
 			std::vector<std::string>& rawKeeps,
 			RawDemo& rawDemo,
+			bool& timeInSeconds,
 			SchemaValidation& validation);
 	};
 

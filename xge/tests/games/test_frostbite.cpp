@@ -68,7 +68,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { engine.step(); }
+			for (int i = 0; i < count; ++i) { engine.step(xge::kSixtieth); }
 		}
 
 		// One jump, all the way to its landing and a frame after.

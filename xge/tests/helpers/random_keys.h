@@ -67,7 +67,7 @@ namespace played
 					if (down.erase(key)) { play.engine.handleKeyReleased(key); }
 					else { down.insert(key); play.engine.handleKeyPressed(key); }
 				}
-				play.engine.step();
+				play.engine.step(xge::kSixtieth);
 			}
 		}
 		catch (const std::exception& error)

@@ -305,9 +305,8 @@ namespace xge
 			std::vector<std::shared_ptr<const Turnable>>* turnables = nullptr);
 
 		// How many frames of the game each picture of the animation is shown
-		// for: its <interval> in seconds times the window's <framerate>, at
-		// least 1. Throws std::runtime_error for an interval that is not above
-		// 0, or for a window with no framerate to count seconds in.
+		// for: its <interval> in seconds times framesASecond, at least 1.
+		// Throws std::runtime_error for an interval that is not above 0.
 		int animationFramesOf(const RawValue& interval, const WindowDesc& windowDesc, const std::string& where);
 
 		// Each picture's own time in frames of the game: a frame's own

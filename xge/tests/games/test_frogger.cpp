@@ -71,7 +71,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 
 		// Puts the frog in a cell and lets it settle, nothing else moving it.
@@ -192,12 +192,12 @@ TEST_CASE("a held hop key hops once, and a state change never repeats it", "[fro
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	engine.handleKeyPressed(KeyCode::Up);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(frog.position.y == startY - kCell);
 
 	// Still held: no more hops, however long.
 	engine.handleKeyPressed(KeyCode::Up); // a repeat event
-	for (int i = 0; i < 30; ++i) { game.updateObjects(); }
+	for (int i = 0; i < 30; ++i) { game.updateObjects(xge::kSixtieth); }
 	CHECK(frog.position.y == startY - kCell);
 
 	// Pause and come back with the key still down: it has to be pressed again.
@@ -207,13 +207,13 @@ TEST_CASE("a held hop key hops once, and a state change never repeats it", "[fro
 	engine.handleKeyPressed(KeyCode::Pause);
 	engine.handleKeyReleased(KeyCode::Pause);
 	CHECK(game.getCurrentState().name == "playing");
-	for (int i = 0; i < 5; ++i) { game.updateObjects(); }
+	for (int i = 0; i < 5; ++i) { game.updateObjects(xge::kSixtieth); }
 	CHECK(frog.position.y == startY - kCell);
 
 	// Let go and press again: one more hop.
 	engine.handleKeyReleased(KeyCode::Up);
 	engine.handleKeyPressed(KeyCode::Up);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(frog.position.y == startY - 2 * kCell);
 }
 

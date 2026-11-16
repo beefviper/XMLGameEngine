@@ -120,7 +120,7 @@ namespace xge
 		// simulation: it reads the keys, moves everything, checks the
 		// conditions, and plays the sounds the frame asked for. render() draws the current picture without moving
 		// anything, so a paused game can be redrawn after its values are edited.
-		void step(void);
+		void step(float seconds);
 		void render(void);
 
 		// Lets the window deal with its own events (move, resize, close)

@@ -39,6 +39,10 @@ namespace xge
 		}
 	};
 
+	// The length of a step when none is measured: a sixtieth of a second,
+	// as xgecli --frames and the tests play.
+	inline constexpr float kSixtieth = 1.0f / 60.0f;
+
 	class FrameRules
 	{
 	public:
@@ -56,9 +60,9 @@ namespace xge
 		// of its own: they run, as an object's timer's do.
 		virtual void frameCameUp(std::size_t index, std::size_t look, std::size_t picture) { (void)index; (void)look; (void)picture; }
 
-		// The timers that go off this frame, before anything moves, so a bomb
-		// dropped this frame starts falling this frame.
-		virtual void timers() {}
+		// The timers that go off this step of `seconds`, before anything
+		// moves, so a bomb dropped this step starts falling this step.
+		virtual void timers(float seconds) { (void)seconds; }
 
 		// Every object on a path takes this frame's step of it.
 		virtual void followPaths() {}
@@ -148,5 +152,5 @@ namespace xge
 	// (before the move), the move (hops, then every pair that can touch swept
 	// through the frame and met in the order they meet), sticks, what is
 	// carried put where it is held, conditions.
-	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules);
+	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds);
 }

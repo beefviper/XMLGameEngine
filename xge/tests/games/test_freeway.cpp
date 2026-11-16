@@ -75,7 +75,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 
 		// Every car and truck parked far off to the left, so a test about the
@@ -337,13 +337,13 @@ TEST_CASE("the keys drive the right chicken through the whole game", "[freeway][
 
 	engine.handleKeyPressed(KeyCode::W);
 	engine.handleKeyReleased(KeyCode::W);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(one.position.y == rowY(10));
 	CHECK(two.position.y == rowY(11));
 
 	engine.handleKeyPressed(KeyCode::Up);
 	engine.handleKeyReleased(KeyCode::Up);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(two.position.y == rowY(10));
 	CHECK(one.position.y == rowY(10));
 
@@ -351,7 +351,7 @@ TEST_CASE("the keys drive the right chicken through the whole game", "[freeway][
 	engine.handleKeyReleased(KeyCode::S);
 	engine.handleKeyPressed(KeyCode::Down);
 	engine.handleKeyReleased(KeyCode::Down);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(one.position.y == rowY(11));
 	CHECK(two.position.y == rowY(11));
 

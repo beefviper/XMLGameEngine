@@ -52,7 +52,7 @@ TEST_CASE("the game is not over while any alien is left", "[win_condition]")
 	}
 
 	REQUIRE(aliensLeft(game) == 1);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(game.getCurrentState().name == "playing");
 }
 
@@ -66,7 +66,7 @@ TEST_CASE("killing the last alien ends the game", "[win_condition]")
 		if (object.groupName == "aliens") { kill(object); }
 	}
 
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(game.getCurrentState().name == "gameover");
 	CHECK(game.isShown(game.getObject("youwin")));
 	CHECK(game.isShown(game.getObject("continue")));
@@ -93,9 +93,9 @@ TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
 	bullet.size = { 8.0f, 8.0f };
 	bullet.position = { last.position.x + 21.0f, last.position.y + 58.0f };
 
-	game.updateObjects(); // the bullet reaches it and both die...
+	game.updateObjects(xge::kSixtieth); // the bullet reaches it and both die...
 	CHECK_FALSE(last.isVisible);
-	game.updateObjects(); // ...and the condition sees it on the next check
+	game.updateObjects(xge::kSixtieth); // ...and the condition sees it on the next check
 	CHECK(game.getCurrentState().name == "gameover");
 }
 
@@ -108,7 +108,7 @@ TEST_CASE("reset() from the win screen starts a fresh game", "[win_condition]")
 	{
 		if (object.groupName == "aliens") { kill(object); }
 	}
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "gameover");
 
 	CommandExecutor executor(game);
@@ -119,6 +119,6 @@ TEST_CASE("reset() from the win screen starts a fresh game", "[win_condition]")
 
 	// ...and playing again does not end at once.
 	game.setCurrentState("playing");
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(game.getCurrentState().name == "playing");
 }

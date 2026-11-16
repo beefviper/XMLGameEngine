@@ -77,7 +77,7 @@ TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules
 
 	for (int frame = 0; frame < 4; ++frame)
 	{
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 		CHECK(copies::count(game, "bullet") == 1);
 	}
 	CHECK(bullet.position.y < player.position.y - bullet.size.y);
@@ -98,7 +98,7 @@ TEST_CASE("a bullet is taken away on touching an alien", "[collision_rules]")
 	bullet.position = { alien.position.x + 20.0f, alien.position.y + alien.size.y - 2.0f };
 	bullet.velocity.y = -6.0f;
 
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 
 	CHECK(copies::count(game, "bullet") == 0);
 }
@@ -145,7 +145,7 @@ namespace
 		// Where the ball is after `frames` frames.
 		float after(int frames)
 		{
-			for (int i = 0; i < frames; ++i) { game->updateObjects(); }
+			for (int i = 0; i < frames; ++i) { game->updateObjects(xge::kSixtieth); }
 			return game->getObject("ball").position.y;
 		}
 	};
@@ -271,23 +271,23 @@ TEST_CASE("an object put somewhere has moved: it touches what it is put on, with
 	Object& a = game.getObject("a");
 
 	// Standing still apart: nothing.
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(a.variable["hits"] == 0.0f);
 
 	// Put on b, as a teleport would: a touch, though neither has a velocity.
 	a.position = { 101.0f, 51.0f };
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(a.variable["hits"] == 1.0f);
 
 	// Left there, nothing has moved since: not touched again.
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(a.variable["hits"] == 1.0f);
 
 	// b put on a: b has moved, so the pair is looked at.
 	game.getObject("b").position = { 200.0f, 0.0f };
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	game.getObject("b").position = { 100.0f, 50.0f };
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(a.variable["hits"] == 2.0f);
 
 	std::filesystem::remove(path);

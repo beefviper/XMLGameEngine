@@ -80,7 +80,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 
 		std::vector<Object*> rocks()
@@ -437,12 +437,12 @@ TEST_CASE("the keys play the game through the engine", "[astrosmash][engine_inpu
 
 	const float startX = ship.position.x;
 	engine.handleKeyPressed(KeyCode::A);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(ship.position.x == startX - 7.0f);
 	engine.handleKeyReleased(KeyCode::A);
 	engine.handleKeyPressed(KeyCode::Right);
-	game.updateObjects();
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
+	game.updateObjects(xge::kSixtieth);
 	CHECK(ship.position.x == startX + 7.0f);
 	engine.handleKeyReleased(KeyCode::Right);
 

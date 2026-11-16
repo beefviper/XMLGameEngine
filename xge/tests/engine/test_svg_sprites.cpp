@@ -168,7 +168,7 @@ namespace
 
 	void frames(Game& game, int count)
 	{
-		for (int i = 0; i < count; ++i) { game.updateObjects(); }
+		for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 	}
 
 	std::string readFile(const std::string& path)

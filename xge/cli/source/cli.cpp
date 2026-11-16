@@ -682,7 +682,7 @@ namespace xge
 			};
 			while (played < options.frames)
 			{
-				engine.step();
+				engine.step(xge::kSixtieth);
 				++played;
 				if (options.dumpEvery > 0 && played % options.dumpEvery == 0 && played < options.frames) { describe(); }
 			}

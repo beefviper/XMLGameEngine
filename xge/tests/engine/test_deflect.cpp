@@ -197,7 +197,7 @@ TEST_CASE("in a real frame, Pong's ball comes off the top of a paddle heading up
 	pong.ball.position = { 134.0f, 375.0f - 60.0f - 10.0f };
 	pong.ball.velocity = { -6.0f, 0.0f };
 
-	pong.game.updateObjects();
+	pong.game.updateObjects(xge::kSixtieth);
 
 	CHECK(pong.ball.velocity.x > 0.0f);
 	CHECK(pong.ball.velocity.y < 0.0f);

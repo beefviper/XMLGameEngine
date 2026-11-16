@@ -511,8 +511,8 @@ namespace xge
 			return false;
 		}
 
-		const float framerate = static_cast<float>(windowDesc.framerate > 0 ? windowDesc.framerate : 60);
-		mover.cellGoEvery = speed > 0.0f ? std::max(1, whole(framerate / speed)) : 0;
+		const float perSecond = static_cast<float>(framesASecond(windowDesc));
+		mover.cellGoEvery = speed > 0.0f ? std::max(1, whole(perSecond / speed)) : 0;
 		if (!mover.cellGoing || mover.cellGoWait > mover.cellGoEvery) { mover.cellGoWait = mover.cellGoEvery; }
 		mover.cellGoing = speed > 0.0f;
 		mover.cellGoWay = way;
@@ -902,11 +902,11 @@ namespace xge
 			return;
 		}
 
-		const float framerate = static_cast<float>(windowDesc.framerate > 0 ? windowDesc.framerate : 60);
+		const float perSecond = static_cast<float>(framesASecond(windowDesc));
 		object.cell.held = move.step > 0.0f;
 		object.cell.heldWay = move.direction;
-		object.cell.heldEvery = move.step > 0.0f ? std::max(1, whole(framerate / move.step)) : 0;
-		object.cell.heldWait = move.wait > 0.0f ? std::max(1, whole(move.wait * framerate)) : object.cell.heldEvery;
+		object.cell.heldEvery = move.step > 0.0f ? std::max(1, whole(perSecond / move.step)) : 0;
+		object.cell.heldWait = move.wait > 0.0f ? std::max(1, whole(move.wait * perSecond)) : object.cell.heldEvery;
 
 		const Vector2f step = stepToward(move.direction, 1.0f);
 		stepCells(object, whole(step.x), whole(step.y));

@@ -9,7 +9,7 @@
 // and <show state>. Each game is written beside the shipped ones so that
 // its schema path resolves, and loaded with Xerces (full validation) and
 // TinyXml2 (the built-in validator). Frames are played with
-// Game::updateObjects(); nothing needs a window.
+// Game::updateObjects(xge::kSixtieth); nothing needs a window.
 
 #include "scratch.h"
 #include "play/executor.h"
@@ -99,7 +99,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
 		}
 
 		bool has(const std::string& name)

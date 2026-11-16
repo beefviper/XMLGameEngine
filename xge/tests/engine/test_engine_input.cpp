@@ -209,7 +209,7 @@ TEST_CASE("keys read by pump() wait for the next step", "[engine_input]")
 	engine.pump();
 	CHECK(game.getCurrentState().name != "playing");
 
-	engine.step();
+	engine.step(xge::kSixtieth);
 	CHECK(game.getCurrentState().name == "playing");
 }
 
@@ -278,12 +278,12 @@ TEST_CASE("Pac-Man sets off left as READY! ends, or the way a key held through i
 		Engine engine(game, std::make_unique<NullWindow>());
 		tap(engine, KeyCode::Space); // title -> playing, under READY!
 		if (holdRight) { engine.handleKeyPressed(KeyCode::D); }
-		engine.step();
+		engine.step(xge::kSixtieth);
 		CHECK(game.getCurrentState().name == "ready");
 		const float start = game.getObject("playing.pacman").position.x;
-		for (int frame = 0; frame < 300 && game.getCurrentState().name != "playing"; ++frame) { engine.step(); }
+		for (int frame = 0; frame < 300 && game.getCurrentState().name != "playing"; ++frame) { engine.step(xge::kSixtieth); }
 		CHECK(game.getCurrentState().name == "playing");
-		for (int frame = 0; frame < 10; ++frame) { engine.step(); }
+		for (int frame = 0; frame < 10; ++frame) { engine.step(xge::kSixtieth); }
 		return game.getObject("playing.pacman").position.x - start;
 	};
 

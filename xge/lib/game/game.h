@@ -53,7 +53,8 @@ namespace xge
 		// out as C++ (a generated one) builds without any XML library.
 		explicit Game(const std::string& file);
 
-		void updateObjects(void);
+		// Plays one step of `seconds` (playOneFrame).
+		void updateObjects(float seconds);
 
 		// A computer's <think> searches on a thread of its own, so the game
 		// goes on (drawn, heard) while it thinks; off, it searches in the
@@ -295,6 +296,12 @@ namespace xge
 		// variables. Each line starts with `indent`. games/xgedump.xsd is its
 		// schema.
 		void describe(std::ostream& out, unsigned long frame, const std::string& indent = "");
+
+		// A step of `seconds` in the units the game's numbers are written in:
+		// seconds for a <game time="seconds">, sixtieths of a second for
+		// one without, whose numbers are per frame at 60. Temporary, while
+		// the games are moved to per-second numbers.
+		float motionTime(float seconds) const noexcept { return timeInSeconds ? seconds : seconds * 60.0f; }
 
 		// The game's recorded <demo> (RawDemo::recorded false for none).
 		const RawDemo& getDemo(void) const noexcept { return demo; }
@@ -834,10 +841,12 @@ namespace xge
 		unsigned long resets = 0;
 		RawDemo demo;
 		bool demoAsked = false;
+		// <game time="seconds"> (see motionTime).
+		bool timeInSeconds = false;
 
 		// FrameRules: what the game file says, asked by playOneFrame.
 		bool inPlay(const Object& object) override { return isShown(object); }
-		void timers() override { updateTimers(); }
+		void timers(float seconds) override { updateTimers(seconds); }
 		void animationEnded(std::size_t index, std::size_t look) override;
 		void frameCameUp(std::size_t index, std::size_t look, std::size_t picture) override;
 		void followPaths() override { applyPaths(); }
@@ -956,7 +965,7 @@ namespace xge
 		// Counts a frame on every object timer of what is shown and every
 		// timer of the current state, and runs the commands of the ones that
 		// go off (CommandExecutor::executeTimer).
-		void updateTimers(void);
+		void updateTimers(float seconds);
 
 		// One frame off one timer; true when it has gone off.
 		bool tickTimer(Timer& timer, const std::string& where);

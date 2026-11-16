@@ -41,7 +41,7 @@ namespace
 		Object& ball = game.getObject("ball");
 		ball.position = { target.position.x + 14.0f, target.position.y + 2.0f };
 		ball.velocity = { 0.0f, -4.0f };
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 	}
 
 	float status(Game& game, const char* name) { return game.getObject("status").variable.at(name); }
@@ -139,7 +139,7 @@ TEST_CASE("the fourth and the twelfth hit of the paddle make Breakout's ball fas
 	{
 		ball.position = { player.position.x + player.size.x / 2 - 5.0f, player.position.y - 12.0f };
 		ball.velocity = { 0.0f, speeds.empty() ? 4.0f : speeds.back() };
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 		speeds.push_back(speed(game));
 	}
 	CHECK(game.takeSoundRequests().front() == "paddle");
@@ -159,7 +159,7 @@ TEST_CASE("once the ball reaches the top wall, the paddle is half as wide", "[br
 	Object& ball = game.getObject("ball");
 	ball.position = { 300.0f, 4.0f };
 	ball.velocity = { 0.0f, -3.0f };
-	for (int frame = 0; frame < 3; ++frame) { game.updateObjects(); }
+	for (int frame = 0; frame < 3; ++frame) { game.updateObjects(xge::kSixtieth); }
 	CHECK(ball.velocity.y > 0.0f);
 	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "wall" });
 	CHECK(game.getObject("player").lookName() == "half");
@@ -179,13 +179,13 @@ TEST_CASE("three balls lost is the end of Breakout", "[breakout]")
 		INFO(lost);
 		ball.position = { 300.0f, 715.0f };
 		ball.velocity = { 0.0f, 4.0f };
-		game.updateObjects();
+		game.updateObjects(xge::kSixtieth);
 		CHECK(status(game, "balls") == 3.0f - static_cast<float>(lost));
 		CHECK(game.takeSoundRequests() == std::vector<std::string>{ "lost" });
 		CHECK(ball.position.y < 400.0f); // served again from the middle
 		if (lost < 3) { CHECK(game.getCurrentState().name == "playing"); }
 	}
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(game.getCurrentState().name == "over");
 	CHECK(game.getObject("over.message").lookName() == "lost");
 }
@@ -197,15 +197,15 @@ TEST_CASE("clearing the first wall builds a second, and clearing that wins", "[b
 	game.getObject("status").variable["score"] = 448.0f;
 
 	clearWall(game);
-	game.updateObjects();
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
+	game.updateObjects(xge::kSixtieth);
 	CHECK(status(game, "walls") == 1.0f);
 	CHECK(bricksIn(game) == 112);
 	CHECK(status(game, "score") == 448.0f); // the score carries on
 	CHECK(game.getCurrentState().name == "playing");
 
 	clearWall(game);
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 	CHECK(game.getCurrentState().name == "over");
 	CHECK(game.getObject("over.message").lookName() == "won");
 }
@@ -224,12 +224,12 @@ TEST_CASE("each state of Breakout has its own objects, and paused and the ending
 	CHECK_FALSE(game.isShown(game.getObject("title")));
 	CHECK(game.isShown(game.getObject("ball")));
 	CHECK(game.isShown(game.getObject("red.5.1")));
-	game.updateObjects();
+	game.updateObjects(xge::kSixtieth);
 
 	// Paused: the ball does not move, and the wall and the paddle are drawn under PAUSED.
 	game.pushState("paused");
 	const Vector2f at = game.getObject("ball").position;
-	for (int frame = 0; frame < 10; ++frame) { game.updateObjects(); }
+	for (int frame = 0; frame < 10; ++frame) { game.updateObjects(xge::kSixtieth); }
 	CHECK(game.getObject("ball").position.x == at.x);
 	CHECK(game.getObject("ball").position.y == at.y);
 	CHECK(game.isStill(game.getObject("ball")));
