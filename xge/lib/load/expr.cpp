@@ -174,7 +174,7 @@ namespace xge
 		checkColor(windowDesc.background, "<window> > <background>");
 
 		nameNumbers(windowDesc, rawVariables, variables, rawObjects);
-		makeObjects(windowDesc, rawObjects, objects);
+		makeObjects(rawObjects, objects);
 		makeRuleTests(rawObjects, objects);
 		makeStates(rawStates, states, objects);
 		makeSounds(rawSounds, sounds);
@@ -299,7 +299,7 @@ namespace xge
 
 	// init's objects: every sprite measured once (its size a name), the
 	// cells of groups laid out, then each object made, groups in lockstep.
-	void game_expr::makeObjects(const WindowDesc& windowDesc, std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
+	void game_expr::makeObjects(std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
 	{
 		// Every object's size as name.width / name.height, so an expression can
 		// place an object by its own size (or another's) the same way it reads
@@ -377,7 +377,7 @@ namespace xge
 			first.animation = firstPassAnimation[rawObject.name];
 			first.animationTurned = firstPassAnimationTurned[rawObject.name];
 			const auto offset = cellOffsets.find(rawObject.name);
-			objects.push_back(onLine(rawObject.line, [&] { return makeObject(rawObject, first, windowDesc, offset == cellOffsets.end() ? Vector2f{} : offset->second, thisLockstep); }));
+			objects.push_back(onLine(rawObject.line, [&] { return makeObject(rawObject, first, offset == cellOffsets.end() ? Vector2f{} : offset->second, thisLockstep); }));
 
 
 			if (rawObject.rawCollisionData.lockstep && rawObject.groupName.empty()) {
@@ -616,7 +616,7 @@ namespace xge
 		}
 	}
 
-	Object game_expr::spawnObject(RawObject& raw, const Object& from, const WindowDesc& windowDesc)
+	Object game_expr::spawnObject(RawObject& raw, const Object& from)
 	{
 		// What its rules and others' read of it, under its own name, as init
 		// makes them known for every object the file has. A name used
@@ -655,7 +655,7 @@ namespace xge
 		if (!from.looks.all.empty()) { first.looks = &from.looks.all; }
 
 		// Its palettes too, wearing the one `from` is (its looks are those).
-		Object made = makeObject(raw, first, windowDesc, from.layout.cellOffset, from.collisionData.lockstep);
+		Object made = makeObject(raw, first, from.layout.cellOffset, from.collisionData.lockstep);
 		made.looks.palettes = from.looks.palettes;
 		made.looks.worn = from.looks.worn;
 		if (made.mirror.on) { made.mirror.flips = from.mirror.flips; }

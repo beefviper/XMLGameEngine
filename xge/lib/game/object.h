@@ -1160,10 +1160,11 @@ namespace xge
 		struct Animation
 		{
 			std::vector<std::shared_ptr<const Bitmap>> bitmaps;
-			int frames{};
-			// Each picture's own time in frames of the game, when a <frame> has
-			// its own <seconds>; empty, every one `frames`.
-			std::vector<int> times;
+			// How long each picture shows, in seconds.
+			float seconds{};
+			// Each picture's own time in seconds, when a <frame> has its own
+			// <seconds>; empty, every one `seconds`.
+			std::vector<float> times;
 			// Each picture's own <hitbox>es, touched with as well as the
 			// object's while it shows; empty when none has any.
 			std::vector<std::vector<Hitbox>> hitboxes;
@@ -1171,7 +1172,9 @@ namespace xge
 			// of an object's one animation (a look's are the look's own); empty
 			// when none has any.
 			std::vector<std::vector<Command>> commands;
-			int tick{};
+			// The seconds the picture `index` has shown so far (a double, so a
+			// slow animation counted in many short steps stays true).
+			double elapsed{};
 			std::size_t index{};
 			// <once />: the animation plays through one time. At its end a look
 			// goes back to `lookBefore` (the last look shown that was not itself
@@ -1202,11 +1205,16 @@ namespace xge
 			return animation.index < animation.hitboxes.size() ? animation.hitboxes[animation.index] : none;
 		}
 
-		// Counts one frame of the game towards the next picture of the
-		// animation, and shows it (marking the visual to be rebuilt) when its
-		// time has come. Does nothing for an object with no animation. True
-		// when an animation that plays once has just ended.
-		bool advanceAnimation();
+		// What one call of advanceAnimation did.
+		enum class AnimationStep { Stayed, Moved, Ended };
+
+		// Spends `owed` seconds on the picture showing. When its time is up
+		// the next is shown (marking the visual to be rebuilt) and what is
+		// left of `owed` stays in it, for the next call to spend there: a
+		// step that passes several pictures calls until it Stayed. Ended: an
+		// animation that plays once has just ended. Stayed for an object
+		// with no animation.
+		AnimationStep advanceAnimation(float& owed);
 
 		// Back to the first picture, from the start of its time.
 		void restartAnimation();
@@ -1219,12 +1227,11 @@ namespace xge
 			return picture < frames.size() && !frames[picture].empty();
 		}
 
-		// A live <seconds> (Follow::Part::Seconds): `frames` frames of the
-		// game for every picture of that animation that has no time of its own
+		// A live <seconds> (Follow::Part::Seconds): `seconds` for every picture of that animation that has no time of its own
 		// (frame npos) or for that one picture, of the look `look` (npos: the
 		// object's one animation), and for the animation playing when it is
-		// that one. A picture already showing keeps the frames it has counted.
-		void timeAnimation(std::size_t look, std::size_t frame, int frames);
+		// that one. A picture already showing keeps the time it has counted.
+		void timeAnimation(std::size_t look, std::size_t frame, float seconds);
 
 		// Coming back into play (fired, released, revealed, spawned) is a
 		// new start: its animation and its timers start over, as at a reset.
@@ -1677,15 +1684,15 @@ namespace xge
 		// looks.shown is the one showing; a reset shows the first again. An object
 		// with one sprite, or one unnamed animation, has none. A look that
 		// moves (a named <animation>) has its pictures in `frames`, each
-		// shown `frameTicks` frames of the game, and `bitmap` the first.
+		// shown `frameSeconds`, and `bitmap` the first.
 		struct Look
 		{
 			std::string name;
 			Picture picture;
 			std::shared_ptr<const Bitmap> bitmap;
 			std::vector<std::shared_ptr<const Bitmap>> frames;
-			int frameTicks{};
-			std::vector<int> frameTimes;   // as Animation::times
+			float frameSeconds{};
+			std::vector<float> frameTimes;   // as Animation::times
 			std::vector<std::vector<Hitbox>> frameHitboxes;   // as Animation::hitboxes
 			std::vector<std::vector<Command>> frameCommands;   // as Animation::commands
 			bool once{ false };            // as Animation::once

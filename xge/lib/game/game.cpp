@@ -280,7 +280,7 @@ namespace xge
 		copy.exists = true;
 		copy.isVisible = true;
 
-		Object made = expr.spawnObject(copy, original, windowDesc);
+		Object made = expr.spawnObject(copy, original);
 
 		// Its rules' tests, made at load for the object it is copied from,
 		// about the copy instead.
@@ -2260,7 +2260,7 @@ namespace xge
 					break;
 				}
 				case Object::Follow::Part::Seconds:
-					object.timeAnimation(each.look, each.frame, std::max(1, static_cast<int>(std::lround(value * static_cast<float>(framesASecond(windowDesc))))));
+					object.timeAnimation(each.look, each.frame, std::max(0.0f, value));
 					break;
 				}
 			}

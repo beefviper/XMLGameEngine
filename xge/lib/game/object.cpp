@@ -86,13 +86,13 @@ namespace xge
 		drawn.picture = looks.all[index].picture;
 		drawn.bitmap = facingPicture(looks.all[index].bitmap);
 		animation.bitmaps = looks.all[index].frames;
-		animation.frames = looks.all[index].frameTicks;
+		animation.seconds = looks.all[index].frameSeconds;
 		animation.times = looks.all[index].frameTimes;
 		animation.hitboxes = looks.all[index].frameHitboxes;
 		animation.once = looks.all[index].once;
 		animation.stepped = looks.all[index].stepped;
 		animation.done = false;
-		animation.tick = 0;
+		animation.elapsed = 0.0;
 		animation.index = 0;
 		// Turned to the way it faces: its own pictures to turn from now on.
 		if (!looks.all[index].turnables.empty())
@@ -116,7 +116,7 @@ namespace xge
 
 		looks.worn = index;
 		const Palette& worn = looks.palettes[index];
-		const int tick = animation.tick;
+		const double elapsed = animation.elapsed;
 		const std::size_t at = animation.index;
 		if (looks.all.empty())
 		{
@@ -130,7 +130,7 @@ namespace xge
 		}
 		if (!animation.bitmaps.empty())
 		{
-			animation.tick = tick;
+			animation.elapsed = elapsed;
 			animation.index = at % animation.bitmaps.size();
 			showAnimationFrame();
 		}
@@ -1019,15 +1019,27 @@ namespace xge
 		size = pictureSize();
 	}
 
-	bool Object::advanceAnimation()
+	Object::AnimationStep Object::advanceAnimation(float& owed)
 	{
 		// One picture moves on only to end, when it plays once.
-		if (animation.bitmaps.size() < (animation.once ? 1u : 2u) || animation.frames < 1 || animation.done) { return false; }
+		if (animation.bitmaps.size() < (animation.once ? 1u : 2u) || animation.done)
+		{
+			owed = 0.0f;
+			return AnimationStep::Stayed;
+		}
 
-		const int due = animation.times.empty() ? animation.frames : animation.times[animation.index];
-		if (++animation.tick < due) { return false; }
+		const double due = static_cast<double>(animation.times.empty() ? animation.seconds : animation.times[animation.index]);
+		animation.elapsed += static_cast<double>(owed);
+		if (animation.elapsed < due - static_cast<double>(kTimeSlack))
+		{
+			owed = 0.0f;
+			return AnimationStep::Stayed;
+		}
 
-		animation.tick = 0;
+		// Its time is up: what the step had beyond it goes to the next. A
+		// time of 0 or less (a live one reading 0) is a picture a step.
+		owed = due > 0.0 ? static_cast<float>(std::max(0.0, animation.elapsed - due)) : 0.0f;
+		animation.elapsed = 0.0;
 		if (animation.once && animation.index + 1 == animation.bitmaps.size())
 		{
 			// Played through: a look goes back to the one before, an
@@ -1035,33 +1047,33 @@ namespace xge
 			const std::size_t next = looks.all.empty() ? 0 : looks.all[looks.shown].thenLook.value_or(animation.lookBefore);
 			if (!looks.all.empty() && next != looks.shown && next < looks.all.size()) { showLook(next); }
 			else { animation.done = true; }
-			return true;
+			return AnimationStep::Ended;
 		}
 		animation.index = (animation.index + 1) % animation.bitmaps.size();
 		showAnimationFrame();
-		return false;
+		return AnimationStep::Moved;
 	}
 
-	void Object::timeAnimation(std::size_t look, std::size_t frame, int frames)
+	void Object::timeAnimation(std::size_t look, std::size_t frame, float seconds)
 	{
-		const auto time = [&](int& every, std::vector<int>& times)
+		const auto time = [&](float& every, std::vector<float>& times)
 		{
-			if (frame == std::string::npos) { every = frames; }
-			else if (frame < times.size()) { times[frame] = frames; }
+			if (frame == std::string::npos) { every = seconds; }
+			else if (frame < times.size()) { times[frame] = seconds; }
 		};
 		if (look == std::string::npos)
 		{
-			time(animation.frames, animation.times);
+			time(animation.seconds, animation.times);
 			return;
 		}
 		if (look >= looks.all.size()) { return; }
-		time(looks.all[look].frameTicks, looks.all[look].frameTimes);
-		if (looks.shown == look) { time(animation.frames, animation.times); }
+		time(looks.all[look].frameSeconds, looks.all[look].frameTimes);
+		if (looks.shown == look) { time(animation.seconds, animation.times); }
 	}
 
 	void Object::restartAnimation()
 	{
-		animation.tick = 0;
+		animation.elapsed = 0.0;
 		animation.since = 0;
 		animation.share = 0.0f;
 		animation.shareBefore = 0.0f;

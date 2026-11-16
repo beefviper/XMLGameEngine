@@ -184,7 +184,7 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
 
 - `<seconds>` is how long each picture shows (above 0); each `<frame>` picks a sprite. At least two frames, all pictures of one size; an unnamed animation shows every sprite.
 - **A frame's own time:** `<frame sprite="closed"><seconds>0.5</seconds></frame>` shows that picture that long; the others keep the animation's `<seconds>`. Cells cut from a sheet take the animation's.
-- **A live time:** `<seconds update="live">fleet.pace</seconds>` (the animation's or a frame's) is worked out every frame from what it reads, as a [live number](format.md#live-numbers-of-an-object) is, so the pictures change faster as the number falls. A picture already showing keeps the frames it has counted; one that reads 0 or less shows for one frame.
+- **A live time:** `<seconds update="live">fleet.pace</seconds>` (the animation's or a frame's) is worked out every frame from what it reads, as a [live number](format.md#live-numbers-of-an-object) is, so the pictures change faster as the number falls. A picture already showing keeps the time it has counted; one that reads 0 or less shows for one step.
 - **A frame's own [hitboxes](collisions.md#how-a-touch-is-found):** `<hitbox>`es after its `<seconds>` touch only while it shows, as well as the object's own: a jab's fist.
 
   ```xml
@@ -198,7 +198,7 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
     <frame sprite="guard" />
   </animation>
   ```
-- **A frame that does something:** commands after a frame's `<seconds>` and `<hitbox>`es run each time the animation moves on to that picture, as an object's timer's do (not when it first shows, at the start or a `<become>`): a march's note on each step, a footstep.
+- **A frame that does something:** commands after a frame's `<seconds>` and `<hitbox>`es run each time the animation moves on to that picture, as an object's timer's do (not when it first shows, at the start or a `<become>`): a march's note on each step, a footstep. A long step that passes several pictures runs each one's commands in turn, and a once animation's `<then>` once.
 
   ```xml
   <frame sprite="a"><play sound="march1" /></frame>

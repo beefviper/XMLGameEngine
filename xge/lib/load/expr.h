@@ -75,14 +75,14 @@ namespace xge
 
 		// One object, made from what the file says of it (after init's
 		// first pass, or for a copy spawned while the game runs).
-		Object makeObject(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, Vector2f cellOffset, int lockstep);
+		Object makeObject(RawObject& rawObject, const FirstPass& first, Vector2f cellOffset, int lockstep);
 
 		// makeObject's looks: each named <sprite> or <animation> made, the first the
 		// very picture it starts with, and where each once look goes when it ends.
-		std::vector<Object::Look> buildLooks(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, const Picture& picture, const std::string& where);
+		std::vector<Object::Look> buildLooks(RawObject& rawObject, const FirstPass& first, const Picture& picture, const std::string& where);
 		// makeObject's picture: the sprite it starts as, its animation, and a
 		// text's live pieces.
-		void buildSprite(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, const Picture& picture, int animationFrames, Object& object, const std::string& where);
+		void buildSprite(RawObject& rawObject, const FirstPass& first, const Picture& picture, float animationSeconds, Object& object, const std::string& where);
 		// makeObject's names: its group, class and owners, and whether it is
 		// drawn, seen and there.
 		void buildNames(RawObject& rawObject, Object& object);
@@ -114,7 +114,7 @@ namespace xge
 		void nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables, std::vector<RawObject>& rawObjects);
 		// init's objects: every sprite measured once (its size a name), the
 		// cells of groups laid out, then each object made, groups in lockstep.
-		void makeObjects(const WindowDesc& windowDesc, std::vector<RawObject>& rawObjects, std::vector<Object>& objects);
+		void makeObjects(std::vector<RawObject>& rawObjects, std::vector<Object>& objects);
 		// init's tests on collision rules, edge guards and actions' conditions,
 		// once every object they can name is made.
 		void makeRuleTests(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects);
@@ -144,7 +144,7 @@ namespace xge
 		// the file says of `from`, under the copy's name): its names
 		// made known to the expressions (its variables, where it is, its
 		// size) and the object made, its pictures shared with `from`'s.
-		Object spawnObject(RawObject& raw, const Object& from, const WindowDesc& windowDesc);
+		Object spawnObject(RawObject& raw, const Object& from);
 
 		void init(const WindowDesc& windowDesc,
 			const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
@@ -304,15 +304,15 @@ namespace xge
 		std::vector<std::shared_ptr<const Bitmap>> buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
 			std::vector<std::shared_ptr<const Turnable>>* turnables = nullptr);
 
-		// How many frames of the game each picture of the animation is shown
-		// for: its <interval> in seconds times framesASecond, at least 1.
-		// Throws std::runtime_error for an interval that is not above 0.
-		int animationFramesOf(const RawValue& interval, const WindowDesc& windowDesc, const std::string& where);
+		// How many seconds each picture of the animation is shown for: its
+		// <interval> (0 for a live one, until it is worked out). Throws
+		// std::runtime_error for an interval that is not above 0.
+		float animationSecondsOf(const RawValue& interval, const std::string& where);
 
-		// Each picture's own time in frames of the game: a frame's own
-		// <seconds> as animationFramesOf counts them, any other `fallback`.
-		// Empty when no frame has its own.
-		std::vector<int> animationTimesOf(const std::vector<RawValue>& times, int fallback, const WindowDesc& windowDesc, const std::string& where);
+		// Each picture's own time in seconds: a frame's own <seconds> as
+		// animationSecondsOf reads them, any other `fallback`. Empty when no
+		// frame has its own.
+		std::vector<float> animationTimesOf(const std::vector<RawValue>& times, float fallback, const std::string& where);
 		// Each frame's own commands, made (empty when no frame has any).
 		std::vector<std::vector<Command>> frameCommandsOf(const std::vector<std::vector<RawCommand>>& frames, const std::string& where);
 

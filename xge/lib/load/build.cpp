@@ -18,7 +18,7 @@
 
 namespace xge
 {
-	Object game_expr::makeObject(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, Vector2f cellOffset, int thisLockstep)
+	Object game_expr::makeObject(RawObject& rawObject, const FirstPass& first, Vector2f cellOffset, int thisLockstep)
 	{
 		const std::string where = "object '" + rawObject.name + "'";
 
@@ -34,13 +34,13 @@ namespace xge
 		const std::vector<std::string> positionSizeDependencies = sizeDependenciesOf(rawObject);
 
 		// How long each picture of an animation lasts.
-		const int animationFrames = rawObject.hasAnimation ? animationFramesOf(rawObject.animation.interval, windowDesc, where + " > <animation>") : 0;
+		const float animationSeconds = rawObject.hasAnimation ? animationSecondsOf(rawObject.animation.interval, where + " > <animation>") : 0.0f;
 
 		// The object's looks, if it has several sprites and no animation.
-		const std::vector<Object::Look> looks = buildLooks(rawObject, first, windowDesc, picture, where);
+		const std::vector<Object::Look> looks = buildLooks(rawObject, first, picture, where);
 
 		Object object{};
-		buildSprite(rawObject, first, windowDesc, picture, animationFrames, object, where);
+		buildSprite(rawObject, first, picture, animationSeconds, object, where);
 		buildNames(rawObject, object);
 		buildNumbers(rawObject, object, cellOffset, positionSizeDependencies, where);
 		buildMotion(rawObject, object, where);
@@ -64,7 +64,7 @@ namespace xge
 
 	// makeObject's looks: each named <sprite> or <animation> made, the first the
 	// very picture it starts with, and where each once look goes when it ends.
-	std::vector<Object::Look> game_expr::buildLooks(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, const Picture& picture, const std::string& where)
+	std::vector<Object::Look> game_expr::buildLooks(RawObject& rawObject, const FirstPass& first, const Picture& picture, const std::string& where)
 	{
 		std::vector<Object::Look> looks;
 		if (first.looks)
@@ -87,8 +87,8 @@ namespace xge
 					const std::string here = where + " > <animation name=\"" + rawLook.name + "\">";
 					look.turnables.clear();
 					look.frames = buildAnimationBitmaps(rawLook.frames, here, rawObject.hasHeading ? &look.turnables : nullptr);
-					look.frameTicks = animationFramesOf(rawLook.interval, windowDesc, here);
-					look.frameTimes = animationTimesOf(rawLook.times, look.frameTicks, windowDesc, here);
+					look.frameSeconds = animationSecondsOf(rawLook.interval, here);
+					look.frameTimes = animationTimesOf(rawLook.times, look.frameSeconds, here);
 					look.once = rawLook.once;
 					look.stepped = rawLook.stepped;
 					look.then = processCommands(rawLook.thenCommands, here + " > <then>");
@@ -129,7 +129,7 @@ namespace xge
 
 	// makeObject's picture: the sprite it starts as, its animation, and a
 	// text's live pieces.
-	void game_expr::buildSprite(RawObject& rawObject, const FirstPass& first, const WindowDesc& windowDesc, const Picture& picture, int animationFrames, Object& object, const std::string& where)
+	void game_expr::buildSprite(RawObject& rawObject, const FirstPass& first, const Picture& picture, float animationSeconds, Object& object, const std::string& where)
 	{
 		object.drawn.picture = picture;
 		object.drawn.bitmap = first.bitmap;
@@ -139,8 +139,8 @@ namespace xge
 		{
 			object.animation.bitmaps = first.animation;
 			if (!first.animationTurned.empty()) { object.drawn.turnables = first.animationTurned; }
-			object.animation.frames = animationFrames;
-			object.animation.times = animationTimesOf(rawObject.animation.times, animationFrames, windowDesc, where + " > <animation>");
+			object.animation.seconds = animationSeconds;
+			object.animation.times = animationTimesOf(rawObject.animation.times, animationSeconds, where + " > <animation>");
 			object.animation.once = rawObject.animation.once;
 			object.animation.stepped = rawObject.animation.stepped;
 			object.animation.then = processCommands(rawObject.animation.thenCommands, where + " > <animation> > <then>");
@@ -414,7 +414,7 @@ namespace xge
 		{
 			// It starts as a look that moves.
 			object.animation.bitmaps = looks.front().frames;
-			object.animation.frames = looks.front().frameTicks;
+			object.animation.seconds = looks.front().frameSeconds;
 			object.animation.times = looks.front().frameTimes;
 			object.animation.once = looks.front().once;
 			object.animation.stepped = looks.front().stepped;

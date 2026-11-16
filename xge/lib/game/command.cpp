@@ -379,7 +379,7 @@ namespace xge
 
 		if (f.animation.bitmaps.size() > 1)
 		{
-			o << "\tanimation=" << f.animation.bitmaps.size() << " frames, " << f.animation.frames << " game frames each\n";
+			o << "\tanimation=" << f.animation.bitmaps.size() << " frames, " << f.animation.seconds << " seconds each\n";
 		}
 
 		if (f.motion.drag != 0)

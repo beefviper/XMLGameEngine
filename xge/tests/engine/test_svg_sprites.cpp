@@ -424,7 +424,7 @@ TEST_CASE("svg sprites animate like any other pictures, if they are the same siz
 	const Object& thing = game.getObject("thing");
 
 	REQUIRE(thing.animation.bitmaps.size() == 2);
-	CHECK(thing.animation.frames == 30);
+	CHECK(thing.animation.seconds == 0.5f);
 	CHECK(thing.drawn.bitmap == thing.animation.bitmaps[0]);
 	CHECK(isColor(pixelAt(*thing.drawn.bitmap, 0, 0), 255, 0, 0));
 
@@ -533,7 +533,7 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 		const Object& alien = game.getObject(kind.name);
 		REQUIRE(alien.drawn.bitmap);
 		REQUIRE(alien.animation.bitmaps.size() == 3);
-		CHECK(alien.animation.frames == 30);
+		CHECK(alien.animation.seconds == 0.5f);
 
 		for (const auto& picture : alien.animation.bitmaps)
 		{

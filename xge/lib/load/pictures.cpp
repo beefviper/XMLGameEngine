@@ -495,27 +495,27 @@ namespace xge
 		return flips;
 	}
 
-	int game_expr::animationFramesOf(const RawValue& interval, const WindowDesc& windowDesc, const std::string& where)
+	float game_expr::animationSecondsOf(const RawValue& interval, const std::string& where)
 	{
 		// A live one may read its own object's numbers, not made yet: it is
 		// timed as the game starts, before anything is drawn (Game::follow).
-		if (interval.live) { return 1; }
+		if (interval.live) { return 0.0f; }
 
 		const float seconds = evaluate(interval, where + " > <seconds>");
 		if (!(seconds > 0.0f))
 		{
 			throw std::runtime_error(where + " > <seconds> is " + std::to_string(seconds) + "; expected a number of seconds above 0");
 		}
-		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(framesASecond(windowDesc)))));
+		return seconds;
 	}
 
-	std::vector<int> game_expr::animationTimesOf(const std::vector<RawValue>& times, int fallback, const WindowDesc& windowDesc, const std::string& where)
+	std::vector<float> game_expr::animationTimesOf(const std::vector<RawValue>& times, float fallback, const std::string& where)
 	{
-		std::vector<int> frames;
+		std::vector<float> frames;
 		for (std::size_t i = 0; i < times.size(); ++i)
 		{
 			frames.push_back(frameTimeGiven(times[i])
-				? animationFramesOf(times[i], windowDesc, where + " > <frame> " + std::to_string(i + 1))
+				? animationSecondsOf(times[i], where + " > <frame> " + std::to_string(i + 1))
 				: fallback);
 		}
 		return frames;

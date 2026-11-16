@@ -49,3 +49,34 @@ TEST_CASE("a timer goes off as often as the time passed owes it, however the tim
 	agree(ticks, 0.0);
 	CHECK(ticks.front().value == 8.0);
 }
+
+TEST_CASE("an animation passes the same pictures, and runs their commands as often, however the time is cut into steps", "[steps][animation]")
+{
+	const auto sprite = [](const std::string& name) { return "<sprite name=\"" + name + "\"><bitmap><row>**</row><row>**</row></bitmap></sprite>"; };
+	const std::string sprites = sprite("a") + sprite("b") + sprite("c");
+	// Round and round, a twentieth of a second a picture: c comes up at 0.1,
+	// 0.25, 0.4 ... seconds, 13 times in 2 seconds.
+	const std::string spinner = "<object name=\"spinner\">" + sprites +
+		"<animation><seconds>0.05</seconds><frame sprite=\"a\" /><frame sprite=\"b\" />"
+		"<frame sprite=\"c\"><inc variable=\"self.n\" /></frame></animation>"
+		"<position><x>0</x><y>0</y></position><collisions><off /></collisions>"
+		"<variables><variable name=\"n\">0</variable></variables></object>";
+	// Once through, its <then> once.
+	const std::string flash = "<object name=\"flash\">" + sprites +
+		"<animation><seconds>0.1</seconds><once /><frame sprite=\"a\" /><frame sprite=\"b\" /><frame sprite=\"c\" />"
+		"<then><inc variable=\"self.ended\" /></then></animation>"
+		"<position><x>20</x><y>0</y></position><collisions><off /></collisions>"
+		"<variables><variable name=\"ended\">0</variable></variables></object>";
+	const std::string game = secondsGame(spinner + flash);
+
+	const auto came = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("spinner").variable.at("n")); });
+	agree(came, 0.0);
+	CHECK(came.front().value == 13.0);
+
+	const auto picture = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("spinner").animation.index); });
+	agree(picture, 0.0);
+
+	const auto ended = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("flash").variable.at("ended")); });
+	agree(ended, 0.0);
+	CHECK(ended.front().value == 1.0);
+}

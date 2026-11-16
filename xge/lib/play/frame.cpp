@@ -1025,10 +1025,9 @@ namespace xge
 
 	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds)
 	{
-		// A picture that changes with time (an <animation>) counts this frame
+		// A picture that changes with time (an <animation>) counts this step
 		// whether or not the object is moving; only what is in play does, so a
 		// pause or a menu holds it where it was.
-		const float second = 1.0f / static_cast<float>(framesASecond(window));
 		// Those whose once animation ended, by index and the look it was:
 		// their <then> may spawn, and the list of objects grow.
 		std::vector<std::pair<std::size_t, std::size_t>> ended;
@@ -1041,9 +1040,18 @@ namespace xge
 			// Just loaded or reset: where it is now is its place, not a move.
 			if (object.placed) { object.remember(); }
 
-			const std::size_t look = object.looks.shown;
-			const std::size_t picture = object.animation.index;
-			if (!object.animation.bitmaps.empty() && rules.inPlay(object) && object.advanceAnimation()) { ended.emplace_back(i, look); }
+			// Each picture the step passes, its commands in turn; an
+			// animation that ends stops there, its <then> run once.
+			bool passed = false;
+			for (float owed = seconds; owed > kTimeSlack && !object.animation.bitmaps.empty() && rules.inPlay(object);)
+			{
+				const std::size_t was = object.looks.shown;
+				const Object::AnimationStep step = object.advanceAnimation(owed);
+				if (step == Object::AnimationStep::Stayed) { break; }
+				passed = true;
+				if (step == Object::AnimationStep::Ended) { ended.emplace_back(i, was); break; }
+				if (object.hasFrameCommands(was, object.animation.index)) { cameUp.push_back({ i, was, object.animation.index }); }
+			}
 			// A stepped one moves this frame only if its picture changed: by
 			// every frame's worth since it last did.
 			if (object.animation.stepped && rules.inPlay(object))
@@ -1051,17 +1059,13 @@ namespace xge
 				++object.animation.since;
 				object.animation.shareBefore = object.animation.share;
 				object.animation.share = 0.0f;
-				if (object.looks.shown != look || object.animation.index != picture)
+				if (passed)
 				{
 					object.animation.share = static_cast<float>(object.animation.since);
 					object.animation.since = 0;
 				}
 			}
-			if (object.looks.shown == look && object.animation.index != picture && object.hasFrameCommands(look, object.animation.index))
-			{
-				cameUp.push_back({ i, look, object.animation.index });
-			}
-			if (object.blink > 0.0f && rules.inPlay(object)) { object.blink = std::max(0.0f, object.blink - second); }
+			if (object.blink > 0.0f && rules.inPlay(object)) { object.blink = std::max(0.0f, object.blink - seconds); }
 		}
 		for (const auto& [index, look] : ended) { rules.animationEnded(index, look); }
 		for (const auto& [index, look, picture] : cameUp) { rules.frameCameUp(index, look, picture); }
