@@ -143,7 +143,7 @@ namespace xge
 		}
 	}
 
-	bool knock(Object& object, Object& other, const Touch& touch, float bounce)
+	bool knock(Object& object, Object& other, const Touch& touch, float bounce, float sixtieth)
 	{
 		// Each one's speed at the point they touch: a thing turning about
 		// its pivot (a flipper swinging) moves faster the further out the
@@ -152,8 +152,8 @@ namespace xge
 		const Vector2f objectAt = object.velocityAt(touch.point);
 		const Vector2f otherAt = other.velocityAt(touch.point);
 		// Against one that does not move, the one that does settles on it.
-		const float settle = other.motion.mass <= 0.0f ? settleSpeed(object.acceleration, way)
-			: object.motion.mass <= 0.0f ? settleSpeed(other.acceleration, way * -1.0f) : 0.0f;
+		const float settle = other.motion.mass <= 0.0f ? settleSpeed(object.acceleration, way, sixtieth)
+			: object.motion.mass <= 0.0f ? settleSpeed(other.acceleration, way * -1.0f, sixtieth) : 0.0f;
 		const std::optional<Knocked> after = knockedApart(objectAt, object.motion.mass, otherAt, other.motion.mass, way, bounce, settle);
 
 		// Gone into each other: apart again, each by its share, whether or not
@@ -183,13 +183,13 @@ namespace xge
 		return true;
 	}
 
-	void bounce(Object& object, const Object& other, const Touch& touch, float share)
+	void bounce(Object& object, const Object& other, const Touch& touch, float share, float sixtieth)
 	{
 		// The way from the object into the other, a surface standing still:
 		// only the object's speed along that way changes. (A surface that
 		// moves and lends its speed is a <knock>.)
 		const Vector2f way = touch.normal * -1.0f;
-		const float settle = settleSpeed(object.acceleration, way);
+		const float settle = settleSpeed(object.acceleration, way, sixtieth);
 		const Vector2f was = object.velocity;
 		if (const std::optional<Knocked> after = knockedApart(object.velocity, 1.0f, Vector2f{}, 0.0f, way, share, settle))
 		{

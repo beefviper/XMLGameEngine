@@ -44,10 +44,10 @@ TEST_CASE("what has an <altitude> falls by its fall, stops at the ground, and bo
 
 	play.frames(1);
 	CHECK(thing.rise == Approx(-1));
-	CHECK(thing.altitude == Approx(49));
+	CHECK(thing.altitude == Approx(49.5)); // a fall of 1 a frame: half of it the first frame
 	CHECK(thing.position.y == Approx(200)); // where it is over the ground does not change
 
-	// 50 = n(n+1)/2 at n = 9.5: down on the tenth frame, coming down at 10,
+	// 50 = n n / 2 at n = 10: down on the tenth frame, coming down at 10,
 	// and back up at 5.
 	play.frames(9);
 	CHECK(thing.altitude == Approx(0));
@@ -61,7 +61,7 @@ TEST_CASE("what has an <altitude> falls by its fall, stops at the ground, and bo
 	// <set> sends it up again, and a reset puts it back where it started.
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK(thing.altitude == Approx(9));
+	CHECK(thing.altitude == Approx(9.5));
 	play.game.resetObject("ball");
 	CHECK(thing.altitude == Approx(50));
 	CHECK(thing.rise == Approx(0));
@@ -84,7 +84,7 @@ TEST_CASE("it is drawn raised by its altitude, and its <shadow> lies under it on
 	CHECK(seen.drawn[0].second.x == Approx(101));
 	CHECK(seen.drawn[0].second.y == Approx(201));
 	CHECK(seen.drawn[1].first == "playing.ball");
-	CHECK(seen.drawn[1].second.y == Approx(200 - 49));
+	CHECK(seen.drawn[1].second.y == Approx(200 - 49.5));
 	CHECK(game.getObject("ball").position.y == Approx(200));
 
 	// Out of play, and so is its shadow.

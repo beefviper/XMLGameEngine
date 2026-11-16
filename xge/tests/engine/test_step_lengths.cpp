@@ -159,3 +159,55 @@ TEST_CASE("a mover at a steady velocity is in the same place, however the time i
 	agree(frames, 2.0);
 	CHECK(frames.front().value == Approx(340.0).margin(2.0));
 }
+
+TEST_CASE("a thing dropped from rest falls as far, however the time is cut into steps", "[steps][acceleration]")
+{
+	// 100 pixels a second, each second: 200 pixels in 2 seconds.
+	const std::string game = secondsGame(box("stone", 100, 10, "<acceleration><x>0</x><y>100</y></acceleration>"));
+	const auto fallen = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("stone").position.y); });
+	agree(fallen, 2.0);
+	CHECK(fallen.front().value == Approx(210.0).margin(1.0));
+	const auto speed = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("stone").velocity.y); });
+	agree(speed, 4.0);
+	CHECK(speed.front().value == Approx(200.0).margin(1.0));
+}
+
+TEST_CASE("a <jump> reaches the same height and lands at the same time, however the time is cut into steps", "[steps][jump]")
+{
+	// A pull of 1,000 pixels a second each second, a jump of 50 pixels, off
+	// a floor at 300.
+	const std::string jumper = "<object name=\"jumper\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>100</x><y>290</y></position><acceleration><x>0</x><y>1000</y></acceleration>"
+		"<collisions><collision object=\"floor\"><land /></collision></collisions>"
+		"<actions><action name=\"up\"><jump>50</jump></action></actions></object>";
+	const std::string floor = "<object name=\"floor\"><sprite><rectangle><width>400</width><height>20</height></rectangle></sprite>"
+		"<position><x>0</x><y>300</y></position><collisions></collisions></object>";
+	const std::string game = secondsGame(jumper + floor);
+	// Stood on the floor a moment, then up.
+	const auto jump = [](Played& play)
+	{
+		play.engine.step(0.05f);
+		xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "jumper", "up" }, true);
+	};
+	// Its height when the top is due: v / a = sqrt(2 h / a), 0.316 seconds.
+	const auto top = atEveryStepLengthOf(game, 0.316, [](Played& play) { return static_cast<double>(play.get("jumper").position.y); }, jump);
+	agree(top, 3.0);
+	CHECK(top.front().value == Approx(240.0).margin(3.0));
+	// Down again after twice that.
+	const auto landed = atEveryStepLengthOf(game, 0.8, [](Played& play) { return static_cast<double>(play.get("jumper").position.y); }, jump);
+	agree(landed, 1.0);
+	CHECK(landed.front().value == Approx(290.0).margin(1.0));
+}
+
+TEST_CASE("a turn held faces the same way, however the time is cut into steps", "[steps][turn]")
+{
+	// 45 degrees a second, held for 2 seconds.
+	const std::string ship = "<object name=\"ship\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>100</x><y>100</y></position><heading>0</heading><collisions><off /></collisions>"
+		"<actions><action name=\"right\"><turn direction=\"clockwise\">45</turn></action></actions></object>";
+	const std::string game = secondsGame(ship);
+	const auto hold = [](Played& play) { xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "ship", "right" }, true); };
+	const auto facing = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("ship").heading); }, hold);
+	agree(facing, 2.0);
+	CHECK(facing.front().value == Approx(90.0).margin(2.0));
+}

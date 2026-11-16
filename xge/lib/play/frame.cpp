@@ -301,10 +301,14 @@ namespace xge
 		// once a frame, before it is moved. Thrust that burns a variable takes
 		// 1 off it every frame it is on, and does nothing while the variable
 		// is at 0 or below: a ship out of fuel still falls.
-		void applyAcceleration(std::vector<Object>& objects, FrameRules& rules, float seconds)
+		void applyAcceleration(std::vector<Object>& objects, FrameRules& rules, const StepTime& step)
 		{
+			const float t = step.t;
+			const float seconds = step.seconds;
 			for (auto& object : objects)
 			{
+				object.motion.gained = {};
+
 				// Nothing to do for most things (a wall): looked at before
 				// asking whether it is in play.
 				const bool thrusting = object.drive.thrust[0] != 0.0f || object.drive.thrust[1] != 0.0f
@@ -336,6 +340,7 @@ namespace xge
 					if (object.rest.resting) { continue; }
 				}
 
+				const Vector2f was = object.velocity;
 				Vector2f change = object.acceleration;
 
 				// A thruster with no fuel does nothing.
@@ -368,7 +373,7 @@ namespace xge
 						- object.drive.turn[static_cast<std::size_t>(Direction::Left)];
 					if (turn != 0.0f)
 					{
-						object.heading = std::fmod(object.heading + turn, 360.0f);
+						object.heading = std::fmod(object.heading + turn * t, 360.0f);
 						if (object.heading < 0.0f) { object.heading += 360.0f; }
 						object.showHeading();
 					}
@@ -385,8 +390,8 @@ namespace xge
 					object.turning.spin = 0.0f;
 					if (object.swing.seconds > 0.0f)
 					{
-						const float step = seconds / object.swing.seconds;
-						const float done = std::clamp(object.swing.done + (object.swing.held ? step : -step), 0.0f, 1.0f);
+						const float stroke = seconds / object.swing.seconds;
+						const float done = std::clamp(object.swing.done + (object.swing.held ? stroke : -stroke), 0.0f, 1.0f);
 						if (done != object.swing.done)
 						{
 							object.swing.done = done;
@@ -409,13 +414,14 @@ namespace xge
 					}
 				}
 
-				object.velocity += change;
+				object.velocity += change * t;
 
 				// Drag: what is left of the speed after this frame.
 				if (object.surface.groundDrag != 0.0f)
 				{
 					object.velocity *= 1.0f - object.surface.groundDrag;
 				}
+				object.motion.gained = object.velocity - was;
 			}
 		}
 
@@ -535,7 +541,7 @@ namespace xge
 		// <pull>: toward the middle of the nearest of each, that much speed a
 		// frame. <seek>: the way it goes turned toward the nearest of its
 		// target, and its heading with it.
-		void pullAndSeek(std::vector<Object>& objects, FrameRules& rules)
+		void pullAndSeek(std::vector<Object>& objects, FrameRules& rules, float t)
 		{
 			const auto inPlay = [&](const Object& other) { return rules.inPlay(other); };
 			for (auto& object : objects)
@@ -549,7 +555,8 @@ namespace xge
 					if (!toward) { continue; }
 					if (const auto way = wayTo(middle, middleOf(*toward)))
 					{
-						object.velocity = object.velocity + *way * strength;
+						object.velocity = object.velocity + *way * (strength * t);
+						object.motion.gained += *way * (strength * t);
 					}
 				}
 
@@ -557,7 +564,7 @@ namespace xge
 				const Object* target = nearestInPlay(objects, object, object.pull.seek, inPlay);
 				if (!target) { continue; }
 				const Vector2f before = object.velocity;
-				object.velocity = turnedToward(object.velocity, middleOf(*target) - middle, object.pull.seekRate);
+				object.velocity = turnedToward(object.velocity, middleOf(*target) - middle, object.pull.seekRate * t);
 				if (object.turning.hasHeading && (object.velocity.x != before.x || object.velocity.y != before.y))
 				{
 					object.heading = headingOf(object.velocity);
@@ -570,19 +577,23 @@ namespace xge
 		// fall each frame; at the ground it stops there, sent back up with
 		// its bounce's share of how fast it came down (none, once that is
 		// less than a frame's fall, so it comes to rest).
-		void riseAndFall(std::vector<Object>& objects, FrameRules& rules)
+		void riseAndFall(std::vector<Object>& objects, FrameRules& rules, const StepTime& step)
 		{
+			const float t = step.t;
 			for (auto& object : objects)
 			{
 				if (!object.aloft.has || !rules.inPlay(object)) { continue; }
-				object.rise -= object.aloft.fall;
-				object.altitude += object.rise;
+				// A constant fall: the altitude goes by the mean of the rise
+				// before and after.
+				const float fall = object.aloft.fall * t;
+				object.altitude += (object.rise - fall * 0.5f) * t;
+				object.rise -= fall;
 				if (object.altitude > 0.0f) { continue; }
 				object.altitude = 0.0f;
 				if (object.rise < 0.0f)
 				{
 					const float up = -object.rise * object.aloft.bounce;
-					object.rise = up > object.aloft.fall ? up : 0.0f;
+					object.rise = up > object.aloft.fall * step.sixtieth ? up : 0.0f;
 				}
 			}
 		}
@@ -806,7 +817,7 @@ namespace xge
 				{
 					if (playing[i])
 					{
-						all[i].position = origin[i] + motionOf(all[i], t) * (total - since[i]);
+						all[i].position = origin[i] + sweptMotion(all[i], t) * (total - since[i]);
 						if (spinning(i))
 						{
 							all[i].pivotDegrees = originDegrees[i];
@@ -830,8 +841,8 @@ namespace xge
 					return {};
 				}
 
-				const Vector2f moveA = motionOf(a, t) * left;
-				const Vector2f moveB = motionOf(b, t) * left;
+				const Vector2f moveA = sweptMotion(a, t) * left;
+				const Vector2f moveB = sweptMotion(b, t) * left;
 				if (!boxesMeet(reachOf(pair.i, moveA), reachOf(pair.j, moveB)))
 				{
 					return { std::nullopt, true };
@@ -852,7 +863,7 @@ namespace xge
 
 				for (std::size_t i = 0; i < all.size(); ++i)
 				{
-					before[i] = { all[i].position, motionOf(all[i], t), all[i].size, all[i].heading };
+					before[i] = { all[i].position, sweptMotion(all[i], t), all[i].size, all[i].heading };
 				}
 
 				rules.touched(*pair.first, *pair.second, contact);
@@ -864,8 +875,11 @@ namespace xge
 					if (turned) { all[i].turning.spin = 0.0f; }
 
 					const char nowPlaying = rules.inPlay(all[i]) ? 1 : 0;
-					if (turned || all[i].position != before[i].position || motionOf(all[i], t) != before[i].motion || nowPlaying != playing[i])
+					if (turned || all[i].position != before[i].position || sweptMotion(all[i], t) != before[i].motion || nowPlaying != playing[i])
 					{
+						// Moving some other way now: at its velocity, its pull's
+						// share of the step spent.
+						all[i].motion.gained = {};
 						origin[i] = all[i].position;
 						originDegrees[i] = all[i].pivotDegrees;
 						since[i] = played;
@@ -1093,11 +1107,11 @@ namespace xge
 
 		applyGrip(objects, rules);
 
-		applyAcceleration(objects, rules, seconds);
+		applyAcceleration(objects, rules, step);
 
-		pullAndSeek(objects, rules);
+		pullAndSeek(objects, rules, step.t);
 
-		riseAndFall(objects, rules);
+		riseAndFall(objects, rules, step);
 
 		// Screen-edge checks: independent per object, order doesn't matter.
 		for (auto& object : objects)

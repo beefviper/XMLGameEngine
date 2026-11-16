@@ -59,13 +59,23 @@ namespace xge
 		return (object.animation.stepped ? object.velocity * object.animation.share : object.velocity * t) + object.riding * t;
 	}
 
+	// How far the sweep moves it in a step `t` long: motionOf, less half of
+	// what its pull gained it this step (Object::Motion::gained), so that a
+	// constant pull moves it v t + a t t / 2 however the time is cut.
+	inline Vector2f sweptMotion(const Object& object, float t) noexcept
+	{
+		if (object.animation.stepped) { return motionOf(object, t); }
+		return motionOf(object, t) - object.motion.gained * (t * 0.5f);
+	}
+
 	// <bounce />: off what it touched, as off a surface standing still:
 	// mirrored about the touch's normal, keeping `share` of the speed it
 	// came in at; one already going away keeps on. A box's side faces
 	// straight out, so off a box this is the plain flip.
 	// With <friction>, it rubs along the surface and may come to rest on it
 	// (see Object::Rest).
-	void bounce(Object& object, const Object& other, const Touch& touch, float share);
+	// `sixtieth`: a sixtieth of a second in the game's units (Game::motionTime).
+	void bounce(Object& object, const Object& other, const Touch& touch, float share, float sixtieth);
 
 	// <bounce /> off a screen edge, which faces straight in.
 	void bounceOffEdge(Object& object, Edge edge, float share);
@@ -78,7 +88,7 @@ namespace xge
 	// knockedApart); `touch` is the object's own view of it. Two that went
 	// into each other are put apart along the touch, the lighter moved
 	// more. Whether they were coming together.
-	bool knock(Object& object, Object& other, const Touch& touch, float bounce);
+	bool knock(Object& object, Object& other, const Touch& touch, float bounce, float sixtieth);
 
 	// <hole>: clears the pixels of the object's own picture within `radius`
 	// of where `other` struck it - the solid pixel nearest the middle of

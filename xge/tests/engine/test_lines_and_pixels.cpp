@@ -561,11 +561,11 @@ TEST_CASE("an object's acceleration changes its velocity every frame, before it 
 
 	flight.frames(1);
 	CHECK_THAT(flight.ship().velocity.y, WithinAbs(0.5f, 1e-5f));
-	CHECK_THAT(flight.ship().position.y, WithinAbs(0.5f, 1e-5f)); // the new velocity is what moved it
+	CHECK_THAT(flight.ship().position.y, WithinAbs(0.25f, 1e-5f)); // a t t / 2, the mean of its velocity before and after
 
 	flight.frames(3);
 	CHECK_THAT(flight.ship().velocity.y, WithinAbs(2.0f, 1e-5f));
-	CHECK_THAT(flight.ship().position.y, WithinAbs(0.5f + 1.0f + 1.5f + 2.0f, 1e-4f));
+	CHECK_THAT(flight.ship().position.y, WithinAbs(0.5f * 4.0f * 4.0f / 2.0f, 1e-4f));
 }
 
 TEST_CASE("only what is shown is pulled", "[acceleration]")

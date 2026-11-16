@@ -543,9 +543,9 @@ namespace xge
 		return velocity;
 	}
 
-	float settleSpeed(const Vector2f& acceleration, const Vector2f& way) noexcept
+	float settleSpeed(const Vector2f& acceleration, const Vector2f& way, float sixtieth) noexcept
 	{
-		return 4.0f * std::max(0.0f, acceleration.x * way.x + acceleration.y * way.y);
+		return 4.0f * sixtieth * std::max(0.0f, acceleration.x * way.x + acceleration.y * way.y);
 	}
 
 	std::optional<Knocked> knockedApart(const Vector2f& first, float firstMass, const Vector2f& second, float secondMass, const Vector2f& way, float bounce, float settle) noexcept

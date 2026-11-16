@@ -38,7 +38,7 @@ namespace xge
 	{
 		if (other.motion.mass > 0.0f)
 		{
-			xge::knock(object, other, touch, bounce);
+			xge::knock(object, other, touch, bounce, executor.game.motionTime(kSixtieth));
 			return;
 		}
 

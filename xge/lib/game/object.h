@@ -1812,6 +1812,12 @@ namespace xge
 			// <mass>: how hard it is to knock (see CmdKnock). 0, when it has
 			// none, is not knocked at all: a wall, a floor.
 			float mass{};
+
+			// What its pull, thrust and drag changed its velocity by this
+			// step, so the step's move is made at the mean of its velocity
+			// before and after: a constant pull's v t + a t t / 2 (sweptMotion).
+			// None again once a touch changes how it moves.
+			Vector2f gained{};
 		};
 		Motion motion;
 
