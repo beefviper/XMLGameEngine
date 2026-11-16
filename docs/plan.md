@@ -503,6 +503,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
 - **The schema's documentation in an editor (A6), not urgent (the author works mostly from the command line):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.
+- **The six games in seconds (DT5 step 8):** Pong, Asteroids, Mario Bros., Space Invaders, Snake and Pinball, each at 60 and at `--framerate 8` and `240`, should feel as they did before DT5. DT6 waits for this.
 
 ## Known untested
 
