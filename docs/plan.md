@@ -158,8 +158,8 @@ Its own block of work, done before anything else in this file. **Design and reas
 ### DT8. The stand-alone writers
 
 - **Steps.**
-  - [ ] **1. The prototypes (S).** `games/prototypes/pong_min/` and `games/prototypes/pong/`: `frame()` takes the seconds passed, speeds are per second, and each `main.cpp` measures the time between frames. `pong_min.xml` gets `time="seconds"` with them, and the `[vocabulary]` check stops leaving it out. **Check:** their behaviour checks in `xge/tests/written/`.
-  - [ ] **2. `windows-cpp` writes that (S).** `games/generators/windows-cpp/*.xsl` until `xgecli pong_min --generate windows-cpp` writes the prototype again. **Check:** `test_generate.cpp`; `xgetest-generated`.
+  - [x] **1. The prototypes (S).** `games/prototypes/pong_min/` and `games/prototypes/pong/`: `frame()` takes the seconds passed, speeds are per second, and each `main.cpp` measures the time between frames. `pong_min.xml` gets `time="seconds"` with them, and the `[vocabulary]` check stops leaving it out. **Check:** their behaviour checks in `xge/tests/written/`.
+  - [x] **2. `windows-cpp` writes that (S).** `games/generators/windows-cpp/*.xsl` until `xgecli pong_min --generate windows-cpp` writes the prototype again. **Check:** `test_generate.cpp`; `xgetest-generated`.
 
 ### DT9. Take out what is not needed
 

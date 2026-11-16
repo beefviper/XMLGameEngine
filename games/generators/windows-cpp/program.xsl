@@ -5,7 +5,7 @@
 <!-- date: Nov 13, 2026 -->
 
 <!-- The rest of a windows-cpp program: source/main.cpp, the loop on SFML
-     (keys, a frame at the game's rate, the picture), its build and its
+     (keys, a step of the time since the last frame, the picture), its build and its
      readme. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
@@ -21,12 +21,13 @@
   <xsl:template name="main-file">
     <xsl:call-template name="header"><xsl:with-param name="file" select="'main.cpp'" /></xsl:call-template>
     <xsl:text>//
-// The window: keys in, </xsl:text>
-    <xsl:call-template name="framerate" />
-    <xsl:value-of select="concat(' frames a second, the picture out.&#10;&#10;#include &quot;', $name, '.h&quot;&#10;')" />
+// The window: keys in, a step of the time since the last frame, the picture out.
+</xsl:text>
+    <xsl:value-of select="concat('&#10;#include &quot;', $name, '.h&quot;&#10;')" />
     <xsl:text>
 #include &lt;SFML/Graphics.hpp&gt;
 
+#include &lt;algorithm&gt;
 #include &lt;optional&gt;
 
 namespace
@@ -59,6 +60,7 @@ int main()
 	</xsl:text>
     <xsl:call-template name="class-name" />
     <xsl:text> game;
+	sf::Clock clock;
 	while (window.isOpen())
 	{
 		while (const std::optional event = window.pollEvent())
@@ -68,7 +70,8 @@ int main()
 			if (const auto* key = event-&gt;getIf&lt;sf::Event::KeyReleased&gt;()) { game.key(key-&gt;code, false); }
 		}
 
-		game.frame();
+		// the time since the last frame, at most a quarter of a second
+		game.frame(std::min(clock.restart().asSeconds(), 0.25f));
 
 		window.clear(sf::Color::Black);
 </xsl:text>
@@ -172,7 +175,7 @@ endif()
 |---|---|
 | `source/</xsl:text>
     <xsl:value-of select="concat($name, '.h` | its numbers, its things and its class |&#10;| `source/', $name, '.cpp` | its rules: where things start, the keys, and a frame |&#10;')" />
-    <xsl:text>| `source/main.cpp` | the window: keys in, the picture out |
+    <xsl:text>| `source/main.cpp` | the window: keys in, a step of the time since the last frame, the picture out |
 | `LICENSE` | the licence (MIT) |
 | `CMakeLists.txt` | the build; it uses installed SFML 3, or downloads and builds it |
 | `.gitignore` | leaves out `build/` and `output/` |

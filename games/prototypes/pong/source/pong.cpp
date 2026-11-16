@@ -113,15 +113,15 @@ namespace pong
 		}
 	}
 
-	void Pong::frame()
+	void Pong::frame(float seconds)
 	{
 		if (screen() != Screen::Playing) { return; }
 
 		left.speed = upOrDown(wHeld, sHeld);
 		right.speed = twoPlayers() ? upOrDown(upHeld, downHeld) : computerSpeed();
-		movePaddle(left);
-		movePaddle(right);
-		moveBall();
+		movePaddle(left, seconds);
+		movePaddle(right, seconds);
+		moveBall(seconds);
 
 		if (left.score >= winningScore || right.score >= winningScore) { screens.push_back(Screen::Over); }
 	}
@@ -140,14 +140,14 @@ namespace pong
 	}
 
 	// A paddle stops at the top and the bottom.
-	void Pong::movePaddle(Paddle& paddle)
+	void Pong::movePaddle(Paddle& paddle, float seconds)
 	{
-		paddle.position.y = std::clamp(paddle.position.y + paddle.speed, 0.0f, windowHeight - paddleHeight);
+		paddle.position.y = std::clamp(paddle.position.y + paddle.speed * seconds, 0.0f, windowHeight - paddleHeight);
 	}
 
-	void Pong::moveBall()
+	void Pong::moveBall(float seconds)
 	{
-		ball.position += ball.velocity;
+		ball.position += ball.velocity * seconds;
 
 		// off the top and the bottom
 		if (ball.position.y < 0 && ball.velocity.y < 0)

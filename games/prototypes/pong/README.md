@@ -5,7 +5,7 @@
 | File | What |
 |---|---|
 | `source/pong.h`, `source/pong.cpp` | the game: paddles, ball, scores, the four screens, the computer's play, the kept choices |
-| `source/main.cpp` | the window: keys in, 60 frames a second, the picture, the text, square-wave sounds |
+| `source/main.cpp` | the window: keys in, a step of the time since the last frame (at most a quarter of a second), the picture, the text, square-wave sounds |
 
 - The screens are an `enum` and a stack; paused and game over draw the game still beneath them.
 - A paddle moves while its key is down, so one held through a pause goes on moving.

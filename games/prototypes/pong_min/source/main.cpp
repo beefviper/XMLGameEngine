@@ -3,12 +3,13 @@
 // author: beefviper
 // date: Nov 13, 2026
 //
-// The window: keys in, 60 frames a second, the picture out.
+// The window: keys in, a step of the time since the last frame, the picture out.
 
 #include "pong_min.h"
 
 #include <SFML/Graphics.hpp>
 
+#include <algorithm>
 #include <optional>
 
 namespace
@@ -31,6 +32,7 @@ int main()
 	window.setKeyRepeatEnabled(false);
 
 	Pong game;
+	sf::Clock clock;
 	while (window.isOpen())
 	{
 		while (const std::optional event = window.pollEvent())
@@ -40,7 +42,8 @@ int main()
 			if (const auto* key = event->getIf<sf::Event::KeyReleased>()) { game.key(key->code, false); }
 		}
 
-		game.frame();
+		// the time since the last frame, at most a quarter of a second
+		game.frame(std::min(clock.restart().asSeconds(), 0.25f));
 
 		window.clear(sf::Color::Black);
 		draw(window, game.ball);

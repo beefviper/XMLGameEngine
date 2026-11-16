@@ -4,7 +4,7 @@
 <!-- author: beefviper -->
 <!-- date: Nov 13, 2026 -->
 
-<!-- <move direction>step</move> in an action: while its key is held, that many pixels a frame that way. -->
+<!-- <move direction>step</move> in an action: while its key is held, that many pixels a second that way. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 

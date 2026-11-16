@@ -21,7 +21,7 @@ namespace pong_min
 	constexpr float size = 16;
 	constexpr float width = 20;
 	constexpr float height = 120;
-	constexpr float step = 5;
+	constexpr float step = 300;
 
 	// Something on the screen: where it is, how it moves, how big it is.
 	struct Thing
@@ -37,7 +37,7 @@ namespace pong_min
 		explicit Pong(unsigned seed = std::random_device{}());
 
 		void key(sf::Keyboard::Key key, bool down);
-		void frame();
+		void frame(float seconds);
 
 		Thing ball;
 		Thing paddle1;

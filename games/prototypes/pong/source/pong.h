@@ -23,9 +23,9 @@ namespace pong
 	constexpr float margin = 30;
 	constexpr float paddleWidth = 20;
 	constexpr float paddleHeight = 120;
-	constexpr float paddleSpeed = 5;
+	constexpr float paddleSpeed = 300; // pixels a second
 	constexpr float ballSize = 16;
-	constexpr float ballSpeed = 9;
+	constexpr float ballSpeed = 540;
 	constexpr int winningScore = 11;
 
 	enum class Screen { Title, Playing, Paused, Over };
@@ -54,7 +54,8 @@ namespace pong
 		void keepChoicesIn(const std::string& file);
 
 		void key(sf::Keyboard::Key key, bool down);
-		void frame();
+		// A step of the game, `seconds` long.
+		void frame(float seconds);
 
 		// The sounds to play since the last time: "paddle", "wall", "score".
 		std::vector<std::string> takeSounds();
@@ -89,8 +90,8 @@ namespace pong
 		void saveChoices() const;
 
 		float computerSpeed() const;
-		void movePaddle(Paddle& paddle);
-		void moveBall();
+		void movePaddle(Paddle& paddle, float seconds);
+		void moveBall(float seconds);
 		void hitPaddle(const Paddle& paddle, float away);
 		void point(Paddle& winner);
 	};

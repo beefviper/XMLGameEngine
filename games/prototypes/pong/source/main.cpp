@@ -3,8 +3,8 @@
 // author: beefviper
 // date: Nov 13, 2026
 //
-// The window: keys in, a frame at 60 a second, the picture and the sounds
-// out.
+// The window: keys in, a step of the time since the last frame, the
+// picture and the sounds out.
 
 #include "pong.h"
 
@@ -167,6 +167,7 @@ int main(int, char* argv[])
 	Pong game;
 	game.keepChoicesIn("pong-kept.txt");
 	Picture picture(window, font);
+	sf::Clock clock;
 
 	while (window.isOpen())
 	{
@@ -183,7 +184,8 @@ int main(int, char* argv[])
 			}
 		}
 
-		game.frame();
+		// the time since the last frame, at most a quarter of a second
+		game.frame(std::min(clock.restart().asSeconds(), 0.25f));
 		for (const std::string& name : game.takeSounds()) { sounds.at(name).play(); }
 
 		window.clear(sf::Color::Black);

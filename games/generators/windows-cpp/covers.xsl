@@ -51,6 +51,11 @@
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'more than one &lt;sprite&gt;'" /></xsl:call-template>
     <xsl:apply-templates select="@* | * | text()" mode="covers" />
   </xsl:template>
+  <!-- It writes speeds a second: a game still in sixtieths is not covered. -->
+  <xsl:template match="game[not(@time = 'seconds')]" mode="covers" priority="2">
+    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a game without time=&quot;seconds&quot;'" /></xsl:call-template>
+    <xsl:apply-templates select="@* | * | text()" mode="covers" />
+  </xsl:template>
   <xsl:template match="game/variables/variable[.//random]" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;random&gt; in the game variables'" /></xsl:call-template>
   </xsl:template>
@@ -82,7 +87,7 @@
     <xsl:apply-templates select="@* | * | text()" mode="covers" />
   </xsl:template>
   <xsl:template mode="covers" match="
-      game/@*[namespace-uri() != ''] | window/@name | variable/@name | state/@name
+      game/@*[namespace-uri() != ''] | game/@time | window/@name | variable/@name | state/@name
       | object/@name | group/@name | member/@name | action/@name | collision/@edge
       | input/@button" />
 

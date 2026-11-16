@@ -70,7 +70,7 @@ namespace pong_min
 	// Where the ball starts, and starts again.
 	void Pong::startBall()
 	{
-		const float speed = 6;
+		const float speed = 360;
 		const float angle = between(-30, 30);
 		const float side = between(-1, 1);
 		ball.size = { size, size };
@@ -91,7 +91,7 @@ namespace pong_min
 		}
 	}
 
-	void Pong::frame()
+	void Pong::frame(float seconds)
 	{
 		// the keys held
 		paddle1.velocity = {};
@@ -102,9 +102,9 @@ namespace pong_min
 		if (downHeld) { paddle2.velocity.y += step; }
 
 		// everything moves
-		ball.position += ball.velocity;
-		paddle1.position += paddle1.velocity;
-		paddle2.position += paddle2.velocity;
+		ball.position += ball.velocity * seconds;
+		paddle1.position += paddle1.velocity * seconds;
+		paddle2.position += paddle2.velocity * seconds;
 
 		// at the window's edges
 		if (ball.position.y < 0) { ball.velocity.y = std::abs(ball.velocity.y); }

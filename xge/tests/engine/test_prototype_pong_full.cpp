@@ -26,6 +26,9 @@ using Catch::Matchers::WithinAbs;
 
 namespace
 {
+	// A step at 60 frames a second.
+	constexpr float sixtieth = 1.0f / 60;
+
 	void tap(Pong& game, Key key)
 	{
 		game.key(key, true);
@@ -34,7 +37,7 @@ namespace
 
 	void frames(Pong& game, int count)
 	{
-		for (int i = 0; i < count; ++i) { game.frame(); }
+		for (int i = 0; i < count; ++i) { game.frame(sixtieth); }
 	}
 
 	// Playing against the computer, the ball held still in the middle so
@@ -93,15 +96,15 @@ TEST_CASE("stand-alone pong: the ball bounces off the top and the bottom", "[pro
 	Pong game = playing();
 	game.takeSounds();
 	game.ball.position = { 600, 4 };
-	game.ball.velocity = { 3, -6 };
-	game.frame();
-	CHECK(game.ball.velocity.y == 6);
+	game.ball.velocity = { 180, -360 };
+	game.frame(sixtieth);
+	CHECK(game.ball.velocity.y == 360);
 	CHECK(has(game.takeSounds(), "wall"));
 
 	game.ball.position = { 600, windowHeight - ballSize - 2 };
-	game.ball.velocity = { 3, 6 };
-	game.frame();
-	CHECK(game.ball.velocity.y == -6);
+	game.ball.velocity = { 180, 360 };
+	game.frame(sixtieth);
+	CHECK(game.ball.velocity.y == -360);
 }
 
 TEST_CASE("stand-alone pong: a paddle sends the ball back, steeper off its ends, faster on the fourth hit", "[prototype][pong]")
@@ -112,7 +115,7 @@ TEST_CASE("stand-alone pong: a paddle sends the ball back, steeper off its ends,
 	{
 		game.ball.position = { margin + paddleWidth + 2, game.left.position.y + paddleHeight / 2 - ballSize / 2 + offset };
 		game.ball.velocity = { -ballSpeed, 0 };
-		game.frame();
+		game.frame(sixtieth);
 	};
 
 	hitLeft(0);
@@ -122,16 +125,16 @@ TEST_CASE("stand-alone pong: a paddle sends the ball back, steeper off its ends,
 
 	hitLeft(-50);
 	CHECK(game.ball.velocity.x > 0);
-	CHECK(game.ball.velocity.y < -3);
+	CHECK(game.ball.velocity.y < -180);
 
 	hitLeft(60);
 	CHECK(game.ball.velocity.y > 0);
-	CHECK_THAT(game.ball.velocity.x, WithinAbs(game.ball.velocity.y, 0.01));
+	CHECK_THAT(game.ball.velocity.x, WithinAbs(game.ball.velocity.y, 0.5));
 
-	CHECK_THAT(speedOf(game.ball), WithinAbs(ballSpeed, 0.01));
+	CHECK_THAT(speedOf(game.ball), WithinAbs(ballSpeed, 0.5));
 	hitLeft(0);
 	CHECK(game.ball.hits == 4);
-	CHECK_THAT(speedOf(game.ball), WithinAbs(ballSpeed * 1.3f, 0.01));
+	CHECK_THAT(speedOf(game.ball), WithinAbs(ballSpeed * 1.3f, 0.5));
 }
 
 TEST_CASE("stand-alone pong: a paddle stops at the top and the bottom", "[prototype][pong]")
@@ -154,9 +157,9 @@ TEST_CASE("stand-alone pong: past a paddle is a point to the other side and a ne
 {
 	Pong game = playing();
 	game.ball.position = { 3, 100 };
-	game.ball.velocity = { -9, 0 };
+	game.ball.velocity = { -540, 0 };
 	game.ball.hits = 5;
-	game.frame();
+	game.frame(sixtieth);
 	CHECK(game.right.score == 1);
 	CHECK(game.left.score == 0);
 	CHECK(game.ball.hits == 0);
@@ -164,8 +167,8 @@ TEST_CASE("stand-alone pong: past a paddle is a point to the other side and a ne
 	CHECK(has(game.takeSounds(), "score"));
 
 	game.ball.position = { windowWidth - ballSize - 3, 100 };
-	game.ball.velocity = { 9, 0 };
-	game.frame();
+	game.ball.velocity = { 540, 0 };
+	game.frame(sixtieth);
 	CHECK(game.left.score == 1);
 }
 
@@ -174,8 +177,8 @@ TEST_CASE("stand-alone pong: eleven ends the game, Space goes back to the title"
 	Pong game = playing();
 	game.left.score = 10;
 	game.ball.position = { windowWidth - ballSize - 3, 100 };
-	game.ball.velocity = { 9, 0 };
-	game.frame();
+	game.ball.velocity = { 540, 0 };
+	game.frame(sixtieth);
 	CHECK(game.screen() == Screen::Over);
 
 	const sf::Vector2f stopped = game.ball.position;
@@ -202,8 +205,8 @@ TEST_CASE("stand-alone pong: a pause stops play, and a paddle key held through i
 
 	tap(game, Key::Pause);
 	CHECK(game.screen() == Screen::Playing);
-	game.frame();
-	CHECK(game.left.position.y == y + paddleSpeed);
+	game.frame(sixtieth);
+	CHECK_THAT(game.left.position.y, WithinAbs(y + paddleSpeed * sixtieth, 0.001));
 }
 
 TEST_CASE("stand-alone pong: Up and Down move the right paddle only for two players", "[prototype][pong]")
@@ -220,10 +223,10 @@ TEST_CASE("stand-alone pong: Up and Down move the right paddle only for two play
 	two.ball.velocity = {};
 	two.key(Key::Up, true);
 	frames(two, 10);
-	CHECK(two.right.position.y == windowHeight / 2 - paddleHeight / 2 - 10 * paddleSpeed);
+	CHECK_THAT(two.right.position.y, WithinAbs(windowHeight / 2 - paddleHeight / 2 - 10 * paddleSpeed * sixtieth, 0.01));
 	two.key(Key::Up, false);
 	frames(two, 10);
-	CHECK(two.right.position.y == windowHeight / 2 - paddleHeight / 2 - 10 * paddleSpeed);
+	CHECK_THAT(two.right.position.y, WithinAbs(windowHeight / 2 - paddleHeight / 2 - 10 * paddleSpeed * sixtieth, 0.01));
 }
 
 TEST_CASE("stand-alone pong: the computer follows the ball; smart waits in the middle until it comes", "[prototype][pong]")
@@ -238,12 +241,12 @@ TEST_CASE("stand-alone pong: the computer follows the ball; smart waits in the m
 	tap(smart, Key::D);
 	tap(smart, Key::Space);
 	smart.ball.position = { 300, 50 };
-	smart.ball.velocity = { -0.001f, 0 };
+	smart.ball.velocity = { -0.06f, 0 };
 	frames(smart, 100);
 	CHECK(std::abs(smart.right.position.y - (windowHeight / 2 - paddleHeight / 2)) <= 8);
 
 	smart.ball.position = { 800, 50 };
-	smart.ball.velocity = { 0.001f, 0 };
+	smart.ball.velocity = { 0.06f, 0 };
 	frames(smart, 100);
 	CHECK(smart.right.position.y < 50);
 }
@@ -258,7 +261,7 @@ TEST_CASE("stand-alone pong: who plays and how well are kept from one game to th
 	tap(game, Key::D);
 	tap(game, Key::Num2);
 	game.left.score = 11;
-	game.frame();
+	game.frame(sixtieth);
 	tap(game, Key::Space);
 
 	Pong next;
@@ -281,12 +284,12 @@ TEST_CASE("stand-alone pong: long play keeps everything in the window", "[protot
 			if (frame % 30 == 0) { game.key(key, true); }
 			if (frame % 30 == 20) { game.key(key, false); }
 			if (game.screen() != Screen::Playing) { ++games; tap(game, Key::Space); tap(game, Key::Space); }
-			game.frame();
+			game.frame(sixtieth);
 
-			REQUIRE(game.ball.position.x >= -ballSpeed * 2);
-			REQUIRE(game.ball.position.x <= windowWidth + ballSpeed * 2);
-			REQUIRE(game.ball.position.y >= -ballSpeed * 2);
-			REQUIRE(game.ball.position.y <= windowHeight + ballSpeed * 2);
+			REQUIRE(game.ball.position.x >= -ballSpeed * sixtieth * 2);
+			REQUIRE(game.ball.position.x <= windowWidth + ballSpeed * sixtieth * 2);
+			REQUIRE(game.ball.position.y >= -ballSpeed * sixtieth * 2);
+			REQUIRE(game.ball.position.y <= windowHeight + ballSpeed * sixtieth * 2);
 			REQUIRE(game.left.score <= winningScore);
 			REQUIRE(game.right.score <= winningScore);
 		}

@@ -77,7 +77,7 @@
     </xsl:choose>
     <xsl:text>
 		void key(sf::Keyboard::Key key, bool down);
-		void frame();
+		void frame(float seconds);
 
 </xsl:text>
     <xsl:for-each select="$objects">
@@ -357,7 +357,7 @@
        meetings. -->
   <xsl:template name="frame-function">
     <xsl:param name="class" />
-    <xsl:value-of select="concat('&#10;&#9;void ', $class, '::frame()&#10;&#9;{&#10;')" />
+    <xsl:value-of select="concat('&#10;&#9;void ', $class, '::frame(float seconds)&#10;&#9;{&#10;')" />
     <xsl:if test="$moved">
       <xsl:text>		// the keys held
 </xsl:text>
@@ -370,7 +370,7 @@
 </xsl:text>
     <xsl:for-each select="$objects">
       <xsl:variable name="thing"><xsl:call-template name="object-name" /></xsl:variable>
-      <xsl:value-of select="concat('&#9;&#9;', $thing, '.position += ', $thing, '.velocity;&#10;')" />
+      <xsl:value-of select="concat('&#9;&#9;', $thing, '.position += ', $thing, '.velocity * seconds;&#10;')" />
     </xsl:for-each>
     <xsl:if test="$edge-owners">
       <xsl:text>
