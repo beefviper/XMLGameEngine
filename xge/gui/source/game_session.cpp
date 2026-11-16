@@ -313,7 +313,7 @@ namespace xge
 		lastNs = clock.nsecsElapsed();
 		fpsStartNs = lastNs;
 		fpsFrames = 0;
-		owedNs = 0;
+		dueNs = lastNs + framePeriodNs;
 		updateTimer();
 		updateTitle();
 		emit playingChanged(true);
@@ -346,7 +346,7 @@ namespace xge
 		if (needed && !timer.isActive())
 		{
 			lastNs = clock.nsecsElapsed();
-			owedNs = 0;
+			dueNs = lastNs + framePeriodNs;
 			timer.start();
 		}
 		else if (!needed)
@@ -431,23 +431,31 @@ namespace xge
 		// window it can't be.
 		rememberPosition();
 
-		const qint64 now = clock.nsecsElapsed();
-		owedNs += now - lastNs;
-		lastNs = now;
-
 		// One step a frame, of the time that passed since the last (no
 		// longer than kLongestStep: after the window was dragged, say, the
 		// game goes on from now). The <framerate> is the most frames a second.
-		if (owedNs < framePeriodNs)
+		// Frames are due on a beat of that length, not a frame's length after
+		// the last: the timer wakes on its own grid (about 16 ms on Windows),
+		// and waiting a whole frame from a late wake-up lost most of a frame
+		// each time, a 60 a second game drawing at 25 to 30.
+		const qint64 now = clock.nsecsElapsed();
+		if (now < dueNs)
 		{
 			return;
+		}
+		const qint64 sinceLast = now - lastNs;
+		lastNs = now;
+		dueNs += framePeriodNs;
+		if (dueNs < now - framePeriodNs)
+		{
+			dueNs = now;   // far behind (a stall): the beat starts again from now
 		}
 
 		try
 		{
 			if (playing)
 			{
-				engine->step(std::min(static_cast<float>(owedNs) / 1e9f, xge::kLongestStep));
+				engine->step(std::min(static_cast<float>(sinceLast) / 1e9f, xge::kLongestStep));
 				++frameCount;
 				++fpsFrames;
 			}
@@ -455,8 +463,6 @@ namespace xge
 			{
 				engine->pump();
 			}
-			owedNs = 0;
-
 			engine->render();
 		}
 		catch (const std::exception& e)
