@@ -56,7 +56,7 @@ With steps of any length, the sums must give the same answer however a second is
 - **Tests give the step.** `Game` is stepped with a length, so a test that plays 600 steps of a sixtieth plays the same game every time, and the same tests can be run at other lengths and at uneven ones.
 - **`xgecli --frames`** plays steps of a sixtieth unless told otherwise.
 - **The board-game search** counts moves, not time.
-- **A recorded demo** is the open point: [below](#open).
+- **A recorded demo** played with `--frames` gets the steps it is told, so it is exact. In a window it is the open point: [below](#open).
 
 ## How the games are moved
 
@@ -74,6 +74,6 @@ For a while a game says which units it is in: `<game time="seconds">`. One witho
 
 ## Open
 
-- **A recorded demo.** A recording is only the same game if it is played back on the same steps. Either a demo keeps the length of every step, or recording and playback both run at one constant step kept in the demo, the one place a fixed step would remain. The author decides when the plan reaches it.
+- **A recorded demo.** A recording is only the same game if it is played back on the same steps. Either a demo keeps the length of every step, or recording and playback both run at one constant step kept in the demo, the one place a fixed step would remain. The author: the shipped demo is dropped for now and new ones are recorded once this is chosen.
 - Whether a window with no `<framerate>` follows the screen's refresh or stays at 60.
 - The exact sum for drag together with a pull, if a game ever shows the difference.
