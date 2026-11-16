@@ -83,7 +83,7 @@ namespace
 		Scratch(const std::string& objects, const std::string& onSpace, const std::string& paths = "")
 		{
 			std::ofstream out(path);
-			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"steering\"><width>800</width><height>600</height><background>color.black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>" << paths <<
@@ -124,13 +124,13 @@ TEST_CASE("a turn toward a way goes no further than it is let, and keeps the spe
 
 TEST_CASE("<pull> draws an object toward the nearest of what pulls it, a little more every frame", "[steering]")
 {
-	const Scratch file(box("ship", 100, 295, "<pull object=\"sun\">0.5</pull>") + box("sun", 400, 295), "<pop />");
+	const Scratch file(box("ship", 100, 295, "<pull object=\"sun\">1800</pull>") + box("sun", 400, 295), "<pop />");
 	Played play(file.path);
 
 	play.frames(1);
-	CHECK(play.get("ship").velocity.x == Approx(0.5));
+	CHECK(play.get("ship").velocity.x == Approx(30));
 	play.frames(9);
-	CHECK(play.get("ship").velocity.x == Approx(5));
+	CHECK(play.get("ship").velocity.x == Approx(300));
 	CHECK(play.get("ship").velocity.y == Approx(0));
 	CHECK(play.get("ship").position.x > 100.0f);
 
@@ -145,13 +145,13 @@ TEST_CASE("<pull> draws an object toward the nearest of what pulls it, a little 
 TEST_CASE("<seek> turns a missile toward its target a few degrees a frame, heading and all", "[steering]")
 {
 	const Scratch file(box("ship", 400, 500) + "<object name=\"missile\"><sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>10</y></to></line></sprite>"
-		"<position><x>100</x><y>100</y></position><velocity><x>4</x><y>0</y></velocity><heading>90</heading><seek object=\"ship\">3</seek></object>",
+		"<position><x>100</x><y>100</y></position><velocity><x>240</x><y>0</y></velocity><heading>90</heading><seek object=\"ship\">180</seek></object>",
 		"<pop />");
 	Played play(file.path);
 
 	play.frames(1);
 	const Object& missile = play.get("missile");
-	CHECK(length(missile.velocity) == Approx(4));
+	CHECK(length(missile.velocity) == Approx(240));
 	CHECK(missile.heading == Approx(93).margin(0.01));
 
 	// In time it comes round and goes over the ship.
@@ -312,7 +312,7 @@ TEST_CASE("a <hunt> by <hop>s makes the one hop that lands nearest what it hunts
 
 TEST_CASE("<track path> puts the object that far along the path a control moves it on", "[steering]")
 {
-	const std::string paths = "<paths><path name=\"rail\"><speed>1</speed><start><x>100</x><y>100</y></start>"
+	const std::string paths = "<paths><path name=\"rail\"><speed>60</speed><start><x>100</x><y>100</y></start>"
 		"<step><x>300</x><y>0</y></step><step><x>0</x><y>100</y></step></path></paths>";
 	const Scratch file(box("gun", 0, 0, "<actions><action name=\"steer\"><track path=\"rail\" /></action></actions>"), "<pop />", paths);
 	Played play(file.path);
@@ -524,7 +524,7 @@ TEST_CASE("a <hunt> with <search /> takes the shortest way to a target behind a 
 		"<object name=\"prey\" char=\"T\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite></object>"
 		"<object name=\"hunter\" char=\"H\"><sprite><rectangle><width>16</width><height>16</height></rectangle></sprite>"
 		"<maze map=\"maze\"><wall class=\"wall\" /></maze>"
-		"<actions><action name=\"go\"><hunt object=\"prey\">2";
+		"<actions><action name=\"go\"><hunt object=\"prey\">120";
 	const auto arrives = [&](const std::string& search)
 	{
 		const Scratch file(map + search + "</hunt></action></actions></object></map>", "<trigger object=\"hunter\" action=\"go\" />");

@@ -32,7 +32,7 @@ namespace
 		explicit Written(const std::string& objects)
 		{
 			std::ofstream out(path);
-			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"scratch\"><width>800</width><height>600</height><background>color.black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
@@ -237,7 +237,7 @@ namespace
 	{
 		return "<object name=\"ball\" class=\"ball\"><sprite><circle><radius>5</radius><color>color.white</color></circle></sprite>"
 			"<position><x>" + std::to_string(x - 5.0f) + "</x><y>" + std::to_string(y - 5.0f) + "</y></position>"
-			"<acceleration><x>0</x><y>0.2</y></acceleration>" + friction + "<mass>1</mass>"
+			"<acceleration><x>0</x><y>720</y></acceleration>" + friction + "<mass>1</mass>"
 			"<collisions><collision class=\"wall\"><bounce>0.5</bounce></collision></collisions></object>";
 	}
 }

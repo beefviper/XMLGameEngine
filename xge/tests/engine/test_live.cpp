@@ -72,7 +72,7 @@ namespace
 		Scratch(const std::string& objects, const std::string& onSpace, const std::string& kit = {})
 		{
 			std::ofstream out(path);
-			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"live\"><width>800</width><height>600</height><background>color.black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
@@ -96,13 +96,13 @@ namespace
 
 TEST_CASE("a command's value is read when it runs: a variable as it is now, where things are and how they go", "[live]")
 {
-	const Scratch file(box("ball", 100, 50, "<velocity><x>2</x><y>0</y></velocity><variables><variable name=\"step\">5</variable><variable name=\"count\">0</variable></variables>"),
+	const Scratch file(box("ball", 100, 50, "<velocity><x>120</x><y>0</y></velocity><variables><variable name=\"step\">5</variable><variable name=\"count\">0</variable></variables>"),
 		"<inc variable=\"ball.count\">ball.step</inc><set variable=\"ball.velocity.y\"><multiply><value>ball.velocity.x</value><value>3</value></multiply></set><set variable=\"ball.step\">ball.x</set>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
 	CHECK(play.get("ball").variable.at("count") == Approx(5));
-	CHECK(play.get("ball").velocity.y == Approx(6));
+	CHECK(play.get("ball").velocity.y == Approx(360));
 	CHECK(play.get("ball").variable.at("step") == Approx(100));
 
 	// The step it adds is the one it was just set to.
@@ -144,11 +144,11 @@ TEST_CASE("where things are is only known while the game runs, and <set> names s
 
 TEST_CASE("<spawn> makes a new object where and going as it says, read as it runs", "[live]")
 {
-	const Scratch file(box("ship", 300, 400, "<velocity><x>3</x><y>0</y></velocity>"),
+	const Scratch file(box("ship", 300, 400, "<velocity><x>180</x><y>0</y></velocity>"),
 		"<spawn object=\"shot\"><position><x><centered><add><value>ship.x</value><value>5</value></add></centered></x><y><subtract><value>ship.y</value><value>8</value></subtract></y></position>"
 		"<velocity><x>ship.velocity.x</x></velocity></spawn>",
 		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>-5</y></velocity></object>");
+		"<velocity><x>0</x><y>-300</y></velocity></object>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -157,14 +157,14 @@ TEST_CASE("<spawn> makes a new object where and going as it says, read as it run
 	CHECK(first.isVisible);
 	CHECK(first.position.x == Approx(303));
 	CHECK(first.position.y == Approx(392));
-	CHECK(first.velocity.x == Approx(3));
-	CHECK(first.velocity.y == Approx(-5)); // left out: as the object starts
+	CHECK(first.velocity.x == Approx(180));
+	CHECK(first.velocity.y == Approx(-300)); // left out: as the object starts
 	CHECK_FALSE(play.get("shot").exists);
 }
 
 TEST_CASE("touch.x and the other numbers of a touch are gone: no name reads them", "[live]")
 {
-	const Scratch file(box("ball", 100, 100, "<velocity><x>20</x><y>0</y></velocity><collisions>"
+	const Scratch file(box("ball", 100, 100, "<velocity><x>1200</x><y>0</y></velocity><collisions>"
 		"<collision object=\"wall\"><set variable=\"marker.x\">touch.x</set><stop /></collision></collisions>")
 		+ box("wall", 200, 95, "<collisions></collisions>") + box("marker", 0, 0), "<pop />");
 	CHECK_THROWS(Played(file.path));
@@ -172,7 +172,7 @@ TEST_CASE("touch.x and the other numbers of a touch are gone: no name reads them
 
 TEST_CASE("a <tether> is drawn from one object's middle to another's, wherever they go", "[live]")
 {
-	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<velocity><x>0</x><y>2</y></velocity>")
+	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<velocity><x>0</x><y>120</y></velocity>")
 		+ "<object name=\"line\"><sprite><tether from=\"rod\" to=\"hook\"><thickness>2</thickness><color>color.red</color></tether></sprite>"
 		"<position><x>0</x><y>0</y></position></object>", "<pop />");
 	Played play(file.path);
@@ -237,12 +237,12 @@ TEST_CASE("a <chase> turns the heading of what chases to the way it goes", "[liv
 	const Scratch file(box("target", 500, 100)
 		+ "<object name=\"missile\"><sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>8</y></to><thickness>2</thickness></line></sprite>"
 		"<position><x>100</x><y>100</y></position><heading>0</heading>"
-		"<timers><timer><every>0.1</every><chase object=\"target\">2</chase></timer></timers></object>", "<pop />");
+		"<timers><timer><every>0.1</every><chase object=\"target\">120</chase></timer></timers></object>", "<pop />");
 	Played play(file.path);
 
 	play.frames(10);
 	CHECK(play.get("missile").heading == Approx(90).margin(1));
-	CHECK(play.get("missile").velocity.x == Approx(2).margin(0.01));
+	CHECK(play.get("missile").velocity.x == Approx(120).margin(0.6));
 }
 
 TEST_CASE("a group gives its members a <heading>, each turned on its own", "[live]")
@@ -250,7 +250,7 @@ TEST_CASE("a group gives its members a <heading>, each turned on its own", "[liv
 	const Scratch file(box("target", 500, 100)
 		+ "<group name=\"missiles\"><sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>8</y></to><thickness>2</thickness></line></sprite>"
 		"<position><y>100</y></position><heading>180</heading>"
-		"<timers><timer><every>0.1</every><chase object=\"target\">2</chase></timer></timers>"
+		"<timers><timer><every>0.1</every><chase object=\"target\">120</chase></timer></timers>"
 		"<member><position><x>100</x></position></member><member><position><x>900</x></position></member></group>", "<pop />");
 	Played play(file.path);
 
@@ -265,7 +265,7 @@ TEST_CASE("an object out of play does not act on a key", "[live]")
 {
 	const Scratch file(box("gun", 100, 300, "<waiting /><actions><action name=\"fire\"><fire object=\"shot\" /></action></actions>")
 , "<trigger object=\"gun\" action=\"fire\" />",
-		box("shot", 0, 0, "<velocity><x>0</x><y>-4</y></velocity><most>1</most>"));
+		box("shot", 0, 0, "<velocity><x>0</x><y>-240</y></velocity><most>1</most>"));
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -420,9 +420,9 @@ TEST_CASE("a named timer's name cannot be a variable of its object or where it i
 
 TEST_CASE("update=\"live\" on a half of a position: worked out again every frame, after the move", "[live][follow]")
 {
-	const Scratch file(box("ship", 300, 400, "<velocity><x>3</x><y>0</y></velocity>")
+	const Scratch file(box("ship", 300, 400, "<velocity><x>180</x><y>0</y></velocity>")
 		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<position><x update=\"live\"><add><value>ship.x</value><value>5</value></add></x><y>100</y></position><velocity><x>0</x><y>-2</y></velocity></object>",
+		"<position><x update=\"live\"><add><value>ship.x</value><value>5</value></add></x><y>100</y></position><velocity><x>0</x><y>-120</y></velocity></object>",
 		"<pop />");
 	Played play(file.path);
 
@@ -439,7 +439,7 @@ TEST_CASE("update=\"live\" on a half of a position: worked out again every frame
 
 TEST_CASE("a live variable follows what it reads; one worked out once keeps its start", "[live][follow]")
 {
-	const Scratch file(box("ball", 100, 50, "<velocity><x>100</x><y>0</y></velocity><variables><variable name=\"base\">2</variable>"
+	const Scratch file(box("ball", 100, 50, "<velocity><x>6000</x><y>0</y></velocity><variables><variable name=\"base\">2</variable>"
 		"<variable name=\"twice\" update=\"live\"><multiply><value>self.base</value><value>2</value></multiply></variable>"
 		"<variable name=\"start\"><multiply><value>self.base</value><value>2</value></multiply></variable>"
 		"<variable name=\"across\" update=\"live\"><smallest><value>self.x</value><value>500</value></smallest></variable></variables>"),
@@ -535,7 +535,7 @@ TEST_CASE("a live <seconds> reading 0 waits a frame, never stops the load", "[li
 TEST_CASE("a <stepped /> animation moves its object only as the picture changes, the whole way at once", "[animation][stepped]")
 {
 	const Scratch file(blinker("<animation><seconds>0.1</seconds><stepped /><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>",
-		"<variable name=\"pace\">0</variable>", "<velocity><x>2</x><y>0</y></velocity>"), "<set variable=\"blinker.velocity.x\">-1</set>");
+		"<variable name=\"pace\">0</variable>", "<velocity><x>120</x><y>0</y></velocity>"), "<set variable=\"blinker.velocity.x\">-60</set>");
 	Played play(file.path);
 	Object& blinker = play.get("blinker");
 
@@ -558,7 +558,7 @@ TEST_CASE("a stepped object still meets the window's edge and bounces off it", "
 		"<sprite name=\"a\"><bitmap><row>**</row><row>**</row></bitmap></sprite>"
 		"<sprite name=\"b\"><bitmap><row>*.</row><row>.*</row></bitmap></sprite>"
 		"<animation><seconds>0.1</seconds><stepped /><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
-		"<position><x>790</x><y>10</y></position><velocity><x>2</x><y>0</y></velocity>"
+		"<position><x>790</x><y>10</y></position><velocity><x>120</x><y>0</y></velocity>"
 		"<collisions><collision edge=\"right\"><bounce /></collision></collisions></object>", "<pop />");
 	Played play(file.path);
 	Object& blinker = play.get("blinker");
