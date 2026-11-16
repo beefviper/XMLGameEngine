@@ -48,7 +48,7 @@
     contracts (`usbid`); a side's tricks are its players' `won` added.
 -->
 
-<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Spades">
     <width>880</width>
     <height>840</height>

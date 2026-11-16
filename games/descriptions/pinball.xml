@@ -37,7 +37,7 @@
     ball sits on it (its loaded look).
 -->
 
-<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Pinball">
     <width>600</width>
     <height>640</height>

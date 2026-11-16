@@ -988,7 +988,7 @@ namespace xge
 	{
 		if (turning.spin == 0.0f) { return velocity; }
 		const Vector2f arm = at - pivotOnScreen();
-		// Its turn over the step, as a speed of turning in the game's units.
+		// Its turn over the step, as a speed of turning, degrees a second.
 		const float radians = (turning.spinOver > 0.0f ? turning.spin / turning.spinOver : 0.0f) * 3.14159265358979323846f / 180.0f;
 		return velocity + Vector2f{ -arm.y * radians, arm.x * radians };
 	}

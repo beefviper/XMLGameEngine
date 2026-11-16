@@ -28,7 +28,7 @@
     a full board where they add up to none is the end.
 -->
 
-<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Doubles">
     <width>480</width>
     <height>600</height>

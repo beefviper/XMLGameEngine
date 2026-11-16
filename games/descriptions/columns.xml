@@ -26,7 +26,7 @@
   * The next column waits in a second map, only shown, until it is sent in.
 -->
 
-<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Columns">
     <width>640</width>
     <height>640</height>

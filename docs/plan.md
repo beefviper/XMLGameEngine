@@ -9,7 +9,7 @@ What is next, and nothing else. The ordered tasks come first, each written to be
 
 ## Order of work
 
-**[Delta time](#delta-time) comes first, then [the C++ review](#the-c-review);** each has its own section and order. After them, one task at a time, top to bottom. A task's steps are done in their own order, and the tests are green after every step. Where a line says "steps 1 to 4", the rest of that task comes back further down.
+**[The C++ review](#the-c-review) comes first,** in its own section and order. After them, one task at a time, top to bottom. A task's steps are done in their own order, and the tests are green after every step. Where a line says "steps 1 to 4", the rest of that task comes back further down.
 
 | # | Task | Why here |
 |---|---|---|
@@ -40,141 +40,12 @@ The rules for any change are in [AGENTS.md](../AGENTS.md), and what a language c
 - One game is moved first as the proof, then the rest in groups of about ten, running that group's tests after each.
 - When a word is removed, the reader must refuse it with a message that names the new form, and a test must hold that message.
 
-## Delta time
-
-Its own block of work, done before anything else in this file. **Design and reasons:** [time](designs/29-time.md). Read it first; this section is only the steps.
-
-- **The aim.** Each frame is one step of the time that really passed. A game plays the same at 8, 60, 144 or 240 frames a second and when frames come unevenly. Game files write per-second numbers.
-- **The shape of the work.** The engine first (DT1 to DT4), with every game still in its old numbers and still playing as before. Then six games moved for the author to try (DT5), then the rest (DT6 to DT8), then what is no longer needed comes out (DT9).
-- **How the old games keep working meanwhile.** A game without `<game time="seconds">` has its motion clock in sixtieths of a second: where a moved game's sums use `t = seconds`, an unmoved one's use `t = seconds * 60`. Its per-frame numbers then mean what they always did, and it already goes by time passed.
-
-### Rules for this block
-
-- **Never a fixed step, never a step cut into smaller ones.** If a sum is wrong over a long step, the sum is fixed. A loop over the ticks or timer firings a step owes is not cutting the physics up, and is right.
-- **No count of frames is left in the engine** for anything that means time. A field named `frames...` or `...Every` that holds time becomes seconds.
-- **How a step is checked.** Build as [AGENTS.md](../AGENTS.md#build-and-test) says, then `cd build && ctest -j4`, then `output/Release/xgetest-long "[steps]"` once DT2 step 1 has made it, and `xgetest-generated` when the reader, a `Raw...` struct or the generator was touched. A step is done when its **Check** and all of these pass with zero warnings, and its box is ticked in the same commit.
-- **"The same at every step length"** in a check means: the game is played for the stated seconds in steps of a tenth, a sixtieth and a 240th of a second and in an uneven seeded mix, and the number named agrees across all four within 2 pixels (or 2 degrees, or 2% for a speed), unless the check gives its own range. A count (timer firings, ticks, pictures passed) agrees exactly.
-- **About the same is enough.** When an existing test fails after a step here:
-  - by a small amount in a position or speed (a few pixels, a few percent): change that expectation to a range, and say why in the commit;
-  - by behaviour (nothing scores, something leaves the window, a state is never reached): it is a bug in the step, not in the test. Never loosen a behaviour check.
-- **Speed.** Run `xgetest-long "[speed]"` before and after each task, back to back on one machine. A power (`std::pow`) is worked out once per share per step, never per object per pixel.
-- Every other rule is as in [rules for every task](#rules-for-every-task). A step marked "the author" stops for the author.
-
-### Order
-
-| # | Task | Ends with |
-|---|---|---|
-| 1 | [DT1](#dt1-a-step-has-a-length): a step has a length | nothing changed in play |
-| 2 | [DT2](#dt2-what-counts-time-holds-seconds): what counts time holds seconds | timers, animations, jumps and ticks right at any step |
-| 3 | [DT3](#dt3-movement-by-the-time-passed): movement by the time passed | every sum right at any step |
-| 4 | [DT4](#dt4-the-loop-plays-real-time): the loop plays real time | **the author** tries old games at several rates |
-| 5 | [DT5](#dt5-six-games-moved): six games moved | **the author** plays them |
-| 6 | [DT6](#dt6-the-rest-of-the-games): the rest of the games | every shipped game in seconds |
-| 7 | [DT7](#dt7-the-tests-own-games): the tests' own games | no per-frame number in a test |
-| 8 | [DT8](#dt8-the-stand-alone-writers): the stand-alone writers | prototypes and `windows-cpp` in seconds |
-| 9 | [DT9](#dt9-take-out-what-is-not-needed): take out what is not needed | one kind of game file again |
-
-### DT1. A step has a length
-
-- **Why.** Everything later needs to be told how long the step is. This task only carries the number about.
-- **Steps.**
-  - [x] **1. The length is passed down (M).** `Engine::step`, `Game::updateObjects`, `Game::updateTimers` and `playOneFrame` (`play/frame.h`) each take `float seconds`. `Engine::loop` still plays its fixed frames and passes `1 / framerate`. The tests' `frames(n)` (`xge/tests/helpers/played.h`) passes a sixtieth. Nothing uses the number yet. **Check:** every test passes unchanged.
-  - [x] **2. One place turns seconds into frames (S).** The copies of `framerate > 0 ? framerate : 60` (`game/game.cpp` three times, `game/cells.cpp` twice, `play/frame.cpp`, `load/pictures.cpp`) become one function. It is temporary: DT2 removes its callers one by one. **Check:** `grep -rn "framerate" xge/lib` shows it only there, in the reader and in `engine/engine.cpp`.
-  - [x] **3. The game says its units (M).** `<game time="seconds">` in `games/xgedef.xsd` (the only value; documented as temporary), read by `load/xml.cpp` into `GameData`, carried by `data.xsl`, `modules/game_parts.h` and the describer. `Game` gets `motionTime(seconds)`: `seconds` for such a game, `seconds * 60` otherwise. Nothing calls it yet. **Check:** a test in `test_xml_format.cpp` loads a small game each way and reads the two answers; `xgetest-generated`.
-- **Files.** `xge/lib/engine/engine.*`, `xge/lib/game/game.*`, `xge/lib/play/frame.*`, `xge/lib/load/xml.cpp`, `xge/lib/game/data.h`, `games/generators/engine-cpp/`, `xge/tests/helpers/played.h`.
-
-### DT2. What counts time holds seconds
-
-- **Why.** Timers and the rest are written in seconds but kept as whole frames, so they round, and a long step cannot pay what it owes.
-- **The rule for each.** It holds seconds left as a `float`. A step takes its length off. When it reaches zero it goes off, and if the step was longer than what was left, the rest counts toward the next round, so it can go off several times in one step, in order.
-- **The check for each** is a case tagged `[steps]` in a new `xge/tests/engine/test_step_lengths.cpp` (add it to `scripts/cmake/tests.cmake`; the name is not `test_pace.cpp`, which is the loop's own test in `xge/tests/long/`): a small game written in the test is played for 2 seconds at each step length, and the thing counted comes out the same each way.
-- **Steps.**
-  - [x] **1. The pacing helper (S).** In `xge/tests/helpers/`: `step_lengths.h` with `playFor(game, seconds, step)`, `playUneven(game, seconds, seed)` (steps between a 240th and a tenth, the last one cut so the total is exact) and `atEveryStepLength(file or text, seconds, measure)`, which loads the game afresh for each of the four, plays it, calls `measure(game)` and returns the four answers. **Check:** a case plays a game of one still object and gets four equal positions.
-  - [x] **2. Timers (M).** `Timer::framesLeft` (`game/command.h`) and `Game::updateTimers`; a state's timers and an object's; the time left a game reads (`energy.level`) still rounds up to whole seconds. **Check:** a timer of 0.05 seconds goes off 40 times in 2 seconds at every pacing.
-  - [x] **3. Animations (M).** `Object::Animation` (`game/object.h`), the counting in `playOneFrame`, `timeAnimation` (`game/game.cpp`), and the frames worked out in `load/pictures.cpp`. A step that passes several pictures runs each one's commands in order, and a once animation's `<then>` once. **Check:** an animation with a command on its third picture runs it the same number of times at every pacing.
-  - [x] **4. Hops, jumps and swings (M).** `Object::Flight` (`framesLeft`, `frames`), `Object::Swing` (`frames`), the stagger of `<follow>` (`game/game.cpp`). A hop that ends inside a step lands at its end point and spends the rest of the step on the ground. **Check:** a hop of half a second lands at the same place and time at every pacing; `test_flippers.cpp` passes.
-  - [x] **5. Cell ticks (M).** `cellGoEvery`, `cellGoWait`, `heldEvery`, `heldWait` (`game/cells.cpp`), `itemWait` (`game/game.h`). A step that owes three ticks makes three moves, each with its own touches. **Check:** a piece with a `<go>` of 8 cells a second is 16 cells on after 2 seconds at every pacing; Snake and Tetris tests pass.
-  - [x] **6. `<stepped />` (S).** It moves when its picture changes, by what its velocity covered since the last change; with step 3 done this follows the animation's seconds. **Check:** the Space Invaders tests, and its block is in the same place after 5 seconds at every pacing, within a step of its own.
-  - [x] **7. The frames function goes (S).** Remove the function from DT1 step 2. **Check:** `grep -rn "framerate" xge/lib` shows only the reader and `engine/engine.cpp`.
-- **Files.** `xge/lib/game/command.h`, `game/object.h`, `game/game.cpp`, `game/cells.cpp`, `play/frame.cpp`, `load/pictures.cpp`, `load/expr.*`; `docs/reference/timers.md`, `docs/reference/pictures.md` where they say "frames".
-
-### DT3. Movement by the time passed
-
-- **Why.** This is the change itself. Every sum uses `t = motionTime(seconds)`, so an unmoved game's numbers still mean what they did.
-- **The sums** are in [time](designs/29-time.md#the-sums). Each step below adds a case to `test_step_lengths.cpp` that plays 2 seconds at each pacing and finds the object in the same place, within 2 pixels.
-- **Steps.**
-  - [x] **1. Velocity (M).** The move a frame sweeps (`FrameSweep` and `moveObjects` in `play/frame.cpp`) is `velocity * t`; so is what `<ride />` lends and what a `<stepped />` object saves up. **Check:** a mover at a steady velocity.
-  - [x] **2. Speed gained (M).** `<acceleration>`, `<thrust>`, `<pull>` and `<jump>`'s pull: the position gains `acceleration * t * t / 2` as well, then the velocity gains `acceleration * t`. `<rise>` and `<fall>` the same. The rest test ("4 frames of its own pull") becomes that many sixtieths of a second. **Check:** a thing dropped from rest; a `<jump>` reaches the same height at every pacing.
-  - [x] **3. Turning (S).** `<turn>` held, `<seek>`'s degrees, a spin: degrees times `t`. **Check:** a turning thing faces the same way.
-  - [x] **4. Shares (M).** `<drag>`, a `<surface>`'s, `<friction>` and `<grip>` (the easing in `play/frame.cpp`): kept over a step is `(1 - lost)` to the power `t`. The snap at 0.05 becomes a speed in the game's units. **Check:** a thing coasting under drag; Speedway and Putt Park tests.
-  - [x] **5. Held keys (M).** `<move>` held (`Object::Drive`), `<climb>`, and an `<inc>` or `<dec>` on a held key add their number times `t`. **Check:** a paddle held for a second; Cannon Hill's power after a second held.
-  - [x] **6. Heading for a point (M).** A path's legs (`Game::applyPaths`), `<chase>`, `<aim>`, `<hunt>`, `<go>` and `<wander>` off cells (`play/maze.cpp`), `<track />`: the distance covered is speed times `t`; one that reaches its point inside a step stops there and spends the rest of the step on the next leg or tile. **Check:** a path of four corners is walked in the same time at every pacing and never cuts or overshoots a corner; Pac-Man tests.
-  - [x] **7. Screen edges in the sweep (M).** Today `touchesScreenEdge` (`play/frame.cpp`) is asked after the move. The window's four sides join `FrameSweep` as things a move can cross, so an edge rule runs at the moment of crossing and the rest of the step carries on from there, as a touch between objects does. **Check:** a ball at 2,000 pixels a second in steps of a tenth bounces off all four edges and never leaves the window; `limits.md` loses that line.
-  - [x] **8. Read what is left (S).** `grep -rn "velocity\|heading\|acceleration" xge/lib/play xge/lib/verbs xge/lib/game` and read every line: anything added, compared or scaled per frame that the steps above missed (`<knock>`'s settle, a `<fire>`'s lead, `<land>`) is fixed or noted here as right. **Check:** the list of what was read and decided is in the commit message.
-- **Files.** `xge/lib/play/frame.cpp`, `play/verbs.cpp`, `play/executor.cpp`, `play/maze.cpp`, `play/collision.cpp`, `xge/lib/verbs/*`, `game/game.cpp`; `docs/reference/objects.md`, `commands.md`, `collisions.md`.
-
-### DT4. The loop plays real time
-
-- **Steps.**
-  - [x] **1. One step a frame (M).** `Engine::loop`: measure the time since the last frame, cut it to `kLongestStep` (a quarter second), play one step of it, draw. `<framerate>` becomes the most frames a second (the wait between frames), default 60. `kMostFramesOwed` goes. `xge/tests/long/test_pace.cpp` is rewritten for the new loop: with its `TimedWindow` taking 5, 20 and 100 milliseconds to show a picture, a mover at 100 pixels a second is within 5 pixels of 200 after 2 real seconds each time, and the pictures shown differ. **Check:** `xgetest-long "[pace]"`; `test_engine_input.cpp`; the window tests under `xvfb-run`.
-  - [x] **2. The command line (S).** `xgecli --framerate <n>` overrides the game's for a window; `--step <seconds>` sets the length of each of `--frames`' steps (default a sixtieth); each `<moment>` of a dump carries its time in seconds (`games/xgedump.xsd`). **Check:** `test_cli.cpp`; `docs/reference/programs.md`.
-  - [x] **3. Whole games at every step length (M).** `xgetest-long "[steps]"` gains one case a game, each played from a fresh load with the keys named, at 8, 30, 60, 144 and 240 steps a second and unevenly. Every run: no exception, every position finite (`finite` in `random_keys.h`). And one measure a game, in game seconds, which must agree with the 60 run within the range given:
-    - Pong: the seconds from the serve to the first point with no key pressed, within 10%.
-    - Asteroids: how far the ship has gone 3 seconds after 1 second of thrust, within 5%.
-    - Mario Bros.: the top of one jump within 3 pixels, and its time in the air within 5%.
-    - Space Invaders: where the block is after 10 seconds, within one of its own steps.
-    - Snake: the cells the head has gone after 5 seconds, exactly.
-    - Pinball: how high the ball gets from a full plunger, within 5%.
-    **Check:** it passes; the measured numbers at each rate are in the commit message.
-  - [x] **4. The recorded demo comes out (S).** The author: drop the demos for now and record new ones later. Remove the recorded `<demo>` from the one game that has one (`grep -l "<demo" games/descriptions/*.xml`) and whatever in that game only shows it; `xgetest "[vocabulary]"` then needs `demo` and its words in `kUnused` with why they stay. Recording and playback stay in the engine, counting steps: `--keys` with `--frames` plays the given steps, so it is still exact, and the tests and "Looking at a game" keep using it. A demo played in a window follows the real steps and so only roughly repeats; that is left open ([backlog](#language-and-engine)). **Check:** that game's tests; `test_cli.cpp`.
-  - [x] **5. The author tries it.** A line in [Waiting for a look on Windows](#waiting-for-a-look-on-windows): `xgecli pong --framerate 8`, `30`, `144`, `240`, and the same for Mario Bros. and Pinball, should each play at the speed 60 does. Do not start DT5 until the author says so.
-- **Files.** `xge/lib/engine/engine.*`, `xge/cli/source/`, `games/xgedump.xsd`, `xge/tests/long/`; `docs/reference/engine.md`, `programs.md`.
-
-### DT5. Six games moved
-
-- **Which.** `pong` (velocity, a held move, the computer), `asteroids` (thrust, turning, drag), `mariobros` (a pull, jumps, grip), `spaceinvaders` (a stepped block), `snake` (cell ticks: nothing to multiply, only the attribute), `pinball` (friction, swings, knocks). Between them they use every row of the [units table](designs/29-time.md#units).
-- **Moving a game.** Add `time="seconds"` to its `<game>`. Multiply each number by its row of the table. Then read the whole file for speeds kept elsewhere: a `<variable>` that is later copied or added into a velocity, a `<set>` or `<inc>` on `x.velocity.y`, a condition that compares a speed, a spawn's or a `<fire>`'s velocity. Round to a number a person would write (`300`, not `299.99997`).
-- **Steps.**
-  - [x] **1 to 6. One game a commit (S to M each),** Pong first. Its test file in `xge/tests/games/` is changed only where it names a speed. **Check:** the game's own tests; its case in `xgetest-long "[steps]"`, whose measure must also be within its range of what it was before the move; `xgecli <game> --frames 600 --seed 1 --dump` before and after lists the same objects, each within 20 pixels of where it was (a game with bounces: the same objects only). No per-frame number is left: read the diff once more for any speed under 20 or pull under 100, and say in the commit why each one left is right.
-  - [x] **7. The reference says seconds (S).** `docs/reference/objects.md`, `commands.md`, `collisions.md`, `format.md`: every "a frame" for a moved word becomes "a second", with the `time="seconds"` attribute explained once in `format.md` as temporary.
-  - [x] **8. The author plays the six.** A line in Waiting for a look on Windows. Do not start DT6 until the author says they feel right; if a sum is changed after that, the six are checked again first.
-
-### DT6. The rest of the games
-
-- **Found in DT5.** `<thrust burn="fuel">` took 1 off the variable each step, so Lunar Lander's fuel lasted longer at 8 steps a second than at 240. It now takes 60 a second, as a held `<inc>` does (done with Lunar Lander).
-- **Found in DT6.** A strong grip (Speedway's tyres) is a share lost each second so near 1 that a float cannot write it. The author chose half-lives: `<drag>` and `<grip>`, a surface's too, are the seconds to lose half the speed (0: at once), and the six were redone ([units](designs/29-time.md#units)).
-- **Steps.**
-  - [x] **1. The games with motion, ten a commit (M each).** In the order `ls games/descriptions` gives, skipping the six and those in step 2. Moved as DT5 says. **Check after each commit:** as DT5 step 1 for each game, without the `[steps]` case; and `playRandomKeys` (`xgetest-long`) for those games.
-  - [x] **2. Cards, boards and cell puzzles in one commit (S).** Games whose only numbers are positions and seconds get the attribute and a read for any `<velocity>` or `<move>` (a dealt card's slide). **Check:** their tests.
-  - [x] **3. Every game is moved (S).** `xgetest "[vocabulary]"` gains a check that every file in `games/descriptions/` has `time="seconds"`, but `pong_min.xml`: a hand-written prototype matches it, so it moves with DT8 step 1. **Check:** it passes; `xgetest-generated`.
-
-### DT7. The tests' own games
-
-- **Why.** About 170 lines of small games written inside 33 test files, and `invaders_fixture.h`, still hold per-frame numbers, and about 190 expectations compare a speed.
-- **Steps.**
-  - [x] **1. Five test files a commit (M in all).** Each inline game gets `time="seconds"` and its numbers moved; each expectation of a speed is multiplied to match; an expectation of a position after some frames keeps its number, as a range where the new sums moved it slightly. **Check after each commit:** that file's cases.
-  - [x] **2. None left (S).** **Check:** `grep -rL 'time="seconds"'` over the test files that hold a `<game` finds none. Left as they are: `<game />` stubs, a broken file, and the demo-splicing strings in `test_gameplay_verbs.cpp` and `test_cli.cpp`, which hold no numbers.
-
-### DT8. The stand-alone writers
-
-- **Steps.**
-  - [x] **1. The prototypes (S).** `games/prototypes/pong_min/` and `games/prototypes/pong/`: `frame()` takes the seconds passed, speeds are per second, and each `main.cpp` measures the time between frames. `pong_min.xml` gets `time="seconds"` with them, and the `[vocabulary]` check stops leaving it out. **Check:** their behaviour checks in `xge/tests/written/`.
-  - [x] **2. `windows-cpp` writes that (S).** `games/generators/windows-cpp/*.xsl` until `xgecli pong_min --generate windows-cpp` writes the prototype again. **Check:** `test_generate.cpp`; `xgetest-generated`.
-
-### DT9. Take out what is not needed
-
-- **Steps.**
-  - [ ] **1. The attribute and the old clock go (M).** Remove `time=` from every game and test, from the schema, the reader, `GameData`, `data.xsl`, `game_parts.h` and the describer; `motionTime` goes, and every sum uses the seconds directly. A file that still has `time=` is refused by the schema like any unknown attribute. **Check:** `grep -rn "motionTime\|time=\"seconds\"" .` finds nothing; all tests; `xgetest-generated`.
-  - [ ] **2. Words for frames (S).** Rename what still says frames but means steps or seconds in `xge/lib` and the tests' helpers, where it misleads. `--frames` keeps its name: it counts steps. **Check:** zero warnings; all tests.
-  - [ ] **3. The docs (S).** `docs/reference/limits.md` loses "Movement is pixels per frame..." and "The window's ... frame rate are read once" is checked; `format.md` loses the temporary attribute; `engine.md` describes the loop as built; `docs/designs/29-time.md` is marked built and its "how the games are moved" becomes history-free; the root `readme.md` if it mentions frames. This section is deleted from the plan, and what is still open goes to the backlog.
-  - [ ] **4. The author: tune.** The games whose speeds were never watched (Galaxian, Berserk, Tennis, Haunted House, Pac-Man) are now easy to compare with the originals; ask which the author wants looked at.
-
 ## The C++ review
 
-Its own block of work, done **after [delta time](#delta-time)**: both touch every field of an object, and doing them at once would hide which one broke a game. **Design, measurements and reasons:** [engine-structure](designs/16-engine-structure.md). Read it first.
+Its own block of work, done before the tasks below: it touches every field of an object. **Design, measurements and reasons:** [engine-structure](designs/16-engine-structure.md). Read it first.
 
 - **The aim.** The engine does the same things with less: a resource is held once, an object carries only the parts it uses, a tag is written in few places, and the code reads from its names.
-- **What it must not do** is change what any game does. Unlike delta time, every step here leaves every game playing exactly as before.
+- **What it must not do** is change what any game does. Every step here leaves every game playing exactly as before.
 - **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `rawDrag` and `hasDrag` in `RawObject`, `load/build.cpp`, `Object::Motion`, the frame, the printer, two hand-kept lists of an object's numbers, `data.xsl` twice and the describer. CR1, CR5, CR6 and CR7 each take homes away.
 
 ### Rules for this block
@@ -427,7 +298,7 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
 
 ## Long term
 
-Goals the author has set, beyond the tasks above. None is scheduled; [delta time](#delta-time) and [the C++ review](#the-c-review) are being done first and have their own sections.
+Goals the author has set, beyond the tasks above. None is scheduled; [the C++ review](#the-c-review) is being done first and has its own section.
 
 ### A camera and scrolling
 

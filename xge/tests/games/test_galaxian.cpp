@@ -135,7 +135,7 @@ namespace
 		{
 			const std::filesystem::path path = std::filesystem::temp_directory_path() / scratchName("xge_paths_scratch.xml");
 			std::ofstream out(path);
-			out << "<game time=\"seconds\"><window name=\"paths\"><width>200</width><height>100</height><background>color.black</background>"
+			out << "<game><window name=\"paths\"><width>200</width><height>100</height><background>color.black</background>"
 				"<framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 				<< paths << "<states><objects>" << objects << "</objects><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
 				"<inputs></inputs>" << stateExtra << "</state></states></game>";

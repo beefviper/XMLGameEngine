@@ -103,7 +103,7 @@ namespace
 	std::string gameXml(const std::string& variables, const std::string& objects, const std::string& conditions = {},
 		const std::string& moreStates = {})
 	{
-		return "<game time=\"seconds\">"
+		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables>" + variables + "</variables>"
@@ -228,19 +228,6 @@ TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' 
 	CHECK(loaded.game.getObject("on").collisionsOn);
 	CHECK_FALSE(loaded.game.getObject("none").collisionsOn);
 	CHECK_FALSE(loaded.game.getObject("plain").collisionsOn);
-}
-
-TEST_CASE("<game time=\"seconds\"> plays its numbers per second; without it, per sixtieth", "[xml_format][time]")
-{
-	const std::string seconds = gameXml("", objectXml({}));
-	std::string plain = seconds;
-	plain.replace(0, std::string("<game time=\"seconds\">").size(), "<game>");
-
-	Loaded old(plain, "xge_test_time_frames.xml");
-	CHECK(old.game.motionTime(0.5f) == 30.0f);
-
-	Loaded moved(seconds, "xge_test_time_seconds.xml");
-	CHECK(moved.game.motionTime(0.5f) == 0.5f);
 }
 
 TEST_CASE("a variable can use the ones declared before it", "[xml_format]")

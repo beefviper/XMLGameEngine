@@ -226,12 +226,12 @@ namespace xge
 		// With a <heading> it is a wheel's grip instead: each frame its speed
 		// across the way it faces loses that share, so it goes where it
 		// points and slides when the grip is low (a car on oil).
-		void applyGrip(std::vector<Object>& objects, FrameRules& rules, const StepTime& time)
+		void applyGrip(std::vector<Object>& objects, FrameRules& rules, float seconds)
 		{
-			KeptOver kept(time.t);
+			KeptOver kept(seconds);
 			// Close enough to the speed asked for to be it: a twentieth of a
 			// pixel a sixtieth of a second.
-			const float snap = 0.05f / time.sixtieth;
+			const float snap = 0.05f / kSixtieth;
 			for (auto& object : objects)
 			{
 				if (std::isinf(object.motion.grip) || object.footing.climbing || !rules.inPlay(object)) { continue; }
@@ -329,10 +329,9 @@ namespace xge
 		// once a frame, before it is moved. Thrust that burns a variable takes
 		// 1 off it every frame it is on, and does nothing while the variable
 		// is at 0 or below: a ship out of fuel still falls.
-		void applyAcceleration(std::vector<Object>& objects, FrameRules& rules, const StepTime& step)
+		void applyAcceleration(std::vector<Object>& objects, FrameRules& rules, float seconds)
 		{
-			const float t = step.t;
-			const float seconds = step.seconds;
+			const float t = seconds;
 			KeptOver kept(t);
 			for (auto& object : objects)
 			{
@@ -624,9 +623,9 @@ namespace xge
 		// fall each frame; at the ground it stops there, sent back up with
 		// its bounce's share of how fast it came down (none, once that is
 		// less than a frame's fall, so it comes to rest).
-		void riseAndFall(std::vector<Object>& objects, FrameRules& rules, const StepTime& step)
+		void riseAndFall(std::vector<Object>& objects, FrameRules& rules, float seconds)
 		{
-			const float t = step.t;
+			const float t = seconds;
 			for (auto& object : objects)
 			{
 				if (!object.aloft.has || !rules.inPlay(object)) { continue; }
@@ -640,7 +639,7 @@ namespace xge
 				if (object.rise < 0.0f)
 				{
 					const float up = -object.rise * object.aloft.bounce;
-					object.rise = up > object.aloft.fall * step.sixtieth ? up : 0.0f;
+					object.rise = up > object.aloft.fall * kSixtieth ? up : 0.0f;
 				}
 			}
 		}
@@ -1024,7 +1023,7 @@ namespace xge
 			std::vector<Object>& all;
 			const WindowDesc& window;
 			FrameRules& rules;
-			// The step's length in the game's units of time.
+			// The step's length in seconds.
 			float t;
 			std::vector<char> playing;
 			std::vector<Vector2f> origin;
@@ -1048,12 +1047,12 @@ namespace xge
 		// came. Each object is swept by itself; a lockstep set has no bounding
 		// box of its own, so when most of the invaders are gone only the ones
 		// left are tested.
-		void moveObjects(std::vector<Object>& all, const WindowDesc& window, FrameRules& rules, const StepTime& step)
+		void moveObjects(std::vector<Object>& all, const WindowDesc& window, FrameRules& rules, float seconds)
 		{
-			applyHops(all, window, rules, step.seconds);
+			applyHops(all, window, rules, seconds);
 			lendCarried(all, rules);
 
-			FrameSweep frame(all, window, rules, step.t);
+			FrameSweep frame(all, window, rules, seconds);
 			playFrame(frame.pairs(), frame.things(),
 				[&](const Pair& pair, float left) { return frame.sweep(pair, left); },
 				[&](float total) { frame.advanceTo(total); },
@@ -1141,9 +1140,8 @@ namespace xge
 		return mazeGrids.emplace(map, std::move(grid)).first->second;
 	}
 
-	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, const StepTime& step)
+	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds)
 	{
-		const float seconds = step.seconds;
 		// A picture that changes with time (an <animation>) counts this step
 		// whether or not the object is moving; only what is in play does, so a
 		// pause or a menu holds it where it was.
@@ -1175,7 +1173,7 @@ namespace xge
 			// what its velocity covered since it last did.
 			if (object.animation.stepped && rules.inPlay(object))
 			{
-				object.animation.since += step.t;
+				object.animation.since += seconds;
 				object.animation.shareBefore = object.animation.share;
 				object.animation.share = 0.0f;
 				if (passed)
@@ -1196,19 +1194,19 @@ namespace xge
 		rules.cellMoves(seconds);
 
 		// Who walks a maze chooses its way, now that a path may have let it go.
-		walkMazes(objects, rules, step.t);
+		walkMazes(objects, rules, seconds);
 
-		applyClimbing(objects, rules, step.t);
+		applyClimbing(objects, rules, seconds);
 
 		findGround(objects, rules);
 
-		applyGrip(objects, rules, step);
+		applyGrip(objects, rules, seconds);
 
-		applyAcceleration(objects, rules, step);
+		applyAcceleration(objects, rules, seconds);
 
-		pullAndSeek(objects, rules, step.t);
+		pullAndSeek(objects, rules, seconds);
 
-		riseAndFall(objects, rules, step);
+		riseAndFall(objects, rules, seconds);
 
 		// The window's sides, for what jumps rather than moves (the rest meet
 		// them in the sweep): independent per object, order doesn't matter.
@@ -1229,7 +1227,7 @@ namespace xge
 
 		// Movement and object-against-object collisions are one job, so that
 		// a fast or small object cannot jump over a thin one between frames.
-		moveObjects(objects, window, rules, step);
+		moveObjects(objects, window, rules, seconds);
 
 		// The edge rules run only for an object that is moving, so on their
 		// own they let a stuck object end the frame poking out past the wall

@@ -21,7 +21,7 @@ using Catch::Approx;
 
 TEST_CASE("a still object is in the same place however the time is cut into steps", "[steps]")
 {
-	const std::string game = secondsGame(box("still", 100, 200));
+	const std::string game = smallGame(box("still", 100, 200));
 
 	const auto answers = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("still").position.x); });
 	agree(answers, 0.0);
@@ -34,7 +34,7 @@ TEST_CASE("a timer goes off as often as the time passed owes it, however the tim
 		"<variables><variable name=\"n\">0</variable><variable name=\"ticks\">0</variable></variables>"
 		"<timers><timer><every>0.05</every><inc variable=\"clock.n\" /></timer>"
 		"<timer name=\"left\"><after>3</after><inc variable=\"clock.n\">1000</inc></timer></timers>");
-	const std::string game = secondsGame(clock,
+	const std::string game = smallGame(clock,
 		"<timers><timer><every>0.25</every><inc variable=\"clock.ticks\" /></timer></timers>");
 
 	// The object's every twentieth of a second: 40 in 2 seconds.
@@ -70,7 +70,7 @@ TEST_CASE("an animation passes the same pictures, and runs their commands as oft
 		"<then><inc variable=\"self.ended\" /></then></animation>"
 		"<position><x>20</x><y>0</y></position><collisions><off /></collisions>"
 		"<variables><variable name=\"ended\">0</variable></variables></object>";
-	const std::string game = secondsGame(spinner + flash);
+	const std::string game = smallGame(spinner + flash);
 
 	const auto came = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("spinner").variable.at("n")); });
 	agree(came, 0.0);
@@ -89,7 +89,7 @@ TEST_CASE("a hop of half a second lands in the same place at the same time, howe
 	const std::string man = box("man", 100, 100,
 		"<collisions><off /></collisions>"
 		"<actions><action name=\"down\"><hop direction=\"down\">60<seconds>0.5</seconds></hop></action></actions>");
-	const std::string game = secondsGame(man);
+	const std::string game = smallGame(man);
 	const auto jump = [](Played& play) { xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "man", "down" }, true); };
 	const auto down = [](Played& play) { return static_cast<double>(play.get("man").position.y); };
 	const auto flying = [](Played& play) { return play.get("man").isAirborne() ? 1.0 : 0.0; };
@@ -119,7 +119,7 @@ TEST_CASE("a <go> of 8 cells a second has gone 16 cells after 2 seconds, however
 		"<row>@...................</row>"
 		"<object name=\"head\" char=\"@\">" + square +
 		"<actions><action name=\"right\"><go direction=\"right\">8</go></action></actions></object></map>";
-	const std::string game = secondsGame(map);
+	const std::string game = smallGame(map);
 	const auto go = [](Played& play) { xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "head", "right" }, true); };
 
 	const auto column = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("playing.head").cellColumn); }, go);
@@ -146,24 +146,16 @@ TEST_CASE("Space Invaders' stepped block is in the same place after 5 seconds, h
 TEST_CASE("a mover at a steady velocity is in the same place, however the time is cut into steps", "[steps][velocity]")
 {
 	// 100 pixels a second, for 2 seconds.
-	const std::string moved = secondsGame(box("mover", 100, 100, "<velocity><x>100</x><y>50</y></velocity>"));
+	const std::string moved = smallGame(box("mover", 100, 100, "<velocity><x>100</x><y>50</y></velocity>"));
 	const auto x = atEveryStepLengthOf(moved, 2.0, [](Played& play) { return static_cast<double>(play.get("mover").position.x); });
 	agree(x, 2.0);
 	CHECK(x.front().value == Approx(300.0).margin(2.0));
-
-	// A game still in pixels a frame: 2 a frame is 120 a second.
-	std::string old = moved;
-	old.replace(old.find(" time=\"seconds\""), std::string(" time=\"seconds\"").size(), "");
-	old.replace(old.find("<x>100</x><y>50</y></velocity>"), std::string("<x>100</x><y>50</y></velocity>").size(), "<x>2</x><y>1</y></velocity>");
-	const auto frames = atEveryStepLengthOf(old, 2.0, [](Played& play) { return static_cast<double>(play.get("mover").position.x); });
-	agree(frames, 2.0);
-	CHECK(frames.front().value == Approx(340.0).margin(2.0));
 }
 
 TEST_CASE("a thing dropped from rest falls as far, however the time is cut into steps", "[steps][acceleration]")
 {
 	// 100 pixels a second, each second: 200 pixels in 2 seconds.
-	const std::string game = secondsGame(box("stone", 100, 10, "<acceleration><x>0</x><y>100</y></acceleration>"));
+	const std::string game = smallGame(box("stone", 100, 10, "<acceleration><x>0</x><y>100</y></acceleration>"));
 	const auto fallen = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("stone").position.y); });
 	agree(fallen, 2.0);
 	CHECK(fallen.front().value == Approx(210.0).margin(1.0));
@@ -182,7 +174,7 @@ TEST_CASE("a <jump> reaches the same height and lands at the same time, however 
 		"<actions><action name=\"up\"><jump>50</jump></action></actions></object>";
 	const std::string floor = "<object name=\"floor\"><sprite><rectangle><width>400</width><height>20</height></rectangle></sprite>"
 		"<position><x>0</x><y>300</y></position><collisions></collisions></object>";
-	const std::string game = secondsGame(jumper + floor);
+	const std::string game = smallGame(jumper + floor);
 	// Stood on the floor a moment, then up.
 	const auto jump = [](Played& play)
 	{
@@ -205,7 +197,7 @@ TEST_CASE("a turn held faces the same way, however the time is cut into steps", 
 	const std::string ship = "<object name=\"ship\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<position><x>100</x><y>100</y></position><heading>0</heading><collisions><off /></collisions>"
 		"<actions><action name=\"right\"><turn direction=\"clockwise\">45</turn></action></actions></object>";
-	const std::string game = secondsGame(ship);
+	const std::string game = smallGame(ship);
 	const auto hold = [](Played& play) { xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "ship", "right" }, true); };
 	const auto facing = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("ship").heading); }, hold);
 	agree(facing, 2.0);
@@ -215,7 +207,7 @@ TEST_CASE("a turn held faces the same way, however the time is cut into steps", 
 TEST_CASE("a thing coasting under drag goes as far, however the time is cut into steps", "[steps][drag]")
 {
 	// 300 pixels a second, losing half of it each second (a half-life of 1).
-	const std::string game = secondsGame(box("puck", 10, 100, "<velocity><x>300</x><y>0</y></velocity><drag>1</drag>"));
+	const std::string game = smallGame(box("puck", 10, 100, "<velocity><x>300</x><y>0</y></velocity><drag>1</drag>"));
 	const auto x = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("puck").position.x); });
 	// 300 (1 - 0.25) / ln 2 on from 10.
 	agree(x, 2.0);
@@ -230,7 +222,7 @@ TEST_CASE("a paddle held for a second goes as far, however the time is cut into 
 	// 200 pixels a second down while S is held.
 	const std::string paddle = box("paddle", 100, 100,
 		"<collisions><off /></collisions><actions><action name=\"down\"><move direction=\"down\">200</move></action></actions>");
-	const std::string game = secondsGame(paddle, "", "<input button=\"s\"><trigger object=\"paddle\" action=\"down\" /></input>");
+	const std::string game = smallGame(paddle, "", "<input button=\"s\"><trigger object=\"paddle\" action=\"down\" /></input>");
 	const auto hold = [](Played& play) { play.engine.handleKeyPressed(xge::KeyCode::S); };
 	const auto y = atEveryStepLengthOf(game, 1.0, [](Played& play) { return static_cast<double>(play.get("paddle").position.y); }, hold);
 	agree(y, 2.0);
@@ -248,7 +240,7 @@ TEST_CASE("a climb held goes as far up the ladder, however the time is cut into 
 		"<position><x>95</x><y>200</y></position><collisions><off /></collisions></object>";
 	const std::string floor = "<object name=\"floor\"><sprite><rectangle><width>400</width><height>20</height></rectangle></sprite>"
 		"<position><x>0</x><y>400</y></position><collisions></collisions></object>";
-	const std::string game = secondsGame(ladder + floor + climber);
+	const std::string game = smallGame(ladder + floor + climber);
 	const auto up = [](Played& play)
 	{
 		play.engine.step(0.05f);
@@ -276,7 +268,7 @@ TEST_CASE("Cannon Hill's charge after a second of Space held is the same, howeve
 TEST_CASE("a path of four corners is walked in the same time and never cuts a corner, however the time is cut into steps", "[steps][paths]")
 {
 	// 150 pixels a second round a square of 100 from (100, 100).
-	std::string game = secondsGame(box("walker", 100, 100,
+	std::string game = smallGame(box("walker", 100, 100,
 		"<collisions><off /></collisions><actions><action name=\"go\"><follow path=\"square\" /></action></actions>"));
 	game.replace(game.find("<states>"), 0, "<paths><path name=\"square\"><speed>150</speed>"
 		"<step><x>100</x><y>0</y></step><step><x>0</x><y>100</y></step><step><x>-100</x><y>0</y></step><step><x>0</x><y>-100</y></step></path></paths>");
@@ -306,7 +298,7 @@ TEST_CASE("a <chase> stops at its near distance inside a step, however the time 
 	// 400 pixels a second at a still target 300 off, stopping 20 short. It
 	// stops inside the step that the chase is run in; run less often, it
 	// goes on at its velocity between runs, as any mover does.
-	const std::string game = secondsGame(
+	const std::string game = smallGame(
 		box("chaser", 100, 100, "<collisions><off /></collisions>"
 			"<timers><timer><every>0.004</every><chase object=\"target\">400<near>20</near></chase></timer></timers>")
 		+ box("target", 400, 100, "<collisions><off /></collisions>"));
@@ -333,7 +325,7 @@ TEST_CASE("a <hunt> through a maze keeps to its lanes and goes as far, however t
 		"<object name=\"hunter\" char=\"H\"><sprite><rectangle><width>16</width><height>16</height></rectangle></sprite>"
 		"<maze map=\"maze\"><wall class=\"wall\" /></maze><collisions><off /></collisions>"
 		"<actions><action name=\"go\"><hunt object=\"prey\">300<search /></hunt></action></actions></object></map>";
-	const std::string game = secondsGame(map);
+	const std::string game = smallGame(map);
 	const auto go = [](Played& play) { xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "playing.hunter", "go" }, true); };
 	const auto middleX = [](Played& play) { const auto& h = play.get("playing.hunter"); return static_cast<double>(h.position.x + h.size.x / 2.0f); };
 	const auto middleY = [](Played& play) { const auto& h = play.get("playing.hunter"); return static_cast<double>(h.position.y + h.size.y / 2.0f); };
@@ -366,7 +358,7 @@ TEST_CASE("a fast ball bounces off all four sides at the moment it meets them, h
 {
 	// 2,000 and 1,500 pixels a second in a window of 800 by 600: a step of a
 	// tenth goes 200 and 150, and every side turns it back where it meets it.
-	const std::string game = secondsGame(box("ball", 400, 300, "<velocity><x>2000</x><y>1500</y></velocity>"
+	const std::string game = smallGame(box("ball", 400, 300, "<velocity><x>2000</x><y>1500</y></velocity>"
 		"<collisions><collision edge=\"left\"><bounce /></collision><collision edge=\"right\"><bounce /></collision>"
 		"<collision edge=\"top\"><bounce /></collision><collision edge=\"bottom\"><bounce /></collision></collisions>"));
 	const std::string path = scratchName("descriptions/steps_edges.xml");

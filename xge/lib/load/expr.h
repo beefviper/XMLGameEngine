@@ -78,7 +78,7 @@ namespace xge
 		Object makeObject(RawObject& rawObject, const FirstPass& first, Vector2f cellOffset, int lockstep);
 
 		// A written <drag> or <grip> as the rate it loses speed at (load/build.cpp).
-		float lossRate(float written, bool grip, const std::string& what) const;
+		float lossRate(float written, const std::string& what) const;
 
 		// makeObject's looks: each named <sprite> or <animation> made, the first the
 		// very picture it starts with, and where each once look goes when it ends.
@@ -284,9 +284,6 @@ namespace xge
 		// The game's <styles>, for the palettes a <become style> asks for.
 		std::vector<RawStyle> styles;
 
-		// <game time="seconds">: a <drag> or <grip> is a half-life in
-		// seconds; without it, a share lost each sixtieth of a second.
-		bool timeInSeconds{ false };
 
 		// The game's <sheets>, and each one's picture, opened the first time a
 		// cell of it is drawn and held until loading is over.

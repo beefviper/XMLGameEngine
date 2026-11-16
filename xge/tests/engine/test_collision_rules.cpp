@@ -116,7 +116,7 @@ namespace
 		{
 			{
 				std::ofstream out(path);
-				out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+				out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 					"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
 					"<framerate>60</framerate></window>"
 					"<variables><variable name=\"unused\">0</variable></variables><states><objects>"
@@ -198,7 +198,7 @@ TEST_CASE("a <trigger> with no object= outside an object's own lists stops the l
 	const std::filesystem::path path = scratchName("descriptions/rules_scratch.xml");
 	{
 		std::ofstream out(path);
-		out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><states><objects>"
@@ -254,7 +254,7 @@ TEST_CASE("an object put somewhere has moved: it touches what it is put on, with
 	const std::filesystem::path path = std::filesystem::temp_directory_path() / scratchName("xge_moved_scratch.xml");
 	{
 		std::ofstream out(path);
-		out << "<game time=\"seconds\"><window name=\"moved\"><width>200</width><height>100</height><background>color.black</background>"
+		out << "<game><window name=\"moved\"><width>200</width><height>100</height><background>color.black</background>"
 			"<framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>"
 			"<object name=\"a\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"

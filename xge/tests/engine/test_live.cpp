@@ -72,7 +72,7 @@ namespace
 		Scratch(const std::string& objects, const std::string& onSpace, const std::string& kit = {})
 		{
 			std::ofstream out(path);
-			out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"live\"><width>800</width><height>600</height><background>color.black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"

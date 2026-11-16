@@ -48,18 +48,6 @@ namespace xge
 	// long, rather than leaping through all the time it missed.
 	inline constexpr float kLongestStep = 0.25f;
 
-	// How long one step is: its seconds, and that time in the units the
-	// game's speeds are written in (Game::motionTime), `t`, with which every
-	// sum of movement is made; `sixtieth` is a sixtieth of a second in those
-	// units, for what is measured in sixtieths (a speed so small it is
-	// still).
-	struct StepTime
-	{
-		float seconds{};
-		float t{};
-		float sixtieth{};
-	};
-
 	class FrameRules
 	{
 	public:
@@ -169,5 +157,5 @@ namespace xge
 	// (before the move), the move (hops, then every pair that can touch swept
 	// through the frame and met in the order they meet), sticks, what is
 	// carried put where it is held, conditions.
-	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, const StepTime& step);
+	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds);
 }

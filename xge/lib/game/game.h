@@ -298,16 +298,10 @@ namespace xge
 		// schema.
 		void describe(std::ostream& out, unsigned long frame, double seconds, const std::string& indent = "");
 
-		// A step of `seconds` in the units the game's numbers are written in:
-		// seconds for a <game time="seconds">, sixtieths of a second for
-		// one without, whose numbers are per frame at 60. Temporary, while
-		// the games are moved to per-second numbers.
-		float motionTime(float seconds) const noexcept { return timeInSeconds ? seconds : seconds * 60.0f; }
-
 		// The step being played, set as it begins: a verb that heads for a
 		// point (<chase>) stops there rather than going past inside it.
 		void beginStep(float seconds) noexcept { stepSeconds = seconds; }
-		float stepTime() const noexcept { return motionTime(stepSeconds); }
+		float stepTime() const noexcept { return stepSeconds; }
 
 		// The game's recorded <demo> (RawDemo::recorded false for none).
 		const RawDemo& getDemo(void) const noexcept { return demo; }
@@ -850,8 +844,6 @@ namespace xge
 		unsigned long resets = 0;
 		RawDemo demo;
 		bool demoAsked = false;
-		// <game time="seconds"> (see motionTime).
-		bool timeInSeconds = false;
 		float stepSeconds = kSixtieth;
 
 		// FrameRules: what the game file says, asked by playOneFrame.
@@ -972,7 +964,7 @@ namespace xge
 		bool holdsTotal(const Condition& condition, const std::vector<std::size_t>& candidates, float against);
 		bool holdsExtreme(const Condition& condition, const std::vector<std::size_t>& candidates, std::vector<const Object*>* who);
 
-		// Counts a frame on every object timer of what is shown and every
+		// Counts `seconds` on every object timer of what is shown and every
 		// timer of the current state, and runs the commands of the ones that
 		// go off (CommandExecutor::executeTimer).
 		void updateTimers(float seconds);

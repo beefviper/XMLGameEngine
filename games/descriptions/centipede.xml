@@ -33,7 +33,7 @@
     takes the life and starts the centipede again.
 -->
 
-<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Centipede">
     <width>480</width>
     <height>552</height>

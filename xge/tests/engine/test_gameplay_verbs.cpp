@@ -58,7 +58,7 @@ namespace
 	// states given, and anything given before the states.
 	std::string gameXml(const std::string& objects, const std::string& states, const std::string& keys = {}, const std::string& pieces = {})
 	{
-		return "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
@@ -446,7 +446,7 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 	const auto fails = [](const std::string& objects, const std::string& states, const std::string& expected)
 	{
 		INFO(objects << states);
-		const std::string xml = "<game time=\"seconds\"><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>" + objects + "</objects>" + states + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
@@ -644,7 +644,7 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 	const auto fails = [](const std::string& objects, const std::string& states, const std::string& expected)
 	{
 		INFO(objects << states);
-		const std::string xml = "<game time=\"seconds\"><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>" + objects + "</objects>" + states + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
@@ -794,7 +794,7 @@ TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes ob
 		  "<position><x>0</x><y>40</y></position></object>"
 		+ "<group name=\"lamps\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		  "<position><x>0</x><y>60</y></position><member><position><x>0</x></position></member><member><position><x>10</x></position></member></group>";
-	const std::string xml = "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+	const std::string xml = "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 		"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 		"<framerate>60</framerate></window>"
 		"<variables><variable name=\"unused\">0</variable></variables>"
@@ -842,7 +842,7 @@ TEST_CASE("a <copy> or <keep> that names nothing is turned away when the game lo
 	const auto fails = [](const std::string& keeps, const std::string& inputs, const std::string& expected)
 	{
 		INFO(keeps << inputs);
-		const std::string xml = "<game time=\"seconds\"><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			+ keeps + "<states><objects>" + box("o", 0, 0, 1, 1, "<off />", {}, "<variables><variable name=\"score\">0</variable></variables>")
 			+ "</objects>" + state("playing", { "o" }, inputs) + "</states></game>";

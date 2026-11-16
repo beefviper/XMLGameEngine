@@ -76,7 +76,7 @@ namespace
 	// A one-state game whose <inputs> are `inputs`.
 	std::string gameWith(const std::string& inputs)
 	{
-		return R"(<game time="seconds">
+		return R"(<game>
   <window name="t"><width>200</width><height>100</height><background>color.black</background><framerate>60</framerate></window>
   <variables />
   <states>

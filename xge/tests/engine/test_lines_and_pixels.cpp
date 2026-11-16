@@ -120,7 +120,7 @@ namespace
 
 	std::string gameXml(const std::string& objects, const std::string& shows)
 	{
-		return "<game time=\"seconds\">"
+		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"g\">1800</variable></variables>"

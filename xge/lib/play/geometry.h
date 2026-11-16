@@ -554,10 +554,8 @@ namespace xge
 	// than bounce: as fast as four frames of its pull into that surface. A
 	// ball resting on a slope only ever meets it that slowly; one meeting a
 	// surface its pull does not press it into (a walker meeting a wall)
-	// always bounces.
-	// `sixtieth` is a sixtieth of a second in the game's units of time: the
-	// speed is what the pull gives in four of them.
-	float settleSpeed(const Vector2f& acceleration, const Vector2f& way, float sixtieth) noexcept;
+	// always bounces. A frame is a sixtieth of a second.
+	float settleSpeed(const Vector2f& acceleration, const Vector2f& way) noexcept;
 
 	// Whether `thing` rests against that side of `base`: up to a pixel
 	// from it, and overlapping it along it (a walker standing on a floor

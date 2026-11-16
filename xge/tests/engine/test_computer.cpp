@@ -39,7 +39,7 @@ namespace
 	// A game with the bat, a ball and the keys, and what else the state has.
 	std::string gameWith(const std::string& ball, const std::string& more)
 	{
-		return "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"computer\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><states><state name=\"playing\"><objects>" + bat + ball + "</objects>"

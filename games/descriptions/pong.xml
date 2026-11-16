@@ -32,7 +32,7 @@
     hit on, a ball sent from the top corner to the bottom one crosses
     faster than a paddle at the top can get down to meet it.
 -->
-<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Pong">
     <width>1280</width>
     <height>720</height>

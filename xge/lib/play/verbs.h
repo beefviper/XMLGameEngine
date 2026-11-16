@@ -49,8 +49,7 @@ namespace xge
 		return nearest;
 	}
 
-	// How far an object moves in a step `t` long (in the game's units of
-	// time, Game::motionTime): its own velocity times t (for a stepped
+	// How far an object moves in a step `t` seconds long: its own velocity times t (for a stepped
 	// animation, only on the step its picture changes, by the time saved up
 	// since: Object::Animation::stepped), plus the velocity of whatever it is
 	// riding (see Object::riding) times t. With t of 1, how fast it goes.
@@ -74,8 +73,7 @@ namespace xge
 	// straight out, so off a box this is the plain flip.
 	// With <friction>, it rubs along the surface and may come to rest on it
 	// (see Object::Rest).
-	// `sixtieth`: a sixtieth of a second in the game's units (Game::motionTime).
-	void bounce(Object& object, const Object& other, const Touch& touch, float share, float sixtieth);
+	void bounce(Object& object, const Object& other, const Touch& touch, float share);
 
 	// <bounce /> off a screen edge, which faces straight in.
 	void bounceOffEdge(Object& object, Edge edge, float share);
@@ -88,7 +86,7 @@ namespace xge
 	// knockedApart); `touch` is the object's own view of it. Two that went
 	// into each other are put apart along the touch, the lighter moved
 	// more. Whether they were coming together.
-	bool knock(Object& object, Object& other, const Touch& touch, float bounce, float sixtieth);
+	bool knock(Object& object, Object& other, const Touch& touch, float bounce);
 
 	// <hole>: clears the pixels of the object's own picture within `radius`
 	// of where `other` struck it - the solid pixel nearest the middle of

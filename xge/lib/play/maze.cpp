@@ -190,7 +190,7 @@ namespace xge
 			std::vector<Object>& objects;
 			const Grid& grid;
 			FrameRules& rules;
-			// The step's length in the game's units.
+			// The step's length in seconds.
 			float t;
 			// The most tile middles one step passes.
 			static constexpr int kMostTilesAStep = 64;

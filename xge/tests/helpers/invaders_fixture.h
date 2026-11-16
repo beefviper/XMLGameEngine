@@ -30,7 +30,7 @@ namespace invaders_fixture
 <!-- author: beefviper -->
 <!-- date: Sept 18, 2020 -->
 
-<game time="seconds">
+<game>
   <window name="Space Invaders">
     <width>1024</width>
     <height>768</height>

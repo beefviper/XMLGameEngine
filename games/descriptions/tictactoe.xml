@@ -27,7 +27,7 @@
     of the game, and cannot be beaten, only drawn with.
 -->
 
-<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Tic-Tac-Toe">
     <width>800</width>
     <height>600</height>

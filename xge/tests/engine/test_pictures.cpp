@@ -64,7 +64,7 @@ namespace
 
 			{
 				std::ofstream out(file.path);
-				out << "<game time=\"seconds\"><window name=\"pictures\"><width>800</width><height>600</height><background>color.black</background>"
+				out << "<game><window name=\"pictures\"><width>800</width><height>600</height><background>color.black</background>"
 					"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 					"<states><objects>" + objects + "</objects><state name=\"s\"><shows>" + shows + "</shows>"
 					"<inputs><input button=\"space\"><pop /></input></inputs></state></states></game>";

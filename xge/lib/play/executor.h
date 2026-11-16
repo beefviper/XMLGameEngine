@@ -84,8 +84,8 @@ namespace xge
 
 		Game& game;
 
-		// While a held key's commands run, the step's length in the game's
-		// units (Game::motionTime): an <inc> or <dec> adds its number times
+		// While a held key's commands run, the step's length in seconds: an
+		// <inc> or <dec> adds its number times
 		// it, so a held count goes by the time held. 1 otherwise.
 		float heldShare = 1.0f;
 

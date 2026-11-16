@@ -53,14 +53,12 @@ namespace xge
 		patterns = std::move(data.patterns);
 		const std::vector<std::string> keeps = std::move(data.keeps);
 		demo = std::move(data.demo);
-		timeInSeconds = data.timeInSeconds;
 
 		// Room for what is spawned, so that the file's objects stay where
 		// they are (and a reference to one good) as copies join.
 		objects.reserve(rawObjects.size() * 2 + 256);
 		expr.styles = data.styles;
 		expr.sheets = data.sheets;
-		expr.timeInSeconds = timeInSeconds;
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 		keep(keeps);
@@ -206,7 +204,7 @@ namespace xge
 		// another scene) is seen, and so is anything this frame changes.
 		settleSpawns();
 		stageChanged();
-		playOneFrame(getCurrentObjects(), windowDesc, *this, { seconds, motionTime(seconds), motionTime(kSixtieth) });
+		playOneFrame(getCurrentObjects(), windowDesc, *this, seconds);
 		settleSpawns();
 		stageChanged();
 		showJoins();
@@ -409,7 +407,6 @@ namespace xge
 		std::cout << "schema validation: " << validation << "\n\n";
 
 		std::cout << windowDesc << '\n';
-		std::cout << "time: " << (timeInSeconds ? "seconds" : "sixtieths of a second") << "\n\n";
 
 		for (auto& variable : variables)
 		{
@@ -1692,7 +1689,7 @@ namespace xge
 			bool moving = false;
 			// How far it goes this step: a corner reached on the way is passed
 			// (the object put on it) and the rest goes on along the next leg.
-			const float t = motionTime(seconds);
+			const float t = seconds;
 			float budget = path.speed * t;
 			while (object.isFollowing() && object.path.leg < path.steps.size())
 			{

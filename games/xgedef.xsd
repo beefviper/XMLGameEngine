@@ -3835,16 +3835,6 @@
           </xs:complexType>
         </xs:element>
       </xs:sequence>
-      <xs:attribute name="time" use="optional">
-        <xs:annotation>
-          <xs:documentation>temporary, while the games are moved to per-second numbers: seconds says this game's speeds, pulls, turns and held counts are per second and its drag and grip half-lives in seconds; left out, they are per sixtieth of a second and drag and grip a share lost each frame</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:NMTOKEN">
-            <xs:enumeration value="seconds" />
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:attribute>
     </xs:complexType>
   </xs:element>
 </xs:schema>

@@ -193,7 +193,7 @@ TEST_CASE("a mass is more than 0, and a knock's bounce 0 up to 1", "[knock]")
 		const std::filesystem::path path = scratchName("descriptions/knock_scratch.xml");
 		{
 			std::ofstream out(path);
-			out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"knock\"><width>800</width><height>600</height><background>color.black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables><states><objects>" << object << "<object name=\"wall\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"

@@ -71,7 +71,7 @@ namespace
 	// A game whose one state shows `shows` (a list of names), around the objects given.
 	std::string gameXml(const std::string& objects, const std::string& shows = "<show object=\"lane\" />")
 	{
-		return "<game time=\"seconds\">"
+		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"row\">100</variable></variables>"

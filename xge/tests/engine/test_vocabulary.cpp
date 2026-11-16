@@ -131,18 +131,6 @@ TEST_CASE("every word of the schema is used by some game, or is listed with why 
 	}
 }
 
-TEST_CASE("every game writes its numbers in seconds", "[vocabulary]")
-{
-	for (const std::string& file : played::shippedGames(gameFilesIn("descriptions")))
-	{
-		const std::string game = std::filesystem::path(file).stem().string();
-		auto document = XmlDocumentFactory::create(XmlBackend::TinyXml2);
-		REQUIRE(document->load(file));
-		INFO(game << ".xml has no time=\"seconds\" on its <game>");
-		CHECK(document->getRootElement()->getAttribute("time") == "seconds");
-	}
-}
-
 TEST_CASE("every word of the schema is in the reference docs", "[vocabulary]")
 {
 	// The docs are in the repository the program was built from, beside xge/.

@@ -110,7 +110,7 @@ This writes a C++ program on SFML 3 that is **the engine with the game built in*
 | `source/main.cpp`, `CMakeLists.txt`, `README.md`, `.gitignore` | `program.xsl` | the window: keys in, a step of the time since the last frame (at most a quarter of a second), the picture; the build finds or fetches SFML 3 |
 | `LICENSE` | `xgecli` | the repository's licence |
 
-It writes `pong_min.xml` only for now, as `games/prototypes/pong_min/` has it, and only a game with `time="seconds"`. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
+It writes `pong_min.xml` only for now, as `games/prototypes/pong_min/` has it. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
 
 ```
 windows-cpp cannot write these parts of pong.xml yet; use engine-cpp for this game:

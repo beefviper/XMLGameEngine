@@ -1140,7 +1140,7 @@ namespace xge
 			// surface going that fast where they touch (velocityAt). 0 for one
 			// put somewhere (a reset) and for anything that does not turn.
 			float spin{};
-			// The step that spin was turned over, in the game's units of time:
+			// The step that spin was turned over, in seconds:
 			// its speed of turning is spin / spinOver.
 			float spinOver{ 1.0f };
 		};
@@ -1180,7 +1180,7 @@ namespace xge
 			std::size_t lookBefore{};
 			// <stepped />: it moves only on the step its picture changes, the
 			// whole way its velocity took it over the time since the last
-			// change (`since`, in the game's units of time: Game::motionTime);
+			// change (`since`, in seconds);
 			// `share` is how much of that time this step moves (0 between
 			// changes). See motionOf. `shareBefore` is the step before's, so
 			// this step's edge checks, made before the move, see where that
@@ -1255,7 +1255,7 @@ namespace xge
 			// each one burns.
 			std::array<float, 4> thrust{};
 			std::array<std::string, 4> thrustBurn{};
-			// Turning held (only Left and Right are used): degrees a frame.
+			// Turning held (only Left and Right are used): degrees a second.
 			std::array<float, 4> turn{};
 			// Thrust held along the heading, for each action that thrusts,
 			// with the variable it burns, so that forward and back held

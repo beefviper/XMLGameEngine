@@ -156,7 +156,7 @@ namespace
 	// A small game around a <map>, with `objects` in place of OBJECTS.
 	std::string mapGame(const std::string& objects)
 	{
-		return R"(<game time="seconds">
+		return R"(<game>
   <window name="t"><width>200</width><height>200</height><background>color.black</background><framerate>60</framerate></window>
   <variables><variable name="tile">10</variable></variables>
   <states>

@@ -75,7 +75,7 @@ namespace
 	// variables. The window is 800 by 600, so window.width.center is 400.
 	std::string gameXml(const std::string& x, const std::string& y = "0", const std::string& variables = {})
 	{
-		return "<game time=\"seconds\">"
+		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables>" + variables + "</variables>"
@@ -555,7 +555,7 @@ namespace
 	// timers), and a state that shows it.
 	std::string gameWithObject(const std::string& name, const std::string& sprite, const std::string& x, const std::string& more = {})
 	{
-		return "<game time=\"seconds\">"
+		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"zero\">0</variable></variables>"
@@ -689,7 +689,7 @@ TEST_CASE("a divisor that is 0 only because it is not known yet is not refused a
 	// b is built after a, so b.w reads 0 while a is being built; and the width of
 	// a text reads 0 until a window has measured it. Neither is a mistake.
 	const std::string xml =
-		"<game time=\"seconds\">"
+		"<game>"
 		"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 		"<framerate>60</framerate></window>"
 		"<variables></variables>"

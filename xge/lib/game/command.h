@@ -337,7 +337,7 @@ namespace xge
 	// <climb direction="up" class="ladder">step</climb> (or down) - only ever
 	// in an object's own <action>, held like a <move>: while the object stands
 	// at, or is on, an object of that class, it goes up or down it `step`
-	// pixels a frame, lined up with its middle, with no pull and no <land />
+	// pixels a second, lined up with its middle, with no pull and no <land />
 	// on the way, and no walking off it until it reaches either end. See
 	// playOneFrame.
 	struct CmdClimb
@@ -347,9 +347,9 @@ namespace xge
 		std::string ladderClass;
 	};
 
-	// <chase object="player">1.5<near>100</near></chase> - the
+	// <chase object="player">90<near>100</near></chase> - the
 	// object heads straight for the middle of the nearest one in play of that
-	// name or <group>, at `speed` pixels a frame; within `near` pixels of it
+	// name or <group>, at `speed` pixels a second; within `near` pixels of it
 	// (0 when left out: never) it stops instead. Once: a timer that repeats
 	// it keeps it on the trail. See CommandExecutor::chase.
 	struct CmdChase
@@ -361,7 +361,7 @@ namespace xge
 
 	// <go direction="left">2</go> - only ever in an object's own <action>,
 	// once for each press, for an object that walks a <maze>: it turns that
-	// way at the first gap there is and keeps going, `speed` pixels a frame,
+	// way at the first gap there is and keeps going, `speed` pixels a second,
 	// until a wall stops it; turned straight round, it goes back at once.
 	// Pac-Man's stick. See play/maze.h.
 	struct CmdGo
@@ -451,11 +451,11 @@ namespace xge
 	// or anything bouncing back off something it has no edge to bounce from.
 	struct CmdReverse {};
 
-	// <thrust direction="up" burn="fuel">0.04</thrust> - only ever in an
+	// <thrust direction="up" burn="fuel">144</thrust> - only ever in an
 	// object's own <action>: while the key is held the object's velocity
-	// changes by `amount` every frame in that direction (a thruster), where
+	// gains `amount` pixels a second each second in that direction (a thruster), where
 	// <move> would set the velocity itself. burn names one of the object's own
-	// <variable>s that one is taken off every frame the thrust is on, and the
+	// <variable>s that 60 a second is taken off while the thrust is on, and the
 	// thrust does nothing while it is at 0 or below (fuel); empty means free
 	// (see playOneFrame).
 	struct CmdThrustAcross
@@ -465,9 +465,9 @@ namespace xge
 		std::string burn;
 	};
 
-	// <turn direction="counterclockwise">3</turn> (or clockwise) - only ever in an object's own
+	// <turn direction="counterclockwise">180</turn> (or clockwise) - only ever in an object's own
 	// <action>: while the key is held the object's heading changes by `rate`
-	// degrees every frame, counterclockwise for left and clockwise for right
+	// degrees a second, counterclockwise for left and clockwise for right
 	// (see Object::heading, playOneFrame). Held like a <move>.
 	struct CmdTurn
 	{
@@ -1206,7 +1206,7 @@ namespace xge
 	// A path: a way through the window that objects <follow>, written once
 	// and flown by any number of them (Galaxian's aliens flying in and
 	// diving). It is a list of legs flown one after the other at `speed`
-	// pixels a frame: a step moves the object by `by` from wherever the step
+	// pixels a second: a step moves the object by `by` from wherever the step
 	// began, and runs its commands (an object's own, as on a timer: firing,
 	// a sound) as it sets off; home takes it back to where it started the
 	// game (its <position>, moved by any <shift>), however far it has come.

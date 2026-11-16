@@ -1,6 +1,6 @@
 # Time
 
-**Status:** Decided, not built. The work is the [delta time](../plan.md#delta-time) section of the plan.
+**Status:** Built. Every game, test game and stand-alone program plays one step a frame of the time that passed. Reference: [engine](../reference/engine.md).
 
 ## What we want
 
@@ -16,17 +16,17 @@ A game plays the same whatever the frame rate: at 8 frames a second, at 60, at 1
 
 ## Units
 
-| Kind | Words | Written as | From a per-frame number |
-|---|---|---|---|
-| speeds | `<velocity>`, `<move>` held, a path's speed, `<chase>`, `<aim>`, `<hunt>`/`<go>`/`<wander>` off cells, `<seek>`'s most | pixels a second | times 60 |
-| speed gained | `<acceleration>`, `<thrust>`, `<pull>`, `<jump>`'s pull, `<rise>`, `<fall>` | pixels a second, each second | times 3,600 |
-| turning | `<turn>` held, `<seek>`'s degrees, a spin | degrees a second | times 60 |
-| losses | `<drag>`, `<grip>`, a `<surface>`'s | half-life: seconds to lose half the speed (0: at once) | `ln 2 / (-60 ln(1 - share))` |
-| counts | an `<inc>` or `<dec>` on a held key | added each second | times 60 |
-| times | timers, animations, `<hop>`, `<swing>`, cell speeds | seconds, as today | unchanged |
+| Kind | Words | Written as |
+|---|---|---|
+| speeds | `<velocity>`, `<move>` held, a path's speed, `<chase>`, `<aim>`, `<hunt>`/`<go>`/`<wander>` off cells, `<seek>`'s most | pixels a second |
+| speed gained | `<acceleration>`, `<thrust>`, `<pull>`, `<jump>`'s pull, `<rise>`, `<fall>` | pixels a second, each second |
+| turning | `<turn>` held, `<seek>`'s degrees, a spin | degrees a second |
+| losses | `<drag>`, `<grip>`, a `<surface>`'s | half-life: seconds to lose half the speed (0: at once) |
+| counts | an `<inc>` or `<dec>` on a held key | added each second |
+| times | timers, animations, `<hop>`, `<swing>`, cell speeds | seconds |
 
 - Live numbers read and set the same units: `ball.velocity.x` is pixels a second.
-- A loss is a half-life, chosen by the author over a share lost each second: strong grips (Speedway's tyres, 0.03 seconds) are a share so near 1 that a float cannot write it, while a half-life is exact at any strength. `<drag>0.02</drag>` a frame is `0.57` seconds. Longer is weaker, the other way from a share.
+- A loss is a half-life, chosen by the author over a share lost each second: strong grips (Speedway's tyres, 0.03 seconds) are a share so near 1 that a float cannot write it, while a half-life is exact at any strength. Longer is weaker, the other way from a share.
 - `<friction>` is not a loss over time: it is how hard a still surface holds back at a touch, and stays as it is.
 
 ## The sums
@@ -58,14 +58,6 @@ With steps of any length, the sums must give the same answer however a second is
 - **`xgecli --frames`** plays steps of a sixtieth unless told otherwise.
 - **The board-game search** counts moves, not time.
 - **A recorded demo** played with `--frames` gets the steps it is told, so it is exact. In a window it is the open point: [below](#open).
-
-## How the games are moved
-
-For a while a game says which units it is in: `<game time="seconds">`. One without it is in the old units, and the engine plays it with its motion clock in sixtieths of a second, so every unmoved game already goes by time passed and plays as before at 60.
-
-- Moving a game is multiplying its numbers by the table above and adding the attribute.
-- Speeds kept in a game's own variables cannot be found by a script; they are found by reading the game and by its tests.
-- When every game and every test's own game is moved, the attribute and the old clock are removed.
 
 ## What we looked at
 

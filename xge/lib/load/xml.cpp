@@ -3788,13 +3788,12 @@ namespace xge
 		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
 		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, std::vector<RawPath>& rawPaths,
 		std::vector<RawStyle>& rawStyles, std::vector<Sheet>& rawSheets, std::vector<RawPatterns>& rawPatterns, std::vector<std::string>& rawKeeps, RawDemo& rawDemo,
-		bool& timeInSeconds, SchemaValidation& validation)
+		SchemaValidation& validation)
 	{
 		const ElementPtr pictured = loadGameFile(filename, backend, validation);
 		const std::unique_ptr<XmlNode> root = viewOf(pictured);
 
 		const std::string where = "game";
-		timeInSeconds = root->getAttribute("time") == "seconds";
 		std::unique_ptr<XmlNode> window = requireChild(*root, "window", where);
 		std::unique_ptr<XmlNode> variablesNode = requireChild(*root, "variables", where);
 		std::unique_ptr<XmlNode> piecesNode = findChild(root.get(), "objects");  // none: nothing is taken
@@ -3876,7 +3875,7 @@ namespace xge
 	{
 		GameData data;
 		SchemaValidation validation = SchemaValidation::None;
-		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.styles, data.sheets, data.patterns, data.keeps, data.demo, data.timeInSeconds, validation);
+		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.styles, data.sheets, data.patterns, data.keeps, data.demo, validation);
 
 		std::ostringstream said;
 		said << validation;
