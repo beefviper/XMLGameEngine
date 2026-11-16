@@ -361,3 +361,46 @@ TEST_CASE("a <hunt> through a maze keeps to its lanes and goes as far, however t
 		}
 	}
 }
+
+TEST_CASE("a fast ball bounces off all four sides at the moment it meets them, however the time is cut into steps", "[steps][edges]")
+{
+	// 2,000 and 1,500 pixels a second in a window of 800 by 600: a step of a
+	// tenth goes 200 and 150, and every side turns it back where it meets it.
+	const std::string game = secondsGame(box("ball", 400, 300, "<velocity><x>2000</x><y>1500</y></velocity>"
+		"<collisions><collision edge=\"left\"><bounce /></collision><collision edge=\"right\"><bounce /></collision>"
+		"<collision edge=\"top\"><bounce /></collision><collision edge=\"bottom\"><bounce /></collision></collisions>"));
+	const std::string path = scratchName("descriptions/steps_edges.xml");
+	{
+		std::ofstream out(path);
+		out << game;
+	}
+	{
+		Played play{ path };
+		int turnsX = 0;
+		int turnsY = 0;
+		xge::Vector2f was = play.get("ball").velocity;
+		for (int step = 0; step < 30; ++step)
+		{
+			play.engine.step(0.1f);
+			const xge::Object& ball = play.get("ball");
+			INFO("step " << step << ": " << ball.position.x << ", " << ball.position.y);
+			CHECK(ball.position.x >= -0.01f);
+			CHECK(ball.position.x <= 789.01f);
+			CHECK(ball.position.y >= -0.01f);
+			CHECK(ball.position.y <= 590.01f);
+			if ((ball.velocity.x > 0.0f) != (was.x > 0.0f)) { ++turnsX; }
+			if ((ball.velocity.y > 0.0f) != (was.y > 0.0f)) { ++turnsY; }
+			was = ball.velocity;
+		}
+		// 6,000 across 779 and 4,500 down 590 in 3 seconds.
+		CHECK(turnsX >= 6);
+		CHECK(turnsY >= 6);
+	}
+	std::error_code ignored;
+	std::filesystem::remove(path, ignored);
+
+	const auto x = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("ball").position.x); });
+	const auto y = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("ball").position.y); });
+	agree(x, 2.0);
+	agree(y, 2.0);
+}

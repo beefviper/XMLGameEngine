@@ -510,6 +510,11 @@ namespace xge
 	// which is when its rules about the edge run.
 	bool pastWindowEdge(const Box& thing, const Vector2f& window, Edge edge) noexcept;
 
+	// How far through `move` (0 to 1) a thing not yet past that edge first
+	// meets that side of the window, going out; none when the move does not
+	// take it there.
+	std::optional<float> timeToWindowEdge(const Box& thing, const Vector2f& move, const Vector2f& window, Edge edge) noexcept;
+
 	// Whether all of the box is inside the window: where a hop may land.
 	bool insideWindow(const Box& at, const Vector2f& window) noexcept;
 

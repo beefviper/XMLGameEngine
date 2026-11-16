@@ -496,6 +496,25 @@ namespace xge
 		return false;
 	}
 
+	std::optional<float> timeToWindowEdge(const Box& thing, const Vector2f& move, const Vector2f& window, Edge edge) noexcept
+	{
+		// The coordinate that goes past, where it meets the side, and the
+		// way out.
+		float at{};
+		float line{};
+		float going{};
+		switch (edge)
+		{
+		case Edge::Left:   at = thing.position.x; line = 0.0f; going = -move.x; break;
+		case Edge::Right:  at = thing.position.x; line = window.x - thing.size.x; going = move.x; break;
+		case Edge::Top:    at = thing.position.y; line = 0.0f; going = -move.y; break;
+		case Edge::Bottom: at = thing.position.y; line = window.y - thing.size.y; going = move.y; break;
+		}
+		const float toGo = edge == Edge::Left || edge == Edge::Top ? at - line : line - at;
+		if (!(going > 0.0f) || toGo >= going) { return std::nullopt; }
+		return std::max(toGo, 0.0f) / going;
+	}
+
 	bool insideWindow(const Box& at, const Vector2f& window) noexcept
 	{
 		return at.left() >= 0 && at.top() >= 0 && at.right() <= window.x && at.bottom() <= window.y;

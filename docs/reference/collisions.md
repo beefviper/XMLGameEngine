@@ -16,7 +16,7 @@ In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<t
 
 ## Rules
 
-- **A screen edge:** `edge="left"`, `right`, `top`, `bottom`, `vertical` (top and bottom), `horizontal` (left and right), `all`. Edges are checked by position, before the frame's move.
+- **A screen edge:** `edge="left"`, `right`, `top`, `bottom`, `vertical` (top and bottom), `horizontal` (left and right), `all`. An edge is met in the frame's sweep, at the moment the object reaches that side going out, and the rest of the step carries on from there; one already past it meets it at once, every step it moves. A `<stepped />` object or a piece of a cell map jumps, so it is asked before the move, by where it is.
 - **Another object:** `class="..."` and/or `object="..."` (one object, a group, a copy's piece), both meaning AND. A `<collision>` with neither is about anything. An edge rule with either stops the load.
 - **Every matching rule runs**, in the order written.
 - **A rule holds rules.** What a `<collision>` says (its attributes and checks) every rule it holds says too, so a shared class or look is written once; an attribute it gives is not given again below it. Its `<first>` runs as a rule of its own, before them. Every one that matches runs, so there is no `<otherwise>`, and commands loose beside the rules it holds stop the load.

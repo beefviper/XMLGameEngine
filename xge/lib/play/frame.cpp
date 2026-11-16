@@ -764,7 +764,9 @@ namespace xge
 			}
 		}
 
-		// A pair of objects in play that a rule answers for and that can touch.
+		// A pair of objects in play that a rule answers for and that can touch,
+		// or an object and a side of the window it has rules for (`second`
+		// none, `j` past the objects: their count plus the edge's index).
 		struct Pair
 		{
 			Object* first;
@@ -772,14 +774,24 @@ namespace xge
 			std::size_t i;
 			std::size_t j;
 			bool byPicture;
+			Edge screenEdge = Edge::Top;
 		};
+
+		// The window's sides are met in the sweep, at the moment of crossing,
+		// by an object with rules for them. A <stepped /> one jumps, so has no
+		// moment of crossing: it is asked before the move (playOneFrame), and
+		// so is a piece of a cell map, which meets its map's edges by its moves.
+		bool sweptAtEdges(const Object& object) noexcept
+		{
+			return !object.animation.stepped && !object.map.cells;
+		}
 
 		// What moveObjects keeps about each object over one frame's sweep.
 		class FrameSweep
 		{
 		public:
-			FrameSweep(std::vector<Object>& objects, FrameRules& frameRules, float stepT)
-				: all(objects), rules(frameRules), t(stepT), playing(objects.size()), origin(objects.size()), since(objects.size(), 0.0f),
+			FrameSweep(std::vector<Object>& objects, const WindowDesc& windowDesc, FrameRules& frameRules, float stepT)
+				: all(objects), window(windowDesc), rules(frameRules), t(stepT), playing(objects.size()), origin(objects.size()), since(objects.size(), 0.0f),
 				turnFrom(objects.size(), 0.0f), originDegrees(objects.size(), 0), reach(objects.size()), fresh(objects.size(), 0), before(objects.size())
 			{
 				// Whether each is in play, asked once and again only after a
@@ -836,8 +848,22 @@ namespace xge
 						}
 					}
 				}
+				for (std::size_t i = 0; i < all.size(); ++i)
+				{
+					if (!playing[i] || !sweptAtEdges(all[i])) { continue; }
+					for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+					{
+						if (!all[i].collisionData.edges[edgeIndex(edge)].commands.empty())
+						{
+							found.push_back({ &all[i], nullptr, i, all.size() + edgeIndex(edge), false, edge });
+						}
+					}
+				}
 				return found;
 			}
+
+			// The things the pairs name: the objects, then the four sides.
+			std::size_t things() const { return all.size() + 4; }
 
 			void advanceTo(float total)
 			{
@@ -863,6 +889,7 @@ namespace xge
 			// leaves them be until a reaction changes one of them).
 			PairSweep sweep(const Pair& pair, float left)
 			{
+				if (!pair.second) { return sweepEdge(pair, left); }
 				Object& a = *pair.first;
 				Object& b = *pair.second;
 				if (!playing[pair.i] || !playing[pair.j] || !canTouch(a, b) || (!isMoving(a) && !isMoving(b)))
@@ -887,15 +914,21 @@ namespace xge
 			// anything starts that object again from where it is now.
 			void react(const Pair& pair, Edge edgeOfSecond, float at, std::vector<std::size_t>& changed)
 			{
-				// What the touch was, found once, before anything answers it.
-				const Contact contact = contactBetween(*pair.first, *pair.second, edgeOfSecond, at, pair.byPicture);
-
 				for (std::size_t i = 0; i < all.size(); ++i)
 				{
 					before[i] = { all[i].position, sweptMotion(all[i], t), all[i].size, all[i].heading };
 				}
 
-				rules.touched(*pair.first, *pair.second, contact);
+				if (pair.second)
+				{
+					// What the touch was, found once, before anything answers it.
+					const Contact contact = contactBetween(*pair.first, *pair.second, edgeOfSecond, at, pair.byPicture);
+					rules.touched(*pair.first, *pair.second, contact);
+				}
+				else
+				{
+					rules.atEdge(*pair.first, pair.screenEdge);
+				}
 
 				for (std::size_t i = 0; i < all.size(); ++i)
 				{
@@ -935,6 +968,22 @@ namespace xge
 
 			bool spinning(std::size_t i) const { return all[i].turning.spin != 0.0f && all[i].turning.hasHeading; }
 
+			// An object and a side of the window: already past it (a hit at
+			// once), or when through what is left of the step its move takes
+			// it past; far when it will not get there unless a reaction
+			// changes it. One that is not moving sits out, as it did before
+			// the sides were swept.
+			PairSweep sweepEdge(const Pair& pair, float left)
+			{
+				const Object& object = *pair.first;
+				if (!playing[pair.i] || !object.collisionsOn || !isMoving(object)) { return { std::nullopt, true }; }
+				const Box box{ object.position, object.size };
+				if (pastWindowEdge(box, { window.width, window.height }, pair.screenEdge)) { return { SweepHit{ 0.0f, pair.screenEdge }, false }; }
+				const std::optional<float> when = timeToWindowEdge(box, sweptMotion(object, t) * left, { window.width, window.height }, pair.screenEdge);
+				if (!when) { return { std::nullopt, true }; }
+				return { SweepHit{ *when, pair.screenEdge }, false };
+			}
+
 			float facingAt(std::size_t i, float total) const
 			{
 				return std::fmod(turnFrom[i] + all[i].turning.spin * total + 720.0f, 360.0f);
@@ -955,6 +1004,7 @@ namespace xge
 			}
 
 			std::vector<Object>& all;
+			const WindowDesc& window;
 			FrameRules& rules;
 			// The step's length in the game's units of time.
 			float t;
@@ -985,8 +1035,8 @@ namespace xge
 			applyHops(all, window, rules, step.seconds);
 			lendCarried(all, rules);
 
-			FrameSweep frame(all, rules, step.t);
-			playFrame(frame.pairs(), all.size(),
+			FrameSweep frame(all, window, rules, step.t);
+			playFrame(frame.pairs(), frame.things(),
 				[&](const Pair& pair, float left) { return frame.sweep(pair, left); },
 				[&](float total) { frame.advanceTo(total); },
 				[&](const Pair& pair, Edge edgeOfSecond, float at, std::vector<std::size_t>& changed) { frame.react(pair, edgeOfSecond, at, changed); });
@@ -1142,11 +1192,12 @@ namespace xge
 
 		riseAndFall(objects, rules, step);
 
-		// Screen-edge checks: independent per object, order doesn't matter.
+		// The window's sides, for what jumps rather than moves (the rest meet
+		// them in the sweep): independent per object, order doesn't matter.
 		for (auto& object : objects)
 		{
 			// A piece of a cell map meets its map's edges by its moves.
-			if (object.collisionsOn && !object.map.cells && isMoving(object) && rules.inPlay(object))
+			if (object.collisionsOn && !object.map.cells && !sweptAtEdges(object) && isMoving(object) && rules.inPlay(object))
 			{
 				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 				{
@@ -1162,9 +1213,9 @@ namespace xge
 		// a fast or small object cannot jump over a thin one between frames.
 		moveObjects(objects, window, rules, step);
 
-		// The edge checks above run before the move, and only for an object
-		// that is moving, so on their own they let a stuck object end the
-		// frame poking out past the wall (and stay there once it stopped).
+		// The edge rules run only for an object that is moving, so on their
+		// own they let a stuck object end the frame poking out past the wall
+		// (and stay there once it stopped).
 		for (auto& object : objects)
 		{
 			if (object.collisionsOn && rules.inPlay(object))
