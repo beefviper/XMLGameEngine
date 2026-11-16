@@ -103,7 +103,7 @@ namespace
 	std::string gameXml(const std::string& variables, const std::string& objects, const std::string& conditions = {},
 		const std::string& moreStates = {})
 	{
-		return "<game>"
+		return "<game time=\"seconds\">"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables>" + variables + "</variables>"
@@ -232,9 +232,9 @@ TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' 
 
 TEST_CASE("<game time=\"seconds\"> plays its numbers per second; without it, per sixtieth", "[xml_format][time]")
 {
-	const std::string plain = gameXml("", objectXml({}));
-	std::string seconds = plain;
-	seconds.replace(0, std::string("<game>").size(), "<game time=\"seconds\">");
+	const std::string seconds = gameXml("", objectXml({}));
+	std::string plain = seconds;
+	plain.replace(0, std::string("<game time=\"seconds\">").size(), "<game>");
 
 	Loaded old(plain, "xge_test_time_frames.xml");
 	CHECK(old.game.motionTime(0.5f) == 30.0f);
@@ -510,7 +510,7 @@ TEST_CASE("a mistake the schema lets through stops the load, saying what to writ
 			&& ContainsSubstring("<acceleration> with a <y> above 0"));
 
 		ObjectXml falls;
-		falls.velocityY = "0</y></velocity><acceleration><x>0</x><y>0.5</y></acceleration><velocity><x>0</x><y>0";
+		falls.velocityY = "0</y></velocity><acceleration><x>0</x><y>1800</y></acceleration><velocity><x>0</x><y>0";
 		std::string xml = gameXml("", objectXml(falls));
 		xml.replace(xml.find("<velocity><x>0</x><y>0</y></velocity><collisions>"), std::string("<velocity><x>0</x><y>0</y></velocity>").size(), "");
 		xml.replace(xml.find("</collisions>"), 13, "</collisions><actions><action name=\"jump\"><jump>40</jump></action></actions>");

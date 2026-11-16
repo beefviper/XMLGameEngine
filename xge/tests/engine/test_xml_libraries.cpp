@@ -150,7 +150,7 @@ TEST_CASE("an element taken from a piece keeps the lines it was written on", "[x
 		"    <position><x>1</x><y>2</y></position>\n"
 		"  </object>\n"
 		"  <object name=\"second\" from=\"ball\">\n"
-		"    <velocity><x>3</x><y>4</y></velocity>\n"
+		"    <velocity><x>180</x><y>240</y></velocity>\n"
 		"  </object>\n"
 		"</objects>\n";
 
@@ -187,7 +187,7 @@ TEST_CASE("a reader's message ends with the line of the tag it is about", "[xml_
 	const std::string file = scratchName("descriptions/lines_error.xml");
 	const auto write = [&](const std::string& sprite, const std::string& onSpace, bool schema = false)
 	{
-		std::ofstream(file) << (schema ? "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">\n" : "<game>\n") <<
+		std::ofstream(file) << (schema ? "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">\n" : "<game time=\"seconds\">\n") <<
 			"  <window name=\"lines\"><width>800</width><height>600</height><background>color.black</background><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>\n"
 			"  <states>\n"
 			"    <state name=\"playing\">\n"

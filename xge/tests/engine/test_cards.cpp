@@ -400,7 +400,7 @@ namespace
 			: path(scratchName("descriptions/sheet_scratch.xml"))
 		{
 			std::ofstream out(path);
-			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"sheets\"><width>800</width><height>600</height><background>color.black</background></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				"<states><state name=\"playing\"><objects>" << objects << "</objects><inputs><input><button>escape</button><pop /></input></inputs></state></states>"
@@ -2117,7 +2117,7 @@ namespace
 		std::string path = scratchName("descriptions/tokens_scratch.xml");
 		explicit Tokens(const std::string& order = "")
 		{
-			std::ofstream(path) << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			std::ofstream(path) << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"tokens\"><width>800</width><height>600</height><background>color.black</background></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				"<states><state name=\"playing\"><objects>"

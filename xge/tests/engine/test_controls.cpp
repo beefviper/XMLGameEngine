@@ -76,7 +76,7 @@ namespace
 	// A one-state game whose <inputs> are `inputs`.
 	std::string gameWith(const std::string& inputs)
 	{
-		return R"(<game>
+		return R"(<game time="seconds">
   <window name="t"><width>200</width><height>100</height><background>color.black</background><framerate>60</framerate></window>
   <variables />
   <states>
@@ -85,7 +85,7 @@ namespace
         <object name="paddle">
           <sprite><rectangle><width>40</width><height>10</height><color>color.white</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
-          <actions><action name="steer"><track /></action><action name="right"><move direction="right">2</move></action></actions>
+          <actions><action name="steer"><track /></action><action name="right"><move direction="right">120</move></action></actions>
         </object>
       </objects>
       <inputs>)" + inputs + R"(</inputs>
@@ -208,7 +208,7 @@ TEST_CASE("a mouse button is a key", "[controls]")
 	down.pointerY = 50.0f;
 	down.mouse[0] = true;
 	engine.handleControls(down);
-	CHECK(paddle.velocity.x == 2.0f);
+	CHECK(paddle.velocity.x == 120.0f);
 	engine.handleControls(Controls{});
 	CHECK(paddle.velocity.x == 0.0f);
 

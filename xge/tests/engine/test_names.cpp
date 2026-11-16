@@ -129,7 +129,7 @@ TEST_CASE("a state shows what the game has, and a trigger's from= is a look it h
 		const std::string path = scratchName("descriptions/names_scratch.xml");
 		{
 			std::ofstream out(path);
-			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"scratch\"><width>800</width><height>600</height><background>color.black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
@@ -200,7 +200,7 @@ TEST_CASE("a misspelt name says the line of what holds it, under every XML libra
 	const std::string file = scratchName("descriptions/names_lines.xml");
 	const auto write = [&](const std::string& rule, const std::string& triggered, const std::string& condition, const std::string& shown)
 	{
-		std::ofstream(file) << "<game>\n"
+		std::ofstream(file) << "<game time=\"seconds\">\n"
 			"  <window name=\"lines\"><width>800</width><height>600</height><background>color.black</background><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>\n"
 			"  <states>\n"
 			"    <state name=\"playing\">\n"
