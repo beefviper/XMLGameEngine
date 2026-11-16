@@ -355,7 +355,7 @@ TEST_CASE("the pond can be crossed by jumping from head to head between bites", 
 	// The next bite a good while off, so the crossing is clear.
 	for (const char* croc : { "crocs.1", "crocs.2", "crocs.3" })
 	{
-		play.game.getObject(croc).timers.at(0).framesLeft = 170;
+		play.game.getObject(croc).timers.at(0).counting = true; play.game.getObject(croc).timers.at(0).secondsLeft = 170.0 / 60.0;
 	}
 
 	// From the edge of the bank, one jump to each head and one to the far bank.

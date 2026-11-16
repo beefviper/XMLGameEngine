@@ -1225,36 +1225,42 @@ namespace xge
 		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(framesASecond(windowDesc)))));
 	}
 
-	bool Game::tickTimer(Timer& timer, const std::string& where)
+	bool Game::tickTimer(Timer& timer, const std::string& where, float& owed)
 	{
 		if (timer.done)
 		{
+			owed = 0.0f;
 			return false;
 		}
 
-		if (timer.framesLeft < 0)
+		if (!timer.counting)
 		{
-			timer.framesLeft = framesFor(evaluateNow(timer.interval, where));
+			timer.secondsLeft = static_cast<double>(evaluateNow(timer.interval, where));
+			timer.counting = true;
+			// None at all: it goes off once a step.
+			if (!(timer.secondsLeft > 0.0)) { timer.secondsLeft = static_cast<double>(owed); }
 		}
 
-		if (--timer.framesLeft > 0)
+		timer.secondsLeft -= static_cast<double>(owed);
+		if (timer.secondsLeft > static_cast<double>(kTimeSlack))
 		{
+			owed = 0.0f;
 			return false;
 		}
 
-		// Gone off: a repeating timer starts over, with its interval worked out
-		// again on the next frame, after its commands have run (so they can
-		// change it, and a <random> waits a new time); a once-only one is
-		// finished.
-		if (timer.repeat) { timer.framesLeft = -1; }
+		// Gone off: what the step had beyond it is still owed. A repeating
+		// timer starts over, with its interval worked out again after its
+		// commands have run (so they can change it, and a <random> waits a
+		// new time); a once-only one is finished.
+		owed = static_cast<float>(std::max(0.0, -timer.secondsLeft));
+		if (timer.repeat) { timer.counting = false; }
 		else { timer.done = true; }
 		return true;
 	}
 
 	void Game::showTimeLeft(Object& object, const Timer& timer)
 	{
-		const float left = timer.done || timer.framesLeft < 0 ? 0.0f
-			: std::ceil(static_cast<float>(timer.framesLeft) / static_cast<float>(framesASecond(windowDesc)));
+		const float left = timer.done || !timer.counting ? 0.0f : static_cast<float>(std::ceil(std::max(0.0, timer.secondsLeft - static_cast<double>(kTimeSlack))));
 		const auto found = object.variable.find(timer.name);
 		if (found == object.variable.end() || found->second == left) { return; }
 		found->second = left;
@@ -1291,7 +1297,6 @@ namespace xge
 
 	void Game::updateTimers(float seconds)
 	{
-		(void)seconds;
 		CommandExecutor executor(*this);
 
 		// An object's timers, while it is shown and in play. By index: a timer
@@ -1314,9 +1319,9 @@ namespace xge
 					continue;
 				}
 
-				const bool goesOff = tickTimer(objects[i].timers[t], "object '" + objects[i].name + "' > <timer>");
-				if (!objects[i].timers[t].name.empty()) { showTimeLeft(objects[i], objects[i].timers[t]); }
-				if (goesOff)
+				// As often as the step owes it, its commands each time.
+				const std::string where = "object '" + objects[i].name + "' > <timer>";
+				for (float owed = seconds; owed > kTimeSlack && tickTimer(objects[i].timers[t], where, owed);)
 				{
 					// A copy: a command may reset the object, and its timers with it.
 					const std::vector<Command> commands = objects[i].timers[t].commands;
@@ -1324,7 +1329,10 @@ namespace xge
 					{
 						if (!executor.executeTimer(command, &objects[i])) { break; }
 					}
+					// Hidden, or out of the look it follows, it stops counting.
+					if (!isShown(objects[i]) || (!sprite.empty() && objects[i].lookName() != sprite)) { break; }
 				}
+				if (!objects[i].timers[t].name.empty()) { showTimeLeft(objects[i], objects[i].timers[t]); }
 			}
 		}
 
@@ -1344,7 +1352,7 @@ namespace xge
 		{
 			for (std::size_t t = 0; t < timers.size() && unchanged(); ++t)
 			{
-				if (tickTimer(timers[t], where))
+				for (float owed = seconds; owed > kTimeSlack && unchanged() && tickTimer(timers[t], where, owed);)
 				{
 					const std::vector<Command> commands = timers[t].commands;
 					takeTurnStop();
@@ -1496,7 +1504,7 @@ namespace xge
 			if (!object.looks.all.empty()) { object.showLook(object.looks.first); }
 			for (auto& timer : object.timers)
 			{
-				timer.framesLeft = -1;
+				timer.counting = false;
 				timer.done = false;
 			}
 		}

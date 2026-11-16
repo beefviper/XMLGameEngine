@@ -20,7 +20,7 @@ A `<timer>` goes off `<every>` so many seconds, again and again, or once `<after
 - **Whose clock.** An object's timers (a group's are every member's) count while it is in play; a state's while it is current; a scene's while it is current. So a pause stops them.
 - **Starting over.** A reset starts a timer over, and so does its object coming back into play (revealed, or a new copy fired or spawned). A push starts a state's timers over, so a state that pops itself after a while says `<after>`; a pop back lets them carry on.
 - **The interval is worked out again each round**, after the commands, so a `<random>` waits a new time each time (Kaboom's bomber turns whenever he likes).
-- Seconds become frames by the `<framerate>`; a timer never waits less than a frame, and `<after>0</after>` goes off on the first frame it counts.
+- A timer counts down the seconds of each step. A step longer than what is left sets it off as many times as it owes, in order, its commands each time, and what is over counts toward the next round. `<after>0</after>` goes off on the first step it counts, and an `<every>` of 0 once a step.
 - Conditions run last in a frame, so a scene a condition puts back is drawn once before its timers count: what must happen first goes in that condition.
 - **Look timers.** `<timer sprite="blue">` counts only while its object shows that look, and starts over whenever a `<become>` gives it that look. Pac-Man's blue ghosts turn back `<after>fright</after>`, and a second pellet starts the fright over.
 - A `name=` on a state's or scene's timer lets a [`from=`](states.md#scenes) replace it.

@@ -73,6 +73,7 @@ add_executable(xgetest
 	"xge/tests/engine/test_new_verbs.cpp"
 	"xge/tests/engine/test_deflect.cpp"
 	"xge/tests/engine/test_xml_format.cpp"
+	"xge/tests/engine/test_step_lengths.cpp"
 	"xge/tests/engine/test_formulas.cpp"
 	"xge/tests/engine/test_calc.cpp"
 	"xge/tests/engine/test_backends.cpp"
@@ -306,6 +307,7 @@ add_executable(xgetest-long EXCLUDE_FROM_ALL
 	"xge/tests/long/test_damaged.cpp"
 	"xge/tests/long/test_speed.cpp"
 	"xge/tests/long/test_pace.cpp"
+	"xge/tests/engine/test_step_lengths.cpp"
 	"xge/cli/source/cli.cpp"
 	"xge/cli/source/generate.cpp"
 )

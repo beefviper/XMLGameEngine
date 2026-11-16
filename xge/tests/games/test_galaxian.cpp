@@ -142,9 +142,10 @@ namespace
 			return path;
 		}
 
+		// Frames of the window's ten a second: a timer of 0.1 goes off each one.
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
+			for (int i = 0; i < count; ++i) { game.updateObjects(0.1f); }
 		}
 	};
 

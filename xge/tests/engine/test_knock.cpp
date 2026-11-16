@@ -405,7 +405,7 @@ TEST_CASE("mariobros.xml: the POW block turns over every shellcreeper on its fee
 		CHECK(pow.lookName() == left);
 		CHECK(play.creeper().lookName() == "flipped");
 		// It gets up again before the next bump.
-		play.creeper().timers.at(2).framesLeft = 1;
+		play.creeper().timers.at(2).counting = true; play.creeper().timers.at(2).secondsLeft = 1.0 / 60.0;
 		play.frames(2);
 		play.creeper().velocity.x = 0.0f;
 		play.frames(60);

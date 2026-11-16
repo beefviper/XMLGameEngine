@@ -519,7 +519,7 @@ TEST_CASE("the first room's robots never fire; the next room's fire at the man, 
 	// one is put away into (which is what made this test fail one run in fifty).
 	for (auto& object : play.game.getCurrentObjects())
 	{
-		for (auto& timer : object.timers) { timer.framesLeft = 1000000; }
+		for (auto& timer : object.timers) { timer.counting = true; timer.secondsLeft = 100000.0; }
 	}
 
 	// And one that meets the man ends a life (a wall in the way would do as much).

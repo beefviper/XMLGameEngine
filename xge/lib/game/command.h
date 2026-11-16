@@ -1122,9 +1122,14 @@ namespace xge
 		std::string sprite; // sprite="blue": an object's timer that counts only while it shows that look
 	};
 
+	// A count of seconds that comes this close to zero has reached it, so the
+	// float sums of many short steps do not miss their moment by a hair.
+	inline constexpr float kTimeSlack = 1e-4f;
+
 	// A <timer>, on an object or in a state, made ready to run. It counts
-	// frames of the game (seconds times the window's <framerate>), so like
-	// everything else it runs slow on a machine that cannot keep up. The
+	// the seconds of each step down; a step longer than what is left sets it
+	// off and the rest counts toward the next round, so it goes off as often
+	// as the time passed owes, however that time is cut into steps. The
 	// interval is kept as written and worked out again each time the timer
 	// starts over, so <every><random><min>1</min><max>3</max></random></every> waits a
 	// different time each round. An object's timers count while it is shown
@@ -1149,10 +1154,13 @@ namespace xge
 		std::string name;
 		float seconds{};
 
-		// Frames until it goes off; -1 means not started yet (worked out on
-		// the first frame it counts). `done` is a once-only timer that has
-		// gone off.
-		int framesLeft{ -1 };
+		// Seconds until it goes off, while `counting`; not counting means not
+		// started yet (worked out on the first step it counts). `done` is a
+		// once-only timer that has gone off.
+		// A double: a long timer counted down in many short steps stays
+		// true to the ten-thousandth of a second.
+		double secondsLeft{};
+		bool counting{ false };
 		bool done{ false };
 	};
 

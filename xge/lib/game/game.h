@@ -967,8 +967,10 @@ namespace xge
 		// go off (CommandExecutor::executeTimer).
 		void updateTimers(float seconds);
 
-		// One frame off one timer; true when it has gone off.
-		bool tickTimer(Timer& timer, const std::string& where);
+		// `owed` seconds off one timer; true when it has gone off, with what
+		// the step had beyond that left in `owed` (0 when it did not go off),
+		// to be paid by calling again once its commands have run.
+		bool tickTimer(Timer& timer, const std::string& where, float& owed);
 
 		// A named object timer's time left, whole seconds rounded up (0 once
 		// it has gone off), into the object's number of that name.

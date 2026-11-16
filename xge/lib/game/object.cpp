@@ -955,7 +955,7 @@ namespace xge
 				{
 					if (timer.sprite == name)
 					{
-						timer.framesLeft = -1;
+						timer.counting = false;
 						timer.done = false;
 					}
 				}
@@ -1078,7 +1078,7 @@ namespace xge
 		restartAnimation();
 		for (auto& timer : timers)
 		{
-			timer.framesLeft = -1;
+			timer.counting = false;
 			timer.done = false;
 		}
 	}

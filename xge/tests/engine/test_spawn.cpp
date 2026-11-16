@@ -76,9 +76,10 @@ TEST_CASE("a copy's own rules and values are about the copy, not the object it w
 	play.tap(KeyCode::Space);
 	play.frames(5);
 
-	// Each counts its own frames (self.age is its own).
-	CHECK(play.get("shot.1").variable.at("age") == Approx(15).margin(1));
-	CHECK(play.get("shot.2").variable.at("age") == Approx(5).margin(1));
+	// Each counts its own time in hundredths of a second (self.age is its
+	// own): 15 and 5 sixtieths.
+	CHECK(play.get("shot.1").variable.at("age") == Approx(25).margin(1));
+	CHECK(play.get("shot.2").variable.at("age") == Approx(8).margin(1));
 	CHECK(play.get("shot").variable.at("age") == 0.0f);
 }
 

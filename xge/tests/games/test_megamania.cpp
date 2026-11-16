@@ -179,7 +179,7 @@ TEST_CASE("the energy runs down a second at a time, and running out costs a ship
 	CHECK(play.energy() == Approx(full - 2.0f));
 
 	// Nearly out: the energy's timer a second from going off.
-	play.game.getObject("energy").timers.at(0).framesLeft = 60;
+	play.game.getObject("energy").timers.at(0).counting = true; play.game.getObject("energy").timers.at(0).secondsLeft = 1.0;
 	play.frames(1);
 	CHECK(play.energy() == Approx(1));
 	play.frames(130);
