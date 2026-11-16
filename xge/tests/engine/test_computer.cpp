@@ -27,8 +27,8 @@ using Catch::Matchers::ContainsSubstring;
 
 namespace
 {
-	const std::string bat = box("bat", 300, 500, "<actions><action name=\"left\"><move direction=\"left\">2</move></action>"
-		"<action name=\"right\"><move direction=\"right\">2</move></action></actions>");
+	const std::string bat = box("bat", 300, 500, "<actions><action name=\"left\"><move direction=\"left\">120</move></action>"
+		"<action name=\"right\"><move direction=\"right\">120</move></action></actions>");
 	const std::string keys = "<input button=\"j\"><trigger object=\"bat\" action=\"left\" /></input>"
 		"<input button=\"l\"><trigger object=\"bat\" action=\"right\" /></input>";
 	const std::string follows = "<computer>"
@@ -39,7 +39,7 @@ namespace
 	// A game with the bat, a ball and the keys, and what else the state has.
 	std::string gameWith(const std::string& ball, const std::string& more)
 	{
-		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+		return "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"computer\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><states><state name=\"playing\"><objects>" + bat + ball + "</objects>"
@@ -62,12 +62,12 @@ namespace
 
 TEST_CASE("a <computer> holds a button down while its condition holds, and lets it go after", "[computer]")
 {
-	const Written file(gameWith(box("ball", 100, 100, "<velocity><x>1</x><y>0</y></velocity>"), follows));
+	const Written file(gameWith(box("ball", 100, 100, "<velocity><x>60</x><y>0</y></velocity>"), follows));
 	Played play(file.path);
 
-	// The ball is to the left: the bat goes left, two a frame, held.
+	// The ball is to the left: the bat goes left, 120 a second, held.
 	play.frames(1);
-	CHECK(play.get("bat").velocity.x == Approx(-2));
+	CHECK(play.get("bat").velocity.x == Approx(-120));
 
 	// It catches the ball up, then keeps with it, never more than a step off.
 	play.frames(200);
@@ -116,9 +116,9 @@ TEST_CASE("a <hold> is only for a <computer>, and holds a key there is", "[compu
 
 TEST_CASE("a condition can test where an object is and how it goes, against a number or another's", "[computer][conditions]")
 {
-	const Written file(gameWith(box("ball", 100, 100, "<velocity><x>3</x><y>0</y></velocity>"),
+	const Written file(gameWith(box("ball", 100, 100, "<velocity><x>180</x><y>0</y></velocity>"),
 		"<conditions><condition object=\"ball\" variable=\"x\"><above>bat.x</above><set variable=\"bat.y\">0</set></condition>"
-		"<condition object=\"ball\" variable=\"velocity.x\"><atleast>3</atleast><set variable=\"ball.y\"><add><value>ball.y</value><value>1</value></add></set></condition></conditions>"));
+		"<condition object=\"ball\" variable=\"velocity.x\"><atleast>180</atleast><set variable=\"ball.y\"><add><value>ball.y</value><value>1</value></add></set></condition></conditions>"));
 	Played play(file.path);
 
 	// The first that holds runs: the ball going at 3 moves down a pixel a

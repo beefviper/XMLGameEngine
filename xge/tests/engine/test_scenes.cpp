@@ -61,7 +61,7 @@ namespace
 	// given) and the states given.
 	std::string gameXml(const std::string& states, const std::string& objects = {}, const std::string& variables = {}, const std::string& kit = {})
 	{
-		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+		return "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"scenes\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable>" + variables + "</variables>"
@@ -122,13 +122,13 @@ namespace
 	// A piece, one rock that drifts right, and a state of three rooms: the
 	// first takes it as it is, the second changes its speed, the third is
 	// the second with a sign of its own.
-	const std::string kRock = box("rock", 100, 100, "<x>1</x>");
+	const std::string kRock = box("rock", 100, 100, "<x>60</x>");
 	const std::string kRooms =
 		"<state name=\"playing\">"
 		"<objects>" + box("hero", 400, 500) + "</objects>"
 		"<scenes>"
 		"<scene name=\"room1\"><objects><object name=\"rock\" /></objects></scene>"
-		"<scene name=\"room2\"><objects><object name=\"rock\"><velocity><x>3</x></velocity></object></objects></scene>"
+		"<scene name=\"room2\"><objects><object name=\"rock\"><velocity><x>180</x></velocity></object></objects></scene>"
 		"<scene name=\"room3\" from=\"room2\"><objects>" + box("sign", 700, 50) + "</objects></scene>"
 		"</scenes>"
 		+ kSpace +
@@ -140,7 +140,7 @@ TEST_CASE("a state's own objects are in play while it is the current state, with
 	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
 	Loaded loaded(gameXml(
 		"<state name=\"title\"><inputs><input button=\"space\"><push state=\"playing\" /></input></inputs></state>"
-		"<state name=\"playing\"><objects>" + box("ball", 100, 100, "<x>2</x>") + "</objects>" + kSpace + "</state>"), backend);
+		"<state name=\"playing\"><objects>" + box("ball", 100, 100, "<x>120</x>") + "</objects>" + kSpace + "</state>"), backend);
 
 	REQUIRE(loaded.has("playing.ball"));
 	Object& ball = loaded.game.getObject("playing.ball");
@@ -185,8 +185,8 @@ TEST_CASE("each scene that takes a piece gets its own copy, named by its path, a
 	CHECK(loaded.game.currentScene("playing") == "playing.room1");
 	Object& one = loaded.game.getObject("playing.room1.rock");
 	Object& two = loaded.game.getObject("playing.room2.rock");
-	CHECK(two.velocity.x == Approx(3));
-	CHECK(loaded.game.getObject("playing.room3.rock").velocity.x == Approx(3)); // from room2, changed there
+	CHECK(two.velocity.x == Approx(180));
+	CHECK(loaded.game.getObject("playing.room3.rock").velocity.x == Approx(180)); // from room2, changed there
 
 	loaded.frames(10);
 	CHECK(one.position.x == Approx(110));
@@ -212,7 +212,7 @@ TEST_CASE("names inside a scene mean its own first, then its state's, then the g
 	const std::string rock = "<object name=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<position><x>100</x><y>100</y></position><collisions>"
 		"<collision class=\"shot\"><inc variable=\"tally.hits\" /><inc variable=\"hero.score\" /></collision></collisions></object>";
-	const std::string shot = box("shot", 100, 300, "<y>-20</y>", "<collisions><collision object=\"rock\"><die /></collision></collisions>", " class=\"shot\"");
+	const std::string shot = box("shot", 100, 300, "<y>-1200</y>", "<collisions><collision object=\"rock\"><die /></collision></collisions>", " class=\"shot\"");
 	const std::string states =
 		"<state name=\"playing\">"
 		"<objects>" + box("hero", 400, 500, {}, "<variables><variable name=\"score\">0</variable></variables>") + shot + "</objects>"
@@ -411,7 +411,7 @@ TEST_CASE("<reset scene> puts back what started in it, and leaves the other scen
 
 TEST_CASE("what a state's own object carries goes along into the next scene, and stays where it is dropped", "[scenes][carry]")
 {
-	const std::string hero = box("hero", 100, 100, "<x>1</x>", "<collisions><collision class=\"item\"><carry /></collision></collisions>"
+	const std::string hero = box("hero", 100, 100, "<x>60</x>", "<collisions><collision class=\"item\"><carry /></collision></collisions>"
 		"<actions><action name=\"drop\"><drop /></action></actions>");
 	const std::string states =
 		"<state name=\"playing\"><objects>" + hero + "</objects><scenes>"
@@ -450,7 +450,7 @@ TEST_CASE("what a state's own object carries goes along into the next scene, and
 
 TEST_CASE("a <hidden /> object still runs and collides: an exit", "[scenes][hidden]")
 {
-	const std::string hero = box("hero", 100, 100, "<x>5</x>", "<collisions></collisions>", " class=\"hero\"");
+	const std::string hero = box("hero", 100, 100, "<x>300</x>", "<collisions></collisions>", " class=\"hero\"");
 	const std::string exit = box("exit", 300, 100, {}, "<hidden /><collisions>"
 		"<collision class=\"hero\"><enter scene=\"room2\" /></collision></collisions>");
 	const std::string states =
@@ -470,7 +470,7 @@ TEST_CASE("a <hidden /> object still runs and collides: an exit", "[scenes][hidd
 TEST_CASE("<show state> draws that state's objects still, underneath, without running them", "[scenes][shows]")
 {
 	const std::string states =
-		"<state name=\"playing\"><objects>" + box("ball", 100, 100, "<x>2</x>") + "</objects>"
+		"<state name=\"playing\"><objects>" + box("ball", 100, 100, "<x>120</x>") + "</objects>"
 		"<inputs><input button=\"p\"><push state=\"paused\" /></input></inputs></state>"
 		"<state name=\"paused\"><objects>" + box("sign", 300, 300) + "</objects><shows><show state=\"playing\" /></shows>" + kSpace + "</state>";
 	Loaded loaded(gameXml(states));
@@ -598,7 +598,7 @@ TEST_CASE("a game variable written with a dot stays that variable beside a state
 TEST_CASE("a game whose states own every object has no <objects> of its own", "[scenes]")
 {
 	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
-	std::string xml = gameXml("<state name=\"playing\"><objects>" + box("ball", 0, 0, "<x>1</x>") + "</objects>" + kSpace + "</state>");
+	std::string xml = gameXml("<state name=\"playing\"><objects>" + box("ball", 0, 0, "<x>60</x>") + "</objects>" + kSpace + "</state>");
 	const std::string marker = "<objects>" + box("marker", 0, 0) + "</objects>";
 	xml.replace(xml.find(marker), marker.size(), "");
 	Loaded loaded(xml, backend);
@@ -614,9 +614,9 @@ TEST_CASE("a scene's <ways> say where its <enter way> and <reset way> lead, so o
 	// room its way leads to, and that room starts again first.
 	const std::string door = box("door", 200, 100, {}, "<hidden /><collisions>"
 		"<collision object=\"hero\"><reset way=\"on\" /><enter way=\"on\" /></collision></collisions>");
-	const std::string rock = box("rock", 500, 500, "<x>1</x>");
+	const std::string rock = box("rock", 500, 500, "<x>60</x>");
 	Loaded loaded(gameXml(
-		"<state name=\"playing\"><objects>" + box("hero", 100, 100, "<x>4</x>",
+		"<state name=\"playing\"><objects>" + box("hero", 100, 100, "<x>240</x>",
 			"<collisions><collision object=\"door\"><move direction=\"left\">150</move></collision></collisions>") + "</objects>"
 		"<scenes>"
 		"<scene name=\"room1\"><ways><way name=\"on\" scene=\"room2\" /></ways><objects><object name=\"door\" /><object name=\"rock\" /></objects></scene>"

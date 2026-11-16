@@ -115,14 +115,14 @@ TEST_CASE("<set> puts a value into where an object is, or into every member of a
 	const Scratch file(box("ball", 100, 50)
 		+ "<group name=\"row\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
 		"<member><position><x>0</x><y>300</y></position></member><member><position><x>20</x><y>300</y></position></member></group>",
-		"<set variable=\"ball.x\">400</set><set variable=\"row.y\"><divide><value>ball.x</value><value>2</value></divide></set><set variable=\"row.velocity.x\">-1</set>");
+		"<set variable=\"ball.x\">400</set><set variable=\"row.y\"><divide><value>ball.x</value><value>2</value></divide></set><set variable=\"row.velocity.x\">-60</set>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
 	CHECK(play.get("ball").position.x == Approx(400));
 	CHECK(play.get("row.1").position.y == Approx(200));
 	CHECK(play.get("row.2").position.y == Approx(200));
-	CHECK(play.get("row.2").velocity.x == Approx(-1));
+	CHECK(play.get("row.2").velocity.x == Approx(-60));
 }
 
 TEST_CASE("where things are is only known while the game runs, and <set> names something there is", "[live]")

@@ -31,7 +31,7 @@ namespace
 		explicit Written(const std::string& states)
 		{
 			std::ofstream out(path);
-			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 				"<window name=\"scratch\"><width>800</width><height>600</height><background>color.black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
@@ -72,7 +72,7 @@ TEST_CASE("a ball falling onto a slope drawn as a line goes off along the way it
 	const std::string slope = "<object name=\"slope\" class=\"wall\"><sprite><line><from><x>0</x><y>0</y></from><to><x>100</x><y>100</y></to>"
 		"<color>color.white</color><thickness>3</thickness></line></sprite><position><x>300</x><y>300</y></position>"
 		"<collisions><type>pixel</type></collisions></object>";
-	Written file(playing(slope + ball(345.0f, 290.0f, 0.0f, 4.0f, "<bounce />")));
+	Written file(playing(slope + ball(345.0f, 290.0f, 0.0f, 240.0f, "<bounce />")));
 	Played play(file.path);
 	Object& ball = play.get("ball");
 
@@ -80,8 +80,8 @@ TEST_CASE("a ball falling onto a slope drawn as a line goes off along the way it
 
 	// Off a slope facing up and to the right: straight down becomes
 	// straight right, at the same speed.
-	CHECK(ball.velocity.x == Approx(4.0f).margin(0.7f));
-	CHECK(ball.velocity.y == Approx(0.0f).margin(0.7f));
+	CHECK(ball.velocity.x == Approx(240.0f).margin(42.0f));
+	CHECK(ball.velocity.y == Approx(0.0f).margin(42.0f));
 }
 
 TEST_CASE("off a box a bounce is the plain flip, with or without a share of the speed kept", "[slopes][bounce]")
@@ -91,26 +91,26 @@ TEST_CASE("off a box a bounce is the plain flip, with or without a share of the 
 
 	SECTION("kept whole")
 	{
-		Written file(playing(floor + ball(380.0f, 300.0f, 1.0f, 4.0f, "<bounce />")));
+		Written file(playing(floor + ball(380.0f, 300.0f, 60.0f, 240.0f, "<bounce />")));
 		Played play(file.path);
 		play.frames(40);
-		CHECK(play.get("ball").velocity.x == Approx(1.0f));
-		CHECK(play.get("ball").velocity.y == Approx(-4.0f));
+		CHECK(play.get("ball").velocity.x == Approx(60.0f));
+		CHECK(play.get("ball").velocity.y == Approx(-240.0f));
 	}
 	SECTION("half kept: a dead cushion")
 	{
-		Written file(playing(floor + ball(380.0f, 300.0f, 1.0f, 4.0f, "<bounce>0.5</bounce>")));
+		Written file(playing(floor + ball(380.0f, 300.0f, 60.0f, 240.0f, "<bounce>0.5</bounce>")));
 		Played play(file.path);
 		play.frames(40);
-		CHECK(play.get("ball").velocity.x == Approx(1.0f));
-		CHECK(play.get("ball").velocity.y == Approx(-2.0f));
+		CHECK(play.get("ball").velocity.x == Approx(60.0f));
+		CHECK(play.get("ball").velocity.y == Approx(-120.0f));
 	}
 	SECTION("more than came in: a bumper")
 	{
-		Written file(playing(floor + ball(380.0f, 300.0f, 1.0f, 4.0f, "<bounce>1.5</bounce>")));
+		Written file(playing(floor + ball(380.0f, 300.0f, 60.0f, 240.0f, "<bounce>1.5</bounce>")));
 		Played play(file.path);
 		play.frames(40);
-		CHECK(play.get("ball").velocity.y == Approx(-6.0f));
+		CHECK(play.get("ball").velocity.y == Approx(-360.0f));
 	}
 }
 
@@ -119,10 +119,10 @@ TEST_CASE("off a screen edge a bounce keeps its share of the speed too", "[slope
 	// A wall out of its way, for its rule about walls to name.
 	const std::string wall = "<object name=\"wall\" class=\"wall\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<position><x>700</x><y>50</y></position></object>";
-	Written file(playing(ball(20.0f, 300.0f, -4.0f, 0.0f, "<bounce>0.25</bounce>") + wall));
+	Written file(playing(ball(20.0f, 300.0f, -240.0f, 0.0f, "<bounce>0.25</bounce>") + wall));
 	Played play(file.path);
 	play.frames(20);
-	CHECK(play.get("ball").velocity.x == Approx(1.0f));
+	CHECK(play.get("ball").velocity.x == Approx(60.0f));
 }
 
 TEST_CASE("a bounce off a ball meets it round: off at an angle when it is hit off its middle", "[slopes][bounce]")
@@ -131,11 +131,11 @@ TEST_CASE("a bounce off a ball meets it round: off at an angle when it is hit of
 	// the ball comes off to the right, not straight back up.
 	const std::string post = "<object name=\"post\" class=\"wall\"><sprite><circle><radius>10</radius><color>color.white</color></circle></sprite>"
 		"<position><x>340</x><y>400</y></position><collisions /></object>";
-	Written file(playing(post + ball(352.0f, 300.0f, 0.0f, 4.0f, "<bounce />")));
+	Written file(playing(post + ball(352.0f, 300.0f, 0.0f, 240.0f, "<bounce />")));
 	Played play(file.path);
 	Object& ball = play.get("ball");
 	for (int i = 0; i < 40 && ball.velocity.y > 0.0f; ++i) { play.frames(1); }
-	CHECK(ball.velocity.x > 1.0f);
+	CHECK(ball.velocity.x > 60.0f);
 	CHECK(ball.velocity.y < 0.0f);
 }
 
@@ -149,7 +149,7 @@ namespace
 		"<variable name=\"pressed\">0</variable><variable name=\"held\">0</variable><variable name=\"letgo\">0</variable>"
 		"</variables></object></objects><inputs>"
 		"<input button=\"space\"><inc variable=\"counts.pressed\" /></input>"
-		"<input button=\"space\" on=\"hold\"><inc variable=\"counts.held\" /></input>"
+		"<input button=\"space\" on=\"hold\"><inc variable=\"counts.held\">60</inc></input>"
 		"<input button=\"space\" on=\"release\"><inc variable=\"counts.letgo\" /></input>"
 		"<input button=\"p\"><push state=\"paused\" /></input>"
 		"</inputs></state>"
