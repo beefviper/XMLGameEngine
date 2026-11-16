@@ -26,8 +26,8 @@ using namespace xge;
 namespace
 {
 	// the player's own <action> step, straight from games/descriptions/tennis.xml's
-	// <variable name="step">3</variable>.
-	constexpr float kStep = 3.0f;
+	// <variable name="step">180</variable>.
+	constexpr float kStep = 180.0f;
 }
 
 TEST_CASE("holding one direction and tapping the opposite cancels, then resumes on release", "[input_resolution]")

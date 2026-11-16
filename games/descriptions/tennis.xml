@@ -37,18 +37,18 @@
     way round; either way it is served again (<reset />).
 -->
 
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+<game time="seconds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Tennis">
     <width>800</width>
     <height>600</height>
     <background>color.forestgreen</background>
   </window>
   <variables>
-    <variable name="step">3</variable>
+    <variable name="step">180</variable>
     <variable name="reach">50</variable>
-    <variable name="hit">4.5</variable>
-    <variable name="loft">6</variable>
-    <variable name="spin">0.12</variable>
+    <variable name="hit">270</variable>
+    <variable name="loft">360</variable>
+    <variable name="spin">7.2</variable>
     <variable name="set">6</variable>
   </variables>
   <styles>
@@ -130,10 +130,10 @@
         <object name="ball">
           <sprite><circle><radius>6</radius><color>color.yellow</color></circle></sprite>
           <position><x>394</x><y>90</y></position>
-          <velocity><x><random><min>-1.5</min><max>1.5</max></random></x><y>3</y></velocity>
+          <velocity><x><random><min>-90</min><max>90</max></random></x><y>180</y></velocity>
           <altitude>
             <start>80</start>
-            <fall>0.25</fall>
+            <fall>900</fall>
             <bounce>0.7</bounce>
           </altitude>
           <collisions>

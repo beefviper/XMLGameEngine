@@ -228,7 +228,7 @@ TEST_CASE("trickshot.xml: the white ball straight into the rack stops, and the r
 	REQUIRE(play.state() == "playing");
 
 	Object& white = play.get("cueball");
-	white.velocity = { 8, 0 };
+	white.velocity = { 480, 0 };
 
 	// From 200 to the apex at 500 less a diameter, slowed by the cloth: about
 	// fifty frames. What it carries when it gets there is all the rack gets.
@@ -239,7 +239,7 @@ TEST_CASE("trickshot.xml: the white ball straight into the rack stops, and the r
 		play.frames(1);
 	}
 	play.frames(5);
-	CHECK(length(white.velocity) < 1.0f);
+	CHECK(length(white.velocity) < 60.0f);
 
 	// Every ball of the rack was knocked on in that moment, each by the one
 	// touching it; nothing was lost but to the cloth.
@@ -270,7 +270,7 @@ TEST_CASE("trickshot.xml: the cue tip has no mass, so it sends the white ball of
 		fastest = std::max(fastest, play.get("cueball").velocity.x);
 	}
 	play.engine.handleKeyReleased(KeyCode::D);
-	CHECK(fastest == Approx(8.0f).margin(0.2f));
+	CHECK(fastest == Approx(480.0f).margin(12.0f));
 	CHECK(play.get("cue").velocity.x == Approx(0.0f));
 }
 
@@ -281,14 +281,14 @@ TEST_CASE("trickshot.xml: a ball in a pocket scores, and the white one there com
 
 	Object& ball = play.get("rack.4");
 	ball.position = { 100, 100 };
-	ball.velocity = { -5, -5 };
+	ball.velocity = { -300, -300 };
 	play.frames(30);
 	CHECK_FALSE(ball.isVisible);
 	CHECK(play.get("player").variable.at("score") == Approx(1.0f));
 
 	Object& white = play.get("cueball");
 	white.position = { 700, 500 };
-	white.velocity = { 5, 5 };
+	white.velocity = { 300, 300 };
 	play.frames(30);
 	CHECK(white.isVisible);
 	CHECK(white.position.x == Approx(200.0f));
