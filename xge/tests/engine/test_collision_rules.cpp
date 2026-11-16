@@ -96,7 +96,7 @@ TEST_CASE("a bullet is taken away on touching an alien", "[collision_rules]")
 	// Just under the alien, its centre a couple of pixels below the bottom
 	// edge, so it overlaps by less than its radius.
 	bullet.position = { alien.position.x + 20.0f, alien.position.y + alien.size.y - 2.0f };
-	bullet.velocity.y = -6.0f;
+	bullet.velocity.y = -360.0f;
 
 	game.updateObjects(xge::kSixtieth);
 
@@ -116,12 +116,12 @@ namespace
 		{
 			{
 				std::ofstream out(path);
-				out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+				out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 					"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
 					"<framerate>60</framerate></window>"
 					"<variables><variable name=\"unused\">0</variable></variables><states><objects>"
 					"<object name=\"ball\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-					"<position><x>100</x><y>0</y></position><velocity><y>5</y></velocity>"
+					"<position><x>100</x><y>0</y></position><velocity><y>300</y></velocity>"
 					"<collisions>" << rule << "</collisions>"
 					"<actions><action name=\"hit\"><reset /></action></actions>"
 					"<variables><variable name=\"armed\">" << armed << "</variable></variables></object>"
@@ -198,7 +198,7 @@ TEST_CASE("a <trigger> with no object= outside an object's own lists stops the l
 	const std::filesystem::path path = scratchName("descriptions/rules_scratch.xml");
 	{
 		std::ofstream out(path);
-		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+		out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><states><objects>"
@@ -234,7 +234,7 @@ TEST_CASE("a rule written on a group of groups, with a check about itself, looks
 		"<group name=\"big\">" + inGroup(big, "10") + "</group>"
 		"<group name=\"small\">" + inGroup(small, "20") + "</group>"
 		"</group>"
-		+ played::box("shot", 300, 130, "<velocity><x>0</x><y>-4</y></velocity><collisions></collisions>")
+		+ played::box("shot", 300, 130, "<velocity><x>0</x><y>-240</y></velocity><collisions></collisions>")
 		+ played::box("tally", 700, 500, "<variables><variable name=\"splits\">0</variable></variables>"),
 		"<pop />");
 	played::Played play(file.path);
@@ -254,7 +254,7 @@ TEST_CASE("an object put somewhere has moved: it touches what it is put on, with
 	const std::filesystem::path path = std::filesystem::temp_directory_path() / scratchName("xge_moved_scratch.xml");
 	{
 		std::ofstream out(path);
-		out << "<game><window name=\"moved\"><width>200</width><height>100</height><background>color.black</background>"
+		out << "<game time=\"seconds\"><window name=\"moved\"><width>200</width><height>100</height><background>color.black</background>"
 			"<framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>"
 			"<object name=\"a\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
@@ -317,7 +317,7 @@ TEST_CASE("a rule names the object it touched other, whichever of its class that
 
 	// p2 walks onto the coin: p2 is paid, once (its shield goes up), and p1 is not.
 	play.get("p2").position = { 585, 402 };
-	play.get("p2").velocity = { 2, 0 };
+	play.get("p2").velocity = { 120, 0 };
 	play.frames(5);
 	CHECK(play.get("p2").variable.at("score") == 5.0f);
 	CHECK(play.get("p2").variable.at("shield") == 1.0f);
@@ -326,7 +326,7 @@ TEST_CASE("a rule names the object it touched other, whichever of its class that
 	// p1, shielded: the rule's test is about p1, so nothing.
 	play.get("p1").variable["shield"] = 1.0f;
 	play.get("p1").position = { 585, 402 };
-	play.get("p1").velocity = { 2, 0 };
+	play.get("p1").velocity = { 120, 0 };
 	play.frames(5);
 	CHECK(play.get("p1").variable.at("score") == 0.0f);
 }
@@ -334,7 +334,7 @@ TEST_CASE("a rule names the object it touched other, whichever of its class that
 TEST_CASE("other is a spawned copy when a copy is what was touched", "[collision_rules][other][spawn]")
 {
 	const std::string shot = "<object name=\"shot\" class=\"bullet\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>-5</y></velocity><collisions></collisions>"
+		"<velocity><x>0</x><y>-300</y></velocity><collisions></collisions>"
 		"<variables><variable name=\"hits\">0</variable></variables></object>";
 	const played::Scratch file(
 		played::box("wall", 300, 300, "<collisions><collision class=\"bullet\"><inc variable=\"other.hits\" /></collision></collisions>"),
@@ -398,7 +398,7 @@ TEST_CASE("a rule about a screen edge can hold conditions: it runs only while th
 {
 	// A box going out past the left edge, its rule there armed by a press.
 	const played::Scratch file(
-		played::box("box", 0, 100, "<velocity><x>-1</x><y>0</y></velocity>"
+		played::box("box", 0, 100, "<velocity><x>-60</x><y>0</y></velocity>"
 			"<collisions><collision edge=\"left\"><condition variable=\"armed\"><atleast>1</atleast></condition>"
 			"<inc variable=\"self.hits\" /></collision></collisions>"
 			"<variables><variable name=\"armed\">0</variable><variable name=\"hits\">0</variable></variables>"),

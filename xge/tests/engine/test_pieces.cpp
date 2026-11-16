@@ -34,7 +34,7 @@ namespace
 {
 	// A paddle: a 10 by 40 rectangle at 10, 100, going down, with a score.
 	const std::string kPaddle = "<object name=\"paddle\" class=\"bat\"><sprite><rectangle><width>10</width><height>40</height></rectangle></sprite>"
-		"<position><x>10</x><y>100</y></position><velocity><x>0</x><y>1</y></velocity>"
+		"<position><x>10</x><y>100</y></position><velocity><x>0</x><y>60</y></velocity>"
 		"<variables><variable name=\"score\">0</variable><variable name=\"lives\">3</variable></variables></object>";
 
 	void fails(const std::string& objects, const std::string& kit, const std::string& message, const std::string& more = {})
@@ -47,7 +47,7 @@ namespace
 TEST_CASE("a piece is in play only where an <objects> takes it, by from= or by its name", "[pieces]")
 {
 	const Scratch file("<object name=\"paddle\" />"
-		"<object name=\"paddle2\" from=\"paddle\"><position><x>780</x></position><velocity><y>-2</y></velocity></object>",
+		"<object name=\"paddle2\" from=\"paddle\"><position><x>780</x></position><velocity><y>-120</y></velocity></object>",
 		"<pop />", {}, kPaddle);
 	Played play(file.path);
 
@@ -60,7 +60,7 @@ TEST_CASE("a piece is in play only where an <objects> takes it, by from= or by i
 	CHECK(two.position.x == Approx(780));
 	CHECK(two.position.y == Approx(100));
 	CHECK(two.velocity.x == Approx(0));
-	CHECK(two.velocity.y == Approx(-2));
+	CHECK(two.velocity.y == Approx(-120));
 	CHECK(two.objClass == "bat");
 	CHECK(two.variable.at("lives") == Approx(3));
 	CHECK(play.game.getCurrentObjects().size() == 2); // the piece itself is never in play
@@ -110,7 +110,7 @@ TEST_CASE("a take of a <waiting /> piece waits too, and one that says <ready /> 
 
 TEST_CASE("a piece can be from= an earlier one, and a named member of a group piece is taken on its own", "[pieces]")
 {
-	const std::string kit = box("rock", 0, 0, "<velocity><x>1</x><y>0</y></velocity>")
+	const std::string kit = box("rock", 0, 0, "<velocity><x>60</x><y>0</y></velocity>")
 		+ "<object name=\"boulder\" from=\"rock\"><sprite><rectangle><width>30</width><height>30</height></rectangle></sprite></object>"
 		"<group name=\"robots\" class=\"robot\"><sprite><rectangle><width>8</width><height>8</height></rectangle></sprite>"
 		"<member name=\"red\"><position><x>10</x><y>10</y></position></member>"
@@ -119,7 +119,7 @@ TEST_CASE("a piece can be from= an earlier one, and a named member of a group pi
 	Played play(file.path);
 
 	const Object& boulder = play.get("boulder");
-	CHECK(boulder.velocity.x == Approx(1));
+	CHECK(boulder.velocity.x == Approx(60));
 	CHECK(boulder.size.x == Approx(30));
 
 	const Object& red = play.get("red");
@@ -151,14 +151,14 @@ TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads it
 	const std::string path = scratchName("descriptions/kit_scratch.xml");
 	{
 		std::ofstream out(path);
-		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+		out << "<game time=\"seconds\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
 			"<window name=\"kit\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><objects>" << kit << "</objects>"
 			"<states><state name=\"playing\"><objects>" << box("ship", 300, 500) << "</objects><scenes>"
-			"<scene name=\"wave1\"><variables><variable name=\"pace\">2</variable></variables><objects>"
+			"<scene name=\"wave1\"><variables><variable name=\"pace\">120</variable></variables><objects>"
 			<< box("dropper", 300, 100, "<timers><timer><every>0.05</every><fire object=\"bomb\" /></timer></timers>") << "</objects></scene>"
-			"<scene name=\"wave2\" from=\"wave1\"><variables><variable name=\"pace\">5</variable></variables></scene>"
+			"<scene name=\"wave2\" from=\"wave1\"><variables><variable name=\"pace\">300</variable></variables></scene>"
 			"</scenes><inputs><input button=\"space\"><enter scene=\"wave2\" /></input></inputs></state></states></game>";
 	}
 	struct Gone
@@ -172,13 +172,13 @@ TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads it
 	play.frames(5);
 	REQUIRE(play.has("wave1.bomb.1"));
 	const Object& first = play.get("wave1.bomb.1");
-	CHECK(first.velocity.y == Approx(2));
+	CHECK(first.velocity.y == Approx(120));
 	CHECK(first.ownerScene == "playing.wave1");
 
 	play.tap(KeyCode::Space);
 	play.frames(5);
 	REQUIRE(play.has("wave2.bomb.1"));
-	CHECK(play.get("wave2.bomb.1").velocity.y == Approx(5));
+	CHECK(play.get("wave2.bomb.1").velocity.y == Approx(300));
 }
 
 TEST_CASE("a map piece is taken by a map, which gives its rows and changes what it will", "[pieces][map]")

@@ -30,7 +30,7 @@ namespace
 	// A shot of the kit, so not in play at the start, going up, counting its
 	// own frames in a variable of its own, and gone at the top.
 	const std::string kShot = "<object name=\"shot\" class=\"bullet\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>-5</y></velocity>"
+		"<velocity><x>0</x><y>-300</y></velocity>"
 		"<collisions><collision edge=\"top\"><despawn /></collision></collisions>"
 		"<variables><variable name=\"age\">0</variable></variables>"
 		"<timers><timer><every>0.01</every><inc variable=\"self.age\" /></timer></timers></object>";
@@ -154,9 +154,9 @@ TEST_CASE("<fire> and <spawn> of a piece make copies of it", "[spawn]")
 		+ box("rock", 300, 380, "<collisions><collision object=\"ship\"><spawn object=\"piece\"><count>3</count></spawn><despawn /></collision></collisions>"),
 		"<trigger object=\"ship\" action=\"shoot\" />", {},
 		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>-6</y></velocity><most>1</most></object>"
+		"<velocity><x>0</x><y>-360</y></velocity><most>1</most></object>"
 		"<object name=\"piece\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite>"
-		"<velocity><x>1</x><y>1</y></velocity></object>");
+		"<velocity><x>60</x><y>60</y></velocity></object>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -165,10 +165,10 @@ TEST_CASE("<fire> and <spawn> of a piece make copies of it", "[spawn]")
 	REQUIRE(play.count("shot") == 1);
 	const Object& shot = play.get("shot.1");
 	CHECK(shot.position.x + 2 == Approx(305)); // from the ship's top middle
-	CHECK(shot.velocity.y == Approx(-6));
+	CHECK(shot.velocity.y == Approx(-360));
 
 	// The ship touches the rock: it breaks into three pieces.
-	play.get("ship").velocity = { 0, -3 };
+	play.get("ship").velocity = { 0, -180 };
 	play.frames(8);
 	CHECK(play.count("piece") == 3);
 }
@@ -225,7 +225,7 @@ TEST_CASE("other rules and conditions see the copies by the name of what they we
 {
 	const Scratch file(box("ship", 300, 400, "<collisions></collisions>")
 		+ box("target", 0, 0, "<collisions></collisions><variables><variable name=\"done\">0</variable></variables>"),
-		"<spawn object=\"rock\"><position><x>300</x><y>380</y></position><velocity><y>4</y></velocity></spawn>",
+		"<spawn object=\"rock\"><position><x>300</x><y>380</y></position><velocity><y>240</y></velocity></spawn>",
 		"<conditions><condition object=\"rock\"><remaining>0</remaining><set variable=\"target.done\">1</set></condition></conditions>",
 		"<object name=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<collisions><collision object=\"ship\"><despawn /></collision></collisions></object>");
@@ -252,7 +252,7 @@ TEST_CASE("a group spawned from makes its members in turn", "[spawn]")
 {
 	const Scratch file(box("ship", 300, 400), "<spawn object=\"rocks\" />", {},
 		"<group name=\"rocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-		"<member name=\"big\"><velocity><x>1</x></velocity></member><member name=\"small\"><velocity><x>2</x></velocity></member></group>");
+		"<member name=\"big\"><velocity><x>60</x></velocity></member><member name=\"small\"><velocity><x>120</x></velocity></member></group>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -263,12 +263,12 @@ TEST_CASE("a group spawned from makes its members in turn", "[spawn]")
 	CHECK(play.has("small.1"));
 	CHECK(play.has("big.2"));
 	CHECK(play.count("rocks") == 3);
-	CHECK(play.get("small.1").velocity.x == Approx(2));
+	CHECK(play.get("small.1").velocity.x == Approx(120));
 }
 
 TEST_CASE("a new game takes away every copy, and a spawned object can be of one that exists", "[spawn]")
 {
-	const Scratch file(box("ball", 100, 100, "<velocity><x>1</x><y>0</y></velocity>"), "<spawn object=\"ball\"><position><y>300</y></position></spawn>");
+	const Scratch file(box("ball", 100, 100, "<velocity><x>60</x><y>0</y></velocity>"), "<spawn object=\"ball\"><position><y>300</y></position></spawn>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -300,7 +300,7 @@ TEST_CASE("a <despawn object> must name an object, and a piece may leave out its
 TEST_CASE("a copy's rule with a condition tests the copy's own values", "[spawn]")
 {
 	const std::string ball = "<object name=\"ball\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>2</y></velocity>"
+		"<velocity><x>0</x><y>120</y></velocity>"
 		"<collisions><collision object=\"wall\"><condition variable=\"armed\"><equal>1</equal></condition><despawn /></collision>"
 		"<collision object=\"wall\"><stop /></collision></collisions>"
 		"<variables><variable name=\"armed\">0</variable></variables></object>";
@@ -325,8 +325,8 @@ TEST_CASE("a copy's rule with a condition tests the copy's own values", "[spawn]
 TEST_CASE("a spawn's <acceleration> is read as it runs and pulls the copy for as long as it lasts", "[spawn]")
 {
 	const Scratch file(box("gun", 300, 400, "<actions><action name=\"shoot\"><spawn object=\"shell\">"
-		"<velocity><y>-4</y></velocity><acceleration><x>self.wind</x><y>0.5</y></acceleration></spawn></action></actions>"
-		"<variables><variable name=\"wind\">0.25</variable></variables>"),
+		"<velocity><y>-240</y></velocity><acceleration><x>self.wind</x><y>1800</y></acceleration></spawn></action></actions>"
+		"<variables><variable name=\"wind\">900</variable></variables>"),
 		"<trigger object=\"gun\" action=\"shoot\" />", {},
 		"<object name=\"shell\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite></object>");
 	Played play(file.path);
@@ -335,17 +335,17 @@ TEST_CASE("a spawn's <acceleration> is read as it runs and pulls the copy for as
 	play.frames(1);
 	REQUIRE(play.has("shell.1"));
 	const Object& shell = play.get("shell.1");
-	CHECK(shell.acceleration.x == Approx(0.25f));
-	CHECK(shell.acceleration.y == Approx(0.5f));
+	CHECK(shell.acceleration.x == Approx(900.0f));
+	CHECK(shell.acceleration.y == Approx(1800.0f));
 	const Vector2f was = shell.velocity;
 	play.frames(4);
-	CHECK(shell.velocity.x - was.x == Approx(1.0f));
-	CHECK(shell.velocity.y - was.y == Approx(2.0f));
+	CHECK(shell.velocity.x - was.x == Approx(60.0f));
+	CHECK(shell.velocity.y - was.y == Approx(120.0f));
 
 	// The next one takes the wind as it is then.
-	play.game.setVariable("playing.gun", "wind", -1.0f);
+	play.game.setVariable("playing.gun", "wind", -3600.0f);
 	play.tap(KeyCode::Space);
 	play.frames(1);
 	REQUIRE(play.has("shell.2"));
-	CHECK(play.get("shell.2").acceleration.x == Approx(-1.0f));
+	CHECK(play.get("shell.2").acceleration.x == Approx(-3600.0f));
 }

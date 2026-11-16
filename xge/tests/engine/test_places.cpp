@@ -74,7 +74,7 @@ namespace
 
 TEST_CASE("an action stops, turns back, lets out and runs another action", "[places][action]")
 {
-	const std::string ship = box("ship", 400, 300, "<velocity><x>2</x><y>0</y></velocity>"
+	const std::string ship = box("ship", 400, 300, "<velocity><x>120</x><y>0</y></velocity>"
 		"<actions><action name=\"back\"><reverse /></action>"
 		"<action name=\"turn\"><trigger object=\"ship\" action=\"back\" /><inc variable=\"ship.turns\" /></action>"
 		"<action name=\"halt\"><stop /></action></actions>"
@@ -83,19 +83,19 @@ TEST_CASE("an action stops, turns back, lets out and runs another action", "[pla
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
-	CHECK(play.get("ship").velocity.x == Approx(-2));
+	CHECK(play.get("ship").velocity.x == Approx(-120));
 	CHECK(play.get("ship").variable.at("turns") == Approx(1));
 
 	play.engine.handleKeyPressed(KeyCode::Space);
 	play.engine.handleKeyReleased(KeyCode::Space);
-	CHECK(play.get("ship").velocity.x == Approx(2));
+	CHECK(play.get("ship").velocity.x == Approx(120));
 }
 
 TEST_CASE("a collision rule can fire", "[places][fire]")
 {
 	const std::string shot = "<object name=\"shot\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite>"
-		"<velocity><x>0</x><y>-4</y></velocity><most>1</most></object>";
-	const std::string bumper = box("bumper", 400, 100, "<velocity><x>0</x><y>-5</y></velocity>"
+		"<velocity><x>0</x><y>-240</y></velocity><most>1</most></object>";
+	const std::string bumper = box("bumper", 400, 100, "<velocity><x>0</x><y>-300</y></velocity>"
 		"<collisions><collision edge=\"top\"><fire object=\"shot\" /><stop /></collision></collisions>");
 	const Scratch file(bumper, "<pop />", {}, shot);
 	Played play(file.path);

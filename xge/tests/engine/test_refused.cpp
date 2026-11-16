@@ -67,7 +67,7 @@ TEST_CASE("an action runs what comes before a refused verb, and nothing after it
 		played::box("gun", 100, 300,
 			"<actions><action name=\"shoot\"><play sound=\"click\" /><fire object=\"shot\" /><play sound=\"bang\" /></action></actions>"),
 		"<trigger object=\"gun\" action=\"shoot\" />", {},
-		played::box("shot", 100, 200, "<velocity><x>0</x><y>-1</y></velocity><most>1</most>"));
+		played::box("shot", 100, 200, "<velocity><x>0</x><y>-60</y></velocity><most>1</most>"));
 	// The scratch game has no sounds; put two in before it is loaded.
 	{
 		std::ifstream in(scratch.path);
@@ -105,7 +105,7 @@ TEST_CASE("a state's key stops at a refused spawn", "[refused][spawn]")
 TEST_CASE("an edge rule stops at a refused spawn, and the rules after it still run", "[refused][spawn]")
 {
 	const played::Scratch file(played::box("ship", 0, 400,
-		"<velocity><x>-1</x><y>0</y></velocity>"
+		"<velocity><x>-60</x><y>0</y></velocity>"
 		"<collisions><collision edge=\"left\"><spawn object=\"shot\" /><inc variable=\"self.shots\" /></collision>"
 		"<collision edge=\"left\"><inc variable=\"self.touches\" /></collision></collisions>"
 		"<variables><variable name=\"shots\">0</variable><variable name=\"touches\">0</variable></variables>"),
@@ -124,7 +124,7 @@ TEST_CASE("a rule about another object stops at a refused spawn", "[refused][spa
 		"<collisions><collision object=\"rock\"><spawn object=\"shot\" /><inc variable=\"self.shots\" /></collision>"
 		"<collision object=\"rock\"><inc variable=\"self.touches\" /></collision></collisions>"
 		"<variables><variable name=\"shots\">0</variable><variable name=\"touches\">0</variable></variables>")
-		+ played::box("rock", 312, 400, "<velocity><x>-1</x><y>0</y></velocity><collisions></collisions>"),
+		+ played::box("rock", 312, 400, "<velocity><x>-60</x><y>0</y></velocity><collisions></collisions>"),
 		"", {}, kCappedShot);
 	Played play(file.path);
 

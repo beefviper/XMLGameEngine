@@ -40,7 +40,7 @@ namespace
 
 TEST_CASE("what is <dark> is drawn only while a <light> reaches some part of it, or from the first time, if unseen", "[dark]")
 {
-	const Scratch file(box("lamp", 100, 100, "<velocity><x>4</x><y>0</y></velocity><light>30</light>")
+	const Scratch file(box("lamp", 100, 100, "<velocity><x>240</x><y>0</y></velocity><light>30</light>")
 		+ box("near", 135, 100, "<dark>unlit</dark>") + box("far", 400, 100, "<dark>unlit</dark>")
 		+ box("map", 200, 100, "<dark>unseen</dark>"), "<set variable=\"lamp.light\">0</set>");
 	Game game(file.path);
@@ -89,7 +89,7 @@ TEST_CASE("what is <dark> is drawn only while a <light> reaches some part of it,
 
 TEST_CASE("a <dark> object still moves and touches while it is not drawn", "[dark]")
 {
-	const Scratch file(box("ghost", 100, 100, "<velocity><x>5</x><y>0</y></velocity><dark>unlit</dark><collisions>"
+	const Scratch file(box("ghost", 100, 100, "<velocity><x>300</x><y>0</y></velocity><dark>unlit</dark><collisions>"
 		"<collision object=\"wall\"><stop /></collision></collisions>") + box("wall", 150, 100, "<collisions></collisions>"), "<pop />");
 	Played play(file.path);
 	play.frames(20);

@@ -11,6 +11,7 @@
 #include "played.h"
 #include "play/executor.h"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
@@ -19,6 +20,7 @@
 using namespace xge;
 using namespace played;
 using Catch::Matchers::ContainsSubstring;
+using Catch::Approx;
 
 namespace
 {
@@ -31,22 +33,23 @@ namespace
 	}
 
 	// A walker on a floor: a look for each pose, the walk one that moves,
-	// pulled down, sliding with a grip of a quarter, and drawn the other
+	// pulled down, sliding with a grip that closes a quarter of the gap a
+	// sixtieth of a second (a half-life of 0.0402 seconds), and drawn the other
 	// way round going left.
-	std::string walker(const std::string& extra = "<grip>0.25</grip>")
+	std::string walker(const std::string& extra = "<grip>0.0402</grip>")
 	{
 		return "<object name=\"floor\" class=\"floor\"><sprite><rectangle><width>600</width><height>10</height></rectangle></sprite>"
 			"<position><x>0</x><y>300</y></position><collisions></collisions></object>"
 			"<object name=\"guy\">" + dot("stand", 0) + dot("stepa", 1) + dot("stepb", 2) + dot("skid", 3) + dot("up", 0) + dot("down", 1) + dot("hurt", 2)
 			+ "<animation name=\"walk\"><seconds>0.1</seconds><frame sprite=\"stepa\" /><frame sprite=\"stepb\" /></animation>"
 			"<position><x>300</x><y>290</y></position>"
-			"<acceleration><x>0</x><y>0.5</y></acceleration>"
+			"<acceleration><x>0</x><y>1800</y></acceleration>"
 			"<poses><standing sprite=\"stand\" /><walking sprite=\"walk\" /><skidding sprite=\"skid\" /><rising sprite=\"up\" /><falling sprite=\"down\" /></poses>"
 			"<mirror>left</mirror>" + extra +
 			"<collisions><collision class=\"floor\"><land /></collision></collisions>"
 			"<actions>"
-			"<action name=\"left\"><move direction=\"left\">2</move></action>"
-			"<action name=\"right\"><move direction=\"right\">2</move></action>"
+			"<action name=\"left\"><move direction=\"left\">120</move></action>"
+			"<action name=\"right\"><move direction=\"right\">120</move></action>"
 			"<action name=\"jump\"><jump>40</jump></action>"
 			"<action name=\"hurt\"><become sprite=\"hurt\" /></action>"
 			"<action name=\"well\"><become sprite=\"stand\" /></action>"
@@ -97,13 +100,13 @@ TEST_CASE("<poses> pick the look from how it moves: standing, walking, skidding,
 	CHECK(guy.footing.grounded);
 	CHECK(guy.lookName() == "stand");
 
-	// A grip of a quarter: a quarter of the way to the walking speed each frame.
+	// A quarter of the way to the walking speed each frame.
 	executor.executeInput(CmdTriggerAction{ "guy", "right" }, true);
 	play.frames(1);
-	CHECK(guy.velocity.x == 0.5f);
+	CHECK(guy.velocity.x == Approx(30.0f).margin(0.1f));
 	CHECK(guy.lookName() == "walk");
 	play.frames(30);
-	CHECK(guy.velocity.x == 2.0f);
+	CHECK(guy.velocity.x == Approx(120.0f));
 	CHECK(litAt(guy, 1) != litAt(guy, 2)); // one of the walk's two pictures
 
 	// Letting go, it slides on, skidding, and stands where the slide ends.
@@ -111,7 +114,7 @@ TEST_CASE("<poses> pick the look from how it moves: standing, walking, skidding,
 	executor.executeInput(CmdTriggerAction{ "guy", "right" }, false);
 	play.frames(1);
 	CHECK(guy.lookName() == "skid");
-	CHECK(guy.velocity.x == 1.5f);
+	CHECK(guy.velocity.x == Approx(90.0f).margin(0.1f));
 	play.frames(30);
 	CHECK(guy.velocity.x == 0.0f);
 	CHECK(guy.lookName() == "stand");
@@ -146,7 +149,7 @@ TEST_CASE("with no grip it is at its speed at once, and stops at once, so it nev
 	play.frames(5);
 	executor.executeInput(CmdTriggerAction{ "guy", "right" }, true);
 	play.frames(1);
-	CHECK(guy.velocity.x == 2.0f);
+	CHECK(guy.velocity.x == Approx(120.0f));
 	executor.executeInput(CmdTriggerAction{ "guy", "right" }, false);
 	play.frames(1);
 	CHECK(guy.velocity.x == 0.0f);
@@ -247,8 +250,7 @@ TEST_CASE("mistakes in poses, mirrors, grips and named animations stop the load"
 
 	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + at + "<poses><standing sprite=\"c\" /></poses></object>"),
 		ContainsSubstring("<standing sprite=\"c\">: the object has no look of that name"));
-	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + at + "<grip>0</grip></object>"), ContainsSubstring("<grip> is 0"));
-	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + at + "<grip>1.5</grip></object>"), ContainsSubstring("<grip> is 1.5"));
+	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + at + "<grip>-1</grip></object>"), ContainsSubstring("<grip> is -1; expected a half-life"));
 	CHECK_THROWS_WITH(load("<object name=\"o\">" + dot("a", 0) + at + "<heading>0</heading><mirror>left</mirror></object>"),
 		ContainsSubstring("<mirror> flips a picture that does not turn"));
 	CHECK_THROWS_WITH(load("<object name=\"o\">" + two + "<animation name=\"x\"><seconds>1</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"

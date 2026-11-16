@@ -32,26 +32,26 @@ namespace
 		std::vector<std::pair<std::string, Vector2f>> drawn;
 	};
 
-	const std::string inTheAir = box("ball", 100, 200, "<altitude><start>50</start><fall>1</fall><bounce>0.5</bounce></altitude>");
+	const std::string inTheAir = box("ball", 100, 200, "<altitude><start>50</start><fall>3600</fall><bounce>0.5</bounce></altitude>");
 }
 
 TEST_CASE("what has an <altitude> falls by its fall, stops at the ground, and bounces back up with its share", "[altitude]")
 {
-	const Scratch file(inTheAir, "<set variable=\"ball.rise\">10</set>");
+	const Scratch file(inTheAir, "<set variable=\"ball.rise\">600</set>");
 	Played play(file.path);
 	Object& thing = play.get("ball");
 	REQUIRE(thing.altitude == Approx(50));
 
 	play.frames(1);
-	CHECK(thing.rise == Approx(-1));
-	CHECK(thing.altitude == Approx(49.5)); // a fall of 1 a frame: half of it the first frame
+	CHECK(thing.rise == Approx(-60));
+	CHECK(thing.altitude == Approx(49.5)); // a fall of 3600 a second, 60 a frame: half of that first frame
 	CHECK(thing.position.y == Approx(200)); // where it is over the ground does not change
 
-	// 50 = n n / 2 at n = 10: down on the tenth frame, coming down at 10,
-	// and back up at 5.
+	// 50 = n n / 2 at n = 10: down on the tenth frame, coming down at 600,
+	// and back up at 300.
 	play.frames(9);
 	CHECK(thing.altitude == Approx(0));
-	CHECK(thing.rise == Approx(5));
+	CHECK(thing.rise == Approx(300));
 
 	// Bounce after bounce, until it rests.
 	play.frames(100);
@@ -95,7 +95,7 @@ TEST_CASE("it is drawn raised by its altitude, and its <shadow> lies under it on
 
 TEST_CASE("a rule can check how high it is: what flies over goes past", "[altitude]")
 {
-	const Scratch file(box("ball", 100, 100, "<velocity><x>4</x><y>0</y></velocity><altitude><start>30</start></altitude>"
+	const Scratch file(box("ball", 100, 100, "<velocity><x>240</x><y>0</y></velocity><altitude><start>30</start></altitude>"
 		"<collisions><collision object=\"wall\"><condition variable=\"altitude\"><below>10</below></condition><bounce /></collision></collisions>")
 		+ box("wall", 160, 100, "<collisions></collisions>"), "<set variable=\"ball.altitude\">0</set><reset object=\"wall\" />");
 	Played play(file.path);
@@ -106,7 +106,7 @@ TEST_CASE("a rule can check how high it is: what flies over goes past", "[altitu
 	play.game.resetObject("ball");
 	play.tap(KeyCode::Space);
 	play.frames(30);
-	CHECK(play.get("ball").velocity.x == Approx(-4));
+	CHECK(play.get("ball").velocity.x == Approx(-240));
 }
 
 TEST_CASE("an <altitude> is not below the ground, and only what has one has one to set", "[altitude]")

@@ -47,7 +47,7 @@ namespace
 
 TEST_CASE("a <hole> is cut round the middle of what hit, and the next shot goes through it", "[hole]")
 {
-	const std::string shot = box("shot", 115, 300, "<velocity><x>0</x><y>-8</y></velocity><collisions>"
+	const std::string shot = box("shot", 115, 300, "<velocity><x>0</x><y>-480</y></velocity><collisions>"
 		"<collision object=\"wall\"><reset /></collision></collisions>");
 	const Scratch file(wall("<collision object=\"shot\"><hole>8</hole></collision>") + shot
 		+ box("another", 600, 100), "<reset object=\"wall\" />");
@@ -91,7 +91,7 @@ TEST_CASE("a rough hole keeps some pixels at its edge, never more than it would 
 	const auto cut = [](const std::string& rough)
 	{
 		const Scratch file(wall("<collision object=\"shot\"><hole>12" + rough + "</hole></collision>")
-			+ box("shot", 115, 115, "<velocity><x>0</x><y>-1</y></velocity><collisions></collisions>"), "<pop />");
+			+ box("shot", 115, 115, "<velocity><x>0</x><y>-60</y></velocity><collisions></collisions>"), "<pop />");
 		Played play(file.path);
 		play.frames(1);
 		return 1600 - solidPixels(play.get("wall"));
@@ -159,7 +159,7 @@ TEST_CASE("a sprite of <polygon>s is filled, tested by its pixels, and holed whe
 		"<color>color.green</color></polygon></sprite>"
 		"<position><x>100</x><y>100</y></position>"
 		"<collisions><type>pixel</type><collision class=\"shell\"><hole>8</hole></collision></collisions></object>";
-	const std::string shell = box("shell", 148, 100, "<velocity><x>0</x><y>3</y></velocity><collisions>"
+	const std::string shell = box("shell", 148, 100, "<velocity><x>0</x><y>180</y></velocity><collisions>"
 		"<collision class=\"ground\"><stop /></collision></collisions>");
 	const Scratch file(hill + shell.substr(0, shell.find('>')) + " class=\"shell\"" + shell.substr(shell.find('>')), "<reset object=\"hill\" />");
 	Played play(file.path);
