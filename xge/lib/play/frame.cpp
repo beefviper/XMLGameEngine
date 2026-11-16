@@ -32,18 +32,30 @@ namespace xge
 			explicit KeptOver(float stepT) : t(stepT) {}
 			float operator()(float share)
 			{
-				if (share != lastShare)
-				{
-					lastShare = share;
-					lastKept = share >= 1.0f ? 0.0f : std::pow(1.0f - share, t);
-				}
+				workOut(share);
 				return lastKept;
 			}
 
+			// How fast it is lost: kept over t is e to the -rate t.
+			float rate(float share)
+			{
+				workOut(share);
+				return lastRate;
+			}
+
 		private:
+			void workOut(float share)
+			{
+				if (share == lastShare) { return; }
+				lastShare = share;
+				lastKept = share >= 1.0f ? 0.0f : std::pow(1.0f - share, t);
+				lastRate = share >= 1.0f ? 0.0f : -std::log(1.0f - share);
+			}
+
 			float t;
 			float lastShare{ -1.0f };
 			float lastKept{ 1.0f };
+			float lastRate{ 0.0f };
 		};
 
 		// Whether it has moved or changed, so its touches are looked for: it
@@ -444,14 +456,31 @@ namespace xge
 					}
 				}
 
-				object.velocity += change * t;
-
-				// Drag: what is left of the speed after this step.
-				if (object.surface.groundDrag != 0.0f)
+				// Drag: what is left of the speed after this step, losing its
+				// share each unit of time while the push goes on (the sums are
+				// exact for a steady push: v' = a - k v). `gained` is what the
+				// sweep takes off the step's end speed to go the step's true
+				// way: twice the end speed less the step's mean.
+				const float drag = object.surface.groundDrag;
+				if (drag == 0.0f)
 				{
-					object.velocity *= kept(object.surface.groundDrag);
+					object.velocity += change * t;
+					object.motion.gained = object.velocity - was;
 				}
-				object.motion.gained = object.velocity - was;
+				else if (drag >= 1.0f || !(t > 0.0f))
+				{
+					object.velocity = drag >= 1.0f ? Vector2f{} : was;
+					object.motion.gained = object.velocity * 2.0f;
+				}
+				else
+				{
+					const float left = kept(drag);
+					const float k = kept.rate(drag);
+					const float lost = (1.0f - left) / k;
+					object.velocity = was * left + change * lost;
+					const Vector2f mean = (was * lost + change * ((t - lost) / k)) * (1.0f / t);
+					object.motion.gained = (object.velocity - mean) * 2.0f;
+				}
 			}
 		}
 

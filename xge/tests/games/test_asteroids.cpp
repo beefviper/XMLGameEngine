@@ -468,14 +468,17 @@ TEST_CASE("held thrust shows the flickering flame, turned with the ship; letting
 
 TEST_CASE("thrust pushes the ship along the way it faces", "[asteroids][heading]")
 {
+	const float kOneFrame = 0.09f * 0.02f / -std::log(0.98f);
 	Field field;
 	field.clearTheMiddle();
 
 	// Facing up: the velocity goes up the screen, which is negative y, and
-	// sideways not at all.
+	// sideways not at all. A frame of thrust under drag from still: the
+	// push less what the drag takes as it builds, 0.09 (1 - 0.98) / k with
+	// 0.98 = e to the -k.
 	field.key("thrust", true);
 	field.frames(1);
-	CHECK_THAT(field.ship().velocity.y, WithinAbs(-0.09f * 0.98f, 1e-4f));
+	CHECK_THAT(field.ship().velocity.y, WithinAbs(-kOneFrame, 1e-4f));
 	CHECK_THAT(field.ship().velocity.x, WithinAbs(0.0f, 1e-5f));
 	field.key("thrust", false);
 
@@ -484,7 +487,7 @@ TEST_CASE("thrust pushes the ship along the way it faces", "[asteroids][heading]
 	field.ship().heading = 90.0f;
 	field.key("thrust", true);
 	field.frames(1);
-	CHECK_THAT(field.ship().velocity.x, WithinAbs(0.09f * 0.98f, 1e-4f));
+	CHECK_THAT(field.ship().velocity.x, WithinAbs(kOneFrame, 1e-4f));
 	CHECK_THAT(field.ship().velocity.y, WithinAbs(0.0f, 1e-4f));
 	field.key("thrust", false);
 
@@ -556,7 +559,8 @@ TEST_CASE("held thrust has a top speed instead of speeding up for ever", "[aster
 		field.ship().position = { 380, 280 }; // keep it in the middle; only its speed matters
 	}
 
-	const float top = 0.09f * 0.98f / 0.02f;
+	// Where the push and the drag even out: 0.09 / k, 0.98 = e to the -k.
+	const float top = 0.09f / -std::log(0.98f);
 	CHECK_THAT(field.ship().velocity.x, WithinAbs(top, 0.05f));
 }
 

@@ -35,7 +35,7 @@ With steps of any length, the sums must give the same answer however a second is
 - **Constant pull:** the position moves by `velocity * t + acceleration * t * t / 2`, then the velocity gains `acceleration * t`. A jump is the same height at any rate.
 - **Shares:** what is kept over a step is `(1 - lost)` to the power `t`.
 - **Easing toward a wanted speed** (`<grip>`): the same power, on the gap.
-- **Drag with a pull** is not exact; the pull's sum is done first, then the share. Close enough at any rate a game is played at.
+- **Drag with a pull** is the exact sum of `v' = a - k v` over the step (`k` the share's rate, `kept = e^(-k t)`): Asteroids' thrust then came out 6% short at 8 steps a second, and the same at every rate with it. The sweep goes the step's true mean speed.
 
 ## Things that count time
 
@@ -76,4 +76,3 @@ For a while a game says which units it is in: `<game time="seconds">`. One witho
 
 - **A recorded demo.** A recording is only the same game if it is played back on the same steps. Either a demo keeps the length of every step, or recording and playback both run at one constant step kept in the demo, the one place a fixed step would remain. The author: the shipped demo is dropped for now and new ones are recorded once this is chosen.
 - Whether a window with no `<framerate>` follows the screen's refresh or stays at 60.
-- The exact sum for drag together with a pull, if a game ever shows the difference.
