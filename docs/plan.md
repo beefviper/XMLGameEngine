@@ -137,7 +137,7 @@ Its own block of work, done before anything else in this file. **Design and reas
 - **Steps.**
   - [x] **1 to 6. One game a commit (S to M each),** Pong first. Its test file in `xge/tests/games/` is changed only where it names a speed. **Check:** the game's own tests; its case in `xgetest-long "[steps]"`, whose measure must also be within its range of what it was before the move; `xgecli <game> --frames 600 --seed 1 --dump` before and after lists the same objects, each within 20 pixels of where it was (a game with bounces: the same objects only). No per-frame number is left: read the diff once more for any speed under 20 or pull under 100, and say in the commit why each one left is right.
   - [x] **7. The reference says seconds (S).** `docs/reference/objects.md`, `commands.md`, `collisions.md`, `format.md`: every "a frame" for a moved word becomes "a second", with the `time="seconds"` attribute explained once in `format.md` as temporary.
-  - [ ] **8. The author plays the six.** A line in Waiting for a look on Windows. Do not start DT6 until the author says they feel right; if a sum is changed after that, the six are checked again first.
+  - [x] **8. The author plays the six.** A line in Waiting for a look on Windows. Do not start DT6 until the author says they feel right; if a sum is changed after that, the six are checked again first.
 
 ### DT6. The rest of the games
 
@@ -505,7 +505,6 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
 - **The schema's documentation in an editor (A6), not urgent (the author works mostly from the command line):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.
-- **The six games in seconds (DT5 step 8):** Pong, Asteroids, Mario Bros., Space Invaders, Snake and Pinball, each at 60 and at `--framerate 8` and `240`, should feel as they did before DT5. DT6 waits for this.
 
 ## Known untested
 
