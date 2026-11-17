@@ -21,13 +21,16 @@ using namespace xge;
 
 namespace
 {
+	// The names these hand-made objects are given, held once.
+	NameStore heldNames;
+
 	Object text(const std::string& words, int size)
 	{
 		Object object;
 		object.drawn.picture.kind = ShapeKind::Text;
 		object.drawn.picture.text = words;
 		object.drawn.picture.textSize = size;
-		object.drawn.picture.color = "color.white";
+		object.drawn.picture.color = heldNames.of("color.white");
 		return object;
 	}
 }
@@ -49,7 +52,7 @@ TEST_CASE("a text drawn at twice the scale has twice the pixels and the same gam
 
 	// A pixel font at its own multiple doubles exactly.
 	Object score = text("SCORE", 16);
-	score.drawn.picture.font = "assets/pressstart2p.ttf";
+	score.drawn.picture.font = heldNames.of("assets/pressstart2p.ttf");
 	CHECK(score.drawnPicture(2.0f)->width == 2 * score.drawnPicture(1.0f)->width);
 }
 
@@ -58,7 +61,7 @@ TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[pi
 	Object ball;
 	ball.drawn.picture.kind = ShapeKind::Circle;
 	ball.drawn.picture.radius = 5.0f;
-	ball.drawn.picture.color = "color.red";
+	ball.drawn.picture.color = heldNames.of("color.red");
 
 	const std::shared_ptr<const Bitmap> small = ball.drawnPicture(1.0f);
 	CHECK(small->width == 10);
@@ -71,7 +74,7 @@ TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[pi
 	Object paddle;
 	paddle.drawn.picture.kind = ShapeKind::Rectangle;
 	paddle.drawn.picture.size = { 10.0f, 50.0f };
-	paddle.drawn.picture.color = "color.white";
+	paddle.drawn.picture.color = heldNames.of("color.white");
 	const std::shared_ptr<const Bitmap> tall = paddle.drawnPicture(2.0f);
 	CHECK(tall->width == 20);
 	CHECK(tall->height == 100);

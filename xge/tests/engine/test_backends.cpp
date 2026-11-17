@@ -224,6 +224,9 @@ TEST_CASE("a picture's size is the game's own, and the null window opens nothing
 
 namespace
 {
+	// The names these hand-made objects are given, held once.
+	NameStore heldNames;
+
 	// The key A pressed (or let go) in the window with this title, as a
 	// person would: XTest through xdotool on X, SendInput on Windows. False
 	// where neither is to hand, and the key is not tried.
@@ -345,8 +348,8 @@ TEST_CASE("every window backend keeps the window contract", "[.][window]")
 					o.drawn.bitmap = red;
 					o.drawn.picture.size = { 8.0f, 8.0f };
 				}),
-				pictureAt("rectangle", 30.0f, 4.0f, [](Object& o) { o.drawn.picture.kind = ShapeKind::Rectangle; o.drawn.picture.size = { 10.0f, 6.0f }; o.drawn.picture.color = "color.green"; }),
-				pictureAt("circle", 20.0f, 28.0f, [](Object& o) { o.drawn.picture.kind = ShapeKind::Circle; o.drawn.picture.radius = 6.0f; o.drawn.picture.color = "color.blue"; }),
+				pictureAt("rectangle", 30.0f, 4.0f, [](Object& o) { o.drawn.picture.kind = ShapeKind::Rectangle; o.drawn.picture.size = { 10.0f, 6.0f }; o.drawn.picture.color = heldNames.of("color.green"); }),
+				pictureAt("circle", 20.0f, 28.0f, [](Object& o) { o.drawn.picture.kind = ShapeKind::Circle; o.drawn.picture.radius = 6.0f; o.drawn.picture.color = heldNames.of("color.blue"); }),
 			};
 			window->init(objects);
 			for (const Object& object : objects) { CHECK_FALSE(object.drawn.visualDirty); }

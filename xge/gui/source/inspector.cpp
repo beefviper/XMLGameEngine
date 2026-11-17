@@ -562,21 +562,33 @@ namespace xge
 				});
 		};
 
+		auto addParamName = [&](const QString& name, Name Picture::* part)
+		{
+			addText(sprite, name,
+				[object, part]() { return text(object().drawn.picture.*part); },
+				[this, object, part](const QString& value)
+				{
+					object().drawn.picture.*part = game().nameOf(value.toStdString());
+					object().drawn.visualDirty = true;
+					object().size = object().pictureSize();
+				});
+		};
+
 		switch (first.drawn.picture.kind)
 		{
 		case ShapeKind::Circle:
 			addParamNumber(tr("radius"), [](Picture& picture) -> float& { return picture.radius; }, false);
-			addParamText(tr("color"), &Picture::color);
+			addParamName(tr("color"), &Picture::color);
 			break;
 		case ShapeKind::Rectangle:
 			addParamNumber(tr("width"), [](Picture& picture) -> float& { return picture.size.x; }, false);
 			addParamNumber(tr("height"), [](Picture& picture) -> float& { return picture.size.y; }, false);
-			addParamText(tr("color"), &Picture::color);
+			addParamName(tr("color"), &Picture::color);
 			break;
 		case ShapeKind::Text:
 			addParamText(tr("content"), &Picture::text);
 			addParamNumber(tr("size"), [](Picture& picture) -> int& { return picture.textSize; }, true);
-			addParamText(tr("color"), &Picture::color);
+			addParamName(tr("color"), &Picture::color);
 			break;
 		case ShapeKind::Image:
 			addInfo(sprite, tr("file"), text(first.drawn.picture.file));

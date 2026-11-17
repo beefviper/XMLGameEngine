@@ -6,6 +6,7 @@
 #pragma once
 
 #include "engine/keys.h"
+#include "game/name.h"
 #include "game/types.h"
 #include "picture/bitmap.h"
 
@@ -47,11 +48,11 @@ namespace xge
 		ShapeKind kind{ ShapeKind::Unknown };
 		Vector2f size{};             // a rectangle's, or a Line's drawing's
 		float radius{};              // a circle's
-		std::string color;           // a circle's, rectangle's or text's color. name
+		Name color;                  // a circle's, rectangle's or text's color. name
 		std::string text;            // a text's words as shown now
 		int textSize{};              // a text's size in pixels
-		std::string font;            // a text's font file; empty: the standard one (textFontFile)
-		std::string file;            // an image's file, as written
+		Name font;                   // a text's font file; empty: the standard one (textFontFile)
+		Name file;                   // an image's file, as written
 		std::shared_ptr<const Bitmap> image;   // an image's pixels, flipped as asked: held by the game's Resources
 		bool flipHorizontal{ false }; // an image's, drawn mirrored
 		bool flipVertical{ false };
