@@ -397,6 +397,13 @@ namespace xge
 			const auto object = std::find_if(objects.begin(), objects.end(), [&](const Object& each) { return each.name == rawObject.name; });
 			if (object == objects.end()) { continue; }
 			const std::string where = "object '" + rawObject.name + "' > <collision>";
+			// Their tests say self of this one (makeTestHere).
+			struct Self
+			{
+				std::string& name;
+				std::string was;
+				~Self() { name = std::move(was); }
+			} self{ selfName, std::exchange(selfName, rawObject.name) };
 			for (std::size_t i = 0; i < rawObject.rawCollisionData.others.size(); ++i)
 			{
 				const RawCondition& check = rawObject.rawCollisionData.others[i].check;
@@ -973,6 +980,12 @@ namespace xge
 		// (a timer starting over, a command made again each time it runs)
 		// only reads the compiled one again. The symbols it reads are bound
 		// by reference, so it always sees the numbers as they are now.
+		// self., while one object's test is worked out, is that object's.
+		if (selfNow && text.compare(0, 5, "self.") == 0)
+		{
+			selfText.assign(*selfNow).append(text, 4, std::string::npos);
+			return evaluateExpression(selfText, where);
+		}
 		auto found = compiled.find(text);
 		if (found == compiled.end())
 		{

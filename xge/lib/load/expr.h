@@ -186,6 +186,12 @@ namespace xge
 		// the object running it; the one made at load is about this one.
 		std::string selfName;
 
+		// While a test about one object is worked out (Game::comparedWith):
+		// its name, which self. in a text reads as; selfText is the room the
+		// text is named in.
+		const std::string* selfNow{ nullptr };
+		std::string selfText;
+
 		// The names a text may read, and every text compiled so far
 		// (evaluateExpression); with the names each text reads (namesIn):
 		// the same texts are worked out again and again.

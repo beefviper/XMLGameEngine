@@ -2242,6 +2242,10 @@ namespace xge
 	// Whether a command says anything of self.
 	bool namesSelf(const RawCommand& command);
 
+	// A test's self made `name`, and a test that names nothing made about
+	// `name` (with "self", one about the object testing it).
+	void nameSelfInTest(RawCondition& condition, const std::string& name);
+
 	// A copy of an object, named `to` where it was `from`: what its own
 	// rules, timers, actions and values said of `from` (by its name, or by
 	// self., which nameSelf made its name) they now say of `to`. What a

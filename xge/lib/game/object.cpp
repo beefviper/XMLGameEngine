@@ -621,7 +621,7 @@ namespace xge
 			if (command.test)
 			{
 				auto test = std::make_shared<RawCondition>(*command.test);
-				nameSelfInCheck(*test, name);
+				nameSelfInCheck(*test, "self");
 				nameSelfInTests(test->commands, name);
 				command.test = std::move(test);
 			}
@@ -653,6 +653,11 @@ namespace xge
 			}
 		}
 		return changed;
+	}
+
+	void nameSelfInTest(RawCondition& condition, const std::string& name)
+	{
+		nameSelfInCheck(condition, name);
 	}
 
 	bool namesSelf(const RawCommand& command)
@@ -786,7 +791,8 @@ namespace xge
 			// as each runs (Game::makeNow); only their tests are made its name.
 			const auto own = [&](std::vector<RawCommand>& list) { nameSelfInTests(list, object.name); };
 			const auto commands = [&](std::vector<RawCommand>& list) { nameSelfIn(list, object.name); };
-			const auto check = [&](RawCondition& condition) { nameSelfInCheck(condition, object.name); };
+			// A rule's test says self too, found as it is tested (Game::holds).
+			const auto check = [&](RawCondition& condition) { nameSelfInCheck(condition, "self"); };
 
 			RawCollisionData& collisions = object.rawCollisionData;
 			for (auto& edge : collisions.edges)

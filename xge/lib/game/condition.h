@@ -88,7 +88,13 @@ namespace xge
 	{
 		int line{ 0 }; // RawCondition::line
 		std::string filterClass;
+		// "self": the object testing it (a rule's, an action's), as are
+		// distanceTo and sees; `selfReads` are the variables of its own a
+		// live number reads (self.worth).
 		std::string filterObject;
+		bool saysSelf{ false };
+		std::string madeFor;   // the object it was made for at load: self, when none tests it
+		std::vector<std::string> selfReads;
 		std::string variableName;
 		Total total{ Total::None };
 		std::string distanceTo; // measured to the nearest one in play of this name or group

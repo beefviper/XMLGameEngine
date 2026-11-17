@@ -545,7 +545,7 @@ namespace xge
 		// false when none moved.
 		bool slideClass(const std::string& objClass, Direction way);
 		// A <condition> in an action: whether its test holds now.
-		bool testHolds(const Condition& condition) { return holds(condition); }
+		bool testHolds(const Condition& condition, const Object* self) { return holdsFor(condition, self); }
 		// The pieces of that class (any, when empty) in the cells about
 		// `piece` that `place` names, on every map of cells laid where its
 		// own is, in reading order.
@@ -1032,6 +1032,12 @@ namespace xge
 		// Whether it holds; with `who`, every object its test holds for
 		// (the last test of an <all>'s), for commands that name self.
 		bool holds(const Condition& condition, std::vector<const Object*>* who = nullptr);
+		// Whether it holds, tested by `self` (a rule's, an action's object):
+		// what says self in it is that one.
+		bool holdsFor(const Condition& condition, const Object* self);
+		const Object* testing{ nullptr };
+		// A name in the condition, with self the object testing it.
+		const std::string& selfIn(const Condition& condition, const std::string& name) const noexcept;
 		// The parts of holds.
 		bool considers(const Condition& condition, const Object& object) const;
 		float comparedWith(const Condition& condition);

@@ -2041,7 +2041,7 @@ namespace xge
 	{
 		return (!guard.sprite.empty() && look != guard.sprite)
 			|| (!guard.unlessClass.empty() && isTouchingClass(object, object, guard.unlessClass))
-			|| (guard.check && !holds(*guard.check));
+			|| (guard.check && !holdsFor(*guard.check, &object));
 	}
 
 	// Whether the edge has a stick() rule that holds right now (one in a rule
@@ -2215,7 +2215,7 @@ namespace xge
 			const bool copy = !rule.otherIs.empty() && other.name != rule.otherIs;
 			const CopyRule* made = copy ? &ruleForCopy(rule, other.name, self.name) : nullptr;
 			const std::optional<Condition>& check = made ? made->check : rule.check;
-			if (check && !holds(*check)) { continue; }
+			if (check && !holdsFor(*check, &self)) { continue; }
 
 			// A verb refused ends the rule there, as it ends an action.
 			for (const auto& command : made ? made->commands : rule.commands)
@@ -2463,7 +2463,7 @@ namespace xge
 	// thing, wherever it is.
 	bool Game::considers(const Condition& condition, const Object& object) const
 	{
-		return (inScope(object) || namedByPath(object, condition.filterObject))
+		return (inScope(object) || namedByPath(object, selfIn(condition, condition.filterObject)))
 			&& (condition.sprite.empty() || object.lookName() == condition.sprite);
 	}
 
@@ -2482,9 +2482,22 @@ namespace xge
 					if (const auto found = owner->variable.find(read.variable); found != owner->variable.end()) { *read.slot = found->second; }
 				}
 			}
+			const Object* self = condition.saysSelf ? (testing ? testing : tryGetObject(condition.madeFor)) : nullptr;
+			if (self)
+			{
+				for (const std::string& variable : condition.selfReads)
+				{
+					const auto slot = expr.objectVariables.find(self->name + "." + variable);
+					const auto found = self->variable.find(variable);
+					if (slot != expr.objectVariables.end() && found != self->variable.end()) { slot->second = found->second; }
+				}
+			}
 			try
 			{
-				against = evaluateNow(*condition.live, condition.where);
+				const std::string* was = std::exchange(expr.selfNow, self ? &self->name : nullptr);
+				try { against = evaluateNow(*condition.live, condition.where); }
+				catch (...) { expr.selfNow = was; throw; }
+				expr.selfNow = was;
 			}
 			catch (const std::runtime_error& error)
 			{
@@ -2504,13 +2517,13 @@ namespace xge
 		if (!condition.sees.empty())
 		{
 			if (!object.isVisible || !isShown(object)) { return std::nullopt; }
-			const Object* nearest = nearestInPlay(object, condition.sees);
+			const Object* nearest = nearestInPlay(object, selfIn(condition, condition.sees));
 			if (!nearest) { return std::nullopt; }
 			return seesPast(object, *nearest, condition.past) ? 1.0f : 0.0f;
 		}
 		if (condition.distanceTo.empty()) { return numberOf(objectParts, object, condition.variableName); }
 		if (!object.isVisible || !isShown(object)) { return std::nullopt; }
-		const Object* nearest = nearestInPlay(object, condition.distanceTo);
+		const Object* nearest = nearestInPlay(object, selfIn(condition, condition.distanceTo));
 		if (!nearest) { return std::nullopt; }
 		const Vector2f apart = (nearest->position + nearest->size * 0.5f) - (object.position + object.size * 0.5f);
 		return std::hypot(apart.x, apart.y);
@@ -2571,6 +2584,20 @@ namespace xge
 		return best != nullptr;
 	}
 
+	const std::string& Game::selfIn(const Condition& condition, const std::string& name) const noexcept
+	{
+		if (!condition.saysSelf || name != "self") { return name; }
+		return testing ? testing->name : condition.madeFor;
+	}
+
+	bool Game::holdsFor(const Condition& condition, const Object* self)
+	{
+		const Object* was = std::exchange(testing, self);
+		const bool held = holds(condition);
+		testing = was;
+		return held;
+	}
+
 	bool Game::holds(const Condition& condition, std::vector<const Object*>* who)
 	{
 		if (condition.join == RawCondition::Join::All)
@@ -2591,7 +2618,7 @@ namespace xge
 		}
 
 		// Only the objects the filter matches are looked at (matching).
-		const std::vector<std::size_t>& candidates = matching(condition.filterClass, condition.filterObject);
+		const std::vector<std::size_t>& candidates = matching(condition.filterClass, selfIn(condition, condition.filterObject));
 		const float against = comparedWith(condition);
 
 		// "No more than N of them left": everything that matches, still

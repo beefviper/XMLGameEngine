@@ -133,7 +133,7 @@ namespace xge
 		// refused.
 		if (const auto* when = std::get_if<CmdWhen>(&current))
 		{
-			if (!when->body || !when->body->test || !game.testHolds(*when->body->test)) { return true; }
+			if (!when->body || !when->body->test || !game.testHolds(*when->body->test, doer.self)) { return true; }
 			for (const Command& inner : when->body->commands)
 			{
 				if (!run(inner, doer)) { break; }

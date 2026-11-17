@@ -32,6 +32,13 @@ namespace xge
 {
 	namespace
 	{
+		// Whether a value says self.
+		bool saysSelf(const RawValue& value)
+		{
+			RawValue probe = value;
+			return renameInValue(probe, "self", "self_");
+		}
+
 		// Whether a condition's class= and object= pick the object.
 		bool matchesFilter(const RawCondition& rawCondition, const Object& object)
 		{
@@ -117,6 +124,48 @@ namespace xge
 		if (condition.join != RawCondition::Join::None)
 		{
 			return condition;
+		}
+
+		// One about self is made, and checked, for the object being made;
+		// as it is tested, it is about the object testing it.
+		const bool own = rawCondition.filterObject == "self" || rawCondition.distance == "self" || rawCondition.sees == "self"
+			|| saysSelf(rawCondition.threshold);
+		if (own && !selfName.empty())
+		{
+			RawCondition named = rawCondition;
+			nameSelfInTest(named, selfName);
+			Condition made = makeTestHere(named, where, owner, objects);
+			made.saysSelf = true;
+			made.madeFor = selfName;
+			if (rawCondition.filterObject == "self") { made.filterObject = "self"; }
+			if (rawCondition.distance == "self") { made.distanceTo = "self"; }
+			if (rawCondition.sees == "self") { made.sees = "self"; }
+			if (saysSelf(rawCondition.threshold))
+			{
+				made.live = std::make_shared<const RawValue>(rawCondition.threshold);
+				made.where = where;
+				// What it reads of itself, by the names its variables have.
+				const auto sameName = [](const std::string& a, const std::string& b)
+				{
+					return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(),
+						[](char x, char y) { return std::tolower(static_cast<unsigned char>(x)) == std::tolower(static_cast<unsigned char>(y)); });
+				};
+				made.reads.erase(std::remove_if(made.reads.begin(), made.reads.end(), [&](const Condition::Read& read) { return sameName(read.owner, selfName); }), made.reads.end());
+				const std::string ownPrefix = "self.";
+				for (const std::string* text : rawCondition.threshold.expressions())
+				{
+					for (const std::string& name : namesIn(*text))
+					{
+						if (name.compare(0, ownPrefix.size(), ownPrefix) != 0) { continue; }
+						const std::string wanted = selfName + "." + name.substr(ownPrefix.size());
+						for (const auto& [key, slot] : objectVariables)
+						{
+							if (sameName(key, wanted)) { made.selfReads.push_back(key.substr(selfName.size() + 1)); break; }
+						}
+					}
+				}
+			}
+			return made;
 		}
 
 		condition.filterClass = rawCondition.filterClass;
