@@ -136,9 +136,9 @@ TEST_CASE("astrosmash.xml loads a base, four big rocks, four small, two spinners
 	{
 		if (object.objClass != "rocks") { continue; }
 		// The rocks are the playing state's own: playing.boulders.1.1 and so on.
-		if (object.name.rfind("playing.boulders.", 0) == 0) { ++boulders; }
-		if (object.name.rfind("playing.pebbles.", 0) == 0) { ++pebbles; }
-		if (object.name.rfind("playing.chip", 0) == 0) { ++chips; CHECK_FALSE(object.exists); }
+		if (object.name.str().rfind("playing.boulders.", 0) == 0) { ++boulders; }
+		if (object.name.str().rfind("playing.pebbles.", 0) == 0) { ++pebbles; }
+		if (object.name.str().rfind("playing.chip", 0) == 0) { ++chips; CHECK_FALSE(object.exists); }
 	}
 	CHECK(boulders == 4);
 	CHECK(pebbles == 4);

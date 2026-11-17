@@ -73,7 +73,7 @@ namespace
 
 		static bool inWave(const Object& object, const std::string& wave)
 		{
-			return object.objClass == "demon" && object.name.rfind("playing." + wave + ".", 0) == 0;
+			return object.objClass == "demon" && object.name.str().rfind("playing." + wave + ".", 0) == 0;
 		}
 
 		// Holds still every demon of a wave, so a test is not about a lane

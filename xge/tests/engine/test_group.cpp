@@ -786,7 +786,7 @@ TEST_CASE("every lane of frogger is a group of the members it had, and space rac
 	{
 		const auto cells = std::count_if(race.getCurrentObjects().begin(), race.getCurrentObjects().end(),
 			[&](const Object& object) { return object.groupName == "playing.debris"
-				&& object.name.substr(object.name.rfind('.') + 1) == std::to_string(row); });
+				&& object.name.str().substr(object.name.str().rfind('.') + 1) == std::to_string(row); });
 		INFO(row);
 		CHECK(cells == 8);
 	}

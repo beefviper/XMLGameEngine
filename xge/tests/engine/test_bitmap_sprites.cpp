@@ -1574,8 +1574,8 @@ TEST_CASE("each kind of alien scores its own, and the block marches faster as it
 	// A shot under a crab of the third row, the rows below gone.
 	for (const Object* alien : aliensOf(game))
 	{
-		if (alien->name.find("aliens.6.") == std::string::npos) { continue; }
-		if (alien->name.back() == '4' || alien->name.back() == '5') { const_cast<Object*>(alien)->isVisible = false; }
+		if (alien->name.str().find("aliens.6.") == std::string::npos) { continue; }
+		if (alien->name.str().back() == '4' || alien->name.str().back() == '5') { const_cast<Object*>(alien)->isVisible = false; }
 	}
 	const Object& crab = game.getObject("aliens.6.3");
 	Object& bullet = copies::spawned(game, "bullet");

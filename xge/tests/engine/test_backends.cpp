@@ -279,7 +279,8 @@ namespace
 	Object pictureAt(const std::string& name, float x, float y, void (*setUp)(Object&))
 	{
 		Object object;
-		object.name = name;
+		static NameStore names;
+		object.name = names.of(name);
 		object.position = { x, y };
 		object.isDrawn = true;
 		setUp(object);

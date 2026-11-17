@@ -37,7 +37,7 @@ namespace
 	std::string comparable(const Object& object)
 	{
 		// Named by their paths where a state or a scene owns them (playing.ball, playing.wave2.half).
-		const auto endsWith = [&](const std::string& end) { return object.name == end || (object.name.size() > end.size() && object.name.compare(object.name.size() - end.size() - 1, end.size() + 1, "." + end) == 0); };
+		const auto endsWith = [&](const std::string& end) { return object.name == end || (object.name.size() > end.size() && object.name.str().compare(object.name.size() - end.size() - 1, end.size() + 1, "." + end) == 0); };
 		const bool drawn = endsWith("ball") || endsWith("half") || object.objClass == "bomb" || object.objClass == "rocks" || object.objClass == "spinner" || object.objClass == "missile" || object.objClass == "ufo";
 		if (drawn) { return object.name; }
 		std::ostringstream text;

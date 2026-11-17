@@ -75,7 +75,7 @@ namespace
 		{
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.exists && object.isCopy() && object.name.size() >= name.size() && object.name.compare(object.name.size() - name.size(), name.size(), name) == 0) { return true; }
+				if (object.exists && object.isCopy() && object.name.size() >= name.size() && object.name.str().compare(object.name.size() - name.size(), name.size(), name) == 0) { return true; }
 			}
 			return false;
 		}

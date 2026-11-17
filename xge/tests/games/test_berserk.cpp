@@ -122,7 +122,7 @@ namespace
 			int k = 0;
 			for (auto& object : game.getCurrentObjects())
 			{
-				if (object.objClass == objClass && object.isVisible && object.name.rfind(prefix, 0) == 0) { ++k; }
+				if (object.objClass == objClass && object.isVisible && object.name.str().rfind(prefix, 0) == 0) { ++k; }
 			}
 			return k;
 		}
@@ -171,7 +171,7 @@ namespace
 			const std::string prefix = inRoom(n, "");
 			for (auto& object : game.getCurrentObjects())
 			{
-				if (object.objClass == "robot" && object.name.rfind(prefix, 0) == 0) { object.isVisible = false; object.collisionsOn = false; }
+				if (object.objClass == "robot" && object.name.str().rfind(prefix, 0) == 0) { object.isVisible = false; object.collisionsOn = false; }
 			}
 		}
 
@@ -219,7 +219,7 @@ namespace
 		int n = 0;
 		for (auto& object : play.game.getCurrentObjects())
 		{
-			if (object.name.rfind(prefix, 0) == 0) { ++n; }
+			if (object.name.str().rfind(prefix, 0) == 0) { ++n; }
 		}
 		return n;
 	}

@@ -61,7 +61,8 @@ namespace
 	Object lineObject(const std::string& name, const std::vector<LineSegment>& lines, float x, float y, CollisionType type = CollisionType::Pixel)
 	{
 		Object object;
-		object.name = name;
+		static NameStore names;
+		object.name = names.of(name);
 		object.drawn.picture.kind = ShapeKind::Line;
 		object.drawn.bitmap = std::make_shared<const Bitmap>(rasterizeLines(lines));
 		object.size = { static_cast<float>(object.drawn.bitmap->width), static_cast<float>(object.drawn.bitmap->height) };
@@ -74,7 +75,8 @@ namespace
 	Object rectangleObject(const std::string& name, float width, float height, float x, float y)
 	{
 		Object object;
-		object.name = name;
+		static NameStore names;
+		object.name = names.of(name);
 		object.drawn.picture.kind = ShapeKind::Rectangle;
 		object.size = { width, height };
 		object.position = { x, y };
@@ -85,7 +87,8 @@ namespace
 	Object circleObject(const std::string& name, float radius, float x, float y)
 	{
 		Object object;
-		object.name = name;
+		static NameStore names;
+		object.name = names.of(name);
 		object.drawn.picture.kind = ShapeKind::Circle;
 		object.size = { radius * 2, radius * 2 };
 		object.position = { x, y };

@@ -1202,7 +1202,7 @@ namespace xge
 		// group's name and its number (logrow3.2), a cell of a group laid out
 		// in <columns> and <rows> the group's name, its column and its row,
 		// counting from 1 (aliens.3.2), unless either is given a name.
-		std::string name;
+		Name name;
 
 		// The <group> this object is a member of ("logrow3" for logrow3.1,
 		// logrow3.2, ...), or empty. It can be used wherever the XML names an

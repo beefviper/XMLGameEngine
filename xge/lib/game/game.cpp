@@ -331,7 +331,7 @@ namespace xge
 			if (const auto found = original.kind->action.find(actionName); found != original.kind->action.end()) { whens(found->second, list); }
 		}
 
-		made.copyOf = nameOf(original.name);
+		made.copyOf = original.name;
 		made.groupName = nameOf(copy.groupName);
 		made.outerGroups = expr.names.of(copy.outerGroups);
 		made.ownerState = original.ownerState;
@@ -2485,8 +2485,8 @@ namespace xge
 			readOwn(other, condition.otherReads);
 			try
 			{
-				const std::string* was = std::exchange(expr.selfNow, self ? &self->name : nullptr);
-				const std::string* wasOther = std::exchange(expr.otherNow, other ? &other->name : nullptr);
+				const std::string* was = std::exchange(expr.selfNow, self ? &self->name.str() : nullptr);
+				const std::string* wasOther = std::exchange(expr.otherNow, other ? &other->name.str() : nullptr);
 				try { against = evaluateNow(*condition.live, condition.where); }
 				catch (...) { expr.selfNow = was; expr.otherNow = wasOther; throw; }
 				expr.selfNow = was;

@@ -177,7 +177,7 @@ namespace xge
 	{
 		object.groupName = names.of(rawObject.groupName);
 		object.outerGroups = names.of(rawObject.outerGroups);
-		object.name = rawObject.name;
+		object.name = names.of(rawObject.name);
 		object.line = rawObject.line;
 		object.objClass = names.of(rawObject.objClass);
 		object.isDrawn = rawObject.isDrawn;

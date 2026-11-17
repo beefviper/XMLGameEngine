@@ -783,7 +783,7 @@ namespace xge
 			if (name.empty()) { return false; }
 			if (holder.named(name)) { return true; }
 			const std::string tail = "." + name;
-			return holder.name.size() > tail.size() && holder.name.compare(holder.name.size() - tail.size(), tail.size(), tail) == 0;
+			return holder.name.size() > tail.size() && holder.name.str().compare(holder.name.size() - tail.size(), tail.size(), tail) == 0;
 		};
 		const auto readIn = [&](const Object& holder, const std::vector<Condition>& conditions, const auto& self) -> bool
 		{

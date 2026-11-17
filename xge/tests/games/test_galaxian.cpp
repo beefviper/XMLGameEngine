@@ -514,7 +514,7 @@ TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pa
 	int following = 0;
 	for (auto& object : play.game.getCurrentObjects())
 	{
-		if (object.isFollowing() && object.name.rfind("playing.fleet.escorts.", 0) == 0) { ++following; }
+		if (object.isFollowing() && object.name.str().rfind("playing.fleet.escorts.", 0) == 0) { ++following; }
 	}
 	CHECK(following == 2);
 	CHECK(play.object("escorts.1.1").isFollowing());

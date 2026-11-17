@@ -747,7 +747,7 @@ TEST_CASE("Centipede plays: the wand's shot wears the mushroom above it away", "
 		{
 			if (object.exists && object.objClass == "mushroom" && static_cast<int>(play.game.place(object).column) == 15 && (!low || play.game.place(object).row > play.game.place(*low).row)) { low = &object; }
 		}
-		return low ? low->name : "";
+		return low ? low->name.str() : std::string();
 	};
 	const std::string first = lowest();
 	REQUIRE_FALSE(first.empty());
