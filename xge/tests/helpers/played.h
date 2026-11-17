@@ -57,6 +57,7 @@ namespace played
 		xge::Holder& holderOf(const std::string& name) { return game.holderOf(get(name)); }
 		xge::Holder& holderOf(const xge::Object& object) { return game.holderOf(object); }
 		bool isHolder(const xge::Object& object) const { return game.isHolder(object); }
+		xge::Hand& handOf(const xge::Object& object) { return game.handOf(object); }
 
 		// Whether an object of that name is in the game (a spawned copy,
 		// shot.1, is there from the end of the frame it was spawned in).

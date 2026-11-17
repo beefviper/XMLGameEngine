@@ -482,7 +482,7 @@ namespace xge
 		// A hand's own holder in a game with a trick: the tricks it should take.
 		if (const Object* trick = trickHolder(); trick && trick != &holder)
 		{
-			const bool owned = std::any_of(objects.begin(), objects.end(), [&](const Object& hand) { return hand.hand.is && !hand.hand.own.empty() && holderNamed(hand.hand.own) == &holder; });
+			const bool owned = std::any_of(objects.begin(), objects.end(), [&](const Object& hand) { return isHand(hand) && !handOf(hand).own.empty() && holderNamed(handOf(hand).own) == &holder; });
 			if (owned)
 			{
 				holderOf(holder).tricks = reckonTricks(holder, holderOf(*trick).takes);
@@ -963,12 +963,12 @@ namespace xge
 		{
 			if (isHolder(object)) { holderOf(object).items.clear(); holderOf(object).broken.clear(); holderOf(object).called = 0.0f; refreshHolder(object); }
 			if (object.item.is) { object.item.laidBy = 0; }
-			if (object.hand.is)
+			if (isHand(object))
 			{
-				object.hand.held.clear();
-				object.hand.from.clear();
-				object.hand.holder.clear();
-				object.hand.at = -1;
+				handOf(object).held.clear();
+				handOf(object).from.clear();
+				handOf(object).holder.clear();
+				handOf(object).at = -1;
 			}
 		}
 
@@ -1052,13 +1052,13 @@ namespace xge
 		// Each hand at its own holder, or else the first holder.
 		for (Object& object : objects)
 		{
-			if (!object.hand.is) { continue; }
-			Object* own = object.hand.own.empty() ? nullptr : holderNamed(object.hand.own);
+			if (!isHand(object)) { continue; }
+			Object* own = handOf(object).own.empty() ? nullptr : holderNamed(handOf(object).own);
 			for (Object& holder : objects)
 			{
 				if (!isHolder(holder) || (own && &holder != own)) { continue; }
-				object.hand.holder = holder.name;
-				object.hand.at = static_cast<int>(holderOf(holder).items.size()) - 1;
+				handOf(object).holder = holder.name;
+				handOf(object).at = static_cast<int>(holderOf(holder).items.size()) - 1;
 				break;
 			}
 		}
@@ -1112,17 +1112,17 @@ namespace xge
 
 		for (Object& hand : objects)
 		{
-			if (!hand.hand.is) { continue; }
-			Object* holder = hand.hand.holder.empty() ? nullptr : holderNamed(hand.hand.holder);
+			if (!isHand(hand)) { continue; }
+			Object* holder = handOf(hand).holder.empty() ? nullptr : holderNamed(handOf(hand).holder);
 			// A hand pointing into its own holder, emptied then dealt to again:
 			// at its first item.
-			if (holder && hand.hand.at < 0 && !holderOf(*holder).items.empty() && !hand.hand.own.empty() && holderNamed(hand.hand.own) == holder) { hand.hand.at = 0; }
+			if (holder && handOf(hand).at < 0 && !holderOf(*holder).items.empty() && !handOf(hand).own.empty() && holderNamed(handOf(hand).own) == holder) { handOf(hand).at = 0; }
 			Vector2f pointed = holder ? holder->position : hand.position;
 			Vector2f size = holder ? sizeOf(*holder) : Vector2f{};
-			if (holder && hand.hand.at >= 0 && static_cast<std::size_t>(hand.hand.at) < holderOf(*holder).items.size())
+			if (holder && handOf(hand).at >= 0 && static_cast<std::size_t>(handOf(hand).at) < holderOf(*holder).items.size())
 			{
-				pointed = itemPlace(*holder, static_cast<std::size_t>(hand.hand.at));
-				if (Object* item = itemAt(holderOf(*holder).items[static_cast<std::size_t>(hand.hand.at)]))
+				pointed = itemPlace(*holder, static_cast<std::size_t>(handOf(hand).at));
+				if (Object* item = itemAt(holderOf(*holder).items[static_cast<std::size_t>(handOf(hand).at)]))
 				{
 					size = sizeOf(*item);
 					// A holder with a <lift>: a face-up item pointed at is lifted
@@ -1142,8 +1142,8 @@ namespace xge
 			// on the holder pointed at, a little off it.
 			Vector2f at = pointed + Vector2f{ 6.0f, 6.0f };
 			if (holder && !holderOf(*holder).items.empty()) { at = itemPlace(*holder, holderOf(*holder).items.size() - 1) + holderOf(*holder).spread + Vector2f{ 6.0f, 6.0f }; }
-			if (hand.hand.mouse && hand.picker.pointer.x >= 0.0f && hand.picker.pointer.y >= 0.0f) { at = hand.picker.pointer - hand.hand.grab; }
-			for (const int number : hand.hand.held)
+			if (handOf(hand).mouse && hand.picker.pointer.x >= 0.0f && hand.picker.pointer.y >= 0.0f) { at = hand.picker.pointer - handOf(hand).grab; }
+			for (const int number : handOf(hand).held)
 			{
 				Object* item = itemAt(number);
 				if (!item) { continue; }
@@ -1288,43 +1288,43 @@ namespace xge
 
 	bool Game::takeItems(Object& hand)
 	{
-		if (!hand.hand.is || (hand.hand.mouse && !hand.hand.over)) { return false; }
-		Object* holder = holderNamed(hand.hand.holder);
+		if (!isHand(hand) || (handOf(hand).mouse && !handOf(hand).over)) { return false; }
+		Object* holder = holderNamed(handOf(hand).holder);
 		if (!holder || holderOf(*holder).pickedSends > 0 || holderOf(*holder).items.empty()) { return false; }
 		// Covering: a top item that an item of another holder, drawn over it,
 		// overlaps stays where it is.
 		if (const Object* top = itemAt(holderOf(*holder).items.back()); top && isCovered(*top, *holder)) { return false; }
 		// Holding already: the top item of another holder too, while the hand
 		// <holds> items from that many holders.
-		if (!hand.hand.held.empty())
+		if (!handOf(hand).held.empty())
 		{
-			const auto taken = [&](const std::string& name) { return name == hand.hand.from || std::any_of(hand.hand.also.begin(), hand.hand.also.end(), [&](const auto& each) { return each.second == name; }); };
-			if (static_cast<int>(hand.hand.also.size()) + 1 >= hand.hand.holds || taken(holder->name)) { return false; }
+			const auto taken = [&](const std::string& name) { return name == handOf(hand).from || std::any_of(handOf(hand).also.begin(), handOf(hand).also.end(), [&](const auto& each) { return each.second == name; }); };
+			if (static_cast<int>(handOf(hand).also.size()) + 1 >= handOf(hand).holds || taken(holder->name)) { return false; }
 			const int number = holderOf(*holder).items.back();
 			const Object* top = itemAt(number);
 			if (!top || !top->item.faceUp) { return false; }
 			holderOf(*holder).items.pop_back();
 			refreshHolder(*holder);
-			hand.hand.held.push_back(number);
-			hand.hand.also.emplace_back(number, holder->name);
+			handOf(hand).held.push_back(number);
+			handOf(hand).also.emplace_back(number, holder->name);
 			layOutItems();
 			return true;
 		}
 		const int count = static_cast<int>(holderOf(*holder).items.size());
-		const int at = hand.hand.at < 0 ? count - 1 : std::min(hand.hand.at, count - 1);
+		const int at = handOf(hand).at < 0 ? count - 1 : std::min(handOf(hand).at, count - 1);
 		// A hand with a holder of its own takes from it alone, any one item,
 		// face up or down (it knows its own items).
-		if (!hand.hand.own.empty())
+		if (!handOf(hand).own.empty())
 		{
-			if (holder != holderNamed(hand.hand.own)) { return false; }
-			hand.hand.held = { holderOf(*holder).items[static_cast<std::size_t>(at)] };
+			if (holder != holderNamed(handOf(hand).own)) { return false; }
+			handOf(hand).held = { holderOf(*holder).items[static_cast<std::size_t>(at)] };
 			holderOf(*holder).items.erase(holderOf(*holder).items.begin() + at);
 			refreshHolder(*holder);
-			hand.hand.from = holder->name;
-			hand.hand.at = std::min(at, static_cast<int>(holderOf(*holder).items.size()) - 1);
-			if (hand.hand.mouse && hand.picker.pointer.x >= 0.0f && hand.picker.pointer.y >= 0.0f)
+			handOf(hand).from = holder->name;
+			handOf(hand).at = std::min(at, static_cast<int>(holderOf(*holder).items.size()) - 1);
+			if (handOf(hand).mouse && hand.picker.pointer.x >= 0.0f && hand.picker.pointer.y >= 0.0f)
 			{
-				hand.hand.grab = hand.picker.pointer - itemPlace(*holder, static_cast<std::size_t>(std::max(0, hand.hand.at)));
+				handOf(hand).grab = hand.picker.pointer - itemPlace(*holder, static_cast<std::size_t>(std::max(0, handOf(hand).at)));
 			}
 			layOutItems();
 			return true;
@@ -1337,15 +1337,15 @@ namespace xge
 			if (!item || !item->item.faceUp) { return false; }
 			if (i > at && !follows(holderOf(*holder).takes, *itemAt(holderOf(*holder).items[static_cast<std::size_t>(i - 1)]), *item)) { return false; }
 		}
-		hand.hand.held.assign(holderOf(*holder).items.begin() + at, holderOf(*holder).items.end());
+		handOf(hand).held.assign(holderOf(*holder).items.begin() + at, holderOf(*holder).items.end());
 		holderOf(*holder).items.resize(static_cast<std::size_t>(at));
 		refreshHolder(*holder);
-		hand.hand.from = holder->name;
-		hand.hand.at = at - 1;
+		handOf(hand).from = holder->name;
+		handOf(hand).at = at - 1;
 		// Held where the pointer took them.
-		if (hand.hand.mouse && hand.picker.pointer.x >= 0.0f && hand.picker.pointer.y >= 0.0f)
+		if (handOf(hand).mouse && hand.picker.pointer.x >= 0.0f && hand.picker.pointer.y >= 0.0f)
 		{
-			hand.hand.grab = hand.picker.pointer - itemPlace(*holder, static_cast<std::size_t>(at));
+			handOf(hand).grab = hand.picker.pointer - itemPlace(*holder, static_cast<std::size_t>(at));
 		}
 		layOutItems();
 		return true;
@@ -1355,7 +1355,7 @@ namespace xge
 	{
 		// From a holder with <picked>: it sends instead, and nothing is
 		// picked up, so the picker's verbs after <pick /> do not run.
-		const Object* holder = hand.hand.is ? holderNamed(hand.hand.holder) : nullptr;
+		const Object* holder = isHand(hand) ? holderNamed(handOf(hand).holder) : nullptr;
 		if (holder && holderOf(*holder).pickedSends > 0)
 		{
 			const std::string sound = holderOf(*holder).pickedSound;
@@ -1369,42 +1369,42 @@ namespace xge
 	// they came from shows its top.
 	void Game::layHeld(Object& hand, Object& holder)
 	{
-		for (const int number : hand.hand.held)
+		for (const int number : handOf(hand).held)
 		{
-			if (Object* item = itemAt(number)) { item->item.laidBy = hand.hand.seat; }
+			if (Object* item = itemAt(number)) { item->item.laidBy = handOf(hand).seat; }
 			putInHolder(holder, number);
 		}
-		hand.hand.held.clear();
-		if (Object* from = holderNamed(hand.hand.from); from && from != &holder) { showTop(*from); }
-		hand.hand.from.clear();
-		for (const auto& [number, name] : hand.hand.also)
+		handOf(hand).held.clear();
+		if (Object* from = holderNamed(handOf(hand).from); from && from != &holder) { showTop(*from); }
+		handOf(hand).from.clear();
+		for (const auto& [number, name] : handOf(hand).also)
 		{
 			if (Object* from = holderNamed(name); from && from != &holder) { showTop(*from); }
 		}
-		hand.hand.also.clear();
+		handOf(hand).also.clear();
 		// A hand with a holder of its own stays pointing into it.
-		if (Object* own = hand.hand.own.empty() ? nullptr : holderNamed(hand.hand.own))
+		if (Object* own = handOf(hand).own.empty() ? nullptr : holderNamed(handOf(hand).own))
 		{
-			hand.hand.holder = own->name;
-			hand.hand.at = std::min(std::max(hand.hand.at, 0), static_cast<int>(holderOf(*own).items.size()) - 1);
+			handOf(hand).holder = own->name;
+			handOf(hand).at = std::min(std::max(handOf(hand).at, 0), static_cast<int>(holderOf(*own).items.size()) - 1);
 		}
 		else
 		{
-			hand.hand.holder = holder.name;
-			hand.hand.at = static_cast<int>(holderOf(holder).items.size()) - 1;
+			handOf(hand).holder = holder.name;
+			handOf(hand).at = static_cast<int>(holderOf(holder).items.size()) - 1;
 		}
 		layOutItems();
 	}
 
 	bool Game::layItems(Object& hand, const std::string& onto)
 	{
-		if (!hand.hand.is || hand.hand.held.empty()) { return false; }
+		if (!isHand(hand) || handOf(hand).held.empty()) { return false; }
 		std::vector<Object*> choices;
 		if (onto.empty())
 		{
 			// Let go over nothing: laid nowhere.
-			if (hand.hand.mouse && !hand.hand.over) { return false; }
-			if (Object* holder = holderNamed(hand.hand.holder)) { choices.push_back(holder); }
+			if (handOf(hand).mouse && !handOf(hand).over) { return false; }
+			if (Object* holder = holderNamed(handOf(hand).holder)) { choices.push_back(holder); }
 		}
 		else
 		{
@@ -1417,12 +1417,12 @@ namespace xge
 		for (Object* holder : choices)
 		{
 			// Back where they came from: put back, always allowed.
-			if (holder->name == hand.hand.from && onto.empty())
+			if (holder->name == handOf(hand).from && onto.empty())
 			{
 				layHeld(hand, *holder);
 				return true;
 			}
-			if (holderTakes(*holder, hand.hand.held, hand.hand.own.empty() ? nullptr : holderNamed(hand.hand.own)))
+			if (holderTakes(*holder, handOf(hand).held, handOf(hand).own.empty() ? nullptr : holderNamed(handOf(hand).own)))
 			{
 				layHeld(hand, *holder);
 				return true;
@@ -1433,45 +1433,45 @@ namespace xge
 
 	bool Game::dropItems(Object& hand)
 	{
-		if (!hand.hand.is || hand.hand.held.empty()) { return false; }
-		Object* from = holderNamed(hand.hand.from);
+		if (!isHand(hand) || handOf(hand).held.empty()) { return false; }
+		Object* from = holderNamed(handOf(hand).from);
 		if (!from) { return false; }
-		const std::string pointed = hand.hand.holder;
-		const int at = hand.hand.at;
-		const int item = hand.hand.held.front();
+		const std::string pointed = handOf(hand).holder;
+		const int at = handOf(hand).at;
+		const int item = handOf(hand).held.front();
 		// Items taken from other holders go back to theirs first.
-		for (const auto& [number, name] : hand.hand.also)
+		for (const auto& [number, name] : handOf(hand).also)
 		{
-			hand.hand.held.erase(std::find(hand.hand.held.begin(), hand.hand.held.end(), number));
+			handOf(hand).held.erase(std::find(handOf(hand).held.begin(), handOf(hand).held.end(), number));
 			if (Object* back = holderNamed(name)) { putInHolder(*back, number); }
 		}
-		hand.hand.also.clear();
+		handOf(hand).also.clear();
 		layHeld(hand, *from);
 		// Back in a hand's own holder: pointing at it again.
-		if (!hand.hand.own.empty() && from == holderNamed(hand.hand.own))
+		if (!handOf(hand).own.empty() && from == holderNamed(handOf(hand).own))
 		{
 			const auto found = std::find(holderOf(*from).items.begin(), holderOf(*from).items.end(), item);
-			hand.hand.holder = from->name;
-			hand.hand.at = static_cast<int>(found - holderOf(*from).items.begin());
+			handOf(hand).holder = from->name;
+			handOf(hand).at = static_cast<int>(found - holderOf(*from).items.begin());
 			layOutItems();
 			return true;
 		}
 		// Put back, the hand stays where it was.
-		hand.hand.holder = pointed;
-		hand.hand.at = at;
-		if (Object* holder = holderNamed(pointed)) { hand.hand.at = std::min(at < 0 ? static_cast<int>(holderOf(*holder).items.size()) - 1 : at, static_cast<int>(holderOf(*holder).items.size()) - 1); }
+		handOf(hand).holder = pointed;
+		handOf(hand).at = at;
+		if (Object* holder = holderNamed(pointed)) { handOf(hand).at = std::min(at < 0 ? static_cast<int>(holderOf(*holder).items.size()) - 1 : at, static_cast<int>(holderOf(*holder).items.size()) - 1); }
 		layOutItems();
 		return true;
 	}
 
 	bool Game::sendPicked(Object& hand, const std::string& fromHolder, const std::string& faces)
 	{
-		if (!hand.hand.is || !hand.hand.held.empty() || (fromHolder.empty() && hand.hand.mouse && !hand.hand.over)) { return false; }
+		if (!isHand(hand) || !handOf(hand).held.empty() || (fromHolder.empty() && handOf(hand).mouse && !handOf(hand).over)) { return false; }
 		// From the holder named, or else the one pointed at.
-		Object* holder = holderNamed(fromHolder.empty() ? hand.hand.holder : fromHolder);
+		Object* holder = holderNamed(fromHolder.empty() ? handOf(hand).holder : fromHolder);
 		if (!holder || holderOf(*holder).pickedSends <= 0) { return false; }
 		// Into the holder it names, or else the hand's own.
-		const std::string& intoName = holderOf(*holder).pickedInto.empty() ? hand.hand.own : holderOf(*holder).pickedInto;
+		const std::string& intoName = holderOf(*holder).pickedInto.empty() ? handOf(hand).own : holderOf(*holder).pickedInto;
 		Object* into = intoName.empty() ? nullptr : holderNamed(intoName);
 		if (!into) { return false; }
 		if (!holderOf(*holder).items.empty())
@@ -1514,7 +1514,7 @@ namespace xge
 			for (const int item : items) { putInHolder(*holder, item); }
 		}
 		// Pointing at the stock, still pointing at its top.
-		if (fromHolder.empty()) { hand.hand.at = static_cast<int>(holderOf(*holder).items.size()) - 1; }
+		if (fromHolder.empty()) { handOf(hand).at = static_cast<int>(holderOf(*holder).items.size()) - 1; }
 		layOutItems();
 		return true;
 	}
@@ -1542,7 +1542,7 @@ namespace xge
 			std::vector<std::pair<int, std::string>> owners;
 			for (const Object& object : objects)
 			{
-				if (object.hand.is && !object.hand.own.empty() && (object.inGroup(intoName) || object.inGroup(fullName(intoName)))) { owners.emplace_back(object.hand.seat, object.hand.own); }
+				if (isHand(object) && !handOf(object).own.empty() && (object.inGroup(intoName) || object.inGroup(fullName(intoName)))) { owners.emplace_back(handOf(object).seat, handOf(object).own); }
 			}
 			if (owners.empty() || all) { return false; }
 			std::stable_sort(owners.begin(), owners.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
@@ -1585,10 +1585,10 @@ namespace xge
 						refreshHolder(object);
 					}
 				}
-				if (object.hand.is)
+				if (isHand(object))
 				{
-					object.hand.held.clear();
-					object.hand.from.clear();
+					handOf(object).held.clear();
+					handOf(object).from.clear();
 				}
 			}
 			std::sort(sent.begin(), sent.end());
@@ -1609,9 +1609,9 @@ namespace xge
 		// A hand pointing where items were: at its own, or at that holder.
 		for (Object& object : objects)
 		{
-			if (!object.hand.is) { continue; }
-			Object* pointed = holderNamed(object.hand.holder);
-			if (pointed && object.hand.at >= static_cast<int>(holderOf(*pointed).items.size())) { object.hand.at = static_cast<int>(holderOf(*pointed).items.size()) - 1; }
+			if (!isHand(object)) { continue; }
+			Object* pointed = holderNamed(handOf(object).holder);
+			if (pointed && handOf(object).at >= static_cast<int>(holderOf(*pointed).items.size())) { handOf(object).at = static_cast<int>(holderOf(*pointed).items.size()) - 1; }
 		}
 		layOutItems();
 		return true;
@@ -1670,12 +1670,12 @@ namespace xge
 
 	bool Game::hopHand(Object& hand, Direction direction)
 	{
-		Object* holder = holderNamed(hand.hand.holder);
+		Object* holder = holderNamed(handOf(hand).holder);
 		const std::vector<Object*> holders = shownHolders();
 		if (holders.empty()) { return false; }
 		if (!holder) { holder = holders.front(); }
 		const int count = static_cast<int>(holderOf(*holder).items.size());
-		const bool own = !hand.hand.own.empty() && holder == holderNamed(hand.hand.own);
+		const bool own = !handOf(hand).own.empty() && holder == holderNamed(handOf(hand).own);
 		const auto takeable = [&](int index)
 		{
 			if (index < 0 || index >= count) { return false; }
@@ -1684,9 +1684,9 @@ namespace xge
 		};
 		const auto pointAt = [&](Object& to)
 		{
-			hand.hand.holder = to.name;
-			hand.hand.at = static_cast<int>(holderOf(to).items.size()) - 1;
-			hand.hand.mouse = false;
+			handOf(hand).holder = to.name;
+			handOf(hand).at = static_cast<int>(holderOf(to).items.size()) - 1;
+			handOf(hand).mouse = false;
 			layOutItems();
 			return true;
 		};
@@ -1697,12 +1697,12 @@ namespace xge
 		const bool fannedAcross = std::fabs(holderOf(*holder).spread.x) > std::fabs(holderOf(*holder).spread.y);
 		if (fannedAcross && (direction == Direction::Left || direction == Direction::Right) && (own || holderOf(*holder).carry))
 		{
-			const int at = hand.hand.at < 0 ? count - 1 : hand.hand.at;
+			const int at = handOf(hand).at < 0 ? count - 1 : handOf(hand).at;
 			const int next = at + ((direction == Direction::Right) == (holderOf(*holder).spread.x > 0.0f) ? 1 : -1);
 			if (takeable(next) && takeable(at))
 			{
-				hand.hand.at = next;
-				hand.hand.mouse = false;
+				handOf(hand).at = next;
+				handOf(hand).mouse = false;
 				layOutItems();
 				return true;
 			}
@@ -1725,18 +1725,18 @@ namespace xge
 		// Up and down: through a run's face-up items, then to the row of
 		// holders above or below, the holder nearest across.
 		const bool up = direction == Direction::Up;
-		const int at = hand.hand.at < 0 ? count - 1 : hand.hand.at;
+		const int at = handOf(hand).at < 0 ? count - 1 : handOf(hand).at;
 		if (!fannedAcross && holderOf(*holder).carry && up && takeable(at - 1) && takeable(at))
 		{
-			hand.hand.at = at - 1;
-			hand.hand.mouse = false;
+			handOf(hand).at = at - 1;
+			handOf(hand).mouse = false;
 			layOutItems();
 			return true;
 		}
 		if (!fannedAcross && holderOf(*holder).carry && !up && at < count - 1)
 		{
-			hand.hand.at = at + 1;
-			hand.hand.mouse = false;
+			handOf(hand).at = at + 1;
+			handOf(hand).mouse = false;
 			layOutItems();
 			return true;
 		}
@@ -1762,8 +1762,8 @@ namespace xge
 	{
 		(horizontal ? hand.picker.pointer.x : hand.picker.pointer.y) = at;
 		if (hand.picker.pointer.x < 0.0f || hand.picker.pointer.y < 0.0f) { return; }
-		hand.hand.mouse = true;
-		hand.hand.over = false;
+		handOf(hand).mouse = true;
+		handOf(hand).over = false;
 		const Vector2f point = hand.picker.pointer;
 		const auto inside = [&](Vector2f where, Vector2f size)
 		{
@@ -1799,23 +1799,23 @@ namespace xge
 		if (found)
 		{
 			// Holding: the holder, its top item.
-			if (!hand.hand.held.empty() && hand.hand.holds <= 1) { foundAt = static_cast<int>(holderOf(*found).items.size()) - 1; }
-			hand.hand.holder = found->name;
-			hand.hand.at = foundAt;
-			hand.hand.over = true;
+			if (!handOf(hand).held.empty() && handOf(hand).holds <= 1) { foundAt = static_cast<int>(holderOf(*found).items.size()) - 1; }
+			handOf(hand).holder = found->name;
+			handOf(hand).at = foundAt;
+			handOf(hand).over = true;
 		}
 		layOutItems();
 	}
 
 	bool Game::callValue(Object& hand, const std::string& name)
 	{
-		if (!hand.hand.is || !hand.hand.held.empty() || hand.hand.own.empty() || (hand.hand.mouse && !hand.hand.over)) { return false; }
+		if (!isHand(hand) || !handOf(hand).held.empty() || handOf(hand).own.empty() || (handOf(hand).mouse && !handOf(hand).over)) { return false; }
 		Object* holder = holderNamed(name);
-		Object* own = holderNamed(hand.hand.own);
-		if (!holder || !own || holderOf(*holder).calling <= 0.0f || holderNamed(hand.hand.holder) != own) { return false; }
+		Object* own = holderNamed(handOf(hand).own);
+		if (!holder || !own || holderOf(*holder).calling <= 0.0f || holderNamed(handOf(hand).holder) != own) { return false; }
 		const int count = static_cast<int>(holderOf(*own).items.size());
 		if (count == 0) { return false; }
-		const int at = hand.hand.at < 0 ? count - 1 : std::min(hand.hand.at, count - 1);
+		const int at = handOf(hand).at < 0 ? count - 1 : std::min(handOf(hand).at, count - 1);
 		const Object* item = itemAt(holderOf(*own).items[static_cast<std::size_t>(at)]);
 		if (!item) { return false; }
 		// The value named: the item's <wild variable=>.
@@ -1833,7 +1833,7 @@ namespace xge
 		int players = 0;
 		for (const Object& object : objects)
 		{
-			if (object.hand.is && object.hand.seat > 0 && isShown(object)) { ++players; }
+			if (isHand(object) && handOf(object).seat > 0 && isShown(object)) { ++players; }
 		}
 		const bool last = static_cast<int>(holderOf(trick).items.size()) + 1 >= std::max(players, 2);
 		const Object* winning = trickWinning(trick);
@@ -1859,11 +1859,11 @@ namespace xge
 		// A partner (another hand on its <team>) winning safely: it is the
 		// last item, or the partner's is the highest or next of its suit.
 		bool partnerWins = false;
-		if (winning && hand.hand.team > 0 && winning->item.laidBy != hand.hand.seat)
+		if (winning && handOf(hand).team > 0 && winning->item.laidBy != handOf(hand).seat)
 		{
 			for (const Object& other : objects)
 			{
-				if (other.hand.is && other.hand.seat == winning->item.laidBy && other.hand.team == hand.hand.team) { partnerWins = last || worth(*winning) >= top - 1.0f || isTrump(rule, *winning); }
+				if (isHand(other) && handOf(other).seat == winning->item.laidBy && handOf(other).team == handOf(hand).team) { partnerWins = last || worth(*winning) >= top - 1.0f || isTrump(rule, *winning); }
 			}
 		}
 
@@ -1903,8 +1903,8 @@ namespace xge
 
 	std::optional<KeyCode> Game::thinkHeld(const CmdThink& think, Object& hand, float seconds)
 	{
-		Object* own = hand.hand.own.empty() ? nullptr : holderNamed(hand.hand.own);
-		if (!own || !hand.hand.held.empty()) { return std::nullopt; }
+		Object* own = handOf(hand).own.empty() ? nullptr : holderNamed(handOf(hand).own);
+		if (!own || !handOf(hand).held.empty()) { return std::nullopt; }
 		if (itemWait > kTimeSlack)
 		{
 			itemWait -= seconds;
@@ -2034,11 +2034,11 @@ namespace xge
 		if (!aim) { return std::nullopt; }
 
 		itemWait = kItemPace;
-		if (hand.hand.holder != aim->name || hand.hand.at != index)
+		if (handOf(hand).holder != aim->name || handOf(hand).at != index)
 		{
-			hand.hand.holder = aim->name;
-			hand.hand.at = index;
-			hand.hand.mouse = false;
+			handOf(hand).holder = aim->name;
+			handOf(hand).at = index;
+			handOf(hand).mouse = false;
 			layOutItems();
 			return std::nullopt;
 		}

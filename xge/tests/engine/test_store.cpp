@@ -159,3 +159,14 @@ TEST_CASE("a part a key gives is added on the first press, and a reset takes it 
 	pong.game.resetObject("paddle2");
 	CHECK_FALSE(pong.game.parts().drives.has(paddle));
 }
+
+TEST_CASE("only an object whose keys pick up held items has a hand part", "[store]")
+{
+	{
+		played::Played pong("descriptions/pong.xml");
+		CHECK(pong.game.parts().hands.size() == 0);
+	}
+	played::Played klondike("descriptions/klondike.xml");
+	CHECK(klondike.game.isHand(klondike.get("hand")));
+	CHECK(klondike.game.parts().hands.size() == 1);
+}

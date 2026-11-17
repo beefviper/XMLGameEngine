@@ -146,6 +146,12 @@ namespace xge
 		Holder& holderOf(const Object& object) { return objectParts.holders.get(object.id); }
 		const Holder& holderOf(const Object& object) const { return objectParts.holders.get(object.id); }
 
+		// Its hand part (it picks up held items): whether it has one, and the part
+		// (std::out_of_range for an object that is no hand).
+		bool isHand(const Object& object) const noexcept { return objectParts.hands.has(object.id); }
+		Hand& handOf(const Object& object) { return objectParts.hands.get(object.id); }
+		const Hand& handOf(const Object& object) const { return objectParts.hands.get(object.id); }
+
 		// What its held keys drive: given on the first key that drives it,
 		// gone when it stops or is reset.
 		Drive& driveFor(const Object& object) { return objectParts.give(objectParts.drives, object.id); }

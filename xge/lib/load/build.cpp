@@ -569,11 +569,14 @@ namespace xge
 			holder.meldsBest = raw.meldsBest;
 			holder.takes = raw.takes;
 		}
-		object.hand.is = rawObject.hand;
-		object.hand.own = rawObject.handHolder;
-		object.hand.seat = rawObject.handSeat;
-		object.hand.team = rawObject.handTeam;
-		object.hand.holds = rawObject.handHolds;
+		if (rawObject.hand)
+		{
+			Hand& hand = parts->hands.add(object.id, order, {});
+			hand.own = rawObject.handHolder;
+			hand.seat = rawObject.handSeat;
+			hand.team = rawObject.handTeam;
+			hand.holds = rawObject.handHolds;
+		}
 		object.item.is = rawObject.held;
 		object.item.startHolder = rawObject.item.startHolder;
 		object.item.worths = rawObject.item.worths;

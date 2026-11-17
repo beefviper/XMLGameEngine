@@ -117,9 +117,9 @@ namespace
 	void pointAt(Table& table, const std::string& holder, int at = -1)
 	{
 		Object& hand = table.hand();
-		hand.hand.holder = table.holder(holder).name;
-		hand.hand.at = at < 0 ? static_cast<int>(table.holderOf(holder).items.size()) - 1 : at;
-		hand.hand.mouse = false;
+		table.handOf(hand).holder = table.holder(holder).name;
+		table.handOf(hand).at = at < 0 ? static_cast<int>(table.holderOf(holder).items.size()) - 1 : at;
+		table.handOf(hand).mouse = false;
 	}
 
 	void space(Table& table)
@@ -215,14 +215,14 @@ TEST_CASE("klondike.xml: a foundation takes an ace, then the same suit up, one c
 	table.tap(KeyCode::F);
 	table.frames(1);
 	CHECK(table.holderOf("columns.1.1").items.size() == 2);
-	CHECK(table.hand().hand.held.empty());
+	CHECK(table.handOf(table.hand()).held.empty());
 	CHECK(table.hand().lookName() == "free");
 	// Nor a run of two onto a foundation.
 	setUp(table, { { "foundations.2.1", { { "spades", "A" } } }, { "columns.1.1", { { "spades", "2" }, { "hearts", "A" } } } });
 	pointAt(table, "columns.1.1", 0);
 	table.tap(KeyCode::F);
 	table.frames(1);
-	CHECK(table.hand().hand.held.empty());
+	CHECK(table.handOf(table.hand()).held.empty());
 	CHECK(table.holderOf("columns.1.1").items.size() == 2);
 	CHECK(table.holderOf("foundations.2.1").items.size() == 1);
 }
@@ -235,7 +235,7 @@ TEST_CASE("klondike.xml: a run moves together, and the face-down card under it t
 	// The 10 and what is on it, onto the red jack.
 	pointAt(table, "columns.1.1", 1);
 	space(table);
-	REQUIRE(table.hand().hand.held.size() == 3);
+	REQUIRE(table.handOf(table.hand()).held.size() == 3);
 	pointAt(table, "columns.2.1");
 	space(table);
 	CHECK(table.holderOf("columns.2.1").items.size() == 4);
@@ -248,7 +248,7 @@ TEST_CASE("klondike.xml: a run moves together, and the face-down card under it t
 	pointAt(table, "columns.1.1", 0);
 	table.tap(KeyCode::F);
 	table.frames(1);
-	CHECK(table.hand().hand.held.empty());
+	CHECK(table.handOf(table.hand()).held.empty());
 	CHECK(table.holderOf("columns.1.1").items.size() == 2);
 }
 
@@ -257,23 +257,23 @@ TEST_CASE("klondike.xml: the hand goes along the rows and up and down a column's
 	Table table;
 	pointAt(table, "stock");
 	table.tap(KeyCode::D);
-	CHECK(table.hand().hand.holder == table.holder("waste").name);
+	CHECK(table.handOf(table.hand()).holder == table.holder("waste").name);
 	table.tap(KeyCode::D);
-	CHECK(table.hand().hand.holder == table.holder("foundations.1.1").name);
+	CHECK(table.handOf(table.hand()).holder == table.holder("foundations.1.1").name);
 	table.tap(KeyCode::S);
-	CHECK(table.hand().hand.holder == table.holder("columns.4.1").name);
+	CHECK(table.handOf(table.hand()).holder == table.holder("columns.4.1").name);
 	setUp(table, { { "columns.4.1", { { "spades", "10" }, { "hearts", "9" } } } });
 	pointAt(table, "columns.4.1");
 	table.tap(KeyCode::W);
-	CHECK(table.hand().hand.at == 0);
+	CHECK(table.handOf(table.hand()).at == 0);
 	table.tap(KeyCode::W);
-	CHECK(table.hand().hand.holder == table.holder("foundations.1.1").name);
+	CHECK(table.handOf(table.hand()).holder == table.holder("foundations.1.1").name);
 	table.tap(KeyCode::A);
-	CHECK(table.hand().hand.holder == table.holder("waste").name);
+	CHECK(table.handOf(table.hand()).holder == table.holder("waste").name);
 	table.tap(KeyCode::A);
-	CHECK(table.hand().hand.holder == table.holder("stock").name);
+	CHECK(table.handOf(table.hand()).holder == table.holder("stock").name);
 	table.tap(KeyCode::A);
-	CHECK(table.hand().hand.holder == table.holder("stock").name);
+	CHECK(table.handOf(table.hand()).holder == table.holder("stock").name);
 }
 
 TEST_CASE("klondike.xml: the mouse takes a card, drags it and lays it", "[cards][mouse]")
@@ -293,11 +293,11 @@ TEST_CASE("klondike.xml: the mouse takes a card, drags it and lays it", "[cards]
 	mouse(waste.x + 20.0f, waste.y + 30.0f);
 	table.engine.handleKeyPressed(KeyCode::MouseLeft);
 	table.frames(1);
-	REQUIRE(table.hand().hand.held.size() == 1);
+	REQUIRE(table.handOf(table.hand()).held.size() == 1);
 	// The card follows the pointer, held where it was taken.
 	mouse(300.0f, 400.0f);
-	CHECK(table.item(table.hand().hand.held.front()).position.x == 280.0f);
-	CHECK(table.item(table.hand().hand.held.front()).position.y == 370.0f);
+	CHECK(table.item(table.handOf(table.hand()).held.front()).position.x == 280.0f);
+	CHECK(table.item(table.handOf(table.hand()).held.front()).position.y == 370.0f);
 	const Vector2f column = table.top("columns.1.1").position;
 	mouse(column.x + 20.0f, column.y + 30.0f);
 	table.engine.handleKeyReleased(KeyCode::MouseLeft);
@@ -313,7 +313,7 @@ TEST_CASE("klondike.xml: the mouse takes a card, drags it and lays it", "[cards]
 	table.engine.handleKeyReleased(KeyCode::MouseLeft);
 	table.frames(1);
 	CHECK(topOf(table, "columns.1.1") == "9 hearts");
-	CHECK(table.hand().hand.held.empty());
+	CHECK(table.handOf(table.hand()).held.empty());
 }
 
 TEST_CASE("klondike.xml: a click takes, and sounds, only over a card", "[cards][mouse]")
@@ -336,7 +336,7 @@ TEST_CASE("klondike.xml: a click takes, and sounds, only over a card", "[cards][
 	// On the green, away from every holder: nothing taken, no sound.
 	mouse(20.0f, 580.0f, false);
 	mouse(20.0f, 580.0f, true);
-	CHECK(table.hand().hand.held.empty());
+	CHECK(table.handOf(table.hand()).held.empty());
 	CHECK(table.game.takeSoundRequests().empty());
 	mouse(20.0f, 580.0f, false);
 	table.frames(1);
@@ -345,18 +345,18 @@ TEST_CASE("klondike.xml: a click takes, and sounds, only over a card", "[cards][
 	mouse(waste.x + 20.0f, waste.y + 30.0f, false);
 	mouse(-30.0f, 300.0f, false);
 	mouse(-30.0f, 300.0f, true);
-	CHECK(table.hand().hand.held.empty());
+	CHECK(table.handOf(table.hand()).held.empty());
 	mouse(-30.0f, 300.0f, false);
 	mouse(100.0f, -20.0f, true, false);
-	CHECK(table.hand().hand.held.empty());
+	CHECK(table.handOf(table.hand()).held.empty());
 	// Held down off it and brought over the card: still no press.
 	mouse(waste.x + 20.0f, waste.y + 30.0f, true);
-	CHECK(table.hand().hand.held.empty());
+	CHECK(table.handOf(table.hand()).held.empty());
 	CHECK(table.game.takeSoundRequests().empty());
 	mouse(waste.x + 20.0f, waste.y + 30.0f, false);
 	// Pressed on the card: taken, with its sound.
 	mouse(waste.x + 20.0f, waste.y + 30.0f, true);
-	CHECK(table.hand().hand.held.size() == 1);
+	CHECK(table.handOf(table.hand()).held.size() == 1);
 	CHECK(table.game.takeSoundRequests() == std::vector<std::string>{ "card" });
 }
 
@@ -681,9 +681,9 @@ namespace
 					game.putInHolder(holder(name), cardOf(each.substr(0, space), each.substr(space + 1)));
 				}
 			}
-			hand().hand.holder = holder("mine").name;
-			hand().hand.at = 0;
-			hand().hand.mouse = false;
+			handOf(hand()).holder = holder("mine").name;
+			handOf(hand()).at = 0;
+			handOf(hand()).mouse = false;
 			game.layOutItems();
 		}
 
@@ -696,7 +696,7 @@ namespace
 			const auto& items = holderOf("mine").items;
 			for (std::size_t i = 0; i < items.size(); ++i)
 			{
-				if (name(items[i]) == which) { hand().hand.holder = holder("mine").name; hand().hand.at = static_cast<int>(i); }
+				if (name(items[i]) == which) { handOf(hand()).holder = holder("mine").name; handOf(hand()).at = static_cast<int>(i); }
 			}
 		}
 
@@ -729,7 +729,7 @@ TEST_CASE("crazyeights.xml: the deal: seven each, yours face up in order, one tu
 	REQUIRE(table.holderOf("discard").items.size() == 1);
 	CHECK(table.item(table.holderOf("discard").items.back()).item.faceUp);
 	CHECK(table.holderOf("stock").items.size() == 37);
-	CHECK(table.hand().hand.holder == table.holder("mine").name);
+	CHECK(table.handOf(table.hand()).holder == table.holder("mine").name);
 	CHECK(table.turn() == 1.0f);
 	CHECK(table.hand().lookName() == "free");
 	CHECK(table.computer().lookName() == "waiting");
@@ -741,9 +741,9 @@ TEST_CASE("crazyeights.xml: keys reach only the player on its turn, and never th
 	Eights table;
 	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "K clubs", "5 spades" } }, { "theirs", { "3 clubs", "4 clubs" } }, { "stock", { "6 clubs" } } });
 	table.computersTurn();
-	table.computer().hand.holder = table.holder("theirs").name;
-	table.computer().hand.at = 0;
-	table.hand().hand.at = 1;
+	table.handOf(table.computer()).holder = table.holder("theirs").name;
+	table.handOf(table.computer()).at = 0;
+	table.handOf(table.hand()).at = 1;
 	// Space and the arrows: nobody's, the computer's cards stay where they are.
 	table.engine.handleKeyPressed(KeyCode::Space);
 	table.engine.handleKeyReleased(KeyCode::Space);
@@ -751,8 +751,8 @@ TEST_CASE("crazyeights.xml: keys reach only the player on its turn, and never th
 	table.engine.handleKeyReleased(KeyCode::D);
 	CHECK(table.holderOf("theirs").items.size() == 2);
 	CHECK(table.holderOf("mine").items.size() == 2);
-	CHECK(table.hand().hand.at == 1);
-	CHECK(table.computer().hand.at == 0);
+	CHECK(table.handOf(table.hand()).at == 1);
+	CHECK(table.handOf(table.computer()).at == 0);
 	CHECK(table.get("whoseturn").drawn.textPieces.front().shown == "the computer is playing");
 }
 
@@ -764,7 +764,7 @@ TEST_CASE("crazyeights.xml: a card goes on the holder by suit or rank; one that 
 	table.space();
 	CHECK(table.top("discard") == "5 hearts");
 	CHECK(table.holderOf("mine").items.size() == 4);
-	CHECK(table.hand().hand.held.empty());
+	CHECK(table.handOf(table.hand()).held.empty());
 	CHECK(table.turn() == 1.0f);
 
 	table.pointAt("5 spades");
@@ -773,7 +773,7 @@ TEST_CASE("crazyeights.xml: a card goes on the holder by suit or rank; one that 
 	CHECK(table.holderOf("mine").items.size() == 3);
 	CHECK(table.turn() == 2.0f);
 	// Your hand still points into your own cards.
-	CHECK(table.hand().hand.holder == table.holder("mine").name);
+	CHECK(table.handOf(table.hand()).holder == table.holder("mine").name);
 }
 
 TEST_CASE("crazyeights.xml: an eight goes on anything, you name a suit, and the computer follows it", "[cards][eights]")
@@ -825,8 +825,8 @@ TEST_CASE("crazyeights.xml: drawn from empty, the stock takes the discard holder
 {
 	Eights table;
 	table.setUp({ { "discard", { "5 hearts", "6 hearts", "7 hearts" } }, { "mine", { "2 spades" } }, { "theirs", { "K clubs" } } });
-	table.hand().hand.holder = table.holder("stock").name;
-	table.hand().hand.at = -1;
+	table.handOf(table.hand()).holder = table.holder("stock").name;
+	table.handOf(table.hand()).at = -1;
 	table.space();
 	CHECK(table.top("discard") == "7 hearts");
 	CHECK(table.holderOf("discard").items.size() == 1);
@@ -872,8 +872,8 @@ TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first
 		bool played = false;
 		for (std::size_t i = 0; i < table.holderOf("mine").items.size() && !played; ++i)
 		{
-			table.hand().hand.holder = table.holder("mine").name;
-			table.hand().hand.at = static_cast<int>(i);
+			table.handOf(table.hand()).holder = table.holder("mine").name;
+			table.handOf(table.hand()).at = static_cast<int>(i);
 			table.space();
 			played = table.turn() != 1.0f;
 		}
@@ -882,16 +882,16 @@ TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first
 		if (table.state() != "playing") { break; }
 		if (!played)
 		{
-			table.hand().hand.holder = table.holder("stock").name;
-			table.hand().hand.at = -1;
+			table.handOf(table.hand()).holder = table.holder("stock").name;
+			table.handOf(table.hand()).at = -1;
 			table.space();
 			continue;
 		}
 		table.frames(1);
 		if (table.state() == "playing" && table.turn() == 3.0f)
 		{
-			table.hand().hand.holder = table.holder("mine").name;
-			table.hand().hand.at = 0;
+			table.handOf(table.hand()).holder = table.holder("mine").name;
+			table.handOf(table.hand()).at = 0;
 			table.space();
 		}
 		table.untilYourTurn();
@@ -1373,8 +1373,8 @@ namespace
 			const auto at = std::find(mine.begin(), mine.end(), cardOf(name));
 			if (at == mine.end()) { return false; }
 			Object& hand = get("you");
-			hand.hand.holder = "playing.mine";
-			hand.hand.at = static_cast<int>(at - mine.begin());
+			handOf(hand).holder = "playing.mine";
+			handOf(hand).at = static_cast<int>(at - mine.begin());
 			tap(KeyCode::Space);
 			frames(1);
 			return std::find(holderOf("trick").items.begin(), holderOf("trick").items.end(), cardOf(name)) != holderOf("trick").items.end();
@@ -1800,8 +1800,8 @@ namespace
 		void drawDiscard()
 		{
 			Object& hand = get("you");
-			hand.hand.holder = "playing.discard";
-			hand.hand.at = static_cast<int>(holderOf("discard").items.size()) - 1;
+			handOf(hand).holder = "playing.discard";
+			handOf(hand).at = static_cast<int>(holderOf("discard").items.size()) - 1;
 			tap(KeyCode::Space);
 			frames(2);
 		}
@@ -1811,8 +1811,8 @@ namespace
 		{
 			const auto& mine = holderOf("mine").items;
 			Object& hand = get("you");
-			hand.hand.holder = "playing.mine";
-			hand.hand.at = static_cast<int>(std::find(mine.begin(), mine.end(), cardOf(name)) - mine.begin());
+			handOf(hand).holder = "playing.mine";
+			handOf(hand).at = static_cast<int>(std::find(mine.begin(), mine.end(), cardOf(name)) - mine.begin());
 			tap(key);
 			frames(2);
 		}
@@ -1865,7 +1865,7 @@ TEST_CASE("gin.xml: before the draw, Space on a card of your own does nothing", 
 	play.discard("K diamonds", KeyCode::Space);
 	CHECK(play.holderOf("mine").items.size() == 10);
 	CHECK(play.holds("mine", "K diamonds"));
-	CHECK(play.get("you").hand.held.empty());
+	CHECK(play.handOf(play.get("you")).held.empty());
 	CHECK(play.look() == "drawing");
 	CHECK(play.get("you").lookName() == "draw");
 	play.drawDiscard();
@@ -2015,9 +2015,9 @@ namespace
 		void space(const std::string& at)
 		{
 			Object& hand = get("hand");
-			hand.hand.holder = holder(at).name;
-			hand.hand.at = static_cast<int>(holderOf(at).items.size()) - 1;
-			hand.hand.mouse = false;
+			handOf(hand).holder = holder(at).name;
+			handOf(hand).at = static_cast<int>(holderOf(at).items.size()) - 1;
+			handOf(hand).mouse = false;
 			tap(KeyCode::Space);
 			frames(1);
 		}

@@ -19,7 +19,7 @@ namespace xge
 	{
 		const CmdPlace& place = std::get<CmdPlace>(command);
 		Object* const self = doer.self;
-		return self && (self->hand.is ? executor.game.layItems(*self, place.into) : executor.game.placePiece(*self));
+		return self && (executor.game.isHand(*self) ? executor.game.layItems(*self, place.into) : executor.game.placePiece(*self));
 	}
 
 	static void printPlace(std::ostream& o, const Command& command)

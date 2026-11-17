@@ -959,6 +959,29 @@ namespace xge
 		std::map<std::string, std::pair<float, std::string>> thrustAhead;
 	};
 
+	// A hand: the holder it points at (its full name) and the item of it
+	// (index from the bottom; -1: the holder itself, empty), the items it
+	// holds and the holder they came from, and whether the mouse moves it
+	// (the items then follow the pointer, `grab` off it). A part
+	// (Parts::hands), for an object whose action picks up held items.
+	struct Hand
+	{
+		std::string own;        // holder=: its own holder, as written, or none
+		int seat{};             // <seat>: which player (0 none)
+		int team{};             // <team>: its side; a partner is another hand on it (0 none)
+		int holds{ 1 };         // <holds>: from how many holders it holds items at once
+		// Holding items from more than one holder: each item taken after
+		// the first, and the holder it came from.
+		std::vector<std::pair<int, std::string>> also;
+		std::string holder;
+		int at{ -1 };
+		std::vector<int> held;
+		std::string from;
+		bool mouse{ false };    // moved by the mouse last, not the keys
+		bool over{ false };     // the mouse is over the holder pointed at (or an item of it)
+		Vector2f grab{};
+	};
+
 	// Items (game/holders.cpp). A holder, a part (Parts::holders): its rules
 	// and the items it holds, bottom first (each an item's number, Game::itemAt), and its live
 	// numbers. Laid out by Game::layOutItems, never moved by the frame.
@@ -1512,29 +1535,6 @@ namespace xge
 			bool faceUp{ false };
 		};
 		Item item;
-		// A hand: the holder it points at (its full name) and the item of it
-		// (index from the bottom; -1: the holder itself, empty), the items it
-		// holds and the holder they came from, and whether the mouse moves it
-		// (the items then follow the pointer, `grab` off it).
-		struct Hand
-		{
-			bool is{ false };
-			std::string own;        // holder=: its own holder, as written, or none
-			int seat{};             // <seat>: which player (0 none)
-			int team{};             // <team>: its side; a partner is another hand on it (0 none)
-			int holds{ 1 };         // <holds>: from how many holders it holds items at once
-			// Holding items from more than one holder: each item taken after
-			// the first, and the holder it came from.
-			std::vector<std::pair<int, std::string>> also;
-			std::string holder;
-			int at{ -1 };
-			std::vector<int> held;
-			std::string from;
-			bool mouse{ false };    // moved by the mouse last, not the keys
-			bool over{ false };     // the mouse is over the holder pointed at (or an item of it)
-			Vector2f grab{};
-		};
-		Hand hand;
 		// A member of a group that takes <turns> (`takes`): the look it shows
 		// off its turn (`sprite`; none: as it is). Its live `turn` is 1 on its
 		// turn, else 0. <owns class=>: the pieces it moves; a picker's

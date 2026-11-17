@@ -1579,7 +1579,7 @@ namespace xge
 			const bool offTurn = object.turns.takes && object.inGroup(target) && object.variable["turn"] == 0.0f;
 			if (object.named(target) && !offTurn && (from.empty() || object.lookName() == from))
 			{
-				const std::string before = object.hand.is ? object.lookName() : std::string();
+				const std::string before = isHand(object) ? object.lookName() : std::string();
 				// A holder given a look of what it holds, not its own: what
 				// it holds turned to it (a dealer's hidden card shown).
 				const bool own = std::any_of(object.looks.all.begin(), object.looks.all.end(), [&](const Object::Look& look) { return look.name == sprite; });
@@ -1590,7 +1590,7 @@ namespace xge
 				}
 				if (!sprite.empty()) { showLookNamed(object, sprite); }
 				if (!style.empty()) { wearPaletteNamed(object, style); }
-				handChanged = handChanged || (object.hand.is && object.lookName() != before);
+				handChanged = handChanged || (isHand(object) && object.lookName() != before);
 			}
 		}
 		// A hand sits centred on what it points at, by the size of its look.

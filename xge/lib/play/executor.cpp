@@ -97,7 +97,7 @@ namespace xge
 			if (along->path.empty())
 			{
 				const float span = horizontal ? window.width : window.height;
-				if (object.hand.is) { game.trackHand(object, horizontal, fraction * span); }
+				if (game.isHand(object)) { game.trackHand(object, horizontal, fraction * span); }
 				else if (object.map.cells) { game.trackCells(object, horizontal, fraction * span, along->onto); }
 				else { track(object, horizontal, fraction, span); }
 			}
@@ -155,11 +155,11 @@ namespace xge
 		}
 		else if (self && (command.from.empty() || self->lookName() == command.from))
 		{
-			const std::string before = self->hand.is ? self->lookName() : std::string();
+			const std::string before = game.isHand(*self) ? self->lookName() : std::string();
 			if (!command.sprite.empty()) { showLookNamed(*self, command.sprite); }
 			if (!command.style.empty()) { wearPaletteNamed(*self, command.style); }
 			// A hand sits centred on its card by its look's size.
-			if (self->hand.is && self->lookName() != before) { game.layOutItems(); }
+			if (game.isHand(*self) && self->lookName() != before) { game.layOutItems(); }
 		}
 	}
 
@@ -361,7 +361,7 @@ namespace xge
 	{
 		// On a cell map: whole cells (one, with no distance), refused (and
 		// touching) when it cannot go.
-		if (object.hand.is) { return game.hopHand(object, command.direction); }
+		if (game.isHand(object)) { return game.hopHand(object, command.direction); }
 		if (object.map.cells && !command.onto.empty()) { return game.hopOnto(object, command.direction, command.onto); }
 		if (object.map.cells)
 		{
