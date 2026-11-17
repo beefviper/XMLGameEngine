@@ -140,3 +140,22 @@ TEST_CASE("only the objects that hold others have a holder part", "[store]")
 	CHECK(holders < klondike.game.getCurrentObjects().size());
 	CHECK(holders == klondike.game.parts().holders.size());
 }
+
+TEST_CASE("a part a key gives is added on the first press, and a reset takes it away", "[store]")
+{
+	played::Played pong("descriptions/pong.xml");
+	pong.tap(KeyCode::Num2);
+	pong.frames(1);
+	REQUIRE(pong.state() == "playing");
+	const ObjectId paddle = pong.get("paddle2").id;
+	CHECK_FALSE(pong.game.parts().drives.has(paddle));
+
+	pong.engine.handleKeyPressed(KeyCode::Down);
+	pong.frames(2);
+	REQUIRE(pong.game.parts().drives.has(paddle));
+	// Nothing drives the ball, ever.
+	CHECK_FALSE(pong.game.parts().drives.has(pong.get("ball").id));
+
+	pong.game.resetObject("paddle2");
+	CHECK_FALSE(pong.game.parts().drives.has(paddle));
+}

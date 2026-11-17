@@ -932,14 +932,33 @@ namespace xge
 	// between, except that letters side by side make one word (initials).
 	std::string joinText(const std::vector<TextPiece>& pieces);
 
-	// The numbers and flags of an object that change as it plays and that a
-	// reset puts back: where it is and how it goes, which way it faces, its
-	// light and height, whether it is in play, touches things and exists,
-	// the scene it is in, and its variables. An object is one (its current
-	// values, with no prefix: object.position), and holds two more: `start`,
-	// how it started (worked out from its RawObject, and drawn again when a
-	// <random> start is), and `before`, how it was when the last frame
-	// ended. The RawObject itself, the file's text, is the fourth.
+	// What held keys drive, each by Direction (static_cast<size_t>; its
+	// four real values, Up/Down/Left/Right). Set by an action's verb while
+	// its key is held, cleared when it is let go (see playOneFrame). A part
+	// (Game::parts().drives), given on the first key that drives it.
+	struct Drive
+	{
+		// A <move>'s step held each way: 0 for a way not held, else the
+		// magnitude of the action's own step.
+		// CommandExecutor::applyActionVelocity recombines all four into
+		// velocity.x/velocity.y on every key transition, so holding Down
+		// and tapping Up cancels out to a standstill, and releasing Up
+		// afterward resumes moving Down, rather than leaving it stopped.
+		// Also what lets two axes combine into an 8-way diagonal from a
+		// 4-way D-pad.
+		std::array<float, 4> moveStep{};
+		// A <thrust direction> held each way, and the variable (if any)
+		// each one burns.
+		std::array<float, 4> thrust{};
+		std::array<std::string, 4> thrustBurn{};
+		// Turning held (only Left and Right are used): degrees a second.
+		std::array<float, 4> turn{};
+		// Thrust held along the heading, for each action that thrusts,
+		// with the variable it burns, so that forward and back held
+		// together add up.
+		std::map<std::string, std::pair<float, std::string>> thrustAhead;
+	};
+
 	// Items (game/holders.cpp). A holder, a part (Parts::holders): its rules
 	// and the items it holds, bottom first (each an item's number, Game::itemAt), and its live
 	// numbers. Laid out by Game::layOutItems, never moved by the frame.
@@ -1025,6 +1044,14 @@ namespace xge
 		friend bool operator==(ObjectId, ObjectId) = default;
 	};
 
+	// The numbers and flags of an object that change as it plays and that a
+	// reset puts back: where it is and how it goes, which way it faces, its
+	// light and height, whether it is in play, touches things and exists,
+	// the scene it is in, and its variables. An object is one (its current
+	// values, with no prefix: object.position), and holds two more: `start`,
+	// how it started (worked out from its RawObject, and drawn again when a
+	// <random> start is), and `before`, how it was when the last frame
+	// ended. The RawObject itself, the file's text, is the fourth.
 	struct Moment
 	{
 		Vector2f position;
@@ -1326,32 +1353,6 @@ namespace xge
 		// heading, if it turns) and marks the visual to be rebuilt.
 		void showAnimationFrame();
 
-		// What held keys drive, each by Direction (static_cast<size_t>; its
-		// four real values, Up/Down/Left/Right). Set by an action's verb while
-		// its key is held, cleared when it is let go (see playOneFrame).
-		struct Drive
-		{
-			// A <move>'s step held each way: 0 for a way not held, else the
-			// magnitude of the action's own step.
-			// CommandExecutor::applyActionVelocity recombines all four into
-			// velocity.x/velocity.y on every key transition, so holding Down
-			// and tapping Up cancels out to a standstill, and releasing Up
-			// afterward resumes moving Down, rather than leaving it stopped.
-			// Also what lets two axes combine into an 8-way diagonal from a
-			// 4-way D-pad.
-			std::array<float, 4> moveStep{};
-			// A <thrust direction> held each way, and the variable (if any)
-			// each one burns.
-			std::array<float, 4> thrust{};
-			std::array<std::string, 4> thrustBurn{};
-			// Turning held (only Left and Right are used): degrees a second.
-			std::array<float, 4> turn{};
-			// Thrust held along the heading, for each action that thrusts,
-			// with the variable it burns, so that forward and back held
-			// together add up.
-			std::map<std::string, std::pair<float, std::string>> thrustAhead;
-		};
-		Drive drive;
 
 		// Where its turning point is on the screen: the pivot, or the middle.
 		Vector2f pivotOnScreen() const;

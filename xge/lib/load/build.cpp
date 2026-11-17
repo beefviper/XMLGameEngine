@@ -42,7 +42,7 @@ namespace xge
 
 		Object object{};
 		object.id = parts->newId();
-		const std::uint64_t order = parts->nextOrder();
+		const std::uint64_t order = parts->orderOf(object.id);
 		buildSprite(rawObject, first, picture, animationSeconds, object, where);
 		buildNames(rawObject, object);
 		buildNumbers(rawObject, object, cellOffset, positionSizeDependencies, where);

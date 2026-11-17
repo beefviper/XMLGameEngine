@@ -240,7 +240,7 @@ namespace xge
 			const Command& actionCommand = now(written, madeNow);
 			if (const auto* move = std::get_if<CmdMove>(&actionCommand))
 			{
-				holdStep(object, move->direction, move->step);
+				holdStep(object, game.driveFor(object), move->direction, move->step);
 			}
 			else if (const auto* climb = std::get_if<CmdClimb>(&actionCommand))
 			{
@@ -286,7 +286,7 @@ namespace xge
 	void CommandExecutor::restart(Object& object)
 	{
 		game.drawStartAgain(object);
-		xge::restart(object);
+		xge::restart(object, game.parts().drives.find(object.id));
 	}
 
 	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge, float share)
@@ -508,15 +508,16 @@ namespace xge
 	void CommandExecutor::applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn)
 	{
 		const auto index = static_cast<std::size_t>(direction);
-		object.drive.thrust[index] = amount;
-		object.drive.thrustBurn[index] = amount == 0.0f ? std::string{} : burn;
+		Drive& drive = game.driveFor(object);
+		drive.thrust[index] = amount;
+		drive.thrustBurn[index] = amount == 0.0f ? std::string{} : burn;
 	}
 
 	// Records that a turn is now held (rate 0 = just released);
 	// playOneFrame turns the object once a frame while it is.
 	void CommandExecutor::applyActionTurn(Object& object, Direction direction, float rate)
 	{
-		object.drive.turn[static_cast<std::size_t>(direction)] = rate;
+		game.driveFor(object).turn[static_cast<std::size_t>(direction)] = rate;
 	}
 
 	// Records that thrust along the heading is now held (amount 0 = just
@@ -526,10 +527,10 @@ namespace xge
 	{
 		if (amount == 0.0f)
 		{
-			object.drive.thrustAhead.erase(action);
+			if (Drive* drive = game.parts().drives.find(object.id)) { drive->thrustAhead.erase(action); }
 			return;
 		}
-		object.drive.thrustAhead[action] = { amount, burn };
+		game.driveFor(object).thrustAhead[action] = { amount, burn };
 	}
 
 	// `command.count` new objects, copies of `spawn.target` (Game::spawn),

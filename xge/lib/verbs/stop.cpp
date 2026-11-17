@@ -4,6 +4,8 @@
 // date: Nov 10, 2026
 
 #include "verbs/verb.h"
+#include "game/game.h"
+#include "play/executor.h"
 #include "play/verbs.h"
 
 namespace xge
@@ -14,9 +16,13 @@ namespace xge
 		return CmdStop{};
 	}
 
-	static bool runStop(const Command&, const Doer& doer, CommandExecutor&)
+	static bool runStop(const Command&, const Doer& doer, CommandExecutor& executor)
 	{
-		if (doer.self) { xge::stop(*doer.self); }
+		if (doer.self)
+		{
+			xge::stop(*doer.self);
+			executor.game.stopDrive(*doer.self);
+		}
 		return true;
 	}
 

@@ -21,6 +21,7 @@ namespace xge
 	struct Parts
 	{
 		Store<Holder> holders;
+		Store<Drive> drives;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.
@@ -36,8 +37,17 @@ namespace xge
 		}
 
 		// Where an object stands among the game's objects: they join in this
-		// order and keep it (Store::add).
-		std::uint64_t nextOrder() noexcept { return ++joined; }
+		// order, a handle given as each joins, and keep it (Store::add).
+		std::uint64_t orderOf(ObjectId id) const noexcept { return current(id) ? handleSlots[id.index].order : 0; }
+
+		// Its part in `store`, added (in its place in object order) the
+		// first time it is asked for: a part a verb gives while playing.
+		template <typename Part>
+		Part& give(Store<Part>& store, ObjectId id)
+		{
+			if (Part* part = store.find(id)) { return *part; }
+			return store.add(id, orderOf(id), {});
+		}
 
 		// Where a handle's object is in the game's list (kNowhere: not in
 		// it now, spawned this frame or in another player's turn).
@@ -65,6 +75,7 @@ namespace xge
 		{
 			std::uint32_t generation{};
 			std::size_t at{ kNowhere };
+			std::uint64_t order{};
 		};
 		std::vector<Slot> handleSlots;
 		std::vector<std::uint32_t> freeHandles;

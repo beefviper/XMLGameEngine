@@ -57,6 +57,9 @@ namespace xge
 		// dead. Nothing else is animated, moved, pulled or touched.
 		virtual bool inPlay(const Object& object) = 0;
 
+		// What its held keys drive (Drive), nullptr for one no key drives.
+		virtual const Drive* driveOf(const Object& object) { (void)object; return nullptr; }
+
 		// An animation that plays once has just ended on objects[index], which
 		// was showing looks[look] (0 for its one unnamed animation): its
 		// <then> commands run, before the timers.

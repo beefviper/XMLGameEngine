@@ -1452,25 +1452,17 @@ namespace xge
 		// is put away, an alien is back), and nothing it was in the middle
 		// of still going. Doesn't touch bound text displays - callers do
 		// that afterward, once they know which objects actually changed.
-		void resetObjectState(Object& object)
+		void resetObjectState(Object& object, Parts& parts)
 		{
 			object.backToStart();
 
-			// Also drop any directions CommandExecutor::applyActionVelocity
-			// currently has recorded as held: velocity above is reset to rest,
-			// so a stale held direction (a key never released across this
-			// reset) shouldn't be able to resurrect part of the old velocity
-			// the next time some other direction's key event recomputes it.
-			object.drive.moveStep = {};
-
-			// The same goes for thrust still recorded as held, and a <stop />
-			// that took the acceleration away is given back above.
-			object.drive.thrust = {};
-			object.drive.thrustBurn = {};
-
-			// No turn or thrust along its heading still held.
-			object.drive.turn = {};
-			object.drive.thrustAhead.clear();
+			// Also drop what its keys drive (moves, thrusts and turns
+			// recorded as held): velocity above is reset to rest, so a stale
+			// held direction (a key never released across this reset)
+			// shouldn't be able to resurrect part of the old velocity the
+			// next time some other direction's key event recomputes it. A
+			// <stop /> that took the acceleration away is given back above.
+			parts.drives.remove(object.id);
 			object.swing.held = false;
 			object.swing.done = 0.0f;
 			object.picker.picked.clear();
@@ -1549,7 +1541,7 @@ namespace xge
 				// A copy did not exist when the game started.
 				if (candidate.isCopy()) { despawn(candidate); continue; }
 				drawStartAgain(candidate);
-				resetObjectState(candidate);
+				resetObjectState(candidate, objectParts);
 				holdVariablesForExpressions(candidate);
 				stageChanged();
 			}
@@ -1820,7 +1812,7 @@ namespace xge
 		{
 			if (object.kept) { continue; }
 			drawStartAgain(object);
-			resetObjectState(object);
+			resetObjectState(object, objectParts);
 			holdVariablesForExpressions(object);
 			stageChanged();
 		}
@@ -1956,7 +1948,7 @@ namespace xge
 			if (object.start.ownerScene != scene) { continue; }
 			if (object.isCopy()) { despawn(object); continue; }
 			drawStartAgain(object);
-			resetObjectState(object);
+			resetObjectState(object, objectParts);
 			holdVariablesForExpressions(object);
 			stageChanged();
 

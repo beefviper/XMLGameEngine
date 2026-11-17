@@ -13,9 +13,11 @@ namespace xge
 		{
 			const std::uint32_t index = freeHandles.back();
 			freeHandles.pop_back();
+			handleSlots[index].order = ++joined;
 			return { index, handleSlots[index].generation };
 		}
 		handleSlots.emplace_back();
+		handleSlots.back().order = ++joined;
 		return { static_cast<std::uint32_t>(handleSlots.size() - 1), 0 };
 	}
 
@@ -31,11 +33,22 @@ namespace xge
 	void Parts::removeParts(ObjectId id)
 	{
 		holders.remove(id);
+		drives.remove(id);
+	}
+
+	namespace
+	{
+		template <typename Part>
+		void copyPart(Store<Part>& into, const Store<Part>& from, ObjectId id)
+		{
+			if (const Part* part = from.find(id)) { into.add(id, from.orderOf(id), *part); }
+			else { into.remove(id); }
+		}
 	}
 
 	void Parts::copyPartsFrom(const Parts& from, ObjectId id)
 	{
-		if (const Holder* holder = from.holders.find(id)) { holders.add(id, from.holders.orderOf(id), *holder); }
-		else { holders.remove(id); }
+		copyPart(holders, from.holders, id);
+		copyPart(drives, from.drives, id);
 	}
 }

@@ -131,23 +131,24 @@ namespace xge
 	// <die />: out of play; not drawn, moved or collided with.
 	void die(Object& object);
 
-	// <stop />: at rest, with nothing left to move it.
+	// <stop />: at rest, with nothing left to move it (what its keys drive
+	// is let go by the caller: Game::stopDrive).
 	void stop(Object& object);
 
 	// A bare <reset /> on an object: back where it started, facing and going
 	// the way it started; a held key still decides its velocity. The start
 	// is start.position and start.velocity, so a start that draws a
 	// <random> is drawn again before this.
-	void restart(Object& object);
+	void restart(Object& object, const Drive* drive);
 
 	// A direction held at `step` (0: let go), recombined with the others held
 	// into the velocity: Left/Right and Up/Down are separate axes, and in a
 	// <jump> the way across waits for the landing.
-	void holdStep(Object& object, Direction direction, float step);
+	void holdStep(Object& object, Drive& drive, Direction direction, float step);
 
 	// A <move> in an action, as its key goes down (pressed) or up: that
 	// direction held at `step`, recombined with the others held into the
 	// velocity, and the object faces that way: with a key of the other axis
 	// held too, the diagonal between them, which its <fire>s follow.
-	void holdMove(Object& object, Direction direction, float step, bool pressed);
+	void holdMove(Object& object, Drive& drive, Direction direction, float step, bool pressed);
 }

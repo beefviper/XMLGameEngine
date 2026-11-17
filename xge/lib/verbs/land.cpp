@@ -25,7 +25,7 @@ namespace xge
 	// the keys held now decide the way across. Any other touch does nothing,
 	// so a platform can be jumped up through and walked past, and nothing
 	// lands while it climbs.
-	static void landOnto(Object& object, const Object& other, Edge edge)
+	static void landOnto(Object& object, const Drive* drive, const Object& other, Edge edge)
 	{
 		if (!landOn(object.position, object.velocity, sizeOf(object), { other.position, sizeOf(other) }, edge, object.footing.climbing))
 		{
@@ -40,15 +40,15 @@ namespace xge
 			// One with a <grip> that is not at once slides on from the speed it landed at.
 			if (std::isinf(object.motion.grip))
 			{
-				object.velocity.x = object.drive.moveStep[static_cast<std::size_t>(Direction::Right)]
-					- object.drive.moveStep[static_cast<std::size_t>(Direction::Left)];
+				object.velocity.x = drive ? drive->moveStep[static_cast<std::size_t>(Direction::Right)]
+					- drive->moveStep[static_cast<std::size_t>(Direction::Left)] : 0.0f;
 			}
 		}
 	}
 
-	static bool runLand(const Command&, const Doer& doer, CommandExecutor&)
+	static bool runLand(const Command&, const Doer& doer, CommandExecutor& executor)
 	{
-		if (doer.self && doer.touch) { landOnto(*doer.self, *doer.other, doer.touch->edge); }
+		if (doer.self && doer.touch) { landOnto(*doer.self, executor.game.parts().drives.find(doer.self->id), *doer.other, doer.touch->edge); }
 		return true;
 	}
 

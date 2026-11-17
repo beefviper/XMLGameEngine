@@ -632,12 +632,13 @@ TEST_CASE("a held thrust is forgotten by a reset and the pull is given back by i
 	Flight flight;
 	flight.key("burn", true);
 	flight.frames(1);
+	REQUIRE(flight.game.parts().drives.has(flight.ship().id));
 
 	flight.game.resetObject("ship");
 
 	CHECK(flight.ship().velocity.y == 0.0f);
 	CHECK(flight.ship().acceleration.y == 1800.0f);
-	CHECK(flight.ship().drive.thrust[static_cast<std::size_t>(Direction::Up)] == 0.0f);
+	CHECK_FALSE(flight.game.parts().drives.has(flight.ship().id));
 	CHECK(flight.ship().variable["fuel"] == 3.0f);
 }
 

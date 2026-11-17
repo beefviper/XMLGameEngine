@@ -145,6 +145,11 @@ namespace xge
 		bool isHolder(const Object& object) const noexcept { return objectParts.holders.has(object.id); }
 		Holder& holderOf(const Object& object) { return objectParts.holders.get(object.id); }
 		const Holder& holderOf(const Object& object) const { return objectParts.holders.get(object.id); }
+
+		// What its held keys drive: given on the first key that drives it,
+		// gone when it stops or is reset.
+		Drive& driveFor(const Object& object) { return objectParts.give(objectParts.drives, object.id); }
+		void stopDrive(const Object& object) { objectParts.drives.remove(object.id); }
 		const Parts& parts() const noexcept { return objectParts; }
 		float getVariable(const std::string& name);
 
@@ -875,6 +880,7 @@ namespace xge
 
 		// FrameRules: what the game file says, asked by playOneFrame.
 		bool inPlay(const Object& object) override { return isShown(object); }
+		const Drive* driveOf(const Object& object) override { return objectParts.drives.find(object.id); }
 		void timers(float seconds) override { updateTimers(seconds); }
 		void animationEnded(std::size_t index, std::size_t look) override;
 		void frameCameUp(std::size_t index, std::size_t look, std::size_t picture) override;
