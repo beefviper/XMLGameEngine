@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "game/parts.h"
+
 #include "audio/sound.h"
 #include "game/command.h"
 #include "game/object.h"
@@ -55,6 +57,7 @@ namespace xge
 		const std::vector<RawStyle>& styles;
 		WantedPalettes& wanted;
 		const std::string& where;
+		const Parts& parts;
 	};
 
 	// What the verbs' checks share. Each throws std::runtime_error saying
@@ -82,6 +85,6 @@ namespace xge
 	// Every command of every state, scene, object and path checked for the
 	// names it uses and for being in a place where it does something
 	// (the places of its verb, verbs/verb.h); hands back the palettes the <become style>s ask for.
-	WantedPalettes checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
+	WantedPalettes checkReferences(const Parts& parts, const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
 		const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles);
 }

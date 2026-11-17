@@ -339,7 +339,7 @@ namespace xge
 				const std::string inside = checking.where + " > <condition>";
 				for (const Command& inner : when->body->commands)
 				{
-					checkCommand(inner, { checking.states, checking.objects, checking.sounds, checking.paths, checking.styles, checking.wanted, inside });
+					checkCommand(inner, { checking.states, checking.objects, checking.sounds, checking.paths, checking.styles, checking.wanted, inside, checking.parts });
 				}
 				return;
 			}
@@ -536,7 +536,7 @@ namespace xge
 		// The variables a holder, a pattern or a cell check go by are ones
 		// some object has (a card's rank, a jewel's hue), or a number the
 		// engine keeps; a misspelt one read nothing, and nothing ever matched.
-		void checkHeldVariables(const std::vector<Object>& objects)
+		void checkHeldVariables(const Parts& parts, const std::vector<Object>& objects)
 		{
 			std::set<std::string> variableSet(liveNumberParts().begin(), liveNumberParts().end());
 			for (const Object& object : objects)
@@ -553,9 +553,12 @@ namespace xge
 			{
 				onLine(object.line, [&]
 				{
-					for (const std::string& by : object.holder.orderBy) { checkVariable(object, "by", by); }
+					for (const auto& check : object.cell.checks) { checkVariable(object, "alike", check.alike); }
+					const Holder* holder = parts.holders.find(object.id);
+					if (!holder) { return; }
+					for (const std::string& by : holder->orderBy) { checkVariable(object, "by", by); }
 					// The looks a holder's words name are ones what it holds has.
-					const Object::Holder& holds = object.holder;
+					const Holder& holds = *holder;
 					if (!holds.holdsClass.empty())
 					{
 						const std::string where = "object '" + object.name + "' > <holds class=\"" + holds.holdsClass + "\">";
@@ -571,12 +574,16 @@ namespace xge
 					}
 					// A holder that counts gets a variable of that name itself
 					// (load/expr.cpp), so what it adds up is another's: a member's.
-					const std::string& counts = object.holder.counts;
-					if (!counts.empty() && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.holder.counts != counts && numberOf(other, counts); }))
+					const std::string& counts = holds.counts;
+					if (!counts.empty() && std::none_of(objects.begin(), objects.end(), [&](const Object& other)
+						{
+							const Holder* its = parts.holders.find(other.id);
+							return (its ? its->counts : std::string{}) != counts && numberOf(parts, other, counts);
+						}))
 					{
 						throw std::runtime_error("object '" + object.name + "' > <counts variable=\"" + counts + "\">: no object has a variable or number of that name" + didYouMean(counts, gameVariables));
 					}
-					const HolderRule& takes = object.holder.takes;
+					const HolderRule& takes = holds.takes;
 					checkVariable(object, "wild", takes.wildVariable);
 					checkVariable(object, "trick", takes.trickBy);
 					for (const auto* rules : { &takes.rules, &takes.emptyRules, &takes.anyRules, &takes.wildRules })
@@ -587,7 +594,6 @@ namespace xge
 							checkVariable(object, "condition", rule.topVariable);
 						}
 					}
-					for (const auto& check : object.cell.checks) { checkVariable(object, "alike", check.alike); }
 				});
 			}
 		}
@@ -633,12 +639,13 @@ namespace xge
 			const std::map<std::string, Path>& paths;
 			const std::vector<RawStyle>& styles;
 			WantedPalettes& wanted;
+			const Parts& parts;
 
 			void all(const std::vector<Command>& commands, const std::string& where) const
 			{
 				for (const auto& command : commands)
 				{
-					checkCommand(command, { states, objects, sounds, paths, styles, wanted, where });
+					checkCommand(command, { states, objects, sounds, paths, styles, wanted, where, parts });
 				}
 			}
 
@@ -668,7 +675,7 @@ namespace xge
 					{
 						throw std::runtime_error(where + ": <become> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
 					}
-					if (!become->style.empty()) { wantPalette({ states, objects, sounds, paths, styles, wanted, where }, *self, become->style); }
+					if (!become->style.empty()) { wantPalette({ states, objects, sounds, paths, styles, wanted, where, parts }, *self, become->style); }
 					if (!become->sprite.empty() && std::none_of(self->looks.all.begin(), self->looks.all.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
 					{
 						throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" />: it has no look of that name (a look is one of several named <sprite>s)");
@@ -947,15 +954,15 @@ namespace xge
 		}
 	}
 
-	WantedPalettes checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
+	WantedPalettes checkReferences(const Parts& parts, const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
 		const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles)
 	{
 		WantedPalettes wanted;
 		checkObjectNames(objects);
 		checkRuleNames(objects);
-		checkHeldVariables(objects);
+		checkHeldVariables(parts, objects);
 		checkStateNames(states, objects, sounds);
-		const CommandChecks checks{ states, objects, sounds, paths, styles, wanted };
+		const CommandChecks checks{ states, objects, sounds, paths, styles, wanted, parts };
 		checkPathCommands(checks);
 		checkStateCommands(checks);
 		checkObjectCommands(checks);

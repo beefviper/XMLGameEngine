@@ -317,7 +317,7 @@ TEST_CASE("Tetris deals from a bag of seven: every seven shapes are the seven, a
 	play.frames(2);
 	const Object& bag = play.get("playing.bag");
 	// One falling and one waiting are out of the bag.
-	CHECK(bag.holder.items.size() == 5);
+	CHECK(play.holderOf(bag).items.size() == 5);
 	CHECK(bag.variable.at("top.shape") >= 1.0f);
 
 	std::set<std::string> first;
@@ -331,8 +331,8 @@ TEST_CASE("Tetris deals from a bag of seven: every seven shapes are the seven, a
 	}
 	CHECK(first.size() == 7);
 	// Nine out: the seven, then two of the next bag (falling and waiting).
-	CHECK(bag.holder.items.size() == 5);
-	CHECK(play.get("playing.used").holder.items.size() == 2);
+	CHECK(play.holderOf(bag).items.size() == 5);
+	CHECK(play.holderOf("playing.used").items.size() == 2);
 }
 
 TEST_CASE("Tetris turns clockwise on W, Up, E or X and counterclockwise on Q", "[cells][tetris]")

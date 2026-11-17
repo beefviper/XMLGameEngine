@@ -10,6 +10,7 @@
 #include "play/frame.h"
 #include "game/data.h"
 #include "load/expr.h"
+#include "game/parts.h"
 #include "game/object.h"
 #include "audio/sound.h"
 #include "game/states.h"
@@ -52,6 +53,12 @@ namespace xge
 		// Defined in load/xml.cpp, so a program that has its game written
 		// out as C++ (a generated one) builds without any XML library.
 		explicit Game(const std::string& file);
+
+		// Not copied or moved: what it is made of holds on to its parts.
+		Game(const Game&) = delete;
+		Game& operator=(const Game&) = delete;
+		Game(Game&&) = delete;
+		Game& operator=(Game&&) = delete;
 
 		// Plays one step of `seconds` (playOneFrame).
 		void updateObjects(float seconds);
@@ -129,6 +136,16 @@ namespace xge
 		// The object a handle names, among those in the game or spawned this
 		// frame; nullptr once it has been despawned and gone.
 		Object* find(ObjectId id) noexcept;
+
+		// Every object's handle and the parts it has.
+		Parts& parts() noexcept { return objectParts; }
+
+		// Its holder part: whether it has one, and the part (std::out_of_range
+		// for an object that is no holder).
+		bool isHolder(const Object& object) const noexcept { return objectParts.holders.has(object.id); }
+		Holder& holderOf(const Object& object) { return objectParts.holders.get(object.id); }
+		const Holder& holderOf(const Object& object) const { return objectParts.holders.get(object.id); }
+		const Parts& parts() const noexcept { return objectParts; }
 		float getVariable(const std::string& name);
 
 		// The state on top of the stack. Only good until the stack changes: a
@@ -840,20 +857,8 @@ namespace xge
 		// object's place in `objects` is worked out again.
 		void rosterChanged(void);
 
-		// Each handle's slot: the generation it is on and where its object
-		// is in `objects` (kNowhere: not there, spawned this frame or in
-		// another player's turn). Slots of despawned copies are free to be
-		// used again, a generation on.
-		struct Slot
-		{
-			static constexpr std::size_t kNowhere = static_cast<std::size_t>(-1);
-			std::uint32_t generation{};
-			std::size_t at{ kNowhere };
-		};
-		std::vector<Slot> handleSlots;
-		std::vector<std::uint32_t> freeHandles;
-		ObjectId newId(void);
-		void freeId(ObjectId id);
+		// Every object's handle and the parts it has (game/parts.h).
+		Parts objectParts;
 
 		// tryGetObject's answers: names never change while a game runs.
 		std::unordered_map<std::string, Object*> foundObjects;
@@ -928,6 +933,7 @@ namespace xge
 		struct Turn
 		{
 			std::vector<Object> objects;
+			Parts parts;
 			std::map<std::string, std::vector<Timer>> stateTimers;
 			std::map<std::string, std::string> currentScenes;
 			std::map<std::string, std::vector<Timer>> sceneTimers;

@@ -4,6 +4,7 @@
 // date: Sept 18, 2020
 
 #include "game/object.h"
+#include "game/parts.h"
 
 #include "picture/color.h"
 #include "picture/font.h"
@@ -427,34 +428,47 @@ namespace xge
 		object.looks = std::move(looks);
 	}
 
+	namespace
+	{
+		// A holder's live number; for an object that is no holder, 0 (and
+		// what is set on it is let go).
+		float& holderNumber(Parts& parts, Object& object, float Holder::* number)
+		{
+			if (Holder* holder = parts.holders.find(object.id)) { return holder->*number; }
+			thread_local float none;
+			none = 0.0f;
+			return none;
+		}
+	}
+
 	const std::vector<LivePart>& liveParts()
 	{
 		static const std::vector<LivePart> parts{
-			{ "x", [](Object& o) -> float& { return o.position.x; }, false },
-			{ "y", [](Object& o) -> float& { return o.position.y; }, false },
-			{ "velocity.x", [](Object& o) -> float& { return o.velocity.x; }, false },
-			{ "velocity.y", [](Object& o) -> float& { return o.velocity.y; }, false },
-			{ "heading", [](Object& o) -> float& { return o.heading; }, false },
-			{ "altitude", [](Object& o) -> float& { return o.altitude; }, true },
-			{ "rise", [](Object& o) -> float& { return o.rise; }, false },
-			{ "light", [](Object& o) -> float& { return o.light; }, true },
-			{ "blink", [](Object& o) -> float& { return o.blink; }, true },
-			{ "speed", [](Object& o) -> float& { if (!o.motion.speedHeld) { o.motion.speed = std::hypot(o.velocity.x, o.velocity.y); } return o.motion.speed; }, false },
-			{ "column", [](Object& o) -> float& { return o.cellColumn; }, false },
-			{ "row", [](Object& o) -> float& { return o.cellRow; }, false },
-			{ "moves", [](Object& o) -> float& { return o.moves.count; }, true },
-			{ "cards", [](Object& o) -> float& { return o.holder.itemCount; }, true },
-			{ "held", [](Object& o) -> float& { return o.holder.itemCount; }, true },
-			{ "calling", [](Object& o) -> float& { return o.holder.calling; }, true },
-			{ "called", [](Object& o) -> float& { return o.holder.called; }, true },
-			{ "points", [](Object& o) -> float& { return o.holder.points; }, true },
-			{ "pattern", [](Object& o) -> float& { return o.holder.pattern; }, true },
-			{ "strength", [](Object& o) -> float& { return o.holder.strength; }, true },
-			{ "odds", [](Object& o) -> float& { return o.holder.odds; }, true },
-			{ "lead", [](Object& o) -> float& { return o.holder.lead; }, true },
-			{ "winner", [](Object& o) -> float& { return o.holder.winner; }, true },
-			{ "tricks", [](Object& o) -> float& { return o.holder.tricks; }, true },
-			{ "deadwood", [](Object& o) -> float& { return o.holder.deadwood; }, true },
+			{ "x", [](Parts&, Object& o) -> float& { return o.position.x; }, false },
+			{ "y", [](Parts&, Object& o) -> float& { return o.position.y; }, false },
+			{ "velocity.x", [](Parts&, Object& o) -> float& { return o.velocity.x; }, false },
+			{ "velocity.y", [](Parts&, Object& o) -> float& { return o.velocity.y; }, false },
+			{ "heading", [](Parts&, Object& o) -> float& { return o.heading; }, false },
+			{ "altitude", [](Parts&, Object& o) -> float& { return o.altitude; }, true },
+			{ "rise", [](Parts&, Object& o) -> float& { return o.rise; }, false },
+			{ "light", [](Parts&, Object& o) -> float& { return o.light; }, true },
+			{ "blink", [](Parts&, Object& o) -> float& { return o.blink; }, true },
+			{ "speed", [](Parts&, Object& o) -> float& { if (!o.motion.speedHeld) { o.motion.speed = std::hypot(o.velocity.x, o.velocity.y); } return o.motion.speed; }, false },
+			{ "column", [](Parts&, Object& o) -> float& { return o.cellColumn; }, false },
+			{ "row", [](Parts&, Object& o) -> float& { return o.cellRow; }, false },
+			{ "moves", [](Parts&, Object& o) -> float& { return o.moves.count; }, true },
+			{ "cards", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true },
+			{ "held", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true },
+			{ "calling", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::calling); }, true },
+			{ "called", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::called); }, true },
+			{ "points", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::points); }, true },
+			{ "pattern", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::pattern); }, true },
+			{ "strength", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::strength); }, true },
+			{ "odds", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::odds); }, true },
+			{ "lead", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::lead); }, true },
+			{ "winner", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::winner); }, true },
+			{ "tricks", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::tricks); }, true },
+			{ "deadwood", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::deadwood); }, true },
 		};
 		return parts;
 	}
@@ -494,12 +508,12 @@ namespace xge
 		return longest;
 	}
 
-	std::optional<float> numberOf(const Object& object, const std::string& name)
+	std::optional<float> numberOf(const Parts& parts, const Object& object, const std::string& name)
 	{
 		if (const auto own = object.variable.find(name); own != object.variable.end()) { return own->second; }
 		const LivePart* part = livePartNamed(name);
 		if (!part || (name == "heading" && !object.turning.hasHeading)) { return std::nullopt; }
-		return part->of(const_cast<Object&>(object)); // only read
+		return part->of(const_cast<Parts&>(parts), const_cast<Object&>(object)); // only read
 	}
 
 	bool Object::followsPart(const std::string& part) const

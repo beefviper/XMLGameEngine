@@ -940,6 +940,77 @@ namespace xge
 	// how it started (worked out from its RawObject, and drawn again when a
 	// <random> start is), and `before`, how it was when the last frame
 	// ended. The RawObject itself, the file's text, is the fourth.
+	// Items (game/holders.cpp). A holder, a part (Parts::holders): its rules
+	// and the items it holds, bottom first (each an item's number, Game::itemAt), and its live
+	// numbers. Laid out by Game::layOutItems, never moved by the frame.
+	struct Holder
+	{
+		std::string holdsClass;   // <holds class sprite>, as written
+		std::string holdsSprite;
+		std::string topSprite;    // <top sprite>: what a member left on top shows
+		Vector2f spread{};        // <spread>: each item on from the one below
+		Vector2f lookSpread{};    // <spread sprite>: each item showing that look
+		std::string spreadSprite;
+		int startCount{};
+		int startMore{};
+		bool startShuffled{ false };
+		std::string pickedInto;
+		int pickedSends{};
+		std::string emptyFrom;
+		bool emptyRandom{ false };
+		int emptyLeave{};
+		std::string pickedSound;
+		std::vector<std::string> orderBy;
+		float spreadWidth{};
+		bool carry{ false };
+		float lift{};
+		float pointsMost{};     // 0: no limit
+		std::string counts;     // <counts variable>: as written (empty: none)
+		std::vector<int> broken;  // the suits of its <breaks> laid on it since the items were gathered
+		std::string score;      // as written
+		std::string scoreWith;
+		int scoreFull{};
+		int scoreBest{};
+		std::string melds;      // as written
+		int meldsBest{};
+		bool scoreDue{ false };  // its items changed since it was last scored
+		HolderRule takes;
+		std::vector<int> items;
+		// The live number `items`: how many the holder holds. A holder that
+		// takes <wild> items: `calling` is 1 while a wild card on top waits
+		// for a suit to be called, `called` the suit called (from 1; 0 none).
+		float itemCount{};
+		float calling{};
+		float called{};
+		// The live number `points`: its face-up items' worths added up, each
+		// as high as it may count while the total stays within <counts><atmost>.
+		float points{};
+		// A <score>d holder: the best of its items (and the shared ones)
+		// by its patterns: `pattern` the highest they make (from 1 as
+		// written; 0 none) and `strength` to compare (higher wins); `odds`,
+		// in percent, how often it beats as many unseen items when the
+		// shared holder is made up to full (a tie counts half).
+		float pattern{};
+		float strength{};
+		float odds{};
+		// Whether anything reads its `odds` (Game::markOddsRead): a thousand
+		// deals are tried to work them out, so holders nobody asks skip them.
+		bool oddsRead{ true };
+		// A <follow /> holder (a trick): `lead`, the suit of its first item
+		// (from 1; 0 empty), and `winner`, the seat of the hand that laid
+		// the item winning it: the highest trump, else the highest of the
+		// suit led.
+		float lead{};
+		float winner{};
+		// A hand's own holder in a game with a trick: `tricks`, how many
+		// tricks its items should take (a reckoning by high items, trumps
+		// and short suits, as a player counts them to bid).
+		float tricks{};
+		// A holder scored with <melds />: `deadwood`, the points of its items in no
+		// group, the groups chosen to leave the fewest.
+		float deadwood{};
+	};
+
 	// An object's handle: its slot in the game, and which object that slot
 	// holds (a slot freed by a despawn is used again with the next
 	// generation, so a handle kept from before finds nothing). The default
@@ -1427,78 +1498,6 @@ namespace xge
 			std::optional<std::size_t> look;
 			std::vector<Mark> marks;
 		};
-		// Items (game/holders.cpp). A holder: its rules and the items it holds,
-		// bottom first (each an item's number, Game::itemAt), and its live
-		// numbers. Laid out by Game::layOutItems, never moved by the frame.
-		struct Holder
-		{
-			bool is{ false };
-			std::string holdsClass;   // <holds class sprite>, as written
-			std::string holdsSprite;
-			std::string topSprite;    // <top sprite>: what a member left on top shows
-			Vector2f spread{};        // <spread>: each item on from the one below
-			Vector2f lookSpread{};    // <spread sprite>: each item showing that look
-			std::string spreadSprite;
-			int startCount{};
-			int startMore{};
-			bool startShuffled{ false };
-			std::string pickedInto;
-			int pickedSends{};
-			std::string emptyFrom;
-			bool emptyRandom{ false };
-			int emptyLeave{};
-			std::string pickedSound;
-			std::vector<std::string> orderBy;
-			float spreadWidth{};
-			bool carry{ false };
-			float lift{};
-			float pointsMost{};     // 0: no limit
-			std::string counts;     // <counts variable>: as written (empty: none)
-			std::vector<int> broken;  // the suits of its <breaks> laid on it since the items were gathered
-			std::string score;      // as written
-			std::string scoreWith;
-			int scoreFull{};
-			int scoreBest{};
-			std::string melds;      // as written
-			int meldsBest{};
-			bool scoreDue{ false };  // its items changed since it was last scored
-			HolderRule takes;
-			std::vector<int> items;
-			// The live number `items`: how many the holder holds. A holder that
-			// takes <wild> items: `calling` is 1 while a wild card on top waits
-			// for a suit to be called, `called` the suit called (from 1; 0 none).
-			float itemCount{};
-			float calling{};
-			float called{};
-			// The live number `points`: its face-up items' worths added up, each
-			// as high as it may count while the total stays within <counts><atmost>.
-			float points{};
-			// A <score>d holder: the best of its items (and the shared ones)
-			// by its patterns: `pattern` the highest they make (from 1 as
-			// written; 0 none) and `strength` to compare (higher wins); `odds`,
-			// in percent, how often it beats as many unseen items when the
-			// shared holder is made up to full (a tie counts half).
-			float pattern{};
-			float strength{};
-			float odds{};
-			// Whether anything reads its `odds` (Game::markOddsRead): a thousand
-			// deals are tried to work them out, so holders nobody asks skip them.
-			bool oddsRead{ true };
-			// A <follow /> holder (a trick): `lead`, the suit of its first item
-			// (from 1; 0 empty), and `winner`, the seat of the hand that laid
-			// the item winning it: the highest trump, else the highest of the
-			// suit led.
-			float lead{};
-			float winner{};
-			// A hand's own holder in a game with a trick: `tricks`, how many
-			// tricks its items should take (a reckoning by high items, trumps
-			// and short suits, as a player counts them to bid).
-			float tricks{};
-			// A holder scored with <melds />: `deadwood`, the points of its items in no
-			// group, the groups chosen to leave the fewest.
-			float deadwood{};
-		};
-		Holder holder;
 		// An item (a held member): what it is (its start holder and worths, as
 		// ItemOf), its number (from 1, every held member of the game in turn),
 		// the hand that last laid it and whether its face is up.
@@ -2245,10 +2244,11 @@ namespace xge
 	// variable of the object's own of that name wins. The one list that
 	// numberOf, <set> (Game::setNumber) and the expressions' live numbers
 	// (Game::refreshLive) all go by: a new part is a row in liveParts.
+	struct Parts;
 	struct LivePart
 	{
 		const char* name;
-		float& (*of)(Object& object);
+		float& (*of)(Parts& parts, Object& object);
 		bool notBelowZero;   // <set> keeps it at 0 or above
 	};
 	const std::vector<LivePart>& liveParts();
@@ -2266,7 +2266,7 @@ namespace xge
 	// An object's number of that name as it is now: its own variable, or
 	// else one of liveNumberParts() (a heading only if it has one); nothing
 	// for neither. What a condition tests and compares with.
-	std::optional<float> numberOf(const Object& object, const std::string& name);
+	std::optional<float> numberOf(const Parts& parts, const Object& object, const std::string& name);
 
 	// `text` with every name in it that starts with `from` (a whole word,
 	// followed by a dot) starting with `to` instead.

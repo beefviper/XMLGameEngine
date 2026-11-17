@@ -90,7 +90,7 @@ namespace xge
 		// one who laid it.
 		for (Object* holder : shownHolders())
 		{
-			if (holder->holder.calling > 0.0f) { return false; }
+			if (holderOf(*holder).calling > 0.0f) { return false; }
 		}
 		// The next member of the group, round to the first.
 		std::vector<Object*> members;

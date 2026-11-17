@@ -8,6 +8,7 @@
 #include "picture/bitmap.h"
 #include "picture/image.h"
 #include "engine/resources.h"
+#include "game/parts.h"
 #include "picture/color.h"
 #include "game/command.h"
 #include "load/calc.h"
@@ -104,7 +105,7 @@ namespace xge
 		// makeObject's board-game moves and marks, each set's look found.
 		void buildMoves(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
 		// makeObject's holder (<holds>), hand, held item and turns.
-		void buildHolder(RawObject& rawObject, Object& object, const std::string& where);
+		void buildHolder(RawObject& rawObject, Object& object, std::uint64_t order, const std::string& where);
 		// makeObject's mirror, grip, timers' looks, its tile on a map, a
 		// maze's walls and its pivot.
 		void buildPlace(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
@@ -280,6 +281,10 @@ namespace xge
 
 		// Every picture the game has loaded or made, each held once.
 		Resources resources;
+
+		// The game's handles and parts (Game::parts), which each object made
+		// joins.
+		Parts* parts{ nullptr };
 
 		// The game's <styles>, for the palettes a <become style> asks for.
 		std::vector<RawStyle> styles;

@@ -57,15 +57,12 @@ namespace xge
 		// Room for what is spawned, so that the file's objects stay where
 		// they are (and a reference to one good) as copies join.
 		objects.reserve(rawObjects.size() * 2 + 256);
+		expr.parts = &objectParts;
 		expr.styles = data.styles;
 		expr.sheets = data.sheets;
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
-		for (std::size_t i = 0; i < objects.size(); ++i)
-		{
-			objects[i].id = newId();
-			handleSlots[objects[i].id.index].at = i;
-		}
+		for (std::size_t i = 0; i < objects.size(); ++i) { objectParts.placeAt(objects[i].id, i); }
 		keep(keeps);
 		refreshAllBoundTexts();
 		// Every picture's size is known now, with no window: the engine draws
@@ -104,13 +101,14 @@ namespace xge
 		// The cards shuffled and dealt, holders scored by patterns there are.
 		for (const Object& object : objects)
 		{
-			if (!object.holder.score.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.holder.score; }))
+			if (!isHolder(object)) { continue; }
+			if (!holderOf(object).score.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == holderOf(object).score; }))
 			{
-				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + object.holder.score + "\">: names no <patterns>");
+				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + holderOf(object).score + "\">: names no <patterns>");
 			}
 			for (const RawPatterns& set : patterns)
 			{
-				if (set.name != object.holder.score) { continue; }
+				if (set.name != holderOf(object).score) { continue; }
 				std::set<std::string> alike;
 				for (const RawPatterns::Pattern& pattern : set.patterns)
 				{
@@ -123,9 +121,9 @@ namespace xge
 					if (alike.size() > 4) { throw std::runtime_error(where + ": scores a hand of " + object.name + "; for now a set scoring a hand compares at most four variables"); }
 				}
 			}
-			if (!object.holder.melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.holder.melds; }))
+			if (!holderOf(object).melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == holderOf(object).melds; }))
 			{
-				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + object.holder.melds + "\"> with <melds />: names no <patterns>");
+				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + holderOf(object).melds + "\"> with <melds />: names no <patterns>");
 			}
 		}
 		markOddsRead();
@@ -341,7 +339,6 @@ namespace xge
 		// Its picture is the one it is copied from, and so its size.
 		made.size = original.size;
 		copyRaws[name] = std::move(copy);
-		made.id = newId();
 		spawned.push_back(std::move(made));
 		if (!spawned.back().drawn.textPieces.empty()) { relabel(spawned.back()); }
 		return &spawned.back();
@@ -383,7 +380,7 @@ namespace xge
 		{
 			for (const Object& object : objects)
 			{
-				if (gone(object)) { freeId(object.id); }
+				if (gone(object)) { objectParts.freeId(object.id); }
 			}
 			objects.erase(std::remove_if(objects.begin(), objects.end(), gone), objects.end());
 			changed = true;
@@ -393,7 +390,7 @@ namespace xge
 			for (Object& object : spawned)
 			{
 				if (object.exists) { objects.push_back(std::move(object)); }
-				else { freeId(object.id); }
+				else { objectParts.freeId(object.id); }
 			}
 			spawned.clear();
 			changed = true;
@@ -401,31 +398,11 @@ namespace xge
 		if (changed) { rosterChanged(); }
 	}
 
-	ObjectId Game::newId(void)
-	{
-		if (!freeHandles.empty())
-		{
-			const std::uint32_t index = freeHandles.back();
-			freeHandles.pop_back();
-			return { index, handleSlots[index].generation };
-		}
-		handleSlots.emplace_back();
-		return { static_cast<std::uint32_t>(handleSlots.size() - 1), 0 };
-	}
-
-	void Game::freeId(ObjectId id)
-	{
-		if (!id || id.index >= handleSlots.size() || handleSlots[id.index].generation != id.generation) { return; }
-		++handleSlots[id.index].generation;
-		handleSlots[id.index].at = Slot::kNowhere;
-		freeHandles.push_back(id.index);
-	}
-
 	Object* Game::find(ObjectId id) noexcept
 	{
-		if (!id || id.index >= handleSlots.size() || handleSlots[id.index].generation != id.generation) { return nullptr; }
-		const Slot& slot = handleSlots[id.index];
-		if (slot.at < objects.size() && objects[slot.at].id == id) { return &objects[slot.at]; }
+		if (!objectParts.current(id)) { return nullptr; }
+		const std::size_t at = objectParts.at(id);
+		if (at < objects.size() && objects[at].id == id) { return &objects[at]; }
 		for (Object& waiting : spawned)
 		{
 			if (waiting.id == id) { return &waiting; }
@@ -435,11 +412,8 @@ namespace xge
 
 	void Game::rosterChanged(void)
 	{
-		for (Slot& slot : handleSlots) { slot.at = Slot::kNowhere; }
-		for (std::size_t i = 0; i < objects.size(); ++i)
-		{
-			if (objects[i].id.index < handleSlots.size()) { handleSlots[objects[i].id.index].at = i; }
-		}
+		objectParts.placeNowhere();
+		for (std::size_t i = 0; i < objects.size(); ++i) { objectParts.placeAt(objects[i].id, i); }
 		foundObjects.clear();
 		filtered.clear();
 		liveLinked = false;
@@ -1012,6 +986,7 @@ namespace xge
 	void Game::putTurnAway(Turn& into) const
 	{
 		into.objects = objects;
+		into.parts = objectParts;
 		into.stateTimers = stateTimers;
 		into.currentScenes = currentScenes;
 		into.sceneTimers = sceneTimers;
@@ -1021,17 +996,21 @@ namespace xge
 	{
 		// The file's objects as the player left them, then the copies
 		// spawned in their game.
+		for (const Object& waiting : spawned) { objectParts.removeParts(waiting.id); }
 		spawned.clear();
+		for (std::size_t i = loadedCount; i < objects.size(); ++i) { objectParts.removeParts(objects[i].id); }
 		objects.resize(std::min(objects.size(), loadedCount));
 		for (std::size_t i = 0; i < objects.size() && i < from.objects.size(); ++i)
 		{
 			if (objects[i].kept) { continue; }
 			objects[i] = from.objects[i];
+			objectParts.copyPartsFrom(from.parts, objects[i].id);
 			objects[i].drawn.visualDirty = true;
 		}
 		for (std::size_t i = loadedCount; i < from.objects.size(); ++i)
 		{
 			objects.push_back(from.objects[i]);
+			objectParts.copyPartsFrom(from.parts, objects.back().id);
 			objects.back().drawn.visualDirty = true;
 		}
 		rosterChanged();
@@ -1612,7 +1591,7 @@ namespace xge
 				// A holder given a look of what it holds, not its own: what
 				// it holds turned to it (a dealer's hidden card shown).
 				const bool own = std::any_of(object.looks.all.begin(), object.looks.all.end(), [&](const Object::Look& look) { return look.name == sprite; });
-				if (!sprite.empty() && object.holder.is && !own)
+				if (!sprite.empty() && isHolder(object) && !own)
 				{
 					turnHeld(object, sprite);
 					continue;
@@ -1911,7 +1890,7 @@ namespace xge
 			{
 				piece.shown = showPiece(piece.kind, value->second, piece.choices);
 			}
-			else if (const auto live = numberOf(*owner, piece.variable))
+			else if (const auto live = numberOf(objectParts, *owner, piece.variable))
 			{
 				piece.shown = showPiece(piece.kind, *live, piece.choices);
 			}
@@ -2276,7 +2255,7 @@ namespace xge
 		const std::vector<LivePart>& parts = liveParts();
 		for (const LiveLink& link : liveLinks)
 		{
-			*link.number = parts[link.part].of(objects[link.object]);
+			*link.number = parts[link.part].of(objectParts, objects[link.object]);
 		}
 	}
 
@@ -2368,7 +2347,7 @@ namespace xge
 			found = true;
 			const bool heading = std::string(part->name) == "heading";
 			if (heading && !object.turning.hasHeading) { continue; }
-			part->of(object) = part->notBelowZero ? std::max(0.0f, value) : value;
+			part->of(objectParts, object) = part->notBelowZero ? std::max(0.0f, value) : value;
 			if (heading) { object.showHeading(); }
 		}
 		if (!found)
@@ -2529,7 +2508,7 @@ namespace xge
 			if (!nearest) { return std::nullopt; }
 			return seesPast(object, *nearest, condition.past) ? 1.0f : 0.0f;
 		}
-		if (condition.distanceTo.empty()) { return numberOf(object, condition.variableName); }
+		if (condition.distanceTo.empty()) { return numberOf(objectParts, object, condition.variableName); }
 		if (!object.isVisible || !isShown(object)) { return std::nullopt; }
 		const Object* nearest = nearestInPlay(object, condition.distanceTo);
 		if (!nearest) { return std::nullopt; }

@@ -137,7 +137,7 @@ The author's order: the resource manager and the components first, since the res
   - Parts are packed in one vector, kept in object order, with an index per object slot (none: no part). `Game` holds one `Store` per kind of part.
   - A slot freed by a despawn is used again with its generation raised by one, so an `ObjectId` kept from before no longer matches and `Game::find(ObjectId)` answers nullptr.
   - A part that a reset returns to its start keeps its start value in the same store (`Store::start(id)`); which parts do is in step 1's table.
-  - Copying a `Game` copies its stores.
+  - A `Game` is not copied (its loaded expressions point at its stores); a player's game put away while another plays (`Turn`) keeps a copy of the stores.
 - **Steps.**
   - [x] **1. The author: the table of parts.** In [object-parts](designs/17-object-parts.md). The author chose a store per part; the per-part proposals are applied as each part moves in step 4.
   - [x] **2. A handle with a generation (M).** `ObjectId` (`game/object.h`), `Game::find(ObjectId)`, each object's `id`, slots freed when a copy leaves and used again a generation on (`test_store.cpp`). The `Object*` kept in `game.h` and `play/frame.h` all live within one step or are cleared when the roster changes, and what is kept from frame to frame is kept by name, which never changes (a copy's number is never reused), so none needed moving. Names become ids only where a store needs one (step 4) or speed gains (CR8 step 4).
@@ -148,6 +148,7 @@ The author's order: the resource manager and the components first, since the res
     3. a verb that can give it to an object while playing adds it on first use;
     4. every reader of `object.<part>` asks the store, with `find` where the object may have none;
     5. spawn copies it, despawn removes it, reset restores it.
+    Moved so far: `Holder` (`Game::parts().holders`, `isHolder`, `holderOf`; handles live in `game/parts.h` with the stores).
     **Check after each commit:** all tests and `xgetest-generated`; a case in `test_store.cpp` that Pong's ball has no such part (for a part Pong does not use); `[size]` and `[speed]` numbers in the commit, neither worse.
   - [ ] **5. What every drawn thing has (the author: it stays).** `Moment` (place, speed and the rest) and the picture stay in the object: nearly every object has them (the picture 5,722 of 5,926) and most verbs touch them. The picture becomes a `PictureId` (CR2 step 4) and `drawn` keeps only what a text needs besides. `before` shrinks to what is read of it (position, `collisionsOn`, `isVisible`).
   - [ ] **6. Passes over a store (M, one pass a commit).** Where a frame pass asks every object "do you have this" (animations, object timers, paths, flights, pulls, altitude), it walks that part's store with `each`. The order of passes in `playOneFrame` and `Game::updateObjects` does not change. **Check:** all tests; `[speed]` frame time for all games summed is lower than before the task; `xgetest-long` random keys.

@@ -179,7 +179,7 @@ namespace xge
 		makeStates(rawStates, states, objects);
 		makeSounds(rawSounds, sounds);
 		makePaths(rawPaths, paths, states, objects);
-		makePalettes(rawObjects, objects, checkReferences(states, objects, sounds, paths, styles));
+		makePalettes(rawObjects, objects, checkReferences(*parts, states, objects, sounds, paths, styles));
 	}
 
 	// init's names: the window's edges, the game's variables, every object's
@@ -218,8 +218,8 @@ namespace xge
 				{
 					throw std::runtime_error(here + ": the object has a <variable> of that name too, and " + rawObject.name + "." + timer.name + " is the timer's time left");
 				}
-				const auto& parts = liveNumberParts();
-				if (std::find(parts.begin(), parts.end(), timer.name) != parts.end())
+				const auto& liveNames = liveNumberParts();
+				if (std::find(liveNames.begin(), liveNames.end(), timer.name) != liveNames.end())
 				{
 					throw std::runtime_error(here + ": " + rawObject.name + "." + timer.name + " is already where the object is or how it moves; give the timer another name");
 				}

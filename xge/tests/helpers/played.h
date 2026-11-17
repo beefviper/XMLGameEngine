@@ -53,6 +53,11 @@ namespace played
 		std::string state() { return game.getCurrentState().name; }
 		xge::Object& get(const std::string& name) { return game.getObject(name); }
 
+		// The holder part of the object of that name, or of that object.
+		xge::Holder& holderOf(const std::string& name) { return game.holderOf(get(name)); }
+		xge::Holder& holderOf(const xge::Object& object) { return game.holderOf(object); }
+		bool isHolder(const xge::Object& object) const { return game.isHolder(object); }
+
 		// Whether an object of that name is in the game (a spawned copy,
 		// shot.1, is there from the end of the frame it was spawned in).
 		bool has(const std::string& name)

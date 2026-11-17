@@ -241,7 +241,7 @@ namespace xge
 		// A total of a variable: some object it can count has it.
 		if ((condition.total == Total::Sum || condition.total == Total::Highest || condition.total == Total::Lowest)
 			&& condition.distanceTo.empty()
-			&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matchesFilter(rawCondition, object) && numberOf(object, condition.variableName); }))
+			&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matchesFilter(rawCondition, object) && numberOf(*parts, object, condition.variableName); }))
 		{
 			throw std::runtime_error(where + ": total=\"" + rawCondition.total + "\" of variable=\"" + condition.variableName + "\", and no object it looks at has a variable of that name");
 		}
@@ -250,7 +250,7 @@ namespace xge
 		// variable of its own or as a number the engine keeps (x,
 		// moves, ...). A misspelt one was never there to compare.
 		if (condition.total == Total::None && !condition.remaining && condition.distanceTo.empty() && !condition.variableName.empty()
-			&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matchesFilter(rawCondition, object) && numberOf(object, condition.variableName); }))
+			&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matchesFilter(rawCondition, object) && numberOf(*parts, object, condition.variableName); }))
 		{
 			std::set<std::string> own;
 			for (const Object& object : objects)

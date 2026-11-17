@@ -41,6 +41,8 @@ namespace xge
 		const std::vector<Object::Look> looks = buildLooks(rawObject, first, picture, where);
 
 		Object object{};
+		object.id = parts->newId();
+		const std::uint64_t order = parts->nextOrder();
 		buildSprite(rawObject, first, picture, animationSeconds, object, where);
 		buildNames(rawObject, object);
 		buildNumbers(rawObject, object, cellOffset, positionSizeDependencies, where);
@@ -48,7 +50,7 @@ namespace xge
 		buildTimers(rawObject, object, where);
 		buildLookParts(rawObject, object, looks, where);
 		buildMoves(rawObject, object, looks, where);
-		buildHolder(rawObject, object, where);
+		buildHolder(rawObject, object, order, where);
 		buildPlace(rawObject, object, looks, where);
 		buildCollisions(rawObject, object, looks, thisLockstep, where);
 		buildActions(rawObject, object, where);
@@ -530,15 +532,14 @@ namespace xge
 	}
 
 	// makeObject's holder (<holds>), hand, held item and turns.
-	void game_expr::buildHolder(RawObject& rawObject, Object& object, const std::string& where)
+	void game_expr::buildHolder(RawObject& rawObject, Object& object, std::uint64_t order, const std::string& where)
 	{
 		// Holders: a holder's rules, a hand, a held member.
 		if (rawObject.holder.is)
 		{
 			const RawObject::RawHolder& raw = rawObject.holder;
 			const auto number = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
-			Object::Holder& holder = object.holder;
-			holder.is = true;
+			Holder& holder = parts->holders.add(object.id, order, {});
 			holder.holdsClass = raw.holdsClass;
 			holder.holdsSprite = raw.holdsSprite;
 			holder.topSprite = raw.topSprite;

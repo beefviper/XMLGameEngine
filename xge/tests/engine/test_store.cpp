@@ -119,3 +119,24 @@ TEST_CASE("a store holds a part for only the objects given one, in object order"
 	store.restart(c);   // no start kept: left as it is
 	CHECK(store.get(c).value == 31);
 }
+
+TEST_CASE("only the objects that hold others have a holder part", "[store]")
+{
+	// Pong holds nothing: no holder parts at all.
+	{
+		played::Played pong("descriptions/pong.xml");
+		CHECK(pong.game.parts().holders.size() == 0);
+		CHECK_FALSE(pong.game.isHolder(pong.get("ball")));
+	}
+
+	// Klondike's piles are holders; its cards are not.
+	played::Played klondike("descriptions/klondike.xml");
+	std::size_t holders = 0;
+	for (Object& object : klondike.game.getCurrentObjects())
+	{
+		if (klondike.game.isHolder(object)) { ++holders; }
+	}
+	CHECK(holders > 0);
+	CHECK(holders < klondike.game.getCurrentObjects().size());
+	CHECK(holders == klondike.game.parts().holders.size());
+}

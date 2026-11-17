@@ -45,6 +45,11 @@ namespace xge
 			if (Part* part = find(id)) { return *part; }
 			throw std::out_of_range("an object has no such part (slot " + std::to_string(id.index) + ")");
 		}
+		const Part& get(ObjectId id) const
+		{
+			if (const Part* part = find(id)) { return *part; }
+			throw std::out_of_range("an object has no such part (slot " + std::to_string(id.index) + ")");
+		}
 
 		// Gives the object the part (or replaces the one it has).
 		Part& add(ObjectId id, std::uint64_t order, Part part)
@@ -89,6 +94,13 @@ namespace xge
 		{
 			const std::size_t at = slotOf(id);
 			if (at != kNone && entries[at].start) { entries[at].part = *entries[at].start; }
+		}
+
+		// Where the object stands among the game's objects, as given to add (0: none).
+		std::uint64_t orderOf(ObjectId id) const noexcept
+		{
+			const std::size_t at = slotOf(id);
+			return at == kNone ? 0 : entries[at].order;
 		}
 
 		std::size_t size() const noexcept { return entries.size(); }
