@@ -86,11 +86,12 @@ namespace xge
 
 		std::vector<RawCommand> commands;
 
-		// A rule that names `other` (the object it touched) is made once for
-		// each object of the file it can touch: this is that one, named in
-		// full, as the rule's object= (see nameOther). Empty for a rule that
-		// does not name other.
-		std::string otherIs;
+		// For a rule that names `other` (the object it touched): every
+		// object of the file it can touch, in full (see nameOther). Its
+		// commands and test are made and checked at load for each, and kept
+		// as made for the first; as it runs, other is the one touched.
+		// Empty for a rule that does not name other.
+		std::vector<std::string> touchable;
 	};
 
 	// How an object's shape is tested against others: as its bounding box
@@ -190,14 +191,6 @@ namespace xge
 		friend std::ostream& operator<<(std::ostream& o, RawCollisionData const& f);
 	};
 
-	// A rule naming `other`, made for a copy (shot.3) of the object it was
-	// made for (shot), the first time that copy is touched.
-	struct CopyRule
-	{
-		std::vector<Command> commands;
-		std::optional<Condition> check;
-	};
-
 	// A parsed, ready-to-run version of RawCollisionRule.
 	struct CollisionRule
 	{
@@ -213,15 +206,10 @@ namespace xge
 		std::string by;
 		std::optional<Condition> check;    // see RawCollisionRule::check
 		std::vector<Command> commands;
-
-		// See RawCollisionRule::otherIs. A copy of that object, spawned
-		// while the game runs, is other too: its commands are made again
-		// from `written` (as for otherIs) and its check moved onto it, once
-		// each, the first time it is touched.
-		std::string otherIs;
-		std::shared_ptr<const std::vector<RawCommand>> written;
-		std::string where;
-		std::map<std::string, CopyRule> copies;
+		// For one naming other: its commands as made for each other thing
+		// it can touch (RawCollisionRule::touchable), only until the load's
+		// checks have seen them.
+		std::vector<std::vector<Command>> loadChecks;
 	};
 
 	struct CollisionData
@@ -2254,11 +2242,18 @@ namespace xge
 
 	// What a rule about another object leaves to mean the object it touched:
 	// other, as the object a command names (object="other") or at the start
-	// of a name (other.score), in its commands and its tests. The rule is made
-	// once for each object of the file it can touch (not the object itself;
-	// one of its own state, or of none), with other made that one's name and
-	// object= it (RawCollisionRule::otherIs). After nameSelf.
+	// of a name (other.score), in its commands and its tests. It stays other,
+	// found as the rule runs; nameOther lists what each such rule can touch
+	// (not the object itself; one of its own state, or of none:
+	// RawCollisionRule::touchable), and refuses one that can touch nothing.
 	void nameOther(std::vector<RawObject>& objects);
+
+	// Whether a command, or a test, says anything of other.
+	bool namesOther(const RawCommand& command);
+	bool namesOther(const RawCondition& condition);
+
+	// other made `name` in a test.
+	void nameOtherInTest(RawCondition& condition, const std::string& name);
 
 	// The object `from` made `to` in a list of commands: as the object one
 	// names, and at the start of a variable or a value. Whether any was.

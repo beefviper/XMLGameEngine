@@ -947,6 +947,7 @@ namespace xge
 						onLine(rule.line, [&]
 						{
 							checks.all(rule.commands, where);
+							for (const std::vector<Command>& made : rule.loadChecks) { checks.all(made, where); }
 							checkPlace(rule.commands, Place::Touch, where + " > <collision>");
 						});
 					}

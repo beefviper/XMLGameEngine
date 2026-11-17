@@ -18,11 +18,11 @@
 
 namespace xge
 {
-	const Command& CommandExecutor::now(const Command& command, Command& made, const Object* self)
+	const Command& CommandExecutor::now(const Command& command, Command& made, const Object* self, const Object* other)
 	{
 		if (const auto* live = std::get_if<CmdLive>(&command))
 		{
-			made = game.makeNow(*live, self);
+			made = game.makeNow(*live, self, other);
 			return made;
 		}
 		return command;
@@ -127,13 +127,13 @@ namespace xge
 
 		// A command whose numbers change as the game runs is made again first.
 		Command made;
-		const Command& current = doer.pressed ? now(command, made, doer.self) : shapeOf(command);
+		const Command& current = doer.pressed ? now(command, made, doer.self, doer.other) : shapeOf(command);
 
 		// A condition in an action: its commands while it holds, up to one
 		// refused.
 		if (const auto* when = std::get_if<CmdWhen>(&current))
 		{
-			if (!when->body || !when->body->test || !game.testHolds(*when->body->test, doer.self)) { return true; }
+			if (!when->body || !when->body->test || !game.testHolds(*when->body->test, doer.self, doer.other)) { return true; }
 			for (const Command& inner : when->body->commands)
 			{
 				if (!run(inner, doer)) { break; }
@@ -216,7 +216,7 @@ namespace xge
 	bool CommandExecutor::executeHeldInput(const Command& held)
 	{
 		Command made;
-		const Command& command = now(held, made, nullptr);
+		const Command& command = now(held, made, nullptr, nullptr);
 
 		// A looping sound right on a key goes on again, as a move does.
 		if (const auto* play = std::get_if<CmdPlay>(&command))
@@ -239,7 +239,7 @@ namespace xge
 		for (const auto& written : object.action[trigger->action])
 		{
 			Command madeNow;
-			const Command& actionCommand = now(written, madeNow, &object);
+			const Command& actionCommand = now(written, madeNow, &object, nullptr);
 			if (const auto* move = std::get_if<CmdMove>(&actionCommand))
 			{
 				holdStep(object, game.driveFor(object), move->direction, move->step);

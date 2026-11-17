@@ -94,6 +94,8 @@ namespace xge
 		std::string filterObject;
 		bool saysSelf{ false };
 		std::string madeFor;   // the object it was made for at load: self, when none tests it
+		std::string madeAgainst;   // the same for other, in a rule about touching
+		std::vector<std::string> otherReads;
 		std::vector<std::string> selfReads;
 		std::string variableName;
 		Total total{ Total::None };

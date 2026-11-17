@@ -739,6 +739,23 @@ namespace xge
 		return changed;
 	}
 
+	bool namesOther(const RawCommand& command)
+	{
+		std::vector<RawCommand> probe{ command };
+		return renameObjectIn(probe, "other", "other_");
+	}
+
+	bool namesOther(const RawCondition& condition)
+	{
+		RawCondition probe = condition;
+		return renameObjectInCheck(probe, "other", "other_");
+	}
+
+	void nameOtherInTest(RawCondition& condition, const std::string& name)
+	{
+		renameObjectInCheck(condition, "other", name);
+	}
+
 	void nameOther(std::vector<RawObject>& objects)
 	{
 		for (RawObject& object : objects)
@@ -755,28 +772,22 @@ namespace xge
 					continue;
 				}
 
-				// Once for each object it can touch: of its class=, named by
-				// its object=, in the same state (or one of them in none).
-				bool any = false;
+				// What it can touch: of its class=, named by its object=, in
+				// the same state (or one of them in none).
 				for (const RawObject& touched : objects)
 				{
 					if (&touched == &object) { continue; }
 					if (!rule.filterClass.empty() && touched.objClass != rule.filterClass) { continue; }
 					if (!rule.filterObject.empty() && !touched.named(rule.filterObject)) { continue; }
 					if (!touched.ownerState.empty() && !object.ownerState.empty() && touched.ownerState != object.ownerState) { continue; }
-					any = true;
-					RawCollisionRule each = rule;
-					each.filterObject = touched.name;
-					each.otherIs = touched.name;
-					renameObjectIn(each.commands, "other", touched.name);
-					renameObjectInCheck(each.check, "other", touched.name);
-					rules.push_back(std::move(each));
+					rule.touchable.push_back(touched.name);
 				}
-				if (!any)
+				if (rule.touchable.empty())
 				{
 					const std::string about = !rule.filterObject.empty() ? " named \"" + rule.filterObject + "\"" : !rule.filterClass.empty() ? " of class \"" + rule.filterClass + "\"" : std::string();
 					throw std::runtime_error("object '" + object.name + "' > <collision>: names other, the object it touched, but there is nothing" + about + " for it to touch");
 				}
+				rules.push_back(std::move(rule));
 			}
 			object.rawCollisionData.others = std::move(rules);
 		}

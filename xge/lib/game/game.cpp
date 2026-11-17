@@ -2169,23 +2169,6 @@ namespace xge
 		return true;
 	}
 
-	const CopyRule& Game::ruleForCopy(CollisionRule& rule, const std::string& copy, const std::string& owner)
-	{
-		if (const auto found = rule.copies.find(copy); found != rule.copies.end()) { return found->second; }
-		std::vector<RawCommand> written = *rule.written;
-		renameObjectIn(written, rule.otherIs, copy);
-		CopyRule made;
-		const std::string was = std::exchange(expr.selfName, owner);
-		made.commands = expr.processCommands(written, rule.where);
-		expr.selfName = was;
-		if (rule.check)
-		{
-			made.check = *rule.check;
-			retargetCheck(*made.check, rule.otherIs, copy);
-		}
-		return rule.copies.emplace(copy, std::move(made)).first->second;
-	}
-
 	void Game::reactTo(Object& self, Object& other, const Touch& touch)
 	{
 		CommandExecutor executor(*this);
@@ -2210,15 +2193,10 @@ namespace xge
 			if (!rule.sides.empty() && std::find(rule.sides.begin(), rule.sides.end(), touch.edge) == rule.sides.end()) { continue; }
 			// hitbox= and by=: which of each touched.
 			if ((!rule.hitbox.empty() || !rule.by.empty()) && !touchesWith(self, rule.hitbox, other, rule.by)) { continue; }
-			// A rule naming other, touching a copy of the one it was made for:
-			// its commands and check about that copy.
-			const bool copy = !rule.otherIs.empty() && other.name != rule.otherIs;
-			const CopyRule* made = copy ? &ruleForCopy(rule, other.name, self.name) : nullptr;
-			const std::optional<Condition>& check = made ? made->check : rule.check;
-			if (check && !holdsFor(*check, &self)) { continue; }
+			if (rule.check && !holdsFor(*rule.check, &self, &other)) { continue; }
 
 			// A verb refused ends the rule there, as it ends an action.
-			for (const auto& command : made ? made->commands : rule.commands)
+			for (const auto& command : rule.commands)
 			{
 				if (!executor.executeObjectCollision(command, self, other, touch)) { break; }
 			}
@@ -2300,19 +2278,21 @@ namespace xge
 		return expr.evaluate(value, where);
 	}
 
-	Command Game::makeNow(const CmdLive& live, const Object* self)
+	Command Game::makeNow(const CmdLive& live, const Object* self, const Object* other)
 	{
 		try
 		{
-			// One that says self, for the object running it; with none to
-			// run it, as it was made at load.
-			if (live.namesSelf)
+			// One that says self, for the object running it, and other, for
+			// the one it touched; with none to say, as it was made at load.
+			if (live.namesSelf || live.namesOther)
 			{
-				if (!self) { return live.loaded->command; }
+				if ((live.namesSelf && !self) || (live.namesOther && !other)) { return live.loaded->command; }
 				// Into one kept for it, so its texts' room is used again.
-				ownCommand = *live.raw;
-				nameSelfIn(ownCommand, self->name);
-				return makeCommand(ownCommand, [&](const RawValue& value) { return evaluateNow(value, live.where); });
+				ownCommands.resize(1);
+				ownCommands.front() = *live.raw;
+				if (live.namesSelf) { nameSelfIn(ownCommands.front(), self->name); }
+				if (live.namesOther) { renameObjectIn(ownCommands, "other", other->name); }
+				return makeCommand(ownCommands.front(), [&](const RawValue& value) { return evaluateNow(value, live.where); });
 			}
 			return makeCommand(*live.raw, [&](const RawValue& value) { return evaluateNow(value, live.where); });
 		}
@@ -2482,22 +2462,28 @@ namespace xge
 					if (const auto found = owner->variable.find(read.variable); found != owner->variable.end()) { *read.slot = found->second; }
 				}
 			}
-			const Object* self = condition.saysSelf ? (testing ? testing : tryGetObject(condition.madeFor)) : nullptr;
-			if (self)
+			const Object* self = condition.saysSelf && !condition.madeFor.empty() ? (testing ? testing : tryGetObject(condition.madeFor)) : nullptr;
+			const Object* other = condition.saysSelf && !condition.madeAgainst.empty() ? (testingOther ? testingOther : tryGetObject(condition.madeAgainst)) : nullptr;
+			const auto readOwn = [&](const Object* owner, const std::vector<std::string>& reads)
 			{
-				for (const std::string& variable : condition.selfReads)
+				if (!owner) { return; }
+				for (const std::string& variable : reads)
 				{
-					const auto slot = expr.objectVariables.find(self->name + "." + variable);
-					const auto found = self->variable.find(variable);
-					if (slot != expr.objectVariables.end() && found != self->variable.end()) { slot->second = found->second; }
+					const auto slot = expr.objectVariables.find(owner->name + "." + variable);
+					const auto found = owner->variable.find(variable);
+					if (slot != expr.objectVariables.end() && found != owner->variable.end()) { slot->second = found->second; }
 				}
-			}
+			};
+			readOwn(self, condition.selfReads);
+			readOwn(other, condition.otherReads);
 			try
 			{
 				const std::string* was = std::exchange(expr.selfNow, self ? &self->name : nullptr);
+				const std::string* wasOther = std::exchange(expr.otherNow, other ? &other->name : nullptr);
 				try { against = evaluateNow(*condition.live, condition.where); }
-				catch (...) { expr.selfNow = was; throw; }
+				catch (...) { expr.selfNow = was; expr.otherNow = wasOther; throw; }
 				expr.selfNow = was;
+				expr.otherNow = wasOther;
 			}
 			catch (const std::runtime_error& error)
 			{
@@ -2586,15 +2572,19 @@ namespace xge
 
 	const std::string& Game::selfIn(const Condition& condition, const std::string& name) const noexcept
 	{
-		if (!condition.saysSelf || name != "self") { return name; }
-		return testing ? testing->name : condition.madeFor;
+		if (!condition.saysSelf) { return name; }
+		if (name == "self") { return testing ? testing->name : condition.madeFor; }
+		if (name == "other") { return testingOther ? testingOther->name : condition.madeAgainst; }
+		return name;
 	}
 
-	bool Game::holdsFor(const Condition& condition, const Object* self)
+	bool Game::holdsFor(const Condition& condition, const Object* self, const Object* other)
 	{
 		const Object* was = std::exchange(testing, self);
+		const Object* wasOther = std::exchange(testingOther, other);
 		const bool held = holds(condition);
 		testing = was;
+		testingOther = wasOther;
 		return held;
 	}
 

@@ -128,19 +128,30 @@ namespace xge
 
 		// One about self is made, and checked, for the object being made;
 		// as it is tested, it is about the object testing it.
-		const bool own = rawCondition.filterObject == "self" || rawCondition.distance == "self" || rawCondition.sees == "self"
-			|| saysSelf(rawCondition.threshold);
-		if (own && !selfName.empty())
+		// The same for other, in a rule about touching: the one touched.
+		const bool own = !selfName.empty() && (rawCondition.filterObject == "self" || rawCondition.distance == "self" || rawCondition.sees == "self"
+			|| saysSelf(rawCondition.threshold));
+		const bool theirs = !otherName.empty() && namesOther(rawCondition);
+		if (own || theirs)
 		{
 			RawCondition named = rawCondition;
-			nameSelfInTest(named, selfName);
+			if (own) { nameSelfInTest(named, selfName); }
+			if (theirs) { nameOtherInTest(named, otherName); }
 			Condition made = makeTestHere(named, where, owner, objects);
 			made.saysSelf = true;
-			made.madeFor = selfName;
-			if (rawCondition.filterObject == "self") { made.filterObject = "self"; }
-			if (rawCondition.distance == "self") { made.distanceTo = "self"; }
-			if (rawCondition.sees == "self") { made.sees = "self"; }
-			if (saysSelf(rawCondition.threshold))
+			if (own) { made.madeFor = selfName; }
+			if (theirs) { made.madeAgainst = otherName; }
+			for (const char* name : { "self", "other" })
+			{
+				if (rawCondition.filterObject == name) { made.filterObject = name; }
+				if (rawCondition.distance == name) { made.distanceTo = name; }
+				if (rawCondition.sees == name) { made.sees = name; }
+			}
+			if (theirs && rawCondition.variableName.compare(0, 6, "other.") == 0)
+			{
+				throw std::runtime_error(where + ": variable=\"" + rawCondition.variableName + "\": say whose with object=\"other\" and variable=\"" + rawCondition.variableName.substr(6) + "\"");
+			}
+			if (saysSelf(rawCondition.threshold) || (theirs && namesLive(rawCondition.threshold)))
 			{
 				made.live = std::make_shared<const RawValue>(rawCondition.threshold);
 				made.where = where;
@@ -150,20 +161,28 @@ namespace xge
 					return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(),
 						[](char x, char y) { return std::tolower(static_cast<unsigned char>(x)) == std::tolower(static_cast<unsigned char>(y)); });
 				};
-				made.reads.erase(std::remove_if(made.reads.begin(), made.reads.end(), [&](const Condition::Read& read) { return sameName(read.owner, selfName); }), made.reads.end());
-				const std::string ownPrefix = "self.";
-				for (const std::string* text : rawCondition.threshold.expressions())
-				{
-					for (const std::string& name : namesIn(*text))
+				made.reads.erase(std::remove_if(made.reads.begin(), made.reads.end(), [&](const Condition::Read& read)
 					{
-						if (name.compare(0, ownPrefix.size(), ownPrefix) != 0) { continue; }
-						const std::string wanted = selfName + "." + name.substr(ownPrefix.size());
-						for (const auto& [key, slot] : objectVariables)
+						return (own && sameName(read.owner, selfName)) || (theirs && sameName(read.owner, otherName));
+					}), made.reads.end());
+				const auto reads = [&](const std::string& prefix, const std::string& whose, std::vector<std::string>& into)
+				{
+					if (whose.empty()) { return; }
+					for (const std::string* text : rawCondition.threshold.expressions())
+					{
+						for (const std::string& name : namesIn(*text))
 						{
-							if (sameName(key, wanted)) { made.selfReads.push_back(key.substr(selfName.size() + 1)); break; }
+							if (name.compare(0, prefix.size(), prefix) != 0) { continue; }
+							const std::string wanted = whose + "." + name.substr(prefix.size());
+							for (const auto& [key, slot] : objectVariables)
+							{
+								if (sameName(key, wanted)) { into.push_back(key.substr(whose.size() + 1)); break; }
+							}
 						}
 					}
-				}
+				};
+				reads("self.", own ? selfName : std::string(), made.selfReads);
+				reads("other.", theirs ? otherName : std::string(), made.otherReads);
 			}
 			return made;
 		}

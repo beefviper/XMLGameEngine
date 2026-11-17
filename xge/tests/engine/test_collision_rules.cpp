@@ -310,10 +310,9 @@ TEST_CASE("a rule names the object it touched other, whichever of its class that
 		"<pop />");
 	played::Played play(file.path);
 
-	// The rule is made once for each player.
-	REQUIRE(play.get("coin").collisionData.others.size() == 2);
-	CHECK(play.get("coin").collisionData.others[0].otherIs == "playing.p1");
-	CHECK(play.get("coin").collisionData.others[1].otherIs == "playing.p2");
+	// The rule is made once, and other is found as it runs.
+	REQUIRE(play.get("coin").collisionData.others.size() == 1);
+	CHECK(play.get("coin").collisionData.others[0].filterClass == "player");
 
 	// p2 walks onto the coin: p2 is paid, once (its shield goes up), and p1 is not.
 	play.get("p2").position = { 585, 402 };

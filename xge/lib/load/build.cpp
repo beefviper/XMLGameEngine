@@ -819,13 +819,17 @@ namespace xge
 			if (side == "bottom" || side == "vertical") { rule.sides.push_back(Edge::Bottom); }
 			if (side == "left" || side == "horizontal") { rule.sides.push_back(Edge::Left); }
 			if (side == "right" || side == "horizontal") { rule.sides.push_back(Edge::Right); }
-			rule.commands = processCommands(rawRule.commands, where);
-			if (!rawRule.otherIs.empty())
+			// One naming other is made, so checked, for each thing it can
+			// touch, and kept as made for the first (other is found as it runs).
+			for (std::size_t i = 1; loading && i < rawRule.touchable.size(); ++i)
 			{
-				rule.otherIs = rawRule.otherIs;
-				rule.written = std::make_shared<const std::vector<RawCommand>>(rawRule.commands);
-				rule.where = where;
+				const std::string was = std::exchange(otherName, rawRule.touchable[i]);
+				rule.loadChecks.push_back(processCommands(rawRule.commands, where + ", touching '" + otherName + "'"));
+				otherName = was;
 			}
+			const std::string was = std::exchange(otherName, rawRule.touchable.empty() ? std::string() : rawRule.touchable.front());
+			rule.commands = processCommands(rawRule.commands, where);
+			otherName = was;
 			object.collisionData.others.push_back(std::move(rule));
 		}
 	}

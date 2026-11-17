@@ -852,13 +852,15 @@ namespace xge
 	// time it runs, so a variable can always be changed. `loaded` is the
 	// command as it was made at load, which says what kind of command it is
 	// (see shapeOf). See Game::makeNow. One that says self (`namesSelf`)
-	// is made for the object running it, as it runs.
+	// is made for the object running it, as it runs; one that says other
+	// (`namesOther`), for the one it touched.
 	struct CmdLive
 	{
 		std::shared_ptr<const RawCommand> raw;
 		std::shared_ptr<const LoadedCommand> loaded;
 		std::string where;
 		bool namesSelf{ false };
+		bool namesOther{ false };   // the same for other, in a rule about touching
 	};
 
 	using Command = std::variant<

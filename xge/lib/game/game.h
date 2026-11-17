@@ -208,7 +208,6 @@ namespace xge
 		void reactTo(Object& self, Object& other, const Touch& touch);
 		// A rule naming other, made for a copy (shot.3) of the object it was
 		// made for (shot): once, the first time that copy is touched.
-		const CopyRule& ruleForCopy(CollisionRule& rule, const std::string& copy, const std::string& owner);
 		// A test made about the object `from`, made about `to`, a copy of it.
 		void retargetCheck(Condition& check, const std::string& from, const std::string& to);
 
@@ -223,9 +222,9 @@ namespace xge
 		// from what is so now. A value that cannot be worked out (a division
 		// by nothing is fine; an expression gone wrong is not) leaves it as it
 		// was made at load, with one warning.
-		Command makeNow(const CmdLive& live, const Object* self);
-		// What makeNow names self in.
-		RawCommand ownCommand;
+		Command makeNow(const CmdLive& live, const Object* self, const Object* other);
+		// What makeNow names self and other in.
+		std::vector<RawCommand> ownCommands;
 
 		// <set variable="target">: a variable of an object's (owner.name), or
 		// one of the numbers every object has (owner.x, owner.y,
@@ -545,7 +544,7 @@ namespace xge
 		// false when none moved.
 		bool slideClass(const std::string& objClass, Direction way);
 		// A <condition> in an action: whether its test holds now.
-		bool testHolds(const Condition& condition, const Object* self) { return holdsFor(condition, self); }
+		bool testHolds(const Condition& condition, const Object* self, const Object* other) { return holdsFor(condition, self, other); }
 		// The pieces of that class (any, when empty) in the cells about
 		// `piece` that `place` names, on every map of cells laid where its
 		// own is, in reading order.
@@ -1034,8 +1033,9 @@ namespace xge
 		bool holds(const Condition& condition, std::vector<const Object*>* who = nullptr);
 		// Whether it holds, tested by `self` (a rule's, an action's object):
 		// what says self in it is that one.
-		bool holdsFor(const Condition& condition, const Object* self);
+		bool holdsFor(const Condition& condition, const Object* self, const Object* other = nullptr);
 		const Object* testing{ nullptr };
+		const Object* testingOther{ nullptr };
 		// A name in the condition, with self the object testing it.
 		const std::string& selfIn(const Condition& condition, const std::string& name) const noexcept;
 		// The parts of holds.

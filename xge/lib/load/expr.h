@@ -185,11 +185,15 @@ namespace xge
 		// command of theirs that says self is made as it runs (CmdLive), for
 		// the object running it; the one made at load is about this one.
 		std::string selfName;
+		// The same for other, in a rule about touching something: the
+		// object a command saying other is made for at load.
+		std::string otherName;
 
 		// While a test about one object is worked out (Game::comparedWith):
 		// its name, which self. in a text reads as; selfText is the room the
 		// text is named in.
 		const std::string* selfNow{ nullptr };
+		const std::string* otherNow{ nullptr };
 		std::string selfText;
 
 		// The names a text may read, and every text compiled so far

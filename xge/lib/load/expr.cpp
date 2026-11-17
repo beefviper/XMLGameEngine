@@ -180,6 +180,10 @@ namespace xge
 		makeSounds(rawSounds, sounds);
 		makePaths(rawPaths, paths, states, objects);
 		makePalettes(rawObjects, objects, checkReferences(*parts, states, objects, sounds, paths, styles));
+		for (Object& object : objects)
+		{
+			for (CollisionRule& rule : object.collisionData.others) { std::vector<std::vector<Command>>().swap(rule.loadChecks); }
+		}
 	}
 
 	// init's names: the window's edges, the game's variables, every object's
@@ -406,11 +410,20 @@ namespace xge
 			} self{ selfName, std::exchange(selfName, rawObject.name) };
 			for (std::size_t i = 0; i < rawObject.rawCollisionData.others.size(); ++i)
 			{
-				const RawCondition& check = rawObject.rawCollisionData.others[i].check;
-				if (check.join != RawCondition::Join::None)
+				const RawCollisionRule& rule = rawObject.rawCollisionData.others[i];
+				const RawCondition& check = rule.check;
+				if (check.join == RawCondition::Join::None) { continue; }
+				// One naming other: made, so checked, for each thing it can
+				// touch, and kept as made for the first.
+				for (std::size_t t = rule.touchable.size(); t-- > 1;)
 				{
-					object->collisionData.others[i].check = makeTest(check, where, where, objects);
+					const std::string was = std::exchange(otherName, rule.touchable[t]);
+					makeTest(check, where + ", touching '" + otherName + "'", where, objects);
+					otherName = was;
 				}
+				const std::string was = std::exchange(otherName, rule.touchable.empty() ? std::string() : rule.touchable.front());
+				object->collisionData.others[i].check = makeTest(check, where, where, objects);
+				otherName = was;
 			}
 			for (std::size_t edge = 0; edge < rawObject.rawCollisionData.edges.size(); ++edge)
 			{
@@ -986,6 +999,11 @@ namespace xge
 			selfText.assign(*selfNow).append(text, 4, std::string::npos);
 			return evaluateExpression(selfText, where);
 		}
+		if (otherNow && text.compare(0, 6, "other.") == 0)
+		{
+			selfText.assign(*otherNow).append(text, 5, std::string::npos);
+			return evaluateExpression(selfText, where);
+		}
 		auto found = compiled.find(text);
 		if (found == compiled.end())
 		{
@@ -1140,26 +1158,28 @@ namespace xge
 				// One that says self is made for the object running it, each
 				// time it runs; at load, for the one being made.
 				const bool own = !selfName.empty() && namesSelf(each);
-				RawCommand named;
-				if (own)
+				const bool theirs = !otherName.empty() && namesOther(each);
+				std::vector<RawCommand> named;
+				if (own || theirs)
 				{
-					named = each;
-					nameSelfIn(named, selfName);
+					named.push_back(each);
+					if (own) { nameSelfIn(named.front(), selfName); }
+					if (theirs) { renameObjectIn(named, "other", otherName); }
 				}
-				const RawCommand& making = own ? named : each;
+				const RawCommand& making = own || theirs ? named.front() : each;
 				Command made = onLine(each.line, [&] { return makeCommand(making, [&](const RawValue& value) { return evaluate(value, where); }); });
 
 				// One whose numbers can change is made again each time it runs
 				// (CmdLive); <set> and <spawn> always are, since what they
 				// put somewhere is the point of them.
-				const bool live = own || each.verb == "set" || each.verb == "spawn"
+				const bool live = own || theirs || each.verb == "set" || each.verb == "spawn"
 					|| namesLive(making.amount) || namesLive(making.seconds) || namesLive(making.distance) || namesLive(making.ahead)
 					|| (each.verb == "shift" && (namesLive(making.positionX) || namesLive(making.positionY)));
 				if (live)
 				{
 					auto loaded = std::make_shared<LoadedCommand>();
 					loaded->command = std::move(made);
-					commands.push_back(CmdLive{ std::make_shared<const RawCommand>(each), std::move(loaded), where, own });
+					commands.push_back(CmdLive{ std::make_shared<const RawCommand>(each), std::move(loaded), where, own, theirs });
 				}
 				else
 				{
