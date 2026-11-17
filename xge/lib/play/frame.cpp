@@ -555,12 +555,13 @@ namespace xge
 		{
 			for (auto& carrier : objects)
 			{
-				if (carrier.carry.what.empty()) { continue; }
+				Object::Carry* carry = rules.parts().carries.find(carrier.id);
+				if (!carry || carry->what.empty()) { continue; }
 
-				Object* item = named(objects, carrier.carry.what);
+				Object* item = named(objects, carry->what);
 				if (!item || !rules.inPlay(carrier) || !rules.inPlay(*item))
 				{
-					carrier.carry.what.clear();
+					carry->what.clear();
 					continue;
 				}
 
@@ -571,24 +572,26 @@ namespace xge
 		// After the move: what is carried is put exactly where it is held
 		// (the carrier may have been stopped on the way, or hopped), and
 		// what was put down can be picked up again once the two are apart.
-		void holdCarried(std::vector<Object>& objects)
+		void holdCarried(std::vector<Object>& objects, FrameRules& rules)
 		{
 			for (auto& carrier : objects)
 			{
-				if (!carrier.carry.what.empty())
+				Object::Carry* carry = rules.parts().carries.find(carrier.id);
+				if (!carry) { continue; }
+				if (!carry->what.empty())
 				{
-					if (Object* item = named(objects, carrier.carry.what))
+					if (Object* item = named(objects, carry->what))
 					{
-						item->position = carrier.position + carrier.carry.offset;
+						item->position = carrier.position + carry->offset;
 					}
 				}
 
-				if (!carrier.carry.dropped.empty())
+				if (!carry->dropped.empty())
 				{
-					const Object* item = named(objects, carrier.carry.dropped);
+					const Object* item = named(objects, carry->dropped);
 					if (!item || !boxesOverlap({ carrier.position, sizeOf(carrier) }, { item->position, sizeOf(*item) }))
 					{
-						carrier.carry.dropped.clear();
+						carry->dropped.clear();
 					}
 				}
 			}
@@ -1260,7 +1263,7 @@ namespace xge
 			}
 		}
 
-		holdCarried(objects);
+		holdCarried(objects, rules);
 
 		rules.follow();
 

@@ -78,7 +78,7 @@ namespace
 
 		Object& object(const std::string& name) { return game.getObject(name); }
 		Object& hero() { return object("hero"); }
-		bool carrying(const std::string& name) { return hero().carry.what == object(name).name; }
+		bool carrying(const std::string& name) { return game.carrying(hero()) == object(name).name; }
 
 		std::string room() { return game.currentScene("playing"); }
 		void enter(const std::string& room) { game.enterScene("playing." + room); }
@@ -148,12 +148,12 @@ TEST_CASE("Space puts it down, and it is not picked up again until he has walked
 
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK(play.hero().carry.what.empty());
+	CHECK(play.game.carrying(play.hero()).empty());
 	const Vector2f swordAt = play.object("sword").position;
 
 	// Still on it: walking does not pick it up.
 	play.hold(KeyCode::Left, 3);
-	CHECK(play.hero().carry.what.empty());
+	CHECK(play.game.carrying(play.hero()).empty());
 	CHECK(play.object("sword").position == swordAt);
 
 	// Off it, and back onto it: picked up.
@@ -347,7 +347,7 @@ TEST_CASE("the chalice carried from the dungeon into the gold castle's hall wins
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
-	CHECK(play.hero().carry.what.empty());
+	CHECK(play.game.carrying(play.hero()).empty());
 	CHECK(play.room() == "playing.castle");
 	CHECK(play.object("chalice").position == play.object("chalice").start.position);
 	CHECK(play.object("chalice").ownerScene == "playing.dungeon");
@@ -377,5 +377,5 @@ TEST_CASE("a carrier out of play puts down what it carried", "[adventure][carry]
 
 	die(play.hero());
 	play.frames(1);
-	CHECK(play.hero().carry.what.empty());
+	CHECK(play.game.carrying(play.hero()).empty());
 }

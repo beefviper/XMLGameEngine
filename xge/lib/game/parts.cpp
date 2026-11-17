@@ -41,6 +41,7 @@ namespace xge
 		pulls.remove(id);
 		alofts.remove(id);
 		rests.remove(id);
+		carries.remove(id);
 	}
 
 	namespace
@@ -64,5 +65,6 @@ namespace xge
 		copyPart(pulls, from.pulls, id);
 		copyPart(alofts, from.alofts, id);
 		copyPart(rests, from.rests, id);
+		copyPart(carries, from.carries, id);
 	}
 }

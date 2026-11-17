@@ -164,6 +164,14 @@ namespace xge
 		Object::Cells& cellPartFor(const Object& object) { return objectParts.give(objectParts.cells, object.id); }
 		bool isShape(const Object& object) const noexcept { return cellPart(object).shapeSize > 0; }
 
+		// The name of what it carries (<carry />), empty for nothing.
+		const std::string& carrying(const Object& object) const noexcept
+		{
+			static const std::string nothing;
+			const Object::Carry* carry = objectParts.carries.find(object.id);
+			return carry ? carry->what : nothing;
+		}
+
 		// Its maze part (<maze>), nullptr for one that walks none.
 		Maze* mazeOf(const Object& object) { return objectParts.mazes.find(object.id); }
 

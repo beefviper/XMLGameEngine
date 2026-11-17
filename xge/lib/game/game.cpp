@@ -350,11 +350,8 @@ namespace xge
 		object.isVisible = false;
 		object.collisionsOn = false;
 		object.path.name.clear();
-		object.carry.what.clear();
-		for (auto& carrier : objects)
-		{
-			if (carrier.carry.what == object.name) { carrier.carry.what.clear(); }
-		}
+		objectParts.carries.each([&](ObjectId, Object::Carry& carry) { if (carry.what == object.name) { carry.what.clear(); } });
+		if (Object::Carry* carry = objectParts.carries.find(object.id)) { carry->what.clear(); }
 		stageChanged();
 	}
 
@@ -629,8 +626,9 @@ namespace xge
 		// own, or the game's) belongs to the scene it is carried into.
 		for (const Object& carrier : objects)
 		{
-			if (carrier.carry.what.empty() || !carrier.ownerScene.empty()) { continue; }
-			Object* carried = tryGetObject(carrier.carry.what);
+			const std::string& what = carrying(carrier);
+			if (what.empty() || !carrier.ownerScene.empty()) { continue; }
+			Object* carried = tryGetObject(what);
 			if (carried && carried->ownerState == state && !carried->ownerScene.empty()) { carried->ownerScene = scene; }
 		}
 		stageChanged();
@@ -1494,8 +1492,7 @@ namespace xge
 			// Nor should a reset object go on riding, or jump; it
 			// faces the way it started, and its timers start over.
 			object.riding = {};
-			object.carry.what.clear();
-			object.carry.dropped.clear();
+			parts.carries.remove(object.id);
 			object.hopPending = {};
 			object.flight = {};
 			object.flight.arc = 0.0f;
@@ -1547,14 +1544,14 @@ namespace xge
 		}
 
 		// Back where it started, it is no longer carried.
-		for (auto& carrier : objects)
+		objectParts.carries.each([&](ObjectId, Object::Carry& carry)
 		{
-			const Object* carried = carrier.carry.what.empty() ? nullptr : tryGetObject(carrier.carry.what);
+			const Object* carried = carry.what.empty() ? nullptr : tryGetObject(carry.what);
 			if (carried && (carried->named(name)))
 			{
-				carrier.carry.what.clear();
+				carry.what.clear();
 			}
-		}
+		});
 
 		// Refresh every text display bound to one of this object's variables
 		// (same notify pattern as setVariable), so e.g. a HUD showing
@@ -1952,10 +1949,7 @@ namespace xge
 			stageChanged();
 
 			// Back where it started, it is no longer carried.
-			for (auto& carrier : objects)
-			{
-				if (carrier.carry.what == object.name) { carrier.carry.what.clear(); }
-			}
+			objectParts.carries.each([&](ObjectId, Object::Carry& carry) { if (carry.what == object.name) { carry.what.clear(); } });
 		}
 
 		for (const Scene& each : owner->scenes)

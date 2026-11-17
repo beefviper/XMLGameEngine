@@ -115,10 +115,10 @@ namespace xge
 	// <carry />: picks `item` up, held where it is now, putting down what
 	// it carried before; nothing if it was just put down and is still
 	// being touched.
-	void carry(Object& object, const Object& item);
+	void carry(Object& object, Object::Carry& carry, const Object& item);
 
 	// <drop />: puts down what it carries.
-	void drop(Object& object);
+	void drop(Object::Carry& carry);
 
 	// <track />: the object's middle goes to `fraction` (0 to 1) of the way
 	// across `span` (the window's width, or its height when not

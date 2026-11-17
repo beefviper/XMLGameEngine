@@ -1982,14 +1982,13 @@ namespace xge
 		// something else is picked up, or until either is out of play
 		// (playOneFrame). `dropped` is what it last let go of: not picked up
 		// again until the two have stopped touching, so it can be walked away
-		// from.
+		// from. A part (Parts::carries), given by the first <carry />.
 		struct Carry
 		{
 			std::string what;
 			Vector2f offset{};
 			std::string dropped;
 		};
-		Carry carry;
 
 		// The object's own bounding box (width/height) in whole pixels, as
 		// every window draws it (pictureSize): set for every object when the

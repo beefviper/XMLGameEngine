@@ -23,7 +23,7 @@ namespace xge
 		// of jumps.
 		if (self && executor.game.isHand(*self)) { return executor.game.dropItems(*self); }
 		if (self && !self->picker.picked.empty()) { return executor.game.dropPiece(*self); }
-		if (self) { xge::drop(*self); }
+		if (self) { if (Object::Carry* carry = executor.game.parts().carries.find(self->id)) { xge::drop(*carry); } }
 		return true;
 	}
 

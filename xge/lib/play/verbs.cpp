@@ -245,26 +245,26 @@ namespace xge
 		object.riding = other.velocity;
 	}
 
-	void carry(Object& object, const Object& item)
+	void carry(Object& object, Object::Carry& carry, const Object& item)
 	{
-		if (item.name == object.carry.what || item.name == object.carry.dropped || &item == &object)
+		if (item.name == carry.what || item.name == carry.dropped || &item == &object)
 		{
 			return;
 		}
 
-		object.carry.what = item.name;
-		object.carry.offset = item.position - object.position;
+		carry.what = item.name;
+		carry.offset = item.position - object.position;
 	}
 
-	void drop(Object& object)
+	void drop(Object::Carry& carry)
 	{
-		if (object.carry.what.empty())
+		if (carry.what.empty())
 		{
 			return;
 		}
 
-		object.carry.dropped = object.carry.what;
-		object.carry.what.clear();
+		carry.dropped = carry.what;
+		carry.what.clear();
 	}
 
 	void track(Object& object, bool horizontal, float fraction, float span)

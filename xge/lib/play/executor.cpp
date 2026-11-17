@@ -183,20 +183,22 @@ namespace xge
 	// Taken from whatever had it: one thing is carried by one object at a time.
 	void CommandExecutor::carry(Object& object, const Object& item)
 	{
-		if (item.name == object.carry.what || item.name == object.carry.dropped)
+		Parts& parts = game.parts();
+		if (const Object::Carry* mine = parts.carries.find(object.id); mine && (item.name == mine->what || item.name == mine->dropped))
 		{
 			return;
 		}
 
 		for (auto& other : game.getCurrentObjects())
 		{
-			if (&other != &object && other.carry.what == item.name)
+			Object::Carry* theirs = parts.carries.find(other.id);
+			if (&other != &object && theirs && theirs->what == item.name)
 			{
-				other.carry.what.clear();
+				theirs->what.clear();
 			}
 		}
 
-		xge::carry(object, item);
+		xge::carry(object, parts.give(parts.carries, object.id), item);
 	}
 
 	void CommandExecutor::playHeld(const std::string& sound, bool keyPressed)
