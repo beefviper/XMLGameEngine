@@ -305,15 +305,19 @@ namespace xge
 			}
 		}
 
-		for (const auto& [name, strength] : rawObject.rawPulls)
+		if (!rawObject.rawPulls.empty() || !rawObject.seekTarget.empty())
 		{
-			object.pull.toward.emplace_back(name, evaluate(strength, where + " > <pull object=\"" + name + "\">"));
-		}
-		if (!rawObject.seekTarget.empty())
-		{
-			object.pull.seek = rawObject.seekTarget;
-			object.pull.seekRate = evaluate(rawObject.rawSeek, where + " > <seek>");
-			if (object.pull.seekRate < 0.0f) { throw std::runtime_error(where + ": <seek> turns " + formatDisplayNumber(object.pull.seekRate) + " degrees a second; expected 0 or more"); }
+			Object::Pull& pull = parts->pulls.add(object.id, parts->orderOf(object.id), {});
+			for (const auto& [name, strength] : rawObject.rawPulls)
+			{
+				pull.toward.emplace_back(name, evaluate(strength, where + " > <pull object=\"" + name + "\">"));
+			}
+			if (!rawObject.seekTarget.empty())
+			{
+				pull.seek = rawObject.seekTarget;
+				pull.seekRate = evaluate(rawObject.rawSeek, where + " > <seek>");
+				if (pull.seekRate < 0.0f) { throw std::runtime_error(where + ": <seek> turns " + formatDisplayNumber(pull.seekRate) + " degrees a second; expected 0 or more"); }
+			}
 		}
 
 		if (rawObject.hasLight)
@@ -327,22 +331,23 @@ namespace xge
 		else if (rawObject.dark == "unseen") { object.dark.kind = Object::Darkness::Unseen; }
 		object.dark.hidden = object.dark.kind != Object::Darkness::None;
 
+		Object::Aloft* aloft = rawObject.hasAltitude || !rawObject.shadowOf.empty() ? &parts->alofts.add(object.id, parts->orderOf(object.id), {}) : nullptr;
 		if (rawObject.hasAltitude)
 		{
 			const std::string here = where + " > <altitude>";
 			const auto given = [&](const RawValue& value) { return !(value.kind == RawValue::Kind::Expression && value.text.empty()); };
-			object.aloft.has = true;
+			aloft->has = true;
 			object.altitude = given(rawObject.rawAltitude) ? evaluate(rawObject.rawAltitude, here) : 0.0f;
 			object.rise = given(rawObject.rawRise) ? evaluate(rawObject.rawRise, here) : 0.0f;
-			object.aloft.fall = given(rawObject.rawFall) ? evaluate(rawObject.rawFall, here) : 0.0f;
-			object.aloft.bounce = given(rawObject.rawAltitudeBounce) ? evaluate(rawObject.rawAltitudeBounce, here) : 0.0f;
+			aloft->fall = given(rawObject.rawFall) ? evaluate(rawObject.rawFall, here) : 0.0f;
+			aloft->bounce = given(rawObject.rawAltitudeBounce) ? evaluate(rawObject.rawAltitudeBounce, here) : 0.0f;
 			if (object.altitude < 0.0f) { throw std::runtime_error(here + ": <start> is " + formatDisplayNumber(object.altitude) + "; it cannot start below the ground"); }
-			if (object.aloft.fall < 0.0f) { throw std::runtime_error(here + ": <fall> is " + formatDisplayNumber(object.aloft.fall) + "; expected 0 or more"); }
-			if (!(object.aloft.bounce >= 0.0f && object.aloft.bounce <= 1.0f)) { throw std::runtime_error(here + ": <bounce> is " + formatDisplayNumber(object.aloft.bounce) + "; expected 0 up to 1"); }
+			if (aloft->fall < 0.0f) { throw std::runtime_error(here + ": <fall> is " + formatDisplayNumber(aloft->fall) + "; expected 0 or more"); }
+			if (!(aloft->bounce >= 0.0f && aloft->bounce <= 1.0f)) { throw std::runtime_error(here + ": <bounce> is " + formatDisplayNumber(aloft->bounce) + "; expected 0 up to 1"); }
 			object.start.altitude = object.altitude;
 			object.start.rise = object.rise;
 		}
-		object.aloft.shadowOf = rawObject.shadowOf;
+		if (aloft) { aloft->shadowOf = rawObject.shadowOf; }
 
 		if (rawObject.sprite.kind == "tether")
 		{
@@ -350,14 +355,15 @@ namespace xge
 			{
 				throw std::runtime_error(where + ": a <tether> is drawn where its ends are; it has no <heading>, other looks or <animation>");
 			}
-			object.tether.from = rawObject.sprite.tetherFrom;
-			object.tether.to = rawObject.sprite.tetherTo;
+			Object::Tether& tether = parts->tethers.add(object.id, parts->orderOf(object.id), {});
+			tether.from = rawObject.sprite.tetherFrom;
+			tether.to = rawObject.sprite.tetherTo;
 			if (!rawObject.sprite.thickness.text.empty() || rawObject.sprite.thickness.kind != RawValue::Kind::Expression)
 			{
-				object.tether.thickness = static_cast<int>(std::lround(evaluate(rawObject.sprite.thickness, where)));
-				if (object.tether.thickness < 1) { throw std::runtime_error(where + ": a <tether> has a <thickness> under 1"); }
+				tether.thickness = static_cast<int>(std::lround(evaluate(rawObject.sprite.thickness, where)));
+				if (tether.thickness < 1) { throw std::runtime_error(where + ": a <tether> has a <thickness> under 1"); }
 			}
-			object.tether.color = colorFromName(rawObject.sprite.color.empty() ? "color.white" : rawObject.sprite.color);
+			tether.color = colorFromName(rawObject.sprite.color.empty() ? "color.white" : rawObject.sprite.color);
 		}
 
 		if (!rawObject.facing.empty())

@@ -15,7 +15,7 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 ## Objects, states and scenes
 
 - An object's changing numbers are its `Moment` (`game/object.h`), with `start` and `before`. A number a reset should put back goes in `Moment` and nowhere else. `placed` marks a reset or load between frames, whose place is not a move.
-- The rest of an object is in parts, one per feature (`object.drawn`, `object.motion`, `object.turning`, ...). Parts few objects use live in a store each (`Game::parts()`: holders, drives, hands, mazes, cells), moving there one by one (plan CR3). A new field goes in the part of its feature, or starts one; `struct Object` keeps only what every object has.
+- The rest of an object is in parts, one per feature (`object.drawn`, `object.motion`, `object.turning`, ...). Parts few objects use live in a store each (`Game::parts()`, which the frame reads as `FrameRules::parts()`: holders, drives, hands, mazes, cells, tethers, pulls, alofts), moving there one by one (plan CR3). A new field goes in the part of its feature, or starts one; `struct Object` keeps only what every object has.
 - The pieces (top-level `<objects>`) and every `from=` are worked out on the XML first (`load/merge.cpp`), and the same in `merge.xsl`. Change one, change the other step for step: `xgetest-generated` compares the order of objects.
 - `layOutScenes` flattens owned objects into `data.objects` named by path and writes every name out in full.
 - `isShown` is visible and running in the top state; `isStill` is drawn under a `<show state>`; `isAway` is in a scene not current.

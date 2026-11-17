@@ -37,6 +37,9 @@ namespace xge
 		hands.remove(id);
 		mazes.remove(id);
 		cells.remove(id);
+		tethers.remove(id);
+		pulls.remove(id);
+		alofts.remove(id);
 	}
 
 	namespace
@@ -56,5 +59,8 @@ namespace xge
 		copyPart(hands, from.hands, id);
 		copyPart(mazes, from.mazes, id);
 		copyPart(cells, from.cells, id);
+		copyPart(tethers, from.tethers, id);
+		copyPart(pulls, from.pulls, id);
+		copyPart(alofts, from.alofts, id);
 	}
 }

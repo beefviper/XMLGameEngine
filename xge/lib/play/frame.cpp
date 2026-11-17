@@ -27,7 +27,7 @@ namespace xge
 		const Drive& driveOf(FrameRules& rules, const Object& object)
 		{
 			static const Drive still{};
-			const Drive* drive = rules.driveOf(object);
+			const Drive* drive = rules.parts().drives.find(object.id);
 			return drive ? *drive : still;
 		}
 
@@ -602,10 +602,11 @@ namespace xge
 			const auto inPlay = [&](const Object& other) { return rules.inPlay(other); };
 			for (auto& object : objects)
 			{
-				if ((object.pull.toward.empty() && object.pull.seek.empty()) || !rules.inPlay(object)) { continue; }
+				const Object::Pull* pull = rules.parts().pulls.find(object.id);
+				if (!pull || !rules.inPlay(object)) { continue; }
 
 				const Vector2f middle = middleOf(object);
-				for (const auto& [name, strength] : object.pull.toward)
+				for (const auto& [name, strength] : pull->toward)
 				{
 					const Object* toward = nearestInPlay(objects, object, name, inPlay);
 					if (!toward) { continue; }
@@ -616,11 +617,11 @@ namespace xge
 					}
 				}
 
-				if (object.pull.seek.empty()) { continue; }
-				const Object* target = nearestInPlay(objects, object, object.pull.seek, inPlay);
+				if (pull->seek.empty()) { continue; }
+				const Object* target = nearestInPlay(objects, object, pull->seek, inPlay);
 				if (!target) { continue; }
 				const Vector2f before = object.velocity;
-				object.velocity = turnedToward(object.velocity, middleOf(*target) - middle, object.pull.seekRate * t);
+				object.velocity = turnedToward(object.velocity, middleOf(*target) - middle, pull->seekRate * t);
 				if (object.turning.hasHeading && (object.velocity.x != before.x || object.velocity.y != before.y))
 				{
 					object.heading = headingOf(object.velocity);
@@ -638,30 +639,32 @@ namespace xge
 			const float t = seconds;
 			for (auto& object : objects)
 			{
-				if (!object.aloft.has || !rules.inPlay(object)) { continue; }
+				const Object::Aloft* aloft = rules.parts().alofts.find(object.id);
+				if (!aloft || !aloft->has || !rules.inPlay(object)) { continue; }
 				// A constant fall: the altitude goes by the mean of the rise
 				// before and after.
-				const float fall = object.aloft.fall * t;
+				const float fall = aloft->fall * t;
 				object.altitude += (object.rise - fall * 0.5f) * t;
 				object.rise -= fall;
 				if (object.altitude > 0.0f) { continue; }
 				object.altitude = 0.0f;
 				if (object.rise < 0.0f)
 				{
-					const float up = -object.rise * object.aloft.bounce;
-					object.rise = up > object.aloft.fall * kSixtieth ? up : 0.0f;
+					const float up = -object.rise * aloft->bounce;
+					object.rise = up > aloft->fall * kSixtieth ? up : 0.0f;
 				}
 			}
 		}
 
 		// A <shadow> is kept under what casts it, on the ground, and shown
 		// while that is.
-		void castShadows(std::vector<Object>& objects)
+		void castShadows(std::vector<Object>& objects, FrameRules& rules)
 		{
 			for (auto& shadow : objects)
 			{
-				if (shadow.aloft.shadowOf.empty()) { continue; }
-				const Object* caster = named(objects, shadow.aloft.shadowOf);
+				const Object::Aloft* aloft = rules.parts().alofts.find(shadow.id);
+				if (!aloft || aloft->shadowOf.empty()) { continue; }
+				const Object* caster = named(objects, aloft->shadowOf);
 				if (!caster) { continue; }
 				shadow.position = caster->position + sizeOf(*caster) * 0.5f - sizeOf(shadow) * 0.5f;
 				shadow.isVisible = caster->isVisible;
@@ -757,20 +760,21 @@ namespace xge
 		// again after the move wherever the two have got to; its own position
 		// and size follow it, so what it touches is where it is now. It is in
 		// play while both ends are (an end may be a copy not made yet).
-		void drawTethers(std::vector<Object>& objects)
+		void drawTethers(std::vector<Object>& objects, FrameRules& rules)
 		{
 			for (auto& tether : objects)
 			{
-				if (tether.tether.from.empty()) { continue; }
+				const Object::Tether* ends = rules.parts().tethers.find(tether.id);
+				if (!ends || ends->from.empty()) { continue; }
 
-				const Object* from = named(objects, tether.tether.from);
-				const Object* to = named(objects, tether.tether.to);
+				const Object* from = named(objects, ends->from);
+				const Object* to = named(objects, ends->to);
 				tether.isVisible = from && to && from->isVisible && to->isVisible;
 				if (!tether.isVisible) { continue; }
 
 				const Vector2f a = from->position + sizeOf(*from) * 0.5f;
 				const Vector2f b = to->position + sizeOf(*to) * 0.5f;
-				const float half = static_cast<float>(tether.tether.thickness) * 0.5f;
+				const float half = static_cast<float>(ends->thickness) * 0.5f;
 				const Vector2f corner{ std::floor(std::min(a.x, b.x) - half), std::floor(std::min(a.y, b.y) - half) };
 
 				LineSegment line;
@@ -778,8 +782,8 @@ namespace xge
 				line.y1 = a.y - corner.y - half;
 				line.x2 = b.x - corner.x - half;
 				line.y2 = b.y - corner.y - half;
-				line.color = tether.tether.color;
-				line.thickness = tether.tether.thickness;
+				line.color = ends->color;
+				line.thickness = ends->thickness;
 
 				auto drawn = std::make_shared<const Bitmap>(rasterizeLines({ line }));
 				tether.position = corner;
@@ -1260,9 +1264,9 @@ namespace xge
 
 		rules.follow();
 
-		drawTethers(objects);
+		drawTethers(objects, rules);
 
-		castShadows(objects);
+		castShadows(objects, rules);
 
 		lightAndDark(objects, rules);
 

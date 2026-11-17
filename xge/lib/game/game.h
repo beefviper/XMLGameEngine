@@ -138,7 +138,7 @@ namespace xge
 		Object* find(ObjectId id) noexcept;
 
 		// Every object's handle and the parts it has.
-		Parts& parts() noexcept { return objectParts; }
+		Parts& parts() noexcept override { return objectParts; }
 
 		// Its holder part: whether it has one, and the part (std::out_of_range
 		// for an object that is no holder).
@@ -165,7 +165,7 @@ namespace xge
 		bool isShape(const Object& object) const noexcept { return cellPart(object).shapeSize > 0; }
 
 		// Its maze part (<maze>), nullptr for one that walks none.
-		Maze* mazeOf(const Object& object) override { return objectParts.mazes.find(object.id); }
+		Maze* mazeOf(const Object& object) { return objectParts.mazes.find(object.id); }
 
 		// What its held keys drive: given on the first key that drives it,
 		// gone when it stops or is reset.
@@ -901,7 +901,6 @@ namespace xge
 
 		// FrameRules: what the game file says, asked by playOneFrame.
 		bool inPlay(const Object& object) override { return isShown(object); }
-		const Drive* driveOf(const Object& object) override { return objectParts.drives.find(object.id); }
 		void timers(float seconds) override { updateTimers(seconds); }
 		void animationEnded(std::size_t index, std::size_t look) override;
 		void frameCameUp(std::size_t index, std::size_t look, std::size_t picture) override;

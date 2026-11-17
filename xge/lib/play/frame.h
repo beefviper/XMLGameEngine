@@ -6,6 +6,7 @@
 #pragma once
 
 #include "game/object.h"
+#include "game/parts.h"
 #include "game/types.h"
 #include "play/geometry.h"
 
@@ -57,11 +58,9 @@ namespace xge
 		// dead. Nothing else is animated, moved, pulled or touched.
 		virtual bool inPlay(const Object& object) = 0;
 
-		// What its held keys drive (Drive), nullptr for one no key drives.
-		virtual const Drive* driveOf(const Object& object) { (void)object; return nullptr; }
-
-		// Its maze part (<maze>), nullptr for one that walks no maze.
-		virtual Maze* mazeOf(const Object& object) { (void)object; return nullptr; }
+		// Every object's handle and the parts it has (a Store each): what a
+		// pass reads of a part few objects have.
+		virtual Parts& parts() noexcept = 0;
 
 		// An animation that plays once has just ended on objects[index], which
 		// was showing looks[look] (0 for its one unnamed animation): its

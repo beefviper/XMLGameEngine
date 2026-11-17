@@ -1893,7 +1893,8 @@ namespace xge
 		};
 		Rest rest;
 
-		// What draws it toward other things each frame (see playOneFrame).
+		// What draws it toward other things each frame (see playOneFrame). A
+		// part (Parts::pulls), for an object with a <pull> or a <seek>.
 		struct Pull
 		{
 			// <pull>: it is pulled toward the middle of the nearest of each
@@ -1908,7 +1909,6 @@ namespace xge
 			std::string seek;
 			float seekRate{};
 		};
-		Pull pull;
 
 		// <dark>: an object drawn only where there is light. Unlit, only while
 		// some part of it is within a light; unseen, once that has happened,
@@ -1933,7 +1933,8 @@ namespace xge
 		//
 		// <shadow object="ball" />: kept under that object each frame, its
 		// middle at the other's middle on the ground, and shown while the
-		// other is (shadowOf; "" for nothing).
+		// other is (shadowOf; "" for nothing). A part (Parts::alofts), for
+		// an object with an <altitude> or a <shadow>.
 		struct Aloft
 		{
 			bool has{ false };
@@ -1941,7 +1942,6 @@ namespace xge
 			float bounce{};
 			std::string shadowOf;
 		};
-		Aloft aloft;
 
 		// The size of what it shows now, in whole pixels, as every window
 		// draws it: its bitmap's, or its picture's (measureShapeSize).
@@ -2106,7 +2106,7 @@ namespace xge
 		// A <tether>: a line from the middle of the object `from` names to
 		// the middle of `to`'s, drawn again every frame wherever the two are
 		// (drawTethers in play/frame), this object's position and size
-		// following it. Empty for every other sprite.
+		// following it. A part (Parts::tethers), for a <tether> sprite only.
 		struct Tether
 		{
 			std::string from;
@@ -2114,7 +2114,6 @@ namespace xge
 			int thickness{ 1 };
 			Color color{};
 		};
-		Tether tether;
 
 		std::map<std::string, std::vector<Command>> action;
 

@@ -25,6 +25,9 @@ namespace xge
 		Store<Hand> hands;
 		Store<Maze> mazes;
 		Store<Object::Cells> cells;
+		Store<Object::Tether> tethers;
+		Store<Object::Pull> pulls;
+		Store<Object::Aloft> alofts;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.

@@ -691,8 +691,9 @@ TEST_CASE("map: a group on a map has every part an object has, heading to seek",
 		// a half-life of a second, kept as a loss rate: ln 2 / 1
 		CHECK(mine.motion.drag == Approx(std::log(2.0)));
 		CHECK(mine.motion.mass == Approx(2));
-		CHECK(mine.pull.seek == "playing.p");
-		CHECK(mine.pull.seekRate == Approx(180));
+		const Object::Pull& pull = game.parts().pulls.get(mine.id);
+		CHECK(pull.seek == "playing.p");
+		CHECK(pull.seekRate == Approx(180));
 	}
 }
 

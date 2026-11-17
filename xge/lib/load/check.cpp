@@ -439,29 +439,33 @@ namespace xge
 	{
 		// A <tether> joins two objects the game has, and a <pull> and a
 		// <seek> name ones it has.
-		void checkObjectNames(const std::vector<Object>& objects)
+		void checkObjectNames(const Parts& parts, const std::vector<Object>& objects)
 		{
 			for (const Object& object : objects)
 			{
 				onLine(object.line, [&]
 				{
-					for (const auto& [name, strength] : object.pull.toward)
+					const Object::Pull* pull = parts.pulls.find(object.id);
+					const Object::Aloft* aloft = parts.alofts.find(object.id);
+					for (const auto& [name, strength] : pull ? pull->toward : std::vector<std::pair<std::string, float>>{})
 					{
 						if (!findObject(objects, name))
 						{
 							throw std::runtime_error("object '" + object.name + "' > <pull>: there is no object named '" + name + "'" + didYouMean(name, objectNames(objects)));
 						}
 					}
-					if (!object.aloft.shadowOf.empty() && !findObject(objects, object.aloft.shadowOf))
+					if (aloft && !aloft->shadowOf.empty() && !findObject(objects, aloft->shadowOf))
 					{
-						throw std::runtime_error("object '" + object.name + "' > <shadow>: there is no object named '" + object.aloft.shadowOf + "'" + didYouMean(object.aloft.shadowOf, objectNames(objects)));
+						throw std::runtime_error("object '" + object.name + "' > <shadow>: there is no object named '" + aloft->shadowOf + "'" + didYouMean(aloft->shadowOf, objectNames(objects)));
 					}
-					if (!object.pull.seek.empty() && !findObject(objects, object.pull.seek))
+					if (pull && !pull->seek.empty() && !findObject(objects, pull->seek))
 					{
-						throw std::runtime_error("object '" + object.name + "' > <seek>: there is no object named '" + object.pull.seek + "'" + didYouMean(object.pull.seek, objectNames(objects)));
+						throw std::runtime_error("object '" + object.name + "' > <seek>: there is no object named '" + pull->seek + "'" + didYouMean(pull->seek, objectNames(objects)));
 					}
-					for (const std::string* end : { &object.tether.from, &object.tether.to })
+					const Object::Tether* tether = parts.tethers.find(object.id);
+					for (const std::string* end : { tether ? &tether->from : nullptr, tether ? &tether->to : nullptr })
 					{
+						if (!end) { continue; }
 						if (!end->empty() && !findObject(objects, *end))
 						{
 							throw std::runtime_error("object '" + object.name + "' > <tether>: there is no object named '" + *end + "'" + didYouMean(*end, objectNames(objects)));
@@ -960,7 +964,7 @@ namespace xge
 		const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles)
 	{
 		WantedPalettes wanted;
-		checkObjectNames(objects);
+		checkObjectNames(parts, objects);
 		checkRuleNames(objects);
 		checkHeldVariables(parts, objects);
 		checkStateNames(states, objects, sounds);
