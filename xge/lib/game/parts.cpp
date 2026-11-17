@@ -7,6 +7,13 @@
 
 namespace xge
 {
+	const Object::MapPlace& mapOf(const Parts& parts, const Object& object) noexcept
+	{
+		static const Object::MapPlace none{};
+		const Object::MapPlace* found = parts.mapPlaces.find(object.id);
+		return found ? *found : none;
+	}
+
 	ObjectId Parts::newId()
 	{
 		if (!freeHandles.empty())
@@ -50,6 +57,7 @@ namespace xge
 		moves.remove(id);
 		swings.remove(id);
 		lightPasts.remove(id);
+		mapPlaces.remove(id);
 	}
 
 	namespace
@@ -82,5 +90,6 @@ namespace xge
 		copyPart(moves, from.moves, id);
 		copyPart(swings, from.swings, id);
 		copyPart(lightPasts, from.lightPasts, id);
+		copyPart(mapPlaces, from.mapPlaces, id);
 	}
 }

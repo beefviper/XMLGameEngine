@@ -98,7 +98,7 @@ namespace xge
 			{
 				const float span = horizontal ? window.width : window.height;
 				if (game.isHand(object)) { game.trackHand(object, horizontal, fraction * span); }
-				else if (object.map.cells) { game.trackCells(object, horizontal, fraction * span, along->onto); }
+				else if (object.onCells) { game.trackCells(object, horizontal, fraction * span, along->onto); }
 				else { track(object, horizontal, fraction, span); }
 			}
 			else if (const auto path = game.getPaths().find(along->path); path != game.getPaths().end())
@@ -275,7 +275,7 @@ namespace xge
 			}
 			// The way a maze walker is asked to go, while the key asking is
 			// still down: Pac-Man held right through READY! sets off right.
-			else if (const auto* go = std::get_if<CmdGo>(&actionCommand); go && game.mazeOf(object) && !object.map.cells)
+			else if (const auto* go = std::get_if<CmdGo>(&actionCommand); go && game.mazeOf(object) && !object.onCells)
 			{
 				startGo(*game.mazeOf(object), *go);
 			}
@@ -366,8 +366,8 @@ namespace xge
 		// On a cell map: whole cells (one, with no distance), refused (and
 		// touching) when it cannot go.
 		if (game.isHand(object)) { return game.hopHand(object, command.direction); }
-		if (object.map.cells && !command.onto.empty()) { return game.hopOnto(object, command.direction, command.onto); }
-		if (object.map.cells)
+		if (object.onCells && !command.onto.empty()) { return game.hopOnto(object, command.direction, command.onto); }
+		if (object.onCells)
 		{
 			const auto cells = [](float pixels, float distance)
 			{
@@ -431,7 +431,7 @@ namespace xge
 		// as the one who plays it presses (the computer, or a person).
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
-			if (objects[i].inGroup(objectName) && showing(objects[i]) && !objects[i].awayFromHome() && (byRule || game.answers(objects[i]))) { reached.push_back(i); }
+			if (objects[i].inGroup(objectName) && showing(objects[i]) && !game.awayFromHome(objects[i]) && (byRule || game.answers(objects[i]))) { reached.push_back(i); }
 		}
 		bool refused = !reached.empty();
 		for (const std::size_t i : reached) { refused = runAction(objects[i], actionName, keyPressed, byRule) && refused; }
@@ -465,7 +465,7 @@ namespace xge
 			return false;
 		}
 		// A piece sent away from its own map (a next-piece box) is only shown.
-		if (object.awayFromHome())
+		if (game.awayFromHome(object))
 		{
 			return false;
 		}
@@ -556,12 +556,12 @@ namespace xge
 		if (!made) { return false; }
 
 		// On a cell map: in a cell, a shape's top left one (counting from 1).
-		if (made->map.cells)
+		if (made->onCells)
 		{
 			// Onto another map: its first cell unless told; on its own, its own.
-			const bool elsewhere = !command.into.empty() && command.into != made->map.name;
+			const bool elsewhere = !command.into.empty() && command.into != game.mapOf(*made).name;
 			// Left out: the spawner's own cell, when it is on that map.
-			const bool besideSelf = self && self->map.cells && self->map.name == (command.into.empty() ? made->map.name : command.into);
+			const bool besideSelf = self && self->onCells && game.mapOf(*self).name == (command.into.empty() ? game.mapOf(*made).name : command.into);
 			const auto cell = [&](const std::optional<float>& given, int own, float selfCell)
 			{
 				if (given) { return static_cast<int>(std::lround(*given)); }
@@ -572,7 +572,7 @@ namespace xge
 			{
 				if (!game.putInFreeCell(*made, command.into, command.freeBelow)) { return false; }
 			}
-			else if (!game.putOnCells(*made, cell(command.column, made->map.column, self ? game.place(*self).column : 0.0f), cell(command.row, made->map.row, self ? game.place(*self).row : 0.0f), command.into)) { return false; }
+			else if (!game.putOnCells(*made, cell(command.column, game.mapOf(*made).column, self ? game.place(*self).column : 0.0f), cell(command.row, game.mapOf(*made).row, self ? game.place(*self).row : 0.0f), command.into)) { return false; }
 			if (command.velocityX) { made->velocity.x = *command.velocityX; }
 			if (command.velocityY) { made->velocity.y = *command.velocityY; }
 			if (command.accelerationX) { made->acceleration.x = *command.accelerationX; }

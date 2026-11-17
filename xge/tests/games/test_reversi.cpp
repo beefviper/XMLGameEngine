@@ -60,7 +60,7 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.exists && object.isVisible && object.map.cells && (object.objClass == "black" || object.objClass == "white")
+				if (object.exists && object.isVisible && object.onCells && (object.objClass == "black" || object.objClass == "white")
 					&& cell(game.place(object).column) == column && cell(game.place(object).row) == row)
 				{
 					return object.objClass;

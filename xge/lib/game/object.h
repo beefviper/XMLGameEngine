@@ -1428,6 +1428,7 @@ namespace xge
 		// no map placed), its tile counting from 0, and the map's top left,
 		// the size of a tile and how many tiles across and down it is. The
 		// maps a walker finds its way on are made from these (buildMazes).
+		// A part (Parts::mapPlaces, Game::mapOf), for a piece of a map only.
 		struct MapPlace
 		{
 			Name name;
@@ -1437,18 +1438,16 @@ namespace xge
 			Vector2f tile{};
 			int columns{};
 			int rows{};
-			// On a map with <cells /> (see RawCell::cells): it moves a cell at
-			// a time, and a move that is refused touches what refused it (see
-			// game/cells.cpp). The Moment's cellColumn and cellRow are the cell
-			// it is in.
-			bool cells{ false };
 			// The map it was written on. Sent to another (a next-piece box), it
 			// is only shown there: its timers do not count and its actions do
-			// not run until it is back (see awayFromHome).
+			// not run until it is back (Game::awayFromHome).
 			Name home;
 		};
-		MapPlace map;
-		bool awayFromHome() const noexcept { return map.cells && map.name != map.home; }
+		// On a map with <cells /> (see RawCell::cells): it moves a cell at a
+		// time, and a move that is refused touches what refused it (see
+		// game/cells.cpp). Its cell part's place is the cell it is in. Kept
+		// in the object, not its map place: every frame asks it of each.
+		bool onCells{ false };
 
 		// <moves>: what a piece of a board game may do when a picker
 		// <place>s it (game/cells.cpp). A step goes to the empty cell that

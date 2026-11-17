@@ -25,7 +25,7 @@ namespace xge
 	{
 		const CmdSlide& slide = std::get<CmdSlide>(command);
 		if (!slide.objClass.empty()) { return executor.game.slideClass(slide.objClass, slide.direction); }
-		if (doer.self && doer.self->map.cells) { executor.game.slideCells(*doer.self, slide.direction); }
+		if (doer.self && doer.self->onCells) { executor.game.slideCells(*doer.self, slide.direction); }
 		return true;
 	}
 

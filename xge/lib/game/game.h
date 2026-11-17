@@ -200,6 +200,13 @@ namespace xge
 			return found ? *found : none;
 		}
 
+		// Its place on a <map> (Object::MapPlace): an empty one for one on
+		// none; mapFor gives it one.
+		const Object::MapPlace& mapOf(const Object& object) const noexcept { return xge::mapOf(objectParts, object); }
+		Object::MapPlace& mapFor(const Object& object) { return objectParts.give(objectParts.mapPlaces, object.id); }
+		// A piece of a cell map sent to another (MapPlace::home).
+		bool awayFromHome(const Object& object) const noexcept { return object.onCells && mapOf(object).name != mapOf(object).home; }
+
 		// Its board-game moves (Object::Moves): none for one with no
 		// <moves>, given at load.
 		const Object::Moves& pieceMoves(const Object& object) const noexcept

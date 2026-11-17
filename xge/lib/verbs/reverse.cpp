@@ -19,7 +19,7 @@ namespace xge
 	{
 		Object* const self = doer.self;
 		// On a map of cells, a <go> turns round.
-		if (self && self->map.cells && executor.game.place(*self).going)
+		if (self && self->onCells && executor.game.place(*self).going)
 		{
 			Object::Cells::Place& going = executor.game.placeFor(*self);
 			const Direction way = going.goWay;

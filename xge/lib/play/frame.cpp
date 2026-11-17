@@ -828,7 +828,7 @@ namespace xge
 		// so is a piece of a cell map, which meets its map's edges by its moves.
 		bool sweptAtEdges(const Object& object) noexcept
 		{
-			return !object.animation.frames.shows().stepped && !object.map.cells;
+			return !object.animation.frames.shows().stepped && !object.onCells;
 		}
 
 		// What moveObjects keeps about each object over one frame's sweep.
@@ -1151,18 +1151,19 @@ namespace xge
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
 			const Object& object = objects[i];
-			if (object.map.name != map) { continue; }
+			const Object::MapPlace& place = mapOf(parts(), object);
+			if (place.name != map) { continue; }
 			if (grid.at.empty())
 			{
-				grid.origin = object.map.origin;
-				grid.tile = object.map.tile;
-				grid.columns = object.map.columns;
-				grid.rows = object.map.rows;
+				grid.origin = place.origin;
+				grid.tile = place.tile;
+				grid.columns = place.columns;
+				grid.rows = place.rows;
 				grid.at.resize(static_cast<std::size_t>(grid.columns) * static_cast<std::size_t>(grid.rows));
 			}
-			if (grid.onMap(object.map.column, object.map.row))
+			if (grid.onMap(place.column, place.row))
 			{
-				grid.at[static_cast<std::size_t>(object.map.row) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(object.map.column)].push_back(i);
+				grid.at[static_cast<std::size_t>(place.row) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(place.column)].push_back(i);
 			}
 		}
 		return mazeGrids.emplace(map, std::move(grid)).first->second;
@@ -1241,7 +1242,7 @@ namespace xge
 		for (auto& object : objects)
 		{
 			// A piece of a cell map meets its map's edges by its moves.
-			if (object.collisionsOn && !object.map.cells && !sweptAtEdges(object) && isMoving(object) && rules.inPlay(object))
+			if (object.collisionsOn && !object.onCells && !sweptAtEdges(object) && isMoving(object) && rules.inPlay(object))
 			{
 				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 				{

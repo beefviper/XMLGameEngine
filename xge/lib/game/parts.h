@@ -14,6 +14,12 @@
 
 namespace xge
 {
+	struct Parts;
+
+	// Its place on a <map> (Object::MapPlace): an empty one, on no map,
+	// for one with none.
+	const Object::MapPlace& mapOf(const Parts& parts, const Object& object) noexcept;
+
 	// A game's handles and its parts: every object's ObjectId, given as it
 	// joins and freed as a copy leaves, and a Store of each part an object
 	// has only if it uses it. Owned by the Game; what loads an object adds
@@ -38,6 +44,7 @@ namespace xge
 		Store<Object::Moves> moves;
 		Store<Object::Swing> swings;
 		Store<Object::LightPast> lightPasts;
+		Store<Object::MapPlace> mapPlaces;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.

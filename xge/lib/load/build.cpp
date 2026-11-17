@@ -629,20 +629,21 @@ namespace xge
 			// A piece of a cell map, a chain or a shape has a cell part.
 			Object::Cells* cell = rawObject.cell.cells || !rawObject.chain.empty() || !rawObject.shapeRows.empty()
 				? &parts->cells.add(object.id, parts->orderOf(object.id), {}) : nullptr;
-			object.map.name = nameStore.of(rawObject.cell.map);
-			object.map.home = object.map.name;
+			Object::MapPlace& mapPlace = parts->mapPlaces.add(object.id, parts->orderOf(object.id), {});
+			mapPlace.name = nameStore.of(rawObject.cell.map);
+			mapPlace.home = mapPlace.name;
 			if (cell) { cell->chain = rawObject.chain; }
-			object.map.column = rawObject.cell.mapColumn - 1;
-			object.map.row = rawObject.cell.mapRow - 1;
-			object.map.columns = rawObject.cell.mapColumns;
-			object.map.rows = rawObject.cell.mapRows;
-			object.map.tile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
-			object.map.origin = object.start.position - object.layout.cellOffset;
+			mapPlace.column = rawObject.cell.mapColumn - 1;
+			mapPlace.row = rawObject.cell.mapRow - 1;
+			mapPlace.columns = rawObject.cell.mapColumns;
+			mapPlace.rows = rawObject.cell.mapRows;
+			mapPlace.tile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
+			mapPlace.origin = object.start.position - object.layout.cellOffset;
 
 			// On a cell map: the cell it is in, its map's checks, and a
 			// shape's cells, each the object its character picks.
-			object.map.cells = rawObject.cell.cells;
-			if (object.map.cells)
+			object.onCells = rawObject.cell.cells;
+			if (object.onCells)
 			{
 				cell->place.column = cell->start.column = static_cast<float>(rawObject.cell.mapColumn);
 				cell->place.row = cell->start.row = static_cast<float>(rawObject.cell.mapRow);

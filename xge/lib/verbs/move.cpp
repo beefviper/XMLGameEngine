@@ -39,7 +39,7 @@ namespace xge
 		// the whole block in lockstep with it.
 		const CmdMove& move = std::get<CmdMove>(command);
 		if (!doer.self) { return true; }
-		if (doer.action && doer.self->map.cells) { executor.game.holdCellMove(*doer.self, move, doer.pressed); }
+		if (doer.action && doer.self->onCells) { executor.game.holdCellMove(*doer.self, move, doer.pressed); }
 		else if (doer.action) { holdMove(*doer.self, executor.game.driveFor(*doer.self), move.direction, move.step, doer.pressed); }
 		else { executor.moveByStep(*doer.self, move.direction, move.step); }
 		return true;

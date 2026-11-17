@@ -1333,7 +1333,7 @@ namespace xge
 			for (std::size_t t = 0; t < objects[i].clocks.size() && t < timers.size(); ++t)
 			{
 				// Not shown, or sent away from its own map (a next-piece box).
-				if (!isShown(objects[i]) || objects[i].awayFromHome())
+				if (!isShown(objects[i]) || awayFromHome(objects[i]))
 				{
 					break;
 				}
@@ -2075,7 +2075,7 @@ namespace xge
 	{
 		// Pieces of cell maps meet each other by their moves, and a shape
 		// touches nothing but by them.
-		if ((a.map.cells && b.map.cells) || (a.map.cells && isShape(a)) || (b.map.cells && isShape(b))) { return false; }
+		if ((a.onCells && b.onCells) || (a.onCells && isShape(a)) || (b.onCells && isShape(b))) { return false; }
 
 		const auto answers = [](const Object& self, const Object& other)
 		{
