@@ -851,7 +851,7 @@ namespace xge
 		// The map's checks, as its pieces written carry them (a copy may not).
 		const Object* written = putTemplate(think.objClass);
 		if (!written) { written = first; }
-		for (const Object::CellCheck& check : written->cell.checks)
+		for (const Object::CellCheck& check : cellPart(*written).checks)
 		{
 			if (check.kind == "line") { board.lines.push_back({ check.objClass, check.count, check.straight }); }
 		}

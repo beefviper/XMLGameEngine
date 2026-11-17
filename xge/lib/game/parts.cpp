@@ -36,6 +36,7 @@ namespace xge
 		drives.remove(id);
 		hands.remove(id);
 		mazes.remove(id);
+		cells.remove(id);
 	}
 
 	namespace
@@ -54,5 +55,6 @@ namespace xge
 		copyPart(drives, from.drives, id);
 		copyPart(hands, from.hands, id);
 		copyPart(mazes, from.mazes, id);
+		copyPart(cells, from.cells, id);
 	}
 }

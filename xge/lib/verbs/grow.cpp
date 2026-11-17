@@ -13,9 +13,9 @@ namespace xge
 		return CmdGrow{};
 	}
 
-	static bool runGrow(const Command&, const Doer& doer, CommandExecutor&)
+	static bool runGrow(const Command&, const Doer& doer, CommandExecutor& executor)
 	{
-		if (doer.self && !doer.self->cell.chain.empty()) { ++doer.self->chainGrow; }
+		if (doer.self && !executor.game.cellPart(*doer.self).chain.empty()) { ++doer.self->chainGrow; }
 		return true;
 	}
 

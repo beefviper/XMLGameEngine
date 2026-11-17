@@ -30,7 +30,7 @@ namespace
 	{
 		for (Object& object : game.getCurrentObjects())
 		{
-			if (object.exists && object.isShape() && object.isCopy() && !object.awayFromHome()) { return &object; }
+			if (object.exists && game.isShape(object) && object.isCopy() && !object.awayFromHome()) { return &object; }
 		}
 		return nullptr;
 	}
@@ -39,7 +39,7 @@ namespace
 	std::set<std::pair<int, int>> cellsOf(Game& game, const Object& shape)
 	{
 		std::set<std::pair<int, int>> cells;
-		for (const std::string& part : shape.cell.shapeParts)
+		for (const std::string& part : game.cellPart(shape).shapeParts)
 		{
 			const Object& cell = game.getObject(part);
 			cells.insert({ static_cast<int>(cell.cellColumn), static_cast<int>(cell.cellRow) });
@@ -53,7 +53,7 @@ namespace
 		std::set<std::pair<int, int>> cells;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.exists && object.map.cells && object.isCopy() && !object.isShape() && object.cell.shapeOwner.empty())
+			if (object.exists && object.map.cells && object.isCopy() && !game.isShape(object) && game.cellPart(object).shapeOwner.empty())
 			{
 				cells.insert({ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) });
 			}
@@ -110,8 +110,8 @@ TEST_CASE("A map with columns and rows and <cells /> loads its pieces waiting to
 	CHECK(block.map.rows == 6);
 
 	const Object& shape = play.get("well.bar");
-	CHECK(shape.isShape());
-	CHECK(shape.cell.shape.size() == 2);
+	CHECK(play.game.isShape(shape));
+	CHECK(play.game.cellPart(shape).shape.size() == 2);
 	CHECK_FALSE(shape.exists);
 }
 
@@ -126,7 +126,7 @@ TEST_CASE("A shape spawned on a cell map brings its cells, and falls a cell at a
 	REQUIRE(shape);
 	CHECK(cellsOf(play.game, *shape) == std::set<std::pair<int, int>>{ { 2, 1 }, { 3, 1 } });
 	// The block in column 2, row 1 is drawn in the middle of its tile.
-	const Object& cell = play.get(shape->cell.shapeParts.front());
+	const Object& cell = play.get(play.game.cellPart(*shape).shapeParts.front());
 	CHECK(cell.position.x == 100.0f + 10.0f + 1.0f);
 	CHECK(cell.position.y == 100.0f + 1.0f);
 
@@ -254,13 +254,13 @@ TEST_CASE("A shape turns a quarter about the middle of its square", "[cells]")
 	play.tap(KeyCode::W);
 	play.frames(1);
 	CHECK(cellsOf(play.game, *falling(play.game)) == std::set<std::pair<int, int>>{ { 3, 2 }, { 3, 3 }, { 3, 4 }, { 4, 3 } });
-	CHECK(falling(play.game)->cell.quarter == 1);
+	CHECK(play.game.cellPart(*falling(play.game)).quarter == 1);
 
 	// And back.
 	play.tap(KeyCode::Q);
 	play.frames(1);
 	CHECK(cellsOf(play.game, *falling(play.game)) == std::set<std::pair<int, int>>{ { 3, 2 }, { 2, 3 }, { 3, 3 }, { 4, 3 } });
-	CHECK(falling(play.game)->cell.quarter == 0);
+	CHECK(play.game.cellPart(*falling(play.game)).quarter == 0);
 }
 
 TEST_CASE("A turn against a wall kicks the shape away from it", "[cells]")
@@ -297,7 +297,7 @@ TEST_CASE("Tetris plays: a shape comes in, falls, lands and the next comes", "[c
 
 	Object* shape = falling(play.game);
 	REQUIRE(shape);
-	CHECK(shape->cell.shapeParts.size() == 4);
+	CHECK(play.game.cellPart(*shape).shapeParts.size() == 4);
 	const std::string first = shape->name;
 
 	// Space drops it at once: it lands on the floor, the next comes in.
@@ -346,7 +346,7 @@ TEST_CASE("Tetris turns clockwise on W, Up, E or X and counterclockwise on Q", "
 		play.tap(key);
 		play.frames(1);
 		REQUIRE(falling(play.game));
-		CHECK(falling(play.game)->cell.quarter == quarter);
+		CHECK(play.game.cellPart(*falling(play.game)).quarter == quarter);
 	}
 }
 
@@ -361,14 +361,14 @@ TEST_CASE("Tetris shows the next shape in its box, still, and sends it in when o
 	{
 		for (Object& object : play.game.getCurrentObjects())
 		{
-			if (object.exists && object.isShape() && object.isCopy() && object.awayFromHome()) { return &object; }
+			if (object.exists && play.game.isShape(object) && object.isCopy() && object.awayFromHome()) { return &object; }
 		}
 		return nullptr;
 	};
 	Object* next = waiting();
 	REQUIRE(next);
 	CHECK(next->map.name == "playing.next");
-	CHECK(next->cell.shapeParts.size() == 4);
+	CHECK(play.game.cellPart(*next).shapeParts.size() == 4);
 	const std::string nextName = next->name;
 	const auto shown = cellsOf(play.game, *next);
 
@@ -454,7 +454,7 @@ namespace
 		std::map<std::pair<int, int>, std::string> found;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.exists && object.map.cells && !object.isShape() && object.cell.shapeOwner.empty())
+			if (object.exists && object.map.cells && !game.isShape(object) && game.cellPart(object).shapeOwner.empty())
 			{
 				const std::string group = object.groupName.substr(object.groupName.rfind('.') + 1);
 				found[{ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) }] = group;
@@ -544,8 +544,8 @@ TEST_CASE("A group of groups picking one character is any of them in a shape", "
 	play.frames(1);
 	Object* shape = falling(play.game);
 	REQUIRE(shape);
-	REQUIRE(shape->cell.shapeParts.size() == 3);
-	for (const std::string& part : shape->cell.shapeParts)
+	REQUIRE(play.game.cellPart(*shape).shapeParts.size() == 3);
+	for (const std::string& part : play.game.cellPart(*shape).shapeParts)
 	{
 		const std::string of = play.get(part).copyOf;
 		CHECK((of == "playing.field.red" || of == "playing.field.blue"));
@@ -561,21 +561,21 @@ TEST_CASE("Columns plays: a column comes in, cycles, lands and the next comes", 
 
 	Object* column = falling(play.game);
 	REQUIRE(column);
-	REQUIRE(column->cell.shapeParts.size() == 3);
+	REQUIRE(play.game.cellPart(*column).shapeParts.size() == 3);
 	const std::string name = column->name;
-	const std::string top = column->cell.shapeParts.front();
+	const std::string top = play.game.cellPart(*column).shapeParts.front();
 	play.tap(KeyCode::W);
 	play.frames(1);
-	CHECK(falling(play.game)->cell.shapeParts[1] == top);
+	CHECK(play.game.cellPart(*falling(play.game)).shapeParts[1] == top);
 	// E cycles the same way, Q back: the top jewel is in the middle, then back on top.
 	play.tap(KeyCode::E);
 	play.frames(1);
-	CHECK(falling(play.game)->cell.shapeParts[2] == top);
+	CHECK(play.game.cellPart(*falling(play.game)).shapeParts[2] == top);
 	play.tap(KeyCode::Q);
 	play.frames(1);
 	play.tap(KeyCode::Q);
 	play.frames(1);
-	CHECK(falling(play.game)->cell.shapeParts[0] == top);
+	CHECK(play.game.cellPart(*falling(play.game)).shapeParts[0] == top);
 
 	// Left to fall, it lands within thirteen rows' time, and the next comes.
 	for (int i = 0; i < 13 * 50 && falling(play.game) && falling(play.game)->name == name; ++i) { play.frames(1); }
@@ -1103,7 +1103,7 @@ TEST_CASE("Capsules plays: germs come in low in the bottle, a capsule falls, and
 	{
 		if (!object.exists || object.objClass != "pill") { continue; }
 		if (object.map.name == "playing.next") { ++next; }
-		else if (!object.cell.shapeOwner.empty()) { ++falling; }
+		else if (!play.game.cellPart(object).shapeOwner.empty()) { ++falling; }
 	}
 	CHECK(falling == 2);
 	CHECK(next == 2);

@@ -617,9 +617,12 @@ namespace xge
 		// On a map: which tile, and the map itself, for what walks it.
 		if (rawObject.cell.mapColumn > 0)
 		{
+			// A piece of a cell map, a chain or a shape has a cell part.
+			Object::Cells* cell = rawObject.cell.cells || !rawObject.chain.empty() || !rawObject.shapeRows.empty()
+				? &parts->cells.add(object.id, parts->orderOf(object.id), {}) : nullptr;
 			object.map.name = rawObject.cell.map;
 			object.map.home = rawObject.cell.map;
-			object.cell.chain = rawObject.chain;
+			if (cell) { cell->chain = rawObject.chain; }
 			object.map.column = rawObject.cell.mapColumn - 1;
 			object.map.row = rawObject.cell.mapRow - 1;
 			object.map.columns = rawObject.cell.mapColumns;
@@ -636,25 +639,25 @@ namespace xge
 				object.cellRow = object.start.cellRow = static_cast<float>(rawObject.cell.mapRow);
 				for (const RawCheck& check : rawObject.cell.checks)
 				{
-					object.cell.checks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count, check.straight, check.alike });
+					cell->checks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count, check.straight, check.alike });
 				}
 			}
 			for (std::size_t row = 0; row < rawObject.shapeRows.size(); ++row)
 			{
 				const std::string& cells = rawObject.shapeRows[row];
-				object.cell.shapeSize = std::max({ object.cell.shapeSize, static_cast<int>(cells.size()), static_cast<int>(rawObject.shapeRows.size()) });
+				cell->shapeSize = std::max({ cell->shapeSize, static_cast<int>(cells.size()), static_cast<int>(rawObject.shapeRows.size()) });
 				for (std::size_t column = 0; column < cells.size(); ++column)
 				{
 					const auto piece = rawObject.shapePieces.find(cells[column]);
 					if (piece == rawObject.shapePieces.end()) { continue; }
-					object.cell.shape.push_back({ static_cast<int>(column), static_cast<int>(row), piece->second });
+					cell->shape.push_back({ static_cast<int>(column), static_cast<int>(row), piece->second });
 				}
 			}
-			if (object.isShape() && object.cell.shape.empty())
+			if (cell && cell->shapeSize > 0 && cell->shape.empty())
 			{
 				throw std::runtime_error(where + " > <shape>: none of its characters picks an object of map '" + rawObject.cell.map + "'");
 			}
-			object.cell.shapeStart = object.cell.shape;
+			if (cell) { cell->shapeStart = cell->shape; }
 		}
 		if (!rawObject.maze.map.empty())
 		{

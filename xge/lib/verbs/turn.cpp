@@ -29,7 +29,7 @@ namespace xge
 		const CmdTurn& turn = std::get<CmdTurn>(command);
 		if (!doer.self || !doer.action) { return true; }
 		// A shape on a cell map: a quarter turn on the press.
-		if (doer.self->isShape()) { return !doer.pressed || executor.game.turnCells(*doer.self, turn.direction == Direction::Right); }
+		if (executor.game.isShape(*doer.self)) { return !doer.pressed || executor.game.turnCells(*doer.self, turn.direction == Direction::Right); }
 		executor.applyActionTurn(*doer.self, turn.direction, doer.pressed ? turn.rate : 0.0f);
 		return true;
 	}

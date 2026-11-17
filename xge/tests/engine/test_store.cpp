@@ -181,3 +181,20 @@ TEST_CASE("only an object written with <maze> has a maze part", "[store]")
 	CHECK(pacman.game.mazeOf(pacman.get("playing.pacman")) != nullptr);
 	CHECK(pacman.game.mazeOf(pacman.get("playing.status")) == nullptr);
 }
+
+TEST_CASE("only a piece of a cell map, a chain or a shape has a cell part", "[store]")
+{
+	{
+		played::Played pong("descriptions/pong.xml");
+		CHECK(pong.game.parts().cells.size() == 0);
+		CHECK_FALSE(pong.game.isShape(pong.get("ball")));
+	}
+	// Pac-Man's maze is a map of tiles, not of cells.
+	{
+		played::Played pacman("descriptions/pacman.xml");
+		CHECK(pacman.game.parts().cells.size() == 0);
+	}
+	played::Played tetris("descriptions/tetris.xml");
+	CHECK(tetris.game.parts().cells.size() > 0);
+	CHECK(tetris.game.parts().cells.size() < tetris.game.getCurrentObjects().size());
+}

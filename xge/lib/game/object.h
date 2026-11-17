@@ -1602,7 +1602,9 @@ namespace xge
 
 		// What a piece on a map with <cells /> has beyond its place: its
 		// <chain>, the map's checks, its <shape> and a held <move>
-		// (game/cells.cpp).
+		// (game/cells.cpp). A part (Parts::cells): a piece of a cell map, a
+		// chain or a shape has one from the start, a piece sent into a cell
+		// map is given one.
 		struct Cells
 		{
 			// <chain object>: what its links are (see RawObject::chain).
@@ -1627,8 +1629,6 @@ namespace xge
 			float heldWait{};
 			float heldEvery{};
 		};
-		Cells cell;
-		bool isShape() const noexcept { return cell.shapeSize > 0; }
 
 
 		// A timed <hop> under way (a flight): the whole way it goes, the

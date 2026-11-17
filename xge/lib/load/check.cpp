@@ -553,7 +553,7 @@ namespace xge
 			{
 				onLine(object.line, [&]
 				{
-					for (const auto& check : object.cell.checks) { checkVariable(object, "alike", check.alike); }
+					if (const Object::Cells* cells = parts.cells.find(object.id)) { for (const auto& check : cells->checks) { checkVariable(object, "alike", check.alike); } }
 					const Holder* holder = parts.holders.find(object.id);
 					if (!holder) { return; }
 					for (const std::string& by : holder->orderBy) { checkVariable(object, "by", by); }
@@ -854,11 +854,12 @@ namespace xge
 
 		// Turning and thrust along the heading, jumps and climbs need what
 		// they move by.
-		void checkActionMoves(const Object& object, const std::vector<Object>& objects, const std::string& name, const std::vector<Command>& commands, const std::string& where)
+		void checkActionMoves(const Object& object, const std::vector<Object>& objects, const Parts& parts, const std::string& name, const std::vector<Command>& commands, const std::string& where)
 		{
 			for (const auto& command : commands)
 			{
-				if (std::holds_alternative<CmdTurn>(shapeOf(command)) && object.isShape()) { continue; }
+				const Object::Cells* cells = parts.cells.find(object.id);
+				if (std::holds_alternative<CmdTurn>(shapeOf(command)) && cells && cells->shapeSize > 0) { continue; }
 				if ((std::holds_alternative<CmdTurn>(shapeOf(command)) || std::holds_alternative<CmdThrust>(shapeOf(command)) || std::holds_alternative<CmdSwing>(shapeOf(command))) && !object.turning.hasHeading)
 				{
 					throw std::runtime_error(where + ": action '" + name + "' turns it or thrusts along its heading, and it has no <heading>");
@@ -935,7 +936,7 @@ namespace xge
 						std::vector<std::string> path;
 						checkTriggerLoop(objects, object.name, name, path, where + " > <action name=\"" + name + "\">");
 
-						checkActionMoves(object, objects, name, commands, where);
+						checkActionMoves(object, objects, checks.parts, name, commands, where);
 					}
 					for (const auto& rule : object.collisionData.others)
 					{

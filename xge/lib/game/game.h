@@ -152,6 +152,18 @@ namespace xge
 		Hand& handOf(const Object& object) { return objectParts.hands.get(object.id); }
 		const Hand& handOf(const Object& object) const { return objectParts.hands.get(object.id); }
 
+		// Its cell part (Object::Cells): what it has as a piece of a cell
+		// map, a chain or a shape; nothing (an empty part) for one with none.
+		// cellPartFor gives it one.
+		const Object::Cells& cellPart(const Object& object) const noexcept
+		{
+			static const Object::Cells none{};
+			const Object::Cells* cells = objectParts.cells.find(object.id);
+			return cells ? *cells : none;
+		}
+		Object::Cells& cellPartFor(const Object& object) { return objectParts.give(objectParts.cells, object.id); }
+		bool isShape(const Object& object) const noexcept { return cellPart(object).shapeSize > 0; }
+
 		// Its maze part (<maze>), nullptr for one that walks none.
 		Maze* mazeOf(const Object& object) override { return objectParts.mazes.find(object.id); }
 
