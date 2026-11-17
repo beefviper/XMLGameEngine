@@ -157,7 +157,7 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.objClass == "creature") { object.velocity = { 0.0f, 0.0f }; object.timers.clear(); object.position = { 0.0f, 0.0f }; }
+				if (object.objClass == "creature") { object.velocity = { 0.0f, 0.0f }; object.clocks.clear(); object.position = { 0.0f, 0.0f }; }
 			}
 		}
 	};

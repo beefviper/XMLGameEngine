@@ -394,7 +394,7 @@ namespace xge
 		}
 		for (const Object& object : objects)
 		{
-			for (const Timer& timer : object.timers) { visit(timer.commands, &object); }
+			for (const Timer& timer : object.kind->timers) { visit(timer.commands, &object); }
 			visit(object.animation.then, &object);
 			for (const auto& frame : object.animation.commands) { visit(frame, &object); }
 			for (const Object::Look& look : object.looks.all)
@@ -823,7 +823,7 @@ namespace xge
 					}
 				}
 			};
-			for (const auto& timer : object.timers) { checkWalks(timer.commands, where + " > <timer>"); }
+			for (const auto& timer : object.kind->timers) { checkWalks(timer.commands, where + " > <timer>"); }
 			checkWalks(object.animation.then, where + " > <animation> > <then>");
 			for (const auto& frame : object.animation.commands) { checkWalks(frame, where + " > <animation> > <frame>"); }
 			for (const auto& look : object.looks.all)
@@ -909,7 +909,7 @@ namespace xge
 
 					checkWalksAndHoles(object, objects, checks.parts, where);
 
-					for (const auto& timer : object.timers)
+					for (const auto& timer : object.kind->timers)
 					{
 						checks.all(timer.commands, where + " > <timer>"); checks.ownLooks(timer.commands, &object, where + " > <timer>");
 						checkPlace(timer.commands, Place::ObjectTimer, where + " > <timer>");

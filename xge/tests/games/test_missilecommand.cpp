@@ -94,7 +94,7 @@ namespace
 				{
 					object.position = { 300.0f, -100000.0f };
 					object.velocity = { 0.0f, 0.0f };
-					object.timers.clear();
+					object.clocks.clear();
 				}
 			}
 		}
@@ -370,13 +370,13 @@ TEST_CASE("when its city is gone a missile turns for another", "[missilecommand]
 {
 	MissileCommand play;
 	play.start();
-	const auto chasing = play.missile("wave1", 2).timers;
+	const auto chasing = play.missile("wave1", 2).clocks;
 	play.holdMissiles("wave1");
 
 	// One missile above the first city, heading for it.
 	Object& missile = play.missile("wave1", 2);
 	const Object& first = play.game.getObject("cities.1");
-	missile.timers = chasing;
+	missile.clocks = chasing;
 	missile.position = { middleOf(first).x - 2.0f, 100.0f };
 	missile.velocity = { 0.0f, 48.0f };
 	play.frames(20);

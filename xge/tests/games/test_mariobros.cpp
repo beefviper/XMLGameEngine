@@ -189,7 +189,7 @@ TEST_CASE("mariobros.xml: a pest that gets up by itself turns red, and blue the 
 	{
 		play.game.become(creeper.name, "flipped");
 		play.frames(3);
-		creeper.timers.at(2).counting = true; creeper.timers.at(2).secondsLeft = 1.0 / 60.0;
+		creeper.clocks.at(2).counting = true; creeper.clocks.at(2).secondsLeft = 1.0 / 60.0;
 		play.frames(3);
 		REQUIRE(creeper.lookName() == "walking");
 		REQUIRE_FALSE(creeper.looks.palettes.empty());

@@ -389,8 +389,9 @@ namespace xge
 	// makeObject's timers, a named one's time left a number of its own.
 	void game_expr::buildTimers(RawObject& rawObject, Object& object, const std::string& where)
 	{
-		object.timers = processTimers(rawObject.timers, where);
-		for (const Timer& timer : object.timers)
+		object.kind->timers = processTimers(rawObject.timers, where);
+		object.clocks.assign(object.kind->timers.size(), {});
+		for (const Timer& timer : object.kind->timers)
 		{
 			if (timer.name.empty()) { continue; }
 			// A named timer's time left (see init): where it starts.
@@ -618,7 +619,7 @@ namespace xge
 		{
 			object.motion.grip = lossRate(evaluate(rawObject.rawGrip, where + " > <grip>"), where + " > <grip>");
 		}
-		for (const Timer& timer : object.timers)
+		for (const Timer& timer : object.kind->timers)
 		{
 			if (!timer.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == timer.sprite; }))
 			{

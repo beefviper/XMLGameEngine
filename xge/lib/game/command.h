@@ -1165,9 +1165,15 @@ namespace xge
 		// once-only timer that has gone off.
 		// A double: a long timer counted down in many short steps stays
 		// true to the ten-thousandth of a second.
-		double secondsLeft{};
-		bool counting{ false };
-		bool done{ false };
+		// A state's timer keeps its own; an object's are the object's
+		// (Object::clocks), its timers being its kind's (Kind::timers).
+		struct Clock
+		{
+			double secondsLeft{};
+			bool counting{ false };
+			bool done{ false };
+		};
+		Clock clock;
 	};
 
 	// One leg of a path as written: a step of x and y (and the commands run as

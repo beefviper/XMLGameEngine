@@ -1144,13 +1144,14 @@ namespace xge
 	Vector2f turnedBy(const Vector2f& way, float degrees) noexcept;
 
 	// What the objects of one kind have alike and never change while they
-	// play: the members of a <group>, or a piece and the copies spawned of
-	// it (RawObject::kind). Made for each object as it loads, checked
+	// play (their rules, actions and timers): the members of a <group>, or
+	// a piece and the copies spawned of it (RawObject::kind). Made for each object as it loads, checked
 	// for each, then shared by the kind (game_expr::shareKinds).
 	struct Kind
 	{
 		CollisionData collisionData;
 		std::map<std::string, std::vector<Command>> action;
+		std::vector<Timer> timers;   // their clocks are each object's (Object::clocks)
 		int written{ 0 };   // RawObject::kind
 	};
 
@@ -1863,9 +1864,10 @@ namespace xge
 		float blink{};
 		bool blinkedOut() const noexcept { return blink > 0.0f && static_cast<int>(blink * 15.0f) % 2 == 1; }
 
-		// The object's <timers>, which count while it is shown and in play
-		// (see Timer, Game::updateTimers).
-		std::vector<Timer> timers;
+		// How far each of its <timers> (its kind's, Kind::timers) has
+		// counted; they count while it is shown and in play (see Timer,
+		// Game::updateTimers).
+		std::vector<Timer::Clock> clocks;
 
 		// <surface>: `is`, this is ground. A thing with a <grip> whose middle
 		// is over it has `motion.drag` and `motion.grip` in place of its own (a surface
@@ -2251,8 +2253,8 @@ namespace xge
 	// A copy of an object, named `to` where it was `from`: what its own
 	// rules, timers, actions and values said of `from` by name they now say
 	// of `to` (self says itself already). What a <spawn> makes a copy from.
-	// Whether its rules or actions named `from`: if not, the copy is of
-	// its kind (Kind).
+	// Whether its rules, actions or timers named `from`: if not, the copy
+	// is of its kind (Kind).
 	bool renameOwn(RawObject& object, const std::string& from, const std::string& to);
 
 	// What a rule about another object leaves to mean the object it touched:

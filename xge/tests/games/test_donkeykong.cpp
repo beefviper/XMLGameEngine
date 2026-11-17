@@ -65,7 +65,7 @@ namespace
 			tap(KeyCode::Space);
 			REQUIRE(state() == "playing");
 			kong().variable["wait"] = 1000.0f;
-			kong().timers.at(0).counting = true; kong().timers.at(0).secondsLeft = 1000.0;
+			kong().clocks.at(0).counting = true; kong().clocks.at(0).secondsLeft = 1000.0;
 			frames(5);
 		}
 
@@ -278,7 +278,7 @@ TEST_CASE("Kong's barrel rolls down every girder to the oil drum", "[donkeykong]
 	play.start();
 	// Jumpman out of the way, on Pauline's girder clear of her.
 	play.standAt(420.0f, "perch");
-	play.kong().timers.at(0).counting = true; play.kong().timers.at(0).secondsLeft = 1.0 / 60.0;
+	play.kong().clocks.at(0).counting = true; play.kong().clocks.at(0).secondsLeft = 1.0 / 60.0;
 	play.frames(2);
 	REQUIRE(play.barrelsInPlay() >= 1);
 
@@ -370,7 +370,7 @@ TEST_CASE("paused, the girders are drawn still and a rolling barrel stops where 
 	DonkeyKong play;
 	play.start();
 	play.standAt(420.0f, "perch");
-	play.kong().timers.at(0).counting = true; play.kong().timers.at(0).secondsLeft = 1.0 / 60.0;
+	play.kong().clocks.at(0).counting = true; play.kong().clocks.at(0).secondsLeft = 1.0 / 60.0;
 	play.frames(10);
 	REQUIRE(play.barrelsInPlay() >= 1);
 	Object& barrel = play.game.getObject("barrel.1");

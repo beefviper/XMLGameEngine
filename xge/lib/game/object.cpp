@@ -906,12 +906,12 @@ namespace xge
 			if (rule.check.join != RawCondition::Join::None) { check(rule.check); }
 		}
 		for (auto& [actionName, list] : object.action) { commands(list); }
-		const bool kindNamedIt = said;
 		for (RawTimer& timer : object.timers)
 		{
 			value(timer.interval);
 			commands(timer.commands);
 		}
+		const bool kindNamedIt = said;
 		const auto animation = [&](RawValue& interval, std::vector<RawValue>& times, std::vector<std::vector<RawCommand>>& frames, std::vector<RawCommand>& then)
 		{
 			value(interval);
@@ -1020,13 +1020,9 @@ namespace xge
 				if (object.looks.shown != i || object.looks.all[i].once) { object.showLook(i); }
 				// A timer that follows this look starts over, even when the
 				// object showed it already: blue again is six seconds again.
-				for (auto& timer : object.timers)
+				for (std::size_t t = 0; t < object.clocks.size() && t < object.kind->timers.size(); ++t)
 				{
-					if (timer.sprite == name)
-					{
-						timer.counting = false;
-						timer.done = false;
-					}
+					if (object.kind->timers[t].sprite == name) { object.clocks[t] = {}; }
 				}
 				return true;
 			}
@@ -1158,11 +1154,7 @@ namespace xge
 	void Object::startOver()
 	{
 		restartAnimation();
-		for (auto& timer : timers)
-		{
-			timer.counting = false;
-			timer.done = false;
-		}
+		for (Timer::Clock& clock : clocks) { clock = {}; }
 	}
 
 	void Object::showAnimationFrame()

@@ -129,7 +129,7 @@ TEST_CASE("kaboom.xml loads a stack of buckets, and a bomber and a bomb that doe
 		const Object& object = table.game.getObject(of(wave, "bomber"));
 		CHECK(object.hasFacing);
 		CHECK(object.facing == Direction::Down);
-		CHECK(object.timers.size() == 2);
+		CHECK(object.kind->timers.size() == 2);
 		CHECK(object.position.y + object.size.y <= 104.0f + 1.0f);
 
 		const Object& bomb = table.game.getObject(of(wave, "bomb"));

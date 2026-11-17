@@ -1247,24 +1247,24 @@ namespace xge
 		}
 	}
 
-	bool Game::tickTimer(Timer& timer, const std::string& where, float& owed)
+	bool Game::tickTimer(const Timer& timer, Timer::Clock& clock, const std::string& where, float& owed)
 	{
-		if (timer.done)
+		if (clock.done)
 		{
 			owed = 0.0f;
 			return false;
 		}
 
-		if (!timer.counting)
+		if (!clock.counting)
 		{
-			timer.secondsLeft = static_cast<double>(evaluateNow(timer.interval, where));
-			timer.counting = true;
+			clock.secondsLeft = static_cast<double>(evaluateNow(timer.interval, where));
+			clock.counting = true;
 			// None at all: it goes off once a step.
-			if (!(timer.secondsLeft > 0.0)) { timer.secondsLeft = static_cast<double>(owed); }
+			if (!(clock.secondsLeft > 0.0)) { clock.secondsLeft = static_cast<double>(owed); }
 		}
 
-		timer.secondsLeft -= static_cast<double>(owed);
-		if (timer.secondsLeft > static_cast<double>(kTimeSlack))
+		clock.secondsLeft -= static_cast<double>(owed);
+		if (clock.secondsLeft > static_cast<double>(kTimeSlack))
 		{
 			owed = 0.0f;
 			return false;
@@ -1274,15 +1274,15 @@ namespace xge
 		// timer starts over, with its interval worked out again after its
 		// commands have run (so they can change it, and a <random> waits a
 		// new time); a once-only one is finished.
-		owed = static_cast<float>(std::max(0.0, -timer.secondsLeft));
-		if (timer.repeat) { timer.counting = false; }
-		else { timer.done = true; }
+		owed = static_cast<float>(std::max(0.0, -clock.secondsLeft));
+		if (timer.repeat) { clock.counting = false; }
+		else { clock.done = true; }
 		return true;
 	}
 
-	void Game::showTimeLeft(Object& object, const Timer& timer)
+	void Game::showTimeLeft(Object& object, const Timer& timer, const Timer::Clock& clock)
 	{
-		const float left = timer.done || !timer.counting ? 0.0f : static_cast<float>(std::ceil(std::max(0.0, timer.secondsLeft - static_cast<double>(kTimeSlack))));
+		const float left = clock.done || !clock.counting ? 0.0f : static_cast<float>(std::ceil(std::max(0.0, clock.secondsLeft - static_cast<double>(kTimeSlack))));
 		const auto found = object.variable.find(timer.name);
 		if (found == object.variable.end() || found->second == left) { return; }
 		found->second = left;
@@ -1326,7 +1326,8 @@ namespace xge
 		// but never how many there are.
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
-			for (std::size_t t = 0; t < objects[i].timers.size(); ++t)
+			const std::vector<Timer>& timers = objects[i].kind->timers;
+			for (std::size_t t = 0; t < objects[i].clocks.size() && t < timers.size(); ++t)
 			{
 				// Not shown, or sent away from its own map (a next-piece box).
 				if (!isShown(objects[i]) || objects[i].awayFromHome())
@@ -1335,7 +1336,7 @@ namespace xge
 				}
 
 				// One that follows a look counts only while the object shows it.
-				const std::string& sprite = objects[i].timers[t].sprite;
+				const std::string& sprite = timers[t].sprite;
 				if (!sprite.empty() && objects[i].lookName() != sprite)
 				{
 					continue;
@@ -1343,18 +1344,17 @@ namespace xge
 
 				// As often as the step owes it, its commands each time.
 				const std::string where = "object '" + objects[i].name + "' > <timer>";
-				for (float owed = seconds; owed > kTimeSlack && tickTimer(objects[i].timers[t], where, owed);)
+				for (float owed = seconds; owed > kTimeSlack && t < objects[i].clocks.size() && tickTimer(timers[t], objects[i].clocks[t], where, owed);)
 				{
-					// A copy: a command may reset the object, and its timers with it.
-					const std::vector<Command> commands = objects[i].timers[t].commands;
-					for (const auto& command : commands)
+					// Its kind's: a command that resets the object leaves them be.
+					for (const auto& command : timers[t].commands)
 					{
 						if (!executor.executeTimer(command, &objects[i])) { break; }
 					}
 					// Hidden, or out of the look it follows, it stops counting.
 					if (!isShown(objects[i]) || (!sprite.empty() && objects[i].lookName() != sprite)) { break; }
 				}
-				if (!objects[i].timers[t].name.empty()) { showTimeLeft(objects[i], objects[i].timers[t]); }
+				if (!timers[t].name.empty() && t < objects[i].clocks.size()) { showTimeLeft(objects[i], timers[t], objects[i].clocks[t]); }
 			}
 		}
 
@@ -1374,7 +1374,7 @@ namespace xge
 		{
 			for (std::size_t t = 0; t < timers.size() && unchanged(); ++t)
 			{
-				for (float owed = seconds; owed > kTimeSlack && unchanged() && tickTimer(timers[t], where, owed);)
+				for (float owed = seconds; owed > kTimeSlack && unchanged() && tickTimer(timers[t], timers[t].clock, where, owed);)
 				{
 					const std::vector<Command> commands = timers[t].commands;
 					takeTurnStop();
@@ -1515,11 +1515,7 @@ namespace xge
 			object.faceMirror();
 			object.wearPalette(0);
 			if (!object.looks.all.empty()) { object.showLook(object.looks.first); }
-			for (auto& timer : object.timers)
-			{
-				timer.counting = false;
-				timer.done = false;
-			}
+			for (Timer::Clock& clock : object.clocks) { clock = {}; }
 		}
 	}
 
