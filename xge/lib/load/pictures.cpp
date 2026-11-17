@@ -19,6 +19,8 @@
 #include "play/numbers.h"
 #include "audio/wave.h"
 #include <algorithm>
+#include <charconv>
+#include <iterator>
 #include <functional>
 #include <initializer_list>
 #include <cctype>
@@ -48,6 +50,15 @@ namespace xge
 				}
 			}
 			for (RawSprite& frame : sprite.frames) { restyle(frame, style); }
+		}
+
+		// A number in a picture's key, exactly: two keys are the same only
+		// when every number in them is.
+		std::string keyNumber(float value)
+		{
+			char text[32];
+			const auto written = std::to_chars(std::begin(text), std::end(text), value);
+			return std::string(text, written.ptr);
 		}
 
 		bool takesStyle(const RawSprite& sprite)
@@ -366,7 +377,7 @@ namespace xge
 				cell.y = evaluate(sprite.svgY, where);
 				cell.width = evaluate(sprite.svgWidth, where);
 				cell.height = evaluate(sprite.svgHeight, where);
-				key += std::to_string(cell.x) + "," + std::to_string(cell.y) + "," + std::to_string(cell.width) + "," + std::to_string(cell.height);
+				key += keyNumber(cell.x) + "," + keyNumber(cell.y) + "," + keyNumber(cell.width) + "," + keyNumber(cell.height);
 			}
 			else
 			{
@@ -378,7 +389,7 @@ namespace xge
 			const int toWidth = sized ? static_cast<int>(std::lround(evaluate(sprite.width, where))) : 0;
 			const int toHeight = sized ? static_cast<int>(std::lround(evaluate(sprite.height, where))) : 0;
 			const float cellScale = sprite.hasScale ? evaluate(sprite.scale, where) : 1.0f;
-			key += sized ? "|" + std::to_string(toWidth) + "x" + std::to_string(toHeight) : "|*" + std::to_string(cellScale);
+			key += sized ? "|" + std::to_string(toWidth) + "x" + std::to_string(toHeight) : "|*" + keyNumber(cellScale);
 			key += "|" + sprite.flip;
 
 			// 2. Cut, once for every sprite of the same cell and size (a
@@ -407,8 +418,8 @@ namespace xge
 
 			// 2. Drawn by lunasvg (picture/svg.cpp), once for every sprite that
 			// takes the same part at the same scale (a group's cells).
-			std::string key = "svg|" + sprite.path + "|" + std::to_string(region.x) + "," + std::to_string(region.y) + ","
-				+ std::to_string(region.width) + "," + std::to_string(region.height) + "|" + std::to_string(svgScale) + "|" + sprite.flip;
+			std::string key = "svg|" + sprite.path + "|" + keyNumber(region.x) + "," + keyNumber(region.y) + ","
+				+ keyNumber(region.width) + "," + keyNumber(region.height) + "|" + keyNumber(svgScale) + "|" + sprite.flip;
 			for (const std::string& hide : sprite.svgHide) { key += "|" + hide; }
 			drawn = drawOnce(key, [&] { return flipped(rasterizeSvg(sprite.path, region, svgScale, sprite.svgHide)); });
 		}

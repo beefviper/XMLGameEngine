@@ -68,3 +68,32 @@ TEST_CASE("objects showing one image file share one picture, and a flip is anoth
 		CHECK(flipped->rgba == flipBitmap(*play.get("thing1").drawnPicture(), true, false).rgba);
 	}
 }
+
+TEST_CASE("objects drawn alike share one picture, and a colour makes another", "[resources]")
+{
+	struct Kind
+	{
+		const char* name;
+		std::string sprite;
+		std::string recoloured;
+	};
+	const Kind kinds[] = {
+		{ "rows", "<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>color.red</color></bitmap>",
+			"<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>color.blue</color></bitmap>" },
+	};
+	for (const Kind& kind : kinds)
+	{
+		INFO(kind.name);
+		{
+			played::Scratch game{ alike(20, kind.sprite), "" };
+			played::Played play{ game.path };
+			CHECK(play.game.resources().pictureCount() == 1);
+			CHECK(play.get("thing0").drawn.bitmap == play.get("thing19").drawn.bitmap);
+		}
+		{
+			played::Scratch game{ alike(20, kind.sprite, kind.recoloured, 1), "" };
+			played::Played play{ game.path };
+			CHECK(play.game.resources().pictureCount() == 2);
+		}
+	}
+}

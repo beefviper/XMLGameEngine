@@ -265,18 +265,14 @@ namespace xge
 		std::map<std::string, Vector2f> layOutCells(const std::vector<RawObject>& rawObjects,
 			const std::map<std::string, Picture>& pictures);
 
-		// A picture drawn from rows of text or an svg, by everything it is
-		// drawn from (`key`): drawn by `draw` the first time it is asked for,
-		// and shared after that, so the 55 cells of a block of aliens are one
-		// picture, drawn once.
+		// The picture `key` names (everything it is drawn from), drawn by
+		// `draw` the first time and shared by the game's Resources after
+		// that, so the 55 cells of a block of aliens are one picture.
 		template <typename Draw>
 		std::shared_ptr<const Bitmap> drawOnce(const std::string& key, Draw&& draw)
 		{
-			std::shared_ptr<const Bitmap>& picture = drawnPictures[key];
-			if (!picture) { picture = std::make_shared<const Bitmap>(draw()); }
-			return picture;
+			return resources.shared(resources.picture(key, std::forward<Draw>(draw)));
 		}
-		std::map<std::string, std::shared_ptr<const Bitmap>> drawnPictures;
 
 		// Each picture an object with a <mirror> shows, and it flipped left
 		// to right, both ways round: made once, whoever shows it.
