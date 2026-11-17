@@ -29,7 +29,7 @@ The language had a pass that asked of every word whether it was needed. The C++ 
 | Pac-Man | 777 | 35 | 85 | 777 | 1,037 | 1,445 |
 | Klondike | 76 | 55 | 2,903 | 76 | 76 | 3,938 |
 
-A4 put an object's fields into parts by feature, which made it readable. It did not make it smaller: every object still holds every part.
+A4 put an object's fields into parts by feature, which made it readable. It did not make it smaller: every object still holds every part. Each part's size and how many objects use it: [object-parts](17-object-parts.md).
 
 ## Decided by the author
 

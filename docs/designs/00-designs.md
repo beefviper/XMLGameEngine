@@ -24,6 +24,7 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 | [verbs](14-verbs.md) | A file per verb, the list, and why it is written out | Built; reading open |
 | [lists](15-lists.md) | Sequences as holders: the bag of seven, Pac-Man's schedule, `top.` variables, spawn by member | Built; Simon and Mastermind Open |
 | [engine-structure](16-engine-structure.md) | Resources held once, parts as components, input/update/render, names | Decided |
+| [object-parts](17-object-parts.md) | Every part of an object: size, how many objects use it, what to do with it | For the author |
 
 ## Behaviour
 
