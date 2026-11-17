@@ -175,6 +175,15 @@ namespace xge
 		const Object::Cells::Place& place(const Object& object) const noexcept { return cellPart(object).place; }
 		Object::Cells::Place& placeFor(const Object& object) { return cellPartFor(object).place; }
 
+		// Its turns part (Object::Turns): an empty one (takes no turns) for
+		// one with none.
+		const Object::Turns& turnsOf(const Object& object) const noexcept
+		{
+			static const Object::Turns none{};
+			const Object::Turns* found = objectParts.turns.find(object.id);
+			return found ? *found : none;
+		}
+
 		// Its picker part (Object::Picker): what it holds, where its last
 		// move went, its marks; an empty part for one with none. pickerFor
 		// gives it one.

@@ -1510,13 +1510,13 @@ namespace xge
 		// turn, else 0. <owns class=>: the pieces it moves; a picker's
 		// <put />, <pick /> and a <think> with no class= take those of the
 		// member on its turn.
+		// A part (Parts::turns), only for a member that takes them.
 		struct Turns
 		{
 			bool takes{ false };
 			std::string sprite;
 			std::string ownsClass;
 		};
-		Turns turns;
 
 		// Drawn after everything with a smaller one; 0 keeps the file's order
 		// (items and hands are drawn above the rest).

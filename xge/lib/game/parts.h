@@ -31,6 +31,7 @@ namespace xge
 		Store<Object::Rest> rests;
 		Store<Object::Carry> carries;
 		Store<Object::Picker> pickers;
+		Store<Object::Turns> turns;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.

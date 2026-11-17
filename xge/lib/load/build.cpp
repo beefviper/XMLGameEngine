@@ -596,9 +596,7 @@ namespace xge
 		object.item.is = rawObject.held;
 		object.item.startHolder = rawObject.item.startHolder;
 		object.item.worths = rawObject.item.worths;
-		object.turns.takes = rawObject.takesTurns;
-		object.turns.sprite = rawObject.turnsSprite;
-		object.turns.ownsClass = rawObject.ownsClass;
+		if (rawObject.takesTurns) { parts->turns.add(object.id, order, { true, rawObject.turnsSprite, rawObject.ownsClass }); }
 	}
 
 	// makeObject's mirror, grip, timers' looks, its tile on a map, a

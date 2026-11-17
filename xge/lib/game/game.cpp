@@ -1574,7 +1574,7 @@ namespace xge
 		for (auto& object : objects)
 		{
 			// A group of players taking turns: the one on its turn.
-			const bool offTurn = object.turns.takes && object.inGroup(target) && object.variable["turn"] == 0.0f;
+			const bool offTurn = turnsOf(object).takes && object.inGroup(target) && object.variable["turn"] == 0.0f;
 			if (object.named(target) && !offTurn && (from.empty() || object.lookName() == from))
 			{
 				const std::string before = isHand(object) ? object.lookName() : std::string();
