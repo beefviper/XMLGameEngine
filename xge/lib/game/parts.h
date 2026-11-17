@@ -34,6 +34,7 @@ namespace xge
 		Store<Object::Turns> turns;
 		Store<Object::Item> items;
 		Store<Object::SizeUse> sizeUses;
+		Store<Object::Climb> climbs;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.

@@ -246,8 +246,9 @@ namespace xge
 			}
 			else if (const auto* climb = std::get_if<CmdClimb>(&actionCommand))
 			{
-				object.footing.activeClimb[climb->direction == Direction::Up ? 0 : 1] = climb->step;
-				object.footing.climbClass = climb->ladderClass;
+				Object::Climb& asked = game.parts().give(game.parts().climbs, object.id);
+				asked.activeClimb[climb->direction == Direction::Up ? 0 : 1] = climb->step;
+				asked.climbClass = climb->ladderClass;
 			}
 			else if (const auto* thrust = std::get_if<CmdThrustAcross>(&actionCommand))
 			{

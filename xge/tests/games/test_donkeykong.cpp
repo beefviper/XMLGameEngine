@@ -532,7 +532,7 @@ TEST_CASE("an unlucky barrel goes down a ladder and rolls on the other way; a lu
 	CHECK(unlucky.lookName() == "rolling");
 	CHECK(unlucky.velocity.x == Approx(-150.0f));
 	CHECK(unlucky.position.y + unlucky.size.y == Approx(play.top("fourth", unlucky.position.x + unlucky.size.x / 2.0f)).margin(1.0f));
-	CHECK(unlucky.footing.activeClimb[1] == 0.0f);
+	CHECK(play.game.parts().climbs.get(unlucky.id).activeClimb[1] == 0.0f);
 
 	// One with luck stays on its girder past the same ladder.
 	Object& lucky = play.barrelAt(500.0f, "top", 150.0f);

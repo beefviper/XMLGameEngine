@@ -1505,9 +1505,12 @@ namespace xge
 			object.footing.grounded = false;
 			object.footing.jumping = false;
 			object.footing.climbing = false;
-			object.footing.climbOnce = false;
+			if (Object::Climb* climb = parts.climbs.find(object.id))
+			{
+				climb->climbOnce = false;
+				climb->activeClimb = {};
+			}
 			object.shifted = {};
-			object.footing.activeClimb = {};
 			object.hasAim = false;
 			object.path.name.clear();
 			if (Maze* maze = parts.mazes.find(object.id)) { maze->walk = {}; }

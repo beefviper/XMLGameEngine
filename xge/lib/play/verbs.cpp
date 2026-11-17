@@ -321,7 +321,6 @@ namespace xge
 	{
 		object.velocity = {};
 		object.acceleration = {};
-		object.footing.activeClimb = {};
 		object.footing.climbing = false;
 		object.footing.jumping = false;
 		object.path.name.clear();

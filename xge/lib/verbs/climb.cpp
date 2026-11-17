@@ -28,14 +28,15 @@ namespace xge
 		return CmdClimb{ direction, evaluate(raw.amount), raw.objClass };
 	}
 
-	static bool runClimb(const Command& command, const Doer& doer, CommandExecutor&)
+	static bool runClimb(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
 		const CmdClimb& climb = std::get<CmdClimb>(command);
 		Object* const self = doer.self;
 		if (!self || !doer.action) { return true; }
-		self->footing.activeClimb[climb.direction == Direction::Up ? 0 : 1] = doer.pressed ? climb.step : 0.0f;
-		self->footing.climbClass = climb.ladderClass;
-		self->footing.climbOnce = doer.pressed && doer.byRule;
+		Object::Climb& asked = executor.game.parts().give(executor.game.parts().climbs, self->id);
+		asked.activeClimb[climb.direction == Direction::Up ? 0 : 1] = doer.pressed ? climb.step : 0.0f;
+		asked.climbClass = climb.ladderClass;
+		asked.climbOnce = doer.pressed && doer.byRule;
 		return true;
 	}
 

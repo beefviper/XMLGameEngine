@@ -124,13 +124,16 @@ namespace xge
 
 		void applyClimbing(std::vector<Object>& objects, FrameRules& rules, float t)
 		{
+			if (rules.parts().climbs.size() == 0) { return; }
 			for (auto& object : objects)
 			{
-				if (object.footing.climbClass.empty() || !rules.inPlay(object)) { continue; }
+				Object::Climb* const asked = rules.parts().climbs.find(object.id);
+				if (!asked || asked->climbClass.empty() || !rules.inPlay(object)) { continue; }
+				Object::Climb& climb = *asked;
 
 				const auto isLadder = [&](const Object& other)
 					{
-						return &other != &object && other.objClass == object.footing.climbClass && rules.inPlay(other);
+						return &other != &object && other.objClass == climb.climbClass && rules.inPlay(other);
 					};
 				const Box climber{ object.position, object.size };
 				const auto ladder = std::find_if(objects.begin(), objects.end(), [&](const Object& other)
@@ -169,8 +172,8 @@ namespace xge
 				// A player's climb holds at an end with nothing there to
 				// stand on (the top of a broken ladder) rather than stepping
 				// off into the air; one a rule started lets go anyway.
-				const float step = object.footing.activeClimb[1] - object.footing.activeClimb[0];
-				const bool holding = object.footing.climbing && !object.footing.climbOnce && step != 0.0f;
+				const float step = climb.activeClimb[1] - climb.activeClimb[0];
+				const bool holding = object.footing.climbing && !climb.climbOnce && step != 0.0f;
 				const bool holdTop = holding && step < 0.0f && !floorAt(objects, object, whole.top(), rules);
 				const bool holdBottom = holding && step > 0.0f && !floorAt(objects, object, whole.bottom(), rules);
 				const bool wasClimbing = object.footing.climbing;
@@ -180,10 +183,10 @@ namespace xge
 				}
 
 				if (!wasClimbing) { object.footing.jumping = false; }
-				if (wasClimbing && !object.footing.climbing && object.footing.climbOnce)
+				if (wasClimbing && !object.footing.climbing && climb.climbOnce)
 				{
-					object.footing.activeClimb = {};
-					object.footing.climbOnce = false;
+					climb.activeClimb = {};
+					climb.climbOnce = false;
 				}
 
 				if (!object.footing.climbing)

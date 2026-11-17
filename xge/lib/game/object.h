@@ -1676,19 +1676,25 @@ namespace xge
 		// next landing is worked out); a <jump> needs it. `jumping` is a jump
 		// under way: the way across stays as it was at the take-off until the
 		// next landing. `climbing` is on a ladder (playOneFrame): no
-		// pull, no landing, no walking off. `activeClimb` is the step held up
-		// (0) and down (1), and `climbClass` what it climbs.
+		// pull, no landing, no walking off.
 		struct Footing
 		{
 			bool grounded{ false };
 			bool jumping{ false };
 			bool climbing{ false };
+		};
+		Footing footing;
+
+		// What a <climb> asked of it, a part (Parts::climbs) given by the
+		// first: `activeClimb` is the step held up (0) and down (1), and
+		// `climbClass` what it climbs.
+		struct Climb
+		{
 			std::array<float, 2> activeClimb{};
 			std::string climbClass;
 			// A climb a rule or timer started, not a key: let go at the end.
 			bool climbOnce{ false };
 		};
-		Footing footing;
 
 		// Where an <aim> pointed it: the way its next <fire>s go (a unit
 		// vector), while hasAim. A move, hop or jump by key, or a reset,

@@ -21,6 +21,7 @@ namespace xge
 		if (doer.self)
 		{
 			xge::stop(*doer.self);
+			if (Object::Climb* climb = executor.game.parts().climbs.find(doer.self->id)) { climb->activeClimb = {}; }
 			executor.game.stopDrive(*doer.self);
 			if (Maze* maze = executor.game.mazeOf(*doer.self)) { maze->walk = {}; }
 		}

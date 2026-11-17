@@ -46,6 +46,7 @@ namespace xge
 		turns.remove(id);
 		items.remove(id);
 		sizeUses.remove(id);
+		climbs.remove(id);
 	}
 
 	namespace
@@ -74,5 +75,6 @@ namespace xge
 		copyPart(turns, from.turns, id);
 		copyPart(items, from.items, id);
 		copyPart(sizeUses, from.sizeUses, id);
+		copyPart(climbs, from.climbs, id);
 	}
 }
