@@ -175,14 +175,14 @@ namespace xge
 	// drawn, seen and there.
 	void game_expr::buildNames(RawObject& rawObject, Object& object)
 	{
-		object.groupName = names.of(rawObject.groupName);
-		object.outerGroups = names.of(rawObject.outerGroups);
-		object.name = names.of(rawObject.name);
+		object.groupName = nameStore.of(rawObject.groupName);
+		object.outerGroups = nameStore.of(rawObject.outerGroups);
+		object.name = nameStore.of(rawObject.name);
 		object.line = rawObject.line;
-		object.objClass = names.of(rawObject.objClass);
+		object.objClass = nameStore.of(rawObject.objClass);
 		object.isDrawn = rawObject.isDrawn;
-		object.ownerState = names.of(rawObject.ownerState);
-		object.ownerScene = names.of(rawObject.ownerScene);
+		object.ownerState = nameStore.of(rawObject.ownerState);
+		object.ownerScene = nameStore.of(rawObject.ownerScene);
 		object.start.ownerScene = object.ownerScene;
 
 		if (rawObject.objClass == "projectile")
@@ -629,8 +629,8 @@ namespace xge
 			// A piece of a cell map, a chain or a shape has a cell part.
 			Object::Cells* cell = rawObject.cell.cells || !rawObject.chain.empty() || !rawObject.shapeRows.empty()
 				? &parts->cells.add(object.id, parts->orderOf(object.id), {}) : nullptr;
-			object.map.name = rawObject.cell.map;
-			object.map.home = rawObject.cell.map;
+			object.map.name = nameStore.of(rawObject.cell.map);
+			object.map.home = object.map.name;
 			if (cell) { cell->chain = rawObject.chain; }
 			object.map.column = rawObject.cell.mapColumn - 1;
 			object.map.row = rawObject.cell.mapRow - 1;

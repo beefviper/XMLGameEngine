@@ -29,6 +29,7 @@ namespace xge
 		const std::string& str() const noexcept { return text ? *text : none(); }
 		operator const std::string&() const noexcept { return str(); }
 		bool empty() const noexcept { return text == nullptr; }
+		void clear() noexcept { text = nullptr; }
 		std::size_t size() const noexcept { return str().size(); }
 
 		friend bool operator==(Name a, Name b) noexcept { return a.text == b.text; }

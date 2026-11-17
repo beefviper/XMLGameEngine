@@ -188,7 +188,7 @@ namespace xge
 		const int columns = like->map.columns;
 		const int rows = like->map.rows;
 		std::vector<Object::CellCheck> checks = cellPart(*like).checks;
-		object.map.name = map;
+		object.map.name = nameOf(map);
 		object.map.origin = origin;
 		object.map.tile = tile;
 		object.map.columns = columns;

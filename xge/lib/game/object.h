@@ -1431,7 +1431,7 @@ namespace xge
 		// maps a walker finds its way on are made from these (buildMazes).
 		struct MapPlace
 		{
-			std::string name;
+			Name name;
 			int column{};
 			int row{};
 			Vector2f origin{};
@@ -1446,7 +1446,7 @@ namespace xge
 			// The map it was written on. Sent to another (a next-piece box), it
 			// is only shown there: its timers do not count and its actions do
 			// not run until it is back (see awayFromHome).
-			std::string home;
+			Name home;
 		};
 		MapPlace map;
 		bool awayFromHome() const noexcept { return map.cells && map.name != map.home; }
@@ -1735,7 +1735,7 @@ namespace xge
 		// first leg (a <stagger>). A reset, a <die /> or a <reveal> ends it.
 		struct OnPath
 		{
-			std::string name;
+			Name name;
 			std::size_t leg{};
 			Vector2f left{};
 			bool legStarted{ false };

@@ -333,7 +333,7 @@ namespace xge
 
 		made.copyOf = original.name;
 		made.groupName = nameOf(copy.groupName);
-		made.outerGroups = expr.names.of(copy.outerGroups);
+		made.outerGroups = expr.nameStore.of(copy.outerGroups);
 		made.ownerState = original.ownerState;
 		made.ownerScene = original.ownerScene;
 		made.start.ownerScene = original.ownerScene;
@@ -1636,7 +1636,7 @@ namespace xge
 			return;
 		}
 
-		object.path.name = path;
+		object.path.name = nameOf(path);
 		object.path.leg = 0;
 		object.path.left = {};
 		object.path.legStarted = false;

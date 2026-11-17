@@ -82,7 +82,7 @@ namespace xge
 		const Resources& resources() const noexcept { return expr.resources; }
 
 		// The game's name for that text (NameStore), held from now on.
-		Name nameOf(std::string_view text) { return expr.names.of(text); }
+		Name nameOf(std::string_view text) { return expr.nameStore.of(text); }
 
 		// Whether the object is in play: it moves, animates, counts its timers
 		// and collides (and is drawn, unless it is <hidden />). It
