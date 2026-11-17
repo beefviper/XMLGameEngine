@@ -96,7 +96,7 @@ namespace xge
 
 		// The command as it runs: itself, or one made as it runs (CmdLive)
 		// made again into `made` (see Game::makeNow).
-		const Command& now(const Command& command, Command& made);
+		const Command& now(const Command& command, Command& made, const Object* self);
 
 		// <spawn>: see CmdSpawn; false, and nothing made, when no more of
 		// it may exist (<most>).

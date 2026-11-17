@@ -2233,6 +2233,14 @@ namespace xge
 	// step, run by whichever object flies it). The answer is whether the
 	// list said anything of itself, so changed.
 	bool nameSelfIn(std::vector<RawCommand>& list, const std::string& name);
+	bool nameSelfIn(RawCommand& command, const std::string& name);
+
+	// Only the tests in a list (a <condition>'s, and a <trigger> with no
+	// object=) made about `name`; the commands keep self (see nameSelf).
+	void nameSelfInTests(std::vector<RawCommand>& list, const std::string& name);
+
+	// Whether a command says anything of self.
+	bool namesSelf(const RawCommand& command);
 
 	// A copy of an object, named `to` where it was `from`: what its own
 	// rules, timers, actions and values said of `from` (by its name, or by

@@ -851,12 +851,14 @@ namespace xge
 	// the touch a rule is answering): made again from what was written each
 	// time it runs, so a variable can always be changed. `loaded` is the
 	// command as it was made at load, which says what kind of command it is
-	// (see shapeOf). See Game::makeNow.
+	// (see shapeOf). See Game::makeNow. One that says self (`namesSelf`)
+	// is made for the object running it, as it runs.
 	struct CmdLive
 	{
 		std::shared_ptr<const RawCommand> raw;
 		std::shared_ptr<const LoadedCommand> loaded;
 		std::string where;
+		bool namesSelf{ false };
 	};
 
 	using Command = std::variant<

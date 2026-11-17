@@ -16,12 +16,19 @@
 #include <limits>
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 namespace xge
 {
 	Object game_expr::makeObject(RawObject& rawObject, const FirstPass& first, Vector2f cellOffset, int thisLockstep)
 	{
 		const std::string where = "object '" + rawObject.name + "'";
+		struct Self
+		{
+			std::string& name;
+			std::string was;
+			~Self() { name = std::move(was); }
+		} self{ selfName, std::exchange(selfName, rawObject.name) };
 
 		// Only a text showing a number needs working out again here, for the
 		// value it has by now (see above).

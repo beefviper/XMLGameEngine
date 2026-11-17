@@ -14,7 +14,7 @@
 - "A variable should always be able to be changed": an `<inc>` amount was fixed at load, so a fish could not add its own worth.
 - **Chosen: a command remembers what it was written as.** One whose values name a live number, and every `<set>` and `<spawn>`, is kept raw (`CmdLive`) and made again by `makeCommand` each time it runs, so no verb needs to know. Rejected: each verb evaluating its own fields (every verb twice), every command live (wasted work on every bounce).
 - **Live numbers** (`x`, `y`, `velocity.x`, `heading`, `altitude`, `light`, `blink`, and `touch.*` in a rule) are bound into the arithmetic before a value is worked out. Only a command's value may read them; anywhere else would read 0, so the load stops.
-- `self.` is written out to the object's own name before evaluation (`nameSelf`), in its commands and in its own numbers (variables, position, heading).
+- `self.` in an object's own numbers (variables, position, heading) is written out to its name before evaluation (`nameSelf`). In the commands of its rules, timers and actions it stays `self`, and such a command is made for the object running it, as it runs (`CmdLive::namesSelf`, `Game::makeNow`), so the objects of one group can share their commands (CR3 step 5a). Their tests are still made the object's name at load, for now.
 
 ## Numbers that follow
 

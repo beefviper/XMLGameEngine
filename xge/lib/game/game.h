@@ -208,7 +208,7 @@ namespace xge
 		void reactTo(Object& self, Object& other, const Touch& touch);
 		// A rule naming other, made for a copy (shot.3) of the object it was
 		// made for (shot): once, the first time that copy is touched.
-		const CopyRule& ruleForCopy(CollisionRule& rule, const std::string& copy);
+		const CopyRule& ruleForCopy(CollisionRule& rule, const std::string& copy, const std::string& owner);
 		// A test made about the object `from`, made about `to`, a copy of it.
 		void retargetCheck(Condition& check, const std::string& from, const std::string& to);
 
@@ -223,7 +223,9 @@ namespace xge
 		// from what is so now. A value that cannot be worked out (a division
 		// by nothing is fine; an expression gone wrong is not) leaves it as it
 		// was made at load, with one warning.
-		Command makeNow(const CmdLive& live);
+		Command makeNow(const CmdLive& live, const Object* self);
+		// What makeNow names self in.
+		RawCommand ownCommand;
 
 		// <set variable="target">: a variable of an object's (owner.name), or
 		// one of the numbers every object has (owner.x, owner.y,

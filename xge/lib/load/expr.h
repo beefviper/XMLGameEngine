@@ -181,6 +181,11 @@ namespace xge
 		bool commandValues{ false };
 		std::set<std::string> warnedDivisions;
 
+		// The object whose rules, timers and actions are being made: a
+		// command of theirs that says self is made as it runs (CmdLive), for
+		// the object running it; the one made at load is about this one.
+		std::string selfName;
+
 		// The names a text may read, and every text compiled so far
 		// (evaluateExpression); with the names each text reads (namesIn):
 		// the same texts are worked out again and again.

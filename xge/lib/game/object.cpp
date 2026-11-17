@@ -609,7 +609,28 @@ namespace xge
 	bool nameSelfIn(std::vector<RawCommand>& list, const std::string& name)
 	{
 		bool changed = false;
+		for (RawCommand& command : list) { changed = nameSelfIn(command, name) || changed; }
+		return changed;
+	}
+
+	void nameSelfInTests(std::vector<RawCommand>& list, const std::string& name)
+	{
 		for (RawCommand& command : list)
+		{
+			if (command.verb == "trigger" && command.object.empty()) { command.object = name; }
+			if (command.test)
+			{
+				auto test = std::make_shared<RawCondition>(*command.test);
+				nameSelfInCheck(*test, name);
+				nameSelfInTests(test->commands, name);
+				command.test = std::move(test);
+			}
+		}
+	}
+
+	bool nameSelfIn(RawCommand& command, const std::string& name)
+	{
+		bool changed = false;
 		{
 			if (command.verb == "trigger" && command.object.empty()) { command.object = name; changed = true; }
 			for (std::string* text : { &command.variable, &command.into })
@@ -632,6 +653,12 @@ namespace xge
 			}
 		}
 		return changed;
+	}
+
+	bool namesSelf(const RawCommand& command)
+	{
+		RawCommand probe = command;
+		return nameSelfIn(probe, "self_");
 	}
 
 	namespace
@@ -755,22 +782,25 @@ namespace xge
 		for (RawObject& object : objects)
 		{
 			const std::function<void(RawValue&)> value = [&](RawValue& each) { nameSelfInValue(each, object.name); };
+			// The commands of its rules, timers and actions keep self, found
+			// as each runs (Game::makeNow); only their tests are made its name.
+			const auto own = [&](std::vector<RawCommand>& list) { nameSelfInTests(list, object.name); };
 			const auto commands = [&](std::vector<RawCommand>& list) { nameSelfIn(list, object.name); };
 			const auto check = [&](RawCondition& condition) { nameSelfInCheck(condition, object.name); };
 
 			RawCollisionData& collisions = object.rawCollisionData;
 			for (auto& edge : collisions.edges)
 			{
-				commands(edge.commands);
+				own(edge.commands);
 				for (EdgeGuard& guard : edge.guards) { if (guard.rawCheck.join != RawCondition::Join::None) { check(guard.rawCheck); } }
 			}
 			for (RawCollisionRule& rule : collisions.others)
 			{
-				commands(rule.commands);
+				own(rule.commands);
 				if (rule.check.join != RawCondition::Join::None) { check(rule.check); }
 			}
-			for (RawTimer& timer : object.timers) { commands(timer.commands); }
-			for (auto& [name, list] : object.action) { commands(list); }
+			for (RawTimer& timer : object.timers) { own(timer.commands); }
+			for (auto& [name, list] : object.action) { own(list); }
 			// Its animations: their live seconds, what a picture does as it
 			// comes up and what an animation that ends does then.
 			const auto animation = [&](RawValue& interval, std::vector<RawValue>& times, std::vector<std::vector<RawCommand>>& frames, std::vector<RawCommand>& then)
@@ -789,10 +819,6 @@ namespace xge
 			for (RawValue* half : { &object.rawPosition.x, &object.rawPosition.y, &object.rawHeading }) { value(*half); }
 			// The numbers its texts show (<number>self.value</number>).
 			for (RawTextPiece& piece : object.sprite.text) { value(piece.value); }
-		for (RawSprite& look : object.looks)
-		{
-			for (RawTextPiece& piece : look.text) { value(piece.value); }
-		}
 			for (RawSprite& look : object.looks)
 			{
 				for (RawTextPiece& piece : look.text) { value(piece.value); }

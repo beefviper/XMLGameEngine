@@ -2169,13 +2169,15 @@ namespace xge
 		return true;
 	}
 
-	const CopyRule& Game::ruleForCopy(CollisionRule& rule, const std::string& copy)
+	const CopyRule& Game::ruleForCopy(CollisionRule& rule, const std::string& copy, const std::string& owner)
 	{
 		if (const auto found = rule.copies.find(copy); found != rule.copies.end()) { return found->second; }
 		std::vector<RawCommand> written = *rule.written;
 		renameObjectIn(written, rule.otherIs, copy);
 		CopyRule made;
+		const std::string was = std::exchange(expr.selfName, owner);
 		made.commands = expr.processCommands(written, rule.where);
+		expr.selfName = was;
 		if (rule.check)
 		{
 			made.check = *rule.check;
@@ -2211,7 +2213,7 @@ namespace xge
 			// A rule naming other, touching a copy of the one it was made for:
 			// its commands and check about that copy.
 			const bool copy = !rule.otherIs.empty() && other.name != rule.otherIs;
-			const CopyRule* made = copy ? &ruleForCopy(rule, other.name) : nullptr;
+			const CopyRule* made = copy ? &ruleForCopy(rule, other.name, self.name) : nullptr;
 			const std::optional<Condition>& check = made ? made->check : rule.check;
 			if (check && !holds(*check)) { continue; }
 
@@ -2298,10 +2300,20 @@ namespace xge
 		return expr.evaluate(value, where);
 	}
 
-	Command Game::makeNow(const CmdLive& live)
+	Command Game::makeNow(const CmdLive& live, const Object* self)
 	{
 		try
 		{
+			// One that says self, for the object running it; with none to
+			// run it, as it was made at load.
+			if (live.namesSelf)
+			{
+				if (!self) { return live.loaded->command; }
+				// Into one kept for it, so its texts' room is used again.
+				ownCommand = *live.raw;
+				nameSelfIn(ownCommand, self->name);
+				return makeCommand(ownCommand, [&](const RawValue& value) { return evaluateNow(value, live.where); });
+			}
 			return makeCommand(*live.raw, [&](const RawValue& value) { return evaluateNow(value, live.where); });
 		}
 		catch (const std::runtime_error& error)

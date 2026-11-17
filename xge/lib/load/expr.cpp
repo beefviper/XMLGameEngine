@@ -1124,19 +1124,29 @@ namespace xge
 					commands.push_back(CmdWhen{ std::move(body) });
 					continue;
 				}
-				Command made = onLine(each.line, [&] { return makeCommand(each, [&](const RawValue& value) { return evaluate(value, where); }); });
+				// One that says self is made for the object running it, each
+				// time it runs; at load, for the one being made.
+				const bool own = !selfName.empty() && namesSelf(each);
+				RawCommand named;
+				if (own)
+				{
+					named = each;
+					nameSelfIn(named, selfName);
+				}
+				const RawCommand& making = own ? named : each;
+				Command made = onLine(each.line, [&] { return makeCommand(making, [&](const RawValue& value) { return evaluate(value, where); }); });
 
 				// One whose numbers can change is made again each time it runs
 				// (CmdLive); <set> and <spawn> always are, since what they
 				// put somewhere is the point of them.
-				const bool live = each.verb == "set" || each.verb == "spawn"
-					|| namesLive(each.amount) || namesLive(each.seconds) || namesLive(each.distance) || namesLive(each.ahead)
-					|| (each.verb == "shift" && (namesLive(each.positionX) || namesLive(each.positionY)));
+				const bool live = own || each.verb == "set" || each.verb == "spawn"
+					|| namesLive(making.amount) || namesLive(making.seconds) || namesLive(making.distance) || namesLive(making.ahead)
+					|| (each.verb == "shift" && (namesLive(making.positionX) || namesLive(making.positionY)));
 				if (live)
 				{
 					auto loaded = std::make_shared<LoadedCommand>();
 					loaded->command = std::move(made);
-					commands.push_back(CmdLive{ std::make_shared<const RawCommand>(each), std::move(loaded), where });
+					commands.push_back(CmdLive{ std::make_shared<const RawCommand>(each), std::move(loaded), where, own });
 				}
 				else
 				{
