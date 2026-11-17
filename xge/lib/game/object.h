@@ -1484,28 +1484,6 @@ namespace xge
 			float count{};
 		};
 		Moves moves;
-		// A picker (it runs <pick>) and a cursor that moves <onto> pieces.
-		struct Picker
-		{
-			// The piece it holds ("" for none), and whether that piece is in
-			// the middle of a run of jumps, which it must finish.
-			std::string picked;
-			bool inChain{ false };
-			// The cells the last move it placed went from and to (0 for none).
-			int fromColumn{};
-			int fromRow{};
-			int toColumn{};
-			int toRow{};
-			// A hop up or down <onto> pieces keeps to the column the first of
-			// them started from (keptColumn), while it is still in the cell the
-			// last one left it in (keptAt): a text cursor's way.
-			int keptColumn{};
-			std::pair<int, int> keptAt{};
-			// A <track> <onto> pieces: where the control points, in pixels, each
-			// half as it last came (below 0: not yet).
-			Vector2f pointer{ -1.0f, -1.0f };
-		};
-		Picker picker;
 
 		// <marks>: copies of the mark pieces put in the cells marked (see
 		// Game::showMarks), made again only when what is marked changes.
@@ -1566,7 +1544,31 @@ namespace xge
 			std::vector<Marked> marked;
 			std::vector<std::string> copies;
 		};
-		Marks marks;
+		// A picker (it runs <pick>) and a cursor that moves <onto> pieces, with
+		// its <marks>. A part (Parts::pickers): one written with <marks> has it
+		// from the start, and the first pick, place, hop or track gives it.
+		struct Picker
+		{
+			// The piece it holds ("" for none), and whether that piece is in
+			// the middle of a run of jumps, which it must finish.
+			std::string picked;
+			bool inChain{ false };
+			// The cells the last move it placed went from and to (0 for none).
+			int fromColumn{};
+			int fromRow{};
+			int toColumn{};
+			int toRow{};
+			// A hop up or down <onto> pieces keeps to the column the first of
+			// them started from (keptColumn), while it is still in the cell the
+			// last one left it in (keptAt): a text cursor's way.
+			int keptColumn{};
+			std::pair<int, int> keptAt{};
+			// A <track> <onto> pieces: where the control points, in pixels, each
+			// half as it last came (below 0: not yet).
+			Vector2f pointer{ -1.0f, -1.0f };
+			// Its <marks>: its sets, the cells marked now and the copies put in them.
+			Marks marks;
+		};
 		// One of the map's <checks>, made ready.
 		struct CellCheck
 		{

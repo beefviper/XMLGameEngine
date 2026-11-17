@@ -143,14 +143,14 @@ TEST_CASE("checkers.xml: a man steps forward on a slant, and the turn passes", "
 	Board board;
 	board.space(3, 6);
 	CHECK(board.cursor().lookName() == "held");
-	CHECK(board.cursor().picker.picked == board.at("red", 3, 6)->name);
+	CHECK(board.game.pickerOf(board.cursor()).picked == board.at("red", 3, 6)->name);
 	board.space(4, 5);
 	CHECK(board.at("red", 4, 5));
 	CHECK_FALSE(board.at("red", 3, 6));
 	CHECK(board.cursor().lookName() == "free");
 	CHECK(board.turn() == 2.0f);
 	CHECK(board.get("whites").lookName() == "moving");
-	CHECK(board.cursor().picker.picked.empty());
+	CHECK(board.game.pickerOf(board.cursor()).picked.empty());
 }
 
 TEST_CASE("checkers.xml: what is no move is refused, and so is the other side's piece", "[checkers]")
@@ -173,7 +173,7 @@ TEST_CASE("checkers.xml: what is no move is refused, and so is the other side's 
 
 	// Space on another of red's own: that one is held instead.
 	board.space(5, 6);
-	CHECK(board.cursor().picker.picked == board.at("red", 5, 6)->name);
+	CHECK(board.game.pickerOf(board.cursor()).picked == board.at("red", 5, 6)->name);
 	board.space(6, 5);
 	CHECK(board.at("red", 6, 5));
 	CHECK(board.cursor().lookName() == "free");
@@ -215,12 +215,12 @@ TEST_CASE("checkers.xml: a piece that can jump again must, before the turn passe
 	CHECK_FALSE(board.at("white", 3, 6));
 	// Still red's, the same man held.
 	CHECK(board.cursor().lookName() == "held");
-	CHECK(board.cursor().picker.inChain);
+	CHECK(board.game.pickerOf(board.cursor()).inChain);
 	CHECK(board.turn() == 1.0f);
 
 	// Not another piece, not a step.
 	board.space(1, 8);
-	CHECK(board.cursor().picker.picked == board.at("red", 4, 5)->name);
+	CHECK(board.game.pickerOf(board.cursor()).picked == board.at("red", 4, 5)->name);
 	board.space(3, 4);
 	CHECK(board.at("red", 4, 5));
 
@@ -228,7 +228,7 @@ TEST_CASE("checkers.xml: a piece that can jump again must, before the turn passe
 	CHECK(board.at("red", 6, 3));
 	CHECK(board.count("white") == 1);
 	CHECK(board.cursor().lookName() == "free");
-	CHECK_FALSE(board.cursor().picker.inChain);
+	CHECK_FALSE(board.game.pickerOf(board.cursor()).inChain);
 }
 
 TEST_CASE("checkers.xml: a man on the far row is crowned, and a king goes backwards too", "[checkers]")
@@ -263,7 +263,7 @@ TEST_CASE("checkers.xml: a crowning jump ends the move", "[checkers]")
 	CHECK(board.at("red", 4, 1)->lookName() == "king");
 	CHECK(board.at("white", 3, 2));
 	CHECK(board.cursor().lookName() == "free");
-	CHECK_FALSE(board.cursor().picker.inChain);
+	CHECK_FALSE(board.game.pickerOf(board.cursor()).inChain);
 }
 
 TEST_CASE("checkers.xml: taking the last piece wins", "[checkers]")
@@ -411,17 +411,17 @@ TEST_CASE("checkers.xml: X puts the piece held back, but not in a run of jumps",
 	REQUIRE(board.cursor().lookName() == "held");
 	board.tap(KeyCode::X);
 	CHECK(board.cursor().lookName() == "free");
-	CHECK(board.cursor().picker.picked.empty());
+	CHECK(board.game.pickerOf(board.cursor()).picked.empty());
 	CHECK(board.at("red", 3, 6));
 
 	Board chain;
 	chain.only({ { "red", 2, 7 }, { "white", 3, 6 }, { "white", 5, 4 }, { "white", 8, 1 } });
 	chain.space(2, 7);
 	chain.space(4, 5);
-	REQUIRE(chain.cursor().picker.inChain);
+	REQUIRE(chain.game.pickerOf(chain.cursor()).inChain);
 	chain.tap(KeyCode::Backspace);
 	CHECK(chain.cursor().lookName() == "held");
-	CHECK_FALSE(chain.cursor().picker.picked.empty());
+	CHECK_FALSE(chain.game.pickerOf(chain.cursor()).picked.empty());
 }
 
 TEST_CASE("checkers.xml: with the option on, the only piece that can move is picked up for you", "[checkers]")
@@ -432,7 +432,7 @@ TEST_CASE("checkers.xml: with the option on, the only piece that can move is pic
 	board.only({ { "red", 4, 5 }, { "red", 1, 8 }, { "red", 2, 7 }, { "white", 5, 4 }, { "white", 8, 1 } });
 	board.frames(2);
 	CHECK(board.cursor().lookName() == "held");
-	CHECK(board.cursor().picker.picked == board.at("red", 4, 5)->name);
+	CHECK(board.game.pickerOf(board.cursor()).picked == board.at("red", 4, 5)->name);
 	board.space(6, 3);
 	CHECK(board.at("red", 6, 3));
 	CHECK(board.count("white") == 1);

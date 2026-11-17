@@ -1463,14 +1463,17 @@ namespace xge
 			parts.drives.remove(object.id);
 			object.swing.held = false;
 			object.swing.done = 0.0f;
-			object.picker.picked.clear();
-			object.picker.inChain = false;
-			object.picker.fromColumn = 0;
-			object.picker.fromRow = 0;
-			object.picker.toColumn = 0;
-			object.picker.toRow = 0;
-			object.marks.marked.clear();
-			object.marks.copies.clear();
+			if (Object::Picker* picker = parts.pickers.find(object.id))
+			{
+				picker->picked.clear();
+				picker->inChain = false;
+				picker->fromColumn = 0;
+				picker->fromRow = 0;
+				picker->toColumn = 0;
+				picker->toRow = 0;
+				picker->marks.marked.clear();
+				picker->marks.copies.clear();
+			}
 			if (Object::Rest* rest = parts.rests.find(object.id)) { *rest = {}; }
 			object.turning.spin = 0.0f;
 			object.showHeading();
@@ -2068,7 +2071,7 @@ namespace xge
 	{
 		// Pieces of cell maps meet each other by their moves, and a shape
 		// touches nothing but by them.
-		if ((a.map.cells && b.map.cells) || isShape(a) || isShape(b)) { return false; }
+		if ((a.map.cells && b.map.cells) || (a.map.cells && isShape(a)) || (b.map.cells && isShape(b))) { return false; }
 
 		const auto answers = [](const Object& self, const Object& other)
 		{

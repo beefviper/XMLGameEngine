@@ -534,7 +534,7 @@ namespace xge
 				mark.variable = raw.variable;
 				set.marks.push_back(std::move(mark));
 			}
-			object.marks.sets.push_back(std::move(set));
+			parts->give(parts->pickers, object.id).marks.sets.push_back(std::move(set));
 		}
 	}
 

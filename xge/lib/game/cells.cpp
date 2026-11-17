@@ -1126,7 +1126,7 @@ namespace xge
 
 	bool Game::putPiece(Object& picker, const CmdPut& put)
 	{
-		if (!picker.map.cells || !picker.picker.picked.empty()) { return false; }
+		if (!picker.map.cells || !pickerOf(picker).picked.empty()) { return false; }
 		const int column = whole(picker.cellColumn);
 		// The first piece of the class that may go there.
 		Object* kind = nullptr;
@@ -1210,10 +1210,10 @@ namespace xge
 				closed = true;
 			}
 		}
-		picker.picker.fromColumn = column;
-		picker.picker.fromRow = row;
-		picker.picker.toColumn = column;
-		picker.picker.toRow = row;
+		pickerFor(picker).fromColumn = column;
+		pickerFor(picker).fromRow = row;
+		pickerFor(picker).toColumn = column;
+		pickerFor(picker).toRow = row;
 		// The map's checks asked about what it has now (a line made).
 		askChecks(map);
 		countMoves();
@@ -1238,7 +1238,7 @@ namespace xge
 
 	bool Game::pickPiece(Object& picker, const std::string& objClass, bool only)
 	{
-		if (picker.picker.inChain || !picker.map.cells) { return false; }
+		if (pickerOf(picker).inChain || !picker.map.cells) { return false; }
 		if (only)
 		{
 			Object* one = nullptr;
@@ -1248,8 +1248,8 @@ namespace xge
 				if (one) { return false; }
 				one = &piece;
 			}
-			if (!one || picker.picker.picked == one->name) { return false; }
-			picker.picker.picked = one->name;
+			if (!one || pickerOf(picker).picked == one->name) { return false; }
+			pickerFor(picker).picked = one->name;
 			return true;
 		}
 		const int column = whole(picker.cellColumn);
@@ -1262,7 +1262,7 @@ namespace xge
 				continue;
 			}
 			if (legalMoves(piece, false).empty()) { return false; }
-			picker.picker.picked = piece.name;
+			pickerFor(picker).picked = piece.name;
 			return true;
 		}
 		return false;
@@ -1270,29 +1270,29 @@ namespace xge
 
 	bool Game::placePiece(Object& picker)
 	{
-		if (picker.picker.picked.empty() || !picker.map.cells) { return false; }
-		Object* piece = findAnywhere(picker.picker.picked);
+		if (pickerOf(picker).picked.empty() || !picker.map.cells) { return false; }
+		Object* piece = findAnywhere(pickerOf(picker).picked);
 		if (!piece || !piece->exists || !isShown(*piece))
 		{
-			picker.picker.picked.clear();
-			picker.picker.inChain = false;
+			pickerFor(picker).picked.clear();
+			pickerFor(picker).inChain = false;
 			return false;
 		}
 		const int column = whole(picker.cellColumn);
 		const int row = whole(picker.cellRow);
-		const std::vector<PieceMoveTo> moves = legalMoves(*piece, picker.picker.inChain);
+		const std::vector<PieceMoveTo> moves = legalMoves(*piece, pickerOf(picker).inChain);
 		const auto move = std::find_if(moves.begin(), moves.end(), [&](const PieceMoveTo& each) { return each.column == column && each.row == row; });
 		if (move == moves.end()) { return false; }
 
 		const Object::MoveSet* set = moveSetOf(*piece);
 		const bool jumped = move->taken != nullptr;
-		if (!picker.picker.inChain)
+		if (!pickerOf(picker).inChain)
 		{
-			picker.picker.fromColumn = whole(piece->cellColumn);
-			picker.picker.fromRow = whole(piece->cellRow);
+			pickerFor(picker).fromColumn = whole(piece->cellColumn);
+			pickerFor(picker).fromRow = whole(piece->cellRow);
 		}
-		picker.picker.toColumn = column;
-		picker.picker.toRow = row;
+		pickerFor(picker).toColumn = column;
+		pickerFor(picker).toRow = row;
 		if (move->taken) { despawn(*move->taken); }
 		putInCell(*piece, column, row);
 
@@ -1307,20 +1307,20 @@ namespace xge
 		// A jump that can be followed by another must be: the turn goes on.
 		if (jumped && !promoted && !movesOf(*piece, true).empty())
 		{
-			picker.picker.inChain = true;
+			pickerFor(picker).inChain = true;
 			countMoves();
 			return false;
 		}
-		picker.picker.picked.clear();
-		picker.picker.inChain = false;
+		pickerFor(picker).picked.clear();
+		pickerFor(picker).inChain = false;
 		countMoves();
 		return true;
 	}
 
 	bool Game::dropPiece(Object& picker)
 	{
-		if (picker.picker.picked.empty() || picker.picker.inChain) { return false; }
-		picker.picker.picked.clear();
+		if (pickerOf(picker).picked.empty() || pickerOf(picker).inChain) { return false; }
+		pickerFor(picker).picked.clear();
 		return true;
 	}
 
@@ -1348,7 +1348,7 @@ namespace xge
 		const int row = whole(mover.cellRow);
 		const bool upDown = direction == Direction::Up || direction == Direction::Down;
 		const int ahead = direction == Direction::Down || direction == Direction::Right ? 1 : -1;
-		if (!upDown || mover.picker.keptAt != std::pair<int, int>{ column, row }) { mover.picker.keptColumn = column; }
+		if (!upDown || pickerFor(mover).keptAt != std::pair<int, int>{ column, row }) { pickerFor(mover).keptColumn = column; }
 
 		std::optional<std::pair<int, int>> best;
 		int bestAlong = 0;
@@ -1357,7 +1357,7 @@ namespace xge
 		{
 			if (!upDown && r != row) { continue; }
 			const int along = upDown ? (r - row) * ahead : (c - column) * ahead;
-			const int across = upDown ? std::abs(c - mover.picker.keptColumn) : 0;
+			const int across = upDown ? std::abs(c - pickerOf(mover).keptColumn) : 0;
 			if (along <= 0) { continue; }
 			if (!best || along < bestAlong || (along == bestAlong && (across < bestAcross || (across == bestAcross && c < best->first))))
 			{
@@ -1369,7 +1369,7 @@ namespace xge
 		if (!best) { return false; }
 		putInCell(mover, best->first, best->second);
 		mover.facing = direction;
-		mover.picker.keptAt = upDown ? *best : std::pair<int, int>{};
+		pickerFor(mover).keptAt = upDown ? *best : std::pair<int, int>{};
 		return true;
 	}
 
@@ -1379,13 +1379,13 @@ namespace xge
 		// piece, while it points over the map.
 		if (!onto.empty())
 		{
-			(horizontal ? object.picker.pointer.x : object.picker.pointer.y) = at;
+			(horizontal ? pickerFor(object).pointer.x : pickerFor(object).pointer.y) = at;
 			const auto middle = [&](int column, int row)
 			{
 				return Vector2f{ object.map.origin.x + (static_cast<float>(column) - 0.5f) * object.map.tile.x,
 					object.map.origin.y + (static_cast<float>(row) - 0.5f) * object.map.tile.y };
 			};
-			Vector2f point = object.picker.pointer;
+			Vector2f point = pickerOf(object).pointer;
 			const Vector2f here = middle(whole(object.cellColumn), whole(object.cellRow));
 			if (point.x < 0.0f) { point.x = here.x; }
 			if (point.y < 0.0f) { point.y = here.y; }
@@ -1422,7 +1422,7 @@ namespace xge
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
 			// Not in play now (a pause over it): its marks stay as they are.
-			if (objects[i].marks.sets.empty() || !isShown(objects[i])) { continue; }
+			if (pickerOf(objects[i]).marks.sets.empty() || !isShown(objects[i])) { continue; }
 			Object& picker = objects[i];
 
 			// What is marked now: the set for its look, and the one for any.
@@ -1436,8 +1436,8 @@ namespace xge
 					const float* value = variableOf(name);
 					return value && *value != 0.0f;
 				};
-				Object* held = picker.picker.picked.empty() ? nullptr : findAnywhere(picker.picker.picked);
-				for (const Object::MarkSet& set : picker.marks.sets)
+				Object* held = pickerOf(picker).picked.empty() ? nullptr : findAnywhere(pickerOf(picker).picked);
+				for (const Object::MarkSet& set : pickerOf(picker).marks.sets)
 				{
 					if (set.look && *set.look != picker.looks.shown) { continue; }
 					for (const Object::Mark& mark : set.marks)
@@ -1453,7 +1453,7 @@ namespace xge
 						case Object::Mark::Kind::Moves:
 							if (held)
 							{
-								for (const PieceMoveTo& move : legalMoves(*held, picker.picker.inChain)) { want.push_back({ mark.object, move.column, move.row }); }
+								for (const PieceMoveTo& move : legalMoves(*held, pickerOf(picker).inChain)) { want.push_back({ mark.object, move.column, move.row }); }
 							}
 							break;
 						case Object::Mark::Kind::Movable:
@@ -1471,13 +1471,13 @@ namespace xge
 							}
 							break;
 						case Object::Mark::Kind::Last:
-							if (picker.picker.toColumn > 0)
+							if (pickerOf(picker).toColumn > 0)
 							{
-								want.push_back({ mark.object, picker.picker.fromColumn, picker.picker.fromRow });
+								want.push_back({ mark.object, pickerOf(picker).fromColumn, pickerOf(picker).fromRow });
 								// A piece put: one cell.
-								if (picker.picker.toColumn != picker.picker.fromColumn || picker.picker.toRow != picker.picker.fromRow)
+								if (pickerOf(picker).toColumn != pickerOf(picker).fromColumn || pickerOf(picker).toRow != pickerOf(picker).fromRow)
 								{
-									want.push_back({ mark.object, picker.picker.toColumn, picker.picker.toRow });
+									want.push_back({ mark.object, pickerOf(picker).toColumn, pickerOf(picker).toRow });
 								}
 							}
 							break;
@@ -1485,12 +1485,12 @@ namespace xge
 					}
 				}
 			}
-			if (want == objects[i].marks.marked) { continue; }
+			if (want == pickerOf(objects[i]).marks.marked) { continue; }
 
 			// Made again: the old copies out, a new one in each cell marked.
-			std::vector<std::string> old = std::move(objects[i].marks.copies);
-			objects[i].marks.copies.clear();
-			objects[i].marks.marked = want;
+			std::vector<std::string> old = std::move(pickerFor(objects[i]).marks.copies);
+			pickerFor(objects[i]).marks.copies.clear();
+			pickerFor(objects[i]).marks.marked = want;
 			for (const std::string& copy : old) { despawn(copy); }
 			std::vector<std::string> made;
 			for (const Object::Marked& mark : want)
@@ -1500,7 +1500,7 @@ namespace xge
 				putInCell(*copy, mark.column, mark.row);
 				made.push_back(copy->name);
 			}
-			objects[i].marks.copies = std::move(made);
+			pickerFor(objects[i]).marks.copies = std::move(made);
 		}
 	}
 

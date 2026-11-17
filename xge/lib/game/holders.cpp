@@ -1142,7 +1142,7 @@ namespace xge
 			// on the holder pointed at, a little off it.
 			Vector2f at = pointed + Vector2f{ 6.0f, 6.0f };
 			if (holder && !holderOf(*holder).items.empty()) { at = itemPlace(*holder, holderOf(*holder).items.size() - 1) + holderOf(*holder).spread + Vector2f{ 6.0f, 6.0f }; }
-			if (handOf(hand).mouse && hand.picker.pointer.x >= 0.0f && hand.picker.pointer.y >= 0.0f) { at = hand.picker.pointer - handOf(hand).grab; }
+			if (handOf(hand).mouse && pickerOf(hand).pointer.x >= 0.0f && pickerOf(hand).pointer.y >= 0.0f) { at = pickerOf(hand).pointer - handOf(hand).grab; }
 			for (const int number : handOf(hand).held)
 			{
 				Object* item = itemAt(number);
@@ -1322,9 +1322,9 @@ namespace xge
 			refreshHolder(*holder);
 			handOf(hand).from = holder->name;
 			handOf(hand).at = std::min(at, static_cast<int>(holderOf(*holder).items.size()) - 1);
-			if (handOf(hand).mouse && hand.picker.pointer.x >= 0.0f && hand.picker.pointer.y >= 0.0f)
+			if (handOf(hand).mouse && pickerOf(hand).pointer.x >= 0.0f && pickerOf(hand).pointer.y >= 0.0f)
 			{
-				handOf(hand).grab = hand.picker.pointer - itemPlace(*holder, static_cast<std::size_t>(std::max(0, handOf(hand).at)));
+				handOf(hand).grab = pickerOf(hand).pointer - itemPlace(*holder, static_cast<std::size_t>(std::max(0, handOf(hand).at)));
 			}
 			layOutItems();
 			return true;
@@ -1343,9 +1343,9 @@ namespace xge
 		handOf(hand).from = holder->name;
 		handOf(hand).at = at - 1;
 		// Held where the pointer took them.
-		if (handOf(hand).mouse && hand.picker.pointer.x >= 0.0f && hand.picker.pointer.y >= 0.0f)
+		if (handOf(hand).mouse && pickerOf(hand).pointer.x >= 0.0f && pickerOf(hand).pointer.y >= 0.0f)
 		{
-			handOf(hand).grab = hand.picker.pointer - itemPlace(*holder, static_cast<std::size_t>(at));
+			handOf(hand).grab = pickerOf(hand).pointer - itemPlace(*holder, static_cast<std::size_t>(at));
 		}
 		layOutItems();
 		return true;
@@ -1760,11 +1760,11 @@ namespace xge
 
 	void Game::trackHand(Object& hand, bool horizontal, float at)
 	{
-		(horizontal ? hand.picker.pointer.x : hand.picker.pointer.y) = at;
-		if (hand.picker.pointer.x < 0.0f || hand.picker.pointer.y < 0.0f) { return; }
+		(horizontal ? pickerFor(hand).pointer.x : pickerFor(hand).pointer.y) = at;
+		if (pickerOf(hand).pointer.x < 0.0f || pickerOf(hand).pointer.y < 0.0f) { return; }
 		handOf(hand).mouse = true;
 		handOf(hand).over = false;
-		const Vector2f point = hand.picker.pointer;
+		const Vector2f point = pickerOf(hand).pointer;
 		const auto inside = [&](Vector2f where, Vector2f size)
 		{
 			return point.x >= where.x && point.y >= where.y && point.x < where.x + size.x && point.y < where.y + size.y;

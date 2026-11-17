@@ -164,6 +164,17 @@ namespace xge
 		Object::Cells& cellPartFor(const Object& object) { return objectParts.give(objectParts.cells, object.id); }
 		bool isShape(const Object& object) const noexcept { return cellPart(object).shapeSize > 0; }
 
+		// Its picker part (Object::Picker): what it holds, where its last
+		// move went, its marks; an empty part for one with none. pickerFor
+		// gives it one.
+		const Object::Picker& pickerOf(const Object& object) const noexcept
+		{
+			static const Object::Picker none{};
+			const Object::Picker* picker = objectParts.pickers.find(object.id);
+			return picker ? *picker : none;
+		}
+		Object::Picker& pickerFor(const Object& object) { return objectParts.give(objectParts.pickers, object.id); }
+
 		// The name of what it carries (<carry />), empty for nothing.
 		const std::string& carrying(const Object& object) const noexcept
 		{
