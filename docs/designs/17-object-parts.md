@@ -57,7 +57,7 @@ Loose fields that stay in the object: `name`, `objClass`, `groupName` and `outer
 
 ## Found while counting
 
-- **`before` is a whole `Moment`,** copied for every object every frame (`Object::remember`), its variables map and three vectors with it. One place reads it (`play/frame.cpp`, whether an object moved): its position, `collisionsOn` and `isVisible`. Proposal: `before` holds those three. It takes 216 bytes and a map copy a frame off every object, and changes no game.
+- **`before` is a whole `Moment`,** copied for every object every frame (`Object::remember`), its variables map and three vectors with it. One place reads it (`play/frame.cpp`, whether an object moved): its position, `collisionsOn` and `isVisible`. `before` now holds those three (`Object::Before`), which took 208 bytes and a map copy a frame off every object, and changed no game.
 - **The reset is a list by hand.** `resetObjectState` names each part's in-flight fields one by one, the same kind of list CR1 step 2 is about. With a store, a part that resets keeps its start (`Store::start`) and the list goes.
 - **`Picture` grew 16 bytes** in CR2 step 1 (an image's pixels); CR2 step 4 makes it an id.
 

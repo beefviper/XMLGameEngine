@@ -1074,7 +1074,8 @@ namespace xge
 	// values, with no prefix: object.position), and holds two more: `start`,
 	// how it started (worked out from its RawObject, and drawn again when a
 	// <random> start is), and `before`, how it was when the last frame
-	// ended. The RawObject itself, the file's text, is the fourth.
+	// ended (only what the next frame reads of it, see Object::Before). The
+	// RawObject itself, the file's text, is the fourth.
 	struct Moment
 	{
 		Vector2f position;
@@ -1163,9 +1164,25 @@ namespace xge
 		// RawObject::line, for the messages of the checks made once all is loaded.
 		int line{ 0 };
 
-		// How it started and how the last frame left it (see Moment).
+		// How it started (see Moment).
 		Moment start;
-		Moment before;
+
+		// What the next frame reads of how the last one left it: whether it
+		// moved, or came into play or into view (playOneFrame).
+		struct Before
+		{
+			Vector2f position;
+			bool collisionsOn{ false };
+			bool isVisible{ true };
+			Before& operator=(const Moment& moment) noexcept
+			{
+				position = moment.position;
+				collisionsOn = moment.collisionsOn;
+				isVisible = moment.isVisible;
+				return *this;
+			}
+		};
+		Before before;
 
 		// Loaded or reset since the last frame ended: where it is when the
 		// next frame starts is its place, not a move (playOneFrame). One
