@@ -97,13 +97,14 @@ namespace xge
 					// A look that moves: its pictures, all one size, and how long each shows.
 					const std::string here = where + " > <animation name=\"" + rawLook.name + "\">";
 					look.turnables.clear();
-					look.frames = buildAnimationBitmaps(rawLook.frames, here, rawObject.hasHeading ? &look.turnables : nullptr);
-					look.frameSeconds = animationSecondsOf(rawLook.interval, here);
-					look.frameTimes = animationTimesOf(rawLook.times, look.frameSeconds, here);
-					look.once = rawLook.once;
-					look.stepped = rawLook.stepped;
-					look.then = processCommands(rawLook.thenCommands, here + " > <then>");
-					look.frameCommands = frameCommandsOf(rawLook.frameCommands, here);
+					Object::Frames& moving = look.frames.edit();
+					moving.bitmaps = buildAnimationBitmaps(rawLook.frames, here, rawObject.hasHeading ? &look.turnables : nullptr);
+					moving.seconds = animationSecondsOf(rawLook.interval, here);
+					moving.times = animationTimesOf(rawLook.times, moving.seconds, here);
+					moving.once = rawLook.once;
+					moving.stepped = rawLook.stepped;
+					moving.then = processCommands(rawLook.thenCommands, here + " > <then>");
+					moving.commands = frameCommandsOf(rawLook.frameCommands, here);
 				}
 				if (look.picture.kind == ShapeKind::Text && showsNumbers(rawLook))
 				{
@@ -116,8 +117,8 @@ namespace xge
 			// the very same picture.
 			looks.front().picture = picture;
 			looks.front().bitmap = first.bitmap;
-			if (!looks.front().frames.empty()) { looks.front().frames.front() = first.bitmap; }
-			if (first.turned && looks.front().frames.empty()) { looks.front().turnables = { first.turned }; }
+			if (!looks.front().frames.shows().bitmaps.empty()) { looks.front().frames.edit().bitmaps.front() = first.bitmap; }
+			if (first.turned && looks.front().frames.shows().bitmaps.empty()) { looks.front().turnables = { first.turned }; }
 
 			// The look each once look goes to when it ends, by its name.
 			for (std::size_t i = 0; i < rawObject.looks.size(); ++i)
@@ -148,15 +149,16 @@ namespace xge
 
 		if (rawObject.hasAnimation)
 		{
-			object.animation.bitmaps = first.animation;
+			Object::Frames& own = object.animation.frames.edit();
+			own.bitmaps = first.animation;
 			if (!first.animationTurned.empty()) { object.drawn.turnables = first.animationTurned; }
-			object.animation.seconds = animationSeconds;
-			object.animation.times = animationTimesOf(rawObject.animation.times, animationSeconds, where + " > <animation>");
-			object.animation.once = rawObject.animation.once;
-			object.animation.stepped = rawObject.animation.stepped;
-			object.animation.then = processCommands(rawObject.animation.thenCommands, where + " > <animation> > <then>");
-			object.animation.commands = frameCommandsOf(rawObject.animation.frameCommands, where + " > <animation>");
-			object.drawn.bitmap = object.animation.bitmaps.front();
+			own.seconds = animationSeconds;
+			own.times = animationTimesOf(rawObject.animation.times, animationSeconds, where + " > <animation>");
+			own.once = rawObject.animation.once;
+			own.stepped = rawObject.animation.stepped;
+			own.then = processCommands(rawObject.animation.thenCommands, where + " > <animation> > <then>");
+			own.commands = frameCommandsOf(rawObject.animation.frameCommands, where + " > <animation>");
+			object.drawn.bitmap = own.bitmaps.front();
 		}
 
 		if (object.drawn.picture.kind == ShapeKind::Text && showsNumbers(rawObject.sprite))
@@ -425,14 +427,10 @@ namespace xge
 		{
 			if (!rawObject.looks[i].frames.empty()) { followSeconds(rawObject.looks[i].interval, rawObject.looks[i].times, i); }
 		}
-		if (!looks.empty() && !looks.front().frames.empty())
+		if (!looks.empty() && !looks.front().frames.shows().bitmaps.empty())
 		{
 			// It starts as a look that moves.
-			object.animation.bitmaps = looks.front().frames;
-			object.animation.seconds = looks.front().frameSeconds;
-			object.animation.times = looks.front().frameTimes;
-			object.animation.once = looks.front().once;
-			object.animation.stepped = looks.front().stepped;
+			object.animation.frames = looks.front().frames;
 		}
 
 		// The look for each way it moves; one left out is another's.
@@ -776,12 +774,13 @@ namespace xge
 			}
 			return made;
 		};
-		object.animation.hitboxes = frameHitboxes(rawObject.animation.frameHitboxes, where + " > <animation>");
+		if (auto own = frameHitboxes(rawObject.animation.frameHitboxes, where + " > <animation>"); !own.empty()) { object.animation.frames.edit().hitboxes = std::move(own); }
 		for (std::size_t i = 0; i < object.looks.all().size() && i < rawObject.looks.size(); ++i)
 		{
-			object.looks.set->all[i].frameHitboxes = frameHitboxes(rawObject.looks[i].frameHitboxes, where + " > <animation name=\"" + rawObject.looks[i].name + "\">");
+			auto made = frameHitboxes(rawObject.looks[i].frameHitboxes, where + " > <animation name=\"" + rawObject.looks[i].name + "\">");
+			if (!made.empty()) { object.looks.set->all[i].frames.edit().hitboxes = std::move(made); }
 		}
-		if (object.looks.shown < object.looks.all().size() && !object.looks.all()[object.looks.shown].frames.empty()) { object.animation.hitboxes = object.looks.all()[object.looks.shown].frameHitboxes; }
+		if (object.looks.shown < object.looks.all().size() && !object.looks.all()[object.looks.shown].frames.shows().bitmaps.empty()) { object.animation.frames = object.looks.all()[object.looks.shown].frames; }
 
 		for (std::size_t edge = 0; edge < object.kind->collisionData.edges.size(); ++edge)
 		{

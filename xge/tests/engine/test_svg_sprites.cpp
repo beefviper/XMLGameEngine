@@ -423,18 +423,18 @@ TEST_CASE("svg sprites animate like any other pictures, if they are the same siz
 	game.setCurrentState("playing");
 	const Object& thing = game.getObject("thing");
 
-	REQUIRE(thing.animation.bitmaps.size() == 2);
-	CHECK(thing.animation.seconds == 0.5f);
-	CHECK(thing.drawn.bitmap == thing.animation.bitmaps[0]);
+	REQUIRE(thing.animation.frames.shows().bitmaps.size() == 2);
+	CHECK(thing.animation.frames.shows().seconds == 0.5f);
+	CHECK(thing.drawn.bitmap == thing.animation.frames.shows().bitmaps[0]);
 	CHECK(isColor(pixelAt(*thing.drawn.bitmap, 0, 0), 255, 0, 0));
 
 	frames(game, 30);
-	CHECK(thing.drawn.bitmap == thing.animation.bitmaps[1]);
+	CHECK(thing.drawn.bitmap == thing.animation.frames.shows().bitmaps[1]);
 	CHECK_FALSE(thing.drawn.bitmap->solidAt(0, 0));
 	CHECK(isColor(pixelAt(*thing.drawn.bitmap, 1, 1), 0, 255, 0));
 
 	frames(game, 30);
-	CHECK(thing.drawn.bitmap == thing.animation.bitmaps[0]);
+	CHECK(thing.drawn.bitmap == thing.animation.frames.shows().bitmaps[0]);
 }
 
 TEST_CASE("svg frames of different sizes are refused", "[svg][animation][xml]")
@@ -532,10 +532,10 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 		INFO(kind.name);
 		const Object& alien = game.getObject(kind.name);
 		REQUIRE(alien.drawn.bitmap);
-		REQUIRE(alien.animation.bitmaps.size() == 3);
-		CHECK(alien.animation.seconds == 0.5f);
+		REQUIRE(alien.animation.frames.shows().bitmaps.size() == 3);
+		CHECK(alien.animation.frames.shows().seconds == 0.5f);
 
-		for (const auto& picture : alien.animation.bitmaps)
+		for (const auto& picture : alien.animation.frames.shows().bitmaps)
 		{
 			CHECK(picture->width == kind.width);
 			CHECK(picture->height == kind.height);
@@ -543,9 +543,9 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 
 		// The pictures differ, so there is something to see; and each is
 		// drawn, not blank.
-		CHECK(alien.animation.bitmaps[0]->rgba != alien.animation.bitmaps[1]->rgba);
-		CHECK(alien.animation.bitmaps[1]->rgba != alien.animation.bitmaps[2]->rgba);
-		for (const auto& picture : alien.animation.bitmaps)
+		CHECK(alien.animation.frames.shows().bitmaps[0]->rgba != alien.animation.frames.shows().bitmaps[1]->rgba);
+		CHECK(alien.animation.frames.shows().bitmaps[1]->rgba != alien.animation.frames.shows().bitmaps[2]->rgba);
+		for (const auto& picture : alien.animation.frames.shows().bitmaps)
 		{
 			int drawn = 0;
 			for (std::size_t at = 3; at < picture->rgba.size(); at += 4) { drawn += picture->rgba[at] != 0 ? 1 : 0; }
@@ -604,7 +604,7 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 	REQUIRE(player.drawn.bitmap);
 	CHECK(player.drawn.bitmap->width == 48);
 	CHECK(player.drawn.bitmap->height == 52);
-	CHECK(player.animation.bitmaps.empty());
+	CHECK(player.animation.frames.shows().bitmaps.empty());
 	CHECK(player.position.x == (1024.0f - 48.0f) / 2.0f);
 
 	const Object& bullet = game.getObject("bullet");
@@ -621,7 +621,7 @@ TEST_CASE("the aliens of Space Invaders 2 step through three pictures, all toget
 	{
 		for (const Object* alien : aliensOf(game))
 		{
-			if (alien->drawn.bitmap != alien->animation.bitmaps[index]) { return false; }
+			if (alien->drawn.bitmap != alien->animation.frames.shows().bitmaps[index]) { return false; }
 		}
 		return true;
 	};

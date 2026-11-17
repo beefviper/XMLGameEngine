@@ -73,7 +73,7 @@ namespace
 			for (const xge::Object::Look& look : looks)
 			{
 				add(look.bitmap);
-				for (const auto& frame : look.frames) { add(frame); }
+				for (const auto& frame : look.frames.shows().bitmaps) { add(frame); }
 				for (const auto& turnable : look.turnables) { add(turnable); }
 			}
 		}
@@ -83,7 +83,7 @@ namespace
 			add(object.drawn.bitmap);
 			add(object.drawn.unholed);
 			for (const auto& turnable : object.drawn.turnables) { add(turnable); }
-			for (const auto& frame : object.animation.bitmaps) { add(frame); }
+			for (const auto& frame : object.animation.frames.shows().bitmaps) { add(frame); }
 			addLooks(object.looks.all());
 			for (const xge::Object::Palette& palette : object.looks.set->palettes)
 			{

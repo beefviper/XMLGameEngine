@@ -62,10 +62,10 @@ namespace xge
 			}
 		};
 		add(hitboxes);
-		for (const std::vector<Hitbox>& frame : animation.hitboxes) { add(frame); }
+		for (const std::vector<Hitbox>& frame : animation.frames.shows().hitboxes) { add(frame); }
 		for (const Look& each : looks.all())
 		{
-			for (const std::vector<Hitbox>& frame : each.frameHitboxes) { add(frame); }
+			for (const std::vector<Hitbox>& frame : each.frames.shows().hitboxes) { add(frame); }
 		}
 		return names;
 	}
@@ -84,16 +84,11 @@ namespace xge
 		}
 
 		// The looks.shown to go back to when a looks.shown that plays once ends.
-		if (index != looks.shown && looks.shown < looks.all().size() && !looks.all()[looks.shown].once) { animation.lookBefore = looks.shown; }
+		if (index != looks.shown && looks.shown < looks.all().size() && !looks.all()[looks.shown].frames.shows().once) { animation.lookBefore = looks.shown; }
 		looks.shown = index;
 		drawn.picture = looks.all()[index].picture;
 		drawn.bitmap = facingPicture(looks.all()[index].bitmap);
-		animation.bitmaps = looks.all()[index].frames;
-		animation.seconds = looks.all()[index].frameSeconds;
-		animation.times = looks.all()[index].frameTimes;
-		animation.hitboxes = looks.all()[index].frameHitboxes;
-		animation.once = looks.all()[index].once;
-		animation.stepped = looks.all()[index].stepped;
+		animation.frames = looks.all()[index].frames;
 		animation.done = false;
 		animation.elapsed = 0.0;
 		animation.index = 0;
@@ -123,17 +118,17 @@ namespace xge
 		const std::size_t at = animation.index;
 		if (looks.all().empty())
 		{
-			animation.bitmaps = worn.animation;
+			animation.frames.edit().bitmaps = worn.animation;
 			drawn.bitmap = facingPicture(worn.bitmap);
 		}
 		else
 		{
 			showLook(looks.shown);
 		}
-		if (!animation.bitmaps.empty())
+		if (!animation.frames.shows().bitmaps.empty())
 		{
 			animation.elapsed = elapsed;
-			animation.index = at % animation.bitmaps.size();
+			animation.index = at % animation.frames.shows().bitmaps.size();
 			showAnimationFrame();
 		}
 		drawn.visualDirty = true;
@@ -1029,7 +1024,7 @@ namespace xge
 			{
 				// A look that plays once starts again from its first frame,
 				// even when it is showing already: a second blast is a whole one.
-				if (object.looks.shown != i || object.looks.all()[i].once) { object.showLook(i); }
+				if (object.looks.shown != i || object.looks.all()[i].frames.shows().once) { object.showLook(i); }
 				// A timer that follows this look starts over, even when the
 				// object showed it already: blue again is six seconds again.
 				for (std::size_t t = 0; t < object.clocks.size() && t < object.kind->timers.size(); ++t)
@@ -1100,13 +1095,13 @@ namespace xge
 	Object::AnimationStep Object::advanceAnimation(float& owed)
 	{
 		// One picture moves on only to end, when it plays once.
-		if (animation.bitmaps.size() < (animation.once ? 1u : 2u) || animation.done)
+		if (animation.frames.shows().bitmaps.size() < (animation.frames.shows().once ? 1u : 2u) || animation.done)
 		{
 			owed = 0.0f;
 			return AnimationStep::Stayed;
 		}
 
-		const double due = static_cast<double>(animation.times.empty() ? animation.seconds : animation.times[animation.index]);
+		const double due = static_cast<double>(animation.frames.shows().times.empty() ? animation.frames.shows().seconds : animation.frames.shows().times[animation.index]);
 		animation.elapsed += static_cast<double>(owed);
 		if (animation.elapsed < due - static_cast<double>(kTimeSlack))
 		{
@@ -1118,7 +1113,7 @@ namespace xge
 		// time of 0 or less (a live one reading 0) is a picture a step.
 		owed = due > 0.0 ? static_cast<float>(std::max(0.0, animation.elapsed - due)) : 0.0f;
 		animation.elapsed = 0.0;
-		if (animation.once && animation.index + 1 == animation.bitmaps.size())
+		if (animation.frames.shows().once && animation.index + 1 == animation.frames.shows().bitmaps.size())
 		{
 			// Played through: a look goes back to the one before, an
 			// object's one animation stays on its last picture.
@@ -1127,7 +1122,7 @@ namespace xge
 			else { animation.done = true; }
 			return AnimationStep::Ended;
 		}
-		animation.index = (animation.index + 1) % animation.bitmaps.size();
+		animation.index = (animation.index + 1) % animation.frames.shows().bitmaps.size();
 		showAnimationFrame();
 		return AnimationStep::Moved;
 	}
@@ -1141,13 +1136,18 @@ namespace xge
 		};
 		if (look == std::string::npos)
 		{
-			time(animation.seconds, animation.times);
+			Frames& own = animation.frames.edit();
+			time(own.seconds, own.times);
 			return;
 		}
 		if (look >= looks.all().size()) { return; }
 		Look& changed = looks.change()[look];
-		time(changed.frameSeconds, changed.frameTimes);
-		if (looks.shown == look) { time(animation.seconds, animation.times); }
+		// Showing it, the animation holds the same frames: let go of them
+		// first, so they are changed in place, not copied each time.
+		if (looks.shown == look) { animation.frames = {}; }
+		Frames& timed = changed.frames.edit();
+		time(timed.seconds, timed.times);
+		if (looks.shown == look) { animation.frames = changed.frames; }
 	}
 
 	void Object::restartAnimation()
@@ -1158,7 +1158,7 @@ namespace xge
 		animation.shareBefore = 0.0f;
 		animation.done = false;
 
-		if (animation.index == 0 || animation.bitmaps.empty()) { return; }
+		if (animation.index == 0 || animation.frames.shows().bitmaps.empty()) { return; }
 
 		animation.index = 0;
 		showAnimationFrame();
@@ -1173,7 +1173,7 @@ namespace xge
 	void Object::showAnimationFrame()
 	{
 		if (!drawn.turnables.empty()) { showHeading(); }
-		else { drawn.bitmap = facingPicture(animation.bitmaps[animation.index]); }
+		else { drawn.bitmap = facingPicture(animation.frames.shows().bitmaps[animation.index]); }
 		drawn.visualDirty = true;
 		size = pictureSize();
 	}

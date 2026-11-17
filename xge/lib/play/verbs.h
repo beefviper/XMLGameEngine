@@ -57,7 +57,7 @@ namespace xge
 	// riding (see Object::riding) times t. With t of 1, how fast it goes.
 	inline Vector2f motionOf(const Object& object, float t) noexcept
 	{
-		return (object.animation.stepped ? object.velocity * object.animation.share : object.velocity * t) + object.riding * t;
+		return (object.animation.frames.shows().stepped ? object.velocity * object.animation.share : object.velocity * t) + object.riding * t;
 	}
 
 	// How far the sweep moves it in a step `t` long: motionOf, less half of
@@ -65,7 +65,7 @@ namespace xge
 	// constant pull moves it v t + a t t / 2 however the time is cut.
 	inline Vector2f sweptMotion(const Object& object, float t) noexcept
 	{
-		if (object.animation.stepped) { return motionOf(object, t); }
+		if (object.animation.frames.shows().stepped) { return motionOf(object, t); }
 		return motionOf(object, t) - object.motion.gained * (t * 0.5f);
 	}
 

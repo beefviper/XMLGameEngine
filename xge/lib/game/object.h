@@ -1283,7 +1283,9 @@ namespace xge
 		// bitmaps). Only an object that is shown and in play moves on; a
 		// reset starts it again at the first. A sprite of one picture has
 		// none of this. See advanceAnimation.
-		struct Animation
+		// What an animation is, made as it loads and shared by every object
+		// that shows it (an object's own animation, or a look that moves).
+		struct Frames
 		{
 			std::vector<std::shared_ptr<const Bitmap>> bitmaps;
 			// How long each picture shows, in seconds.
@@ -1294,42 +1296,65 @@ namespace xge
 			// Each picture's own <hitbox>es, touched with as well as the
 			// object's while it shows; empty when none has any.
 			std::vector<std::vector<Hitbox>> hitboxes;
-			// Each picture's own commands, run as it comes up (Game::frameCameUp),
-			// of an object's one animation (a look's are the look's own); empty
-			// when none has any.
+			// Each picture's own commands, run as it comes up (Game::frameCameUp);
+			// empty when none has any.
 			std::vector<std::vector<Command>> commands;
+			// <once />: the animation plays through one time. At its end a look
+			// goes back to the look before (Animation::lookBefore); an object's
+			// one animation stays on its last picture and is done.
+			bool once{ false };
+			// <stepped />: it moves only on the step its picture changes, the
+			// whole way its velocity took it over the time since the last
+			// change (see Animation::since).
+			bool stepped{ false };
+			// <then>'s commands, run when it ends.
+			std::vector<Command> then;
+		};
+		// Frames held to be shown or changed: none is an empty Frames. edit
+		// gives one of its own to change (a copy, if it was shared).
+		struct HeldFrames
+		{
+			std::shared_ptr<Frames> held;
+			const Frames& shows() const noexcept
+			{
+				static const Frames none{};
+				return held ? *held : none;
+			}
+			Frames& edit()
+			{
+				if (!held) { held = std::make_shared<Frames>(); }
+				else if (held.use_count() > 1) { held = std::make_shared<Frames>(*held); }
+				return *held;
+			}
+		};
+		struct Animation
+		{
+			// The frames showing: its own animation's, or the look's.
+			HeldFrames frames;
 			// The seconds the picture `index` has shown so far (a double, so a
 			// slow animation counted in many short steps stays true).
 			double elapsed{};
 			std::size_t index{};
-			// <once />: the animation plays through one time. At its end a look
-			// goes back to `lookBefore` (the last look shown that was not itself
-			// once); an object's one animation stays on its last picture and is
-			// `done`.
-			bool once{ false };
+			// A <once /> animation played through: an object's one animation
+			// stays on its last picture. A look goes back to `lookBefore` (the
+			// last look shown that was not itself once).
 			bool done{ false };
 			std::size_t lookBefore{};
-			// <stepped />: it moves only on the step its picture changes, the
-			// whole way its velocity took it over the time since the last
-			// change (`since`, in seconds);
-			// `share` is how much of that time this step moves (0 between
-			// changes). See motionOf. `shareBefore` is the step before's, so
-			// this step's edge checks, made before the move, see where that
-			// step left it, and a bounce can take it back.
-			bool stepped{ false };
+			// <stepped />: the time since the picture last changed (`since`,
+			// in seconds); `share` is how much of that time this step moves
+			// (0 between changes). See motionOf. `shareBefore` is the step
+			// before's, so this step's edge checks, made before the move, see
+			// where that step left it, and a bounce can take it back.
 			float since{};
 			float share{};
 			float shareBefore{};
-			// <then>'s commands of an object's one animation, run when it ends
-			// (a look's are the look's own).
-			std::vector<Command> then;
 		};
 		Animation animation;
 		// The hitboxes of the picture showing (often none).
 		const std::vector<Hitbox>& frameHitboxes() const noexcept
 		{
 			static const std::vector<Hitbox> none;
-			return animation.index < animation.hitboxes.size() ? animation.hitboxes[animation.index] : none;
+			return animation.index < animation.frames.shows().hitboxes.size() ? animation.frames.shows().hitboxes[animation.index] : none;
 		}
 
 		// What one call of advanceAnimation did.
@@ -1350,7 +1375,7 @@ namespace xge
 		// for an object with no looks) has commands of its own to run.
 		bool hasFrameCommands(std::size_t look, std::size_t picture) const noexcept
 		{
-			const auto& frames = looks.all().empty() ? animation.commands : look < looks.all().size() ? looks.all()[look].frameCommands : animation.commands;
+			const auto& frames = looks.all().empty() ? animation.frames.shows().commands : look < looks.all().size() ? looks.all()[look].frames.shows().commands : animation.frames.shows().commands;
 			return picture < frames.size() && !frames[picture].empty();
 		}
 
@@ -1730,17 +1755,11 @@ namespace xge
 			std::string name;
 			Picture picture;
 			std::shared_ptr<const Bitmap> bitmap;
-			std::vector<std::shared_ptr<const Bitmap>> frames;
-			float frameSeconds{};
-			std::vector<float> frameTimes;   // as Animation::times
-			std::vector<std::vector<Hitbox>> frameHitboxes;   // as Animation::hitboxes
-			std::vector<std::vector<Command>> frameCommands;   // as Animation::commands
-			bool once{ false };            // as Animation::once
-			bool stepped{ false };         // as Animation::stepped
+			// A look that moves: its frames (none for a still look).
+			HeldFrames frames;
 			// <then>: the look to go to when it ends, in place of the look
-			// before, and the commands it runs then.
+			// before.
 			std::optional<std::size_t> thenLook;
-			std::vector<Command> then;
 			// For an object with a <heading>: the look's pictures (one, or
 			// one a frame) kept to be turned to it (see `turnables`).
 			std::vector<std::shared_ptr<const Turnable>> turnables;

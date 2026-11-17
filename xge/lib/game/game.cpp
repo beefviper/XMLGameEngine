@@ -1297,8 +1297,8 @@ namespace xge
 		if (index >= objects.size()) { return; }
 		Object& object = objects[index];
 		// A copy: a command may reset the object, or spawn and move it.
-		const std::vector<Command> commands = object.looks.all().empty() ? object.animation.then
-			: look < object.looks.all().size() ? object.looks.all()[look].then : std::vector<Command>{};
+		const std::vector<Command> commands = object.looks.all().empty() ? object.animation.frames.shows().then
+			: look < object.looks.all().size() ? object.looks.all()[look].frames.shows().then : std::vector<Command>{};
 		CommandExecutor executor(*this);
 		for (const Command& command : commands)
 		{
@@ -1312,7 +1312,7 @@ namespace xge
 		Object& object = objects[index];
 		if (!object.hasFrameCommands(look, picture)) { return; }
 		// A copy, as for <then>.
-		const std::vector<Command> commands = object.looks.all().empty() ? object.animation.commands[picture] : object.looks.all()[look].frameCommands[picture];
+		const std::vector<Command> commands = object.looks.all().empty() ? object.animation.frames.shows().commands[picture] : object.looks.all()[look].frames.shows().commands[picture];
 		CommandExecutor executor(*this);
 		for (const Command& command : commands)
 		{
@@ -1983,7 +1983,7 @@ namespace xge
 			if (obj.kind->collisionData.lockstep == lockstepNum)
 			{
 				obj.velocity.x *= -1;
-				if (obj.animation.stepped) { obj.position.x += obj.velocity.x * obj.animation.shareBefore; }
+				if (obj.animation.frames.shows().stepped) { obj.position.x += obj.velocity.x * obj.animation.shareBefore; }
 			}
 		}
 	}
@@ -2092,8 +2092,8 @@ namespace xge
 	// never sink into a floor.
 	bool Game::touchesByPicture(const Object& a, const Object& b)
 	{
-		const auto has = [](const Object& object) { return !object.hitboxes.empty() || !object.animation.hitboxes.empty()
-			|| std::any_of(object.looks.all().begin(), object.looks.all().end(), [](const Object::Look& look) { return !look.frameHitboxes.empty(); }); };
+		const auto has = [](const Object& object) { return !object.hitboxes.empty() || !object.animation.frames.shows().hitboxes.empty()
+			|| std::any_of(object.looks.all().begin(), object.looks.all().end(), [](const Object::Look& look) { return !look.frames.shows().hitboxes.empty(); }); };
 		if (!has(a) && !has(b)) { return false; }
 
 		const auto solid = [](const Command& command)

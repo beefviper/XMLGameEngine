@@ -826,7 +826,7 @@ namespace xge
 		// so is a piece of a cell map, which meets its map's edges by its moves.
 		bool sweptAtEdges(const Object& object) noexcept
 		{
-			return !object.animation.stepped && !object.map.cells;
+			return !object.animation.frames.shows().stepped && !object.map.cells;
 		}
 
 		// What moveObjects keeps about each object over one frame's sweep.
@@ -1186,7 +1186,7 @@ namespace xge
 			// Each picture the step passes, its commands in turn; an
 			// animation that ends stops there, its <then> run once.
 			bool passed = false;
-			for (float owed = seconds; owed > kTimeSlack && !object.animation.bitmaps.empty() && rules.inPlay(object);)
+			for (float owed = seconds; owed > kTimeSlack && !object.animation.frames.shows().bitmaps.empty() && rules.inPlay(object);)
 			{
 				const std::size_t was = object.looks.shown;
 				const Object::AnimationStep moved = object.advanceAnimation(owed);
@@ -1197,7 +1197,7 @@ namespace xge
 			}
 			// A stepped one moves this step only if its picture changed: by
 			// what its velocity covered since it last did.
-			if (object.animation.stepped && rules.inPlay(object))
+			if (object.animation.frames.shows().stepped && rules.inPlay(object))
 			{
 				object.animation.since += seconds;
 				object.animation.shareBefore = object.animation.share;

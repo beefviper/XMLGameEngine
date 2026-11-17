@@ -678,13 +678,13 @@ namespace xge
 		FirstPass first;
 		first.picture = from.looks.all().empty() ? from.drawn.picture : from.looks.all().front().picture;
 		first.bitmap = from.looks.all().empty() ? from.drawn.bitmap : from.looks.all().front().bitmap;
-		if (from.animation.bitmaps.empty())
+		if (from.animation.frames.shows().bitmaps.empty())
 		{
 			if (!from.drawn.turnables.empty()) { first.turned = from.drawn.turnables.front(); }
 		}
 		else
 		{
-			first.animation = from.animation.bitmaps;
+			first.animation = from.animation.frames.shows().bitmaps;
 			first.animationTurned = from.drawn.turnables;
 		}
 		if (!from.looks.all().empty()) { first.looks = &from.looks.all(); }

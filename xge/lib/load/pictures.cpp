@@ -97,7 +97,7 @@ namespace xge
 			Object::Palette loaded;
 			loaded.looks = object.looks.all();
 			loaded.bitmap = object.looks.all().empty() ? object.facingPicture(object.drawn.bitmap) : object.looks.all().front().bitmap;
-			if (object.looks.all().empty()) { loaded.animation = object.animation.bitmaps; }
+			if (object.looks.all().empty()) { loaded.animation = object.animation.frames.shows().bitmaps; }
 			object.looks.set->palettes.push_back(std::move(loaded));
 
 			for (const std::string& name : asked->second)
@@ -115,14 +115,14 @@ namespace xge
 					{
 						const RawSprite look = restyled(raw->looks[i]);
 						buildPicture(look, here, &palette.looks[i].bitmap);
-						if (!look.frames.empty()) { palette.looks[i].frames = buildAnimationBitmaps(look.frames, here); }
+						if (!look.frames.empty()) { palette.looks[i].frames.edit().bitmaps = buildAnimationBitmaps(look.frames, here); }
 					}
 					palette.bitmap = palette.looks.front().bitmap;
 				}
 				else
 				{
 					buildPicture(restyled(raw->sprite), here, &palette.bitmap);
-					if (!object.animation.bitmaps.empty())
+					if (!object.animation.frames.shows().bitmaps.empty())
 					{
 						std::vector<RawSprite> frames;
 						for (const RawSprite& frame : raw->animation.frames) { frames.push_back(restyled(frame)); }
@@ -520,11 +520,11 @@ namespace xge
 			for (const Object::Look& look : looks)
 			{
 				add(look.bitmap);
-				for (const auto& picture : look.frames) { add(picture); }
+				for (const auto& picture : look.frames.shows().bitmaps) { add(picture); }
 			}
 		};
 		add(object.drawn.bitmap);
-		for (const auto& picture : object.animation.bitmaps) { add(picture); }
+		for (const auto& picture : object.animation.frames.shows().bitmaps) { add(picture); }
 		addLooks(object.looks.all());
 		for (const Object::Palette& palette : object.looks.set->palettes)
 		{
