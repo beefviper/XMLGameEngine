@@ -358,7 +358,6 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 - A Lode Runner kind of chase is now possible: a `<hunt>` with `<search />` finds the way round.
 - Pac-Man: the later levels' schedules, the other fruit. Adventure: the bat, Rhindle, the rest of the kingdom.
 - Putt Park: a cup that takes only a slow ball wholly over it. Cannon Hill: cannons falling into craters.
-- Speeds in Galaxian, Berserk, Tennis, Haunted House and Pac-Man were chosen without watching play: tune them first.
 - Pinball at 10 frames a second (the author, after DT4): the ball never fully settles, and once a flipper went on turning round and round on the game over screen, as if it started turning as the ball went out and never stopped.
 
 ### Code
