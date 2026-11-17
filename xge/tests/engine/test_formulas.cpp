@@ -523,7 +523,7 @@ TEST_CASE("Pong's title is placed by an operation on its own size", "[formulas][
 	Object& title = game.getObject("title");
 
 	// Known when the game loads, from the text as drawn.
-	CHECK(title.layout.usesSize);
+	CHECK(game.usesSize(title));
 	REQUIRE(title.size.x > 0.0f);
 	CHECK(title.position.x == 640.0f - title.size.x / 2.0f); // 1280 wide window, window.width.center - title.width / 2
 	CHECK(title.position.y == 120.0f);
@@ -539,7 +539,7 @@ TEST_CASE("Breakout's title is placed by operations on its own size", "[formulas
 	Game game{ "descriptions/breakout.xml" };
 	Object& title = game.getObject("title");
 
-	CHECK(title.layout.usesSize);
+	CHECK(game.usesSize(title));
 
 	measure(title, 600.0f, 200.0f);
 	game.resolveSizeDependentPositions();
@@ -636,7 +636,7 @@ TEST_CASE("a position worked out again for a text's new size warns, once, instea
 	Loaded loaded(xml);
 	Object& text = loaded.game.getObject("t");
 	loaded.game.setCurrentState(0);
-	CHECK(text.layout.usesSize);
+	CHECK(loaded.game.usesSize(text));
 
 	CaptureStderr captured;
 

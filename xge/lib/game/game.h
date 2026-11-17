@@ -175,6 +175,9 @@ namespace xge
 		const Object::Cells::Place& place(const Object& object) const noexcept { return cellPart(object).place; }
 		Object::Cells::Place& placeFor(const Object& object) { return cellPartFor(object).place; }
 
+		// Whether its <position> uses a text's size (Object::SizeUse).
+		bool usesSize(const Object& object) const noexcept { return objectParts.sizeUses.has(object.id); }
+
 		// Its item part (Object::Item): an empty one (no item) for one with
 		// none. Only a held member has one, given at load.
 		const Object::Item& itemOf(const Object& object) const noexcept

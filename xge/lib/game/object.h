@@ -2028,17 +2028,19 @@ namespace xge
 		// size follows from its sprite alone, so a position using only those
 		// is exact the moment the game is loaded. A text's size can change as
 		// its words do (a score gaining a digit), so a position that uses one
-		// sets usesSize and lists those texts in sizesOf, and
-		// Game::resolveSizeDependentPositions() works it out again whenever
-		// one of them changes. sizesUsed holds the sizes, in sizesOf order,
-		// it was last worked out from. cellOffset is a cell's offset from its
-		// group's evaluated <position> (see RawCell), so that position can be
-		// worked out again later and the offset added back.
-		struct Layout
+		// has a SizeUse part (Parts::sizeUses) listing those texts in
+		// sizesOf, and Game::resolveSizeDependentPositions() works it out
+		// again whenever one of them changes. sizesUsed holds the sizes, in
+		// sizesOf order, it was last worked out from. cellOffset is a cell's
+		// offset from its group's evaluated <position> (see RawCell), so that
+		// position can be worked out again later and the offset added back.
+		struct SizeUse
 		{
-			bool usesSize{ false };
 			std::vector<std::string> sizesOf;
 			std::vector<Vector2f> sizesUsed;
+		};
+		struct Layout
+		{
 			Vector2f cellOffset{};
 		};
 		Layout layout;

@@ -229,8 +229,7 @@ namespace xge
 		object.position = object.start.position + object.layout.cellOffset;
 		object.start.position = object.position;
 
-		object.layout.sizesOf = positionSizeDependencies;
-		object.layout.usesSize = !positionSizeDependencies.empty();
+		if (!positionSizeDependencies.empty()) { parts->sizeUses.add(object.id, parts->orderOf(object.id), { positionSizeDependencies, {} }); }
 
 		// What it follows, worked out again every frame (Game::follow).
 		using Follow = Object::Follow;

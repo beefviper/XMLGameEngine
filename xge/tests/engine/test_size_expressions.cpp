@@ -54,7 +54,7 @@ TEST_CASE("a text's size and the position made from it are known when the game l
 	Game game{ "descriptions/pong.xml" };
 	const Object& title = game.getObject("title"); // x = the middle - title.width / 2
 
-	CHECK(title.layout.usesSize);
+	CHECK(game.usesSize(title));
 	REQUIRE(title.size.x > 0.0f);
 	const Bitmap drawn = drawText("PONG", title.drawn.picture.textSize, Color{}, textFontFile(title.drawn.picture.font));
 	CHECK(title.size.x == static_cast<float>(drawn.width));
@@ -155,7 +155,7 @@ TEST_CASE("a shape's position that uses its own size is exact as soon as the gam
 	Game game{ scratch.path.string() };
 	const Object& logo = game.getObject("logo");
 
-	CHECK_FALSE(logo.layout.usesSize);
+	CHECK_FALSE(game.usesSize(logo));
 	CHECK(logo.position.x == 200.0f);
 	CHECK(logo.position.y == 400.0f);
 }
@@ -169,8 +169,8 @@ TEST_CASE("an object can be placed by another object's size", "[size_expressions
 	Object& title = game.getObject("title");
 
 	// The title is a text: placed by its size at once, and again if it changes.
-	CHECK(logo.layout.usesSize);
-	CHECK(logo.layout.sizesOf == std::vector<std::string>{ "title.title" }); // the title is the main menu's
+	CHECK(game.usesSize(logo));
+	CHECK(game.parts().sizeUses.get(logo.id).sizesOf == std::vector<std::string>{ "title.title" }); // the title is the main menu's
 	REQUIRE(title.size.x > 0.0f);
 	CHECK(logo.position.x == title.size.x + 10.0f);
 	CHECK(logo.position.y == title.size.y);
@@ -196,7 +196,7 @@ TEST_CASE("an object's own <variable> named width is not replaced by its size", 
 
 	CHECK(paddle1.size.x == 30.0f);
 	CHECK(paddle1.size.y == 150.0f);
-	CHECK_FALSE(logo.layout.usesSize); // an image's size never changes
+	CHECK_FALSE(game.usesSize(logo)); // an image's size never changes
 	CHECK(logo.position.x == 7.0f);
 	CHECK(logo.position.y == 150.0f);
 }

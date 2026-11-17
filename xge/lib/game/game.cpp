@@ -158,17 +158,17 @@ namespace xge
 			if (object.drawn.picture.kind == ShapeKind::Text) { expr.setObjectSize(object.name, object.size); }
 		}
 
-		for (auto& object : objects)
+		// Only the objects whose position uses a size (most games: none).
+		objectParts.sizeUses.each([&](ObjectId id, Object::SizeUse& use)
 		{
-			if (!object.layout.usesSize)
-			{
-				continue;
-			}
+			const std::size_t at = objectParts.at(id);
+			if (at >= objects.size()) { return; }
+			Object& object = objects[at];
 
 			// Worked out again only when a size it uses has changed.
 			std::vector<Vector2f> sizes;
 			bool allThere = true;
-			for (const auto& dependency : object.layout.sizesOf)
+			for (const auto& dependency : use.sizesOf)
 			{
 				const Object* measured = tryGetObject(dependency);
 				if (!measured || measured->name != dependency)
@@ -179,16 +179,16 @@ namespace xge
 				sizes.push_back(measured->size);
 			}
 
-			if (!allThere || sizes == object.layout.sizesUsed)
+			if (!allThere || sizes == use.sizesUsed)
 			{
-				continue;
+				return;
 			}
 
 			const auto rawObject = std::find_if(rawObjects.begin(), rawObjects.end(),
 				[&](const RawObject& raw) { return raw.name == object.name; });
 			if (rawObject == rawObjects.end())
 			{
-				continue;
+				return;
 			}
 
 			const std::string where = "object '" + rawObject->name + "'";
@@ -196,8 +196,8 @@ namespace xge
 			object.start.position.y = expr.evaluate(rawObject->rawPosition.y, where);
 			object.start.position = object.start.position + object.layout.cellOffset;
 			object.position = object.start.position;
-			object.layout.sizesUsed = sizes;
-		}
+			use.sizesUsed = sizes;
+		});
 	}
 
 	void Game::updateObjects(float seconds)
