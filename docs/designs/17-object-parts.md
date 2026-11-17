@@ -14,13 +14,13 @@ Kind is as [engine-structure](16-engine-structure.md#how-the-parts-are-grouped) 
 
 | Part | Kind | Verbs or tag | Bytes | Objects | Reset | Proposal |
 |---|---|---|---|---|---|---|
-| `drawn` | shared | every sprite | 280 | 5,722 | holes undone | keep (step 5 decides if it leaves) |
+| `drawn` | shared | every sprite | 280 | 5,722 | holes undone | stays in the object (the author), its picture a `PictureId` |
 | `map` (`MapPlace`) | family | `<map>`, cells | 104 | 2,550 | none | merge with Moment's cell fields as `cellPlace` |
 | Moment's cell fields | family | `<map>` cells, `<chain>`, `<joins>` | (in Moment) | 877 | Moment | into `cellPlace`, its start kept by the store |
 | Moment `variable` | shared | variables, numbers | 48 | 2,297 | Moment | keep in the object |
 | `collisionData` | shared | `<collisions>` | 248 | 1,279 | none | keep, rename `collisions` |
 | `looks` | family | named sprites, `<poses>`, palettes | 176 | 881 | first look | keep |
-| Moment velocity, acceleration | shared | every mover | (in Moment) | 865 | Moment | keep in the place (step 5) |
+| Moment velocity, acceleration | shared | every mover | (in Moment) | 865 | Moment | stays in the object (the author) |
 | `motion` | shared | `<speed>`, `<drag>`, `<grip>`, `<mass>` | 32 | 767 | none | keep |
 | `layout` | family | sizes from other objects, cells | 64 | 534 | none | keep, rename `sizing` |
 | `timers` | verb's own | `<timer>` | 24 | 476 | started over | keep |
@@ -68,4 +68,4 @@ Loose fields that stay in the object: `name`, `objClass`, `groupName` and `outer
 ## Open
 
 - The proposals above are the author's to change.
-- Step 5: whether `Moment` and `drawn` leave the object.
+

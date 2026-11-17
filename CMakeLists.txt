@@ -93,6 +93,7 @@ set(ENGINE_HEADERS
 	"xge/lib/game/states.h"
 	"xge/lib/game/condition.h"
 	"xge/lib/game/scenes.h"
+	"xge/lib/game/store.h"
 	"xge/lib/game/types.h"
 	"xge/lib/picture/color.h"
 	"xge/lib/picture/bitmap.h"

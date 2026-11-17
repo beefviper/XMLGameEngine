@@ -7,10 +7,12 @@
 // once it is gone, and a slot used again is a generation on.
 
 #include "played.h"
+#include "game/store.h"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <string>
+#include <vector>
 
 using namespace xge;
 
@@ -62,4 +64,58 @@ TEST_CASE("an object's handle finds it until it is despawned, and a slot used ag
 	CHECK(play.game.find(second) == &play.game.getObject(again));
 	CHECK(play.game.find(first) == nullptr);
 	CHECK(play.game.find(ship.id) == &play.get("ship"));
+}
+
+TEST_CASE("a store holds a part for only the objects given one, in object order", "[store]")
+{
+	struct Part { int value{}; };
+	Store<Part> store;
+	const ObjectId a{ 0, 0 };
+	const ObjectId b{ 1, 0 };
+	const ObjectId c{ 2, 0 };
+
+	CHECK_FALSE(store.has(a));
+	CHECK(store.find(a) == nullptr);
+	CHECK_THROWS(store.get(a));
+
+	// Given out of order: walked in object order.
+	store.add(c, 3, { 30 });
+	store.add(a, 1, { 10 });
+	store.add(b, 2, { 20 });
+	CHECK(store.size() == 3);
+	CHECK(store.get(b).value == 20);
+	const auto walked = [&]
+	{
+		std::vector<int> values;
+		store.each([&](ObjectId, Part& part) { values.push_back(part.value); });
+		return values;
+	};
+	CHECK(walked() == std::vector<int>{ 10, 20, 30 });
+
+	// Taken away: the rest stay found and in order.
+	store.remove(b);
+	CHECK_FALSE(store.has(b));
+	CHECK(store.get(c).value == 30);
+	CHECK(walked() == std::vector<int>{ 10, 30 });
+
+	// The slot used again a generation on: the old handle finds nothing.
+	const ObjectId again{ 1, 1 };
+	store.add(again, 4, { 40 });
+	CHECK(store.find(b) == nullptr);
+	CHECK(store.get(again).value == 40);
+	CHECK(walked() == std::vector<int>{ 10, 30, 40 });
+
+	// A copy changes alone.
+	Store<Part> copy = store;
+	copy.get(a).value = 11;
+	CHECK(store.get(a).value == 10);
+
+	// A reset puts back the start that was kept.
+	store.keepStart(a);
+	store.get(a).value = 99;
+	store.restart(a);
+	CHECK(store.get(a).value == 10);
+	store.get(c).value = 31;
+	store.restart(c);   // no start kept: left as it is
+	CHECK(store.get(c).value == 31);
 }

@@ -52,6 +52,7 @@
   <file>lib/audio/wave.cpp</file>
   <file>lib/game/data.h</file>
   <file>lib/game/scenes.h</file>
+  <file>lib/game/store.h</file>
   <file>lib/game/scenes.cpp</file>
   <file>lib/load/expr.h</file>
   <file>lib/load/build.cpp</file>
