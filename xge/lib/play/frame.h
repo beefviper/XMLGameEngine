@@ -60,6 +60,9 @@ namespace xge
 		// What its held keys drive (Drive), nullptr for one no key drives.
 		virtual const Drive* driveOf(const Object& object) { (void)object; return nullptr; }
 
+		// Its maze part (<maze>), nullptr for one that walks no maze.
+		virtual Maze* mazeOf(const Object& object) { (void)object; return nullptr; }
+
 		// An animation that plays once has just ended on objects[index], which
 		// was showing looks[look] (0 for its one unnamed animation): its
 		// <then> commands run, before the timers.

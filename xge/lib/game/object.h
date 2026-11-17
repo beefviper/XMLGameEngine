@@ -897,11 +897,11 @@ namespace xge
 		std::vector<int> searchSteps;
 	};
 
-	// A maze walker (<maze>): the map it walks ("" for an object that walks
-	// none), what stops it, what slows it, and where it is headed now: what
-	// its last <go>, <hunt> or <wander> said. It keeps to the middle of a
-	// lane, stops at a wall and turns only where there is a gap; a reset
-	// stops it. See play/maze.h.
+	// A maze walker (<maze>): the map it walks, what stops it, what slows
+	// it, and where it is headed now: what its last <go>, <hunt> or
+	// <wander> said. It keeps to the middle of a lane, stops at a wall and
+	// turns only where there is a gap; a reset stops it. A part
+	// (Parts::mazes), for an object written with <maze>. See play/maze.h.
 	struct Maze
 	{
 		std::string map;
@@ -1630,9 +1630,6 @@ namespace xge
 		Cells cell;
 		bool isShape() const noexcept { return cell.shapeSize > 0; }
 
-		// A maze walker's map, walls, slows and way (Maze).
-		Maze maze;
-		bool walksMaze() const noexcept { return !maze.map.empty(); }
 
 		// A timed <hop> under way (a flight): the whole way it goes, the
 		// seconds it takes, and the seconds flown so far (a double, so many

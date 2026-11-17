@@ -656,10 +656,14 @@ namespace xge
 			}
 			object.cell.shapeStart = object.cell.shape;
 		}
-		object.maze.map = rawObject.maze.map;
-		object.maze.walls = rawObject.maze.walls;
-		object.maze.slows = rawObject.maze.slows;
-		for (const MazeWall& wall : object.maze.walls)
+		if (!rawObject.maze.map.empty())
+		{
+			Maze& maze = parts->mazes.add(object.id, parts->orderOf(object.id), {});
+			maze.map = rawObject.maze.map;
+			maze.walls = rawObject.maze.walls;
+			maze.slows = rawObject.maze.slows;
+		}
+		for (const MazeWall& wall : rawObject.maze.walls)
 		{
 			if (!wall.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == wall.sprite; }))
 			{

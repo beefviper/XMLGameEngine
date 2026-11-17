@@ -794,16 +794,17 @@ namespace xge
 
 		// A walker walks a map the game has; only a walker goes, hunts or
 		// wanders. A hole is cut in a picture that stays as it is.
-		void checkWalksAndHoles(const Object& object, const std::vector<Object>& objects, const std::string& where)
+		void checkWalksAndHoles(const Object& object, const std::vector<Object>& objects, const Parts& parts, const std::string& where)
 		{
-			if (object.walksMaze() && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.map.name == object.maze.map; }))
+			const Maze* maze = parts.mazes.find(object.id);
+			if (maze && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.map.name == maze->map; }))
 			{
 				std::vector<std::string> maps;
 				for (const Object& other : objects)
 				{
 					if (!other.map.name.empty() && std::find(maps.begin(), maps.end(), other.map.name) == maps.end()) { maps.push_back(other.map.name); }
 				}
-				throw std::runtime_error(where + " > <maze map=\"" + object.maze.map + "\">: the game has no <map> of that name" + didYouMean(object.maze.map, maps)
+				throw std::runtime_error(where + " > <maze map=\"" + maze->map + "\">: the game has no <map> of that name" + didYouMean(maze->map, maps)
 					+ (maps.empty() ? std::string(" (it has no <map>s)") : ". Its maps are: " + listOf(maps)));
 			}
 			const auto checkWalks = [&](const std::vector<Command>& commands, const std::string& here)
@@ -812,7 +813,7 @@ namespace xge
 				{
 					// On a map of cells a <go> goes a cell at a time, with no maze.
 					if (std::holds_alternative<CmdGo>(shapeOf(command)) && object.map.cells) { continue; }
-					if ((std::holds_alternative<CmdGo>(shapeOf(command)) || std::holds_alternative<CmdHunt>(shapeOf(command)) || std::holds_alternative<CmdWander>(shapeOf(command))) && !object.walksMaze())
+					if ((std::holds_alternative<CmdGo>(shapeOf(command)) || std::holds_alternative<CmdHunt>(shapeOf(command)) || std::holds_alternative<CmdWander>(shapeOf(command))) && !maze)
 					{
 						throw std::runtime_error(here + ": " + tagOf(command) + " steers an object through a maze, and this one walks none: give it a <maze map=\"...\">");
 					}
@@ -901,7 +902,7 @@ namespace xge
 				{
 					const std::string where = "object '" + object.name + "'";
 
-					checkWalksAndHoles(object, objects, where);
+					checkWalksAndHoles(object, objects, checks.parts, where);
 
 					for (const auto& timer : object.timers)
 					{

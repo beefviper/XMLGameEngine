@@ -4,6 +4,8 @@
 // date: Nov 10, 2026
 
 #include "verbs/verb.h"
+#include "game/game.h"
+#include "play/executor.h"
 #include "play/maze.h"
 #include "load/reading.h"
 
@@ -20,9 +22,9 @@ namespace xge
 		return CmdWander{ speedOf(raw, "wander", evaluate) };
 	}
 
-	static bool runWander(const Command& command, const Doer& doer, CommandExecutor&)
+	static bool runWander(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
-		if (doer.self) { startWander(*doer.self, std::get<CmdWander>(command)); }
+		if (doer.self) { if (Maze* maze = executor.game.mazeOf(*doer.self)) { startWander(*maze, std::get<CmdWander>(command)); } }
 		return true;
 	}
 

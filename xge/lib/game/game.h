@@ -152,6 +152,9 @@ namespace xge
 		Hand& handOf(const Object& object) { return objectParts.hands.get(object.id); }
 		const Hand& handOf(const Object& object) const { return objectParts.hands.get(object.id); }
 
+		// Its maze part (<maze>), nullptr for one that walks none.
+		Maze* mazeOf(const Object& object) override { return objectParts.mazes.find(object.id); }
+
 		// What its held keys drive: given on the first key that drives it,
 		// gone when it stops or is reset.
 		Drive& driveFor(const Object& object) { return objectParts.give(objectParts.drives, object.id); }

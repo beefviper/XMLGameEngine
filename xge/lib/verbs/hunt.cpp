@@ -131,7 +131,7 @@ namespace xge
 	{
 		if (!doer.self) { return true; }
 		if (const auto* byHops = std::get_if<CmdHuntHop>(&command)) { return huntByHops(executor, *doer.self, *byHops); }
-		startHunt(*doer.self, std::get<CmdHunt>(command));
+		if (Maze* maze = executor.game.mazeOf(*doer.self)) { startHunt(*maze, std::get<CmdHunt>(command)); }
 		return true;
 	}
 

@@ -51,14 +51,14 @@ namespace xge
 		class Walker
 		{
 		public:
-			Walker(Object& who, std::vector<Object>& everything, const Grid& map, FrameRules& frameRules, float stepTime)
-				: walker(who), objects(everything), grid(map), rules(frameRules), t(stepTime)
+			Walker(Object& who, Maze& part, std::vector<Object>& everything, const Grid& map, FrameRules& frameRules, float stepTime)
+				: walker(who), maze(part), objects(everything), grid(map), rules(frameRules), t(stepTime)
 			{
 			}
 
 			void walk()
 			{
-				Walk& walk = walker.maze.walk;
+				Walk& walk = maze.walk;
 				const Vector2f size = sizeOf(walker);
 				const Vector2f middle = walker.position + size * 0.5f;
 				const int column = static_cast<int>(std::floor((middle.x - grid.origin.x) / grid.tile.x));
@@ -187,6 +187,7 @@ namespace xge
 
 		private:
 			Object& walker;
+			Maze& maze;
 			std::vector<Object>& objects;
 			const Grid& grid;
 			FrameRules& rules;
@@ -209,9 +210,9 @@ namespace xge
 			// whose class something in play on the tile has, or the whole.
 			float shareAt(int column, int row) const
 			{
-				if (walker.maze.slows.empty()) { return 1.0f; }
+				if (maze.slows.empty()) { return 1.0f; }
 				const auto& here = grid.at[static_cast<std::size_t>(row) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(column)];
-				for (const MazeSlow& slow : walker.maze.slows)
+				for (const MazeSlow& slow : maze.slows)
 				{
 					for (const std::size_t index : here)
 					{
@@ -228,7 +229,7 @@ namespace xge
 				for (const std::size_t index : here)
 				{
 					const Object& other = objects[index];
-					for (const MazeWall& wall : walker.maze.walls)
+					for (const MazeWall& wall : maze.walls)
 					{
 						if (other.objClass == wall.objClass && (wall.sprite.empty() || wall.sprite == walker.lookName()) && rules.inPlay(other))
 						{
@@ -255,7 +256,7 @@ namespace xge
 			// not in play.
 			std::optional<Vector2f> target() const
 			{
-				const CmdHunt& hunt = walker.maze.walk.hunt;
+				const CmdHunt& hunt = maze.walk.hunt;
 				const Object* quarry = nearest(hunt.target);
 				if (!quarry) { return std::nullopt; }
 
@@ -280,7 +281,7 @@ namespace xge
 			// when it stops. A hunter or wanderer at a dead end turns round.
 			std::optional<Direction> choose(int column, int row, Direction going, bool moving) const
 			{
-				const Walk& walk = walker.maze.walk;
+				const Walk& walk = maze.walk;
 				if (walk.mode == Walk::Mode::Go)
 				{
 					if (open(column, row, walk.wish, going, moving)) { return walk.wish; }
@@ -343,7 +344,7 @@ namespace xge
 			{
 				const int toColumn = std::clamp(static_cast<int>(std::floor((point.x - grid.origin.x) / grid.tile.x)), 0, grid.columns - 1);
 				const int toRow = std::clamp(static_cast<int>(std::floor((point.y - grid.origin.y) / grid.tile.y)), 0, grid.rows - 1);
-				Walk& walk = walker.maze.walk;
+				Walk& walk = maze.walk;
 				const std::size_t tiles = static_cast<std::size_t>(grid.columns) * static_cast<std::size_t>(grid.rows);
 				if (walk.searchColumn != toColumn || walk.searchRow != toRow || walk.searchSteps.size() != tiles)
 				{
@@ -374,15 +375,15 @@ namespace xge
 			void head(Direction way)
 			{
 				walker.velocity = unit(way) * speed;
-				walker.maze.walk.going = way;
+				maze.walk.going = way;
 				face(way);
 			}
 
 			void setOff(Direction way, int column, int row)
 			{
-				walker.maze.walk.chose = true;
-				walker.maze.walk.chosenColumn = column;
-				walker.maze.walk.chosenRow = row;
+				maze.walk.chose = true;
+				maze.walk.chosenColumn = column;
+				maze.walk.chosenRow = row;
 				head(way);
 			}
 
@@ -425,40 +426,41 @@ namespace xge
 		return steps;
 	}
 
-	void startGo(Object& walker, const CmdGo& go)
+	void startGo(Maze& maze, const CmdGo& go)
 	{
-		walker.maze.walk.mode = Walk::Mode::Go;
-		walker.maze.walk.speed = go.speed;
-		walker.maze.walk.wish = go.direction;
+		maze.walk.mode = Walk::Mode::Go;
+		maze.walk.speed = go.speed;
+		maze.walk.wish = go.direction;
 	}
 
-	void startHunt(Object& walker, const CmdHunt& hunt)
+	void startHunt(Maze& maze, const CmdHunt& hunt)
 	{
-		walker.maze.walk.mode = Walk::Mode::Hunt;
-		walker.maze.walk.speed = hunt.speed;
-		walker.maze.walk.hunt = hunt;
-		walker.maze.walk.searchColumn = -1;
+		maze.walk.mode = Walk::Mode::Hunt;
+		maze.walk.speed = hunt.speed;
+		maze.walk.hunt = hunt;
+		maze.walk.searchColumn = -1;
 	}
 
-	void startWander(Object& walker, const CmdWander& wander)
+	void startWander(Maze& maze, const CmdWander& wander)
 	{
-		walker.maze.walk.mode = Walk::Mode::Wander;
-		walker.maze.walk.speed = wander.speed;
+		maze.walk.mode = Walk::Mode::Wander;
+		maze.walk.speed = wander.speed;
 	}
 
 	void walkMazes(std::vector<Object>& objects, FrameRules& rules, float t)
 	{
 		for (Object& object : objects)
 		{
-			if (!object.walksMaze() || object.maze.walk.mode == Walk::Mode::None || object.isFollowing() || object.isAirborne() || !rules.inPlay(object))
+			Maze* maze = rules.mazeOf(object);
+			if (!maze || maze->walk.mode == Walk::Mode::None || object.isFollowing() || object.isAirborne() || !rules.inPlay(object))
 			{
 				continue;
 			}
 
-			const Grid& grid = rules.mazeGrid(objects, object.maze.map);
+			const Grid& grid = rules.mazeGrid(objects, maze->map);
 			if (grid.at.empty() || !(grid.tile.x > 0.0f) || !(grid.tile.y > 0.0f)) { continue; }
 
-			Walker(object, objects, grid, rules, t).walk();
+			Walker(object, *maze, objects, grid, rules, t).walk();
 		}
 	}
 }

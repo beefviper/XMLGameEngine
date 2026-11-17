@@ -52,9 +52,9 @@ namespace xge
 	std::vector<int> mazeDistances(int columns, int rows, int toColumn, int toRow, const std::function<bool(int, int)>& blocked);
 
 	// <go>, <hunt> and <wander>: what the walker does from now on.
-	void startGo(Object& walker, const CmdGo& go);
-	void startHunt(Object& walker, const CmdHunt& hunt);
-	void startWander(Object& walker, const CmdWander& wander);
+	void startGo(Maze& maze, const CmdGo& go);
+	void startHunt(Maze& maze, const CmdHunt& hunt);
+	void startWander(Maze& maze, const CmdWander& wander);
 
 	// This step's choosing, for every walker in play: its velocity (and,
 	// where it turns, its place, so that it turns exactly in the middle of a

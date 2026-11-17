@@ -23,6 +23,7 @@ namespace xge
 		Store<Holder> holders;
 		Store<Drive> drives;
 		Store<Hand> hands;
+		Store<Maze> mazes;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.

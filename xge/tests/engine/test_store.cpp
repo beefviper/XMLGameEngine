@@ -170,3 +170,14 @@ TEST_CASE("only an object whose keys pick up held items has a hand part", "[stor
 	CHECK(klondike.game.isHand(klondike.get("hand")));
 	CHECK(klondike.game.parts().hands.size() == 1);
 }
+
+TEST_CASE("only an object written with <maze> has a maze part", "[store]")
+{
+	{
+		played::Played pong("descriptions/pong.xml");
+		CHECK(pong.game.parts().mazes.size() == 0);
+	}
+	played::Played pacman("descriptions/pacman.xml");
+	CHECK(pacman.game.mazeOf(pacman.get("playing.pacman")) != nullptr);
+	CHECK(pacman.game.mazeOf(pacman.get("playing.status")) == nullptr);
+}

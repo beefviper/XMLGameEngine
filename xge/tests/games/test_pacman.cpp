@@ -101,7 +101,7 @@ namespace
 			float theirHalf = 0.0f;
 			box(p, mine, myHalf);
 			box(other, theirs, theirHalf);
-			p.maze.walk = {};
+			if (Maze* maze = game.mazeOf(p)) { maze->walk = {}; }
 			p.position += theirs - mine - Vector2f{ myHalf + theirHalf + 1.0f, 0.0f };
 			p.velocity = { 180.0f, 0.0f };
 			frames(1);
@@ -131,6 +131,9 @@ namespace
 			return found;
 		}
 	};
+
+	// Where a maze walker is headed now (its maze part's walk).
+	Walk& walkOf(PacmanPlay& play, const Object& walker) { return play.game.mazeOf(walker)->walk; }
 
 	std::string loadError(const std::string& xml)
 	{
@@ -298,13 +301,13 @@ TEST_CASE("pacman: Blinky scatters to his corner, then hunts Pac-Man through the
 
 	// He sets off at once, for the top right corner, and never steps onto a wall.
 	maze.frames(1);
-	CHECK(blinky.maze.walk.mode == Walk::Mode::Hunt);
-	CHECK(blinky.maze.walk.hunt.target == "playing.topright");
+	CHECK(walkOf(maze, blinky).mode == Walk::Mode::Hunt);
+	CHECK(walkOf(maze, blinky).hunt.target == "playing.topright");
 	bool chased = false;
 	for (int i = 0; i < 1500 && maze.state() == "playing"; ++i)
 	{
 		maze.frames(1);
-		chased = chased || blinky.maze.walk.hunt.target == "playing.pacman";
+		chased = chased || walkOf(maze, blinky).hunt.target == "playing.pacman";
 		const Vector2f middle = middleOf(blinky);
 		const int column = static_cast<int>(middle.x / kTile);
 		const int row = static_cast<int>((middle.y - kTop) / kTile);
@@ -358,18 +361,18 @@ TEST_CASE("pacman: the ghosts scatter and chase in waves, turning round at each 
 	maze.pacman().position = { 2000.0f, 2000.0f };
 	maze.frames(2);
 	REQUIRE(mode.lookName() == "scatter");
-	CHECK(blinky.maze.walk.hunt.target == "playing.topright");
+	CHECK(walkOf(maze, blinky).hunt.target == "playing.topright");
 
 	// Seven seconds of scatter, twenty of chase, and he turns round at each.
 	maze.frames(7 * 60 - 4);
 	const Vector2f before = blinky.velocity;
 	maze.frames(4);
 	CHECK(mode.lookName() == "chase");
-	CHECK(blinky.maze.walk.hunt.target == "playing.pacman");
+	CHECK(walkOf(maze, blinky).hunt.target == "playing.pacman");
 	CHECK(blinky.velocity.x * before.x + blinky.velocity.y * before.y <= 0.0f);
 	maze.frames(20 * 60);
 	CHECK(mode.lookName() == "scatter");
-	CHECK(blinky.maze.walk.hunt.target == "playing.topright");
+	CHECK(walkOf(maze, blinky).hunt.target == "playing.topright");
 
 	// The last two scatters are five seconds; after the fourth chase is for good.
 	maze.frames(7 * 60 + 20 * 60);
@@ -380,7 +383,7 @@ TEST_CASE("pacman: the ghosts scatter and chase in waves, turning round at each 
 	CHECK(mode.lookName() == "chase");
 	maze.frames(60 * 60);
 	CHECK(mode.lookName() == "chase");
-	CHECK(blinky.maze.walk.hunt.target == "playing.pacman");
+	CHECK(walkOf(maze, blinky).hunt.target == "playing.pacman");
 }
 
 TEST_CASE("pacman: a blue ghost keeps wandering through a change of mode, and takes up the mode after", "[pacman][hunt]")
@@ -395,11 +398,11 @@ TEST_CASE("pacman: a blue ghost keeps wandering through a change of mode, and ta
 	maze.frames(7 * 60);
 	CHECK(maze.game.getObject("playing.mode").lookName() == "chase");
 	CHECK(blinky.lookName() == "blue");
-	CHECK(blinky.maze.walk.mode == Walk::Mode::Wander);
+	CHECK(walkOf(maze, blinky).mode == Walk::Mode::Wander);
 	maze.game.become(blinky.name, "normal");
 	maze.frames(2);
-	CHECK(blinky.maze.walk.mode == Walk::Mode::Hunt);
-	CHECK(blinky.maze.walk.hunt.target == "playing.pacman");
+	CHECK(walkOf(maze, blinky).mode == Walk::Mode::Hunt);
+	CHECK(walkOf(maze, blinky).hunt.target == "playing.pacman");
 }
 
 TEST_CASE("pacman: Inky comes out after thirty dots and Clyde after sixty more; four idle seconds count as thirty", "[pacman][hunt]")
@@ -454,7 +457,7 @@ TEST_CASE("pacman: a ghost goes at half speed in the tunnel", "[pacman][hunt]")
 	// Set in the middle of the left tunnel, going left.
 	blinky.position = tile(3, 14) - blinky.size * 0.5f;
 	blinky.velocity = { -pace, 0.0f };
-	blinky.maze.walk.going = Direction::Left;
+	walkOf(maze, blinky).going = Direction::Left;
 	maze.frames(2);
 	CHECK(blinky.velocity.x == Approx(-pace * 0.5f));
 	CHECK(blinky.velocity.y == Approx(0.0f));
@@ -467,15 +470,15 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	Object& blinky = maze.ghost("blinky");
 
 	maze.frames(10);
-	CHECK(blinky.maze.walk.mode == Walk::Mode::Hunt);
+	CHECK(walkOf(maze, blinky).mode == Walk::Mode::Hunt);
 	Object& pellet = maze.game.getObject("playing.maze.pellets.3");
 	maze.touch(pellet);
 	CHECK_FALSE(pellet.isVisible);
 	CHECK(blinky.lookName() == "blue");
 	maze.frames(1);
 	CHECK(blinky.lookName() == "blue");
-	CHECK(blinky.maze.walk.mode == Walk::Mode::Wander);
-	CHECK(blinky.maze.walk.speed == Approx(60.0f));
+	CHECK(walkOf(maze, blinky).mode == Walk::Mode::Wander);
+	CHECK(walkOf(maze, blinky).speed == Approx(60.0f));
 
 	// The eyes of one not blue stay eyes (<become from>), and a second pellet
 	// starts the blue over (the timer follows the look).
@@ -490,7 +493,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	maze.frames(200);
 	CHECK(blinky.lookName() == "normal");
 	maze.frames(1);
-	CHECK(blinky.maze.walk.mode == Walk::Mode::Hunt);
+	CHECK(walkOf(maze, blinky).mode == Walk::Mode::Hunt);
 
 	// Blue and touched: two hundred points, and its eyes head home through
 	// the door, where it is a ghost again and comes back out.
@@ -518,7 +521,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	maze.frames(50);
 	CHECK_FALSE(blinky.isFollowing());
 	CHECK(middleOf(blinky).y == Approx(tile(14, 11).y));
-	CHECK(blinky.maze.walk.mode == Walk::Mode::Hunt);
+	CHECK(walkOf(maze, blinky).mode == Walk::Mode::Hunt);
 }
 
 TEST_CASE("pacman: each ghost eaten on one pellet is worth twice the one before", "[pacman][looks]")

@@ -324,7 +324,6 @@ namespace xge
 		object.footing.climbing = false;
 		object.footing.jumping = false;
 		object.path.name.clear();
-		object.maze.walk = {};
 	}
 
 	void restart(Object& object, const Drive* drive)

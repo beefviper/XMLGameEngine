@@ -22,6 +22,7 @@ namespace xge
 		{
 			xge::stop(*doer.self);
 			executor.game.stopDrive(*doer.self);
+			if (Maze* maze = executor.game.mazeOf(*doer.self)) { maze->walk = {}; }
 		}
 		return true;
 	}

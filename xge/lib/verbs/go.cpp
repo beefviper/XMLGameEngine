@@ -27,7 +27,7 @@ namespace xge
 	{
 		const CmdGo& go = std::get<CmdGo>(command);
 		if (doer.self && doer.self->map.cells) { return executor.game.goCells(*doer.self, go.direction, go.speed); }
-		if (doer.self && doer.action) { startGo(*doer.self, go); }
+		if (doer.self && doer.action) { if (Maze* maze = executor.game.mazeOf(*doer.self)) { startGo(*maze, go); } }
 		return true;
 	}
 

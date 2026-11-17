@@ -271,9 +271,9 @@ namespace xge
 			}
 			// The way a maze walker is asked to go, while the key asking is
 			// still down: Pac-Man held right through READY! sets off right.
-			else if (const auto* go = std::get_if<CmdGo>(&actionCommand); go && object.walksMaze() && !object.map.cells)
+			else if (const auto* go = std::get_if<CmdGo>(&actionCommand); go && game.mazeOf(object) && !object.map.cells)
 			{
-				startGo(object, *go);
+				startGo(*game.mazeOf(object), *go);
 			}
 		}
 
