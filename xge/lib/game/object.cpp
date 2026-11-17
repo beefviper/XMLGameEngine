@@ -450,6 +450,7 @@ namespace xge
 			return none;
 		}
 		bool hasPlace(const Parts& parts, const Object& object) { return parts.cells.has(object.id); }
+		bool isHolder(const Parts& parts, const Object& object) { return parts.holders.has(object.id); }
 	}
 
 	const std::vector<LivePart>& liveParts()
@@ -468,18 +469,18 @@ namespace xge
 			{ "column", [](Parts& p, Object& o) -> float& { return placeNumber(p, o, &Object::Cells::Place::column); }, false, hasPlace },
 			{ "row", [](Parts& p, Object& o) -> float& { return placeNumber(p, o, &Object::Cells::Place::row); }, false, hasPlace },
 			{ "moves", [](Parts&, Object& o) -> float& { return o.moves.count; }, true, nullptr },
-			{ "cards", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, nullptr },
-			{ "held", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, nullptr },
-			{ "calling", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::calling); }, true, nullptr },
-			{ "called", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::called); }, true, nullptr },
-			{ "points", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::points); }, true, nullptr },
-			{ "pattern", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::pattern); }, true, nullptr },
-			{ "strength", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::strength); }, true, nullptr },
-			{ "odds", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::odds); }, true, nullptr },
-			{ "lead", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::lead); }, true, nullptr },
-			{ "winner", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::winner); }, true, nullptr },
-			{ "tricks", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::tricks); }, true, nullptr },
-			{ "deadwood", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::deadwood); }, true, nullptr },
+			{ "cards", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, isHolder },
+			{ "held", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, isHolder },
+			{ "calling", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::calling); }, true, isHolder },
+			{ "called", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::called); }, true, isHolder },
+			{ "points", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::points); }, true, isHolder },
+			{ "pattern", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::pattern); }, true, isHolder },
+			{ "strength", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::strength); }, true, isHolder },
+			{ "odds", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::odds); }, true, isHolder },
+			{ "lead", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::lead); }, true, isHolder },
+			{ "winner", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::winner); }, true, isHolder },
+			{ "tricks", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::tricks); }, true, isHolder },
+			{ "deadwood", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::deadwood); }, true, isHolder },
 		};
 		return parts;
 	}
