@@ -553,6 +553,7 @@ namespace xge
 		// down.
 		void lendCarried(std::vector<Object>& objects, FrameRules& rules)
 		{
+			if (rules.parts().carries.size() == 0) { return; }
 			for (auto& carrier : objects)
 			{
 				Object::Carry* carry = rules.parts().carries.find(carrier.id);
@@ -574,6 +575,7 @@ namespace xge
 		// what was put down can be picked up again once the two are apart.
 		void holdCarried(std::vector<Object>& objects, FrameRules& rules)
 		{
+			if (rules.parts().carries.size() == 0) { return; }
 			for (auto& carrier : objects)
 			{
 				Object::Carry* carry = rules.parts().carries.find(carrier.id);
@@ -602,6 +604,7 @@ namespace xge
 		// target, and its heading with it.
 		void pullAndSeek(std::vector<Object>& objects, FrameRules& rules, float t)
 		{
+			if (rules.parts().pulls.size() == 0) { return; }
 			const auto inPlay = [&](const Object& other) { return rules.inPlay(other); };
 			for (auto& object : objects)
 			{
@@ -639,6 +642,7 @@ namespace xge
 		// less than a frame's fall, so it comes to rest).
 		void riseAndFall(std::vector<Object>& objects, FrameRules& rules, float seconds)
 		{
+			if (rules.parts().alofts.size() == 0) { return; }
 			const float t = seconds;
 			for (auto& object : objects)
 			{
@@ -663,6 +667,7 @@ namespace xge
 		// while that is.
 		void castShadows(std::vector<Object>& objects, FrameRules& rules)
 		{
+			if (rules.parts().alofts.size() == 0) { return; }
 			for (auto& shadow : objects)
 			{
 				const Object::Aloft* aloft = rules.parts().alofts.find(shadow.id);
@@ -765,6 +770,7 @@ namespace xge
 		// play while both ends are (an end may be a copy not made yet).
 		void drawTethers(std::vector<Object>& objects, FrameRules& rules)
 		{
+			if (rules.parts().tethers.size() == 0) { return; }
 			for (auto& tether : objects)
 			{
 				const Object::Tether* ends = rules.parts().tethers.find(tether.id);

@@ -449,6 +449,7 @@ namespace xge
 
 	void walkMazes(std::vector<Object>& objects, FrameRules& rules, float t)
 	{
+		if (rules.parts().mazes.size() == 0) { return; }
 		for (Object& object : objects)
 		{
 			Maze* maze = rules.parts().mazes.find(object.id);

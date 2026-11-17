@@ -118,7 +118,9 @@ namespace xge
 
 		std::size_t slotOf(ObjectId id) const noexcept
 		{
-			if (!id || id.index >= positions.size()) { return kNone; }
+			// Most objects have no part of a kind, and most stores are empty:
+			// a plain number answers them (no call, in a Debug build).
+			if (id.index >= slotsKnown) { return kNone; }
 			const std::size_t at = positions[id.index];
 			return at != kNone && entries[at].owner == id ? at : kNone;
 		}
@@ -131,9 +133,11 @@ namespace xge
 				if (slot >= positions.size()) { positions.resize(static_cast<std::size_t>(slot) + 1, kNone); }
 				positions[slot] = i;
 			}
+			slotsKnown = positions.size();
 		}
 
 		std::vector<Entry> entries;
 		std::vector<std::size_t> positions;   // by slot: where its entry is, or kNone
+		std::size_t slotsKnown{ 0 };          // positions.size()
 	};
 }
