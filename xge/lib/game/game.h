@@ -125,6 +125,10 @@ namespace xge
 		bool seesPast(const Object& from, const Object& to, const std::vector<std::string>& past);
 		Object& getObject(const std::string& name);
 		Object* tryGetObject(const std::string& name) noexcept;
+
+		// The object a handle names, among those in the game or spawned this
+		// frame; nullptr once it has been despawned and gone.
+		Object* find(ObjectId id) noexcept;
 		float getVariable(const std::string& name);
 
 		// The state on top of the stack. Only good until the stack changes: a
@@ -835,6 +839,21 @@ namespace xge
 		// After objects have joined or left: every answer kept by an
 		// object's place in `objects` is worked out again.
 		void rosterChanged(void);
+
+		// Each handle's slot: the generation it is on and where its object
+		// is in `objects` (kNowhere: not there, spawned this frame or in
+		// another player's turn). Slots of despawned copies are free to be
+		// used again, a generation on.
+		struct Slot
+		{
+			static constexpr std::size_t kNowhere = static_cast<std::size_t>(-1);
+			std::uint32_t generation{};
+			std::size_t at{ kNowhere };
+		};
+		std::vector<Slot> handleSlots;
+		std::vector<std::uint32_t> freeHandles;
+		ObjectId newId(void);
+		void freeId(ObjectId id);
 
 		// tryGetObject's answers: names never change while a game runs.
 		std::unordered_map<std::string, Object*> foundObjects;

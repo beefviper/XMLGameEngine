@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <limits>
 #include <optional>
@@ -939,6 +940,20 @@ namespace xge
 	// how it started (worked out from its RawObject, and drawn again when a
 	// <random> start is), and `before`, how it was when the last frame
 	// ended. The RawObject itself, the file's text, is the fourth.
+	// An object's handle: its slot in the game, and which object that slot
+	// holds (a slot freed by a despawn is used again with the next
+	// generation, so a handle kept from before finds nothing). The default
+	// handle is no object's.
+	struct ObjectId
+	{
+		std::uint32_t index{ kNoSlot };
+		std::uint32_t generation{};
+
+		static constexpr std::uint32_t kNoSlot = 0xFFFFFFFFu;
+		explicit operator bool() const noexcept { return index != kNoSlot; }
+		friend bool operator==(ObjectId, ObjectId) = default;
+	};
+
 	struct Moment
 	{
 		Vector2f position;
@@ -1021,6 +1036,9 @@ namespace xge
 
 	struct Object : Moment
 	{
+		// Its handle (Game::find); given when it joins the game.
+		ObjectId id;
+
 		// RawObject::line, for the messages of the checks made once all is loaded.
 		int line{ 0 };
 

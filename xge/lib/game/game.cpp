@@ -61,6 +61,11 @@ namespace xge
 		expr.sheets = data.sheets;
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
+		for (std::size_t i = 0; i < objects.size(); ++i)
+		{
+			objects[i].id = newId();
+			handleSlots[objects[i].id.index].at = i;
+		}
 		keep(keeps);
 		refreshAllBoundTexts();
 		// Every picture's size is known now, with no window: the engine draws
@@ -336,6 +341,7 @@ namespace xge
 		// Its picture is the one it is copied from, and so its size.
 		made.size = original.size;
 		copyRaws[name] = std::move(copy);
+		made.id = newId();
 		spawned.push_back(std::move(made));
 		if (!spawned.back().drawn.textPieces.empty()) { relabel(spawned.back()); }
 		return &spawned.back();
@@ -375,6 +381,10 @@ namespace xge
 		const auto gone = [](const Object& object) { return object.isCopy() && !object.exists; };
 		if (std::any_of(objects.begin(), objects.end(), gone))
 		{
+			for (const Object& object : objects)
+			{
+				if (gone(object)) { freeId(object.id); }
+			}
 			objects.erase(std::remove_if(objects.begin(), objects.end(), gone), objects.end());
 			changed = true;
 		}
@@ -383,6 +393,7 @@ namespace xge
 			for (Object& object : spawned)
 			{
 				if (object.exists) { objects.push_back(std::move(object)); }
+				else { freeId(object.id); }
 			}
 			spawned.clear();
 			changed = true;
@@ -390,8 +401,45 @@ namespace xge
 		if (changed) { rosterChanged(); }
 	}
 
+	ObjectId Game::newId(void)
+	{
+		if (!freeHandles.empty())
+		{
+			const std::uint32_t index = freeHandles.back();
+			freeHandles.pop_back();
+			return { index, handleSlots[index].generation };
+		}
+		handleSlots.emplace_back();
+		return { static_cast<std::uint32_t>(handleSlots.size() - 1), 0 };
+	}
+
+	void Game::freeId(ObjectId id)
+	{
+		if (!id || id.index >= handleSlots.size() || handleSlots[id.index].generation != id.generation) { return; }
+		++handleSlots[id.index].generation;
+		handleSlots[id.index].at = Slot::kNowhere;
+		freeHandles.push_back(id.index);
+	}
+
+	Object* Game::find(ObjectId id) noexcept
+	{
+		if (!id || id.index >= handleSlots.size() || handleSlots[id.index].generation != id.generation) { return nullptr; }
+		const Slot& slot = handleSlots[id.index];
+		if (slot.at < objects.size() && objects[slot.at].id == id) { return &objects[slot.at]; }
+		for (Object& waiting : spawned)
+		{
+			if (waiting.id == id) { return &waiting; }
+		}
+		return nullptr;
+	}
+
 	void Game::rosterChanged(void)
 	{
+		for (Slot& slot : handleSlots) { slot.at = Slot::kNowhere; }
+		for (std::size_t i = 0; i < objects.size(); ++i)
+		{
+			if (objects[i].id.index < handleSlots.size()) { handleSlots[objects[i].id.index].at = i; }
+		}
 		foundObjects.clear();
 		filtered.clear();
 		liveLinked = false;
