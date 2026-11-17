@@ -1,6 +1,6 @@
 # An object's parts
 
-**Status:** Counted, for the author's changes ([CR3](../plan.md#cr3-parts-as-components) step 1). Why parts become components is in [engine-structure](16-engine-structure.md).
+**Status:** Counted; parts go in a store each (the author). The per-part proposals are applied as each part moves ([CR3](../plan.md#cr3-parts-as-components)). Why parts become components is in [engine-structure](16-engine-structure.md).
 
 ## How they were counted
 
@@ -63,21 +63,9 @@ Loose fields that stay in the object: `name`, `objClass`, `groupName` and `outer
 
 ## How a part is held
 
-Two forms fit the numbers. Either gives an object the size of what it uses (about 465 bytes of parts on average, against 3,825 today).
-
-| | A store per part (the plan) | A part held by pointer in the object |
-|---|---|---|
-| Shape | `game.holders.find(object.id)`; parts packed in one vector a kind | `object.holder` is a box: empty, or one `Holder` made on first use, copied with the object |
-| An unused part costs | nothing in the object | 8 bytes |
-| Call sites | each of about 1,400 reads of a part in the engine and 640 in the tests (holder 192, hand 172, map 154, looks 104, drawn 90) goes through the game; `Object` methods that read their own parts (`showLook`, `advanceAnimation`) become functions given the game | `object.holder.x` becomes `object.holder->x`; methods stay |
-| A pass over one part | walks the store, touching only objects that have it | still asks every object |
-| Stale references | the `ObjectId` with a generation (CR3 step 2) | the same: the handle is worth having either way |
-
-The pass gain is small here: games have tens to hundreds of objects, and the slow part of a frame is the move and its touches, not the asking. The store's gain is its shape; its cost is that every feature's code needs the game in hand.
+**A store per part (the author).** Each kind of part lives in its own collection in the `Game`, found by the object's `ObjectId`: the storage of an ECS, done the right way rather than the cheapest. Looked at and not taken: a part held by pointer in the object, which saves the same memory with fewer changed call sites (about 1,400 reads of a part in the engine and 640 in the tests go through the game instead), but keeps the object the owner of its parts.
 
 ## Open
-
-- Store or box, above: the author's.
 
 - The proposals above are the author's to change.
 - Step 5: whether `Moment` and `drawn` leave the object.
