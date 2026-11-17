@@ -1492,7 +1492,7 @@ namespace xge
 			std::optional<std::size_t> look;
 			std::vector<Mark> marks;
 		};
-		// An item (a held member): what it is (its start holder and worths, as
+		// An item (a held member, a part: Parts::items): what it is (its start holder and worths, as
 		// ItemOf), its number (from 1, every held member of the game in turn),
 		// the hand that last laid it and whether its face is up.
 		struct Item
@@ -1504,7 +1504,6 @@ namespace xge
 			int laidBy{};           // the seat of the hand that last laid it (0 none)
 			bool faceUp{ false };
 		};
-		Item item;
 		// A member of a group that takes <turns> (`takes`): the look it shows
 		// off its turn (`sprite`; none: as it is). Its live `turn` is 1 on its
 		// turn, else 0. <owns class=>: the pieces it moves; a picker's

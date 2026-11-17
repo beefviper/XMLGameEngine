@@ -44,6 +44,7 @@ namespace xge
 		carries.remove(id);
 		pickers.remove(id);
 		turns.remove(id);
+		items.remove(id);
 	}
 
 	namespace
@@ -70,5 +71,6 @@ namespace xge
 		copyPart(carries, from.carries, id);
 		copyPart(pickers, from.pickers, id);
 		copyPart(turns, from.turns, id);
+		copyPart(items, from.items, id);
 	}
 }

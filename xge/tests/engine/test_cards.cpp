@@ -62,7 +62,7 @@ TEST_CASE("klondike.xml: the deal: a staircase of columns, their tops face up, t
 		total += column;
 		for (std::size_t i = 0; i < items.size(); ++i)
 		{
-			CHECK(table.item(items[i]).item.faceUp == (i + 1 == items.size()));
+			CHECK(table.game.itemOf(table.item(items[i])).faceUp == (i + 1 == items.size()));
 		}
 		CHECK(table.top("columns." + std::to_string(column) + ".1").lookName() == "face");
 	}
@@ -88,7 +88,7 @@ namespace
 	{
 		for (Object& object : table.game.getCurrentObjects())
 		{
-			if (object.item.is && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return object.item.number; }
+			if (table.game.itemOf(object).is && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return table.game.itemOf(object).number; }
 		}
 		return 0;
 	}
@@ -146,7 +146,7 @@ TEST_CASE("klondike.xml: the stock deals to the waste face up, and empty, takes 
 	CHECK(table.holderOf("stock").items.size() == 23);
 	REQUIRE(table.holderOf("waste").items.size() == 1);
 	CHECK(table.holderOf("waste").items.back() == first);
-	CHECK(table.item(first).item.faceUp);
+	CHECK(table.game.itemOf(table.item(first)).faceUp);
 	CHECK(table.hand().lookName() == "free");
 	for (int i = 0; i < 23; ++i) { space(table); }
 	CHECK(table.holderOf("stock").items.empty());
@@ -155,7 +155,7 @@ TEST_CASE("klondike.xml: the stock deals to the waste face up, and empty, takes 
 	CHECK(table.holderOf("waste").items.empty());
 	REQUIRE(table.holderOf("stock").items.size() == 24);
 	CHECK(table.holderOf("stock").items.back() == first);
-	CHECK_FALSE(table.item(first).item.faceUp);
+	CHECK_FALSE(table.game.itemOf(table.item(first)).faceUp);
 }
 
 TEST_CASE("klondike.xml: a column takes a card one lower of the other colour, an empty one only a king", "[cards]")
@@ -241,7 +241,7 @@ TEST_CASE("klondike.xml: a run moves together, and the face-down card under it t
 	CHECK(table.holderOf("columns.2.1").items.size() == 4);
 	CHECK(topOf(table, "columns.2.1") == "8 clubs");
 	CHECK(table.holderOf("columns.1.1").items.size() == 1);
-	CHECK(table.top("columns.1.1").item.faceUp);
+	CHECK(table.game.itemOf(table.top("columns.1.1")).faceUp);
 	// A run that is not in order cannot be taken: a face-down card neither.
 	setUp(table, { { "columns.1.1", { { "clubs", "4" }, { "spades", "10" } } } });
 	table.game.turnItem(table.item(table.holderOf("columns.1.1").items[0]), false);
@@ -445,7 +445,7 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 		int items = 0;
 		for (const Object& object : play.game.getCurrentObjects())
 		{
-			if (!object.item.is) { continue; }
+			if (!play.game.itemOf(object).is) { continue; }
 			++items;
 			CHECK(object.variable.at("row") == object.variable.at("suit"));
 			CHECK(object.variable.at("column") == object.variable.at("rank"));
@@ -462,7 +462,7 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 		Played play(plain.path);
 		for (const Object& object : play.game.getCurrentObjects())
 		{
-			if (object.item.is) { CHECK_FALSE(object.variable.count("rank")); }
+			if (play.game.itemOf(object).is) { CHECK_FALSE(object.variable.count("rank")); }
 		}
 	}
 	// A name its group gives that a member has a variable of already stops the load.
@@ -593,7 +593,7 @@ TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces fro
 	hearts.frames(2);
 	// Card 22 is the 9 of hearts in both: row 2, column 9.
 	Object& nine = table.item(cardOf(table, "hearts", "9"));
-	CHECK(nine.item.number == 22);
+	CHECK(table.game.itemOf(nine).number == 22);
 	CHECK(cardAxis(nine, "row") == 2);
 	CHECK(cardAxis(nine, "column") == 9);
 	CHECK((nine.looks.all[0].bitmap->rgba == hearts.game.itemAt(22)->looks.all[0].bitmap->rgba));
@@ -655,7 +655,7 @@ namespace
 		{
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.item.is && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return object.item.number; }
+				if (game.itemOf(object).is && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return game.itemOf(object).number; }
 			}
 			return 0;
 		}
@@ -721,13 +721,13 @@ TEST_CASE("crazyeights.xml: the deal: seven each, yours face up in order, one tu
 	REQUIRE(mine.size() == 7);
 	for (std::size_t i = 0; i < mine.size(); ++i)
 	{
-		CHECK(table.item(mine[i]).item.faceUp);
+		CHECK(table.game.itemOf(table.item(mine[i])).faceUp);
 		if (i > 0) { CHECK(std::make_pair(cardAxis(table.item(mine[i - 1]), "row"), cardAxis(table.item(mine[i - 1]), "column")) < std::make_pair(cardAxis(table.item(mine[i]), "row"), cardAxis(table.item(mine[i]), "column"))); }
 	}
 	REQUIRE(table.holderOf("theirs").items.size() == 7);
-	for (const int number : table.holderOf("theirs").items) { CHECK_FALSE(table.item(number).item.faceUp); }
+	for (const int number : table.holderOf("theirs").items) { CHECK_FALSE(table.game.itemOf(table.item(number)).faceUp); }
 	REQUIRE(table.holderOf("discard").items.size() == 1);
-	CHECK(table.item(table.holderOf("discard").items.back()).item.faceUp);
+	CHECK(table.game.itemOf(table.item(table.holderOf("discard").items.back())).faceUp);
 	CHECK(table.holderOf("stock").items.size() == 37);
 	CHECK(table.handOf(table.hand()).holder == table.holder("mine").name);
 	CHECK(table.turn() == 1.0f);
@@ -831,7 +831,7 @@ TEST_CASE("crazyeights.xml: drawn from empty, the stock takes the discard holder
 	CHECK(table.top("discard") == "7 hearts");
 	CHECK(table.holderOf("discard").items.size() == 1);
 	REQUIRE(table.holderOf("stock").items.size() == 2);
-	for (const int number : table.holderOf("stock").items) { CHECK_FALSE(table.item(number).item.faceUp); }
+	for (const int number : table.holderOf("stock").items) { CHECK_FALSE(table.game.itemOf(table.item(number)).faceUp); }
 	// Then a draw into your hand, which stays your turn.
 	table.space();
 	CHECK(table.holderOf("mine").items.size() == 2);
@@ -924,7 +924,7 @@ namespace
 			const int column = static_cast<int>(std::find(ranks.begin(), ranks.end(), rank) - ranks.begin()) + 1;
 			for (Object& object : game.getCurrentObjects())
 			{
-				if (object.item.is && cardAxis(object, "row") == row && cardAxis(object, "column") == column) { return object.item.number; }
+				if (game.itemOf(object).is && cardAxis(object, "row") == row && cardAxis(object, "column") == column) { return game.itemOf(object).number; }
 			}
 			return 0;
 		}
@@ -1006,7 +1006,7 @@ TEST_CASE("blackjack.xml: over 21 is bust; blackjack pays three to two", "[cards
 	CHECK(play.get("result").lookName() == "bust");
 	CHECK(play.table("bank") == 190.0f);
 	// The dealer's hidden card shows.
-	for (const int number : play.holderOf("dealer").items) { CHECK(play.game.itemAt(number)->item.faceUp); }
+	for (const int number : play.holderOf("dealer").items) { CHECK(play.game.itemOf(*play.game.itemAt(number)).faceUp); }
 
 	play.press(KeyCode::Space);
 	play.stack({ "A hearts", "6 spades", "K clubs", "5 diamonds" });
@@ -1047,7 +1047,7 @@ namespace
 		const int row = numberOf(packSuits, name.substr(space + 1));
 		for (Object& object : game.getCurrentObjects())
 		{
-			if (object.item.is && cardAxis(object, "column") == column && cardAxis(object, "row") == row) { return object.item.number; }
+			if (game.itemOf(object).is && cardAxis(object, "column") == column && cardAxis(object, "row") == row) { return game.itemOf(object).number; }
 		}
 		return 0;
 	}
@@ -1195,7 +1195,7 @@ TEST_CASE("holdem.xml: the deal antes five each; checked through, the better han
 	CHECK(play.chips("you") == 495.0f);
 	CHECK(play.holderOf("yours").items.size() == 2);
 	CHECK(play.holderOf("theirs").items.size() == 2);
-	for (const int number : play.holderOf("theirs").items) { CHECK_FALSE(play.game.itemAt(number)->item.faceUp); }
+	for (const int number : play.holderOf("theirs").items) { CHECK_FALSE(play.game.itemOf(*play.game.itemAt(number)).faceUp); }
 	CHECK(play.get("you").lookName() == "act");
 
 	// You check each round; the computer, with little, checks too.
@@ -1209,7 +1209,7 @@ TEST_CASE("holdem.xml: the deal antes five each; checked through, the better han
 	CHECK(play.get("result").lookName() == "youwin");
 	CHECK(play.chips("you") == 505.0f);
 	CHECK(play.chips("cpu") == 495.0f);
-	for (const int number : play.holderOf("theirs").items) { CHECK(play.game.itemAt(number)->item.faceUp); }
+	for (const int number : play.holderOf("theirs").items) { CHECK(play.game.itemOf(*play.game.itemAt(number)).faceUp); }
 	CHECK(play.get("you").lookName() == "done");
 }
 
@@ -1443,8 +1443,8 @@ TEST_CASE("hearts.xml: the deal: thirteen each, yours face up in suit order, the
 	{
 		const Object& before = *play.game.itemAt(mine[i - 1]);
 		const Object& after = *play.game.itemAt(mine[i]);
-		CHECK(std::make_pair(cardAxis(before, "row"), before.item.worths.back()) < std::make_pair(cardAxis(after, "row"), after.item.worths.back()));
-		CHECK(after.item.faceUp);
+		CHECK(std::make_pair(cardAxis(before, "row"), play.game.itemOf(before).worths.back()) < std::make_pair(cardAxis(after, "row"), play.game.itemOf(after).worths.back()));
+		CHECK(play.game.itemOf(after).faceUp);
 	}
 	CHECK(play.turn() == 1.0f);
 	CHECK(play.get("you").lookName() == "free");
@@ -1882,7 +1882,7 @@ TEST_CASE("gin.xml: a knock with ten or less scores the difference, north's card
 	CHECK(play.look() == "done");
 	CHECK(play.of("you", "score") == 56.0f);
 	CHECK(play.get("message").lookName() == "youknock");
-	for (const int number : play.holderOf("northcards").items) { CHECK(play.game.itemAt(number)->item.faceUp); }
+	for (const int number : play.holderOf("northcards").items) { CHECK(play.game.itemOf(*play.game.itemAt(number)).faceUp); }
 }
 
 TEST_CASE("gin.xml: gin scores 25 more", "[cards][gin]")
@@ -1951,7 +1951,7 @@ TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[c
 	CHECK(play.of("north", "score") == play.holderOf("mine").deadwood - play.holderOf("northcards").deadwood);
 	CHECK(play.of("you", "turn") == 0.0f);
 	CHECK(play.of("north", "turn") == 0.0f);
-	for (const int number : play.holderOf("northcards").items) { CHECK(play.game.itemAt(number)->item.faceUp); }
+	for (const int number : play.holderOf("northcards").items) { CHECK(play.game.itemOf(*play.game.itemAt(number)).faceUp); }
 }
 
 TEST_CASE("gin.xml: at 100 after a hand the higher score wins", "[cards][gin]")
@@ -1997,8 +1997,8 @@ namespace
 				}
 				Object& moved = *game.itemAt(number);
 				Object& other = *game.itemAt(target.back());
-				const bool up = other.item.faceUp;
-				game.turnItem(other, moved.item.faceUp);
+				const bool up = game.itemOf(other).faceUp;
+				game.turnItem(other, game.itemOf(moved).faceUp);
 				game.turnItem(moved, up);
 				*at = target.back();
 				target.back() = number;

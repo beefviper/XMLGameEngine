@@ -93,7 +93,7 @@ namespace xge
 			{
 				for (const std::string& by : pattern.by)
 				{
-					if (by == "worth" || std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.item.is && object.variable.count(by); })) { continue; }
+					if (by == "worth" || std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return itemOf(object).is && object.variable.count(by); })) { continue; }
 					throw std::runtime_error("<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">: variable=\"" + by + "\"; nothing held has a variable of that name");
 				}
 			}

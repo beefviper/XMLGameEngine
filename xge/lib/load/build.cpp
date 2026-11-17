@@ -593,9 +593,7 @@ namespace xge
 			hand.team = rawObject.handTeam;
 			hand.holds = rawObject.handHolds;
 		}
-		object.item.is = rawObject.held;
-		object.item.startHolder = rawObject.item.startHolder;
-		object.item.worths = rawObject.item.worths;
+		if (rawObject.held) { parts->items.add(object.id, order, { true, rawObject.item.startHolder, rawObject.item.worths, 0, 0, false }); }
 		if (rawObject.takesTurns) { parts->turns.add(object.id, order, { true, rawObject.turnsSprite, rawObject.ownsClass }); }
 	}
 
