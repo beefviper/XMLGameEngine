@@ -1095,30 +1095,6 @@ namespace xge
 		float altitude{};
 		float rise{};
 
-		// On a map with <cells />: the cell it is in, counting from 1 (the
-		// live numbers column and row); 0 for anything else.
-		float cellColumn{};
-		float cellRow{};
-
-		// A <go> on a map with <cells />: going that way, a cell every
-		// cellGoEvery seconds, the next in cellGoWait.
-		bool cellGoing{ false };
-		Direction cellGoWay{ Direction::Up };
-		float cellGoEvery{};
-		float cellGoWait{};
-
-		// A <chain>: its links in order from the one behind it (found from
-		// where they lie when empty), and how many it is to grow by.
-		std::vector<std::string> chainLinks;
-		int chainGrow{};
-		// Its links are known (found, or given by a <split />): a link lost
-		// is dropped, never looked for again where they lie.
-		bool chainKnown{ false };
-
-		// A piece with <joins>, settled: the other cells of the shape it came
-		// in, which it falls with while they are there.
-		std::vector<std::string> joinedWith;
-
 		// In play: shown, and touching things when its collisions are on. die()
 		// takes it out of play and stops its collisions.
 		bool isVisible{ true };
@@ -1625,6 +1601,36 @@ namespace xge
 		// map is given one.
 		struct Cells
 		{
+			// Where it is on its map: the cell, counting from 1 (the live
+			// numbers column and row; 0 for one not on cells), and what goes
+			// with the place. A reset puts back `start`.
+			struct Place
+			{
+				float column{};
+				float row{};
+
+				// A <go>: going that way, a cell every goEvery seconds, the
+				// next in goWait.
+				bool going{ false };
+				Direction goWay{ Direction::Up };
+				float goEvery{};
+				float goWait{};
+
+				// A <chain>: its links in order from the one behind it (found
+				// from where they lie when empty), and how many it is to grow
+				// by. Its links are known (found, or given by a <split />): a
+				// link lost is dropped, never looked for again where they lie.
+				std::vector<std::string> chainLinks;
+				int chainGrow{};
+				bool chainKnown{ false };
+
+				// A piece with <joins>, settled: the other cells of the shape
+				// it came in, which it falls with while they are there.
+				std::vector<std::string> joinedWith;
+			};
+			Place place;
+			Place start;
+
 			// <chain object>: what its links are (see RawObject::chain).
 			std::string chain;
 			// The map's <checks>, made ready (each piece of the map has them).
@@ -2288,6 +2294,9 @@ namespace xge
 		const char* name;
 		float& (*of)(Parts& parts, Object& object);
 		bool notBelowZero;   // <set> keeps it at 0 or above
+		// Whether an object can have it (its part is there); null: every
+		// object. One that cannot reads 0 and is not linked (Game::refreshLive).
+		bool (*has)(const Parts& parts, const Object& object);
 	};
 	const std::vector<LivePart>& liveParts();
 

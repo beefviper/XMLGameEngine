@@ -19,11 +19,12 @@ namespace xge
 	{
 		Object* const self = doer.self;
 		// On a map of cells, a <go> turns round.
-		if (self && self->map.cells && self->cellGoing)
+		if (self && self->map.cells && executor.game.place(*self).going)
 		{
-			const Direction way = self->cellGoWay;
-			self->cellGoWay = way == Direction::Up ? Direction::Down : way == Direction::Down ? Direction::Up : way == Direction::Left ? Direction::Right : Direction::Left;
-			self->facing = self->cellGoWay;
+			Object::Cells::Place& going = executor.game.placeFor(*self);
+			const Direction way = going.goWay;
+			going.goWay = way == Direction::Up ? Direction::Down : way == Direction::Down ? Direction::Up : way == Direction::Left ? Direction::Right : Direction::Left;
+			self->facing = going.goWay;
 		}
 		else if (self) { executor.reverse(*self); }
 		return true;

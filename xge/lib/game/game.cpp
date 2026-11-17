@@ -1477,6 +1477,7 @@ namespace xge
 				picker->marks.copies.clear();
 			}
 			if (Object::Rest* rest = parts.rests.find(object.id)) { *rest = {}; }
+			if (Object::Cells* cells = parts.cells.find(object.id)) { cells->place = cells->start; }
 			object.turning.spin = 0.0f;
 			object.showHeading();
 
@@ -2208,10 +2209,12 @@ namespace xge
 		{
 			liveLinked = true;
 			const std::vector<std::string>& parts = liveNumberParts();
+			const std::vector<LivePart>& live = liveParts();
 			for (std::size_t i = 0; i < objects.size(); ++i)
 			{
 				for (std::size_t part = 0; part < parts.size(); ++part)
 				{
+					if (live[part].has && !live[part].has(objectParts, objects[i])) { continue; }
 					const auto found = expr.liveNumbers.find(objects[i].name + "." + parts[part]);
 					if (found != expr.liveNumbers.end()) { liveLinks.push_back({ &found->second, i, part }); }
 				}

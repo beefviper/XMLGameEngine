@@ -37,10 +37,10 @@ namespace
 
 		void to(int column, int row)
 		{
-			while (cell(cursor().cellColumn) < column) { tap(KeyCode::D); }
-			while (cell(cursor().cellColumn) > column) { tap(KeyCode::A); }
-			while (cell(cursor().cellRow) < row) { tap(KeyCode::S); }
-			while (cell(cursor().cellRow) > row) { tap(KeyCode::W); }
+			while (cell(game.place(cursor()).column) < column) { tap(KeyCode::D); }
+			while (cell(game.place(cursor()).column) > column) { tap(KeyCode::A); }
+			while (cell(game.place(cursor()).row) < row) { tap(KeyCode::S); }
+			while (cell(game.place(cursor()).row) > row) { tap(KeyCode::W); }
 		}
 
 		void space(int column, int row = 1)
@@ -56,7 +56,7 @@ namespace
 			for (Object& object : game.getCurrentObjects())
 			{
 				if (object.exists && object.isVisible && object.map.cells && object.isCopy() && object.map.name == boardMap
-					&& cell(object.cellColumn) == column && cell(object.cellRow) == row)
+					&& cell(game.place(object).column) == column && cell(game.place(object).row) == row)
 				{
 					return object.objClass;
 				}
@@ -110,7 +110,7 @@ TEST_CASE("fourinarow.xml: a disc dropped falls to the bottom, then onto the one
 	CHECK(board.at(4, 5) == "yellow");
 	CHECK(board.turn() == 1.0f);
 	// The cursor stays on its own row above the board.
-	CHECK(cell(board.cursor().cellRow) == 1);
+	CHECK(cell(board.game.place(board.cursor()).row) == 1);
 }
 
 TEST_CASE("fourinarow.xml: a full column refuses a disc", "[fourinarow]")
@@ -196,13 +196,13 @@ TEST_CASE("fourinarow.xml: the computer's disc is dropped from its row", "[fouri
 	board.frames(1);
 	CHECK(board.cursor().lookName() == "yellow");
 	// Your keys do not reach the cursor while the computer thinks.
-	const int column = cell(board.cursor().cellColumn);
+	const int column = cell(board.game.place(board.cursor()).column);
 	board.tap(KeyCode::A);
-	CHECK(cell(board.cursor().cellColumn) == column);
+	CHECK(cell(board.game.place(board.cursor()).column) == column);
 	board.untilFirst();
 	CHECK(board.turn() == 1.0f);
 	CHECK(board.get("match").variable.at("made") == 2.0f);
-	CHECK(cell(board.cursor().cellRow) == 1);
+	CHECK(cell(board.game.place(board.cursor()).row) == 1);
 }
 
 TEST_CASE("tictactoe.xml: a mark goes in any free square, never a taken one", "[tictactoe]")

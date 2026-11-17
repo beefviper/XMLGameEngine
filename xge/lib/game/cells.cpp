@@ -110,14 +110,14 @@ namespace xge
 				{
 					if (object.exists && object.map.cells && !isShape(object) && object.map.name == map && isShown(object))
 					{
-						cells.emplace(cellKey(whole(object.cellColumn), whole(object.cellRow)), &object);
+						cells.emplace(cellKey(whole(place(object).column), whole(place(object).row)), &object);
 					}
 				}
 				for (Object& object : spawned)
 				{
 					if (object.exists && object.map.cells && !isShape(object) && object.map.name == map)
 					{
-						cells.emplace(cellKey(whole(object.cellColumn), whole(object.cellRow)), &object);
+						cells.emplace(cellKey(whole(place(object).column), whole(place(object).row)), &object);
 					}
 				}
 				found = heldCells.maps.emplace(map, std::move(cells)).first;
@@ -128,7 +128,7 @@ namespace xge
 		const auto holds = [&](Object& object)
 		{
 			return object.exists && object.map.cells && !isShape(object) && object.map.name == map
-				&& whole(object.cellColumn) == column && whole(object.cellRow) == row
+				&& whole(place(object).column) == column && whole(place(object).row) == row
 				&& std::find(mover.begin(), mover.end(), &object) == mover.end();
 		};
 		for (Object& object : objects)
@@ -156,8 +156,8 @@ namespace xge
 
 	void Game::putInCell(Object& object, int column, int row)
 	{
-		object.cellColumn = static_cast<float>(column);
-		object.cellRow = static_cast<float>(row);
+		placeFor(object).column = static_cast<float>(column);
+		placeFor(object).row = static_cast<float>(row);
 		object.map.column = column - 1;
 		object.map.row = row - 1;
 		const Vector2f size = sizeOf(object);
@@ -255,25 +255,25 @@ namespace xge
 		if (!piece) { return false; }
 
 		const std::vector<Object*> cells = cellsOf(*piece);
-		const int left = column.value_or(whole(piece->cellColumn));
-		const int top = row.value_or(whole(piece->cellRow));
-		const int fromLeft = whole(piece->cellColumn);
-		const int fromTop = whole(piece->cellRow);
+		const int left = column.value_or(whole(place(*piece).column));
+		const int top = row.value_or(whole(place(*piece).row));
+		const int fromLeft = whole(place(*piece).column);
+		const int fromTop = whole(place(*piece).row);
 
 		// Where each cell goes, kept as it lies from the shape's top left.
 		Object probe = *piece;
 		if (!moveToMap(probe, into)) { return false; }
 		for (Object* cell : cells)
 		{
-			const int c = left + whole(cell->cellColumn) - fromLeft;
-			const int r = top + whole(cell->cellRow) - fromTop;
+			const int c = left + whole(place(*cell).column) - fromLeft;
+			const int r = top + whole(place(*cell).row) - fromTop;
 			if (c < 1 || r < 1 || c > probe.map.columns || r > probe.map.rows || cellHolder(into, c, r, cells)) { return false; }
 		}
 
 		for (Object* cell : cells)
 		{
-			const int c = left + whole(cell->cellColumn) - fromLeft;
-			const int r = top + whole(cell->cellRow) - fromTop;
+			const int c = left + whole(place(*cell).column) - fromLeft;
+			const int r = top + whole(place(*cell).row) - fromTop;
 			moveToMap(*cell, into);
 			putInCell(*cell, c, r);
 		}
@@ -295,7 +295,7 @@ namespace xge
 		// growing there: it is no blocker.
 		std::vector<Object*> passing = cells;
 		const std::vector<Object*> links = chainOf(mover);
-		if (!links.empty() && mover.chainGrow == 0) { passing.push_back(links.back()); }
+		if (!links.empty() && place(mover).chainGrow == 0) { passing.push_back(links.back()); }
 
 		// The first thing in the way, or the map's edge.
 		const auto inTheWay = [&](bool& offMap) -> Object*
@@ -303,8 +303,8 @@ namespace xge
 			offMap = false;
 			for (Object* cell : cells)
 			{
-				const int column = whole(cell->cellColumn) + across;
-				const int row = whole(cell->cellRow) + down;
+				const int column = whole(place(*cell).column) + across;
+				const int row = whole(place(*cell).row) + down;
 				if (column < 1 || row < 1 || column > mover.map.columns || row > mover.map.rows)
 				{
 					offMap = true;
@@ -327,14 +327,14 @@ namespace xge
 			// While the rules run, the cells it steps into are not free for
 			// a <spawn><free /> (Snake's next food).
 			const std::size_t steppingBefore = stepping.size();
-			for (Object* cell : cells) { stepping.push_back({ mover.map.name, whole(cell->cellColumn) + across, whole(cell->cellRow) + down }); }
+			for (Object* cell : cells) { stepping.push_back({ mover.map.name, whole(place(*cell).column) + across, whole(place(*cell).row) + down }); }
 			Touch touch;
 			touch.edge = edge;
 			touch.normal = outOf(opposite(edge));
 			touch.along = 0.5f;
 			touch.point = middleOf(*blocker);
-			const int beforeColumn = whole(mover.cellColumn);
-			const int beforeRow = whole(mover.cellRow);
+			const int beforeColumn = whole(place(mover).column);
+			const int beforeRow = whole(place(mover).row);
 			goThrough = false;
 			reactTo(mover, *blocker, touch);
 			Touch back = touch;
@@ -348,17 +348,17 @@ namespace xge
 			// the step go on; one that moved the mover (a centipede turning)
 			// has made its own step instead.
 			// A <through /> in the rules makes it anyway.
-			const bool moved = whole(mover.cellColumn) != beforeColumn || whole(mover.cellRow) != beforeRow;
+			const bool moved = whole(place(mover).column) != beforeColumn || whole(place(mover).row) != beforeRow;
 			const bool through = goThrough;
 			goThrough = false;
 			if (moved || !mover.exists) { return false; }
 			if (!through && (inTheWay(offMap) || offMap)) { return false; }
 		}
 
-		const int fromColumn = whole(mover.cellColumn);
-		const int fromRow = whole(mover.cellRow);
-		for (Object* cell : cells) { putInCell(*cell, whole(cell->cellColumn) + across, whole(cell->cellRow) + down); }
-		if (isShape(mover)) { putInCell(mover, whole(mover.cellColumn) + across, whole(mover.cellRow) + down); }
+		const int fromColumn = whole(place(mover).column);
+		const int fromRow = whole(place(mover).row);
+		for (Object* cell : cells) { putInCell(*cell, whole(place(*cell).column) + across, whole(place(*cell).row) + down); }
+		if (isShape(mover)) { putInCell(mover, whole(place(mover).column) + across, whole(place(mover).row) + down); }
 		if (!cellPart(mover).chain.empty()) { followChain(mover, links, fromColumn, fromRow); }
 		return true;
 	}
@@ -377,25 +377,25 @@ namespace xge
 
 		// As kept: a link no longer there is dropped.
 		std::vector<Object*> links;
-		if (head.chainKnown)
+		if (place(head).chainKnown)
 		{
 			std::vector<std::string> kept;
-			for (const std::string& name : head.chainLinks)
+			for (const std::string& name : place(head).chainLinks)
 			{
 				Object* link = findAnywhere(name);
 				if (!link || !link->exists) { continue; }
 				links.push_back(link);
 				kept.push_back(name);
 			}
-			head.chainLinks = std::move(kept);
+			placeFor(head).chainLinks = std::move(kept);
 			return links;
 		}
 
 		// Found from where they lie: from the head, the next one beside
 		// the last, until there is none.
-		head.chainLinks.clear();
-		int column = whole(head.cellColumn);
-		int row = whole(head.cellRow);
+		placeFor(head).chainLinks.clear();
+		int column = whole(place(head).column);
+		int row = whole(place(head).row);
 		for (;;)
 		{
 			Object* next = nullptr;
@@ -406,18 +406,18 @@ namespace xge
 					if (next) { return; }
 					if (!object.exists || !object.map.cells || object.map.name != head.map.name || &object == &head || !isLink(object, cellPart(head).chain)) { continue; }
 					if (std::find(links.begin(), links.end(), &object) != links.end()) { continue; }
-					if (std::abs(whole(object.cellColumn) - column) + std::abs(whole(object.cellRow) - row) == 1) { next = &object; }
+					if (std::abs(whole(place(object).column) - column) + std::abs(whole(place(object).row) - row) == 1) { next = &object; }
 				}
 			};
 			look(objects);
 			look(spawned);
 			if (!next) { break; }
 			links.push_back(next);
-			head.chainLinks.push_back(next->name);
-			column = whole(next->cellColumn);
-			row = whole(next->cellRow);
+			placeFor(head).chainLinks.push_back(next->name);
+			column = whole(place(*next).column);
+			row = whole(place(*next).row);
 		}
-		head.chainKnown = true;
+		placeFor(head).chainKnown = true;
 		return links;
 	}
 
@@ -426,21 +426,21 @@ namespace xge
 		// Each link into the cell of the one ahead of it.
 		for (Object* link : links)
 		{
-			const int nowColumn = whole(link->cellColumn);
-			const int nowRow = whole(link->cellRow);
+			const int nowColumn = whole(place(*link).column);
+			const int nowRow = whole(place(*link).row);
 			putInCell(*link, column, row);
 			column = nowColumn;
 			row = nowRow;
 		}
-		if (head.chainGrow <= 0) { return; }
+		if (place(head).chainGrow <= 0) { return; }
 
 		// Growing: a new link where the tail was.
-		--head.chainGrow;
+		--placeFor(head).chainGrow;
 		Object* grown = spawn(cellPart(head).chain, true);
 		if (!grown) { return; }
 		moveToMap(*grown, head.map.name);
 		putInCell(*grown, column, row);
-		head.chainLinks.push_back(grown->name);
+		placeFor(head).chainLinks.push_back(grown->name);
 	}
 
 	void Game::splitChain(Object& piece)
@@ -455,12 +455,12 @@ namespace xge
 			for (Object& object : list)
 			{
 				if (head || !object.exists || cellPart(object).chain.empty()) { continue; }
-				if (&object == &piece && (object.chainKnown || object.cellGoing)) { head = &object; return; }
-				const auto found = std::find(object.chainLinks.begin(), object.chainLinks.end(), piece.name);
-				if (found != object.chainLinks.end())
+				if (&object == &piece && (place(object).chainKnown || place(object).going)) { head = &object; return; }
+				const auto found = std::find(place(object).chainLinks.begin(), place(object).chainLinks.end(), piece.name);
+				if (found != place(object).chainLinks.end())
 				{
 					head = &object;
-					at = static_cast<std::size_t>(found - object.chainLinks.begin()) + 1;
+					at = static_cast<std::size_t>(found - place(object).chainLinks.begin()) + 1;
 					return;
 				}
 			}
@@ -471,32 +471,32 @@ namespace xge
 		chainOf(*head);
 
 		// at: where the piece is, 0 for the head itself.
-		const std::vector<std::string> links = head->chainLinks;
+		const std::vector<std::string> links = place(*head).chainLinks;
 		std::vector<std::string> behind(links.begin() + static_cast<std::ptrdiff_t>(std::min(at, links.size())), links.end());
-		head->chainLinks.resize(at == 0 ? 0 : at - 1);
-		head->chainKnown = true;
+		placeFor(*head).chainLinks.resize(at == 0 ? 0 : at - 1);
+		placeFor(*head).chainKnown = true;
 
 		Object* next = behind.empty() ? nullptr : findAnywhere(behind.front());
 		if (next)
 		{
-			next->chainLinks.assign(behind.begin() + 1, behind.end());
-			next->chainKnown = true;
-			next->chainGrow = 0;
-			next->cellGoing = head->cellGoing;
-			next->cellGoEvery = head->cellGoEvery;
-			next->cellGoWait = head->cellGoWait;
+			placeFor(*next).chainLinks.assign(behind.begin() + 1, behind.end());
+			placeFor(*next).chainKnown = true;
+			placeFor(*next).chainGrow = 0;
+			placeFor(*next).going = place(*head).going;
+			placeFor(*next).goEvery = place(*head).goEvery;
+			placeFor(*next).goWait = place(*head).goWait;
 			// The way it was going: toward the cell of the piece cut out,
 			// across; or, just turning down or up, the head's way.
-			const int across = whole(piece.cellColumn) - whole(next->cellColumn);
-			next->cellGoWay = across > 0 ? Direction::Right : across < 0 ? Direction::Left : head->cellGoWay;
-			next->facing = next->cellGoWay;
+			const int across = whole(place(piece).column) - whole(place(*next).column);
+			placeFor(*next).goWay = across > 0 ? Direction::Right : across < 0 ? Direction::Left : place(*head).goWay;
+			next->facing = place(*next).goWay;
 			next->variable = head->variable;
 			if (const std::string look = head->lookName(); !look.empty()) { showLookNamed(*next, look); }
 		}
 		if (&piece == head)
 		{
-			piece.cellGoing = false;
-			piece.chainLinks.clear();
+			placeFor(piece).going = false;
+			placeFor(piece).chainLinks.clear();
 		}
 	}
 
@@ -505,16 +505,16 @@ namespace xge
 		// Never straight back into its own first link.
 		const std::vector<Object*> links = chainOf(mover);
 		const Vector2f step = stepToward(way, 1.0f);
-		if (!links.empty() && whole(links.front()->cellColumn) == whole(mover.cellColumn) + whole(step.x)
-			&& whole(links.front()->cellRow) == whole(mover.cellRow) + whole(step.y))
+		if (!links.empty() && whole(place(*links.front()).column) == whole(place(mover).column) + whole(step.x)
+			&& whole(place(*links.front()).row) == whole(place(mover).row) + whole(step.y))
 		{
 			return false;
 		}
 
-		mover.cellGoEvery = speed > 0.0f ? 1.0f / speed : 0.0f;
-		if (!mover.cellGoing || mover.cellGoWait > mover.cellGoEvery) { mover.cellGoWait = mover.cellGoEvery; }
-		mover.cellGoing = speed > 0.0f;
-		mover.cellGoWay = way;
+		placeFor(mover).goEvery = speed > 0.0f ? 1.0f / speed : 0.0f;
+		if (!place(mover).going || place(mover).goWait > place(mover).goEvery) { placeFor(mover).goWait = place(mover).goEvery; }
+		placeFor(mover).going = speed > 0.0f;
+		placeFor(mover).goWay = way;
 		mover.facing = way;
 		return true;
 	}
@@ -571,8 +571,8 @@ namespace xge
 
 		const std::vector<Object*> cells = cellsOf(shape);
 		if (cells.size() != turned.size()) { return false; }
-		const int column = whole(shape.cellColumn);
-		const int row = whole(shape.cellRow);
+		const int column = whole(place(shape).column);
+		const int row = whole(place(shape).row);
 		for (const auto& [kickAcross, kickUp] : kicksFor(size, static_cast<int>(cellPart(shape).shape.size()), cellPart(shape).quarter, clockwise))
 		{
 			const int left = column + kickAcross;
@@ -606,10 +606,10 @@ namespace xge
 			{
 				cellPartFor(*cell).shapeOwner.clear();
 				if (!cell->looks.hasJoins) { continue; }
-				cell->joinedWith.clear();
+				placeFor(*cell).joinedWith.clear();
 				for (const Object* other : cells)
 				{
-					if (other != cell) { cell->joinedWith.push_back(other->name); }
+					if (other != cell) { placeFor(*cell).joinedWith.push_back(other->name); }
 				}
 			}
 			cellPartFor(mover).shapeParts.clear();
@@ -668,7 +668,7 @@ namespace xge
 				const bool stillFull = std::all_of(match.pieces.begin(), match.pieces.end(), [&](const std::string& name)
 					{
 						const Object* piece = findAnywhere(name);
-						return piece && piece->exists && whole(piece->cellRow) == row;
+						return piece && piece->exists && whole(place(*piece).row) == row;
 					});
 				if (stillFull) { --row; }
 			}
@@ -784,7 +784,7 @@ namespace xge
 					Object* holder = cellHolder(map, column, row, {});
 					if (!holder || !cellPart(*holder).shapeOwner.empty() || (!objClass.empty() && holder->objClass != objClass) || std::find(done.begin(), done.end(), holder) != done.end()) { continue; }
 					std::vector<Object*> together{ holder };
-					for (const std::string& name : holder->joinedWith)
+					for (const std::string& name : place(*holder).joinedWith)
 					{
 						Object* other = findAnywhere(name);
 						if (other && other->exists && other->map.cells && other->map.name == map && cellPart(*other).shapeOwner.empty() && (objClass.empty() || other->objClass == objClass)
@@ -800,13 +800,13 @@ namespace xge
 					{
 						return std::all_of(together.begin(), together.end(), [&](const Object* piece)
 							{
-								const int below = whole(piece->cellRow) + by;
-								return below <= rows && !cellHolder(map, whole(piece->cellColumn), below, together);
+								const int below = whole(place(*piece).row) + by;
+								return below <= rows && !cellHolder(map, whole(place(*piece).column), below, together);
 							});
 					};
 					while (fits(drop + 1)) { ++drop; }
 					if (drop == 0) { continue; }
-					for (Object* piece : together) { putInCell(*piece, whole(piece->cellColumn), whole(piece->cellRow) + drop); }
+					for (Object* piece : together) { putInCell(*piece, whole(place(*piece).column), whole(place(*piece).row) + drop); }
 					moved = true;
 				}
 			}
@@ -823,7 +823,7 @@ namespace xge
 			if (std::find(looks.begin(), looks.end(), piece.looks.shown) == looks.end()) { return; }
 
 			// Falling, the other cells of its shape; settled, those it came with.
-			std::vector<std::string> partners = piece.joinedWith;
+			std::vector<std::string> partners = place(piece).joinedWith;
 			if (!cellPart(piece).shapeOwner.empty())
 			{
 				const Object* shape = findAnywhere(cellPart(piece).shapeOwner);
@@ -834,8 +834,8 @@ namespace xge
 			{
 				const Object* other = findAnywhere(name);
 				if (!other || other == &piece || !other->exists || other->map.name != piece.map.name) { continue; }
-				const int across = whole(other->cellColumn) - whole(piece.cellColumn);
-				const int down = whole(other->cellRow) - whole(piece.cellRow);
+				const int across = whole(place(*other).column) - whole(place(piece).column);
+				const int down = whole(place(*other).row) - whole(place(piece).row);
 				if (std::abs(across) + std::abs(down) != 1) { continue; }
 				way = across < 0 ? Object::Join::Left : across > 0 ? Object::Join::Right : down < 0 ? Object::Join::Up : Object::Join::Down;
 				break;
@@ -862,8 +862,8 @@ namespace xge
 			parts[to] = cellPart(shape).shapeParts[i];
 			pieces[to] = cellPart(shape).shape[i].piece;
 		}
-		const int column = whole(shape.cellColumn);
-		const int row = whole(shape.cellRow);
+		const int column = whole(place(shape).column);
+		const int row = whole(place(shape).row);
 		for (std::size_t i = 0; i < count; ++i)
 		{
 			cellPartFor(shape).shapeParts[i] = parts[i];
@@ -884,9 +884,9 @@ namespace xge
 	{
 		const auto down = [&](Object& object)
 		{
-			if (object.exists && object.map.cells && !isShape(object) && cellPart(object).shapeOwner.empty() && object.map.name == match.map && whole(object.cellRow) < match.row)
+			if (object.exists && object.map.cells && !isShape(object) && cellPart(object).shapeOwner.empty() && object.map.name == match.map && whole(place(object).row) < match.row)
 			{
-				putInCell(object, whole(object.cellColumn), whole(object.cellRow) + 1);
+				putInCell(object, whole(place(object).column), whole(place(object).row) + 1);
 			}
 		};
 		for (Object& object : objects) { down(object); }
@@ -918,13 +918,13 @@ namespace xge
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
 			if (!counts(i)) { continue; }
-			if (objects[i].cellGoing)
+			if (place(objects[i]).going)
 			{
-				objects[i].cellGoWait -= seconds;
-				while (counts(i) && objects[i].cellGoing && objects[i].cellGoWait <= kTimeSlack)
+				placeFor(objects[i]).goWait -= seconds;
+				while (counts(i) && place(objects[i]).going && place(objects[i]).goWait <= kTimeSlack)
 				{
-					objects[i].cellGoWait += objects[i].cellGoEvery;
-					const Vector2f step = stepToward(objects[i].cellGoWay, 1.0f);
+					placeFor(objects[i]).goWait += place(objects[i]).goEvery;
+					const Vector2f step = stepToward(place(objects[i]).goWay, 1.0f);
 					stepCells(objects[i], whole(step.x), whole(step.y));
 				}
 			}
@@ -955,8 +955,8 @@ namespace xge
 		std::vector<PieceMoveTo> found;
 		const Object::MoveSet* set = moveSetOf(piece);
 		if (!set || !piece.map.cells || !piece.exists) { return found; }
-		const int column = whole(piece.cellColumn);
-		const int row = whole(piece.cellRow);
+		const int column = whole(place(piece).column);
+		const int row = whole(place(piece).row);
 		const auto onMap = [&](int c, int r) { return c >= 1 && r >= 1 && c <= piece.map.columns && r <= piece.map.rows; };
 		for (const Object::PieceMove& move : set->moves)
 		{
@@ -1127,7 +1127,7 @@ namespace xge
 	bool Game::putPiece(Object& picker, const CmdPut& put)
 	{
 		if (!picker.map.cells || !pickerOf(picker).picked.empty()) { return false; }
-		const int column = whole(picker.cellColumn);
+		const int column = whole(place(picker).column);
 		// The first piece of the class that may go there.
 		Object* kind = nullptr;
 		int row = 0;
@@ -1135,7 +1135,7 @@ namespace xge
 		std::vector<Object*> trapped;
 		for (Object* each : putTemplates(put.objClass))
 		{
-			row = whole(picker.cellRow);
+			row = whole(place(picker).row);
 			// Falling: wherever the picker is in its column, to the lowest free cell.
 			if (const Object::MoveSet* set = moveSetOf(*each); set && set->fall)
 			{
@@ -1169,7 +1169,7 @@ namespace xge
 		std::vector<std::pair<int, int>> cells{ { column, row } };
 		for (Object* each : trapped)
 		{
-			cells.emplace_back(whole(each->cellColumn), whole(each->cellRow));
+			cells.emplace_back(whole(place(*each).column), whole(place(*each).row));
 			despawn(*each);
 		}
 		for (const auto& [c, r] : cells)
@@ -1252,12 +1252,12 @@ namespace xge
 			pickerFor(picker).picked = one->name;
 			return true;
 		}
-		const int column = whole(picker.cellColumn);
-		const int row = whole(picker.cellRow);
+		const int column = whole(place(picker).column);
+		const int row = whole(place(picker).row);
 		for (Object& piece : objects)
 		{
 			if (&piece == &picker || piece.moves.sets.empty() || piece.objClass != objClass || !piece.map.cells || !isShown(piece)
-				|| whole(piece.cellColumn) != column || whole(piece.cellRow) != row)
+				|| whole(place(piece).column) != column || whole(place(piece).row) != row)
 			{
 				continue;
 			}
@@ -1278,8 +1278,8 @@ namespace xge
 			pickerFor(picker).inChain = false;
 			return false;
 		}
-		const int column = whole(picker.cellColumn);
-		const int row = whole(picker.cellRow);
+		const int column = whole(place(picker).column);
+		const int row = whole(place(picker).row);
 		const std::vector<PieceMoveTo> moves = legalMoves(*piece, pickerOf(picker).inChain);
 		const auto move = std::find_if(moves.begin(), moves.end(), [&](const PieceMoveTo& each) { return each.column == column && each.row == row; });
 		if (move == moves.end()) { return false; }
@@ -1288,8 +1288,8 @@ namespace xge
 		const bool jumped = move->taken != nullptr;
 		if (!pickerOf(picker).inChain)
 		{
-			pickerFor(picker).fromColumn = whole(piece->cellColumn);
-			pickerFor(picker).fromRow = whole(piece->cellRow);
+			pickerFor(picker).fromColumn = whole(place(*piece).column);
+			pickerFor(picker).fromRow = whole(place(*piece).row);
 		}
 		pickerFor(picker).toColumn = column;
 		pickerFor(picker).toRow = row;
@@ -1332,7 +1332,7 @@ namespace xge
 		{
 			if (!object.map.cells || !isShown(object)) { continue; }
 			if (std::find(onto.begin(), onto.end(), object.objClass) == onto.end()) { continue; }
-			cells.emplace_back(whole(object.cellColumn), whole(object.cellRow));
+			cells.emplace_back(whole(place(object).column), whole(place(object).row));
 		}
 		return cells;
 	}
@@ -1344,8 +1344,8 @@ namespace xge
 	// its column). Refused when there is none that way.
 	bool Game::hopOnto(Object& mover, Direction direction, const std::vector<std::string>& onto)
 	{
-		const int column = whole(mover.cellColumn);
-		const int row = whole(mover.cellRow);
+		const int column = whole(place(mover).column);
+		const int row = whole(place(mover).row);
 		const bool upDown = direction == Direction::Up || direction == Direction::Down;
 		const int ahead = direction == Direction::Down || direction == Direction::Right ? 1 : -1;
 		if (!upDown || pickerFor(mover).keptAt != std::pair<int, int>{ column, row }) { pickerFor(mover).keptColumn = column; }
@@ -1386,7 +1386,7 @@ namespace xge
 					object.map.origin.y + (static_cast<float>(row) - 0.5f) * object.map.tile.y };
 			};
 			Vector2f point = pickerOf(object).pointer;
-			const Vector2f here = middle(whole(object.cellColumn), whole(object.cellRow));
+			const Vector2f here = middle(whole(place(object).column), whole(place(object).row));
 			if (point.x < 0.0f) { point.x = here.x; }
 			if (point.y < 0.0f) { point.y = here.y; }
 			if (point.x < object.map.origin.x || point.y < object.map.origin.y
@@ -1404,7 +1404,7 @@ namespace xge
 					bestDistance = distance;
 				}
 			}
-			if (best && (best->first != whole(object.cellColumn) || best->second != whole(object.cellRow))) { putInCell(object, best->first, best->second); }
+			if (best && (best->first != whole(place(object).column) || best->second != whole(place(object).row))) { putInCell(object, best->first, best->second); }
 			return;
 		}
 		const float from = horizontal ? object.map.origin.x : object.map.origin.y;
@@ -1412,9 +1412,9 @@ namespace xge
 		if (tile <= 0.0f || at < from) { return; }
 		const int cell = static_cast<int>((at - from) / tile) + 1;
 		if (cell > (horizontal ? object.map.columns : object.map.rows)) { return; }
-		const int column = horizontal ? cell : whole(object.cellColumn);
-		const int row = horizontal ? whole(object.cellRow) : cell;
-		if (column != whole(object.cellColumn) || row != whole(object.cellRow)) { putInCell(object, column, row); }
+		const int column = horizontal ? cell : whole(place(object).column);
+		const int row = horizontal ? whole(place(object).row) : cell;
+		if (column != whole(place(object).column) || row != whole(place(object).row)) { putInCell(object, column, row); }
 	}
 
 	void Game::showMarks()
@@ -1448,7 +1448,7 @@ namespace xge
 						switch (mark.kind)
 						{
 						case Object::Mark::Kind::Held:
-							if (held) { want.push_back({ mark.object, whole(held->cellColumn), whole(held->cellRow) }); }
+							if (held) { want.push_back({ mark.object, whole(place(*held).column), whole(place(*held).row) }); }
 							break;
 						case Object::Mark::Kind::Moves:
 							if (held)
@@ -1460,7 +1460,7 @@ namespace xge
 							for (Object& piece : objects)
 							{
 								if (piece.moves.sets.empty() || piece.objClass != markClass || !piece.map.cells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
-								want.push_back({ mark.object, whole(piece.cellColumn), whole(piece.cellRow) });
+								want.push_back({ mark.object, whole(place(piece).column), whole(place(piece).row) });
 							}
 							break;
 						case Object::Mark::Kind::Put:
@@ -1545,10 +1545,10 @@ namespace xge
 			if (object.objClass == objClass && object.exists && object.map.cells && !isShape(object) && !object.awayFromHome() && isShown(object)) { pieces.push_back(&object); }
 		}
 		// The one nearest that way first, so the rest slide up behind it.
-		const auto key = [way](const Object* piece)
+		const auto key = [this, way](const Object* piece)
 		{
-			const int column = whole(piece->cellColumn);
-			const int row = whole(piece->cellRow);
+			const int column = whole(place(*piece).column);
+			const int row = whole(place(*piece).row);
 			switch (way)
 			{
 			case Direction::Left: return column * 1000 + row;
@@ -1564,10 +1564,10 @@ namespace xge
 		for (Object* piece : pieces)
 		{
 			if (!piece->exists) { continue; }
-			const int column = whole(piece->cellColumn);
-			const int row = whole(piece->cellRow);
+			const int column = whole(place(*piece).column);
+			const int row = whole(place(*piece).row);
 			slideCells(*piece, way);
-			moved = moved || !piece->exists || whole(piece->cellColumn) != column || whole(piece->cellRow) != row;
+			moved = moved || !piece->exists || whole(place(*piece).column) != column || whole(place(*piece).row) != row;
 		}
 		merged.clear();
 		return moved;
@@ -1606,14 +1606,14 @@ namespace xge
 			const auto theirs = other.variable.find(place.alike);
 			return mine != piece.variable.end() && theirs != other.variable.end() && mine->second == theirs->second;
 		};
-		const int column = whole(piece.cellColumn);
-		const int row = whole(piece.cellRow);
+		const int column = whole(this->place(piece).column);
+		const int row = whole(this->place(piece).row);
 		const auto look = [&](Object& other, bool joined, int wantColumn, int wantRow)
 		{
 			if (&other == &piece || !other.exists || !other.map.cells || isShape(other) || other.awayFromHome()) { return; }
 			if (!joined && !isShown(other)) { return; }
 			if (!objClass.empty() && other.objClass != objClass) { return; }
-			if (whole(other.cellColumn) != wantColumn || whole(other.cellRow) != wantRow || !sameLayout(other) || !alike(other)) { return; }
+			if (whole(this->place(other).column) != wantColumn || whole(this->place(other).row) != wantRow || !sameLayout(other) || !alike(other)) { return; }
 			found.push_back(&other);
 		};
 		for (const auto& [across, down] : offsets)
@@ -1630,7 +1630,7 @@ namespace xge
 		kept.reserve(objects.size());
 		for (const Object& object : objects)
 		{
-			kept.push_back({ object.name, static_cast<const Moment&>(object), object.looks.shown });
+			kept.push_back({ object.name, static_cast<const Moment&>(object), place(object), object.looks.shown });
 		}
 		return kept;
 	}
@@ -1658,7 +1658,7 @@ namespace xge
 			const Kept* was = at < before.size() && before[at].name == object.name ? &before[at] : nullptr;
 			++at;
 			if (!object.map.cells) { continue; }
-			if (!was || was->moment.exists != object.exists || was->moment.cellColumn != object.cellColumn || was->moment.cellRow != object.cellRow)
+			if (!was || was->moment.exists != object.exists || was->place.column != place(object).column || was->place.row != place(object).row)
 			{
 				changed = true;
 				break;
@@ -1686,6 +1686,7 @@ namespace xge
 				continue;
 			}
 			static_cast<Moment&>(object) = was->moment;
+			if (Object::Cells* cells = objectParts.cells.find(object.id)) { cells->place = was->place; }
 			object.placed = true;
 			if (object.looks.shown != was->look && was->look < object.looks.all.size()) { object.showLook(was->look); }
 			for (const auto& [variable, value] : was->moment.variable) { setVariable(object.name, variable, value); }

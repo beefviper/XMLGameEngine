@@ -784,7 +784,7 @@ namespace xge
 	{
 		auto job = std::make_shared<ThinkJob>();
 		job->think = think;
-		job->pickerRow = whole(picker.cellRow);
+		job->pickerRow = whole(place(picker).row);
 		Board& board = job->board;
 		// The board: the map of cells its pieces are on (the first piece of
 		// its class with moves), and everything on that map.
@@ -871,8 +871,8 @@ namespace xge
 		{
 			const Object& object = *each;
 			if (!object.map.cells || object.map.name != first->map.name || &object == &picker) { continue; }
-			const int column = whole(object.cellColumn);
-			const int row = whole(object.cellRow);
+			const int column = whole(place(object).column);
+			const int row = whole(place(object).row);
 			if (!board.onBoard(column, row)) { continue; }
 			Piece piece;
 			piece.object = board.kindOf(&object);
@@ -1015,8 +1015,8 @@ namespace xge
 
 		// A cell at a time to the next cell of the move, then the button.
 		const auto [column, row] = thinking.cells[thinking.next];
-		const int atColumn = whole(picker->cellColumn);
-		const int atRow = whole(picker->cellRow);
+		const int atColumn = whole(place(*picker).column);
+		const int atRow = whole(place(*picker).row);
 		if (atColumn != column || atRow != row)
 		{
 			const int across = column > atColumn ? 1 : column < atColumn ? -1 : 0;

@@ -651,8 +651,8 @@ namespace xge
 			object.map.cells = rawObject.cell.cells;
 			if (object.map.cells)
 			{
-				object.cellColumn = object.start.cellColumn = static_cast<float>(rawObject.cell.mapColumn);
-				object.cellRow = object.start.cellRow = static_cast<float>(rawObject.cell.mapRow);
+				cell->place.column = cell->start.column = static_cast<float>(rawObject.cell.mapColumn);
+				cell->place.row = cell->start.row = static_cast<float>(rawObject.cell.mapRow);
 				for (const RawCheck& check : rawObject.cell.checks)
 				{
 					cell->checks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count, check.straight, check.alike });

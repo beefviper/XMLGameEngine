@@ -570,7 +570,7 @@ namespace xge
 			{
 				if (!game.putInFreeCell(*made, command.into, command.freeBelow)) { return false; }
 			}
-			else if (!game.putOnCells(*made, cell(command.column, made->map.column, self ? self->cellColumn : 0.0f), cell(command.row, made->map.row, self ? self->cellRow : 0.0f), command.into)) { return false; }
+			else if (!game.putOnCells(*made, cell(command.column, made->map.column, self ? game.place(*self).column : 0.0f), cell(command.row, made->map.row, self ? game.place(*self).row : 0.0f), command.into)) { return false; }
 			if (command.velocityX) { made->velocity.x = *command.velocityX; }
 			if (command.velocityY) { made->velocity.y = *command.velocityY; }
 			if (command.accelerationX) { made->acceleration.x = *command.accelerationX; }

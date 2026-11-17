@@ -45,8 +45,8 @@ namespace
 		float turn() { return turns::number(game); }
 		float score(const std::string& name) { return get("score").variable.at(name); }
 
-		int column() { return cell(cursor().cellColumn); }
-		int row() { return cell(cursor().cellRow); }
+		int column() { return cell(game.place(cursor()).column); }
+		int row() { return cell(game.place(cursor()).row); }
 
 		// By the keys: to the row, then along it (only free places).
 		void to(int toColumn, int toRow)
@@ -86,7 +86,7 @@ namespace
 			for (Object& object : game.getCurrentObjects())
 			{
 				if (object.exists && object.isVisible && object.map.cells && object.map.name == "playing.grid"
-					&& cell(object.cellColumn) == column && cell(object.cellRow) == row)
+					&& cell(game.place(object).column) == column && cell(game.place(object).row) == row)
 				{
 					return object.objClass;
 				}

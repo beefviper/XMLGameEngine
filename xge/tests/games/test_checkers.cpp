@@ -48,10 +48,10 @@ namespace
 		// The cursor walked to that square with the keys.
 		void to(int column, int row)
 		{
-			while (cell(cursor().cellColumn) < column) { tap(KeyCode::D); }
-			while (cell(cursor().cellColumn) > column) { tap(KeyCode::A); }
-			while (cell(cursor().cellRow) < row) { tap(KeyCode::S); }
-			while (cell(cursor().cellRow) > row) { tap(KeyCode::W); }
+			while (cell(game.place(cursor()).column) < column) { tap(KeyCode::D); }
+			while (cell(game.place(cursor()).column) > column) { tap(KeyCode::A); }
+			while (cell(game.place(cursor()).row) < row) { tap(KeyCode::S); }
+			while (cell(game.place(cursor()).row) > row) { tap(KeyCode::W); }
 		}
 
 		// Space on that square.
@@ -68,7 +68,7 @@ namespace
 			for (Object& object : game.getCurrentObjects())
 			{
 				if (object.exists && object.isVisible && object.objClass == side && object.map.cells
-					&& cell(object.cellColumn) == column && cell(object.cellRow) == row)
+					&& cell(game.place(object).column) == column && cell(game.place(object).row) == row)
 				{
 					return &object;
 				}
@@ -100,8 +100,8 @@ namespace
 				int& next = object.objClass == "red" ? red : white;
 				if (!keep) { game.despawn(object.name); continue; }
 				++next;
-				object.cellColumn = static_cast<float>(keep->column);
-				object.cellRow = static_cast<float>(keep->row);
+				game.placeFor(object).column = static_cast<float>(keep->column);
+				game.placeFor(object).row = static_cast<float>(keep->row);
 				object.position = { 100.0f + 60.0f * static_cast<float>(keep->column) + 4.0f, 20.0f + 60.0f * static_cast<float>(keep->row) + 4.0f };
 			}
 			frames(1);
@@ -305,9 +305,9 @@ TEST_CASE("checkers.xml: against the computer, white answers red's move", "[chec
 	REQUIRE(board.turn() == 2.0f);
 	board.frames(1);
 	// Your keys do not reach the cursor on its turn.
-	const int was = cell(board.cursor().cellColumn);
+	const int was = cell(board.game.place(board.cursor()).column);
 	board.tap(KeyCode::A);
-	CHECK(cell(board.cursor().cellColumn) == was);
+	CHECK(cell(board.game.place(board.cursor()).column) == was);
 	board.untilRed();
 	CHECK(board.turn() == 1.0f);
 	CHECK(board.cursor().lookName() == "free");
@@ -367,7 +367,7 @@ namespace
 		std::vector<std::pair<int, int>> cells;
 		for (const Object& object : board.game.getCurrentObjects())
 		{
-			if (object.exists && object.copyOf.find(mark) != std::string::npos) { cells.emplace_back(cell(object.cellColumn), cell(object.cellRow)); }
+			if (object.exists && object.copyOf.find(mark) != std::string::npos) { cells.emplace_back(cell(board.game.place(object).column), cell(board.game.place(object).row)); }
 		}
 		std::sort(cells.begin(), cells.end());
 		return cells;
@@ -457,8 +457,8 @@ TEST_CASE("checkers.xml: the cursor follows the mouse, and a click picks up and 
 	};
 	// The middle of the square in column 3, row 6, then of column 4, row 5.
 	mouse(160.0f + 60.0f * 2.5f, 80.0f + 60.0f * 5.5f, false);
-	CHECK(cell(board.cursor().cellColumn) == 3);
-	CHECK(cell(board.cursor().cellRow) == 6);
+	CHECK(cell(board.game.place(board.cursor()).column) == 3);
+	CHECK(cell(board.game.place(board.cursor()).row) == 6);
 	mouse(160.0f + 60.0f * 2.5f, 80.0f + 60.0f * 5.5f, true);
 	CHECK(board.cursor().lookName() == "held");
 	mouse(160.0f + 60.0f * 3.5f, 80.0f + 60.0f * 4.5f, true);
@@ -466,8 +466,8 @@ TEST_CASE("checkers.xml: the cursor follows the mouse, and a click picks up and 
 	CHECK(board.cursor().lookName() == "free");
 	// Off the board, the cursor stays where it was.
 	mouse(20.0f, 20.0f, false);
-	CHECK(cell(board.cursor().cellColumn) == 4);
-	CHECK(cell(board.cursor().cellRow) == 5);
+	CHECK(cell(board.game.place(board.cursor()).column) == 4);
+	CHECK(cell(board.game.place(board.cursor()).row) == 5);
 }
 
 TEST_CASE("checkers.xml: the computer thinks on its own thread, as it does in a window, and answers the same way", "[checkers][think]")

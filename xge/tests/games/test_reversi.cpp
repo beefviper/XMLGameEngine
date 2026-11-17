@@ -42,10 +42,10 @@ namespace
 
 		void to(int column, int row)
 		{
-			while (cell(cursor().cellColumn) < column) { tap(KeyCode::D); }
-			while (cell(cursor().cellColumn) > column) { tap(KeyCode::A); }
-			while (cell(cursor().cellRow) < row) { tap(KeyCode::S); }
-			while (cell(cursor().cellRow) > row) { tap(KeyCode::W); }
+			while (cell(game.place(cursor()).column) < column) { tap(KeyCode::D); }
+			while (cell(game.place(cursor()).column) > column) { tap(KeyCode::A); }
+			while (cell(game.place(cursor()).row) < row) { tap(KeyCode::S); }
+			while (cell(game.place(cursor()).row) > row) { tap(KeyCode::W); }
 		}
 
 		void space(int column, int row)
@@ -61,7 +61,7 @@ namespace
 			for (Object& object : game.getCurrentObjects())
 			{
 				if (object.exists && object.isVisible && object.map.cells && (object.objClass == "black" || object.objClass == "white")
-					&& cell(object.cellColumn) == column && cell(object.cellRow) == row)
+					&& cell(game.place(object).column) == column && cell(game.place(object).row) == row)
 				{
 					return object.objClass;
 				}
@@ -98,8 +98,8 @@ namespace
 				for (const Disc& disc : discs)
 				{
 					if (disc.side != object.objClass || seen++ != next) { continue; }
-					object.cellColumn = static_cast<float>(disc.column);
-					object.cellRow = static_cast<float>(disc.row);
+					game.placeFor(object).column = static_cast<float>(disc.column);
+					game.placeFor(object).row = static_cast<float>(disc.row);
 					object.position = { 44.0f + 60.0f * static_cast<float>(disc.column), 24.0f + 60.0f * static_cast<float>(disc.row) };
 					break;
 				}
@@ -114,7 +114,7 @@ namespace
 			Cells cells;
 			for (const Object& object : game.getCurrentObjects())
 			{
-				if (object.exists && object.copyOf.find(mark) != std::string::npos) { cells.emplace_back(cell(object.cellColumn), cell(object.cellRow)); }
+				if (object.exists && object.copyOf.find(mark) != std::string::npos) { cells.emplace_back(cell(game.place(object).column), cell(game.place(object).row)); }
 			}
 			std::sort(cells.begin(), cells.end());
 			return cells;
@@ -222,9 +222,9 @@ TEST_CASE("reversi.xml: the computer answers black's disc with one of its own", 
 	REQUIRE(board.turn() == 2.0f);
 	board.frames(1);
 	// Your keys do not reach the cursor while the computer thinks.
-	const int column = cell(board.cursor().cellColumn);
+	const int column = cell(board.game.place(board.cursor()).column);
 	board.tap(KeyCode::A);
-	CHECK(cell(board.cursor().cellColumn) == column);
+	CHECK(cell(board.game.place(board.cursor()).column) == column);
 	for (int i = 0; i < 600 && board.turn() != 1.0f; ++i) { board.frames(1); }
 	CHECK(board.turn() == 1.0f);
 	CHECK(board.score("black") + board.score("white") == 6.0f);
@@ -249,8 +249,8 @@ TEST_CASE("reversi.xml: the cursor follows the mouse, and a click puts a disc", 
 		board.frames(1);
 	};
 	mouse(100.0f + 60.0f * 5.5f, 80.0f + 60.0f * 3.5f, false);
-	CHECK(cell(board.cursor().cellColumn) == 6);
-	CHECK(cell(board.cursor().cellRow) == 4);
+	CHECK(cell(board.game.place(board.cursor()).column) == 6);
+	CHECK(cell(board.game.place(board.cursor()).row) == 4);
 	mouse(100.0f + 60.0f * 5.5f, 80.0f + 60.0f * 4.5f, true);
 	CHECK(board.at(6, 5) == "black");
 	CHECK(board.at(5, 5) == "black");

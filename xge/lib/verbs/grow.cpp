@@ -15,7 +15,7 @@ namespace xge
 
 	static bool runGrow(const Command&, const Doer& doer, CommandExecutor& executor)
 	{
-		if (doer.self && !executor.game.cellPart(*doer.self).chain.empty()) { ++doer.self->chainGrow; }
+		if (doer.self && !executor.game.cellPart(*doer.self).chain.empty()) { ++executor.game.placeFor(*doer.self).chainGrow; }
 		return true;
 	}
 

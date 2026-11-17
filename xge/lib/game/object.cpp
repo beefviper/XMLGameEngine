@@ -439,36 +439,47 @@ namespace xge
 			none = 0.0f;
 			return none;
 		}
+
+		// Its cell on a map of cells; for an object with no cell part, 0
+		// (and what is set on it is let go, as it is on no map of cells).
+		float& placeNumber(Parts& parts, Object& object, float Object::Cells::Place::* number)
+		{
+			if (Object::Cells* cells = parts.cells.find(object.id)) { return cells->place.*number; }
+			thread_local float none;
+			none = 0.0f;
+			return none;
+		}
+		bool hasPlace(const Parts& parts, const Object& object) { return parts.cells.has(object.id); }
 	}
 
 	const std::vector<LivePart>& liveParts()
 	{
 		static const std::vector<LivePart> parts{
-			{ "x", [](Parts&, Object& o) -> float& { return o.position.x; }, false },
-			{ "y", [](Parts&, Object& o) -> float& { return o.position.y; }, false },
-			{ "velocity.x", [](Parts&, Object& o) -> float& { return o.velocity.x; }, false },
-			{ "velocity.y", [](Parts&, Object& o) -> float& { return o.velocity.y; }, false },
-			{ "heading", [](Parts&, Object& o) -> float& { return o.heading; }, false },
-			{ "altitude", [](Parts&, Object& o) -> float& { return o.altitude; }, true },
-			{ "rise", [](Parts&, Object& o) -> float& { return o.rise; }, false },
-			{ "light", [](Parts&, Object& o) -> float& { return o.light; }, true },
-			{ "blink", [](Parts&, Object& o) -> float& { return o.blink; }, true },
-			{ "speed", [](Parts&, Object& o) -> float& { if (!o.motion.speedHeld) { o.motion.speed = std::hypot(o.velocity.x, o.velocity.y); } return o.motion.speed; }, false },
-			{ "column", [](Parts&, Object& o) -> float& { return o.cellColumn; }, false },
-			{ "row", [](Parts&, Object& o) -> float& { return o.cellRow; }, false },
-			{ "moves", [](Parts&, Object& o) -> float& { return o.moves.count; }, true },
-			{ "cards", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true },
-			{ "held", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true },
-			{ "calling", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::calling); }, true },
-			{ "called", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::called); }, true },
-			{ "points", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::points); }, true },
-			{ "pattern", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::pattern); }, true },
-			{ "strength", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::strength); }, true },
-			{ "odds", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::odds); }, true },
-			{ "lead", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::lead); }, true },
-			{ "winner", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::winner); }, true },
-			{ "tricks", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::tricks); }, true },
-			{ "deadwood", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::deadwood); }, true },
+			{ "x", [](Parts&, Object& o) -> float& { return o.position.x; }, false, nullptr },
+			{ "y", [](Parts&, Object& o) -> float& { return o.position.y; }, false, nullptr },
+			{ "velocity.x", [](Parts&, Object& o) -> float& { return o.velocity.x; }, false, nullptr },
+			{ "velocity.y", [](Parts&, Object& o) -> float& { return o.velocity.y; }, false, nullptr },
+			{ "heading", [](Parts&, Object& o) -> float& { return o.heading; }, false, nullptr },
+			{ "altitude", [](Parts&, Object& o) -> float& { return o.altitude; }, true, nullptr },
+			{ "rise", [](Parts&, Object& o) -> float& { return o.rise; }, false, nullptr },
+			{ "light", [](Parts&, Object& o) -> float& { return o.light; }, true, nullptr },
+			{ "blink", [](Parts&, Object& o) -> float& { return o.blink; }, true, nullptr },
+			{ "speed", [](Parts&, Object& o) -> float& { if (!o.motion.speedHeld) { o.motion.speed = std::hypot(o.velocity.x, o.velocity.y); } return o.motion.speed; }, false, nullptr },
+			{ "column", [](Parts& p, Object& o) -> float& { return placeNumber(p, o, &Object::Cells::Place::column); }, false, hasPlace },
+			{ "row", [](Parts& p, Object& o) -> float& { return placeNumber(p, o, &Object::Cells::Place::row); }, false, hasPlace },
+			{ "moves", [](Parts&, Object& o) -> float& { return o.moves.count; }, true, nullptr },
+			{ "cards", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, nullptr },
+			{ "held", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, nullptr },
+			{ "calling", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::calling); }, true, nullptr },
+			{ "called", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::called); }, true, nullptr },
+			{ "points", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::points); }, true, nullptr },
+			{ "pattern", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::pattern); }, true, nullptr },
+			{ "strength", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::strength); }, true, nullptr },
+			{ "odds", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::odds); }, true, nullptr },
+			{ "lead", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::lead); }, true, nullptr },
+			{ "winner", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::winner); }, true, nullptr },
+			{ "tricks", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::tricks); }, true, nullptr },
+			{ "deadwood", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::deadwood); }, true, nullptr },
 		};
 		return parts;
 	}

@@ -161,8 +161,19 @@ namespace xge
 			const Object::Cells* cells = objectParts.cells.find(object.id);
 			return cells ? *cells : none;
 		}
-		Object::Cells& cellPartFor(const Object& object) { return objectParts.give(objectParts.cells, object.id); }
+		Object::Cells& cellPartFor(const Object& object)
+		{
+			if (Object::Cells* cells = objectParts.cells.find(object.id)) { return *cells; }
+			// Its column and row are live numbers from now on.
+			liveLinked = false;
+			liveLinks.clear();
+			return objectParts.give(objectParts.cells, object.id);
+		}
 		bool isShape(const Object& object) const noexcept { return cellPart(object).shapeSize > 0; }
+		// Its place on a cell map (Object::Cells::Place): an empty one for
+		// one with no cell part; placeFor gives it one.
+		const Object::Cells::Place& place(const Object& object) const noexcept { return cellPart(object).place; }
+		Object::Cells::Place& placeFor(const Object& object) { return cellPartFor(object).place; }
 
 		// Its picker part (Object::Picker): what it holds, where its last
 		// move went, its marks; an empty part for one with none. pickerFor
@@ -774,6 +785,7 @@ namespace xge
 		{
 			std::string name;
 			Moment moment;
+			Object::Cells::Place place;
 			std::size_t look{};
 		};
 		std::vector<std::vector<Kept>> undoSteps;

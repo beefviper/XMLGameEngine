@@ -42,7 +42,7 @@ namespace
 		for (const std::string& part : game.cellPart(shape).shapeParts)
 		{
 			const Object& cell = game.getObject(part);
-			cells.insert({ static_cast<int>(cell.cellColumn), static_cast<int>(cell.cellRow) });
+			cells.insert({ static_cast<int>(game.place(cell).column), static_cast<int>(game.place(cell).row) });
 		}
 		return cells;
 	}
@@ -55,7 +55,7 @@ namespace
 		{
 			if (object.exists && object.map.cells && object.isCopy() && !game.isShape(object) && game.cellPart(object).shapeOwner.empty())
 			{
-				cells.insert({ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) });
+				cells.insert({ static_cast<int>(game.place(object).column), static_cast<int>(game.place(object).row) });
 			}
 		}
 		return cells;
@@ -389,7 +389,7 @@ TEST_CASE("Tetris shows the next shape in its box, still, and sends it in when o
 	REQUIRE(falling(play.game));
 	CHECK(falling(play.game)->name == nextName);
 	CHECK(falling(play.game)->map.name == "playing.board");
-	CHECK(static_cast<int>(falling(play.game)->cellColumn) == 4);
+	CHECK(static_cast<int>(play.game.place(*falling(play.game)).column) == 4);
 	REQUIRE(waiting());
 	CHECK(waiting()->name != nextName);
 }
@@ -457,7 +457,7 @@ namespace
 			if (object.exists && object.map.cells && !game.isShape(object) && game.cellPart(object).shapeOwner.empty())
 			{
 				const std::string group = object.groupName.substr(object.groupName.rfind('.') + 1);
-				found[{ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) }] = group;
+				found[{ static_cast<int>(game.place(object).column), static_cast<int>(game.place(object).row) }] = group;
 			}
 		}
 		return found;
@@ -621,11 +621,11 @@ namespace
 	std::vector<std::pair<int, int>> snakeOf(Played& play, const std::string& head)
 	{
 		Object& front = play.get(head);
-		std::vector<std::pair<int, int>> cells{ { static_cast<int>(front.cellColumn), static_cast<int>(front.cellRow) } };
-		for (const std::string& link : front.chainLinks)
+		std::vector<std::pair<int, int>> cells{ { static_cast<int>(play.game.place(front).column), static_cast<int>(play.game.place(front).row) } };
+		for (const std::string& link : play.game.place(front).chainLinks)
 		{
 			const Object& piece = play.get(link);
-			cells.push_back({ static_cast<int>(piece.cellColumn), static_cast<int>(piece.cellRow) });
+			cells.push_back({ static_cast<int>(play.game.place(piece).column), static_cast<int>(play.game.place(piece).row) });
 		}
 		return cells;
 	}
@@ -678,7 +678,7 @@ TEST_CASE("Food stepped into is eaten: the step goes on, the chain grows, more f
 	{
 		if (!object.exists || !object.named("playing.food")) { continue; }
 		++food;
-		const std::pair<int, int> at{ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) };
+		const std::pair<int, int> at{ static_cast<int>(play.game.place(object).column), static_cast<int>(play.game.place(object).row) };
 		for (const auto& cell : snakeOf(play, "playing.head")) { CHECK(cell != at); }
 		CHECK((at.first > 1 && at.first < 8 && at.second > 1 && at.second < 5));
 	}
@@ -745,7 +745,7 @@ TEST_CASE("Centipede plays: the wand's shot wears the mushroom above it away", "
 		const Object* low = nullptr;
 		for (const Object& object : play.game.getCurrentObjects())
 		{
-			if (object.exists && object.objClass == "mushroom" && static_cast<int>(object.cellColumn) == 15 && (!low || object.cellRow > low->cellRow)) { low = &object; }
+			if (object.exists && object.objClass == "mushroom" && static_cast<int>(play.game.place(object).column) == 15 && (!low || play.game.place(object).row > play.game.place(*low).row)) { low = &object; }
 		}
 		return low ? low->name : "";
 	};
@@ -803,7 +803,7 @@ TEST_CASE("Centipede: a head rising meets the zone's line and winds back down a 
 		play.frames(1);
 		for (const Object& object : play.game.getCurrentObjects())
 		{
-			if (object.exists && object.cellGoing && object.lookName() == "rising") { highest = std::min(highest, static_cast<int>(object.cellRow)); }
+			if (object.exists && play.game.place(object).going && object.lookName() == "rising") { highest = std::min(highest, static_cast<int>(play.game.place(object).row)); }
 		}
 	}
 	CHECK(highest == 27);
@@ -945,7 +945,7 @@ TEST_CASE("A <split /> cuts a chain: the links behind lead a chain of their own"
 
 	CHECK(snakeOf(play, "playing.field.heads.1") == Snake{ { 6, 2 }, { 5, 2 } });
 	Object& lead = play.get("playing.field.bodies.2");
-	CHECK(lead.cellGoing);
+	CHECK(play.game.place(lead).going);
 	CHECK(lead.lookName() == "head");
 	CHECK(snakeOf(play, "playing.field.bodies.2") == Snake{ { 3, 2 }, { 2, 2 } });
 
@@ -998,7 +998,7 @@ namespace
 		std::map<std::pair<int, int>, std::string> found;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.exists && object.map.cells && object.objClass == "pill") { found[{ static_cast<int>(object.cellColumn), static_cast<int>(object.cellRow) }] = object.lookName(); }
+			if (object.exists && object.map.cells && object.objClass == "pill") { found[{ static_cast<int>(game.place(object).column), static_cast<int>(game.place(object).row) }] = object.lookName(); }
 		}
 		return found;
 	}
@@ -1065,7 +1065,7 @@ TEST_CASE("After a line goes only the halves fall: germs stay put, and hold up w
 	bool hanging = false;
 	for (const Object& object : play.game.getCurrentObjects())
 	{
-		if (object.exists && object.map.cells && object.objClass == "germ" && object.cellColumn == 2.0f) { hanging = object.cellRow == 4.0f; }
+		if (object.exists && object.map.cells && object.objClass == "germ" && play.game.place(object).column == 2.0f) { hanging = play.game.place(object).row == 4.0f; }
 	}
 	CHECK(hanging);
 }
@@ -1095,7 +1095,7 @@ TEST_CASE("Capsules plays: germs come in low in the bottle, a capsule falls, and
 	CHECK(germsIn(play.game) == 8);
 	for (const Object& object : play.game.getCurrentObjects())
 	{
-		if (object.exists && object.map.cells && object.objClass == "germ") { CHECK(object.cellRow > 6.0f); }
+		if (object.exists && object.map.cells && object.objClass == "germ") { CHECK(play.game.place(object).row > 6.0f); }
 	}
 	int falling = 0;
 	int next = 0;

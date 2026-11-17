@@ -30,9 +30,9 @@ namespace
 		return play.get("playing." + room + "." + name);
 	}
 
-	std::pair<int, int> cellOf(const Object& piece)
+	std::pair<int, int> cellOf(const Played& play, const Object& piece)
 	{
-		return { static_cast<int>(piece.cellColumn), static_cast<int>(piece.cellRow) };
+		return { static_cast<int>(play.game.place(piece).column), static_cast<int>(play.game.place(piece).row) };
 	}
 }
 
@@ -44,11 +44,11 @@ TEST_CASE("Crates: the worker shoves a crate along, and a crate on its spot fini
 	REQUIRE(play.state() == "playing");
 
 	Object& worker = inRoom(play, "room1", "worker");
-	CHECK(cellOf(worker) == std::pair{ 3, 3 });
+	CHECK(cellOf(play, worker) == std::pair{ 3, 3 });
 	play.tap(KeyCode::D);
 	play.frames(1);
-	CHECK(cellOf(worker) == std::pair{ 4, 3 });
-	CHECK(cellOf(inRoom(play, "room1", "board.crates.1")) == std::pair{ 5, 3 });
+	CHECK(cellOf(play, worker) == std::pair{ 4, 3 });
+	CHECK(cellOf(play, inRoom(play, "room1", "board.crates.1")) == std::pair{ 5, 3 });
 	CHECK(play.get("status").variable.at("moves") == 1.0f);
 
 	play.tap(KeyCode::D);
@@ -56,7 +56,7 @@ TEST_CASE("Crates: the worker shoves a crate along, and a crate on its spot fini
 	CHECK(inRoom(play, "room1", "board.crates.1").lookName() == "crate");
 	play.tap(KeyCode::D);
 	play.frames(2);
-	CHECK(cellOf(inRoom(play, "room1", "board.crates.1")) == std::pair{ 7, 3 });
+	CHECK(cellOf(play, inRoom(play, "room1", "board.crates.1")) == std::pair{ 7, 3 });
 	CHECK(inRoom(play, "room1", "board.crates.1").lookName() == "home");
 	CHECK(play.get("status").variable.at("room") == 2.0f);
 	CHECK(play.get("status").variable.at("moves") == 0.0f);
@@ -73,10 +73,10 @@ TEST_CASE("Crates: a crate against a wall stays, and so does the worker", "[puzz
 	play.tap(KeyCode::W); play.frames(1);
 	for (int i = 0; i < 3; ++i) { play.tap(KeyCode::D); play.frames(1); }
 	play.tap(KeyCode::S); play.frames(1);
-	const auto crate = cellOf(inRoom(play, "room1", "board.crates.1"));
+	const auto crate = cellOf(play, inRoom(play, "room1", "board.crates.1"));
 	for (int i = 0; i < 5; ++i) { play.tap(KeyCode::A); play.frames(1); }
-	CHECK(cellOf(inRoom(play, "room1", "board.crates.1")) == std::pair{ 2, 3 });
-	CHECK(cellOf(worker) == std::pair{ 3, 3 });
+	CHECK(cellOf(play, inRoom(play, "room1", "board.crates.1")) == std::pair{ 2, 3 });
+	CHECK(cellOf(play, worker) == std::pair{ 3, 3 });
 	CHECK(crate == std::pair{ 4, 3 });
 }
 
@@ -93,15 +93,15 @@ TEST_CASE("Crates: <undo /> takes back moves one at a time, the count with them"
 	CHECK(play.get("status").variable.at("moves") == 2.0f);
 
 	play.tap(KeyCode::U); play.frames(1);
-	CHECK(cellOf(worker) == std::pair{ 4, 3 });
+	CHECK(cellOf(play, worker) == std::pair{ 4, 3 });
 	CHECK(play.get("status").variable.at("moves") == 1.0f);
 	play.tap(KeyCode::U); play.frames(1);
-	CHECK(cellOf(worker) == std::pair{ 3, 3 });
-	CHECK(cellOf(inRoom(play, "room1", "board.crates.1")) == std::pair{ 4, 3 });
+	CHECK(cellOf(play, worker) == std::pair{ 3, 3 });
+	CHECK(cellOf(play, inRoom(play, "room1", "board.crates.1")) == std::pair{ 4, 3 });
 	CHECK(play.get("status").variable.at("moves") == 0.0f);
 	// Nothing left: refused, nothing changes.
 	play.tap(KeyCode::U); play.frames(1);
-	CHECK(cellOf(worker) == std::pair{ 3, 3 });
+	CHECK(cellOf(play, worker) == std::pair{ 3, 3 });
 }
 
 TEST_CASE("Crates: every room can be finished, and the last one wins the game", "[puzzles][crates]")
@@ -133,7 +133,7 @@ namespace
 		std::map<std::pair<int, int>, int> found;
 		for (const Object& object : play.game.getCurrentObjects())
 		{
-			if (object.exists && object.isCopy() && object.objClass == "tile") { found[cellOf(object)] = static_cast<int>(object.variable.at("value")); }
+			if (object.exists && object.isCopy() && object.objClass == "tile") { found[cellOf(play, object)] = static_cast<int>(object.variable.at("value")); }
 		}
 		return found;
 	}
@@ -179,7 +179,7 @@ namespace
 		std::vector<int> row(static_cast<std::size_t>(width), 0);
 		for (const Object& object : play.game.getCurrentObjects())
 		{
-			if (object.exists && object.objClass == "tile") { row[static_cast<std::size_t>(object.cellColumn) - 1] = static_cast<int>(object.variable.at("value")); }
+			if (object.exists && object.objClass == "tile") { row[static_cast<std::size_t>(play.game.place(object).column) - 1] = static_cast<int>(object.variable.at("value")); }
 		}
 		return row;
 	}
@@ -239,8 +239,8 @@ namespace
 			for (const Object& object : play.game.getCurrentObjects())
 			{
 				if (!object.exists || !object.isVisible) { continue; }
-				if (object.objClass == "mine") { mines.insert(cellOf(object)); }
-				if (object.objClass == "square") { squares[cellOf(object)] = &object; }
+				if (object.objClass == "mine") { mines.insert(cellOf(play, object)); }
+				if (object.objClass == "square") { squares[cellOf(play, object)] = &object; }
 			}
 		}
 

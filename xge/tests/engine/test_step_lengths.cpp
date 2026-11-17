@@ -122,7 +122,7 @@ TEST_CASE("a <go> of 8 cells a second has gone 16 cells after 2 seconds, however
 	const std::string game = smallGame(map);
 	const auto go = [](Played& play) { xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "head", "right" }, true); };
 
-	const auto column = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("playing.head").cellColumn); }, go);
+	const auto column = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.game.place(play.get("playing.head")).column); }, go);
 	agree(column, 0.0);
 	CHECK(column.front().value == 17.0);
 }
