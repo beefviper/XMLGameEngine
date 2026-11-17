@@ -283,7 +283,7 @@ TEST_CASE("asteroids.xml loads with a ship that has a heading, shots, rocks and 
 	const Object& ship = field.ship();
 
 	CHECK(ship.drawn.picture.kind == ShapeKind::Line);
-	CHECK(ship.collisionData.type == CollisionType::Pixel);
+	CHECK(ship.kind->collisionData.type == CollisionType::Pixel);
 	CHECK(ship.turning.hasHeading);
 	CHECK(ship.heading == 0.0f);
 	REQUIRE(ship.drawn.turnables.size() == 1);
@@ -331,7 +331,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 		for (const Object& object : game.getCurrentObjects())
 		{
 			if (!object.exists) { ++descriptions; }
-			for (const auto& [name, commands] : object.action)
+			for (const auto& [name, commands] : object.kind->action)
 			{
 				for (const Command& command : commands)
 				{
@@ -339,7 +339,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 					if (std::holds_alternative<CmdThrust>(command)) { ++thrusts; }
 				}
 			}
-			for (const auto& rule : object.collisionData.others)
+			for (const auto& rule : object.kind->collisionData.others)
 			{
 				for (const Command& command : rule.commands)
 				{

@@ -38,9 +38,9 @@ TEST_CASE("a collision with no selector still matches anything", "[collision_rul
 	const Object& ball = game.getObject("ball");
 
 	// pong_min.xml's ball: <collision><deflect>45</deflect></collision>
-	REQUIRE(ball.collisionData.others.size() == 1);
-	CHECK(ball.collisionData.others[0].filterClass.empty());
-	CHECK(ball.collisionData.others[0].filterObject.empty());
+	REQUIRE(ball.kind->collisionData.others.size() == 1);
+	CHECK(ball.kind->collisionData.others[0].filterClass.empty());
+	CHECK(ball.kind->collisionData.others[0].filterObject.empty());
 }
 
 TEST_CASE("a collision naming only a class is an object rule for that class", "[collision_rules]")
@@ -50,13 +50,13 @@ TEST_CASE("a collision naming only a class is an object rule for that class", "[
 
 	// spaceinvaders.xml's bullet: <collision class="aliens"><die /></collision>,
 	// then the same for the shields, the bombs and the mystery ship
-	REQUIRE(bullet.collisionData.others.size() == 4);
-	CHECK(bullet.collisionData.others[0].filterClass == "aliens");
-	CHECK(bullet.collisionData.others[0].filterObject.empty());
-	CHECK(bullet.collisionData.others[1].filterClass == "shield");
+	REQUIRE(bullet.kind->collisionData.others.size() == 4);
+	CHECK(bullet.kind->collisionData.others[0].filterClass == "aliens");
+	CHECK(bullet.kind->collisionData.others[0].filterObject.empty());
+	CHECK(bullet.kind->collisionData.others[1].filterClass == "shield");
 
 	// ...and it did not also turn into a screen-edge rule.
-	CHECK(bullet.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1); // only the edge="all" <die />
+	CHECK(bullet.kind->collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1); // only the edge="all" <die />
 }
 
 TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules]")
@@ -311,8 +311,8 @@ TEST_CASE("a rule names the object it touched other, whichever of its class that
 	played::Played play(file.path);
 
 	// The rule is made once, and other is found as it runs.
-	REQUIRE(play.get("coin").collisionData.others.size() == 1);
-	CHECK(play.get("coin").collisionData.others[0].filterClass == "player");
+	REQUIRE(play.get("coin").kind->collisionData.others.size() == 1);
+	CHECK(play.get("coin").kind->collisionData.others[0].filterClass == "player");
 
 	// p2 walks onto the coin: p2 is paid, once (its shield goes up), and p1 is not.
 	play.get("p2").position = { 585, 402 };

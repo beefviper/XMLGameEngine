@@ -1374,7 +1374,7 @@ TEST_CASE("a collision rule holds rules: what it says they say too, its <first> 
 		"<collision object=\"w\"><stop /></collision>"
 		"</collision>"
 		"<collision unless=\"wall\"><collision edge=\"horizontal\"><wrap /></collision></collision>"));
-	const CollisionData& rules = loaded.game.getObject("a").collisionData;
+	const CollisionData& rules = loaded.game.getObject("a").kind->collisionData;
 	REQUIRE(rules.others.size() == 3);
 	for (const CollisionRule& rule : rules.others)
 	{

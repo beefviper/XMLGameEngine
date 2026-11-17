@@ -218,10 +218,6 @@ namespace xge
 		int lockstep{ 0 };
 		CollisionType type{ CollisionType::Box };
 
-		// Its <hitbox>es (see RawCollisionData), any of them a touch; none,
-		// its picture's box.
-		std::vector<Hitbox> hitboxes;
-
 		// Each screen edge's rules (see RawCollisionData::edges).
 		EdgesRules<Command> edges;
 		// Rules about another object (see RawCollisionData::others).
@@ -796,6 +792,9 @@ namespace xge
 		// RawObject per member (see load/xml.cpp), so from here on a member
 		// is an ordinary object that also remembers which group it came from.
 		std::string groupName;
+		// Its group's number, the same for all its members (see Kind); 0
+		// for a plain <object>, which is a kind of its own.
+		int kind{ 0 };
 		// The groups around that group, outermost first, when groups are
 		// written inside one another; each of their names means this object too.
 		std::vector<std::string> outerGroups;
@@ -1143,6 +1142,17 @@ namespace xge
 	// The way `way` points once turned that many degrees clockwise (on the
 	// screen, where y grows downward), as a picture is turned.
 	Vector2f turnedBy(const Vector2f& way, float degrees) noexcept;
+
+	// What the objects of one kind have alike and never change while they
+	// play: the members of a <group>, or a piece and the copies spawned of
+	// it (RawObject::kind). Made for each object as it loads, checked
+	// for each, then shared by the kind (game_expr::shareKinds).
+	struct Kind
+	{
+		CollisionData collisionData;
+		std::map<std::string, std::vector<Command>> action;
+		int written{ 0 };   // RawObject::kind
+	};
 
 	struct Object : Moment
 	{
@@ -2054,8 +2064,6 @@ namespace xge
 		// <random>: a reset then draws it again (Game::drawStartAgain).
 		bool startDrawsRandom{ false };
 
-		CollisionData collisionData;
-
 		// <light>'s <past>es: the classes its light does not shine through.
 		std::vector<std::string> lightPast;
 
@@ -2120,7 +2128,12 @@ namespace xge
 			Color color{};
 		};
 
-		std::map<std::string, std::vector<Command>> action;
+		// Its <hitbox>es (see RawCollisionData), any of them a touch; none,
+		// its picture's box. Its own, since they can be about its picture.
+		std::vector<Hitbox> hitboxes;
+
+		// What every object of its kind has alike (see Kind), shared.
+		std::shared_ptr<Kind> kind{ std::make_shared<Kind>() };
 
 		// Whether one of the pieces shows that variable of that object.
 		bool showsVariable(const std::string& ownerName, const std::string& variableName) const noexcept
@@ -2223,9 +2236,10 @@ namespace xge
 	bool nameSelfIn(std::vector<RawCommand>& list, const std::string& name);
 	bool nameSelfIn(RawCommand& command, const std::string& name);
 
-	// Only the tests in a list (a <condition>'s, and a <trigger> with no
-	// object=) made about `name`; the commands keep self (see nameSelf).
-	void nameSelfInTests(std::vector<RawCommand>& list, const std::string& name);
+	// The tests in a list (a <condition>'s) made to say self of the object
+	// testing them; the commands keep self (see nameSelf), a <trigger> with
+	// no object= among them.
+	void nameSelfInTests(std::vector<RawCommand>& list);
 
 	// Whether a command says anything of self.
 	bool namesSelf(const RawCommand& command);
@@ -2235,10 +2249,11 @@ namespace xge
 	void nameSelfInTest(RawCondition& condition, const std::string& name);
 
 	// A copy of an object, named `to` where it was `from`: what its own
-	// rules, timers, actions and values said of `from` (by its name, or by
-	// self., which nameSelf made its name) they now say of `to`. What a
-	// <spawn> makes a copy from.
-	void renameOwn(RawObject& object, const std::string& from, const std::string& to);
+	// rules, timers, actions and values said of `from` by name they now say
+	// of `to` (self says itself already). What a <spawn> makes a copy from.
+	// Whether its rules or actions named `from`: if not, the copy is of
+	// its kind (Kind).
+	bool renameOwn(RawObject& object, const std::string& from, const std::string& to);
 
 	// What a rule about another object leaves to mean the object it touched:
 	// other, as the object a command names (object="other") or at the start

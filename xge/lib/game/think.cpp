@@ -48,7 +48,7 @@ namespace xge
 
 		// What the search needs of a kind of piece: its class, its rules
 		// and its looks (a copy, so the game may change while it thinks).
-		struct Kind
+		struct PieceKind
 		{
 			std::string objClass;
 			std::vector<Object::MoveSet> moveSets;
@@ -69,7 +69,7 @@ namespace xge
 
 		struct Piece
 		{
-			const Kind* object{ nullptr };
+			const PieceKind* object{ nullptr };
 			int column{};
 			int row{};
 			std::size_t look{};
@@ -91,7 +91,7 @@ namespace xge
 			bool put{ false };
 			int side{ 0 };
 			std::vector<std::size_t> turned;
-			const Kind* kind{ nullptr };  // a put: the piece it copies
+			const PieceKind* kind{ nullptr };  // a put: the piece it copies
 			int under{ -1 };                // a put <on> a piece: that piece
 		};
 
@@ -106,30 +106,30 @@ namespace xge
 
 		struct Board
 		{
-			std::deque<Kind> types;   // every kind on the board (a deque: pointers to them stay good)
-			std::map<const Object*, const Kind*> typeOf;
+			std::deque<PieceKind> types;   // every kind on the board (a deque: pointers to them stay good)
+			std::map<const Object*, const PieceKind*> typeOf;
 			std::vector<Piece> pieces;
 			int columns{};
 			int rows{};
 			std::vector<int> grid;    // a piece's index + 1 in each cell, 0 for none
 			std::vector<std::string> sides;
 			// Each side's piece a put copies (none: its pieces are moved).
-			const Kind* kinds[2]{ nullptr, nullptr };
+			const PieceKind* kinds[2]{ nullptr, nullptr };
 			// Every piece each side may put (one of each group), the classes
 			// they go <on>, and what a side's put <close>s and the class of
 			// what it claims with.
-			std::vector<const Kind*> allKinds[2];
+			std::vector<const PieceKind*> allKinds[2];
 			std::vector<std::string> places;
 			std::string closeClass[2];
 			std::string ownClass[2];
 			std::vector<LineRule> lines;
 
 			// The kind of a piece of the game, copied the first time.
-			const Kind* kindOf(const Object* object)
+			const PieceKind* kindOf(const Object* object)
 			{
 				if (!object) { return nullptr; }
 				if (const auto found = typeOf.find(object); found != typeOf.end()) { return found->second; }
-				Kind kind;
+				PieceKind kind;
 				kind.objClass = object->objClass;
 				kind.moveSets = object->moves.sets;
 				kind.look = object->looks.shown;
@@ -145,7 +145,7 @@ namespace xge
 			void prepare()
 			{
 				std::size_t i = 0;
-				for (Kind& kind : types)
+				for (PieceKind& kind : types)
 				{
 					kind.index = i++;
 					kind.isPlace = std::find(places.begin(), places.end(), kind.objClass) != places.end();
@@ -155,12 +155,12 @@ namespace xge
 						kind.ownedBy[side] = !ownClass[side].empty() && kind.objClass == ownClass[side];
 					}
 				}
-				for (Kind& kind : types)
+				for (PieceKind& kind : types)
 				{
 					kind.ownSet = setOf(kind, kind.look);
 					kind.goesOn.assign(types.size(), 0);
 					if (!kind.ownSet) { continue; }
-					for (const Kind& other : types)
+					for (const PieceKind& other : types)
 					{
 						kind.goesOn[other.index] = std::find(kind.ownSet->on.begin(), kind.ownSet->on.end(), other.objClass) != kind.ownSet->on.end();
 					}
@@ -197,7 +197,7 @@ namespace xge
 			bool onBoard(int column, int row) const { return column >= 1 && row >= 1 && column <= columns && row <= rows; }
 			bool empty(int column, int row) { return onBoard(column, row) && at(column, row) == 0; }
 
-			static const Object::MoveSet* setOf(const Kind& object, std::size_t look)
+			static const Object::MoveSet* setOf(const PieceKind& object, std::size_t look)
 			{
 				const Object::MoveSet* any = nullptr;
 				for (const Object::MoveSet& set : object.moveSets)
@@ -212,7 +212,7 @@ namespace xge
 			// Whether the side's pieces are put rather than moved.
 			bool puts(int side) const
 			{
-				const Kind* kind = kinds[side];
+				const PieceKind* kind = kinds[side];
 				const Object::MoveSet* set = kind ? setOf(*kind, kind->look) : nullptr;
 				return set && set->puts();
 			}
@@ -221,7 +221,7 @@ namespace xge
 			// that stops is won by more pieces; else it is drawn.
 			bool flanks(int side) const
 			{
-				const Kind* kind = kinds[side];
+				const PieceKind* kind = kinds[side];
 				const Object::MoveSet* set = kind ? setOf(*kind, kind->look) : nullptr;
 				return set && !set->flanks.empty();
 			}
@@ -290,13 +290,13 @@ namespace xge
 			// pieces that fits each cell.
 			void putMoves(int side, std::vector<Move>& out, std::size_t enough = std::numeric_limits<std::size_t>::max())
 			{
-				std::vector<const Kind*> each = allKinds[side];
+				std::vector<const PieceKind*> each = allKinds[side];
 				if (each.empty()) { each.push_back(kinds[side]); }
 				for (int row = 1; row <= rows; ++row)
 				{
 					for (int column = 1; column <= columns; ++column)
 					{
-						for (const Kind* kind : each)
+						for (const PieceKind* kind : each)
 						{
 							const Object::MoveSet* set = kind->ownSet;
 							if (!set) { continue; }
@@ -830,7 +830,7 @@ namespace xge
 			if (side == 1 && other.empty()) { break; }
 			for (const Object* each : putTemplates(side == 0 ? think.objClass : other))
 			{
-				const Kind* kind = board.kindOf(each);
+				const PieceKind* kind = board.kindOf(each);
 				board.allKinds[side].push_back(kind);
 				if (const Object::MoveSet* set = Board::setOf(*kind, kind->look))
 				{

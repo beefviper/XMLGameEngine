@@ -397,10 +397,10 @@ namespace xge
 
 		o << "\tsize.x=" << f.size.x << ", size.y=" << f.size.y << '\n';
 
-		o << "\tcollision=" << (f.collisionsOn ? "true" : "false") << f.collisionData;
+		o << "\tcollision=" << (f.collisionsOn ? "true" : "false") << f.kind->collisionData;
 		o << '\n';
 
-		for (auto& action : f.action)
+		for (auto& action : f.kind->action)
 		{
 			o << "\taction=" << action.first << ", value=";
 			for (auto& command : action.second)

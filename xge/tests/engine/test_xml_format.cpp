@@ -279,7 +279,7 @@ TEST_CASE("commands run in the order they are written", "[xml_format][commands]"
 	o.extra = "<variables><variable name=\"score\">0</variable></variables>";
 	Loaded loaded(gameXml("", objectXml(o)));
 
-	const auto& left = loaded.game.getObject("o").collisionData.edges[edgeIndex(Edge::Left)].commands;
+	const auto& left = loaded.game.getObject("o").kind->collisionData.edges[edgeIndex(Edge::Left)].commands;
 	REQUIRE(left.size() == 3);
 	CHECK(as<CmdIncrement>(left[0]).target.written() == "o.score");
 	as<CmdReset>(left[1]);
@@ -295,7 +295,7 @@ TEST_CASE("an edge rule reaches the edges it names, and several rules on one edg
 		"<collision edge=\"vertical\"><stick /></collision>";
 	Loaded loaded(gameXml("", objectXml(o)));
 
-	const auto& data = loaded.game.getObject("o").collisionData;
+	const auto& data = loaded.game.getObject("o").kind->collisionData;
 	CHECK(data.edges[edgeIndex(Edge::Top)].commands.size() == 2);    // all, vertical
 	CHECK(data.edges[edgeIndex(Edge::Bottom)].commands.size() == 2); // all, vertical
 	CHECK(data.edges[edgeIndex(Edge::Left)].commands.size() == 2);   // all, left
@@ -321,7 +321,7 @@ TEST_CASE("a collision without an edge is about another object; naming nothing m
 	log.attributes = "class=\"logs\"";
 	Loaded loaded(gameXml("", objectXml(o) + objectXml(wall) + objectXml(brick) + objectXml(log)));
 
-	const auto& others = loaded.game.getObject("o").collisionData.others;
+	const auto& others = loaded.game.getObject("o").kind->collisionData.others;
 	REQUIRE(others.size() == 3);
 
 	CHECK(others[0].filterClass.empty());
@@ -335,7 +335,7 @@ TEST_CASE("a collision without an edge is about another object; naming nothing m
 	CHECK(others[2].unlessClass == "logs");
 	as<CmdReverse>(others[2].commands.at(0));
 
-	const auto& data = loaded.game.getObject("o").collisionData;
+	const auto& data = loaded.game.getObject("o").kind->collisionData;
 	CHECK(data.edges[edgeIndex(Edge::Top)].commands.empty());
 	CHECK(data.edges[edgeIndex(Edge::Left)].commands.empty());
 }
@@ -348,7 +348,7 @@ TEST_CASE("move and hop take a direction and a value", "[xml_format][commands]")
 		"</actions>";
 	Loaded loaded(gameXml("<variable name=\"step\">3</variable>", objectXml(o)));
 
-	const auto& go = loaded.game.getObject("o").action.at("go");
+	const auto& go = loaded.game.getObject("o").kind->action.at("go");
 	REQUIRE(go.size() == 2);
 	CHECK(as<CmdMove>(go[0]).direction == Direction::Left);
 	CHECK(as<CmdMove>(go[0]).step == 6.0f);

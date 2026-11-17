@@ -21,7 +21,7 @@ namespace xge
 
 		std::size_t ownParts(const Object& object, bool byPicture) noexcept
 		{
-			return byPicture || object.collisionData.hitboxes.empty() ? 1 : object.collisionData.hitboxes.size();
+			return byPicture || object.hitboxes.empty() ? 1 : object.hitboxes.size();
 		}
 
 		std::size_t partsOf(const Object& object, bool byPicture) noexcept
@@ -32,14 +32,14 @@ namespace xge
 		std::size_t partOf(const Object& object, bool byPicture, std::size_t index) noexcept
 		{
 			const std::size_t own = ownParts(object, byPicture);
-			if (index >= own) { return object.collisionData.hitboxes.size() + (index - own); }
-			return byPicture || object.collisionData.hitboxes.empty() ? picture : index;
+			if (index >= own) { return object.hitboxes.size() + (index - own); }
+			return byPicture || object.hitboxes.empty() ? picture : index;
 		}
 
 		const Hitbox& hitboxAt(const Object& object, std::size_t part) noexcept
 		{
-			const std::size_t own = object.collisionData.hitboxes.size();
-			return part < own ? object.collisionData.hitboxes[part] : object.frameHitboxes()[part - own];
+			const std::size_t own = object.hitboxes.size();
+			return part < own ? object.hitboxes[part] : object.frameHitboxes()[part - own];
 		}
 
 		// A part's box. An inset hitbox is the picture's box pulled in, left
@@ -71,7 +71,7 @@ namespace xge
 		// are of type pixel (those its <solid char>s name), otherwise its shape.
 		bool solidAt(const Object& object, const Vector2f& local, std::size_t part = picture)
 		{
-			if (object.collisionData.type == CollisionType::Pixel && object.drawn.bitmap)
+			if (object.kind->collisionData.type == CollisionType::Pixel && object.drawn.bitmap)
 			{
 				return object.drawn.bitmap->touchesAt(static_cast<int>(std::floor(local.x)), static_cast<int>(std::floor(local.y)));
 			}
@@ -149,7 +149,7 @@ namespace xge
 
 	bool usesPixels(const Object& a, const Object& b) noexcept
 	{
-		return a.collisionData.type == CollisionType::Pixel || b.collisionData.type == CollisionType::Pixel;
+		return a.kind->collisionData.type == CollisionType::Pixel || b.kind->collisionData.type == CollisionType::Pixel;
 	}
 
 	bool pixelsOverlap(const Object& a, const Object& b)
@@ -257,7 +257,7 @@ namespace xge
 			bool solidAt(const Vector2f& local) const
 			{
 				if (!drawing) { return xge::solidAt(*object, local, part); }
-				if (object->collisionData.type == CollisionType::Pixel)
+				if (object->kind->collisionData.type == CollisionType::Pixel)
 				{
 					return drawing->touchesAt(static_cast<int>(std::floor(local.x)), static_cast<int>(std::floor(local.y)));
 				}
@@ -351,7 +351,7 @@ namespace xge
 		// A point swept along the line against the shape: a hit within it.
 		const std::optional<SweepHit> hit = sweepShapes(Box{ from, {} }, false, along, box, isRound(object), {});
 		if (!hit) { return false; }
-		if (object.collisionData.type != CollisionType::Pixel || !object.drawn.bitmap) { return true; }
+		if (object.kind->collisionData.type != CollisionType::Pixel || !object.drawn.bitmap) { return true; }
 
 		// Its pixels: from where the line meets its box, half a pixel at a time.
 		const float length = std::hypot(along.x, along.y);

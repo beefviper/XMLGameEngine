@@ -93,7 +93,7 @@ TEST_CASE("lunarlander.xml loads with a lander, terrain and three pads, all draw
 	{
 		const Object& object = moon.game.getObject(name);
 		CHECK(object.drawn.picture.kind == ShapeKind::Line);
-		CHECK(object.collisionData.type == CollisionType::Pixel);
+		CHECK(object.kind->collisionData.type == CollisionType::Pixel);
 		REQUIRE(object.drawn.bitmap);
 	}
 	for (const char* name : { "terrain", "pad2", "pad3", "pad5" })
@@ -119,7 +119,7 @@ TEST_CASE("lunarlander.xml loads under every XML backend, checked against the sc
 		Game game{ readGame("descriptions/lunarlander.xml", backend) };
 		const Object& lander = game.getObject("lander");
 
-		CHECK(lander.collisionData.type == CollisionType::Pixel);
+		CHECK(lander.kind->collisionData.type == CollisionType::Pixel);
 		CHECK(lander.turning.hasHeading);
 
 		// One rule is the landing, kept for slow touches: a condition on its speed.
@@ -128,7 +128,7 @@ TEST_CASE("lunarlander.xml loads under every XML backend, checked against the sc
 			return condition.variableName == "speed" || std::any_of(condition.parts.begin(), condition.parts.end(), onSpeed);
 		};
 		int slow = 0;
-		for (const auto& rule : lander.collisionData.others)
+		for (const auto& rule : lander.kind->collisionData.others)
 		{
 			if (rule.check && onSpeed(*rule.check)) { ++slow; }
 		}

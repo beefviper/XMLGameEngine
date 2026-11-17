@@ -25,14 +25,14 @@ namespace xge
 	public:
 		explicit CommandExecutor(Game& gameToRun) noexcept : game(gameToRun) {}
 
-		// object.collisionData.edges, driven by
+		// object.kind->collisionData.edges, driven by
 		// touchesScreenEdge. Each of these returns false
 		// when the verb is refused (a <spawn> or <fire> with every copy out,
 		// an <aim> not lined up, a hop that cannot be made), which ends the
 		// rule, key or condition there, as it ends an action.
 		bool executeScreenEdgeCollision(const Command& command, Object& object, Edge edge);
 
-		// object.collisionData.others, driven by Game::reactTo. `other` is
+		// object.kind->collisionData.others, driven by Game::reactTo. `other` is
 		// the object being touched. `touch` must already be self-relative to
 		// `object` (touch.edge the edge of *this* object that was touched,
 		// touch.normal the way out of `other` towards it) - see play/collision.h for why that's not simply the raw

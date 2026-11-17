@@ -48,6 +48,7 @@ namespace xge
 		const std::vector<Object::Look> looks = buildLooks(rawObject, first, picture, where);
 
 		Object object{};
+		object.kind->written = rawObject.kind;
 		object.id = parts->newId();
 		const std::uint64_t order = parts->orderOf(object.id);
 		buildSprite(rawObject, first, picture, animationSeconds, object, where);
@@ -733,14 +734,14 @@ namespace xge
 		object.collisionsOn = rawObject.rawCollisionData.enabled;
 		object.start.isVisible = object.isVisible;
 		object.start.collisionsOn = object.collisionsOn;
-		object.collisionData.lockstep = thisLockstep;
-		object.collisionData.type = rawObject.rawCollisionData.type;
+		object.kind->collisionData.lockstep = thisLockstep;
+		object.kind->collisionData.type = rawObject.rawCollisionData.type;
 
 		// A pixel collision tests the pixels that are drawn; a line
 		// drawing has them from the start, and a circle or rectangle
 		// is solid all over, but what a text or an image looks like
 		// is only known once a window backend has drawn it.
-		if (object.collisionData.type == CollisionType::Pixel
+		if (object.kind->collisionData.type == CollisionType::Pixel
 			&& (object.drawn.picture.kind == ShapeKind::Text || object.drawn.picture.kind == ShapeKind::Image))
 		{
 			throw std::runtime_error(where + ": <type>pixel</type> needs a sprite of lines, a circle or a rectangle; the pixels of text and images are only known to a window backend");
@@ -750,7 +751,7 @@ namespace xge
 		// pixel by pixel.
 		if (!rawObject.rawCollisionData.solid.empty())
 		{
-			if (object.collisionData.type != CollisionType::Pixel)
+			if (object.kind->collisionData.type != CollisionType::Pixel)
 			{
 				throw std::runtime_error(where + ": a <solid char> says which pixels touch, so it needs <type>pixel</type>");
 			}
@@ -763,10 +764,10 @@ namespace xge
 		}
 
 		// What it touches with, if not its picture.
-		object.collisionData.hitboxes.clear();
+		object.hitboxes.clear();
 		for (const RawHitbox& raw : rawObject.rawCollisionData.hitboxes)
 		{
-			object.collisionData.hitboxes.push_back(makeHitbox(raw, object, where + " > <hitbox>"));
+			object.hitboxes.push_back(makeHitbox(raw, object, where + " > <hitbox>"));
 		}
 		// And each animation frame's own.
 		const auto frameHitboxes = [&](const std::vector<std::vector<RawHitbox>>& written, const std::string& here)
@@ -786,10 +787,10 @@ namespace xge
 		}
 		if (object.looks.shown < object.looks.all.size() && !object.looks.all[object.looks.shown].frames.empty()) { object.animation.hitboxes = object.looks.all[object.looks.shown].frameHitboxes; }
 
-		for (std::size_t edge = 0; edge < object.collisionData.edges.size(); ++edge)
+		for (std::size_t edge = 0; edge < object.kind->collisionData.edges.size(); ++edge)
 		{
 			const EdgeRules<RawCommand>& raw = rawObject.rawCollisionData.edges[edge];
-			object.collisionData.edges[edge] = { processCommands(raw.commands, where), raw.guards };
+			object.kind->collisionData.edges[edge] = { processCommands(raw.commands, where), raw.guards };
 			for (const EdgeGuard& edgeGuard : raw.guards)
 			{
 				if (!edgeGuard.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == edgeGuard.sprite; }))
@@ -830,7 +831,7 @@ namespace xge
 			const std::string was = std::exchange(otherName, rawRule.touchable.empty() ? std::string() : rawRule.touchable.front());
 			rule.commands = processCommands(rawRule.commands, where);
 			otherName = was;
-			object.collisionData.others.push_back(std::move(rule));
+			object.kind->collisionData.others.push_back(std::move(rule));
 		}
 	}
 
@@ -839,7 +840,7 @@ namespace xge
 	{
 		for (auto& rawAction : rawObject.action)
 		{
-			object.action[rawAction.first] = processCommands(rawAction.second, where);
+			object.kind->action[rawAction.first] = processCommands(rawAction.second, where);
 		}
 	}
 }

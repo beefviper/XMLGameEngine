@@ -276,7 +276,7 @@ namespace xge
 		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& each) { return each.name == original.name; });
 		if (raw == rawObjects.end()) { return nullptr; }
 		RawObject copy = *raw;
-		renameOwn(copy, original.name, name);
+		const bool namedIt = renameOwn(copy, original.name, name);
 		copy.outerGroups = original.outerGroups;
 		if (!original.groupName.empty()) { copy.outerGroups.push_back(original.groupName); }
 		copy.groupName = original.name;
@@ -285,20 +285,21 @@ namespace xge
 
 		Object made = expr.spawnObject(copy, original);
 
-		// Its rules' tests, made at load for the object it is copied from,
-		// about the copy instead.
+		// Of its kind, unless its rules named the one it is copied from:
+		// then their tests, made at load for that one, about the copy.
+		if (!namedIt) { made.kind = original.kind; }
 		const auto retarget = [&](Condition& check) { retargetCheck(check, original.name, name); };
-		for (std::size_t i = 0; i < made.collisionData.others.size() && i < original.collisionData.others.size(); ++i)
+		for (std::size_t i = 0; namedIt && i < made.kind->collisionData.others.size() && i < original.kind->collisionData.others.size(); ++i)
 		{
-			if (!original.collisionData.others[i].check) { continue; }
-			Condition check = *original.collisionData.others[i].check;
+			if (!original.kind->collisionData.others[i].check) { continue; }
+			Condition check = *original.kind->collisionData.others[i].check;
 			retarget(check);
-			made.collisionData.others[i].check = std::move(check);
+			made.kind->collisionData.others[i].check = std::move(check);
 		}
-		for (std::size_t edge = 0; edge < made.collisionData.edges.size(); ++edge)
+		for (std::size_t edge = 0; namedIt && edge < made.kind->collisionData.edges.size(); ++edge)
 		{
-			const std::vector<EdgeGuard>& was = original.collisionData.edges[edge].guards;
-			std::vector<EdgeGuard>& guards = made.collisionData.edges[edge].guards;
+			const std::vector<EdgeGuard>& was = original.kind->collisionData.edges[edge].guards;
+			std::vector<EdgeGuard>& guards = made.kind->collisionData.edges[edge].guards;
 			for (std::size_t g = 0; g < guards.size() && g < was.size(); ++g)
 			{
 				if (!was[g].check) { continue; }
@@ -321,9 +322,10 @@ namespace xge
 				whens(was->body->commands, now->body->commands);
 			}
 		};
-		for (auto& [actionName, list] : made.action)
+		for (auto& [actionName, list] : made.kind->action)
 		{
-			if (const auto found = original.action.find(actionName); found != original.action.end()) { whens(found->second, list); }
+			if (!namedIt) { break; }
+			if (const auto found = original.kind->action.find(actionName); found != original.kind->action.end()) { whens(found->second, list); }
 		}
 
 		made.copyOf = original.name;
@@ -1964,7 +1966,7 @@ namespace xge
 
 	void Game::updateLockstepObjects(const Object& object) noexcept
 	{
-		const int lockstepNum = object.collisionData.lockstep;
+		const int lockstepNum = object.kind->collisionData.lockstep;
 
 		// Every member gets exactly the same treatment. This used to shift the
 		// members stored before the touching one by three steps and the rest
@@ -1975,7 +1977,7 @@ namespace xge
 		// turn at the moment the edge is met (in the sweep), where they are.
 		for (auto& obj : objects)
 		{
-			if (obj.collisionData.lockstep == lockstepNum)
+			if (obj.kind->collisionData.lockstep == lockstepNum)
 			{
 				obj.velocity.x *= -1;
 				if (obj.animation.stepped) { obj.position.x += obj.velocity.x * obj.animation.shareBefore; }
@@ -2016,8 +2018,8 @@ namespace xge
 	void Game::atEdge(Object& object, Edge edge)
 	{
 		CommandExecutor executor(*this);
-		const std::vector<Command>& commands = object.collisionData.edges[edgeIndex(edge)].commands;
-		const std::vector<EdgeGuard>& guards = object.collisionData.edges[edgeIndex(edge)].guards;
+		const std::vector<Command>& commands = object.kind->collisionData.edges[edgeIndex(edge)].commands;
+		const std::vector<EdgeGuard>& guards = object.kind->collisionData.edges[edgeIndex(edge)].guards;
 		// sprite= asks for the look it had as it met the edge, not one an
 		// earlier rule changed (or the next would answer a turn again).
 		const std::string look = object.lookName();
@@ -2051,8 +2053,8 @@ namespace xge
 	// before the move.
 	bool Game::sticksAt(const Object& object, Edge edge)
 	{
-		const auto& commands = object.collisionData.edges[edgeIndex(edge)].commands;
-		const auto& guards = object.collisionData.edges[edgeIndex(edge)].guards;
+		const auto& commands = object.kind->collisionData.edges[edgeIndex(edge)].commands;
+		const auto& guards = object.kind->collisionData.edges[edgeIndex(edge)].guards;
 		for (std::size_t i = 0; i < commands.size(); ++i)
 		{
 			const bool passedOver = std::any_of(guards.begin(), guards.end(), [&](const EdgeGuard& guard)
@@ -2075,7 +2077,7 @@ namespace xge
 
 		const auto answers = [](const Object& self, const Object& other)
 		{
-			return std::any_of(self.collisionData.others.begin(), self.collisionData.others.end(),
+			return std::any_of(self.kind->collisionData.others.begin(), self.kind->collisionData.others.end(),
 				[&](const CollisionRule& rule) { return collisionRuleMatches(rule, other); });
 		};
 
@@ -2087,7 +2089,7 @@ namespace xge
 	// never sink into a floor.
 	bool Game::touchesByPicture(const Object& a, const Object& b)
 	{
-		const auto has = [](const Object& object) { return !object.collisionData.hitboxes.empty() || !object.animation.hitboxes.empty()
+		const auto has = [](const Object& object) { return !object.hitboxes.empty() || !object.animation.hitboxes.empty()
 			|| std::any_of(object.looks.all.begin(), object.looks.all.end(), [](const Object::Look& look) { return !look.frameHitboxes.empty(); }); };
 		if (!has(a) && !has(b)) { return false; }
 
@@ -2100,7 +2102,7 @@ namespace xge
 		};
 		const auto standsOn = [&](const Object& self, const Object& other)
 		{
-			return std::any_of(self.collisionData.others.begin(), self.collisionData.others.end(), [&](const CollisionRule& rule)
+			return std::any_of(self.kind->collisionData.others.begin(), self.kind->collisionData.others.end(), [&](const CollisionRule& rule)
 				{
 					return collisionRuleMatches(rule, other) && std::any_of(rule.commands.begin(), rule.commands.end(), solid);
 				});
@@ -2184,7 +2186,7 @@ namespace xge
 
 		// A rule with unless= is passed over while `self` is also touching
 		// something of that class.
-		for (auto& rule : self.collisionData.others)
+		for (auto& rule : self.kind->collisionData.others)
 		{
 			if (!collisionRuleMatches(rule, other)) { continue; }
 			if (!rule.whileSprite.empty() && look != rule.whileSprite) { continue; }

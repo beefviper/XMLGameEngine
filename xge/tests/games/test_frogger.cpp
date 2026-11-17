@@ -124,7 +124,7 @@ TEST_CASE("frogger.xml loads under every XML backend, checked against the schema
 
 		// One rule with unless, and the condition with atmost, came through.
 		bool unlessSeen = false;
-		for (const auto& rule : frog.collisionData.others)
+		for (const auto& rule : frog.kind->collisionData.others)
 		{
 			if (rule.unlessClass == "logs") { unlessSeen = true; }
 		}

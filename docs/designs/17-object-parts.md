@@ -1,6 +1,6 @@
 # An object's parts
 
-**Status:** Counted; parts go in a store each (the author). The per-part proposals are applied as each part moves ([CR3](../plan.md#cr3-parts-as-components)); `Holder`, `Drive`, `Hand`, `Maze`, `Cells`, `Tether`, `Pull`, `Aloft`, `Rest`, `Carry` and `Picker` (with `marks` in it) have moved. Why parts become components is in [engine-structure](16-engine-structure.md).
+**Status:** Counted; parts go in a store each (the author). The per-part proposals are applied as each part moves ([CR3](../plan.md#cr3-parts-as-components)); `Holder`, `Drive`, `Hand`, `Maze`, `Cells`, `Tether`, `Pull`, `Aloft`, `Rest`, `Carry` and `Picker` (with `marks` in it) have moved. The collision rules and actions are one `Kind` shared by a group's members and its copies (step 5a); this table's "Kind" column is the older sense, a part's grouping. Why parts become components is in [engine-structure](16-engine-structure.md).
 
 ## How they were counted
 

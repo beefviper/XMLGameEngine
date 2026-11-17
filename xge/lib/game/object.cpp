@@ -54,14 +54,14 @@ namespace xge
 	std::vector<std::string> Object::hitboxNames() const
 	{
 		std::vector<std::string> names;
-		const auto add = [&](const std::vector<Hitbox>& hitboxes)
+		const auto add = [&](const std::vector<Hitbox>& boxes)
 		{
-			for (const Hitbox& hitbox : hitboxes)
+			for (const Hitbox& hitbox : boxes)
 			{
 				if (!hitbox.name.empty() && std::find(names.begin(), names.end(), hitbox.name) == names.end()) { names.push_back(hitbox.name); }
 			}
 		};
-		add(collisionData.hitboxes);
+		add(hitboxes);
 		for (const std::vector<Hitbox>& frame : animation.hitboxes) { add(frame); }
 		for (const Look& each : looks.all)
 		{
@@ -613,16 +613,15 @@ namespace xge
 		return changed;
 	}
 
-	void nameSelfInTests(std::vector<RawCommand>& list, const std::string& name)
+	void nameSelfInTests(std::vector<RawCommand>& list)
 	{
 		for (RawCommand& command : list)
 		{
-			if (command.verb == "trigger" && command.object.empty()) { command.object = name; }
 			if (command.test)
 			{
 				auto test = std::make_shared<RawCondition>(*command.test);
 				nameSelfInCheck(*test, "self");
-				nameSelfInTests(test->commands, name);
+				nameSelfInTests(test->commands);
 				command.test = std::move(test);
 			}
 		}
@@ -800,7 +799,7 @@ namespace xge
 			const std::function<void(RawValue&)> value = [&](RawValue& each) { nameSelfInValue(each, object.name); };
 			// The commands of its rules, timers and actions keep self, found
 			// as each runs (Game::makeNow); only their tests are made its name.
-			const auto own = [&](std::vector<RawCommand>& list) { nameSelfInTests(list, object.name); };
+			const auto own = [&](std::vector<RawCommand>& list) { nameSelfInTests(list); };
 			const auto commands = [&](std::vector<RawCommand>& list) { nameSelfIn(list, object.name); };
 			// A rule's test says self too, found as it is tested (Game::holds).
 			const auto check = [&](RawCondition& condition) { nameSelfInCheck(condition, "self"); };
@@ -843,15 +842,22 @@ namespace xge
 		}
 	}
 
-	void renameOwn(RawObject& object, const std::string& from, const std::string& to)
+	bool renameOwn(RawObject& object, const std::string& from, const std::string& to)
 	{
-		const auto value = [&](RawValue& each) { renameInValue(each, from, to); };
+		bool said = false;
+		const auto value = [&](RawValue& each) { said = renameInValue(each, from, to) || said; };
+		const auto exact = [&](std::string& each) { if (each == from) { each = to; said = true; } };
+		const auto start = [&](std::string& each)
+		{
+			std::string renamed = renameStart(each, from, to);
+			if (renamed != each) { each = std::move(renamed); said = true; }
+		};
 		const std::function<void(RawCondition&)> check = [&](RawCondition& condition)
 		{
 			for (RawCondition& part : condition.parts) { check(part); }
-			if (condition.filterObject == from) { condition.filterObject = to; }
-			if (condition.distance == from) { condition.distance = to; }
-			if (condition.sees == from) { condition.sees = to; }
+			exact(condition.filterObject);
+			exact(condition.distance);
+			exact(condition.sees);
 			value(condition.threshold);
 		};
 		std::function<void(std::vector<RawCommand>&)> commands = [&](std::vector<RawCommand>& list)
@@ -864,9 +870,9 @@ namespace xge
 					check(*command.test);
 					commands(command.test->commands);
 				}
-				if (command.verb == "trigger" && command.object == from) { command.object = to; }
-				command.variable = renameStart(command.variable, from, to);
-				command.into = renameStart(command.into, from, to);
+				if (command.verb == "trigger") { exact(command.object); }
+				start(command.variable);
+				start(command.into);
 				for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
 					&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.member })
 				{
@@ -886,6 +892,8 @@ namespace xge
 		for (auto& [name, each] : object.variable) { value(each); }
 		for (RawTextPiece& piece : object.sprite.text) { value(piece.value); }
 
+		// Whether what its kind holds (its rules and actions) named it.
+		said = false;
 		RawCollisionData& collisions = object.rawCollisionData;
 		for (auto& edge : collisions.edges)
 		{
@@ -897,12 +905,13 @@ namespace xge
 			commands(rule.commands);
 			if (rule.check.join != RawCondition::Join::None) { check(rule.check); }
 		}
+		for (auto& [actionName, list] : object.action) { commands(list); }
+		const bool kindNamedIt = said;
 		for (RawTimer& timer : object.timers)
 		{
 			value(timer.interval);
 			commands(timer.commands);
 		}
-		for (auto& [name, list] : object.action) { commands(list); }
 		const auto animation = [&](RawValue& interval, std::vector<RawValue>& times, std::vector<std::vector<RawCommand>>& frames, std::vector<RawCommand>& then)
 		{
 			value(interval);
@@ -912,6 +921,7 @@ namespace xge
 		};
 		animation(object.animation.interval, object.animation.times, object.animation.frameCommands, object.animation.thenCommands);
 		for (RawSprite& look : object.looks) { animation(look.interval, look.times, look.frameCommands, look.thenCommands); }
+		return kindNamedIt;
 	}
 
 	namespace

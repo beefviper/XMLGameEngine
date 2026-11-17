@@ -2710,6 +2710,10 @@ namespace xge
 			refuseReserved(name, "a group", where);
 
 			GroupShared own = outer;
+			// Its members are of one kind (Kind): their rules are written
+			// only here, so they are alike.
+			static int lastKind = 0;
+			own.object.kind = ++lastKind;
 
 			if (!group.getAttribute("char").empty() && !own.map)
 			{

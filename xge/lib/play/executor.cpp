@@ -90,7 +90,7 @@ namespace xge
 		if (!game.answersPicker(object)) { return; }
 		// from=: only while it shows that look.
 		if (!trigger->from.empty() && object.lookName() != trigger->from) { return; }
-		for (const auto& action : object.action[trigger->action])
+		for (const auto& action : object.kind->action[trigger->action])
 		{
 			const auto* along = std::get_if<CmdTrack>(&shapeOf(action));
 			if (!along) { continue; }
@@ -236,7 +236,7 @@ namespace xge
 		}
 
 		Object& object = game.getObject(trigger->object);
-		for (const auto& written : object.action[trigger->action])
+		for (const auto& written : object.kind->action[trigger->action])
 		{
 			Command madeNow;
 			const Command& actionCommand = now(written, madeNow, &object, nullptr);
@@ -297,7 +297,7 @@ namespace xge
 		// whole block sideways instead of just moving this one object.
 		// circleRectangleCollision never had lockstep behaviour, so that path
 		// (executeObjectCollision) always goes straight to bounceOffEdge.
-		if (object.collisionData.lockstep && (edge == Edge::Left || edge == Edge::Right))
+		if (object.kind->collisionData.lockstep && (edge == Edge::Left || edge == Edge::Right))
 		{
 			game.updateLockstepObjects(object);
 			return;
@@ -319,11 +319,11 @@ namespace xge
 			}
 		};
 
-		if (object.collisionData.lockstep > 0)
+		if (object.kind->collisionData.lockstep > 0)
 		{
 			for (auto& obj : game.getCurrentObjects())
 			{
-				if (obj.collisionData.lockstep == object.collisionData.lockstep)
+				if (obj.kind->collisionData.lockstep == object.kind->collisionData.lockstep)
 				{
 					apply(obj);
 				}
@@ -479,7 +479,7 @@ namespace xge
 		doer.pressed = keyPressed;
 		doer.byRule = byRule;
 		doer.action = &actionName;
-		for (const auto& written : object.action[actionName])
+		for (const auto& written : object.kind->action[actionName])
 		{
 			// Refused: what comes after it answers a press that did nothing.
 			if (!run(written, doer)) { return true; }

@@ -11,6 +11,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -197,4 +198,22 @@ TEST_CASE("only a piece of a cell map, a chain or a shape has a cell part", "[st
 	played::Played tetris("descriptions/tetris.xml");
 	CHECK(tetris.game.parts().cells.size() > 0);
 	CHECK(tetris.game.parts().cells.size() < tetris.game.getCurrentObjects().size());
+}
+
+TEST_CASE("the members of a group share one kind: its rules and actions are held once", "[store][kind]")
+{
+	played::Played invaders("descriptions/spaceinvaders.xml");
+	const Kind* aliens = nullptr;
+	std::size_t members = 0;
+	std::set<const Kind*> kinds;
+	for (const Object& object : invaders.game.getCurrentObjects())
+	{
+		kinds.insert(object.kind.get());
+		if (object.objClass != "aliens") { continue; }
+		++members;
+		if (!aliens) { aliens = object.kind.get(); }
+		CHECK(object.kind.get() == aliens);
+	}
+	CHECK(members == 55);
+	CHECK(kinds.size() < invaders.game.getCurrentObjects().size() - 50);
 }

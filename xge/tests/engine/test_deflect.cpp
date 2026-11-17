@@ -111,7 +111,7 @@ TEST_CASE("Pong's ball deflects off the paddles at up to 45 degrees", "[deflect]
 	Pong pong;
 
 	// The first of its two rules about a paddle; the second makes it faster.
-	const auto& rules = pong.ball.collisionData.others;
+	const auto& rules = pong.ball.kind->collisionData.others;
 	REQUIRE(rules.size() == 2);
 	CHECK(rules[0].filterClass == "paddle");
 	REQUIRE(std::holds_alternative<CmdDeflect>(rules[0].commands.at(0)));

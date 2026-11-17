@@ -1235,7 +1235,7 @@ namespace xge
 	// the one under it (`below`; none for the first on an empty holder).
 	bool Game::acceptsBy(const std::vector<HolderRule::VarRule>& rules, const Object& next, const Object* below, const std::string& called, float value)
 	{
-		using Kind = HolderRule::VarRule::Kind;
+		using Rule = HolderRule::VarRule::Kind;
 		const auto valueOf = [](const Object& of, const std::string& name)
 		{
 			const auto found = of.variable.find(name);
@@ -1243,7 +1243,7 @@ namespace xge
 		};
 		for (const HolderRule::VarRule& each : rules)
 		{
-			if (each.kind == Kind::Total) { continue; }   // what is laid together, added up (holderTakes)
+			if (each.kind == Rule::Total) { continue; }   // what is laid together, added up (holderTakes)
 			const float mine = valueOf(next, each.variable);
 			const std::string& named = each.topVariable.empty() ? each.variable : each.topVariable;
 			const float theirs = !below ? 0.0f : value > 0.0f && named == called ? value : valueOf(*below, named);
@@ -1251,13 +1251,13 @@ namespace xge
 			bool holds = true;
 			switch (each.kind)
 			{
-			case Kind::Equal: holds = mine == against; break;
-			case Kind::Unequal: holds = mine != against; break;
-			case Kind::Above: holds = mine > against; break;
-			case Kind::Below: holds = mine < against; break;
-			case Kind::AtLeast: holds = mine >= against; break;
-			case Kind::AtMost: holds = mine <= against; break;
-			case Kind::Total: break;
+			case Rule::Equal: holds = mine == against; break;
+			case Rule::Unequal: holds = mine != against; break;
+			case Rule::Above: holds = mine > against; break;
+			case Rule::Below: holds = mine < against; break;
+			case Rule::AtLeast: holds = mine >= against; break;
+			case Rule::AtMost: holds = mine <= against; break;
+			case Rule::Total: break;
 			}
 			if (!holds) { return false; }
 		}

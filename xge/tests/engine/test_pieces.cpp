@@ -93,7 +93,7 @@ TEST_CASE("a take changes its piece: sprites by name, whole; variables one by on
 	CHECK(gold.variable.at("worth") == Approx(50));
 	CHECK(gold.variable.at("shine") == Approx(1));
 	CHECK(gold.collisionsOn);
-	CHECK(gold.collisionData.others.size() == 2); // its rule after the piece's
+	CHECK(gold.kind->collisionData.others.size() == 2); // its rule after the piece's
 }
 
 TEST_CASE("a take of a <waiting /> piece waits too, and one that says <ready /> is in play: either written replaces the other", "[pieces]")

@@ -185,6 +185,10 @@ namespace xge
 		// command of theirs that says self is made as it runs (CmdLive), for
 		// the object running it; the one made at load is about this one.
 		std::string selfName;
+
+		// Once loaded and checked: the objects of one kind share the first's
+		// Kind (see Kind).
+		void shareKinds(std::vector<Object>& objects);
 		// The same for other, in a rule about touching something: the
 		// object a command saying other is made for at load.
 		std::string otherName;

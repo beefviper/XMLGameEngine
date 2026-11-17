@@ -182,7 +182,22 @@ namespace xge
 		makePalettes(rawObjects, objects, checkReferences(*parts, states, objects, sounds, paths, styles));
 		for (Object& object : objects)
 		{
-			for (CollisionRule& rule : object.collisionData.others) { std::vector<std::vector<Command>>().swap(rule.loadChecks); }
+			for (CollisionRule& rule : object.kind->collisionData.others) { std::vector<std::vector<Command>>().swap(rule.loadChecks); }
+		}
+		shareKinds(objects);
+	}
+
+	void game_expr::shareKinds(std::vector<Object>& objects)
+	{
+		// Each was made and checked for itself; from here the first of its
+		// kind's is every one's.
+		std::map<int, std::shared_ptr<Kind>> first;
+		for (Object& object : objects)
+		{
+			const int written = object.kind->written;
+			if (written == 0) { continue; }
+			const auto [found, fresh] = first.emplace(written, object.kind);
+			if (!fresh) { object.kind = found->second; }
 		}
 	}
 
@@ -422,7 +437,7 @@ namespace xge
 					otherName = was;
 				}
 				const std::string was = std::exchange(otherName, rule.touchable.empty() ? std::string() : rule.touchable.front());
-				object->collisionData.others[i].check = makeTest(check, where, where, objects);
+				object->kind->collisionData.others[i].check = makeTest(check, where, where, objects);
 				otherName = was;
 			}
 			for (std::size_t edge = 0; edge < rawObject.rawCollisionData.edges.size(); ++edge)
@@ -432,7 +447,7 @@ namespace xge
 				{
 					if (guards[g].rawCheck.join != RawCondition::Join::None)
 					{
-						object->collisionData.edges[edge].guards[g].check = makeTest(guards[g].rawCheck, where, where, objects);
+						object->kind->collisionData.edges[edge].guards[g].check = makeTest(guards[g].rawCheck, where, where, objects);
 					}
 				}
 			}
@@ -447,7 +462,7 @@ namespace xge
 					tests(when->body->commands, here + " > <condition>");
 				}
 			};
-			for (auto& [name, list] : object->action) { tests(list, "object '" + rawObject.name + "' > <action name=\"" + name + "\">"); }
+			for (auto& [name, list] : object->kind->action) { tests(list, "object '" + rawObject.name + "' > <action name=\"" + name + "\">"); }
 		}
 	}
 
@@ -675,7 +690,7 @@ namespace xge
 		if (!from.looks.all.empty()) { first.looks = &from.looks.all; }
 
 		// Its palettes too, wearing the one `from` is (its looks are those).
-		Object made = makeObject(raw, first, from.layout.cellOffset, from.collisionData.lockstep);
+		Object made = makeObject(raw, first, from.layout.cellOffset, from.kind->collisionData.lockstep);
 		made.looks.palettes = from.looks.palettes;
 		made.looks.worn = from.looks.worn;
 		if (made.mirror.on) { made.mirror.flips = from.mirror.flips; }
@@ -781,7 +796,7 @@ namespace xge
 	// A <hitbox> worked out for `object` (its picture already made).
 	Hitbox game_expr::makeHitbox(const RawHitbox& raw, const Object& object, const std::string& where)
 	{
-		if (object.collisionData.type == CollisionType::Pixel)
+		if (object.kind->collisionData.type == CollisionType::Pixel)
 		{
 			throw std::runtime_error(where + ": a <hitbox> is touched as its own shape, not by the pixels of the picture; it cannot go with <type>pixel</type>");
 		}

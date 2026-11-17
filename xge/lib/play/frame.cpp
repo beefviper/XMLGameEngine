@@ -80,7 +80,7 @@ namespace xge
 		{
 			if (!a.collisionsOn || !b.collisionsOn) { return false; }
 			if (a.isAirborne() || b.isAirborne()) { return false; }
-			return a.collisionData.lockstep == 0 || a.collisionData.lockstep != b.collisionData.lockstep;
+			return a.kind->collisionData.lockstep == 0 || a.kind->collisionData.lockstep != b.kind->collisionData.lockstep;
 		}
 
 		// Climbing (a <climb> in an action, held): an object at a ladder - an
@@ -101,7 +101,7 @@ namespace xge
 		// ladder can come up through a hole between two pieces of ground.
 		bool floorAt(const std::vector<Object>& objects, const Object& climber, float feet, FrameRules& rules)
 		{
-			for (const auto& rule : climber.collisionData.others)
+			for (const auto& rule : climber.kind->collisionData.others)
 			{
 				if (std::none_of(rule.commands.begin(), rule.commands.end(), [](const Command& command) { return std::holds_alternative<CmdLand>(shapeOf(command)); }))
 				{
@@ -893,7 +893,7 @@ namespace xge
 					if (!playing[i] || !sweptAtEdges(all[i])) { continue; }
 					for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
 					{
-						if (!all[i].collisionData.edges[edgeIndex(edge)].commands.empty())
+						if (!all[i].kind->collisionData.edges[edgeIndex(edge)].commands.empty())
 						{
 							found.push_back({ &all[i], nullptr, i, all.size() + edgeIndex(edge), false, edge });
 						}

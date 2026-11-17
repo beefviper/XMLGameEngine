@@ -67,7 +67,7 @@ namespace
 		object.size = { static_cast<float>(object.drawn.bitmap->width), static_cast<float>(object.drawn.bitmap->height) };
 		object.position = { x, y };
 		object.collisionsOn = true;
-		object.collisionData.type = type;
+		object.kind->collisionData.type = type;
 		return object;
 	}
 
@@ -407,7 +407,7 @@ TEST_CASE("a sprite of lines is drawn when the game loads and has the size of it
 	CHECK(hut.drawn.bitmap->width == 22);
 	CHECK(hut.drawn.bitmap->height == 12);
 	CHECK(hut.drawn.picture.size == Vector2f{ 22.0f, 12.0f });
-	CHECK(hut.collisionData.type == CollisionType::Pixel);
+	CHECK(hut.kind->collisionData.type == CollisionType::Pixel);
 
 	// Known without a window, like a circle's or a rectangle's.
 	const Vector2f size = measureShapeSize(hut.drawn.picture);
@@ -500,11 +500,11 @@ TEST_CASE("type is box when it is left out, and a circle or rectangle can be pix
 	const std::string circle = "<circle><radius>4</radius></circle>";
 
 	Loaded plain{ gameXml(objectWith(circle), "<show object=\"thing\" />") };
-	CHECK(plain.game.getObject("thing").collisionData.type == CollisionType::Box);
+	CHECK(plain.game.getObject("thing").kind->collisionData.type == CollisionType::Box);
 	CHECK_FALSE(plain.game.getObject("thing").drawn.bitmap);
 
 	Loaded pixel{ gameXml(objectWith(circle, "<type>pixel</type>"), "<show object=\"thing\" />") };
-	CHECK(pixel.game.getObject("thing").collisionData.type == CollisionType::Pixel);
+	CHECK(pixel.game.getObject("thing").kind->collisionData.type == CollisionType::Pixel);
 }
 
 // ------------------------------------------- verbs and filters for landing
@@ -727,22 +727,22 @@ TEST_CASE("the new tags read back the way they were written", "[rules][xml]")
 	Flight flight;
 	const Object& ship = flight.ship();
 
-	REQUIRE(ship.collisionData.others.size() == 2);
-	CHECK(ship.collisionData.others[0].check);
-	CHECK(ship.collisionData.others[1].check);
+	REQUIRE(ship.kind->collisionData.others.size() == 2);
+	CHECK(ship.kind->collisionData.others[0].check);
+	CHECK(ship.kind->collisionData.others[1].check);
 
-	REQUIRE(ship.action.at("burn").size() == 1);
-	const auto* burn = std::get_if<CmdThrustAcross>(&ship.action.at("burn")[0]);
+	REQUIRE(ship.kind->action.at("burn").size() == 1);
+	const auto* burn = std::get_if<CmdThrustAcross>(&ship.kind->action.at("burn")[0]);
 	REQUIRE(burn);
 	CHECK(burn->direction == Direction::Up);
 	CHECK(burn->amount == 5400.0f);
 	CHECK(burn->burn == "fuel");
 
-	const auto* free = std::get_if<CmdThrustAcross>(&ship.action.at("free")[0]);
+	const auto* free = std::get_if<CmdThrustAcross>(&ship.kind->action.at("free")[0]);
 	REQUIRE(free);
 	CHECK(free->burn.empty());
 
-	REQUIRE(std::holds_alternative<CmdStop>(ship.collisionData.others[0].commands.back()));
+	REQUIRE(std::holds_alternative<CmdStop>(ship.kind->collisionData.others[0].commands.back()));
 }
 
 // ------------------------------------------------------------------ schema

@@ -48,7 +48,7 @@ namespace xge
 		if (trigger.place.any())
 		{
 			// About the cells round it: some piece of the class has the action.
-			const bool any = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.objClass == trigger.objClass && object.action.count(trigger.action); });
+			const bool any = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.objClass == trigger.objClass && object.kind->action.count(trigger.action); });
 			if (!any) { throw std::runtime_error(checking.where + ": <trigger action=\"" + trigger.action + "\" class=\"" + trigger.objClass + "\">: no object of that class has an action of that name"); }
 			return;
 		}
@@ -61,10 +61,10 @@ namespace xge
 		{
 			throw std::runtime_error(checking.where + ": an action of '" + trigger.object + "' is asked for, and there is no object of that name" + didYouMean(trigger.object, objectNames(objects)));
 		}
-		if (!object->action.count(trigger.action))
+		if (!object->kind->action.count(trigger.action))
 		{
 			std::vector<std::string> names;
-			for (const auto& entry : object->action) { names.push_back(entry.first); }
+			for (const auto& entry : object->kind->action) { names.push_back(entry.first); }
 			throw std::runtime_error(checking.where + ": '" + trigger.object + "' has no action named '" + trigger.action + "'" + didYouMean(trigger.action, names)
 				+ (names.empty() ? std::string(" (it has no <actions>)") : "; its actions are: " + listOf(names)));
 		}

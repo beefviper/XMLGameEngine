@@ -482,12 +482,12 @@ namespace xge
 		addBool(collision, tr("enabled"),
 			[object]() { return object().collisionsOn ? 1.0 : 0.0; },
 			[object](double value) { object().collisionsOn = value != 0; });
-		addInfo(collision, tr("type"), first.collisionData.type == CollisionType::Pixel ? tr("pixel") : tr("box"));
-		addInfo(collision, tr("rules about other objects"), QString::number(first.collisionData.others.size()));
-		addInfo(collision, tr("top"), commandsText(first.collisionData.edges[edgeIndex(Edge::Top)].commands));
-		addInfo(collision, tr("bottom"), commandsText(first.collisionData.edges[edgeIndex(Edge::Bottom)].commands));
-		addInfo(collision, tr("left"), commandsText(first.collisionData.edges[edgeIndex(Edge::Left)].commands));
-		addInfo(collision, tr("right"), commandsText(first.collisionData.edges[edgeIndex(Edge::Right)].commands));
+		addInfo(collision, tr("type"), first.kind->collisionData.type == CollisionType::Pixel ? tr("pixel") : tr("box"));
+		addInfo(collision, tr("rules about other objects"), QString::number(first.kind->collisionData.others.size()));
+		addInfo(collision, tr("top"), commandsText(first.kind->collisionData.edges[edgeIndex(Edge::Top)].commands));
+		addInfo(collision, tr("bottom"), commandsText(first.kind->collisionData.edges[edgeIndex(Edge::Bottom)].commands));
+		addInfo(collision, tr("left"), commandsText(first.kind->collisionData.edges[edgeIndex(Edge::Left)].commands));
+		addInfo(collision, tr("right"), commandsText(first.kind->collisionData.edges[edgeIndex(Edge::Right)].commands));
 
 		if (!first.variable.empty())
 		{
@@ -502,10 +502,10 @@ namespace xge
 			}
 		}
 
-		if (!first.action.empty())
+		if (!first.kind->action.empty())
 		{
-			auto* actions = addNode(node, tr("actions"), tr("%1").arg(first.action.size()));
-			for (const auto& entry : first.action)
+			auto* actions = addNode(node, tr("actions"), tr("%1").arg(first.kind->action.size()));
+			for (const auto& entry : first.kind->action)
 			{
 				addInfo(actions, text(entry.first), commandsText(entry.second));
 			}

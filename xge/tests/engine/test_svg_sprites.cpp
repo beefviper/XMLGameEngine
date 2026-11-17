@@ -594,7 +594,7 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 
 	// One block: one lockstep number.
 	std::set<int> lockstep;
-	for (const Object* alien : aliensOf(game)) { lockstep.insert(alien->collisionData.lockstep); }
+	for (const Object* alien : aliensOf(game)) { lockstep.insert(alien->kind->collisionData.lockstep); }
 	CHECK(lockstep.size() == 1);
 	CHECK(*lockstep.begin() > 0);
 

@@ -149,8 +149,8 @@ namespace xge
 			}
 			const Object* object = findObject(objects, objectName);
 			if (!object) { return; }
-			const auto found = object->action.find(actionName);
-			if (found == object->action.end()) { return; }
+			const auto found = object->kind->action.find(actionName);
+			if (found == object->kind->action.end()) { return; }
 
 			path.push_back(step);
 			for (const Command& command : found->second)
@@ -402,9 +402,9 @@ namespace xge
 				visit(look.then, &object);
 				for (const auto& frame : look.frameCommands) { visit(frame, &object); }
 			}
-			for (const auto& [name, commands] : object.action) { visit(commands, &object); }
-			for (const auto& rule : object.collisionData.others) { visit(rule.commands, &object); }
-			for (const auto& edgeRules : object.collisionData.edges)
+			for (const auto& [name, commands] : object.kind->action) { visit(commands, &object); }
+			for (const auto& rule : object.kind->collisionData.others) { visit(rule.commands, &object); }
+			for (const auto& edgeRules : object.kind->collisionData.edges)
 			{
 				visit(edgeRules.commands, &object);
 			}
@@ -512,7 +512,7 @@ namespace xge
 			{
 				onLine(object.line, [&]
 				{
-					for (const CollisionRule& rule : object.collisionData.others)
+					for (const CollisionRule& rule : object.kind->collisionData.others)
 					{
 						onLine(rule.line, [&]
 						{
@@ -528,7 +528,7 @@ namespace xge
 							}
 						});
 					}
-					for (const auto& edge : object.collisionData.edges)
+					for (const auto& edge : object.kind->collisionData.edges)
 					{
 						for (const EdgeGuard& guard : edge.guards) { checkClass(object, "collision", "unless", guard.unlessClass); }
 					}
@@ -831,12 +831,12 @@ namespace xge
 				checkWalks(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>");
 				for (const auto& frame : look.frameCommands) { checkWalks(frame, where + " > <animation name=\"" + look.name + "\"> > <frame>"); }
 			}
-			for (const auto& [name, commands] : object.action) { checkWalks(commands, where + " > <action name=\"" + name + "\">"); }
-			for (const auto& rule : object.collisionData.others) { onLine(rule.line, [&] { checkWalks(rule.commands, where + " > <collision>"); }); }
+			for (const auto& [name, commands] : object.kind->action) { checkWalks(commands, where + " > <action name=\"" + name + "\">"); }
+			for (const auto& rule : object.kind->collisionData.others) { onLine(rule.line, [&] { checkWalks(rule.commands, where + " > <collision>"); }); }
 
 			// A hole is cut in a picture that stays as it is: one of
 			// <line>s or a <bitmap>, not turned, animated or swapped.
-			for (const auto& rule : object.collisionData.others)
+			for (const auto& rule : object.kind->collisionData.others)
 			{
 				onLine(rule.line, [&]
 				{
@@ -850,7 +850,7 @@ namespace xge
 					}
 				});
 			}
-			for (const auto& edgeRules : object.collisionData.edges)
+			for (const auto& edgeRules : object.kind->collisionData.edges)
 			{
 				checkWalks(edgeRules.commands, where + " > <collision edge>");
 			}
@@ -876,7 +876,7 @@ namespace xge
 					throw std::runtime_error(where + ": action '" + name + "' has a <jump>, and nothing pulls the object down to come back:"
 						" give it an <acceleration> with a <y> above 0, and a <collision> with <land /> to stand on");
 				}
-				if (std::holds_alternative<CmdJump>(shapeOf(command)) && std::none_of(object.collisionData.others.begin(), object.collisionData.others.end(),
+				if (std::holds_alternative<CmdJump>(shapeOf(command)) && std::none_of(object.kind->collisionData.others.begin(), object.kind->collisionData.others.end(),
 					[](const CollisionRule& rule) { return std::any_of(rule.commands.begin(), rule.commands.end(), [](const Command& c) { return std::holds_alternative<CmdLand>(shapeOf(c)); }); }))
 				{
 					throw std::runtime_error(where + ": action '" + name + "' has a <jump>, and the object never stands on anything to jump from:"
@@ -927,13 +927,13 @@ namespace xge
 						checkThen(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>");
 						for (const auto& frame : look.frameCommands) { checkThen(frame, where + " > <animation name=\"" + look.name + "\"> > <frame>"); }
 					}
-					for (const auto& [name, commands] : object.action) { checks.ownLooks(commands, &object, where); }
-					for (const auto& rule : object.collisionData.others) { onLine(rule.line, [&] { checks.ownLooks(rule.commands, &object, where); }); }
-					for (const auto& edgeRules : object.collisionData.edges)
+					for (const auto& [name, commands] : object.kind->action) { checks.ownLooks(commands, &object, where); }
+					for (const auto& rule : object.kind->collisionData.others) { onLine(rule.line, [&] { checks.ownLooks(rule.commands, &object, where); }); }
+					for (const auto& edgeRules : object.kind->collisionData.edges)
 					{
 						checks.ownLooks(edgeRules.commands, &object, where);
 					}
-					for (const auto& [name, commands] : object.action)
+					for (const auto& [name, commands] : object.kind->action)
 					{
 						checks.all(commands, where);
 						checkPlace(commands, Place::Action, where + " > <action name=\"" + name + "\">");
@@ -942,7 +942,7 @@ namespace xge
 
 						checkActionMoves(object, objects, checks.parts, name, commands, where);
 					}
-					for (const auto& rule : object.collisionData.others)
+					for (const auto& rule : object.kind->collisionData.others)
 					{
 						onLine(rule.line, [&]
 						{
@@ -951,7 +951,7 @@ namespace xge
 							checkPlace(rule.commands, Place::Touch, where + " > <collision>");
 						});
 					}
-					for (const auto& edgeRules : object.collisionData.edges)
+					for (const auto& edgeRules : object.kind->collisionData.edges)
 					{
 						checks.all(edgeRules.commands, where);
 						checkPlace(edgeRules.commands, Place::Edge, where + " > <collision edge>");

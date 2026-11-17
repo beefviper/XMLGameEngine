@@ -139,8 +139,8 @@ TEST_CASE("a group is read as one object for each member", "[group]")
 		CHECK(object.objClass == "logs");
 		CHECK(object.groupName == "lane");
 		CHECK(object.collisionsOn);
-		CHECK(object.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
-		CHECK(object.collisionData.edges[edgeIndex(Edge::Right)].commands.size() == 1);
+		CHECK(object.kind->collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
+		CHECK(object.kind->collisionData.edges[edgeIndex(Edge::Right)].commands.size() == 1);
 		CHECK(object.variable.at("weight") == 3.0f);
 	}
 }
@@ -260,8 +260,8 @@ TEST_CASE("a group can share actions with every member", "[group]")
 		"<member name=\"a\" /><member name=\"b\" />");
 	Loaded loaded{ gameXml(lane) };
 
-	CHECK(loaded.game.getObject("a").action.count("up") == 1);
-	CHECK(loaded.game.getObject("b").action.count("up") == 1);
+	CHECK(loaded.game.getObject("a").kind->action.count("up") == 1);
+	CHECK(loaded.game.getObject("b").kind->action.count("up") == 1);
 }
 
 TEST_CASE("members of a group with lockstep move as one block", "[group][lockstep]")
@@ -278,11 +278,11 @@ TEST_CASE("members of a group with lockstep move as one block", "[group][lockste
 	Loaded loaded{ gameXml(lane("a", "<lockstep />") + lane("b", "<lockstep />")
 		+ lane("c", "") + plainLockstep, "<show object=\"a\" />") };
 
-	const int a1 = loaded.game.getObject("a.1").collisionData.lockstep;
-	const int a2 = loaded.game.getObject("a.2").collisionData.lockstep;
-	const int b1 = loaded.game.getObject("b.1").collisionData.lockstep;
-	const int b2 = loaded.game.getObject("b.2").collisionData.lockstep;
-	const int alone = loaded.game.getObject("alone").collisionData.lockstep;
+	const int a1 = loaded.game.getObject("a.1").kind->collisionData.lockstep;
+	const int a2 = loaded.game.getObject("a.2").kind->collisionData.lockstep;
+	const int b1 = loaded.game.getObject("b.1").kind->collisionData.lockstep;
+	const int b2 = loaded.game.getObject("b.2").kind->collisionData.lockstep;
+	const int alone = loaded.game.getObject("alone").kind->collisionData.lockstep;
 
 	// One number for each block, nothing shared between blocks, none for a
 	// group that did not ask.
@@ -294,8 +294,8 @@ TEST_CASE("members of a group with lockstep move as one block", "[group][lockste
 	CHECK(alone > 0);
 	CHECK(alone != a1);
 	CHECK(alone != b1);
-	CHECK(loaded.game.getObject("c.1").collisionData.lockstep == 0);
-	CHECK(loaded.game.getObject("c.2").collisionData.lockstep == 0);
+	CHECK(loaded.game.getObject("c.1").kind->collisionData.lockstep == 0);
+	CHECK(loaded.game.getObject("c.2").kind->collisionData.lockstep == 0);
 }
 
 TEST_CASE("a group or member that is incomplete says where", "[group][errors]")
@@ -637,15 +637,15 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(measureShapeSize(slow.drawn.picture).x == 30.0f);
 	CHECK(slow.drawn.picture.color == "color.red");
 	CHECK(slow.collisionsOn);
-	CHECK(slow.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
-	CHECK(slow.collisionData.others.empty());
+	CHECK(slow.kind->collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
+	CHECK(slow.kind->collisionData.others.empty());
 	CHECK(slow.variable.at("weight") == 3.0f);
 
 	// The inner group's rules and variables add to the outer's, its class replaces it.
 	const Object& fast = game.getObject("fast.1");
 	CHECK(fast.objClass == "hazard");
-	CHECK(fast.collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
-	CHECK(fast.collisionData.others.size() == 1);
+	CHECK(fast.kind->collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
+	CHECK(fast.kind->collisionData.others.size() == 1);
 	CHECK(fast.variable.at("weight") == 5.0f);
 	CHECK(fast.velocity.x == -180.0f);
 
@@ -712,9 +712,9 @@ TEST_CASE("groups inside a group can each be laid out in cells from the outer's 
 	CHECK(game.getObject("block.1.1").collisionsOn);
 
 	// Only the inner group with lockstep moves as one block.
-	CHECK(game.getObject("block.1.1").collisionData.lockstep != 0);
-	CHECK(game.getObject("block.1.1").collisionData.lockstep == game.getObject("block.3.2").collisionData.lockstep);
-	CHECK(game.getObject("top.1.1").collisionData.lockstep == 0);
+	CHECK(game.getObject("block.1.1").kind->collisionData.lockstep != 0);
+	CHECK(game.getObject("block.1.1").kind->collisionData.lockstep == game.getObject("block.3.2").kind->collisionData.lockstep);
+	CHECK(game.getObject("top.1.1").kind->collisionData.lockstep == 0);
 }
 
 TEST_CASE("a group with groups inside it has no members of its own", "[group][nested][errors]")
