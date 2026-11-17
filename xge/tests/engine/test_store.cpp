@@ -200,6 +200,23 @@ TEST_CASE("only a piece of a cell map, a chain or a shape has a cell part", "[st
 	CHECK(tetris.game.parts().cells.size() < tetris.game.getCurrentObjects().size());
 }
 
+TEST_CASE("board moves, a swing and a light's pasts are parts of only the objects that have them", "[store]")
+{
+	{
+		played::Played pong("descriptions/pong.xml");
+		CHECK(pong.game.parts().moves.size() == 0);
+		CHECK(pong.game.parts().swings.size() == 0);
+		CHECK(pong.game.parts().lightPasts.size() == 0);
+	}
+	{
+		played::Played checkers("descriptions/checkers.xml");
+		CHECK(checkers.game.parts().moves.size() > 0);
+		CHECK(checkers.game.parts().moves.size() < checkers.game.getCurrentObjects().size());
+	}
+	played::Played hauntedhouse("descriptions/hauntedhouse.xml");
+	CHECK(hauntedhouse.game.parts().lightPasts.size() > 0);
+}
+
 TEST_CASE("the members of a group share one kind: its rules and actions are held once", "[store][kind]")
 {
 	played::Played invaders("descriptions/spaceinvaders.xml");

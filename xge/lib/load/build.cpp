@@ -335,7 +335,7 @@ namespace xge
 			object.light = evaluate(rawObject.rawLight, where + " > <light>");
 			if (object.light < 0.0f) { throw std::runtime_error(where + ": <light> reaches " + formatDisplayNumber(object.light) + " pixels; expected 0 or more"); }
 			object.start.light = object.light;
-			object.lightPast = rawObject.lightPast;
+			if (!rawObject.lightPast.empty()) { parts->lightPasts.add(object.id, parts->orderOf(object.id), { rawObject.lightPast }); }
 		}
 		if (rawObject.dark == "unlit") { object.dark.kind = Object::Darkness::Unlit; }
 		else if (rawObject.dark == "unseen") { object.dark.kind = Object::Darkness::Unseen; }
@@ -513,7 +513,7 @@ namespace xge
 			set.on = rawSet.on;
 			set.closeClass = rawSet.closeClass;
 			set.closeObject = rawSet.closeObject;
-			object.moves.sets.push_back(std::move(set));
+			parts->give(parts->moves, object.id).sets.push_back(std::move(set));
 		}
 		for (const RawObject::RawMarkSet& rawSet : rawObject.markSets)
 		{

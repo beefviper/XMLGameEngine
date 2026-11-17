@@ -200,6 +200,15 @@ namespace xge
 			return found ? *found : none;
 		}
 
+		// Its board-game moves (Object::Moves): none for one with no
+		// <moves>, given at load.
+		const Object::Moves& pieceMoves(const Object& object) const noexcept
+		{
+			static const Object::Moves none{};
+			const Object::Moves* found = objectParts.moves.find(object.id);
+			return found ? *found : none;
+		}
+
 		// Its picker part (Object::Picker): what it holds, where its last
 		// move went, its marks; an empty part for one with none. pickerFor
 		// gives it one.

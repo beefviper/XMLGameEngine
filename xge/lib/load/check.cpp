@@ -479,7 +479,7 @@ namespace xge
 		// some object has (a piece only ever spawned counts: it is among the
 		// objects, not yet in play), and its object= an object or a group.
 		// A misspelt one would never match and the rule would never run.
-		void checkRuleNames(const std::vector<Object>& objects)
+		void checkRuleNames(const Parts& parts, const std::vector<Object>& objects)
 		{
 			std::set<std::string> classSet;
 			for (const Object& object : objects)
@@ -532,7 +532,10 @@ namespace xge
 					{
 						for (const EdgeGuard& guard : edge.guards) { checkClass(object, "collision", "unless", guard.unlessClass); }
 					}
-					for (const std::string& past : object.lightPast) { checkClass(object, "light > <past", "class", past); }
+					if (const Object::LightPast* past = parts.lightPasts.find(object.id))
+					{
+						for (const std::string& each : past->classes) { checkClass(object, "light > <past", "class", each); }
+					}
 				});
 			}
 		}
@@ -966,7 +969,7 @@ namespace xge
 	{
 		WantedPalettes wanted;
 		checkObjectNames(parts, objects);
-		checkRuleNames(objects);
+		checkRuleNames(parts, objects);
 		checkHeldVariables(parts, objects);
 		checkStateNames(states, objects, sounds);
 		const CommandChecks checks{ states, objects, sounds, paths, styles, wanted, parts };

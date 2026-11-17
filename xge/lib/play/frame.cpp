@@ -429,16 +429,16 @@ namespace xge
 					// (moveObjects), and what it strikes on the way takes its
 					// speed there (velocityAt).
 					object.turning.spin = 0.0f;
-					if (object.swing.seconds > 0.0f)
+					if (Object::Swing* swing = rules.parts().swings.find(object.id); swing && swing->seconds > 0.0f)
 					{
-						const float stroke = seconds / object.swing.seconds;
-						const float done = std::clamp(object.swing.done + (object.swing.held ? stroke : -stroke), 0.0f, 1.0f);
-						if (done != object.swing.done)
+						const float stroke = seconds / swing->seconds;
+						const float done = std::clamp(swing->done + (swing->held ? stroke : -stroke), 0.0f, 1.0f);
+						if (done != swing->done)
 						{
-							object.swing.done = done;
+							swing->done = done;
 							const float pi = 3.14159265358979323846f;
 							const float eased = (1.0f - std::cos(pi * done)) / 2.0f;
-							float now = std::fmod(object.start.heading + object.swing.by * eased, 360.0f);
+							float now = std::fmod(object.start.heading + swing->by * eased, 360.0f);
 							if (now < 0.0f) { now += 360.0f; }
 							object.turning.spin = turnBetween(object.heading, now);
 							object.turning.spinOver = t;
@@ -693,6 +693,8 @@ namespace xge
 				const Object* object;
 				Vector2f middle;
 				float reach;
+				// The classes it does not shine through (null: none).
+				const Object::LightPast* past;
 				// What it does not shine through, in play and in reach, with boxes.
 				std::vector<std::pair<const Object*, Box>> blockers;
 			};
@@ -703,7 +705,7 @@ namespace xge
 				anyDark = anyDark || object.dark.kind != Object::Darkness::None;
 				if (object.light > 0.0f && rules.inPlay(object))
 				{
-					lights.push_back({ &object, object.position + sizeOf(object) * 0.5f, object.light, {} });
+					lights.push_back({ &object, object.position + sizeOf(object) * 0.5f, object.light, rules.parts().lightPasts.find(object.id), {} });
 				}
 			}
 			if (!anyDark) { return; }
@@ -712,14 +714,14 @@ namespace xge
 			// <past> classes in play within its reach.
 			for (Light& light : lights)
 			{
-				if (light.object->lightPast.empty()) { continue; }
+				if (!light.past) { continue; }
 				const Box reach{ light.middle - Vector2f{ light.reach, light.reach }, Vector2f{ light.reach, light.reach } * 2.0f };
 				for (const Object& other : objects)
 				{
 					if (&other == light.object) { continue; }
 					const Box box{ other.position, sizeOf(other) };
 					if (!boxesMeet(reach, box) || !rules.inPlay(other)) { continue; }
-					if (std::find(light.object->lightPast.begin(), light.object->lightPast.end(), other.objClass) == light.object->lightPast.end()) { continue; }
+					if (std::find(light.past->classes.begin(), light.past->classes.end(), other.objClass) == light.past->classes.end()) { continue; }
 					light.blockers.emplace_back(&other, box);
 				}
 			}
@@ -746,7 +748,7 @@ namespace xge
 						const float x = std::clamp(light.middle.x, object.position.x, object.position.x + size.x);
 						const float y = std::clamp(light.middle.y, object.position.y, object.position.y + size.y);
 						if ((x - light.middle.x) * (x - light.middle.x) + (y - light.middle.y) * (y - light.middle.y) > light.reach * light.reach) { return false; }
-						if (light.object->lightPast.empty()) { return true; }
+						if (!light.past) { return true; }
 						// Its nearest part, a pixel in toward its middle, so a
 						// neighbour it only touches does not stand in the way.
 						const Vector2f middle = object.position + size * 0.5f;

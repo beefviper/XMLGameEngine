@@ -112,7 +112,7 @@ namespace
 			float total = 0.0f;
 			for (const Object& object : game.getCurrentObjects())
 			{
-				if (object.exists && object.isVisible && object.objClass == side) { total += object.moves.count; }
+				if (object.exists && object.isVisible && object.objClass == side) { total += game.pieceMoves(object).count; }
 			}
 			return total;
 		}
@@ -133,9 +133,9 @@ TEST_CASE("checkers.xml: the board is set, red to move, the cursor over red's me
 	// Only the front row can move: one way from the edge, two from the others.
 	CHECK(board.sum("red") == 7.0f);
 	CHECK(board.sum("white") == 7.0f);
-	CHECK(board.at("red", 1, 6)->moves.count == 1.0f);
-	CHECK(board.at("red", 3, 6)->moves.count == 2.0f);
-	CHECK(board.at("red", 2, 7)->moves.count == 0.0f);
+	CHECK(board.game.pieceMoves(*board.at("red", 1, 6)).count == 1.0f);
+	CHECK(board.game.pieceMoves(*board.at("red", 3, 6)).count == 2.0f);
+	CHECK(board.game.pieceMoves(*board.at("red", 2, 7)).count == 0.0f);
 }
 
 TEST_CASE("checkers.xml: a man steps forward on a slant, and the turn passes", "[checkers]")
@@ -240,7 +240,7 @@ TEST_CASE("checkers.xml: a man on the far row is crowned, and a king goes backwa
 	Object* king = board.at("red", 4, 1);
 	REQUIRE(king);
 	CHECK(king->lookName() == "king");
-	CHECK(king->moves.count == 2.0f);
+	CHECK(board.game.pieceMoves(*king).count == 2.0f);
 
 	// White's turn, then the king steps back down.
 	board.space(1, 6);

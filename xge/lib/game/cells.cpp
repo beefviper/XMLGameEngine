@@ -942,7 +942,7 @@ namespace xge
 	const Object::MoveSet* Game::moveSetOf(const Object& piece) const noexcept
 	{
 		const Object::MoveSet* any = nullptr;
-		for (const Object::MoveSet& set : piece.moves.sets)
+		for (const Object::MoveSet& set : pieceMoves(piece).sets)
 		{
 			if (set.look && *set.look == piece.looks.shown) { return &set; }
 			if (!set.look && !any) { any = &set; }
@@ -985,7 +985,7 @@ namespace xge
 			// Any piece of its side that can jump makes jumps the only moves.
 			for (Object& other : objects)
 			{
-				if (other.moves.sets.empty() || other.objClass != piece.objClass || other.map.name != piece.map.name || !isShown(other)) { continue; }
+				if (pieceMoves(other).sets.empty() || other.objClass != piece.objClass || other.map.name != piece.map.name || !isShown(other)) { continue; }
 				if (!movesOf(other, true).empty()) { jumpsOnly = true; break; }
 			}
 		}
@@ -1001,8 +1001,9 @@ namespace xge
 		std::vector<std::pair<std::string, float>> puts;
 		for (Object& piece : objects)
 		{
-			if (piece.moves.sets.empty()) { continue; }
-			if (!isShown(piece)) { piece.moves.count = 0.0f; continue; }
+			Object::Moves* moves = objectParts.moves.find(piece.id);
+			if (!moves || moves->sets.empty()) { continue; }
+			if (!isShown(piece)) { moves->count = 0.0f; continue; }
 			float count = static_cast<float>(movesOf(piece, false).size());
 			const Object::MoveSet* set = moveSetOf(piece);
 			if (set && set->puts())
@@ -1015,7 +1016,7 @@ namespace xge
 				}
 				count += known->second;
 			}
-			piece.moves.count = count;
+			moves->count = count;
 		}
 	}
 
@@ -1244,7 +1245,7 @@ namespace xge
 			Object* one = nullptr;
 			for (Object& piece : objects)
 			{
-				if (piece.moves.sets.empty() || piece.objClass != objClass || !piece.map.cells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
+				if (pieceMoves(piece).sets.empty() || piece.objClass != objClass || !piece.map.cells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
 				if (one) { return false; }
 				one = &piece;
 			}
@@ -1256,7 +1257,7 @@ namespace xge
 		const int row = whole(place(picker).row);
 		for (Object& piece : objects)
 		{
-			if (&piece == &picker || piece.moves.sets.empty() || piece.objClass != objClass || !piece.map.cells || !isShown(piece)
+			if (&piece == &picker || pieceMoves(piece).sets.empty() || piece.objClass != objClass || !piece.map.cells || !isShown(piece)
 				|| whole(place(piece).column) != column || whole(place(piece).row) != row)
 			{
 				continue;
@@ -1459,7 +1460,7 @@ namespace xge
 						case Object::Mark::Kind::Movable:
 							for (Object& piece : objects)
 							{
-								if (piece.moves.sets.empty() || piece.objClass != markClass || !piece.map.cells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
+								if (pieceMoves(piece).sets.empty() || piece.objClass != markClass || !piece.map.cells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
 								want.push_back({ mark.object, whole(place(piece).column), whole(place(piece).row) });
 							}
 							break;

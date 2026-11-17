@@ -1466,8 +1466,7 @@ namespace xge
 			// next time some other direction's key event recomputes it. A
 			// <stop /> that took the acceleration away is given back above.
 			parts.drives.remove(object.id);
-			object.swing.held = false;
-			object.swing.done = 0.0f;
+			if (Object::Swing* swing = parts.swings.find(object.id)) { swing->held = false; swing->done = 0.0f; }
 			if (Object::Picker* picker = parts.pickers.find(object.id))
 			{
 				picker->picked.clear();

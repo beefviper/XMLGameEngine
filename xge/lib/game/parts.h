@@ -35,6 +35,9 @@ namespace xge
 		Store<Object::Item> items;
 		Store<Object::SizeUse> sizeUses;
 		Store<Object::Climb> climbs;
+		Store<Object::Moves> moves;
+		Store<Object::Swing> swings;
+		Store<Object::LightPast> lightPasts;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.

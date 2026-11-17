@@ -1410,7 +1410,6 @@ namespace xge
 			float done{};
 			bool held{ false };
 		};
-		Swing swing;
 
 		// How fast the point `at` of it is going: its velocity, and its spin
 		// about its turning point.
@@ -1501,7 +1500,6 @@ namespace xge
 			// kind could be put in as well.
 			float count{};
 		};
-		Moves moves;
 
 		// <marks>: copies of the mark pieces put in the cells marked (see
 		// Game::showMarks), made again only when what is marked changes.
@@ -2121,7 +2119,11 @@ namespace xge
 		bool startDrawsRandom{ false };
 
 		// <light>'s <past>es: the classes its light does not shine through.
-		std::vector<std::string> lightPast;
+		// A part (Parts::lightPasts), for a light with <past>es only.
+		struct LightPast
+		{
+			std::vector<std::string> classes;
+		};
 
 		// How it is drawn: what it shows now and what the backends and a
 		// pixel collision read of it.

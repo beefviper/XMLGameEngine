@@ -264,9 +264,10 @@ namespace xge
 			}
 			else if (const auto* swing = std::get_if<CmdSwing>(&actionCommand))
 			{
-				object.swing.seconds = swing->seconds;
-				object.swing.by = swing->by;
-				object.swing.held = true;
+				Object::Swing& stroke = game.parts().give(game.parts().swings, object.id);
+				stroke.seconds = swing->seconds;
+				stroke.by = swing->by;
+				stroke.held = true;
 			}
 			else if (const auto* play = std::get_if<CmdPlay>(&actionCommand))
 			{

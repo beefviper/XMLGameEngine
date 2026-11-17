@@ -445,6 +445,14 @@ namespace xge
 		}
 		bool hasPlace(const Parts& parts, const Object& object) { return parts.cells.has(object.id); }
 		bool isHolder(const Parts& parts, const Object& object) { return parts.holders.has(object.id); }
+		bool hasMoves(const Parts& parts, const Object& object) { return parts.moves.has(object.id); }
+		float& movesNumber(Parts& parts, Object& object)
+		{
+			if (Object::Moves* moves = parts.moves.find(object.id)) { return moves->count; }
+			thread_local float none;
+			none = 0.0f;
+			return none;
+		}
 	}
 
 	const std::vector<LivePart>& liveParts()
@@ -462,7 +470,7 @@ namespace xge
 			{ "speed", [](Parts&, Object& o) -> float& { if (!o.motion.speedHeld) { o.motion.speed = std::hypot(o.velocity.x, o.velocity.y); } return o.motion.speed; }, false, nullptr },
 			{ "column", [](Parts& p, Object& o) -> float& { return placeNumber(p, o, &Object::Cells::Place::column); }, false, hasPlace },
 			{ "row", [](Parts& p, Object& o) -> float& { return placeNumber(p, o, &Object::Cells::Place::row); }, false, hasPlace },
-			{ "moves", [](Parts&, Object& o) -> float& { return o.moves.count; }, true, nullptr },
+			{ "moves", [](Parts& p, Object& o) -> float& { return movesNumber(p, o); }, true, hasMoves },
 			{ "cards", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, isHolder },
 			{ "held", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, isHolder },
 			{ "calling", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::calling); }, true, isHolder },
