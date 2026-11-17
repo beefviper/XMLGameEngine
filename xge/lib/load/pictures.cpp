@@ -270,6 +270,17 @@ namespace xge
 			picture.file = sprite.path;
 			picture.flipHorizontal = sprite.flip == "horizontal";
 			picture.flipVertical = sprite.flip == "vertical";
+			try
+			{
+				PictureId file = resources.pictureFile(sprite.path);
+				if (picture.flipHorizontal || picture.flipVertical)
+				{
+					file = resources.picture("file|" + sprite.path + "|" + sprite.flip,
+						[&] { return flipBitmap(resources.bitmap(file), picture.flipHorizontal, picture.flipVertical); });
+				}
+				picture.image = resources.shared(file);
+			}
+			catch (const std::exception& error) { throw std::runtime_error(where + ": " + error.what()); }
 		}
 		else if (sprite.kind == "tether")
 		{

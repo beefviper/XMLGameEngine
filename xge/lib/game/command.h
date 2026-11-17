@@ -7,6 +7,7 @@
 
 #include "engine/keys.h"
 #include "game/types.h"
+#include "picture/bitmap.h"
 
 #include <functional>
 #include <map>
@@ -50,7 +51,8 @@ namespace xge
 		std::string text;            // a text's words as shown now
 		int textSize{};              // a text's size in pixels
 		std::string font;            // a text's font file; empty: the standard one (textFontFile)
-		std::string file;            // an image's
+		std::string file;            // an image's file, as written
+		std::shared_ptr<const Bitmap> image;   // an image's pixels, flipped as asked: held by the game's Resources
 		bool flipHorizontal{ false }; // an image's, drawn mirrored
 		bool flipVertical{ false };
 
@@ -1238,8 +1240,8 @@ namespace xge
 	// The picture's size, with no window needed: a circle's box and a
 	// rectangle exactly as written (Object::pictureSize rounds them up to
 	// the pixels drawn), a Line's bitmap, a text as drawText draws it, an
-	// image file's pixels (loadPicture). ShapeKind::Unknown is {0,0}.
-	// Throws as loadPicture does for an image file that cannot be read.
+	// image's pixels (Picture::image, read as the game loads).
+	// ShapeKind::Unknown is {0,0}.
 	Vector2f measureShapeSize(const Picture& picture);
 
 	// If `expression` is nothing but an "owner.variable" reference (for

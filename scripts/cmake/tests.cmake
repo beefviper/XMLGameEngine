@@ -105,6 +105,7 @@ add_executable(xgetest
 	"xge/tests/engine/test_text.cpp"
 	"xge/tests/games/test_frostbite.cpp"
 	"xge/tests/engine/test_pictures.cpp"
+	"xge/tests/engine/test_resources.cpp"
 	"xge/tests/engine/test_cli.cpp"
 	"xge/tests/engine/test_data_folder.cpp"
 	"xge/tests/engine/test_generate.cpp"

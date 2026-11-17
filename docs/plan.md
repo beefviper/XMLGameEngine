@@ -82,18 +82,17 @@ The author's order: the resource manager and the components first, since the res
 
 ### CR2. A resource manager
 
-- **Why.** Each object draws its own bitmap (`drawPicture` in `load/pictures.cpp` makes a new one per sprite per object), each window makes a texture per object (`CachedVisual` in `window/sfml.h`, `opengl.h`, `raylib.h` and the rest), and what is shared is shared by `std::shared_ptr`s nobody owns and one static map (`loadPicture` in `picture/image.cpp`).
-- **The shape.** One class, `Resources` (`xge/lib/engine/resources.h`, `.cpp`), owned by the `Game`:
+- **Why.** Pictures are shared by five caches in four places (`drawOnce` and the flips in `game_expr`, each `Turnable`'s turned pictures, a static map of image files), lines and polygons are drawn per object, circles, rectangles and texts are drawn again whenever a window asks, and each window keeps a texture per object and builds it again on every change of picture ([what was measured](designs/16-engine-structure.md#what-was-measured)).
+- **The shape.** One class, `Resources` (`xge/lib/engine/resources.h`, `.cpp`), owned by the `Game` (in its `game_expr`, as `Game::resources()`):
 
   ```cpp
   struct PictureId { std::uint32_t index{}; };          // 0 is "none"; SoundId, FontId, SheetId, SchemaId alike
   class Resources
   {
   public:
-      PictureId picture(const PictureKey& description);  // the same description gives the same id
-      PictureId turned(PictureId from, int degrees);     // made on request, then kept
-      PictureId flipped(PictureId from, bool horizontal, bool vertical);
-      PictureId recoloured(PictureId from, const std::string& style);
+      PictureId pictureFile(const std::string& path);    // read once
+      template <typename Draw>
+      PictureId picture(const std::string& key, Draw&& draw);   // the same key gives the same id
       PictureId own(Bitmap made);                        // one object's alone (a holed picture)
       void release(PictureId owned);                     // only for what own() gave
       const Bitmap& bitmap(PictureId id) const;
@@ -101,12 +100,13 @@ The author's order: the resource manager and the components first, since the res
   };
   ```
 
-  - A `PictureKey` holds everything that decides the pixels and nothing else: the kind, its rows or lines or file and part, colours, scale, flip, style, font and size. Two sprites that would draw the same pixels have equal keys.
+  - A key is text holding everything that decides the pixels and nothing else (the kind, its rows or lines or file and part, colours, scale, flip, style, font and size), as `drawOnce`'s keys were. Not a `PictureKey` struct: that would be one more place listing every field of every sprite kind, which this review is removing. Turned, flipped and recoloured pictures are keys too (the key it was made from, then the turn).
+  - Numbers in a key are written exactly (`std::to_chars`), so two descriptions share a picture only when they draw the same pixels.
   - Ids are never reused while a game is loaded, so an id held anywhere stays right. `own` and `release` are the one exception and are used only by `<hole>`.
   - A window keeps its textures by `PictureId`. It is told which ids are on screen and makes a texture the first time it sees one.
 - **Steps.**
-  - [ ] **1. The manager, with image files (M).** `Resources` with `picture()` for pictures loaded from files; `Game` owns one; the static map and its mutex in `picture/image.cpp` go. New `xge/tests/engine/test_resources.cpp` (add to `tests.cmake`). **Check:** in it, the same file asked twice gives one id and `pictureCount()` of 1; two files give two; a missing file throws the message it does today.
-  - [ ] **2. Drawn pictures (L, one kind a commit).** In this order: bitmap rows, lines, polygons, circles and rectangles, texts, sheet cells, SVGs. For each, `drawPicture` builds the key and asks the manager. **Check for each kind,** a case in `test_resources.cpp`: a game written in the test with a group of 20 members sharing one sprite of that kind has `pictureCount()` of 1; changing one member's colour makes it 2. **Check at the end:** `[size]` shows Space Invaders' pictures fewer than its objects, and its load time in `[speed]` has fallen; both numbers in the commit.
+  - [x] **1. The manager, with image files (M).** `Resources` with `pictureFile()`; `Game` owns one; the static map and its mutex in `picture/image.cpp` went (`readPictureFile` reads, the manager keeps). An `<image>`'s pixels are read as the game loads into `Picture::image`. `xge/tests/engine/test_resources.cpp`.
+  - [ ] **2. Drawn pictures (M, one kind a commit).** First `drawOnce` (rows, sheet cells, SVGs, already shared) becomes the manager's; then lines, then polygons, which are drawn per object today. Circles, rectangles and texts are drawn at the window's scale when a window asks, so they move with step 5. **Check for each kind,** a case in `test_resources.cpp`: a game written in the test with 20 objects sharing one sprite of that kind has `pictureCount()` of 1; changing one's colour makes it 2. **Check at the end:** `[size]` and `[speed]` numbers in the commit, neither worse.
   - [ ] **3. Made pictures (M, one kind a commit).** Turned (`Turnable` in `picture/bitmap.h`, which keeps its own map today), flipped (`flipsOf`), palette swaps (`makePalettes`), redrawn at the window's size, and holed (`own`, released when its object is reset or despawned). **Check:** cases in `test_resources.cpp`: two objects with one picture turned to the same heading share one turned picture; a `<hole>` in one of two alike shields leaves the other's picture untouched, and `pictureCount()` returns to what it was after a reset. `test_holes.cpp`, `test_picture_scale.cpp`, `test_flippers.cpp` pass.
   - [ ] **4. Objects hold ids (M).** `std::shared_ptr<const Bitmap>` leaves `Object` and its parts (`Looks`, `Animation`, `Drawn`, `Mirror`) for `PictureId`; `Object::drawnPicture` asks the manager. **Check:** `grep -rn "shared_ptr<const Bitmap>" xge/lib/game xge/lib/play` finds nothing; all tests.
   - [ ] **5. Textures by picture (M, one backend a commit).** Null window first, with a count of textures asked for; then SFML, SDL2, raylib, OpenGL, Vulkan, Qt (`xge/gui`); the Direct3D windows are changed blind and wait for the author's build. The contract in `window/window.h` and `docs/reference/engine.md` "What a window must do" is rewritten first. **Check:** a case in `test_resources.cpp`: the null window is asked for 1 texture by the 20-member game; `test_backends.cpp` under `xvfb-run` for each backend built; a line in Waiting for a look on Windows for Direct3D.

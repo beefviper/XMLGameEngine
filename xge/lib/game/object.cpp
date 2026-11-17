@@ -1139,8 +1139,8 @@ namespace xge
 			return std::make_shared<const Bitmap>(drawText(drawn.picture.text, pixels, color, textFontFile(drawn.picture.font)));
 		}
 		case ShapeKind::Image:
-			if (!drawn.picture.flipHorizontal && !drawn.picture.flipVertical) { return loadPicture(drawn.picture.file); }
-			return std::make_shared<const Bitmap>(loadPicture(drawn.picture.file, drawn.picture.flipHorizontal, drawn.picture.flipVertical));
+			if (drawn.picture.image) { return drawn.picture.image; }
+			break;
 		case ShapeKind::Line:
 			if (drawn.bitmap) { return drawn.bitmap; }
 			break;
@@ -1177,10 +1177,8 @@ namespace xge
 			return measured.emplace(key, Vector2f{ static_cast<float>(drawn.width), static_cast<float>(drawn.height) }).first->second;
 		}
 		case ShapeKind::Image:
-		{
-			const std::shared_ptr<const Bitmap> file = loadPicture(picture.file);
-			return { static_cast<float>(file->width), static_cast<float>(file->height) };
-		}
+			if (!picture.image) { return {}; }
+			return { static_cast<float>(picture.image->width), static_cast<float>(picture.image->height) };
 		case ShapeKind::Unknown:
 		default:
 			return {};

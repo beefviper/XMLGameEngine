@@ -691,8 +691,7 @@ TEST_CASE("picture draws the last frame frames played into a PNG", "[cli][pictur
 	// background in the corner, and something drawn on it.
 	Game game{ readGame("descriptions/pong.xml", XmlBackend::Xerces) };
 	const WindowDesc& window = game.getWindowDesc();
-	const std::shared_ptr<const Bitmap> picture = loadPicture(file.string());
-	REQUIRE(picture);
+	const std::shared_ptr<const Bitmap> picture = std::make_shared<const Bitmap>(readPictureFile(file.string()));
 	const int scale = std::max(1, window.scale);
 	CHECK(picture->width == static_cast<int>(window.width) * scale);
 	CHECK(picture->height == static_cast<int>(window.height) * scale);

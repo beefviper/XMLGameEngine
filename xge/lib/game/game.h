@@ -71,6 +71,9 @@ namespace xge
 
 		WindowDesc& getWindowDesc(void) noexcept;
 
+		// Every picture the game has loaded or made, each held once.
+		const Resources& resources() const noexcept { return expr.resources; }
+
 		// Whether the object is in play: it moves, animates, counts its timers
 		// and collides (and is drawn, unless it is <hidden />). It
 		// is, when it is not hidden or dead, and is the current state's (or

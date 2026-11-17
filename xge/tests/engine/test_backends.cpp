@@ -20,6 +20,7 @@
 #include "audio/audio.h"
 #include "cli.h"
 #include "picture/font.h"
+#include "picture/image.h"
 #include "window/null.h"
 #include "window/window.h"
 #include "xml/document.h"
@@ -210,7 +211,7 @@ TEST_CASE("a picture's size is the game's own, and the null window opens nothing
 	CHECK(drawn.width > 0);
 
 	// An image file by its pixels (the tests run in games/).
-	const Vector2f image = measured([](Picture& picture) { picture.kind = ShapeKind::Image; picture.file = "assets/paddle.jpg"; });
+	const Vector2f image = measured([](Picture& picture) { picture.kind = ShapeKind::Image; picture.image = std::make_shared<const Bitmap>(readPictureFile("assets/paddle.jpg")); });
 	CHECK(image.x == 30.0f);
 	CHECK(image.y == 150.0f);
 

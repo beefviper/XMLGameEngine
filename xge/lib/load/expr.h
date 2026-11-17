@@ -7,6 +7,7 @@
 
 #include "picture/bitmap.h"
 #include "picture/image.h"
+#include "engine/resources.h"
 #include "picture/color.h"
 #include "game/command.h"
 #include "load/calc.h"
@@ -280,6 +281,9 @@ namespace xge
 		// Each picture an object with a <mirror> shows, and it flipped left
 		// to right, both ways round: made once, whoever shows it.
 		std::map<const Bitmap*, std::shared_ptr<const Bitmap>> flippedPictures;
+
+		// Every picture the game has loaded or made, each held once.
+		Resources resources;
 
 		// The game's <styles>, for the palettes a <become style> asks for.
 		std::vector<RawStyle> styles;
