@@ -84,11 +84,11 @@ TEST_CASE("a take changes its piece: sprites by name, whole; variables one by on
 
 	const Object& gold = play.get("gold");
 	CHECK(gold.objClass == "treasure");
-	REQUIRE(gold.looks.all.size() == 3);
-	CHECK(gold.looks.all[0].name == "whole");
-	CHECK(gold.looks.all[1].name == "cracked");
-	CHECK(gold.looks.all[2].name == "shining");
-	CHECK(gold.looks.all[1].picture != gold.looks.all[0].picture);
+	REQUIRE(gold.looks.all().size() == 3);
+	CHECK(gold.looks.all()[0].name == "whole");
+	CHECK(gold.looks.all()[1].name == "cracked");
+	CHECK(gold.looks.all()[2].name == "shining");
+	CHECK(gold.looks.all()[1].picture != gold.looks.all()[0].picture);
 	CHECK(gold.variable.at("hits") == Approx(0));
 	CHECK(gold.variable.at("worth") == Approx(50));
 	CHECK(gold.variable.at("shine") == Approx(1));

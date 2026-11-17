@@ -70,7 +70,7 @@ TEST_CASE("a named <animation> is a look that moves, and an object starts as its
 	Object& lamp = play.get("lamp");
 	CommandExecutor executor(play.game);
 
-	REQUIRE(lamp.looks.all.size() == 4);
+	REQUIRE(lamp.looks.all().size() == 4);
 	CHECK(lamp.lookName() == "blinking");
 	CHECK(litAt(lamp, 1));
 	play.frames(15);

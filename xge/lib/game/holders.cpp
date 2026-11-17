@@ -74,15 +74,15 @@ namespace xge
 
 	void Game::showHeld(Object& item, const std::string& look)
 	{
-		const auto found = std::find_if(item.looks.all.begin(), item.looks.all.end(), [&](const Object::Look& each) { return each.name == look; });
-		if (found != item.looks.all.end()) { turnItem(item, found == item.looks.all.begin()); }
+		const auto found = std::find_if(item.looks.all().begin(), item.looks.all().end(), [&](const Object::Look& each) { return each.name == look; });
+		if (found != item.looks.all().end()) { turnItem(item, found == item.looks.all().begin()); }
 	}
 
 	void Game::turnItem(Object& item, bool up)
 	{
 		itemFor(item).faceUp = up;
 		const std::size_t look = up ? 0 : 1;
-		if (item.looks.shown != look && look < item.looks.all.size()) { item.showLook(look); }
+		if (item.looks.shown != look && look < item.looks.all().size()) { item.showLook(look); }
 	}
 
 	void Game::putInHolder(Object& holder, int number)
@@ -1525,9 +1525,9 @@ namespace xge
 		// look) up; another of its looks down; none of its looks, nothing.
 		std::optional<bool> faceFor(const Object& item, const std::string& sprite)
 		{
-			for (std::size_t i = 0; i < item.looks.all.size(); ++i)
+			for (std::size_t i = 0; i < item.looks.all().size(); ++i)
 			{
-				if (item.looks.all[i].name == sprite) { return i == 0; }
+				if (item.looks.all()[i].name == sprite) { return i == 0; }
 			}
 			return std::nullopt;
 		}

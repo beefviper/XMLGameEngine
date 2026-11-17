@@ -217,3 +217,20 @@ TEST_CASE("the members of a group share one kind: its rules and actions are held
 	CHECK(members == 55);
 	CHECK(kinds.size() < invaders.game.getCurrentObjects().size() - 50);
 }
+
+TEST_CASE("a spawned copy shows the looks of the piece it is copied from, held once", "[store][kind]")
+{
+	played::Played mario("descriptions/mariobros.xml");
+	const Object* coin = nullptr;
+	for (const Object& object : mario.game.getCurrentObjects())
+	{
+		if (object.objClass == "coin" && !object.isCopy() && !object.looks.all().empty()) { coin = &object; break; }
+	}
+	REQUIRE(coin != nullptr);
+	const std::string name = coin->name;
+	const Object* made = mario.game.spawn(name);
+	REQUIRE(made != nullptr);
+	const Object& original = mario.get(name);
+	CHECK(made->looks.set == original.looks.set);
+	CHECK(made->kind == original.kind);
+}

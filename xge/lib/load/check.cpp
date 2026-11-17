@@ -397,7 +397,7 @@ namespace xge
 			for (const Timer& timer : object.kind->timers) { visit(timer.commands, &object); }
 			visit(object.animation.then, &object);
 			for (const auto& frame : object.animation.commands) { visit(frame, &object); }
-			for (const Object::Look& look : object.looks.all)
+			for (const Object::Look& look : object.looks.all())
 			{
 				visit(look.then, &object);
 				for (const auto& frame : look.frameCommands) { visit(frame, &object); }
@@ -569,7 +569,7 @@ namespace xge
 						const auto member = std::find_if(objects.begin(), objects.end(), [&](const Object& other) { return parts.items.has(other.id) && other.objClass == holds.holdsClass; });
 						if (member == objects.end()) { throw std::runtime_error(where + ": nothing is of class " + holds.holdsClass); }
 						std::vector<std::string> looks;
-						for (const Object::Look& look : member->looks.all) { looks.push_back(look.name); }
+						for (const Object::Look& look : member->looks.all()) { looks.push_back(look.name); }
 						for (const auto& [look, part] : { std::pair{ &holds.holdsSprite, "its" }, std::pair{ &holds.topSprite, "<top>" }, std::pair{ &holds.spreadSprite, "<spread>" } })
 						{
 							if (look->empty() || std::find(looks.begin(), looks.end(), *look) != looks.end()) { continue; }
@@ -680,7 +680,7 @@ namespace xge
 						throw std::runtime_error(where + ": <become> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
 					}
 					if (!become->style.empty()) { wantPalette({ states, objects, sounds, paths, styles, wanted, where, parts }, *self, become->style); }
-					if (!become->sprite.empty() && std::none_of(self->looks.all.begin(), self->looks.all.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
+					if (!become->sprite.empty() && std::none_of(self->looks.all().begin(), self->looks.all().end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
 					{
 						throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" />: it has no look of that name (a look is one of several named <sprite>s)");
 					}
@@ -826,7 +826,7 @@ namespace xge
 			for (const auto& timer : object.kind->timers) { checkWalks(timer.commands, where + " > <timer>"); }
 			checkWalks(object.animation.then, where + " > <animation> > <then>");
 			for (const auto& frame : object.animation.commands) { checkWalks(frame, where + " > <animation> > <frame>"); }
-			for (const auto& look : object.looks.all)
+			for (const auto& look : object.looks.all())
 			{
 				checkWalks(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>");
 				for (const auto& frame : look.frameCommands) { checkWalks(frame, where + " > <animation name=\"" + look.name + "\"> > <frame>"); }
@@ -843,7 +843,7 @@ namespace xge
 					for (const Command& command : rule.commands)
 					{
 						if (!std::holds_alternative<CmdHole>(shapeOf(command))) { continue; }
-						if (!object.drawn.bitmap || object.turning.hasHeading || !object.animation.bitmaps.empty() || !object.looks.all.empty() || object.mirror.on)
+						if (!object.drawn.bitmap || object.turning.hasHeading || !object.animation.bitmaps.empty() || !object.looks.all().empty() || object.mirror.on)
 						{
 							throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or <polygon>s, or a <bitmap>, with no <heading>, <animation>, <mirror> or second <sprite>");
 						}
@@ -922,7 +922,7 @@ namespace xge
 					};
 					checkThen(object.animation.then, where + " > <animation> > <then>");
 					for (const auto& frame : object.animation.commands) { checkThen(frame, where + " > <animation> > <frame>"); }
-					for (const auto& look : object.looks.all)
+					for (const auto& look : object.looks.all())
 					{
 						checkThen(look.then, where + " > <animation name=\"" + look.name + "\"> > <then>");
 						for (const auto& frame : look.frameCommands) { checkThen(frame, where + " > <animation name=\"" + look.name + "\"> > <frame>"); }

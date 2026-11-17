@@ -1350,7 +1350,7 @@ namespace xge
 		// for an object with no looks) has commands of its own to run.
 		bool hasFrameCommands(std::size_t look, std::size_t picture) const noexcept
 		{
-			const auto& frames = looks.all.empty() ? animation.commands : look < looks.all.size() ? looks.all[look].frameCommands : animation.commands;
+			const auto& frames = looks.all().empty() ? animation.commands : look < looks.all().size() ? looks.all()[look].frameCommands : animation.commands;
 			return picture < frames.size() && !frames[picture].empty();
 		}
 
@@ -1789,19 +1789,40 @@ namespace xge
 
 		// Its looks (`all`; `shown` is the one showing), the palettes it can
 		// wear (`worn` the one on), and the looks of its poses and joins.
-		struct Looks
+		// What never changes of them, made as it loads and shared by the
+		// copies spawned of it (LookSet), and which it shows and wears.
+		struct LookSet
 		{
 			std::vector<Look> all;
-			std::size_t shown{ 0 };
 			// The look it starts as, and a reset brings back: the first, or
 			// for one with <poses> its standing look.
 			std::size_t first{ 0 };
 			std::vector<Palette> palettes;
-			std::size_t worn{ 0 };
 			std::array<std::size_t, 6> poses{};
 			bool hasPoses{ false };
 			std::array<std::size_t, 5> joins{};
 			bool hasJoins{ false };
+			// Changed while it played (Looks::change): no longer as loaded.
+			bool changed{ false };
+		};
+		struct Looks
+		{
+			std::shared_ptr<LookSet> set{ std::make_shared<LookSet>() };
+			std::size_t shown{ 0 };
+			std::size_t worn{ 0 };
+			// Its looks in the palette it wears.
+			const std::vector<Look>& all() const noexcept
+			{
+				return worn == 0 || worn >= set->palettes.size() ? set->all : set->palettes[worn].looks;
+			}
+			// The same, to change while it plays (a look's seconds): its
+			// own set from then on, if it shared one.
+			std::vector<Look>& change()
+			{
+				if (set.use_count() > 1) { set = std::make_shared<LookSet>(*set); }
+				set->changed = true;
+				return worn == 0 || worn >= set->palettes.size() ? set->all : set->palettes[worn].looks;
+			}
 		};
 		Looks looks;
 
@@ -2064,7 +2085,7 @@ namespace xge
 			Part part{ Part::Variable };
 			std::string variable;
 			RawValue value;
-			// Seconds: whose they are, the look (index into looks.all) or the
+			// Seconds: whose they are, the look (index into looks.all()) or the
 			// object's one animation (npos), and which picture's (index into
 			// its times) or every picture's that has none of its own (npos).
 			std::size_t look{ std::string::npos };
@@ -2266,9 +2287,15 @@ namespace xge
 	// A copy of an object, named `to` where it was `from`: what its own
 	// rules, timers, actions and values said of `from` by name they now say
 	// of `to` (self says itself already). What a <spawn> makes a copy from.
-	// Whether its rules, actions or timers named `from`: if not, the copy
-	// is of its kind (Kind).
-	bool renameOwn(RawObject& object, const std::string& from, const std::string& to);
+	// Whether its rules, actions or timers named `from` (if not, the copy
+	// is of its kind, Kind), and whether its animations' commands did (if
+	// not, it shows the looks of the one copied, Looks::set).
+	struct Renamed
+	{
+		bool kind{ false };
+		bool looks{ false };
+	};
+	Renamed renameOwn(RawObject& object, const std::string& from, const std::string& to);
 
 	// What a rule about another object leaves to mean the object it touched:
 	// other, as the object a command names (object="other") or at the start

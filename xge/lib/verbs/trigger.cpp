@@ -75,7 +75,7 @@ namespace xge
 			for (const Object& each : objects)
 			{
 				if (&each != object && !each.named(trigger.object)) { continue; }
-				for (const auto& look : each.looks.all) { looks.push_back(look.name); }
+				for (const auto& look : each.looks.all()) { looks.push_back(look.name); }
 			}
 			if (std::find(looks.begin(), looks.end(), trigger.from) == looks.end())
 			{

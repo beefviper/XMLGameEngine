@@ -405,7 +405,7 @@ namespace xge
 	// each way it moves (<poses>) and for where what it is joined to lies.
 	void game_expr::buildLookParts(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
-		object.looks.all = looks;
+		object.looks.set->all = looks;
 
 		// Animations timed live (<seconds update="live">), followed after the
 		// object's other live numbers: the animation's own seconds, and each
@@ -454,14 +454,14 @@ namespace xge
 			const std::size_t standing = *lookOf("standing");
 			const std::size_t walking = lookOf("walking").value_or(standing);
 			const std::size_t falling = lookOf("falling").value_or(standing);
-			object.looks.poses[static_cast<std::size_t>(Object::Pose::Standing)] = standing;
-			object.looks.poses[static_cast<std::size_t>(Object::Pose::Walking)] = walking;
-			object.looks.poses[static_cast<std::size_t>(Object::Pose::Skidding)] = lookOf("skidding").value_or(walking);
-			object.looks.poses[static_cast<std::size_t>(Object::Pose::Falling)] = falling;
-			object.looks.poses[static_cast<std::size_t>(Object::Pose::Rising)] = lookOf("rising").value_or(falling);
-			object.looks.poses[static_cast<std::size_t>(Object::Pose::Thrusting)] = lookOf("thrusting").value_or(standing);
-			object.looks.hasPoses = true;
-			object.looks.first = standing;
+			object.looks.set->poses[static_cast<std::size_t>(Object::Pose::Standing)] = standing;
+			object.looks.set->poses[static_cast<std::size_t>(Object::Pose::Walking)] = walking;
+			object.looks.set->poses[static_cast<std::size_t>(Object::Pose::Skidding)] = lookOf("skidding").value_or(walking);
+			object.looks.set->poses[static_cast<std::size_t>(Object::Pose::Falling)] = falling;
+			object.looks.set->poses[static_cast<std::size_t>(Object::Pose::Rising)] = lookOf("rising").value_or(falling);
+			object.looks.set->poses[static_cast<std::size_t>(Object::Pose::Thrusting)] = lookOf("thrusting").value_or(standing);
+			object.looks.set->hasPoses = true;
+			object.looks.set->first = standing;
 			if (standing != 0) { object.showLook(standing); }
 		}
 
@@ -480,9 +480,9 @@ namespace xge
 					throw std::runtime_error(where + " > <joins> > <" + join + " sprite=\"" + name + "\">: the object has no look of that name"
 						+ (names.empty() ? std::string(" (it has no looks)") : didYouMean(name, names) + ". Its looks are: " + listOf(names)));
 				}
-				object.looks.joins[at++] = static_cast<std::size_t>(look - looks.begin());
+				object.looks.set->joins[at++] = static_cast<std::size_t>(look - looks.begin());
 			}
-			object.looks.hasJoins = true;
+			object.looks.set->hasJoins = true;
 		}
 	}
 
@@ -777,11 +777,11 @@ namespace xge
 			return made;
 		};
 		object.animation.hitboxes = frameHitboxes(rawObject.animation.frameHitboxes, where + " > <animation>");
-		for (std::size_t i = 0; i < object.looks.all.size() && i < rawObject.looks.size(); ++i)
+		for (std::size_t i = 0; i < object.looks.all().size() && i < rawObject.looks.size(); ++i)
 		{
-			object.looks.all[i].frameHitboxes = frameHitboxes(rawObject.looks[i].frameHitboxes, where + " > <animation name=\"" + rawObject.looks[i].name + "\">");
+			object.looks.set->all[i].frameHitboxes = frameHitboxes(rawObject.looks[i].frameHitboxes, where + " > <animation name=\"" + rawObject.looks[i].name + "\">");
 		}
-		if (object.looks.shown < object.looks.all.size() && !object.looks.all[object.looks.shown].frames.empty()) { object.animation.hitboxes = object.looks.all[object.looks.shown].frameHitboxes; }
+		if (object.looks.shown < object.looks.all().size() && !object.looks.all()[object.looks.shown].frames.empty()) { object.animation.hitboxes = object.looks.all()[object.looks.shown].frameHitboxes; }
 
 		for (std::size_t edge = 0; edge < object.kind->collisionData.edges.size(); ++edge)
 		{

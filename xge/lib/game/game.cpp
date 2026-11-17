@@ -276,7 +276,8 @@ namespace xge
 		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& each) { return each.name == original.name; });
 		if (raw == rawObjects.end()) { return nullptr; }
 		RawObject copy = *raw;
-		const bool namedIt = renameOwn(copy, original.name, name);
+		const Renamed renamed = renameOwn(copy, original.name, name);
+		const bool namedIt = renamed.kind;
 		copy.outerGroups = original.outerGroups;
 		if (!original.groupName.empty()) { copy.outerGroups.push_back(original.groupName); }
 		copy.groupName = original.name;
@@ -288,6 +289,8 @@ namespace xge
 		// Of its kind, unless its rules named the one it is copied from:
 		// then their tests, made at load for that one, about the copy.
 		if (!namedIt) { made.kind = original.kind; }
+		// Its looks too, while the one copied from shows them as loaded.
+		if (!renamed.looks && !original.looks.set->changed) { made.looks.set = original.looks.set; }
 		const auto retarget = [&](Condition& check) { retargetCheck(check, original.name, name); };
 		for (std::size_t i = 0; namedIt && i < made.kind->collisionData.others.size() && i < original.kind->collisionData.others.size(); ++i)
 		{
@@ -1152,9 +1155,9 @@ namespace xge
 				if (object && !object->kept) { object = nullptr; }
 				if (object && match[2].matched)
 				{
-					const auto look = std::find_if(object->looks.all.begin(), object->looks.all.end(),
+					const auto look = std::find_if(object->looks.all().begin(), object->looks.all().end(),
 						[&](const Object::Look& each) { return each.name == match[2].str(); });
-					if (look != object->looks.all.end()) { object->showLook(static_cast<std::size_t>(look - object->looks.all.begin())); }
+					if (look != object->looks.all().end()) { object->showLook(static_cast<std::size_t>(look - object->looks.all().begin())); }
 				}
 			}
 			else if (object && std::regex_match(line, match, variableLine))
@@ -1294,8 +1297,8 @@ namespace xge
 		if (index >= objects.size()) { return; }
 		Object& object = objects[index];
 		// A copy: a command may reset the object, or spawn and move it.
-		const std::vector<Command> commands = object.looks.all.empty() ? object.animation.then
-			: look < object.looks.all.size() ? object.looks.all[look].then : std::vector<Command>{};
+		const std::vector<Command> commands = object.looks.all().empty() ? object.animation.then
+			: look < object.looks.all().size() ? object.looks.all()[look].then : std::vector<Command>{};
 		CommandExecutor executor(*this);
 		for (const Command& command : commands)
 		{
@@ -1309,7 +1312,7 @@ namespace xge
 		Object& object = objects[index];
 		if (!object.hasFrameCommands(look, picture)) { return; }
 		// A copy, as for <then>.
-		const std::vector<Command> commands = object.looks.all.empty() ? object.animation.commands[picture] : object.looks.all[look].frameCommands[picture];
+		const std::vector<Command> commands = object.looks.all().empty() ? object.animation.commands[picture] : object.looks.all()[look].frameCommands[picture];
 		CommandExecutor executor(*this);
 		for (const Command& command : commands)
 		{
@@ -1518,7 +1521,7 @@ namespace xge
 			object.mirror.goingLeft = object.start.facing == Direction::Left;
 			object.faceMirror();
 			object.wearPalette(0);
-			if (!object.looks.all.empty()) { object.showLook(object.looks.first); }
+			if (!object.looks.all().empty()) { object.showLook(object.looks.set->first); }
 			for (Timer::Clock& clock : object.clocks) { clock = {}; }
 		}
 	}
@@ -1583,7 +1586,7 @@ namespace xge
 				const std::string before = isHand(object) ? object.lookName() : std::string();
 				// A holder given a look of what it holds, not its own: what
 				// it holds turned to it (a dealer's hidden card shown).
-				const bool own = std::any_of(object.looks.all.begin(), object.looks.all.end(), [&](const Object::Look& look) { return look.name == sprite; });
+				const bool own = std::any_of(object.looks.all().begin(), object.looks.all().end(), [&](const Object::Look& look) { return look.name == sprite; });
 				if (!sprite.empty() && isHolder(object) && !own)
 				{
 					turnHeld(object, sprite);
@@ -2090,7 +2093,7 @@ namespace xge
 	bool Game::touchesByPicture(const Object& a, const Object& b)
 	{
 		const auto has = [](const Object& object) { return !object.hitboxes.empty() || !object.animation.hitboxes.empty()
-			|| std::any_of(object.looks.all.begin(), object.looks.all.end(), [](const Object::Look& look) { return !look.frameHitboxes.empty(); }); };
+			|| std::any_of(object.looks.all().begin(), object.looks.all().end(), [](const Object::Look& look) { return !look.frameHitboxes.empty(); }); };
 		if (!has(a) && !has(b)) { return false; }
 
 		const auto solid = [](const Command& command)

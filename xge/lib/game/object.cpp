@@ -63,7 +63,7 @@ namespace xge
 		};
 		add(hitboxes);
 		for (const std::vector<Hitbox>& frame : animation.hitboxes) { add(frame); }
-		for (const Look& each : looks.all)
+		for (const Look& each : looks.all())
 		{
 			for (const std::vector<Hitbox>& frame : each.frameHitboxes) { add(frame); }
 		}
@@ -73,34 +73,34 @@ namespace xge
 	const std::string& Object::lookName() const
 	{
 		static const std::string none;
-		return looks.all.empty() ? none : looks.all[looks.shown].name;
+		return looks.all().empty() ? none : looks.all()[looks.shown].name;
 	}
 
 	void Object::showLook(std::size_t index)
 	{
-		if (index >= looks.all.size())
+		if (index >= looks.all().size())
 		{
 			return;
 		}
 
 		// The looks.shown to go back to when a looks.shown that plays once ends.
-		if (index != looks.shown && looks.shown < looks.all.size() && !looks.all[looks.shown].once) { animation.lookBefore = looks.shown; }
+		if (index != looks.shown && looks.shown < looks.all().size() && !looks.all()[looks.shown].once) { animation.lookBefore = looks.shown; }
 		looks.shown = index;
-		drawn.picture = looks.all[index].picture;
-		drawn.bitmap = facingPicture(looks.all[index].bitmap);
-		animation.bitmaps = looks.all[index].frames;
-		animation.seconds = looks.all[index].frameSeconds;
-		animation.times = looks.all[index].frameTimes;
-		animation.hitboxes = looks.all[index].frameHitboxes;
-		animation.once = looks.all[index].once;
-		animation.stepped = looks.all[index].stepped;
+		drawn.picture = looks.all()[index].picture;
+		drawn.bitmap = facingPicture(looks.all()[index].bitmap);
+		animation.bitmaps = looks.all()[index].frames;
+		animation.seconds = looks.all()[index].frameSeconds;
+		animation.times = looks.all()[index].frameTimes;
+		animation.hitboxes = looks.all()[index].frameHitboxes;
+		animation.once = looks.all()[index].once;
+		animation.stepped = looks.all()[index].stepped;
 		animation.done = false;
 		animation.elapsed = 0.0;
 		animation.index = 0;
 		// Turned to the way it faces: its own pictures to turn from now on.
-		if (!looks.all[index].turnables.empty())
+		if (!looks.all()[index].turnables.empty())
 		{
-			drawn.turnables = looks.all[index].turnables;
+			drawn.turnables = looks.all()[index].turnables;
 			drawn.turnedDegrees = -1;
 			showHeading();
 		}
@@ -112,23 +112,22 @@ namespace xge
 
 	void Object::wearPalette(std::size_t index)
 	{
-		if (index >= looks.palettes.size() || index == looks.worn)
+		if (index >= looks.set->palettes.size() || index == looks.worn)
 		{
 			return;
 		}
 
 		looks.worn = index;
-		const Palette& worn = looks.palettes[index];
+		const Palette& worn = looks.set->palettes[index];
 		const double elapsed = animation.elapsed;
 		const std::size_t at = animation.index;
-		if (looks.all.empty())
+		if (looks.all().empty())
 		{
 			animation.bitmaps = worn.animation;
 			drawn.bitmap = facingPicture(worn.bitmap);
 		}
 		else
 		{
-			looks.all = worn.looks;
 			showLook(looks.shown);
 		}
 		if (!animation.bitmaps.empty())
@@ -854,7 +853,7 @@ namespace xge
 		}
 	}
 
-	bool renameOwn(RawObject& object, const std::string& from, const std::string& to)
+	Renamed renameOwn(RawObject& object, const std::string& from, const std::string& to)
 	{
 		bool said = false;
 		const auto value = [&](RawValue& each) { said = renameInValue(each, from, to) || said; };
@@ -924,6 +923,7 @@ namespace xge
 			commands(timer.commands);
 		}
 		const bool kindNamedIt = said;
+		said = false;
 		const auto animation = [&](RawValue& interval, std::vector<RawValue>& times, std::vector<std::vector<RawCommand>>& frames, std::vector<RawCommand>& then)
 		{
 			value(interval);
@@ -933,7 +933,7 @@ namespace xge
 		};
 		animation(object.animation.interval, object.animation.times, object.animation.frameCommands, object.animation.thenCommands);
 		for (RawSprite& look : object.looks) { animation(look.interval, look.times, look.frameCommands, look.thenCommands); }
-		return kindNamedIt;
+		return { kindNamedIt, said };
 	}
 
 	namespace
@@ -1010,9 +1010,9 @@ namespace xge
 
 	bool wearPaletteNamed(Object& object, const std::string& name)
 	{
-		for (std::size_t i = 0; i < object.looks.palettes.size(); ++i)
+		for (std::size_t i = 0; i < object.looks.set->palettes.size(); ++i)
 		{
-			if (object.looks.palettes[i].name == name)
+			if (object.looks.set->palettes[i].name == name)
 			{
 				object.wearPalette(i);
 				return true;
@@ -1023,13 +1023,13 @@ namespace xge
 
 	bool showLookNamed(Object& object, const std::string& name)
 	{
-		for (std::size_t i = 0; i < object.looks.all.size(); ++i)
+		for (std::size_t i = 0; i < object.looks.all().size(); ++i)
 		{
-			if (object.looks.all[i].name == name)
+			if (object.looks.all()[i].name == name)
 			{
 				// A look that plays once starts again from its first frame,
 				// even when it is showing already: a second blast is a whole one.
-				if (object.looks.shown != i || object.looks.all[i].once) { object.showLook(i); }
+				if (object.looks.shown != i || object.looks.all()[i].once) { object.showLook(i); }
 				// A timer that follows this look starts over, even when the
 				// object showed it already: blue again is six seconds again.
 				for (std::size_t t = 0; t < object.clocks.size() && t < object.kind->timers.size(); ++t)
@@ -1122,8 +1122,8 @@ namespace xge
 		{
 			// Played through: a look goes back to the one before, an
 			// object's one animation stays on its last picture.
-			const std::size_t next = looks.all.empty() ? 0 : looks.all[looks.shown].thenLook.value_or(animation.lookBefore);
-			if (!looks.all.empty() && next != looks.shown && next < looks.all.size()) { showLook(next); }
+			const std::size_t next = looks.all().empty() ? 0 : looks.all()[looks.shown].thenLook.value_or(animation.lookBefore);
+			if (!looks.all().empty() && next != looks.shown && next < looks.all().size()) { showLook(next); }
 			else { animation.done = true; }
 			return AnimationStep::Ended;
 		}
@@ -1144,8 +1144,9 @@ namespace xge
 			time(animation.seconds, animation.times);
 			return;
 		}
-		if (look >= looks.all.size()) { return; }
-		time(looks.all[look].frameSeconds, looks.all[look].frameTimes);
+		if (look >= looks.all().size()) { return; }
+		Look& changed = looks.change()[look];
+		time(changed.frameSeconds, changed.frameTimes);
 		if (looks.shown == look) { time(animation.seconds, animation.times); }
 	}
 

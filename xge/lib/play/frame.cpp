@@ -314,7 +314,7 @@ namespace xge
 		{
 			for (auto& object : objects)
 			{
-				if (!object.mirror.on && !object.looks.hasPoses) { continue; }
+				if (!object.mirror.on && !object.looks.set->hasPoses) { continue; }
 				if (!rules.inPlay(object)) { continue; }
 
 				if (object.mirror.on)
@@ -327,8 +327,8 @@ namespace xge
 					object.faceMirror();
 				}
 
-				if (!object.looks.hasPoses) { continue; }
-				const auto& poses = object.looks.poses;
+				if (!object.looks.set->hasPoses) { continue; }
+				const auto& poses = object.looks.set->poses;
 				if (std::find(poses.begin(), poses.end(), object.looks.shown) == poses.end()) { continue; }
 
 				const std::size_t look = poses[static_cast<std::size_t>(poseOf(object, driveOf(rules, object)))];

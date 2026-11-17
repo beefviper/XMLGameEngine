@@ -605,7 +605,7 @@ namespace xge
 			for (Object* cell : cells)
 			{
 				cellPartFor(*cell).shapeOwner.clear();
-				if (!cell->looks.hasJoins) { continue; }
+				if (!cell->looks.set->hasJoins) { continue; }
 				placeFor(*cell).joinedWith.clear();
 				for (const Object* other : cells)
 				{
@@ -818,8 +818,8 @@ namespace xge
 	{
 		const auto join = [&](Object& piece)
 		{
-			if (!piece.looks.hasJoins || !piece.exists || !piece.map.cells) { return; }
-			const auto& looks = piece.looks.joins;
+			if (!piece.looks.set->hasJoins || !piece.exists || !piece.map.cells) { return; }
+			const auto& looks = piece.looks.set->joins;
 			if (std::find(looks.begin(), looks.end(), piece.looks.shown) == looks.end()) { return; }
 
 			// Falling, the other cells of its shape; settled, those it came with.
@@ -1688,7 +1688,7 @@ namespace xge
 			static_cast<Moment&>(object) = was->moment;
 			if (Object::Cells* cells = objectParts.cells.find(object.id)) { cells->place = was->place; }
 			object.placed = true;
-			if (object.looks.shown != was->look && was->look < object.looks.all.size()) { object.showLook(was->look); }
+			if (object.looks.shown != was->look && was->look < object.looks.all().size()) { object.showLook(was->look); }
 			for (const auto& [variable, value] : was->moment.variable) { setVariable(object.name, variable, value); }
 			holdVariablesForExpressions(object);
 		}

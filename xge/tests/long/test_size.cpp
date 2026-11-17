@@ -84,8 +84,8 @@ namespace
 			add(object.drawn.unholed);
 			for (const auto& turnable : object.drawn.turnables) { add(turnable); }
 			for (const auto& frame : object.animation.bitmaps) { add(frame); }
-			addLooks(object.looks.all);
-			for (const xge::Object::Palette& palette : object.looks.palettes)
+			addLooks(object.looks.all());
+			for (const xge::Object::Palette& palette : object.looks.set->palettes)
 			{
 				add(palette.bitmap);
 				for (const auto& frame : palette.animation) { add(frame); }

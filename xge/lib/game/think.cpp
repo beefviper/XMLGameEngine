@@ -133,7 +133,7 @@ namespace xge
 				kind.objClass = object->objClass;
 				kind.moveSets = object->moves.sets;
 				kind.look = object->looks.shown;
-				for (const auto& look : object->looks.all) { kind.lookNames.push_back(look.name); }
+				for (const auto& look : object->looks.all()) { kind.lookNames.push_back(look.name); }
 				types.push_back(std::move(kind));
 				typeOf[object] = &types.back();
 				return &types.back();

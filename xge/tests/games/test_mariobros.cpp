@@ -192,8 +192,8 @@ TEST_CASE("mariobros.xml: a pest that gets up by itself turns red, and blue the 
 		creeper.clocks.at(2).counting = true; creeper.clocks.at(2).secondsLeft = 1.0 / 60.0;
 		play.frames(3);
 		REQUIRE(creeper.lookName() == "walking");
-		REQUIRE_FALSE(creeper.looks.palettes.empty());
-		CHECK(creeper.looks.palettes.at(creeper.looks.worn).name == colour);
+		REQUIRE_FALSE(creeper.looks.set->palettes.empty());
+		CHECK(creeper.looks.set->palettes.at(creeper.looks.worn).name == colour);
 		creeper.position.x = 40.0f;
 	}
 }
@@ -242,7 +242,7 @@ TEST_CASE("mariobros.xml: one player leaves Luigi out; 2 on the title brings him
 	REQUIRE(two.luigi().isVisible);
 	CHECK(two.get("score2").isVisible);
 	CHECK(two.luigi().variable.at("lives") == Approx(3.0f));
-	CHECK(two.luigi().looks.palettes.at(two.luigi().looks.worn).name == "luigi");
+	CHECK(two.luigi().looks.set->palettes.at(two.luigi().looks.worn).name == "luigi");
 
 	// The arrows walk Luigi, not Mario.
 	const float marioWas = two.mario().position.x;
