@@ -4,6 +4,7 @@
 // date: Oct 12, 2026
 
 #include "play/verbs.h"
+#include "game/parts.h"
 
 #include "game/command.h"
 #include "game/random.h"
@@ -94,9 +95,9 @@ namespace xge
 		//   frame or two ago and its pull points between the two (wedged in a
 		//   corner), it comes to rest: still, and not pulled, until something
 		//   moves it or what it rests on moves (applyAcceleration).
-		void rub(Object& mover, const Object& surface, const Vector2f& out, const Vector2f& surfaceAt, const Vector2f& before, float settle)
+		void rub(Object& mover, Object::Rest* rest, const Object& surface, const Vector2f& out, const Vector2f& surfaceAt, const Vector2f& before, float settle)
 		{
-			if (!(mover.motion.friction > 0.0f)) { return; }
+			if (!rest || !(mover.motion.friction > 0.0f)) { return; }
 
 			const Vector2f cameIn = before - surfaceAt;
 			Vector2f now = mover.velocity - surfaceAt;
@@ -112,13 +113,13 @@ namespace xge
 			if (!(-dotOf(cameIn, out) < settle)) { return; }
 
 			// Settled on another within the last two sixtieths of a second.
-			const bool another = mover.rest.settledAge <= 2.0f / 60.0f + kTimeSlack && dotOf(mover.rest.settledNormal, out) < 0.95f;
-			const Vector2f other = mover.rest.settledNormal;
-			const Object::Support otherSupport = mover.rest.settledOn;
+			const bool another = rest->settledAge <= 2.0f / 60.0f + kTimeSlack && dotOf(rest->settledNormal, out) < 0.95f;
+			const Vector2f other = rest->settledNormal;
+			const Object::Support otherSupport = rest->settledOn;
 			const Object::Support support{ surface.name, surface.position, surface.heading };
-			mover.rest.settledOn = support;
-			mover.rest.settledNormal = out;
-			mover.rest.settledAge = 0.0f;
+			rest->settledOn = support;
+			rest->settledNormal = out;
+			rest->settledAge = 0.0f;
 
 			const bool still = surface.turning.spin == 0.0f && surfaceAt.x == 0.0f && surfaceAt.y == 0.0f;
 			if (!still || !(lengthOf(now) < settle)) { return; }
@@ -126,7 +127,7 @@ namespace xge
 			const Vector2f pull = mover.acceleration;
 			const float into = -dotOf(pull, out);
 			if (!(into > 0.0f)) { return; }
-			mover.rest.on.clear();
+			rest->on.clear();
 			if (lengthOf(pull + out * into) > mover.motion.friction * into)
 			{
 				if (!another) { return; }
@@ -134,17 +135,17 @@ namespace xge
 				const float first = crossOf(other, up);
 				const float second = crossOf(up, out);
 				if (!(dotOf(pull, other) < 0.0f && first != 0.0f && second != 0.0f && (first > 0.0f) == (second > 0.0f))) { return; }
-				mover.rest.on.push_back(otherSupport);
+				rest->on.push_back(otherSupport);
 			}
-			mover.rest.on.push_back(support);
+			rest->on.push_back(support);
 
 			mover.velocity = {};
-			mover.rest.resting = true;
-			mover.rest.at = mover.position;
+			rest->resting = true;
+			rest->at = mover.position;
 		}
 	}
 
-	bool knock(Object& object, Object& other, const Touch& touch, float bounce)
+	bool knock(Parts& parts, Object& object, Object& other, const Touch& touch, float bounce)
 	{
 		// Each one's speed at the point they touch: a thing turning about
 		// its pivot (a flipper swinging) moves faster the further out the
@@ -178,13 +179,13 @@ namespace xge
 		other.velocity += after->second - otherAt;
 
 		// One against something that does not move: its friction.
-		if (other.motion.mass <= 0.0f && object.motion.mass > 0.0f) { rub(object, other, touch.normal, otherAt, objectWas, settle); }
-		else if (object.motion.mass <= 0.0f && other.motion.mass > 0.0f) { rub(other, object, way, objectAt, otherWas, settle); }
+		if (other.motion.mass <= 0.0f && object.motion.mass > 0.0f) { rub(object, parts.rests.find(object.id), other, touch.normal, otherAt, objectWas, settle); }
+		else if (object.motion.mass <= 0.0f && other.motion.mass > 0.0f) { rub(other, parts.rests.find(other.id), object, way, objectAt, otherWas, settle); }
 
 		return true;
 	}
 
-	void bounce(Object& object, const Object& other, const Touch& touch, float share)
+	void bounce(Parts& parts, Object& object, const Object& other, const Touch& touch, float share)
 	{
 		// The way from the object into the other, a surface standing still:
 		// only the object's speed along that way changes. (A surface that
@@ -195,7 +196,7 @@ namespace xge
 		if (const std::optional<Knocked> after = knockedApart(object.velocity, 1.0f, Vector2f{}, 0.0f, way, share, settle))
 		{
 			object.velocity = after->first;
-			rub(object, other, touch.normal, Vector2f{}, was, settle);
+			rub(object, parts.rests.find(object.id), other, touch.normal, Vector2f{}, was, settle);
 		}
 	}
 

@@ -164,7 +164,7 @@ TEST_CASE("pinball.xml: a ball caught on a raised flipper rolls down to the hing
 	table.frames(120);
 	// Wedged between the flipper and the slope above it: still, not a hair
 	// of jitter.
-	REQUIRE(table.ball().rest.resting);
+	REQUIRE(table.game.parts().rests.get(table.ball().id).resting);
 	const Vector2f settled = table.ball().position;
 	CHECK(table.middle(table.ball()).x < 155.0f);
 	for (int i = 0; i < 60; ++i)
@@ -177,7 +177,7 @@ TEST_CASE("pinball.xml: a ball caught on a raised flipper rolls down to the hing
 	// sends it up the table.
 	table.engine.handleKeyReleased(KeyCode::A);
 	table.frames(20);
-	CHECK_FALSE(table.ball().rest.resting);
+	CHECK_FALSE(table.game.parts().rests.get(table.ball().id).resting);
 	CHECK(table.middle(table.ball()).x > settled.x + 10.0f);
 	table.engine.handleKeyPressed(KeyCode::A);
 	table.frames(8);

@@ -1473,8 +1473,7 @@ namespace xge
 			object.picker.toRow = 0;
 			object.marks.marked.clear();
 			object.marks.copies.clear();
-			object.rest.resting = false;
-			object.rest.settledAge = 1000.0f;
+			if (Object::Rest* rest = parts.rests.find(object.id)) { *rest = {}; }
 			object.turning.spin = 0.0f;
 			object.showHeading();
 

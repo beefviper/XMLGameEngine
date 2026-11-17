@@ -14,6 +14,8 @@
 
 namespace xge
 {
+	struct Parts;
+
 	// What a verb does to an object, once something has decided it should
 	// happen: no game file, no rules and no looking anything up, only the
 	// object (and what it touched) changed. CommandExecutor calls these
@@ -73,7 +75,7 @@ namespace xge
 	// straight out, so off a box this is the plain flip.
 	// With <friction>, it rubs along the surface and may come to rest on it
 	// (see Object::Rest).
-	void bounce(Object& object, const Object& other, const Touch& touch, float share);
+	void bounce(Parts& parts, Object& object, const Object& other, const Touch& touch, float share);
 
 	// <bounce /> off a screen edge, which faces straight in.
 	void bounceOffEdge(Object& object, Edge edge, float share);
@@ -86,7 +88,7 @@ namespace xge
 	// knockedApart); `touch` is the object's own view of it. Two that went
 	// into each other are put apart along the touch, the lighter moved
 	// more. Whether they were coming together.
-	bool knock(Object& object, Object& other, const Touch& touch, float bounce);
+	bool knock(Parts& parts, Object& object, Object& other, const Touch& touch, float bounce);
 
 	// <hole>: clears the pixels of the object's own picture within `radius`
 	// of where `other` struck it - the solid pixel nearest the middle of

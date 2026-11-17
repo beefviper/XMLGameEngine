@@ -1,6 +1,6 @@
 # An object's parts
 
-**Status:** Counted; parts go in a store each (the author). The per-part proposals are applied as each part moves ([CR3](../plan.md#cr3-parts-as-components)); `Holder`, `Drive`, `Hand`, `Maze`, `Cells`, `Tether`, `Pull` and `Aloft` have moved. Why parts become components is in [engine-structure](16-engine-structure.md).
+**Status:** Counted; parts go in a store each (the author). The per-part proposals are applied as each part moves ([CR3](../plan.md#cr3-parts-as-components)); `Holder`, `Drive`, `Hand`, `Maze`, `Cells`, `Tether`, `Pull`, `Aloft` and `Rest` have moved. Why parts become components is in [engine-structure](16-engine-structure.md).
 
 ## How they were counted
 

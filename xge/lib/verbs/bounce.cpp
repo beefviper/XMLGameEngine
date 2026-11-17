@@ -33,7 +33,7 @@ namespace xge
 	static bool runBounce(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
 		const CmdBounce& bounce = std::get<CmdBounce>(command);
-		if (doer.self && doer.touch && doer.other) { xge::bounce(*doer.self, *doer.other, *doer.touch, bounce.share); }
+		if (doer.self && doer.touch && doer.other) { xge::bounce(executor.game.parts(), *doer.self, *doer.other, *doer.touch, bounce.share); }
 		else if (doer.self && doer.screenEdge) { executor.bounceScreenEdge(*doer.self, *doer.screenEdge, bounce.share); }
 		return true;
 	}

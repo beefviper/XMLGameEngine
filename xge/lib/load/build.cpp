@@ -289,6 +289,7 @@ namespace xge
 
 		if (rawObject.hasFriction)
 		{
+			parts->rests.add(object.id, parts->orderOf(object.id), {});
 			object.motion.friction = evaluate(rawObject.rawFriction, where);
 			if (object.motion.friction < 0.0f)
 			{

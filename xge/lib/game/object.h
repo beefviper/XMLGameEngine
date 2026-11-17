@@ -1881,7 +1881,7 @@ namespace xge
 		// (play/verbs.cpp's rub), which also keeps the last surface it
 		// settled on, the way out of it and how many seconds ago
 		// (`settledOn`, `settledNormal`, `settledAge`), for one wedged
-		// between two.
+		// between two. A part (Parts::rests), for an object with <friction>.
 		struct Rest
 		{
 			bool resting{ false };
@@ -1891,7 +1891,6 @@ namespace xge
 			Vector2f settledNormal;
 			float settledAge{ 1000.0f };
 		};
-		Rest rest;
 
 		// What draws it toward other things each frame (see playOneFrame). A
 		// part (Parts::pulls), for an object with a <pull> or a <seek>.

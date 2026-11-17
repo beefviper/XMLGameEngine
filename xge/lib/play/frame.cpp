@@ -362,20 +362,20 @@ namespace xge
 				// At rest (Object::Rest): nothing pulls it while it lies
 				// where it came to rest, still, on something still there as
 				// it was. Anything else wakes it.
-				if (object.motion.friction > 0.0f)
+				if (Object::Rest* rest = rules.parts().rests.find(object.id); rest && object.motion.friction > 0.0f)
 				{
-					if (object.rest.settledAge < 1000.0f) { object.rest.settledAge += seconds; }
-					if (object.rest.resting)
+					if (rest->settledAge < 1000.0f) { rest->settledAge += seconds; }
+					if (rest->resting)
 					{
-						object.rest.resting = object.velocity.x == 0.0f && object.velocity.y == 0.0f && object.position == object.rest.at
-							&& std::all_of(object.rest.on.begin(), object.rest.on.end(), [&](const Object::Support& support)
+						rest->resting = object.velocity.x == 0.0f && object.velocity.y == 0.0f && object.position == rest->at
+							&& std::all_of(rest->on.begin(), rest->on.end(), [&](const Object::Support& support)
 								{
 									const auto under = std::find_if(objects.begin(), objects.end(), [&](const Object& other) { return other.name == support.name; });
 									return under != objects.end() && rules.inPlay(*under) && under->position == support.at
 										&& under->heading == support.heading && under->turning.spin == 0.0f;
 								});
 					}
-					if (object.rest.resting) { continue; }
+					if (rest->resting) { continue; }
 				}
 
 				const Vector2f was = object.velocity;

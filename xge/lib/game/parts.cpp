@@ -40,6 +40,7 @@ namespace xge
 		tethers.remove(id);
 		pulls.remove(id);
 		alofts.remove(id);
+		rests.remove(id);
 	}
 
 	namespace
@@ -62,5 +63,6 @@ namespace xge
 		copyPart(tethers, from.tethers, id);
 		copyPart(pulls, from.pulls, id);
 		copyPart(alofts, from.alofts, id);
+		copyPart(rests, from.rests, id);
 	}
 }
