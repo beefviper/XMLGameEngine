@@ -372,7 +372,13 @@ namespace xge
 				polygon.color = colorFromName(rawPolygon.color.empty() ? "color.white" : rawPolygon.color);
 				polygons.push_back(std::move(polygon));
 			}
-			drawn = std::make_shared<const Bitmap>(rasterizePolygons(polygons));
+			std::string key = "polygons";
+			for (const FilledPolygon& polygon : polygons)
+			{
+				key += "|" + colorKey(polygon.color);
+				for (const auto& [x, y] : polygon.points) { key += ";" + keyNumber(x) + "," + keyNumber(y); }
+			}
+			drawn = drawOnce(key, [&] { return rasterizePolygons(polygons); });
 		}
 		else if (sprite.kind == "cell")
 		{
