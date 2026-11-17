@@ -80,6 +80,8 @@ TEST_CASE("objects drawn alike share one picture, and a colour makes another", "
 	const Kind kinds[] = {
 		{ "rows", "<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>color.red</color></bitmap>",
 			"<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>color.blue</color></bitmap>" },
+		{ "lines", "<line><from><x>0</x><y>0</y></from><to><x>6</x><y>4</y></to><color>color.red</color></line>",
+			"<line><from><x>0</x><y>0</y></from><to><x>6</x><y>4</y></to><color>color.blue</color></line>" },
 	};
 	for (const Kind& kind : kinds)
 	{

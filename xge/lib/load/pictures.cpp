@@ -61,6 +61,11 @@ namespace xge
 			return std::string(text, written.ptr);
 		}
 
+		std::string colorKey(const Color& color)
+		{
+			return std::to_string(color.r) + "." + std::to_string(color.g) + "." + std::to_string(color.b) + "." + std::to_string(color.a);
+		}
+
 		bool takesStyle(const RawSprite& sprite)
 		{
 			return (sprite.kind == "bitmap" && !sprite.style.empty()) || std::any_of(sprite.frames.begin(), sprite.frames.end(), takesStyle);
@@ -341,8 +346,15 @@ namespace xge
 				kept->lines.push_back(segment);
 			}
 
-			// 2. Drawn. (Kept as lines for turning: see step 4.)
-			drawn = std::make_shared<const Bitmap>(rasterizeLines(kept->lines));
+			// 2. Drawn, once for every sprite of the same lines. (Kept as
+			// lines for turning: see step 4.)
+			std::string key = "lines";
+			for (const LineSegment& line : kept->lines)
+			{
+				key += "|" + keyNumber(line.x1) + "," + keyNumber(line.y1) + "," + keyNumber(line.x2) + "," + keyNumber(line.y2)
+					+ "," + std::to_string(line.thickness) + "," + colorKey(line.color);
+			}
+			drawn = drawOnce(key, [&] { return rasterizeLines(kept->lines); });
 		}
 		else if (sprite.kind == "polygon")
 		{
