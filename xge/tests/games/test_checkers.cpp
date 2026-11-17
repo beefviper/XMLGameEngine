@@ -367,7 +367,7 @@ namespace
 		std::vector<std::pair<int, int>> cells;
 		for (const Object& object : board.game.getCurrentObjects())
 		{
-			if (object.exists && object.copyOf.find(mark) != std::string::npos) { cells.emplace_back(cell(board.game.place(object).column), cell(board.game.place(object).row)); }
+			if (object.exists && object.copyOf.str().find(mark) != std::string::npos) { cells.emplace_back(cell(board.game.place(object).column), cell(board.game.place(object).row)); }
 		}
 		std::sort(cells.begin(), cells.end());
 		return cells;

@@ -278,7 +278,7 @@ namespace xge
 		RawObject copy = *raw;
 		const Renamed renamed = renameOwn(copy, original.name, name);
 		const bool namedIt = renamed.kind;
-		copy.outerGroups = original.outerGroups;
+		copy.outerGroups = textsOf(original.outerGroups);
 		if (!original.groupName.empty()) { copy.outerGroups.push_back(original.groupName); }
 		copy.groupName = original.name;
 		copy.exists = true;
@@ -331,9 +331,9 @@ namespace xge
 			if (const auto found = original.kind->action.find(actionName); found != original.kind->action.end()) { whens(found->second, list); }
 		}
 
-		made.copyOf = original.name;
-		made.groupName = copy.groupName;
-		made.outerGroups = copy.outerGroups;
+		made.copyOf = nameOf(original.name);
+		made.groupName = nameOf(copy.groupName);
+		made.outerGroups = expr.names.of(copy.outerGroups);
 		made.ownerState = original.ownerState;
 		made.ownerScene = original.ownerScene;
 		made.start.ownerScene = original.ownerScene;
@@ -634,7 +634,7 @@ namespace xge
 			const std::string& what = carrying(carrier);
 			if (what.empty() || !carrier.ownerScene.empty()) { continue; }
 			Object* carried = tryGetObject(what);
-			if (carried && carried->ownerState == state && !carried->ownerScene.empty()) { carried->ownerScene = scene; }
+			if (carried && carried->ownerState == state && !carried->ownerScene.empty()) { carried->ownerScene = nameOf(scene); }
 		}
 		stageChanged();
 	}

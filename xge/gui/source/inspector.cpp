@@ -459,7 +459,7 @@ namespace xge
 
 		addText(node, tr("class"),
 			[object]() { return text(object().objClass); },
-			[object](const QString& value) { object().objClass = value.toStdString(); });
+			[this, object](const QString& value) { object().objClass = game().nameOf(value.toStdString()); });
 		addBool(node, tr("visible"),
 			[object]() { return object().isVisible ? 1.0 : 0.0; },
 			[object](double value) { object().isVisible = value != 0; });

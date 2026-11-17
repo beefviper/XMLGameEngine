@@ -74,7 +74,7 @@ namespace xge
 			felt.point = { std::clamp(touch.point.x, at.left(), at.right()), std::clamp(touch.point.y, at.top(), at.bottom()) };
 			felt.along = 0.5f;
 			felt.time = touch.time;
-			felt.through = &other.objClass;
+			felt.through = &other.objClass.str();
 			executor.game.reactTo(thing, object, felt);
 		}
 	}

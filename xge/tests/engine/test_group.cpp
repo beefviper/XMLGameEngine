@@ -629,7 +629,7 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 
 	const Object& slow = game.getObject("slow.2");
 	CHECK(slow.groupName == "slow");
-	CHECK(slow.outerGroups == std::vector<std::string>{ "lanes" });
+	CHECK(textsOf(slow.outerGroups) == std::vector<std::string>{ "lanes" });
 	CHECK(slow.objClass == "logs");
 	CHECK(slow.position.x == 200.0f);
 	CHECK(slow.position.y == 20.0f);

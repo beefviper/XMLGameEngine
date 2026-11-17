@@ -456,7 +456,7 @@ namespace
 		{
 			if (object.exists && object.map.cells && !game.isShape(object) && game.cellPart(object).shapeOwner.empty())
 			{
-				const std::string group = object.groupName.substr(object.groupName.rfind('.') + 1);
+				const std::string group = object.groupName.str().substr(object.groupName.str().rfind('.') + 1);
 				found[{ static_cast<int>(game.place(object).column), static_cast<int>(game.place(object).row) }] = group;
 			}
 		}

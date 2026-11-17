@@ -60,7 +60,7 @@ namespace xge
 			const auto add = [&](const std::string& name)
 			{
 				names.insert(name);
-				for (const std::string* owner : { &object.ownerScene, &object.ownerState })
+				for (const std::string* owner : { &object.ownerScene.str(), &object.ownerState.str() })
 				{
 					if (!owner->empty() && name.size() > owner->size() + 1 && name.compare(0, owner->size() + 1, *owner + ".") == 0)
 					{

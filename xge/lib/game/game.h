@@ -81,6 +81,9 @@ namespace xge
 		// Every picture the game has loaded or made, each held once.
 		const Resources& resources() const noexcept { return expr.resources; }
 
+		// The game's name for that text (NameStore), held from now on.
+		Name nameOf(std::string_view text) { return expr.names.of(text); }
+
 		// Whether the object is in play: it moves, animates, counts its timers
 		// and collides (and is drawn, unless it is <hidden />). It
 		// is, when it is not hidden or dead, and is the current state's (or

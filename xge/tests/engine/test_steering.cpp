@@ -69,7 +69,7 @@ namespace
 			int found = 0;
 			for (const auto& object : game.getCurrentObjects())
 			{
-				if (object.exists && object.isCopy() && object.groupName.size() >= piece.size() && object.groupName.compare(object.groupName.size() - piece.size(), piece.size(), piece) == 0) { ++found; }
+				if (object.exists && object.isCopy() && object.groupName.size() >= piece.size() && object.groupName.str().compare(object.groupName.size() - piece.size(), piece.size(), piece) == 0) { ++found; }
 			}
 			return found;
 		}

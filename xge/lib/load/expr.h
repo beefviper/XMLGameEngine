@@ -300,6 +300,8 @@ namespace xge
 
 		// Every picture the game has loaded or made, each held once.
 		Resources resources;
+		// The game's names, each held once (Name).
+		NameStore names;
 
 		// The game's handles and parts (Game::parts), which each object made
 		// joins.

@@ -94,6 +94,7 @@ set(ENGINE_HEADERS
 	"xge/lib/game/states.h"
 	"xge/lib/game/condition.h"
 	"xge/lib/game/scenes.h"
+	"xge/lib/game/name.h"
 	"xge/lib/game/store.h"
 	"xge/lib/game/parts.h"
 	"xge/lib/game/types.h"

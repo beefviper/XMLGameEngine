@@ -53,7 +53,7 @@ Kind is as [engine-structure](16-engine-structure.md#how-the-parts-are-grouped) 
 | `carry` | verb's own | `<carry>`, `<drop>` | 72 | 1 | dropped | keep |
 | `aim`, `hasAim` | verb's own | `<aim>` | 9 | 1 | dropped | a part `aim` |
 
-Loose fields that stay in the object: `name`, `objClass`, `groupName` and `outerGroups` (how rules find it), `line`, `copyOf` and `most` (spawns), `kept`, `ownerState`, `isDrawn`, `drawOrder`, `size`. Loose fields that join a part: `hasFacing` (into `turning`), `blink` (into `drawn`), `riding`, `hopPending` and `shifted` (into `motion`), `startDrawsRandom` (into `looks`).
+Loose fields that stay in the object: `name`, `objClass`, `groupName` and `outerGroups` (how rules find it; all but `name` are now a `Name`, one pointer into the game's store of names, so each text is held once), `line`, `copyOf` and `most` (spawns), `kept`, `ownerState`, `isDrawn`, `drawOrder`, `size`. Loose fields that join a part: `hasFacing` (into `turning`), `blink` (into `drawn`), `riding`, `hopPending` and `shifted` (into `motion`), `startDrawsRandom` (into `looks`).
 
 ## Found while counting
 

@@ -177,12 +177,12 @@ TEST_CASE("the portcullis stops the hero, and rises for its own key he carries",
 
 	// The black key does nothing to it.
 	play.put("blackkey", 312, 270);
-	play.object("blackkey").ownerScene = "playing.castle";
+	play.object("blackkey").ownerScene = play.game.nameOf("playing.castle");
 	play.put("hero", 315, 290);
 	play.hold(KeyCode::Up, 30);
 	CHECK(play.game.isShown(gate));
 	play.tap(KeyCode::Space);
-	play.object("blackkey").ownerScene = "playing.hall";
+	play.object("blackkey").ownerScene = play.game.nameOf("playing.hall");
 	play.put("blackkey", 300, 200);
 
 	// The gold key held ahead of him reaches the gate first, which rises.
@@ -233,7 +233,7 @@ TEST_CASE("a dragon chases the hero and eats him; the sword slays it", "[adventu
 		Adventure play;
 		play.start(true);
 		play.enter("field");
-		play.object("sword").ownerScene = "playing.field";
+		play.object("sword").ownerScene = play.game.nameOf("playing.field");
 		play.put("hero", 300, 200);
 		play.put("sword", 330, 215);
 		play.put("yorgle", 380, 200);

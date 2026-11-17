@@ -175,15 +175,15 @@ namespace xge
 	// drawn, seen and there.
 	void game_expr::buildNames(RawObject& rawObject, Object& object)
 	{
-		object.groupName = rawObject.groupName;
-		object.outerGroups = rawObject.outerGroups;
+		object.groupName = names.of(rawObject.groupName);
+		object.outerGroups = names.of(rawObject.outerGroups);
 		object.name = rawObject.name;
 		object.line = rawObject.line;
-		object.objClass = rawObject.objClass;
+		object.objClass = names.of(rawObject.objClass);
 		object.isDrawn = rawObject.isDrawn;
-		object.ownerState = rawObject.ownerState;
-		object.ownerScene = rawObject.ownerScene;
-		object.start.ownerScene = rawObject.ownerScene;
+		object.ownerState = names.of(rawObject.ownerState);
+		object.ownerScene = names.of(rawObject.ownerScene);
+		object.start.ownerScene = object.ownerScene;
 
 		if (rawObject.objClass == "projectile")
 		{

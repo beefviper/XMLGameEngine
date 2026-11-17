@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "game/name.h"
 #include "picture/bitmap.h"
 #include "game/command.h"
 #include "game/condition.h"
@@ -1109,7 +1110,7 @@ namespace xge
 
 		// The scene it is in (see RawObject::ownerState): an object carried
 		// into another scene (<enter>) belongs to that one from then on.
-		std::string ownerScene;
+		Name ownerScene;
 
 		// Its <variable>s by name, and its named timers' time left.
 		std::map<std::string, float> variable;
@@ -1207,9 +1208,9 @@ namespace xge
 		// logrow3.2, ...), or empty. It can be used wherever the XML names an
 		// object (a state's <show>, object= in a rule or
 		// condition, <reset object="..." />) to mean every member at once.
-		std::string groupName;
+		Name groupName;
 		// The groups around that one, outermost first (see RawObject).
-		std::vector<std::string> outerGroups;
+		std::vector<Name> outerGroups;
 
 		// Whether `group` is this object's group or one around it.
 		bool inGroup(const std::string& group) const
@@ -1219,7 +1220,7 @@ namespace xge
 
 		// Whether `name` names it: its own name, or a group it is in.
 		bool named(const std::string& wanted) const { return name == wanted || inGroup(wanted); }
-		std::string objClass;
+		Name objClass;
 
 		// Whether it is drawn while in play (see RawObject::isDrawn).
 		bool isDrawn{ true };
@@ -1229,7 +1230,7 @@ namespace xge
 		// (shot.1, shot.2 for copies of shot). Empty for an object the file
 		// wrote. `most` is how many copies of this one may exist at once (0:
 		// no limit), from <most>.
-		std::string copyOf;
+		Name copyOf;
 		int most{ 0 };
 		bool isCopy() const noexcept { return !copyOf.empty(); }
 
@@ -1239,7 +1240,7 @@ namespace xge
 
 		// The state it belongs to (see RawObject::ownerState); its scene is
 		// the Moment's ownerScene.
-		std::string ownerState;
+		Name ownerState;
 
 		// How far <shift> has moved the place it goes home to (a path's
 		// <home />) since it was last put back.
