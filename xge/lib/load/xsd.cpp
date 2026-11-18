@@ -8,14 +8,21 @@
 #include "xml/document.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <charconv>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <filesystem>
 #include <map>
+#include <memory>
+#include <mutex>
 #include <optional>
 #include <set>
+#include <string>
+#include <system_error>
+#include <utility>
 #include <vector>
 
 namespace xge
@@ -1390,5 +1397,48 @@ namespace xge
 	std::string XsdLiteValidator::getErrorMessage() const
 	{
 		return errorMessage;
+	}
+
+	namespace
+	{
+		struct KeptSchema
+		{
+			std::filesystem::file_time_type changed;
+			std::unique_ptr<XsdLiteValidator> validator;
+		};
+
+		// Each schema parsed, by its path and backend. The lock covers
+		// validating too: a validator keeps its last error.
+		std::mutex keptSchemasLock;
+		std::map<std::pair<std::string, XmlBackend>, KeptSchema> keptSchemas;
+		std::atomic<std::size_t> schemaReadCount{ 0 };
+	}
+
+	bool validateWithKeptSchema(const XmlNode& root, const std::string& schemaPath, XmlBackend backend, std::string& why)
+	{
+		std::error_code unknown;
+		const std::filesystem::file_time_type changed = std::filesystem::last_write_time(schemaPath, unknown);
+		const std::lock_guard<std::mutex> hold(keptSchemasLock);
+		KeptSchema& kept = keptSchemas[{ schemaPath, backend }];
+		if (!kept.validator || kept.changed != changed || unknown)
+		{
+			auto validator = std::make_unique<XsdLiteValidator>();
+			++schemaReadCount;
+			if (!validator->loadSchema(schemaPath, backend))
+			{
+				why = validator->getErrorMessage();
+				kept = {};
+				return false;
+			}
+			kept = { changed, std::move(validator) };
+		}
+		if (kept.validator->validate(root)) { return true; }
+		why = kept.validator->getErrorMessage();
+		return false;
+	}
+
+	std::size_t schemaReads() noexcept
+	{
+		return schemaReadCount.load();
 	}
 }

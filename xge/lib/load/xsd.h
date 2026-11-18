@@ -7,6 +7,7 @@
 
 #include "xml/document.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -85,4 +86,13 @@ namespace xge
 		std::unique_ptr<Model> model;
 		mutable std::string errorMessage;
 	};
+
+	// Checks `root` against the schema at `schemaPath`, read with `backend`.
+	// The schema is parsed once for the program, as it outlives every game
+	// that names it, and again only when its file changes. False, with `why`,
+	// if the schema cannot be read or `root` does not match it.
+	bool validateWithKeptSchema(const XmlNode& root, const std::string& schemaPath, XmlBackend backend, std::string& why);
+
+	// How many times a schema file has been parsed, for a test.
+	std::size_t schemaReads() noexcept;
 }

@@ -3612,11 +3612,10 @@ namespace xge
 			{
 				const std::string schemaPath = findSchema(filename, schemaLocation).string();
 
-				XsdLiteValidator validator;
-
-				if (!validator.loadSchema(schemaPath, backend) || !validator.validate(*root))
+				std::string why;
+				if (!validateWithKeptSchema(*root, schemaPath, backend, why))
 				{
-					throw std::runtime_error("XML file failed to validate against the schema: " + validator.getErrorMessage());
+					throw std::runtime_error("XML file failed to validate against the schema: " + why);
 				}
 
 				validation = SchemaValidation::Weak;

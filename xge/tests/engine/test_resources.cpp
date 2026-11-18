@@ -10,6 +10,8 @@
 #include "engine/resources.h"
 #include "window/null.h"
 #include "picture/image.h"
+#include "load/xml.h"
+#include "load/xsd.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
@@ -191,4 +193,14 @@ TEST_CASE("a sheet is opened once to cut its cells, and let go once the game has
 	Game klondike{ "descriptions/klondike.xml" };
 	CHECK(klondike.resources().sheetsOpen() == 0);
 	CHECK(klondike.resources().pictureCount() > 52);   // the cards were cut from it
+}
+
+TEST_CASE("the schema is read once for every game that names it", "[resources][schema]")
+{
+	Game first{ readGame("descriptions/pong.xml", XmlBackend::PugiXml) };
+	const std::size_t reads = schemaReads();
+	Game second{ readGame("descriptions/pong.xml", XmlBackend::PugiXml) };
+	Game third{ readGame("descriptions/frogger.xml", XmlBackend::PugiXml) };
+	CHECK(schemaReads() == reads);
+	CHECK(reads >= 1);
 }
