@@ -236,12 +236,12 @@ namespace xge
 
 		// What it follows, worked out again every frame (Game::follow).
 		using Follow = Object::Follow;
-		if (rawObject.rawPosition.x.live) { object.follows.push_back({ Follow::Part::X, "", rawObject.rawPosition.x }); }
-		if (rawObject.rawPosition.y.live) { object.follows.push_back({ Follow::Part::Y, "", rawObject.rawPosition.y }); }
-		if (rawObject.hasHeading && rawObject.rawHeading.live) { object.follows.push_back({ Follow::Part::Heading, "", rawObject.rawHeading }); }
+		if (rawObject.rawPosition.x.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::X, "", rawObject.rawPosition.x }); }
+		if (rawObject.rawPosition.y.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Y, "", rawObject.rawPosition.y }); }
+		if (rawObject.hasHeading && rawObject.rawHeading.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Heading, "", rawObject.rawHeading }); }
 		for (const auto& [name, value] : rawObject.variable)
 		{
-			if (value.live) { object.follows.push_back({ Follow::Part::Variable, name, value }); }
+			if (value.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Variable, name, value }); }
 		}
 
 		object.velocity.x = evaluate(rawObject.rawVelocity.x, where);
@@ -416,11 +416,11 @@ namespace xge
 		const auto followSeconds = [&](const RawValue& interval, const std::vector<RawValue>& times, std::size_t look)
 		{
 			using Follow = Object::Follow;
-			if (interval.live) { object.follows.push_back({ Follow::Part::Seconds, "", interval, look, std::string::npos }); }
+			if (interval.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Seconds, "", interval, look, std::string::npos }); }
 			for (std::size_t i = 0; i < times.size(); ++i)
 			{
 				const RawValue& time = frameTimeGiven(times[i]) ? times[i] : interval;
-				if (time.live) { object.follows.push_back({ Follow::Part::Seconds, "", time, look, i }); }
+				if (time.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Seconds, "", time, look, i }); }
 			}
 		};
 		if (rawObject.hasAnimation) { followSeconds(rawObject.animation.interval, rawObject.animation.times, std::string::npos); }

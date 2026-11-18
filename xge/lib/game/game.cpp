@@ -1490,10 +1490,10 @@ namespace xge
 			object.dark.seen = false;
 			object.dark.hidden = object.dark.kind != Object::Darkness::None;
 
-			if (object.drawn.unholed)
+			if (Object::Unholed* unholed = parts.unholed.find(object.id))
 			{
-				object.drawn.bitmap = std::move(object.drawn.unholed);
-				object.drawn.unholed.reset();
+				object.drawn.bitmap = std::move(unholed->bitmap);
+				parts.unholed.remove(object.id);
 				object.drawn.visualDirty = true;
 			}
 
@@ -2239,9 +2239,10 @@ namespace xge
 	{
 		for (Object& object : getCurrentObjects())
 		{
-			if (object.follows.empty() || !object.exists) { continue; }
+			const Object::Follows* follows = objectParts.follows.find(object.id);
+			if (!follows || !object.exists) { continue; }
 			const std::string where = "object '" + object.name + "'";
-			for (const Object::Follow& each : object.follows)
+			for (const Object::Follow& each : follows->each)
 			{
 				const float value = evaluateNow(each.value, where);
 				switch (each.part)

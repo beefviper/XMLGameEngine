@@ -22,7 +22,7 @@ namespace xge
 		return measureShapeSize(object.drawn.picture);
 	}
 
-	void cutHole(Object& object, const Object& other, float radius, float rough)
+	void cutHole(Parts& parts, Object& object, const Object& other, float radius, float rough)
 	{
 		if (!object.drawn.bitmap) { return; }
 
@@ -72,7 +72,7 @@ namespace xge
 		}
 		if (!changed) { return; }
 
-		if (!object.drawn.unholed) { object.drawn.unholed = object.drawn.bitmap; }
+		if (!parts.unholed.has(object.id)) { parts.unholed.add(object.id, parts.orderOf(object.id), { object.drawn.bitmap }); }
 		object.drawn.bitmap = std::move(cut);
 		object.drawn.visualDirty = true;
 	}

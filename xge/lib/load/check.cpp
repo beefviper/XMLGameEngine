@@ -278,7 +278,8 @@ namespace xge
 	void refuseFollowed(const Checking& checking, const VariableName& target, const std::string& tag)
 	{
 		const Object* owner = target.variable.empty() ? nullptr : findObject(checking.objects, target.owner);
-		if (owner && owner->followsPart(target.variable))
+		const Object::Follows* follows = owner ? checking.parts.follows.find(owner->id) : nullptr;
+		if (follows && follows->has(target.variable))
 		{
 			throw std::runtime_error(checking.where + ": " + tag + ": '" + target.written() + "' is update=\"live\", worked out every frame from what it reads;"
 				" no command can change it. Change what it reads, or leave out update=\"live\"");

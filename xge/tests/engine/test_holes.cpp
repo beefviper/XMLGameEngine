@@ -59,7 +59,8 @@ TEST_CASE("a <hole> is cut round the middle of what hit, and the next shot goes 
 	play.frames(30);
 	const Object& hit = play.get("wall");
 	CHECK(hit.drawn.bitmap != whole);
-	CHECK(hit.drawn.unholed == whole);
+	REQUIRE(play.game.parts().unholed.find(hit.id));
+	CHECK(play.game.parts().unholed.find(hit.id)->bitmap == whole);
 	CHECK_FALSE(hit.drawn.bitmap->solidAt(20, 39));
 	CHECK(hit.drawn.bitmap->solidAt(20, 20));
 	CHECK(hit.drawn.bitmap->solidAt(2, 39));
@@ -82,7 +83,7 @@ TEST_CASE("a <hole> is cut round the middle of what hit, and the next shot goes 
 	CHECK(solidPixels(*whole) == 1600);
 	play.tap(KeyCode::Space);
 	CHECK(play.get("wall").drawn.bitmap == whole);
-	CHECK_FALSE(play.get("wall").drawn.unholed);
+	CHECK_FALSE(play.game.parts().unholed.has(play.get("wall").id));
 	CHECK(solidPixels(play.get("wall")) == 1600);
 }
 

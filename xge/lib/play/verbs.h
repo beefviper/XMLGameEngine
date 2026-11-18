@@ -6,6 +6,7 @@
 #pragma once
 
 #include "game/object.h"
+#include "game/parts.h"
 #include "game/types.h"
 #include "play/geometry.h"
 
@@ -97,7 +98,7 @@ namespace xge
 	// radius. So shot after shot up one line goes deeper and deeper. The
 	// first hole keeps the whole picture in Object::Drawn::unholed for a reset; the
 	// picture is copied, never changed where other objects share it.
-	void cutHole(Object& object, const Object& other, float radius, float rough);
+	void cutHole(Parts& parts, Object& object, const Object& other, float radius, float rough);
 
 	// <stick />: pushed back inside the window on that edge's axis, losing
 	// only the velocity carrying it into the edge.

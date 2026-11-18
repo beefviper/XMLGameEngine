@@ -2109,10 +2109,21 @@ namespace xge
 			std::size_t look{ std::string::npos };
 			std::size_t frame{ std::string::npos };
 		};
-		std::vector<Follow> follows;
+		// The picture as it was before a <hole> was first cut in it, which a
+		// reset puts back. A part (Parts::unholed), given by the first hole
+		// (xge::cutHole) and taken away by a reset.
+		struct Unholed
+		{
+			std::shared_ptr<const Bitmap> bitmap;
+		};
 
-		// Whether `part` (x, y, heading or a variable's name) is one it follows.
-		bool followsPart(const std::string& part) const;
+		// A part (Parts::follows), for an object that follows something only.
+		struct Follows
+		{
+			std::vector<Follow> each;
+			// Whether `part` (x, y, heading or a variable's name) is one it follows.
+			bool has(const std::string& part) const;
+		};
 
 		// Whether its start (position, velocity or a <variable>) draws a
 		// <random>: a reset then draws it again (Game::drawStartAgain).
@@ -2137,10 +2148,6 @@ namespace xge
 			// collision of type pixel tests it; null for every other shape. Shared,
 			// not copied, with every copy of the object.
 			std::shared_ptr<const Bitmap> bitmap;
-
-			// The picture as it was before a <hole> was first cut in it, which a
-			// reset puts back; null while it has none. See xge::cutHole.
-			std::shared_ptr<const Bitmap> unholed;
 
 			// True until the active Window backend has built (or rebuilt) this
 			// object's own visual - set again whenever something changes what

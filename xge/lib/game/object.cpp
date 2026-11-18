@@ -530,16 +530,16 @@ namespace xge
 		return part->of(const_cast<Parts&>(parts), const_cast<Object&>(object)); // only read
 	}
 
-	bool Object::followsPart(const std::string& part) const
+	bool Object::Follows::has(const std::string& part) const
 	{
-		return std::any_of(follows.begin(), follows.end(), [&](const Follow& each)
+		return std::any_of(each.begin(), each.end(), [&](const Follow& one)
 		{
-			switch (each.part)
+			switch (one.part)
 			{
 			case Follow::Part::X: return part == "x";
 			case Follow::Part::Y: return part == "y";
 			case Follow::Part::Heading: return part == "heading";
-			case Follow::Part::Variable: return part == each.variable;
+			case Follow::Part::Variable: return part == one.variable;
 			case Follow::Part::Seconds: return false;
 			}
 			return false;

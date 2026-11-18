@@ -30,10 +30,10 @@ namespace xge
 		return CmdHole{ radius, rough };
 	}
 
-	static bool runHole(const Command& command, const Doer& doer, CommandExecutor&)
+	static bool runHole(const Command& command, const Doer& doer, CommandExecutor& executor)
 	{
 		const CmdHole& hole = std::get<CmdHole>(command);
-		if (doer.self && doer.touch) { cutHole(*doer.self, *doer.other, hole.radius, hole.rough); }
+		if (doer.self && doer.touch) { cutHole(executor.game.parts(), *doer.self, *doer.other, hole.radius, hole.rough); }
 		return true;
 	}
 

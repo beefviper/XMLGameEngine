@@ -78,10 +78,10 @@ namespace
 			}
 		}
 		// Every picture an object holds, each counted once however many hold it.
-		void addObject(const xge::Object& object)
+		void addObject(const xge::Parts& parts, const xge::Object& object)
 		{
 			add(object.drawn.bitmap);
-			add(object.drawn.unholed);
+			if (const xge::Object::Unholed* unholed = parts.unholed.find(object.id)) { add(unholed->bitmap); }
 			for (const auto& turnable : object.drawn.turnables) { add(turnable); }
 			for (const auto& frame : object.animation.frames.shows().bitmaps) { add(frame); }
 			addLooks(object.looks.all());
@@ -123,7 +123,7 @@ TEST_CASE("The size of the engine's things", "[long][size]")
 		for (int frame = 0; frame < 600; ++frame) { engine.step(xge::kSixtieth); engine.render(); }
 
 		Pictures pictures;
-		for (const xge::Object& object : game.getCurrentObjects()) { pictures.addObject(object); }
+		for (const xge::Object& object : game.getCurrentObjects()) { pictures.addObject(game.parts(), object); }
 		std::printf("%-14s %8zu %9zu %12.1f %9zu %9zu %12.1f\n", name.c_str(), game.getCurrentObjects().size(), pictures.seen.size(),
 			static_cast<double>(pictures.bytes) / 1024.0, window.textures.size(), window.builds, static_cast<double>(window.textureBytes) / 1024.0);
 	}
