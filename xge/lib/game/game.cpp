@@ -1097,7 +1097,7 @@ namespace xge
 		{
 			out << in << '<' << tag << "><x>" << value.x << "</x><y>" << value.y << "</y></" << tag << ">\n";
 		};
-		const auto numbers = [&](const std::map<std::string, float>& values, const std::string& in)
+		const auto numbers = [&](const auto& values, const std::string& in)
 		{
 			if (values.empty()) { return; }
 			out << in << "<variables>\n";

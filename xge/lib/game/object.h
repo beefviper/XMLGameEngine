@@ -5,11 +5,12 @@
 
 #pragma once
 
-#include "game/name.h"
 #include "picture/bitmap.h"
 #include "game/command.h"
 #include "game/condition.h"
+#include "game/name.h"
 #include "game/types.h"
+#include "game/variables.h"
 
 #include <algorithm>
 #include <array>
@@ -1113,7 +1114,7 @@ namespace xge
 		Name ownerScene;
 
 		// Its <variable>s by name, and its named timers' time left.
-		std::map<std::string, float> variable;
+		Variables variable;
 	};
 
 	// The way `way` points once turned that many degrees clockwise (on the

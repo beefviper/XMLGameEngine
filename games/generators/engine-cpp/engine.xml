@@ -53,6 +53,7 @@
   <file>lib/game/data.h</file>
   <file>lib/game/scenes.h</file>
   <file>lib/game/name.h</file>
+  <file>lib/game/variables.h</file>
   <file>lib/game/store.h</file>
   <file>lib/game/parts.h</file>
   <file>lib/game/parts.cpp</file>
