@@ -48,14 +48,16 @@ namespace xge
 		std::unique_ptr<QPainter> framePainter;
 		bool open{ true };
 
-		// Each object's picture, made again when its visualDirty flag says it
-		// changed or the pictures' scale did (as in the other backends).
+		// What an object shows: the image of its picture, which objects
+		// showing the same picture share, asked again when its visualDirty
+		// flag says it changed or the pictures' scale did.
 		struct Visual
 		{
 			QImage image;
 			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 		};
-		std::map<std::string, Visual> visuals;
+		Textures<QImage> images{ *this };
+		std::map<std::string, Visual> visuals;  // by object name
 
 		void build(Object& object, Visual& visual);
 	};
