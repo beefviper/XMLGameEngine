@@ -314,7 +314,7 @@ namespace xge
 		object.drawn.visualDirty = false;
 		visual.drawnAt = pictureScale();
 
-		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());
+		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
 		if (picture->rgba.empty())
 		{
 			if (visual.loaded) { UnloadTexture(visual.texture); }

@@ -286,7 +286,7 @@ namespace xge
 		object.drawn.visualDirty = false;
 		visual.drawnAt = pictureScale();
 
-		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());
+		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
 		const Bitmap blank = picture->rgba.empty() ? filledBitmap(1, 1) : Bitmap{};
 		const Bitmap& source = picture->rgba.empty() ? blank : *picture;
 

@@ -230,7 +230,7 @@ float4 ps(Shaded shaded) : SV_TARGET
 
 		// The engine's picture of the object, at `scale`, copied to the
 		// graphics card through an upload buffer.
-		void build(Object& object, float scale)
+		void build(Object& object, float scale, PictureId showing)
 		{
 			object.drawn.visualDirty = false;
 			Visual& visual = visuals[object.name];
@@ -239,7 +239,7 @@ float4 ps(Shaded shaded) : SV_TARGET
 			if (visual.picture.texture) { retired.push_back(visual.picture); }
 			visual.picture = {};
 
-			const std::shared_ptr<const Bitmap> source = object.drawnPicture(scale);
+			const std::shared_ptr<const Bitmap> source = showing.shared();
 			if (source->rgba.empty() || source->width <= 0 || source->height <= 0) { return; }
 			if (freeSlots.empty()) { throw std::runtime_error("Direct3D 12 has no room for another picture"); }
 
@@ -510,7 +510,7 @@ float4 ps(Shaded shaded) : SV_TARGET
 	{
 		for (auto& object : objects)
 		{
-			parts->build(object, pictureScale());
+			parts->build(object, pictureScale(), pictureOf(object));
 		}
 	}
 
@@ -570,7 +570,7 @@ float4 ps(Shaded shaded) : SV_TARGET
 		const auto found = p.visuals.find(object.name);
 		if (object.drawn.visualDirty || found == p.visuals.end() || (object.drawnAtScale() && found->second.drawnAt != pictureScale()))
 		{
-			p.build(object, pictureScale());
+			p.build(object, pictureScale(), pictureOf(object));
 		}
 	}
 

@@ -45,7 +45,7 @@ namespace xge
 	void PictureWindow::draw(Object& object)
 	{
 		prepare(object);
-		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());
+		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
 		if (picture->rgba.empty() || picture->width <= 0 || picture->height <= 0) { return; }
 
 		// Where it goes, in the frame's pixels: from a whole game pixel,

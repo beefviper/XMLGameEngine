@@ -3,13 +3,14 @@
 // author: beefviper
 // date: Nov 14, 2026
 //
-// Catch2 tests for pictures drawn at a window's size (Object::drawnPicture,
+// Catch2 tests for pictures drawn at a window's size (Window::pictureOf,
 // SettledFit in window/window.h): in a window bigger than the game, a text,
 // a circle and a rectangle are drawn with more pixels, so they stay sharp,
 // while the game's sizes stay its own; a bitmap keeps its pixels.
 
 #include "engine/resources.h"
 #include "game/object.h"
+#include "window/null.h"
 #include "window/window.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -34,27 +35,35 @@ namespace
 		object.drawn.picture.edit().color = heldNames.of("color.white");
 		return object;
 	}
+
+	// What a window at `scale` shows for the object.
+	Bitmap shownAt(const Object& object, float scale)
+	{
+		static NullWindow window;
+		window.setPictureScale(scale);
+		return *window.pictureOf(object);
+	}
 }
 
 TEST_CASE("a text drawn at twice the scale has twice the pixels and the same game size", "[picture_scale]")
 {
 	const Object title = text("PONG", 64);
 	const Vector2f size = title.pictureSize();
-	const std::shared_ptr<const Bitmap> once = title.drawnPicture(1.0f);
-	const std::shared_ptr<const Bitmap> twice = title.drawnPicture(2.0f);
+	const Bitmap once = shownAt(title, 1.0f);
+	const Bitmap twice = shownAt(title, 2.0f);
 
-	CHECK(static_cast<float>(once->width) == size.x);
-	CHECK(static_cast<float>(once->height) == size.y);
+	CHECK(static_cast<float>(once.width) == size.x);
+	CHECK(static_cast<float>(once.height) == size.y);
 	// The font's own rounding at another size moves an edge a pixel at most.
-	CHECK(std::abs(twice->width - 2 * once->width) <= 2);
-	CHECK(std::abs(twice->height - 2 * once->height) <= 2);
+	CHECK(std::abs(twice.width - 2 * once.width) <= 2);
+	CHECK(std::abs(twice.height - 2 * once.height) <= 2);
 	CHECK(title.pictureSize().x == size.x);
 	CHECK(title.drawnAtScale());
 
 	// A pixel font at its own multiple doubles exactly.
 	Object score = text("SCORE", 16);
 	score.drawn.picture.edit().font = heldNames.of("assets/pressstart2p.ttf");
-	CHECK(score.drawnPicture(2.0f)->width == 2 * score.drawnPicture(1.0f)->width);
+	CHECK(shownAt(score, 2.0f).width == 2 * shownAt(score, 1.0f).width);
 }
 
 TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[picture_scale]")
@@ -64,23 +73,23 @@ TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[pi
 	ball.drawn.picture.edit().radius = 5.0f;
 	ball.drawn.picture.edit().color = heldNames.of("color.red");
 
-	const std::shared_ptr<const Bitmap> small = ball.drawnPicture(1.0f);
-	CHECK(small->width == 10);
-	CHECK(small->height == 10);
-	CHECK(small->solidAt(5, 5));
-	CHECK_FALSE(small->solidAt(0, 0));          // a corner is outside the round
-	CHECK(ball.drawnPicture(3.0f)->width == 30);
-	CHECK(ball.drawnPicture(2.5f)->width == 25);
+	const Bitmap small = shownAt(ball, 1.0f);
+	CHECK(small.width == 10);
+	CHECK(small.height == 10);
+	CHECK(small.solidAt(5, 5));
+	CHECK_FALSE(small.solidAt(0, 0));          // a corner is outside the round
+	CHECK(shownAt(ball, 3.0f).width == 30);
+	CHECK(shownAt(ball, 2.5f).width == 25);
 
 	Object paddle;
 	paddle.drawn.picture.edit().kind = ShapeKind::Rectangle;
 	paddle.drawn.picture.edit().size = { 10.0f, 50.0f };
 	paddle.drawn.picture.edit().color = heldNames.of("color.white");
-	const std::shared_ptr<const Bitmap> tall = paddle.drawnPicture(2.0f);
-	CHECK(tall->width == 20);
-	CHECK(tall->height == 100);
-	CHECK(tall->solidAt(0, 0));
-	CHECK(tall->solidAt(19, 99));
+	const Bitmap tall = shownAt(paddle, 2.0f);
+	CHECK(tall.width == 20);
+	CHECK(tall.height == 100);
+	CHECK(tall.solidAt(0, 0));
+	CHECK(tall.solidAt(19, 99));
 	CHECK(paddle.pictureSize().x == 10.0f);
 }
 
@@ -96,7 +105,9 @@ TEST_CASE("a bitmap keeps its own pixels at any scale", "[picture_scale]")
 	ship.drawn.bitmap = resources.own(std::move(drawn));
 
 	CHECK_FALSE(ship.drawnAtScale());
-	CHECK(ship.drawnPicture(3.0f) == ship.drawn.bitmap.shared());   // the very same, not a copy
+	NullWindow window;
+	window.setPictureScale(3.0f);
+	CHECK(window.pictureOf(ship) == ship.drawn.bitmap);   // the very same, not a copy
 }
 
 TEST_CASE("pictures are drawn again once a resize has held still a quarter second", "[picture_scale]")

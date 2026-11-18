@@ -29,7 +29,7 @@ namespace xge
 	// library to depend on.
 	//
 	// Like the other backends, each object's picture is the engine's
-	// (Object::drawnPicture), uploaded as a texture and made again on
+	// (Window::pictureOf), uploaded as a texture and made again on
 	// visualDirty.
 	class OpenGLWindow : public Window
 	{

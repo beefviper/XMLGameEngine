@@ -355,7 +355,7 @@ namespace xge
 			visual.texture = nullptr;
 		}
 
-		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());
+		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
 		if (picture->rgba.empty())
 		{
 			return;

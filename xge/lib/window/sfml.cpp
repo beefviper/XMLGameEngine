@@ -326,7 +326,7 @@ namespace xge
 	// object's size in the game's pixels.
 	void SFMLWindow::build(Object& object, CachedVisual& visual)
 	{
-		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());
+		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
 		const auto width = static_cast<unsigned int>(std::max(picture->width, 1));
 		const auto height = static_cast<unsigned int>(std::max(picture->height, 1));
 

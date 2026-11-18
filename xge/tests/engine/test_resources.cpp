@@ -6,12 +6,15 @@
 // A game's Resources: each picture held once, however many objects show it.
 
 #include "played.h"
+#include "engine/engine.h"
 #include "engine/resources.h"
+#include "window/null.h"
 #include "picture/image.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
+#include <memory>
 #include <string>
 
 using Catch::Matchers::ContainsSubstring;
@@ -58,14 +61,14 @@ TEST_CASE("objects showing one image file share one picture, and a flip is anoth
 		played::Scratch game{ alike(20, image), "" };
 		played::Played play{ game.path };
 		CHECK(play.game.resources().pictureCount() == 1);
-		CHECK(play.get("thing0").drawnPicture() == play.get("thing19").drawnPicture());
+		CHECK(play.get("thing0").drawn.picture->image == play.get("thing19").drawn.picture->image);
 	}
 	{
 		played::Scratch game{ alike(20, image, "<image><path>assets/paddle.jpg</path><flip>horizontal</flip></image>", 1), "" };
 		played::Played play{ game.path };
 		CHECK(play.game.resources().pictureCount() == 2);
-		const std::shared_ptr<const Bitmap> flipped = play.get("thing0").drawnPicture();
-		CHECK(flipped->rgba == flipBitmap(*play.get("thing1").drawnPicture(), true, false).rgba);
+		const PictureId flipped = play.get("thing0").drawn.picture->image;
+		CHECK(flipped->rgba == flipBitmap(*play.get("thing1").drawn.picture->image, true, false).rgba);
 	}
 }
 
@@ -158,4 +161,15 @@ TEST_CASE("a hole makes one shield's picture its own, and a reset lets it go", "
 	play.tap(KeyCode::Space);
 	CHECK(play.get("left").drawn.bitmap == whole);
 	CHECK(play.game.resources().pictureCount() == held);
+}
+
+TEST_CASE("a window makes one texture for a picture twenty objects show", "[resources][window]")
+{
+	played::Scratch game{ alike(20, "<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>color.red</color></bitmap>"), "" };
+	Game loaded{ game.path };
+	auto made = std::make_unique<NullWindow>();
+	NullWindow& window = *made;
+	Engine engine{ loaded, std::move(made) };
+	for (int frame = 0; frame < 10; ++frame) { engine.step(kSixtieth); engine.render(); }
+	CHECK(window.texturesMade() == 1);
 }

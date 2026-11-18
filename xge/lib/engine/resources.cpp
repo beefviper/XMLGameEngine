@@ -38,7 +38,9 @@ namespace xge
 
 	void Resources::replace(PictureId owned, Bitmap made)
 	{
-		if (owned) { held(owned).bitmap = std::make_shared<const Bitmap>(std::move(made)); }
+		if (!owned) { return; }
+		held(owned).bitmap = std::make_shared<const Bitmap>(std::move(made));
+		++held(owned).version;
 	}
 
 	void Resources::release(PictureId owned)

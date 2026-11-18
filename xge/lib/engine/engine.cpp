@@ -46,6 +46,7 @@ namespace xge
 
 		// The window makes every object's picture, at its own scale; the
 		// pictures are drawn again at its size once a resize settles (render).
+		this->window->usePictures(game.resources());
 		this->window->init(game.getCurrentObjects());
 		settledFit = SettledFit(this->window->pictureScale());
 
@@ -62,6 +63,7 @@ namespace xge
 		window.reset();
 		window = create();
 
+		window->usePictures(game.resources());
 		window->init(game.getCurrentObjects());
 		settledFit = SettledFit(window->pictureScale());
 	}

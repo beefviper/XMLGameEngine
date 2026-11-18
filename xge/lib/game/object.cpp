@@ -1201,33 +1201,6 @@ namespace xge
 		return exact;
 	}
 
-	std::shared_ptr<const Bitmap> Object::drawnPicture(float scale) const
-	{
-		const Color color = colorFromName(drawn.picture->color);
-		switch (drawn.picture->kind)
-		{
-		case ShapeKind::Circle:
-			return std::make_shared<const Bitmap>(drawCircle(drawn.picture->radius, color, scale));
-		case ShapeKind::Rectangle:
-			return std::make_shared<const Bitmap>(drawRectangle(drawn.picture->size.x, drawn.picture->size.y, color, scale));
-		case ShapeKind::Text:
-		{
-			const int pixels = std::max(1, static_cast<int>(std::lround(static_cast<float>(drawn.picture->textSize) * scale)));
-			return std::make_shared<const Bitmap>(drawText(drawn.picture->text, pixels, color, textFontFile(drawn.picture->font)));
-		}
-		case ShapeKind::Image:
-			if (drawn.picture->image) { return drawn.picture->image.shared(); }
-			break;
-		case ShapeKind::Line:
-			if (drawn.bitmap.get()) { return drawn.bitmap.shared(); }
-			break;
-		case ShapeKind::Unknown:
-			break;
-		}
-		static const std::shared_ptr<const Bitmap> nothing = std::make_shared<const Bitmap>();
-		return nothing;
-	}
-
 	bool Object::drawnAtScale() const noexcept
 	{
 		return drawn.picture->kind == ShapeKind::Text || drawn.picture->kind == ShapeKind::Circle || drawn.picture->kind == ShapeKind::Rectangle;

@@ -7,12 +7,16 @@
 
 #include "picture/bitmap.h"
 #include "engine/keys.h"
+#include "engine/resources.h"
 #include "game/object.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -30,12 +34,13 @@ namespace xge
 	// do". A window must:
 	//   1. open at the game's size times its scale, or throw runtime_error;
 	//   2. keep the game's proportions when resized (fit, centre, bars);
-	//   3. make each object's picture in init(), and again when
+	//   3. ask each object's picture (pictureOf) in init(), and again when
 	//      visualDirty is set (prepare()), clearing visualDirty; sizes are
 	//      the game's own (Object::pictureSize), never the window's;
-	//   4. make a picture from Object::drawnPicture(pictureScale()), the
-	//      engine's own bitmap of it, and make it again when pictureScale()
-	//      has changed for an object that is drawnAtScale();
+	//   4. keep one texture a picture, by its id (Textures), however many
+	//      objects show it, made again only when that picture is drawn anew
+	//      (PictureId::version); ask again when pictureScale() has changed
+	//      for an object that is drawnAtScale();
 	//   5. draw each object's picture over pictureSize() at its position,
 	//      its top left, between clear() and display(), smoothed if it is
 	//      drawnAtScale() and with hard edges if not;
@@ -109,14 +114,90 @@ namespace xge
 		// is not one of its own.
 		virtual float fit() const { return 1.0f; }
 
-		// The scale the pictures are drawn at (Object::drawnPicture). The
+		// The scale the pictures are drawn at (Window::pictureOf). The
 		// engine sets it to fit() once a resize has settled (SettledFit), so
 		// text and shapes are drawn again, sharp, at the window's size.
 		float pictureScale() const noexcept { return drawnScale; }
 		void setPictureScale(float scale) noexcept { drawnScale = scale > 0.0f ? scale : 1.0f; }
 
+		// The game's pictures, which the window shows and draws its texts
+		// and shapes into (the Engine gives them); until then its own.
+		void usePictures(Resources& resources) noexcept { pictures = &resources; }
+
+		// The picture to show for the object now: its own bitmap or image,
+		// or its circle, rectangle or text drawn at pictureScale(). A circle
+		// or rectangle is shared by every object of that size and colour; a
+		// text is the object's own picture, drawn again when its words or
+		// the scale change.
+		PictureId pictureOf(const Object& object);
+
+		// How many textures the window has made since it opened: one a
+		// picture, and again for a picture drawn anew.
+		std::size_t texturesMade() const noexcept { return madeTextures; }
+
+	protected:
+		// One more texture made, for a window that counts without Textures.
+		void madeTexture() noexcept { ++madeTextures; }
+
+		// The textures a window keeps, one a picture by its id. `make(bitmap,
+		// texture)` makes `texture` (as it was: none yet, or the picture's
+		// older pixels) from the picture's pixels, the first time and when it
+		// has been drawn anew.
+		template <typename Texture>
+		class Textures
+		{
+		public:
+			explicit Textures(Window& window) noexcept : owner(window) {}
+
+			template <typename Make>
+			Texture& of(PictureId picture, Make&& make)
+			{
+				Held& held = kept[picture.index()];
+				if (!held.made || held.version != picture.version())
+				{
+					static const Bitmap none;
+					make(picture.get() ? *picture : none, held.texture);
+					held.made = true;
+					held.version = picture.version();
+					++owner.madeTextures;
+				}
+				return held.texture;
+			}
+
+			// Each texture, to let go of with the library's own call.
+			template <typename Each>
+			void forEach(Each&& each)
+			{
+				for (auto& [index, held] : kept) { (void)index; each(held.texture); }
+			}
+			void clear() { kept.clear(); }
+
+		private:
+			struct Held
+			{
+				Texture texture{};
+				std::uint32_t version{};
+				bool made{ false };
+			};
+			Window& owner;
+			std::unordered_map<std::uint32_t, Held> kept;
+		};
+
 	private:
+		PictureId pictureNow(const Object& object);
+
 		float drawnScale{ 1.0f };
+		Resources ownPictures;
+		Resources* pictures{ &ownPictures };
+		std::size_t madeTextures{};
+		// Each text's own picture, by its object, with what it was drawn
+		// from.
+		struct DrawnText
+		{
+			PictureId picture;
+			std::string drawnFrom;
+		};
+		std::unordered_map<std::uint32_t, DrawnText> texts;
 	};
 
 	// When a window's pictures are drawn again at its size: once its fit()

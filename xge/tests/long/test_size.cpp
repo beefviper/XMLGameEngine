@@ -40,7 +40,7 @@ namespace
 		{
 			const bool fresh = textures.insert(object.name).second;
 			if (!fresh && !object.drawn.visualDirty) { return; }
-			const std::shared_ptr<const xge::Bitmap> picture = object.drawnPicture(pictureScale());
+			const std::shared_ptr<const xge::Bitmap> picture = pictureOf(object).shared();
 			++builds;
 			textureBytes += picture->rgba.size();
 			object.drawn.visualDirty = false;

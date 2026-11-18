@@ -76,14 +76,14 @@ namespace xge
 			return SUCCEEDED(state);
 		}
 
-		void build(Object& object, float scale)
+		void build(Object& object, float scale, PictureId showing)
 		{
 			object.drawn.visualDirty = false;
 			Visual& visual = visuals[object.name];
 			visual.drawnAt = scale;
 			visual.picture.Reset();
 
-			const std::shared_ptr<const Bitmap> picture = object.drawnPicture(scale);
+			const std::shared_ptr<const Bitmap> picture = showing.shared();
 			if (picture->rgba.empty() || picture->width <= 0 || picture->height <= 0) { return; }
 
 			ComPtr<IDirect3DTexture9> texture;
@@ -181,7 +181,7 @@ namespace xge
 	{
 		for (auto& object : objects)
 		{
-			parts->build(object, pictureScale());
+			parts->build(object, pictureScale(), pictureOf(object));
 		}
 	}
 
@@ -240,7 +240,7 @@ namespace xge
 		const auto found = p.visuals.find(object.name);
 		if (object.drawn.visualDirty || found == p.visuals.end() || (object.drawnAtScale() && found->second.drawnAt != pictureScale()))
 		{
-			p.build(object, pictureScale());
+			p.build(object, pictureScale(), pictureOf(object));
 		}
 	}
 

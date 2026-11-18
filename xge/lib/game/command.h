@@ -41,7 +41,7 @@ namespace xge
 	// the engine draws itself (<line>s, a <bitmap>, an <svg>, a tether) is
 	// a Line: its pixels are the object's bitmap, and `size` is the
 	// bitmap's. The engine draws the rest too, when a window asks for the
-	// object's picture (Object::drawnPicture): a text, a circle, a
+	// object's picture (Window::pictureOf): a text, a circle, a
 	// rectangle, an image file.
 	struct Picture
 	{

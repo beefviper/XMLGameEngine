@@ -29,11 +29,20 @@ namespace xge
 		void init(std::vector<Object>& objects) override;
 		std::vector<std::pair<KeyCode, bool>> pollEvents() override { return {}; }
 		void clear(const std::string& colorName) override { (void)colorName; }
-		void prepare(Object& object) override { object.drawn.visualDirty = false; }
+		// Its textures are counted, not made: one a picture, and one each
+		// time a text changes, which is not drawn to save the time.
+		void prepare(Object& object) override
+		{
+			if (!object.drawn.visualDirty) { return; }
+			if (object.drawn.picture->kind == ShapeKind::Text) { madeTexture(); }
+			else { textures.of(pictureOf(object), [](const Bitmap&, char&) {}); }
+			object.drawn.visualDirty = false;
+		}
 		void draw(Object& object) override { prepare(object); }
 		void display() override {}
 
 	private:
 		bool open{ true };
+		Textures<char> textures{ *this };
 	};
 }

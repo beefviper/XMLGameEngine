@@ -14,7 +14,7 @@
 namespace xge
 {
 	// A window that is a picture: the engine draws the frame into one image,
-	// from the same pictures every window shows (Object::drawnPicture), with
+	// from the same pictures every window shows (Window::pictureOf), with
 	// no library and no screen. xgecli --picture writes it as a PNG, so a game
 	// can be looked at with no window at all.
 	//

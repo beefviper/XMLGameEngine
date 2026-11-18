@@ -117,7 +117,7 @@ namespace xge
 	// The engine's picture of the object, at pictureScale().
 	void QtWindow::build(Object& object, Visual& visual)
 	{
-		const std::shared_ptr<const Bitmap> picture = object.drawnPicture(pictureScale());
+		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
 		if (picture->width <= 0 || picture->height <= 0 || picture->rgba.empty())
 		{
 			visual.image = emptyImage(1, 1);

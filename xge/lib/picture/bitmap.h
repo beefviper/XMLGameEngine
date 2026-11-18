@@ -71,8 +71,11 @@ namespace xge
 		// Its number in the Resources (1 up; 0 for none), what a window
 		// keeps a texture by.
 		std::uint32_t index() const noexcept { return held ? held->index : 0; }
-		// The picture as a shared pointer, for a window that still takes
-		// one (until windows keep their textures by id).
+		// How many times one object's own picture has been drawn again in
+		// place (Resources::replace): a window's texture of it made at
+		// another is stale. Always 0 for a shared picture.
+		std::uint32_t version() const noexcept { return held ? held->version : 0; }
+		// The picture as a shared pointer, for what keeps it beside its id.
 		std::shared_ptr<const Bitmap> shared() const { return held ? held->bitmap : nullptr; }
 
 		friend bool operator==(PictureId a, PictureId b) noexcept { return a.held == b.held; }
@@ -84,6 +87,7 @@ namespace xge
 		{
 			std::shared_ptr<const Bitmap> bitmap;
 			std::uint32_t index{};
+			std::uint32_t version{};
 		};
 		explicit PictureId(const Held* kept) noexcept : held(kept) {}
 		const Held* held{ nullptr };
