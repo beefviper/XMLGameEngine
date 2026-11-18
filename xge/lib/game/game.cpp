@@ -345,7 +345,7 @@ namespace xge
 		made.size = original.size;
 		copyRaws[name] = std::move(copy);
 		spawned.push_back(std::move(made));
-		if (!spawned.back().drawn.textPieces.empty()) { relabel(spawned.back()); }
+		if (objectParts.boundTexts.has(spawned.back().id)) { relabel(spawned.back()); }
 		return &spawned.back();
 	}
 
@@ -1421,7 +1421,7 @@ namespace xge
 
 		for (auto& object : objects)
 		{
-			if (object.showsVariable(ownerName, variableName))
+			if (showsVariable(object, ownerName, variableName))
 			{
 				relabel(object);
 			}
@@ -1566,7 +1566,8 @@ namespace xge
 		const std::string owner = object->name;
 		for (auto& other : objects)
 		{
-			if (std::any_of(other.drawn.textPieces.begin(), other.drawn.textPieces.end(), [&](const TextPiece& piece) { return piece.owner == owner; }))
+			const std::vector<TextPiece>& pieces = textPiecesOf(other);
+			if (std::any_of(pieces.begin(), pieces.end(), [&](const TextPiece& piece) { return piece.owner == owner; }))
 			{
 				relabel(other);
 			}
@@ -1853,7 +1854,7 @@ namespace xge
 	{
 		for (auto& object : objects)
 		{
-			if (!object.drawn.textPieces.empty())
+			if (objectParts.boundTexts.has(object.id))
 			{
 				relabel(object);
 			}
@@ -1862,12 +1863,13 @@ namespace xge
 
 	void Game::relabel(Object& object)
 	{
-		if (object.drawn.picture.kind != ShapeKind::Text)
+		Object::BoundText* bound = objectParts.boundTexts.find(object.id);
+		if (object.drawn.picture.kind != ShapeKind::Text || !bound)
 		{
 			return;
 		}
 
-		for (TextPiece& piece : object.drawn.textPieces)
+		for (TextPiece& piece : bound->pieces)
 		{
 			if (piece.owner.empty())
 			{
@@ -1891,7 +1893,7 @@ namespace xge
 			}
 		}
 
-		const std::string text = joinText(object.drawn.textPieces);
+		const std::string text = joinText(bound->pieces);
 		if (object.drawn.picture.text != text)
 		{
 			object.drawn.picture.text = text;

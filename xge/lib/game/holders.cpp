@@ -813,7 +813,7 @@ namespace xge
 					read = read || (dot != std::string::npos && name.compare(dot + 1, std::string::npos, "odds") == 0 && means(holder, name.substr(0, dot)));
 				}
 			}
-			for (const Object& other : objects) { read = read || other.showsVariable(holder.name, "odds"); }
+			for (const Object& other : objects) { read = read || showsVariable(other, holder.name, "odds"); }
 			for (const State& state : states)
 			{
 				read = read || readIn(holder, state.conditions, readIn) || readIn(holder, state.computer, readIn);

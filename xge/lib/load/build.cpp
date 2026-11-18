@@ -166,7 +166,7 @@ namespace xge
 			std::vector<TextPiece> pieces = textPieces(rawObject.sprite, where, &rawObject);
 			if (std::any_of(pieces.begin(), pieces.end(), [](const TextPiece& piece) { return !piece.owner.empty(); }))
 			{
-				object.drawn.textPieces = std::move(pieces);
+				parts->boundTexts.add(object.id, parts->orderOf(object.id), { std::move(pieces) });
 			}
 		}
 	}

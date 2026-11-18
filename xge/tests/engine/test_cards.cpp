@@ -733,7 +733,7 @@ TEST_CASE("crazyeights.xml: the deal: seven each, yours face up in order, one tu
 	CHECK(table.turn() == 1.0f);
 	CHECK(table.hand().lookName() == "free");
 	CHECK(table.computer().lookName() == "waiting");
-	CHECK(table.get("whoseturn").drawn.textPieces.front().shown == "your turn: play a card that matches, or draw");
+	CHECK(table.game.textPiecesOf(table.get("whoseturn")).front().shown == "your turn: play a card that matches, or draw");
 }
 
 TEST_CASE("crazyeights.xml: keys reach only the player on its turn, and never the one the computer plays", "[cards][eights][players]")
@@ -753,7 +753,7 @@ TEST_CASE("crazyeights.xml: keys reach only the player on its turn, and never th
 	CHECK(table.holderOf("mine").items.size() == 2);
 	CHECK(table.handOf(table.hand()).at == 1);
 	CHECK(table.handOf(table.computer()).at == 0);
-	CHECK(table.get("whoseturn").drawn.textPieces.front().shown == "the computer is playing");
+	CHECK(table.game.textPiecesOf(table.get("whoseturn")).front().shown == "the computer is playing");
 }
 
 TEST_CASE("crazyeights.xml: a card goes on the holder by suit or rank; one that does not goes back in your hand", "[cards][eights]")
@@ -796,7 +796,7 @@ TEST_CASE("crazyeights.xml: an eight goes on anything, you name a suit, and the 
 	CHECK(table.turn() == 2.0f);
 	CHECK(table.holderOf("mine").items.size() == 2);
 	table.frames(1);
-	CHECK(table.get("called").drawn.textPieces.front().shown == "spades");
+	CHECK(table.game.textPiecesOf(table.get("called")).front().shown == "spades");
 
 	// It plays its spade, not its eight.
 	table.untilYourTurn();

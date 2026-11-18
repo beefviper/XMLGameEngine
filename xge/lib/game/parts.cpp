@@ -58,6 +58,7 @@ namespace xge
 		swings.remove(id);
 		lightPasts.remove(id);
 		mapPlaces.remove(id);
+		boundTexts.remove(id);
 	}
 
 	namespace
@@ -91,5 +92,6 @@ namespace xge
 		copyPart(swings, from.swings, id);
 		copyPart(lightPasts, from.lightPasts, id);
 		copyPart(mapPlaces, from.mapPlaces, id);
+		copyPart(boundTexts, from.boundTexts, id);
 	}
 }

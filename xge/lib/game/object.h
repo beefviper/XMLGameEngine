@@ -304,7 +304,7 @@ namespace xge
 
 		// A text: its pieces, in order (see RawTextPiece); a <number> or a
 		// <letter> that is just an owner.variable stays live (see
-		// Object::Drawn::textPieces).
+		// Object::BoundText).
 		std::vector<RawTextPiece> text;
 
 		std::string path;            // image, svg
@@ -2160,18 +2160,20 @@ namespace xge
 			// whole degree costs nothing. -1 for nothing drawn yet.
 			int turnedDegrees{ -1 };
 			std::size_t turnedFrame{};
-
-			// Set when this is a text object that shows a variable (e.g. a <text>
-			// sprite whose <number> is paddle1.score): every piece of the text,
-			// those that follow a variable with its owner and name, the rest as
-			// they were worked out, so it can be put together again whenever one
-			// of its variables changes (Game::relabel). Empty means the text shows
-			// no variable and only ever changes by an <inc /> naming the text
-			// object itself (the older pattern for a text that counts its own
-			// number).
-			std::vector<TextPiece> textPieces;
 		};
 		Drawn drawn;
+
+		// A text that shows a variable (e.g. a <text> sprite whose <number>
+		// is paddle1.score): every piece of the text, those that follow a
+		// variable with its owner and name, the rest as they were worked
+		// out, so it can be put together again whenever one of its
+		// variables changes (Game::relabel). A part (Parts::boundTexts,
+		// Game::textPiecesOf): a text with none shows no variable and only
+		// ever changes by an <inc /> naming the text object itself.
+		struct BoundText
+		{
+			std::vector<TextPiece> pieces;
+		};
 
 		// A <tether>: a line from the middle of the object `from` names to
 		// the middle of `to`'s, drawn again every frame wherever the two are
@@ -2191,13 +2193,6 @@ namespace xge
 
 		// What every object of its kind has alike (see Kind), shared.
 		std::shared_ptr<Kind> kind{ std::make_shared<Kind>() };
-
-		// Whether one of the pieces shows that variable of that object.
-		bool showsVariable(const std::string& ownerName, const std::string& variableName) const noexcept
-		{
-			return std::any_of(drawn.textPieces.begin(), drawn.textPieces.end(),
-				[&](const TextPiece& piece) { return piece.owner == ownerName && piece.variable == variableName; });
-		}
 
 		friend std::ostream& operator<<(std::ostream& o, Object const& f);
 	};

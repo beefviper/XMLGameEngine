@@ -207,7 +207,7 @@ namespace xge
 
 	// <inc variable="ownerName.variableName" /> - add 1 (or, for <inc variable="...">5</inc>,
 	// the amount) to that object's named <variable> and refresh every text object whose display is bound to it (see
-	// Game::addTo and Object::Drawn::textPieces).
+	// Game::addTo and Object::BoundText).
 	struct CmdIncrement
 	{
 		VariableName target;

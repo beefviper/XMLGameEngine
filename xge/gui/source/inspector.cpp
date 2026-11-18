@@ -511,7 +511,7 @@ namespace xge
 			}
 		}
 
-		for (const TextPiece& piece : first.drawn.textPieces)
+		for (const TextPiece& piece : game().textPiecesOf(first))
 		{
 			if (!piece.owner.empty())
 			{

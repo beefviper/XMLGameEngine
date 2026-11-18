@@ -877,7 +877,7 @@ TEST_CASE("a <text> is its pieces: labels, numbers and letters, each following i
 		// A space between pieces, but letters side by side are one word; a
 		// letter goes round (-1 is Z, 27 is B); a sum is worked out once.
 		CHECK(shown.drawn.picture.text == "SCORE 120 HZB 240");
-		CHECK(shown.showsVariable("p", "a"));
+		CHECK(loaded.game.showsVariable(shown, "p", "a"));
 
 		loaded.game.addTo({ "p", "a" });
 		loaded.game.addTo({ "p", "score" }, 5.0f);

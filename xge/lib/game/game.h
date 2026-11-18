@@ -207,6 +207,22 @@ namespace xge
 		// A piece of a cell map sent to another (MapPlace::home).
 		bool awayFromHome(const Object& object) const noexcept { return object.onCells && mapOf(object).name != mapOf(object).home; }
 
+		// The pieces of its text that show variables (Object::BoundText):
+		// none for a text that shows none, and for anything else.
+		const std::vector<TextPiece>& textPiecesOf(const Object& object) const noexcept
+		{
+			static const std::vector<TextPiece> none;
+			const Object::BoundText* found = objectParts.boundTexts.find(object.id);
+			return found ? found->pieces : none;
+		}
+		// Whether one of its text's pieces shows that variable of that object.
+		bool showsVariable(const Object& object, const std::string& ownerName, const std::string& variableName) const noexcept
+		{
+			const std::vector<TextPiece>& pieces = textPiecesOf(object);
+			return std::any_of(pieces.begin(), pieces.end(),
+				[&](const TextPiece& piece) { return piece.owner == ownerName && piece.variable == variableName; });
+		}
+
 		// Its board-game moves (Object::Moves): none for one with no
 		// <moves>, given at load.
 		const Object::Moves& pieceMoves(const Object& object) const noexcept

@@ -45,6 +45,7 @@ namespace xge
 		Store<Object::Swing> swings;
 		Store<Object::LightPast> lightPasts;
 		Store<Object::MapPlace> mapPlaces;
+		Store<Object::BoundText> boundTexts;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.
