@@ -64,10 +64,6 @@ namespace xge
 
 		const Bitmap& bitmap(PictureId id) const { return *id; }
 
-		// The picture as a shared pointer, for what still takes one (a
-		// window's texture, until it keeps them by id).
-		std::shared_ptr<const Bitmap> shared(PictureId id) const { return id ? held(id).bitmap : nullptr; }
-
 		// How many pictures are held, and the bytes of their pixels.
 		std::size_t pictureCount() const noexcept;
 		std::size_t pictureBytes() const noexcept;

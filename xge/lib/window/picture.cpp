@@ -45,8 +45,8 @@ namespace xge
 	void PictureWindow::draw(Object& object)
 	{
 		prepare(object);
-		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
-		if (picture->rgba.empty() || picture->width <= 0 || picture->height <= 0) { return; }
+		const Bitmap& picture = *pictureOf(object);   // never none: an empty picture at least
+		if (picture.rgba.empty() || picture.width <= 0 || picture.height <= 0) { return; }
 
 		// Where it goes, in the frame's pixels: from a whole game pixel,
 		// stretched over its size, as a window draws it. Each pixel there
@@ -65,11 +65,11 @@ namespace xge
 
 		for (int y = fromY; y < toY; ++y)
 		{
-			const int pictureY = std::clamp(static_cast<int>((static_cast<float>(y) + 0.5f - top) / high * static_cast<float>(picture->height)), 0, picture->height - 1);
+			const int pictureY = std::clamp(static_cast<int>((static_cast<float>(y) + 0.5f - top) / high * static_cast<float>(picture.height)), 0, picture.height - 1);
 			for (int x = fromX; x < toX; ++x)
 			{
-				const int pictureX = std::clamp(static_cast<int>((static_cast<float>(x) + 0.5f - left) / wide * static_cast<float>(picture->width)), 0, picture->width - 1);
-				const std::uint8_t* from = picture->rgba.data() + (static_cast<std::size_t>(pictureY) * static_cast<std::size_t>(picture->width) + static_cast<std::size_t>(pictureX)) * 4;
+				const int pictureX = std::clamp(static_cast<int>((static_cast<float>(x) + 0.5f - left) / wide * static_cast<float>(picture.width)), 0, picture.width - 1);
+				const std::uint8_t* from = picture.rgba.data() + (static_cast<std::size_t>(pictureY) * static_cast<std::size_t>(picture.width) + static_cast<std::size_t>(pictureX)) * 4;
 				std::uint8_t* to = frame.rgba.data() + (static_cast<std::size_t>(y) * static_cast<std::size_t>(frame.width) + static_cast<std::size_t>(x)) * 4;
 				const unsigned alpha = from[3];
 				for (int channel = 0; channel < 3; ++channel)

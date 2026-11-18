@@ -75,8 +75,6 @@ namespace xge
 		// place (Resources::replace): a window's texture of it made at
 		// another is stale. Always 0 for a shared picture.
 		std::uint32_t version() const noexcept { return held ? held->version : 0; }
-		// The picture as a shared pointer, for what keeps it beside its id.
-		std::shared_ptr<const Bitmap> shared() const { return held ? held->bitmap : nullptr; }
 
 		friend bool operator==(PictureId a, PictureId b) noexcept { return a.held == b.held; }
 		friend bool operator<(PictureId a, PictureId b) noexcept { return a.index() < b.index(); }
