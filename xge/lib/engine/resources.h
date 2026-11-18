@@ -50,6 +50,11 @@ namespace xge
 
 		const Bitmap& bitmap(PictureId id) const { return *pictures.at(id.index); }
 
+		// The picture flipped left to right (a <mirror>'s), made once; the
+		// flip of that is the picture again. One not held yet is held from
+		// now on.
+		std::shared_ptr<const Bitmap> flippedLeftRight(const std::shared_ptr<const Bitmap>& picture);
+
 		// The picture as an object holds it today (CR2 step 4 replaces this
 		// with the id).
 		const std::shared_ptr<const Bitmap>& shared(PictureId id) const { return pictures.at(id.index); }
@@ -63,5 +68,6 @@ namespace xge
 
 		std::vector<std::shared_ptr<const Bitmap>> pictures{ nullptr };   // [0] is none
 		std::map<std::string, PictureId> byKey;
+		std::map<const Bitmap*, PictureId> byPicture;
 	};
 }

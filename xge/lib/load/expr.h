@@ -294,9 +294,6 @@ namespace xge
 			return resources.shared(resources.picture(key, std::forward<Draw>(draw)));
 		}
 
-		// Each picture an object with a <mirror> shows, and it flipped left
-		// to right, both ways round: made once, whoever shows it.
-		std::map<const Bitmap*, std::shared_ptr<const Bitmap>> flippedPictures;
 
 		// Every picture the game has loaded or made, each held once.
 		Resources resources;

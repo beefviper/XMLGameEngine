@@ -34,9 +34,22 @@ namespace xge
 
 	std::shared_ptr<const Bitmap> Turnable::sharedTurned(int degrees) const { return resources->shared(turned(degrees)); }
 
+	std::shared_ptr<const Bitmap> Resources::flippedLeftRight(const std::shared_ptr<const Bitmap>& picture)
+	{
+		const auto held = byPicture.find(picture.get());
+		const PictureId from = held != byPicture.end() ? held->second : keep(picture);
+		const std::string key = "flipped|" + std::to_string(from.index);
+		const bool fresh = byKey.find(key) == byKey.end();
+		const PictureId made = this->picture(key, [&] { return flipBitmap(*picture, true, false); });
+		if (fresh) { byKey.emplace("flipped|" + std::to_string(made.index), from); }
+		return shared(made);
+	}
+
 	PictureId Resources::keep(std::shared_ptr<const Bitmap> made)
 	{
+		const PictureId id{ static_cast<std::uint32_t>(pictures.size()) };
+		byPicture.emplace(made.get(), id);
 		pictures.push_back(std::move(made));
-		return PictureId{ static_cast<std::uint32_t>(pictures.size() - 1) };
+		return id;
 	}
 }

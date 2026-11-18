@@ -116,3 +116,18 @@ TEST_CASE("objects turned to one heading share one turned picture", "[resources]
 	// The drawing, it at heading 0 (as it loads) and at 90.
 	CHECK(play.game.resources().pictureCount() == 3);
 }
+
+TEST_CASE("a <mirror>'s flipped picture is made once, whoever shows it", "[resources]")
+{
+	std::string objects;
+	for (int i = 0; i < 20; ++i)
+	{
+		objects += "<object name=\"guy" + std::to_string(i) + "\"><sprite><bitmap><row>**.</row><row>*..</row><scale>2</scale></bitmap></sprite>"
+			"<position><x>" + std::to_string(40 + i * 20) + "</x><y>40</y></position><mirror>left</mirror></object>";
+	}
+	played::Scratch game{ objects, "" };
+	played::Played play{ game.path };
+	// The picture and it flipped.
+	CHECK(play.game.resources().pictureCount() == 2);
+	CHECK(*play.get("guy0").looks.set->flips == *play.get("guy19").looks.set->flips);
+}

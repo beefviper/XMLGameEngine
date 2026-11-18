@@ -511,15 +511,9 @@ namespace xge
 		const auto add = [&](const std::shared_ptr<const Bitmap>& picture)
 		{
 			if (!picture || flips->count(picture.get())) { return; }
-			auto made = flippedPictures.find(picture.get());
-			if (made == flippedPictures.end())
-			{
-				auto flipped = std::make_shared<const Bitmap>(flipBitmap(*picture, true, false));
-				flippedPictures[flipped.get()] = picture;
-				made = flippedPictures.emplace(picture.get(), std::move(flipped)).first;
-			}
-			(*flips)[picture.get()] = made->second;
-			(*flips)[made->second.get()] = picture;
+			const std::shared_ptr<const Bitmap> flipped = resources.flippedLeftRight(picture);
+			(*flips)[picture.get()] = flipped;
+			(*flips)[flipped.get()] = picture;
 		};
 		const auto addLooks = [&](const std::vector<Object::Look>& looks)
 		{
