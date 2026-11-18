@@ -753,7 +753,7 @@ TEST_CASE("a hit ship waits for the middle to be clear before it comes back", "[
 	other.position = { 740, 540 };
 	field.frames(2);
 	CHECK(field.ship().isVisible);
-	CHECK(field.ship().position == field.ship().start.position);
+	CHECK(field.ship().position == field.game.startOf(field.ship()).position);
 }
 
 // ------------------------------------------------------------ breaking rocks
@@ -797,7 +797,7 @@ TEST_CASE("a shot breaks a big rock into two medium ones where it was", "[astero
 		if (!medium->isVisible) { continue; }
 		CHECK(medium->collisionsOn);
 		CHECK_THAT(field.centre(*medium).x, WithinAbs(from.x, 3.0f * 60.0f)); // moved on since, at its own speed
-		CHECK(medium->velocity == medium->start.velocity);
+		CHECK(medium->velocity == field.game.startOf(*medium).velocity);
 		CHECK((medium->velocity.x != 0.0f || medium->velocity.y != 0.0f));
 	}
 }
@@ -921,7 +921,7 @@ TEST_CASE("a rock hitting the ship costs a ship and breaks, and the ship comes b
 	field.frames(2);
 
 	CHECK(field.lives() == 2.0f);
-	CHECK(field.ship().position == field.ship().start.position);
+	CHECK(field.ship().position == field.game.startOf(field.ship()).position);
 	CHECK(field.ship().velocity == Vector2f{});
 	CHECK(field.ship().heading == 0.0f);
 	CHECK(field.ship().drawn.turnedDegrees == 0);
@@ -934,7 +934,7 @@ TEST_CASE("a rock hitting the ship costs a ship and breaks, and the ship comes b
 	field.clearTheMiddle();
 	field.frames(121);
 	CHECK(field.ship().isVisible);
-	CHECK(field.ship().position == field.ship().start.position);
+	CHECK(field.ship().position == field.game.startOf(field.ship()).position);
 }
 
 TEST_CASE("the pixels decide: the boxes overlap long before a rock touches the ship", "[asteroids][ship]")
@@ -1308,7 +1308,7 @@ TEST_CASE("a heading, a drag and an active are read from the file", "[asteroids]
 
 	const Object& ship = game.getObject("ship");
 	CHECK(ship.turning.hasHeading);
-	CHECK(ship.start.heading == 0.0f);
+	CHECK(game.startOf(ship).heading == 0.0f);
 	CHECK_THAT(ship.motion.drag, WithinAbs((std::log(2.0f) / 0.57f), 1e-5f));
 	CHECK(ship.drawn.turnables.size() == 1);
 

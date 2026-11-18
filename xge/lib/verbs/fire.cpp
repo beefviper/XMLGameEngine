@@ -37,7 +37,7 @@ namespace xge
 		// What it sends is a copy of a piece, never an object already there.
 		for (const Object& object : checking.objects)
 		{
-			if (object.named(shot) && object.start.exists)
+			if (object.named(shot) && startOf(checking.parts, object).exists)
 			{
 				throw std::runtime_error(checking.where + ": <fire object=\"" + shot + "\" />: '" + object.name + "' is in the game from the start; <fire> sends a copy of a piece (an object of the top-level <objects>), so write the shot there, with a <most> for how many may fly at once");
 			}
@@ -55,7 +55,7 @@ namespace xge
 
 		const Box from{ shooter.position, sizeOf(shooter) };
 		const Vector2f shotSize = sizeOf(*projectile);
-		const float speed = std::hypot(projectile->start.velocity.x, projectile->start.velocity.y);
+		const float speed = std::hypot(executor.game.startOf(*projectile).velocity.x, executor.game.startOf(*projectile).velocity.y);
 		std::optional<Shot> shot;
 		if (shooter.hasAim)
 		{
@@ -77,7 +77,7 @@ namespace xge
 		{
 			// From the shooter's top-centre: the projectile's own middle over
 			// the shooter's, so a thin shot leaves the middle of the gun.
-			shot = Shot{ shotFromTop(from, shotSize), projectile->start.velocity };
+			shot = Shot{ shotFromTop(from, shotSize), executor.game.startOf(*projectile).velocity };
 		}
 
 		projectile->position = shot->position;

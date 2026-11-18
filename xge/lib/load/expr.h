@@ -306,6 +306,8 @@ namespace xge
 		// The game's handles and parts (Game::parts), which each object made
 		// joins.
 		Parts* parts{ nullptr };
+		// How the object being made started (Parts::starts), given it the first time.
+		Moment& startFor(const Object& object) { return parts->give(parts->starts, object.id); }
 
 		// The game's <styles>, for the palettes a <become style> asks for.
 		std::vector<RawStyle> styles;

@@ -143,8 +143,8 @@ TEST_CASE("a value is an operation of operations, numbers and names", "[xml_form
 	Loaded loaded(gameXml("<variable name=\"step\">2</variable>", objectXml(o)));
 
 	const Object& object = loaded.game.getObject("o");
-	CHECK(object.start.position.x == 406.0f); // 800 wide window
-	CHECK(object.start.velocity.x == -2.0f);
+	CHECK(loaded.game.startOf(object).position.x == 406.0f); // 800 wide window
+	CHECK(loaded.game.startOf(object).velocity.x == -2.0f);
 }
 
 TEST_CASE("<random> gives a number between its two ends, and a different one each time", "[xml_format][random]")
@@ -165,11 +165,11 @@ TEST_CASE("<random> gives a number between its two ends, and a different one eac
 	for (int i = 0; i < 40; ++i)
 	{
 		const Object& object = loaded.game.getObject("r" + std::to_string(i));
-		CHECK(object.start.velocity.x >= -7.0f);
-		CHECK(object.start.velocity.x <= 7.0f);
-		CHECK(object.start.velocity.y >= 390.0f);
-		CHECK(object.start.velocity.y <= 400.0f);
-		seen.insert(object.start.velocity.x);
+		CHECK(loaded.game.startOf(object).velocity.x >= -7.0f);
+		CHECK(loaded.game.startOf(object).velocity.x <= 7.0f);
+		CHECK(loaded.game.startOf(object).velocity.y >= 390.0f);
+		CHECK(loaded.game.startOf(object).velocity.y <= 400.0f);
+		seen.insert(loaded.game.startOf(object).velocity.x);
 	}
 	CHECK(seen.size() > 1);
 }

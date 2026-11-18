@@ -101,7 +101,7 @@ TEST_CASE("qbert.xml: a hop down a diagonal lights the cube landed on, and one o
 	for (const char* enemy : { "ball", "coily" })
 	{
 		play.get(enemy).position = { 232, 210 };
-		play.get(enemy).start.position = { 232, 210 };
+		play.game.startFor(play.get(enemy)).position = { 232, 210 };
 	}
 
 	// A hop takes 0.3 seconds, 18 frames, through the air.
@@ -162,7 +162,7 @@ TEST_CASE("qbert.xml: Coily hatches on the bottom row and hunts Q*bert a hop at 
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "playing");
 	play.get("ball").position = { 232, 210 };
-	play.get("ball").start.position = { 232, 210 };
+	play.game.startFor(play.get("ball")).position = { 232, 210 };
 
 	// The egg, on the left of the sixth row, hops down and left onto the
 	// bottom row (that cube's top centred at 32, 196) and hatches there.
@@ -204,7 +204,7 @@ TEST_CASE("qbert.xml: a disc carries Q*bert back to the top once, and Coily chas
 	for (const char* enemy : { "ball", "coily" })
 	{
 		play.get(enemy).position = { 232, 210 };
-		play.get(enemy).start.position = { 232, 210 };
+		play.game.startFor(play.get(enemy)).position = { 232, 210 };
 	}
 	Object& qbert = play.get("qbert");
 	Object& coily = play.get("coily");

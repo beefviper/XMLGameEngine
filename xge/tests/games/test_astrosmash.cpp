@@ -107,9 +107,9 @@ namespace
 		bool atStart(const std::string& name)
 		{
 			const Object& rock = game.getObject(name);
-			return std::abs(rock.position.x - rock.start.position.x) <= std::abs(rock.velocity.x) / 60.0f
-				&& rock.position.y >= rock.start.position.y
-				&& rock.position.y <= rock.start.position.y + rock.velocity.y / 60.0f;
+			return std::abs(rock.position.x - game.startOf(rock).position.x) <= std::abs(rock.velocity.x) / 60.0f
+				&& rock.position.y >= game.startOf(rock).position.y
+				&& rock.position.y <= game.startOf(rock).position.y + rock.velocity.y / 60.0f;
 		}
 
 		// Brings a rock down into the middle of the screen, fires, and puts the

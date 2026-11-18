@@ -153,8 +153,8 @@ TEST_CASE("a rule about another object can reset, move, count and ride", "[new_v
 	CHECK(pair.frog.position.y == 90.0f);
 
 	pair.executor.executeObjectCollision(Command{ CmdReset{} }, pair.frog, pair.hedge, Edge::Top);
-	CHECK(pair.frog.position.x == pair.frog.start.position.x);
-	CHECK(pair.frog.position.y == pair.frog.start.position.y);
+	CHECK(pair.frog.position.x == pair.game.startOf(pair.frog).position.x);
+	CHECK(pair.frog.position.y == pair.game.startOf(pair.frog).position.y);
 
 	pair.executor.executeObjectCollision(Command{ CmdIncrement{ { "frog", "score" } } }, pair.frog, pair.hedge, Edge::Top);
 	pair.executor.executeObjectCollision(Command{ CmdDecrement{ { "frog", "lives" } } }, pair.frog, pair.hedge, Edge::Top);

@@ -192,10 +192,10 @@ namespace xge
 			}
 
 			const std::string where = "object '" + rawObject->name + "'";
-			object.start.position.x = expr.evaluate(rawObject->rawPosition.x, where);
-			object.start.position.y = expr.evaluate(rawObject->rawPosition.y, where);
-			object.start.position = object.start.position + object.layout.cellOffset;
-			object.position = object.start.position;
+			startFor(object).position.x = expr.evaluate(rawObject->rawPosition.x, where);
+			startFor(object).position.y = expr.evaluate(rawObject->rawPosition.y, where);
+			startFor(object).position = startOf(object).position + object.layout.cellOffset;
+			object.position = startOf(object).position;
 			use.sizesUsed = sizes;
 		});
 	}
@@ -230,7 +230,7 @@ namespace xge
 		{
 			if (!objects[i].named(name)) { continue; }
 			any = true;
-			all = all && !objects[i].start.exists;
+			all = all && !startOf(objects[i]).exists;
 		}
 		return descriptions[name] = any && all;
 	}
@@ -336,11 +336,11 @@ namespace xge
 		made.outerGroups = expr.nameStore.of(copy.outerGroups);
 		made.ownerState = original.ownerState;
 		made.ownerScene = original.ownerScene;
-		made.start.ownerScene = original.ownerScene;
+		startFor(made).ownerScene = original.ownerScene;
 		made.exists = true;
-		made.start.exists = true;
+		startFor(made).exists = true;
 		made.isVisible = true;
-		made.start.isVisible = true;
+		startFor(made).isVisible = true;
 		// Its picture is the one it is copied from, and so its size.
 		made.size = original.size;
 		copyRaws[name] = std::move(copy);
@@ -815,7 +815,7 @@ namespace xge
 			if (!value.drawsRandom()) { continue; }
 			const float drawn = expr.evaluate(value, where);
 			object.variable[name] = drawn;
-			object.start.variable[name] = drawn;
+			startFor(object).variable[name] = drawn;
 			refreshBoundTexts(object.name, name, drawn);
 		}
 
@@ -823,9 +823,9 @@ namespace xge
 		// game loads (load/expr::init), so a start drawn again takes the same
 		// numbers as the first did, and a generated program, which draws them
 		// in that order, draws the same ones.
-		object.start.position = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.layout.cellOffset;
+		startFor(object).position = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.layout.cellOffset;
 
-		object.start.velocity = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
+		startFor(object).velocity = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
 	}
 
 	void Game::popState(const std::string& name)
@@ -1457,7 +1457,8 @@ namespace xge
 		// that afterward, once they know which objects actually changed.
 		void resetObjectState(Object& object, Parts& parts)
 		{
-			object.backToStart();
+			static_cast<Moment&>(object) = startOf(parts, object);
+			object.placed = true;
 
 			// Also drop what its keys drive (moves, thrusts and turns
 			// recorded as held): velocity above is reset to rest, so a stale
@@ -1517,7 +1518,7 @@ namespace xge
 			object.path.name.clear();
 			if (Maze* maze = parts.mazes.find(object.id)) { maze->walk = {}; }
 			object.blink = 0.0f;
-			object.mirror.goingLeft = object.start.facing == Direction::Left;
+			object.mirror.goingLeft = startOf(parts, object).facing == Direction::Left;
 			object.faceMirror();
 			object.wearPalette(0);
 			if (!object.looks.all().empty()) { object.showLook(object.looks.set->first); }
@@ -1614,10 +1615,10 @@ namespace xge
 			// and its timers and animation start over.
 			drawStartAgain(object);
 			object.startOver();
-			object.position = object.start.position;
-			object.velocity = object.start.velocity;
+			object.position = startOf(object).position;
+			object.velocity = startOf(object).velocity;
 			object.isVisible = true;
-			object.collisionsOn = object.start.collisionsOn;
+			object.collisionsOn = startOf(object).collisionsOn;
 			object.path.name.clear();
 			--count;
 		}
@@ -1747,7 +1748,7 @@ namespace xge
 
 				// What is left of this leg: the rest of a step, or the way home
 				// from wherever it has got to.
-				const Vector2f left = leg.home ? object.start.position + object.shifted - object.position : object.path.left;
+				const Vector2f left = leg.home ? startOf(object).position + object.shifted - object.position : object.path.left;
 				const std::optional<Vector2f> step = pathStep(left, budget);
 				const bool last = object.path.leg + 1 == path.steps.size();
 				const float distance = std::hypot(left.x, left.y);
@@ -1950,7 +1951,7 @@ namespace xge
 
 		for (auto& object : objects)
 		{
-			if (object.start.ownerScene != scene) { continue; }
+			if (startOf(object).ownerScene != scene) { continue; }
 			if (object.isCopy()) { despawn(object); continue; }
 			drawStartAgain(object);
 			resetObjectState(object, objectParts);

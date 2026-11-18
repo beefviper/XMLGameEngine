@@ -1141,8 +1141,6 @@ namespace xge
 		// RawObject::line, for the messages of the checks made once all is loaded.
 		int line{ 0 };
 
-		// How it started (see Moment).
-		Moment start;
 
 		// What the next frame reads of how the last one left it: whether it
 		// moved, or came into play or into view (playOneFrame).
@@ -1167,12 +1165,6 @@ namespace xge
 		// Q*bert set down on the top cube by a disc lands on it.
 		bool placed{ true };
 
-		// Back as it started, every number of the Moment.
-		void backToStart()
-		{
-			static_cast<Moment&>(*this) = start;
-			placed = true;
-		}
 
 		// What it showed when the last frame ended: a picture that changed
 		// can touch what the old one did not, though nothing moved (a

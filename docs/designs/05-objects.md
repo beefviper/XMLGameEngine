@@ -34,9 +34,9 @@
 - Looked at: a snapshot of the whole object to copy back (about 200 fields with bitmaps, maps and rule lists, so each object twice over for one function).
   - The author's idea instead: the few numbers that change in play, kept at each point in time an object has.
   - **Chosen:** `Moment` (`game/object.h`): position, velocity, acceleration, heading, facing, light, altitude, rise, in play, collisions on, exists, scene and variables.
-  - An `Object` is a Moment (its current values, no prefix: `object.position`) and holds two more, `start` (as worked out from the file, drawn again when a `<random>` start is) and `before` (where the last frame left it and whether it was in play and in view: all the next frame reads).
+  - An `Object` is a Moment (its current values, no prefix: `object.position`) and has two more: `start` (as worked out from the file, drawn again when a `<random>` start is; kept in the game's `starts` store, since only a reset and a few verbs read it) and `before` (where the last frame left it and whether it was in play and in view: all the next frame reads).
   - The fourth layer, the file's text, is the `RawObject` the game keeps.
-  - A reset is `backToStart()` plus clearing what was under way (held keys, jumps, rides, timers, the look); the end of a frame is `remember()`.
+  - A reset copies the start back plus clearing what was under way (held keys, jumps, rides, timers, the look); the end of a frame is `remember()`.
   - About 100 bytes more per object; copying it each frame allocates nothing.
 - Not in it: what does not change in play (`drag`, `grip`, pulls, mass), and what is under way rather than a value (held moves, a jump, a ride), which the reset clears by hand.
 - Open: rules reading `before` (how fast something went before a bounce), if a game needs it; `before` would then grow by what they read.

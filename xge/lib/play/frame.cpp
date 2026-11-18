@@ -440,7 +440,7 @@ namespace xge
 							swing->done = done;
 							const float pi = 3.14159265358979323846f;
 							const float eased = (1.0f - std::cos(pi * done)) / 2.0f;
-							float now = std::fmod(object.start.heading + swing->by * eased, 360.0f);
+							float now = std::fmod(startOf(rules.parts(), object).heading + swing->by * eased, 360.0f);
 							if (now < 0.0f) { now += 360.0f; }
 							object.turning.spin = turnBetween(object.heading, now);
 							object.turning.spinOver = t;

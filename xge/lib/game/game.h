@@ -200,6 +200,10 @@ namespace xge
 			return found ? *found : none;
 		}
 
+		// How it started (Parts::starts); startFor gives it one.
+		const Moment& startOf(const Object& object) const noexcept { return xge::startOf(objectParts, object); }
+		Moment& startFor(const Object& object) { return objectParts.give(objectParts.starts, object.id); }
+
 		// Its place on a <map> (Object::MapPlace): an empty one for one on
 		// none; mapFor gives it one.
 		const Object::MapPlace& mapOf(const Object& object) const noexcept { return xge::mapOf(objectParts, object); }

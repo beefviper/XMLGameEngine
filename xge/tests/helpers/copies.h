@@ -31,7 +31,7 @@ namespace copies
 		std::string from = piece;
 		for (const xge::Object& object : game.getCurrentObjects())
 		{
-			if (!object.start.exists && !object.isCopy() && calls(object.name, piece) && object.ownerState == game.getCurrentState().name) { from = object.name; break; }
+			if (!game.startOf(object).exists && !object.isCopy() && calls(object.name, piece) && object.ownerState == game.getCurrentState().name) { from = object.name; break; }
 		}
 		const xge::Object* made = game.spawn(from);
 		if (!made) { throw std::runtime_error("no more of '" + piece + "' may be spawned"); }

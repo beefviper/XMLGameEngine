@@ -330,7 +330,7 @@ TEST_CASE("a barrel that reaches Jumpman costs a life and clears the girders; ju
 	CHECK(play.game.getCurrentState().name == "playing");
 	CHECK(play.variable("lives") == 2);
 	CHECK(play.barrelsInPlay() == 0);
-	CHECK(play.man().position.x == Approx(play.man().start.position.x));
+	CHECK(play.man().position.x == Approx(play.game.startOf(play.man()).position.x));
 }
 
 TEST_CASE("saving Pauline scores the bonus, starts the climb again with Kong quicker, and three saves win", "[donkeykong]")
@@ -351,7 +351,7 @@ TEST_CASE("saving Pauline scores the bonus, starts the climb again with Kong qui
 		CHECK(play.kong().variable.at("wait") == Approx(1000.0f + static_cast<float>(save) - 0.6f));
 		if (save < 3)
 		{
-			CHECK(play.man().position.x == Approx(play.man().start.position.x));
+			CHECK(play.man().position.x == Approx(play.game.startOf(play.man()).position.x));
 		}
 	}
 	play.frames(1);

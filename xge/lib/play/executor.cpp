@@ -290,7 +290,7 @@ namespace xge
 	void CommandExecutor::restart(Object& object)
 	{
 		game.drawStartAgain(object);
-		xge::restart(object, game.parts().drives.find(object.id));
+		xge::restart(object, game.startOf(object), game.parts().drives.find(object.id));
 	}
 
 	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge, float share)

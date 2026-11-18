@@ -89,7 +89,7 @@ namespace
 		std::string state() { return game.getCurrentState().name; }
 		Object& object(const char* name) { return game.getObject(name); }
 
-		int count(bool (*test)(const Object&))
+		template <class Test> int count(Test test)
 		{
 			int n = 0;
 			for (auto& object : game.getCurrentObjects())
@@ -100,10 +100,11 @@ namespace
 		}
 	};
 
-	bool isHome(const Object& object)
+	bool isHome(const Game& game, const Object& object)
 	{
-		return std::abs(object.position.x - object.start.position.x - object.shifted.x) < 0.01f
-			&& std::abs(object.position.y - object.start.position.y - object.shifted.y) < 0.01f;
+		const Vector2f home = game.startOf(object).position;
+		return std::abs(object.position.x - home.x - object.shifted.x) < 0.01f
+			&& std::abs(object.position.y - home.y - object.shifted.y) < 0.01f;
 	}
 
 	// A file in the temporary folder, removed afterwards.
@@ -183,7 +184,7 @@ TEST_CASE("a path is flown a step at a time at its speed, and home takes the obj
 	CHECK(a.isFollowing());
 	loaded.frames(2);
 	CHECK_FALSE(a.isFollowing());
-	CHECK(isHome(a));
+	CHECK(isHome(loaded.game, a));
 	CHECK(a.velocity.x == 0.0f);
 	CHECK(a.velocity.y == 0.0f);
 }
@@ -212,9 +213,9 @@ TEST_CASE("a path with a start puts the object there first, and a stagger sends 
 	CHECK(second.position.x == Approx(-20.0f));
 
 	loaded.frames(100);
-	CHECK(isHome(first));
-	CHECK(isHome(second));
-	CHECK(isHome(third));
+	CHECK(isHome(loaded.game, first));
+	CHECK(isHome(loaded.game, second));
+	CHECK(isHome(loaded.game, third));
 	CHECK_FALSE(third.isFollowing());
 }
 
@@ -236,7 +237,7 @@ TEST_CASE("a step runs its commands as it sets off, and an object on a path fini
 	loaded.frames(3);
 	CHECK(a.variable["n"] == 11.0f);
 	CHECK_FALSE(a.isFollowing());
-	CHECK(isHome(a));
+	CHECK(isHome(loaded.game, a));
 }
 
 TEST_CASE("a reset ends a path, and an object out of play is not moved along it", "[paths]")
@@ -248,7 +249,7 @@ TEST_CASE("a reset ends a path, and an object out of play is not moved along it"
 	loaded.frames(3);
 	loaded.game.resetObject("a");
 	CHECK_FALSE(a.isFollowing());
-	CHECK(isHome(a));
+	CHECK(isHome(loaded.game, a));
 
 	loaded.game.follow(a, "square");
 	loaded.frames(3);
@@ -293,7 +294,7 @@ TEST_CASE("<shift> moves objects and the places they go home to; one on a path o
 	Object& a = loaded.game.getObject("a");
 	loaded.frames(3);
 	CHECK(a.position.x == Approx(53.0f));
-	CHECK(isHome(a));
+	CHECK(isHome(loaded.game, a));
 
 	// Sent round the square, it is not pushed along by the shift, but
 	// comes home to where the shift has taken its place meanwhile.
@@ -303,7 +304,7 @@ TEST_CASE("<shift> moves objects and the places they go home to; one on a path o
 	CHECK(a.shifted.x == Approx(8.0f));
 	loaded.frames(40);
 	CHECK_FALSE(a.isFollowing());
-	CHECK(isHome(a));
+	CHECK(isHome(loaded.game, a));
 
 	// A reset puts it back where the file says.
 	loaded.game.resetObject("a");
@@ -327,7 +328,7 @@ TEST_CASE("a path step that names something live is worked out as it starts, wit
 	loaded.frames(9);
 	CHECK(a.position.x == Approx(30.0f));
 	loaded.frames(20);
-	CHECK(isHome(a));
+	CHECK(isHome(loaded.game, a));
 }
 
 TEST_CASE("a step's commands can name the one flying it as self, whoever sent it", "[paths]")
@@ -431,7 +432,7 @@ TEST_CASE("the fleet flies in on its paths, one behind another, and settles into
 
 	play.frames(400);
 	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 0);
-	CHECK(play.count([](const Object& object) { return isHome(object); }) == 46);
+	CHECK(play.count([&](const Object& object) { return isHome(play.game, object); }) == 46);
 }
 
 TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back to its place from the top", "[galaxian]")
@@ -447,7 +448,7 @@ TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back 
 	ship.isVisible = false;
 
 	Object& diver = play.object("escorts.1.1");
-	REQUIRE(isHome(diver));
+	REQUIRE(isHome(play.game, diver));
 	play.game.follow(diver, "dive");
 
 	float closest = 1000.0f;
@@ -474,7 +475,7 @@ TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back 
 
 	CHECK_FALSE(diver.isFollowing());
 	CHECK(diver.isVisible);
-	CHECK(isHome(diver));
+	CHECK(isHome(play.game, diver));
 	CHECK(lowest > 600.0f);
 	CHECK(cameFromTop);
 	CHECK(rightmost - leftmost > 60.0f);
@@ -500,7 +501,7 @@ TEST_CASE("the formation sways from side to side, and a diver comes home to wher
 	}
 	CHECK(rightmost - leftmost > 20.0f);
 	CHECK(rightmost - leftmost < 60.0f);
-	CHECK(play.count([](const Object& object) { return object.isFollowing() || isHome(object); }) == play.count([](const Object& object) { return object.isVisible; }));
+	CHECK(play.count([&](const Object& object) { return object.isFollowing() || isHome(play.game, object); }) == play.count([](const Object& object) { return object.isVisible; }));
 }
 
 TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pays more", "[galaxian]")

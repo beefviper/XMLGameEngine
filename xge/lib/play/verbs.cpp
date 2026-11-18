@@ -326,9 +326,9 @@ namespace xge
 		object.path.name.clear();
 	}
 
-	void restart(Object& object, const Drive* drive)
+	void restart(Object& object, const Moment& start, const Drive* drive)
 	{
-		object.position = object.start.position;
+		object.position = start.position;
 		object.footing.climbing = false;
 		object.footing.jumping = false;
 		object.footing.grounded = false;
@@ -336,9 +336,9 @@ namespace xge
 		const bool keyHeld = drive && std::any_of(drive->moveStep.begin(), drive->moveStep.end(), [](float step) { return step != 0.0f; });
 		if (!keyHeld)
 		{
-			object.velocity = object.start.velocity;
+			object.velocity = start.velocity;
 		}
-		object.heading = object.start.heading;
+		object.heading = start.heading;
 		object.showHeading();
 	}
 

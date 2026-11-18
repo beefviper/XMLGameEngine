@@ -65,7 +65,7 @@ namespace xge
 		buildActions(rawObject, object, where);
 
 		// How it started is how it was before its first frame.
-		object.before = object.start;
+		object.before = startFor(object);
 
 		// object's visual is built later by whichever Window backend is
 		// running, once one exists (see Window::init() in window/window.h) -
@@ -184,7 +184,7 @@ namespace xge
 		object.isDrawn = rawObject.isDrawn;
 		object.ownerState = nameStore.of(rawObject.ownerState);
 		object.ownerScene = nameStore.of(rawObject.ownerScene);
-		object.start.ownerScene = object.ownerScene;
+		startFor(object).ownerScene = object.ownerScene;
 
 		if (rawObject.objClass == "projectile")
 		{
@@ -193,7 +193,7 @@ namespace xge
 
 		object.isVisible = rawObject.isVisible;
 		object.exists = rawObject.exists;
-		object.start.exists = rawObject.exists;
+		startFor(object).exists = rawObject.exists;
 		// One that does not exist is in nothing that looks for what is out
 		// there, as one taken out of play is not.
 		if (!object.exists) { object.isVisible = false; }
@@ -210,7 +210,7 @@ namespace xge
 		{
 			const float value = evaluateStart(rawVariable.second, where);
 			object.variable[rawVariable.first] = value;
-			object.start.variable[rawVariable.first] = value;
+			startFor(object).variable[rawVariable.first] = value;
 
 			// Keep the cross-object symbol table entry (registered above,
 			// before any expression compiled) up to date with the real
@@ -222,15 +222,15 @@ namespace xge
 			|| rawObject.rawVelocity.x.drawsRandom() || rawObject.rawVelocity.y.drawsRandom()
 			|| std::any_of(rawObject.variable.begin(), rawObject.variable.end(), [](const auto& variable) { return variable.second.drawsRandom(); });
 
-		object.start.position.x = evaluateStart(rawObject.rawPosition.x, where);
-		object.start.position.y = evaluateStart(rawObject.rawPosition.y, where);
+		startFor(object).position.x = evaluateStart(rawObject.rawPosition.x, where);
+		startFor(object).position.y = evaluateStart(rawObject.rawPosition.y, where);
 
 		// A cell is its group's position and its place in the
 		// group; start.position keeps both, so a reset puts each
 		// cell (each brick) back in its own place.
 		object.layout.cellOffset = cellOffset;
-		object.position = object.start.position + object.layout.cellOffset;
-		object.start.position = object.position;
+		object.position = startFor(object).position + object.layout.cellOffset;
+		startFor(object).position = object.position;
 
 		if (!positionSizeDependencies.empty()) { parts->sizeUses.add(object.id, parts->orderOf(object.id), { positionSizeDependencies, {} }); }
 
@@ -247,14 +247,14 @@ namespace xge
 		object.velocity.x = evaluate(rawObject.rawVelocity.x, where);
 		object.velocity.y = evaluate(rawObject.rawVelocity.y, where);
 
-		object.start.velocity = object.velocity;
+		startFor(object).velocity = object.velocity;
 
 		if (rawObject.hasAcceleration)
 		{
 			object.acceleration.x = evaluate(rawObject.rawAcceleration.x, where);
 			object.acceleration.y = evaluate(rawObject.rawAcceleration.y, where);
 		}
-		object.start.acceleration = object.acceleration;
+		startFor(object).acceleration = object.acceleration;
 
 		if (rawObject.hasHeading)
 		{
@@ -263,7 +263,7 @@ namespace xge
 			if (degrees < 0.0f) { degrees += 360.0f; }
 			object.heading = degrees;
 		}
-		object.start.heading = object.heading;
+		startFor(object).heading = object.heading;
 	}
 
 	// A <drag> or <grip>, written as a half-life (the seconds to lose half
@@ -336,7 +336,7 @@ namespace xge
 		{
 			object.light = evaluate(rawObject.rawLight, where + " > <light>");
 			if (object.light < 0.0f) { throw std::runtime_error(where + ": <light> reaches " + formatDisplayNumber(object.light) + " pixels; expected 0 or more"); }
-			object.start.light = object.light;
+			startFor(object).light = object.light;
 			if (!rawObject.lightPast.empty()) { parts->lightPasts.add(object.id, parts->orderOf(object.id), { rawObject.lightPast }); }
 		}
 		if (rawObject.dark == "unlit") { object.dark.kind = Object::Darkness::Unlit; }
@@ -356,8 +356,8 @@ namespace xge
 			if (object.altitude < 0.0f) { throw std::runtime_error(here + ": <start> is " + formatDisplayNumber(object.altitude) + "; it cannot start below the ground"); }
 			if (aloft->fall < 0.0f) { throw std::runtime_error(here + ": <fall> is " + formatDisplayNumber(aloft->fall) + "; expected 0 or more"); }
 			if (!(aloft->bounce >= 0.0f && aloft->bounce <= 1.0f)) { throw std::runtime_error(here + ": <bounce> is " + formatDisplayNumber(aloft->bounce) + "; expected 0 up to 1"); }
-			object.start.altitude = object.altitude;
-			object.start.rise = object.rise;
+			startFor(object).altitude = object.altitude;
+			startFor(object).rise = object.rise;
 		}
 		if (aloft) { aloft->shadowOf = rawObject.shadowOf; }
 
@@ -386,7 +386,7 @@ namespace xge
 				: rawObject.facing == "right" ? Direction::Right
 				: Direction::Up;
 		}
-		object.start.facing = object.facing;
+		startFor(object).facing = object.facing;
 	}
 
 	// makeObject's timers, a named one's time left a number of its own.
@@ -400,7 +400,7 @@ namespace xge
 			// A named timer's time left (see init): where it starts.
 			const float left = std::ceil(timer.seconds);
 			object.variable[timer.name] = left;
-			object.start.variable[timer.name] = left;
+			startFor(object).variable[timer.name] = left;
 			objectVariables[rawObject.name + "." + timer.name] = left;
 		}
 	}
@@ -640,7 +640,7 @@ namespace xge
 			mapPlace.columns = rawObject.cell.mapColumns;
 			mapPlace.rows = rawObject.cell.mapRows;
 			mapPlace.tile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
-			mapPlace.origin = object.start.position - object.layout.cellOffset;
+			mapPlace.origin = startFor(object).position - object.layout.cellOffset;
 
 			// On a cell map: the cell it is in, its map's checks, and a
 			// shape's cells, each the object its character picks.
@@ -719,8 +719,8 @@ namespace xge
 			object.pivotDegrees = wholeDegrees(object.heading);
 			const Vector2f square{ static_cast<float>(object.drawn.bitmap->width), static_cast<float>(object.drawn.bitmap->height) };
 			object.position = object.position - square * 0.5f - turnedBy(object.turning.pivotFromMiddle, static_cast<float>(object.pivotDegrees));
-			object.start.position = object.position;
-			object.start.pivotDegrees = object.pivotDegrees;
+			startFor(object).position = object.position;
+			startFor(object).pivotDegrees = object.pivotDegrees;
 		}
 	}
 
@@ -729,8 +729,8 @@ namespace xge
 	void game_expr::buildCollisions(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where)
 	{
 		object.collisionsOn = rawObject.rawCollisionData.enabled;
-		object.start.isVisible = object.isVisible;
-		object.start.collisionsOn = object.collisionsOn;
+		startFor(object).isVisible = object.isVisible;
+		startFor(object).collisionsOn = object.collisionsOn;
 		object.kind->collisionData.lockstep = thisLockstep;
 		object.kind->collisionData.type = rawObject.rawCollisionData.type;
 

@@ -14,6 +14,13 @@ namespace xge
 		return found ? *found : none;
 	}
 
+	const Moment& startOf(const Parts& parts, const Object& object) noexcept
+	{
+		static const Moment none{};
+		const Moment* found = parts.starts.find(object.id);
+		return found ? *found : none;
+	}
+
 	ObjectId Parts::newId()
 	{
 		if (!freeHandles.empty())
@@ -62,6 +69,7 @@ namespace xge
 		follows.remove(id);
 		unholed.remove(id);
 		surfaces.remove(id);
+		starts.remove(id);
 	}
 
 	namespace
@@ -99,5 +107,6 @@ namespace xge
 		copyPart(follows, from.follows, id);
 		copyPart(unholed, from.unholed, id);
 		copyPart(surfaces, from.surfaces, id);
+		copyPart(starts, from.starts, id);
 	}
 }

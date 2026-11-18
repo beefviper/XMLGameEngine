@@ -94,8 +94,8 @@ namespace
 
 		bool atStart(int player)
 		{
-			return chicken(player).position.x == chicken(player).start.position.x
-				&& chicken(player).position.y == chicken(player).start.position.y;
+			return chicken(player).position.x == game.startOf(chicken(player)).position.x
+				&& chicken(player).position.y == game.startOf(chicken(player)).position.y;
 		}
 	};
 

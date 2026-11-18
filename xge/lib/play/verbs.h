@@ -142,7 +142,7 @@ namespace xge
 	// the way it started; a held key still decides its velocity. The start
 	// is start.position and start.velocity, so a start that draws a
 	// <random> is drawn again before this.
-	void restart(Object& object, const Drive* drive);
+	void restart(Object& object, const Moment& start, const Drive* drive);
 
 	// A direction held at `step` (0: let go), recombined with the others held
 	// into the velocity: Left/Right and Up/Down are separate axes, and in a

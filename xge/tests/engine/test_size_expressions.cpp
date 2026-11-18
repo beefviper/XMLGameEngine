@@ -61,7 +61,7 @@ TEST_CASE("a text's size and the position made from it are known when the game l
 	CHECK(title.size.y == static_cast<float>(drawn.height));
 	CHECK(title.position.x == 640.0f - title.size.x / 2.0f); // 1280 wide window
 	CHECK(title.position.y == 120.0f);                       // y is "margin * 4"
-	CHECK(title.start.position == title.position);
+	CHECK(game.startOf(title).position == title.position);
 }
 
 TEST_CASE("a position is worked out again when the text's words change its size", "[size_expressions]")

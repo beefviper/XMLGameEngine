@@ -20,6 +20,9 @@ namespace xge
 	// for one with none.
 	const Object::MapPlace& mapOf(const Parts& parts, const Object& object) noexcept;
 
+	// How it started (Parts::starts): an empty Moment for one with none.
+	const Moment& startOf(const Parts& parts, const Object& object) noexcept;
+
 	// A game's handles and its parts: every object's ObjectId, given as it
 	// joins and freed as a copy leaves, and a Store of each part an object
 	// has only if it uses it. Owned by the Game; what loads an object adds
@@ -49,6 +52,9 @@ namespace xge
 		Store<Object::Follows> follows;
 		Store<Object::Unholed> unholed;
 		Store<Object::Surface> surfaces;
+		// How each object started (see Moment), what a reset puts back:
+		// every object has one, given as it loads.
+		Store<Moment> starts;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.

@@ -193,8 +193,8 @@ TEST_CASE("a member takes what it leaves out from its group", "[group]")
 	CHECK(odd.drawn.picture != first.drawn.picture);
 
 	// And where they started is where a reset puts them back.
-	CHECK(odd.start.position.y == 150.0f);
-	CHECK(odd.start.velocity.x == 60.0f);
+	CHECK(loaded.game.startOf(odd).position.y == 150.0f);
+	CHECK(loaded.game.startOf(odd).velocity.x == 60.0f);
 }
 
 TEST_CASE("the group's name means every member", "[group]")

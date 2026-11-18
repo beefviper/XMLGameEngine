@@ -64,8 +64,8 @@ namespace
 
 		bool atStart(int player)
 		{
-			return rocket(player).position.x == rocket(player).start.position.x
-				&& rocket(player).position.y == rocket(player).start.position.y;
+			return rocket(player).position.x == game.startOf(rocket(player)).position.x
+				&& rocket(player).position.y == game.startOf(rocket(player)).position.y;
 		}
 	};
 }
