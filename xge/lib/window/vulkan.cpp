@@ -171,11 +171,15 @@ namespace xge
 			VkDescriptorPool pool{ VK_NULL_HANDLE };
 		};
 
+		// What an object shows: the picture on the card of its picture,
+		// which objects showing the same picture share.
 		struct Visual
 		{
 			Picture picture;
 			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 		};
+
+		explicit Parts(Window& owner) : textures(owner) {}
 
 		// Where a frame is: nothing yet, being recorded, or handed to the
 		// graphics card (capture() does that early, to read it back).
@@ -234,7 +238,8 @@ namespace xge
 		std::uint32_t shownImage{ 0 };
 		Stage stage{ Stage::Idle };
 
-		std::unordered_map<std::string, Visual> visuals;
+		Textures<Picture> textures;
+		std::unordered_map<std::string, Visual> visuals;  // by object name
 		// Pictures replaced this frame: the last one may still be drawing
 		// them, so they go once it is done.
 		std::vector<Picture> retired;
@@ -246,8 +251,9 @@ namespace xge
 			if (device)
 			{
 				vkDeviceWaitIdle(device);
-				for (auto& [name, visual] : visuals) { drop(visual.picture); }
 				visuals.clear();
+				textures.forEach([this](Picture& picture) { drop(picture); });
+				textures.clear();
 				for (Picture& picture : retired) { drop(picture); }
 				retired.clear();
 				dropSwapchain();
@@ -723,20 +729,27 @@ namespace xge
 			return set;
 		}
 
-		// The engine's picture of the object, at `scale`, copied to the
-		// graphics card through a buffer the processor can write.
+		// The engine's picture of the object, at `scale`.
 		void build(Object& object, float scale, PictureId showing)
 		{
 			object.drawn.visualDirty = false;
 			Visual& visual = visuals[object.name];
 			visual.drawnAt = scale;
-			if (visual.picture.image) { retired.push_back(visual.picture); }
-			visual.picture = {};
+			const bool smoothly = object.drawnAtScale();
+			visual.picture = textures.of(showing, [&](const Bitmap& source, Picture& made)
+			{
+				if (made.image) { retired.push_back(made); }
+				made = cardPicture(source, smoothly);
+			});
+		}
 
-			const std::shared_ptr<const Bitmap> source = showing.shared();
-			if (source->rgba.empty() || source->width <= 0 || source->height <= 0) { return; }
-			const std::uint32_t width = static_cast<std::uint32_t>(source->width);
-			const std::uint32_t height = static_cast<std::uint32_t>(source->height);
+		// A picture copied to the graphics card through a buffer the
+		// processor can write; none for an empty one.
+		Picture cardPicture(const Bitmap& source, bool smoothly)
+		{
+			if (source.rgba.empty() || source.width <= 0 || source.height <= 0) { return {}; }
+			const std::uint32_t width = static_cast<std::uint32_t>(source.width);
+			const std::uint32_t height = static_cast<std::uint32_t>(source.height);
 
 			Picture picture;
 			auto about = blank<VkImageCreateInfo>(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO);
@@ -763,11 +776,11 @@ namespace xge
 			}
 			vkBindImageMemory(device, picture.image, picture.memory, 0);
 
-			const VkDeviceSize bytes = source->rgba.size();
+			const VkDeviceSize bytes = source.rgba.size();
 			const auto [staging, stagingMemory] = hostBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 			void* mapped = nullptr;
 			vkMapMemory(device, stagingMemory, 0, bytes, 0, &mapped);
-			std::memcpy(mapped, source->rgba.data(), source->rgba.size());
+			std::memcpy(mapped, source.rgba.data(), source.rgba.size());
 			vkUnmapMemory(device, stagingMemory);
 
 			auto begin = blank<VkCommandBufferBeginInfo>(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
@@ -805,7 +818,7 @@ namespace xge
 
 			picture.set = newSet(picture.pool);
 			VkDescriptorImageInfo shown{};
-			shown.sampler = object.drawnAtScale() ? smooth : hardEdges;
+			shown.sampler = smoothly ? smooth : hardEdges;
 			shown.imageView = picture.view;
 			shown.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			auto write = blank<VkWriteDescriptorSet>(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET);
@@ -815,7 +828,7 @@ namespace xge
 			write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			write.pImageInfo = &shown;
 			vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
-			visual.picture = picture;
+			return picture;
 		}
 
 		// Ends the frame's drawing and hands it to the graphics card; with
@@ -853,7 +866,7 @@ namespace xge
 	};
 
 	VulkanWindow::VulkanWindow(const WindowDesc& windowDesc) :
-		parts(std::make_unique<Parts>())
+		parts(std::make_unique<Parts>(*this))
 	{
 		Parts& p = *parts;
 		p.gameWidth = std::max(windowDesc.width, 1.0f);
