@@ -44,7 +44,7 @@ namespace
 			while (end - played > 1e-6)
 			{
 				const double step = std::min(end - played, rate > 0 ? 1.0 / rate : length(pick));
-				play.engine.step(static_cast<float>(step));
+				play.engine.input(); play.engine.update(static_cast<float>(step));
 				played += step;
 				for (const xge::Object& object : play.game.getCurrentObjects())
 				{

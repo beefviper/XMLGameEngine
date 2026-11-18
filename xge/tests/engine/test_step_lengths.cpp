@@ -178,7 +178,7 @@ TEST_CASE("a <jump> reaches the same height and lands at the same time, however 
 	// Stood on the floor a moment, then up.
 	const auto jump = [](Played& play)
 	{
-		play.engine.step(0.05f);
+		play.engine.input(); play.engine.update(0.05f);
 		xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "jumper", "up" }, true);
 	};
 	// Its height when the top is due: v / a = sqrt(2 h / a), 0.316 seconds.
@@ -243,7 +243,7 @@ TEST_CASE("a climb held goes as far up the ladder, however the time is cut into 
 	const std::string game = smallGame(ladder + floor + climber);
 	const auto up = [](Played& play)
 	{
-		play.engine.step(0.05f);
+		play.engine.input(); play.engine.update(0.05f);
 		xge::CommandExecutor(play.game).executeInput(xge::CmdTriggerAction{ "climber", "up" }, true);
 	};
 	const auto y = atEveryStepLengthOf(game, 2.0, [](Played& play) { return static_cast<double>(play.get("climber").position.y); }, up);
@@ -373,7 +373,7 @@ TEST_CASE("a fast ball bounces off all four sides at the moment it meets them, h
 		xge::Vector2f was = play.get("ball").velocity;
 		for (int step = 0; step < 30; ++step)
 		{
-			play.engine.step(0.1f);
+			play.engine.input(); play.engine.update(0.1f);
 			const xge::Object& ball = play.get("ball");
 			INFO("step " << step << ": " << ball.position.x << ", " << ball.position.y);
 			CHECK(ball.position.x >= -0.01f);

@@ -289,7 +289,7 @@ TEST_CASE("the city gone is game over, and space plays again with everything bac
 	{
 		if (object.objClass == "building") { object.isVisible = false; }
 	}
-	engine.step(xge::kSixtieth);
+	engine.input(); engine.update(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "over");
 	CHECK(game.getObject("over.message").lookName() == "lost");
 	CHECK(game.isStill(game.getObject("leftpost")));

@@ -47,13 +47,13 @@ namespace xge
 		Engine(const Engine&) = delete;
 		Engine& operator=(const Engine&) = delete;
 
-		// Plays the game until the window closes: each frame, one step() of
-		// the time that passed (at most kLongestStep), then render() (the
-		// window waits for the screen's refresh). At most <framerate>
-		// frames a second, or what setFramerate gave.
-		void loop(void);
+		// Plays the game until the window closes: each frame input(), then
+		// update() by the time that passed (at most kLongestStep), then
+		// render() (the window waits for the screen's refresh). At most
+		// <framerate> frames a second, or what setFramerate gave.
+		void run(void);
 
-		// The most frames a second loop() plays, in place of the game's
+		// The most frames a second run() plays, in place of the game's
 		// <framerate> (xgecli --framerate).
 		void setFramerate(int framesASecond) noexcept { mostFrames = framesASecond; }
 
@@ -67,7 +67,7 @@ namespace xge
 
 		// Plays a recording's keys back (xgecli --keys): a new game starts
 		// now from the recording's seed, as record() started the one it was
-		// made from, and every step() from here presses and lets go each of
+		// made from, and every frame from here presses and lets go each of
 		// its keys in the frame it was recorded in, beside any the window
 		// reports. Frames the game's own demo plays in are not counted, as
 		// they were not while recording.
@@ -115,23 +115,26 @@ namespace xge
 		// picture is built again for it. Nothing about the game changes - not
 		// the objects, the values, or the state the game is in - and the keys
 		// held stay held. If `create` throws, the engine has no window and can
-		// only be given one by calling this again (or destroyed); step() and
+		// only be given one by calling this again (or destroyed); input(), update() and
 		// render() throw std::logic_error until then.
 		void replaceWindow(const std::function<std::unique_ptr<Window>()>& create);
 
-		// What loop() does each frame, split in two so a front end that owns
-		// the event loop (the Qt application, xgegui) can run the engine from
-		// its own timer instead of handing control to loop(). step() is the
-		// simulation: it reads the keys, moves everything, checks the
-		// conditions, and plays the sounds the frame asked for. render() draws the current picture without moving
+		// What run() does each frame, for a front end that owns the event
+		// loop (the Qt application, xgegui) and runs the engine from its own
+		// timer, and for the tests. input() takes what came from outside: the
+		// window's keys, the mouse and pads, a demo's or a replay's keys.
+		// update() is the game's step of `seconds`: the computer's presses and
+		// held keys, everything moved and checked, the sounds it asked for,
+		// what it keeps. render() draws the current picture without moving
 		// anything, so a paused game can be redrawn after its values are edited.
-		void step(float seconds);
+		void input(void);
+		void update(float seconds);
 		void render(void);
 
 		// Lets the window deal with its own events (move, resize, close)
 		// without playing a frame: for a front end that has paused the game
 		// but keeps its window alive. The keys it reports are held back and
-		// handled by the next step(), so none is lost or reaches the game
+		// handled by the next input(), so none is lost or reaches the game
 		// while it is not running.
 		void pump(void);
 
@@ -140,7 +143,7 @@ namespace xge
 		void handleKeyPressed(KeyCode key);
 		void handleKeyReleased(KeyCode key);
 
-		// The mouse and the pads as the window sees them now (step() asks it
+		// The mouse and the pads as the window sees them now (input() asks it
 		// every frame): a button that went down or up is pressed or released
 		// as a key is (KeyCode::MouseLeft, Pad1A...; a pad's direction is its
 		// d-pad or its stick past halfway), and a control that moved runs the
@@ -158,7 +161,7 @@ namespace xge
 		// When the window's pictures are drawn again at its size (render).
 		SettledFit settledFit;
 
-		// Key changes pump() took from the window that step() has not handled yet.
+		// Key changes pump() took from the window that input() has not handled yet.
 		std::vector<std::pair<KeyCode, bool>> pumpedKeys;
 
 		// Which keys are down; a repeated press of a held key is not a new one.

@@ -455,7 +455,7 @@ namespace xge
 		{
 			if (playing)
 			{
-				engine->step(std::min(static_cast<float>(sinceLast) / 1e9f, xge::kLongestStep));
+				engine->input(); engine->update(std::min(static_cast<float>(sinceLast) / 1e9f, xge::kLongestStep));
 				++frameCount;
 				++fpsFrames;
 			}
@@ -504,7 +504,7 @@ namespace xge
 
 		try
 		{
-			engine->step(static_cast<float>(framePeriodNs) / 1e9f);
+			engine->input(); engine->update(static_cast<float>(framePeriodNs) / 1e9f);
 			engine->render();
 			++frameCount;
 		}

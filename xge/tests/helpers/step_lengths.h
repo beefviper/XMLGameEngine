@@ -30,9 +30,9 @@ namespace played
 	inline void playFor(Played& play, double seconds, double step)
 	{
 		const int whole = static_cast<int>(std::floor(seconds / step + 1e-6));
-		for (int i = 0; i < whole; ++i) { play.engine.step(static_cast<float>(step)); }
+		for (int i = 0; i < whole; ++i) { play.engine.input(); play.engine.update(static_cast<float>(step)); }
 		const double rest = seconds - whole * step;
-		if (rest > 1e-6) { play.engine.step(static_cast<float>(rest)); }
+		if (rest > 1e-6) { play.engine.input(); play.engine.update(static_cast<float>(rest)); }
 	}
 
 	// Plays `seconds` in steps of any length between a 240th and a tenth of a
@@ -46,7 +46,7 @@ namespace played
 		while (left > 1e-6)
 		{
 			const double step = std::min(left, length(pick));
-			play.engine.step(static_cast<float>(step));
+			play.engine.input(); play.engine.update(static_cast<float>(step));
 			left -= step;
 		}
 	}

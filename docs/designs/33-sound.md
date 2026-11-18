@@ -26,7 +26,7 @@ The 8-bit machines played bleeps, bloops and little tunes from a sound chip, not
   - Rejected: a `<music>` element of its own (a tune is a sound), beats as lengths (a length is already a value), a tracker pattern table (a little language), music resuming where it paused (each library would need a pause).
 - **A short fade (about 2 ms), and one part of an envelope: decay.** `<decay>` on a sound or a part is the seconds each note takes to fall evenly to nothing from its start, for plucks and bells (Pinball's bumpers ring). It belongs to the voice, not the note, so a note stays one number of seconds (no mixed text and tags). Attack, sustain and release, the other three of the usual four, wait for a game that needs them.
 - **One voice per sound,** like a chip channel: replaying restarts it; different sounds overlap.
-- **The game asks, the engine plays.** `<play>` queues a name; `Engine` plays the queue at the end of `step()`. `Game` never touches audio, so tests read the requests.
+- **The game asks, the engine plays.** `<play>` queues a name; `Engine` plays the queue at the end of `update()`. `Game` never touches audio, so tests read the requests.
 - **Checked at load** with messages that say where. A note is at most 10 seconds.
 - **The sound library is chosen apart from the window,** so an OpenGL window (GLFW has no sound) can have sound. **No sound is not an error:** a device that will not open gives a warning and silence.
 - **SDL is shared** by window and sound: each starts and stops only its own subsystem.

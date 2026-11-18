@@ -32,7 +32,7 @@ using Clock = std::chrono::steady_clock;
 namespace
 {
 	// A window that closes once `open` has passed, counts the steps played
-	// (each step() polls it once) and the pictures shown, notes when the
+	// (each input() polls it once) and the pictures shown, notes when the
 	// last step was, and can take a while to show a picture.
 	class TimedWindow : public NullWindow
 	{
@@ -102,7 +102,7 @@ namespace
 			TimedWindow::Seen seen;
 			Engine engine(game, std::make_unique<TimedWindow>(std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(seconds)), displayTime, &seen));
 			const Clock::time_point start = Clock::now();
-			engine.loop();
+			engine.run();
 			paced.played = std::chrono::duration<double>(seen.lastStep - start).count();
 			paced.steps = seen.steps;
 			paced.pictures = seen.pictures;

@@ -50,7 +50,7 @@ namespace
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { engine.step(xge::kSixtieth); }
+			for (int i = 0; i < count; ++i) { engine.input(); engine.update(xge::kSixtieth); }
 		}
 
 		void hold(KeyCode key, int count)

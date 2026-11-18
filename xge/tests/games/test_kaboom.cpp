@@ -352,10 +352,10 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	game.getObject("bucket").variable["score"] = 10;
-	for (int i = 0; i < 90; ++i) { engine.step(xge::kSixtieth); }
+	for (int i = 0; i < 90; ++i) { engine.input(); engine.update(xge::kSixtieth); }
 	REQUIRE(game.currentScene("playing") == "playing.wave2");
 	game.getObject("bucket").variable["buckets"] = 0;
-	engine.step(xge::kSixtieth);
+	engine.input(); engine.update(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "over");
 	CHECK(game.getObject("over.message").lookName() == "lost");
 
@@ -410,7 +410,7 @@ TEST_CASE("the keys carry on from wave to wave, and Pause pauses over the game d
 	CHECK(game.isStill(game.getObject("score")));
 	CHECK_FALSE(game.isStill(game.getObject(of("wave1", "bomber"))));
 	const float x = bomber.position.x;
-	for (int i = 0; i < 30; ++i) { engine.step(xge::kSixtieth); }
+	for (int i = 0; i < 30; ++i) { engine.input(); engine.update(xge::kSixtieth); }
 	CHECK(bomber.position.x == Approx(x));
 
 	engine.handleKeyPressed(KeyCode::Pause);

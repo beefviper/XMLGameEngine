@@ -126,7 +126,7 @@ TEST_CASE("The size of the engine's things", "[long][size]")
 		// Started, and played a little, so what is made on the way is counted.
 		engine.handleKeyPressed(xge::KeyCode::Space);
 		engine.handleKeyReleased(xge::KeyCode::Space);
-		for (int frame = 0; frame < 600; ++frame) { engine.step(xge::kSixtieth); engine.render(); }
+		for (int frame = 0; frame < 600; ++frame) { engine.input(); engine.update(xge::kSixtieth); engine.render(); }
 
 		Pictures pictures;
 		for (const xge::Object& object : game.getCurrentObjects()) { pictures.addObject(game.parts(), object); }

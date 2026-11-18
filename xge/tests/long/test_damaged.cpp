@@ -244,7 +244,7 @@ TEST_CASE("every game broken 40 ways stops with a message or plays on, never cra
 					for (int frame = 0; frame < kFrames; ++frame)
 					{
 						if (frame % 30 == 0) { engine.handleKeyPressed(xge::KeyCode::Space); engine.handleKeyReleased(xge::KeyCode::Space); }
-						engine.step(xge::kSixtieth);
+						engine.input(); engine.update(xge::kSixtieth);
 					}
 					++played;
 				}

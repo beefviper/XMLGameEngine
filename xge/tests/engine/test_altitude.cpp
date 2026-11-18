@@ -77,7 +77,7 @@ TEST_CASE("it is drawn raised by its altitude, and its <shadow> lies under it on
 	Engine engine(game, std::move(window));
 	for (auto& object : game.getCurrentObjects()) { object.size = measureShapeSize(object.drawn.picture); }
 
-	engine.step(xge::kSixtieth);
+	engine.input(); engine.update(xge::kSixtieth);
 	engine.render();
 	REQUIRE(seen.drawn.size() == 2);
 	CHECK(seen.drawn[0].first == "playing.shade");
@@ -89,7 +89,7 @@ TEST_CASE("it is drawn raised by its altitude, and its <shadow> lies under it on
 
 	// Out of play, and so is its shadow.
 	game.getObject("ball").isVisible = false;
-	engine.step(xge::kSixtieth);
+	engine.input(); engine.update(xge::kSixtieth);
 	CHECK_FALSE(game.getObject("shade").isVisible);
 }
 

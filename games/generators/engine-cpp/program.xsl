@@ -64,7 +64,7 @@ int main()
 		engine.keepIn("saves/</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text>.xml");
-		engine.loop();
+		engine.run();
 	}
 	catch (const std::exception&amp; error)
 	{

@@ -29,12 +29,12 @@ Then the sounds asked for play, loops start or stop, and the frame is drawn: wha
 
 An object is **in play** when it is not out of play (`<waiting />`, dead, despawned) and belongs to the current state, its current scene, or the game, or is shown by the state. Timers count seconds, and every speed is a second.
 
-**Pace.** `Engine::loop` plays one step a frame, of the real time that passed since the last, then draws. There is no fixed step and no sub-step: every sum takes the step's length ([time](../designs/29-time.md)).
+**Pace.** `Engine::run` is the loop. Each frame it takes what came in (`input()`: keys, mouse and pads, a demo's or replay's keys), steps the game by the real time that passed since the last (`update(seconds)`: the computer's presses, held keys, the game's frame, its sounds), then draws (`render()`). There is no fixed step and no sub-step: every sum takes the step's length ([time](../designs/29-time.md)).
 
 - `<framerate>` is the most frames a second: a frame waits until that much time has passed.
 - Every library waits for the screen's refresh (vsync) but sets no speed of its own, so a game plays at the same speed with any library and on any screen.
 - No step is longer than a quarter second (`kLongestStep`): after a stall (the window dragged, a breakpoint) the game goes on from now.
-- `xgegui` runs `step()` and `render()` from its own timer, the same way.
+- `xgegui` and the tests call `input()`, `update()` and `render()` themselves, the same way.
 
 ## Backends
 
@@ -135,7 +135,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `play/numbers.h` | the one-number operations of a value (`sign`, `sine`, `cosine`) |
 | pictures | `picture/bitmap.cpp`, `svg.cpp`, `image.cpp`, `font.cpp`, `color.cpp` | pixels, flips and turns; SVG with lunasvg; picture sheets cut and shrunk (`<pictures>`); fonts and the 8x8 fallback; colour names |
 | resources | `engine/resources.cpp` | `Resources`, one a game (in its `game_expr`, `Game::resources()`): every picture loaded or made, held once and named by a `PictureId`, which objects hold; each sound's samples, shared by sounds that sound the same and handed to the audio library (`Audio::load`); a sheet's picture while the game loads |
-| loop and libraries | `engine/engine.cpp`, `backends.cpp`, `keys.cpp`, `folder.cpp` | the loop (`loop()`, or `step()` and `render()`), choosing libraries, key names, the games folder and `findSchema` |
+| loop and libraries | `engine/engine.cpp`, `backends.cpp`, `keys.cpp`, `folder.cpp` | the loop (`run()`: `input()`, `update()`, `render()`), choosing libraries, key names, the games folder and `findSchema` |
 | | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, a file per library; `window/picture.cpp` draws a frame into one image (`--picture`); `audio/sound.cpp` is the synthesizer |
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
 | | `xge/gui/source/` | `main_window`, `game_session`, `game_stage`, `game_view`, `qt_window`, `key_queue`, `options_dialog`, `session_options`, `app_settings` (`xgegui.ini`), `inspector`, `theme` |

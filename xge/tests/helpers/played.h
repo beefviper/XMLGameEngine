@@ -47,7 +47,7 @@ namespace played
 
 		void frames(int count)
 		{
-			for (int i = 0; i < count; ++i) { engine.step(xge::kSixtieth); }
+			for (int i = 0; i < count; ++i) { engine.input(); engine.update(xge::kSixtieth); }
 		}
 
 		std::string state() { return game.getCurrentState().name; }

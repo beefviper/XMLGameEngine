@@ -95,7 +95,7 @@ namespace xge
 	{
 		audio->stopAll();
 
-		// Started again by the next step() if the game still wants them.
+		// Started again by the next update() if the game still wants them.
 		playingLoops.clear();
 	}
 
@@ -140,15 +140,16 @@ namespace xge
 		return window && window->isOpen();
 	}
 
-	void Engine::loop(void)
+	void Engine::run(void)
 	{
 		using Clock = std::chrono::steady_clock;
 
 		// A computer thinks beside the game, which goes on being drawn.
 		game.thinkInBackground(true);
 
-		// One step a frame, of the time that passed since the last, then the
-		// picture is drawn (the window may wait for the screen's refresh). The
+		// Each frame: what came in, the game's step of the time that passed
+		// since the last, then the picture (the window may wait for the
+		// screen's refresh). The
 		// <framerate> is the most frames a second: a frame waits until that
 		// much time has passed.
 		const Clock::duration shortest = std::chrono::duration_cast<Clock::duration>(
@@ -166,15 +167,15 @@ namespace xge
 
 			const float seconds = std::min(std::chrono::duration<float>(now - last).count(), kLongestStep);
 			last = now;
-			step(seconds);
+			input();
+			update(seconds);
 			if (isWindowOpen()) { render(); }
 		}
 	}
 
-	void Engine::step(float seconds)
+	void Engine::input(void)
 	{
 		requireWindow();
-		game.beginStep(seconds);
 
 		auto events = std::move(pumpedKeys);
 		pumpedKeys.clear();
@@ -218,9 +219,16 @@ namespace xge
 
 			handleControls(window->controls());
 		}
+	}
 
+	void Engine::update(float seconds)
+	{
+		requireWindow();
+		game.beginStep(seconds);
+
+		// The computer presses as a player would, by the time that passed;
+		// keys held go on adding by it too.
 		playComputer(seconds);
-
 		playHeldKeys();
 
 		game.updateObjects(seconds);

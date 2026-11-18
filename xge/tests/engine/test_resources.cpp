@@ -172,7 +172,7 @@ TEST_CASE("a window makes one texture for a picture twenty objects show", "[reso
 	auto made = std::make_unique<NullWindow>();
 	NullWindow& window = *made;
 	Engine engine{ loaded, std::move(made) };
-	for (int frame = 0; frame < 10; ++frame) { engine.step(kSixtieth); engine.render(); }
+	for (int frame = 0; frame < 10; ++frame) { engine.input(); engine.update(kSixtieth); engine.render(); }
 	CHECK(window.texturesMade() == 1);
 }
 

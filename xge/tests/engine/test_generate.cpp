@@ -107,7 +107,7 @@ TEST_CASE("generating pong_min writes the game as data, a main that runs the eng
 	CHECK(main.find("xge::Game game{ pongMinGame() };") != std::string::npos);
 	CHECK(main.find("std::make_unique<xge::SFMLWindow>(game.getWindowDesc())") != std::string::npos);
 	CHECK(main.find("audio = std::make_unique<xge::SFMLAudio>();") != std::string::npos);
-	CHECK(main.find("engine.loop();") != std::string::npos);
+	CHECK(main.find("engine.run();") != std::string::npos);
 
 	// the game is what the engine reads from the file, a line for each tag
 	const std::string data = readFile(out / "source/pong_min.cpp");

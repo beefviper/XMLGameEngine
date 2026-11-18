@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
 		}
 
 		if (options.framerate > 0) { engine.setFramerate(options.framerate); }
-		engine.loop();
+		engine.run();
 
 		if (options.record)
 		{

@@ -51,7 +51,7 @@ TEST_CASE("what is <dark> is drawn only while a <light> reaches some part of it,
 
 	const auto frame = [&]
 	{
-		engine.step(xge::kSixtieth);
+		engine.input(); engine.update(xge::kSixtieth);
 		seen.drawn.clear();
 		engine.render();
 		return seen.drawn;
