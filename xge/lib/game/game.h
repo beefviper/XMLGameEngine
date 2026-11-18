@@ -775,6 +775,11 @@ namespace xge
 		// caller that spawns or despawns between frames and wants it seen at
 		// once calls it too.
 		void settleSpawns(void);
+		// Spawned and despawned objects settled, and what is in play seen
+		// again (stageChanged).
+		void settle();
+		// A text that grew or shrank (a score): the positions made from it.
+		void placeByResizedTexts();
 
 		// <follow path="..." />: the object sets off along that path, unless it
 		// is on one already (it finishes that first), after waiting `wait`

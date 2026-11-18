@@ -1173,11 +1173,11 @@ namespace xge
 		return mazeGrids.emplace(map, std::move(grid)).first->second;
 	}
 
-	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds)
+	// A picture that changes with time (an <animation>) counts this step
+	// whether or not the object is moving; only what is in play does, so a
+	// pause or a menu holds it where it was.
+	static void advanceAnimations(std::vector<Object>& objects, FrameRules& rules, float seconds)
 	{
-		// A picture that changes with time (an <animation>) counts this step
-		// whether or not the object is moving; only what is in play does, so a
-		// pause or a menu holds it where it was.
 		// Those whose once animation ended, by index and the look it was:
 		// their <then> may spawn, and the list of objects grow.
 		std::vector<std::pair<std::size_t, std::size_t>> ended;
@@ -1219,6 +1219,57 @@ namespace xge
 		}
 		for (const auto& [index, look] : ended) { rules.animationEnded(index, look); }
 		for (const auto& [index, look, picture] : cameUp) { rules.frameCameUp(index, look, picture); }
+	}
+
+	// The window's sides, for what jumps rather than moves (the rest meet
+	// them in the sweep): independent per object, order doesn't matter.
+	static void meetEdgesWithoutSweep(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules)
+	{
+		for (auto& object : objects)
+		{
+			// A piece of a cell map meets its map's edges by its moves.
+			if (object.collisionsOn && !object.onCells && !sweptAtEdges(object) && isMoving(object) && rules.inPlay(object))
+			{
+				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+				{
+					if (touchesScreenEdge(object, window, edge))
+					{
+						rules.atEdge(object, edge);
+					}
+				}
+			}
+	}
+	}
+
+	// The edge rules run only for an object that is moving, so on their own
+	// they let a stuck object end the frame poking out past the wall (and
+	// stay there once it stopped).
+	static void stickAtEdges(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules)
+	{
+		for (auto& object : objects)
+		{
+			if (object.collisionsOn && rules.inPlay(object))
+			{
+				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+				{
+					if (touchesScreenEdge(object, window, edge) && rules.sticksAt(object, edge))
+					{
+						stick(object, window, edge);
+					}
+				}
+			}
+	}
+	}
+
+	// How everything ended up, to tell next frame what has moved.
+	static void rememberWhereAll(std::vector<Object>& objects)
+	{
+		for (auto& object : objects) { object.remember(); }
+	}
+
+	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds)
+	{
+		advanceAnimations(objects, rules, seconds);
 
 		rules.timers(seconds);
 
@@ -1241,43 +1292,13 @@ namespace xge
 
 		riseAndFall(objects, rules, seconds);
 
-		// The window's sides, for what jumps rather than moves (the rest meet
-		// them in the sweep): independent per object, order doesn't matter.
-		for (auto& object : objects)
-		{
-			// A piece of a cell map meets its map's edges by its moves.
-			if (object.collisionsOn && !object.onCells && !sweptAtEdges(object) && isMoving(object) && rules.inPlay(object))
-			{
-				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
-				{
-					if (touchesScreenEdge(object, window, edge))
-					{
-						rules.atEdge(object, edge);
-					}
-				}
-			}
-		}
+		meetEdgesWithoutSweep(objects, window, rules);
 
 		// Movement and object-against-object collisions are one job, so that
 		// a fast or small object cannot jump over a thin one between frames.
 		moveObjects(objects, window, rules, seconds);
 
-		// The edge rules run only for an object that is moving, so on their
-		// own they let a stuck object end the frame poking out past the wall
-		// (and stay there once it stopped).
-		for (auto& object : objects)
-		{
-			if (object.collisionsOn && rules.inPlay(object))
-			{
-				for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
-				{
-					if (touchesScreenEdge(object, window, edge) && rules.sticksAt(object, edge))
-					{
-						stick(object, window, edge);
-					}
-				}
-			}
-		}
+		stickAtEdges(objects, window, rules);
 
 		holdCarried(objects, rules);
 
@@ -1291,9 +1312,8 @@ namespace xge
 
 		takePoses(objects, rules);
 
-		// How everything ended up, to tell next frame what has moved. A
-		// condition that puts something elsewhere has moved it.
-		for (auto& object : objects) { object.remember(); }
+		// A condition that puts something elsewhere has moved it.
+		rememberWhereAll(objects);
 
 		rules.conditions();
 	}

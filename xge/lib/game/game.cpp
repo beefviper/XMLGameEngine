@@ -205,18 +205,24 @@ namespace xge
 		beginStep(seconds);
 		// Anything changed from outside since (a test moving an object to
 		// another scene) is seen, and so is anything this frame changes.
-		settleSpawns();
-		stageChanged();
+		settle();
 		playOneFrame(getCurrentObjects(), windowDesc, *this, seconds);
+		settle();
+		showJoins();
+		placeByResizedTexts();
+	}
+
+	void Game::settle()
+	{
 		settleSpawns();
 		stageChanged();
-		showJoins();
-		// A text that grew or shrank (a score): the positions made from it.
-		if (textsResized)
-		{
-			textsResized = false;
-			resolveSizeDependentPositions();
-		}
+	}
+
+	void Game::placeByResizedTexts()
+	{
+		if (!textsResized) { return; }
+		textsResized = false;
+		resolveSizeDependentPositions();
 	}
 
 	bool Game::isDescription(const std::string& name)
