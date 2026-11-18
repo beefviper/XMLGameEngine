@@ -42,7 +42,7 @@ namespace xge
 		window(std::move(newWindow)),
 		audio(newAudio ? std::move(newAudio) : std::make_unique<NullAudio>())
 	{
-		this->audio->load(game.getSounds());
+		this->audio->load(game.getSounds(), game.resources());
 
 		// The window makes every object's picture, at its own scale; the
 		// pictures are drawn again at its size once a resize settles (render).
@@ -88,7 +88,7 @@ namespace xge
 			audio = std::make_unique<NullAudio>();
 		}
 
-		audio->load(game.getSounds());
+		audio->load(game.getSounds(), game.resources());
 	}
 
 	void Engine::silence(void)

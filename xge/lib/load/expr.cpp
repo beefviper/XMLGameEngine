@@ -14,7 +14,6 @@
 #include "load/spelling.h"
 #include "picture/svg.h"
 #include "play/numbers.h"
-#include "audio/wave.h"
 
 #include <algorithm>
 #include <functional>
@@ -745,7 +744,9 @@ namespace xge
 		{
 			try
 			{
-				(void)readWave(sound.path);
+				// Read once, here, where a bad file is told; the audio plays
+				// these samples.
+				(void)resources.samples(sound);
 			}
 			catch (const std::runtime_error& error)
 			{

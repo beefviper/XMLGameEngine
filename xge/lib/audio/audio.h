@@ -6,6 +6,7 @@
 #pragma once
 
 #include "audio/sound.h"
+#include "engine/resources.h"
 
 #include <memory>
 #include <string>
@@ -24,7 +25,7 @@ namespace xge
 	// its own) included.
 	//
 	// Every sound is made into samples by the engine (samplesOf(), audio/sound.h),
-	// the same for every backend; a backend only hands those samples to its
+	// once a game however many sounds sound the same, the same for every backend; a backend only hands those samples to its
 	// library. Each sound has one voice, like a channel of an old sound chip:
 	// playing a sound that is still playing starts it again from the
 	// beginning, and different sounds play over each other.
@@ -35,8 +36,10 @@ namespace xge
 
 		// Called once, right after the audio is created (see Engine's
 		// constructors and Engine::replaceAudio): makes every sound the game
-		// file describes ready to play. Replaces whatever was loaded before.
-		virtual void load(const std::vector<SoundDesc>& sounds) = 0;
+		// file describes ready to play, its samples asked of the game's
+		// `resources` (Resources::samples). Replaces whatever was loaded
+		// before.
+		virtual void load(const std::vector<SoundDesc>& sounds, Resources& resources) = 0;
 
 		// Starts the sound of that name (again, from the beginning, if it is
 		// already playing). A name that was not loaded does nothing: a game
@@ -65,7 +68,7 @@ namespace xge
 	class NullAudio : public Audio
 	{
 	public:
-		void load(const std::vector<SoundDesc>& sounds) override { (void)sounds; }
+		void load(const std::vector<SoundDesc>& sounds, Resources& resources) override { (void)sounds; (void)resources; }
 		void play(const std::string& name) override { (void)name; }
 		void loop(const std::string& name) override { (void)name; }
 		void stop(const std::string& name) override { (void)name; }

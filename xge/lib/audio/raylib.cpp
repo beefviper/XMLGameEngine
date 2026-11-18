@@ -69,13 +69,14 @@ namespace xge
 		loops.clear();
 	}
 
-	void RaylibAudio::load(const std::vector<SoundDesc>& descs)
+	void RaylibAudio::load(const std::vector<SoundDesc>& descs, Resources& resources)
 	{
 		unloadAll();
 
 		for (const SoundDesc& desc : descs)
 		{
-			std::vector<std::int16_t> samples = samplesOf(desc);
+			const std::shared_ptr<const std::vector<std::int16_t>> held = resources.samples(desc);
+			const std::vector<std::int16_t>& samples = *held;
 			if (samples.empty())
 			{
 				continue;
@@ -88,7 +89,7 @@ namespace xge
 			wave.sampleRate = kSoundSampleRate;
 			wave.sampleSize = 16;
 			wave.channels = 1;
-			wave.data = samples.data();
+			wave.data = const_cast<std::int16_t*>(samples.data());
 
 			sounds[desc.name] = LoadSoundFromWave(wave);
 

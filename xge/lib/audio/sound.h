@@ -96,5 +96,9 @@ namespace xge
 	// synthesize() above.
 	std::vector<std::int16_t> samplesOf(const SoundDesc& sound);
 
+	// Everything that decides a sound's samples, as text with its numbers
+	// exact: two sounds with the same key sound the same (Resources::samples).
+	std::string soundKey(const SoundDesc& sound);
+
 	std::ostream& operator<<(std::ostream& o, const SoundDesc& sound);
 }

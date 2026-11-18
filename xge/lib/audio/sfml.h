@@ -23,7 +23,7 @@ namespace xge
 	class SFMLAudio : public Audio
 	{
 	public:
-		void load(const std::vector<SoundDesc>& sounds) override;
+		void load(const std::vector<SoundDesc>& sounds, Resources& resources) override;
 		void play(const std::string& name) override;
 		void loop(const std::string& name) override;
 		void stop(const std::string& name) override;

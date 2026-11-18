@@ -14,9 +14,12 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace xge
 {
+	struct SoundDesc;
+
 	// Everything a game loads or makes once and shares, each held here once
 	// however many objects show it, and named by its PictureId. One a Game:
 	// two games open side by side hold their own.
@@ -67,6 +70,11 @@ namespace xge
 		std::size_t pictureCount() const noexcept;
 		std::size_t pictureBytes() const noexcept;
 
+		// A sound's samples (samplesOf, audio/sound.h), made the first time
+		// they are asked for and shared by every sound that sounds the same.
+		std::shared_ptr<const std::vector<std::int16_t>> samples(const SoundDesc& sound);
+		std::size_t sampleSets() const noexcept { return samplesByKey.size(); }
+
 	private:
 		PictureId keep(std::shared_ptr<const Bitmap> made);
 		PictureId::Held& held(PictureId id) { return pictures[id.index() - 1]; }
@@ -74,5 +82,6 @@ namespace xge
 
 		std::deque<PictureId::Held> pictures;   // [0] is id 1
 		std::map<std::string, PictureId> byKey;
+		std::map<std::string, std::shared_ptr<const std::vector<std::int16_t>>> samplesByKey;
 	};
 }

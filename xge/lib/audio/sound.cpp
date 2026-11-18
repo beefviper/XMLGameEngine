@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
+#include <iterator>
 #include <cmath>
 #include <cstdlib>
 
@@ -233,6 +235,28 @@ namespace xge
 			sample = static_cast<std::int16_t>(std::lround(sample * volume));
 		}
 		return samples;
+	}
+
+	namespace
+	{
+		std::string exactly(float value)
+		{
+			char text[32];
+			const auto written = std::to_chars(std::begin(text), std::end(text), value);
+			return std::string(text, written.ptr);
+		}
+	}
+
+	std::string soundKey(const SoundDesc& sound)
+	{
+		std::string key = exactly(sound.volume);
+		if (!sound.path.empty()) { return key + "|file|" + sound.path; }
+		for (const SoundNote& note : sound.notes)
+		{
+			key += note.rest ? "|rest " : "|" + waveformName(note.wave) + " " + exactly(note.startHz) + " " + exactly(note.endHz) + " " + exactly(note.decay) + " ";
+			key += exactly(note.seconds) + " part " + std::to_string(note.part);
+		}
+		return key;
 	}
 
 	std::ostream& operator<<(std::ostream& o, const SoundDesc& sound)

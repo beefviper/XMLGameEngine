@@ -4,6 +4,7 @@
 // date: Nov 17, 2026
 
 #include "engine/resources.h"
+#include "audio/sound.h"
 #include "picture/image.h"
 
 #include <string>
@@ -72,5 +73,14 @@ namespace xge
 	{
 		pictures.push_back({ std::move(made), static_cast<std::uint32_t>(pictures.size() + 1) });
 		return PictureId(&pictures.back());
+	}
+
+	std::shared_ptr<const std::vector<std::int16_t>> Resources::samples(const SoundDesc& sound)
+	{
+		const std::string key = soundKey(sound);
+		if (const auto found = samplesByKey.find(key); found != samplesByKey.end()) { return found->second; }
+		auto made = std::make_shared<const std::vector<std::int16_t>>(samplesOf(sound));
+		samplesByKey.emplace(key, made);
+		return made;
 	}
 }

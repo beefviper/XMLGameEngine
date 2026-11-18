@@ -60,8 +60,9 @@ namespace
 	public:
 		explicit RecordingAudio(AudioLog& audioLog) : log(audioLog) {}
 
-		void load(const std::vector<SoundDesc>& sounds) override
+		void load(const std::vector<SoundDesc>& sounds, Resources& resources) override
 		{
+			(void)resources;
 			log.loaded.clear();
 			for (const auto& sound : sounds) { log.loaded.push_back(sound.name); }
 		}
@@ -455,7 +456,8 @@ TEST_CASE("Engine without an Audio is silent, and replaceAudio hands the sounds 
 TEST_CASE("the silent backend needs no sound device", "[sound][engine]")
 {
 	auto audio = AudioFactory::create(AudioBackend::None);
-	audio->load(Game{ "descriptions/pong.xml" }.getSounds());
+	Game pong{ "descriptions/pong.xml" };
+	audio->load(pong.getSounds(), pong.resources());
 	audio->play("wall");
 	audio->stopAll();
 	CHECK(dynamic_cast<NullAudio*>(audio.get()) != nullptr);
@@ -1097,6 +1099,38 @@ TEST_CASE("a sound with a <path> plays its recording, as loud as made unless giv
 	CHECK(sounds[1].loop);
 	CHECK(sounds[1].volume == 0.5f);
 	CHECK(samplesOf(sounds[1]) == std::vector<std::int16_t>{ 0, 5000, -5000, 10000 });
+}
+
+TEST_CASE("sounds that sound the same share one set of samples, and a recording is read as the game loads", "[sound][resources]")
+{
+	const ScratchFile recording{ scratchName("descriptions/roar.wav") };
+	WaveFile wave;
+	wave.samples = { 0, 10000, -10000, 20000 };
+	wave.write(recording.path);
+	const std::string path = recording.path.generic_string();
+
+	ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_test_sound.xml") };
+	{
+		std::ofstream out(scratch.path);
+		out << gameWithSounds(
+			"<sounds><sound name=\"roar\"><path>" + path + "</path></sound>"
+			"<sound name=\"again\"><path>" + path + "</path></sound>"
+			"<sound name=\"beep\"><note pitch=\"A4\">0.05</note></sound>"
+			"<sound name=\"bleep\"><note pitch=\"A4\">0.05</note></sound>"
+			"<sound name=\"boop\"><note pitch=\"A5\">0.05</note></sound></sounds>",
+			"<play sound=\"roar\" />");
+	}
+	Game game{ scratch.path.string() };
+	Resources& resources = game.resources();
+	CHECK(resources.sampleSets() == 1);   // the recording, read once for both its sounds; notes wait for an audio library
+
+	const std::vector<SoundDesc>& sounds = game.getSounds();
+	REQUIRE(sounds.size() == 5);
+	CHECK(resources.samples(sounds[0]) == resources.samples(sounds[1]));
+	CHECK(resources.samples(sounds[2]) == resources.samples(sounds[3]));
+	CHECK(resources.samples(sounds[2]) != resources.samples(sounds[4]));
+	CHECK(*resources.samples(sounds[2]) == samplesOf(sounds[2]));
+	CHECK(resources.sampleSets() == 3);
 }
 
 TEST_CASE("a recording that is missing or unreadable, or a <path> with notes, stops the load", "[sound][wave]")

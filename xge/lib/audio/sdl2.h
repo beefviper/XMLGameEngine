@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -35,7 +36,7 @@ namespace xge
 		SDL2Audio(const SDL2Audio&) = delete;
 		SDL2Audio& operator=(const SDL2Audio&) = delete;
 
-		void load(const std::vector<SoundDesc>& sounds) override;
+		void load(const std::vector<SoundDesc>& sounds, Resources& resources) override;
 		void play(const std::string& name) override;
 		void loop(const std::string& name) override;
 		void stop(const std::string& name) override;
@@ -44,7 +45,7 @@ namespace xge
 	private:
 		struct Voice
 		{
-			std::vector<std::int16_t> samples;
+			std::shared_ptr<const std::vector<std::int16_t>> samples;   // the game's, shared
 
 			// The next sample to play; samples.size() while it is silent.
 			std::size_t position{ 0 };
