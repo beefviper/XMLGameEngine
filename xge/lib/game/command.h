@@ -60,6 +60,33 @@ namespace xge
 		friend bool operator==(const Picture&, const Picture&) = default;
 	};
 
+	// A Picture held by pointer: an object's is its look's, one between
+	// them, until something changes it (a text's words), when edit copies
+	// a shared one first.
+	struct HeldPicture
+	{
+		HeldPicture() = default;
+		HeldPicture(Picture made) : held(std::make_shared<Picture>(std::move(made))) {}
+
+		const Picture& shows() const noexcept
+		{
+			static const Picture none{};
+			return held ? *held : none;
+		}
+		operator const Picture&() const noexcept { return shows(); }
+		const Picture* operator->() const noexcept { return &shows(); }
+		friend bool operator==(const HeldPicture& a, const HeldPicture& b) { return a.shows() == b.shows(); }
+		Picture& edit()
+		{
+			if (!held) { held = std::make_shared<Picture>(); }
+			else if (held.use_count() > 1) { held = std::make_shared<Picture>(*held); }
+			return *held;
+		}
+
+	private:
+		std::shared_ptr<Picture> held;
+	};
+
 	// --- Command: what a command tag in the XML becomes once it is loaded.
 	// makeCommand() (game/command.cpp) is the one place that turns a RawCommand
 	// into one of these.

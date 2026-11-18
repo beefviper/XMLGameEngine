@@ -160,7 +160,7 @@ TEST_CASE("tennis.xml: a ball let past is a point, said in words, and four take 
 	Played play("descriptions/tennis.xml");
 	play.tap(KeyCode::Space);
 	Object& player = play.get("player");
-	CHECK(play.get("playerscore").drawn.picture.text == "YOU 0 LOVE");
+	CHECK(play.get("playerscore").drawn.picture->text == "YOU 0 LOVE");
 
 	for (int point = 1; point <= 4; ++point)
 	{
@@ -169,9 +169,9 @@ TEST_CASE("tennis.xml: a ball let past is a point, said in words, and four take 
 		{
 			play.frames(1);
 		}
-		if (point == 2) { CHECK(play.get("cpuscore").drawn.picture.text == "CPU 0 30"); }
+		if (point == 2) { CHECK(play.get("cpuscore").drawn.picture->text == "CPU 0 30"); }
 	}
 	CHECK(play.get("cpu").variable.at("games") == Approx(1));
 	CHECK(play.get("cpu").variable.at("points") == Approx(0));
-	CHECK(play.get("cpuscore").drawn.picture.text == "CPU 1 LOVE");
+	CHECK(play.get("cpuscore").drawn.picture->text == "CPU 1 LOVE");
 }

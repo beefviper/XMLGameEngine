@@ -63,7 +63,7 @@ namespace xge
 		bool isRound(const Object& object, std::size_t part = picture)
 		{
 			if (part != picture) { return hitboxAt(object, part).round; }
-			return object.drawn.picture.kind == ShapeKind::Circle;
+			return object.drawn.picture->kind == ShapeKind::Circle;
 		}
 
 		// Whether the point `local` (from the top left of the part's box) is

@@ -237,13 +237,13 @@ TEST_CASE("a bitmap sprite is drawn when the game loads and has the size of its 
 		"<show object=\"thing\" />") };
 	const Object& thing = loaded.game.getObject("thing");
 
-	REQUIRE(thing.drawn.picture.kind == ShapeKind::Line);
+	REQUIRE(thing.drawn.picture->kind == ShapeKind::Line);
 	REQUIRE(thing.drawn.bitmap);
 
 	// 3 characters by 2 rows, each 3 pixels (the variable `pixel`).
 	CHECK(thing.drawn.bitmap->width == 9);
 	CHECK(thing.drawn.bitmap->height == 6);
-	CHECK(thing.drawn.picture.size == Vector2f{ 9.0f, 6.0f });
+	CHECK(thing.drawn.picture->size == Vector2f{ 9.0f, 6.0f });
 
 	const Vector2f size = measureShapeSize(thing.drawn.picture);
 	CHECK(size.x == 9.0f);
@@ -1241,7 +1241,7 @@ TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as
 
 	// The bullet is a thin tall rectangle.
 	const Object& bullet = game.getObject("bullet");
-	CHECK(bullet.drawn.picture.kind == ShapeKind::Rectangle);
+	CHECK(bullet.drawn.picture->kind == ShapeKind::Rectangle);
 	const Vector2f size = measureShapeSize(bullet.drawn.picture);
 	CHECK(size.x == 4.0f);
 	CHECK(size.y == 24.0f);

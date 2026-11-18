@@ -78,9 +78,9 @@ TEST_CASE("a text takes the size and color it leaves out from its style", "[text
 	const Picture& heading = game.getObject("heading").drawn.picture;
 	CHECK(heading.textSize == 90);   // the style's size, a game variable
 	CHECK(heading.color == "color.red");
-	CHECK(game.getObject("smaller").drawn.picture.textSize == 30); // its own size wins
-	CHECK(game.getObject("smaller").drawn.picture.color == "color.red");
-	CHECK(game.getObject("note").drawn.picture.color == "color.white");           // a style with no color: white
+	CHECK(game.getObject("smaller").drawn.picture->textSize == 30); // its own size wins
+	CHECK(game.getObject("smaller").drawn.picture->color == "color.red");
+	CHECK(game.getObject("note").drawn.picture->color == "color.white");           // a style with no color: white
 }
 
 TEST_CASE("a style that is not there, or a text with no size at all, stops the load", "[text]")
@@ -150,10 +150,10 @@ TEST_CASE("a text's font file is its own <font>, its style's, or the standard on
 		"<object name=\"standard\"><sprite><text style=\"plain\"><content>HI</content></text></sprite><position><x>0</x><y>0</y></position></object>",
 		styles, backend);
 
-	CHECK(textFontFile(game.getObject("styled").drawn.picture.font) == "assets/pressstart2p.ttf");
-	CHECK(textFontFile(game.getObject("own").drawn.picture.font) == "assets/other.ttf");
-	CHECK(game.getObject("standard").drawn.picture.font.empty());
-	CHECK(textFontFile(game.getObject("standard").drawn.picture.font) == "assets/tuffy.ttf");
+	CHECK(textFontFile(game.getObject("styled").drawn.picture->font) == "assets/pressstart2p.ttf");
+	CHECK(textFontFile(game.getObject("own").drawn.picture->font) == "assets/other.ttf");
+	CHECK(game.getObject("standard").drawn.picture->font.empty());
+	CHECK(textFontFile(game.getObject("standard").drawn.picture->font) == "assets/tuffy.ttf");
 }
 
 TEST_CASE("<become style> puts another style's colors on an object's bitmaps, and a reset the first", "[text]")

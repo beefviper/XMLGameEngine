@@ -56,7 +56,7 @@ TEST_CASE("a text's size and the position made from it are known when the game l
 
 	CHECK(game.usesSize(title));
 	REQUIRE(title.size.x > 0.0f);
-	const Bitmap drawn = drawText("PONG", title.drawn.picture.textSize, Color{}, textFontFile(title.drawn.picture.font));
+	const Bitmap drawn = drawText("PONG", title.drawn.picture->textSize, Color{}, textFontFile(title.drawn.picture->font));
 	CHECK(title.size.x == static_cast<float>(drawn.width));
 	CHECK(title.size.y == static_cast<float>(drawn.height));
 	CHECK(title.position.x == 640.0f - title.size.x / 2.0f); // 1280 wide window

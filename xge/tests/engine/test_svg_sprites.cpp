@@ -343,13 +343,13 @@ TEST_CASE("an svg sprite is drawn when the game loads and has the size of its pi
 		"<show object=\"thing\" />") };
 	const Object& thing = loaded.game.getObject("thing");
 
-	REQUIRE(thing.drawn.picture.kind == ShapeKind::Line);
+	REQUIRE(thing.drawn.picture->kind == ShapeKind::Line);
 	REQUIRE(thing.drawn.bitmap);
 
 	// 4 units at 3 pixels each (the variable `pixel`).
 	CHECK(thing.drawn.bitmap->width == 12);
 	CHECK(thing.drawn.bitmap->height == 12);
-	CHECK(thing.drawn.picture.size == Vector2f{ 12.0f, 12.0f });
+	CHECK(thing.drawn.picture->size == Vector2f{ 12.0f, 12.0f });
 
 	const Vector2f size = measureShapeSize(thing.drawn.picture);
 	CHECK(size.x == 12.0f);

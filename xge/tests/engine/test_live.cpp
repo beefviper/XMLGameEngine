@@ -379,12 +379,12 @@ TEST_CASE("a named timer's time left is a number of its object: whole seconds, r
 
 	play.frames(1);
 	CHECK(bomb.variable.at("fuse") == Approx(3));
-	CHECK(play.get("clock").drawn.picture.text == "LEFT 3");
+	CHECK(play.get("clock").drawn.picture->text == "LEFT 3");
 
 	// 179 frames counted of 180: under a second left still shows 1.
 	play.frames(178);
 	CHECK(bomb.variable.at("fuse") == Approx(1));
-	CHECK(play.get("clock").drawn.picture.text == "LEFT 1");
+	CHECK(play.get("clock").drawn.picture->text == "LEFT 1");
 	play.tap(KeyCode::Space);
 	CHECK(bomb.variable.at("read") == Approx(10));
 	CHECK(bomb.variable.at("bangs") == Approx(0));
@@ -395,7 +395,7 @@ TEST_CASE("a named timer's time left is a number of its object: whole seconds, r
 	CHECK(bomb.variable.at("fuse") == Approx(0));
 	play.frames(30);
 	CHECK(bomb.variable.at("fuse") == Approx(0));
-	CHECK(play.get("clock").drawn.picture.text == "LEFT 0");
+	CHECK(play.get("clock").drawn.picture->text == "LEFT 0");
 
 	// A reset gives it its whole time again.
 	play.game.resetObject("bomb");

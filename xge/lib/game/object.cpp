@@ -1200,26 +1200,26 @@ namespace xge
 		if (drawn.bitmap) { return { static_cast<float>(std::max(drawn.bitmap->width, 1)), static_cast<float>(std::max(drawn.bitmap->height, 1)) }; }
 		// A circle or a rectangle is drawn on whole pixels, rounded up.
 		const Vector2f exact = measureShapeSize(drawn.picture);
-		if (drawn.picture.kind == ShapeKind::Circle || drawn.picture.kind == ShapeKind::Rectangle) { return { std::ceil(exact.x), std::ceil(exact.y) }; }
+		if (drawn.picture->kind == ShapeKind::Circle || drawn.picture->kind == ShapeKind::Rectangle) { return { std::ceil(exact.x), std::ceil(exact.y) }; }
 		return exact;
 	}
 
 	std::shared_ptr<const Bitmap> Object::drawnPicture(float scale) const
 	{
-		const Color color = colorFromName(drawn.picture.color);
-		switch (drawn.picture.kind)
+		const Color color = colorFromName(drawn.picture->color);
+		switch (drawn.picture->kind)
 		{
 		case ShapeKind::Circle:
-			return std::make_shared<const Bitmap>(drawCircle(drawn.picture.radius, color, scale));
+			return std::make_shared<const Bitmap>(drawCircle(drawn.picture->radius, color, scale));
 		case ShapeKind::Rectangle:
-			return std::make_shared<const Bitmap>(drawRectangle(drawn.picture.size.x, drawn.picture.size.y, color, scale));
+			return std::make_shared<const Bitmap>(drawRectangle(drawn.picture->size.x, drawn.picture->size.y, color, scale));
 		case ShapeKind::Text:
 		{
-			const int pixels = std::max(1, static_cast<int>(std::lround(static_cast<float>(drawn.picture.textSize) * scale)));
-			return std::make_shared<const Bitmap>(drawText(drawn.picture.text, pixels, color, textFontFile(drawn.picture.font)));
+			const int pixels = std::max(1, static_cast<int>(std::lround(static_cast<float>(drawn.picture->textSize) * scale)));
+			return std::make_shared<const Bitmap>(drawText(drawn.picture->text, pixels, color, textFontFile(drawn.picture->font)));
 		}
 		case ShapeKind::Image:
-			if (drawn.picture.image) { return drawn.picture.image; }
+			if (drawn.picture->image) { return drawn.picture->image; }
 			break;
 		case ShapeKind::Line:
 			if (drawn.bitmap) { return drawn.bitmap; }
@@ -1233,7 +1233,7 @@ namespace xge
 
 	bool Object::drawnAtScale() const noexcept
 	{
-		return drawn.picture.kind == ShapeKind::Text || drawn.picture.kind == ShapeKind::Circle || drawn.picture.kind == ShapeKind::Rectangle;
+		return drawn.picture->kind == ShapeKind::Text || drawn.picture->kind == ShapeKind::Circle || drawn.picture->kind == ShapeKind::Rectangle;
 	}
 
 	Vector2f measureShapeSize(const Picture& picture)

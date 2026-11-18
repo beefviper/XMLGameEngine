@@ -819,7 +819,7 @@ namespace xge
 			{
 				throw std::runtime_error(where + ": a <hitbox> pulled in that far leaves nothing of a picture " + formatDisplayNumber(object.size.x) + " by " + formatDisplayNumber(object.size.y));
 			}
-			hitbox.round = object.drawn.picture.kind == ShapeKind::Circle;
+			hitbox.round = object.drawn.picture->kind == ShapeKind::Circle;
 			return hitbox;
 		}
 

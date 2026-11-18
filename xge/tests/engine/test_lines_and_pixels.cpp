@@ -63,7 +63,7 @@ namespace
 		Object object;
 		static NameStore names;
 		object.name = names.of(name);
-		object.drawn.picture.kind = ShapeKind::Line;
+		object.drawn.picture.edit().kind = ShapeKind::Line;
 		object.drawn.bitmap = std::make_shared<const Bitmap>(rasterizeLines(lines));
 		object.size = { static_cast<float>(object.drawn.bitmap->width), static_cast<float>(object.drawn.bitmap->height) };
 		object.position = { x, y };
@@ -77,7 +77,7 @@ namespace
 		Object object;
 		static NameStore names;
 		object.name = names.of(name);
-		object.drawn.picture.kind = ShapeKind::Rectangle;
+		object.drawn.picture.edit().kind = ShapeKind::Rectangle;
 		object.size = { width, height };
 		object.position = { x, y };
 		object.collisionsOn = true;
@@ -89,7 +89,7 @@ namespace
 		Object object;
 		static NameStore names;
 		object.name = names.of(name);
-		object.drawn.picture.kind = ShapeKind::Circle;
+		object.drawn.picture.edit().kind = ShapeKind::Circle;
 		object.size = { radius * 2, radius * 2 };
 		object.position = { x, y };
 		object.collisionsOn = true;
@@ -403,13 +403,13 @@ TEST_CASE("a sprite of lines is drawn when the game loads and has the size of it
 	Loaded loaded{ gameXml(kHut, "<show object=\"hut\" />") };
 	const Object& hut = loaded.game.getObject("hut");
 
-	REQUIRE(hut.drawn.picture.kind == ShapeKind::Line);
+	REQUIRE(hut.drawn.picture->kind == ShapeKind::Line);
 	REQUIRE(hut.drawn.bitmap);
 
 	// From x 0 to 20 and y 0 to 10, the second pair two pixels thick: 22 by 12.
 	CHECK(hut.drawn.bitmap->width == 22);
 	CHECK(hut.drawn.bitmap->height == 12);
-	CHECK(hut.drawn.picture.size == Vector2f{ 22.0f, 12.0f });
+	CHECK(hut.drawn.picture->size == Vector2f{ 22.0f, 12.0f });
 	CHECK(hut.kind->collisionData.type == CollisionType::Pixel);
 
 	// Known without a window, like a circle's or a rectangle's.

@@ -92,7 +92,7 @@ TEST_CASE("lunarlander.xml loads with a lander, terrain and three pads, all draw
 	for (const char* name : { "terrain", "pad2", "pad3", "pad5", "lander" })
 	{
 		const Object& object = moon.game.getObject(name);
-		CHECK(object.drawn.picture.kind == ShapeKind::Line);
+		CHECK(object.drawn.picture->kind == ShapeKind::Line);
 		CHECK(object.kind->collisionData.type == CollisionType::Pixel);
 		REQUIRE(object.drawn.bitmap);
 	}
@@ -197,8 +197,8 @@ TEST_CASE("the fuel and score shown follow the lander's", "[lunarlander]")
 	moon.key("thrust", true);
 	moon.frames(25);
 
-	CHECK(moon.game.getObject("fuel").drawn.picture.text == "FUEL 975");
-	CHECK(moon.game.getObject("score").drawn.picture.text == "SCORE 0");
+	CHECK(moon.game.getObject("fuel").drawn.picture->text == "FUEL 975");
+	CHECK(moon.game.getObject("score").drawn.picture->text == "SCORE 0");
 }
 
 TEST_CASE("it cannot leave the sides or top of the screen", "[lunarlander]")
@@ -238,7 +238,7 @@ TEST_CASE("coming down slowly and upright onto a pad is a landing worth that pad
 			CHECK(moon.score() == pad.worth);
 			CHECK(moon.lander().velocity.y == 0.0f);
 			CHECK(moon.game.isShown(moon.game.getObject("landed.message")));
-			CHECK(moon.game.getObject("points").drawn.picture.text == std::to_string(static_cast<int>(pad.worth)) + " POINTS");
+			CHECK(moon.game.getObject("points").drawn.picture->text == std::to_string(static_cast<int>(pad.worth)) + " POINTS");
 
 			// It stays where it touched down, drawn still under the message.
 			const Vector2f where = moon.lander().position;

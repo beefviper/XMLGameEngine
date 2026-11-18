@@ -1751,7 +1751,7 @@ namespace xge
 		struct Look
 		{
 			std::string name;
-			Picture picture;
+			HeldPicture picture;
 			std::shared_ptr<const Bitmap> bitmap;
 			// A look that moves: its frames (none for a still look).
 			HeldFrames frames;
@@ -2129,7 +2129,7 @@ namespace xge
 		struct Drawn
 		{
 			// What it shows now (one of its looks, or its one sprite).
-			Picture picture;
+			HeldPicture picture;
 
 			// What a sprite of <line>s was drawn as, worked out when the game
 			// loads (load/expr). The window backends draw it as a picture and a

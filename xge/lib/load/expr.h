@@ -84,10 +84,10 @@ namespace xge
 
 		// makeObject's looks: each named <sprite> or <animation> made, the first the
 		// very picture it starts with, and where each once look goes when it ends.
-		std::vector<Object::Look> buildLooks(RawObject& rawObject, const FirstPass& first, const Picture& picture, const std::string& where);
+		std::vector<Object::Look> buildLooks(RawObject& rawObject, const FirstPass& first, const HeldPicture& picture, const std::string& where);
 		// makeObject's picture: the sprite it starts as, its animation, and a
 		// text's live pieces.
-		void buildSprite(RawObject& rawObject, const FirstPass& first, const Picture& picture, float animationSeconds, Object& object, const std::string& where);
+		void buildSprite(RawObject& rawObject, const FirstPass& first, const HeldPicture& picture, float animationSeconds, Object& object, const std::string& where);
 		// makeObject's names: its group, class and owners, and whether it is
 		// drawn, seen and there.
 		void buildNames(RawObject& rawObject, Object& object);

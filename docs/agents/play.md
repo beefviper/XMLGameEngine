@@ -32,7 +32,8 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 - An object mid-jump (`isAirborne()`) is in no pair. A resting object stays touching its platform only because its pull moves it each frame, so `<stop />` ends that.
 - **Touches at one moment run in file order, and a still pair is skipped:** a `<land />` that runs first can hide a hazard met at the same moment (Pitfall's jaws are written before the crocodiles).
 - `sprite=` on a rule is the look as the touch happened, taken once.
-- **Swings:** a swing's turn is `turning.spin`; `moveObjects` (its `FrameSweep`) turns it through the frame in `advanceTo`, and `sweepTurning` tests the pictures at each whole degree. The heading follows half a cosine over `swing.frames`. `knock` uses `velocityAt(touch.point)`.
+- **Shared pictures:** `drawn.picture` and a look's `picture` are a `HeldPicture`, one between an object and its looks. Read through `->`; write through `edit()`, which copies a shared one first. A write that skips `edit()` will not compile, so a look is never changed by accident.
+- **Swings:** a swing's turn is `turning.spin`; `moveObjects` (its `FrameSweep`) turns it through the frame in `advanceTo`, and `sweepTurning` tests the pictures at each whole degree. The heading follows half a cosine over its `Swing` part's `seconds` (`Parts::swings`, given by the first `<swing>`). `knock` uses `velocityAt(touch.point)`.
 - **Resting:** pixel contact depth is measured by pixels; `knockedApart`'s settle (four frames of pull) stops a resting ball hopping; `<friction>` (`rub`) may set `rest.resting`, which `applyAcceleration` wakes when the thing or a support moves.
 - Drag and grip in a frame are `surface.groundDrag`/`surface.groundGrip` from `findGround`; use those, not `drag`/`grip`.
 - Edge rules: `sprite=`/`unless=` are an `EdgeGuard`; `class=` or `object=` on one is a load error.

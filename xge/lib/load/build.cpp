@@ -31,8 +31,9 @@ namespace xge
 		} self{ selfName, std::exchange(selfName, rawObject.name) };
 
 		// Only a text showing a number needs working out again here, for the
-		// value it has by now (see above).
-		const Picture picture = (rawObject.sprite.kind == "text" && showsNumbers(rawObject.sprite))
+		// value it has by now (see above). The object and its first look
+		// hold this one picture.
+		const HeldPicture picture = (rawObject.sprite.kind == "text" && showsNumbers(rawObject.sprite))
 			? buildPicture(rawObject.sprite, where, nullptr, nullptr, &rawObject)
 			: first.picture;
 
@@ -75,7 +76,7 @@ namespace xge
 
 	// makeObject's looks: each named <sprite> or <animation> made, the first the
 	// very picture it starts with, and where each once look goes when it ends.
-	std::vector<Object::Look> game_expr::buildLooks(RawObject& rawObject, const FirstPass& first, const Picture& picture, const std::string& where)
+	std::vector<Object::Look> game_expr::buildLooks(RawObject& rawObject, const FirstPass& first, const HeldPicture& picture, const std::string& where)
 	{
 		std::vector<Object::Look> looks;
 		if (first.looks)
@@ -106,7 +107,7 @@ namespace xge
 					moving.then = processCommands(rawLook.thenCommands, here + " > <then>");
 					moving.commands = frameCommandsOf(rawLook.frameCommands, here);
 				}
-				if (look.picture.kind == ShapeKind::Text && showsNumbers(rawLook))
+				if (look.picture->kind == ShapeKind::Text && showsNumbers(rawLook))
 				{
 					throw std::runtime_error(where + ": a look cannot be a text showing a <number> or a <letter>");
 				}
@@ -141,7 +142,7 @@ namespace xge
 
 	// makeObject's picture: the sprite it starts as, its animation, and a
 	// text's live pieces.
-	void game_expr::buildSprite(RawObject& rawObject, const FirstPass& first, const Picture& picture, float animationSeconds, Object& object, const std::string& where)
+	void game_expr::buildSprite(RawObject& rawObject, const FirstPass& first, const HeldPicture& picture, float animationSeconds, Object& object, const std::string& where)
 	{
 		object.drawn.picture = picture;
 		object.drawn.bitmap = first.bitmap;
@@ -161,7 +162,7 @@ namespace xge
 			object.drawn.bitmap = own.bitmaps.front();
 		}
 
-		if (object.drawn.picture.kind == ShapeKind::Text && showsNumbers(rawObject.sprite))
+		if (object.drawn.picture->kind == ShapeKind::Text && showsNumbers(rawObject.sprite))
 		{
 			std::vector<TextPiece> pieces = textPieces(rawObject.sprite, where, &rawObject);
 			if (std::any_of(pieces.begin(), pieces.end(), [](const TextPiece& piece) { return !piece.owner.empty(); }))
@@ -737,7 +738,7 @@ namespace xge
 		// is solid all over, but what a text or an image looks like
 		// is only known once a window backend has drawn it.
 		if (object.kind->collisionData.type == CollisionType::Pixel
-			&& (object.drawn.picture.kind == ShapeKind::Text || object.drawn.picture.kind == ShapeKind::Image))
+			&& (object.drawn.picture->kind == ShapeKind::Text || object.drawn.picture->kind == ShapeKind::Image))
 		{
 			throw std::runtime_error(where + ": <type>pixel</type> needs a sprite of lines, a circle or a rectangle; the pixels of text and images are only known to a window backend");
 		}

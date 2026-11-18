@@ -185,7 +185,7 @@ TEST_CASE("a picture's size is the game's own, and the null window opens nothing
 	const auto measured = [](auto setUp)
 	{
 		Object object;
-		setUp(object.drawn.picture);
+		setUp(object.drawn.picture.edit());
 		object.drawn.visualDirty = true;
 		std::vector<Object> objects{ object };
 		NullWindow window;
@@ -340,16 +340,16 @@ TEST_CASE("every window backend keeps the window contract", "[.][window]")
 			std::vector<Object> objects{
 				pictureAt("bitmap", 4.0f, 4.0f, [](Object& o)
 				{
-					o.drawn.picture.kind = ShapeKind::Line;
+					o.drawn.picture.edit().kind = ShapeKind::Line;
 					auto red = std::make_shared<Bitmap>();
 					red->width = 8;
 					red->height = 8;
 					for (int i = 0; i < 64; ++i) { red->rgba.insert(red->rgba.end(), { 255, 0, 0, 255 }); }
 					o.drawn.bitmap = red;
-					o.drawn.picture.size = { 8.0f, 8.0f };
+					o.drawn.picture.edit().size = { 8.0f, 8.0f };
 				}),
-				pictureAt("rectangle", 30.0f, 4.0f, [](Object& o) { o.drawn.picture.kind = ShapeKind::Rectangle; o.drawn.picture.size = { 10.0f, 6.0f }; o.drawn.picture.color = heldNames.of("color.green"); }),
-				pictureAt("circle", 20.0f, 28.0f, [](Object& o) { o.drawn.picture.kind = ShapeKind::Circle; o.drawn.picture.radius = 6.0f; o.drawn.picture.color = heldNames.of("color.blue"); }),
+				pictureAt("rectangle", 30.0f, 4.0f, [](Object& o) { o.drawn.picture.edit().kind = ShapeKind::Rectangle; o.drawn.picture.edit().size = { 10.0f, 6.0f }; o.drawn.picture.edit().color = heldNames.of("color.green"); }),
+				pictureAt("circle", 20.0f, 28.0f, [](Object& o) { o.drawn.picture.edit().kind = ShapeKind::Circle; o.drawn.picture.edit().radius = 6.0f; o.drawn.picture.edit().color = heldNames.of("color.blue"); }),
 			};
 			window->init(objects);
 			for (const Object& object : objects) { CHECK_FALSE(object.drawn.visualDirty); }

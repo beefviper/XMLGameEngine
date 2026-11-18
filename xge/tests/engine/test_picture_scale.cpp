@@ -27,10 +27,10 @@ namespace
 	Object text(const std::string& words, int size)
 	{
 		Object object;
-		object.drawn.picture.kind = ShapeKind::Text;
-		object.drawn.picture.text = words;
-		object.drawn.picture.textSize = size;
-		object.drawn.picture.color = heldNames.of("color.white");
+		object.drawn.picture.edit().kind = ShapeKind::Text;
+		object.drawn.picture.edit().text = words;
+		object.drawn.picture.edit().textSize = size;
+		object.drawn.picture.edit().color = heldNames.of("color.white");
 		return object;
 	}
 }
@@ -52,16 +52,16 @@ TEST_CASE("a text drawn at twice the scale has twice the pixels and the same gam
 
 	// A pixel font at its own multiple doubles exactly.
 	Object score = text("SCORE", 16);
-	score.drawn.picture.font = heldNames.of("assets/pressstart2p.ttf");
+	score.drawn.picture.edit().font = heldNames.of("assets/pressstart2p.ttf");
 	CHECK(score.drawnPicture(2.0f)->width == 2 * score.drawnPicture(1.0f)->width);
 }
 
 TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[picture_scale]")
 {
 	Object ball;
-	ball.drawn.picture.kind = ShapeKind::Circle;
-	ball.drawn.picture.radius = 5.0f;
-	ball.drawn.picture.color = heldNames.of("color.red");
+	ball.drawn.picture.edit().kind = ShapeKind::Circle;
+	ball.drawn.picture.edit().radius = 5.0f;
+	ball.drawn.picture.edit().color = heldNames.of("color.red");
 
 	const std::shared_ptr<const Bitmap> small = ball.drawnPicture(1.0f);
 	CHECK(small->width == 10);
@@ -72,9 +72,9 @@ TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[pi
 	CHECK(ball.drawnPicture(2.5f)->width == 25);
 
 	Object paddle;
-	paddle.drawn.picture.kind = ShapeKind::Rectangle;
-	paddle.drawn.picture.size = { 10.0f, 50.0f };
-	paddle.drawn.picture.color = heldNames.of("color.white");
+	paddle.drawn.picture.edit().kind = ShapeKind::Rectangle;
+	paddle.drawn.picture.edit().size = { 10.0f, 50.0f };
+	paddle.drawn.picture.edit().color = heldNames.of("color.white");
 	const std::shared_ptr<const Bitmap> tall = paddle.drawnPicture(2.0f);
 	CHECK(tall->width == 20);
 	CHECK(tall->height == 100);
@@ -86,7 +86,7 @@ TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[pi
 TEST_CASE("a bitmap keeps its own pixels at any scale", "[picture_scale]")
 {
 	Object ship;
-	ship.drawn.picture.kind = ShapeKind::Line;
+	ship.drawn.picture.edit().kind = ShapeKind::Line;
 	auto drawn = std::make_shared<Bitmap>();
 	drawn->width = 4;
 	drawn->height = 2;

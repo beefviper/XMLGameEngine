@@ -155,7 +155,7 @@ namespace xge
 		// name.height variables.
 		for (const auto& object : objects)
 		{
-			if (object.drawn.picture.kind == ShapeKind::Text) { expr.setObjectSize(object.name, object.size); }
+			if (object.drawn.picture->kind == ShapeKind::Text) { expr.setObjectSize(object.name, object.size); }
 		}
 
 		// Only the objects whose position uses a size (most games: none).
@@ -1864,7 +1864,7 @@ namespace xge
 	void Game::relabel(Object& object)
 	{
 		Object::BoundText* bound = objectParts.boundTexts.find(object.id);
-		if (object.drawn.picture.kind != ShapeKind::Text || !bound)
+		if (object.drawn.picture->kind != ShapeKind::Text || !bound)
 		{
 			return;
 		}
@@ -1894,9 +1894,9 @@ namespace xge
 		}
 
 		const std::string text = joinText(bound->pieces);
-		if (object.drawn.picture.text != text)
+		if (object.drawn.picture->text != text)
 		{
-			object.drawn.picture.text = text;
+			object.drawn.picture.edit().text = text;
 			object.drawn.visualDirty = true;
 			// The size of its new words, now: what this frame's edges, touches
 			// and the positions made from it look at.

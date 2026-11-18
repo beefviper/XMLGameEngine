@@ -282,7 +282,7 @@ TEST_CASE("asteroids.xml loads with a ship that has a heading, shots, rocks and 
 	Field field;
 	const Object& ship = field.ship();
 
-	CHECK(ship.drawn.picture.kind == ShapeKind::Line);
+	CHECK(ship.drawn.picture->kind == ShapeKind::Line);
 	CHECK(ship.kind->collisionData.type == CollisionType::Pixel);
 	CHECK(ship.turning.hasHeading);
 	CHECK(ship.heading == 0.0f);

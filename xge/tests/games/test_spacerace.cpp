@@ -152,7 +152,7 @@ TEST_CASE("getting off the top scores a point and sends the rocket back", "[spac
 	CHECK(table.score(2) == 1.0f);
 	CHECK(table.score(1) == 0.0f);
 	CHECK(table.rocket(2).position.y > 560.0f); // back at the bottom (and one step up, the key was down)
-	CHECK(table.game.getObject("score2").drawn.picture.text == "1");
+	CHECK(table.game.getObject("score2").drawn.picture->text == "1");
 	CHECK(table.game.getCurrentState().name == "playing");
 }
 
@@ -191,7 +191,7 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 		CHECK(table.game.getCurrentState().name == "title");
 		CHECK(table.score(2) == 0.0f);
 		CHECK(table.game.getObject("over.winner").lookName() == "draw");
-		CHECK(table.game.getObject("score2").drawn.picture.text == "0");
+		CHECK(table.game.getObject("score2").drawn.picture->text == "0");
 	}
 
 	SECTION("a draw")

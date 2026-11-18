@@ -966,13 +966,13 @@ TEST_CASE("blackjack.xml: points count face-up cards, an ace 11 while within 21,
 	CHECK(play.holderOf("player").points == 17.0f);
 	CHECK(play.holderOf("dealer").points == 9.0f);
 	CHECK(play.holderOf("dealer").itemCount == 2.0f);
-	CHECK(play.get("dealerpoints").drawn.picture.text == "dealer 9");
+	CHECK(play.get("dealerpoints").drawn.picture->text == "dealer 9");
 
 	// A 9: the ace counts 1 now.
 	play.stack({ "9 hearts" });
 	play.press(KeyCode::W);
 	CHECK(play.holderOf("player").points == 16.0f);
-	CHECK(play.get("yourpoints").drawn.picture.text == "you 16");
+	CHECK(play.get("yourpoints").drawn.picture->text == "you 16");
 }
 
 TEST_CASE("blackjack.xml: the dealer draws to 17, and the nearer to 21 wins", "[cards][blackjack]")
@@ -1147,7 +1147,7 @@ TEST_CASE("holdem.xml: the best five of seven: the kinds in order, a wheel the l
 	CHECK(kindOf({ "A hearts", "A clubs", "J diamonds", "4 diamonds", "5 clubs", "J hearts", "J spades" }) == 6.0f);
 	CHECK(kindOf({ "J clubs", "A clubs", "J diamonds", "4 diamonds", "5 clubs", "J hearts", "J spades" }) == 7.0f);
 	CHECK(kindOf({ "10 hearts", "K hearts", "Q hearts", "J hearts", "A hearts", "2 clubs", "3 spades" }) == 8.0f);
-	CHECK(play.get("yourchips").drawn.picture.text == "you: 500 chips, a straight flush");
+	CHECK(play.get("yourchips").drawn.picture->text == "you: 500 chips, a straight flush");
 
 	// A wheel (ace to five) is under a six-high straight; a flush beats both.
 	const float wheel = (play.lay({ "A hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "K hearts", "K spades" }), play.holderOf("yours").strength);
