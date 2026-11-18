@@ -19,6 +19,8 @@
 namespace xge
 {
 	struct SoundDesc;
+	struct Sheet;
+	class SheetPicture;
 
 	// Everything a game loads or makes once and shares, each held here once
 	// however many objects show it, and named by its PictureId. One a Game:
@@ -70,6 +72,13 @@ namespace xge
 		std::size_t pictureCount() const noexcept;
 		std::size_t pictureBytes() const noexcept;
 
+		// The picture of a <sheet>, opened the first time a cell of it is
+		// cut and held, to cut the rest from, until letGoOfSheets() (once
+		// the game has loaded: what is cut is kept, the whole sheet is not).
+		const SheetPicture& sheet(const Sheet& sheet);
+		void letGoOfSheets() noexcept { sheets.clear(); }
+		std::size_t sheetsOpen() const noexcept { return sheets.size(); }
+
 		// A sound's samples (samplesOf, audio/sound.h), made the first time
 		// they are asked for and shared by every sound that sounds the same.
 		std::shared_ptr<const std::vector<std::int16_t>> samples(const SoundDesc& sound);
@@ -83,5 +92,6 @@ namespace xge
 		std::deque<PictureId::Held> pictures;   // [0] is id 1
 		std::map<std::string, PictureId> byKey;
 		std::map<std::string, std::shared_ptr<const std::vector<std::int16_t>>> samplesByKey;
+		std::map<std::string, std::shared_ptr<const SheetPicture>> sheets;   // by the sheet's name
 	};
 }

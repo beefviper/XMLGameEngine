@@ -422,10 +422,9 @@ namespace xge
 			// opened once while the game loads.
 			drawn = drawOnce(key, [&]
 			{
-				std::shared_ptr<SheetPicture>& opened = openSheets[sheet->name];
-				if (!opened) { opened = std::make_shared<SheetPicture>(*sheet); }
-				const SheetPart part = opened->partOf(cell);
-				return flipped(sized ? opened->cut(part, toWidth, toHeight) : opened->cut(part, cellScale));
+				const SheetPicture& opened = resources.sheet(*sheet);
+				const SheetPart part = opened.partOf(cell);
+				return flipped(sized ? opened.cut(part, toWidth, toHeight) : opened.cut(part, cellScale));
 			});
 			kept->key = key;
 		}

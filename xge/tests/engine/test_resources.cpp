@@ -173,3 +173,22 @@ TEST_CASE("a window makes one texture for a picture twenty objects show", "[reso
 	for (int frame = 0; frame < 10; ++frame) { engine.step(kSixtieth); engine.render(); }
 	CHECK(window.texturesMade() == 1);
 }
+
+TEST_CASE("a sheet is opened once to cut its cells, and let go once the game has loaded", "[resources][sheet]")
+{
+	Resources resources;
+	Sheet cards;
+	cards.name = "cards";
+	cards.path = "assets/cards.png";
+	cards.columns = 13;
+	cards.rows = 5;
+	const SheetPicture& opened = resources.sheet(cards);
+	CHECK(&resources.sheet(cards) == &opened);
+	CHECK(resources.sheetsOpen() == 1);
+	resources.letGoOfSheets();
+	CHECK(resources.sheetsOpen() == 0);
+
+	Game klondike{ "descriptions/klondike.xml" };
+	CHECK(klondike.resources().sheetsOpen() == 0);
+	CHECK(klondike.resources().pictureCount() > 52);   // the cards were cut from it
+}

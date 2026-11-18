@@ -58,7 +58,7 @@ namespace xge
 		void finishLoading()
 		{
 			loading = false;
-			openSheets.clear();
+			resources.letGoOfSheets();
 		}
 
 		// What an object's sprite was drawn as before it was built (init's
@@ -310,10 +310,8 @@ namespace xge
 		std::vector<RawStyle> styles;
 
 
-		// The game's <sheets>, and each one's picture, opened the first time a
-		// cell of it is drawn and held until loading is over.
+		// The game's <sheets> (their pictures are opened by the Resources).
 		std::vector<Sheet> sheets;
-		std::map<std::string, std::shared_ptr<SheetPicture>> openSheets;
 
 		// Each object's palettes (Object::Looks::palettes), for the styles `wanted`
 		// names for it by its name, drawn from what the file says of it.

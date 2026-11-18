@@ -83,4 +83,11 @@ namespace xge
 		samplesByKey.emplace(key, made);
 		return made;
 	}
+
+	const SheetPicture& Resources::sheet(const Sheet& sheet)
+	{
+		std::shared_ptr<const SheetPicture>& opened = sheets[sheet.name];
+		if (!opened) { opened = std::make_shared<const SheetPicture>(sheet); }
+		return *opened;
+	}
 }
