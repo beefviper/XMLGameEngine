@@ -4,6 +4,8 @@
 // date: Nov 10, 2026
 
 #include "verbs/verb.h"
+#include "game/game.h"
+#include "play/executor.h"
 
 namespace xge
 {
