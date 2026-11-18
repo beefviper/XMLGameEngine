@@ -1339,8 +1339,8 @@ namespace xge
 			// A <once /> animation played through: an object's one animation
 			// stays on its last picture. A look goes back to `lookBefore` (the
 			// last look shown that was not itself once).
-			bool done{ false };
 			std::size_t lookBefore{};
+			bool done{ false };
 			// <stepped />: the time since the picture last changed (`since`,
 			// in seconds); `share` is how much of that time this step moves
 			// (0 between changes). See motionOf. `shareBefore` is the step
