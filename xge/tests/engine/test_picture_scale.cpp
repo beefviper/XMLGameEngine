@@ -8,6 +8,7 @@
 // a circle and a rectangle are drawn with more pixels, so they stay sharp,
 // while the game's sizes stay its own; a bitmap keeps its pixels.
 
+#include "engine/resources.h"
 #include "game/object.h"
 #include "window/window.h"
 
@@ -87,14 +88,15 @@ TEST_CASE("a bitmap keeps its own pixels at any scale", "[picture_scale]")
 {
 	Object ship;
 	ship.drawn.picture.edit().kind = ShapeKind::Line;
-	auto drawn = std::make_shared<Bitmap>();
-	drawn->width = 4;
-	drawn->height = 2;
-	drawn->rgba.assign(4 * 2 * 4, 255);
-	ship.drawn.bitmap = drawn;
+	Bitmap drawn;
+	drawn.width = 4;
+	drawn.height = 2;
+	drawn.rgba.assign(4 * 2 * 4, 255);
+	Resources resources;
+	ship.drawn.bitmap = resources.own(std::move(drawn));
 
 	CHECK_FALSE(ship.drawnAtScale());
-	CHECK(ship.drawnPicture(3.0f) == ship.drawn.bitmap);   // the very same, not a copy
+	CHECK(ship.drawnPicture(3.0f) == ship.drawn.bitmap.shared());   // the very same, not a copy
 }
 
 TEST_CASE("pictures are drawn again once a resize has held still a quarter second", "[picture_scale]")

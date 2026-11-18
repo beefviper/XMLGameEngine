@@ -200,7 +200,7 @@ namespace xge
 	}
 
 	Picture game_expr::buildPicture(const RawSprite& sprite, const std::string& where,
-		std::shared_ptr<const Bitmap>* bitmap, std::shared_ptr<const Turnable>* turnable, const RawObject* self)
+		PictureId* bitmap, std::shared_ptr<const Turnable>* turnable, const RawObject* self)
 	{
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
 		checkColor(color, where);
@@ -223,7 +223,7 @@ namespace xge
 		{
 			auto kept = std::make_shared<Turnable>();
 			kept->resources = &resources;
-			std::shared_ptr<const Bitmap> drawn;
+			PictureId drawn;
 
 			try
 			{
@@ -237,7 +237,7 @@ namespace xge
 					if (kept->lines.empty()) { kept->picture = drawn; }
 					if (!kept->lines.empty() || drawn->width > 0)
 					{
-						drawn = kept->sharedTurned(0);
+						drawn = kept->turned(0);
 					}
 					*turnable = std::move(kept);
 				}
@@ -295,7 +295,7 @@ namespace xge
 					file = resources.picture("file|" + sprite.path + "|" + sprite.flip,
 						[&] { return flipBitmap(resources.bitmap(file), picture.flipHorizontal, picture.flipVertical); });
 				}
-				picture.image = resources.shared(file);
+				picture.image = file;
 			}
 			catch (const std::exception& error) { throw std::runtime_error(where + ": " + error.what()); }
 		}
@@ -303,13 +303,17 @@ namespace xge
 		{
 			// Drawn every frame where its two ends are (drawTethers); until
 			// then, one clear pixel.
-			auto clear = std::make_shared<Bitmap>();
-			clear->width = 1;
-			clear->height = 1;
-			clear->rgba.assign(4, 0);
+			const PictureId clear = resources.picture("clear pixel", []
+			{
+				Bitmap pixel;
+				pixel.width = 1;
+				pixel.height = 1;
+				pixel.rgba.assign(4, 0);
+				return pixel;
+			});
 			picture.kind = ShapeKind::Line;
 			picture.size = { 1.0f, 1.0f };
-			if (bitmap) { *bitmap = std::move(clear); }
+			if (bitmap) { *bitmap = clear; }
 		}
 		else
 		{
@@ -322,9 +326,9 @@ namespace xge
 
 	// buildPicture's steps 1 to 3 for a line, polygon, cell, svg or bitmap:
 	// read, drawn into a Bitmap and flipped; a line's segments kept to turn.
-	std::shared_ptr<const Bitmap> game_expr::drawPicture(const RawSprite& sprite, const std::string& where, const std::string& color, const std::shared_ptr<Turnable>& kept)
+	PictureId game_expr::drawPicture(const RawSprite& sprite, const std::string& where, const std::string& color, const std::shared_ptr<Turnable>& kept)
 	{
-		std::shared_ptr<const Bitmap> drawn;
+		PictureId drawn;
 		// 3. Flipped.
 		const auto flipped = [&](Bitmap unflipped)
 		{
@@ -468,10 +472,10 @@ namespace xge
 		}
 		return drawn;
 	}
-	std::vector<std::shared_ptr<const Bitmap>> game_expr::buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
+	std::vector<PictureId> game_expr::buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
 		std::vector<std::shared_ptr<const Turnable>>* turnables)
 	{
-		std::vector<std::shared_ptr<const Bitmap>> pictures;
+		std::vector<PictureId> pictures;
 
 		for (std::size_t i = 0; i < frames.size(); ++i)
 		{
@@ -484,7 +488,7 @@ namespace xge
 				throw std::runtime_error(here + ": a frame must be a <bitmap>, an <svg>, a sheet's <cell> or a drawing of <line>s, not a <" + frame.kind + ">");
 			}
 
-			std::shared_ptr<const Bitmap> picture;
+			PictureId picture;
 			std::shared_ptr<const Turnable> turnable;
 			buildPicture(frame, here, &picture, turnables ? &turnable : nullptr);
 
@@ -505,15 +509,15 @@ namespace xge
 		return pictures;
 	}
 
-	std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> game_expr::flipsOf(const Object& object)
+	std::shared_ptr<const std::map<PictureId, PictureId>> game_expr::flipsOf(const Object& object)
 	{
-		auto flips = std::make_shared<std::map<const Bitmap*, std::shared_ptr<const Bitmap>>>();
-		const auto add = [&](const std::shared_ptr<const Bitmap>& picture)
+		auto flips = std::make_shared<std::map<PictureId, PictureId>>();
+		const auto add = [&](const PictureId& picture)
 		{
-			if (!picture || flips->count(picture.get())) { return; }
-			const std::shared_ptr<const Bitmap> flipped = resources.flippedLeftRight(picture);
-			(*flips)[picture.get()] = flipped;
-			(*flips)[flipped.get()] = picture;
+			if (!picture || flips->count(picture)) { return; }
+			const PictureId flipped = resources.flippedLeftRight(picture);
+			(*flips)[picture] = flipped;
+			(*flips)[flipped] = picture;
 		};
 		const auto addLooks = [&](const std::vector<Object::Look>& looks)
 		{

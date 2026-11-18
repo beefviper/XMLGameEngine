@@ -134,10 +134,10 @@ namespace xge
 		drawn.visualDirty = true;
 	}
 
-	std::shared_ptr<const Bitmap> Object::facingPicture(const std::shared_ptr<const Bitmap>& shown) const
+	PictureId Object::facingPicture(PictureId shown) const
 	{
 		if (!mirror.flipped || !looks.set->flips || !shown) { return shown; }
-		const auto found = looks.set->flips->find(shown.get());
+		const auto found = looks.set->flips->find(shown);
 		return found == looks.set->flips->end() ? shown : found->second;
 	}
 
@@ -151,7 +151,7 @@ namespace xge
 		mirror.flipped = want;
 		if (drawn.bitmap && looks.set->flips)
 		{
-			const auto found = looks.set->flips->find(drawn.bitmap.get());
+			const auto found = looks.set->flips->find(drawn.bitmap);
 			if (found != looks.set->flips->end()) { drawn.bitmap = found->second; }
 		}
 		drawn.visualDirty = true;
@@ -1094,7 +1094,7 @@ namespace xge
 
 		if (drawn.bitmap && drawn.turnedDegrees == degrees && drawn.turnedFrame == frame) { return; }
 
-		drawn.bitmap = drawn.turnables[frame]->sharedTurned(degrees);
+		drawn.bitmap = drawn.turnables[frame]->turned(degrees);
 		drawn.turnedDegrees = degrees;
 		drawn.turnedFrame = frame;
 		drawn.visualDirty = true;
@@ -1216,10 +1216,10 @@ namespace xge
 			return std::make_shared<const Bitmap>(drawText(drawn.picture->text, pixels, color, textFontFile(drawn.picture->font)));
 		}
 		case ShapeKind::Image:
-			if (drawn.picture->image) { return drawn.picture->image; }
+			if (drawn.picture->image) { return drawn.picture->image.shared(); }
 			break;
 		case ShapeKind::Line:
-			if (drawn.bitmap) { return drawn.bitmap; }
+			if (drawn.bitmap.get()) { return drawn.bitmap.shared(); }
 			break;
 		case ShapeKind::Unknown:
 			break;

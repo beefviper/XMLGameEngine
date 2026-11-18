@@ -1288,7 +1288,7 @@ namespace xge
 		// that shows it (an object's own animation, or a look that moves).
 		struct Frames
 		{
-			std::vector<std::shared_ptr<const Bitmap>> bitmaps;
+			std::vector<PictureId> bitmaps;
 			// How long each picture shows, in seconds.
 			float seconds{};
 			// Each picture's own time in seconds, when a <frame> has its own
@@ -1748,7 +1748,7 @@ namespace xge
 		{
 			std::string name;
 			HeldPicture picture;
-			std::shared_ptr<const Bitmap> bitmap;
+			PictureId bitmap;
 			// A look that moves: its frames (none for a still look).
 			HeldFrames frames;
 			// <then>: the look to go to when it ends, in place of the look
@@ -1775,8 +1775,8 @@ namespace xge
 		struct Palette
 		{
 			std::string name;
-			std::shared_ptr<const Bitmap> bitmap;
-			std::vector<std::shared_ptr<const Bitmap>> animation;
+			PictureId bitmap;
+			std::vector<PictureId> animation;
 			std::vector<Look> looks;
 		};
 
@@ -1819,7 +1819,7 @@ namespace xge
 			bool changed{ false };
 			// For a <mirror>: each of its pictures and that picture flipped,
 			// both ways round, made as the game loads.
-			std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flips;
+			std::shared_ptr<const std::map<PictureId, PictureId>> flips;
 		};
 		struct Looks
 		{
@@ -1857,7 +1857,7 @@ namespace xge
 		Mirror mirror;
 
 		// The picture to show for `picture`: flipped while mirrored.
-		std::shared_ptr<const Bitmap> facingPicture(const std::shared_ptr<const Bitmap>& shown) const;
+		PictureId facingPicture(PictureId shown) const;
 
 		// Flips its picture, if it now goes the other way to the one it
 		// is drawn for (see goingLeft).
@@ -2107,7 +2107,7 @@ namespace xge
 		// (xge::cutHole) and taken away by a reset.
 		struct Unholed
 		{
-			std::shared_ptr<const Bitmap> bitmap;
+			PictureId bitmap;
 		};
 
 		// A part (Parts::follows), for an object that follows something only.
@@ -2136,7 +2136,7 @@ namespace xge
 			// loads (load/expr). The window backends draw it as a picture and a
 			// collision of type pixel tests it; null for every other shape. Shared,
 			// not copied, with every copy of the object.
-			std::shared_ptr<const Bitmap> bitmap;
+			PictureId bitmap;
 
 			// True until the active Window backend has built (or rebuilt) this
 			// object's own visual - set again whenever something changes what
@@ -2182,6 +2182,8 @@ namespace xge
 			std::string to;
 			int thickness{ 1 };
 			Color color{};
+			// The line as last drawn, the tether's own picture.
+			PictureId drawn;
 		};
 
 		// Its <hitbox>es (see RawCollisionData), any of them a touch; none,

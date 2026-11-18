@@ -374,6 +374,14 @@ namespace xge
 		}
 	}
 
+	// A copy that leaves lets go of the pictures that were its own: one
+	// with holes cut in it, a tether's line.
+	void Game::letGoOwnPictures(const Object& object)
+	{
+		if (objectParts.unholed.has(object.id)) { expr.resources.release(object.drawn.bitmap); }
+		if (const Object::Tether* tether = objectParts.tethers.find(object.id)) { expr.resources.release(tether->drawn); }
+	}
+
 	void Game::settleSpawns(void)
 	{
 		bool changed = false;
@@ -382,7 +390,11 @@ namespace xge
 		{
 			for (const Object& object : objects)
 			{
-				if (gone(object)) { objectParts.freeId(object.id); }
+				if (gone(object))
+				{
+					letGoOwnPictures(object);
+					objectParts.freeId(object.id);
+				}
 			}
 			objects.erase(std::remove_if(objects.begin(), objects.end(), gone), objects.end());
 			changed = true;
@@ -392,7 +404,11 @@ namespace xge
 			for (Object& object : spawned)
 			{
 				if (object.exists) { objects.push_back(std::move(object)); }
-				else { objectParts.freeId(object.id); }
+				else
+				{
+					letGoOwnPictures(object);
+					objectParts.freeId(object.id);
+				}
 			}
 			spawned.clear();
 			changed = true;
@@ -1459,7 +1475,7 @@ namespace xge
 		// is put away, an alien is back), and nothing it was in the middle
 		// of still going. Doesn't touch bound text displays - callers do
 		// that afterward, once they know which objects actually changed.
-		void resetObjectState(Object& object, Parts& parts)
+		void resetObjectState(Object& object, Parts& parts, Resources& resources)
 		{
 			static_cast<Moment&>(object) = startOf(parts, object);
 			object.placed = true;
@@ -1497,7 +1513,8 @@ namespace xge
 
 			if (Object::Unholed* unholed = parts.unholed.find(object.id))
 			{
-				object.drawn.bitmap = std::move(unholed->bitmap);
+				resources.release(object.drawn.bitmap);
+				object.drawn.bitmap = unholed->bitmap;
 				parts.unholed.remove(object.id);
 				object.drawn.visualDirty = true;
 			}
@@ -1552,7 +1569,7 @@ namespace xge
 				// A copy did not exist when the game started.
 				if (candidate.isCopy()) { despawn(candidate); continue; }
 				drawStartAgain(candidate);
-				resetObjectState(candidate, objectParts);
+				resetObjectState(candidate, objectParts, expr.resources);
 				holdVariablesForExpressions(candidate);
 				stageChanged();
 			}
@@ -1828,7 +1845,7 @@ namespace xge
 		{
 			if (object.kept) { continue; }
 			drawStartAgain(object);
-			resetObjectState(object, objectParts);
+			resetObjectState(object, objectParts, expr.resources);
 			holdVariablesForExpressions(object);
 			stageChanged();
 		}
@@ -1965,7 +1982,7 @@ namespace xge
 			if (startOf(object).ownerScene != scene) { continue; }
 			if (object.isCopy()) { despawn(object); continue; }
 			drawStartAgain(object);
-			resetObjectState(object, objectParts);
+			resetObjectState(object, objectParts, expr.resources);
 			holdVariablesForExpressions(object);
 			stageChanged();
 

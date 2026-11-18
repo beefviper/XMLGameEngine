@@ -6,6 +6,7 @@ Tips for changing how things are drawn. Back to [the notes](readme.md).
 
 - Every engine-drawn picture is `ShapeKind::Line`, built in `buildPicture`. Never draw or turn in a backend.
 - A picture that outlives a function belongs to the game's `Resources` (`engine/resources.h`): ask it by a key of everything that decides the pixels. No static caches.
+- An object holds a `PictureId`, read like the picture (`*id`, `id->width`). One object's own picture (holed, a tether's line) is `own`ed, redrawn with `replace` and let go with `release` at a reset or when the copy leaves.
 - Looks that move come **before** still sprites in the look list, so look 0 is the first animation; an object with `<poses>` starts as standing.
 - A pose is picked only while the current look is a pose look.
 - `<become object="group">` changes members out of play too.

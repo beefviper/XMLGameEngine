@@ -780,7 +780,7 @@ namespace xge
 			if (rules.parts().tethers.size() == 0) { return; }
 			for (auto& tether : objects)
 			{
-				const Object::Tether* ends = rules.parts().tethers.find(tether.id);
+				Object::Tether* ends = rules.parts().tethers.find(tether.id);
 				if (!ends || ends->from.empty()) { continue; }
 
 				const Object* from = named(objects, ends->from);
@@ -801,12 +801,14 @@ namespace xge
 				line.color = ends->color;
 				line.thickness = ends->thickness;
 
-				auto drawn = std::make_shared<const Bitmap>(rasterizeLines({ line }));
+				Bitmap drawn = rasterizeLines({ line });
 				tether.position = corner;
-				tether.size = { static_cast<float>(drawn->width), static_cast<float>(drawn->height) };
+				tether.size = { static_cast<float>(drawn.width), static_cast<float>(drawn.height) };
 				tether.drawn.picture.edit().kind = ShapeKind::Line;
 				tether.drawn.picture.edit().size = tether.size;
-				tether.drawn.bitmap = std::move(drawn);
+				if (ends->drawn) { rules.resources().replace(ends->drawn, std::move(drawn)); }
+				else { ends->drawn = rules.resources().own(std::move(drawn)); }
+				tether.drawn.bitmap = ends->drawn;
 				tether.drawn.visualDirty = true;
 			}
 		}

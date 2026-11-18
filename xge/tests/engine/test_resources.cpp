@@ -131,3 +131,31 @@ TEST_CASE("a <mirror>'s flipped picture is made once, whoever shows it", "[resou
 	CHECK(play.game.resources().pictureCount() == 2);
 	CHECK(*play.get("guy0").looks.set->flips == *play.get("guy19").looks.set->flips);
 }
+
+TEST_CASE("a hole makes one shield's picture its own, and a reset lets it go", "[resources][hole]")
+{
+	std::string rows;
+	for (int i = 0; i < 10; ++i) { rows += "<row>**********</row>"; }
+	const auto shield = [&](const std::string& name, int x)
+	{
+		return "<object name=\"" + name + "\"><sprite><bitmap>" + rows + "<scale>4</scale><color>color.green</color></bitmap></sprite>"
+			"<position><x>" + std::to_string(x) + "</x><y>100</y></position>"
+			"<collisions><type>pixel</type><collision object=\"shot\"><hole>8</hole></collision></collisions></object>";
+	};
+	const std::string shot = played::box("shot", 115, 300, "<velocity><x>0</x><y>-480</y></velocity><collisions>"
+		"<collision object=\"left\"><reset /></collision></collisions>");
+	played::Scratch file{ shield("left", 100) + shield("right", 300) + shot, "<reset object=\"left\" />" };
+	played::Played play{ file.path };
+	const PictureId whole = play.get("right").drawn.bitmap;
+	REQUIRE(play.get("left").drawn.bitmap == whole);
+	const std::size_t held = play.game.resources().pictureCount();
+
+	play.frames(30);
+	CHECK(play.get("left").drawn.bitmap != whole);
+	CHECK(play.get("right").drawn.bitmap == whole);
+	CHECK(play.game.resources().pictureCount() == held + 1);
+
+	play.tap(KeyCode::Space);
+	CHECK(play.get("left").drawn.bitmap == whole);
+	CHECK(play.game.resources().pictureCount() == held);
+}

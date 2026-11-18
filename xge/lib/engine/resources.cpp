@@ -6,6 +6,8 @@
 #include "engine/resources.h"
 #include "picture/image.h"
 
+#include <string>
+
 namespace xge
 {
 	PictureId Resources::pictureFile(const std::string& path)
@@ -13,43 +15,60 @@ namespace xge
 		return picture("file|" + path, [&] { return readPictureFile(path); });
 	}
 
+	PictureId Turnable::turned(int degrees) const
+	{
+		PictureId& known = asked[degrees];
+		if (!known) { known = resources->picture(key + "|turned " + std::to_string(degrees), [&] { return at(static_cast<float>(degrees)); }); }
+		return known;
+	}
+
+	PictureId Resources::flippedLeftRight(PictureId picture)
+	{
+		const std::string key = "flipped|" + std::to_string(picture.index());
+		const bool fresh = byKey.find(key) == byKey.end();
+		const PictureId made = this->picture(key, [&] { return flipBitmap(*picture, true, false); });
+		if (fresh) { byKey.emplace("flipped|" + std::to_string(made.index()), picture); }
+		return made;
+	}
+
+	PictureId Resources::own(Bitmap made)
+	{
+		return keep(std::make_shared<const Bitmap>(std::move(made)));
+	}
+
+	void Resources::replace(PictureId owned, Bitmap made)
+	{
+		if (owned) { held(owned).bitmap = std::make_shared<const Bitmap>(std::move(made)); }
+	}
+
+	void Resources::release(PictureId owned)
+	{
+		if (owned) { held(owned).bitmap.reset(); }
+	}
+
+	std::size_t Resources::pictureCount() const noexcept
+	{
+		std::size_t count = 0;
+		for (const PictureId::Held& each : pictures)
+		{
+			if (each.bitmap) { ++count; }
+		}
+		return count;
+	}
+
 	std::size_t Resources::pictureBytes() const noexcept
 	{
 		std::size_t bytes = 0;
-		for (const auto& held : pictures)
+		for (const PictureId::Held& each : pictures)
 		{
-			if (held) { bytes += held->rgba.size() + held->touching.size(); }
+			if (each.bitmap) { bytes += each.bitmap->rgba.size() + each.bitmap->touching.size(); }
 		}
 		return bytes;
 	}
 
-	PictureId Turnable::turned(int degrees) const
-	{
-		std::uint32_t& known = asked[degrees];
-		if (known == 0) { known = resources->picture(key + "|turned " + std::to_string(degrees), [&] { return at(static_cast<float>(degrees)); }).index; }
-		return PictureId{ known };
-	}
-
-	const Bitmap& Turnable::turnedTo(int degrees) const { return resources->bitmap(turned(degrees)); }
-
-	std::shared_ptr<const Bitmap> Turnable::sharedTurned(int degrees) const { return resources->shared(turned(degrees)); }
-
-	std::shared_ptr<const Bitmap> Resources::flippedLeftRight(const std::shared_ptr<const Bitmap>& picture)
-	{
-		const auto held = byPicture.find(picture.get());
-		const PictureId from = held != byPicture.end() ? held->second : keep(picture);
-		const std::string key = "flipped|" + std::to_string(from.index);
-		const bool fresh = byKey.find(key) == byKey.end();
-		const PictureId made = this->picture(key, [&] { return flipBitmap(*picture, true, false); });
-		if (fresh) { byKey.emplace("flipped|" + std::to_string(made.index), from); }
-		return shared(made);
-	}
-
 	PictureId Resources::keep(std::shared_ptr<const Bitmap> made)
 	{
-		const PictureId id{ static_cast<std::uint32_t>(pictures.size()) };
-		byPicture.emplace(made.get(), id);
-		pictures.push_back(std::move(made));
-		return id;
+		pictures.push_back({ std::move(made), static_cast<std::uint32_t>(pictures.size() + 1) });
+		return PictureId(&pictures.back());
 	}
 }

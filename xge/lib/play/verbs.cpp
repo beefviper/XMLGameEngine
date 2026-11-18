@@ -22,11 +22,11 @@ namespace xge
 		return measureShapeSize(object.drawn.picture);
 	}
 
-	void cutHole(Parts& parts, Object& object, const Object& other, float radius, float rough)
+	void cutHole(Parts& parts, Resources& resources, Object& object, const Object& other, float radius, float rough)
 	{
 		if (!object.drawn.bitmap) { return; }
 
-		auto cut = std::make_shared<Bitmap>(*object.drawn.bitmap);
+		Bitmap cut = *object.drawn.bitmap;
 
 		// Where it struck: the solid pixel nearest the other's middle, near
 		// enough the other to be touched by it.
@@ -39,13 +39,13 @@ namespace xge
 			Vector2f nearest = middle;
 			const int x0 = std::max(0, static_cast<int>(std::floor(from.x)) - reach);
 			const int y0 = std::max(0, static_cast<int>(std::floor(from.y)) - reach);
-			const int x1 = std::min(cut->width - 1, static_cast<int>(std::ceil(from.x + otherSize.x)) + reach);
-			const int y1 = std::min(cut->height - 1, static_cast<int>(std::ceil(from.y + otherSize.y)) + reach);
+			const int x1 = std::min(cut.width - 1, static_cast<int>(std::ceil(from.x + otherSize.x)) + reach);
+			const int y1 = std::min(cut.height - 1, static_cast<int>(std::ceil(from.y + otherSize.y)) + reach);
 			for (int y = y0; y <= y1; ++y)
 			{
 				for (int x = x0; x <= x1; ++x)
 				{
-					if (!cut->solidAt(x, y)) { continue; }
+					if (!cut.solidAt(x, y)) { continue; }
 					const Vector2f at{ static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f };
 					const float away = (at.x - middle.x) * (at.x - middle.x) + (at.y - middle.y) * (at.y - middle.y);
 					if (best < 0.0f || away < best) { best = away; nearest = at; }
@@ -55,8 +55,8 @@ namespace xge
 		}
 		const int left = std::max(0, static_cast<int>(std::floor(middle.x - radius)));
 		const int top = std::max(0, static_cast<int>(std::floor(middle.y - radius)));
-		const int right = std::min(cut->width - 1, static_cast<int>(std::ceil(middle.x + radius)));
-		const int bottom = std::min(cut->height - 1, static_cast<int>(std::ceil(middle.y + radius)));
+		const int right = std::min(cut.width - 1, static_cast<int>(std::ceil(middle.x + radius)));
+		const int bottom = std::min(cut.height - 1, static_cast<int>(std::ceil(middle.y + radius)));
 		bool changed = false;
 		for (int y = top; y <= bottom; ++y)
 		{
@@ -65,15 +65,21 @@ namespace xge
 				const float dx = static_cast<float>(x) + 0.5f - middle.x;
 				const float dy = static_cast<float>(y) + 0.5f - middle.y;
 				const float reach = rough > 0.0f ? radius * (1.0f - rough * randomBetween(0.0f, 1.0f)) : radius;
-				if (dx * dx + dy * dy > reach * reach || !cut->solidAt(x, y)) { continue; }
-				cut->rgba[(static_cast<std::size_t>(y) * static_cast<std::size_t>(cut->width) + static_cast<std::size_t>(x)) * 4 + 3] = 0;
+				if (dx * dx + dy * dy > reach * reach || !cut.solidAt(x, y)) { continue; }
+				cut.rgba[(static_cast<std::size_t>(y) * static_cast<std::size_t>(cut.width) + static_cast<std::size_t>(x)) * 4 + 3] = 0;
 				changed = true;
 			}
 		}
 		if (!changed) { return; }
 
-		if (!parts.unholed.has(object.id)) { parts.unholed.add(object.id, parts.orderOf(object.id), { object.drawn.bitmap }); }
-		object.drawn.bitmap = std::move(cut);
+		// The first hole makes the picture its own, kept whole for a reset;
+		// each after that is cut into it.
+		if (parts.unholed.has(object.id)) { resources.replace(object.drawn.bitmap, std::move(cut)); }
+		else
+		{
+			parts.unholed.add(object.id, parts.orderOf(object.id), { object.drawn.bitmap });
+			object.drawn.bitmap = resources.own(std::move(cut));
+		}
 		object.drawn.visualDirty = true;
 	}
 

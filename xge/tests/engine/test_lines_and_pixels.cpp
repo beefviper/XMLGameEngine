@@ -15,6 +15,7 @@
 
 #include "scratch.h"
 #include "file_text.h"
+#include "engine/resources.h"
 #include "picture/bitmap.h"
 #include "picture/font.h"
 #include "play/collision.h"
@@ -62,9 +63,10 @@ namespace
 	{
 		Object object;
 		static NameStore names;
+		static Resources pictures;
 		object.name = names.of(name);
 		object.drawn.picture.edit().kind = ShapeKind::Line;
-		object.drawn.bitmap = std::make_shared<const Bitmap>(rasterizeLines(lines));
+		object.drawn.bitmap = pictures.own(rasterizeLines(lines));
 		object.size = { static_cast<float>(object.drawn.bitmap->width), static_cast<float>(object.drawn.bitmap->height) };
 		object.position = { x, y };
 		object.collisionsOn = true;

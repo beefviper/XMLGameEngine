@@ -142,6 +142,7 @@ namespace xge
 
 		// Every object's handle and the parts it has.
 		Parts& parts() noexcept override { return objectParts; }
+		Resources& resources() noexcept override { return expr.resources; }
 
 		// Its holder part: whether it has one, and the part (std::out_of_range
 		// for an object that is no holder).
@@ -1070,6 +1071,8 @@ namespace xge
 		bool turnHandedOver = false;
 		std::function<void()> turnPutAway;
 		void putTurnAway(Turn& into) const;
+		// What a copy that leaves lets go of (settleSpawns).
+		void letGoOwnPictures(const Object& object);
 		void takeTurnUp(const Turn& from);
 		void beginTurn(void);
 

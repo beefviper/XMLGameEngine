@@ -285,7 +285,7 @@ namespace xge
 			// picture at the nearest whole degree, turned about its pivot.
 			const std::size_t frame = object.drawn.turnables.size() > 1 && object.animation.index < object.drawn.turnables.size() ? object.animation.index : 0;
 			const int degrees = wholeDegrees(object.heading + turn * time);
-			at.drawing = &object.drawn.turnables[frame]->turnedTo(degrees);
+			at.drawing = object.drawn.turnables[frame]->turned(degrees).get();
 			const Vector2f arm = object.turning.hasPivot ? object.turning.pivotFromMiddle : Vector2f{};
 			at.box = { object.position + move * time + turnedBy(arm, static_cast<float>(object.pivotDegrees)) - turnedBy(arm, static_cast<float>(degrees)), object.size };
 			return at;

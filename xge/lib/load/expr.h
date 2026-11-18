@@ -68,9 +68,9 @@ namespace xge
 		struct FirstPass
 		{
 			Picture picture;
-			std::shared_ptr<const Bitmap> bitmap;
+			PictureId bitmap;
 			std::shared_ptr<const Turnable> turned;
-			std::vector<std::shared_ptr<const Bitmap>> animation;
+			std::vector<PictureId> animation;
 			std::vector<std::shared_ptr<const Turnable>> animationTurned;
 			const std::vector<Object::Look>* looks{ nullptr };
 		};
@@ -144,7 +144,7 @@ namespace xge
 
 		// buildPicture's steps 1 to 3 for a line, polygon, cell, svg or bitmap:
 		// read, drawn into a Bitmap and flipped; a line's segments kept to turn.
-		std::shared_ptr<const Bitmap> drawPicture(const RawSprite& sprite, const std::string& where, const std::string& color, const std::shared_ptr<Turnable>& kept);
+		PictureId drawPicture(const RawSprite& sprite, const std::string& where, const std::string& color, const std::shared_ptr<Turnable>& kept);
 		// A copy of `from` spawned while the game runs, from `raw` (what
 		// the file says of `from`, under the copy's name): its names
 		// made known to the expressions (its variables, where it is, its
@@ -269,7 +269,7 @@ namespace xge
 		// A text's pieces that name a variable of `self`'s group (scores.score
 		// in a member of the group scores) mean `self`'s own.
 		Picture buildPicture(const RawSprite& sprite, const std::string& where,
-			std::shared_ptr<const Bitmap>* bitmap = nullptr,
+			PictureId* bitmap = nullptr,
 			std::shared_ptr<const Turnable>* turnable = nullptr,
 			const RawObject* self = nullptr);
 
@@ -289,9 +289,9 @@ namespace xge
 		// `draw` the first time and shared by the game's Resources after
 		// that, so the 55 cells of a block of aliens are one picture.
 		template <typename Draw>
-		std::shared_ptr<const Bitmap> drawOnce(const std::string& key, Draw&& draw)
+		PictureId drawOnce(const std::string& key, Draw&& draw)
 		{
-			return resources.shared(resources.picture(key, std::forward<Draw>(draw)));
+			return resources.picture(key, std::forward<Draw>(draw));
 		}
 
 
@@ -322,7 +322,7 @@ namespace xge
 		void makePalettes(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted);
 
 		// The flips (Object::Mirror::flips) of every picture `object` can show.
-		std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flipsOf(const Object& object);
+		std::shared_ptr<const std::map<PictureId, PictureId>> flipsOf(const Object& object);
 
 		// The pictures of an object's <animation>, each drawn once, in the order
 		// of its <frame>s. Throws std::runtime_error (saying whose) when a frame
@@ -330,7 +330,7 @@ namespace xge
 		// all the same size. `turned`, when given, is for an
 		// object with a <heading>: it gets what each frame turns from,
 		// and every frame must turn in the same size of square.
-		std::vector<std::shared_ptr<const Bitmap>> buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
+		std::vector<PictureId> buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
 			std::vector<std::shared_ptr<const Turnable>>* turnables = nullptr);
 
 		// How many seconds each picture of the animation is shown for: its

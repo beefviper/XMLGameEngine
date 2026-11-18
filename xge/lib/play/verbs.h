@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "engine/resources.h"
 #include "game/object.h"
 #include "game/parts.h"
 #include "game/types.h"
@@ -96,9 +97,10 @@ namespace xge
 	// `other`, within a pixel or two of it, or that middle when there is
 	// none - each at the edge kept at random by up to `rough` of the
 	// radius. So shot after shot up one line goes deeper and deeper. The
-	// first hole keeps the whole picture in Object::Drawn::unholed for a reset; the
-	// picture is copied, never changed where other objects share it.
-	void cutHole(Parts& parts, Object& object, const Object& other, float radius, float rough);
+	// first hole keeps the whole picture (Object::Unholed) for a reset and
+	// makes the object its own copy (Resources::own); others sharing the
+	// picture are never changed.
+	void cutHole(Parts& parts, Resources& resources, Object& object, const Object& other, float radius, float rough);
 
 	// <stick />: pushed back inside the window on that edge's axis, losing
 	// only the velocity carrying it into the edge.

@@ -19,6 +19,7 @@
 
 #include "audio/audio.h"
 #include "cli.h"
+#include "engine/resources.h"
 #include "picture/font.h"
 #include "picture/image.h"
 #include "window/null.h"
@@ -211,7 +212,7 @@ TEST_CASE("a picture's size is the game's own, and the null window opens nothing
 	CHECK(drawn.width > 0);
 
 	// An image file by its pixels (the tests run in games/).
-	const Vector2f image = measured([](Picture& picture) { picture.kind = ShapeKind::Image; picture.image = std::make_shared<const Bitmap>(readPictureFile("assets/paddle.jpg")); });
+	const Vector2f image = measured([](Picture& picture) { picture.kind = ShapeKind::Image; static Resources resources; picture.image = resources.pictureFile("assets/paddle.jpg"); });
 	CHECK(image.x == 30.0f);
 	CHECK(image.y == 150.0f);
 
@@ -341,11 +342,12 @@ TEST_CASE("every window backend keeps the window contract", "[.][window]")
 				pictureAt("bitmap", 4.0f, 4.0f, [](Object& o)
 				{
 					o.drawn.picture.edit().kind = ShapeKind::Line;
-					auto red = std::make_shared<Bitmap>();
-					red->width = 8;
-					red->height = 8;
-					for (int i = 0; i < 64; ++i) { red->rgba.insert(red->rgba.end(), { 255, 0, 0, 255 }); }
-					o.drawn.bitmap = red;
+					Bitmap red;
+					red.width = 8;
+					red.height = 8;
+					for (int i = 0; i < 64; ++i) { red.rgba.insert(red.rgba.end(), { 255, 0, 0, 255 }); }
+					static Resources resources;
+					o.drawn.bitmap = resources.own(std::move(red));
 					o.drawn.picture.edit().size = { 8.0f, 8.0f };
 				}),
 				pictureAt("rectangle", 30.0f, 4.0f, [](Object& o) { o.drawn.picture.edit().kind = ShapeKind::Rectangle; o.drawn.picture.edit().size = { 10.0f, 6.0f }; o.drawn.picture.edit().color = heldNames.of("color.green"); }),

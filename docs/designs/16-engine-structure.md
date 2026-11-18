@@ -33,7 +33,7 @@ A4 put an object's fields into parts by feature, which made it readable. It did 
 
 ## Decided by the author
 
-- **One owner of resources.** Everything loaded or made (pictures, turned and flipped and recoloured pictures, sheets, fonts, sounds, schemas, a window's textures) is held once by a resource manager and named by a small id. A hundred objects with one picture share it.
+- **One owner of resources.** Everything loaded or made (pictures, turned and flipped and recoloured pictures, sheets, fonts, sounds, schemas, a window's textures) is held once by a resource manager and named by a small id. A hundred objects with one picture share it. A picture's id is one pointer to where the manager keeps it (as a `Name` is into the names), so it reads like the picture wherever an object is at hand, with no manager passed in; the author asked for ids, and this one is also the picture.
 - **Components.** A part an object does not use is not in it. Parts live in a collection each, an object keeps an index into the ones it has, and an object's own handle carries a generation so a stale one is caught.
 - **The engine's run reads as it is:** input, update, render, spelled out, so another stage can go between.
 - **Names over comments.** A good name replaces a comment; one-line comments stay as landmarks over sections and functions.

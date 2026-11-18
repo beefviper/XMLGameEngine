@@ -58,10 +58,12 @@ namespace
 		std::unordered_set<const xge::Bitmap*> seen;
 		std::size_t bytes{};
 
-		void add(const std::shared_ptr<const xge::Bitmap>& picture)
+		void add(const xge::Bitmap* picture)
 		{
-			if (picture && seen.insert(picture.get()).second) { bytes += picture->rgba.size() + picture->touching.size(); }
+			if (picture && seen.insert(picture).second) { bytes += picture->rgba.size() + picture->touching.size(); }
 		}
+		void add(const xge::PictureId& picture) { add(picture.get()); }
+		void add(const std::shared_ptr<const xge::Bitmap>& picture) { add(picture.get()); }
 		void add(const std::shared_ptr<const xge::Turnable>& turnable)
 		{
 			if (!turnable) { return; }

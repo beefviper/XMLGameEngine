@@ -332,9 +332,9 @@ namespace xge
 		// kept as it came out, so that a <random> in it gives the size used here
 		// and the size drawn the same number.
 		std::map<std::string, Picture> firstPassPictures;
-		std::map<std::string, std::shared_ptr<const Bitmap>> firstPassBitmaps;
+		std::map<std::string, PictureId> firstPassBitmaps;
 		std::map<std::string, std::shared_ptr<const Turnable>> firstPassTurned;
-		std::map<std::string, std::vector<std::shared_ptr<const Bitmap>>> firstPassAnimation;
+		std::map<std::string, std::vector<PictureId>> firstPassAnimation;
 		std::map<std::string, std::vector<std::shared_ptr<const Turnable>>> firstPassAnimationTurned;
 		for (auto& rawObject : rawObjects)
 		{

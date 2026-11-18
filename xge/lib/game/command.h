@@ -53,7 +53,7 @@ namespace xge
 		int textSize{};              // a text's size in pixels
 		Name font;                   // a text's font file; empty: the standard one (textFontFile)
 		Name file;                   // an image's file, as written
-		std::shared_ptr<const Bitmap> image;   // an image's pixels, flipped as asked: held by the game's Resources
+		PictureId image;             // an image's pixels, flipped as asked (the game's Resources)
 		bool flipHorizontal{ false }; // an image's, drawn mirrored
 		bool flipVertical{ false };
 

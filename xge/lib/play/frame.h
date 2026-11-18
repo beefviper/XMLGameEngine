@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "engine/resources.h"
 #include "game/object.h"
 #include "game/parts.h"
 #include "game/types.h"
@@ -61,6 +62,10 @@ namespace xge
 		// Every object's handle and the parts it has (a Store each): what a
 		// pass reads of a part few objects have.
 		virtual Parts& parts() noexcept = 0;
+
+		// The game's pictures: where an object's own picture (a tether's
+		// line) is drawn again.
+		virtual Resources& resources() noexcept = 0;
 
 		// An animation that plays once has just ended on objects[index], which
 		// was showing looks[look] (0 for its one unnamed animation): its
