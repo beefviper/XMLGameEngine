@@ -693,7 +693,7 @@ namespace xge
 		Object made = makeObject(raw, first, from.layout.cellOffset, from.kind->collisionData.lockstep);
 		made.looks.set->palettes = from.looks.set->palettes;
 		made.looks.worn = from.looks.worn;
-		if (made.mirror.on) { made.mirror.flips = from.mirror.flips; }
+		if (made.mirror.on) { made.looks.set->flips = from.looks.set->flips; }
 		return made;
 	}
 

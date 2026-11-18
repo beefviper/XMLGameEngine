@@ -1822,6 +1822,9 @@ namespace xge
 			bool hasJoins{ false };
 			// Changed while it played (Looks::change): no longer as loaded.
 			bool changed{ false };
+			// For a <mirror>: each of its pictures and that picture flipped,
+			// both ways round, made as the game loads.
+			std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flips;
 		};
 		struct Looks
 		{
@@ -1848,16 +1851,13 @@ namespace xge
 		// left to right, when `on`; `flipped` is whether they are now.
 		// `goingLeft` is the way across it last went: what keys it holds say,
 		// else the hop or jump it is making, else its velocity (a stop leaves
-		// it as it was). `flips` has each of its pictures and that picture
-		// flipped, both ways round, made as the game loads and shared by its
-		// copies.
+		// it as it was). Its pictures flipped are its looks' (LookSet::flips).
 		struct Mirror
 		{
 			bool on{ false };
 			Direction way{ Direction::Left };
 			bool flipped{ false };
 			bool goingLeft{ false };
-			std::shared_ptr<const std::map<const Bitmap*, std::shared_ptr<const Bitmap>>> flips;
 		};
 		Mirror mirror;
 

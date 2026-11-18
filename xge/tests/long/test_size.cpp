@@ -91,9 +91,9 @@ namespace
 				for (const auto& frame : palette.animation) { add(frame); }
 				addLooks(palette.looks);
 			}
-			if (object.mirror.flips)
+			if (object.looks.set->flips)
 			{
-				for (const auto& [from, to] : *object.mirror.flips) { (void)from; add(to); }
+				for (const auto& [from, to] : *object.looks.set->flips) { (void)from; add(to); }
 			}
 		}
 	};

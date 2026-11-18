@@ -606,7 +606,7 @@ namespace xge
 			object.mirror.on = true;
 			object.mirror.way = rawObject.mirror == "right" ? Direction::Right : Direction::Left;
 			object.mirror.goingLeft = object.facing == Direction::Left;
-			object.mirror.flips = flipsOf(object);
+			object.looks.set->flips = flipsOf(object);
 			object.faceMirror();
 		}
 

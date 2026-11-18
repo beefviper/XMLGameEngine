@@ -136,9 +136,9 @@ namespace xge
 
 	std::shared_ptr<const Bitmap> Object::facingPicture(const std::shared_ptr<const Bitmap>& shown) const
 	{
-		if (!mirror.flipped || !mirror.flips || !shown) { return shown; }
-		const auto found = mirror.flips->find(shown.get());
-		return found == mirror.flips->end() ? shown : found->second;
+		if (!mirror.flipped || !looks.set->flips || !shown) { return shown; }
+		const auto found = looks.set->flips->find(shown.get());
+		return found == looks.set->flips->end() ? shown : found->second;
 	}
 
 	void Object::faceMirror()
@@ -149,10 +149,10 @@ namespace xge
 
 		// Flipping twice is no flip, so what shows now flips back the same way.
 		mirror.flipped = want;
-		if (drawn.bitmap && mirror.flips)
+		if (drawn.bitmap && looks.set->flips)
 		{
-			const auto found = mirror.flips->find(drawn.bitmap.get());
-			if (found != mirror.flips->end()) { drawn.bitmap = found->second; }
+			const auto found = looks.set->flips->find(drawn.bitmap.get());
+			if (found != looks.set->flips->end()) { drawn.bitmap = found->second; }
 		}
 		drawn.visualDirty = true;
 	}
