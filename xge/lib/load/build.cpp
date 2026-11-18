@@ -761,10 +761,10 @@ namespace xge
 		}
 
 		// What it touches with, if not its picture.
-		object.hitboxes.clear();
+		object.kind->collisionData.hitboxes.clear();
 		for (const RawHitbox& raw : rawObject.rawCollisionData.hitboxes)
 		{
-			object.hitboxes.push_back(makeHitbox(raw, object, where + " > <hitbox>"));
+			object.kind->collisionData.hitboxes.push_back(makeHitbox(raw, object, where + " > <hitbox>"));
 		}
 		// And each animation frame's own.
 		const auto frameHitboxes = [&](const std::vector<std::vector<RawHitbox>>& written, const std::string& here)

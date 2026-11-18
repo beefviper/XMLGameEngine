@@ -224,6 +224,9 @@ namespace xge
 		EdgesRules<Command> edges;
 		// Rules about another object (see RawCollisionData::others).
 		std::vector<CollisionRule> others;
+		// Its <hitbox>es (Object::hitboxes), an inset one placed on whatever
+		// picture shows.
+		std::vector<Hitbox> hitboxes;
 
 		friend std::ostream& operator<<(std::ostream& o, CollisionData const& f);
 	};
@@ -2191,8 +2194,8 @@ namespace xge
 		};
 
 		// Its <hitbox>es (see RawCollisionData), any of them a touch; none,
-		// its picture's box. Its own, since they can be about its picture.
-		std::vector<Hitbox> hitboxes;
+		// its picture's box. Its kind's: they are written with its rules.
+		const std::vector<Hitbox>& hitboxes() const noexcept { return kind->collisionData.hitboxes; }
 
 		// What every object of its kind has alike (see Kind), shared.
 		std::shared_ptr<Kind> kind{ std::make_shared<Kind>() };

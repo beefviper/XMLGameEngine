@@ -61,7 +61,7 @@ namespace xge
 				if (!hitbox.name.empty() && std::find(names.begin(), names.end(), hitbox.name) == names.end()) { names.push_back(hitbox.name); }
 			}
 		};
-		add(hitboxes);
+		add(hitboxes());
 		for (const std::vector<Hitbox>& frame : animation.frames.shows().hitboxes) { add(frame); }
 		for (const Look& each : looks.all())
 		{

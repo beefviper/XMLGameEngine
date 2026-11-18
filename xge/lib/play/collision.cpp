@@ -21,7 +21,7 @@ namespace xge
 
 		std::size_t ownParts(const Object& object, bool byPicture) noexcept
 		{
-			return byPicture || object.hitboxes.empty() ? 1 : object.hitboxes.size();
+			return byPicture || object.hitboxes().empty() ? 1 : object.hitboxes().size();
 		}
 
 		std::size_t partsOf(const Object& object, bool byPicture) noexcept
@@ -32,14 +32,14 @@ namespace xge
 		std::size_t partOf(const Object& object, bool byPicture, std::size_t index) noexcept
 		{
 			const std::size_t own = ownParts(object, byPicture);
-			if (index >= own) { return object.hitboxes.size() + (index - own); }
-			return byPicture || object.hitboxes.empty() ? picture : index;
+			if (index >= own) { return object.hitboxes().size() + (index - own); }
+			return byPicture || object.hitboxes().empty() ? picture : index;
 		}
 
 		const Hitbox& hitboxAt(const Object& object, std::size_t part) noexcept
 		{
-			const std::size_t own = object.hitboxes.size();
-			return part < own ? object.hitboxes[part] : object.frameHitboxes()[part - own];
+			const std::size_t own = object.hitboxes().size();
+			return part < own ? object.hitboxes()[part] : object.frameHitboxes()[part - own];
 		}
 
 		// A part's box. An inset hitbox is the picture's box pulled in, left

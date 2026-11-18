@@ -2094,7 +2094,7 @@ namespace xge
 	// never sink into a floor.
 	bool Game::touchesByPicture(const Object& a, const Object& b)
 	{
-		const auto has = [](const Object& object) { return !object.hitboxes.empty() || !object.animation.frames.shows().hitboxes.empty()
+		const auto has = [](const Object& object) { return !object.hitboxes().empty() || !object.animation.frames.shows().hitboxes.empty()
 			|| std::any_of(object.looks.all().begin(), object.looks.all().end(), [](const Object::Look& look) { return !look.frames.shows().hitboxes.empty(); }); };
 		if (!has(a) && !has(b)) { return false; }
 

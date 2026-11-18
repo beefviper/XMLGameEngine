@@ -59,8 +59,8 @@ TEST_CASE("sparring.xml loads two boxers whose fists are out only mid-jab", "[sp
 	CHECK(ring.boxer(1).objClass == "boxer");
 	CHECK(ring.boxer(2).objClass == "boxer");
 	CHECK(ring.boxer(1).lookName() == "guard");
-	REQUIRE(ring.boxer(1).hitboxes.size() == 1);
-	CHECK(ring.boxer(1).hitboxes[0].name == "body");
+	REQUIRE(ring.boxer(1).hitboxes().size() == 1);
+	CHECK(ring.boxer(1).hitboxes()[0].name == "body");
 	CHECK(ring.boxer(1).frameHitboxes().empty());
 	const auto names = ring.boxer(2).hitboxNames();
 	CHECK(names.size() == 2);
