@@ -61,7 +61,7 @@ namespace xge
 	PictureId Window::pictureOf(const Object& object)
 	{
 		const PictureId shown = pictureNow(object);
-		return shown.get() ? shown : pictures->picture("nothing", [] { return Bitmap{}; });
+		return shown.get() ? shown : gamePictures->picture("nothing", [] { return Bitmap{}; });
 	}
 
 	PictureId Window::pictureNow(const Object& object)
@@ -77,10 +77,10 @@ namespace xge
 			if (picture.image) { return picture.image; }
 			break;
 		case ShapeKind::Circle:
-			return pictures->picture("circle|" + keyNumber(picture.radius) + "|" + picture.color.str() + "|" + keyNumber(scale),
+			return gamePictures->picture("circle|" + keyNumber(picture.radius) + "|" + picture.color.str() + "|" + keyNumber(scale),
 				[&] { return drawCircle(picture.radius, colorFromName(picture.color), scale); });
 		case ShapeKind::Rectangle:
-			return pictures->picture("rectangle|" + keyNumber(picture.size.x) + "," + keyNumber(picture.size.y) + "|" + picture.color.str() + "|" + keyNumber(scale),
+			return gamePictures->picture("rectangle|" + keyNumber(picture.size.x) + "," + keyNumber(picture.size.y) + "|" + picture.color.str() + "|" + keyNumber(scale),
 				[&] { return drawRectangle(picture.size.x, picture.size.y, colorFromName(picture.color), scale); });
 		case ShapeKind::Text:
 		{
@@ -89,15 +89,15 @@ namespace xge
 			DrawnText& text = texts[object.id.index];
 			if (text.picture && text.drawnFrom == from) { return text.picture; }
 			Bitmap drawn = drawText(picture.text, pixels, colorFromName(picture.color), textFontFile(picture.font));
-			if (text.picture) { pictures->replace(text.picture, std::move(drawn)); }
-			else { text.picture = pictures->own(std::move(drawn)); }
+			if (text.picture) { gamePictures->replace(text.picture, std::move(drawn)); }
+			else { text.picture = gamePictures->own(std::move(drawn)); }
 			text.drawnFrom = from;
 			return text.picture;
 		}
 		case ShapeKind::Unknown:
 			break;
 		}
-		return pictures->picture("nothing", [] { return Bitmap{}; });
+		return gamePictures->picture("nothing", [] { return Bitmap{}; });
 	}
 
 	namespace

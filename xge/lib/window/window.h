@@ -122,7 +122,7 @@ namespace xge
 
 		// The game's pictures, which the window shows and draws its texts
 		// and shapes into (the Engine gives them); until then its own.
-		void usePictures(Resources& resources) noexcept { pictures = &resources; }
+		void usePictures(Resources& resources) noexcept { gamePictures = &resources; }
 
 		// The picture to show for the object now: its own bitmap or image,
 		// or its circle, rectangle or text drawn at pictureScale(). A circle
@@ -188,7 +188,7 @@ namespace xge
 
 		float drawnScale{ 1.0f };
 		Resources ownPictures;
-		Resources* pictures{ &ownPictures };
+		Resources* gamePictures{ &ownPictures };
 		std::size_t madeTextures{};
 		// Each text's own picture, by its object, with what it was drawn
 		// from.
