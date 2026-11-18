@@ -13,8 +13,8 @@ The 8-bit machines played bleeps, bloops and little tunes from a sound chip, not
   - Uncompressed WAV only: it needs no library. MP3 or Ogg would each need a decoder, which is the author's call.
   - Stereo is averaged into mono, as every sound is mono; another rate is resampled along straight lines. At most 60 seconds, so a wrong file is a load error and not memory filled.
   - A recording plays as made (volume 1) when no `<volume>` is given, where notes default to 0.3: a recording was already mixed, a full-scale square wave is harsh.
-  - The file is read once at load to check it, so a bad one stops the load before a window opens.
-- **The engine makes the samples; a backend only plays them.** `samplesOf()` is the one place a sound becomes samples (today by `synthesize()`): 16-bit mono at 44100 Hz, the same for every library; SFML and SDL2 have no synthesis of their own anyway. The synthesizer is tested with no device.
+  - The file is read once, at load, by the game's `Resources`: a bad one stops the load before a window opens, and the audio library plays those samples.
+- **The engine makes the samples; a backend only plays them.** `samplesOf()` is the one place a sound becomes samples (today by `synthesize()`): 16-bit mono at 44100 Hz, the same for every library, made once a game by `Resources::samples` (sounds that sound the same share them) when a library asks, so a game played with no sound makes none; SFML and SDL2 have no synthesis of their own anyway. The synthesizer is tested with no device.
 - **A chip's waves:** square, triangle, sawtooth; noise pitched like a chip (a new random level every half cycle, seeded per note, so it sounds the same everywhere); sine as a soft option.
 - **Slides by semitones**, so a bend sounds even.
 - **Looping is the sound's, holding is the key's.** `<loop />` sits on the `<sound>`; a key's `<play>` of a loop is held like a `<move>`, on with the press and off with the release.

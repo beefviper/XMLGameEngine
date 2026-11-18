@@ -4,7 +4,7 @@ How a game is loaded and played, the libraries behind it, how to build it, and w
 
 ## Loading
 
-1. **Parse and validate** (`load/xml`). If the file names a schema it is validated: Xerces fully ("strong"); the other XML libraries with a small built-in validator for the XSD the schema uses ("weak", `load/xsd`).
+1. **Parse and validate** (`load/xml`). If the file names a schema it is validated: Xerces fully ("strong"); the other XML libraries with a small built-in validator for the XSD the schema uses ("weak", `load/xsd`), which parses a schema once for the program and again only when its file changes.
 2. **Work out the pieces and every `from=`** on the XML (`load/merge`).
 3. **Read** the tags into a `GameData` (`game/data.h`), a group as one raw object per member. A generated program starts here, with its `GameData` compiled in.
 4. **Lay out states and scenes** (`layOutScenes`, `game/scenes.cpp`): owned objects named by path, every name written out in full.
@@ -134,7 +134,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `play/maze.cpp` | walking a map's tiles |
 | | `play/numbers.h` | the one-number operations of a value (`sign`, `sine`, `cosine`) |
 | pictures | `picture/bitmap.cpp`, `svg.cpp`, `image.cpp`, `font.cpp`, `color.cpp` | pixels, flips and turns; SVG with lunasvg; picture sheets cut and shrunk (`<pictures>`); fonts and the 8x8 fallback; colour names |
-| resources | `engine/resources.cpp` | `Resources`, one a game (in its `game_expr`, `Game::resources()`): every picture loaded or made, held once and named by a `PictureId`, which objects hold |
+| resources | `engine/resources.cpp` | `Resources`, one a game (in its `game_expr`, `Game::resources()`): every picture loaded or made, held once and named by a `PictureId`, which objects hold; each sound's samples, shared by sounds that sound the same and handed to the audio library (`Audio::load`); a sheet's picture while the game loads |
 | loop and libraries | `engine/engine.cpp`, `backends.cpp`, `keys.cpp`, `folder.cpp` | the loop (`loop()`, or `step()` and `render()`), choosing libraries, key names, the games folder and `findSchema` |
 | | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, a file per library; `window/picture.cpp` draws a frame into one image (`--picture`); `audio/sound.cpp` is the synthesizer |
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
