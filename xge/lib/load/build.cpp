@@ -177,7 +177,7 @@ namespace xge
 	void game_expr::buildNames(RawObject& rawObject, Object& object)
 	{
 		object.groupName = nameStore.of(rawObject.groupName);
-		object.outerGroups = nameStore.of(rawObject.outerGroups);
+		object.outerGroups = nameStore.listOf(rawObject.outerGroups);
 		object.name = nameStore.of(rawObject.name);
 		object.line = rawObject.line;
 		object.objClass = nameStore.of(rawObject.objClass);

@@ -333,7 +333,7 @@ namespace xge
 
 		made.copyOf = original.name;
 		made.groupName = nameOf(copy.groupName);
-		made.outerGroups = expr.nameStore.of(copy.outerGroups);
+		made.outerGroups = expr.nameStore.listOf(copy.outerGroups);
 		made.ownerState = original.ownerState;
 		made.ownerScene = original.ownerScene;
 		startFor(made).ownerScene = original.ownerScene;

@@ -5,9 +5,11 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <deque>
 #include <functional>
+#include <map>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -55,6 +57,32 @@ namespace xge
 		const std::string* text{ nullptr };
 	};
 
+	// Several names in order (an object's outer groups), held once in the
+	// game's NameStore like a Name: one pointer. The empty list holds
+	// nothing; objects of one group share the list.
+	class NameList
+	{
+	public:
+		NameList() = default;
+
+		const std::vector<Name>& all() const noexcept { return list ? *list : none(); }
+		std::vector<Name>::const_iterator begin() const noexcept { return all().begin(); }
+		std::vector<Name>::const_iterator end() const noexcept { return all().end(); }
+		std::size_t size() const noexcept { return all().size(); }
+		bool empty() const noexcept { return list == nullptr; }
+		Name operator[](std::size_t at) const noexcept { return all()[at]; }
+
+	private:
+		friend class NameStore;
+		explicit NameList(const std::vector<Name>* held) noexcept : list(held) {}
+		static const std::vector<Name>& none() noexcept
+		{
+			static const std::vector<Name> empty;
+			return empty;
+		}
+		const std::vector<Name>* list{ nullptr };
+	};
+
 	// The game's names, each held once (an object keeps a Name, not its
 	// own copy of the text). A name once held stays where it is, so a
 	// Name read on another thread while one is added stays good.
@@ -86,6 +114,18 @@ namespace xge
 			return made;
 		}
 
+		// The list of those texts' names, held from now on (none: the
+		// empty list).
+		NameList listOf(const std::vector<std::string>& texts)
+		{
+			if (texts.empty()) { return {}; }
+			std::vector<Name> names = of(texts);
+			if (const auto found = lists.find(names); found != lists.end()) { return NameList(found->second); }
+			const std::vector<Name>& kept = heldLists.emplace_back(std::move(names));
+			lists.emplace(kept, &kept);
+			return NameList(&kept);
+		}
+
 		// The name of that text if it is held, else the empty name.
 		Name find(std::string_view text) const
 		{
@@ -98,6 +138,18 @@ namespace xge
 	private:
 		std::deque<std::string> held;
 		std::unordered_map<std::string_view, const std::string*> index;
+		// Lists, told apart by which names they hold (each held once, so
+		// the same name is the same text).
+		struct ByHeld
+		{
+			bool operator()(const std::vector<Name>& a, const std::vector<Name>& b) const noexcept
+			{
+				return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(),
+					[](Name x, Name y) { return std::less<const std::string*>{}(&x.str(), &y.str()); });
+			}
+		};
+		std::deque<std::vector<Name>> heldLists;
+		std::map<std::vector<Name>, const std::vector<Name>*, ByHeld> lists;
 	};
 }
 
@@ -111,6 +163,7 @@ namespace xge
 		for (const Name& name : names) { texts.push_back(name.str()); }
 		return texts;
 	}
+	inline std::vector<std::string> textsOf(const NameList& names) { return textsOf(names.all()); }
 }
 
 template <>

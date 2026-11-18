@@ -1200,7 +1200,7 @@ namespace xge
 		// condition, <reset object="..." />) to mean every member at once.
 		Name groupName;
 		// The groups around that one, outermost first (see RawObject).
-		std::vector<Name> outerGroups;
+		NameList outerGroups;
 
 		// Whether `group` is this object's group or one around it.
 		bool inGroup(const std::string& group) const
