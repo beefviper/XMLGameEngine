@@ -101,3 +101,18 @@ TEST_CASE("objects drawn alike share one picture, and a colour makes another", "
 		}
 	}
 }
+
+TEST_CASE("objects turned to one heading share one turned picture", "[resources]")
+{
+	std::string objects;
+	for (int i = 0; i < 20; ++i)
+	{
+		objects += "<object name=\"ship" + std::to_string(i) + "\"><sprite><bitmap><row>.*.</row><row>***</row><scale>2</scale></bitmap></sprite>"
+			"<position><x>" + std::to_string(40 + i * 20) + "</x><y>40</y></position><heading>90</heading></object>";
+	}
+	played::Scratch game{ objects, "" };
+	played::Played play{ game.path };
+	CHECK(play.get("ship0").drawn.bitmap == play.get("ship19").drawn.bitmap);
+	// The drawing, it at heading 0 (as it loads) and at 90.
+	CHECK(play.game.resources().pictureCount() == 3);
+}

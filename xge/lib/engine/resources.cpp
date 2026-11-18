@@ -23,6 +23,17 @@ namespace xge
 		return bytes;
 	}
 
+	PictureId Turnable::turned(int degrees) const
+	{
+		std::uint32_t& known = asked[degrees];
+		if (known == 0) { known = resources->picture(key + "|turned " + std::to_string(degrees), [&] { return at(static_cast<float>(degrees)); }).index; }
+		return PictureId{ known };
+	}
+
+	const Bitmap& Turnable::turnedTo(int degrees) const { return resources->bitmap(turned(degrees)); }
+
+	std::shared_ptr<const Bitmap> Turnable::sharedTurned(int degrees) const { return resources->shared(turned(degrees)); }
+
 	PictureId Resources::keep(std::shared_ptr<const Bitmap> made)
 	{
 		pictures.push_back(std::move(made));

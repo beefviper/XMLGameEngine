@@ -1094,7 +1094,7 @@ namespace xge
 
 		if (drawn.bitmap && drawn.turnedDegrees == degrees && drawn.turnedFrame == frame) { return; }
 
-		drawn.bitmap = std::make_shared<const Bitmap>(drawn.turnables[frame]->at(static_cast<float>(degrees)));
+		drawn.bitmap = drawn.turnables[frame]->sharedTurned(degrees);
 		drawn.turnedDegrees = degrees;
 		drawn.turnedFrame = frame;
 		drawn.visualDirty = true;

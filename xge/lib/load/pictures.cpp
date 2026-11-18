@@ -222,6 +222,7 @@ namespace xge
 		if (sprite.kind == "line" || sprite.kind == "polygon" || sprite.kind == "bitmap" || sprite.kind == "svg" || sprite.kind == "cell")
 		{
 			auto kept = std::make_shared<Turnable>();
+			kept->resources = &resources;
 			std::shared_ptr<const Bitmap> drawn;
 
 			try
@@ -236,7 +237,7 @@ namespace xge
 					if (kept->lines.empty()) { kept->picture = drawn; }
 					if (!kept->lines.empty() || drawn->width > 0)
 					{
-						drawn = std::make_shared<const Bitmap>(kept->at(0.0f));
+						drawn = kept->sharedTurned(0);
 					}
 					*turnable = std::move(kept);
 				}
@@ -355,6 +356,7 @@ namespace xge
 					+ "," + std::to_string(line.thickness) + "," + colorKey(line.color);
 			}
 			drawn = drawOnce(key, [&] { return rasterizeLines(kept->lines); });
+			kept->key = key;
 		}
 		else if (sprite.kind == "polygon")
 		{
@@ -379,6 +381,7 @@ namespace xge
 				for (const auto& [x, y] : polygon.points) { key += ";" + keyNumber(x) + "," + keyNumber(y); }
 			}
 			drawn = drawOnce(key, [&] { return rasterizePolygons(polygons); });
+			kept->key = key;
 		}
 		else if (sprite.kind == "cell")
 		{
@@ -420,6 +423,7 @@ namespace xge
 				const SheetPart part = opened->partOf(cell);
 				return flipped(sized ? opened->cut(part, toWidth, toHeight) : opened->cut(part, cellScale));
 			});
+			kept->key = key;
 		}
 		else if (sprite.kind == "svg")
 		{
@@ -440,6 +444,7 @@ namespace xge
 				+ keyNumber(region.width) + "," + keyNumber(region.height) + "|" + keyNumber(svgScale) + "|" + sprite.flip;
 			for (const std::string& hide : sprite.svgHide) { key += "|" + hide; }
 			drawn = drawOnce(key, [&] { return flipped(rasterizeSvg(sprite.path, region, svgScale, sprite.svgHide)); });
+			kept->key = key;
 		}
 		else
 		{
@@ -459,6 +464,7 @@ namespace xge
 			for (const std::string& row : sprite.bitmapRows) { key += "|" + row; }
 			if (!sprite.solid.empty()) { key += "|solid=" + sprite.solid; }
 			drawn = drawOnce(key, [&] { return flipped(rasterizeRows(sprite.bitmapRows, rowsScale, colorFromName(color), inks, sprite.solid)); });
+			kept->key = key;
 		}
 		return drawn;
 	}

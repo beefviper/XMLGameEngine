@@ -66,7 +66,6 @@ namespace
 		{
 			if (!turnable) { return; }
 			add(turnable->picture);
-			for (const auto& [degrees, turned] : turnable->kept) { (void)degrees; add(turned); }
 		}
 		void addLooks(const std::vector<xge::Object::Look>& looks)
 		{

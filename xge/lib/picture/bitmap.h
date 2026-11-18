@@ -16,6 +16,9 @@
 
 namespace xge
 {
+	class Resources;
+	struct PictureId;
+
 	// A picture the engine draws itself, pixel by pixel, with no window or
 	// graphics library involved: what a sprite made of <line>s is turned into
 	// when the game loads. The backends upload `rgba` as a texture, and a
@@ -158,18 +161,21 @@ namespace xge
 		std::vector<LineSegment> lines;
 		std::shared_ptr<const Bitmap> picture;
 
-		// The drawing at each whole degree a sweep through a turn has asked
-		// for, kept (turnedTo): a swing goes through the same few each time.
-		mutable std::map<int, std::shared_ptr<const Bitmap>> kept;
+		// Where its turned drawings are kept, and the key of the drawing
+		// they are turned from (everything that decides its pixels).
+		Resources* resources{ nullptr };
+		std::string key;
+		// Which of them it has asked for, so a turn does not spell the key
+		// again.
+		mutable std::map<int, std::uint32_t> asked;
 
-		// The drawing at a whole number of degrees, as at() draws it, made
-		// once and kept.
-		const Bitmap& turnedTo(int degrees) const
-		{
-			std::shared_ptr<const Bitmap>& turned = kept[degrees];
-			if (!turned) { turned = std::make_shared<const Bitmap>(at(static_cast<float>(degrees))); }
-			return *turned;
-		}
+		// The drawing at a whole number of degrees, as at() draws it: made
+		// once by the game's Resources for every object that turns this
+		// drawing (engine/resources.cpp), so a swing or a block of turning
+		// ships goes through the same few.
+		PictureId turned(int degrees) const;
+		const Bitmap& turnedTo(int degrees) const;
+		std::shared_ptr<const Bitmap> sharedTurned(int degrees) const;
 
 		// The drawing at the heading: the lines turned if there are lines,
 		// otherwise the picture turned.

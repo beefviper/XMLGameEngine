@@ -55,7 +55,7 @@ Text and `<image>` files are made by the engine as well (plutovg reads both), so
 ## Flip and turning
 
 - `<flip>` is applied right after drawing, before turning, so the size is exact.
-- **Turning by heading, on demand:** an object keeps the original (`Turnable`) and one current bitmap, redrawn when the whole-degree heading changes. Nearest sample keeps hard edges; lines are redrawn turned. Every heading is the same square. Rejected: 72 pictures made at load.
+- **Turning by heading, on demand:** an object keeps the original (`Turnable`) and one current bitmap, asked for when the whole-degree heading changes; each heading's drawing is made once by the game's `Resources` and shared by every object turning that drawing. Nearest sample keeps hard edges; lines are redrawn turned. Every heading is the same square. Rejected: 72 pictures made at load.
 - Not done: smooth turned edges, fractions of a degree.
 
 ## Tethers
