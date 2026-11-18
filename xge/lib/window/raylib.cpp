@@ -131,6 +131,8 @@ namespace xge
 		if (isOpenFlag)
 		{
 			visuals.clear();
+			textures.forEach([](Texture2D& texture) { if (texture.id != 0) { UnloadTexture(texture); } });
+			textures.clear();
 
 			CloseWindow();
 			isOpenFlag = false;
@@ -233,7 +235,7 @@ namespace xge
 	{
 		CachedVisual& visual = visuals[object.name];
 
-		if (object.drawn.visualDirty || !visual.loaded || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
+		if (object.drawn.visualDirty || !visual.built || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
 			build(object, visual);
 		}
@@ -243,7 +245,7 @@ namespace xge
 	{
 		prepare(object);
 		CachedVisual& visual = visuals[object.name];
-		if (!visual.loaded)
+		if (visual.texture.id == 0)
 		{
 			return;
 		}
@@ -313,40 +315,42 @@ namespace xge
 	{
 		object.drawn.visualDirty = false;
 		visual.drawnAt = pictureScale();
-
-		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
-		if (picture->rgba.empty())
+		visual.built = true;
+		const bool smooth = object.drawnAtScale();
+		visual.texture = textures.of(pictureOf(object), [&](const Bitmap& picture, Texture2D& made)
 		{
-			if (visual.loaded) { UnloadTexture(visual.texture); }
-			visual.loaded = false;
-			return;
-		}
+			if (picture.rgba.empty())
+			{
+				if (made.id != 0) { UnloadTexture(made); }
+				made = Texture2D{};
+				return;
+			}
 
-		// A picture the same size as the one before (a score that changed
-		// digits) goes into the texture it already has.
-		if (visual.loaded && visual.texture.width == picture->width && visual.texture.height == picture->height)
-		{
-			UpdateTexture(visual.texture, picture->rgba.data());
-		}
-		else
-		{
-			if (visual.loaded) { UnloadTexture(visual.texture); }
+			// A picture the same size as the one before (a score that changed
+			// digits) goes into the texture it already has.
+			if (made.id != 0 && made.width == picture.width && made.height == picture.height)
+			{
+				UpdateTexture(made, picture.rgba.data());
+			}
+			else
+			{
+				if (made.id != 0) { UnloadTexture(made); }
 
-			// raylib only reads the pixels while making the texture, so the
-			// bitmap's own memory can be lent to it.
-			Image image{};
-			image.data = const_cast<std::uint8_t*>(picture->rgba.data());
-			image.width = picture->width;
-			image.height = picture->height;
-			image.mipmaps = 1;
-			image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
-			visual.texture = LoadTextureFromImage(image);
-			visual.loaded = visual.texture.id != 0;
-		}
+				// raylib only reads the pixels while making the texture, so the
+				// bitmap's own memory can be lent to it.
+				Image image{};
+				image.data = const_cast<std::uint8_t*>(picture.rgba.data());
+				image.width = picture.width;
+				image.height = picture.height;
+				image.mipmaps = 1;
+				image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+				made = LoadTextureFromImage(image);
+			}
 
-		if (visual.loaded)
-		{
-			SetTextureFilter(visual.texture, object.drawnAtScale() ? TEXTURE_FILTER_BILINEAR : TEXTURE_FILTER_POINT);
-		}
+			if (made.id != 0)
+			{
+				SetTextureFilter(made, smooth ? TEXTURE_FILTER_BILINEAR : TEXTURE_FILTER_POINT);
+			}
+		});
 	}
 }

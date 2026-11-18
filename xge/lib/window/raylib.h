@@ -51,19 +51,13 @@ namespace xge
 		// <window><scale>: window pixels to one of the game's.
 		float scale{ 1.0f };
 
-		// Each object's picture as a texture, by the object's name.
+		// What an object shows: the texture of its picture, which objects
+		// showing the same picture share (id 0 for an empty picture).
 		struct CachedVisual
 		{
 			Texture2D texture{};
-			bool loaded{ false };
 			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
-
-			CachedVisual() = default;
-			~CachedVisual() { if (loaded) { UnloadTexture(texture); } }
-			CachedVisual(const CachedVisual&) = delete;
-			CachedVisual& operator=(const CachedVisual&) = delete;
-			CachedVisual(CachedVisual&&) = delete;
-			CachedVisual& operator=(CachedVisual&&) = delete;
+			bool built{ false };
 		};
 
 		bool isOpenFlag{ false };
@@ -78,7 +72,8 @@ namespace xge
 		// EndDrawing() do neither. Worked out once, after the first frame.
 		bool frameControlChecked{ false };
 		bool manualFrameControl{ false };
-		std::unordered_map<std::string, CachedVisual> visuals;
+		Textures<Texture2D> textures{ *this };
+		std::unordered_map<std::string, CachedVisual> visuals;  // by object name
 
 		// Makes the object's picture again, at pictureScale().
 		void build(Object& object, CachedVisual& visual);
