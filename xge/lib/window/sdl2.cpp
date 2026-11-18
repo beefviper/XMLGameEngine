@@ -150,6 +150,8 @@ namespace xge
 		}
 
 		visuals.clear();
+		textures.forEach([](SDL_Texture* texture) { if (texture) { SDL_DestroyTexture(texture); } });
+		textures.clear();
 
 		if (renderer) { SDL_DestroyRenderer(renderer); renderer = nullptr; }
 		if (window) { SDL_DestroyWindow(window); window = nullptr; }
@@ -292,7 +294,7 @@ namespace xge
 	{
 		CachedVisual& visual = visuals[object.name];
 
-		if (object.drawn.visualDirty || !visual.texture || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
+		if (object.drawn.visualDirty || !visual.built || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
 			build(object, visual);
 		}
@@ -349,35 +351,38 @@ namespace xge
 	{
 		object.drawn.visualDirty = false;
 		visual.drawnAt = pictureScale();
-		if (visual.texture)
+		visual.built = true;
+		const bool smooth = object.drawnAtScale();
+		visual.texture = textures.of(pictureOf(object), [&](const Bitmap& picture, SDL_Texture*& made)
 		{
-			SDL_DestroyTexture(visual.texture);
-			visual.texture = nullptr;
-		}
+			if (made)
+			{
+				SDL_DestroyTexture(made);
+				made = nullptr;
+			}
+			if (picture.rgba.empty())
+			{
+				return;
+			}
 
-		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
-		if (picture->rgba.empty())
-		{
-			return;
-		}
+			// A surface that only looks at the bitmap's pixels (they are copied
+			// into the texture below, and the surface is freed before the bitmap).
+			SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom(const_cast<std::uint8_t*>(picture.rgba.data()),
+				picture.width, picture.height, 32, picture.width * 4, SDL_PIXELFORMAT_RGBA32);
+			if (!surface)
+			{
+				std::cout << "error: SDL2: failed to make a surface from the picture of '" << object.name << "': " << SDL_GetError() << std::endl;
+				return;
+			}
 
-		// A surface that only looks at the bitmap's pixels (they are copied
-		// into the texture below, and the surface is freed before the bitmap).
-		SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom(const_cast<std::uint8_t*>(picture->rgba.data()),
-			picture->width, picture->height, 32, picture->width * 4, SDL_PIXELFORMAT_RGBA32);
-		if (!surface)
-		{
-			std::cout << "error: SDL2: failed to make a surface from the picture of '" << object.name << "': " << SDL_GetError() << std::endl;
-			return;
-		}
+			made = SDL_CreateTextureFromSurface(renderer, surface);
+			SDL_FreeSurface(surface);
 
-		visual.texture = SDL_CreateTextureFromSurface(renderer, surface);
-		SDL_FreeSurface(surface);
-
-		if (visual.texture)
-		{
-			SDL_SetTextureBlendMode(visual.texture, SDL_BLENDMODE_BLEND);
-			SDL_SetTextureScaleMode(visual.texture, object.drawnAtScale() ? SDL_ScaleModeLinear : SDL_ScaleModeNearest);
-		}
+			if (made)
+			{
+				SDL_SetTextureBlendMode(made, SDL_BLENDMODE_BLEND);
+				SDL_SetTextureScaleMode(made, smooth ? SDL_ScaleModeLinear : SDL_ScaleModeNearest);
+			}
+		});
 	}
 }

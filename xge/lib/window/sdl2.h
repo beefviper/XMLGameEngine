@@ -43,18 +43,13 @@ namespace xge
 		Bitmap capture() override;
 
 	private:
-		// Each object's picture as a texture, by the object's name.
+		// What an object shows: the texture of its picture, which objects
+		// showing the same picture share (none for an empty picture).
 		struct CachedVisual
 		{
 			SDL_Texture* texture{ nullptr };
 			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
-
-			CachedVisual() = default;
-			~CachedVisual() { if (texture) { SDL_DestroyTexture(texture); } }
-			CachedVisual(const CachedVisual&) = delete;
-			CachedVisual& operator=(const CachedVisual&) = delete;
-			CachedVisual(CachedVisual&&) = delete;
-			CachedVisual& operator=(CachedVisual&&) = delete;
+			bool built{ false };
 		};
 
 		SDL_Window* window{ nullptr };
@@ -72,7 +67,8 @@ namespace xge
 		// frame that read the event is still going to clear and draw.
 		bool closeRequested{ false };
 
-		std::unordered_map<std::string, CachedVisual> visuals;
+		Textures<SDL_Texture*> textures{ *this };
+		std::unordered_map<std::string, CachedVisual> visuals;  // by object name
 
 		static KeyCode sdlKeyToKeyCode(SDL_Keycode key) noexcept;
 
