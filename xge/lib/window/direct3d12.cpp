@@ -122,14 +122,16 @@ float4 ps(Shaded shaded) : SV_TARGET
 
 	struct Direct3D12Window::Parts
 	{
-		// One object's picture on the graphics card, and its slot in the heap
-		// the pixel shader reads.
+		// A picture on the graphics card, and its slot in the heap the pixel
+		// shader reads.
 		struct Picture
 		{
 			ComPtr<ID3D12Resource> texture;
 			UINT slot{ kPictureSlots };   // none
 		};
 
+		// What an object shows: the picture on the card of its picture,
+		// which objects showing the same picture share.
 		struct Visual
 		{
 			Picture picture;
@@ -141,7 +143,7 @@ float4 ps(Shaded shaded) : SV_TARGET
 		// graphics card (capture() does that early, to read it back).
 		enum class Stage { Idle, Recording, Submitted };
 
-		explicit Parts(const WindowDesc& windowDesc) : frame(windowDesc, "Direct3D 12") {}
+		Parts(Window& owner, const WindowDesc& windowDesc) : frame(windowDesc, "Direct3D 12"), textures(owner) {}
 
 		~Parts()
 		{
@@ -173,7 +175,8 @@ float4 ps(Shaded shaded) : SV_TARGET
 		UINT shownBuffer{ 0 };
 		Stage stage{ Stage::Idle };
 
-		std::unordered_map<std::string, Visual> visuals;
+		Window::Textures<Picture> textures;
+		std::unordered_map<std::string, Visual> visuals;  // by object name
 		// Pictures replaced while a frame may still draw them: let go once it
 		// is done.
 		std::vector<Picture> retired;
@@ -228,27 +231,33 @@ float4 ps(Shaded shaded) : SV_TARGET
 			return target;
 		}
 
-		// The engine's picture of the object, at `scale`, copied to the
-		// graphics card through an upload buffer.
+		// The engine's picture of the object, at `scale`.
 		void build(Object& object, float scale, PictureId showing)
 		{
 			object.drawn.visualDirty = false;
 			Visual& visual = visuals[object.name];
 			visual.drawnAt = scale;
 			visual.soft = object.drawnAtScale();
-			if (visual.picture.texture) { retired.push_back(visual.picture); }
-			visual.picture = {};
+			visual.picture = textures.of(showing, [this](const Bitmap& source, Picture& made)
+			{
+				if (made.texture) { retired.push_back(made); }
+				made = cardPicture(source);
+			});
+		}
 
-			const std::shared_ptr<const Bitmap> source = showing.shared();
-			if (source->rgba.empty() || source->width <= 0 || source->height <= 0) { return; }
+		// A picture copied to the graphics card through an upload buffer;
+		// none for an empty one.
+		Picture cardPicture(const Bitmap& source)
+		{
+			if (source.rgba.empty() || source.width <= 0 || source.height <= 0) { return {}; }
 			if (freeSlots.empty()) { throw std::runtime_error("Direct3D 12 has no room for another picture"); }
 
 			D3D12_HEAP_PROPERTIES onCard{};
 			onCard.Type = D3D12_HEAP_TYPE_DEFAULT;
 			D3D12_RESOURCE_DESC description{};
 			description.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-			description.Width = static_cast<UINT64>(source->width);
-			description.Height = static_cast<UINT>(source->height);
+			description.Width = static_cast<UINT64>(source.width);
+			description.Height = static_cast<UINT>(source.height);
 			description.DepthOrArraySize = 1;
 			description.MipLevels = 1;
 			description.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -269,10 +278,10 @@ float4 ps(Shaded shaded) : SV_TARGET
 			const D3D12_RANGE nothingRead{ 0, 0 };
 			check(upload->Map(0, &nothingRead, &mapped), "copy a picture");
 			std::uint8_t* written = static_cast<std::uint8_t*>(mapped);
-			const std::size_t row = static_cast<std::size_t>(source->width) * 4;
-			for (std::size_t y = 0; y < static_cast<std::size_t>(source->height); ++y)
+			const std::size_t row = static_cast<std::size_t>(source.width) * 4;
+			for (std::size_t y = 0; y < static_cast<std::size_t>(source.height); ++y)
 			{
-				std::memcpy(written + layout.Offset + y * layout.Footprint.RowPitch, source->rgba.data() + y * row, row);
+				std::memcpy(written + layout.Offset + y * layout.Footprint.RowPitch, source.rgba.data() + y * row, row);
 			}
 			upload->Unmap(0, nullptr);
 
@@ -299,7 +308,7 @@ float4 ps(Shaded shaded) : SV_TARGET
 			D3D12_CPU_DESCRIPTOR_HANDLE slot = pictureHeap->GetCPUDescriptorHandleForHeapStart();
 			slot.ptr += static_cast<SIZE_T>(picture.slot) * pictureStep;
 			device->CreateShaderResourceView(picture.texture.Get(), nullptr, slot);
-			visual.picture = picture;
+			return picture;
 		}
 
 		// Ends the frame's drawing and hands it to the graphics card; with
@@ -337,7 +346,7 @@ float4 ps(Shaded shaded) : SV_TARGET
 	};
 
 	Direct3D12Window::Direct3D12Window(const WindowDesc& windowDesc) :
-		parts(std::make_unique<Parts>(windowDesc))
+		parts(std::make_unique<Parts>(*this, windowDesc))
 	{
 		Parts& p = *parts;
 
@@ -487,6 +496,7 @@ float4 ps(Shaded shaded) : SV_TARGET
 		if (!p.frame.handle()) { return; }
 		p.waitIdle();
 		p.visuals.clear();
+		p.textures.clear();
 		p.retired.clear();
 		p.frame.destroy();
 	}

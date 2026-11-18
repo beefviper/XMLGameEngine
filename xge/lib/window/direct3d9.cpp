@@ -38,15 +38,16 @@ namespace xge
 
 	struct Direct3D9Window::Parts
 	{
-		// One object's picture, on the graphics card. A managed texture keeps
-		// a copy in memory, so it outlives a reset of the device.
+		// What an object shows: its picture on the graphics card, which
+		// objects showing the same picture share. A managed texture keeps a
+		// copy in memory, so it outlives a reset of the device.
 		struct Visual
 		{
 			ComPtr<IDirect3DTexture9> picture;
 			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 		};
 
-		explicit Parts(const WindowDesc& windowDesc) : frame(windowDesc, "Direct3D 9") {}
+		Parts(Window& owner, const WindowDesc& windowDesc) : frame(windowDesc, "Direct3D 9"), textures(owner) {}
 
 		Win32Window frame;
 
@@ -55,7 +56,8 @@ namespace xge
 		D3DPRESENT_PARAMETERS present{};
 		bool drawing{ false };   // between BeginScene and EndScene
 
-		std::unordered_map<std::string, Visual> visuals;
+		Window::Textures<ComPtr<IDirect3DTexture9>> textures;
+		std::unordered_map<std::string, Visual> visuals;  // by object name
 
 		// Fits the window's drawing to its size again, after a resize or when
 		// the device was lost (another program took the screen) and is back.
@@ -81,23 +83,26 @@ namespace xge
 			object.drawn.visualDirty = false;
 			Visual& visual = visuals[object.name];
 			visual.drawnAt = scale;
-			visual.picture.Reset();
+			visual.picture = textures.of(showing, [this](const Bitmap& picture, ComPtr<IDirect3DTexture9>& made) { made = cardPicture(picture); });
+		}
 
-			const std::shared_ptr<const Bitmap> picture = showing.shared();
-			if (picture->rgba.empty() || picture->width <= 0 || picture->height <= 0) { return; }
+		// A picture on the graphics card; none for an empty one.
+		ComPtr<IDirect3DTexture9> cardPicture(const Bitmap& picture)
+		{
+			if (picture.rgba.empty() || picture.width <= 0 || picture.height <= 0) { return {}; }
 
 			ComPtr<IDirect3DTexture9> texture;
-			if (FAILED(device->CreateTexture(static_cast<UINT>(picture->width), static_cast<UINT>(picture->height), 1, 0,
-				D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &texture, nullptr))) { return; }
+			if (FAILED(device->CreateTexture(static_cast<UINT>(picture.width), static_cast<UINT>(picture.height), 1, 0,
+				D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &texture, nullptr))) { return {}; }
 			D3DLOCKED_RECT locked{};
-			if (FAILED(texture->LockRect(0, &locked, nullptr, 0))) { return; }
+			if (FAILED(texture->LockRect(0, &locked, nullptr, 0))) { return {}; }
 
 			// The picture is red, green, blue, alpha; the texture holds each
 			// pixel as blue, green, red, alpha.
-			const std::size_t wide = static_cast<std::size_t>(picture->width);
-			for (std::size_t y = 0; y < static_cast<std::size_t>(picture->height); ++y)
+			const std::size_t wide = static_cast<std::size_t>(picture.width);
+			for (std::size_t y = 0; y < static_cast<std::size_t>(picture.height); ++y)
 			{
-				const std::uint8_t* from = picture->rgba.data() + y * wide * 4;
+				const std::uint8_t* from = picture.rgba.data() + y * wide * 4;
 				std::uint8_t* to = static_cast<std::uint8_t*>(locked.pBits) + y * static_cast<std::size_t>(locked.Pitch);
 				for (std::size_t x = 0; x < wide; ++x)
 				{
@@ -108,12 +113,12 @@ namespace xge
 				}
 			}
 			texture->UnlockRect(0);
-			visual.picture = texture;
+			return texture;
 		}
 	};
 
 	Direct3D9Window::Direct3D9Window(const WindowDesc& windowDesc) :
-		parts(std::make_unique<Parts>(windowDesc))
+		parts(std::make_unique<Parts>(*this, windowDesc))
 	{
 		Parts& p = *parts;
 		p.direct3d.Attach(Direct3DCreate9(D3D_SDK_VERSION));
@@ -157,6 +162,7 @@ namespace xge
 		Parts& p = *parts;
 		if (!p.frame.handle()) { return; }
 		p.visuals.clear();
+		p.textures.clear();
 		p.device.Reset();
 		p.direct3d.Reset();
 		p.frame.destroy();

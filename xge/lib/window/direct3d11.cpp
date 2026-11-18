@@ -81,14 +81,15 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 
 	struct Direct3D11Window::Parts
 	{
-		// One object's picture, on the graphics card.
+		// What an object shows: its picture on the graphics card, which
+		// objects showing the same picture share.
 		struct Visual
 		{
 			ComPtr<ID3D11ShaderResourceView> picture;
 			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 		};
 
-		explicit Parts(const WindowDesc& windowDesc) : frame(windowDesc, "Direct3D 11") {}
+		Parts(Window& owner, const WindowDesc& windowDesc) : frame(windowDesc, "Direct3D 11"), textures(owner) {}
 
 		Win32Window frame;
 
@@ -106,7 +107,8 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 		ComPtr<ID3D11BlendState> blend;
 		ComPtr<ID3D11RasterizerState> rasterizer;
 
-		std::unordered_map<std::string, Visual> visuals;
+		Window::Textures<ComPtr<ID3D11ShaderResourceView>> textures;
+		std::unordered_map<std::string, Visual> visuals;  // by object name
 
 		void makeTarget()
 		{
@@ -147,14 +149,17 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 			object.drawn.visualDirty = false;
 			Visual& visual = visuals[object.name];
 			visual.drawnAt = scale;
-			visual.picture.Reset();
+			visual.picture = textures.of(showing, [this](const Bitmap& picture, ComPtr<ID3D11ShaderResourceView>& made) { made = cardPicture(picture); });
+		}
 
-			const std::shared_ptr<const Bitmap> picture = showing.shared();
-			if (picture->rgba.empty() || picture->width <= 0 || picture->height <= 0) { return; }
+		// A picture on the graphics card; none for an empty one.
+		ComPtr<ID3D11ShaderResourceView> cardPicture(const Bitmap& picture)
+		{
+			if (picture.rgba.empty() || picture.width <= 0 || picture.height <= 0) { return {}; }
 
 			D3D11_TEXTURE2D_DESC description{};
-			description.Width = static_cast<UINT>(picture->width);
-			description.Height = static_cast<UINT>(picture->height);
+			description.Width = static_cast<UINT>(picture.width);
+			description.Height = static_cast<UINT>(picture.height);
 			description.MipLevels = 1;
 			description.ArraySize = 1;
 			description.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -162,17 +167,19 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 			description.Usage = D3D11_USAGE_IMMUTABLE;
 			description.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 			D3D11_SUBRESOURCE_DATA pixels{};
-			pixels.pSysMem = picture->rgba.data();
-			pixels.SysMemPitch = static_cast<UINT>(picture->width) * 4;
+			pixels.pSysMem = picture.rgba.data();
+			pixels.SysMemPitch = static_cast<UINT>(picture.width) * 4;
 
 			ComPtr<ID3D11Texture2D> texture;
-			if (FAILED(device->CreateTexture2D(&description, &pixels, &texture))) { return; }
-			device->CreateShaderResourceView(texture.Get(), nullptr, &visual.picture);
+			ComPtr<ID3D11ShaderResourceView> view;
+			if (FAILED(device->CreateTexture2D(&description, &pixels, &texture))) { return {}; }
+			if (FAILED(device->CreateShaderResourceView(texture.Get(), nullptr, &view))) { return {}; }
+			return view;
 		}
 	};
 
 	Direct3D11Window::Direct3D11Window(const WindowDesc& windowDesc) :
-		parts(std::make_unique<Parts>(windowDesc))
+		parts(std::make_unique<Parts>(*this, windowDesc))
 	{
 		Parts& p = *parts;
 		DXGI_SWAP_CHAIN_DESC chain{};
@@ -269,6 +276,7 @@ float4 ps(Shaded shaded) : SV_TARGET { return picture.Sample(how, shaded.uv); }
 		Parts& p = *parts;
 		if (!p.frame.handle()) { return; }
 		p.visuals.clear();
+		p.textures.clear();
 		if (p.context) { p.context->ClearState(); }
 		p.frame.destroy();
 	}
