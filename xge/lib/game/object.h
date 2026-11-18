@@ -1162,12 +1162,6 @@ namespace xge
 		};
 		Before before;
 
-		// Loaded or reset since the last frame ended: where it is when the
-		// next frame starts is its place, not a move (playOneFrame). One
-		// reset by a rule in the middle of a frame has moved, there and then:
-		// Q*bert set down on the top cube by a disc lands on it.
-		bool placed{ true };
-
 
 		// What it showed when the last frame ended: a picture that changed
 		// can touch what the old one did not, though nothing moved (a
@@ -1218,9 +1212,6 @@ namespace xge
 		bool named(const std::string& wanted) const { return name == wanted || inGroup(wanted); }
 		Name objClass;
 
-		// Whether it is drawn while in play (see RawObject::isDrawn).
-		bool isDrawn{ true };
-
 		// A spawned copy: the name of the object it was spawned from, which
 		// is also its group, so whatever names that object names it too
 		// (shot.1, shot.2 for copies of shot). Empty for an object the file
@@ -1233,6 +1224,19 @@ namespace xge
 		// Named in the game's <keeps>: a full <reset /> passes it over, so it
 		// keeps what it holds (a best score) from one game to the next.
 		bool kept{ false };
+
+		// Whether it is drawn while in play (see RawObject::isDrawn).
+		bool isDrawn{ true };
+
+		// Loaded or reset since the last frame ended: where it is when the
+		// next frame starts is its place, not a move (playOneFrame). One
+		// reset by a rule in the middle of a frame has moved, there and then:
+		// Q*bert set down on the top cube by a disc lands on it.
+		bool placed{ true };
+
+		// Whether its start (position, velocity or a <variable>) draws a
+		// <random>: a reset then draws it again (Game::drawStartAgain).
+		bool startDrawsRandom{ false };
 
 		// The state it belongs to (see RawObject::ownerState); its scene is
 		// the Moment's ownerScene.
@@ -1683,8 +1687,8 @@ namespace xge
 		{
 			Vector2f whole{};
 			float seconds{};
-			double flown{};
 			float arc{};
+			double flown{};
 		};
 		Flight flight;
 		bool isAirborne() const noexcept { return flight.flown < static_cast<double>(flight.seconds); }
@@ -2122,10 +2126,6 @@ namespace xge
 			// Whether `part` (x, y, heading or a variable's name) is one it follows.
 			bool has(const std::string& part) const;
 		};
-
-		// Whether its start (position, velocity or a <variable>) draws a
-		// <random>: a reset then draws it again (Game::drawStartAgain).
-		bool startDrawsRandom{ false };
 
 		// <light>'s <past>es: the classes its light does not shine through.
 		// A part (Parts::lightPasts), for a light with <past>es only.
