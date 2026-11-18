@@ -53,7 +53,7 @@ namespace xge
 			object.variable["turn"] = first ? 1.0f : 0.0f;
 			refreshBoundTexts(object.name, "turn", object.variable["turn"]);
 			if (first) { object.showLook(0); }
-			else if (!turnsOf(object).sprite.empty()) { showLookNamed(object, turnsOf(object).sprite); }
+			else if (!turnsOf(object).sprite.empty()) { showLook(object, turnsOf(object).sprite); }
 		}
 	}
 
@@ -131,7 +131,7 @@ namespace xge
 			// Onto its turn it leaves its off-turn look, for its first; a look
 			// given it while it waited (a pass's "again") stays.
 			if (on && (turnsOf(*each).sprite.empty() || each->lookName() == turnsOf(*each).sprite)) { each->showLook(0); }
-			else if (!on && !turnsOf(*each).sprite.empty()) { showLookNamed(*each, turnsOf(*each).sprite); }
+			else if (!on && !turnsOf(*each).sprite.empty()) { showLook(*each, turnsOf(*each).sprite); }
 		}
 		// A moment before the computer plays the one whose turn came, and the
 		// game's conditions see the turn change first.

@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace xge
@@ -22,6 +23,11 @@ namespace xge
 
 	// How it started (Parts::starts): an empty Moment for one with none.
 	const Moment& startOf(const Parts& parts, const Object& object) noexcept;
+
+	// Shows the object's look of that name, and starts over the timers that
+	// follow it (Timer::sprite); false (and nothing changes) if it has none
+	// of that name.
+	bool showLookNamed(Parts& parts, Object& object, const std::string& name);
 
 	// A game's handles and its parts: every object's ObjectId, given as it
 	// joins and freed as a copy leaves, and a Store of each part an object
@@ -55,6 +61,10 @@ namespace xge
 		// How each object started (see Moment), what a reset puts back:
 		// every object has one, given as it loads.
 		Store<Moment> starts;
+		// How far each of its <timers> (its kind's, Kind::timers) has
+		// counted, for an object with timers; they count while it is shown
+		// and in play (see Timer, Game::updateTimers).
+		Store<std::vector<Timer::Clock>> clocks;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.

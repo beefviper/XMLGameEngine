@@ -70,6 +70,7 @@ namespace xge
 		unholed.remove(id);
 		surfaces.remove(id);
 		starts.remove(id);
+		clocks.remove(id);
 	}
 
 	namespace
@@ -108,5 +109,6 @@ namespace xge
 		copyPart(unholed, from.unholed, id);
 		copyPart(surfaces, from.surfaces, id);
 		copyPart(starts, from.starts, id);
+		copyPart(clocks, from.clocks, id);
 	}
 }

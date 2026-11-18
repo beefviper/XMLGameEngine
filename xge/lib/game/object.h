@@ -1132,7 +1132,7 @@ namespace xge
 	{
 		CollisionData collisionData;
 		std::map<std::string, std::vector<Command>> action;
-		std::vector<Timer> timers;   // their clocks are each object's (Object::clocks)
+		std::vector<Timer> timers;   // their clocks are each object's (Parts::clocks)
 		int written{ 0 };   // RawObject::kind
 	};
 
@@ -1385,10 +1385,6 @@ namespace xge
 		// object's one animation), and for the animation playing when it is
 		// that one. A picture already showing keeps the time it has counted.
 		void timeAnimation(std::size_t look, std::size_t frame, float seconds);
-
-		// Coming back into play (fired, released, revealed, spawned) is a
-		// new start: its animation and its timers start over, as at a reset.
-		void startOver();
 
 		// Points `bitmap` at the picture animation.index names (turned to the
 		// heading, if it turns) and marks the visual to be rebuilt.
@@ -1913,11 +1909,6 @@ namespace xge
 		float blink{};
 		bool blinkedOut() const noexcept { return blink > 0.0f && static_cast<int>(blink * 15.0f) % 2 == 1; }
 
-		// How far each of its <timers> (its kind's, Kind::timers) has
-		// counted; they count while it is shown and in play (see Timer,
-		// Game::updateTimers).
-		std::vector<Timer::Clock> clocks;
-
 		// <surface>: this is ground. A thing with a <grip> whose middle is
 		// over it has its drag and grip in place of its own (a surface that
 		// gives neither leaves them as they are); the last surface in the
@@ -2392,11 +2383,6 @@ namespace xge
 	// What an object with no <sprite> is drawn as, which is never: an empty
 	// rectangle (it only holds numbers; see RawObject::isDrawn).
 	RawSprite nothingSprite();
-
-	// Shows the object's look of that name, and starts over the timers that
-	// follow it (Timer::sprite); false (and nothing changes) if it has none
-	// of that name.
-	bool showLookNamed(Object& object, const std::string& name);
 
 	// Puts on the object's palette of that name (Object::Looks::palettes); false
 	// (and nothing changes) if it has none of that name.

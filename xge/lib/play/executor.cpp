@@ -156,7 +156,7 @@ namespace xge
 		else if (self && (command.from.empty() || self->lookName() == command.from))
 		{
 			const std::string before = game.isHand(*self) ? self->lookName() : std::string();
-			if (!command.sprite.empty()) { showLookNamed(*self, command.sprite); }
+			if (!command.sprite.empty()) { game.showLook(*self, command.sprite); }
 			if (!command.style.empty()) { wearPaletteNamed(*self, command.style); }
 			// A hand sits centred on its card by its look's size.
 			if (game.isHand(*self) && self->lookName() != before) { game.layOutItems(); }

@@ -485,7 +485,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	Object& clyde = maze.ghost("clyde");
 	maze.frames(300);
 	CHECK(blinky.lookName() == "blue");
-	showLookNamed(clyde, "eyes");
+	maze.game.showLook(clyde, "eyes");
 	maze.touch(maze.game.getObject("playing.maze.pellets.4"));
 	CHECK(clyde.lookName() == "eyes");
 	maze.frames(200);

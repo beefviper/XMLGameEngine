@@ -1024,7 +1024,7 @@ namespace xge
 		return false;
 	}
 
-	bool showLookNamed(Object& object, const std::string& name)
+	bool showLookNamed(Parts& parts, Object& object, const std::string& name)
 	{
 		for (std::size_t i = 0; i < object.looks.all().size(); ++i)
 		{
@@ -1035,9 +1035,12 @@ namespace xge
 				if (object.looks.shown != i || object.looks.all()[i].frames.shows().once) { object.showLook(i); }
 				// A timer that follows this look starts over, even when the
 				// object showed it already: blue again is six seconds again.
-				for (std::size_t t = 0; t < object.clocks.size() && t < object.kind->timers.size(); ++t)
+				if (std::vector<Timer::Clock>* clocks = parts.clocks.find(object.id))
 				{
-					if (object.kind->timers[t].sprite == name) { object.clocks[t] = {}; }
+					for (std::size_t t = 0; t < clocks->size() && t < object.kind->timers.size(); ++t)
+					{
+						if (object.kind->timers[t].sprite == name) { (*clocks)[t] = {}; }
+					}
 				}
 				return true;
 			}
@@ -1170,12 +1173,6 @@ namespace xge
 
 		animation.index = 0;
 		showAnimationFrame();
-	}
-
-	void Object::startOver()
-	{
-		restartAnimation();
-		for (Timer::Clock& clock : clocks) { clock = {}; }
 	}
 
 	void Object::showAnimationFrame()

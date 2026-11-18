@@ -1330,7 +1330,11 @@ namespace xge
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
 			const std::vector<Timer>& timers = objects[i].kind->timers;
-			for (std::size_t t = 0; t < objects[i].clocks.size() && t < timers.size(); ++t)
+			// Found again each time: a command can give another object its
+			// clocks, which moves the store's entries.
+			const auto clocks = [&]() { return objectParts.clocks.find(objects[i].id); };
+			const auto count = [&]() { const std::vector<Timer::Clock>* each = clocks(); return each ? each->size() : 0; };
+			for (std::size_t t = 0; t < count() && t < timers.size(); ++t)
 			{
 				// Not shown, or sent away from its own map (a next-piece box).
 				if (!isShown(objects[i]) || awayFromHome(objects[i]))
@@ -1347,7 +1351,7 @@ namespace xge
 
 				// As often as the step owes it, its commands each time.
 				const std::string where = "object '" + objects[i].name + "' > <timer>";
-				for (float owed = seconds; owed > kTimeSlack && t < objects[i].clocks.size() && tickTimer(timers[t], objects[i].clocks[t], where, owed);)
+				for (float owed = seconds; owed > kTimeSlack && t < count() && tickTimer(timers[t], (*clocks())[t], where, owed);)
 				{
 					// Its kind's: a command that resets the object leaves them be.
 					for (const auto& command : timers[t].commands)
@@ -1357,7 +1361,7 @@ namespace xge
 					// Hidden, or out of the look it follows, it stops counting.
 					if (!isShown(objects[i]) || (!sprite.empty() && objects[i].lookName() != sprite)) { break; }
 				}
-				if (!timers[t].name.empty() && t < objects[i].clocks.size()) { showTimeLeft(objects[i], timers[t], objects[i].clocks[t]); }
+				if (!timers[t].name.empty() && t < count()) { showTimeLeft(objects[i], timers[t], (*clocks())[t]); }
 			}
 		}
 
@@ -1522,7 +1526,10 @@ namespace xge
 			object.faceMirror();
 			object.wearPalette(0);
 			if (!object.looks.all().empty()) { object.showLook(object.looks.set->first); }
-			for (Timer::Clock& clock : object.clocks) { clock = {}; }
+			if (std::vector<Timer::Clock>* clocks = parts.clocks.find(object.id))
+			{
+				for (Timer::Clock& clock : *clocks) { clock = {}; }
+			}
 		}
 	}
 
@@ -1593,7 +1600,7 @@ namespace xge
 					turnHeld(object, sprite);
 					continue;
 				}
-				if (!sprite.empty()) { showLookNamed(object, sprite); }
+				if (!sprite.empty()) { showLook(object, sprite); }
 				if (!style.empty()) { wearPaletteNamed(object, style); }
 				handChanged = handChanged || (isHand(object) && object.lookName() != before);
 			}
@@ -1614,7 +1621,11 @@ namespace xge
 			// Back in play is a new start: a <random> in it is drawn again,
 			// and its timers and animation start over.
 			drawStartAgain(object);
-			object.startOver();
+			object.restartAnimation();
+			if (std::vector<Timer::Clock>* clocks = clocksOf(object))
+			{
+				for (Timer::Clock& clock : *clocks) { clock = {}; }
+			}
 			object.position = startOf(object).position;
 			object.velocity = startOf(object).velocity;
 			object.isVisible = true;

@@ -393,7 +393,7 @@ namespace xge
 	void game_expr::buildTimers(RawObject& rawObject, Object& object, const std::string& where)
 	{
 		object.kind->timers = processTimers(rawObject.timers, where);
-		object.clocks.assign(object.kind->timers.size(), {});
+		if (!object.kind->timers.empty()) { parts->clocks.add(object.id, parts->orderOf(object.id), std::vector<Timer::Clock>(object.kind->timers.size())); }
 		for (const Timer& timer : object.kind->timers)
 		{
 			if (timer.name.empty()) { continue; }

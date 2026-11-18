@@ -491,7 +491,7 @@ namespace xge
 			placeFor(*next).goWay = across > 0 ? Direction::Right : across < 0 ? Direction::Left : place(*head).goWay;
 			next->facing = place(*next).goWay;
 			next->variable = head->variable;
-			if (const std::string look = head->lookName(); !look.empty()) { showLookNamed(*next, look); }
+			if (const std::string look = head->lookName(); !look.empty()) { showLook(*next, look); }
 		}
 		if (&piece == head)
 		{

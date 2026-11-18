@@ -646,7 +646,7 @@ namespace
 		void computersTurn()
 		{
 			game.setVariable(hand().name, "turn", 0.0f);
-			showLookNamed(hand(), "waiting");
+			game.showLook(hand(), "waiting");
 			game.setVariable(computer().name, "turn", 1.0f);
 			computer().showLook(0);
 		}
@@ -1270,7 +1270,7 @@ TEST_CASE("holdem.xml: raises stop at three a round; out of chips between hands 
 	CHECK(play.street() != "preflop");
 
 	play.get("cpu").variable["chips"] = 0.0f;
-	showLookNamed(play.get("hand"), "done");
+	play.game.showLook(play.get("hand"), "done");
 	play.frames(2);
 	CHECK(play.state() == "over");
 	CHECK(play.get("over.winner").lookName() == "you");
@@ -1356,7 +1356,7 @@ namespace
 		{
 			set("table", "first", static_cast<float>(leader == 1 ? 4 : leader - 1));
 			// As a hand ends: the table done, nobody's turn.
-			showLookNamed(get("table"), "done");
+			game.showLook(get("table"), "done");
 			game.passPlayersTo("players", 0);
 			frames(2);
 			// Dealt a card a round to the players in turn: you, west, north and east.
@@ -1538,7 +1538,7 @@ TEST_CASE("hearts.xml: the hand's points to the scores; all 26 to one shoots the
 	play.set("you", "got", 0.0f);
 	play.set("west", "got", 0.0f);
 	play.set("north", "got", 26.0f);
-	showLookNamed(play.get("table"), "playing");
+	play.game.showLook(play.get("table"), "playing");
 	play.frames(2);
 	CHECK(play.of("you", "score") == 29.0f);
 	CHECK(play.of("west", "score") == 39.0f);
@@ -1554,7 +1554,7 @@ TEST_CASE("hearts.xml: at 100 after a hand the lowest score wins", "[cards][hear
 	play.set("west", "score", 104.0f);
 	play.set("north", "score", 35.0f);
 	play.set("east", "score", 60.0f);
-	showLookNamed(play.get("table"), "done");
+	play.game.showLook(play.get("table"), "done");
 	play.frames(2);
 	CHECK(play.state() == "over");
 	CHECK(play.get("over.winner").lookName() == "north");
@@ -1720,7 +1720,7 @@ TEST_CASE("spades.xml: at 500 after a hand the higher score wins", "[cards][spad
 	Spades play;
 	play.set("table", "us", 320.0f);
 	play.set("table", "them", 512.0f);
-	showLookNamed(play.get("table"), "done");
+	play.game.showLook(play.get("table"), "done");
 	play.frames(2);
 	CHECK(play.state() == "over");
 	CHECK(play.get("over.winner").lookName() == "them");
@@ -1959,7 +1959,7 @@ TEST_CASE("gin.xml: at 100 after a hand the higher score wins", "[cards][gin]")
 	Gin play(ginJunk);
 	play.set("you", "score", 105.0f);
 	play.set("north", "score", 40.0f);
-	showLookNamed(play.get("table"), "done");
+	play.game.showLook(play.get("table"), "done");
 	play.frames(2);
 	CHECK(play.state() == "over");
 	CHECK(play.get("over.winner").lookName() == "you");

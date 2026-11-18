@@ -667,7 +667,7 @@ TEST_CASE("an animation with once plays through one time", "[animation]")
 		Object& thing = game.getObject("thing");
 		CHECK(thing.lookName() == "idle");
 
-		showLookNamed(thing, "flash");
+		game.showLook(thing, "flash");
 		CHECK(showing(thing) == 'b');
 		frames(game, 6);
 		CHECK(showing(thing) == 'a');
@@ -680,7 +680,7 @@ TEST_CASE("an animation with once plays through one time", "[animation]")
 		CHECK(showing(thing) == 'a');
 
 		// A reset half way puts it on its first look, playing as at the start.
-		showLookNamed(thing, "flash");
+		game.showLook(thing, "flash");
 		frames(game, 7);
 		game.resetAll();
 		CHECK(thing.lookName() == "idle");
@@ -729,7 +729,7 @@ TEST_CASE("an animation's then names the look it goes to and the commands it run
 		Game& game = loaded.game;
 		game.setCurrentState("playing");
 		Object& thing = game.getObject("thing");
-		showLookNamed(thing, "flash");
+		game.showLook(thing, "flash");
 		frames(game, 12);
 		CHECK(thing.lookName() == "b");
 		frames(game, 60);
@@ -744,7 +744,7 @@ TEST_CASE("an animation's then names the look it goes to and the commands it run
 		Game& game = loaded.game;
 		game.setCurrentState("playing");
 		Object& thing = game.getObject("thing");
-		showLookNamed(thing, "flash");
+		game.showLook(thing, "flash");
 		frames(game, 11);
 		CHECK(thing.variable.at("ended") == 0.0f);
 		frames(game, 1);
@@ -791,7 +791,7 @@ TEST_CASE("an animation that plays once may be one frame: a look held for a time
 	Game& game = loaded.game;
 	game.setCurrentState("playing");
 	Object& thing = game.getObject("thing");
-	showLookNamed(thing, "lit");
+	game.showLook(thing, "lit");
 	CHECK(showing(thing) == 'b');
 	frames(game, 5);
 	CHECK(thing.lookName() == "lit");
