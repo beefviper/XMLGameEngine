@@ -23,7 +23,7 @@ namespace xge
 	// Absorbs what used to be the standalone game_sfml class: building each
 	// object's visual from its picture (circle/rectangle/text/image) is
 	// backend work, not Game's, so it lives here now as SFMLWindow's own
-	// per-object cache instead of being baked into Object itself.
+	// cache instead of being baked into Object itself.
 	class SFMLWindow : public Window
 	{
 	public:
@@ -46,10 +46,10 @@ namespace xge
 		Bitmap capture() override;
 
 	private:
-		// Each object's picture as a texture, by the object's name.
+		// What an object shows: a sprite over the texture of its picture,
+		// which objects showing the same picture share.
 		struct CachedVisual
 		{
-			sf::Texture texture;
 			std::unique_ptr<sf::Sprite> sprite;
 			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 		};
@@ -59,7 +59,8 @@ namespace xge
 
 		void fitView();
 		float fitNow{ 1.0f };  // window pixels to a game pixel, as fitView left it
-		std::unordered_map<std::string, CachedVisual> visuals;
+		Textures<sf::Texture> textures{ *this };
+		std::unordered_map<std::string, CachedVisual> visuals;  // by object name
 
 		static KeyCode sfmlKeyToKeyCode(sf::Keyboard::Key key) noexcept;
 

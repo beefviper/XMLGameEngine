@@ -326,25 +326,27 @@ namespace xge
 	// object's size in the game's pixels.
 	void SFMLWindow::build(Object& object, CachedVisual& visual)
 	{
-		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
-		const auto width = static_cast<unsigned int>(std::max(picture->width, 1));
-		const auto height = static_cast<unsigned int>(std::max(picture->height, 1));
-
-		if (picture->rgba.empty())
+		const bool smooth = object.drawnAtScale();
+		const sf::Texture& texture = textures.of(pictureOf(object), [&](const Bitmap& picture, sf::Texture& made)
 		{
-			const std::uint8_t clear[4] = { 0, 0, 0, 0 };
-			if (!visual.texture.resize({ 1, 1 })) { std::cout << "error: SFML: failed to make a texture for '" << object.name << "'\n"; }
-			visual.texture.update(clear);
-		}
-		else if (!visual.texture.loadFromImage(sf::Image(sf::Vector2u(width, height), picture->rgba.data())))
-		{
-			std::cout << "error: SFML: failed to make a texture from the picture of '" << object.name << "'\n";
-		}
-		visual.texture.setSmooth(object.drawnAtScale());
+			const auto width = static_cast<unsigned int>(std::max(picture.width, 1));
+			const auto height = static_cast<unsigned int>(std::max(picture.height, 1));
+			if (picture.rgba.empty())
+			{
+				const std::uint8_t clear[4] = { 0, 0, 0, 0 };
+				if (!made.resize({ 1, 1 })) { std::cout << "error: SFML: failed to make a texture for '" << object.name << "'\n"; }
+				made.update(clear);
+			}
+			else if (!made.loadFromImage(sf::Image(sf::Vector2u(width, height), picture.rgba.data())))
+			{
+				std::cout << "error: SFML: failed to make a texture from the picture of '" << object.name << "'\n";
+			}
+			made.setSmooth(smooth);
+		});
 
-		visual.sprite = std::make_unique<sf::Sprite>(visual.texture);
+		visual.sprite = std::make_unique<sf::Sprite>(texture);
 		const Vector2f size = object.pictureSize();
-		const sf::Vector2u made = visual.texture.getSize();
+		const sf::Vector2u made = texture.getSize();
 		visual.sprite->setScale({ size.x / static_cast<float>(made.x), size.y / static_cast<float>(made.y) });
 		visual.sprite->setPosition({ object.position.x, object.position.y });
 		visual.drawnAt = pictureScale();

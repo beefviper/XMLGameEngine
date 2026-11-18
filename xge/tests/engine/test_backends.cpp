@@ -279,8 +279,9 @@ namespace
 		return std::abs(got.r - want.r) <= 8 && std::abs(got.g - want.g) <= 8 && std::abs(got.b - want.b) <= 8;
 	}
 
-	// A window keeps each picture by its object's name.
-	Object pictureAt(const std::string& name, float x, float y, void (*setUp)(Object&))
+	// Each object a name of its own: a window may keep its sprite by it.
+	template <typename SetUp>
+	Object pictureAt(const std::string& name, float x, float y, SetUp setUp)
 	{
 		Object object;
 		static NameStore names;
@@ -338,15 +339,18 @@ TEST_CASE("every window backend keeps the window contract", "[.][window]")
 
 			// Rules 3 to 5: three known pictures, a bitmap, a rectangle and a
 			// circle, each where its position says.
+			// The game's pictures, which the window is given as the engine
+			// gives it the game's.
+			Resources resources;
+			window->usePictures(resources);
 			std::vector<Object> objects{
-				pictureAt("bitmap", 4.0f, 4.0f, [](Object& o)
+				pictureAt("bitmap", 4.0f, 4.0f, [&resources](Object& o)
 				{
 					o.drawn.picture.edit().kind = ShapeKind::Line;
 					Bitmap red;
 					red.width = 8;
 					red.height = 8;
 					for (int i = 0; i < 64; ++i) { red.rgba.insert(red.rgba.end(), { 255, 0, 0, 255 }); }
-					static Resources resources;
 					o.drawn.bitmap = resources.own(std::move(red));
 					o.drawn.picture.edit().size = { 8.0f, 8.0f };
 				}),
