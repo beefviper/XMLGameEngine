@@ -35,14 +35,6 @@ namespace xge
 		}
 	}
 
-	OpenGLWindow::CachedVisual::~CachedVisual()
-	{
-		if (texture)
-		{
-			glDeleteTextures(1, &texture);
-		}
-	}
-
 	OpenGLWindow::OpenGLWindow(const WindowDesc& windowDesc) :
 		width(static_cast<int>(windowDesc.width)),
 		height(static_cast<int>(windowDesc.height)),
@@ -89,6 +81,8 @@ namespace xge
 		// Everything OpenGL made goes while its context is current.
 		glfwMakeContextCurrent(window);
 		visuals.clear();
+		textures.forEach([](unsigned int& texture) { if (texture) { glDeleteTextures(1, &texture); } });
+		textures.clear();
 
 
 		glfwDestroyWindow(window);
@@ -285,23 +279,24 @@ namespace xge
 	{
 		object.drawn.visualDirty = false;
 		visual.drawnAt = pictureScale();
-
-		const std::shared_ptr<const Bitmap> picture = pictureOf(object).shared();
-		const Bitmap blank = picture->rgba.empty() ? filledBitmap(1, 1) : Bitmap{};
-		const Bitmap& source = picture->rgba.empty() ? blank : *picture;
-
-		if (!visual.texture)
-		{
-			glGenTextures(1, &visual.texture);
-		}
-
 		const GLint filter = object.drawnAtScale() ? GL_LINEAR : GL_NEAREST;
-		glBindTexture(GL_TEXTURE_2D, visual.texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, source.width, source.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, source.rgba.data());
+		visual.texture = textures.of(pictureOf(object), [&](const Bitmap& picture, unsigned int& made)
+		{
+			const Bitmap blank = picture.rgba.empty() ? filledBitmap(1, 1) : Bitmap{};
+			const Bitmap& source = picture.rgba.empty() ? blank : picture;
+
+			if (!made)
+			{
+				glGenTextures(1, &made);
+			}
+
+			glBindTexture(GL_TEXTURE_2D, made);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, source.width, source.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, source.rgba.data());
+		});
 	}
 }

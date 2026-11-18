@@ -54,18 +54,12 @@ namespace xge
 		Bitmap capture() override;
 
 	private:
-		// One object's picture, as an OpenGL texture.
+		// What an object shows: the OpenGL texture of its picture, which
+		// objects showing the same picture share.
 		struct CachedVisual
 		{
 			unsigned int texture{ 0 };
 			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
-
-			CachedVisual() = default;
-			~CachedVisual();
-			CachedVisual(const CachedVisual&) = delete;
-			CachedVisual& operator=(const CachedVisual&) = delete;
-			CachedVisual(CachedVisual&&) = delete;
-			CachedVisual& operator=(CachedVisual&&) = delete;
 		};
 
 		GLFWwindow* window{ nullptr };
@@ -77,7 +71,8 @@ namespace xge
 		// Keys the GLFW callback has seen since pollEvents() last looked.
 		std::vector<std::pair<KeyCode, bool>> pendingKeys;
 
-		std::unordered_map<std::string, CachedVisual> visuals;
+		Textures<unsigned int> textures{ *this };
+		std::unordered_map<std::string, CachedVisual> visuals;  // by object name
 
 		static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
