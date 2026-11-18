@@ -380,7 +380,6 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
-- **Direct3D 9 to 12 keep one texture a picture (CR2 step 5):** they compile under MSVC with no warnings, and `xgetest "[window]"` passes for each, with a game whose objects share a picture (Space Invaders' aliens) looking as before.
 - **The schema's documentation in an editor (A6), not urgent (the author works mostly from the command line):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.
 
 ## Known untested
