@@ -38,19 +38,24 @@ namespace
 		void clear(const std::string& colorName) override { (void)colorName; }
 		void prepare(xge::Object& object) override
 		{
-			const bool fresh = textures.insert(object.name).second;
+			const bool fresh = asked.insert(object.name).second;
 			if (!fresh && !object.drawn.visualDirty) { return; }
-			const std::shared_ptr<const xge::Bitmap> picture = pictureOf(object).shared();
-			++builds;
-			textureBytes += picture->rgba.size();
+			const xge::PictureId picture = pictureOf(object);
+			pictures.insert(picture.index());
+			made.of(picture, [this](const xge::Bitmap& bitmap, char&) { textureBytes += bitmap.rgba.size(); });
 			object.drawn.visualDirty = false;
 		}
 		void draw(xge::Object& object) override { prepare(object); }
 		void display() override {}
 
-		std::set<std::string> textures;   // one a name, as the backends keep them
-		std::size_t builds{};             // textures made, counting each made again
-		std::size_t textureBytes{};       // pixels sent over all those builds
+		std::size_t textures() const { return pictures.size(); }   // one a picture, as the backends keep them
+		std::size_t builds() const { return texturesMade(); }      // textures made, counting each made again
+		std::size_t textureBytes{};                                // pixels sent over all those builds
+
+	private:
+		std::set<std::string> asked;   // the objects asked for once already
+		std::set<std::uint32_t> pictures;
+		Textures<char> made{ *this };
 	};
 
 	struct Pictures
@@ -126,7 +131,7 @@ TEST_CASE("The size of the engine's things", "[long][size]")
 		Pictures pictures;
 		for (const xge::Object& object : game.getCurrentObjects()) { pictures.addObject(game.parts(), object); }
 		std::printf("%-14s %8zu %9zu %12.1f %9zu %9zu %12.1f\n", name.c_str(), game.getCurrentObjects().size(), pictures.seen.size(),
-			static_cast<double>(pictures.bytes) / 1024.0, window.textures.size(), window.builds, static_cast<double>(window.textureBytes) / 1024.0);
+			static_cast<double>(pictures.bytes) / 1024.0, window.textures(), window.builds(), static_cast<double>(window.textureBytes) / 1024.0);
 	}
 	SUCCEED();
 }
