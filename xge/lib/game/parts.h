@@ -48,6 +48,7 @@ namespace xge
 		Store<Object::BoundText> boundTexts;
 		Store<Object::Follows> follows;
 		Store<Object::Unholed> unholed;
+		Store<Object::Surface> surfaces;
 
 		// A new handle, in the slot a copy that left freed if there is one,
 		// a generation on.

@@ -203,30 +203,32 @@ namespace xge
 		// surface's drag and grip this frame in place of its own.
 		void findGround(std::vector<Object>& objects, FrameRules& rules)
 		{
-			std::vector<const Object*> surfaces;
+			const Store<Object::Surface>& kinds = rules.parts().surfaces;
+			std::vector<std::pair<const Object*, const Object::Surface*>> surfaces;
 			for (auto& object : objects)
 			{
-				object.surface.groundDrag = object.motion.drag;
-				object.surface.groundGrip = object.motion.grip;
-				if (object.surface.is && rules.inPlay(object)) { surfaces.push_back(&object); }
+				object.ground = { object.motion.drag, object.motion.grip };
+				if (kinds.size() == 0) { continue; }
+				const Object::Surface* surface = kinds.find(object.id);
+				if (surface && rules.inPlay(object)) { surfaces.emplace_back(&object, surface); }
 			}
 			if (surfaces.empty()) { return; }
 
 			for (auto& object : objects)
 			{
-				if (std::isinf(object.motion.grip) || object.surface.is || !rules.inPlay(object)) { continue; }
+				if (std::isinf(object.motion.grip) || kinds.has(object.id) || !rules.inPlay(object)) { continue; }
 				const Vector2f middle = middleOf(object);
 				for (auto ground = surfaces.rbegin(); ground != surfaces.rend(); ++ground)
 				{
-					const Object& surface = **ground;
+					const Object& surface = *ground->first;
 					const Vector2f size = sizeOf(surface);
 					if (middle.x < surface.position.x || middle.y < surface.position.y
 						|| middle.x >= surface.position.x + size.x || middle.y >= surface.position.y + size.y)
 					{
 						continue;
 					}
-					if (surface.surface.drag) { object.surface.groundDrag = *surface.surface.drag; }
-					if (surface.surface.grip) { object.surface.groundGrip = *surface.surface.grip; }
+					if (ground->second->drag) { object.ground.drag = *ground->second->drag; }
+					if (ground->second->grip) { object.ground.grip = *ground->second->grip; }
 					break;
 				}
 			}
@@ -253,11 +255,11 @@ namespace xge
 					const Vector2f way = ahead(object.heading);
 					const float along = object.velocity.x * way.x + object.velocity.y * way.y;
 					const Vector2f across = object.velocity - way * along;
-					object.velocity -= across * (1.0f - kept(object.surface.groundGrip));
+					object.velocity -= across * (1.0f - kept(object.ground.grip));
 					continue;
 				}
 
-				const float keeps = kept(object.surface.groundGrip);
+				const float keeps = kept(object.ground.grip);
 				const auto ease = [&](float& velocity, float wanted)
 				{
 					velocity = wanted + (velocity - wanted) * keeps;
@@ -354,7 +356,7 @@ namespace xge
 				const Drive& drive = driveOf(rules, object);
 				const bool thrusting = drive.thrust[0] != 0.0f || drive.thrust[1] != 0.0f
 					|| drive.thrust[2] != 0.0f || drive.thrust[3] != 0.0f;
-				if (!thrusting && !object.turning.hasHeading && object.surface.groundDrag == 0.0f && object.acceleration.x == 0.0f && object.acceleration.y == 0.0f)
+				if (!thrusting && !object.turning.hasHeading && object.ground.drag == 0.0f && object.acceleration.x == 0.0f && object.acceleration.y == 0.0f)
 				{
 					continue;
 				}
@@ -461,7 +463,7 @@ namespace xge
 				// exact for a steady push: v' = a - k v). `gained` is what the
 				// sweep takes off the step's end speed to go the step's true
 				// way: twice the end speed less the step's mean.
-				const float drag = object.surface.groundDrag;
+				const float drag = object.ground.drag;
 				if (drag == 0.0f)
 				{
 					object.velocity += change * t;

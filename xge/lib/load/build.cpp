@@ -286,15 +286,16 @@ namespace xge
 
 		if (rawObject.hasSurface)
 		{
-			object.surface.is = true;
+			Object::Surface surface;
 			if (rawObject.hasSurfaceDrag)
 			{
-				object.surface.drag = lossRate(evaluate(rawObject.rawSurfaceDrag, where + " > <surface> > <drag>"), where + " > <surface> > <drag>");
+				surface.drag = lossRate(evaluate(rawObject.rawSurfaceDrag, where + " > <surface> > <drag>"), where + " > <surface> > <drag>");
 			}
 			if (rawObject.hasSurfaceGrip)
 			{
-				object.surface.grip = lossRate(evaluate(rawObject.rawSurfaceGrip, where + " > <surface> > <grip>"), where + " > <surface> > <grip>");
+				surface.grip = lossRate(evaluate(rawObject.rawSurfaceGrip, where + " > <surface> > <grip>"), where + " > <surface> > <grip>");
 			}
+			parts->surfaces.add(object.id, parts->orderOf(object.id), surface);
 		}
 
 		if (rawObject.hasFriction)

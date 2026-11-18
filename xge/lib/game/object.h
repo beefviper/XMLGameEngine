@@ -1919,20 +1919,23 @@ namespace xge
 		// Game::updateTimers).
 		std::vector<Timer::Clock> clocks;
 
-		// <surface>: `is`, this is ground. A thing with a <grip> whose middle
-		// is over it has `motion.drag` and `motion.grip` in place of its own (a surface
-		// that gives neither leaves them as they are); the last surface in
-		// the file's order wins. groundDrag and groundGrip are what this
-		// object has this frame, worked out by applyGrip (play/frame.cpp).
+		// <surface>: this is ground. A thing with a <grip> whose middle is
+		// over it has its drag and grip in place of its own (a surface that
+		// gives neither leaves them as they are); the last surface in the
+		// file's order wins. A part (Parts::surfaces), for a <surface> only.
 		struct Surface
 		{
-			bool is{ false };
 			std::optional<float> drag;
 			std::optional<float> grip;
-			float groundDrag{};
-			float groundGrip{ std::numeric_limits<float>::infinity() };
 		};
-		Surface surface;
+		// The drag and grip this object has this frame, its own or the
+		// ground's under it, worked out by findGround (play/frame.cpp).
+		struct Ground
+		{
+			float drag{};
+			float grip{ std::numeric_limits<float>::infinity() };
+		};
+		Ground ground;
 
 		// What something lies on, as it was: its name, where it was and the
 		// way it faced.

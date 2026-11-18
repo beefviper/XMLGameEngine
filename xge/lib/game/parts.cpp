@@ -61,6 +61,7 @@ namespace xge
 		boundTexts.remove(id);
 		follows.remove(id);
 		unholed.remove(id);
+		surfaces.remove(id);
 	}
 
 	namespace
@@ -97,5 +98,6 @@ namespace xge
 		copyPart(boundTexts, from.boundTexts, id);
 		copyPart(follows, from.follows, id);
 		copyPart(unholed, from.unholed, id);
+		copyPart(surfaces, from.surfaces, id);
 	}
 }
