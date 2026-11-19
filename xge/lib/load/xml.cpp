@@ -2864,7 +2864,7 @@ namespace xge
 			{
 				note.wave = node.getAttribute("wave");
 				if (note.wave.empty()) { note.wave = wave; }
-				note.pitch = requireAttribute(node, "pitch", where);
+				note.pitch = node.getAttribute("pitch");
 				note.to = node.getAttribute("to");
 				note.decay = decay;
 			}
@@ -2889,83 +2889,53 @@ namespace xge
 		RawSound readSoundHere(const XmlNode& sound)
 		{
 			RawSound raw;
-			raw.name = requireAttribute(sound, "name", "<sounds>");
+			raw.name = sound.getAttribute("name");
 			refuseReserved(raw.name, "a sound", "<sound name=\"" + raw.name + "\">", false);
 			raw.wave = sound.getAttribute("wave");
 
 			const std::string where = "sound '" + raw.name + "'";
 
+			// The schema holds the order (<loop />, <volume>, <decay>) and that
+			// a sound is <note>s and <rest>s, <part>s or one <path>, never two
+			// of them, and a part a <decay> then one or more notes.
 			unsigned parts = 0;
-			bool loose = false; // a <note> or <rest> not in a part
 			RawValue decay;     // the sound's <decay>, every note's that its part does not change
+			bool decayed = false;
 			for (std::unique_ptr<XmlNode> child = sound.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
 
-				if (tag == "loop")
-				{
-					if (!raw.notes.empty() || parts > 0 || raw.volume.kind != RawValue::Kind::Expression || !raw.volume.text.empty()) { fail(where, "<loop /> has to come first"); }
-					raw.loop = true;
-				}
-				else if (tag == "volume")
-				{
-					if (!raw.notes.empty() || parts > 0) { fail(where, "<volume> has to come before the <note>s and <rest>s"); }
-					raw.volume = readValue(*child, where);
-				}
+				if (tag == "loop") { raw.loop = true; }
+				else if (tag == "volume") { raw.volume = readValue(*child, where); }
 				else if (tag == "decay")
 				{
-					if (!raw.notes.empty() || parts > 0) { fail(where, "<decay> has to come before the <note>s and <rest>s"); }
-					if (!raw.path.empty()) { fail(where, "plays a recording (<path>), so it has no <decay>"); }
 					decay = readValue(*child, where);
+					decayed = true;
 				}
 				else if (tag == "path")
 				{
-					if (!raw.notes.empty()) { fail(where, "has <note>s or <part>s, so it cannot have a <path> as well"); }
-					if (!decay.text.empty() || decay.kind != RawValue::Kind::Expression) { fail(where, "plays a recording (<path>), so it has no <decay>"); }
-					if (!raw.path.empty()) { fail(where, "has two <path>s"); }
+					if (decayed) { fail(where, "plays a recording (<path>), so it has no <decay>"); }
 					if (!raw.wave.empty()) { fail(where, "plays a recording (<path>), so it has no wave="); }
 					raw.path = readText(*child);
 					if (raw.path.empty()) { fail(where, "has an empty <path>"); }
 				}
 				else if (tag == "note" || tag == "rest")
 				{
-					if (!raw.path.empty()) { fail(where, "plays a recording (<path>), so it cannot have <" + tag + ">s as well"); }
-					if (parts > 0) { fail(where, "has <part>s, so its <" + tag + ">s go inside them"); }
-					loose = true;
 					raw.notes.push_back(readNote(*child, where, 0, "", decay));
 				}
 				else if (tag == "part")
 				{
-					if (!raw.path.empty()) { fail(where, "plays a recording (<path>), so it cannot have <part>s as well"); }
-					if (loose) { fail(where, "has <note>s and <rest>s of its own, so it cannot have <part>s as well"); }
 					const std::string partWhere = where + " > <part> " + std::to_string(parts + 1);
 					const std::string wave = child->getAttribute("wave");
 					RawValue partDecay = decay;
-					bool any = false;
 					for (std::unique_ptr<XmlNode> step = child->getFirstChild(); step != nullptr; step = step->getNextSibling())
 					{
-						const std::string stepTag = step->getName();
-						if (stepTag == "decay")
-						{
-							if (any) { fail(partWhere, "<decay> has to come before the <note>s and <rest>s"); }
-							partDecay = readValue(*step, partWhere);
-							continue;
-						}
-						if (stepTag != "note" && stepTag != "rest") { fail(partWhere, "unknown <" + stepTag + ">; expected a <decay>, then <note>s and <rest>s"); }
-						raw.notes.push_back(readNote(*step, partWhere, parts, wave, partDecay));
-						any = true;
+						if (step->getName() == "decay") { partDecay = readValue(*step, partWhere); }
+						else { raw.notes.push_back(readNote(*step, partWhere, parts, wave, partDecay)); }
 					}
-					if (!any) { fail(partWhere, "has no <note>"); }
 					++parts;
 				}
-				else
-				{
-					fail(where, "unknown <" + tag + ">; expected a <loop />, a <volume>, a <decay>, then <note>s and <rest>s, <part>s, or a <path>");
-				}
 			}
-
-			if (raw.notes.empty() && raw.path.empty()) { fail(where, "has no <note>"); }
-
 			return raw;
 		}
 
