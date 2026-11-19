@@ -32,18 +32,16 @@ namespace xge
 		return CmdHole{ radius, rough };
 	}
 
-	static bool runHole(const Command& command, const Doer& doer)
+	static bool runHole(const CmdHole& hole, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdHole& hole = std::get<CmdHole>(command);
 		if (doer.self && doer.touch) { cutHole(executor.game.parts(), executor.game.resources(), *doer.self, *doer.other, hole.radius, hole.rough); }
 		return true;
 	}
 
-	static void printHole(std::ostream& o, const Command& command)
+	static void printHole(std::ostream& o, const CmdHole& hole)
 	{
-		const CmdHole& h = std::get<CmdHole>(command);
-		o << "hole(" << h.radius << ", " << h.rough << ")";
+		o << "hole(" << hole.radius << ", " << hole.rough << ")";
 	}
 
 	extern const Verb holeVerb;
@@ -52,7 +50,7 @@ namespace xge
 		.forms = { { "<hole>", places::touch, kindOf<CmdHole>() } },
 		.read = readHole,
 		.make = makeHole,
-		.run = runHole,
-		.print = printHole,
+		.run = runAs<runHole>,
+		.print = printAs<printHole>,
 	};
 }

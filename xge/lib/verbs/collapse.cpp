@@ -15,14 +15,14 @@ namespace xge
 		return CmdCollapse{};
 	}
 
-	static bool runCollapse(const Command&, const Doer& doer)
+	static bool runCollapse(const CmdCollapse&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.match) { executor.game.collapseCells(*doer.match); }
 		return true;
 	}
 
-	static void printCollapse(std::ostream& o, const Command&)
+	static void printCollapse(std::ostream& o, const CmdCollapse&)
 	{
 		o << "collapse";
 	}
@@ -32,7 +32,7 @@ namespace xge
 		.name = "collapse",
 		.forms = { { "<collapse />", places::cells, kindOf<CmdCollapse>() } },
 		.make = makeCollapse,
-		.run = runCollapse,
-		.print = printCollapse,
+		.run = runAs<runCollapse>,
+		.print = printAs<printCollapse>,
 	};
 }

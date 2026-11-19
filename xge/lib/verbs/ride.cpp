@@ -14,13 +14,13 @@ namespace xge
 		return CmdRide{};
 	}
 
-	static bool runRide(const Command&, const Doer& doer)
+	static bool runRide(const CmdRide&, const Doer& doer)
 	{
 		if (doer.self && doer.touch) { xge::ride(*doer.self, *doer.other); }
 		return true;
 	}
 
-	static void printRide(std::ostream& o, const Command&)
+	static void printRide(std::ostream& o, const CmdRide&)
 	{
 		o << "ride";
 	}
@@ -30,7 +30,7 @@ namespace xge
 		.name = "ride",
 		.forms = { { "<ride />", places::touch, kindOf<CmdRide>() } },
 		.make = makeRide,
-		.run = runRide,
-		.print = printRide,
+		.run = runAs<runRide>,
+		.print = printAs<printRide>,
 	};
 }

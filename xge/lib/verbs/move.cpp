@@ -33,12 +33,11 @@ namespace xge
 		return move;
 	}
 
-	static bool runMove(const Command& command, const Doer& doer)
+	static bool runMove(const CmdMove& move, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		// In an action a move is held, like a key; anywhere else it is one step,
 		// the whole block in lockstep with it.
-		const CmdMove& move = std::get<CmdMove>(command);
 		if (!doer.self) { return true; }
 		if (doer.action && doer.self->onCells) { executor.game.holdCellMove(*doer.self, move, doer.pressed); }
 		else if (doer.action) { holdMove(*doer.self, executor.game.driveFor(*doer.self), move.direction, move.step, doer.pressed); }
@@ -46,14 +45,13 @@ namespace xge
 		return true;
 	}
 
-	static void printMove(std::ostream& o, const Command& command)
+	static void printMove(std::ostream& o, const CmdMove& move)
 	{
-		const CmdMove& m = std::get<CmdMove>(command);
-		const char* direction = (m.direction == Direction::Up) ? "up"
-			: (m.direction == Direction::Down) ? "down"
-			: (m.direction == Direction::Left) ? "left"
+		const char* direction = (move.direction == Direction::Up) ? "up"
+			: (move.direction == Direction::Down) ? "down"
+			: (move.direction == Direction::Left) ? "left"
 			: "right";
-		o << "move." << direction << "(" << m.step << (m.wait > 0.0f ? ", wait " + formatDisplayNumber(m.wait) : std::string{}) << ")";
+		o << "move." << direction << "(" << move.step << (move.wait > 0.0f ? ", wait " + formatDisplayNumber(move.wait) : std::string{}) << ")";
 	}
 
 	extern const Verb moveVerb;
@@ -63,7 +61,7 @@ namespace xge
 		.onRelease = true,
 		.read = readMove,
 		.make = makeMove,
-		.run = runMove,
-		.print = printMove,
+		.run = runAs<runMove>,
+		.print = printAs<printMove>,
 	};
 }

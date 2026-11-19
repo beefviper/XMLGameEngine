@@ -115,41 +115,39 @@ namespace xge
 		return spawn;
 	}
 
-	static void checkSpawn(const Command& command, const Checking& checking)
+	static void checkSpawn(const CmdSpawn& spawn, const Checking& checking)
 	{
-		const CmdSpawn& spawn = std::get<CmdSpawn>(command);
 		checkObject(checking, spawn.target, "<spawn>", "object or group");
 		if (!spawn.into.empty()) { checkCellMap(checking, spawn.into, "<spawn into=\"" + spawn.into + "\">"); }
 	}
 
-	static bool runSpawn(const Command& command, const Doer& doer)
+	static bool runSpawn(const CmdSpawn& spawnCommand, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		return executor.spawn(std::get<CmdSpawn>(command), doer.self);
+		return executor.spawn(spawnCommand, doer.self);
 	}
 
-	static void printSpawn(std::ostream& o, const Command& command)
+	static void printSpawn(std::ostream& o, const CmdSpawn& spawn)
 	{
-		const CmdSpawn& s = std::get<CmdSpawn>(command);
 		const auto half = [&](const std::optional<float>& value, bool centered)
 		{
 			if (!value) { o << "-"; return; }
 			o << (centered ? "centered " : "") << *value;
 		};
-		o << "spawn(" << s.target << (s.count != 1 ? " x" + std::to_string(s.count) : "") << (s.member ? " member " + std::to_string(std::lround(*s.member)) : "") << ", ";
-		half(s.x, s.centerX);
+		o << "spawn(" << spawn.target << (spawn.count != 1 ? " x" + std::to_string(spawn.count) : "") << (spawn.member ? " member " + std::to_string(std::lround(*spawn.member)) : "") << ", ";
+		half(spawn.x, spawn.centerX);
 		o << " ";
-		half(s.y, s.centerY);
+		half(spawn.y, spawn.centerY);
 		o << ", ";
-		half(s.velocityX, false);
+		half(spawn.velocityX, false);
 		o << " ";
-		half(s.velocityY, false);
-		if (s.accelerationX || s.accelerationY)
+		half(spawn.velocityY, false);
+		if (spawn.accelerationX || spawn.accelerationY)
 		{
 			o << ", ";
-			half(s.accelerationX, false);
+			half(spawn.accelerationX, false);
 			o << " ";
-			half(s.accelerationY, false);
+			half(spawn.accelerationY, false);
 		}
 		o << ")";
 	}
@@ -160,8 +158,8 @@ namespace xge
 		.forms = { { "<spawn>", places::changes, kindOf<CmdSpawn>() } },
 		.read = readSpawn,
 		.make = makeSpawn,
-		.check = checkSpawn,
-		.run = runSpawn,
-		.print = printSpawn,
+		.check = checkAs<checkSpawn>,
+		.run = runAs<runSpawn>,
+		.print = printAs<printSpawn>,
 	};
 }

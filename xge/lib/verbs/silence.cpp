@@ -22,22 +22,21 @@ namespace xge
 		return CmdSilence{ raw.sound };
 	}
 
-	static void checkSilence(const Command& command, const Checking& checking)
+	static void checkSilence(const CmdSilence& silence, const Checking& checking)
 	{
-		checkSound(checking, "silence", std::get<CmdSilence>(command).sound);
+		checkSound(checking, "silence", silence.sound);
 	}
 
-	static bool runSilence(const Command& command, const Doer& doer)
+	static bool runSilence(const CmdSilence& silence, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		executor.game.silenceSound(std::get<CmdSilence>(command).sound);
+		executor.game.silenceSound(silence.sound);
 		return true;
 	}
 
-	static void printSilence(std::ostream& o, const Command& command)
+	static void printSilence(std::ostream& o, const CmdSilence& silence)
 	{
-		const CmdSilence& s = std::get<CmdSilence>(command);
-		o << "silence(" << s.sound << ")";
+		o << "silence(" << silence.sound << ")";
 	}
 
 	extern const Verb silenceVerb;
@@ -46,8 +45,8 @@ namespace xge
 		.forms = { { "<silence>", places::changes, kindOf<CmdSilence>() } },
 		.read = readSilence,
 		.make = makeSilence,
-		.check = checkSilence,
-		.run = runSilence,
-		.print = printSilence,
+		.check = checkAs<checkSilence>,
+		.run = runAs<runSilence>,
+		.print = printAs<printSilence>,
 	};
 }

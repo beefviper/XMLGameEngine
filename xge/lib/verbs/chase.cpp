@@ -35,9 +35,9 @@ namespace xge
 		return CmdChase{ raw.object, speed, stopWithin };
 	}
 
-	static void checkChase(const Command& command, const Checking& checking)
+	static void checkChase(const CmdChase& chase, const Checking& checking)
 	{
-		checkObject(checking, std::get<CmdChase>(command).target, "<chase>");
+		checkObject(checking, chase.target, "<chase>");
 	}
 
 	// Heads for the nearest of `chase.target` in play: straight at its middle
@@ -61,17 +61,16 @@ namespace xge
 		}
 	}
 
-	static bool runChase(const Command& command, const Doer& doer)
+	static bool runChase(const CmdChase& chase, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		if (doer.self) { chaseNearest(executor, *doer.self, std::get<CmdChase>(command)); }
+		if (doer.self) { chaseNearest(executor, *doer.self, chase); }
 		return true;
 	}
 
-	static void printChase(std::ostream& o, const Command& command)
+	static void printChase(std::ostream& o, const CmdChase& chase)
 	{
-		const CmdChase& c = std::get<CmdChase>(command);
-		o << "chase(" << c.target << ", " << c.speed << (c.stopWithin > 0.0f ? ", near " + formatDisplayNumber(c.stopWithin) : std::string{}) << ")";
+		o << "chase(" << chase.target << ", " << chase.speed << (chase.stopWithin > 0.0f ? ", near " + formatDisplayNumber(chase.stopWithin) : std::string{}) << ")";
 	}
 
 	extern const Verb chaseVerb;
@@ -80,8 +79,8 @@ namespace xge
 		.forms = { { "<chase>", places::steering, kindOf<CmdChase>() } },
 		.read = readChase,
 		.make = makeChase,
-		.check = checkChase,
-		.run = runChase,
-		.print = printChase,
+		.check = checkAs<checkChase>,
+		.run = runAs<runChase>,
+		.print = printAs<printChase>,
 	};
 }

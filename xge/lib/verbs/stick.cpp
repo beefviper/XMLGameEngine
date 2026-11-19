@@ -16,7 +16,7 @@ namespace xge
 		return CmdStick{};
 	}
 
-	static bool runStick(const Command&, const Doer& doer)
+	static bool runStick(const CmdStick&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.self && doer.screenEdge) { xge::stick(*doer.self, executor.game.getWindowDesc(), *doer.screenEdge); }
@@ -24,7 +24,7 @@ namespace xge
 		return true;
 	}
 
-	static void printStick(std::ostream& o, const Command&)
+	static void printStick(std::ostream& o, const CmdStick&)
 	{
 		o << "stick";
 	}
@@ -34,7 +34,7 @@ namespace xge
 		.name = "stick",
 		.forms = { { "<stick />", places::edge | places::touch, kindOf<CmdStick>() } },
 		.make = makeStick,
-		.run = runStick,
-		.print = printStick,
+		.run = runAs<runStick>,
+		.print = printAs<printStick>,
 	};
 }

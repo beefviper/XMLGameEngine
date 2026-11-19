@@ -28,16 +28,15 @@ namespace xge
 		return CmdJump{ height };
 	}
 
-	static bool runJump(const Command& command, const Doer& doer)
+	static bool runJump(const CmdJump& jumpCommand, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		return !(doer.self && doer.action) || executor.jump(*doer.self, std::get<CmdJump>(command).height);
+		return !(doer.self && doer.action) || executor.jump(*doer.self, jumpCommand.height);
 	}
 
-	static void printJump(std::ostream& o, const Command& command)
+	static void printJump(std::ostream& o, const CmdJump& jump)
 	{
-		const CmdJump& j = std::get<CmdJump>(command);
-		o << "jump(" << j.height << ")";
+		o << "jump(" << jump.height << ")";
 	}
 
 	extern const Verb jumpVerb;
@@ -46,7 +45,7 @@ namespace xge
 		.forms = { { "<jump>", places::controls, kindOf<CmdJump>() } },
 		.read = readJump,
 		.make = makeJump,
-		.run = runJump,
-		.print = printJump,
+		.run = runAs<runJump>,
+		.print = printAs<printJump>,
 	};
 }

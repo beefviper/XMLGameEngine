@@ -27,17 +27,15 @@ namespace xge
 		return CmdDeflect{ maxAngle };
 	}
 
-	static bool runDeflect(const Command& command, const Doer& doer)
+	static bool runDeflect(const CmdDeflect& deflect, const Doer& doer)
 	{
-		const CmdDeflect& deflect = std::get<CmdDeflect>(command);
 		if (doer.self && doer.touch) { xge::deflect(*doer.self, *doer.other, doer.touch->edge, deflect.maxAngle); }
 		return true;
 	}
 
-	static void printDeflect(std::ostream& o, const Command& command)
+	static void printDeflect(std::ostream& o, const CmdDeflect& deflect)
 	{
-		const CmdDeflect& d = std::get<CmdDeflect>(command);
-		o << "deflect(" << d.maxAngle << ")";
+		o << "deflect(" << deflect.maxAngle << ")";
 	}
 
 	extern const Verb deflectVerb;
@@ -46,7 +44,7 @@ namespace xge
 		.forms = { { "<deflect>", places::touch, kindOf<CmdDeflect>() } },
 		.read = readDeflect,
 		.make = makeDeflect,
-		.run = runDeflect,
-		.print = printDeflect,
+		.run = runAs<runDeflect>,
+		.print = printAs<printDeflect>,
 	};
 }

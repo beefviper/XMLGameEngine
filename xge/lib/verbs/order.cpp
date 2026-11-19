@@ -30,16 +30,15 @@ namespace xge
 		return CmdOrder{ raw.object };
 	}
 
-	static bool runOrder(const Command& command, const Doer& doer)
+	static bool runOrder(const CmdOrder& order, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		return executor.game.orderHeld(std::get<CmdOrder>(command).group);
+		return executor.game.orderHeld(order.group);
 	}
 
-	static void printOrder(std::ostream& o, const Command& command)
+	static void printOrder(std::ostream& o, const CmdOrder& order)
 	{
-		const CmdOrder& r = std::get<CmdOrder>(command);
-		o << "order(" << r.group << ", random)";
+		o << "order(" << order.group << ", random)";
 	}
 
 	extern const Verb orderVerb;
@@ -48,7 +47,7 @@ namespace xge
 		.forms = { { "<order>", places::changes, kindOf<CmdOrder>() } },
 		.read = readOrder,
 		.make = makeOrder,
-		.run = runOrder,
-		.print = printOrder,
+		.run = runAs<runOrder>,
+		.print = printAs<printOrder>,
 	};
 }

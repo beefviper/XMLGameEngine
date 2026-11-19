@@ -15,13 +15,13 @@ namespace xge
 		return CmdShove{};
 	}
 
-	static bool runShove(const Command&, const Doer& doer)
+	static bool runShove(const CmdShove&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		return doer.self && doer.touch && doer.other && executor.game.shoveCells(*doer.other, doer.touch->edge);
 	}
 
-	static void printShove(std::ostream& o, const Command&)
+	static void printShove(std::ostream& o, const CmdShove&)
 	{
 		o << "shove";
 	}
@@ -31,7 +31,7 @@ namespace xge
 		.name = "shove",
 		.forms = { { "<shove />", places::touch, kindOf<CmdShove>() } },
 		.make = makeShove,
-		.run = runShove,
-		.print = printShove,
+		.run = runAs<runShove>,
+		.print = printAs<printShove>,
 	};
 }

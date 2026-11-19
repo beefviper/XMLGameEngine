@@ -15,14 +15,14 @@ namespace xge
 		return CmdClear{};
 	}
 
-	static bool runClear(const Command&, const Doer& doer)
+	static bool runClear(const CmdClear&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.match) { executor.game.clearCells(*doer.match); }
 		return true;
 	}
 
-	static void printClear(std::ostream& o, const Command&)
+	static void printClear(std::ostream& o, const CmdClear&)
 	{
 		o << "clear";
 	}
@@ -32,7 +32,7 @@ namespace xge
 		.name = "clear",
 		.forms = { { "<clear />", places::cells, kindOf<CmdClear>() } },
 		.make = makeClear,
-		.run = runClear,
-		.print = printClear,
+		.run = runAs<runClear>,
+		.print = printAs<printClear>,
 	};
 }

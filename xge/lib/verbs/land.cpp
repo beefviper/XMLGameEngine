@@ -46,14 +46,14 @@ namespace xge
 		}
 	}
 
-	static bool runLand(const Command&, const Doer& doer)
+	static bool runLand(const CmdLand&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.self && doer.touch) { landOnto(*doer.self, executor.game.parts().drives.find(doer.self->id), *doer.other, doer.touch->edge); }
 		return true;
 	}
 
-	static void printLand(std::ostream& o, const Command&)
+	static void printLand(std::ostream& o, const CmdLand&)
 	{
 		o << "land()";
 	}
@@ -63,7 +63,7 @@ namespace xge
 		.name = "land",
 		.forms = { { "<land />", places::touch, kindOf<CmdLand>() } },
 		.make = makeLand,
-		.run = runLand,
-		.print = printLand,
+		.run = runAs<runLand>,
+		.print = printAs<printLand>,
 	};
 }

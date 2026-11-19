@@ -41,9 +41,8 @@ namespace xge
 		return CmdTriggerAction{ raw.object, raw.action, raw.from, raw.otherwise, raw.objClass, cellPlaceOf(raw) };
 	}
 
-	static void checkTrigger(const Command& command, const Checking& checking)
+	static void checkTrigger(const CmdTriggerAction& trigger, const Checking& checking)
 	{
-		const CmdTriggerAction& trigger = std::get<CmdTriggerAction>(command);
 		const std::vector<Object>& objects = checking.objects;
 		if (trigger.place.any())
 		{
@@ -85,20 +84,18 @@ namespace xge
 		}
 	}
 
-	static bool runTrigger(const Command& command, const Doer& doer)
+	static bool runTrigger(const CmdTriggerAction& trigger, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		// Another action, of this object or another, as part of this.
-		const CmdTriggerAction& trigger = std::get<CmdTriggerAction>(command);
 		if (!trigger.place.any()) { executor.triggerObjectAction(trigger.object, trigger.action, doer.pressed, doer.byRule, trigger.from); }
 		else if (doer.self && doer.pressed) { executor.triggerAbout(*doer.self, trigger, doer.byRule); }
 		return true;
 	}
 
-	static void printTrigger(std::ostream& o, const Command& command)
+	static void printTrigger(std::ostream& o, const CmdTriggerAction& triggerAction)
 	{
-		const CmdTriggerAction& a = std::get<CmdTriggerAction>(command);
-		o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << (a.objClass.empty() ? std::string{} : ", " + a.objClass) << cellPlaceText(a.place) << ")";
+		o << "action(" << triggerAction.object << "," << triggerAction.action << (triggerAction.from.empty() ? std::string{} : "," + triggerAction.from) << (triggerAction.objClass.empty() ? std::string{} : ", " + triggerAction.objClass) << cellPlaceText(triggerAction.place) << ")";
 	}
 
 	extern const Verb triggerVerb;
@@ -108,8 +105,8 @@ namespace xge
 		.onRelease = true,
 		.read = readTrigger,
 		.make = makeTrigger,
-		.check = checkTrigger,
-		.run = runTrigger,
-		.print = printTrigger,
+		.check = checkAs<checkTrigger>,
+		.run = runAs<runTrigger>,
+		.print = printAs<printTrigger>,
 	};
 }

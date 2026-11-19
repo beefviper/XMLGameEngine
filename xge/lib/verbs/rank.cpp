@@ -27,11 +27,10 @@ namespace xge
 		return CmdRank{ VariableName::of(raw.variable), raw.into };
 	}
 
-	static void checkRank(const Command& command, const Checking& checking)
+	static void checkRank(const CmdRank& rank, const Checking& checking)
 	{
 		// The entry's variable, and a group whose every member has one of that
 		// name to be ordered by.
-		const CmdRank& rank = std::get<CmdRank>(command);
 		const std::string tag = "<rank variable=\"" + rank.entry.written() + "\" into=\"" + rank.table + "\" />";
 		checkVariable(checking, rank.entry, tag);
 		const std::string& variableName = rank.entry.variable;
@@ -51,18 +50,16 @@ namespace xge
 		}
 	}
 
-	static bool runRank(const Command& command, const Doer& doer)
+	static bool runRank(const CmdRank& rank, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdRank& rank = std::get<CmdRank>(command);
 		executor.game.rank(rank.entry, rank.table);
 		return true;
 	}
 
-	static void printRank(std::ostream& o, const Command& command)
+	static void printRank(std::ostream& o, const CmdRank& rank)
 	{
-		const CmdRank& c = std::get<CmdRank>(command);
-		o << "rank(" << c.entry.written() << ", " << c.table << ")";
+		o << "rank(" << rank.entry.written() << ", " << rank.table << ")";
 	}
 
 	extern const Verb rankVerb;
@@ -71,8 +68,8 @@ namespace xge
 		.forms = { { "<rank>", places::changes, kindOf<CmdRank>() } },
 		.read = readRank,
 		.make = makeRank,
-		.check = checkRank,
-		.run = runRank,
-		.print = printRank,
+		.check = checkAs<checkRank>,
+		.run = runAs<runRank>,
+		.print = printAs<printRank>,
 	};
 }

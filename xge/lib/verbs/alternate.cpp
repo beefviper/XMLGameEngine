@@ -36,26 +36,25 @@ namespace xge
 		return CmdAlternate{ raw.players };
 	}
 
-	static void checkAlternate(const Command& command, const Checking& checking)
+	static void checkAlternate(const CmdAlternate& alternate, const Checking& checking)
 	{
-		for (const std::string& player : std::get<CmdAlternate>(command).players)
+		for (const std::string& player : alternate.players)
 		{
 			if (!player.empty()) { checkState(checking, player, "<alternate> > <player state=\"" + player + "\" />"); }
 		}
 	}
 
-	static bool runAlternate(const Command& command, const Doer& doer)
+	static bool runAlternate(const CmdAlternate& alternate, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		if (!doer.self) { executor.game.startTurns(std::get<CmdAlternate>(command).players); }
+		if (!doer.self) { executor.game.startTurns(alternate.players); }
 		return true;
 	}
 
-	static void printAlternate(std::ostream& o, const Command& command)
+	static void printAlternate(std::ostream& o, const CmdAlternate& alternate)
 	{
-		const CmdAlternate& c = std::get<CmdAlternate>(command);
 		o << "alternate(";
-		for (std::size_t i = 0; i < c.players.size(); ++i) { o << (i ? ", " : "") << (c.players[i].empty() ? "-" : c.players[i]); }
+		for (std::size_t i = 0; i < alternate.players.size(); ++i) { o << (i ? ", " : "") << (alternate.players[i].empty() ? "-" : alternate.players[i]); }
 		o << ")";
 	}
 
@@ -65,8 +64,8 @@ namespace xge
 		.forms = { { "<alternate>", places::flow, kindOf<CmdAlternate>() } },
 		.read = readAlternate,
 		.make = makeAlternate,
-		.check = checkAlternate,
-		.run = runAlternate,
-		.print = printAlternate,
+		.check = checkAs<checkAlternate>,
+		.run = runAs<runAlternate>,
+		.print = printAs<printAlternate>,
 	};
 }

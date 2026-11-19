@@ -32,23 +32,21 @@ namespace xge
 		return CmdReveal{ raw.object, count };
 	}
 
-	static void checkReveal(const Command& command, const Checking& checking)
+	static void checkReveal(const CmdReveal& reveal, const Checking& checking)
 	{
-		checkObject(checking, std::get<CmdReveal>(command).target, "<reveal>");
+		checkObject(checking, reveal.target, "<reveal>");
 	}
 
-	static bool runReveal(const Command& command, const Doer& doer)
+	static bool runReveal(const CmdReveal& reveal, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdReveal& reveal = std::get<CmdReveal>(command);
 		executor.game.reveal(reveal.target, reveal.count);
 		return true;
 	}
 
-	static void printReveal(std::ostream& o, const Command& command)
+	static void printReveal(std::ostream& o, const CmdReveal& reveal)
 	{
-		const CmdReveal& r = std::get<CmdReveal>(command);
-		o << "reveal(" << r.target << ", " << r.count << ")";
+		o << "reveal(" << reveal.target << ", " << reveal.count << ")";
 	}
 
 	extern const Verb revealVerb;
@@ -57,8 +55,8 @@ namespace xge
 		.forms = { { "<reveal>", places::changes, kindOf<CmdReveal>() } },
 		.read = readReveal,
 		.make = makeReveal,
-		.check = checkReveal,
-		.run = runReveal,
-		.print = printReveal,
+		.check = checkAs<checkReveal>,
+		.run = runAs<runReveal>,
+		.print = printAs<printReveal>,
 	};
 }

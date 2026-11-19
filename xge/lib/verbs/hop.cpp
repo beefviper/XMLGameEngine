@@ -61,24 +61,23 @@ namespace xge
 		return hop;
 	}
 
-	static bool runHop(const Command& command, const Doer& doer)
+	static bool runHop(const CmdHop& hopCommand, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		return !doer.self || executor.hop(*doer.self, std::get<CmdHop>(command));
+		return !doer.self || executor.hop(*doer.self, hopCommand);
 	}
 
-	static void printHop(std::ostream& o, const Command& command)
+	static void printHop(std::ostream& o, const CmdHop& hop)
 	{
-		const CmdHop& h = std::get<CmdHop>(command);
-		const char* direction = (h.direction == Direction::Up) ? "up"
-			: (h.direction == Direction::Down) ? "down"
-			: (h.direction == Direction::Left) ? "left"
+		const char* direction = (hop.direction == Direction::Up) ? "up"
+			: (hop.direction == Direction::Down) ? "down"
+			: (hop.direction == Direction::Left) ? "left"
 			: "right";
-		if (h.step.x != 0.0f && h.step.y != 0.0f) { o << "hop(" << h.step.x << ", " << h.step.y; }
-		else { o << "hop." << direction << "(" << h.distance; }
-		o << (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
-			<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{});
-		for (const std::string& onto : h.onto) { o << ", onto " << onto; }
+		if (hop.step.x != 0.0f && hop.step.y != 0.0f) { o << "hop(" << hop.step.x << ", " << hop.step.y; }
+		else { o << "hop." << direction << "(" << hop.distance; }
+		o << (hop.seconds > 0.0f ? ", " + formatDisplayNumber(hop.seconds) + "s" : std::string{})
+			<< (hop.arc > 0.0f ? ", arc " + formatDisplayNumber(hop.arc) : std::string{});
+		for (const std::string& onto : hop.onto) { o << ", onto " << onto; }
 		o << ")";
 	}
 
@@ -88,7 +87,7 @@ namespace xge
 		.forms = { { "<hop>", places::self, kindOf<CmdHop>() } },
 		.read = readHop,
 		.make = makeHop,
-		.run = runHop,
-		.print = printHop,
+		.run = runAs<runHop>,
+		.print = printAs<printHop>,
 	};
 }

@@ -45,9 +45,8 @@ namespace xge
 		return CmdFollow{ raw.path, raw.object, stagger, nearest };
 	}
 
-	static void checkFollow(const Command& command, const Checking& checking)
+	static void checkFollow(const CmdFollow& follow, const Checking& checking)
 	{
-		const CmdFollow& follow = std::get<CmdFollow>(command);
 		if (!checking.paths.count(follow.path))
 		{
 			std::vector<std::string> names;
@@ -57,17 +56,16 @@ namespace xge
 		if (!follow.target.empty()) { checkObject(checking, follow.target, "<follow>"); }
 	}
 
-	static bool runFollow(const Command& command, const Doer& doer)
+	static bool runFollow(const CmdFollow& followCommand, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		executor.follow(doer.self, std::get<CmdFollow>(command));
+		executor.follow(doer.self, followCommand);
 		return true;
 	}
 
-	static void printFollow(std::ostream& o, const Command& command)
+	static void printFollow(std::ostream& o, const CmdFollow& follow)
 	{
-		const CmdFollow& f = std::get<CmdFollow>(command);
-		o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")";
+		o << "follow(" << follow.path << (follow.target.empty() ? "" : ", " + follow.target) << ")";
 	}
 
 	extern const Verb followVerb;
@@ -76,8 +74,8 @@ namespace xge
 		.forms = { { "<follow>", places::changes, kindOf<CmdFollow>() } },
 		.read = readFollow,
 		.make = makeFollow,
-		.check = checkFollow,
-		.run = runFollow,
-		.print = printFollow,
+		.check = checkAs<checkFollow>,
+		.run = runAs<runFollow>,
+		.print = printAs<printFollow>,
 	};
 }

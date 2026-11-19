@@ -31,10 +31,9 @@ namespace xge
 		return CmdClimb{ direction, evaluate(ownOf<RawClimb>(raw).speed), raw.objClass };
 	}
 
-	static bool runClimb(const Command& command, const Doer& doer)
+	static bool runClimb(const CmdClimb& climb, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdClimb& climb = std::get<CmdClimb>(command);
 		Object* const self = doer.self;
 		if (!self || !doer.action) { return true; }
 		Object::Climb& asked = executor.game.parts().give(executor.game.parts().climbs, self->id);
@@ -44,10 +43,9 @@ namespace xge
 		return true;
 	}
 
-	static void printClimb(std::ostream& o, const Command& command)
+	static void printClimb(std::ostream& o, const CmdClimb& climb)
 	{
-		const CmdClimb& c = std::get<CmdClimb>(command);
-		o << "climb." << (c.direction == Direction::Up ? "up" : "down") << "(" << c.step << ", " << c.ladderClass << ")";
+		o << "climb." << (climb.direction == Direction::Up ? "up" : "down") << "(" << climb.step << ", " << climb.ladderClass << ")";
 	}
 
 	extern const Verb climbVerb;
@@ -57,7 +55,7 @@ namespace xge
 		.onRelease = true,
 		.read = readClimb,
 		.make = makeClimb,
-		.run = runClimb,
-		.print = printClimb,
+		.run = runAs<runClimb>,
+		.print = printAs<printClimb>,
 	};
 }

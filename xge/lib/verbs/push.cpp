@@ -24,23 +24,22 @@ namespace xge
 		return CmdPushState{ raw.state };
 	}
 
-	static void checkPush(const Command& command, const Checking& checking)
+	static void checkPush(const CmdPushState& pushState, const Checking& checking)
 	{
-		const std::string& name = std::get<CmdPushState>(command).name;
+		const std::string& name = pushState.name;
 		checkState(checking, name, "<push state=\"" + name + "\" />");
 	}
 
-	static bool runPush(const Command& command, const Doer& doer)
+	static bool runPush(const CmdPushState& pushStateCommand, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		executor.game.pushState(std::get<CmdPushState>(command).name);
+		executor.game.pushState(pushStateCommand.name);
 		return true;
 	}
 
-	static void printPush(std::ostream& o, const Command& command)
+	static void printPush(std::ostream& o, const CmdPushState& pushState)
 	{
-		const CmdPushState& s = std::get<CmdPushState>(command);
-		o << "state(" << s.name << ")";
+		o << "state(" << pushState.name << ")";
 	}
 
 	extern const Verb pushVerb;
@@ -49,8 +48,8 @@ namespace xge
 		.forms = { { "<push>", places::flow, kindOf<CmdPushState>() } },
 		.read = readPush,
 		.make = makePush,
-		.check = checkPush,
-		.run = runPush,
-		.print = printPush,
+		.check = checkAs<checkPush>,
+		.run = runAs<runPush>,
+		.print = printAs<printPush>,
 	};
 }

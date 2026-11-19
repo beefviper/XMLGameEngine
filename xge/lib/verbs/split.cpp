@@ -15,14 +15,14 @@ namespace xge
 		return CmdSplit{};
 	}
 
-	static bool runSplit(const Command&, const Doer& doer)
+	static bool runSplit(const CmdSplit&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.self) { executor.game.splitChain(*doer.self); }
 		return true;
 	}
 
-	static void printSplit(std::ostream& o, const Command&)
+	static void printSplit(std::ostream& o, const CmdSplit&)
 	{
 		o << "split";
 	}
@@ -32,7 +32,7 @@ namespace xge
 		.name = "split",
 		.forms = { { "<split />", places::self, kindOf<CmdSplit>() } },
 		.make = makeSplit,
-		.run = runSplit,
-		.print = printSplit,
+		.run = runAs<runSplit>,
+		.print = printAs<printSplit>,
 	};
 }

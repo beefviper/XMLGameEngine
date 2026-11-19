@@ -36,10 +36,9 @@ namespace xge
 		return CmdSwing{ direction == Direction::Left ? -degrees : degrees, seconds };
 	}
 
-	static bool runSwing(const Command& command, const Doer& doer)
+	static bool runSwing(const CmdSwing& swing, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdSwing& swing = std::get<CmdSwing>(command);
 		Object* const self = doer.self;
 		if (!self || !doer.action) { return true; }
 		Object::Swing& stroke = executor.game.parts().give(executor.game.parts().swings, self->id);
@@ -49,10 +48,9 @@ namespace xge
 		return true;
 	}
 
-	static void printSwing(std::ostream& o, const Command& command)
+	static void printSwing(std::ostream& o, const CmdSwing& swing)
 	{
-		const CmdSwing& s = std::get<CmdSwing>(command);
-		o << "swing(" << s.by << " degrees, " << s.seconds << "s)";
+		o << "swing(" << swing.by << " degrees, " << swing.seconds << "s)";
 	}
 
 	extern const Verb swingVerb;
@@ -62,7 +60,7 @@ namespace xge
 		.onRelease = true,
 		.read = readSwing,
 		.make = makeSwing,
-		.run = runSwing,
-		.print = printSwing,
+		.run = runAs<runSwing>,
+		.print = printAs<printSwing>,
 	};
 }

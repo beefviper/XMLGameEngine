@@ -15,14 +15,14 @@ namespace xge
 		return CmdSettle{};
 	}
 
-	static bool runSettle(const Command&, const Doer& doer)
+	static bool runSettle(const CmdSettle&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.self) { executor.game.settle(*doer.self); }
 		return true;
 	}
 
-	static void printSettle(std::ostream& o, const Command&)
+	static void printSettle(std::ostream& o, const CmdSettle&)
 	{
 		o << "settle";
 	}
@@ -32,7 +32,7 @@ namespace xge
 		.name = "settle",
 		.forms = { { "<settle />", places::self, kindOf<CmdSettle>() } },
 		.make = makeSettle,
-		.run = runSettle,
-		.print = printSettle,
+		.run = runAs<runSettle>,
+		.print = printAs<printSettle>,
 	};
 }

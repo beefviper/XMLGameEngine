@@ -25,23 +25,21 @@ namespace xge
 		return CmdEnterScene{ raw.scene, raw.way };
 	}
 
-	static void checkEnter(const Command& command, const Checking& checking)
+	static void checkEnter(const CmdEnterScene& enter, const Checking& checking)
 	{
-		const CmdEnterScene& enter = std::get<CmdEnterScene>(command);
 		checkScene(checking, "enter", enter.scene, enter.way);
 	}
 
-	static bool runEnter(const Command& command, const Doer& doer)
+	static bool runEnter(const CmdEnterScene& enterScene, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		executor.game.enter(std::get<CmdEnterScene>(command));
+		executor.game.enter(enterScene);
 		return true;
 	}
 
-	static void printEnter(std::ostream& o, const Command& command)
+	static void printEnter(std::ostream& o, const CmdEnterScene& enterScene)
 	{
-		const CmdEnterScene& e = std::get<CmdEnterScene>(command);
-		o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")";
+		o << "enter(" << (enterScene.way.empty() ? enterScene.scene : "way " + enterScene.way) << ")";
 	}
 
 	extern const Verb enterVerb;
@@ -50,8 +48,8 @@ namespace xge
 		.forms = { { "<enter>", places::changes, kindOf<CmdEnterScene>() } },
 		.read = readEnter,
 		.make = makeEnter,
-		.check = checkEnter,
-		.run = runEnter,
-		.print = printEnter,
+		.check = checkAs<checkEnter>,
+		.run = runAs<runEnter>,
+		.print = printAs<printEnter>,
 	};
 }

@@ -15,14 +15,14 @@ namespace xge
 		return CmdThrough{};
 	}
 
-	static bool runThrough(const Command&, const Doer& doer)
+	static bool runThrough(const CmdThrough&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.self && doer.touch) { executor.game.stepThrough(); }
 		return true;
 	}
 
-	static void printThrough(std::ostream& o, const Command&)
+	static void printThrough(std::ostream& o, const CmdThrough&)
 	{
 		o << "through";
 	}
@@ -32,7 +32,7 @@ namespace xge
 		.name = "through",
 		.forms = { { "<through />", places::touch, kindOf<CmdThrough>() } },
 		.make = makeThrough,
-		.run = runThrough,
-		.print = printThrough,
+		.run = runAs<runThrough>,
+		.print = printAs<printThrough>,
 	};
 }

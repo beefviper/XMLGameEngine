@@ -27,18 +27,17 @@ namespace xge
 		return CmdPut{ raw.objClass };
 	}
 
-	static bool runPut(const Command& command, const Doer& doer)
+	static bool runPut(const CmdPut& putCommand, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		CmdPut put = std::get<CmdPut>(command);
+		CmdPut put = putCommand;
 		if (put.objClass.empty()) { put.objClass = executor.game.turnClass(); }
 		return doer.self && !put.objClass.empty() && executor.game.putPiece(*doer.self, put);
 	}
 
-	static void printPut(std::ostream& o, const Command& command)
+	static void printPut(std::ostream& o, const CmdPut& put)
 	{
-		const CmdPut& p = std::get<CmdPut>(command);
-		o << "put(" << p.objClass << ")";
+		o << "put(" << put.objClass << ")";
 	}
 
 	extern const Verb putVerb;
@@ -47,7 +46,7 @@ namespace xge
 		.forms = { { "<put>", places::self, kindOf<CmdPut>() } },
 		.read = readPut,
 		.make = makePut,
-		.run = runPut,
-		.print = printPut,
+		.run = runAs<runPut>,
+		.print = printAs<printPut>,
 	};
 }

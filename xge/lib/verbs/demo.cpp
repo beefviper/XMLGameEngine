@@ -15,14 +15,14 @@ namespace xge
 		return CmdDemo{};
 	}
 
-	static bool runDemo(const Command&, const Doer& doer)
+	static bool runDemo(const CmdDemo&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (!doer.self) { executor.game.requestDemo(); }
 		return true;
 	}
 
-	static void printDemo(std::ostream& o, const Command&)
+	static void printDemo(std::ostream& o, const CmdDemo&)
 	{
 		o << "demo()";
 	}
@@ -32,7 +32,7 @@ namespace xge
 		.name = "demo",
 		.forms = { { "<demo />", places::flow, kindOf<CmdDemo>() } },
 		.make = makeDemo,
-		.run = runDemo,
-		.print = printDemo,
+		.run = runAs<runDemo>,
+		.print = printAs<printDemo>,
 	};
 }

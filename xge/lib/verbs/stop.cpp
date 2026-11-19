@@ -16,7 +16,7 @@ namespace xge
 		return CmdStop{};
 	}
 
-	static bool runStop(const Command&, const Doer& doer)
+	static bool runStop(const CmdStop&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.self)
@@ -29,7 +29,7 @@ namespace xge
 		return true;
 	}
 
-	static void printStop(std::ostream& o, const Command&)
+	static void printStop(std::ostream& o, const CmdStop&)
 	{
 		o << "stop";
 	}
@@ -39,7 +39,7 @@ namespace xge
 		.name = "stop",
 		.forms = { { "<stop />", places::self, kindOf<CmdStop>() } },
 		.make = makeStop,
-		.run = runStop,
-		.print = printStop,
+		.run = runAs<runStop>,
+		.print = printAs<printStop>,
 	};
 }

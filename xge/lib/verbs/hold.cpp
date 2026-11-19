@@ -28,10 +28,9 @@ namespace xge
 		return CmdHold{ button };
 	}
 
-	static void printHold(std::ostream& o, const Command& command)
+	static void printHold(std::ostream& o, const CmdHold& hold)
 	{
-		const CmdHold& h = std::get<CmdHold>(command);
-		o << "hold(" << keyCodeToString(h.button) << ")";
+		o << "hold(" << keyCodeToString(hold.button) << ")";
 	}
 
 	extern const Verb holdVerb;
@@ -40,6 +39,6 @@ namespace xge
 		.forms = { { "<hold>", places::press, kindOf<CmdHold>() } },
 		.read = readHold,
 		.make = makeHold,
-		.print = printHold,
+		.print = printAs<printHold>,
 	};
 }

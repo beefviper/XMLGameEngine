@@ -51,33 +51,30 @@ namespace xge
 		return send;
 	}
 
-	static void checkSend(const Command& command, const Checking& checking)
+	static void checkSend(const CmdSend& send, const Checking& checking)
 	{
 		// Holder to holder (from a group: its members): what is held is known
 		// only once the game is made (load/expr.cpp), so a name that is none
 		// is a send refused.
-		const CmdSend& send = std::get<CmdSend>(command);
 		if (send.held) { return; }
 		checkObject(checking, send.target, "<send>", "object or group");
 		checkCellMap(checking, send.from, "<send from=\"" + send.from + "\">");
 		checkCellMap(checking, send.into, "<send into=\"" + send.into + "\">");
 	}
 
-	static bool runSend(const Command& command, const Doer& doer)
+	static bool runSend(const CmdSend& send, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		// Members of a held class, holder to holder; else a piece, map to map.
-		const CmdSend& send = std::get<CmdSend>(command);
 		if (send.held) { return executor.game.sendHeld(send.from, send.into, send.count, send.all, send.sprite); }
 		const auto cell = [](const std::optional<float>& given) { return given ? std::optional<int>(static_cast<int>(std::lround(*given))) : std::nullopt; };
 		return executor.game.sendCells(send.target, send.from, send.into, cell(send.column), cell(send.row));
 	}
 
-	static void printSend(std::ostream& o, const Command& command)
+	static void printSend(std::ostream& o, const CmdSend& send)
 	{
-		const CmdSend& s = std::get<CmdSend>(command);
-		o << "send(" << s.target << ", " << s.from << " into " << s.into;
-		if (s.column && s.row) { o << ", " << *s.column << " " << *s.row; }
+		o << "send(" << send.target << ", " << send.from << " into " << send.into;
+		if (send.column && send.row) { o << ", " << *send.column << " " << *send.row; }
 		o << ")";
 	}
 
@@ -87,8 +84,8 @@ namespace xge
 		.forms = { { "<send>", places::changes, kindOf<CmdSend>() } },
 		.read = readSend,
 		.make = makeSend,
-		.check = checkSend,
-		.run = runSend,
-		.print = printSend,
+		.check = checkAs<checkSend>,
+		.run = runAs<runSend>,
+		.print = printAs<printSend>,
 	};
 }

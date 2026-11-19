@@ -30,9 +30,9 @@ namespace xge
 		return CmdFire{ raw.object };
 	}
 
-	static void checkFire(const Command& command, const Checking& checking)
+	static void checkFire(const CmdFire& fire, const Checking& checking)
 	{
-		const std::string& shot = std::get<CmdFire>(command).projectileName;
+		const std::string& shot = fire.projectileName;
 		checkObject(checking, shot, "<fire>");
 		// What it sends is a copy of a piece, never an object already there.
 		for (const Object& object : checking.objects)
@@ -87,16 +87,15 @@ namespace xge
 		return true;
 	}
 
-	static bool runFire(const Command& command, const Doer& doer)
+	static bool runFire(const CmdFire& fire, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		return !doer.self || fireProjectile(executor, *doer.self, std::get<CmdFire>(command).projectileName);
+		return !doer.self || fireProjectile(executor, *doer.self, fire.projectileName);
 	}
 
-	static void printFire(std::ostream& o, const Command& command)
+	static void printFire(std::ostream& o, const CmdFire& fire)
 	{
-		const CmdFire& f = std::get<CmdFire>(command);
-		o << "fire(" << f.projectileName << ")";
+		o << "fire(" << fire.projectileName << ")";
 	}
 
 	extern const Verb fireVerb;
@@ -105,8 +104,8 @@ namespace xge
 		.forms = { { "<fire>", places::self, kindOf<CmdFire>() } },
 		.read = readFire,
 		.make = makeFire,
-		.check = checkFire,
-		.run = runFire,
-		.print = printFire,
+		.check = checkAs<checkFire>,
+		.run = runAs<runFire>,
+		.print = printAs<printFire>,
 	};
 }

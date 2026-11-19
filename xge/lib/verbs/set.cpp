@@ -35,11 +35,10 @@ namespace xge
 		return CmdSet{ std::move(target), evaluate(ownOf<RawSet>(raw).value) };
 	}
 
-	static void checkSet(const Command& command, const Checking& checking)
+	static void checkSet(const CmdSet& set, const Checking& checking)
 	{
 		// A variable of an object's, or one of the numbers every object has
 		// (where it is, how it is going, its heading).
-		const CmdSet& set = std::get<CmdSet>(command);
 		const std::vector<Object>& objects = checking.objects;
 		const std::string tag = "<set variable=\"" + (set.target.variable.empty() ? set.target.owner : set.target.written()) + "\">";
 		refuseFollowed(checking, set.target, tag);
@@ -68,18 +67,16 @@ namespace xge
 		}
 	}
 
-	static bool runSet(const Command& command, const Doer& doer)
+	static bool runSet(const CmdSet& set, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdSet& set = std::get<CmdSet>(command);
 		executor.game.setNumber(set.target, set.value);
 		return true;
 	}
 
-	static void printSet(std::ostream& o, const Command& command)
+	static void printSet(std::ostream& o, const CmdSet& set)
 	{
-		const CmdSet& s = std::get<CmdSet>(command);
-		o << "set(" << s.target.written() << ", " << s.value << ")";
+		o << "set(" << set.target.written() << ", " << set.value << ")";
 	}
 
 	extern const Verb setVerb;
@@ -88,8 +85,8 @@ namespace xge
 		.forms = { { "<set>", places::changes, kindOf<CmdSet>() } },
 		.read = readSet,
 		.make = makeSet,
-		.check = checkSet,
-		.run = runSet,
-		.print = printSet,
+		.check = checkAs<checkSet>,
+		.run = runAs<runSet>,
+		.print = printAs<printSet>,
 	};
 }

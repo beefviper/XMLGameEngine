@@ -15,7 +15,7 @@ namespace xge
 		return CmdReverse{};
 	}
 
-	static bool runReverse(const Command&, const Doer& doer)
+	static bool runReverse(const CmdReverse&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		Object* const self = doer.self;
@@ -31,7 +31,7 @@ namespace xge
 		return true;
 	}
 
-	static void printReverse(std::ostream& o, const Command&)
+	static void printReverse(std::ostream& o, const CmdReverse&)
 	{
 		o << "reverse";
 	}
@@ -41,7 +41,7 @@ namespace xge
 		.name = "reverse",
 		.forms = { { "<reverse />", places::self, kindOf<CmdReverse>() } },
 		.make = makeReverse,
-		.run = runReverse,
-		.print = printReverse,
+		.run = runAs<runReverse>,
+		.print = printAs<printReverse>,
 	};
 }

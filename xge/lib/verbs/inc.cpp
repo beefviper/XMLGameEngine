@@ -29,28 +29,26 @@ namespace xge
 		return CmdIncrement{ VariableName::of(raw.variable), ownOf<RawInc>(raw).by ? evaluate(*ownOf<RawInc>(raw).by) : 1.0f };
 	}
 
-	static void checkInc(const Command& command, const Checking& checking)
+	static void checkInc(const CmdIncrement& increment, const Checking& checking)
 	{
 		// A variable belongs to an object: paddle1.score is paddle1's
 		// <variable name="score">.
-		const VariableName& target = std::get<CmdIncrement>(command).target;
+		const VariableName& target = increment.target;
 		const std::string tag = "<inc variable=\"" + (target.variable.empty() ? target.owner : target.written()) + "\" />";
 		checkVariable(checking, target, tag);
 		refuseFollowed(checking, target, tag);
 	}
 
-	static bool runInc(const Command& command, const Doer& doer)
+	static bool runInc(const CmdIncrement& inc, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdIncrement& inc = std::get<CmdIncrement>(command);
 		executor.game.addTo(inc.target, inc.amount * executor.heldShare);
 		return true;
 	}
 
-	static void printInc(std::ostream& o, const Command& command)
+	static void printInc(std::ostream& o, const CmdIncrement& increment)
 	{
-		const CmdIncrement& c = std::get<CmdIncrement>(command);
-		o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")";
+		o << "inc(" << increment.target.written() << (increment.amount == 1.0f ? "" : ", " + formatDisplayNumber(increment.amount)) << ")";
 	}
 
 	extern const Verb incVerb;
@@ -59,8 +57,8 @@ namespace xge
 		.forms = { { "<inc>", places::changes, kindOf<CmdIncrement>() } },
 		.read = readInc,
 		.make = makeInc,
-		.check = checkInc,
-		.run = runInc,
-		.print = printInc,
+		.check = checkAs<checkInc>,
+		.run = runAs<runInc>,
+		.print = printAs<printInc>,
 	};
 }

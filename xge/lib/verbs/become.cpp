@@ -29,11 +29,10 @@ namespace xge
 		return CmdBecome{ raw.sprite, raw.object, raw.from, raw.style };
 	}
 
-	static void checkBecome(const Command& command, const Checking& checking)
+	static void checkBecome(const CmdBecome& become, const Checking& checking)
 	{
 		// With object=, every object of that name has the looks it names. (Its
 		// own looks, without: checked with the object, in load/check.cpp.)
-		const CmdBecome& become = std::get<CmdBecome>(command);
 		if (become.target.empty()) { return; }
 		const std::vector<Object>& objects = checking.objects;
 		bool any = false;
@@ -57,17 +56,16 @@ namespace xge
 		if (!any) { checkObject(checking, become.target, "<become>"); }
 	}
 
-	static bool runBecome(const Command& command, const Doer& doer)
+	static bool runBecome(const CmdBecome& becomeCommand, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		executor.become(doer.self, std::get<CmdBecome>(command));
+		executor.become(doer.self, becomeCommand);
 		return true;
 	}
 
-	static void printBecome(std::ostream& o, const Command& command)
+	static void printBecome(std::ostream& o, const CmdBecome& become)
 	{
-		const CmdBecome& b = std::get<CmdBecome>(command);
-		o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << (b.from.empty() ? "" : ", from " + b.from) << (b.style.empty() ? "" : ", style " + b.style) << ")";
+		o << "become(" << become.sprite << (become.target.empty() ? "" : ", " + become.target) << (become.from.empty() ? "" : ", from " + become.from) << (become.style.empty() ? "" : ", style " + become.style) << ")";
 	}
 
 	extern const Verb becomeVerb;
@@ -76,8 +74,8 @@ namespace xge
 		.forms = { { "<become>", places::changes, kindOf<CmdBecome>() } },
 		.read = readBecome,
 		.make = makeBecome,
-		.check = checkBecome,
-		.run = runBecome,
-		.print = printBecome,
+		.check = checkAs<checkBecome>,
+		.run = runAs<runBecome>,
+		.print = printAs<printBecome>,
 	};
 }

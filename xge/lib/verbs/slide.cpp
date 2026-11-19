@@ -21,20 +21,18 @@ namespace xge
 		return CmdSlide{ directionFromName(raw.direction, raw.verb), raw.objClass };
 	}
 
-	static bool runSlide(const Command& command, const Doer& doer)
+	static bool runSlide(const CmdSlide& slide, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdSlide& slide = std::get<CmdSlide>(command);
 		if (!slide.objClass.empty()) { return executor.game.slideClass(slide.objClass, slide.direction); }
 		if (doer.self && doer.self->onCells) { executor.game.slideCells(*doer.self, slide.direction); }
 		return true;
 	}
 
-	static void printSlide(std::ostream& o, const Command& command)
+	static void printSlide(std::ostream& o, const CmdSlide& slide)
 	{
-		const CmdSlide& m = std::get<CmdSlide>(command);
-		o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");
-		if (!m.objClass.empty()) { o << "(" << m.objClass << ")"; }
+		o << "slide." << ((slide.direction == Direction::Up) ? "up" : (slide.direction == Direction::Down) ? "down" : (slide.direction == Direction::Left) ? "left" : "right");
+		if (!slide.objClass.empty()) { o << "(" << slide.objClass << ")"; }
 	}
 
 	extern const Verb slideVerb;
@@ -43,7 +41,7 @@ namespace xge
 		.forms = { { "<slide>", places::self, kindOf<CmdSlide>() } },
 		.read = readSlide,
 		.make = makeSlide,
-		.run = runSlide,
-		.print = printSlide,
+		.run = runAs<runSlide>,
+		.print = printAs<printSlide>,
 	};
 }

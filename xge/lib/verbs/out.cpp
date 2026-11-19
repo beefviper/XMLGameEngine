@@ -15,14 +15,14 @@ namespace xge
 		return CmdOut{};
 	}
 
-	static bool runOut(const Command&, const Doer& doer)
+	static bool runOut(const CmdOut&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (!doer.self) { executor.game.passTurn(true); }
 		return true;
 	}
 
-	static void printOut(std::ostream& o, const Command&)
+	static void printOut(std::ostream& o, const CmdOut&)
 	{
 		o << "out()";
 	}
@@ -32,7 +32,7 @@ namespace xge
 		.name = "out",
 		.forms = { { "<out />", places::flow, kindOf<CmdOut>() } },
 		.make = makeOut,
-		.run = runOut,
-		.print = printOut,
+		.run = runAs<runOut>,
+		.print = printAs<printOut>,
 	};
 }

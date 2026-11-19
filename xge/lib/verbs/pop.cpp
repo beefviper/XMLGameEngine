@@ -18,23 +18,22 @@ namespace xge
 		return CmdPopState{ raw.state };
 	}
 
-	static void checkPop(const Command& command, const Checking& checking)
+	static void checkPop(const CmdPopState& popState, const Checking& checking)
 	{
-		const std::string& name = std::get<CmdPopState>(command).name;
+		const std::string& name = popState.name;
 		if (!name.empty()) { checkState(checking, name, "<pop state=\"" + name + "\" />"); }
 	}
 
-	static bool runPop(const Command& command, const Doer& doer)
+	static bool runPop(const CmdPopState& popStateCommand, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		executor.game.popState(std::get<CmdPopState>(command).name);
+		executor.game.popState(popStateCommand.name);
 		return true;
 	}
 
-	static void printPop(std::ostream& o, const Command& command)
+	static void printPop(std::ostream& o, const CmdPopState& popState)
 	{
-		const CmdPopState& s = std::get<CmdPopState>(command);
-		o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; }
+		o << "state()"; if (!popState.name.empty()) { o << " state(" << popState.name << ")"; }
 	}
 
 	extern const Verb popVerb;
@@ -42,8 +41,8 @@ namespace xge
 		.name = "pop",
 		.forms = { { "<pop>", places::flow, kindOf<CmdPopState>() } },
 		.make = makePop,
-		.check = checkPop,
-		.run = runPop,
-		.print = printPop,
+		.check = checkAs<checkPop>,
+		.run = runAs<runPop>,
+		.print = printAs<printPop>,
 	};
 }

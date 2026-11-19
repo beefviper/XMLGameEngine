@@ -24,10 +24,9 @@ namespace xge
 		return CmdTurn{ rotationFromName(raw.direction, raw.verb), valueOr(raw.amount, 0.0f, evaluate) };
 	}
 
-	static bool runTurn(const Command& command, const Doer& doer)
+	static bool runTurn(const CmdTurn& turn, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdTurn& turn = std::get<CmdTurn>(command);
 		if (!doer.self || !doer.action) { return true; }
 		// A shape on a cell map: a quarter turn on the press.
 		if (executor.game.isShape(*doer.self)) { return !doer.pressed || executor.game.turnCells(*doer.self, turn.direction == Direction::Right); }
@@ -35,10 +34,9 @@ namespace xge
 		return true;
 	}
 
-	static void printTurn(std::ostream& o, const Command& command)
+	static void printTurn(std::ostream& o, const CmdTurn& turn)
 	{
-		const CmdTurn& t = std::get<CmdTurn>(command);
-		o << "turn." << (t.direction == Direction::Left ? "counterclockwise" : "clockwise") << "(" << t.rate << ")";
+		o << "turn." << (turn.direction == Direction::Left ? "counterclockwise" : "clockwise") << "(" << turn.rate << ")";
 	}
 
 	extern const Verb turnVerb;
@@ -48,7 +46,7 @@ namespace xge
 		.onRelease = true,
 		.read = readTurn,
 		.make = makeTurn,
-		.run = runTurn,
-		.print = printTurn,
+		.run = runAs<runTurn>,
+		.print = printAs<printTurn>,
 	};
 }

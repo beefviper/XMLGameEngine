@@ -29,28 +29,26 @@ namespace xge
 		return CmdDecrement{ VariableName::of(raw.variable), ownOf<RawDec>(raw).by ? evaluate(*ownOf<RawDec>(raw).by) : 1.0f };
 	}
 
-	static void checkDec(const Command& command, const Checking& checking)
+	static void checkDec(const CmdDecrement& decrement, const Checking& checking)
 	{
 		// A variable belongs to an object: paddle1.score is paddle1's
 		// <variable name="score">.
-		const VariableName& target = std::get<CmdDecrement>(command).target;
+		const VariableName& target = decrement.target;
 		const std::string tag = "<dec variable=\"" + (target.variable.empty() ? target.owner : target.written()) + "\" />";
 		checkVariable(checking, target, tag);
 		refuseFollowed(checking, target, tag);
 	}
 
-	static bool runDec(const Command& command, const Doer& doer)
+	static bool runDec(const CmdDecrement& dec, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdDecrement& dec = std::get<CmdDecrement>(command);
 		executor.game.addTo(dec.target, -dec.amount * executor.heldShare);
 		return true;
 	}
 
-	static void printDec(std::ostream& o, const Command& command)
+	static void printDec(std::ostream& o, const CmdDecrement& decrement)
 	{
-		const CmdDecrement& c = std::get<CmdDecrement>(command);
-		o << "dec(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")";
+		o << "dec(" << decrement.target.written() << (decrement.amount == 1.0f ? "" : ", " + formatDisplayNumber(decrement.amount)) << ")";
 	}
 
 	extern const Verb decVerb;
@@ -59,8 +57,8 @@ namespace xge
 		.forms = { { "<dec>", places::changes, kindOf<CmdDecrement>() } },
 		.read = readDec,
 		.make = makeDec,
-		.check = checkDec,
-		.run = runDec,
-		.print = printDec,
+		.check = checkAs<checkDec>,
+		.run = runAs<runDec>,
+		.print = printAs<printDec>,
 	};
 }

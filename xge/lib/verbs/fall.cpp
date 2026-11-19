@@ -15,16 +15,15 @@ namespace xge
 		return CmdFall{ raw.objClass };
 	}
 
-	static bool runFall(const Command& command, const Doer& doer)
+	static bool runFall(const CmdFall& fall, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		if (doer.match) { executor.game.fallCells(doer.match->map, std::get<CmdFall>(command).objClass); }
+		if (doer.match) { executor.game.fallCells(doer.match->map, fall.objClass); }
 		return true;
 	}
 
-	static void printFall(std::ostream& o, const Command& command)
+	static void printFall(std::ostream& o, const CmdFall& fall)
 	{
-		const CmdFall& fall = std::get<CmdFall>(command);
 		o << "fall"; if (!fall.objClass.empty()) { o << "(" << fall.objClass << ")"; }
 	}
 
@@ -33,7 +32,7 @@ namespace xge
 		.name = "fall",
 		.forms = { { "<fall />", places::cells, kindOf<CmdFall>() } },
 		.make = makeFall,
-		.run = runFall,
-		.print = printFall,
+		.run = runAs<runFall>,
+		.print = printAs<printFall>,
 	};
 }

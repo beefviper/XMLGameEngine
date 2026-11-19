@@ -14,13 +14,13 @@ namespace xge
 		return CmdDie{};
 	}
 
-	static bool runDie(const Command&, const Doer& doer)
+	static bool runDie(const CmdDie&, const Doer& doer)
 	{
 		if (doer.self) { xge::die(*doer.self); }
 		return true;
 	}
 
-	static void printDie(std::ostream& o, const Command&)
+	static void printDie(std::ostream& o, const CmdDie&)
 	{
 		o << "die";
 	}
@@ -30,7 +30,7 @@ namespace xge
 		.name = "die",
 		.forms = { { "<die />", places::self, kindOf<CmdDie>() } },
 		.make = makeDie,
-		.run = runDie,
-		.print = printDie,
+		.run = runAs<runDie>,
+		.print = printAs<printDie>,
 	};
 }

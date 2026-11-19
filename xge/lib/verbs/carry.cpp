@@ -15,14 +15,14 @@ namespace xge
 		return CmdCarry{};
 	}
 
-	static bool runCarry(const Command&, const Doer& doer)
+	static bool runCarry(const CmdCarry&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.self && doer.touch) { executor.carry(*doer.self, *doer.other); }
 		return true;
 	}
 
-	static void printCarry(std::ostream& o, const Command&)
+	static void printCarry(std::ostream& o, const CmdCarry&)
 	{
 		o << "carry";
 	}
@@ -32,7 +32,7 @@ namespace xge
 		.name = "carry",
 		.forms = { { "<carry />", places::touch, kindOf<CmdCarry>() } },
 		.make = makeCarry,
-		.run = runCarry,
-		.print = printCarry,
+		.run = runAs<runCarry>,
+		.print = printAs<printCarry>,
 	};
 }

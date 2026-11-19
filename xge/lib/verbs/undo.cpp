@@ -15,13 +15,13 @@ namespace xge
 		return CmdUndo{};
 	}
 
-	static bool runUndo(const Command&, const Doer& doer)
+	static bool runUndo(const CmdUndo&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		return executor.game.undo();
 	}
 
-	static void printUndo(std::ostream& o, const Command&)
+	static void printUndo(std::ostream& o, const CmdUndo&)
 	{
 		o << "undo";
 	}
@@ -31,7 +31,7 @@ namespace xge
 		.name = "undo",
 		.forms = { { "<undo />", places::flow, kindOf<CmdUndo>() } },
 		.make = makeUndo,
-		.run = runUndo,
-		.print = printUndo,
+		.run = runAs<runUndo>,
+		.print = printAs<printUndo>,
 	};
 }

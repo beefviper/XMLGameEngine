@@ -32,9 +32,9 @@ namespace xge
 		return CmdAim{ raw.object, lined, within };
 	}
 
-	static void checkAim(const Command& command, const Checking& checking)
+	static void checkAim(const CmdAim& aim, const Checking& checking)
 	{
-		checkObject(checking, std::get<CmdAim>(command).target, "<aim>");
+		checkObject(checking, aim.target, "<aim>");
 	}
 
 	// Turns to the nearest of `target` in play: the next shots go straight at
@@ -65,16 +65,15 @@ namespace xge
 		return true;
 	}
 
-	static bool runAim(const Command& command, const Doer& doer)
+	static bool runAim(const CmdAim& aim, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		return !doer.self || aimAtNearest(executor, *doer.self, std::get<CmdAim>(command));
+		return !doer.self || aimAtNearest(executor, *doer.self, aim);
 	}
 
-	static void printAim(std::ostream& o, const Command& command)
+	static void printAim(std::ostream& o, const CmdAim& aim)
 	{
-		const CmdAim& a = std::get<CmdAim>(command);
-		o << "aim(" << a.target << (a.lined ? ", lined " + std::to_string(a.within) : std::string()) << ")";
+		o << "aim(" << aim.target << (aim.lined ? ", lined " + std::to_string(aim.within) : std::string()) << ")";
 	}
 
 	extern const Verb aimVerb;
@@ -83,8 +82,8 @@ namespace xge
 		.forms = { { "<aim>", places::steering, kindOf<CmdAim>() } },
 		.read = readAim,
 		.make = makeAim,
-		.check = checkAim,
-		.run = runAim,
-		.print = printAim,
+		.check = checkAs<checkAim>,
+		.run = runAs<runAim>,
+		.print = printAs<printAim>,
 	};
 }

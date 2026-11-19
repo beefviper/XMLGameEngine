@@ -16,14 +16,14 @@ namespace xge
 		return CmdWrap{};
 	}
 
-	static bool runWrap(const Command&, const Doer& doer)
+	static bool runWrap(const CmdWrap&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.self && doer.screenEdge) { xge::wrap(*doer.self, executor.game.getWindowDesc(), *doer.screenEdge); }
 		return true;
 	}
 
-	static void printWrap(std::ostream& o, const Command&)
+	static void printWrap(std::ostream& o, const CmdWrap&)
 	{
 		o << "wrap";
 	}
@@ -33,7 +33,7 @@ namespace xge
 		.name = "wrap",
 		.forms = { { "<wrap />", places::edge, kindOf<CmdWrap>() } },
 		.make = makeWrap,
-		.run = runWrap,
-		.print = printWrap,
+		.run = runAs<runWrap>,
+		.print = printAs<printWrap>,
 	};
 }

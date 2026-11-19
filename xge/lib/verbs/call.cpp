@@ -18,16 +18,15 @@ namespace xge
 		return CmdCall{ raw.object };
 	}
 
-	static bool runCall(const Command& command, const Doer& doer)
+	static bool runCall(const CmdCall& call, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		return doer.self && executor.game.callValue(*doer.self, std::get<CmdCall>(command).holder);
+		return doer.self && executor.game.callValue(*doer.self, call.holder);
 	}
 
-	static void printCall(std::ostream& o, const Command& command)
+	static void printCall(std::ostream& o, const CmdCall& call)
 	{
-		const CmdCall& c = std::get<CmdCall>(command);
-		o << "call(" << c.holder << ")";
+		o << "call(" << call.holder << ")";
 	}
 
 	extern const Verb callVerb;
@@ -35,7 +34,7 @@ namespace xge
 		.name = "call",
 		.forms = { { "<call />", places::self, kindOf<CmdCall>() } },
 		.make = makeCall,
-		.run = runCall,
-		.print = printCall,
+		.run = runAs<runCall>,
+		.print = printAs<printCall>,
 	};
 }

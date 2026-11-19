@@ -26,23 +26,21 @@ namespace xge
 		return CmdShift{ raw.object, { valueOr(raw.positionX, 0.0f, evaluate), valueOr(raw.positionY, 0.0f, evaluate) } };
 	}
 
-	static void checkShift(const Command& command, const Checking& checking)
+	static void checkShift(const CmdShift& shift, const Checking& checking)
 	{
-		checkObject(checking, std::get<CmdShift>(command).target, "<shift>");
+		checkObject(checking, shift.target, "<shift>");
 	}
 
-	static bool runShift(const Command& command, const Doer& doer)
+	static bool runShift(const CmdShift& shift, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdShift& shift = std::get<CmdShift>(command);
 		executor.game.shift(shift.target, shift.by);
 		return true;
 	}
 
-	static void printShift(std::ostream& o, const Command& command)
+	static void printShift(std::ostream& o, const CmdShift& shift)
 	{
-		const CmdShift& s = std::get<CmdShift>(command);
-		o << "shift(" << s.target << ", " << s.by.x << ", " << s.by.y << ")";
+		o << "shift(" << shift.target << ", " << shift.by.x << ", " << shift.by.y << ")";
 	}
 
 	extern const Verb shiftVerb;
@@ -51,8 +49,8 @@ namespace xge
 		.forms = { { "<shift>", places::changes, kindOf<CmdShift>() } },
 		.read = readShift,
 		.make = makeShift,
-		.check = checkShift,
-		.run = runShift,
-		.print = printShift,
+		.check = checkAs<checkShift>,
+		.run = runAs<runShift>,
+		.print = printAs<printShift>,
 	};
 }

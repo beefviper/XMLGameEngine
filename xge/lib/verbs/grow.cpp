@@ -15,14 +15,14 @@ namespace xge
 		return CmdGrow{};
 	}
 
-	static bool runGrow(const Command&, const Doer& doer)
+	static bool runGrow(const CmdGrow&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		if (doer.self && !executor.game.cellPart(*doer.self).chain.empty()) { ++executor.game.placeFor(*doer.self).chainGrow; }
 		return true;
 	}
 
-	static void printGrow(std::ostream& o, const Command&)
+	static void printGrow(std::ostream& o, const CmdGrow&)
 	{
 		o << "grow";
 	}
@@ -32,7 +32,7 @@ namespace xge
 		.name = "grow",
 		.forms = { { "<grow />", places::self, kindOf<CmdGrow>() } },
 		.make = makeGrow,
-		.run = runGrow,
-		.print = printGrow,
+		.run = runAs<runGrow>,
+		.print = printAs<printGrow>,
 	};
 }

@@ -21,17 +21,15 @@ namespace xge
 		return CmdMerge{ raw.variable };
 	}
 
-	static bool runMerge(const Command& command, const Doer& doer)
+	static bool runMerge(const CmdMerge& merge, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdMerge& merge = std::get<CmdMerge>(command);
 		return doer.self && doer.touch && doer.other && executor.game.mergeCells(*doer.self, *doer.other, merge.variable);
 	}
 
-	static void printMerge(std::ostream& o, const Command& command)
+	static void printMerge(std::ostream& o, const CmdMerge& merge)
 	{
-		const CmdMerge& m = std::get<CmdMerge>(command);
-		o << "merge(" << m.variable << ")";
+		o << "merge(" << merge.variable << ")";
 	}
 
 	extern const Verb mergeVerb;
@@ -40,7 +38,7 @@ namespace xge
 		.forms = { { "<merge>", places::touch, kindOf<CmdMerge>() } },
 		.read = readMerge,
 		.make = makeMerge,
-		.run = runMerge,
-		.print = printMerge,
+		.run = runAs<runMerge>,
+		.print = printAs<printMerge>,
 	};
 }

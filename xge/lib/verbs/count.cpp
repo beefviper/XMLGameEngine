@@ -24,19 +24,17 @@ namespace xge
 		return CmdCount{ raw.objClass, VariableName::of(raw.into), cellPlaceOf(raw) };
 	}
 
-	static bool runCount(const Command& command, const Doer& doer)
+	static bool runCount(const CmdCount& count, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		const CmdCount& count = std::get<CmdCount>(command);
 		if (!count.place.any()) { executor.game.setNumber(count.target, executor.game.countClass(count.objClass)); }
 		else if (doer.self) { executor.game.setNumber(count.target, static_cast<float>(executor.game.piecesAbout(*doer.self, count.objClass, count.place).size())); }
 		return true;
 	}
 
-	static void printCount(std::ostream& o, const Command& command)
+	static void printCount(std::ostream& o, const CmdCount& count)
 	{
-		const CmdCount& c = std::get<CmdCount>(command);
-		o << "count(" << c.objClass << ", " << c.target.written() << cellPlaceText(c.place) << ")";
+		o << "count(" << count.objClass << ", " << count.target.written() << cellPlaceText(count.place) << ")";
 	}
 
 	extern const Verb countVerb;
@@ -45,7 +43,7 @@ namespace xge
 		.forms = { { "<count>", places::changes, kindOf<CmdCount>() } },
 		.read = readCount,
 		.make = makeCount,
-		.run = runCount,
-		.print = printCount,
+		.run = runAs<runCount>,
+		.print = printAs<printCount>,
 	};
 }

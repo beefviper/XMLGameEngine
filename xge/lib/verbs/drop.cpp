@@ -16,7 +16,7 @@ namespace xge
 		return CmdDrop{};
 	}
 
-	static bool runDrop(const Command&, const Doer& doer)
+	static bool runDrop(const CmdDrop&, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
 		Object* const self = doer.self;
@@ -28,7 +28,7 @@ namespace xge
 		return true;
 	}
 
-	static void printDrop(std::ostream& o, const Command&)
+	static void printDrop(std::ostream& o, const CmdDrop&)
 	{
 		o << "drop";
 	}
@@ -38,7 +38,7 @@ namespace xge
 		.name = "drop",
 		.forms = { { "<drop />", places::self, kindOf<CmdDrop>() } },
 		.make = makeDrop,
-		.run = runDrop,
-		.print = printDrop,
+		.run = runAs<runDrop>,
+		.print = printAs<printDrop>,
 	};
 }

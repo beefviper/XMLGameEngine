@@ -19,16 +19,16 @@ namespace xge
 		return CmdDespawn{ raw.object };
 	}
 
-	static void checkDespawn(const Command& command, const Checking& checking)
+	static void checkDespawn(const CmdDespawn& despawn, const Checking& checking)
 	{
-		const std::string& target = std::get<CmdDespawn>(command).target;
+		const std::string& target = despawn.target;
 		if (!target.empty()) { checkObject(checking, target, "<despawn>", "object or group"); }
 	}
 
-	static bool runDespawn(const Command& command, const Doer& doer)
+	static bool runDespawn(const CmdDespawn& despawnCommand, const Doer& doer)
 	{
 		CommandExecutor& executor = *doer.executor;
-		executor.despawn(doer.self, std::get<CmdDespawn>(command));
+		executor.despawn(doer.self, despawnCommand);
 		return true;
 	}
 
@@ -38,10 +38,9 @@ namespace xge
 		return std::get<CmdDespawn>(command).target.empty() ? 0 : 1;
 	}
 
-	static void printDespawn(std::ostream& o, const Command& command)
+	static void printDespawn(std::ostream& o, const CmdDespawn& despawn)
 	{
-		const CmdDespawn& d = std::get<CmdDespawn>(command);
-		o << "despawn" << (d.target.empty() ? "" : "(" + d.target + ")");
+		o << "despawn" << (despawn.target.empty() ? "" : "(" + despawn.target + ")");
 	}
 
 	extern const Verb despawnVerb;
@@ -50,8 +49,8 @@ namespace xge
 		.forms = { { "<despawn />", places::self, kindOf<CmdDespawn>() }, { "<despawn object>", places::changes, kindOf<CmdDespawn>() } },
 		.formOf = formOfDespawn,
 		.make = makeDespawn,
-		.check = checkDespawn,
-		.run = runDespawn,
-		.print = printDespawn,
+		.check = checkAs<checkDespawn>,
+		.run = runAs<runDespawn>,
+		.print = printAs<printDespawn>,
 	};
 }

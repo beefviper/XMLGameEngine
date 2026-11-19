@@ -26,9 +26,8 @@ namespace xge
 		return CmdTrack{ raw.path, raw.onto };
 	}
 
-	static void checkTrack(const Command& command, const Checking& checking)
+	static void checkTrack(const CmdTrack& track, const Checking& checking)
 	{
-		const CmdTrack& track = std::get<CmdTrack>(command);
 		if (track.path.empty()) { return; }
 		const auto path = checking.paths.find(track.path);
 		if (path == checking.paths.end())
@@ -43,11 +42,10 @@ namespace xge
 		}
 	}
 
-	static void printTrack(std::ostream& o, const Command& command)
+	static void printTrack(std::ostream& o, const CmdTrack& track)
 	{
-		const CmdTrack& t = std::get<CmdTrack>(command);
-		o << "track" << (t.path.empty() ? "" : "(" + t.path + ")");
-		for (const std::string& onto : t.onto) { o << " onto " << onto; }
+		o << "track" << (track.path.empty() ? "" : "(" + track.path + ")");
+		for (const std::string& onto : track.onto) { o << " onto " << onto; }
 	}
 
 	extern const Verb trackVerb;
@@ -56,7 +54,7 @@ namespace xge
 		.forms = { { "<track />", places::controls, kindOf<CmdTrack>() } },
 		.read = readTrack,
 		.make = makeTrack,
-		.check = checkTrack,
-		.print = printTrack,
+		.check = checkAs<checkTrack>,
+		.print = printAs<printTrack>,
 	};
 }
