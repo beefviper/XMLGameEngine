@@ -1231,8 +1231,10 @@ namespace xge
 		RawPath readPath(const XmlNode& node)
 		{
 			RawPath path;
-			path.name = requireAttribute(node, "name", "<paths> > <path>");
+			path.name = node.getAttribute("name");
 			const std::string where = "path '" + path.name + "'";
+
+			// A <speed>, maybe a <start>, then one or more <step>s and <home />s (the schema).
 
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
@@ -1254,7 +1256,7 @@ namespace xge
 					step.home = true;
 					path.steps.push_back(std::move(step));
 				}
-				else if (name == "step")
+				else
 				{
 					const std::string here = where + " > <step>";
 					RawPathStep step;
@@ -1270,14 +1272,7 @@ namespace xge
 					step.commands = readCommands(std::move(first), here);
 					path.steps.push_back(std::move(step));
 				}
-				else
-				{
-					fail(where, "unknown <" + name + ">; expected <speed>, <start>, <step> and <home />");
-				}
 			}
-
-			if (path.speed.kind == RawValue::Kind::Expression && path.speed.text.empty()) { fail(where, "missing <speed>"); }
-			if (path.steps.empty()) { fail(where, "has no <step> or <home />"); }
 			return path;
 		}
 
@@ -2786,7 +2781,7 @@ namespace xge
 		void readMapHere(const XmlNode& node, std::vector<RawObject>& out)
 		{
 			MapLayout map;
-			map.name = requireAttribute(node, "name", "<map>");
+			map.name = node.getAttribute("name");
 			const std::string where = "map '" + map.name + "'";
 			refuseReserved(map.name, "a map", where);
 
@@ -2838,10 +2833,6 @@ namespace xge
 				{
 					out.push_back(readObject(*child, &map));
 					any = true;
-				}
-				else if (tag != "tile" && tag != "position" && tag != "row" && tag != "columns" && tag != "rows" && tag != "cells" && tag != "checks")
-				{
-					fail(where, "unknown <" + tag + ">; expected a <tile>, a <position>, <columns> and <rows>, <cells />, <row>s, then <group>s and <object>s, then <checks>");
 				}
 			}
 			if (!any && map.cells) { out.push_back(mapHolder(map)); }
