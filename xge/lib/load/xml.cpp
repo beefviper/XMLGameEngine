@@ -1032,7 +1032,6 @@ namespace xge
 						{
 							holder.pickedInto = part->getAttribute("into");
 							holder.pickedSends = readLeadValue(*part, {}, "how many", at);
-							holder.hasPickedSend = true;
 						}
 						else if (name == "play") { holder.pickedSound = part->getAttribute("sound"); }
 						else if (name == "empty")
@@ -1148,10 +1147,7 @@ namespace xge
 				}
 				else if (name == "start")
 				{
-					const RawVector2 start = readVector2(*child, where + " > <start>");
-					path.hasStart = true;
-					path.startX = start.x;
-					path.startY = start.y;
+					path.start = readVector2(*child, where + " > <start>");
 				}
 				else if (name == "home")
 				{

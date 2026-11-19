@@ -585,10 +585,9 @@ namespace xge
 			{
 				throw std::runtime_error(where + ": the <speed> is not above 0, so it would never get anywhere");
 			}
-			path.hasStart = rawPath.hasStart;
-			if (rawPath.hasStart)
+			if (rawPath.start)
 			{
-				path.start = { evaluate(rawPath.startX, where + " > <start>"), evaluate(rawPath.startY, where + " > <start>") };
+				path.start = Vector2f{ evaluate(rawPath.start->x, where + " > <start>"), evaluate(rawPath.start->y, where + " > <start>") };
 			}
 			for (const RawPathStep& rawStep : rawPath.steps)
 			{

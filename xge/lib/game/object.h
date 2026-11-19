@@ -231,13 +231,6 @@ namespace xge
 		friend std::ostream& operator<<(std::ostream& o, CollisionData const& f);
 	};
 
-	// An <x>/<y> pair, each still a RawValue.
-	struct RawVector2
-	{
-		RawValue x;
-		RawValue y;
-	};
-
 	// One <line> of a sprite drawn from lines: two points, measured in pixels
 	// from the sprite's top left, and how it looks.
 	struct RawLine
@@ -727,8 +720,7 @@ namespace xge
 			RawValue startMore;         // a group's: each holder after the first, this many more
 			bool startShuffled{ false }; // <starts> > <order group><random />: what starts in it is shuffled
 			std::string pickedInto;     // <picked><send into>N: picking from it sends that many there (none: into the hand's own holder)
-			RawValue pickedSends;
-			bool hasPickedSend{ false };
+			std::optional<RawValue> pickedSends;
 			std::string emptyFrom;      // <picked><empty><send from>: picking from it empty brings that holder's back
 			bool emptyRandom{ false };  // <empty><order><random /></order>: put back in random order, not turned over
 			RawValue emptyLeave;        // <empty><send><leave>: that many of the top items stay (empty text: none)

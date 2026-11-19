@@ -565,7 +565,7 @@ namespace xge
 			holder.startMore = static_cast<int>(std::lround(number(raw.startMore)));
 			holder.startShuffled = raw.startShuffled;
 			holder.pickedInto = raw.pickedInto;
-			holder.pickedSends = !raw.hasPickedSend ? 0 : std::max(1, static_cast<int>(std::lround(number(raw.pickedSends))));
+			holder.pickedSends = !raw.pickedSends ? 0 : std::max(1, static_cast<int>(std::lround(number(*raw.pickedSends))));
 			holder.emptyFrom = raw.emptyFrom;
 			holder.emptyRandom = raw.emptyRandom;
 			holder.pickedSound = raw.pickedSound;

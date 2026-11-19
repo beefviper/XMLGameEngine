@@ -1678,9 +1678,9 @@ namespace xge
 		object.path.legStarted = false;
 		object.path.wait = std::max(0.0f, wait);
 		object.velocity = {};
-		if (chosen.hasStart)
+		if (chosen.start)
 		{
-			object.position = chosen.start;
+			object.position = *chosen.start;
 		}
 	}
 

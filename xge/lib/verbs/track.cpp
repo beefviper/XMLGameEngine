@@ -37,7 +37,7 @@ namespace xge
 			for (const auto& entry : checking.paths) { names.push_back(entry.first); }
 			throw std::runtime_error(checking.where + ": <track path=\"" + track.path + "\" /> names no path of the game" + didYouMean(track.path, names));
 		}
-		if (!path->second.hasStart)
+		if (!path->second.start)
 		{
 			throw std::runtime_error(checking.where + ": <track path=\"" + track.path + "\" />: the path needs a <start>, where 0 is");
 		}

@@ -982,6 +982,13 @@ namespace xge
 		bool drawsRandom() const;
 	};
 
+	// An <x>/<y> pair, each still a RawValue.
+	struct RawVector2
+	{
+		RawValue x;
+		RawValue y;
+	};
+
 	// One operand of an operation: the number it is, and the role it plays
 	// (`value`, or a test word such as `atleast`; see operationShape).
 	struct RawOperand
@@ -1219,9 +1226,7 @@ namespace xge
 	{
 		std::string name;
 		RawValue speed;
-		bool hasStart{ false };
-		RawValue startX;
-		RawValue startY;
+		std::optional<RawVector2> start;  // <start>, when written
 		std::vector<RawPathStep> steps;
 	};
 
@@ -1259,8 +1264,7 @@ namespace xge
 	{
 		std::string name;
 		float speed{};
-		bool hasStart{ false };
-		Vector2f start;
+		std::optional<Vector2f> start;  // where 0 is; when written
 		std::vector<PathStep> steps;
 	};
 

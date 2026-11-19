@@ -284,10 +284,11 @@ namespace xge
 
 	void trackPath(Object& object, const Path& path, float fraction)
 	{
-		std::vector<Vector2f> corners{ path.start };
+		const Vector2f start = path.start.value_or(Vector2f{}); // a tracked path has one (verbs/track.cpp)
+		std::vector<Vector2f> corners{ start };
 		for (const PathStep& step : path.steps)
 		{
-			corners.push_back(step.home ? path.start : corners.back() + step.by);
+			corners.push_back(step.home ? start : corners.back() + step.by);
 		}
 
 		float total = 0.0f;
