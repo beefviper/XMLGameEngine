@@ -1607,43 +1607,31 @@ namespace xge
 			RawCollisionData collisionData = std::move(base);
 
 			// A <collisions> is on unless it says <off />; <lockstep /> adds to
-			// what an outer group said.
-			collisionData.enabled = findChild(&collisions, "off") == nullptr;
-			if (findChild(&collisions, "lockstep")) { collisionData.lockstep = true; }
-			if (auto type = findChild(&collisions, "type"))
-			{
-				collisionData.type = readText(*type) == "pixel" ? CollisionType::Pixel : CollisionType::Box;
-			}
-
-			// The characters of its bitmap that touch, each <solid char>; an
-			// inner group's replace the outer's.
+			// what an outer group said. The characters of its bitmap that touch,
+			// each <solid char>, and what it touches with, if not its picture,
+			// its <hitbox>es, replace an outer group's.
+			collisionData.enabled = true;
 			std::string solid;
-			for (std::unique_ptr<XmlNode> child = collisions.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			std::vector<RawHitbox> hitboxes;
+			for (const auto& [tag, child] : Children(collisions))
 			{
-				if (child->getName() != "solid") { continue; }
-				const std::string character = child->getAttribute("char");
-				if (character.size() != 1 || character == ".")
+				if (tag == "off") { collisionData.enabled = false; }
+				else if (tag == "lockstep") { collisionData.lockstep = true; }
+				else if (tag == "type") { collisionData.type = readText(*child) == "pixel" ? CollisionType::Pixel : CollisionType::Box; }
+				else if (tag == "solid")
 				{
-					fail(collisionsHere + " > <solid>", "char=\"" + character + "\"; expected one character of the bitmap, '*' or one of its <color char>s");
+					const std::string character = child->getAttribute("char");
+					if (character.size() != 1 || character == ".")
+					{
+						fail(collisionsHere + " > <solid>", "char=\"" + character + "\"; expected one character of the bitmap, '*' or one of its <color char>s");
+					}
+					solid += character;
 				}
-				solid += character;
+				else if (tag == "hitbox") { hitboxes.push_back(readHitbox(*child, collisionsHere + " > <hitbox>")); }
+				else if (tag == "collision") { readRule(collisionData, *child, Said{}, collisionsHere + " > <collision>"); }
 			}
 			if (!solid.empty()) { collisionData.solid = solid; }
-
-			// What it touches with, if not its picture: its <hitbox>es, which
-			// replace an outer group's.
-			std::vector<RawHitbox> hitboxes;
-			for (std::unique_ptr<XmlNode> child = collisions.getFirstChild(); child != nullptr; child = child->getNextSibling())
-			{
-				if (child->getName() == "hitbox") { hitboxes.push_back(readHitbox(*child, collisionsHere + " > <hitbox>")); }
-			}
 			if (!hitboxes.empty()) { collisionData.hitboxes = std::move(hitboxes); }
-
-			for (std::unique_ptr<XmlNode> collision = findChild(&collisions, "collision"); collision != nullptr; collision = collision->getNextSibling())
-			{
-				if (collision->getName() != "collision") { continue; }
-				readRule(collisionData, *collision, Said{}, collisionsHere + " > <collision>");
-			}
 
 			return collisionData;
 		}
@@ -1905,6 +1893,7 @@ namespace xge
 			rawObject.objClass = getAttribute(&object, "class");
 
 			const std::string where = "object '" + rawObject.name + "'";
+			const Children children(object);
 
 			std::vector<AnimationSpec> animations = readAnimations(object, where);
 			std::vector<RawSprite> sprites = readSprites(object, where);
@@ -1915,16 +1904,16 @@ namespace xge
 			// Looks that are all empty: one that only keeps where something is up
 			// to (a look for each), drawn as nothing, and, unless it says, at 0, 0.
 			bool blank = !sprites.empty() && animations.empty() && !map;
-			for (std::unique_ptr<XmlNode> node = object.getFirstChild(); node != nullptr && blank; node = node->getNextSibling())
+			for (const Children::Child& child : children)
 			{
-				if (node->getName() == "sprite" && node->getFirstChild()) { blank = false; }
+				if (child.name == "sprite" && child.node->getFirstChild()) { blank = false; }
 			}
-			const bool shape = findChild(&object, "shape") != nullptr;
+			const bool shape = children.find("shape") != nullptr;
 			if (shape)
 			{
 				if (!map || !map->cells) { fail(where, "has a <shape>, which is for an object on a map with <cells />"); }
 				if (!sprites.empty() || !animations.empty()) { fail(where, "has a <shape>, which is drawn by its cells, so it has no <sprite> or <animation>"); }
-				rawObject.shapeRows = readShapeRows(*findChild(&object, "shape"), where);
+				rawObject.shapeRows = readShapeRows(*children.find("shape"), where);
 				rawObject.sprite = nothingSprite();
 				rawObject.isDrawn = false;
 			}
@@ -1932,30 +1921,30 @@ namespace xge
 			{
 				rawObject.sprite = nothingSprite();
 				rawObject.isDrawn = false;
-				if (findChild(&object, "hidden")) { fail(where, "has no <sprite>, so it is never drawn; <hidden /> is for something with a picture"); }
-				if (!findChild(&object, "variables") && !findChild(&object, "timers") && !findChild(&object, "holds")) { fail(where, "has no <sprite> and no <variables>, <timers> or <holds>, so it is nothing"); }
+				if (children.find("hidden")) { fail(where, "has no <sprite>, so it is never drawn; <hidden /> is for something with a picture"); }
+				if (!children.find("variables") && !children.find("timers") && !children.find("holds")) { fail(where, "has no <sprite> and no <variables>, <timers> or <holds>, so it is nothing"); }
 			}
 			else
 			{
 				chooseSprite(std::move(sprites), animations, where, rawObject);
-				if (blank && findChild(&object, "hidden")) { fail(where, "draws nothing in any of its looks; <hidden /> is for something with a picture"); }
+				if (blank && children.find("hidden")) { fail(where, "draws nothing in any of its looks; <hidden /> is for something with a picture"); }
 			}
 
 			if (map)
 			{
-				if (findChild(&object, "position")) { fail(where, "is on a <map>, where the tile of its char= is where it starts, so it has no <position>"); }
+				if (children.find("position")) { fail(where, "is on a <map>, where the tile of its char= is where it starts, so it has no <position>"); }
 				placeObjectOnMap(object, *map, rawObject, where);
 			}
 			else
 			{
 				if (!object.getAttribute("char").empty()) { fail(where, "char=\"" + object.getAttribute("char") + "\" picks a character of a <map>'s rows; this object is on no <map>"); }
-				if (auto position = findChild(&object, "position")) { rawObject.rawPosition = readVector2(*position, where); }
+				if (auto position = children.find("position")) { rawObject.rawPosition = readVector2(*position, where); }
 				else if (holder || blank || !readExists(object, where)) { rawObject.rawPosition = { zeroValue(), zeroValue() }; }
 				else { fail(where, "missing <position>"); }
 			}
 			// What a game leaves out is nothing: no <velocity> (or no half of
 			// one) stands still, and no <collisions> touches nothing.
-			if (auto velocity = findChild(&object, "velocity"))
+			if (auto velocity = children.find("velocity"))
 			{
 				const PartialVector2 given = readPartialVector2(*velocity, where);
 				rawObject.rawVelocity.x = given.x.value_or(zeroValue());
@@ -1965,12 +1954,12 @@ namespace xge
 			{
 				rawObject.rawVelocity = { zeroValue(), zeroValue() };
 			}
-			for (std::unique_ptr<XmlNode> child = object.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			for (const Children::Child& child : children)
 			{
-				if (const SimplePart* part = simplePart(child->getName())) { part->read(*child, rawObject, where); }
+				if (const SimplePart* part = simplePart(child.name)) { part->read(*child.node, rawObject, where); }
 			}
 			readPieceMoves(object, rawObject, where);
-			if (auto chain = findChild(&object, "chain"))
+			if (auto chain = children.find("chain"))
 			{
 				if (!map || !map->cells) { fail(where, "has a <chain>, which is for an object on a map with <cells />"); }
 				rawObject.chain = chain->getAttribute("object");
@@ -3034,12 +3023,12 @@ namespace xge
 		// What a <spawn> or <fire> in those children of a state or
 		// scene names (load/merge spawnedIn): a piece of the top-level <objects> named so
 		// comes into the list they run beside (addWaiting).
-		std::set<std::string> spawnedBy(const XmlNode& node, const std::vector<std::string>& tags, const Kit& kit)
+		std::set<std::string> spawnedBy(const Children& children, const std::vector<std::string>& tags, const Kit& kit)
 		{
 			std::set<std::string> names;
 			for (const std::string& tag : tags)
 			{
-				if (std::unique_ptr<XmlNode> child = findChild(&node, tag))
+				if (const XmlNode* child = children.find(tag))
 				{
 					const std::set<std::string> more = spawnedIn(copyElement(*child), kit);
 					names.insert(more.begin(), more.end());
@@ -3064,22 +3053,16 @@ namespace xge
 		// objects and the game's.
 		void readScenes(const XmlNode& scenes, const std::string& stateWhere, const Kit& kit, const std::set<std::string>& seen, RawState& state)
 		{
-			if (findChild(&scenes, "objects"))
-			{
-				fail(stateWhere + " > <scenes>", "has an <objects> of its own: the pieces the scenes take go in the top-level <objects>");
-			}
-
 			// Each scene so far, laid out, for a scene that is from= it.
 			std::map<std::string, std::vector<ElementPtr>> lists;
 
 			for (std::unique_ptr<XmlNode> node = scenes.getFirstChild(); node != nullptr; node = node->getNextSibling())
 			{
-				if (node->getName() != "scene") { continue; }
-
 				RawScene scene;
 				scene.name = node->getAttribute("name");
 				scene.from = node->getAttribute("from");
 				const std::string where = stateWhere + " > scene '" + scene.name + "'";
+				const Children parts(*node);
 				if (lists.count(scene.name)) { fail(stateWhere, "has two scenes called '" + scene.name + "'"); }
 				if (scene.name.find('.') != std::string::npos) { fail(where, "a scene's name has no dots: they join the parts of a path (" + state.name + "." + scene.name + ")"); }
 
@@ -3091,7 +3074,7 @@ namespace xge
 					list = from->second;
 				}
 
-				if (std::unique_ptr<XmlNode> ways = findChild(node.get(), "ways"))
+				if (const XmlNode* ways = parts.find("ways"))
 				{
 					for (std::unique_ptr<XmlNode> way = ways->getFirstChild(); way != nullptr; way = way->getNextSibling())
 					{
@@ -3105,20 +3088,20 @@ namespace xge
 					}
 				}
 
-				readVariables(findChild(node.get(), "variables").get(), where + " > <variables>", scene.variables);
+				readVariables(parts.find("variables"), where + " > <variables>", scene.variables);
 
-				if (std::unique_ptr<XmlNode> objects = findChild(node.get(), "objects"))
+				if (const XmlNode* objects = parts.find("objects"))
 				{
 					list = layOut(*objects, std::move(list), kit, where + " > <objects>");
 				}
 
-				if (std::unique_ptr<XmlNode> conditions = findChild(node.get(), "conditions"))
+				if (const XmlNode* conditions = parts.find("conditions"))
 				{
 					readConditions(*conditions, where, scene.conditions);
 				}
-				scene.timers = readTimers(findChild(node.get(), "timers").get(), where, false);
+				scene.timers = readTimers(parts.find("timers"), where, false);
 
-				addWaiting(list, spawnedBy(*node, { "conditions", "timers" }, kit), seen, kit, where);
+				addWaiting(list, spawnedBy(parts, { "conditions", "timers" }, kit), seen, kit, where);
 				readAll(list, scene.objects);
 
 				lists[scene.name] = std::move(list);
@@ -3129,13 +3112,13 @@ namespace xge
 		// What comes after a state's <inputs>: its <conditions> (optional - the
 		// schema allows a state with none) and its <timers> (optional: counted
 		// while this is the current state).
-		RawState finishState(const XmlNode& state, const std::string& where, RawState rawState)
+		RawState finishState(const Children& children, const std::string& where, RawState rawState)
 		{
-			if (std::unique_ptr<XmlNode> conditions = findChild(&state, "conditions"))
+			if (const XmlNode* conditions = children.find("conditions"))
 			{
 				readConditions(*conditions, where, rawState.conditions);
 			}
-			if (std::unique_ptr<XmlNode> computer = findChild(&state, "computer"))
+			if (const XmlNode* computer = children.find("computer"))
 			{
 				readConditions(*computer, where + " > <computer>", rawState.computer);
 				// Every one that holds holds its buttons, so one holding conditions has no "otherwise".
@@ -3152,7 +3135,7 @@ namespace xge
 				};
 				plain(rawState.computer);
 			}
-			rawState.timers = readTimers(findChild(&state, "timers").get(), where, false);
+			rawState.timers = readTimers(children.find("timers"), where, false);
 			return rawState;
 		}
 
@@ -3176,6 +3159,7 @@ namespace xge
 			rawState.from = state.getAttribute("from");
 
 			const std::string where = "state '" + rawState.name + "'";
+			const Children children(state);
 
 			std::vector<ElementPtr> list;
 			if (!rawState.from.empty())
@@ -3186,13 +3170,13 @@ namespace xge
 			}
 
 			// <objects>: its own, in play in every scene of it
-			if (std::unique_ptr<XmlNode> objects = findChild(&state, "objects"))
+			if (const XmlNode* objects = children.find("objects"))
 			{
 				list = layOut(*objects, std::move(list), kit, where + " > <objects>");
 			}
 
 			// <starts> (optional): the deal, done when it begins
-			if (std::unique_ptr<XmlNode> starts = findChild(&state, "starts"))
+			if (const XmlNode* starts = children.find("starts"))
 			{
 				for (std::unique_ptr<XmlNode> step = starts->getFirstChild(); step != nullptr; step = step->getNextSibling())
 				{
@@ -3222,19 +3206,20 @@ namespace xge
 
 			// <shows> (optional): objects of the game's, named <shows> sets
 			// taken whole, and states drawn still underneath
-			if (std::unique_ptr<XmlNode> shows = findChild(&state, "shows"))
+			if (const XmlNode* shows = children.find("shows"))
 			{
 				readShows(*shows, where + " > <shows>", rawState.show, rawState.showStates);
 			}
 
 			// <music sound="..." /> (optional)
-			if (std::unique_ptr<XmlNode> music = findChild(&state, "music"))
+			if (const XmlNode* music = children.find("music"))
 			{
 				rawState.music = music->getAttribute("sound");
 			}
 
 			// <inputs>: its own <input>s, over those of the state it is from=.
-			std::unique_ptr<XmlNode> inputs = rawState.from.empty() ? requireChild(state, "inputs", where) : findChild(&state, "inputs");
+			const XmlNode* inputs = children.find("inputs");
+			if (!inputs && rawState.from.empty()) { fail(where, "missing <inputs>"); }
 			if (inputs)
 			{
 				KeyBindings own;
@@ -3245,13 +3230,13 @@ namespace xge
 				}
 				for (auto& [axis, commands] : own.axes) { rawState.axes[axis] = std::move(commands); }
 			}
-			rawState = finishState(state, where, std::move(rawState));
+			rawState = finishState(children, where, std::move(rawState));
 
 			// What its own inputs, conditions and timers spawn (a piece of the top-level <objects>
 			// comes into its objects), then its scenes, then its objects read.
-			addWaiting(list, spawnedBy(state, { "inputs", "conditions", "computer", "timers" }, kit), gameNames, kit, where);
+			addWaiting(list, spawnedBy(children, { "inputs", "conditions", "computer", "timers" }, kit), gameNames, kit, where);
 
-			if (std::unique_ptr<XmlNode> scenes = findChild(&state, "scenes"))
+			if (const XmlNode* scenes = children.find("scenes"))
 			{
 				readScenes(*scenes, where, kit, namesOf(list, gameNames), rawState);
 			}
@@ -3383,9 +3368,9 @@ namespace xge
 		}
 
 		// <styles> (optional): what a <text> or a <bitmap> can take by style="...".
-		void readStyles(const XmlNode& root, std::vector<RawStyle>& rawStyles)
+		void readStyles(const Children& top, std::vector<RawStyle>& rawStyles)
 		{
-			if (std::unique_ptr<XmlNode> stylesNode = findChild(&root, "styles"))
+			if (const XmlNode* stylesNode = top.find("styles"))
 			{
 				for (std::unique_ptr<XmlNode> style = stylesNode->getFirstChild(); style != nullptr; style = style->getNextSibling())
 				{
@@ -3412,9 +3397,9 @@ namespace xge
 
 		// The <sheet>s among the <pictures> (optional): the pictures sprites,
 		// animations and packs cut theirs from.
-		void readSheets(const XmlNode& root, std::vector<Sheet>& rawSheets)
+		void readSheets(const Children& top, std::vector<Sheet>& rawSheets)
 		{
-			if (std::unique_ptr<XmlNode> picturesNode = findChild(&root, "pictures"))
+			if (const XmlNode* picturesNode = top.find("pictures"))
 			{
 				for (std::unique_ptr<XmlNode> node = picturesNode->getFirstChild(); node != nullptr; node = node->getNextSibling())
 				{
@@ -3457,11 +3442,11 @@ namespace xge
 		}
 
 		// <patterns> (optional): what a holder's <score patterns="..."> is scored by.
-		void readPatterns(const XmlNode& root, std::vector<RawPatterns>& rawPatterns)
+		void readPatterns(const Children& top, std::vector<RawPatterns>& rawPatterns)
 		{
-			for (std::unique_ptr<XmlNode> node = root.getFirstChild(); node != nullptr; node = node->getNextSibling())
+			for (const auto& [name, node] : top)
 			{
-				if (node->getName() != "patterns") { continue; }
+				if (name != "patterns") { continue; }
 				RawPatterns raw;
 				raw.name = node->getAttribute("name");
 				const std::string here = "<patterns name=\"" + raw.name + "\">";
@@ -3514,20 +3499,21 @@ namespace xge
 	{
 		const ElementPtr pictured = loadGameFile(filename, backend, validation);
 		const std::unique_ptr<XmlNode> root = viewOf(pictured);
+		const Children top(*root);
 
-		std::unique_ptr<XmlNode> window = findChild(root.get(), "window");
-		std::unique_ptr<XmlNode> variablesNode = findChild(root.get(), "variables");
-		std::unique_ptr<XmlNode> piecesNode = findChild(root.get(), "objects");  // none: nothing is taken
-		std::unique_ptr<XmlNode> states = findChild(root.get(), "states");
-		std::unique_ptr<XmlNode> objectsNode = findChild(states.get(), "objects"); // none: every object is a state's own
+		const XmlNode* window = top.find("window");
+		const XmlNode* variablesNode = top.find("variables");
+		const XmlNode* piecesNode = top.find("objects");  // none: nothing is taken
+		const XmlNode* states = top.find("states");
+		std::unique_ptr<XmlNode> objectsNode = findChild(states, "objects"); // none: every object is a state's own
 
 		readWindow(*window, windowDesc);
 
 		// load variables
-		readVariables(variablesNode.get(), "<variables>", rawVariables);
+		readVariables(variablesNode, "<variables>", rawVariables);
 
 		// load sounds (optional: a game can be silent)
-		if (std::unique_ptr<XmlNode> soundsNode = findChild(root.get(), "sounds"))
+		if (const XmlNode* soundsNode = top.find("sounds"))
 		{
 			for (std::unique_ptr<XmlNode> sound = soundsNode->getFirstChild(); sound != nullptr; sound = sound->getNextSibling())
 			{
@@ -3536,7 +3522,7 @@ namespace xge
 		}
 
 		// load paths (optional: only a game whose objects fly them has any)
-		if (std::unique_ptr<XmlNode> pathsNode = findChild(root.get(), "paths"))
+		if (const XmlNode* pathsNode = top.find("paths"))
 		{
 			for (std::unique_ptr<XmlNode> path = pathsNode->getFirstChild(); path != nullptr; path = path->getNextSibling())
 			{
@@ -3544,9 +3530,9 @@ namespace xge
 			}
 		}
 
-		readStyles(*root, rawStyles);
-		readSheets(*root, rawSheets);
-		readPatterns(*root, rawPatterns);
+		readStyles(top, rawStyles);
+		readSheets(top, rawSheets);
+		readPatterns(top, rawPatterns);
 
 		// load the pieces, the top-level <objects>: written once, in play
 		// only where something takes them (load/merge)
@@ -3558,7 +3544,7 @@ namespace xge
 				kit.add(copyElement(*piece), "the top-level <objects>");
 			}
 		}
-		if (std::unique_ptr<XmlNode> pathsNode = findChild(root.get(), "paths"))
+		if (const XmlNode* pathsNode = top.find("paths"))
 		{
 			for (std::unique_ptr<XmlNode> path = pathsNode->getFirstChild(); path != nullptr; path = path->getNextSibling())
 			{
@@ -3575,7 +3561,7 @@ namespace xge
 		const std::set<std::string> gameNames = namesOf(gameList, {});
 
 		// load keeps (optional: what a full reset passes over)
-		if (std::unique_ptr<XmlNode> keepsNode = findChild(root.get(), "keeps"))
+		if (const XmlNode* keepsNode = top.find("keeps"))
 		{
 			for (std::unique_ptr<XmlNode> keep = keepsNode->getFirstChild(); keep != nullptr; keep = keep->getNextSibling())
 			{
@@ -3584,7 +3570,7 @@ namespace xge
 		}
 
 		// load the demo (optional: a recorded game for the attract mode)
-		if (std::unique_ptr<XmlNode> demoNode = findChild(root.get(), "demo"))
+		if (const XmlNode* demoNode = top.find("demo"))
 		{
 			rawDemo = readDemoElement(*demoNode);
 		}

@@ -13,7 +13,9 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 // What every reader of a game file's tags shares: finding a child, asking
 // for an attribute, reading a value (a number, a <random>, an operation), and
@@ -33,6 +35,29 @@ namespace xge
 	// child up by name rather than chaining getFirstChild()/getNextSibling()
 	// calls that assume a particular position.
 	std::unique_ptr<XmlNode> findChild(const XmlNode* parent, const std::string& name);
+
+	// An element's children, walked once and kept with their names, so a
+	// reader asking for several of them by name walks the element only once.
+	class Children
+	{
+	public:
+		struct Child
+		{
+			std::string name;
+			std::unique_ptr<XmlNode> node;
+		};
+
+		explicit Children(const XmlNode& parent);
+
+		// The first child named `name`, or nullptr.
+		const XmlNode* find(std::string_view name) const;
+
+		auto begin() const { return all.begin(); }
+		auto end() const { return all.end(); }
+
+	private:
+		std::vector<Child> all;
+	};
 
 	// What fail() throws: what is wrong and where, and the line of the file
 	// it is on once a reader that knows the line has said so (0 until then).

@@ -43,6 +43,27 @@ namespace xge
 		return child;
 	}
 
+	Children::Children(const XmlNode& parent)
+	{
+		std::unique_ptr<XmlNode> child = parent.getFirstChild();
+		while (child != nullptr)
+		{
+			std::unique_ptr<XmlNode> next = child->getNextSibling();
+			std::string name = child->getName();
+			all.push_back({ std::move(name), std::move(child) });
+			child = std::move(next);
+		}
+	}
+
+	const XmlNode* Children::find(std::string_view name) const
+	{
+		for (const Child& child : all)
+		{
+			if (child.name == name) { return child.node.get(); }
+		}
+		return nullptr;
+	}
+
 	[[noreturn]] void fail(const std::string& where, const std::string& message)
 	{
 		throw LoadError(where + ": " + message);
