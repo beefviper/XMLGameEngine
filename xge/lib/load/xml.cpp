@@ -96,7 +96,6 @@ namespace xge
 					{
 						if (word->getName() == "word") { piece.choices.push_back(readText(*word)); }
 					}
-					if (piece.choices.empty()) { fail(here, "needs a <word> to choose from"); }
 				}
 				else
 				{
@@ -371,8 +370,7 @@ namespace xge
 			for (std::unique_ptr<XmlNode> child = surface.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				if (child->getName() == "drag") { rawObject.hasSurfaceDrag = true; rawObject.rawSurfaceDrag = readValue(*child, here); }
-				else if (child->getName() == "grip") { rawObject.hasSurfaceGrip = true; rawObject.rawSurfaceGrip = readValue(*child, here); }
-				else { fail(here, "unknown <" + child->getName() + ">; expected a <drag> and a <grip>, each if wanted"); }
+				else { rawObject.hasSurfaceGrip = true; rawObject.rawSurfaceGrip = readValue(*child, here); }
 			}
 		}
 
@@ -385,10 +383,8 @@ namespace xge
 			for (std::unique_ptr<XmlNode> node = polygon.getFirstChild(); node != nullptr; node = node->getNextSibling())
 			{
 				if (node->getName() == "point") { rawPolygon.points.push_back(readVector2(*node, here + " > <point>")); }
-				else if (node->getName() == "color") { rawPolygon.color = readText(*node); }
-				else { fail(here, "unknown <" + node->getName() + ">; expected <point>s and a <color>"); }
+				else { rawPolygon.color = readText(*node); }
 			}
-			if (rawPolygon.points.size() < 3) { fail(here, "has " + std::to_string(rawPolygon.points.size()) + " <point>s; a filled shape needs three or more"); }
 
 			return rawPolygon;
 		}
@@ -425,7 +421,6 @@ namespace xge
 
 				for (std::unique_ptr<XmlNode> node = std::move(first); node != nullptr; node = node->getNextSibling())
 				{
-					if (node->getName() != "line") { fail(here, "a sprite of lines holds only <line>s, not <" + node->getName() + ">"); }
 					sprite.lines.push_back(onLineOf(*node, [&] { return readLine(*node, here); }));
 				}
 			}
@@ -436,7 +431,6 @@ namespace xge
 
 				for (std::unique_ptr<XmlNode> node = std::move(first); node != nullptr; node = node->getNextSibling())
 				{
-					if (node->getName() != "polygon") { fail(here, "a sprite of polygons holds only <polygon>s, not <" + node->getName() + ">"); }
 					sprite.polygons.push_back(onLineOf(*node, [&] { return readPolygon(*node, here); }));
 				}
 			}
@@ -633,7 +627,7 @@ namespace xge
 				if (tag == "frame")
 				{
 					const std::string at = here + " > <frame>";
-					spec.frames.push_back(requireAttribute(*node, "sprite", at));
+					spec.frames.push_back(node->getAttribute("sprite"));
 					if (auto seconds = findChild(node.get(), "seconds"))
 					{
 						spec.times.resize(spec.frames.size());
@@ -679,7 +673,6 @@ namespace xge
 					spec.thenSprite = node->getAttribute("sprite");
 					spec.thenCommands = readCommands(node->getFirstChild(), here + " > <then>");
 				}
-				else if (tag != "seconds") { fail(here, "unknown <" + tag + ">; expected <seconds>, <stepped />, <once />, then <frame>s, <cell>s and runs of <cells>, and last <then>"); }
 			}
 			if (!spec.times.empty()) { spec.times.resize(spec.frames.size()); }
 			if (!spec.frameHitboxes.empty()) { spec.frameHitboxes.resize(spec.frames.size()); }
@@ -870,8 +863,7 @@ namespace xge
 					if (tag == "start") { rawObject.rawAltitude = readValue(*child, here); }
 					else if (tag == "rise") { rawObject.rawRise = readValue(*child, here); }
 					else if (tag == "fall") { rawObject.rawFall = readValue(*child, here); }
-					else if (tag == "bounce") { rawObject.rawAltitudeBounce = readValue(*child, here); }
-					else { fail(here, "unknown <" + tag + ">; expected <start>, <rise>, <fall> or <bounce>"); }
+					else { rawObject.rawAltitudeBounce = readValue(*child, here); }
 				}
 			}
 			if (auto shadow = findChild(&object, "shadow"))
@@ -1280,7 +1272,6 @@ namespace xge
 		int readCells(const XmlNode& node, const char* tag, const std::string& where)
 		{
 			const auto part = findChild(&node, tag);
-			if (!part) { fail(where, std::string("missing <") + tag + ">: how many cells " + (tag[0] == 'x' ? "across" : "down") + ", a whole number"); }
 			const std::string text = readText(*part);
 			const std::size_t digits = text.size() > 0 && text[0] == '-' ? 1 : 0;
 			if (text.size() <= digits || text.size() > digits + 3
@@ -1313,9 +1304,8 @@ namespace xge
 					if (tag == "forced") { set.forced = true; continue; }
 					if (tag == "promote")
 					{
-						set.promote = requireAttribute(*move, "sprite", here + " > <promote>");
+						set.promote = move->getAttribute("sprite");
 						const auto row = findChild(move.get(), "row");
-						if (!row) { fail(here + " > <promote>", "missing <row>: the row of the map that promotes it"); }
 						const std::string text = readText(*row);
 						if (text.empty() || text.size() > 3 || !std::all_of(text.begin(), text.end(), [](unsigned char c) { return std::isdigit(c) != 0; }) || std::stoi(text) < 1)
 						{
@@ -1327,34 +1317,27 @@ namespace xge
 					if (tag == "fall") { set.fall = true; continue; }
 					if (tag == "on")
 					{
-						set.on.push_back(requireAttribute(*move, "class", here + " > <on>"));
+						set.on.push_back(move->getAttribute("class"));
 						continue;
 					}
 					if (tag == "close")
 					{
-						if (!set.closeClass.empty()) { fail(here, "a second <close>; a piece closes one class"); }
-						set.closeClass = requireAttribute(*move, "class", here + " > <close>");
-						set.closeObject = requireAttribute(*move, "object", here + " > <close>");
+						set.closeClass = move->getAttribute("class");
+						set.closeObject = move->getAttribute("object");
 						continue;
 					}
 					if (tag == "flank")
 					{
-						const std::string at = here + " > <flank>";
 						RawObject::RawMoveSet::RawFlank flank;
-						flank.objClass = requireAttribute(*move, "class", at);
-						for (std::unique_ptr<XmlNode> inside = move->getFirstChild(); inside != nullptr; inside = inside->getNextSibling())
-						{
-							if (inside->getName() != "straight") { fail(at, "unknown <" + inside->getName() + ">; expected <straight /> if wanted"); }
-							flank.straight = true;
-						}
+						flank.objClass = move->getAttribute("class");
+						flank.straight = move->getFirstChild() != nullptr;
 						set.flanks.push_back(std::move(flank));
 						continue;
 					}
-					if (tag != "step" && tag != "jump") { fail(here, "unknown <" + tag + ">; expected <forced />, <step>s and <jump>s, <flank>s, <on>s, <fall />, <close>, then <promote>"); }
 					RawObject::RawPieceMove each;
 					each.jump = tag == "jump";
 					const std::string at = here + " > <" + tag + ">";
-					if (each.jump) { each.objClass = requireAttribute(*move, "class", at); }
+					if (each.jump) { each.objClass = move->getAttribute("class"); }
 					each.x = readCells(*move, "x", at);
 					each.y = readCells(*move, "y", at);
 					if (each.x == 0 && each.y == 0) { fail(at, "goes nowhere: <x> and <y> are both 0"); }
@@ -1370,17 +1353,11 @@ namespace xge
 				if (!anyMarks) { object.markSets.clear(); anyMarks = true; }
 				RawObject::RawMarkSet set;
 				set.sprite = child->getAttribute("sprite");
-				const std::string here = where + " > <marks" + (set.sprite.empty() ? std::string() : " sprite=\"" + set.sprite + "\"") + ">";
 				for (std::unique_ptr<XmlNode> mark = child->getFirstChild(); mark != nullptr; mark = mark->getNextSibling())
 				{
 					RawObject::RawMark each;
 					each.kind = mark->getName();
-					if (each.kind != "held" && each.kind != "moves" && each.kind != "movable" && each.kind != "put" && each.kind != "last")
-					{
-						fail(here, "unknown <" + each.kind + ">; expected <held>, <moves>, <movable>, <put> and <last>");
-					}
-					const std::string at = here + " > <" + each.kind + ">";
-					each.object = requireAttribute(*mark, "object", at);
+					each.object = mark->getAttribute("object");
 					each.objClass = mark->getAttribute("class");
 					each.variable = mark->getAttribute("variable");
 					set.marks.push_back(std::move(each));
@@ -1406,46 +1383,23 @@ namespace xge
 			if (auto owns = findChild(&node, "owns")) { readOwns(*owns, where + " > <owns>", object.handHolder, object.ownsClass); }
 			if (auto poses = findChild(&node, "poses"))
 			{
-				const std::string here = where + " > <poses>";
 				object.poses.clear();
 				for (std::unique_ptr<XmlNode> pose = poses->getFirstChild(); pose != nullptr; pose = pose->getNextSibling())
 				{
-					const std::string tag = pose->getName();
-					if (tag != "standing" && tag != "walking" && tag != "skidding" && tag != "rising" && tag != "falling" && tag != "thrusting")
-					{
-						fail(here, "unknown <" + tag + ">; expected <standing>, then any of <walking>, <skidding>, <rising>, <falling> and <thrusting>");
-					}
-					if (object.poses.count(tag)) { fail(here, "has two <" + tag + ">s"); }
-					object.poses[tag] = requireAttribute(*pose, "sprite", here + " > <" + tag + ">");
+					object.poses[pose->getName()] = pose->getAttribute("sprite");
 				}
-				if (!object.poses.count("standing")) { fail(here, "missing <standing>: the look when it is not moving, which the others fall back to"); }
 			}
 			if (auto joins = findChild(&node, "joins"))
 			{
-				const std::string here = where + " > <joins>";
 				object.joins.clear();
 				for (std::unique_ptr<XmlNode> join = joins->getFirstChild(); join != nullptr; join = join->getNextSibling())
 				{
-					const std::string tag = join->getName();
-					if (tag != "alone" && tag != "left" && tag != "right" && tag != "up" && tag != "down")
-					{
-						fail(here, "unknown <" + tag + ">; expected <alone>, <left>, <right>, <up> and <down>");
-					}
-					if (object.joins.count(tag)) { fail(here, "has two <" + tag + ">s"); }
-					object.joins[tag] = requireAttribute(*join, "sprite", here + " > <" + tag + ">");
-				}
-				for (const char* tag : { "alone", "left", "right", "up", "down" })
-				{
-					if (!object.joins.count(tag)) { fail(here, std::string("missing <") + tag + ">: every way it can be joined, and alone, has its look"); }
+					object.joins[join->getName()] = join->getAttribute("sprite");
 				}
 			}
 			if (auto mirror = findChild(&node, "mirror"))
 			{
 				object.mirror = readText(*mirror);
-				if (object.mirror != "left" && object.mirror != "right")
-				{
-					fail(where, "<mirror> is \"" + object.mirror + "\"; expected left or right, the way that shows its pictures flipped");
-				}
 			}
 			if (auto grip = findChild(&node, "grip"))
 			{
@@ -1528,9 +1482,7 @@ namespace xge
 				std::map<std::string, RawValue> given;
 				for (std::unique_ptr<XmlNode> part = hitbox.getFirstChild(); part != nullptr; part = part->getNextSibling())
 				{
-					const std::string tag = part->getName();
-					if (!isSide(tag)) { fail(here, "unknown <" + tag + ">; a hitbox pulled in from the sides has <all>, <horizontal>, <vertical>, <top>, <bottom>, <left> and <right>"); }
-					given[tag] = readValue(*part, here + " > <" + tag + ">");
+					given[part->getName()] = readValue(*part, here + " > <" + part->getName() + ">");
 				}
 				const auto side = [&](const char* own, const char* pair) -> RawValue
 				{
@@ -1548,20 +1500,12 @@ namespace xge
 				return read;
 			}
 
-			if (!shape || (shape->getName() != "rectangle" && shape->getName() != "circle"))
+			if (!shape)
 			{
 				fail(here, "expected <all>, <horizontal>, <vertical>, <top>, <bottom>, <left> or <right>, or a <rectangle> or a <circle> then a <position> if wanted");
 			}
 			read.kind = shape->getName();
 			const std::string shapeHere = here + " > <" + shape->getName() + ">";
-			for (std::unique_ptr<XmlNode> part = shape->getFirstChild(); part != nullptr; part = part->getNextSibling())
-			{
-				const std::string tag = part->getName();
-				if (shape->getName() == "rectangle" ? (tag != "width" && tag != "height") : tag != "radius")
-				{
-					fail(shapeHere, "unknown <" + tag + ">; a hitbox's " + (shape->getName() == "rectangle" ? "rectangle has a <width> and a <height>" : "circle has a <radius>"));
-				}
-			}
 			if (shape->getName() == "rectangle")
 			{
 				read.width = readValueOf(*shape, "width", shapeHere);
@@ -1573,7 +1517,6 @@ namespace xge
 			}
 			for (std::unique_ptr<XmlNode> next = shape->getNextSibling(); next != nullptr; next = next->getNextSibling())
 			{
-				if (next->getName() != "position") { fail(here, "unknown <" + next->getName() + ">; after its shape a hitbox has a <position>"); }
 				const PartialVector2 at = readPartialVector2(*next, here);
 				if (at.x) { read.x = *at.x; }
 				if (at.y) { read.y = *at.y; }
@@ -1866,24 +1809,22 @@ namespace xge
 		{
 			const std::string here = where + " > <maze>";
 			RawMaze maze;
-			maze.map = requireAttribute(node, "map", here);
+			maze.map = node.getAttribute("map");
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				if (child->getName() == "slow")
 				{
 					const std::string there = here + " > <slow>";
 					MazeSlow slow;
-					slow.objClass = requireAttribute(*child, "class", there);
+					slow.objClass = child->getAttribute("class");
 					const std::string text = readText(*child);
-					if (!isNumber(text)) { fail(there, "is \"" + text + "\"; expected a share of the speed, a number above 0"); }
 					slow.share = std::stof(text);
 					if (!(slow.share > 0.0f)) { fail(there, "is " + text + "; a walker slowed to nothing would stop for good, so give a share above 0"); }
 					maze.slows.push_back(std::move(slow));
 					continue;
 				}
-				if (child->getName() != "wall") { fail(here, "unknown <" + child->getName() + ">; expected <wall>s and <slow>s"); }
 				MazeWall wall;
-				wall.objClass = requireAttribute(*child, "class", here + " > <wall>");
+				wall.objClass = child->getAttribute("class");
 				wall.sprite = child->getAttribute("sprite");
 				maze.walls.push_back(std::move(wall));
 			}
@@ -1897,7 +1838,6 @@ namespace xge
 			const std::string here = where + " > <shape>";
 			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
-				if (child->getName() != "row") { fail(here, "unknown <" + child->getName() + ">; expected a <row> of characters for each row of cells"); }
 				const std::string row = readText(*child);
 				if (row.empty()) { fail(here + " > <row> " + std::to_string(rows.size() + 1), "is empty"); }
 				if (!rows.empty() && row.size() != rows.front().size())
@@ -1906,7 +1846,6 @@ namespace xge
 				}
 				rows.push_back(row);
 			}
-			if (rows.empty()) { fail(here, "has no <row>s"); }
 			return rows;
 		}
 
@@ -1920,7 +1859,6 @@ namespace xge
 			{
 				const std::string tag = child->getName();
 				const std::string here = where + " > <checks> > <" + tag + ">";
-				if (tag != "full" && tag != "line") { fail(where + " > <checks>", "unknown <" + tag + ">; expected <full> or <line>"); }
 				RawCheck check;
 				check.kind = tag;
 				check.objClass = child->getAttribute("class");
@@ -1928,17 +1866,11 @@ namespace xge
 				{
 					if (command->getName() == "atleast")
 					{
-						if (tag != "line") { fail(here, "has an <atleast>, which is for a <line>"); }
 						check.count = readCount(*command, here);
 						continue;
 					}
-					if (command->getName() == "straight" || command->getName() == "alike")
-					{
-						if (tag != "line") { fail(here, "has an <" + command->getName() + ">, which is for a <line>"); }
-						if (command->getName() == "straight") { check.straight = true; }
-						else { check.alike = requireAttribute(*command, "variable", here + " > <alike>"); }
-						continue;
-					}
+					if (command->getName() == "straight") { check.straight = true; continue; }
+					if (command->getName() == "alike") { check.alike = command->getAttribute("variable"); continue; }
 					check.commands.push_back(readCommand(*command, here));
 				}
 				if (tag == "line" && check.count < 2) { fail(here, "needs <atleast> 2 or more: how many alike make a line"); }
