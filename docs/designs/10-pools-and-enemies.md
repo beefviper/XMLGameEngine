@@ -23,7 +23,7 @@
   - Shots once kept as one hidden object to fire again and again are pieces with `<most>1</most>`: Galaxian, Megamania, Demon Attack, Berserk, Combat (one piece, each tank's shell taken from it), Yars' Revenge (energy missile and Zorlon cannon), both Space Invaders, Astrosmash.
 - **What still starts out of play** (`<waiting />`, once `<active>false</active>`) is things revealed later: Asteroids' centre and saucers, Atlantis' gorgons, Berserk's doors and Evil Otto, Frostbite's igloo and door, Lunar Lander's wreck, Mario Bros.' pests, Luigi and his score and lives, both Space Invaders' saucers, Yars' cannon; and Missile Command's extra waves, turned on by scene.
 - **Fixed sets that cycle:** things that fall and come back (Astrosmash's rocks, Missile Command's missiles) are a fixed set reset to the top, and stay so where that is the game.
-- **Open:** each copy's names are registered with the expression engine and live numbers and kept (bounded by reuse of names, so `<most>`-less descriptions that pile up grow them). The collision partner table is rebuilt for every list change, O(n²) in objects; fine at these sizes, worth a measure if a game spawns every frame.
+- **Open:** each copy's names are registered with the expression engine and live numbers and kept (bounded by reuse of names, so `<most>`-less descriptions that pile up grow them). The collision partner table is rebuilt for every list change; objects alike (same kind and class, named by no rule) are asked as one group, so the asking is O(groups²), but the table is still O(n²) in objects; worth a measure if a game spawns every frame.
 
 ## Enemies fire back
 
