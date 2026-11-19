@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 #include "load/spelling.h"
@@ -56,10 +55,23 @@ namespace xge
 		if (!follow.target.empty()) { checkObject(checking, follow.target, "<follow>"); }
 	}
 
-	static bool runFollow(const CmdFollow& followCommand, const Doer& doer)
+	// With object=, every object of that name sets off along the path
+	// (Game::follow); without, the object running it does.
+	static void setOff(Game& game, Object* self, const CmdFollow& follow)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.follow(doer.self, followCommand);
+		if (!follow.target.empty())
+		{
+			game.follow(follow.target, follow.path, follow.stagger, follow.nearest, self);
+		}
+		else if (self)
+		{
+			game.follow(*self, follow.path);
+		}
+	}
+
+	static bool runFollow(const CmdFollow& follow, const Doer& doer)
+	{
+		setOff(doer.game(), doer.self, follow);
 		return true;
 	}
 

@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,17 +16,18 @@ namespace xge
 
 	static bool runReverse(const CmdReverse&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
 		Object* const self = doer.self;
+		if (!self) { return true; }
+		Game& game = doer.game();
 		// On a map of cells, a <go> turns round.
-		if (self && self->onCells && executor.game.place(*self).going)
+		if (self->onCells && game.place(*self).going)
 		{
-			Object::Cells::Place& going = executor.game.placeFor(*self);
+			Object::Cells::Place& going = game.placeFor(*self);
 			const Direction way = going.goWay;
 			going.goWay = way == Direction::Up ? Direction::Down : way == Direction::Down ? Direction::Up : way == Direction::Left ? Direction::Right : Direction::Left;
 			self->facing = going.goWay;
 		}
-		else if (self) { executor.reverse(*self); }
+		else { self->velocity = self->velocity * -1.0f; }
 		return true;
 	}
 

@@ -5,9 +5,12 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
+#include "play/geometry.h"
+#include "play/verbs.h"
 #include "load/reading.h"
 
+#include <algorithm>
+#include <cmath>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -61,10 +64,81 @@ namespace xge
 		return hop;
 	}
 
-	static bool runHop(const CmdHop& hopCommand, const Doer& doer)
+	// Through the air by `whole` over `seconds`, touching nothing until it
+	// lands: a <hop> that takes time. Not when it is in the air already, nor
+	// when it would land outside the window. With an arc it is drawn that
+	// high above its way halfway there.
+	static bool startFlight(Game& game, Object& object, Vector2f whole, float seconds, float arc)
 	{
-		CommandExecutor& executor = *doer.executor;
-		return !doer.self || executor.hop(*doer.self, hopCommand);
+		if (object.isAirborne())
+		{
+			return false;
+		}
+
+		// A jump that would land off the screen is not made at all (up from the
+		// top row stays where it is), rather than going part of the way.
+		const WindowDesc& window = game.getWindowDesc();
+		const Box landing{ object.position + whole, sizeOf(object) };
+		if (!insideWindow(landing, { window.width, window.height }))
+		{
+			return false;
+		}
+
+		object.flight.whole = whole;
+		// None at all: it lands on the next step.
+		object.flight.seconds = std::max(seconds, kTimeSlack);
+		object.flight.flown = 0.0;
+		object.flight.arc = arc;
+		return true;
+	}
+
+	bool hopObject(Game& game, Object& object, const CmdHop& hop)
+	{
+		// On a cell map: whole cells (one, with no distance), refused (and
+		// touching) when it cannot go.
+		if (game.isHand(object)) { return game.hopHand(object, hop.direction); }
+		if (object.onCells && !hop.onto.empty()) { return game.hopOnto(object, hop.direction, hop.onto); }
+		if (object.onCells)
+		{
+			const auto cells = [](float pixels, float distance)
+			{
+				if (pixels == 0.0f && distance == 0.0f) { return 0; }
+				const int count = std::max(1, static_cast<int>(std::lround(std::fabs(distance > 0.0f ? distance : pixels))));
+				return pixels < 0.0f ? -count : count;
+			};
+			Vector2f way = hop.step;
+			if (way.x == 0.0f && way.y == 0.0f) { way = stepToward(hop.direction, 1.0f); }
+			const int across = way.x == 0.0f ? 0 : cells(way.x, hop.distance);
+			const int down = way.y == 0.0f ? 0 : cells(way.y, hop.distance);
+			if (!game.stepCells(object, across, down)) { return false; }
+			object.facing = hop.direction;
+			return true;
+		}
+
+		// One in the air waits for the landing.
+		if (object.isAirborne()) { return false; }
+
+		if (hop.seconds > 0.0f)
+		{
+			if (!startFlight(game, object, hop.step, hop.seconds, hop.arc)) { return false; }
+		}
+		else
+		{
+			// playOneFrame refuses it again where the object is then; asked
+			// here, so the action knows at once.
+			const WindowDesc& window = game.getWindowDesc();
+			if (!insideWindow({ object.position + hop.step, sizeOf(object) }, { window.width, window.height })) { return false; }
+			object.hopPending = hop.step;
+		}
+		object.facing = hop.direction;
+		if (hop.step.x != 0.0f) { object.mirror.goingLeft = hop.step.x < 0.0f; }
+		object.hasAim = false;
+		return true;
+	}
+
+	static bool runHop(const CmdHop& hop, const Doer& doer)
+	{
+		return !doer.self || hopObject(doer.game(), *doer.self, hop);
 	}
 
 	static void printHop(std::ostream& o, const CmdHop& hop)

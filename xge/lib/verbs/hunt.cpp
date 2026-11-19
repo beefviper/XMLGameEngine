@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "play/maze.h"
 #include "load/check.h"
 #include "load/reading.h"
@@ -91,11 +90,11 @@ namespace xge
 	}
 
 	// A hunt by hops: see CmdHuntHop.
-	static bool huntByHops(CommandExecutor& executor, Object& object, const CmdHuntHop& hunt)
+	static bool huntByHops(Game& game, Object& object, const CmdHuntHop& hunt)
 	{
-		if (object.isAirborne() || !executor.game.isShown(object)) { return false; }
+		if (object.isAirborne() || !game.isShown(object)) { return false; }
 
-		const Object* quarry = executor.game.nearestInPlay(object, hunt.target);
+		const Object* quarry = game.nearestInPlay(object, hunt.target);
 		if (!quarry) { return false; }
 
 		// The four hops it could make, in the order a tie goes: up before
@@ -106,7 +105,7 @@ namespace xge
 			: std::array<std::pair<Direction, Vector2f>, 4>{ { { Direction::Up, { 0.0f, -hunt.down } }, { Direction::Left, { -hunt.across, 0.0f } },
 				{ Direction::Down, { 0.0f, hunt.down } }, { Direction::Right, { hunt.across, 0.0f } } } };
 
-		const WindowDesc& window = executor.game.getWindowDesc();
+		const WindowDesc& window = game.getWindowDesc();
 		const Vector2f there = quarry->position + sizeOf(*quarry) * 0.5f;
 		const Vector2f middle = object.position + sizeOf(object) * 0.5f;
 		std::optional<std::pair<Direction, Vector2f>> best;
@@ -124,15 +123,15 @@ namespace xge
 		}
 		if (!best) { return false; }
 
-		return executor.hop(object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds, hunt.arc, {} });
+		return hopObject(game, object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds, hunt.arc, {} });
 	}
 
 	static bool runHunt(const Command& command, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
 		if (!doer.self) { return true; }
-		if (const auto* byHops = std::get_if<CmdHuntHop>(&command)) { return huntByHops(executor, *doer.self, *byHops); }
-		if (Maze* maze = executor.game.mazeOf(*doer.self)) { startHunt(*maze, std::get<CmdHunt>(command)); }
+		Game& game = doer.game();
+		if (const auto* byHops = std::get_if<CmdHuntHop>(&command)) { return huntByHops(game, *doer.self, *byHops); }
+		if (Maze* maze = game.mazeOf(*doer.self)) { startHunt(*maze, std::get<CmdHunt>(command)); }
 		return true;
 	}
 

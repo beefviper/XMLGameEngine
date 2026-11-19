@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 
 #include <string>
@@ -25,10 +24,13 @@ namespace xge
 		if (!target.empty()) { checkObject(checking, target, "<despawn>", "object or group"); }
 	}
 
-	static bool runDespawn(const CmdDespawn& despawnCommand, const Doer& doer)
+	// The object running it (none in a state's list), or with object= the
+	// objects it names.
+	static bool runDespawn(const CmdDespawn& despawn, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.despawn(doer.self, despawnCommand);
+		Game& game = doer.game();
+		if (!despawn.target.empty()) { game.despawn(despawn.target); }
+		else if (doer.self) { game.despawn(*doer.self); }
 		return true;
 	}
 

@@ -5,7 +5,7 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
+#include "play/verbs.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -121,10 +121,63 @@ namespace xge
 		if (!spawn.into.empty()) { checkCellMap(checking, spawn.into, "<spawn into=\"" + spawn.into + "\">"); }
 	}
 
-	static bool runSpawn(const CmdSpawn& spawnCommand, const Doer& doer)
+	// One of them. A half of the position left out is the spawner's middle
+	// (with no spawner, where the file says it starts); on a cell map, the
+	// spawner's cell. Velocity and acceleration left out are its own.
+	static bool spawnOne(Game& game, const CmdSpawn& spawn, const Object* self)
 	{
-		CommandExecutor& executor = *doer.executor;
-		return executor.spawn(spawnCommand, doer.self);
+		Object* made = game.spawn(spawn.target, spawn.random, spawn.member ? std::optional<int>(static_cast<int>(std::lround(*spawn.member))) : std::nullopt);
+		if (!made) { return false; }
+
+		// On a cell map: in a cell, a shape's top left one (counting from 1).
+		if (made->onCells)
+		{
+			// Onto another map: its first cell unless told; on its own, its own.
+			const bool elsewhere = !spawn.into.empty() && spawn.into != game.mapOf(*made).name;
+			// Left out: the spawner's own cell, when it is on that map.
+			const bool besideSelf = self && self->onCells && game.mapOf(*self).name == (spawn.into.empty() ? game.mapOf(*made).name : spawn.into);
+			const auto cell = [&](const std::optional<float>& given, int own, float selfCell)
+			{
+				if (given) { return static_cast<int>(std::lround(*given)); }
+				if (besideSelf) { return static_cast<int>(std::lround(selfCell)); }
+				return elsewhere ? 1 : own + 1;
+			};
+			if (spawn.free)
+			{
+				if (!game.putInFreeCell(*made, spawn.into, spawn.freeBelow)) { return false; }
+			}
+			else if (!game.putOnCells(*made, cell(spawn.column, game.mapOf(*made).column, self ? game.place(*self).column : 0.0f), cell(spawn.row, game.mapOf(*made).row, self ? game.place(*self).row : 0.0f), spawn.into)) { return false; }
+			if (spawn.velocityX) { made->velocity.x = *spawn.velocityX; }
+			if (spawn.velocityY) { made->velocity.y = *spawn.velocityY; }
+			if (spawn.accelerationX) { made->acceleration.x = *spawn.accelerationX; }
+			if (spawn.accelerationY) { made->acceleration.y = *spawn.accelerationY; }
+			return true;
+		}
+
+		const Vector2f size = sizeOf(*made);
+		const Vector2f middle = self ? self->position + sizeOf(*self) * 0.5f - size * 0.5f : made->position;
+		made->position.x = !spawn.x ? middle.x : spawn.centerX ? *spawn.x - size.x * 0.5f : *spawn.x;
+		made->position.y = !spawn.y ? middle.y : spawn.centerY ? *spawn.y - size.y * 0.5f : *spawn.y;
+		if (spawn.velocityX) { made->velocity.x = *spawn.velocityX; }
+		if (spawn.velocityY) { made->velocity.y = *spawn.velocityY; }
+		if (spawn.accelerationX) { made->acceleration.x = *spawn.accelerationX; }
+		if (spawn.accelerationY) { made->acceleration.y = *spawn.accelerationY; }
+		return true;
+	}
+
+	// `command.count` new objects, copies of `spawn.target` (Game::spawn),
+	// each put and sent where the command says. False only when not one more
+	// of it may exist; past its <most> the rest are simply not made.
+	static bool spawnCopies(Game& game, const CmdSpawn& spawn, const Object* self)
+	{
+		bool made = false;
+		for (int each = 0; each < spawn.count && spawnOne(game, spawn, self); ++each) { made = true; }
+		return made;
+	}
+
+	static bool runSpawn(const CmdSpawn& spawn, const Doer& doer)
+	{
+		return spawnCopies(doer.game(), spawn, doer.self);
 	}
 
 	static void printSpawn(std::ostream& o, const CmdSpawn& spawn)

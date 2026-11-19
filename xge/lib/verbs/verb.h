@@ -230,6 +230,13 @@ namespace xge
 	// that names no object.
 	Command makeSendHeld(const RawCommand& raw, const ValueEvaluator& evaluate);
 
+	// --- What several verbs' run() share.
+
+	// A <hop> made by `object` (a <hunt> by hops makes them too): at once,
+	// or with <seconds> through the air; either way it then faces that way.
+	// False when it is in the air, or the hop would land outside the window.
+	bool hopObject(Game& game, Object& object, const CmdHop& hop);
+
 	// --- What several verbs' print() share.
 
 	// What a <hop> says as printed: its distance or diagonal, its seconds

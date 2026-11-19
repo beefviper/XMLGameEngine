@@ -201,7 +201,9 @@ TEST_CASE("a <spawn> with a <count> makes that many, at the spawner's middle unl
 	two.target = "piece";
 	two.count = 2;
 	two.x = 10.0f;
-	REQUIRE(executor.spawn(two, &play.get("cliff")));
+	Doer cliff;
+	cliff.self = &play.get("cliff");
+	REQUIRE(executor.run(Command{ two }, cliff));
 	play.frames(1);
 	REQUIRE(play.count("piece") == 4);
 	CHECK(play.get("piece.4").position.x == Approx(10));

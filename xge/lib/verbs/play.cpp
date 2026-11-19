@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -27,10 +26,13 @@ namespace xge
 		checkSound(checking, "play", play.sound);
 	}
 
+	// On a key, or in the action a key triggers: the press asks for the
+	// sound; letting go silences it if it loops.
 	static bool runPlay(const CmdPlay& play, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.playHeld(play.sound, doer.pressed);
+		Game& game = doer.game();
+		if (doer.pressed) { game.requestSound(play.sound); }
+		else if (game.soundLoops(play.sound)) { game.silenceSound(play.sound); }
 		return true;
 	}
 

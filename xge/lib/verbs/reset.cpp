@@ -5,7 +5,7 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
+#include "play/verbs.h"
 #include "load/check.h"
 #include "load/reading.h"
 #include "load/spelling.h"
@@ -42,13 +42,22 @@ namespace xge
 		}
 	}
 
+	// Back where it started, facing the way it started and going the way it
+	// started, with any <random> in that start drawn again (a new serve).
+	// While a held key is moving it, that key still decides its velocity.
+	static void startAgain(Game& game, Object& object)
+	{
+		game.drawStartAgain(object);
+		xge::restart(object, game.startOf(object), game.parts().drives.find(object.id));
+	}
+
 	static bool runReset(const Command& command, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (const auto* object = std::get_if<CmdResetObject>(&command)) { executor.game.resetObject(object->target); }
-		else if (const auto* scene = std::get_if<CmdResetScene>(&command)) { executor.game.reset(*scene); }
-		else if (doer.self) { executor.restart(*doer.self); }
-		else { executor.game.resetAll(); }
+		Game& game = doer.game();
+		if (const auto* object = std::get_if<CmdResetObject>(&command)) { game.resetObject(object->target); }
+		else if (const auto* scene = std::get_if<CmdResetScene>(&command)) { game.reset(*scene); }
+		else if (doer.self) { startAgain(game, *doer.self); }
+		else { game.resetAll(); }
 		return true;
 	}
 

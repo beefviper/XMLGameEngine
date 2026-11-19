@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "play/verbs.h"
 #include "load/reading.h"
 
@@ -33,15 +32,44 @@ namespace xge
 		return move;
 	}
 
+	// One step, the whole block in lockstep with it.
+	static void stepBy(Game& game, Object& object, Direction direction, float step)
+	{
+		const auto apply = [&](Object& target)
+		{
+			switch (direction)
+			{
+			case Direction::Up:    target.position.y -= step; break;
+			case Direction::Down:  target.position.y += step; break;
+			case Direction::Left:  target.position.x -= step; break;
+			case Direction::Right: target.position.x += step; break;
+			}
+		};
+
+		if (object.kind->collisionData.lockstep > 0)
+		{
+			for (auto& obj : game.getCurrentObjects())
+			{
+				if (obj.kind->collisionData.lockstep == object.kind->collisionData.lockstep)
+				{
+					apply(obj);
+				}
+			}
+		}
+		else
+		{
+			apply(object);
+		}
+	}
+
 	static bool runMove(const CmdMove& move, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		// In an action a move is held, like a key; anywhere else it is one step,
-		// the whole block in lockstep with it.
+		// In an action a move is held, like a key; anywhere else it is one step.
 		if (!doer.self) { return true; }
-		if (doer.action && doer.self->onCells) { executor.game.holdCellMove(*doer.self, move, doer.pressed); }
-		else if (doer.action) { holdMove(*doer.self, executor.game.driveFor(*doer.self), move.direction, move.step, doer.pressed); }
-		else { executor.moveByStep(*doer.self, move.direction, move.step); }
+		Game& game = doer.game();
+		if (doer.action && doer.self->onCells) { game.holdCellMove(*doer.self, move, doer.pressed); }
+		else if (doer.action) { holdMove(*doer.self, game.driveFor(*doer.self), move.direction, move.step, doer.pressed); }
+		else { stepBy(game, *doer.self, move.direction, move.step); }
 		return true;
 	}
 

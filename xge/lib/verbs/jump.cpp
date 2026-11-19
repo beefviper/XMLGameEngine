@@ -5,7 +5,7 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
+#include "play/geometry.h"
 #include "load/reading.h"
 
 #include <stdexcept>
@@ -28,10 +28,25 @@ namespace xge
 		return CmdJump{ height };
 	}
 
-	static bool runJump(const CmdJump& jumpCommand, const Doer& doer)
+	// Up off the ground at the speed that, under the object's own pull, rises
+	// `height` pixels: v * v = 2 * pull * height. Only from the ground and not
+	// on a ladder; nothing without a pull down (the loader refuses that).
+	static bool jumpUp(Object& object, float height)
 	{
-		CommandExecutor& executor = *doer.executor;
-		return !(doer.self && doer.action) || executor.jump(*doer.self, jumpCommand.height);
+		if (!object.footing.grounded || object.footing.climbing || object.acceleration.y <= 0.0f)
+		{
+			return false;
+		}
+
+		object.velocity.y = -jumpSpeed(object.acceleration.y, height);
+		object.footing.grounded = false;
+		object.footing.jumping = true;
+		return true;
+	}
+
+	static bool runJump(const CmdJump& jump, const Doer& doer)
+	{
+		return !(doer.self && doer.action) || jumpUp(*doer.self, jump.height);
 	}
 
 	static void printJump(std::ostream& o, const CmdJump& jump)

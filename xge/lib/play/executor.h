@@ -98,48 +98,9 @@ namespace xge
 		// made again into `made` (see Game::makeNow).
 		const Command& now(const Command& command, Command& made, const Object* self, const Object* other);
 
-		// <spawn>: see CmdSpawn; false, and nothing made, when no more of
-		// it may exist (<most>).
-		bool spawn(const CmdSpawn& command, const Object* self = nullptr);
-
-		// <despawn />: `self` (none in a state's list), or with object= the
-		// objects it names.
-		void despawn(Object* self, const CmdDespawn& command);
-
-		// <carry />: see CmdCarry.
-		void carry(Object& object, const Object& item);
-
-		// A <play> on a key, or in the action a key triggers: the press asks
-		// for the sound; letting go silences it if it loops.
-		void playHeld(const std::string& sound, bool keyPressed);
-
-		void moveByStep(Object& object, Direction direction, float step);
-		void queueHop(Object& object, Vector2f step);
-
-		// A <hop>: at once (queued), or with <seconds> through the air, as a
-		// jump goes; either way the object then faces that way. False when
-		// it is in the air, or the hop would land outside the window.
-		bool hop(Object& object, const CmdHop& hop);
-
-		// Through the air by `whole` over `seconds`, touching nothing until it
-		// lands: a <hop> that takes time. Not when it is in the
-		// air already, nor when it would land outside the window. With an
-		// arc it is drawn that high above its way halfway there.
-		bool startFlight(Object& object, Vector2f whole, float seconds, float arc);
-		bool jump(Object& object, float height);
-		void reverse(Object& object);
-
-		// <become>: the object running it (self, which a state's commands do
-		// not have), or every object its object= names.
-		void become(Object* self, const CmdBecome& command);
-
-		// <follow>: with object=, every object of that name sets off along the
-		// path (Game::follow); without, `self` does (nothing when there is none).
-		void follow(Object* self, const CmdFollow& command);
 		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
 		void applyActionTurn(Object& object, Direction direction, float rate);
 		void applyActionThrustAhead(Object& object, const std::string& action, float amount, const std::string& burn);
-		void restart(Object& object);
 
 		// Runs an action's commands in order. On the press, a verb that can
 		// be refused (<fire> with nothing left to fire, a <hop>, <jump>
@@ -160,7 +121,6 @@ namespace xge
 		// actions it runs trigger more (aboutReached, aboutDepth).
 		void triggerAbout(Object& self, const CmdTriggerAction& trigger, bool byRule);
 
-		bool spawnOne(const CmdSpawn& command, const Object* self);
 
 	private:
 		bool lastTriggerRefused{ false };

@@ -5,7 +5,7 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
+#include "play/verbs.h"
 
 namespace xge
 {
@@ -15,10 +15,30 @@ namespace xge
 		return CmdCarry{};
 	}
 
+	// Taken from whatever had it: one thing is carried by one object at a time.
+	static void takeUp(Game& game, Object& object, const Object& item)
+	{
+		Parts& parts = game.parts();
+		if (const Object::Carry* mine = parts.carries.find(object.id); mine && (item.name == mine->what || item.name == mine->dropped))
+		{
+			return;
+		}
+
+		for (auto& other : game.getCurrentObjects())
+		{
+			Object::Carry* theirs = parts.carries.find(other.id);
+			if (&other != &object && theirs && theirs->what == item.name)
+			{
+				theirs->what.clear();
+			}
+		}
+
+		xge::carry(object, parts.give(parts.carries, object.id), item);
+	}
+
 	static bool runCarry(const CmdCarry&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self && doer.touch) { executor.carry(*doer.self, *doer.other); }
+		if (doer.touching()) { takeUp(doer.game(), *doer.self, *doer.other); }
 		return true;
 	}
 

@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -56,10 +55,27 @@ namespace xge
 		if (!any) { checkObject(checking, become.target, "<become>"); }
 	}
 
-	static bool runBecome(const CmdBecome& becomeCommand, const Doer& doer)
+	// The object running it (self, which a state's commands do not have),
+	// or every object its object= names.
+	static void changeLook(Game& game, Object* self, const CmdBecome& become)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.become(doer.self, becomeCommand);
+		if (!become.target.empty())
+		{
+			game.become(become.target, become.sprite, become.from, become.style);
+		}
+		else if (self && (become.from.empty() || self->lookName() == become.from))
+		{
+			const std::string before = game.isHand(*self) ? self->lookName() : std::string();
+			if (!become.sprite.empty()) { game.showLook(*self, become.sprite); }
+			if (!become.style.empty()) { wearPaletteNamed(*self, become.style); }
+			// A hand sits centred on its card by its look's size.
+			if (game.isHand(*self) && self->lookName() != before) { game.layOutItems(); }
+		}
+	}
+
+	static bool runBecome(const CmdBecome& become, const Doer& doer)
+	{
+		changeLook(doer.game(), doer.self, become);
 		return true;
 	}
 
