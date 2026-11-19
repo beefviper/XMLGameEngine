@@ -23,8 +23,9 @@ namespace xge
 		return CmdThrust{ evaluate(raw.amount), raw.burn };
 	}
 
-	static bool runThrust(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runThrust(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (!doer.self || !doer.action) { return true; }
 		if (const auto* way = std::get_if<CmdThrustAcross>(&command))
 		{
@@ -56,22 +57,14 @@ namespace xge
 		}
 	}
 
-	static void printThrustRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
-	}
-
 	extern const Verb thrustVerb;
 	const Verb thrustVerb{
 		.name = "thrust",
 		.forms = { { "<thrust>", places::controls, kindOf<CmdThrust>() }, { "<thrust direction>", places::controls, kindOf<CmdThrustAcross>() } },
-		.formOf = nullptr,
 		.onRelease = true,
 		.read = readThrust,
 		.make = makeThrust,
-		.check = nullptr,
 		.run = runThrust,
 		.print = printThrust,
-		.printRaw = printThrustRaw,
 	};
 }

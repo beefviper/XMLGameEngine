@@ -34,22 +34,12 @@ namespace xge
 		o << "hold(" << keyCodeToString(h.button) << ")";
 	}
 
-	static void printHoldRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.button << ")";
-	}
-
 	extern const Verb holdVerb;
 	const Verb holdVerb{
 		.name = "hold",
 		.forms = { { "<hold>", places::press, kindOf<CmdHold>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readHold,
 		.make = makeHold,
-		.check = nullptr,
-		.run = nullptr,
 		.print = printHold,
-		.printRaw = printHoldRaw,
 	};
 }

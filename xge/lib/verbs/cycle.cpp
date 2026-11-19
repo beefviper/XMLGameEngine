@@ -22,8 +22,9 @@ namespace xge
 		throw std::runtime_error("<cycle> has direction=\"" + raw.direction + "\"; expected forward or backward");
 	}
 
-	static bool runCycle(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runCycle(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self) { executor.game.cycleCells(*doer.self, std::get<CmdCycle>(command).backward); }
 		return true;
 	}
@@ -38,11 +39,7 @@ namespace xge
 	const Verb cycleVerb{
 		.name = "cycle",
 		.forms = { { "<cycle />", places::self, kindOf<CmdCycle>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeCycle,
-		.check = nullptr,
 		.run = runCycle,
 		.print = printCycle,
 	};

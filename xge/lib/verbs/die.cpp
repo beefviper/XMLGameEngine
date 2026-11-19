@@ -14,7 +14,7 @@ namespace xge
 		return CmdDie{};
 	}
 
-	static bool runDie(const Command&, const Doer& doer, CommandExecutor&)
+	static bool runDie(const Command&, const Doer& doer)
 	{
 		if (doer.self) { xge::die(*doer.self); }
 		return true;
@@ -29,11 +29,7 @@ namespace xge
 	const Verb dieVerb{
 		.name = "die",
 		.forms = { { "<die />", places::self, kindOf<CmdDie>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeDie,
-		.check = nullptr,
 		.run = runDie,
 		.print = printDie,
 	};

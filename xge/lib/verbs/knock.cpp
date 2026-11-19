@@ -82,8 +82,9 @@ namespace xge
 		}
 	}
 
-	static bool runKnock(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runKnock(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdKnock& knock = std::get<CmdKnock>(command);
 		if (doer.self && doer.touch) { knockOrThrough(executor, *doer.self, *doer.other, *doer.touch, knock.bounce); }
 		return true;
@@ -95,22 +96,13 @@ namespace xge
 		o << "knock(" << k.bounce << ")";
 	}
 
-	static void printKnockRaw(std::ostream& o, const RawCommand& command)
-	{
-		if (const auto& bounce = ownOf<RawKnock>(command).bounce) { o << "(" << *bounce << ")"; }
-	}
-
 	extern const Verb knockVerb;
 	const Verb knockVerb{
 		.name = "knock",
 		.forms = { { "<knock>", places::touch, kindOf<CmdKnock>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readKnock,
 		.make = makeKnock,
-		.check = nullptr,
 		.run = runKnock,
 		.print = printKnock,
-		.printRaw = printKnockRaw,
 	};
 }

@@ -57,8 +57,9 @@ namespace xge
 		if (!any) { checkObject(checking, become.target, "<become>"); }
 	}
 
-	static bool runBecome(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runBecome(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		executor.become(doer.self, std::get<CmdBecome>(command));
 		return true;
 	}
@@ -73,8 +74,6 @@ namespace xge
 	const Verb becomeVerb{
 		.name = "become",
 		.forms = { { "<become>", places::changes, kindOf<CmdBecome>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readBecome,
 		.make = makeBecome,
 		.check = checkBecome,

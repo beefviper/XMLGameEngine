@@ -127,8 +127,9 @@ namespace xge
 		return executor.hop(object, CmdHop{ best->first, 0.0f, best->second, hunt.seconds, hunt.arc, {} });
 	}
 
-	static bool runHunt(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runHunt(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (!doer.self) { return true; }
 		if (const auto* byHops = std::get_if<CmdHuntHop>(&command)) { return huntByHops(executor, *doer.self, *byHops); }
 		if (Maze* maze = executor.game.mazeOf(*doer.self)) { startHunt(*maze, std::get<CmdHunt>(command)); }
@@ -158,32 +159,14 @@ namespace xge
 		}
 	}
 
-	static void printHuntRaw(std::ostream& o, const RawCommand& command)
-	{
-		if (const RawHop* hop = std::get_if<RawHop>(&command.own))
-		{
-			o << "(" << command.object << ", by hops of ";
-			printHopParts(o, *hop);
-			o << ")";
-		}
-		else
-		{
-			o << "(" << command.object << ", " << command.amount << ", ahead " << command.ahead << ", with " << command.partner
-				<< ", retreat " << command.retreat << " " << command.distance << (command.search ? ", search" : "") << ")";
-		}
-	}
-
 	extern const Verb huntVerb;
 	const Verb huntVerb{
 		.name = "hunt",
 		.forms = { { "<hunt>", places::steering, kindOf<CmdHunt>() }, { "<hunt> by <hop>", places::steering, kindOf<CmdHuntHop>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readHunt,
 		.make = makeHunt,
 		.check = checkHunt,
 		.run = runHunt,
 		.print = printHunt,
-		.printRaw = printHuntRaw,
 	};
 }

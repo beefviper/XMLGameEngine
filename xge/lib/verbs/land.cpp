@@ -46,8 +46,9 @@ namespace xge
 		}
 	}
 
-	static bool runLand(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runLand(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self && doer.touch) { landOnto(*doer.self, executor.game.parts().drives.find(doer.self->id), *doer.other, doer.touch->edge); }
 		return true;
 	}
@@ -61,11 +62,7 @@ namespace xge
 	const Verb landVerb{
 		.name = "land",
 		.forms = { { "<land />", places::touch, kindOf<CmdLand>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeLand,
-		.check = nullptr,
 		.run = runLand,
 		.print = printLand,
 	};

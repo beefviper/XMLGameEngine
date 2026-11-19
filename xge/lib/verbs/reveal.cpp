@@ -37,8 +37,9 @@ namespace xge
 		checkObject(checking, std::get<CmdReveal>(command).target, "<reveal>");
 	}
 
-	static bool runReveal(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runReveal(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdReveal& reveal = std::get<CmdReveal>(command);
 		executor.game.reveal(reveal.target, reveal.count);
 		return true;
@@ -54,8 +55,6 @@ namespace xge
 	const Verb revealVerb{
 		.name = "reveal",
 		.forms = { { "<reveal>", places::changes, kindOf<CmdReveal>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readReveal,
 		.make = makeReveal,
 		.check = checkReveal,

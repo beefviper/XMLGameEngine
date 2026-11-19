@@ -144,7 +144,10 @@ namespace xge
 		// <track /> runs on a pointing control (executeAxis), <hold> and
 		// <think> in a <computer>: they have no run of their own.
 		const Verb* verb = verbOf(current);
-		return !verb || !verb->run || verb->run(current, doer, *this);
+		if (!verb || !verb->run) { return true; }
+		Doer here = doer;
+		here.executor = this;
+		return verb->run(current, here);
 	}
 
 	void CommandExecutor::become(Object* self, const CmdBecome& command)

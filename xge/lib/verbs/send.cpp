@@ -63,8 +63,9 @@ namespace xge
 		checkCellMap(checking, send.into, "<send into=\"" + send.into + "\">");
 	}
 
-	static bool runSend(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runSend(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		// Members of a held class, holder to holder; else a piece, map to map.
 		const CmdSend& send = std::get<CmdSend>(command);
 		if (send.held) { return executor.game.sendHeld(send.from, send.into, send.count, send.all, send.sprite); }
@@ -80,22 +81,14 @@ namespace xge
 		o << ")";
 	}
 
-	static void printSendRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.object << ", " << command.from << " into " << command.into << ", " << command.column << " " << command.row << ")";
-	}
-
 	extern const Verb sendVerb;
 	const Verb sendVerb{
 		.name = "send",
 		.forms = { { "<send>", places::changes, kindOf<CmdSend>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readSend,
 		.make = makeSend,
 		.check = checkSend,
 		.run = runSend,
 		.print = printSend,
-		.printRaw = printSendRaw,
 	};
 }

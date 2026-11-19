@@ -85,7 +85,7 @@ namespace
 	};
 }
 
-TEST_CASE("<deflect>angle</deflect> makes a CmdDeflect, and prints as it is written", "[deflect][command_parsing]")
+TEST_CASE("<deflect>angle</deflect> makes a CmdDeflect, and prints its angle", "[deflect][command_parsing]")
 {
 	const auto commands = makeCommands({ deflectTag("45") }, evaluatePlainNumber);
 
@@ -94,8 +94,8 @@ TEST_CASE("<deflect>angle</deflect> makes a CmdDeflect, and prints as it is writ
 	CHECK(std::get<CmdDeflect>(commands[0]).maxAngle == 45.0f);
 
 	std::ostringstream printed;
-	printed << commands[0] << " " << deflectTag("45");
-	CHECK(printed.str() == "deflect(45) deflect(45)");
+	printed << commands[0];
+	CHECK(printed.str() == "deflect(45)");
 }
 
 TEST_CASE("a <deflect> angle is from 0 up to, not including, 90 degrees", "[deflect][command_parsing][errors]")

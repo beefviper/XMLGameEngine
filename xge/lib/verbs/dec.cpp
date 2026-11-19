@@ -39,8 +39,9 @@ namespace xge
 		refuseFollowed(checking, target, tag);
 	}
 
-	static bool runDec(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runDec(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdDecrement& dec = std::get<CmdDecrement>(command);
 		executor.game.addTo(dec.target, -dec.amount * executor.heldShare);
 		return true;
@@ -52,24 +53,14 @@ namespace xge
 		o << "dec(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")";
 	}
 
-	static void printDecRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.variable;
-		if (const auto& by = ownOf<RawDec>(command).by) { o << ", " << *by; }
-		o << ")";
-	}
-
 	extern const Verb decVerb;
 	const Verb decVerb{
 		.name = "dec",
 		.forms = { { "<dec>", places::changes, kindOf<CmdDecrement>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readDec,
 		.make = makeDec,
 		.check = checkDec,
 		.run = runDec,
 		.print = printDec,
-		.printRaw = printDecRaw,
 	};
 }

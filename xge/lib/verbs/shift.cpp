@@ -31,8 +31,9 @@ namespace xge
 		checkObject(checking, std::get<CmdShift>(command).target, "<shift>");
 	}
 
-	static bool runShift(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runShift(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdShift& shift = std::get<CmdShift>(command);
 		executor.game.shift(shift.target, shift.by);
 		return true;
@@ -48,8 +49,6 @@ namespace xge
 	const Verb shiftVerb{
 		.name = "shift",
 		.forms = { { "<shift>", places::changes, kindOf<CmdShift>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readShift,
 		.make = makeShift,
 		.check = checkShift,

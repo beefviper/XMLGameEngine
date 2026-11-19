@@ -15,8 +15,9 @@ namespace xge
 		return CmdUndo{};
 	}
 
-	static bool runUndo(const Command&, const Doer&, CommandExecutor& executor)
+	static bool runUndo(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		return executor.game.undo();
 	}
 
@@ -29,11 +30,7 @@ namespace xge
 	const Verb undoVerb{
 		.name = "undo",
 		.forms = { { "<undo />", places::flow, kindOf<CmdUndo>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeUndo,
-		.check = nullptr,
 		.run = runUndo,
 		.print = printUndo,
 	};

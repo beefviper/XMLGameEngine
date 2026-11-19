@@ -36,8 +36,9 @@ namespace xge
 		return CmdSwing{ direction == Direction::Left ? -degrees : degrees, seconds };
 	}
 
-	static bool runSwing(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runSwing(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdSwing& swing = std::get<CmdSwing>(command);
 		Object* const self = doer.self;
 		if (!self || !doer.action) { return true; }
@@ -54,22 +55,14 @@ namespace xge
 		o << "swing(" << s.by << " degrees, " << s.seconds << "s)";
 	}
 
-	static void printSwingRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.direction << " " << command.distance << " degrees, " << command.seconds << "s)";
-	}
-
 	extern const Verb swingVerb;
 	const Verb swingVerb{
 		.name = "swing",
 		.forms = { { "<swing>", places::controls, kindOf<CmdSwing>() } },
-		.formOf = nullptr,
 		.onRelease = true,
 		.read = readSwing,
 		.make = makeSwing,
-		.check = nullptr,
 		.run = runSwing,
 		.print = printSwing,
-		.printRaw = printSwingRaw,
 	};
 }

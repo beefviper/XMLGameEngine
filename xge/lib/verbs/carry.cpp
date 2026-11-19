@@ -15,8 +15,9 @@ namespace xge
 		return CmdCarry{};
 	}
 
-	static bool runCarry(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runCarry(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self && doer.touch) { executor.carry(*doer.self, *doer.other); }
 		return true;
 	}
@@ -30,11 +31,7 @@ namespace xge
 	const Verb carryVerb{
 		.name = "carry",
 		.forms = { { "<carry />", places::touch, kindOf<CmdCarry>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeCarry,
-		.check = nullptr,
 		.run = runCarry,
 		.print = printCarry,
 	};

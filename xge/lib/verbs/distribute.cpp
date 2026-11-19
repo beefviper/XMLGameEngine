@@ -24,11 +24,7 @@ namespace xge
 	const Verb distributeVerb{
 		.name = "distribute",
 		.forms = { { "<distribute>", places::changes, kindOf<CmdSend>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readDistribute,
 		.make = makeDistribute,
-		.check = nullptr,
-		.run = nullptr,
 	};
 }

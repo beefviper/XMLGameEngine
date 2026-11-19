@@ -30,8 +30,9 @@ namespace xge
 		return CmdPass{ raw.object, static_cast<int>(number) };
 	}
 
-	static bool runPass(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runPass(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdPass& pass = std::get<CmdPass>(command);
 		Object* const self = doer.self;
 		if (pass.member >= 0) { return executor.game.passPlayersTo(pass.group.empty() && self ? self->groupName : pass.group, pass.member); }
@@ -54,11 +55,8 @@ namespace xge
 	const Verb passVerb{
 		.name = "pass",
 		.forms = { { "<pass />", places::flow | in(Place::Action), kindOf<CmdPass>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readPass,
 		.make = makePass,
-		.check = nullptr,
 		.run = runPass,
 		.print = printPass,
 	};

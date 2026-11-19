@@ -31,8 +31,9 @@ namespace xge
 		checkScene(checking, "enter", enter.scene, enter.way);
 	}
 
-	static bool runEnter(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runEnter(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		executor.game.enter(std::get<CmdEnterScene>(command));
 		return true;
 	}
@@ -43,22 +44,14 @@ namespace xge
 		o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")";
 	}
 
-	static void printEnterRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(scene " << command.scene << ")";
-	}
-
 	extern const Verb enterVerb;
 	const Verb enterVerb{
 		.name = "enter",
 		.forms = { { "<enter>", places::changes, kindOf<CmdEnterScene>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readEnter,
 		.make = makeEnter,
 		.check = checkEnter,
 		.run = runEnter,
 		.print = printEnter,
-		.printRaw = printEnterRaw,
 	};
 }

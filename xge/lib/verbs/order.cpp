@@ -30,8 +30,9 @@ namespace xge
 		return CmdOrder{ raw.object };
 	}
 
-	static bool runOrder(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runOrder(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		return executor.game.orderHeld(std::get<CmdOrder>(command).group);
 	}
 
@@ -45,11 +46,8 @@ namespace xge
 	const Verb orderVerb{
 		.name = "order",
 		.forms = { { "<order>", places::changes, kindOf<CmdOrder>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readOrder,
 		.make = makeOrder,
-		.check = nullptr,
 		.run = runOrder,
 		.print = printOrder,
 	};

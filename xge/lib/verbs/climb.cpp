@@ -31,8 +31,9 @@ namespace xge
 		return CmdClimb{ direction, evaluate(ownOf<RawClimb>(raw).speed), raw.objClass };
 	}
 
-	static bool runClimb(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runClimb(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdClimb& climb = std::get<CmdClimb>(command);
 		Object* const self = doer.self;
 		if (!self || !doer.action) { return true; }
@@ -49,22 +50,14 @@ namespace xge
 		o << "climb." << (c.direction == Direction::Up ? "up" : "down") << "(" << c.step << ", " << c.ladderClass << ")";
 	}
 
-	static void printClimbRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "." << command.direction << "(" << ownOf<RawClimb>(command).speed << ", " << command.objClass << ")";
-	}
-
 	extern const Verb climbVerb;
 	const Verb climbVerb{
 		.name = "climb",
 		.forms = { { "<climb>", places::controls, kindOf<CmdClimb>() } },
-		.formOf = nullptr,
 		.onRelease = true,
 		.read = readClimb,
 		.make = makeClimb,
-		.check = nullptr,
 		.run = runClimb,
 		.print = printClimb,
-		.printRaw = printClimbRaw,
 	};
 }

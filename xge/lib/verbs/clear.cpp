@@ -15,8 +15,9 @@ namespace xge
 		return CmdClear{};
 	}
 
-	static bool runClear(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runClear(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.match) { executor.game.clearCells(*doer.match); }
 		return true;
 	}
@@ -30,11 +31,7 @@ namespace xge
 	const Verb clearVerb{
 		.name = "clear",
 		.forms = { { "<clear />", places::cells, kindOf<CmdClear>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeClear,
-		.check = nullptr,
 		.run = runClear,
 		.print = printClear,
 	};

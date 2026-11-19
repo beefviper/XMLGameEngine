@@ -15,8 +15,9 @@ namespace xge
 		return CmdReverse{};
 	}
 
-	static bool runReverse(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runReverse(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		Object* const self = doer.self;
 		// On a map of cells, a <go> turns round.
 		if (self && self->onCells && executor.game.place(*self).going)
@@ -39,11 +40,7 @@ namespace xge
 	const Verb reverseVerb{
 		.name = "reverse",
 		.forms = { { "<reverse />", places::self, kindOf<CmdReverse>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeReverse,
-		.check = nullptr,
 		.run = runReverse,
 		.print = printReverse,
 	};

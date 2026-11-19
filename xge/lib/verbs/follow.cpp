@@ -57,8 +57,9 @@ namespace xge
 		if (!follow.target.empty()) { checkObject(checking, follow.target, "<follow>"); }
 	}
 
-	static bool runFollow(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runFollow(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		executor.follow(doer.self, std::get<CmdFollow>(command));
 		return true;
 	}
@@ -69,22 +70,14 @@ namespace xge
 		o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")";
 	}
 
-	static void printFollowRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.path << (command.object.empty() ? "" : ", " + command.object) << ")";
-	}
-
 	extern const Verb followVerb;
 	const Verb followVerb{
 		.name = "follow",
 		.forms = { { "<follow>", places::changes, kindOf<CmdFollow>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readFollow,
 		.make = makeFollow,
 		.check = checkFollow,
 		.run = runFollow,
 		.print = printFollow,
-		.printRaw = printFollowRaw,
 	};
 }

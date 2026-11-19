@@ -21,8 +21,9 @@ namespace xge
 		return CmdMerge{ raw.variable };
 	}
 
-	static bool runMerge(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runMerge(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdMerge& merge = std::get<CmdMerge>(command);
 		return doer.self && doer.touch && doer.other && executor.game.mergeCells(*doer.self, *doer.other, merge.variable);
 	}
@@ -37,11 +38,8 @@ namespace xge
 	const Verb mergeVerb{
 		.name = "merge",
 		.forms = { { "<merge>", places::touch, kindOf<CmdMerge>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readMerge,
 		.make = makeMerge,
-		.check = nullptr,
 		.run = runMerge,
 		.print = printMerge,
 	};

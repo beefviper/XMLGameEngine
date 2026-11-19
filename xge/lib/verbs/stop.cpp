@@ -16,8 +16,9 @@ namespace xge
 		return CmdStop{};
 	}
 
-	static bool runStop(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runStop(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self)
 		{
 			xge::stop(*doer.self);
@@ -37,11 +38,7 @@ namespace xge
 	const Verb stopVerb{
 		.name = "stop",
 		.forms = { { "<stop />", places::self, kindOf<CmdStop>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeStop,
-		.check = nullptr,
 		.run = runStop,
 		.print = printStop,
 	};

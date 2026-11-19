@@ -15,8 +15,9 @@ namespace xge
 		return CmdSplit{};
 	}
 
-	static bool runSplit(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runSplit(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self) { executor.game.splitChain(*doer.self); }
 		return true;
 	}
@@ -30,11 +31,7 @@ namespace xge
 	const Verb splitVerb{
 		.name = "split",
 		.forms = { { "<split />", places::self, kindOf<CmdSplit>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeSplit,
-		.check = nullptr,
 		.run = runSplit,
 		.print = printSplit,
 	};

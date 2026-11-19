@@ -16,8 +16,9 @@ namespace xge
 		return CmdDrop{};
 	}
 
-	static bool runDrop(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runDrop(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		Object* const self = doer.self;
 		// A picker puts back the piece it holds; refused in the middle of a run
 		// of jumps.
@@ -36,11 +37,7 @@ namespace xge
 	const Verb dropVerb{
 		.name = "drop",
 		.forms = { { "<drop />", places::self, kindOf<CmdDrop>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeDrop,
-		.check = nullptr,
 		.run = runDrop,
 		.print = printDrop,
 	};

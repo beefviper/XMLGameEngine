@@ -18,8 +18,9 @@ namespace xge
 		return CmdCall{ raw.object };
 	}
 
-	static bool runCall(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runCall(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		return doer.self && executor.game.callValue(*doer.self, std::get<CmdCall>(command).holder);
 	}
 
@@ -33,11 +34,7 @@ namespace xge
 	const Verb callVerb{
 		.name = "call",
 		.forms = { { "<call />", places::self, kindOf<CmdCall>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeCall,
-		.check = nullptr,
 		.run = runCall,
 		.print = printCall,
 	};

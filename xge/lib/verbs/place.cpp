@@ -15,8 +15,9 @@ namespace xge
 		return CmdPlace{ raw.into };
 	}
 
-	static bool runPlace(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runPlace(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdPlace& place = std::get<CmdPlace>(command);
 		Object* const self = doer.self;
 		return self && (executor.game.isHand(*self) ? executor.game.layItems(*self, place.into) : executor.game.placePiece(*self));
@@ -32,11 +33,7 @@ namespace xge
 	const Verb placeVerb{
 		.name = "place",
 		.forms = { { "<place />", places::self, kindOf<CmdPlace>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makePlace,
-		.check = nullptr,
 		.run = runPlace,
 		.print = printPlace,
 	};

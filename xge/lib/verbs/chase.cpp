@@ -61,8 +61,9 @@ namespace xge
 		}
 	}
 
-	static bool runChase(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runChase(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self) { chaseNearest(executor, *doer.self, std::get<CmdChase>(command)); }
 		return true;
 	}
@@ -73,22 +74,14 @@ namespace xge
 		o << "chase(" << c.target << ", " << c.speed << (c.stopWithin > 0.0f ? ", near " + formatDisplayNumber(c.stopWithin) : std::string{}) << ")";
 	}
 
-	static void printChaseRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.object << ", " << command.amount << ", " << command.distance << ")";
-	}
-
 	extern const Verb chaseVerb;
 	const Verb chaseVerb{
 		.name = "chase",
 		.forms = { { "<chase>", places::steering, kindOf<CmdChase>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readChase,
 		.make = makeChase,
 		.check = checkChase,
 		.run = runChase,
 		.print = printChase,
-		.printRaw = printChaseRaw,
 	};
 }

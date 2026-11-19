@@ -51,8 +51,9 @@ namespace xge
 		}
 	}
 
-	static bool runRank(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runRank(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdRank& rank = std::get<CmdRank>(command);
 		executor.game.rank(rank.entry, rank.table);
 		return true;
@@ -68,8 +69,6 @@ namespace xge
 	const Verb rankVerb{
 		.name = "rank",
 		.forms = { { "<rank>", places::changes, kindOf<CmdRank>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readRank,
 		.make = makeRank,
 		.check = checkRank,

@@ -61,8 +61,9 @@ namespace xge
 		return hop;
 	}
 
-	static bool runHop(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runHop(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		return !doer.self || executor.hop(*doer.self, std::get<CmdHop>(command));
 	}
 
@@ -81,24 +82,13 @@ namespace xge
 		o << ")";
 	}
 
-	static void printHopRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "." << command.direction << "(";
-		printHopParts(o, ownOf<RawHop>(command));
-		o << ")";
-	}
-
 	extern const Verb hopVerb;
 	const Verb hopVerb{
 		.name = "hop",
 		.forms = { { "<hop>", places::self, kindOf<CmdHop>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readHop,
 		.make = makeHop,
-		.check = nullptr,
 		.run = runHop,
 		.print = printHop,
-		.printRaw = printHopRaw,
 	};
 }

@@ -85,8 +85,9 @@ namespace xge
 		}
 	}
 
-	static bool runTrigger(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runTrigger(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		// Another action, of this object or another, as part of this.
 		const CmdTriggerAction& trigger = std::get<CmdTriggerAction>(command);
 		if (!trigger.place.any()) { executor.triggerObjectAction(trigger.object, trigger.action, doer.pressed, doer.byRule, trigger.from); }
@@ -100,22 +101,15 @@ namespace xge
 		o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << (a.objClass.empty() ? std::string{} : ", " + a.objClass) << cellPlaceText(a.place) << ")";
 	}
 
-	static void printTriggerRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.object << "," << command.action << (command.place.empty() ? "" : ", " + command.objClass + " " + command.place) << ")";
-	}
-
 	extern const Verb triggerVerb;
 	const Verb triggerVerb{
 		.name = "trigger",
 		.forms = { { "<trigger>", places::changes, kindOf<CmdTriggerAction>() } },
-		.formOf = nullptr,
 		.onRelease = true,
 		.read = readTrigger,
 		.make = makeTrigger,
 		.check = checkTrigger,
 		.run = runTrigger,
 		.print = printTrigger,
-		.printRaw = printTriggerRaw,
 	};
 }

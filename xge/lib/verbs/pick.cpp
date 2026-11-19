@@ -28,8 +28,9 @@ namespace xge
 		return CmdPick{ raw.objClass, raw.only };
 	}
 
-	static bool runPick(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runPick(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdPick& pick = std::get<CmdPick>(command);
 		Object* const self = doer.self;
 		return self && (executor.game.isHand(*self) ? executor.game.pickItems(*self) : executor.game.pickPiece(*self, pick.objClass.empty() ? executor.game.turnClass() : pick.objClass, pick.only));
@@ -45,11 +46,8 @@ namespace xge
 	const Verb pickVerb{
 		.name = "pick",
 		.forms = { { "<pick>", places::self, kindOf<CmdPick>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readPick,
 		.make = makePick,
-		.check = nullptr,
 		.run = runPick,
 		.print = printPick,
 	};

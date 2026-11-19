@@ -16,8 +16,9 @@ namespace xge
 		return CmdStick{};
 	}
 
-	static bool runStick(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runStick(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self && doer.screenEdge) { xge::stick(*doer.self, executor.game.getWindowDesc(), *doer.screenEdge); }
 		else if (doer.self && doer.touch) { stickAgainst(*doer.self, doer.touch->edge); }
 		return true;
@@ -32,11 +33,7 @@ namespace xge
 	const Verb stickVerb{
 		.name = "stick",
 		.forms = { { "<stick />", places::edge | places::touch, kindOf<CmdStick>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeStick,
-		.check = nullptr,
 		.run = runStick,
 		.print = printStick,
 	};

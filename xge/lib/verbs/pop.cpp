@@ -24,8 +24,9 @@ namespace xge
 		if (!name.empty()) { checkState(checking, name, "<pop state=\"" + name + "\" />"); }
 	}
 
-	static bool runPop(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runPop(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		executor.game.popState(std::get<CmdPopState>(command).name);
 		return true;
 	}
@@ -40,9 +41,6 @@ namespace xge
 	const Verb popVerb{
 		.name = "pop",
 		.forms = { { "<pop>", places::flow, kindOf<CmdPopState>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makePop,
 		.check = checkPop,
 		.run = runPop,

@@ -64,12 +64,8 @@ namespace xge
 	const Verb thinkVerb{
 		.name = "think",
 		.forms = { { "<think>", places::press, kindOf<CmdThink>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readThink,
 		.make = makeThink,
-		.check = nullptr,
-		.run = nullptr,
 		.print = printThink,
 	};
 }

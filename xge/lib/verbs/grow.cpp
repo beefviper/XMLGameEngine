@@ -15,8 +15,9 @@ namespace xge
 		return CmdGrow{};
 	}
 
-	static bool runGrow(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runGrow(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self && !executor.game.cellPart(*doer.self).chain.empty()) { ++executor.game.placeFor(*doer.self).chainGrow; }
 		return true;
 	}
@@ -30,11 +31,7 @@ namespace xge
 	const Verb growVerb{
 		.name = "grow",
 		.forms = { { "<grow />", places::self, kindOf<CmdGrow>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeGrow,
-		.check = nullptr,
 		.run = runGrow,
 		.print = printGrow,
 	};

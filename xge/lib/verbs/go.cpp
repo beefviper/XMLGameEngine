@@ -24,8 +24,9 @@ namespace xge
 		return CmdGo{ directionFromName(raw.direction, raw.verb), speedOf(ownOf<RawGo>(raw).speed, "go", evaluate) };
 	}
 
-	static bool runGo(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runGo(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdGo& go = std::get<CmdGo>(command);
 		if (doer.self && doer.self->onCells) { return executor.game.goCells(*doer.self, go.direction, go.speed); }
 		if (doer.self && doer.action) { if (Maze* maze = executor.game.mazeOf(*doer.self)) { startGo(*maze, go); } }
@@ -42,22 +43,13 @@ namespace xge
 		o << "go." << direction << "(" << g.speed << ")";
 	}
 
-	static void printGoRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "." << command.direction << "(" << ownOf<RawGo>(command).speed << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
-	}
-
 	extern const Verb goVerb;
 	const Verb goVerb{
 		.name = "go",
 		.forms = { { "<go>", places::controls, kindOf<CmdGo>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readGo,
 		.make = makeGo,
-		.check = nullptr,
 		.run = runGo,
 		.print = printGo,
-		.printRaw = printGoRaw,
 	};
 }

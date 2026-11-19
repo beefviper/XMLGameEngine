@@ -50,22 +50,13 @@ namespace xge
 		for (const std::string& onto : t.onto) { o << " onto " << onto; }
 	}
 
-	static void printTrackRaw(std::ostream& o, const RawCommand& command)
-	{
-		if (!command.path.empty()) { o << "(" << command.path << ")"; }
-	}
-
 	extern const Verb trackVerb;
 	const Verb trackVerb{
 		.name = "track",
 		.forms = { { "<track />", places::controls, kindOf<CmdTrack>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readTrack,
 		.make = makeTrack,
 		.check = checkTrack,
-		.run = nullptr,
 		.print = printTrack,
-		.printRaw = printTrackRaw,
 	};
 }

@@ -87,8 +87,9 @@ namespace xge
 		return true;
 	}
 
-	static bool runFire(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runFire(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		return !doer.self || fireProjectile(executor, *doer.self, std::get<CmdFire>(command).projectileName);
 	}
 
@@ -98,22 +99,14 @@ namespace xge
 		o << "fire(" << f.projectileName << ")";
 	}
 
-	static void printFireRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.object << ")";
-	}
-
 	extern const Verb fireVerb;
 	const Verb fireVerb{
 		.name = "fire",
 		.forms = { { "<fire>", places::self, kindOf<CmdFire>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readFire,
 		.make = makeFire,
 		.check = checkFire,
 		.run = runFire,
 		.print = printFire,
-		.printRaw = printFireRaw,
 	};
 }

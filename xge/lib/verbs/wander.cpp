@@ -23,8 +23,9 @@ namespace xge
 		return CmdWander{ speedOf(ownOf<RawWander>(raw).speed, "wander", evaluate) };
 	}
 
-	static bool runWander(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runWander(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self) { if (Maze* maze = executor.game.mazeOf(*doer.self)) { startWander(*maze, std::get<CmdWander>(command)); } }
 		return true;
 	}
@@ -35,22 +36,13 @@ namespace xge
 		o << "wander(" << w.speed << ")";
 	}
 
-	static void printWanderRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << ownOf<RawWander>(command).speed << ")";
-	}
-
 	extern const Verb wanderVerb;
 	const Verb wanderVerb{
 		.name = "wander",
 		.forms = { { "<wander>", places::steering, kindOf<CmdWander>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readWander,
 		.make = makeWander,
-		.check = nullptr,
 		.run = runWander,
 		.print = printWander,
-		.printRaw = printWanderRaw,
 	};
 }

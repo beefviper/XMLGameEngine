@@ -122,8 +122,9 @@ namespace xge
 		if (!spawn.into.empty()) { checkCellMap(checking, spawn.into, "<spawn into=\"" + spawn.into + "\">"); }
 	}
 
-	static bool runSpawn(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runSpawn(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		return executor.spawn(std::get<CmdSpawn>(command), doer.self);
 	}
 
@@ -153,46 +154,14 @@ namespace xge
 		o << ")";
 	}
 
-	static void printSpawnRaw(std::ostream& o, const RawCommand& command)
-	{
-		const RawSpawn& spawn = ownOf<RawSpawn>(command);
-		const auto half = [&](const std::optional<RawValue>& value) { if (value) { o << *value; } else { o << "-"; } };
-		o << "(" << command.object << ", ";
-		half(spawn.count);
-		o << ", ";
-		half(spawn.positionX);
-		o << " ";
-		half(spawn.positionY);
-		o << ", ";
-		half(spawn.velocityX);
-		o << " ";
-		half(spawn.velocityY);
-		o << ", ";
-		half(spawn.accelerationX);
-		o << " ";
-		half(spawn.accelerationY);
-		o << (spawn.random ? ", random" : "") << (spawn.free ? ", free " : " ");
-		half(spawn.freeBelow);
-		o << ", ";
-		half(spawn.column);
-		o << " ";
-		half(spawn.row);
-		o << (command.into.empty() ? "" : ", into " + command.into);
-		if (spawn.member) { o << ", member " << *spawn.member; }
-		o << ")";
-	}
-
 	extern const Verb spawnVerb;
 	const Verb spawnVerb{
 		.name = "spawn",
 		.forms = { { "<spawn>", places::changes, kindOf<CmdSpawn>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readSpawn,
 		.make = makeSpawn,
 		.check = checkSpawn,
 		.run = runSpawn,
 		.print = printSpawn,
-		.printRaw = printSpawnRaw,
 	};
 }

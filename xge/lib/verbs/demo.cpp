@@ -15,8 +15,9 @@ namespace xge
 		return CmdDemo{};
 	}
 
-	static bool runDemo(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runDemo(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (!doer.self) { executor.game.requestDemo(); }
 		return true;
 	}
@@ -30,11 +31,7 @@ namespace xge
 	const Verb demoVerb{
 		.name = "demo",
 		.forms = { { "<demo />", places::flow, kindOf<CmdDemo>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeDemo,
-		.check = nullptr,
 		.run = runDemo,
 		.print = printDemo,
 	};

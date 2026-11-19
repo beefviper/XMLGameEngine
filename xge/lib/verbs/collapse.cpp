@@ -15,8 +15,9 @@ namespace xge
 		return CmdCollapse{};
 	}
 
-	static bool runCollapse(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runCollapse(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.match) { executor.game.collapseCells(*doer.match); }
 		return true;
 	}
@@ -30,11 +31,7 @@ namespace xge
 	const Verb collapseVerb{
 		.name = "collapse",
 		.forms = { { "<collapse />", places::cells, kindOf<CmdCollapse>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeCollapse,
-		.check = nullptr,
 		.run = runCollapse,
 		.print = printCollapse,
 	};

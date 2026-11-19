@@ -33,8 +33,9 @@ namespace xge
 		return move;
 	}
 
-	static bool runMove(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runMove(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		// In an action a move is held, like a key; anywhere else it is one step,
 		// the whole block in lockstep with it.
 		const CmdMove& move = std::get<CmdMove>(command);
@@ -55,23 +56,14 @@ namespace xge
 		o << "move." << direction << "(" << m.step << (m.wait > 0.0f ? ", wait " + formatDisplayNumber(m.wait) : std::string{}) << ")";
 	}
 
-	static void printMoveRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
-		if (!(command.seconds.kind == RawValue::Kind::Expression && command.seconds.text.empty())) { o << "(wait " << command.seconds << ")"; }
-	}
-
 	extern const Verb moveVerb;
 	const Verb moveVerb{
 		.name = "move",
 		.forms = { { "<move>", places::self, kindOf<CmdMove>() } },
-		.formOf = nullptr,
 		.onRelease = true,
 		.read = readMove,
 		.make = makeMove,
-		.check = nullptr,
 		.run = runMove,
 		.print = printMove,
-		.printRaw = printMoveRaw,
 	};
 }

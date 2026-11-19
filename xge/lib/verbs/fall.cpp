@@ -15,8 +15,9 @@ namespace xge
 		return CmdFall{ raw.objClass };
 	}
 
-	static bool runFall(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runFall(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.match) { executor.game.fallCells(doer.match->map, std::get<CmdFall>(command).objClass); }
 		return true;
 	}
@@ -31,11 +32,7 @@ namespace xge
 	const Verb fallVerb{
 		.name = "fall",
 		.forms = { { "<fall />", places::cells, kindOf<CmdFall>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeFall,
-		.check = nullptr,
 		.run = runFall,
 		.print = printFall,
 	};

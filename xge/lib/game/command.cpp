@@ -257,13 +257,7 @@ namespace xge
 
 	std::ostream& operator<<(std::ostream& o, const RawCommand& command)
 	{
-		// The tag, then what its verb says it holds.
-		o << command.verb;
-		if (const Verb* verb = findVerb(command.verb); verb && verb->printRaw)
-		{
-			verb->printRaw(o, command);
-		}
-		return o;
+		return o << command.verb;
 	}
 
 	std::ostream& operator<<(std::ostream& o, const std::vector<RawCommand>& commands)

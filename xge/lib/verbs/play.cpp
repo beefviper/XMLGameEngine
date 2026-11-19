@@ -27,8 +27,9 @@ namespace xge
 		checkSound(checking, "play", std::get<CmdPlay>(command).sound);
 	}
 
-	static bool runPlay(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runPlay(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		executor.playHeld(std::get<CmdPlay>(command).sound, doer.pressed);
 		return true;
 	}
@@ -39,22 +40,15 @@ namespace xge
 		o << "play(" << p.sound << ")";
 	}
 
-	static void printPlayRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.sound << ")";
-	}
-
 	extern const Verb playVerb;
 	const Verb playVerb{
 		.name = "play",
 		.forms = { { "<play>", places::changes, kindOf<CmdPlay>() } },
-		.formOf = nullptr,
 		.onRelease = true,
 		.read = readPlay,
 		.make = makePlay,
 		.check = checkPlay,
 		.run = runPlay,
 		.print = printPlay,
-		.printRaw = printPlayRaw,
 	};
 }

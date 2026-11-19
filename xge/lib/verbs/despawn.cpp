@@ -25,8 +25,9 @@ namespace xge
 		if (!target.empty()) { checkObject(checking, target, "<despawn>", "object or group"); }
 	}
 
-	static bool runDespawn(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runDespawn(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		executor.despawn(doer.self, std::get<CmdDespawn>(command));
 		return true;
 	}
@@ -43,22 +44,14 @@ namespace xge
 		o << "despawn" << (d.target.empty() ? "" : "(" + d.target + ")");
 	}
 
-	static void printDespawnRaw(std::ostream& o, const RawCommand& command)
-	{
-		if (!command.object.empty()) { o << "(" << command.object << ")"; }
-	}
-
 	extern const Verb despawnVerb;
 	const Verb despawnVerb{
 		.name = "despawn",
 		.forms = { { "<despawn />", places::self, kindOf<CmdDespawn>() }, { "<despawn object>", places::changes, kindOf<CmdDespawn>() } },
 		.formOf = formOfDespawn,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeDespawn,
 		.check = checkDespawn,
 		.run = runDespawn,
 		.print = printDespawn,
-		.printRaw = printDespawnRaw,
 	};
 }

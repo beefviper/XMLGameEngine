@@ -15,8 +15,9 @@ namespace xge
 		return CmdThrough{};
 	}
 
-	static bool runThrough(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runThrough(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self && doer.touch) { executor.game.stepThrough(); }
 		return true;
 	}
@@ -30,11 +31,7 @@ namespace xge
 	const Verb throughVerb{
 		.name = "through",
 		.forms = { { "<through />", places::touch, kindOf<CmdThrough>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeThrough,
-		.check = nullptr,
 		.run = runThrough,
 		.print = printThrough,
 	};

@@ -44,8 +44,9 @@ namespace xge
 		}
 	}
 
-	static bool runAlternate(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runAlternate(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (!doer.self) { executor.game.startTurns(std::get<CmdAlternate>(command).players); }
 		return true;
 	}
@@ -62,8 +63,6 @@ namespace xge
 	const Verb alternateVerb{
 		.name = "alternate",
 		.forms = { { "<alternate>", places::flow, kindOf<CmdAlternate>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readAlternate,
 		.make = makeAlternate,
 		.check = checkAlternate,

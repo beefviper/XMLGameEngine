@@ -36,8 +36,9 @@ namespace xge
 		refuseFollowed(checking, copy.into, tag);
 	}
 
-	static bool runCopy(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runCopy(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdCopy& copy = std::get<CmdCopy>(command);
 		executor.game.copyVariable(copy.from, copy.into);
 		return true;
@@ -53,8 +54,6 @@ namespace xge
 	const Verb copyVerb{
 		.name = "copy",
 		.forms = { { "<copy>", places::changes, kindOf<CmdCopy>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readCopy,
 		.make = makeCopy,
 		.check = checkCopy,

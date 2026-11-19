@@ -15,8 +15,9 @@ namespace xge
 		return CmdShove{};
 	}
 
-	static bool runShove(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runShove(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		return doer.self && doer.touch && doer.other && executor.game.shoveCells(*doer.other, doer.touch->edge);
 	}
 
@@ -29,11 +30,7 @@ namespace xge
 	const Verb shoveVerb{
 		.name = "shove",
 		.forms = { { "<shove />", places::touch, kindOf<CmdShove>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeShove,
-		.check = nullptr,
 		.run = runShove,
 		.print = printShove,
 	};

@@ -33,8 +33,9 @@ namespace xge
 		return CmdBounce{ share };
 	}
 
-	static bool runBounce(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runBounce(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdBounce& bounce = std::get<CmdBounce>(command);
 		if (doer.self && doer.touch && doer.other) { xge::bounce(executor.game.parts(), *doer.self, *doer.other, *doer.touch, bounce.share); }
 		else if (doer.self && doer.screenEdge) { executor.bounceScreenEdge(*doer.self, *doer.screenEdge, bounce.share); }
@@ -47,23 +48,13 @@ namespace xge
 		o << "bounce(" << b.share << ")";
 	}
 
-	static void printBounceRaw(std::ostream& o, const RawCommand& command)
-	{
-		const RawBounce& bounce = ownOf<RawBounce>(command);
-		if (bounce.share) { o << "(" << *bounce.share << ")"; }
-	}
-
 	extern const Verb bounceVerb;
 	const Verb bounceVerb{
 		.name = "bounce",
 		.forms = { { "<bounce />", places::edge | places::touch, kindOf<CmdBounce>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readBounce,
 		.make = makeBounce,
-		.check = nullptr,
 		.run = runBounce,
 		.print = printBounce,
-		.printRaw = printBounceRaw,
 	};
 }

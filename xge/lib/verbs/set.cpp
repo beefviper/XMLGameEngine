@@ -68,8 +68,9 @@ namespace xge
 		}
 	}
 
-	static bool runSet(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runSet(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdSet& set = std::get<CmdSet>(command);
 		executor.game.setNumber(set.target, set.value);
 		return true;
@@ -81,22 +82,14 @@ namespace xge
 		o << "set(" << s.target.written() << ", " << s.value << ")";
 	}
 
-	static void printSetRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.variable << ", " << ownOf<RawSet>(command).value << ")";
-	}
-
 	extern const Verb setVerb;
 	const Verb setVerb{
 		.name = "set",
 		.forms = { { "<set>", places::changes, kindOf<CmdSet>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readSet,
 		.make = makeSet,
 		.check = checkSet,
 		.run = runSet,
 		.print = printSet,
-		.printRaw = printSetRaw,
 	};
 }

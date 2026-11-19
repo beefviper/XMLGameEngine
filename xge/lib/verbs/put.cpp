@@ -27,8 +27,9 @@ namespace xge
 		return CmdPut{ raw.objClass };
 	}
 
-	static bool runPut(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runPut(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		CmdPut put = std::get<CmdPut>(command);
 		if (put.objClass.empty()) { put.objClass = executor.game.turnClass(); }
 		return doer.self && !put.objClass.empty() && executor.game.putPiece(*doer.self, put);
@@ -44,11 +45,8 @@ namespace xge
 	const Verb putVerb{
 		.name = "put",
 		.forms = { { "<put>", places::self, kindOf<CmdPut>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readPut,
 		.make = makePut,
-		.check = nullptr,
 		.run = runPut,
 		.print = printPut,
 	};

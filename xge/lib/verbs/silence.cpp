@@ -27,8 +27,9 @@ namespace xge
 		checkSound(checking, "silence", std::get<CmdSilence>(command).sound);
 	}
 
-	static bool runSilence(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runSilence(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		executor.game.silenceSound(std::get<CmdSilence>(command).sound);
 		return true;
 	}
@@ -39,22 +40,14 @@ namespace xge
 		o << "silence(" << s.sound << ")";
 	}
 
-	static void printSilenceRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.sound << ")";
-	}
-
 	extern const Verb silenceVerb;
 	const Verb silenceVerb{
 		.name = "silence",
 		.forms = { { "<silence>", places::changes, kindOf<CmdSilence>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readSilence,
 		.make = makeSilence,
 		.check = checkSilence,
 		.run = runSilence,
 		.print = printSilence,
-		.printRaw = printSilenceRaw,
 	};
 }

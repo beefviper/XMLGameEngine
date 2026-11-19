@@ -39,8 +39,9 @@ namespace xge
 		refuseFollowed(checking, target, tag);
 	}
 
-	static bool runInc(const Command& command, const Doer&, CommandExecutor& executor)
+	static bool runInc(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		const CmdIncrement& inc = std::get<CmdIncrement>(command);
 		executor.game.addTo(inc.target, inc.amount * executor.heldShare);
 		return true;
@@ -52,24 +53,14 @@ namespace xge
 		o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")";
 	}
 
-	static void printIncRaw(std::ostream& o, const RawCommand& command)
-	{
-		o << "(" << command.variable;
-		if (const auto& by = ownOf<RawInc>(command).by) { o << ", " << *by; }
-		o << ")";
-	}
-
 	extern const Verb incVerb;
 	const Verb incVerb{
 		.name = "inc",
 		.forms = { { "<inc>", places::changes, kindOf<CmdIncrement>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readInc,
 		.make = makeInc,
 		.check = checkInc,
 		.run = runInc,
 		.print = printInc,
-		.printRaw = printIncRaw,
 	};
 }

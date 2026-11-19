@@ -42,8 +42,9 @@ namespace xge
 		}
 	}
 
-	static bool runReset(const Command& command, const Doer& doer, CommandExecutor& executor)
+	static bool runReset(const Command& command, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (const auto* object = std::get_if<CmdResetObject>(&command)) { executor.game.resetObject(object->target); }
 		else if (const auto* scene = std::get_if<CmdResetScene>(&command)) { executor.game.reset(*scene); }
 		else if (doer.self) { executor.restart(*doer.self); }
@@ -72,23 +73,14 @@ namespace xge
 		}
 	}
 
-	static void printResetRaw(std::ostream& o, const RawCommand& command)
-	{
-		if (!command.scene.empty()) { o << "(scene " << command.scene << ")"; }
-		else if (!command.object.empty()) { o << "(" << command.object << ")"; }
-	}
-
 	extern const Verb resetVerb;
 	const Verb resetVerb{
 		.name = "reset",
 		.forms = { { "<reset />", places::changes, kindOf<CmdReset>() }, { "<reset object>", places::changes, kindOf<CmdResetObject>() }, { "<reset scene>", places::changes, kindOf<CmdResetScene>() } },
-		.formOf = nullptr,
-		.onRelease = false,
 		.read = readReset,
 		.make = makeReset,
 		.check = checkReset,
 		.run = runReset,
 		.print = printReset,
-		.printRaw = printResetRaw,
 	};
 }

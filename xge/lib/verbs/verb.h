@@ -94,6 +94,8 @@ namespace xge
 		const std::string* action{ nullptr };
 		// In a cell map's check: what it found.
 		const Object::CellMatch* match{ nullptr };
+		// What runs it, and the game it runs in (CommandExecutor::run).
+		CommandExecutor* executor{ nullptr };
 	};
 
 	// One way a verb is written: how a message names it, where it may go
@@ -113,30 +115,46 @@ namespace xge
 		Form forms[3];
 		// Which form a command is, for a verb whose forms make the same
 		// kind of command; none: the first of that kind.
-		std::size_t (*formOf)(const Command& command);
+		std::size_t (*formOf)(const Command& command) = nullptr;
 		// Acts when a key is let go as well: a held verb stops.
-		bool onRelease;
+		bool onRelease = false;
 		// What its tag says besides the names every command may have (see
 		// readCommand): the attributes it must have, its content and its
 		// children, into `command`. None: it says nothing more. Stops the
 		// load (fail, load/reading.h) at anything missing or unknown.
-		void (*read)(const XmlNode& node, const std::string& where, RawCommand& command);
+		void (*read)(const XmlNode& node, const std::string& where, RawCommand& command) = nullptr;
 		// What was written, its numbers worked out. Throws
 		// std::runtime_error naming what is wrong with it.
-		Command (*make)(const RawCommand& raw, const ValueEvaluator& evaluate);
+		Command (*make)(const RawCommand& raw, const ValueEvaluator& evaluate) = nullptr;
 		// The names it uses exist (load/check.h); none: it names nothing.
 		// Throws std::runtime_error saying which does not.
-		void (*check)(const Command& command, const Checking& checking);
+		void (*check)(const Command& command, const Checking& checking) = nullptr;
 		// Does it, as `doer` says. False when it is refused, which ends the
-		// list it is in.
-		bool (*run)(const Command& command, const Doer& doer, CommandExecutor& executor);
-		// How a command of it is printed (operator<< in game/command.cpp,
-		// which the tests of generated games compare): the whole command
-		// made, and what a command as written says after its tag. None: the
-		// tag alone.
+		// list it is in. None: it does nothing when run (it acts elsewhere).
+		bool (*run)(const Command& command, const Doer& doer) = nullptr;
+		// How a command of it is printed (operator<< in game/command.cpp).
+		// None: the tag alone.
 		void (*print)(std::ostream& out, const Command& command) = nullptr;
-		void (*printRaw)(std::ostream& out, const RawCommand& command) = nullptr;
 	};
+
+	// A verb's own functions written for its own command (`bool
+	// runBounce(const CmdBounce& bounce, const Doer& doer)`), as the Verb
+	// table takes them: `.run = runAs<runBounce>`.
+	template <typename Cmd> Cmd commandOf(bool (*)(const Cmd&, const Doer&));
+	template <typename Cmd> Cmd commandOf(void (*)(std::ostream&, const Cmd&));
+	template <typename Cmd> Cmd commandOf(void (*)(const Cmd&, const Checking&));
+	template <auto Run> bool runAs(const Command& command, const Doer& doer)
+	{
+		return Run(std::get<decltype(commandOf(Run))>(command), doer);
+	}
+	template <auto Print> void printAs(std::ostream& out, const Command& command)
+	{
+		Print(out, std::get<decltype(commandOf(Print))>(command));
+	}
+	template <auto Check> void checkAs(const Command& command, const Checking& checking)
+	{
+		Check(std::get<decltype(commandOf(Check))>(command), checking);
+	}
 
 	// Every verb, in the order of docs/reference/commands.md.
 	const std::vector<const Verb*>& allVerbs();

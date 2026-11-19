@@ -15,8 +15,9 @@ namespace xge
 		return CmdSettle{};
 	}
 
-	static bool runSettle(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runSettle(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (doer.self) { executor.game.settle(*doer.self); }
 		return true;
 	}
@@ -30,11 +31,7 @@ namespace xge
 	const Verb settleVerb{
 		.name = "settle",
 		.forms = { { "<settle />", places::self, kindOf<CmdSettle>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeSettle,
-		.check = nullptr,
 		.run = runSettle,
 		.print = printSettle,
 	};

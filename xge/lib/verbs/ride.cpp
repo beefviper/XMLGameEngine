@@ -14,7 +14,7 @@ namespace xge
 		return CmdRide{};
 	}
 
-	static bool runRide(const Command&, const Doer& doer, CommandExecutor&)
+	static bool runRide(const Command&, const Doer& doer)
 	{
 		if (doer.self && doer.touch) { xge::ride(*doer.self, *doer.other); }
 		return true;
@@ -29,11 +29,7 @@ namespace xge
 	const Verb rideVerb{
 		.name = "ride",
 		.forms = { { "<ride />", places::touch, kindOf<CmdRide>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeRide,
-		.check = nullptr,
 		.run = runRide,
 		.print = printRide,
 	};

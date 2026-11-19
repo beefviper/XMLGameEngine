@@ -15,8 +15,9 @@ namespace xge
 		return CmdOut{};
 	}
 
-	static bool runOut(const Command&, const Doer& doer, CommandExecutor& executor)
+	static bool runOut(const Command&, const Doer& doer)
 	{
+		CommandExecutor& executor = *doer.executor;
 		if (!doer.self) { executor.game.passTurn(true); }
 		return true;
 	}
@@ -30,11 +31,7 @@ namespace xge
 	const Verb outVerb{
 		.name = "out",
 		.forms = { { "<out />", places::flow, kindOf<CmdOut>() } },
-		.formOf = nullptr,
-		.onRelease = false,
-		.read = nullptr,
 		.make = makeOut,
-		.check = nullptr,
 		.run = runOut,
 		.print = printOut,
 	};
