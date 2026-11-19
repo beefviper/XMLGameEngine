@@ -1149,6 +1149,22 @@ namespace xge
 		// condition (a <condition> in an action): its test, and its commands
 		// as the test's own (shared; copied before it is changed).
 		std::shared_ptr<RawCondition> test;
+
+		// Every number it holds, written or not: what self, a copy's name, a
+		// scene's names and live numbers are looked for in. Not its test's.
+		template <typename Visit> void forEachValue(Visit&& visit) { eachValue(*this, visit); }
+		template <typename Visit> void forEachValue(Visit&& visit) const { eachValue(*this, visit); }
+
+	private:
+		template <typename Command, typename Visit> static void eachValue(Command& command, Visit& visit)
+		{
+			for (auto* each : { &command.amount, &command.seconds, &command.arc, &command.distance, &command.ahead,
+				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY,
+				&command.column, &command.row, &command.below, &command.member })
+			{
+				visit(*each);
+			}
+		}
 	};
 
 	// A <timer> as written: <every> (again and again) or <after> (once), a

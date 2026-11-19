@@ -656,11 +656,7 @@ namespace xge
 			{
 				changed = renameStart(*text, "self", name) || changed;
 			}
-			for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
-				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.member })
-			{
-				changed = nameSelfInValue(*each, name) || changed;
-			}
+			command.forEachValue([&](RawValue& each) { changed = nameSelfInValue(each, name) || changed; });
 			// A condition in an action: its test and its commands.
 			if (command.test)
 			{
@@ -740,11 +736,7 @@ namespace xge
 			{
 				changed = renameStart(*text, from, to) || changed;
 			}
-			for (RawValue* each : { &command.amount, &command.seconds, &command.arc, &command.distance, &command.ahead, &command.positionX, &command.positionY,
-				&command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.below, &command.member })
-			{
-				changed = renameObjectInValue(*each, from, to) || changed;
-			}
+			command.forEachValue([&](RawValue& each) { changed = renameObjectInValue(each, from, to) || changed; });
 			if (command.test)
 			{
 				auto test = std::make_shared<RawCondition>(*command.test);
@@ -889,28 +881,12 @@ namespace xge
 				if (command.verb == "trigger") { exact(command.object); }
 				start(command.variable);
 				start(command.into);
-				for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
-					&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.member })
-				{
-					value(*each);
-				}
+				command.forEachValue(value);
 			}
 		};
 
 		object.name = to;
-		for (RawValue* each : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y, &object.rawSeek,
-			&object.rawAltitude, &object.rawRise, &object.rawFall, &object.rawAltitudeBounce })
-		{
-			value(*each);
-		}
-		for (std::optional<RawVector2>* each : { &object.rawAcceleration, &object.rawPivot })
-		{
-			if (*each) { value((*each)->x); value((*each)->y); }
-		}
-		for (std::optional<RawValue>* each : { &object.rawHeading, &object.rawDrag, &object.rawFriction, &object.rawMass, &object.rawSurfaceDrag, &object.rawSurfaceGrip, &object.rawLight })
-		{
-			if (*each) { value(**each); }
-		}
+		object.forEachValue(value);
 		for (auto& [name, each] : object.rawPulls) { value(each); }
 		for (auto& [name, each] : object.variable) { value(each); }
 		for (RawTextPiece& piece : object.sprite.text) { value(piece.value); }

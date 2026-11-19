@@ -663,6 +663,26 @@ namespace xge
 		// <grip>: how much of the way to what its moves ask for its velocity
 		// goes each frame, only when written; otherwise 1, all of it.
 		std::optional<RawValue> rawGrip;
+
+		// Every number of its motion, light and altitude that was written
+		// (not its pulls' or its variables', which go with a name, nor its
+		// pictures' or commands'): what a copy's name and a scene's names
+		// are looked for in.
+		template <typename Visit> void forEachValue(Visit&& visit)
+		{
+			for (RawValue* each : { &rawPosition.x, &rawPosition.y, &rawVelocity.x, &rawVelocity.y, &rawSeek, &rawAltitude, &rawRise, &rawFall, &rawAltitudeBounce })
+			{
+				visit(*each);
+			}
+			for (std::optional<RawVector2>* each : { &rawAcceleration, &rawPivot })
+			{
+				if (*each) { visit((*each)->x); visit((*each)->y); }
+			}
+			for (std::optional<RawValue>* each : { &rawHeading, &rawDrag, &rawFriction, &rawMass, &rawSurfaceDrag, &rawSurfaceGrip, &rawLight, &rawGrip })
+			{
+				if (*each) { visit(**each); }
+			}
+		}
 		// <moves>: on a map with <cells />, the moves a piece of a board
 		// game may make when <place>d (see Object::MoveSet); a set with a
 		// sprite= is the one for that look, the one without for the others.

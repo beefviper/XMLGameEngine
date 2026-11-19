@@ -331,19 +331,7 @@ namespace xge
 								+ (known.empty() ? std::string(" (it has no <ways>)") : ". Its ways are: " + listOf(known)));
 						}
 					}
-					value(command.amount, context);
-					value(command.seconds, context);
-					value(command.distance, context);
-					value(command.ahead, context);
-					value(command.positionX, context);
-					value(command.positionY, context);
-					value(command.velocityX, context);
-					value(command.velocityY, context);
-					value(command.accelerationX, context);
-					value(command.accelerationY, context);
-					value(command.column, context);
-					value(command.row, context);
-					value(command.member, context);
+					command.forEachValue([&](RawValue& each) { value(each, context); });
 					// A condition in an action: its test and its commands.
 					if (command.test)
 					{
@@ -433,18 +421,7 @@ namespace xge
 				for (std::vector<RawCommand>& frame : object.animation.frameCommands) { commands(frame, context); }
 				for (RawValue& time : object.animation.times) { value(time, context); }
 				for (RawSprite& frame : object.animation.frames) { sprite(frame, context); }
-				for (RawValue* part : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y })
-				{
-					value(*part, context);
-				}
-				for (std::optional<RawVector2>* part : { &object.rawAcceleration, &object.rawPivot })
-				{
-					if (*part) { value((*part)->x, context); value((*part)->y, context); }
-				}
-				for (std::optional<RawValue>* part : { &object.rawHeading, &object.rawDrag, &object.rawFriction, &object.rawMass, &object.rawSurfaceDrag, &object.rawSurfaceGrip })
-				{
-					if (*part) { value(**part, context); }
-				}
+				object.forEachValue([&](RawValue& each) { value(each, context); });
 				timers(object.timers, context);
 
 				RawCollisionData& collisions = object.rawCollisionData;
@@ -479,12 +456,6 @@ namespace xge
 					value(strength, context);
 				}
 				object.seekTarget = names_.object(object.seekTarget, context);
-				value(object.rawSeek, context);
-				if (object.rawLight) { value(*object.rawLight, context); }
-				value(object.rawAltitude, context);
-				value(object.rawRise, context);
-				value(object.rawFall, context);
-				value(object.rawAltitudeBounce, context);
 				object.shadowOf = names_.object(object.shadowOf, context);
 			}
 

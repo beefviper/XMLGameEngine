@@ -1191,9 +1191,9 @@ namespace xge
 				// One whose numbers can change is made again each time it runs
 				// (CmdLive); <set> and <spawn> always are, since what they
 				// put somewhere is the point of them.
-				const bool live = own || theirs || each.verb == "set" || each.verb == "spawn"
-					|| namesLive(making.amount) || namesLive(making.seconds) || namesLive(making.distance) || namesLive(making.ahead)
-					|| (each.verb == "shift" && (namesLive(making.positionX) || namesLive(making.positionY)));
+				bool readsLive = false;
+				making.forEachValue([&](const RawValue& value) { readsLive = readsLive || namesLive(value); });
+				const bool live = own || theirs || each.verb == "set" || each.verb == "spawn" || readsLive;
 				if (live)
 				{
 					auto loaded = std::make_shared<LoadedCommand>();
