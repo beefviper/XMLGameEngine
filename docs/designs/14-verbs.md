@@ -34,3 +34,7 @@ One place for everything the engine knows about a verb.
   - Two verbs share one struct where they read alike: a hunt by hops reads a `RawHop`, a `<distribute>` a `RawSend`. A verb with nothing to work out keeps what it read as made (the cells of a `<trigger>` or a `<count>` are a `CellPlace`).
   - `RawCommand` went from 3,328 to 2,496 bytes; a spawn's eleven numbers are most of it. It is load-time data only.
 - Rejected: one table of all verbs in one file (the first plan): it centralises the list but leaves each verb's code where it was.
+
+## Open
+
+- **A verb added in one place.** A new verb still touches its file, the list in `all.cpp`, the generator's list in `engine.xml`, its `Cmd` and `Raw` structs and their variants in `game/command.h`, and the schema. The author wants to approach "a `.h` and `.cpp` per verb and one list" at some point: the structs move to the verb's header, one list builds both variants and the table, and the generator copies the folder. The schema keeps its element.
