@@ -3018,17 +3018,14 @@ namespace xge
 			{
 				const std::string object = show->getAttribute("object");
 				const std::string stateName = show->getAttribute("state");
-				if (!show->getAttribute("set").empty())
-				{
-					fail(where, "<show set=...> is gone; write each <show> in the state (a state from= another takes its shows)");
-				}
 				if (object.empty() == stateName.empty()) { fail(where, "a <show> names an object=\"...\" or a state=\"...\", one of them"); }
 				if (!stateName.empty()) { states.push_back(stateName); }
 				else { out.push_back(object); }
 			}
 		}
 
-		// An <any>, into `raw`: its <condition>s and <any>s in order.
+		// An <any>, into `raw`: its <condition>s and <any>s in order, one or
+		// more (the schema).
 		void readJoin(const XmlNode& join, const std::string& here, RawCondition& raw)
 		{
 			raw.line = join.line();
@@ -3042,21 +3039,12 @@ namespace xge
 					const std::string checkHere = here + " > <condition>";
 					if (readCheck(*part, checkHere, check)) { fail(checkHere, "has its one test and nothing after it; the commands go at the end of the <condition>"); }
 				}
-				else if (partName == "all")
-				{
-					fail(here + " > <all>", "is gone; tests that must all hold are a condition in a condition, so write this <any> as two conditions: one for each way it can hold");
-				}
-				else if (partName == "any")
+				else
 				{
 					readJoin(*part, here + " > <" + partName + ">", check);
 				}
-				else
-				{
-					fail(here, "unknown <" + partName + ">; expected <condition>s and <any>s");
-				}
 				raw.parts.push_back(std::move(check));
 			}
-			if (raw.parts.empty()) { fail(here, "has no <condition>"); }
 		}
 
 		// What a <condition> tests, into `raw`: its filters and
@@ -3084,13 +3072,12 @@ namespace xge
 					fail(here, "<sees> looks along a line, so the condition has no variable=, total= or distance=");
 				}
 				raw.test = RawCondition::Test::Sees;
-				raw.sees = requireAttribute(*test, "object", seesHere);
+				// One or more <past class>es (the schema).
+				raw.sees = test->getAttribute("object");
 				for (std::unique_ptr<XmlNode> past = test->getFirstChild(); past != nullptr; past = past->getNextSibling())
 				{
-					if (past->getName() != "past") { fail(seesHere, "unknown <" + past->getName() + ">; a <sees> holds a <past class=\"...\" /> for each class that blocks the view"); }
-					raw.past.push_back(requireAttribute(*past, "class", seesHere + " > <past>"));
+					raw.past.push_back(past->getAttribute("class"));
 				}
-				if (raw.past.empty()) { fail(seesHere, "needs a <past class=\"...\" /> naming what blocks the view (a wall)"); }
 				return test->getNextSibling();
 			}
 
@@ -3112,10 +3099,6 @@ namespace xge
 			if (!test) { fail(here, "needs an <atleast>, <atmost>, <above>, <below>, <equal>, <unequal> or <remaining>, or an <any>"); }
 
 			const std::string testName = test->getName();
-			if (testName == "all")
-			{
-				fail(here + " > <all>", "is gone; tests that must all hold are a condition in a condition: the first test here, the next in a <condition> inside it");
-			}
 
 			// <any>: several checks, each a test of its own.
 			if (testName == "any")
@@ -3727,11 +3710,6 @@ namespace xge
 		// The states, each read with what it takes from the pieces.
 		void readStates(const XmlNode& states, std::vector<RawState>& rawStates, Kit& kit, const std::set<std::string>& gameNames)
 		{
-			for (std::unique_ptr<XmlNode> node = states.getFirstChild(); node != nullptr; node = node->getNextSibling())
-			{
-				if (node->getName() == "shows") { fail("<states> > <shows name>", "named <shows> sets are gone; write each <show> in the state that shows it (a state from= another takes its shows)"); }
-			}
-
 			std::map<std::string, std::vector<ElementPtr>> stateLists;
 			for (std::unique_ptr<XmlNode> state = states.getFirstChild(); state != nullptr; state = state->getNextSibling())
 			{
