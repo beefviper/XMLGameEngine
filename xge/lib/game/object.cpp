@@ -728,9 +728,10 @@ namespace xge
 		bool changed = false;
 		for (RawCommand& command : list)
 		{
-			for (std::string* each : { &command.object, &command.partner, &command.retreat })
+			RawHunt* hunt = std::get_if<RawHunt>(&command.own);
+			for (std::string* each : { &command.object, hunt ? &hunt->partner : nullptr, hunt ? &hunt->retreat : nullptr })
 			{
-				if (*each == from) { *each = to; changed = true; }
+				if (each && *each == from) { *each = to; changed = true; }
 			}
 			for (std::string* text : { &command.variable, &command.into })
 			{

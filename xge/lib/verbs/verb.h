@@ -205,7 +205,7 @@ namespace xge
 	void readOnto(const XmlNode& node, const std::string& here, std::vector<std::string>& onto);
 	// A <count>'s or <trigger>'s cells: one <here /> or <around>, the latter
 	// holding <straight /> and an <alike variable> if wanted.
-	void readCellPlace(const XmlNode& node, const std::string& where, RawCommand& command);
+	CellPlace readCellPlace(const XmlNode& node, const std::string& where);
 	// Members of a held class, holder to holder: how many, or <all />; a
 	// <distribute>: how many each, into a holder or a group's own ones.
 	void readSendHeld(const XmlNode& node, const std::string& where, RawCommand& command);
@@ -232,8 +232,6 @@ namespace xge
 	// A turn's way: a rotation, clockwise (adds to the heading, kept as
 	// Right) or counterclockwise (takes from it, kept as Left).
 	Direction rotationFromName(const std::string& name, const std::string& verb);
-	// <here /> or <around /> as written in a <count> or a <trigger>.
-	CellPlace cellPlaceOf(const RawCommand& raw);
 	// How long a <hop> takes: no <seconds>, none at all.
 	float hopSeconds(const RawHop& hop, const ValueEvaluator& evaluate);
 	// How high a timed <hop> goes: no <arc>, not at all.

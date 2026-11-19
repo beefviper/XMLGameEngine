@@ -21,18 +21,20 @@ namespace xge
 		// A <player> for each player, each with the state (if any) that says it
 		// is their turn.
 		const std::string here = where + " > <alternate>";
+		std::vector<std::string>& players = command.own.emplace<RawAlternate>().players;
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			if (child->getName() != "player") { fail(here, "unknown <" + child->getName() + ">; expected a <player> for each player"); }
-			command.players.push_back(child->getAttribute("state"));
+			players.push_back(child->getAttribute("state"));
 		}
-		if (command.players.empty()) { fail(here, "has no <player>; it needs one for each player"); }
+		if (players.empty()) { fail(here, "has no <player>; it needs one for each player"); }
 	}
 
 	static Command makeAlternate(const RawCommand& raw, const ValueEvaluator&)
 	{
-		if (raw.players.empty()) { throw std::runtime_error("<alternate> has no <player>; it needs one for each player"); }
-		return CmdAlternate{ raw.players };
+		const std::vector<std::string>& players = ownOf<RawAlternate>(raw).players;
+		if (players.empty()) { throw std::runtime_error("<alternate> has no <player>; it needs one for each player"); }
+		return CmdAlternate{ players };
 	}
 
 	static void checkAlternate(const CmdAlternate& alternate, const Checking& checking)

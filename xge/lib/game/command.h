@@ -1193,26 +1193,87 @@ namespace xge
 	// <shift object="..."><x>N</x><y>N</y></shift>: by how far.
 	struct RawShift { std::optional<RawValue> x, y; static auto values(auto& own) { return std::tie(own.x, own.y); } };
 
+	// <hunt object="...">speed<ahead>N</ahead><with object="..." />
+	// <retreat object="...">N</retreat><search /></hunt> in a maze (a hunt
+	// by hops is a RawHop): tiles ahead of the one hunted, a partner, what
+	// it backs off to within that many tiles, and the shortest way.
+	struct RawHunt
+	{
+		RawValue speed;
+		std::optional<RawValue> ahead;
+		std::string partner;
+		std::string retreat;
+		RawValue retreatWithin;
+		bool search{ false };
+		static auto values(auto& own) { return std::tie(own.speed, own.ahead, own.retreatWithin); }
+	};
+
+	// <send>: on a cell map, the cell it goes to; holder to holder (and a
+	// <distribute>), how many, or <all />.
+	struct RawSend
+	{
+		std::optional<RawValue> column, row;
+		std::optional<RawValue> count;
+		bool all{ false };
+		static auto values(auto& own) { return std::tie(own.column, own.row, own.count); }
+	};
+
+	// <pick><only /><most>N</most></pick>: pick the only piece that can
+	// move; from how many holders a picker may hold one at once.
+	struct RawPick { bool only{ false }; int most{ 0 }; static auto values(auto&) { return std::tie(); } };
+
+	// <think button="..."><depth>N</depth><avoid /><worth sprite="...">N</worth></think>.
+	struct RawThink
+	{
+		std::string button;
+		std::optional<RawValue> depth;
+		bool avoid{ false };
+		std::vector<std::pair<std::string, float>> worths;
+		static auto values(auto& own) { return std::tie(own.depth); }
+	};
+
+	// <hold button="..." />: the key the computer holds down.
+	struct RawHold { std::string button; static auto values(auto&) { return std::tie(); } };
+
+	// <alternate><player state="..." />...</alternate>: each player's state
+	// (empty for none).
+	struct RawAlternate { std::vector<std::string> players; static auto values(auto&) { return std::tie(); } };
+
+	// <track><onto class="..." /></track> on cells.
+	struct RawTrack { std::vector<std::string> onto; static auto values(auto&) { return std::tie(); } };
+
+	// <trigger>: in a key's input, how many commands after it are its
+	// <otherwise>; with class=, the cells about the one running it.
+	struct RawTrigger { int otherwise{ 0 }; CellPlace cells; static auto values(auto&) { return std::tie(); } };
+
+	// <count class="..." into="..."><here /> or <around /></count>.
+	struct RawCount { CellPlace cells; static auto values(auto&) { return std::tie(); } };
+
 	using RawOwn = std::variant<std::monostate, RawBounce, RawHop, RawSpawn,
 		RawInc, RawDec, RawSet, RawJump, RawKnock, RawPass, RawReveal, RawGo, RawWander, RawClimb,
-		RawFollow, RawMove, RawTurn, RawThrust, RawDeflect, RawHole, RawSwing, RawChase, RawAim, RawShift>;
+		RawFollow, RawMove, RawTurn, RawThrust, RawDeflect, RawHole, RawSwing, RawChase, RawAim, RawShift,
+		RawHunt, RawSend, RawPick, RawThink, RawHold, RawAlternate, RawTrack, RawTrigger, RawCount>;
 
 	// Each number among a verb's own parts that was written: a RawValue, or
 	// an optional one, or pair, that holds something.
 	template <typename Visit, typename... Parts> void visitValues(Visit& visit, Parts&... parts)
 	{
-		const auto one = [&](auto& part)
+		// A verb with no numbers has nothing to visit.
+		if constexpr (sizeof...(Parts) > 0)
 		{
-			using Part = std::remove_const_t<std::remove_reference_t<decltype(part)>>;
-			if constexpr (std::is_same_v<Part, RawValue>) { visit(part); }
-			else if constexpr (std::is_same_v<Part, std::optional<RawValue>>) { if (part) { visit(*part); } }
-			else
+			const auto one = [&](auto& part)
 			{
-				static_assert(std::is_same_v<Part, std::optional<RawVector2>>, "a verb's number is a RawValue, an optional one or an optional pair");
-				if (part) { visit(part->x); visit(part->y); }
-			}
-		};
-		(one(parts), ...);
+				using Part = std::remove_const_t<std::remove_reference_t<decltype(part)>>;
+				if constexpr (std::is_same_v<Part, RawValue>) { visit(part); }
+				else if constexpr (std::is_same_v<Part, std::optional<RawValue>>) { if (part) { visit(*part); } }
+				else
+				{
+					static_assert(std::is_same_v<Part, std::optional<RawVector2>>, "a verb's number is a RawValue, an optional one or an optional pair");
+					if (part) { visit(part->x); visit(part->y); }
+				}
+			};
+			(one(parts), ...);
+		}
 	}
 
 	// One command tag from the XML - <bounce/>, <inc variable="a.b"/>,
@@ -1239,38 +1300,20 @@ namespace xge
 		std::string scene;     // enter, reset
 		std::string way;       // enter, reset: a way of the current scene
 		std::string from;      // become, trigger: only one showing this look
-		int otherwise{ 0 };    // trigger in a key's input: how many commands after it are its <otherwise>
-		std::string partner;   // hunt: <with object="...">
-		std::string retreat;   // hunt: <retreat object="...">
-		std::string button;    // hold, think
-		std::vector<std::pair<std::string, float>> worths; // think: each <worth sprite="...">
-		bool only{ false };    // pick: <only />
-		bool avoid{ false };   // think: <avoid />, a card player that keeps out of tricks
-		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
-		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
 		RawValue amount;       // follow (how many nearest; empty text: all), move, turn, thrust, deflect (the widest angle), hole (the radius), hunt (the speed)
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0), swing (its stroke), move (its <wait>)
-		bool search{ false };  // hunt: <search />, the shortest way through the maze
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way), swing (its <degrees>)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
 		// shift: its <x> and <y>, each empty text when left out (0).
 		RawValue positionX;
 		RawValue positionY;
-		bool all{ false };     // send: <all />
-		int most{ 0 };         // pick: <most>, from how many holders a picker may hold one at once
 		RawValue column;       // send: on a cell map, where it goes
 		RawValue row;
-		// count, trigger on cells: <here /> or <around /> (place: "here",
-		// "around"), <straight /> in <around>, its <alike variable>.
-		std::string place;
-		bool straight{ false };
-		std::string alike;
 		// condition (a <condition> in an action): its test, and its commands
 		// as the test's own (shared; copied before it is changed).
 		std::shared_ptr<RawCondition> test;
 
-		// The verb's own data, for a verb that has it: bounce, hop (and a
-		// hunt's hop) and spawn.
+		// The verb's own data, as written, for a verb that has any (RawOwn).
 		RawOwn own;
 
 		// Every number it holds, written or not: what self, a copy's name, a

@@ -1088,7 +1088,7 @@ namespace xge
 				trigger.from = node->getAttribute("from");
 				std::vector<RawCommand> instead = readCommands(otherwise->getFirstChild(), here + " > <otherwise>");
 				if (instead.empty()) { fail(here + " > <otherwise>", "is empty; leave it out"); }
-				trigger.otherwise = static_cast<int>(instead.size());
+				trigger.own.emplace<RawTrigger>().otherwise = static_cast<int>(instead.size());
 				commands.push_back(std::move(trigger));
 				commands.insert(commands.end(), instead.begin(), instead.end());
 			}

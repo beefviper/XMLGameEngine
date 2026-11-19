@@ -83,7 +83,7 @@ namespace xge
 					{
 						if (command.verb != "pick" || !isHeld(command.objClass)) { continue; }
 						object.hand = true;
-						if (command.most > 0) { object.handHolds = command.most; }
+						if (const RawPick* pick = std::get_if<RawPick>(&command.own); pick && pick->most > 0) { object.handHolds = pick->most; }
 					}
 				}
 			}

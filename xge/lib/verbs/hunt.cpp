@@ -41,19 +41,20 @@ namespace xge
 
 		// What it hunts, how fast, and how its target is found from that: tiles
 		// ahead of it, with a partner, or backing off when near.
+		RawHunt& hunt = command.own.emplace<RawHunt>();
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			const std::string tag = child->getName();
-			if (tag == "with") { command.partner = requireAttribute(*child, "object", here + " > <with>"); }
+			if (tag == "with") { hunt.partner = requireAttribute(*child, "object", here + " > <with>"); }
 			else if (tag == "retreat")
 			{
-				command.retreat = requireAttribute(*child, "object", here + " > <retreat>");
-				command.distance = readValue(*child, here + " > <retreat>");
+				hunt.retreat = requireAttribute(*child, "object", here + " > <retreat>");
+				hunt.retreatWithin = readValue(*child, here + " > <retreat>");
 			}
-			else if (tag == "search") { command.search = true; }
+			else if (tag == "search") { hunt.search = true; }
 		}
-		command.amount = readLeadValue(node, { "ahead", "with", "retreat", "search" }, "its speed, then <ahead>, <with>, <retreat> and <search />, each if wanted", where);
-		if (auto ahead = findChild(&node, "ahead")) { command.ahead = readValue(*ahead, here); }
+		hunt.speed = readLeadValue(node, { "ahead", "with", "retreat", "search" }, "its speed, then <ahead>, <with>, <retreat> and <search />, each if wanted", where);
+		if (auto ahead = findChild(&node, "ahead")) { hunt.ahead = readValue(*ahead, here); }
 	}
 
 	static Command makeHunt(const RawCommand& raw, const ValueEvaluator& evaluate)
@@ -66,11 +67,11 @@ namespace xge
 			return CmdHuntHop{ raw.object, diagonal ? evaluate(hop->diagonal->x) : distance, diagonal ? evaluate(hop->diagonal->y) : distance, diagonal, seconds, arcOf(*hop, "hop", seconds, evaluate) };
 		}
 
-		CmdHunt hunt{ raw.object, speedOf(raw.amount, "hunt", evaluate), 0.0f, raw.partner, raw.retreat, 0.0f, raw.search };
-		if (isWritten(raw.ahead)) { hunt.ahead = evaluate(raw.ahead); }
-		if (!raw.retreat.empty())
+		const RawHunt& written = ownOf<RawHunt>(raw);
+		CmdHunt hunt{ raw.object, speedOf(written.speed, "hunt", evaluate), valueOr(written.ahead, 0.0f, evaluate), written.partner, written.retreat, 0.0f, written.search };
+		if (!written.retreat.empty())
 		{
-			hunt.retreatWithin = evaluate(raw.distance);
+			hunt.retreatWithin = evaluate(written.retreatWithin);
 			if (hunt.retreatWithin < 0.0f) { throw std::runtime_error("<hunt object=\"" + raw.object + "\">: the <retreat> is below 0 tiles"); }
 		}
 		return hunt;

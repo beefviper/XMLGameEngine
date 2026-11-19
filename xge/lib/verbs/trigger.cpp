@@ -29,7 +29,7 @@ namespace xge
 		}
 		if (child)
 		{
-			readCellPlace(node, where + " > <trigger>", command);
+			command.own.emplace<RawTrigger>().cells = readCellPlace(node, where + " > <trigger>");
 			requireAttribute(node, "class", where + " > <trigger> with <" + child->getName() + ">");
 			if (!command.object.empty()) { fail(where + " > <trigger>", "with <" + child->getName() + "> runs the action of pieces about the object running it, so it names no object="); }
 		}
@@ -38,7 +38,8 @@ namespace xge
 
 	static Command makeTrigger(const RawCommand& raw, const ValueEvaluator&)
 	{
-		return CmdTriggerAction{ raw.object, raw.action, raw.from, raw.otherwise, raw.objClass, cellPlaceOf(raw) };
+		const RawTrigger& written = ownOf<RawTrigger>(raw);
+		return CmdTriggerAction{ raw.object, raw.action, raw.from, written.otherwise, raw.objClass, written.cells };
 	}
 
 	static void checkTrigger(const CmdTriggerAction& trigger, const Checking& checking)

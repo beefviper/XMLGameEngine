@@ -15,15 +15,16 @@ namespace xge
 	// are tested.
 	static void readHold(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
-		command.button = requireAttribute(node, "button", where);
+		command.own.emplace<RawHold>().button = requireAttribute(node, "button", where);
 	}
 
 	static Command makeHold(const RawCommand& raw, const ValueEvaluator&)
 	{
-		const KeyCode button = keyCodeFromString(raw.button);
+		const std::string& written = ownOf<RawHold>(raw).button;
+		const KeyCode button = keyCodeFromString(written);
 		if (button == KeyCode::Unknown)
 		{
-			throw std::runtime_error("<hold button=\"" + raw.button + "\">: there is no key named '" + raw.button + "'");
+			throw std::runtime_error("<hold button=\"" + written + "\">: there is no key named '" + written + "'");
 		}
 		return CmdHold{ button };
 	}

@@ -15,12 +15,12 @@ namespace xge
 	{
 		requireAttribute(node, "class", where);
 		requireAttribute(node, "into", where);
-		if (node.getFirstChild()) { readCellPlace(node, where + " > <count>", command); }
+		if (node.getFirstChild()) { command.own.emplace<RawCount>().cells = readCellPlace(node, where + " > <count>"); }
 	}
 
 	static Command makeCount(const RawCommand& raw, const ValueEvaluator&)
 	{
-		return CmdCount{ raw.objClass, VariableName::of(raw.into), cellPlaceOf(raw) };
+		return CmdCount{ raw.objClass, VariableName::of(raw.into), ownOf<RawCount>(raw).cells };
 	}
 
 	static bool runCount(const CmdCount& count, const Doer& doer)

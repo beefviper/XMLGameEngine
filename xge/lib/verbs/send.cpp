@@ -35,8 +35,9 @@ namespace xge
 		const auto column = findChild(&node, "column");
 		const auto row = findChild(&node, "row");
 		if (!column != !row) { fail(here, "has a <column> or a <row> and not the other; give both, or neither to keep its cell"); }
-		if (column) { command.column = readValue(*column, here); }
-		if (row) { command.row = readValue(*row, here); }
+		RawSend& send = command.own.emplace<RawSend>();
+		if (column) { send.column = readValue(*column, here); }
+		if (row) { send.row = readValue(*row, here); }
 	}
 
 	static Command makeSend(const RawCommand& raw, const ValueEvaluator& evaluate)
@@ -45,8 +46,9 @@ namespace xge
 		// <distribute> sends them.
 		if (raw.object.empty()) { return makeSendHeld(raw, evaluate); }
 		CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt, false, 0, false, {} };
-		if (isWritten(raw.column)) { send.column = evaluate(raw.column); }
-		if (isWritten(raw.row)) { send.row = evaluate(raw.row); }
+		const RawSend& written = ownOf<RawSend>(raw);
+		if (written.column) { send.column = evaluate(*written.column); }
+		if (written.row) { send.row = evaluate(*written.row); }
 		return send;
 	}
 

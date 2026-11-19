@@ -210,22 +210,24 @@ namespace xge
 	}
 
 
-	void readCellPlace(const XmlNode& node, const std::string& where, RawCommand& command)
+	CellPlace readCellPlace(const XmlNode& node, const std::string& where)
 	{
+		CellPlace cells;
 		std::unique_ptr<XmlNode> place = node.getFirstChild();
 		if (!place || place->getNextSibling() || (place->getName() != "here" && place->getName() != "around"))
 		{
 			fail(where, "holds <" + (place ? place->getName() : std::string()) + ">; expected one <here /> or <around />");
 		}
-		command.place = place->getName();
+		cells.where = place->getName() == "here" ? CellPlace::Where::Here : CellPlace::Where::Around;
 		for (std::unique_ptr<XmlNode> child = place->getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			const std::string tag = child->getName();
-			if (command.place == "here") { fail(where + " > <here>", "holds <" + tag + ">; it is empty"); }
-			if (tag == "straight" && !command.straight) { command.straight = true; continue; }
-			if (tag == "alike" && command.alike.empty()) { command.alike = requireAttribute(*child, "variable", where + " > <around> > <alike>"); continue; }
+			if (cells.where == CellPlace::Where::Here) { fail(where + " > <here>", "holds <" + tag + ">; it is empty"); }
+			if (tag == "straight" && !cells.straight) { cells.straight = true; continue; }
+			if (tag == "alike" && cells.alike.empty()) { cells.alike = requireAttribute(*child, "variable", where + " > <around> > <alike>"); continue; }
 			fail(where + " > <around>", "holds <" + tag + ">; expected <straight /> and <alike variable=\"...\" />, each once if wanted");
 		}
+		return cells;
 	}
 
 
@@ -235,12 +237,13 @@ namespace xge
 		command.from = requireAttribute(node, "from", where);
 		command.into = requireAttribute(node, "into", where);
 		const std::string here = where + " > <" + verb + ">";
+		RawSend& send = command.own.emplace<RawSend>();
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			if (child->getName() != "all" || verb == "distribute") { fail(here, "unknown <" + child->getName() + ">; expected how many" + std::string(verb == "send" ? ", or <all />" : " each")); }
-			command.all = true;
+			send.all = true;
 		}
-		if (!command.all) { command.amount = readValue(node, where); }
+		if (!send.all) { send.count = readValue(node, where); }
 		else if (!readText(node).empty()) { fail(here, "has <all /> and a number; give one"); }
 	}
 
@@ -277,16 +280,6 @@ namespace xge
 		throw std::runtime_error("<" + verb + "> has direction=\"" + name + "\"; expected clockwise or counterclockwise");
 	}
 
-	CellPlace cellPlaceOf(const RawCommand& raw)
-	{
-		CellPlace place;
-		if (raw.place == "here") { place.where = CellPlace::Where::Here; }
-		else if (raw.place == "around") { place.where = CellPlace::Where::Around; }
-		place.straight = raw.straight;
-		place.alike = raw.alike;
-		return place;
-	}
-
 	float hopSeconds(const RawHop& hop, const ValueEvaluator& evaluate)
 	{
 		if (!hop.seconds) { return 0.0f; }
@@ -315,11 +308,12 @@ namespace xge
 	{
 		CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt, false, 0, false, {} };
 		send.held = true;
-		send.all = raw.all;
+		const RawSend& written = ownOf<RawSend>(raw);
+		send.all = written.all;
 		send.sprite = raw.sprite;
-		if (!raw.all)
+		if (!written.all)
 		{
-			const float count = evaluate(raw.amount);
+			const float count = written.count ? evaluate(*written.count) : 0.0f;
 			if (count < 1.0f || count != std::floor(count)) { throw std::runtime_error("<" + raw.verb + " from=\"" + raw.from + "\" into=\"" + raw.into + "\">: sends " + formatDisplayNumber(count) + "; expected a whole number from 1, or <all />"); }
 			send.count = static_cast<int>(count);
 		}

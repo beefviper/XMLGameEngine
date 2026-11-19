@@ -21,12 +21,12 @@ namespace xge
 	// <track>: Follows a control that points (a mouse, a stick).
 	static void readTrack(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
-		if (node.getFirstChild()) { readOnto(node, where + " > <track>", command.onto); }
+		if (node.getFirstChild()) { readOnto(node, where + " > <track>", command.own.emplace<RawTrack>().onto); }
 	}
 
 	static Command makeTrack(const RawCommand& raw, const ValueEvaluator&)
 	{
-		return CmdTrack{ raw.path, raw.onto };
+		return CmdTrack{ raw.path, ownOf<RawTrack>(raw).onto };
 	}
 
 	static void checkTrack(const CmdTrack& track, const Checking& checking)
