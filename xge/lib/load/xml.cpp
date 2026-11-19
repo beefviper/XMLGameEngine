@@ -3641,19 +3641,12 @@ namespace xge
 		// against the window's size.
 		void readWindow(const XmlNode& window, WindowDesc& windowDesc)
 		{
-			const std::string windowHere = "<window>";
-			windowDesc.name = requireAttribute(window, "name", windowHere);
-			windowDesc.width = std::stof(readText(*requireChild(window, "width", windowHere)));
-			windowDesc.height = std::stof(readText(*requireChild(window, "height", windowHere)));
-			for (const auto& [side, size] : { std::pair{ "width", windowDesc.width }, std::pair{ "height", windowDesc.height } })
-			{
-				if (!(size >= 1.0f)) { fail(windowHere, std::string("<") + side + "> is " + formatDisplayNumber(size) + "; expected a number of pixels, 1 or more"); }
-			}
-			if (std::unique_ptr<XmlNode> scale = findChild(&window, "scale"))
-			{
-				windowDesc.scale = std::stoi(readText(*scale));
-				if (windowDesc.scale < 1) { fail(windowHere, "<scale> is a whole number, 1 or more"); }
-			}
+			// The schema holds the sizes to whole pixels from 1 and the scale
+			// and frame rate to whole numbers from 1.
+			windowDesc.name = window.getAttribute("name");
+			windowDesc.width = std::stof(readText(*findChild(&window, "width")));
+			windowDesc.height = std::stof(readText(*findChild(&window, "height")));
+			if (std::unique_ptr<XmlNode> scale = findChild(&window, "scale")) { windowDesc.scale = std::stoi(readText(*scale)); }
 			// Left out: black, a window, 60 frames a second.
 			const auto background = findChild(&window, "background");
 			const auto fullscreen = findChild(&window, "fullscreen");
@@ -3661,7 +3654,6 @@ namespace xge
 			windowDesc.background = background ? readText(*background) : "color.black";
 			windowDesc.fullscreen = fullscreen ? "true" : "false";
 			windowDesc.framerate = framerate ? std::stoi(readText(*framerate)) : 60;
-			if (windowDesc.framerate < 1) { fail(windowHere, "<framerate> is " + std::to_string(windowDesc.framerate) + "; expected a number of frames a second, 1 or more"); }
 		}
 
 		// <styles> (optional): what a <text> or a <bitmap> can take by style="...".
@@ -3672,7 +3664,7 @@ namespace xge
 				for (std::unique_ptr<XmlNode> style = stylesNode->getFirstChild(); style != nullptr; style = style->getNextSibling())
 				{
 					RawStyle raw;
-					raw.name = requireAttribute(*style, "name", "<styles> > <style>");
+					raw.name = style->getAttribute("name");
 					const std::string here = "<styles> > <style name=\"" + raw.name + "\">";
 					if (std::any_of(rawStyles.begin(), rawStyles.end(), [&](const RawStyle& each) { return each.name == raw.name; }))
 					{
@@ -3702,31 +3694,27 @@ namespace xge
 				{
 					if (node->getName() != "sheet") { continue; }
 					Sheet sheet;
-					sheet.name = requireAttribute(*node, "name", "<pictures> > <sheet>");
+					sheet.name = node->getAttribute("name");
 					const std::string here = "<pictures> > <sheet name=\"" + sheet.name + "\">";
 					if (std::any_of(rawSheets.begin(), rawSheets.end(), [&](const Sheet& each) { return each.name == sheet.name; }))
 					{
 						fail("<pictures>", "two <sheet>s are called '" + sheet.name + "'");
 					}
-					sheet.path = readText(*requireChild(*node, "path", here));
+					sheet.path = readText(*findChild(node.get(), "path"));
+					// A number the schema has read; it cannot say from 0.
 					const auto plain = [&](const XmlNode& parent, const char* tag, const std::string& at)
 					{
 						const auto part = findChild(&parent, tag);
 						if (!part) { return 0.0f; }
-						const std::string text = readText(*part);
-						std::size_t used = 0;
-						float value = -1.0f;
-						try { value = std::stof(text, &used); }
-						catch (const std::exception&) { used = 0; }
-						if (text.empty() || used != text.size() || value < 0.0f) { fail(at + " > <" + tag + ">", "is \"" + text + "\"; expected a number from 0"); }
+						const float value = std::stof(readText(*part));
+						if (value < 0.0f) { fail(at + " > <" + tag + ">", "is " + readText(*part) + "; expected a number from 0"); }
 						return value;
 					};
+					// <columns> and <rows> come together, or a <cell> size instead (the schema).
 					if (auto columns = findChild(node.get(), "columns")) { sheet.columns = readCount(*columns, here); }
 					if (auto rows = findChild(node.get(), "rows")) { sheet.rows = readCount(*rows, here); }
-					if ((sheet.columns > 0) != (sheet.rows > 0)) { fail(here, "has <columns> or <rows> without the other"); }
 					if (auto cell = findChild(node.get(), "cell"))
 					{
-						if (sheet.columns > 0) { fail(here, "has <columns> and <rows> and a <cell> size; give one"); }
 						sheet.cellWidth = plain(*cell, "width", here + " > <cell>");
 						sheet.cellHeight = plain(*cell, "height", here + " > <cell>");
 						if (!(sheet.cellWidth > 0.0f && sheet.cellHeight > 0.0f)) { fail(here + " > <cell>", "needs a <width> and a <height> above 0"); }
@@ -3749,7 +3737,7 @@ namespace xge
 			{
 				if (node->getName() != "patterns") { continue; }
 				RawPatterns raw;
-				raw.name = requireAttribute(*node, "name", "<patterns>");
+				raw.name = node->getAttribute("name");
 				const std::string here = "<patterns name=\"" + raw.name + "\">";
 				if (std::any_of(rawPatterns.begin(), rawPatterns.end(), [&](const RawPatterns& each) { return each.name == raw.name; }))
 				{
@@ -3758,19 +3746,17 @@ namespace xge
 				for (std::unique_ptr<XmlNode> pattern = node->getFirstChild(); pattern != nullptr; pattern = pattern->getNextSibling())
 				{
 					RawPatterns::Pattern one;
-					one.name = requireAttribute(*pattern, "name", here + " > <pattern>");
+					one.name = pattern->getAttribute("name");
 					const std::string at = here + " > <pattern name=\"" + one.name + "\">";
+					// One or more, each an <alike> or a <run> (the schema).
 					for (std::unique_ptr<XmlNode> part = pattern->getFirstChild(); part != nullptr; part = part->getNextSibling())
 					{
 						const std::string tag = part->getName();
-						if (tag != "alike" && tag != "run") { fail(at, "unknown <" + tag + ">; expected <alike variable> and <run variable>"); }
 						// The variable compared: <alike> one value of it, <run> values in a row.
-						const std::string variable = requireAttribute(*part, "variable", at + " > <" + tag + ">");
 						const RawPatterns::Part kind = tag == "run" ? RawPatterns::Part::Run : RawPatterns::Part::Alike;
-						one.by.push_back(variable);
+						one.by.push_back(part->getAttribute("variable"));
 						one.parts.emplace_back(kind, readCount(*part, at + " > <" + tag + ">"));
 					}
-					if (one.parts.empty()) { fail(at, "has no <alike> or <run>"); }
 					raw.patterns.push_back(std::move(one));
 				}
 				rawPatterns.push_back(std::move(raw));
@@ -3808,11 +3794,10 @@ namespace xge
 		const ElementPtr pictured = loadGameFile(filename, backend, validation);
 		const std::unique_ptr<XmlNode> root = viewOf(pictured);
 
-		const std::string where = "game";
-		std::unique_ptr<XmlNode> window = requireChild(*root, "window", where);
-		std::unique_ptr<XmlNode> variablesNode = requireChild(*root, "variables", where);
+		std::unique_ptr<XmlNode> window = findChild(root.get(), "window");
+		std::unique_ptr<XmlNode> variablesNode = findChild(root.get(), "variables");
 		std::unique_ptr<XmlNode> piecesNode = findChild(root.get(), "objects");  // none: nothing is taken
-		std::unique_ptr<XmlNode> states = requireChild(*root, "states", where);
+		std::unique_ptr<XmlNode> states = findChild(root.get(), "states");
 		std::unique_ptr<XmlNode> objectsNode = findChild(states.get(), "objects"); // none: every object is a state's own
 
 		readWindow(*window, windowDesc);
@@ -3873,7 +3858,7 @@ namespace xge
 		{
 			for (std::unique_ptr<XmlNode> keep = keepsNode->getFirstChild(); keep != nullptr; keep = keep->getNextSibling())
 			{
-				rawKeeps.push_back(requireAttribute(*keep, "object", "<keeps> > <keep>"));
+				rawKeeps.push_back(keep->getAttribute("object"));
 			}
 		}
 
