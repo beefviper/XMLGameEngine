@@ -73,6 +73,13 @@ namespace xge
 		return true;
 	}
 
+	static bool keepMoving(const CmdMove& move, const Doer& doer)
+	{
+		if (!doer.self) { return false; }
+		holdStep(*doer.self, doer.game().driveFor(*doer.self), move.direction, move.step);
+		return true;
+	}
+
 	static void printMove(std::ostream& o, const CmdMove& move)
 	{
 		const char* direction = (move.direction == Direction::Up) ? "up"
@@ -90,6 +97,7 @@ namespace xge
 		.read = readMove,
 		.make = makeMove,
 		.run = runAs<runMove>,
+		.hold = runAs<keepMoving>,
 		.print = printAs<printMove>,
 	};
 }

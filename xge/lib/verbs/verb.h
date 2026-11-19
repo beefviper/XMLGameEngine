@@ -139,6 +139,10 @@ namespace xge
 		// Does it, as `doer` says. False when it is refused, which ends the
 		// list it is in. None: it does nothing when run (it acts elsewhere).
 		bool (*run)(const Command& command, const Doer& doer) = nullptr;
+		// Goes on while the key that ran it is still down as a state begins
+		// (a held move keeps going, a looping sound plays on). Whether it
+		// did. None: it is not held.
+		bool (*hold)(const Command& command, const Doer& doer) = nullptr;
 		// How a command of it is printed (operator<< in game/command.cpp).
 		// None: the tag alone.
 		void (*print)(std::ostream& out, const Command& command) = nullptr;

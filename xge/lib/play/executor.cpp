@@ -154,70 +154,27 @@ namespace xge
 	{
 		Command made;
 		const Command& command = now(held, made, nullptr, nullptr);
+		Doer doer;
+		doer.executor = this;
 
-		// A looping sound right on a key goes on again, as a move does.
-		if (const auto* play = std::get_if<CmdPlay>(&command))
-		{
-			if (!game.soundLoops(play->sound))
-			{
-				return false;
-			}
-			game.requestSound(play->sound);
-			return true;
-		}
-
+		// Right on a key (a looping sound goes on again, as a move does), or
+		// each verb of the action the key triggers.
 		const auto* trigger = std::get_if<CmdTriggerAction>(&command);
 		if (!trigger)
 		{
-			return false;
+			const Verb* verb = verbOf(command);
+			return verb && verb->hold && verb->hold(command, doer);
 		}
 
 		Object& object = game.getObject(trigger->object);
+		doer.self = &object;
+		doer.action = &trigger->action;
 		for (const auto& written : object.kind->action[trigger->action])
 		{
 			Command madeNow;
 			const Command& actionCommand = now(written, madeNow, &object, nullptr);
-			if (const auto* move = std::get_if<CmdMove>(&actionCommand))
-			{
-				holdStep(object, game.driveFor(object), move->direction, move->step);
-			}
-			else if (const auto* climb = std::get_if<CmdClimb>(&actionCommand))
-			{
-				Object::Climb& asked = game.parts().give(game.parts().climbs, object.id);
-				asked.activeClimb[climb->direction == Direction::Up ? 0 : 1] = climb->step;
-				asked.climbClass = climb->ladderClass;
-			}
-			else if (const auto* thrust = std::get_if<CmdThrustAcross>(&actionCommand))
-			{
-				applyActionThrust(object, thrust->direction, thrust->amount, thrust->burn);
-			}
-			else if (const auto* turn = std::get_if<CmdTurn>(&actionCommand))
-			{
-				applyActionTurn(object, turn->direction, turn->rate);
-			}
-			else if (const auto* ahead = std::get_if<CmdThrust>(&actionCommand))
-			{
-				applyActionThrustAhead(object, trigger->action, ahead->amount, ahead->burn);
-			}
-			else if (const auto* swing = std::get_if<CmdSwing>(&actionCommand))
-			{
-				Object::Swing& stroke = game.parts().give(game.parts().swings, object.id);
-				stroke.seconds = swing->seconds;
-				stroke.by = swing->by;
-				stroke.held = true;
-			}
-			else if (const auto* play = std::get_if<CmdPlay>(&actionCommand))
-			{
-				if (game.soundLoops(play->sound)) { game.requestSound(play->sound); }
-			}
-			// The way a maze walker is asked to go, while the key asking is
-			// still down: Pac-Man held right through READY! sets off right.
-			else if (const auto* go = std::get_if<CmdGo>(&actionCommand); go && game.mazeOf(object) && !object.onCells)
-			{
-				startGo(*game.mazeOf(object), *go);
-			}
+			if (const Verb* verb = verbOf(actionCommand); verb && verb->hold) { verb->hold(actionCommand, doer); }
 		}
-
 		return true;
 	}
 
@@ -299,37 +256,4 @@ namespace xge
 		}
 		return false;
 	}
-
-	// Records that `direction` is now being pushed by `amount` a frame (0 =
-	// just released), and the variable it burns; playOneFrame
-	// applies every direction being held once a frame. Unlike a move's velocity
-	// there is nothing to recombine: each direction adds its own amount.
-	void CommandExecutor::applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn)
-	{
-		const auto index = static_cast<std::size_t>(direction);
-		Drive& drive = game.driveFor(object);
-		drive.thrust[index] = amount;
-		drive.thrustBurn[index] = amount == 0.0f ? std::string{} : burn;
-	}
-
-	// Records that a turn is now held (rate 0 = just released);
-	// playOneFrame turns the object once a frame while it is.
-	void CommandExecutor::applyActionTurn(Object& object, Direction direction, float rate)
-	{
-		game.driveFor(object).turn[static_cast<std::size_t>(direction)] = rate;
-	}
-
-	// Records that thrust along the heading is now held (amount 0 = just
-	// released) by that action, and the variable it burns. Each action's
-	// thrust is its own, so two held at once add up.
-	void CommandExecutor::applyActionThrustAhead(Object& object, const std::string& action, float amount, const std::string& burn)
-	{
-		if (amount == 0.0f)
-		{
-			if (Drive* drive = game.parts().drives.find(object.id)) { drive->thrustAhead.erase(action); }
-			return;
-		}
-		game.driveFor(object).thrustAhead[action] = { amount, burn };
-	}
-
 }

@@ -48,6 +48,16 @@ namespace xge
 		return true;
 	}
 
+	static bool keepSwinging(const CmdSwing& swing, const Doer& doer)
+	{
+		if (!doer.self) { return false; }
+		Object::Swing& stroke = doer.game().parts().give(doer.game().parts().swings, doer.self->id);
+		stroke.seconds = swing.seconds;
+		stroke.by = swing.by;
+		stroke.held = true;
+		return true;
+	}
+
 	static void printSwing(std::ostream& o, const CmdSwing& swing)
 	{
 		o << "swing(" << swing.by << " degrees, " << swing.seconds << "s)";
@@ -61,6 +71,7 @@ namespace xge
 		.read = readSwing,
 		.make = makeSwing,
 		.run = runAs<runSwing>,
+		.hold = runAs<keepSwinging>,
 		.print = printAs<printSwing>,
 	};
 }

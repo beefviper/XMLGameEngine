@@ -43,6 +43,15 @@ namespace xge
 		return true;
 	}
 
+	static bool keepClimbing(const CmdClimb& climb, const Doer& doer)
+	{
+		if (!doer.self) { return false; }
+		Object::Climb& asked = doer.game().parts().give(doer.game().parts().climbs, doer.self->id);
+		asked.activeClimb[climb.direction == Direction::Up ? 0 : 1] = climb.step;
+		asked.climbClass = climb.ladderClass;
+		return true;
+	}
+
 	static void printClimb(std::ostream& o, const CmdClimb& climb)
 	{
 		o << "climb." << (climb.direction == Direction::Up ? "up" : "down") << "(" << climb.step << ", " << climb.ladderClass << ")";
@@ -56,6 +65,7 @@ namespace xge
 		.read = readClimb,
 		.make = makeClimb,
 		.run = runAs<runClimb>,
+		.hold = runAs<keepClimbing>,
 		.print = printAs<printClimb>,
 	};
 }

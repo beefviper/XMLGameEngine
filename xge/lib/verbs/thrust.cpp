@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 namespace xge
@@ -23,18 +22,49 @@ namespace xge
 		return CmdThrust{ evaluate(raw.amount), raw.burn };
 	}
 
+	// `direction` is now being pushed by `amount` (0 =
+	// just released), and the variable it burns; playOneFrame
+	// applies every direction being held once a frame. Unlike a move's velocity
+	// there is nothing to recombine: each direction adds its own amount.
+	static void pushAcross(Game& game, Object& object, Direction direction, float amount, const std::string& burn)
+	{
+		const auto index = static_cast<std::size_t>(direction);
+		Drive& drive = game.driveFor(object);
+		drive.thrust[index] = amount;
+		drive.thrustBurn[index] = amount == 0.0f ? std::string{} : burn;
+	}
+
+	// Thrust along the heading is now held (amount 0 = just
+	// released) by that action, and the variable it burns. Each action's
+	// thrust is its own, so two held at once add up.
+	static void pushAhead(Game& game, Object& object, const std::string& action, float amount, const std::string& burn)
+	{
+		if (amount == 0.0f)
+		{
+			if (Drive* drive = game.parts().drives.find(object.id)) { drive->thrustAhead.erase(action); }
+			return;
+		}
+		game.driveFor(object).thrustAhead[action] = { amount, burn };
+	}
+
+	// Held: the push goes on; let go, it stops.
 	static bool runThrust(const Command& command, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
 		if (!doer.self || !doer.action) { return true; }
-		if (const auto* way = std::get_if<CmdThrustAcross>(&command))
+		Game& game = doer.game();
+		if (const auto* across = std::get_if<CmdThrustAcross>(&command))
 		{
-			executor.applyActionThrust(*doer.self, way->direction, doer.pressed ? way->amount : 0.0f, way->burn);
+			pushAcross(game, *doer.self, across->direction, doer.pressed ? across->amount : 0.0f, across->burn);
 			return true;
 		}
-		const CmdThrust& thrust = std::get<CmdThrust>(command);
-		executor.applyActionThrustAhead(*doer.self, *doer.action, doer.pressed ? thrust.amount : 0.0f, thrust.burn);
+		const CmdThrust& ahead = std::get<CmdThrust>(command);
+		pushAhead(game, *doer.self, *doer.action, doer.pressed ? ahead.amount : 0.0f, ahead.burn);
 		return true;
+	}
+
+	static bool keepPushing(const Command& command, const Doer& doer)
+	{
+		return doer.self && doer.action && runThrust(command, doer);
 	}
 
 	static void printThrust(std::ostream& o, const Command& command)
@@ -65,6 +95,7 @@ namespace xge
 		.read = readThrust,
 		.make = makeThrust,
 		.run = runThrust,
+		.hold = keepPushing,
 		.print = printThrust,
 	};
 }

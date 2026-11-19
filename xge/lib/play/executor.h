@@ -98,9 +98,6 @@ namespace xge
 		// made again into `made` (see Game::makeNow).
 		const Command& now(const Command& command, Command& made, const Object* self, const Object* other);
 
-		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
-		void applyActionTurn(Object& object, Direction direction, float rate);
-		void applyActionThrustAhead(Object& object, const std::string& action, float amount, const std::string& burn);
 
 		// Runs an action's commands in order. On the press, a verb that can
 		// be refused (<fire> with nothing left to fire, a <hop>, <jump>

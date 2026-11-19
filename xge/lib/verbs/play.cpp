@@ -36,6 +36,15 @@ namespace xge
 		return true;
 	}
 
+	// Only a sound that loops goes on.
+	static bool keepPlaying(const CmdPlay& play, const Doer& doer)
+	{
+		Game& game = doer.game();
+		if (!game.soundLoops(play.sound)) { return false; }
+		game.requestSound(play.sound);
+		return true;
+	}
+
 	static void printPlay(std::ostream& o, const CmdPlay& play)
 	{
 		o << "play(" << play.sound << ")";
@@ -50,6 +59,7 @@ namespace xge
 		.make = makePlay,
 		.check = checkAs<checkPlay>,
 		.run = runAs<runPlay>,
+		.hold = runAs<keepPlaying>,
 		.print = printAs<printPlay>,
 	};
 }

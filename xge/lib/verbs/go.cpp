@@ -32,6 +32,17 @@ namespace xge
 		return true;
 	}
 
+	// The way a maze walker is asked to go, while the key asking is still
+	// down: Pac-Man held right through READY! sets off right.
+	static bool keepGoing(const CmdGo& go, const Doer& doer)
+	{
+		if (!doer.self || doer.self->onCells) { return false; }
+		Maze* maze = doer.game().mazeOf(*doer.self);
+		if (!maze) { return false; }
+		startGo(*maze, go);
+		return true;
+	}
+
 	static void printGo(std::ostream& o, const CmdGo& go)
 	{
 		const char* direction = (go.direction == Direction::Up) ? "up"
@@ -48,6 +59,7 @@ namespace xge
 		.read = readGo,
 		.make = makeGo,
 		.run = runAs<runGo>,
+		.hold = runAs<keepGoing>,
 		.print = printAs<printGo>,
 	};
 }

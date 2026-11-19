@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 namespace xge
@@ -24,13 +23,27 @@ namespace xge
 		return CmdTurn{ rotationFromName(raw.direction, raw.verb), valueOr(raw.amount, 0.0f, evaluate) };
 	}
 
+	// A turn is now held (rate 0 = just released);
+	// playOneFrame turns the object once a frame while it is.
+	static void holdTurn(Game& game, Object& object, Direction direction, float rate)
+	{
+		game.driveFor(object).turn[static_cast<std::size_t>(direction)] = rate;
+	}
+
 	static bool runTurn(const CmdTurn& turn, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
 		if (!doer.self || !doer.action) { return true; }
+		Game& game = doer.game();
 		// A shape on a cell map: a quarter turn on the press.
-		if (executor.game.isShape(*doer.self)) { return !doer.pressed || executor.game.turnCells(*doer.self, turn.direction == Direction::Right); }
-		executor.applyActionTurn(*doer.self, turn.direction, doer.pressed ? turn.rate : 0.0f);
+		if (game.isShape(*doer.self)) { return !doer.pressed || game.turnCells(*doer.self, turn.direction == Direction::Right); }
+		holdTurn(game, *doer.self, turn.direction, doer.pressed ? turn.rate : 0.0f);
+		return true;
+	}
+
+	static bool keepTurning(const CmdTurn& turn, const Doer& doer)
+	{
+		if (!doer.self) { return false; }
+		holdTurn(doer.game(), *doer.self, turn.direction, turn.rate);
 		return true;
 	}
 
@@ -47,6 +60,7 @@ namespace xge
 		.read = readTurn,
 		.make = makeTurn,
 		.run = runAs<runTurn>,
+		.hold = runAs<keepTurning>,
 		.print = printAs<printTurn>,
 	};
 }
