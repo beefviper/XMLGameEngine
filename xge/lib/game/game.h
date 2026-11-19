@@ -922,9 +922,11 @@ namespace xge
 		// Each live number the expressions read, and whose it is and which
 		// part, worked out the first time (objects keep their places in
 		// `objects`).
+		// Only those a text has read are kept up (game_expr::liveRead).
 		struct LiveLink { float* number; std::size_t object; std::size_t part; };
 		std::vector<LiveLink> liveLinks;
 		bool liveLinked = false;
+		std::size_t liveLinkedAt = 0;
 		std::set<std::string> liveWarned;
 
 		// The copy of an object's variables that texts read (load/calc), made

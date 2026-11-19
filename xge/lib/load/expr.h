@@ -17,6 +17,7 @@
 #include "audio/sound.h"
 #include "game/states.h"
 
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -374,6 +375,10 @@ namespace xge
 		// Each is under its name as a text reads it (Calc::nameOf), and goes
 		// into calc the first time a text reads it.
 		std::unordered_map<std::string, float> liveNumbers;
+		// How many of them have gone into calc so far; one that goes in while
+		// the game runs is first given its number by whenLiveRead.
+		std::size_t liveRead = 0;
+		std::function<void()> whenLiveRead;
 
 		// The texts already found to name none of liveNumbers while loading,
 		// so a text many objects share (a map's pieces) is looked through once.

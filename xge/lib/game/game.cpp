@@ -63,6 +63,7 @@ namespace xge
 		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
 		expr.finishLoading();
 		for (std::size_t i = 0; i < objects.size(); ++i) { objectParts.placeAt(objects[i].id, i); }
+		expr.whenLiveRead = [this] { refreshLive(); };
 		keep(keeps);
 		refreshAllBoundTexts();
 		// Every picture's size is known now, with no window: the engine draws
@@ -2281,9 +2282,11 @@ namespace xge
 
 	void Game::refreshLive(void)
 	{
-		if (!liveLinked)
+		if (!liveLinked || liveLinkedAt != expr.liveRead)
 		{
 			liveLinked = true;
+			liveLinkedAt = expr.liveRead;
+			liveLinks.clear();
 			const std::vector<std::string>& parts = liveNumberParts();
 			const std::vector<LivePart>& live = liveParts();
 			for (std::size_t i = 0; i < objects.size(); ++i)
@@ -2291,8 +2294,9 @@ namespace xge
 				for (std::size_t part = 0; part < parts.size(); ++part)
 				{
 					if (live[part].has && !live[part].has(objectParts, objects[i])) { continue; }
-					const auto found = expr.liveNumbers.find(Calc::nameOf(objects[i].name + "." + parts[part]));
-					if (found != expr.liveNumbers.end()) { liveLinks.push_back({ &found->second, i, part }); }
+					const std::string name = Calc::nameOf(objects[i].name + "." + parts[part]);
+					const auto found = expr.liveNumbers.find(name);
+					if (found != expr.liveNumbers.end() && expr.calc.has(name)) { liveLinks.push_back({ &found->second, i, part }); }
 				}
 			}
 		}

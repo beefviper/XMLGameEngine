@@ -1031,9 +1031,11 @@ namespace xge
 					calc.variable(name, *waiting->second);
 					unbound.erase(waiting);
 				}
-				else if (const auto live = liveNumbers.find(name); live != liveNumbers.end())
+				else if (const auto live = liveNumbers.find(name); live != liveNumbers.end() && !calc.has(name))
 				{
 					calc.variable(name, live->second);
+					++liveRead;
+					if (whenLiveRead) { whenLiveRead(); }
 				}
 			}
 
