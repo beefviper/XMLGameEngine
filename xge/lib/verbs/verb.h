@@ -232,9 +232,10 @@ namespace xge
 	// A <count>'s or <trigger>'s cells: one <here /> or <around>, the latter
 	// holding <straight /> and an <alike variable> if wanted.
 	CellPlace readCellPlace(const XmlNode& node, const std::string& where);
-	// Members of a held class, holder to holder: how many, or <all />; a
-	// <distribute>: how many each, into a holder or a group's own ones.
-	void readSendHeld(const XmlNode& node, const std::string& where, RawCommand& command);
+	// Members of a held class, holder to holder: how many, or <all /> where
+	// it `takesAll` (a <send>; a <distribute> gives how many each, into a
+	// holder or a group's own ones).
+	void readSendHeld(const XmlNode& node, const std::string& where, RawCommand& command, bool takesAll);
 
 	// --- What several verbs' make() share.
 

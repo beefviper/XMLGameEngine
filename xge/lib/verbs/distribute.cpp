@@ -12,7 +12,7 @@ namespace xge
 	// command, which runs it.
 	static void readDistribute(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
-		readSendHeld(node, where, command);
+		readSendHeld(node, where, command, false);
 	}
 
 	static Command makeDistribute(const RawCommand& raw, const ValueEvaluator& evaluate)

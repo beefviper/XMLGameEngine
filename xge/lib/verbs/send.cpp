@@ -22,7 +22,7 @@ namespace xge
 		// With no object=, members of a held class, holder to holder.
 		if (node.getAttribute("object").empty())
 		{
-			readSendHeld(node, where, command);
+			readSendHeld(node, where, command, true);
 			return;
 		}
 		command.from = requireAttribute(node, "from", where);

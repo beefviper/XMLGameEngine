@@ -153,7 +153,6 @@ namespace xge
 		command.line = node.line();
 
 		const Verb* verb = findVerb(command.verb);
-		if (!verb && command.verb == "accelerate") { fail(where, "<accelerate direction=...> is now <thrust direction=...>"); }
 		if (!verb) { fail(where, "unknown command <" + command.verb + ">"); }
 
 		// The names any command may have, each an attribute.
@@ -243,7 +242,7 @@ namespace xge
 	}
 
 
-	void readSendHeld(const XmlNode& node, const std::string& where, RawCommand& command)
+	void readSendHeld(const XmlNode& node, const std::string& where, RawCommand& command, bool takesAll)
 	{
 		const std::string& verb = command.verb;
 		command.from = requireAttribute(node, "from", where);
@@ -252,7 +251,7 @@ namespace xge
 		RawSend& send = command.own.emplace<RawSend>();
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
-			if (child->getName() != "all" || verb == "distribute") { fail(here, "unknown <" + child->getName() + ">; expected how many" + std::string(verb == "send" ? ", or <all />" : " each")); }
+			if (child->getName() != "all" || !takesAll) { fail(here, "unknown <" + child->getName() + ">; expected how many" + std::string(takesAll ? ", or <all />" : " each")); }
 			send.all = true;
 		}
 		if (!send.all) { send.count = readValue(node, where); }
