@@ -144,6 +144,9 @@ namespace xge
 		bool onRelease = false;
 		// What its object=, variable=, into= and from= name.
 		VerbNames names{};
+		// Made again each time it runs, even with no live number: what it
+		// puts somewhere is the point of it (<set>, <spawn>).
+		bool alwaysLive = false;
 		// What its tag says besides the names every command may have (see
 		// readCommand): the attributes it must have, its content and its
 		// children, into `command`. None: it says nothing more. Stops the
@@ -202,6 +205,8 @@ namespace xge
 	const Verb* findVerb(std::string_view name) noexcept;
 	// What a written command's attributes name (VerbNames), by its verb.
 	VerbNames namesOf(const RawCommand& command) noexcept;
+	// Whether a written command is made again each time it runs (Verb::alwaysLive).
+	bool alwaysLive(const RawCommand& command) noexcept;
 
 	// The verb a command is of, and which of its forms; null for what is not
 	// a verb's (a condition in an action, a command made as it runs: see

@@ -210,6 +210,7 @@ namespace xge
 		.name = "spawn",
 		.forms = { { "<spawn>", places::changes, kindOf<CmdSpawn>() } },
 		.names = { .into = Naming::Object },
+		.alwaysLive = true,
 		.read = readSpawn,
 		.make = makeSpawn,
 		.check = checkAs<checkSpawn>,

@@ -82,6 +82,7 @@ namespace xge
 		.name = "set",
 		.forms = { { "<set>", places::changes, kindOf<CmdSet>() } },
 		.names = { .variable = Naming::Variable },
+		.alwaysLive = true,
 		.read = readSet,
 		.make = makeSet,
 		.check = checkAs<checkSet>,

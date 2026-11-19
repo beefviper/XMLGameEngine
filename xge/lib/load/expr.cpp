@@ -4,6 +4,7 @@
 // date: Sept 21, 2020
 
 #include "load/expr.h"
+#include "verbs/verb.h"
 
 #include "load/calc.h"
 #include "load/check.h"
@@ -1189,11 +1190,10 @@ namespace xge
 				Command made = onLine(each.line, [&] { return makeCommand(making, [&](const RawValue& value) { return evaluate(value, where); }); });
 
 				// One whose numbers can change is made again each time it runs
-				// (CmdLive); <set> and <spawn> always are, since what they
-				// put somewhere is the point of them.
+				// (CmdLive), and so is one whose verb says so (Verb::alwaysLive).
 				bool readsLive = false;
 				making.forEachValue([&](const RawValue& value) { readsLive = readsLive || namesLive(value); });
-				const bool live = own || theirs || each.verb == "set" || each.verb == "spawn" || readsLive;
+				const bool live = own || theirs || alwaysLive(each) || readsLive;
 				if (live)
 				{
 					auto loaded = std::make_shared<LoadedCommand>();

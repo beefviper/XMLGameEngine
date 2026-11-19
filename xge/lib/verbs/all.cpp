@@ -72,6 +72,12 @@ namespace xge
 		return verb ? verb->names : VerbNames{};
 	}
 
+	bool alwaysLive(const RawCommand& command) noexcept
+	{
+		const Verb* verb = findVerb(command.verb);
+		return verb && verb->alwaysLive;
+	}
+
 	namespace
 	{
 		// The verb and the first form of each kind of command.
