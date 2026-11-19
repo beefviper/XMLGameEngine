@@ -13,11 +13,10 @@ Tips for changing the libraries behind the engine, the build, the generator and 
 
 ## Generator
 
-- `data.xsl` is a second reader: a new tag or `Raw*` field needs the same there (and in the describer in `test_generated_games.cpp`), maybe a helper in `game_parts.h`.
-- Keep generated statements that make big temporaries in helpers (`addCell`, `addMember`): a Debug build gives each statement its own stack slots, and Breakout's bricks once overflowed a 1 MB stack. Check under `ulimit -s 1024`.
+- `engine-cpp` writes only the file's tree (`tree.xsl`); a new tag needs nothing there. The tree is static arrays, so a big game costs no stack.
 - XSLT comments cannot hold `--`; libxml2 refuses the stylesheet.
 - A new engine source a generated program needs goes in `engine.xml` and `assets.cmake`; one that reads XML or chooses libraries stays out (keep `game/game.cpp` and `engine/engine.cpp` free of `load/xml.h` and the factories).
-- After a generator or `Raw*` change, `cmake --build build --target xgetest-generated`.
+- After a generator or reader change, `cmake --build build --target xgetest-generated`.
 
 ## xgegui
 

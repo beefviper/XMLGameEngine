@@ -22,7 +22,6 @@ What must come before what:
 
 | Task | Needs first |
 |---|---|
-| A1 step 4 | A5 far enough along to retire `data.xsl`, and the author's yes |
 | F8 | the hold on new games lifted ([open decisions](#open-decisions)) |
 
 Everything else is independent, so the author can move any line up or down.
@@ -46,7 +45,7 @@ Its own block of work, done before the tasks below: it touches every field of an
 
 - **The aim.** The engine does the same things with less: a resource is held once, an object carries only the parts it uses, a tag is written in few places, and the code reads from its names.
 - **What it must not do** is change what any game does. Every step here leaves every game playing exactly as before.
-- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `rawDrag` and `hasDrag` in `RawObject`, `load/build.cpp`, `Object::Motion`, the frame, the printer, two hand-kept lists of an object's numbers, `data.xsl` twice and the describer. CR1, CR5, CR6 and CR7 each take homes away.
+- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `rawDrag` and `hasDrag` in `RawObject`, `load/build.cpp`, `Object::Motion`, the frame, the printer, two hand-kept lists of an object's numbers. CR1, CR5 and CR7 each take homes away; CR6 took `data.xsl`'s two and the describer's.
 
 ### Rules for this block
 
@@ -185,7 +184,7 @@ The author's order: the resource manager and the components first, since the res
 - [x] **1. The author: yes or no.** **Yes, for `engine-cpp`** (the author): it was only what was left once `windows-cpp` became stand-alone, so it can work the way the engine does. `windows-cpp` (A5) stays small and hand-written-looking, untouched. Was: `engine-cpp` would write the game's tree (after `from=` is worked out) as a C++ table, and the generated program would run `load/xml.cpp` over it through a small `XmlNode`. `data.xsl` (4,138 lines), `merge.xsl` (768), `modules/game_parts.h` (588) and the describer in `test_generated_games.cpp` (551) go; the generator leaves [changing the language](agents/readme.md#changing-the-language). It stays XSLT, with no XML library in the program. The cost: the program carries the reader and reads its table at start. If no, skip to CR7 and A1 step 4 stays parked.
 - [x] **2. The tree and its node (M).** Done: `xml/tree.h` (`TreeElement`, `viewOfTree`); `load/xml.cpp` reads a checked `<game>` element (`readGame(root)`) and `load/file.cpp` loads and checks a file; `test_tree.cpp` reads Pong, Pac-Man, Klondike and Mario Bros. from trees. Was: A static tree type and an `XmlNode` over it (`xge/lib/xml/`), with a test that reads Pong from one.
 - [x] **3. The stylesheet (M).** Done: `tree.xsl` writes each element as a static `TreeElement` array; the program includes the reader, `load/merge.cpp` and `xml/tree.cpp`, and nothing else changed. Was: `games/generators/engine-cpp/tree.xsl` writes it; `xgetest-generated` plays each generated game beside the engine's as it does now.
-- [ ] **4. The second reader goes (S).** Delete the four files and their mentions in `engine.xml`, `assets.cmake`, the agent notes and [generator](designs/40-generator.md).
+- [x] **4. The second reader goes (S).** Done: `data.xsl`, `merge.xsl`, `game_parts.h`, the describer and `<module>` in `generate.cpp` gone. Was: Delete the four files and their mentions in `engine.xml`, `assets.cmake`, the agent notes and [generator](designs/40-generator.md).
 - [ ] **5. `hasX` beside a value becomes `std::optional` (S).** From CR5 step 3, once `data.xsl` no longer writes them.
 
 ### CR7. A verb owns its data
@@ -235,7 +234,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [x] **1. A place for printing (S).** `Verb` (`verbs/verb.h`) gains an optional `print` for a `Command` and one for a `RawCommand`. `operator<<` for each (`game/command.cpp`) asks the verb first and falls back to its own cases. Nothing moves yet. **Check:** `xgetest-generated` (it compares these dumps, so the text must not change by a character).
   - [x] **2. Move the printing, ten verbs a commit (M in all).** Each verb's two cases move into its file. Repeat until the cases in `command.cpp` are gone, then remove the fallback. **Check after each commit:** `xgetest-generated`.
   - [x] **3. A verb's own helpers move beside it (S).** `hop`, `startFlight`, `huntByHop`, `spawnProjectile`, `aim`, `chase`, `land`, `knock` in `play/executor.cpp`: for each, `grep` for its callers; one used by a single verb moves into that verb's file, one used by several stays. One helper a commit. **Check:** `xgetest-long "[speed]"` before and after (load and frame times must not rise).
-  - [ ] **4. Moved to [CR7](#cr7-a-verb-owns-its-data).** Was: the author: whether each verb owns its data (L if yes). `Command` would become `{ const Verb* verb; data }` and `RawCommand`'s shared fields the verb's own, which is where "`seconds` means a move's wait" ends. It changes `data.xsl` and the describer heavily, so it waits until A5 has retired `data.xsl`, or is dropped. Ask before starting. With it, each command carries its own line, and the load's name checks can say the command's line rather than its holder's (B7, done; the author wants that).
+  - [ ] **4. Moved to [CR7](#cr7-a-verb-owns-its-data).** Was: the author: whether each verb owns its data (L if yes). `Command` would become `{ const Verb* verb; data }` and `RawCommand`'s shared fields the verb's own, which is where "`seconds` means a move's wait" ends. It changed `data.xsl` and the describer heavily, so it waited for CR6. Ask before starting. With it, each command carries its own line, and the load's name checks can say the command's line rather than its holder's (B7, done; the author wants that).
 - **Files.** `xge/lib/verbs/*`, `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/play.md` "Loading".
 - **Done when** adding a verb is one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element and the docs.
 
@@ -371,7 +370,6 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 - **xgegui's Qt window on Windows** (the author, after DT5): slow and uneven on some games, docked more than popped out, while SFML2 and SDL2 play them smoothly. On Linux every game draws a frame in under 1.5 ms. Left for now; a readout of step, draw and paint times would show where it goes.
 
-- `data.xsl` reads the file a second time; a new field in `load/xml.cpp` needs the same there ([generator](designs/40-generator.md#open)).
 - `Engine::handleKeyPressed`/`handleKeyReleased` are public only because the tests and `played.h` press keys through them; a test seam would let them go private.
 - Objects not shown (`isShown`) are left out of the swept collision pass in `play/frame.cpp`, so nothing hidden can touch or be touched; a game with invisible things that collide would need them in it.
 - Astrosmash's test "a crude player who shoots the lowest rock in the sights scores" fails for about 1 Catch2 seed in 250 (`--rng-seed 179`, `235`, `349`): no score in twenty seconds. The test's player or the game's rocks, not the engine; it fails the same before and after A4.

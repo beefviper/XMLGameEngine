@@ -98,6 +98,5 @@ Each is a step in the plan only where it removes code.
 
 ## Open
 
-- Whether `engine-cpp` may carry the game as a tree for the engine's own reader, which retires `data.xsl`.
 - The names table.
 - Whether parts are moved before or after the frame is reshaped; the plan moves storage first.

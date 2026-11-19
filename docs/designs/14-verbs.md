@@ -34,4 +34,4 @@ One place for everything the engine knows about a verb.
 
 ## Open
 
-- **Its own data.** `RawCommand` is one struct of about fifty fields shared by all, each meaning something different per verb. A verb owning its fields would end that; it changes the generator's `data.xsl` heavily.
+- **Its own data.** `RawCommand` is one struct of about fifty fields shared by all, each meaning something different per verb. A verb owning its fields would end that (plan CR7).

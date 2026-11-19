@@ -114,7 +114,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `load/xml.cpp` | a checked `<game>` element's tags into a `GameData` (`readGame(root)`) |
 | | `xml/tree.cpp` | an element held as plain C++ data (`TreeElement`), read as an `XmlNode` (`viewOfTree`): how a generated program holds its game |
 | | `load/reading.cpp` | what every reader shares: a child, an attribute, a value, `fail` |
-| | `load/merge.cpp` | pieces and `from=` on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
+| | `load/merge.cpp` | pieces and `from=` on the XML (`layOut`, `addWaiting`) |
 | | `load/expr.cpp` | values, operations, building `Object`s and `State`s; the loading stages in order (`game_expr::init`) |
 | | `load/build.cpp` | one `Object` from its `RawObject` (`makeObject`), a step per part: looks, numbers, motion, timers, rules, actions, holder, moves |
 | | `load/conditions.cpp` | conditions and their tests, as states, rules and holders use them |
@@ -141,7 +141,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, a file per library; `window/picture.cpp` draws a frame into one image (`--picture`); `audio/sound.cpp` is the synthesizer |
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
 | | `xge/gui/source/` | `main_window`, `game_session`, `game_stage`, `game_view`, `qt_window`, `key_queue`, `options_dialog`, `session_options`, `app_settings` (`xgegui.ini`), `inspector`, `theme` |
-| generator | `games/generators/engine-cpp/` | `generate.xsl`, `merge.xsl`, `data.xsl`, `program.xsl`, `text.xsl`, `engine.xml`, `modules/game_parts.h` |
+| generator | `games/generators/engine-cpp/` | `generate.xsl`, `tree.xsl`, `program.xsl`, `text.xsl`, `engine.xml` |
 | | `games/generators/windows-cpp/` | `generate.xsl`, `covers.xsl`, `game.xsl`, `names.xsl`, `values.xsl`, `program.xsl`, `verbs/` (a file per verb it can write) |
 | | `games/prototypes/pong_min/` | `pong_min.xml` as a stand-alone SFML game, the `pong_min` program: what the `windows-cpp` generator writes for it |
 | | `games/prototypes/pong/` | `pong.xml` as a stand-alone SFML game with no engine code (states, texts, sounds, a computer player), the `pong` program: what it is to write next |

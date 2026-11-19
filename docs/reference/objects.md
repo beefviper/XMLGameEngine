@@ -208,7 +208,7 @@ A take, a state `from=` another and a scene `from=` another all change what they
 
 These stop the load: a `from=` naming no piece, taking a name the list already has, a map `from=` an object (or the reverse), two pieces of one name, a piece `from=` a later one, a dotted name (`rocks.2`; name the member instead).
 
-All of this is worked out on the XML before any object is read (`load/merge.cpp`), and the same in XSLT for a generated program (`merge.xsl`).
+All of this is worked out on the XML before any object is read (`load/merge.cpp`), in a generated program too.
 
 ## Spawn and despawn
 

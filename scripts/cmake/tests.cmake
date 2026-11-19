@@ -211,7 +211,7 @@ xge_place_program(xgetest-generated)
 set(XGE_GENERATED_DIR "${CMAKE_BINARY_DIR}/generated")
 set(generated_declarations "")
 set(generated_entries "")
-# The stylesheets and modules, file by file, so a change to the generator
+# The stylesheets, file by file, so a change to the generator
 # generates every game again (depending on xgedata alone only orders the steps).
 list(TRANSFORM data_generators PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/" OUTPUT_VARIABLE generator_files)
 foreach(game_file IN LISTS data_xml)
@@ -258,7 +258,7 @@ file(WRITE "${XGE_GENERATED_DIR}/generated_games.h.in"
 	"#pragma once\n\n"
 	"#include \"game/data.h\"\n\n"
 	"${generated_declarations}\n"
-	"struct GeneratedGame\n{\n\tconst char* file;\n\txge::GameData (*describe)();\n};\n\n"
+	"struct GeneratedGame\n{\n\tconst char* file;\n\txge::GameData (*read)();\n};\n\n"
 	"inline const GeneratedGame generatedGames[] = {\n${generated_entries}};\n")
 configure_file("${XGE_GENERATED_DIR}/generated_games.h.in" "${XGE_GENERATED_DIR}/generated_games.h" COPYONLY)
 target_include_directories(xgetest-generated PRIVATE "${XGE_GENERATED_DIR}" xge/tests xge/tests/helpers xge/tests/generated)

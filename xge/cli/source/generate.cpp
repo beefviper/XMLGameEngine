@@ -269,12 +269,6 @@ namespace xge
 				{
 					program.files.push_back(path);
 				}
-				else if (element == "module")
-				{
-					// one of the target's own files, from its modules/ folder
-					copyFile(targetFolder / "modules" / attribute(node, "from"), output / path);
-					program.files.push_back(path);
-				}
 				else if (element == "engine")
 				{
 					// one of the engine's files, from lib/ in the engine folder, unchanged

@@ -24,7 +24,7 @@ The wish: define objects once, up top, and customize them lower down.
 - **Lifetime follows nesting:** the top level never, `<states>`' own `<objects>` the whole game, a state's while it is current, a scene's while that scene is. The deeper, the shorter.
 - **In any `<objects>`, `from="piece"` takes a piece** under the name written; an object named after a piece takes it by that name.
 - **One change rule** for a take, a state `from=` and a scene `from=`: sprites and animations by name, whole; x and y halves of position, velocity, acceleration and padding apart; variables, actions and timers by name; collision rules added after; members, rows and cells in place of all; inner groups by name; anything else in place of its tag.
-- **A change is only of what came from elsewhere.** The rule first also merged two siblings of one name in one `<objects>`, so a copied object left unrenamed vanished without a word. Now a name written twice in one list stops the load (`layOut`, before the merge), as two states of one name, two scenes of one name in a state, and one key bound twice at one moment in a state do. `--generate` loads the game first, so `merge.xsl` never sees one.
+- **A change is only of what came from elsewhere.** The rule first also merged two siblings of one name in one `<objects>`, so a copied object left unrenamed vanished without a word. Now a name written twice in one list stops the load (`layOut`, before the merge), as two states of one name, two scenes of one name in a state, and one key bound twice at one moment in a state do.
 - **`<spawn>` and `<fire>` name a piece;** its waiting copies sit beside the spawner, so they read its scene's variables (Kaboom's bombs fall at their wave's speed).
 - A member taken alone keeps its group's class, rules and picture.
 - **A map is a piece too:** Berserk's four rooms share tile, place, walls and exits, and each gives only its rows. Rejected: a scene `from=` the first room (it copies the robots, and a copy cannot be dropped).
@@ -32,7 +32,7 @@ The wish: define objects once, up top, and customize them lower down.
 ## How it was built
 
 - **The merge is done on the XML, before reading** (`load/merge.cpp`): each `<objects>` is copied into small in-memory elements, laid out, and read through an `XmlNode` view of them, so the readers did not change.
-- **The generator does the same merge in XSLT** (`merge.xsl`). The rule was rewritten from step by step to a definition XSLT 1.0 can say directly: base's children in order, each kept or changed by the last one alike, then the written ones that took no place. `xgetest-generated` makes the two agree to the order of objects.
+- **The rule is a definition, not steps:** base's children in order, each kept or changed by the last one alike, then the written ones that took no place. It was first written so XSLT 1.0 could say it too (a generator once merged in XSLT); a generated program now runs `load/merge.cpp` on its tree.
 - What is spawned is read from the XML too, round by round, so a piece whose copies spawn another brings that one in.
 
 ## Open

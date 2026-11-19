@@ -86,17 +86,13 @@ set(data_assets
 	"games/assets/cards.png"
 	"games/assets/Space Invaders Color Sprites.svg")
 
-# The stylesheets xgecli --generate runs, a folder per target (generate.cpp),
-# and the target's modules, copied into a program unchanged.
+# The stylesheets xgecli --generate runs, a folder per target (generate.cpp).
 set(data_generators
 	"games/generators/engine-cpp/generate.xsl"
 	"games/generators/engine-cpp/text.xsl"
-	"games/generators/engine-cpp/merge.xsl"
-	"games/generators/engine-cpp/data.xsl"
 	"games/generators/engine-cpp/program.xsl"
 	"games/generators/engine-cpp/tree.xsl"
 	"games/generators/engine-cpp/engine.xml"
-	"games/generators/engine-cpp/modules/game_parts.h"
 	"games/generators/windows-cpp/generate.xsl"
 	"games/generators/windows-cpp/names.xsl"
 	"games/generators/windows-cpp/values.xsl"

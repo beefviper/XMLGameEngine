@@ -26,7 +26,7 @@ Text and `<image>` files are made by the engine as well (plutovg reads both), so
 - **Inks:** more `<color char="w">`s, so a ghost's eyes follow its body's looks. Rejected: two or three objects on top of each other.
 - **Styles as palettes:** `<bitmap style="mario">` takes the style's scale and inks, its own winning. About 150 lines repeated another bitmap's colours. Rejected: a separate `<palettes>` container, taking another sprite's colours by name.
 - **Pictures at the bottom** (the author: bitmaps are visually noisy at the top of a file): `<pictures>` after the states holds each `<bitmap name>` and the sheets, and a sprite takes one with `<bitmap from>`, changing what it gives by the take rule.
-  - Worked out on the XML before reading (`withPictures`, mirrored in `merge.xsl`), so nothing after it changed.
+  - Worked out on the XML before reading (`withPictures`), so nothing after it changed.
   - One picture shown by two sprites is written once.
   - The author offered `<video>` (and `<audio>`); `<pictures>` and the old `<sounds>` were proposed for being what the engine already calls them.
   - Maps stay in the objects: their rows are where things are.
